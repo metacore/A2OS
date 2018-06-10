@@ -1264,13 +1264,13 @@ TYPE
 		END;
 
 		IF (field = EvenField) & (wField = EvenField) THEN
-			flags := flags * (-AosWantEven);
+			flags := flags * SET (-AosWantEven);
 		ELSIF (field = OddField) & (reqField = OddField) & (wField = OddField) THEN
-			flags := flags * (-AosWantOdd);
+			flags := flags * SET (-AosWantOdd);
 		ELSIF (field = OddField) & (reqField = (OddField + EvenField)) & (wField = (OddField + EvenField)) THEN
-			flags := flags * (-AosWantOdd);
+			flags := flags * SET (-AosWantOdd);
 		ELSIF (field = OddField) & (reqField = (OddField + EvenField)) & (wField = OddField) THEN
-			flags := flags * (-AosWantOdd);
+			flags := flags * SET (-AosWantOdd);
 			flags := flags + AosWantEven;
 		ELSE
 			IF DEBUG >= DebugHigh THEN KernelLog.String("(out of sync) "); END;
@@ -1636,7 +1636,7 @@ TYPE
 			IF (flag1 * OpSOL # {}) & (startSkip > 0) THEN
 				prog[dmaIndex] := SYSTEM.VAL(LONGINT, OpSkip + OpSOL + SYSTEM.VAL(SET, startSkip));
 				INC(dmaIndex);
-				flag1 := flag1 * (-OpSOL);
+				flag1 := flag1 * SET (-OpSOL);
 				skip := startSkip;
 			END;
 			prog[dmaIndex] := SYSTEM.VAL(LONGINT, op + flag1 + SYSTEM.VAL(SET, width*bpp - skip));
@@ -1659,7 +1659,7 @@ TYPE
 			IF (flag1 * OpSOL # {}) & (startSkip > 0) THEN
 				prog[dmaIndex] := SYSTEM.VAL(LONGINT, OpSkip + OpSOL + SYSTEM.VAL(SET, startSkip));
 				INC(dmaIndex);
-				flag1 := flag1 * (-OpSOL);
+				flag1 := flag1 * SET (-OpSOL);
 				skip := startSkip;
 			END;
 			prog[dmaIndex] := SYSTEM.VAL(LONGINT, op + flag1 + SYSTEM.VAL(SET, width*bpp DIV 2 - skip));
@@ -2126,7 +2126,7 @@ TYPE
 
 		SYSTEM.PUT32(base + BktrRISCStrtAdd, Machine.PhysicalAdr(ADDRESSOF(dmaProg), 4));
 
-		vbiFlags := vbiFlags * (-VbiCapture);	(* default - no VBI capture *)
+		vbiFlags := vbiFlags * SET (-VbiCapture);	(* default - no VBI capture *)
 
 		IF pixelFormat.type = AosPixTypeRGB THEN
 			IF (vbiFlags * VbiOpen # {}) OR (formatParameters = Bt848IFormFPalBDGHI) OR
@@ -2365,7 +2365,7 @@ TYPE
 			SYSTEM.PUT8(base + BktrPLLFHi, 00DCH);
 			SYSTEM.PUT8(base + BktrPLLFXCI, 008EH);
 		END;
-		flags := (flags * (-AosDevMask)) + AosDev0;
+		flags := (flags * SET (-AosDevMask)) + AosDev0;
 		(* TO BE DONE: clipping *)
 		SYSTEM.PUT8(base + BktrColorCtl, SYSTEM.VAL(LONGINT, Bt848ColorCtlGamma + Bt848ColorCtlRGBDed));
 
@@ -2398,7 +2398,7 @@ TYPE
 	(** Closes the VideoCaptureDevice object. *)
 	PROCEDURE VideoClose*;
 	BEGIN
-		flags := flags * (-(FileHandlers + AosSingle + AosCapMask + AosWantMask));
+		flags := flags * SET (-(FileHandlers + AosSingle + AosCapMask + AosWantMask));
 
 		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
 		SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(LONGINT, CaptureOff));
@@ -2446,16 +2446,16 @@ TYPE
 	BEGIN
 		temp1 := SYSTEM.VAL(SET, format) * Bt848IFormFormat;
 		temp2 := SYSTEM.VAL(SET, SYSTEM.GET8(base + BktrIForm));
-		temp2 := temp2 * (-Bt848IFormFormat);
-		temp2 := temp2 * (-Bt848IFormXtSel);
+		temp2 := temp2 * SET (-Bt848IFormFormat);
+		temp2 := temp2 * SET (-Bt848IFormXtSel);
 		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, temp1 + temp2 +
 			SYSTEM.VAL(SET, formatParams[SYSTEM.VAL(LONGINT, temp1)].iformXTSel)));
 		CASE format OF
 				Bt848IFormFAuto:
-					flags := (flags * (-AosFormMask)) + AosAutoMode;
+					flags := (flags * SET (-AosFormMask)) + AosAutoMode;
 			|  Bt848IFormFNTSCM,
 			    Bt848IFormFNTSCJ:
-			    	flags := (flags * (-AosFormMask)) + AosNTSC;
+			    	flags := (flags * SET (-AosFormMask)) + AosNTSC;
 			    	formatParameters := SYSTEM.VAL(LONGINT, temp1);
 			    	SYSTEM.PUT8(base + BktrADelay, formatParams[formatParameters].aDelay);
 			    	SYSTEM.PUT8(base + BktrBDelay, formatParams[formatParameters].bDelay);
@@ -2464,7 +2464,7 @@ TYPE
 				Bt848IFormFSecam,
 				Bt848IFormFRSVD,
 				Bt848IFormFPalM:
-					flags := (flags * (-AosFormMask)) + AosPAL;
+					flags := (flags * SET (-AosFormMask)) + AosPAL;
 					formatParameters := SYSTEM.VAL(LONGINT, temp1);
 					SYSTEM.PUT8(base + BktrADelay, formatParams[formatParameters].aDelay);
 					SYSTEM.PUT8(base + BktrBDelay, formatParams[formatParameters].bDelay);
@@ -2491,7 +2491,7 @@ TYPE
 	VAR
 		temp1: LONGINT;
 	BEGIN
-		flags := (flags * (-AosDevMask)) + AosDev0;
+		flags := (flags * SET (-AosDevMask)) + AosDev0;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
 		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		(* work around for new Hauppauge 878 cards *)
@@ -2514,7 +2514,7 @@ TYPE
 	VAR
 		temp1: LONGINT;
 	BEGIN
-		flags := (flags * (-AosDevMask)) + AosDev1;
+		flags := (flags * SET (-AosDevMask)) + AosDev1;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
 		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		temp1 := SYSTEM.GET8(base + BktrIForm);
@@ -2531,7 +2531,7 @@ TYPE
 	VAR
 		temp1: LONGINT;
 	BEGIN
-		flags := (flags * (-AosDevMask)) + AosDev2;
+		flags := (flags * SET (-AosDevMask)) + AosDev2;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
 		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		temp1 := SYSTEM.GET8(base + BktrIForm);
@@ -2548,7 +2548,7 @@ TYPE
 	VAR
 		temp1: LONGINT;
 	BEGIN
-		flags := (flags * (-AosDevMask)) + AosDevSVideo;
+		flags := (flags * SET (-AosDevMask)) + AosDevSVideo;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
 		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		temp1 := SYSTEM.GET8(base + BktrIForm);
@@ -2566,9 +2566,9 @@ TYPE
 		temp1: LONGINT;
 	BEGIN
 		IF ((id = Brooktree848A) OR (id = Brooktree849A) OR (id = Brooktree878) OR (id = Brooktree879)) THEN
-			flags := (flags * (-AosDevMask)) + AosDev3;
+			flags := (flags * SET (-AosDevMask)) + AosDev3;
 			temp1 := SYSTEM.GET8(base + BktrIForm);
-			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
+			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * SET (-Bt848IFormMUXSel)));
 			IF ((card.cardID = CardHauppauge) & ((id = Brooktree878) OR (id = Brooktree879))) THEN
 				temp1 := SYSTEM.GET8(base + BktrIForm);
 				SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX1));
@@ -2611,7 +2611,7 @@ TYPE
 		temp1 := SYSTEM.GET32(base + BktrIntStat);
 		SYSTEM.PUT32(base + BktrIntStat, temp1);
 		flags := flags + AosSingle;
-		flags := flags * (-AosWantMask);
+		flags := flags * SET (-AosWantMask);
 		IF flags * AosOnlyFieldsMask = AosOnlyEvenFields THEN
 			IF DEBUG >= DebugMed THEN KernelLog.String("{BT848} CaptureSingle: even fields"); KernelLog.Ln; END;
 			flags := flags + AosWantEven;
@@ -2653,7 +2653,7 @@ TYPE
 		(* disable RISC, leave FIFO running *)
 		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoEnabled));
 
-		flags := flags * (-(AosSingle + AosWantMask));
+		flags := flags * SET (-(AosSingle + AosWantMask));
 	END CaptureSingle;
 
 	(** Start continuous frame capture. *)
@@ -2667,7 +2667,7 @@ TYPE
 		temp1 := SYSTEM.GET32(base + BktrIntStat);
 		SYSTEM.PUT(base + BktrIntStat, temp1);
 		flags := flags + AosContin;
-		flags := flags * (-AosWantMask);
+		flags := flags * SET (-AosWantMask);
 		IF flags * AosOnlyFieldsMask = AosOnlyEvenFields THEN
 			flags := flags + AosWantEven;
 			iFlag := AosEvenField;
@@ -2702,7 +2702,7 @@ TYPE
 			(* turn off capture *)
 			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
 			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
-			flags := flags * (-(AosContin + AosWantMask));
+			flags := flags * SET (-(AosContin + AosWantMask));
 		END;
 	END StopCaptureContinuous;
 
@@ -2718,12 +2718,12 @@ TYPE
 		IF format * AosOnlyOddFields # {} THEN
 			flags := flags + AosOnlyOddFields;
 		ELSE
-			flags := flags * (-AosOnlyOddFields);
+			flags := flags * SET (-AosOnlyOddFields);
 		END;
 		IF format * AosOnlyEvenFields # {} THEN
 			flags := flags + AosOnlyEvenFields;
 		ELSE
-			flags := flags * (-AosOnlyEvenFields);
+			flags := flags * SET (-AosOnlyEvenFields);
 		END;
 		ASSERT(columns > 0);	(* columns must be greater than zero *)
 		ASSERT(SYSTEM.VAL(SET, columns) * SYSTEM.VAL(SET, 03FEH) = SYSTEM.VAL(SET, columns));	(* columns too large or not even *)

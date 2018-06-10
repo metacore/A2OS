@@ -21,7 +21,7 @@ CONST
 	MinIPHdrLen*= 20;
 	MaxIPHdrLen* = 60;
 	TOS = 10X; (* type-of-service on outgoing datagrams *)
-	BroadcastAdr = SHORT(0FFFFFFFFH);
+	BroadcastAdr = LONGINT(0FFFFFFFFH);
 
 TYPE
 	ARPEntry = POINTER TO RECORD
@@ -112,7 +112,7 @@ TYPE
 
 
 		(** Send an IP packet on this interface. *)
-		PROCEDURE Send*(type: LONGINT; fip:IP. Adr; VAR l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: LONGINT);
+		PROCEDURE Send*(type: LONGINT; fip:IP. Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: LONGINT);
 		VAR
 			l3hdr: ARRAY MaxIPHdrLen OF CHAR;
 
@@ -143,7 +143,7 @@ TYPE
 
 
 		(* Internal procedure to perform the rest of the send operation. Used by "Send" and for IP forwarding. *)
-		PROCEDURE DoSend*(destAdr: IP.Adr; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT) ;
+		PROCEDURE DoSend*(destAdr: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT) ;
 		VAR
 			linkDst: Network.LinkAdr;
 
@@ -565,7 +565,7 @@ TYPE
 
 
 		(* Queue an IP packet awaiting an ARP reply. *)
-		PROCEDURE ARPQueue(dst: IP.Adr; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE ARPQueue(dst: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
 		VAR p: ARPEntry; n: LONGINT;
 		BEGIN {EXCLUSIVE}
 			ASSERT (dst.usedProtocol = 4, 2345);

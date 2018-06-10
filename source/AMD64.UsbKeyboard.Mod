@@ -710,8 +710,7 @@ VAR
 	string : ARRAY 64 OF CHAR;
 	plugin : Plugins.Plugin; kd : KeyboardDriver;
 BEGIN
-	context.arg.GetString(string);
-	IF (context.arg.res = Streams.Ok) & (string # "") THEN
+	IF context.arg.GetString(string) THEN
 		plugin := Usb.usbDrivers.Get(string);
 		IF plugin # NIL THEN
 			IF plugin IS KeyboardDriver THEN
@@ -723,8 +722,7 @@ BEGIN
 	ELSE context.error.String("UsbKeyboard: Expected <dev> parameter."); context.error.Ln;
 	END;
 	IF kd # NIL THEN
-		context.arg.GetString(string);
-		IF (context.arg.res = Streams.Ok) & (string # "") THEN
+		IF context.arg.GetString(string) THEN
 			kd.base.SetLayout(string);
 			context.out.String("Layout set to "); context.out.String(string); context.out.Ln;
 		END;

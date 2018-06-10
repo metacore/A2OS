@@ -24,10 +24,10 @@ TYPE
 		PROCEDURE HandleInterrupt;
 		VAR m: SET; i: LONGINT; msg: Inputs.KeyboardMsg; k: INTEGER; c: CHAR;
 		BEGIN {EXCLUSIVE}
-			SYSTEM.PORTIN(060H, c);	(* get scan code *)
-			SYSTEM.PORTIN(061H, SYSTEM.VAL(CHAR, m));
-			INCL(m, 7); SYSTEM.PORTOUT(061H, SYSTEM.VAL(CHAR, m));
-			EXCL(m, 7); SYSTEM.PORTOUT(061H, SYSTEM.VAL(CHAR, m));	(* ack *)
+			Machine.Portin8(060H, c);	(* get scan code *)
+			Machine.Portin8(061H, SYSTEM.VAL(CHAR, m));
+			INCL(m, 7); Machine.Portout8(061H, SYSTEM.VAL(CHAR, m));
+			EXCL(m, 7); Machine.Portout8(061H, SYSTEM.VAL(CHAR, m));	(* ack *)
 			IF TraceKeys THEN KernelLog.Hex(ORD(c), -3) END;
 			k := MapScanCode(c, msg.keysym);
 			IF k >= 0 THEN msg.ch := CHR(k) ELSE msg.ch := 0X END;
@@ -308,7 +308,7 @@ VAR t: Kernel.MilliTimer; s: SET;
 BEGIN
 	Kernel.SetTimer(t, 20);	(* wait up to 17 ms *)
 	REPEAT
-		SYSTEM.PORTIN(64H, SYSTEM.VAL(CHAR, s))
+		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s))
 	UNTIL ~(1 IN s) OR Kernel.Expired(t)
 END Wait;
 
@@ -316,7 +316,7 @@ END Wait;
 
 PROCEDURE SendByte(port: LONGINT; value: SYSTEM.BYTE);
 BEGIN
-	Wait; SYSTEM.PORTOUT(port, SYSTEM.VAL(CHAR, value));
+	Wait; Machine.Portout8(port, SYSTEM.VAL(CHAR, value));
 	lastport := port; lastvalue := value
 END SendByte;
 
@@ -493,12 +493,12 @@ BEGIN
 		(* clear the keyboard's internal buffer *)
 	i := 8;
 	LOOP
-		SYSTEM.PORTIN(64H, SYSTEM.VAL(CHAR, s));
+		Machine.Portin8(64H, SYSTEM.VAL(CHAR, s));
 		IF ~(0 IN s) OR (i = 0) THEN EXIT END;
-		SYSTEM.PORTIN(60H, c);	(* read byte *)
-		SYSTEM.PORTIN(61H, SYSTEM.VAL(CHAR, s));
-		INCL(s, 7); SYSTEM.PORTOUT(61H, SYSTEM.VAL(CHAR, s));
-		EXCL(s, 7); SYSTEM.PORTOUT(61H, SYSTEM.VAL(CHAR, s));	(* ack *)
+		Machine.Portin8(60H, c);	(* read byte *)
+		Machine.Portin8(61H, SYSTEM.VAL(CHAR, s));
+		INCL(s, 7); Machine.Portout8(61H, SYSTEM.VAL(CHAR, s));
+		EXCL(s, 7); Machine.Portout8(61H, SYSTEM.VAL(CHAR, s));	(* ack *)
 		DEC(i)
 	END;
 	flags := {SetTypematic};

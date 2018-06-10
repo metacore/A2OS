@@ -17,7 +17,6 @@ TYPE
 		type-, size-, n-, tdadr-: LONGINT
 	END;
 
-
 VAR
 	trapState: ARRAY Machine.MaxCPU OF LONGINT;	(* indexed by Machine.ID() *)
 	modes: ARRAY 25 OF CHAR;
@@ -66,6 +65,8 @@ VAR
 				-14:	(* page fault *)
 					IF (int.CS MOD 4 > Machine.KernelLevel) & (exc.pf+4 = int.SP) THEN
 						w.String("stack overflow"); overflow := TRUE
+					ELSE
+						w.String("memory access violation (page fault)");
 					END
 				|0: w.String("division error")
 				|1: w.String("WITH guard failed")
@@ -79,6 +80,7 @@ VAR
 				|9: w.String("array dimension error")
 				|14: w.String("out of memory")
 				|16: w.String("procedure returned")
+				|17: w.String("nil pointer access")
 				ELSE
 					IF (exc.halt > MAX(INTEGER)+1) OR (exc.halt < MIN(INTEGER)) THEN
 						w.String("module freed?")
@@ -120,7 +122,8 @@ VAR
 			IF (int.INT = Machine.PF) & (ABS(int.PC-exc.CR[2]) < 100H) THEN	(* PF close to PC *)
 				KernelLog.Memory(int.ESP-16, 64)	(* show stack *)
 			END;*)
-			Reflection.StackTraceBack(w, int.PC, int.BP, Objects.GetStackBottom(p), long, overflow);
+			w.String( "StackTraceBack:" );  w.Ln;
+			Reflection.StackTraceBack(w, int.PC, int.BP, int.SP, Objects.GetStackBottom(p), long, overflow);
 		END;
 		w.String("---------------------------------"); w.Ln;
 		w.Char(02X);	(* "end of trap" *)

@@ -145,7 +145,7 @@ TYPE
 		lbaHigh, lbaLow: LONGINT;
 	END;
 
-	CommandPacket = POINTER TO CommandPacketDesc;
+	CommandPacket* = POINTER TO CommandPacketDesc;
 	CommandPacketDesc = RECORD (CommandDesc)
 		packet*: Packet;
 		features*: SET;
@@ -814,7 +814,6 @@ TYPE
 			IF res # Res_OK THEN
 				(* Most likely, there is no device .... Show("Could not select device"); KernelLog.Ln; *)
 			END;
-
 			(* Check if registers are valid. FAST DETECTION  *)
 			Machine.Portout8(cmdbase+Ofs_CountLow, 055X);
 			NanoDelay(400);
@@ -1596,7 +1595,6 @@ TYPE
 			command.size := LEN(buf);
 			command.packet[4] := CHR(LEN(buf));
 			res := controller.ExecuteCommand(command, ATAPITimeout, status);
-
 			IF TraceVerbose & (trace * (TraceErrors + TraceSense) # {}) & (res # Res_OK) THEN
 				Show(name); KernelLog.String(" request sense failed"); KernelLog.Ln;
 			END;
@@ -1936,7 +1934,7 @@ PROCEDURE ResetCommand(cmd: Command; size: SIZE);
 BEGIN
 	ASSERT(cmd # NIL);
 	ASSERT(size MOD 4 = 0);
-	Machine.Fill32(SYSTEM.VAL(ADDRESS, cmd), size, 0);
+	Machine.Fill32(ADDRESS OF cmd.dev, size, 0);
 END ResetCommand;
 
 PROCEDURE GetPhysAdr(bufAdr: ADDRESS; size: LONGINT; VAR physAdr: ADDRESS): BOOLEAN;
@@ -2217,12 +2215,13 @@ BEGIN
 	AddController(c);
 END IdentifyController;
 
+
 PROCEDURE ScanPCI(vendor, id: LONGINT);
 VAR idx, bus, dev, fkt: LONGINT;
 BEGIN
-	idx := 0;
+	idx := 0; Dot();
 	WHILE PCI.FindPCIDevice(id, vendor, idx, bus, dev, fkt) = PCI.Done DO
-		Show("Found PCI device "); KernelLogHex(vendor, 4, 0); KernelLog.String(":"); KernelLogHex(id, 4, 0); KernelLog.Ln;
+		Show("Found PCI device "); KernelLogHex(vendor, 4, 0); KernelLog.String(":"); KernelLogHex(id, 4, 0); KernelLog.Ln; 
 		IdentifyController(bus, dev, fkt);
 		INC(idx);
 	END;
@@ -2231,20 +2230,39 @@ END ScanPCI;
 PROCEDURE ScanPCIClass(class: LONGINT);
 VAR idx, bus, dev, fkt: LONGINT;
 BEGIN
-	idx := 0;
+	idx := 0; Dot();
 	WHILE PCI.FindPCIClassCode(class, idx, bus, dev, fkt) = PCI.Done DO
 		Show("Found PCI device on bus "); KernelLog.Int(bus, 0); KernelLog.String(", device "); KernelLog.Int(dev, 0);
-		KernelLog.String(", function "); KernelLog.Int(fkt, 0); KernelLog.Ln;
+		KernelLog.String(", function "); KernelLog.Int(fkt, 0); KernelLog.Ln; 
 		IdentifyController(bus, dev, fkt);
 		INC(idx);
 	END;
 END ScanPCIClass;
 
+PROCEDURE ScanIterate;
+VAR pci: PCI.Pci; res,r0,r8,class: LONGINT;
+BEGIN
+	PCI.StartIterate(pci);
+	WHILE PCI.Iterate(pci) DO
+	 	res := PCI.ReadConfigDword(pci.bus, pci.device, pci.function, 0, r0);
+		IF r0 # LONGINT(0FFFFFFFFH) THEN
+			res := PCI.ReadConfigDword(pci.bus, pci.device, pci.function, 8, r8);
+			class := r8 DIV 100H MOD 1000000H;
+			IF (class DIV 10000H = 01H) (* mass storage *)
+				(*(class >= 010100H) & (class <= 0101FFH) OR (class >= 010600H) & (class <= 0106FFH)
+				OR (class >= 010400H) & (class <= 0104FFH) OR (class >= 018000H) & (class <= 0180FFH) *) THEN
+				IdentifyController(pci.bus, pci.device, pci.function);
+			END
+		END;
+	END;
+END ScanIterate;
+
 PROCEDURE IdentifyControllers;
 VAR
 	class: LONGINT;
-	str: ARRAY 32 OF CHAR;
+	str: ARRAY 128 OF CHAR;
 	c: Controller;
+	i, num1, num2: LONGINT;
 BEGIN
 	nofControllers := 2;
 	Machine.GetConfig("ATADetect", str);
@@ -2269,13 +2287,17 @@ BEGIN
 		ScanPCI(105AH, 0D30H);	(* Asus A7V Promise *)
 		ScanPCI(1078H, 0102H);		(* Cyrix IDE *)
 		ScanPCI(1166H, 0211H);		(* Serverworks *)
+		ScanPCI(8086H, 27C0H); (* found on TL device *)
+
  	ELSIF str = "legacy" THEN
  		Show("Legacy mode..."); KernelLog.Ln;
 		NEW(c, 1F0H, 3F0H, 0, 14);
 		AddController(c);
 		NEW(c, 170H, 370H, 0, 15);
 		AddController(c);
-	ELSE
+	ELSIF ~ParseConfigString(str) THEN
+		ScanIterate; (* much faster *)
+		(*
 		Show("Scanning PCI bus for IDE & SATA class devices ..."); KernelLog.Ln;
 		FOR class := 010100H TO 0101FFH DO ScanPCIClass(class); END;	(* IDE *)
 		FOR class := 010600H TO 0106FFH DO ScanPCIClass(class); END;	(* SATA *)
@@ -2287,6 +2309,7 @@ BEGIN
 			Show("Scanning PCI bus for PCI mass storage class devices..."); KernelLog.Ln;
 			FOR class := 018000H TO 0180FFH DO ScanPCIClass(class); END;	(* Mass Storage *)
 		END;
+		*)
 	END;
 END IdentifyControllers;
 
@@ -2354,10 +2377,116 @@ BEGIN
 	expectedCount := 0;
 END ResetCounter;
 
+VAR dots: LONGINT;
+
+PROCEDURE Dot;
+BEGIN
+	KernelLog.String(".");
+	INC(dots); 	IF dots >= 128 THEN KernelLog.Ln; dots := 0 END;
+END Dot;
+
 PROCEDURE Show(CONST string : ARRAY OF CHAR);
 BEGIN
+	IF dots > 0 THEN KernelLog.Ln END;
+	dots := 0;
 	KernelLog.String("ATADisks: "); KernelLog.String(string);
 END Show;
+
+
+PROCEDURE ParseConfigString(CONST s: ARRAY OF CHAR): BOOLEAN;
+VAR pos: LONGINT; ch: CHAR; cmdbase, cnlbase, bmbase, irq: LONGINT; c: Controller;
+
+	PROCEDURE Char(VAR ch: CHAR);
+	BEGIN ch := s[pos]; IF ch # 0X THEN INC(pos) END;
+	END Char;
+
+	PROCEDURE Hex(VAR n: LONGINT): BOOLEAN;
+	VAR ch: CHAR;
+	BEGIN
+		ch := s[pos];
+		IF (ch >= "0") & (ch <= "9") THEN n := ORD(ch)-ORD("0"); INC(pos); RETURN TRUE
+		ELSIF (ch >= "A") & (ch <= "F") THEN n := ORD(ch)-ORD("A")+10; INC(pos); RETURN TRUE
+		ELSE RETURN FALSE
+		END;
+	END Hex;
+
+	PROCEDURE Number(VAR num: LONGINT);
+	VAR n: LONGINT;
+	BEGIN
+		num := 0;
+		WHILE Hex(n) DO num := num* 10H + n END;
+	END Number;
+
+BEGIN
+	IF s[0] = "X" THEN
+		pos := 1; (* skip "X" "*)
+		Show("Using predefined configuration string "); KernelLog.String(s); KernelLog.Ln;
+		REPEAT
+			Number(cmdbase); Char(ch);
+			Number(cnlbase); Char(ch);
+			Number(bmbase); Char(ch);
+			Number(irq); Char(ch);
+			NEW(c,cmdbase, cnlbase, bmbase, irq);
+			AddController(c);
+		UNTIL ch # ",";
+		RETURN TRUE
+	ELSE
+		RETURN FALSE
+	END;
+END ParseConfigString;
+
+PROCEDURE GetConfigString*(VAR s: ARRAY OF CHAR);
+VAR i: LONGINT; c: Controller; first: BOOLEAN; pos: LONGINT
+
+	PROCEDURE Char(c: CHAR);
+	BEGIN
+		s[pos] := c;
+		IF pos < LEN(s)-1 THEN INC(pos) END;
+	END Char;
+
+	PROCEDURE Hex(x: LONGINT): CHAR;
+	BEGIN
+		IF x < 10 THEN RETURN CHR(ORD("0")+x)
+		ELSE RETURN CHR(ORD("A")+x-10);
+		END;
+	END Hex;
+
+	PROCEDURE Number(n: LONGINT);
+	VAR h: ARRAY 8 OF CHAR; i: LONGINT;
+	BEGIN
+		ASSERT(n>=0);
+		i := 0;
+		REPEAT
+			h[i] := Hex(n MOD 10H); n := n DIV 10H; INC(i);
+		UNTIL n = 0;
+		WHILE(i>0) DO
+			DEC(i); Char(h[i]);
+		END;
+	END Number;
+
+BEGIN
+	pos := 0;
+	first := TRUE;
+	Char("X");
+	FOR i := 0 TO MaxControllers-1 DO
+		c := controller[i];
+		IF c # NIL THEN
+			IF ~first THEN Char(",") ELSE first := FALSE END;
+			Number(c.cmdbase);Char(":");
+			Number(c.cnlbase);Char(":");
+			Number(c.bmbase); Char(":");
+			Number(c.irq);
+		END;
+	END;
+	Char(0X);
+END GetConfigString;
+
+PROCEDURE ShowConfigString*;
+VAR s: ARRAY 128 OF CHAR;
+BEGIN
+	GetConfigString(s);
+	KernelLog.String("config = "); KernelLog.String(s); KernelLog.Ln;
+END ShowConfigString;
 
 (* Clean up unloaded module. *)
 PROCEDURE Cleanup;

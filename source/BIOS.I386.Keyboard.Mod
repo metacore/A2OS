@@ -513,7 +513,7 @@ PROCEDURE SetLayout*(context : Commands.Context); (** KeyboardLayoutFile ~ *)
 VAR layoutFilename : ARRAY 256 OF CHAR;
 BEGIN {EXCLUSIVE}
 	IF (keyboard # NIL) THEN
-		context.arg.SkipWhitespace; context.arg.String(layoutFilename);
+		context.arg.GetString(layoutFilename);
 		table := TableFromFile(layoutFilename);
 	ELSE
 		context.error.String("Keyboard: No keyboard found."); context.error.Ln;

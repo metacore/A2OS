@@ -318,7 +318,7 @@ VAR
 	BEGIN
 		t := Objects.running[Machine.ID()];
 		IF Machine.IFBit IN state.FLAGS THEN	(* enable interrupts again if they were enabled *)
-			Machine.Sti()(* avoid Processors.StopAll deadlock when waiting for locks below (fixme: remove) *)
+			Machine.Sti()	(* avoid Processors.StopAll deadlock when waiting for locks below (fixme: remove) *)
 		END;
 		IF (t = NIL) OR ~Machine.ExtendStack(t.stack, Machine.CR2()) THEN
 			IF TraceVerbose THEN
@@ -342,7 +342,6 @@ VAR
 			END
 		END
 	END PageFault;
-
 
 	PROCEDURE Init;
 	VAR i: LONGINT; s: ARRAY 8 OF CHAR;

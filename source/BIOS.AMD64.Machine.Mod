@@ -295,6 +295,12 @@ VAR
 
 	SSESupport-: BOOLEAN;
 	SSE2Support-: BOOLEAN;
+	SSE3Support-: BOOLEAN; (* PH 04/11*)
+	SSSE3Support-: BOOLEAN;
+	SSE41Support-: BOOLEAN;
+	SSE42Support-: BOOLEAN;
+	SSE5Support-: BOOLEAN;
+	AVXSupport-: BOOLEAN;
 
 	features-, features2-: SET;	(** processor features *)
 	fcr*: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
@@ -560,6 +566,54 @@ CODE {SYSTEM.586, SYSTEM.Privileged}
 	BTR EAX, 2		; clear TSD
 	MOV CR4, EAX
 END Setup586Flags;
+
+(* setup SSE and SSE2 extension *)
+PROCEDURE SetupSSE2Ext;
+CONST
+	FXSRFlag = 24; (*IN features from EBX*)
+	SSEFlag = 25;
+	SSE2Flag = 26;
+	SSE3Flag = 0; (*IN features2 from ECX*) (*PH 04/11*)
+	SSSE3Flag =9;
+	SSE41Flag =19; 
+	SSE42Flag =20;
+	SSE5Flag = 11; 
+	AVXFlag = 28;
+BEGIN
+	SSE2Support := FALSE;
+	SSE3Support := FALSE;
+	SSSE3Support := FALSE;
+	SSE41Support := FALSE;
+	SSE42Support := FALSE;
+	SSE5Support := FALSE;
+	AVXSupport := FALSE;
+	(* checking for SSE support *)
+	IF SSEFlag IN features THEN
+		SSESupport := TRUE;
+		(* checking for SSE2 support *)
+		IF SSE2Flag IN features THEN SSE2Support := TRUE;
+			(* checking for SSE3... support*)(*PH 04/11*)
+			IF SSE3Flag IN features2 THEN SSE3Support := TRUE;
+				IF SSSE3Flag IN features2 THEN	SSSE3Support := TRUE END;
+				IF SSE41Flag IN features2 THEN	SSE41Support := TRUE;
+					IF SSE42Flag IN features2 THEN	SSE42Support := TRUE END;
+				END;
+				IF SSE5Flag IN features2 THEN SSE5Support := TRUE END;
+				IF AVXFlag IN features2 THEN AVXSupport := TRUE END;
+			END;
+		END;
+		(* checking for support for the FXSAVE and FXRSTOR instruction *)
+		IF FXSRFlag IN features THEN InitSSE END;
+	END;
+END SetupSSE2Ext;
+
+PROCEDURE -InitSSE;
+CODE {SYSTEM.Pentium, SYSTEM.Privileged}
+	MOV	EAX, CR4
+	OR	EAX, 00000200H		; set bit 9 (OSFXSR)
+	AND	EAX, 0FFFFFBFFH	; delete bit 10 (OSXMMEXCPT)
+	MOV	CR4, EAX
+END InitSSE;
 
 (* Disable exceptions caused by math in new task. (1, p. 479) *)
 PROCEDURE -DisableMathTaskEx;

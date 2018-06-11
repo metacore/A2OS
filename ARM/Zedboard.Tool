@@ -83,7 +83,7 @@ Linker.Link --fileName=Init.Bin --displacement=0H -a
 ~
 Release.Build -b -f=ZBL:/BootloaderRelease.Tool --only=Bootstrap Zedboard ~
 
-MinosLinker.Link Init.bin 0H Zbl.bin
+MinosLinker.Link Init.Bin 0H Zbl.Bin
 Platform Board TclInit ZynqInitializer FPE64 Builtins PsUartMin Trace TraceDevice Caches Memory 
 MemoryMapping Interrupts Bit Clocks KernelUtils GlobalTimer Kernel Utils Strings Heaps OFS Modules 
 SdEnvironment Sd Disks SdDisks SdControllers OFSDiskVolumes Bootstrap ~

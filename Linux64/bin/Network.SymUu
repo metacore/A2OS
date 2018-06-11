@@ -84,9 +84,9 @@ TYPE
 		PROCEDURE ^  & Constr*(type, mtu, adrSize: LONGINT); 
 		PROCEDURE ^ Finalize*(connected: BOOLEAN); 
 		PROCEDURE ^ Linked*(): LONGINT; 
-		PROCEDURE ^ Send*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT; loopback: BOOLEAN); 
-		PROCEDURE ^ DoSend*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT); 
-		PROCEDURE ^ Loopback(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT); 
+		PROCEDURE ^ Send*(dst: LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT; loopback: BOOLEAN); 
+		PROCEDURE ^ DoSend*(dst: LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT); 
+		PROCEDURE ^ Loopback(dst: LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT); 
 		PROCEDURE ^ InstallReceiver*(owner: ANY; type: LONGINT; receiver: Receiver; isPacketValid: IsPacketValid; isPacketForSingleRec: IsPacketForSingleRec; isPacketAccepted: IsPacketAccepted; isForwardingOn: BOOLEAN); 
 		PROCEDURE ^ RemoveReceiver*(owner: ANY; type: LONGINT); 
 		PROCEDURE ^ InstallSendSniffer*(s: SendSniffer); 
@@ -105,7 +105,7 @@ TYPE
 
 	IsPacketValid* = PROCEDURE {DELEGATE}(VAR buffer: Buffer):BOOLEAN; 
 
-	SendSniffer* = PROCEDURE {DELEGATE}(dev: LinkDevice; VAR dst: LinkAdr; VAR type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: LONGINT):BOOLEAN; 
+	SendSniffer* = PROCEDURE {DELEGATE}(dev: LinkDevice; VAR dst: LinkAdr; VAR type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: LONGINT):BOOLEAN; 
 
 	ReceiveSniffer* = PROCEDURE {DELEGATE}(dev: LinkDevice; VAR type: LONGINT; buffer: Buffer):BOOLEAN; 
 VAR 

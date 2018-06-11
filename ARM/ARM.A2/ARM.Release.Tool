@@ -37,7 +37,7 @@ END
 PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kernel"
 	ARM { ZYNQ:/ARM.Runtime.Mod ZYNQ:/ARM.Initializer.Mod }
 	ZYNQ { ZYNQ:/Zynq.ARM.Platform.Mod }
-	ARM { ARM.FPE64.Mod ARM.ARMRuntime.Mod }
+	ARM { ARM.FPE64.Mod ARM.Builtins.Mod }
 	Trace.Mod
 	STATIC { ZYNQ:/Static.BootConfig.Mod }
 	DYNAMIC { ZYNQ:/Dynamic.BootConfig.Mod }
@@ -105,7 +105,7 @@ PACKAGE SystemTools ARCHIVE "SystemTools.zip" SOURCE "SystemToolsSrc.zip" DESCRI
 	UTF8Strings.Mod DynamicStrings.Mod XMLObjects.Mod XML.Mod XMLScanner.Mod XMLParser.Mod Configuration.Mod
 	FSTools.Mod
 
-	ProcessInfo0.Mod ProcessInfo.Mod CRC.Mod SystemVersion.Mod SystemTools.Mod
+	ProcessInfo0.Mod ProcessInfo.Mod CRC.Mod SystemVersion.Mod System.Mod
 END
 
 ## Drivers
@@ -232,7 +232,7 @@ PACKAGE GUI ARCHIVE "GUI.zip" SOURCE "GUISrc.zip" DESCRIPTION "GUI & WindowManag
 	WMProgressComponents.Mod
 
 	ContextualDependency.Mod WMTextView.Mod
-	WMInputMethods.Mod WMEditors.Mod WMDialogs.Mod Beep.Mod
+	WMInputMethods.Mod WMEditors.Mod WMDialogs.Mod
 
 	WMRestorable.Mod
 
@@ -399,7 +399,7 @@ END
 
 PACKAGE SystemExt ARCHIVE "SystemExt.zip" SOURCE "SystemExtSrc.zip" DESCRIPTION "Various system apps/tools"
 	BIT.Mod
-	V24.Mod SerialsVirtual.Mod
+	SerialsVirtual.Mod
 
 	OldDiskVolumes.Mod ISO9660Volumes.Mod PartitionsLib.Mod FATScavenger.Mod Partitions.Mod
 

@@ -74,7 +74,7 @@ PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION 
 
 	MINOS:/HAL/zynq/Zynq.Initializer.Mos
 	ARM.FPE64.Mod
-	ARM.ARMRuntime.Mod
+	ARM.Builtins.Mod
 	MINOS:/Trace.Mos
 	ZYNQ:/Zynq.PsUartMin.Mod
 	ZBL:Zynq.PsTraceDevice.Mos

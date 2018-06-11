@@ -10004,6 +10004,8 @@ TYPE
 					offset := 2;
 				END;
 				Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType, ToMemoryUnits(system,system.addressSize  *(meta.MethodTableOffset + x.methodNumber + offset)))));
+			ELSIF meta.simple THEN
+				Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType, ToMemoryUnits(system,system.addressSize  *(meta.MethodTableOffset + x.methodNumber)))));			
 			ELSE
 				Emit(Add(position,reg,tmp,IntermediateCode.Immediate(addressType, ToMemoryUnits(system,system.addressSize  *(meta.MethodTableOffset - x.methodNumber)))));
 			END;
@@ -11528,7 +11530,7 @@ TYPE
  		modulePointerSectionOffset: LONGINT; 
  		modulePointers: LONGINT;
  		
-		simple: BOOLEAN; (* simple = no methods, no module loading, no reflection *)
+		simple: BOOLEAN; (* simple = no module loading, no reflection *)
 
 		RecordBaseOffset: LONGINT;
 		MethodTableOffset: LONGINT; (* method table offset from zero *)

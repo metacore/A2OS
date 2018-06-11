@@ -54,7 +54,7 @@ DisplayLinear.VertBackPorch = 32;
 DisplayLinear.VertSyncPolarity = TRUE;
 ~
 
-SystemTools.DoCommands
+System.DoCommands
 
 (* 1. Mount Filesystems *)
 FSTools.Mount MINOS RelativeFileSystem ARM/Minos~
@@ -95,13 +95,13 @@ The bootloader is composed of 3 parts:
 Compiler.Compile -p=ARMA2 --metaData=simple
 	ZBL:/Boot.Mos
 ~
-StaticLinker.Link --fileName=Init.Bin --displacement=0H -a
+Linker.Link --fileName=Init.Bin --displacement=0H -a
 	Boot
 ~
 Release.Build -b -f=ZBL:/BootloaderRelease.Tool --only=Bootstrap Zybo ~
 
 MinosLinker.Link Init.bin 0H Zbl.bin
-Platform Board TclInit ZynqInitializer FPE64 ARMRuntime PsUartMin Trace TraceDevice Caches Memory 
+Platform Board TclInit ZynqInitializer FPE64 Builtins PsUartMin Trace TraceDevice Caches Memory 
 MemoryMapping Interrupts Bit Clocks KernelUtils GlobalTimer Kernel Utils Strings Heaps OFS Modules 
 SdEnvironment Sd Disks SdDisks SdControllers OFSDiskVolumes Bootstrap ~
 
@@ -148,10 +148,10 @@ ZYNQ:/Zynq.DisplayLinear.Mod
 ~
 
 
-StaticLinker.Link --fileName=A2.Bin --displacement=100000H -a --path=build/
-Runtime Initializer Platform FPE64 ARMRuntime Trace BootConfig PsUartMin PsUart TraceDevice PrivateWatchdog Machine Heaps Modules Objects Kernel KernelLog Plugins
+Linker.Link --fileName=A2.Bin --displacement=100000H -a --path=build/
+Runtime Initializer Platform FPE64 Builtins Trace BootConfig PsUartMin PsUart TraceDevice PrivateWatchdog Machine Heaps Modules Objects Kernel KernelLog Plugins
 Streams Pipes Commands Reals Clock Dates Strings Files Disks Reflection TrapWriters Traps Locks Options PsConfig SdEnvironment
-Sd SdDisks SdControllers Caches DiskVolumes DiskFS BitSets StringPool ObjectFile Diagnostics GenericLinker GenericLoader
+Sd SdDisks SdControllers Caches DiskVolumes DiskFS BitSets StringPool ObjectFile Diagnostics GenericLinker Loader
 BootConsole ~
 
 (* ShellController Shell Displays AcAxisIo StreamVideoOut AxiDma DisplayLinear UTF8Strings CLUTs Raster WMRectangles
@@ -226,7 +226,7 @@ Partitions.Format VDISK0#3 AosFS ~
 FSTools.Mount ZYNQA2 AosFS VDISK0#3 ~
 ZipTool.ExtractAll --prefix=ZYNQA2: --sourcePath=build/ --overwrite --silent
 	BootConsole.zip DMA.zip FpgaDisplay.zip FS.zip Kernel.zip Math.zip
-	SD.zip Shell.zip System.zip SystemExt.zip SystemTools.zip Usb.zip 
+	SD.zip Shell.zip System.zip SystemExt.zip System.zip Usb.zip 
 	Profiler.zip GUI.zip Gfx.zip Crypto.zip
 	Compiler.zip PET.zip Zip.zip
 ~
@@ -239,7 +239,7 @@ FSTools.CopyFiles -o
 FSTools.Unmount ZYNQA2 ~
 VirtualDisks.Uninstall VDISK0 ~
 
-SystemTools.Show 'Zybo Zynq A2 image has been built!' ~
+System.Show 'Zybo Zynq A2 image has been built!' ~
 FSTools.CloseFiles build/Zybo.ZynqA2.img ~
 ~
 
@@ -249,7 +249,7 @@ FSTools.CloseFiles build/Zybo.ZynqA2.img ~
 WinDisks.Install E: RW ~
 VirtualDisks.Install -b=512 VDISK0 build/Zybo.ZynqA2.img ~
 
-SystemTools.DoCommands
+System.DoCommands
 
 FSTools.Mount BOOT FatFS VDISK0#1 ~
 FSTools.Mount BL AosFS VDISK0#2 ~

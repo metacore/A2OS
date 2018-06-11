@@ -226,7 +226,7 @@ Partitions.Format VDISK0#3 AosFS ~
 FSTools.Mount ZYNQA2 AosFS VDISK0#3 ~
 ZipTool.ExtractAll --prefix=ZYNQA2: --sourcePath=build/ --overwrite --silent
 	BootConsole.zip DMA.zip FpgaDisplay.zip FS.zip Kernel.zip Math.zip
-	SD.zip Shell.zip System.zip SystemExt.zip System.zip Usb.zip 
+	SD.zip Shell.zip System.zip SystemExt.zip SystemTools.zip Usb.zip 
 	Profiler.zip GUI.zip Gfx.zip Crypto.zip
 	Compiler.zip PET.zip Zip.zip
 ~

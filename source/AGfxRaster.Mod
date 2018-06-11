@@ -52,7 +52,7 @@ MODULE GfxRaster; (** portable *)	(* eos  *)
 		END;
 
 		(** abstract raster context **)
-		Context* = OBJECT (Gfx.Context)
+		Context* = OBJECT { ABSTRACT } (Gfx.Context)
 		VAR
 			clipReg*: GfxRegions.Region;	(** region inside clip path **)
 			col*: Gfx.Color;	(** current color **)

@@ -74,7 +74,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		ClipAreaDesc* = RECORD END;
 
 		(** graphics context **)
-		Context* = OBJECT
+		Context* = OBJECT { ABSTRACT }
 		VAR
 			mode*: SET;	(** current drawing mode **)
 			path*: GfxPaths.Path;	(** current path in device coordinates (updated only if mode contains the 'Record' flag) **)

@@ -1808,7 +1808,7 @@ CONST
 					IF S & H THEN INCL(instruction.flags, flagSH) END;
 				END;
 				IF flagT IN format.flags THEN
-					IF ~B & ~P & ~W THEN INCL(instruction.flags, flagT) END;
+					IF ~B & ~P & W THEN INCL(instruction.flags, flagT) END;
 				END;
 				IF flagUserMode IN format.flags THEN
 					IF 22 IN codeSet THEN INCL(instruction.flags, flagUserMode) END

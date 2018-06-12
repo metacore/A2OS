@@ -136,7 +136,7 @@ BUILDS
 	Bios32C {
 		INCLUDE "BIOS32C BIOS NATIVE I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --traceModule=Trace --mergeSections"
+		COMPILEOPTIONS "--cooperative --traceModule=Trace"
 		TARGET "AMD"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
@@ -154,7 +154,7 @@ BUILDS
 	RpiC {
 		INCLUDE "RPIC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --traceModule=Trace --mergeSections"
+		COMPILEOPTIONS "--cooperative --traceModule=Trace"
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
@@ -165,7 +165,7 @@ BUILDS
 	ZynqC {
 		INCLUDE "ZYNQC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --traceModule=Trace --mergeSections"
+		COMPILEOPTIONS "--cooperative --traceModule=Trace"
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"

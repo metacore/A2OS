@@ -13,7 +13,6 @@ VAR
 	traceBufDef: ARRAY BufSize OF CHAR;	(* default trace buffer *)
 	traceBufAdr: ADDRESS; traceBufSize: SIZE;	(* current trace buffer virtual addresses *)
 	traceHead, traceTail: ADDRESS;
-	column*: LONGINT;	(** hint for Traps *)
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
 
@@ -26,7 +25,6 @@ BEGIN
 		IF ofs >= len THEN EXIT END;
 		c := buf[ofs];
 		IF c = 0X THEN EXIT END;
-		IF c = 0AX THEN column := 0 ELSE INC(column) END;
 		next := (traceTail+1) MOD traceBufSize;
 		IF next # traceHead THEN
 			SYSTEM.PUT8(traceBufAdr+traceTail, c);
@@ -303,7 +301,7 @@ END CloseBuffer;
 BEGIN
 	traceBufAdr := ADDRESSOF(traceBufDef[0]);
 	traceBufSize := LEN(traceBufDef);
-	traceHead := 0; traceTail := 0; column := 0;
+	traceHead := 0; traceTail := 0;
 END KernelLog.
 
 (**

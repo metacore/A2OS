@@ -68,7 +68,7 @@ VAR options : Options.Options; window : Window; filename : Files.FileName; forma
 BEGIN
 	NEW(options);
 	options.Add("f", "format", Options.String);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF ~options.GetString("format", format) THEN format := "AUTO"; END;
 		NEW(window, NIL);
 		IF context.arg.GetString(filename) THEN

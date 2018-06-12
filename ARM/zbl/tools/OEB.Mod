@@ -389,7 +389,7 @@ VAR
 		opt.Add(0X, "start", Options.Flag);
 		opt.Add(0X, "stop", Options.Flag);
 		opt.Add('s', "server", Options.Integer);
-		IF ~opt.Parse(context.arg, context.out) THEN
+		IF ~opt.Parse(context.arg, context.error) THEN
 			context.result := 1;
 			RETURN
 		END;

@@ -655,7 +655,7 @@ VAR options : Options.Options; tester: Tester; report: TestSuite.StreamReport; p
 BEGIN
 	NEW(options);
 	options.Add("p", "path", Options.String);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF ~options.GetString("path", path) THEN path := ""; END;
 		NEW(tester, context.out, path);
 		NEW(report, context.out);

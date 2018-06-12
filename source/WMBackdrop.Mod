@@ -316,7 +316,7 @@ VAR
 BEGIN {EXCLUSIVE}
 	NEW(options);
 	options.Add("f", "fullscreen", Options.Flag);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		context.arg.SkipWhitespace; context.arg.String(name);
 
 		IF options.GetFlag("fullscreen") THEN

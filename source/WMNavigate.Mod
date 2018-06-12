@@ -1596,7 +1596,7 @@ BEGIN {EXCLUSIVE}
 	options.Add("v", "viewport", Options.Flag);
 	options.Add("n", "names", Options.Flag);
 
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		showWindowNames := options.GetFlag("names");
 		context.arg.SkipWhitespace; context.arg.Int(id, FALSE);
 		context.arg.SkipWhitespace; context.arg.Int(x, FALSE);
@@ -1803,7 +1803,7 @@ VAR options : Options.Options; window : WMWindowManager.Window; x, y : LONGINT;
 BEGIN {EXCLUSIVE}
 	NEW(options);
 	options.Add("d", "display", Options.Flag);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF context.arg.GetInteger(x, FALSE) & context.arg.GetInteger(y, FALSE) THEN
 			IF options.GetFlag("display") THEN
 				x := x * width;
@@ -1843,7 +1843,7 @@ BEGIN
 	options.Add("s", "showTransition", Options.Flag);
 	options.Add("d", "display", Options.Flag);
 
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		x := 0; y := 0; w := 0; h := 0;
 		context.arg.SkipWhitespace; context.arg.Int(x, FALSE);
 		context.arg.SkipWhitespace; context.arg.Int(y, FALSE);

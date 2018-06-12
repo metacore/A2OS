@@ -3079,7 +3079,7 @@ BEGIN
 	options.Add("f", "file", Options.String);
 	options.Add(0X, "exclude", Options.String);
 
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF ~options.GetString("file", filename) THEN COPY(DefaultPackagesFile, filename); END;
 		modulename := "";
 		context.arg.SkipWhitespace; context.arg.String(buildname);

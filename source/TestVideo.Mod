@@ -762,7 +762,7 @@ BEGIN
 	NEW(options);
 	options.Add("t","threshold",Options.Integer);
 	threshold := 50;
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF options.GetInteger("threshold", threshold) THEN END;
 	END;
 	VideoExample.InstallFrameHandler(ThresholdFilter)
@@ -909,7 +909,7 @@ BEGIN
 	options.Add("p","pixelThreshold", Options.Integer);
 	threshold := 50;
 	pixThreshold := 50;
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF options.GetInteger("threshold", threshold) THEN END;
 		IF options.GetInteger("pixelThreshold", pixThreshold) THEN END;
 	END;

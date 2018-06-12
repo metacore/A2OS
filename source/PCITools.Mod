@@ -465,7 +465,7 @@ VAR
 BEGIN {EXCLUSIVE}
 	NEW(options);
 	options.Add("d", "details", Options.Flag);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		context.out.String("PCITools: PCI bus enumeration:"); context.out.Ln;
 		IF PCI.PCIPresent(version, lastPCIBus, hw) = PCI.Done THEN
 			context.out.String("PCI Bus Information: "); context.out.Int(lastPCIBus + 1, 0); context.out.String(" bus(ses) found, PCI version: ");

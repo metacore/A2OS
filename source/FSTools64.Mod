@@ -404,7 +404,7 @@ BEGIN
 	NEW(options);
 	options.Add("s", "subdirectories", Options.Flag);
 	options.Add("d", "directories", Options.Flag);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF context.arg.GetString(pattern) & context.arg.GetString(commandProcStr) THEN
 			Commands.Split(commandProcStr, moduleName, procedureName, res, msg);
 			IF (res = Commands.Ok) THEN
@@ -449,7 +449,7 @@ BEGIN
 	options.Add("c", "cr", Options.Flag);
 	options.Add("r", "remove", Options.Flag);
 	options.Add("a", "append", Options.Flag);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF context.arg.GetString(filename) THEN
 			cr := options.GetFlag("cr");
 			removeWhitespace := options.GetFlag("remove");

@@ -1145,7 +1145,7 @@ VAR cpuInfo : CpuInformation; options : Options.Options;
 BEGIN
 	NEW(options);
 	options.Add("d", "details", Options.Flag);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF CpuIdSupported() THEN
 			GetCpuInformation(cpuInfo);
 			IF options.GetFlag("details") THEN

@@ -308,7 +308,7 @@ BEGIN
 	NEW(options);
 	options.Add("n", "navigation", Options.Flag);
 	options.Add("s", "stayOnTop", Options.Flag);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		flags := {WMWindowManager.FlagHidden};
 		IF options.GetFlag("navigation") THEN INCL(flags, WMWindowManager.FlagNavigation); END;
 		IF options.GetFlag("stayOnTop") THEN INCL(flags, WMWindowManager.FlagStayOnTop); END;

@@ -171,7 +171,7 @@ VAR
 BEGIN
 	NEW(options);
 	options.Add("b", "blocksize", Options.Integer);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		context.arg.SkipWhitespace; context.arg.String(filename);
 		context.arg.SkipWhitespace; context.arg.Int(nbrOfBlocks, FALSE);
 		IF ~options.GetInteger("blocksize", blocksize) THEN blocksize := DefaultBlocksize; END;
@@ -209,7 +209,7 @@ BEGIN
 	options.Add("c", "cylinders", Options.Integer);
 	options.Add("h", "heads", Options.Integer);
 	options.Add("s", "sectors", Options.Integer);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		(* disk geometry in CHS *)
 		IF ~options.GetInteger("blocksize", blocksize) THEN blocksize := DefaultBlocksize; END;
 		IF ~options.GetInteger("cylinders", cylinders) THEN cylinders := 0; END;

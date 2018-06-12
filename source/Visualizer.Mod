@@ -1511,7 +1511,7 @@ BEGIN
 	options.Add("p", "procedures", Options.String);
 	options.Add("e", "exclude", Options.String);
 
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF CheckOptions(options, context.out) THEN
 			IF ~options.GetString("file", outputFilename) THEN
 				COPY(DefaultOutputFilename, outputFilename);

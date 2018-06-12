@@ -103,7 +103,7 @@ BEGIN
 	NEW(options);
 	options.Add("b", "blocking", Options.Flag);
 	options.Add("f","font",Options.String);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		context.arg.SkipWhitespace; context.arg.String(command);
 		NEW(writer, command, 700, 480, FALSE);
 		IF options.GetString("font",fontName) THEN writer.SetFontName(fontName) END;

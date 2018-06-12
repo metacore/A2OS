@@ -1108,7 +1108,7 @@ TYPE
 			options.Add("l","logFile", Options.String);
 			options.Add("a","address",Options.Integer);
 			options.Add("w","instructionWidth",Options.Integer);
-			IF options.Parse(context.arg, context.out) THEN
+			IF options.Parse(context.arg, context.error) THEN
 				IF ~options.GetInteger("w",instructionWidth) THEN instructionWidth:=18 END;
 				TRACE(instructionWidth);
 				IF ~options.GetInteger("a", address) THEN address := 0 END;

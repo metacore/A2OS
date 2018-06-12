@@ -2687,7 +2687,7 @@ BEGIN
 	NEW(options);
 	options.Add("e","external",Options.Flag);
 	options.Add("f", "format", Options.String);
-	IF options.Parse(context.arg, context.out) THEN
+	IF options.Parse(context.arg, context.error) THEN
 		IF (context.caller # NIL) & (context.caller IS Window) & ~options.GetFlag("external") THEN
 			window := context.caller(Window);
 		ELSE

@@ -16,7 +16,7 @@ MODULE Options; (** AUTHOR "staubesv"; PURPOSE "Command line options parsing"; *
  *
  *	3.	Parse options at the current position of the context argument stream (this will skip whitespace and options on the stream)
  *
- *			IF options.Parse(context.arg, context.out) THEN (* some useful work *) END;
+ *			IF options.Parse(context.arg, context.error) THEN (* some useful work *) END;
  *
  *		Note: Parse will output an error message on the context error stream if option parsing fails
  *

@@ -2909,7 +2909,7 @@ CONST
 			options.Add("l","logFile", Options.String);
 			options.Add("a","address",Options.Integer);
 			options.Add("o","offset",Options.Integer);
-			IF options.Parse(context.arg, context.out) THEN
+			IF options.Parse(context.arg, context.error) THEN
 				IF ~options.GetInteger("a", address) THEN address := 0 END;
 				NEW(disassembler, context.out);
 				code := ReadCode(codeFile);

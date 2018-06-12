@@ -45,7 +45,7 @@ TYPE
 	(** Implements a recursive lock *)
 	RecursiveLock* = OBJECT
 	VAR
-		lockLevel : LONGINT;
+		lockLevel : SIZE;
 		lockedBy : ANY;
 
 		PROCEDURE &New*;
@@ -90,7 +90,7 @@ TYPE
 
 	ReaderLockInfo = RECORD
 		owner : ANY;
-		lockLevel : LONGINT
+		lockLevel : SIZE
 	END;
 
 	ReaderLockList = POINTER TO ARRAY OF ReaderLockInfo;
@@ -104,14 +104,14 @@ TYPE
 	*)
 	RWLock* = OBJECT
 	VAR
-		lockLevel : LONGINT;
+		lockLevel : SIZE;
 		lockedBy : ANY; (* writer *)
 		lastReader : ANY;
-		nofReaders : LONGINT;
+		nofReaders : SIZE;
 		readers : ReaderLockList;
 		wlReleaseHandler : LockReleasedHandler;
 		DEADLOCK : BOOLEAN;
-		nofReadLocks, nofWriteLocks : LONGINT; (* statistics *)
+		nofReadLocks, nofWriteLocks : SIZE; (* statistics *)
 
 		PROCEDURE &New*;
 		BEGIN
@@ -166,7 +166,7 @@ TYPE
 		END HasWriteLock;
 
 		(** Returns the locklevel of the write lock. [Must hold write lock] *)
-		PROCEDURE GetWLockLevel*() : LONGINT;
+		PROCEDURE GetWLockLevel*() : SIZE;
 		BEGIN
 			ASSERT(HasWriteLock(), 3000);
 			RETURN lockLevel
@@ -179,7 +179,7 @@ TYPE
 
 		(** acquire a read-lock on the object *)
 		PROCEDURE AcquireRead*;
-		VAR me, other : ANY; i : LONGINT; found : BOOLEAN; t : ReaderLockList;
+		VAR me, other : ANY; i : SIZE; found : BOOLEAN; t : ReaderLockList;
 		BEGIN {EXCLUSIVE}
 			IF Statistics THEN INC(nofReadLocks); END;
 			me := Objects.ActiveObject();
@@ -203,7 +203,7 @@ TYPE
 
 		(** release the read lock on the object. MUST hold lock *)
 		PROCEDURE ReleaseRead*;
-		VAR me : ANY; i : LONGINT; found : BOOLEAN;
+		VAR me : ANY; i : SIZE; found : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			me := Objects.ActiveObject();
 			found := FALSE;
@@ -233,7 +233,7 @@ TYPE
 		END HasReadLock;
 
 		PROCEDURE InternalHasReadLock(): BOOLEAN;
-		VAR me : ANY; i : LONGINT;
+		VAR me : ANY; i : SIZE;
 		BEGIN
 			me := Objects.ActiveObject();
 			i := 0; WHILE (i < nofReaders) DO
@@ -245,7 +245,7 @@ TYPE
 
 		(** Remove all locks owned by the caller *)
 		PROCEDURE Reset*;
-		VAR i, j : LONGINT;me : ANY;
+		VAR i, j : SIZE;me : ANY;
 		BEGIN {EXCLUSIVE}
 			me := Objects.ActiveObject();
 			KernelLog.String("!!! LOCK RESET !!!");

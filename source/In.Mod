@@ -12,7 +12,7 @@ BEGIN
 	RETURN GetArg().GetChar(ch);
 END Char;
 
-PROCEDURE Int*(VAR i: LONGINT; hex = TRUE: BOOLEAN): BOOLEAN;
+PROCEDURE Int*(VAR i: WORD; hex = TRUE: BOOLEAN): BOOLEAN;
 (* hex = TRUE means that hex numbers are allowed. A hex number must have the "H" postfix *)
 BEGIN
 	RETURN GetArg().GetInteger(i, hex);

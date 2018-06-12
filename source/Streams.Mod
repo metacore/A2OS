@@ -388,7 +388,7 @@ TYPE
 
 
 	(** Write LONGREAL x  using n character positions. *)
-		PROCEDURE Float*( x: LONGREAL;  n: LONGINT );
+		PROCEDURE Float*( x: LONGREAL;  n: WORD );
 		(* BM 1993.4.22. Do not simplify rounding! *)
 		VAR e, h, l, i: LONGINT;  z: LONGREAL;
 			d: ARRAY 16 OF CHAR;
@@ -429,7 +429,7 @@ TYPE
 		END Float;
 
 	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
-		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: LONGINT );
+		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: WORD );
 		(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
 		VAR e, h, l, i: LONGINT;  r, z: LONGREAL;
 			d: ARRAY 16 OF CHAR;

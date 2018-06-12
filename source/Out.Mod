@@ -29,12 +29,12 @@ BEGIN
 	Commands.GetContext().out.Set(s);
 END Set;
 
-PROCEDURE Int*(i: HUGEINT; n = 1: LONGINT);
+PROCEDURE Int*(i: HUGEINT; n = 1: WORD);
 BEGIN
 	Commands.GetContext().out.Int(i,n);
 END Int;
 
-PROCEDURE Hex*(i: HUGEINT; n = -16: LONGINT);
+PROCEDURE Hex*(i: HUGEINT; n = -16: WORD);
 BEGIN
 	Commands.GetContext().out.Hex(i,n);
 END Hex;
@@ -44,7 +44,7 @@ BEGIN
 	Commands.GetContext().out.Address(a);
 END Address;
 
-PROCEDURE Float*(x: LONGREAL; n = 4, f= 3, d=0: LONGINT);
+PROCEDURE Float*(x: LONGREAL; n = 4, f= 3, d=0: WORD);
 BEGIN
 	Commands.GetContext().out.FloatFix(x,n,f,d);
 END Float;

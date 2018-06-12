@@ -7,7 +7,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 	VAR relTo: PathName; fs: Files.FileSystem;
 
 		PROCEDURE &InitFileSystem*( relTo: ARRAY OF CHAR; fs: Files.FileSystem);
-		VAR ch: CHAR;i: LONGINT;
+		VAR ch: CHAR;i: SIZE;
 		BEGIN
 			SELF.fs := fs;
 			INCL(flags,Files.NeedsPrefix);
@@ -54,7 +54,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			MakeRel(name,new); fs.CreateDirectory0(new,res);
 		END CreateDirectory0;
 
-		PROCEDURE Delete0* (name: ARRAY OF CHAR;     VAR key, res: LONGINT);
+		PROCEDURE Delete0* (name: ARRAY OF CHAR;     VAR key: LONGINT; VAR res: WORD);
 		VAR new: PathName;
 		BEGIN
 			MakeRel(name,new); fs.Delete0(new,key,res);
@@ -76,7 +76,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			RETURN fs.FileKey(new);
 		END FileKey;
 
-		PROCEDURE RemoveDirectory0* (name: ARRAY OF CHAR;     force: BOOLEAN;     VAR key, res: LONGINT);
+		PROCEDURE RemoveDirectory0* (name: ARRAY OF CHAR;     force: BOOLEAN;     VAR key: LONGINT; VAR res: WORD);
 		VAR new: PathName;
 		BEGIN
 			MakeRel(name,new);  fs.RemoveDirectory0(new,force,key,res);
@@ -91,7 +91,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 	END FileSystem;
 
 	PROCEDURE RemovePrefix(VAR name: ARRAY OF CHAR);
-	VAR i,j: LONGINT;
+	VAR i,j: SIZE;
 	BEGIN
 		WHILE(name[i] # 0X) & (name[i] # ":") DO
 			INC(i);

@@ -30,7 +30,7 @@ TYPE
 		in-, arg- : Streams.Reader;
 		out-, error- : Streams.Writer;
 		caller-: OBJECT;
-		result*: LONGINT;
+		result*: WORD;
 
 		PROCEDURE &Init*(in, arg : Streams.Reader; out, error : Streams.Writer; caller: OBJECT);
 		BEGIN
@@ -109,7 +109,7 @@ TYPE
 		msg : ARRAY 128 OF CHAR; res : WORD;
 
 		module : Modules.Module;
-		state : LONGINT;
+		state : WORD;
 		exception : BOOLEAN;
 
 		PROCEDURE &Init*(CONST moduleName, commandName : Modules.Name; context : Context);
@@ -129,7 +129,7 @@ TYPE
 			state := Started;
 		END Init;
 
-		PROCEDURE Join(this : LONGINT; VAR res : WORD; VAR msg : ARRAY OF CHAR);
+		PROCEDURE Join(this : WORD; VAR res : WORD; VAR msg : ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
 			AWAIT(state >= this);
 			res := SELF.res; COPY(SELF.msg, msg);
@@ -201,7 +201,7 @@ END SendNothing;
 	command string is syntactically correct, i.e. is of the form 'ModuleName "." [ProcedureName]' *)
 
 PROCEDURE Split*(CONST cmdstr : ARRAY OF CHAR; VAR moduleName, procedureName : Modules.Name; VAR res : WORD; VAR msg : ARRAY OF CHAR);
-VAR i, j : LONGINT; maxlen, cmdlen : LONGINT;
+VAR i, j, maxlen, cmdlen : SIZE;
 BEGIN
 	res := CommandParseError;
 	moduleName := ""; procedureName := ""; msg := "";

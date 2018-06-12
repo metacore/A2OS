@@ -133,7 +133,7 @@ CONST
 	END CheckHeapAddress;
 	
 	PROCEDURE Wait(w: Streams.Writer);
-	VAR i: LONGINT;
+	VAR i: WORD;
 	BEGIN
 		IF LineDelay > 0 THEN
 			FOR i := 0 TO LineDelay DO END;
@@ -754,14 +754,14 @@ CONST
 	Search = RECORD
 		name: ARRAY 256 OF CHAR; 	(* for search by name *)
 		nameOffset: SIZE;				(* to incrementally search through scopes *)
-		minLevel: LONGINT; 					(* in order to stop scope search *)
+		minLevel: SIZE; 					(* in order to stop scope search *)
 		pc: ADDRESS;							(* for search by address *)
 		pos: SIZE;							(* symbol position in stream, -1 if not found *)
 		found: BOOLEAN;						(* if found *)
 	END;
 
 	(* check if stream contains the string part stored in search record with respective offset *)
-	PROCEDURE FindString(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	PROCEDURE FindString(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search);
 	VAR ofs: SIZE;
 	BEGIN
 		IF find.minLevel > level THEN
@@ -785,7 +785,7 @@ CONST
 	END FindString;
 
 	(* find a symbol by name or pc starting from the procedure stream section *)
-	PROCEDURE FindInProcedure(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	PROCEDURE FindInProcedure(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search);
 	VAR name: ARRAY 128 OF CHAR;  start, end: ADDRESS; pos: SIZE; 
 	BEGIN
 		pos := offset; 
@@ -813,7 +813,7 @@ CONST
 	END FindInProcedure;
 
 	(* find a symbol by name or pc starting from the variable stream section *)
-	PROCEDURE FindInVariable(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	PROCEDURE FindInVariable(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search);
 	VAR name: ARRAY 128 OF CHAR;  pos: SIZE; 
 	BEGIN
 		pos := offset; 
@@ -830,7 +830,7 @@ CONST
 	END FindInVariable; 
 
 	(* find a symbol by name or pc starting from the type declaration stream section *)
-	PROCEDURE FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	PROCEDURE FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search);
 	VAR name: ARRAY 128 OF CHAR;  adr, pos: SIZE; 
 	BEGIN
 		pos := offset;
@@ -845,7 +845,7 @@ CONST
 		IF refs[offset] = sfScopeBegin THEN FindInScope(refs, offset, level+1, find) END;
 	END FindInTypeDeclaration; 
 	
-	PROCEDURE FindInModule(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	PROCEDURE FindInModule(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search);
 	VAR pos: SIZE;
 	BEGIN
 		pos := offset;
@@ -860,7 +860,7 @@ CONST
 	END FindInModule;
 
 	(* find a symbol by name or pc in a scope in the stream *)
-	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search);
+	PROCEDURE FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search);
 	VAR no,i: SIZE;
 	BEGIN
 		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END;
@@ -1000,7 +1000,7 @@ CONST
 
 	(** Write a process's state in one line. *)
 	PROCEDURE WriteProcess*(w: Streams.Writer; p: Objects.Process);
-	VAR adr: ADDRESS; mode: LONGINT; m: Modules.Module;
+	VAR adr: ADDRESS; mode: WORD; m: Modules.Module;
 	BEGIN
 		IF p # NIL THEN
 			w.Int(p.id, 5);

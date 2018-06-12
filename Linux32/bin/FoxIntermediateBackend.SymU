@@ -283,7 +283,6 @@ TYPE
 		inData: BOOLEAN; 
 		emitLabels: BOOLEAN; 
 		builtinsModuleName: SyntaxTree.IdentifierString; 
-		newObjectFile: BOOLEAN; 
 		indexCounter: LONGINT; 
 		profile: BOOLEAN; 
 		profileId, profileInit: IntermediateCode.Section; 
@@ -304,7 +303,7 @@ TYPE
 		isUnchecked: BOOLEAN; 
 		modifyAssignmentCounter: LONGINT; 
 
-		PROCEDURE ^  & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend; newObjectFile: BOOLEAN); 
+		PROCEDURE ^  & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend); 
 		PROCEDURE ^ SwitchContext(new: IntermediateCode.Section): Context; 
 		PROCEDURE ^ ReturnToContext(context: Context); 
 		PROCEDURE ^ NewSection(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): IntermediateCode.Section; 
@@ -601,7 +600,6 @@ TYPE
 		trace-: BOOLEAN; 
 		traceString-: SyntaxTree.IdentifierString; 
 		traceModuleName-: SyntaxTree.IdentifierString; 
-		newObjectFile-: BOOLEAN; 
 		profile-: BOOLEAN; 
 		noRuntimeChecks: BOOLEAN; 
 		simpleMetaData-: BOOLEAN; 
@@ -622,7 +620,7 @@ TYPE
 		PROCEDURE ^ ProcessSyntaxTreeModule*(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule; 
 		PROCEDURE ^ ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule; 
 		PROCEDURE ^ GetDescription*(VAR instructionSet: ARRAY OF CHAR); 
-		PROCEDURE ^ SetNewObjectFile*(newObjectFile: BOOLEAN; simpleMetaData: BOOLEAN); 
+		PROCEDURE ^ SetSimpleMetaData*(simpleMetaData: BOOLEAN); 
 		PROCEDURE ^ SetTraceModuleName(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ DefineOptions*(options: Options.Options); 
 		PROCEDURE ^ GetOptions*(options: Options.Options); 

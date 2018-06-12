@@ -120,8 +120,8 @@ CODE{SYSTEM.i386}
 	; [EBP+r+4]:[EBP+r+0] = multiplier (r)
 	; Out: EDX:EAX = (multiplicand * multiplier) % 2^64
 	; Destroys: EAX, ECX, EDX, EFlags
-	MOV EDX, [EBP+r+4] 		; multiplicand_hi
-	MOV ECX, [EBP+l+4] 		; multiplier_hi
+	MOV EDX, [EBP+r+4] 		; multiplier_hi
+	MOV ECX, [EBP+l+4] 		; multiplicand_hi
 	OR EDX,ECX 				; One operand >= 2^32?
 	MOV EDX, [EBP+l+0] 		; multiplier_lo
 	MOV EAX, [EBP+r+0] 		; multiplicand_lo

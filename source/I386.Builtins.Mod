@@ -120,8 +120,8 @@ CODE{SYSTEM.i386}
 	; [EBP+r+4]:[EBP+r+0] = multiplier (r)
 	; Out: EDX:EAX = (multiplicand * multiplier) % 2^64
 	; Destroys: EAX, ECX, EDX, EFlags
-	MOV EDX, [EBP+l+4] 		; multiplicand_hi
-	MOV ECX, [EBP+r+4] 		; multiplier_hi
+	MOV EDX, [EBP+r+4] 		; multiplicand_hi
+	MOV ECX, [EBP+l+4] 		; multiplier_hi
 	OR EDX,ECX 				; One operand >= 2^32?
 	MOV EDX, [EBP+l+0] 		; multiplier_lo
 	MOV EAX, [EBP+r+0] 		; multiplicand_lo
@@ -129,10 +129,10 @@ CODE{SYSTEM.i386}
 	MUL EDX 					; multiplicand_lo * multiplier_lo
 	JMP done 					; Done, return to caller.
 	twomul:
-	IMUL EDX, [EBP+l+4]		; p3_lo = multiplicand_hi * multiplier_lo
+	IMUL EDX, [EBP+r+4]		; p3_lo = multiplicand_hi * multiplier_lo
 	IMUL ECX,EAX 			; p2_lo = multiplier_hi * multiplicand_lo
 	ADD ECX, EDX 			; p2_lo + p3_lo
-	MUL DWORD [EBP+r+0] 	; p1 = multiplicand_lo * multiplier_lo
+	MUL DWORD [EBP+l+0] 	; p1 = multiplicand_lo * multiplier_lo
 	ADD EDX,ECX 			; p1 + p2_lo + p3_lo = result in EDX:EAX
 	done:
 	POP	ECX

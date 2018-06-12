@@ -20,7 +20,7 @@ TYPE
 	(* generic property object that provides lock-free access to its value *)
 	Property* = OBJECT
 	VAR
-		locks: SIZE;
+		locks: WORD;
 		container*: OBJECT;
 
 		PROCEDURE &InitProperty;
@@ -28,7 +28,7 @@ TYPE
 		END InitProperty;
 
 		PROCEDURE AcquireRead;
-		VAR locks: SIZE;
+		VAR locks: WORD;
 		BEGIN
 			LOOP
 				locks := SELF.locks;
@@ -42,7 +42,7 @@ TYPE
 		END ReleaseRead;
 
 		PROCEDURE AcquireWrite;
-		VAR locks: SIZE;
+		VAR locks: WORD;
 		BEGIN
 			LOOP
 				locks := SELF.locks;

@@ -3,7 +3,7 @@ A2 on ARM
 
 For Zynq/ZedBoard targets, the compilation line is:
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --destPath=arm.bin
+Compiler.Compile -b=ARM --traceModule=Trace --destPath=arm.bin
 	ARM.A2/Initializer.Zynq.Mod
 
 	ARM.A2/Runtime.Mod

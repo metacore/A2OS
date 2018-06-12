@@ -1488,9 +1488,9 @@ END FoxIntermediateLinker.
 
 System.FreeDownTo FoxIntermediateLinker ~
 FoxIntermediateObjectFile.Show Test ~
-FoxIntermediateLinker.Link -b=TRM --objectFile=Generic --targetFile=Test Test ~
+FoxIntermediateLinker.Link -b=TRM --targetFile=Test Test ~
 FoxGenericObjectFile.Show Test.Gof ~
 
-FoxIntermediateLinker.Test -b=TRM --objectFile=Generic --targetFile=Test --extension=.IroT TestActiveCells.TestCellnet.Controller MyController_Name  ~
+FoxIntermediateLinker.Test -b=TRM --targetFile=Test --extension=.IroT TestActiveCells.TestCellnet.Controller MyController_Name  ~
 
 FoxGenericObjectFile.Show MyController_Name.Gof ~

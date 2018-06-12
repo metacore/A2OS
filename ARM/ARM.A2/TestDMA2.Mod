@@ -107,7 +107,7 @@ BEGIN
 	Trace.String(" => Differences: "); Trace.Int(count, 0); Trace.String("/"); Trace.Int(Size, 0); Trace.Ln*)
 END TestDMA.
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic  --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	basel/ARM.A2/ARM.Streams.Mod 
 	basel/ARM.A2/ARM.Math.Mod
 	Random.Mod

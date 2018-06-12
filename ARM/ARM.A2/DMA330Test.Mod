@@ -643,7 +643,7 @@ BEGIN
 	Trace.String(" :: Stack Transfer Errors: "); Trace.Int(count, 0); Trace.String("/"); Trace.Int(Repeats, 0); Trace.Ln
 END DMA330.
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	basel/ARM.A2/DMA330Test.Mod
 ~
 

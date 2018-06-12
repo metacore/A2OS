@@ -1,6 +1,6 @@
 To compile the A2 kernel, see A2.Tool.
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	basel/ARM.A2/KernelLog.Mod
 
 	(* Non-USB modules needed for the HID Driver *)
@@ -28,13 +28,13 @@ Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
 	Serials.Mod BluetoothTest.Mod
 ~
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	(* Video modules *)
 	basel/ARM.A2/UsbVideoDesc.Mod
 	basel/ARM.A2/UsbVideo.Mod
 ~
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	Caches.Mod DiskVolumes.Mod
 ~
 
@@ -65,7 +65,7 @@ StaticLinker.Link --fileName=Test.Bin --displacement=100000H -a
 =======================================
 For testing the EHCI controller on the ZedBoard, here is a simple initialization module:
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	basel/ARM.A2/TestUsbEhci.Mod
 	basel/ARM.A2/USBTestWatcher.Mod
 ~

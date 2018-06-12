@@ -20,7 +20,7 @@ Release.Build
 # Create image for bootable USB  (A2USB.img)
 SystemTools.DoCommands
 
-	Compiler.Compile --objectFile=Generic --mergeSections -b=AMD --objectFileExtension=.Gox --symbolFileExtension=.Syx --destPath=bin/
+	Compiler.Compile --mergeSections -b=AMD --objectFileExtension=.Gox --symbolFileExtension=.Syx --destPath=bin/
 		UsbDebug.Mod
 
 		(* NEW *)

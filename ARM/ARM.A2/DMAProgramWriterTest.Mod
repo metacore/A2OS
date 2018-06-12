@@ -884,7 +884,7 @@ Release.Build -b -f=ARM.Release.Tool -o="--traceModule=Trace" --only="System Ran
 Release.Build -l -f=ARM.Release.Tool --only="Kernel System Random UsbCore Shell" ZynqA2 ~
 
 SystemTools.DoCommands
-	Compiler.Compile -b=ARM --objectFile=Generic --mergeSections
+	Compiler.Compile -b=ARM --mergeSections
 		Zynq.PsConfig.Mod
 		TestFifo/Zynq.AcAxisIo.Mod
 		DMA330.Mod

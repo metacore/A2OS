@@ -284,7 +284,7 @@ BEGIN
 END TestPlFifo.
 
 SystemTools.DoCommands
-	Compiler.Compile -b=ARM --objectFile=Generic --mergeSections
+	Compiler.Compile -b=ARM --mergeSections
 		Zynq.PsConfig.Mod
 		TestFifo/Zynq.AcAxisIo.Mod
 		DMA330.Mod

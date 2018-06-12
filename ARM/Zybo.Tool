@@ -134,7 +134,7 @@ Release.Build -b -f=ZBL:/BootloaderRelease.Tool --only=MD5Checksum Zybo ~
 FSTools.CreateDirectory build/ ~
 FSTools.DeleteFiles build/* ~
 Release.Build -b --path='build/' -f=ZYNQ:/ARM.Release.Tool
-	-o='--objectFile=Generic --symbolFile=Textual --mergeSections --traceModule=Trace --noInitLocals --useFPU64' --only=Kernel
+	-o='--mergeSections --traceModule=Trace --noInitLocals --useFPU64' --only=Kernel
 	ZynqDynamic
 ~
 Release.Build -b --path='build/' -f=ZYNQ:/ARM.Release.Tool --only='System SD BootConsole' ZynqDynamic ~
@@ -143,7 +143,7 @@ Release.Build -b -z --path='build/' -f=ZYNQ:/ARM.Release.Tool
 	--only='System SystemExt FpgaDisplay Kernel Math SD Shell SystemTools Usb DMA FS Profiler Crypto GUI Compiler Archives Gfx'
 	--exclude="Network Enet Inga" ZynqDynamic ~
 
-Compiler.Compile -p=ARMA2 --objectFile=Generic --symbolFile=Textual --mergeSections  --useFPU64 --replacements=Zybo.DisplayLinear.Replacements.tmp --destPath='build/'
+Compiler.Compile -p=ARMA2 --mergeSections  --useFPU64 --replacements=Zybo.DisplayLinear.Replacements.tmp --destPath='build/'
 ZYNQ:/Zynq.DisplayLinear.Mod
 ~
 
@@ -284,4 +284,4 @@ Partitions.FileToPartition PhysicalDrive1#0 build/Zybo.ZynqA2.img 0 819200 ~
 #
 # Compiler options for ARM
 #
--p=ARMA2 --objectFile=Generic --symbolFile=Textual --mergeSections  --useFPU64 --destPath='build/'
+-p=ARMA2 --mergeSections  --useFPU64 --destPath='build/'

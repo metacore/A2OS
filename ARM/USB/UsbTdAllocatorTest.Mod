@@ -64,7 +64,7 @@ END UsbTdAllocatorTest.
 
 UsbTdAllocatorTest.Benchmark ~
 SystemTools.Free UsbTdAllocatorTest UsbTdAllocator ~
-Compiler.Compile -b=ARM --objectFile=Generic --traceModule=Trace --mergeSections
+Compiler.Compile -b=ARM --traceModule=Trace --mergeSections
 	basel/USB/UsbVarTdAlloc.Mod
 	basel/USB/UsbTdAllocatorTest.Mod
 ~

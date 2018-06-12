@@ -7,7 +7,7 @@ BUILDS
 	ZynqStatic {
 		INCLUDE "ARM NATIVE ZYNQ A2 STATIC"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=ARMA2 --objectFile=Generic --mergeSections --useFPU32 --useFPU64"
+		COMPILEOPTIONS "-p=ARMA2 --mergeSections --useFPU32 --useFPU64"
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
@@ -21,7 +21,7 @@ BUILDS
 	ZynqDynamic {
 		INCLUDE "ARM NATIVE ZYNQ A2 DYNAMIC"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=ARMA2 --objectFile=Generic --mergeSections --useFPU32 --useFPU64"
+		COMPILEOPTIONS "-p=ARMA2 --mergeSections --useFPU32 --useFPU64"
 		TARGET "ARM"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"

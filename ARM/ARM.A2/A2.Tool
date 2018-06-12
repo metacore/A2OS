@@ -13,7 +13,7 @@ Modules FPE64 and ARMRuntime are needed and were taken from Minos.
 
 For Zynq/ZedBoard targets, the compilation line is:
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic
+Compiler.Compile -b=ARM --traceModule=Trace
 	(* Zynq specific initialization *)
 	basel/ARM.A2/Initializer.Zynq.Mod
 
@@ -29,7 +29,7 @@ Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic
 	basel/ARM.A2/Heaps.Mod oc/Generic.Modules.Mod basel/ARM.A2/Objects.Mod basel/ARM.A2/Kernel.Mod
 ~
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	(* Interactive shell on UART *)
 	basel/ARM.A2/KernelLog.Mod basel/ARM.A2/ARM.Streams.Mod Commands.Mod basel/ARM.A2/ARM.Reals.Mod Clock.Mod Dates.Mod Strings.Mod Pipes.Mod Files.Mod Shell.Mod
 	basel/ARM.A2/ShellController.Mod
@@ -67,21 +67,21 @@ Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
 ~
 
 Trap handling:
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals (*--trace=* -i*)
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals (*--trace=* -i*)
 	basel/ARM.A2/KernelLog.Mod basel/ARM.A2/ARM.Streams.Mod Reflection.Mod TrapWriters.Mod basel/ARM.A2/ARM.Traps.Mod
 ~
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals basel/ARM.A2/GenericLoader.Mod Test.Mod ~
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals basel/ARM.A2/GenericLoader.Mod Test.Mod ~
 
 Dynamically linked modules:
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals (*--trace=* -i*)
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals (*--trace=* -i*)
 	Trace.Mod
 	KernelLog.Mod
 	basel/ARM.A2/Test.Mod
 	HeapTest.Mod
 ~
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals (*--trace=* -i*)
+Compiler.Compile -b=ARM --traceModule=Trace --initLocals (*--trace=* -i*)
 	Test.Mod
 ~
 

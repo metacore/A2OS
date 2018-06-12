@@ -361,7 +361,7 @@ FSTools.Safe ~
 SystemTools.DoCommands
 Release.Build -b -f=ARM.Release.Tool -o='--replacements=Replacements.tmp --noInitLocals --traceModule=Trace' --only="Kernel" ZynqA2 ~
 Release.Build -b -f=ARM.Release.Tool -o='--replacements=Replacements.tmp --traceModule=Trace' --only="System Enet Shell" ZynqA2 ~
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --replacements=Replacements.tmp
+Compiler.Compile -b=ARM --traceModule=Trace --replacements=Replacements.tmp
 	ENET:Zynq.TestEnetMT.Mod
 ~
 ~

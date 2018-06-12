@@ -105,13 +105,13 @@ VAR
 		Log.Address(i);
 	END Address;
 
-	PROCEDURE Int*( i,j: LONGINT );
+	PROCEDURE Int*( i: HUGEINT; j: WORD );
 	BEGIN
 		Log.Int( i, j );
 	END Int;
 
 	PROCEDURE Set*(set: SET);
-	VAR i: LONGINT; first: BOOLEAN;
+	VAR i: WORD; first: BOOLEAN;
 	BEGIN
 		Log.String("{"); first := TRUE;
 		FOR i := MIN(SET) TO MAX(SET) DO
@@ -124,12 +124,12 @@ VAR
 	END Set;
 
 
-	PROCEDURE Float*( r: LONGREAL; len: LONGINT );
+	PROCEDURE Float*( r: LONGREAL; len: WORD );
 	BEGIN
 		Log.Float( r, len );
 	END Float;
 
-	PROCEDURE Hex*( i: HUGEINT; j: LONGINT );
+	PROCEDURE Hex*( i: HUGEINT; j: WORD );
 	BEGIN
 		Log.Hex( i, j );
 	END Hex;
@@ -206,7 +206,7 @@ VAR
 
 	(* useful for debugging the GC / metadata *)
 	PROCEDURE ReportProcedureDescriptors*;
-	VAR m: Modules.Module; i,j: LONGINT;
+	VAR m: Modules.Module; i,j: SIZE;
 	BEGIN
 		m := Modules.root;
 		WHILE (m # NIL) DO

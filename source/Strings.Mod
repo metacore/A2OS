@@ -120,7 +120,7 @@ BEGIN
 END Count;
 
 (** truncates string to length *)
-PROCEDURE Truncate* (VAR string: ARRAY OF CHAR; length: LONGINT);
+PROCEDURE Truncate* (VAR string: ARRAY OF CHAR; length: SIZE);
 BEGIN
 	IF LEN(string) > length THEN string[length] := 0X END;
 END Truncate;
@@ -279,7 +279,7 @@ END GenericPos;
 
 (** Simple pattern matching with support for "*" and "?" wildcards  - returns TRUE if name matches mask. Patent pending ;-) *)
 PROCEDURE Match*(CONST mask, name: ARRAY OF CHAR): BOOLEAN;
-VAR m,n, om, on: LONGINT; f: BOOLEAN;
+VAR m,n, om, on: SIZE; f: BOOLEAN;
 BEGIN
 	m := 0; n := 0; om := -1;
 	f := TRUE;
@@ -309,7 +309,7 @@ BEGIN
 END Match;
 
 (** copies src[soff ... soff + len - 1] to dst[doff ... doff + len - 1] *)
-PROCEDURE Move* (CONST src: ARRAY OF CHAR; soff, len: LONGINT; VAR dst: ARRAY OF CHAR; doff: LONGINT);
+PROCEDURE Move* (CONST src: ARRAY OF CHAR; soff, len: SIZE; VAR dst: ARRAY OF CHAR; doff: SIZE);
 BEGIN
 	(* reverse copy direction in case src and dst denote the same string *)
 	IF soff < doff THEN
@@ -322,7 +322,7 @@ END Move;
 
 (** concatenates s1 and s2: s := s1 || s2 *)
 PROCEDURE Concat* (CONST s1, s2: ARRAY OF CHAR; VAR s: ARRAY OF CHAR);
-VAR len1, len2 : LONGINT;
+VAR len1, len2 : SIZE;
 BEGIN
 	len1 := Length (s1); len2 := Length (s2);
 	Move(s2, 0, len2, s, len1);
@@ -332,7 +332,7 @@ END Concat;
 
 (** concatenates s1 and s2: s := s1 || s2. The resulting string is truncated to the length of s if necessary *)
 PROCEDURE ConcatX*(CONST s1, s2 : ARRAY OF CHAR; VAR s : ARRAY OF CHAR);
-VAR len1, len2 : LONGINT;
+VAR len1, len2 : SIZE;
 BEGIN
 	len1 := Length (s1); len2 := Length (s2);
 	IF (len1 + 1 >= LEN(s)) THEN
@@ -375,15 +375,15 @@ END AppendChar;
 
 
 (** copies src[index ... index + len-1] to dst *)
-PROCEDURE Copy* (CONST src: ARRAY OF CHAR; index, len: LONGINT; VAR dst: ARRAY OF CHAR);
+PROCEDURE Copy* (CONST src: ARRAY OF CHAR; index, len: SIZE; VAR dst: ARRAY OF CHAR);
 BEGIN
 	Move (src, index, len, dst, 0);
 	Truncate (dst, len);
 END Copy;
 
 (** deletes positions index ... index + count - 1 from 's' *)
-PROCEDURE Delete* (VAR s: ARRAY OF CHAR; index, count: LONGINT);
-VAR len: LONGINT;
+PROCEDURE Delete* (VAR s: ARRAY OF CHAR; index, count: SIZE);
+VAR len: SIZE;
 BEGIN
 	len := Length (s);
 	Move (s, index + count, len - index - count, s, index);
@@ -391,8 +391,8 @@ BEGIN
 END Delete;
 
 (** inserts 'src' at position 'index' into 'dst' *)
-PROCEDURE Insert* (CONST src: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR; index: LONGINT);
-VAR slen, dlen: LONGINT;
+PROCEDURE Insert* (CONST src: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR; index: SIZE);
+VAR slen, dlen: SIZE;
 BEGIN
 	slen := Length (src); dlen := Length (dst);
 	Move (dst, index, dlen-index, dst, index+slen);
@@ -402,7 +402,7 @@ END Insert;
 
 (** removes all occurrences of 'c' at the head of 'string' *)
 PROCEDURE TrimLeft* (VAR string: ARRAY OF CHAR; c: CHAR);
-VAR len, index: LONGINT;
+VAR len, index: SIZE;
 BEGIN
 	len := Length (string); index := 0;
 	WHILE (index # len) & (string[index] = c) DO INC (index) END;
@@ -411,7 +411,7 @@ END TrimLeft;
 
 (** removes all occurrences of 'c' at the end of 'string' *)
 PROCEDURE TrimRight* (VAR string: ARRAY OF CHAR; c: CHAR);
-VAR len, index: LONGINT;
+VAR len, index: SIZE;
 BEGIN
 	len := Length (string); index := len;
 	WHILE (index # 0) & (string[index - 1] = c) DO DEC (index) END;
@@ -480,7 +480,7 @@ END LOW;
 
 (** converts s to lower-case letters *)
 PROCEDURE LowerCase*(VAR s: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 	WHILE (s[i] # 0X) DO
@@ -503,7 +503,7 @@ END UpperCaseChar;
 
 (** converts s to upper-case letters *)
 PROCEDURE UpperCase*(VAR s: ARRAY OF CHAR);
-VAR i: LONGINT; c : CHAR;
+VAR i: SIZE; c : CHAR;
 BEGIN
 	i := 0;
 	WHILE (s[i] # 0X) DO
@@ -538,7 +538,7 @@ END StrToBool;
 
 (** converts an integer value to a string *)
 PROCEDURE IntToStr*(x: HUGEINT; VAR s: ARRAY OF CHAR);
-VAR i, j: LONGINT; x0: HUGEINT; digits: ARRAY 21 OF CHAR;
+VAR i, j: SIZE; x0: HUGEINT; digits: ARRAY 21 OF CHAR;
 BEGIN
 	IF x < 0 THEN
 		IF x = MIN( HUGEINT ) THEN
@@ -560,7 +560,7 @@ END IntToStr;
 (** converts a string to an integer. Leading whitespace is ignored *)
 (* adopted from Strings.Mod *)
 PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT);
-VAR i, d: LONGINT; neg: BOOLEAN;
+VAR i: SIZE; d: LONGINT; neg: BOOLEAN;
 BEGIN
 	i := 0; WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
 	neg := FALSE;
@@ -601,7 +601,7 @@ BEGIN
 END StrToIntPos;
 
 (** converts an integer value to a hex string *)
-PROCEDURE IntToHexStr*(h : HUGEINT; width: LONGINT; VAR s: ARRAY OF CHAR);
+PROCEDURE IntToHexStr*(h : HUGEINT; width: WORD; VAR s: ARRAY OF CHAR);
 VAR c: CHAR;
 BEGIN
 	IF (width <= 0) THEN width := 8 END;

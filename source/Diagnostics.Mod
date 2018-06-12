@@ -34,7 +34,7 @@ TYPE
 TYPE
 
 	Entry* = POINTER TO RECORD
-		type*: LONGINT;
+		type*: WORD;
 		source*: ARRAY 128 OF CHAR;
 		position*, errorCode*: LONGINT;
 		message*: ARRAY 256 OF CHAR;
@@ -52,11 +52,11 @@ TYPE
 		(* Intended for subclassing only *)
 		entries- : Entry;
 
-		nofErrors- : LONGINT;
-		nofWarnings- : LONGINT;
-		nofInformations- : LONGINT;
+		nofErrors- : SIZE;
+		nofWarnings- : SIZE;
+		nofInformations- : SIZE;
 
-		nofMessages- : LONGINT;
+		nofMessages- : SIZE;
 
 		PROCEDURE Error*(CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
@@ -105,7 +105,7 @@ TYPE
 		END ForAll;
 
 		PROCEDURE GetEntries*() : EntryArray;
-		VAR e : Entry; result : EntryArray; nofEntries, i : LONGINT;
+		VAR e : Entry; result : EntryArray; nofEntries, i : SIZE;
 		BEGIN {EXCLUSIVE}
 			result := NIL;
 			nofEntries := nofErrors + nofWarnings + nofInformations;
@@ -120,7 +120,7 @@ TYPE
 			RETURN result;
 		END GetEntries;
 
-		PROCEDURE InsertSorted(type: LONGINT; CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR; VAR counter: LONGINT);
+		PROCEDURE InsertSorted(type: WORD; CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
 		VAR prev, entry : Entry;
 		BEGIN
 			entry := entries; prev := NIL;
@@ -132,7 +132,7 @@ TYPE
 			END
 		END InsertSorted;
 
-		PROCEDURE NewEntry*(type: LONGINT; CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR; next: Entry) : Entry;
+		PROCEDURE NewEntry*(type: WORD; CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR; next: Entry) : Entry;
 		VAR entry : Entry;
 		BEGIN
 			NEW(entry);
@@ -173,7 +173,7 @@ TYPE
 
 	END StreamDiagnostics;
 
-PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position, errorCode, type: LONGINT; CONST message: ARRAY OF CHAR);
+PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position, errorCode: LONGINT; type: WORD; CONST message: ARRAY OF CHAR);
 BEGIN
 	w.Char(Tab);
 	IF (source # "") THEN w.String (source); END;

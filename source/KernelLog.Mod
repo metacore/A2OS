@@ -64,7 +64,7 @@ END Char;
 
 (** Write "x" as a decimal number. "w" is the field width. *)
 
-PROCEDURE Int*(x: HUGEINT; w: LONGINT);
+PROCEDURE Int*(x: HUGEINT; w: WORD);
 VAR i: SIZE; x0: HUGEINT; a: ARRAY 21 OF CHAR;
 BEGIN
 	IF x < 0 THEN
@@ -95,7 +95,7 @@ END Boolean;
 
 (** Write "x" as a decimal number with a power-of-two multiplier (K, M or G), followed by "suffix". "w" is the field width, excluding "suffix". *)
 
-PROCEDURE IntSuffix*(x, w: LONGINT; CONST suffix: ARRAY OF CHAR);
+PROCEDURE IntSuffix*(x: HUGEINT; w: WORD; CONST suffix: ARRAY OF CHAR);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult: CHAR;
 BEGIN
@@ -113,8 +113,8 @@ END IntSuffix;
 (*
 (** Write "x" as a hexadecimal number. The absolute value of "w" is the field width. If "w" is negative, two hex digits are printed (x MOD 100H), otherwise 8 digits are printed. *)
 
-PROCEDURE Hex*(x: HUGEINT; w: LONGINT);
-VAR i, j: LONGINT; buf: ARRAY 10 OF CHAR;
+PROCEDURE Hex*(x: HUGEINT; w: WORD);
+VAR i, j: SIZE; buf: ARRAY 10 OF CHAR;
 BEGIN
 	IF w >= 0 THEN j := 8 ELSE j := 2; w := -w END;
 	FOR i := j+1 TO w DO Char(" ") END;
@@ -133,8 +133,8 @@ END Hex;
 (**	Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
 	If w < 0, the w least significant hex digits of x are written (potentially including leading zeros)
 *)
-PROCEDURE Hex*( x: HUGEINT;  w: LONGINT );
-VAR filler: CHAR;  i, maxi, y: LONGINT;  buf: ARRAY 20 OF CHAR; 
+PROCEDURE Hex*( x: HUGEINT;  w: WORD );
+VAR filler: CHAR; i, maxi, y: WORD;  buf: ARRAY 20 OF CHAR; 
 BEGIN
 	IF w < 0 THEN  filler := '0';  w := -w;  maxi := w  ELSE  filler := ' ';  maxi := 16  END;
 	i := 0;
@@ -157,7 +157,7 @@ END Address;
 
 (** Write "x" as a hexadecimal number.  "w" is the field width.  Always prints 16 digits. *)
 
-PROCEDURE HIntHex*(x: HUGEINT; w: LONGINT);
+PROCEDURE HIntHex*(x: HUGEINT; w: WORD);
 BEGIN
 	Hex( x, w )
 END HIntHex;
@@ -194,14 +194,14 @@ END Memory;
 
 (** Write a buffer in hex. *)
 
-PROCEDURE Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
+PROCEDURE Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE);
 BEGIN
 	Memory(ADDRESSOF(buf[ofs]), len)
 END Buffer;
 
 (** Write bits (ofs..ofs+n-1) of x in binary. *)
 
-PROCEDURE Bits*(x: SET; ofs, n: LONGINT);
+PROCEDURE Bits*(x: SET; ofs, n: WORD);
 BEGIN
 	REPEAT
 		DEC(n);
@@ -211,7 +211,7 @@ END Bits;
 
 (** write a set as set *)
 PROCEDURE Set*(x: SET);
-VAR first: BOOLEAN; i: LONGINT;
+VAR first: BOOLEAN; i: WORD;
 BEGIN
 	first := TRUE;
 	Char("{");
@@ -274,7 +274,7 @@ END OpenBuffer;
 (** Return output buffer contents.  Used by a display process. *)
 
 PROCEDURE GetBuffer*(VAR val: ARRAY OF CHAR);
-VAR i, m: LONGINT;
+VAR i, m: SIZE;
 BEGIN
 	i := 0; m := LEN(val)-1;
 	Machine.Acquire(Machine.TraceOutput);

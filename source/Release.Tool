@@ -181,13 +181,9 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Win32C {
-		INCLUDE "WIN32C WIN COOP"
+		INCLUDE "WIN32C WIN I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --traceModule=Trace"
-		TARGET "AMD"
-		EXTENSION "GofCW"
-		SYMBOLEXTENSION "SymCW"
-		PATH "../obj/"
+		COMPILEOPTIONS "-p=Win32 --cooperative --traceModule=Trace --preciseGC=no"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}

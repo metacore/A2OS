@@ -575,7 +575,6 @@ BEGIN
 	DoAddPlatform("Bios64","-b=AMD --bits=64 --mergeSections --objectFileExtension=.Goff --symbolFileExtension=.Symm --preciseGC");
 	DoAddPlatform("Win32","-b=AMD --bits=32 --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI");
 	DoAddPlatform("Win64","-b=AMD --bits=64 --mergeSections --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI");
-	DoAddPlatform("Win32C","-b=AMD --bits=32 --cooperative --traceModule=Trace --objectFileExtension=.GofCW --symbolFileExtension=.SymCW --platformCC=WINAPI");
 	DoAddPlatform("ARM","-b=ARM --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya");
 	DoAddPlatform("Minos","-b=ARM --objectFile=Minos"); 
 	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");

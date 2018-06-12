@@ -580,7 +580,6 @@ BEGIN
 	DoAddPlatform("Minos","-b=ARM --objectFile=Minos"); 
 	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT");
 	DoAddPlatform("TRMI","-b=TRM --objectFile=Intermediate --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT");
-	DoAddPlatform("A2Coop","-b=AMD --bits=32 --cooperative --traceModule=Trace --mergeSections");
 	DoAddPlatform("ARMA2","-b=ARM --mergeSections");
 	DoAddPlatform("Linux32","-b=AMD --bits=32 --mergeSections --traceModule=Trace --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC --cellsAreObjects --platformCC=C");
 	DoAddPlatform("Linux64","-b=AMD --bits=64 --mergeSections --traceModule=Trace --objectFileExtension=.GofUu --symbolFileExtension=.SymUu --preciseGC --cellsAreObjects --platformCC=C");

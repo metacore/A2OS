@@ -14012,7 +14012,9 @@ TYPE
 			noRuntimeChecks := options.GetFlag("noRuntimeChecks");
 			noAsserts := options.GetFlag("noAsserts");
 			cooperative := options.GetFlag("cooperative");
-			newObjectFile := options.GetFlag("newObjectFile");
+			IF options.GetFlag("newObjectFile") THEN
+				newObjectFile := TRUE; (* might have been set previously via SetNewObjectFile *)
+			END;
 			IF options.GetString("objectFile",string) & (string = "Minos") THEN 
 				simpleMetaData := TRUE
 			END;

@@ -510,11 +510,11 @@ TYPE
 					options[index].timestamp := timestamp;
 					CASE options[index].type OF
 					| Flag:
-						IF (string = "false") THEN
-							options[index].isSet := FALSE;
-							RETURN TRUE;
-						ELSIF (string = "true") THEN
+						IF (string = "yes") | (string = "on") | (string = "true") THEN
 							options[index].isSet := TRUE;
+							RETURN TRUE;
+						ELSIF (string = "no") | (string = "off") | (string = "false") THEN
+							options[index].isSet := FALSE;
 							RETURN TRUE;
 						ELSIF (error # NIL) THEN
 							error.String("Option "); ShowOption(ch, name);
@@ -806,6 +806,6 @@ Options.Test -afds -b --fdas ~
 Options.Test -f  -s=fds ~
 
 Options.Test -f=true ~
-Options.Test --flag=false ~
+Options.Test --flag=no ~
 
 System.Free Options ~

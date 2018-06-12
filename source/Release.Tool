@@ -136,12 +136,8 @@ BUILDS
 	Bios32C {
 		INCLUDE "BIOS32C BIOS NATIVE I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --traceModule=Trace"
-		TARGET "AMD"
-		EXTENSION "Gof"
-		SYMBOLEXTENSION "Sym"
-		PATH "AOS"
-		EXCLUDEPACKAGES "Applications GuiApplications Fun Testing Education Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
+		COMPILEOPTIONS "-p=Bios32 --cooperative --traceModule=Trace --preciseGC=no"
+		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
 	Bios64 {
@@ -154,22 +150,14 @@ BUILDS
 	RpiC {
 		INCLUDE "RPIC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --traceModule=Trace"
-		TARGET "ARM"
-		EXTENSION "Gof"
-		SYMBOLEXTENSION "Sym"
-		PATH "AOS"
+		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	ZynqC {
 		INCLUDE "ZYNQC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "--cooperative --traceModule=Trace"
-		TARGET "ARM"
-		EXTENSION "Gof"
-		SYMBOLEXTENSION "Sym"
-		PATH "AOS"
+		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}

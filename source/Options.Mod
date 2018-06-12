@@ -10,9 +10,9 @@ MODULE Options; (** AUTHOR "staubesv"; PURPOSE "Command line options parsing"; *
  *
  *	2.	Add options of type Flag, String or Integer
  *
- *			options.Add("h", "help", Flag);   			(* -h / --help option flags *)
- *			options.Add("s", "string", String); 		(* -s=Hello / --string="Hello World" *)
- *			options.Add("i", "integer", Integer); 		(* -i=76H / --integer=999 *)
+ *			options.Add("h", "help", Options.Flag);   			(* -h / --help option flags *)
+ *			options.Add("s", "string", Options.String); 		(* -s=Hello / --string="Hello World" *)
+ *			options.Add("i", "integer", Options.Integer); 		(* -i=76H / --integer=999 *)
  *
  *	3.	Parse options at the current position of the context argument stream (this will skip whitespace and options on the stream)
  *

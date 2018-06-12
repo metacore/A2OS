@@ -510,10 +510,10 @@ TYPE
 					options[index].timestamp := timestamp;
 					CASE options[index].type OF
 					| Flag:
-						IF (string = "yes") | (string = "on") | (string = "true") THEN
+						IF (string = "yes") OR (string = "on") OR (string = "true") THEN
 							options[index].isSet := TRUE;
 							RETURN TRUE;
-						ELSIF (string = "no") | (string = "off") | (string = "false") THEN
+						ELSIF (string = "no") OR (string = "off") OR (string = "false") THEN
 							options[index].isSet := FALSE;
 							RETURN TRUE;
 						ELSIF (error # NIL) THEN

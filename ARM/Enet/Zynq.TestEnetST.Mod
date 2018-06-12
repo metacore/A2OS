@@ -347,7 +347,7 @@ EnetEmacPs7.AllowZeroPhyAddr = [TRUE,TRUE];
 SystemTools.DoCommands
 Release.Build -b -f=ARM.Release.Tool -o='--replacements=Replacements.tmp --noInitLocals --traceModule=Trace' --only="Kernel" ZynqMinos ~
 Release.Build -b -f=ARM.Release.Tool -o='--replacements=Replacements.tmp --traceModule=Trace' --only="System Enet Shell" ZynqMinos ~
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --newObjectFile --replacements=Replacements.tmp 
+Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --replacements=Replacements.tmp 
 	Zynq.TestEnetST.Mod
 ~
 ~

@@ -15,7 +15,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI32 --
 ** Kernel Image **
 
 System.DoCommands
-Compiler.Compile --newObjectFile --mergeSections -b=AMD --bits=32 --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
+Compiler.Compile --mergeSections -b=AMD --bits=32 --objectFileExtension=.Gox --symbolFileExtension=.Syx --traceModule=Trace
 	I386.Builtins.Mod Trace.Mod EFI.I386.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod 
 	BIOS.Objects.Mod Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod I386.Reals.Mod 
 	Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod BIOS.I386.Traps.Mod Locks.Mod BIOS.PCI.Mod 
@@ -44,7 +44,7 @@ Linker.Link
 System.FreeDownTo FoxIntermediateBackend ~
 
 
-	Compiler.Compile --newObjectFile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
+	Compiler.Compile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
 	--trace=* -i StartConsole.Mod ~
 ~
 
@@ -65,7 +65,7 @@ Linker.Link --fileName=E:/felix.svn/qemu/disk/A2Loader.efi --fileFormat=EFI64 --
 ** Kernel Image **
 	
 System.DoCommands
-	Compiler.Compile --newObjectFile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
+	Compiler.Compile -b=AMD --bits=64 --objectFileExtension=.Gos --symbolFileExtension=.Sys --traceModule=Trace
 	AMD64.Builtins.Mod Trace.Mod EFI.AMD64.Machine.Mod EFIGraphicalConsole.Mod StartConsole.Mod Heaps.Mod Modules.Mod BIOS.Objects.Mod Kernel.Mod 
 	Interfaces.Mod KernelLog.Mod Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod AMD64.Reals.Mod 
 	Reflection.Mod TrapWriters.Mod BIOS.AMD64.Traps.Mod Locks.Mod BIOS.PCI.Mod BIOS.Clock.Mod BIOS.AMD64.MemCache.Mod Disks.Mod Files.Mod 

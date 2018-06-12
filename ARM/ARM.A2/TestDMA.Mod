@@ -89,7 +89,7 @@ BEGIN
 	(*END*)
 END TestDMA.
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --newObjectFile  --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
 	Timothee/ARM.A2/ARM.Streams.Mod 
 	Timothee/ARM.A2/ARM.Math.Mod
 	Random.Mod

@@ -2,7 +2,7 @@ Commands that have to be run in order to get FTP, VNC, RAMFS working are listed 
 	basel/ARM.A2/ZynqScript.txt
 Note that the command for VNC has to be run for the initialization of module WMStandardComponents, so the module ShellController needs to be linked BEFORE.
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --newObjectFile  --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
 	basel/ARM.A2/KernelLog.Mod Streams.Mod Commands.Mod basel/ARM.A2/ARM.Reals.Mod Clock.Mod Dates.Mod
 	Strings.Mod Options.Mod ActiveTimers.Mod Plugins.Mod basel/ARM.A2/ARM.Network.Mod
 
@@ -26,13 +26,13 @@ Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --newObjectFile
 	basel/ARM.A2/VNCController.Mod
 ~
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --newObjectFile  --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
 	MainMenu.Mod Tar.Mod WMRestorable.Mod WMNavigate.Mod
 	WMUtilities.Mod
 	PNGDecoder.Mod
 	WMOberonFonts.Mod
 ~
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --newObjectFile  --initLocals WMTrees.Mod WMGrids.Mod WMStringGrids.Mod WMMacros.Mod WMSearchComponents.Mod WMDocumentEditor.Mod Notepad.Mod WMSystemComponents.Mod WMFileManager.Mod ~
+Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals WMTrees.Mod WMGrids.Mod WMStringGrids.Mod WMMacros.Mod WMSearchComponents.Mod WMDocumentEditor.Mod Notepad.Mod WMSystemComponents.Mod WMFileManager.Mod ~
 
 StaticLinker.Link --fileName=Test.Bin --displacement=100000H -a
 	Initializer Runtime Platform FPE64 ARMRuntime Trace Uart
@@ -64,7 +64,7 @@ StaticLinker.Link --fileName=Test.Bin --displacement=100000H -a
 	VNCController
 ~
 
-Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --newObjectFile  --initLocals
+Compiler.Compile -b=ARM --traceModule=Trace --objectFile=Generic --initLocals
 	basel/ARM.A2/Zynq.XEmac.Mod
 	basel/ARM.A2/StaticInterface.Mod
 	Test.Mod

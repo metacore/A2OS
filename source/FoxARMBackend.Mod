@@ -3474,7 +3474,6 @@ TYPE
 			useFPU32 := FALSE;
 			useFPU64 := FALSE;
 			InitIntermediateBackend;
-			SetNewObjectFile(TRUE,FALSE);
 			system := NIL;
 			initLocals := TRUE;
 			SetHasLinkRegister;

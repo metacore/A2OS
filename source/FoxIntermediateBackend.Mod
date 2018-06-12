@@ -439,7 +439,7 @@ TYPE
 					END;
 				ELSE
 					lastUpdated:= 0;
-					IF implementationVisitor.newObjectFile & ((x.initializer # NIL) OR TypeNeedsInitialization(x.type)) THEN
+					IF ((x.initializer # NIL) OR TypeNeedsInitialization(x.type)) THEN
 						Initialize(x.type, x.initializer, 0);
 					END;
 					size := ToMemoryUnits(system,system.SizeOf(x.type)) - lastUpdated;	
@@ -955,7 +955,7 @@ TYPE
 			ir := implementationVisitor.NewSection(module.allSections, Sections.InitCodeSection, name,procedure,dump);
 			ir.SetExported(TRUE);
 			Global.GetSymbolSegmentedName (bodyProcedure,name);
-			IF (backend.newObjectFile OR backend.cooperative) & ~meta.simple THEN
+			IF ~meta.simple THEN
 				implementationVisitor.currentScope := module.module.moduleScope;
 				implementationVisitor.section := ir;
 				implementationVisitor.PushSelfPointer();
@@ -1039,26 +1039,14 @@ TYPE
 				module.imports.AddName(idstr);
 				import := import.nextImport
 			END;
-
-			IF ~implementationVisitor.newObjectFile & ~meta.simple THEN
-				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@moduleSelf"));
-				moduleSelf := SyntaxTree.NewVariable(Basic.invalidPosition,SyntaxTree.NewIdentifier("@moduleSelf"));
-				moduleSelf.SetType(system.anyType);
-				moduleSelf.SetScope(x.moduleScope);
-				moduleSelf.SetUntraced(TRUE);
-				ir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,moduleSelf,dump);  ir.SetOffset(0);
-				ir.SetExported(TRUE);
-				IntermediateCode.InitImmediate(op,addressType,0);
-				ir.Emit(Data(Basic.invalidPosition,op));
-			END;
-
+			
 			implementationVisitor.module := module;
 			implementationVisitor.moduleScope := x.moduleScope;
 			implementationVisitor.moduleSelf := moduleSelf;
 			implementationVisitor.canBeLoaded := TRUE;
 			meta.SetModule(module);
 
-			IF (forceModuleBody OR implementationVisitor.newObjectFile  & ~meta.simple  OR ScopeNeedsInitialization(x.moduleScope)) THEN
+			IF (forceModuleBody OR ~meta.simple  OR ScopeNeedsInitialization(x.moduleScope)) THEN
 				EnsureBodyProcedure(x.moduleScope); (* currently needed in Oberon, remove ? *)
 			END;
 
@@ -1387,7 +1375,6 @@ TYPE
 		inData: BOOLEAN;  (* to prevent indirect reference to data within data sections, cf. VisitIntegerValue *)
 		emitLabels: BOOLEAN;
 		builtinsModuleName : SyntaxTree.IdentifierString;
-		newObjectFile: BOOLEAN;
 		indexCounter: LONGINT;
 
 		profile: BOOLEAN;
@@ -1414,8 +1401,7 @@ TYPE
 		isUnchecked: BOOLEAN;
 	
 		
-		PROCEDURE & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend;
-			newObjectFile: BOOLEAN);
+		PROCEDURE & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend);
 		BEGIN
 			SELF.system := system;
 			SELF.builtinsModuleName := runtime;
@@ -1458,7 +1444,6 @@ TYPE
 			IntermediateCode.InitImmediate(false,bool,0);
 			IntermediateCode.InitImmediate(true,bool,1);
 
-			SELF.newObjectFile := newObjectFile;
 			indexCounter := 0;
 			NEW(registerUsageCount);
 			usedRegisters := NIL;
@@ -2473,9 +2458,6 @@ TYPE
 				*)
 				ReuseCopy(left,tag);
 				right := TypeDescriptorAdr(type);
-				IF ~newObjectFile THEN
-					IntermediateCode.MakeMemory(right,addressType);
-				END;
 				
 				IF backend.cooperative THEN
 		 			repeatL := NewLabel();
@@ -3063,7 +3045,6 @@ TYPE
 					base := StaticArrayBaseType(type);
 					Symbol(symbol, operand);
 					arg := TypeDescriptorAdr(base);
-					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
 					Emit(Push(position,operand.op));
 					Emit(Push(position,arg));
 					Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
@@ -3079,7 +3060,6 @@ TYPE
 					Symbol(symbol, operand);
 
 					arg := TypeDescriptorAdr(base);
-					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
 
 					Emit(Push(position,operand.op));
 					Emit(Push(position,arg));
@@ -4387,9 +4367,6 @@ TYPE
 			IF (resultingType IS SyntaxTree.RecordType) & (resultingType(SyntaxTree.RecordType).pointerType = NIL) THEN
 				ReleaseIntermediateOperand(result.tag);
 				result.tag := TypeDescriptorAdr(resultingType);
-				IF ~newObjectFile THEN
-					IntermediateCode.MakeMemory(result.tag,addressType);
-				END;
 
 			ELSIF IsDelegate(resultingType) THEN
 				ReleaseIntermediateOperand(result.tag);
@@ -4666,9 +4643,6 @@ TYPE
 			IF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) THEN
 				ReleaseIntermediateOperand(result.tag);
 				result.tag := TypeDescriptorAdr(type);
-				IF ~newObjectFile THEN
-					IntermediateCode.MakeMemory(result.tag,addressType);
-				END
 			ELSIF IsDelegate(type) THEN
 				ReleaseIntermediateOperand(result.tag);
 				IntermediateCode.InitMemory(result.tag,addressType,result.op,ToMemoryUnits(system,system.addressSize));
@@ -6073,7 +6047,6 @@ TYPE
 							(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
 							recordType := formalParameter.type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
 							arg := TypeDescriptorAdr(recordType);
-							IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
 							Emit(Push(position,arg));
 						ELSE
 							(* push 'NonPointer' *)
@@ -6295,41 +6268,25 @@ TYPE
 					ASSERT(td # NIL);
 				END;
 
-				IF newObjectFile THEN
-					GetCodeSectionNameForSymbol(td,name);
-					IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-						meta.CheckTypeDeclaration(x);
-						source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
-					ELSE
-						source := NewSection(module.importedSections, Sections.ConstSection,name,td,commentPrintout # NIL);
-					END;
-					IF backend.cooperative OR meta.simple THEN
-						offset := 0;
-					ELSE
-						IF x IS SyntaxTree.CellType THEN
-							baseRecord := x(SyntaxTree.CellType).GetBaseRecord();
-							IF baseRecord = NIL THEN 
-								offset := ToMemoryUnits(system, meta.GetTypeRecordBaseOffset(0));
-							ELSE 
-								offset := ToMemoryUnits(system, meta.GetTypeRecordBaseOffset(baseRecord.recordScope.numberMethods)*system.addressSize);
-							END;
-						ELSE
-							offset := ToMemoryUnits(system,meta.GetTypeRecordBaseOffset(x(SyntaxTree.RecordType).recordScope.numberMethods)*system.addressSize);
-						END;
-					END;
+				GetCodeSectionNameForSymbol(td,name);
+				IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+					meta.CheckTypeDeclaration(x);
+					source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
 				ELSE
+					source := NewSection(module.importedSections, Sections.ConstSection,name,td,commentPrintout # NIL);
+				END;
+				IF backend.cooperative OR meta.simple THEN
 					offset := 0;
-					source := module.allSections.FindBySymbol(td); (*TODO*)
-					IF source = NIL THEN
-						null := 0;
-						GetCodeSectionNameForSymbol(td,name);
-						Basic.SuffixSegmentedName (name, Basic.MakeString("@"));
-						Basic.SuffixSegmentedName (name, module.module.name);
-						source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
-						IntermediateCode.InitImmediate(op,addressType,0);
-						source(IntermediateCode.Section).Emit(Data(position,op));
+				ELSE
+					IF x IS SyntaxTree.CellType THEN
+						baseRecord := x(SyntaxTree.CellType).GetBaseRecord();
+						IF baseRecord = NIL THEN 
+							offset := ToMemoryUnits(system, meta.GetTypeRecordBaseOffset(0));
+						ELSE 
+							offset := ToMemoryUnits(system, meta.GetTypeRecordBaseOffset(baseRecord.recordScope.numberMethods)*system.addressSize);
+						END;
 					ELSE
-						name := source.name;
+						offset := ToMemoryUnits(system,meta.GetTypeRecordBaseOffset(x(SyntaxTree.RecordType).recordScope.numberMethods)*system.addressSize);
 					END;
 				END;
 				RETURN td
@@ -6345,13 +6302,9 @@ TYPE
 				source := GetBackendType(t);
 			END;
 			*)
-			IF newObjectFile THEN
-				IntermediateCode.InitAddress(res, addressType, name, GetFingerprint(td), 0 (*
-				1+t(SyntaxTree.RecordType).recordScope.numberMethods+16+1 *));
-				IntermediateCode.SetOffset(res,offset);
-			ELSE
-				IntermediateCode.InitAddress(res, addressType, name, GetFingerprint(td), 0);
-			END;
+			IntermediateCode.InitAddress(res, addressType, name, GetFingerprint(td), 0 (*
+			1+t(SyntaxTree.RecordType).recordScope.numberMethods+16+1 *));
+			IntermediateCode.SetOffset(res,offset);
 			(*
 			IntermediateCode.MakeMemory(res,IntermediateCode.UnsignedInteger,addressType.sizeInBits);
 			make memory should be used when tag is used, not earlier
@@ -6474,7 +6427,6 @@ TYPE
 					(* IF dump # NIL THEN dump.String("push typetag"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
 					recordType := type.resolved(SyntaxTree.PointerType).pointerBase.resolved(SyntaxTree.RecordType);
 					arg := TypeDescriptorAdr(recordType);
-					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
 				ELSE
 					(* non-pointer to record type: push fingerprint *)
 					(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
@@ -7293,9 +7245,6 @@ TYPE
 			Emit(Push(position,op.op));
 			(* push type descriptor *)
 			reg := TypeDescriptorAdr(type);
-			IF ~newObjectFile THEN
-				IntermediateCode.MakeMemory(reg,addressType);
-			END;
 			Emit(Push(position,reg));
 			ReleaseIntermediateOperand(reg);
 			(* push realtime flag: false by default *)
@@ -7816,9 +7765,6 @@ TYPE
 						type := type.resolved(SyntaxTree.PointerType).pointerBase;
 					END;
 					op := TypeDescriptorAdr(type.resolved);
-					IF ~newObjectFile THEN
-						IntermediateCode.MakeMemory(op,addressType);
-					END;
 					Emit(Push(position,op));
 				END
 			END PushTD;
@@ -8279,9 +8225,6 @@ TYPE
 
 						(* push type descriptor *)
 						reg := TypeDescriptorAdr(recordType);
-						IF ~newObjectFile THEN
-							IntermediateCode.MakeMemory(reg,addressType);
-						END;
 						Emit(Push(position,reg));
 						ReleaseIntermediateOperand(reg);
 
@@ -8415,9 +8358,6 @@ TYPE
 						END;
 						IF SemanticChecker.ContainsPointer(type) THEN
 							tmp := TypeDescriptorAdr(type);
-							IF ~newObjectFile THEN
-								IntermediateCode.MakeMemory(tmp,addressType);
-							END;
 						ELSE
 							tmp := nil;
 						END;
@@ -8570,9 +8510,6 @@ TYPE
 								ReleaseOperand(l);
 
 								tmp := TypeDescriptorAdr(type);
-								IF ~newObjectFile THEN
-									IntermediateCode.MakeMemory(tmp,addressType);
-								END;
 								Emit(Push(position,tmp)); (* type descriptor *)
 								ReleaseIntermediateOperand(tmp);
 
@@ -8670,9 +8607,6 @@ TYPE
 							(* *)
 							IF SemanticChecker.ContainsPointer(type) THEN
 								tmp := TypeDescriptorAdr(type);
-								IF ~newObjectFile THEN
-									IntermediateCode.MakeMemory(tmp,addressType);
-								END;
 							ELSE
 								tmp := IntermediateCode.Immediate(addressType, 0);
 							END;
@@ -8745,9 +8679,6 @@ TYPE
 
 						IF SemanticChecker.ContainsPointer(baseType) THEN
 							tmp := TypeDescriptorAdr(baseType);
-							IF ~newObjectFile THEN
-								IntermediateCode.MakeMemory(tmp,addressType);
-							END;
 						ELSE
 							tmp := nil;
 						END;
@@ -8792,9 +8723,6 @@ TYPE
 					
 					(* push type descriptor *)
 					reg := TypeDescriptorAdr(baseType);
-					IF ~newObjectFile THEN
-						IntermediateCode.MakeMemory(reg,addressType);
-					END;
 					Emit(Push(position,reg));
 					ReleaseIntermediateOperand(reg);
 
@@ -9051,9 +8979,6 @@ TYPE
 					IF (type IS SyntaxTree.RecordType) THEN
 						ReleaseIntermediateOperand(s1.tag);
 						s1.tag := TypeDescriptorAdr(type);
-						IF ~newObjectFile THEN
-							IntermediateCode.MakeMemory(s1.tag,addressType);
-						END;
 						UseIntermediateOperand(s1.tag);
 					END;
 					result := s1;
@@ -9195,10 +9120,7 @@ TYPE
 					type := type.resolved(SyntaxTree.PointerType).pointerBase;
 				END;
 				result.op := TypeDescriptorAdr(type);
-				IF ~newObjectFile THEN
-					ToMemory(result.op,IntermediateCode.GetType(system,x.type),0);
-				ELSE Convert(result.op, IntermediateCode.GetType(system,x.type));
-				END;
+				Convert(result.op, IntermediateCode.GetType(system,x.type));
 				result.mode := ModeValue;
 			(* ---- SYSTEM.TRACE ----- *)
 			|Global.systemTrace:
@@ -9394,9 +9316,6 @@ TYPE
 				IF isUnsafe & ((type = NIL) OR ~type(SyntaxTree.RecordType).isObject) THEN
 					ReleaseIntermediateOperand(operand.tag);
 					operand.tag := TypeDescriptorAdr(type);
-					IF ~newObjectFile THEN
-						IntermediateCode.MakeMemory(operand.tag,addressType);
-					END;
 				ELSE
 					IF ~backend.cooperative THEN
 						IntermediateCode.AddOffset(operand.tag,ToMemoryUnits(system,-addressType.sizeInBits));
@@ -9489,19 +9408,14 @@ TYPE
 				scope := scope.outerScope;
 			END;
 			IF scope.outerScope IS SyntaxTree.ModuleScope THEN
-				IF newObjectFile THEN
-					moduleSection := meta.ModuleSection();
-					IF backend.cooperative THEN
-						moduleOffset := 0;
-					ELSE
-						moduleOffset := moduleSection.pc;
-					END;
-					result.mode := ModeValue;
-					result.op := IntermediateCode.Address(addressType, moduleSection.name, GetFingerprint(moduleSection.symbol), moduleOffset);
+				moduleSection := meta.ModuleSection();
+				IF backend.cooperative THEN
+					moduleOffset := 0;
 				ELSE
-					Symbol(moduleSelf,result);
-					IntermediateCode.MakeMemory(result.op,addressType);
-				END
+					moduleOffset := moduleSection.pc;
+				END;
+				result.mode := ModeValue;
+				result.op := IntermediateCode.Address(addressType, moduleSection.name, GetFingerprint(moduleSection.symbol), moduleOffset);
 			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
 				result.mode := ModeValue;
 				Global.GetSymbolSegmentedName(scope.outerScope(SyntaxTree.CellScope).ownerCell.typeDeclaration, name);
@@ -9631,7 +9545,7 @@ TYPE
 			IF ~TryConstantDeclaration() THEN
 				IF constantDeclaration = NIL THEN constantDeclaration:=BuildConstant(module.module,x,constId) END;
 				GetCodeSectionNameForSymbol(constantDeclaration,name);
-				IF ~newObjectFile OR (constantDeclaration.scope = NIL) OR (constantDeclaration.scope.ownerModule = module.module) THEN
+				IF (constantDeclaration.scope = NIL) OR (constantDeclaration.scope.ownerModule = module.module) THEN
 					irv := NewSection(module.allSections,Sections.ConstSection,name,constantDeclaration,commentPrintout # NIL);
 				ELSE
 					irv := NewSection(module.importedSections, Sections.ConstSection, name,constantDeclaration,commentPrintout # NIL);
@@ -9692,7 +9606,7 @@ TYPE
 			IF ~TryConstantDeclaration() THEN
 				IF constantDeclaration = NIL THEN constantDeclaration:=BuildConstant(module.module,x,constId) END;
 				GetCodeSectionNameForSymbol(constantDeclaration,name);
-				IF ~newObjectFile OR (constantDeclaration.scope = NIL) OR (constantDeclaration.scope.ownerModule = module.module) THEN
+				IF (constantDeclaration.scope = NIL) OR (constantDeclaration.scope.ownerModule = module.module) THEN
 					irv := NewSection(module.allSections, Sections.ConstSection, name,constantDeclaration,commentPrintout # NIL);
 				ELSE
 					irv := NewSection(module.importedSections, Sections.ConstSection, name,constantDeclaration,commentPrintout # NIL);
@@ -9837,9 +9751,6 @@ TYPE
 			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) THEN
 				ReleaseIntermediateOperand(result.tag);
 				result.tag := TypeDescriptorAdr(type);
-				IF ~newObjectFile THEN
-					IntermediateCode.MakeMemory(result.tag,addressType);
-				END;
 				UseIntermediateOperand(result.tag);
 			(* tag for pointer type computed not here but during dereferencing *)
 			END;
@@ -9970,9 +9881,6 @@ TYPE
 			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & ((x.kind = SyntaxTree.ValueParameter) OR x.selfParameter) THEN
 				ReleaseIntermediateOperand(result.tag);
 				result.tag := TypeDescriptorAdr(type);
-				IF ~newObjectFile THEN
-					IntermediateCode.MakeMemory(result.tag,addressType);
-				END;
 				UseIntermediateOperand(result.tag);
 			END;
 			IF Trace THEN TraceExit("VisitParameter") END;
@@ -10302,7 +10210,6 @@ TYPE
 					ReleaseOperand(leftO);
 					
 					arg := TypeDescriptorAdr(base);
-					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
 					Emit(Push(position,arg));
 
 					Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
@@ -10318,7 +10225,6 @@ TYPE
 					ReleaseOperand(leftO);
 					
 					arg := TypeDescriptorAdr(base);
-					IF ~newObjectFile THEN IntermediateCode.MakeMemory(arg, addressType) END;
 					Emit(Push(position,arg));
 
 					Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
@@ -11083,18 +10989,13 @@ TYPE
 				scope := scope.outerScope;
 			END;
 			IF scope.outerScope IS SyntaxTree.ModuleScope THEN
-				IF ~newObjectFile THEN
-					Symbol(moduleSelf,op);
-					IntermediateCode.MakeMemory(op.op,addressType);
+				moduleSection := meta.ModuleSection();
+				IF backend.cooperative THEN
+					moduleOffset := 0;
 				ELSE
-					moduleSection := meta.ModuleSection();
-					IF backend.cooperative THEN
-						moduleOffset := 0;
-					ELSE
-						moduleOffset := moduleSection.pc;
-					END;
-					op.op := IntermediateCode.Address(addressType, moduleSection.name, GetFingerprint(moduleSection.symbol), moduleOffset);
+					moduleOffset := moduleSection.pc;
 				END;
+				op.op := IntermediateCode.Address(addressType, moduleSection.name, GetFingerprint(moduleSection.symbol), moduleOffset);
 			ELSE
 				GetBaseRegister(op.op,currentScope,scope);
 				procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
@@ -11454,9 +11355,6 @@ TYPE
 				END;
 
 				section.SetPositionOrAlignment(procedure.fixed, procedure.alignment);
-				IF moduleBody & ~newObjectFile THEN
-					InitVariables(moduleScope)
-				END;
 				IF (scope.outerScope # NIL) & (scope.outerScope IS SyntaxTree.CellScope) THEN
 					cellScope := scope.outerScope(SyntaxTree.CellScope);
 					IF procedure = cellScope.bodyProcedure THEN
@@ -11583,7 +11481,7 @@ TYPE
 			SELF.module := module;
 			Global.GetModuleName(module.module,moduleName);
 			Global.GetSymbolSegmentedName(module.module, name);
-			IF ReflectionSupport &  implementationVisitor.newObjectFile & ~simple & ~implementationVisitor.backend.cooperative THEN 
+			IF ReflectionSupport & ~simple & ~implementationVisitor.backend.cooperative THEN 
 				NEW(moduleNamePool, 32);
 				(*! require GC protection *)
 				modulePointerSection := Block("Heaps","ArrayBlockDesc",".@ModulePointerArray", modulePointerSectionOffset);
@@ -13205,7 +13103,6 @@ TYPE
 			moduleSection: IntermediateCode.Section; offset: LONGINT; pooledName: Basic.SegmentedName;
 			symbol: SyntaxTree.Symbol;
 		BEGIN
-			ASSERT(implementationVisitor.backend.newObjectFile);
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module");
 			Basic.ToSegmentedName(name, pooledName);
@@ -13391,7 +13288,7 @@ TYPE
 		
 		PROCEDURE PatchCRC(crc: LONGINT);
 		BEGIN
-			IF implementationVisitor.newObjectFile & ~simple THEN
+			IF ~simple THEN
 				PatchLongint(ModuleSection(), patchCRC, crc);
 			END;
 		END PatchCRC;
@@ -13449,7 +13346,6 @@ TYPE
 				name: Basic.SegmentedName;
 				section: IntermediateCode.Section;
 			BEGIN
-					ASSERT(implementationVisitor.newObjectFile);
 					Global.GetSymbolSegmentedName(symbol,name);
 					Basic.AppendToSegmentedName(name,suffix);
 
@@ -13827,19 +13723,8 @@ TYPE
 
 				section := module.allSections.FindBySymbol(td); (* TODO *)
 				IF (section = NIL) OR (section(IntermediateCode.Section).pc = 0) THEN
-					IF implementationVisitor.newObjectFile THEN
-						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-							NewTypeDescriptor
-						END;
-					ELSE
-						(* data section in intermediate code *)
-						Global.GetSymbolSegmentedName(td,name);
-						Basic.SuffixSegmentedName (name, Basic.MakeString("@"));
-						Basic.SuffixSegmentedName (name, module.module.name);
-
-						tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,td,implementationVisitor.dump # NIL);
-						IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),0);
-						tir.Emit(Data(Basic.invalidPosition,op));
+					IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+						NewTypeDescriptor
 					END;
 				END;
 			ELSIF (x IS SyntaxTree.CellType) & implementationVisitor.backend.cellsAreObjects THEN
@@ -13847,10 +13732,8 @@ TYPE
 				td := x.typeDeclaration;
 				section := module.allSections.FindBySymbol(td); (* TODO *)
 				IF (section = NIL) OR (section(IntermediateCode.Section).pc = 0) THEN
-					IF implementationVisitor.newObjectFile THEN
-						IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-							NewTypeDescriptor
-						END;
+					IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+						NewTypeDescriptor
 					END;
 				END;
 			END
@@ -13864,7 +13747,6 @@ TYPE
 		trace-: BOOLEAN;
 		traceString-: SyntaxTree.IdentifierString;
 		traceModuleName-: SyntaxTree.IdentifierString;
-		newObjectFile-: BOOLEAN;
 		profile-: BOOLEAN;
 		noRuntimeChecks: BOOLEAN;
 		simpleMetaData-: BOOLEAN;
@@ -13881,7 +13763,6 @@ TYPE
 		PROCEDURE &InitIntermediateBackend*;
 		BEGIN
 			simpleMetaData := FALSE;
-			newObjectFile := FALSE;
 			InitBackend;
 			SetBuiltinsModuleName(DefaultBuiltinsModuleName);
 			SetTraceModuleName(DefaultTraceModuleName);
@@ -13916,25 +13797,23 @@ TYPE
 			Global.GetModuleName(x, name);
 			module.SetModuleName(name);
 
-			NEW(implementationVisitor,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF, newObjectFile);
+			NEW(implementationVisitor,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
 			NEW(declarationVisitor,system,implementationVisitor,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
 
 			NEW(meta, implementationVisitor, declarationVisitor,simpleMetaData);
 			declarationVisitor.Module(x,module);
 
-			IF newObjectFile & ~meta.simple THEN
+			IF ~meta.simple THEN
 				meta.Module(implementationVisitor.moduleBodySection);
 			END;
 
 			GetDescription(platformName);
 			module.SetPlatformName(platformName);
 
-			IF newObjectFile THEN
-				NEW(crc);
-				module.allSections.WriteRaw(crc);
-				crc.Update;
-				meta.PatchCRC(crc.GetCRC());
-			END;
+			NEW(crc);
+			module.allSections.WriteRaw(crc);
+			crc.Update;
+			meta.PatchCRC(crc.GetCRC());
 			
 			RETURN module
 		END GenerateIntermediate;
@@ -13973,11 +13852,10 @@ TYPE
 		BEGIN instructionSet := "Intermediate";
 		END GetDescription;
 
-		PROCEDURE SetNewObjectFile*(newObjectFile: BOOLEAN; simpleMetaData: BOOLEAN);
+		PROCEDURE SetSimpleMetaData*(simpleMetaData: BOOLEAN);
 		BEGIN
-			SELF.newObjectFile := newObjectFile;
 			SELF.simpleMetaData := simpleMetaData;
-		END SetNewObjectFile;
+		END SetSimpleMetaData;
 
 		PROCEDURE SetTraceModuleName(CONST name: ARRAY OF CHAR);
 		BEGIN COPY(name, traceModuleName)
@@ -13988,7 +13866,6 @@ TYPE
 			DefineOptions^(options);
 			options.Add(0X,"trace",Options.String);
 			options.Add(0X,"builtinsModule",Options.String);
-			options.Add(0X,"newObjectFile",Options.Flag);
 			options.Add(0X,"traceModule",Options.String);
 			options.Add(0X,"profile",Options.Flag);
 			options.Add(0X,"noRuntimeChecks",Options.Flag);
@@ -14012,9 +13889,6 @@ TYPE
 			noRuntimeChecks := options.GetFlag("noRuntimeChecks");
 			noAsserts := options.GetFlag("noAsserts");
 			cooperative := options.GetFlag("cooperative");
-			IF options.GetFlag("newObjectFile") THEN
-				newObjectFile := TRUE; (* might have been set previously via SetNewObjectFile *)
-			END;
 			IF options.GetString("objectFile",string) & (string = "Minos") THEN 
 				simpleMetaData := TRUE
 			END;

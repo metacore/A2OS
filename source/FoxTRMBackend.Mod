@@ -2218,7 +2218,7 @@ TYPE
 		PROCEDURE &InitBackendTRM;
 		BEGIN
 			InitIntermediateBackend;
-			SetNewObjectFile(TRUE,TRUE);
+			SetSimpleMetaData(TRUE);
 			myInstructionSet:=defaultInstructionSet;
 			SetHasLinkRegister;
 			recentInstructionWidth := Sections.UnknownSize;

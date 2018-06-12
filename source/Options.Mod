@@ -507,13 +507,24 @@ TYPE
 			index := FindOption(optionName);
 			IF (index # Invalid) THEN
 				IF ~checkTimestamp OR (options[index].timestamp < timestamp) THEN
-					IF (options[index].type = String) THEN
-						options[index].timestamp := timestamp;
+					options[index].timestamp := timestamp;
+					CASE options[index].type OF
+					| Flag:
+						IF (string = "false") THEN
+							options[index].isSet := FALSE;
+							RETURN TRUE;
+						ELSIF (string = "true") THEN
+							options[index].isSet := TRUE;
+							RETURN TRUE;
+						ELSIF (error # NIL) THEN
+							error.String("Option "); ShowOption(ch, name);
+							error.String(" expects a boolean parameter"); error.Ln;
+						END;
+					| String:
 						options[index].isSet := TRUE;
 						COPY(string, options[index].string);
 						RETURN TRUE;
-					ELSIF (options[index].type = Integer) THEN
-						options[index].timestamp := timestamp;
+					| Integer:
 						IF StringToInteger(string, options[index].value, TRUE) THEN
 							options[index].isSet := TRUE;
 							RETURN TRUE;
@@ -521,14 +532,10 @@ TYPE
 							error.String("Option "); ShowOption(ch, name);
 							error.String(" expects decimal number as parameter"); error.Ln;
 						END;
-					ELSIF (options[index].type=Real) THEN
-						options[index].timestamp:=timestamp;
+					| Real:
 						Strings.StrToFloat(string, options[index].rvalue);
 						options[index].isSet:=TRUE;
 						RETURN TRUE;
-					ELSIF (error # NIL) THEN
-						error.String("Option "); ShowOption(ch, name);
-						error.String(" does not have a parameter"); error.Ln;
 					END;
 				ELSIF (error # NIL) THEN
 					error.String("Option "); ShowOption(ch, name);
@@ -797,5 +804,8 @@ Options.Test  -i="99" --flag ~
 Options.Test -afds -b --fdas ~
 
 Options.Test -f  -s=fds ~
+
+Options.Test -f=true ~
+Options.Test --flag=false ~
 
 System.Free Options ~

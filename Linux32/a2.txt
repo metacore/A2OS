@@ -4,7 +4,6 @@ Files.AddSearchPath ../source ~
 Files.SetWorkPath work ~
 Configuration.Init~
 FSTools.Mount WORK RelativeFileSystem . ~
-Debugging.DisableGC~
 Display.Install ~
 WindowManager.Install ~
 Autostart.Run~

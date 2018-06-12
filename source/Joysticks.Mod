@@ -458,7 +458,7 @@ VAR
 	registry- : Plugins.Registry;
 	nextId : LONGINT;
 
-PROCEDURE EventHandler(event : LONGINT; plugin : Plugins.Plugin);
+PROCEDURE EventHandler(event : WORD; plugin : Plugins.Plugin);
 VAR
 	joystick : Joystick;
 	connectedMsg : JoystickConnectedMessage; disconnectedMsg : JoystickDisconnectedMessage;

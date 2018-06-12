@@ -517,7 +517,7 @@ TYPE
 			IF lockLevel = 0 THEN lockedBy := NIL; END
 		END Release;
 
-		PROCEDURE DiskEventHandler(event : LONGINT; plugin : Plugins.Plugin);
+		PROCEDURE DiskEventHandler(event : WORD; plugin : Plugins.Plugin);
 		VAR tempTable : Plugins.Table; dev : AosDisks.Device; i, j : LONGINT;
 		BEGIN
 			ASSERT(plugin#NIL);

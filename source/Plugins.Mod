@@ -40,7 +40,7 @@ TYPE
 	PluginHandler* = PROCEDURE {DELEGATE} (p: Plugin);
 
 	(** Event handler (upcall) *)
-	EventHandler* = PROCEDURE {DELEGATE} (event: LONGINT; plugin: Plugin);
+	EventHandler* = PROCEDURE {DELEGATE} (event: WORD; plugin: Plugin);
 
 	(* List item of event handler list *)
 	EventHandlerList = POINTER TO RECORD
@@ -55,7 +55,7 @@ TYPE
 	Registry* = OBJECT (Plugin)
 		VAR
 			root: Plugin;	(* list of registered plugins, in order of registration *)
-			added: LONGINT;	(* number of plugins successfully added (for synchronization) *)
+			added: SIZE;	(* number of plugins successfully added (for synchronization) *)
 			handlers: EventHandlerList;	(* list of installed event handlers *)
 
 		(** Get a specific plugin.  If name = "", get the first existing plugin.  Return NIL if it was not found. *)
@@ -73,7 +73,7 @@ TYPE
 		(** Like Get, but wait until the plugin is available. *)
 
 		PROCEDURE Await*(CONST name: ARRAY OF CHAR): Plugin;
-		VAR p: Plugin; num: LONGINT;
+		VAR p: Plugin; num: SIZE;
 		BEGIN {EXCLUSIVE}
 			LOOP
 				p := root;
@@ -100,7 +100,7 @@ TYPE
 		(** Get a table of available plugin instances in the registry, in order of registration.  If none are available, table = NIL, otherwise LEN(table^) is the number of available plugins. *)
 
 		PROCEDURE GetAll*(VAR table: Table);
-		VAR p: Plugin; num, i: LONGINT;
+		VAR p: Plugin; num, i: SIZE;
 		BEGIN {EXCLUSIVE}
 			num := 0; p := root;	(* get number of entries *)
 			WHILE p # NIL DO INC(num); p := p.link END;
@@ -230,8 +230,8 @@ TYPE
 VAR
 	main*: Registry;	(** registry of all registries (excluding itself) *)
 
-PROCEDURE AppendInt(x: LONGINT; VAR to: ARRAY OF CHAR);
-VAR i, m: LONGINT;
+PROCEDURE AppendInt(x: SIZE; VAR to: ARRAY OF CHAR);
+VAR i, m: SIZE;
 BEGIN
 	ASSERT(x >= 0);
 	i := 0; WHILE to[i] # 0X DO INC(i) END;
@@ -248,7 +248,7 @@ BEGIN
 	to[i] := 0X
 END AppendInt;
 
-PROCEDURE GenName(n: LONGINT; VAR registry, plugin: Name);
+PROCEDURE GenName(n: SIZE; VAR registry, plugin: Name);
 BEGIN
 	COPY(registry, plugin);
 	AppendInt(n, plugin)

@@ -139,7 +139,7 @@ END Removed;
 
 
 (* Handle events of installed/removed devices *)
-PROCEDURE EventHandler(event: LONGINT; plugin: Plugins.Plugin);
+PROCEDURE EventHandler(event: WORD; plugin: Plugins.Plugin);
 BEGIN
 	IF event = Plugins.EventAdd THEN
 		Added(plugin(Network.LinkDevice));

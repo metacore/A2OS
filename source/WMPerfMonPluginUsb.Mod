@@ -75,7 +75,7 @@ BEGIN {EXCLUSIVE}
 	WMPerfMonPlugins.updater.RemoveByName(PluginName, devicename);
 END RemovePlugin;
 
-PROCEDURE EventHandler(event : LONGINT; plugin : Plugins.Plugin);
+PROCEDURE EventHandler(event : WORD; plugin : Plugins.Plugin);
 BEGIN
 	IF event = Plugins.EventAdd THEN
 		AddPlugin(plugin (UsbHcdi.Hcd));

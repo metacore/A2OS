@@ -1660,7 +1660,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END GetRootHubs;
 
-PROCEDURE RootHubEvent(event : LONGINT; plugin : Plugins.Plugin);
+PROCEDURE RootHubEvent(event : WORD; plugin : Plugins.Plugin);
 VAR hcd : UsbHcdi.Hcd;
 BEGIN
 	hcd := plugin(UsbHcdi.Hcd);

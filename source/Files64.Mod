@@ -465,7 +465,7 @@ END OpenWriter;
 (** Split fullname = ( prefix ":" name ) into prefix and name *)
 
 PROCEDURE SplitName*(fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
-VAR i, j, len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
 	i := 0; WHILE (fullname[i] # ":") & (fullname[i] # 0X) DO INC(i) END;
 	IF (fullname[i] # ":") OR (i >= LEN(prefix)) THEN
@@ -482,7 +482,7 @@ END SplitName;
 (** Join prefix and name to fullname = ( prefix ":" name ) *)
 
 PROCEDURE JoinName*(prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
-VAR i, j, len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
 	len := LEN(fullname)-1;
 	i := 0; WHILE (i < len) & (prefix[i] # 0X) DO fullname[i] := prefix[i]; INC(i) END;
@@ -494,7 +494,7 @@ END JoinName;
 (** Split a pathname at the last PathDelimiter or ":" into path and filename = ( {path (PathDelimiter|":")} filename ) *)
 
 PROCEDURE SplitPath*(pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
 	i := 0; j := -1;
 	WHILE pathname[i] # 0X DO
@@ -514,7 +514,7 @@ END SplitPath;
 (** Join path and file name = ( path PathDelimiter name ) *)
 
 PROCEDURE JoinPath*(path, name: ARRAY OF CHAR; VAR pathname: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
 	len := LEN(pathname)-1;
 	i := 0; WHILE (i < len) & (path[i] # 0X) DO pathname[i] := path[i]; INC(i) END;
@@ -526,14 +526,14 @@ END JoinPath;
 (** Split a filename at the last '.' into name and extension = ( name "." extension ) *)
 
 PROCEDURE SplitExtension*(filename: ARRAY OF CHAR; VAR name, extension: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
-	i := 0; j := -1;
+	i := 0; j := 0;
 	WHILE filename[i] # 0X DO
 		IF filename[i] = "." THEN j := i END;
 		INC(i)
 	END;
-	IF (j = -1) THEN (* no extension *)
+	IF (j = 0) & (filename[0] # ".") THEN (* no extension *)
 		COPY(filename, name); COPY("", extension)
 	ELSE
 		i := 0; len := LEN(name)-1;
@@ -547,7 +547,7 @@ END SplitExtension;
 (** Join name and extension = ( name "." extension ) *)
 
 PROCEDURE JoinExtension*(name, extension: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i,j,len: SIZE;
 BEGIN
 	len := LEN(filename)-1;
 	i := 0; WHILE (i < len) & (name[i] # 0X) DO filename[i] := name[i]; INC(i) END;
@@ -560,7 +560,7 @@ END JoinExtension;
 (** Append the path delimiter to path if path does not contain one *)
 
 PROCEDURE ForceTrailingDelimiter*(VAR path: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0; WHILE path[i] # 0X DO INC(i) END;
 	IF (i = 0) OR (path[i-1] # PathDelimiter) THEN
@@ -1111,7 +1111,7 @@ BEGIN
 END ReadLReal;
 
 PROCEDURE ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR);
-VAR i: LONGWORD; ch: CHAR; f: File;
+VAR i: SIZE; ch: CHAR; f: File;
 BEGIN
 	i := 0; f := r.file;
 	LOOP
@@ -1214,7 +1214,7 @@ END WriteNum;
 (** Append first string to second string, truncating on overflow. *)
 
 PROCEDURE AppendStr*(from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR);
-VAR i, j, m: LONGINT;
+VAR i, j, m: SIZE;
 BEGIN
 	j := 0; WHILE to[j] # 0X DO INC(j) END;
 	m := LEN(to)-1;
@@ -1225,7 +1225,7 @@ END AppendStr;
 (** Append unsigned integer to string in ASCII format. *)
 
 PROCEDURE AppendInt*(x: LONGINT; VAR to: ARRAY OF CHAR);
-VAR i, m: LONGINT;
+VAR i: SIZE; m: LONGINT;
 BEGIN
 	ASSERT(x >= 0);
 	i := 0; WHILE to[i] # 0X DO INC(i) END;
@@ -1244,7 +1244,7 @@ END AppendInt;
 
 (** Get the dev#part string from the stream *)
 PROCEDURE GetDevPart*(arg : Streams.Reader; VAR deviceName : ARRAY OF CHAR; VAR partition : LONGINT);
-VAR i : LONGINT; ch : CHAR;
+VAR i: SIZE; ch : CHAR;
 BEGIN
 	arg.SkipWhitespace;
 	deviceName := ""; partition := 0;

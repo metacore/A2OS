@@ -220,6 +220,13 @@ TYPE
 			Char( CHR( x MOD 128 ) )
 		END RawNum;
 
+	(** Write a size in a compressed format. *)
+		PROCEDURE RawSize*( x: SIZE );
+		BEGIN
+			WHILE (x < -64) OR (x > 63) DO Char( CHR( x MOD 128 + 128 ) );  x := x DIV 128 END;
+			Char( CHR( x MOD 128 ) )
+		END RawSize;
+
 		(** -- Write formatted data -- *)
 
 	(** Write an ASCII end-of-line (CR/LF). *)
@@ -381,7 +388,7 @@ TYPE
 
 
 	(** Write LONGREAL x  using n character positions. *)
-		PROCEDURE Float*( x: LONGREAL;  n: LONGINT );
+		PROCEDURE Float*( x: LONGREAL;  n: WORD );
 		(* BM 1993.4.22. Do not simplify rounding! *)
 		VAR e, h, l, i: LONGINT;  z: LONGREAL;
 			d: ARRAY 16 OF CHAR;
@@ -422,7 +429,7 @@ TYPE
 		END Float;
 
 	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
-		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: LONGINT );
+		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: WORD );
 		(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
 		VAR e, h, l, i: LONGINT;  r, z: LONGREAL;
 			d: ARRAY 16 OF CHAR;
@@ -761,6 +768,15 @@ TYPE
 			x := ASH( LSH( LONGINT( ORD( ch ) ), 25 ), n - 25 ) + y
 		END RawNum;
 
+	(** Read a size in a compressed format. *)
+		PROCEDURE RawSize*( VAR x: SIZE );
+		VAR ch: CHAR;  n, y: SIZE;
+		BEGIN
+			n := 0;  y := 0;  ch := Get();
+			WHILE ch >= 80X DO INC( y, LSH( SIZE( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
+			x := ASH( LSH( SIZE( ORD( ch ) ), SIZE OF SIZE * 8 - 7 ), n - SIZE OF SIZE * 8 - 7 ) + y
+		END RawSize;
+
 		(** -- Read formatted data (uses Peek for one character lookahead) -- *)
 
 	 (** Read an integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
@@ -907,7 +923,7 @@ TYPE
 
 	(** Read a token, consisting of any string of characters terminated by space, TAB or EOLN. *)
 		PROCEDURE Token*( VAR token: ARRAY OF CHAR );
-		VAR j, max: LONGWORD;  ch: CHAR;
+		VAR j, max: SIZE;  ch: CHAR;
 		BEGIN
 			j := 0;  max := LEN( token ) - 1;
 			LOOP
@@ -921,7 +937,7 @@ TYPE
 
 	(** Read an optionally "" or '' enquoted string.  Will not read past the end of a line. *)
 		PROCEDURE String*( VAR string: ARRAY OF CHAR );
-		VAR c, delimiter: CHAR;  i, len: LONGWORD;
+		VAR c, delimiter: CHAR;  i, len: SIZE;
 		BEGIN
 			c := Peek();
 			IF (c # "'") & (c # '"') THEN Token( string )

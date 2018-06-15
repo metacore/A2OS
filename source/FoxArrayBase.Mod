@@ -258,7 +258,7 @@ VAR
 	END SafePut;
 	
 	(* set data base pointer (GC protection) *)
-	PROCEDURE PutPtr(CONST base: UnsafeArray; value: ANY);
+	PROCEDURE PutPtr(CONST base: UnsafeArrayT; value: ANY);
 	BEGIN
 		base.ptr := value;
 		(*
@@ -524,7 +524,7 @@ Sufficient (but not necessary) conditions:
 	(*** procedures to traverse arrays and apply operators *)
 	
 	(** apply unary operator to array:  array SHORTINT -> array SHORTINT *)
-	PROCEDURE ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	PROCEDURE ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -567,7 +567,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpS;
 
 	(** apply unary operator to array:  array INTEGER -> array INTEGER *)
-	PROCEDURE ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE(x: INTEGER): INTEGER );
+	PROCEDURE ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE(x: INTEGER): INTEGER );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -610,7 +610,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpI;
 
 	(** apply unary operator to array:  array SIZE -> array SIZE *)
-	PROCEDURE ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE(x: LONGINT): LONGINT );
+	PROCEDURE ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE(x: LONGINT): LONGINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -653,7 +653,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpL;
 	
 	(** apply unary operator to array:  array HUGEINT -> array HUGEINT *)
-	PROCEDURE ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	PROCEDURE ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -696,7 +696,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpH;
 	
 	(** apply unary operator to array:  array REAL -> array REAL *)
-	PROCEDURE ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
+	PROCEDURE ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -739,7 +739,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpR;
 	
 	(** apply unary operator to array:  array LONGREAL -> array LONGREAL *)
-	PROCEDURE ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	PROCEDURE ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -782,7 +782,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpX;
 	
 	(** apply unary operator to array:  array COMPLEX -> array COMPLEX *)
-	PROCEDURE ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	PROCEDURE ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -825,7 +825,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpZ;
 	
 	(** apply unary operator to array:  array LONGCOMPLEX -> array LONGCOMPLEX *)
-	PROCEDURE ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArray;  elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	PROCEDURE ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -868,7 +868,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpLZ;
 	
 (** apply unary operator to array:  array -> array *)
-	PROCEDURE ApplyUnaryAAOp(VAR dest: UnsafeArrayT; CONST left: UnsafeArray; elementSize: SIZE;
+	PROCEDURE ApplyUnaryAAOp(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE;
 														Loop: UnaryAALoop );
 	VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 		origdest: SIZE;  modes: SET;
@@ -920,7 +920,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyUnaryAAOp;
 
 (** apply unary operator to array:  array -> scalar *)
-	PROCEDURE ApplyUnaryASOp( dest: ADDRESS; CONST left: UnsafeArray; Loop: UnaryASLoop );
+	PROCEDURE ApplyUnaryASOp( dest: ADDRESS; CONST left: UnsafeArrayT; Loop: UnaryASLoop );
 	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
 	VAR dim: SIZE;
 
@@ -8191,12 +8191,11 @@ TYPE
 	(*** LEN: array -> array **)
 
 	OPERATOR "LEN"*(CONST left: ARRAY [?]): ARRAY [*] OF SIZE;
-	VAR src: ADDRESS; dim,i: SIZE;
+	VAR dim,i: SIZE;
 	BEGIN
-		src := SYSTEM.VAL(ADDRESS,left);
-		dim := GetDim( src );
+		dim := GetDim( left );
 		IF (DIM(RESULT)#1) OR (LEN(RESULT,0) # dim) THEN NEW(RESULT,dim) END;
-		FOR i := 0 TO dim-1 DO RESULT[i] := LenType(GetLen(src,i)) END;
+		FOR i := 0 TO dim-1 DO RESULT[i] := LenType(GetLen(left,i)) END;
 		RETURN RESULT
 	END "LEN";
 
@@ -10225,7 +10224,7 @@ TYPE
 	END DoReshape;
 
 	(* this is memory safe: the allocation result is written to a pointer in the call chain *)
-	PROCEDURE AllocateTensorA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; VAR dest: UnsafeArray );
+	PROCEDURE AllocateTensorA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; VAR dest: UnsafeArrayT );
 	VAR descr, data: ANY;  same: BOOLEAN;  i: SIZE;  dim: SIZE;
 
 		PROCEDURE NewData;
@@ -10277,7 +10276,7 @@ TYPE
 		END;		
 	END AllocateTensorA;
 
-	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray );
+	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray);
 	BEGIN
 		AllocateTensorA(a,elementSize,tag,dest);
 		IF dest.ptr # NIL THEN Heaps.SetPC(dest.ptr) END;
@@ -10768,3 +10767,6 @@ System.ListModules
 System.FreeDownTo FoxArrayBase ~ 
 
 
+
+
+Debugging.DisableGC 

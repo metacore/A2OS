@@ -1379,6 +1379,11 @@ TYPE
 					END;
 					INC(y,8);INC(y0);
 				END;
+				IF selection.rectOwner = SELF THEN
+					r0 := selection.rect;
+				 	color := LONGINT(0FF000080H);
+					canvas.Fill(r0, color, WMGraphics.ModeCopy); 
+				END; 			
 			END;
 			IF selection.Has(SELF) THEN
 				IF selection.state = 0 THEN
@@ -1710,8 +1715,14 @@ TYPE
 		VAR event : KeyPressedEvent; command : Strings.String; scale: LONGINT;
 			clone: Repositories.Component; parent: XML.Content; parentEditMode: BOOLEAN;
 			enum: XMLObjects.Enumerator; obj: ANY;
+			po: VisualComponent;
+			entry: ComponentListEntry;
+			c: VisualComponent;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
+			IF fPointerOwner # SELF THEN
+				RETURN fPointerOwner.EditKeyEvents(ucs,flags,keySym);
+			END;
 			event.ucs := ucs; event.flags := flags; event.keysym := keySym;
 
 			parent := GetParent();
@@ -1735,8 +1746,20 @@ TYPE
 					ELSIF keySym = Inputs.KsDown THEN selection.Shift(0,scale); RETURN TRUE
 					ELSIF keySym = Inputs.KsUp THEN selection.Shift(0,-scale); RETURN TRUE
 					ELSIF keySym=4 (* CTRL-D *) THEN
-						clone := Clone(selection.first.component);
-						parent := selection.first.component.GetParent(); parent(Component).AddContent(clone);
+						entry := selection.first;
+						WHILE entry # NIL DO
+							clone := Clone(entry.component);
+							parent := selection.first.component.GetParent(); 
+							c := clone(VisualComponent);
+							IF c.sequencer # parent(Component).sequencer THEN c.SetSequencer(parent(Component).sequencer) END;
+							c.Reset(NIL, NIL);
+							c.RecacheProperties;
+							parent(Component).AddContent(c);
+
+							entry.component := clone(VisualComponent);
+							entry := entry.next;
+						END;
+						selection.Shift(20,20);
 						RETURN TRUE
 					ELSIF keySym=1 THEN (* CTRL-A *)
 						enum := GetContents();
@@ -1768,21 +1791,6 @@ TYPE
 				ELSIF (keySym = Inputs.KsEscape) THEN
 					command := GetAttributeValue("onEscape");
 					selection.Reset(NIL);
-				(*ELSIF (keySym = Inputs.KsF1) & (Inputs.Shift * flags # {}) THEN
-					SetEditMode(~editMode.Get(), TRUE);
-				   ELSIF editMode.Get() THEN
-					IF Inputs.Shift * flags # {} THEN scale := 1 ELSE scale := 4 END;
-					IF keySym = Inputs.KsLeft THEN selection.Shift(-scale,0)
-					ELSIF keySym = Inputs.KsRight THEN selection.Shift(scale,0)
-					ELSIF keySym = Inputs.KsDown THEN selection.Shift(0,scale)
-					ELSIF keySym = Inputs.KsUp THEN selection.Shift(0,-scale)
-					ELSIF keySym=4 (* CTRL-D *) THEN
-						clone := Clone(selection.first.component);
-						parent := selection.first.component.GetParent(); parent(Component).AddContent(clone);
-					ELSIF keySym = Inputs.KsDelete THEN
-						RemoveSelection();
-					END;
-				*)
 				END;
 				IF (command # NIL) THEN HandleEvent(event, SELF, command); END;
 
@@ -1864,6 +1872,7 @@ TYPE
 		PROCEDURE Edit(VAR msg: Messages.Message);
 		VAR region: LONGINT; dx,dy: LONGINT; b: Rectangles.Rectangle; manager: WM.WindowManager;
 			w,h: LONGINT; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas; e: ComponentListEntry;
+			tr,or : Rectangles.Rectangle; enum: XMLObjects.Enumerator; obj: ANY;
 			alignRelative : BOOLEAN;
 		BEGIN
 			IF msg.msgSubType = Messages.MsgSubPointerUp THEN
@@ -1899,6 +1908,25 @@ TYPE
 					IF StartDrag(selection,img,-msg.x-e.dx,-msg.y-e.dy, EditMoved,NIL) THEN END;
 				END;
 				RETURN
+			ELSIF (editRegion = None) & (msg.flags * {0,1,2} # {}) THEN
+					tr.l :=MIN (editX,msg.x); ;
+					tr.t := MIN(editY, msg.y);
+					tr.r := MAX(editX, msg.x);
+					tr.b := MAX(editY, msg.y); 
+					selection.rectOwner := SELF;
+					selection.rect := tr;
+					Invalidate;
+					enum := GetContents();
+						WHILE enum.HasMoreElements() DO
+							obj := enum.GetNext();
+							IF (obj IS VisualComponent) THEN
+								 or := obj(VisualComponent).bounds.Get();
+								 IF Rectangles.Intersect(or, tr) THEN
+									selection.Add(obj(VisualComponent))
+								END;
+							END;
+						END;
+				RETURN;
 			END;
 			AdaptRelativeBounds(b, GetParent());
 			bounds.Set(b);
@@ -2010,6 +2038,12 @@ TYPE
 									ELSE oldPointerInfo := GetPointerInfo();
 									END;
 								END;
+							ELSIF editMode.Get() & (msg.flags * {0, 1, 2} # {}) & ~parentEditMode   THEN
+								IF (keyFlags # {}) & (keyFlags <= Inputs.Shift) THEN
+								ELSE
+									selection.Reset(SELF);
+								END;
+								Edit(msg);
 							END;
 
 							IF extPointerMove # NIL THEN extPointerMove(msg.x, msg.y, msg.flags, handled) END;
@@ -2019,6 +2053,10 @@ TYPE
 						ELSIF msg.msgSubType = Messages.MsgSubPointerDown THEN
 							IF parentEditMode THEN
 								editRegion := InEditBounds(msg.x, msg.y);
+							ELSIF editMode.Get() THEN 
+								editRegion := None;
+
+								editX := msg.x; editY := msg.y;
 							END;
 							(*
 							IF (msg.originator # NIL) & (msg.originator IS WM.ViewPort) THEN
@@ -2028,10 +2066,12 @@ TYPE
 								editRegion := None
 							END;
 							*)
-							IF editRegion # None THEN
+							IF (editRegion # None) & parentEditMode THEN
 								IF (keyFlags # {}) & (keyFlags <= Inputs.Shift) THEN
 									selection.Toggle(SELF)
-								ELSIF ~selection.Has(SELF) THEN selection.Reset(SELF)
+								ELSIF ~selection.Has(SELF) THEN 
+									selection.Reset(SELF);
+									selection.Add(SELF);
 								END;
 								manager := msg.originator(WM.ViewPort).manager;
 								editX := msg.x; editY := msg.y;
@@ -2041,6 +2081,10 @@ TYPE
 							END;
 							SetFocus
 						ELSIF msg.msgSubType = Messages.MsgSubPointerUp THEN
+							IF selection.rectOwner = SELF THEN 
+								Invalidate;
+								selection.rectOwner := NIL;
+							END;
 							IF extPointerUp # NIL THEN extPointerUp(msg.x, msg.y, msg.flags, handled) END;
 							IF ~handled THEN PointerUp(msg.x, msg.y, msg.flags) END
 						ELSIF msg.msgSubType = Messages.MsgSubPointerLeave THEN
@@ -2061,9 +2105,9 @@ TYPE
 					 fPointerOwner.Handle(msg)
 				END
 			ELSIF msg.msgType = Messages.MsgKey THEN
-				IF focusComponent # SELF THEN focusComponent.Handle(msg)
-				ELSIF EditKeyEvents(msg.x, msg.flags, msg.y) THEN
-					handled := TRUE;
+				IF fPointerOwner.EditKeyEvents(msg.x, msg.flags, msg.y) THEN 
+					handled := TRUE
+				ELSIF focusComponent # SELF THEN focusComponent.Handle(msg)
 				ELSIF (visible.Get()) THEN
 					IF ~needsTab.Get() & (msg.y = 0FF09H) THEN
 						IF (Inputs.Shift * msg.flags # {}) THEN FocusPrev ELSE FocusNext END
@@ -2517,6 +2561,8 @@ TYPE
 	VAR first, last: ComponentListEntry; number: LONGINT; state: LONGINT; timer: Kernel.Timer;
 		onChanged-: WMEvents.EventSource;
 		lock: Locks.RecursiveLock;
+		rectOwner: ANY;
+		rect : Rectangles.Rectangle;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -2532,7 +2578,7 @@ TYPE
 			first := NIL; last := NIL; number := 0;
 			WHILE entry # NIL DO entry.component.Invalidate; entry := entry.next END;
 			lock.Release;
-			Add(this);
+			(*Add(this);*)
 			onChanged.Call(SELF);
 		END Reset;
 
@@ -2703,21 +2749,7 @@ VAR
 
 	macroHandlers : MacroHandler; (* the head of the list is always the DefaultMacroHandler *)
 	selection-: SelectionList;
-(*
-PROCEDURE ResetInternal(parent:Component);
-VAR c: XML.Content;
-BEGIN
-	IF ~parent.initialized THEN parent.Initialize END;
-	(*parent.RecacheProperties;*)
-	c := parent.GetFirst();
-	WHILE (c # NIL) DO
-		IF c IS Component THEN 
-			ResetInternal(c(Component)) 
-		END;
-		c := parent.GetNext(c);
-	END;
-END ResetInternal;
-*)
+
 
 PROCEDURE IsWhiteSpace(ch : CHAR) : BOOLEAN;
 BEGIN

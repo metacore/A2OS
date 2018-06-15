@@ -10112,7 +10112,6 @@ TYPE
 				len := shape[i];  PutInc( dest, i, size );  PutLen( dest, i, len );
 				size := size * len;
 			END;
-			TRACE(size);
 			SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 			PutAdr( dest, Align(data) );
 			PutPtr( dest, data );  PutDim( dest, newDim );

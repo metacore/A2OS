@@ -1,5 +1,5 @@
 # Math Array Exeuction Test Suite
-# options 	--mayTrap --prolog="Compiler.Compile -p=Win32 TesterInput.txt" --command="System.Free Test Dummy B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="MathArrays.Execution.Test.Diff"
+# options 	--mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test Dummy B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="MathArrays.Execution.Test.Diff"
 
 positive: DIM and LEN
 
@@ -700,36 +700,6 @@ positive: conversion tests
 		i := SHORT(l); Driver.TestFillI(i);
 		s := SHORT(i); Driver.TestFillS(s);
 	END Test.
-
-positive: array structured object type (was: problem with register restoration when returning composite type)
-
-	 MODULE Test;
-	 TYPE
-	  Asot = OBJECT(ARRAY [4, 3] OF LONGINT)
-	  VAR
-	   data: ARRAY [4, 3] OF LONGINT;
-	   OPERATOR "LEN"*(): ARRAY [2] OF LONGINT;
-	   BEGIN RESULT := [LONGINT(4), 3]; RETURN RESULT
-	   END "LEN";
-
-	   (* problematic operator: *)
-	   OPERATOR "[]"*(range0, range1: RANGE): ARRAY [*, *] OF LONGINT;
-	   BEGIN
-	    RESULT := data[*, 1 .. 2];
-	    RETURN RESULT
-	   END "[]";
-
-	   (* not relevant here: *)
-	   OPERATOR "[]"*(range0, range1: RANGE; rhs: ARRAY [*, *] OF LONGINT);
-	   BEGIN
-	   END "[]";
-	  END Asot;
-	 VAR asot: Asot;
-	 BEGIN
-	  NEW(asot);
-	  ASSERT(asot[*, *][*, 0] = [LONGINT(0),0,0,0]);
-	  ASSERT(asot[*, *][*, 0] = [LONGINT(0),0,0,0]);
-	 END Test.
 
 positive: correct use of ADDRESS OF and SYSTEM.VAL for tensors and open math arrays
 

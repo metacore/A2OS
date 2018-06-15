@@ -6818,7 +6818,7 @@ TYPE
 							Symbol(variable, operand);
 							MakeMemory(tmp,operand.op,addressType,0);
 							ReleaseOperand(operand);
-							IF temporary THEN
+							IF FALSE & temporary THEN
 									(* trick -- temporary object from array base *)
 									symbol := GetSymbol(moduleScope,"FoxArrayBase","temporary");
 									Symbol(symbol,operand);

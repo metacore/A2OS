@@ -128,7 +128,7 @@ TYPE
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
 		PROCEDURE GetMC*(VAR s: SET);
 		END GetMC;
-		
+
 		(** Setup receive timeout (maximum time allowed to elapse before arrival of the next data byte) in ms.
 			Use timeout <= 0 to disable receive timeout handling  *)
 		PROCEDURE SetReceiveTimeout*(timeout: LONGINT);
@@ -251,15 +251,9 @@ BEGIN{EXCLUSIVE}
 		IF Trace.Char # TraceChar THEN
 			traceChar0 := Trace.Char;
 		END;
-
-		TRACE(traceChar0);
-
-		Machine.Acquire(Machine.TraceOutput);
 		tracePort := port;
 		Trace.Char := TraceChar;
-		Machine.Release(Machine.TraceOutput);
 
-		TRACE(Trace.Char);
 	ELSIF portNumber = 0 THEN
 		tracePort := NIL;
 		IF Trace.Char # TraceChar THEN
@@ -268,11 +262,7 @@ BEGIN{EXCLUSIVE}
 		Trace.Char := TraceChar;
 	ELSIF portNumber < 0 THEN
 		IF traceChar0 # NIL THEN
-
-			Machine.Acquire(Machine.TraceOutput);
 			Trace.Char := traceChar0;
-			Machine.Release(Machine.TraceOutput);
-
 			tracePort := NIL;
 			traceChar0 := NIL;
 		END;

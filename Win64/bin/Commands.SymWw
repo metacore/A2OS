@@ -19,7 +19,7 @@ TYPE
 		in-, arg-: Streams.Reader; 
 		out-, error-: Streams.Writer; 
 		caller-: OBJECT; 
-		result*: LONGINT; 
+		result*: WORD; 
 
 		PROCEDURE ^  & Init*(in, arg: Streams.Reader; out, error: Streams.Writer; caller: OBJECT); 
 	END Context; 
@@ -53,11 +53,11 @@ TYPE
 		msg: ARRAY 128 OF CHAR; 
 		res: WORD; 
 		module: Modules.Module; 
-		state: LONGINT; 
+		state: WORD; 
 		exception: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(CONST moduleName, commandName: Modules.Name; context: Context); 
-		PROCEDURE ^ Join(this: LONGINT; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Join(this: WORD; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	BEGIN{ACTIVE, SAFE} 
 	END Runner; 
 VAR 

@@ -23,7 +23,7 @@ TYPE
 
 	PluginHandler* = PROCEDURE {DELEGATE}(p: Plugin); 
 
-	EventHandler* = PROCEDURE {DELEGATE}(event: LONGINT; plugin: Plugin); 
+	EventHandler* = PROCEDURE {DELEGATE}(event: WORD; plugin: Plugin); 
 
 	EventHandlerList = POINTER TO RECORD 
 		next: EventHandlerList; 
@@ -35,7 +35,7 @@ TYPE
 	Registry* = OBJECT {EXCLUSIVE} (Plugin)
 	VAR 
 		root: Plugin; 
-		added: LONGINT; 
+		added: SIZE; 
 		handlers: EventHandlerList; 
 
 		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR): Plugin; 
@@ -51,7 +51,7 @@ TYPE
 VAR 
 	main*: Registry; 
 
-	PROCEDURE ^ AppendInt(x: LONGINT; VAR to: ARRAY OF CHAR); 
-	PROCEDURE ^ GenName(n: LONGINT; VAR registry, plugin: Name); 
+	PROCEDURE ^ AppendInt(x: SIZE; VAR to: ARRAY OF CHAR); 
+	PROCEDURE ^ GenName(n: SIZE; VAR registry, plugin: Name); 
 BEGIN
 END Plugins.

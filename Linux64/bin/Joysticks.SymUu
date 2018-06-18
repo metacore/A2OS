@@ -133,7 +133,7 @@ VAR
 	registry-: Plugins.Registry; 
 	nextId: LONGINT; 
 
-	PROCEDURE ^ EventHandler(event: LONGINT; plugin: Plugins.Plugin); 
+	PROCEDURE ^ EventHandler(event: WORD; plugin: Plugins.Plugin); 
 	PROCEDURE ^ GetId(): LONGINT; 
 	PROCEDURE ^ Round(value: REAL): LONGINT; 
 	PROCEDURE ^ GetAxisName*(axisNbr: LONGINT; VAR name: ARRAY OF CHAR); 

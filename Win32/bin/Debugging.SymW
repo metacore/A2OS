@@ -16,10 +16,10 @@ VAR
 	PROCEDURE ^ Str*(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ String*(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ Address*(i: ADDRESS); 
-	PROCEDURE ^ Int*(i, j: LONGINT); 
+	PROCEDURE ^ Int*(i: HUGEINT; j: WORD); 
 	PROCEDURE ^ Set*(set: SET); 
-	PROCEDURE ^ Float*(r: LONGREAL; len: LONGINT); 
-	PROCEDURE ^ Hex*(i: HUGEINT; j: LONGINT); 
+	PROCEDURE ^ Float*(r: LONGREAL; len: WORD); 
+	PROCEDURE ^ Hex*(i: HUGEINT; j: WORD); 
 	PROCEDURE ^ HIntHex*(x: HUGEINT); 
 	PROCEDURE ^ Char*(c: CHAR); 
 	PROCEDURE ^ Update*; 

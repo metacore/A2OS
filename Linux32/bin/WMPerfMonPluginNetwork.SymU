@@ -18,7 +18,7 @@ TYPE
 
 	PROCEDURE ^ AddPlugin(dev: Network.LinkDevice); 
 	PROCEDURE ^ RemovePlugin(dev: Network.LinkDevice); 
-	PROCEDURE ^ EventHandler(event: LONGINT; plugin: Plugins.Plugin); 
+	PROCEDURE ^ EventHandler(event: WORD; plugin: Plugins.Plugin); 
 	PROCEDURE ^ InitPlugins; 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Cleanup; 

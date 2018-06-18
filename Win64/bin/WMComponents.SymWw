@@ -373,6 +373,8 @@ TYPE
 		timer: Kernel.Timer; 
 		onChanged-: WMEvents.EventSource; 
 		lock: Locks.RecursiveLock; 
+		rectOwner: ANY; 
+		rect: Rectangles.Rectangle; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Reset(this: VisualComponent); 

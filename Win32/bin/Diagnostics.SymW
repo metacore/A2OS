@@ -16,7 +16,7 @@ TYPE
 	END Diagnostics; 
 
 	Entry* = POINTER TO RECORD 
-		type*: LONGINT; 
+		type*: WORD; 
 		source*: ARRAY 128 OF CHAR; 
 		position*, errorCode*: LONGINT; 
 		message*: ARRAY 256 OF CHAR; 
@@ -30,10 +30,10 @@ TYPE
 	DiagnosticsList* = OBJECT {EXCLUSIVE} (Diagnostics)
 	VAR 
 		entries-: Entry; 
-		nofErrors-: LONGINT; 
-		nofWarnings-: LONGINT; 
-		nofInformations-: LONGINT; 
-		nofMessages-: LONGINT; 
+		nofErrors-: SIZE; 
+		nofWarnings-: SIZE; 
+		nofInformations-: SIZE; 
+		nofMessages-: SIZE; 
 
 		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
@@ -42,8 +42,8 @@ TYPE
 		PROCEDURE ^  & Reset*; 
 		PROCEDURE ^ ForAll*(proc: EnumProc); 
 		PROCEDURE ^ GetEntries*(): EntryArray; 
-		PROCEDURE ^ InsertSorted(type: LONGINT; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; VAR counter: LONGINT); 
-		PROCEDURE ^ NewEntry*(type: LONGINT; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
+		PROCEDURE ^ InsertSorted(type: WORD; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
+		PROCEDURE ^ NewEntry*(type: WORD; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
 	END DiagnosticsList; 
 
 	StreamDiagnostics* = OBJECT (Diagnostics)
@@ -56,6 +56,6 @@ TYPE
 		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
 	END StreamDiagnostics; 
 
-	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position, errorCode, type: LONGINT; CONST message: ARRAY OF CHAR); 
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; type: WORD; CONST message: ARRAY OF CHAR); 
 BEGIN
 END Diagnostics.

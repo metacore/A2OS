@@ -66,8 +66,8 @@ TYPE
 		PROCEDURE ^ Pair(ch: CHAR; x: LONGINT); 
 		PROCEDURE ^ Date*(t, d: LONGINT); 
 		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
-		PROCEDURE ^ Float*(x: LONGREAL; n: LONGINT); 
-		PROCEDURE ^ FloatFix*(x: LONGREAL; n, f, D: LONGINT); 
+		PROCEDURE ^ Float*(x: LONGREAL; n: WORD); 
+		PROCEDURE ^ FloatFix*(x: LONGREAL; n, f, D: WORD); 
 	END Writer; 
 
 	StringWriter* = OBJECT (Writer)

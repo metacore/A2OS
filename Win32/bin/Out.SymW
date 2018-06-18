@@ -6,9 +6,9 @@ MODULE Out;
 	PROCEDURE ^ Char*(c: CHAR); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ Set*(s: SET); 
-	PROCEDURE ^ Int*(i: HUGEINT; n= 1: LONGINT); 
-	PROCEDURE ^ Hex*(i: HUGEINT; n=  -16: LONGINT); 
+	PROCEDURE ^ Int*(i: HUGEINT; n= 1: WORD); 
+	PROCEDURE ^ Hex*(i: HUGEINT; n=  -16: WORD); 
 	PROCEDURE ^ Address*(a: ADDRESS); 
-	PROCEDURE ^ Float*(x: LONGREAL; n= 4, f= 3, d= 0: LONGINT); 
+	PROCEDURE ^ Float*(x: LONGREAL; n= 4, f= 3, d= 0: WORD); 
 BEGIN
 END Out.

@@ -6,7 +6,7 @@ CONST
 TYPE 
 	Property* = OBJECT 
 	VAR 
-		locks: LONGINT; 
+		locks: WORD; 
 		container*: OBJECT; 
 
 		PROCEDURE ^  & InitProperty; 
@@ -32,15 +32,15 @@ TYPE
 
 	Integer* = OBJECT (Property)
 	VAR 
-		value: LONGINT; 
+		value: WORD; 
 		handlers: ARRAY MaxHandlers OF IntegerHandler; 
 
-		PROCEDURE ^  & InitInteger*(value: LONGINT); 
-		PROCEDURE ^ Get*(): LONGINT; 
-		PROCEDURE ^ Set*(value: LONGINT); 
-		PROCEDURE ^ Inc*(step: LONGINT); 
-		PROCEDURE ^ Dec*(step: LONGINT); 
-		PROCEDURE ^ Changed(value: LONGINT); 
+		PROCEDURE ^  & InitInteger*(value: WORD); 
+		PROCEDURE ^ Get*(): WORD; 
+		PROCEDURE ^ Set*(value: WORD); 
+		PROCEDURE ^ Inc*(step: WORD); 
+		PROCEDURE ^ Dec*(step: WORD); 
+		PROCEDURE ^ Changed(value: WORD); 
 		PROCEDURE ^ AddHandler*(handler: IntegerHandler); 
 	END Integer; 
 
@@ -64,8 +64,8 @@ TYPE
 		PROCEDURE ^  & InitSet*(value: SET); 
 		PROCEDURE ^ Get*(): SET; 
 		PROCEDURE ^ Set*(value: SET); 
-		PROCEDURE ^ Incl*(element: LONGINT); 
-		PROCEDURE ^ Excl*(element: LONGINT); 
+		PROCEDURE ^ Incl*(element: WORD); 
+		PROCEDURE ^ Excl*(element: WORD); 
 		PROCEDURE ^ Changed(value: SET); 
 		PROCEDURE ^ AddHandler*(handler: SetHandler); 
 	END Set; 
@@ -75,7 +75,7 @@ TYPE
 		value: POINTER TO ARRAY OF CHAR; 
 		handlers: ARRAY MaxHandlers OF StringHandler; 
 
-		PROCEDURE ^  & InitString*(CONST value: ARRAY OF CHAR; length: LONGINT); 
+		PROCEDURE ^  & InitString*(CONST value: ARRAY OF CHAR; length: SIZE); 
 		PROCEDURE ^ Get*(VAR value: ARRAY OF CHAR); 
 		PROCEDURE ^ Set*(CONST value: ARRAY OF CHAR); 
 		PROCEDURE ^ Changed(CONST value: ARRAY OF CHAR); 
@@ -110,19 +110,19 @@ TYPE
 
 	IntegerMessage* = OBJECT (Message)
 	VAR 
-		value: LONGINT; 
+		value: WORD; 
 		procedure: IntegerProcedure; 
 
-		PROCEDURE ^  & InitIntegerMessage*(value: LONGINT; procedure: IntegerProcedure); 
+		PROCEDURE ^  & InitIntegerMessage*(value: WORD; procedure: IntegerProcedure); 
 		PROCEDURE ^ Handle*; 
 	END IntegerMessage; 
 
 	IntegerIntegerMessage* = OBJECT (Message)
 	VAR 
-		value0, value1: LONGINT; 
+		value0, value1: WORD; 
 		procedure: IntegerIntegerProcedure; 
 
-		PROCEDURE ^  & InitIntegerIntegerMessage*(value0, value1: LONGINT; procedure: IntegerIntegerProcedure); 
+		PROCEDURE ^  & InitIntegerIntegerMessage*(value0, value1: WORD; procedure: IntegerIntegerProcedure); 
 		PROCEDURE ^ Handle*; 
 	END IntegerIntegerMessage; 
 
@@ -164,10 +164,10 @@ TYPE
 
 	IntegerRequest* = OBJECT {EXCLUSIVE} (Request)
 	VAR 
-		value: LONGINT; 
+		value: WORD; 
 		procedure: IntegerProcedure; 
 
-		PROCEDURE ^  & InitIntegerRequest*(value: LONGINT; procedure: IntegerProcedure); 
+		PROCEDURE ^  & InitIntegerRequest*(value: WORD; procedure: IntegerProcedure); 
 		PROCEDURE ^ Handle*; 
 	END IntegerRequest; 
 
@@ -183,7 +183,7 @@ TYPE
 	RequestInteger* = OBJECT {EXCLUSIVE} (Request)
 	VAR 
 		procedure: ProcedureInteger; 
-		result-: LONGINT; 
+		result-: WORD; 
 
 		PROCEDURE ^  & InitRequestInteger*(procedure: ProcedureInteger); 
 		PROCEDURE ^ Handle*; 
@@ -200,11 +200,11 @@ TYPE
 
 	IntegerRequestBoolean* = OBJECT {EXCLUSIVE} (Request)
 	VAR 
-		value: LONGINT; 
+		value: WORD; 
 		procedure: IntegerProcedureBoolean; 
 		result-: BOOLEAN; 
 
-		PROCEDURE ^  & InitIntegerRequestBoolean*(value: LONGINT; procedure: IntegerProcedureBoolean); 
+		PROCEDURE ^  & InitIntegerRequestBoolean*(value: WORD; procedure: IntegerProcedureBoolean); 
 		PROCEDURE ^ Handle*; 
 	END IntegerRequestBoolean; 
 
@@ -212,7 +212,7 @@ TYPE
 	VAR 
 		value: REAL; 
 		procedure: RealProcedureInteger; 
-		result-: LONGINT; 
+		result-: WORD; 
 
 		PROCEDURE ^  & InitRealRequestInteger*(value: REAL; procedure: RealProcedureInteger); 
 		PROCEDURE ^ Handle*; 
@@ -230,17 +230,17 @@ TYPE
 		PROCEDURE ^ Add*(message: Message; time: LONGINT); 
 		PROCEDURE ^ AddMessage*(procedure: Procedure); 
 		PROCEDURE ^ AddBooleanMessage*(value: BOOLEAN; procedure: BooleanProcedure); 
-		PROCEDURE ^ AddIntegerMessage*(value: LONGINT; procedure: IntegerProcedure); 
+		PROCEDURE ^ AddIntegerMessage*(value: WORD; procedure: IntegerProcedure); 
 		PROCEDURE ^ AddRealMessage*(value: REAL; procedure: RealProcedure); 
 		PROCEDURE ^ AddSetMessage*(value: SET; procedure: SetProcedure); 
 		PROCEDURE ^ AddStringMessage*(CONST value: ARRAY OF CHAR; procedure: StringProcedure); 
-		PROCEDURE ^ AddIntegerIntegerMessage*(value0, value1: LONGINT; procedure: IntegerIntegerProcedure); 
-		PROCEDURE ^ AddIntegerRequest*(value: LONGINT; procedure: IntegerProcedure); 
+		PROCEDURE ^ AddIntegerIntegerMessage*(value0, value1: WORD; procedure: IntegerIntegerProcedure); 
+		PROCEDURE ^ AddIntegerRequest*(value: WORD; procedure: IntegerProcedure); 
 		PROCEDURE ^ AddRequestBoolean*(procedure: ProcedureBoolean): BOOLEAN; 
-		PROCEDURE ^ AddRequestInteger*(procedure: ProcedureInteger): LONGINT; 
+		PROCEDURE ^ AddRequestInteger*(procedure: ProcedureInteger): WORD; 
 		PROCEDURE ^ AddRequestReal*(procedure: ProcedureReal): REAL; 
-		PROCEDURE ^ AddIntegerRequestBoolean*(value: LONGINT; procedure: IntegerProcedureBoolean): BOOLEAN; 
-		PROCEDURE ^ AddRealRequestInteger*(value: REAL; procedure: RealProcedureInteger): LONGINT; 
+		PROCEDURE ^ AddIntegerRequestBoolean*(value: WORD; procedure: IntegerProcedureBoolean): BOOLEAN; 
+		PROCEDURE ^ AddRealRequestInteger*(value: REAL; procedure: RealProcedureInteger): WORD; 
 		PROCEDURE ^ Remove*(message: Message); 
 		PROCEDURE ^ Handle*; 
 		PROCEDURE ^ Wakeup; 
@@ -250,7 +250,7 @@ TYPE
 
 	BooleanHandler = PROCEDURE {DELEGATE}(property: Boolean; value: BOOLEAN); 
 
-	IntegerHandler = PROCEDURE {DELEGATE}(property: Integer; value: LONGINT); 
+	IntegerHandler = PROCEDURE {DELEGATE}(property: Integer; value: WORD); 
 
 	RealHandler = PROCEDURE {DELEGATE}(property: Real; value: REAL); 
 
@@ -262,9 +262,9 @@ TYPE
 
 	BooleanProcedure = PROCEDURE {DELEGATE}(value: BOOLEAN); 
 
-	IntegerProcedure = PROCEDURE {DELEGATE}(value: LONGINT); 
+	IntegerProcedure = PROCEDURE {DELEGATE}(value: WORD); 
 
-	IntegerIntegerProcedure = PROCEDURE {DELEGATE}(value0, value1: LONGINT); 
+	IntegerIntegerProcedure = PROCEDURE {DELEGATE}(value0, value1: WORD); 
 
 	RealProcedure = PROCEDURE {DELEGATE}(value: REAL); 
 
@@ -274,13 +274,13 @@ TYPE
 
 	ProcedureBoolean = PROCEDURE {DELEGATE}():BOOLEAN; 
 
-	ProcedureInteger = PROCEDURE {DELEGATE}():LONGINT; 
+	ProcedureInteger = PROCEDURE {DELEGATE}():WORD; 
 
 	ProcedureReal = PROCEDURE {DELEGATE}():REAL; 
 
-	IntegerProcedureBoolean = PROCEDURE {DELEGATE}(value: LONGINT):BOOLEAN; 
+	IntegerProcedureBoolean = PROCEDURE {DELEGATE}(value: WORD):BOOLEAN; 
 
-	RealProcedureInteger = PROCEDURE {DELEGATE}(value: REAL):LONGINT; 
+	RealProcedureInteger = PROCEDURE {DELEGATE}(value: REAL):WORD; 
 
 	PROCEDURE ^ Delay*(delay: LONGINT): LONGINT; 
 BEGIN

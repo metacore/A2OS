@@ -108,7 +108,7 @@ TYPE
 		PROCEDURE ^ UpdateDiskInternal(i: LONGINT); 
 		PROCEDURE ^ Acquire*; 
 		PROCEDURE ^ Release*; 
-		PROCEDURE ^ DiskEventHandler(event: LONGINT; plugin: Plugins.Plugin); 
+		PROCEDURE ^ DiskEventHandler(event: WORD; plugin: Plugins.Plugin); 
 		PROCEDURE ^ GetTableGeometry(dev: AosDisks.Device; VAR hds, spt: LONGINT): BOOLEAN; 
 		PROCEDURE ^ GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: WORD); 
 		PROCEDURE ^ NewFree(type: LONGINT; VAR table: AosDisks.PartitionTable; start, size, ptblock: LONGINT; flags: SET); 

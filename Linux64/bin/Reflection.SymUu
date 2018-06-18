@@ -80,7 +80,7 @@ TYPE
 	Search = RECORD 
 		name: ARRAY 256 OF CHAR; 
 		nameOffset: SIZE; 
-		minLevel: LONGINT; 
+		minLevel: SIZE; 
 		pc: ADDRESS; 
 		pos: SIZE; 
 		found: BOOLEAN; 
@@ -125,12 +125,12 @@ VAR
 	PROCEDURE ^ SkipTypeDeclaration*(refs: Modules.Bytes; VAR offset: SIZE); 
 	PROCEDURE ^ SkipModule*(refs: Modules.Bytes; VAR offset: SIZE); 
 	PROCEDURE ^ SkipScope*(refs: Modules.Bytes; VAR offset: SIZE); 
-	PROCEDURE ^ FindString(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search); 
-	PROCEDURE ^ FindInProcedure(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search); 
-	PROCEDURE ^ FindInVariable(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search); 
-	PROCEDURE ^ FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search); 
-	PROCEDURE ^ FindInModule(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search); 
-	PROCEDURE ^ FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: LONGINT; VAR find: Search); 
+	PROCEDURE ^ FindString(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search); 
+	PROCEDURE ^ FindInProcedure(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search); 
+	PROCEDURE ^ FindInVariable(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search); 
+	PROCEDURE ^ FindInTypeDeclaration(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search); 
+	PROCEDURE ^ FindInModule(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search); 
+	PROCEDURE ^ FindInScope(refs: Modules.Bytes; VAR offset: SIZE; level: SIZE; VAR find: Search); 
 	PROCEDURE ^ InitSearch(VAR search: Search); 
 	PROCEDURE ^ FindByName*(refs: Modules.Bytes; offset: SIZE; CONST name: ARRAY OF CHAR; skipFirstSymbol: BOOLEAN): SIZE; 
 	PROCEDURE ^ FindByAdr*(refs: Modules.Bytes; offset: SIZE; pc: ADDRESS): SIZE; 

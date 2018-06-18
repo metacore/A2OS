@@ -15,7 +15,7 @@ BUILDS
 	Zedboard  {
 		INCLUDE "ZYNQ ZEDBOARD"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:Zedboard.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:Zedboard.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -27,7 +27,7 @@ BUILDS
 	Zybo {
 		INCLUDE "ZYNQ ZYBO"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:Zybo.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:Zybo.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -39,7 +39,7 @@ BUILDS
 	KRM {
 		INCLUDE "ZYNQ KRM"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:KRM.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:KRM.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -51,7 +51,7 @@ BUILDS
 	TE0726 {
 		INCLUDE "ZYNQ TE0726"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:TE0726.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:TE0726.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"

@@ -1277,7 +1277,7 @@ TYPE
 			FOR i := 0 TO pos-1 DO
 				IF ~(Occupied(i)) THEN
 					var := GetVariable(i);
-					IF CompatibleType(type, var.type) & (var.untraced = untraced) (*& ~(var.type.NeedsTrace())*) THEN
+					IF (~var.useRegister) & CompatibleType(type, var.type) & (var.untraced = untraced) (*& ~(var.type.NeedsTrace())*) THEN
 						pos := i;
 						Occupy(i); 
 						RETURN var;
@@ -7176,6 +7176,7 @@ TYPE
 				ASSERT(~register); 
 				
 				variable(SyntaxTree.Variable).SetOffset(v.offsetInBits);
+				ASSERT(v.offsetInBits # 0);
 				
 				scope.InsertVariable(variable(SyntaxTree.Variable), v);
 				scope.EnterSymbol(variable, duplicate);

@@ -7280,8 +7280,8 @@ TYPE
 									Error(operator.position,"return type is not Boolean")
 								END
 							ELSIF mustReturnInteger THEN
-								IF ~(procedureType.returnType.resolved IS SyntaxTree.IntegerType) THEN
-									Error(operator.position,"return type is not integer")
+								IF ~IsSizeType(procedureType.returnType, system.addressSize) THEN
+									Error(operator.position,"return type is no size type")
 								END
 							END
 						ELSIF procedureType.returnType # NIL THEN
@@ -9534,7 +9534,8 @@ TYPE
 
 	PROCEDURE IsSizeType(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN;
 	BEGIN
-		RETURN (type # NIL) & ((type IS SyntaxTree.IntegerType) & (type(SyntaxTree.IntegerType).sizeInBits <= addressWidth) OR (type IS SyntaxTree.SizeType))
+		
+		RETURN (type # NIL) & ((type.resolved IS SyntaxTree.IntegerType) & (type.resolved(SyntaxTree.IntegerType).sizeInBits <= addressWidth) OR (type.resolved IS SyntaxTree.SizeType))
 	END IsSizeType;
 
 

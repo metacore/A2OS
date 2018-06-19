@@ -10,7 +10,7 @@ update || exit 1
 
 process ()
 {
-	local target=$1
+	local target="$1"
 	check && break
 	local status="Building" output=""
 	notify

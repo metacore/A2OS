@@ -1299,48 +1299,15 @@ Sufficient (but not necessary) conditions:
 
 	PROCEDURE (*-*)MoveB*( srcadr, destadr, len: SIZE );
 	BEGIN
-		IF (srcadr >= destadr) OR (srcadr+len >= destadr) THEN
+		IF (len > 0)  THEN
 			SYSTEM.MOVE(srcadr, destadr, len);
 		ELSE
-			INC(srcadr,len-1); INC(destadr,len-1);
+			len := -len;
 			WHILE len > 0 DO
 				SYSTEM.PUT8(destadr, SYSTEM.GET8(srcadr));
 				DEC(srcadr); DEC(destadr); DEC(len);
 			END;
 		END;
-	(**
-	(** Correct move if overlap, might be important for some array operations,
-		do not use SYSTEM.MOVE.  *)
-	CODE {SYSTEM.i386}
-		MOV	ECX, [ESP]	;  len
-		MOV	EDI, [ESP+4]	;  destadr
-		MOV	ESI, [ESP+8]	;  srcadr
-		CMP	ESI, EDI
-		JAE	moveup	;  src adr greater then dest adr, no problem with moving up
-		MOV	EAX, ESI
-		ADD	EAX, ECX
-		CMP	EAX, EDI
-		JBE	moveup	;  no overlap, no problem, move up
-		MOV	ESI, EAX
-		ADD	EDI, ECX
-		DEC	ESI
-		DEC	EDI
-		STD	;  move down since overlap occured
-		REP
-		MOVSB
-		JMP	done
-		moveup:
-		CLD
-		MOV	BL, CL
-		SHR	ECX, 2
-		AND	BL, 00000003H	;  rest to move after 4 byte move
-		REP
-		MOVSD	;  move 4 bytes each step
-		MOV	CL, BL
-		REP
-		MOVSB	;  move rest in one byte steps
-		done:
-		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)*)
 	END MoveB;
 
 	PROCEDURE CopyContent( dest, src: ADDRESS; elementSize: SIZE );   (**! optimize *)
@@ -1351,42 +1318,16 @@ Sufficient (but not necessary) conditions:
 		BEGIN
 			IF (dinc = elementSize) & (linc = elementSize) THEN
 				MoveB( ladr, dadr, len * elementSize );
-				(*
-				SYSTEM.MOVE( ladr, dadr, elementSize * len );
-				*)
 			ELSIF (dinc = -elementSize) & (linc = -elementSize) THEN
-				len := len * elementSize;
-				MoveB( ladr - len + elementSize, dadr - len + elementSize, len );
+				MoveB( ladr, dadr, - len * elementSize );
 			ELSIF elementSize = 1 THEN
 				Copy1( ladr, dadr, linc, dinc, len );
-				(*
-						WHILE (len > 0) DO
-					SYSTEM.PUT8( dadr, SYSTEM.GET8( ladr ) );  DEC( len );  INC( ladr, linc );  INC( dadr, dinc );
-				END;
-				*)
 			ELSIF elementSize = 2 THEN
 				Copy2( ladr, dadr, linc, dinc, len );
-				(*
-				WHILE (len > 0) DO
-					SYSTEM.PUT16( dadr, SYSTEM.GET16( ladr ) );  DEC( len );  INC( ladr, linc );  INC( dadr, dinc );
-				END;
-				*)
 			ELSIF elementSize = 4 THEN
 				Copy4( ladr, dadr, linc, dinc, len );
-				(*
-				WHILE (len > 0) DO
-					SYSTEM.PUT32( dadr, SYSTEM.GET32( ladr ) );  DEC( len );  INC( ladr, linc );  INC( dadr, dinc );
-				END;
-				*)
 			ELSIF elementSize = 8 THEN
 				Copy8( ladr, dadr, linc, dinc, len );
-				(*
-				WHILE (len > 0) DO
-					SYSTEM.PUT32( dadr, SYSTEM.GET32( ladr ) );
-					SYSTEM.PUT32( dadr + 4, SYSTEM.GET32( ladr + 4 ) );  DEC( len );  INC( ladr, linc );
-					INC( dadr, dinc );
-				END;
-				*)
 			ELSE  (* SYSTEM.MOVE is expensive ! *)
 				WHILE (len > 0) DO
 					SYSTEM.MOVE( ladr, dadr, elementSize );  DEC( len );  INC( ladr, linc );
@@ -1430,6 +1371,7 @@ Sufficient (but not necessary) conditions:
 
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( src, dest, dim, loopd, looplen, loopli, loopdi );
+		
 		Traverse( 0, GetAdr( src ), GetAdr( dest ) );
 
 		IF up IN modes THEN  (* nothing to be done *)
@@ -1495,7 +1437,6 @@ Sufficient (but not necessary) conditions:
 			IF (TensorFlag IN GetFlags( dest )) THEN (* old heap pointer overwritten *)
 				oldDest := dest;
 				Heaps.Assign(dest, src);
-				(*TRACE(Heaps.RefCount(oldDest)); *)
 				
 			ELSE
 				(*

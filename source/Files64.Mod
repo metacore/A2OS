@@ -59,8 +59,7 @@ CONST
 	NeedsPrefix*		= Files.NeedsPrefix; (* if no prefix given, then this file system cannot handle it, to prevent file systems from being in the search path *)
 
 TYPE
-	TSize* = Streams.TSize;
-	TOffset* = Streams.TOffset;
+	Position* = Streams.Position;
 
 TYPE
 (** All record fields are read-only for users, and read-write for extenders. *)
@@ -71,9 +70,9 @@ TYPE
 	Rider* = RECORD	(** not shareable between multiple processes *)
 		(* the rider must be a record, otherwise the Oberon text system will not work *)
 		eof*: BOOLEAN;	(** has end of file been passed *)
-		res*: TOffset;	(** leftover byte count for ReadBytes/WriteBytes *)
+		res*: Streams.Offset;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
-		apos*: TSize;
+		apos*: Streams.Position;
 		bpos*: LONGINT;
 		hint*: Hint;
 		file*: File;
@@ -88,7 +87,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: TOffset; VAR len: TOffset; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: Streams.Offset; VAR len: Streams.Offset; VAR res: WORD);
 		BEGIN
 			file.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -100,14 +99,14 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : TSize);
+		PROCEDURE SetPos*(pos : Streams.Position);
 		BEGIN
 			file.Set(r, pos);
 			Reset;
 			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
 		END SetPos;
 
-		PROCEDURE &InitFileReader*(file : File; pos: TSize);
+		PROCEDURE &InitFileReader*(file : File; pos: Streams.Position);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -126,7 +125,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: TOffset; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: Streams.Offset; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			r.file.WriteBytes(r, buf, ofs, len);
 			IF propagate THEN r.file.Update END;
@@ -138,20 +137,20 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : TSize);
+		PROCEDURE SetPos*(pos : Streams.Position);
 			BEGIN
 			Update;
 			file.Set(r, pos);
 			Reset;
 		END SetPos;
 
-		PROCEDURE Pos*(): TSize;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN
 			Update;
 			RETURN file.Pos(r)
 		END Pos;
 
-		PROCEDURE &InitFileWriter*(file: File; pos: TSize);
+		PROCEDURE &InitFileWriter*(file: File; pos: Streams.Position);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -235,7 +234,7 @@ TYPE
 
 		(* default implementation using an enumerator *)
 		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-		VAR enum: Enumerator; time, date: LONGINT; size: TSize;
+		VAR enum: Enumerator; time, date: LONGINT; size: Streams.Position;
 		BEGIN
 			NEW(enum);
 			enum.Open(name,{});
@@ -263,14 +262,14 @@ TYPE
 			key*: LONGINT;	(* unique id for registered file, never 0 *)
 			fs*: FileSystem;	(* file system containing file *)
 
-		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
+		(** ddPosition a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
 
-		PROCEDURE Set*(VAR r: Rider; pos: TSize);
+		PROCEDURE Set*(VAR r: Rider; pos: Streams.Position);
 		BEGIN HALT(301) END Set;	(* abstract *)
 
 		(** Return the offset of a Rider positioned on a file. *)
 
-		PROCEDURE Pos*(VAR r: Rider): TSize;
+		PROCEDURE Pos*(VAR r: Rider): Streams.Position;
 		BEGIN HALT(301) END Pos;	(* abstract *)
 
 		(** Read a byte from a file, advancing the Rider one byte further.  R.eof indicates if the end of the file has been passed. *)
@@ -280,7 +279,7 @@ TYPE
 
 		(** Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 
-		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: TOffset);
+		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: Streams.Offset);
 		BEGIN HALT(301) END ReadBytes;	(* abstract *)
 
 		(** Write a byte into the file at the Rider position, advancing the Rider by one. *)
@@ -290,12 +289,12 @@ TYPE
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
 
-		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: TOffset);
+		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: Streams.Offset);
 		BEGIN HALT(301) END WriteBytes;	(* abstract *)
 
 		(** Return the current length of a file. *)
 
-		PROCEDURE Length*(): TSize;
+		PROCEDURE Length*(): Streams.Position;
 		BEGIN HALT(301) END Length;	(* abstract *)
 
 		(** Return the time (t) and date (d) when a file was last modified. *)
@@ -378,7 +377,7 @@ TYPE
 
 		(** Get one entry from the enumerator. *)
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: TSize): BOOLEAN;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Streams.Position): BOOLEAN;
 		VAR len: LONGINT;
 		BEGIN
 			ReadNum(r, len);
@@ -401,7 +400,7 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size:TSize);
+		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size:Streams.Position);
 		VAR len: LONGINT;
 		BEGIN
 			ASSERT(adding);
@@ -445,7 +444,7 @@ VAR
 
 (** Open a reader on a file at the specified position. *)
 
-PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: TSize);
+PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: Streams.Position);
 BEGIN
 	IF b = NIL THEN
 		NEW(b, f, pos)
@@ -456,7 +455,7 @@ END OpenReader;
 
 (** Open a writer on a file at the specified position.  Remember to call Streams.Update before registering or closing the file! *)
 
-PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: TSize);
+PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: Streams.Position);
 BEGIN
 	NEW(b, f, pos)
 END OpenWriter;
@@ -812,7 +811,7 @@ VAR writer : Writer;
 	reader : Reader;
 	file : File;
 	chunk : ARRAY 4096 OF CHAR;
-	len : TOffset;
+	len : Streams.Offset;
 BEGIN
 	IF fileClipboard = NIL THEN RETURN END;
 	IF Old(name) # NIL THEN res := FileAlreadyExists;			(* File already exists *)
@@ -846,7 +845,7 @@ VAR
 	sfs, dfs : FileSystem;
 	sfile, dfile : File;
 	buffer : ARRAY BufferSize OF CHAR;
-	i : TSize;
+	i : Streams.Position;
 BEGIN
 	SplitName(source, sprefix, sname);
 	SplitName(destination, dprefix, dname);
@@ -894,8 +893,8 @@ BEGIN
 		dfile.WriteBytes(dPos, buffer, 0, BufferSize);
 		INC(i);
 	END;
-	sfile.ReadBytes(sPos, buffer, 0, TOffset(sfile.Length() MOD BufferSize));
-	dfile.WriteBytes(dPos, buffer, 0, TOffset(sfile.Length() MOD BufferSize));
+	sfile.ReadBytes(sPos, buffer, 0, Streams.Offset(sfile.Length() MOD BufferSize));
+	dfile.WriteBytes(dPos, buffer, 0, Streams.Offset(sfile.Length() MOD BufferSize));
 	dfile.Update;
 	Register(dfile); (* Will enter exclusive region *)
 END CopyFile;
@@ -1081,8 +1080,8 @@ BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END ReadHInt;
 
-PROCEDURE ReadTSize*(VAR r: Rider; VAR x: TSize);
-CONST Size = SIZEOF (TSize);
+PROCEDURE ReadTSize*(VAR r: Rider; VAR x: Streams.Position);
+CONST Size = SIZEOF (Streams.Position);
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
@@ -1162,8 +1161,8 @@ BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END WriteHInt;
 
-PROCEDURE WriteTSize*(VAR r: Rider; x: TSize);
-CONST Size = SIZEOF (TSize);
+PROCEDURE WriteTSize*(VAR r: Rider; x: Streams.Position);
+CONST Size = SIZEOF (Streams.Position);
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
@@ -1192,7 +1191,7 @@ BEGIN
 END WriteLReal;
 
 PROCEDURE WriteString*(VAR r: Rider; x: ARRAY OF CHAR);
-VAR i: TOffset;
+VAR i: Streams.Offset;
 BEGIN
 	i := 0; WHILE x[i] # 0X DO INC(i) END;
 	r.file.WriteBytes(r, x, 0, i+1)

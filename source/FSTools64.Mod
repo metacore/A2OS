@@ -225,7 +225,7 @@ BEGIN
 END SetDefault;
 
 (* using the NIST standard for Kibi, Mebi & Gibi: http://physics.nist.gov/cuu/Units/binary.html *)
-PROCEDURE WriteK( k: Files.TSize; out : Streams.Writer);
+PROCEDURE WriteK( k: Files.Position; out : Streams.Writer);
 VAR suffix: ARRAY 3 OF CHAR;
 BEGIN
 	IF k < 10*1024 THEN COPY("Ki", suffix)
@@ -289,8 +289,8 @@ VAR
 	string, pattern : ARRAY 256 OF CHAR;
 	enum : Files.Enumerator;
 	flags, fileflags : SET;
-	count: LONGINT; total : Files.TSize;
-	time, date: LONGINT; size : Files.TSize;
+	count: LONGINT; total : Files.Position;
+	time, date: LONGINT; size : Files.Position;
 	name : ARRAY MaxNameLen OF CHAR;
 	dt : Dates.DateTime;
 BEGIN
@@ -344,7 +344,7 @@ PROCEDURE EnumerateDirectory(
 	CONST arguments : ARRAY OF CHAR);
 VAR
 	name : Files.FileName;
-	flags : SET; time, date: LONGINT; size : Files.TSize;
+	flags : SET; time, date: LONGINT; size : Files.Position;
 	subDirEnum : Files.Enumerator;
 
 	PROCEDURE PrepareContext(context : Commands.Context; CONST currentFile, arguments : ARRAY OF CHAR);
@@ -443,7 +443,7 @@ END Enumerate;
 PROCEDURE CreateFile*(context : Commands.Context); (** [Options] filename [content] ~ *)
 VAR
 	options : Options.Options; cr, removeWhitespace : BOOLEAN;
-	file : Files.File; filename : Files.FileName; writer : Files.Writer; ch : CHAR; pos: Files.TSize;
+	file : Files.File; filename : Files.FileName; writer : Files.Writer; ch : CHAR; pos: Files.Position;
 BEGIN
 	NEW(options);
 	options.Add("c", "cr", Options.Flag);
@@ -856,7 +856,7 @@ PROCEDURE InsertFiles(CONST mask : ARRAY OF CHAR; VAR filelist : FileList; VAR i
 VAR
 	enum : Files.Enumerator;
 	fileflags : SET;
-	time, date: LONGINT; size : Files.TSize;
+	time, date: LONGINT; size : Files.Position;
 	name : ARRAY MaxNameLen OF CHAR;
 BEGIN
 	NEW(enum); enum.Open(mask, {});
@@ -955,7 +955,7 @@ PROCEDURE InsertFilesAndFixDestination(context : Commands.Context; CONST sourceM
 VAR
 	enum : Files.Enumerator;
 	fileflags : SET;
-	time, date: LONGINT; size : Files.TSize;
+	time, date: LONGINT; size : Files.Position;
 	name : ARRAY MaxNameLen OF CHAR;
 BEGIN
 	IF ~IsValidTargetMask(context, targetMask) THEN RETURN FALSE; END;

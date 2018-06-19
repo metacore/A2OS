@@ -198,6 +198,14 @@ BUILDS
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+	Linux64C {
+		INCLUDE "LINUX64C UNIX64 UNIX AMD64 COOP"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no"
+		PATH "./NewAos/"
+		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
+		DISABLED "FALSE"
+	}
 	Darwin32 {
 		INCLUDE "DARWIN32 UNIX32 UNIX I386"
 		COMPILER "Compiler.Compile"
@@ -247,6 +255,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	I386 { I386.Builtins.Mod }
 	AMD64 { AMD64.Builtins.Mod }
 	BIOS32C, WIN32C { I386.CPU.Mod }
+	LINUX64C { AMD64.CPU.Mod }
 	RPIC { RPI.CPU.Mod }
 	ZYNQC { Zynq.CPU.Mod }
 

@@ -60,6 +60,7 @@ CONST
 
 TYPE
 	TSize* = Streams.TSize;
+	TOffset* = Streams.TOffset;
 
 TYPE
 (** All record fields are read-only for users, and read-write for extenders. *)
@@ -70,7 +71,7 @@ TYPE
 	Rider* = RECORD	(** not shareable between multiple processes *)
 		(* the rider must be a record, otherwise the Oberon text system will not work *)
 		eof*: BOOLEAN;	(** has end of file been passed *)
-		res*: LONGWORD;	(** leftover byte count for ReadBytes/WriteBytes *)
+		res*: TOffset;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
 		apos*: TSize;
 		bpos*: LONGINT;
@@ -87,7 +88,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGWORD; VAR len: LONGWORD; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: TOffset; VAR len: TOffset; VAR res: WORD);
 		BEGIN
 			file.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -125,7 +126,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGWORD; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: TOffset; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			r.file.WriteBytes(r, buf, ofs, len);
 			IF propagate THEN r.file.Update END;
@@ -279,7 +280,7 @@ TYPE
 
 		(** Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 
-		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGWORD);
+		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: TOffset);
 		BEGIN HALT(301) END ReadBytes;	(* abstract *)
 
 		(** Write a byte into the file at the Rider position, advancing the Rider by one. *)
@@ -289,7 +290,7 @@ TYPE
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
 
-		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGWORD);
+		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: TOffset);
 		BEGIN HALT(301) END WriteBytes;	(* abstract *)
 
 		(** Return the current length of a file. *)
@@ -811,7 +812,7 @@ VAR writer : Writer;
 	reader : Reader;
 	file : File;
 	chunk : ARRAY 4096 OF CHAR;
-	len : LONGWORD;
+	len : TOffset;
 BEGIN
 	IF fileClipboard = NIL THEN RETURN END;
 	IF Old(name) # NIL THEN res := FileAlreadyExists;			(* File already exists *)
@@ -845,7 +846,7 @@ VAR
 	sfs, dfs : FileSystem;
 	sfile, dfile : File;
 	buffer : ARRAY BufferSize OF CHAR;
-	i : HUGEINT;
+	i : TSize;
 BEGIN
 	SplitName(source, sprefix, sname);
 	SplitName(destination, dprefix, dname);
@@ -893,8 +894,8 @@ BEGIN
 		dfile.WriteBytes(dPos, buffer, 0, BufferSize);
 		INC(i);
 	END;
-	sfile.ReadBytes(sPos, buffer, 0, LONGWORD( sfile.Length() MOD BufferSize));
-	dfile.WriteBytes(dPos, buffer, 0, LONGWORD(sfile.Length() MOD BufferSize));
+	sfile.ReadBytes(sPos, buffer, 0, TOffset(sfile.Length() MOD BufferSize));
+	dfile.WriteBytes(dPos, buffer, 0, TOffset(sfile.Length() MOD BufferSize));
 	dfile.Update;
 	Register(dfile); (* Will enter exclusive region *)
 END CopyFile;
@@ -1191,7 +1192,7 @@ BEGIN
 END WriteLReal;
 
 PROCEDURE WriteString*(VAR r: Rider; x: ARRAY OF CHAR);
-VAR i: LONGWORD;
+VAR i: TOffset;
 BEGIN
 	i := 0; WHILE x[i] # 0X DO INC(i) END;
 	r.file.WriteBytes(r, x, 0, i+1)

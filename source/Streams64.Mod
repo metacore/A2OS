@@ -23,21 +23,22 @@ VAR
 	H, L: INTEGER;
 
 TYPE
-	TSize* = HUGEINT;
+	TSize*		= HUGEINT;
+	TOffset*	= LONGWORD;
 
 TYPE
 	(** Any stream output procedure or method. *)
-	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGWORD;  propagate: BOOLEAN;  VAR res: WORD );
+	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: TOffset;  propagate: BOOLEAN;  VAR res: WORD );
 
 	(** Any stream input procedure or method. *)
-	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGWORD;  VAR len: LONGWORD; VAR res: WORD );
+	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: TOffset;  VAR len: TOffset; VAR res: WORD );
 
 	Connection* = OBJECT
 
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGWORD;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: TOffset;  propagate: BOOLEAN;  VAR res: WORD );
 		END Send;
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGWORD;  VAR len: LONGWORD; VAR res: WORD );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: TOffset;  VAR len: TOffset; VAR res: WORD );
 		END Receive;
 
 		PROCEDURE Close*;
@@ -49,14 +50,14 @@ TYPE
 TYPE
 	Writer* = OBJECT
 	VAR
-		tail: LONGWORD;
+		tail: TOffset;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: LONGINT; (** result of last output operation. *)
+		res*: WORD; (** result of last output operation. *)
 		send: Sender;
 		sent*: TSize;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
 
-		PROCEDURE & InitWriter*( send: Sender;  size: LONGWORD );
+		PROCEDURE & InitWriter*( send: Sender;  size: TOffset );
 		BEGIN
 			ASSERT ( send # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -107,8 +108,8 @@ TYPE
 		END Char;
 
 	(** Write len bytes from x, starting at ofs. *)
-		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: LONGWORD );
-		VAR n: LONGWORD;
+		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: TOffset );
+		VAR n: TOffset;
 		BEGIN
 			ASSERT ( len >= 0 );
 			LOOP
@@ -206,7 +207,7 @@ TYPE
 
 	(** Write a 0X-terminated string, including the 0X terminator. *)
 		PROCEDURE RawString*(CONST x: ARRAY OF CHAR );
-		VAR i: LONGWORD;
+		VAR i: SIZE;
 		BEGIN
 			i := 0;
 			WHILE x[i] # 0X DO Char( x[i] );  INC( i ) END;
@@ -237,7 +238,7 @@ TYPE
 
 	(** Write a 0X-terminated string, excluding the 0X terminator. *)
 		PROCEDURE String*(CONST x: ARRAY OF CHAR );
-		VAR i: LONGWORD;
+		VAR i: SIZE;
 		BEGIN
 			i := 0;
 			WHILE x[i] # 0X DO Char( x[i] );  INC( i ) END
@@ -500,12 +501,12 @@ TYPE
 	(** A special writer that buffers output to be fetched by GetString or GetRawString. *)
 	StringWriter* = OBJECT (Writer)
 
-		PROCEDURE & InitStringWriter*( size: LONGWORD );
+		PROCEDURE & InitStringWriter*( size: TOffset );
 		BEGIN
 			InitWriter( Send, size )
 		END InitStringWriter;
 
-		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: LONGWORD;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: TOffset;  propagate: BOOLEAN;  VAR res: WORD );
 		BEGIN
 			res := StringFull
 		END Send;
@@ -519,7 +520,7 @@ TYPE
 		PROCEDURE SetPos*( pos: TSize );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
-			tail := LONGWORD( pos );  sent := 0;  res := Ok;
+			tail := TOffset( pos );  sent := 0;  res := Ok;
 		END SetPos;
 
 		PROCEDURE Update*;
@@ -528,7 +529,7 @@ TYPE
 
 	(** Return the contents of the string writer (0X-terminated). *)
 		PROCEDURE Get*( VAR s: ARRAY OF CHAR );
-		VAR i, m: LONGWORD;
+		VAR i, m: TOffset;
 		BEGIN
 			m := LEN( s ) - 1;  i := 0;
 			WHILE (i # tail) & (i < m) DO s[i] := buf[i];  INC( i ) END;
@@ -536,8 +537,8 @@ TYPE
 		END Get;
 
 	(** Return the contents of the string writer (not 0X-terminated).  The len parameters returns the string length. *)
-		PROCEDURE GetRaw*( VAR s: ARRAY OF CHAR;  VAR len: LONGWORD );
-		VAR i, m: LONGWORD;
+		PROCEDURE GetRaw*( VAR s: ARRAY OF CHAR;  VAR len: TOffset );
+		VAR i, m: TOffset;
 		BEGIN
 			m := LEN( s );  i := 0;
 			WHILE (i # tail) & (i < m) DO s[i] := buf[i];  INC( i ) END;
@@ -550,14 +551,14 @@ TYPE
 	(** A reader buffers input received from a Receiver.  Must not be shared between processes. *)
 	Reader* = OBJECT
 	VAR
-		head, tail: LONGWORD;
+		head, tail: TOffset;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: LONGINT;   (** result of last input operation. *)
+		res*: WORD;   (** result of last input operation. *)
 		receive: Receiver;
 		received*: TSize;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
 
-		PROCEDURE & InitReader*( receive: Receiver;  size: LONGWORD );
+		PROCEDURE & InitReader*( receive: Receiver;  size: TOffset );
 		BEGIN
 			ASSERT ( receive # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -584,8 +585,8 @@ TYPE
 		END SetPos;
 
 	(** Return bytes currently available in input buffer. *)
-		PROCEDURE Available*( ): LONGWORD;
-		VAR n: LONGWORD;
+		PROCEDURE Available*( ): TOffset;
+		VAR n: TOffset;
 		BEGIN
 			IF (res = Ok) THEN
 				IF (head = tail) THEN head := 0;  receive( buf^, 0, LEN( buf ), 0, tail, res );  INC( received, tail );
@@ -633,8 +634,8 @@ TYPE
 		END Peek;
 
 	(** Read size bytes into x, starting at ofs.  The len parameter returns the number of bytes that were actually read. *)
-		PROCEDURE Bytes*( VAR x: ARRAY OF CHAR;  ofs, size: LONGWORD;  VAR len: LONGWORD );
-		VAR n: LONGWORD;
+		PROCEDURE Bytes*( VAR x: ARRAY OF CHAR;  ofs, size: TOffset;  VAR len: TOffset );
+		VAR n: TOffset;
 		BEGIN
 			ASSERT ( size >= 0 );
 			len := 0;
@@ -683,14 +684,14 @@ TYPE
 
 	(** Read a LONGINT. *)
 		PROCEDURE RawLInt*( VAR x: LONGINT );
-		VAR ignore: LONGWORD;
+		VAR ignore: TOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawLInt;
 
 	(** Read a HUGEINT. *)
 		PROCEDURE RawHInt*( VAR x: HUGEINT );
-		VAR ignore: LONGWORD;
+		VAR ignore: TOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawHInt;
@@ -721,7 +722,7 @@ TYPE
 
 	(** Read a SET. *)
 		PROCEDURE RawSet*( VAR x: SET );
-		VAR ignore: LONGWORD;
+		VAR ignore: TOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawSet;
@@ -734,21 +735,21 @@ TYPE
 
 	(** Read a REAL. *)
 		PROCEDURE RawReal*( VAR x: REAL );
-		VAR ignore: LONGWORD;
+		VAR ignore: TOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawReal;
 
 	(** Read a LONGREAL. *)
 		PROCEDURE RawLReal*( VAR x: LONGREAL );
-		VAR ignore: LONGWORD;
+		VAR ignore: TOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawLReal;
 
 	(** Read a 0X-terminated string.  If the input string is larger than x, read the full string and assign the truncated 0X-terminated value to x. *)
 		PROCEDURE RawString*( VAR x: ARRAY OF CHAR );
-		VAR i, m: LONGWORD;  ch: CHAR;
+		VAR i, m: TOffset;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -853,7 +854,7 @@ TYPE
 	(** Read all characters until the end of the line (inclusive).  If the input string is larger than x, read the full string and assign
 			the truncated 0X-terminated value to x. *)
 		PROCEDURE Ln*( VAR x: ARRAY OF CHAR );
-		VAR i, m: LONGWORD;  ch: CHAR;
+		VAR i, m: TOffset;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -871,7 +872,7 @@ TYPE
 			If the input string is larger than x, read the full string and assign the truncated 0X-terminated
 			value to x. *)
 		PROCEDURE LnEOT*( VAR x: ARRAY OF CHAR );
-		VAR i, m: LONGWORD;  ch: CHAR;
+		VAR i, m: TOffset;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -989,7 +990,7 @@ TYPE
 	(** A special reader that buffers input set by SetString or SetRawString. *)
 	StringReader* = OBJECT (Reader)
 
-		PROCEDURE & InitStringReader*( size: LONGWORD );
+		PROCEDURE & InitStringReader*( size: TOffset );
 		BEGIN
 			InitReader( Receive, size )
 		END InitStringReader;
@@ -1003,10 +1004,10 @@ TYPE
 		PROCEDURE SetPos*( pos: TSize );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
-			head := LONGWORD( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;
+			head := TOffset( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;
 		END SetPos;
 
-		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGWORD;  VAR len: LONGWORD; VAR res: WORD );
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: TOffset;  VAR len: TOffset; VAR res: WORD );
 		BEGIN
 			IF min = 0 THEN res := Ok ELSE res := EOF END;
 			len := 0;
@@ -1014,7 +1015,7 @@ TYPE
 
 	(** Set the contents of the string buffer.  The s parameter is a 0X-terminated string. *)
 		PROCEDURE Set*(CONST  s: ARRAY OF CHAR );
-		VAR len: LONGWORD;
+		VAR len: TOffset;
 		BEGIN
 			len := 0;
 			WHILE s[len] # 0X DO INC( len ) END;
@@ -1026,7 +1027,7 @@ TYPE
 		END Set;
 
 	(** Set the contents of the string buffer.  The len parameter specifies the size of the buffer s. *)
-		PROCEDURE SetRaw*(CONST s: ARRAY OF CHAR;  ofs, len: LONGWORD );
+		PROCEDURE SetRaw*(CONST s: ARRAY OF CHAR;  ofs, len: TOffset );
 		BEGIN
 			IF len > LEN( buf ) THEN len := LEN( buf ) END;
 			head := 0;  tail := len;  received := len;  res := Ok;

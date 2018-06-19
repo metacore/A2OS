@@ -262,7 +262,7 @@ TYPE
 			key*: LONGINT;	(* unique id for registered file, never 0 *)
 			fs*: FileSystem;	(* file system containing file *)
 
-		(** ddPosition a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
+		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
 
 		PROCEDURE Set*(VAR r: Rider; pos: Streams.Position);
 		BEGIN HALT(301) END Set;	(* abstract *)

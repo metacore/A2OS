@@ -15,7 +15,7 @@ symbol := .SymUu
 # module dependencies
 
 modules: source/Release.Tool
-	@env AOSPATH=source ./original Release.Build --list $(target) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' ' > $@
+	@AOSPATH=source ./original Release.Build --list $(target) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' ' > $@
 
 dependencies: modules source/*.Mod
 	@./original DependencyWalker.Walk --fileExtension=$(object) $(addprefix source/, $(shell sort -u modules)) DependencyWalker.Mod | tr -d '\r' | grep "^.\+\$(object):" > $@
@@ -54,9 +54,9 @@ ifdef platform
 
 build: $(if $(filter $(platforms), $(platform)), $(platform), $(error invalid platform))
 
-$(platform): oberon source/Release.Tool $(addprefix source/, $(shell env AOSPATH=source ./original Release.Build --list $(platform) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' '))
+$(platform): oberon source/Release.Tool $(addprefix source/, $(shell AOSPATH=source ./original Release.Build --list $(platform) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' '))
 	@rm -rf $@ && mkdir $@
-	@env AOSPATH=source ./oberon Release.Build --path=$@/ --build $(platform) || (rm -rf $@ && false)
+	@AOSPATH=source ./oberon Release.Build --path=$@/ --build $(platform) || (rm -rf $@ && false)
 
 else
 

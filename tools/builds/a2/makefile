@@ -1,7 +1,7 @@
 all: oberon
-commit: compiler compilation execution builds
+commit: Self\ Compilation Compilation\ Tests Execution\ Tests builds
 
-.PHONY: all commit compiler compilation execution builds build clean
+.PHONY: all commit Self\ Compilation Compilation\ Tests Execution\ Tests builds build clean
 MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 .SUFFIXES: # delete the default suffixes
 
@@ -32,15 +32,15 @@ oberon: $(addsuffix $(object), Builtins Trace Glue Unix Machine Heaps Modules Ob
 	@$(tool) Linker.Link -p=$(target) --fileName=$@ Builtins Traps UnixFiles Loader WMDefaultFont StdIOShell Shell System Compiler FoxOberonFrontend FoxAMDBackend FoxArrayBase FoxArrayBaseOptimized Linker DependencyWalker Release && chmod +x $@
 # grep ":processing\s$" oberon.log | grep "^[^:]\+" -o | tr '\n' ' '
 
-compiler: $(addsuffix $(object), FoxA2Interface FoxActiveCells FoxAMD64Assembler FoxAMD64InstructionSet FoxAMDBackend FoxARMAssembler FoxARMBackend FoxARMInstructionSet FoxArrayBase FoxArrayBaseOptimized FoxAssembler FoxBackend FoxBasic FoxBinaryCode FoxCodeGenerators Compiler FoxCSharpFrontend FoxCSharpParser FoxCSharpScanner FoxDisassembler FoxDocumentationBackend FoxDocumentationHtml FoxDocumentationParser FoxDocumentationPrinter FoxDocumentationScanner FoxDocumentationTree FoxFingerPrinter FoxFormats FoxFrontend FoxGenericObjectFile FoxGlobal FoxHardware FoxInterfaceComparison FoxIntermediateAssembler FoxIntermediateBackend FoxIntermediateCode FoxIntermediateLinker FoxIntermediateObjectFile FoxIntermediateParser FoxInterpreterBackend FoxMinosObjectFile FoxOberonFrontend FoxParser FoxPrintout FoxProfiler FoxProgTools FoxScanner FoxSections FoxSemanticChecker FoxSyntaxTree FoxTest TextCompiler FoxTextualSymbolFile FoxTranspilerBackend FoxTRMAssembler FoxTRMBackend FoxTRMInstructionSet)
+Self\ Compilation: $(addsuffix $(object), FoxA2Interface FoxActiveCells FoxAMD64Assembler FoxAMD64InstructionSet FoxAMDBackend FoxARMAssembler FoxARMBackend FoxARMInstructionSet FoxArrayBase FoxArrayBaseOptimized FoxAssembler FoxBackend FoxBasic FoxBinaryCode FoxCodeGenerators Compiler FoxCSharpFrontend FoxCSharpParser FoxCSharpScanner FoxDisassembler FoxDocumentationBackend FoxDocumentationHtml FoxDocumentationParser FoxDocumentationPrinter FoxDocumentationScanner FoxDocumentationTree FoxFingerPrinter FoxFormats FoxFrontend FoxGenericObjectFile FoxGlobal FoxHardware FoxInterfaceComparison FoxIntermediateAssembler FoxIntermediateBackend FoxIntermediateCode FoxIntermediateLinker FoxIntermediateObjectFile FoxIntermediateParser FoxInterpreterBackend FoxMinosObjectFile FoxOberonFrontend FoxParser FoxPrintout FoxProfiler FoxProgTools FoxScanner FoxSections FoxSemanticChecker FoxSyntaxTree FoxTest TextCompiler FoxTextualSymbolFile FoxTranspilerBackend FoxTRMAssembler FoxTRMBackend FoxTRMInstructionSet)
 # grep "^Fox" modules | sed 's/\.Mod//g' | tr '\n' ' '
 
-compilation: Oberon.Compilation.Test.Diff
+Compilation\ Tests: Oberon.Compilation.Test.Diff
 
 Oberon.Compilation.Test.Diff: oberon FoxTest$(object) source/Oberon.Compilation.Test
 	@./oberon FoxTest.Compile source/Oberon.Compilation.Test
 
-execution: Oberon.Execution.Test.Diff
+Execution\ Tests: Oberon.Execution.Test.Diff
 
 Oberon.Execution.Test.Diff: oberon FoxTest$(object) source/Oberon.Execution.Test
 	@./oberon FoxTest.Compile source/Oberon.Execution.Test

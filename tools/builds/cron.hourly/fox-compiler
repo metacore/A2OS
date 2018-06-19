@@ -1,0 +1,27 @@
+#!/bin/sh
+
+directory="/var/tmp/fox-compiler/"
+update () { svn checkout --non-interactive --quiet --username eth.a2guest --password a2guest https://svn.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$directory" && make --directory "$directory" --quiet oberon && version=$(svnversion "$directory/source"); }
+check () { make --question --directory "$directory" --quiet "$target"; }
+build () { timeout 1h make --directory "$directory" --quiet "$target"; }
+notify () { echo "$output" | sendbuild "Fox Compiler" "$target" "$version" "$status"; }
+
+update || exit 1
+
+process ()
+{
+	local target="$1"
+	check && break
+	local status="Building" output=""
+	notify
+	trap notify exit
+	trap "status=Aborted" int term kill
+	status="Failed" output=$(build 2>&1)
+	test $? -eq 0 && status="Succeeded" output=""
+	trap exit
+	notify
+}
+
+process "Self Compilation"
+process "Compilation Tests"
+process "Execution Tests"

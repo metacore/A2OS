@@ -47,7 +47,7 @@ TYPE
 
 	(*see StreamUtilities.Mod: reader that can daisychained with another reader that extracts a copy of the data flow to a monitor stream*)
 	ReaderMonitor* = OBJECT(Streams.Reader)
-		VAR in: Streams.Reader; tracer: Streams.Writer; pos0: LONGINT; tracedPos: LONGINT;
+		VAR in: Streams.Reader; tracer: Streams.Writer; pos0: Streams.Position; tracedPos: LONGINT;
 
 		PROCEDURE &Init(in: Streams.Reader; tracer: Streams.Writer);
 		BEGIN
@@ -80,11 +80,11 @@ TYPE
 		BEGIN RETURN in.CanSetPos()
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos: LONGINT);
+		PROCEDURE SetPos*(pos: Streams.Position);
 		BEGIN Reset; pos0 := pos; in.SetPos(pos)
 		END SetPos;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN RETURN Pos^()+pos0;
 		END Pos;
 

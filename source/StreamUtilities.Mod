@@ -32,11 +32,11 @@ TYPE	WriterMonitor* = OBJECT (Streams.Writer);
 		BEGIN RETURN out.CanSetPos()
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos: LONGINT);
+		PROCEDURE SetPos*(pos: Streams.Position);
 		BEGIN Reset; out.SetPos(pos);
 		END SetPos;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN RETURN out.Pos()
 		END Pos;
 
@@ -68,7 +68,7 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 			res:=out.res;
 		END Sender;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN RETURN out.Pos()
 		END Pos;
 
@@ -97,7 +97,7 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 			res:=in.res;
 		END Receiver;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN RETURN in.Pos()
 		END Pos;
 
@@ -217,13 +217,13 @@ TYPE
 		BEGIN RETURN out.CanSetPos()
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos: LONGINT);
+		PROCEDURE SetPos*(pos: Streams.Position);
 		BEGIN{EXCLUSIVE}
 			AWAIT(first = NIL);
 			Reset; out.SetPos(pos);
 		END SetPos;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN{EXCLUSIVE}
 			AWAIT(first = NIL);
 			RETURN out.Pos()
@@ -266,11 +266,11 @@ TYPE
 		BEGIN RETURN in.CanSetPos()
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos: LONGINT);
+		PROCEDURE SetPos*(pos: Streams.Position);
 		BEGIN Reset; in.SetPos(pos)
 		END SetPos;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN RETURN in.Pos()
 		END Pos;
 
@@ -389,7 +389,7 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 			res:=out.res;
 		END Close;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN RETURN out.Pos()
 		END Pos;
 
@@ -460,7 +460,7 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 			INC(received,len);
 		END Receiver;
 		
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN RETURN in.Pos()
 		END Pos;
 

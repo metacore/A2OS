@@ -62,7 +62,7 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : LONGINT);
+		PROCEDURE SetPos*(pos : Streams.Position);
 		BEGIN
 			f.Set(r, pos);
 			Reset;
@@ -123,7 +123,7 @@ TYPE
 			demultiplexer.GetData(streamNr, buf, ofs, size, min, len, res)
 		END Receive;
 
-		PROCEDURE SetPos*(pos : LONGINT);
+		PROCEDURE SetPos*(pos : Streams.Position);
 		VAR  seekType, itemSize, res: LONGINT;
 		BEGIN
 			seekType := SeekByte;

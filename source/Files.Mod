@@ -96,7 +96,7 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : LONGINT);
+		PROCEDURE SetPos*(pos : Streams.Position);
 		BEGIN
 			file.Set(r, pos);
 			Reset;
@@ -134,14 +134,14 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : LONGINT);
-			BEGIN
+		PROCEDURE SetPos*(pos : Streams.Position);
+		BEGIN
 			Update;
 			file.Set(r, pos);
 			Reset;
 		END SetPos;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN
 			Update;
 			RETURN file.Pos(r)

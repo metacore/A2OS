@@ -26,6 +26,8 @@ TYPE
 	TSize* = LONGINT;
 
 TYPE
+	Position* = LONGINT;
+
 	(** Any stream output procedure or method. *)
 	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 
@@ -45,8 +47,8 @@ TYPE
 
 	END Connection;
 
-	(** A writer buffers output before it is sent to a Sender.  Must not be shared between processes. *)
 TYPE
+	(** A writer buffers output before it is sent to a Sender.  Must not be shared between processes. *)
 	Writer* = OBJECT
 	VAR
 		tail: LONGINT;
@@ -75,7 +77,7 @@ TYPE
 			RETURN FALSE
 		END CanSetPos;
 
-		PROCEDURE SetPos*( pos: LONGINT );
+		PROCEDURE SetPos*( pos: Position );
 		BEGIN
 			HALT( 1234 )
 		END SetPos;
@@ -89,7 +91,7 @@ TYPE
 		END Update;
 
 	(** Current write position. *)
-		PROCEDURE Pos*( ): LONGINT;
+		PROCEDURE Pos*( ): Position;
 		BEGIN
 			RETURN sent + tail
 		END Pos;
@@ -516,7 +518,7 @@ TYPE
 		END CanSetPos;
 
 	(* Set the position for the writer *)
-		PROCEDURE SetPos*( pos: LONGINT );
+		PROCEDURE SetPos*( pos: Position );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
 			tail := pos;  sent := 0;  res := Ok;
@@ -578,7 +580,7 @@ TYPE
 			RETURN FALSE
 		END CanSetPos;
 
-		PROCEDURE SetPos*( pos: LONGINT );
+		PROCEDURE SetPos*( pos: Position );
 		BEGIN
 			HALT( 1234 )
 		END SetPos;
@@ -599,7 +601,7 @@ TYPE
 		END Available;
 
 	(** Current read position. *)
-		PROCEDURE Pos*( ): LONGINT;
+		PROCEDURE Pos*( ): Position;
 		BEGIN
 			RETURN received - (tail - head)
 		END Pos;
@@ -1000,7 +1002,7 @@ TYPE
 		END CanSetPos;
 
 	(** Set the reader position *)
-		PROCEDURE SetPos*( pos: LONGINT );
+		PROCEDURE SetPos*( pos: Position );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
 			head := pos;  tail := LEN( buf );  received := LEN( buf );  res := Ok;

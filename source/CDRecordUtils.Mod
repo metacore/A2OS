@@ -487,7 +487,7 @@ TYPE
 			NEW(cur, NIL, NIL, NIL);
 		END Init;
 
-		PROCEDURE SetPos*(pos: LONGINT);
+		PROCEDURE SetPos*(pos: Streams.Position);
 		BEGIN
 			IF pos < start.Get() THEN
 				pos := start.Get();
@@ -498,7 +498,7 @@ TYPE
 			Invalidate();
 		END SetPos;
 
-		PROCEDURE GetPos*(): LONGINT;
+		PROCEDURE GetPos*(): Streams.Position;
 		BEGIN
 			RETURN cur.Get();
 		END GetPos;

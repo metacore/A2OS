@@ -1448,7 +1448,7 @@ TYPE
 		BEGIN RETURN w.CanSetPos();
 		END CanSetPos;
 
-		PROCEDURE SetPos*( pos: LONGINT );
+		PROCEDURE SetPos*( pos: Streams.Position );
 		BEGIN w.SetPos(pos);
 		END SetPos;
 
@@ -1456,7 +1456,7 @@ TYPE
 		BEGIN w.Update;
 		END Update;
 
-		PROCEDURE Pos*( ): LONGINT;
+		PROCEDURE Pos*( ): Streams.Position;
 		BEGIN RETURN w.Pos()
 		END Pos;
 

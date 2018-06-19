@@ -203,7 +203,7 @@ IMPORT
 		END Resynch;
 
 		(* Return Pos in Avi File, relativ to the beginning of the stream data *)
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN
 			RETURN r.Pos()
 		END Pos;
@@ -227,7 +227,7 @@ IMPORT
 		END Bytes;
 
 		(* Set Byte Position *)
-		PROCEDURE SetPos*(pos : LONGINT);
+		PROCEDURE SetPos*(pos : Streams.Position);
 		VAR seekType, itemSize, res : LONGINT;
 		BEGIN
 			IF Debug THEN KernelLog.String("DemuxStream.SetPos"); KernelLog.Ln; END;

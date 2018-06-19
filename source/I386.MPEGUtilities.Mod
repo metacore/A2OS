@@ -634,12 +634,12 @@ TYPE
 			END;
 		END SkipBits;
 
-		PROCEDURE Pos*(): LONGINT;
+		PROCEDURE Pos*(): Streams.Position;
 		BEGIN
 			RETURN input.Pos() - 8;
 		END Pos;
 
-		PROCEDURE SetPos*(pos: LONGINT);
+		PROCEDURE SetPos*(pos: Streams.Position);
 		VAR
 			dummy, result: LONGINT;
 

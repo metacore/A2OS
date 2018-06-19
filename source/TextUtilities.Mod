@@ -227,7 +227,7 @@ TYPE
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos: LONGINT);
+		PROCEDURE SetPos*(pos: Streams.Position);
 		BEGIN
 			reader.text.AcquireRead;
 			reader.SetPosition(pos); (* pos is clipped *)

@@ -72,7 +72,7 @@ backend options (intermediate and AMD)
 
 generic object file options
 		--textualObjectFile		flag		store the object file in textual (UTF8) form
-		--objectFIleExtension	string	extension to be used for object file
+		--objectFileExtension	string	extension to be used for object file
 
 textual symbol file options
 		--symbolFileExtension	string	extension to be used for symbol file (for reading only)

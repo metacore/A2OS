@@ -5,7 +5,7 @@
 * Setup website in /var/www/builds
 
 	cp -r www /var/www/builds
-	mv apache2.conf /etc/apache2/sites-available/builds.conf
+	cp apache2.conf /etc/apache2/sites-available/builds.conf
 	chown -R www-data:www-data /var/www/builds
 	chmod +x /var/www/builds/index.cgi
 

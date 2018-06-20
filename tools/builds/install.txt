@@ -1,0 +1,17 @@
+* Install required packages
+
+	apt install apache2 ruby-sqlite3 ruby-fcgi libapache2-mod-fcgid
+
+* Setup website in /var/www/builds
+
+	cp -r www /var/www/builds
+	mv apache2.conf /etc/apache2/sites-available/builds.conf
+	chown -R www-data:www-data /var/www/builds
+	chmod +x /var/www/builds/index.cgi
+
+* Manage websites and modules
+
+	a2ensite builds.conf
+	a2dissite 000-default.conf
+	a2enmod rewrite
+	service apache2 reload

@@ -15,3 +15,8 @@
 	a2dissite 000-default.conf
 	a2enmod rewrite
 	service apache2 reload
+
+* Copy executable scripts and cron jobs
+
+	cp bin/* /usr/local/bin
+	cp cron.hourly/* /etc/cron.hourly

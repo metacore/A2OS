@@ -1,6 +1,6 @@
 * Install required packages
 
-	apt install apache2 ruby-sqlite3 ruby-fcgi libapache2-mod-fcgid
+	apt install apache2 ruby-sqlite3 ruby-fcgi libapache2-mod-fcgid curl sendmail-bin
 
 * Setup website in /var/www/builds
 

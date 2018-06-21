@@ -1087,6 +1087,11 @@ TYPE
 	PROCEDURE ToVectorType*(VAR type: Type; length: LONGINT);
 	BEGIN type.length := length
 	END ToVectorType;
+	
+	PROCEDURE IsVectorRegister*(CONST op: Operand): BOOLEAN;
+	BEGIN
+		RETURN (op.mode = ModeRegister) & (op.type.length > 1);
+	END IsVectorRegister;
 
 	PROCEDURE InitRegisterClass*(VAR registerClass: RegisterClass; class: SHORTINT; number: LONGINT);
 	BEGIN registerClass.class := class; registerClass.number := INTEGER(number)

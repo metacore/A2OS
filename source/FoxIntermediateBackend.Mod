@@ -10370,7 +10370,13 @@ TYPE
 					Designate(right,rightO);
 					Designate(left,leftO);
 					size := ToMemoryUnits(system,system.SizeOf(rightType));
-					Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
+					IF IntermediateCode.IsVectorRegister(leftO.op) THEN
+						MakeMemory(mem, rightO.op, leftO.op.type,0);
+						Emit(Mov(position, leftO.op, mem)); 
+						ReleaseIntermediateOperand(mem); 
+					ELSE
+						Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
+					END;
 					ReleaseOperand(leftO); ReleaseOperand(rightO);
 				ELSE
 					AssignMathArray(left,right);
@@ -14684,6 +14690,8 @@ TYPE
 	PROCEDURE Copy(position: Basic.Position;dest,src,size: IntermediateCode.Operand): IntermediateCode.Instruction;
 	VAR instruction: IntermediateCode.Instruction;
 	BEGIN
+		ASSERT(~IntermediateCode.IsVectorRegister(dest)); 
+		ASSERT(~IntermediateCode.IsVectorRegister(src)); 
 		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.copy,dest,src,size);
 		RETURN instruction
 	END Copy;

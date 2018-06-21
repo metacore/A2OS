@@ -42,7 +42,7 @@ TYPE
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: LONGINT); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END FileInputStream; 
 
 	AVDemultiplexer* = OBJECT 
@@ -64,7 +64,7 @@ TYPE
 
 		PROCEDURE ^  & Open*(demultiplexer: AVDemultiplexer; streamNr: LONGINT); 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^ SetPosX*(seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 	END DemuxStream; 
 

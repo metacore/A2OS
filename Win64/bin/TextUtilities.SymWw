@@ -66,7 +66,7 @@ TYPE
 		PROCEDURE ^  & Init*(text: Texts.Text); 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END TextReader; 
 
 	LongintArray = POINTER TO ARRAY OF LONGINT; 

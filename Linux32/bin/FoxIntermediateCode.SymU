@@ -227,6 +227,7 @@ VAR
 	PROCEDURE ^ String*(string: SyntaxTree.SourceCode): Operand; 
 	PROCEDURE ^ InitType*(VAR type: Type; form: SHORTINT; sizeInBits: INTEGER); 
 	PROCEDURE ^ ToVectorType*(VAR type: Type; length: LONGINT); 
+	PROCEDURE ^ IsVectorRegister*(CONST op: Operand): BOOLEAN; 
 	PROCEDURE ^ InitRegisterClass*(VAR registerClass: RegisterClass; class: SHORTINT; number: LONGINT); 
 	PROCEDURE ^ InitParameterRegisterClass*(VAR registerClass: RegisterClass; number: LONGINT); 
 	PROCEDURE ^ NewType*(form: SHORTINT; sizeInBits: INTEGER): Type; 

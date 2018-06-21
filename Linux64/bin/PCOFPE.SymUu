@@ -109,8 +109,8 @@ TYPE
 		org, ofs: LONGINT; 
 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
-		PROCEDURE ^ Pos*(): LONGINT; 
-		PROCEDURE ^ SetPos*(ofs: LONGINT); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+		PROCEDURE ^ SetPos*(ofs: Streams.Position); 
 		PROCEDURE ^  & Open*(sect: Section; ofs: LONGINT); 
 	END SectionReader; 
 
@@ -120,8 +120,8 @@ TYPE
 		org, ofs: LONGINT; 
 
 		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Pos*(): LONGINT; 
-		PROCEDURE ^ SetPos*(ofs: LONGINT); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+		PROCEDURE ^ SetPos*(ofs: Streams.Position); 
 		PROCEDURE ^  & Open*(sect: Section; ofs: LONGINT); 
 	END SectionWriter; 
 

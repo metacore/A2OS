@@ -92,8 +92,8 @@ TYPE
 		PROCEDURE ^ ShowBuffer*; 
 		PROCEDURE ^ GetBits*(n: LONGINT): LONGINT; 
 		PROCEDURE ^ SkipBits*(n: LONGINT); 
-		PROCEDURE ^ Pos*(): LONGINT; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
 	END BitStream; 
 

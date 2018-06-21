@@ -15,6 +15,8 @@ CONST
 TYPE 
 	TSize* = LONGINT; 
 
+	Position* = LONGINT; 
+
 	Sender* = PROCEDURE {DELEGATE}(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 
 	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
@@ -37,9 +39,9 @@ TYPE
 		PROCEDURE ^  & InitWriter*(send: Sender; size: LONGINT); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Position); 
 		PROCEDURE ^ Update*; 
-		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ Pos*(): Position; 
 		PROCEDURE ^ Char*(x: CHAR); 
 		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ RawSInt*(x: SHORTINT); 
@@ -75,7 +77,7 @@ TYPE
 		PROCEDURE ^  & InitStringWriter*(size: LONGINT); 
 		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Position); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Get*(VAR s: ARRAY OF CHAR); 
 		PROCEDURE ^ GetRaw*(VAR s: ARRAY OF CHAR; VAR len: LONGINT); 
@@ -92,9 +94,9 @@ TYPE
 		PROCEDURE ^  & InitReader*(receive: Receiver; size: LONGINT); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Position); 
 		PROCEDURE ^ Available*(): LONGINT; 
-		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ Pos*(): Position; 
 		PROCEDURE ^ Char*(VAR x: CHAR); 
 		PROCEDURE ^ Get*(): CHAR; 
 		PROCEDURE ^ Peek*(): CHAR; 
@@ -135,7 +137,7 @@ TYPE
 
 		PROCEDURE ^  & InitStringReader*(size: LONGINT); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Position); 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^ Set*(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ SetRaw*(CONST s: ARRAY OF CHAR; ofs, len: LONGINT); 

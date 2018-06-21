@@ -51,7 +51,7 @@ TYPE
 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^  & InitFileReader*(file: File; pos: LONGINT); 
 	END Reader; 
 
@@ -62,8 +62,8 @@ TYPE
 
 		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
-		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
 		PROCEDURE ^  & InitFileWriter*(file: File; pos: LONGINT); 
 	END Writer; 
 

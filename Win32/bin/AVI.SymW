@@ -93,10 +93,10 @@ TYPE
 		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
 		PROCEDURE ^ ReadNextChunk(VAR buf: ARRAY OF CHAR); 
 		PROCEDURE ^ Resynch*(VAR buf: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ Pos*(): Streams.Position; 
 		PROCEDURE ^ SetAVIPos*(pos: LONGINT; VAR retPos: LONGINT); 
 		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: LONGINT; VAR len: LONGINT); 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END AVIStream; 
 
 	AVIDemux* = OBJECT (AOC.AVDemultiplexer)

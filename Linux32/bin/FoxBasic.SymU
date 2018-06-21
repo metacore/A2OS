@@ -376,9 +376,9 @@ TYPE
 		PROCEDURE ^  & InitW(w: Streams.Writer); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^ Update*; 
-		PROCEDURE ^ Pos*(): LONGINT; 
+		PROCEDURE ^ Pos*(): Streams.Position; 
 		PROCEDURE ^ Indent; 
 		PROCEDURE ^ Char*(x: CHAR); 
 		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 

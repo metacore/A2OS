@@ -5400,7 +5400,12 @@ TYPE
 							CallAssignMethod(dst, operand.op, parameter.type);
 							RestoreRegisters(saved);
 						END;
-						Emit(Copy(position,sp,operand.op,IntermediateCode.Immediate(addressType,size)));
+						IF operand.op.type.length > 1 THEN (* vector *)
+							MakeMemory(tmp,sp,operand.op.type,0);
+							Emit(Mov(position, tmp, operand.op)); 
+						ELSE
+							Emit(Copy(position,sp,operand.op,IntermediateCode.Immediate(addressType,size)));
+						END;
 					ELSIF IsOpenArray(parameter.type) THEN
 						Designate(expression,operand);
 						baseReg := operand.tag;

@@ -122,7 +122,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		COPY(source, inputFileName);
 		inputFile := Files.Old(inputFileName);
 		IF inputFile= NIL THEN
-			diagnostics.Error(inputFileName,Diagnostics.Invalid,Diagnostics.Invalid,"could not open file");
+			diagnostics.Error(inputFileName,Diagnostics.Invalid,"could not open file");
 			RETURN FALSE
 		END;
 		Files.OpenReader( reader,inputFile,0);
@@ -196,7 +196,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		COPY(source, fileName);
 		oldFile := Files.Old(fileName);
 		IF oldFile = NIL THEN
-			diagnostics.Error(fileName,Diagnostics.Invalid,Diagnostics.Invalid,"could not open file");
+			diagnostics.Error(fileName,Diagnostics.Invalid,"could not open file");
 			RETURN FALSE
 		END;
 		Files.OpenReader( reader,oldFile,0);
@@ -208,13 +208,13 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 			GetFileName(i,fileName);
 			newFiles[i] := Files.New(fileName);
 			IF newFiles[i]= NIL THEN
-				diagnostics.Error(fileName,Diagnostics.Invalid,Diagnostics.Invalid,"could not open file");
+				diagnostics.Error(fileName,Diagnostics.Invalid,"could not open file");
 				RETURN FALSE
 			ELSE
 				Files.OpenWriter(writers[i],newFiles[i],0);
 			END;
 			IF verbose THEN
-				diagnostics.Information(fileName,Diagnostics.Invalid,Diagnostics.Invalid,"file generated");
+				diagnostics.Information(fileName,Diagnostics.Invalid,"file generated");
 			END;
 		END;
 		(*If strided: read line by line, fill round robin into the output files*)
@@ -237,7 +237,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 			INC(line);
 		END;
 		IF reader.Available()>0 THEN
-			diagnostics.Warning(source,Diagnostics.Invalid,Diagnostics.Invalid,"source file truncated");
+			diagnostics.Warning(source,Diagnostics.Invalid,"source file truncated");
 		END;
 		FOR i := 0 TO blocks-1 DO
 			writers[i].Update; Files.Register(newFiles[i])
@@ -296,11 +296,11 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		IF ~options.GetString("target",targetName) THEN targetName:="default.mem" END;
 		NEW(diagnostics,context.out);
 		
-		diagnostics.Information("target name", 0, 0, targetName);
+		diagnostics.Information("target name", Diagnostics.Invalid, targetName);
 		done:=TRUE;
 		WHILE done & context.arg.GetString (name) DO
 		
-			diagnostics.Information("source name", 0, 0, name);
+			diagnostics.Information("source name", Diagnostics.Invalid, name);
 			done := SplitColumns(name,  targetName, insW, numB, baseD, diagnostics);
 		END;
 	END SplitColumnsCmd;

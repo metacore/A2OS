@@ -988,7 +988,7 @@ TYPE
 				 	module := modules.GetModule(i);
 				 	Strings.Append(msg," "); Strings.Append(msg,module.name);
 				 END;
-				 diagnostics.Error("",Diagnostics.Invalid, Diagnostics.Invalid, msg);
+				 diagnostics.Error("",Diagnostics.Invalid, msg);
 			END;
 			RETURN ~linker.error
 		END LinkType;

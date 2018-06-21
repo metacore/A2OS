@@ -415,7 +415,7 @@ type
 		
 		i := Strings.IndexOfByte2(".",cellNet);
 		if i = -1 then
-			diagnostics.Error("",Diagnostics.Invalid,Diagnostics.Invalid, "CELLNET type name is malformed");
+			diagnostics.Error("",Diagnostics.Invalid, "CELLNET type name is malformed");
 			return;
 		end;
 
@@ -424,14 +424,14 @@ type
 
 		unloaded := FreeDownTo(moduleName);
 		if unloaded > 0 then
-			(*param.ctx.Information("", Diagnostics.Invalid,Diagnostics.Invalid,"unloaded " & unloaded & " modules")*)
+			(*param.ctx.Information("", Diagnostics.Invalid,"unloaded " & unloaded & " modules")*)
 		end;
 		m := Modules.ThisModule(moduleName,res,str);
 
 		if m = nil then
 			Strings.Concat('failed to load module "',moduleName,str);
 			Strings.Concat(str,'"',str);
-			diagnostics.Error("",Diagnostics.Invalid,-1,str);
+			diagnostics.Error("",Diagnostics.Invalid,str);
 			return;
 		end;
 		typeInfo := Modules.ThisType(m,typeName);
@@ -440,7 +440,7 @@ type
 			Strings.Concat(str,'" in module "',str);
 			Strings.Concat(str,moduleName,str);
 			Strings.Concat(str,'"',str);
-			diagnostics.Error("",Diagnostics.Invalid,-1,str);
+			diagnostics.Error("",Diagnostics.Invalid,str);
 			return;
 		end;
 

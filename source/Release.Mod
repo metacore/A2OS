@@ -451,7 +451,7 @@ TYPE
 					COPY(build.name, temp);
 					Strings.Append(temp, ": Import # not found in file #");
 					MakeMessage(message, temp, module.imports[i], name);
-					diagnostics.Error(builds.source, pos, Diagnostics.Invalid, message);
+					diagnostics.Error(builds.source, pos, message);
 				END;
 			END;
 		END CheckImports;
@@ -473,7 +473,7 @@ TYPE
 					SplitName(name, pre, mid, suf);
 					IF (module.name # mid)  THEN
 						MakeMessage(message, "Module name not equal to filename in #", name, "");
-						diagnostics.Warning(builds.source, pos, Diagnostics.Invalid, message);
+						diagnostics.Warning(builds.source, pos, message);
 					END;
 					CreateContext(module.name, module.context);
 				END;
@@ -916,7 +916,7 @@ TYPE
 					END;
 				END;
 			ELSE
-				diagnostics.Error("", Diagnostics.Invalid, Diagnostics.Invalid, "No packages");
+				diagnostics.Error("", Diagnostics.Invalid, "No packages");
 			END;
 		END GenerateZipFiles;
 
@@ -1014,7 +1014,7 @@ TYPE
 					END;
 					IF (file.file = NIL) THEN
 						MakeMessage(message, "File # does not exists (Package #)", file.name, file.package.name);
-						diagnostics.Warning(builds.source, file.pos, Diagnostics.Invalid, message);
+						diagnostics.Warning(builds.source, file.pos, message);
 					ELSIF file.IsSourceCode() THEN
 						file.ParseModule(diagnostics);
 					END;
@@ -1299,7 +1299,7 @@ TYPE
 				END;
 			ELSE
 				MakeMessage(message, "File # not found", file.name, "");
-				diagnostics.Error("", file.pos, Diagnostics.Invalid, message);
+				diagnostics.Error("", file.pos, message);
 				error := TRUE;
 			END;
 		END CompileFile;
@@ -1483,7 +1483,7 @@ TYPE
 					INC(nofPrefixes);
 				ELSE
 					error := TRUE;
-					diagnostics.Warning("", Diagnostics.Invalid, Diagnostics.Invalid, "Maximum number of prefixes exceeded");
+					diagnostics.Warning("", Diagnostics.Invalid, "Maximum number of prefixes exceeded");
 					FOR j := 0 TO LEN(prefixes)-1 DO
 						TRACE(prefixes[j]);
 					END;
@@ -1517,9 +1517,9 @@ TYPE
 				IF (file.file = NIL) THEN
 					MakeMessage(message, "File # does not exists (Package #)", file.name, file.package.name);
 					IF file.IsSourceCode() THEN
-						diagnostics.Error(source, file.pos, Diagnostics.Invalid, message);
+						diagnostics.Error(source, file.pos, message);
 					ELSE
-						diagnostics.Warning(source, file.pos, Diagnostics.Invalid, message);
+						diagnostics.Warning(source, file.pos, message);
 					END;
 				ELSIF file.IsSourceCode() THEN
 					file.ParseModule(diagnostics);
@@ -1670,7 +1670,7 @@ TYPE
 				INC(nofBuilds);
 			ELSE
 				error := TRUE;
-				diagnostics.Error(source, Diagnostics.Invalid, Diagnostics.Invalid, "Maximum number of builds exceeded");
+				diagnostics.Error(source, Diagnostics.Invalid, "Maximum number of builds exceeded");
 			END;
 			RETURN ~error;
 		END AddBuild;
@@ -1754,7 +1754,7 @@ TYPE
 								MakeMessage(message, "Excluded package '#' in build '#' does not exist",
 									builds[build].excludedPackages[package]^,
 									builds[build].name);
-								diagnostics.Error(source, Diagnostics.Invalid, Diagnostics.Invalid, message);
+								diagnostics.Error(source, Diagnostics.Invalid, message);
 							END;
 						END;
 					END;
@@ -1816,7 +1816,7 @@ TYPE
 		BEGIN
 			error := TRUE;
 			MakeMessage(message, msg, par1, par2);
-			diagnostics.Error(source, pos, Diagnostics.Invalid, message);
+			diagnostics.Error(source, pos, message);
 		END Error;
 
 		PROCEDURE Check(CONST token : Token) : BOOLEAN;
@@ -1958,14 +1958,14 @@ TYPE
 		BEGIN
 			error := TRUE;
 			MakeMessage(message, msg, par1, par2);
-			diagnostics.Error(scanner.source, pos, Diagnostics.Invalid, message);
+			diagnostics.Error(scanner.source, pos, message);
 		END Error;
 
 		PROCEDURE Warning(pos : LONGINT; CONST msg, par1, par2 : ARRAY OF CHAR);
 		VAR message : ARRAY 128 OF CHAR;
 		BEGIN
 			MakeMessage(message, msg, par1, par2);
-			diagnostics.Warning(scanner.source, pos, Diagnostics.Invalid, message);
+			diagnostics.Warning(scanner.source, pos, message);
 		END Warning;
 
 		PROCEDURE IsFilename(CONST token : Token) : BOOLEAN;
@@ -2313,7 +2313,7 @@ TYPE
 							END;
 							builds.AddFile(token, currentRelease, currentPackage, scanner.pos);
 						ELSE
-							diagnostics.Warning(scanner.source, scanner.pos, Diagnostics.Invalid, "Expected filename (not file extension?)");
+							diagnostics.Warning(scanner.source, scanner.pos, "Expected filename (not file extension?)");
 						END;
 					ELSE
 						Error(scanner.pos, "Expected identifier, found #", token, "");
@@ -2333,7 +2333,7 @@ TYPE
 				Incl(release,index);
 			ELSE
 				MakeMessage(message, "Unknown build prefix #", token, "");
-				diagnostics.Warning(scanner.source, scanner.pos, Diagnostics.Invalid, message);
+				diagnostics.Warning(scanner.source, scanner.pos, message);
 			END;
 			IF scanner.Get(token) THEN
 				IF (token = OPENSECTION) THEN
@@ -2470,13 +2470,13 @@ PROCEDURE GetModuleInfo(
 				IF (context = "") THEN
 					error := TRUE;
 					MakeMessage(message, "Context identifier missing in file #", filename, "");
-					diagnostics.Error(source, errorPosition, Diagnostics.Invalid, message);
+					diagnostics.Error(source, errorPosition, message);
 				END;
 				SkipComments(in);
 			ELSE
 				error := TRUE;
 				MakeMessage(message, "Expected 'IN' keyword in file #", filename, "");
-				diagnostics.Error(source, errorPosition, Diagnostics.Invalid, message);
+				diagnostics.Error(source, errorPosition, message);
 			END;
 		END;
 	END GetContext;
@@ -2500,17 +2500,17 @@ PROCEDURE GetModuleInfo(
 				IF ~error & (ch # ";") THEN
 					error := TRUE;
 					MakeMessage(message, "Expected semicolon after module identifier in file #", filename, "");
-					diagnostics.Error(source, errorPosition, Diagnostics.Invalid, message);
+					diagnostics.Error(source, errorPosition, message);
 				END;
 			ELSE
 				error := TRUE;
 				MakeMessage(message, "Module identifier missing in file #", filename, "");
-				diagnostics.Error(source, errorPosition, Diagnostics.Invalid, message);
+				diagnostics.Error(source, errorPosition, message);
 			END;
 		ELSE
 			error := TRUE;
 			MakeMessage(message, "MODULE keyword missing in file #, first token is #", filename, token);
-			diagnostics.Error(source, errorPosition, Diagnostics.Invalid, message);
+			diagnostics.Error(source, errorPosition, message);
 		END;
 	END GetModuleNameAndContext;
 
@@ -2526,7 +2526,7 @@ PROCEDURE GetModuleInfo(
 		ELSE
 			error := TRUE;
 			MakeMessage(message, "Identifier expected in import section of file #", filename, "");
-			diagnostics.Error(source, errorPosition, Diagnostics.Invalid, message);
+			diagnostics.Error(source, errorPosition, message);
 		END;
 	END GetImport;
 
@@ -2550,7 +2550,7 @@ PROCEDURE GetModuleInfo(
 					ELSE
 						error := TRUE;
 						MakeMessage(message, "Maximum number of supported imports exceeded in module #", filename, "");
-						diagnostics.Error(source, Diagnostics.Invalid, Diagnostics.Invalid, message);
+						diagnostics.Error(source, Diagnostics.Invalid, message);
 						EXIT;
 					END;
 
@@ -2563,7 +2563,7 @@ PROCEDURE GetModuleInfo(
 					ELSE
 						error := TRUE;
 						MakeMessage(message, "Parsing import section of module # failed", filename, "");
-						diagnostics.Error(source, errorPosition, Diagnostics.Invalid, message);
+						diagnostics.Error(source, errorPosition, message);
 						EXIT;
 					END;
 				ELSE
@@ -2679,7 +2679,7 @@ BEGIN
 			reader := fileReader;
 		ELSE
 			MakeMessage(message, "Could not open file #", file.name, "");
-			diagnostics.Error(file.name, file.pos, Diagnostics.Invalid, message);
+			diagnostics.Error(file.name, file.pos, message);
 		END;
 	END;
 	IF (reader = NIL) THEN
@@ -2690,7 +2690,7 @@ BEGIN
 			reader := textReader;
 		ELSE
 			MakeMessage(message, "Could not open file # (Package = )", file.name, "");
-			diagnostics.Error(file.name, file.pos, Diagnostics.Invalid, message);
+			diagnostics.Error(file.name, file.pos, message);
 		END;
 	END;
 	RETURN reader;
@@ -2752,7 +2752,7 @@ BEGIN
 	ELSE
 		builds := NIL;
 		MakeMessage(message, "Could not open file #", filename, "");
-		diagnostics.Error("", Diagnostics.Invalid, Diagnostics.Invalid, message);
+		diagnostics.Error("", Diagnostics.Invalid, message);
 		RETURN FALSE;
 	END;
 END ParseBuildFile;

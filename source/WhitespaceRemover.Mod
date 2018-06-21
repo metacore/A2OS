@@ -53,7 +53,7 @@ BEGIN
 	WHILE ~reader.eot DO
 		IF (char = LineFeed) THEN
 			IF lastCharWasWhitespace THEN
-				diagnostics.Warning("", lastWhitespacePosition, Diagnostics.Invalid, "Whitespace at end of line");
+				diagnostics.Warning("", lastWhitespacePosition, "Whitespace at end of line");
 				lastCharWasWhitespace := FALSE;
 			END;
 		ELSIF TextUtilities.IsWhiteSpace(char, text.isUTF) THEN

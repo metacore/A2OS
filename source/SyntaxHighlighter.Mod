@@ -1435,7 +1435,7 @@ BEGIN
 				Copy(string^, fontname);
 			END;
 		ELSE
-			diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Style font name missing");
+			diagnostics.Warning(source, element.GetPos(), "Style font name missing");
 		END;
 
 		fontsize := 0;
@@ -1447,7 +1447,7 @@ BEGIN
 				Strings.StrToInt(string^, fontsize);
 			END;
 		ELSE
-			diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Style attribute font size missing");
+			diagnostics.Warning(source, element.GetPos(), "Style attribute font size missing");
 		END;
 
 		string := element.GetAttributeValue(XmlAttributeFontStyle);
@@ -1468,10 +1468,10 @@ BEGIN
 				IF (res = Strings.Ok) THEN
 					INCL(defined, Color);
 				ELSE
-					diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Style attribute color: Invalid value");
+					diagnostics.Warning(source, element.GetPos(), "Style attribute color: Invalid value");
 				END;
 			END;
-		ELSE diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Style attribute color missing");
+		ELSE diagnostics.Warning(source, element.GetPos(), "Style attribute color missing");
 		END;
 
 		bgcolor := 0;
@@ -1483,7 +1483,7 @@ BEGIN
 				IF (res = Strings.Ok) THEN
 					INCL(defined, BgColor);
 				ELSE
-					diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Style attribute background color: Invalid value");
+					diagnostics.Warning(source, element.GetPos(), "Style attribute background color: Invalid value");
 				END;
 			END;
 		ELSE
@@ -1509,7 +1509,7 @@ BEGIN
 		styles.Add(style);
 	ELSE
 		error := TRUE;
-		diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Style name missing");
+		diagnostics.Error(source, element.GetPos(), "Style name missing");
 	END;
 END ParseStyle;
 
@@ -1530,7 +1530,7 @@ BEGIN
 			IF (string # NIL) & (string^ = XmlStyle) THEN
 				ParseStyle(ptr(XML.Element), styles, source, diagnostics, error);
 			ELSE
-				diagnostics.Warning(source, ptr(XML.Element).GetPos(), Diagnostics.Invalid, "Expected style element");
+				diagnostics.Warning(source, ptr(XML.Element).GetPos(), "Expected style element");
 			END;
 		END;
 	END;
@@ -1571,24 +1571,24 @@ BEGIN
 						END;
 						IF (res # Ok) THEN
 							error := TRUE;
-							diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Token too long");
+							diagnostics.Error(source, element.GetPos(), "Token too long");
 						END;
 						reader.SkipWhitespace;
 						reader.Token(token);
 					END;
 				ELSE
-					diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Empty group (string)");
+					diagnostics.Warning(source, element.GetPos(), "Empty group (string)");
 				END;
 			ELSE
-				diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Empty group");
+				diagnostics.Warning(source, element.GetPos(), "Empty group");
 			END;
 		ELSE
 			error := TRUE;
-			diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Could not find style for group...");
+			diagnostics.Error(source, element.GetPos(), "Could not find style for group...");
 		END;
 	ELSE
 		error := TRUE;
-		diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Group name missing");
+		diagnostics.Error(source, element.GetPos(), "Group name missing");
 	END;
 END ParseGroup;
 
@@ -1609,7 +1609,7 @@ BEGIN
 			IF (string # NIL) & (string^ = XmlGroup) THEN
 				ParseGroup(ptr(XML.Element), highlighter, styles, TypeTokens, source, diagnostics, error);
 			ELSE
-				diagnostics.Warning(source, ptr(XML.Element).GetPos(), Diagnostics.Invalid, "Expected group element");
+				diagnostics.Warning(source, ptr(XML.Element).GetPos(), "Expected group element");
 			END;
 		END;
 	END;
@@ -1633,7 +1633,7 @@ BEGIN
 			IF (string # NIL) & (string^ = XmlGroup) THEN
 				ParseGroup(ptr(XML.Element), highlighter, styles, TypeWords, source, diagnostics, error);
 			ELSE
-				diagnostics.Warning(source, ptr(XML.Element).GetPos(), Diagnostics.Invalid, "Expected group element");
+				diagnostics.Warning(source, ptr(XML.Element).GetPos(), "Expected group element");
 			END;
 		END;
 	END;
@@ -1649,7 +1649,7 @@ BEGIN
 	IF (string # NIL) THEN
 		highlighter.numberStyle := styles.Find(string^);
 		IF (highlighter.numberStyle = NIL) THEN
-			diagnostics.Warning(source, ptr(XML.Element).GetPos(), Diagnostics.Invalid, "Number style not found");
+			diagnostics.Warning(source, ptr(XML.Element).GetPos(), "Number style not found");
 		END;
 	END;
 END ParseWords;
@@ -1677,7 +1677,7 @@ BEGIN
 			styleOpen := style;
 		ELSE
 			error := TRUE;
-			diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "OpenStyle not found");
+			diagnostics.Error(source, element.GetPos(), "OpenStyle not found");
 		END;
 	END;
 
@@ -1688,7 +1688,7 @@ BEGIN
 			styleClose := style;
 		ELSE
 			error := TRUE;
-			diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "CloseStyle not found");
+			diagnostics.Error(source, element.GetPos(), "CloseStyle not found");
 		END;
 	END;
 
@@ -1699,7 +1699,7 @@ BEGIN
 			styleContent := style;
 		ELSE
 			error := TRUE;
-			diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "ContentStyle not found");
+			diagnostics.Error(source, element.GetPos(), "ContentStyle not found");
 		END;
 	END;
 
@@ -1708,17 +1708,17 @@ BEGIN
 		Copy(string^, open);
 		IF (open = "") THEN
 			error := TRUE;
-			diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Region attribute open is empty");
+			diagnostics.Error(source, element.GetPos(), "Region attribute open is empty");
 		END;
 	ELSE
 		error := TRUE;
-		diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Region attribute open missing");
+		diagnostics.Error(source, element.GetPos(), "Region attribute open missing");
 	END;
 
 	string := element.GetAttributeValue(XmlAttributeClose);
 	IF (string # NIL) THEN
 		Copy(string^, close);
-	ELSE diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Region attribute close missing");
+	ELSE diagnostics.Warning(source, element.GetPos(), "Region attribute close missing");
 	END;
 
 	nesting := FALSE;
@@ -1726,7 +1726,7 @@ BEGIN
 	IF (string # NIL) THEN
 		Strings.TrimWS(string^);
 		Strings.StrToBool(string^, nesting);
-	ELSE diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Region attribute nesting missing");
+	ELSE diagnostics.Warning(source, element.GetPos(), "Region attribute nesting missing");
 	END;
 
 	multiline := FALSE;
@@ -1734,7 +1734,7 @@ BEGIN
 	IF (string # NIL) THEN
 		Strings.TrimWS(string^);
 		Strings.StrToBool(string^, multiline);
-	ELSE diagnostics.Warning(source, element.GetPos(), Diagnostics.Invalid, "Region attribute multiline missing");
+	ELSE diagnostics.Warning(source, element.GetPos(), "Region attribute multiline missing");
 	END;
 
 	IF ~error THEN
@@ -1759,7 +1759,7 @@ BEGIN
 			IF (string # NIL) & (string^ = XmlRegion) THEN
 				ParseRegion(ptr(XML.Element), highlighter, styles, source, diagnostics, error);
 			ELSE
-				diagnostics.Warning(source, ptr(XML.Element).GetPos(), Diagnostics.Invalid, "Expected region element");
+				diagnostics.Warning(source, ptr(XML.Element).GetPos(), "Expected region element");
 			END;
 		END;
 	END;
@@ -1786,7 +1786,7 @@ BEGIN
 				highlighter.defaultStyle := styles.Find(string^);
 				IF (highlighter.defaultStyle = NIL) THEN
 					error := TRUE;
-					diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Default style not found");
+					diagnostics.Error(source, element.GetPos(), "Default style not found");
 				END;
 			END;
 		END;
@@ -1807,7 +1807,7 @@ BEGIN
 		END;
 	ELSE
 		error := TRUE;
-		diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Highlighter name missing");
+		diagnostics.Error(source, element.GetPos(), "Highlighter name missing");
 	END;
 END ParseHighlighter;
 
@@ -1828,7 +1828,7 @@ BEGIN
 			IF (string # NIL) & (string^ = XmlHighlighter) THEN
 				ParseHighlighter(ptr(XML.Element), highlighters, styles, source, diagnostics, error);
 			ELSE
-				diagnostics.Warning(source, ptr(XML.Element).GetPos(), Diagnostics.Invalid, "Expected highlighter element");
+				diagnostics.Warning(source, ptr(XML.Element).GetPos(), "Expected highlighter element");
 			END;
 		END;
 	END;
@@ -1854,7 +1854,7 @@ BEGIN
 			ParseStyles(element, styles, source, diagnostics, error);
 		ELSE
 			error := TRUE;
-			diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Styles section missing");
+			diagnostics.Error(source, element.GetPos(), "Styles section missing");
 		END;
 
 		NEW(highlighters);
@@ -1863,11 +1863,11 @@ BEGIN
 			ParseHighlighters(element, highlighters, styles, source, diagnostics, error);
 		ELSE
 			error := TRUE;
-			diagnostics.Error(source, element.GetPos(), Diagnostics.Invalid, "Highlighters section missing");
+			diagnostics.Error(source, element.GetPos(), "Highlighters section missing");
 		END;
 	ELSE
 		error := TRUE;
-		diagnostics.Error(source, root.GetPos(), Diagnostics.Invalid, "XML root element name mismatch");
+		diagnostics.Error(source, root.GetPos(), "XML root element name mismatch");
 	END;
 END ParseDocument;
 
@@ -1907,7 +1907,7 @@ END FindChild;
 PROCEDURE TrapHandler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 BEGIN
 	error := TRUE;
-	diagnostics.Error(source, pos, Diagnostics.Invalid, msg);
+	diagnostics.Error(source, pos, msg);
 END TrapHandler;
 
 PROCEDURE LoadDocument(CONST filename : ARRAY OF CHAR; CONST d: Diagnostics.Diagnostics; VAR e : BOOLEAN) : XML.Document;
@@ -1931,7 +1931,7 @@ BEGIN
 		END;
 	ELSE
 		e := TRUE;
-		d.Error(filename, Diagnostics.Invalid, Diagnostics.Invalid, "File not found");
+		d.Error(filename, Diagnostics.Invalid, "File not found");
 	END;
 	diagnostics := NIL; source := "";
 	ASSERT(error OR (document # NIL));

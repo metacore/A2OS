@@ -154,7 +154,7 @@ TYPE
 
 		PROCEDURE ReportError(pos, line, row : LONGINT; CONST msg : ARRAY OF CHAR);
 		BEGIN
-			diagnostics.Error("PET", pos, Diagnostics.Invalid, msg);
+			diagnostics.Error("PET", pos, msg);
 			hasErrors := TRUE;
 		END ReportError;
 

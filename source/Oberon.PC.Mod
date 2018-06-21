@@ -105,12 +105,7 @@ END Locate;
 PROCEDURE ReportError(entry : Diagnostics.Entry);
 BEGIN
 	PCM.LogW(9X);
-	IF entry.errorCode = -1 THEN
-		PCM.LogWStr("pos "); PCM.LogWNum(entry.position);
-	ELSIF (entry.type # Diagnostics.TypeInformation) THEN
-		PCM.LogWStr("pos  "); PCM.LogWNum(entry.position);
-		PCM.LogWStr("  err  "); PCM.LogWNum(entry.errorCode)
-	END;
+	PCM.LogWStr("pos "); PCM.LogWNum(entry.position);
 	PCM.LogW(9X);
 	PCM.LogWStr(entry.message);
 	PCM.LogWLn;

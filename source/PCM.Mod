@@ -361,11 +361,11 @@ IMPORT
 				err := Diagnostics.Invalid; pos := Diagnostics.Invalid; str := "too many errors"
 			END;
 			IF diagnostics # NIL THEN
-				diagnostics.Error (source, pos, err, str);
+				diagnostics.Error (source, pos, str);
 			END;
 		ELSE
 			IF diagnostics # NIL THEN
-				diagnostics.Information (source, pos, err, str);
+				diagnostics.Information (source, pos, str);
 			END;
 		END;
 	END Error;
@@ -390,7 +390,7 @@ IMPORT
 			GetMessage (err, msg, str);
 		END;
 		IF diagnostics # NIL THEN
-			diagnostics.Warning (source, pos, err, str);
+			diagnostics.Warning (source, pos, str);
 		END;
 	END Warning;
 

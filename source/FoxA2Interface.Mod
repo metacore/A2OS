@@ -87,22 +87,22 @@ TYPE
 			writer := w;
 		END Init;
 
-		PROCEDURE Error* (CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
-		BEGIN Print (writer, source, position, errorCode, Diagnostics.TypeError, message);
+		PROCEDURE Error* (CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
+		BEGIN Print (writer, source, position, Diagnostics.TypeError, message);
 		END Error;
 
-		PROCEDURE Warning* (CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
-		BEGIN Print (writer, source, position, errorCode, Diagnostics.TypeWarning, message);
+		PROCEDURE Warning* (CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
+		BEGIN Print (writer, source, position, Diagnostics.TypeWarning, message);
 		END Warning;
 
-		PROCEDURE Information* (CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
-		BEGIN Print (writer, source, position, errorCode, Diagnostics.TypeInformation, message);
+		PROCEDURE Information* (CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
+		BEGIN Print (writer, source, position, Diagnostics.TypeInformation, message);
 		END Information;
 
 	END StreamDiagnostics;
 
 
-	PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position, errorCode, type: LONGINT; CONST message: ARRAY OF CHAR);
+	PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR);
 	VAR attributes: Texts.Attributes;
 	BEGIN
 		IF w IS TextUtilities.TextWriter THEN
@@ -124,10 +124,6 @@ TYPE
 		ELSIF (type = Diagnostics.TypeError) THEN
 			w.String("error");
 		ELSE
-		END;
-		IF (errorCode # Diagnostics.Invalid) THEN
-			IF (type # Diagnostics.TypeInformation) THEN w.Char (' ') END;
-			w.Int(errorCode, 0);
 		END;
 		IF (type # Diagnostics.TypeInformation) THEN w.String(": ") END;
 		w.String(message); w.Ln;

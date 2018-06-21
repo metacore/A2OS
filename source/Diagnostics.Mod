@@ -3,7 +3,7 @@ MODULE Diagnostics; (** AUTHOR "staubesv"; PURPOSE "Generic diagnostics reportin
 IMPORT Streams;
 
 CONST
-	(** Indicate that a position or an errorcode is not valid *)
+	(** Indicate that a position is not valid *)
 	Invalid* = -1;
 
 	(** Entry types *)
@@ -20,13 +20,13 @@ TYPE
 
 	Diagnostics* = OBJECT
 
-		PROCEDURE Error*(CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
+		PROCEDURE Error*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		END Error;
 
-		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
+		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		END Warning;
 
-		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
+		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		END Information;
 
 	END Diagnostics;
@@ -37,7 +37,6 @@ TYPE
 		type*: WORD;
 		source*: ARRAY 128 OF CHAR;
 		position*: Streams.Position;
-		errorCode*: WORD;
 		message*: ARRAY 256 OF CHAR;
 		next*: Entry;
 	END;
@@ -59,19 +58,19 @@ TYPE
 
 		nofMessages- : SIZE;
 
-		PROCEDURE Error*(CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
+		PROCEDURE Error*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
-			InsertSorted(TypeError, source, position, errorCode, message, nofErrors)
+			InsertSorted(TypeError, source, position, message, nofErrors)
 		END Error;
 
-		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
+		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
-			InsertSorted(TypeWarning, source, position, errorCode, message, nofWarnings);
+			InsertSorted(TypeWarning, source, position, message, nofWarnings);
 		END Warning;
 
-		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
+		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
-			InsertSorted(TypeInformation, source, position, errorCode, message, nofInformations);
+			InsertSorted(TypeInformation, source, position, message, nofInformations);
 		END Information;
 
 		PROCEDURE ToStream*(w : Streams.Writer; mask : SET);
@@ -81,7 +80,7 @@ TYPE
 			entry := entries;
 			WHILE (entry # NIL) DO
 				IF (entry.type IN mask) THEN
-					Print (w, entry.source, entry.position, entry.errorCode, entry.type, entry.message);
+					Print (w, entry.source, entry.position, entry.type, entry.message);
 				END;
 				entry := entry.next;
 			END;
@@ -121,26 +120,25 @@ TYPE
 			RETURN result;
 		END GetEntries;
 
-		PROCEDURE InsertSorted(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
+		PROCEDURE InsertSorted(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
 		VAR prev, entry : Entry;
 		BEGIN
 			entry := entries; prev := NIL;
 			WHILE (entry # NIL) & (entry.position <= position) DO prev := entry; entry := entry.next END;
-			IF (entry = NIL) OR (entry.type # type) OR (entry.position # position) OR (entry.errorCode # errorCode) OR (entry.message # message) THEN
+			IF (entry = NIL) OR (entry.type # type) OR (entry.position # position) OR (entry.message # message) THEN
 				INC(nofMessages); INC (counter);
-				entry := NewEntry (type, source, position, errorCode, message, entry);
+				entry := NewEntry (type, source, position, message, entry);
 				IF prev = NIL THEN entries := entry ELSE prev.next := entry END
 			END
 		END InsertSorted;
 
-		PROCEDURE NewEntry*(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR; next: Entry) : Entry;
+		PROCEDURE NewEntry*(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; next: Entry) : Entry;
 		VAR entry : Entry;
 		BEGIN
 			NEW(entry);
 			entry.type := type;
 			COPY (source, entry.source);
 			entry.position := position;
-			entry.errorCode := errorCode;
 			COPY (message, entry.message);
 			entry.next := next;
 			RETURN entry;
@@ -160,21 +158,21 @@ TYPE
 			writer := w;
 		END Init;
 
-		PROCEDURE Error* (CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
-		BEGIN Print (writer, source, position, errorCode, TypeError, message);
+		PROCEDURE Error* (CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
+		BEGIN Print (writer, source, position, TypeError, message);
 		END Error;
 
-		PROCEDURE Warning* (CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
-		BEGIN Print (writer, source, position, errorCode, TypeWarning, message);
+		PROCEDURE Warning* (CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
+		BEGIN Print (writer, source, position, TypeWarning, message);
 		END Warning;
 
-		PROCEDURE Information* (CONST source : ARRAY OF CHAR; position : Streams.Position; errorCode : WORD; CONST message : ARRAY OF CHAR);
-		BEGIN Print (writer, source, position, errorCode, TypeInformation, message);
+		PROCEDURE Information* (CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
+		BEGIN Print (writer, source, position, TypeInformation, message);
 		END Information;
 
 	END StreamDiagnostics;
 
-PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; type: WORD; CONST message: ARRAY OF CHAR);
+PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR);
 BEGIN
 	w.Char(Tab);
 	IF (source # "") THEN w.String (source); END;
@@ -184,10 +182,6 @@ BEGIN
 		w.String("warning");
 	ELSIF (type = TypeError) THEN
 		w.String("error");
-	END;
-	IF (errorCode # Invalid) THEN
-		IF (type # TypeInformation) THEN w.Char (' ') END;
-		w.Int(errorCode, 0);
 	END;
 	IF (type # TypeInformation) THEN w.String(": ") END;
 	w.String(message); w.Ln;

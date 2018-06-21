@@ -1449,7 +1449,7 @@ TYPE
 				IF log # NIL THEN log.String(msg); log.Ln; END;
 				RETURN TRUE
 			ELSE
-				diagnostics.Error(fileName,Diagnostics.Invalid, Diagnostics.Invalid,"could not generate file");
+				diagnostics.Error(fileName,Diagnostics.Invalid, "could not generate file");
 				IF TraceError THEN HALT(100) ELSE RETURN FALSE END
 			END;
 		END Emit;

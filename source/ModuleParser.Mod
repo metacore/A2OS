@@ -1599,7 +1599,7 @@ BEGIN
 		scanner := FoxScanner.NewScanner(filename, reader, 0, diagnostics);
 		Parse(scanner, module);
 	ELSIF (diagnostics # NIL) THEN
-		diagnostics.Error("ModuleParser", Diagnostics.Invalid, Diagnostics.Invalid, "File not found");
+		diagnostics.Error("ModuleParser", Diagnostics.Invalid, "File not found");
 	END;
 	RETURN module
 END ParseFile;

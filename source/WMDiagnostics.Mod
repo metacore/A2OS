@@ -1,7 +1,7 @@
 MODULE WMDiagnostics; (** AUTHOR "staubesv"; PURPOSE "Visual Component for Diagnostics Interface"; *)
 
 IMPORT
-	Locks, Strings, Diagnostics, Files,
+	Locks, Strings, Diagnostics, Files, Streams,
 	WMRectangles, WMGraphics, WMGraphicUtilities, WMBitmapFont,
 	WMEvents, WMProperties, WMGrids, WMTextView;
 
@@ -32,15 +32,13 @@ CONST
 	SortByTypeDescending* = 1;
 	SortByPositionAscending* = 2;
 	SortByPositionDescending* = 3;
-	SortByErrorCodeAscending* = 4;
-	SortByErrorCodeDescending* = 5;
 
 TYPE
 
 	Entry* = RECORD
 		type- : LONGINT;
 		source- : Files.FileName;
-		position-, errorCode- : LONGINT;
+		position-: Streams.Position;
 		message- : ARRAY 256 OF CHAR;
 	END;
 
@@ -149,40 +147,39 @@ TYPE
 			END;
 		END CheckEntriesSize;
 
-		PROCEDURE Error*(CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
+		PROCEDURE Error*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN
-			Add(TypeError, source, position, errorCode, message, nofErrors)
+			Add(TypeError, source, position, message, nofErrors)
 		END Error;
 
-		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
+		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN
-			Add(TypeWarning, source, position, errorCode, message, nofWarnings);
+			Add(TypeWarning, source, position, message, nofWarnings);
 		END Warning;
 
-		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
+		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN
-			Add(TypeInformation, source, position, errorCode, message, nofInformations);
+			Add(TypeInformation, source, position, message, nofInformations);
 		END Information;
 
-		PROCEDURE Exists(type, position, errorCode : LONGINT; CONST message: ARRAY OF CHAR) : BOOLEAN;
+		PROCEDURE Exists(type: WORD; position : Streams.Position; CONST message: ARRAY OF CHAR) : BOOLEAN;
 		VAR i : LONGINT;
 		BEGIN
 			i := 0;
-			WHILE (i < nofEntries) & ((entries[i].type # type) OR (entries[i].position # position) OR (entries[i].errorCode # errorCode) OR (entries[i].message # message)) DO
+			WHILE (i < nofEntries) & ((entries[i].type # type) OR (entries[i].position # position) OR (entries[i].message # message)) DO
 				INC(i);
 			END;
 			RETURN (nofEntries > 0) & (i < nofEntries);
 		END Exists;
 
-		PROCEDURE Add(type: LONGINT; CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR; VAR counter: LONGINT);
+		PROCEDURE Add(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: LONGINT);
 		BEGIN
 			AcquireWrite;
-			IF ~Exists(type, position, errorCode,message) THEN
+			IF ~Exists(type, position, message) THEN
 				CheckEntriesSize;
 				entries[nofEntries].type := type;
 				COPY(source, entries[nofEntries].source);
 				entries[nofEntries].position := position;
-				entries[nofEntries].errorCode := errorCode;
 				COPY(message, entries[nofEntries].message);
 				INC(nofEntries); INC(counter);
 				changed := TRUE;
@@ -227,7 +224,6 @@ TYPE
 					IF SELF.entries[i].type = type THEN
 						entries[dest].type := SELF.entries[i].type;
 						entries[dest].position := SELF.entries[i].position;
-						entries[dest].errorCode := SELF.entries[i].errorCode;
 						entries[dest].source := SELF.entries[i].source;
 						entries[dest].message := SELF.entries[i].message;
 						INC(dest);
@@ -333,7 +329,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE OnClickHandler(sender, data : ANY);
-		CONST Position = 0; ErrorCode = 1;
+		CONST Position = 0;
 		VAR column, row, newMode : LONGINT;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.OnClickHandler, sender, data)
@@ -346,38 +342,18 @@ TYPE
 							|SortByTypeAscending:
 								IF (column = Position) THEN
 									newMode := SortByTypeDescending;
-								ELSIF (column = ErrorCode) THEN
-									newMode := SortByErrorCodeAscending;
 								END;
 							|SortByTypeDescending:
 								IF (column = Position) THEN
 									newMode := SortByTypeAscending;
-								ELSIF (column = ErrorCode) THEN
-									newMode := SortByErrorCodeDescending;
 								END;
 							|SortByPositionAscending:
 								IF (column = Position) THEN
 									newMode := SortByPositionDescending;
-								ELSIF (column = ErrorCode) THEN
-									newMode := SortByErrorCodeAscending;
 								END;
 							|SortByPositionDescending:
 								IF (column = Position) THEN
 									newMode := SortByPositionAscending;
-								ELSIF (column = ErrorCode) THEN
-									newMode := SortByErrorCodeDescending;
-								END;
-							|SortByErrorCodeAscending:
-								IF (column = Position) THEN
-									newMode := SortByTypeAscending;
-								ELSIF (column = ErrorCode) THEN
-									newMode := SortByErrorCodeDescending;
-								END;
-							|SortByErrorCodeDescending:
-								IF (column = Position) THEN
-									newMode := SortByTypeDescending;
-								ELSIF (column = ErrorCode) THEN
-									newMode := SortByErrorCodeAscending;
 								END;
 						ELSE
 							newMode := sortByI; (* don't change *)
@@ -412,8 +388,7 @@ TYPE
 		BEGIN
 			ASSERT(
 				(mode = SortByTypeAscending) OR (mode = SortByTypeDescending) OR
-				(mode = SortByPositionAscending) OR (mode = SortByPositionDescending) OR
-				(mode = SortByErrorCodeAscending) OR (mode = SortByErrorCodeDescending)
+				(mode = SortByPositionAscending) OR (mode = SortByPositionDescending)
 			);
 			Acquire;
 			IF (mode # sortByI) THEN
@@ -423,8 +398,6 @@ TYPE
 					|SortByTypeDescending: SortEntries(CompareByType, FALSE);
 					|SortByPositionAscending: SortEntries(CompareByPosition, TRUE);
 					|SortByPositionDescending: SortEntries(CompareByPosition, FALSE);
-					|SortByErrorCodeAscending: SortEntries(CompareByErrorCode, TRUE);
-					|SortByErrorCodeDescending: SortEntries(CompareByErrorCode, FALSE);
 				END;
 				Invalidate;
 			END;
@@ -452,9 +425,7 @@ TYPE
 			IF (textViews # NIL) THEN
 				FOR i := 0 TO nofEntries - 1 DO
 
-					IF (entries[i].errorCode = 400) THEN
-						picture := PicturePCPosition;
-					ELSIF (entries[i].type = Diagnostics.TypeError) THEN
+					IF (entries[i].type = Diagnostics.TypeError) THEN
 						picture := PictureError;
 					ELSIF (entries[i].type = Diagnostics.TypeWarning) THEN
 						picture := PictureWarning;
@@ -649,11 +620,6 @@ TYPE
 						ELSIF entries[y - 1].type = TypeInformation THEN
 							(* do nothing *)
 						END;
-					| 1 : IF (entries[y-1].errorCode # Invalid) THEN
-							Strings.IntToStr(entries[y - 1].errorCode, str);
-						ELSE
-							COPY("", str);
-						END;
 					| 2 : COPY(entries[y - 1].message, str)
 				ELSE
 				END;
@@ -680,17 +646,6 @@ BEGIN
 	END;
 	RETURN result;
 END CompareByPosition;
-
-PROCEDURE CompareByErrorCode(CONST e1, e2 : Entry) : LONGINT;
-VAR result : LONGINT;
-BEGIN
-	IF (e1.errorCode < e2.errorCode) THEN result := Less;
-	ELSIF (e1.errorCode > e2.errorCode) THEN result := Greater;
-	ELSE
-		result := CompareByPosition(e1, e2);
-	END;
-	RETURN result;
-END CompareByErrorCode;
 
 PROCEDURE CompareByType(CONST e1, e2 : Entry) : LONGINT;
 VAR result : LONGINT;

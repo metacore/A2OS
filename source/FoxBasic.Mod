@@ -1648,32 +1648,31 @@ TYPE
 			SELF.diagnostics := diagnostics
 		END InitDiagnostics;
 
-		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
+		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
-				diagnostics.Error(source,position,errorCode,message);
+				diagnostics.Error(source,position,message);
 			END;
 			D.Ln;
 			D.String(" ---------------------- TRACE for COMPILER ERROR  < ");
 			D.String(source);
 			IF position # Diagnostics.Invalid THEN D.String("@"); D.Int(position,1) END;
-			IF errorCode # Diagnostics.Invalid THEN D.String(" "); D.Int(errorCode,1); END;
 			D.String(" "); D.String(message);
 			D.String(" > ---------------------- ");
 			D.TraceBack
 		END Error;
 
-		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
+		PROCEDURE Warning*(CONST source : ARRAY OF CHAR; position: Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
-				diagnostics.Warning(source,position,errorCode,message);
+				diagnostics.Warning(source,position,message);
 			END;
 		END Warning;
 
-		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position, errorCode : LONGINT; CONST message : ARRAY OF CHAR);
+		PROCEDURE Information*(CONST source : ARRAY OF CHAR; position: Streams.Position; CONST message : ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
-				diagnostics.Information(source,position,errorCode,message);
+				diagnostics.Information(source,position,message);
 			END;
 		END Information;
 
@@ -1798,7 +1797,7 @@ VAR
 	BEGIN
 		IF diagnostics # NIL THEN
 			MakeDetailedMessage(pos, code, msg, GetReader(), message);
-			diagnostics.Error(source, pos.start, code, message);
+			diagnostics.Error(source, pos.start, message);
 		END;
 	END ErrorC;
 
@@ -1815,7 +1814,7 @@ VAR
 	BEGIN
 		IF diagnostics # NIL THEN
 			MakeMessage(pos, InvalidCode, msg,message);
-			diagnostics.Warning(source, pos.start, InvalidCode, message);
+			diagnostics.Warning(source, pos.start, message);
 		END;
 	END Warning;
 
@@ -1824,7 +1823,7 @@ VAR
 	BEGIN
 		IF diagnostics # NIL THEN
 			MakeMessage(pos, InvalidCode, msg,message);
-			diagnostics.Information(source, pos.start, InvalidCode, message);
+			diagnostics.Information(source, pos.start, message);
 		END;
 	END Information;
 

@@ -7,7 +7,7 @@ VAR reader: Streams.Reader; scanner: FoxScanner.Scanner; parser: FoxParser.Parse
 VAR module: FoxSyntaxTree.Module; import: FoxSyntaxTree.Import; string: ARRAY 64 OF CHAR;
 BEGIN
 	reader := FoxBasic.GetFileReader (moduleName);
-	IF reader = NIL THEN diagnostics.Error (moduleName, Diagnostics.Invalid, Diagnostics.Invalid, "Failed to open module"); RETURN FALSE END;
+	IF reader = NIL THEN diagnostics.Error (moduleName, Diagnostics.Invalid, "Failed to open module"); RETURN FALSE END;
 	scanner := FoxScanner.NewScanner (moduleName, reader, 0, diagnostics);
 	NEW (parser, scanner, diagnostics);
 	module := parser.Module ();

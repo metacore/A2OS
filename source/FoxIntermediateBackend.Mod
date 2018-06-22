@@ -2,7 +2,7 @@ MODULE FoxIntermediateBackend; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal,
 	Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode,  Printout := FoxPrintout,
-	SYSTEM, Diagnostics, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging,
+	SYSTEM, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging,
 	FingerPrinter := FoxFingerPrinter, StringPool, CRC;
 
 CONST
@@ -198,7 +198,7 @@ TYPE
 
 		PROCEDURE Error(position: Position; CONST s: ARRAY OF CHAR);
 		BEGIN
-			backend.Error(module.module.sourceName, position, Diagnostics.Invalid, s);
+			backend.Error(module.module.sourceName, position, Streams.Invalid, s);
 		END Error;
 
 		PROCEDURE Type(x: SyntaxTree.Type);
@@ -2490,7 +2490,7 @@ TYPE
 
 		PROCEDURE Error(position: Position; CONST s: ARRAY OF CHAR);
 		BEGIN
-			backend.Error(module.module.sourceName,position,Diagnostics.Invalid,s);
+			backend.Error(module.module.sourceName,position,Streams.Invalid,s);
 			IF dump # NIL THEN
 				dump.String(s); dump.Ln;
 			END;

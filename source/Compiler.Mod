@@ -52,7 +52,7 @@ TYPE
 		replacement := NIL;
 		reader := Basic.GetFileReader(filename);
 		IF reader = NIL THEN
-			diagnostics.Error (filename, Diagnostics.Invalid, "failed to open");
+			diagnostics.Error (filename, Streams.Invalid, "failed to open");
 		ELSE
 
 			scanner := Scanner.NewScanner(filename, reader, 0, diagnostics);
@@ -111,7 +111,7 @@ TYPE
 			Strings.Append (message, msg);
 			IF error THEN
 				IF diagnostics # NIL THEN
-					diagnostics.Error (source, Diagnostics.Invalid, message);
+					diagnostics.Error (source, Streams.Invalid, message);
 				END;
 			ELSE
 				IF (log # NIL) & ~(Silent IN options.flags) & ~(FindPC IN options.flags) THEN
@@ -272,7 +272,7 @@ TYPE
 		PROCEDURE Error(CONST error: ARRAY OF CHAR);
 		BEGIN
 			IF diagnostics # NIL THEN
-				diagnostics.Error("",Diagnostics.Invalid,error);
+				diagnostics.Error("",Streams.Invalid,error);
 			END;
 		END Error;
 
@@ -467,7 +467,7 @@ TYPE
 				reader := Basic.GetFileReader(filename);
 
 				IF reader = NIL THEN
-					diagnostics.Error (filename, Diagnostics.Invalid, "failed to open"); error := TRUE;
+					diagnostics.Error (filename, Streams.Invalid, "failed to open"); error := TRUE;
 				ELSE
 					error := ~Modules(filename, reader, 0, diagnostics,context.out, options,  importCache);
 				END;
@@ -483,7 +483,7 @@ TYPE
 				WHILE replacement # NIL DO
 					IF ~replacement.used THEN
 						name := replacement.name;
-						diagnostics.Warning(name,  Diagnostics.Invalid, " unused replacement.");
+						diagnostics.Warning(name,  Streams.Invalid, " unused replacement.");
 					END;
 					replacement := replacement.next;
 				END;
@@ -506,7 +506,7 @@ TYPE
 		IF GetOptions(context.arg,context.error,diagnostics,options) THEN
 
 			IF reader = NIL THEN
-				diagnostics.Error (filename, Diagnostics.Invalid, "failed to open"); error := TRUE;
+				diagnostics.Error (filename, Streams.Invalid, "failed to open"); error := TRUE;
 			ELSE
 				error := ~Modules(filename, reader, 0, diagnostics, context.out, options, importCache);
 			END;

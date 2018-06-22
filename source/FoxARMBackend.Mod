@@ -3752,7 +3752,7 @@ TYPE
 		 		PatchFixups(in(IntermediateCode.Section).resolved)
 		 	END;
 
-			IF cg.error THEN Error("", Basic.invalidPosition, Diagnostics.Invalid,  "") END
+			IF cg.error THEN Error("", Basic.invalidPosition, Streams.Invalid,  "") END
 		END GenerateBinary;
 
 		(** create an ARM code module from an intermediate code module **)

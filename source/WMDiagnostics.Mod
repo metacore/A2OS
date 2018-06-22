@@ -10,8 +10,6 @@ CONST
 	TypeWarning* = Diagnostics.TypeWarning;
 	TypeError* = Diagnostics.TypeError;
 
-	Invalid* = Diagnostics.Invalid;
-
 	(* Error grid colors *)
 	ColorError = LONGINT(0FF3030A0H);
 	ColorWarning = LONGINT(0D0D040C0H);
@@ -433,7 +431,7 @@ TYPE
 						picture := "";
 					END;
 
-					IF (entries[i].position # Invalid) & (textViews # NIL) THEN
+					IF (entries[i].position # Streams.Invalid) & (textViews # NIL) THEN
 						NEW(entries[i].pos, LEN(textViews));
 						FOR j := 0 TO LEN(textViews) - 1 DO
 							entries[i].pos[j] := textViews[j].CreatePositionMarker();
@@ -471,12 +469,12 @@ TYPE
 					IF (entries[0].pos # NIL) & (entries[0].pos[i] # NIL) THEN
 						positions[i] := entries[0].pos[i].GetPosition();
 					ELSE
-						positions[i] := Invalid;
+						positions[i] := Streams.Invalid;
 					END;
 					type := entries[0].type;
 				END;
 			ELSE
-				FOR i := 0 TO LEN(positions)-1 DO positions[i] := Invalid; END;
+				FOR i := 0 TO LEN(positions)-1 DO positions[i] := Streams.Invalid; END;
 			END;
 			Release;
 		END GetFirstPosition;

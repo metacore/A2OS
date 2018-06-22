@@ -1931,7 +1931,7 @@ BEGIN
 		END;
 	ELSE
 		e := TRUE;
-		d.Error(filename, Diagnostics.Invalid, "File not found");
+		d.Error(filename, Streams.Invalid, "File not found");
 	END;
 	diagnostics := NIL; source := "";
 	ASSERT(error OR (document # NIL));

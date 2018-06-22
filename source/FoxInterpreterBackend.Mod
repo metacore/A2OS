@@ -1,6 +1,6 @@
 MODULE FoxInterpreterBackend; (** AUTHOR "fof"; PURPOSE "abstract code interpreter"; *)
 
-IMPORT Basic := FoxBasic, SYSTEM, Diagnostics, Intermediate := FoxIntermediateCode, Sections := FoxSections, SyntaxTree := FoxSyntaxTree, Options,
+IMPORT Basic := FoxBasic, SYSTEM, Intermediate := FoxIntermediateCode, Sections := FoxSections, SyntaxTree := FoxSyntaxTree, Options,
 	IntermediateBackend := FoxIntermediateBackend, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats,
 	Trace := KernelLog, Streams, SymbolFileFormat := FoxTextualSymbolFile;
 
@@ -269,7 +269,7 @@ TYPE
 		END Stop;
 
 		PROCEDURE Error (CONST msg: ARRAY OF CHAR);
-		BEGIN backend.Error ("", Basic.invalidPosition, Diagnostics.Invalid, msg); Stop;
+		BEGIN backend.Error ("", Basic.invalidPosition, Streams.Invalid, msg); Stop;
 		END Error;
 
 		PROCEDURE Execute (VAR instr: Intermediate.Instruction; VAR pc: PC);

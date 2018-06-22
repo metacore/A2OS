@@ -494,7 +494,7 @@ TYPE
 				access := SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal;
 			ELSIF Optional( Scanner.Minus ) THEN
 				IF ~allowedReadOnly THEN
-					Error( symbol.position, Diagnostics.Invalid, "may not be defined read-only" )
+					Error( symbol.position, Basic.InvalidCode, "may not be defined read-only" )
 				ELSE
 					access :=  SyntaxTree.ReadOnly + {SyntaxTree.InternalWrite};
 				END;
@@ -1048,7 +1048,7 @@ TYPE
 					REPEAT
 						identifier := Identifier(position);
 						IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
-							Error(position,Diagnostics.Invalid,"forbidden qualified identifier in with statement");
+							Error(position,Basic.InvalidCode,"forbidden qualified identifier in with statement");
 						END;
 						withPart := SyntaxTree.NewWithPart();
 						withPart.SetPosition(symbol.position);
@@ -1123,7 +1123,7 @@ TYPE
 					CommentStatement(forStatement);
 					identifier := Identifier(position);
 					IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
-						Error(position,Diagnostics.Invalid,"forbidden non-local counter variable");
+						Error(position,Basic.InvalidCode,"forbidden non-local counter variable");
 					END;
 					designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
 					forStatement.SetVariable( designator );
@@ -1400,7 +1400,7 @@ TYPE
 			*)
 
 			IF Optional( Scanner.Semicolon ) THEN
-				(*Warning(symbol.position,Diagnostics.Invalid,"no semicolon allowed here");*)
+				(*Warning(symbol.position,Basic.InvalidCode,"no semicolon allowed here");*)
 			END;
 
 			DeclarationSequence( recordScope);
@@ -1601,7 +1601,7 @@ TYPE
 				END;
 			END;
 			IF modifiers # NIL THEN
-				Error(modifiers.position, Diagnostics.Invalid, "forbidden modifiers");
+				Error(modifiers.position, Basic.InvalidCode, "forbidden modifiers");
 			END;
 			IF Trace THEN E( "ArrayType" ) END;
 			RETURN type
@@ -1649,7 +1649,7 @@ TYPE
 			ELSIF Optional(Scanner.Out) THEN
 				direction := SyntaxTree.OutPort
 			ELSE
-				Error(position,Diagnostics.Invalid,"invalid direction, expected IN or OUT");
+				Error(position,Basic.InvalidCode,"invalid direction, expected IN or OUT");
 			END;
 
 			IF Optional(Scanner.LeftParenthesis) THEN
@@ -1945,7 +1945,7 @@ TYPE
 			END;
 
 			IF Peek(Scanner.String) OR Peek(Scanner.Character)  THEN (* for compatibility with release *)
-				Error (position, Diagnostics.Invalid, "Invalid operator declaration: replace 'procedure' by 'operator' keyword!");
+				Error (position, Basic.InvalidCode, "Invalid operator declaration: replace 'procedure' by 'operator' keyword!");
 				OperatorDeclaration( parentScope );
 				RETURN
 			END;
@@ -2065,7 +2065,7 @@ TYPE
 			ELSIF parentScope IS SyntaxTree.RecordScope THEN
 				parentScope(SyntaxTree.RecordScope).AddOperator(operator);
 			ELSE
-				Error(position,Diagnostics.Invalid,"Operators only allowed in module or record scope"); (* nopov *)
+				Error(position,Basic.InvalidCode,"Operators only allowed in module or record scope"); (* nopov *)
 			END;
 			IF Trace THEN EE( "Operator", string^ ) END;
 		END OperatorDeclaration;

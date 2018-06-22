@@ -1930,7 +1930,7 @@ BEGIN
 	TextUtilities.LoadAuto (text, fileName, format, res);
 
 	IF res # 0 THEN
-		diagnostics.Error (fileName, Diagnostics.Invalid, "failed to open file"); RETURN;
+		diagnostics.Error (fileName, Streams.Invalid, "failed to open file"); RETURN;
 	END;
 
 	NEW (assembly, diagnostics, NIL);
@@ -1991,7 +1991,7 @@ BEGIN
 		writer.Update;
 		Files.Register(file);
 	ELSE
-		diagnostics.Error(filename, Diagnostics.Invalid, "Could not create output file");
+		diagnostics.Error(filename, Streams.Invalid, "Could not create output file");
 		error := TRUE;
 	END;
 END WriteBinary;

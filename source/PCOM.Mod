@@ -60,7 +60,7 @@ MODULE PCOM; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: symbol file plug-in";
 
 
 IMPORT
-		SYSTEM, Modules, StringPool, PCM, PCS, PCT, PCBT, PCLIR, Diagnostics;
+		SYSTEM, Modules, StringPool, PCM, PCS, PCT, PCBT, PCLIR;
 
 CONST
 		Trace = FALSE;
@@ -658,11 +658,11 @@ PROCEDURE Export*(VAR r: PCM.Rider; M: PCT.Module; new, extend, skipImport: BOOL
 			IF ~(PCT.Operator IN new.flags) THEN
 				IF  (old.sym(Symbol).fp # newsym.fp) OR
 					((new IS PCT.Type) OR (new.type IS PCT.Record) & (new.type.owner = NIL)) & TypeChanged(new.type, old.type) THEN
-					changed:=TRUE; PCM.ErrorN(402, Diagnostics.Invalid, new.name)
+					changed:=TRUE; PCM.ErrorN(402, PCM.InvalidPosition, new.name)
 				END
 			END
 		ELSIF new.vis # PCT.Internal THEN	(*new export*)
-			extended:=TRUE; PCM.ErrorN(403, Diagnostics.Invalid, new.name)
+			extended:=TRUE; PCM.ErrorN(403, PCM.InvalidPosition, new.name)
 		END
 	END CompareSymbol;
 
@@ -1076,9 +1076,9 @@ BEGIN
 	PCM.CloseSym(r);		(*commit file*)
 	IF changed OR extended  THEN
 		IF changed THEN
-			IF newsym OR new THEN COPY("  new symbol file", msg) ELSE PCM.Error(155, Diagnostics.Invalid, "") END
+			IF newsym OR new THEN COPY("  new symbol file", msg) ELSE PCM.Error(155, PCM.InvalidPosition, "") END
 		ELSIF extended THEN
-			IF extend OR new THEN COPY("  extended symbol file", msg) ELSE PCM.Error(155, Diagnostics.Invalid, "") END
+			IF extend OR new THEN COPY("  extended symbol file", msg) ELSE PCM.Error(155, PCM.InvalidPosition, "") END
 		END
 	END
 END Export;
@@ -1274,9 +1274,9 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 			END;
 
 			IF  old=NIL  THEN
-				PCM.ErrorN(401, Diagnostics.Invalid, obj.name);  MAttr.changed:=TRUE
+				PCM.ErrorN(401, PCM.InvalidPosition, obj.name);  MAttr.changed:=TRUE
 			ELSIF  old.vis#obj.vis  THEN
-				PCM.ErrorN(401, Diagnostics.Invalid, obj.name);  MAttr.changed:=TRUE
+				PCM.ErrorN(401, PCM.InvalidPosition, obj.name);  MAttr.changed:=TRUE
 			ELSE
 				ASSERT(old.sym=NIL);
 				NEW(OAttr);  old.sym:=OAttr;  OAttr.sibling:=obj
@@ -1427,7 +1427,7 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 						R.RawNum(tag)
 					END;
 
-					PCT.ChangeState(mscope, PCT.structdeclared, Diagnostics.Invalid);
+					PCT.ChangeState(mscope, PCT.structdeclared, PCM.InvalidPosition);
 				END
 			END;
 			IF ~selfimport THEN PCT.AddRecord(M.scope, rec) END;
@@ -1692,7 +1692,7 @@ BEGIN
 	IF (ver = PCM.FileVersion) OR (ver=PCM.FileVersionOC) THEN
 		R.RawSet(flags);
 	ELSE
-		PCM.Error(151, Diagnostics.Invalid, ""); M := NIL; RETURN
+		PCM.Error(151, PCM.InvalidPosition, ""); M := NIL; RETURN
 	END;
 
 	GetImports;

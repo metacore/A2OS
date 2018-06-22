@@ -117,7 +117,7 @@ TYPE
 		END;
 		w.Char(Tab);
 		IF (source # "") THEN w.String (source); END;
-		IF (position # Diagnostics.Invalid) THEN w.Char ('@'); w.Int(position, 0); END;
+		IF (position # Streams.Invalid) THEN w.Char ('@'); w.Int(position, 0); END;
 		w.Char(Tab);
 		IF (type = Diagnostics.TypeWarning) THEN
 			w.String("warning");

@@ -3,7 +3,7 @@
 (* Paco, Copyright 2000 - 2002, Patrik Reali, ETH Zurich *)
 
 MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug-in"; *)
-	IMPORT SYSTEM, KernelLog, StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM, Dates, Strings, Streams, Files, Clock, Diagnostics;
+	IMPORT SYSTEM, KernelLog, StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM, Dates, Strings, Streams, Files, Clock;
 
 	CONST
 		Loader = "AosRuntime"; Heap = "AosRuntime"; Active = "Objects";
@@ -671,7 +671,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				StringPool.GetString(p.name, name);
 				fp := p.sym(PCOM.Symbol).fp;
 				FOR i := 0 TO exppos-1 DO
-					IF fp = explist[i] THEN PCM.ErrorN(280, Diagnostics.Invalid, p.name) END
+					IF fp = explist[i] THEN PCM.ErrorN(280, PCM.InvalidPosition, p.name) END
 				END;
 				IF exppos >= explen THEN
 					NEW(explist2, 2*explen);
@@ -1009,7 +1009,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				i := W.Pos();
 				PtrAdr(W, 0, rec, FALSE);
 				nofptrs := (W.Pos() - i) DIV 4;
-				IF nofptrs > MAX(INTEGER) THEN PCM.Error(221, Diagnostics.Invalid, "") END;
+				IF nofptrs > MAX(INTEGER) THEN PCM.Error(221, PCM.InvalidPosition, "") END;
 				IF nofptrs # 0 THEN
 					i := W.Pos(); W.SetPos(pos);
 					W.RawInt(SHORT(nofptrs));

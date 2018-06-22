@@ -16,6 +16,8 @@ CONST
 	DefaultWriterSize* = 4096;
 	DefaultReaderSize* = 4096;
 
+	Invalid* = -1;  (** invalid stream position *)
+
 CONST
 	CR = 0DX;  LF = 0AX;  TAB = 9X;  SP = 20X;
 

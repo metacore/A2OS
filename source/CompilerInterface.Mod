@@ -41,12 +41,12 @@ TYPE
 			IF (compileText # NIL) THEN
 				compileText(t, source, pos, pc, opt, log, diagnostics, error);
 			ELSIF (diagnostics # NIL) THEN
-				diagnostics.Error(source, Diagnostics.Invalid, "Text compile procedure not set");
+				diagnostics.Error(source, Streams.Invalid, "Text compile procedure not set");
 			END;
 		FINALLY
 			IF trap THEN (* trap will be set in case a trap occurs in the block above *)
 				error := TRUE;
-				diagnostics.Error(source, Diagnostics.Invalid, "COMPILER TRAPPED");
+				diagnostics.Error(source, Streams.Invalid, "COMPILER TRAPPED");
 				log.String("COMPILER TRAPPED!!!"); log.Update;
 			END;
 		END CompileText;

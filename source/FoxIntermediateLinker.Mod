@@ -719,7 +719,7 @@ TYPE
 			IF (inExtension # "") THEN irLinker.objectFile.SetExtension(inExtension) END;
 			IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).builtinsModuleName, TRUE) THEN
 				error := TRUE;
-				Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Diagnostics.Invalid, "could not load ir file");
+				Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Streams.Invalid, "could not load ir file");
 			END;
 			backend := irLinker.backend;
 			system := backend.system;
@@ -744,7 +744,7 @@ TYPE
 		BEGIN
 			irLinker.PrearrangeReachableDataSections;
 			IF irLinker.GenerateObjectFile(outputFormat, NIL, instanceName) THEN
-				Basic.Information(diagnostics, instanceName, Diagnostics.Invalid, "generated.");
+				Basic.Information(diagnostics, instanceName, Streams.Invalid, "generated.");
 				RETURN TRUE
 			ELSE
 				RETURN FALSE
@@ -810,7 +810,7 @@ TYPE
 						Strings.Append(msg, device.name);
 						Strings.Append(msg," in cell ");
 						instance.AppendToMsg(msg);
-						Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, msg);
+						Basic.Error(diagnostics, specification.name,Streams.Invalid, msg);
 						error := TRUE;
 					END;
 				ELSE
@@ -819,7 +819,7 @@ TYPE
 						Strings.Append(msg, device.name);
 						Strings.Append(msg," in cell ");
 						instance.AppendToMsg(msg);
-						Basic.Warning(diagnostics, specification.name,Diagnostics.Invalid,msg);
+						Basic.Warning(diagnostics, specification.name,Streams.Invalid,msg);
 					END;
 				END;
 			END;
@@ -829,7 +829,7 @@ TYPE
 			objectFileFormat.GetExtension(objectFileExtension);
 			irLinker.PrearrangeReachableDataSections;
 			IF ~irLinker.GenerateObjectFile(objectFileFormat, specification.log, instanceName) THEN
-				Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, "could not generate object file");
+				Basic.Error(diagnostics, specification.name,Streams.Invalid, "could not generate object file");
 				RETURN FALSE
 			END;
 
@@ -861,7 +861,7 @@ TYPE
 			END;
 
 			IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-				Basic.Error(diagnostics, instanceName,Diagnostics.Invalid, "specified instruction memory size too small");
+				Basic.Error(diagnostics, instanceName,Streams.Invalid, "specified instruction memory size too small");
 				error := TRUE;
 			ELSIF instructionMemorySize = 0 THEN
 				instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
@@ -872,7 +872,7 @@ TYPE
 			instance.SetDataMemorySize(dataMemorySize);
 
 			IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-				Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, "specified data memory size too small");
+				Basic.Error(diagnostics, specification.name,Streams.Invalid, "specified data memory size too small");
 				error := TRUE;
 			END;
 
@@ -900,7 +900,7 @@ TYPE
 			ELSE
 				msg := "could not link ";
 				Strings.Append(msg,linkRoot);
-				Basic.Error(diagnostics, "",Diagnostics.Invalid, msg);
+				Basic.Error(diagnostics, "",Streams.Invalid, msg);
 			END;
 			RETURN ~linker.error & ~error
 		END LinkInstance;
@@ -1019,11 +1019,11 @@ TYPE
 				NEW(irLinker, specification.diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
 				IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).builtinsModuleName, TRUE) THEN
 					error := TRUE;
-					Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Diagnostics.Invalid, "could not load ir file");
+					Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Streams.Invalid, "could not load ir file");
 				END;
 				IF ~irLinker.LoadModule(specification.name,TRUE) THEN
 					error := TRUE;
-					Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, "could not load ir file");
+					Basic.Error(diagnostics, specification.name,Streams.Invalid, "could not load ir file");
 				END;
 				backend := irLinker.backend;
 				system := backend.system;
@@ -1083,7 +1083,7 @@ TYPE
 				objectFileFormat.GetExtension(objectFileExtension);
 				irLinker.PrearrangeReachableDataSections;
 				IF ~irLinker.GenerateObjectFile(objectFileFormat, specification.log, instanceName) THEN
-					Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, "could not generate object file");
+					Basic.Error(diagnostics, specification.name,Streams.Invalid, "could not generate object file");
 					RETURN FALSE
 				END;
 
@@ -1115,7 +1115,7 @@ TYPE
 				END;
 
 				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-					Basic.Error(diagnostics, instanceName,Diagnostics.Invalid, "specified instruction memory size too small");
+					Basic.Error(diagnostics, instanceName,Streams.Invalid, "specified instruction memory size too small");
 					error := TRUE;
 				ELSIF instructionMemorySize = 0 THEN
 					instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
@@ -1126,7 +1126,7 @@ TYPE
 				instance.SetDataMemorySize(dataMemorySize);
 
 				IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-					Basic.Error(diagnostics, specification.name,Diagnostics.Invalid, "specified data memory size too small");
+					Basic.Error(diagnostics, specification.name,Streams.Invalid, "specified data memory size too small");
 					error := TRUE;
 				END;
 
@@ -1154,7 +1154,7 @@ TYPE
 				ELSE
 					msg := "could not link ";
 					Strings.Append(msg,linkRoot);
-					Basic.Error(diagnostics, "",Diagnostics.Invalid, msg);
+					Basic.Error(diagnostics, "",Streams.Invalid, msg);
 				END;
 				RETURN ~linker.error & ~error
 			END LinkInstance;
@@ -1461,9 +1461,9 @@ TYPE
 				assemblinker.MarkReachabilityOfAll(TRUE);
 				FileNameToModuleName(filename, moduleName);
 				IF (targetFile = "") & assemblinker.GenerateObjectFile(objectFileFormat, context.out, moduleName) THEN
-					Basic.Information(diagnostics, filename, Diagnostics.Invalid, "done.")
+					Basic.Information(diagnostics, filename, Streams.Invalid, "done.")
 				ELSIF targetFile # "" THEN
-					Basic.Information(diagnostics, filename,  Diagnostics.Invalid, "loaded.")
+					Basic.Information(diagnostics, filename,  Streams.Invalid, "loaded.")
 				ELSE
 					error := TRUE
 				END
@@ -1477,7 +1477,7 @@ TYPE
 			assemblinker.PrearrangeReachableDataSections;
 			IF 	assemblinker.GenerateObjectFile(objectFileFormat, context.out, targetFile)
 			THEN
-				Basic.Information(diagnostics, targetFile, Diagnostics.Invalid, "generated.")
+				Basic.Information(diagnostics, targetFile, Streams.Invalid, "generated.")
 			ELSE error := FALSE
 			END;
 		END;

@@ -1,6 +1,6 @@
 MODULE PCARMRegisters;	(** be  **)
 
-IMPORT PCM, PCOARM, KernelLog, Diagnostics;
+IMPORT PCM, PCOARM, KernelLog;
 
 CONST
 	INTERNALERROR = 100;
@@ -307,7 +307,7 @@ TYPE
 				WHILE (r # lru.prevLRU) & (r.free > 0) DO r := r.nextLRU END;
 				IF (r.free = 0) THEN reg := r.id
 				ELSE (* not enough registers *)
-					PCM.Error(215, Diagnostics.Invalid, "Not enough registers.");
+					PCM.Error(215, PCM.InvalidPosition, "Not enough registers.");
 					HALT(MAX(INTEGER));
 					HALT(INTERNALERROR)
 				END;

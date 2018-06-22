@@ -988,7 +988,7 @@ TYPE
 				 	module := modules.GetModule(i);
 				 	Strings.Append(msg," "); Strings.Append(msg,module.name);
 				 END;
-				 diagnostics.Error("",Diagnostics.Invalid, msg);
+				 diagnostics.Error("",Streams.Invalid, msg);
 			END;
 			RETURN ~linker.error
 		END LinkType;
@@ -1449,7 +1449,7 @@ TYPE
 				IF log # NIL THEN log.String(msg); log.Ln; END;
 				RETURN TRUE
 			ELSE
-				diagnostics.Error(fileName,Diagnostics.Invalid, "could not generate file");
+				diagnostics.Error(fileName,Streams.Invalid, "could not generate file");
 				IF TraceError THEN HALT(100) ELSE RETURN FALSE END
 			END;
 		END Emit;

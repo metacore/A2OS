@@ -3,9 +3,6 @@ MODULE Diagnostics; (** AUTHOR "staubesv"; PURPOSE "Generic diagnostics reportin
 IMPORT Streams;
 
 CONST
-	(** Indicate that a position is not valid *)
-	Invalid* = -1;
-
 	(** Entry types *)
 	TypeInformation* = 0;
 	TypeWarning* = 1;
@@ -176,7 +173,7 @@ PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Stre
 BEGIN
 	w.Char(Tab);
 	IF (source # "") THEN w.String (source); END;
-	IF (position # Invalid) THEN w.Char ('@'); w.Int(position, 0); END;
+	IF (position # Streams.Invalid) THEN w.Char ('@'); w.Int(position, 0); END;
 	w.String(": ");
 	IF (type = TypeWarning) THEN
 		w.String("warning");

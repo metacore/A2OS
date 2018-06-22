@@ -13,12 +13,12 @@ BEGIN
 		IF res = 0 THEN
 			converter (text, filename, res);
 			IF res = 0 THEN
-				diagnostics.Information (filename, Diagnostics.Invalid, "successfully converted");
+				diagnostics.Information (filename, Streams.Invalid, "successfully converted");
 			ELSE
-				diagnostics.Information (filename, Diagnostics.Invalid, "failed to store");
+				diagnostics.Information (filename, Streams.Invalid, "failed to store");
 			END
 		ELSE
-			diagnostics.Error (filename, Diagnostics.Invalid, "failed to load");
+			diagnostics.Error (filename, Streams.Invalid, "failed to load");
 		END;
 	END;
 END Convert;

@@ -938,7 +938,7 @@ KernelLog.Ln();
                     expression := SyntaxTree.NewParameterDesignator(position, designator, expressionList);
                 END;
              ELSE
-                Error(symbol.position, Diagnostics.Invalid, "Invalid primary expression");
+                Error(symbol.position, Basic.InvalidCode, "Invalid primary expression");
                 NextSymbol;
                 expression := SyntaxTree.invalidExpression;
             END;
@@ -1522,7 +1522,7 @@ KernelLog.Ln();
                 expression := PrimaryExpression();
             END;
             IF ~(expression IS SyntaxTree.Designator) THEN
-                Error(position, Diagnostics.Invalid, "Invalid expression statement");
+                Error(position, Basic.InvalidCode, "Invalid expression statement");
             ELSE
                 designator := expression(SyntaxTree.Designator);
                 position := symbol.position;
@@ -1610,7 +1610,7 @@ KernelLog.Ln();
                 ELSIF designator IS SyntaxTree.ParameterDesignator THEN
                     statement := SyntaxTree.NewProcedureCallStatement(designator.position, designator, outer);
                 ELSE
-                    Error(position, Diagnostics.Invalid, "Invalid expression statement");
+                    Error(position, Basic.InvalidCode, "Invalid expression statement");
                 END;
             END;
             IF statement # NIL THEN
@@ -1721,7 +1721,7 @@ KernelLog.Ln();
                     Check(Scanner.Default);
                     Check(Scanner.Colon);
                     IF haveDefault THEN
-                        Error(position, Diagnostics.Invalid, "Duplicate default label");
+                        Error(position, Basic.InvalidCode, "Duplicate default label");
                     ELSE
                         defaultSection := TRUE;
                         haveDefault := TRUE;
@@ -1731,13 +1731,13 @@ KernelLog.Ln();
             statements := StatementList(caseStatement);
             length := statements.Length();
             IF length = 0 THEN
-                Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
+                Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
             ELSE
                 last := statements.GetStatement(length-1);
                 IF last IS SyntaxTree.ExitStatement THEN
                     statements.RemoveStatement(last);
                 ELSIF ~(last IS SyntaxTree.ReturnStatement) THEN
-                    Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
+                    Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
                 END;
             END;
             IF ~defaultSection THEN
@@ -1925,7 +1925,7 @@ KernelLog.Ln();
                 ELSIF Optional(Scanner.Long) THEN
                     typename := lynxLong;
                 ELSE
-                    Error(position, Diagnostics.Invalid, "Missing integral type specifier");
+                    Error(position, Basic.InvalidCode, "Missing integral type specifier");
                     typename := lynxInt;
                 END;
                 type := 
@@ -1979,13 +1979,13 @@ KernelLog.Ln();
             caseBody := StatementList(caseStatement);
             length := caseBody.Length();
             IF length = 0 THEN
-                Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
+                Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
             ELSE
                 last := caseBody.GetStatement(length-1);
                 IF last IS SyntaxTree.ExitStatement THEN
                     caseBody.RemoveStatement(last);
                 ELSIF ~(last IS SyntaxTree.ReturnStatement) THEN
-                    Error(symbol.position, Diagnostics.Invalid, "Fall through in switch section");
+                    Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
                 END;
             END;
 
@@ -2032,7 +2032,7 @@ KernelLog.Ln();
             position := symbol.position;
             Check(Scanner.RightBrace);
             IF index = 0 THEN
-                Error(position, Diagnostics.Invalid, "Empty select statement");
+                Error(position, Basic.InvalidCode, "Empty select statement");
             END;
             statements.AddStatement(caseStatement);
             IF Trace THEN 
@@ -2795,13 +2795,13 @@ KernelLog.Ln();
             VAR access: SET;
         BEGIN
             IF modifiers * {Public, Internal} = {Public, Internal} THEN
-                Error(symbol.position, Diagnostics.Invalid, "conflicting modifiers");
+                Error(symbol.position, Basic.InvalidCode, "conflicting modifiers");
             END;
             IF Public IN modifiers THEN
                 access := SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal;
             ELSIF Internal IN modifiers THEN
                 IF ~allowedReadOnly THEN
-                    Error(symbol.position, Diagnostics.Invalid, "may not be defined internal")
+                    Error(symbol.position, Basic.InvalidCode, "may not be defined internal")
                 ELSE
                     access :=  SyntaxTree.ReadOnly + {SyntaxTree.InternalWrite};
                 END;
@@ -3155,9 +3155,9 @@ KernelLog.Ln();
             procedureType := SyntaxTree.NewProcedureType(position, parentScope);
             FormalParameterList(procedureType, procedureScope, type);
             IF procedureType.numberParameters # 0 THEN
-                Error(position, Diagnostics.Invalid, "constructor/main has parameters");
+                Error(position, Basic.InvalidCode, "constructor/main has parameters");
             ELSIF procedureType.returnType # NIL THEN
-                Error(position, Diagnostics.Invalid, "constructor/main returns value");
+                Error(position, Basic.InvalidCode, "constructor/main returns value");
             END;
             procedure.SetType(procedureType);
             procedure.SetBodyProcedure(TRUE);
@@ -3495,7 +3495,7 @@ KernelLog.Ln();
             ELSIF Optional(Scanner.Out) THEN
                 direction := SyntaxTree.OutPort;
             ELSE
-                Error(position, Diagnostics.Invalid, "invalid direction, expected in or out");
+                Error(position, Basic.InvalidCode, "invalid direction, expected in or out");
             END;
             type := SyntaxTree.NewPortType(position, direction, NIL, parentScope);
             IF Optional(Scanner.LeftBracket) THEN

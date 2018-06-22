@@ -3,7 +3,7 @@
 MODULE PCT; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: symbol table"; *)
 
 IMPORT
-	SYSTEM, KernelLog, StringPool, Strings, PCM, PCS,Diagnostics;
+	SYSTEM, KernelLog, StringPool, Strings, PCM, PCS;
 
 CONST
 	MaxPlugins = 4;
@@ -2218,7 +2218,7 @@ VAR
 				IF (p.super.vis * Public # {}) & (vis*Public = {}) THEN
 					vis := vis + p.super.vis;
 					(*
-					PCM.Warning(Diagnostics.Invalid,pos,"auto-export of overwritten exported method");
+					PCM.Warning(Streams.Invalid,pos,"auto-export of overwritten exported method");
 					*)
 				END;
 			END;

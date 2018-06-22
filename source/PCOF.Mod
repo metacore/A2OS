@@ -4,7 +4,7 @@ MODULE PCOF; (** AUTHOR "prk / be"; PURPOSE "Parallel Compiler: object file plug
 
 IMPORT
 	SYSTEM, KernelLog,
-	StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM, Diagnostics;
+	StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM;
 
 CONST
 	AddressSize = SIZEOF(ADDRESS);
@@ -900,7 +900,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 
 			END;
 			FOR i := 0 TO exppos-1 DO
-				IF fp = explist[i] THEN  PCM.ErrorN(280, Diagnostics.Invalid, p.name) END
+				IF fp = explist[i] THEN  PCM.ErrorN(280, PCM.InvalidPosition, p.name) END
 			END;
 			IF exppos >= explen THEN
 				NEW(explist2, 2*explen);

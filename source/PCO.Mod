@@ -6,7 +6,7 @@ MODULE PCO; (** AUTHOR "prk / be"; PURPOSE "Parallel Compiler: Intel 386 code pa
 	Based on the OPO module for OP2 by N. Mannhart
 *)
 
-	IMPORT SYSTEM, PCM, PCLIR, Diagnostics;
+	IMPORT SYSTEM, PCM, PCLIR;
 
 
 	CONST
@@ -128,7 +128,7 @@ MODULE PCO; (** AUTHOR "prk / be"; PURPOSE "Parallel Compiler: Intel 386 code pa
                		code := c;
                		code[pos] := CHR(b); (*fof*)
            		ELSE
-               		IF ~CodeErr THEN  PCM.Error(210, Diagnostics.Invalid, ""); CodeErr:= TRUE  END;
+               		IF ~CodeErr THEN  PCM.Error(210, PCM.InvalidPosition, ""); CodeErr:= TRUE  END;
                		pc:= 0
            		END
        	ELSE
@@ -165,7 +165,7 @@ MODULE PCO; (** AUTHOR "prk / be"; PURPOSE "Parallel Compiler: Intel 386 code pa
                		code[pos]:= CHR (dw DIV 1000000H)
               		 (*fof<<*)
            		ELSE
-              		 IF ~CodeErr THEN  PCM.Error(210, Diagnostics.Invalid, ""); CodeErr:= TRUE  END;
+              		 IF ~CodeErr THEN  PCM.Error(210, PCM.InvalidPosition, ""); CodeErr:= TRUE  END;
                		pc:= 0
            		END
        	ELSE

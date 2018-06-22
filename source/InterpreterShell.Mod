@@ -816,7 +816,7 @@ TYPE
 				NEW(scope, Interpreter.global, container);
 				NEW(interpreter, scope, diagnostics, context);
 				LOOP
-				(*diagnostics.Information("interpreter",Diagnostics.Invalid,"start statement");*)
+				(*diagnostics.Information("interpreter",Streams.Invalid,"start statement");*)
 				seq := SyntaxTree.NewStatementSequence();
 				IF parser.Optional(Scanner.Questionmark) THEN
 					first := TRUE;
@@ -846,7 +846,7 @@ TYPE
 					IF interpreter.error THEN interpreter.Reset END;
 				ELSE
 					IF ~parser.error & first THEN 
-						diagnostics.Error("",Diagnostics.Invalid, "no statement");
+						diagnostics.Error("",Streams.Invalid, "no statement");
 						first := FALSE;
 						context.out.Ln;
 						context.out.String(">");

@@ -153,7 +153,7 @@ CONST
 			CompareScopes(module.moduleScope,importedModule.moduleScope);
 			IF importCache # NIL THEN SemanticChecker.RemoveModuleFromCache(importCache, importedModule) END;
 		ELSE
-			(* ErrorSS(Diagnostics.Invalid,fname," new module."); *)
+			(* ErrorSS(Streams.Invalid,fname," new module."); *)
 		END;
 	END CompareThis;
 

@@ -89,6 +89,9 @@ IMPORT
 		MaxErrors = 100;	(* maximum number of diagnostic messages *)
 		MaxWarnings = 100;
 
+		InvalidCode* = -1;
+		InvalidPosition* = Streams.Invalid;
+
 	TYPE
 		SymReader* = Files.Reader;
 
@@ -358,7 +361,7 @@ IMPORT
 			IF errors > MaxErrors THEN
 				RETURN
 			ELSIF errors = MaxErrors THEN
-				err := Diagnostics.Invalid; pos := Diagnostics.Invalid; str := "too many errors"
+				err := InvalidCode; pos := InvalidPosition; str := "too many errors"
 			END;
 			IF diagnostics # NIL THEN
 				diagnostics.Error (source, pos, str);
@@ -385,7 +388,7 @@ IMPORT
 		IF warnings > MaxWarnings THEN
 			RETURN
 		ELSIF warnings = MaxWarnings THEN
-			err := Diagnostics.Invalid; pos := Diagnostics.Invalid; str := "too many warnings"
+			err := InvalidCode; pos := InvalidPosition; str := "too many warnings"
 		ELSE
 			GetMessage (err, msg, str);
 		END;

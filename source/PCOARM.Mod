@@ -4,7 +4,7 @@ MODULE PCOARM;	(** be  **)
 
 (** Code Generator for ARM. Not concurrent ! *)
 
-IMPORT SYSTEM, Files, PCLIR, PCM(*Trace, PCARMDecoder *), Diagnostics;
+IMPORT SYSTEM, Files, PCLIR, PCM(*Trace, PCARMDecoder *);
 
 CONST
 	(*Trace = FALSE; *)
@@ -697,7 +697,7 @@ PROCEDURE Close*;
 VAR b: POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF (codelen > MaxCodeLength) THEN (* code too long *)
-		PCM.Error(244, Diagnostics.Invalid, "Code too long.");
+		PCM.Error(244, PCM.InvalidPosition, "Code too long.");
 	ELSIF (codelen-start > 0) THEN
 		NEW(b, codelen-start);
 		SYSTEM.MOVE(ADDRESSOF(code[start]), ADDRESSOF(b[0]), codelen-start);

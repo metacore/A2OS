@@ -173,11 +173,11 @@ VAR
 	END SetLinkRoot;
 
 	PROCEDURE Error* (CONST source, message: ARRAY OF CHAR);
-	BEGIN diagnostics.Error (source, Diagnostics.Invalid, message); error := TRUE;
+	BEGIN diagnostics.Error (source, Streams.Invalid, message); error := TRUE;
 	END Error;
 
 	PROCEDURE Warning* (CONST source, message: ARRAY OF CHAR);
-	BEGIN diagnostics.Warning (source, Diagnostics.Invalid, message);
+	BEGIN diagnostics.Warning (source, Streams.Invalid, message);
 	END Warning;
 
 	PROCEDURE ErrorP*(CONST pooledName: ObjectFile.SegmentedName; CONST message: ARRAY OF CHAR);

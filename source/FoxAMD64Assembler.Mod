@@ -1154,7 +1154,7 @@ TYPE
 		BEGIN
 			pos := errPos;
 			COPY(message,msg);
-			IF (pos.start = Diagnostics.Invalid) OR (sourceName = "") THEN
+			IF (pos.start = Streams.Invalid) OR (sourceName = "") THEN
 				Strings.Append(msg," in ");
 				ObjectFile.SegmentedNameToString(emitter.code.os.identifier.name, name);
 				Strings.Append(msg, name);

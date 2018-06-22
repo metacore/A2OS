@@ -3,7 +3,7 @@
 MODULE PCP; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: parser"; *)
 
 IMPORT
-	Machine, Diagnostics, Modules, Objects, Kernel, Strings,
+	Machine, Modules, Objects, Kernel, Strings,
 	StringPool,
 	PCM, PCS, PCT, PCB, PCC, SYSTEM, PCArrays;
 
@@ -391,7 +391,7 @@ TYPE
 					Error(148, pos);	(* first parameter of ":=" must be VAR *)
 				END;
 				IF (scope.firstPar.nextPar # NIL) & (scope.firstPar.type = scope.firstPar.nextPar.type) THEN
-					PCM.Warning(Diagnostics.Invalid, pos, "Warning: both parameters of identical type");
+					PCM.Warning(PCM.InvalidCode, pos, "Warning: both parameters of identical type");
 				END
 			ELSIF opStr = "[]" THEN
 				IF (scope = NIL) OR (scope.parent = NIL) OR ~(scope.parent IS PCT.RecScope) THEN

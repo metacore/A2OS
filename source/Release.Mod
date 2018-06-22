@@ -916,7 +916,7 @@ TYPE
 					END;
 				END;
 			ELSE
-				diagnostics.Error("", Diagnostics.Invalid, "No packages");
+				diagnostics.Error("", Streams.Invalid, "No packages");
 			END;
 		END GenerateZipFiles;
 
@@ -1483,7 +1483,7 @@ TYPE
 					INC(nofPrefixes);
 				ELSE
 					error := TRUE;
-					diagnostics.Warning("", Diagnostics.Invalid, "Maximum number of prefixes exceeded");
+					diagnostics.Warning("", Streams.Invalid, "Maximum number of prefixes exceeded");
 					FOR j := 0 TO LEN(prefixes)-1 DO
 						TRACE(prefixes[j]);
 					END;
@@ -1670,7 +1670,7 @@ TYPE
 				INC(nofBuilds);
 			ELSE
 				error := TRUE;
-				diagnostics.Error(source, Diagnostics.Invalid, "Maximum number of builds exceeded");
+				diagnostics.Error(source, Streams.Invalid, "Maximum number of builds exceeded");
 			END;
 			RETURN ~error;
 		END AddBuild;
@@ -1754,7 +1754,7 @@ TYPE
 								MakeMessage(message, "Excluded package '#' in build '#' does not exist",
 									builds[build].excludedPackages[package]^,
 									builds[build].name);
-								diagnostics.Error(source, Diagnostics.Invalid, message);
+								diagnostics.Error(source, Streams.Invalid, message);
 							END;
 						END;
 					END;
@@ -2007,7 +2007,7 @@ TYPE
 				ELSE
 					VersionToString(VersionMajor, VersionMinor, v1);
 					VersionToString(builds.version.major, builds.version.minor, v2);
-					Error(Diagnostics.Invalid, "Version mismatch, Release.Mod is version #, tool file is version #", v1, v2);
+					Error(Streams.Invalid, "Version mismatch, Release.Mod is version #, tool file is version #", v1, v2);
 				END;
 			END;
 			RETURN ~(error OR scanner.error OR (builds = NIL));
@@ -2550,7 +2550,7 @@ PROCEDURE GetModuleInfo(
 					ELSE
 						error := TRUE;
 						MakeMessage(message, "Maximum number of supported imports exceeded in module #", filename, "");
-						diagnostics.Error(source, Diagnostics.Invalid, message);
+						diagnostics.Error(source, Streams.Invalid, message);
 						EXIT;
 					END;
 
@@ -2752,7 +2752,7 @@ BEGIN
 	ELSE
 		builds := NIL;
 		MakeMessage(message, "Could not open file #", filename, "");
-		diagnostics.Error("", Diagnostics.Invalid, message);
+		diagnostics.Error("", Streams.Invalid, message);
 		RETURN FALSE;
 	END;
 END ParseBuildFile;

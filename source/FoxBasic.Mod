@@ -29,7 +29,7 @@ CONST
 	InitErrMsgSize = 300;	(* initial size of array of error messages *)
 
 	invalidString* = -1;
-	InvalidCode* = Diagnostics.Invalid;
+	InvalidCode* = -1;
 TYPE
 	(*
 	String* = POINTER TO ARRAY OF CHAR;
@@ -1656,7 +1656,7 @@ TYPE
 			D.Ln;
 			D.String(" ---------------------- TRACE for COMPILER ERROR  < ");
 			D.String(source);
-			IF position # Diagnostics.Invalid THEN D.String("@"); D.Int(position,1) END;
+			IF position # Streams.Invalid THEN D.String("@"); D.Int(position,1) END;
 			D.String(" "); D.String(message);
 			D.String(" > ---------------------- ");
 			D.TraceBack

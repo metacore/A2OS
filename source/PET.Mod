@@ -774,7 +774,7 @@ TYPE
 			IF (diagnostics.nofEntries > 0) THEN
 				errorGrid.GetFirstPosition(positions, type);
 				IF (type = WMDiagnostics.TypeError) OR findPC & (type=WMDiagnostics.TypeInformation) THEN
-					IF (focus = EditorFocus) & (positions[0] # WMDiagnostics.Invalid) THEN
+					IF (focus = EditorFocus) & (positions[0] # Streams.Invalid) THEN
 						editor.tv.cursor.SetPosition(positions[0]);
 						editor.SetFocus;
 					ELSIF (focus = SplitEditorFocus) THEN

@@ -150,7 +150,7 @@ TYPE
 		BEGIN
 			ASSERT(currentScope # NIL);
 			IF module # NIL THEN errModule := module ELSE errModule := currentScope.ownerModule END;
-			Basic.ErrorC(diagnostics, errModule.sourceName, position, Diagnostics.Invalid, message);
+			Basic.ErrorC(diagnostics, errModule.sourceName, position, Basic.InvalidCode, message);
 			error := TRUE;
 		END Error;
 

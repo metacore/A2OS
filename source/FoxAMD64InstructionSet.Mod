@@ -4413,8 +4413,8 @@ VAR
 		AddInstructionV(opVCVTPS2DQ,"ymm1,ymm2/mem256","C4 RXB.00001 X.1111.1.01 5B /r");
 		AddInstructionV(opVCVTPS2PD,"xmm1,xmm2/mem64","C4 RXB.00001 X.1111.0.00 5A /r");
 		AddInstructionV(opVCVTPS2PD,"ymm1,ymm2/mem128","C4 RXB.00001 X.1111.1.00 5A /r");
-		AddInstructionV(opVCVTPS2PH,"xmm1/mem64,xmm2,imm8","C4 RXB.03 0.1111.0.01 1D /r /imm8");
-		AddInstructionV(opVCVTPS2PH,"xmm1/mem128,ymm2,imm8","C4 RXB.03 0.1111.1.01 1D /r /imm8");
+		AddInstructionV(opVCVTPS2PH,"xmm1/mem64,xmm2,imm8","C4 RXB.03 0.1111.0.01 1D /r /ib");
+		AddInstructionV(opVCVTPS2PH,"xmm1/mem128,ymm2,imm8","C4 RXB.03 0.1111.1.01 1D /r /ib");
 		AddInstructionV(opVCVTSD2SI,"reg32,xmm2/mem64","C4 RXB.00001 0.1111.X.11 2D /r");
 		AddInstructionV(opVCVTSD2SI,"reg64,xmm2/mem64","C4 RXB.00001 1.1111.X.11 2D /r");
 		AddInstructionV(opVCVTSD2SS,"xmm1,xmm2,xmm3/mem64","C4 RXB.00001 X.src.X.11 5A /r");

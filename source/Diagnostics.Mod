@@ -9,9 +9,7 @@ CONST
 	TypeError* = 2;
 
 	(** DiagnosticsList.ToStream mask argument *)
-	All* = {0..2};
-
-	Tab = 9X;
+	All* = {TypeInformation, TypeWarning, TypeError};
 
 TYPE
 
@@ -171,7 +169,7 @@ TYPE
 
 PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR);
 BEGIN
-	w.Char(Tab);
+	w.Char(9X);
 	IF (source # "") THEN w.String (source); END;
 	IF (position # Streams.Invalid) THEN w.Char ('@'); w.Int(position, 0); END;
 	w.String(": ");

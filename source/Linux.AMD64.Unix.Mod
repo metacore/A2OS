@@ -132,6 +132,12 @@ CONST
 	SA_NODEFER		= 0x40000000;
 	SA_RESETHAND	= 0x80000000;
 
+	CLOCK_MONOTONIC* = 1;
+	CLOCK_MONOTONIC_RAW* = 4;
+	CLOCK_PROCESS_CPUTIME_ID* = 2;
+	CLOCK_REALTIME* = 0;
+	CLOCK_THREAD_CPUTIME_ID* = 3;
+
 	PTHREAD_CANCEL_ENABLE 	= 0;
 	PTHREAD_CANCEL_DISABLE	= 1;
 
@@ -312,6 +318,10 @@ TYPE
 				interval*, value*: Timeval
 			END;
 
+	Timespec* = RECORD
+		tv_sec*: LONGWORD;
+		tv_nsec*: LONGWORD;
+	END;
 
 CONST
 	FdSetLen* = 16;
@@ -501,7 +511,8 @@ VAR
 	alarm-		: PROCEDURE {C} ( ms: LONGINT ): LONGINT;
 	setitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value, ovalue: Itimerval ): LONGINT;
 	getitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value: Itimerval ): LONGINT;
-	clock_gettime-	: PROCEDURE{C}	(clk_id: LONGINT; tp: tvPtr): LONGINT;
+	clock_gettime-	: PROCEDURE {C} (clk_id: WORD; tp: ADDRESS): WORD;
+	clock_getres-	: PROCEDURE {C} (clk_id: WORD; res: ADDRESS): WORD;
 
 	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): LONGINT;
 	mktime-			: PROCEDURE {C} ( VAR tm: Tm ): LONGINT;
@@ -1143,6 +1154,7 @@ VAR
 		Dlsym( libc, "setitimer",	ADDRESSOF( setitimer ) );
 		Dlsym( libc, "getitimer",	ADDRESSOF( getitimer ) );
 		Dlsym( libc, "clock_gettime", ADDRESSOF(clock_gettime) );
+		Dlsym( libc, "clock_getres", ADDRESSOF(clock_getres) );
 
 		Dlsym( libc, "gettimeofday", ADDRESSOF( gettimeofday ) );
 		Dlsym( libc, "mktime",		ADDRESSOF( mktime ) );

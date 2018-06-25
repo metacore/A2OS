@@ -25,12 +25,12 @@ TYPE
 		writer: Streams.Writer; 
 
 		PROCEDURE ^  & Init*(w: Streams.Writer); 
-		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 	END StreamDiagnostics; 
 
-	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position, errorCode, type: LONGINT; CONST message: ARRAY OF CHAR); 
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR); 
 	PROCEDURE ^ DebugWriterFactory(CONST title: ARRAY OF CHAR): Streams.Writer; 
 	PROCEDURE ^ WriterFactory(w: Streams.Writer): Basic.Writer; 
 	PROCEDURE ^ DiagnosticsFactory(w: Streams.Writer): Diagnostics.Diagnostics; 

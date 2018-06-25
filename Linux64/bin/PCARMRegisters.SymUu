@@ -1,5 +1,5 @@
 MODULE PCARMRegisters;
-	IMPORT PCM, PCOARM, KernelLog, Diagnostics;
+	IMPORT PCM, PCOARM, KernelLog;
 CONST 
 	INTERNALERROR = 100; 
 	CheckRegisterSize = TRUE; 

@@ -1,10 +1,9 @@
 MODULE WMDiagnostics;
-	IMPORT Locks, Strings, Diagnostics, Files, WMRectangles, WMGraphics, WMGraphicUtilities, WMBitmapFont, WMEvents, WMProperties, WMGrids, WMTextView;
+	IMPORT Locks, Strings, Diagnostics, Files, Streams, WMRectangles, WMGraphics, WMGraphicUtilities, WMBitmapFont, WMEvents, WMProperties, WMGrids, WMTextView;
 CONST 
 	TypeInformation* = Diagnostics.TypeInformation; 
 	TypeWarning* = Diagnostics.TypeWarning; 
 	TypeError* = Diagnostics.TypeError; 
-	Invalid* = Diagnostics.Invalid; 
 	ColorError = LONGINT(4281348256); 
 	ColorWarning = LONGINT(3503308992); 
 	ColorPCPosition = 8323232; 
@@ -19,13 +18,11 @@ CONST
 	SortByTypeDescending* = 1; 
 	SortByPositionAscending* = 2; 
 	SortByPositionDescending* = 3; 
-	SortByErrorCodeAscending* = 4; 
-	SortByErrorCodeDescending* = 5; 
 TYPE 
 	Entry* = RECORD 
 		type-: LONGINT; 
 		source-: Files.FileName; 
-		position-, errorCode-: LONGINT; 
+		position-: Streams.Position; 
 		message-: ARRAY 256 OF CHAR; 
 	END; 
 
@@ -52,11 +49,11 @@ TYPE
 		PROCEDURE ^ ReleaseWrite*; 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ CheckEntriesSize; 
-		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Exists(type, position, errorCode: LONGINT; CONST message: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Add(type: LONGINT; CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR; VAR counter: LONGINT); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Exists(type: WORD; position: Streams.Position; CONST message: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Add(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; VAR counter: LONGINT); 
 		PROCEDURE ^ GetSummary(VAR summary: ARRAY OF CHAR); 
 		PROCEDURE ^ Synchronize(VAR entries: ViewEntryArray; VAR nofEntries: LONGINT); 
 	END Model; 
@@ -113,7 +110,6 @@ VAR
 	PrototypeSortBy: WMProperties.Int32Property; 
 
 	PROCEDURE ^ CompareByPosition(CONST e1, e2: Entry): LONGINT; 
-	PROCEDURE ^ CompareByErrorCode(CONST e1, e2: Entry): LONGINT; 
 	PROCEDURE ^ CompareByType(CONST e1, e2: Entry): LONGINT; 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 

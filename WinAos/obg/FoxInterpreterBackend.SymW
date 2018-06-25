@@ -1,5 +1,5 @@
 MODULE FoxInterpreterBackend;
-	IMPORT Basic := FoxBasic, SYSTEM, Diagnostics, Intermediate := FoxIntermediateCode, Sections := FoxSections, SyntaxTree := FoxSyntaxTree, Options, IntermediateBackend := FoxIntermediateBackend, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats, Trace := KernelLog, Streams, SymbolFileFormat := FoxTextualSymbolFile;
+	IMPORT Basic := FoxBasic, SYSTEM, Intermediate := FoxIntermediateCode, Sections := FoxSections, SyntaxTree := FoxSyntaxTree, Options, IntermediateBackend := FoxIntermediateBackend, Backend := FoxBackend, Global := FoxGlobal, Formats := FoxFormats, Trace := KernelLog, Streams, SymbolFileFormat := FoxTextualSymbolFile;
 CONST 
 	StackSize = 1024; 
 	AddressSize = SIZEOF(ADDRESS); 

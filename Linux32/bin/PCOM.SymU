@@ -1,5 +1,5 @@
 MODULE PCOM;
-	IMPORT SYSTEM, Modules, StringPool, PCM, PCS, PCT, PCBT, PCLIR, Diagnostics;
+	IMPORT SYSTEM, Modules, StringPool, PCM, PCS, PCT, PCBT, PCLIR;
 CONST 
 	Trace = FALSE; 
 	TraceCalls = FALSE; 

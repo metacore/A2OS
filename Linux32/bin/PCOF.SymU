@@ -1,5 +1,5 @@
 MODULE PCOF;
-	IMPORT SYSTEM, KernelLog, StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM, Diagnostics;
+	IMPORT SYSTEM, KernelLog, StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM;
 CONST 
 	AddressSize = SIZEOF(ADDRESS); 
 	TraceUse = FALSE; 

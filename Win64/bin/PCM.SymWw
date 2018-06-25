@@ -58,6 +58,8 @@ CONST
 	InitErrMsgSize = 300; 
 	MaxErrors = 100; 
 	MaxWarnings = 100; 
+	InvalidCode* =  -1; 
+	InvalidPosition* = Streams.Invalid; 
 TYPE 
 	SymReader* = Files.Reader; 
 

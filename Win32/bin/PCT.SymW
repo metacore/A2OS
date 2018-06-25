@@ -1,5 +1,5 @@
 MODULE PCT;
-	IMPORT SYSTEM, KernelLog, StringPool, Strings, PCM, PCS, Diagnostics;
+	IMPORT SYSTEM, KernelLog, StringPool, Strings, PCM, PCS;
 CONST 
 	MaxPlugins = 4; 
 	Ok* = 0; 

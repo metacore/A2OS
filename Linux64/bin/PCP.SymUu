@@ -1,5 +1,5 @@
 MODULE PCP;
-	IMPORT Machine, Diagnostics, Modules, Objects, Kernel, Strings, StringPool, PCM, PCS, PCT, PCB, PCC, SYSTEM, PCArrays;
+	IMPORT Machine, Modules, Objects, Kernel, Strings, StringPool, PCM, PCS, PCT, PCB, PCC, SYSTEM, PCArrays;
 CONST 
 	null = PCS.null; 
 	times = PCS.times; 

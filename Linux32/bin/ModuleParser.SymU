@@ -1,5 +1,5 @@
 MODULE ModuleParser;
-	IMPORT Strings, Files, Diagnostics, FoxScanner, KernelLog, Texts, TextUtilities;
+	IMPORT Strings, Files, Streams, Diagnostics, FoxScanner, KernelLog, Texts, TextUtilities;
 CONST 
 	Public* = 1; 
 	PublicRO* = 2; 

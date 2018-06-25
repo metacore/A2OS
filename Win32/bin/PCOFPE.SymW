@@ -1,5 +1,5 @@
 MODULE PCOFPE;
-	IMPORT SYSTEM, KernelLog, StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM, Dates, Strings, Streams, Files, Clock, Diagnostics;
+	IMPORT SYSTEM, KernelLog, StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM, Dates, Strings, Streams, Files, Clock;
 CONST 
 	Loader = \"AosRuntime"\; 
 	Heap = \"AosRuntime"\; 

@@ -8,6 +8,7 @@ CONST
 	FormatError* = 4203; 
 	DefaultWriterSize* = 4096; 
 	DefaultReaderSize* = 4096; 
+	Invalid* =  -1; 
 	CR = 0DX; 
 	LF = 0AX; 
 	TAB = 9X; 

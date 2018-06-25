@@ -1,5 +1,5 @@
 MODULE PCO;
-	IMPORT SYSTEM, PCM, PCLIR, Diagnostics;
+	IMPORT SYSTEM, PCM, PCLIR;
 CONST 
 	noScale* = 0; 
 	Scale1* = 0; 

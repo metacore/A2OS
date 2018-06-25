@@ -1,25 +1,22 @@
 MODULE Diagnostics;
 	IMPORT Streams;
 CONST 
-	Invalid* =  -1; 
 	TypeInformation* = 0; 
 	TypeWarning* = 1; 
 	TypeError* = 2; 
-	All* = {0 .. 2}; 
-	Tab = 9X; 
+	All* = {TypeInformation, TypeWarning, TypeError}; 
 TYPE 
 	Diagnostics* = OBJECT 
 
-		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 	END Diagnostics; 
 
 	Entry* = POINTER TO RECORD 
 		type*: WORD; 
 		source*: ARRAY 128 OF CHAR; 
 		position*: Streams.Position; 
-		errorCode*: WORD; 
 		message*: ARRAY 256 OF CHAR; 
 		next*: Entry; 
 	END; 
@@ -36,15 +33,15 @@ TYPE
 		nofInformations-: SIZE; 
 		nofMessages-: SIZE; 
 
-		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer; mask: SET); 
 		PROCEDURE ^  & Reset*; 
 		PROCEDURE ^ ForAll*(proc: EnumProc); 
 		PROCEDURE ^ GetEntries*(): EntryArray; 
-		PROCEDURE ^ InsertSorted(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
-		PROCEDURE ^ NewEntry*(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
+		PROCEDURE ^ InsertSorted(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
+		PROCEDURE ^ NewEntry*(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
 	END DiagnosticsList; 
 
 	StreamDiagnostics* = OBJECT (Diagnostics)
@@ -52,11 +49,11 @@ TYPE
 		writer: Streams.Writer; 
 
 		PROCEDURE ^  & Init*(w: Streams.Writer); 
-		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 	END StreamDiagnostics; 
 
-	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; errorCode: WORD; type: WORD; CONST message: ARRAY OF CHAR); 
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR); 
 BEGIN
 END Diagnostics.

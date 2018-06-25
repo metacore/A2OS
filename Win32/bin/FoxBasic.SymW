@@ -21,7 +21,7 @@ CONST
 	InitListSize = 4; 
 	InitErrMsgSize = 300; 
 	invalidString* =  -1; 
-	InvalidCode* = Diagnostics.Invalid; 
+	InvalidCode* =  -1; 
 TYPE 
 	String* = StringPool.Index; 
 
@@ -431,9 +431,9 @@ TYPE
 		diagnostics: Diagnostics.Diagnostics; 
 
 		PROCEDURE ^  & InitDiagnostics(diagnostics: Diagnostics.Diagnostics); 
-		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position, errorCode: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 	END TracingDiagnostics; 
 
 	DebugWriterFactory* = PROCEDURE {DELEGATE}(CONST title: ARRAY OF CHAR):Streams.Writer; 

@@ -62,7 +62,7 @@ compiler options:
 	-w	--warnings		flag		show warnings
 		--darwinHost	flag		use Darwin (MacOSX) calling convention for ext. C procedures
 		--hardware	string	hardware generation hint for ActiveCells
-	-d	--documentation	string	install documentation engine
+		--documentation	string	install documentation engine
 	-S	--sourcePath	string	specification of a source path
 	-D --destPath		string	specification of a destination path
 	-p 	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in Compiler.Mod

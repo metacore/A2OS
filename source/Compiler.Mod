@@ -301,7 +301,7 @@ TYPE
 		options.Add("w","warnings", Options.Flag);
 		options.Add(0X,"darwinHost", Options.Flag);
 		options.Add(0X,"hardware", Options.String);
-		options.Add("d","documentation", Options.String);
+		options.Add(0X,"documentation", Options.String);
 		options.Add("S","srcPath", Options.String);
 		options.Add("D","destPath", Options.String);
 		options.Add(0X,"replacements", Options.String);
@@ -373,7 +373,7 @@ TYPE
 		END;
 
 
-		IF options.GetString("d", name) THEN
+		IF options.GetString("documentation", name) THEN
 			compilerOptions.documentation := Backend.GetBackendByName("Documentation");
 			IF (compilerOptions.documentation = NIL)  THEN
 				Error("documentation engine could not be installed"); result := FALSE;

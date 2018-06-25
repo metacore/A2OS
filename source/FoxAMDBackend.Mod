@@ -445,7 +445,15 @@ TYPE
 			END Get;
 
 			BEGIN
-			IF type.form IN IntermediateCode.Integer THEN
+			IF (type.length > 1) THEN
+				IF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =4) THEN
+					i := Get(XMM7, XMM0);
+				ELSIF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =8) THEN
+					i := Get(YMM7, YMM0);
+				ELSE
+					HALT(100)
+				END
+			ELSIF type.form IN IntermediateCode.Integer THEN
 				IF type.sizeInBits = IntermediateCode.Bits8 THEN
 					i := GetGPHint(AL);
 					IF i = none THEN i := Get(BL, AL) END;
@@ -661,8 +669,10 @@ TYPE
 			IF type.length > 1 THEN
 				IF type.length = 4 THEN
 					(*ASSERT(type.form = IntermediateCode.Float);*)
-					IF (*(type.form = IntermediateCode.Float) & *) (type.sizeInBits = 32) THEN
-					SpecialMove(InstructionSet.opMOVUPS, InstructionSet.opMOVUPS, TRUE, dest, src, type);
+					IF Assembler.IsRegisterOperand(dest) & Assembler.IsRegisterOperand(src) THEN
+						SpecialMove(InstructionSet.opMOVUPS, InstructionSet.opMOVUPS, TRUE, dest, src, type);
+					ELSIF (*(type.form = IntermediateCode.Float) & *) (type.sizeInBits = 32) THEN
+						SpecialMove(InstructionSet.opMOVUPS, InstructionSet.opMOVUPS, TRUE, dest, src, type);
 					ELSIF (type.sizeInBits = 16) THEN
 						SpecialMove(InstructionSet.opMOVQ, InstructionSet.opMOVQ, TRUE, dest, src, type);
 					ELSIF  (type.sizeInBits = 8) THEN
@@ -670,8 +680,10 @@ TYPE
 					END;
 				ELSIF type.length = 8 THEN
 					(*ASSERT(type.form = IntermediateCode.Float);*)
-					IF (*(type.form = IntermediateCode.Float) & *) (type.sizeInBits = 32) THEN
-					SpecialMove(InstructionSet.opVMOVUPS, InstructionSet.opVMOVUPS, TRUE, dest, src, type);
+					IF Assembler.IsRegisterOperand(dest) & Assembler.IsRegisterOperand(src) THEN
+						SpecialMove(InstructionSet.opMOVUPS, InstructionSet.opMOVUPS, TRUE, dest, src, type);
+					ELSIF (*(type.form = IntermediateCode.Float) & *) (type.sizeInBits = 32) THEN
+						SpecialMove(InstructionSet.opVMOVUPS, InstructionSet.opVMOVUPS, TRUE, dest, src, type);
 					ELSIF (type.sizeInBits = 16) THEN
 						SpecialMove(InstructionSet.opVMOVQ, InstructionSet.opVMOVQ, TRUE, dest, src, type);
 					ELSIF  (type.sizeInBits = 8) THEN

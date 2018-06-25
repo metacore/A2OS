@@ -687,7 +687,7 @@ BEGIN
 END vyRanBase.
 
 
- # call these only after a random number generator has been installed, for example
+call these only after a random number generator has been installed, for example
 vyRanSkeleton.Install ~
 
 Gadgets.Insert SetFrame vyRanBase.Deposit ~

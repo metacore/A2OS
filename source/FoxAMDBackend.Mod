@@ -2591,18 +2591,21 @@ TYPE
 		END EmitCas;
 
 		PROCEDURE EmitCopy(CONST instruction: IntermediateCode.Instruction);
-		VAR op1,op2,op3: Assembler.Operand; rs, rd, rc, t: Ticket; temp,imm: Assembler.Operand; source, dest: IntermediateCode.Operand; size: HUGEINT;
+		VAR op1,op2,op3: Assembler.Operand; rs, rd, rc, t: Ticket; temp,imm: Assembler.Operand; source, dest: IntermediateCode.Operand; size: HUGEINT;type: IntermediateCode.Type;
 		BEGIN
-			IF IntermediateCode.IsConstantInteger(instruction.op3, size) & (size = 4) THEN
-				Spill(physicalRegisters.Mapped(RS));
-				Spill(physicalRegisters.Mapped(RD));
-				rs := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RS,inPC);
-				rd := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RD,inPC);
-				MakeOperand(instruction.op1,Low,op1,rd);
-				MakeOperand(instruction.op2,Low,op2,rs);
-				emitter.Emit0(InstructionSet.opMOVSD);
-				UnmapTicket(rs);
-				UnmapTicket(rd);
+			IF IntermediateCode.IsConstantInteger(instruction.op3, size) & ((size=8)  OR (size = 4) OR (size = 2) OR (size=1)) & (size * 8 <= cpuBits) THEN
+				MakeRegister(instruction.op1,Low,op1);
+				Assembler.InitMem(op1,SHORTINT(size),op1.register,0);
+				MakeRegister(instruction.op2,Low,op2);
+				Assembler.InitMem(op2,SHORTINT(size),op2.register,0);
+
+				type := IntermediateCode.NewType(IntermediateCode.SignedInteger, SHORTINT(size*8)); 
+				rd := TemporaryTicket(IntermediateCode.GeneralPurposeRegister, type);
+				TicketToOperand(rd,op3);
+				
+				
+				Move(op3, op2, type); 
+				Move(op1, op3, type); 
 			ELSE
 				Spill(physicalRegisters.Mapped(RS));
 				Spill(physicalRegisters.Mapped(RD));

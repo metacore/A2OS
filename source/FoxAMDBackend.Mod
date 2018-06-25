@@ -588,7 +588,11 @@ TYPE
 		BEGIN
 			spillStack.Init;
 			IF backend.cooperative THEN
-				ap := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.UnsignedIntegerType(cpuBits),RC,in.pc);
+				IF cpuBits=32 THEN
+					ap := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.UnsignedIntegerType(cpuBits),ECX,in.pc);
+				ELSE
+					ap := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.UnsignedIntegerType(cpuBits),RBX,in.pc);
+				END;
 				ap.spillable := FALSE;
 			END;
 			emitter.SetCode(out);

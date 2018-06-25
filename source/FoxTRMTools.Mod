@@ -1,5 +1,5 @@
 MODULE FoxTRMTools;
-IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,ObjectFile;
+IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,ObjectFile,Streams;
 
 	(*! check spartan 6 code emission *)
 	PROCEDURE PatchSpartan6(CONST this: ARRAY OF CHAR; VAR result: ARRAY OF CHAR; line: LONGINT);

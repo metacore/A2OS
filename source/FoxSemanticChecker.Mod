@@ -947,9 +947,8 @@ TYPE
 					ELSE
 						procedureType.SetCallingConvention(system.platformCallingConvention); 
 					END;
-				ELSIF HasFlag(modifiers, Global.NameNoReturn,position) THEN
-					procedureType.SetNoReturn(TRUE);
 				END;
+				IF HasFlag(modifiers, Global.NameNoReturn,position) THEN procedureType.SetNoReturn(TRUE) END;
 				IF HasValue(modifiers,Global.NameStackAligned,position,value) THEN procedureType.SetStackAlignment(LONGINT (value)) END; (* TODO: fix explicit integer truncation *)
 				IF HasFlag(modifiers, Global.NameDelegate,position) THEN procedureType.SetDelegate(TRUE) END;
 				IF HasFlag(modifiers, Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;

@@ -121,7 +121,7 @@ TYPE
 		nasid-: LONGINT; 
 	END; 
 
-	PROCEDURE ^ CPUID(function: LONGINT; VAR peax, pebx, pecx, pedx: SET); 
+	PROCEDURE ^ CPUID(function: LONGINT; VAR eax, ebx, ecx, edx: SET); 
 	PROCEDURE ^ CpuIdSupported(): BOOLEAN; 
 	PROCEDURE ^ StandardFunction0(VAR cpuInfo: CpuInformation); 
 	PROCEDURE ^ StandardFunction1(VAR cpuInfo: CpuInformation); 

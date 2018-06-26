@@ -1,5 +1,5 @@
 MODULE FoxParser;
-	IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Diagnostics;
+	IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Diagnostics, Streams, Strings, StringPool;
 CONST 
 	Trace = FALSE; 
 	CascadedWithSupport = TRUE; 
@@ -7,6 +7,12 @@ TYPE
 	Position* = Scanner.Position; 
 
 	Parser* = OBJECT 
+	CONST 
+		Processing = 0; 
+		ProcessingElse = 1; 
+		Skipping = 2; 
+		Ignoring = 3; 
+		IgnoringElse = 4; 
 	VAR 
 		scanner-: Scanner.Scanner; 
 		symbol-: Scanner.Symbol; 
@@ -21,14 +27,20 @@ TYPE
 		indent: LONGINT; 
 		hasSymbol: BOOLEAN; 
 		prevPosition-: Position; 
+		conditional: WORD; 
+		conditionals: ARRAY 10 OF WORD; 
+		definitions: ARRAY 10 OF Scanner.IdentifierType; 
+		conditionalCount, definitionCount: SIZE; 
 
 		PROCEDURE ^ S(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ E(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ EE(CONST s, t: ARRAY OF CHAR); 
-		PROCEDURE ^  & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^  & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics; CONST definitions: ARRAY OF CHAR); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ SetLax*; 
 		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNextSymbol(VAR symbol: Scanner.Symbol): BOOLEAN; 
+		PROCEDURE ^ ConditionalStatement(VAR symbol: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ SkipComments(b: BOOLEAN); 
 		PROCEDURE ^ NextSymbol*; 
 		PROCEDURE ^ Token*(): LONGINT; 
@@ -97,6 +109,6 @@ TYPE
 	END Parser; 
 
 	PROCEDURE ^ AppendModifier(VAR list: SyntaxTree.Modifier; modifier: SyntaxTree.Modifier); 
-	PROCEDURE ^ NewParser*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics): Parser; 
+	PROCEDURE ^ NewParser*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics; CONST definitions: ARRAY OF CHAR): Parser; 
 BEGIN
 END FoxParser.

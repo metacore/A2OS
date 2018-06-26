@@ -7,7 +7,7 @@ TYPE
 		flags-: SET; 
 
 		PROCEDURE ^  & InitFrontEnd*; 
-		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader; CONST fileName: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader; CONST fileName, definitions: ARRAY OF CHAR; pos: LONGINT); 
 		PROCEDURE ^ Parse*(): SyntaxTree.Module; 
 		PROCEDURE ^ Done*(): BOOLEAN; 
 		PROCEDURE ^ Error*(): BOOLEAN; 

@@ -32,6 +32,7 @@ TYPE
 		srcPath, destPath: Files.FileName; 
 		replacements: SemanticChecker.Replacement; 
 		platformCallingConvention: SyntaxTree.CallingConvention; 
+		definitions: Options.Parameter; 
 	END; 
 VAR 
 	platforms: Options.Defaults; 

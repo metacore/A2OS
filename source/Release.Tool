@@ -136,7 +136,7 @@ BUILDS
 	Bios32C {
 		INCLUDE "BIOS32C BIOS NATIVE I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Bios32 --cooperative --traceModule=Trace --preciseGC=no"
+		COMPILEOPTIONS "-p=Bios32 --cooperative --traceModule=Trace --preciseGC=no --define=BIOS32C,BIOS,NATIVE,I386,COOP"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
@@ -150,14 +150,14 @@ BUILDS
 	RpiC {
 		INCLUDE "RPIC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no"
+		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=RPIC,NATIVE,ARM,COOP"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	ZynqC {
 		INCLUDE "ZYNQC NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no"
+		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=ZYNQC,NATIVE,ARM,COOP"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -171,7 +171,7 @@ BUILDS
 	Win32C {
 		INCLUDE "WIN32C WIN I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Win32 --cooperative --traceModule=Trace --preciseGC=no"
+		COMPILEOPTIONS "-p=Win32 --cooperative --traceModule=Trace --preciseGC=no --define=WIN32C,WIN,I386,COOP"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
@@ -201,7 +201,7 @@ BUILDS
 	Linux64C {
 		INCLUDE "LINUX64C UNIX64 UNIX AMD64 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no"
+		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX64C,UNIX64,UNIX,AMD64,COOP"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
@@ -209,7 +209,7 @@ BUILDS
 	Darwin32 {
 		INCLUDE "DARWIN32 UNIX32 UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32"
+		COMPILEOPTIONS "-p=Linux32 --define=DARWIN32,UNIX32,UNIX,I386"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -217,7 +217,7 @@ BUILDS
 	Darwin64 {
 		INCLUDE "DARWIN64 UNIX64 UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64"
+		COMPILEOPTIONS "-p=Linux64 --define=DARWIN64,UNIX64,UNIX,AMD64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -225,7 +225,7 @@ BUILDS
 	Solaris32 {
 		INCLUDE "SOLARIS32 UNIX32 UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32"
+		COMPILEOPTIONS "-p=Linux32 --define=SOLARIS32,UNIX32,UNIX,I386"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -233,7 +233,7 @@ BUILDS
 	Solaris64 {
 		INCLUDE "SOLARIS64 UNIX64 UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64"
+		COMPILEOPTIONS "-p=Linux64 --define=SOLARIS64,UNIX64,UNIX,AMD64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"

@@ -436,10 +436,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Ping.Mod TraceRoute.Mod TCPPortLog.Mod		# network tools
 	}
 
-	UNIX32 { Unix.I386.IP.Mod }
-	UNIX64 { Unix.AMD64.IP.Mod }
-
 	UNIX {
+		Unix.IP.Mod
 		Unix.Sockets.Mod
 		Unix.TCP.Mod Unix.UDP.Mod Unix.DNS.Mod
 	}

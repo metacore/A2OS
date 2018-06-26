@@ -615,13 +615,26 @@ VAR
 
 	(* Swap internal representation of an IP address from big to little endian or vice versa. *)
 	PROCEDURE  -SwapEndian(  VAR adr: LONGINT );
-	CODE {SYSTEM.i386}
-		POP EAX
-		MOV ECX, [EAX]
-		XCHG CL, CH
-		ROL ECX, 16
-		XCHG CL, CH
-		MOV [EAX], ECX
+	#IF I386 THEN
+		CODE
+			POP EAX
+			MOV ECX, [EAX]
+			XCHG CL, CH
+			ROL ECX, 16
+			XCHG CL, CH
+			MOV [EAX], ECX
+	#ELSIF AMD64 THEN
+		CODE
+			POP RAX
+			MOV ECX, [RAX]
+			XCHG CL, CH
+			ROL ECX, 16
+			XCHG CL, CH
+			MOV [RAX], ECX
+	#ELSE
+		BEGIN
+			ASSERT (FALSE);
+	#END
 	END SwapEndian;
 
 

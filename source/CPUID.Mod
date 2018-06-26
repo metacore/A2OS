@@ -202,25 +202,54 @@ TYPE
 	END;
 
 (** CPU identification *)
-PROCEDURE CPUID(function : LONGINT; VAR peax, pebx, pecx, pedx : SET);
-CODE {SYSTEM.AMD64, SYSTEM.Pentium}
+PROCEDURE CPUID(function : LONGINT; VAR eax, ebx, ecx, edx : SET);
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP+function]	; CPUID function parameter
+	MOV ESI, [EBP+ecx]   	; required for INTEL standard function4.
+	MOV ECX, [ESI]
+	CPUID					; execute CPUID
+	MOV ESI, [EBP+eax]		; copy EAX into eax
+	MOV [ESI], EAX
+	MOV ESI, [EBP+ebx]		; copy EBX into ebx
+	MOV [ESI], EBX
+	MOV ESI, [EBP+ecx]		; copy ECX into ecx
+	MOV [ESI], ECX
+	MOV ESI, [EBP+edx]		; copy EDX into edx
+	MOV [ESI], EDX
+#ELSIF AMD64 THEN
 	MOV EAX, [RBP + function]	; CPUID function parameter
-	MOV RSI, [RBP + pecx]   	; required for INTEL standard function4.
+	MOV RSI, [RBP + ecx]   	; required for INTEL standard function4.
 	MOV ECX, [RSI]
 	CPUID					; execute CPUID
-	MOV RSI, [RBP + peax]		; copy EAX into eax
+	MOV RSI, [RBP + eax]		; copy EAX into eax
 	MOV [RSI], EAX
-	MOV RSI, [RBP + pebx]		; copy EBX into ebx
+	MOV RSI, [RBP + ebx]		; copy EBX into ebx
 	MOV [RSI], EBX
-	MOV RSI, [RBP + pecx]		; copy ECX into ecx
+	MOV RSI, [RBP + ecx]		; copy ECX into ecx
 	MOV [RSI], ECX
-	MOV RSI, [RBP + pedx]		; copy EDX into edx
+	MOV RSI, [RBP + edx]		; copy EDX into edx
 	MOV [RSI], EDX
+#ELSE
+	unimplemented
+#END
 END CPUID;
 
 (* If the CPUID instruction is supported, the ID flag (bit 21) of the EFLAGS register is r/w *)
 PROCEDURE CpuIdSupported() : BOOLEAN;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	PUSHFD					; save EFLAGS
+	POP EAX				; store EFLAGS in EAX
+	MOV EBX, EAX			; save EBX for later testing
+	XOR EAX, 00200000H	; toggle bit 21
+	PUSH EAX				; push to stack
+	POPFD					; save changed EAX to EFLAGS
+	PUSHFD					; push EFLAGS to TOS
+	POP EAX				; store EFLAGS in EAX
+	CMP EAX, EBX			; see if bit 21 has changed
+	SETNE AL;				; return TRUE if bit 21 has changed, FALSE otherwise
+#ELSIF AMD64 THEN
 	PUSHFQ				; save RFLAGS
 	POP RAX				; store RFLAGS in RAX
 	MOV RBX, RAX			; save RBX for later testing
@@ -231,6 +260,9 @@ CODE {SYSTEM.AMD64}
 	POP RAX				; store RFLAGS in RAX
 	CMP RAX, RBX			; see if bit 21 has changed
 	SETNE AL;				; return TRUE if bit 21 has changed, FALSE otherwise
+#ELSE
+	unimplemented
+#END
 END CpuIdSupported;
 
 (* Standard Function 0: Processor Vendor and Largest Standard Function Number *)

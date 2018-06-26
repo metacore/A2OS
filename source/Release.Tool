@@ -770,8 +770,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	Fido.Mod
 
-	I386 { I386.CPUID.Mod }
-	AMD64 { AMD64.CPUID.Mod }
+	I386, AMD64 { CPUID.Mod }
 
 	A2Sequencers.Mod
 

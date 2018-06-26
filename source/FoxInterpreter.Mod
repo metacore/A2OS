@@ -816,7 +816,7 @@ TYPE
 			BEGIN
 				reader := expMaker.GetReader();
 				scanner := Scanner.NewScanner("", reader, 0, NIL);
-				NEW(parser, scanner, NIL);
+				NEW(parser, scanner, NIL, "");
 				REPEAT
 					error := FALSE;
 					expression := parser.Expression();
@@ -1278,7 +1278,7 @@ VAR scanner: Scanner.Scanner; parser: Parser; diagnostics: Diagnostics.StreamDia
 BEGIN
 	NEW(diagnostics, context.error);
 	scanner := Scanner.NewScanner("",context.arg,0,diagnostics);
-	NEW(parser, scanner, diagnostics);
+	NEW(parser, scanner, diagnostics, "");
 	seq := parser.StatementSequence(NIL);
 	NEW(interpreter, global, diagnostics,context); interpreter.StatementSequence(seq);
 END Statements;
@@ -1289,7 +1289,7 @@ VAR scanner: Scanner.Scanner; parser: Parser; diagnostics: Diagnostics.StreamDia
 BEGIN
 	NEW(diagnostics, context.error);
 	scanner := Scanner.NewScanner("",context.arg,0,diagnostics);
-	NEW(parser, scanner, diagnostics);
+	NEW(parser, scanner, diagnostics, "");
 	expression := parser.Expression();
 	NEW(interpreter, global, diagnostics,NIL);
 	IF interpreter.GetValue(expression, value) THEN

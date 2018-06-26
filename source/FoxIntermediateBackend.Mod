@@ -1591,8 +1591,6 @@ TYPE
 				CallThis(position,"Runtime","Trap",1); 
 			ELSE
 				Emit(Trap(position,trapNo));
-				(* Artificially append code to keep address of the instruction following the trap at the end of procedure within its boundary *)
-				IF trapNo = ReturnTrap THEN Emit(Trap(position,NoReturnTrap)) END;
 			END;
 		END EmitTrap;
 

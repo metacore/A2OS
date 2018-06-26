@@ -167,6 +167,8 @@ VAR
 			(* assume call of procedure variable with value NIL *)
 			S.GET( sp, pc );   (* get return address on top of stack *)
 		END;
+
+		IF (sig = 5) & (trapno = 3) THEN DEC (pc) END;
 		
 		IF process # NIL THEN
 			Reflection.StackTraceBack( w, pc, bp, sp, Objects.GetStackBottom( process ), TRUE, FALSE );

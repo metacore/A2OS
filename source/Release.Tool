@@ -494,8 +494,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	# PS/2 keyboard incl. layouts
 
-	BIOS32 { BIOS.I386.Keyboard.Mod }
-	BIOS64 { BIOS.AMD64.Keyboard.Mod }
+	BIOS { BIOS.Keyboard.Mod }
 
 	NATIVE {
 		KeyUK.Bin KeyCA.Bin KeyCH.Bin KeyD.Bin KeyN.Bin KeyTR.Bin KeyPL.Bin KeyDV.Bin

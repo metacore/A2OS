@@ -98,13 +98,24 @@ VAR
 (* TableUS - US keyboard translation table (dead keys: ^=1, '=2, `=3, ~=4, "=5) *)
 
 PROCEDURE TableUS(): ADDRESS;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	CALL L1
 L1:
 	POP EAX
 	ADD EAX, L2 - L1
 	JMP DWORD L3
 L2:
+#ELSIF AMD64 THEN
+	CALL L1
+L1:
+	POP RAX
+	ADD RAX, L2 - L1
+	JMP DWORD L3
+L2:
+#ELSE
+	unimplemented
+#END
 		; alphabet
 	DB 1EH, 'a', 'A', 4H,	30H, 'b', 'B', 4H,	2EH, 'c', 'C', 4H,	20H, 'd', 'D', 4H
 	DB 12H, 'e', 'E', 4H,	21H, 'f', 'F', 4H,	22H, 'g', 'G', 4H,	23H, 'h', 'H', 4H

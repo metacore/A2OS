@@ -415,8 +415,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	WIN32C { Coop.Windows.Display.Mod }
 
 	WIN { Windows.WSock32.Mod }
-	WIN32 { Windows.I386.Network.Mod Windows.I386.IP.Mod }
-	WIN64 { Windows.AMD64.Network.Mod Windows.AMD64.IP.Mod }
+	WIN32 { Windows.I386.Network.Mod Windows.IP.Mod }
+	WIN64 { Windows.AMD64.Network.Mod Windows.IP.Mod }
 
 	WIN {
 		Windows.DNS.Mod

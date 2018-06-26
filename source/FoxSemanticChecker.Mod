@@ -5234,7 +5234,7 @@ TYPE
 							misusing ASSERT does not make the language clearer nor odes it make the compiler simpler!
 	*)
 						IF IsBooleanValue(parameter0,b) & ~b & ~(currentIsUnreachable)  THEN
-							Error(position, "assert failed");
+							Error(position, "static assertion failed");
 						END;
 						IF (numberActualParameters > 1) & CheckIntegerValue(parameter1,i1) THEN
 							(* modified: any integer parameter value is allowed, it is in the responsibility of the programmer to adhere to

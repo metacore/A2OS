@@ -414,11 +414,10 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	WIN { Windows.Display.Mod }
 	WIN32C { Coop.Windows.Display.Mod }
 
-	WIN { Windows.WSock32.Mod }
-	WIN32 { Windows.I386.Network.Mod Windows.IP.Mod }
-	WIN64 { Windows.AMD64.Network.Mod Windows.IP.Mod }
-
 	WIN {
+		Windows.WSock32.Mod
+		Windows.Network.Mod
+		Windows.IP.Mod
 		Windows.DNS.Mod
 		Windows.UDP.Mod
 		Windows.TCP.Mod

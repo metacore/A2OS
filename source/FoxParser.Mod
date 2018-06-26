@@ -269,11 +269,25 @@ TYPE
 		END Error;
 
 		(* conditional compilation according to the following syntax *)
-		(* Block = '#' 'if' Expression 'then' Block { '#' 'elsif' Expression 'then' Block } ['#' 'else' Block] '#' 'end' | any token until next new line. *)
+		(* Block = '#' 'if' Condition 'then' Block { '#' 'elsif' Condition 'then' Block } ['#' 'else' Block] '#' 'end' | any token until next new line. *)
 		PROCEDURE GetNextSymbol(VAR symbol: Scanner.Symbol): BOOLEAN;
-		VAR line: Streams.Position; value: BOOLEAN;
+		VAR line: Streams.Position;
+		BEGIN
+			LOOP
+				line := symbol.position.line;
+				IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+				IF (symbol.token = Scanner.Unequal) & (symbol.position.line # line) THEN
+					IF ~ConditionalStatement (symbol) THEN RETURN FALSE END;
+				ELSIF (conditional = Processing) OR (conditional = ProcessingElse) THEN
+					RETURN TRUE;
+				END;
+			END;
+		END GetNextSymbol;
 
-			(* Factor = Identifier | '~' Factor | '(' Expression ')'. *)
+		PROCEDURE ConditionalStatement(VAR symbol: Scanner.Symbol): BOOLEAN;
+		VAR value: BOOLEAN;
+
+			(* Factor = Identifier | '~' Factor | '(' Condition ')'. *)
 			PROCEDURE Factor (VAR value: BOOLEAN): BOOLEAN;
 			VAR i: SIZE;
 			BEGIN
@@ -287,7 +301,7 @@ TYPE
 					value := ~value;
 				ELSIF symbol.token = Scanner.LeftParenthesis THEN
 					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
-					IF ~Expression (value) THEN RETURN FALSE END;
+					IF ~Condition (value) THEN RETURN FALSE END;
 					IF symbol.token # Scanner.RightParenthesis THEN Error (symbol.position, Scanner.RightParenthesis, ""); RETURN FALSE END;
 					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
 				ELSE
@@ -309,8 +323,8 @@ TYPE
 				RETURN TRUE;
 			END Term;
 
-			(* Expression = Term {'or' Term}. *)
-			PROCEDURE Expression (VAR value: BOOLEAN): BOOLEAN;
+			(* Condition = Term {'or' Term}. *)
+			PROCEDURE Condition (VAR value: BOOLEAN): BOOLEAN;
 			VAR next: BOOLEAN;
 			BEGIN
 				IF ~Term (value) THEN RETURN FALSE END;
@@ -320,44 +334,37 @@ TYPE
 					IF next THEN value := TRUE END;
 				END;
 				RETURN TRUE;
-			END Expression;
+			END Condition;
 
 		BEGIN
-			LOOP
-				line := symbol.position.line;
+			IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+			IF symbol.token = Scanner.If THEN
 				IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
-				IF (symbol.token = Scanner.Unequal) & (symbol.position.line # line) THEN
-					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
-					IF symbol.token = Scanner.If THEN
-						IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
-						IF ~Expression (value) THEN RETURN FALSE END;
-						IF symbol.token # Scanner.Then THEN Error (symbol.position, Scanner.Then, ""); RETURN FALSE END;
-						conditionals[conditionalCount] := conditional; INC (conditionalCount);
-						IF (conditional # Processing) & (conditional # ProcessingElse) THEN conditional := Ignoring;
-						ELSIF value THEN conditional := Processing ELSE conditional := Skipping;
-						END;
-					ELSIF symbol.token = Scanner.Elsif THEN
-						IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
-						IF ~Expression (value) THEN RETURN FALSE END;
-						IF symbol.token # Scanner.Then THEN Error (symbol.position, Scanner.Then, ""); RETURN FALSE END;
-						IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := Ignoring;
-						ELSIF conditional = Skipping THEN IF value THEN conditional := Processing ELSE conditional := Skipping END;
-						ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional elsif"); RETURN FALSE END;
-					ELSIF symbol.token = Scanner.Else THEN
-						IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := IgnoringElse;
-						ELSIF conditional = Skipping THEN conditional := ProcessingElse;
-						ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional else"); RETURN FALSE END;
-					ELSIF symbol.token = Scanner.End THEN
-						IF conditionalCount # 0 THEN DEC (conditionalCount); conditional := conditionals[conditionalCount];
-						ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional end"); RETURN FALSE END;
-					ELSE
-						Error(symbol.position,Basic.InvalidCode,"invalid conditional statement"); RETURN FALSE;
-					END;
-				ELSIF (conditional = Processing) OR (conditional = ProcessingElse) THEN
-					RETURN TRUE;
+				IF ~Condition (value) THEN RETURN FALSE END;
+				IF symbol.token # Scanner.Then THEN Error (symbol.position, Scanner.Then, ""); RETURN FALSE END;
+				conditionals[conditionalCount] := conditional; INC (conditionalCount);
+				IF (conditional # Processing) & (conditional # ProcessingElse) THEN conditional := Ignoring;
+				ELSIF value THEN conditional := Processing ELSE conditional := Skipping;
 				END;
+			ELSIF symbol.token = Scanner.Elsif THEN
+				IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+				IF ~Condition (value) THEN RETURN FALSE END;
+				IF symbol.token # Scanner.Then THEN Error (symbol.position, Scanner.Then, ""); RETURN FALSE END;
+				IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := Ignoring;
+				ELSIF conditional = Skipping THEN IF value THEN conditional := Processing ELSE conditional := Skipping END;
+				ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional elsif"); RETURN FALSE END;
+			ELSIF symbol.token = Scanner.Else THEN
+				IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := IgnoringElse;
+				ELSIF conditional = Skipping THEN conditional := ProcessingElse;
+				ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional else"); RETURN FALSE END;
+			ELSIF symbol.token = Scanner.End THEN
+				IF conditionalCount # 0 THEN DEC (conditionalCount); conditional := conditionals[conditionalCount];
+				ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional end"); RETURN FALSE END;
+			ELSE
+				Error(symbol.position,Basic.InvalidCode,"invalid conditional statement"); RETURN FALSE;
 			END;
-		END GetNextSymbol;
+			RETURN TRUE;
+		END ConditionalStatement;
 
 		(** helper procedures interfacing to the scanner **)
 
@@ -1376,8 +1383,14 @@ TYPE
 		BEGIN
 			startPos := symbol.position;
 			end := scanner.SkipToEndOfCode(startPos.start, endPos, symbol);
+			codeString := symbol.string;
+			WHILE (end = Scanner.Unequal) & ConditionalStatement (symbol) DO
+				end := scanner.SkipToEndOfCode(startPos.start, endPos, symbol);
+				IF (conditional = Processing) OR (conditional = ProcessingElse) THEN
+					codeString := Strings.ConcatToNew (codeString^, symbol.string^);
+				END;
+			END;
 			IF (end = Scanner.End) OR (end = Scanner.With) THEN
-				codeString := symbol.string;
 				code := SyntaxTree.NewCode(startPos,outer);
 				i := 0; len := LEN(codeString^);
 				code.SetSourceCode(codeString,len);

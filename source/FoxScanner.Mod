@@ -830,17 +830,16 @@ TYPE
 		END ReadComment;
 
 		PROCEDURE SkipToEndOfCode*(VAR startPos,endPos: LONGINT; VAR symbol: Symbol): Token;
-		VAR s: LONGINT;
+		VAR s: LONGINT; newline: BOOLEAN;
 		BEGIN
 			ASSERT(case # Unknown);
 			stringMaker.Clear;
 			startPos := symbol.position.end;
-			s := symbol.token;
-			WHILE (s # EndOfText) & (s # End) & (s # With) DO
+			s := Code; newline := FALSE;
+			WHILE (s # EndOfText) & (s # End) & (s # With) & (s # Unequal) DO
 				symbol.position := position;
 				endPos := position.start;
-				CASE ch OF
-				'A' .. 'Z','a'..'z': s := Identifier;
+				IF (ch >= 'A') & (ch <= 'Z') OR (ch >= 'a') & (ch <= 'z') THEN
 					GetIdentifier(symbol);
 					IF (case=Uppercase) & (symbol.identifierString = "END") OR (case=Lowercase) & (symbol.identifierString = "end") THEN
 						s := End
@@ -849,7 +848,13 @@ TYPE
 					ELSE
 						stringWriter.String(symbol.identifierString);
 					END;
+				ELSIF (ch = '#') & newline THEN
+					s := Unequal;
+					GetNextCharacter;
 				ELSE
+					IF ch > ' ' THEN newline := FALSE;
+					ELSIF (ch = CR) OR (ch = LF) THEN newline := TRUE;
+					END;
 					stringWriter.Char(ch);
 					GetNextCharacter;
 				END;

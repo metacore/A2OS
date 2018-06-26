@@ -809,7 +809,7 @@ TYPE
 				context.out.Update;
 				scanner := Scanner.NewScanner("", r, 0, diagnostics);
 				scanner.SetCase(Scanner.Lowercase);
-				NEW(parser, scanner, diagnostics); (* silent *) 
+				NEW(parser, scanner, diagnostics, ""); (* silent *) 
 				parser.SetLax;
 				
 				NEW(container);
@@ -855,7 +855,7 @@ TYPE
 					IF parser.error THEN parser.Reset END;
 					parser.NextSymbol;
 					(*NEW(scanner, "",r, 0, diagnostics);
-					NEW(parser, scanner, diagnostics); (* silent *)*)
+					NEW(parser, scanner, diagnostics, ""); (* silent *)*)
 				END;
 				
 				END;

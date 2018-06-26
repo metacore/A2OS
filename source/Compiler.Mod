@@ -42,6 +42,7 @@ TYPE
 		srcPath, destPath: Files.FileName;
 		replacements: SemanticChecker.Replacement;
 		platformCallingConvention: SyntaxTree.CallingConvention;
+		definitions: Options.Parameter;
 	END;
 
 	PROCEDURE ParseReplacements(CONST filename: ARRAY OF CHAR; VAR replacement: SemanticChecker.Replacement; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
@@ -56,7 +57,7 @@ TYPE
 		ELSE
 
 			scanner := Scanner.NewScanner(filename, reader, 0, diagnostics);
-			NEW(parser, scanner, diagnostics);
+			NEW(parser, scanner, diagnostics, "");
 
 			REPEAT (* WHILE parser.Peek(Scanner.Identifier) DO*)
 				identifier := parser.QualifiedIdentifier();
@@ -156,7 +157,7 @@ TYPE
 
 		IF (options.objectFile # NIL) & (options.objectFile.ForceModuleBodies()) THEN INCL(flags, ForceModuleBodies) END;
 
-		options.frontend.Initialize(diagnostics, flags, reader, source, position);
+		options.frontend.Initialize(diagnostics, flags, reader, source, options.definitions, position);
 		REPEAT
 			(** first phase: scan and parse **)
 			module := options.frontend.Parse();
@@ -307,6 +308,7 @@ TYPE
 		options.Add(0X,"replacements", Options.String);
 		options.Add(0X,"cooperative", Options.Flag);
 		options.Add(0X,"platformCC",Options.String);
+		options.Add("d","define",Options.String);
 
 		position := input.Pos();
 		parsed := options.ParseStaged(input, error);
@@ -426,6 +428,7 @@ TYPE
 			IF compilerOptions.objectFile # NIL THEN compilerOptions.objectFile.GetOptions(options) END;
 			IF compilerOptions.documentation # NIL THEN compilerOptions.documentation.GetOptions(options) END;
 			IF options.GetFlag("lineNumbers") THEN INCL(compilerOptions.flags, UseLineNumbers) END;
+			IF ~options.GetString("define", compilerOptions.definitions) THEN compilerOptions.definitions := "" END;
 			IF options.GetString("platformCC", name) THEN
 				IF name = Global.StringC THEN compilerOptions.platformCallingConvention := SyntaxTree.CCallingConvention
 				ELSIF name = Global.StringWinAPI THEN compilerOptions.platformCallingConvention := SyntaxTree.WinAPICallingConvention

@@ -66,6 +66,7 @@ compiler options:
 	-S	--sourcePath	string	specification of a source path
 	-D --destPath		string	specification of a destination path
 	-p 	--platform		string	compiler options for platforms such as ARMA2, Win32, defined in Compiler.Mod
+	-d	--define	string	define comma-separated identifiers for conditional compilation
 
 backend options (intermediate and AMD)
 		--trace			string	display trace information for sections (--trace=* : all sections)

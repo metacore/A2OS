@@ -11,11 +11,11 @@ TYPE
 		
 		PROCEDURE & InitFrontEnd*;
 		BEGIN
-			Initialize(NIL, {}, NIL, "", 0);
+			Initialize(NIL, {}, NIL, "", "", 0);
 		END InitFrontEnd;
 		
 		(* initialize frontend for usage *)
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader;CONST fileName: ARRAY OF CHAR; pos: LONGINT);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader;CONST fileName, definitions: ARRAY OF CHAR; pos: LONGINT);
 		BEGIN
 			SELF.flags := flags;
 		END Initialize;

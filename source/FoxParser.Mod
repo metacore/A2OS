@@ -1,7 +1,7 @@
 MODULE FoxParser;   (**  AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Parser";  **)
 (* (c) fof ETH Zurich, 2009 *)
 
-IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal,  Diagnostics;
+IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Diagnostics, Streams, Strings, StringPool;
 
 CONST
 	Trace = FALSE;	
@@ -182,6 +182,14 @@ TYPE
 		hasSymbol: BOOLEAN;
 		prevPosition-: Position;
 
+		(* conditional compilation *)
+		CONST Processing = 0; ProcessingElse = 1; Skipping = 2; Ignoring = 3; IgnoringElse = 4;
+
+		VAR conditional: WORD;
+		VAR conditionals: ARRAY 10 OF WORD;
+		VAR definitions: ARRAY 10 OF Scanner.IdentifierType;
+		VAR conditionalCount, definitionCount: SIZE;
+
 		PROCEDURE S( CONST s: ARRAY OF CHAR );   (* for debugging purposes only *)
 		VAR i: LONGINT;
 		BEGIN
@@ -209,11 +217,30 @@ TYPE
 		END EE;
 
 		(** constructor, init parser with scanner providing input and with diagnostics for error output *)
-		PROCEDURE & Init*( scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics );
+		PROCEDURE & Init*( scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics; CONST definitions: ARRAY OF CHAR );
+		VAR begin, end: LONGINT (* SIZE! *); definition: ARRAY 32 OF CHAR;
 		BEGIN
+			conditional := Processing;
+			conditionalCount := 0;
+			definitionCount := 0;
+			begin := 0;
+			REPEAT
+				end := Strings.Find (definitions, begin, ',');
+				IF end # -1 THEN
+					Strings.Copy (definitions, begin, end - begin, definition);
+					begin := end + 1;
+				ELSE
+					Strings.Copy (definitions, begin, Strings.Length (definitions) - begin, definition);
+				END;
+				IF definition # "" THEN
+					StringPool.GetIndex (definition, SELF.definitions[definitionCount]);
+					INC (definitionCount);
+				END;
+			UNTIL end = -1;
+
 			SELF.scanner := scanner;
 			SELF.diagnostics := diagnostics;
-			error := ~scanner.GetNextSymbol(symbol);
+			error := ~GetNextSymbol(symbol);
 			hasSymbol := TRUE;
 			IF error THEN Basic.Error(diagnostics, scanner.source^, Basic.invalidPosition, "no input stream") END;
 			recentCommentItem := NIL; recentComment := NIL;
@@ -240,6 +267,97 @@ TYPE
 			Basic.ErrorC(diagnostics, scanner.source^, position, code, message);
 			error := TRUE
 		END Error;
+
+		(* conditional compilation according to the following syntax *)
+		(* Block = '#' 'if' Expression 'then' Block { '#' 'elsif' Expression 'then' Block } ['#' 'else' Block] '#' 'end' | any token until next new line. *)
+		PROCEDURE GetNextSymbol(VAR symbol: Scanner.Symbol): BOOLEAN;
+		VAR line: Streams.Position; value: BOOLEAN;
+
+			(* Factor = Identifier | '~' Factor | '(' Expression ')'. *)
+			PROCEDURE Factor (VAR value: BOOLEAN): BOOLEAN;
+			VAR i: SIZE;
+			BEGIN
+				IF symbol.token = Scanner.Identifier THEN
+					value := FALSE; i := 0;
+					WHILE (i # definitionCount) & ~value DO value := symbol.identifier = definitions[i]; INC (i) END;
+					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+				ELSIF symbol.token = Scanner.Not THEN
+					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+					IF ~Factor (value) THEN RETURN FALSE END;
+					value := ~value;
+				ELSIF symbol.token = Scanner.LeftParenthesis THEN
+					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+					IF ~Expression (value) THEN RETURN FALSE END;
+					IF symbol.token # Scanner.RightParenthesis THEN Error (symbol.position, Scanner.RightParenthesis, ""); RETURN FALSE END;
+					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+				ELSE
+					Error (symbol.position, Scanner.Identifier, ""); RETURN FALSE;
+				END;
+				RETURN TRUE;
+			END Factor;
+
+			(* Term = Factor {'&' Factor}. *)
+			PROCEDURE Term (VAR value: BOOLEAN): BOOLEAN;
+			VAR next: BOOLEAN;
+			BEGIN
+				IF ~Factor (value) THEN RETURN FALSE END;
+				WHILE symbol.token = Scanner.And DO
+					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+					IF ~Factor (next) THEN RETURN FALSE END;
+					IF ~next THEN value := FALSE END;
+				END;
+				RETURN TRUE;
+			END Term;
+
+			(* Expression = Term {'or' Term}. *)
+			PROCEDURE Expression (VAR value: BOOLEAN): BOOLEAN;
+			VAR next: BOOLEAN;
+			BEGIN
+				IF ~Term (value) THEN RETURN FALSE END;
+				WHILE symbol.token = Scanner.Or DO
+					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+					IF ~Term (next) THEN RETURN FALSE END;
+					IF next THEN value := TRUE END;
+				END;
+				RETURN TRUE;
+			END Expression;
+
+		BEGIN
+			LOOP
+				line := symbol.position.line;
+				IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+				IF (symbol.token = Scanner.Unequal) & (symbol.position.line # line) THEN
+					IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+					IF symbol.token = Scanner.If THEN
+						IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+						IF ~Expression (value) THEN RETURN FALSE END;
+						IF symbol.token # Scanner.Then THEN Error (symbol.position, Scanner.Then, ""); RETURN FALSE END;
+						conditionals[conditionalCount] := conditional; INC (conditionalCount);
+						IF (conditional # Processing) & (conditional # ProcessingElse) THEN conditional := Ignoring;
+						ELSIF value THEN conditional := Processing ELSE conditional := Skipping;
+						END;
+					ELSIF symbol.token = Scanner.Elsif THEN
+						IF ~scanner.GetNextSymbol (symbol) THEN RETURN FALSE END;
+						IF ~Expression (value) THEN RETURN FALSE END;
+						IF symbol.token # Scanner.Then THEN Error (symbol.position, Scanner.Then, ""); RETURN FALSE END;
+						IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := Ignoring;
+						ELSIF conditional = Skipping THEN IF value THEN conditional := Processing ELSE conditional := Skipping END;
+						ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional elsif"); RETURN FALSE END;
+					ELSIF symbol.token = Scanner.Else THEN
+						IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := IgnoringElse;
+						ELSIF conditional = Skipping THEN conditional := ProcessingElse;
+						ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional else"); RETURN FALSE END;
+					ELSIF symbol.token = Scanner.End THEN
+						IF conditionalCount # 0 THEN DEC (conditionalCount); conditional := conditionals[conditionalCount];
+						ELSE Error(symbol.position,Basic.InvalidCode,"invalid conditional end"); RETURN FALSE END;
+					ELSE
+						Error(symbol.position,Basic.InvalidCode,"invalid conditional statement"); RETURN FALSE;
+					END;
+				ELSIF (conditional = Processing) OR (conditional = ProcessingElse) THEN
+					RETURN TRUE;
+				END;
+			END;
+		END GetNextSymbol;
 
 		(** helper procedures interfacing to the scanner **)
 
@@ -283,7 +401,7 @@ TYPE
 					END;
 				END;
 				NextSymbol;
-				(*error := ~scanner.GetNextSymbol(symbol);*)
+				(*error := ~GetNextSymbol(symbol);*)
 			END;
 		END SkipComments;
 
@@ -291,7 +409,7 @@ TYPE
 		PROCEDURE NextSymbol*;
 		BEGIN
 			(*
-				error := ~scanner.GetNextSymbol(symbol) OR error;
+				error := ~GetNextSymbol(symbol) OR error;
 				hasSymbol := TRUE;
 				SkipComments();
 			*)
@@ -302,9 +420,9 @@ TYPE
 		BEGIN
 			IF ~hasSymbol OR (symbol.token = Scanner.Escape) THEN
 				prevPosition := symbol.position;
-				error := ~scanner.GetNextSymbol(symbol) OR error;
+				error := ~GetNextSymbol(symbol) OR error;
 				IF symbol.token = Scanner.Escape THEN 
-					error := ~scanner.GetNextSymbol(symbol) OR error;
+					error := ~GetNextSymbol(symbol) OR error;
 				END;
 				hasSymbol := TRUE;
 				SkipComments(FALSE);
@@ -317,7 +435,7 @@ TYPE
 		BEGIN
 			IF ~hasSymbol THEN
 				prevPosition := symbol.position;
-				error := ~scanner.GetNextSymbol(symbol) OR error;
+				error := ~GetNextSymbol(symbol) OR error;
 				hasSymbol := TRUE;
 				SkipComments(TRUE);
 			END;
@@ -2306,6 +2424,7 @@ TYPE
 					*)
 				END;
 			END;
+			IF conditionalCount # 0 THEN Error (symbol.position, Basic.InvalidCode, "missing conditional end"); error := TRUE END;
 			IF Trace THEN E( "Module" ) END;
 			RETURN module
 		END Module;
@@ -2335,10 +2454,10 @@ TYPE
 	END AppendModifier;
 
 	(** parser retrieval **)
-	PROCEDURE NewParser*( scanner: Scanner.Scanner;  diagnostics: Diagnostics.Diagnostics): Parser;
+	PROCEDURE NewParser*( scanner: Scanner.Scanner;  diagnostics: Diagnostics.Diagnostics; CONST definitions: ARRAY OF CHAR): Parser;
 	VAR parser: Parser;
 	BEGIN
-		NEW( parser, scanner, diagnostics );  RETURN parser;
+		NEW( parser, scanner, diagnostics, definitions );  RETURN parser;
 	END NewParser;
 
 END FoxParser.

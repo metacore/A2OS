@@ -20,7 +20,7 @@ TYPE
 			reader := Basic.GetFileReader(fileName);
 			scanner := Scanner.NewScanner(moduleFileName, reader, 0, diagnostics);
 			IF ~scanner.error THEN
-				parser := Parser.NewParser(scanner,NIL);
+				parser := Parser.NewParser(scanner,NIL, "");
 				module := parser.Module();
 				IF parser.error THEN module := NIL END;
 			END;

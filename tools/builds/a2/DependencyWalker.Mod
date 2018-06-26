@@ -9,7 +9,7 @@ BEGIN
 	reader := FoxBasic.GetFileReader (moduleName);
 	IF reader = NIL THEN diagnostics.Error (moduleName, Streams.Invalid, "Failed to open module"); RETURN FALSE END;
 	scanner := FoxScanner.NewScanner (moduleName, reader, 0, diagnostics);
-	NEW (parser, scanner, diagnostics);
+	NEW (parser, scanner, diagnostics, "");
 	module := parser.Module ();
 	IF parser.error THEN RETURN FALSE END;
 	FoxGlobal.ModuleFileName (module.name, module.context, string);

@@ -840,6 +840,7 @@ TYPE
 				symbol.position := position;
 				endPos := position.start;
 				IF (ch >= 'A') & (ch <= 'Z') OR (ch >= 'a') & (ch <= 'z') THEN
+					newline := FALSE;
 					GetIdentifier(symbol);
 					IF (case=Uppercase) & (symbol.identifierString = "END") OR (case=Lowercase) & (symbol.identifierString = "end") THEN
 						s := End

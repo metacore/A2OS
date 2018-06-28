@@ -424,9 +424,9 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 		Windows.CommandLine.Mod	# Command Line Parsing for Windows A2
 	}
 
-	BIOS32 { I386.IP.Mod I386.IPv4.Mod }
-	BIOS64 { AMD64.IP.Mod AMD64.IPv4.Mod }
-	ARM { ARM.IP.Mod ARM.IPv4.Mod }
+	BIOS32 { I386.IP.Mod IPv4.Mod }
+	BIOS64 { AMD64.IP.Mod IPv4.Mod }
+	ARM { ARM.IP.Mod IPv4.Mod }
 
 	NATIVE {
 		IPv6.Mod ICMP.Mod UDP.Mod DNS.Mod	# IP, UDP, TCP

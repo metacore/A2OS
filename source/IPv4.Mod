@@ -689,32 +689,65 @@ VAR
 
 
 (* Return TRUE if "adr1" and "adr2" are in the same subnet defined by "mask". *)
-PROCEDURE -SameSubnet(adr1, adr2, mask: LONGINT): BOOLEAN;
-CODE {SYSTEM.i386}
-	POP ECX
-	POP EBX
-	POP EAX
+PROCEDURE SameSubnet(adr1, adr2, mask: LONGINT): BOOLEAN;
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP + adr1]
+	MOV EBX, [EBP + adr2]
+	MOV ECX, [EBP + mask]
 	AND EAX, ECX
 	AND EBX, ECX
 	CMP EAX, EBX
-	SETZ AL
+	SETE AL
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP + adr1]
+	MOV EBX, [RBP + adr2]
+	MOV ECX, [RBP + mask]
+	AND EAX, ECX
+	AND EBX, ECX
+	CMP EAX, EBX
+	SETE AL
+#ELSIF ARM THEN
+	LDR R0, [FP, #adr1]
+	LDR R1, [FP, #adr2]
+	LDR R2, [FP, #mask]
+	AND R0, R0, R2
+	AND R1, R1, R2
+	CMP R0, R1
+	MOVEQ R0, #1
+	MOVNE R0, #0
+#ELSE
+	unimplemented
+#END
 END SameSubnet;
 
 
 (* Inline hash function for ARP hash table *)
-PROCEDURE -ARPHash(ip: LONGINT): LONGINT;
-CODE {SYSTEM.i386}
-	; hash := ip MOD ARPHashSize;
-	POP EAX
-	; Convert IP to host byte order
+PROCEDURE ARPHash(ip: LONGINT): LONGINT;
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP + ip]
 	XCHG AL, AH
 	ROL EAX, 16
 	XCHG AL, AH
-	; MOD operation
 	MOV EBX, ARPHashSize
 	XOR EDX, EDX
 	DIV EBX
 	MOV EAX, EDX
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP + ip]
+	BSWAP EAX
+	MOV EBX, ARPHashSize
+	XOR EDX, EDX
+	DIV EBX
+	MOV EAX, EDX
+#ELSIF ARM THEN
+	LDR	R0, [SP, #ip]
+	MOV	R1, #ARPHashSize-1
+	AND	R0, R0, R1
+#ELSE
+	unimplemented
+#END
 END ARPHash;
 
 

@@ -51,9 +51,9 @@ typedef struct {  /* cf. Unix.*.Glue.Mod */
 } *Header;
 
 #if defined(__LP64__) || defined(_LP64)
-   char *coreID = "Oberon64G.binary";	/* cf. Unix.AMD64.Glue.Mod */
+   char *coreID = "Oberon64G.binary";	/* cf. Unix.Glue.Mod */
 #else
-   char *coreID = "Oberon32G.binary";	/* cf. Unix.I386.Glue.Mod */
+   char *coreID = "Oberon32G.binary";	/* cf. Unix.Glue.Mod */
 #endif
 
 addr heap;

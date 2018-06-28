@@ -277,10 +277,10 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	LINUX32 { Linux.Glue.Mod Linux.I386.Unix.Mod }
 	LINUX64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
-	DARWIN32 { Unix.I386.Glue.Mod Darwin.I386.Unix.Mod }
-	DARWIN64 { Unix.AMD64.Glue.Mod Darwin.AMD64.Unix.Mod }
-	SOLARIS32 { Unix.I386.Glue.Mod Solaris.I386.Unix.Mod }
-	SOLARIS64 { Unix.AMD64.Glue.Mod Solaris.AMD64.Unix.Mod }
+	DARWIN32 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
+	DARWIN64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
+	SOLARIS32 { Unix.Glue.Mod Solaris.I386.Unix.Mod }
+	SOLARIS64 { Unix.Glue.Mod Solaris.AMD64.Unix.Mod }
 
 	WIN32 { Windows.I386.Kernel32.Mod }
 	WIN64 { Windows.AMD64.Kernel32.Mod }

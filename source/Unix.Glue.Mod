@@ -26,6 +26,7 @@ VAR
 
 	PROCEDURE {INITIAL, NOPAF} Header;		(* header needed by OberonLoader *)
 	CODE
+	#IF I386 THEN
 		DB 'Oberon32G.binary'	; ID (24 byte)
 		DD 0
 		DD 0
@@ -39,6 +40,23 @@ VAR
 		DD @argv			; Loader --> Oberon 
 		DD @environ		; Loader --> Oberon
 		DD @cout			; Loader --> Oberon
+	#ELSIF AMD64 THEN
+		DB 'Oberon64G.binary'	; ID (24 byte)
+		DD 0
+		DD 0
+		DD 0				; size of statially linked binary	( filled in by static linker )
+		DD 0				; # relocations	( filled in by static linker )
+		DQ @Init0		; Loader <-- Oberon (entrypoint)
+		DQ @dlopen		; Loader --> Oberon 
+		DQ @dlclose		; Loader --> Oberon 
+		DQ @dlsym		; Loader --> Oberon 
+		DQ @argc			; Loader --> Oberon 
+		DQ @argv			; Loader --> Oberon 
+		DQ @environ		; Loader --> Oberon
+		DQ @cout			; Loader --> Oberon
+	#ELSE
+		unimplemented
+	#END
 	END Header;		
 	
 	
@@ -52,7 +70,7 @@ VAR
 	VAR val: ADDRESS;
 	BEGIN
 		val := dlsym( handle, ADDRESSOF( name[0] ) );
-		SYSTEM.PUT32( adr, val );	
+		SYSTEM.PUT( adr, val );	
 	END Dlsym;
 	
 	
@@ -78,7 +96,7 @@ END Glue.
 
 Compiler.Compile -p=Linux32
 		I386.Builtins.Mod Trace.Mod 
-		Unix.I386.Glue.Mod  Solaris.I386.Unix.Mod  Unix.I386.Machine.Mod	
+		Unix.Glue.Mod  Solaris.I386.Unix.Mod  Unix.I386.Machine.Mod	
 		Heaps.Mod  Modules.Mod  Solaris.Objects.Mod  Unix.Kernel.Mod
 		KernelLog.Mod  Streams.Mod  Pipes.Mod  Commands.Mod  TrapWriters.Mod  Reflection.Mod	
 		Unix.StdIO.Mod  Unix.Traps.Mod  UTF8Strings.Mod  Files.Mod  Unix.UnixFiles.Mod

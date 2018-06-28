@@ -249,7 +249,7 @@ BEGIN
 		END;
 		pb := pb.next;
 	END;
-	(* now patch header (cf  Unix.I386.Glue.Mod)  *)
+	(* now patch header (cf  Unix.Glue.Mod)  *)
 	w.SetPos( 24 );
 	w.RawLInt( binsize );
 	w.RawLInt( relocations );

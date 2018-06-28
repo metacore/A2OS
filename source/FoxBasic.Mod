@@ -1611,35 +1611,6 @@ TYPE
 
 	END Writer;
 
-	CRC32Stream* = OBJECT(Streams.Writer) (* from CRC.Mod *)
-	VAR
-		crc : LONGINT;
-
-		PROCEDURE  &InitStream*;
-		BEGIN
-			crc := LONGINT(0FFFFFFFFH);
-			InitWriter(Send, 256)
-		END InitStream;
-
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR idx: LONGINT;
-		BEGIN
-			WHILE len > 0 DO
-				idx := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc) / SYSTEM.VAL(SET, LONG(ORD(buf[ofs])))) MOD 100H;
-				crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, CRC32Table[idx])/SYSTEM.VAL(SET, LSH(crc, -8)));
-				DEC(len); INC(ofs)
-			END;
-			res := Streams.Ok
-		END Send;
-
-		PROCEDURE GetCRC*():LONGINT;
-		BEGIN
-			Update();
-			RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc)/{0..31})
-		END GetCRC;
-
-	END CRC32Stream;
-
 	TracingDiagnostics=OBJECT (Diagnostics.Diagnostics)
 	VAR diagnostics: Diagnostics.Diagnostics;
 
@@ -1690,7 +1661,6 @@ VAR
 	getDebugWriter: DebugWriterFactory;
 	getWriter: WriterFactory;
 	getDiagnostics: DiagnosticsFactory;
-	CRC32Table: ARRAY 256 OF SET;
 	invalidPosition-: Position;
 
 	(* Make a string out of a series of characters. *)
@@ -2296,25 +2266,9 @@ VAR
 		NEW(tracing, diagnostics); RETURN tracing
 	END GetTracingDiagnostics;
 
-	PROCEDURE InitTable32;
-	CONST poly = LONGINT(0EDB88320H);
-	VAR n, c, k: LONGINT;
-	BEGIN
-		FOR n := 0 TO 255 DO
-			c := n;
-			FOR k := 0 TO 7 DO
-				IF ODD(c) THEN c := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, poly) / SYSTEM.VAL(SET, LSH(c, -1)))
-				ELSE c := LSH(c, -1)
-				END
-			END;
-			CRC32Table[n] := SYSTEM.VAL(SET, c)
-		END
-	END InitTable32;
-
 BEGIN
 	InitErrorMessages;
 	InitWindowWriter;
-	InitTable32;
 	lists := 0;  enlarged := 0;  strings := 0;
 	emptyString := MakeString("");
 	debug := FALSE;

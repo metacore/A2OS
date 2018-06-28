@@ -275,8 +275,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
 	WIN32C { Windows.Environment.Mod }
 
-	LINUX32 { Linux.I386.Glue.Mod Linux.I386.Unix.Mod }
-	LINUX64 { Linux.AMD64.Glue.Mod Linux.AMD64.Unix.Mod }
+	LINUX32 { Linux.Glue.Mod Linux.I386.Unix.Mod }
+	LINUX64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
 	DARWIN32 { Unix.I386.Glue.Mod Darwin.I386.Unix.Mod }
 	DARWIN64 { Unix.AMD64.Glue.Mod Darwin.AMD64.Unix.Mod }
 	SOLARIS32 { Unix.I386.Glue.Mod Solaris.I386.Unix.Mod }

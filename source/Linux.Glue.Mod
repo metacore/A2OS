@@ -28,6 +28,112 @@ VAR
 
 	PROCEDURE {INITIAL, NOPAF} EntryPoint;
 	CODE
+	#IF I386 THEN
+		; ELF header
+		DB 07FH, 'ELF', 1, 1, 1, 0
+		DD 0, 0
+		DW 02, 03
+		DD 01
+		DD entry + base; program entry point
+		DD elfheadersize
+		DD 0
+		DD 0
+		DW elfheadersize
+		DW 20H
+		DW 3 ; #program header table entries
+		DW 0
+		DW 0
+		DW 0
+
+		elfheadersize:
+
+		; program header
+		DD 1
+		DD 0
+		DD base; 
+		DD base; 
+		DD @last - base; segment size (file)
+		DD @last - base; segment size (memory)
+		DD 07
+		DD 1000H; alignment
+		
+		; interpreter header
+		DD 3
+		DD interpretername; interpreter name offset
+		DD interpretername + base; interpreter name 
+		DD interpretername + base; interpreter name
+		DD interpretername_end - interpretername ; interpreter name length
+		DD interpretername_end - interpretername ; interpreter name length
+		DD 4H
+		DD 1H
+
+		; dynamic header
+		DD 02H
+		DD dynamicsection 
+		DD dynamicsection + base
+		DD dynamicsection + base
+		DD dynamicsection_end - dynamicsection ; size of dynamic section
+		DD dynamicsection_end - dynamicsection ; size of dynamic section
+		DD 06H
+		DD 04H
+
+		dynamicsection:
+		DD 05H, base + stringtable
+		DD 06H, symboltablebegin + base
+		DD 07H, dlsymrelocation + base
+		DD 08H, dlsymrelocation_end-dlsymrelocation ; size (relocationtable)
+		DD 09H, 0CH
+		DD 0AH, stringtable_end - stringtable; size (stringtable)
+		DD 0BH, 10H
+		
+		DD 01H, libname - stringtable; position of libname
+		DD 0H, 0H ; sentinel
+		dynamicsection_end:		
+		
+	 	dlsymrelocation:
+		DD @dlsym
+		DB 01H
+		DB 01H, 00H, 00H; index of the symbol
+		DD 0H
+		dlsymrelocation_end:
+
+		stringtable:
+		DB 0H ; sentinel
+
+		libname:
+		DB 'libdl.so.2', 0
+		
+		dlsymname:
+		DB 'dlsym', 0
+		
+		
+		stringtable_end:
+		
+		ALIGN 4
+		symboltablebegin:
+		DD	0;
+		DD	0
+		DD	0
+		DB	0
+		DB	0
+		DW 0
+		
+		; dlsym symbol
+		DD dlsymname - stringtable; position of dlsymname
+		DD	0
+		DD	0
+		DB	12H ; info: global + function
+		DB 0
+		DW	0
+
+		interpretername:
+		DB '/lib/ld-linux.so.2', 0
+		interpretername_end:
+
+		ALIGN 4
+
+		entry:
+	#ELSIF AMD64 THEN
 		; ELF header
 		DB 07FH, 'ELF', 2, 1, 1, 0
 		DD 0, 0
@@ -132,6 +238,9 @@ VAR
 		ALIGN 8
 
 		entry:
+	#ELSE
+		unimplemented
+	#END
 	END EntryPoint;
 
 	(*
@@ -144,12 +253,23 @@ VAR
 
 	PROCEDURE {NOPAF} putc*(file: ADDRESS; c: CHAR);
 	CODE
+	#IF I386 THEN
+		MOV EAX, 4
+		MOV EBX, [ESP + 8]
+		LEA ECX, [ESP + 4]
+		MOV EDX, 1
+		INT 80H
+		RET
+	#ELSIF AMD64 THEN
 		MOV EAX, 1
 		MOV RDI, [RSP + 16]
 		LEA RSI, [RSP + 8]
 		MOV RDX, 1
 		SYSCALL
 		RET
+	#ELSE
+		unimplemented
+	#END
 	END putc;
 
 	PROCEDURE Dlsym*(handle: ADDRESS; CONST name: ARRAY OF CHAR; adr: ADDRESS);
@@ -185,12 +305,26 @@ VAR
 	
 	PROCEDURE {INITIAL,NOPAF} Init0;
 	BEGIN
-		(*initial stack layout:
-			argc at rsp
-			argv at rsp+8
-			0 at rsp+8+argc*8
-			env at rsp+8+argc*8+8      =   (2+argc)<<3 + rsp*)
-		CODE{SYSTEM.AMD64}
+		CODE
+		#IF I386 THEN
+			; argc at esp
+			; argv at esp+4
+			; 0 at esp+4+argc*4
+			; env at esp+4+argc*4+4 = (2+argc)<<2 + esp
+			MOV EAX, [ESP]
+			MOV argc, EAX
+			LEA EAX, [ESP+4]
+			MOV argv, EAX
+			MOV EAX, [ESP]
+			ADD EAX, 2
+			SHL EAX, 2
+			ADD EAX, ESP
+			MOV environ, EAX
+		#ELSIF AMD64 THEN
+			; argc at rsp
+			; argv at rsp+8
+			; 0 at rsp+8+argc*8
+			; env at rsp+8+argc*8+8 = (2+argc)<<3 + rsp
 			MOV RAX, [RSP]
 			MOV argc, RAX
 			LEA RAX, [RSP+8]
@@ -200,6 +334,9 @@ VAR
 			SHL RAX, 3
 			ADD RAX, RSP
 			MOV environ, RAX
+		#ELSE
+			unimplemented
+		#END
 		END;
 		Init;
 	END Init0;
@@ -212,7 +349,7 @@ System.FreeDownTo FoxIntermediateBackend ~
 
 System.DoCommands
 	Compiler.Compile -p=Linux32
-		I386.Builtins.Mod Trace.Mod Linux.I386.Glue.Mod Linux.I386.Unix.Mod Unix.I386.Machine.Mod Heaps.Mod  Modules.Mod 
+		I386.Builtins.Mod Trace.Mod Linux.Glue.Mod Linux.I386.Unix.Mod Unix.I386.Machine.Mod Heaps.Mod  Modules.Mod 
 		Unix.Objects.Mod 
 		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
 		Pipes.Mod Commands.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 

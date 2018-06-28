@@ -475,8 +475,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	NATIVE { SCSI.Mod }
 
-	BIOS32 { BIOS.I386.ATADisks.Mod }
-	BIOS64 { BIOS.AMD64.ATADisks.Mod }
+	BIOS { BIOS.ATADisks.Mod }
 
 	# Adaptec SCSI driver
 	BIOS32 { BIOS.I386.Adaptec7Script.Mod }

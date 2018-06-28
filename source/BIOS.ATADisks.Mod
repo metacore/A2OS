@@ -353,9 +353,9 @@ TYPE
 			LOOP
 				IF TraceVerbose & (trace * TraceBuffer # {}) THEN KernelLog.String("    "); KernelLog.Hex(bufAdr, 0); END;
 				IF ~GetPhysAdr(bufAdr, 1, physAdr) THEN Show("Setup PRD failed (GetPhysAdr)"); KernelLog.Ln; RETURN Res_Err; END;
-				command.prdt.prd[i].physAdr := physAdr;
+				command.prdt.prd[i].physAdr := Machine.Ensure32BitAddress (physAdr);
 				IF TraceVerbose & (trace * TraceBuffer # {}) THEN KernelLog.String(", "); KernelLog.Hex(physAdr, 0); END;
-				left := 65536 - physAdr MOD 65536;	(* should not cross 64k boundary (sec. 3.5.3) *)
+				left := 65536 - Machine.Ensure32BitAddress (physAdr MOD 65536);	(* should not cross 64k boundary (sec. 3.5.3) *)
 				IF TraceVerbose & (trace * TraceBuffer # {})THEN KernelLog.String(", ("); KernelLog.Hex(left, 0); END;
 
 				(* Calculate the max. contiguous physical memory *)
@@ -927,7 +927,7 @@ TYPE
 			try := 3;
 			REPEAT
 				NEW(prdt);	(* must not cross page boundary, see Intel 290550-002 sec. 2.7.3 *)
-				prdtPhysAdr := Machine.PhysicalAdr(ADDRESSOF(prdt.prd[0]), MaxPRD*8);
+				prdtPhysAdr := Machine.Ensure32BitAddress (Machine.PhysicalAdr(ADDRESSOF(prdt.prd[0]), MaxPRD*8));
 				DEC(try);
 			UNTIL (try = 0) OR ((prdtPhysAdr # Machine.NilAdr) &
 				(prdtPhysAdr DIV PageSize = (prdtPhysAdr+MaxPRD*8-1) DIV PageSize));
@@ -1911,7 +1911,8 @@ VAR
 (* Block port input instruction. *)
 
 PROCEDURE RepInWord(port, bufAdr: ADDRESS; len: SIZE);
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	PUSH	ECX
 	MOV	EDX, [EBP + port]
 	MOV	EDI, [EBP + bufAdr]
@@ -1919,12 +1920,24 @@ CODE {SYSTEM.i386}
 	CLD
 	REP	INSW
 	POP	ECX
+#ELSIF AMD64 THEN
+	PUSH	RCX
+	MOV	RDX, [RBP + port]
+	MOV	RDI, [RBP + bufAdr]
+	MOV	RCX, [RBP + len]
+	CLD
+	REP	INSW
+	POP	RCX
+#ELSE
+	unimplemented
+#END
 END RepInWord;
 
 (* Block port out instruction. *)
 
 PROCEDURE RepOutWord(port, bufAdr: ADDRESS; len: SIZE);
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	PUSH	ECX
 	MOV	EDX, [EBP + port]
 	MOV	ESI, [EBP + bufAdr]
@@ -1932,6 +1945,17 @@ CODE {SYSTEM.i386}
 	CLD
 	REP	OUTSW
 	POP	ECX
+#ELSIF AMD64 THEN
+	PUSH	RCX
+	MOV	RDX, [RBP + port]
+	MOV	RSI, [RBP + bufAdr]
+	MOV	RCX, [RBP + len]
+	CLD
+	REP	OUTSW
+	POP	RCX
+#ELSE
+	unimplemented
+#END
 END RepOutWord;
 
 PROCEDURE ResetCommand(cmd: Command; size: SIZE);

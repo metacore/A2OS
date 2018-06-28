@@ -793,6 +793,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	ShellCommands.Mod Telnet.Mod	# Telnet Shell (currently broken)
 
+	BIOS32 { I386.MemInfo.Mod }
 	BIOS, WIN { Info.Mod }
 
 	TFClasses.Mod Mail.Mod SMTPClient.Mod

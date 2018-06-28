@@ -349,8 +349,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	UNIX { Unix.Clock.Mod }
 
 	# Memory cache control
-	BIOS32 { BIOS.I386.MemCache.Mod }
-	BIOS64 { BIOS.AMD64.MemCache.Mod }
+	BIOS { BIOS.MemCache.Mod }
 	COOP { Coop.MemCache.Mod }
 
 	# Block device interface

@@ -22,66 +22,121 @@ TYPE
 (* Return the value of the MTTRcap register. *)
 
 PROCEDURE -GetMTTRcapLow(): SET;
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
 	MOV ECX, 0FEH	; MTTRcap
 	RDMSR
+#ELSIF AMD64 THEN
+	XOR RAX, RAX
+	MOV ECX, 0FEH	; MTTRcap
+	RDMSR
+#ELSE
+	unimplemented
+#END	
 END GetMTTRcapLow;
 
 (*
 (* Return the value of the MTTRdefType register. *)
 
 PROCEDURE -GetMTTRdefTypeLow(): SET;
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
+	MOV ECX, 2FFH	; MTTRdefType
+	RDMSR
+#ELSIF AMD64 THEN
 	XOR RAX, RAX
 	MOV ECX, 2FFH	; MTTRdefType
 	RDMSR
+#ELSE
+	unimplemented
+#END	
 END GetMTTRdefTypeLow;
 *)
 
 (* Return the value of the specified MTTRphysBase register. *)
 
 PROCEDURE -GetMTTRphysBaseLow(n: ADDRESS): SET;
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
+	POP ECX
+	SHL ECX, 1
+	ADD ECX, 200H	; MTTRphysBase0
+	RDMSR
+#ELSIF AMD64 THEN
 	XOR RAX, RAX
 	POP RCX
 	SHL RCX, 1
 	ADD RCX, 200H	; MTTRphysBase0
 	RDMSR
+#ELSE
+	unimplemented
+#END	
 END GetMTTRphysBaseLow;
 
 (* Return the value of the specified MTTRphysMask register. *)
 
 PROCEDURE -GetMTTRphysMaskLow(n: ADDRESS): SET;
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
+	POP ECX
+	SHL ECX, 1
+	ADD ECX, 201H	; MTTRphysMask0
+	RDMSR
+#ELSIF AMD64 THEN
 	XOR RAX, RAX
 	POP RCX
 	SHL RCX, 1
 	ADD RCX, 201H	; MTTRphysMask0
 	RDMSR
+#ELSE
+	unimplemented
+#END	
 END GetMTTRphysMaskLow;
 
 (* Set the specified MTTRphysBase register. *)
 
 PROCEDURE -SetMTTRphysBase(n: ADDRESS; high, low: SET);
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
+	POP EAX
+	POP EDX
+	POP ECX
+	SHL ECX, 1
+	ADD ECX, 200H	; MTTRphysBase0
+	WRMSR
+#ELSIF AMD64 THEN
 	POP RAX
 	POP RDX
 	POP RCX
 	SHL RCX, 1
 	ADD RCX, 200H	; MTTRphysBase0
 	WRMSR
+#ELSE
+	unimplemented
+#END	
 END SetMTTRphysBase;
 
 (* Set the specified MTTRphysMask register. *)
 
 PROCEDURE -SetMTTRphysMask(n: ADDRESS; high, low: SET);
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
+	POP EAX
+	POP EDX
+	POP ECX
+	SHL ECX, 1
+	ADD ECX, 201H	; MTTRphysMask0
+	WRMSR
+#ELSIF AMD64 THEN
 	POP RAX
 	POP RDX
 	POP RCX
 	SHL RCX, 1
 	ADD RCX, 201H	; MTTRphysMask0
 	WRMSR
+#ELSE
+	unimplemented
+#END	
 END SetMTTRphysMask;
 
 (** Set the cache properties of the specified physical memory area on the current processor. {physAdr, size MOD PS = 0}  Must be called from supervisor mode. *)

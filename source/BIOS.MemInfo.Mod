@@ -19,16 +19,30 @@ VAR
 	msrlow, msrhigh: SET;
 
 PROCEDURE GetCR3(VAR state: Machine.State);
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
+	MOV EAX, CR3
+	MOV kernelPD, EAX
+#ELSIF AMD64 THEN
 	MOV RAX, CR3
 	MOV RBX, kernelPD
 	MOV [RBX], RAX
+#ELSE
+	unimplemented
+#END
 END GetCR3;
 
 PROCEDURE -DoSoftInt(eax: LONGINT);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
 	POP EAX
 	INT SoftInt
+#ELSIF AMD64 THEN
+	POP EAX
+	INT SoftInt
+#ELSE
+	unimplemented
+#END
 END DoSoftInt;
 
 (* Display mapped ranges. *)
@@ -88,19 +102,36 @@ BEGIN
 	KernelLog.String(s); KernelLog.Char("="); KernelLog.Bits(x, ofs, n)
 END Bits;
 
-PROCEDURE -RealReadMSR(msr: HUGEINT; VAR low, high: SET);
-CODE {SYSTEM.AMD64, SYSTEM.Privileged}
+PROCEDURE -RealReadMSR(msr: LONGWORD; VAR low, high: SET);
+CODE
+#IF I386 THEN
+	POP EDI
+	POP ESI
+	POP ECX
+	RDMSR
+	MOV [ESI], EAX
+	MOV [EDI], EDX
+#ELSIF AMD64 THEN
 	POP RDI
 	POP RSI
-	POP RCX
+	POP ECX
 	RDMSR
 	MOV [RSI], EAX
 	MOV [RDI], EDX
+#ELSE
+	unimplemented
+#END
 END RealReadMSR;
 
 PROCEDURE IntReadMSR(VAR state: Machine.State);
 BEGIN
-	RealReadMSR(state.RAX, msrlow, msrhigh)
+#IF I386 THEN
+	RealReadMSR(state.EAX, msrlow, msrhigh);
+#ELSIF AMD64 THEN
+	RealReadMSR(state.RAX, msrlow, msrhigh);
+#ELSE
+	unimplemented
+#END
 END IntReadMSR;
 
 PROCEDURE ReadMSR(msr: LONGINT; VAR low, high: SET);
@@ -243,7 +274,7 @@ BEGIN
 END Test2;
 
 PROCEDURE Test3*;
-VAR res: WORD;
+VAR res: LONGINT;
 BEGIN
 	Processors.GlobalSetCacheProperties(0FA800000H, 800000H, Machine.WC, res);
 	KernelLog.Enter; KernelLog.String("SetCache "); KernelLog.Int(res, 1); KernelLog.Exit

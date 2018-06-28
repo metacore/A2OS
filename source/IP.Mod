@@ -873,7 +873,7 @@ BEGIN
 	CASE ORD(buffer.data[buffer.l3ofs]) DIV 16 OF
 		IPv4:
 			adr.usedProtocol := IPv4;
-			adr.ipv4Adr := SYSTEM.VAL(LONGINT, buffer.data[buffer.l3ofs+12]);
+			SYSTEM.MOVE(ADDRESSOF(buffer.data[buffer.l3ofs+12]),ADDRESSOF(adr.ipv4Adr),4); (* data might be unaligned *)
 			SetIPv6AdrNil(adr);
 			RETURN adr;
 
@@ -904,7 +904,7 @@ BEGIN
 	CASE ORD(buffer.data[buffer.l3ofs]) DIV 16 OF
 		IPv4:
 			adr.usedProtocol := IPv4;
-			adr.ipv4Adr := SYSTEM.VAL(LONGINT, buffer.data[buffer.l3ofs+16]);
+			SYSTEM.MOVE(ADDRESSOF(buffer.data[buffer.l3ofs+16]),ADDRESSOF(adr.ipv4Adr),4); (* data might be unaligned *)
 			SetIPv6AdrNil(adr);
 			RETURN adr;
 
@@ -927,11 +927,27 @@ END DestAdrFromBuffer;
 
 (* Swap internal representation of an IP address from big to little endian or vice versa. *)
 PROCEDURE -SwapEndian(VAR adr: LONGINT);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP EAX
+	MOV ECX, [EAX]
+	XCHG CL, CH
+	ROL ECX, 16
+	XCHG CL, CH
+	MOV [EAX], ECX
+#ELSIF AMD64 THEN
 	POP RAX
 	MOV ECX, [RAX]
 	BSWAP ECX
 	MOV [RAX], ECX
+#ELSIF ARM THEN
+	LDMIA	SP!, {R0}
+	LDR	R1, [R0, #0]
+	REV	R1, R1
+	STR	R1, [R0, #0]
+#ELSE
+	unimplemented
+#END
 END SwapEndian;
 
 
@@ -1002,11 +1018,27 @@ END IPConfig;
 	operation. Carries from bit 15 are accumulated in the top 16 bits, so at most 65535 words can be
 	summed by Checksum1 and Checksum2 together. *)
 PROCEDURE Checksum1*(CONST data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): LONGINT;
-CODE {SYSTEM.AMD64}
-	MOV EAX, [RBP + chk1]
-	MOV RBX, [RBP + data]
-	ADD EBX, [RBP + ofs]
-	MOV ECX, [RBP + len]
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP+chk1]
+	MOV EBX, [EBP+data]
+	ADD EBX, [EBP+ofs]
+	MOV ECX, [EBP+len]
+	SHR ECX, 1
+	JNC sloop
+	PUSH 8	; ASSERT(~ODD(len))
+	INT 3
+sloop:
+	MOVZX EDX, WORD [EBX]
+	ADD EAX, EDX
+	ADD EBX, 2
+	DEC ECX
+	JNZ sloop
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP+chk1]
+	MOV RBX, [RBP+data]
+	ADD EBX, [RBP+ofs]
+	MOV ECX, [RBP+len]
 	SHR ECX, 1
 	JNC sloop
 	PUSH 8	; ASSERT(~ODD(len))
@@ -1017,13 +1049,62 @@ sloop:
 	ADD RBX, 2
 	DEC ECX
 	JNZ sloop
+#ELSIF ARM THEN
+	LDR R0, [FP, #chk1]
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #len]
+	LDR R3, [FP, #data] ; LDR R3, [FP, #20]
+	ADD R3, R3, R1
+	AND R4, R2, #1
+	LSR R2, R2, #1 ; number of 16-bit words to process
+	CMP R4, #0
+	BEQ WordLoop
+	SWI #8 ; ASSERT(~ODD(length))
+WordLoop: ; sum up the words
+	LDRH R4, [R3, #0]
+	ADD R0, R0, R4
+	ADD R3, R3, #2
+	SUB R2, R2, #1
+	CMP R2, #0
+	BNE WordLoop
+#ELSE
+	unimplemented
+#END
 END Checksum1;
 
 
 (** 	Continue a checksum operation. len can be zero or odd. chk1 can be the result of Checksum1 for
 	the immediately preceding data, or 0 for contiguous data. *)
 PROCEDURE Checksum2*(CONST data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): INTEGER;
-	CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP+chk1]
+	MOV EBX, [EBP+data]
+	ADD EBX, [EBP+ofs]
+	MOV ECX, [EBP+len]
+	SHR ECX, 1
+	JZ eloop
+sloop:
+	MOVZX EDX, WORD [EBX]
+	ADD EAX, EDX
+	ADD EBX, 2
+	DEC ECX
+	JNZ sloop
+eloop:
+	TEST [EBP+len], 1	; check for odd length
+	JZ even
+	MOVZX EDX, BYTE [EBX]	; add last byte
+	ADD EAX, EDX
+even:
+	MOV ECX, EAX	; now add in all the carries
+	SHR ECX, 16
+	AND EAX, 0FFFFH
+	ADD EAX, ECX
+	MOV ECX, EAX	; add in additional carry
+	SHR ECX, 16
+	ADD EAX, ECX	; result is in low 16 bits of EAX
+	NOT EAX
+#ELSIF AMD64 THEN
 	MOV EAX, [RBP + chk1]
 	MOV RBX, [RBP + data]
 	ADD EBX, [RBP + ofs]
@@ -1050,19 +1131,77 @@ even:
 	SHR ECX, 16
 	ADD EAX, ECX	; result is in low 16 bits of EAX
 	NOT EAX
+#ELSIF ARM THEN
+	LDR	R0, [FP, #chk1]
+	LDR	R1, [FP, #20] ; LDR R1, [FP, #data]
+	LDR	R2, [FP, #ofs]
+	LDR	R3, [FP, #len]
+	ADD	R1, R1, R2
+	LSR	R4, R3, #1 ; number of 16-bit words to process
+	CMP	R4, #0
+	BEQ	Remainder
+WordLoop: ; sum up the words
+	LDRH	R5, [R1, #0]
+	ADD	R0, R0, R5
+	ADD	R1, R1, #2
+	SUB	R4, R4, #1
+	CMP	R4, #0
+	BNE	WordLoop
+	ANDS R5, R3, #1 ; if len is even
+	BEQ WrapUp
+Remainder: ; addition of the remaining byte
+	LDRB	R5, [R1, #0]
+	ADD	R0, R0, R5
+WrapUp: ; 32-bit sum is in R0
+	LDR	R7, [PC, #WordMask - $ - 8] ; load the 16-bit word mask
+	LSR	R6, R0, 16 ; upper 16 bits of R0 is the carry
+	AND	R0, R0, R7
+	ADD	R0, R0, R6
+	LSR	R6, R0, 16 ; upper 16 bits of R0 is the carry
+	AND	R0, R0, R7
+	ADD	R0, R0, R6
+	EOR	R0, R0, R7 ; negate the bits of the resulted 16-bit word
+	B		end
+data:
+	WordMask:	d32 0FFFFH
+end:
+#ELSE
+	unimplemented
+#END
 END Checksum2;
 
 
 (* Return TRUE if "adr1" and "adr2" are in the same subnet defined by "mask". Only for IPv4 *)
 PROCEDURE SameSubnetv4(adr1, adr2, mask: LONGINT): BOOLEAN;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP + adr1]
+	MOV EBX, [EBP + adr2]
+	MOV ECX, [EBP + mask]
+	AND EAX, ECX
+	AND EBX, ECX
+	CMP EAX, EBX
+	SETE AL
+#ELSIF AMD64 THEN
 	MOV EAX, [RBP + adr1]
 	MOV EBX, [RBP + adr2]
 	MOV ECX, [RBP + mask]
 	AND EAX, ECX
 	AND EBX, ECX
 	CMP EAX, EBX
-	SETZ AL
+	SETE AL
+#ELSIF ARM THEN
+	LDR R0, [FP, #adr1]
+	LDR R1, [FP, #adr2]
+	LDR R2, [FP, #mask]
+	AND R0, R0, R2
+	AND R1, R1, R2
+	CMP R0, R1
+	MOVEQ R0, #1
+	MOVNE R0, #0
+#ELSE
+	unimplemented
+#END
 END SameSubnetv4;
 
 

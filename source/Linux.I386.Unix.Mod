@@ -421,11 +421,12 @@ VAR
 	pthread_cond_wait: PROCEDURE {C} (cond: ADDRESS; mutex: ADDRESS): WORD;
 	pthread_cond_signal: PROCEDURE {C} (cond: ADDRESS): WORD;
 
-	pthread_create: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): WORD;
-	pthread_exit: PROCEDURE {C} (thr: ADDRESS);
+	pthread_create-: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: ADDRESS; arg: PROCEDURE): WORD;
+	pthread_exit-: PROCEDURE {C, NORETURN} (thr: ADDRESS);
 	pthread_detach: PROCEDURE {C} (thr: ADDRESS);
 	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
 	pthread_cancel: PROCEDURE {C} (thr: ADDRESS);
+	pthread_join-: PROCEDURE {C} (thread: Thread_t; return: ADDRESS): WORD;
 	
 	pthread_key_create	: PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): WORD;
 	pthread_setspecific	: PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
@@ -435,7 +436,7 @@ VAR
 	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD);
 	pthread_attr_setdetachstate: PROCEDURE {C}(attr: ADDRESS; set: WORD);
 	pthread_attr_setstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: SIZE);
-	pthread_self: PROCEDURE {C} (): Thread_t;
+	pthread_self-: PROCEDURE {C} (): Thread_t;
 
 	sched_get_priority_max: PROCEDURE {C} (policy: LONGINT): LONGINT;
 	sched_get_priority_min: PROCEDURE {C} (policy: LONGINT): LONGINT;
@@ -452,6 +453,18 @@ VAR
 	nanosleep: PROCEDURE {C} (req, rem: ADDRESS): LONGINT;
 	sigaltstack: PROCEDURE {C} (ss, oss: ADDRESS): LONGINT;
 	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS): LONGINT;
+
+	sem_init-: PROCEDURE {C} (sem: ADDRESS; pshared: WORD; value: WORD): WORD;
+	sem_wait-: PROCEDURE {C} (sem: ADDRESS): WORD;
+	sem_post-: PROCEDURE {C} (sem: ADDRESS): WORD;
+	sem_destroy-: PROCEDURE {C} (sem: ADDRESS): WORD;
+
+	pthread_barrier_init-: PROCEDURE {C} (barrier: ADDRESS; attr: ADDRESS; count: WORD): WORD;
+	pthread_barrier_wait-: PROCEDURE {C} (barrier: ADDRESS): WORD;
+	pthread_barrier_destroy-: PROCEDURE {C} (barrier: ADDRESS): WORD;
+
+	pthread_getaffinity_np-: PROCEDURE {C} (thread: Thread_t; cpusetsize: SIZE; cpuset: ADDRESS): WORD;
+	pthread_setaffinity_np-: PROCEDURE {C} (thread: Thread_t; cpusetsize: SIZE; cpuset: ADDRESS): WORD;
 
 	(*pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
 	posix_spawnp- 	: PROCEDURE{C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS): LONGINT;
@@ -476,15 +489,15 @@ VAR
 	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
 	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): LONGINT;
-	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS): ADDRESS;
+	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS ): ADDRESS;
 
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
 	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): LONGINT;
 	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): LONGINT;
 
 	xstat-			: PROCEDURE {C} ( ver: LONGINT; name: ADDRESS;  VAR buf: Status ): LONGINT;
-	lxstat-			: PROCEDURE {C} ( ver: LONGINT; name: ADDRESS;  VAR buf: Status ): LONGINT;
-	fxstat-			: PROCEDURE {C} ( ver: LONGINT; fd: LONGINT;  VAR buf: Status ): LONGINT;
+	lxstat-		: PROCEDURE {C} ( ver: LONGINT; name: ADDRESS;  VAR buf: Status ): LONGINT;
+	fxstat-		: PROCEDURE {C} ( ver: LONGINT; fd: LONGINT;  VAR buf: Status ): LONGINT;
 
 	getpid-		: PROCEDURE {C} ( ): LONGINT;
 	getuid-		: PROCEDURE {C} ( ): LONGINT;
@@ -497,7 +510,8 @@ VAR
 	alarm-		: PROCEDURE {C} ( ms: LONGINT ): LONGINT;
 	setitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value, ovalue: Itimerval ): LONGINT;
 	getitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value: Itimerval ): LONGINT;
-	clock_gettime-	: PROCEDURE{C}	(clk_id: LONGINT; tp: tvPtr): LONGINT;
+	clock_gettime-	: PROCEDURE {C} (clk_id: WORD; tp: ADDRESS): WORD;
+	clock_getres-	: PROCEDURE {C} (clk_id: WORD; res: ADDRESS): WORD;
 
 	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): LONGINT;
 	mktime-			: PROCEDURE {C} ( VAR tm: Tm ): LONGINT;
@@ -749,7 +763,6 @@ VAR
 			END
 		END;
     END ThrKill;
-
 
 	PROCEDURE {C} resume_handler( sig: LONGINT );
 	BEGIN
@@ -1014,7 +1027,7 @@ VAR
 		RETURN 0;
 	END X11ErrorHandler;
 
-	PROCEDURE X11IOErrorHandler(d: ADDRESS): WORD;
+	PROCEDURE {C} X11IOErrorHandler(d: ADDRESS): WORD;
 	VAR res: WORD;
 	BEGIN
 		TRACE(d);
@@ -1075,6 +1088,7 @@ VAR
 		Dlsym( libp, "pthread_detach", ADDRESSOF(pthread_detach) );
 		Dlsym( libp, "pthread_cancel", ADDRESSOF(pthread_cancel) );
 		Dlsym( libp, "pthread_kill", ADDRESSOF(pthread_kill) );
+		Dlsym( libp, "pthread_join", ADDRESSOF(pthread_join) );
 		
 		Dlsym( libp, "pthread_key_create", ADDRESSOF( pthread_key_create ) );
 		Dlsym( libp, "pthread_getspecific", ADDRESSOF( pthread_getspecific ) );
@@ -1088,6 +1102,18 @@ VAR
 		Dlsym( libp, "pthread_attr_setdetachstate", ADDRESSOF(pthread_attr_setdetachstate) );
 		Dlsym( libp, "pthread_attr_setstacksize", ADDRESSOF(pthread_attr_setstacksize) );
 		Dlsym( libp, "pthread_self", ADDRESSOF(pthread_self) );
+
+		Dlsym( libp, "sem_init", ADDRESSOF(sem_init) );
+		Dlsym( libp, "sem_wait", ADDRESSOF(sem_wait) );
+		Dlsym( libp, "sem_post", ADDRESSOF(sem_post) );
+		Dlsym( libp, "sem_destroy", ADDRESSOF(sem_destroy) );
+
+		Dlsym( libp, "pthread_barrier_init", ADDRESSOF(pthread_barrier_init) );
+		Dlsym( libp, "pthread_barrier_wait", ADDRESSOF(pthread_barrier_wait) );
+		Dlsym( libp, "pthread_barrier_destroy", ADDRESSOF(pthread_barrier_destroy) );
+
+		Dlsym( libp, "pthread_getaffinity_np", ADDRESSOF(pthread_getaffinity_np) );
+		Dlsym( libp, "pthread_setaffinity_np", ADDRESSOF(pthread_setaffinity_np) );
 
 		Dlsym( libc, "posix_spawnp", ADDRESSOF(posix_spawnp) );
 		Dlsym( libc, "posix_spawn", ADDRESSOF(posix_spawn) );
@@ -1141,6 +1167,7 @@ VAR
 		Dlsym( libc, "setitimer",	ADDRESSOF( setitimer ) );
 		Dlsym( libc, "getitimer",	ADDRESSOF( getitimer ) );
 		Dlsym( libc, "clock_gettime", ADDRESSOF(clock_gettime) );
+		Dlsym( libc, "clock_getres", ADDRESSOF(clock_getres) );
 
 		Dlsym( libc, "gettimeofday", ADDRESSOF( gettimeofday ) );
 		Dlsym( libc, "mktime",		ADDRESSOF( mktime ) );

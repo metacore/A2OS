@@ -82,13 +82,24 @@ BEGIN
 END LoadPatches;
 
 PROCEDURE SeqProgram(): ADDRESS;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	CALL L1
 L1:
 	POP EAX
 	ADD EAX, L2 - L1
 	POP EBP
 	RET
+#ELSIF AMD64 THEN
+	CALL L1
+L1:
+	POP RAX
+	ADD RAX, L2 - L1
+	POP RBP
+	RET
+#ELSE
+	unimplemented
+#END
 L2:
 	; sequencer program, from Linux  aic7xxx_seq.c
 	DD 008066AFFH, 00804027FH, 000006A32H, 000006A12H

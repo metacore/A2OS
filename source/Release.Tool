@@ -1235,8 +1235,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 		BluetoothTest.Mod
 	}
 
-	BIOS32 { BIOS.I386.BenchInterrupts.Mod }
-	BIOS64 { BIOS.AMD64.BenchInterrupts.Mod }
+	BIOS { BIOS.BenchInterrupts.Mod }
 
 	BenchTCP.Mod
 

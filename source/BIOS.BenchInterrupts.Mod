@@ -36,8 +36,14 @@ END InterruptHandler;
 
 (* Software interrupt call *)
 PROCEDURE -SoftwareInterrupt;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
 	INT InterruptVectorNumber
+#ELSIF AMD64 THEN
+	INT InterruptVectorNumber
+#ELSE
+	unimplemented
+#END
 END SoftwareInterrupt;
 
 (** Start the 1st Level Interrupt Handler latency benchmark *)

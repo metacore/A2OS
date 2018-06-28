@@ -1126,7 +1126,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 
 	HotKeysCommands.Mod
 
-	I386 { I386.VMWareTools.Mod }		# VMWare
+	BIOS { VMWareTools.Mod }		# VMWare
 	SynergyClient.Mod			# Synergy
 
 	NATIVE {

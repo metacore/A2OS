@@ -13825,7 +13825,6 @@ TYPE
 			NEW(crc);
 			module.allSections.WriteRaw(crc);
 			crc.Update;
-			meta.PatchCRC(crc.GetCRC());
 			
 			RETURN module
 		END GenerateIntermediate;

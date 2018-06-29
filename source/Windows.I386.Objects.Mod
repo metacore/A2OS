@@ -314,7 +314,6 @@ TYPE
 					p := p.next
 				END;
 
-
 				Machine.Release(Machine.Heaps);
 				Machine.Release(Machine.Objects);
 				time := Kernel32.GetTickCount()-time;
@@ -830,7 +829,6 @@ BEGIN
 	Kernel32.Sleep(999999);   (* wait until dependent threads terminated *)
 END TerminateProc;
 
-
 (* Allocate a new process associated with "obj". Must be outside lock region, because of potential GC. *)
 PROCEDURE NewProcess(body: Body; priority: LONGINT;  flags: SET; obj: ProtectedObject; VAR new: Process);
 VAR t,r: Process;  fn: Heaps.FinalizerNode;
@@ -1221,7 +1219,7 @@ END CancelTimeout;
 PROCEDURE InitEventHandling;
 BEGIN
 	NEW(event); event.next := event; event.prev := event;  (* event: head of timer event queue, only a sentinel *)
-	NEW(clock)
+	NEW(clock);
 END InitEventHandling;
 
 PROCEDURE InitGCHandling;
@@ -1298,9 +1296,7 @@ BEGIN
 	RETURN 1000000000;
 END TimerFrequency;
 
-
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
-
 
 PROCEDURE LeaveA2*;
 VAR cur: Process; ebp,n: ADDRESS;

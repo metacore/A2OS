@@ -265,7 +265,6 @@ TYPE
 										VAR handled: BOOLEAN);
 
 
-
 	GCStatusExt = OBJECT(Heaps.GCStatus)
 	
 	(* called from Heaps.InvokeGC, i.e. this is a hidden upcall. However, it is necessary to take the Machine.Objects lock here since writing

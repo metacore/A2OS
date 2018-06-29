@@ -321,10 +321,10 @@ VAR
 
 		IF i < writers.Length() THEN
 			w := writers.Get(i)(Writer);
-			ctx.out.String("byteCount="); ctx.out.Int(w.byteCount,0); ctx.out.Ln;
+			ctx.out.String("byte count="); ctx.out.Int(w.byteCount,0); ctx.out.Ln;
 
 			speed := 1000.0 * REAL(w.byteCount-w.startByteCount) / Kernel.Elapsed(w.tStart);
-			ctx.out.String("overall speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
+			ctx.out.String("speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
 			ctx.out.String("status: ");
 			IF w.Exited() THEN
 				ctx.out.String("Finished");
@@ -421,7 +421,7 @@ VAR
 		speed := 1000.0 * (r.byteCount-r.startByteCount) / Kernel.Elapsed(r.tStart);
 
 		ctx.out.String("byte count="); ctx.out.Int(r.byteCount, 0); ctx.out.Ln;
-		ctx.out.String("overall speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.Ln;
+		ctx.out.String("speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
 		ctx.out.String("status: ");
 		IF r.Exited() THEN
 			ctx.out.String("Finished");

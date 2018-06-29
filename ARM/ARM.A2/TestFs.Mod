@@ -1,7 +1,7 @@
 MODULE TestFs;
 
 IMPORT
-	SYSTEM, Random, Files, Kernel, Commands, FoxBasic;
+	SYSTEM, Random, Files, Kernel, Commands, FoxBasic, Strings;
 
 TYPE
 
@@ -10,16 +10,22 @@ TYPE
 		id: LONGINT;
 		file: Files.File;
 		fw: Files.Writer;
-		fileSize: LONGINT;
-		byteCount: LONGINT;
+		fileSize: HUGEINT;
+		byteCount: HUGEINT;
 		rndData, rndUpdate: Random.Generator;
 
 		tStart: Kernel.MilliTimer;
+		startByteCount: HUGEINT;
+
+		fileName0: Files.FileName;
+		partNum: LONGINT;
+		partByteCount: LONGINT;
 
 		run := FALSE, exited := FALSE: BOOLEAN;
 
-		PROCEDURE &InitWriter(id: LONGINT; CONST fileName: ARRAY OF CHAR; fileSize: LONGINT);
+		PROCEDURE &InitWriter(id: LONGINT; CONST fileName: ARRAY OF CHAR; fileSize: HUGEINT);
 		BEGIN
+			ASSERT(~exited);
 
 			file := Files.New(fileName);
 			ASSERT(file # NIL);
@@ -35,6 +41,12 @@ TYPE
 
 			SELF.id := id;
 			SELF.fileSize := fileSize;
+
+			COPY(fileName,fileName0);
+			partNum := 0;
+
+			byteCount := 0;
+			partByteCount := 0;
 
 			run := TRUE;
 		END InitWriter;
@@ -65,52 +77,55 @@ TYPE
 			RETURN exited
 		END Exited;
 
-		PROCEDURE Loop1;
+		PROCEDURE Loop;
 		VAR
 			v: LONGINT;
+			strNum: ARRAY 16 OF CHAR;
+			str: Files.FileName;
 		BEGIN
-			WHILE run & (byteCount < fileSize) DO
-				v := rndData.Dice(256);
-				fw.Char(CHR(v));
-				INC(byteCount);
+			WHILE run & ((fileSize <= 0) OR (byteCount < fileSize)) & (fw.res = 0) DO
+				v := rndData.Integer();
+				fw.RawLInt(v);
+				INC(byteCount,SIZEOF(LONGINT));
+				INC(partByteCount,SIZEOF(LONGINT));
+
+				IF partByteCount MOD 0x1000000 = 0 THEN
+					Kernel.SetTimer(tStart,0);
+					startByteCount := byteCount;
+				END;
+(*
 				IF rndUpdate.Dice(4096) = 0 THEN (* Files.DefaultWriterSize *)
 					fw.Update;
 				END;
-			END;
-
-			fw.Update;
-			run := FALSE;
-		END Loop1;
-
-		PROCEDURE Loop2;
-		TYPE
-			Char4 = ARRAY 4 OF CHAR;
-		VAR
-			buf: ARRAY 4096 OF CHAR; (* Files.DefaultWriterSize *)
-			v: LONGINT;
-			i: LONGINT;
-		BEGIN
-			WHILE run & (byteCount < fileSize) & (fw.res = 0) DO
-				FOR i := 0 TO LEN(buf)-1 BY 4 DO
-					v := rndData.Integer();
-					SYSTEM.MOVE(ADDRESSOF(v),ADDRESSOF(buf[i]),SIZEOF(LONGINT));
+*)
+				IF partByteCount = 0x40000000 THEN (* 1GB parts *)
+					partByteCount := 0;
+					INC(partNum);
+					fw.Update;
+					file.Close;
+					Strings.IntToStr(partNum,strNum);
+					Strings.Concat(fileName0,".p",str);
+					Strings.Concat(str,strNum,str);
+					file := Files.New(str);
+					Files.Register(file);
+					Files.OpenWriter(fw,file,0);
+					TRACE("started a new file part",id,fileName0,partNum,byteCount);
 				END;
-				fw.Bytes(buf,0,LEN(buf));
-				fw.Update;
-				INC(byteCount,LEN(buf));
 			END;
-
-			run := FALSE;
 
 			IF fw.res # 0 THEN
 				TRACE("TestFs writer",id,"stopped due to a writer error",fw.res);
 			END;
-		END Loop2;
+
+			fw.Update;
+			run := FALSE;
+		END Loop;
 
 	BEGIN{ACTIVE}
 		Kernel.SetTimer(tStart,0);
+		startByteCount := 0;
 
-		Loop1;
+		Loop;
 
 	FINALLY
 		BEGIN{EXCLUSIVE}
@@ -123,24 +138,35 @@ TYPE
 	VAR
 		id: LONGINT;
 		file: Files.File;
-		reader: Files.Reader;
+		fr: Files.Reader;
 		rndData: Random.Generator;
-		byteCount: LONGINT;
+		byteCount: HUGEINT;
 		run, exited: BOOLEAN;
 
 		tStart: Kernel.MilliTimer;
+		startByteCount: HUGEINT;
 
-		PROCEDURE & Init*(id: LONGINT; CONST filename: ARRAY OF CHAR);
+		fileName0: Files.FileName;
+		partNum: LONGINT;
+		partByteCount: LONGINT;
+
+		PROCEDURE & InitReader(id: LONGINT; CONST fileName: ARRAY OF CHAR);
 		BEGIN
 			SELF.id := id;
-			file := Files.Old(filename);
+			file := Files.Old(fileName);
 			ASSERT(file # NIL);
-			Files.OpenReader(reader, file, 0);
-			ASSERT(reader # NIL);
+			Files.OpenReader(fr, file, 0);
 			NEW(rndData);
 			rndData.InitSeed(id);
+
+			COPY(fileName,fileName0);
+			partNum := 0;
+
+			byteCount := 0;
+			partByteCount := 0;
+
 			run := TRUE;
-		END Init;
+		END InitReader;
 
 		PROCEDURE Exit;
 		BEGIN {EXCLUSIVE}
@@ -170,18 +196,42 @@ TYPE
 
 		PROCEDURE Loop;
 		VAR
-			buf: ARRAY 4096 OF CHAR;
-			i, len: LONGINT;
+			v: LONGINT;
+			strNum: ARRAY 16 OF CHAR;
+			str: Files.FileName;
 		BEGIN
-			WHILE run & (reader.res = 0) DO
-				reader.Bytes(buf, 0, LEN(buf), len);
-				INC(byteCount, len);
-				FOR i := 0 TO len - 1 DO ASSERT(ORD(buf[i]) = rndData.Dice(256)); END;
-			END
+			WHILE run & (fr.res = 0) DO
+				fr.RawLInt(v);
+				INC(partByteCount, SIZEOF(LONGINT));
+				INC(byteCount, SIZEOF(LONGINT));
+				ASSERT(v = rndData.Integer());
+
+				IF partByteCount MOD 0x1000000 = 0 THEN
+					Kernel.SetTimer(tStart,0);
+					startByteCount := byteCount;
+				END;
+
+				IF partByteCount = 0x40000000 THEN (* 1GB parts *)
+					partByteCount := 0;
+					INC(partNum);
+					file.Close;
+					Strings.IntToStr(partNum,strNum);
+					Strings.Concat(fileName0,".p",str);
+					Strings.Concat(str,strNum,str);
+					file := Files.Old(str);
+					IF file = NIL THEN
+						RETURN;
+					END;
+					Files.OpenReader(fr,file,0);
+					TRACE("started a new file part",id,fileName0,partNum,byteCount);
+				END;
+			END;
 		END Loop;
 
 	BEGIN {ACTIVE}
 		Kernel.SetTimer(tStart, 0);
+		startByteCount := 0;
+
 		Loop;
 	FINALLY
 		BEGIN {EXCLUSIVE}
@@ -206,7 +256,7 @@ VAR
 	BEGIN{EXCLUSIVE}
 		IF ~ctx.arg.GetInteger(id,FALSE) THEN ctx.result := 1; RETURN; END;
 		IF ~ctx.arg.GetString(fileName) THEN ctx.result := 1; RETURN;END;
-		IF ~ctx.arg.GetInteger(fileSize,FALSE) THEN ctx.result := 1; RETURN; END;
+		IF ~ctx.arg.GetInteger(fileSize,FALSE) THEN fileSize := -1; END;
 
 		i := 0;
 		WHILE (i < writers.Length()) & (writers.Get(i)(Writer).id # id) DO
@@ -273,7 +323,7 @@ VAR
 			w := writers.Get(i)(Writer);
 			ctx.out.String("byteCount="); ctx.out.Int(w.byteCount,0); ctx.out.Ln;
 
-			speed := 1000.0 * REAL(w.byteCount) / Kernel.Elapsed(w.tStart);
+			speed := 1000.0 * REAL(w.byteCount-w.startByteCount) / Kernel.Elapsed(w.tStart);
 			ctx.out.String("overall speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
 			ctx.out.String("status: ");
 			IF w.Exited() THEN
@@ -292,51 +342,51 @@ VAR
 
 	END ReportWriter;
 
-	PROCEDURE StartReader*(context : Commands.Context);
+	PROCEDURE StartReader*(ctx: Commands.Context);
 	VAR
-		name: Files.FileName;
+		fileName: Files.FileName;
 		r: Reader;
 		id: LONGINT;
 		i: LONGINT;
 	BEGIN {EXCLUSIVE}
-		IF ~context.arg.GetInteger(id, FALSE) THEN context.result := 1; RETURN; END;
-		IF ~context.arg.GetString(name) THEN context.result := 1; RETURN; END;
+		IF ~ctx.arg.GetInteger(id,FALSE) THEN ctx.result := 1; RETURN; END;
+		IF ~ctx.arg.GetString(fileName) THEN ctx.result := 1; RETURN;END;
 
 		WHILE (i < readers.Length()) & (readers.Get(i)(Reader).id # id) DO INC(i); END;
 		IF i < readers.Length() THEN
-			context.error.String("TestFs reader with ID ");
-			context.error.Int(id, 0);
-			context.error.String(" already running.");
-			context.error.Ln;
-			context.result := 1;
+			ctx.error.String("TestFs reader with ID ");
+			ctx.error.Int(id, 0);
+			ctx.error.String(" already running.");
+			ctx.error.Ln;
+			ctx.result := 1;
 			RETURN;
 		END;
-		NEW(r, id, name);
+		NEW(r, id, fileName);
 		readers.Add(r);
 
-		context.out.String("Added TestFs reader with ID ");
-		context.out.Int(id, 0);
-		context.out.String(", filename='");
-		context.out.String(name);
-		context.out.String("'");
-		context.out.Ln;
+		ctx.out.String("Added TestFs reader with ID ");
+		ctx.out.Int(id, 0);
+		ctx.out.String(", fileName='");
+		ctx.out.String(fileName);
+		ctx.out.String("'");
+		ctx.out.Ln;
 	END StartReader;
 
-	PROCEDURE StopReader*(context : Commands.Context);
+	PROCEDURE StopReader*(ctx: Commands.Context);
 	VAR
 		r: Reader;
 		id: LONGINT;
 		i: LONGINT;
 	BEGIN {EXCLUSIVE}
-		IF ~context.arg.GetInteger(id, FALSE) THEN context.result := 1; RETURN; END;
+		IF ~ctx.arg.GetInteger(id, FALSE) THEN ctx.result := 1; RETURN; END;
 
 		WHILE (i < readers.Length()) & (readers.Get(i)(Reader).id # id) DO INC(i); END;
 		IF i = readers.Length() THEN
-			context.error.String("TestFs reader with ID ");
-			context.error.Int(id, 0);
-			context.error.String(" is not running");
-			context.error.Ln;
-			context.result := 1;
+			ctx.error.String("TestFs reader with ID ");
+			ctx.error.Int(id, 0);
+			ctx.error.String(" is not running");
+			ctx.error.Ln;
+			ctx.result := 1;
 			RETURN;
 		END;
 
@@ -344,45 +394,43 @@ VAR
 		r.Exit;
 		readers.RemoveByIndex(i);
 
-		context.out.String("TestFs reader ");
-		context.out.Int(id, 0);
-		context.out.String(" stopped");
-		context.out.Ln;
+		ctx.out.String("TestFs reader ");
+		ctx.out.Int(id, 0);
+		ctx.out.String(" stopped");
+		ctx.out.Ln;
 	END StopReader;
 
-	PROCEDURE ReportReader*(context : Commands.Context);
+	PROCEDURE ReportReader*(ctx: Commands.Context);
 	VAR
 		r: Reader;
 		id: LONGINT;
 		i: LONGINT;
-		bytes: LONGINT;
 		speed: LONGREAL;
 	BEGIN {EXCLUSIVE}
-		IF ~context.arg.GetInteger(id, FALSE) THEN context.result := 1; RETURN; END;
+		IF ~ctx.arg.GetInteger(id, FALSE) THEN ctx.result := 1; RETURN; END;
 		WHILE (i < readers.Length()) & (readers.Get(i)(Reader).id # id) DO INC(i); END;
 		IF i = readers.Length() THEN
-			context.error.String("TestFs reader with ID ");
-			context.error.Int(id, 0);
-			context.error.String(" is not running");
-			context.error.Ln;
-			context.result := 1;
+			ctx.error.String("TestFs reader with ID ");
+			ctx.error.Int(id, 0);
+			ctx.error.String(" is not running");
+			ctx.error.Ln;
+			ctx.result := 1;
 			RETURN;
 		END;
 		r := readers.Get(i)(Reader);
-		bytes := r.byteCount;
-		speed := 1000.0 * bytes / Kernel.Elapsed(r.tStart);
+		speed := 1000.0 * (r.byteCount-r.startByteCount) / Kernel.Elapsed(r.tStart);
 
-		context.out.String("byte count="); context.out.Int(r.byteCount, 0); context.out.Ln;
-		context.out.String("overall speed="); context.out.FloatFix(speed,0,5,0); context.out.Ln;
-		context.out.String("status: ");
+		ctx.out.String("byte count="); ctx.out.Int(r.byteCount, 0); ctx.out.Ln;
+		ctx.out.String("overall speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.Ln;
+		ctx.out.String("status: ");
 		IF r.Exited() THEN
-			context.out.String("Finished");
+			ctx.out.String("Finished");
 		ELSIF r.Running() THEN
-			context.out.String("Running");
+			ctx.out.String("Running");
 		ELSE
-			context.out.String("Paused");
+			ctx.out.String("Paused");
 		END;
-		context.out.Ln;
+		ctx.out.Ln;
 	END ReportReader;
 
 BEGIN

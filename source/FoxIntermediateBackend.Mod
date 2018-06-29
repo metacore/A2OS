@@ -2372,13 +2372,26 @@ TYPE
 					END;
 				END;
 			END RecursiveAssignment;
+			
+			PROCEDURE Dimension(): LONGINT;
+			VAR dim: LONGINT; expression: SyntaxTree.Expression;
+			BEGIN
+					dim := 0; 
+					expression := x;
+					WHILE expression IS SyntaxTree.MathArrayExpression DO
+						expression := expression(SyntaxTree.MathArrayExpression).elements.GetExpression(0);
+						INC(dim); 
+					END; 
+					RETURN dim;
+			END Dimension;
+			
 
 		BEGIN
 			(*static math array not providing pointers anyway *)
 			variable := GetTemporaryVariable(x.type, FALSE, FALSE (* untraced *));
 			designator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition,NIL,variable);
 			designator.SetType(variable.type);
-			dim := SemanticChecker.Dimension(x.type,{SyntaxTree.Static});
+			dim := Dimension();
 			index := SyntaxTree.NewIndexDesignator(x.position,designator);
 			FOR i := 0 TO dim-1 DO
 				element := SyntaxTree.NewIntegerValue(x.position,0);

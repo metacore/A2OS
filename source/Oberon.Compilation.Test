@@ -39479,3 +39479,15 @@ negative: conversion float to unsigned data type
 	    unsigned8 := UNSIGNED8(real);
 	END Test.
 
+negative: use array of size for array size
+	MODULE Test;
+	CONST Data = [10,20];
+	VAR a: ARRAY LEN(Data) OF LONGINT;
+	END Test.
+
+positive: use array size for array size
+	MODULE Test;
+	CONST Data = [10,20];
+	VAR a: ARRAY LEN(Data,0) OF LONGINT;
+	END Test.
+	

@@ -545,7 +545,9 @@ TYPE
 						IF variableAccessed THEN
 							Error(e.position, "forbidden variable access");
 						END;
-						x.SetLength(e); x.SetForm(SyntaxTree.SemiDynamic);
+						IF CheckSizeType(e) THEN
+							x.SetLength(e); x.SetForm(SyntaxTree.SemiDynamic);
+						END;
 					ELSE
 						x.SetLength(ConstantIntegerGeq0(e (*x.length*)));
 					END;

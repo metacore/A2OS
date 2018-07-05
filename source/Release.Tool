@@ -168,9 +168,9 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Win32C {
-		INCLUDE "WIN32C WIN I386 COOP"
+		INCLUDE "WIN I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Win32 --cooperative --traceModule=Trace --preciseGC=no --define=WIN32C,WIN,I386,COOP"
+		COMPILEOPTIONS "-p=Win32 --cooperative --traceModule=Trace --preciseGC=no --define=WIN,I386,COOP"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
@@ -282,7 +282,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# cooperative runtime system
 	COOP { Counters.Mod }
 	BIOS & I386 & COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
-	WIN32C { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
+	WIN & I386 & COOP { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	UNIX & COOP { Unix.Processors.Mod Unix.Timer.Mod }
 	RPI & COOP { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQ & COOP { Zynq.Processors.Mod Zynq.Timer.Mod }
@@ -291,7 +291,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	BIOS & COOP { BIOS.Environment.Mod }
 	RPI & COOP { RPI.Environment.Mod }
 	ZYNQ & COOP { Zynq.Environment.Mod }
-	WIN32C { Windows.Environment.Mod }
+	WIN & COOP { Windows.Environment.Mod }
 	UNIX & COOP { Unix.Environment.Mod }
 
 	BIOS & I386 & ~COOP { BIOS.I386.Machine.Mod }
@@ -413,8 +413,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	ActiveTimers.Mod
 
 	WIN { Windows.GDI32.Mod }
-	WIN { Windows.Display.Mod }
-	WIN32C { Coop.Windows.Display.Mod }
+	WIN & ~COOP { Windows.Display.Mod }
+	WIN & COOP { Coop.Windows.Display.Mod }
 
 	WIN {
 		Windows.WSock32.Mod

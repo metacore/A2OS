@@ -10,6 +10,7 @@ platforms := Bios32 Bios64 Win32 Win64 Linux32 Linux64 Darwin32 Darwin64 Solaris
 	Linux32C Linux64C
 
 target := Linux64
+pltfrm := Unix64
 object := .GofUu
 symbol := .SymUu
 
@@ -25,7 +26,7 @@ dependencies: modules source/*.Mod
 FoxArrayBase$(object): ComplexNumbers$(object)
 
 %$(object):
-	@$(tool) compile -p=$(target) $(if $<, $<, $(error no target for $@))
+	@$(tool) compile -p=$(pltfrm) $(if $<, $<, $(error no target for $@))
 
 # Fox Compiler
 

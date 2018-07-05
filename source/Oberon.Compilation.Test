@@ -227,7 +227,7 @@ positive: multiple module import
 	IMPORT A := Dummy, B := Dummy, C := Dummy, D := Dummy;
 	END Test.
 
-negative: multiple import lists
+positive: multiple import lists
 
 	MODULE Test;
 	IMPORT A := Dummy;
@@ -952,7 +952,7 @@ negative: procedure with parameter missing type
 
 # intermixed section types
 
-negative: import section before import section
+positive: import section before import section
 
 	MODULE Test;
 	IMPORT A := Dummy;

@@ -10,7 +10,7 @@ CONST
 	(** the parser reflects the following EBNF:
 
 		Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';' 
-								[ImportList] DeclarationSequence [Body] 
+								{ImportList} DeclarationSequence [Body] 
 								'end' Identifier '.'.
 		   
 		ImportList = 'import' Import { ',' Import } ';'.
@@ -1547,7 +1547,7 @@ TYPE
 			RETURN pointerType
 		END ObjectType;
 		
-		(** CellType = 'cell' [Flags] [PortList] [';'] DeclarationSequence [Body] 'end' [Identifier]
+		(** CellType = 'cell' [Flags] [PortList] [';'] {ImportList} DeclarationSequence [Body] 'end' [Identifier]
               | 'object'. **)
 		PROCEDURE CellType(position: Position;  name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type;
 		VAR
@@ -1584,7 +1584,7 @@ TYPE
 			IF Optional( Scanner.Semicolon ) THEN END;
 
 			
-			IF Optional(Scanner.Import) THEN ImportList(cellScope) END;
+			WHILE Optional(Scanner.Import) DO ImportList(cellScope) END;
 			DeclarationSequence( cellScope);
 			IF Peek(Scanner.Begin) OR Peek(Scanner.Code) THEN
 				cellScope.SetBodyProcedure(BodyProcedure(cellScope));
@@ -2370,7 +2370,7 @@ TYPE
 		END ImportList;
 
 		(** Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';' 
-										[ImportList] DeclarationSequence [Body] 
+										{ImportList} DeclarationSequence [Body] 
 										'end' Identifier '.'.
 		**)
 
@@ -2411,7 +2411,7 @@ TYPE
 					recentComment := NIL;
 				END;
 
-				IF Optional(Scanner.Import) THEN ImportList(moduleScope) END;
+				WHILE Optional(Scanner.Import) DO ImportList(moduleScope) END;
 				DeclarationSequence( moduleScope);
 				IF Peek(Scanner.Begin) OR Peek(Scanner.Code) THEN
 					moduleScope.SetBodyProcedure(BodyProcedure(moduleScope)); (* insert empty body procedure if necessary *)

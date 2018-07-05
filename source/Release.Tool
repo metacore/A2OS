@@ -283,8 +283,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	SOLARIS32 { Unix.Glue.Mod Solaris.I386.Unix.Mod }
 	SOLARIS64 { Unix.Glue.Mod Solaris.AMD64.Unix.Mod }
 
-	WIN32 { Windows.I386.Kernel32.Mod }
-	WIN64 { Windows.AMD64.Kernel32.Mod }
+	WIN { Windows.Kernel32.Mod }
 
 	BIOS32 { BIOS.I386.Machine.Mod }
 	BIOS64 { BIOS.AMD64.Machine.Mod }
@@ -304,9 +303,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { GarbageCollector.Mod }
 
 	BIOS { BIOS.Objects.Mod Kernel.Mod }
-	WIN32 { Windows.I386.Objects.Mod }
-	WIN64 { Windows.AMD64.Objects.Mod }
-	WIN { Windows.Kernel.Mod }
+	WIN { Windows.Objects.Mod Windows.Kernel.Mod }
 	UNIX { Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
 END

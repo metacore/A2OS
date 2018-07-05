@@ -159,8 +159,6 @@ TYPE
 			mod {UNTRACED}: Modules.Module;
 			proc {UNTRACED}: Modules.ProcedureDescPointer;
 			modName: ARRAY 128 OF CHAR;
-			mode0,mode1: LONGINT;
-			
 			contextPos: SIZE;
 		BEGIN{UNCHECKED} (* avoid winapi call indirection *)
 			O := obj; ID := id;
@@ -198,9 +196,22 @@ TYPE
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
+			#IF WIN64 THEN
 				Heaps.Candidate( state.RDI );  Heaps.Candidate( state.RSI );
 				Heaps.Candidate( state.RBX ); Heaps.Candidate( state.RDX );
 				Heaps.Candidate( state.RCX ); Heaps.Candidate( state.RAX );
+				Heaps.Candidate( state.R9 );  Heaps.Candidate( state.R10 );
+				Heaps.Candidate( state.R11 ); Heaps.Candidate( state.R12 );
+				Heaps.Candidate( state.R13 ); Heaps.Candidate( state.R14 );
+				Heaps.Candidate( state.R15 );
+			#ELSIF WIN32 THEN
+				Heaps.Candidate( state.EDI );  Heaps.Candidate( state.ESI );
+				Heaps.Candidate( state.EBX ); Heaps.Candidate( state.EDX );
+				Heaps.Candidate( state.ECX ); Heaps.Candidate( state.EAX );
+			#ELSE
+				ASSERT(FALSE);
+			#END
+				
 				IF (stackBottom # 0) & (sp # 0) THEN
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
@@ -528,25 +539,36 @@ BEGIN
 
 			Trace.String( "EXCEPTION " );  Trace.Address(exceptionPointers.exception.ExceptionCode);
 			Trace.String( " at " );  Trace.Address(exceptionPointers.exception.ExceptionAddress);
-			Trace.Ln();  Trace.String( "RAX " );  Trace.Address(exceptionPointers.context.RAX);
-			Trace.String( "  RBX " );  Trace.Address(exceptionPointers.context.RBX);  Trace.Ln();
-			Trace.String( "RCX " );  Trace.Address(exceptionPointers.context.RCX);  Trace.String( "  RDX " );
-			Trace.Address(exceptionPointers.context.RDX);  Trace.Ln();  Trace.String( "RDI " );
-			Trace.Address(exceptionPointers.context.RDI);  Trace.String( "  RSI " );
-			Trace.Address(exceptionPointers.context.RSI);  Trace.Ln(); 
+			#IF WIN64 THEN
+				Trace.Ln();  Trace.String( "RAX " );  Trace.Address(exceptionPointers.context.RAX);
+				Trace.String( "  RBX " );  Trace.Address(exceptionPointers.context.RBX);  Trace.Ln();
+				Trace.String( "RCX " );  Trace.Address(exceptionPointers.context.RCX);  Trace.String( "  RDX " );
+				Trace.Address(exceptionPointers.context.RDX);  Trace.Ln();  Trace.String( "RDI " );
+				Trace.Address(exceptionPointers.context.RDI);  Trace.String( "  RSI " );
+				Trace.Address(exceptionPointers.context.RSI);  Trace.Ln(); 
+				
+				Trace.String( "R8 " ); Trace.Address(exceptionPointers.context.R8);
+				Trace.String( " R9 " ); Trace.Address(exceptionPointers.context.R9);  Trace.Ln();  
+				Trace.String( "R10 " ); Trace.Address(exceptionPointers.context.R10);
+				Trace.String( " R11 " ); Trace.Address(exceptionPointers.context.R11);  Trace.Ln();  
+				Trace.String( "R12 " ); Trace.Address(exceptionPointers.context.R12);
+				Trace.String( " R13 " ); Trace.Address(exceptionPointers.context.R13);  Trace.Ln();  
+				Trace.String( "R14 " ); Trace.Address(exceptionPointers.context.R14);
+				Trace.String( " R15 " ); Trace.Address(exceptionPointers.context.R15);  Trace.Ln();  
+				Trace.Ln; 
+			#ELSIF WIN32 THEN
+				Trace.Ln();  Trace.String( "EAX " );  Trace.Hex( exceptionPointers.context.EAX, 1 );
+				Trace.String( "  EBX " );  Trace.Hex( exceptionPointers.context.EBX, 1 );  Trace.Ln();
+				Trace.String( "ECX " );  Trace.Hex( exceptionPointers.context.ECX, 1 );  Trace.String( "  EDX " );
+				Trace.Hex( exceptionPointers.context.EDX, 1 );  Trace.Ln();  Trace.String( "EDI " );
+				Trace.Hex( exceptionPointers.context.EDI, 1 );  Trace.String( "  ESI " );
+				Trace.Hex( exceptionPointers.context.ESI, 1 );  Trace.Ln();  
+			#ELSE 
+				-- UNIMPLEMENTED --
+			#END
 			
-			Trace.String( "R8 " ); Trace.Address(exceptionPointers.context.R8);
-			Trace.String( " R9 " ); Trace.Address(exceptionPointers.context.R9);  Trace.Ln();  
-			Trace.String( "R10 " ); Trace.Address(exceptionPointers.context.R10);
-			Trace.String( " R11 " ); Trace.Address(exceptionPointers.context.R11);  Trace.Ln();  
-			Trace.String( "R12 " ); Trace.Address(exceptionPointers.context.R12);
-			Trace.String( " R13 " ); Trace.Address(exceptionPointers.context.R13);  Trace.Ln();  
-			Trace.String( "R14 " ); Trace.Address(exceptionPointers.context.R14);
-			Trace.String( " R15 " ); Trace.Address(exceptionPointers.context.R15);  Trace.Ln();  
-			Trace.Ln; 
-			
-			Trace.String( "RBP " );
-			Trace.Address(exceptionPointers.context.BP);  Trace.String( "  RSP " );
+			Trace.String( "BP " );
+			Trace.Address(exceptionPointers.context.BP);  Trace.String( "  SP " );
 			Trace.Address(exceptionPointers.context.SP);  Trace.Ln();  Trace.String( "PC " );
 			Trace.Address(exceptionPointers.context.PC);  Trace.Ln();  
 			
@@ -714,7 +736,6 @@ BEGIN
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, lpParameter));
 	t := lpParameter(Process);  obj := t.obj;
 	ASSERT(res # 0);
-
 	SetPriority(t.priority);
 	bp := Machine.CurrentBP();
 	sp := Machine.CurrentSP();
@@ -1078,13 +1099,6 @@ BEGIN
 	TerminateProc();
 END Terminate;
 
-TYPE KdHelp = RECORD
-	Thread: ADDRESS;
-	ThCallBackStack,ThCallBackStore,NextCallback,FramePointer: Kernel32.DWORD;
-	KiCallUserMode, KeUserCallbackDispatcher,SystemRangeStart,KiUserExceptionDispatcher,StackBase,StackLimit: ADDRESS;
-	Reserved: ARRAY 5 OF ADDRESS;
-END; 
-
 PROCEDURE Init;   (* can not use NEW *)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
@@ -1260,12 +1274,14 @@ VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: AD
 PROCEDURE LeaveA2*;
 VAR cur: Process; ebp,n: ADDRESS;
 BEGIN
+	#IF WIN64 THEN	
 	CODE
 		PUSH RCX
 		PUSH RDX
 		PUSH R8
 		PUSH R9
 	END;
+	#END
 	IF clock = NIL THEN 
 		RETURN 
 	END;
@@ -1281,12 +1297,14 @@ BEGIN
 		IF cur.gcContext.nextPos > 255 THEN cur.gcContext.nextPos := 255 END;
 		(* IF (cur.gcContext.nextPos > 4) THEN cur.gcContext.nextPos := 2 END;*)
 	END;
+	#IF WIN64 THEN
 	CODE
 		POP R9
 		POP R8
 		POP RDX
 		POP RCX
 	END;
+	#END
 END LeaveA2;
 
 PROCEDURE ReenterA2*;
@@ -1317,34 +1335,3 @@ BEGIN
 	
 	Init;
 END Objects.
-
-(*
-24.03.1998	pjm	Started
-06.05.1998	pjm	CreateProcess init process, page fault handler
-06.08.1998	pjm	Moved exception interrupt handling here for current process
-17.08.1998	pjm	FindRoots method
-02.10.1998	pjm	Idle process
-06.11.1998	pjm	snapshot
-25.03.1999	pjm	Scope removed
-28.05.1999	pjm	EventHandler object
-01.06.1999	pjm	Fixed InterruptProcess lock error
-16.06.1999	pjm	Flat IRQ priority model to avoid GC deadlock
-23.06.1999	pjm	Flat IRQ priority experiment failed, rather do STI in FieldIRQ to avoid GC deadlock
-29.06.1999	pjm	Timeout in EventHandler object
-13.01.2000	pjm	Overed (Interrupt Objects, Event Handlers, Process ID, Process state, Process mode, Process stack, Await)
-17.10.2000	pjm	Priorities
-22.10.2003	mib	SSE2 extension
-24.10.2003	phk	Priority inversion / cycle counters
-
-Stack invariant for GC:
-o if process is running, the processor registers contain its state
-o if process is not running, at least state.ESP is valid, and between stack.adr and stack.high (for GC)
-
-o when releasing the Ready lock, make sure the process state is up to date
-*)
-
-System.ShowStacks ~
-
-Heaps.SetMetaData 
-
-Linker.Link --fileFormat=PE32 --fileName=A2GC.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  Loader  BootConsole ~

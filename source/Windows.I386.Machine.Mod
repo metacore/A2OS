@@ -74,9 +74,9 @@ TYPE
 	END;
 
 VAR
-
 	LastAddress: RECORD END;
-
+	stackBottom-: ADDRESS;
+	
 	MMXSupport*: BOOLEAN;
 	SSESupport*: BOOLEAN;
 	SSE2Support*: BOOLEAN;
@@ -585,6 +585,7 @@ END Init;
 
 	PROCEDURE {INITIAL, NOPAF} Start*;
 	BEGIN
+		stackBottom := CurrentSP();
 		Init; (* cannot allocate variables in here *)
 	END Start;
 

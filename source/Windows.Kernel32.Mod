@@ -135,7 +135,7 @@ CONST
 
 	(** EscapeCommFunction *)
 	SETXOFF* = 1;  SETXON* = 2;  SETRTS* = 3;  CLRRTS* = 4;  SETDTR* = 5;
-	CLRDTR* = 6;  REDWORDDEV* = 7;  SETBREAK* = 8;  CLRBREAK* = 9;
+	CLRDTR* = 6;  RESETDEV* = 7;  SETBREAK* = 8;  CLRBREAK* = 9;
 
 	(** PurgeComm *)
 	PurgeTXAbort* = 0;  PurgeRXAbort* = 1;  PurgeTXClear* = 2;
@@ -211,7 +211,7 @@ TYPE
 	END;
 
 	ContextPtr*= POINTER {UNSAFE,UNTRACED} TO Context;
-	(* 32 bit
+	#IF WIN32 THEN
 	Context* = RECORD
 		ContextFlags*: WORDSET;
 		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: SIZE;
@@ -220,8 +220,7 @@ TYPE
 		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: ADDRESS;
 		BP*, PC*, CS*, FLAGS*, SP*, SS*: ADDRESS; (* whereas BP is EBP and SP is ESP *)
 	END;
-	*) 
-	
+	#ELSIF WIN64 THEN
 	Context*= RECORD
 		P1Home, P2Home, P3Home, P4Home, P5Home, P6Home: SIZE; 
 		
@@ -273,7 +272,7 @@ TYPE
 } CONTEXT, *PCONTEXT;
 	*)
 	END; 
-				
+	#END;			
 	
 	ExceptionRecordPtr* = POINTER {UNSAFE,UNTRACED} TO ExceptionRecord;
 	ExceptionRecord* = RECORD
@@ -928,7 +927,6 @@ VAR
 	PROCEDURE ShutdownP(l: LONGINT);
 	VAR i: LONGINT;
 	BEGIN
-		(* FOR i := 0 TO 0x10000000 DO END;*) 
 		OutputString("Kernel32.Shutdown");
 		ExitProcess(l);
 	END ShutdownP;
@@ -1115,7 +1113,54 @@ VAR hout: HANDLE;
 	END SetTraceConsole;
 
 
+#IF WIN32 THEN
+		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
+			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
+			are patched by the PE linker. 
+			[CF. Microsoft Portable Executable and Common Object File Format Specification]
+		*)
+		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint;
+		CODE{SYSTEM.i386}
+			JMP  DWORD end;
+			DB 0
+			DB 0
+			DB 0
 
+		ImportTable:
+			DD Kernel32Import + 1000H 
+			DD 0
+			DD -1
+			DD Kernel32Name + 1000H
+			DD Kernel32Import + 1000H
+			DD 0, 0, 0, 0, 0
+		
+		Kernel32Import:
+		adrLoadLibrary:			
+			DD LoadLibraryA + 1000H
+		adrGetProcAddress:			
+			DD GetProcAddress + 1000H
+			DD 0
+			
+		Kernel32Name:
+			DB 'KERNEL32.DLL' , 0
+			
+		LoadLibraryA:			
+			DW 0
+			DB 'LoadLibraryA',0,0
+			
+		GetProcAddress:
+			DW 0
+			DB 'GetProcAddress',0
+			
+		end:
+			MOV EAX,[401000H+adrLoadLibrary]
+			MOV LoadLibrary, EAX
+			MOV EAX,[401000H+adrGetProcAddress]
+			MOV getProcAddress, EAX
+			
+		END EntryPoint;
+		
+#ELSIF WIN64 THEN
 		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
 			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
 			are patched by the PE linker. 
@@ -1163,8 +1208,8 @@ VAR hout: HANDLE;
 			MOV RAX,[401000H+adrGetProcAddress]
 			MOV getProcAddress, RAX
 	END EntryPoint;
-		
-(*BEGIN
-	Init;*)
-	
+#ELSE
+	UNIMPLEMENTED
+#END	
+
 END Kernel32.

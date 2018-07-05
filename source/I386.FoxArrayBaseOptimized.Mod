@@ -6511,7 +6511,7 @@ VAR
 		context.arg.SkipWhitespace; context.arg.Int(nrProcesses,TRUE);
 		IF nrProcesses > maxProcesses THEN
 			nrProcesses := maxProcesses
-		ELSIF nrProcesses = 0 THEN nrProcesses := Machine.NumberOfProcessors();
+		ELSIF nrProcesses = 0 THEN nrProcesses := LONGINT (Machine.NumberOfProcessors());
 		END;
 		KernelLog.String( "BlockSize=" );  KernelLog.Int( cBlockSize, 0 );
 		KernelLog.String( ", NrProcesses = " );  KernelLog.Int( nrProcesses, 0 );  KernelLog.Ln;
@@ -6519,7 +6519,7 @@ VAR
 
 BEGIN
 	cBlockSize := 0;   (* automatic *)
-	nrProcesses := Machine.NumberOfProcessors();   (* automatic *)
+	nrProcesses := LONGINT (Machine.NumberOfProcessors());   (* automatic *)
 
 	allocT := 0;  copyT := 0;  compT := 0;
 	NEW( cachePool );

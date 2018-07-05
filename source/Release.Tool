@@ -112,7 +112,6 @@
 #
 #	NATIVE: BIOS / RPI / ZYNQ
 #	UNIX: LINUX / DARWIN / SOLARIS
-#	WIN: WIN32 / WIN64
 #
 # The architecture specifies the target of modules that contain inline assembly code and may be one of the following:
 #
@@ -162,7 +161,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Win32 {
-		INCLUDE "WIN32 WIN I386"
+		INCLUDE "WIN I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win32"
 		EXCLUDEPACKAGES ""
@@ -176,7 +175,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Win64 {
-		INCLUDE "WIN64 WIN AMD64"
+		INCLUDE "WIN AMD64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win64"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
@@ -297,8 +296,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	BIOS & I386 & ~COOP { BIOS.I386.Machine.Mod }
 	BIOS & AMD64 & ~COOP { BIOS.AMD64.Machine.Mod }
-	WIN32 { Windows.I386.Machine.Mod }
-	WIN64 { Windows.AMD64.Machine.Mod }
+	WIN & I386 { Windows.I386.Machine.Mod }
+	WIN & AMD64 { Windows.AMD64.Machine.Mod }
 	COOP & ~ARM { Mutexes.Mod Coop.Machine.Mod }
 	COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
@@ -1515,7 +1514,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 
 	# Configuration
 	Configuration.Tool
-	WIN32 { Windows.Oberon.Registry.Mod }
+	WIN & I386 { Windows.Oberon.Registry.Mod }
 	NATIVE, WIN { Oberon.Configuration.Mod }
 
 # Basic Tools. NetSystem, Telnet, TextMail, ET, developer's tools, OpenType.

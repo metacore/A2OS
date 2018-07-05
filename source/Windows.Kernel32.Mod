@@ -211,7 +211,7 @@ TYPE
 	END;
 
 	ContextPtr*= POINTER {UNSAFE,UNTRACED} TO Context;
-	#IF WIN32 THEN
+	#IF I386 THEN
 	Context* = RECORD
 		ContextFlags*: WORDSET;
 		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: SIZE;
@@ -220,7 +220,7 @@ TYPE
 		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: ADDRESS;
 		BP*, PC*, CS*, FLAGS*, SP*, SS*: ADDRESS; (* whereas BP is EBP and SP is ESP *)
 	END;
-	#ELSIF WIN64 THEN
+	#ELSIF AMD64 THEN
 	Context*= RECORD
 		P1Home, P2Home, P3Home, P4Home, P5Home, P6Home: SIZE; 
 		
@@ -238,39 +238,39 @@ TYPE
 		remainder (* leave enough space for the rest here *): ARRAY 1024 OF CHAR;
 		
 		(*    union {
-        XMM_SAVE_AREA32 FltSave;
-        struct {
-            M128A Header[2];
-            M128A Legacy[8];
-            M128A Xmm0;
-            M128A Xmm1;
-            M128A Xmm2;
-            M128A Xmm3;
-            M128A Xmm4;
-            M128A Xmm5;
-            M128A Xmm6;
-            M128A Xmm7;
-            M128A Xmm8;
-            M128A Xmm9;
-            M128A Xmm10;
-            M128A Xmm11;
-            M128A Xmm12;
-            M128A Xmm13;
-            M128A Xmm14;
-            M128A Xmm15;
-        };
-    };
+			XMM_SAVE_AREA32 FltSave;
+			struct {
+				M128A Header[2];
+				M128A Legacy[8];
+				M128A Xmm0;
+				M128A Xmm1;
+				M128A Xmm2;
+				M128A Xmm3;
+				M128A Xmm4;
+				M128A Xmm5;
+				M128A Xmm6;
+				M128A Xmm7;
+				M128A Xmm8;
+				M128A Xmm9;
+				M128A Xmm10;
+				M128A Xmm11;
+				M128A Xmm12;
+				M128A Xmm13;
+				M128A Xmm14;
+				M128A Xmm15;
+			};
+			};
 
-    M128A VectorRegister[26];
-    DWORD64 VectorControl;
+			M128A VectorRegister[26];
+			DWORD64 VectorControl;
 
-    DWORD64 DebugControl;
-    DWORD64 LastBranchToRip;
-    DWORD64 LastBranchFromRip;
-    DWORD64 LastExceptionToRip;
-    DWORD64 LastExceptionFromRip;
-} CONTEXT, *PCONTEXT;
-	*)
+			DWORD64 DebugControl;
+			DWORD64 LastBranchToRip;
+			DWORD64 LastBranchFromRip;
+			DWORD64 LastExceptionToRip;
+			DWORD64 LastExceptionFromRip;
+		} CONTEXT, *PCONTEXT;
+		*)
 	END; 
 	#END;			
 	
@@ -1113,7 +1113,7 @@ VAR hout: HANDLE;
 	END SetTraceConsole;
 
 
-#IF WIN32 THEN
+#IF I386 THEN
 		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
 			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
 			are patched by the PE linker. 
@@ -1160,7 +1160,7 @@ VAR hout: HANDLE;
 			
 		END EntryPoint;
 		
-#ELSIF WIN64 THEN
+#ELSIF AMD64 THEN
 		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
 			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
 			are patched by the PE linker. 

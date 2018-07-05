@@ -139,19 +139,19 @@ VAR
 				Val( "CS", int.CS );  Val( "DS", int.DS );  Val( "ES", int.ES );  Val( "SS", int.SS );
 
 				Val( "PC", int.PC );  
-				#IF WIN64 THEN
+				#IF I386 THEN
+					Val( "ESI", int.ESI );  Val( "EDI", int.EDI );  Val( "ESP", int.SP );
+					Val( "PID", p.id ); Val( "EAX", int.EAX );  Val( "EBX", int.EBX );  Val( "ECX", int.ECX );  Val( "EDX", int.EDX );
+				#ELSIF AMD64 THEN
 					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
 					Val( "PID", p.id ); Val( "EAX", int.RAX );  Val( "EBX", int.RBX );  Val( "ECX", int.RCX );  Val( "EDX", int.RDX );
 					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
-				#ELSIF WIN32 THEN
-					Val( "ESI", int.ESI );  Val( "EDI", int.EDI );  Val( "ESP", int.SP );
-					Val( "PID", p.id ); Val( "EAX", int.EAX );  Val( "EBX", int.EBX );  Val( "ECX", int.ECX );  Val( "EDX", int.EDX );
 				#ELSE
 					ASSERT(FALSE);
 				#END
 				Val( "EBP", int.BP );  Val( "FS", int.FS );  Val( "GS", int.GS );
 				Val( "TMR", Kernel.GetTicks());
-				#IF WIN32 THEN
+				#IF I386 THEN
 					IF SYSTEM.VAL( CHAR, int.DR7 ) # 0X THEN  (* some breakpoints enabled *)
 						Val( "DR0", int.DR0 );  Val( "DR1", int.DR1 );  Val( "DR2", int.DR2 );  Val( "DR3", int.DR3 );  Val( "DR6", int.DR6 );
 						Val( "DR7", int.DR7 );  w.Ln

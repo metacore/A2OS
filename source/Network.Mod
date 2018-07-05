@@ -635,46 +635,82 @@ END Equal;
 (** Put a 32-bit host value into buf[ofs..ofs+3] *)
 
 PROCEDURE Put4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EAX, [EBP+val]
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	MOV [ECX+EBX], EAX
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP+val]
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	MOV [RCX+RBX], EAX
+#ELSE
+	unimplemented
+#END
 END Put4;
 
 (** Put a 16-bit host value into buf[ofs..ofs+1] *)
 
 PROCEDURE Put2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EAX, [EBP+val]
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	MOV [ECX+EBX], AX
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP+val]
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	MOV [RCX+RBX], AX
+#ELSE
+	unimplemented
+#END
 END Put2;
 
 (** Get a 32-bit host value from buf[ofs..ofs+3] *)
 
 PROCEDURE Get4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	MOV EAX, [ECX+EBX]
+#ELSIF AMD64 THEN
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	MOV EAX, [RCX+RBX]
+#ELSE
+	unimplemented
+#END
 END Get4;
 
 (** Get a 16-bit host value from buf[ofs..ofs+1] *)
 
 PROCEDURE Get2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	XOR EAX, EAX
 	MOV AX, [ECX+EBX]
+#ELSIF AMD64 THEN
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	XOR EAX, EAX
+	MOV AX, [RCX+RBX]
+#ELSE
+	unimplemented
+#END
 END Get2;
 
 (** Put a 32-bit host value into buf[ofs..ofs+3] in network byte order *)
 
 PROCEDURE PutNet4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EAX, [EBP+val]
 	XCHG AL, AH
 	ROL EAX, 16
@@ -682,40 +718,82 @@ CODE {SYSTEM.i386}
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	MOV [ECX+EBX], EAX
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP+val]
+	XCHG AL, AH
+	ROL EAX, 16
+	XCHG AL, AH
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	MOV [RCX+RBX], EAX
+#ELSE
+	unimplemented
+#END
 END PutNet4;
 
 (** Put a 16-bit host value into buf[ofs..ofs+1] in network byte order *)
 
 PROCEDURE PutNet2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EAX, [EBP+val]
 	XCHG AL, AH
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	MOV [ECX+EBX], AX
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP+val]
+	XCHG AL, AH
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	MOV [RCX+RBX], AX
+#ELSE
+	unimplemented
+#END
 END PutNet2;
 
 (** Get a 32-bit network value from buf[ofs..ofs+3] in host byte order *)
 
 PROCEDURE GetNet4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	MOV EAX, [ECX+EBX]
 	XCHG AL, AH
 	ROL EAX, 16
 	XCHG AL, AH
+#ELSIF AMD64 THEN
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	MOV EAX, [RCX+EBX]
+	XCHG AL, AH
+	ROL EAX, 16
+	XCHG AL, AH
+#ELSE
+	unimplemented
+#END
 END GetNet4;
 
 (** Get a 16-bit network value from buf[ofs..ofs+1] in host byte order *)
 
 PROCEDURE GetNet2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	XOR EAX, EAX
 	MOV AX, [ECX+EBX]
 	XCHG AL, AH
+#ELSIF AMD64 THEN
+	MOV EBX, [RBP+ofs]
+	MOV RCX, [RBP+buf]
+	XOR EAX, EAX
+	MOV AX, [RCX+RBX]
+	XCHG AL, AH
+#ELSE
+	unimplemented
+#END
 END GetNet2;
 
 (** Convert a LinkAdr to a printable string (up to size*3 characters) *)

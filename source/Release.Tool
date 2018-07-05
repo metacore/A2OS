@@ -404,8 +404,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	BIOS { BIOS.BootShell.Mod }
 
-	BIOS32, UNIX32 { I386.Network.Mod }
-	BIOS64, UNIX64 { AMD64.Network.Mod }
+	BIOS, UNIX { Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
 

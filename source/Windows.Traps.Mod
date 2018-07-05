@@ -11,22 +11,18 @@ CONST
 	(* Process termination halt codes *)
 	halt* = Objects.halt;  haltUnbreakable* = Objects.haltUnbreakable;
 
-TYPE
-
-
 VAR
 	modes: ARRAY 25 OF CHAR;
 	flags: ARRAY 13 OF CHAR;
 	trapState: LONGINT;
 	check: Objects.Process;
-	(* Get a compressed refblk number. *)
 
 	(** Display trap state. *)
 	PROCEDURE Show*( p: Objects.Process;  VAR int: Kernel32.Context;  VAR exc: Kernel32.ExceptionRecord;  long: BOOLEAN );
 	VAR  overflow: BOOLEAN;
 		desc: ARRAY 128 OF CHAR;
 		code: LONGINT;
-		pc: LONGINT; (*ALEX 2005.12.08*)
+		pc: ADDRESS; 
 		w: Streams.Writer;
 
 		(* Write flag values. *)
@@ -43,11 +39,12 @@ VAR
 			w.String( " iopl" );  w.Int( ASH( SYSTEM.VAL( LONGINT, s * {12, 13} ), -12 ), 1 )
 		END Flags;
 
-		PROCEDURE Val( CONST s: ARRAY OF CHAR;  val: LONGINT );
+		PROCEDURE Val( CONST s: ARRAY OF CHAR;  val:ADDRESS );
 		BEGIN
-			w.Char( " " );  w.String( s );  w.Char( "=" );  w.Hex( val, -8 )
+			w.Char( " " );  w.String( s );  w.Char( "=" );  w.Address(val)
 		END Val;
-	(** Append this to to. *)
+
+		(** Append this to to. *)
 		PROCEDURE StrAppend( VAR to (** in/out *) : ARRAY OF CHAR;  CONST this: ARRAY OF CHAR );
 		VAR i, j, l: LONGINT;
 		BEGIN
@@ -58,7 +55,7 @@ VAR
 			to[i] := 0X
 		END StrAppend;
 
-	(** Convert an integer into a string. *)
+		(** Convert an integer into a string. *)
 		PROCEDURE StrIntToStr( val: LONGINT;  VAR str: ARRAY OF CHAR );
 		VAR i, j: LONGINT;
 			digits: ARRAY 16 OF LONGINT;
@@ -115,7 +112,6 @@ VAR
 
 	BEGIN
 		overflow := FALSE;
-		(*! we need a reentrant lock here, use Kernel32 !! *)
 		Machine.Acquire( Machine.KernelLog );   (* like KernelLog.Enter, but without output *)
 		w := TrapWriters.GetWriter();
 		w.Update;   (* flush previous output stuck in global writer w *)
@@ -130,84 +126,46 @@ VAR
 
 			w.String( "TRAP " );  w.Int( code, 1 ); w.String( " [" );  w.Int( trapState, 1 );  w.String( "]" );   w.String( " PL" );
 			w.Int( int.CS MOD 4, 2 );  w.Char( " " );  GetDescription();
-			(*
-		CASE exc.halt OF
-			-14:	(* page fault *)
-				IF (int.CS MOD 4 > Machine.KernelLevel) & (exc.pf+4 = int.ESP) THEN
-					w.String("stack overflow"); overflow := TRUE
-				END
-			|0: w.String("division error")
-			|1: w.String("WITH guard failed")
-			|2: w.String("CASE invalid")
-			|3: w.String("RETURN missing")
-			|4: w.String("integer overflow")
-			|5: w.String("implicit type guard failed")
-			|6: w.String("type guard failed")
-			|7: w.String("index out of range")
-			|8: w.String("ASSERT failed")
-			|9: w.String("array dimension error")
-			|14: w.String("out of memory")
-			ELSE
-				IF (exc.halt > MAX(INTEGER)+1) OR (exc.halt < MIN(INTEGER)) THEN
-					w.String("module freed?")
-				END
-		END;
-		*)
 			w.String( desc );  	w.Ln;		w.Update;
 
-			(*
-		IF exc.locks # {} THEN
-			w.String(", Locks: "); w.Set(exc.locks)
-		END;
-		*)
 			w.String( "System: " );  w.String( Machine.version ); 
 			w.String(" Kernel_CRC="); w.Hex(SystemVersion.BootCRC,8); 
 			w.String(" Uptime="); w.Hex(Machine.GetTimer()- Machine.boottime, 8);
-			(*w.String( " Uptime=" );  w.Hex(Machine.GetTimer()-Machine.boottime, -8);*)
 			IF long THEN
 				w.Char( 0EX );   (* "fixed font" *)
 				w.Ln;
 				w.String("Processor:");
 				(* output values *)
-				Val( "CS", int.CS );  Val( "DS", int.DS );  Val( "ES", int.ES );  Val( "SS", int.SS );   (* Val("CR0", int.CR[0]);*)
-				(*
-			Val("FPU", SYSTEM.VAL(LONGINT, int.FPU[1] * {0..15} + LSH(int.FPU[2], 16))); w.Ln;
-			*)
+				Val( "CS", int.CS );  Val( "DS", int.DS );  Val( "ES", int.ES );  Val( "SS", int.SS );
 
-				Val( "PC", int.PC );  Val( "ESI", int.ESI );  Val( "EDI", int.EDI );  Val( "ESP", int.SP );
-				(*
-			Val("CR2", int.CR[2]);
-			*)
-				Val( "PID", p.id ); Val( "EAX", int.EAX );  Val( "EBX", int.EBX );  Val( "ECX", int.ECX );  Val( "EDX", int.EDX );
-				(*
-			Val("CR3", int.CR[3]);
-			Val("LCK", SYSTEM.VAL(LONGINT, int.locks)); w.Ln;
-			*)
-				Val( "EBP", int.BP );  Val( "FS", int.FS );  Val( "GS", int.GS );   (* Val("ERR", int.ERR); Val("CR4", int.CR[4]); *)
-				Val( "TMR", Kernel.GetTicks() ); (* w.Ln;*)
-				IF SYSTEM.VAL( CHAR, int.DR7 ) # 0X THEN  (* some breakpoints enabled *)
-					Val( "DR0", int.DR0 );  Val( "DR1", int.DR1 );  Val( "DR2", int.DR2 );  Val( "DR3", int.DR3 );  Val( "DR6", int.DR6 );
-					Val( "DR7", int.DR7 );  w.Ln
-				END;
+				Val( "PC", int.PC );  
+				#IF WIN64 THEN
+					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
+					Val( "PID", p.id ); Val( "EAX", int.RAX );  Val( "EBX", int.RBX );  Val( "ECX", int.RCX );  Val( "EDX", int.RDX );
+					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
+				#ELSIF WIN32 THEN
+					Val( "ESI", int.ESI );  Val( "EDI", int.EDI );  Val( "ESP", int.SP );
+					Val( "PID", p.id ); Val( "EAX", int.EAX );  Val( "EBX", int.EBX );  Val( "ECX", int.ECX );  Val( "EDX", int.EDX );
+				#ELSE
+					ASSERT(FALSE);
+				#END
+				Val( "EBP", int.BP );  Val( "FS", int.FS );  Val( "GS", int.GS );
+				Val( "TMR", Kernel.GetTicks());
+				#IF WIN32 THEN
+					IF SYSTEM.VAL( CHAR, int.DR7 ) # 0X THEN  (* some breakpoints enabled *)
+						Val( "DR0", int.DR0 );  Val( "DR1", int.DR1 );  Val( "DR2", int.DR2 );  Val( "DR3", int.DR3 );  Val( "DR6", int.DR6 );
+						Val( "DR7", int.DR7 );  w.Ln
+					END;
+				#END
 				w.Ln; w.String( " FLAGS: " );  Flags( w, SYSTEM.VAL( SET, int.FLAGS ) );
 				w.Char( 0FX );   (* "proportional font" *)
 				w.Char( " " );  w.Set( SYSTEM.VAL( SET, int.FLAGS ) );  w.Ln;
 				w.String(" Features="); w.Set(Machine.features); w.Set(Machine.features2); w.Ln;
-				(*IF int.INT = Machine.UD THEN KernelLog.Memory(int.PC, 16) END*)  (* show bad instruction *)
 			ELSE w.Ln
 			END;
 			w.Update;
 
 			w.String( "Process:" );  Reflection.WriteProcess( w, p );  w.Ln;
-			(*IF exc.halt = 1301 THEN	(* lock timeout - see Machine *)
-			KernelLog.Memory(ADDRESSOF(Machine.trapState[0]), LEN(Machine.trapState) *
-				(ADDRESSOF(Machine.trapState[1]) - ADDRESSOF(Machine.trapState[0])));
-			w.Hex(SYSTEM.VAL(LONGINT, Machine.trapLocksBusy), 8); w.Ln
-		END;
-		IF (int.INT = Machine.PF) & (ABS(int.PC-exc.CR[2]) < 100H) THEN	(* PF close to EIP *)
-			KernelLog.Memory(int.ESP-16, 64)	(* show stack *)
-		END;*)
-				(*ALEX 2005.12.08 when calling a pointer to a function and the pointer is NULL meaning eip=NULL*)
 			IF int.PC = 0 THEN SYSTEM.GET( int.SP, pc ) ELSE pc := int.PC END;
 			w.String( "StackTraceBack:" );  w.Ln;
 			Reflection.StackTraceBack( w, pc, int.BP, int.SP, Objects.GetStackBottom(p), long, overflow )
@@ -222,13 +180,6 @@ VAR
 	END Show;
 
 	PROCEDURE SetLastExceptionState( ex: Kernel32.Context );
-	(*
-	VAR id: LONGINT;
-	BEGIN
-	id := Machine.AcquirePreemption();
-	Objects.running[id].exp := ex;
-	Machine.ReleasePreemption();
-	*)
 	END SetLastExceptionState;
 
 	PROCEDURE CheckBP(fp: ADDRESS): ADDRESS;
@@ -252,7 +203,7 @@ VAR
 		ELSE			
 			WHILE (fp # 0) & (handler = -1) DO
 				fp := CheckBP(fp);
-				SYSTEM.GET( fp + 4, pc );
+				SYSTEM.GET( fp + SIZEOF(ADDRESS), pc );
 				pc := pc - 1;   (*  CALL instruction, machine dependant!!! *)
 				handler := Modules.GetExceptionHandler( pc );
 				sp := fp;   (* Save the old framepointer into the stack pointer *)
@@ -266,8 +217,8 @@ VAR
 		END
 	END HandleException;
 
-	PROCEDURE SetTrapVariable( pc, fp: LONGINT );
-	VAR varadr: LONGINT;
+	PROCEDURE SetTrapVariable( pc, fp: ADDRESS );
+	VAR varadr: ADDRESS;
 	BEGIN
 		varadr := Reflection.GetVariableAdr( pc, fp, "trap" );
 		IF varadr # -1 THEN SYSTEM.PUT8( varadr, 1 ) END
@@ -297,7 +248,7 @@ VAR
 			END;
 
 			(* Get the return pc *)
-			SYSTEM.GET( checkedBP + 4, pc );
+			SYSTEM.GET( checkedBP + SIZEOF(ADDRESS), pc );
 
 			handler := Modules.GetExceptionHandler( pc );
 
@@ -311,7 +262,7 @@ VAR
 			IF (handler # -1) & (ebp # 0) THEN  (* If Objects.Terminate has a FINALLY this doesn't work !!! *)
 				IF hasFinally THEN
 					(* Connect Finally to Finally *)
-					SYSTEM.PUT( ebpSave + 4, handler );   (* Adapt the return pc *)
+					SYSTEM.PUT( ebpSave + SIZEOF(ADDRESS), handler );   (* Adapt the return pc *)
 					SYSTEM.PUT( ebpSave, ebp );   (* Adapt the dynamic link *)
 					ebpSave := checkedBP;
 				ELSE 
@@ -323,15 +274,13 @@ VAR
 
 		(* Now ebp =  0, bottom of the stack, so link the last known return PC to the Termination *)
 		IF ~hasFinally THEN
-			SYSTEM.GET( ebpBottom + 4, pc );   (* PC of the Terminate *)
+			SYSTEM.GET( ebpBottom + SIZEOF(ADDRESS), pc );   (* PC of the Terminate *)
 			int.PC := pc;  int.BP := ebpBottom;
 		ELSIF ebpSave # ebpBottom THEN
-			SYSTEM.GET( ebpBottom + 4, pc );   (* PC of the Terminate *)
-			SYSTEM.PUT( ebpSave + 4, pc );  SetLastExceptionState( int )
+			SYSTEM.GET( ebpBottom + SIZEOF(ADDRESS), pc );   (* PC of the Terminate *)
+			SYSTEM.PUT( ebpSave + SIZEOF(ADDRESS), pc );  SetLastExceptionState( int )
 		END;
-
 		handled := TRUE;   (* If FALSE the process could be restarted, may be this is the meaning? *)
-
 	END Unbreakable;
 
 	(* General exception handler. *)
@@ -340,18 +289,9 @@ VAR
 	BEGIN  (* interrupts off *)
 		t := Objects.CurrentProcess();
 		check := t;
-		(*
-		t := Objects.running[Machine.ID()];	(* t is running process *)
-		*)
 		handled := FALSE;
-		(*
-		Machine.GetExceptionState(int, exc);
-		*)
 		user := (int.CS MOD 4 > 0 (* Machine.KernelLevel*) );  SYSTEM.GET( int.SP, exchalt );
 
-		(*
-		traceTrap := (exc.locks = {}) & (exc.halt >= MAX(INTEGER)) & (exc.halt <= MAX(INTEGER)+1);
-		*)
 		traceTrap := FALSE;
 
 		Show( t, int, exc,  (* exc.halt # MAX(INTEGER)+1*) TRUE );   (* Always show the trap info!*)
@@ -362,11 +302,6 @@ VAR
 
 		IF ~handled THEN
 		(* Taken from Machine to allow the FINALLY in the kernel *)
-
-			(*
-		locks := Machine.BreakAll();
-		SYSTEM.STI();
-		*)
 			IF ~traceTrap THEN  (* trap *)
 				IF user THEN  (* return to outer level *)
 					IF TraceVerbose THEN
@@ -374,9 +309,6 @@ VAR
 						KernelLog.Hex( t.restartSP, 9 );   (* KernelLog.Hex(t.stack.high, 9);*)
 						KernelLog.Exit
 					END;
-					(*
-				INCL(SYSTEM.VAL(SET,int.EFLAGS), Machine.IFBit);	(* enable interrupts *)
-				*)
 					int.BP := 0;  int.SP := t.restartSP;   (* reset stack *)
 					int.PC := t.restartPC;   (* restart object body or terminate *)
 				ELSE  (* trap was in kernel (interrupt handler) *)  (* fixme: recover from trap in stack traceback *)
@@ -419,19 +351,3 @@ BEGIN
 	Init
 END Traps.
 
-System.FreeDownTo Traps ~
-
-(*
-12.03.1998	pjm	Started
-06.08.1998	pjm	Exported Show and removed AosException upcall installation & Modules lock
-10.12.1998	pjm	New refblk
-23.06.1999	pjm	State added
-*)
-
-(*
-to do:
-o stack overflow message is not correctly displayed in case of dynamic arrays (EDI = CR2, ESP # CR2)
-o fix KernelLog.Memory calls removed when switching to Streams
-o fix use of KernelLog lock in Show
-o if allowing modification of variables using their descriptors, it should also have reference to module to avoid gc after free.
-*)

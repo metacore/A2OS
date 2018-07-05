@@ -328,8 +328,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BIOS32 & ~COOP { BIOS.I386.Traps.Mod }
 	BIOS64 & ~COOP { BIOS.AMD64.Traps.Mod }
 	ARM & ~COOP { ARM.Traps.Mod }
-	WIN32 & ~COOP { Windows.I386.Traps.Mod }
-	WIN64 & ~COOP { Windows.AMD64.Traps.Mod }
+	WIN & ~COOP { Windows.Traps.Mod }
 	UNIX & ~COOP { Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
 	WIN { Windows.WinTrace.Mod Windows.StdIO.Mod }

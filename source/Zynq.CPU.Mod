@@ -69,8 +69,8 @@ CONST Channel_sts_reg0* = 02CH; TXEMPTY* = 3; TXFULL* = 4;
 CONST Baud_rate_divider_reg0* = 034H; BDIV* = 0;
 CONST TX_RX_FIFO0* = 030H; FIFO* = 0;
 
-CONST 	Global_Timer_Counter_Register0* = 0F8F00200H;
-CONST 	Global_Timer_Counter_Register1* = 0F8F00204H;
+CONST Global_Timer_Counter_Register0* = 0F8F00200H;
+CONST Global_Timer_Counter_Register1* = 0F8F00204H;
 
 CONST WDOG_MODE* = 0F8005000H; WDEN* = 0; RSTEN* = 1; ZKEY* = 12;
 CONST WDOG_CONTROL* = 0F8005004H; CLKSEL* = 0; CRV* = 2; CKEY* = 14;
@@ -133,7 +133,7 @@ END MaskIn;
 	
 (* interrupt handling *)
 CONST Interrupts* = 7;
-CONST UndefinedInstruction* = 1; SoftwareInterrupt* = 2; PrefetchAbort* = 3; DataAbort* = 4; IRQ* = 5; FIQ* = 6;
+CONST UndefinedInstruction* = 1; SoftwareInterrupt* = 2; PrefetchAbort* = 3; DataAbort* = 4; IRQ* = 5; FIQ* = 6; IRQ0* = IRQ;
 
 TYPE InterruptHandler* = PROCEDURE (index: SIZE);
 
@@ -159,6 +159,17 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (index < Interrupts);
 	REPEAT previous := CAS (handlers[index], NIL, NIL) UNTIL CAS (handlers[index], previous, NIL) = previous;
 END DisableInterrupt;
+
+PROCEDURE EnableIRQ- (index: SIZE);
+BEGIN
+	(* no effect -- only for compatibility *)
+END EnableIRQ;
+
+PROCEDURE DisableIRQ-(index: SIZE);
+BEGIN
+	(* no effect -- only for compatibility *)
+END DisableIRQ;
+
 
 PROCEDURE Initialize-;
 CODE

@@ -274,19 +274,19 @@ VAR
 
 	PROCEDURE Dlsym*(handle: ADDRESS; CONST name: ARRAY OF CHAR; adr: ADDRESS);
 	VAR val: ADDRESS;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		val := dlsym(handle, ADDRESS OF name[0]);
 		SYSTEM.PUT(adr, val);
 	END Dlsym;
 
 	PROCEDURE Char(c: CHAR);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		putc(1, c);
 	END Char;
  
 	PROCEDURE Init;
 	VAR i: ADDRESS;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		baseAdr := ADDRESS OF EntryPoint;
 		endAdr := ADDRESS OF last;
 		
@@ -304,7 +304,7 @@ VAR
 	END Init;
 	
 	PROCEDURE {INITIAL,NOPAF} Init0;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		CODE
 		#IF I386 THEN
 			; argc at esp

@@ -550,25 +550,25 @@ VAR
 
 
 	PROCEDURE getnprocs* (): LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN sysconf( 0x54 ); (*0x53 for number of processors configured, 0x54 for number of processors online *)
 	END getnprocs;
  
 	PROCEDURE NewKey*( ): Key_t;
 	VAR
 		key: Key_t;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_key_create(ADDRESSOF(key), NIL) = 0);
 		RETURN key;
 	END NewKey;
  
 	PROCEDURE ReadKey* (key: Key_t): ADDRESS;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN pthread_getspecific(key);
 	END ReadKey;
 
 	PROCEDURE WriteKey* (key: Key_t; value: ADDRESS);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_setspecific(key, value) = 0);
 	END WriteKey;
 
@@ -576,7 +576,7 @@ VAR
 	PROCEDURE NewMtx*( ): Mutex_t;
 	VAR
 		mtx: Mutex_t;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		mtx := malloc( SIZEOF(MutexType) );
 		ASSERT(mtx # 0);
 		ASSERT(pthread_mutex_init(mtx, NIL) = 0);
@@ -590,7 +590,7 @@ VAR
 		res: WORD;
 	CONST
 		Recursive = 1;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		mtx := malloc( SIZEOF(MutexType) );
 		res := pthread_mutexattr_init(ADDRESS OF attr);
 		res := pthread_mutexattr_settype(ADDRESS OF attr, Recursive);
@@ -603,23 +603,23 @@ VAR
 
 
 	PROCEDURE MtxDestroy*(mtx: Mutex_t);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_mutex_destroy(mtx) = 0);
 	END MtxDestroy;
 
 	PROCEDURE MtxLock*(mtx: Mutex_t);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_mutex_lock(mtx) = 0);
 	END MtxLock;
 
 	PROCEDURE MtxUnlock*(mtx: Mutex_t);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_mutex_unlock(mtx) = 0);
 	END MtxUnlock;
 
 	PROCEDURE NewCond* ( ): Condition_t;
 	VAR cond: Condition_t;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		cond := malloc( SIZEOF(ConditionType) );
 		ASSERT(cond # 0);
 		ASSERT(pthread_cond_init(cond, NIL)=0);
@@ -627,32 +627,32 @@ VAR
 	END NewCond;
 
 	PROCEDURE CondDestroy*(con: Condition_t);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_cond_destroy(con) = 0);
 	END CondDestroy;
 
 	PROCEDURE CondWait*(con: Condition_t; mtx: Mutex_t);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_cond_wait(con, mtx) = 0);
 	END CondWait;
 
 	PROCEDURE CondSignal*(cond: Condition_t);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_cond_signal(cond) = 0);
 	END CondSignal;
 
 	PROCEDURE ThrThis*(): Thread_t;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN pthread_self( );
 	END ThrThis;
 
 	PROCEDURE ThrYield*( );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ThrSleep(1);
 	END ThrYield;
 
 	PROCEDURE ThrExit*( );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		pthread_exit( 0 );
 	END ThrExit;
 
@@ -660,7 +660,7 @@ VAR
 	VAR
 		param: Sched_param;
 		policy: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF pthread_getschedparam( thr, ADDRESS OF policy, ADDRESS OF param ) # 0 THEN END;
 		param.sched_priority := prio;
 		IF pthread_setschedparam( thr, SCHED_OTHER, ADDRESS OF param ) # 0 THEN
@@ -672,7 +672,7 @@ VAR
 	VAR
 		param: Sched_param;
 		policy: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 	    IF pthread_getschedparam( thr, ADDRESS OF policy, ADDRESS OF param ) # 0 THEN END;
 	    RETURN  param.sched_priority;
 	END ThrGetPriority;
@@ -681,7 +681,7 @@ VAR
 		sigstk: Stack;
 
 	PROCEDURE SetSigaltstack;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF sigaltstack(ADDRESS OF sigstk, NIL) < 0 THEN
 			Perror("sigaltstack")
 		END;
@@ -693,7 +693,7 @@ VAR
 		old, new: Sigset_t;
 		param: Sched_param;
 		res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		me := pthread_self();
 		SetSigaltstack();
 
@@ -727,7 +727,7 @@ VAR
 	CONST
 		PTHREAD_SCOPE_SYSTEM = 0;
 		PTHREAD_CREATE_DETACHED = 1;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		pthread_attr_init(ADDRESS OF attr);
 		pthread_attr_setscope(ADDRESS OF attr, PTHREAD_SCOPE_SYSTEM);
 		pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);
@@ -743,7 +743,7 @@ VAR
 			tv_sec: LONGWORD;        (* seconds *)
 			tv_nsec: LONGWORD;       (* nanoseconds *)
      	END;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		sltime.tv_sec := ms DIV 1000;
 		sltime.tv_nsec := 1000000*(ms MOD 1000);
 		WHILE (nanosleep(ADDRESS OF sltime, ADDRESS OF rem) < 0) DO
@@ -753,7 +753,7 @@ VAR
 	END ThrSleep;
 
 	PROCEDURE ThrKill*(thr: Thread_t);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF (thr # mainthread) THEN
 	    		pthread_detach( thr );
     			IF (thr = pthread_self()) THEN
@@ -765,12 +765,12 @@ VAR
     END ThrKill;
 
 	PROCEDURE {C} resume_handler( sig: LONGINT );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END resume_handler;
 
 	PROCEDURE ThrResume*( thr: Thread_t );
 	VAR  res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		res := pthread_mutex_lock( ADDRESS OF suspend_mutex );
 		resume_done := 0; 
 		res := pthread_kill( thr, T_SIGRESUME );
@@ -784,7 +784,7 @@ VAR
 
 	PROCEDURE {C} suspend_handler(sig: LONGINT; scp: ADDRESS; ucp: ADDRESS);
 	VAR block: Sigset_t; res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF suspendHandler # NIL THEN suspendHandler( S.VAL( Ucontext, ucp) ) END;
 	    res := sigfillset( ADDRESS OF block );
 	    sigdelset(  ADDRESS OF block, T_SIGRESUME );
@@ -795,7 +795,7 @@ VAR
 
 	PROCEDURE ThrSuspend*(thr: Thread_t; saveContext: BOOLEAN);
 	VAR res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 	    res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
 	    suspend_done := 0;
 	    res := pthread_kill( thr, T_SIGSUSPEND );
@@ -812,7 +812,7 @@ VAR
 	PROCEDURE ThrInitialize*( VAR low, high: LONGINT ): BOOLEAN;
 	VAR
 		param: Sched_param; res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(pthread_mutex_init( ADDRESS OF suspend_mutex, NIL ) = 0);
 		mainthread := pthread_self();
 		high := sched_get_priority_max(SCHED_OTHER);
@@ -837,26 +837,26 @@ VAR
 	END ThrInitialize;
 
 	PROCEDURE CopyContext*(CONST from: McontextDesc; VAR to: McontextDesc);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		S.MOVE(ADDRESS OF from, ADDRESS OF to, SIZE OF McontextDesc);
 	END CopyContext;
 
 
 	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: ADDRESS );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		cont.r_pc := pc;
 		cont.r_bp := bp;
 		cont.r_sp := sp;
 	END ModifyContext;
 
 	PROCEDURE Perror*( CONST msg: ARRAY OF CHAR );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		perror( ADDRESSOF( msg ) )
 	END Perror;
 
 	PROCEDURE Dlsym*( lib: ADDRESS;  CONST sym: ARRAY OF CHAR;  objAddr: ADDRESS );
 	VAR val: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Glue.Dlsym( lib, sym, objAddr );
 		S.GET( objAddr, val );
 		IF val = 0 THEN
@@ -869,7 +869,7 @@ VAR
 	PROCEDURE Dlopen*( CONST libname: ARRAY OF CHAR;  mode: LONGINT ): ADDRESS;
 	VAR h: ADDRESS;  i, j, k: INTEGER;
 		p: ARRAY 256 OF CHAR;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF libname[0] = '/' THEN  h := Glue.dlopen( ADDRESSOF( libname ), mode );
 		ELSE
 			i := 0;  h := 0;
@@ -890,13 +890,13 @@ VAR
 	END Dlopen;
 
 	PROCEDURE Dlclose*( lib: ADDRESS );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Glue.dlclose( lib )
 	END Dlclose;
 
 	PROCEDURE GetArg*( no: LONGINT;  VAR val: ARRAY OF CHAR );
 	VAR ch: CHAR;  adr: ADDRESS;  i: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF no >= argc THEN  val[0] := 0X
 		ELSE
 			S.GET( argv + SIZEOF(ADDRESS)*no, adr );  i := 0;
@@ -907,7 +907,7 @@ VAR
 	PROCEDURE GetArgval*(  CONST argName: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR );
 	VAR i: INTEGER;
 		buf: ARRAY 40 OF CHAR;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		i := 1;
 		WHILE i < argc - 1 DO
 			GetArg( i, buf );
@@ -925,14 +925,14 @@ VAR
 
 		PROCEDURE copy( VAR p: INTEGER;  VAR dest: ARRAY OF CHAR );
 		VAR i: INTEGER;
-		BEGIN
+		BEGIN {UNCOOPERATIVE, UNCHECKED}
 			WHILE buf[p] <= ' ' DO  INC( p )  END;
 			i := 0;
 			REPEAT  dest[i] := buf[p];  INC( i );  INC( p )  UNTIL (buf[p - 1] = 0X) OR (i >= LEN( dest ));
 			dest[i - 1] := 0X
 		END copy;
 
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		FOR p := 0 TO 4096 - 1 DO  buf[p] := 0X  END;
 		res := uname( ADDRESSOF( buf ) );
 		p := 0;
@@ -944,7 +944,7 @@ VAR
 	END getSysinfo;
 
 	PROCEDURE CreateSignalStack;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		sigstk.sp := ADDRESS OF sigstack;
 		sigstk.size := LEN(sigstack);
 		sigstk.flags := {};
@@ -955,7 +955,7 @@ VAR
 	VAR trap: SignalTrap;
 
 	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF trap # NIL THEN
 			trap( sig, S.VAL( Mcontext, ADDRESSOF( ucp.mc ) ) )
 		ELSE
@@ -964,7 +964,7 @@ VAR
 	END SigHandler;
 
 	PROCEDURE InstallTrap* ( h: SignalTrap );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		trap := h;
 	END InstallTrap;
 
@@ -974,7 +974,7 @@ VAR
 	VAR
 		act: Sigaction;
 		mask: Sigset_t;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		sigemptyset(ADDRESS OF mask);
 		act.sa_mask := mask;
 		IF sig = SIGSEGV THEN (* segmentation violation *)
@@ -989,24 +989,24 @@ VAR
 	END InstallHandler;
 
 	PROCEDURE fstat*  ( fd: LONGINT;  VAR buf: Status ): LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN  fxstat( 3, fd, buf );
 	END fstat;
 
 	PROCEDURE stat*  ( path: ADDRESS;  VAR buf: Status ): LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN  xstat( 3, path, buf );
 	END stat;
 
 	
 	PROCEDURE HandleSignal*( sig: LONGINT );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		InstallHandler( sig )
 	END HandleSignal;
 
 	PROCEDURE errno*(): LONGINT;
 	VAR loc: ADDRESS;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		loc := errno_location();
 		RETURN S.GET32(loc);
 	END errno;
@@ -1019,7 +1019,7 @@ VAR
 
 	PROCEDURE {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD;
 	VAR res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		TRACE(d,err);
 		IF oberonXErrorHandler # NIL THEN
 			res := oberonXErrorHandler(d, err);
@@ -1029,7 +1029,7 @@ VAR
 
 	PROCEDURE {C} X11IOErrorHandler(d: ADDRESS): WORD;
 	VAR res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		TRACE(d);
 		IF oberonXIOErrorHandler # NIL THEN
 			res := oberonXIOErrorHandler(d);
@@ -1039,7 +1039,7 @@ VAR
 
 	PROCEDURE InitXErrorHandlers*(xErrorHandler: OberonXErrorHandler; xIOErrorHandler: OberonXIOErrorHandler);
 	VAR res: WORD;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		oberonXErrorHandler := xErrorHandler;
 		oberonXIOErrorHandler := xIOErrorHandler;
 		res := xSetErrorHandler(ADDRESS OF X11ErrorHandler);
@@ -1048,7 +1048,7 @@ VAR
 
 	PROCEDURE Init;
 	VAR test: ADDRESS; i: LONGINT; s: ARRAY 256 OF CHAR;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		argc := Glue.argc;
 		argv := Glue.argv;
 		environ := Glue.environ;
@@ -1206,7 +1206,7 @@ VAR
 
 	(* load X11 related libaries only on demand *)
 	PROCEDURE LinkToX*;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		libx := Dlopen( libX11name, 2 );
 
 		Dlsym( libx, "XSetErrorHandler", ADDRESS OF xSetErrorHandler);
@@ -1215,7 +1215,7 @@ VAR
 
 
 	PROCEDURE {INITIAL} Init0;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Init;
 	END Init0;
 END Unix.

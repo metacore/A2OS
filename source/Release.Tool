@@ -134,9 +134,9 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Bios32C {
-		INCLUDE "BIOS32C BIOS NATIVE I386 COOP"
+		INCLUDE "BIOS NATIVE I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Bios32 --cooperative --traceModule=Trace --preciseGC=no --define=BIOS32C,BIOS,NATIVE,I386,COOP"
+		COMPILEOPTIONS "-p=Bios32 --cooperative --traceModule=Trace --preciseGC=no --define=BIOS,NATIVE,I386,COOP"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
@@ -272,13 +272,13 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	# cooperative runtime system
 	COOP { Counters.Mod }
-	BIOS32C { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
+	BIOS & I386 & COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
 	WIN32C { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	LINUX & COOP { Linux.Glue.Mod Linux.AMD64.Unix.Mod Unix.Processors.Mod Unix.Timer.Mod }
 	RPIC { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
-	BIOS32C { HeapManager.Mod BIOS.Environment.Mod }
+	BIOS & COOP { HeapManager.Mod BIOS.Environment.Mod }
 	RPIC { HeapManager.Mod RPI.Environment.Mod }
 	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
 	WIN32C { Windows.Environment.Mod }
@@ -781,8 +781,8 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	TCPServices.Mod TestServer.Mod	# TCP services
 	TCPTools.Mod						# Some useful TCP-related commands
 
-	BIOS { Performance.Mod }
-	WIN, UNIX, BIOS32C { Windows.Performance.Mod } # This is just a dummy
+	BIOS & ~COOP { Performance.Mod }
+	WIN, UNIX, BIOS & COOP { Windows.Performance.Mod } # This is just a dummy
 
 	Bin2Hex.Mod BinToCode.Mod
 

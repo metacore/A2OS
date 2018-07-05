@@ -40,7 +40,7 @@ TYPE
 	IDMap* = ARRAY 16 OF SHORTINT;
 
 	Range* = RECORD
-		adr*, size*: LONGINT
+		adr*: ADDRESS; size*: SIZE;
 	END;
 
 	MemoryBlock* = POINTER TO MemoryBlockDesc;
@@ -109,27 +109,51 @@ VAR
 
 (** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)
 
-	PROCEDURE -SpinHint*;
-	CODE {SYSTEM.i386}
-		REP	NOP	;  PAUSE instruction (* NOP on pre-P4 processors, Spin Loop Hint on P4 and after *)
-	END SpinHint;
+PROCEDURE -SpinHint*;
+CODE
+#IF I386 THEN
+	PAUSE
+#ELSIF AMD64 THEN
+	PAUSE
+#ELSE
+	unimplemented
+#END
+END SpinHint;
 
 (* Return current instruction pointer *)
 PROCEDURE CurrentPC* (): ADDRESS;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EAX, [EBP+4]
+#ELSIF AMD64 THEN
+	MOV RAX, [RBP + 8]
+#ELSE
+	unimplemented
+#END
 END CurrentPC;
 
 (* Return current frame pointer *)
 PROCEDURE -CurrentBP* (): ADDRESS;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EAX, EBP
+#ELSIF AMD64 THEN
+	MOV RAX, RBP
+#ELSE
+	unimplemented
+#END
 END CurrentBP;
 
 (* Return current stack pointer *)
 PROCEDURE -CurrentSP* (): ADDRESS;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	MOV EAX, ESP
+#ELSIF AMD64 THEN
+	MOV RAX, RSP
+#ELSE
+	unimplemented
+#END
 END CurrentSP;
 
 PROCEDURE MapPhysical*(physAdr: ADDRESS; size: SIZE; VAR virtAdr: ADDRESS);
@@ -179,7 +203,8 @@ END GetInit;
 (** Fill "size" bytes at "destAdr" with "filler".  "size" must be multiple of 4. *)
 
 	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
-	CODE {SYSTEM.i386}
+	CODE
+	#IF I386 THEN
 		PUSH	ECX
 		MOV	EDI, [EBP+destAdr]
 		MOV	ECX, [EBP+size]
@@ -188,38 +213,76 @@ END GetInit;
 		JZ	ok
 		PUSH	8	;  ASSERT failure
 		INT	3
-		ok:
-		SHR	ECX, 2
+	ok:	SHR	ECX, 2
 		CLD
 		REP	STOSD
 		POP	ECX
+	#ELSIF AMD64 THEN
+		PUSH	RCX
+		MOV	RDI, [RBP + destAdr]
+		MOV	RCX, [RBP + size]
+		MOV	EAX, [RBP + filler]
+		TEST	RCX, 3
+		JZ	ok
+		PUSH	8	; ASSERT failure
+		INT	3
+	ok:	SHR	RCX, 2
+		CLD
+		REP	STOSD
+		POP	RCX
+	#ELSE
+		unimplemented
+	#END
 	END Fill32;
 
 (** -- Processor initialization -- *)
 
 	PROCEDURE -SetFCR( s: SET );
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE
+	#IF I386 THEN
 		FLDCW	[ESP]	;  parameter s
 		POP	EAX
+	#ELSIF AMD64 THEN
+		FLDCW	WORD [RSP]	; parameter s
+		POP	RAX
+	#ELSE
+		unimplemented
+	#END
 	END SetFCR;
 
 	PROCEDURE -FCR( ): SET;
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE
+	#IF I386 THEN
 		PUSH	0
 		FNSTCW	[ESP]
 		FWAIT
 		POP	EAX
+	#ELSIF AMD64 THEN
+		PUSH	0
+		FNSTCW	WORD [RSP]
+		FWAIT
+		POP	RAX
+	#ELSE
+		unimplemented
+	#END
 	END FCR;
 
 	PROCEDURE -InitFPU;
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE
+	#IF I386 THEN
 		FNINIT
+	#ELSIF AMD64 THEN
+		FNINIT
+	#ELSE
+		unimplemented
+	#END
 	END InitFPU;
 
 (** CPU identification. *)
 
 	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
-	CODE {SYSTEM.i386, SYSTEM.Pentium}
+	CODE
+	#IF I386 THEN
 		PUSH	ECX
 		MOV	EAX, 0
 		CPUID
@@ -250,6 +313,40 @@ END GetInit;
 		MOV	[ESI], ECX
 		end:
 		POP	ECX
+	#ELSIF AMD64 THEN
+		PUSH	RCX
+		MOV	EAX, 0
+		CPUID
+		CMP	EAX, 0
+		JNE	ok
+		MOV	RSI, [RBP+vendor]
+		MOV	[RSI], AL	;  AL = 0
+		MOV	RSI, [RBP+version]
+		MOV	[RSI], EAX	;  EAX = 0
+		MOV	RSI, [RBP+features1]
+		MOV	[RSI], EAX
+		MOV	RSI, [RBP+features2]
+		MOV	[RSI], EAX
+		JMP	end
+		ok:
+		MOV	RSI, [RBP+vendor]
+		MOV	[RSI], EBX
+		MOV	[RSI+4], EDX
+		MOV	[RSI+8], ECX
+		MOV	BYTE [RSI+12], 0
+		MOV	EAX, 1
+		CPUID
+		MOV	RSI, [RBP+version]
+		MOV	[RSI], EAX
+		MOV	RSI, [RBP+features1]
+		MOV	[RSI], EDX
+		MOV	RSI, [RBP+features2]
+		MOV	[RSI], RCX
+		end:
+		POP	RCX
+	#ELSE
+		unimplemented
+	#END
 	END CPUID;
 
 	PROCEDURE GetConfig* ( CONST name: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR );
@@ -272,25 +369,48 @@ END Sti;
 
 (* Dan: from new Machine *)
 PROCEDURE -GetTimer*(): HUGEINT;
-CODE {SYSTEM.Pentium}
+CODE
+#IF I386 THEN
 	RDTSC	; set EDX:EAX
+#ELSIF AMD64 THEN
+	XOR RAX, RAX
+	RDTSC	; set EDX:EAX
+	SHL RDX, 32
+	OR RAX, RDX
+#ELSE
+	unimplemented
+#END
 END GetTimer;
 
 (** Disable interrupts and return old interrupt state. *)
 PROCEDURE -DisableInterrupts* (): SET;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	PUSHFD
 	CLI
 	POP EAX
+#ELSIF AMD64 THEN
+	PUSHFQ
+	CLI
+	POP RAX
+#ELSE
+	unimplemented
+#END
 END DisableInterrupts;
 
 (** Restore interrupt state. Parameter s must be return value of earlier DisableInterrupts call on same processor. *)
 PROCEDURE -RestoreInterrupts* (s: SET);
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	POPFD
+#ELSIF AMD64 THEN
+	POPFQ
+#ELSE
+	unimplemented
+#END
 END RestoreInterrupts;
 
-PROCEDURE ID*(): LONGINT;
+PROCEDURE ID*(): SIZE;
 BEGIN
 	RETURN Processors.GetCurrentIndex ();
 END ID;
@@ -298,11 +418,20 @@ END ID;
 (* setup MMX, SSE and SSE2..SSE5 and AVX extension *)
 
 PROCEDURE -InitSSE;
-CODE {SYSTEM.Pentium, SYSTEM.Privileged}
+CODE
+#IF I386 THEN
 	MOV	EAX, CR4
 	OR	EAX, 00000200H		; set bit 9 (OSFXSR)
 	AND	EAX, 0FFFFFBFFH	; delete bit 10 (OSXMMEXCPT)
 	MOV	CR4, EAX
+#ELSIF AMD64 THEN
+	MOV	EAX, CR4
+	OR	EAX, 00000200H		; set bit 9 (OSFXSR)
+	AND	EAX, 0FFFFFBFFH	; delete bit 10 (OSXMMEXCPT)
+	MOV	CR4, EAX
+#ELSE
+	unimplemented
+#END
 END InitSSE;
 
 PROCEDURE InitBootProcessor-;
@@ -373,152 +502,286 @@ END PhysicalAdr;
 (** Atomic INC(x). *)
 
 	PROCEDURE -AtomicInc*( VAR x: LONGINT );
-	CODE {SYSTEM.i386}
+	CODE
+	#IF I386 THEN
 		POP	EAX
 		LOCK
-		INC	DWORD[EAX]
+		INC	DWORD [EAX]
+	#ELSIF AMD64 THEN
+		POP	RAX
+		LOCK
+		INC	DWORD [RAX]
+	#ELSE
+		unimplemented
+	#END
 	END AtomicInc;
 
 (** Atomic DEC(x). *)
 
 	PROCEDURE -AtomicDec*( VAR x: LONGINT );
-	CODE {SYSTEM.i386}
+	CODE
+	#IF I386 THEN
 		POP	EAX
 		LOCK
-		DEC	DWORD[EAX]
+		DEC	DWORD [EAX]
+	#ELSIF AMD64 THEN
+		POP	RAX
+		LOCK
+		DEC	DWORD [RAX]
+	#ELSE
+		unimplemented
+	#END
 	END AtomicDec;
 
 (** Atomic INC(x, y). *)
 
 	PROCEDURE -AtomicAdd*( VAR x: LONGINT;  y: LONGINT );
-	CODE {SYSTEM.i386}
+	CODE
+	#IF I386 THEN
 		POP	EBX
 		POP	EAX
 		LOCK
-		ADD	DWORD[EAX], EBX
+		ADD	DWORD [EAX], EBX
+	#ELSIF AMD64 THEN
+		POP	EBX
+		POP	RAX
+		LOCK
+		ADD	DWORD [RAX], EBX
+	#ELSE
+		unimplemented
+	#END
 	END AtomicAdd;
 
 (** Atomic test-and-set.  Set x = TRUE and return old value of x. *)
 
 	PROCEDURE -AtomicTestSet*( VAR x: BOOLEAN ): BOOLEAN;
-	CODE {SYSTEM.i386}
+	CODE
+	#IF I386 THEN
 		POP	EBX
 		MOV	AL, 1
 		XCHG	[EBX], AL
+	#ELSIF AMD64 THEN
+		POP	RBX
+		MOV	AL, 1
+		XCHG	[RBX], AL
+	#ELSE
+		unimplemented
+	#END
 	END AtomicTestSet;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
 
 	PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
-	CODE {SYSTEM.i386}
+	CODE
+	#IF I386 THEN
 		POP EBX		; new
 		POP EAX		; old
 		POP EDX		; address of x
-		DB 0F0X, 00FX, 0B1X, 01AX	; LOCK CMPXCHG [EDX], EBX; atomicly compare x with old and set it to new if equal
+		LOCK CMPXCHG [EDX], EBX	; atomicly compare x with old and set it to new if equal
+	#ELSIF AMD64 THEN
+		POP EBX		; new
+		POP EAX		; old
+		POP RDX		; address of x
+		LOCK CMPXCHG [RDX], EBX	; atomicly compare x with old and set it to new if equal
+	#ELSE
+		unimplemented
+	#END
 	END AtomicCAS;
 
 (* function returning the number of processors that are available to Aos *)
-PROCEDURE NumberOfProcessors*( ): LONGINT;
+PROCEDURE NumberOfProcessors*( ): SIZE;
 BEGIN
 	RETURN Processors.count;
 END NumberOfProcessors;
 
 (* function for changing byte order *)
 PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
-CODE { SYSTEM.Pentium }
+CODE
+#IF I386 THEN
 	MOV EAX, [EBP+n]				; load n in eax
 	BSWAP EAX						; swap byte order
+#ELSIF AMD64 THEN
+	MOV EAX, [RBP+n]				; load n in eax
+	BSWAP EAX						; swap byte order
+#ELSE
+	unimplemented
+#END
 END ChangeByteOrder;
 
-PROCEDURE -GetEAX*(): LONGINT;
-CODE{SYSTEM.i386}
-END GetEAX;
+#IF I386 THEN
 
-PROCEDURE -GetECX*(): LONGINT;
-CODE{SYSTEM.i386}
-	MOV EAX,ECX
-END GetECX;
+	PROCEDURE -GetEAX*(): LONGINT;
+	CODE
+	END GetEAX;
 
-PROCEDURE -SetEAX*(n: LONGINT);
-CODE{SYSTEM.i386}	POP EAX
-END SetEAX;
+	PROCEDURE -GetECX*(): LONGINT;
+	CODE MOV EAX,ECX
+	END GetECX;
 
-PROCEDURE -SetEBX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EBX
-END SetEBX;
+	PROCEDURE -SetEAX*(n: LONGINT);
+	CODE POP EAX
+	END SetEAX;
 
-PROCEDURE -SetECX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP ECX
-END SetECX;
+	PROCEDURE -SetEBX*(n: LONGINT);
+	CODE POP EBX
+	END SetEBX;
 
-PROCEDURE -SetEDX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EDX
-END SetEDX;
+	PROCEDURE -SetECX*(n: LONGINT);
+	CODE POP ECX
+	END SetECX;
 
-PROCEDURE -SetESI*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP ESI
-END SetESI;
+	PROCEDURE -SetEDX*(n: LONGINT);
+	CODE POP EDX
+	END SetEDX;
 
-PROCEDURE -SetEDI*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EDI
-END SetEDI;
+	PROCEDURE -SetESI*(n: LONGINT);
+	CODE POP ESI
+	END SetESI;
 
-PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
-	IN AL, DX
-	MOV EBX, [EBP+val]
-	MOV [EBX], AL
-END Portin8;
+	PROCEDURE -SetEDI*(n: LONGINT);
+	CODE POP EDI
+	END SetEDI;
 
-PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
-	IN AX, DX
-	MOV EBX, [EBP+val]
-	MOV [EBX], AX
-END Portin16;
+	PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
+	CODE
+		MOV EDX, [EBP+port]
+		IN AL, DX
+		MOV EBX, [EBP+val]
+		MOV [EBX], AL
+	END Portin8;
 
-PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
-	IN EAX, DX
-	MOV EBX, [EBP+val]
-	MOV [EBX], EAX
-END Portin32;
+	PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
+	CODE
+		MOV EDX, [EBP+port]
+		IN AX, DX
+		MOV EBX, [EBP+val]
+		MOV [EBX], AX
+	END Portin16;
 
-PROCEDURE Portout8*(port: LONGINT; val: CHAR);
-CODE{SYSTEM.i386}
-	MOV AL,[EBP+val]
-	MOV EDX,[EBP+port]
-	OUT DX,AL
-END Portout8;
+	PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
+	CODE
+		MOV EDX, [EBP+port]
+		IN EAX, DX
+		MOV EBX, [EBP+val]
+		MOV [EBX], EAX
+	END Portin32;
 
-PROCEDURE Portout16*(port: LONGINT; val: INTEGER);
-CODE{SYSTEM.i386}
-	MOV AX,[EBP+val]
-	MOV EDX,[EBP+port]
-	OUT DX,AX
-END Portout16;
+	PROCEDURE Portout8*(port: LONGINT; val: CHAR);
+	CODE
+		MOV AL, [EBP+val]
+		MOV EDX, [EBP+port]
+		OUT DX, AL
+	END Portout8;
 
-PROCEDURE Portout32*(port: LONGINT; val: LONGINT);
-CODE{SYSTEM.i386}
-	MOV EAX,[EBP+val]
-	MOV EDX,[EBP+port]
-	OUT DX,EAX
-END Portout32;
+	PROCEDURE Portout16*(port: LONGINT; val: INTEGER);
+	CODE
+		MOV AX, [EBP+val]
+		MOV EDX, [EBP+port]
+		OUT DX, AX
+	END Portout16;
+
+	PROCEDURE Portout32*(port: LONGINT; val: LONGINT);
+	CODE
+		MOV EAX, [EBP+val]
+		MOV EDX, [EBP+port]
+		OUT DX, EAX
+	END Portout32;
+
+#ELSIF AMD64 THEN
+
+	PROCEDURE -GetRAX*(): HUGEINT;
+	CODE
+	END GetRAX;
+
+	PROCEDURE -GetRCX*(): HUGEINT;
+	CODE MOV RAX, RCX
+	END GetRCX;
+
+	PROCEDURE -SetRAX*(n: HUGEINT);
+	CODE POP RAX
+	END SetRAX;
+
+	PROCEDURE -SetRBX*(n: HUGEINT);
+	CODE POP RBX
+	END SetRBX;
+
+	PROCEDURE -SetRCX*(n: HUGEINT);
+	CODE POP RCX
+	END SetRCX;
+
+	PROCEDURE -SetRDX*(n: HUGEINT);
+	CODE POP RDX
+	END SetRDX;
+
+	PROCEDURE -SetRSI*(n: HUGEINT);
+	CODE POP RSI
+	END SetRSI;
+
+	PROCEDURE -SetRDI*(n: HUGEINT);
+	CODE POP EDI
+	END SetRDI;
+
+	PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
+	CODE
+		MOV EDX, [RBP+port]
+		IN AL, DX
+		MOV RBX, [RBP+val]
+		MOV [RBX], AL
+	END Portin8;
+
+	PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
+	CODE
+		MOV EDX, [RBP+port]
+		IN AX, DX
+		MOV RBX, [RBP+val]
+		MOV [RBX], AX
+	END Portin16;
+
+	PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
+	CODE
+		MOV EDX, [RBP+port]
+		IN EAX, DX
+		MOV RBX, [RBP+val]
+		MOV [RBX], EAX
+	END Portin32;
+
+	PROCEDURE Portout8*(port: LONGINT; val: CHAR);
+	CODE
+		MOV AL, [RBP+val]
+		MOV EDX, [RBP+port]
+		OUT DX, AL
+	END Portout8;
+
+	PROCEDURE Portout16*(port: LONGINT; val: INTEGER);
+	CODE
+		MOV AX, [RBP+val]
+		MOV EDX, [RBP+port]
+		OUT DX, AX
+	END Portout16;
+
+	PROCEDURE Portout32*(port: LONGINT; val: LONGINT);
+	CODE
+		MOV EAX, [RBP+val]
+		MOV EDX, [RBP+port]
+		OUT DX, EAX
+	END Portout32;
+
+#END
 
 (* Delay for IO *)
 PROCEDURE -Wait*;
-CODE {SYSTEM.i386}
+CODE
+#IF I386 THEN
 	JMP 0
 	JMP 0
 	JMP 0
+#ELSIF AMD64 THEN
+	JMP 0
+	JMP 0
+	JMP 0
+#ELSE
+	unimplemented
+#END
 END Wait;
 
 (** Read a byte from the non-volatile setup memory. *)

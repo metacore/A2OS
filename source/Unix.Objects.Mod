@@ -44,7 +44,6 @@ VAR
 	timerStopped: BOOLEAN;
 	
 	(* processes *)
-	SystemA2Up- 	: BOOLEAN;
 	root-	: Process;	(*!  Anchor of all instantiated threads in system *)
 	stacksize: LONGINT;		(* stack size of active objects, adjustable via boot parameter *)
 	
@@ -805,15 +804,8 @@ TYPE
 		the signals SIGHUP, SIGINT and SIGQUIT don't branch into SignalHandler
 		but terminate A2 (at least in Solaris).		
 		*)
-		SystemA2Up := TRUE;
 		LOOP Sleep( 100 ) END
 	END GCLoop;		
-
-	(* in order to get the traps running correctly without a BootConsole *)
-	PROCEDURE SystemA2IsUp*;
-	BEGIN
-		SystemA2Up := TRUE;		
-	END SystemA2IsUp;
 			
 	PROCEDURE CurrentProcessTime*(): HUGEINT;
 	BEGIN
@@ -946,7 +938,6 @@ VAR
 	
 BEGIN
 	TraceProcessHook := NIL;
-	SystemA2Up := FALSE;
 	Init;
 END Objects.
 

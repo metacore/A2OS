@@ -4,10 +4,14 @@ IMPORT S := SYSTEM, Trace, Unix, Glue;
 
 CONST
 	DefaultConfig = "Color 0  StackSize 128";
-	
-	Version = "A2 Gen. 64-bit, ";
 
-	DefaultObjectFileExtension* = ".GofUu";
+	#IF I386 THEN
+		Version = "A2 Gen. 32-bit, ";
+		DefaultObjectFileExtension* = ".GofU";
+	#ELSIF AMD64 THEN
+		Version = "A2 Gen. 64-bit, ";
+		DefaultObjectFileExtension* = ".GofUu";
+	#END
 	
 	Second* = 1000; (* frequency of ticks increments in Hz *)
 
@@ -263,7 +267,20 @@ VAR
 
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
 	PROCEDURE  Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
-	CODE {SYSTEM.AMD64}
+	CODE
+	#IF I386 THEN
+		MOV EDI, [EBP+destAdr]
+		MOV ECX, [EBP+size]
+		MOV EAX, [EBP+filler]
+		TEST ECX, 3
+		JZ ok
+		PUSH 8	; ASSERT failure
+		INT 3
+	ok:
+		SHR ECX, 2
+		CLD
+		REP STOSD
+	#ELSIF AMD64 THEN
 		MOV RDI, [RBP + destAdr]
 		MOV RCX, [RBP + size]
 		MOV EAX, [RBP + filler]
@@ -275,6 +292,9 @@ VAR
 		SHR RCX, 2
 		CLD
 		REP STOSD
+	#ELSE
+		unimpemented
+	#END
 	END Fill32;
 
 PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
@@ -300,147 +320,249 @@ END Portout32;
 
 (** Atomic INC(x). *)
 PROCEDURE -AtomicInc*(VAR x: LONGINT);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP EAX
+	LOCK
+	INC DWORD [EAX]
+#ELSIF AMD64 THEN
 	POP RAX
 	LOCK
 	INC DWORD [RAX]
+#ELSE
+	unimplemented
+#END
 END AtomicInc;
 
 (** Atomic DEC(x). *)
 PROCEDURE -AtomicDec*(VAR x: LONGINT);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP EAX
+	LOCK
+	DEC DWORD [EAX]
+#ELSIF AMD64 THEN
 	POP RAX
 	LOCK
 	DEC DWORD [RAX]
+#ELSE
+	unimplemented
+#END
 END AtomicDec;
 
 (** Atomic INC(x, y). *)
 PROCEDURE -AtomicAdd*(VAR x: LONGINT; y: LONGINT);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP EBX
+	POP EAX
+	LOCK
+	ADD DWORD [EAX], EBX
+#ELSIF AMD64 THEN
 	POP EBX
 	POP RAX
 	LOCK
 	ADD DWORD [RAX], EBX
+#ELSE
+	unimplemented
+#END
 END AtomicAdd;
 
 
 (** Atomic EXCL. *)
 PROCEDURE AtomicExcl* (VAR s: SET; bit: LONGINT);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP+bit]
+	MOV EBX, [EBP+s]
+	LOCK
+	BTR [EBX], EAX
+#ELSIF AMD64 THEN
 	MOV EAX, [RBP + bit]
 	MOV RBX, [RBP + s]
 	LOCK
 	BTR [RBX], EAX
+#ELSE
+	unimplemented
+#END
 END AtomicExcl;
 
 
 (** Atomic test-and-set. Set x = TRUE and return old value of x. *)
 PROCEDURE -AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP EBX
+	MOV AL, 1
+	XCHG [EBX], AL
+#ELSIF AMD64 THEN
 	POP RBX
 	MOV AL, 1
 	XCHG [RBX], AL
+#ELSE
+	unimplemented
+#END
 END AtomicTestSet;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
 PROCEDURE  -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP EBX		; new
+	POP EAX		; old
+	POP ECX		; address of x
+	LOCK CMPXCHG [ECX], EBX; atomicly compare x with old and set it to new if equal
+#ELSIF AMD64 THEN
 	POP EBX		; new
 	POP EAX		; old
 	POP RCX		; address of x
 	LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
+#ELSE
+	unimplemented
+#END
 END AtomicCAS;
 
 
 (* Return current instruction pointer *)
 PROCEDURE  CurrentPC* (): ADDRESS;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	MOV EAX, [EBP+4]
+#ELSIF AMD64 THEN
 	MOV RAX, [RBP + 8]
+#ELSE
+	unimplemented
+#END
 END CurrentPC;
 
 (* Return current frame pointer *)
 PROCEDURE  -CurrentBP* (): ADDRESS;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	MOV EAX, EBP
+#ELSIF AMD64 THEN
 	MOV RAX, RBP
+#ELSE
+	unimplemented
+#END
 END CurrentBP;
 
 (* Set current frame pointer *)
 PROCEDURE  -SetBP* (bp: ADDRESS);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP EBP
+#ELSIF AMD64 THEN
 	POP RBP
+#ELSE
+	unimplemented
+#END
 END SetBP;
 
 (* Return current stack pointer *)
 PROCEDURE  -CurrentSP* (): ADDRESS;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	MOV EAX, ESP
+#ELSIF AMD64 THEN
 	MOV RAX, RSP
+#ELSE
+	unimplemented
+#END
 END CurrentSP;
 
 (* Set current stack pointer *)
 PROCEDURE  -SetSP* (sp: ADDRESS);
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	POP ESP
+#ELSIF AMD64 THEN
 	POP RSP
+#ELSE
+	unimplemented
+#END
 END SetSP;
 
-PROCEDURE -GetRAX*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-END GetRAX;
+#IF I386 THEN
 
-PROCEDURE -GetRCX*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-	MOV RAX,RCX
-END GetRCX;
+	PROCEDURE -GetEAX*(): LONGINT;
+	CODE
+	END GetEAX;
 
-PROCEDURE -GetRSI*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-	MOV RAX,RSI
-END GetRSI;
+	PROCEDURE -GetECX*(): LONGINT;
+	CODE MOV EAX,ECX
+	END GetECX;
 
-PROCEDURE -GetRDI*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-	MOV RAX,RDI
-END GetRDI;
+	PROCEDURE -SetEAX*(n: LONGINT);
+	CODE POP EAX
+	END SetEAX;
 
+	PROCEDURE -SetEBX*(n: LONGINT);
+	CODE POP EBX
+	END SetEBX;
 
-PROCEDURE -SetRAX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}	
-	NOP
-	POP RAX
-END SetRAX;
+	PROCEDURE -SetECX*(n: LONGINT);
+	CODE POP ECX
+	END SetECX;
 
-PROCEDURE -SetRBX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	NOP
-	POP RBX
-END SetRBX;
+	PROCEDURE -SetEDX*(n: LONGINT);
+	CODE POP EDX
+	END SetEDX;
 
-PROCEDURE -SetRCX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RCX
-END SetRCX;
+	PROCEDURE -SetESI*(n: LONGINT);
+	CODE POP ESI
+	END SetESI;
 
-PROCEDURE -SetRDX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RDX
-END SetRDX;
+	PROCEDURE -SetEDI*(n: LONGINT);
+	CODE POP EDI
+	END SetEDI;
 
-PROCEDURE -SetRSI*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RSI
-END SetRSI;
+#ELSIF AMD64 THEN
 
-PROCEDURE -SetRDI*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RDI
-END SetRDI;
+	PROCEDURE -GetRAX*(): HUGEINT;
+	CODE
+	END GetRAX;
 
+	PROCEDURE -GetRCX*(): HUGEINT;
+	CODE MOV RAX, RCX
+	END GetRCX;
+
+	PROCEDURE -SetRAX*(n: HUGEINT);
+	CODE POP RAX
+	END SetRAX;
+
+	PROCEDURE -SetRBX*(n: HUGEINT);
+	CODE POP RBX
+	END SetRBX;
+
+	PROCEDURE -SetRCX*(n: HUGEINT);
+	CODE POP RCX
+	END SetRCX;
+
+	PROCEDURE -SetRDX*(n: HUGEINT);
+	CODE POP RDX
+	END SetRDX;
+
+	PROCEDURE -SetRSI*(n: HUGEINT);
+	CODE POP RSI
+	END SetRSI;
+
+	PROCEDURE -SetRDI*(n: HUGEINT);
+	CODE POP EDI
+	END SetRDI;
+
+#END
 
 PROCEDURE -GetTimer* (): HUGEINT;
-CODE {SYSTEM.AMD64}
+CODE
+#IF I386 THEN
+	RDTSC	; set EDX:EAX
+#ELSIF AMD64 THEN
 	XOR RAX, RAX
 	RDTSC	; set EDX:EAX
 	SHL RDX, 32
 	OR RAX, RDX
+#END
 END GetTimer;
 
 
@@ -524,9 +646,16 @@ END GetTimer;
 
 	(* function for changing byte order *)
 	PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
-	CODE {SYSTEM.AMD64}
-		MOV EAX, [RBP + n]				; load n in eax
+	CODE
+	#IF I386 THEN
+		MOV EAX, [EBP+n]				; load n in eax
 		BSWAP EAX						; swap byte order
+	#ELSIF AMD64 THEN
+		MOV EAX, [RBP+n]				; load n in eax
+		BSWAP EAX						; swap byte order
+	#ELSE
+		unimplemented
+	#END
 	END ChangeByteOrder;
 
 
@@ -540,7 +669,40 @@ END GetTimer;
 	(** CPU identification *)
 
 	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
-	CODE {SYSTEM.AMD64}
+	CODE
+	#IF I386 THEN
+		PUSH	ECX
+		MOV	EAX, 0
+		CPUID
+		CMP	EAX, 0
+		JNE	ok
+		MOV	ESI, [EBP+vendor]
+		MOV	[ESI], AL	;  AL = 0
+		MOV	ESI, [EBP+version]
+		MOV	[ESI], EAX	;  EAX = 0
+		MOV	ESI, [EBP+features1]
+		MOV	[ESI], EAX
+		MOV	ESI, [EBP+features2]
+		MOV	[ESI], EAX
+		JMP	end
+		ok:
+		MOV	ESI, [EBP+vendor]
+		MOV	[ESI], EBX
+		MOV	[ESI+4], EDX
+		MOV	[ESI+8], ECX
+		MOV	BYTE [ESI+12], 0
+		MOV	EAX, 1
+		CPUID
+		MOV	ESI, [EBP+version]
+		MOV	[ESI], EAX
+		MOV	ESI, [EBP+features1]
+		MOV	[ESI], EDX
+		MOV	ESI, [EBP+features2]
+		MOV	[ESI], ECX
+		end:
+		POP	ECX
+	#ELSIF AMD64 THEN
+		PUSH	RCX
 		MOV	EAX, 0
 		CPUID
 		CMP	EAX, 0
@@ -554,7 +716,7 @@ END GetTimer;
 		MOV	RSI, [RBP+features2]
 		MOV	[RSI], EAX
 		JMP	end
-	ok:
+		ok:
 		MOV	RSI, [RBP+vendor]
 		MOV	[RSI], EBX
 		MOV	[RSI+4], EDX
@@ -567,24 +729,43 @@ END GetTimer;
 		MOV	RSI, [RBP+features1]
 		MOV	[RSI], EDX
 		MOV	RSI, [RBP+features2]
-		MOV	[RSI], ECX
-	end:
+		MOV	[RSI], RCX
+		end:
+		POP	RCX
+	#ELSE
+		unimplemented
+	#END
 	END CPUID;
 	
 
 	(* If the CPUID instruction is supported, the ID flag (bit 21) of the EFLAGS register is r/w *)
 	PROCEDURE CpuIdSupported( ) : BOOLEAN;
-	CODE {SYSTEM.AMD64}
-		PUSHFQ					; save RFLAGS
-		POP RAX				; store RFLAGS in RAX
-		MOV EBX, EAX			; save EBX for later testing
+	CODE
+	#IF I386 THEN
+		PUSHFD				; save EFLAGS
+		POP EAX				; store EFLAGS in EAX
+		MOV EBX, EAX		; save EBX for later testing
 		XOR EAX, 00200000H	; toggle bit 21
+		PUSH EAX				; push to stack
+		POPFD					; save changed EAX to EFLAGS
+		PUSHFD				; push EFLAGS to TOS
+		POP EAX				; store EFLAGS in EAX
+		CMP EAX, EBX		; see if bit 21 has changed
+		SETNE AL;			; return TRUE if bit 21 has changed, FALSE otherwise
+	#ELSIF AMD64 THEN
+		PUSHFQ				; save RFLAGS
+		POP RAX				; store RFLAGS in EAX
+		MOV RBX, RAX		; save RBX for later testing
+		XOR RAX, 00200000H	; toggle bit 21
 		PUSH RAX				; push to stack
-		POPFQ					; save changed RAX to RFLAGS
-		PUSHFQ					; push RFLAGS to TOS
-		POP RAX				; store RFLAGS in RAX
-		CMP EAX, EBX			; see if bit 21 has changed
-		SETNE AL;				; return TRUE if bit 21 has changed, FALSE otherwise
+		POPFQ					; save changed EAX to EFLAGS
+		PUSHFQ				; push EFLAGS to TOS
+		POP RAX				; store EFLAGS in EAX
+		CMP RAX, RBX		; see if bit 21 has changed
+		SETNE AL;			; return TRUE if bit 21 has changed, FALSE otherwise
+	#ELSE
+		unimplemented
+	#END
 	END CpuIdSupported;
 
 	
@@ -621,22 +802,44 @@ END GetTimer;
 
 	(** -- Processor initialization -- *)
 	PROCEDURE -SetFCR( s: SET );
-	CODE {SYSTEM.AMD64, SYSTEM.FPU}
-		FLDCW WORD [RSP]	; parameter s
-		POP RAX
+	CODE
+	#IF I386 THEN
+		FLDCW	[ESP]	;  parameter s
+		POP	EAX
+	#ELSIF AMD64 THEN
+		FLDCW	WORD [RSP]	; parameter s
+		POP	RAX
+	#ELSE
+		unimplemented
+	#END
 	END SetFCR;
 
 	PROCEDURE -FCR( ): SET;
-	CODE {SYSTEM.AMD64, SYSTEM.FPU}
-		PUSH 0
-		FNSTCW WORD [RSP]
+	CODE
+	#IF I386 THEN
+		PUSH	0
+		FNSTCW	[ESP]
 		FWAIT
-		POP RAX
+		POP	EAX
+	#ELSIF AMD64 THEN
+		PUSH	0
+		FNSTCW	WORD [RSP]
+		FWAIT
+		POP	RAX
+	#ELSE
+		unimplemented
+	#END
 	END FCR;
 
 	PROCEDURE -InitFPU;
-	CODE {SYSTEM.AMD64, SYSTEM.FPU}
+	CODE
+	#IF I386 THEN
 		FNINIT
+	#ELSIF AMD64 THEN
+		FNINIT
+	#ELSE
+		unimplemented
+	#END
 	END InitFPU;
 
 	(** Setup FPU control word of current processor. *)

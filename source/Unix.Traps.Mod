@@ -107,8 +107,6 @@ VAR
 			(* ignore *) RETURN
 		END;
 		
-		IF ~Objects.SystemA2Up THEN  Machine.VerboseLog( )  END;
-		
 		LockTrap;
 		
 		INC( trapHandlingLevel );
@@ -192,9 +190,7 @@ VAR
 			RETURN  (*! to exception handler !! *)
 		END;
 
-		IF Objects.SystemA2Up THEN  Objects.ExitTrap( )
-		ELSE  Machine.Shutdown( FALSE )
-		END
+		Objects.ExitTrap;
 	END Trap;
 
 

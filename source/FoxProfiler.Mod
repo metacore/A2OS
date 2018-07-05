@@ -43,22 +43,22 @@ TYPE
 		PROCEDURE Enter(moduleId, procedureId: LONGINT; enterTime: HUGEINT);
 		BEGIN
 			IF TraceEnter THEN log.String("stack position "); log.Int(stackPosition,1); log.Ln; END;
+			IF (moduleId < MaxModules) & (procedureId < MaxProcedures) THEN
+				INC(modules[moduleId,procedureId].calls);
+			END;
 			IF stackPosition < MaxStackSize THEN
-				startTime[stackPosition] := GetTimer();
 				correcture[stackPosition] := 0;
 
 				(* debugging *)
 				module[stackPosition] := moduleId;
 				procedure[stackPosition] := procedureId;
 
+				startTime[stackPosition] := GetTimer();
 				(* book keeping for caller *)
 				IF stackPosition > 0 THEN
 					(* try to remove time spent in profiler *)
 					INC(correcture[stackPosition-1], startTime[stackPosition] -enterTime);
 				END;
-			END;
-			IF (moduleId < MaxModules) & (procedureId < MaxProcedures) THEN
-				INC(modules[moduleId,procedureId].calls);
 			END;
 			INC(stackPosition);
 		END Enter;
@@ -359,16 +359,30 @@ VAR
 		log.Update;
 	END Report;
 
+	PROCEDURE CalibrateProc;
+	BEGIN
+		EnterProcedure(0,0);
+		ExitProcedure(0,0);
+	END CalibrateProc;
+	
+
 	PROCEDURE Calibrate;
+	VAR cal: LONGINT; i: SIZE; process: Process;
 	BEGIN
 		frequency := Objects.TimerFrequency();
 		log.Ln;  log.String( "Timer reported Frequency: " ); log.FloatFix( frequency, 5, 1,0 );
 		log.Ln;  log.Update;
+		AddModule(cal,1,"@FoxProfiler");
+		AddProcedure(cal,0,"@ProfilerDelta");
+		process := GetProcess();
+		FOR i := 1 TO 1000 DO
+			CalibrateProc();
+		END;		
 	END Calibrate;
 
 	PROCEDURE Init;
 	VAR i: LONGINT;
-	BEGIN{EXCLUSIVE}
+	BEGIN
 		FOR i := 0 TO LEN(modules)-1 DO	modules[i] := NIL	END;
 		FOR i := 0 TO LEN(table)-1 DO table[i].used := FALSE END;
 		numberModules := 0;
@@ -397,11 +411,11 @@ BEGIN
 	Init;
 END FoxProfiler.
 
-WMUtilities.Call --font=Courier FoxProfiler.Report ~
-WMUtilities.Call --font=Courier FoxProfiler.Report time ~
-WMUtilities.Call --font=Courier FoxProfiler.Report calls ~
-WMUtilities.Call --font=Courier FoxProfiler.Report name ~
-WMUtilities.Call --font=Courier FoxProfiler.Report brut ~
+WMUtilities.Call --font=VeraMo FoxProfiler.Report ~
+WMUtilities.Call --font=VeraMo FoxProfiler.Report time ~
+WMUtilities.Call --font=VeraMo FoxProfiler.Report calls ~
+WMUtilities.Call --font=VeraMo FoxProfiler.Report name ~
+WMUtilities.Call --font=VeraMo FoxProfiler.Report brut ~
 
 WMUtilities.Call --font=Courier FoxProfiler.Report time all ~
 

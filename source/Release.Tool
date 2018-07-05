@@ -190,6 +190,14 @@ BUILDS
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+	Linux32C {
+		INCLUDE "LINUX32C UNIX32 UNIX I386 COOP"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Linux32 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX32C,UNIX32,UNIX,I386,COOP"
+		PATH "./NewAos/"
+		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
+		DISABLED "FALSE"
+	}
 	Linux64 {
 		INCLUDE "LINUX64 UNIX64 UNIX AMD64"
 		COMPILER "Compiler.Compile"
@@ -254,8 +262,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# Runtime support for HUGEINT and strings
 	I386 { I386.Builtins.Mod }
 	AMD64 { AMD64.Builtins.Mod }
-	BIOS32C, WIN32C { I386.CPU.Mod }
-	LINUX64C { AMD64.CPU.Mod }
+	I386 & COOP { I386.CPU.Mod }
+	AMD64 & COOP { AMD64.CPU.Mod }
 	RPIC { RPI.CPU.Mod }
 	ZYNQC { Zynq.CPU.Mod }
 
@@ -266,7 +274,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { Counters.Mod }
 	BIOS32C { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
 	WIN32C { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
-	LINUX64C { Linux.Glue.Mod Linux.AMD64.Unix.Mod Unix.Processors.Mod Unix.Timer.Mod }
+	LINUX & COOP { Linux.Glue.Mod Linux.AMD64.Unix.Mod Unix.Processors.Mod Unix.Timer.Mod }
 	RPIC { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
@@ -274,7 +282,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	RPIC { HeapManager.Mod RPI.Environment.Mod }
 	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
 	WIN32C { Windows.Environment.Mod }
-	LINUX64C { Unix.Environment.Mod }
+	UNIX & COOP { Unix.Environment.Mod }
 
 	LINUX32 { Linux.Glue.Mod Linux.I386.Unix.Mod }
 	LINUX64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
@@ -288,9 +296,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	BIOS64 { BIOS.AMD64.Machine.Mod }
 	WIN32 { Windows.I386.Machine.Mod }
 	WIN64 { Windows.AMD64.Machine.Mod }
-	COOP { Mutexes.Mod }
-	BIOS32C, WIN32C { Coop.Machine.Mod }
-	LINUX64C { Coop.Machine.Mod }
+	COOP { Mutexes.Mod Coop.Machine.Mod }
 	RPIC, ZYNQC { Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
 

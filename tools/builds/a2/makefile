@@ -7,7 +7,7 @@ MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 
 tool := $(if $(wildcard oberon), ./oberon, ./original)
 platforms := Bios32 Bios64 Win32 Win64 Linux32 Linux64 Darwin32 Darwin64 Solaris32 Solaris64 \
-	Linux64C
+	Linux32C Linux64C
 
 target := Linux64
 object := .GofUu

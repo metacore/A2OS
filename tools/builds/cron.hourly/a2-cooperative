@@ -22,4 +22,5 @@ process ()
 	notify
 }
 
+process Linux32C &
 process Linux64C &

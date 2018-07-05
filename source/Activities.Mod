@@ -133,7 +133,7 @@ TYPE Processor = RECORD {ALIGNED (CPU.CacheLineSize)}
 	assigning := FALSE: BOOLEAN;
 	originalFramePointer: ADDRESS;
 	readyQueue: ARRAY Priorities OF Queues.AlignedQueue;
-	runningActivity: Activity;
+	runningActivity {UNTRACED}: Activity;
 	index: SIZE;
 END;
 

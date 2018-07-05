@@ -780,7 +780,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF register.first = NIL THEN
 		register.first := module;
 	ELSE
-		register.last.next := module; (* transitively unsafe access via register.last *)
+		SYSTEM.PUT (ADDRESS OF register.last.next, module); (* transitively unsafe access via register.last *)
 	END;
 	register.last := module;
 END Register;

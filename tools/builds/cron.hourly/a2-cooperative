@@ -24,3 +24,4 @@ process ()
 
 process Linux32C &
 process Linux64C &
+process RpiC &

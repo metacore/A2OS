@@ -262,6 +262,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# Runtime support for HUGEINT and strings
 	I386 { I386.Builtins.Mod }
 	AMD64 { AMD64.Builtins.Mod }
+	ARM { ARM.FPE64.Mod ARM.Builtins.Mod }
 
 	I386 & COOP { I386.CPU.Mod }
 	AMD64 & COOP { AMD64.CPU.Mod }
@@ -297,8 +298,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	BIOS & AMD64 & ~COOP { BIOS.AMD64.Machine.Mod }
 	WIN32 { Windows.I386.Machine.Mod }
 	WIN64 { Windows.AMD64.Machine.Mod }
-	COOP { Mutexes.Mod Coop.Machine.Mod }
-	ARM & COOP { Coop.ARM.Machine.Mod }
+	COOP & ~ARM { Mutexes.Mod Coop.Machine.Mod }
+	COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
 
 	~COOP { Heaps.Mod }

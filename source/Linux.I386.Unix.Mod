@@ -132,11 +132,19 @@ CONST
 	SA_NODEFER		= 0x40000000;
 	SA_RESETHAND	= 0x80000000;
 
+	CLOCK_MONOTONIC* = 1;
+	CLOCK_MONOTONIC_RAW* = 4;
+	CLOCK_PROCESS_CPUTIME_ID* = 2;
+	CLOCK_REALTIME* = 0;
+	CLOCK_THREAD_CPUTIME_ID* = 3;
+
 	PTHREAD_CANCEL_ENABLE 	= 0;
 	PTHREAD_CANCEL_DISABLE	= 1;
 
 	PTHREAD_CANCEL_ASYNCHRONOUS	= 0;
 	PTHREAD_CANCEL_DEFERRED	= 1;
+
+	PTHREAD_BARRIER_SERIAL_THREAD* = -1;
 
 	(*--------------------------- Threads -------------------------------*)
 
@@ -158,6 +166,8 @@ TYPE
 	arg_t*		= ARRAY OF CHAR;
 	argv_t*	= ARRAY OF arg_t;
 
+	Sem* = RECORD reserved1-: ARRAY 4 OF ADDRESS END;
+	Barrier* = RECORD reserved1-: ARRAY 3 OF ADDRESS; reserved2-: ARRAY 2 OF WORD END;
 
 CONST
 	(* Thread priorities *)
@@ -313,6 +323,10 @@ TYPE
 				interval*, value*: Timeval
 			END;
 
+	Timespec* = RECORD
+		tv_sec*: LONGWORD;
+		tv_nsec*: LONGWORD;
+	END;
 
 CONST
 	FdSetLen* = 32;

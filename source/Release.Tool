@@ -183,7 +183,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32 {
-		INCLUDE "UNIX I386"
+		INCLUDE "LINUX UNIX I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
@@ -191,7 +191,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32C {
-		INCLUDE "UNIX I386 COOP"
+		INCLUDE "LINUX UNIX I386 COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,I386,COOP"
 		PATH "./NewAos/"
@@ -199,7 +199,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux64 {
-		INCLUDE "LINUX64 UNIX AMD64"
+		INCLUDE "LINUX UNIX AMD64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
@@ -207,7 +207,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux64C {
-		INCLUDE "UNIX AMD64 COOP"
+		INCLUDE "LINUX UNIX AMD64 COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,AMD64,COOP"
 		PATH "./NewAos/"
@@ -270,11 +270,19 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# Low-level trace output
 	Trace.Mod
 
+	WIN { Windows.Kernel32.Mod }
+
+	LINUX & I386 { Linux.Glue.Mod Linux.I386.Unix.Mod }
+	LINUX & AMD64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
+	DARWIN & I386 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
+	DARWIN & AMD64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
+	SOLARIS { Unix.Glue.Mod Solaris.Unix.Mod }
+
 	# cooperative runtime system
 	COOP { Counters.Mod }
 	BIOS & I386 & COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
 	WIN32C { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
-	LINUX & COOP { Linux.Glue.Mod Linux.AMD64.Unix.Mod Unix.Processors.Mod Unix.Timer.Mod }
+	UNIX & COOP { Unix.Processors.Mod Unix.Timer.Mod }
 	RPIC { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
@@ -283,14 +291,6 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
 	WIN32C { Windows.Environment.Mod }
 	UNIX & COOP { Unix.Environment.Mod }
-
-	LINUX & I386 { Linux.Glue.Mod Linux.I386.Unix.Mod }
-	LINUX & AMD64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
-	DARWIN & I386 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
-	DARWIN & AMD64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
-	SOLARIS { Unix.Glue.Mod Solaris.Unix.Mod }
-
-	WIN { Windows.Kernel32.Mod }
 
 	BIOS & I386 & ~COOP { BIOS.I386.Machine.Mod }
 	BIOS & AMD64 & ~COOP { BIOS.AMD64.Machine.Mod }

@@ -185,7 +185,7 @@ BUILDS
 	Linux32 {
 		INCLUDE "LINUX UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32"
+		COMPILEOPTIONS "-p=Unix32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -193,7 +193,7 @@ BUILDS
 	Linux32C {
 		INCLUDE "LINUX UNIX I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,I386,COOP"
+		COMPILEOPTIONS "-p=Unix32 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,I386,COOP"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
@@ -201,7 +201,7 @@ BUILDS
 	Linux64 {
 		INCLUDE "LINUX UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64"
+		COMPILEOPTIONS "-p=Unix64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -209,7 +209,7 @@ BUILDS
 	Linux64C {
 		INCLUDE "LINUX UNIX AMD64 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,AMD64,COOP"
+		COMPILEOPTIONS "-p=Unix64 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,AMD64,COOP"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
@@ -217,7 +217,7 @@ BUILDS
 	Darwin32 {
 		INCLUDE "DARWIN UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32"
+		COMPILEOPTIONS "-p=Unix32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -225,7 +225,7 @@ BUILDS
 	Darwin64 {
 		INCLUDE "DARWIN UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64"
+		COMPILEOPTIONS "-p=Unix64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -233,7 +233,7 @@ BUILDS
 	Solaris32 {
 		INCLUDE "SOLARIS UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32"
+		COMPILEOPTIONS "-p=Unix32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -241,7 +241,7 @@ BUILDS
 	Solaris64 {
 		INCLUDE "SOLARIS UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64"
+		COMPILEOPTIONS "-p=Unix64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"

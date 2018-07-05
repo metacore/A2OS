@@ -583,8 +583,8 @@ BEGIN
 	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT --define=ARM");
 	DoAddPlatform("TRMI","-b=TRM --objectFile=Intermediate --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT --define=ARM");
 	DoAddPlatform("ARMA2","-b=ARM --mergeSections --define=ARM");
-	DoAddPlatform("Linux32","-b=AMD --bits=32 --mergeSections --traceModule=Trace --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,I386");
-	DoAddPlatform("Linux64","-b=AMD --bits=64 --mergeSections --traceModule=Trace --objectFileExtension=.GofUu --symbolFileExtension=.SymUu --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,AMD64");
+	DoAddPlatform("Unix32","-b=AMD --bits=32 --mergeSections --traceModule=Trace --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,I386");
+	DoAddPlatform("Unix64","-b=AMD --bits=64 --mergeSections --traceModule=Trace --objectFileExtension=.GofUu --symbolFileExtension=.SymUu --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,AMD64");
 	
 	SetupDefaults;
 END Compiler.

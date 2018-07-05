@@ -94,7 +94,7 @@ END Glue.
 
  Building the SolarisA2 Generic elf binary:
 
-Compiler.Compile -p=Linux32
+Compiler.Compile -p=Unix32
 		I386.Builtins.Mod Trace.Mod 
 		Unix.Glue.Mod  Solaris.I386.Unix.Mod  Unix.I386.Machine.Mod	
 		Heaps.Mod  Modules.Mod  Solaris.Objects.Mod  Unix.Kernel.Mod

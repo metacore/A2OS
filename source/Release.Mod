@@ -157,7 +157,7 @@ TYPE
 		BEGIN
 			nofFiles := 0; nofSources := 0;
 			FOR i := 0 TO MaxPrefixes-1 DO
-				IF Has(release, i) THEN
+				IF In(release, i) THEN
 					nofFiles := nofFiles + stats[i].nofFiles;
 					nofSources := nofSources + stats[i].nofSources;
 				END;
@@ -169,9 +169,9 @@ TYPE
 		BEGIN
 			INC(nofFiles);
 			IF file.IsSourceCode() THEN INC(nofSources); END;
-			IF ~IsAll(file.release) THEN
+			IF file.release # NIL THEN
 				FOR i := 0 TO MaxPrefixes-1 DO
-					IF Has(file.release, i) THEN
+					IF (file.release = NIL) OR file.release.Has(i) THEN
 						INC(stats[i].nofFiles);
 						IF file.IsSourceCode() THEN INC(stats[i].nofSources); END;
 					END;
@@ -196,6 +196,43 @@ TYPE
 	END Statistics;
 
 TYPE
+	ExpressionModel = ENUM Prefix, Not, And, Or END;
+
+	Expression = OBJECT
+
+		VAR model: ExpressionModel;
+		VAR index: LONGINT;
+		VAR left, right: Expression;
+
+		PROCEDURE Test (CONST set: Set): BOOLEAN;
+		BEGIN
+			CASE model OF
+			| ExpressionModel.Prefix:
+				RETURN In(set, index);
+			| ExpressionModel.Not:
+				RETURN ~left.Test (set);
+			| ExpressionModel.And:
+				RETURN left.Test (set) & right.Test (set);
+			| ExpressionModel.Or:
+				RETURN left.Test (set) OR right.Test (set);
+			END;
+		END Test;
+
+		PROCEDURE Has(index: LONGINT): BOOLEAN;
+		BEGIN
+			CASE model OF
+			| ExpressionModel.Prefix:
+				RETURN SELF.index = index;
+			| ExpressionModel.Not:
+				RETURN ~left.Has (index);
+			| ExpressionModel.And:
+				RETURN left.Has (index) & right.Has (index);
+			| ExpressionModel.Or:
+				RETURN left.Has (index) OR right.Has (index);
+			END;
+		END Has;
+
+	END Expression;
 
 	(* The bitmap is used to analyze  dependencies between modules *)
 	Bitmap = OBJECT
@@ -389,7 +426,7 @@ TYPE
 
 		package- : Package;
 		options: ARRAY 8 OF CHAR;
-		release- : Set;
+		release- : Expression;
 		flags-: SET;
 		file : Files.File;
 		pos : LONGINT; (* Position in package description file *)
@@ -412,21 +449,16 @@ TYPE
 			doCompile := TRUE;
 			package := NIL;
 			COPY("", options);
-			SetEmpty(release);
+			release := NIL;
 			flags := {};
 			file := NIL;
 			pos := 0;
 			prev := NIL; next := NIL;
 		END Init;
 
-		PROCEDURE IsInRelease*(release : Set) : BOOLEAN;
-		VAR i: LONGINT;
+		PROCEDURE IsInRelease*(CONST release : Set) : BOOLEAN;
 		BEGIN
-			IF IsAll(SELF.release) THEN RETURN TRUE END; 
-			FOR i := 0 TO LEN(release)-1 DO 
-				IF SELF.release[i] * release[i] # {} THEN RETURN TRUE END;
-			END;
-			RETURN FALSE;
+			RETURN (SELF.release = NIL) OR SELF.release.Test (release);
 		END IsInRelease;
 
 		PROCEDURE IsSourceCode*() : BOOLEAN;
@@ -1594,7 +1626,7 @@ TYPE
 					nofFiles := 0;
 					file := files;
 					WHILE (file # NIL) DO
-						IF ~IsAll(file.release) & Has(file.release, prefix) THEN
+						IF (file.release = NIL) OR file.release.Has(prefix) THEN
 							w.Char(Tab); w.String(file.name); w.Ln;
 							INC(nofFiles);
 						END;
@@ -1675,7 +1707,7 @@ TYPE
 			RETURN ~error;
 		END AddBuild;
 
-		PROCEDURE AddFile(CONST filename : ARRAY OF CHAR;  release : Set; package : Package;  pos : LONGINT);
+		PROCEDURE AddFile(CONST filename : ARRAY OF CHAR; release : Expression; package : Package;  pos : LONGINT);
 		VAR file, f : File; pre, suf : Files.FileName;
 		BEGIN
 			ASSERT(package # NIL);
@@ -1896,12 +1928,12 @@ TYPE
 					token[i] := ch; INC(i);
 				END;
 
-				IF (~useDelimiter & (ch # "{") & (ch # "}") & (ch # ",")) THEN
+				IF (~useDelimiter & (ch # "{") & (ch # "}") & (ch # ",") & (ch # "~") & (ch # "|") & (ch # "(") & (ch # ")")) THEN
 					ch := reader.Peek();
 				END;
 			UNTIL
 				(i >= LEN(token)-1) OR ((reader.res = Streams.EOF) & (ch = 0X)) OR
-				(~useDelimiter & (IsWhitespace(ch) OR (ch = "#") OR (ch ="{") OR (ch="}") OR (ch = ","))) OR
+				(~useDelimiter & (IsWhitespace(ch) OR (ch = "#") OR (ch ="(") OR (ch=")") OR (ch ="{") OR (ch="}") OR (ch = ",") OR (ch = "~"))) OR
 				(useDelimiter & (ch = delimiter));
 
 
@@ -2275,15 +2307,13 @@ TYPE
 			Prefix = prefix {"," prefix}
 			FileList = filename {" " filename} *)
 		PROCEDURE ParsePackage(builds : Builds;  VAR token : Token) : BOOLEAN;
-		VAR currentRelease : Set; index : LONGINT; pos : LONGINT; nbr : ARRAY 8 OF CHAR; caseEqual : BOOLEAN; file : File;
+		VAR currentRelease : Expression; index : LONGINT; pos : LONGINT; nbr : ARRAY 8 OF CHAR; caseEqual : BOOLEAN; file : File;
 		BEGIN
-			SetAll(currentRelease);
 			LOOP
 				IF scanner.Get(token) THEN
 					index := builds.GetPrefixIndex(token);
 					IF (index >= 0) THEN
-						IF IsAll(currentRelease) THEN
-							SetEmpty(currentRelease);
+						IF currentRelease = NIL THEN
 							IF ~ParseBuildPrefixes(builds, token, currentRelease, pos) THEN
 								RETURN FALSE;
 							END;
@@ -2292,9 +2322,13 @@ TYPE
 							Error(scanner.pos, "Expected closing brace for tag at position #", nbr, "");
 							RETURN FALSE;
 						END;
+					ELSIF (token = "~") OR (token = "(") THEN
+						IF ~ParseBuildPrefixes(builds, token, currentRelease, pos) THEN
+							RETURN FALSE;
+						END;
 					ELSIF (token = CLOSESECTION) THEN
-						IF ~IsAll(currentRelease) THEN
-							SetAll(currentRelease);
+						IF currentRelease # NIL THEN
+							currentRelease := NIL;
 						ELSE
 							Error(scanner.pos, "No matching opening bracket", "", "");
 							RETURN FALSE;
@@ -2322,29 +2356,76 @@ TYPE
 					EXIT;
 				END;
 			END;
-			RETURN IsAll(currentRelease);
+			RETURN currentRelease = NIL;
 		END ParsePackage;
 
-		PROCEDURE ParseBuildPrefixes(builds : Builds; VAR token : Token; VAR release : Set; VAR pos : LONGINT) : BOOLEAN;
-		VAR index : LONGINT; message : ARRAY 128 OF CHAR;
-		BEGIN
-			index := builds.GetPrefixIndex(token);
-			IF (index >= 0) THEN
-				Incl(release,index);
-			ELSE
-				MakeMessage(message, "Unknown build prefix #", token, "");
-				diagnostics.Warning(scanner.source, scanner.pos, message);
-			END;
-			IF scanner.Get(token) THEN
-				IF (token = OPENSECTION) THEN
-					RETURN TRUE;
-				ELSIF (token = SEPARATOR) THEN
-					RETURN scanner.Get(token) & ParseBuildPrefixes(builds, token, release, pos);
+		PROCEDURE ParseBuildPrefixes(builds : Builds; VAR token : Token; VAR release : Expression; VAR pos : LONGINT) : BOOLEAN;
+
+			(* Factor = Identifier | '~' Factor | '(' Prefixes ')'. *)
+			PROCEDURE Factor (VAR value: Expression): BOOLEAN;
+			VAR index: LONGINT; message : ARRAY 128 OF CHAR;
+			BEGIN
+				IF token = "(" THEN
+					IF ~scanner.Get(token) THEN RETURN FALSE END;
+					IF ~Prefixes (value) THEN RETURN FALSE END;
+					IF token # ")" THEN Error(scanner.pos, "Expected ')'", "", ""); RETURN FALSE END;
+					IF ~scanner.Get(token) THEN RETURN FALSE END;
+				ELSIF token = "~" THEN
+					IF ~scanner.Get(token) THEN RETURN FALSE END;
+					NEW (value);
+					value.model := ExpressionModel.Not;
+					IF ~Factor (value.left) THEN RETURN FALSE END;
 				ELSE
-					Error(scanner.pos, "Expected '{' or ',' token", "", "");
-					RETURN FALSE;
+					NEW (value);
+					value.model := ExpressionModel.Prefix;
+					value.index := builds.GetPrefixIndex(token);
+					IF (value.index < 0) THEN
+						MakeMessage(message, "Unknown build prefix #", token, "");
+						diagnostics.Warning(scanner.source, scanner.pos, message);
+					END;
+					IF ~scanner.Get(token) THEN RETURN FALSE END;
 				END;
+				RETURN TRUE;
+			END Factor;
+
+			(* Term = Factor {'&' Factor}. *)
+			PROCEDURE Term (VAR value: Expression): BOOLEAN;
+			VAR left: Expression;
+			BEGIN
+				IF ~Factor (value) THEN RETURN FALSE END;
+				WHILE token = "&" DO
+					IF ~scanner.Get(token) THEN RETURN FALSE END;
+					left := value;
+					NEW (value);
+					value.model := ExpressionModel.And;
+					value.left := left;
+					IF ~Factor (value.right) THEN RETURN FALSE END;
+				END;
+				RETURN TRUE;
+			END Term;
+				
+			(* Prefixes = Term {('|'|',') Term}. *)
+			PROCEDURE Prefixes (VAR value: Expression): BOOLEAN;
+			VAR left: Expression;
+			BEGIN
+				IF ~Term (value) THEN RETURN FALSE END;
+				WHILE (token = "|") OR (token = ",") DO
+					IF ~scanner.Get (token) THEN RETURN FALSE END;
+					left := value;
+					NEW (value);
+					value.model := ExpressionModel.Or;
+					value.left := left;
+					IF ~Term (value.right) THEN RETURN FALSE END;
+				END;
+				RETURN TRUE;
+			END Prefixes;
+
+		BEGIN
+			IF ~Prefixes (release) THEN RETURN FALSE END;
+			IF (token = OPENSECTION) THEN
+				RETURN TRUE;
 			ELSE
+				Error(scanner.pos, "Expected '{' or ',' token", "", "");
 				RETURN FALSE;
 			END;
 		END ParseBuildPrefixes;
@@ -2385,6 +2466,15 @@ TYPE
 		RETURN TRUE;
 	END IsAll;
 	
+	PROCEDURE IsEmpty(CONST s: Set): BOOLEAN;
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO LEN(s)-1 DO 
+			IF s[i] # {} THEN RETURN FALSE END; 
+		END;
+		RETURN TRUE;
+	END IsEmpty;
+	
 	PROCEDURE Incl(VAR s: Set; i: LONGINT);
 	BEGIN
 		INCL(s[i DIV SetSize], i MOD SetSize); 
@@ -2395,10 +2485,34 @@ TYPE
 		EXCL(s[i DIV SetSize], i MOD SetSize); 
 	END Excl;
 	
-	PROCEDURE Has(CONST s: Set; i: LONGINT): BOOLEAN;
+	PROCEDURE Complement(VAR s: Set);
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO LEN(s)-1 DO 
+			s[i] := -s[i];
+		END;
+	END Complement;
+	
+	PROCEDURE Union(VAR s: Set; CONST t: Set);
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO LEN(s)-1 DO 
+			s[i] := s[i] + t[i];
+		END;
+	END Union;
+	
+	PROCEDURE Intersection(VAR s: Set; CONST t: Set);
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO LEN(s)-1 DO 
+			s[i] := s[i] * t[i];
+		END;
+	END Intersection;
+	
+	PROCEDURE In(CONST s: Set; i: LONGINT): BOOLEAN;
 	BEGIN
 		RETURN i MOD SetSize IN s[i DIV SetSize];
-	END Has;
+	END In;
 	
 PROCEDURE GetModuleInfo(
 					in : Streams.Reader;

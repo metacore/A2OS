@@ -11,12 +11,11 @@ TYPE
 	(* Heaps.GetHeapInfo is a slow operation. HeapHelper provides its results to multiple plugins *)
 	HeapHelper = OBJECT(WMPerfMonPlugins.Helper)
 	VAR
-		free, total : SIZE;
+		free, total, largest : SIZE;
 
 		PROCEDURE Update;
 		BEGIN
-			total := Heaps.HeapSize();
-			free := total - Heaps.Used();
+			Heaps.GetHeapInfo(total, free, largest);
 		END Update;
 
 	END HeapHelper;
@@ -34,9 +33,10 @@ TYPE
 			p.autoMax := TRUE; p.unit := "KB"; p.minDigits := 7;
 			p.noSuperSampling := TRUE;
 			p.helper := heapHelper; h := heapHelper;
-			NEW(ds, 2);
+			NEW(ds, 3);
 			ds[0].name := "Size"; INCL(ds[0].flags, WMPerfMonPlugins.Maximum);
 			ds[1].name := "Free";
+			ds[2].name := "LargestBlock"; INCL(ds[2].flags, WMPerfMonPlugins.Standalone);
 			p.datasetDescriptor := ds;
 		END Init;
 
@@ -44,6 +44,7 @@ TYPE
 		BEGIN
 			dataset[0] := h.total DIV 1024;
 			dataset[1] := h.free DIV 1024;
+			dataset[2] := h.largest DIV 1024;
 		END UpdateDataset;
 
 	END MemoryLoad;

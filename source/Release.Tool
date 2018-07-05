@@ -600,8 +600,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	Errors.Mod errors.txt
 
 	# Access to system functions
-	UNIX { Unix.ProcessInfo0.Mod }
-	NATIVE, WIN { ProcessInfo0.Mod }
+	UNIX & ~COOP { Unix.ProcessInfo0.Mod }
+	NATIVE, WIN, UNIX & COOP { ProcessInfo0.Mod }
 	ProcessInfo.Mod
 
 	System.Mod
@@ -1012,8 +1012,8 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 		BIOS.WMPerfMonPluginInterrupts.Mod
 		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
 	}
-	WIN { Windows.WMPerfMonPluginCpu.Mod Windows.WMPerfMonPluginMemory.Mod }
-	UNIX { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
+	WIN, COOP { Windows.WMPerfMonPluginCpu.Mod Windows.WMPerfMonPluginMemory.Mod }
+	UNIX & ~COOP { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
 
 	NATIVE, WIN {
 		WMPerfMonPluginModVars.Mod WMPerfMonPluginHeap.Mod

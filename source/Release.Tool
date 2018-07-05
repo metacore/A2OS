@@ -182,7 +182,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32 {
-		INCLUDE "LINUX32 UNIX I386"
+		INCLUDE "UNIX I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
@@ -283,8 +283,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN32C { Windows.Environment.Mod }
 	UNIX & COOP { Unix.Environment.Mod }
 
-	LINUX32 { Linux.Glue.Mod Linux.I386.Unix.Mod }
-	LINUX64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
+	LINUX & I386 { Linux.Glue.Mod Linux.I386.Unix.Mod }
+	LINUX & AMD64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
 	DARWIN32 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
 	DARWIN64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
 	SOLARIS { Unix.Glue.Mod Solaris.Unix.Mod }

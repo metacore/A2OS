@@ -190,9 +190,9 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32C {
-		INCLUDE "LINUX32C UNIX I386 COOP"
+		INCLUDE "UNIX I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX32C,UNIX,I386,COOP"
+		COMPILEOPTIONS "-p=Linux32 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,I386,COOP"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
@@ -206,9 +206,9 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux64C {
-		INCLUDE "LINUX64C UNIX AMD64 COOP"
+		INCLUDE "UNIX AMD64 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX64C,UNIX,AMD64,COOP"
+		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,AMD64,COOP"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"

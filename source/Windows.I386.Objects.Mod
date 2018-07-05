@@ -130,41 +130,29 @@ TYPE
 		rootedNext : Process; (*  to prevent process to be GCed in WinAos *)
 		obj-: ProtectedObject;   (* associated active object *)
 		state-: Kernel32.Context;
-		(*
-		sse: SSEState;	(* fpu and sse state of preempted process (only valid if Preempted IN flag) *)
-		sseAdr: LONGINT;
-		*)
 		condition-: Condition;   (* awaited process' condition *)
-		condFP-: LONGINT;   (* awaited process' condition's context *)
+		condFP-: ADDRESS;   (* awaited process' condition's context *)
 		mode-: LONGINT;   (* process state *)  (* only changed inside Objects lock ??? *)
 		procID-: LONGINT;   (* processor ID where running,  exported for compatibilty , useless in WinAos *)
 		waitingOn-: ProtectedObject;   (* obj this process is waiting on (for lock or condition) *)
 		id-: LONGINT;   (* unique process ID for tracing *)
 		flags*: SET;   (* process flags *)
 		priority-: LONGINT;   (* process priority *)
-		(*
-		currPri: LONGINT;
-		stack*: Machine.Stack; (** user-level stack of process *)
-		*)
-		stackBottom: LONGINT;
+
+		stackBottom: ADDRESS;
 		handle-: Kernel32.HANDLE; (* handle to corresponding Windows thread *)
 		body: Body;
 		event: Win32Event;
-		restartPC-: LONGINT;   (** entry point of body, for SAFE exception recovery *)
-		restartSP-: LONGINT;   (** stack level at start of body, for SAFE exception recovery *)
-		(*
-		perfCyc*: ARRAY Machine.MaxCPU OF HUGEINT;
-		priInvCnt: LONGINT; (* counts the nummber of object locks hold that increased currPri of the process *)
-		exp*: Machine.ExceptionState;
-		oldReturnPC: LONGINT;
-		*)
+		restartPC-: ADDRESS;   (** entry point of body, for SAFE exception recovery *)
+		restartSP-: ADDRESS;   (** stack level at start of body, for SAFE exception recovery *)
+
 		lastThreadTimes: HUGEINT;   (*ALEX 2005.12.12*)
 		gcContext: GCContext;
 		context: ANY; (* commands contect *)
 
 		PROCEDURE FindRoots*;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
-			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
+			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; p {UNTRACED}: ANY; i: SIZE;
 			context: Kernel32.Wow64Context;
 			a0,a1, obp, osb, osbp, opc, gbp: ADDRESS;
 			O: ANY; ID: LONGINT;
@@ -746,7 +734,7 @@ BEGIN
 END terminate;
 
 PROCEDURE {WINAPI} Wrapper( lpParameter: ANY ): LONGINT;
-VAR t: Process;  obj: ProtectedObject; res: Kernel32.BOOL; bp,sp: LONGINT;
+VAR t: Process;  obj: ProtectedObject; res: Kernel32.BOOL; bp,sp: ADDRESS;
 	excpfrm: Kernel32.ExcpFrm;
 BEGIN
 	(* it may happen that the garbage collector runs right here and ignores this procedure.
@@ -764,8 +752,8 @@ BEGIN
 	sp := Machine.CurrentSP();
 	t.restartSP := sp;
 	t.stackBottom := bp;
-	IF t.restartPC = SYSTEM.VAL(ADDRESS, terminateProc) THEN DEC(t.restartSP, 4)
-	ELSE DEC(t.restartSP, 8)
+	IF t.restartPC = SYSTEM.VAL(ADDRESS, terminateProc) THEN DEC(t.restartSP, SIZEOF(ADDRESS))
+	ELSE DEC(t.restartSP, 2*SIZEOF(ADDRESS))
 	END;
 	IF TraceVerbose THEN
 		Machine.Acquire(Machine.TraceOutput);
@@ -876,11 +864,12 @@ VAR t : Process; heapBlock {UNTRACED}: Heaps.HeapBlock;
 BEGIN
 	ASSERT(priority >= 0, 1000); ASSERT(priority <=Realtime, 1001);
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, heapBlock);
+	
 	ASSERT(heapBlock IS Heaps.ProtRecBlock); (* protected object *)
 	IF Restart IN flags THEN INCL(flags, Resistant) END;   (* SAFE => Restart & Resistant *)
 	NewProcess(body, priority, flags, obj, t);  INC(nProcs);  (* acquires Machine.Objects lock *)
 	t.mode := Ready; Put(ready, t);
-	Machine.Release(Machine.Objects)
+	Machine.Release(Machine.Objects);
 END CreateProcess;
 
 

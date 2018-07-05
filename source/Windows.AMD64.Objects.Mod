@@ -122,7 +122,7 @@ TYPE
 	Win32Event = Kernel32.HANDLE;
 	
 	GCContext = RECORD
-		nextPos: LONGINT; (* 0 to start with *)
+		nextPos: SIZE; (* 0 to start with *)
 		(*first,*)  last: ARRAY 256 OF ADDRESS; (* first might be not required *)
 	END;
 
@@ -161,7 +161,7 @@ TYPE
 			modName: ARRAY 128 OF CHAR;
 			mode0,mode1: LONGINT;
 			
-			contextPos: LONGINT;
+			contextPos: SIZE;
 		BEGIN{UNCHECKED} (* avoid winapi call indirection *)
 			O := obj; ID := id;
 			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)

@@ -7,7 +7,7 @@
 #
 # RPi Cooperative
 #
-#	Release.Build --build --path="./" RpiC ~
+#	Release.Build --build --path="./" RPiC ~
 #	Linker.Link --fileName=kernel.img --extension=Gof --displacement=8000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
 # Zynq Cooperative
@@ -147,7 +147,7 @@ BUILDS
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
-	RpiC {
+	RPiC {
 		INCLUDE "RPI NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=NATIVE,ARM,COOP"

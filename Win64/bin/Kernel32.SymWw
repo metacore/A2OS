@@ -113,7 +113,7 @@ CONST
 	CLRRTS* = 4; 
 	SETDTR* = 5; 
 	CLRDTR* = 6; 
-	REDWORDDEV* = 7; 
+	RESETDEV* = 7; 
 	SETBREAK* = 8; 
 	CLRBREAK* = 9; 
 	PurgeTXAbort* = 0; 

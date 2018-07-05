@@ -417,15 +417,6 @@ TYPE
 		PROCEDURE ^ AlertString*(CONST s: ARRAY OF CHAR); 
 	END Writer; 
 
-	CRC32Stream* = OBJECT (Streams.Writer)
-	VAR 
-		crc: LONGINT; 
-
-		PROCEDURE ^  & InitStream*; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ GetCRC*(): LONGINT; 
-	END CRC32Stream; 
-
 	TracingDiagnostics = OBJECT (Diagnostics.Diagnostics)
 	VAR 
 		diagnostics: Diagnostics.Diagnostics; 
@@ -452,7 +443,6 @@ VAR
 	getDebugWriter: DebugWriterFactory; 
 	getWriter: WriterFactory; 
 	getDiagnostics: DiagnosticsFactory; 
-	CRC32Table: ARRAY 256 OF SET; 
 	invalidPosition-: Position; 
 
 	PROCEDURE ^ MakeString*(CONST s: ARRAY OF CHAR): String; 
@@ -503,6 +493,5 @@ VAR
 	PROCEDURE ^ MessageSI*(CONST format: ARRAY OF CHAR; CONST s0: ARRAY OF CHAR; i1: LONGINT): MessageString; 
 	PROCEDURE ^ GetStringParameter*(r: Streams.Reader; VAR string: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetTracingDiagnostics*(diagnostics: Diagnostics.Diagnostics): Diagnostics.Diagnostics; 
-	PROCEDURE ^ InitTable32; 
 BEGIN
 END FoxBasic.

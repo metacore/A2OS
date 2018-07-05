@@ -107,7 +107,7 @@ VAR
 	shutdown*: LONGINT; 
 	trace: BOOLEAN; 
 	register: RECORD 
-		first, last: Module; 
+		first{UNTRACED} , last{UNTRACED} : Module; 
 	END; 
 	procedureDescriptors-: ProcedureDescs; 
 	callagain: BOOLEAN; 

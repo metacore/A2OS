@@ -76,7 +76,7 @@ TYPE
 	Win32Event = Kernel32.HANDLE; 
 
 	GCContext = RECORD 
-		nextPos: LONGINT; 
+		nextPos: SIZE; 
 		last: ARRAY 256 OF ADDRESS; 
 	END; 
 
@@ -133,13 +133,6 @@ TYPE
 		PROCEDURE ^ Activate; 
 	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
 	END FinalizerCaller; 
-
-	KdHelp = RECORD 
-		Thread: ADDRESS; 
-		ThCallBackStack, ThCallBackStore, NextCallback, FramePointer: Kernel32.DWORD; 
-		KiCallUserMode, KeUserCallbackDispatcher, SystemRangeStart, KiUserExceptionDispatcher, StackBase, StackLimit: ADDRESS; 
-		Reserved: ARRAY 5 OF ADDRESS; 
-	END; 
 VAR 
 	awc-, awl-: LONGINT; 
 	oberonLoop*: ANY; 

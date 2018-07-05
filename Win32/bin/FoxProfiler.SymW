@@ -60,6 +60,7 @@ VAR
 	PROCEDURE ^ ExitProcedure*(moduleId, procedureId: LONGINT); 
 	PROCEDURE ^ Initialize*; 
 	PROCEDURE ^ Report*(context: Commands.Context); 
+	PROCEDURE ^ CalibrateProc; 
 	PROCEDURE ^ Calibrate; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Reset*; 

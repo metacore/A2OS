@@ -267,8 +267,6 @@ VAR
 	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: LONGINT); 
 	PROCEDURE ^ AddFinalizer*(obj: ANY; n: FinalizerNode); 
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
-	PROCEDURE ^ HeapSize*(): SIZE; 
-	PROCEDURE ^ Used*(): SIZE; 
 	PROCEDURE ^ DecRefCount(VAR count: WORD): BOOLEAN; 
 	PROCEDURE ^ RefCount*(p: DataBlockU): WORD; 
 	PROCEDURE ^ RecursiveReset(h{UNTRACED} : HeapBlock); 

@@ -370,11 +370,12 @@ VAR
 	pthread_cond_destroy: PROCEDURE {C}(cond: ADDRESS):WORD; 
 	pthread_cond_wait: PROCEDURE {C}(cond: ADDRESS; mutex: ADDRESS):WORD; 
 	pthread_cond_signal: PROCEDURE {C}(cond: ADDRESS):WORD; 
-	pthread_create: PROCEDURE {C}(newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C}(arg: PROCEDURE ):ADDRESS; arg: PROCEDURE ):WORD; 
-	pthread_exit: PROCEDURE {C}(thr: ADDRESS); 
+	pthread_create-: PROCEDURE {C}(newthread: ADDRESS; attr: ADDRESS; start_routine: ADDRESS; arg: PROCEDURE ):WORD; 
+	pthread_exit-: PROCEDURE {NORETURN, C}(thr: ADDRESS); 
 	pthread_detach: PROCEDURE {C}(thr: ADDRESS); 
 	pthread_kill: PROCEDURE {C}(thr: ADDRESS; sigid: LONGINT):LONGINT; 
 	pthread_cancel: PROCEDURE {C}(thr: ADDRESS); 
+	pthread_join-: PROCEDURE {C}(thread: Thread_t; return: ADDRESS):WORD; 
 	pthread_key_create: PROCEDURE {C}(key: ADDRESS; destructor: PROCEDURE {C}(param: ADDRESS)):WORD; 
 	pthread_setspecific: PROCEDURE {C}(key: Key_t; value: ADDRESS):WORD; 
 	pthread_getspecific: PROCEDURE {C}(key: Key_t):ADDRESS; 
@@ -382,7 +383,7 @@ VAR
 	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
 	pthread_attr_setdetachstate: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
 	pthread_attr_setstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: SIZE); 
-	pthread_self: PROCEDURE {C}():Thread_t; 
+	pthread_self-: PROCEDURE {C}():Thread_t; 
 	sched_get_priority_max: PROCEDURE {C}(policy: LONGINT):LONGINT; 
 	sched_get_priority_min: PROCEDURE {C}(policy: LONGINT):LONGINT; 
 	pthread_setschedparam: PROCEDURE {C}(thread: Thread_t; policy: LONGINT; param: ADDRESS):WORD; 
@@ -398,6 +399,15 @@ VAR
 	nanosleep: PROCEDURE {C}(req, rem: ADDRESS):LONGINT; 
 	sigaltstack: PROCEDURE {C}(ss, oss: ADDRESS):LONGINT; 
 	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS):LONGINT; 
+	sem_init-: PROCEDURE {C}(sem: ADDRESS; pshared: WORD; value: WORD):WORD; 
+	sem_wait-: PROCEDURE {C}(sem: ADDRESS):WORD; 
+	sem_post-: PROCEDURE {C}(sem: ADDRESS):WORD; 
+	sem_destroy-: PROCEDURE {C}(sem: ADDRESS):WORD; 
+	pthread_barrier_init-: PROCEDURE {C}(barrier: ADDRESS; attr: ADDRESS; count: WORD):WORD; 
+	pthread_barrier_wait-: PROCEDURE {C}(barrier: ADDRESS):WORD; 
+	pthread_barrier_destroy-: PROCEDURE {C}(barrier: ADDRESS):WORD; 
+	pthread_getaffinity_np-: PROCEDURE {C}(thread: Thread_t; cpusetsize: SIZE; cpuset: ADDRESS):WORD; 
+	pthread_setaffinity_np-: PROCEDURE {C}(thread: Thread_t; cpusetsize: SIZE; cpuset: ADDRESS):WORD; 
 	posix_spawnp-: PROCEDURE {C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS; envp: ADDRESS):LONGINT; 
 	posix_spawn-: PROCEDURE {C}(pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS; envp: ADDRESS):LONGINT; 
 	waitpid-: PROCEDURE {C}(pid: pid_t; status: ADDRESS; options: LONGINT):pid_t; 
@@ -434,7 +444,8 @@ VAR
 	alarm-: PROCEDURE {C}(ms: LONGINT):LONGINT; 
 	setitimer-: PROCEDURE {C}(which: LONGINT; VAR value, ovalue: Itimerval):LONGINT; 
 	getitimer-: PROCEDURE {C}(which: LONGINT; VAR value: Itimerval):LONGINT; 
-	clock_gettime-: PROCEDURE {C}(clk_id: LONGINT; tp: tvPtr):LONGINT; 
+	clock_gettime-: PROCEDURE {C}(clk_id: WORD; tp: ADDRESS):WORD; 
+	clock_getres-: PROCEDURE {C}(clk_id: WORD; res: ADDRESS):WORD; 
 	gettimeofday-: PROCEDURE {C}(VAR tv: Timeval; VAR tz: Timezone):LONGINT; 
 	mktime-: PROCEDURE {C}(VAR tm: Tm):LONGINT; 
 	localtime-: PROCEDURE {C}(CONST tv: Timeval):TmPtr; 
@@ -512,7 +523,7 @@ VAR
 	PROCEDURE ^ HandleSignal*(sig: LONGINT); 
 	PROCEDURE ^ errno*(): LONGINT; 
 	PROCEDURE ^ {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD; 
-	PROCEDURE ^ X11IOErrorHandler(d: ADDRESS): WORD; 
+	PROCEDURE ^ {C} X11IOErrorHandler(d: ADDRESS): WORD; 
 	PROCEDURE ^ InitXErrorHandlers*(xErrorHandler: OberonXErrorHandler; xIOErrorHandler: OberonXIOErrorHandler); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ LinkToX*; 

@@ -76,28 +76,29 @@ TYPE
 	Win32Event = Kernel32.HANDLE; 
 
 	GCContext = RECORD 
-		ebp: ADDRESS; 
+		nextPos: SIZE; 
+		last: ARRAY 256 OF ADDRESS; 
 	END; 
 
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR 
 		rootedNext: Process; 
 		obj-: ProtectedObject; 
-		state-: Kernel32.Context; 
+		state-{ALIGNED(16)} : Kernel32.Context; 
 		condition-: Condition; 
-		condFP-: LONGINT; 
+		condFP-: ADDRESS; 
 		mode-: LONGINT; 
 		procID-: LONGINT; 
 		waitingOn-: ProtectedObject; 
 		id-: LONGINT; 
 		flags*: SET; 
 		priority-: LONGINT; 
-		stackBottom: LONGINT; 
+		stackBottom: ADDRESS; 
 		handle-: Kernel32.HANDLE; 
 		body: Body; 
 		event: Win32Event; 
-		restartPC-: LONGINT; 
-		restartSP-: LONGINT; 
+		restartPC-: ADDRESS; 
+		restartSP-: ADDRESS; 
 		lastThreadTimes: HUGEINT; 
 		gcContext: GCContext; 
 		context: ANY; 
@@ -146,9 +147,7 @@ VAR
 	nProcs: LONGINT; 
 	excplock: Kernel32.CriticalSection; 
 	exceptionhandler: ExceptionHandler; 
-	isWow64: BOOLEAN; 
 	GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS); 
-	lpContext: Kernel32.Wow64Context; 
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 
 	PROCEDURE ^ SetPriority*(priority: LONGINT); 
@@ -162,26 +161,7 @@ VAR
 	PROCEDURE ^ GetProcessID*(): LONGINT; 
 	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
-	PROCEDURE {FingerPrint(435550672)}  - StackBottom*(): LONGINT;
-	CODE {SYSTEM.i386}
-	DB	064H
-	DB	08BH
-	DB	005H
-	DB	004H
-	DB	000H
-	DB	000H
-	DB	000H
-
-	END StackBottom; 
-	PROCEDURE ^ {WINAPI} ExcpFrmHandler(VAR excpRec: Kernel32.ExceptionRecord; excpFrame: Kernel32.ExcpFrmPtr; VAR context: Kernel32.Context; dispatch: LONGINT): LONGINT; 
-	PROCEDURE {FingerPrint(-974582836)}  - GetCur;
-	CODE
-	END GetCur; 
-	PROCEDURE ^ GetCurrent(): Kernel32.ExcpFrmPtr; 
-	PROCEDURE {FingerPrint(-974582842)}  - SetCur;
-	CODE
-	END SetCur; 
-	PROCEDURE ^ SetCurrent(cur: Kernel32.ExcpFrmPtr); 
+	PROCEDURE ^ {WINAPI} ExcpFrmHandler(CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD; 
 	PROCEDURE ^ RemoveExcpFrm(VAR excpfrm: Kernel32.ExcpFrm); 
 	PROCEDURE ^ InstallExcpFrm(VAR excpfrm: Kernel32.ExcpFrm); 
 	PROCEDURE ^ InQueue(queue: ProcessQueue; t: Process): BOOLEAN; 

@@ -129,7 +129,6 @@ VAR
 	timers: Timer; 
 	timerListMutex: Unix.Mutex_t; 
 	timerStopped: BOOLEAN; 
-	SystemA2Up-: BOOLEAN; 
 	root-: Process; 
 	stacksize: LONGINT; 
 	processList: Unix.Mutex_t; 
@@ -184,7 +183,6 @@ VAR
 	PROCEDURE ^ SuspendActivities; 
 	PROCEDURE ^ ResumeActivities; 
 	PROCEDURE ^ GCLoop*; 
-	PROCEDURE ^ SystemA2IsUp*; 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
 	PROCEDURE ^ LeaveA2; 

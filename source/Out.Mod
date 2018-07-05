@@ -49,6 +49,11 @@ BEGIN
 	Commands.GetContext().out.FloatFix(x,n,f,d);
 END Float;
 
+PROCEDURE Update*;
+BEGIN
+	Commands.GetContext().out.Update();
+END Update;
+
 
 
 END Out.

@@ -155,9 +155,9 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	ZynqC {
-		INCLUDE "ZYNQC NATIVE ARM COOP"
+		INCLUDE "ZYNQ NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=ZYNQC,NATIVE,ARM,COOP"
+		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=NATIVE,ARM,COOP"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -262,10 +262,11 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# Runtime support for HUGEINT and strings
 	I386 { I386.Builtins.Mod }
 	AMD64 { AMD64.Builtins.Mod }
+
 	I386 & COOP { I386.CPU.Mod }
 	AMD64 & COOP { AMD64.CPU.Mod }
 	RPI & COOP { RPI.CPU.Mod }
-	ZYNQC { Zynq.CPU.Mod }
+	ZYNQ & COOP { Zynq.CPU.Mod }
 
 	# Low-level trace output
 	Trace.Mod
@@ -284,11 +285,11 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN32C { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	UNIX & COOP { Unix.Processors.Mod Unix.Timer.Mod }
 	RPI & COOP { RPI.Processors.Mod RPI.Timer.Mod }
-	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
+	ZYNQ & COOP { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
 	BIOS & COOP { HeapManager.Mod BIOS.Environment.Mod }
 	RPI & COOP { HeapManager.Mod RPI.Environment.Mod }
-	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
+	ZYNQ & COOP { HeapManager.Mod Zynq.Environment.Mod }
 	WIN32C { Windows.Environment.Mod }
 	UNIX & COOP { Unix.Environment.Mod }
 

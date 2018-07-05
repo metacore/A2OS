@@ -217,7 +217,7 @@ BUILDS
 	Darwin32 {
 		INCLUDE "DARWIN UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --define=DARWIN,UNIX,I386"
+		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -225,7 +225,7 @@ BUILDS
 	Darwin64 {
 		INCLUDE "DARWIN UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --define=DARWIN,UNIX,AMD64"
+		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -233,7 +233,7 @@ BUILDS
 	Solaris32 {
 		INCLUDE "SOLARIS UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --define=SOLARIS,UNIX,I386"
+		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -241,7 +241,7 @@ BUILDS
 	Solaris64 {
 		INCLUDE "SOLARIS UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --define=SOLARIS,UNIX,AMD64"
+		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"

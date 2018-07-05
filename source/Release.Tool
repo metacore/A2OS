@@ -111,6 +111,7 @@
 # Platform-specific build prefixes are subdivided as follows:
 #
 #	NATIVE: BIOS / RPI / ZYNQ
+#	UNIX: LINUX / DARWIN / SOLARIS
 #	WIN: WIN32 / WIN64
 #
 # The architecture specifies the target of modules that contain inline assembly code and may be one of the following:
@@ -214,17 +215,17 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Darwin32 {
-		INCLUDE "DARWIN32 UNIX I386"
+		INCLUDE "DARWIN UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --define=DARWIN32,UNIX,I386"
+		COMPILEOPTIONS "-p=Linux32 --define=DARWIN,UNIX,I386"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Darwin64 {
-		INCLUDE "DARWIN64 UNIX AMD64"
+		INCLUDE "DARWIN UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --define=DARWIN64,UNIX,AMD64"
+		COMPILEOPTIONS "-p=Linux64 --define=DARWIN,UNIX,AMD64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -285,8 +286,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	LINUX & I386 { Linux.Glue.Mod Linux.I386.Unix.Mod }
 	LINUX & AMD64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
-	DARWIN32 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
-	DARWIN64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
+	DARWIN & I386 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
+	DARWIN & AMD64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
 	SOLARIS { Unix.Glue.Mod Solaris.Unix.Mod }
 
 	WIN { Windows.Kernel32.Mod }

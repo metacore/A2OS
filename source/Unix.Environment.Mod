@@ -13,6 +13,7 @@ VAR status* := 0: WORD;
 VAR clock: Timer.Counter;
 VAR milliseconds: Timer.Counter;
 VAR sleepingQueue: Queues.Queue;
+VAR activity: Unix.Key_t;
 
 PROCEDURE {NORETURN} Abort-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -56,6 +57,16 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Counters.Dec (Activities.awaiting);
 END Sleep;
 
+PROCEDURE Allocate- (size: SIZE): ADDRESS;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	RETURN Unix.malloc (size);
+END Allocate;
+
+PROCEDURE Deallocate- (address: ADDRESS);
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Unix.free (address);
+END Deallocate;
+
 PROCEDURE Enqueue (previous {UNTRACED}: Activities.Activity; argument: ADDRESS);
 VAR item: Queues.Item;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -66,10 +77,26 @@ PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
 BEGIN val := 0;
 END GetInit;
 
+PROCEDURE GetString- (CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	result := "";
+END GetString;
+
+PROCEDURE StoreActivity-;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Unix.WriteKey (activity, SYSTEM.GetActivity ());
+END StoreActivity;
+
+PROCEDURE RestoreActivity-;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	SYSTEM.SetActivity(SYSTEM.VAL(Activities.Activity,Unix.ReadKey (activity)));
+END RestoreActivity;
+
 PROCEDURE Initialize-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	clock := Timer.GetCounter ();
 	milliseconds := Timer.GetFrequency () DIV 1000;
+	activity := Unix.NewKey ();
 END Initialize;
 
 PROCEDURE Terminate-;

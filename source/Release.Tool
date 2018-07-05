@@ -292,8 +292,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	BIOS32C, WIN32C { Coop.Machine.Mod }
 	LINUX64C { Coop.Machine.Mod }
 	RPIC, ZYNQC { Coop.ARM.Machine.Mod }
-
-	UNIX { Unix.Machine.Mod }
+	UNIX & ~COOP { Unix.Machine.Mod }
 
 	~COOP { Heaps.Mod }
 	COOP { Coop.Heaps.Mod }
@@ -377,8 +376,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BitSets.Mod Diagnostics.Mod StringPool.Mod ObjectFile.Mod GenericLinker.Mod Loader.Mod
 
 	# binding modules
-	NATIVE, WIN { BootConsole.Mod }
-	UNIX { Unix.BootConsole.Mod }
+	NATIVE, WIN, COOP { BootConsole.Mod }
+	UNIX & ~COOP { Unix.BootConsole.Mod }
 
 	UNIX, WIN { Shell.Mod StdIOShell.Mod }
 

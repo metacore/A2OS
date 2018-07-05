@@ -1,6 +1,10 @@
 MODULE Modules;	(** AUTHOR "pjm"; PURPOSE "Modules and types"; *)
 
-IMPORT SYSTEM, Trace, Machine, Heaps;
+IMPORT SYSTEM,
+	#IF COOP THEN
+		Environment, Activities, Processors, Queues,
+	#END
+	Trace, Machine, Heaps;
 
 CONST
 	Ok* = 0;
@@ -113,21 +117,23 @@ TYPE
 			body*: PROCEDURE;
 			flags*: SET;	 (* e.g. compilation flags *)
 			
-		PROCEDURE FindRoots*;	(* override *)
-		VAR i: LONGINT; ptr {UNTRACED}: ANY; false: BOOLEAN;
-		VAR name: Name;
-		BEGIN
-			name := SELF.name;
-			false := FALSE; IF false THEN BEGIN{EXCLUSIVE} END END; (* trick to make a module a protected record ... *)
-			IF published THEN	(* mark global pointers *)				
-				FOR i := 0 TO LEN(ptrAdr) - 1 DO
-					SYSTEM.GET (ptrAdr[i], ptr);
-					IF ptr # NIL THEN Heaps.Mark(ptr) END
+		#IF ~COOP THEN
+			PROCEDURE FindRoots*;	(* override *)
+			VAR i: LONGINT; ptr {UNTRACED}: ANY; false: BOOLEAN;
+			VAR name: Name;
+			BEGIN
+				name := SELF.name;
+				false := FALSE; IF false THEN BEGIN{EXCLUSIVE} END END; (* trick to make a module a protected record ... *)
+				IF published THEN	(* mark global pointers *)				
+					FOR i := 0 TO LEN(ptrAdr) - 1 DO
+						SYSTEM.GET (ptrAdr[i], ptr);
+						IF ptr # NIL THEN Heaps.Mark(ptr) END
+					END;
+					Heaps.AddRootObject(next);
+					(* all other fields are being traversed by Mark of the Garbage Collector *)
 				END;
-				Heaps.AddRootObject(next);
-				(* all other fields are being traversed by Mark of the Garbage Collector *)
-			END;
-		END FindRoots;
+			END FindRoots;
+		#END
 
 	END Module;
 
@@ -145,7 +151,7 @@ VAR
 	shutdown*: LONGINT;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
 	register: RECORD
-		first, last: Module;
+		first {UNTRACED}, last {UNTRACED}: Module;
 	END;
 	
 	(* global sorted table of all procedures , basically for GC *)
@@ -227,10 +233,12 @@ BEGIN
 		new := TRUE;
 	END;
 	Machine.Release(Machine.Modules);
-	IF (Heaps.GCType = Heaps.MetaDataForStackGC) & ~(PreciseGC IN m.flags) THEN
-		name := m.name;
-		Halt("Module does not provide metadata required by the GC.");
-	END;
+	#IF ~COOP THEN
+		IF (Heaps.GCType = Heaps.MetaDataForStackGC) & ~(PreciseGC IN m.flags) THEN
+			name := m.name;
+			Halt("Module does not provide metadata required by the GC.");
+		END;
+	#END
 END Publish;
 
 PROCEDURE Initialize*(VAR module: Module);
@@ -772,7 +780,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF register.first = NIL THEN
 		register.first := module;
 	ELSE
-		register.last.next := module;
+		register.last.next := module; (* transitively unsafe access via register.last *)
 	END;
 	register.last := module;
 END Register;
@@ -801,6 +809,9 @@ END Unregister;
 PROCEDURE PublishRegisteredModules;
 VAR m {UNTRACED}, prev {UNTRACED}, cur {UNTRACED}: Module; import: SIZE;
 BEGIN
+	#IF COOP THEN
+		Activities.Call (Activities.Idle);
+	#END
 	WHILE register.first # NIL DO
 		m := register.first;
 		(*
@@ -834,6 +845,40 @@ BEGIN
 	END;
 END PublishRegisteredModules;
 
+#IF COOP THEN
+
+PROCEDURE FinalizeModules;
+VAR module {UNTRACED}: Module;
+PROCEDURE Finalize EXTERN "BaseTypes.Object.Finalize" (module {UNTRACED}: Module);
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	module := root;
+	WHILE module # NIL DO
+		Finalize (module);
+		module := module.next;
+	END;
+END FinalizeModules;
+
+PROCEDURE {FINAL} Main;
+PROCEDURE InitializeGC EXTERN "GarbageCollector.Initialize";
+PROCEDURE TerminateGC EXTERN "GarbageCollector.Terminate";
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	SYSTEM.SetActivity (NIL);
+	SYSTEM.SetFramePointer (NIL);
+	Environment.Initialize;
+	InitializeGC;
+	Processors.Initialize;
+	Activities.Execute (PublishRegisteredModules);
+	Processors.Terminate;
+	FinalizeModules;
+	Activities.Terminate;
+	Queues.Terminate;
+	Environment.Terminate;
+	TerminateGC;
+	Environment.Exit (Environment.status);
+END Main;
+
+#ELSE
+
 (* procedure that will be called last in a linked kernel *)
 PROCEDURE {FINAL, NOPAF} Main-;
 BEGIN
@@ -846,11 +891,13 @@ BEGIN
 	Machine.Shutdown(FALSE);
 END Main;
 
+#END
+
 PROCEDURE Init;
 VAR
 	s: ARRAY 4 OF CHAR;
 BEGIN
-	(* root is initialized by the linker *)
+	(* root and initBlock are initialized by the linker *)
 	shutdown := None;
 	numLoaders := 0;
 	freeRoot := NIL;
@@ -862,158 +909,3 @@ BEGIN
 	Init;
 END Modules.
 
-(*
-19.03.1998	pjm	Started
-06.10.1998	pjm	FreeModule
-
-Note:
-o GetProcedure race: process A calls ThisModule, the module is published, but before its body has finished executing, process B calls GetProcedure, causing the assert (m.init) to fail. Process B should perhaps wait in this case until the body has executed, or GetProcedure should return NIL (but that will just move the race to the user).
-*)
-
-
-Linker.Link --fileFormat=PE32 --fileName=A2M.exe --extension=GofW --displacement=401000H  
-Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands 
-FIles WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection  
-Loader  BootConsole
-
-Traps
-TrapWriters
-SystemVersion
-CRC
-FileTrapWriter
-Display
-User32
-GDI32
-Displays
-Plugins
-Inputs
-Options
-WindowManager
-WMGraphics
-WMRectangles
-Raster
-CLUTs
-UTF8Strings
-WMRasterScale
-Codecs
-SoundDevices
-Configuration
-XMLObjects
-XML
-DynamicStrings
-XMLScanner
-XMLParser
-Unzip
-Inflate
-Texts
-WMEvents
-Locks
-FP1616
-Archives
-WMMessages
-Debugging
-WMDefaultWindows
-WMWindowManager
-WMGraphicUtilities
-WMFontManager
-WMDefaultFont
-WMOTFonts
-OpenType
-OpenTypeInt
-OpenTypeScan
-WMCCGFonts
-PNGDecoder
-Clipboard
-TextUtilities
-Repositories
-Localization
-UnicodeProperties
-HostClipboard
-FSTools
-RelativeFileSystem
-Autostart
-WMTrapWriter
-WMUtilities
-WMComponents
-Events
-WMProperties
-Models
-Types
-WMDropTarget
-WMDocumentEditor
-WMMacros
-WMTextView
-SyntaxHighlighter
-WMStandardComponents
-FileHandlers
-WMPopups
-WMPieMenu
-UnicodeBidirectionality
-PositionDebugging
-ContextualDependency
-WMEditors
-UndoManager
-WMInputMethods
-WMSearchComponents
-WMDialogs
-WMRestorable
-UpTime
-StartMenu
-MainMenu
-WMTabComponents
-Tar
-SkinEngine
-SkinLanguage
-Pipes
-WMFileManager
-WMSystemComponents
-WMTrees
-WMGrids
-WMStringGrids
-Notepad
-WMKernelLog
-KernelLogger
-WMClock
-Math
-WMTextTool
-PET
-CompilerInterface
-WhitespaceRemover
-WMDiagnostics
-WMBitmapFont
-PETTrees
-WMOberonFonts
-WMNavigate
-HotKeys
-Errors
-Zip
-Zlib
-ZlibReaders
-ZlibBuffers
-ZlibInflate
-ZlibWriters
-ZlibDeflate
-FoxBasic
-FoxA2Interface
-FoxScanner
-FoxSyntaxTree
-FoxGlobal
-FoxParser
-FoxPrintout
-FoxFormats
-FoxSemanticChecker
-FoxBackend
-FoxFrontend
-Compiler
-ReleaseThreadPool
-Release
-PETReleaseTree
-ModuleParser
-PETModuleTree
-ProcessInfo0
-ProcessInfo
-System
-Linker
-~
-
-System.ListModules -l ~

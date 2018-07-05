@@ -210,6 +210,11 @@ BEGIN
 	Activities.Switch;
 END Yield;
 
+PROCEDURE Sleep* (ms: LONGINT);
+BEGIN
+	Environment.Sleep (ms);
+END Sleep;
+
 (** Return current process. (DEPRECATED, use ActiveObject) *)
 PROCEDURE CurrentProcess*( ): Process;
 BEGIN

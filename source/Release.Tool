@@ -301,7 +301,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { Coop.Heaps.Mod }
 
 	NATIVE, WIN, UNIX { Modules.Mod }
-	COOP { Coop.Modules.Mod GarbageCollector.Mod }
+	COOP { GarbageCollector.Mod }
 
 	BIOS { BIOS.Objects.Mod Kernel.Mod }
 	WIN32 { Windows.I386.Objects.Mod }

@@ -296,15 +296,15 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	UNIX { Unix.Machine.Mod }
 
-	NATIVE, WIN, UNIX { Heaps.Mod }
+	~COOP { Heaps.Mod }
 	COOP { Coop.Heaps.Mod }
 
-	NATIVE, WIN, UNIX { Modules.Mod }
+	Modules.Mod
 	COOP { GarbageCollector.Mod }
 
-	BIOS { BIOS.Objects.Mod Kernel.Mod }
-	WIN { Windows.Objects.Mod Windows.Kernel.Mod }
-	UNIX { Unix.Objects.Mod Unix.Kernel.Mod }
+	BIOS & ~COOP { BIOS.Objects.Mod Kernel.Mod }
+	WIN & ~COOP { Windows.Objects.Mod Windows.Kernel.Mod }
+	UNIX & ~COOP { Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
 END
 
@@ -326,12 +326,13 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	# default trap handling
 	Reflection.Mod
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
-	BIOS32 { BIOS.I386.Traps.Mod }
-	BIOS64 { BIOS.AMD64.Traps.Mod }
-	ARM { ARM.Traps.Mod }
-	WIN32 { Windows.I386.Traps.Mod }
-	WIN64 { Windows.AMD64.Traps.Mod }
-	UNIX { Unix.StdIO.Mod Unix.Traps.Mod }
+	UNIX { Unix.StdIO.Mod }
+	BIOS32 & ~COOP { BIOS.I386.Traps.Mod }
+	BIOS64 & ~COOP { BIOS.AMD64.Traps.Mod }
+	ARM & ~COOP { ARM.Traps.Mod }
+	WIN32 & ~COOP { Windows.I386.Traps.Mod }
+	WIN64 & ~COOP { Windows.AMD64.Traps.Mod }
+	UNIX & ~COOP { Unix.Traps.Mod }
 	COOP { Coop.Traps.Mod }
 	WIN { Windows.WinTrace.Mod Windows.StdIO.Mod }
 

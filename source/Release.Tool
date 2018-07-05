@@ -127,7 +127,7 @@ END
 
 BUILDS
 	Bios32 {
-		INCLUDE "BIOS32 BIOS NATIVE I386"
+		INCLUDE "BIOS NATIVE I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Bios32"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
@@ -141,7 +141,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Bios64 {
-		INCLUDE "BIOS64 BIOS NATIVE AMD64"
+		INCLUDE "BIOS NATIVE AMD64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Bios64"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
@@ -292,8 +292,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	WIN { Windows.Kernel32.Mod }
 
-	BIOS32 { BIOS.I386.Machine.Mod }
-	BIOS64 { BIOS.AMD64.Machine.Mod }
+	BIOS & I386 & ~COOP { BIOS.I386.Machine.Mod }
+	BIOS & AMD64 & ~COOP { BIOS.AMD64.Machine.Mod }
 	WIN32 { Windows.I386.Machine.Mod }
 	WIN64 { Windows.AMD64.Machine.Mod }
 	COOP { Mutexes.Mod Coop.Machine.Mod }
@@ -331,8 +331,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Reflection.Mod
 	TrapWriters.Mod CRC.Mod SystemVersion.Mod
 	UNIX { Unix.StdIO.Mod }
-	BIOS32 & ~COOP { BIOS.I386.Traps.Mod }
-	BIOS64 & ~COOP { BIOS.AMD64.Traps.Mod }
+	BIOS & I386 & ~COOP { BIOS.I386.Traps.Mod }
+	BIOS & AMD64 & ~COOP { BIOS.AMD64.Traps.Mod }
 	ARM & ~COOP { ARM.Traps.Mod }
 	WIN & ~COOP { Windows.Traps.Mod }
 	UNIX & ~COOP { Unix.Traps.Mod }
@@ -530,8 +530,8 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		UsbFTDI.Mod
 	}
 
-	BIOS32 { I386.UsbKeyboard.Mod }
-	BIOS64 { AMD64.UsbKeyboard.Mod }
+	BIOS & I386 { I386.UsbKeyboard.Mod }
+	BIOS & AMD64 { AMD64.UsbKeyboard.Mod }
 
 	NATIVE {
 		UsbHidUP.Mod UsbHidErrors.Mod UsbHidReport.Mod
@@ -1684,7 +1684,7 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	WIN { Windows.Oberon.PlugInDocs.Mod }
 
-	BIOS32 {
+	BIOS & I386 {
 		Oberon.Profiler.Mod	# alternative profiler (prk)
 		Oberon.FATDocs.Mod	# FAT browser (be)
 	}

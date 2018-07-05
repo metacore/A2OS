@@ -148,9 +148,9 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	RpiC {
-		INCLUDE "RPIC NATIVE ARM COOP"
+		INCLUDE "RPI NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=RPIC,NATIVE,ARM,COOP"
+		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=NATIVE,ARM,COOP"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -264,7 +264,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	AMD64 { AMD64.Builtins.Mod }
 	I386 & COOP { I386.CPU.Mod }
 	AMD64 & COOP { AMD64.CPU.Mod }
-	RPIC { RPI.CPU.Mod }
+	RPI & COOP { RPI.CPU.Mod }
 	ZYNQC { Zynq.CPU.Mod }
 
 	# Low-level trace output
@@ -283,11 +283,11 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	BIOS & I386 & COOP { I386.APIC.Mod APIC.Processors.Mod BIOS.ACPI.Mod ACPI.Timer.Mod }
 	WIN32C { Coop.Windows.I386.Kernel32.Mod Windows.Processors.Mod Windows.Timer.Mod }
 	UNIX & COOP { Unix.Processors.Mod Unix.Timer.Mod }
-	RPIC { RPI.Processors.Mod RPI.Timer.Mod }
+	RPI & COOP { RPI.Processors.Mod RPI.Timer.Mod }
 	ZYNQC { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
 	BIOS & COOP { HeapManager.Mod BIOS.Environment.Mod }
-	RPIC { HeapManager.Mod RPI.Environment.Mod }
+	RPI & COOP { HeapManager.Mod RPI.Environment.Mod }
 	ZYNQC { HeapManager.Mod Zynq.Environment.Mod }
 	WIN32C { Windows.Environment.Mod }
 	UNIX & COOP { Unix.Environment.Mod }
@@ -297,7 +297,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN32 { Windows.I386.Machine.Mod }
 	WIN64 { Windows.AMD64.Machine.Mod }
 	COOP { Mutexes.Mod Coop.Machine.Mod }
-	RPIC, ZYNQC { Coop.ARM.Machine.Mod }
+	ARM & COOP { Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
 
 	~COOP { Heaps.Mod }

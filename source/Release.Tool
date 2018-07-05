@@ -289,7 +289,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	ZYNQ & COOP { Zynq.Processors.Mod Zynq.Timer.Mod }
 	COOP { Queues.Mod BaseTypes.Mod Activities.Mod ExclusiveBlocks.Mod Interrupts.Mod Runtime.Mod }
 	NATIVE & COOP { HeapManager.Mod }
-	BIOS { BIOS.Environment.Mod }
+	BIOS & COOP { BIOS.Environment.Mod }
 	RPI & COOP { RPI.Environment.Mod }
 	ZYNQ & COOP { Zynq.Environment.Mod }
 	WIN32C { Windows.Environment.Mod }

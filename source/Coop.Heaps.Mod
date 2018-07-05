@@ -129,10 +129,16 @@ VAR
 	(** Statistics considering the last GC cyle *)
 	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT;
 	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : HUGEINT;
+	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT;
 
 	freeBlockFound-, freeBlockNotFound-: LONGINT;
 
 	allocationLogger-: PROCEDURE(p: ANY);
+
+PROCEDURE Assign*(VAR dest: ADDRESS; src: ADDRESS);
+BEGIN
+	dest := src;
+END Assign;
 
 (* for low level debugging of allocation -- beware: errors or traps in allocation logger can produce catastrophy - loggers may not allocate memory  *)
 PROCEDURE SetAllocationLogger*(a: PROCEDURE (p:ANY));

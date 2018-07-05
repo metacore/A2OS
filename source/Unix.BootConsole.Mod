@@ -201,7 +201,9 @@ BEGIN
 	InitializeCoreModules;
 	InitSignalHandling;
 	StartSystem;
-	Objects.GCLoop
+	#IF ~COOP THEN
+		Objects.GCLoop;
+	#END
 END BootConsole.
 
 

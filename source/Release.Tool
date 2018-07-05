@@ -112,7 +112,6 @@
 #
 #	NATIVE: BIOS / RPI / ZYNQ
 #	WIN: WIN32 / WIN64
-#	UNIX: UNIX32 / UNIX64
 #
 # The architecture specifies the target of modules that contain inline assembly code and may be one of the following:
 #
@@ -183,7 +182,7 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32 {
-		INCLUDE "LINUX32 UNIX32 UNIX I386"
+		INCLUDE "LINUX32 UNIX I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux32"
 		PATH "./NewAos/"
@@ -191,15 +190,15 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux32C {
-		INCLUDE "LINUX32C UNIX32 UNIX I386 COOP"
+		INCLUDE "LINUX32C UNIX I386 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX32C,UNIX32,UNIX,I386,COOP"
+		COMPILEOPTIONS "-p=Linux32 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX32C,UNIX,I386,COOP"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
 	Linux64 {
-		INCLUDE "LINUX64 UNIX64 UNIX AMD64"
+		INCLUDE "LINUX64 UNIX AMD64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Linux64"
 		PATH "./NewAos/"
@@ -207,41 +206,41 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Linux64C {
-		INCLUDE "LINUX64C UNIX64 UNIX AMD64 COOP"
+		INCLUDE "LINUX64C UNIX AMD64 COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX64C,UNIX64,UNIX,AMD64,COOP"
+		COMPILEOPTIONS "-p=Linux64 --cooperative --traceModule=Trace --preciseGC=no --define=LINUX64C,UNIX,AMD64,COOP"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"
 	}
 	Darwin32 {
-		INCLUDE "DARWIN32 UNIX32 UNIX I386"
+		INCLUDE "DARWIN32 UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --define=DARWIN32,UNIX32,UNIX,I386"
+		COMPILEOPTIONS "-p=Linux32 --define=DARWIN32,UNIX,I386"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Darwin64 {
-		INCLUDE "DARWIN64 UNIX64 UNIX AMD64"
+		INCLUDE "DARWIN64 UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --define=DARWIN64,UNIX64,UNIX,AMD64"
+		COMPILEOPTIONS "-p=Linux64 --define=DARWIN64,UNIX,AMD64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Solaris32 {
-		INCLUDE "SOLARIS UNIX32 UNIX I386"
+		INCLUDE "SOLARIS UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --define=SOLARIS,UNIX32,UNIX,I386"
+		COMPILEOPTIONS "-p=Linux32 --define=SOLARIS,UNIX,I386"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Solaris64 {
-		INCLUDE "SOLARIS UNIX64 UNIX AMD64"
+		INCLUDE "SOLARIS UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --define=SOLARIS,UNIX64,UNIX,AMD64"
+		COMPILEOPTIONS "-p=Linux64 --define=SOLARIS,UNIX,AMD64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"

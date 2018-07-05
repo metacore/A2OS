@@ -1676,22 +1676,6 @@ BEGIN
 	Machine.Release(Machine.Heaps)
 END GetHeapInfo;
 
-(* redundant, for compatibility *)
-PROCEDURE HeapSize*(): SIZE;
-VAR total, free, largest: SIZE;
-BEGIN
-	GetHeapInfo(total, free, largest);
-	RETURN total;
-END HeapSize;
-
-(* redundant, for compatibility *)
-PROCEDURE Used*(): SIZE;
-VAR total, free, largest: SIZE;
-BEGIN
-	GetHeapInfo(total, free, largest);
-	RETURN total-free;
-END Used;
-
 PROCEDURE DecRefCount(VAR count: WORD): BOOLEAN;
 VAR value: WORD;
 BEGIN

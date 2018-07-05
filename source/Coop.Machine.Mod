@@ -26,7 +26,8 @@ CONST
 	Objects* = 5;   (* Ready queue *)
 	KernelLog* = 7;   (* Atomic output *)
 	GC* = 8;
-	MaxLocks = 9;   (* { <= 32 } *)
+	X11* = 9;   (* XWindows I/O *)
+	MaxLocks = 10;   (* { <= 32 } *)
 
 	(* error codes *)
 	Ok* = 0;

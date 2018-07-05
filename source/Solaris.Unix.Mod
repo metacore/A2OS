@@ -123,9 +123,9 @@ CONST
 	SIGJVM2*		= 40;		(* reserved signal for Java Virtual Machine *)
 	
 	
-	SIG_BLOCK = 1;
-	SIG_UNBLOCK=2;
-	SIG_SETMASK=3;
+	SIG_BLOCK		= 1;
+	SIG_UNBLOCK	= 2;
+	SIG_SETMASK	= 3;
 
 	SCHED_OTHER = 0;	(* scheduling policy *)
 	
@@ -143,9 +143,9 @@ CONST
 	PTHREAD_CANCEL_ASYNCHRONOUS	= 2;
 	PTHREAD_CANCEL_DEFERRED	= 0;
 	
-	PTHREAD_SCOPE_PROCESS = 0;
-	PTHREAD_SCOPE_SYSTEM = 1;
-	PTHREAD_CREATE_DETACHED = 40H;
+	PTHREAD_SCOPE_PROCESS	= 0;
+	PTHREAD_SCOPE_SYSTEM		= 1;
+	PTHREAD_CREATE_DETACHED	= 40H;
 
 	
 		
@@ -153,7 +153,6 @@ CONST
 	rdonly* = SET32({});  rdwr* = SET32({1});  creat* = SET32({8});  trunc* = SET32({9});
 
 	(* access modes *)
-(*	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};	*)
 	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH;  
 	
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
@@ -270,19 +269,38 @@ TYPE
 	(*------------------------------------------------------------------*)
 
 TYPE
-	dev_t*		= HUGEINT;
-	ino_t*		= HUGEINT;
-	nlink_t*	= LONGINT;
-	mode_t*	= LONGINT;
-	off_t*		= HUGEINT;
-	blksize_t*= LONGINT;
-	blkcnt_t*	= HUGEINT;
-	uid_t*		= LONGINT;
-	gid_t*		= LONGINT;
-	pid_t*		= LONGINT;
+	dev_t*		= LONGWORD;
+	ino_t*		= LONGWORD;
+	nlink_t*	= WORD;
+	mode_t*	= WORD;
+	off_t*		= LONGWORD;
+	blksize_t*= WORD;
+	blkcnt_t*	= LONGWORD;
+	uid_t*		= WORD;
+	gid_t*		= WORD;
+	pid_t*		= WORD;
 	
-
 	Status* = RECORD
+		#IF I386 THEN
+				dev-		: dev_t;
+				pad1		: ARRAY 3 OF WORD;
+				ino-		: ino_t;
+				mode-	: WORD;
+				nlink-		: WORD;
+				uid-		: WORD;
+				gid-		: WORD;
+				rdev-		: dev_t;
+				pad2		: ARRAY 2 OF WORD;
+				size-		: WORD;
+				pad3		: WORD;
+				atime-	: Timeval;
+				mtime-	: Timeval;
+				ctime-	: Timeval;
+				blksize-	: WORD;
+				blocks-	: WORD;
+				fstype-	: ARRAY 16 OF CHAR;
+				pad4		: ARRAY 8 OF WORD
+		#ELSIF AMD64 THEN
 				dev-		: dev_t;
 				ino-		: ino_t;
 				mode-	: WORD;
@@ -295,10 +313,14 @@ TYPE
 				mtime-	: Timeval;
 				ctime-	: Timeval;
 				blksize-	: WORD;
-				pad0-		: WORD;
+				pad0		: WORD;
 				blocks-	: LONGWORD;
-				fstype-	: ARRAY 16 OF CHAR;
-			END;
+				fstype-	: ARRAY 16 OF CHAR
+		#ELSE
+			unimplemented
+		#END
+	END;
+			
 
 	Timeval* = RECORD
 				sec*	: LONGWORD;
@@ -327,11 +349,11 @@ CONST
 	FdSetLen* = 32;
 	
 TYPE
-	FdSet* = ARRAY FdSetLen OF SET;
+	FdSet* = ARRAY FdSetLen OF SET32;
 
 	Dirent* = POINTER TO RECORD
-				ino-	: ino_t;
-				off-	: off_t;
+				ino-		: ino_t;
+				off-		: off_t;
 				reclen-	: INTEGER;
 				name-	: (*array of*) CHAR;
 			END;
@@ -340,9 +362,9 @@ TYPE
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext ); 
 
 	Stack* = RECORD
-				sp*	: ADDRESS;
-				size*	: SIZE;
-				flags*	: SET;
+				sp-	: ADDRESS;
+				size-	: SIZE;
+				flags-	: WORD;
 			END;
 
 	Ucontext* = POINTER TO UcontextDesc;
@@ -351,48 +373,75 @@ TYPE
 				link-		: ADDRESS;
 				sigmask-	: Sigset;
 				stack-	: Stack;
-				filler		: LONGWORD;  (* to make 'mc' 16 byte aligned *)
+			#IF AMD64 THEN
+				pad: LONGWORD;		(* force proper alignment of 'mc' *)
+			#END
 				mc-		: McontextDesc;
 			END;
 
 	Mcontext* = POINTER TO McontextDesc;
 	McontextDesc* = RECORD
-				r_15		: HUGEINT;
-				r_14		: HUGEINT;
-				r_13		: HUGEINT;
-				r_12		: HUGEINT;
-				r_11		: HUGEINT;
-				r_10		: HUGEINT;
-				r_9			: HUGEINT;
-				r_8			: HUGEINT;
-				r_di		: HUGEINT;
-				r_si		: HUGEINT;
+			#IF I386 THEN
+				r_gs-		: LONGINT;
+				r_fs-		: LONGINT;
+				r_es-		: LONGINT;
+				r_ds-		: LONGINT;
+				r_di-		: LONGINT;
+				r_si-		: LONGINT;
+				r_bp-		: LONGINT;
+				r_nsp-	: LONGINT;
+				r_bx-		: LONGINT;
+				r_dx-		: LONGINT;
+				r_cx-		: LONGINT;
+				r_ax-		: LONGINT;
+				r_trapno-	: LONGINT;
+				r_err-		: LONGINT;
+				r_pc-		: LONGINT;
+				r_cs-		: LONGINT;
+				r_flags-	: LONGINT;
+				r_sp-		: LONGINT;		(* sp at error(signal) *)
+				r_ss		: LONGINT;
+				fpc-		: ADDRESS;
+			#ELSIF AMD64 THEN
+				r_15-		: HUGEINT;
+				r_14-		: HUGEINT;
+				r_13-		: HUGEINT;
+				r_12-		: HUGEINT;
+				r_11-		: HUGEINT;
+				r_10-		: HUGEINT;
+				r_9-		: HUGEINT;
+				r_8-		: HUGEINT;
+				r_di-		: HUGEINT;
+				r_si-		: HUGEINT;
 				r_bp-		: HUGEINT;
-				r_bx		: HUGEINT;
-				r_dx		: HUGEINT;
-				r_cx		: HUGEINT;
-				r_ax		: HUGEINT;
+				r_bx-		: HUGEINT;
+				r_dx-		: HUGEINT;
+				r_cx-		: HUGEINT;
+				r_ax-		: HUGEINT;
 				r_trapno-	: HUGEINT;
 				r_err-		: HUGEINT;
 				r_pc-		: HUGEINT;
-				r_cs		: HUGEINT;
-				r_fl			: HUGEINT;
+				r_cs-		: HUGEINT;
+				r_fl-		: HUGEINT;
 				r_sp-		: HUGEINT;
-				r_ss		: HUGEINT;
-				r_fs		: HUGEINT;
-				r_gs		: HUGEINT;
-				r_es		: HUGEINT;
-				r_ds		: HUGEINT;
-				r_fsbase	: HUGEINT;
-				r_gsbase	: HUGEINT;
-			END;
+				r_ss-		: HUGEINT;
+				r_fs-		: HUGEINT;
+				r_gs-		: HUGEINT;
+				r_es-		: HUGEINT;
+				r_ds-		: HUGEINT;
+				r_fsbase-	: HUGEINT;
+				r_gsbase-: HUGEINT
+			#ELSE
+				unimplemented
+			#END
+		END;
 
 			
 	Sigaction = RECORD
-				sa_flags: LONGINT;
+				sa_flags: WORD;
 				sa_handler: ADDRESS;
 				sa_mask: Sigset;
-				u1, u2: LONGINT
+				pad1, pad2: WORD
 			END;
 	
 	Sched_param = RECORD
@@ -408,7 +457,6 @@ TYPE
 VAR
 	handler_done: BOOLEAN;
 	mainthread: Thread_t;
-	sasuspend: Sigaction;
 	
 	argc-: LONGINT;  argv-: ADDRESS;  environ: ADDRESS;
 	
@@ -449,10 +497,10 @@ VAR
 	pthread_setspecific:		PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
 	pthread_getspecific:		PROCEDURE {C} ( key: Key_t ): ADDRESS;
 	
-	pthread_attr_init: PROCEDURE {C} ( attr: ADDRESS );
-	pthread_attr_setscope: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
-	pthread_attr_setdetachstate: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
-	pthread_attr_setstacksize: PROCEDURE {C} ( attr: ADDRESS; stackSize: SIZE );
+	pthread_attr_init					: PROCEDURE {C} ( attr: ADDRESS );
+	pthread_attr_setscope			: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
+	pthread_attr_setdetachstate	: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
+	pthread_attr_setstacksize		: PROCEDURE {C} ( attr: ADDRESS; stackSize: SIZE );
 	
 	sched_get_priority_max		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	sched_get_priority_min		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
@@ -541,8 +589,8 @@ VAR
 	kill-			: PROCEDURE {C} ( pid, sig: LONGINT ): LONGINT;
 	exit-			: PROCEDURE {C} ( status: LONGINT );
 	perror-		: PROCEDURE {C} ( msg: ADDRESS );
-	errno_location		: PROCEDURE {C} ( ): ADDRESS;
-
+	
+	errno_location	: PROCEDURE {C} ( ): ADDRESS;
 
 	xSetErrorHandler		: PROCEDURE {C} ( h: ADDRESS ): WORD;
 	xSetIOErrorHandler	: PROCEDURE {C} ( h: ADDRESS ): WORD;
@@ -690,7 +738,7 @@ VAR
 	BEGIN
 		sigstk.sp := ADDRESSOF( sigstack );
 		sigstk.size := LEN( sigstack );
-		sigstk.flags := {};
+		sigstk.flags := 0;
 		
 		IF sigaltstack( ADDRESSOF( sigstk ), NIL) < 0 THEN
 			Perror("sigaltstack")
@@ -1005,9 +1053,18 @@ VAR
 		argv := Glue.argv;
 		environ := Glue.environ;
 		
+	#IF I386 THEN
+		libraryPaths[0] := "/usr/lib";
+		libraryPaths[1] := "/lib";
+		libraryPaths[2] := "/usr/openwin/lib";
+		noPaths := 3;
+	#ELSIF AMD64 THEN
 		libraryPaths[0] := "/usr/lib/64";
 		libraryPaths[1] := "/lib/64";
 		noPaths := 2;
+	#ELSE
+		unimplemented
+	#END
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2 ); 

@@ -223,17 +223,17 @@ BUILDS
 		DISABLED "FALSE"
 	}
 	Solaris32 {
-		INCLUDE "SOLARIS32 UNIX32 UNIX I386"
+		INCLUDE "SOLARIS UNIX32 UNIX I386"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux32 --define=SOLARIS32,UNIX32,UNIX,I386"
+		COMPILEOPTIONS "-p=Linux32 --define=SOLARIS,UNIX32,UNIX,I386"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Solaris64 {
-		INCLUDE "SOLARIS64 UNIX64 UNIX AMD64"
+		INCLUDE "SOLARIS UNIX64 UNIX AMD64"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Linux64 --define=SOLARIS64,UNIX64,UNIX,AMD64"
+		COMPILEOPTIONS "-p=Linux64 --define=SOLARIS,UNIX64,UNIX,AMD64"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
@@ -280,8 +280,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	LINUX64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
 	DARWIN32 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
 	DARWIN64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
-	SOLARIS32 { Unix.Glue.Mod Solaris.I386.Unix.Mod }
-	SOLARIS64 { Unix.Glue.Mod Solaris.AMD64.Unix.Mod }
+	SOLARIS { Unix.Glue.Mod Solaris.Unix.Mod }
 
 	WIN { Windows.Kernel32.Mod }
 

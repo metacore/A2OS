@@ -1,10 +1,10 @@
 MODULE Modules;	(** AUTHOR "pjm"; PURPOSE "Modules and types"; *)
 
-IMPORT SYSTEM,
-	#IF COOP THEN
-		Environment, Activities, Processors, Queues,
-	#END
-	Trace, Machine, Heaps;
+IMPORT SYSTEM, Trace, Machine, Heaps;
+
+#IF COOP THEN
+	IMPORT Environment, Activities, Processors, Queues;
+#END
 
 CONST
 	Ok* = 0;

@@ -76,7 +76,6 @@ CONST
 	rdonly* = SET32({});  rdwr* = SET32({1});  creat* = SET32({6});  trunc* = SET32({9});
 
 	(* access modes *)
-(*	rwrwr* = {2, 4, 5, 7, 8};  rwxrwxrwx* = {0..8};	*)
 	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH; 
 
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
@@ -151,15 +150,15 @@ CONST
 TYPE
 	Thread_t* = ADDRESS;
 	Mutex_t* = ADDRESS;
-	MutexType = ARRAY 5 OF ADDRESS;
-	MutexAttributeType = ARRAY 1 OF WORD;
-
 	Condition_t* = ADDRESS;
-	ConditionType = ARRAY 6 OF ADDRESS;
+	
+	MutexType = ARRAY 10 OF WORD;
+	MutexAttributeType = ARRAY 1 OF WORD;
+	ConditionType = ARRAY 12 OF WORD;
 	
 	Key_t* = ADDRESS;
 
-	Sigset_t= ARRAY 16 OF ADDRESS;
+	Sigset_t= ARRAY 32 OF WORD;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
 	
 	path_t*	= ARRAY OF CHAR;
@@ -271,33 +270,53 @@ TYPE
 
 TYPE
 	dev_t*		= HUGEINT;
-	ino_t*		= HUGEINT;
-	nlink_t*	= HUGEINT;
-	mode_t*	= LONGINT;
-	off_t*		= HUGEINT;
-	blksize_t*= HUGEINT;
-	blkcnt_t*	= HUGEINT;
+	ino_t*		= LONGWORD;
+	nlink_t*	= LONGWORD;
+	mode_t*	= WORD;
+	off_t*		= LONGWORD;
+	blksize_t*= LONGWORD;
+	blkcnt_t*	= LONGWORD;
 	uid_t*		= LONGINT;
 	gid_t*		= LONGINT;
 	pid_t*		= LONGINT;
 
 	Status* = RECORD
+			#IF I386 THEN
 				dev-		: dev_t;
+				pad1		: WORD;
 				ino-		: ino_t;
-				nlink-		: LONGWORD;
-				mode-	: WORD;
-				uid-		: WORD;
-				gid-		: WORD;
-				pad0-		: WORD;
+				mode-	: mode_t;
+				nlink-		: nlink_t;
+				uid-		: LONGINT;
+				gid-		: LONGINT;
 				rdev-		: dev_t;
-				size-		: LONGWORD;
-				blksize-	: LONGWORD;
-				blocks-	: LONGWORD;
+				pad2		: WORD;
+				size-		: SIZE;
+				blksize-	: blksize_t;
+				blocks-	: blkcnt_t;
 				atime-	: Timeval;
 				mtime-	: Timeval;
 				ctime-	: Timeval;
-				reserved-	: ARRAY 3 OF LONGWORD;
-			END;
+			#ELSIF AMD64 THEN
+				dev-		: dev_t;
+				ino-		: ino_t;
+				nlink-		: nlink_t;
+				mode-	: mode_t;
+				uid-		: WORD;
+				gid-		: WORD;
+				pad1		: WORD;
+				rdev-		: dev_t;
+				size-		: SIZE;
+				blksize-	: blksize_t;
+				blocks-	: blkcnt_t;
+				atime-	: Timeval;
+				mtime-	: Timeval;
+				ctime-	: Timeval;
+			#ELSE
+				unimplemented
+			#END
+				reserved	: ARRAY 3 OF LONGWORD;
+		END;
 	tvPtr* = POINTER {UNSAFE, UNTRACED} TO Timeval;
 	Timeval* = RECORD
 				sec*	: LONGWORD;
@@ -328,15 +347,15 @@ TYPE
 	END;
 
 CONST
-	FdSetLen* = 16;
+	FdSetLen* = 32;
 
 TYPE
-	FdSet* = ARRAY FdSetLen OF SET;
+	FdSet* = ARRAY FdSetLen OF SET32;
 
 
 	Dirent* = POINTER {UNSAFE, UNTRACED} TO RECORD
-				ino-	: ino_t;
-				off-	: off_t;
+				ino-		: ino_t;
+				off-		: off_t;
 				reclen-	: INTEGER;
 				typ-		: CHAR;
 				name-	: (*array of*) CHAR;
@@ -358,6 +377,30 @@ TYPE
 
 	Mcontext* = POINTER{UNSAFE, UNTRACED}  TO McontextDesc;
 	McontextDesc* = RECORD
+			#IF I386 THEN
+				r_gs-		: ADDRESS;
+				r_fs-		: ADDRESS;
+				r_es-		: ADDRESS;
+				r_ds-		: ADDRESS;
+				r_di-		: ADDRESS;
+				r_si-		: ADDRESS;
+				r_bp-		: ADDRESS;
+				r_sp_x		: ADDRESS;
+				r_bx-		: ADDRESS;
+				r_dx-		: ADDRESS;
+				r_cx-		: ADDRESS;
+				r_ax-		: ADDRESS;
+				trapno-	: LONGINT;
+				err-		: LONGINT;
+				r_pc-		: ADDRESS;
+				r_cs-		: ADDRESS;
+				flags-		: LONGINT;
+				r_sp-		: ADDRESS;		(* sp at error (signal) *)
+				r_ss-		: LONGINT;
+				fpc-		: ADDRESS; 		(* FP context *)
+				oldmask	: LONGINT;
+				cr2			: LONGINT
+			#ELSIF AMD64 THEN
 				r_8			: HUGEINT;
   				r_9			: HUGEINT;
   				r_10		: HUGEINT;
@@ -381,12 +424,11 @@ TYPE
   				trapno-	: HUGEINT;
   				oldmask	: HUGEINT;
   				cr2			: HUGEINT;
-			END;
+  			#ELSE
+  				unimplemented
+  			#END
+		END;
 
-	FPcontext* = POINTER{UNSAFE, UNTRACED}  TO FPcontextDesc;
-	FPcontextDesc* = RECORD
-				(* ... *)
-			END;
 
 	PThreadAttr = RECORD
 		reserved1-: ARRAY 5 OF ADDRESS;
@@ -520,8 +562,8 @@ VAR
 	getpid-		: PROCEDURE {C} ( ): LONGINT;
 	getuid-		: PROCEDURE {C} ( ): LONGINT;
 
-	malloc-		: PROCEDURE {C} ( size: SIZE ): ADDRESS;
 	posix_memalign-	: PROCEDURE {C} ( VAR p: ADDRESS;  alignment, size: SIZE ): LONGINT;
+	malloc-		: PROCEDURE {C} ( size: SIZE ): ADDRESS;
 	free-			: PROCEDURE {C} ( p: ADDRESS );
 	mprotect-	: PROCEDURE {C} ( p: ADDRESS; len: SIZE; prot: LONGINT ): LONGINT;
 
@@ -902,7 +944,6 @@ VAR
 		IF h = 0 THEN
 			Trace.String( "Unix.Dlopen: loading library " );
 			Trace.String( libname );  Trace.String( " failed" );  Trace.Ln;
-		(*	LOOP END;*)
 		END;
 		RETURN h
 	END Dlopen;
@@ -1008,12 +1049,20 @@ VAR
 
 	PROCEDURE fstat*  ( fd: LONGINT;  VAR buf: Status ): LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
+	#IF AMD64 THEN
 		RETURN  fxstat( 1, fd, buf );
+	#ELSE
+		RETURN  fxstat( 3, fd, buf );
+	#END
 	END fstat;
 
 	PROCEDURE stat*  ( path: ADDRESS;  VAR buf: Status ): LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
+	#IF AMD64 THEN
 		RETURN  xstat( 1, path, buf );
+	#ELSE
+		RETURN  xstat( 3, path, buf );
+	#END
 	END stat;
 
 	
@@ -1071,6 +1120,16 @@ VAR
 		argv := Glue.argv;
 		environ := Glue.environ;
 
+#IF I386 THEN
+		libraryPaths[0] := "/lib/i386-linux-gnu/i686/cmov";
+		libraryPaths[1] := "/lib/i386-linux-gnu";
+		libraryPaths[2] := "/lib32";
+		libraryPaths[3] := "/lib";
+		libraryPaths[4] := "/usr/lib/i386-linux-gnu";
+		libraryPaths[5] := "/usr/lib32";
+		libraryPaths[6] := "/usr/lib";
+		noPaths := 7;
+#ELSIF AMD64 THEN
 		libraryPaths[0] := "/lib/x86_64-linux-gnu";
 		libraryPaths[1] := "/lib64";
 		libraryPaths[2] := "/lib";
@@ -1078,6 +1137,9 @@ VAR
 		libraryPaths[4] := "/usr/lib64";
 		libraryPaths[5] := "/usr/lib";
 		noPaths := 6;
+#ELSE
+	=== error
+#END
 
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2 );

@@ -315,6 +315,12 @@ BEGIN
 	Machine.Release(Machine.Objects);
 END CancelTimeout;
 
+PROCEDURE LeaveA2-;
+END LeaveA2;
+
+PROCEDURE ReenterA2-;
+END ReenterA2;
+
 PROCEDURE InitEventHandling;
 BEGIN
 	NEW(event); event.next := event; event.prev := event;  (* event: head of timer event queue, only a sentinel *)

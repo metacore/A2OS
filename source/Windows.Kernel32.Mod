@@ -118,6 +118,7 @@ CONST
 
 
 	(** WaitForSingleObject return values *)
+	WaitFailed* = -1;
 	WaitTimeout* = 0102H;
 
 	(** SetErrorMode *)
@@ -329,7 +330,7 @@ TYPE
 	END;
 
 	(** CreateThread *)
-	ThreadProc* = PROCEDURE {WINAPI} ( lpParameter: ANY ): LONGINT;
+	ThreadProc* = PROCEDURE {WINAPI} ( lpParameter {UNTRACED}: ANY ): LONGINT;
 
 	(** CreateProcess *)
 	ProcessInformation* = RECORD
@@ -864,14 +865,14 @@ VAR
 
 	(** Wrapper for getProcAddress. *)
 	PROCEDURE GetProcAddress*( hModule: HMODULE; CONST procName: ARRAY OF CHAR; VAR adr: ADDRESS );
-	BEGIN
-		adr := getProcAddress( hModule, procName )
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
+		adr := getProcAddress( hModule, procName );
 	END GetProcAddress;
 
 (** Copy a zero-terminated string from address lpString. *)
 	PROCEDURE CopyString*( lpString: LPSTR;  VAR str: ARRAY OF CHAR );
 	VAR i: LONGINT;  ch: CHAR;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		i := 0;
 		IF lpString # NULL THEN
 			SYSTEM.GET( lpString, ch );
@@ -883,17 +884,17 @@ VAR
 	END CopyString;
 
 	PROCEDURE OutputDebugString*( CONST str: ARRAY OF CHAR );
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		outputDebugString( str );
 	END OutputDebugString;
 
 	PROCEDURE NoOutputString(CONST str: ARRAY OF CHAR);
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END NoOutputString;
 	
 	PROCEDURE ConsoleString(CONST str: ARRAY OF CHAR);
 	VAR i: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		i := 0; 
 		WHILE (i<LEN(str)) & (str[i] # 0X) DO
 			TraceChar(str[i]);INC(i); 
@@ -902,7 +903,7 @@ VAR
 
 	PROCEDURE TraceChar(c: CHAR);
 	VAR len: LONGINT; b: BOOL;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		len := 1;
 		b := WriteFile(hout,c,len,len,NIL);
 	END TraceChar;
@@ -926,14 +927,14 @@ VAR
 
 	PROCEDURE ShutdownP(l: LONGINT);
 	VAR i: LONGINT;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		OutputString("Kernel32.Shutdown");
 		ExitProcess(l);
 	END ShutdownP;
 	
 	PROCEDURE Init*;
 	VAR mod: HMODULE;
-	BEGIN
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Shutdown := ShutdownP;
 		mod := LoadLibrary("Kernel32.DLL");
 		GetProcAddress(mod, "AllocConsole",SYSTEM.VAL(ADDRESS,AllocConsole));

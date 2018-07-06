@@ -389,7 +389,7 @@ TYPE
 
 	Mcontext* = POINTER TO McontextDesc;
 	McontextDesc* = RECORD
-			#IF I368 THEN
+			#IF I386 THEN
 				trapno-	: LONGINT;
 				err			: LONGINT;
 				faultvaddr	: ADDRESS;

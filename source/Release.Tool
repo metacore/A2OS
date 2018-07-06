@@ -275,8 +275,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	LINUX & I386 { Linux.Glue.Mod Linux.I386.Unix.Mod }
 	LINUX & AMD64 { Linux.Glue.Mod Linux.AMD64.Unix.Mod }
-	DARWIN & I386 { Unix.Glue.Mod Darwin.I386.Unix.Mod }
-	DARWIN & AMD64 { Unix.Glue.Mod Darwin.AMD64.Unix.Mod }
+	DARWIN { Unix.Glue.Mod Darwin.Unix.Mod }
 	SOLARIS { Unix.Glue.Mod Solaris.Unix.Mod }
 
 	# cooperative runtime system

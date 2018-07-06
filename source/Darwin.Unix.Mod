@@ -76,7 +76,6 @@ CONST
 	rdonly* = SET32({});  rdwr* = SET32({1});  creat* = SET32({6});  trunc* = SET32({9});
 
 	(* access modes *)
-(*	rwrwr* = SET32({2, 4, 5, 7, 8});  rwxrwxrwx* = SET32({0..8});	*)
 	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH;  
 
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
@@ -151,11 +150,20 @@ TYPE
 	Thread_t* = ADDRESS;
 	Mutex_t* = ADDRESS;
 	Condition_t* = ADDRESS;
-	
-	PThreadAttrType		= ARRAY 64 OF CHAR; 	(* 64bit: 64*)
-	MutexType			= ARRAY 64 OF CHAR;	(* 64bit: 64 *)
-	MutexAttributeType	= ARRAY 16 OF CHAR;	(* 64bit: 16 *)
-	ConditionType		= ARRAY 48 OF CHAR;	(* 64bit: 48 *)
+
+#IF I386 THEN
+	PThreadAttrType		= ARRAY 40 OF CHAR;
+	MutexType			= ARRAY 44 OF CHAR;
+	MutexAttributeType	= ARRAY 12 OF CHAR;
+	ConditionType		= ARRAY 28 OF CHAR;
+#ELSIF AMD64 THEN	
+	PThreadAttrType		= ARRAY 64 OF CHAR;
+	MutexType			= ARRAY 64 OF CHAR;
+	MutexAttributeType	= ARRAY 16 OF CHAR;
+	ConditionType		= ARRAY 48 OF CHAR;
+#ELSE
+	unimplemented
+#END
 
 	Key_t* = ADDRESS;
 	
@@ -266,24 +274,44 @@ TYPE
 
 
 TYPE
-	dev_t*		= LONGINT;
-	ino_t*		= HUGEINT;
+	dev_t*		= WORD;
+	ino_t*		= LONGWORD;
 	nlink_t*	= INTEGER;
 	mode_t*	= INTEGER;
-	off_t*		= SIZE;
-	blksize_t*= LONGINT;
-	blkcnt_t*	= SIZE;
-	uid_t*		= LONGINT;
-	gid_t*		= LONGINT;
-	pid_t*		= LONGINT;
+	off_t*		= HUGEINT;
+	blksize_t*= WORD;
+	blkcnt_t*	= HUGEINT;
+	uid_t*		= WORD;
+	gid_t*		= WORD;
+	pid_t*		= WORD;
 
 	Status* = RECORD
+			#IF I386 THEN
+				dev-		: dev_t;
+				ino-		: ino_t;
+				mode-	: mode_t;
+				nlink-		: nlink_t;
+				uid-		: WORD;
+				gid-		: WORD;
+				rdev-		: dev_t;
+				atime-	: Timeval;
+				mtime-	: Timeval;
+				ctime-	: Timeval;
+				size-		: WORD;
+				pad		: WORD;
+				blocks-	: HUGEINT;
+				blksize-	: WORD;
+				flags-		: WORD;
+				gen-		: WORD;
+				lspare-	: WORD;
+				qspare-	: ARRAY 4 OF WORD
+			#ELSIF AMD64 THEN
 				dev-		: dev_t;
 				mode-	: mode_t;
 				nlink-		: nlink_t;
 				ino-		: ino_t;
-				uid-		: LONGINT;
-				gid-		: LONGINT;
+				uid-		: WORD;
+				gid-		: WORD;
 				rdev-		: dev_t;
 				atime-	: Timeval;
 				mtime-	: Timeval;
@@ -291,17 +319,20 @@ TYPE
 				btime-	: Timeval;
 				size-		: SIZE;
 				blocks-	: HUGEINT;
-				blksize-	: LONGINT;
-				flags-		: LONGINT;
-				gen-		: LONGINT;
-				lspare-	: LONGINT;
-				qspare-	: ARRAY 4 OF LONGINT
-			END;
+				blksize-	: WORD;
+				flags-		: WORD;
+				gen-		: WORD;
+				lspare-	: WORD;
+				qspare-	: ARRAY 4 OF WORD
+			#ELSE
+				unimplemented
+			#END
+		END;
 
 	tvPtr* = POINTER TO Timeval;
 	Timeval* = RECORD
-				sec*		: HUGEINT;
-				usec*		: HUGEINT
+				sec*		: LONGWORD;
+				usec*		: LONGWORD
 			END;
 
 
@@ -358,6 +389,32 @@ TYPE
 
 	Mcontext* = POINTER TO McontextDesc;
 	McontextDesc* = RECORD
+			#IF I368 THEN
+				trapno-	: LONGINT;
+				err			: LONGINT;
+				faultvaddr	: ADDRESS;
+				
+				r_ax		: ADDRESS;
+				r_bx		: ADDRESS;
+				r_cx		: ADDRESS;
+				r_dx		: ADDRESS;
+				r_di		: ADDRESS;
+				r_si		: ADDRESS;
+				r_bp-		: ADDRESS;
+				r_sp-		: ADDRESS;
+				r_ss		: ADDRESS;
+				r_flags		: ADDRESS;
+				r_pc-		: ADDRESS;
+				r_cs		: ADDRESS;
+				r_ds		: ADDRESS;
+				r_es		: ADDRESS;
+				r_fs		: ADDRESS;
+				r_gs		: ADDRESS;
+				
+				flavor		: LONGINT;
+				count		: LONGINT;
+				(* ... *)
+			#ELSIF AMD64 THEN
 				trapno-	: INTEGER;
 				cpu		: INTEGER;
 				err			: LONGINT;
@@ -383,8 +440,11 @@ TYPE
 				r_flags		: HUGEINT;
 				r_cs		: HUGEINT;
 				r_fs		: HUGEINT;
-				r_gs		: HUGEINT;
-			END;
+				r_gs		: HUGEINT
+			#ELSE
+				unimplemented
+			#END
+		END;
 
 	Sigaction = RECORD	
 		sa_handler: ADDRESS;
@@ -410,41 +470,42 @@ VAR
 
 	sigstack-: ARRAY 32*4096 OF CHAR;
 
-
 	sysconf: PROCEDURE {C} (name: LONGINT):WORD;
 
-	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
-	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
-	pthread_mutex_lock: PROCEDURE {C} (mutex: ADDRESS): WORD;
-	pthread_mutex_unlock: PROCEDURE {C} (mutex: ADDRESS): WORD;
+	pthread_mutex_init		: PROCEDURE {C} ( mutex: ADDRESS; mutexattr: ADDRESS ): WORD;
+	pthread_mutex_destroy	: PROCEDURE {C} ( mutex: ADDRESS ): WORD;
+	pthread_mutex_lock		: PROCEDURE {C} ( mutex: ADDRESS ): WORD;
+	pthread_mutex_unlock	: PROCEDURE {C} ( mutex: ADDRESS ): WORD;
 
-	pthread_mutexattr_init: PROCEDURE {C} (mutexattr: ADDRESS): WORD;
-	pthread_mutexattr_settype: PROCEDURE {C} (mutexattr: ADDRESS; type: WORD): WORD;
+	pthread_mutexattr_init		: PROCEDURE {C} ( mutexattr: ADDRESS ): WORD;
+	pthread_mutexattr_settype	: PROCEDURE {C} ( mutexattr: ADDRESS; type: WORD ): WORD;
 
-	pthread_cond_init: PROCEDURE {C} (cond: ADDRESS; condAttr: ADDRESS): WORD;
-	pthread_cond_destroy: PROCEDURE {C} (cond: ADDRESS): WORD;
-	pthread_cond_wait: PROCEDURE {C} (cond: ADDRESS; mutex: ADDRESS): WORD;
-	pthread_cond_signal: PROCEDURE {C} (cond: ADDRESS): WORD;
+	pthread_cond_init		: PROCEDURE {C} ( cond: ADDRESS; condAttr: ADDRESS ): WORD;
+	pthread_cond_destroy	: PROCEDURE {C} ( cond: ADDRESS ): WORD;
+	pthread_cond_wait		: PROCEDURE {C} ( cond: ADDRESS; mutex: ADDRESS ): WORD;
+	pthread_cond_signal		: PROCEDURE {C} ( cond: ADDRESS ): WORD;
 
-	pthread_create: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): WORD;
-	pthread_exit: PROCEDURE {C} (thr: ADDRESS);
-	pthread_detach: PROCEDURE {C} (thr: ADDRESS);
-	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
-	pthread_cancel: PROCEDURE {C} (thr: ADDRESS);
+	pthread_create	: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): WORD;
+	pthread_exit		: PROCEDURE {C} (thr: ADDRESS);
+	pthread_detach	: PROCEDURE {C} (thr: ADDRESS);
+	pthread_kill		: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
+	pthread_cancel	: PROCEDURE {C} (thr: ADDRESS);
+	pthread_self		: PROCEDURE {C} (): Thread_t;
 	
 	pthread_key_create	: PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): WORD;
 	pthread_setspecific	: PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
 	pthread_getspecific	: PROCEDURE {C} ( key: Key_t ): ADDRESS;
 
-	pthread_attr_init: PROCEDURE {C} (attr: ADDRESS);
-	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD);
-	pthread_attr_setdetachstate: PROCEDURE {C}(attr: ADDRESS; set: WORD);
-	pthread_attr_setstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: SIZE);
-	pthread_self: PROCEDURE {C} (): Thread_t;
+	pthread_attr_init					: PROCEDURE {C} ( attr: ADDRESS );
+	pthread_attr_setscope			: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
+	pthread_attr_setdetachstate	: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
+	pthread_attr_setstacksize		: PROCEDURE {C} ( attr: ADDRESS; stackSize: SIZE );
 	
 	pthread_mach_thread_np: PROCEDURE {C} ( thr: Thread_t ): MachPort;
+	
 	thread_suspend:	PROCEDURE {C} ( mthr: MachPort );
 	thread_resume:	PROCEDURE {C} ( mthr: MachPort );
+	
 	sched_get_priority_max		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	sched_get_priority_min		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	
@@ -464,14 +525,17 @@ VAR
 	sigaltstack	: PROCEDURE {C} (ss, oss: ADDRESS): LONGINT;
 	
 
-	(*pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
-	posix_spawnp- 	: PROCEDURE {C} (pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS): LONGINT;
+	(*	pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. 
+		file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. 
+		attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
+	posix_spawnp- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
 	(*more restrictive than spawnp*)
-	posix_spawn- 	: PROCEDURE {C} (pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS): LONGINT;
-	waitpid-			: PROCEDURE {C} (pid: pid_t; status: ADDRESS; options: LONGINT): pid_t;
-	pipe-				: PROCEDURE {C} (pipefd: ADDRESS): LONGINT; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)
-	dup2-				: PROCEDURE {C} (oldfd,newfd: LONGINT): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
-	dup-				: PROCEDURE {C} (oldfd: LONGINT): LONGINT;
+	posix_spawn- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
+	
+	waitpid-		: PROCEDURE {C} ( pid: pid_t; status: ADDRESS; options: LONGINT ): pid_t;
+	pipe-			: PROCEDURE {C} ( pipefd: ADDRESS ): LONGINT; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)
+	dup2-			: PROCEDURE {C} ( oldfd, newfd: LONGINT ): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
+	dup-			: PROCEDURE {C} ( oldfd: LONGINT ): LONGINT;
 
 	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
 	pread-		: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE; pos: off_t ): SIZE;
@@ -489,7 +553,7 @@ VAR
 	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
 	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
 	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): LONGINT;
-	realpath-	: PROCEDURE {C} (file_name: ADDRESS; resolved_name: ADDRESS): ADDRESS;
+	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS ): ADDRESS;
 
 	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
 	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): LONGINT;
@@ -501,16 +565,16 @@ VAR
 
 	getpid-		: PROCEDURE {C} ( ): LONGINT;
 	getuid-		: PROCEDURE {C} ( ): LONGINT;
-
-	malloc-		: PROCEDURE {C} ( size: SIZE ): ADDRESS;
+	
 	posix_memalign-	: PROCEDURE {C} ( VAR p: ADDRESS;  alignment, size: SIZE ): LONGINT;
+	malloc-		: PROCEDURE {C} ( size: SIZE ): ADDRESS;
 	free-			: PROCEDURE {C} ( p: ADDRESS );
 	mprotect-	: PROCEDURE {C} ( p: ADDRESS; len: SIZE; prot: LONGINT ): LONGINT;
 
 	alarm-		: PROCEDURE {C} ( ms: LONGINT ): LONGINT;
 	setitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value, ovalue: Itimerval ): LONGINT;
 	getitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value: Itimerval ): LONGINT;
-(*	clock_gettime-	: PROCEDURE{C} (clk_id: LONGINT; tp: tvPtr): LONGINT;	*)
+(*	clock_gettime-	: PROCEDURE{C} (clk_id: LONGINT; tp: tvPtr): LONGINT;	none existent on older systems *)
 
 	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): LONGINT;
 	mktime-			: PROCEDURE {C} ( VAR tm: Tm ): LONGINT;
@@ -536,8 +600,8 @@ VAR
 	perror-		: PROCEDURE {C} ( msg: ADDRESS );
 	errno_loc		: PROCEDURE {C} ( ): ADDRESS;
 
-	xSetErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
-	xSetIOErrorHandler: PROCEDURE {C} (h: ADDRESS): WORD;
+	xSetErrorHandler		: PROCEDURE {C} ( h: ADDRESS ): WORD;
+	xSetIOErrorHandler	: PROCEDURE {C} ( h: ADDRESS ): WORD;
 
 	libc-: ADDRESS;
 	libp-: ADDRESS;
@@ -1021,28 +1085,28 @@ VAR
 		libc := Dlopen( libcname, 2 );
 		libp := Dlopen( libpthreadname, 2 ); 
 
-		Dlsym( libc, "exit",		ADDRESSOF(exit) );
-		Dlsym( libc, "sysconf", ADDRESSOF(sysconf) );
+		Dlsym( libc, "exit",			ADDRESSOF(exit) );
+		Dlsym( libc, "sysconf", 	ADDRESSOF(sysconf) );
 
-		Dlsym( libc, "pthread_mutex_init", ADDRESSOF(pthread_mutex_init) );
-		Dlsym( libc, "pthread_mutex_destroy", ADDRESSOF(pthread_mutex_destroy) );
-		Dlsym( libc, "pthread_mutex_lock", ADDRESSOF(pthread_mutex_lock) );
-		Dlsym( libc, "pthread_mutex_unlock", ADDRESSOF(pthread_mutex_unlock) );
+		Dlsym( libc, "pthread_mutex_init",		ADDRESSOF(pthread_mutex_init) );
+		Dlsym( libc, "pthread_mutex_destroy",	ADDRESSOF(pthread_mutex_destroy) );
+		Dlsym( libc, "pthread_mutex_lock",		ADDRESSOF(pthread_mutex_lock) );
+		Dlsym( libc, "pthread_mutex_unlock",	ADDRESSOF(pthread_mutex_unlock) );
 
-		Dlsym( libp, "pthread_mutexattr_init", ADDRESSOF(pthread_mutexattr_init) );
-		Dlsym( libp, "pthread_mutexattr_settype", ADDRESSOF(pthread_mutexattr_settype) );
+		Dlsym( libp, "pthread_mutexattr_init",		ADDRESSOF(pthread_mutexattr_init) );
+		Dlsym( libp, "pthread_mutexattr_settype",	ADDRESSOF(pthread_mutexattr_settype) );
 
 
-		Dlsym( libc, "pthread_cond_init", ADDRESSOF(pthread_cond_init) );
-		Dlsym( libc, "pthread_cond_destroy", ADDRESSOF(pthread_cond_destroy) );
-		Dlsym( libc, "pthread_cond_wait", ADDRESSOF(pthread_cond_wait) );
-		Dlsym( libc, "pthread_cond_signal", ADDRESSOF(pthread_cond_signal) );
+		Dlsym( libc, "pthread_cond_init",		ADDRESSOF(pthread_cond_init) );
+		Dlsym( libc, "pthread_cond_destroy",	ADDRESSOF(pthread_cond_destroy) );
+		Dlsym( libc, "pthread_cond_wait",		ADDRESSOF(pthread_cond_wait) );
+		Dlsym( libc, "pthread_cond_signal",	ADDRESSOF(pthread_cond_signal) );
 
-		Dlsym( libp, "pthread_create", ADDRESSOF(pthread_create) );
-		Dlsym( libp, "pthread_exit", ADDRESSOF(pthread_exit) );
-		Dlsym( libp, "pthread_detach", ADDRESSOF(pthread_detach) );
-		Dlsym( libp, "pthread_cancel", ADDRESSOF(pthread_cancel) );
-		Dlsym( libp, "pthread_kill", ADDRESSOF(pthread_kill) );
+		Dlsym( libp, "pthread_create",	ADDRESSOF(pthread_create) );
+		Dlsym( libp, "pthread_exit",		ADDRESSOF(pthread_exit) );
+		Dlsym( libp, "pthread_detach",	ADDRESSOF(pthread_detach) );
+		Dlsym( libp, "pthread_cancel",	ADDRESSOF(pthread_cancel) );
+		Dlsym( libp, "pthread_kill",		ADDRESSOF(pthread_kill) );
 		
 		Dlsym( libp, "pthread_key_create", ADDRESSOF( pthread_key_create ) );
 		Dlsym( libp, "pthread_getspecific", ADDRESSOF( pthread_getspecific ) );
@@ -1064,10 +1128,10 @@ VAR
 		Dlsym( libc, "posix_spawnp", ADDRESSOF(posix_spawnp) );
 		Dlsym( libc, "posix_spawn", ADDRESSOF(posix_spawn) );
 
-		Dlsym( libc, "waitpid", ADDRESSOF(waitpid) );
-		Dlsym( libc, "pipe", ADDRESSOF(pipe) );
-		Dlsym( libc, "dup2", ADDRESSOF(dup2) );
-		Dlsym( libc, "dup", ADDRESSOF(dup) );
+		Dlsym( libc, "waitpid",	ADDRESSOF(waitpid) );
+		Dlsym( libc, "pipe",		ADDRESSOF(pipe) );
+		Dlsym( libc, "dup2",		ADDRESSOF(dup2) );
+		Dlsym( libc, "dup",		ADDRESSOF(dup) );
 
 		Dlsym( libc, "sched_get_priority_max",	ADDRESSOF(sched_get_priority_max) );
 		Dlsym( libc, "sched_get_priority_min",	ADDRESSOF(sched_get_priority_min) );
@@ -1082,31 +1146,39 @@ VAR
 		Dlsym( libc, "sigaltstack",	ADDRESSOF(sigaltstack) );
 		Dlsym( libc, "sigsuspend",		ADDRESSOF(sigsuspend) );
 
-		Dlsym( libc, "read",		ADDRESSOF( read ) );
-		Dlsym( libc, "pread",	ADDRESSOF( pread ) );
-		Dlsym( libc, "write",	ADDRESSOF( write ) );
-		Dlsym( libc, "pwrite",	ADDRESSOF( pwrite ) );
-		Dlsym( libc, "open",		ADDRESSOF( open ) );
-		Dlsym( libc, "close",	ADDRESSOF( close ) );
-		Dlsym( libc, "lseek",	ADDRESSOF( lseek ) );
+		Dlsym( libc, "read",			ADDRESSOF( read ) );
+		Dlsym( libc, "pread",		ADDRESSOF( pread ) );
+		Dlsym( libc, "write",		ADDRESSOF( write ) );
+		Dlsym( libc, "pwrite",		ADDRESSOF( pwrite ) );
+		Dlsym( libc, "open",			ADDRESSOF( open ) );
+		Dlsym( libc, "close",		ADDRESSOF( close ) );
+		Dlsym( libc, "lseek",		ADDRESSOF( lseek ) );
 		Dlsym( libc, "realpath",	ADDRESSOF( realpath ) );
-		Dlsym( libc, "fsync",	ADDRESSOF( fsync ) );
-		Dlsym( libc, "ioctl",	ADDRESSOF( ioctl ) );
-		Dlsym( libc, "unlink",	ADDRESSOF( unlink ) );
-		Dlsym( libc, "rename",	ADDRESSOF( rename ) );
+		Dlsym( libc, "fsync",		ADDRESSOF( fsync ) );
+		Dlsym( libc, "ioctl",		ADDRESSOF( ioctl ) );
+		Dlsym( libc, "unlink",		ADDRESSOF( unlink ) );
+		Dlsym( libc, "rename",		ADDRESSOF( rename ) );
 		Dlsym( libc, "ftruncate",	ADDRESSOF( ftruncate ) );
-		Dlsym( libc, "chmod",	ADDRESSOF( chmod ) );
-		Dlsym( libc, "utime",	ADDRESSOF( utime ) );
-		Dlsym( libc, "access",	ADDRESSOF( access ) );
-		Dlsym( libc, "select",	ADDRESSOF( select ) );
+		Dlsym( libc, "chmod",		ADDRESSOF( chmod ) );
+		Dlsym( libc, "utime",		ADDRESSOF( utime ) );
+		Dlsym( libc, "access",		ADDRESSOF( access ) );
+		Dlsym( libc, "select",		ADDRESSOF( select ) );
 
 		Dlsym( libc, "chdir",	ADDRESSOF( chdir ) );
 		Dlsym( libc, "mkdir",	ADDRESSOF( mkdir ) );
 		Dlsym( libc, "rmdir",	ADDRESSOF( rmdir ) );
-
-		Dlsym( libc, "stat64",		ADDRESSOF( stat ) );
+		
+#IF I386 THEN
+		Dlsym( libc, "stat",		ADDRESSOF( stat ) );
+		Dlsym( libc, "lstat",	ADDRESSOF( lstat ) );
+		Dlsym( libc, "fstat",	ADDRESSOF( fstat ) );
+#ELSIF AMD64 THEN
+		Dlsym( libc, "stat64",	ADDRESSOF( stat ) );
 		Dlsym( libc, "lstat64",	ADDRESSOF( lstat ) );
 		Dlsym( libc, "fstat64",	ADDRESSOF( fstat ) );
+#ELSE
+	=== error
+#END
 
 		Dlsym( libc, "getpid",	ADDRESSOF( getpid ) );
 		Dlsym( libc, "getuid",	ADDRESSOF( getuid ) );

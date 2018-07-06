@@ -20,7 +20,7 @@ modules: source/Release.Tool
 	@AOSPATH=source ./original Release.Build --list $(target) | tr -d '\r' | grep "^[^ ]\+\.Mod\s" | tr -d ' ' > $@
 
 dependencies: modules source/*.Mod
-	@./original DependencyWalker.Walk --fileExtension=$(object) $(addprefix source/, $(shell sort -u modules)) DependencyWalker.Mod | tr -d '\r' | grep "^.\+\$(object):" > $@
+	@./original DependencyWalker.Walk --define=UNIX,AMD64 --fileExtension=$(object) $(addprefix source/, $(shell sort -u modules)) DependencyWalker.Mod | tr -d '\r' | grep "^.\+\$(object):" > $@
 
 -include dependencies
 FoxArrayBase$(object): ComplexNumbers$(object)

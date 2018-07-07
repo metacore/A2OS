@@ -23,14 +23,12 @@ PROCEDURE GetCurrentIndex- EXTERN "Activities.GetCurrentProcessorIndex" (): SIZE
 (** A suspended processor must be resumed by a call to the ResumeAnyProcessor procedure. *)
 PROCEDURE SuspendCurrentProcessor-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	ASSERT (count > 1);
 	ASSERT (Unix.sem_wait (ADDRESS OF semaphore) = 0);
 END SuspendCurrentProcessor;
 
 (** Resumes the execution of all suspended processors. *)
 PROCEDURE ResumeAllProcessors-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	ASSERT (count > 1);
 	ASSERT (Unix.sem_post (ADDRESS OF semaphore) = 0);
 END ResumeAllProcessors;
 

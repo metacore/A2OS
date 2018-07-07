@@ -2141,6 +2141,10 @@ END InvalidateDCacheRange;
 PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
 END InvalidateICacheRange;
 
+PROCEDURE -SetEAX(n: LONGINT);
+CODE{SYSTEM.i386}	POP EAX
+END SetEAX;
+
 (* Unexpected - Default interrupt handler *)
 PROCEDURE Unexpected(VAR state: State);
 VAR int: LONGINT; isr, irr: CHAR;

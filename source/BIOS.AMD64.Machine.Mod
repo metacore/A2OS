@@ -1,4 +1,4 @@
-GetMODULE Machine;	(** AUTHOR "pjm"; PURPOSE "Bootstrapping, configuration and machine interface"; *)
+MODULE Machine;	(** AUTHOR "pjm"; PURPOSE "Bootstrapping, configuration and machine interface"; *)
 
 (* The code of this module body must be the first in the statically linked boot file. *)
 

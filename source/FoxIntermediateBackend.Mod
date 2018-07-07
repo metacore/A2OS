@@ -1585,10 +1585,13 @@ TYPE
 		END Emit;
 		
 		PROCEDURE EmitTrap (position: Position; trapNo: LONGINT);
+		VAR saved: RegisterEntry;
 		BEGIN
 			IF backend.cooperative THEN
+				ReleaseUsedRegisters(saved);
 				Emit(Push(position,IntermediateCode.Immediate(sizeType,trapNo)));
 				CallThis(position,"Runtime","Trap",1); 
+				RestoreRegisterUse(saved);
 			ELSE
 				Emit(Trap(position,trapNo));
 			END;
@@ -2021,25 +2024,29 @@ TYPE
 				type := entry.type;
 				class := entry.registerClass;
 				IntermediateCode.InitRegister(op,type,class,entry.register);
-				(*
-				new := registerUsageCount.Next(type,class);
-				registerUsageCount.Remap(entry.register,new);
-				IF TraceRegisterUsageCount & (dump# NIL) THEN
-					dump.String("remap register "); dump.Int(entry.register,1);
-					dump.String("to "); dump.Int(new,1);
-					dump.String("with count "); dump.Int(registerUsageCount.Use(new),1); dump.Ln; dump.Update;
-				END;
-				entry.register := new;
-				*)
-				
 				Emit(Pop(position,op));
 				AddRegisterEntry(usedRegisters,entry.register,entry.registerClass, entry.type);
 				entry := prev;
 			END;
-			(*
-			usedRegisters := saved;
-			*)
 		END RestoreRegisters;
+
+		(* re-enter registers from array saved into array markedRegisters (recursion possible) *)
+		PROCEDURE RestoreRegisterUse(CONST saved: RegisterEntry);
+		VAR op: IntermediateCode.Operand; entry,prev: RegisterEntry; type: IntermediateCode.Type; class: IntermediateCode.RegisterClass;
+		BEGIN
+			entry := saved;
+			WHILE (entry # NIL) DO prev := entry; entry := entry.next END;
+			entry := prev;
+			WHILE entry # NIL DO
+				prev := entry.prev;
+				type := entry.type;
+				class := entry.registerClass;
+				IntermediateCode.InitRegister(op,type,class,entry.register);
+				Emit(Mov(position,op,op));
+				AddRegisterEntry(usedRegisters,entry.register,entry.registerClass, entry.type);
+				entry := prev;
+			END;
+		END RestoreRegisterUse;
 
 		PROCEDURE CheckRegistersFree;
 		VAR r: RegisterEntry; warning: ARRAY 128 OF CHAR; i: LONGINT;

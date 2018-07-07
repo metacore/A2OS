@@ -8,6 +8,5 @@ Display.Install ~
 WindowManager.Install ~
 Autostart.Run~
 Clipboard.Install~
-Objects.SystemA2IsUp~
 KbdMouse.DisableMouseEmulation ~
 DisplayRefresher.Install~

@@ -2141,9 +2141,9 @@ END InvalidateDCacheRange;
 PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
 END InvalidateICacheRange;
 
-PROCEDURE -SetEAX(n: LONGINT);
-CODE{SYSTEM.i386}	POP EAX
-END SetEAX;
+PROCEDURE -SetRA(n: SIZE);
+CODE POP EAX
+END SetRA;
 
 (* Unexpected - Default interrupt handler *)
 PROCEDURE Unexpected(VAR state: State);
@@ -2175,7 +2175,7 @@ BEGIN
 			LOOP END
 		ELSE
 			Release (TraceOutput);
-			SetEAX(int);
+			SetRA(int);
 			HALT(1801)	(* unexpected interrupt *)
 		END
 	END

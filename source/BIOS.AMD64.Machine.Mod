@@ -2313,6 +2313,10 @@ END InvalidateDCacheRange;
 PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
 END InvalidateICacheRange;
 
+PROCEDURE -SetRA(n: SIZE);
+CODE POP RAX
+END SetRA;
+
 (* Unexpected - Default interrupt handler *)
 PROCEDURE Unexpected(VAR state: State);
 VAR int: HUGEINT; isr, irr: CHAR;
@@ -2343,7 +2347,7 @@ BEGIN
 			LOOP END
 		ELSE
 			Release (TraceOutput);
-			SetRAX(int);
+			SetRA(int);
 			HALT(1801)	(* unexpected interrupt *)
 		END
 	END

@@ -294,8 +294,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	BIOS & I386 & ~COOP { BIOS.I386.Machine.Mod }
 	BIOS & AMD64 & ~COOP { BIOS.AMD64.Machine.Mod }
-	WIN & I386 { Windows.I386.Machine.Mod }
-	WIN & AMD64 { Windows.AMD64.Machine.Mod }
+	WIN { Windows.Machine.Mod }
 	COOP & ~ARM { Mutexes.Mod Coop.Machine.Mod }
 	COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }

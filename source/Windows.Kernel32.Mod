@@ -218,7 +218,7 @@ TYPE
 		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: SIZE;
 		FloatSave*: FloatingSaveArea;
 		GS*, FS*, ES*, DS*: ADDRESS;
-		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: ADDRESS;
+		RDI*, RSI*, RB*, RD*, RC*, RA*: ADDRESS;
 		BP*, PC*, CS*, FLAGS*, SP*, SS*: ADDRESS; (* whereas BP is EBP and SP is ESP *)
 	END;
 	#ELSIF AMD64 THEN
@@ -233,7 +233,7 @@ TYPE
 		
 		Dr0*, Dr1*, Dr2*, Dr3*, Dr6*, Dr7*: SIZE;
 		
-		RAX*, RCX*, RDX*, RBX*, SP*, BP*, RSI*, RDI*, R8*, R9*, R10*, R11*, R12*, R13*, R14*, R15*: ADDRESS;
+		RA*, RC*, RD*, RB*, SP*, BP*, RSI*, RDI*, R8*, R9*, R10*, R11*, R12*, R13*, R14*, R15*: ADDRESS;
 		PC*: ADDRESS; 
 		
 		remainder (* leave enough space for the rest here *): ARRAY 1024 OF CHAR;

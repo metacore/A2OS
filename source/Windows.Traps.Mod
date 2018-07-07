@@ -140,12 +140,12 @@ VAR
 
 				Val( "PC", int.PC );  
 				#IF I386 THEN
-					Val( "ESI", int.ESI );  Val( "EDI", int.EDI );  Val( "ESP", int.SP );
-					Val( "PID", p.id ); Val( "EAX", int.EAX );  Val( "EBX", int.EBX );  Val( "ECX", int.ECX );  Val( "EDX", int.EDX );
+					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
+					Val( "PID", p.id ); Val( "EAX", int.RA );  Val( "EBX", int.RB );  Val( "ECX", int.RC );  Val( "EDX", int.RD );
 				#ELSIF AMD64 THEN
-					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
-					Val( "PID", p.id ); Val( "EAX", int.RAX );  Val( "EBX", int.RBX );  Val( "ECX", int.RCX );  Val( "EDX", int.RDX );
-					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
+					Val( "RSI", int.RSI );  Val( "RDI", int.RDI );  Val( "ESP", int.SP );
+					Val( "PID", p.id ); Val( "RAX", int.RA );  Val( "RBX", int.RB );  Val( "RCX", int.RC );  Val( "RDX", int.RD );
+					Val( "RSI", int.RSI );  Val( "RDI", int.RDI );  Val( "SP", int.SP );
 				#ELSE
 					ASSERT(FALSE);
 				#END

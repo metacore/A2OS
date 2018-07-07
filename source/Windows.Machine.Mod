@@ -5,7 +5,13 @@ MODULE Machine;
 IMPORT SYSTEM, Trace, Kernel32;
 
 CONST
+#IF AMD64 THEN
+	Version = "WinA2 (64bit) ";
+#ELSIF I386 THEN
 	Version = "WinAos (32bit) ";
+#ELSE
+	-- UNDEFINED
+#END
 
 	DefaultConfigFile = "aos.ini";
 	DefaultGenericConfigFile = "aosg.ini";
@@ -13,7 +19,13 @@ CONST
 
 	MaxCPU* = 8;	(* dummy definition to make GC for both Win32 and I386 work *)
 
+#IF AMD64 THEN
+	DefaultObjectFileExtension* = ".GofWw";
+#ELSIF I386 THEN
 	DefaultObjectFileExtension* = ".Obw";
+#ELSE
+	-- UNDEFINED
+#END
 
 	(** bits in features variable *)
 	MTTR* = 12;  MMX* = 23;
@@ -74,9 +86,10 @@ TYPE
 	END;
 
 VAR
+
 	LastAddress: RECORD END;
 	stackBottom-: ADDRESS;
-	
+
 	MMXSupport*: BOOLEAN;
 	SSESupport*: BOOLEAN;
 	SSE2Support*: BOOLEAN;
@@ -99,7 +112,6 @@ VAR
 VAR
 	lock-: ARRAY MaxLocks OF CHAR;  (* not implemented as SET because of shared access *)
 	cs: ARRAY MaxLocks OF Kernel32.CriticalSection;
-	trace: ARRAY 2 OF CHAR;
 	defaultConfigFile, userConfigFile, traceName: ARRAY Kernel32.MaxPath OF CHAR;
 
 	gcThreshold-: SIZE;
@@ -124,70 +136,198 @@ VAR
 		IF hex THEN vd := vh END;
 		RETURN sgn * vd
 	END StrToInt;
+
 	(** -- Atomic operations -- *)
 
-(** Atomic INC with one parameter. *)
-
-	PROCEDURE -Inc*( VAR x: LONGINT );
-	CODE {SYSTEM.i386}
+	(** Atomic INC(x). *)
+	PROCEDURE -AtomicInc*(VAR x: LONGINT);
+	CODE
+#IF AMD64 THEN
+		POP RAX
+		LOCK
+		INC DWORD [RAX]
+#ELSIF I386 THEN
 		POP	EAX
 		LOCK
 		INC	DWORD[EAX]
-	END Inc;
+#ELSE
+	UNIMPLEMENTED
+#END
+	END AtomicInc;
 
-(** Atomic EXCL. *)
-
-	PROCEDURE Excl*( VAR s: SET;  bit: LONGINT );
-	CODE {SYSTEM.i386}
-		MOV	EAX, [EBP+bit]
-		MOV	EBX, [EBP+s]
+	(** Atomic DEC(x). *)
+	PROCEDURE -AtomicDec*(VAR x: LONGINT);
+	CODE
+#IF AMD64 THEN
+		POP RAX
 		LOCK
-		BTR	[EBX], EAX
-	END Excl;
-	(** -- Miscellaneous -- *)
+		DEC DWORD [RAX]
+#ELSIF I386 THEN
+		POP	EAX
+		LOCK
+		DEC	DWORD[EAX]
+#ELSE
+	UNIMPLEMENTED
+#END
+	END AtomicDec;
 
-(** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)
+	(** Atomic EXCL. *)
+	PROCEDURE AtomicExcl* (VAR s: SET; bit: LONGINT);
+	CODE
+#IF AMD64 THEN
+		MOV EAX, [RBP + bit]
+		MOV RBX, [RBP + s]
+		LOCK
+		BTR [RBX], EAX
+#ELSIF I386 THEN
+		MOV EAX, [EBP + bit]
+		MOV EBX, [EBP + s]
+		LOCK
+		BTR [EBX], EAX
+#ELSE
+	UNIMPLEMENTED
+#END
+	END AtomicExcl;
 
+	(** Atomic INC(x, y). *)
+	PROCEDURE -AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+	CODE
+#IF AMD64 THEN
+		POP EBX
+		POP RAX
+		LOCK
+		ADD DWORD [RAX], EBX
+#ELSIF I386 THEN
+		POP	EBX
+		POP	EAX
+		LOCK
+		ADD	DWORD[EAX], EBX
+#ELSE
+	UNIMPLEMENTED
+#END
+	END AtomicAdd;
+
+	(** Atomic test-and-set. Set x = TRUE and return old value of x. *)
+	PROCEDURE -AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
+	CODE
+#IF AMD64 THEN
+		POP RBX
+		MOV AL, 1
+		XCHG [RBX], AL
+#ELSIF I386 THEN
+		POP	EBX
+		MOV	AL, 1
+		XCHG	[EBX], AL
+#ELSE
+	UNIMPLEMENTED
+#END
+	END AtomicTestSet;
+
+	(* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
+	PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	CODE
+#IF AMD64 THEN
+		POP EBX		; new
+		POP EAX		; old
+		POP RCX		; address of x
+		LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
+#ELSIF I386 THEN
+		POP EBX		; new
+		POP EAX		; old
+		POP ECX		; address of x
+		DB 0F0X, 00FX, 0B1X, 019X	; LOCK CMPXCHG [ECX], EBX; atomicly compare x with old and set it to new if equal
+
+#ELSE
+	UNIMPLEMENTED
+#END
+	END AtomicCAS;
+
+
+	(** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)
 	PROCEDURE -SpinHint*;
-	CODE {SYSTEM.i386}
-		XOR	ECX, ECX	;  just in case some processor interprets REP this way
-		REP	NOP	;  PAUSE instruction (* NOP on pre-P4 processors, Spin Loop Hint on P4 and after *)
+	CODE
+		PAUSE
 	END SpinHint;
 
-(* Return current instruction pointer *)
-PROCEDURE CurrentPC* (): ADDRESS;
-CODE {SYSTEM.i386}
-	MOV EAX, [EBP+4]
-END CurrentPC;
+	(** -- Miscellaneous -- *)
 
-(* Return current frame pointer *)
-PROCEDURE -CurrentBP* (): ADDRESS;
-CODE {SYSTEM.i386}
-	MOV EAX, EBP
-END CurrentBP;
+	(* Return current instruction pointer *)
+	PROCEDURE CurrentPC* (): ADDRESS;
+	CODE
+#IF AMD64 THEN
+		MOV RAX, [RBP + 8]
+#ELSIF I386 THEN
+		MOV EAX, [EBP+4]
+#ELSE
+	UNIMPLEMENTED
+#END
+	END CurrentPC;
 
-(* Set current frame pointer *)
-PROCEDURE -SetBP* (bp: ADDRESS);
-CODE {SYSTEM.i386}
-	POP EBP
-END SetBP;
+	(* Return current frame pointer *)
+	PROCEDURE -CurrentBP* (): ADDRESS;
+	CODE
+#IF AMD64 THEN
+		MOV RAX, RBP
+#ELSIF I386 THEN
+		MOV EAX, EBP
+#ELSE
+	UNIMPLEMENTED
+#END
+	END CurrentBP;
 
-(* Return current stack pointer *)
-PROCEDURE -CurrentSP* (): ADDRESS;
-CODE {SYSTEM.i386}
-	MOV EAX, ESP
-END CurrentSP;
+	(* Set current frame pointer *)
+	PROCEDURE -SetBP* (bp: ADDRESS);
+	CODE
+#IF AMD64 THEN
+		POP RBP
+#ELSIF I386 THEN
+		POP EBP
+#ELSE
+	UNIMPLEMENTED
+#END
+	END SetBP;
 
-(* Set current stack pointer *)
-PROCEDURE -SetSP* (sp: ADDRESS);
-CODE {SYSTEM.i386}
-	POP ESP
-END SetSP;
+	(* Return current stack pointer *)
+	PROCEDURE -CurrentSP* (): ADDRESS;
+	CODE
+#IF AMD64 THEN
+		MOV RAX, RSP
+#ELSIF I386 THEN
+		MOV EAX, ESP
+#ELSE
+	UNIMPLEMENTED
+#END
+	END CurrentSP;
 
-(** Fill "size" bytes at "destAdr" with "filler".  "size" must be multiple of 4. *)
+	(* Set current stack pointer *)
+	PROCEDURE -SetSP* (sp: ADDRESS);
+	CODE {SYSTEM.AMD64}
+#IF AMD64 THEN
+		POP RSP
+#ELSIF I386 THEN
+		POP ESP
+#ELSE
+	UNIMPLEMENTED
+#END
+	END SetSP;
 
-	PROCEDURE Fill32*( destAdr, size, filler: LONGINT );
-	CODE {SYSTEM.i386}
+
+	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
+	PROCEDURE Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	CODE
+#IF AMD64 THEN
+		MOV RDI, [RBP + destAdr]
+		MOV RCX, [RBP + size]
+		MOV EAX, [RBP + filler]
+		TEST RCX, 3
+		JZ ok
+		PUSH 8	; ASSERT failure
+		INT 3
+	ok:
+		SHR RCX, 2
+		CLD
+		REP STOSD
+#ELSIF I386 THEN
 		MOV	EDI, [EBP+destAdr]
 		MOV	ECX, [EBP+size]
 		MOV	EAX, [EBP+filler]
@@ -195,30 +335,48 @@ END SetSP;
 		JZ	ok
 		PUSH	8	;  ASSERT failure
 		INT	3
-		ok:
+	ok:
 		SHR	ECX, 2
 		CLD
 		REP	STOSD
+#ELSE
+	UNIMPLEMENTED
+#END
 	END Fill32;
-
-(** -- Processor initialization -- *)
+	(** -- Processor initialization -- *)
 
 	PROCEDURE -SetFCR( s: SET );
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE
+#IF AMD64 THEN
+		FLDCW	[RSP]	;  parameter s
+		POP	EAX
+#ELSIF I386 THEN
 		FLDCW	[ESP]	;  parameter s
 		POP	EAX
+#ELSE
+	UNIMPLEMENTED
+#END
 	END SetFCR;
 
 	PROCEDURE -FCR( ): SET;
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE
+#IF AMD64 THEN
+		PUSH	0
+		FNSTCW	[RSP]
+		FWAIT
+		POP	EAX
+#ELSIF I386 THEN
 		PUSH	0
 		FNSTCW	[ESP]
 		FWAIT
 		POP	EAX
+#ELSE
+	UNIMPLEMENTED
+#END
 	END FCR;
 
 	PROCEDURE -InitFPU;
-	CODE {SYSTEM.i386, SYSTEM.FPU}
+	CODE
 		FNINIT
 	END InitFPU;
 
@@ -232,7 +390,37 @@ END SetSP;
 (** CPU identification. *)
 
 	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
-	CODE {SYSTEM.i386, SYSTEM.Pentium}
+	CODE
+#IF AMD64 THEN
+		MOV	EAX, 0
+		CPUID
+		CMP	EAX, 0
+		JNE	ok
+		MOV	RSI, [RBP+vendor]
+		MOV	[RSI], AL	;  AL = 0
+		MOV	RSI, [RBP+version]
+		MOV	[RSI], EAX	;  EAX = 0
+		MOV	RSI, [RBP+features1]
+		MOV	[RSI], EAX
+		MOV	RSI, [RBP+features2]
+		MOV	[RSI], EAX
+		JMP	end
+		ok:
+		MOV	RSI, [RBP+vendor]
+		MOV	[RSI], EBX
+		MOV	[RSI+4], EDX
+		MOV	[RSI+8], ECX
+		MOV	BYTE [RSI+12], 0
+		MOV	EAX, 1
+		CPUID
+		MOV	RSI, [RBP+version]
+		MOV	[RSI], EAX
+		MOV	RSI, [RBP+features1]
+		MOV	[RSI], EDX
+		MOV	RSI, [RBP+features2]
+		MOV	[RSI], ECX
+		end:
+#ELSIF I386 THEN
 		MOV	EAX, 0
 		CPUID
 		CMP	EAX, 0
@@ -261,21 +449,36 @@ END SetSP;
 		MOV	ESI, [EBP+features2]
 		MOV	[ESI], ECX
 		end:
+#ELSE
+	UNIMPLEMENTED
+#END
 	END CPUID;
 
 	PROCEDURE GetConfig*( CONST name: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR );
 	CONST ConfigKey = "Configuration";
 	BEGIN
 		COPY ("", val);
+
 		IF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), userConfigFile) # 0 THEN
 		ELSIF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), defaultConfigFile) # 0 THEN
 		END;
+		
 		IF (name = "ObjectFileExtension") & (val = "") THEN
+#IF AMD64 THEN
+			IF Kernel32.Generic THEN
+				val := ".GofWw";
+			ELSE
+				val := ".Obww"
+			END;
+#ELSIF I386 THEN
 			IF Kernel32.Generic THEN
 				val := ".GofW";
 			ELSE
 				val := ".Obw"
 			END;
+#ELSE
+	UNIMPLEMENTED
+#END
 		END;
 	END GetConfig;
 
@@ -413,6 +616,7 @@ BEGIN
 	END;
 END ParseLine;
 
+
 PROCEDURE TraceChar(c: CHAR);
 VAR len: LONGINT; b: Kernel32.BOOL;
 BEGIN
@@ -420,15 +624,18 @@ BEGIN
 	b := Kernel32.WriteFile(hout,c,len,len,NIL);
 END TraceChar;
 
-PROCEDURE SetTraceFile(VAR filename: ARRAY OF CHAR);
+PROCEDURE SetTraceFile*;
 BEGIN
-	Trace.String("trace -> file "); Trace.String(filename); Trace.Ln;
-	hout := Kernel32.CreateFile(filename, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
-	Kernel32.GetFullPathName(filename, LEN(filename), filename, NIL);
+	traceName := "SystemTrace.txt";
+	SetupTraceName(traceName);
+	Trace.String("trace -> file "); Trace.String(traceName); Trace.Ln;
+	hout := Kernel32.CreateFile(traceName, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
+	Kernel32.GetFullPathName(traceName, LEN(traceName),traceName, NIL);
 	Trace.Char := TraceChar;
+	Trace.String(version); Trace.Ln; 
 END SetTraceFile;
 
-PROCEDURE SetTraceConsole;
+PROCEDURE SetTraceConsole*;
 VAR res: WORD;
 BEGIN
 	Trace.String("trace -> console"); Trace.Ln;
@@ -436,6 +643,7 @@ BEGIN
 	hin := Kernel32.GetStdHandle (Kernel32.STDInput);
 	hout := Kernel32.GetStdHandle (Kernel32.STDOutput);
 	Trace.Char := TraceChar;
+	Trace.String(version); Trace.Ln; 
 END SetTraceConsole;
 
 PROCEDURE SetupTraceName(VAR traceName: ARRAY OF CHAR);
@@ -490,9 +698,9 @@ END SetupTraceName;
 PROCEDURE RemoveTraceFile;
 VAR res: WORD;
 BEGIN
-	IF traceName[0] # 0X THEN
+	IF (traceName # "") & (traceName # "Console") THEN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;
-		Trace.Char := LogChar;
+		(*Trace.Char := LogChar;*)
 		res := Kernel32.CloseHandle(hout);
 		IF res = 0 THEN
 			res := Kernel32.GetLastError();
@@ -503,7 +711,6 @@ BEGIN
 			res := Kernel32.GetLastError();
 			Trace.String("could not delete "); Trace.String(traceName); Trace.String("; res = "); Trace.Int(res,1); Trace.Ln;
 		END;
-
 	END;
 END RemoveTraceFile;
 
@@ -540,9 +747,8 @@ PROCEDURE Init*;
 VAR vendor: Vendor; ver: LONGINT; hfile: Kernel32.HANDLE;
 BEGIN
 	Kernel32.Init;
-	trace[1] := 0X; Trace.Char := LogChar; Trace.Color := TraceColor;
+	(*	trace[1] := 0X; Trace.Char := LogChar; Trace.Color := TraceColor; *)
 	InitLocks();
-	Trace.String("Machine");
 	boottime:=GetTimer();
 
 	COPY( Version, version );
@@ -565,22 +771,20 @@ BEGIN
 		Kernel32.CloseHandle(hfile)
 	END;
 
+	(*
 	(* ever used ? *)
 	ParseLine(commandLine, userConfigFile);
 	userConfigFile[Kernel32.GetFullPathName (userConfigFile, Kernel32.MaxPath, userConfigFile, 0)] := 0X;
 
-	Trace.String("config file = "); Trace.String(defaultConfigFile); Trace.Ln;
-	Trace.String("user config file = "); Trace.String(userConfigFile); Trace.Ln;
-
 	traceName[0] := 0X;
 	GetConfig("Trace",traceName);
-	IF traceName = "File" THEN
-		traceName := "SystemTrace.txt";
-		SetupTraceName(traceName);
-		SetTraceFile(traceName);
+	Trace.String("traceName "); Trace.String(traceName); Trace.Ln;
+	IF traceName = "File" THEN SetTraceFile;
 	ELSIF traceName = "Console" THEN SetTraceConsole
 	(* else trace is on kernel log *)
 	END;
+	Trace.String("Machine init done"); Trace.Ln;
+	*)
 END Init;
 
 	PROCEDURE {INITIAL, NOPAF} Start*;
@@ -717,9 +921,9 @@ BEGIN
 		memBlock.next := cur;
 		prev.next := memBlock;
 	END;
-	IF cur = NIL THEN
-		memBlockTail := memBlock
-	END
+		IF cur = NIL THEN
+			memBlockTail := memBlock
+		END
 END InsertMemoryBlock;
 
 	(* expand heap by allocating a new memory block *)
@@ -813,55 +1017,6 @@ END FreeMemBlock;
 PROCEDURE PhysicalAdr*(adr: ADDRESS; size: SIZE): ADDRESS;
 END PhysicalAdr;
 
-	(** -- Atomic operations -- *)
-
-(** Atomic INC(x). *)
-
-	PROCEDURE -AtomicInc*( VAR x: LONGINT );
-	CODE {SYSTEM.i386}
-		POP	EAX
-		LOCK
-		INC	DWORD[EAX]
-	END AtomicInc;
-
-(** Atomic DEC(x). *)
-
-	PROCEDURE -AtomicDec*( VAR x: LONGINT );
-	CODE {SYSTEM.i386}
-		POP	EAX
-		LOCK
-		DEC	DWORD[EAX]
-	END AtomicDec;
-
-(** Atomic INC(x, y). *)
-
-	PROCEDURE -AtomicAdd*( VAR x: LONGINT;  y: LONGINT );
-	CODE {SYSTEM.i386}
-		POP	EBX
-		POP	EAX
-		LOCK
-		ADD	DWORD[EAX], EBX
-	END AtomicAdd;
-
-(** Atomic test-and-set.  Set x = TRUE and return old value of x. *)
-
-	PROCEDURE -AtomicTestSet*( VAR x: BOOLEAN ): BOOLEAN;
-	CODE {SYSTEM.i386}
-		POP	EBX
-		MOV	AL, 1
-		XCHG	[EBX], AL
-	END AtomicTestSet;
-
-(* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
-
-	PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
-	CODE {SYSTEM.i386}
-		POP EBX		; new
-		POP EAX		; old
-		POP ECX		; address of x
-		DB 0F0X, 00FX, 0B1X, 019X	; LOCK CMPXCHG [ECX], EBX; atomicly compare x with old and set it to new if equal
-	END AtomicCAS;
-
 (* function returning the number of processors that are available to Aos *)
 PROCEDURE NumberOfProcessors*( ): LONGINT;
 VAR info: Kernel32.SystemInfo;
@@ -872,103 +1027,39 @@ END NumberOfProcessors;
 
 (* function for changing byte order *)
 PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
-CODE { SYSTEM.Pentium }
-	MOV EAX, [EBP+n]				; load n in eax
+CODE
+#IF AMD64 THEN
+	MOV EAX, [RBP+n]				; load n in eax
 	BSWAP EAX						; swap byte order
+#ELSIF I386 THEN
+	MOV EAX, [EBP+n]				; load n in eax
+	BSWAP EAX
+#ELSE
+	UNIMPLEMENTED
+#END
 END ChangeByteOrder;
 
-PROCEDURE TraceColor (c: SHORTINT);
-END TraceColor;
+	PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
+	END Portin8;
 
-PROCEDURE LogChar (c: CHAR);
-BEGIN trace[0] := c; Kernel32.OutputString (trace);
-END LogChar;
+	PROCEDURE  Portin16*(port: LONGINT; VAR val: INTEGER);
+	END Portin16;
 
-PROCEDURE -GetEAX*(): LONGINT;
-CODE{SYSTEM.i386}
-END GetEAX;
+	PROCEDURE  Portin32*(port: LONGINT; VAR val: LONGINT);
+	END Portin32;
 
-PROCEDURE -GetECX*(): LONGINT;
-CODE{SYSTEM.i386}
-	MOV EAX,ECX
-END GetECX;
+	PROCEDURE  Portout8*(port: LONGINT; val: CHAR);
+	END Portout8;
 
-PROCEDURE -SetEAX*(n: LONGINT);
-CODE{SYSTEM.i386}	POP EAX
-END SetEAX;
+	PROCEDURE  Portout16*(port: LONGINT; val: INTEGER);
+	END Portout16;
 
-PROCEDURE -SetEBX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EBX
-END SetEBX;
-
-PROCEDURE -SetECX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP ECX
-END SetECX;
-
-PROCEDURE -SetEDX*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EDX
-END SetEDX;
-
-PROCEDURE -SetESI*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP ESI
-END SetESI;
-
-PROCEDURE -SetEDI*(n: LONGINT);
-CODE{SYSTEM.i386}
-	POP EDI
-END SetEDI;
-
-PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
-	IN AL, DX
-	MOV ECX, [EBP+val]
-	MOV [ECX], AL
-END Portin8;
-
-PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
-	IN AX, DX
-	MOV ECX, [EBP+val]
-	MOV [ECX], AX
-END Portin16;
-
-PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
-CODE{SYSTEM.i386}
-	MOV EDX,[EBP+port]
-	IN EAX, DX
-	MOV ECX, [EBP+val]
-	MOV [ECX], EAX
-END Portin32;
-
-PROCEDURE Portout8*(port: LONGINT; val: CHAR);
-CODE{SYSTEM.i386}
-	MOV AL,[EBP+val]
-	MOV EDX,[EBP+port]
-	OUT DX,AL
-END Portout8;
-
-PROCEDURE Portout16*(port: LONGINT; val: INTEGER);
-CODE{SYSTEM.i386}
-	MOV AX,[EBP+val]
-	MOV EDX,[EBP+port]
-	OUT DX,AX
-END Portout16;
-
-PROCEDURE Portout32*(port: LONGINT; val: LONGINT);
-CODE{SYSTEM.i386}
-	MOV EAX,[EBP+val]
-	MOV EDX,[EBP+port]
-	OUT DX,EAX
-END Portout32;
+	PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
+	END Portout32;
 
 BEGIN
 	IF ~Kernel32.Generic THEN
 		Init
 	END;
+	Trace.String(version); Trace.Ln;
 END Machine.

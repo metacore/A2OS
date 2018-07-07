@@ -73,6 +73,38 @@ CODE{SYSTEM.i386, SYSTEM.SSE, SYSTEM.MMX, SYSTEM.SSE2}
 	MOVDQA	XMM4, [EDX+112] ; necessary ?
 END MOVDQA5;
 
+	PROCEDURE -GetRA(): SIZE;
+	CODE
+	END GetRA;
+
+	PROCEDURE -GetRC(): SIZE;
+	CODE MOV EAX,ECX
+	END GetRC;
+
+	PROCEDURE -SetRA(n: SIZE);
+	CODE POP EAX
+	END SetRA;
+
+	PROCEDURE -SetRB(n: SIZE);
+	CODE POP EBX
+	END SetRB;
+
+	PROCEDURE -SetRC(n: SIZE);
+	CODE POP ECX
+	END SetRC;
+
+	PROCEDURE -SetRD(n: SIZE);
+	CODE POP EDX
+	END SetRD;
+
+	PROCEDURE -SetRSI(n: SIZE);
+	CODE POP ESI
+	END SetRSI;
+
+	PROCEDURE -SetRDI(n: SIZE);
+	CODE POP EDI
+	END SetRDI;
+
 (* Pay attention if you change local varss. In the inline procedures there are direct address variable *)
 PROCEDURE TransformSSE2*(src, dst: LONGINT);
 VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr, ecx: LONGINT;
@@ -85,30 +117,30 @@ BEGIN {UNCOOPERATIVE}
 	onecorr := onecorradr;
 	roundinvcol := roundinvcoladr;
 	roundinvcorr := roundinvcorradr;
-	ecx := Machine.GetECX();
-	Machine.SetEAX(src);
-	Machine.SetEDX(dst);
-	Machine.SetECX(roundinvrowadr);
+	ecx := GetRC();
+	SetRA(src);
+	SetRD(dst);
+	SetRC(roundinvrowadr);
 	MOVDQA1;
 
-	Machine.SetESI(tabi04adr );
-	Machine.SetECX(tabi26adr );
+	SetRSI(tabi04adr );
+	SetRC(tabi26adr );
 	DCT8INVROWSSE2;
 	MOVDQA2;
-(*	Machine.SetESI(tabi04adr );
-	Machine.SetECX(tabi26adr );*)
+(*	SetRSI(tabi04adr );
+	SetRC(tabi26adr );*)
 	DCT8INVROWSSE2;
 	MOVDQA3;
-	Machine.SetESI(tabi35adr );
-	Machine.SetECX(tabi17adr );
+	SetRSI(tabi35adr );
+	SetRC(tabi17adr );
 	DCT8INVROWSSE2;
 	MOVDQA4;
-(*	Machine.SetESI(tabi35adr );
-	Machine.SetECX(tabi17adr ); *)
+(*	SetRSI(tabi35adr );
+	SetRC(tabi17adr ); *)
 	DCT8INVROWSSE2;
 	MOVDQA5;
 	DCT8INVCOLSSE2;
-	Machine.SetECX (ecx);
+	SetRC (ecx);
 END TransformSSE2;
 
 
@@ -348,39 +380,39 @@ BEGIN {UNCOOPERATIVE}
 	roundinvcol := roundinvcoladr;
 	roundinvcorr := roundinvcorradr;
 
-	ecx := Machine.GetECX ();
-	Machine.SetECX(src);
-	Machine.SetEDX(dst);	(* MOV EDX, dst *)
-	Machine.SetEBX(roundinvrowadr );
+	ecx := GetRC ();
+	SetRC(src);
+	SetRD(dst);	(* MOV EDX, dst *)
+	SetRB(roundinvrowadr );
 	MOVQ1;
-	Machine.SetESI(tabi04adr );
+	SetRSI(tabi04adr );
 	DCT8INVROWSSE;
 	MOVQ2;
-	Machine.SetESI(tabi17adr );
+	SetRSI(tabi17adr );
 	DCT8INVROWSSE;
 	MOVQ3;
-	Machine.SetESI(tabi26adr );
+	SetRSI(tabi26adr );
 	DCT8INVROWSSE;
 	MOVQ4;
-	Machine.SetESI(tabi35adr );
+	SetRSI(tabi35adr );
 	DCT8INVROWSSE;
 	MOVQ5;
-	Machine.SetESI(tabi04adr );
+	SetRSI(tabi04adr );
 	DCT8INVROWSSE;
 	MOVQ6;
-	Machine.SetESI(tabi35adr );
+	SetRSI(tabi35adr );
 	DCT8INVROWSSE;
 	MOVQ7;
-	Machine.SetESI(tabi26adr );
+	SetRSI(tabi26adr );
 	DCT8INVROWSSE;
 	MOVQ8;
-	Machine.SetESI(tabi17adr );
+	SetRSI(tabi17adr );
 	DCT8INVROWSSE;
 	MOVQ9;
 	DCT8INVCOLSSE;
 	MOVQ10;
 	DCT8INVCOLSSE;
-	Machine.SetECX(ecx);
+	SetRC(ecx);
 
 END TransformSSE;
 

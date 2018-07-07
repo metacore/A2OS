@@ -1,4 +1,4 @@
-MODULE Machine;	(** AUTHOR "pjm"; PURPOSE "Bootstrapping, configuration and machine interface"; *)
+GetMODULE Machine;	(** AUTHOR "pjm"; PURPOSE "Bootstrapping, configuration and machine interface"; *)
 
 (* The code of this module body must be the first in the statically linked boot file. *)
 
@@ -2896,57 +2896,6 @@ CODE {SYSTEM.AMD64}
 	POP RSP
 END SetSP;
 
-PROCEDURE -GetRAX*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-END GetRAX;
-
-PROCEDURE -GetRCX*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-	MOV RAX,RCX
-END GetRCX;
-
-PROCEDURE -GetRSI*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-	MOV RAX,RSI
-END GetRSI;
-
-PROCEDURE -GetRDI*(): HUGEINT;
-CODE{SYSTEM.AMD64}
-	MOV RAX,RDI
-END GetRDI;
-
-
-PROCEDURE -SetRAX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}	
-	NOP
-	POP RAX
-END SetRAX;
-
-PROCEDURE -SetRBX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	NOP
-	POP RBX
-END SetRBX;
-
-PROCEDURE -SetRCX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RCX
-END SetRCX;
-
-PROCEDURE -SetRDX*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RDX
-END SetRDX;
-
-PROCEDURE -SetRSI*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RSI
-END SetRSI;
-
-PROCEDURE -SetRDI*(n: HUGEINT);
-CODE{SYSTEM.AMD64}
-	POP RDI
-END SetRDI;
 
 PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
 CODE{SYSTEM.AMD64}

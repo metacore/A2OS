@@ -197,13 +197,13 @@ TYPE
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
 			#IF I386 THEN
-				Heaps.Candidate( state.EDI );  Heaps.Candidate( state.ESI );
-				Heaps.Candidate( state.EBX ); Heaps.Candidate( state.EDX );
-				Heaps.Candidate( state.ECX ); Heaps.Candidate( state.EAX );
+				Heaps.Candidate( state.RDI );  Heaps.Candidate( state.RSI );
+				Heaps.Candidate( state.RB ); Heaps.Candidate( state.RD );
+				Heaps.Candidate( state.RC ); Heaps.Candidate( state.RA );
 			#ELSIF AMD64 THEN
 				Heaps.Candidate( state.RDI );  Heaps.Candidate( state.RSI );
-				Heaps.Candidate( state.RBX ); Heaps.Candidate( state.RDX );
-				Heaps.Candidate( state.RCX ); Heaps.Candidate( state.RAX );
+				Heaps.Candidate( state.RB ); Heaps.Candidate( state.RD );
+				Heaps.Candidate( state.RC ); Heaps.Candidate( state.RA );
 				Heaps.Candidate( state.R9 );  Heaps.Candidate( state.R10 );
 				Heaps.Candidate( state.R11 ); Heaps.Candidate( state.R12 );
 				Heaps.Candidate( state.R13 ); Heaps.Candidate( state.R14 );
@@ -540,17 +540,17 @@ BEGIN
 			Trace.String( "EXCEPTION " );  Trace.Address(exceptionPointers.exception.ExceptionCode);
 			Trace.String( " at " );  Trace.Address(exceptionPointers.exception.ExceptionAddress);
 			#IF I386 THEN
-				Trace.Ln();  Trace.String( "EAX " );  Trace.Hex( exceptionPointers.context.EAX, 1 );
-				Trace.String( "  EBX " );  Trace.Hex( exceptionPointers.context.EBX, 1 );  Trace.Ln();
-				Trace.String( "ECX " );  Trace.Hex( exceptionPointers.context.ECX, 1 );  Trace.String( "  EDX " );
-				Trace.Hex( exceptionPointers.context.EDX, 1 );  Trace.Ln();  Trace.String( "EDI " );
-				Trace.Hex( exceptionPointers.context.EDI, 1 );  Trace.String( "  ESI " );
-				Trace.Hex( exceptionPointers.context.ESI, 1 );  Trace.Ln();  
+				Trace.Ln();  Trace.String( "EAX " );  Trace.Hex( exceptionPointers.context.RA, 1 );
+				Trace.String( "  EBX " );  Trace.Hex( exceptionPointers.context.RB, 1 );  Trace.Ln();
+				Trace.String( "ECX " );  Trace.Hex( exceptionPointers.context.RC, 1 );  Trace.String( "  EDX " );
+				Trace.Hex( exceptionPointers.context.RD, 1 );  Trace.Ln();  Trace.String( "EDI " );
+				Trace.Hex( exceptionPointers.context.RDI, 1 );  Trace.String( "  ESI " );
+				Trace.Hex( exceptionPointers.context.RSI, 1 );  Trace.Ln();  
 			#ELSIF AMD64 THEN
-				Trace.Ln();  Trace.String( "RAX " );  Trace.Address(exceptionPointers.context.RAX);
-				Trace.String( "  RBX " );  Trace.Address(exceptionPointers.context.RBX);  Trace.Ln();
-				Trace.String( "RCX " );  Trace.Address(exceptionPointers.context.RCX);  Trace.String( "  RDX " );
-				Trace.Address(exceptionPointers.context.RDX);  Trace.Ln();  Trace.String( "RDI " );
+				Trace.Ln();  Trace.String( "RAX " );  Trace.Address(exceptionPointers.context.RA);
+				Trace.String( "  RBX " );  Trace.Address(exceptionPointers.context.RB);  Trace.Ln();
+				Trace.String( "RCX " );  Trace.Address(exceptionPointers.context.RC);  Trace.String( "  RDX " );
+				Trace.Address(exceptionPointers.context.RD);  Trace.Ln();  Trace.String( "RDI " );
 				Trace.Address(exceptionPointers.context.RDI);  Trace.String( "  RSI " );
 				Trace.Address(exceptionPointers.context.RSI);  Trace.Ln(); 
 				

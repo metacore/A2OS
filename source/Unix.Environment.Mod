@@ -23,7 +23,7 @@ END Abort;
 
 PROCEDURE Shutdown*;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	Trace.StringLn ("system: shutting down...");
+	IF CAS (status, Running, ShuttingDown) # Running THEN RETURN END;
 	Trace.StringLn ("system: shutting down...");
 END Shutdown;
 

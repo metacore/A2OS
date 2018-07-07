@@ -206,7 +206,9 @@ END GetInit;
 	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE
 	#IF I386 THEN
-		PUSH	ECX
+		#IF COOP THEN
+			PUSH	ECX
+		#END
 		MOV	EDI, [EBP+destAdr]
 		MOV	ECX, [EBP+size]
 		MOV	EAX, [EBP+filler]
@@ -217,9 +219,10 @@ END GetInit;
 	ok:	SHR	ECX, 2
 		CLD
 		REP	STOSD
-		POP	ECX
+		#IF COOP THEN
+			POP	ECX
+		#END
 	#ELSIF AMD64 THEN
-		PUSH	RCX
 		MOV	RDI, [RBP + destAdr]
 		MOV	RCX, [RBP + size]
 		MOV	EAX, [RBP + filler]
@@ -230,7 +233,6 @@ END GetInit;
 	ok:	SHR	RCX, 2
 		CLD
 		REP	STOSD
-		POP	RCX
 	#ELSE
 		unimplemented
 	#END
@@ -284,7 +286,9 @@ END GetInit;
 	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
 	CODE
 	#IF I386 THEN
-		PUSH	ECX
+		#IF COOP THEN
+			PUSH	ECX
+		#END
 		MOV	EAX, 0
 		CPUID
 		CMP	EAX, 0
@@ -313,9 +317,13 @@ END GetInit;
 		MOV	ESI, [EBP+features2]
 		MOV	[ESI], ECX
 		end:
-		POP	ECX
+		#IF COOP THEN
+			POP	ECX
+		#END
 	#ELSIF AMD64 THEN
-		PUSH	RCX
+		#IF COOP THEN
+			PUSH	RBX
+		#END
 		MOV	EAX, 0
 		CPUID
 		CMP	EAX, 0
@@ -344,7 +352,9 @@ END GetInit;
 		MOV	RSI, [RBP+features2]
 		MOV	[RSI], RCX
 		end:
-		POP	RCX
+		#IF COOP THEN
+			POP	RBX
+		#END
 	#ELSE
 		unimplemented
 	#END
@@ -544,10 +554,10 @@ END PhysicalAdr;
 		LOCK
 		ADD	DWORD [EAX], EBX
 	#ELSIF AMD64 THEN
-		POP	EBX
+		POP	ECX
 		POP	RAX
 		LOCK
-		ADD	DWORD [RAX], EBX
+		ADD	DWORD [RAX], ECX
 	#ELSE
 		unimplemented
 	#END
@@ -562,9 +572,9 @@ END PhysicalAdr;
 		MOV	AL, 1
 		XCHG	[EBX], AL
 	#ELSIF AMD64 THEN
-		POP	RBX
+		POP	RCX
 		MOV	AL, 1
-		XCHG	[RBX], AL
+		XCHG	[RCX], AL
 	#ELSE
 		unimplemented
 	#END
@@ -580,10 +590,10 @@ END PhysicalAdr;
 		POP EDX		; address of x
 		LOCK CMPXCHG [EDX], EBX	; atomicly compare x with old and set it to new if equal
 	#ELSIF AMD64 THEN
-		POP EBX		; new
+		POP ECX		; new
 		POP EAX		; old
 		POP RDX		; address of x
-		LOCK CMPXCHG [RDX], EBX	; atomicly compare x with old and set it to new if equal
+		LOCK CMPXCHG [RDX], ECX	; atomicly compare x with old and set it to new if equal
 	#ELSE
 		unimplemented
 	#END
@@ -726,24 +736,24 @@ END ChangeByteOrder;
 	CODE
 		MOV EDX, [RBP+port]
 		IN AL, DX
-		MOV RBX, [RBP+val]
-		MOV [RBX], AL
+		MOV RCX, [RBP+val]
+		MOV [RCX], AL
 	END Portin8;
 
 	PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
 	CODE
 		MOV EDX, [RBP+port]
 		IN AX, DX
-		MOV RBX, [RBP+val]
-		MOV [RBX], AX
+		MOV RCX, [RBP+val]
+		MOV [RCX], AX
 	END Portin16;
 
 	PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
 	CODE
 		MOV EDX, [RBP+port]
 		IN EAX, DX
-		MOV RBX, [RBP+val]
-		MOV [RBX], EAX
+		MOV RCX, [RBP+val]
+		MOV [RCX], EAX
 	END Portin32;
 
 	PROCEDURE Portout8*(port: LONGINT; val: CHAR);

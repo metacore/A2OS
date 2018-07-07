@@ -2,7 +2,11 @@ MODULE StdIO;	(** AUTHOR gf;  PURPOSE "Unix standard IO and argument channels *)
 
 (* Commands.Context for programs running outside Aos *)
 
-IMPORT S := SYSTEM, Modules, Commands, Streams,Pipes , Unix;
+IMPORT SYSTEM, Modules, Commands, Streams,Pipes , Unix;
+
+#IF COOP THEN
+	IMPORT Activities, Environment;
+#END
 
 CONST 
 	AddrSize = SIZEOF( ADDRESS );
@@ -43,12 +47,56 @@ BEGIN
 	RETURN str;
 END Args;
 
+#IF COOP THEN
+
+	VAR processor: Activities.Activity;
+	VAR reader: Unix.Thread_t;
+	VAR read : RECORD buffer: ADDRESS; size, result: SIZE; ready: BOOLEAN END;
+
+	PROCEDURE ReaderThread;
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
+		Activities.CallVirtual (ReadActivity, NIL, processor);
+	END ReaderThread;
+
+	PROCEDURE ReadActivity (p: ADDRESS);
+	BEGIN
+		WHILE Environment.status = 0 DO
+			BEGIN {EXCLUSIVE}
+				AWAIT (~read.ready);
+				read.result := Unix.read( 0, read.buffer, read.size );
+				read.ready := TRUE;
+			END;
+		END;
+	END ReadActivity;
+
+	PROCEDURE Read (buffer: ADDRESS; size: SIZE): SIZE;
+	VAR res: WORD;
+	BEGIN {EXCLUSIVE}
+		read.buffer := buffer;
+		read.size := size;
+		read.ready := FALSE;
+		IF processor = NIL THEN
+			processor := Activities.CreateVirtualProcessor ();
+			res := Unix.pthread_create(ADDRESS OF reader, NIL, ReaderThread, NIL);
+		END;
+		AWAIT (read.ready);
+		RETURN read.result;
+	END Read;
+
+#ELSE
+
+	PROCEDURE Read (buffer: ADDRESS; size: SIZE): SIZE;
+	BEGIN RETURN Unix.read( 0, buffer, size );
+	END Read;
+
+#END
+
 PROCEDURE ReceiveStdin( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
-VAR ures: HUGEINT;  i, err: LONGINT;
+VAR ures: SIZE;  i, err: LONGINT;
 BEGIN
 	len := 0;
 	REPEAT
-		ures := Unix.read( 0, ADDRESSOF( data[ofs] ), size );
+		ures := Read( ADDRESSOF (data[ofs]), size );
 		IF ures > 0 THEN  
 			INC( ofs, LONGINT(ures) );  DEC( size, LONGINT(ures) );  INC( len, LONGINT(ures) )  
 		END;
@@ -91,9 +139,9 @@ BEGIN
 	NEW( stdout, SendStdout, 1024 );
 	NEW( errout, SendErrout, 512 );
 	NEW( env, stdin, arg, stdout, errout, NIL );
-	Modules.InstallTermHandler( Cleanup )
+	Modules.InstallTermHandler( Cleanup );
 END Setup
 
 BEGIN
-	Setup
+	Setup;
 END  StdIO.

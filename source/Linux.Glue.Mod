@@ -251,22 +251,20 @@ VAR
 	END ExitPoint;
 	*)
 
-	PROCEDURE {NOPAF} putc*(file: ADDRESS; c: CHAR);
+	PROCEDURE putc*(file: ADDRESS; c: CHAR);
 	CODE
 	#IF I386 THEN
 		MOV EAX, 4
-		MOV EBX, [ESP + 8]
-		LEA ECX, [ESP + 4]
+		MOV EBX, [EBP + file]
+		LEA ECX, [EBP + c]
 		MOV EDX, 1
 		INT 80H
-		RET
 	#ELSIF AMD64 THEN
 		MOV EAX, 1
-		MOV RDI, [RSP + 16]
-		LEA RSI, [RSP + 8]
+		MOV RDI, [RBP + file]
+		LEA RSI, [RBP + c]
 		MOV RDX, 1
 		SYSCALL
-		RET
 	#ELSE
 		unimplemented
 	#END

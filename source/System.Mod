@@ -441,6 +441,7 @@ BEGIN
 			r := NEW Files.Reader(file, 0);
 			NEW(newContext, context.in, r, context.out, context.error, context.caller);
 			Commands.Activate("System.DoCommands", newContext, {Commands.Wait}, res, msg);
+			context.result := res;
 		ELSE
 			context.error.String("Error: no such file: "); context.error.String(filename); context.error.Ln;
 		END;
@@ -547,6 +548,7 @@ BEGIN
 		Commands.Activate(command^, newContext, {Commands.Wait}, res, msg);
 
 		IF res # Commands.Ok THEN
+			context.result := res;
 			context.error.String("System.DoCommands: Command: '");
 			context.error.String(command^); context.error.String("', parameters: ");
 			IF paramString = NIL THEN
@@ -611,6 +613,7 @@ BEGIN
 			DEC(nofTimes);
 		END;
 		IF (res # Commands.Ok) THEN
+			context.result := res;
 			context.out.String("Error in command '"); context.out.String(command); context.out.String("', res: ");
 			context.out.Int(res, 0); context.out.Ln;
 		END;
@@ -682,6 +685,7 @@ BEGIN
 			UNTIL (reader.res # Streams.Ok);
 		ELSE
 			context.error.String("Could not open file "); context.error.String(filename); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END ShowFile;

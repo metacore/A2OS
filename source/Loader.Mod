@@ -598,14 +598,19 @@ VAR
 	BEGIN
 		Machine.GetConfig("ObjectFileExtension", extension);
 		IF extension = "" THEN
-			COPY(".Gof", extension)
+			COPY(Machine.DefaultObjectFileExtension, extension)
 		END;
 		Modules.AddLoader(extension, LoadObj); 
 	END Install;
 
 	PROCEDURE Remove*;
+	VAR extension: ARRAY 32 OF CHAR;
 	BEGIN
-		Modules.RemoveLoader(".Gof",LoadObj);
+		Machine.GetConfig("ObjectFileExtension", extension);
+		IF extension = "" THEN
+			COPY(Machine.DefaultObjectFileExtension, extension)
+		END;
+		Modules.RemoveLoader(extension,LoadObj);
 	END Remove;
 
 	BEGIN

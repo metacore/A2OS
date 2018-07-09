@@ -7,7 +7,15 @@ CONST
 
 	MaxCPU* = Processors.Maximum;	(* dummy definition to make GC for both Win32 and I386 work *)
 
-	DefaultObjectFileExtension* = ".Obw";
+	#IF UNIX THEN
+		#IF AMD64 THEN
+			DefaultObjectFileExtension* = ".GofUu";
+		#ELSE
+			DefaultObjectFileExtension* = ".GofU";
+		#END
+	#ELSE
+		DefaultObjectFileExtension* = ".Obw";
+	#END
 
 	(** bits in features variable *)
 	MTTR* = 12;  MMX* = 23;

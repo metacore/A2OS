@@ -201,29 +201,29 @@ TYPE
 				PROCEDURE RegisterUsage(CONST instruction: IntermediateCode.Instruction);
 				VAR i: LONGINT;
 
-					PROCEDURE Use(CONST operand: IntermediateCode.Operand);
+					PROCEDURE Use(CONST operand: IntermediateCode.Operand; registerParameter: BOOLEAN);
 					VAR i: LONGINT;
 					BEGIN
 						IF operand.register > 0 THEN
 							allocation.Use(operand.register,inPC);
-							IF operand.registerClass.class = IntermediateCode.Parameter THEN (* store recent parameter registers *)
+							IF registerParameter & (operand.registerClass.class = IntermediateCode.Parameter) THEN (* store recent parameter registers *)
 								parameterRegisters[parameterRegister] := operand;
 								INC(parameterRegister);
 							END;
 						END;
 						IF operand.rule # NIL THEN
 							FOR i := 0 TO LEN(operand.rule)-1 DO
-								Use(operand.rule[i]);
+								Use(operand.rule[i],FALSE);
 							END;
 						END;
 					END Use;
 				BEGIN
-					Use(instruction.op1);
-					Use(instruction.op2);
-					Use(instruction.op3);
+					Use(instruction.op1,TRUE);
+					Use(instruction.op2,TRUE);
+					Use(instruction.op3,TRUE);
 					IF instruction.opcode = IntermediateCode.call THEN (* mark all currently used parameter registers used in this instruction *)
 						FOR i := 0 TO parameterRegister-1 DO
-							Use(parameterRegisters[i]);
+							Use(parameterRegisters[i],FALSE);
 							IntermediateCode.InitOperand(parameterRegisters[i]);
 						END;
 						parameterRegister := 0;

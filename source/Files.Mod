@@ -187,10 +187,13 @@ TYPE
 			IF size - used <= reserved THEN HALT(VolumeFull) END;
 			ASSERT(hint >= 0);
 			IF hint > size THEN hint := 0 END;
+			hint := hint - hint MOD SetSize; (* in order to make sure that hint is hit when increasing by SetSize *)
 			adr := hint+1;
 			LOOP
 				IF adr > size THEN adr := 0 END;
-				IF (adr MOD SetSize) IN map[adr DIV SetSize] THEN
+				IF (adr MOD SetSize = 0) & (map[adr DIV SetSize] = {MIN(SET)..MAX(SET)}) THEN
+					INC(adr,SetSize);
+				ELSIF (adr MOD SetSize) IN map[adr DIV SetSize] THEN
 					INC(adr) (* Block in use *)
 				ELSE
 					INCL(map[adr DIV SetSize], adr MOD SetSize);

@@ -47,22 +47,20 @@ TYPE
 			AWAIT(done);
 		END Wait;
 		
-	BEGIN{ACTIVE}
+	BEGIN {ACTIVE, EXCLUSIVE}
 		IF Execute(StdIO.env) THEN code := Modules.Reboot END;
 	FINALLY
-		IF Verbose THEN
-			Trace.String("StdIOShell: Exit"); Trace.Ln;
-		END;
-		Modules.Shutdown(code);
-		done := TRUE
+		done := TRUE;
 	END Executor;
 
 VAR execute: Executor;
 
 (* do not add commands here -- the module loader does not finish here and they will not become available *)
 BEGIN	
-	NEW(execute); (* execute shell and termination in separate thread *)
-	execute.Wait; (* will actually never return *)
+	NEW(execute);
+	execute.Wait;
+	IF Verbose THEN Trace.String("StdIOShell: Exit"); Trace.Ln END;
+	Modules.Shutdown(execute.code);
 END StdIOShell.
 
 Linking a command line shell:

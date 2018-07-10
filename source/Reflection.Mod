@@ -282,6 +282,9 @@ CONST
 	PROCEDURE WriteType*(w: Streams.Writer; adr: ADDRESS);
 	VAR module: Modules.Module; typeDesc: Modules.TypeDesc;
 	BEGIN
+	#IF COOP THEN
+		w.String("UNDETERMINED");
+	#ELSE
 		IF CheckHeapAddress(adr) THEN
 			ThisTypeByAdr(adr, module, typeDesc);
 			IF module # NIL THEN
@@ -302,6 +305,7 @@ CONST
 		ELSE
 			w.String("UNKNOWN");
 		END;
+	#END
 	END WriteType;
 
 	(* Write the specified procedure name and returns parameters for use with Variables  *)

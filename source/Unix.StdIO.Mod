@@ -56,6 +56,7 @@ END Args;
 	PROCEDURE ReaderThread;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Activities.CallVirtual (ReadActivity, NIL, processor);
+		Unix.pthread_exit (0);
 	END ReaderThread;
 
 	PROCEDURE ReadActivity (p: ADDRESS);
@@ -70,14 +71,13 @@ END Args;
 	END ReadActivity;
 
 	PROCEDURE Read (buffer: ADDRESS; size: SIZE): SIZE;
-	VAR res: WORD;
 	BEGIN {EXCLUSIVE}
 		read.buffer := buffer;
 		read.size := size;
 		read.ready := FALSE;
 		IF processor = NIL THEN
 			processor := Activities.CreateVirtualProcessor ();
-			res := Unix.pthread_create(ADDRESS OF reader, NIL, ReaderThread, NIL);
+			ASSERT (Unix.pthread_create(ADDRESS OF reader, NIL, ReaderThread, NIL) = 0);
 		END;
 		AWAIT (read.ready);
 		RETURN read.result;

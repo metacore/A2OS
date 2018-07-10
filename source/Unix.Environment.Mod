@@ -14,6 +14,7 @@ VAR clock: Timer.Counter;
 VAR milliseconds: Timer.Counter;
 VAR sleepingQueue: Queues.Queue;
 VAR activity: Unix.Key_t;
+VAR timer: Unix.Thread_t;
 
 PROCEDURE {NORETURN} Abort-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -35,6 +36,7 @@ END Reboot;
 
 PROCEDURE {NORETURN} Exit- (status: WORD);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Trace.String ("system: exiting to Unix"); Trace.Ln;
 	Unix.exit (status);
 END Exit;
 
@@ -57,6 +59,29 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Counters.Dec (Activities.awaiting);
 END Sleep;
 
+PROCEDURE Enqueue (previous {UNTRACED}: Activities.Activity; argument: ADDRESS);
+VAR item: Queues.Item;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Queues.Enqueue (previous, sleepingQueue);
+END Enqueue;
+
+PROCEDURE TimerThread;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Activities.CallVirtual (TickLoop, NIL, Activities.CreateVirtualProcessor ());
+	Unix.pthread_exit (0);
+END TimerThread;
+
+PROCEDURE TickLoop (argument: ADDRESS);
+VAR item: Queues.Item;
+BEGIN
+	WHILE status = Running DO
+		Unix.ThrSleep (1);
+		WHILE Queues.Dequeue (item, sleepingQueue) DO
+			Activities.Resume (item(Activities.Activity));
+		END;
+	END;
+END TickLoop;
+
 PROCEDURE Allocate- (size: SIZE): ADDRESS;
 VAR result, address: ADDRESS;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -70,12 +95,6 @@ PROCEDURE Deallocate- (address: ADDRESS);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Unix.free (address);
 END Deallocate;
-
-PROCEDURE Enqueue (previous {UNTRACED}: Activities.Activity; argument: ADDRESS);
-VAR item: Queues.Item;
-BEGIN {UNCOOPERATIVE, UNCHECKED}
-	Queues.Enqueue (previous, sleepingQueue);
-END Enqueue;
 
 PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
 BEGIN val := 0;
@@ -107,4 +126,11 @@ PROCEDURE Terminate-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Terminate;
 
+BEGIN
+	Trace.String ("Build "); Trace.String (SYSTEM.Date); Trace.String (" (Unix, ");
+	Trace.String ("GC, ");
+	Trace.Int (Processors.count, 0); Trace.String (" CPU");
+	IF Processors.count > 1 THEN Trace.Char ('s') END; Trace.String (", ");
+	Trace.Int (SIZE OF ADDRESS * 8, 0); Trace.String ("-bit)"); Trace.Ln;
+	ASSERT (Unix.pthread_create (ADDRESS OF timer, NIL, TimerThread, NIL) = 0);
 END Environment.

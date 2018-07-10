@@ -130,6 +130,12 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Hex(x,-2*SIZEOF(ADDRESS));
 END Address;
 
+(** Write "x" as a size *)
+PROCEDURE Size* (x: SIZE);
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	Int(x,0);
+END Size;
+
 (** Write "x" as a hexadecimal number. "w" is the field width. Always prints 16 digits. *)
 PROCEDURE HIntHex* (x: HUGEINT; w: SIZE);
 BEGIN {UNCOOPERATIVE, UNCHECKED} Hex (x, w);

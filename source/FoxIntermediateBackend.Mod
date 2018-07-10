@@ -6639,6 +6639,14 @@ TYPE
 				END;
 			END Address;
 
+			PROCEDURE Size(op: IntermediateCode.Operand);
+			BEGIN
+				IF GetProcedure("Size") THEN
+					Emit(Push(position,op));
+					CallProcedure;
+				END;
+			END Size;
+
 			PROCEDURE StringOperand(op: Operand; type: SyntaxTree.Type);
 			VAR len: IntermediateCode.Operand;
 			BEGIN
@@ -6714,7 +6722,7 @@ TYPE
 						ELSIF expression.type.resolved IS SyntaxTree.AddressType THEN
 							Address(res.op);String("H");
 						ELSIF expression.type.resolved IS SyntaxTree.SizeType THEN
-							Address(res.op);String("H");
+							Size(res.op);
 						ELSIF (expression.type.resolved IS SyntaxTree.PointerType) OR IsPointerToRecord(expression.type,recordType) THEN
 							Address(res.op);String("H");
 						ELSIF (expression.type.resolved IS SyntaxTree.ProcedureType) THEN

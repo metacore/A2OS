@@ -56,7 +56,7 @@ TYPE
 	Clock = OBJECT
 	VAR h: Timer;
 	BEGIN {ACTIVE, SAFE, PRIORITY(High)}
-		WHILE Environment.status = 0 DO
+		WHILE Environment.status = Environment.Running DO
 			Machine.Acquire(Machine.Objects);
 			LOOP
 				h := event.next;

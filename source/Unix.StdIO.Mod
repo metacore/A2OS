@@ -5,7 +5,7 @@ MODULE StdIO;	(** AUTHOR gf;  PURPOSE "Unix standard IO and argument channels *)
 IMPORT SYSTEM, Modules, Commands, Streams,Pipes , Unix;
 
 #IF COOP THEN
-	IMPORT Activities, Environment;
+	IMPORT Activities, Counters, Environment;
 #END
 
 CONST 
@@ -61,11 +61,13 @@ END Args;
 
 	PROCEDURE ReadActivity (p: ADDRESS);
 	BEGIN
-		WHILE Environment.status = 0 DO
+		WHILE Environment.status = Environment.Running DO
 			BEGIN {EXCLUSIVE}
+				Counters.Inc (Activities.awaiting);
 				AWAIT (~read.ready);
 				read.result := Unix.read( 0, read.buffer, read.size );
 				read.ready := TRUE;
+				Counters.Dec (Activities.awaiting);
 			END;
 		END;
 	END ReadActivity;

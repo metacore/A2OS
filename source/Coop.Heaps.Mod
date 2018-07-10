@@ -21,7 +21,7 @@ CONST
 	ArrayAlignment = 8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
 	BlockHeaderSize* = 2 * AddressSize;
 	HeapBlockOffset* = - 2 * AddressSize;
-	TypeDescOffset* = - AddressSize;
+	TypeDescOffset* = 0;
 
 	ProtTypeBit* = 31;			(** flags in TypeDesc, RoundUp(log2(MaxTags)) low bits reserved for extLevel *)
 

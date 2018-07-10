@@ -1751,14 +1751,15 @@ VAR
 	VAR message: ARRAY 1024 OF CHAR; file: Files.File;
 
 	    PROCEDURE GetReader(): Streams.Reader;
-	    VAR reader := NIL: Streams.Reader;
+	    VAR reader := NIL: Streams.Reader; fileReader : Files.Reader;
 	    BEGIN
             IF (pos.linepos >= 0) & ((source # "") OR (pos.reader # NIL)) THEN
                 reader := pos.reader;
                 IF reader = NIL THEN
                     file := Files.Old(source);
                     IF file # NIL THEN
-                        reader := NEW Files.Reader(file, pos.linepos);
+			NEW (fileReader, file, pos.linepos);
+                        reader := fileReader;
                     END;
                 END;
             END;

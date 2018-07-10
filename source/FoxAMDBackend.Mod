@@ -729,7 +729,7 @@ TYPE
 		PROCEDURE AllocateSpillStack*(size: LONGINT);
 		BEGIN
 			IF ~FrameSpillStack THEN
-				AllocateStack(cpuBits DIV 8*size)
+				ModifyStackPointer(cpuBits DIV 8*size)
 			END;
 		END AllocateSpillStack;
 
@@ -1075,7 +1075,7 @@ TYPE
 			END;
 		END SpecialMove;
 
-		PROCEDURE AllocateStack(sizeInBytes: LONGINT);
+		PROCEDURE ModifyStackPointer(sizeInBytes: HUGEINT);
 		VAR sizeOp: Assembler.Operand; opcode: LONGINT;
 		BEGIN
 			ASSERT(sizeInBytes MOD (cpuBits DIV 8) = 0);
@@ -1086,10 +1086,11 @@ TYPE
 			ELSE RETURN
 			END;
 			IF sizeInBytes < 128 THEN sizeOp := Assembler.NewImm8(sizeInBytes);
-			ELSE sizeOp := Assembler.NewImm32(sizeInBytes);
+			ELSIF sizeInBytes < MAX(LONGINT) THEN sizeOp := Assembler.NewImm32(sizeInBytes);
+			ELSE sizeOp := Assembler.NewImm64(sizeInBytes);
 			END;
 			emitter.Emit2(opcode,opSP,sizeOp);
-		END AllocateStack;
+		END ModifyStackPointer;
 
 		(*-------------------  generation = emit dispatch  / emit procedures ----------------------*)
 		PROCEDURE IsFloat(CONST operand: IntermediateCode.Operand): BOOLEAN;
@@ -1322,13 +1323,9 @@ TYPE
 						END;
 					END;
 				END;
-				IF spillStack.MaxSize()>0 THEN (* register spill stack, does not have to be initialized *)
-					op1 := Assembler.NewImm32(spillStack.MaxSize()*cpuBits DIV 8);
-					emitter.Emit2(InstructionSet.opSUB,opSP,op1);
-				END;
+				ModifyStackPointer (spillStack.MaxSize()*cpuBits DIV 8);
 			ELSE
-				op1 := Assembler.NewImm32(size+ spillStack.MaxSize());
-				emitter.Emit2(InstructionSet.opSUB,opSP,op1);
+				ModifyStackPointer (size + spillStack.MaxSize());
 			END;
 
 			cc := SHORT(instruction.op1.intValue);
@@ -1450,7 +1447,7 @@ TYPE
 							emitter.Emit1(InstructionSet.opFSTP,dest);
 							DEC(fpStackPointer);
 						ELSE
-							AllocateStack(stackSize);
+							ModifyStackPointer(stackSize);
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							emitter.Emit1(InstructionSet.opFSTP,espm);
 							DEC(fpStackPointer);
@@ -1466,7 +1463,7 @@ TYPE
 							MakeOperand(vdest, Low, dest, NIL);
 							Move(dest, src, vsrc.type);
 						ELSE (* need temporary stack argument *)
-							AllocateStack(stackSize);
+							ModifyStackPointer(stackSize);
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							Move(espm, src, vsrc.type);
 							MakeOperand(vdest,Low,dest,NIL);
@@ -1499,7 +1496,7 @@ TYPE
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							emitter.Emit1(InstructionSet.opFLD,espm);
 							ASSERT(sizeInBytes >0);
-							AllocateStack(-stackSize);
+							ModifyStackPointer(-stackSize);
 						END;
 						INC(fpStackPointer);
 						MakeOperand(vdest,Low,dest,NIL);
@@ -1519,7 +1516,7 @@ TYPE
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							MakeOperand(vdest, Low, dest, NIL);
 							Move(dest, espm, vdest.type);
-							AllocateStack(-stackSize);
+							ModifyStackPointer(-stackSize);
 						END;
 					END;
 				END;
@@ -1655,7 +1652,7 @@ TYPE
 						INC(fpStackPointer);
 						ASSERT(sizeInBytes >0);
 						Basic.Align(sizeInBytes, cpuBits DIV 8);
-						AllocateStack(-sizeInBytes);
+						ModifyStackPointer(-sizeInBytes);
 						MakeOperand(vdest,Low,dest,NIL);
 						emitter.Emit1(InstructionSet.opFSTP,dest);
 						DEC(fpStackPointer);
@@ -1671,7 +1668,7 @@ TYPE
 								emitter.Emit2(InstructionSet.opCVTSD2SS, dest,dest);
 							END;
 						END;
-						AllocateStack(-sizeInBytes);
+						ModifyStackPointer(-sizeInBytes);
 					ELSE
 						MakeOperand(vdest,Low,dest,NIL);
 						IF destType.sizeInBits = 32 THEN
@@ -1679,7 +1676,7 @@ TYPE
 						ELSE
 							emitter.Emit2(InstructionSet.opCVTSI2SD, dest, espm)
 						END;
-						AllocateStack(-sizeInBytes);
+						ModifyStackPointer(-sizeInBytes);
 					END;
 				END;
 			ELSE
@@ -1736,7 +1733,7 @@ TYPE
 				ELSE
 					emitter.Emit1(InstructionSet.opFLD,src); INC(fpStackPointer);
 					MakeOperand(vdest,Low,dest,NIL);
-					IF destType.sizeInBits = IntermediateCode.Bits64 THEN AllocateStack(12) ELSE AllocateStack(8) END;
+					IF destType.sizeInBits = IntermediateCode.Bits64 THEN ModifyStackPointer(12) ELSE ModifyStackPointer(8) END;
 
 					Assembler.InitMem(espm,IntermediateCode.Bits16 DIV 8,SP,0);
 
@@ -1949,7 +1946,7 @@ TYPE
 		END EmitResultFPU;
 
 		PROCEDURE EmitCall(CONST instruction: IntermediateCode.Instruction);
-		VAR fixup: Sections.Section;  target, op, parSize: Assembler.Operand;
+		VAR fixup: Sections.Section;  target, op: Assembler.Operand;
 			code: SyntaxTree.Code; emitterFixup,newFixup: BinaryCode.Fixup; resolved: BinaryCode.Section; pc: LONGINT;
 		BEGIN
 			IF fpStackPointer # 0 THEN Error(instruction.textPosition,"compiler implementation error: fp stack not cleared before call") END;
@@ -1971,20 +1968,17 @@ TYPE
 				ELSIF cpuBits = 64 THEN
 					MakeOperand(instruction.op1,Low,op,NIL);
 					emitter.Emit1(InstructionSet.opCALL,op);
-					Assembler.InitOffset32(parSize,instruction.op2.intValue);
-					IF parSize.val # 0 THEN emitter.Emit2(InstructionSet.opADD,opSP,parSize) END;
+					ModifyStackPointer (-instruction.op2.intValue);
 				ELSE
 					Assembler.InitOffset32(target,instruction.op1.intValue);
 					Assembler.SetSymbol(target,instruction.op1.symbol.name,instruction.op1.symbol.fingerprint,instruction.op1.offset,0);
 					emitter.Emit1(InstructionSet.opCALL,target);
-					Assembler.InitOffset32(parSize,instruction.op2.intValue);
-					IF parSize.val # 0 THEN emitter.Emit2(InstructionSet.opADD,opSP,parSize) END;
+					ModifyStackPointer (-instruction.op2.intValue);
 				END;
 			ELSE
 				MakeOperand(instruction.op1,Low,op,NIL);
 				emitter.Emit1(InstructionSet.opCALL,op);
-				Assembler.InitOffset32(parSize,instruction.op2.intValue);
-				IF parSize.val # 0 THEN emitter.Emit2(InstructionSet.opADD,opSP,parSize) END;
+				ModifyStackPointer (-instruction.op2.intValue);
 			END;
 		END EmitCall;
 
@@ -2421,7 +2415,7 @@ TYPE
 			IF instruction.op3.mode = IntermediateCode.ModeImmediate THEN
 				size := instruction.op3.type.sizeInBits DIV 8;
 				Basic.Align(size, cpuBits DIV 8 );
-				AllocateStack(size);
+				ModifyStackPointer(size);
 				Assembler.InitMem(memop,SHORT(instruction.op3.type.sizeInBits DIV 8),SP,0);
 				emitter.Emit2(InstructionSet.opMOV,memop,op3);
 				op3 := memop;
@@ -2447,7 +2441,7 @@ TYPE
 			IF instruction.op3.mode = IntermediateCode.ModeImmediate THEN
 				size := instruction.op3.type.sizeInBits DIV 8;
 				Basic.Align(size, cpuBits DIV 8 );
-				AllocateStack(-size);
+				ModifyStackPointer(-size);
 			END;
 		END EmitDivMod;
 
@@ -3029,9 +3023,9 @@ TYPE
 				sizeInBytes := vop.type.sizeInBits DIV 8;
 				length := vop.type.length;
 				IF sizeInBytes * length * 8 < cpuBits THEN 
-					AllocateStack(cpuBits DIV 8);
+					ModifyStackPointer(cpuBits DIV 8);
 				ELSE
-					AllocateStack(sizeInBytes*length);
+					ModifyStackPointer(sizeInBytes*length);
 				END;
 				Assembler.InitMem(memop, SHORTINT(sizeInBytes*length),SP,0);
 				IF backend.forceFPU THEN
@@ -3065,9 +3059,9 @@ TYPE
 					Move(op, memop, vop.type)
 				END;
 				IF sizeInBytes * length * 8 < cpuBits THEN 
-					AllocateStack(-cpuBits DIV 8);
+					ModifyStackPointer(-cpuBits DIV 8);
 				ELSE
-					AllocateStack(-sizeInBytes*length);
+					ModifyStackPointer(-sizeInBytes*length);
 				END;
 			END;
 		END EmitPopFloat;

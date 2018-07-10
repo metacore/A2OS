@@ -3003,7 +3003,7 @@ TYPE
 		
 
 		PROCEDURE ResetVariables (scope: SyntaxTree.ProcedureScope);
-		VAR variable: SyntaxTree.Variable; parameter: SyntaxTree.Parameter; previousScope: SyntaxTree.Scope;   pc: LONGINT; 
+		VAR variable: SyntaxTree.Variable; parameter: SyntaxTree.Parameter; previousScope: SyntaxTree.Scope; prevOffset: SIZE; pc: LONGINT; 
 
 			PROCEDURE Reset (symbol: SyntaxTree.Symbol);
 			VAR operand: Operand;
@@ -3017,16 +3017,18 @@ TYPE
 			previousScope := currentScope;
 			currentScope := scope;
 			pc := section.pc;
+			prevOffset := MAX(SIZE);
 			variable := scope.firstVariable;
 			WHILE variable # NIL DO
-				IF variable.NeedsTrace() THEN
+				IF variable.NeedsTrace() & (variable.offsetInBits # prevOffset) (* multiple temporaries *) THEN
 					Reset (variable);
+					prevOffset := variable.offsetInBits;
 				END;
 				variable := variable.nextVariable;
 			END;
 			parameter := scope.ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
 			WHILE parameter # NIL DO
-				IF parameter.NeedsTrace() & ~IsVariableParameter(parameter)  & (parameter.kind # SyntaxTree.ConstParameter) THEN
+				IF parameter.NeedsTrace() & ~IsVariableParameter(parameter) & (parameter.kind # SyntaxTree.ConstParameter) THEN
 					Reset (parameter);
 				END;
 				parameter := parameter.nextParameter;
@@ -6875,7 +6877,13 @@ TYPE
 					Assign(reference,variable.initializer);
 				ELSIF temporary THEN
 					IF SemanticChecker.IsPointerType(variable.type) THEN
-						IF backend.writeBarriers THEN
+						IF backend.cooperative THEN
+							SaveRegisters();ReleaseUsedRegisters(saved);
+							Symbol(variable, operand); 
+							CallAssignPointer(operand.op, nil);
+							ReleaseOperand(operand);
+							RestoreRegisters(saved);							
+						ELSIF backend.writeBarriers THEN
 							SaveRegisters();ReleaseUsedRegisters(saved);
 							Symbol(variable, operand); 
 							Emit(Push(position,operand.op));
@@ -7171,7 +7179,7 @@ TYPE
 			END;
 			scope := currentScope;
 			(*
-			variable := NIL; (* disable free variable managemenet for the time being -- does not work *)
+			v := NIL; (* disable free variable managemenet for the time being *)
 			*)
 			name := temporaries.GetUID(); 
 			

@@ -160,6 +160,20 @@ BUILDS
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
+	ZynqKernel {
+		INCLUDE "ZYNQ NATIVE ARM"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=ARMA2 --useFPU32 --useFPU64 --traceModule=Trace --noInitLocals"
+		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
+	Zynq {
+		INCLUDE "ZYNQ NATIVE ARM"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=ARMA2 --useFPU32 --useFPU64 --traceModule=Trace"
+		EXCLUDEPACKAGES "EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
+		DISABLED "FALSE"
+	}
 	Win32 {
 		INCLUDE "WIN I386"
 		COMPILER "Compiler.Compile"
@@ -267,9 +281,14 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	AMD64 & COOP { AMD64.CPU.Mod }
 	RPI & COOP { RPI.CPU.Mod }
 	ZYNQ & COOP { Zynq.CPU.Mod }
-
+	
+	ARM & ~COOP { ZYNQ:/ARM.Initializer.Mod }
+	ZYNQ & ~COOP { ZYNQ:/Zynq.ARM.Platform.Mod }
+	
 	# Low-level trace output
 	Trace.Mod
+	
+	ARM & ~COOP{ ZYNQ:/Dynamic.BootConfig.Mod }
 
 	WIN { Windows.Kernel32.Mod }
 
@@ -298,6 +317,15 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP & ~ARM { Mutexes.Mod Coop.Machine.Mod }
 	COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
+	
+	ZYNQ & ~COOP {
+		# Trace using PS UART
+		ZYNQ:/Zynq.PsUartMin.Mod
+		ZYNQ:/Zynq.PsTraceDevice.Mod
+
+		ZYNQ:/Zynq.PrivateWatchdog.Mod
+		ZYNQ:/ARM.Machine.Mod
+	}
 
 	~COOP { Heaps.Mod }
 	COOP { Coop.Heaps.Mod }
@@ -309,6 +337,12 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN & ~COOP { Windows.Objects.Mod Windows.Kernel.Mod }
 	UNIX & ~COOP { Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
+	
+	ARM & ~COOP {
+		ZYNQ:/ARM.Objects.Mod
+		ZYNQ:/ARM.Kernel.Mod
+	}
+	
 END
 
 PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
@@ -348,6 +382,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BIOS { BIOS.Clock.Mod }
 	WIN { Windows.Clock.Mod }
 	UNIX { Unix.Clock.Mod }
+	NATIVE & ~BIOS { ZYNQ:Clock.Mod}
 
 	# Memory cache control
 	BIOS { BIOS.MemCache.Mod }
@@ -467,6 +502,8 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	# PC speaker driver
 	BIOS { BIOS.Beep.Mod }
 	WIN { Windows.Beep.Mod }
+	
+	NATIVE & ~BIOS { Beep.Mod }
 
 	# Pseudo sound driver for UnixAos
 	UNIX { Unix.OpenAL.Mod OpenALSound.Mod }
@@ -488,41 +525,125 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	# PS/2 keyboard incl. layouts
 
 	BIOS { BIOS.Keyboard.Mod }
-
+	
 	NATIVE {
 		KeyUK.Bin KeyCA.Bin KeyCH.Bin KeyD.Bin KeyN.Bin KeyTR.Bin KeyPL.Bin KeyDV.Bin
 		KeyFR.Bin KeyBE.Bin KeySF.Bin KeyIT.Bin KeyUS.Bin
-
+	}
+	
+	BIOS {
 		BIOS.MousePS2.Mod MouseSerial.Mod
 
 		# Display drivers (implement Displays interface)
 		BIOS.DisplayLinear.Mod
-
+	}
+	
+	ZYNQ & ~COOP {
+		ActiveCells/AcDrivers/Zynq.AcAxisIo.Mod
+		ActiveCells/AcDrivers/AcStreamVideoOut.Mod
+		ActiveCells/AcDrivers/AcAxiDma.Mod
+		ZYNQ:Zynq.PsConfig.Mod
+		ZYNQ:/Zynq.DisplayLinear.Mod
+	}
+	
+	NATIVE {
 		# Loopback driver (implements Network interface)
 		Loopback.Mod
-
+	}
+	
+	BIOS {
 		# network drivers (implement Network interface)
 		BIOS.Ethernet3Com90x.Mod RTL8139.Mod RTL8169.Mod Intel8255x.Mod
 		BIOS.AM79C970.Mod
 
 		# Sound drivers (implement SoundDevice interface)
 		BIOS.EnsoniqSound.Mod YMF754.Mod YMF754.Bin BIOS.i810Sound.Mod
-
+		
 		# TV card driver (implements TVDriver interface)
 		BT848.Mod
-
-		# USB core
+		}
+	
+	NATIVE {
 		UsbDebug.Mod
+	}
+	
+	NATIVE & ~ARM {
+		# USB core
 		Usbdi.Mod UsbHcdi.Mod
-		BIOS.UsbUhci.Mod UsbOhci.Mod UsbEhci.Mod UsbEhciPCI.Mod
-		UsbDriverLoader.Mod UsbUtilities.Mod Usb.Mod UsbHubDriver.Mod
-
+	}
+	
+	NATIVE & ARM {
+		USB:/UsbBuffers.Mod
+		USB:/Usbdi.Mod
+		USB:/UsbHcdi.Mod
+		USB:/UsbVarTdAlloc.Mod
+	}
+	
+	BIOS {
+		BIOS.UsbUhci.Mod 
+	}
+	
+	BIOS {
+		UsbOhci.Mod
+	}
+	
+	NATIVE & ~ARM {
+		UsbEhci.Mod
+	}
+	
+	NATIVE & ARM {
+		USB:UsbEhci.Mod
+	}
+	
+	BIOS {
+		UsbEhciPCI.Mod
+	}
+	
+	NATIVE & ARM {
+		USB:/UsbEhci.Mod
+	}
+	
+	NATIVE {
+		UsbDriverLoader.Mod UsbUtilities.Mod
+	}
+	
+	NATIVE & ~ARM {
+		Usb.Mod UsbHubDriver.Mod
+	}
+	
+	NATIVE & ARM {
+		USB:/Usb.Mod
+		USB:/UsbHubDriver.Mod
+	}
+	
+	ZYNQ & ~COOP {
+		ZYNQ:/Zynq.Gpio.Mod ZYNQ:/Zynq.UsbEhciPhy.Mod ZYNQ:/UsbEhciZynq.Mod
+	}
+	
+	NATIVE & ~ARM {
 		# USB mass storage class driver
 		UsbStorageBase.Mod UsbStorageBot.Mod UsbStorageCbi.Mod
-		UsbStorageScm.Mod UsbStorageBoot.Mod UsbStorage.Mod
-
+		UsbStorageScm.Mod
+	}
+	
+	NATIVE & ARM {
+		USB:/UsbStorageBase.Mod USB:/UsbStorageBot.Mod USB:/UsbStorageCbi.Mod USB:/UsbStorageScm.Mod
+	}
+	
+	NATIVE {
+		UsbStorageBoot.Mod UsbStorage.Mod
+	}
+	
+	NATIVE & ~ARM {
 		# USB HID class driver
 		UsbHid.Mod
+	}
+	
+	NATIVE & ARM {
+		USB:UsbHid.Mod
+	}
+	
+	NATIVE & ~ARM {
 		UsbMouse.Mod
 
 		#USB <-> RS232 FTDI driver
@@ -531,21 +652,36 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	BIOS & I386 { I386.UsbKeyboard.Mod }
 	BIOS & AMD64 { AMD64.UsbKeyboard.Mod }
+	
+	NATIVE & ARM { ZYNQ:/ARM.UsbKeyboard.Mod }
 
 	NATIVE {
 		UsbHidUP.Mod UsbHidErrors.Mod UsbHidReport.Mod
 		UsbHidParserExt.Mod UsbHidParser.Mod
+	}
+	
+	NATIVE & ~ARM {
 		UsbHidDriver.Mod
-
+	}
+	
+	NATIVE & ARM {
+		USB:UsbHidDriver.Mod
+	}
+	
+	NATIVE & ~ARM {
 		# USB network drivers
 		UsbNetwork.Mod UsbNetworkUSB200M.Mod
 
 		UsbPrinter.Mod
 		UsbGarminGPS18.Mod
-
+	}
+	
+	NATIVE {
 		# Touchscreen drivers
 		UsbTouchscreen.Mod
-
+	}
+	
+	NATIVE & ~ARM {
 		# Bluetooth stack
 		Bluetooth.Mod BluetoothUART.Mod UsbBluetooth.Mod BluetoothUSB.Mod
 		BluetoothHCI.Mod BluetoothL2CAP.Mod BluetoothRFCOMM.Mod
@@ -589,6 +725,7 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	#FPU32 { I386.Math.Mod I386.MathL.Mod }
 	AMD64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
 	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
+	ARM { ARM.Math.Mod ARM.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
 	I386 { I386.FoxArrayBaseOptimized.Mod }
@@ -612,6 +749,9 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	NATIVE {
 		DriverDatabase.Mod DriverDatabase.XML
+	}
+	
+	BIOS {
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
@@ -633,6 +773,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	# raster images (eos)
 	I386 { I386.Raster.Mod }
 	AMD64 { AMD64.Raster.Mod }
+	ARM { ZYNQ:ARM.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -666,6 +807,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	# Move to graphical package!!
 	I386 { I386.WMRasterScale.Mod }
 	AMD64 { AMD64.WMRasterScale.Mod }
+	ARM { ZYNQ:/ARM.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 	WMGraphicsSmooth.Mod
@@ -781,7 +923,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	TCPTools.Mod						# Some useful TCP-related commands
 
 	BIOS & ~COOP { Performance.Mod }
-	WIN, UNIX, BIOS & COOP { Windows.Performance.Mod } # This is just a dummy
+	WIN, UNIX, BIOS & COOP, ZYNQ { Windows.Performance.Mod } # This is just a dummy
 
 	Bin2Hex.Mod BinToCode.Mod
 
@@ -966,7 +1108,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMFileManager.Mod WMSearchTool.Mod
 	WMFTPClient.Mod
 
-	NATIVE { WMUsbInfo.Mod WMUsbInfo.tar }
+	NATIVE & ~ARM { WMUsbInfo.Mod WMUsbInfo.tar }
 
 	# Skin support
 	SkinLanguage.Mod FNHistories.Mod SkinEngine.Mod SkinConfig.XML
@@ -1008,9 +1150,15 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMPerfMonAlerts.Mod WMPerfMonAlertsUtils.Mod WMPerfMonAlerts.XML
 
 	# perfmon kernel plugins
-	BIOS {
+	NATIVE {
 		WMPerfMonPluginCpu.Mod WMPerfMonPluginMemory.Mod
+	}
+	
+	BIOS {
 		BIOS.WMPerfMonPluginInterrupts.Mod
+	}
+	
+	NATIVE {
 		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
 	}
 	WIN { Windows.WMPerfMonPluginCpu.Mod Windows.WMPerfMonPluginMemory.Mod }
@@ -1141,8 +1289,11 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 
 	I386 { I386.WMTransitions.Mod }
 	AMD64 { AMD64.WMTransitions.Mod }
-	MediaPlayer.Mod Presentation.Mod
-	MP3Player.Mod WMPlayer.Mod
+	I386, AMD64 {
+		MediaPlayer.Mod Presentation.Mod
+	}
+	MP3Player.Mod
+	I386, AMD64 { WMPlayer.Mod }
 	WAVRecorder.Mod
 	OGGUtilities.Mod OGGVorbisPlayer.Mod OGGRadios.Text WMOGGPlayer.Mod	# OGG Player/Radio
 
@@ -1195,7 +1346,9 @@ PACKAGE Fun ARCHIVE "Fun.zip" SOURCE "FunSrc.zip" DESCRIPTION "Games, Demos and 
 	W3dClusterWatch.Mod W3dClusterWatchIcons.tar Cluster.XML # 3D Cluster monitor tool
 
 	# Slide show
-	WMSlideshow.Mod RetoWMSlideshow.XML SlideShowData.tar
+	~ARM {
+		WMSlideshow.Mod RetoWMSlideshow.XML SlideShowData.tar
+	}
 
 	# Example data
 	stucki01.svg stucki02.svg
@@ -1225,7 +1378,7 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 
 	CSV.Test
 
-	NATIVE {
+	BIOS {
 		TestLocks.Mod
 		BenchSpeedup.Mod BenchObjCount.Mod
 		BenchClockDrift.Mod BenchNew.Mod BenchLocks.Mod

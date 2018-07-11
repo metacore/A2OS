@@ -226,8 +226,11 @@ TYPE
 			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
 			FOR i := ofs TO ofs + len -1 DO
 				adr := a[i];
-				IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-				INCL(map[adr DIV SetSize], adr MOD SetSize);
+				IF (adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
+				ELSE 
+					IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
+					INCL(map[adr DIV SetSize], adr MOD SetSize);
+				END;
 			END;
 			INC(used, len);
 		END MarkBlocks;

@@ -402,28 +402,38 @@ TYPE
 						j := hd.aleng + 1;
 						REPEAT
 							DEC(j);
-							IF hd.sec[j] # 0 THEN MarkSector(vol, hd.sec[j]) ELSE hd.aleng := j-1; bad := TRUE END
-						UNTIL j = 0
+							IF hd.sec[j] # 0 THEN hd.sec[j] := hd.sec[j] DIV SectorFactor; (* preparation for block marking *)
+							ELSE hd.aleng := j-1; bad := TRUE 
+							END
+						UNTIL j = 0;
+						vol.MarkBlocks(hd.sec,0,hd.aleng+1); 
 					ELSE
 						j := SectorTableSize;
 						REPEAT
 							DEC(j);
-							IF hd.sec[j] # 0 THEN MarkSector(vol, hd.sec[j]) ELSE hd.aleng := j-1; bad := TRUE END
+							IF hd.sec[j] # 0 THEN 
+								hd.sec[j] := hd.sec[j] DIV SectorFactor; (* preparation for block marking *)
+							ELSE hd.aleng := j-1; bad := TRUE 
+							END
 						UNTIL j = 0;
+						vol.MarkBlocks(hd.sec,0,SectorTableSize); 
 						IF hd.ext = 0 THEN hd.aleng := SectorTableSize-1; bad := TRUE END;
 						IF ~bad THEN
-							MarkSector(vol, hd.ext); GetSector(vol, hd.ext, sup);
+							MarkSector(vol, hd.ext); 
+							GetSector(vol, hd.ext, sup);
 							n := (hd.aleng - SectorTableSize) DIV IndexSize; i := 0;
 							WHILE (i <= n) & ~bad DO
 								IF sup.x[i] # 0 THEN
-									MarkSector(vol, sup.x[i]); GetSector(vol, sup.x[i], sub);
+									GetSector(vol, sup.x[i], sub);
+									sup.x[i] := sup.x[i] DIV SectorFactor; (* preparation for block marking *)
 									IF i < n THEN size := IndexSize
 									ELSE size := (hd.aleng - SectorTableSize) MOD IndexSize + 1
 									END;
 									FOR j := 0 TO size-1 DO
 										IF (sub.x[j] MOD SectorFactor = 0) & (sub.x[j] > 0) THEN
-											sub.x[j] := sub.x[j] DIV SectorFactor;
+											sub.x[j] := sub.x[j] DIV SectorFactor; (* preparation for block marking *)
 										ELSE
+											sub.x[j] := 0; 
 											bad := TRUE
 										END
 									END;
@@ -436,7 +446,8 @@ TYPE
 									ELSE hd.aleng := SectorTableSize + (i-1) * IndexSize
 									END
 								END
-							END
+							END;
+							vol.MarkBlocks(sup.x,0,n);
 						END
 					END;
 					IF bad THEN

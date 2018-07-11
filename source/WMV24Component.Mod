@@ -25,7 +25,7 @@ IMPORT
 	Modules, Kernel, Serials, XYModem, Files, Inputs,
 	WMWindowManager, WMMessages, WMRestorable, WMGraphics, WMRectangles,
 	WMComponents, WMStandardComponents, WMProgressComponents, WMTextView, WMEditors, WMPopups, WMDialogs,
-	XML, XMLObjects, WMSearchComponents, Commands, V24, T := Trace;
+	XML, XMLObjects, WMSearchComponents, Commands, T := Trace;
 
 CONST
 
@@ -1517,6 +1517,7 @@ END InitV24;
 BEGIN
 	Modules.InstallTermHandler(Cleanup);
 	InitStrings;
+	InitV24;
 END WMV24Component.
 
 

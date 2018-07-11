@@ -32,3 +32,4 @@ process Solaris32 &
 process Solaris64 &
 process Win32 &
 process Win64 &
+process Zynq &

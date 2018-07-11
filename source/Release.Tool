@@ -282,13 +282,13 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	RPI & COOP { RPI.CPU.Mod }
 	ZYNQ & COOP { Zynq.CPU.Mod }
 	
-	ARM & ~COOP { ZYNQ:/ARM.Initializer.Mod }
-	ZYNQ & ~COOP { ZYNQ:/Zynq.ARM.Platform.Mod }
+	ARM & ~COOP { ARM.Initializer.Mod }
+	ZYNQ & ~COOP { Zynq.ARM.Platform.Mod }
 	
 	# Low-level trace output
 	Trace.Mod
 	
-	ARM & ~COOP{ ZYNQ:/Dynamic.BootConfig.Mod }
+	ARM & ~COOP{ BootConfig.Mod }
 
 	WIN { Windows.Kernel32.Mod }
 
@@ -320,11 +320,11 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	
 	ZYNQ & ~COOP {
 		# Trace using PS UART
-		ZYNQ:/Zynq.PsUartMin.Mod
-		ZYNQ:/Zynq.PsTraceDevice.Mod
+		Zynq.PsUartMin.Mod
+		Zynq.PsTraceDevice.Mod
 
-		ZYNQ:/Zynq.PrivateWatchdog.Mod
-		ZYNQ:/ARM.Machine.Mod
+		Zynq.PrivateWatchdog.Mod
+		ARM.Machine.Mod
 	}
 
 	~COOP { Heaps.Mod }
@@ -339,8 +339,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
 	
 	ARM & ~COOP {
-		ZYNQ:/ARM.Objects.Mod
-		ZYNQ:/ARM.Kernel.Mod
+		ARM.Objects.Mod
+		ARM.Kernel.Mod
 	}
 	
 END
@@ -382,7 +382,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	BIOS { BIOS.Clock.Mod }
 	WIN { Windows.Clock.Mod }
 	UNIX { Unix.Clock.Mod }
-	NATIVE & ~BIOS { ZYNQ:Clock.Mod}
+	NATIVE & ~BIOS { Clock.Mod}
 
 	# Memory cache control
 	BIOS { BIOS.MemCache.Mod }
@@ -539,11 +539,11 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	ZYNQ & ~COOP {
-		ActiveCells/AcDrivers/Zynq.AcAxisIo.Mod
-		ActiveCells/AcDrivers/AcStreamVideoOut.Mod
-		ActiveCells/AcDrivers/AcAxiDma.Mod
-		ZYNQ:Zynq.PsConfig.Mod
-		ZYNQ:/Zynq.DisplayLinear.Mod
+		Zynq.AcAxisIo.Mod
+		AcStreamVideoOut.Mod
+		AcAxiDma.Mod
+		Zynq.PsConfig.Mod
+		Zynq.DisplayLinear.Mod
 	}
 	
 	NATIVE {
@@ -573,10 +573,10 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	NATIVE & ARM {
-		USB:/UsbBuffers.Mod
-		USB:/Usbdi.Mod
-		USB:/UsbHcdi.Mod
-		USB:/UsbVarTdAlloc.Mod
+		ARM.UsbBuffers.Mod
+		ARM.Usbdi.Mod
+		ARM.UsbHcdi.Mod
+		ARM.UsbVarTdAlloc.Mod
 	}
 	
 	BIOS {
@@ -589,15 +589,11 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	NATIVE & ARM {
-		USB:UsbEhci.Mod
+		ARM.UsbEhci.Mod
 	}
 	
 	BIOS {
 		BIOS.UsbEhciPCI.Mod
-	}
-	
-	NATIVE & ARM {
-		USB:/UsbEhci.Mod
 	}
 	
 	NATIVE {
@@ -609,12 +605,12 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	NATIVE & ARM {
-		USB:/Usb.Mod
-		USB:/UsbHubDriver.Mod
+		ARM.Usb.Mod
+		ARM.UsbHubDriver.Mod
 	}
 	
 	ZYNQ & ~COOP {
-		ZYNQ:/Zynq.Gpio.Mod ZYNQ:/Zynq.UsbEhciPhy.Mod ZYNQ:/UsbEhciZynq.Mod
+		Zynq.Gpio.Mod Zynq.UsbEhciPhy.Mod Zynq.UsbEhciZynq.Mod
 	}
 	
 	NATIVE & ~ARM {
@@ -624,7 +620,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	NATIVE & ARM {
-		USB:/UsbStorageBase.Mod USB:/UsbStorageBot.Mod USB:/UsbStorageCbi.Mod USB:/UsbStorageScm.Mod
+		ARM.UsbStorageBase.Mod ARM.UsbStorageBot.Mod ARM.UsbStorageCbi.Mod ARM.UsbStorageScm.Mod
 	}
 	
 	NATIVE {
@@ -637,7 +633,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	NATIVE & ARM {
-		USB:UsbHid.Mod
+		ARM.UsbHid.Mod
 	}
 	
 	NATIVE & ~ARM {
@@ -650,7 +646,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	BIOS & I386 { I386.UsbKeyboard.Mod }
 	BIOS & AMD64 { AMD64.UsbKeyboard.Mod }
 	
-	NATIVE & ARM { ZYNQ:/ARM.UsbKeyboard.Mod }
+	NATIVE & ARM { ARM.UsbKeyboard.Mod }
 
 	NATIVE {
 		UsbHidUP.Mod UsbHidErrors.Mod UsbHidReport.Mod
@@ -662,7 +658,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	NATIVE & ARM {
-		USB:UsbHidDriver.Mod
+		ARM.UsbHidDriver.Mod
 	}
 	
 	NATIVE & ~ARM {
@@ -770,7 +766,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	# raster images (eos)
 	I386 { I386.Raster.Mod }
 	AMD64 { AMD64.Raster.Mod }
-	ARM { ZYNQ:ARM.Raster.Mod }
+	ARM { ARM.Raster.Mod }
 
 	Localization.Mod
 	Archives.Mod
@@ -804,7 +800,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	# Move to graphical package!!
 	I386 { I386.WMRasterScale.Mod }
 	AMD64 { AMD64.WMRasterScale.Mod }
-	ARM { ZYNQ:/ARM.WMRasterScale.Mod }
+	ARM { ARM.WMRasterScale.Mod }
 
 	WMGraphics.Mod
 	WMGraphicsSmooth.Mod

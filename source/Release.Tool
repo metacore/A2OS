@@ -581,10 +581,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	
 	BIOS {
 		BIOS.UsbUhci.Mod 
-	}
-	
-	BIOS {
-		UsbOhci.Mod
+		BIOS.UsbOhci.Mod
 	}
 	
 	NATIVE & ~ARM {
@@ -596,7 +593,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 	
 	BIOS {
-		UsbEhciPCI.Mod
+		BIOS.UsbEhciPCI.Mod
 	}
 	
 	NATIVE & ARM {

@@ -505,7 +505,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.MOVE(ADDRESS OF previousFrame.caller + SIZE OF ADDRESS, ADDRESS OF newFrame.caller + SIZE OF ADDRESS, parSize); (* copy parameters *)
 		
 	sp := ADDRESSOF(newFrame.descriptor) - varSize; 
-	currentActivity.stack := newStack;
+	DISPOSE (currentActivity.stack); currentActivity.stack := newStack;
 	currentActivity.stackLimit := ADDRESS OF newStack[SafeStackSize + 3 * SIZE OF ADDRESS];
 
 	RETURN sp; 

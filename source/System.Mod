@@ -106,7 +106,6 @@ BEGIN
 	NEW(options);
 	options.Add("c", "crc", Options.Flag);
 	options.Add("l", "ln", Options.Flag);
-	options.Add("b", "base", Options.Flag);
 	options.Add("r", "reverse", Options.Flag);
 	IF options.Parse(context.arg, context.error) THEN
 		reverse := ~options.GetFlag("r");

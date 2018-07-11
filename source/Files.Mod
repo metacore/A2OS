@@ -219,6 +219,18 @@ TYPE
 			INCL(map[adr DIV SetSize], adr MOD SetSize);
 			INC(used)
 		END MarkBlock;
+		
+		PROCEDURE MarkBlocks*(CONST a: ARRAY OF Address; ofs, size: TSize);
+		VAR i: SIZE;  adr: Address;
+		BEGIN {EXCLUSIVE}
+			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
+			FOR i := ofs TO ofs + size -1 DO
+				adr := a[i];
+				IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
+				INCL(map[adr DIV SetSize], adr MOD SetSize);
+			END;
+			INC(used, size);
+		END MarkBlocks;
 
 		PROCEDURE Marked*(adr: Address): BOOLEAN;
 		BEGIN {EXCLUSIVE}

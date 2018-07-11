@@ -374,6 +374,7 @@ TYPE
 
 			PROCEDURE MarkSectors;
 			VAR L, R, i, j, n: LONGINT; x: DiskAdr; hd: FileHeader; sup, sub: IndexSector;
+				size: Files.TSize;
 
 				PROCEDURE sift(L, R: LONGINT);
 					VAR i, j: LONGINT; x: DiskAdr;
@@ -416,17 +417,17 @@ TYPE
 							WHILE (i <= n) & ~bad DO
 								IF sup.x[i] # 0 THEN
 									MarkSector(vol, sup.x[i]); GetSector(vol, sup.x[i], sub);
-									IF i < n THEN j := IndexSize
-									ELSE j := (hd.aleng - SectorTableSize) MOD IndexSize + 1
+									IF i < n THEN size := IndexSize
+									ELSE size := (hd.aleng - SectorTableSize) MOD IndexSize + 1
 									END;
-									REPEAT
-										DEC(j);
+									FOR j := 0 TO size-1 DO
 										IF (sub.x[j] MOD SectorFactor = 0) & (sub.x[j] > 0) THEN
-											MarkSector(vol, sub.x[j])
+											sub.x[j] := sub.x[j] DIV SectorFactor;
 										ELSE
 											bad := TRUE
 										END
-									UNTIL j = 0;
+									END;
+									vol.MarkBlocks(sub.x,0,size);
 									INC(i)
 								ELSE bad := TRUE
 								END;
@@ -992,7 +993,7 @@ TYPE
 		END Write;
 
 		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
-		VAR src, dst: ADDRESS; m: LONGINT; buf: Buffer;
+		VAR dst: ADDRESS; m: LONGINT; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN

@@ -2629,6 +2629,7 @@ TYPE
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
 			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
+			section.SetExported (TRUE);
 
 			IF dump # NIL THEN dump := section.comments END;
 			IF backend.hasLinkRegister THEN
@@ -2672,6 +2673,7 @@ TYPE
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
 				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				section.SetExported (TRUE);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 
@@ -2759,6 +2761,8 @@ TYPE
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
 			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
+			section.SetExported (TRUE);
+
 			IF dump # NIL THEN dump := section.comments END;
 
 			IF backend.hasLinkRegister THEN
@@ -2817,6 +2821,8 @@ TYPE
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
 				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				section.SetExported (TRUE);
+
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 				IF dump # NIL THEN dump := section.comments END;
@@ -2839,6 +2845,7 @@ TYPE
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
 				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				section.SetExported (TRUE);
 				NEW(registerUsageCount);
 				usedRegisters := NIL;
 
@@ -2877,6 +2884,7 @@ TYPE
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
 			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
+			section.SetExported (TRUE);
 
 			IF dump # NIL THEN dump := section.comments END;
 
@@ -2916,6 +2924,7 @@ TYPE
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
 			section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+			section.SetExported (TRUE);
 			NEW(registerUsageCount);
 			usedRegisters := NIL;
 

@@ -390,6 +390,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	# Block device interface
 	Disks.Mod
+	DiskCaches.Mod
 
 	Files.Mod
 

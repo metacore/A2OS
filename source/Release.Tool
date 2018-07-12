@@ -98,7 +98,7 @@
 #
 #
 # Naming Convention:
-# 
+#
 # The prefixes included in each build below include the build name itself as well as the name of its target platform and architecture.
 # The filenames of modules are structured accordingly and look as follows:
 #
@@ -281,14 +281,14 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	AMD64 & COOP { AMD64.CPU.Mod }
 	RPI & COOP { RPI.CPU.Mod }
 	ZYNQ & COOP { Zynq.CPU.Mod }
-	
+
 	ARM & ~COOP { ARM.Initializer.Mod }
 	ZYNQ & ~COOP { Zynq.ARM.Platform.Mod }
-	
+
 	# Low-level trace output
 	Trace.Mod
-	
-	ARM & ~COOP{ BootConfig.Mod }
+
+	ARM & ~COOP { BootConfig.Mod }
 
 	WIN { Windows.Kernel32.Mod }
 
@@ -313,19 +313,11 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	BIOS & I386 & ~COOP { BIOS.I386.Machine.Mod }
 	BIOS & AMD64 & ~COOP { BIOS.AMD64.Machine.Mod }
-	WIN { Windows.Machine.Mod }
+	WIN & ~COOP { Windows.Machine.Mod }
 	COOP & ~ARM { Mutexes.Mod Coop.Machine.Mod }
 	COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
-	
-	ZYNQ & ~COOP {
-		# Trace using PS UART
-		Zynq.PsUartMin.Mod
-		Zynq.PsTraceDevice.Mod
-
-		Zynq.PrivateWatchdog.Mod
-		ARM.Machine.Mod
-	}
+	ZYNQ & ~COOP { Zynq.PsUartMin.Mod Zynq.PsTraceDevice.Mod Zynq.PrivateWatchdog.Mod ARM.Machine.Mod }
 
 	~COOP { Heaps.Mod }
 	COOP { Coop.Heaps.Mod }
@@ -337,12 +329,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	WIN & ~COOP { Windows.Objects.Mod Windows.Kernel.Mod }
 	UNIX & ~COOP { Unix.Objects.Mod Unix.Kernel.Mod }
 	COOP { Coop.Objects.Mod Coop.Kernel.Mod }
-	
-	ARM & ~COOP {
-		ARM.Objects.Mod
-		ARM.Kernel.Mod
-	}
-	
+	ARM & ~COOP { ARM.Objects.Mod ARM.Kernel.Mod }
+
 END
 
 PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
@@ -393,7 +381,6 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	DiskCaches.Mod
 
 	Files.Mod
-
 
 	Dates.Mod Strings.Mod # low-level utility modules
 	UTF8Strings.Mod
@@ -503,7 +490,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	# PC speaker driver
 	BIOS { BIOS.Beep.Mod }
 	WIN { Windows.Beep.Mod }
-	
+
 	NATIVE & ~BIOS { Beep.Mod }
 
 	# Pseudo sound driver for UnixAos
@@ -526,19 +513,19 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	# PS/2 keyboard incl. layouts
 
 	BIOS { BIOS.Keyboard.Mod }
-	
+
 	NATIVE {
 		KeyUK.Bin KeyCA.Bin KeyCH.Bin KeyD.Bin KeyN.Bin KeyTR.Bin KeyPL.Bin KeyDV.Bin
 		KeyFR.Bin KeyBE.Bin KeySF.Bin KeyIT.Bin KeyUS.Bin
 	}
-	
+
 	BIOS {
 		BIOS.MousePS2.Mod MouseSerial.Mod
 
 		# Display drivers (implement Displays interface)
 		BIOS.DisplayLinear.Mod
 	}
-	
+
 	ZYNQ & ~COOP {
 		Zynq.AcAxisIo.Mod
 		AcStreamVideoOut.Mod
@@ -546,12 +533,12 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		Zynq.PsConfig.Mod
 		Zynq.DisplayLinear.Mod
 	}
-	
+
 	NATIVE {
 		# Loopback driver (implements Network interface)
 		Loopback.Mod
 	}
-	
+
 	BIOS {
 		# network drivers (implement Network interface)
 		BIOS.Ethernet3Com90x.Mod RTL8139.Mod RTL8169.Mod Intel8255x.Mod
@@ -559,84 +546,84 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 		# Sound drivers (implement SoundDevice interface)
 		BIOS.EnsoniqSound.Mod YMF754.Mod YMF754.Bin BIOS.i810Sound.Mod
-		
+
 		# TV card driver (implements TVDriver interface)
 		BT848.Mod
 		}
-	
+
 	NATIVE {
 		UsbDebug.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		# USB core
 		Usbdi.Mod UsbHcdi.Mod
 	}
-	
+
 	NATIVE & ARM {
 		ARM.UsbBuffers.Mod
 		ARM.Usbdi.Mod
 		ARM.UsbHcdi.Mod
 		ARM.UsbVarTdAlloc.Mod
 	}
-	
+
 	BIOS {
-		BIOS.UsbUhci.Mod 
+		BIOS.UsbUhci.Mod
 		BIOS.UsbOhci.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		UsbEhci.Mod
 	}
-	
+
 	NATIVE & ARM {
 		ARM.UsbEhci.Mod
 	}
-	
+
 	BIOS {
 		BIOS.UsbEhciPCI.Mod
 	}
-	
+
 	NATIVE {
 		UsbDriverLoader.Mod UsbUtilities.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		Usb.Mod UsbHubDriver.Mod
 	}
-	
+
 	NATIVE & ARM {
 		ARM.Usb.Mod
 		ARM.UsbHubDriver.Mod
 	}
-	
+
 	ZYNQ & ~COOP {
 		Zynq.Gpio.Mod Zynq.UsbEhciPhy.Mod Zynq.UsbEhciZynq.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		# USB mass storage class driver
 		UsbStorageBase.Mod UsbStorageBot.Mod UsbStorageCbi.Mod
 		UsbStorageScm.Mod
 	}
-	
+
 	NATIVE & ARM {
 		ARM.UsbStorageBase.Mod ARM.UsbStorageBot.Mod ARM.UsbStorageCbi.Mod ARM.UsbStorageScm.Mod
 	}
-	
+
 	NATIVE {
 		UsbStorageBoot.Mod UsbStorage.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		# USB HID class driver
 		UsbHid.Mod
 	}
-	
+
 	NATIVE & ARM {
 		ARM.UsbHid.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		UsbMouse.Mod
 
@@ -646,22 +633,22 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 
 	BIOS & I386 { I386.UsbKeyboard.Mod }
 	BIOS & AMD64 { AMD64.UsbKeyboard.Mod }
-	
+
 	NATIVE & ARM { ARM.UsbKeyboard.Mod }
 
 	NATIVE {
 		UsbHidUP.Mod UsbHidErrors.Mod UsbHidReport.Mod
 		UsbHidParserExt.Mod UsbHidParser.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		UsbHidDriver.Mod
 	}
-	
+
 	NATIVE & ARM {
 		ARM.UsbHidDriver.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		# USB network drivers
 		UsbNetwork.Mod UsbNetworkUSB200M.Mod
@@ -669,12 +656,12 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		UsbPrinter.Mod
 		UsbGarminGPS18.Mod
 	}
-	
+
 	NATIVE {
 		# Touchscreen drivers
 		UsbTouchscreen.Mod
 	}
-	
+
 	NATIVE & ~ARM {
 		# Bluetooth stack
 		Bluetooth.Mod BluetoothUART.Mod UsbBluetooth.Mod BluetoothUSB.Mod
@@ -744,7 +731,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	NATIVE {
 		DriverDatabase.Mod DriverDatabase.XML
 	}
-	
+
 	BIOS {
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
@@ -778,7 +765,6 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	FP1616.Mod DefaultTextStyles.XML	# Text System
 
 	Texts.Mod
-
 
 	UndoManager.Mod
 
@@ -1015,10 +1001,8 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WindowManager.Mod
 	UNIX { Unix.X11.Mod Unix.X11Api.Mod Unix.XDisplay.Mod Unix.Beep.Mod Unix.KbdMouse.Mod Unix.Clipboard.Mod Unix.Display.Mod }
 
-
 	# Icons representing applications (don't put icons used by applications inside!)
 	WMIcons.tar
-
 
 	Attributes.Mod
 
@@ -1109,8 +1093,6 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 
 	ZeroSkin.zip # default skin
 
-
-
 	# Trackers
 	WMProcessInfo.Mod
 	WMObjectTracker.Mod
@@ -1136,8 +1118,6 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	Tutorial.Text Quickstart.Text cn.PrgInOberon.txt	# documentation
 	WMTextTool.Mod
 
-
-
 # Performance monitor framework
 
 	WMPerfMonPlugins.Mod
@@ -1147,11 +1127,11 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	NATIVE {
 		WMPerfMonPluginCpu.Mod WMPerfMonPluginMemory.Mod
 	}
-	
+
 	BIOS {
 		BIOS.WMPerfMonPluginInterrupts.Mod
 	}
-	
+
 	NATIVE {
 		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
 	}
@@ -1725,7 +1705,6 @@ PACKAGE OberonGadgets ARCHIVE "OberonGadgets.zip" SOURCE "OberonGadgetsSrc.zip" 
 
 	Oberon.Lists.Mod
 	Oberon.Panels.Mod
-
 
 	Oberon.TextGadgets0.Mod Oberon.TextGadgets.Mod
 

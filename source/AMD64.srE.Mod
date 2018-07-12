@@ -17,7 +17,9 @@ END E;
 
 PROCEDURE Eprime(VAR in:ARRAY OF SREAL; VAR out: ARRAY OF INTEGER);
 CODE {SYSTEM.AMD64, SYSTEM.FPU}
-   PUSH  RCX
+   #IF COOP THEN
+      PUSH   RBX
+   #END
    MOV   RDI, [RBP+out+0]         ; dest   = ADR(out)
    MOV   RCX, [RBP+out+8]       ; count  = LEN(out)
    MOV   RSI, [RBP+in+0]        ; source = ADR(in)
@@ -44,7 +46,9 @@ Check:
    JG    Loop
    FLDCW [RSP]               ; restore original FPU configuration
    ADD   RSP, 8
-   POP   RCX
+   #IF COOP THEN
+      POP   RBX
+   #END
 END Eprime;
 
 PROCEDURE E2*(in: srBase.PT; VAR out: srBase.IPT);

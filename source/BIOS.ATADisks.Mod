@@ -1913,21 +1913,23 @@ VAR
 PROCEDURE RepInWord(port, bufAdr: ADDRESS; len: SIZE);
 CODE
 #IF I386 THEN
-	PUSH	ECX
+	#IF COOP THEN
+		MOV	ESI, ECX
+	#END
 	MOV	EDX, [EBP + port]
 	MOV	EDI, [EBP + bufAdr]
 	MOV	ECX, [EBP + len]
 	CLD
 	REP	INSW
-	POP	ECX
+	#IF COOP THEN
+		MOV	ECX, ESI
+	#END
 #ELSIF AMD64 THEN
-	PUSH	RCX
 	MOV	RDX, [RBP + port]
 	MOV	RDI, [RBP + bufAdr]
 	MOV	RCX, [RBP + len]
 	CLD
 	REP	INSW
-	POP	RCX
 #ELSE
 	unimplemented
 #END
@@ -1938,21 +1940,23 @@ END RepInWord;
 PROCEDURE RepOutWord(port, bufAdr: ADDRESS; len: SIZE);
 CODE
 #IF I386 THEN
-	PUSH	ECX
+	#IF COOP THEN
+		MOV	ESI, ECX
+	#END
 	MOV	EDX, [EBP + port]
 	MOV	ESI, [EBP + bufAdr]
 	MOV	ECX, [EBP + len]
 	CLD
 	REP	OUTSW
-	POP	ECX
+	#IF COOP THEN
+		MOV	ECX, ESI
+	#END
 #ELSIF AMD64 THEN
-	PUSH	RCX
 	MOV	RDX, [RBP + port]
 	MOV	RSI, [RBP + bufAdr]
 	MOV	RCX, [RBP + len]
 	CLD
 	REP	OUTSW
-	POP	RCX
 #ELSE
 	unimplemented
 #END

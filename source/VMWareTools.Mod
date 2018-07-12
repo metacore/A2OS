@@ -301,7 +301,7 @@ CODE
 	#IF COOP THEN
 		MOV RBX, RSI
 	#END
-##ELSE
+#ELSE
 	unimplemented
 #END
 END SetGUIOptions;

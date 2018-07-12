@@ -641,12 +641,7 @@ TYPE
 			CASE irInstruction.opcode OF
 			| IntermediateCode.add, IntermediateCode.sub, IntermediateCode.mul, IntermediateCode.abs, IntermediateCode.neg:
 				
-				IF (irInstruction.opcode = IntermediateCode.mul) & IsInteger(irInstruction.op1) & IsInteger(irInstruction.op2) & (IsComplex(irInstruction.op1) OR IsComplex(irInstruction.op2)) THEN
-					result := FALSE;
-				ELSE
-					result :=  ~IsFloat(irInstruction.op1) OR backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1);
-				END;
-				result := result OR (irInstruction.opcode = IntermediateCode.mul) & IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
+				result :=  ~IsFloat(irInstruction.op1) OR backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1);
 
 			| IntermediateCode.div:
 				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) 
@@ -2213,6 +2208,7 @@ TYPE
 		VAR
 			destination, left, right: ARRAY 2 OF Operand; inst: IntermediateCode.Instruction; 
 			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand;
+			temp: Operand;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(op3, IntermediateCode.uint32, exp);
@@ -2233,20 +2229,16 @@ TYPE
 				Emit3(opFMULD, destination[Low], left[Low], right[Low]);
 				WriteBack(irInstruction.op1, Low, destination[Low])
 			ELSIF IsInteger(irInstruction.op1) THEN
-				IF IsComplex(irInstruction.op1) THEN
-					ASSERT(irInstruction.op1.type.form = IntermediateCode.SignedInteger);
-					HALT(200);
-					(* TODO: fix signed 64 bit integer multiplication:
+				IF IsComplex(irInstruction.op1) THEN					
 					PrepareDoubleSourceOp(irInstruction, Low, destination[Low], left[Low], right[Low]);
 					PrepareDoubleSourceOp(irInstruction, High, destination[High], left[High], right[High]);
-
-					Emit4(opSMULL, destination[Low], destination[High], left[Low], right[Low]); (* signed long multiplication *)
-					Emit3(opMLA, destination[High], left[Low], right[High]); (* multiply and accumulate *)
-					Emit3(opMLA, destination[High], left[High], right[Low]);
-
+					temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
+					Emit3(opMUL, temp, left[Low], right[High]); 
+					Emit4(opMLA, temp, left[High], right[Low], temp);
+					Emit4(opUMULL, destination[Low], destination[High], left[Low], right[Low]); (* signed long multiplication *)
+					Emit3(opADD, destination[High], destination[High],temp);
 					WriteBack(irInstruction.op1, Low, destination[Low]);
 					WriteBack(irInstruction.op1, High, destination[High]);
-					*)
 				ELSE
 					(* signed or unsigned integer multiplication: *)
 					PrepareDoubleSourceOp(irInstruction, Low, destination[Low], left[Low], right[Low]);
@@ -2486,7 +2478,9 @@ TYPE
 					ELSIF irInstruction.op1.type.sizeInBits = 16 THEN
 						(* simple 16 bit rotation: *)
 						ZeroExtendOperand(source[Low], 16);
-						IF IsSameRegister(destination[Low], source[Low]) THEN temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)) ELSE temp := destination[Low] END;
+						IF IsSameRegister(destination[Low], source[Low]) THEN 
+							temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)) ELSE temp := destination[Low] 
+						END;
 						Emit2(opMOV, temp, InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftROR, shiftAmountRegister.register, shiftAmountImmediate));
 						Emit3(opORR, destination[Low], temp, InstructionSet.NewRegister(temp.register, InstructionSet.shiftLSR, None, 16))
 					ELSIF irInstruction.op1.type.sizeInBits = 32 THEN

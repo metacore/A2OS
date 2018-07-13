@@ -630,6 +630,10 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		#USB <-> RS232 FTDI driver
 		UsbFTDI.Mod
 	}
+	
+	NATIVE & ARM {
+		ARM.UsbMouse.Mod
+	}
 
 	BIOS & I386 { I386.UsbKeyboard.Mod }
 	BIOS & AMD64 { AMD64.UsbKeyboard.Mod }
@@ -671,6 +675,13 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	BIOS {
 		# Floppy disk driver
 		BIOS.Diskettes.Mod
+	}
+	
+	ZYNQ & ~COOP {
+		Zynq.SdEnvironment.Mod
+		Sd.Mod
+		SdDisks.Mod
+		Zynq.SdControllers.Mod
 	}
 END
 
@@ -842,9 +853,17 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# Animation codecs
 	AnimationCodec.Mod
-
+	
+	NATIVE & ~ARM { # USB info tools & documentation
+		UsbInfo.Mod
+	}
+	
+	NATIVE & ARM {
+		ARM.UsbInfo.Mod
+	}
+	
 	NATIVE { # USB info tools & documentation
-		UsbInfo.Mod UsbSkeleton.Mod UsbTools.Mod Usb.Text
+		UsbSkeleton.Mod UsbTools.Mod Usb.Text
 	}
 
 	# Partitions Framework

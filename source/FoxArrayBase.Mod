@@ -868,7 +868,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpLZ;
 	
 (** apply unary operator to array:  array -> array *)
-	PROCEDURE ApplyUnaryAAOp(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE;
+	PROCEDURE ApplyUnaryAAOp*(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE;
 														Loop: UnaryAALoop );
 	VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 		origdest: SIZE;  modes: SET;
@@ -920,7 +920,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyUnaryAAOp;
 
 (** apply unary operator to array:  array -> scalar *)
-	PROCEDURE ApplyUnaryASOp( dest: ADDRESS; CONST left: UnsafeArrayT; Loop: UnaryASLoop );
+	PROCEDURE ApplyUnaryASOp*( dest: ADDRESS; CONST left: UnsafeArrayT; Loop: UnaryASLoop );
 	VAR loopd, looplen, loopli: SIZE;  glen: SIZE;
 	VAR dim: SIZE;
 
@@ -986,7 +986,7 @@ Sufficient (but not necessary) conditions:
 (** apply binary operator : array x array -> array *)
 
 
-	PROCEDURE ApplyBinaryAAAOp( VAR dest: UnsafeArrayT; CONST left, right: UnsafeArrayT; elementSize: SIZE;
+	PROCEDURE ApplyBinaryAAAOp*( VAR dest: UnsafeArrayT; CONST left, right: UnsafeArrayT; elementSize: SIZE;
 														    Loop: BinaryAAALoop );
 	VAR loopd, looplen, loopli, loopri, loopdi: SIZE;  p: ANY;  glen: SIZE;
 		origdest: SIZE;  modes: SET;  dim: SIZE;
@@ -1041,7 +1041,7 @@ Sufficient (but not necessary) conditions:
 
 (** apply binary operator: array x scalar -> array *)
 
-	PROCEDURE ApplyBinaryASAOp( VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; right: ADDRESS;
+	PROCEDURE ApplyBinaryASAOp*( VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; right: ADDRESS;
 														   elementSize: SIZE;
 														   Loop: BinaryASALoop );
 	VAR loopd, looplen, loopli, loopdi: SIZE;  glen: SIZE;
@@ -1097,7 +1097,7 @@ Sufficient (but not necessary) conditions:
 
 (** apply binary operator: array x array -> scalar *)
 
-	PROCEDURE ApplyBinaryAASOp( dest: ADDRESS; CONST left, right: UnsafeArrayT;  Loop: BinaryAASLoop );
+	PROCEDURE ApplyBinaryAASOp*( dest: ADDRESS; CONST left, right: UnsafeArrayT;  Loop: BinaryAASLoop );
 	VAR loopd, looplen, loopli, loopri: SIZE;  glen: SIZE;
 		dim: SIZE;
 
@@ -1140,7 +1140,7 @@ Sufficient (but not necessary) conditions:
 
 (** special binary operator: array x array -> boolean *)
 
-	PROCEDURE ApplyBinaryAABOp( CONST left, right: UnsafeArrayT;
+	PROCEDURE ApplyBinaryAABOp*( CONST left, right: UnsafeArrayT;
 														    Loop: BinaryAABLoop; geometryMismatchDefault: BOOLEAN ): BOOLEAN;
 	VAR loopd, looplen, loopli, loopri: SIZE; dim: SIZE;
 
@@ -8567,7 +8567,7 @@ TYPE
 		PutPtr( dest, p );
 	END AllocateVector;
 
-	PROCEDURE ApplyMatMulLoop( dest, left, right: ADDRESS;  Size: SIZE;
+	PROCEDURE ApplyMatMulLoop*( dest, left, right: ADDRESS;  Size: SIZE;
 														 loop: BinaryAASLoop;
 	fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr: ADDRESS; dadri, radri, rowsL, colsL, rowsR, colsR, incL, incR, incD, strideR, strideL, strideD, colsRi: SIZE;

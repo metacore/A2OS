@@ -164,6 +164,8 @@ BUILDS
 		INCLUDE "ZYNQ NATIVE ARM"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=ARMA2 --useFPU32 --useFPU64 --traceModule=Trace --noInitLocals"
+		EXTENSION "Gof"
+		SYMBOLEXTENSION "Sym"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -171,6 +173,8 @@ BUILDS
 		INCLUDE "ZYNQ NATIVE ARM"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=ARMA2 --useFPU32 --useFPU64 --traceModule=Trace"
+		EXTENSION "Gof"
+		SYMBOLEXTENSION "Sym"
 		EXCLUDEPACKAGES "EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -677,6 +681,14 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		BIOS.Diskettes.Mod
 	}
 	
+	# Zynq PS UART driver
+	ZYNQ & ~COOP {
+		Zynq.PsUartInterrupts.Mod
+		Zynq.PsUart.Mod
+		Zynq.PsSerials.Mod
+	}
+	
+	# SD card driver
 	ZYNQ & ~COOP {
 		Zynq.SdEnvironment.Mod
 		Sd.Mod

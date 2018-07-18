@@ -934,13 +934,31 @@ TYPE
 					out.Int(nofFilesAdded, 0); out.String(" files added."); out.Ln; out.Update;
 				END;
 			END GenerateZipFile;
+			
+			PROCEDURE PackageIsExcludedFromZip(package: Package): BOOLEAN;
+			VAR k: SIZE;
+			BEGIN
+				IF PackageIsExcluded(package) THEN
+					RETURN TRUE;
+				END;
+				IF onlyPackages # NIL THEN
+					k := 0;
+					WHILE (k < LEN(onlyPackages)) & (package.name # onlyPackages[k]^) DO
+						INC(k);
+					END;
+					IF k = LEN(onlyPackages) THEN
+						RETURN TRUE;
+					END;
+				END;
+				RETURN FALSE;
+			END PackageIsExcludedFromZip;
 
 		BEGIN
 			packageArray := packages.GetAll();
 			IF (packageArray # NIL) THEN
 				DeleteOldZipFiles(packageArray);
 				FOR i := 0 TO LEN(packageArray)-1 DO
-					IF ~PackageIsExcluded(packageArray[i]) THEN
+					IF ~PackageIsExcludedFromZip(packageArray[i]) THEN
 						GenerateZipFile(packageArray[i], TRUE, res);
 						IF (res # Zip.Ok) THEN err := TRUE; RETURN END;
 						GenerateZipFile(packageArray[i], FALSE, res);

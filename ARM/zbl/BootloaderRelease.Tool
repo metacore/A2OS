@@ -76,7 +76,7 @@ PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION 
 	ARM.FPE64.Mod
 	ARM.Builtins.Mod
 	MINOS:/Trace.Mos
-	ZYNQ:/Zynq.PsUartMin.Mod
+	Zynq.PsUartMin.Mod
 	ZBL:Zynq.PsTraceDevice.Mos
 	MINOS:/HAL/zynq/Zynq.Caches.Mos
 	MINOS:/HAL/zynq/Zynq.Memory.Mos
@@ -94,7 +94,7 @@ PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION 
 	ZBL:/Modules.Mos
 
 	MINOS:/HAL/zynq/Zynq.SdEnvironment.Mos
-	ZYNQ:/Sd.Mod
+	Sd.Mod
 	ZBL:/Disks.Mos
 
 	MINOS:SdDisks.Mos
@@ -105,10 +105,10 @@ END
 
 PACKAGE Bootloader ARCHIVE "Bootloader.zip" SOURCE "BootloaderSrc.zip" DESCRIPTION "Bootloader Core"
 	ZBL:Zynq.PsUartInterrupts.Mos
-	ZYNQ:/Zynq.PsUart.Mod
+	Zynq.PsUart.Mod
 
 	MINOS:OFSStreams.Mos
-	ZYNQ:Zynq.PrivateWatchdog.Mod
+	Zynq.PrivateWatchdog.Mod
 
 	ZBL:Loader.Mos
 	ZBL:Programmer.Mos

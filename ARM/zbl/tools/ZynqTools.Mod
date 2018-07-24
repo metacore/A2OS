@@ -23,6 +23,7 @@ CONST
 	TCLMaskWrite = 0;
 	TCLMaskPoll = 1;
 	TCLMaskDelay = 3;
+	TCLMwrForce = 4;
 
 	TraceDeployCommands = TRUE;
 
@@ -52,7 +53,12 @@ TYPE
 			UNTIL (token # '{') & (token # '}') & (token # '{}');
 
 			LOOP
-				IF (token = 'mask_write') OR (token = 'mask_poll') OR (token = 'mask_delay') THEN
+				IF (token = 'mask_write') OR (token = 'mask_poll') OR (token = 'mask_delay') OR (token = 'mwr') THEN
+					IF token = 'mwr' THEN
+						ASSERT(reader.GetString(token));
+						ASSERT(token = '-force');
+						token := "mwr_force";
+					END;
 					writer.Ln;
 					writer.String("		")
 				ELSIF (token[0] = '0') & (token[1] = 'X') THEN
@@ -429,6 +435,10 @@ TYPE
 		output.Ln;
 		output.String("	mask_delay * = ");
 		output.Int(TCLMaskDelay, 0);
+		output.String(';');
+		output.Ln;
+		output.String("	mwr_force * = ");
+		output.Int(TCLMwrForce, 0);
 		output.String(';');
 		output.Ln;
 

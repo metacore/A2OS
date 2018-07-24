@@ -4,6 +4,7 @@ CONST
 	mask_write * = 0;
 	mask_poll * = 1;
 	mask_delay * = 3;
+	mwr_force* = 4;
 	ps7_pll_init_data_1_0 * = [
 		mask_write, LONGINT(0xF8000008), LONGINT(0x0000FFFF), LONGINT(0x0000DF0D), 
 		mask_write, LONGINT(0xF8000110), LONGINT(0x003FFFF0), LONGINT(0x000FA220), 

@@ -292,7 +292,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	# Low-level trace output
 	Trace.Mod
 
-	ARM & ~COOP { BootConfig.Mod }
+	ARM & ~COOP { ARM.BootConfig.Mod }
 
 	WIN { Windows.Kernel32.Mod }
 

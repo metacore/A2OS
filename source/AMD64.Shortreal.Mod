@@ -538,7 +538,8 @@ TYPE
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),NegateLoop);
 		RETURN RESULT;
 	END "-";
-
+	
+	(*!TODO: replace by SHORT operator after fixing a compiler bug which does not allow to compile the operator code *)
 	PROCEDURE Short*(CONST x: ARRAY [?] OF Real): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),ShortLoop);

@@ -1,4 +1,4 @@
-MODULE ZynqTools; (** AUTHOR "TimothÃ©e Martiel"; PURPOSE "Utility commands for Zynq platforms"; *)
+MODULE ZynqTools; (** AUTHOR "Timothée Martiel"; PURPOSE "Utility commands for Zynq platforms"; *)
 
 IMPORT SYSTEM, Commands, Streams, Files, Options, Strings;
 
@@ -493,25 +493,17 @@ TYPE
 		IF opt.GetString('board', board) THEN
 			board := "None"
 		END;
-		IF ~opt.GetFlag('encrypt') THEN
-			encrypt := FALSE
-		END;
-		IF ~opt.GetString('key', key) THEN
+		encrypt := opt.GetFlag('encrypt');
+		IF opt.GetString('key', key) THEN
 			IF encrypt THEN
 				context.error.String("Cannot encrypt image without key");
 				context.error.Ln;
 				RETURN
 			END
 		END;
-		IF ~opt.GetFlag('keyFromEfuse') THEN
-			keyFromEFuse := FALSE
-		END;
-		IF ~opt.GetFlag('keyFromRam') THEN
-			keyFromRam := FALSE
-		END;
-		IF ~opt.GetFlag('inPlace') THEN
-			inPlace := TRUE
-		END;
+		keyFromEFuse := opt.GetFlag('keyFromEfuse');
+		keyFromRam := opt.GetFlag('keyFromRam');
+		inPlace := opt.GetFlag('inPlace');
 		IF ~opt.GetInteger('userWord', userWord) THEN
 			userWord := 0
 		END;
@@ -831,14 +823,18 @@ TYPE
 
 		(* Length of image *)
 		ASSERT(imageSize <= 30000H);
-		MoveRawInt(imageSize, header, pos);
+		IF ~inPlace THEN
+			MoveRawInt(imageSize, header, pos);
+		ELSE
+			MoveRawInt(0, header, pos);
+		END;
 		INC(pos, 4);
 
-		(* Reserved *)
+		(* FSBL Load Address *)
 		MoveRawInt(0, header, pos);
 		INC(pos, 4);
 
-		(* Image Load Address *)
+		(* Start of Execution *)
 		IF inPlace THEN
 			ASSERT(imageLoadAdr < 32 * 1024 * 1024);
 		ELSIF encrypt THEN
@@ -851,10 +847,14 @@ TYPE
 		INC(pos, 4);
 
 		(* Total Image Length *)
-		MoveRawInt(imageSize, header, pos);
+		IF ~inPlace THEN
+			MoveRawInt(imageSize, header, pos);
+		ELSE
+			MoveRawInt(0, header, pos);
+		END;
 		INC(pos, 4);
 
-		(* Reserved *)
+		(* QSPI Config Word *)
 		MoveRawInt(0, header, pos);
 		INC(pos, 4);
 

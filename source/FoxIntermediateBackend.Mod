@@ -112,8 +112,8 @@ CONST
 		
 		WarningDynamicLoading = FALSE;
 		
-		SysvABI = {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention}; 
-		SysvABIorWINAPI = {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention, SyntaxTree.WinAPICallingConvention}; 
+		SysvABI = {SyntaxTree.CCallingConvention}; 
+		SysvABIorWINAPI = {SyntaxTree.CCallingConvention, SyntaxTree.WinAPICallingConvention}; 
 		
 	
 TYPE

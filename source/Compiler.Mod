@@ -17,13 +17,12 @@ CONST
 	FindPC* = 5;
 	Warnings*=7;
 	ForceModuleBodies*=8;
-	UseDarwinCCalls*=9;	(* use Darwin stack alignment for ext. C procedures *)	(*fld*)
-	SingleModule*=10;
-	Oberon07*=11;
-	ChangeCase*=12;
-	Cooperative*=13;
-	CellsAreObjects*=14;
-	UseLineNumbers*=15;
+	SingleModule*=9;
+	Oberon07*=10;
+	ChangeCase*=11;
+	Cooperative*=12;
+	CellsAreObjects*=13;
+	UseLineNumbers*=14;
 
 	DefaultBackend = "AMD";
 	DefaultFrontend = "Oberon";
@@ -177,7 +176,7 @@ TYPE
 				ELSE
 					backendName := "";
 				END;
-				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,UseDarwinCCalls IN flags,Cooperative IN flags,system,options.symbolFile,importCache,backendName);
+				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,Cooperative IN flags,system,options.symbolFile,importCache,backendName);
 				checker.replacements := options.replacements;
 				checker.Module(module);
 				IF checker.error THEN
@@ -300,7 +299,6 @@ TYPE
 		options.Add(0X, "symbolFile", Options.String);
 		options.Add(0X, "objectFile", Options.String);
 		options.Add("w","warnings", Options.Flag);
-		options.Add(0X,"darwinHost", Options.Flag);
 		options.Add(0X,"hardware", Options.String);
 		options.Add(0X,"documentation", Options.String);
 		options.Add("S","srcPath", Options.String);
@@ -416,7 +414,6 @@ TYPE
 			IF options.GetFlag("info") THEN INCL(compilerOptions.flags,Info) END;
 			IF options.GetString("findPC",compilerOptions.findPC) THEN INCL(compilerOptions.flags,FindPC) END;
 			IF options.GetFlag("warnings") THEN INCL(compilerOptions.flags, Warnings) END;
-			IF options.GetFlag("darwinHost") THEN INCL(compilerOptions.flags,UseDarwinCCalls) END;	(*fld*)
 			IF options.GetFlag("singleModule") THEN INCL(compilerOptions.flags,SingleModule) END;
 			IF options.GetFlag("oberon07") THEN INCL(compilerOptions.flags, Oberon07) END;
 			IF options.GetFlag("cooperative") THEN INCL(compilerOptions.flags, Cooperative) END;

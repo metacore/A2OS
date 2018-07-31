@@ -3335,7 +3335,7 @@ TYPE
 			ELSE
 				CASE callingConvention OF
 					|SyntaxTree.WinAPICallingConvention:  RETURN 4;
-					|SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention: RETURN 6; 
+					|SyntaxTree.CCallingConvention: RETURN 6; 
 				ELSE
 					RETURN 0;
 				END;
@@ -3378,7 +3378,7 @@ TYPE
 			IF type.form IN IntermediateCode.Integer THEN
 				CASE callingConvention OF
 					|SyntaxTree.WinAPICallingConvention:  index := winAPIRegisters[index];
-					|SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention: index := cRegisters[index]
+					|SyntaxTree.CCallingConvention: index := cRegisters[index]
 				END;
 				RETURN HardwareIntegerRegister(RAX + index, type.sizeInBits)
 			ELSIF type.form = IntermediateCode.Float THEN

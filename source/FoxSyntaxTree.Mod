@@ -17,13 +17,12 @@ CONST
 		flag numbers have no meaning and are not used for object files etc., i.e. flag renumbering is possible without effect
 	*)
 	(** calling conventions *)
-	OberonCallingConvention* =0;
-	CCallingConvention* =1;
-	WinAPICallingConvention* =2;
-	DarwinCCallingConvention* =3;
-	InterruptCallingConvention* = 4;
-	PlatformCallingConvention*= 5;
-	UndefinedCallingConvention*=6;
+	OberonCallingConvention* = 0;
+	CCallingConvention* = 1;
+	WinAPICallingConvention* = 2;
+	InterruptCallingConvention* = 3;
+	PlatformCallingConvention* = 4;
+	UndefinedCallingConvention* = 5;
 
 	(** Access Flags *)
 	InternalRead* = 0;			(** can read symbol in same module *)

@@ -76,7 +76,6 @@ TYPE
 	VAR
 		module: SyntaxTree.Module;
 		diagnostics: Diagnostics.Diagnostics;
-		useDarwinCCalls: BOOLEAN;
 		cooperative: BOOLEAN;
 		error-: BOOLEAN;
 		VerboseErrorMessage: BOOLEAN;
@@ -112,10 +111,9 @@ TYPE
 		cellsAreObjects: BOOLEAN;
 		variableAccessed: BOOLEAN;
 
-		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR);
+		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR);
 		BEGIN
 			SELF.diagnostics := diagnostics;
-			SELF.useDarwinCCalls := useDarwinCCalls;
 			SELF.cooperative := cooperative;
 			SELF.system := system;
 			SELF.symbolFileFormat := symbolFileFormat;
@@ -938,11 +936,7 @@ TYPE
 					procedureType.SetInterrupt(TRUE);
 					procedureType.SetCallingConvention(SyntaxTree.InterruptCallingConvention)
 				ELSIF HasFlag(modifiers,Global.NameC,position) THEN
-					IF useDarwinCCalls THEN	(*fld*)
-						procedureType.SetCallingConvention(SyntaxTree.DarwinCCallingConvention)
-					ELSE
-						procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
-					END
+					procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
 				ELSIF HasFlag(modifiers,Global.NamePlatformCC, position) THEN
 					IF system.platformCallingConvention = SyntaxTree.UndefinedCallingConvention THEN
 						Error(position, "undefined platform calling convention");
@@ -6947,13 +6941,10 @@ TYPE
 				IF Trace THEN D.Str("undefined"); D.Ln; END;
 				procedureType := procedure.type(SyntaxTree.ProcedureType);
 				modifiers := procedureType.modifiers;
-				IF HasFlag(modifiers, Global.NameWinAPI,position) THEN procedureType.SetCallingConvention(SyntaxTree.WinAPICallingConvention)
+				IF HasFlag(modifiers, Global.NameWinAPI,position) THEN
+					procedureType.SetCallingConvention(SyntaxTree.WinAPICallingConvention)
 				ELSIF HasFlag(modifiers, Global.NameC,position) THEN
-					IF useDarwinCCalls THEN	(*fld*)
-						procedureType.SetCallingConvention(SyntaxTree.DarwinCCallingConvention)
-					ELSE
-						procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
-					END
+					procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
 				END;
 				IF HasFlag(modifiers, Global.NameInterrupt, position) THEN
 					procedureType.SetInterrupt(TRUE);
@@ -10084,10 +10075,10 @@ TYPE
 	END EnterCase;
 
 	(** generate and return a new checker object, errors are entered into diagnostics **)
-	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,useDarwinCCalls,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR): Checker;
+	PROCEDURE NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR): Checker;
 	VAR checker: Checker;
 	BEGIN
-		NEW(checker, diagnostics,verboseErrorMessage,useDarwinCCalls,cooperative,system,symbolFileFormat,importCache,backend);
+		NEW(checker, diagnostics,verboseErrorMessage,cooperative,system,symbolFileFormat,importCache,backend);
 		RETURN checker
 	END NewChecker;
 

@@ -9,13 +9,12 @@ CONST
 	FindPC* = 5; 
 	Warnings* = 7; 
 	ForceModuleBodies* = 8; 
-	UseDarwinCCalls* = 9; 
-	SingleModule* = 10; 
-	Oberon07* = 11; 
-	ChangeCase* = 12; 
-	Cooperative* = 13; 
-	CellsAreObjects* = 14; 
-	UseLineNumbers* = 15; 
+	SingleModule* = 9; 
+	Oberon07* = 10; 
+	ChangeCase* = 11; 
+	Cooperative* = 12; 
+	CellsAreObjects* = 13; 
+	UseLineNumbers* = 14; 
 	DefaultBackend = \"AMD"\; 
 	DefaultFrontend = \"Oberon"\; 
 TYPE 

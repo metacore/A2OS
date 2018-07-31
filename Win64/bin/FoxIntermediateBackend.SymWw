@@ -86,8 +86,8 @@ CONST
 	ProtectModulesPointers = FALSE; 
 	CreateProcedureDescInfo = TRUE; 
 	WarningDynamicLoading = FALSE; 
-	SysvABI = {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention}; 
-	SysvABIorWINAPI = {SyntaxTree.CCallingConvention, SyntaxTree.DarwinCCallingConvention, SyntaxTree.WinAPICallingConvention}; 
+	SysvABI = {SyntaxTree.CCallingConvention}; 
+	SysvABIorWINAPI = {SyntaxTree.CCallingConvention, SyntaxTree.WinAPICallingConvention}; 
 TYPE 
 	Position = SyntaxTree.Position; 
 
@@ -315,7 +315,7 @@ TYPE
 		PROCEDURE ^ TraceExit(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Emit(instruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitTrap(position: Position; trapNo: LONGINT); 
-		PROCEDURE ^ EmitEnter(section: IntermediateCode.Section; position: Position; procedure: SyntaxTree.Procedure; callconv: LONGINT; varSize: LONGINT; numRegs: LONGINT); 
+		PROCEDURE ^ EmitEnter(section: IntermediateCode.Section; position: Position; procedure: SyntaxTree.Procedure; callconv: LONGINT; varSize: LONGINT); 
 		PROCEDURE ^ Enter(position: Position; callconv: LONGINT; varSize: LONGINT): IntermediateCode.Instruction; 
 		PROCEDURE ^ Leave(position: Position; callconv: LONGINT): IntermediateCode.Instruction; 
 		PROCEDURE ^ EmitLeave(section: IntermediateCode.Section; position: Basic.Position; procedure: SyntaxTree.Procedure; callconv: LONGINT); 
@@ -408,7 +408,7 @@ TYPE
 		PROCEDURE ^ IndexDesignator(x: SyntaxTree.IndexDesignator); 
 		PROCEDURE ^ VisitIndexDesignator*(x: SyntaxTree.IndexDesignator); 
 		PROCEDURE ^ PrepareTensorDescriptor(expression: SyntaxTree.IndexDesignator): SyntaxTree.Variable; 
-		PROCEDURE ^ PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; numberRegister: LONGINT); 
+		PROCEDURE ^ PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; register: WORD); 
 		PROCEDURE ^ VisitStatementDesignator*(x: SyntaxTree.StatementDesignator); 
 		PROCEDURE ^ InlineProcedureCall(x: SyntaxTree.ProcedureCallDesignator): BOOLEAN; 
 		PROCEDURE ^ VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator); 
@@ -614,8 +614,8 @@ TYPE
 		experiment: BOOLEAN; 
 
 		PROCEDURE ^  & InitIntermediateBackend*; 
-		PROCEDURE ^ NumberParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): SIZE; 
-		PROCEDURE ^ ParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; index: LONGINT): LONGINT; 
+		PROCEDURE ^ GetParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; VAR register: WORD): BOOLEAN; 
+		PROCEDURE ^ ResetParameterRegisters*; 
 		PROCEDURE ^ GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module; 
 		PROCEDURE ^ SupportedImmediate*(CONST op: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ ProcessSyntaxTreeModule*(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule; 

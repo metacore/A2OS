@@ -45,7 +45,6 @@ TYPE
 	VAR 
 		module: SyntaxTree.Module; 
 		diagnostics: Diagnostics.Diagnostics; 
-		useDarwinCCalls: BOOLEAN; 
 		cooperative: BOOLEAN; 
 		error-: BOOLEAN; 
 		VerboseErrorMessage: BOOLEAN; 
@@ -74,7 +73,7 @@ TYPE
 		cellsAreObjects: BOOLEAN; 
 		variableAccessed: BOOLEAN; 
 
-		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR); 
+		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR); 
 		PROCEDURE ^ Error(position: Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning(position: Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSS(position: Position; CONST msg, msg2: ARRAY OF CHAR); 
@@ -360,7 +359,7 @@ TYPE
 	PROCEDURE ^ FindSuperProcedure*(scope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure): SyntaxTree.Procedure; 
 	PROCEDURE ^ GetConstructor(record: SyntaxTree.RecordType): SyntaxTree.Procedure; 
 	PROCEDURE ^ EnterCase(VAR root: SyntaxTree.CaseConstant; min, max: Basic.Integer): BOOLEAN; 
-	PROCEDURE ^ NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, useDarwinCCalls, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR): Checker; 
+	PROCEDURE ^ NewChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR): Checker; 
 	PROCEDURE ^ NewWarnings*(diagnostics: Diagnostics.Diagnostics): Warnings; 
 	PROCEDURE ^ IsRangeType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsMathArrayType(type: SyntaxTree.Type): BOOLEAN; 

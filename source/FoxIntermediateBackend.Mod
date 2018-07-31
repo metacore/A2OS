@@ -5381,9 +5381,24 @@ TYPE
 				ELSE
 					ASSERT((parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter));
 					Evaluate(expression, operand);
-					Pass((operand.extra)); (* step *)
-					Pass((operand.tag)); (* last *)
-					Pass((operand.op)) (* first *)
+					IF (numberRegister > 0) OR (system.AlignmentOf(system.parameterAlignment,system.lenType) = system.AlignmentOf(system.variableAlignment,system.lenType)) THEN
+						Pass((operand.extra)); (* step *)
+						Pass((operand.tag)); (* last *)
+						Pass((operand.op)); (* first *)
+					ELSE
+						(* pass range as structure in order to comply with the variable alignment of its components *)
+						size := ToMemoryUnits(system,system.AlignedSizeOf(parameter.type));
+						Basic.Align(size,ToMemoryUnits(system,system.AlignmentOf(system.parameterAlignment,system.lenType)));
+						Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,size)));
+						tmp := sp;
+						IntermediateCode.MakeMemory(tmp,operand.op.type);
+						Emit(Mov(position,tmp,operand.op)); (* first *)
+						size := ToMemoryUnits(system,system.AlignedSizeOf(system.lenType));
+						IntermediateCode.AddOffset(tmp,size);
+						Emit(Mov(position,tmp,operand.tag)); (* last *)
+						IntermediateCode.AddOffset(tmp,size);
+						Emit(Mov(position,tmp,operand.extra)); (* step *)
+					END;
 				END
 			ELSIF parameter.type.resolved IS SyntaxTree.ComplexType THEN
 				IF parameter.kind = SyntaxTree.VarParameter THEN
@@ -5397,13 +5412,14 @@ TYPE
 						Pass((operand.tag)); (* imaginary part *)
 						Pass((operand.op)) (* real part *)
 					ELSE
-						(* pass complex as a whole in order to comply with the variable alignment of its components *)
-						size := ToMemoryUnits(system,system.AlignmentOf(system.parameterAlignment,parameter.type));
+						(* pass complex as structure in order to comply with the variable alignment of its components *)
+						size := ToMemoryUnits(system,system.AlignedSizeOf(parameter.type));
+						Basic.Align(size,ToMemoryUnits(system,system.AlignmentOf(system.parameterAlignment,componentType)));
 						Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,size)));
 						tmp := sp;
 						IntermediateCode.MakeMemory(tmp,operand.op.type);
 						Emit(Mov(position,tmp,operand.op)); (* real part *)
-						size := ToMemoryUnits(system,system.AlignmentOf(system.variableAlignment,componentType));
+						size := ToMemoryUnits(system,system.AlignedSizeOf(componentType));
 						IntermediateCode.AddOffset(tmp,size);
 						Emit(Mov(position,tmp,operand.tag)); (* imaginary part *)
 					END

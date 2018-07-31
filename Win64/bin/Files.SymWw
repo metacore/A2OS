@@ -93,6 +93,7 @@ TYPE
 		PROCEDURE ^ AllocBlock*(hint: Address; VAR adr: Address); 
 		PROCEDURE ^ FreeBlock*(adr: Address); 
 		PROCEDURE ^ MarkBlock*(adr: Address); 
+		PROCEDURE ^ MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize); 
 		PROCEDURE ^ Marked*(adr: Address): BOOLEAN; 
 		PROCEDURE ^ Available*(): LONGINT; 
 		PROCEDURE ^ GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 

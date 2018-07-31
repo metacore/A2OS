@@ -1,5 +1,5 @@
 MODULE StdIO;
-	IMPORT S := SYSTEM, Modules, Commands, Streams, Pipes, Unix;
+	IMPORT SYSTEM, Modules, Commands, Streams, Pipes, Unix;
 CONST 
 	AddrSize = SIZEOF(ADDRESS); 
 TYPE 
@@ -9,6 +9,7 @@ VAR
 	stdInDecoupler: Pipes.ReadDecoupler; 
 
 	PROCEDURE ^ Args(): String; 
+	PROCEDURE ^ Read(buffer: ADDRESS; size: SIZE): SIZE; 
 	PROCEDURE ^ ReceiveStdin(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
 	PROCEDURE ^ SendStdout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ SendErrout(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; prop: BOOLEAN; VAR res: WORD); 

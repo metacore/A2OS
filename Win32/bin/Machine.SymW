@@ -75,48 +75,95 @@ VAR
 	hin, hout: Kernel32.HANDLE; 
 	lock-: ARRAY MaxLocks OF CHAR; 
 	cs: ARRAY MaxLocks OF Kernel32.CriticalSection; 
-	trace: ARRAY 2 OF CHAR; 
 	defaultConfigFile, userConfigFile, traceName: ARRAY Kernel32.MaxPath OF CHAR; 
 	gcThreshold-: SIZE; 
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 
 	PROCEDURE ^ StrToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE {FingerPrint(109449456)}  - Inc*(VAR x: LONGINT);
-	CODE {SYSTEM.i386}
+	PROCEDURE {FingerPrint(753519207)}  - AtomicInc*(VAR x: LONGINT);
+	CODE
+
 		POP	EAX
 		LOCK
 		INC	DWORD[EAX]
+
 	
-	END Inc; 
-	PROCEDURE ^ Excl*(VAR s: SET; bit: LONGINT); 
-	PROCEDURE {FingerPrint(-2093825980)}  - SpinHint*;
-	CODE {SYSTEM.i386}
-		XOR	ECX, ECX	;  just in case some processor interprets REP this way
-		REP	NOP	;  PAUSE instruction (* NOP on pre-P4 processors, Spin Loop Hint on P4 and after *)
+	END AtomicInc; 
+	PROCEDURE {FingerPrint(741911151)}  - AtomicDec*(VAR x: LONGINT);
+	CODE
+
+		POP	EAX
+		LOCK
+		DEC	DWORD[EAX]
+
+	
+	END AtomicDec; 
+	PROCEDURE ^ AtomicExcl*(VAR s: SET; bit: LONGINT); 
+	PROCEDURE {FingerPrint(806537763)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+	CODE
+
+		POP	EBX
+		POP	EAX
+		LOCK
+		ADD	DWORD[EAX], EBX
+
+	
+	END AtomicAdd; 
+	PROCEDURE {FingerPrint(-1667119161)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
+	CODE
+
+		POP	EBX
+		MOV	AL, 1
+		XCHG	[EBX], AL
+
+	
+	END AtomicTestSet; 
+	PROCEDURE {FingerPrint(-618502421)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	CODE
+
+		POP EBX		; new
+		POP EAX		; old
+		POP ECX		; address of x
+		DB 0F0X, 00FX, 0B1X, 019X	; LOCK CMPXCHG [ECX], EBX; atomicly compare x with old and set it to new if equal
+
+
+	
+	END AtomicCAS; 
+	PROCEDURE {FingerPrint(-414159379)}  - SpinHint*;
+	CODE
+		PAUSE
 	
 	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
 	PROCEDURE {FingerPrint(-936660625)}  - CurrentBP*(): ADDRESS;
-	CODE {SYSTEM.i386}
-	MOV EAX, EBP
+	CODE
 
+		MOV EAX, EBP
+
+	
 	END CurrentBP; 
 	PROCEDURE {FingerPrint(-2111997521)}  - SetBP*(bp: ADDRESS);
-	CODE {SYSTEM.i386}
-	POP EBP
+	CODE
 
+		POP EBP
+
+	
 	END SetBP; 
 	PROCEDURE {FingerPrint(702750756)}  - CurrentSP*(): ADDRESS;
-	CODE {SYSTEM.i386}
-	MOV EAX, ESP
+	CODE
 
+		MOV EAX, ESP
+
+	
 	END CurrentSP; 
 	PROCEDURE {FingerPrint(-1826784850)}  - SetSP*(sp: ADDRESS);
-	CODE {SYSTEM.i386}
-	POP ESP
+	CODE {SYSTEM.AMD64}
 
+		POP ESP
+
+	
 	END SetSP; 
-	PROCEDURE ^ Fill32*(destAdr, size, filler: LONGINT); 
+	PROCEDURE ^ Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
 	PROCEDURE {FingerPrint(1201501690)}  - SetFCR(s: SET);
 	CODE
 	END SetFCR; 
@@ -143,8 +190,8 @@ VAR
 	PROCEDURE ^ ReadCommandLine(VAR commandLine: ARRAY OF CHAR); 
 	PROCEDURE ^ ParseLine(VAR c: ARRAY OF CHAR; VAR iniFile: ARRAY OF CHAR); 
 	PROCEDURE ^ TraceChar(c: CHAR); 
-	PROCEDURE ^ SetTraceFile(VAR filename: ARRAY OF CHAR); 
-	PROCEDURE ^ SetTraceConsole; 
+	PROCEDURE ^ SetTraceFile*; 
+	PROCEDURE ^ SetTraceConsole*; 
 	PROCEDURE ^ SetupTraceName(VAR traceName: ARRAY OF CHAR); 
 	PROCEDURE ^ RemoveTraceFile; 
 	PROCEDURE ^ ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR); 
@@ -167,85 +214,8 @@ VAR
 	PROCEDURE ^ SetMemoryBlockEndAddress*(memBlock: MemoryBlock; endBlockAdr: ADDRESS); 
 	PROCEDURE ^ FreeMemBlock*(memBlock: MemoryBlock); 
 	PROCEDURE ^ PhysicalAdr*(adr: ADDRESS; size: SIZE): ADDRESS; 
-	PROCEDURE {FingerPrint(753519207)}  - AtomicInc*(VAR x: LONGINT);
-	CODE {SYSTEM.i386}
-		POP	EAX
-		LOCK
-		INC	DWORD[EAX]
-	
-	END AtomicInc; 
-	PROCEDURE {FingerPrint(741911151)}  - AtomicDec*(VAR x: LONGINT);
-	CODE {SYSTEM.i386}
-		POP	EAX
-		LOCK
-		DEC	DWORD[EAX]
-	
-	END AtomicDec; 
-	PROCEDURE {FingerPrint(806537763)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
-	CODE {SYSTEM.i386}
-		POP	EBX
-		POP	EAX
-		LOCK
-		ADD	DWORD[EAX], EBX
-	
-	END AtomicAdd; 
-	PROCEDURE {FingerPrint(-1667119161)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
-	CODE {SYSTEM.i386}
-		POP	EBX
-		MOV	AL, 1
-		XCHG	[EBX], AL
-	
-	END AtomicTestSet; 
-	PROCEDURE {FingerPrint(-618502421)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
-	CODE {SYSTEM.i386}
-		POP EBX		; new
-		POP EAX		; old
-		POP ECX		; address of x
-		DB 0F0X, 00FX, 0B1X, 019X	; LOCK CMPXCHG [ECX], EBX; atomicly compare x with old and set it to new if equal
-	
-	END AtomicCAS; 
 	PROCEDURE ^ NumberOfProcessors*(): LONGINT; 
 	PROCEDURE ^ ChangeByteOrder*(n: LONGINT): LONGINT; 
-	PROCEDURE ^ TraceColor(c: SHORTINT); 
-	PROCEDURE ^ LogChar(c: CHAR); 
-	PROCEDURE {FingerPrint(1709791086)}  - GetEAX*(): LONGINT;
-	CODE{SYSTEM.i386}
-
-	END GetEAX; 
-	PROCEDURE {FingerPrint(1440686669)}  - GetECX*(): LONGINT;
-	CODE{SYSTEM.i386}
-	MOV EAX,ECX
-
-	END GetECX; 
-	PROCEDURE {FingerPrint(1286422002)}  - SetEAX*(n: LONGINT);
-	CODE{SYSTEM.i386}	POP EAX
-
-	END SetEAX; 
-	PROCEDURE {FingerPrint(1336753649)}  - SetEBX*(n: LONGINT);
-	CODE{SYSTEM.i386}
-	POP EBX
-
-	END SetEBX; 
-	PROCEDURE {FingerPrint(1319976435)}  - SetECX*(n: LONGINT);
-	CODE{SYSTEM.i386}
-	POP ECX
-
-	END SetECX; 
-	PROCEDURE {FingerPrint(1236090352)}  - SetEDX*(n: LONGINT);
-	CODE{SYSTEM.i386}
-	POP EDX
-
-	END SetEDX; 
-	PROCEDURE {FingerPrint(1586445812)}  - SetESI*(n: LONGINT);
-	CODE{SYSTEM.i386}
-	POP ESI
-
-	END SetESI; 
-	PROCEDURE {FingerPrint(1234124277)}  - SetEDI*(n: LONGINT);
-	CODE{SYSTEM.i386}
-	POP EDI
-
-	END SetEDI; 
 	PROCEDURE ^ Portin8*(port: LONGINT; VAR val: CHAR); 
 	PROCEDURE ^ Portin16*(port: LONGINT; VAR val: INTEGER); 
 	PROCEDURE ^ Portin32*(port: LONGINT; VAR val: LONGINT); 

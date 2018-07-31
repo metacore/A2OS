@@ -38,6 +38,30 @@ VAR
 	PROCEDURE {FingerPrint(-2037877908)}  - MOVDQA5;
 	CODE
 	END MOVDQA5; 
+	PROCEDURE {FingerPrint(-674504944)}  - GetRA(): SIZE;
+	CODE
+	END GetRA; 
+	PROCEDURE {FingerPrint(-137634032)}  - GetRC(): SIZE;
+	CODE
+	END GetRC; 
+	PROCEDURE {FingerPrint(-182157966)}  - SetRA(n: SIZE);
+	CODE
+	END SetRA; 
+	PROCEDURE {FingerPrint(-182161038)}  - SetRB(n: SIZE);
+	CODE
+	END SetRB; 
+	PROCEDURE {FingerPrint(-182160014)}  - SetRC(n: SIZE);
+	CODE
+	END SetRC; 
+	PROCEDURE {FingerPrint(-182163086)}  - SetRD(n: SIZE);
+	CODE
+	END SetRD; 
+	PROCEDURE {FingerPrint(1404899578)}  - SetRSI(n: SIZE);
+	CODE
+	END SetRSI; 
+	PROCEDURE {FingerPrint(-913801738)}  - SetRDI(n: SIZE);
+	CODE
+	END SetRDI; 
 	PROCEDURE ^ TransformSSE2*(src, dst: LONGINT); 
 	PROCEDURE {FingerPrint(-653380500)}  - DCT8INVROWSSE2;
 	CODE

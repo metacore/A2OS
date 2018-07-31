@@ -180,23 +180,23 @@ CONST
 	PARODD* = {9}; 
 	HUPCL* = {10}; 
 	CLOCAL* = {11}; 
-	FdSetLen* = 16; 
+	FdSetLen* = 32; 
 TYPE 
 	Thread_t* = ADDRESS; 
 
 	Mutex_t* = ADDRESS; 
 
-	MutexType = ARRAY 5 OF ADDRESS; 
+	Condition_t* = ADDRESS; 
+
+	MutexType = ARRAY 10 OF WORD; 
 
 	MutexAttributeType = ARRAY 1 OF WORD; 
 
-	Condition_t* = ADDRESS; 
-
-	ConditionType = ARRAY 6 OF ADDRESS; 
+	ConditionType = ARRAY 12 OF WORD; 
 
 	Key_t* = ADDRESS; 
 
-	Sigset_t = ARRAY 16 OF ADDRESS; 
+	Sigset_t = ARRAY 32 OF WORD; 
 
 	SignalTrap = PROCEDURE (sig: LONGINT; mc: Mcontext); 
 
@@ -224,17 +224,17 @@ TYPE
 
 	dev_t* = HUGEINT; 
 
-	ino_t* = HUGEINT; 
+	ino_t* = LONGWORD; 
 
-	nlink_t* = HUGEINT; 
+	nlink_t* = LONGWORD; 
 
-	mode_t* = LONGINT; 
+	mode_t* = WORD; 
 
-	off_t* = HUGEINT; 
+	off_t* = LONGWORD; 
 
-	blksize_t* = HUGEINT; 
+	blksize_t* = LONGWORD; 
 
-	blkcnt_t* = HUGEINT; 
+	blkcnt_t* = LONGWORD; 
 
 	uid_t* = LONGINT; 
 
@@ -245,19 +245,19 @@ TYPE
 	Status* = RECORD 
 		dev-: dev_t; 
 		ino-: ino_t; 
-		nlink-: LONGWORD; 
-		mode-: WORD; 
+		nlink-: nlink_t; 
+		mode-: mode_t; 
 		uid-: WORD; 
 		gid-: WORD; 
-		pad0-: WORD; 
+		pad1: WORD; 
 		rdev-: dev_t; 
-		size-: LONGWORD; 
-		blksize-: LONGWORD; 
-		blocks-: LONGWORD; 
+		size-: SIZE; 
+		blksize-: blksize_t; 
+		blocks-: blkcnt_t; 
 		atime-: Timeval; 
 		mtime-: Timeval; 
 		ctime-: Timeval; 
-		reserved-: ARRAY 3 OF LONGWORD; 
+		reserved: ARRAY 3 OF LONGWORD; 
 	END; 
 
 	tvPtr* = POINTER {UNSAFE, UNTRACED} TO Timeval; 
@@ -291,7 +291,7 @@ TYPE
 		tv_nsec*: LONGWORD; 
 	END; 
 
-	FdSet* = ARRAY FdSetLen OF SET; 
+	FdSet* = ARRAY FdSetLen OF SET32; 
 
 	Dirent* = POINTER {UNSAFE, UNTRACED} TO RECORD 
 		ino-: ino_t; 
@@ -342,11 +342,6 @@ TYPE
 		trapno-: HUGEINT; 
 		oldmask: HUGEINT; 
 		cr2: HUGEINT; 
-	END; 
-
-	FPcontext* = POINTER {UNSAFE, UNTRACED} TO FPcontextDesc; 
-
-	FPcontextDesc* = RECORD 
 	END; 
 
 	PThreadAttr = RECORD 
@@ -462,8 +457,8 @@ VAR
 	fxstat-: PROCEDURE {C}(ver: LONGINT; fd: LONGINT; VAR buf: Status):LONGINT; 
 	getpid-: PROCEDURE {C}():LONGINT; 
 	getuid-: PROCEDURE {C}():LONGINT; 
-	malloc-: PROCEDURE {C}(size: SIZE):ADDRESS; 
 	posix_memalign-: PROCEDURE {C}(VAR p: ADDRESS; alignment, size: SIZE):LONGINT; 
+	malloc-: PROCEDURE {C}(size: SIZE):ADDRESS; 
 	free-: PROCEDURE {C}(p: ADDRESS); 
 	mprotect-: PROCEDURE {C}(p: ADDRESS; len: SIZE; prot: LONGINT):LONGINT; 
 	alarm-: PROCEDURE {C}(ms: LONGINT):LONGINT; 

@@ -18,6 +18,7 @@ VAR
 	PROCEDURE ^ IntSuffix*(x: HUGEINT; w: SIZE; CONST suffix: ARRAY OF CHAR); 
 	PROCEDURE ^ Hex*(x: HUGEINT; w: SIZE); 
 	PROCEDURE ^ Address*(x: ADDRESS); 
+	PROCEDURE ^ Size*(x: SIZE); 
 	PROCEDURE ^ HIntHex*(x: HUGEINT; w: SIZE); 
 	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ StackFrames-(skip, count, size: SIZE); 

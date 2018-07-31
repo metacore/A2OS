@@ -338,6 +338,7 @@ TYPE
 		PROCEDURE ^ ReleaseUsedRegisters(VAR saved: RegisterEntry); 
 		PROCEDURE ^ ReleaseParameterRegisters; 
 		PROCEDURE ^ RestoreRegisters(CONST saved: RegisterEntry); 
+		PROCEDURE ^ RestoreRegisterUse(CONST saved: RegisterEntry); 
 		PROCEDURE ^ CheckRegistersFree; 
 		PROCEDURE ^ Reuse2(VAR result: IntermediateCode.Operand; src1, src2: IntermediateCode.Operand); 
 		PROCEDURE ^ Reuse2a(VAR result: IntermediateCode.Operand; src1, src2: IntermediateCode.Operand; VAR alternative: IntermediateCode.Operand); 

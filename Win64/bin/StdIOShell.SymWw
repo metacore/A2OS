@@ -9,7 +9,7 @@ TYPE
 		code: LONGINT; 
 
 		PROCEDURE ^ Wait; 
-	BEGIN{ACTIVE} 
+	BEGIN{ACTIVE, EXCLUSIVE} 
 	END Executor; 
 VAR 
 	execute: Executor; 

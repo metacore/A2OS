@@ -17,6 +17,7 @@ VAR
 	PROCEDURE ^ IntSuffix*(x: HUGEINT; w: WORD; CONST suffix: ARRAY OF CHAR); 
 	PROCEDURE ^ Hex*(x: HUGEINT; w: WORD); 
 	PROCEDURE ^ Address*(x: ADDRESS); 
+	PROCEDURE ^ Size*(x: SIZE); 
 	PROCEDURE ^ HIntHex*(x: HUGEINT; w: WORD); 
 	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE); 

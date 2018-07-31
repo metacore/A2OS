@@ -97,6 +97,7 @@ CONST
 	ThreadPriorityHighest* = 2; 
 	ThreadPriorityTimeCritical* = 15; 
 	ThreadPriorityErrorReturn* = MAX(LONGINT); 
+	WaitFailed* =  -1; 
 	WaitTimeout* = 258; 
 	SEMFailCriticalErrors* = 0; 
 	DuplicateCloseSource* = 0; 
@@ -210,7 +211,7 @@ TYPE
 		CS*, DS*, ES*, FS*, GS*, SS*: INTEGER; 
 		FLAGS*: DWORD; 
 		Dr0*, Dr1*, Dr2*, Dr3*, Dr6*, Dr7*: SIZE; 
-		RAX*, RCX*, RDX*, RBX*, SP*, BP*, RSI*, RDI*, R8*, R9*, R10*, R11*, R12*, R13*, R14*, R15*: ADDRESS; 
+		RA*, RC*, RD*, RB*, SP*, BP*, RSI*, RDI*, R8*, R9*, R10*, R11*, R12*, R13*, R14*, R15*: ADDRESS; 
 		PC*: ADDRESS; 
 		remainder: ARRAY 1024 OF CHAR; 
 	END; 
@@ -263,7 +264,7 @@ TYPE
 		ullAvailExtendedVirtual*: HUGEINT; 
 	END; 
 
-	ThreadProc* = PROCEDURE {WINAPI}(lpParameter: ANY):LONGINT; 
+	ThreadProc* = PROCEDURE {WINAPI}(lpParameter{UNTRACED} : ANY):LONGINT; 
 
 	ProcessInformation* = RECORD 
 		hProcess*, hThread*: HANDLE; 

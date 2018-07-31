@@ -57,10 +57,10 @@ CONST
 	EL2HLT* = 51; 
 	EDEADLK* = 35; 
 	ENOLCK* = 37; 
-	rdonly* = {}; 
-	rdwr* = {1}; 
-	creat* = {6}; 
-	trunc* = {9}; 
+	rdonly* = SET32({}); 
+	rdwr* = SET32({1}); 
+	creat* = SET32({6}); 
+	trunc* = SET32({9}); 
 	rwrwr* = 436; 
 	rwxrwxrwx* = 511; 
 	F_OK* = {}; 
@@ -113,10 +113,16 @@ CONST
 	SA_RESTART = 268435456; 
 	SA_NODEFER = 1073741824; 
 	SA_RESETHAND = 2147483648; 
+	CLOCK_MONOTONIC* = 1; 
+	CLOCK_MONOTONIC_RAW* = 4; 
+	CLOCK_PROCESS_CPUTIME_ID* = 2; 
+	CLOCK_REALTIME* = 0; 
+	CLOCK_THREAD_CPUTIME_ID* = 3; 
 	PTHREAD_CANCEL_ENABLE = 0; 
 	PTHREAD_CANCEL_DISABLE = 1; 
 	PTHREAD_CANCEL_ASYNCHRONOUS = 0; 
 	PTHREAD_CANCEL_DEFERRED = 1; 
+	PTHREAD_BARRIER_SERIAL_THREAD* =  -1; 
 	ThreadLow* = 1; 
 	ThreadNormal* = 20; 
 	ThreadHigh* = 99; 
@@ -180,17 +186,17 @@ TYPE
 
 	Mutex_t* = ADDRESS; 
 
-	MutexType = ARRAY 8 OF ADDRESS; 
+	Condition_t* = ADDRESS; 
+
+	MutexType = ARRAY 10 OF WORD; 
 
 	MutexAttributeType = ARRAY 1 OF WORD; 
-
-	Condition_t* = ADDRESS; 
 
 	ConditionType = ARRAY 12 OF WORD; 
 
 	Key_t* = ADDRESS; 
 
-	Sigset_t = ARRAY 32 OF ADDRESS; 
+	Sigset_t = ARRAY 32 OF WORD; 
 
 	SignalTrap = PROCEDURE (sig: LONGINT; mc: Mcontext); 
 
@@ -200,8 +206,17 @@ TYPE
 
 	argv_t* = ARRAY OF arg_t; 
 
+	Sem* = RECORD 
+		reserved1-: ARRAY 4 OF ADDRESS; 
+	END; 
+
+	Barrier* = RECORD 
+		reserved1-: ARRAY 3 OF ADDRESS; 
+		reserved2-: ARRAY 2 OF WORD; 
+	END; 
+
 	Termios* = RECORD 
-		iflags*, oflags*, cflags*, lflags*: SET; 
+		iflags*, oflags*, cflags*, lflags*: SET32; 
 		line*: CHAR; 
 		cc*: ARRAY 32 OF CHAR; 
 		ispeed-, ospeed-: LONGINT; 
@@ -209,17 +224,17 @@ TYPE
 
 	dev_t* = HUGEINT; 
 
-	ino_t* = LONGINT; 
+	ino_t* = LONGWORD; 
 
-	nlink_t* = LONGINT; 
+	nlink_t* = LONGWORD; 
 
-	mode_t* = LONGINT; 
+	mode_t* = WORD; 
 
-	off_t* = LONGINT; 
+	off_t* = LONGWORD; 
 
-	blksize_t* = LONGINT; 
+	blksize_t* = LONGWORD; 
 
-	blkcnt_t* = LONGINT; 
+	blkcnt_t* = LONGWORD; 
 
 	uid_t* = LONGINT; 
 
@@ -229,31 +244,31 @@ TYPE
 
 	Status* = RECORD 
 		dev-: dev_t; 
-		unused1-: LONGINT; 
+		pad1: WORD; 
 		ino-: ino_t; 
-		mode-: LONGINT; 
-		nlink-: LONGINT; 
+		mode-: mode_t; 
+		nlink-: nlink_t; 
 		uid-: LONGINT; 
 		gid-: LONGINT; 
 		rdev-: dev_t; 
-		unused2-: LONGINT; 
-		size-: LONGINT; 
-		blksize-: LONGINT; 
-		blocks-: LONGINT; 
+		pad2: WORD; 
+		size-: SIZE; 
+		blksize-: blksize_t; 
+		blocks-: blkcnt_t; 
 		atime-: Timeval; 
 		mtime-: Timeval; 
 		ctime-: Timeval; 
-		unused-: ARRAY 2 OF LONGINT; 
+		reserved: ARRAY 3 OF LONGWORD; 
 	END; 
 
-	tvPtr* = POINTER TO Timeval; 
+	tvPtr* = POINTER {UNSAFE, UNTRACED} TO Timeval; 
 
 	Timeval* = RECORD 
-		sec*: LONGINT; 
-		usec*: LONGINT; 
+		sec*: LONGWORD; 
+		usec*: LONGWORD; 
 	END; 
 
-	TmPtr* = POINTER TO Tm; 
+	TmPtr* = POINTER {UNSAFE, UNTRACED} TO Tm; 
 
 	Tm* = RECORD 
 		sec*, min*, hour*, mday*, mon*, year*, wday*, yday*, isdst*: LONGINT; 
@@ -272,9 +287,14 @@ TYPE
 		interval*, value*: Timeval; 
 	END; 
 
-	FdSet* = ARRAY FdSetLen OF SET; 
+	Timespec* = RECORD 
+		tv_sec*: LONGWORD; 
+		tv_nsec*: LONGWORD; 
+	END; 
 
-	Dirent* = POINTER TO RECORD 
+	FdSet* = ARRAY FdSetLen OF SET32; 
+
+	Dirent* = POINTER {UNSAFE, UNTRACED} TO RECORD 
 		ino-: ino_t; 
 		off-: off_t; 
 		reclen-: INTEGER; 
@@ -288,7 +308,7 @@ TYPE
 		size*: SIZE; 
 	END; 
 
-	Ucontext* = POINTER TO UcontextDesc; 
+	Ucontext* = POINTER {UNSAFE, UNTRACED} TO UcontextDesc; 
 
 	UcontextDesc* = RECORD 
 		flags-: SET; 
@@ -297,7 +317,7 @@ TYPE
 		mc-: McontextDesc; 
 	END; 
 
-	Mcontext* = POINTER TO McontextDesc; 
+	Mcontext* = POINTER {UNSAFE, UNTRACED} TO McontextDesc; 
 
 	McontextDesc* = RECORD 
 		r_gs-: ADDRESS; 
@@ -306,22 +326,22 @@ TYPE
 		r_ds-: ADDRESS; 
 		r_di-: ADDRESS; 
 		r_si-: ADDRESS; 
-		r_bp*: ADDRESS; 
-		r_sp_x-: ADDRESS; 
+		r_bp-: ADDRESS; 
+		r_sp_x: ADDRESS; 
 		r_bx-: ADDRESS; 
 		r_dx-: ADDRESS; 
 		r_cx-: ADDRESS; 
 		r_ax-: ADDRESS; 
-		r_trapno-: LONGINT; 
-		r_err-: LONGINT; 
-		r_pc*: ADDRESS; 
+		trapno-: LONGINT; 
+		err-: LONGINT; 
+		r_pc-: ADDRESS; 
 		r_cs-: ADDRESS; 
-		r_flags-: LONGINT; 
-		r_sp*: ADDRESS; 
+		flags-: LONGINT; 
+		r_sp-: ADDRESS; 
 		r_ss-: LONGINT; 
 		fpc-: ADDRESS; 
-		oldmask-: LONGINT; 
-		cr2-: LONGINT; 
+		oldmask: LONGINT; 
+		cr2: LONGINT; 
 	END; 
 
 	PThreadAttr = RECORD 
@@ -414,11 +434,11 @@ VAR
 	pipe-: PROCEDURE {C}(pipefd: ADDRESS):LONGINT; 
 	dup2-: PROCEDURE {C}(oldfd, newfd: LONGINT):LONGINT; 
 	dup-: PROCEDURE {C}(oldfd: LONGINT):LONGINT; 
-	read-: PROCEDURE {C}(fd: LONGINT; buf: ADDRESS; n: SIZE):LONGINT; 
-	write-: PROCEDURE {C}(fd: LONGINT; buf: ADDRESS; n: SIZE):LONGINT; 
-	open-: PROCEDURE {C}(name: ADDRESS; flags: SET; mode: mode_t):LONGINT; 
+	read-: PROCEDURE {C}(fd: LONGINT; buf: ADDRESS; n: SIZE):SIZE; 
+	write-: PROCEDURE {C}(fd: LONGINT; buf: ADDRESS; n: SIZE):SIZE; 
+	open-: PROCEDURE {C}(name: ADDRESS; flags: SET32; mode: mode_t):LONGINT; 
 	close-: PROCEDURE {C}(fd: LONGINT):LONGINT; 
-	lseek-: PROCEDURE {C}(fd: LONGINT; offset, origin: SIZE):LONGINT; 
+	lseek-: PROCEDURE {C}(fd: LONGINT; offset: off_t; origin: LONGINT):off_t; 
 	fsync-: PROCEDURE {C}(fd: LONGINT):LONGINT; 
 	ioctl-: PROCEDURE {C}(fd: LONGINT; request: LONGINT; arg: ADDRESS):LONGINT; 
 	unlink-: PROCEDURE {C}(name: ADDRESS):LONGINT; 
@@ -437,8 +457,8 @@ VAR
 	fxstat-: PROCEDURE {C}(ver: LONGINT; fd: LONGINT; VAR buf: Status):LONGINT; 
 	getpid-: PROCEDURE {C}():LONGINT; 
 	getuid-: PROCEDURE {C}():LONGINT; 
-	malloc-: PROCEDURE {C}(size: SIZE):ADDRESS; 
 	posix_memalign-: PROCEDURE {C}(VAR p: ADDRESS; alignment, size: SIZE):LONGINT; 
+	malloc-: PROCEDURE {C}(size: SIZE):ADDRESS; 
 	free-: PROCEDURE {C}(p: ADDRESS); 
 	mprotect-: PROCEDURE {C}(p: ADDRESS; len: SIZE; prot: LONGINT):LONGINT; 
 	alarm-: PROCEDURE {C}(ms: LONGINT):LONGINT; 

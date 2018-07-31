@@ -153,7 +153,7 @@ TYPE
 		PROCEDURE ^ MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket); 
 		PROCEDURE ^ MakeRegister(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand); 
 		PROCEDURE ^ SpecialMove(op, back: LONGINT; canStoreToMemory: BOOLEAN; VAR dest, src: Assembler.Operand; type: IntermediateCode.Type); 
-		PROCEDURE ^ AllocateStack(sizeInBytes: LONGINT); 
+		PROCEDURE ^ ModifyStackPointer(sizeInBytes: HUGEINT); 
 		PROCEDURE ^ IsFloat(CONST operand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsComplex(CONST operand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ Generate*(VAR instruction: IntermediateCode.Instruction); 

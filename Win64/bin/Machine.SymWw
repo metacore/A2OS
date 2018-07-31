@@ -81,69 +81,87 @@ VAR
 
 	PROCEDURE ^ StrToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
 	PROCEDURE {FingerPrint(2114384799)}  - AtomicInc*(VAR x: LONGINT);
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		POP RAX
 		LOCK
 		INC DWORD [RAX]
+
 	
 	END AtomicInc; 
 	PROCEDURE {FingerPrint(381088663)}  - AtomicDec*(VAR x: LONGINT);
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		POP RAX
 		LOCK
 		DEC DWORD [RAX]
+
 	
 	END AtomicDec; 
 	PROCEDURE ^ AtomicExcl*(VAR s: SET; bit: LONGINT); 
 	PROCEDURE {FingerPrint(59150593)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		POP EBX
 		POP RAX
 		LOCK
 		ADD DWORD [RAX], EBX
+
 	
 	END AtomicAdd; 
 	PROCEDURE {FingerPrint(423481940)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		POP RBX
 		MOV AL, 1
 		XCHG [RBX], AL
+
 	
 	END AtomicTestSet; 
 	PROCEDURE {FingerPrint(-31252743)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		POP EBX		; new
 		POP EAX		; old
 		POP RCX		; address of x
 		LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
+
 	
 	END AtomicCAS; 
+	PROCEDURE {FingerPrint(-414159379)}  - SpinHint*;
+	CODE
+		PAUSE
+	
+	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
 	PROCEDURE {FingerPrint(368510835)}  - CurrentBP*(): ADDRESS;
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		MOV RAX, RBP
+
 	
 	END CurrentBP; 
 	PROCEDURE {FingerPrint(247209244)}  - SetBP*(bp: ADDRESS);
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		POP RBP
+
 	
 	END SetBP; 
 	PROCEDURE {FingerPrint(702750756)}  - CurrentSP*(): ADDRESS;
-	CODE {SYSTEM.AMD64}
+	CODE
+
 		MOV RAX, RSP
+
 	
 	END CurrentSP; 
 	PROCEDURE {FingerPrint(-1900274411)}  - SetSP*(sp: ADDRESS);
 	CODE {SYSTEM.AMD64}
+
 		POP RSP
+
 	
 	END SetSP; 
-	PROCEDURE {FingerPrint(-414159379)}  - SpinHint*;
-	CODE {SYSTEM.AMD64}
-		PAUSE
-	
-	END SpinHint; 
 	PROCEDURE ^ Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
 	PROCEDURE {FingerPrint(1201501690)}  - SetFCR(s: SET);
 	CODE
@@ -169,6 +187,7 @@ VAR
 	PROCEDURE ^ InvalidateICacheRange*(adr: ADDRESS; len: LONGINT); 
 	PROCEDURE ^ SetupSSE2Ext; 
 	PROCEDURE ^ ReadCommandLine(VAR commandLine: ARRAY OF CHAR); 
+	PROCEDURE ^ ParseLine(VAR c: ARRAY OF CHAR; VAR iniFile: ARRAY OF CHAR); 
 	PROCEDURE ^ TraceChar(c: CHAR); 
 	PROCEDURE ^ SetTraceFile*; 
 	PROCEDURE ^ SetTraceConsole*; 
@@ -196,57 +215,6 @@ VAR
 	PROCEDURE ^ PhysicalAdr*(adr: ADDRESS; size: SIZE): ADDRESS; 
 	PROCEDURE ^ NumberOfProcessors*(): LONGINT; 
 	PROCEDURE ^ ChangeByteOrder*(n: LONGINT): LONGINT; 
-	PROCEDURE {FingerPrint(1709768814)}  - GetRAX*(): HUGEINT;
-	CODE{SYSTEM.AMD64}
-
-	END GetRAX; 
-	PROCEDURE {FingerPrint(264144407)}  - GetRCX*(): HUGEINT;
-	CODE{SYSTEM.AMD64}
-	MOV RAX,RCX
-
-	END GetRCX; 
-	PROCEDURE {FingerPrint(530351663)}  - GetRSI*(): HUGEINT;
-	CODE{SYSTEM.AMD64}
-	MOV RAX,RSI
-
-	END GetRSI; 
-	PROCEDURE {FingerPrint(144475687)}  - GetRDI*(): HUGEINT;
-	CODE{SYSTEM.AMD64}
-	MOV RAX,RDI
-
-	END GetRDI; 
-	PROCEDURE {FingerPrint(-791910259)}  - SetRAX*(n: HUGEINT);
-	CODE{SYSTEM.AMD64}	
-	NOP
-	POP RAX
-
-	END SetRAX; 
-	PROCEDURE {FingerPrint(-791910322)}  - SetRBX*(n: HUGEINT);
-	CODE{SYSTEM.AMD64}
-	NOP
-	POP RBX
-
-	END SetRBX; 
-	PROCEDURE {FingerPrint(1415460030)}  - SetRCX*(n: HUGEINT);
-	CODE{SYSTEM.AMD64}
-	POP RCX
-
-	END SetRCX; 
-	PROCEDURE {FingerPrint(-732023618)}  - SetRDX*(n: HUGEINT);
-	CODE{SYSTEM.AMD64}
-	POP RDX
-
-	END SetRDX; 
-	PROCEDURE {FingerPrint(1163801777)}  - SetRSI*(n: HUGEINT);
-	CODE{SYSTEM.AMD64}
-	POP RSI
-
-	END SetRSI; 
-	PROCEDURE {FingerPrint(-983681861)}  - SetRDI*(n: HUGEINT);
-	CODE{SYSTEM.AMD64}
-	POP RDI
-
-	END SetRDI; 
 	PROCEDURE ^ Portin8*(port: LONGINT; VAR val: CHAR); 
 	PROCEDURE ^ Portin16*(port: LONGINT; VAR val: INTEGER); 
 	PROCEDURE ^ Portin32*(port: LONGINT; VAR val: LONGINT); 

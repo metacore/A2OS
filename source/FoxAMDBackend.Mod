@@ -3234,6 +3234,8 @@ TYPE
 		forceFPU: BOOLEAN;
 		winAPIRegisters: ARRAY 4 OF LONGINT;
 		cRegisters: ARRAY 6 OF LONGINT;
+		intParameterIndex: WORD;
+		floatParameterIndex: WORD;
 
 		PROCEDURE &InitBackendAMD64;
 		BEGIN
@@ -3326,24 +3328,7 @@ TYPE
 			END;
 			RETURN system
 		END GetSystem;
-
-		(* return number of general purpose registery used as parameter register in calling convention *)
-		PROCEDURE NumberParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): SIZE;
-		BEGIN
-			IF bits = 32 THEN
-				RETURN 0;
-			ELSE
-				CASE callingConvention OF
-					|SyntaxTree.WinAPICallingConvention:  RETURN 4;
-					|SyntaxTree.CCallingConvention: RETURN 6; 
-				ELSE
-					RETURN 0;
-				END;
-			END
-		END NumberParameterRegisters;
-		
-		
-
+			
 		(* returns the following register (or part thereof)
 			0: regRAX; 
 			1: regRCX; 
@@ -3372,21 +3357,50 @@ TYPE
 			RETURN XMM0 + index;
 		END HardwareFloatRegister;
 		
-		PROCEDURE ParameterRegister*(callingConvention: SyntaxTree.CallingConvention;  type: IntermediateCode.Type; index: LONGINT): LONGINT;
-		VAR size: LONGINT; 
+		PROCEDURE ResetParameterRegisters*;
 		BEGIN
+			intParameterIndex := 0;
+			floatParameterIndex := 0; 
+		END ResetParameterRegisters;
+		
+		PROCEDURE GetParameterRegister*(callingConvention: SyntaxTree.CallingConvention;  type: IntermediateCode.Type; VAR register: WORD): BOOLEAN;
+		VAR index: WORD;
+		BEGIN
+			IF bits = 32 THEN register := -1; RETURN FALSE END;
+			
 			IF type.form IN IntermediateCode.Integer THEN
 				CASE callingConvention OF
-					|SyntaxTree.WinAPICallingConvention:  index := winAPIRegisters[index];
-					|SyntaxTree.CCallingConvention: index := cRegisters[index]
+					|SyntaxTree.WinAPICallingConvention:  
+						IF intParameterIndex >= 4 THEN register := -1; RETURN FALSE END;
+						index := winAPIRegisters[intParameterIndex];
+					|SyntaxTree.CCallingConvention: 
+						IF intParameterIndex >= 6 THEN register := -1; RETURN FALSE END;
+						index := cRegisters[intParameterIndex];
+				ELSE
+					register := -1; RETURN FALSE;
 				END;
-				RETURN HardwareIntegerRegister(RAX + index, type.sizeInBits)
+				INC (intParameterIndex);
+				register :=  HardwareIntegerRegister(RAX + index, type.sizeInBits);
+				RETURN TRUE;
 			ELSIF type.form = IntermediateCode.Float THEN
-				RETURN HardwareFloatRegister(index, type.sizeInBits)
+				CASE callingConvention OF
+					|SyntaxTree.WinAPICallingConvention:  
+						IF intParameterIndex >= 4 THEN register := -1; RETURN FALSE END;
+						index := intParameterIndex;
+						INC(intParameterIndex);
+					|SyntaxTree.CCallingConvention: 
+						IF floatParameterIndex >= 8 THEN register := -1; RETURN FALSE END;
+						index := floatParameterIndex;
+						INC(floatParameterIndex);
+				ELSE
+					register := -1; RETURN FALSE;
+				END;
+				register := HardwareFloatRegister(index, type.sizeInBits);
+				RETURN TRUE;
 			ELSE
 				HALT(100);
 			END;
-		END ParameterRegister;
+		END GetParameterRegister;
 
 		PROCEDURE SupportedInstruction*(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		BEGIN

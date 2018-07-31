@@ -591,7 +591,7 @@ TYPE
 			null,size,src,dest,fp,res: IntermediateCode.Operand;
 			callingConvention: LONGINT;
 			cellType: SyntaxTree.CellType;
-			registerNumber: LONGINT;
+			register: WORD;
 			registerParameters: SIZE;
 			registerClass: IntermediateCode.RegisterClass;
 			type: IntermediateCode.Type;
@@ -601,6 +601,7 @@ TYPE
 			parametersSize: LONGINT;
 			position: LONGINT;
 			variable: SyntaxTree.Variable;
+			nonParameterRegisters: WORD;
 
 			PROCEDURE Signature;
 			VAR parameter: SyntaxTree.Parameter; procedureType: SyntaxTree.ProcedureType; returnType : SyntaxTree.Type;
@@ -724,7 +725,7 @@ TYPE
 
 
 				IF implementationVisitor.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
-				registerNumber := 0;
+
 				IF ~inline THEN
 					IF scope.lastVariable = NIL THEN
 						stackSize := 0
@@ -742,62 +743,62 @@ TYPE
 					*)
 
 					IF (callingConvention # SyntaxTree.OberonCallingConvention) & (~(callingConvention IN SysvABI) OR (system.addressSize # 64)) THEN
-						registerParameters := backend.NumberParameterRegisters(callingConvention);
-
+						backend.ResetParameterRegisters();
 						(* assumption: registers are passed left to right and left parameters are in registers *)
 						formalParameter := procedureType.firstParameter;
-						WHILE (formalParameter # NIL) & (registerNumber < registerParameters) DO
-							IF ~PassInRegister(formalParameter, callingConvention) THEN
-								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
-							ELSE
+						WHILE (formalParameter # NIL)  DO
+							IF PassInRegister(formalParameter, callingConvention) THEN
 								IF formalParameter.type.IsRecordType() THEN
 									ASSERT (formalParameter.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter});
 									type := addressType;
 								ELSE
 									type := GetType(system, formalParameter.type);
 								END;
-								IntermediateCode.InitParameterRegisterClass(registerClass, backend.ParameterRegister(callingConvention, type, registerNumber));
-								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
-								IntermediateCode.InitMemory(dest,type,implementationVisitor.sp,ToMemoryUnits(system,formalParameter.offsetInBits - system.addressSize));
-								ir.Emit(Mov(Basic.invalidPosition,dest, src));
-								implementationVisitor.ReleaseIntermediateOperand(src);
-								INC(registerNumber);
-								formalParameter := formalParameter.nextParameter;
+								IF backend.GetParameterRegister(callingConvention, type, register) THEN
+									IntermediateCode.InitParameterRegisterClass(registerClass, register);
+									src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
+									IntermediateCode.InitMemory(dest,type,implementationVisitor.sp,ToMemoryUnits(system,formalParameter.offsetInBits - system.addressSize));
+									ir.Emit(Mov(Basic.invalidPosition,dest, src));
+									implementationVisitor.ReleaseIntermediateOperand(src);
+								END;
 							END;
+							formalParameter := formalParameter.nextParameter;
 						END;
 					END;
 					
 					IF ~procedureType.noPAF THEN (* no procedure activation frame ! *)
-						implementationVisitor.EmitEnter(ir,x.position,x,callingConvention,ToMemoryUnits(system,stackSize),registerNumber);
+						implementationVisitor.EmitEnter(ir,x.position,x,callingConvention,ToMemoryUnits(system,stackSize));
 					END;
 					pc := ir.pc-1;
 
 					IF (callingConvention IN SysvABI) & (system.addressSize = 64) THEN
-						registerParameters := backend.NumberParameterRegisters(callingConvention);
-
+						backend.ResetParameterRegisters();
+						nonParameterRegisters := 0; 
 						(* assumption: registers are passed left to right and left parameters are in registers *)
 						formalParameter := procedureType.firstParameter;
-						WHILE (formalParameter # NIL) & (registerNumber < registerParameters) DO
-							IF ~PassInRegister(formalParameter, callingConvention) THEN
-								Error(formalParameter.position,"Calling convention error: cannot be passed as register");
-							ELSE
+						WHILE (formalParameter # NIL) DO
+							IF PassInRegister(formalParameter, callingConvention) THEN
 								IF formalParameter.type.IsRecordType() THEN
 									ASSERT (formalParameter.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter});
 									type := addressType;
 								ELSE
 									type := GetType(system, formalParameter.type);
 								END;
-								IntermediateCode.InitParameterRegisterClass(registerClass, backend.ParameterRegister(callingConvention, type, registerNumber));
-								src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
-								implementationVisitor.currentScope := currentScope;
-								variable := implementationVisitor.GetTemporaryVariable(formalParameter.type,FALSE,FALSE);
-								formalParameter.SetOffset(variable.offsetInBits);
-								IntermediateCode.InitMemory(dest,type,implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
-								ir.Emit(Mov(Basic.invalidPosition,dest, src));
-								implementationVisitor.ReleaseIntermediateOperand(src);
-								INC(registerNumber);
-								formalParameter := formalParameter.nextParameter;
+								IF backend.GetParameterRegister(callingConvention, type, register) THEN
+									IntermediateCode.InitParameterRegisterClass(registerClass, register);
+									src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
+									implementationVisitor.currentScope := currentScope;
+									variable := implementationVisitor.GetTemporaryVariable(formalParameter.type,FALSE,FALSE);
+									formalParameter.SetOffset(variable.offsetInBits);
+									IntermediateCode.InitMemory(dest,type,implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
+									ir.Emit(Mov(Basic.invalidPosition,dest, src));
+									implementationVisitor.ReleaseIntermediateOperand(src);
+								ELSE
+									INC(nonParameterRegisters); 
+									formalParameter.SetOffset(nonParameterRegisters * addressType.sizeInBits);
+								END;
 							END;
+							formalParameter := formalParameter.nextParameter;
 						END;
 					END;
 
@@ -926,7 +927,7 @@ TYPE
 					END
 				END;
 			ELSE (* force body for procedures *)
-				implementationVisitor.EmitEnter(ir, x.position,x,callingConvention,0,0);
+				implementationVisitor.EmitEnter(ir, x.position,x,callingConvention,0);
 				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
 				(*IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;*)
 				implementationVisitor.EmitLeave(ir,x.position,x,callingConvention);
@@ -1057,7 +1058,7 @@ TYPE
 				implementationVisitor.profileId.Emit(Reserve(Basic.invalidPosition,ToMemoryUnits(system,system.SizeOf(system.longintType))));
 				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@InitProfiler"));
 				implementationVisitor.profileInit := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump);
-				implementationVisitor.EmitEnter(implementationVisitor.profileInit,Basic.invalidPosition,NIL,0,0,0);
+				implementationVisitor.EmitEnter(implementationVisitor.profileInit,Basic.invalidPosition,NIL,0,0);
 
 				Global.GetModuleName(module.module,idstr);
 				implementationVisitor.ProfilerAddModule(idstr);
@@ -1078,7 +1079,7 @@ TYPE
 				EnsureBodyProcedure(x.moduleScope);
 				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@OperatorInitialization"));
 				implementationVisitor.operatorInitializationCodeSection := implementationVisitor.NewSection(module.allSections, Sections.CodeSection,name, NIL, dump);
-				implementationVisitor.EmitEnter(implementationVisitor.operatorInitializationCodeSection,Basic.invalidPosition,NIL,0,0,0);
+				implementationVisitor.EmitEnter(implementationVisitor.operatorInitializationCodeSection,Basic.invalidPosition,NIL,0,0);
 			END;
 
 			Scope(x.moduleScope);
@@ -1597,7 +1598,7 @@ TYPE
 			END;
 		END EmitTrap;
 
-		PROCEDURE EmitEnter (section: IntermediateCode.Section; position: Position; procedure: SyntaxTree.Procedure; callconv: LONGINT; varSize: LONGINT; numRegs: LONGINT);
+		PROCEDURE EmitEnter (section: IntermediateCode.Section; position: Position; procedure: SyntaxTree.Procedure; callconv: LONGINT; varSize: LONGINT);
 		VAR name: Basic.SegmentedName;
 		VAR op1, op2, reg: IntermediateCode.Operand;
 		VAR call, nocall: Label;
@@ -4770,7 +4771,7 @@ TYPE
 
 		END PrepareTensorDescriptor;
 
-		PROCEDURE PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; numberRegister: LONGINT);
+		PROCEDURE PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; register: WORD);
 		VAR
 			type, descriptorType, baseType, componentType: SyntaxTree.Type;
 			operand, tmpOperand, variableOp, variable2Op: Operand;
@@ -4790,8 +4791,8 @@ TYPE
 			PROCEDURE Pass(op: IntermediateCode.Operand);
 			VAR registerClass: IntermediateCode.RegisterClass; parameterRegister: IntermediateCode.Operand;
 			BEGIN
-				IF numberRegister >= 0 THEN
-					IntermediateCode.InitParameterRegisterClass(registerClass, backend.ParameterRegister(callingConvention,op.type,numberRegister));
+				IF register >= 0 THEN
+					IntermediateCode.InitParameterRegisterClass(registerClass, register);
 					IntermediateCode.InitRegister(parameterRegister, op.type, registerClass, AcquireRegister(op.type, registerClass));
 					Emit(Mov(position,parameterRegister, op));
 				ELSE
@@ -5381,7 +5382,7 @@ TYPE
 				ELSE
 					ASSERT((parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter));
 					Evaluate(expression, operand);
-					IF (numberRegister > 0) OR (system.AlignmentOf(system.parameterAlignment,system.lenType) = system.AlignmentOf(system.variableAlignment,system.lenType)) THEN
+					IF (register >= 0) OR (system.AlignmentOf(system.parameterAlignment,system.lenType) = system.AlignmentOf(system.variableAlignment,system.lenType)) THEN
 						Pass((operand.extra)); (* step *)
 						Pass((operand.tag)); (* last *)
 						Pass((operand.op)); (* first *)
@@ -5408,7 +5409,7 @@ TYPE
 					ASSERT((parameter.kind = SyntaxTree.ValueParameter) OR (parameter.kind = SyntaxTree.ConstParameter));
 					Evaluate(expression, operand);
 					componentType := parameter.type.resolved(SyntaxTree.ComplexType).componentType;
-					IF (numberRegister > 0) OR (system.AlignmentOf(system.parameterAlignment,componentType) = system.AlignmentOf(system.variableAlignment,componentType)) THEN
+					IF (register >= 0) OR (system.AlignmentOf(system.parameterAlignment,componentType) = system.AlignmentOf(system.variableAlignment,componentType)) THEN
 						Pass((operand.tag)); (* imaginary part *)
 						Pass((operand.op)) (* real part *)
 					ELSE
@@ -5744,10 +5745,11 @@ TYPE
 			identifierNumber: LONGINT;
 
 			parameterRegisters: SIZE;
-			passByRegister: BOOLEAN; registerNumber,stackSize: LONGINT;
+			registers: ARRAY 64 OF WORD;
 			procedure: SyntaxTree.Procedure;
 			callingConvention: SyntaxTree.CallingConvention;
-
+			type: IntermediateCode.Type;
+	
 			PROCEDURE BackupGlobalState;
 			BEGIN
 				oldResult := result;
@@ -5990,30 +5992,39 @@ TYPE
 			firstWriteBackCall := NIL; (* reset write-back call list *)
 
 			IF callingConvention # SyntaxTree.OberonCallingConvention THEN
-				parameterRegisters := backend.NumberParameterRegisters(callingConvention);
-				
-				passByRegister := parameterRegisters > 0;
-				registerNumber := 0;
+				parameterRegisters := 0; 
+
+				backend.ResetParameterRegisters();
+
+				formalParameter := procedureType.firstParameter;
+				FOR i := 0 TO parameters.Length()-1 DO 
+					IF (formalParameter.kind = SyntaxTree.VarParameter) THEN
+						type := addressType;						
+					ELSIF formalParameter.type.IsRecordType() OR (formalParameter.type.resolved IS SyntaxTree.ArrayType) THEN
+						type := addressType;
+					ELSE
+						type := GetType(system, formalParameter.type);
+					END;
+					IF backend.GetParameterRegister(callingConvention, type, registers[i]) THEN
+						INC(parameterRegisters);
+						IF ~PassInRegister(formalParameter,callingConvention) THEN
+							Error(actualParameter.position,"cannot be passed by register")
+						END;
+					ELSE 
+						registers[i] := -1;
+					END;
+					formalParameter := formalParameter.nextParameter;
+				END;
 				formalParameter := procedureType.lastParameter;
 				FOR i := parameters.Length() - 1 TO 0 BY -1 DO
 					actualParameter := parameters.GetExpression(i);
 					PrepareParameter(actualParameter, formalParameter);
-					IF passByRegister & (i < parameterRegisters) THEN
-						IF ~PassInRegister(formalParameter,callingConvention) THEN
-							Error(actualParameter.position,"cannot be passed by register")
-						ELSE
-							PushParameter(actualParameter, formalParameter, callingConvention, FALSE, dummy,i);
-						END;
-						INC(registerNumber);
-					ELSE
-						PushParameter(actualParameter, formalParameter, callingConvention, FALSE, dummy,-1);
-					END;
+					PushParameter(actualParameter, formalParameter, callingConvention, FALSE, dummy, registers[i]);
 					formalParameter := formalParameter.prevParameter;
 				END;
-				IF passByRegister (* & (registerNumber > 0)*)  & ~(callingConvention IN SysvABI) THEN
+				IF (callingConvention = SyntaxTree.WinAPICallingConvention) & (addressType.sizeInBits = 64)  THEN
 					(* WINAPI: always (!) reserve 4 addresses for fastcall registers *)
-					stackSize := ToMemoryUnits(system,parameterRegisters*addressType.sizeInBits);
-					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,stackSize)));
+					Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,32)));
 				END;
 			ELSE
 				hasDynamicOperands := FALSE;
@@ -6029,11 +6040,6 @@ TYPE
 							hasDynamicOperands := TRUE;
 							PushParameter(actualParameter, formalParameter, callingConvention, TRUE, parameterBackups[i],-1)
 						ELSE
-							IF passByRegister & (registerNumber > 0) THEN
-								stackSize := ToMemoryUnits(system,registerNumber*addressType.sizeInBits);
-								Emit(Sub(position,sp,sp,IntermediateCode.Immediate(addressType,stackSize)));
-							END;
-							passByRegister := FALSE;
 							PushParameter(actualParameter, formalParameter, callingConvention, FALSE, dummy,-1);
 						END;
 						formalParameter := formalParameter.nextParameter;
@@ -6173,7 +6179,7 @@ TYPE
 			END;
 			
 			(* === return parameter space === *)
-			IF (callingConvention = SyntaxTree.WinAPICallingConvention) & passByRegister (* & (registerNumber > 0) *) THEN
+				IF (callingConvention = SyntaxTree.WinAPICallingConvention) & (addressType.sizeInBits = 64)  THEN
 				parametersSize := ToMemoryUnits(system,parameters.Length()*addressType.sizeInBits);
 				(* cleanup all space for all parameters *) 
 				IF parametersSize < 32 THEN 
@@ -6185,7 +6191,7 @@ TYPE
 			END; 
 
 			IF (callingConvention IN SysvABI) THEN
-				IF passByRegister THEN 
+				IF parameterRegisters > 0 THEN 
 					IF parameters.Length() > parameterRegisters THEN
 						parametersSize := ToMemoryUnits(system,(parameters.Length()-parameterRegisters)*addressType.sizeInBits)
 					ELSE 
@@ -7376,7 +7382,7 @@ TYPE
 			procedure.SetAccess(SyntaxTree.Hidden);
 			currentScope := procedureScope;
 			section := NewSection(module.allSections, Sections.CodeSection, name, NIL,commentPrintout # NIL);
-			EmitEnter(section, Basic.invalidPosition,procedure,0,0,0);
+			EmitEnter(section, Basic.invalidPosition,procedure,0,0);
 			RETURN section;
 		END OpenInitializer;
 		
@@ -13840,18 +13846,17 @@ TYPE
 			SetBuiltinsModuleName(DefaultBuiltinsModuleName);
 			SetTraceModuleName(DefaultTraceModuleName);
 		END InitIntermediateBackend;
-		
-		(* must be overwritten by actual backend, if parameter registers should be used *)
-		PROCEDURE NumberParameterRegisters*(callingConvention: SyntaxTree.CallingConvention): SIZE;
-		BEGIN
-			RETURN 0; (* default case: no parameter registers *)
-		END NumberParameterRegisters;
 
 		(* must be overwritten by actual backend, if parameter registers should be used *)
-		PROCEDURE ParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; index: LONGINT): LONGINT;
+		PROCEDURE GetParameterRegister*(callingConvention: SyntaxTree.CallingConvention; type: IntermediateCode.Type; VAR register: WORD): BOOLEAN;
 		BEGIN
-			HALT(100); (* abstract *)
-		END ParameterRegister;
+			register := -1;
+			RETURN FALSE;
+		END GetParameterRegister;
+		
+		PROCEDURE ResetParameterRegisters*;
+		BEGIN
+		END ResetParameterRegisters;
 
 		PROCEDURE GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module;
 		VAR

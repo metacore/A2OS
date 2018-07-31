@@ -606,7 +606,7 @@ TYPE
 			ELSIF type IS SyntaxTree.CellType THEN
 				size := addressSize;
 			ELSIF type IS SyntaxTree.RangeType THEN
-				size := 3 * SizeOf(longintType);
+				size := 3 * SizeOf(lenType);
 			ELSE
 				HALT(100)
 			END;
@@ -678,6 +678,8 @@ TYPE
 				ELSE
 					result := type.alignmentInBits
 				END;
+			ELSIF type IS SyntaxTree.RangeType THEN
+				result := AlignmentOf(alignment,lenType);
 			ELSIF type IS SyntaxTree.StringType THEN
 				result := SizeOf(type(SyntaxTree.StringType).baseType);
 			ELSE
@@ -780,10 +782,11 @@ TYPE
 		system.nilType := SyntaxTree.NewNilType(system.addressSize);
 		system.addressType := SyntaxTree.NewAddressType(system.addressSize);
 		system.sizeType := SyntaxTree.NewSizeType(system.addressSize);
-		system.rangeType := SyntaxTree.NewRangeType(3 * system.SizeOf(system.longintType));
 
 		system.lenType := system.longintType;
 		(* generally, the lenType should be sizeType but for historical (legacy) reasons, it is longint in the current implementation *)
+
+		system.rangeType := SyntaxTree.NewRangeType(3 * system.SizeOf(system.lenType));
 
 		system.complexType := Complex64;
 		system.longcomplexType := Complex128;

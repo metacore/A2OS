@@ -5905,7 +5905,21 @@ TYPE
 						gap := 4*ToMemoryUnits(system,system.addressSize); 
 					END;
 				ELSIF (callingConvention IN SysvABI) & (system.addressSize =64) THEN
-					gap := gap - 6*ToMemoryUnits(system,system.addressSize); (* the first 6 parameters are passed via registers in SysVABI *)
+					backend.ResetParameterRegisters();
+					formalParameter := procedureType.firstParameter;
+					FOR i := 0 TO parameters.Length()-1 DO 
+						IF (formalParameter.kind = SyntaxTree.VarParameter) THEN
+							type := addressType;						
+						ELSIF formalParameter.type.IsRecordType() OR (formalParameter.type.resolved IS SyntaxTree.ArrayType) THEN
+							type := addressType;
+						ELSE
+							type := GetType(system, formalParameter.type);
+						END;
+						IF backend.GetParameterRegister(callingConvention, type, registers[i]) THEN
+							DEC (gap, ToMemoryUnits(system,system.addressSize))
+						END;
+						formalParameter := formalParameter.nextParameter;
+					END;
 					IF gap < 0 THEN 
 						gap := 0
 					END; 

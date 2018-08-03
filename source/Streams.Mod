@@ -390,12 +390,19 @@ TYPE
 			END
 		END Date822;
 
+		PROCEDURE Append( VAR str: ARRAY OF CHAR; c: CHAR );
+		VAR i: LONGINT;
+		BEGIN
+			WHILE str[i] # 0X DO  INC( i )  END;
+			str[i] := c; str[i+1] := 0X
+		END Append;
 
 	(** Write LONGREAL x  using n character positions. *)
 		PROCEDURE Float*( x: LONGREAL;  n: WORD );
 		(* BM 1993.4.22. Do not simplify rounding! *)
-		VAR e, h, l, i: LONGINT;  z: LONGREAL;
-			d: ARRAY 16 OF CHAR;
+		VAR e, h, l, i, le, ndigits: LONGINT;  z: LONGREAL;
+			d, exp: ARRAY 24 OF CHAR;
+			neg: BOOLEAN;
 		BEGIN
 			e := ExpoL( x );
 			IF e = 2047 THEN
@@ -406,9 +413,7 @@ TYPE
 				ELSE String("  INF" )
 				END
 			ELSE
-				IF n <= 9 THEN n := 1 ELSE DEC( n, 8 ) END;
-				REPEAT Char( " " );  DEC( n ) UNTIL n <= 15;   (* 0 <= n <= 15 fraction digits *)
-				IF (e # 0) & (x < 0) THEN Char( "-" );  x := -x ELSE Char( " " ) END;
+				IF (e # 0) & (x < 0) THEN  x := -x; neg := TRUE  ELSE  neg := FALSE  END;
 				IF e = 0 THEN
 					h := 0;  l := 0 (* no denormals *)
 				ELSE
@@ -422,17 +427,28 @@ TYPE
 					END;
 					x := x * Ten( 7 );  h := ENTIER( x );  x := (x - h) * Ten( 8 );  l := ENTIER( x )
 				END;
+				IF e = 0 THEN  exp := "";  le := 0
+				ELSE
+					IF e < 0 THEN  exp := "E-";  e := -e  ELSE  exp := "E+"  END;  le := 2; 
+					IF e >= 100 THEN  Append( exp, CHR( e DIV 100 + ORD( '0' ) ) );  INC( le );  e := e MOD 100  END;
+					IF (le > 2) OR (e >= 10) THEN  Append( exp, CHR( e DIV 10 + ORD( '0' ) ) ); INC( le )  END;
+					Append( exp, CHR( e MOD 10 + ORD( '0' ) ) ); INC( le )
+				END;
+				IF neg THEN  INC( le )  END;
+				IF n < 10 THEN  ndigits := 7 ELSE  ndigits := 15  END;
+				WHILE n > ndigits+le+1 DO  Char( ' ' );  DEC( n ) END;	
+				IF neg THEN  Char( '-' )  END;
 				i := 15;
 				WHILE i > 7 DO d[i] := CHR( l MOD 10 + ORD( "0" ) );  l := l DIV 10;  DEC( i ) END;
 				WHILE i >= 0 DO d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i ) END;
 				Char( d[0] );  Char( "." );  i := 1;
-				WHILE i <= n DO Char( d[i] );  INC( i ) END;
-				IF e < 0 THEN String( "E-" );  e := -e ELSE String( "E+" ) END;
-				Char( CHR( e DIV 100 + ORD( "0" ) ) );  e := e MOD 100;  Char( CHR( e DIV 10 + ORD( "0" ) ) );  Char( CHR( e MOD 10 + ORD( "0" ) ) )
+				WHILE i < ndigits DO  Char( d[i] );  INC( i )  END;
+				String( exp )
 			END
 		END Float;
 
-	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
+	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, 
+		f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
 		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: WORD );
 		(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
 		VAR e, h, l, i: LONGINT;  r, z: LONGREAL;

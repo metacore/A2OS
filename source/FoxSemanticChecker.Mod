@@ -3738,7 +3738,11 @@ TYPE
 
 			IF (left = NIL) OR (left IS SyntaxTree.SelfDesignator) OR (left IS SyntaxTree.DereferenceDesignator) & (left(SyntaxTree.DereferenceDesignator).left IS SyntaxTree.SelfDesignator) THEN
 				IF GetGuard(symbol,guardType) THEN
-					result := NewTypeGuardDesignator(position,result(SyntaxTree.SymbolDesignator),guardType, result);
+					IF (symbol.type.resolved IS SyntaxTree.RecordType) OR ~assignable THEN (* type guard is tested and type cannot be changed *)
+						result.SetType(guardType);
+					ELSE
+						result := NewTypeGuardDesignator(position,result(SyntaxTree.SymbolDesignator),guardType, result);
+					END;
 				END;
 			END;
 

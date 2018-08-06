@@ -7707,6 +7707,9 @@ TYPE
 			withPart.SetType(type);
 			variableType := variable.type.resolved;
 
+			WHILE variable IS SyntaxTree.TypeGuardDesignator DO
+				variable := variable(SyntaxTree.TypeGuardDesignator).left(SyntaxTree.Designator);
+			END;
 
 			IF (type.resolved = SyntaxTree.invalidType) OR (variableType = SyntaxTree.invalidType) THEN (* error already reported *)
 			ELSIF ~(type.resolved = variableType) & ~IsExtensibleDesignator(variable) THEN
@@ -7760,9 +7763,6 @@ TYPE
 			
 			variable := ResolveDesignator(withStatement.variable);
 			withStatement.SetVariable(variable);
-			WHILE variable IS SyntaxTree.TypeGuardDesignator DO
-				variable := variable(SyntaxTree.TypeGuardDesignator).left(SyntaxTree.Designator);
-			END;
 
 
 			FOR i := 0 TO withStatement.WithParts()-1 DO

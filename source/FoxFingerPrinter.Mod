@@ -853,6 +853,12 @@ TYPE
 			ELSE FPLongReal(SELF.fp,x.value)
 			END;
 		END VisitRealValue;
+
+		PROCEDURE VisitComplexValue*(x: SyntaxTree.ComplexValue);
+		BEGIN
+			FPLongReal(SELF.fp,x.realValue);
+			FPLongReal(SELF.fp,x.imagValue);
+		END VisitComplexValue;
 		
 		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
 		BEGIN IF x.type.sizeInBits = 64 THEN FPHugeInt(SELF.fp, 0) ELSE FPNumber(SELF.fp, 0) END;

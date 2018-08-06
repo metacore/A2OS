@@ -224,7 +224,7 @@ TYPE
 
 		PROCEDURE Type*(x: SyntaxTree.Type);
 		BEGIN
-			IF x # NIL THEN x.Accept(SELF) END;
+			IF x # NIL THEN VType(x) END;
 		END Type;
 
 		PROCEDURE VisitType*(x: SyntaxTree.Type);

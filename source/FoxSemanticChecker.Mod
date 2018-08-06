@@ -1678,7 +1678,7 @@ TYPE
 			prev := resolvedType;
 			resolvedType := SyntaxTree.invalidType;
 			IF x = NIL THEN resolvedType := NIL
-			ELSE x.Accept(SELF); ASSERT(resolvedType # NIL); (* in error cases it must be invalidType *)
+			ELSE VType(x); ASSERT(resolvedType # NIL); (* in error cases it must be invalidType *)
 			END;
 			resolved := resolvedType;
 			resolvedType := prev;
@@ -7697,20 +7697,16 @@ TYPE
 			currentIsUnreachable := prevUnreachable;
 		END VisitIfStatement;
 
-		PROCEDURE WithPart(withPart: SyntaxTree.WithPart; VAR symbol: SyntaxTree.Symbol);
-		VAR variable: SyntaxTree.Designator;
+		PROCEDURE WithPart(withPart: SyntaxTree.WithPart; variable: SyntaxTree.Designator);
+		VAR 
 			type,variableType: SyntaxTree.Type;
 			withEntry: WithEntry;
+			symbol: SyntaxTree.Symbol
 		BEGIN
-			variable := ResolveDesignator(withPart.variable);
-			variableType := variable.type.resolved;
-			withPart.SetVariable(variable);
 			type := ResolveType(withPart.type);
 			withPart.SetType(type);
+			variableType := variable.type.resolved;
 
-			WHILE variable IS SyntaxTree.TypeGuardDesignator DO
-				variable := variable(SyntaxTree.TypeGuardDesignator).left(SyntaxTree.Designator);
-			END;
 
 			IF (type.resolved = SyntaxTree.invalidType) OR (variableType = SyntaxTree.invalidType) THEN (* error already reported *)
 			ELSIF ~(type.resolved = variableType) & ~IsExtensibleDesignator(variable) THEN
@@ -7758,12 +7754,29 @@ TYPE
 				WITH variable: type DO ... END; 	--> IF ~(variable IS type) THEN HALT(withTrap) ELSE ... END;
 		**)
 		PROCEDURE VisitWithStatement*(withStatement: SyntaxTree.WithStatement);
-		VAR i: LONGINT; prevScope: SyntaxTree.Scope; symbol: SyntaxTree.Symbol;
+		VAR i,j: LONGINT; prevScope: SyntaxTree.Scope; variable: SyntaxTree.Designator;
 		BEGIN
-			prevScope := currentScope; symbol := NIL;
-			FOR i := 0 TO withStatement.WithParts()-1 DO
-				WithPart(withStatement.GetWithPart(i),symbol);
+			prevScope := currentScope;
+			
+			variable := ResolveDesignator(withStatement.variable);
+			withStatement.SetVariable(variable);
+			WHILE variable IS SyntaxTree.TypeGuardDesignator DO
+				variable := variable(SyntaxTree.TypeGuardDesignator).left(SyntaxTree.Designator);
 			END;
+
+
+			FOR i := 0 TO withStatement.WithParts()-1 DO
+				WithPart(withStatement.GetWithPart(i),variable);
+			END;
+
+			FOR i := 0 TO withStatement.WithParts()-1 DO
+				FOR j := i+1 TO withStatement.WithParts()-1 DO
+					IF IsTypeExtension(withStatement.GetWithPart(i).type, withStatement.GetWithPart(j).type) THEN
+						Error(withStatement.GetWithPart(j).position, "unreachable extended type");
+					END;
+				END;
+			END;
+			
 			IF withStatement.elsePart # NIL THEN
 				StatementSequence(withStatement.elsePart)
 			END;
@@ -8783,7 +8796,7 @@ TYPE
 
 		(** types *)
 		PROCEDURE Type(x: SyntaxTree.Type);
-		BEGIN x.Accept(SELF)
+		BEGIN VType(x)
 		END Type;
 
 		PROCEDURE VisitType*(x: SyntaxTree.Type);

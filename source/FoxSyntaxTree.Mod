@@ -150,6 +150,37 @@ TYPE
 
 		PROCEDURE VisitProcedureType*(x: ProcedureType);
 		BEGIN HALT(100) (* abstract *) END VisitProcedureType;
+		
+		PROCEDURE VType*(x: Type);
+		BEGIN
+			(*x.Accept(SELF); RETURN;*)
+			WITH x: ProcedureType DO VisitProcedureType(x)
+			|x: CellType DO VisitCellType(x)
+			|x: RecordType DO VisitRecordType(x)
+			|x: PortType DO VisitPortType(x)
+			|x: PointerType DO VisitPointerType(x)
+			|x: MathArrayType DO VisitMathArrayType(x)
+			|x: ArrayType DO VisitArrayType(x)
+			|x: RangeType DO VisitRangeType(x)
+			|x: EnumerationType DO VisitEnumerationType(x)
+			|x: StringType DO VisitStringType(x)
+			|x: QualifiedType DO VisitQualifiedType(x)
+			|x: ComplexType DO VisitComplexType(x)
+			|x: FloatType DO VisitFloatType(x)
+			|x: IntegerType DO VisitIntegerType(x)
+			|x: CharacterType DO VisitCharacterType(x)
+			|x: SetType DO VisitSetType(x)
+			|x: BooleanType DO VisitBooleanType(x)
+			|x: SizeType DO VisitSizeType(x)
+			|x: AddressType DO VisitAddressType(x)
+			|x: NilType DO VisitNilType(x)
+			|x: ObjectType DO VisitObjectType(x)
+			|x: AnyType DO VisitAnyType(x)
+			|x: ByteType DO VisitByteType(x)
+			|x: BasicType DO VisitBasicType(x)
+			ELSE VisitType(x)
+			END;
+		END VType;
 
 		(** expressions *)
 		PROCEDURE VisitExpression*(x: Expression);
@@ -259,6 +290,49 @@ TYPE
 		PROCEDURE VisitEnumerationValue*(x: EnumerationValue);
 		BEGIN HALT(100) (* abstract *) END VisitEnumerationValue;
 
+		PROCEDURE VExpression*(x: Expression);
+		BEGIN
+			x.Accept(SELF); RETURN;
+			WITH 
+			  x: ResultDesignator DO VisitResultDesignator(x)
+			| x: SelfDesignator DO VisitSelfDesignator(x)
+			| x: SupercallDesignator DO VisitSupercallDesignator(x)
+			| x: DereferenceDesignator DO VisitDereferenceDesignator(x)
+			| x: TypeGuardDesignator DO VisitTypeGuardDesignator(x)
+			| x: BuiltinCallDesignator DO VisitBuiltinCallDesignator(x)
+			| x: StatementDesignator DO VisitStatementDesignator(x)
+			| x: ProcedureCallDesignator DO VisitProcedureCallDesignator(x)
+			| x: IndexDesignator DO VisitIndexDesignator(x)
+			| x: SymbolDesignator DO VisitSymbolDesignator(x)
+			| x: BracketDesignator DO VisitBracketDesignator(x)
+			| x: ArrowDesignator DO VisitArrowDesignator(x)
+			| x: ParameterDesignator DO VisitParameterDesignator(x)
+			| x: SelectorDesignator DO VisitSelectorDesignator(x)
+			| x: IdentifierDesignator DO VisitIdentifierDesignator(x)
+			| x: Designator DO VisitDesignator(x)
+			| x: Conversion DO VisitConversion(x)
+			| x: TensorRangeExpression DO VisitTensorRangeExpression(x)
+			| x: RangeExpression DO VisitRangeExpression(x)
+			| x: BinaryExpression DO VisitBinaryExpression(x)
+			| x: UnaryExpression DO VisitUnaryExpression(x)
+			| x: MathArrayExpression DO VisitMathArrayExpression(x)
+			| x: Set DO VisitSet(x)
+			| x: BooleanValue DO VisitBooleanValue(x)
+			| x: IntegerValue DO VisitIntegerValue(x)
+			| x: CharacterValue DO VisitCharacterValue(x)
+			| x: SetValue DO VisitSetValue(x)
+			| x: MathArrayValue DO VisitMathArrayValue(x)
+			| x: RealValue DO VisitRealValue(x)
+			| x: ComplexValue DO VisitComplexValue(x)
+			| x: StringValue DO VisitStringValue(x)
+			| x: NilValue DO VisitNilValue(x)
+			| x: EnumerationValue DO VisitEnumerationValue(x);
+			| x: Value DO VisitValue(x);
+			ELSE
+				VisitExpression(x)
+			END;		
+		END VExpression;
+
 		(** symbols *)
 		PROCEDURE VisitSymbol*(x: Symbol);
 		BEGIN HALT(100) (* abstract *) END VisitSymbol;
@@ -292,7 +366,26 @@ TYPE
 
 		PROCEDURE VisitImport*(x: Import);
 		BEGIN HALT(100) (* abstract *) END VisitImport;
-
+		
+		PROCEDURE VSymbol*(x: Symbol);
+		BEGIN
+			x.Accept(SELF); RETURN;
+			WITH 
+			  x: Module DO VisitModule(x)
+			| x: TypeDeclaration DO VisitTypeDeclaration(x)
+			| x: Constant DO VisitConstant(x)
+			| x: Parameter DO VisitParameter(x)
+			| x: Property DO VisitProperty(x)
+			| x: Variable DO VisitVariable(x)
+			| x: Operator DO VisitOperator(x)
+			| x: Procedure DO VisitProcedure(x)
+			| x: Builtin DO VisitBuiltin(x)
+			| x: Import DO VisitImport(x)
+			ELSE 
+				VisitSymbol(x)
+			END;
+		END VSymbol;
+	
 		(** statements *)
 		PROCEDURE VisitStatement*(x: Statement);
 		BEGIN HALT(100) (* abstract *) END VisitStatement;
@@ -344,7 +437,31 @@ TYPE
 
 		PROCEDURE VisitCode*(x: Code);
 		BEGIN HALT(100) (* abstract *) END VisitCode;
-
+		
+		PROCEDURE VStatement*(x: Statement);
+		BEGIN
+			x.Accept(SELF); RETURN;
+			WITH 
+			x: ProcedureCallStatement DO VisitProcedureCallStatement(x)
+			| x: Assignment DO VisitAssignment(x)
+			| x: CommunicationStatement DO VisitCommunicationStatement(x)
+			| x: IfStatement DO VisitIfStatement(x)
+			| x: WithStatement DO VisitWithStatement(x)
+			| x: CaseStatement DO VisitCaseStatement(x)
+			| x: WhileStatement DO VisitWhileStatement(x)
+			| x: RepeatStatement DO VisitRepeatStatement(x)
+			| x: ForStatement DO VisitForStatement(x)
+			| x: LoopStatement DO VisitLoopStatement(x)
+			| x: ExitableBlock DO VisitExitableBlock(x)
+			| x: ExitStatement DO VisitExitStatement(x)
+			| x: ReturnStatement DO VisitReturnStatement(x)
+			| x: AwaitStatement DO VisitAwaitStatement(x)
+			| x: StatementBlock DO VisitStatementBlock(x)
+			| x: Code DO VisitCode(x)
+			ELSE VisitStatement(x)
+			END;
+		END VStatement;
+		
 	END Visitor;
 
 	ArrayAccessOperators* = RECORD
@@ -3946,7 +4063,6 @@ TYPE
 
 	WithPart*= OBJECT (Part)
 	VAR
-		variable-: Designator;
 		type-: Type; (* initially is qualified type *)
 		statements-: StatementSequence;
 
@@ -3955,13 +4071,8 @@ TYPE
 		PROCEDURE &InitWithPart();
 		BEGIN
 			InitPart();
-			type := NIL; variable := NIL; statements := NIL; comment := NIL;
+			type := NIL; statements := NIL; comment := NIL;
 		END InitWithPart;
-
-		PROCEDURE SetVariable*( variable: Designator);
-		BEGIN
-			SELF.variable := variable
-		END SetVariable;
 
 		PROCEDURE SetType*( type: Type );
 		BEGIN
@@ -3981,7 +4092,6 @@ TYPE
 		VAR copy: WithPart;
 		BEGIN
 			NEW(copy);
-			copy.SetVariable(CloneDesignator(variable));
 			copy.SetType(type);
 			copy.SetStatements(CloneStatementSequence(statements));
 			RETURN copy
@@ -3992,6 +4102,7 @@ TYPE
 	(** << WITH variable : type DO statements END >> **)
 	WithStatement* = OBJECT (Statement)
 		VAR
+			variable-: Designator;
 			withParts-: Basic.List;
 			elsePart-: StatementSequence;
 
@@ -3999,7 +4110,13 @@ TYPE
 		BEGIN
 			InitStatement( position,outer );
 			NEW(withParts,4); elsePart := NIL;
+			variable := NIL;
 		END InitWithStatement;
+
+		PROCEDURE SetVariable*( variable: Designator);
+		BEGIN
+			SELF.variable := variable
+		END SetVariable;
 
 		PROCEDURE AddWithPart*( withPart: WithPart );
 		BEGIN withParts.Add( withPart );
@@ -4027,6 +4144,7 @@ TYPE
 			FOR i := 0 TO WithParts()-1 DO
 				copy.AddWithPart(GetWithPart(i).Clone());
 			END;
+			copy.SetVariable(CloneDesignator(variable));
 			copy.SetElsePart(CloneStatementSequence(elsePart));
 			RETURN copy
 		END Clone;

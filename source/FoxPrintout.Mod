@@ -86,7 +86,7 @@ TYPE
 			IF x= NIL THEN
 				AlertString("nil type");
 			ELSE
-				x.Accept(SELF);
+				VType(x);
 			END;
 		END Type;
 
@@ -1573,8 +1573,6 @@ TYPE
 		PROCEDURE WithPart(x: SyntaxTree.WithPart);
 		BEGIN
 			Comments(x.comment, x, FALSE);
-			Expression(x.variable);
-			w.String(" : ");
 			Type(x.type);
 			Keyword(" DO " );
 			Comments(x.comment,x, TRUE);
@@ -1585,6 +1583,8 @@ TYPE
 		VAR i: LONGINT;
 		BEGIN
 			Indent; Keyword("WITH " );
+			Expression(x.variable);
+			w.String(" : ");
 			WithPart(x.GetWithPart(0));
 			FOR i := 1 TO x.WithParts()-1 DO
 				Indent; w.String("| ");

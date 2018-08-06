@@ -203,7 +203,7 @@ TYPE
 
 		PROCEDURE Type(x: SyntaxTree.Type);
 		BEGIN
-			x.Accept(SELF);
+			VType(x);
 		END Type;
 
 		(** types **)
@@ -2460,7 +2460,7 @@ TYPE
 		END VisitUnaryExpression;
 
 		(* test if e is of type type, side effect: result of evaluation of e stays in the operand *)
-		PROCEDURE TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; trueL,falseL: Label);
+		PROCEDURE TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; trueL,falseL: Label; withPart: BOOLEAN);
 		VAR left,right: IntermediateCode.Operand; level,offset: LONGINT; repeatL: Label; originalType: SyntaxTree.Type;
 		BEGIN
 			type := type.resolved;
@@ -2477,7 +2477,11 @@ TYPE
 				(*
 				IntermediateCode.MakeMemory(tag,addressType); (*! already done during generation *)
 				*)
-				ReuseCopy(left,tag);
+				IF withPart THEN
+					left := tag;
+				ELSE
+					ReuseCopy(left,tag);
+				END;
 				right := TypeDescriptorAdr(type);
 				
 				IF backend.cooperative THEN
@@ -2504,8 +2508,11 @@ TYPE
 					IntermediateCode.MakeMemory(left,addressType);
 					BreqL(trueL,left,right);
 				END;
-				ReleaseIntermediateOperand(left); ReleaseIntermediateOperand(right);
-				BrL(falseL);
+				IF ~withPart THEN
+					ReleaseIntermediateOperand(left); 
+				END;
+				ReleaseIntermediateOperand(right);
+				IF falseL # NIL THEN BrL(falseL) END;
 			END;
 		END TypeTest;
 
@@ -3582,7 +3589,7 @@ TYPE
 					ELSE
 						Designate(x.left,left);
 					END;
-					TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,trueLabel,falseLabel);
+					TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,trueLabel,falseLabel,FALSE);
 					ReleaseOperand(left);
 				END;
 			|Scanner.Plus:
@@ -9365,7 +9372,7 @@ TYPE
 					tag := result.tag;
 					UseIntermediateOperand(tag);
 				END;
-				TypeTest(tag,x.type,trueL,falseL);
+				TypeTest(tag,x.type,trueL,falseL,FALSE);
 				ReleaseIntermediateOperand(tag);
 				SetLabel(falseL);
 				EmitTrap(position,TypeCheckTrap);
@@ -10579,35 +10586,44 @@ TYPE
 			IF Trace THEN TraceExit("VisitIfStatement") END;
 		END VisitIfStatement;
 
-		PROCEDURE WithPart(x: SyntaxTree.WithPart; VAR falseL, endL: Label);
-		VAR trueL: Label; res: Operand; recordType: SyntaxTree.RecordType;
+		PROCEDURE BrWithPart(CONST tag: IntermediateCode.Operand; x: SyntaxTree.WithPart; VAR trueL: Label);
 		BEGIN
-			(*IF x.variable.type.resolved = x.type.resolved THEN
-				(* always true, do nothing *)
-			ELSE*)
-			Designate(x.variable,res);
-			IF IsPointerToRecord(x.variable.type,recordType) THEN
-				Dereference(res,recordType,IsUnsafePointer(x.variable.type))
-			END;
 			trueL := NewLabel();
-			TypeTest(res.tag,x.type,trueL,falseL);
-			ReleaseOperand(res);
-			SetLabel(trueL);
+			TypeTest(tag, x.type, trueL, NIL,TRUE);
+		END BrWithPart;
+		
+		PROCEDURE EmitWithPart(x: SyntaxTree.WithPart);
+		BEGIN
 			StatementSequence(x.statements);
-			BrL(endL);
-		END WithPart;
+		END EmitWithPart;
 
 		PROCEDURE VisitWithStatement*(x: SyntaxTree.WithStatement);
-		VAR endL,falseL: Label;i: LONGINT;
+		VAR endL,elseL: Label;i: LONGINT; trueL: POINTER TO ARRAY OF Label; res: Operand; recordType: SyntaxTree.RecordType;
+			tag: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitWithStatement") END;
 
 			endL := NewLabel();
-			FOR i := 0 TO x.WithParts()-1 DO
-				falseL := NewLabel();
-				WithPart(x.GetWithPart(i),falseL,endL);
-				SetLabel(falseL);
+			elseL := NewLabel();
+			
+			Designate(x.variable,res);
+			IF IsPointerToRecord(x.variable.type,recordType) THEN
+				Dereference(res,recordType,IsUnsafePointer(x.variable.type))
 			END;
+			ReuseCopy(tag, res.tag);
+			ReleaseOperand(res);
+			NEW(trueL, x.WithParts());
+			FOR i := 0 TO x.WithParts()-1 DO
+				BrWithPart(tag, x.GetWithPart(i), trueL[i]); 
+			END;
+			ReleaseIntermediateOperand(tag);
+			BrL(elseL);			
+			FOR i := 0 TO x.WithParts()-1 DO
+				SetLabel(trueL[i]);
+				EmitWithPart(x.GetWithPart(i)); 
+				BrL(endL);
+			END;					
+			SetLabel(elseL);
 			IF x.elsePart = NIL THEN
 				IF ~isUnchecked THEN
 					EmitTrap(position,WithTrap);

@@ -1170,19 +1170,26 @@ TYPE
 					withStatement := SyntaxTree.NewWithStatement( symbol.position ,outer);
 					CommentStatement(withStatement);
 					NextSymbol;
+
+					identifier := Identifier(position);
+					IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
+						Error(position,Basic.InvalidCode,"forbidden qualified identifier in with statement");
+					END;
+					designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
+					withStatement.SetVariable(designator);
+					Check( Scanner.Colon );
+
+					IF Optional(Scanner.Bar) THEN (* ignore *) END;
 					REPEAT
-						identifier := Identifier(position);
-						IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
-							Error(position,Basic.InvalidCode,"forbidden qualified identifier in with statement");
-						END;
 						withPart := SyntaxTree.NewWithPart();
 						withPart.SetPosition(symbol.position);
 						CommentWithPart(withPart);
 						withStatement.AddWithPart(withPart);
-						designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
-						withPart.SetVariable( designator );
-						Check( Scanner.Colon );
 						qualifiedIdentifier := QualifiedIdentifier();
+						IF Optional(Scanner.Colon) THEN (* compatibility with old format *)
+							Basic.Warning(diagnostics, scanner.source^, position, "deprecate form of with statement, remove the repeated variable");
+							qualifiedIdentifier := QualifiedIdentifier();
+						END;
 						qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, currentScope, qualifiedIdentifier);
 						withPart.SetType(qualifiedType);
 						Check( Scanner.Do );

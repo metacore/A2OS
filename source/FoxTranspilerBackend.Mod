@@ -978,7 +978,7 @@ TYPE
 			FOR i := 0 TO statement.WithParts () - 1 DO
 				withPart := statement.GetWithPart (i); PrintIndent;
 				IF i > 0 THEN writer.String ("else ") END;
-				writer.String ("if ("); CompareTypeDescriptor (withPart.variable, withPart.type); writer.String (")"); writer.Ln;
+				writer.String ("if ("); CompareTypeDescriptor (statement.variable, withPart.type); writer.String (")"); writer.Ln;
 				BeginBlock; PrintStatements (withPart.statements); EndBlock;
 			END;
 			PrintIndent;

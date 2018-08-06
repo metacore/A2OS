@@ -643,7 +643,7 @@ TYPE
 		
 		PROCEDURE FindType(type: SyntaxTree.Type): Result;
 		BEGIN
-			type.Accept(SELF);
+			VType(type);
 			IF item.object # NIL THEN
 				RETURN item.object(Result);
 			END;

@@ -325,7 +325,7 @@ TYPE
 
 		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
 		BEGIN
-			x.resolved.Accept(SELF);
+			VType(x.resolved);
 		END VisitQualifiedType;
 
 		(*
@@ -369,7 +369,7 @@ TYPE
 				fingerprint.public := fingerprint.shallow;
 				fingerprint.deepAvailable := TRUE; (* to avoid circles during base finger printing *)
 				x.SetFingerPrint(fingerprint);
-				x.arrayBase.Accept(SELF); (* make sure that base pointer is also deeply fped *)
+				VType(x.arrayBase); (* make sure that base pointer is also deeply fped *)
 			END;
 
 			IF Trace THEN TraceExit("ArrayType",fingerprint) END;
@@ -415,7 +415,7 @@ TYPE
 			END;
 
 			IF deep & ~fingerprint.deepAvailable THEN
-				x.arrayBase.Accept(SELF);
+				VType(x.arrayBase);
 				fingerprint.private := fingerprint.shallow;
 				fingerprint.public := fingerprint.shallow;
 				fingerprint.deepAvailable := TRUE;
@@ -878,7 +878,7 @@ TYPE
 		BEGIN
 			INC(level); ASSERT(level <= 100);
 			IF t = NIL THEN FPNumber(fp,fpTypeNone);
-			ELSE t.Accept(SELF); FPNumber(fp,SELF.fingerprint.shallow);
+			ELSE VType(t); FPNumber(fp,SELF.fingerprint.shallow);
 			END;
 			DEC(level);
 		END FPType;
@@ -989,7 +989,7 @@ TYPE
 				FPName(fp,x.name);
 				IF Trace THEN TraceIndent; D.String("access="); D.Set(x.access); D.Ln;  END;
 				FPVisibility(fp, x.access);
-				x.declaredType.Accept(SELF);
+				VType(x.declaredType);
 				FPNumber(fp, SELF.fingerprint.shallow);
 				fingerprint.shallow := fp;
 				fingerprint.public := fp;
@@ -1064,7 +1064,7 @@ TYPE
 				Global.GetSymbolName(x,name);
 				FPString(fp,name);
 				FPVisibility(fp,x.access);
-				x.type.Accept(SELF);
+				VType(x.type);
 				FPNumber(fp,SELF.fingerprint.shallow);
 				fingerprint.shallow := fp;
 				fingerprint.public := fingerprint.shallow;
@@ -1098,7 +1098,7 @@ TYPE
 				Global.GetSymbolName(x,name);
 				FPString(fp,name);
 				FPVisibility(fp,x.access);
-				x.type.Accept(SELF);
+				VType(x.type);
 				FPNumber(fp,SELF.fingerprint.shallow);
 				fingerprint.shallow := fp;
 				fingerprint.public := fingerprint.shallow;
@@ -1275,7 +1275,7 @@ TYPE
 
 			deep := SELF.deep;
 			SELF.deep := TRUE;
-			this.Accept(SELF);
+			VType(this);
 			SELF.deep := deep;
 			ASSERT(fingerprint.deepAvailable,101);
 			ASSERT(fingerprint.shallow #0,102);

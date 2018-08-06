@@ -30,8 +30,8 @@ FoxArrayBase$(object): ComplexNumbers$(object)
 
 # Fox Compiler
 
-oberon: $(addsuffix $(object), Builtins Trace Glue Unix Machine Heaps Modules Objects Streams Kernel Reflection KernelLog TrapWriters Commands Pipes StdIO Traps Files UnixFiles BitSets StringPool ObjectFile Diagnostics Reals Clock Dates Strings GenericLinker Loader WMRectangles CLUTs Plugins Displays Raster UTF8Strings WMRasterScale SoundDevices XMLObjects DynamicStrings XML XMLScanner XMLParser Configuration Inflate CRC Unzip WMEvents Locks FP1616 Texts Archives Codecs WMGraphics WMDefaultFont StdIOShell Shell Options ProcessInfo0 ProcessInfo SystemVersion System Debugging FoxBasic FoxScanner FoxSyntaxTree FoxGlobal FoxParser FoxFingerPrinter FoxPrintout FoxFormats FoxSemanticChecker FoxBackend FoxFrontend Compiler FoxOberonFrontend FoxSections FoxBinaryCode FoxIntermediateCode FoxInterfaceComparison FoxTextualSymbolFile FoxIntermediateBackend FoxAMD64InstructionSet FoxAMD64Assembler FoxARMAssembler FoxARMBackend FoxCodeGenerators FoxAMDBackend FoxGenericObjectFile Math MathL ComplexNumbers FoxArrayBase FoxArrayBaseOptimized Linker DependencyWalker Localization Repositories UnicodeProperties TextUtilities ReleaseThreadPool Zlib ZlibBuffers ZlibInflate ZlibReaders ZlibDeflate ZlibWriters Zip CompilerInterface Release)
-	@$(tool) Linker.Link -p=$(target) --extension=$(object) --fileName=$@ Builtins Traps UnixFiles Loader WMDefaultFont StdIOShell Shell System Compiler FoxOberonFrontend FoxAMDBackend FoxARMBackend FoxArrayBase FoxArrayBaseOptimized Linker DependencyWalker Release && chmod +x $@
+oberon: $(addsuffix $(object), Builtins Trace Glue Unix Machine Heaps Modules Objects Streams Kernel Reflection KernelLog TrapWriters Commands Pipes StdIO Traps Files UnixFiles BitSets StringPool ObjectFile Diagnostics Reals Clock Dates Strings GenericLinker Loader WMRectangles CLUTs Plugins Displays Raster UTF8Strings WMRasterScale SoundDevices XMLObjects DynamicStrings XML XMLScanner XMLParser Configuration Inflate CRC Unzip WMEvents Locks FP1616 Texts Archives Codecs WMGraphics WMDefaultFont StdIOShell Shell Options ProcessInfo0 ProcessInfo SystemVersion System Debugging FoxBasic FoxScanner FoxSyntaxTree FoxGlobal FoxParser FoxFingerPrinter FoxPrintout FoxFormats FoxSemanticChecker FoxBackend FoxFrontend Compiler FoxOberonFrontend FoxSections FoxBinaryCode FoxIntermediateCode FoxInterfaceComparison FoxTextualSymbolFile FoxIntermediateBackend FoxAMD64InstructionSet FoxAMD64Assembler FoxARMAssembler FoxARMBackend FoxCodeGenerators FoxAMDBackend FoxGenericObjectFile FoxTest Math MathL ComplexNumbers FoxArrayBase FoxArrayBaseOptimized Linker DependencyWalker Localization Repositories UnicodeProperties TextUtilities ReleaseThreadPool Zlib ZlibBuffers ZlibInflate ZlibReaders ZlibDeflate ZlibWriters Zip CompilerInterface Release)
+	@$(tool) Linker.Link -p=$(target) --extension=$(object) --fileName=$@ Builtins Traps UnixFiles Loader WMDefaultFont StdIOShell Shell System Compiler FoxOberonFrontend FoxAMDBackend FoxARMBackend FoxArrayBase FoxArrayBaseOptimized FoxTest Linker DependencyWalker Release && chmod +x $@
 # grep ":processing\s$" oberon.log | grep "^[^:]\+" -o | tr '\n' ' '
 
 Self\ Compilation: $(addsuffix $(object), FoxA2Interface FoxActiveCells FoxAMD64Assembler FoxAMD64InstructionSet FoxAMDBackend FoxARMAssembler FoxARMBackend FoxARMInstructionSet FoxArrayBase FoxArrayBaseOptimized FoxAssembler FoxBackend FoxBasic FoxBinaryCode FoxCodeGenerators Compiler FoxCSharpFrontend FoxCSharpParser FoxCSharpScanner FoxDisassembler FoxDocumentationBackend FoxDocumentationHtml FoxDocumentationParser FoxDocumentationPrinter FoxDocumentationScanner FoxDocumentationTree FoxFingerPrinter FoxFormats FoxFrontend FoxGenericObjectFile FoxGlobal FoxHardware FoxInterfaceComparison FoxIntermediateAssembler FoxIntermediateBackend FoxIntermediateCode FoxIntermediateLinker FoxIntermediateObjectFile FoxIntermediateParser FoxInterpreterBackend FoxMinosObjectFile FoxOberonFrontend FoxParser FoxPrintout FoxProfiler FoxProgTools FoxScanner FoxSections FoxSemanticChecker FoxSyntaxTree FoxTest TextCompiler FoxTextualSymbolFile FoxTranspilerBackend FoxTRMAssembler FoxTRMBackend FoxTRMInstructionSet)
@@ -39,12 +39,12 @@ Self\ Compilation: $(addsuffix $(object), FoxA2Interface FoxActiveCells FoxAMD64
 
 Compilation\ Tests: Oberon.Compilation.Test.Diff
 
-Oberon.Compilation.Test.Diff: oberon FoxTest$(object) source/Oberon.Compilation.Test
+Oberon.Compilation.Test.Diff: oberon source/Oberon.Compilation.Test
 	@./oberon FoxTest.Compile source/Oberon.Compilation.Test
 
 Execution\ Tests: Oberon.Execution.Test.Diff
 
-Oberon.Execution.Test.Diff: oberon FoxTest$(object) source/Oberon.Execution.Test
+Oberon.Execution.Test.Diff: oberon source/Oberon.Execution.Test
 	@./oberon FoxTest.Compile source/Oberon.Execution.Test
 
 # A2 Builds

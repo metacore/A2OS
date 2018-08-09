@@ -1,5 +1,5 @@
 # Oberon language test and validation suite
-# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test Dummy B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="Oberon.Execution.Test.Diff"
+# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="Oberon.Execution.Test.Diff"
 
 # test halt and assert statements and simple procedure call (basics for the test suite)
 

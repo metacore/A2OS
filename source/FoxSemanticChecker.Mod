@@ -7910,13 +7910,6 @@ TYPE
 			FOR i := 0 TO caseStatement.CaseParts()-1 DO
 				CasePart(caseStatement.GetCasePart(i),type,caseList,min,max);
 			END;
-			IF (max - min > 1024) & (100* caseStatement.CaseParts() DIV (max-min) < 10) (* less than ten percent used in a huge case table *) THEN
-				msg := "huge sparse case table ";
-				Strings.AppendInt(msg, max-min);
-				Strings.Append(msg,"/");
-				Strings.AppendInt(msg, caseStatement.CaseParts());
-				Warning(caseStatement.position,msg);
-			END;
 
 			caseStatement.SetMinMax(min,max);
 			StatementSequence(caseStatement.elsePart);

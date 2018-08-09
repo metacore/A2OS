@@ -10640,50 +10640,86 @@ TYPE
 			out,else: Label; label: Label;
 			fixups: POINTER TO ARRAY OF Label; section: IntermediateCode.Section; name: Basic.SegmentedName; string: ARRAY 32 OF CHAR;
 			symbol: SyntaxTree.Symbol;
+			table: BOOLEAN;
 		BEGIN
 			(*! split case statement into if-elsif statements for large case label lists *)
 			IF Trace THEN TraceEnter("VisitCaseStatement") END;
 			range := x.max-x.min+1;
-			IF (range<0) OR (range > 1024*1024) THEN Error(x.position,"implementation restriction: case table size too large"); RETURN
+			IF (range < 0) OR (range > 1024) & (range DIV x.caseParts.Length() >10) THEN
+				(* if case table is larger than 1024 elements and only sparsely used, then do not employ a table *)
+				table := FALSE;
+				size := x.caseParts.Length();
+			ELSE
+				table := TRUE;
+				size := LONGINT(range);
 			END;
-			size := LONGINT(range);
 			Evaluate(x.variable,var);
 			ReuseCopy(tmp,var.op);
 			ReleaseIntermediateOperand(var.op);
 			var.op := tmp;
-			Emit(Sub(position,var.op,var.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,x.variable.type),x.min)));
-			Convert(var.op,addressType);
-			else := NewLabel();
-			BrgeL(else,var.op,IntermediateCode.Immediate(addressType,size));
 			(*
 			UniqueId(name,module.module,"case",caseId);
 			*)
-			string := "@case"; Basic.AppendNumber(string, caseId); INC(caseId);
-			Global.GetModuleSegmentedName(module.module, name);
-			Basic.SuffixSegmentedName(name,Basic.MakeString(string));
-			symbol := SyntaxTree.NewSymbol(name[1]);
-			symbol.SetScope(moduleScope);
 			NEW(fixups,size); FOR i := 0 TO size-1 DO fixups[i] := NIL END;
-			section := NewSection(module.allSections, Sections.ConstSection,name,SyntaxTree.NewSymbol(name[1]),commentPrintout # NIL);
-			IntermediateCode.InitAddress(jmp, addressType, section.name, GetFingerprint(section.symbol), 0);
-			ReuseCopy(res,var.op);
-			ReleaseOperand(var);
-			Emit(Mul(position,res,res,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.addressSize))));
-			Emit(Add(position,res,res,jmp));
-			IntermediateCode.MakeMemory(res,addressType);
-			Emit(Br(position,res));
-			ReleaseIntermediateOperand(res);
+			else := NewLabel();
+			IF table THEN
+				Emit(Sub(position,var.op,var.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,x.variable.type),x.min)));
+				Convert(var.op,addressType);
+				BrgeL(else,var.op,IntermediateCode.Immediate(addressType,size));
+				ReuseCopy(res,var.op);
+				ReleaseOperand(var);
+				string := "@case"; Basic.AppendNumber(string, caseId); INC(caseId);
+				Global.GetModuleSegmentedName(module.module, name);
+				Basic.SuffixSegmentedName(name,Basic.MakeString(string));
+				symbol := SyntaxTree.NewSymbol(name[1]);
+				symbol.SetScope(moduleScope);
+				section := NewSection(module.allSections, Sections.ConstSection,name,SyntaxTree.NewSymbol(name[1]),commentPrintout # NIL);
+				IntermediateCode.InitAddress(jmp, addressType, section.name, GetFingerprint(section.symbol), 0);
+				Emit(Mul(position,res,res,IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.addressSize))));
+				Emit(Add(position,res,res,jmp));
+				IntermediateCode.MakeMemory(res,addressType);
+				Emit(Br(position,res));
+				ReleaseIntermediateOperand(res);
+			ELSE
+				ReuseCopy(res,var.op); (* make sure it is in a register *)
+				ReleaseOperand(var);
+				BrltL(else,res,IntermediateCode.Immediate(res.type,x.min));
+				BrltL(else,IntermediateCode.Immediate(res.type,x.max),res);
+				FOR i := 0 TO x.caseParts.Length()-1 DO (* case parts *)
+					part := x.GetCasePart(i);
+					constant := part.firstConstant;
+					fixups[i] := NewLabel();
+					WHILE(constant # NIL) DO (* case labels for this case part *)
+						IF constant.min = constant.max THEN
+							BreqL(fixups[i], res,IntermediateCode.Immediate(res.type,constant.min));
+						ELSE
+							label := NewLabel();	
+							BrltL(label, res, IntermediateCode.Immediate(res.type,constant.min));
+							BrltL(label, IntermediateCode.Immediate(res.type,constant.max),res);
+							BrL(fixups[i]); 
+							SetLabel(label);
+						END;
+						constant := constant.next;
+					END;
+				END;
+				BrL(else);
+				ReleaseIntermediateOperand(res);
+			END;
 			out := NewLabel();
 			FOR i := 0 TO x.caseParts.Length()-1 DO (* case parts *)
 				part := x.GetCasePart(i);
 				constant := part.firstConstant;
-				label := NewLabel();
-				SetLabel(label);
-				WHILE(constant # NIL) DO (* case labels for this case part *)
-					FOR j := constant.min TO constant.max DO
-						fixups[j-x.min] := label;
+				IF table THEN
+					label := NewLabel();
+					SetLabel(label);
+					WHILE(constant # NIL) DO (* case labels for this case part *)
+						FOR j := constant.min TO constant.max DO
+							fixups[j-x.min] := label;
+						END;
+						constant := constant.next;
 					END;
-					constant := constant.next;
+				ELSE
+					SetLabel(fixups[i]);
 				END;
 				StatementSequence(part.statements);
 				BrL(out);
@@ -10700,9 +10736,11 @@ TYPE
 				EmitTrap(position,CaseTrap);
 			END;
 			SetLabel(out);
-			FOR i := 0 TO size-1 DO
-				IntermediateCode.InitAddress(op, addressType, fixups[i].section.name, GetFingerprint(fixups[i].section.symbol), fixups[i].pc);
-				section.Emit(Data(position,op));
+			IF table THEN
+				FOR i := 0 TO size-1 DO
+					IntermediateCode.InitAddress(op, addressType, fixups[i].section.name, GetFingerprint(fixups[i].section.symbol), fixups[i].pc);
+					section.Emit(Data(position,op));
+				END;
 			END;
 			IF Trace THEN TraceExit("VisitCaseStatement") END;
 		END VisitCaseStatement;

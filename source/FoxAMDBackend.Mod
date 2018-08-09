@@ -872,7 +872,7 @@ TYPE
 			END;
 		END GetImmediateMem;
 
-		PROCEDURE GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit: BOOLEAN);
+		PROCEDURE GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit,push: BOOLEAN);
 		VAR type: IntermediateCode.Type; temp: Assembler.Operand; size: SHORTINT; value: HUGEINT;
 
 			PROCEDURE IsImm8(value: HUGEINT): BOOLEAN;
@@ -890,6 +890,12 @@ TYPE
 				value := value DIV 10000H DIV 10000H;
 				RETURN (value = 0) OR (value=-1);
 			END IsImm32;
+			
+			PROCEDURE IsSignedImm32(value: HUGEINT): BOOLEAN;
+			BEGIN
+				RETURN (value <= MAX(SIGNED32)) & (value >= MIN(SIGNED32));
+			END IsSignedImm32;
+			
 
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeImmediate);
@@ -910,7 +916,7 @@ TYPE
 				END;
 				Assembler.InitImm(physical,size ,value);
 				IF virtual.symbol.name # "" THEN Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+part*Assembler.bits32) END;
-				IF (cpuBits=64) & ((physical.sizeInBytes=8) OR ~IsImm32(value)) THEN
+				IF (cpuBits=64) & ((physical.sizeInBytes=8) OR ~IsImm32(value) OR push & ~IsSignedImm32(value)) THEN
 					ASSERT(cpuBits=64);
 					GetTemporaryRegister(IntermediateCode.int64,temp);
 					emitter.Emit2(InstructionSet.opMOV,temp,physical);
@@ -1032,7 +1038,7 @@ TYPE
 			CASE vop.mode OF
 				IntermediateCode.ModeMemory: GetMemory(vop,part,op);
 				|IntermediateCode.ModeRegister:	GetRegister(vop,part,op,ticket);
-				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE);
+				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE,FALSE);
 			END;
 			IF ticket # NIL THEN
 				TicketToOperand(ticket, tmp);
@@ -2952,7 +2958,7 @@ TYPE
 			ASSERT(type.form IN IntermediateCode.Integer);
 
 			IF	vop.mode = IntermediateCode.ModeImmediate THEN (* may not push 16 bit immediate: strange instruction in 32 / 64 bit mode *)
-				GetImmediate(vop,part,op1,TRUE);
+				GetImmediate(vop,part,op1,TRUE,TRUE);
 				emitter.Emit1(InstructionSet.opPUSH,op1);
 			ELSIF (type.sizeInBits = cpuBits) THEN
 				MakeOperand(vop,part,op1,NIL);

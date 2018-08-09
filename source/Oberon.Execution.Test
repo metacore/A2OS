@@ -7801,3 +7801,15 @@ positive: pass three-dimensional arrays A[x,y,z] with missing dimensions, e.g. A
 		Test;
 	END Test.
 
+positive: check push of UNSIGNED constants
+
+	MODULE Test;
+		PROCEDURE Check(value: HUGEINT);
+		BEGIN
+			ASSERT(value>0);
+		END Check;
+		
+	BEGIN
+		Check(MAX(UNSIGNED16)); 
+		Check(MAX(UNSIGNED32));
+	END Test.

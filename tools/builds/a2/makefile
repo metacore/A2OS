@@ -11,8 +11,8 @@ platforms := Bios32 Bios64 Zynq Win32 Win64 Linux32 Linux64 Darwin32 Darwin64 So
 
 target := Linux64
 pltfrm := Unix64
-object := .GofUu
-symbol := .SymUu
+object := .Gof
+symbol := .Sym
 
 # module dependencies
 
@@ -45,7 +45,7 @@ Oberon.Compilation.Test.Diff: oberon source/Oberon.Compilation.Test
 Execution\ Tests: Oberon.Execution.Test.Diff
 
 Oberon.Execution.Test.Diff: oberon source/Oberon.Execution.Test
-	@./oberon FoxTest.Compile source/Oberon.Execution.Test
+	@./oberon FoxTest.Compile --prolog=\"Compiler.Compile --symbolFileExtension=$(symbol) TesterInput.txt\" source/Oberon.Execution.Test
 
 # A2 Builds
 

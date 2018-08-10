@@ -929,7 +929,9 @@ VAR
 	VAR i: LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		OutputString("Kernel32.Shutdown");
+	#IF ~SHAREDLIB THEN
 		ExitProcess(l);
+	#END;
 	END ShutdownP;
 	
 	PROCEDURE Init*;
@@ -1115,6 +1117,104 @@ VAR hout: HANDLE;
 
 
 #IF I386 THEN
+	
+	#IF SHAREDLIB THEN
+	
+		PROCEDURE CallSdw();
+		PROCEDURE SDW EXTERN "Modules.Shutdown"(code: LONGINT);
+		BEGIN
+			SDW(-1);
+		END CallSdw;
+		
+		(**
+			DLL entry point that corresponds to 
+			
+			BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+		*)
+		PROCEDURE {INITIAL, NOPAF} EntryPoint*;
+		CODE{SYSTEM.i386}
+			JMP  DWORD end;
+				DB 0
+				DB 0
+				DB 0
+
+			ImportTable:
+				DD Kernel32Import + 1000H
+				DD 0
+				DD -1
+				DD Kernel32Name + 1000H
+				DD Kernel32Import + 1000H
+				DD 0, 0, 0, 0, 0
+
+			Kernel32Import:
+			adrLoadLibrary:
+				DD LoadLibraryA + 1000H
+			adrGetProcAddress:
+				DD GetProcAddress + 1000H
+				DD 0
+
+			Kernel32Name:
+				DB 'KERNEL32.DLL' , 0
+
+			LoadLibraryA:
+				DW 0
+				DB 'LoadLibraryA',0,0
+
+			GetProcAddress:
+				DW 0
+				DB 'GetProcAddress',0
+
+			end:
+				PUSH EBP
+				MOV EBP, ESP
+				MOV EAX, [EBP+12]
+				CMP EAX, 1
+				JZ ProcessAttach ; call all modules bodies only when fdwReason = DLL_PROCESS_ATTACH (1)
+				CMP EAX, 0
+				JZ ProcessDetach ; call all modules bodies only when fdwReason = DLL_PROCESS_DETACH (0)
+				
+				POP EBP
+				RET 12
+
+			ProcessAttach:
+				PUSH EBX
+				PUSH ESI
+				PUSH EDI
+
+				MOV EDX, EntryPoint;
+				MOV EAX,[EDX+adrLoadLibrary]
+				MOV LoadLibrary, EAX
+				MOV EAX,[EDX+adrGetProcAddress]
+				MOV getProcAddress, EAX
+				JMP exit
+				
+			ProcessDetach:
+				PUSH EBX
+				PUSH ESI
+				PUSH EDI
+				CALL CallSdw
+				POP EDI
+				POP ESI
+				POP EBX
+		
+				POP EBP
+				RET 12
+				
+			exit:
+		END EntryPoint;
+		
+		PROCEDURE {FINAL, NOPAF} Exit*;
+		CODE{SYSTEM.i386}
+			POP EDI
+			POP ESI
+			POP EBX
+			POP EBP
+
+			MOV EAX, 1
+			RET 12
+		END Exit;
+
+	#ELSE
 		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
 			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
 			are patched by the PE linker. 
@@ -1160,6 +1260,7 @@ VAR hout: HANDLE;
 			MOV getProcAddress, EAX
 			
 		END EntryPoint;
+	#END;
 		
 #ELSIF AMD64 THEN
 		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
@@ -1211,6 +1312,6 @@ VAR hout: HANDLE;
 	END EntryPoint;
 #ELSE
 	UNIMPLEMENTED
-#END	
+#END
 
 END Kernel32.

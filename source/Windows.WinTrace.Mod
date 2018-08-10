@@ -7,6 +7,8 @@ CONST
 VAR
 	hin-, hout-, herr-: Kernel32.HANDLE;
 	mode: LONGINT; (* none, console or file *)
+	
+	traceChar0: PROCEDURE(ch: CHAR);
 
 (* Sender to be used with Stream.Writer *)
 PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
@@ -52,9 +54,14 @@ END Init;
 PROCEDURE Close*;
 VAR res: WORD;
 BEGIN
+	IF traceChar0 # NIL THEN
+		Trace.Char := traceChar0; 
+	END;
 	IF mode = console THEN
 		Kernel32.CloseHandle(hout);
+	#IF ~SHAREDLIB THEN
 		res := Kernel32.FreeConsole ();
+	#END;
 	ELSIF mode = file THEN
 		Kernel32.CloseHandle(hout);
 	END;
@@ -80,7 +87,8 @@ BEGIN
 
 	herr := Kernel32.GetStdHandle (Kernel32.STDError);
 	ASSERT ((herr) # (Kernel32.InvalidHandleValue));
-
+	
+	traceChar0 := Trace.Char;
 	Trace.Char := Char;
 	mode := console;
 END OpenConsole;
@@ -93,6 +101,7 @@ BEGIN
 	hout := Kernel32.CreateFile(filename, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
 	ASSERT ((hout) # (Kernel32.InvalidHandleValue));
 	herr := hout;
+	traceChar0 := Trace.Char;
 	Trace.Char := Char;
 	mode := file;
 END OpenFile;

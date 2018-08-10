@@ -67,10 +67,6 @@ CONST
 		RhsIsPointer = 1;
 
 		(* priority values, lower means higher priority *)
-		EntryPriority=-4;
-		FirstPriority=-3;
-		InitPriority=-2;
-		ExitPriority=-1;		
 		BasePointerTypeSize = 5;
 		BaseArrayTypeSize = BasePointerTypeSize + 3;
 			LengthOffset = BasePointerTypeSize + 0;
@@ -284,7 +280,7 @@ TYPE
 		END HasFlag;
 
 		PROCEDURE VisitCellType*(x: SyntaxTree.CellType);
-		VAR port,adr: LONGINT; symbol: IntermediateCode.Section; op: IntermediateCode.Operand; capabilities: SET;
+		VAR capabilities: SET;
 		BEGIN
 			IF backend.cellsAreObjects THEN meta.CheckTypeDeclaration(x) END;
 			capabilities := {};
@@ -369,7 +365,8 @@ TYPE
 			VAR op: Operand; baseType: SyntaxTree.Type; variable: SyntaxTree.Variable; i: LONGINT; size:LONGINT;
 			BEGIN
 				IF type = NIL THEN RETURN ELSE type := type.resolved END;
-				WITH type: SyntaxTree.RecordType DO
+				WITH type: 
+				SyntaxTree.RecordType DO
 					baseType := type.baseType;
 					IF baseType # NIL THEN
 						baseType := baseType.resolved;
@@ -383,7 +380,7 @@ TYPE
 						Initialize(variable.type, variable.initializer, offset+ToMemoryUnits(system,variable.offsetInBits));
 						variable := variable.nextVariable
 					END;
-				| type: SyntaxTree.ArrayType DO
+				| SyntaxTree.ArrayType DO
 						IF type.form = SyntaxTree.Static THEN
 							baseType := type.arrayBase;
 							IF TypeNeedsInitialization(baseType) THEN
@@ -393,7 +390,7 @@ TYPE
 								END;
 							END;
 						END;
-				| type: SyntaxTree.MathArrayType DO
+				| SyntaxTree.MathArrayType DO
 						IF type.form = SyntaxTree.Open THEN
 							dim := DynamicDim(type);
 							baseType := SemanticChecker.ArrayBase(type,dim);
@@ -466,8 +463,8 @@ TYPE
 		END VisitProperty; 
 
 		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
-		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i, dim: LONGINT;
-			size: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
+		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i: LONGINT;
+			size: LONGINT; lastUpdated: LONGINT;
 		BEGIN
 			ASSERT(currentScope IS SyntaxTree.CellScope);
 			Global.GetSymbolSegmentedName(x,name);
@@ -592,7 +589,6 @@ TYPE
 			callingConvention: LONGINT;
 			cellType: SyntaxTree.CellType;
 			register: WORD;
-			registerParameters: SIZE;
 			registerClass: IntermediateCode.RegisterClass;
 			type: IntermediateCode.Type;
 			formalParameter: SyntaxTree.Parameter;
@@ -990,7 +986,7 @@ TYPE
 		(** entry function to visit a complete module *)
 		PROCEDURE Module(x: SyntaxTree.Module; module: Sections.Module);
 		VAR
-			ir: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; idstr: SyntaxTree.IdentifierString;
+			name: Basic.SegmentedName; idstr: SyntaxTree.IdentifierString;
 			hasDynamicOperatorDeclarations: BOOLEAN;
 			operator: SyntaxTree.Operator;
 			import: SyntaxTree.Import;
@@ -7416,7 +7412,6 @@ TYPE
 		
 		PROCEDURE AddPorts(cell: SyntaxTree.Symbol; x: SyntaxTree.CellType);
 		VAR name: SyntaxTree.IdentifierString; 
-			variable: SyntaxTree.Variable;
 			parameter: SyntaxTree.Parameter;
 			type: SyntaxTree.Type;
 
@@ -11256,14 +11251,15 @@ TYPE
 				FOR i := 0 TO LEN(out)-1 DO
 					statement := x.outRules.GetStatement(i);
 					IF statement IS SyntaxTree.StatementBlock THEN statement := statement(SyntaxTree.StatementBlock).statements.GetStatement(0) END;
-					WITH statement: SyntaxTree.Assignment DO
+					WITH statement: 
+					SyntaxTree.Assignment DO
 						Designate(statement.left, operand); 
 						MakeMemory(result, operand.op, IntermediateCode.GetType(system,statement.left.type) , 0);
 						NEW(str, 64);
 						Basic.GetString(statement.right(SyntaxTree.IdentifierDesignator).identifier, str^);
 						out[i] := result; IntermediateCode.SetString(out[i], str);
 						ReleaseOperand(operand); (* implicit increase of use of operand.op in MakeMemory *)
-					|statement: SyntaxTree.ReturnStatement DO
+					| SyntaxTree.ReturnStatement DO
 						NEW(str, 64);
 						Basic.GetString(statement.returnValue(SyntaxTree.IdentifierDesignator).identifier, str^);
 						IF currentIsInline THEN
@@ -11298,9 +11294,10 @@ TYPE
 			END;
 			IF out # NIL THEN
 				FOR i := 0 TO LEN(out)-1 DO
-					WITH statement: SyntaxTree.Assignment DO
+					WITH statement: 
+					SyntaxTree.Assignment DO
 						ReleaseIntermediateOperand(out[i]);
-					|statement: SyntaxTree.ReturnStatement DO
+					|SyntaxTree.ReturnStatement DO
 						(* release happens below *)
 					ELSE
 					END;
@@ -12470,7 +12467,8 @@ TYPE
 						type := type.resolved;
 						size := type.sizeInBits;
 						
-						WITH type:SyntaxTree.PointerType DO
+						WITH type:
+						SyntaxTree.PointerType DO
 							IF type.pointerBase.resolved IS SyntaxTree.RecordType THEN
 								IF RefInfo THEN Info(section,"PointerToRecord") END;
 								Char(section, sfTypePointerToRecord);
@@ -12480,7 +12478,7 @@ TYPE
 								Char(section, sfTypePointerToArray);
 								NType(type.pointerBase);
 							END;
-						| type: SyntaxTree.ArrayType DO
+						| SyntaxTree.ArrayType DO
 							IF ~Indirect(type) THEN
 								IF type.form = SyntaxTree.Open THEN
 									IF RefInfo THEN Info(section,"OpenArray") END;
@@ -12497,7 +12495,7 @@ TYPE
 								END;
 								NType(type.arrayBase);
 							END;
-						| type: SyntaxTree.MathArrayType DO
+						| SyntaxTree.MathArrayType DO
 							IF ~Indirect(type) THEN
 								IF type.form = SyntaxTree.Open THEN
 									IF RefInfo THEN Info(section,"MathOpenArray") END;
@@ -12514,7 +12512,7 @@ TYPE
 								END;
 								NType(type.arrayBase);
 							END;
-						| type: SyntaxTree.RecordType DO
+						| SyntaxTree.RecordType DO
 							IF ~Indirect(type) THEN
 								IF type.pointerType # NIL (* OBJECT *) THEN
 									IF RefInfo THEN Info(section,"PointerToRecord") END;
@@ -12538,7 +12536,7 @@ TYPE
 									END;
 								END;
 							END;
-						| type: SyntaxTree.CellType DO
+						| SyntaxTree.CellType DO
 								IF ~Indirect(type) THEN
 									IF RefInfo THEN Info(section,"Record") END;
 									Char(section, sfTypeRecord);
@@ -12557,14 +12555,14 @@ TYPE
 										Address(section, 0);
 									END;
 								END;
-						| type: SyntaxTree.PortType DO
+						| SyntaxTree.PortType DO
 							Char(section, sfTypePORT);
 							IF type.direction = SyntaxTree.OutPort THEN
 								Char(section, sfOUT)
 							ELSE
 								Char(section, sfIN)
 							END;
-						| type: SyntaxTree.ProcedureType DO
+						| SyntaxTree.ProcedureType DO
 								IF ~Indirect(type) THEN
 									IF type.isDelegate THEN
 										Char(section, sfTypeDelegate);
@@ -12578,81 +12576,82 @@ TYPE
 									END;
 									NType(type.returnType);
 								END;															
-						| type:SyntaxTree.EnumerationType DO
+						| SyntaxTree.EnumerationType DO
 								Char(section, sfTypeENUM);
-						| type: SyntaxTree.BasicType DO
-							WITH type: SyntaxTree.BooleanType DO
+						| SyntaxTree.BasicType DO
+							WITH type: 
+							SyntaxTree.BooleanType DO
 								IF RefInfo THEN Info(section,"Boolean") END;
 								Char(section, sfTypeBOOLEAN);
-							| type: SyntaxTree.CharacterType DO
-									IF type = module.system.characterType THEN
-									IF RefInfo THEN Info(section,"CHAR") END;
-										Char(section, sfTypeCHAR);
-									ELSIF (type = module.system.characterType8) OR (type.sizeInBits= 8) THEN
-										IF RefInfo THEN Info(section,"CHAR8") END;
-										Char(section, sfTypeCHAR8)
-									ELSIF (type = module.system.characterType16) OR (type.sizeInBits= 16) THEN
-										IF RefInfo THEN Info(section,"CHAR16") END;
-										Char(section, sfTypeCHAR16);
-									ELSIF (type = module.system.characterType32) OR (type.sizeInBits = 32) THEN
-										IF RefInfo THEN Info(section,"CHAR32") END;
-										Char(section, sfTypeCHAR32);
-									ELSE
-										HALT(100);
-									END;
-							|type: SyntaxTree.IntegerType DO
-								IF type(SyntaxTree.IntegerType).signed THEN
-									IF (type = module.system.shortintType) THEN
-										IF RefInfo THEN Info(section,"SHORTINT") END;
-										Char(section, sfTypeSHORTINT)
-									ELSIF (type = module.system.integerType) THEN
-										IF RefInfo THEN Info(section,"INTEGER") END;
-										Char(section, sfTypeINTEGER)
-									ELSIF (type = module.system.longintType) THEN
-										IF RefInfo THEN Info(section,"LONGINT") END;
-										Char(section, sfTypeLONGINT)
-									ELSIF (type = module.system.hugeintType) THEN 
-										IF RefInfo THEN Info(section,"HUGEINT") END;
-										Char(section, sfTypeHUGEINT)
-									ELSIF (type = module.system.wordType) THEN
-										IF RefInfo THEN Info(section,"WORD") END;
-										Char(section, sfTypeWORD)
-									ELSIF (type = module.system.longWordType) THEN
-										IF RefInfo THEN Info(section,"LONGWORD") END;
-										Char(section, sfTypeLONGWORD);
-									ELSIF (type = Global.Integer8) OR (type.sizeInBits = 8 ) THEN
-										IF RefInfo THEN Info(section,"SIGNED8") END;
-										Char(section, sfTypeSIGNED8)
-									ELSIF (type = Global.Integer16) OR (type.sizeInBits = 16 ) THEN
-										IF RefInfo THEN Info(section,"SIGNED16") END;
-										Char(section, sfTypeSIGNED16)
-									ELSIF (type = Global.Integer32) OR (type.sizeInBits = 32 ) THEN
-										IF RefInfo THEN Info(section,"SIGNED32") END;
-										Char(section, sfTypeSIGNED32)
-									ELSIF (type = Global.Integer64) OR (type.sizeInBits = 64 ) THEN
-										IF RefInfo THEN Info(section,"SIGNED64") END;
-										Char(section, sfTypeSIGNED64)
-									ELSE
-										HALT(100);
-									END 
-								ELSE (* unsigned *) 
-									IF (type = Global.Unsigned8) OR (type.sizeInBits = 8 ) THEN
-										IF RefInfo THEN Info(section,"UNSIGNED8") END;
-										Char(section, sfTypeUNSIGNED8)
-									ELSIF (type = Global.Unsigned16) OR (type.sizeInBits = 16 ) THEN
-										IF RefInfo THEN Info(section,"UNSIGNED16") END;
-										Char(section, sfTypeUNSIGNED16)
-									ELSIF (type = Global.Unsigned32) OR (type.sizeInBits = 32 ) THEN
-										IF RefInfo THEN Info(section,"UNSIGNED32") END;
-										Char(section, sfTypeUNSIGNED32)
-									ELSIF (type = Global.Unsigned64) OR (type.sizeInBits = 64 ) THEN
-										IF RefInfo THEN Info(section,"UNSIGNED64") END;
-										Char(section, sfTypeUNSIGNED64)
-									ELSE
-										HALT(100)
-									END 
+							| SyntaxTree.CharacterType DO
+										IF type = module.system.characterType THEN
+										IF RefInfo THEN Info(section,"CHAR") END;
+											Char(section, sfTypeCHAR);
+										ELSIF (type = module.system.characterType8) OR (type.sizeInBits= 8) THEN
+											IF RefInfo THEN Info(section,"CHAR8") END;
+											Char(section, sfTypeCHAR8)
+										ELSIF (type = module.system.characterType16) OR (type.sizeInBits= 16) THEN
+											IF RefInfo THEN Info(section,"CHAR16") END;
+											Char(section, sfTypeCHAR16);
+										ELSIF (type = module.system.characterType32) OR (type.sizeInBits = 32) THEN
+											IF RefInfo THEN Info(section,"CHAR32") END;
+											Char(section, sfTypeCHAR32);
+										ELSE
+											HALT(100);
+										END;
+								|SyntaxTree.IntegerType DO
+									IF type(SyntaxTree.IntegerType).signed THEN
+										IF (type = module.system.shortintType) THEN
+											IF RefInfo THEN Info(section,"SHORTINT") END;
+											Char(section, sfTypeSHORTINT)
+										ELSIF (type = module.system.integerType) THEN
+											IF RefInfo THEN Info(section,"INTEGER") END;
+											Char(section, sfTypeINTEGER)
+										ELSIF (type = module.system.longintType) THEN
+											IF RefInfo THEN Info(section,"LONGINT") END;
+											Char(section, sfTypeLONGINT)
+										ELSIF (type = module.system.hugeintType) THEN 
+											IF RefInfo THEN Info(section,"HUGEINT") END;
+											Char(section, sfTypeHUGEINT)
+										ELSIF (type = module.system.wordType) THEN
+											IF RefInfo THEN Info(section,"WORD") END;
+											Char(section, sfTypeWORD)
+										ELSIF (type = module.system.longWordType) THEN
+											IF RefInfo THEN Info(section,"LONGWORD") END;
+											Char(section, sfTypeLONGWORD);
+										ELSIF (type = Global.Integer8) OR (type.sizeInBits = 8 ) THEN
+											IF RefInfo THEN Info(section,"SIGNED8") END;
+											Char(section, sfTypeSIGNED8)
+										ELSIF (type = Global.Integer16) OR (type.sizeInBits = 16 ) THEN
+											IF RefInfo THEN Info(section,"SIGNED16") END;
+											Char(section, sfTypeSIGNED16)
+										ELSIF (type = Global.Integer32) OR (type.sizeInBits = 32 ) THEN
+											IF RefInfo THEN Info(section,"SIGNED32") END;
+											Char(section, sfTypeSIGNED32)
+										ELSIF (type = Global.Integer64) OR (type.sizeInBits = 64 ) THEN
+											IF RefInfo THEN Info(section,"SIGNED64") END;
+											Char(section, sfTypeSIGNED64)
+										ELSE
+											HALT(100);
+										END 
+									ELSE (* unsigned *) 
+										IF (type = Global.Unsigned8) OR (type.sizeInBits = 8 ) THEN
+											IF RefInfo THEN Info(section,"UNSIGNED8") END;
+											Char(section, sfTypeUNSIGNED8)
+										ELSIF (type = Global.Unsigned16) OR (type.sizeInBits = 16 ) THEN
+											IF RefInfo THEN Info(section,"UNSIGNED16") END;
+											Char(section, sfTypeUNSIGNED16)
+										ELSIF (type = Global.Unsigned32) OR (type.sizeInBits = 32 ) THEN
+											IF RefInfo THEN Info(section,"UNSIGNED32") END;
+											Char(section, sfTypeUNSIGNED32)
+										ELSIF (type = Global.Unsigned64) OR (type.sizeInBits = 64 ) THEN
+											IF RefInfo THEN Info(section,"UNSIGNED64") END;
+											Char(section, sfTypeUNSIGNED64)
+										ELSE
+											HALT(100)
+										END 
 								END;
-							| type: SyntaxTree.FloatType DO
+							| SyntaxTree.FloatType DO
 								IF (type = module.system.realType) OR (type.sizeInBits = 32) THEN
 									IF RefInfo THEN Info(section,"REAL") END;
 									Char(section, sfTypeREAL);
@@ -12662,7 +12661,7 @@ TYPE
 								ELSE
 									HALT(100);
 								END;
-							|type: SyntaxTree.ComplexType DO
+							| SyntaxTree.ComplexType DO
 								IF (type = module.system.complexType) OR (type.sizeInBits = 64) THEN
 									IF RefInfo THEN Info(section,"COMPLEX") END;
 									Char(section, sfTypeCOMPLEX);
@@ -12672,25 +12671,25 @@ TYPE
 								ELSE
 									HALT(100);
 								END;
-							|type:SyntaxTree.SetType DO
+							|SyntaxTree.SetType DO
 								IF RefInfo THEN Info(section,"SET") END;
 								Char(section, sfTypeSET);
-							|type:SyntaxTree.AnyType DO
+							|SyntaxTree.AnyType DO
 								IF RefInfo THEN Info(section,"ANY") END;
 								Char(section, sfTypeANY);
-							|type:SyntaxTree.ObjectType DO
+							|SyntaxTree.ObjectType DO
 								IF RefInfo THEN Info(section,"OBJECT") END;
 								Char(section, sfTypeOBJECT);
-							|type:SyntaxTree.ByteType DO
+							|SyntaxTree.ByteType DO
 								IF RefInfo THEN Info(section,"BYTE") END;
 								Char(section, sfTypeBYTE);
-							|type:SyntaxTree.RangeType DO	
+							|SyntaxTree.RangeType DO	
 								IF RefInfo THEN Info(section,"RANGE") END;
 								Char(section, sfTypeRANGE)
-							|type:SyntaxTree.AddressType DO
+							|SyntaxTree.AddressType DO
 								IF RefInfo THEN Info(section,"ADDRESS") END;
 								Char(section, sfTypeADDRESS)
-							|type:SyntaxTree.SizeType DO
+							|SyntaxTree.SizeType DO
 								IF RefInfo THEN Info(section,"SIZE") END;
 								Char(section, sfTypeSIZE)
 							ELSE
@@ -12818,7 +12817,8 @@ TYPE
 						declared := declared(SyntaxTree.PointerType).pointerBase.resolved;
 					END;
 
-					WITH declared: SyntaxTree.RecordType DO
+					WITH declared: 
+					SyntaxTree.RecordType DO
 						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(declared.recordScope.numberMethods)*module.system.addressSize);
 						Symbol(section, s,  0, offset);
 						Global.GetSymbolSegmentedName(typeDeclaration,name);
@@ -12828,7 +12828,7 @@ TYPE
 							PatchSize(s(IntermediateCode.Section), patchInfoPC, pos);
 						END;
 						NScope(declared.recordScope, pos);
-					|declared: SyntaxTree.CellType DO
+					|SyntaxTree.CellType DO
 						offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
 						Symbol(section, s,  0, offset);
 						Global.GetSymbolSegmentedName(typeDeclaration,name);
@@ -12867,9 +12867,10 @@ TYPE
 						NVariable(variable, prevSymbol);
 						variable := variable.nextVariable;
 					END;
-					WITH scope: SyntaxTree.ModuleScope DO
+					WITH scope: 
+					SyntaxTree.ModuleScope DO
 						bodyProcedure := scope.bodyProcedure;
-					|scope: SyntaxTree.RecordScope DO
+					|SyntaxTree.RecordScope DO
 						bodyProcedure := scope.bodyProcedure;
 					ELSE
 						bodyProcedure := NIL;

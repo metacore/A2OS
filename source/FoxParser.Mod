@@ -2365,9 +2365,10 @@ TYPE
 						context := Identifier(idPosition);
 						IF context # SyntaxTree.invalidIdentifier THEN  import.SetContext(context) END;
 					END;
-					WITH scope: SyntaxTree.ModuleScope DO
+					WITH scope: 
+					SyntaxTree.ModuleScope DO
 						scope.AddImport( import );
-					| scope: SyntaxTree.CellScope DO
+					| SyntaxTree.CellScope DO
 						scope.AddImport( import );
 					END;
 				END;

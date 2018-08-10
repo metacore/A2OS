@@ -147,7 +147,7 @@ TYPE
 		PROCEDURE ^ TicketToOperand(ticket: Ticket; VAR op: Assembler.Operand); 
 		PROCEDURE ^ GetTemporaryRegister(type: IntermediateCode.Type; VAR op: Assembler.Operand); 
 		PROCEDURE ^ GetImmediateMem(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR imm: Assembler.Operand); 
-		PROCEDURE ^ GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit: BOOLEAN); 
+		PROCEDURE ^ GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit, push: BOOLEAN); 
 		PROCEDURE ^ GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand); 
 		PROCEDURE ^ GetRegister(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; VAR ticket: Ticket); 
 		PROCEDURE ^ MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket); 

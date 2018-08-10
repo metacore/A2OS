@@ -104,6 +104,7 @@ TYPE
 		PROCEDURE ^ VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression); 
 		PROCEDURE ^ VisitMathArrayValue*(x: SyntaxTree.MathArrayValue); 
 		PROCEDURE ^ VisitRealValue*(x: SyntaxTree.RealValue); 
+		PROCEDURE ^ VisitComplexValue*(x: SyntaxTree.ComplexValue); 
 		PROCEDURE ^ VisitNilValue*(x: SyntaxTree.NilValue); 
 		PROCEDURE ^ VisitStringValue*(x: SyntaxTree.StringValue); 
 		PROCEDURE ^ FPValue(VAR fp: LONGINT; x: SyntaxTree.Expression); 

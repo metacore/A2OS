@@ -361,7 +361,7 @@ TYPE
 		PROCEDURE ^ VisitSet*(x: SyntaxTree.Set); 
 		PROCEDURE ^ VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression); 
 		PROCEDURE ^ VisitUnaryExpression*(x: SyntaxTree.UnaryExpression); 
-		PROCEDURE ^ TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; trueL, falseL: Label); 
+		PROCEDURE ^ TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; trueL, falseL: Label; withPart: BOOLEAN); 
 		PROCEDURE ^ Error(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ CreateTraceModuleMethod(mod: SyntaxTree.Module); 
@@ -494,7 +494,8 @@ TYPE
 		PROCEDURE ^ EmitCooperativeSwitch; 
 		PROCEDURE ^ VisitCommunicationStatement*(communication: SyntaxTree.CommunicationStatement); 
 		PROCEDURE ^ VisitIfStatement*(x: SyntaxTree.IfStatement); 
-		PROCEDURE ^ WithPart(x: SyntaxTree.WithPart; VAR falseL, endL: Label); 
+		PROCEDURE ^ BrWithPart(CONST tag: IntermediateCode.Operand; x: SyntaxTree.WithPart; VAR trueL: Label); 
+		PROCEDURE ^ EmitWithPart(x: SyntaxTree.WithPart); 
 		PROCEDURE ^ VisitWithStatement*(x: SyntaxTree.WithStatement); 
 		PROCEDURE ^ VisitCaseStatement*(x: SyntaxTree.CaseStatement); 
 		PROCEDURE ^ VisitWhileStatement*(x: SyntaxTree.WhileStatement); 

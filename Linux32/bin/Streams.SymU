@@ -69,6 +69,7 @@ TYPE
 		PROCEDURE ^ Pair(ch: CHAR; x: LONGINT); 
 		PROCEDURE ^ Date*(t, d: LONGINT); 
 		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
+		PROCEDURE ^ Append(VAR str: ARRAY OF CHAR; c: CHAR); 
 		PROCEDURE ^ Float*(x: LONGREAL; n: WORD); 
 		PROCEDURE ^ FloatFix*(x: LONGREAL; n, f, D: WORD); 
 	END Writer; 

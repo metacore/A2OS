@@ -79,6 +79,7 @@ TYPE
 		PROCEDURE ^ VisitRecordType*(x: RecordType); 
 		PROCEDURE ^ VisitCellType*(x: CellType); 
 		PROCEDURE ^ VisitProcedureType*(x: ProcedureType); 
+		PROCEDURE ^ VType*(x: Type); 
 		PROCEDURE ^ VisitExpression*(x: Expression); 
 		PROCEDURE ^ VisitSet*(x: Set); 
 		PROCEDURE ^ VisitMathArrayExpression*(x: MathArrayExpression); 
@@ -114,6 +115,7 @@ TYPE
 		PROCEDURE ^ VisitStringValue*(x: StringValue); 
 		PROCEDURE ^ VisitNilValue*(x: NilValue); 
 		PROCEDURE ^ VisitEnumerationValue*(x: EnumerationValue); 
+		PROCEDURE ^ VExpression*(x: Expression); 
 		PROCEDURE ^ VisitSymbol*(x: Symbol); 
 		PROCEDURE ^ VisitModule*(x: Module); 
 		PROCEDURE ^ VisitTypeDeclaration*(x: TypeDeclaration); 
@@ -125,6 +127,7 @@ TYPE
 		PROCEDURE ^ VisitBuiltin*(x: Builtin); 
 		PROCEDURE ^ VisitOperator*(x: Operator); 
 		PROCEDURE ^ VisitImport*(x: Import); 
+		PROCEDURE ^ VSymbol*(x: Symbol); 
 		PROCEDURE ^ VisitStatement*(x: Statement); 
 		PROCEDURE ^ VisitProcedureCallStatement*(x: ProcedureCallStatement); 
 		PROCEDURE ^ VisitAssignment*(x: Assignment); 
@@ -142,6 +145,7 @@ TYPE
 		PROCEDURE ^ VisitAwaitStatement*(x: AwaitStatement); 
 		PROCEDURE ^ VisitStatementBlock*(x: StatementBlock); 
 		PROCEDURE ^ VisitCode*(x: Code); 
+		PROCEDURE ^ VStatement*(x: Statement); 
 	END Visitor; 
 
 	ArrayAccessOperators* = RECORD 
@@ -1244,13 +1248,11 @@ TYPE
 
 	WithPart* = OBJECT (Part)
 	VAR 
-		variable-: Designator; 
 		type-: Type; 
 		statements-: StatementSequence; 
 		comment-: Comment; 
 
 		PROCEDURE ^  & InitWithPart; 
-		PROCEDURE ^ SetVariable*(variable: Designator); 
 		PROCEDURE ^ SetType*(type: Type); 
 		PROCEDURE ^ SetStatements*(statements: StatementSequence); 
 		PROCEDURE ^ SetComment*(comment: Comment); 
@@ -1259,10 +1261,12 @@ TYPE
 
 	WithStatement* = OBJECT (Statement)
 	VAR 
+		variable-: Designator; 
 		withParts-: Basic.List; 
 		elsePart-: StatementSequence; 
 
 		PROCEDURE ^  & InitWithStatement(position: Position; outer: Statement); 
+		PROCEDURE ^ SetVariable*(variable: Designator); 
 		PROCEDURE ^ AddWithPart*(withPart: WithPart); 
 		PROCEDURE ^ GetWithPart*(i: LONGINT): WithPart; 
 		PROCEDURE ^ WithParts*(): LONGINT; 

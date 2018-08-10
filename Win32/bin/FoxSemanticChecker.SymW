@@ -232,7 +232,7 @@ TYPE
 		PROCEDURE ^ VisitCommunicationStatement*(communication: SyntaxTree.CommunicationStatement); 
 		PROCEDURE ^ IfPart(ifPart: SyntaxTree.IfPart; VAR true: BOOLEAN); 
 		PROCEDURE ^ VisitIfStatement*(ifStatement: SyntaxTree.IfStatement); 
-		PROCEDURE ^ WithPart(withPart: SyntaxTree.WithPart; VAR symbol: SyntaxTree.Symbol); 
+		PROCEDURE ^ WithPart(withPart: SyntaxTree.WithPart; variable: SyntaxTree.Designator); 
 		PROCEDURE ^ VisitWithStatement*(withStatement: SyntaxTree.WithStatement); 
 		PROCEDURE ^ CasePart(casePart: SyntaxTree.CasePart; type: SyntaxTree.Type; VAR allcases: SyntaxTree.CaseConstant; VAR min, max: Basic.Integer); 
 		PROCEDURE ^ VisitCaseStatement*(caseStatement: SyntaxTree.CaseStatement); 

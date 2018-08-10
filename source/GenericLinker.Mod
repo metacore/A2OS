@@ -221,7 +221,7 @@ VAR
 	BEGIN
 		leftType := this.priority;
 		rightType := that.priority;
-		RETURN (leftType < rightType)
+		RETURN (leftType < rightType) OR (leftType = rightType) & (leftType = ExitCode)
 	END Precedes;
 
 

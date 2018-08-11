@@ -14,7 +14,7 @@ TYPE
 		BEGIN
 			InitBasicWriter(w); alertCount := 0; commentCount := 0; keywordCount := 0;
 			IF w IS TextUtilities.TextWriter THEN
-				w(TextUtilities.TextWriter).SetFontName("Courier");
+				w(TextUtilities.TextWriter).SetFontName("Vera");
 			END;
 		END InitA2Writer;
 

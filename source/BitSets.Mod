@@ -76,7 +76,7 @@ TYPE BitSet* = OBJECT
 	END SetBits;
 	
 	PROCEDURE SetBytes*(startPos: SIZE; bytes: LONGINT; CONST values: ARRAY OF CHAR);
-	VAR adr: ADDRESS; i: SIZE;
+	VAR adr: ADDRESS;
 	BEGIN
 		ASSERT (startPos >= 0); ASSERT (startPos+8*bytes <= size); ASSERT(startPos MOD 8 = 0);
 		adr := ADDRESS OF data[0] + startPos DIV 8;

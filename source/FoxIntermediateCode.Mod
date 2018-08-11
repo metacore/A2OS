@@ -2,7 +2,7 @@ MODULE FoxIntermediateCode; (** AUTHOR "fof"; PURPOSE "Oberon Compiler Abstract 
 (* Active Oberon Compiler, (c) 2009 Felix Friedrich *)
 IMPORT
 	Sections := FoxSections, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Backend := FoxBackend,
-	SYSTEM, Streams, Global := FoxGlobal, D := Debugging, ObjectFile;
+	Streams, Global := FoxGlobal, D := Debugging, ObjectFile;
 
 CONST
 	(* operand modes *)
@@ -230,14 +230,6 @@ TYPE
 			RETURN sizeInUnits
 		END GetSize;
 
-		PROCEDURE InitArray;
-		CONST MinInstructions = 8;
-		BEGIN
-			IF instructions = NIL THEN NEW(instructions, MinInstructions); END;
-			pc := 0;
-		END InitArray;
-
-
 		(* very useful for debugging:
 		PROCEDURE Assert*(b: BOOLEAN; CONST s: ARRAY OF CHAR);
 		BEGIN
@@ -424,7 +416,6 @@ TYPE
 	**)
 	PROCEDURE NewSection*(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): Section;
 	VAR
-		t0: SHORTINT;
 		result: Sections.Section;
 		section: Section;
 	BEGIN
@@ -1211,7 +1202,6 @@ TYPE
 	- note that no conversion is done, but only the type is changed **)
 	PROCEDURE ToUnsigned*(operand: Operand): Operand;
 	VAR
-		type: Type;
 		result: Operand;
 	BEGIN
 		ASSERT(operand.type.form IN Integer);

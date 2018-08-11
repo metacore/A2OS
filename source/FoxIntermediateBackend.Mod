@@ -125,6 +125,7 @@ TYPE
 		dimOffset: LONGINT;
 	END;
 
+	
 	Fixup= POINTER TO RECORD
 		pc: LONGINT;
 		nextFixup: Fixup;
@@ -169,7 +170,7 @@ TYPE
 
 	ConditionalBranch = PROCEDURE {DELEGATE}(label: Label; op1,op2: IntermediateCode.Operand);
 
-	DeclarationVisitor =OBJECT(SyntaxTree.Visitor)
+	DeclarationVisitor =OBJECT
 	VAR
 		backend: IntermediateBackend;
 		implementationVisitor: ImplementationVisitor;
@@ -197,62 +198,40 @@ TYPE
 			backend.Error(module.module.sourceName, position, Streams.Invalid, s);
 		END Error;
 
-		PROCEDURE Type(x: SyntaxTree.Type);
-		BEGIN
-			VType(x);
-		END Type;
-
 		(** types **)
 
-		PROCEDURE VisitBasicType*(x: SyntaxTree.BasicType);
-		BEGIN (* no code emission *) END VisitBasicType;
+		PROCEDURE Type(x: SyntaxTree.Type);
+		BEGIN
+			WITH x: 
+			SyntaxTree.QualifiedType DO QualifiedType(x)
+			|SyntaxTree.MathArrayType DO meta.CheckTypeDeclaration(x)
+			|SyntaxTree.PointerType DO meta.CheckTypeDeclaration(x)			(* base type must not be visited => will be done via record type declaration, otherwise is done twice ! *)
+			|SyntaxTree.RecordType DO RecordType(x)
+			|SyntaxTree.CellType DO CellType(x)
+			ELSE
+			END;
+		END Type;
 
-		PROCEDURE VisitCharacterType*(x: SyntaxTree.CharacterType);
-		BEGIN (* no code emission *)  END VisitCharacterType;
-
-		PROCEDURE VisitIntegerType*(x: SyntaxTree.IntegerType);
-		BEGIN (* no code emission *)  END VisitIntegerType;
-
-		PROCEDURE VisitFloatType*(x: SyntaxTree.FloatType);
-		BEGIN (* no code emission *)  END VisitFloatType;
-
-		PROCEDURE VisitComplexType*(x: SyntaxTree.ComplexType);
-		BEGIN (* no code emission *)  END VisitComplexType;
-
-		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
+		PROCEDURE QualifiedType(x: SyntaxTree.QualifiedType);
 		VAR type: SyntaxTree.Type;
 		BEGIN (* no further traversal to x.resolved necessary since type descriptor and code will be inserted at "original" position ? *)
 			type := x.resolved;
 			IF (type.typeDeclaration # NIL) & (type.typeDeclaration.scope.ownerModule # module.module) THEN
 				meta.CheckTypeDeclaration(type);
 			END;
-		END VisitQualifiedType;
+		END QualifiedType;
 
-		PROCEDURE VisitStringType*(x: SyntaxTree.StringType);
-		BEGIN (* no code emission *)   END VisitStringType;
-
-		PROCEDURE VisitArrayRangeType(x: SyntaxTree.RangeType);
-		BEGIN (* no code emission *)
-		END VisitArrayRangeType;
-
-		PROCEDURE VisitArrayType*(x: SyntaxTree.ArrayType);
-		BEGIN (* no code emission *)   END VisitArrayType;
-
-		PROCEDURE VisitPortType*(x: SyntaxTree.PortType);
-		BEGIN (* no code emission *)   END VisitPortType;
-
-		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
+		PROCEDURE HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN;
+		VAR this: SyntaxTree.Modifier; id: SyntaxTree.Identifier;
 		BEGIN
-			meta.CheckTypeDeclaration(x);
-		END VisitMathArrayType;
-
-		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
-		BEGIN
-			meta.CheckTypeDeclaration(x);
-			(* base type must not be visited => will be done via record type declaration, otherwise is done twice ! *)
-		END VisitPointerType;
-
-		PROCEDURE VisitRecordType*(x: SyntaxTree.RecordType);
+			this := modifiers; id := SyntaxTree.NewIdentifier(name);
+			WHILE (this # NIL) & (this.identifier# id) DO
+				this := this.nextModifier;
+			END;
+			RETURN this # NIL
+		END HasFlag;
+		
+		PROCEDURE RecordType(x: SyntaxTree.RecordType);
 		VAR name: ARRAY 256 OF CHAR; td: SyntaxTree.TypeDeclaration;
 		BEGIN (* no code emission *)
 			meta.CheckTypeDeclaration(x);
@@ -267,19 +246,9 @@ TYPE
 				(* code section for object *)
 			END;
 			Scope(x.recordScope);
-		END VisitRecordType;
-
-		PROCEDURE HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN;
-		VAR this: SyntaxTree.Modifier; id: SyntaxTree.Identifier;
-		BEGIN
-			this := modifiers; id := SyntaxTree.NewIdentifier(name);
-			WHILE (this # NIL) & (this.identifier# id) DO
-				this := this.nextModifier;
-			END;
-			RETURN this # NIL
-		END HasFlag;
-
-		PROCEDURE VisitCellType*(x: SyntaxTree.CellType);
+		END RecordType;
+		
+		PROCEDURE CellType(x: SyntaxTree.CellType);
 		VAR capabilities: SET;
 		BEGIN
 			IF backend.cellsAreObjects THEN meta.CheckTypeDeclaration(x) END;
@@ -291,28 +260,11 @@ TYPE
 			IF ~implementationVisitor.checker.SkipImplementation(x) THEN
 				Scope(x.cellScope);
 			END;
-		END VisitCellType;
-
-		PROCEDURE VisitProcedureType*(x: SyntaxTree.ProcedureType);
-		BEGIN (* no code emission *)   END VisitProcedureType;
-
-		PROCEDURE VisitEnumerationType*(x: SyntaxTree.EnumerationType);
-		BEGIN (* no code emission, exported enumeration type values should be included in symbol file *)
-		END VisitEnumerationType;
+		END CellType;
 
 		(* symbols *)
 
-		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
-		BEGIN
-			Procedure(x);
-		END VisitProcedure;
-
-		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
-		BEGIN
-			Procedure(x);
-		END VisitOperator;
-
-		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
+		PROCEDURE Variable(x: SyntaxTree.Variable);
 		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align,  dim, i: LONGINT;
 			size: LONGINT; lastUpdated: LONGINT; imm: IntermediateCode.Operand;
 
@@ -455,14 +407,9 @@ TYPE
 			ELSIF currentScope IS SyntaxTree.ProcedureScope THEN
 			END;
 			(* do not call Type(x.type) here as this must already performed in the type declaration section ! *)
-		END VisitVariable;
+		END Variable;
 
-		PROCEDURE VisitProperty*(x: SyntaxTree.Property);
-		BEGIN
-			VisitVariable(x)
-		END VisitProperty; 
-
-		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
+		PROCEDURE Parameter(x: SyntaxTree.Parameter);
 		VAR name: Basic.SegmentedName; irv: IntermediateCode.Section; align, i: LONGINT;
 			size: LONGINT; lastUpdated: LONGINT;
 		BEGIN
@@ -492,24 +439,22 @@ TYPE
 				irv.SetPositionOrAlignment(x.fixed, align);
 				meta.CheckTypeDeclaration(x.type);
 			END;
-		END VisitParameter;
-		
+		END Parameter;
 
-
-		PROCEDURE VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration);
+		PROCEDURE TypeDeclaration(x: SyntaxTree.TypeDeclaration);
 		BEGIN
 			Type(x.declaredType); (* => code in objects *)
 			IF ~(x.declaredType IS SyntaxTree.QualifiedType) & (x.declaredType.resolved IS SyntaxTree.PointerType) THEN
 				Type(x.declaredType.resolved(SyntaxTree.PointerType).pointerBase);
 			END;
-		END VisitTypeDeclaration;
+		END TypeDeclaration;
 
-		PROCEDURE VisitConstant*(x: SyntaxTree.Constant);
+		PROCEDURE Constant(x: SyntaxTree.Constant);
 		BEGIN
 			IF (SyntaxTree.Public * x.access # {}) THEN
 				implementationVisitor.VisitConstant(x);
 			END;
-		END VisitConstant;
+		END Constant;
 
 
 		PROCEDURE Scope(x: SyntaxTree.Scope);
@@ -530,12 +475,12 @@ TYPE
 				cell := x.ownerCell;
 				parameter := cell.firstParameter;
 				WHILE parameter # NIL DO
-					VisitParameter(parameter);
+					Parameter(parameter);
 					parameter := parameter.nextParameter;
 				END;
 				property := cell.firstProperty;
 				WHILE property # NIL DO
-					VisitProperty(property);
+					Variable(property);
 					property := property.nextProperty;
 				END;
 			ELSE
@@ -543,25 +488,25 @@ TYPE
 
 			typeDeclaration := x.firstTypeDeclaration;
 			WHILE typeDeclaration # NIL DO
-				VisitTypeDeclaration(typeDeclaration);
+				TypeDeclaration(typeDeclaration);
 				typeDeclaration := typeDeclaration.nextTypeDeclaration;
 			END;
 
 			variable := x.firstVariable;
 			WHILE variable # NIL DO
-				VisitVariable(variable);
+				Variable(variable);
 				variable := variable.nextVariable;
 			END;
 
 			procedure := x.firstProcedure;
 			WHILE procedure # NIL DO
-				VisitProcedure(procedure);
+				Procedure(procedure);
 				procedure := procedure.nextProcedure;
 			END;
 
 			constant := x.firstConstant;
 			WHILE constant # NIL DO
-				VisitConstant(constant);
+				Constant(constant);
 				constant := constant.nextConstant;
 			END;
 			currentScope := prevScope;
@@ -572,7 +517,7 @@ TYPE
 		BEGIN
 			parameter := first;
 			WHILE parameter # NIL DO
-				VisitParameter(parameter);
+				Parameter(parameter);
 				parameter := parameter.nextParameter;
 			END;
 		END Parameters;
@@ -1527,19 +1472,6 @@ TYPE
 		END GetCodeSectionNameForSymbol;
 
 
-		(** get the name for the code section that represens a certain symbol
-		(essentially the same as Global.GetSymbolName, apart from operators) **)
-		PROCEDURE GetCodeSectionNameForSymbolInScope(symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope; VAR name: ARRAY OF CHAR);
-		VAR string: ARRAY 32 OF CHAR;
-		BEGIN
-			Global.GetSymbolNameInScope(symbol, scope, name);
-			(* if the symbol is an operator, then append the fingerprint to the name *)
-			IF symbol IS SyntaxTree.Operator THEN
-				GetFingerprintString(symbol, string);
-				Strings.Append(name, string);
-			END
-		END GetCodeSectionNameForSymbolInScope;
-
 		PROCEDURE TraceEnter(CONST s: ARRAY OF CHAR);
 		BEGIN
 			IF dump # NIL THEN
@@ -1690,7 +1622,7 @@ TYPE
 		
 		PROCEDURE EmitLeave(section: IntermediateCode.Section; position: Basic.Position; procedure: SyntaxTree.Procedure; callconv: LONGINT);
 		VAR prevSection: IntermediateCode.Section;
-		VAR op2, size: IntermediateCode.Operand;
+		VAR op2: IntermediateCode.Operand;
 		VAR body: SyntaxTree.Body;
 		BEGIN
 			prevSection := SELF.section;
@@ -2158,7 +2090,9 @@ TYPE
 		END NewLabel;
 
 		PROCEDURE SetLabel(label: Label);
-		BEGIN label.Resolve(section.pc);
+		BEGIN 
+			Emit(Nop(position));
+			label.Resolve(section.pc);
 		END SetLabel;
 
 		PROCEDURE LabelOperand(label: Label): IntermediateCode.Operand;
@@ -2172,6 +2106,7 @@ TYPE
 
 		PROCEDURE BrL(label: Label);
 		BEGIN
+			Emit(Nop(position));
 			Emit(Br(position,LabelOperand(label)));
 		END BrL;
 
@@ -3548,7 +3483,7 @@ TYPE
 			leftType,rightType: SyntaxTree.Type;
 			leftExpression,rightExpression : SyntaxTree.Expression;
 			componentType: IntermediateCode.Type;
-			value: HUGEINT; exp: LONGINT;next,exit: Label; recordType: SyntaxTree.RecordType; dest: IntermediateCode.Operand;
+			next,exit: Label; recordType: SyntaxTree.RecordType; dest: IntermediateCode.Operand;
 			size: LONGINT;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitBinaryExpression") END;
@@ -5711,12 +5646,12 @@ TYPE
 			designator: SyntaxTree.Designator;
 			procedureType: SyntaxTree.ProcedureType;
 			formalParameter: SyntaxTree.Parameter;
-			operand, returnValue: Operand;
+			operand: Operand;
 			reg, size, mask, dest: IntermediateCode.Operand;
 			saved,saved2: RegisterEntry;
 			symbol: SyntaxTree.Symbol;
 			variable: SyntaxTree.Variable;
-			i,  parametersSize, returnTypeSize : LONGINT;
+			i,  parametersSize : LONGINT;
 			structuredReturnType: BOOLEAN;
 			firstWriteBackCall, currentWriteBackCall: WriteBackCall;
 			tempVariableDesignator: SyntaxTree.Designator;
@@ -6323,8 +6258,8 @@ TYPE
 				reason: type desciptors in Sections are then accessible via a type declaration symbol and for types
 				and variables, constants and procedures the same mechanism can be used for fixups etc.
 			*)
-			VAR  source: Sections.Section;null: HUGEINT; td: SyntaxTree.TypeDeclaration;
-				op: IntermediateCode.Operand; baseRecord: SyntaxTree.RecordType;
+			VAR  source: Sections.Section;td: SyntaxTree.TypeDeclaration;
+				baseRecord: SyntaxTree.RecordType;
 			BEGIN (* no code emission *)
 				source := NIL;
 				x := x.resolved;
@@ -7327,21 +7262,7 @@ TYPE
 			END;
 			RETURN type
 		END GetMathArrayDescriptorType;
-
-		PROCEDURE NewMathArrayDescriptor(op: Operand; dimensions: LONGINT);
-		VAR reg: IntermediateCode.Operand; type: SyntaxTree.Type;
-		BEGIN
-			type := GetMathArrayDescriptorType(dimensions);
-			Emit(Push(position,op.op));
-			(* push type descriptor *)
-			reg := TypeDescriptorAdr(type);
-			Emit(Push(position,reg));
-			ReleaseIntermediateOperand(reg);
-			(* push realtime flag: false by default *)
-			Emit(Push(position,false));
-			CallThis(position,"Heaps","NewRec",3);
-		END NewMathArrayDescriptor;
-
+		
 		PROCEDURE PushConstString(CONST s: ARRAY OF CHAR);
 		VAR res: Operand; string: SyntaxTree.String; sv: SyntaxTree.StringValue; type: SyntaxTree.Type;
 		BEGIN
@@ -7750,7 +7671,6 @@ TYPE
 			required for generational garbage collector
 		*)
 		PROCEDURE OnHeap(x: SyntaxTree.Expression): BOOLEAN;
-		VAR pos: LONGINT; y: SyntaxTree.Expression;
 		BEGIN
 			RETURN TRUE;
 			(*! find a conservative and simple algorithm. The following does, for example, not work for records on the stack
@@ -7769,7 +7689,7 @@ TYPE
 			constructor: SyntaxTree.Procedure; s0,s1,s2: Operand; hint: HUGEINT;
 			i: LONGINT; formalParameter: SyntaxTree.Parameter;
 			tmp:IntermediateCode.Operand;
-			size: LONGINT; dim,openDim: LONGINT; pointer: IntermediateCode.Operand; t,t0,t1,t2: SyntaxTree.Type; trueL,falseL,ignore: Label;
+			size: LONGINT; dim,openDim: LONGINT; pointer: IntermediateCode.Operand; t0,t1,t2: SyntaxTree.Type; trueL,falseL,ignore: Label;
 			exit,else,end: Label; procedureType: SyntaxTree.ProcedureType;
 			name: Basic.SegmentedName; symbol: Sections.Section; operand: Operand;
 			dest: IntermediateCode.Operand;
@@ -7777,7 +7697,6 @@ TYPE
 			convert,isTensor: BOOLEAN;
 			recordType: SyntaxTree.RecordType;
 			baseType: SyntaxTree.Type;
-			flags: SET;
 			left: SyntaxTree.Expression;
 			call: SyntaxTree.Designator;
 			procedure: SyntaxTree.Procedure;
@@ -9852,8 +9771,8 @@ TYPE
 		END VisitProperty;
 
 		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
-		VAR type: SyntaxTree.Type; basereg, mem: IntermediateCode.Operand; parameter: SyntaxTree.Parameter;adr: LONGINT; symbol: Sections.Section;
-			name: Basic.SegmentedName; parameterType, ptype: SyntaxTree.Type; len,inc: LONGINT; temp: IntermediateCode.Operand;
+		VAR type: SyntaxTree.Type; basereg, mem: IntermediateCode.Operand; symbol: Sections.Section;
+			name: Basic.SegmentedName; ptype: SyntaxTree.Type; temp: IntermediateCode.Operand;
 		BEGIN
 			type := x.type.resolved;
 			IF Trace THEN TraceEnter("VisitParameter") END;
@@ -11749,15 +11668,7 @@ TYPE
 			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.longintType),value);
 			section.Emit(Data(Basic.invalidPosition,op));
 		END Longint;
-
-		PROCEDURE PatchAddress(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
-		VAR op,noOperand: IntermediateCode.Operand;
-		BEGIN
-			IntermediateCode.InitOperand(noOperand);
-			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.addressType),value);
-			section.PatchOperands(pc,op,noOperand,noOperand);
-		END PatchAddress;
-
+		
 		PROCEDURE PatchSize(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
 		VAR op,noOperand: IntermediateCode.Operand;
 		BEGIN
@@ -11796,13 +11707,6 @@ TYPE
 			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.characterType),ORD(char));
 			section.Emit(Data(Basic.invalidPosition,op));
 		END Char;
-
-		PROCEDURE Integer(section: IntermediateCode.Section; int: LONGINT);
-		VAR op: IntermediateCode.Operand;
-		BEGIN
-			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.integerType),int);
-			section.Emit(Data(Basic.invalidPosition,op));
-		END Integer;
 
 		PROCEDURE String(section: IntermediateCode.Section; CONST str: ARRAY OF CHAR);
 		VAR i: LONGINT;
@@ -12373,7 +12277,7 @@ TYPE
 				sfTypeProcedure = 29X;
 				sfTypeDelegate = 2AX;
 				sfTypeENUM = 2BX; 
-				sfTypeCELL = 2CX;
+(*				sfTypeCELL = 2CX; *)
 				sfTypePORT = 2DX;
 				
 				sfIN = 0X;
@@ -12397,7 +12301,7 @@ TYPE
 				RefInfo = TRUE;
 
 			VAR
-				s: Sections.Section; sizePC, i, startPC, lastOffset: LONGINT;
+				sizePC, startPC, lastOffset: LONGINT;
 				indirectTypes: Basic.HashTable;
 
 
@@ -12704,7 +12608,7 @@ TYPE
 					Parameter = sfVariable prevSymbol:SIZE name:STRING (sfIndirec|sfRelative) offset:SIZE Type.
 				*)
 				PROCEDURE NParameter(parameter: SyntaxTree.Parameter; procOffset: LONGINT);
-				VAR pos: LONGINT; type: SyntaxTree.Type;
+				VAR type: SyntaxTree.Type;
 				BEGIN
 					IF RefInfo THEN Info(section, "Parameter") END;
 					Char(section, sfVariable);
@@ -12857,7 +12761,7 @@ TYPE
 					Scope = sfScopeBegin {Variable} {Procedure} {TypeDeclaration} sfScopeEnd.
 				*)
 				PROCEDURE NScope(scope: SyntaxTree.Scope; prevSymbol: LONGINT);
-				VAR bodyProcedure, procedure: SyntaxTree.Procedure; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration; pos: LONGINT;
+				VAR bodyProcedure, procedure: SyntaxTree.Procedure; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration;
 				BEGIN
 					IF scope = NIL THEN RETURN END; 
 					IF RefInfo THEN Info(section, "Scope") END;
@@ -13091,7 +12995,7 @@ TYPE
 		
 		(* only for tracing, the descriptor is otherwise not complete ! *)
 		PROCEDURE MakeProcedureDescriptorTag(procedureSection: IntermediateCode.Section): IntermediateCode.Section;
-		VAR section: IntermediateCode.Section; infoName: Basic.SectionName;  offset: LONGINT; moduleSection: IntermediateCode.Section; name: Basic.SegmentedName;
+		VAR section: IntermediateCode.Section; infoName: Basic.SectionName;  moduleSection: IntermediateCode.Section; name: Basic.SegmentedName;
 		BEGIN
 			(* mini pseudo type tag that only refers to the information data for debugging purposes -- then the descriptor in the GC can be identified *)
 			name := procedureSection.name;
@@ -13334,7 +13238,7 @@ TYPE
 			moduleSection, pointerSection, importSection, emptyArraySection, exceptionSection, commandsSection,
 			typeInfoSection, procTableSection,  referenceSection : IntermediateCode.Section;
 			emptyArraySectionOffset, pointerSectionOffset, importSectionOffset, numberPointers,
-			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, maxPointers, numberProcs,temp,
+			exceptionSectionOffset, commandsSectionOffset, typeInfoSectionOffset, procTableSectionOffset, numberProcs,temp,
 			referenceSectionOffset	: LONGINT;
 			name: Basic.SegmentedName; offset: LONGINT;
 			flags: SET; 
@@ -13488,31 +13392,11 @@ TYPE
 			END;
 			PatchArray(source,pc,numberPointers);
 		END PointerArray;
-
-			PROCEDURE SymbolSection(symbol: SyntaxTree.Symbol; CONST suffix: ARRAY OF CHAR; VAR pc: LONGINT): IntermediateCode.Section;
-			VAR
-				name: Basic.SegmentedName;
-				section: IntermediateCode.Section;
-			BEGIN
-					Global.GetSymbolSegmentedName(symbol,name);
-					Basic.AppendToSegmentedName(name,suffix);
-
-					section := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name, NIL,declarationVisitor.dump);
-					HeapBlock("Heaps","SystemBlockDesc", section, 2);
-					Info(section, "HeapBlock");
-					Address(section,0); (* empty such that GC does not go on traversing *)
-					Info(section, suffix);
-					Address(section,0);
-					pc := section.pc;
-					RETURN section;
-			END SymbolSection;
 			
 		PROCEDURE CheckTypeDeclaration(x: SyntaxTree.Type);
 		VAR recordType: SyntaxTree.RecordType;
-			tir, tdInfo: IntermediateCode.Section; op: IntermediateCode.Operand; name: Basic.SegmentedName; td: SyntaxTree.TypeDeclaration;
+			tir, tdInfo: IntermediateCode.Section; td: SyntaxTree.TypeDeclaration;
 			section: Sections.Section; cellType: SyntaxTree.CellType;
-			tdInfoOffset: LONGINT;
-
 
 			PROCEDURE NewTypeDescriptorInfo(tag: Sections.Section; offset: LONGINT; isProtected: BOOLEAN): IntermediateCode.Section;
 			VAR name: Basic.SegmentedName;source: IntermediateCode.Section;
@@ -13569,7 +13453,7 @@ TYPE
 			VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; source, base: IntermediateCode.Section;
 				procedure: SyntaxTree.Procedure; baseRecord: SyntaxTree.RecordType;
 				baseTD: SyntaxTree.TypeDeclaration; sym: SyntaxTree.Symbol;
-				numberPointers: LONGINT;  padding, i, tdInfoOffset: LONGINT;
+				numberPointers: LONGINT;  padding, i: LONGINT;
 				
 			CONST MPO=-40000000H;
 

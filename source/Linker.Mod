@@ -76,7 +76,6 @@ TYPE
 		PROCEDURE QuickSort(lo, hi: LONGINT);
 		VAR
 			i, j,m: LONGINT;
-			x, t: ANY;
 		BEGIN
 			i := lo; j := hi; m := (lo + hi) DIV 2;
 
@@ -163,7 +162,6 @@ TYPE
 	END Patch;
 
 	PROCEDURE CheckReloc*(target: GenericLinker.Address; pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
-	VAR i: LONGINT;
 	BEGIN
 		IF (pattern.mode = ObjectFile.Absolute) & (relocInfo # NIL) THEN
 			relocInfo.AddReloc(LONGINT(target+patch.offset));
@@ -295,7 +293,7 @@ BEGIN
 END WriteUnixBinaryFile;
 
 PROCEDURE WriteTRMFile (arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines:LONGINT);
-VAR i,j,size,end,nonZeroInLeadingNibble,leadingzeros: LONGINT;
+VAR i,j,size,end,nonZeroInLeadingNibble: LONGINT;
 	PROCEDURE GetBits(pos: LONGINT): LONGINT;
 	BEGIN
 		IF pos >= size THEN RETURN 0
@@ -444,9 +442,9 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize: LONGINT;  BaseCo
 	BEGIN RETURN Align(RelocTableSize(), SectionAlignment);
 	END AlignedRelocTableSize;
 
-	PROCEDURE SectionHeaderOffset(): LONGINT;
+	(*PROCEDURE SectionHeaderOffset(): LONGINT;
 	BEGIN RETURN DOSStubSize + HeaderSize + OptionalHeaderSize
-	END SectionHeaderOffset;
+	END SectionHeaderOffset;*)
 
 	PROCEDURE WriteDOSStub;
 	BEGIN

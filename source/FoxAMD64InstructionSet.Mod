@@ -57,13 +57,14 @@ CONST
 	cpuWillamette* = 8;
 	cpuPrescott* = 9;
 	cpuAMD64* = 10;
-	(* unused options *)
+	(* unused options
 	cpuSW = 11;
 	cpuSB = 11;
 	cpuSMM = 11;
 	cpuAR1 = 11;
 	cpuAR2 = 11;
 	cpuND = 11;
+	*)
 
 	(** options selectable with CODE {SYSTEM.....} **)
 	cpuPrivileged* = 20;
@@ -1896,7 +1897,7 @@ VAR
 		END EncodeV;
 		
 		PROCEDURE AddInstructionV(mnemonic: LONGINT; CONST operands, code: ARRAY OF CHAR);
-		VAR i, at: LONGINT; name,operand: ARRAY 32 OF CHAR;
+		VAR i, at: LONGINT; name: ARRAY 32 OF CHAR;
 		BEGIN
 			i := 0; at := 0;
 			WHILE (i<maxNumberOperands) DO

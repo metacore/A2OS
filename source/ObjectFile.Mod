@@ -190,7 +190,7 @@ TYPE
 
 		(** read map and produce Local --> Global **)
 		PROCEDURE Read*(reader: Streams.Reader);
-		VAR i,j,pos,size,value: LONGINT; ch: CHAR;name: SectionName;
+		VAR value,pos: LONGINT; name: SectionName;
 		BEGIN
 			pos := 1;
 			reader.RawString(name);
@@ -298,7 +298,6 @@ VAR
 	END CopyPatches;
 
 	PROCEDURE CopyFixup*(source: Fixup; VAR dest: Fixup);
-	VAR i: LONGINT;
 	BEGIN
 		CopyIdentifier(source.identifier, dest.identifier);
 		CopyPattern(source.pattern, dest.pattern);
@@ -306,7 +305,6 @@ VAR
 	END CopyFixup;
 
 	PROCEDURE CopyAlias*(CONST source: Alias; VAR dest: Alias);
-	VAR i: LONGINT;
 	BEGIN
 		CopyIdentifier(source.identifier, dest.identifier);
 		dest.offset := source.offset;
@@ -372,7 +370,7 @@ VAR
 
 	PROCEDURE WriteSectionTextual (writer: Streams.Writer; CONST section: Section);
 	CONST Separator = ' '; Tab = 09X;
-	VAR i,offset,start, len: LONGINT; size: Bits; bits: LONGINT;
+	VAR i,offset,start, len: LONGINT; size: Bits;
 
 		PROCEDURE WriteValueIdentifier (value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
@@ -433,7 +431,6 @@ VAR
 		END WriteFixup;
 
 		PROCEDURE WriteAlias (CONST alias: Alias);
-		VAR i: LONGINT;
 		BEGIN
 			WriteIdentifier(alias.identifier);
 			writer.Char (Separator);
@@ -471,7 +468,7 @@ VAR
 		END GetSegment;
 
 		PROCEDURE WriteSegment(offset,len: LONGINT); (* offset in bits *)
-		VAR bits: LONGINT; first: BOOLEAN;
+		VAR bits: LONGINT;
 		BEGIN
 			ASSERT(len MOD 4 = 0); ASSERT(offset MOD 4 = 0);
 			len := len DIV 4;
@@ -585,7 +582,6 @@ VAR
 		END ReadFixup;
 
 		PROCEDURE ReadAlias (VAR alias: Alias);
-		VAR i: LONGINT;
 		BEGIN
 			reader.SkipWhitespace; ReadIdentifier (alias.identifier);
 			reader.SkipWhitespace; reader.Int(alias.offset,FALSE);
@@ -651,7 +647,7 @@ VAR
 	END ReadSectionTextual;
 
 	PROCEDURE ReadNameList*(reader: Streams.Reader; VAR nameList: NameList; binary: BOOLEAN; poolMap: PoolMap);
-	VAR i,len,num: LONGINT; name: ARRAY 256 OF CHAR;
+	VAR i,len: LONGINT; name: ARRAY 256 OF CHAR;
 
 		PROCEDURE ReadIdentifier(VAR name: SegmentedName);
 		(*VAR name: SectionName;*)
@@ -688,7 +684,7 @@ VAR
 	END ReadNameList;
 
 	PROCEDURE WriteNameList*(writer: Streams.Writer; nameList: NameList; binary: BOOLEAN; poolMap: PoolMap);
-	VAR i,len,num: LONGINT; name: ARRAY 256 OF CHAR;
+	VAR i,len: LONGINT; name: ARRAY 256 OF CHAR;
 	CONST Separator = ' ';
 
 		PROCEDURE WriteIdentifier(CONST name: SegmentedName);
@@ -724,7 +720,7 @@ VAR
 	
 
 	PROCEDURE WriteSectionBinary (writer: Streams.Writer; CONST section: Section; poolMap: PoolMap);
-	VAR pos, i, offset, start, len: LONGINT; size: Bits; bits: LONGINT; name: ARRAY 256 OF CHAR;
+	VAR pos, i, offset, start, len: LONGINT; size: Bits;
 	CONST ByteSize=8;
 
 		PROCEDURE WriteValueIdentifier (value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -786,7 +782,6 @@ VAR
 		END WriteFixup;
 
 		PROCEDURE WriteAlias (CONST alias: Alias);
-		VAR i: LONGINT;
 		BEGIN
 			WriteIdentifier(alias.identifier);
 			writer.RawNum(alias.offset);
@@ -823,7 +818,7 @@ VAR
 		END GetSegment;
 
 		PROCEDURE WriteSegment(offset,len: LONGINT); (* offset in bits *)
-		VAR bits: LONGINT; first: BOOLEAN; pos: LONGINT;
+		VAR bits: LONGINT; pos: LONGINT;
 		BEGIN
 			pos := writer.Pos();
 			ASSERT(len > 0);
@@ -893,7 +888,7 @@ VAR
 	END WriteSectionBinary;
 
 	PROCEDURE ReadSectionBinary (reader: Streams.Reader; version: LONGINT; VAR section: Section; poolMap: PoolMap);
-	VAR i, size: LONGINT; char: CHAR; relocatibility: INTEGER; num: LONGINT; ch: CHAR; priority: LONGINT;
+	VAR i, size: LONGINT; relocatibility: INTEGER; ch: CHAR; priority: LONGINT;
 	CONST ByteSize=8;
 
 		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -970,14 +965,13 @@ VAR
 		END ReadFixup;
 
 		PROCEDURE ReadAlias (VAR alias: Alias);
-		VAR i: LONGINT;
 		BEGIN
 			ReadIdentifier (alias.identifier);
 			reader.RawNum (alias.offset);
 		END ReadAlias;
 
 		PROCEDURE ReadSegment(): BOOLEAN;
-		VAR len,offset,bits: LONGINT; c: CHAR;
+		VAR len,offset: LONGINT; c: CHAR;
 			segment: ARRAY 128 OF CHAR;
 			received: LONGINT;
 		BEGIN
@@ -1119,12 +1113,7 @@ VAR
 		END;
 		RETURN TRUE
 	END SameFixupPattern;
-
-	PROCEDURE SamePattern(left, right: Pattern): BOOLEAN;
-	BEGIN
-		RETURN (left.mode = right.mode) & (left.scale = right.scale) & (left.patterns = right.patterns) & SameFixupPattern(left.patterns, left.pattern, right.pattern);
-	END SamePattern;
-
+	
 	PROCEDURE HasPattern(pat: Pattern; mode, scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): BOOLEAN;
 	BEGIN
 		RETURN (pat.mode = mode) & (pat.scale = scale) & (pat.patterns = patterns) & SameFixupPattern(patterns, pat.pattern, pattern);

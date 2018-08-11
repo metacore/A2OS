@@ -1,6 +1,6 @@
 MODULE FoxBinaryCode; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT Basic := FoxBasic, Sections := FoxSections, SYSTEM, Streams, ObjectFile, BitSets, D := Debugging;
+IMPORT Basic := FoxBasic, Sections := FoxSections, Streams, ObjectFile, BitSets;
 
 CONST
 	Absolute*=ObjectFile.Absolute;
@@ -27,7 +27,6 @@ TYPE
 		END InitAlias;
 
 		PROCEDURE Dump*(w: Streams.Writer);
-		VAR i: LONGINT;
 		BEGIN
 			Basic.WriteSegmentedName(w, identifier.name);
 			IF identifier.fingerprint # 0 THEN w.String("["); w.Hex(identifier.fingerprint,-8); w.String("]") END;

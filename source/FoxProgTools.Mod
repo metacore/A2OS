@@ -598,7 +598,7 @@ TYPE
 			END;
 		END GetLine;
 
-			PROCEDURE Operand(CONST op: ARRAY OF CHAR);
+			(*PROCEDURE Operand(CONST op: ARRAY OF CHAR);
 			VAR i: LONGINT;
 			BEGIN
 				IF op[0] = 0X THEN w.String("none")
@@ -613,7 +613,7 @@ TYPE
 					INC(i);
 				END;
 				END;
-			END Operand;
+			END Operand;*)
 
 			PROCEDURE AppendCh(VAR s: ARRAY OF CHAR; c: CHAR);
 			VAR i: LONGINT;

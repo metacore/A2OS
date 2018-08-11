@@ -1,8 +1,7 @@
 MODULE FoxCSharpScanner;
 
 IMPORT Streams, Strings, Diagnostics, Commands, StringPool, 
-    D := Debugging, Basic := FoxBasic, FoxScanner,
-    KernelLog (* DEBUG *);
+    D := Debugging, Basic := FoxBasic, FoxScanner;
 
 CONST
     Trace = FALSE;
@@ -1059,7 +1058,7 @@ KernelLog.Ln();
             (diagnostics = NIL ==> no report) and reset the error state
             intended for silent symbol peeeking after the end of a module *)
         PROCEDURE ResetErrorDiagnostics*(VAR diagnostics: Diagnostics.Diagnostics);
-            VAR b: BOOLEAN; 
+        VAR 
                 d: Diagnostics.Diagnostics;
         BEGIN
             error := FALSE;

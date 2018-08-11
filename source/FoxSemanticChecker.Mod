@@ -7885,7 +7885,7 @@ TYPE
 		**)
 		PROCEDURE VisitCaseStatement*(caseStatement: SyntaxTree.CaseStatement);
 		VAR expression: SyntaxTree.Expression; i: LONGINT; type: SyntaxTree.Type; caseList: SyntaxTree.CaseConstant;
-			ch: CHAR; l: Basic.Integer; min,max: Basic.Integer; msg: ARRAY 64 OF CHAR;
+			ch: CHAR; l: Basic.Integer; min,max: Basic.Integer;
 		BEGIN
 			expression := ResolveExpression(caseStatement.variable);
 			type := RegularType(expression.position,expression.type);
@@ -8788,73 +8788,20 @@ TYPE
 			SELF.diagnostics := diagnostics
 		END InitWarnings;
 
-		PROCEDURE VisitPortType*(x: SyntaxTree.PortType);
-		BEGIN	END VisitPortType;
-
 		(** types *)
-		PROCEDURE Type(x: SyntaxTree.Type);
-		BEGIN VType(x)
+		PROCEDURE Type(CONST x: SyntaxTree.Type);
+		BEGIN
+			IF SyntaxTree.Warned IN x.state THEN RETURN END;
+			x.SetState(SyntaxTree.Warned);
+			WITH x:
+			SyntaxTree.ArrayType DO  Type(x.arrayBase);
+			|SyntaxTree.MathArrayType DO Type(x.arrayBase);
+			|SyntaxTree.PointerType DO Type(x.pointerBase);
+			|SyntaxTree.RecordType DO Scope(x.recordScope);
+			|SyntaxTree.CellType DO Scope(x.cellScope)
+			ELSE
+			END;	
 		END Type;
-
-		PROCEDURE VisitType*(x: SyntaxTree.Type);
-		BEGIN  END VisitType;
-
-		PROCEDURE VisitBasicType*(x: SyntaxTree.BasicType);
-		BEGIN  END VisitBasicType;
-
-		PROCEDURE VisitCharacterType*(x: SyntaxTree.CharacterType);
-		BEGIN END VisitCharacterType;
-
-		PROCEDURE VisitIntegerType*(x: SyntaxTree.IntegerType);
-		BEGIN END VisitIntegerType;
-
-		PROCEDURE VisitFloatType*(x: SyntaxTree.FloatType);
-		BEGIN END VisitFloatType;
-
-		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
-		BEGIN END VisitQualifiedType;
-
-		PROCEDURE VisitStringType*(x: SyntaxTree.StringType);
-		BEGIN END VisitStringType;
-
-		PROCEDURE VisitEnumerationType*(x: SyntaxTree.EnumerationType);
-		BEGIN END VisitEnumerationType;
-
-		PROCEDURE VisitRangeType*(x: SyntaxTree.RangeType);
-		BEGIN  END VisitRangeType;
-
-		PROCEDURE VisitArrayType*(x: SyntaxTree.ArrayType);
-		BEGIN
-			IF ~(SyntaxTree.Warned IN x.state) THEN
-				x.SetState(SyntaxTree.Warned);
-				Type(x.arrayBase);
-			END;
-		END VisitArrayType;
-
-		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
-		BEGIN
-			IF ~(SyntaxTree.Warned IN x.state) THEN
-				x.SetState(SyntaxTree.Warned);
-				Type(x.arrayBase);
-			END;
-		END VisitMathArrayType;
-
-		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
-		BEGIN
-			IF ~(SyntaxTree.Warned IN x.state) THEN
-				x.SetState(SyntaxTree.Warned);
-				Type(x.pointerBase);
-			END;
-		END VisitPointerType;
-
-		PROCEDURE VisitRecordType*(x: SyntaxTree.RecordType);
-		BEGIN Scope(x.recordScope) END VisitRecordType;
-
-		PROCEDURE VisitCellType*(x: SyntaxTree.CellType);
-		BEGIN  Scope(x.cellScope) END VisitCellType;
-
-		PROCEDURE VisitProcedureType*(x: SyntaxTree.ProcedureType);
-		BEGIN  END VisitProcedureType;
 
 		PROCEDURE Warning(x: SyntaxTree.Symbol; CONST text: ARRAY OF CHAR);
 		VAR msg: ARRAY 256 OF CHAR;
@@ -8873,37 +8820,13 @@ TYPE
 					Warning(x,"never used");
 				END;
 			END;
+			WITH x: 
+			SyntaxTree.Procedure DO
+				Scope(x.procedureScope) 				
+			ELSE
+			END;				
 			x.Accept(SELF);
 		END Symbol;
-
-		PROCEDURE VisitSymbol*(x: SyntaxTree.Symbol);
-		BEGIN END VisitSymbol;
-
-		PROCEDURE VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration);
-		BEGIN Type(x.declaredType) END VisitTypeDeclaration;
-
-		PROCEDURE VisitConstant*(x: SyntaxTree.Constant);
-		BEGIN  END VisitConstant;
-
-		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
-		BEGIN  END VisitVariable;
-
-		PROCEDURE VisitProperty*(x: SyntaxTree.Property);
-		BEGIN  END VisitProperty;
-
-		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
-		BEGIN	END VisitParameter;
-
-		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
-		BEGIN 
-			Scope(x.procedureScope) 
-		END VisitProcedure;
-
-		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
-		BEGIN END VisitOperator;
-
-		PROCEDURE VisitImport*(x: SyntaxTree.Import);
-		BEGIN END VisitImport;
 
 		PROCEDURE Scope(scope: SyntaxTree.Scope);
 		VAR

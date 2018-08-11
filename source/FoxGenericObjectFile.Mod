@@ -3,7 +3,7 @@ MODULE FoxGenericObjectFile; (** AUTHOR "negelef"; PURPOSE "Generic Object File 
 IMPORT
 	StringPool, Streams, Commands, Basic := FoxBasic, Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode,
 	SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode,
-	FingerPrinter := FoxFingerPrinter, Files, Options, ObjectFile, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
+	FingerPrinter := FoxFingerPrinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 
 CONST
 	Version = 5;
@@ -66,11 +66,9 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 			PROCEDURE MergeSections (sections: Sections.SectionList): BOOLEAN;
 			VAR
-				section, test: Sections.Section;
-				i, j: LONGINT;
-				name: ObjectFile.SectionName;
+				section: Sections.Section;
+				i: LONGINT;
 				sname: Basic.SegmentedName;
-				msg: ARRAY 256 OF CHAR;
 				codeAlign, dataAlign, constAlign: LONGINT;
 				codeUnit, dataUnit, constUnit: LONGINT;
 				resolved, codeSection, dataSection, constSection: BinaryCode.Section;
@@ -193,13 +191,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				section, test: Sections.Section;
 				i, j: LONGINT;
 				name: ObjectFile.SectionName;
-				sname: Basic.SegmentedName;
 				msg: ARRAY 256 OF CHAR;
-				codeAlign, dataAlign, constAlign: LONGINT;
-				codeUnit, dataUnit, constUnit: LONGINT;
-				resolved, codeSection, dataSection, constSection: BinaryCode.Section;
-				alias: BinaryCode.Alias;
-				irSection: IntermediateCode.Section;
 			BEGIN
 
 				FOR i := 0 TO sections.Length() - 1 DO
@@ -258,7 +250,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END MakeStatistics;
 
 			PROCEDURE ExportModule (module: Sections.Module): BOOLEAN;
-			VAR result: BOOLEAN; pos,i: LONGINT;
+			VAR result: BOOLEAN; pos: LONGINT;
 				offers, requires: ObjectFile.NameList;
 				numImports: LONGINT; 
 				name: ObjectFile.SectionName;
@@ -393,10 +385,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 	PROCEDURE CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: LONGINT);
 	VAR fixup: BinaryCode.Fixup; i: INTEGER; index: LONGINT;	fixupList: ObjectFile.Fixups; fixups: LONGINT;
-		name: ObjectFile.SegmentedName; aliasSymbol: ObjectFile.Identifier; alias: Sections.Section; aliasOffset: LONGINT;
+		aliasSymbol: ObjectFile.Identifier; aliasOffset: LONGINT;
 
 		PROCEDURE PatchFixup (fixup: BinaryCode.Fixup; fixupOffset, targetOffset: LONGINT);
-		VAR target, address: ObjectFile.Unit; i,j: LONGINT;
+		VAR target, address: ObjectFile.Unit; j: LONGINT;
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
@@ -476,7 +468,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	END Get;
 
 	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT;
-	VAR ch: CHAR; string: ARRAY 32 OF CHAR; i,j,pos,size: LONGINT; name: ObjectFile.SectionName;
+	VAR ch: CHAR; string: ARRAY 32 OF CHAR;
 	VAR version: LONGINT;
 	BEGIN
 		reader.String(string);
@@ -509,10 +501,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	END ReadHeader;
 
 	PROCEDURE WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; fingerPrinter:FingerPrinter.FingerPrinter);
-	VAR p1,p2, size,i: LONGINT; section: Sections.Section; fixups: LONGINT; fixupList: ObjectFile.Fixups;
+	VAR i: LONGINT; section: Sections.Section;
 
 		PROCEDURE ProcessSection(section: IntermediateCode.Section);
-		VAR i: LONGINT; fixup: BinaryCode.Fixup; index: LONGINT; alias: BinaryCode.Alias; name: ARRAY 256 OF CHAR;
+		VAR i: LONGINT; fixup: BinaryCode.Fixup; alias: BinaryCode.Alias;
 		BEGIN
 			IF (section.resolved # NIL)  & (section.alias = NIL)  THEN
 				poolMap.PutSegmentedName(section.resolved.os.identifier.name);

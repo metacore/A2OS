@@ -102,7 +102,7 @@ TYPE
 		backendName: ARRAY 32 OF CHAR;
 
 		PROCEDURE FinalMessage(error: BOOLEAN; CONST msg: ARRAY OF CHAR);
-		VAR message,name: ARRAY 256 OF CHAR;
+		VAR message: ARRAY 256 OF CHAR;
 		BEGIN
 			message := "";
 			IF module # NIL THEN

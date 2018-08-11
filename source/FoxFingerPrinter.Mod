@@ -171,7 +171,6 @@ TYPE
 		END SetTypeFingerprint;
 
 		PROCEDURE VisitRangeType*(x: SyntaxTree.RangeType);
-		VAR fingerprint: FingerPrint;
 		BEGIN
 			SetTypeFingerprint(x,fpTypeRange);
 		END VisitRangeType;
@@ -483,7 +482,7 @@ TYPE
 		PrivateFP(PointerType)     = 0.
 		*)
 		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
-		VAR fingerprint,typeFP: FingerPrint; fp: LONGINT; deep: BOOLEAN;
+		VAR fp: LONGINT; deep: BOOLEAN;
 		BEGIN
 			IF Trace THEN TraceEnter("PointerType");  END;
 			fingerprint := x.fingerprint;
@@ -592,7 +591,7 @@ TYPE
 		END FPrintMethod;
 
 		PROCEDURE VisitCellType*(x: SyntaxTree.CellType);
-		VAR fingerprint: FingerPrint; fp:LONGINT; name: SyntaxTree.String;
+		VAR fingerprint: FingerPrint; fp:LONGINT;
 		BEGIN
 			fingerprint := x.fingerprint;
 			deep := SELF.deep;

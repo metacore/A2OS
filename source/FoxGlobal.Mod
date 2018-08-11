@@ -2,7 +2,7 @@ MODULE FoxGlobal; (** AUTHOR "fof & fn"; PURPOSE "Oberon Compiler Globally Defin
 (* (c) fof ETH Zürich, 2008 *)
 
 IMPORT
-	SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Scanner := FoxScanner, Strings, Dates, D:= Debugging;
+	SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Scanner := FoxScanner, Strings, Dates;
 
 CONST
 	(* system flag names *)

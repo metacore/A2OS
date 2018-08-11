@@ -3,7 +3,7 @@ MODULE FoxTextualSymbolFile; (** AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Sy
 
 IMPORT
 	D := Debugging, Basic := FoxBasic,  Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Formats := FoxFormats, Files,Streams,
-	Printout := FoxPrintout,Parser:= FoxParser , SemanticChecker := FoxSemanticChecker, InterfaceComparison := FoxInterfaceComparison, Options, Diagnostics;
+	Printout := FoxPrintout,Parser:= FoxParser , SemanticChecker := FoxSemanticChecker, InterfaceComparison := FoxInterfaceComparison, Options;
 
 CONST Trace = FALSE;
 

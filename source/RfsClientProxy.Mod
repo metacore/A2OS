@@ -723,7 +723,7 @@ TYPE
 						KernelLog.Ln;
 					END;
 				ELSE
-					KernelLog.String("Mount->Authentification Error");
+					KernelLog.String("Mount->Authentication Error");
 					KernelLog.Ln;
 				END;
 			ELSE

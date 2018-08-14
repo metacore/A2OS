@@ -119,6 +119,11 @@ TYPE
 		RETURN ~LessThan(x.value,y.value);
 	END ">=";
 
+	OPERATOR ":="*(VAR y: ARRAY {UNSAFE} [?] OF SHORTREAL; x: SHORTREAL);
+	BEGIN
+		FoxArrayBase.ApplyUnarySAOp(y,ADDRESS OF x,AssignScalarLoop);
+	END ":=";
+
 	OPERATOR "+"*(CONST x, y: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
 		FoxArrayBase.ApplyBinaryAAAOp(RESULT,x,y,SIZEOF(SHORTREAL),AddLoop);
@@ -538,7 +543,7 @@ TYPE
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),NegateLoop);
 		RETURN RESULT;
 	END "-";
-	
+
 	(*!TODO: replace by SHORT operator after fixing a compiler bug which does not allow to compile the operator code *)
 	PROCEDURE Short*(CONST x: ARRAY [?] OF Real): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
@@ -563,31 +568,31 @@ TYPE
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),SqrtLoop);
 		RETURN RESULT;
 	END Sqrt;
-	
+
 	PROCEDURE Sin*(CONST x: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),SinLoop);
 		RETURN RESULT;
 	END Sin;
-	
+
 	PROCEDURE Cos*(CONST x: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),CosLoop);
 		RETURN RESULT;
 	END Cos;
-	
+
 	PROCEDURE Arctan*(CONST x: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),ArctanLoop);
 		RETURN RESULT;
 	END Arctan;
-	
+
 	PROCEDURE Ln*(CONST x: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),LnLoop);
 		RETURN RESULT;
 	END Ln;
-	
+
 	PROCEDURE Exp*(CONST x: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF SHORTREAL;
 	BEGIN
 		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(SHORTREAL),ExpLoop);
@@ -800,6 +805,29 @@ TYPE
 		MOVD EAX, XMM0
 		AND EAX, 1
 	END GreaterThan;
+
+	PROCEDURE AssignScalarLoop(laddr, daddr: ADDRESS; dinc, len: SIZE);
+	BEGIN
+		(*!TODO: optimize contiguous case *)
+		IF FALSE(*dinc = 2*) THEN
+		ELSE (* striding single element access *)
+			CODE
+				MOV RAX, [RBP+laddr]
+				MOV AX, [RAX]
+				MOV RBX, [RBP+daddr]
+				MOV RCX, [RBP+len]
+				MOV RDX, [RBP+dinc]
+			Loop:
+				CMP RCX, 0
+				JLE Exit
+				MOV [RBX], AX
+				ADD RBX, RDX
+				SUB RCX, 1
+				JMP Loop
+			Exit:
+			END;
+		END;
+	END AssignScalarLoop;
 
 	PROCEDURE SumLoop(laddr, daddr: ADDRESS; linc, len: SIZE);
 	BEGIN
@@ -2076,7 +2104,7 @@ TYPE
 	VAR
 		b: BOOLEAN;
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2109,7 +2137,7 @@ TYPE
 	VAR
 		b: BOOLEAN;
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2142,7 +2170,7 @@ TYPE
 	VAR
 		b: BOOLEAN;
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2173,7 +2201,7 @@ TYPE
 
 	PROCEDURE EwEqualLoop( laddr, raddr, daddr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2) & (dinc = 1)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2206,7 +2234,7 @@ TYPE
 
 	PROCEDURE EwLessThanLoop( laddr, raddr, daddr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2) & (dinc = 1)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2239,7 +2267,7 @@ TYPE
 
 	PROCEDURE EwLessOrEqualThanLoop( laddr, raddr, daddr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2) & (dinc = 1)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2272,7 +2300,7 @@ TYPE
 
 	PROCEDURE EwGreaterThanLoop( laddr, raddr, daddr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2) & (dinc = 1)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2305,7 +2333,7 @@ TYPE
 
 	PROCEDURE EwGreaterOrEqualThanLoop( laddr, raddr, daddr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	BEGIN
-		(*TODO: optimize contiguous case *)
+		(*!TODO: optimize contiguous case *)
 		IF FALSE(*(linc = 2) & (rinc = 2) & (dinc = 1)*) THEN
 		ELSE (* striding single element access *)
 			CODE
@@ -2429,7 +2457,7 @@ TYPE
 	Exit:
 		ADD RSP, 4 ; remove local variable
 	END SinLoop;
-	
+
 	PROCEDURE CosLoop(laddr, daddr: ADDRESS; linc, dinc, len: SIZE);
 	CODE
 		MOV RAX, [RBP+laddr]
@@ -2457,7 +2485,7 @@ TYPE
 	Exit:
 		ADD RSP, 4 ; remove local variable
 	END CosLoop;
-	
+
 	PROCEDURE ArctanLoop(laddr, daddr: ADDRESS; linc, dinc, len: SIZE);
 	CODE
 		MOV RAX, [RBP+laddr]
@@ -2486,7 +2514,7 @@ TYPE
 	Exit:
 		ADD RSP, 4 ; remove local variable
 	END ArctanLoop;
-	
+
 	PROCEDURE LnLoop(laddr, daddr: ADDRESS; linc, dinc, len: SIZE);
 	CODE
 		MOV RAX, [RBP+laddr]
@@ -2517,7 +2545,7 @@ TYPE
 	Exit:
 		ADD RSP, 4 ; remove local variable
 	END LnLoop;
-	
+
 	PROCEDURE ExpLoop(laddr, daddr: ADDRESS; linc, dinc, len: SIZE);
 	CODE
 		MOV RAX, [RBP+laddr]

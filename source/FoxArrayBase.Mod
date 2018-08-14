@@ -952,7 +952,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyUnaryASOp;
 
 (** apply unary operator to array:  scalar -> array *)
-	PROCEDURE ApplyUnarySAOp( VAR dest: UnsafeArrayT; right: ADDRESS;  Loop: UnarySALoop );
+	PROCEDURE ApplyUnarySAOp*( VAR dest: UnsafeArrayT; right: ADDRESS;  Loop: UnarySALoop );
 	VAR loopd, looplen, loopdi: SIZE;  glen: SIZE;
 	VAR dim: SIZE;
 

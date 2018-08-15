@@ -66,7 +66,7 @@ TYPE Canvas*= OBJECT(WMGraphics.BufferCanvas)
 		PROCEDURE SetFillColor*(fillColor:LONGINT);
 		BEGIN
 			IF fillColor#SELF.fillColor THEN
-				SetColor^(fillColor);
+				SELF.fillColor := fillColor;
 				gfxFillColor:=ColorToGfxColor(fillColor);
 				Gfx.SetFillColor(gfxContext, gfxFillColor);
 			END;	
@@ -103,11 +103,11 @@ TYPE Canvas*= OBJECT(WMGraphics.BufferCanvas)
 		
 		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; lineColor : WMGraphics.Color; mode : LONGINT); (*this is a heavy duty procedure that can be called millions of times in time-varying or scrolled graphs - optimize*)
 		BEGIN
-			IF lineColor#SELF.color THEN
-				SELF.color:=lineColor; gfxStrokeColor:=ColorToGfxColor(lineColor); Gfx.SetStrokeColor(gfxContext,gfxStrokeColor);
-			END; (*! to do: clippling, see WMGraphics.Fill *)
+			IF lineColor # color THEN 
+				SetColor(lineColor);
+			END; 
 			Gfx.DrawLine(gfxContext, dx+x0, dy+y0, dx+x1, dy+y1, {Gfx.Stroke}); (*may be refined by plotting to upper/lower boundary*)
-				(* Performance issue: Gfx.DrawLine expects REAL coordinates;	inside of Gfx a  coordinate transformation and conversion from REAL to Integer pixel position will happen again *)
+			(* Performance issue: Gfx.DrawLine expects REAL coordinates;	inside of Gfx a  coordinate transformation and conversion from REAL to Integer pixel position will happen again *)
 		END Line;
 
 		(** draw circle in requested mode (clockwise if r > 0, counterclockwise if r < 0) **)
@@ -157,5 +157,5 @@ END Test;
 END WMGraphicsGfx.
 
 WMGraphicsGfx.Test ~
-System.FreeDownTo WMGraphicsGfx ~
+SystemTools.FreeDownTo WMGraphicsGfx ~
 

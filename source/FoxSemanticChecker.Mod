@@ -8825,7 +8825,6 @@ TYPE
 				Scope(x.procedureScope) 				
 			ELSE
 			END;				
-			x.Accept(SELF);
 		END Symbol;
 
 		PROCEDURE Scope(scope: SyntaxTree.Scope);

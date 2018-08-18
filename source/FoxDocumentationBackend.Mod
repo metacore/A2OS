@@ -475,7 +475,7 @@ TYPE
 		PROCEDURE Expression*(x: SyntaxTree.Expression);
 		BEGIN
 			IF x # NIL THEN
-				x.Accept(SELF);
+				VExpression(x);
 			END;
 			w.Update;
 		END Expression;
@@ -757,7 +757,7 @@ TYPE
 
 		PROCEDURE Symbol*(x: SyntaxTree.Symbol);
 		BEGIN
-			IF Visible(x) THEN x.Accept(SELF) END
+			IF Visible(x) THEN VSymbol(x) END
 		END Symbol;
 
 		PROCEDURE NeedsSection(x: SyntaxTree.Symbol): BOOLEAN;

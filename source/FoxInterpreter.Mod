@@ -975,7 +975,7 @@ TYPE
 			ELSE
 				call := x.call;
 			END;
-			call.Accept(SELF);
+			VExpression(call);
 		END VisitProcedureCallStatement;
 
 		PROCEDURE LoadValue;
@@ -1038,7 +1038,7 @@ TYPE
 
 		PROCEDURE PutValue(x: SyntaxTree.Designator; v: Value);
 		BEGIN
-			x.Accept(SELF);
+			VExpression(x);
 			IF (item.object # NIL) & item.object(Result).SetV(v) THEN
 			ELSIF (item.in # NIL) & (item.name # 0) & (item.in IS Container) THEN
 				item.in(Container).Enter1(v, item.name);
@@ -1176,13 +1176,13 @@ TYPE
 		PROCEDURE Expression(x: SyntaxTree.Expression);
 		BEGIN
 			value := FALSE;
-			x.Accept(SELF);			
+			VExpression(x);
 		END Expression;
 		
 		PROCEDURE Statement*(x: SyntaxTree.Statement);
 		BEGIN
 			item.object := NIL;
-			x.Accept(SELF);
+			VStatement(x);
 		END Statement;
 
 		PROCEDURE StatementSequence*(x: SyntaxTree.StatementSequence);

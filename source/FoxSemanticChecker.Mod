@@ -6535,7 +6535,7 @@ TYPE
 				IF ~(expression IS SyntaxTree.BuiltinCallDesignator) THEN
 					expression.SetType(SyntaxTree.invalidType);
 				END;
-				expression.Accept(SELF);
+				VExpression(expression);
 				result := resolvedExpression;
 				IF currentIsRealtime THEN
 					IF (result.type # NIL) & ~result.type.resolved.isRealtime THEN
@@ -6636,7 +6636,7 @@ TYPE
 
 		PROCEDURE ResolveSymbol(x: SyntaxTree.Symbol);
 		BEGIN
-			x.Accept(SELF);
+			VSymbol(x);
 		END ResolveSymbol;
 
 		(** check a symbol
@@ -7430,7 +7430,7 @@ TYPE
 			resolvedStatement := x;
 			IF currentIsUnreachable THEN x.SetUnreachable(TRUE) END;
 			activeCellsStatement := FALSE;
-			x.Accept(SELF);
+			VStatement(x);
 			(* removed this, implementation restriction should be resolved by backend
 			IF (inCellNetBody) & (activeCellsStatement = FALSE) THEN
 				Error(x.position, "non-activeCells statement in activeCells block - not yet implemented");

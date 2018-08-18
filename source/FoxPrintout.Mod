@@ -475,7 +475,7 @@ TYPE
 			IF x = NIL THEN
 				AlertString("nil expression");
 			ELSE
-				x.Accept(SELF);
+				VExpression(x);
 				IF info & (x.resolved # NIL) & (x.resolved # x) THEN
 					BeginComment; w.String("value = "); Expression(x.resolved); EndComment;
 				END;
@@ -909,7 +909,7 @@ TYPE
 			IF x = NIL THEN
 				AlertString("nil symbol");
 			ELSE
-				x.Accept(SELF);
+				VSymbol(x);
 			END
 		END Symbol;
 
@@ -1498,7 +1498,7 @@ TYPE
 			ELSE
 				Comments(x.comment, x, FALSE);
 				IF DebugPosition THEN TRACE(x.position.start, x.position.end, x.end.start, x.end.end) END;
-				x.Accept(SELF);
+				VStatement(x);
 				Comments(x.comment,x,TRUE);
 			END
 		END Statement;

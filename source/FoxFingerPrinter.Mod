@@ -872,9 +872,9 @@ TYPE
 		BEGIN
 			SELF.fp := fp;
 			IF x.resolved # NIL THEN
-				x.resolved.Accept(SELF);
+				VExpression(x.resolved);
 			ELSE
-				x.Accept(SELF)
+				VExpression(x);
 			END;
 			fp := SELF.fp
 		END FPValue;
@@ -1302,7 +1302,7 @@ TYPE
 				D.Str("name: ");
 				D.Str0(this.name); D.Ln;
 			END;
-			this.Accept(SELF);
+			VSymbol(this);
 			SELF.deep := deep;
 			IF Trace THEN TraceExit("SymbolFP",fingerprint); D.Ln; END;
 			RETURN fingerprint

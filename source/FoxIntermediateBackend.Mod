@@ -1656,18 +1656,18 @@ TYPE
 					Printout.Info("mapping from", x);
 					Printout.Info("mapping to ", m.to);
 					*)
-					m.to.Accept(SELF);
+					VExpression(m.to);
 					op := result;
 					IF m.tag # NIL THEN
 						ReleaseIntermediateOperand(result.tag);
-						m.tag.Accept(SELF);
+						VExpression(m.tag);
 						op.tag := result.op;
 						ReleaseIntermediateOperand(result.tag);
 					END;
 					RETURN
 				END;
 			END;
-			x.Accept(SELF);
+			VSymbol(x);
 			op := result;
 		END Symbol;
 
@@ -1679,9 +1679,9 @@ TYPE
 				constantDeclaration := x(SyntaxTree.SymbolDesignator).symbol;
 			END;
 			IF x.resolved # NIL THEN
-				x.resolved.Accept(SELF)
+				VExpression(x.resolved);
 			ELSE
-				x.Accept(SELF)
+				VExpression(x);
 			END;
 			(* check this, was commented out in ActiveCells3 *)
 			IF (x IS SyntaxTree.Designator) & (x(SyntaxTree.Designator).modifiers # NIL) & ~backend.cellsAreObjects THEN
@@ -1726,7 +1726,7 @@ TYPE
 				dump.Ln;
 				(*dump.Update;*)
 			END;
-			x.Accept(SELF);
+			VStatement(x);
 			(*
 			CheckRegistersFree();
 			*)
@@ -9584,7 +9584,7 @@ TYPE
 		PROCEDURE VisitConstant*(x: SyntaxTree.Constant);
 		BEGIN
 			constantDeclaration := x;
-			x.value.resolved.Accept(SELF);
+			VExpression(x.value.resolved);
 		END VisitConstant;
 
 		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);

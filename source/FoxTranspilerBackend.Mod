@@ -921,11 +921,12 @@ TYPE
 		BEGIN
 			ASSERT (statement # NIL);
 			PrintComments (statement.comment, statement);
-			statement.Accept (SELF);
+			VStatement(statement);
 		END PrintStatement;
 
 		PROCEDURE PrintExpression (expression: SyntaxTree.Expression);
-		BEGIN ASSERT (expression # NIL); expression.Accept (SELF);
+		BEGIN ASSERT (expression # NIL); 
+			VExpression(expression);
 		END PrintExpression;
 
 		PROCEDURE PrintNegatedExpression (expression: SyntaxTree.Expression);

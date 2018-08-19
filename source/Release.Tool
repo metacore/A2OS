@@ -2,18 +2,18 @@
 #
 # Bios Cooperative
 #
-#	Release.Build --build --path="./" Bios32C ~
-#	Linker.Link --fileName=a2.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters APIC Processors Queues BaseTypes Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Reflection TrapWriters Traps Plugins Disks PCI ATADisks Caches Commands Files DiskVolumes Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
+#	Release.Build --build Bios32C ~
+#	Linker.Link --fileName=a2.bin --extension=Gof --displacement=100000H Builtins Trace CPU Runtime Counters APIC Processors Queues BaseTypes Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Reflection TrapWriters Traps Plugins Disks PCI ATADisks Caches Commands Files DiskVolumes Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader BootConsole ~
 #
 # RPi Cooperative
 #
-#	Release.Build --build --path="./" RPiC ~
-#	Linker.Link --fileName=kernel.img --extension=Gof --displacement=8000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
+#	Release.Build --build RPiC ~
+#	Linker.Link --fileName=kernel.img --extension=Gof --displacement=8000H Builtins Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
 # Zynq Cooperative
 #
-#	Release.Build --build --path="./" ZynqC ~
-#	Linker.Link --fileName=kernel.bin --extension=Gof --displacement=100000H --path="./" Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
+#	Release.Build --build ZynqC ~
+#	Linker.Link --fileName=kernel.bin --extension=Gof --displacement=100000H Builtins Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
 # WINAOS
 #	Release.Build Win32 ~
@@ -48,8 +48,8 @@
 #	UnixBinary.Build oberon.bin -> A2Core ~
 #
 # WINAOS Cooperative
-#	Release.Build --path="./" Win32C ~
-#	Linker.Link --fileFormat=PE32 --fileName=a2.exe --extension=GofCW --displacement=401000H --path="./" Trace CPU Runtime Counters Kernel32 Processors Queues BaseTypes Timer Activities ExclusiveBlocks Environment Mutexes Interrupts Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
+#	Release.Build Win32C ~
+#	Linker.Link --fileFormat=PE32 --fileName=a2.exe --extension=GofCW --displacement=401000H Builtins Trace CPU Runtime Counters Kernel32 Processors Queues BaseTypes Timer Activities ExclusiveBlocks Environment Mutexes Interrupts Machine Heaps Modules GarbageCollector Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
 #	FSTools.CloseFiles A2.exe ~
 #
 # For the detailed command syntax: See Release.Mod

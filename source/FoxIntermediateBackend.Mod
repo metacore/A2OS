@@ -2091,7 +2091,7 @@ TYPE
 
 		PROCEDURE SetLabel(label: Label);
 		BEGIN 
-			Emit(Nop(position));
+			(* basic block start / end *)
 			label.Resolve(section.pc);
 		END SetLabel;
 
@@ -2106,7 +2106,7 @@ TYPE
 
 		PROCEDURE BrL(label: Label);
 		BEGIN
-			Emit(Nop(position));
+			(* basic block start / end *)
 			Emit(Br(position,LabelOperand(label)));
 		END BrL;
 

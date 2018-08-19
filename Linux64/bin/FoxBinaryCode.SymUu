@@ -1,5 +1,5 @@
 MODULE FoxBinaryCode;
-	IMPORT Basic := FoxBasic, Sections := FoxSections, SYSTEM, Streams, ObjectFile, BitSets, D := Debugging;
+	IMPORT Basic := FoxBasic, Sections := FoxSections, Streams, ObjectFile, BitSets;
 CONST 
 	Absolute* = ObjectFile.Absolute; 
 	Relative* = ObjectFile.Relative; 

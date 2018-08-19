@@ -10,8 +10,8 @@ CONST
 	DefaultHasA = Public; 
 	DefaultDependencies = None; 
 	DefaultOutputFilename = \"graph.txt"\; 
-	DependsOnFactor =   1.0000000E-001; 
-	HasAFactor =   3.0000000E-001; 
+	DependsOnFactor = 1.00000000000000E-1; 
+	HasAFactor = 3.00000000000000E-1; 
 	NodeFontName = \"Arial"\; 
 	NodeFontSize = 48; 
 	Initialized = 0; 

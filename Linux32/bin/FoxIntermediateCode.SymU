@@ -1,5 +1,5 @@
 MODULE FoxIntermediateCode;
-	IMPORT Sections := FoxSections, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Backend := FoxBackend, SYSTEM, Streams, Global := FoxGlobal, D := Debugging, ObjectFile;
+	IMPORT Sections := FoxSections, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Backend := FoxBackend, Streams, Global := FoxGlobal, D := Debugging, ObjectFile;
 CONST 
 	Undefined* = 0; 
 	ModeRegister* = 1; 
@@ -155,7 +155,6 @@ TYPE
 		PROCEDURE ^ SetAlias*(section: BinaryCode.Section; offset: LONGINT); 
 		PROCEDURE ^ SetFinally*(atPc: LONGINT); 
 		PROCEDURE ^ GetSize*(): LONGINT; 
-		PROCEDURE ^ InitArray; 
 		PROCEDURE ^ Emit*(instruction: Instruction); 
 		PROCEDURE ^ EmitAt*(at: LONGINT; instruction: Instruction); 
 		PROCEDURE ^ Reset*; 

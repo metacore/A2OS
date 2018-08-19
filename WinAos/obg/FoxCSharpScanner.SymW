@@ -1,5 +1,5 @@
 MODULE FoxCSharpScanner;
-	IMPORT Streams, Strings, Diagnostics, Commands, StringPool, D := Debugging, Basic := FoxBasic, FoxScanner, KernelLog;
+	IMPORT Streams, Strings, Diagnostics, Commands, StringPool, D := Debugging, Basic := FoxBasic, FoxScanner;
 CONST 
 	Trace = FALSE; 
 	MaxIdentifierLength* = FoxScanner.MaxIdentifierLength; 

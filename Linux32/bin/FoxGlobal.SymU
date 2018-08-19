@@ -1,5 +1,5 @@
 MODULE FoxGlobal;
-	IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Scanner := FoxScanner, Strings, Dates, D := Debugging;
+	IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, Scanner := FoxScanner, Strings, Dates;
 CONST 
 	StringWinAPI* = \"WINAPI"\; 
 	StringC* = \"C"\; 

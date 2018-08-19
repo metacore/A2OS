@@ -1,7 +1,7 @@
 MODULE GfxMatrix;
 	IMPORT Streams, Math;
 CONST 
-	Eps =   1.0000000E-005; 
+	Eps = 1.00000000000000E-5; 
 TYPE 
 	Matrix* = ARRAY 3 OF ARRAY 2 OF REAL; 
 VAR 

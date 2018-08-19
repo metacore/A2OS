@@ -25,12 +25,6 @@ CONST
 	cpuWillamette* = 8; 
 	cpuPrescott* = 9; 
 	cpuAMD64* = 10; 
-	cpuSW = 11; 
-	cpuSB = 11; 
-	cpuSMM = 11; 
-	cpuAR1 = 11; 
-	cpuAR2 = 11; 
-	cpuND = 11; 
 	cpuPrivileged* = 20; 
 	cpuProtected* = 21; 
 	cpuSSE* = 22; 

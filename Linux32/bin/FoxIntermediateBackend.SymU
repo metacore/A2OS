@@ -55,10 +55,6 @@ CONST
 	NoType = 0; 
 	LhsIsPointer = 0; 
 	RhsIsPointer = 1; 
-	EntryPriority =  -4; 
-	FirstPriority =  -3; 
-	InitPriority =  -2; 
-	ExitPriority =  -1; 
 	BasePointerTypeSize = 5; 
 	BaseArrayTypeSize = (BasePointerTypeSize + 3); 
 	LengthOffset = (BasePointerTypeSize + 0); 
@@ -126,7 +122,7 @@ TYPE
 
 	ConditionalBranch = PROCEDURE {DELEGATE}(label: Label; op1, op2: IntermediateCode.Operand); 
 
-	DeclarationVisitor = OBJECT (SyntaxTree.Visitor)
+	DeclarationVisitor = OBJECT 
 	VAR 
 		backend: IntermediateBackend; 
 		implementationVisitor: ImplementationVisitor; 
@@ -142,30 +138,14 @@ TYPE
 		PROCEDURE ^  & Init(system: Global.System; implementationVisitor: ImplementationVisitor; backend: IntermediateBackend; forceModuleBody, dump: BOOLEAN); 
 		PROCEDURE ^ Error(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Type(x: SyntaxTree.Type); 
-		PROCEDURE ^ VisitBasicType*(x: SyntaxTree.BasicType); 
-		PROCEDURE ^ VisitCharacterType*(x: SyntaxTree.CharacterType); 
-		PROCEDURE ^ VisitIntegerType*(x: SyntaxTree.IntegerType); 
-		PROCEDURE ^ VisitFloatType*(x: SyntaxTree.FloatType); 
-		PROCEDURE ^ VisitComplexType*(x: SyntaxTree.ComplexType); 
-		PROCEDURE ^ VisitQualifiedType*(x: SyntaxTree.QualifiedType); 
-		PROCEDURE ^ VisitStringType*(x: SyntaxTree.StringType); 
-		PROCEDURE ^ VisitArrayRangeType(x: SyntaxTree.RangeType); 
-		PROCEDURE ^ VisitArrayType*(x: SyntaxTree.ArrayType); 
-		PROCEDURE ^ VisitPortType*(x: SyntaxTree.PortType); 
-		PROCEDURE ^ VisitMathArrayType*(x: SyntaxTree.MathArrayType); 
-		PROCEDURE ^ VisitPointerType*(x: SyntaxTree.PointerType); 
-		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 
+		PROCEDURE ^ QualifiedType(x: SyntaxTree.QualifiedType); 
 		PROCEDURE ^ HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ VisitCellType*(x: SyntaxTree.CellType); 
-		PROCEDURE ^ VisitProcedureType*(x: SyntaxTree.ProcedureType); 
-		PROCEDURE ^ VisitEnumerationType*(x: SyntaxTree.EnumerationType); 
-		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
-		PROCEDURE ^ VisitOperator*(x: SyntaxTree.Operator); 
-		PROCEDURE ^ VisitVariable*(x: SyntaxTree.Variable); 
-		PROCEDURE ^ VisitProperty*(x: SyntaxTree.Property); 
-		PROCEDURE ^ VisitParameter*(x: SyntaxTree.Parameter); 
-		PROCEDURE ^ VisitTypeDeclaration*(x: SyntaxTree.TypeDeclaration); 
-		PROCEDURE ^ VisitConstant*(x: SyntaxTree.Constant); 
+		PROCEDURE ^ RecordType(x: SyntaxTree.RecordType); 
+		PROCEDURE ^ CellType(x: SyntaxTree.CellType); 
+		PROCEDURE ^ Variable(x: SyntaxTree.Variable); 
+		PROCEDURE ^ Parameter(x: SyntaxTree.Parameter); 
+		PROCEDURE ^ TypeDeclaration(x: SyntaxTree.TypeDeclaration); 
+		PROCEDURE ^ Constant(x: SyntaxTree.Constant); 
 		PROCEDURE ^ Scope(x: SyntaxTree.Scope); 
 		PROCEDURE ^ Parameters(first: SyntaxTree.Parameter); 
 		PROCEDURE ^ Procedure(x: SyntaxTree.Procedure); 
@@ -310,7 +290,6 @@ TYPE
 		PROCEDURE ^ AcquireRegister(CONST type: IntermediateCode.Type; class: IntermediateCode.RegisterClass): LONGINT; 
 		PROCEDURE ^ GetFingerprintString(symbol: SyntaxTree.Symbol; VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetCodeSectionNameForSymbol(symbol: SyntaxTree.Symbol; VAR name: Basic.SegmentedName); 
-		PROCEDURE ^ GetCodeSectionNameForSymbolInScope(symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope; VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ TraceEnter(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ TraceExit(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Emit(instruction: IntermediateCode.Instruction); 
@@ -437,7 +416,6 @@ TYPE
 		PROCEDURE ^ ArrayLen(type: SyntaxTree.ArrayType; VAR operand: Operand; VAR dim: IntermediateCode.Operand; VAR result: Operand); 
 		PROCEDURE ^ GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable; 
 		PROCEDURE ^ GetMathArrayDescriptorType(dimensions: LONGINT): SyntaxTree.Type; 
-		PROCEDURE ^ NewMathArrayDescriptor(op: Operand; dimensions: LONGINT); 
 		PROCEDURE ^ PushConstString(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ PushConstBoolean(b: BOOLEAN); 
 		PROCEDURE ^ PushConstSet(v: SET); 
@@ -553,13 +531,11 @@ TYPE
 		PROCEDURE ^ Size(section: IntermediateCode.Section; value: SIZE); 
 		PROCEDURE ^ Set(section: IntermediateCode.Section; value: Basic.Set); 
 		PROCEDURE ^ Longint(section: IntermediateCode.Section; value: LONGINT); 
-		PROCEDURE ^ PatchAddress(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 
 		PROCEDURE ^ PatchSize(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 
 		PROCEDURE ^ PatchLongint(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 
 		PROCEDURE ^ PatchSymbol(section: IntermediateCode.Section; pc: LONGINT; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT); 
 		PROCEDURE ^ Boolean(section: IntermediateCode.Section; value: BOOLEAN); 
 		PROCEDURE ^ Char(section: IntermediateCode.Section; char: CHAR); 
-		PROCEDURE ^ Integer(section: IntermediateCode.Section; int: LONGINT); 
 		PROCEDURE ^ String(section: IntermediateCode.Section; CONST str: ARRAY OF CHAR); 
 		PROCEDURE ^ String0(section: IntermediateCode.Section; str: StringPool.Index); 
 		PROCEDURE ^ NamedSymbol(section: IntermediateCode.Section; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT); 
@@ -593,7 +569,6 @@ TYPE
 		PROCEDURE ^ Module(bodyProc: IntermediateCode.Section); 
 		PROCEDURE ^ PatchCRC(crc: LONGINT); 
 		PROCEDURE ^ PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT); 
-		PROCEDURE ^ SymbolSection(symbol: SyntaxTree.Symbol; CONST suffix: ARRAY OF CHAR; VAR pc: LONGINT): IntermediateCode.Section; 
 		PROCEDURE ^ CheckTypeDeclaration(x: SyntaxTree.Type); 
 	END MetaDataGenerator; 
 

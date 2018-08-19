@@ -1,11 +1,11 @@
 MODULE BartSimpson IN Oberon;
 	IMPORT Out, Objects, Display, Input, Gadgets, Oberon, Modules, Pictures, Math IN A2, Display3, Printer, Printer3;
 CONST 
-	LEyeX =   1.6500000E+001; 
-	REyeX =   2.3500000E+001; 
-	LEyeY =   1.6500000E+001; 
-	REyeY =   1.6500000E+001; 
-	EyeR =   1.5000000E+000; 
+	LEyeX = 1.64999999999999E+1; 
+	REyeX = 2.35000000000000E+1; 
+	LEyeY = 1.64999999999999E+1; 
+	REyeY = 1.64999999999999E+1; 
+	EyeR = 1.50000000000000; 
 	BartW = 34; 
 	BartH = 34; 
 TYPE 

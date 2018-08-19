@@ -6,7 +6,7 @@ CONST
 	MetaFontTag = 503; 
 	OldMetaFontTag = (1793 - 4096); 
 	MaxBezierPoints = ((3 * GfxPaths.MaxSplinePoints) + 1); 
-	DPI =   9.1440000E+001; 
+	DPI = 9.14400000000000E+1; 
 	FontId = 0DBX; 
 TYPE 
 	FontName* = ARRAY FontNameLen OF CHAR; 

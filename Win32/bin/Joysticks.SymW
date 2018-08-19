@@ -60,7 +60,7 @@ CONST
 	MaxNbrOfButtons* = 32; 
 	MaxNbrOfAxis* = 32; 
 	MaxNbrOfCoolieHats* = 8; 
-	DefaultDeadzone =   5.0000000E-001; 
+	DefaultDeadzone = 5.00000000000000E-1; 
 	ErrorAxisNotImplemented = \"Axis not implemented"\; 
 	ErrorParameterOutOfRange = \"Parameter out of range"\; 
 	ErrorNoValidCenterPosition = \"Axis must be centerd when stopping calibration"\; 

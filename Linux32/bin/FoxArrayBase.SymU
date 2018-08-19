@@ -243,7 +243,7 @@ VAR
 	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
 	PROCEDURE ^ ApplyUnaryAAOp*(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: UnaryAALoop); 
 	PROCEDURE ^ ApplyUnaryASOp*(dest: ADDRESS; CONST left: UnsafeArrayT; Loop: UnaryASLoop); 
-	PROCEDURE ^ ApplyUnarySAOp(VAR dest: UnsafeArrayT; right: ADDRESS; Loop: UnarySALoop); 
+	PROCEDURE ^ ApplyUnarySAOp*(VAR dest: UnsafeArrayT; right: ADDRESS; Loop: UnarySALoop); 
 	PROCEDURE ^ ApplyBinaryAAAOp*(VAR dest: UnsafeArrayT; CONST left, right: UnsafeArrayT; elementSize: SIZE; Loop: BinaryAAALoop); 
 	PROCEDURE ^ ApplyBinaryASAOp*(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; right: ADDRESS; elementSize: SIZE; Loop: BinaryASALoop); 
 	PROCEDURE ^ ApplyBinaryAASOp*(dest: ADDRESS; CONST left, right: UnsafeArrayT; Loop: BinaryAASLoop); 

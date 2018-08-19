@@ -1,7 +1,7 @@
 MODULE DTPImage;
 	IMPORT Modules, Files, XML, WMStandardComponents, WMGraphics, WMComponents, WMRectangles, WMDialogs, WMEditors, Strings, XMLObjects, WMWindowManager, Raster, WMRasterScale, DTPEditor, DTPData;
 CONST 
-	pluginVersion =   1.0000000E+000; 
+	pluginVersion = 1.00000000000000; 
 	pluginName = \"Image"\; 
 	pluginDesc = \"Loads an Image from the given Filename"\; 
 TYPE 

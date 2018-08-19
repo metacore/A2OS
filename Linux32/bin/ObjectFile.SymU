@@ -146,7 +146,6 @@ VAR
 	PROCEDURE ^ SetAliases*(VAR section: Section; aliases: LONGINT; alias: Aliases); 
 	PROCEDURE ^ AddPatch*(VAR patches: LONGINT; VAR patch: Patches; disp, ofs: LONGINT); 
 	PROCEDURE ^ SameFixupPattern(patterns: LONGINT; left, right: FixupPatterns): BOOLEAN; 
-	PROCEDURE ^ SamePattern(left, right: Pattern): BOOLEAN; 
 	PROCEDURE ^ HasPattern(pat: Pattern; mode, scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): BOOLEAN; 
 	PROCEDURE ^ AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: LONGINT; mode: INTEGER; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT; 
 	PROCEDURE ^ AddAlias*(VAR aliases: LONGINT; VAR alias: Aliases; CONST name: SegmentedName; fingerprint, offset: LONGINT): LONGINT; 

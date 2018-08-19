@@ -7,6 +7,7 @@ CONST
 VAR 
 	hin-, hout-, herr-: Kernel32.HANDLE; 
 	mode: LONGINT; 
+	traceChar0: PROCEDURE (ch: CHAR); 
 
 	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ SendError*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 

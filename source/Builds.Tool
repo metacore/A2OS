@@ -40,6 +40,73 @@ Shell.Mod StdIOShell.Mod ~
 
 System.FreeDownTo FoxIntermediateBackend ~
 
+WIN32DLL -- 32-bit windows a2 in a DLL (Example)
+=================================
+
+System.DoCommands
+
+	Compiler.Compile --define=WIN,I386,SHAREDLIB -p=Win32 --traceModule=Trace --destPath=A2Dll/
+		I386.Builtins.Mod Trace.Mod Windows.Kernel32.Mod Windows.Machine.Mod Heaps.Mod Modules.Mod
+		Windows.Objects.Mod Windows.Kernel.Mod KernelLog.Mod
+	~
+
+	Compiler.Compile --define=WIN,I386,SHAREDLIB -p=Win32 --destPath=A2Dll/
+		Streams.Mod Commands.Mod Files.Mod Windows.WinFS.Mod Windows.Clock.Mod Dates.Mod i386.Reals.Mod 
+		Strings.Mod Diagnostics.Mod BitSets.Mod StringPool.Mod ObjectFIle.Mod GenericLinker.Mod Reflection.Mod 
+		Loader.Mod CRC.Mod SystemVersion.Mod TrapWriters.Mod Windows.Traps.Mod FileTrapWriter.Mod Options.Mod 
+		ProcessInfo0.Mod ProcessInfo.Mod Plugins.Mod System.Mod
+	~
+	
+	FSTools.CreateFile -c -r A2Dll.Mod
+		MODULE A2Dll;
+		IMPORT Kernel;
+		IMPORT SystemVersion;
+			PROCEDURE {WINAPI} Test*(): LONGINT;
+			BEGIN
+				RETURN SystemVersion.GetKernelCRC();
+			END Test;
+		END A2Dll.
+
+		MODULE DllMainExit;
+		IMPORT SYSTEM;
+			PROCEDURE {FINAL, NOPAF} Exit*;
+			CODE{SYSTEM.i386}
+				POP EDI
+				POP ESI
+				POP EBX
+				POP EBP
+
+				MOV EAX, 1
+				RET 12
+			END Exit;
+		END DllMainExit.
+	~
+	
+	Compiler.Compile --define=WIN,I386,SHAREDLIB -p=Win32 --destPath=A2Dll/
+		A2Dll.Mod
+	~
+	
+	Linker.Link
+		--path=A2Dll/
+		--fileFormat=DLL32
+		--fileName=A2Dll.dll
+		--extension=GofW
+		--exports="A2Dll.Test=Test"
+		--displacement=401000H
+		--useAll
+	
+		Builtins Trace Kernel32 Machine Heaps Modules DllMainExit
+		Objects Kernel KernelLog
+
+		Streams Commands Files WinFS Clock Dates Reals 
+		Strings Diagnostics BitSets StringPool ObjectFIle GenericLinker Reflection 
+		Loader CRC SystemVersion TrapWriters Traps FileTrapWriter Options 
+		ProcessInfo0 ProcessInfo Plugins System
+		
+		A2Dll
+	~
+~
+
 LINUX32 -- 32 bit linux a2
 ================================
 

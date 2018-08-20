@@ -733,7 +733,7 @@ BEGIN
 	    This is not a problem since lpParameter (being a reference to a process) is protected by the process lists *)
 	Machine.Acquire(Machine.Objects);
 
-	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, lpParameter));
+	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, lpParameter));
 	t := lpParameter(Process);  obj := t.obj;
 	ASSERT(res # 0);
 	SetPriority(t.priority);
@@ -1124,7 +1124,7 @@ BEGIN
 	proc := Kernel32.GetCurrentProcess();
 	res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
 	ASSERT(res # 0);
-	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(LONGINT, t));
+	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
 	ASSERT(res # 0);
 	t.stackBottom := Machine.stackBottom;
 	t.mode := Running;

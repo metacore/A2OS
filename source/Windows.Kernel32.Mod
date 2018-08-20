@@ -832,7 +832,7 @@ VAR
 	TlsAlloc-: PROCEDURE {WINAPI} ( ): LONGINT;
 	TlsFree-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT ): BOOL;
 	TlsGetValue-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT ): LONGINT;
-	TlsSetValue-: PROCEDURE {WINAPI} ( dwTlsIndex, lpTlsValue: LONGINT ): BOOL;
+	TlsSetValue-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT; lpTlsValue: ADDRESS ): BOOL;
 	(** The TryEnterCriticalSection function attempts to enter a critical section without blocking. *)
 	TryEnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection ): BOOL;
 	(** The VirtualAlloc function reserves or commits a region of pages in the virtual address space of the calling process. *)

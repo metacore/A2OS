@@ -1202,17 +1202,6 @@ VAR hout: HANDLE;
 				
 			exit:
 		END EntryPoint;
-		
-		PROCEDURE {FINAL, NOPAF} Exit*;
-		CODE{SYSTEM.i386}
-			POP EDI
-			POP ESI
-			POP EBX
-			POP EBP
-
-			MOV EAX, 1
-			RET 12
-		END Exit;
 
 	#ELSE
 		(* The following procedure is linked as the first block in the code section of a PE32 executable file 

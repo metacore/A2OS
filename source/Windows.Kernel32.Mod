@@ -831,7 +831,7 @@ VAR
 																			 dwExitCode: LONGINT ): BOOL;
 	TlsAlloc-: PROCEDURE {WINAPI} ( ): LONGINT;
 	TlsFree-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT ): BOOL;
-	TlsGetValue-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT ): LONGINT;
+	TlsGetValue-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT ): ADDRESS;
 	TlsSetValue-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT; lpTlsValue: ADDRESS ): BOOL;
 	(** The TryEnterCriticalSection function attempts to enter a critical section without blocking. *)
 	TryEnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection ): BOOL;
@@ -1119,15 +1119,27 @@ VAR hout: HANDLE;
 #IF I386 THEN
 	
 	#IF SHAREDLIB THEN
-	
-		PROCEDURE CallSdw();
-		PROCEDURE SDW EXTERN "Modules.Shutdown"(code: LONGINT);
+
+		PROCEDURE ObjectsAttachThread(stackBottom: ADDRESS);
+		PROCEDURE AttachThread EXTERN "Objects.AttachThread"(stackBottom: ADDRESS);
 		BEGIN
-			SDW(-1);
-		END CallSdw;
+			AttachThread(stackBottom);
+		END ObjectsAttachThread;
+		
+		PROCEDURE ObjectsDetachThread();
+		PROCEDURE DetachThread EXTERN "Objects.DetachThread"();
+		BEGIN
+			DetachThread;
+		END ObjectsDetachThread;
+		
+		PROCEDURE ObjectsDetachProcess();
+		PROCEDURE DetachProcess EXTERN "Objects.DetachProcess"();
+		BEGIN
+			DetachProcess;
+		END ObjectsDetachProcess;
 		
 		(**
-			DLL entry point that corresponds to 
+			DLL entry point that corresponds to
 			
 			BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 		*)
@@ -1171,10 +1183,13 @@ VAR hout: HANDLE;
 				CMP EAX, 1
 				JZ ProcessAttach ; call all modules bodies only when fdwReason = DLL_PROCESS_ATTACH (1)
 				CMP EAX, 0
-				JZ ProcessDetach ; call all modules bodies only when fdwReason = DLL_PROCESS_DETACH (0)
+				JZ ProcessDetach ; DLL_PROCESS_DETACH (0)
+				CMP EAX, 2 ; DLL_THREAD_ATTACH (2)
+				JZ ThreadAttach
+				CMP EAX, 3 ; DLL_THREAD_DETACH (3)
+				JZ ThreadDetach
 				
-				POP EBP
-				RET 12
+				JMP ret
 
 			ProcessAttach:
 				PUSH EBX
@@ -1187,19 +1202,44 @@ VAR hout: HANDLE;
 				MOV EAX,[EDX+adrGetProcAddress]
 				MOV getProcAddress, EAX
 				JMP exit
-				
+
 			ProcessDetach:
 				PUSH EBX
 				PUSH ESI
 				PUSH EDI
-				CALL CallSdw
+				CALL ObjectsDetachProcess
 				POP EDI
 				POP ESI
 				POP EBX
 		
+				JMP ret
+				
+			ThreadAttach:
+				PUSH EBX
+				PUSH ESI
+				PUSH EDI
+				PUSH EBP ; push the thread stack bottom
+				CALL ObjectsAttachThread
+				ADD ESP, 4 ; pop stack bottom
+				POP EDI
+				POP ESI
+				POP EBX
+				
+				JMP ret
+				
+			ThreadDetach:
+				PUSH EBX
+				PUSH ESI
+				PUSH EDI
+				CALL ObjectsDetachThread
+				POP EDI
+				POP ESI
+				POP EBX
+				
+			ret:
 				POP EBP
 				RET 12
-				
+
 			exit:
 		END EntryPoint;
 
@@ -1209,7 +1249,7 @@ VAR hout: HANDLE;
 			are patched by the PE linker. 
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
-		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint;
+		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint*;
 		CODE{SYSTEM.i386}
 			JMP  DWORD end;
 			DB 0
@@ -1257,7 +1297,7 @@ VAR hout: HANDLE;
 			are patched by the PE linker. 
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
-		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint;
+		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint*;
 		CODE{SYSTEM.AMD64}
 			JMP  DWORD end;
 			DB 0

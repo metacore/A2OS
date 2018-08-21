@@ -870,7 +870,7 @@ END GetStaticHeap;
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 BEGIN
 	RETURN (p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
-		OR (p>=401000H) & (p<=ADDRESSOF(LastAddress))
+		OR (p>=ADDRESS OF Kernel32.EntryPoint) & (p<=ADDRESSOF(LastAddress))
 END ValidHeapAddress;
 
 

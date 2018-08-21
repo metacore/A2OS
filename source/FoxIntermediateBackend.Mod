@@ -10501,9 +10501,17 @@ TYPE
 		END VisitIfStatement;
 
 		PROCEDURE BrWithPart(CONST tag: IntermediateCode.Operand; x: SyntaxTree.WithPart; VAR trueL: Label);
+		VAR reg: IntermediateCode.Operand;
 		BEGIN
 			trueL := NewLabel();
-			TypeTest(tag, x.type, trueL, NIL,TRUE);
+			IF backend.cooperative THEN
+				IntermediateCode.InitRegister(reg,tag.type,tag.registerClass, AcquireRegister(tag.type, tag.registerClass));
+				Emit(Mov(position,reg,tag));
+				TypeTest(reg, x.type, trueL, NIL,TRUE);
+				ReleaseIntermediateOperand(reg);
+			ELSE
+				TypeTest(tag, x.type, trueL, NIL,TRUE);
+			END;
 		END BrWithPart;
 		
 		PROCEDURE EmitWithPart(x: SyntaxTree.WithPart);

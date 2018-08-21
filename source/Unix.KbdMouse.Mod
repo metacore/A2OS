@@ -8,6 +8,10 @@ MODULE KbdMouse;   (* g.f.	9.7.07 *)
 
 IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands, Api:=X11Api, Objects;
 
+#IF COOP THEN
+	IMPORT Environment;
+#END
+
 CONST
 	ML = 0;  MM = 1;  MR = 2;
 	
@@ -29,7 +33,10 @@ TYPE
 		BEGIN {ACTIVE, SAFE,PRIORITY(Objects.High - 1)}
 			LOOP
 				Objects.Sleep( 15 );  PollXQueue;
-			END 
+				#IF COOP THEN
+					IF Environment.status # Environment.Running THEN EXIT END;
+				#END
+			END
 		END Poll;
 
 VAR
@@ -205,6 +212,7 @@ VAR
 						(* shutdown *)
 						Machine.Release( Machine.X11 );
 						TerminateA2;
+						RETURN;
 					(*	Modules.Shutdown( Modules.Reboot ); *)
 					END; 
 			| Api.UnmapNotify:

@@ -451,7 +451,9 @@ TYPE
 
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
-					IF (variable.externalName = NIL) & ~variable.fictive THEN
+					IF (variable.externalName # NIL) THEN
+						variable.SetOffset(offset)
+					ELSIF ~variable.fictive THEN
 						size := SizeOf(variable.type.resolved);
 						IF size < 0 THEN RETURN FALSE END;
 						DEC(offset,size);

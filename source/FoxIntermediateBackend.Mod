@@ -541,7 +541,7 @@ TYPE
 			isModuleBody: BOOLEAN;
 			parametersSize: LONGINT;
 			position: LONGINT;
-			variable, lastVariable: SyntaxTree.Variable;
+			variable: SyntaxTree.Variable;
 			nonParameterRegisters: WORD;
 
 			PROCEDURE Signature;
@@ -668,16 +668,10 @@ TYPE
 				IF implementationVisitor.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
 
 				IF ~inline THEN
-					variable := scope.firstVariable;
-					lastVariable := NIL;
-					WHILE (variable # NIL) DO
-						IF (variable.externalName = NIL) & ~variable.fictive THEN lastVariable := variable END;
-						variable := variable.nextVariable;
-					END;
-					IF lastVariable = NIL THEN
+					IF scope.lastVariable = NIL THEN
 						stackSize := 0
 					ELSE
-						stackSize := lastVariable.offsetInBits;
+						stackSize := scope.lastVariable.offsetInBits;
 						IF stackSize <0 THEN stackSize := -stackSize END;
 						Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
 					END;
@@ -756,8 +750,8 @@ TYPE
 				implementationVisitor.Body(scope.body,currentScope,ir,isModuleBody);
 
 				IF ~inline & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
-					IF lastVariable # NIL THEN
-						stackSize := lastVariable.offsetInBits;
+					IF scope.lastVariable # NIL THEN
+						stackSize := scope.lastVariable.offsetInBits;
 						IF stackSize <0 THEN stackSize := -stackSize END;
 						Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
 					END;
@@ -12704,8 +12698,13 @@ TYPE
 					String0(section, variable.name);
 					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
 						Char(section, sfAbsolute);
-						implementationVisitor.GetCodeSectionNameForSymbol(variable, sn);
-						NamedSymbol(section, sn,variable, 0,0);
+						IF variable.externalName # NIL THEN
+							sn := variable.externalName^;
+							NamedSymbol(section, sn,NIL, 0,0);
+						ELSE
+							implementationVisitor.GetCodeSectionNameForSymbol(variable, sn);
+							NamedSymbol(section, sn,variable, 0,0);
+						END;
 					ELSE
 						Char(section, sfRelative);
 						Size(section, ToMemoryUnits(module.system,variable.offsetInBits));

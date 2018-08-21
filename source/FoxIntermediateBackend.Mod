@@ -541,7 +541,7 @@ TYPE
 			isModuleBody: BOOLEAN;
 			parametersSize: LONGINT;
 			position: LONGINT;
-			variable: SyntaxTree.Variable;
+			variable, lastVariable: SyntaxTree.Variable;
 			nonParameterRegisters: WORD;
 
 			PROCEDURE Signature;
@@ -668,10 +668,16 @@ TYPE
 				IF implementationVisitor.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
 
 				IF ~inline THEN
-					IF scope.lastVariable = NIL THEN
+					variable := scope.firstVariable;
+					lastVariable := NIL;
+					WHILE (variable # NIL) DO
+						IF (variable.externalName = NIL) & ~variable.fictive THEN lastVariable := variable END;
+						variable := variable.nextVariable;
+					END;
+					IF lastVariable = NIL THEN
 						stackSize := 0
 					ELSE
-						stackSize := scope.lastVariable.offsetInBits;
+						stackSize := lastVariable.offsetInBits;
 						IF stackSize <0 THEN stackSize := -stackSize END;
 						Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
 					END;
@@ -750,8 +756,8 @@ TYPE
 				implementationVisitor.Body(scope.body,currentScope,ir,isModuleBody);
 
 				IF ~inline & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
-					IF scope.lastVariable # NIL THEN
-						stackSize := scope.lastVariable.offsetInBits;
+					IF lastVariable # NIL THEN
+						stackSize := lastVariable.offsetInBits;
 						IF stackSize <0 THEN stackSize := -stackSize END;
 						Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
 					END;

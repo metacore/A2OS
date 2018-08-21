@@ -12,9 +12,9 @@ CONST StackDisplacement* = 0;
 
 PROCEDURE Backoff-;
 CODE
-	MOV	EBX, 80000H
+	MOV	EAX, 80000H
 loop:
-	DEC	EBX
+	DEC	EAX
 	JNZ		loop
 END Backoff;
 

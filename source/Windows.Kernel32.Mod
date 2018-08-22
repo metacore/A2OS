@@ -551,6 +551,8 @@ VAR
 	GetCurrentThread-: PROCEDURE {WINAPI} ( ): HANDLE;
 	(** The GetCurrentThreadId function returns the thread identifier of the calling thread. *)
 	GetCurrentThreadId-: PROCEDURE {WINAPI} ( ): LONGINT;
+	(** Retrieves the boundaries of the stack that was allocated by the system for the current thread. *)
+	GetCurrentThreadStackLimits-: PROCEDURE {WINAPI} (VAR lowLimit, highLimit: SIZE);
 	(** The GetDiskFreeSpace function retrieves information about the specified disk, including the amount of
 			free space on the disk. *)
 	GetDiskFreeSpace-: PROCEDURE {WINAPI} ( VAR lpRootPathName: ARRAY   OF CHAR;
@@ -980,6 +982,7 @@ VAR
 		GetProcAddress(mod, "GetCurrentProcessId",SYSTEM.VAL(ADDRESS,GetCurrentProcessId));
 		GetProcAddress(mod, "GetCurrentThread",SYSTEM.VAL(ADDRESS,GetCurrentThread));
 		GetProcAddress(mod, "GetCurrentThreadId",SYSTEM.VAL(ADDRESS,GetCurrentThreadId));
+		GetProcAddress(mod, "GetCurrentThreadStackLimits",SYSTEM.VAL(ADDRESS,GetCurrentThreadStackLimits));
 		GetProcAddress(mod, "GetDiskFreeSpaceA",SYSTEM.VAL(ADDRESS,GetDiskFreeSpace));
 		GetProcAddress(mod, "GetDriveTypeA",SYSTEM.VAL(ADDRESS,GetDriveType));
 		GetProcAddress(mod, "GetExitCodeProcess",SYSTEM.VAL(ADDRESS,GetExitCodeProcess));
@@ -1120,10 +1123,10 @@ VAR hout: HANDLE;
 	
 	#IF SHAREDLIB THEN
 
-		PROCEDURE ObjectsAttachThread(stackBottom: ADDRESS);
-		PROCEDURE AttachThread EXTERN "Objects.AttachThread"(stackBottom: ADDRESS);
+		PROCEDURE ObjectsAttachThread();
+		PROCEDURE AttachThread EXTERN "Objects.AttachThread"();
 		BEGIN
-			AttachThread(stackBottom);
+			AttachThread();
 		END ObjectsAttachThread;
 		
 		PROCEDURE ObjectsDetachThread();
@@ -1218,9 +1221,7 @@ VAR hout: HANDLE;
 				PUSH EBX
 				PUSH ESI
 				PUSH EDI
-				PUSH EBP ; push the thread stack bottom
 				CALL ObjectsAttachThread
-				ADD ESP, 4 ; pop stack bottom
 				POP EDI
 				POP ESI
 				POP EBX

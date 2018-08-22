@@ -19,6 +19,9 @@ CONST
 	Preempted* = 27;   (* Has been preempted. *)
 	Resistant* = 28;   (* Can only be destroyed by itself *)
 	PleaseStop* = 31;   (* Process requested to Terminate or Halt itself soon *)
+#IF SHAREDLIB THEN
+	External = 13; (* external (non A2) process attached in case of a DLL *)
+#END;
 
 	InActive* = 26;   (* needed to prevent processes to call finalizers while in await or lock or unlock, see Kernel.GC *)
 
@@ -69,17 +72,23 @@ TYPE
 			res: Kernel32.BOOL;
 			mode: LONGINT;
 			process: Process;
+			exiting: BOOLEAN;
 
 		PROCEDURE Wakeup;
 		VAR res: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			res := Kernel32.SetEvent(hevent)
 		END Wakeup;
+		
+		PROCEDURE Exit;
+		BEGIN
+			exiting := TRUE;
+			Wakeup;
+		END Exit;
 
 		PROCEDURE Finalize(ptr: ANY);
-		VAR res: Kernel32.BOOL;
 		BEGIN
-			IF hevent # 0 THEN res := Kernel32.CloseHandle(hevent);  hevent := 0 END
+			Exit;
 		END Finalize;
 
 		PROCEDURE &Init*;
@@ -114,7 +123,10 @@ TYPE
 			ELSE
 				res := Kernel32.WaitForSingleObject(hevent, h.trigger - ticks);
 			END;
-		END
+			IF exiting THEN EXIT; END;
+		END;
+		process.mode := Running; (*! avoid a trap in terminate *)
+		IF hevent # 0 THEN res := Kernel32.CloseHandle(hevent); END;
 	END Clock;
 
 TYPE
@@ -339,6 +351,7 @@ TYPE
 	VAR n: Heaps.FinalizerNode;
 		event: Kernel32.HANDLE;
 		process: Process;
+		exiting: BOOLEAN;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -346,14 +359,19 @@ TYPE
 			ASSERT(event # 0);
 		END Init;
 
-		PROCEDURE Wait;
+		PROCEDURE Wait(): BOOLEAN;
 		VAR res: Kernel32.BOOL; mode: LONGINT;
 		BEGIN
 			mode := process.mode;
 			process.mode := AwaitingEvent;
 			res := Kernel32.WaitForSingleObject(event, Kernel32.Infinite);
-			ASSERT(res = Kernel32.WaitObject0);
 			process.mode := mode;
+			ASSERT(res = Kernel32.WaitObject0);
+			IF ~exiting THEN
+				RETURN TRUE;
+			ELSE
+				RETURN FALSE;
+			END;
 		END Wait;
 
 		PROCEDURE Activate;
@@ -361,11 +379,16 @@ TYPE
 		BEGIN
 			res := Kernel32.SetEvent(event);
 		END Activate;
+		
+		PROCEDURE Exit;
+		BEGIN
+			exiting := TRUE;
+			Activate;
+		END Exit;
 
 	BEGIN {ACTIVE, SAFE, PRIORITY(High)}
 		process := CurrentProcess();
-		LOOP
-			Wait;
+		WHILE Wait() DO
 			LOOP
 				n := Heaps.GetFinalizer();
 				IF n = NIL THEN EXIT END;
@@ -375,8 +398,9 @@ TYPE
 				IF n.finalizer # NIL THEN
 					n.finalizer( n.objStrong ) (* may acquire locks *)
 				END
-			END
+			END;
 		END;
+		IF event # 0 THEN Kernel32.CloseHandle(event); END;
 	END FinalizerCaller;
 
 VAR
@@ -748,7 +772,9 @@ BEGIN
 		Machine.Acquire(Machine.TraceOutput);
 		Trace.String("New process; restartPC= "); Trace.Address(t.restartPC);
 		Trace.String("; stackBottom= ");
-		Trace.Address(t.stackBottom); Trace.Ln;
+		Trace.Address(t.stackBottom);
+		Trace.String("; id= ");
+		Trace.Int(t.id,0); Trace.Ln;
 		Machine.Release(Machine.TraceOutput);
 	END;
 	t.mode := Running;
@@ -836,6 +862,11 @@ BEGIN
 		t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);
 	END;
 	
+	(*! Put the process into the process queue before the thread is created.
+		this is highly important in case of a DLL, where Objects.AttachThread 
+		will be called by Kernel32.EntryPoint (DllMain)
+	*)
+	Put(ready, t);
 	t.handle := Kernel32.CreateThread(0, defaultStackSize, Wrapper, t, {}, t.id);
 
 	IF TraceVerbose OR TraceOpenClose THEN
@@ -858,7 +889,7 @@ BEGIN
 	ASSERT(heapBlock IS Heaps.ProtRecBlock); (* protected object *)
 	IF Restart IN flags THEN INCL(flags, Resistant) END;   (* SAFE => Restart & Resistant *)
 	NewProcess(body, priority, flags, obj, t);  INC(nProcs);  (* acquires Machine.Objects lock *)
-	t.mode := Ready; Put(ready, t);
+	t.mode := Ready;
 	Machine.Release(Machine.Objects);
 END CreateProcess;
 
@@ -1103,22 +1134,36 @@ PROCEDURE Init;   (* can not use NEW *)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
 	lib: Kernel32.HMODULE;
+	low, high: SIZE;
 BEGIN
 	Kernel32.AddVectoredExceptionHandler(1, ExcpFrmHandler); 
 	Kernel32.InitializeCriticalSection(excplock);
 	numberOfProcessors := Machine.NumberOfProcessors();
 
-	NEW(t);  NEW(fn);
+	NEW(t);
+#IF ~SHAREDLIB THEN
+	NEW(fn);
+#END;
+
 	Machine.Acquire(Machine.Objects);
 	t.gcContext.nextPos := 0;
 	nProcs := 1;
 	t.next := NIL;  t.prev := NIL;
-	t.waitingOn := NIL; t.flags := {}; t.obj := NIL;
+	t.waitingOn := NIL; 
+#IF ~SHAREDLIB THEN
+	t.flags := {};
+#ELSE (*! mark the process as external (non A2) *)
+	t.flags := {External};
+#END;
+	t.obj := NIL;
 	t.mode := Unknown; t.body := NIL;
 	t.priority := Normal;
+	
+#IF ~SHAREDLIB THEN (*! do not allow to finalize the dll loading thread *)
 	fn.finalizer := FinalizeProcess;
-
 	Heaps.AddFinalizer(t, fn);
+#END;
+
 	t.handle := Kernel32.GetCurrentThread();
 	t.id := Kernel32.GetCurrentThreadId();
 	proc := Kernel32.GetCurrentProcess();
@@ -1126,7 +1171,12 @@ BEGIN
 	ASSERT(res # 0);
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
 	ASSERT(res # 0);
+#IF ~SHAREDLIB THEN
 	t.stackBottom := Machine.stackBottom;
+#ELSE
+	Kernel32.GetCurrentThreadStackLimits(low,high);
+	t.stackBottom := high;
+#END;
 	t.mode := Running;
 	Put( ready, t );
 	ASSERT(t.handle # 0);
@@ -1319,6 +1369,201 @@ BEGIN
 		cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* returned *)
 	END;	
 END ReenterA2;
+
+#IF SHAREDLIB THEN
+
+	PROCEDURE InQueueById( queue: ProcessQueue;  id: LONGINT ): BOOLEAN;
+	VAR p: Heaps.ProcessLink;
+	BEGIN
+		p := queue.head;
+		WHILE (p # NIL ) & (p(Process).id # id) DO p := p.next;  END;
+		RETURN (p # NIL);
+	END InQueueById;
+
+	PROCEDURE AttachThread*();
+	CONST THREAD_PRIORITY_ERROR_RETURN = 0x7fffffff;
+	VAR
+		t: Process;
+		proc: Kernel32.HANDLE;
+		res: Kernel32.BOOL;
+		low, high: SIZE;
+	BEGIN
+		(*! this thread attach event could be invoked by Kernel32.CreateThread called within Objects.NewProcess. 
+			In such cases the created process will be already in the process queue and we must skip it.
+			All other cases correspond to external threads. *)
+		Machine.Acquire(Machine.Objects);
+		IF InQueueById(ready,Kernel32.GetCurrentThreadId()) THEN
+			Machine.Release(Machine.Objects);
+			RETURN;
+		END;
+		Machine.Release(Machine.Objects);
+		
+		(*!TODO: this can potentially invoke the GC and can cause a crash 
+			since the current thread is not yet registered.
+			Consider to use a preallocated array of Process descriptors *)
+		NEW(t);
+
+		Machine.Acquire(Machine.Objects);
+
+		t.gcContext.nextPos := 0;
+		t.next := NIL;  t.prev := NIL;
+		t.waitingOn := NIL; t.flags := {External}; t.obj := NIL;
+		t.mode := Unknown; t.body := NIL;
+
+		t.handle := Kernel32.GetCurrentThread();
+
+		t.priority := Kernel32.GetThreadPriority(t.handle);
+		ASSERT(t.priority # THREAD_PRIORITY_ERROR_RETURN);
+		CASE t.priority OF
+			|Kernel32.ThreadPriorityIdle: t.priority := MinPriority;
+			|Kernel32.ThreadPriorityBelowNormal: t.priority := Low;
+			|Kernel32.ThreadPriorityAboveNormal: t.priority := High;
+			|Kernel32.ThreadPriorityTimeCritical: t.priority := Realtime;
+		ELSE
+			ASSERT(t.priority = Kernel32.ThreadPriorityNormal);
+			t.priority := Normal;
+		END;
+
+		t.id := Kernel32.GetCurrentThreadId();
+		proc := Kernel32.GetCurrentProcess();
+		res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
+		ASSERT(res # 0);
+		res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
+		ASSERT(res # 0);
+		Kernel32.GetCurrentThreadStackLimits(low,high);
+		t.stackBottom := high;
+		t.mode := Running;
+		Put(ready, t);
+
+		Machine.Acquire(Machine.TraceOutput);
+		Trace.String("attached thread: id=");
+		Trace.Int(t.id,0);
+		Trace.String(", handle=");
+		Trace.Int(t.handle,0);
+		Trace.String(", stackBottom=");
+		Trace.Hex(t.stackBottom,-8);
+		Trace.Ln;
+		Machine.Release(Machine.TraceOutput);
+
+		Machine.Release(Machine.Objects);
+	END AttachThread;
+	
+	PROCEDURE CleanupExternalProcess(t: Process);
+	BEGIN
+		ASSERT(External IN t.flags);
+		IF InQueue(ready,t) THEN Remove(ready,t); END;
+		IF t.event # 0 THEN Kernel32.CloseHandle(t.event); END;
+		DEC(nProcs);
+	END CleanupExternalProcess;
+	
+	PROCEDURE DetachThread*();
+	VAR t: Process;
+	BEGIN
+		t := CurrentProcess();
+		IF ~(External IN t.flags) THEN RETURN; END;
+
+		Machine.Acquire(Machine.Objects);
+		CleanupExternalProcess(t);
+		Machine.Release(Machine.Objects);
+
+		Machine.Acquire (Machine.TraceOutput);
+		Trace.String("detached a thread: id="); Trace.Int(t.id,0); Trace.Ln;
+		Machine.Release (Machine.TraceOutput);
+	END DetachThread;
+	
+	PROCEDURE CleanupProcesses;
+	VAR 
+		t: Process;
+		res: Kernel32.BOOL;
+	BEGIN
+		Machine.Acquire(Machine.Objects);
+		Get(ready, t);
+		WHILE t # NIL DO
+			IF t.mode # Terminated THEN
+				IF External IN t.flags THEN
+					Machine.Acquire (Machine.TraceOutput);
+					Trace.String("cleaning up an external process: id="); Trace.Int(t.id,0); Trace.String(", mode="); Trace.Int(t.mode,0); Trace.Ln;
+					Machine.Release (Machine.TraceOutput);
+					CleanupExternalProcess(t);
+				ELSE
+					Machine.Acquire (Machine.TraceOutput);
+					Trace.String("killing a process: id="); Trace.Int(t.id,0); Trace.String(", mode="); Trace.Int(t.mode,0); Trace.Ln;
+					Machine.Release (Machine.TraceOutput);
+					res := Kernel32.TerminateThread(t.handle,-1);
+					IF res = 0 THEN
+						Machine.Acquire (Machine.TraceOutput);
+						Trace.String("failed to kill a process: id="); Trace.Int(t.id,0); Trace.String(", error="); Trace.Int(Kernel32.GetLastError(),0); Trace.Ln;
+						Machine.Release (Machine.TraceOutput);
+					END;
+				END;
+			END;
+			Get(ready, t);
+		END;
+		Machine.Release(Machine.Objects);
+	END CleanupProcesses;
+
+	PROCEDURE DetachProcess*();
+	CONST
+		TerminationTimeout = 1000;
+	VAR
+		p: Heaps.ProcessLink;
+		t: Process;
+		res: Kernel32.BOOL;
+		tick: LONGINT;
+		numNonTerminated, numExternals: SIZE;
+	BEGIN
+		Modules.Shutdown(-1);
+		finalizerCaller.Exit;
+		clock.Exit;
+		
+		Machine.Acquire(Machine.TraceOutput);
+		Trace.StringLn("wait until all A2 processes terminate");
+		Machine.Release(Machine.TraceOutput);
+			
+		tick := Kernel32.GetTickCount();
+		REPEAT
+			numNonTerminated := 0;
+			numExternals := 0;
+			Machine.Acquire(Machine.Objects);
+			p := ready.head;
+			WHILE p # NIL DO
+				t := p(Process);
+				IF External IN t.flags THEN
+					INC(numExternals);
+				ELSIF t.mode # Terminated THEN
+					INC(numNonTerminated);
+				END;
+				p := p.next;
+			END;
+			Machine.Release(Machine.Objects);
+		UNTIL (numNonTerminated = 0) OR (Kernel32.GetTickCount() - tick >= TerminationTimeout);
+		
+		IF numNonTerminated # 0 THEN
+			Machine.Acquire(Machine.TraceOutput);
+			Trace.String("there are "); Trace.Int(numNonTerminated,0); Trace.StringLn(" A2 processes to terminate forcedly");
+			Machine.Release(Machine.TraceOutput);
+			CleanupProcesses;
+		ELSE
+			Machine.Acquire(Machine.TraceOutput);
+			Trace.StringLn("all A2 processes terminated");
+			Machine.Release(Machine.TraceOutput);
+
+			IF numExternals # 0 THEN
+				CleanupProcesses;
+			END;
+		END;
+
+		res := Kernel32.TlsFree(tlsIndex);
+		IF res = 0 THEN
+			Machine.Acquire (Machine.TraceOutput);
+			Trace.String("failed free TLS: error="); Trace.Int(Kernel32.GetLastError(),0); Trace.Ln;
+			Machine.Release (Machine.TraceOutput);
+		END;
+
+		(*!TODO: free resources allocated in Machine (e.g. critical section objects) *)
+	END DetachProcess;
+
+#END;
 
 VAR
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);

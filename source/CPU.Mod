@@ -12,86 +12,172 @@ CONST StackDisplacement* = 0;
 
 PROCEDURE Backoff-;
 CODE
+#IF I386 THEN
 	MOV	EAX, 80000H
-loop:
-	DEC	EAX
+loop:	DEC	EAX
 	JNZ		loop
+#ELSIF AMD64 THEN
+	MOV	EAX, 80000H
+loop:	DEC	EAX
+	JNZ		loop
+#ELSE
+	unimplemented
+#END
 END Backoff;
 
 (* cpu control *)
 PROCEDURE {NORETURN} Reset-;
 CODE
+#IF I386 THEN
+	CLI
+	PUSH	0
+	PUSH	0
+	LIDT	[ESP]
+	INT3
+#ELSIF AMD64 THEN
 	CLI
 	PUSH	0
 	PUSH	0
 	LIDT	[RSP]
 	INT3
+#ELSE
+	unimplemented
+#END
 END Reset;
 
 PROCEDURE {NORETURN} Halt-;
 CODE
+#IF I386 THEN
 	CLI
-end:
-	HLT
+end:	HLT
 	JMP	end
+#ELSIF AMD64 THEN
+	CLI
+end:	HLT
+	JMP	end
+#ELSE
+	unimplemented
+#END
 END Halt;
 
 (* input / output ports *)
 PROCEDURE OutChar- (port: SIZE; value: CHAR);
 CODE
+#IF I386 THEN
+	MOV	AL, [EBP + value]
+	MOV	DX, [EBP + port]
+	OUT	DX, AL
+#ELSIF AMD64 THEN
 	MOV	AL, [RBP + value]
 	MOV	DX, [RBP + port]
 	OUT	DX, AL
+#ELSE
+	unimplemented
+#END
 END OutChar;
 
 PROCEDURE OutByte- (port: SIZE; value: SIZE);
 CODE
+#IF I386 THEN
+	MOV	AL, [EBP + value]
+	MOV	DX, [EBP + port]
+	OUT	DX, AL
+#ELSIF AMD64 THEN
 	MOV	AL, [RBP + value]
 	MOV	DX, [RBP + port]
 	OUT	DX, AL
+#ELSE
+	unimplemented
+#END
 END OutByte;
 
 PROCEDURE OutSet- (port: SIZE; value: SET);
 CODE
+#IF I386 THEN
+	MOV	AL, [EBP + value]
+	MOV	DX, [EBP + port]
+	OUT	DX, AL
+#ELSIF AMD64 THEN
 	MOV	AL, [RBP + value]
 	MOV	DX, [RBP + port]
 	OUT	DX, AL
+#ELSE
+	unimplemented
+#END
 END OutSet;
 
 PROCEDURE InChar- (port: SIZE): CHAR;
 CODE
+#IF I386 THEN
+	MOV	DX, [EBP + port]
+	IN		AL, DX
+#ELSIF AMD64 THEN
 	MOV	DX, [RBP + port]
 	IN		AL, DX
+#ELSE
+	unimplemented
+#END
 END InChar;
 
 PROCEDURE InByte- (port: SIZE): SIZE;
 CODE
+#IF I386 THEN
+	MOV	DX, [EBP + port]
+	IN		AL, DX
+	MOVZX	EAX, AL
+#ELSIF AMD64 THEN
 	MOV	DX, [RBP + port]
 	IN		AL, DX
 	MOVZX	EAX, AL
+#ELSE
+	unimplemented
+#END
 END InByte;
 
 PROCEDURE InSet- (port: SIZE): SET;
 CODE
+#IF I386 THEN
+	MOV	DX, [EBP + port]
+	IN		AL, DX
+	MOVZX	EAX, AL
+#ELSIF AMD64 THEN
 	MOV	DX, [RBP + port]
 	IN		AL, DX
 	MOVZX	EAX, AL
+#ELSE
+	unimplemented
+#END
 END InSet;
 
 PROCEDURE -SaveResult-;
 CODE
+#IF I386 THEN
+	PUSH EAX
+	PUSH EDX
+#ELSIF AMD64 THEN
 	PUSH RAX
+#ELSE
+	unimplemented
+#END
 END SaveResult;
 
 PROCEDURE -RestoreResultAndReturn-;
 CODE
+#IF I386 THEN
+	POP EDX
+	POP EAX
+	LEA ESP, [EBP + 4]
+	POP EBP
+	RET
+#ELSIF AMD64 THEN
 	POP RAX
-	LEA RSP, [RBP+8]
+	LEA RSP, [RBP + 8]
 	POP RBP
 	RET
+#ELSE
+	unimplemented
+#END
 END RestoreResultAndReturn;
-
-
 
 PROCEDURE Mask- (port: SIZE; value: SET);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -127,6 +213,9 @@ END InstallInterrupt;
 PROCEDURE HandleInterrupt (index: SIZE);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CODE
+	#IF I386 THEN
+		PUSHAD
+	#ELSIF AMD64 THEN
 		PUSH	RAX
 		PUSH	RCX
 		PUSH	RDX
@@ -141,6 +230,9 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		PUSH	R13
 		PUSH	R14
 		PUSH	R15
+	#ELSE
+		unimplemented
+	#END
 	END;
 
 	SYSTEM.SetActivity (NIL);
@@ -154,6 +246,9 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 
 	CODE
+	#IF I386 THEN
+		POPAD
+	#ELSIF AMD64 THEN
 		POP	R15
 		POP	R14
 		POP	R13
@@ -168,6 +263,9 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		POP	RDX
 		POP	RCX
 		POP	RAX
+	#ELSE
+		unimplemented
+	#END
 	END;
 END HandleInterrupt;
 
@@ -192,6 +290,82 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF (index >= IRQ0) & (index <= IRQ7) THEN Mask (PIC1DataPort, {index - IRQ0}) END;
 	IF (index >= IRQ8) & (index <= IRQ15) THEN Mask (PIC2DataPort, {index - IRQ8}) END;
 END DisableIRQ;
+
+#IF I386 THEN
+
+VAR idt-: ARRAY Interrupts OF ARRAY 4 OF INTEGER;
+VAR wrapper: ARRAY Interrupts OF ARRAY 16 OF CHAR;
+
+PROCEDURE Initialize-;
+CONST IRETD = 0CFX; PUSH = 06AX; CALL = 0E8X; ADD = 083X; ESP = 0C4X;
+VAR i, c: SIZE; address: ADDRESS;
+BEGIN {UNCOOPERATIVE, UNCHECKED}
+	(* ICW1: initialization *)
+	OutByte (PIC1CommandPort, ICW1_INIT + ICW1_ICW4);
+	OutByte (PIC2CommandPort, ICW1_INIT + ICW1_ICW4);
+
+	(* ICW2: vector offsets *)
+	OutByte (PIC1DataPort, IRQ0);
+	OutByte (PIC2DataPort, IRQ8);
+
+	(* ICW3: cascading *)
+	OutByte (PIC1DataPort, 4);
+	OutByte (PIC2DataPort, 2);
+
+	(* ICW4: mode *)
+	OutByte (PIC1DataPort, ICW4_8086);
+	OutByte (PIC2DataPort, ICW4_8086);
+
+	(* mask all maskable interrupts *)
+	OutChar (PIC1DataPort, 0FBX);
+	OutChar (PIC2DataPort, 0FFX);
+	
+	FOR i := 0 TO Interrupts - 1 DO
+		IF (i # 9) & (i # 15) & ((i < 20) OR (i > 29)) & (i # 31) THEN
+			idt[i][0] := INTEGER (ADDRESS OF wrapper[i] MOD 10000H);
+			idt[i][1] := INTEGER(8H);
+			idt[i][2] := INTEGER(8E00H);
+			idt[i][3] := INTEGER(ADDRESS OF wrapper[i] DIV 10000H);
+
+			c := 0;
+			IF i # 2 THEN
+				IF (i = 8) OR (i >= 10) & (i <= 14) OR (i = 17) THEN
+					wrapper[i][c] := ADD; INC (c);
+					wrapper[i][c] := ESP; INC (c);
+					wrapper[i][c] := CHR (4); INC (c);
+				END;
+				wrapper[i][c] := PUSH; INC (c);
+				wrapper[i][c] := CHR (i); INC (c);
+				wrapper[i][c] := CALL; INC (c);
+				address := ADDRESS OF HandleInterrupt - ADDRESS OF wrapper[i][c + 4];
+				wrapper[i][c] := CHR (address DIV 1H); INC (c);
+				wrapper[i][c] := CHR (address DIV 100H); INC (c);
+				wrapper[i][c] := CHR (address DIV 10000H); INC (c);
+				wrapper[i][c] := CHR (address DIV 1000000H); INC (c);
+				wrapper[i][c] := ADD; INC (c);
+				wrapper[i][c] := ESP; INC (c);
+				wrapper[i][c] := CHR (4); INC (c);
+			END;
+			wrapper[i][c] := IRETD;
+		ELSE
+			idt[i][0] := 0;
+			idt[i][1] := 0;
+			idt[i][2] := 0;
+			idt[i][3] := 0;
+		END;
+	END;
+	
+	CODE
+		LEA	EAX, idt
+		PUSH	EAX
+		MOV	AX, Interrupts * 8
+		PUSH	AX
+		LIDT	[ESP]
+		STI
+	END;
+END Initialize;
+
+#ELSIF AMD64 THEN
 
 VAR idt-: ARRAY Interrupts OF ARRAY 8 OF INTEGER;
 VAR wrapper: ARRAY Interrupts OF ARRAY 20 OF CHAR;
@@ -270,5 +444,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		STI
 	END;
 END Initialize;
+
+#ELSE
+
+	unimplemented
+
+#END
 
 END CPU.

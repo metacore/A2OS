@@ -281,8 +281,8 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	AMD64 { AMD64.Builtins.Mod }
 	ARM { ARM.FPE64.Mod ARM.Builtins.Mod }
 
-	I386 & COOP { I386.CPU.Mod }
-	AMD64 & COOP { AMD64.CPU.Mod }
+	I386 & COOP { CPU.Mod }
+	AMD64 & COOP { CPU.Mod }
 	RPI & COOP { RPI.CPU.Mod }
 	ZYNQ & COOP { Zynq.CPU.Mod }
 

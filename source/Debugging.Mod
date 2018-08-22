@@ -21,20 +21,31 @@ VAR
 		Log.Update;
 	END Memory;
 
+	
+	PROCEDURE CallerBP(bp: ADDRESS): ADDRESS;
+	VAR n: ADDRESS;
+	BEGIN
+		IF bp # NIL THEN
+			SYSTEM.GET(bp, n);
+			IF ODD(n) THEN INC(bp, SIZEOF(ADDRESS)) END;
+			SYSTEM.GET(bp, bp);			
+		END;
+		RETURN bp;
+	END CallerBP;
+	
 	PROCEDURE ViewStack( ebp, esp: ADDRESS; CONST s: ARRAY OF CHAR);
 	VAR i: ADDRESS; val: LONGINT; prevBP:ADDRESS;
 	CONST adrSize= SIZEOF(ADDRESS);
 	BEGIN
 		Log.String( ">>>>> " );  Log.String(s); Log.String (" >>>>>> "); Log.Ln;
-		SYSTEM.GET(ebp,prevBP);
+		prevBP := CallerBP(ebp);
 		IF prevBP-ebp > 1024 THEN prevBP := ebp END;
 		FOR i := prevBP TO esp BY -adrSize DO
 			Log.Address( i );  Log.String( "H (" );  Log.Int( i, 0 );  Log.String( "," );
 			Log.Int( i - ebp, 4 );  Log.String( ") " );  SYSTEM.GET( i, val );
 			Log.Address( val );  Log.String( "H = " );  Log.Int( val, 10 );
-			IF (i = prevBP) & (i # ebp) THEN Log.String("  <-----  [EBP]"); END;
+			IF i = prevBP THEN Log.String("  <-----  caller EBP"); END;
 			IF i = ebp THEN Log.String("  <----- EBP"); END;
-			IF i = ebp+adrSize THEN Log.String("  <----- EIP"); END;
 			IF i = esp THEN Log.String("  <----- ESP"); END;
 			Log.Ln;
 		END;
@@ -47,7 +58,7 @@ VAR
 	VAR bp,oldbp: ADDRESS;
 	BEGIN
 		bp := Machine.CurrentBP();
-		SYSTEM.GET(bp,oldbp);
+		oldbp := CallerBP(bp);
 		ViewStack(oldbp,bp+4*SIZEOF(ADDRESS),s);
 	END Stack;
 
@@ -247,6 +258,12 @@ VAR
 		END;
 		context.result := Commands.CommandError;
 	END ReportModule;
+	
+	PROCEDURE Test*;
+	BEGIN
+		Stack("Stack");
+	END Test;
+	
 
 BEGIN
 	Streams.OpenWriter( DefaultLog, KernelLog.Send );  Log := DefaultLog; NEW( lock );

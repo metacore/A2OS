@@ -2536,10 +2536,10 @@ TYPE
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN 
-			(*! semantic of x.y := new : 
-				if x is untraced then assignments to x^.y can be traced, depending on traceability of field y in x
+			(*! semantic of x.y.z := new : if x is untraced then the effect of y.z := new remains untraced! 
+				In other words: difference between y := x.y; y.z := new and x.y.z := new.
 			*)
-			RETURN type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
+			RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
 		END NeedsTrace;
 
 	END DereferenceDesignator;

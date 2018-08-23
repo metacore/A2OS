@@ -260,10 +260,7 @@ VAR
 	(* set data base pointer (GC protection) *)
 	PROCEDURE PutPtr(CONST base: UnsafeArrayT; value: ANY);
 	BEGIN
-		base.ptr := value;
-		(*
 		SafePut(base.ptr,value);
-		*)
 	END PutPtr;
 
 	PROCEDURE GetSize( base: UnsafeArray ): SIZE;
@@ -1516,7 +1513,7 @@ Sufficient (but not necessary) conditions:
 
 		PROCEDURE CopyDescriptor;
 		BEGIN
-			dest.ptr := src.ptr;(* GC! Must do before MOVE (NIL <- src.ptr), then copy redundant *)
+			SafePut(dest.ptr, src.ptr);(* With refcount. GC! Must do before MOVE (NIL <- src.ptr), then copy redundant *)
 			SYSTEM.MOVE( src , dest, MathLenOffset + SIZEOF(LenInc) *  GetDim( src ));
 		END CopyDescriptor;
 

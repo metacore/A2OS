@@ -50,7 +50,7 @@ VAR nextActivity: Activities.Activity;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	INC (milliseconds, Clock ());
 	Counters.Inc (Activities.awaiting);
-	WHILE Clock () - milliseconds < 0 DO
+	WHILE (status = Running) & (Clock () - milliseconds < 0) DO
 		IF Activities.Select (nextActivity, Activities.IdlePriority) THEN
 			Activities.SwitchTo (nextActivity, Enqueue, NIL);
 			Activities.FinalizeSwitch;
@@ -63,6 +63,9 @@ PROCEDURE Enqueue (previous {UNTRACED}: Activities.Activity; argument: ADDRESS);
 VAR item: Queues.Item;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Queues.Enqueue (previous, sleepingQueue);
+	IF status # Running THEN
+		WHILE Queues.Dequeue (item, sleepingQueue) DO Activities.Resume (item(Activities.Activity)) END;
+	END;
 END Enqueue;
 
 PROCEDURE TimerThread;
@@ -79,6 +82,9 @@ BEGIN
 		WHILE Queues.Dequeue (item, sleepingQueue) DO
 			Activities.Resume (item(Activities.Activity));
 		END;
+	END;
+	WHILE Queues.Dequeue (item, sleepingQueue) DO
+		Activities.Resume (item(Activities.Activity));
 	END;
 END TickLoop;
 

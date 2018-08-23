@@ -123,6 +123,7 @@ TYPE
 		tag: IntermediateCode.Operand;
 		extra: IntermediateCode.Operand; (* stores the step size of an array range *)
 		dimOffset: LONGINT;
+		availability: WORD; (* index *)
 	END;
 
 	
@@ -1294,7 +1295,6 @@ TYPE
 		arrayDestinationDimension:LONGINT;
 
 		currentLoop: Label; (* variable to hand over loop exit jump list *)
-		conditional: BOOLEAN;
 		trueLabel, falseLabel, exitLabel: Label;
 		locked: BOOLEAN;
 		(*
@@ -1342,6 +1342,14 @@ TYPE
 
 		isUnchecked: BOOLEAN;
 	
+		(* EXPERIMENTAL *)		
+		availableSymbols: ARRAY 1024 OF
+		RECORD
+			symbol: SyntaxTree.Symbol;
+			inMemory, inRegister: BOOLEAN;
+			register: IntermediateCode.Operand;
+			memory: IntermediateCode.Operand;
+		END;
 		
 		PROCEDURE & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend);
 		BEGIN
@@ -1357,7 +1365,6 @@ TYPE
 			SELF.checker := checker;
 			SELF.backend := backend;
 			position := Basic.invalidPosition;
-			conditional := FALSE;
 			locked := FALSE;
 			InitOperand(result,ModeUndefined);
 			addressType := IntermediateCode.GetType(system,system.addressType);
@@ -1786,7 +1793,22 @@ TYPE
 				ELSE
 					MakeMemory(mem,operand.op,IntermediateCode.GetType(system,type),0);
 					ReleaseIntermediateOperand(operand.op);
-					operand.op := mem;
+					(* EXPERIMENTAL *)
+					IF operand.availability >= 0 THEN
+						IF availableSymbols[operand.availability].inRegister THEN
+							operand.op := availableSymbols[operand.availability].register;
+							UseIntermediateOperand(operand.op);
+						ELSE
+							availableSymbols[operand.availability].register := NewRegisterOperand(IntermediateCode.GetType(system,type));
+							availableSymbols[operand.availability].memory := mem;
+							operand.op := availableSymbols[operand.availability].register;
+							Emit(Mov(position, operand.op, mem));
+							availableSymbols[operand.availability].inRegister := TRUE;
+						END;
+						ReleaseIntermediateOperand(mem);
+					ELSE
+						operand.op := mem;					
+					END;
 				END;
 				operand.mode := ModeValue;
 			END;
@@ -1794,43 +1816,299 @@ TYPE
 		END LoadValue;
 
 		PROCEDURE Evaluate(x: SyntaxTree.Expression; VAR op: Operand);
-		VAR prevConditional: BOOLEAN;
 		BEGIN
-			prevConditional := conditional;
-			conditional := FALSE;
 			InitOperand(result, ModeUndefined);
 			Expression(x);
 			op := result;
 			LoadValue(op,x.type.resolved);
-			conditional := prevConditional;
 		END Evaluate;
+		
+		PROCEDURE EvaluateX(x: SyntaxTree.Expression): Operand;
+		VAR op: Operand;
+		BEGIN
+			Evaluate(x, op);
+			RETURN op;
+		END EvaluateX;
+		
 
 		PROCEDURE Designate(x: SyntaxTree.Expression; VAR op: Operand);
-		VAR prevConditional: BOOLEAN;
 		BEGIN
-			prevConditional := conditional;
-			conditional := FALSE;
 			InitOperand(result,ModeUndefined);
 			Expression(x);
 			op := result;
-		(*
-			ASSERT((op.mode = ModeReference) OR (x.type.resolved IS SyntaxTree.NilType)); (* special case: winapi NIL parameter on references *)
-		*)
-			conditional := prevConditional;
 		END Designate;
-
-		PROCEDURE Condition(x: SyntaxTree.Expression; trueL,falseL: Label);
-		VAR prevTrue, prevFalse: Label; prevConditional: BOOLEAN;
+		
+		PROCEDURE Condition(CONST x: SyntaxTree.Expression; label: Label; reason: BOOLEAN);
+		VAR skip: Label; recordType: SyntaxTree.RecordType; left, right: Operand;
+			leftType, rightType: SyntaxTree.Type; temp: IntermediateCode.Operand;
+			leftExpression, rightExpression: SyntaxTree.Expression;
 		BEGIN
-			ASSERT(trueL # NIL); ASSERT(falseL # NIL);
-			prevTrue := trueLabel; prevFalse := falseLabel; prevConditional := conditional;
-			conditional := TRUE;
-			trueLabel := trueL; falseLabel := falseL;
-			Expression(x);
-			trueL := trueLabel; falseL := falseLabel;
-			trueLabel := prevTrue;falseLabel := prevFalse;conditional := prevConditional;
+			ASSERT(label # NIL);
+			WITH x: 
+			SyntaxTree.UnaryExpression DO
+				CASE x.operator OF
+					Scanner.Not:
+						Condition(x.left,label,~reason);
+						RETURN;
+				ELSE
+				END;
+			| SyntaxTree.BinaryExpression DO
+					leftType := x.left.type.resolved;
+					rightType := x.right.type.resolved;
+					CASE x.operator OF
+					Scanner.Or:
+						(* shortcut evaluation of left OR right *)
+							IF reason THEN (*left or right*)
+								Condition(x.left,label,TRUE);
+								Condition(x.right,label,TRUE);
+							ELSE (* ~ (left or right) = ~left & ~right *)
+								skip := NewLabel();
+								Condition(x.left,skip,TRUE);
+								Condition(x.right,label,FALSE);
+								SetLabel(skip);
+							END;
+							RETURN;
+					|Scanner.And:
+						(* shortcut evaluation of left & right *)
+						IF reason THEN (* left and right *)
+							skip := NewLabel();
+							Condition(x.left,skip,FALSE);
+							Condition(x.right,label,TRUE);
+							SetLabel(skip);
+						ELSE (* ~(left and right) = ~left or ~right *)
+							Condition(x.left,label,FALSE);
+							Condition(x.right,label,FALSE);
+						END;
+						RETURN;
+					|Scanner.Is:
+						(* get type desc tag *)
+						IF IsPointerToRecord(x.left.type,recordType) THEN
+							left := EvaluateX(x.left);
+							Dereference(left,recordType,IsUnsafePointer(x.left.type))
+						ELSE
+							Designate(x.left,left);
+						END;
+						TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,label,reason,FALSE);
+						ReleaseOperand(left);
+						RETURN;
+					|Scanner.Equal:
+					IF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+						IF reason THEN
+							CompareString(BreqL,label,x.left,x.right);
+						ELSE
+							CompareString(BrneL,label,x.left,x.right);
+						END;
+					ELSE
+						Evaluate(x.left,left);
+						Evaluate(x.right,right);
+						IF leftType IS SyntaxTree.RangeType THEN
+							ASSERT(rightType IS SyntaxTree.RangeType);
+							IF reason THEN 
+								skip := NewLabel();
+								BrneL(skip, left.op, right.op); (* first *)
+								BrneL(skip, left.tag, right.tag); (* last *)
+								BreqL(label, left.extra, right.extra); (* step *)
+								SetLabel(skip);
+							ELSE
+								BrneL(label, left.op, right.op); (* first *)
+								BrneL(label, left.tag, right.tag); (* last *)
+								BrneL(label, left.extra, right.extra); (* step *)
+							END;							
+							ReleaseOperand(left); ReleaseOperand(right);
+						ELSIF IsDelegate(leftType) OR (leftType IS SyntaxTree.ComplexType) THEN (* pair comparison *)
+							IF reason THEN 
+								skip := NewLabel();
+								BrneL(skip, left.op, right.op); (* first *)
+								BreqL(label, left.tag, right.tag); (* last *)
+								SetLabel(skip);
+							ELSE
+								BrneL(label, left.op, right.op); (* first *)
+								BrneL(label, left.tag, right.tag); (* last *)
+							END;
+							ReleaseOperand(left); ReleaseOperand(right);
+						ELSE
+							IF reason THEN 
+								BreqL(label,left.op,right.op);
+							ELSE
+								BrneL(label,left.op,right.op); 
+							END;
+							ReleaseOperand(left); ReleaseOperand(right);
+						END;
+					END;
+					RETURN;
+				|Scanner.LessEqual:
+					IF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+						IF reason THEN
+							CompareString(BrgeL,label,x.right,x.left);
+						ELSE
+							CompareString(BrltL,label,x.right,x.left);
+						END;					
+					ELSE
+						Evaluate(x.left,left);
+						Evaluate(x.right,right);
+						IF leftType IS SyntaxTree.SetType THEN (* left subsetequal right: left \cap right = left  *)
+							Reuse1(temp,right.op);
+							Emit(And(position,temp,left.op,right.op));
+							ReleaseOperand(right);
+							IF reason THEN
+								BreqL(label,temp,left.op);
+							ELSE
+								BrneL(label,temp,left.op);
+							END;
+							ReleaseIntermediateOperand(temp);ReleaseOperand(left);
+						ELSE
+							IF reason THEN 
+								BrgeL(label,right.op,left.op);
+							ELSE
+								BrltL(label,right.op,left.op);
+							END;
+							ReleaseOperand(left); ReleaseOperand(right);
+						END;
+					END;
+					RETURN;
+				|Scanner.Less:
+					IF leftType IS SyntaxTree.SetType THEN (* left < right <=> left <= right & left # right *)
+						leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.LessEqual);
+						leftExpression.SetType(system.booleanType);
+						rightExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.Unequal);
+						rightExpression.SetType(system.booleanType);
+						leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,leftExpression,rightExpression,Scanner.And);
+						leftExpression.SetType(system.booleanType);
+						Condition(leftExpression,label,reason);
+					ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+						IF reason THEN
+							CompareString(BrltL,label,x.left,x.right);
+						ELSE
+							CompareString(BrgeL,label,x.left,x.right);
+						END;
+					ELSE
+						Evaluate(x.left,left);
+						Evaluate(x.right,right);
+						IF reason THEN
+							BrltL(label,left.op,right.op);
+						ELSE
+							BrgeL(label,left.op,right.op);
+						END;
+						ReleaseOperand(left); ReleaseOperand(right);
+					END;
+					RETURN;
+				|Scanner.Greater:
+					IF leftType IS SyntaxTree.SetType THEN (* left > right <=> left >= right & left # right  *)
+						leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.GreaterEqual);
+						leftExpression.SetType(system.booleanType);
+						rightExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.Unequal);
+						rightExpression.SetType(system.booleanType);
+						leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,leftExpression,rightExpression,Scanner.And);
+						leftExpression.SetType(system.booleanType);
+						Condition(leftExpression,label,reason);
+					ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+						IF reason THEN
+							CompareString(BrltL,label,x.right,x.left);	
+						ELSE
+							CompareString(BrgeL,label,x.right,x.left);	
+						END;
+					ELSE
+						Evaluate(x.left,left);
+						Evaluate(x.right,right);
+						IF reason THEN
+							BrltL(label, right.op,left.op);
+						ELSE
+							BrgeL(label, right.op,left.op);
+						END;
+						ReleaseOperand(left); ReleaseOperand(right);
+					END;
+					RETURN;
+				|Scanner.GreaterEqual:
+					IF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+						IF reason THEN
+							CompareString(BrgeL,label,x.left,x.right);
+						ELSE
+							CompareString(BrltL,label,x.left,x.right);
+						END;
+					ELSE
+						Evaluate(x.left,left);
+						Evaluate(x.right,right);
+						IF leftType IS SyntaxTree.SetType THEN (* left supsetequal right: left \cap right = right *)
+							Reuse1(temp,left.op);
+							Emit(And(position,temp,left.op,right.op));
+							ReleaseOperand(left);
+							IF reason THEN
+								BreqL(label, temp, right.op);
+							ELSE
+								BrneL(label, temp, right.op);
+							END;
+							ReleaseIntermediateOperand(temp); ReleaseOperand(right);
+						ELSE
+							IF reason THEN
+								BrgeL(label,left.op,right.op);
+							ELSE
+								BrltL(label, left.op,right.op);
+							END;
+							ReleaseOperand(left); ReleaseOperand(right);
+						END;
+					END;
+					RETURN;
+				|Scanner.Unequal:
+					IF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
+						IF reason THEN
+							CompareString(BrneL,label,x.left,x.right);
+						ELSE
+							CompareString(BreqL,label,x.left,x.right);
+						END					
+					ELSE
+						Evaluate(x.left,left);
+						Evaluate(x.right,right);
+						IF leftType IS SyntaxTree.RangeType THEN
+							ASSERT(rightType IS SyntaxTree.RangeType);
+							IF ~reason THEN 
+								skip := NewLabel();
+								BrneL(skip, left.op, right.op); (* first *)
+								BrneL(skip, left.tag, right.tag); (* last *)
+								BreqL(label, left.extra, right.extra); (* step *)
+								SetLabel(skip);
+							ELSE
+								BrneL(label, left.op, right.op); (* first *)
+								BrneL(label, left.tag, right.tag); (* last *)
+								BrneL(label, left.extra, right.extra); (* step *)
+							END;
+							ReleaseOperand(left); ReleaseOperand(right);
+						ELSIF IsDelegate(leftType) OR (leftType IS SyntaxTree.ComplexType) THEN (* pair comparison *)
+							IF reason THEN
+								BrneL(label, left.op, right.op);
+								BrneL(label, left.tag, right.tag);
+							ELSE
+								skip := NewLabel();
+								BrneL(skip, left.op, right.op);
+								BreqL(label, left.tag, right.tag);
+								SetLabel(skip);
+							END;							
+							ReleaseOperand(left); ReleaseOperand(right);
+						ELSE
+							IF reason THEN
+								BrneL(label,left.op,right.op);
+							ELSE
+								BreqL(label,left.op,right.op);
+							END;
+							ReleaseOperand(left); ReleaseOperand(right);
+						END;
+					END;
+					RETURN;
+				ELSE (* case *)
+				END;
+			|SyntaxTree.BooleanValue DO
+				IF reason = x.value THEN BrL(label) END;
+			ELSE (* with *)
+			END;
+			(* default case: evaluate and compare result *)
+			left := EvaluateX(x);
+			IF reason THEN
+				BrneL(label,left.op, false);
+			ELSE
+				BreqL(label,left.op, false);
+			END;
+			ReleaseOperand(left);
 		END Condition;
-
+		
 		PROCEDURE NewRegisterOperand(type: IntermediateCode.Type): IntermediateCode.Operand;
 		VAR op: IntermediateCode.Operand; reg: LONGINT;
 		BEGIN
@@ -2088,10 +2366,33 @@ TYPE
 		BEGIN
 			NEW(label,section); RETURN label;
 		END NewLabel;
-
+		
+		(* EXPERIMENTAL *)
+		PROCEDURE EndBasicBlock;
+		VAR i: LONGINT;
+		BEGIN
+			i := 0; 
+			WHILE (availableSymbols[i].symbol # NIL) DO
+				IF ~availableSymbols[i].inMemory & availableSymbols[i].inRegister THEN
+					Emit(Mov(position,availableSymbols[i].memory, availableSymbols[i].register));
+				END;
+				availableSymbols[i].symbol := NIL;
+				INC(i); 
+			END;
+		END EndBasicBlock;
+		
+		(* EXPERIMENTAL *)
+		PROCEDURE BeginBasicBlock;
+		BEGIN
+			ASSERT(availableSymbols[0].symbol = NIL);
+		END BeginBasicBlock;
+		
 		PROCEDURE SetLabel(label: Label);
 		BEGIN 
-			(* basic block start / end *)
+			(* EXPERIMENTAL *)
+			EndBasicBlock;
+			BeginBasicBlock;
+
 			label.Resolve(section.pc);
 		END SetLabel;
 
@@ -2106,7 +2407,9 @@ TYPE
 
 		PROCEDURE BrL(label: Label);
 		BEGIN
-			(* basic block start / end *)
+			(* EXPERIMENTAL *)
+			EndBasicBlock;
+
 			Emit(Br(position,LabelOperand(label)));
 		END BrL;
 
@@ -2348,15 +2651,11 @@ TYPE
 			IF Trace THEN TraceEnter("VisitUnaryExpression") END;
 			dest := destination; destination := emptyOperand;
 			IF x.operator = Scanner.Not THEN
-				IF conditional THEN
-					Condition(x.left,falseLabel,trueLabel)
-				ELSE
-					Evaluate(x.left,operand);
-					InitOperand(result,ModeValue);
-					Reuse1a(result.op,operand.op,dest);
-					Emit(Xor(position,result.op,operand.op,true));
-					ReleaseOperand(operand);
-				END;
+				Evaluate(x.left,operand);
+				InitOperand(result,ModeValue);
+				Reuse1a(result.op,operand.op,dest);
+				Emit(Xor(position,result.op,operand.op,true));
+				ReleaseOperand(operand);
 			ELSIF x.operator = Scanner.Minus THEN
 				Evaluate(x.left,operand);
 				InitOperand(result,ModeValue);
@@ -2389,18 +2688,18 @@ TYPE
 			destination := dest;
 			IF Trace THEN TraceExit("VisitUnaryExpression") END;
 		END VisitUnaryExpression;
-
-		(* test if e is of type type, side effect: result of evaluation of e stays in the operand *)
-		PROCEDURE TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; trueL,falseL: Label; withPart: BOOLEAN);
-		VAR left,right: IntermediateCode.Operand; level,offset: LONGINT; repeatL: Label; originalType: SyntaxTree.Type;
+		
+				(* test if e is of type type, side effect: result of evaluation of e stays in the operand *)
+		PROCEDURE TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; label: Label; reason: BOOLEAN; withPart: BOOLEAN);
+		VAR left,right: IntermediateCode.Operand; level,offset: LONGINT; repeatL,skip: Label; originalType: SyntaxTree.Type;
 		BEGIN
 			type := type.resolved;
 			originalType := type;
 			IF type IS SyntaxTree.PointerType THEN
 				type := type(SyntaxTree.PointerType).pointerBase.resolved;
 			END;
-			IF type IS SyntaxTree.ObjectType THEN
-				BrL(trueL);
+			IF (type IS SyntaxTree.ObjectType) & reason THEN
+				BrL(label);
 			ELSE
 
 				ASSERT(type IS SyntaxTree.RecordType);
@@ -2421,29 +2720,45 @@ TYPE
 						Emit(Mov(position,left,IntermediateCode.Memory(addressType,left,ToMemoryUnits(system,addressType.sizeInBits))));
 					END;
 		 			SetLabel(repeatL);
-					BreqL(trueL,left,right);
+		 			IF reason THEN
+						BreqL(label,left,right);
+					ELSE
+						skip := NewLabel();
+						BreqL(skip,left,right);
+					END;
 					Emit(Mov(position,left,IntermediateCode.Memory(addressType,left,0)));
 					BrneL(repeatL,left,nil);
+					IF ~reason THEN
+						BrL(label);
+						SetLabel(skip);
+					END;
 				ELSIF meta.simple THEN
 					level := type(SyntaxTree.RecordType).Level();
 					(* get type desc tag of level relative to base tag *)
 					offset := (meta.BaseTypesTableOffset + level) * addressType.sizeInBits;
 					IntermediateCode.AddOffset(left,ToMemoryUnits(system,offset));
 					IntermediateCode.MakeMemory(left,addressType);
-					BreqL(trueL,left,right);
+					IF reason THEN
+						BreqL(label,left,right);
+					ELSE
+						BrneL(label,left,right);
+					END;
 				ELSE
 					level := type(SyntaxTree.RecordType).Level();
 					(* get type desc tag of level relative to base tag *)
 					offset := (meta.BaseTypesTableOffset - level) * addressType.sizeInBits;
 					IntermediateCode.AddOffset(left,ToMemoryUnits(system,offset));
 					IntermediateCode.MakeMemory(left,addressType);
-					BreqL(trueL,left,right);
+					IF reason THEN
+						BreqL(label,left,right);
+					ELSE
+						BrneL(label,left,right);
+					END;
 				END;
 				IF ~withPart THEN
 					ReleaseIntermediateOperand(left); 
 				END;
 				ReleaseIntermediateOperand(right);
-				IF falseL # NIL THEN BrL(falseL) END;
 			END;
 		END TypeTest;
 
@@ -3190,31 +3505,22 @@ TYPE
 			END;
 		END EnsureSymbol;
 
-		PROCEDURE ConditionToValue(x: SyntaxTree.Expression);
-		VAR exit: Label; trueL,falseL: Label;
+		PROCEDURE ConditionValue(x: SyntaxTree.Expression): Operand;
+		VAR trueL, exitL: Label; op: Operand;
 		BEGIN
+			InitOperand(op,ModeValue);
 			trueL := NewLabel();
-			falseL := NewLabel();
-			exit := NewLabel();
-			Condition(x,trueL,falseL);
-			InitOperand(result,ModeValue);
+			exitL := NewLabel();
+			IntermediateCode.InitRegister(op.op,IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister,AcquireRegister(IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister));
+			Condition(x,trueL,TRUE);
+			Emit(Mov(position,op.op,false));
+			BrL(exitL);
 			SetLabel(trueL);
-			IntermediateCode.InitRegister(result.op,IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister,AcquireRegister(IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister));
-			Emit(Mov(position,result.op,true));
-			BrL(exit);
-			SetLabel(falseL);
-			Emit(MovReplace(position,result.op,false));
-			SetLabel(exit);
-		END ConditionToValue;
-
-		PROCEDURE ValueToCondition(VAR op: Operand);
-		BEGIN
-			LoadValue(op,system.booleanType);
-			BrneL(trueLabel,op.op, false);
-			ReleaseOperand(op);
-			BrL(falseLabel);
-		END ValueToCondition;
-
+			Emit(MovReplace(position,op.op,true));
+			SetLabel(exitL);
+			RETURN op;
+		END ConditionValue;
+		
 		PROCEDURE GetDynamicSize(type: SyntaxTree.Type; tag: IntermediateCode.Operand):IntermediateCode.Operand;
 		VAR size: LONGINT;
 			PROCEDURE GetArraySize(type: SyntaxTree.ArrayType; offset: LONGINT):IntermediateCode.Operand;
@@ -3409,7 +3715,7 @@ TYPE
 			CallThisChecked(position, moduleName, procedureName, numberParameters,TRUE); 
 		END CallThis;
 
-		PROCEDURE CompareString(br: ConditionalBranch; leftExpression,rightExpression: SyntaxTree.Expression);
+		PROCEDURE CompareString(br: ConditionalBranch; label: Label; leftExpression,rightExpression: SyntaxTree.Expression);
 		VAR
 			left,right: Operand;
 			leftSize, rightSize: IntermediateCode.Operand;
@@ -3438,16 +3744,9 @@ TYPE
 
 			IntermediateCode.InitRegister(reg,int8,IntermediateCode.GeneralPurposeRegister,AcquireRegister(int8,IntermediateCode.GeneralPurposeRegister));
 			Emit(Result(position,reg));
-			(*
-			AcquireThisRegister(int8,IntermediateCode.Result);
-			*)
-			RestoreRegisters(saved); (* must be done before use of result, might be jumped over otherwise *)
-			(*
-			IntermediateCode.InitRegister(reg,int8,IntermediateCode.Result);
-			*)
-			br(trueLabel,reg,IntermediateCode.Immediate(int8,0));
+			RestoreRegisters(saved);
+			br(label,reg,IntermediateCode.Immediate(int8,0));
 			ReleaseIntermediateOperand(reg);
-			BrL(falseLabel);
 		END CompareString;
 
 		PROCEDURE CopyString(leftExpression,rightExpression: SyntaxTree.Expression);
@@ -3492,37 +3791,8 @@ TYPE
 			rightType := x.right.type.resolved;
 			(* for "OR" and "&" the left and right expressions may not be emitted first <= shortcut evaluation *)
 			CASE x.operator OF
-			Scanner.Or:
-				(* shortcut evaluation of left OR right *)
-				IF ~conditional THEN ConditionToValue(x);
-				ELSE
-					next := NewLabel();
-					Condition(x.left,trueLabel,next);
-					SetLabel(next);
-					Condition(x.right,trueLabel,falseLabel);
-				END;
-			|Scanner.And:
-				(* shortcut evaluation of left & right *)
-				IF ~conditional THEN ConditionToValue(x);
-				ELSE
-					next := NewLabel();
-					Condition(x.left,next,falseLabel);
-					SetLabel(next);
-					Condition(x.right,trueLabel,falseLabel);
-				END;
-			|Scanner.Is:
-				IF ~conditional THEN ConditionToValue(x);
-				ELSE
-					(* get type desc tag *)
-					IF IsPointerToRecord(leftType,recordType) THEN
-						Evaluate(x.left,left);
-						Dereference(left,recordType,IsUnsafePointer(leftType))
-					ELSE
-						Designate(x.left,left);
-					END;
-					TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,trueLabel,falseLabel,FALSE);
-					ReleaseOperand(left);
-				END;
+			Scanner.Or, Scanner.And, Scanner.Is:
+				result := ConditionValue(x);
 			|Scanner.Plus:
 				Evaluate(x.left,left);
 				Evaluate(x.right,right);
@@ -3680,146 +3950,8 @@ TYPE
 					Emit(Div(position,result.op,left.op,right.op));
 				END;
 				ReleaseOperand(left); ReleaseOperand(right);
-			|Scanner.Equal:
-				IF ~conditional THEN ConditionToValue(x);
-				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
-					CompareString(BreqL,x.left,x.right);
-				ELSE
-					Evaluate(x.left,left);
-					Evaluate(x.right,right);
-					IF leftType IS SyntaxTree.RangeType THEN
-						ASSERT(rightType IS SyntaxTree.RangeType);
-						BrneL(falseLabel, left.op, right.op); (* first *)
-						BrneL(falseLabel, left.tag, right.tag); (* last *)
-						BrneL(falseLabel, left.extra, right.extra); (* step *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(trueLabel)
-					ELSIF IsDelegate(leftType) THEN (* delegate comparison *)
-						BrneL(falseLabel, left.op, right.op); (* first *)
-						BrneL(falseLabel, left.tag, right.tag); (* last *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(trueLabel)
-					ELSIF leftType IS SyntaxTree.ComplexType THEN
-						(* TODO: review this *)
-						BrneL(falseLabel, left.op, right.op); (* real part *)
-						BrneL(falseLabel, left.tag, right.tag); (* imaginary part *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(trueLabel)
-					ELSE
-						BrneL(falseLabel,left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(trueLabel);
-					END;
-				END;
-			|Scanner.LessEqual:
-				IF ~conditional THEN ConditionToValue(x);
-				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
-					CompareString(BrgeL,x.right,x.left);
-				ELSE
-					Evaluate(x.left,left);
-					Evaluate(x.right,right);
-					IF leftType IS SyntaxTree.SetType THEN (* left subsetequal right: left \cap right = left  *)
-						Reuse1(temp.op,right.op);
-						Emit(And(position,temp.op,left.op,right.op));
-						ReleaseOperand(right);
-						BreqL(trueLabel,temp.op,left.op);
-						BrL(falseLabel);
-						ReleaseOperand(temp);ReleaseOperand(left);
-					ELSE
-						BrltL(falseLabel,right.op,left.op); (* inverse evaluation to optimize jumps for true case *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(trueLabel);
-					END;
-				END;
-			|Scanner.Less:
-				IF leftType IS SyntaxTree.SetType THEN (* left < right <=> left <= right & left # right *)
-					leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.LessEqual);
-					leftExpression.SetType(system.booleanType);
-					rightExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.Unequal);
-					rightExpression.SetType(system.booleanType);
-					leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,leftExpression,rightExpression,Scanner.And);
-					leftExpression.SetType(system.booleanType);
-					Expression(leftExpression);
-				ELSIF ~conditional THEN ConditionToValue(x);
-				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
-					CompareString(BrltL,x.left,x.right);
-				ELSE
-					Evaluate(x.left,left);
-					Evaluate(x.right,right);
-					BrgeL(falseLabel,left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
-					ReleaseOperand(left); ReleaseOperand(right);
-					BrL(trueLabel);
-				END;
-			|Scanner.Greater:
-				IF leftType IS SyntaxTree.SetType THEN (* left > right <=> left >= right & left # right  *)
-					leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.GreaterEqual);
-					leftExpression.SetType(system.booleanType);
-					rightExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.left,x.right,Scanner.Unequal);
-					rightExpression.SetType(system.booleanType);
-					leftExpression := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,leftExpression,rightExpression,Scanner.And);
-					leftExpression.SetType(system.booleanType);
-					Expression(leftExpression);
-				ELSIF ~conditional THEN ConditionToValue(x);
-				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
-					CompareString(BrltL,x.right,x.left);
-				ELSE
-					Evaluate(x.left,left);
-					Evaluate(x.right,right);
-					BrgeL(falseLabel, right.op,left.op); (* inverse evaluation to optimize jumps for true case *)
-					ReleaseOperand(left); ReleaseOperand(right);
-					BrL(trueLabel);
-				END;
-			|Scanner.GreaterEqual:
-				IF ~conditional THEN ConditionToValue(x);
-				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
-					CompareString(BrgeL,x.left,x.right);
-				ELSE
-					Evaluate(x.left,left);
-					Evaluate(x.right,right);
-					IF leftType IS SyntaxTree.SetType THEN (* left supsetequal right: left \cap right = right *)
-						Reuse1(temp.op,left.op);
-						Emit(And(position,temp.op,left.op,right.op));
-						ReleaseOperand(left);
-						BreqL(trueLabel, temp.op,right.op);
-						ReleaseOperand(temp); ReleaseOperand(right);
-						BrL(falseLabel);
-					ELSE
-						BrltL(falseLabel, left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(trueLabel);
-					END;
-				END;
-			|Scanner.Unequal:
-				IF ~conditional THEN ConditionToValue(x);
-				ELSIF (leftType IS SyntaxTree.ArrayType) OR (leftType IS SyntaxTree.StringType) THEN (* string comparison *)
-					CompareString(BrneL,x.left,x.right);
-				ELSE
-					Evaluate(x.left,left);
-					Evaluate(x.right,right);
-					IF leftType IS SyntaxTree.RangeType THEN
-						ASSERT(rightType IS SyntaxTree.RangeType);
-						BrneL(trueLabel, left.op, right.op); (* first *)
-						BrneL(trueLabel, left.tag, right.tag); (* last *)
-						BrneL(trueLabel, left.extra, right.extra); (* step *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(falseLabel)
-					ELSIF IsDelegate(leftType) THEN (* delegate comparison *)
-						BrneL(trueLabel, left.op, right.op); (* first *)
-						BrneL(trueLabel, left.tag, right.tag); (* last *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(falseLabel)
-					ELSIF leftType IS SyntaxTree.ComplexType THEN
-						(* TODO: review this *)
-						BrneL(trueLabel, left.op, right.op); (* real part *)
-						BrneL(trueLabel, left.tag, right.tag); (* imaginary part *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(falseLabel)
-					ELSE
-						BreqL(falseLabel,left.op,right.op); (* inverse evaluation to optimize jumps for true case *)
-						ReleaseOperand(left); ReleaseOperand(right);
-						BrL(trueLabel);
-					END;
-				END;
+			|Scanner.Equal, Scanner.LessEqual, Scanner.Less, Scanner.Greater, Scanner.GreaterEqual, Scanner.Unequal :
+				result := ConditionValue(x);
 			|Scanner.In:
 				ASSERT(rightType.resolved IS SyntaxTree.SetType);
 				Evaluate(x.left,left);
@@ -3831,17 +3963,10 @@ TYPE
 				ReleaseOperand(right); ReleaseOperand(left);
 				IntermediateCode.InitImmediate(one,setType,1);
 				Emit(And(position,temp.op,temp.op,one));
-				IF conditional THEN
-					IntermediateCode.InitImmediate(zero,setType,0);
-					BrneL(trueLabel,temp.op,zero);
-					ReleaseOperand(temp);
-					BrL(falseLabel);
-				ELSE
-					Convert(temp.op,bool);
-					result.mode := ModeValue;
-					result.op := temp.op;
-					result.tag := nil; (* may be left over from calls to evaluate *)
-				END;
+				Convert(temp.op,bool);
+				result.mode := ModeValue;
+				result.op := temp.op;
+				result.tag := nil; (* may be left over from calls to evaluate *)
 			ELSE
 				IF (x.operator = Scanner.Questionmarks) OR (x.operator = Scanner.LessLessQ) & (x.right.type.resolved IS SyntaxTree.PortType) THEN
 					IF x.operator = Scanner.Questionmarks THEN
@@ -3870,12 +3995,6 @@ TYPE
 					InitOperand(result, ModeValue);
 					result.op := NewRegisterOperand(bool);
 					Emit(Result(position,result.op));
-					IF conditional THEN
-						IntermediateCode.InitImmediate(zero,setType,0);
-						BrneL(trueLabel,result.op,zero);
-						ReleaseOperand(result);
-						BrL(falseLabel);
-					END;
 				ELSIF (x.operator = Scanner.ExclamationMarks) OR (x.operator = Scanner.LessLessQ) & (x.left.type.resolved IS SyntaxTree.PortType) THEN
 					leftExpression := x.left;
 					rightExpression := x.right;
@@ -3898,12 +4017,6 @@ TYPE
 					InitOperand(result, ModeValue);
 					result.op := NewRegisterOperand(bool);
 					Emit(Result(position,result.op));
-					IF conditional THEN
-						IntermediateCode.InitImmediate(zero,setType,0);
-						BrneL(trueLabel,result.op,zero);
-						ReleaseOperand(result);
-						BrL(falseLabel);
-					END;
 				ELSE
 					HALT(100);
 				END;
@@ -4395,10 +4508,6 @@ TYPE
 
 			ReleaseOperand(array);
 
-			IF conditional & (resultingType.resolved IS SyntaxTree.BooleanType) THEN
-				ValueToCondition(result); (*! wrong as the result of an index designator is always an address *)
-			END;
-
 		END MathIndexDesignator;
 
 		(* get the length of an array , trying to make use of static information *)
@@ -4624,10 +4733,6 @@ TYPE
 				result.tag := array.tag; UseIntermediateOperand(result.tag); result.dimOffset := array.dimOffset+maxDim;
 			END;
 			ReleaseOperand(array);
-
-			IF (conditional)  & (type.resolved IS SyntaxTree.BooleanType)  THEN
-				ValueToCondition(result); (*! wrong as the result of an index designator is always an address *)
-			END;
 		END IndexDesignator;
 
 		PROCEDURE VisitIndexDesignator*(x: SyntaxTree.IndexDesignator);
@@ -5461,17 +5566,12 @@ TYPE
 		END PushParameter;
 
 		PROCEDURE VisitStatementDesignator*(x: SyntaxTree.StatementDesignator);
-		VAR prevConditional: BOOLEAN;
 		BEGIN
-			prevConditional := conditional;
-			conditional := FALSE;
-
 			IF (x.result # NIL) & ( x.result IS SyntaxTree.SymbolDesignator) & (x.result(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Variable) & (x.result(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Variable).useRegister) THEN
 				Expression(x.result); (* use register *)
 			END;
 
 			Statement(x.statement);
-			conditional := prevConditional;
 			IF x.result # NIL THEN Expression(x.result) END;
 
 			IF (x.result # NIL) & (x.result IS SyntaxTree.SymbolDesignator) & (x.result(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Variable) & (x.result(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Variable).useRegister) THEN
@@ -5625,10 +5725,6 @@ TYPE
 
 				IF procedureType.returnType # NIL THEN
 					Designate(returnDesignator, result);
-					IF conditional THEN
-						ASSERT (procedureType.returnType.resolved IS SyntaxTree.BooleanType);
-						ValueToCondition(result)
-					END;
 				END;
 				
 			END;
@@ -5665,7 +5761,6 @@ TYPE
 			oldConstantDeclaration: SyntaxTree.Symbol;
 			oldDestination: IntermediateCode.Operand;
 			oldCurrentLoop: Label;
-			oldConditional: BOOLEAN;
 			oldTrueLabel, oldFalseLabel: Label;
 			oldLocked: BOOLEAN;
 			usedRegisters,oldUsedRegisters: RegisterEntry;
@@ -5697,7 +5792,6 @@ TYPE
 				oldConstantDeclaration := constantDeclaration;
 				oldDestination := destination;
 				oldCurrentLoop := currentLoop;
-				oldConditional := conditional;
 				oldTrueLabel := trueLabel;
 				oldFalseLabel := falseLabel;
 				oldLocked := locked;
@@ -5713,7 +5807,6 @@ TYPE
 				constantDeclaration := oldConstantDeclaration;
 				destination := oldDestination;
 				currentLoop := oldCurrentLoop;
-				conditional := oldConditional;
 				trueLabel := oldTrueLabel;
 				falseLabel := oldFalseLabel;
 				locked := oldLocked;
@@ -6184,9 +6277,6 @@ TYPE
 				Emit(Pop(position, ap));
 			END;
 
-			IF conditional & (procedureType.returnType # NIL) & (procedureType.returnType.resolved IS SyntaxTree.BooleanType) THEN
-				ValueToCondition(result);
-			END;
 			destination := dest;
 
 			(* perform all write-back calls in the list *)
@@ -7947,19 +8037,12 @@ TYPE
 				result.op := res;
 			(* ---- ODD ----- *)
 			|Global.Odd:
-				IF ~conditional THEN
-					ConditionToValue(x)
-				ELSE
-					Evaluate(p0,result);
-					res := IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1);
-					Reuse1(res,result.op);
-					Emit(And(position,res,result.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1)));
-					ReleaseIntermediateOperand(result.op);
-					result.op := res;
-					BreqL(trueLabel,IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1),result.op);
-					ReleaseOperand(result);
-					BrL(falseLabel);
-				END;
+				Evaluate(p0,result);
+				Reuse1(res,result.op);
+				Emit(And(position,res,result.op,IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1)));
+				ReleaseIntermediateOperand(result.op);
+				result.op := res;
+				Convert(result.op,bool);
 			(* ---- ORD ----- *)
 			|Global.Ord, Global.Ord32:
 				Evaluate(p0,result);
@@ -7982,14 +8065,10 @@ TYPE
 			|Global.Assert:
 				IF ~backend.noAsserts & (p0.resolved = NIL) THEN
 					trueL := NewLabel();
-					falseL := NewLabel();
-					Condition(p0,trueL,falseL);
-
+					Condition(p0,trueL,TRUE);
 					IF p1 = NIL THEN val := AssertTrap
 					ELSE val := LONGINT(p1.resolved(SyntaxTree.IntegerValue).value); (* TODO: fix explicit integer truncation *)
 					END;
-
-					SetLabel(falseL);
 					EmitTrap(position,val);
 					SetLabel(trueL);
 				END;
@@ -8000,7 +8079,14 @@ TYPE
 			(* ---- INC, DEC----- *)
 			|Global.Inc,Global.Dec:
 				Expression(p0); adr := result.op;
-				LoadValue(result,p0.type); l := result;
+				s0 := result;
+				LoadValue(result,p0.type); 
+				(* EXPERIMENTAL *)
+				IF (s0.availability >= 0) & (availableSymbols[s0.availability].inRegister) THEN
+					availableSymbols[s0.availability].inMemory := FALSE;
+				END;
+				
+				l := result;
 				IF p1 = NIL THEN r.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1);
 				ELSE Expression(p1); LoadValue(result,p1.type); r := result;
 				END;
@@ -8923,13 +9009,8 @@ TYPE
 				ReleaseOperand(s1);
 				Emit(And(position,res,res,IntermediateCode.Immediate(IntermediateCode.GetType(system,p0.type),1)));
 				Convert(res,IntermediateCode.GetType(system,system.booleanType));
-				IF ~conditional THEN
-					InitOperand(result,ModeValue); result.op := res;
-				ELSE
-					BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
-					BrL(falseLabel);
-					ReleaseIntermediateOperand(res);
-				END;
+				InitOperand(result,ModeValue); 
+				result.op := res;
 			(* --- MSK ----*)
 			|Global.systemMsk:
 				Evaluate(p0,s0);
@@ -9097,12 +9178,16 @@ TYPE
 				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
 				IF needsTrace THEN ModifyAssignments(false) END;
 				res := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
-				Emit(Result(position, res)); result.op := res; result.mode := ModeValue;
+				Emit(Result(position, res)); 
+				result.op := res; 
+				result.mode := ModeValue;
+				(*
 				IF conditional THEN
 					BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
 					BrL(falseLabel);
 					ReleaseIntermediateOperand(res);
 				END;
+				*)
 			(* ---- DIM ----- *)
 			|Global.Dim:
 				ASSERT(~SemanticChecker.IsArrayStructuredObjectType(p0.type));
@@ -9240,14 +9325,7 @@ TYPE
 					result.op := res;
 					*)
 
-					IF ~conditional THEN
-						InitOperand(result,ModeValue); result.op := res;
-					ELSE
-						BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
-						BrL(falseLabel);
-						ReleaseIntermediateOperand(res);
-					END;
-
+					InitOperand(result,ModeValue); result.op := res;
 				END
 
 			ELSE (* function not yet implemented *)
@@ -9258,7 +9336,7 @@ TYPE
 		END VisitBuiltinCallDesignator;
 
 		PROCEDURE VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator);
-		VAR trueL,falseL: Label; recordType: SyntaxTree.RecordType; dest,tag,ptr: IntermediateCode.Operand;
+		VAR trueL: Label; recordType: SyntaxTree.RecordType; dest,tag,ptr: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitTypeGuardDesignator") END;
 			dest := destination; destination := emptyOperand;
@@ -9268,7 +9346,6 @@ TYPE
 			ELSIF isUnchecked THEN (* no check *)
 			ELSE
 				trueL := NewLabel();
-				falseL := NewLabel();
 				IF IsPointerToRecord(x.left.type,recordType) THEN
 					IntermediateCode.InitRegister(tag,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
 					Emit(Mov(position,tag, result.op));
@@ -9285,9 +9362,8 @@ TYPE
 					tag := result.tag;
 					UseIntermediateOperand(tag);
 				END;
-				TypeTest(tag,x.type,trueL,falseL,FALSE);
+				TypeTest(tag,x.type,trueL,TRUE,FALSE);
 				ReleaseIntermediateOperand(tag);
-				SetLabel(falseL);
 				EmitTrap(position,TypeCheckTrap);
 				SetLabel(trueL);
 			END;
@@ -9473,14 +9549,8 @@ TYPE
 		PROCEDURE VisitBooleanValue*(x: SyntaxTree.BooleanValue);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitBooleanValue") END;
-			IF conditional THEN
-				IF x.value THEN BrL(trueLabel)
-				ELSE BrL(falseLabel)
-				END;
-			ELSE
-				InitOperand(result,ModeValue);
-				IF x.value THEN result.op := true ELSE result.op := false END;
-			END;
+			InitOperand(result,ModeValue);
+			IF x.value THEN result.op := true ELSE result.op := false END;
 		END VisitBooleanValue;
 
 		PROCEDURE GetDataSection*(): IntermediateCode.Section;
@@ -9672,6 +9742,24 @@ TYPE
 				result := fp;
 			END;
 		END GetBaseRegister;
+		
+		(* EXPERIMENTAL *)
+		PROCEDURE GetAvailability(x: SyntaxTree.Variable): WORD;
+		VAR i: WORD; 
+		BEGIN
+			IF ~backend.experiment THEN RETURN -1 END;
+			i := 0; 
+			WHILE (availableSymbols[i].symbol # NIL) & (availableSymbols[i].symbol # x) DO
+				INC(i);
+			END;
+			IF availableSymbols[i].symbol = NIL THEN
+				availableSymbols[i].inRegister := FALSE;
+				availableSymbols[i].inMemory := TRUE;
+				availableSymbols[i].symbol := x;
+			END;
+			RETURN i;
+		END GetAvailability;
+		
 
 		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
 		VAR symbol: Sections.Section;  type: SyntaxTree.Type; recordType: SyntaxTree.RecordType; name: Basic.SegmentedName; temp: IntermediateCode.Operand; reg: LONGINT;
@@ -9696,6 +9784,8 @@ TYPE
 				InitOperand(result,ModeReference);
 				GetBaseRegister(result.op,currentScope,x.scope);
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
+				(* EXPERIMENTAL *)
+				result.availability := GetAvailability(x);
 			ELSIF (x.scope = moduleScope) OR (x.scope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN (* global variable *)
 				InitOperand(result,ModeReference);
 				GetCodeSectionNameForSymbol(x,name);
@@ -9723,9 +9813,7 @@ TYPE
 				END;
 			END;
 
-			IF conditional & (x.type.resolved IS SyntaxTree.BooleanType) THEN
-				ValueToCondition(result);
-			ELSIF type IS SyntaxTree.ProcedureType THEN
+			IF type IS SyntaxTree.ProcedureType THEN
 				ReleaseIntermediateOperand(result.tag);
 				IF type(SyntaxTree.ProcedureType).isDelegate THEN
 					IntermediateCode.InitMemory(result.tag,addressType,result.op,ToMemoryUnits(system,system.addressSize));
@@ -9862,9 +9950,7 @@ TYPE
 				IntermediateCode.AddOffset(result.op,ToMemoryUnits(system,x.offsetInBits));
 			END;
 
-			IF conditional & (x.type.resolved IS SyntaxTree.BooleanType) THEN
-				ValueToCondition(result);
-			ELSIF type IS SyntaxTree.ProcedureType THEN
+			IF type IS SyntaxTree.ProcedureType THEN
 				ReleaseIntermediateOperand(result.tag);
 				IF type(SyntaxTree.ProcedureType).isDelegate THEN
 					IF x.kind = SyntaxTree.VarParameter THEN
@@ -9980,6 +10066,7 @@ TYPE
 		(* handle expressions of the form designator.procedure or procedure *)
 		BEGIN
 			IF Trace THEN TraceEnter("VisitProcedure") END;
+			EndBasicBlock;
 			IF  (x.type(SyntaxTree.ProcedureType).isDelegate) & ~SemanticChecker.IsStaticProcedure(x) & ~(result.tag.mode = IntermediateCode.ModeImmediate) THEN
 				DynamicCallOperand(result,x);
 			ELSIF x.isInline THEN
@@ -10326,6 +10413,15 @@ TYPE
 					destination := leftO.op;
 				END;
 				ReleaseOperand(leftO);
+				
+				(* EXPERIMENTAL *)
+				IF (leftO.availability >= 0) & (availableSymbols[leftO.availability].inRegister) THEN
+					ReleaseIntermediateOperand(destination);
+					destination := availableSymbols[leftO.availability].register;
+					UseIntermediateOperand(destination);
+					availableSymbols[leftO.availability].inMemory := FALSE;
+				END;
+				
 				IF destination.mode # IntermediateCode.Undefined THEN
 					Emit(Mov(position,destination,rightO.op));
 				END;
@@ -10460,17 +10556,15 @@ TYPE
 		PROCEDURE VisitIfStatement*(x: SyntaxTree.IfStatement);
 		VAR end: Label; i,elsifs: LONGINT; elsif: SyntaxTree.IfPart; escape: BOOLEAN;
 
-			PROCEDURE IfPart(if: SyntaxTree.IfPart);
-			VAR true, false: Label; condition, value: BOOLEAN;
+			PROCEDURE IfPart(if: SyntaxTree.IfPart; last: BOOLEAN);
+			VAR false: Label; condition, value: BOOLEAN;
 			BEGIN
 				condition := ~SemanticChecker.IsBooleanValue(if.condition, value);
 				IF condition THEN
-					true := NewLabel();
 					false := NewLabel();
-					Condition(if.condition,true,false);
-					SetLabel(true);
+					Condition(if.condition,false,FALSE);
 					StatementSequence(if.statements);
-					BrL(end);
+					IF ~last OR (x.elsePart # NIL) THEN BrL(end) END;
 					SetLabel(false);
 				ELSE
 					IF value THEN (* always true *)
@@ -10485,11 +10579,11 @@ TYPE
 			IF Trace THEN TraceEnter("VisitIfStatement") END;
 			end := NewLabel();
 			elsifs := x.ElsifParts();
-			IfPart(x.ifPart);
+			IfPart(x.ifPart,elsifs=0);
 			FOR i := 0 TO elsifs-1 DO
 				IF ~escape THEN
 					elsif := x.GetElsifPart(i);
-					IfPart(elsif);
+					IfPart(elsif, i=elsifs-1);
 				END;
 			END;
 			IF (x.elsePart # NIL) & ~escape THEN
@@ -10506,10 +10600,10 @@ TYPE
 			IF backend.cooperative THEN
 				IntermediateCode.InitRegister(reg,tag.type,tag.registerClass, AcquireRegister(tag.type, tag.registerClass));
 				Emit(Mov(position,reg,tag));
-				TypeTest(reg, x.type, trueL, NIL,TRUE);
+				TypeTest(reg, x.type, trueL, TRUE,TRUE);
 				ReleaseIntermediateOperand(reg);
 			ELSE
-				TypeTest(tag, x.type, trueL, NIL,TRUE);
+				TypeTest(tag, x.type, trueL, TRUE,TRUE);
 			END;
 		END BrWithPart;
 		
@@ -10668,48 +10762,43 @@ TYPE
 
 
 		PROCEDURE VisitWhileStatement*(x: SyntaxTree.WhileStatement);
-		VAR start: Label; true,false: Label;
+		VAR startL,falseL: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitWhileStatement") END;
 			IF cooperativeSwitches THEN EmitCooperativeSwitch END;
-			start := NewLabel();
-			true := NewLabel();
-			false := NewLabel();
-			SetLabel(start);
-			Condition(x.condition,true,false);
-			SetLabel(true);
+			startL := NewLabel();
+			falseL := NewLabel();
+			SetLabel(startL);
+			Condition(x.condition,falseL,FALSE);
 			StatementSequence(x.statements);
 			IF cooperativeSwitches THEN EmitCooperativeSwitch END;
-			BrL(start);
-			SetLabel(false);
+			BrL(startL);
+			SetLabel(falseL);
 			IF Trace THEN TraceExit("VisitWhileStatement") END;
 		END VisitWhileStatement;
 
 		PROCEDURE VisitRepeatStatement*(x: SyntaxTree.RepeatStatement);
-		VAR false,true: Label;
+		VAR falseL: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitRepeatStatement") END;
 			IF cooperativeSwitches THEN EmitCooperativeSwitch END;
-			true := NewLabel();
-			false := NewLabel();
-			SetLabel(false);
+			falseL := NewLabel();
+			SetLabel(falseL);
 			StatementSequence(x.statements);
 			IF cooperativeSwitches THEN EmitCooperativeSwitch END;
-			Condition(x.condition,true,false);
-			SetLabel(true);
+			Condition(x.condition,falseL,FALSE);
 			IF Trace THEN TraceExit("VisitRepeatStatement") END;
 		END VisitRepeatStatement;
 
 		PROCEDURE VisitForStatement*(x: SyntaxTree.ForStatement);
 		VAR
-			binary: SyntaxTree.BinaryExpression; start,true,false : Label; cmp: LONGINT; by: HUGEINT;
+			binary: SyntaxTree.BinaryExpression; startL,falseL : Label; cmp: LONGINT; by: HUGEINT;
 			temporaryVariable: SyntaxTree.Variable;
 			temporaryVariableDesignator : SyntaxTree.Designator;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitForStatement") END;
-			true := NewLabel();
-			false := NewLabel();
-			start := NewLabel();
+			falseL := NewLabel();
+			startL := NewLabel();
 
 			Assign(x.variable,x.from);
 			temporaryVariable := GetTemporaryVariable(x.variable.type, FALSE, FALSE);
@@ -10728,11 +10817,9 @@ TYPE
 			binary.SetType(system.booleanType);
 
 			IF cooperativeSwitches THEN EmitCooperativeSwitch END;
-			SetLabel(start);
+			SetLabel(startL);
 
-
-			Condition(binary,true,false);
-			SetLabel(true);
+			Condition(binary,falseL, FALSE);
 			StatementSequence(x.statements);
 
 			binary := SyntaxTree.NewBinaryExpression(Basic.invalidPosition,x.variable,x.by,Scanner.Plus);
@@ -10741,8 +10828,8 @@ TYPE
 
 			IF cooperativeSwitches THEN EmitCooperativeSwitch END;
 
-			BrL(start);
-			SetLabel(false);
+			BrL(startL);
+			SetLabel(falseL);
 
 			IF Trace THEN TraceExit("VisitForStatement") END;
 		END VisitForStatement;
@@ -10987,22 +11074,20 @@ TYPE
 
 		PROCEDURE VisitAwaitStatement*(x: SyntaxTree.AwaitStatement);
 		VAR proc: SyntaxTree.Procedure; res: IntermediateCode.Operand; symbol: Sections.Section;
-			call: IntermediateCode.Operand; label, start, true, false: Label; name: Basic.SegmentedName;
+			call: IntermediateCode.Operand; label, startL, trueL, falseL: Label; name: Basic.SegmentedName;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitAwaitStatement") END;
 			IF profile THEN ProfilerEnterExit(numberProcedures, FALSE) END;
 			
 			IF backend.cooperative THEN
-				start := NewLabel();
-				true := NewLabel();
-				false := NewLabel();
-				SetLabel(start);
-				Condition(x.condition,true,false);
-				SetLabel(false);
+				startL := NewLabel();
+				trueL := NewLabel();
+				SetLabel(startL);
+				Condition(x.condition,trueL,TRUE);
 				PushSelfPointer();
 				CallThis(position,"ExclusiveBlocks","Await",1);
-				BrL(start);
-				SetLabel(true);
+				BrL(startL);
+				SetLabel(trueL);
 				PushSelfPointer();
 				CallThis(position,"ExclusiveBlocks","FinalizeAwait",1);
 			ELSE
@@ -11477,6 +11562,7 @@ TYPE
 			IF x # NIL THEN
 				SELF.position := x.position;
 			END;
+			EndBasicBlock;
 			CheckRegistersFree();
 			ASSERT(modifyAssignmentCounter = 0);
 			currentScope := prevScope;
@@ -13802,6 +13888,7 @@ TYPE
 		cellsAreObjects: BOOLEAN;
 		preciseGC, trackLeave, writeBarriers: BOOLEAN; 
 		experiment: BOOLEAN; 
+		
 
 		
 		PROCEDURE &InitIntermediateBackend*;
@@ -14132,6 +14219,7 @@ TYPE
 		IntermediateCode.InitOperand(op.tag);
 		IntermediateCode.InitOperand(op.extra);
 		op.dimOffset := 0;
+		op.availability := -1;
 	END InitOperand;
 
 	(* TODO: remove this, and redirect calls to 'IntermediateCode.GetType' directly *)

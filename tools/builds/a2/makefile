@@ -26,7 +26,7 @@ dependencies: modules source/*.Mod
 FoxArrayBase$(object): ComplexNumbers$(object)
 
 %$(object):
-	@$(tool) compile -p=$(pltfrm) --objectFileExtension=$(object) --symbolFileExtension=$(symbol) $(if $<, $<, $(error no target for $@))
+	@$(tool) Compiler.Compile -p=$(pltfrm) --objectFileExtension=$(object) --symbolFileExtension=$(symbol) $(if $<, $<, $(error no target for $@))
 
 # Fox Compiler
 

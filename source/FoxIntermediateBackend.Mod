@@ -2098,6 +2098,7 @@ TYPE
 				END;
 			|SyntaxTree.BooleanValue DO
 				IF reason = x.value THEN BrL(label) END;
+				RETURN;
 			ELSE (* with *)
 			END;
 			(* default case: evaluate and compare result *)

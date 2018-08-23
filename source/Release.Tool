@@ -324,10 +324,9 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	ZYNQ & ~COOP { Zynq.PsUartMin.Mod Zynq.PsTraceDevice.Mod Zynq.PrivateWatchdog.Mod ARM.Machine.Mod }
 
 	~COOP { Heaps.Mod }
-	COOP { Coop.Heaps.Mod }
+	COOP { Coop.Heaps.Mod GarbageCollector.Mod }
 
 	Modules.Mod
-	COOP { GarbageCollector.Mod }
 
 	BIOS & ~COOP { BIOS.Objects.Mod Kernel.Mod }
 	WIN & ~COOP { Windows.Objects.Mod Windows.Kernel.Mod }

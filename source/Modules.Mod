@@ -3,7 +3,7 @@ MODULE Modules;	(** AUTHOR "pjm"; PURPOSE "Modules and types"; *)
 IMPORT SYSTEM, Trace, Machine, Heaps;
 
 #IF COOP THEN
-	IMPORT Environment, Activities, Processors, Queues;
+	IMPORT Activities, Environment, GargabeCollector, Processors, Queues;
 #END
 
 CONST
@@ -859,13 +859,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END FinalizeModules;
 
 PROCEDURE {FINAL} Main;
-PROCEDURE InitializeGC EXTERN "GarbageCollector.Initialize";
-PROCEDURE TerminateGC EXTERN "GarbageCollector.Terminate";
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.SetActivity (NIL);
 	SYSTEM.SetFramePointer (NIL);
 	Environment.Initialize;
-	InitializeGC;
+	GarbageCollector.Initialize;
 	Processors.Initialize;
 	Activities.Execute (PublishRegisteredModules);
 	Processors.Terminate;
@@ -873,7 +871,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Activities.Terminate;
 	Queues.Terminate;
 	Environment.Terminate;
-	TerminateGC;
+	GarbageCollector.Terminate;
 	Environment.Exit (Environment.status);
 END Main;
 

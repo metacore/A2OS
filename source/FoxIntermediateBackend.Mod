@@ -1844,6 +1844,7 @@ TYPE
 			leftExpression, rightExpression: SyntaxTree.Expression;
 		BEGIN
 			ASSERT(label # NIL);
+			IF (x.resolved # NIL) & (x.resolved # x) THEN Condition(x.resolved, label, reason); RETURN END;
 			WITH x: 
 			SyntaxTree.UnaryExpression DO
 				CASE x.operator OF

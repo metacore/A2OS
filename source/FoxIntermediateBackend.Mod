@@ -8143,22 +8143,21 @@ TYPE
 						Emit(Result(position, pointer));
 						exit := NewLabel();
 						BreqL(exit,pointer,nil);
-						IF ~type(SyntaxTree.PointerType).isPlain THEN
-							GetRecordTypeName (recordType,name);
-							IF ~recordType.isObject THEN
-								Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
+
+						GetRecordTypeName (recordType,name);
+						IF ~recordType.isObject THEN
+							Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
+						END;
+						IntermediateCode.InitAddress(adr, addressType, name , 0, 0);
+						Emit(Mov(position,IntermediateCode.Memory(addressType,pointer,0),adr));
+						IF recordType.isObject THEN
+							IF recordType.IsProtected() THEN
+								DEC (size, MonitorTypeSize * ToMemoryUnits(system,addressType.sizeInBits));
+								Emit(Mov(position,IntermediateCode.Memory(addressType,pointer,MonitorOffset * ToMemoryUnits(system,addressType.sizeInBits)), IntermediateCode.RegisterOffset(addressType,IntermediateCode.GeneralPurposeRegister,pointer.register,size)));
 							END;
-							IntermediateCode.InitAddress(adr, addressType, name , 0, 0);
-							Emit(Mov(position,IntermediateCode.Memory(addressType,pointer,0),adr));
-							IF recordType.isObject THEN
-								IF recordType.IsProtected() THEN
-									DEC (size, MonitorTypeSize * ToMemoryUnits(system,addressType.sizeInBits));
-									Emit(Mov(position,IntermediateCode.Memory(addressType,pointer,MonitorOffset * ToMemoryUnits(system,addressType.sizeInBits)), IntermediateCode.RegisterOffset(addressType,IntermediateCode.GeneralPurposeRegister,pointer.register,size)));
-								END;
-								IF recordType.IsActive() THEN
-									DEC (size, ActionTypeSize * ToMemoryUnits(system,addressType.sizeInBits));
-									Emit(Mov(position,IntermediateCode.Memory(addressType,pointer,ActionOffset * ToMemoryUnits(system,addressType.sizeInBits)), IntermediateCode.RegisterOffset(addressType,IntermediateCode.GeneralPurposeRegister,pointer.register,size)));
-								END;
+							IF recordType.IsActive() THEN
+								DEC (size, ActionTypeSize * ToMemoryUnits(system,addressType.sizeInBits));
+								Emit(Mov(position,IntermediateCode.Memory(addressType,pointer,ActionOffset * ToMemoryUnits(system,addressType.sizeInBits)), IntermediateCode.RegisterOffset(addressType,IntermediateCode.GeneralPurposeRegister,pointer.register,size)));
 							END;
 						END;
 						

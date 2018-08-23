@@ -116,12 +116,14 @@ TYPE Process = OBJECT {DISPOSABLE} (Activity)
 	END Unlink;
 
 	PROCEDURE ~Finalize;
-	VAR item: Queues.Item;
+	VAR currentActivity {UNTRACED}: Activity; item: Queues.Item;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF object # NIL THEN
+			currentActivity := SYSTEM.GetActivity ()(Activity); SYSTEM.SetActivity (SELF);
 			object.action.activity := NIL;
 			IF Queues.Dequeue (item, object.action.waitingQueue) THEN Resume (item(Activity)) END;
 			Unlink;
+			SYSTEM.SetActivity (currentActivity);
 		END;
 		Finalize^;
 	END Finalize;

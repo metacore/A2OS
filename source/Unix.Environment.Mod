@@ -115,11 +115,20 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.SetActivity(SYSTEM.VAL(Activities.Activity,Unix.ReadKey (activity)));
 END RestoreActivity;
 
+PROCEDURE TrapHandler ( sig: LONGINT; mc: Unix.Mcontext );
+PROCEDURE Trap EXTERN "Runtime.Trap" (number: SIZE);
+BEGIN
+	RestoreActivity;
+	Trap (sig);
+END TrapHandler;
+
 PROCEDURE Initialize-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	clock := Timer.GetCounter ();
 	milliseconds := Timer.GetFrequency () DIV 1000;
 	activity := Unix.NewKey ();
+	Unix.HandleSignal(Unix.SIGSEGV);
+	Unix.InstallTrap (TrapHandler);
 END Initialize;
 
 PROCEDURE Terminate-;

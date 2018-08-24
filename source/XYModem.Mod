@@ -291,6 +291,351 @@ TYPE
 		ReceiveFile(); Stop()
 	END Receiver;
 
+	(*
+		Wait for availability of data from a given reader
+
+		minAvailable: minimal amount of available data in bytes to wait for
+		timeout: timeout in milliseconds
+		yield: procedure for yielding processing time to other processes; BOOLEAN return parameter allows to cancel the waiting operation
+
+		Return: TRUE if at least  minAvailable bytes is available
+	*)
+	PROCEDURE WaitForData(reader: Streams.Reader; minAvailable, timeout: LONGINT; yield: PROCEDURE{DELEGATE}(): BOOLEAN): BOOLEAN;
+	VAR milliTimer: Kernel.MilliTimer;
+	BEGIN
+		Kernel.SetTimer(milliTimer, timeout);
+		WHILE (reader.Available() < minAvailable) & (reader.res = Streams.Ok) & ~Kernel.Expired(milliTimer) DO
+			IF (yield # NIL) & ~yield() THEN RETURN FALSE; END;
+		END;
+
+		(*TRACE(timeout,reader.Available(),reader.res,Kernel.Elapsed(milliTimer));*)
+		RETURN reader.Available() >= minAvailable;
+	END WaitForData;
+
+	PROCEDURE AbortTransfer(modemWriter: Streams.Writer);
+	BEGIN
+		modemWriter.Char(CAN); modemWriter.Char(CAN); modemWriter.Update;
+	END AbortTransfer;
+
+CONST
+	TimeoutExpired = 1;
+	CorruptedData = 2;
+	InvalidHeader = 3;
+	InvalidBlockNum = 4;
+	TransferAborted = 5;
+	EotError = 6;
+	ModemIoError = 7;
+	DataIoError = 8;
+	FileNameUnspecified = 9;
+	CreateFileFailure = 10;
+
+	MaxNakCount = 3; (* maximal number of NAK's sent for a corrupted data packet *)
+
+	PROCEDURE InitReceiveTransfer(
+												modemReader: Streams.Reader;
+												modemWriter: Streams.Writer;
+												mode, initTimeout, dataTimeout: LONGINT;
+												yield: PROCEDURE{DELEGATE}(): BOOLEAN;
+												VAR fileName: ARRAY OF CHAR;
+												VAR fileLength: LONGINT;
+												VAR res: LONGINT
+												);
+	VAR
+		i, blockSize, n: LONGINT;
+		ch: CHAR;
+		blockNum, blockNumCheck: LONGINT;
+		crc, crcr: LONGINT;
+		buf: ARRAY 1024 OF CHAR;
+
+		(* Process block 0 of an YMODEM transfer *)
+		PROCEDURE ProcessBlock0();
+		VAR
+			k, m: LONGINT;
+			str: ARRAY 16 OF CHAR;
+		BEGIN
+			TRACE(blockSize);
+			k := 0;
+			WHILE (k < blockSize) & (buf[k] # 0X) DO
+				IF k < LEN(fileName) THEN fileName[k] := buf[k]; END;
+				INC(k);
+			END;
+
+			IF k < LEN(fileName) THEN fileName[k] := 0X;
+			ELSE fileName[LEN(fileName)-1] := 0X;
+			END;
+
+			TRACE(fileName);
+
+			m := 0;
+			WHILE (k < blockSize) & (buf[k] # 0X) & (m < LEN(str)) DO
+				str[m] := buf[k];
+				INC(k); INC(m);
+			END;
+
+			IF m < LEN(str) THEN
+				str[m] := 0X; Strings.StrToInt(str,fileLength);
+				TRACE(str,fileLength);
+			END;
+
+			IF fileLength <= 0 THEN fileLength := MAX(LONGINT); END;
+		END ProcessBlock0;
+
+	BEGIN
+		fileName := "";
+		fileLength := MAX(LONGINT);
+		res := 0;
+
+		initTimeout := MAX(1,initTimeout DIV 10);
+		i := 0;
+		REPEAT
+			modemWriter.Char(C); modemWriter.Update;
+			INC(i);
+		UNTIL WaitForData(modemReader,3,initTimeout,yield) OR (i > 10);
+
+		ch := modemReader.Peek();
+		IF (ch # SOH) & (ch # STX) THEN
+			AbortTransfer(modemWriter); res := InvalidHeader; TRACE(ORD(ch)); RETURN;
+		END;
+
+		IF mode = YModem THEN
+			modemReader.SkipBytes(1);
+			IF ch = SOH THEN blockSize := 128; ELSE blockSize := 1024; END;
+
+			blockNum := ORD(modemReader.Get());
+			blockNumCheck := ORD(modemReader.Get());
+			IF (blockNum # 0) OR (blockNumCheck # 255) THEN
+				TRACE(blockNum,blockNumCheck);
+				(* just in case abort the transfer *)
+				AbortTransfer(modemWriter); res := InvalidBlockNum; RETURN;
+			END;
+
+			IF ~WaitForData(modemReader,blockSize,dataTimeout,yield) THEN
+				AbortTransfer(modemWriter); res := TimeoutExpired; TRACE(modemReader.Available()); RETURN;
+			END;
+
+			modemReader.Bytes(buf,0,blockSize,n); ASSERT(n = blockSize);
+
+			crcr := 256*LONGINT(ORD(modemReader.Get())) + LONGINT(ORD(modemReader.Get()));
+			crc := CRC16(buf, blockSize);
+
+			IF crc = crcr THEN
+				ProcessBlock0;
+				modemWriter.Char(ACK); modemWriter.Char(C); modemWriter.Update;
+			ELSE
+				TRACE(crc,crcr);
+				AbortTransfer(modemWriter); res := CorruptedData; RETURN;
+			END;
+
+			IF (modemWriter.res # Streams.Ok) OR (modemReader.res # Streams.Ok) THEN
+				res := ModemIoError; TRACE(res);
+			END;
+		END;
+	END InitReceiveTransfer;
+
+	PROCEDURE ReceiveFileData(
+												modemReader: Streams.Reader;
+												modemWriter, dataWriter: Streams.Writer;
+												mode, length, timeout: LONGINT;
+												yield: PROCEDURE{DELEGATE}(): BOOLEAN;
+												VAR numBytesReceived: LONGINT;
+												VAR res: LONGINT
+												);
+	VAR
+		ch: CHAR;
+		blockNum, blockSize, dataLen, n: LONGINT;
+		blockNum1, blockNum1Check: LONGINT;
+
+		data: ARRAY 1024 OF CHAR;
+
+		crc, crcr: LONGINT;
+		nakCount: LONGINT;
+
+		PROCEDURE EndOfTransfer();
+		BEGIN
+			IF length = MAX(LONGINT) THEN
+				(* remove EOF padding characters *)
+				WHILE (dataLen > 0) & (data[dataLen-1] = EOF) DO
+					DEC(dataLen);
+				END;
+				TRACE(dataLen);
+			END;
+			
+			(* write the last data block *)
+			dataWriter.Bytes(data,0,dataLen);
+			IF dataWriter.res # Streams.Ok THEN res := DataIoError; TRACE(dataWriter.res); RETURN; END;
+			
+			IF mode = YModem THEN
+				modemWriter.Char(NAK); modemWriter.Update;
+				IF ~WaitForData(modemReader,1,timeout,yield) THEN
+					AbortTransfer(modemWriter); res := EotError; TRACE(modemReader.Available()); RETURN;
+				END;
+				ch := modemReader.Get();
+				IF ch # EOT THEN
+					TRACE(ORD(ch)); AbortTransfer(modemWriter); res := EotError; RETURN;
+				END;
+				modemWriter.Char(ACK); modemWriter.Char(C); modemWriter.Update;
+				IF ~WaitForData(modemReader,133,timeout,yield) THEN
+					AbortTransfer(modemWriter); res := EotError;
+					TRACE(modemReader.Available());
+					WHILE modemReader.Available() # 0 DO
+						TRACE(ORD(modemReader.Get()));
+					END;
+					RETURN;
+				END;
+
+				ch := modemReader.Get();
+				blockNum1 := ORD(modemReader.Get());
+				blockNum1Check := ORD(modemReader.Get());
+				IF (ch # SOH) OR (blockNum1 # 0) OR (blockNum1Check # 255) THEN
+					TRACE(ORD(ch),blockNum1,blockNum1Check);
+					AbortTransfer(modemWriter); res := EotError; RETURN;
+				END;
+
+				modemReader.SkipBytes(128);
+				crcr := 256*LONGINT(ORD(modemReader.Get())) + LONGINT(ORD(modemReader.Get()));
+
+				TRACE(modemReader.Available());
+
+				modemWriter.Char(ACK); modemWriter.Update;
+			ELSE
+				modemWriter.Char(ACK); modemWriter.Update;
+			END;
+		FINALLY
+		END EndOfTransfer;
+
+	BEGIN
+		res := 0;
+		numBytesReceived := 0;
+		blockNum := 1;
+		nakCount := 0;
+
+		LOOP
+
+			IF ~WaitForData(modemReader,1,timeout,yield) THEN
+				AbortTransfer(modemWriter); res := TimeoutExpired; TRACE(modemReader.Available()); RETURN;
+			END;
+
+			ch := modemReader.Get();
+			CASE ch OF
+				SOH:
+					blockSize := 128;
+				|STX:
+					blockSize := 1024;
+				|EOT:
+					IF numBytesReceived = 0 THEN (* got EOT when no data was received *)
+						AbortTransfer(modemWriter); res := EotError; TRACE(res); RETURN;
+					END;
+					EndOfTransfer; RETURN;
+				|CAN:
+					AbortTransfer(modemWriter); res := TransferAborted; TRACE(res); RETURN;
+			ELSE
+				TRACE(ORD(ch));
+				AbortTransfer(modemWriter); res := InvalidHeader; RETURN;
+			END;
+
+			IF ~WaitForData(modemReader,2,timeout,yield) THEN
+				AbortTransfer(modemWriter); res := TimeoutExpired; TRACE(modemReader.Available()); RETURN;
+			END;
+
+			blockNum1 := ORD(modemReader.Get());
+			blockNum1Check := ORD(modemReader.Get());
+			IF (blockNum1 # blockNum) OR (blockNum1Check # 255-blockNum) THEN
+				TRACE(blockNum,blockNum1,blockNum1Check);
+				AbortTransfer(modemWriter); res := InvalidBlockNum; TRACE(res); RETURN;
+			END;
+
+			IF ~WaitForData(modemReader,blockSize,timeout,yield) THEN
+				AbortTransfer(modemWriter); res := TimeoutExpired; TRACE(modemReader.Available()); RETURN;
+			END;
+
+			IF numBytesReceived > 0 THEN (* one block postponed data write out *)
+				dataWriter.Bytes(data,0,dataLen);
+				IF dataWriter.res # Streams.Ok THEN res := DataIoError; TRACE(res); RETURN; END;
+			END;
+			modemReader.Bytes(data,0,blockSize,n); ASSERT(n = blockSize);
+
+			crcr := 256*LONGINT(ORD(modemReader.Get())) + LONGINT(ORD(modemReader.Get()));
+			crc := CRC16(data, blockSize);
+
+			IF crc = crcr THEN
+				modemWriter.Char(ACK); modemWriter.Update;
+				dataLen := blockSize;
+				IF length # MAX(LONGINT) THEN
+					dataLen := MIN(length,dataLen);
+					DEC(length,dataLen);
+				END;
+				blockNum := (blockNum + 1) MOD 256;
+				nakCount := 0;
+				INC(numBytesReceived,dataLen);
+			ELSE
+				TRACE(crc,crcr,nakCount);
+				IF nakCount < MaxNakCount THEN
+					modemWriter.Char(NAK); modemWriter.Update;
+					INC(nakCount);
+				ELSE
+					AbortTransfer(modemWriter); res := CorruptedData; TRACE(res); RETURN;
+				END;
+			END;
+
+			IF (modemWriter.res # Streams.Ok) OR (modemReader.res # Streams.Ok) THEN
+				res := ModemIoError; TRACE(res); RETURN;
+			END;
+		END;
+	END ReceiveFileData;
+	
+	(** XMODEM or YMODEM receive 
+
+		modemReader, modemWriter: input/output modem streams
+		fileName: name of the file where to store received data; can be "" in case of YMODEM, where the file name can be transmitted by the sender 
+		mode: receive mode XModem or XModem1K or YModem
+		initTimeout: timeout in ms for initiation of the transfer
+		dataTimeout: timeout in ms for receiving file data
+		numBytesReceived: number of bytes received
+		yield: procedure for yielding processing time to other processes while the receiver is waiting for data; BOOLEAN return parameter allows to cancel the waiting operation
+		res: error code (0 for success)
+	*)
+	PROCEDURE Receive*
+									(
+									modemReader: Streams.Reader;
+									modemWriter: Streams.Writer;
+									VAR fileName: Files.FileName;
+									mode: LONGINT;
+									initTimeout, dataTimeout: LONGINT;
+									VAR numBytesReceived: LONGINT;
+									yield: PROCEDURE{DELEGATE}(): BOOLEAN;
+									VAR res: LONGINT
+									);
+	VAR
+		file: Files.File;
+		length: LONGINT;
+		name: Files.FileName;
+		dataWriter: Files.Writer;
+	BEGIN
+		IF (mode # YModem) & (fileName = "") THEN
+			res := FileNameUnspecified; RETURN;
+		END;
+		InitReceiveTransfer(modemReader,modemWriter,mode,initTimeout,dataTimeout,yield,name,length,res);
+		IF res # 0 THEN RETURN; END;
+		IF fileName # "" THEN
+			COPY(fileName,name);
+		ELSIF name = "" THEN
+			AbortTransfer(modemWriter);
+			res := FileNameUnspecified; RETURN;
+		END;
+		file := Files.New(name);
+		IF file = NIL THEN
+			AbortTransfer(modemWriter);
+			res := CreateFileFailure; RETURN;
+		END;
+		Files.OpenWriter(dataWriter,file,0);
+		ReceiveFileData(modemReader,modemWriter,dataWriter,mode,length,dataTimeout,yield,numBytesReceived,res);
+		IF res = 0 THEN
+			dataWriter.Update;
+			Files.Register(file);
+		END;
+		file.Close;
+	END Receive;
+
 PROCEDURE IsDigit(ch: CHAR): BOOLEAN;
 BEGIN
 	RETURN (ch >= "0") & (ch <= "9")

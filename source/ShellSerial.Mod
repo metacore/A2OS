@@ -25,7 +25,7 @@ MODULE ShellSerial; (** AUTHOR "staubesv/be" PURPOSE "Serial port utilities for 
  *)
 
 IMPORT
-	Modules, Kernel, Commands, Streams, (*Strings,*) Files, Serials, Shell, XYModem;
+	Modules, Kernel, Commands, Streams, (*Strings,*) Files, Serials, Shell, Objects, XYModem;
 
 CONST
 	BufferSize = 1024;
@@ -35,51 +35,89 @@ CONST
 VAR
 	shells : ARRAY Serials.MaxPorts + 1 OF Shell.Shell;
 
+PROCEDURE Yield(): BOOLEAN;
+BEGIN
+	Objects.Yield();
+	RETURN TRUE;
+END Yield;
+
 PROCEDURE ModemReceive(context : Commands.Context; modemMode: LONGINT); (** [[filename] portNbr BitsPerSecond DataBits Parity StopBits] ~ *)
 VAR
-	name : Files.FileName; file : Files.File;
-	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT; params: SET;
+	fileName : Files.FileName;
+	length: LONGINT;
+	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT;
 	isOpen0 : BOOLEAN;
 	bps0, data0, parity0, stop0 : LONGINT;
-	recv : XYModem.Receiver; awaitF : BOOLEAN;
 	w : Streams.Writer; r : Streams.Reader;
-	error: ARRAY 64 OF CHAR;
 	isTracePort: BOOLEAN;
+	params: SET;
+	i, receiveRes: LONGINT;
 BEGIN
-	IF ~context.arg.GetString(name) THEN
+	IF ~context.arg.GetString(fileName) & (modemMode # XYModem.YModem) THEN
 		context.result := 1;
-		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
+		context.error.String("file name is missing"); context.error.Ln;
 		RETURN;
 	END;
-	
-	Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
-	IF res # 0 THEN
-		context.result := 2;
-		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
-		RETURN;
+
+	context.arg.SkipWhitespace;
+	TRACE(context.arg.Available());
+	IF context.arg.Available() # 0 THEN (* port settings are specified *)
+		Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
+		IF res # 0 THEN
+			context.result := 2;
+			context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
+			RETURN;
+		END;
+	ELSE
+		(*
+			if the command context is the same as the context of the currently executed command of a shell
+			take that shell port as the port used for data transmission
+		*)
+		i := 0;
+		WHILE (i < LEN(shells)) & ((shells[i] = NIL) OR ~shells[i].IsCurrentCmdContext(context)) DO
+			INC(i);
+		END;
+
+		IF i < LEN(shells) THEN
+			portNbr := i+1;
+			bps := -1;
+		ELSE
+			context.result := 3;
+			context.error.String("port number is not specified"); context.error.Ln;
+			RETURN;
+		END;
 	END;
 
 	port := Serials.GetPort(portNbr);
 	IF port = NIL THEN
-		context.result := 3;
+		context.result := 4;
 		context.error.String("Cannot find port "); context.error.Int(portNbr, 0); context.error.Ln;
 		RETURN;
 	END;
 
 	port.GetPortState(isOpen0, bps0, data0, parity0, stop0);
+	IF bps = -1 THEN (* using port of a shell *)
+		bps := bps0; data := data0; parity := parity0; stop := stop0;
+	END;
+
+	TRACE(portNbr, isOpen0, bps0, data0, parity0, stop0);
 
 	(* disable tracing over the selected port *)
 	IF Serials.IsTracePort(port) THEN
+		TRACE("disabling trace port");
 		isTracePort := TRUE;
-		Serials.SetTracePort(-1,0,0,0,0, res);
+		Serials.SetTracePort(0,0,0,0,0, res);
 	END;
 
+	TRACE("closing port");
 	port.Close;
+	TRACE("opening port", bps, data, parity, stop);
 	port.Open(bps, data, parity, stop, res);
+	TRACE(res);
 	IF res # Serials.Ok THEN
-		
-		context.result := 4;
-		
+
+		context.result := 5;
+
 		context.error.String("Could not open port "); context.error.Int(portNbr, 0);
 		context.error.String(", res="); context.error.Int(res,0);
 		context.error.Ln;
@@ -93,27 +131,11 @@ BEGIN
 		RETURN;
 	END;
 
-	IF (modemMode = XYModem.XModem) OR (modemMode = XYModem.XModem1K) THEN
-		context.out.String("XReceive ");
-	ELSE
-		context.out.String("YReceive ");
-	END;
+	NEW(w, port.Send, 4096); NEW(r, port.Receive, 4096);
 
-	context.out.String(name); context.out.Ln;
-	IF name # "" THEN
-		file := Files.New(name); awaitF := FALSE
-	ELSE
-		file := NIL; awaitF := TRUE
-	END;
+	XYModem.Receive(r,w,fileName,modemMode,15000,5000,length,Yield,receiveRes);
 
-	NEW(w, port.Send, BufferSize); NEW(r, port.Receive, BufferSize);
-	NEW(recv, w, r, file, modemMode);
-	IF ~awaitF THEN
-		recv.Await(error)
-	ELSE
-		recv.AwaitF(file, error)
-	END;
-
+	TRACE("closing port");
 	port.Close();
 
 	IF isTracePort THEN
@@ -134,18 +156,15 @@ BEGIN
 
 	Wait(1000); (* Give the port open time so we see the output below *)
 
-	IF error # "" THEN
-		context.result := 5;
-		context.error.String(" "); context.error.String(error)
-	ELSE
-		Files.Register(file);
-		IF awaitF THEN
-			file.GetName(name);
-			context.out.String("  "); context.out.String(name);
-			context.out.String(" ("); context.out.Int(file.Length(), 0); context.out.String(" Bytes"); context.out.String(")");
-		END;
+	IF receiveRes = 0 THEN
+		context.out.String("  "); context.out.String(fileName);
+		context.out.String(" ("); context.out.Int(length, 0); context.out.String(" Bytes"); context.out.String(")");
+
 		context.out.String(" done.");
 		context.out.Ln;
+	ELSE
+		context.result := 6;
+		context.error.String("error "); context.error.Int(receiveRes,0); context.error.Ln;
 	END;
 END ModemReceive;
 
@@ -172,72 +191,13 @@ BEGIN
 	NEW(timer); timer.Sleep(ms);
 END Wait;
 
-(*PROCEDURE GetSerialPortParameters(context : Commands.Context; VAR port, bps, data, parity, stop: LONGINT): BOOLEAN;
-VAR str : ARRAY 32 OF CHAR;
-BEGIN
-	bps := DefaultBPS; data := DefaultDataBits; parity := DefaultParity; stop := DefaultStop;
-
-	IF ~context.arg.GetInteger(port,FALSE) THEN
-		context.result := 1;
-		context.error.String("port number not specified"); context.error.Ln();
-		RETURN FALSE
-	END;
-
-	IF (port < 1) OR (port > Serials.MaxPorts) THEN
-		context.result := 2;
-		context.error.String("wrong port number"); context.error.Ln();
-		RETURN FALSE
-	END;
-
-	IF ~context.arg.GetInteger(bps, FALSE) THEN
-		RETURN TRUE;
-	END;
-
-	IF ~context.arg.GetInteger(data, FALSE) THEN
-		RETURN TRUE;
-	END;
-
-	IF ~context.arg.GetString(str) THEN
-		RETURN TRUE;
-	END;
-
-	IF str = "odd" THEN
-		parity := Serials.ParOdd
-	ELSIF str = "even" THEN
-		parity := Serials.ParEven
-	ELSIF str = "mark" THEN
-		parity := Serials.ParMark
-	ELSIF str = "space" THEN
-		parity := Serials.ParSpace
-	ELSIF str # "no" THEN
-		context.result := 3;
-		context.error.String("wrong parity"); context.error.Ln();
-		RETURN FALSE
-	END;
-
-	IF ~context.arg.GetString(str) THEN
-		RETURN TRUE;
-	END;
-
-	IF str = "1.5" THEN
-		stop := Serials.Stop1dot5
-	ELSIF str = "2" THEN
-		stop := Serials.Stop2
-	ELSIF str # "1" THEN
-		context.result := 4;
-		context.error.String("wrong stop bits"); context.error.Ln();
-		RETURN FALSE
-	END;
-
-	RETURN TRUE
-END GetSerialPortParameters;*)
-
 (** Open a shell listening on the specified <portNbr> *)
 PROCEDURE Open*(context : Commands.Context); (** [portNbr BitsPerSecond DataBits Parity StopBits Prompt] ~ *)
 VAR
-	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT; params: SET;
+	port : Serials.Port; portNbr, bps, data, parity, stop, res : LONGINT;
 	prompt: ARRAY 32 OF CHAR;
 	w : Streams.Writer; r : Streams.Reader;
+	params: SET;
 BEGIN {EXCLUSIVE}
 	Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
 	IF res # 0 THEN
@@ -246,17 +206,27 @@ BEGIN {EXCLUSIVE}
 		RETURN;
 	END;
 
+	IF ~context.arg.GetString(prompt) THEN prompt := DefaultPrompt; END;
+
 	port := Serials.GetPort(portNbr);
 	IF port # NIL THEN
+		TRACE("closing port");
+		port.Close;
 		IF shells[portNbr-1] # NIL THEN
-			shells[portNbr-1].Exit; shells[portNbr-1].AwaitDeath;
+			TRACE("exiting a shell");
+			shells[portNbr-1].Exit;
+			(* avoid dead-lock if this command is issued by shells[portNbr-1] *)
+			TRACE(~shells[portNbr-1].IsCurrentCmdContext(context));
+			IF ~shells[portNbr-1].IsCurrentCmdContext(context) THEN
+				shells[portNbr-1].AwaitDeath;
+			END;
 			shells[portNbr-1] := NIL;
-			port.Close;
 		END;
+		TRACE("opening port", portNbr, bps, data, parity, stop);
 		port.Open(bps, data, parity, stop, res);
+		TRACE(res);
 		IF (res = Serials.Ok) THEN
 			NEW(w, port.Send, BufferSize); NEW(r, port.Receive, BufferSize);
-			IF ~context.arg.GetString(prompt) THEN prompt := DefaultPrompt; END;
 			NEW(shells[portNbr-1], r, w, w, TRUE, prompt);
 		ELSE
 			context.error.String("Shell: could not open port "); context.error.Int(portNbr, 0);

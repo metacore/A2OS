@@ -3513,8 +3513,8 @@ TYPE
 			InitOperand(op,ModeValue);
 			trueL := NewLabel();
 			exitL := NewLabel();
-			IntermediateCode.InitRegister(op.op,IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister,AcquireRegister(IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister));
 			Condition(x,trueL,TRUE);
+			IntermediateCode.InitRegister(op.op,IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister,AcquireRegister(IntermediateCode.GetType(system,x.type),IntermediateCode.GeneralPurposeRegister));
 			Emit(Mov(position,op.op,false));
 			BrL(exitL);
 			SetLabel(trueL);

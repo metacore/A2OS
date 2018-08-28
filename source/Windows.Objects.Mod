@@ -1152,10 +1152,11 @@ BEGIN
 	t.waitingOn := NIL; 
 #IF ~SHAREDLIB THEN
 	t.flags := {};
-#ELSE (*! mark the process as external (non A2) *)
-	t.flags := {External};
-#END;
 	t.obj := NIL;
+#ELSE 
+	t.flags := {External}; (*! mark the process as external (non A2) *)
+	NEW(t.obj); (*! required for ActiveObject() to return non-NIL *)
+#END;
 	t.mode := Unknown; t.body := NIL;
 	t.priority := Normal;
 	
@@ -1407,7 +1408,9 @@ END ReenterA2;
 
 		t.gcContext.nextPos := 0;
 		t.next := NIL;  t.prev := NIL;
-		t.waitingOn := NIL; t.flags := {External}; t.obj := NIL;
+		t.waitingOn := NIL; 
+		t.flags := {External}; (*! mark the process as external (non A2) *)
+		NEW(t.obj); (*! required for ActiveObject() to return non-NIL *)
 		t.mode := Unknown; t.body := NIL;
 
 		t.handle := Kernel32.GetCurrentThread();

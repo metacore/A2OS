@@ -314,6 +314,8 @@ VAR
 		k: Key;
 	BEGIN
 		NEW( k ); k.private := FALSE;
+		r.String(str);
+		ASSERT( str = "ssh-rsa" );
 		len := Base64.DecodeStream( r, buf );
 		pos := 0;
 		U.GetString( buf, pos, str );

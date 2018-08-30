@@ -100,6 +100,22 @@ VAR
 
 		RETURN TRUE;
 	END GetOutput;
+	
+	PROCEDURE GetOutputDataAddr*(out: Output): ADDRESS;
+	VAR portDesc: POINTER {UNSAFE} TO PortDesc;
+	BEGIN
+		portDesc := SYSTEM.VAL(ADDRESS,out);
+		ASSERT(portDesc # NIL);
+		RETURN portDesc.portAddr;
+	END GetOutputDataAddr;
+	
+	PROCEDURE GetInputDataAddr*(inp: Input): ADDRESS;
+	VAR portDesc: POINTER {UNSAFE} TO PortDesc;
+	BEGIN
+		portDesc := SYSTEM.VAL(ADDRESS,inp);
+		ASSERT(portDesc # NIL);
+		RETURN portDesc.portAddr+8;
+	END GetInputDataAddr;
 
 	(*
 		Acquire exclusive access to a resource

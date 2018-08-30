@@ -577,8 +577,8 @@ BEGIN
 	DoAddPlatform("Win64","-b=AMD --bits=64 --mergeSections --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI --define=WIN,AMD64");
 	DoAddPlatform("ARM","-b=ARM --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya --define=ARM");
 	DoAddPlatform("Minos","-b=ARM --objectFile=Minos --define=ARM"); 
-	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT --define=ARM");
-	DoAddPlatform("TRMI","-b=TRM --objectFile=Intermediate --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT --define=ARM");
+	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT --define=TRM");
+	DoAddPlatform("TRMI","-b=TRM --objectFile=Intermediate --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT --define=TRM");
 	DoAddPlatform("ARMA2","-b=ARM --mergeSections --define=ARM --objectFileExtension=.Gof --symbolFileExtension=.Sym");
 	DoAddPlatform("Unix32","-b=AMD --bits=32 --mergeSections --traceModule=Trace --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,I386");
 	DoAddPlatform("Unix64","-b=AMD --bits=64 --mergeSections --traceModule=Trace --objectFileExtension=.GofUu --symbolFileExtension=.SymUu --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,AMD64");

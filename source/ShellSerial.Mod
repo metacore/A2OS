@@ -63,7 +63,7 @@ BEGIN
 	IF context.arg.Available() # 0 THEN (* port settings are specified *)
 		Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
 		IF res # 0 THEN
-			context.result := 2;
+			context.result := Commands.CommandParseError;
 			context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
 			RETURN;
 		END;
@@ -81,7 +81,7 @@ BEGIN
 			portNbr := i+1;
 			bps := -1;
 		ELSE
-			context.result := 3;
+			context.result := Commands.CommandError;
 			context.error.String("port number is not specified"); context.error.Ln;
 			RETURN;
 		END;
@@ -89,7 +89,7 @@ BEGIN
 
 	port := Serials.GetPort(portNbr);
 	IF port = NIL THEN
-		context.result := 4;
+		context.result := Commands.CommandError;
 		context.error.String("Cannot find port "); context.error.Int(portNbr, 0); context.error.Ln;
 		RETURN;
 	END;
@@ -109,8 +109,7 @@ BEGIN
 	port.Open(bps, data, parity, stop, res);
 	IF res # Serials.Ok THEN
 
-		context.result := 5;
-
+		context.result := Commands.CommandError;
 		context.error.String("Could not open port "); context.error.Int(portNbr, 0);
 		context.error.String(", res="); context.error.Int(res,0);
 		context.error.Ln;
@@ -155,7 +154,7 @@ BEGIN
 		context.out.String(" done.");
 		context.out.Ln;
 	ELSE
-		context.result := 6;
+		context.result := Commands.CommandError;
 		context.error.String("error "); context.error.Int(receiveRes,0); context.error.Ln;
 	END;
 END ModemReceive;

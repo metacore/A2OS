@@ -60,7 +60,6 @@ BEGIN
 	END;
 
 	context.arg.SkipWhitespace;
-	TRACE(context.arg.Available());
 	IF context.arg.Available() # 0 THEN (* port settings are specified *)
 		Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
 		IF res # 0 THEN
@@ -100,20 +99,14 @@ BEGIN
 		bps := bps0; data := data0; parity := parity0; stop := stop0;
 	END;
 
-	TRACE(portNbr, isOpen0, bps0, data0, parity0, stop0);
-
 	(* disable tracing over the selected port *)
 	IF Serials.IsTracePort(port) THEN
-		TRACE("disabling trace port");
 		isTracePort := TRUE;
 		Serials.SetTracePort(0,0,0,0,0, res);
 	END;
 
-	TRACE("closing port");
 	port.Close;
-	TRACE("opening port", bps, data, parity, stop);
 	port.Open(bps, data, parity, stop, res);
-	TRACE(res);
 	IF res # Serials.Ok THEN
 
 		context.result := 5;
@@ -135,7 +128,6 @@ BEGIN
 
 	XYModem.Receive(r,w,fileName,modemMode,15000,5000,length,Yield,receiveRes);
 
-	TRACE("closing port");
 	port.Close();
 
 	IF isTracePort THEN
@@ -210,21 +202,16 @@ BEGIN {EXCLUSIVE}
 
 	port := Serials.GetPort(portNbr);
 	IF port # NIL THEN
-		TRACE("closing port");
 		port.Close;
 		IF shells[portNbr-1] # NIL THEN
-			TRACE("exiting a shell");
 			shells[portNbr-1].Exit;
-			(* avoid dead-lock if this command is issued by shells[portNbr-1] *)
-			TRACE(~shells[portNbr-1].IsCurrentCmdContext(context));
+			(*! avoid dead-lock if this command is issued by shells[portNbr-1] *)
 			IF ~shells[portNbr-1].IsCurrentCmdContext(context) THEN
 				shells[portNbr-1].AwaitDeath;
 			END;
 			shells[portNbr-1] := NIL;
 		END;
-		TRACE("opening port", portNbr, bps, data, parity, stop);
 		port.Open(bps, data, parity, stop, res);
-		TRACE(res);
 		IF (res = Serials.Ok) THEN
 			NEW(w, port.Send, BufferSize); NEW(r, port.Receive, BufferSize);
 			NEW(shells[portNbr-1], r, w, w, TRUE, prompt);

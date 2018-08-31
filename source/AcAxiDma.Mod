@@ -5,7 +5,7 @@
 module AcAxiDma;
 
 import
-	system, AcAxisIo;
+	Channels;
 
 const
 	CmdSetAddr = 1*2;
@@ -21,9 +21,9 @@ type
 	Address = longint;
 
 	Controller* = record
-		cfgCmd-: AcAxisIo.Output;
-		cfgData-: AcAxisIo.Output;
-		status-: AcAxisIo.Input;
+		cfgCmd-: port out;
+		cfgData-: port out;
+		status-: port in;
 
 		dataSize-: longint; (** size of one data element in bytes *)
 		addr-: Address;
@@ -41,7 +41,7 @@ type
 	WriteController* = record(Controller)
 	end;
 
-	procedure InitController*(var ctl: Controller; cfgCmd, cfgData: AcAxisIo.Output; status: AcAxisIo.Input; dataSize, maxBurstLen: longint);
+	procedure InitController*(var ctl: Controller; cfgCmd, cfgData: port out; status: port in; dataSize, maxBurstLen: longint);
 	begin
 		ctl.cfgCmd := cfgCmd;
 		ctl.cfgData := cfgData;

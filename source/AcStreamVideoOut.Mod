@@ -1,7 +1,7 @@
 module AcStreamVideoOut; (** AUTHOR ""; PURPOSE ""; *)
 
 import
-	system, AcAxisIo;
+	Channels;
 
 const
 	CmdSetEnabled = 0;
@@ -19,7 +19,7 @@ const
 
 type
 	Controller* = record
-		cfg-: AcAxisIo.Output; (** configuration port *)
+		cfg-: port out; (** configuration port *)
 		enabled-: boolean; (** TRUE if the PWM output is enabled *)
 		
 		pixelClock-: real; (** pixel clock in Hz *)
@@ -37,7 +37,7 @@ type
 		vertSyncPolarity-: boolean;
 	end;
 
-	procedure InitController*(var ctl: Controller; cfg: AcAxisIo.Output; pixelClock: real);
+	procedure InitController*(var ctl: Controller; cfg: port out; pixelClock: real);
 	begin
 		ctl.cfg := cfg;
 		ctl.pixelClock := pixelClock;

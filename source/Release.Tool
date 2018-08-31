@@ -530,7 +530,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 	}
 
 	ZYNQ & ~COOP {
-		Zynq.AcAxisIo.Mod
+		Zynq.ARM.Channels.Mod
 		AcStreamVideoOut.Mod
 		AcAxiDma.Mod
 		Zynq.PsConfig.Mod

@@ -1,7 +1,7 @@
 MODULE DisplayLinear;
 
 IMPORT SYSTEM, Displays, Plugins, Machine, Kernel, Commands, Options,
-	PsConfig, AcAxisIo, Video := AcStreamVideoOut, AcAxiDma, Trace;
+	PsConfig, Channels, Video := AcStreamVideoOut, AcAxiDma, Trace;
 
 CONST
 	MaxWidth = 1920;
@@ -137,9 +137,9 @@ VAR
 	buf: POINTER TO ARRAY OF CHAR;
 	bufAddr: ADDRESS;
 
-	rCfgCmd, rCfgData: AcAxisIo.Output;
-	rStatus: AcAxisIo.Input;
-	videoCfg: AcAxisIo.Output;
+	rCfgCmd, rCfgData: PORT OUT;
+	rStatus: PORT IN;
+	videoCfg: PORT OUT;
 	rdma: AcAxiDma.ReadController;
 
 	(*
@@ -213,10 +213,10 @@ VAR
 		(*
 			Setup ActiveCells components ports
 		*)
-		ASSERT(AcAxisIo.GetOutput(0,0, rCfgCmd));
-		ASSERT(AcAxisIo.GetOutput(0,1, rCfgData));
-		ASSERT(AcAxisIo.GetInput(0,0, rStatus));
-		ASSERT(AcAxisIo.GetOutput(0,2, videoCfg));
+		ASSERT(Channels.GetOutput(0,0, rCfgCmd));
+		ASSERT(Channels.GetOutput(0,1, rCfgData));
+		ASSERT(Channels.GetInput(0,0, rStatus));
+		ASSERT(Channels.GetOutput(0,2, videoCfg));
 
 		(*
 			Allocate frame buffer

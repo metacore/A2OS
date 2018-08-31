@@ -116,7 +116,7 @@ TYPE
 		options.Add(0X, 'host', Options.String);
 		options.Add(0X, 'softwareLoadAddress', Options.Integer);
 
-		IF ~options.Parse(context.arg, context.error) THEN RETURN END;
+		IF ~options.Parse(context.arg, context.error) THEN context.result := Commands.CommandParseError; RETURN END;
 
 		loadBootloader := options.GetFlag('bootloader');
 		loadSoftware := options.GetFlag('software');
@@ -128,20 +128,20 @@ TYPE
 		END;
 		IF loadBootloader & (loadSoftware OR loadHardware) THEN
 			context.error.String("Cannot program hardware or software when rewriting bootloader");
-			context.error.Ln;
+			context.error.Ln; context.result := Commands.CommandError;
 			RETURN
 		END;
 		IF loadBootloader OR loadSoftware THEN
 			IF ~context.arg.GetString(softwareFile) THEN
 				context.error.String("Expected software file image");
-				context.error.Ln;
+				context.error.Ln; context.result := Commands.CommandParseError;
 				RETURN
 			END
 		END;
 		IF loadHardware THEN
 			IF ~context.arg.GetString(hardwareFile) THEN
 				context.error.String("Expected hardware file image");
-				context.error.Ln;
+				context.error.Ln; context.result := Commands.CommandParseError;
 				RETURN
 			END
 		END;
@@ -195,6 +195,7 @@ TYPE
 			context.error.String("Error opening UDP command socket: ");
 			context.error.Int(res, 0);
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 		boardIpAdr := IP.StrToAdr(boardAddress);
@@ -214,6 +215,7 @@ TYPE
 			context.error.Ln;
 			context.error.Update;
 			socket.Close;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 
@@ -231,6 +233,7 @@ TYPE
 				context.error.Ln;
 				context.error.Update;
 				socket.Close;
+				context.result := Commands.CommandError;
 				RETURN
 			END;
 		END;
@@ -250,6 +253,7 @@ TYPE
 				context.error.Ln;
 				context.error.Update;
 				socket.Close;
+				context.result := Commands.CommandError;
 				RETURN
 			END;
 
@@ -264,6 +268,7 @@ TYPE
 				context.error.Ln;
 				context.error.Update;
 				socket.Close;
+				context.result := Commands.CommandError;
 				RETURN
 			END;
 		END;
@@ -343,15 +348,17 @@ TYPE
 		options.Add('d', 'directory', Options.String);
 		options.Add('m', 'module', Options.String);
 
-		IF ~options.Parse(context.arg, context.error) THEN RETURN END;
+		IF ~options.Parse(context.arg, context.error) THEN context.result := Commands.CommandParseError; RETURN END;
 		IF ~context.arg.GetString(board) THEN
 			context.error.String("Expected board name");
 			context.error.Ln;
+			context.result := Commands.CommandParseError;
 			RETURN
 		END;
 		IF ~context.arg.GetString(inputFile) THEN
 			context.error.String("Expected input TCL file");
 			context.error.Ln;
+			context.result := Commands.CommandParseError;
 			RETURN
 		END;
 		IF ~options.GetString('module', moduleName) THEN
@@ -375,6 +382,7 @@ TYPE
 			context.error.String(inputFile);
 			context.error.String("'.");
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 		Files.OpenReader(input, inFile, 0);
@@ -382,6 +390,7 @@ TYPE
 			context.error.String("Cannot read file '");
 			context.error.String(inputFile);
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 
@@ -391,6 +400,7 @@ TYPE
 			context.error.String(outputFile);
 			context.error.String("'.");
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 		Files.OpenWriter(output, outFile, 0);
@@ -398,6 +408,7 @@ TYPE
 			context.error.String("Cannot write to file '");
 			context.error.String(outputFile);
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 		Files.Register(outFile);
@@ -484,7 +495,7 @@ TYPE
 		opt.Add(0X, 'inPlace', Options.Flag);
 		opt.Add(0X, 'userWord', Options.Integer);
 
-		IF ~opt.Parse(context.arg, context.error) THEN RETURN END;
+		IF ~opt.Parse(context.arg, context.error) THEN context.result := Commands.CommandParseError; RETURN END;
 
 		context.arg.String(input);
 		IF ~opt.GetString("outFile", output) THEN
@@ -498,6 +509,7 @@ TYPE
 			IF encrypt THEN
 				context.error.String("Cannot encrypt image without key");
 				context.error.Ln;
+				context.result := Commands.CommandError;
 				RETURN
 			END
 		END;
@@ -511,6 +523,7 @@ TYPE
 		IF encrypt & ~keyFromEFuse & ~keyFromRam THEN
 			context.error.String("Cannot encrypt image without key source");
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 
@@ -520,6 +533,7 @@ TYPE
 			context.error.String(input);
 			context.error.String("'");
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 		Files.OpenReader(in, inFile, 0);
@@ -530,6 +544,7 @@ TYPE
 			context.error.String(output);
 			context.error.String("'");
 			context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 		Files.OpenWriter(out, outFile, 0);
@@ -540,6 +555,7 @@ TYPE
 			context.error.String("Image size is too big."); context.error.Ln;
 			context.error.String("	Maximum size:	30000H"); context.error.Ln;
 			context.error.String("	Actual size:			"); context.error.Hex(size, -5); context.error.String('H'); context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 
@@ -577,6 +593,7 @@ TYPE
 			context.error.String("B.");
 			context.error.Ln;
 			context.error.Update;
+			context.result := Commands.CommandError;
 			RETURN
 		ELSE
 			context.out.String("Copied ");
@@ -621,16 +638,19 @@ TYPE
 			context.error.String("Could not open ROM file");
 			context.error.Ln;
 			context.error.Update;
+			context.result := Commands.CommandError;
 			RETURN
 		ELSIF fIm = NIL THEN
 			context.error.String("Could not open image file");
 			context.error.Ln;
 			context.error.Update;
+			context.result := Commands.CommandError;
 			RETURN
 		ELSIF fOut = NIL THEN
 			context.error.String("Could not open output file");
 			context.error.Ln;
 			context.error.Update;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 
@@ -695,13 +715,13 @@ TYPE
 		IF ~context.arg.GetString(romName) THEN
 			context.error.String("Error: expected input and output files as parameters");
 			context.error.Ln;
-			context.result := 1;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 		IF ~context.arg.GetString(outName) THEN
 			context.error.String("Error: expected output file name as parameter");
 			context.error.Ln;
-			context.result := 1;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 
@@ -718,11 +738,13 @@ TYPE
 			context.error.String("Could not open ROM file");
 			context.error.Ln;
 			context.error.Update;
+			context.result := Commands.CommandError;
 			RETURN
 		ELSIF fOut = NIL THEN
 			context.error.String("Could not open output file");
 			context.error.Ln;
 			context.error.Update;
+			context.result := Commands.CommandError;
 			RETURN
 		END;
 

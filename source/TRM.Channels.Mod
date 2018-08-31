@@ -1,6 +1,6 @@
 (**
-	AUTHOR "Felix Friedrich and Alexey Morozov";
-	PURPOSE "ActiveCells AXI-4 Stream input/output for Tiny Register Machine (TRM) implemented on an FPGA";
+	AUTHOR: "Felix Friedrich and Alexey Morozov";
+	PURPOSE: "ActiveCells AXI-4 Stream input/output interface for Tiny Register Machine (TRM) implemented on an FPGA";
 *)
 MODULE Channels;
 

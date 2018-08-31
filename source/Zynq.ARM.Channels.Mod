@@ -1,13 +1,16 @@
 (**
-	AUTHOR "Alexey Morozov, HighDim GmbH, 2015";
-	PURPOSE "ActiveCells AXI4 Stream IO interface";
+	AUTHOR: "Alexey Morozov";
+	PURPOSE: "ActiveCells AXI-4 Stream input/output interface for Xilinx Zynq platform";
 *)
-MODULE AcAxisIo;
+MODULE Channels;
 
 IMPORT
-	SYSTEM, Platform;
+	SYSTEM;
 
 CONST
+	MasterAxiGp0Base = 07F000000H; (* base address for Master AXI General Purpose interface 0 *)
+	MasterAxiGp1Base = 0BF000000H; (* base address for Master AXI General Purpose interface 1 *)
+
 	ChanOffset  = 256*4; (* ActiveCells AXI4 Stream channel offset in bytes *)
 (*
 	OutDataOffset = 0;
@@ -18,10 +21,10 @@ CONST
 *)
 
 TYPE
-	(* AXI4 Stream port descriptor *)
+	(* AXI4 Stream logical port descriptor *)
 	PortDesc = RECORD
-		lockAddr: ADDRESS; (**  *)
-		portAddr: ADDRESS;
+		lockAddr: ADDRESS; (** address of the associated spin lock *)
+		portAddr: ADDRESS; (** address of the logical channel port;  *)
 	END;
 
 	Output* = PORT OUT; (** AXI4 Stream output port *)
@@ -33,16 +36,40 @@ VAR
 
 	locks: ARRAY 2 OF LONGINT; (* locks for each physical channel *)
 
-(*
-	(** AXI4 Stream output interface *)
-	Output* = POINTER{UNSAFE,UNTRACED} TO RECORD
+(**
+	Writing to and reading from a port can be described by the following high-level code:
+
+	PROCEDURE WriteToPort(out: Output; data: LONGINT);
+	VAR
+		portDesc: POINTER {UNSAFE} TO PortDesc;
+		outDesc: OutputDesc;
+	BEGIN
+		portDesc := SYSTEM.VAL(ADDRESS,out);
+		outDesc := portDesc.portAddr;
+		outDesc.data := data;
+	END WriteToPort;
+
+	PROCEDURE ReadFromPort(inp: Input; VAR data: LONGINT);
+	VAR
+		portDesc: POINTER {UNSAFE} TO PortDesc;
+		inpDesc: InputDesc;
+	BEGIN
+		portDesc := SYSTEM.VAL(ADDRESS,inp);
+		inpDesc := portDesc.portAddr;
+		data := inpDesc.data;
+	END ReadFromPort;
+	
+	where OutputDesc and InputDesc are defined as follows:
+	
+	(** AXI4 Stream output port descriptor *)
+	OutputDesc* = POINTER{UNSAFE,UNTRACED} TO RECORD
 		data: LONGINT; (** output data, write only *)
 		ready: BOOLEAN; (** TRUE when output is available for sending data *)
 		padding: ARRAY 3 OF CHAR;
 	END;
-
-	(** AXI4 Stream input port description *)
-	Input* = POINTER{UNSAFE,UNTRACED} TO RECORD
+	
+	(** AXI4 Stream input port descriptor *)
+	InputDesc* = POINTER{UNSAFE,UNTRACED} TO RECORD
 		available: BOOLEAN; (** TRUE when input data is available *)
 		padding: ARRAY 7 OF CHAR;
 		data: LONGINT; (** input data, read only *)
@@ -61,8 +88,8 @@ VAR
 		portAddr: ADDRESS;
 	BEGIN
 		CASE physicalPortNum OF
-			|0: portAddr := Platform.MasterAxiGp0Base + logicalPortNum*ChanOffset;
-			|1: portAddr := Platform.MasterAxiGp1Base + logicalPortNum*ChanOffset;
+			|0: portAddr := MasterAxiGp0Base + logicalPortNum*ChanOffset;
+			|1: portAddr := MasterAxiGp1Base + logicalPortNum*ChanOffset;
 		ELSE
 			RETURN FALSE;
 		END;
@@ -87,8 +114,8 @@ VAR
 		portAddr: ADDRESS;
 	BEGIN
 		CASE physicalPortNum OF
-			|0: portAddr := Platform.MasterAxiGp0Base + logicalPortNum*ChanOffset;
-			|1: portAddr := Platform.MasterAxiGp1Base + logicalPortNum*ChanOffset;
+			|0: portAddr := MasterAxiGp0Base + logicalPortNum*ChanOffset;
+			|1: portAddr := MasterAxiGp1Base + logicalPortNum*ChanOffset;
 		ELSE
 			RETURN FALSE;
 		END;
@@ -100,7 +127,7 @@ VAR
 
 		RETURN TRUE;
 	END GetOutput;
-	
+
 	PROCEDURE GetOutputDataAddr*(out: Output): ADDRESS;
 	VAR portDesc: POINTER {UNSAFE} TO PortDesc;
 	BEGIN
@@ -108,7 +135,7 @@ VAR
 		ASSERT(portDesc # NIL);
 		RETURN portDesc.portAddr;
 	END GetOutputDataAddr;
-	
+
 	PROCEDURE GetInputDataAddr*(inp: Input): ADDRESS;
 	VAR portDesc: POINTER {UNSAFE} TO PortDesc;
 	BEGIN
@@ -139,7 +166,7 @@ VAR
 		BNE Loop ; retry if not
 
 		DMB ; ensures that all subsequent accesses are observed after the gaining of the lock is observed
-		
+
 		; loads and stores in the critical region can now be performed
 	END AcquireResource;
 
@@ -535,5 +562,5 @@ VAR
 	OPERATOR ">>?"*(port: Input; VAR x: REAL): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
 	OPERATOR "<<?"*(VAR x: REAL; port: Input): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
 
-END AcAxisIo.
+END Channels.
 

@@ -113,6 +113,8 @@ BEGIN
 	IF options.Parse(context.arg, context.error) THEN
 		context.arg.SkipWhitespace; context.arg.String(archiveName);
 		WriteDirectory(context.out, context.error, archiveName, options.GetFlag("details"), res);
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Directory;
 
@@ -269,9 +271,12 @@ BEGIN
 				IF (nofErrors = 1) THEN context.out.String(" error)");
 				ELSE context.out.String(" errors)");
 				END;
+				context.result := Commands.CommandError;
 			END;
 			context.out.Ln;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Extract;
 
@@ -347,10 +352,13 @@ BEGIN
 					IF (nofErrors = 1) THEN context.out.String("1 error)");
 					ELSE context.out.Int(nofErrors, 0); context.out.String(" errors)");
 					END;
+					context.result := Commands.CommandError;
 				END;
 				IF (nofExtracted > 1) OR (nofErrors > 0) THEN context.out.Ln; END;
 			END;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END ExtractAll;
 
@@ -466,12 +474,16 @@ BEGIN
 			IF (nofErrors > 0) THEN
 				context.out.String(" ("); context.out.Int(nofErrors, 0);
 				IF (nofErrors = 1) THEN context.out.String(" error)"); ELSE context.out.String(" errors)"); END;
+				context.result := Commands.CommandError;
 			END;
 			IF (nofAdded > 1) OR (nofErrors > 0) THEN context.out.Ln; END;
 		ELSE
 			context.error.String("Could not create archive '"); context.error.String(archiveName); context.error.String("': ");
 			Zip.ShowError(res, context.error); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Add;
 
@@ -525,9 +537,12 @@ BEGIN
 				IF (nofErrors = 1) THEN context.out.String("error)");
 				ELSE context.out.String(" errors)");
 				END;
+				context.result := Commands.CommandError;
 			END;
 			IF (nofDeleted > 1) OR (nofErrors > 0) THEN context.out.Ln; END;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Delete;
 

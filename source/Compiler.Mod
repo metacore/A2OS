@@ -489,7 +489,7 @@ TYPE
 				END;
 			END;
 		END;
-		IF error THEN context.result := -1 ELSE context.result := Commands.Ok END;
+		IF error THEN context.result := Commands.CommandError ELSE context.result := Commands.Ok END;
 
 	END Compile;
 
@@ -533,6 +533,8 @@ TYPE
 	BEGIN
 		IF context.arg.GetString(name) & context.arg.GetString(defaults) THEN
 			DoAddPlatform(name, defaults);
+		ELSE
+			context.result := Commands.CommandParseError;
 		END;
 	END AddPlatform;
 	

@@ -187,17 +187,26 @@ BEGIN
 						file.WriteBytes(rider, buffer^, 0, blocksize);
 						IF rider.res # 0 THEN
 							context.error.String("Error: Could not write bytes to file"); context.error.Ln;
+							context.result := Commands.CommandError;
 							RETURN;
 						END;
 					END;
 					Files.Register(file);
 					context.out.String("done."); context.out.Ln;
-				ELSE context.error.String("Could not create file '"); context.error.String(filename); context.error.String("'"); context.error.Ln;
+				ELSE
+					context.error.String("Could not create file '"); context.error.String(filename); context.error.String("'"); context.error.Ln;
+					context.result := Commands.CommandError;
 				END;
-			ELSE context.error.String("nbrOfBlocks parameter expected."); context.error.Ln;
+			ELSE
+				context.error.String("nbrOfBlocks parameter expected."); context.error.Ln;
+				context.result := Commands.CommandParseError;
 			END;
-		ELSE context.error.String("filename parameter expected."); context.error.Ln;
+		ELSE
+			context.error.String("filename parameter expected."); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Create;
 
@@ -260,10 +269,14 @@ BEGIN
 				context.out.Ln;
 			ELSE
 				context.error.String("Could not register disk, res: "); context.error.Int(res, 0); context.error.Ln;
+				context.result := Commands.CommandError;
 			END;
 		ELSE
 			context.error.String(filename); context.error.String(" not found"); context.out.Ln;
+			context.result := Commands.CommandError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Install;
 
@@ -300,7 +313,10 @@ BEGIN
 			context.out.Ln;
 		ELSE
 			context.error.String("Could not register disk, res: "); context.error.Int(res, 0); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END InstallRamdisk;
 
@@ -332,6 +348,7 @@ BEGIN
 		END;
 	ELSE
 		context.out.String(" not found");
+		context.result := Commands.CommandError;
 	END;
 	context.out.Ln;
 END Uninstall;

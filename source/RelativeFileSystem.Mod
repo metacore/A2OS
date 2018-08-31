@@ -1,6 +1,6 @@
 MODULE RelativeFileSystem ;	(**  AUTHOR "fof"; PURPOSE "";  **)
 
-IMPORT Files,UTF8Strings;
+IMPORT Files,UTF8Strings, Commands;
 TYPE PathName=ARRAY 272 OF CHAR;
 
 	FileSystem = OBJECT(Files.FileSystem)
@@ -122,6 +122,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 				Files.Add(fs, context.prefix);
 			ELSE
 				context.out.String("file system could not be found: "); context.out.String(str); context.out.Ln;
+				context.result := Commands.CommandError;
 			END;
 		END;
 	END NewFS;

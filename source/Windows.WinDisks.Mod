@@ -193,6 +193,7 @@ VAR
 			END;
 		ELSE
 			context.error.String( diskname );  context.error.String( " not found" );  context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END Uninstall;
 
@@ -277,7 +278,7 @@ VAR
 			ELSE
 				context.error.String("Windows Error Code: "); context.error.Int(errorcode, 0);
 			END;
-			context.error.Ln;
+			context.error.Ln; context.result := Commands.CommandError;
 		END;
 		RETURN handle # Kernel32.InvalidHandleValue;
 	END OpenVolume;
@@ -298,6 +299,7 @@ VAR
 		IF done > 0 THEN
 			IF extents.NumberOfDiskExtents = 0 THEN
 				context.error.String( "no disk extents used, probably the drive is physical already " );  context.error.Ln;
+				context.result := Commands.CommandError;
 			ELSIF extents.NumberOfDiskExtents = 1 THEN
 				drive := extents.extents[0].DiskNumber;
 				IF GetDiskGeometry( handle, pdg ) THEN bps := pdg.BytesPerSector ELSE bps := 512 END;
@@ -307,12 +309,15 @@ VAR
 				name := "PhysicalDrive";  AppendInt( name, drive );  context.out.String( "Mapping to drive : " );  context.out.String( name );  context.out.Ln;
 				IF ~OpenVolume( handle, flags,name, context) THEN 
 					context.error.String( "volume could not be opened. " ); context.error.Ln; 
+					context.result := Commands.CommandError;
 				END;
 			ELSE
 				context.error.String( "cannot handle volumes with more than one extent (yet) " ); context.error.Ln;
+				context.result := Commands.CommandError;
 			END;
 		ELSE
 			context.error.String( "GetPhysicalDrive: no success, probably the drive is already physical" ); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END GetPhysicalDrive;
 
@@ -345,6 +350,7 @@ VAR
 			IF ~GetDiskGeometry( handle, pdg ) THEN
 				Kernel32.CloseHandle( handle );
 				context.error.String( "Could not determine disk geometry " );  context.error.Ln;
+				context.result := Commands.CommandError;
 			ELSE
 				ReportDiskGeometry( pdg, context.out);
 				IF pdg.MediaType = RemovableMedia THEN INCL(flags,Disks.Removable) END;
@@ -359,8 +365,9 @@ VAR
 					AddDisk( vd );
 					context.out.String( diskname );  context.out.String( " registered." ); context.out.Ln;
 				ELSE
-					  Kernel32.CloseHandle( handle );
-					context.out.String( "Could not register disk, res: " ); context.out.Int( res, 0 ); context.out.Ln;
+					Kernel32.CloseHandle( handle );
+					context.error.String( "Could not register disk, res: " ); context.error.Int( res, 0 ); context.error.Ln;
+					context.result := Commands.CommandError;
 				END;
 			END;
 		END;

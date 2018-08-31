@@ -54,7 +54,7 @@ VAR
 	i, receiveRes: LONGINT;
 BEGIN
 	IF ~context.arg.GetString(fileName) & (modemMode # XYModem.YModem) THEN
-		context.result := 1;
+		context.result := Commands.CommandParseError;
 		context.error.String("file name is missing"); context.error.Ln;
 		RETURN;
 	END;
@@ -201,7 +201,7 @@ VAR
 BEGIN {EXCLUSIVE}
 	Serials.GetPortParameters(context.arg, portNbr, bps, data, parity, stop, params, res);
 	IF res # 0 THEN
-		context.result := 1;
+		context.result := Commands.CommandError;
 		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
 		RETURN;
 	END;

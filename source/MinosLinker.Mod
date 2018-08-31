@@ -315,7 +315,7 @@ VAR
 			S.SkipWhitespace;  S.String( fileIn );
 			IF fileIn[0] # 0X THEN linker.Link (fileIn, success) END;
 		END;
-		IF success THEN linker.End; END;
+		IF success THEN linker.End ELSE context.result := Commands.CommandError END;
 		SetLog(NIL);
 	END DoLink;
 

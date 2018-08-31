@@ -111,6 +111,8 @@ BEGIN
 		reverse := ~options.GetFlag("r");
 		first := FALSE;
 		List(Modules.root);
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END ListModules;
 
@@ -151,7 +153,8 @@ BEGIN
 			context.out.Ln;
 		END
 	ELSE
-		context.error.String("Module not found"); context.error.Ln
+		context.error.String("Module not found"); context.error.Ln;
+		context.result := Commands.CommandError;
 	END;
 END ListCommands;
 
@@ -165,7 +168,7 @@ BEGIN
 	ELSIF (string = "commands") THEN ListCommands(context);
 	ELSE
 		context.error.String('Usage: System.List ("plugins"|"modules"|("commands" moduleName))');
-		context.error.Ln;
+		context.error.Ln; context.result := Commands.CommandParseError;
 	END;
 END List;
 
@@ -192,6 +195,7 @@ BEGIN
 		END;
 	ELSE
 		context.error.String("Module "); context.error.String(name); context.error.String(" is not loaded."); context.error.Ln;
+		context.result := Commands.CommandError;
 	END;
 END WhoImports;
 
@@ -230,8 +234,8 @@ BEGIN
 			context.error.String(" ("); context.error.String(msg); context.error.String(")");
 		END;
 		context.error.Ln;
+		context.result := Commands.CommandError;
 	END;
-	
 END ModuleState;
 
 
@@ -375,7 +379,7 @@ BEGIN
 		ProcessInfo.ShowStack(process, context.out);
 	ELSE
 		context.error.String("Process ID = "); context.error.Int(pid, 0); context.error.String(" not found.");
-		context.error.Ln;
+		context.error.Ln; context.result := Commands.CommandError;
 	END;
 END ShowStack;
 
@@ -443,9 +447,11 @@ BEGIN
 			context.result := res;
 		ELSE
 			context.error.String("Error: no such file: "); context.error.String(filename); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	ELSE
-		context.error.String("Error: mo filename provided."); context.error.String(filename); context.error.Ln;
+		context.error.String("Error: no filename provided."); context.error.String(filename); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END DoFile;
 

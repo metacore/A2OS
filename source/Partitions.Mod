@@ -86,9 +86,13 @@ BEGIN
 		operation := Lib.operations.GetByUid(uid);
 		IF operation # NIL THEN
 			operation.Show(context.out, TRUE);
-		ELSE context.error.String("Error: Operation UID "); context.error.Int(uid, 0); context.error.String(" not found"); context.error.Ln;
+		ELSE
+			context.error.String("Error: Operation UID "); context.error.Int(uid, 0); context.error.String(" not found"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
-	ELSE context.error.String("Exspected parameters: uid"); context.error.Ln;
+	ELSE
+		context.error.String("Exspected parameters: uid"); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END ShowOp;
 
@@ -101,9 +105,14 @@ BEGIN
 		IF operation # NIL THEN
 			operation.Abort;
 			context.out.String("Operation UID "); context.out.Int(uid, 0); context.out.String(" aborted"); context.out.Ln;
-		ELSE context.error.String("Error: Operation UID "); context.error.Int(uid, 0); context.error.String(" not found"); context.error.Ln;
+		ELSE
+			context.error.String("Error: Operation UID "); context.error.Int(uid, 0); context.error.String(" not found"); context.error.Ln;
+			context.result := Commands.CommandParseError;
+
 		END;
-	ELSE context.error.String("Exspected parameters: uid"); context.error.Ln;
+	ELSE
+		context.error.String("Exspected parameters: uid"); context.error.Ln;
+		context.result := Commands.CommandError;
 	END;
 END Abort;
 
@@ -116,6 +125,7 @@ BEGIN
 			context.out.String("Operation UID "); context.out.Int(uid, 0); context.out.String(" has been removed"); context.out.Ln;
 		ELSE
 			context.error.String("Error: Could not remove operation UID "); context.error.Int(uid, 0); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	ELSIF context.arg.res = Streams.FormatError THEN
 		par := "";
@@ -129,10 +139,15 @@ BEGIN
 				context.out.String("All finished operation have been removed"); context.out.Ln;
 			ELSE
 				context.error.String("Expected parameters: uid | all | finished"); context.error.Ln;
+				context.result := Commands.CommandParseError;
 			END;
-		ELSE context.error.String("Expected parameters: uid | all | finished"); context.error.Ln;
+		ELSE
+			context.error.String("Expected parameters: uid | all | finished"); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
-	ELSE context.error.String("Expected parameters: uid | all | finished"); context.error.Ln;
+	ELSE
+		context.error.String("Expected parameters: uid | all | finished"); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END Remove;
 
@@ -150,6 +165,7 @@ BEGIN
 			mount.SetBlockingStart;
 		ELSE
 			context.error.String("Expected parameters: dev#part alias prefix"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END Mount;
@@ -184,6 +200,7 @@ BEGIN
 				formatAos.SetBlockingStart;
 			ELSE
 				context.error.String("File system "); context.error.String(fsname); context.error.String(" is not supported"); context.error.Ln;
+				context.result := Commands.CommandError;
 			END;
 		ELSE (* optional parameters not specified *)
 			NEW(formatAos, selection.disk, selection.partition, context.out);
@@ -209,6 +226,7 @@ BEGIN
 			updateBootFile.SetBlockingStart;
 		ELSE
 			context.error.String("Expected parameters: dev#part bootfilename"); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
 	END;
 END UpdateBootFile;
@@ -272,6 +290,7 @@ BEGIN
 			setConfig.SetBlockingStart;
 		ELSE
 			context.error.String("Expected argument stream that supports SetPos"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END SetConfig;
@@ -303,11 +322,17 @@ BEGIN
 					NEW(change, selection.disk, selection.partition, context.out);
 					change.SetParameters(oldtype, newtype);
 					change.SetBlockingStart;
-				ELSE context.error.String("Expected parameters: dev#part oldtype newtype, failed to parse newtype"); context.error.Ln;
+				ELSE
+					context.error.String("Expected parameters: dev#part oldtype newtype, failed to parse newtype"); context.error.Ln;
+					context.result := Commands.CommandParseError;
 				END;
-			ELSE context.error.String("Expected parameters: dev#part oldtype newtype, failed to parse oldtype"); context.error.Ln;
+			ELSE
+				context.error.String("Expected parameters: dev#part oldtype newtype, failed to parse oldtype"); context.error.Ln;
+				context.result := Commands.CommandParseError;
 			END;
-		ELSE context.error.String("Operation not support for floppy disk drives."); context.error.Ln;
+		ELSE
+			context.error.String("Operation not support for floppy disk drives."); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END ChangeType;
@@ -325,9 +350,13 @@ BEGIN
 				NEW(delete, selection.disk, selection.partition, context.out);
 				delete.SetParameters(type);
 				delete.SetBlockingStart;
-			ELSE context.error.String("Expected parameters: dev#part type sizeMB, error while parsing type"); context.error.Ln;
+			ELSE
+				context.error.String("Expected parameters: dev#part type sizeMB, error while parsing type"); context.error.Ln;
+				context.result := Commands.CommandParseError;
 			END;
-		ELSE context.error.String("Operation not supported for floppy disks"); context.error.Ln;
+		ELSE
+			context.error.String("Operation not supported for floppy disks"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END Delete;
@@ -345,11 +374,17 @@ BEGIN
 					NEW(create, selection.disk, selection.partition, context.out);
 					create.SetParameters(size, type, FALSE);
 					create.SetBlockingStart;
-				ELSE context.error.String("Expected parameters: dev#part type sizeMB, error while parsing size"); context.error.Ln;
+				ELSE
+					context.error.String("Expected parameters: dev#part type sizeMB, error while parsing size"); context.error.Ln;
+					context.result := Commands.CommandParseError;
 				END;
-			ELSE context.error.String("Expected parameters: dev#part type sizeMB, error while parsing type"); context.error.Ln;
+			ELSE
+				context.error.String("Expected parameters: dev#part type sizeMB, error while parsing type"); context.error.Ln;
+				context.result := Commands.CommandParseError;
 			END;
-		ELSE context.error.String("Operation not supported on floppy disks"); context.error.Ln;
+		ELSE
+			context.error.String("Operation not supported on floppy disks"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END Create;
@@ -378,6 +413,7 @@ BEGIN
 			setFlags.SetBlockingStart;
 		ELSE
 			context.error.String("Operation not supported for floppy disks"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END ChangeActiveBit;
@@ -395,6 +431,7 @@ BEGIN
 			IF context.arg.GetInteger(block, FALSE) THEN
 				IF ~context.arg.GetInteger(numblocks, FALSE) THEN
 					context.error.String("Exspected parameters: dev#part filename [block numblocks], failed to parse numblocks"); context.error.Ln;
+					context.result := Commands.CommandParseError;
 					RETURN;
 				END;
 			ELSE (* optional parameters not specified *)
@@ -405,6 +442,7 @@ BEGIN
 			fileToPartition.SetBlockingStart;
 		ELSE
 			context.error.String("Exspected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
 	END;
 END FileToPartition;
@@ -423,6 +461,7 @@ BEGIN
 			IF context.arg.GetInteger(block, FALSE) THEN
 				IF ~context.arg.GetInteger(numblocks, FALSE) THEN
 					context.error.String("Exspected parameters: dev#part filename [block numblocks], failed to parse numblocks"); context.error.Ln;
+					context.result := Commands.CommandParseError;
 					RETURN;
 				END;
 			ELSE (* optional parameters not specified *)
@@ -433,7 +472,9 @@ BEGIN
 			partitionToFile.SetBlockingStart;
 			context.out.String("Partitions UID "); context.out.Int(partitionToFile.uid, 0); context.out.String(": Started PartitionToFile on ");
 			context.out.String(partitionToFile.diskpartString); context.out.Ln;
-		ELSE context.error.String("Exspected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
+		ELSE
+			context.error.String("Exspected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
 	END;
 END PartitionToFile;
@@ -458,11 +499,17 @@ BEGIN
 						writeMBR.SetParameters(filename, TRUE, FALSE);
 					END;
 					writeMBR.SetBlockingStart;
-				ELSE context.error.String("Expected parameters: dev#0 filename, failed to parse filename"); context.error.Ln;
+				ELSE
+					context.error.String("Expected parameters: dev#0 filename, failed to parse filename"); context.error.Ln;
+					context.result := Commands.CommandParseError;
 				END;
-			ELSE context.error.String("Expected parameters: dev#0 filename, partition is not 0"); context.error.Ln;
+			ELSE
+				context.error.String("Expected parameters: dev#0 filename, partition is not 0"); context.error.Ln;
+				context.result := Commands.CommandParseError;
 			END;
-		ELSE context.error.String("Operation not supported for floppy disks"); context.error.Ln;
+		ELSE
+			context.error.String("Operation not supported for floppy disks"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END WriteMBR;
@@ -482,6 +529,7 @@ BEGIN
 			updateLoader.SetBlockingStart;
 		ELSE
 			context.error.String("Expected parameters: dev#part bootloader"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	END;
 END UpdateBootLoader;
@@ -525,6 +573,7 @@ BEGIN
 			showBlocks.SetBlockingStart;
 		ELSE
 			context.error.String("Exspected parameters: dev#part block [numblocks], failed to parse block"); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
 	END;
 END ShowBlocks;
@@ -544,9 +593,11 @@ BEGIN
 			Lib.Eject(dev, temp); context.out.String(temp); context.out.Ln;
 		ELSE
 			context.error.String("Device "); context.error.String(name); context.error.String(" not found"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	ELSE
 		context.error.String("Expected parameters: dev"); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END Eject;
 
@@ -565,9 +616,11 @@ BEGIN
 			Lib.Sync(dev, temp); context.out.String(temp); context.out.Ln;
 		ELSE
 			context.error.String("Device "); context.error.String(name); context.error.String(" not found"); context.error.Ln;
+			context.result := Commands.CommandError;
 		END;
 	ELSE
 		context.error.String("Expected parameters: dev"); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END Sync;
 
@@ -612,6 +665,7 @@ BEGIN
 		END;
 	ELSE
 		context.error.String("No Devices found"); context.error.Ln;
+		context.result := Commands.CommandError;
 	END;
 	Lib.diskModel.Release;
 END Show;
@@ -699,6 +753,7 @@ BEGIN
 	selection.disk.device := NIL; selection.partition := -1; (* invalid *)
 	IF ~context.arg.GetString(devpart) THEN
 		context.error.String("Expected parameters: dev#part"); context.error.Ln; context.error.Update;
+		context.result := Commands.CommandParseError;
 		RETURN FALSE;
 	END;
 	context.arg.SkipWhitespace;
@@ -716,7 +771,7 @@ BEGIN
 		RETURN TRUE;
 	ELSE
 		context.error.String("Partition "); context.error.String(devpart); context.out.String(" not found."); context.error.Ln;
-		context.error.Update;
+		context.error.Update; context.result := Commands.CommandError;
 	END;
 	RETURN FALSE;
 END GetSelection;

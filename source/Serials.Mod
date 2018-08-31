@@ -366,14 +366,14 @@ VAR
 BEGIN
 	GetPortParameters(context.arg, portNumber, bps, data, parity, stop, params, res);
 	IF (portNumber > 0) & (res # 0) THEN
-		context.result := 1;
+		context.result := Commands.CommandError;
 		context.error.String("Invalid port settings, res="); context.error.Int(res,0); context.error.Ln;
 		RETURN;
 	END;
 
 	SetTracePort(portNumber, bps, data, parity, stop, res);
 	IF res # 0 THEN
-		context.result := 2;
+		context.result := Commands.CommandError;
 		context.error.String("Failed to setup trace port, res="); context.error.Int(res,0); context.error.Ln;
 	END;
 END SetTrace;

@@ -972,7 +972,6 @@ VAR options: Options.Options;
 	linkRoot: ARRAY 256 OF CHAR; logFile: Files.File; log: Files.Writer;
 	use: SET;
 	exportString: ARRAY 1024 OF CHAR;
-	error: BOOLEAN;
 	parsed: BOOLEAN;
 	position: LONGINT;
 	name: ARRAY 32 OF CHAR;
@@ -998,7 +997,9 @@ BEGIN
 	IF options.GetString("platform", name) THEN
 		reader := defaults.Get(name);
 		IF reader = NIL THEN 
-			context.error.String("Unknown platform"); context.error.Ln 
+			context.error.String("Unknown platform"); context.error.Ln;
+			context.result := Commands.CommandError;
+			RETURN;
 		ELSE
 			parsed := options.ParseStaged(reader, context.error) & parsed;
 			context.arg.SetPos(position);
@@ -1028,6 +1029,8 @@ BEGIN
 		code.exportInfo := ParseExports(exportString);
 		IF code.exportInfo = NIL THEN
 			context.error.String("Syntax error in export list or empty export list."); context.error.Ln;
+			context.result := Commands.CommandError;
+			RETURN;
 		ELSE
 			COPY(codeFileName, code.exportInfo.name);
 		END;
@@ -1054,10 +1057,7 @@ BEGIN
 	(* do linking after having read in all blocks to account for potential constraints *)
 	IF ~linker.error THEN linker.Link; END;
 
-	error := linker.error;
-	error := error OR ~CheckExports(code.exportInfo, context.error);
-
-	IF ~error THEN
+	IF ~linker.error & CheckExports(code.exportInfo, context.error) THEN
 		IF (code.displacement # 0) & (linker.log # NIL) THEN linker.log.String("code displacement 0"); linker.log.Hex(code.displacement,-8); linker.log.String("H"); linker.log.Ln END;
 		WriteOutputFile (code, codeFileName, linker, codeFileFormat);
 		IF data # code THEN
@@ -1075,9 +1075,9 @@ BEGIN
 		IF log # NIL THEN
 			log.Update; Files.Register(logFile);
 		END;
+	ELSE
+		context.result := Commands.CommandError;
 	END;
-
-	IF error THEN context.result := Commands.CommandError; END;
 END Link;
 
 PROCEDURE ShowDefaults*(context: Commands.Context);

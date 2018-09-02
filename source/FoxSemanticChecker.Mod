@@ -3618,6 +3618,11 @@ TYPE
 		BEGIN
 			(* check if in record scope *)
 			scope := currentScope;
+			IF (scope IS SyntaxTree.ProcedureScope) & (scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter # NIL) THEN
+				resolvedExpression := 
+					NewSymbolDesignator(x.position, NIL, scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter); RETURN; 
+			END; 
+			
 			WHILE (scope # NIL) & ~(scope IS SyntaxTree.RecordScope) &~(scope IS SyntaxTree.CellScope) DO
 				scope := scope.outerScope;
 			END;
@@ -3633,6 +3638,7 @@ TYPE
 					x.SetType(type);
 				ELSE
 					x.SetType(record);
+					x.SetAssignable(TRUE); (* var parameter *)
 				END;
 			END;
 			resolvedExpression := x;
@@ -7025,6 +7031,17 @@ TYPE
 							selfParameter.SetType(qualifiedType);
 						END;
 						selfParameter.SetAccess(SyntaxTree.Hidden);
+					ELSIF (procedureType.selfParameter = NIL) THEN
+						selfParameter := SyntaxTree.NewParameter(procedure.position,procedureType,Global.SelfParameterName,SyntaxTree.VarParameter);
+						IF (record.typeDeclaration = NIL) THEN
+							selfParameter.SetType(record);
+						ELSE
+							qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(procedure.position,SyntaxTree.invalidIdentifier,record.typeDeclaration.name);
+							qualifiedType := SyntaxTree.NewQualifiedType(procedure.position,procedure.scope,qualifiedIdentifier);
+							qualifiedType.SetResolved(record);
+							selfParameter.SetType(qualifiedType);
+						END;
+						procedureType.SetSelfParameter(selfParameter);
 					END;
 
 					(*! constructor information is redundant, we can remove "isConstructor" and repplace by constructor procedure reference *)

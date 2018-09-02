@@ -5987,24 +5987,37 @@ TYPE
 			ELSE
 				symbol := x.left(SyntaxTree.SymbolDesignator).symbol;
 			END;
+			
+			IF procedureType.selfParameter # NIL THEN (* type bound procedure in a record *)
+				Designate(x.left(SyntaxTree.Designator).left, operand); 
+				Emit(Push(position, operand.tag)); 
+				Emit(Push(position, operand.op)); 
+				Symbol(symbol, operand); 
+				LoadValue(operand, symbol.type);
+				(*
+				PushParameter(x.left(SyntaxTree.Designator).left, procedureType.selfParameter, callingConvention, FALSE, dummy,-1);
+				Evaluate(x.left, operand);
+				*)
+			ELSE
 
-			Evaluate(x.left, operand);
+				Evaluate(x.left, operand);
 
-			IF symbol IS SyntaxTree.Procedure THEN
-				IF (procedureType.selfParameter # NIL) THEN
-					Emit(Push(position,operand.tag));
-				ELSIF x.left IS SyntaxTree.SupercallDesignator THEN
-					Emit(Push(position,operand.tag));
-				ELSIF (procedureType.isDelegate) THEN
-					Emit(Push(position,operand.tag));
+				IF symbol IS SyntaxTree.Procedure THEN
+					IF (procedureType.selfParameter # NIL) THEN
+						Emit(Push(position,operand.tag));
+					ELSIF x.left IS SyntaxTree.SupercallDesignator THEN
+						Emit(Push(position,operand.tag));
+					ELSIF (procedureType.isDelegate) THEN
+						Emit(Push(position,operand.tag));
+					END;
+				ELSIF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
+					IF (procedureType.selfParameter # NIL) THEN
+						Emit(Push(position,operand.tag));
+					ELSIF (procedureType.isDelegate) THEN (* push self pointer only if procedure is a method *)
+						Emit(Push(position,operand.tag));
+					END;
+				ELSE HALT(200);
 				END;
-			ELSIF (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) THEN
-				IF (procedureType.selfParameter # NIL) THEN
-					Emit(Push(position,operand.tag));
-				ELSIF (procedureType.isDelegate) THEN (* push self pointer only if procedure is a method *)
-					Emit(Push(position,operand.tag));
-				END;
-			ELSE HALT(200);
 			END;
 			
 			ReleaseIntermediateOperand(operand.tag);
@@ -9967,7 +9980,7 @@ TYPE
 					result.tag := nil;
 				END;
 			(* tag for pointer type computed not here but during dereferencing *)
-			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter}) & ~(x.selfParameter) THEN
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter}) (* & ~(x.selfParameter) *) THEN
 				ReleaseIntermediateOperand(result.tag);
 				result.tag := basereg;
 				IntermediateCode.AddOffset(result.tag,ToMemoryUnits(system,x.offsetInBits+system.addressSize));

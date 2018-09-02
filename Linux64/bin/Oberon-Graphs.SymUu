@@ -2,7 +2,7 @@ MODULE Graphs IN Oberon;
 	IMPORT Files, Display, Attributes, Display3, Objects, Gadgets, Oberon;
 CONST 
 	BufSize = 360; 
-	ScaleFactor = 2.66000000000000; 
+	ScaleFactor =   2.6600000E+000; 
 TYPE 
 	Graph* = POINTER TO GraphDesc; 
 

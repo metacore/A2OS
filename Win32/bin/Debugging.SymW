@@ -7,6 +7,7 @@ VAR
 	lock: Locks.RWLock; 
 
 	PROCEDURE ^ Memory*(from, tov: ADDRESS); 
+	PROCEDURE ^ CallerBP(bp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ ViewStack(ebp, esp: ADDRESS; CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Stack*(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ TraceBackThis(eip, ebp: ADDRESS; stacklow, stackhigh: ADDRESS); 
@@ -34,5 +35,6 @@ VAR
 	PROCEDURE ^ EnableGC*; 
 	PROCEDURE ^ ReportProcedureDescriptors*; 
 	PROCEDURE ^ ReportModule*(context: Commands.Context); 
+	PROCEDURE ^ Test*; 
 BEGIN
 END Debugging.

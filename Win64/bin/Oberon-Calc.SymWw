@@ -3,8 +3,8 @@ MODULE Calc IN Oberon;
 CONST 
 	Version = \"Calc / cas 28.9.93"\; 
 	End = 7; 
-	Eps =       1.00000000000000D-9; 
-	Eps0 =      5.00000000000000D-10; 
+	Eps =    1.000000000000000D-009; 
+	Eps0 =    5.000000000000000D-010; 
 TYPE 
 	Symbol = POINTER TO SymbolDesc; 
 

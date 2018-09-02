@@ -1,7 +1,7 @@
 MODULE GfxDemo IN Oberon;
 	IMPORT Files, Display, Printer, Objects, Oberon, Display3, Printer3, Gadgets, Colors, GfxMatrix, GfxRegions, Gfx, GfxDisplay, GfxPrinter;
 CONST 
-	Sqrt3 = 1.73205080000000; 
+	Sqrt3 =   1.7320508E+000; 
 TYPE 
 	Frame* = POINTER TO FrameDesc; 
 

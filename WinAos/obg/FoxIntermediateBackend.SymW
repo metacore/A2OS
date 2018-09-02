@@ -97,6 +97,7 @@ TYPE
 		tag: IntermediateCode.Operand; 
 		extra: IntermediateCode.Operand; 
 		dimOffset: LONGINT; 
+		availability: WORD; 
 	END; 
 
 	Fixup = POINTER TO RECORD 
@@ -228,6 +229,8 @@ TYPE
 			usedRegisters: RegisterEntry; 
 			temporaries: Variables; 
 		END; 
+
+		; 
 	VAR 
 		system: Global.System; 
 		section: IntermediateCode.Section; 
@@ -248,7 +251,6 @@ TYPE
 		arrayDestinationTag: IntermediateCode.Operand; 
 		arrayDestinationDimension: LONGINT; 
 		currentLoop: Label; 
-		conditional: BOOLEAN; 
 		trueLabel, falseLabel, exitLabel: Label; 
 		locked: BOOLEAN; 
 		registerUsageCount: RegisterUsageCount; 
@@ -281,6 +283,12 @@ TYPE
 		cooperativeSwitches: BOOLEAN; 
 		lastSwitchPC: LONGINT; 
 		isUnchecked: BOOLEAN; 
+		availableSymbols: ARRAY 1024 OF RECORD 
+			symbol: SyntaxTree.Symbol; 
+			inMemory, inRegister: BOOLEAN; 
+			register: IntermediateCode.Operand; 
+			memory: IntermediateCode.Operand; 
+		END; 
 		modifyAssignmentCounter: LONGINT; 
 
 		PROCEDURE ^  & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend); 
@@ -305,8 +313,9 @@ TYPE
 		PROCEDURE ^ ToMemory(VAR res: IntermediateCode.Operand; type: IntermediateCode.Type; offset: LONGINT); 
 		PROCEDURE ^ LoadValue(VAR operand: Operand; type: SyntaxTree.Type); 
 		PROCEDURE ^ Evaluate(x: SyntaxTree.Expression; VAR op: Operand); 
+		PROCEDURE ^ EvaluateX(x: SyntaxTree.Expression): Operand; 
 		PROCEDURE ^ Designate(x: SyntaxTree.Expression; VAR op: Operand); 
-		PROCEDURE ^ Condition(x: SyntaxTree.Expression; trueL, falseL: Label); 
+		PROCEDURE ^ Condition(CONST x: SyntaxTree.Expression; label: Label; reason: BOOLEAN); 
 		PROCEDURE ^ NewRegisterOperand(type: IntermediateCode.Type): IntermediateCode.Operand; 
 		PROCEDURE ^ UnuseRegister(register: LONGINT); 
 		PROCEDURE ^ UseRegister(register: LONGINT); 
@@ -326,6 +335,8 @@ TYPE
 		PROCEDURE ^ ReuseCopy(VAR result: IntermediateCode.Operand; src1: IntermediateCode.Operand); 
 		PROCEDURE ^ TransferToRegister(VAR result: IntermediateCode.Operand; src: IntermediateCode.Operand); 
 		PROCEDURE ^ NewLabel(): Label; 
+		PROCEDURE ^ EndBasicBlock; 
+		PROCEDURE ^ BeginBasicBlock; 
 		PROCEDURE ^ SetLabel(label: Label); 
 		PROCEDURE ^ LabelOperand(label: Label): IntermediateCode.Operand; 
 		PROCEDURE ^ BrL(label: Label); 
@@ -340,7 +351,7 @@ TYPE
 		PROCEDURE ^ VisitSet*(x: SyntaxTree.Set); 
 		PROCEDURE ^ VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression); 
 		PROCEDURE ^ VisitUnaryExpression*(x: SyntaxTree.UnaryExpression); 
-		PROCEDURE ^ TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; trueL, falseL: Label; withPart: BOOLEAN); 
+		PROCEDURE ^ TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; label: Label; reason: BOOLEAN; withPart: BOOLEAN); 
 		PROCEDURE ^ Error(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ CreateTraceModuleMethod(mod: SyntaxTree.Module); 
@@ -358,8 +369,7 @@ TYPE
 		PROCEDURE ^ CreateProcedureDescriptor(procedure: SyntaxTree.Procedure); 
 		PROCEDURE ^ AddImport(CONST moduleName: ARRAY OF CHAR; VAR module: SyntaxTree.Module; force: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ EnsureSymbol(CONST moduleName, procedureName: SyntaxTree.IdentifierString); 
-		PROCEDURE ^ ConditionToValue(x: SyntaxTree.Expression); 
-		PROCEDURE ^ ValueToCondition(VAR op: Operand); 
+		PROCEDURE ^ ConditionValue(x: SyntaxTree.Expression): Operand; 
 		PROCEDURE ^ GetDynamicSize(type: SyntaxTree.Type; tag: IntermediateCode.Operand): IntermediateCode.Operand; 
 		PROCEDURE ^ GetArrayLength(type: SyntaxTree.Type; tag: IntermediateCode.Operand): IntermediateCode.Operand; 
 		PROCEDURE ^ GetSizeFromTag(tag: IntermediateCode.Operand): IntermediateCode.Operand; 
@@ -368,7 +378,7 @@ TYPE
 		PROCEDURE ^ GetTypeDescriptor(CONST moduleName, typeName: ARRAY OF CHAR; VAR name: Basic.SegmentedName): SyntaxTree.Symbol; 
 		PROCEDURE ^ CallThisChecked(position: Position; CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT; checkNumParameters: BOOLEAN); 
 		PROCEDURE ^ CallThis(position: Position; CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT); 
-		PROCEDURE ^ CompareString(br: ConditionalBranch; leftExpression, rightExpression: SyntaxTree.Expression); 
+		PROCEDURE ^ CompareString(br: ConditionalBranch; label: Label; leftExpression, rightExpression: SyntaxTree.Expression); 
 		PROCEDURE ^ CopyString(leftExpression, rightExpression: SyntaxTree.Expression); 
 		PROCEDURE ^ VisitBinaryExpression*(x: SyntaxTree.BinaryExpression); 
 		PROCEDURE ^ VisitRangeExpression*(x: SyntaxTree.RangeExpression); 
@@ -456,6 +466,7 @@ TYPE
 		PROCEDURE ^ VisitEnumerationValue*(x: SyntaxTree.EnumerationValue); 
 		PROCEDURE ^ VisitImport*(x: SyntaxTree.Import); 
 		PROCEDURE ^ GetBaseRegister(VAR result: IntermediateCode.Operand; scope, baseScope: SyntaxTree.Scope); 
+		PROCEDURE ^ GetAvailability(x: SyntaxTree.Variable): WORD; 
 		PROCEDURE ^ VisitVariable*(x: SyntaxTree.Variable); 
 		PROCEDURE ^ VisitProperty*(property: SyntaxTree.Property); 
 		PROCEDURE ^ VisitParameter*(x: SyntaxTree.Parameter); 

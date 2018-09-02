@@ -2,7 +2,7 @@ MODULE DVIViewers IN Oberon;
 	IMPORT Display, Display3, Effects, Files, Gadgets, Oberon, Strings, Input, Objects, Printer, In, Out, Documents, Desktops, DVIFiles, Gfx, GfxImages, GfxDisplay, GfxRegions, GfxMatrix, GfxFonts, GfxPS, Math IN A2, Links, Attributes, Images, BIT IN A2;
 CONST 
 	Version* = 100; 
-	MaxZoom = 2.00000000000000E+1; 
+	MaxZoom =   2.0000000E+001; 
 TYPE 
 	Frame* = POINTER TO FrameDesc; 
 

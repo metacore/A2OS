@@ -5,7 +5,7 @@ CONST
 	framesize = 3; 
 	BGPictureName = \"Voyager.Pict"\; 
 	Border* = 4; 
-	gold* = 6.18033999999999E-1; 
+	gold* =   6.1803400E-001; 
 	square* = 1; 
 	ActionLayerRemove = 1; 
 	ActionLayerCopy = 2; 

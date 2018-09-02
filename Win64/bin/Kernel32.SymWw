@@ -387,6 +387,7 @@ VAR
 	GetCurrentProcessId-: PROCEDURE {WINAPI}():LONGINT; 
 	GetCurrentThread-: PROCEDURE {WINAPI}():HANDLE; 
 	GetCurrentThreadId-: PROCEDURE {WINAPI}():LONGINT; 
+	GetCurrentThreadStackLimits-: PROCEDURE {WINAPI}(VAR lowLimit, highLimit: SIZE); 
 	GetDiskFreeSpace-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR; VAR lpSectorsPerCluster, lpBytesPerSector, lpNumberOfFreeClusters, lpTotalNumberOfClusters: LONGINT):BOOL; 
 	GetDriveType-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR):LONGINT; 
 	GetExitCodeProcess-: PROCEDURE {WINAPI}(hProcess: HANDLE; VAR lpExitCode: LONGINT):BOOL; 
@@ -481,8 +482,8 @@ VAR
 	TerminateThread-: PROCEDURE {WINAPI}(hThread: HANDLE; dwExitCode: LONGINT):BOOL; 
 	TlsAlloc-: PROCEDURE {WINAPI}():LONGINT; 
 	TlsFree-: PROCEDURE {WINAPI}(dwTlsIndex: LONGINT):BOOL; 
-	TlsGetValue-: PROCEDURE {WINAPI}(dwTlsIndex: LONGINT):LONGINT; 
-	TlsSetValue-: PROCEDURE {WINAPI}(dwTlsIndex, lpTlsValue: LONGINT):BOOL; 
+	TlsGetValue-: PROCEDURE {WINAPI}(dwTlsIndex: LONGINT):ADDRESS; 
+	TlsSetValue-: PROCEDURE {WINAPI}(dwTlsIndex: LONGINT; lpTlsValue: ADDRESS):BOOL; 
 	TryEnterCriticalSection-: PROCEDURE {WINAPI}(VAR lpCriticalSection: CriticalSection):BOOL; 
 	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; flAllocationType, flProtect: WORDSET):ADDRESS; 
 	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; dwFreeType: WORDSET):BOOL; 
@@ -503,6 +504,6 @@ VAR
 	PROCEDURE ^ ShutdownP(l: LONGINT); 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ SetTraceConsole; 
-	PROCEDURE ^ {FIXED(4198400)} EntryPoint; 
+	PROCEDURE ^ {FIXED(4198400)} EntryPoint*; 
 BEGIN
 END Kernel32.

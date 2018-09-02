@@ -2,10 +2,10 @@ MODULE vyScatter1 IN Oberon;
 	IMPORT Objects, Gadgets, Display, vyHostStrings, vyHostTexts, vyBase, vyGraphBase, vyLinks, vyName, vyBooleanVec, vyRealVec, vyTypes, vyRectangles, vyDisplay2d, vyPort, vyHighlight, vyEvents;
 CONST 
 	idversion* = \"Scatter1 v0r0a3"\; 
-	cBottom = 2.50000000000000E-1; 
-	cTop = 7.50000000000000E-1; 
-	cSelBottom = 1.00000000000000E-1; 
-	cSelTop = 9.00000000000000E-1; 
+	cBottom =   2.5000000E-001; 
+	cTop =   7.5000000E-001; 
+	cSelBottom =   1.0000000E-001; 
+	cSelTop =   9.0000000E-001; 
 	cMin = 0; 
 	cMax = 1; 
 TYPE 

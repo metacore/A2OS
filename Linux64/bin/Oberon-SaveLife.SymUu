@@ -13,7 +13,7 @@ CONST
 	minFadeSteps = 2; 
 	maxFadeSteps = 26; 
 	defFadeSteps = 8; 
-	defMvalue = 7.80000000000000E-1; 
+	defMvalue =   7.8000000E-001; 
 	defTiming = FALSE; 
 	minColoring = 0; 
 	maxColoring = 2; 
@@ -35,8 +35,8 @@ CONST
 	ee = 1; 
 	nrGensUnchangedLimit = 100; 
 	nrGensUnchangedTolerance = 2; 
-	creationProportion = 1.20000000000000E-1; 
-	kickstartProportion = 5.00000000000000E-2; 
+	creationProportion =   1.2000000E-001; 
+	kickstartProportion =   5.0000000E-002; 
 	quick = FALSE; 
 	all = TRUE; 
 	pseudoDead = 0; 

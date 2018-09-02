@@ -1,5 +1,5 @@
 MODULE RelativeFileSystem;
-	IMPORT Files, UTF8Strings;
+	IMPORT Files, UTF8Strings, Commands;
 CONST 
 TYPE 
 	PathName = ARRAY 272 OF CHAR; 

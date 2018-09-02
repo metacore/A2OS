@@ -2,9 +2,9 @@ MODULE HTTPSession;
 	IMPORT HTTPSupport, WebHTTP, MD5, IP, Random, Dates, Strings, TFClasses, Kernel, Modules, KernelLog;
 CONST 
 	HTTPVarSessionIdName* = \"sessionid"\; 
-	InitialLeaseTime = 5.00000000000000; 
-	LeaseTimeIncrement = 2.00000000000000; 
-	MaxLeaseTime = 1.50000000000000E+1; 
+	InitialLeaseTime =   5.0000000E+000; 
+	LeaseTimeIncrement =   2.0000000E+000; 
+	MaxLeaseTime =   1.5000000E+001; 
 	LeaseManagerInterval = (60 * 1000); 
 TYPE 
 	SessionId* = ARRAY 80 OF CHAR; 

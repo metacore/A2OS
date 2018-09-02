@@ -66,8 +66,10 @@ TYPE
 		res: Kernel32.BOOL; 
 		mode: LONGINT; 
 		process: Process; 
+		exiting: BOOLEAN; 
 
 		PROCEDURE ^ Wakeup; 
+		PROCEDURE ^ Exit; 
 		PROCEDURE ^ Finalize(ptr: ANY); 
 		PROCEDURE ^  & Init*; 
 	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
@@ -127,10 +129,12 @@ TYPE
 		n: Heaps.FinalizerNode; 
 		event: Kernel32.HANDLE; 
 		process: Process; 
+		exiting: BOOLEAN; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Wait; 
+		PROCEDURE ^ Wait(): BOOLEAN; 
 		PROCEDURE ^ Activate; 
+		PROCEDURE ^ Exit; 
 	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
 	END FinalizerCaller; 
 VAR 

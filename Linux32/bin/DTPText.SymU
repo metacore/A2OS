@@ -1,10 +1,10 @@
 MODULE DTPText;
 	IMPORT KernelLog, Modules, Inputs, Streams, Files, XML, WMGrids, WMStandardComponents, WMGraphics, WMGraphicUtilities, WMDropTarget, WMStringGrids, WMComponents, WMRectangles, WMDialogs, WMProperties, WMRasterScale, WMEditors, Strings, TextUtilities, Texts, XMLObjects, UTF8Strings, WMWindowManager, Raster, DTPEditor, DTPData, DTPUtilities;
 CONST 
-	pluginVersion = 1.00000000000000; 
+	pluginVersion =   1.0000000E+000; 
 	pluginName = \"Text"\; 
 	pluginDesc = \"Text Plugin for DTPEditor"\; 
-	point = 3.52777777800000E-1; 
+	point =   3.5277778E-001; 
 	TraceRenderOptimize = 0; 
 	TraceLayout = 1; 
 	TraceBaseLine = 2; 

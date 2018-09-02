@@ -1,7 +1,7 @@
 MODULE W3dVectors;
 	IMPORT Math := MathL;
 CONST 
-	TooSmall* = 1.00000000000000E-11; 
+	TooSmall* =   1.0000000E-011; 
 TYPE 
 	TVector2d* = RECORD 
 		x*, y*: LONGREAL; 

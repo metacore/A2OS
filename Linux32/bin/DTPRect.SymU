@@ -1,7 +1,7 @@
 MODULE DTPRect;
 	IMPORT Modules, Files, XML, XMLObjects, WMStandardComponents, WMGraphics, WMGraphicUtilities, WMComponents, WMRectangles, WMEditors, Strings, WMWindowManager, WMPopups, DTPData, DTPEditor, DTPUtilities;
 CONST 
-	pluginVersion = 1.00000000000000; 
+	pluginVersion =   1.0000000E+000; 
 	pluginName = \"Rectangle"\; 
 	pluginDesc = \"Draws a Rectangle with a given Bordercolor and Fillcolor"\; 
 	fillModeSolid = 0; 

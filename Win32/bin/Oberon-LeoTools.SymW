@@ -1,11 +1,11 @@
 MODULE LeoTools IN Oberon;
 	IMPORT Files, Math IN A2, Objects, Display, Fonts, Printer, Input, Oberon, Pictures, Strings, Attributes, Links, Display3, Printer3, Effects, Gadgets, Colors, Images, GfxMatrix, GfxImages, GfxPaths, GfxRegions, GfxFonts, Gfx, GfxPrinter, GfxBuffer, Leonardo, LeoFrames;
 CONST 
-	inch* = 9.14400000000000E+1; 
-	cm* = (inch / 2.54000000000000); 
+	inch* =   9.1440000E+001; 
+	cm* = (inch /   2.5400000E+000); 
 	A4W* = (21 * cm); 
-	A4H* = (2.97000000000000E+1 * cm); 
-	LetterW* = (8.50000000000000 * inch); 
+	A4H* = (  2.9700000E+001 * cm); 
+	LetterW* = (  8.5000000E+000 * inch); 
 	LetterH* = (11 * inch); 
 	RulerW = 32; 
 	RulerH = 19; 

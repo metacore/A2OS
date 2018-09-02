@@ -7483,9 +7483,13 @@ TYPE
 				(* inline call in a statement *)
 			ELSIF ~IsCallable(call) THEN
 				Error(procedureCall.position,"called object is not a procedure");
-			ELSIF (call.type # NIL) &  (call.left # NIL) &  (call.left.type.resolved(SyntaxTree.ProcedureType).callingConvention # SyntaxTree.WinAPICallingConvention) THEN
-				Error(procedureCall.position,"calling procedure with non-void return type");
-				IF VerboseErrorMessage THEN Printout.Info("call ",call) END;
+			ELSIF (call.type # NIL) &  (call.left # NIL) THEN
+				IF call.left.type.resolved(SyntaxTree.ProcedureType).callingConvention = SyntaxTree.WinAPICallingConvention THEN
+					Warning(procedureCall.position,"ignoring return value of procedure call");
+				ELSE
+					Error(procedureCall.position,"calling procedure with non-void return type");
+					IF VerboseErrorMessage THEN Printout.Info("call ",call) END;
+				END;
 			END;
 			procedureCall.SetCall(call);
 

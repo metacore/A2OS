@@ -373,8 +373,27 @@ TYPE
 		VAR k: LONGINT; A: ARRAY 2000 OF DiskAdr; files: LONGINT; bad: BOOLEAN;
 
 			PROCEDURE MarkSectors;
-			VAR L, R, i, j, n: LONGINT; x: DiskAdr; hd: FileHeader; sup, sub, mark, marksup: IndexSector;
-				size: Files.TSize;
+			VAR L, R, i, j, n: LONGINT; x: DiskAdr; hd: FileHeader; sup, sub: IndexSector; mark: ARRAY 512 OF DiskAdr; markPosition: LONGINT;
+
+				PROCEDURE StartMarking;
+				BEGIN
+					markPosition := 0;
+				END StartMarking;
+
+				PROCEDURE FinishMarking;
+				BEGIN
+					vol.MarkBlocks(mark,0,markPosition);
+					markPosition := 0;
+				END FinishMarking;
+				
+				PROCEDURE MarkSector(vol: Files.Volume (* ignored *); sec: LONGINT);
+				BEGIN
+					mark[markPosition] := sec DIV SectorFactor;
+					INC(markPosition); 
+					IF markPosition = LEN(mark) THEN
+						FinishMarking;
+					END; 
+				END MarkSector;
 
 				PROCEDURE sift(L, R: LONGINT);
 					VAR i, j: LONGINT; x: DiskAdr;
@@ -388,6 +407,7 @@ TYPE
 				END sift;
 
 			BEGIN
+				StartMarking;
 				KernelLog.String(" marking");
 				L := k DIV 2; R := k; (*heapsort*)
 				WHILE L > 0 DO DEC(L); sift(L, R) END ;
@@ -402,54 +422,41 @@ TYPE
 						j := hd.aleng + 1;
 						REPEAT
 							DEC(j);
-							IF hd.sec[j] # 0 THEN mark.x[j] := hd.sec[j] DIV SectorFactor; (* preparation for block marking *)
-							ELSE hd.aleng := j-1; bad := TRUE; mark.x[j] := 0;
-							END
-						UNTIL j = 0;
-						vol.MarkBlocks(mark.x,0,hd.aleng+1); 
+							IF hd.sec[j] # 0 THEN MarkSector(vol, hd.sec[j]) ELSE hd.aleng := j-1; bad := TRUE END
+						UNTIL j = 0
 					ELSE
 						j := SectorTableSize;
 						REPEAT
 							DEC(j);
-							IF hd.sec[j] # 0 THEN 
-								mark.x[j] := hd.sec[j] DIV SectorFactor; (* preparation for block marking *)
-							ELSE hd.aleng := j-1; bad := TRUE; mark.x[j] := 0;
-							END
+							IF hd.sec[j] # 0 THEN MarkSector(vol, hd.sec[j]) ELSE hd.aleng := j-1; bad := TRUE END
 						UNTIL j = 0;
-						vol.MarkBlocks(mark.x,0,SectorTableSize); 
 						IF hd.ext = 0 THEN hd.aleng := SectorTableSize-1; bad := TRUE END;
 						IF ~bad THEN
-							MarkSector(vol, hd.ext); 
-							GetSector(vol, hd.ext, sup);
+							MarkSector(vol, hd.ext); GetSector(vol, hd.ext, sup);
 							n := (hd.aleng - SectorTableSize) DIV IndexSize; i := 0;
 							WHILE (i <= n) & ~bad DO
 								IF sup.x[i] # 0 THEN
-									GetSector(vol, sup.x[i], sub);
-									marksup.x[i] := sup.x[i] DIV SectorFactor; (* preparation for block marking *)
-									IF i < n THEN size := IndexSize
-									ELSE size := (hd.aleng - SectorTableSize) MOD IndexSize + 1
+									MarkSector(vol, sup.x[i]); GetSector(vol, sup.x[i], sub);
+									IF i < n THEN j := IndexSize
+									ELSE j := (hd.aleng - SectorTableSize) MOD IndexSize + 1
 									END;
-									FOR j := 0 TO size-1 DO
+									REPEAT
+										DEC(j);
 										IF (sub.x[j] MOD SectorFactor = 0) & (sub.x[j] > 0) THEN
-											mark.x[j] := sub.x[j] DIV SectorFactor; (* preparation for block marking *)
+											MarkSector(vol, sub.x[j])
 										ELSE
-											mark.x[j] := 0; 
 											bad := TRUE
 										END
-									END;
-									vol.MarkBlocks(mark.x,0,size);
+									UNTIL j = 0;
 									INC(i)
-								ELSE 
-									bad := TRUE;
-									marksup.x[i] := 0;
+								ELSE bad := TRUE
 								END;
 								IF bad THEN
 									IF i = 0 THEN hd.aleng := SectorTableSize-1
 									ELSE hd.aleng := SectorTableSize + (i-1) * IndexSize
 									END
 								END
-							END;
-							vol.MarkBlocks(marksup.x,0,n);
+							END
 						END
 					END;
 					IF bad THEN
@@ -458,7 +465,8 @@ TYPE
 						PutSector(vol, A[L], hd)
 					END;
 					INC(L)
-				END
+				END;
+				FinishMarking;
 			END MarkSectors;
 
 			PROCEDURE TraverseDir(dpg: DiskAdr);

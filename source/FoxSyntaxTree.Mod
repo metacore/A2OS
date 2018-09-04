@@ -1481,11 +1481,6 @@ TYPE
 			isObject-,isProtected: BOOLEAN;
 			isAbstract-: BOOLEAN;
 
-			(* a math array type describing an object's array structure; NIL if the type does not exhibit an array structure *)
-			arrayStructure-: MathArrayType;
-			(* list of all operators needed to access an array-structured object type *)
-			arrayAccessOperators-: ArrayAccessOperators;
-
 		PROCEDURE & InitRecordType( position: Position; scope: Scope; recordScope: RecordScope);
 		BEGIN
 			InitType( position);
@@ -1497,7 +1492,6 @@ TYPE
 			ASSERT(recordScope.ownerRecord = NIL); (* cannot register twice ! *)
 			recordScope.ownerRecord := SELF;
 			isObject := FALSE; isProtected := FALSE;
-			arrayStructure := NIL;
 			modifiers := NIL;
 			isAbstract := FALSE;
 		END InitRecordType;
@@ -1597,18 +1591,6 @@ TYPE
 		BEGIN	RETURN Extends(to)
 		END CompatibleTo;
 
-		PROCEDURE SetArrayStructure*(arrayStructure: MathArrayType);
-		BEGIN SELF.arrayStructure := arrayStructure
-		END SetArrayStructure;
-
-		PROCEDURE SetArrayAccessOperators*(arrayAccessOperators: ArrayAccessOperators);
-		BEGIN SELF.arrayAccessOperators := arrayAccessOperators
-		END SetArrayAccessOperators;
-
-		PROCEDURE HasArrayStructure*(): BOOLEAN;
-		BEGIN RETURN (arrayStructure # NIL)
-		END HasArrayStructure
-		;
 		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
@@ -2210,39 +2192,18 @@ TYPE
 	Designator* = OBJECT(Expression)
 		VAR
 			left-: Expression; (* currently only designators are allowed but for later purposes ... (as for example (a+b).c) *)
-
-			relatedRhs-: Expression; (* the RHS of an assignment if this designator is used on the LHS: *)
-
-			(* used if this designator contains an index operator call, e.g. 'asot.^"[]"(indexList)': *)
-			relatedAsot-: Expression; (* the ASOT on which the index operator is called *)
-			relatedIndexList-: ExpressionList; (* the index list *)
 			modifiers-: Modifier;
 
 		PROCEDURE &InitDesignator*(position: Position);
 		BEGIN
 			InitExpression(position);
 			left := NIL;
-			relatedRhs := NIL;
-			relatedAsot := NIL;
-			relatedIndexList := NIL;
 			modifiers := NIL;
 		END InitDesignator;
 
 		PROCEDURE SetLeft*(expression: Expression);
 		BEGIN left := expression
 		END SetLeft;
-
-		PROCEDURE SetRelatedRhs*(relatedRhs: Expression);
-		BEGIN SELF.relatedRhs := relatedRhs
-		END SetRelatedRhs;
-
-		PROCEDURE SetRelatedAsot*(relatedAsot: Expression);
-		BEGIN SELF.relatedAsot := relatedAsot
-		END SetRelatedAsot;
-
-		PROCEDURE SetRelatedIndexList*(relatedIndexList: ExpressionList);
-		BEGIN SELF.relatedIndexList := relatedIndexList
-		END SetRelatedIndexList;
 
 		PROCEDURE SetModifiers*(flags: Modifier);
 		BEGIN modifiers := flags

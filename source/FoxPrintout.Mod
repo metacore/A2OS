@@ -342,11 +342,6 @@ TYPE
 				IF info THEN
 					BeginComment; w.String("ObjectType");
 
-					IF x.HasArrayStructure() THEN
-						w.String(" (array structure: ");
-						VisitMathArrayType(x.arrayStructure);
-						w.String(")");
-					END;
 					EndComment;
 				END;
 				IF (x.baseType # NIL)  THEN
@@ -1282,29 +1277,6 @@ TYPE
 			IF Visible(x) THEN
 				Indent;
 				Comments(x.comment,x,FALSE);
-				(* mark array access operators for array-structured object types *)
-				IF info THEN
-					IF (x.scope # NIL) & (x.scope IS SyntaxTree.RecordScope) THEN
-						recordType := x.scope(SyntaxTree.RecordScope).ownerRecord;
-						IF recordType.HasArrayStructure() THEN
-							BeginComment;
-							valid := FALSE;
-							IF x = recordType.arrayAccessOperators.len THEN w.String("the length operator: "); valid := TRUE;
-							ELSIF x = recordType.arrayAccessOperators.generalRead THEN w.String("the general read operator"); valid := TRUE;
-							ELSIF x = recordType.arrayAccessOperators.generalWrite THEN w.String("the general write operator"); valid := TRUE;
-							ELSE
-								FOR i := 0 TO LEN(recordType.arrayAccessOperators.read, 0) - 1 DO
-									IF x = recordType.arrayAccessOperators.read[i] THEN w.String("a read operator (hash="); w.Int(i, 1); w.String("):"); valid := TRUE;
-									ELSIF x = recordType.arrayAccessOperators.write[i] THEN w.String("a write operator (hash="); w.Int(i, 1); w.String("):"); valid := TRUE;
-									END
-								END
-							END;
-							IF ~valid THEN w.String("an invalid operator:") END;
-							EndComment;
-							w.String(" ");
-						END
-					END
-				END;
 				Keyword("OPERATOR ");
 
 				first := TRUE;

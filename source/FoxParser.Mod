@@ -1484,7 +1484,7 @@ TYPE
 			RETURN procedureType;
 		END ProcedureType;
 
-		(** ObjectType = 'object' | 'object' [Flags] ['(' (QualifiedIdentifier | ArrayType) ')'] DeclarationSequence [Body] 'end' [Identifier] . **)
+		(** ObjectType = 'object' | 'object' [Flags] ['(' QualifiedIdentifier ')'] DeclarationSequence [Body] 'end' [Identifier] . **)
 		PROCEDURE ObjectType(position: Position;  name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope ): SyntaxTree.Type;
 		VAR
 			objectType: SyntaxTree.RecordType;
@@ -1520,12 +1520,8 @@ TYPE
 			END;
 
 			IF Optional( Scanner.LeftParenthesis ) THEN
-				IF Optional(Scanner.Array) THEN
-					baseType := ArrayType(position, parentScope) (* TODO: correct position? *)
-				ELSE
-					qualifiedIdentifier := QualifiedIdentifier();
-					baseType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, parentScope, qualifiedIdentifier)
-				END;
+				qualifiedIdentifier := QualifiedIdentifier();
+				baseType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, parentScope, qualifiedIdentifier);
 				objectType.SetBaseType(baseType);
 				Check( Scanner.RightParenthesis )
 			END;

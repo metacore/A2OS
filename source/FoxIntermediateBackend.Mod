@@ -14051,6 +14051,7 @@ TYPE
 			trackLeave := options.GetFlag("trackLeave");
 			writeBarriers := options.GetFlag("writeBarriers");
 			experiment := options.GetFlag("experiment");
+			IF simpleMetaData THEN preciseGC := FALSE END;
 		END GetOptions;
 
 		PROCEDURE DefaultSymbolFileFormat*(): Formats.SymbolFileFormat;

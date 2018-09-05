@@ -1,6 +1,6 @@
 (**
-	AUTHOR "Alexey Morozov, HighDim GmbH, 2015";
-	PURPOSE "Interface for system level configuration/control of Zynq Processing System (PS)";
+	AUTHOR: Alexey Morozov
+	PURPOSE: Interface for system level configuration/control of Zynq Processing System (PS)
 *)
 MODULE PsConfig;
 

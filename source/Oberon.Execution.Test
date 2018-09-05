@@ -7813,3 +7813,62 @@ positive: check push of UNSIGNED constants
 		Check(MAX(UNSIGNED16)); 
 		Check(MAX(UNSIGNED32));
 	END Test.
+
+positive: index operators on objects
+	MODULE Test; (** AUTHOR ""; PURPOSE ""; *)
+
+	TYPE O* = OBJECT
+	VAR a: ARRAY 100 OF LONGINT;
+
+		OPERATOR "[]"* (index: LONGINT): LONGINT;
+		BEGIN
+			RETURN a[index]
+		END "[]";
+
+		OPERATOR "[]"* (index: LONGINT; value: LONGINT);
+		BEGIN
+			a[index] := value;
+		END "[]";
+
+	END O; 
+
+	TYPE Q = OBJECT
+	VAR a: ARRAY 100 OF LONGINT;
+
+		OPERATOR "[]" (index: LONGINT): LONGINT;
+		BEGIN
+			RETURN a[index]
+		END "[]";
+
+		OPERATOR "[]" (index: LONGINT; value: LONGINT);
+		BEGIN
+			a[index] := value;
+		END "[]";
+
+	END Q; 
+
+	PROCEDURE VarTest(VAR a: LONGINT): LONGINT;
+	BEGIN 
+		a := 1000;
+		RETURN 123;
+	END VarTest;
+
+	PROCEDURE Test*;
+	VAR o: O; q: Q;
+	BEGIN
+		NEW(o); 
+		ASSERT(VarTest(o[10])=123);
+		ASSERT(o[10]=1000);
+		o[5] := 555;
+		ASSERT (o[5] = 555);
+		NEW(q); 
+		ASSERT(VarTest(q[10])=123);
+		ASSERT(q[10]=1000);
+		q[5] := 555;
+		ASSERT (q[5] = 555);
+	END Test;
+
+	BEGIN
+		Test;
+	END Test.
+

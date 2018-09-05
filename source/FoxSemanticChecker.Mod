@@ -3925,6 +3925,7 @@ TYPE
 
 			PROCEDURE FindOperator(recordType: SyntaxTree.RecordType; identifier: SyntaxTree.Identifier; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Operator;
 			VAR bestOperator: SyntaxTree.Operator; bestDistance: LONGINT; numberParameters: LONGINT; procedureType: SyntaxTree.ProcedureType;
+					
 
 				PROCEDURE FindInScope(scope: SyntaxTree.RecordScope; access: SET);
 				VAR operator: SyntaxTree.Operator; distance,i: LONGINT;
@@ -4082,6 +4083,7 @@ TYPE
 					leftBracketDesignator.parameters.AddExpression(bracketDesignator.parameters.GetExpression(i))
 				END;
 				(* only resolve left bracket designator and use as final result *)
+				bracketDesignator.SetRelatedRhs(leftBracketDesignator.relatedRhs);
 				resolvedExpression := ResolveExpression(leftBracketDesignator)
 
 			ELSE
@@ -4095,7 +4097,7 @@ TYPE
 				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType) 
 					OR (type IS SyntaxTree.RecordType)
 				THEN
-					resolvedExpression := NewObjectOperatorCall(bracketDesignator.position, designator, 0, bracketDesignator.parameters,NIL);
+					resolvedExpression := NewObjectOperatorCall(bracketDesignator.position, designator, 0, bracketDesignator.parameters,bracketDesignator.relatedRhs);
 					IF resolvedExpression = NIL THEN 
 						Error(bracketDesignator.position,"undefined operator");
 						resolvedExpression := SyntaxTree.invalidDesignator
@@ -7079,10 +7081,15 @@ TYPE
 
 		BEGIN
 			right := ResolveExpression(assignment.right);
+			assignment.left.SetRelatedRhs(right);
 			left := ResolveDesignator(assignment.left);
 
 			IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
 				(* error already handled *)
+			ELSIF IsIndexOperator(left) & left.assignable THEN
+				(* LHS is index write operator call *)
+				procedureCallDesignator :=  left(SyntaxTree.ProcedureCallDesignator);
+				resolvedStatement := SyntaxTree.NewProcedureCallStatement(assignment.position, procedureCallDesignator, assignment.outer);
 			ELSIF CheckVariable(left) THEN
 				expression := NewOperatorCall(assignment.position, Scanner.Becomes, left, right, NIL);
 				IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
@@ -9382,6 +9389,27 @@ TYPE
 		END;
 		RETURN result
 	END IsExtensibleType;
+	
+	PROCEDURE IsIndexOperator*(expression: SyntaxTree.Expression): BOOLEAN;
+	VAR left: SyntaxTree.Expression; symbol: SyntaxTree.Symbol;
+	BEGIN
+		WITH expression: SyntaxTree.ProcedureCallDesignator DO
+			left := expression.left;
+			WITH left: SyntaxTree.SymbolDesignator DO
+				symbol := left.symbol;
+				WITH symbol: SyntaxTree.Operator DO
+					RETURN symbol.name = "[]";
+				ELSE
+					RETURN FALSE
+				END;
+			ELSE
+				RETURN FALSE
+			END;
+		ELSE
+			RETURN FALSE
+		END;
+	END IsIndexOperator;
+
 
 	PROCEDURE IsUnextensibleRecord(d: SyntaxTree.Expression): BOOLEAN;
 	BEGIN

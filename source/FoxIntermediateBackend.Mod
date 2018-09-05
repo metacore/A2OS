@@ -117,6 +117,11 @@ TYPE
 	SupportedInstructionProcedure* = PROCEDURE {DELEGATE} (CONST instr: IntermediateCode.Instruction; VAR moduleName,procedureName: ARRAY OF CHAR): BOOLEAN;
 	SupportedImmediateProcedure* = PROCEDURE {DELEGATE} (CONST op: IntermediateCode.Operand): BOOLEAN;
 
+	WriteBackCall = POINTER TO RECORD
+		call: SyntaxTree.ProcedureCallDesignator;
+		next: WriteBackCall;
+	END;
+
 	Operand = RECORD
 		mode: SHORTINT;
 		op: IntermediateCode.Operand;
@@ -6178,7 +6183,48 @@ TYPE
 			procedure: SyntaxTree.Procedure;
 			callingConvention: SyntaxTree.CallingConvention;
 			type: IntermediateCode.Type;
-	
+			
+			firstWriteBackCall, currentWriteBackCall: WriteBackCall;
+						
+			(** do preparations before parameter push for array-structured object types (ASOTs):
+				if ASOT is passed as VAR parameter:
+				- allocate temporary variable of math array type
+				- copy contents of ASOT to be passed to temporary variable
+				- use temporary variable as the actual parameter instead
+				- create and store a write-back call in a list (an index operator call that writes the contents of the temp. variable back into the ASOT)
+			**)
+			PROCEDURE PrepareParameter(VAR actualParameter: SyntaxTree.Expression; formalParameter: SyntaxTree.Parameter);
+			VAR
+				expression, left: SyntaxTree.Expression; tempVariableDesignator : SyntaxTree.Designator;
+			BEGIN
+				IF (formalParameter.kind = SyntaxTree.VarParameter) & SemanticChecker.IsIndexOperator(actualParameter) THEN
+					WITH actualParameter: SyntaxTree.ProcedureCallDesignator DO
+						(* prepare writeback for any other "normal" indexer *)
+						variable := GetTemporaryVariable(actualParameter.type.resolved, FALSE, TRUE (* untraced *));
+						tempVariableDesignator := SyntaxTree.NewSymbolDesignator(Basic.invalidPosition, NIL, variable);
+						tempVariableDesignator.SetType(actualParameter.type.resolved);
+						Assign(tempVariableDesignator, actualParameter);
+						IF firstWriteBackCall = NIL THEN
+							NEW(firstWriteBackCall);
+							currentWriteBackCall := firstWriteBackCall
+						ELSE
+							ASSERT(currentWriteBackCall # NIL);
+							NEW(currentWriteBackCall.next);
+							currentWriteBackCall := currentWriteBackCall.next
+						END;
+						
+						(* a [^] . P[] ()*)
+						left := actualParameter.left; (* procedure call designator --> procedure call *)
+						left := left(SyntaxTree.Designator).left; (* procedure call --> caller object *)
+						IF left IS SyntaxTree.DereferenceDesignator THEN (* dereference, if required *)
+							left := left(SyntaxTree.Designator).left;
+						END;
+	 					expression := checker.NewObjectOperatorCall(Basic.invalidPosition, left, 0, actualParameter.parameters, tempVariableDesignator);
+						currentWriteBackCall.call := expression(SyntaxTree.ProcedureCallDesignator);
+					END;
+					actualParameter := tempVariableDesignator;
+				END
+			END PrepareParameter;
 			
 		BEGIN
 			IF Trace THEN TraceEnter("VisitProcedureCallDesignator") END;
@@ -6382,6 +6428,7 @@ TYPE
 				formalParameter := procedureType.firstParameter;
 				FOR i := 0 TO parameters.Length() - 1 DO
 					actualParameter := parameters.GetExpression(i);
+					PrepareParameter(actualParameter, formalParameter);
 
 					IF formalParameter # NIL THEN (* TENTATIVE *)
 						IF isCallOfDynamicOperator  & IsStrictlyPointerToRecord(formalParameter.type) & (formalParameter.access # SyntaxTree.Hidden) THEN (* TODO: remove hidden parameters *)
@@ -6556,8 +6603,27 @@ TYPE
 				END;
 			END;
 
-			IF (resultDesignator = NIL) & (procedureType.returnType # NIL) THEN
+			IF alignment > 1 THEN
+				Emit(Pop(position,sp));
+			END;
 
+			IF backend.cooperative & (callingConvention = SyntaxTree.WinAPICallingConvention) THEN
+				Emit(Pop(position, ap));
+			END;
+
+			
+			IF firstWriteBackCall # NIL THEN 
+				SaveRegisters(); ReleaseUsedRegisters(saved2);					
+				(* perform all write-back calls in the list *)
+				currentWriteBackCall := firstWriteBackCall;
+				WHILE currentWriteBackCall # NIL DO
+					VisitProcedureCallDesignator(currentWriteBackCall.call);
+					currentWriteBackCall := currentWriteBackCall.next
+				END;
+				RestoreRegisters(saved2);
+			END; 
+
+			IF (resultDesignator = NIL) & (procedureType.returnType # NIL) THEN
 				IF structuredReturnType THEN
 					RestoreRegisters(saved);
 					InitOperand(result,ModeReference);
@@ -6569,16 +6635,8 @@ TYPE
 				END;
 			END;
 
-			IF alignment > 1 THEN
-				Emit(Pop(position,sp));
-			END;
-
-			IF backend.cooperative & (callingConvention = SyntaxTree.WinAPICallingConvention) THEN
-				Emit(Pop(position, ap));
-			END;
-
 			destination := dest;
-
+			
 			IF Trace THEN TraceExit("VisitProcedureCallDesignator") END;
 		END VisitProcedureCallDesignator;
 

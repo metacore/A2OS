@@ -2160,6 +2160,16 @@ VAR
 			Strings.Insert(by, in, pos);
 		END;
 	END Replace;
+	
+	OPERATOR "="*(CONST left: ARRAY OF CHAR; right: String): BOOLEAN;
+	BEGIN
+		RETURN right = StringPool.GetIndex1(left);
+	END "=";
+
+	OPERATOR "="*(left: String; CONST right: ARRAY OF CHAR): BOOLEAN;
+	BEGIN
+		RETURN right = left;
+	END "=";
 
 	PROCEDURE MessageS*(CONST format, s0: ARRAY OF CHAR): MessageString;
 	VAR message: MessageString;

@@ -2193,12 +2193,14 @@ TYPE
 		VAR
 			left-: Expression; (* currently only designators are allowed but for later purposes ... (as for example (a+b).c) *)
 			modifiers-: Modifier;
+			relatedRhs-: Expression;
 
 		PROCEDURE &InitDesignator*(position: Position);
 		BEGIN
 			InitExpression(position);
 			left := NIL;
 			modifiers := NIL;
+			relatedRhs := NIL;
 		END InitDesignator;
 
 		PROCEDURE SetLeft*(expression: Expression);
@@ -2208,6 +2210,12 @@ TYPE
 		PROCEDURE SetModifiers*(flags: Modifier);
 		BEGIN modifiers := flags
 		END SetModifiers;
+		
+		PROCEDURE SetRelatedRhs*(expression: Expression);
+		BEGIN
+			relatedRhs := expression;
+		END SetRelatedRhs;
+		
 
 		PROCEDURE Clone(): Expression;
 		VAR clone: Designator;

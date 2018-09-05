@@ -82,6 +82,7 @@ TYPE
 			v: LONGINT;
 			strNum: ARRAY 16 OF CHAR;
 			str: Files.FileName;
+			t: LONGINT;
 		BEGIN
 			WHILE run & ((fileSize <= 0) OR (byteCount < fileSize)) & (fw.res = 0) DO
 				v := rndData.Integer();
@@ -102,12 +103,29 @@ TYPE
 					partByteCount := 0;
 					INC(partNum);
 					fw.Update;
+
+					TRACE("closing file...");
+					t := Kernel.GetTicks();
 					file.Close;
+					t := Kernel.GetTicks() - t;
+					TRACE("closed file",t);
+
 					Strings.IntToStr(partNum,strNum);
 					Strings.Concat(fileName0,".p",str);
 					Strings.Concat(str,strNum,str);
+
+					TRACE("creating file...");
+					t := Kernel.GetTicks();
 					file := Files.New(str);
+					t := Kernel.GetTicks() - t;
+					TRACE("created file",t);
+
+					TRACE("registering the created file...");
+					t := Kernel.GetTicks();
 					Files.Register(file);
+					t := Kernel.GetTicks() - t;
+					TRACE("registered the file",t);
+
 					Files.OpenWriter(fw,file,0);
 					TRACE("started a new file part",id,fileName0,partNum,byteCount);
 				END;
@@ -302,18 +320,12 @@ VAR
 		END;
 	END StopWriter;
 
-	(**
-		ReportWriter id ~
-	*)
-	PROCEDURE ReportWriter*(ctx: Commands.Context);
+	PROCEDURE DoReportWriter(id: LONGINT; ctx: Commands.Context);
 	VAR
-		id: LONGINT;
 		i: LONGINT;
 		w: Writer;
 		speed: REAL;
-	BEGIN{EXCLUSIVE}
-		IF ~ctx.arg.GetInteger(id,FALSE) THEN ctx.result := 1; RETURN; END;
-
+	BEGIN
 		i := 0;
 		WHILE (i < writers.Length()) & (writers.Get(i)(Writer).id # id) DO
 			INC(i);
@@ -321,9 +333,8 @@ VAR
 
 		IF i < writers.Length() THEN
 			w := writers.Get(i)(Writer);
-			ctx.out.String("byte count="); ctx.out.Int(w.byteCount,0); ctx.out.Ln;
-
 			speed := 1000.0 * REAL(w.byteCount-w.startByteCount) / Kernel.Elapsed(w.tStart);
+			ctx.out.String("byte count="); ctx.out.Int(w.byteCount,0); ctx.out.Ln;
 			ctx.out.String("speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
 			ctx.out.String("status: ");
 			IF w.Exited() THEN
@@ -336,10 +347,24 @@ VAR
 			ctx.out.Ln;
 		ELSE
 			ctx.error.String("TestFs writer with ID "); ctx.error.Int(id,0); ctx.error.String(" not found"); ctx.error.Ln;
-			ctx.result := 1;
+			ctx.result := Commands.CommandError;
+		END;
+	END DoReportWriter;
+
+	(**
+		ReportWriter id ~
+	*)
+	PROCEDURE ReportWriter*(ctx: Commands.Context);
+	VAR
+		id: LONGINT;
+	BEGIN{EXCLUSIVE}
+		IF ~ctx.arg.GetInteger(id,FALSE) THEN
+			ctx.result := Commands.CommandError;
+			ctx.error.String("writer ID is not specified"); ctx.error.Ln;
 			RETURN;
 		END;
 
+		DoReportWriter(id,ctx);
 	END ReportWriter;
 
 	PROCEDURE StartReader*(ctx: Commands.Context);
@@ -400,38 +425,76 @@ VAR
 		ctx.out.Ln;
 	END StopReader;
 
-	PROCEDURE ReportReader*(ctx: Commands.Context);
+	PROCEDURE DoReportReader(id: LONGINT; ctx: Commands.Context);
 	VAR
 		r: Reader;
-		id: LONGINT;
 		i: LONGINT;
 		speed: LONGREAL;
-	BEGIN {EXCLUSIVE}
-		IF ~ctx.arg.GetInteger(id, FALSE) THEN ctx.result := 1; RETURN; END;
+	BEGIN
 		WHILE (i < readers.Length()) & (readers.Get(i)(Reader).id # id) DO INC(i); END;
-		IF i = readers.Length() THEN
-			ctx.error.String("TestFs reader with ID ");
-			ctx.error.Int(id, 0);
-			ctx.error.String(" is not running");
-			ctx.error.Ln;
-			ctx.result := 1;
+		IF i < readers.Length() THEN
+			r := readers.Get(i)(Reader);
+			speed := 1000.0 * (r.byteCount-r.startByteCount) / Kernel.Elapsed(r.tStart);
+			ctx.out.String("byte count="); ctx.out.Int(r.byteCount, 0); ctx.out.Ln;
+			ctx.out.String("speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
+			ctx.out.String("status: ");
+			IF r.Exited() THEN
+				ctx.out.String("Finished");
+			ELSIF r.Running() THEN
+				ctx.out.String("Running");
+			ELSE
+				ctx.out.String("Paused");
+			END;
+			ctx.out.Ln;
+		ELSE
+			ctx.error.String("TestFs reader with ID "); ctx.error.Int(id,0); ctx.error.String(" not found"); ctx.error.Ln;
+			ctx.result := Commands.CommandError;
+			ctx.result := Commands.CommandError;
 			RETURN;
 		END;
-		r := readers.Get(i)(Reader);
-		speed := 1000.0 * (r.byteCount-r.startByteCount) / Kernel.Elapsed(r.tStart);
+	END DoReportReader;
 
-		ctx.out.String("byte count="); ctx.out.Int(r.byteCount, 0); ctx.out.Ln;
-		ctx.out.String("speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
-		ctx.out.String("status: ");
-		IF r.Exited() THEN
-			ctx.out.String("Finished");
-		ELSIF r.Running() THEN
-			ctx.out.String("Running");
-		ELSE
-			ctx.out.String("Paused");
+	PROCEDURE ReportReader*(ctx: Commands.Context);
+	VAR
+		id: LONGINT;
+	BEGIN {EXCLUSIVE}
+		IF ~ctx.arg.GetInteger(id,FALSE) THEN
+			ctx.result := Commands.CommandError;
+			ctx.error.String("reader ID is not specified"); ctx.error.Ln;
+			RETURN;
 		END;
-		ctx.out.Ln;
+
+		DoReportReader(id,ctx);
 	END ReportReader;
+
+	PROCEDURE Report*(ctx: Commands.Context);
+	VAR
+		w: Writer;
+		r: Reader;
+		i: LONGINT;
+	BEGIN{EXCLUSIVE}
+		IF writers.Length() # 0 THEN
+			FOR i := 0 TO writers.Length()-1 DO
+				w := writers.Get(i)(Writer);
+				ctx.out.String("writer (ID="); ctx.out.Int(w.id,0); ctx.out.String("):"); ctx.out.Ln;
+				DoReportWriter(w.id,ctx);
+				ctx.out.Ln;
+			END;
+		ELSE
+			ctx.out.String("no TestFs writer is running"); ctx.out.Ln;
+		END;
+
+		IF readers.Length() # 0 THEN
+			FOR i := 0 TO readers.Length()-1 DO
+				r := readers.Get(i)(Reader);
+				ctx.out.String("reader (ID="); ctx.out.Int(r.id,0); ctx.out.String("):"); ctx.out.Ln;
+				DoReportReader(r.id,ctx);
+				ctx.out.Ln;
+			END;
+		ELSE
+			ctx.out.String("no TestFs reader is running"); ctx.out.Ln;
+		END;
+	END Report;
 
 BEGIN
 	NEW(writers,8);
@@ -507,7 +570,7 @@ SystemTools.FreeDownTo UDP ~
 
 mount DATA AosFS SD0#4 '|' N
 
-TestFs.StartWriter 1234567 DATA:TestFs-123457.dat 1000000000
+TestFs.StartWriter 1234567 DATA:TestFs-1234567.dat 1000000000
 TestFs.StartWriter 7654321 DATA:TestFs-7654321.dat 1000000000
 
 

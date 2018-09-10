@@ -380,8 +380,8 @@ TYPE
 				IF x.recordScope.procedures # NIL THEN w.Ln; ProcedureList(x.recordScope.procedures) END;
 				currentScope := prevScope;
 				Indent; Keyword("END" );
+				IF (x.pointerType = NIL) & (x.recordScope.procedures # NIL) THEN w.Ln; ProcedureList(x.recordScope.procedures) END;
 			END;
-			IF x.recordScope.procedures # NIL THEN w.Ln; ProcedureList(x.recordScope.procedures) END;
 		END VisitRecordType;
 
 		PROCEDURE Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN);

@@ -212,6 +212,21 @@ TYPE
 			DEC(used)
 		END FreeBlock;
 
+		PROCEDURE FreeBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize);
+		VAR i: SIZE;  adr: Address;
+		BEGIN {EXCLUSIVE}
+			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
+			FOR i := ofs TO ofs + len -1 DO
+				adr := a[i];
+				IF (adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
+				ELSE 
+					IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
+					EXCL(map[adr DIV SetSize], adr MOD SetSize);
+					DEC(used);
+				END;
+			END;
+		END FreeBlocks;
+
 		PROCEDURE MarkBlock*(adr: Address);
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
@@ -230,9 +245,9 @@ TYPE
 				ELSE 
 					IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
 					INCL(map[adr DIV SetSize], adr MOD SetSize);
+					INC(used);
 				END;
 			END;
-			INC(used, len);
 		END MarkBlocks;
 
 		PROCEDURE Marked*(adr: Address): BOOLEAN;

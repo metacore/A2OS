@@ -568,7 +568,7 @@ TYPE
 			openFiles: DiskAdrList;
 				(* all files that are registered, must be stored separately of finalizeFiles because of race
 					between Delete0/Rename0 and deferred execution of file close finalizer *)
-			tempRegFileSec: DiskAdrList; (* temporary used for PurgeOpenedFile *)
+			tempRegFileSec: DiskAdrTable; (* temporary used for PurgeOpenedFile *)
 
 		PROCEDURE &Init*;
 		BEGIN NEW(finalizeFiles); NEW(openFiles); NEW(tempRegFileSec)
@@ -770,8 +770,28 @@ TYPE
 		END PurgeByAdr;
 
 		(* purge all sectors of f except the sectors in 'except', except may be NIL *)
-		PROCEDURE PurgeOpenedFile(f: File; except: DiskAdrList);
-		VAR i, p, m, n: LONGINT; super, sub: IndexSector;
+		PROCEDURE PurgeOpenedFile(f: File; except: DiskAdrTable);
+		VAR i, p, m, n: LONGINT; super, sub: IndexSector; free: ARRAY 512 OF DiskAdr; freePosition: Files.TSize;
+
+			PROCEDURE StartFreeing;
+			BEGIN
+				freePosition := 0;
+			END StartFreeing;
+
+			PROCEDURE FinishFreeing;
+			BEGIN
+				vol.FreeBlocks(free,0,freePosition);
+				freePosition := 0;
+			END FinishFreeing;
+			
+			PROCEDURE FreeSector(vol: Files.Volume (* ignored *); sec: LONGINT);
+			BEGIN
+				free[freePosition] := sec DIV SectorFactor;
+				INC(freePosition); 
+				IF freePosition = LEN(free) THEN
+					FinishFreeing;
+				END; 
+			END FreeSector;
 
 			PROCEDURE FreeExcept(sec: DiskAdr);
 			BEGIN
@@ -779,6 +799,7 @@ TYPE
 			END FreeExcept;
 
 		BEGIN
+			StartFreeing;
 			IF f.aleng < SectorTableSize THEN m := f.aleng + 1 ELSE m := SectorTableSize END; p := 0; (* include sec[0] *)
 			WHILE p < m DO
 				IF f.sec[p] # 0 THEN FreeExcept(f.sec[p]) END;
@@ -801,7 +822,8 @@ TYPE
 					END;
 					INC(i)
 				END
-			END
+			END;
+			FinishFreeing;
 		END PurgeOpenedFile;
 
 		PROCEDURE Close(f: File);
@@ -844,11 +866,6 @@ TYPE
 		BEGIN NEW(list, 8); count := 0
 		END New;
 
-		PROCEDURE GetCount() : LONGINT;
-		BEGIN {EXCLUSIVE}
-			RETURN count
-		END GetCount;
-
 		PROCEDURE Grow;
 		VAR old: DiskAdrArray; i : LONGINT;
 		BEGIN
@@ -877,13 +894,6 @@ TYPE
 			END
 		END Remove;
 
-		PROCEDURE Clear;
-		VAR i : LONGINT;
-		BEGIN {EXCLUSIVE}
-			FOR i := 0 TO count - 1 DO list[i] := 0 END;
-			count := 0
-		END Clear;
-
 		PROCEDURE Contains(x: DiskAdr) : BOOLEAN;
 		VAR i: LONGINT;
 		BEGIN {EXCLUSIVE}
@@ -891,6 +901,69 @@ TYPE
 			RETURN FALSE
 		END Contains;
 	END DiskAdrList;
+			
+	DiskAdrTable = OBJECT
+		VAR
+			table : DiskAdrArray;
+			count :SIZE;
+			size: SIZE; (* cache: invariant size  = LEN(table) *)
+			
+		CONST
+			threshold = 4; (* 1/4 filled -> grow*)
+
+		PROCEDURE &New*;
+		BEGIN NEW(table, 8); size := LEN(table)-1; count := 0; 
+		END New;
+		
+		PROCEDURE Clear;
+		VAR i: SIZE;
+		BEGIN{EXCLUSIVE}
+			FOR i := 0 TO LEN(table)-1 DO
+				table[i] := 0;
+			END;
+			count := 0;
+		END Clear;
+		
+		PROCEDURE Grow;
+		VAR old: DiskAdrArray; i,value: LONGINT;
+		BEGIN
+			old := table;
+			NEW(table, LEN(old)*2); (* filled with zeroes -- ok *)
+			size := LEN(table)-1;
+			count := 0;
+			FOR i := 0 TO LEN(old)-1 DO
+				value := old[i];
+				IF value # 0 THEN Add(value) END;
+			END;
+		END Grow;
+		
+		PROCEDURE HashValue(key: DiskAdr):SIZE;
+		VAR index, h1, h2, i: SIZE;
+		BEGIN
+			index := key;
+			h1 := key MOD size;
+			(* h2 := 1; -- linear probing *) 
+			REPEAT
+				index := (h1 + i) MOD size;
+			UNTIL((table[index] = 0) OR (table[index] = key));
+			ASSERT((table[index] = 0) OR (table[index] = key));
+			RETURN index;
+		END HashValue;
+		
+		PROCEDURE Add(x: DiskAdr);
+		BEGIN {EXCLUSIVE}
+			ASSERT(x # 0);
+			IF count > size DIV threshold THEN Grow END;
+			table[HashValue(x)] := x;
+			INC(count)
+		END Add;
+		
+		PROCEDURE Contains(x: DiskAdr) : BOOLEAN;
+		BEGIN {EXCLUSIVE}
+			RETURN table[HashValue(x)] = x;
+		END Contains;
+
+	END DiskAdrTable;
 
 TYPE
 	File = OBJECT (Files.File)

@@ -381,6 +381,7 @@ TYPE
 				currentScope := prevScope;
 				Indent; Keyword("END" );
 			END;
+			IF x.recordScope.procedures # NIL THEN w.Ln; ProcedureList(x.recordScope.procedures) END;
 		END VisitRecordType;
 
 		PROCEDURE Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN);
@@ -1183,6 +1184,7 @@ TYPE
 		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN; fp: SyntaxTree.FingerPrint;
 		BEGIN
 			IF Visible(x) THEN
+				
 				Indent;
 				Comments(x.comment,x,FALSE);
 				Keyword("PROCEDURE " );
@@ -1190,13 +1192,7 @@ TYPE
 					w.String("^ ");
 				END;
 
-				(*
-				CallingConvention(x.type(SyntaxTree.ProcedureType).callingConvention);
-				*)
 				type := x.type(SyntaxTree.ProcedureType);
-				(*
-				flags := type.flags;
-				*)
 
 				first := TRUE;
 				IF type.stackAlignment > 1 THEN Value(Global.NameStackAligned,type.stackAlignment,first) END;
@@ -1226,7 +1222,7 @@ TYPE
 				IF x.isConstructor THEN w.String(" & ") END;
 				IF x.isFinalizer THEN w.String(" ~ ") END;
 
-				IF type.selfParameter # NIL THEN
+				IF (type.selfParameter # NIL) & ~(type.selfParameter.name = "@Self") THEN
 					ParameterList(type.selfParameter);
 				END;
 
@@ -1324,14 +1320,20 @@ TYPE
 		END VisitOperator;
 
 		PROCEDURE ProcedureList(list: SyntaxTree.ProcedureList);
-		VAR x: SyntaxTree.Procedure; i: LONGINT;
+		VAR x: SyntaxTree.Procedure; i: LONGINT; type: SyntaxTree.ProcedureType;
 		BEGIN
 			w.IncIndent;
 			FOR i := 0 TO list.Length()-1 DO
 				x := list.GetProcedure(i);
-				IF (x.access # SyntaxTree.Hidden) & ~(x.isBodyProcedure) OR (mode > SourceCode)  THEN
-					Symbol(x);
-					w.String( "; " );
+				IF (x.access # SyntaxTree.Hidden) & ~(x.isBodyProcedure) OR (mode > SourceCode)  
+				THEN
+					type := x.type(SyntaxTree.ProcedureType);
+					IF (type.selfParameter = NIL) OR (type.selfParameter.name = "@Self") & (currentScope IS SyntaxTree.RecordScope)
+						OR ~ (type.selfParameter.name = "@Self") & ~(currentScope IS SyntaxTree.RecordScope)
+					THEN				
+						Symbol(x);
+						w.String( "; " );
+					END;
 				END;
 				IF (i# list.Length()-1) & (mode > SymbolFile) & ((x.access # SyntaxTree.Hidden) OR (mode > SourceCode)) THEN w.Ln END;
 			END;
@@ -1956,3 +1958,5 @@ VAR
 BEGIN
 	Init;
 END FoxPrintout.
+
+System.FreeDownTo FoxPrintout ~ 

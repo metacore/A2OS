@@ -925,17 +925,22 @@ TYPE
 		END Clear;
 		
 		PROCEDURE Grow;
-		VAR old: DiskAdrArray; i,value: LONGINT;
+		VAR old: DiskAdrArray; i,x: LONGINT; index: SIZE;
 		BEGIN
 			old := table;
 			NEW(table, LEN(old)*2); (* filled with zeroes -- ok *)
 			size := LEN(table)-1;
 			count := 0;
 			FOR i := 0 TO LEN(old)-1 DO
-				value := old[i];
-				IF value # 0 THEN
-					table[HashValue(value)] := value;
-					INC(count);
+				x := old[i];
+				IF (x # 0) THEN
+					index := HashValue(x);
+					IF (table[index] = 0) THEN 
+						table[index] := x;
+						INC(count);
+					ELSE
+						HALT(100); (* double entry *)
+					END;
 				END;
 			END;
 		END Grow;
@@ -954,11 +959,17 @@ TYPE
 		END HashValue;
 
 		PROCEDURE Add(x: DiskAdr);
+		VAR index: SIZE;
 		BEGIN {EXCLUSIVE}
 			ASSERT(x # 0);
 			IF count > size DIV threshold THEN Grow END;
-			table[HashValue(x)] := x;
-			INC(count)
+			index := HashValue(x);
+			IF table[index] = 0 THEN 
+				table[index] := x;
+				INC(count);
+			ELSE
+				ASSERT(table[index] = x);
+			END;
 		END Add;
 		
 		PROCEDURE Contains(x: DiskAdr) : BOOLEAN;

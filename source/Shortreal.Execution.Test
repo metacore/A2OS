@@ -1,0 +1,72 @@
+# Oberon language test and validation suite
+# options --mayTrap --prolog="Compiler.Compile TesterInput.txt" --command="System.Free Test B A;System.Load Test" --logFile="FoxExecutionTest.Log" --result="Shortreal.Execution.Test.Diff"
+
+# test halt and assert statements and simple procedure call (basics for the test suite)
+
+positive: test scalar SHORTREAL operators
+
+	MODULE Test;
+	IMPORT Shortreal, Random;
+	CONST NumRetries = 100000;
+	VAR
+		rnd: Random.Generator;
+		t, x0, y0, z0: REAL;
+		x, y, z: Shortreal.SHORTREAL;
+		i: SIZE;
+	BEGIN
+		NEW(rnd);
+		FOR i := 0 TO NumRetries-1 DO
+			t := 2*rnd.Uniform()-1;
+			x0 := LONG(SHORT(t));
+			ASSERT(ABS(x0 - t) <= LONG(Shortreal.eps));
+
+			t := 2*rnd.Uniform()-1;
+			y0 := LONG(SHORT(t));
+			ASSERT(ABS(y0 - t) <= LONG(Shortreal.eps));
+
+			x := SHORT(x0);
+			y := SHORT(y0);
+			z := SHORT(z0);
+
+			ASSERT((x0 = y0) = (x = y));
+			ASSERT((x0 # y0) = (x # y));
+			ASSERT((x0 < y0) = (x < y));
+			ASSERT((x0 <= y0) = (x <= y));
+			ASSERT((x0 > y0) = (x > y));
+			ASSERT((x0 >= y0) = (x >= y));
+
+			ASSERT(-x0 = LONG(-x));
+			ASSERT(-y0 = LONG(-y));
+
+			ASSERT(ABS(x0) = LONG(ABS(x)));
+			ASSERT(ABS(y0) = LONG(ABS(y)));
+
+			ASSERT(MAX(x0,y0) = LONG(MAX(x,y)));
+			ASSERT(MAX(y0,x0) = LONG(MAX(y,x)));
+			ASSERT(MIN(x0,y0) = LONG(MIN(x,y)));
+			ASSERT(MIN(y0,x0) = LONG(MIN(y,x)));
+
+			z0 := x0 + y0;
+			z := x + y;
+			ASSERT(ABS(LONG(z) - z0) <= LONG(Shortreal.eps));
+
+			z0 := x0 - y0;
+			z := x - y;
+			ASSERT(ABS(LONG(z) - z0) <= LONG(Shortreal.eps));
+
+			z0 := x0 * y0;
+			z := x * y;
+			ASSERT(ABS(LONG(z) - z0) <= LONG(Shortreal.eps));
+
+			IF ABS(y0) < LONG(Shortreal.eps) THEN
+				y0 := LONG(SHORT(y0+1));
+				y := SHORT(y0);
+				ASSERT(ABS(LONG(y) - y0) <= LONG(Shortreal.eps));
+			END;
+
+			z0 := x0 / y0;
+			z := x / y;
+			ASSERT(ABS(LONG(z*y) - x0) <= LONG(Shortreal.eps));
+		END;
+	END Test.
+

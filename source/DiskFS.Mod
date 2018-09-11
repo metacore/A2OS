@@ -933,7 +933,10 @@ TYPE
 			count := 0;
 			FOR i := 0 TO LEN(old)-1 DO
 				value := old[i];
-				IF value # 0 THEN Add(value) END;
+				IF value # 0 THEN
+					table[HashValue(value)] := value;
+					INC(count);
+				END;
 			END;
 		END Grow;
 		
@@ -949,7 +952,7 @@ TYPE
 			ASSERT((table[index] = 0) OR (table[index] = key));
 			RETURN index;
 		END HashValue;
-		
+
 		PROCEDURE Add(x: DiskAdr);
 		BEGIN {EXCLUSIVE}
 			ASSERT(x # 0);

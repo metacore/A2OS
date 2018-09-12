@@ -1,10 +1,11 @@
-MODULE PsUart;
 (**
-	AUTHOR: Alexey Morozov, Timothee Martiel, HighDim GmbH, 2013-2018
+	AUTHOR: Alexey Morozov, Timothee Martiel
 	PURPOSE: driver implementation for Xilinx Zynq UART PS controller
 *)
 
-IMPORT SYSTEM, UartMin := PsUartMin, PsUartInterrupts, Trace;
+MODULE PsUart;
+
+IMPORT SYSTEM, PsUartMin, PsUartInterrupts, Trace;
 
 CONST
 	(** Receive errors - compatible with A2 Serials *)
@@ -19,22 +20,22 @@ CONST
 	ReceiveTimeoutInUs* = 500; (** Receive timeout in microseconds *)
 
 	(* RX data interrupts *)
-	RxDataInterrupts = {UartMin.XUARTPS_IXR_TOUT , UartMin.XUARTPS_IXR_RXFULL , UartMin.XUARTPS_IXR_RXOVR};
+	RxDataInterrupts = {PsUartMin.XUARTPS_IXR_TOUT , PsUartMin.XUARTPS_IXR_RXFULL , PsUartMin.XUARTPS_IXR_RXOVR};
 
 	(* RX error interrupts *)
-	RxErrorInterrupts = {UartMin.XUARTPS_IXR_PARITY , UartMin.XUARTPS_IXR_FRAMING , UartMin.XUARTPS_IXR_OVER};
+	RxErrorInterrupts = {PsUartMin.XUARTPS_IXR_PARITY , PsUartMin.XUARTPS_IXR_FRAMING , PsUartMin.XUARTPS_IXR_OVER};
 
 	(* TX data interrupts *)
-	TxDataInterrupts = {UartMin.XUARTPS_IXR_TXEMPTY, UartMin.XUARTPS_IXR_TTRIG};
+	TxDataInterrupts = {PsUartMin.XUARTPS_IXR_TXEMPTY, PsUartMin.XUARTPS_IXR_TTRIG};
 
 	(* TX error interrupts *)
-	TxErrorInterrupts = {UartMin.XUARTPS_IXR_TOVR};
+	TxErrorInterrupts = {PsUartMin.XUARTPS_IXR_TOVR};
 
 TYPE
 
 	UartController* = POINTER TO RECORD
 		id-: LONGINT; (** UART controller ID *)
-		regs-: UartMin.UartRegisters; (** controller registers *)
+		regs-: PsUartMin.UartRegisters; (** controller registers *)
 		inputClock-: LONGINT; (** controller input clock in Hz *)
 		bps-, data-, parity-, stop-: LONGINT; (** current parameter values *)
 
@@ -53,9 +54,9 @@ VAR
 	uarts: ARRAY 2 OF UartController;
 
 	(* Disable all UART interrupts *)
-	PROCEDURE DisableInterrupts(regs: UartMin.UartRegisters);
+	PROCEDURE DisableInterrupts(regs: PsUartMin.UartRegisters);
 	BEGIN
-		regs.idr := UartMin.XUARTPS_IXR_MASK;
+		regs.idr := PsUartMin.XUARTPS_IXR_MASK;
 	END DisableInterrupts;
 
 	PROCEDURE IntrHandler(param: ANY);
@@ -87,7 +88,7 @@ VAR
 	BEGIN
 
 		IF intrStatus * RxErrorInterrupts # {} THEN
-			IF UartMin.XUARTPS_IXR_OVER IN intrStatus THEN
+			IF PsUartMin.XUARTPS_IXR_OVER IN intrStatus THEN
 				INCL(uart.errors,OverrunError);
 				Trace.String("---rx overrun(1)---: intrStatus="); Trace.Set(intrStatus); Trace.Ln;
 				RETURN;
@@ -96,7 +97,7 @@ VAR
 
 		bufWrPos := uart.rxBufWrPos;
 
-		WHILE ~(UartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) DO
+		WHILE ~(PsUartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) DO
 
 			uart.rxBuf[bufWrPos] := CHR(uart.regs.fifo);
 			INC(bufWrPos);
@@ -118,7 +119,7 @@ VAR
 	VAR bufRdPos: LONGINT;
 	BEGIN
 		IF intrStatus * TxErrorInterrupts # {} THEN
-			IF UartMin.XUARTPS_IXR_TOVR IN intrStatus THEN
+			IF PsUartMin.XUARTPS_IXR_TOVR IN intrStatus THEN
 				INCL(uart.errors,OverrunError);
 				Trace.String("---tx overrun---: intrStatus="); Trace.Set(intrStatus); Trace.Ln;
 				RETURN;
@@ -127,7 +128,7 @@ VAR
 
 		bufRdPos := uart.txBufRdPos;
 
-		WHILE (bufRdPos # uart.txBufWrPos) & ~(UartMin.XUARTPS_SR_TXFULL IN uart.regs.sr) DO
+		WHILE (bufRdPos # uart.txBufWrPos) & ~(PsUartMin.XUARTPS_SR_TXFULL IN uart.regs.sr) DO
 			uart.regs.fifo := ORD(uart.txBuf[bufRdPos]);
 			INC(bufRdPos);
 			IF bufRdPos = LEN(uart.txBuf) THEN
@@ -166,20 +167,20 @@ VAR
 	PROCEDURE Install* (uart: LONGINT; base: ADDRESS; inputClock: LONGINT; VAR res: LONGINT);
 	VAR ctl: UartController;
 	BEGIN
-		UartMin.Install(uart, base, inputClock, res);
+		PsUartMin.Install(uart, base, inputClock, res);
 		IF res # 0 THEN RETURN; END;
 
 		NEW(ctl);
 		uarts[uart] := ctl;
 
 		ctl.id := uart;
-		ctl.regs := UartMin.GetUart(uart);
+		ctl.regs := PsUartMin.GetUart(uart);
 		ctl.inputClock := inputClock;
 		ctl.open := FALSE;
-		ctl.bps := UartMin.DefaultBPS;
-		ctl.data := UartMin.DefaultDataBits;
-		ctl.parity := UartMin.DefaultParity;
-		ctl.stop := UartMin.DefaultStop;
+		ctl.bps := PsUartMin.DefaultBPS;
+		ctl.data := PsUartMin.DefaultDataBits;
+		ctl.parity := PsUartMin.DefaultParity;
+		ctl.stop := PsUartMin.DefaultStop;
 
 		NEW(ctl.rxBuf,DefaultRxBufSize);
 		NEW(ctl.txBuf,DefaultTxBufSize);
@@ -215,14 +216,14 @@ VAR
 	PROCEDURE Open*(uart: UartController; bps, data, parity, stop: LONGINT; VAR res: LONGINT);
 	VAR n: LONGINT;
 	BEGIN
-		IF uart.open THEN res := UartMin.PortInUse; RETURN; END;
+		IF uart.open THEN res := PsUartMin.PortInUse; RETURN; END;
 
-		UartMin.Reset(uart.regs);
+		PsUartMin.Reset(uart.regs);
 
-		IF ~UartMin.SetBps(uart.regs, bps, res) OR
-			~UartMin.SetDataBits(uart.regs, data, res) OR
-			~UartMin.SetParity(uart.regs, parity, res) OR
-			~UartMin.SetStopBits(uart.regs, stop, res) THEN  RETURN;
+		IF ~PsUartMin.SetBps(uart.regs, bps, res) OR
+			~PsUartMin.SetDataBits(uart.regs, data, res) OR
+			~PsUartMin.SetParity(uart.regs, parity, res) OR
+			~PsUartMin.SetStopBits(uart.regs, stop, res) THEN  RETURN;
 		END;
 
 		uart.bps := bps;
@@ -242,7 +243,7 @@ VAR
 		TRACE(n);
 		uart.regs.rxtout := n;
 
-		uart.regs.cr := uart.regs.cr + {UartMin.XUARTPS_CR_TORST}; (* restart receive timeout counter *)
+		uart.regs.cr := uart.regs.cr + {PsUartMin.XUARTPS_CR_TORST}; (* restart receive timeout counter *)
 
 		uart.regs.rxwm := 32; (* RX FIFO triggering threshold *)
 
@@ -250,8 +251,8 @@ VAR
 
 		uart.regs.ier := (RxDataInterrupts+RxErrorInterrupts+TxErrorInterrupts);
 
-		UartMin.Enable(uart.regs,TRUE);
-		
+		PsUartMin.Enable(uart.regs,TRUE);
+
 		res := 0;
 		uart.open := TRUE;
 	END Open;
@@ -263,9 +264,11 @@ VAR
 	*)
 	PROCEDURE Close*(uart: UartController);
 	BEGIN
-		uart.open := FALSE;
-		DisableInterrupts(uart.regs);
-		UartMin.Enable(uart.regs,FALSE);
+		IF uart.open THEN
+			uart.open := FALSE;
+			DisableInterrupts(uart.regs);
+			PsUartMin.Enable(uart.regs,FALSE);
+		END;
 	END Close;
 
 	PROCEDURE OccupiedBufSpace(bufWrPos, bufRdPos, bufSize: LONGINT): LONGINT;
@@ -309,17 +312,17 @@ VAR
 		propagate: TRUE for flushing the TX FIFO buffer
 		res: error code, 0 in case of success
 	*)
-	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: UartMin.BusyLoopCallback; VAR res: LONGINT);
+	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT);
 	BEGIN
 		(*! for the moment just write directly to the FIFO *)
 		res := 0;
 		WHILE uart.open DO
-			IF ~(UartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
+			IF ~(PsUartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
 				uart.regs.fifo := ORD(ch); RETURN;
 			END;
 		END;
-		
-		res := UartMin.Closed;
+
+		res := PsUartMin.Closed;
 	(*TYPE ArrayOfChar1 = ARRAY 1 OF CHAR;
 	BEGIN
 		(*!TODO: do not use interrupts here to avoid problems when SendChar is used for trace output *)
@@ -329,12 +332,12 @@ VAR
 	(**
 		Send data to the UART
 	*)
-	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; onBusy: UartMin.BusyLoopCallback; VAR res: LONGINT);
+	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT);
 	VAR
 		bufWrPos, n: LONGINT;
 	BEGIN
 
-		IF ~uart.open THEN res := UartMin.Closed; RETURN; END;
+		IF ~uart.open THEN res := PsUartMin.Closed; RETURN; END;
 
 		WHILE uart.open & (len > 0) DO
 
@@ -373,7 +376,7 @@ VAR
 			END;
 
 			(* flush the FIFO *)
-			WHILE uart.open & ~(UartMin.XUARTPS_SR_TXEMPTY IN uart.regs.sr) DO
+			WHILE uart.open & ~(PsUartMin.XUARTPS_SR_TXEMPTY IN uart.regs.sr) DO
 				IF (onBusy # NIL) & ~onBusy(res) THEN RETURN; END;
 			END;
 		END;
@@ -382,13 +385,13 @@ VAR
 			res := 0;
 		ELSE
 			IF OverrunError IN uart.errors THEN res := OverrunError;
-			ELSE res := UartMin.Closed;
+			ELSE res := PsUartMin.Closed;
 			END;
 		END;
 (*	BEGIN
 
 		WHILE uart.open & (len > 0) DO
-			IF ~(UartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
+			IF ~(PsUartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
 				uart.regs.fifo := ORD(buf[offs]);
 				INC(offs); DEC(len);
 			ELSIF (onBusy # NIL) & ~onBusy(res) THEN
@@ -397,15 +400,15 @@ VAR
 		END;
 
 		IF propagate THEN (* flush the FIFO *)
-			WHILE uart.open & ~(UartMin.XUARTPS_SR_TXEMPTY IN uart.regs.sr) DO
+			WHILE uart.open & ~(PsUartMin.XUARTPS_SR_TXEMPTY IN uart.regs.sr) DO
 				IF (onBusy # NIL) & ~onBusy(res) THEN RETURN; END;
 			END;
 		END;
 
 		IF uart.open THEN
-			res := UartMin.Ok;
+			res := PsUartMin.Ok;
 		ELSE
-			res := UartMin.Closed;
+			res := PsUartMin.Closed;
 		END;*)
 	END Send;
 
@@ -416,7 +419,7 @@ VAR
 
 		Remarks: blocks until a character is available
 	*)
-	PROCEDURE ReceiveChar*(uart: UartController; onBusy: UartMin.BusyLoopCallback; VAR res: LONGINT): CHAR;
+	PROCEDURE ReceiveChar*(uart: UartController; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT): CHAR;
 	VAR
 		buf: ARRAY 1 OF CHAR;
 		len: LONGINT;
@@ -428,11 +431,11 @@ VAR
 	(**
 		Receive data from the UART
 	*)
-	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len: LONGINT; onBusy: UartMin.BusyLoopCallback; VAR res: LONGINT);
+	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len: LONGINT; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT);
 	VAR
 		bufRdPos, n: LONGINT;
 	BEGIN
-		IF ~uart.open THEN res := UartMin.Closed; RETURN; END;
+		IF ~uart.open THEN res := PsUartMin.Closed; RETURN; END;
 
 		res := 0;
 		len := 0;
@@ -479,9 +482,9 @@ VAR
 
 		min := MIN(size,min);
 
-		WHILE uart.open & (~(UartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) OR (min > 0)) DO
-			IF ~(UartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) THEN
-				WHILE (size > 0) & ~(UartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) DO
+		WHILE uart.open & (~(PsUartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) OR (min > 0)) DO
+			IF ~(PsUartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) THEN
+				WHILE (size > 0) & ~(PsUartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) DO
 					buf[offs] := uart.regs.fifo;
 					DEC(min); DEC(size); INC(offs); INC(len);
 				END;
@@ -495,7 +498,7 @@ VAR
 		END;*)
 	END Receive;
 
-	PROCEDURE PrintRegisters(regs: UartMin.UartRegisters);
+	PROCEDURE PrintRegisters(regs: PsUartMin.UartRegisters);
 	BEGIN
 		Trace.String("cr("); Trace.Hex(ADDRESSOF(regs.cr),-8); Trace.String("): "); Trace.Set(regs.cr); Trace.Ln;
 		Trace.String("mr("); Trace.Hex(ADDRESSOF(regs.mr),-8); Trace.String("): "); Trace.Set(regs.mr); Trace.Ln;

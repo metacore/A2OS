@@ -1,4 +1,8 @@
-MODULE PsSerials; (** AUTHOR "Timothée Martiel, 11/2017"; PURPOSE "Serial interface for Zynq PS UARTs"; *)
+(**
+	AUTHOR: Timothee Martiel, Alexey Morozov
+	PURPOSE: A2 Serials interface for Zynq PS UARTs
+*)
+MODULE PsSerials;
 
 IMPORT Platform, BootConfig, Modules, Strings, PsUartMin, PsUart, Serials, Objects, Machine;
 
@@ -6,8 +10,9 @@ TYPE
 	Port = OBJECT (Serials.Port)
 	VAR
 		uart: PsUart.UartController;
-		
-		sendCharLock := FALSE : BOOLEAN;
+
+		recvLock := FALSE : BOOLEAN;
+		sendLock := FALSE : BOOLEAN;
 
 		PROCEDURE & Init (id: LONGINT);
 		BEGIN
@@ -25,7 +30,7 @@ TYPE
 			PsUart.Close(uart);
 		END Close;
 
-		PROCEDURE Yield(VAR res: LONGINT): BOOLEAN;
+		PROCEDURE BusyLoopCallback(VAR res: LONGINT): BOOLEAN;
 		BEGIN
 			IF uart.open THEN
 				Objects.Yield;
@@ -34,9 +39,9 @@ TYPE
 				res := Serials.Closed;
 				RETURN FALSE;
 			END;
-		END Yield;
+		END BusyLoopCallback;
 
-		PROCEDURE Yield0(VAR res: LONGINT): BOOLEAN;
+		PROCEDURE BusyLoopCallback0(VAR res: LONGINT): BOOLEAN;
 		BEGIN
 			IF uart.open THEN
 				RETURN TRUE;
@@ -44,34 +49,45 @@ TYPE
 				res := Serials.Closed;
 				RETURN FALSE;
 			END;
-		END Yield0;
+		END BusyLoopCallback0;
 
+		(*! This method can be used for trace output *)
 		PROCEDURE SendChar(char: CHAR; VAR res: LONGINT);
 		BEGIN
-			Machine.AcquireObject(sendCharLock);
-			(*! use Yield0 method to make sure no low-level lock is acquired here - required when used as trace output *)
-			PsUart.SendChar(uart, char, TRUE, Yield0, res);
+			Machine.AcquireObject(sendLock);
+			(*! use BusyLoopCallback0 method to make sure no low-level lock is acquired here - required when used as trace output *)
+			PsUart.SendChar(uart, char, TRUE, BusyLoopCallback0, res);
 		FINALLY
-			Machine.ReleaseObject(sendCharLock);
+			Machine.ReleaseObject(sendLock);
 		END SendChar;
 
+		(*! This method must not be used for trace output! *)
 		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
 		BEGIN
-			PsUart.Send(uart, buf, ofs, len, propagate, Yield, res);
+			Machine.AcquireObject(sendLock);
+			PsUart.Send(uart, buf, ofs, len, propagate, BusyLoopCallback, res);
+		FINALLY
+			Machine.ReleaseObject(sendLock);
 		END Send;
 
 		PROCEDURE ReceiveChar(VAR char: CHAR; VAR res: LONGINT);
 		BEGIN
-			char := PsUart.ReceiveChar(uart, Yield, res);
+			Machine.AcquireObject(recvLock);
+			char := PsUart.ReceiveChar(uart, BusyLoopCallback, res);
+		FINALLY
+			Machine.ReleaseObject(recvLock);
 		END ReceiveChar;
 
 		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
 		BEGIN
-			PsUart.Receive(uart, buf, ofs, size, min, len, Yield, res);
+			Machine.AcquireObject(recvLock);
+			PsUart.Receive(uart, buf, ofs, size, min, len, BusyLoopCallback, res);
+		FINALLY
+			Machine.ReleaseObject(recvLock);
 		END Receive;
 
 		PROCEDURE Available(): LONGINT;
-		BEGIN
+		BEGIN{EXCLUSIVE}
 			RETURN PsUart.Available(uart);
 		END Available;
 

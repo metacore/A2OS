@@ -5263,12 +5263,12 @@ TYPE
 						actualParameters.SetExpression(0,parameter0);
 						actualParameters.SetExpression(1,parameter1);
 						IF IsRealValue(parameter0,r0) & IsRealValue(parameter1,r1) THEN
-							IF r0 > r1 THEN result.SetResolved(parameter0(SyntaxTree.Value))
-							ELSE result.SetResolved(parameter0(SyntaxTree.Value))
+							IF r0 > r1 THEN result.SetResolved(parameter0.resolved)
+							ELSE result.SetResolved(parameter0.resolved)
 							END;
 						ELSIF IsIntegerValue(parameter0,i0) & IsIntegerValue(parameter1,i1) THEN
-							IF i0 > i1 THEN result.SetResolved(parameter0(SyntaxTree.Value))
-							ELSE result.SetResolved(parameter1(SyntaxTree.Value))
+							IF i0 > i1 THEN result.SetResolved(parameter0.resolved)
+							ELSE result.SetResolved(parameter1.resolved)
 							END;
 						END;
 						type := parameter0.type;

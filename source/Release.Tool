@@ -344,7 +344,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	KernelLog.Mod
 
 	# Services and device drivers
-	Plugins.Mod Streams.Mod Pipes.Mod Commands.Mod
+	Plugins.Mod RealConversions.Mod Streams.Mod Pipes.Mod Commands.Mod
 	In.Mod Out.Mod
 
 	I386 { I386.Reals.Mod }

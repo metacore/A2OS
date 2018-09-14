@@ -1,6 +1,6 @@
 MODULE Strings; (** AUTHOR "be,tf, staubesv"; PURPOSE "String functions" *)
 
-IMPORT SYSTEM, Streams, Reals, Dates;
+IMPORT Streams, Dates, RC := RealConversions;
 
 CONST
 	Ok* = 0;
@@ -82,6 +82,56 @@ TYPE
 
 	END Buffer;
 
+
+	
+	
+	OPERATOR "+"*( a: String; CONST b: ARRAY OF CHAR ): String;
+	VAR str: String; 
+	BEGIN
+		NEW( str, LEN( a ) + Length( b ) );  
+		COPY( a^, str^ );  Append( str^, b );
+		RETURN str
+	END "+"; 
+
+	OPERATOR "+"*( a: String; b: CHAR ): String;
+	VAR str: String; 
+	BEGIN
+		NEW( str, LEN( a ) + 1 );  
+		COPY( a^, str^ );  AppendChar( str^, b );
+		RETURN str
+	END "+"; 
+	
+	OPERATOR "+"*( a, b: String ): String;
+	VAR str: String; 
+	BEGIN
+		NEW( str, LEN( a ) + LEN( b ) );  
+		COPY( a^, str^ );  Append( str^, b^ );
+		RETURN str
+	END "+"; 
+	
+	OPERATOR "+"*( a: String; b: HUGEINT ): String;
+	VAR 
+		digits: ARRAY 32 OF CHAR;
+		str: String;  
+	BEGIN
+		IntToStr( b, digits );
+		NEW( str, LEN( a ) + Length( digits ) );  
+		COPY( a^, str^ );  Append( str^, digits );
+		RETURN str
+	END "+"; 
+
+	OPERATOR "+"*( a: String; b: LONGREAL ): String;
+	VAR 
+		digits: ARRAY 32 OF CHAR;
+		str: String;  
+	BEGIN
+		RC.RealToString( b, 18, digits );
+		NEW( str, LEN( a ) + Length( digits ) );  
+		COPY( a^, str^ );  Append( str^, digits );
+		RETURN str
+	END "+"; 
+	
+	
 (** useful functions *)
 
 PROCEDURE Min*(a,b: LONGINT): LONGINT;
@@ -648,70 +698,8 @@ END HexStrToInt;
 (** converts a real value to a string *)
 (* adopted from Strings.Mod *)
 PROCEDURE FloatToStr*(x: LONGREAL; n, f, D: LONGINT; VAR str: ARRAY OF CHAR);
-VAR pos, len, e, i, h, l: LONGINT; r, z: LONGREAL; d: ARRAY 16 OF CHAR; s: CHAR;
-
-	PROCEDURE Wr(ch: CHAR);
-	BEGIN IF pos < len THEN str[pos] := ch; INC(pos) END;
-	END Wr;
-
 BEGIN
-	len := LEN(str)-1; pos := 0;
-	e := Reals.ExpoL(x);
-	IF (e = 2047) OR (ABS(D) > 308) THEN
-		Wr("N"); Wr("a"); Wr("N")
-	ELSE
-		IF D = 0 THEN DEC(n, 2) ELSE DEC(n, 7) END;
-		IF n < 2 THEN n := 2 END;
-		IF f < 0 THEN f := 0 END;
-		IF n < f + 2 THEN n := f + 2 END;
-		DEC(n, f);
-		IF (e # 0) & (x < 0) THEN s := "-"; x := - x ELSE s := " " END;
-		IF e = 0 THEN
-			h := 0; l := 0; DEC(e, D-1) (* no denormals *)
-		ELSE
-			e := (e - 1023) * 301029 DIV 1000000; (* ln(2)/ln(10) = 0.301029996 *)
-			z := Reals.Ten(e+1);
-			IF x >= z THEN x := x/z; INC(e) ELSE x:= x * Reals.Ten(-e) END;
-			DEC(e, D-1); i := -(e+f);
-			IF i <= 0 THEN r := 5 * Reals.Ten(i) ELSE r := 0 END;
-			IF x >= 10 THEN
-				x := x * Reals.Ten(-1) + r; INC(e)
-			ELSE
-				x := x + r;
-				IF x >= 10 THEN x := x * Reals.Ten(-1); INC(e) END
-			END;
-			x := x * Reals.Ten(7); h:= ENTIER(x); x := (x-h) * Reals.Ten(8); l := ENTIER(x)
-		END;
-		i := 15;
-		WHILE i > 7 DO d[i] := CHR(l MOD 10 + ORD("0")); l := l DIV 10; DEC(i) END;
-		WHILE i >= 0 DO d[i] := CHR(h MOD 10 + ORD("0")); h := h DIV 10; DEC(i) END;
-		IF n <= e THEN n := e + 1 END;
-		IF e > 0 THEN
-			WHILE n > e DO Wr(" "); DEC(n) END;
-			Wr(s); e:= 0;
-			WHILE n > 0 DO
-				DEC(n);
-				IF e < 16 THEN Wr(d[e]); INC(e) ELSE Wr("0") END
-			END;
-			Wr(".")
-		ELSE
-			WHILE n > 1 DO Wr(" "); DEC(n) END;
-			Wr(s); Wr("0"); Wr(".");
-			WHILE (0 < f) & (e < 0) DO Wr("0"); DEC(f); INC(e) END
-		END;
-		WHILE f > 0 DO
-			DEC(f);
-			IF e < 16 THEN Wr(d[e]); INC(e) ELSE Wr("0") END
-		END;
-		IF D # 0 THEN
-			IF D < 0 THEN Wr("D"); Wr("-"); D := - D
-			ELSE Wr("D"); Wr("+")
-			END;
-			Wr(CHR(D DIV 100 + ORD("0"))); D := D MOD 100;
-			Wr(CHR(D DIV 10 + ORD("0"))); Wr(CHR(D MOD 10 + ORD("0")))
-		END
-	END;
-	str[pos] := 0X
+	RC.RealToStringFix( x, n, f, D, str )
 END FloatToStr;
 
 PROCEDURE AddressToStr*(adr : ADDRESS; VAR str : ARRAY OF CHAR);
@@ -722,41 +710,10 @@ END AddressToStr;
 (** converts a string to a real value *)
 (* adopted from Strings.Mod *)
 PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
-VAR p, e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN;
+VAR sr: Streams.StringReader;
 BEGIN
-	p := 0;
-	WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
-	IF s[p] = "-" THEN neg := TRUE; INC(p) ELSE neg := FALSE END;
-	WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
-
-	y := 0;
-	WHILE ("0" <= s[p]) & (s[p] <= "9") DO
-		y := y * 10 + (ORD(s[p]) - 30H);
-		INC(p);
-	END;
-	IF s[p] = "." THEN
-		INC(p); g := 1;
-		WHILE ("0" <= s[p]) & (s[p] <= "9") DO
-			g := g / 10; y := y + g * (ORD(s[p]) - 30H);
-			INC(p);
-		END;
-	END;
-	IF (s[p] = "d") OR (s[p] = "D") OR (s[p] = "e") OR (s[p] = "E") THEN
-		INC(p); e := 0;
-		IF s[p] = "-" THEN negE := TRUE; INC(p)
-		ELSIF s[p] = "+" THEN negE := FALSE; INC(p)
-		ELSE negE := FALSE
-		END;
-		WHILE (s[p] = "0") DO INC(p) END;
-		WHILE ("0" <= s[p]) & (s[p] <= "9") DO
-			e := e * 10 + (ORD(s[p]) - 30H);
-			INC(p);
-		END;
-		IF negE THEN y := y / Reals.Ten(e)
-		ELSE y := y * Reals.Ten(e) END;
-	END;
-	IF neg THEN y := -y END;
-	r := y
+	NEW( sr, 64 );  sr.Set( s );
+	r := RC.ScanReal( sr.Get );
 END StrToFloat;
 
 (** converts a set to a string *)

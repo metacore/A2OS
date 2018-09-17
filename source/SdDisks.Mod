@@ -226,6 +226,7 @@ TYPE
 					SdEnvironment.String("Removed disk ");
 					SdEnvironment.String(devices.name);
 					SdEnvironment.Ln;
+					disk := devices;
 					devices := devices.next
 				ELSE
 					disk := devices;
@@ -240,6 +241,9 @@ TYPE
 					SdEnvironment.Ln;
 					prev.next := disk.next
 				END;
+				
+				disk.next := NIL;
+				Disks.registry.Remove(disk);
 		END
 	END HandleSdEvent;
 

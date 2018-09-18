@@ -130,8 +130,10 @@ BEGIN
 		ExpandAlias(alias, genvol, genfs);
 		IF (Files.This(prefix) # NIL) THEN
 			context.error.String(prefix); context.error.String("; already used"); context.error.Ln;
+			context.result := Commands.CommandError;
 		ELSIF (genvol = "") OR (genfs = "") THEN
 			context.error.String(prefix); context.error.String(": unknown alias "); context.error.String(alias); context.error.Ln;
+			context.result := Commands.CommandError;
 		ELSE
 			IF genvol # "NIL" THEN
 				NEW(parvol, context.in, context.arg, context.out, context.error, context.caller);
@@ -165,11 +167,12 @@ BEGIN
 					parvol.vol.Finalize()	(* unmount volume *)
 				END
 			ELSE
-				(* skip *)
+				context.result := Commands.CommandError;
 			END
 		END;
 	ELSE
 		context.error.String('Expected parameters: prefix alias ([volpar] ["|" fspar]'); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END Mount;
 
@@ -199,9 +202,11 @@ BEGIN
 		ELSE
 			context.error.String(prefix); context.error.Char(":");
 			context.error.String(" can't unmount boot volume. Use \f parameter to force unmounting."); context.error.Ln;
+			context.result := Commands.CommandError;
 		END
 	ELSE
 		context.error.String(prefix); context.error.Char(":"); context.error.String(" not found"); context.error.Ln;
+		context.result := Commands.CommandError;
 	END
 END Unmount;
 
@@ -221,11 +226,12 @@ BEGIN
 		END
 	ELSE
 		context.error.String(prefix);  context.error.String(": not found"); context.error.Ln;
+		context.result := Commands.CommandError;
 	END;
 END SetDefault;
 
 (* using the NIST standard for Kibi, Mebi & Gibi: http://physics.nist.gov/cuu/Units/binary.html *)
-PROCEDURE WriteK( k: Files.Position; out : Streams.Writer);
+PROCEDURE WriteK( k: HUGEINT; out : Streams.Writer);
 VAR suffix: ARRAY 3 OF CHAR;
 BEGIN
 	IF k < 10*1024 THEN COPY("Ki", suffix)
@@ -265,11 +271,11 @@ BEGIN
 	END;
 	IF ~found THEN
 		IF (prefix = "") THEN
-			context.out.String("No file systems found."); context.out.Ln;
+			context.error.String("No file systems found.");
 		ELSE
-			context.out.String("File system "); context.out.String(prefix); context.out.String(" not found.");
-			context.out.Ln;
+			context.error.String("File system "); context.error.String(prefix); context.error.String(" not found.");
 		END;
+		context.error.Ln; context.result := Commands.CommandError;
 	END;
 END Watch;
 
@@ -332,6 +338,8 @@ BEGIN
 			END
 		END;
 		context.out.Ln;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Directory;
 
@@ -421,17 +429,20 @@ BEGIN
 					EnumerateDirectory(enum, enumProc, options, enumContext, filemask, arguments^);
 					enum.Close;
 				ELSE
-					context.out.String("Procedure "); context.out.String(commandProcStr); context.out.String(" not found");
-					context.out.Ln;
+					context.error.String("Procedure "); context.error.String(commandProcStr); context.error.String(" not found");
+					context.error.Ln; context.result := Commands.CommandError;
 				END;
 			ELSE
-				context.out.String("Command procedure error, res: "); context.out.Int(res, 0);
-				context.out.String(" ("); context.out.String(msg); context.out.String(")");
-				context.out.Ln;
+				context.error.String("Command procedure error, res: "); context.error.Int(res, 0);
+				context.error.String(" ("); context.error.String(msg); context.error.String(")");
+				context.error.Ln; context.result := Commands.CommandError;
 			END;
 		ELSE
-			context.out.String("FSTools64.Enumerate [Options] pattern ~"); context.out.Ln;
+			context.error.String("FSTools64.Enumerate [Options] pattern ~"); context.error.Ln;
+			context.result := Commands.CommandParseError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END Enumerate;
 
@@ -480,7 +491,10 @@ BEGIN
 			context.out.String("Created file "); context.out.String(filename); context.out.Ln;
 		ELSE
 			context.out.String("FSTools64.CreateFile filename [content] ~"); context.out.Ln;
+			context.result := Commands.CommandParseError;
 		END;
+	ELSE
+		context.result := Commands.CommandParseError;
 	END;
 END CreateFile;
 
@@ -503,12 +517,14 @@ BEGIN
 			context.error.String("Error: Could not copy file "); context.error.String(sourceFullname);
 			context.error.String(" to "); context.error.String(targetFullname); context.error.String(", res: ");
 			context.error.Int(res, 0); context.error.Ln;
+			context.result := Commands.CommandError;
 			RETURN;
 		END;
 	END;
 	context.out.Int(nofFilesCopied, 0); context.out.String(" files copied");
 	IF (nofErrors > 0) THEN
 		context.out.String(" ("); context.out.Int(nofErrors, 0); context.out.String(" errors)");
+		context.result := Commands.CommandError;
 	END;
 	context.out.Ln;
 END CopyTo;
@@ -561,6 +577,7 @@ BEGIN
 					context.error.String("failed "); ShowRes(context.error, res); context.error.Ln;
 					context.error.Update;
 					error := TRUE;
+					IF ~ignoreErrors THEN context.result := Commands.CommandError END;
 				END;
 			END;
 		END;
@@ -568,6 +585,7 @@ BEGIN
 			context.out.Int(n, 0); context.out.String(" of "); context.out.Int(nofFiles, 0);  context.out.String(" files copied."); context.out.Ln;
 		ELSE
 			context.out.String("No files copied."); context.out.Ln;
+			IF ~ignoreErrors THEN context.result := Commands.CommandError END;
 		END;
 	END;
 END CopyFiles;
@@ -636,6 +654,7 @@ BEGIN
 					END;
 					context.out.String("failed "); ShowRes(context.out, res); context.out.Ln;
 					error := TRUE;
+					IF ~ignoreErrors THEN context.result := Commands.CommandError END;
 				END;
 				INC(n);
 				context.out.Update;
@@ -645,6 +664,7 @@ BEGIN
 			context.out.String("No files matching the mask found."); context.out.Ln;
 		ELSE
 			context.error.String("Syntax Error: No files deleted"); context.error.Ln;
+			IF ~ignoreErrors THEN context.result := Commands.CommandError END;
 		END;
 	END;
 END DeleteFiles;
@@ -677,6 +697,7 @@ BEGIN
 				IF res # Files.Ok THEN
 					context.error.String("failed "); ShowRes(context.error, res); context.error.Ln;
 					error := TRUE;
+					IF ~ignoreErrors THEN context.result := Commands.CommandError END;
 				ELSE
 					context.out.String("done."); context.out.Ln;
 					INC(n);
@@ -687,6 +708,7 @@ BEGIN
 			context.out.Int(n, 0); context.out.String(" of "); context.out.Int(nofFiles, 0); context.out.String(" files renamed."); context.out.Ln;
 		ELSE
 			context.out.String("No files renamed."); context.out.Ln;
+			IF ~ignoreErrors THEN context.result := Commands.CommandError END;
 		END;
 	END;
 END RenameFiles;
@@ -699,9 +721,11 @@ BEGIN
 		IF (res # Files.Ok) THEN
 			context.out.String("Could not create directory '"); context.out.String(path); context.out.String("', res: ");
 			ShowRes(context.out, res); context.out.Ln;
+			context.result := Commands.CommandError;
 		END;
 	ELSE
-		context.out.String("Usage: FSTools64.CreateDirectory <path> ~"); context.out.Ln;
+		context.error.String("Usage: FSTools64.CreateDirectory <path> ~"); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END CreateDirectory;
 
@@ -713,9 +737,11 @@ BEGIN
 		IF (res # Files.Ok) THEN
 			context.out.String("Could not delete directory '"); context.out.String(path); context.out.String("', res: ");
 			ShowRes(context.out, res); context.out.Ln;
+			context.result := Commands.CommandError;
 		END;
 	ELSE
-		context.out.String("Usage: FSTools64.DeleteDirectory <path> ~"); context.out.Ln;
+		context.error.String("Usage: FSTools64.DeleteDirectory <path> ~"); context.error.Ln;
+		context.result := Commands.CommandParseError;
 	END;
 END DeleteDirectory;
 
@@ -818,11 +844,11 @@ BEGIN
 			END;
 		ELSE
 			context.error.String("File "); context.error.String(filename); context.error.String(" not found");
-			context.error.Ln;
+			context.error.Ln; context.result := Commands.CommandError;
 		END;
 	ELSE
 		context.error.String("File "); context.error.String(filename); context.error.String(" not found");
-		context.error.Ln;
+		context.error.Ln; context.result := Commands.CommandParseError;
 	END;
 END CompareFiles;
 
@@ -900,11 +926,13 @@ BEGIN
 
 	IF (CountCharacters(mask, "?") > 0) THEN
 		context.error.String("Syntax Error in "); context.error.String(mask); context.error.String(": '?' matching characters not implemented for target mask"); context.error.Ln;
+		context.result := Commands.CommandError;
 		RETURN FALSE;
 	END;
 
 	IF (CountCharacters(prefix, "*") # 0) OR (CountCharacters(path, "*") # 0) THEN
 		context.error.String("Syntax Error in "); context.error.String(mask); context.error.String(": Target prefix/path may not contain '*' characters"); context.error.Ln;
+		context.result := Commands.CommandError;
 		RETURN FALSE;
 	END;
 
@@ -997,7 +1025,7 @@ BEGIN
 			done := TRUE;
 		ELSE
 			context.error.String("Command parsing error (res: "); context.error.Int(context.arg.res, 0); context.error.String(")");
-			error := TRUE;
+			error := TRUE; context.result := Commands.CommandError;
 		END;
 	END;
 	IF error THEN count := Error; END;
@@ -1020,6 +1048,7 @@ BEGIN
 	ELSE
 		count := Error;
 		context.error.String("Expected two filenames as arguments"); context.error.Ln;
+		context.result := Commands.CommandError;
 	END;
 	RETURN count;
 END GetSimpleFileLists;
@@ -1063,7 +1092,7 @@ BEGIN
 			error := TRUE;
 		END;
 	END;
-	IF error THEN count := Error; END;
+	IF error THEN count := Error; context.result := Commands.CommandError END;
 	RETURN count;
 END GetFileLists;
 

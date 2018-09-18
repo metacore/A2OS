@@ -21,8 +21,6 @@ CONST
 CONST
 	CR = 0DX;  LF = 0AX;  TAB = 9X;  SP = 20X;
 
-TYPE
-	TSize* = LONGINT;
 
 TYPE
 	Position* = LONGINT;
@@ -31,14 +29,14 @@ TYPE
 	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 
 	(** Any stream input procedure or method. *)
-	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
 
 	Connection* = OBJECT
 
 		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 		END Send;
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
 		END Receive;
 
 		PROCEDURE Close*;
@@ -52,7 +50,7 @@ TYPE
 	VAR
 		tail: LONGINT;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: LONGINT; (** result of last output operation. *)
+		res*: WORD; (** result of last output operation. *)
 		send: Sender;
 		sent*: LONGINT;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
@@ -390,7 +388,7 @@ TYPE
 
 	(** Write LONGREAL x  using n character positions. *)
 		PROCEDURE Float*( x: LONGREAL;  n: WORD );
-		VAR 
+		VAR
 			buf: ARRAY 32 OF CHAR;
 		BEGIN
 			RC.RealToString( x, n, buf );
@@ -405,7 +403,6 @@ TYPE
 			RC.RealToStringFix( x, n, f, D, buf );
 			String( buf )
 		END FloatFix;
-
 	END Writer;
 
 	(** A special writer that buffers output to be fetched by GetString or GetRawString. *)
@@ -463,7 +460,7 @@ TYPE
 	VAR
 		head, tail: LONGINT;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: LONGINT;   (** result of last input operation. *)
+		res*: WORD;   (** result of last input operation. *)
 		receive: Receiver;
 		received*: LONGINT;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
@@ -878,7 +875,7 @@ TYPE
 			head := pos;  tail := LEN( buf );  received := LEN( buf );  res := Ok;
 		END SetPos;
 
-		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
 		BEGIN
 			IF min = 0 THEN res := Ok ELSE res := EOF END;
 			len := 0;
@@ -942,7 +939,7 @@ VAR
 
 
 BEGIN
-	months := " Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"; 
+	months := " Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec";
 END Streams.
 
 (**

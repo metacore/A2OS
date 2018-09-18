@@ -21,9 +21,12 @@ CONST
 CONST
 	CR = 0DX;  LF = 0AX;  TAB = 9X;  SP = 20X;
 
+TYPE
+	BufferOffset*	= LONGINT; (* offset in the stream biffer *)
 
 TYPE
-	Position* = LONGINT;
+	Position* = LONGINT; (* position in the stream *)
+	StreamSize* = LONGINT; (* size of hte stream *)
 
 	(** Any stream output procedure or method. *)
 	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );

@@ -57,7 +57,8 @@ CONST
 	NeedsPrefix* = 0; (* if no prefix given, then this file system cannot handle it, to prevent file systems from being in the search path *)
 
 TYPE
-	TSize* = Streams.TSize;
+	Position* = Streams.Position;
+	TSize* = LONGINT;
 
 TYPE
 (** All record fields are read-only for users, and read-write for extenders. *)

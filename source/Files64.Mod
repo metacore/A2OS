@@ -70,7 +70,7 @@ TYPE
 	Rider* = RECORD	(** not shareable between multiple processes *)
 		(* the rider must be a record, otherwise the Oberon text system will not work *)
 		eof*: BOOLEAN;	(** has end of file been passed *)
-		res*: Streams.Offset;	(** leftover byte count for ReadBytes/WriteBytes *)
+		res*: Streams.BufferOffset;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
 		apos*: Streams.Position;
 		bpos*: LONGINT;
@@ -87,7 +87,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: Streams.Offset; VAR len: Streams.Offset; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: Streams.BufferOffset; VAR len: Streams.BufferOffset; VAR res: WORD);
 		BEGIN
 			file.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -125,7 +125,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: Streams.Offset; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: Streams.BufferOffset; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			r.file.WriteBytes(r, buf, ofs, len);
 			IF propagate THEN r.file.Update END;
@@ -279,7 +279,7 @@ TYPE
 
 		(** Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 
-		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: Streams.Offset);
+		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: Streams.BufferOffset);
 		BEGIN HALT(301) END ReadBytes;	(* abstract *)
 
 		(** Write a byte into the file at the Rider position, advancing the Rider by one. *)
@@ -289,7 +289,7 @@ TYPE
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
 
-		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: Streams.Offset);
+		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: Streams.BufferOffset);
 		BEGIN HALT(301) END WriteBytes;	(* abstract *)
 
 		(** Return the current length of a file. *)
@@ -384,7 +384,7 @@ TYPE
 			IF ~r.eof THEN
 				name[len] := 0X;	(* index check *)
 				r.file.ReadBytes(r, name, 0, len);
-				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadTSize(r, size);
+				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadFileSize(r, size);
 				ASSERT(~r.eof)
 			END;
 			RETURN ~r.eof
@@ -407,7 +407,7 @@ TYPE
 			INC(SELF.size);
 			len := 0; WHILE name[len] # 0X DO INC(len) END;
 			WriteNum(r, len); r.file.WriteBytes(r, name, 0, len);
-			WriteSet(r, flags); WriteNum(r, time); WriteNum(r, date); WriteTSize(r, size)
+			WriteSet(r, flags); WriteNum(r, time); WriteNum(r, date); WriteFileSize(r, size)
 		END PutEntry;
 
 	END Enumerator;
@@ -811,7 +811,7 @@ VAR writer : Writer;
 	reader : Reader;
 	file : File;
 	chunk : ARRAY 4096 OF CHAR;
-	len : Streams.Offset;
+	len : Streams.BufferOffset;
 BEGIN
 	IF fileClipboard = NIL THEN RETURN END;
 	IF Old(name) # NIL THEN res := FileAlreadyExists;			(* File already exists *)
@@ -893,8 +893,8 @@ BEGIN
 		dfile.WriteBytes(dPos, buffer, 0, BufferSize);
 		INC(i);
 	END;
-	sfile.ReadBytes(sPos, buffer, 0, Streams.Offset(sfile.Length() MOD BufferSize));
-	dfile.WriteBytes(dPos, buffer, 0, Streams.Offset(sfile.Length() MOD BufferSize));
+	sfile.ReadBytes(sPos, buffer, 0, Streams.BufferOffset(sfile.Length() MOD BufferSize));
+	dfile.WriteBytes(dPos, buffer, 0, Streams.BufferOffset(sfile.Length() MOD BufferSize));
 	dfile.Update;
 	Register(dfile); (* Will enter exclusive region *)
 END CopyFile;
@@ -1080,12 +1080,12 @@ BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END ReadHInt;
 
-PROCEDURE ReadTSize*(VAR r: Rider; VAR x: Streams.Position);
+PROCEDURE ReadFileSize*(VAR r: Rider; VAR x: Streams.Position);
 CONST Size = SIZEOF (Streams.Position);
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
-END ReadTSize;
+END ReadFileSize;
 
 PROCEDURE ReadSet*(VAR r: Rider; VAR x: SET);
 CONST Size = SIZEOF (SET);
@@ -1161,12 +1161,12 @@ BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END WriteHInt;
 
-PROCEDURE WriteTSize*(VAR r: Rider; x: Streams.Position);
+PROCEDURE WriteFileSize*(VAR r: Rider; x: Streams.Position);
 CONST Size = SIZEOF (Streams.Position);
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
-END WriteTSize;
+END WriteFileSize;
 
 PROCEDURE WriteSet*(VAR r: Rider; x: SET);
 CONST Size = SIZEOF (SET);
@@ -1191,7 +1191,7 @@ BEGIN
 END WriteLReal;
 
 PROCEDURE WriteString*(VAR r: Rider; x: ARRAY OF CHAR);
-VAR i: Streams.Offset;
+VAR i: Streams.BufferOffset;
 BEGIN
 	i := 0; WHILE x[i] # 0X DO INC(i) END;
 	r.file.WriteBytes(r, x, 0, i+1)

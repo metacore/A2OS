@@ -2,7 +2,7 @@
 
 MODULE Streams64;   (** AUTHOR "pjm/be"; PURPOSE "I/O buffering and formatted writing and reading"; *)
 
-IMPORT SYSTEM;
+IMPORT SYSTEM, RC := RealConversions;
 
 CONST
 	Ok* = 0;   (** zero result code means no error occurred *)
@@ -16,29 +16,30 @@ CONST
 	DefaultWriterSize* = 4096;
 	DefaultReaderSize* = 4096;
 
+	Invalid* = -1;  (** invalid stream position *)
+
 CONST
 	CR = 0DX;  LF = 0AX;  TAB = 9X;  SP = 20X;
 
-VAR
-	H, L: INTEGER;
+TYPE
+	BufferOffset*	= LONGWORD; (* offset in the stream biffer *)
 
 TYPE
-	Position*		= HUGEINT;
-	Offset*	= LONGWORD;
+	Position* = HUGEINT; (* position in the stream *)
+	StreamSize* = HUGEINT; (* size of hte stream *)
 
-TYPE
 	(** Any stream output procedure or method. *)
-	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: Offset;  propagate: BOOLEAN;  VAR res: WORD );
+	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: BufferOffset;  propagate: BOOLEAN;  VAR res: WORD );
 
 	(** Any stream input procedure or method. *)
-	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: Offset;  VAR len: Offset; VAR res: WORD );
+	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: BufferOffset;  VAR len: BufferOffset; VAR res: WORD );
 
 	Connection* = OBJECT
 
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: Offset;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: BufferOffset;  propagate: BOOLEAN;  VAR res: WORD );
 		END Send;
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: Offset;  VAR len: Offset; VAR res: WORD );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: BufferOffset;  VAR len: BufferOffset; VAR res: WORD );
 		END Receive;
 
 		PROCEDURE Close*;
@@ -46,18 +47,18 @@ TYPE
 
 	END Connection;
 
-	(** A writer buffers output before it is sent to a Sender.  Must not be shared between processes. *)
 TYPE
+	(** A writer buffers output before it is sent to a Sender.  Must not be shared between processes. *)
 	Writer* = OBJECT
 	VAR
-		tail: Offset;
+		tail: BufferOffset;
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: WORD; (** result of last output operation. *)
 		send: Sender;
 		sent*: Position;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
 
-		PROCEDURE & InitWriter*( send: Sender;  size: Offset );
+		PROCEDURE & InitWriter*( send: Sender;  size: BufferOffset );
 		BEGIN
 			ASSERT ( send # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -108,8 +109,8 @@ TYPE
 		END Char;
 
 	(** Write len bytes from x, starting at ofs. *)
-		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: Offset );
-		VAR n: Offset;
+		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: BufferOffset );
+		VAR n: BufferOffset;
 		BEGIN
 			ASSERT ( len >= 0 );
 			LOOP
@@ -390,123 +391,32 @@ TYPE
 
 	(** Write LONGREAL x  using n character positions. *)
 		PROCEDURE Float*( x: LONGREAL;  n: WORD );
-		(* BM 1993.4.22. Do not simplify rounding! *)
-		VAR e, h, l, i: LONGINT;  z: LONGREAL;
-			d: ARRAY 16 OF CHAR;
+		VAR
+			buf: ARRAY 32 OF CHAR;
 		BEGIN
-			e := ExpoL( x );
-			IF e = 2047 THEN
-				WHILE n > 5 DO Char( " " );  DEC( n ) END;
-				NaNCodeL( x, h, l );
-				IF (h # 0) OR (l # 0) THEN String( "      NaN" )
-				ELSIF x < 0 THEN String( "     -INF" )
-				ELSE String( "      INF" )
-				END
-			ELSE
-				IF n <= 9 THEN n := 1 ELSE DEC( n, 8 ) END;
-				REPEAT Char( " " );  DEC( n ) UNTIL n <= 15;   (* 0 <= n <= 15 fraction digits *)
-				IF (e # 0) & (x < 0) THEN Char( "-" );  x := -x ELSE Char( " " ) END;
-				IF e = 0 THEN
-					h := 0;  l := 0 (* no denormals *)
-				ELSE
-					e := (e - 1023) * 301029 DIV 1000000;   (* ln(2)/ln(10) = 0.301029996 *)
-					z := Ten( e + 1 );
-					IF x >= z THEN x := x / z;  INC( e ) ELSE x := x * Ten( -e ) END;
-					IF x >= 10 THEN x := x * Ten( -1 ) + 0.5D0 / Ten( n );  INC( e )
-					ELSE
-						x := x + 0.5D0 / Ten( n );
-						IF x >= 10 THEN x := x * Ten( -1 );  INC( e ) END
-					END;
-					x := x * Ten( 7 );  h := ENTIER( x );  x := (x - h) * Ten( 8 );  l := ENTIER( x )
-				END;
-				i := 15;
-				WHILE i > 7 DO d[i] := CHR( l MOD 10 + ORD( "0" ) );  l := l DIV 10;  DEC( i ) END;
-				WHILE i >= 0 DO d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i ) END;
-				Char( d[0] );  Char( "." );  i := 1;
-				WHILE i <= n DO Char( d[i] );  INC( i ) END;
-				IF e < 0 THEN String( "E-" );  e := -e ELSE String( "E+" ) END;
-				Char( CHR( e DIV 100 + ORD( "0" ) ) );  e := e MOD 100;  Char( CHR( e DIV 10 + ORD( "0" ) ) );  Char( CHR( e MOD 10 + ORD( "0" ) ) )
-			END
+			RC.RealToString( x, n, buf );
+			String( buf )
 		END Float;
 
 	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
 		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: WORD );
-		(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
-		VAR e, h, l, i: LONGINT;  r, z: LONGREAL;
-			d: ARRAY 16 OF CHAR;
-			s: CHAR;  dot: BOOLEAN;
+		VAR 
+			buf: ARRAY 64 OF CHAR;
 		BEGIN
-			e := ExpoL( x );
-			IF (e = 2047) OR (ABS( D ) > 308) THEN
-				WHILE n > 5 DO Char( " " );  DEC( n ) END;
-				NaNCodeL( x, h, l );
-				IF (h # 0) OR (l # 0) THEN String( "      NaN" )
-				ELSIF x < 0 THEN String( "     -INF" )
-				ELSE String( "      INF" )
-				END
-			ELSE
-				IF D = 0 THEN IF (f=0) THEN dot := FALSE; DEC( n, 1 ) ELSE dot := TRUE; DEC(n,2);  END;  ELSE dot := TRUE; DEC( n, 7 ) END;
-				IF n < 2 THEN n := 2 END;
-				IF f < 0 THEN f := 0 END;
-				IF n < f + 2 THEN n := f + 2 END;
-				DEC( n, f );
-				IF (e # 0) & (x < 0) THEN s := "-";  x := -x ELSE s := " " END;
-				IF e = 0 THEN
-					h := 0;  l := 0;  DEC( e, D - 1 ) (* no denormals *)
-				ELSE
-					e := (e - 1023) * 301029 DIV 1000000;   (* ln(2)/ln(10) = 0.301029996 *)
-					z := Ten( e + 1 );
-					IF x >= z THEN x := x / z;  INC( e ) ELSE x := x * Ten( -e ) END;
-					DEC( e, D - 1 );  i := -(e + f);
-					IF i <= 0 THEN r := 5 * Ten( i ) ELSE r := 0 END;
-					IF x >= 10 THEN x := x * Ten( -1 ) + r;  INC( e )
-					ELSE
-						x := x + r;
-						IF x >= 10 THEN x := x * Ten( -1 );  INC( e ) END
-					END;
-					x := x * Ten( 7 );  h := ENTIER( x );  x := (x - h) * Ten( 8 );  l := ENTIER( x )
-				END;
-				i := 15;
-				WHILE i > 7 DO d[i] := CHR( l MOD 10 + ORD( "0" ) );  l := l DIV 10;  DEC( i ) END;
-				WHILE i >= 0 DO d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i ) END;
-				IF n <= e THEN n := e + 1 END;
-				IF e > 0 THEN
-					WHILE n > e DO Char( " " );  DEC( n ) END;
-					Char( s );  e := 0;
-					WHILE n > 0 DO
-						DEC( n );
-						IF e < 16 THEN Char( d[e] );  INC( e ) ELSE Char( "0" ) END
-					END;
-					IF dot THEN
-					Char( "." )
-					END;
-				ELSE
-					WHILE n > 1 DO Char( " " );  DEC( n ) END;
-					Char( s );  Char( "0" );  IF dot THEN Char( "." );  END;
-					WHILE (0 < f) & (e < 0) DO Char( "0" );  DEC( f );  INC( e ) END
-				END;
-				WHILE f > 0 DO
-					DEC( f );
-					IF e < 16 THEN Char( d[e] );  INC( e ) ELSE Char( "0" ) END
-				END;
-				IF D # 0 THEN
-					IF D < 0 THEN String( "E-" );  D := -D ELSE String( "E+" ) END;
-					Char( CHR( D DIV 100 + ORD( "0" ) ) );  D := D MOD 100;  Char( CHR( D DIV 10 + ORD( "0" ) ) );  Char( CHR( D MOD 10 + ORD( "0" ) ) )
-				END
-			END
+			RC.RealToStringFix( x, n, f, D, buf );
+			String( buf )
 		END FloatFix;
-
 	END Writer;
 
 	(** A special writer that buffers output to be fetched by GetString or GetRawString. *)
 	StringWriter* = OBJECT (Writer)
 
-		PROCEDURE & InitStringWriter*( size: Offset );
+		PROCEDURE & InitStringWriter*( size: BufferOffset );
 		BEGIN
 			InitWriter( Send, size )
 		END InitStringWriter;
 
-		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: Offset;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: BufferOffset;  propagate: BOOLEAN;  VAR res: WORD );
 		BEGIN
 			res := StringFull
 		END Send;
@@ -520,7 +430,7 @@ TYPE
 		PROCEDURE SetPos*( pos: Position );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
-			tail := Offset( pos );  sent := 0;  res := Ok;
+			tail := BufferOffset( pos );  sent := 0;  res := Ok;
 		END SetPos;
 
 		PROCEDURE Update*;
@@ -529,7 +439,7 @@ TYPE
 
 	(** Return the contents of the string writer (0X-terminated). *)
 		PROCEDURE Get*( VAR s: ARRAY OF CHAR );
-		VAR i, m: Offset;
+		VAR i, m: BufferOffset;
 		BEGIN
 			m := LEN( s ) - 1;  i := 0;
 			WHILE (i # tail) & (i < m) DO s[i] := buf[i];  INC( i ) END;
@@ -537,8 +447,8 @@ TYPE
 		END Get;
 
 	(** Return the contents of the string writer (not 0X-terminated).  The len parameters returns the string length. *)
-		PROCEDURE GetRaw*( VAR s: ARRAY OF CHAR;  VAR len: Offset );
-		VAR i, m: Offset;
+		PROCEDURE GetRaw*( VAR s: ARRAY OF CHAR;  VAR len: BufferOffset );
+		VAR i, m: BufferOffset;
 		BEGIN
 			m := LEN( s );  i := 0;
 			WHILE (i # tail) & (i < m) DO s[i] := buf[i];  INC( i ) END;
@@ -551,14 +461,14 @@ TYPE
 	(** A reader buffers input received from a Receiver.  Must not be shared between processes. *)
 	Reader* = OBJECT
 	VAR
-		head, tail: Offset;
+		head, tail: BufferOffset;
 		buf: POINTER TO ARRAY OF CHAR;
 		res*: WORD;   (** result of last input operation. *)
 		receive: Receiver;
 		received*: Position;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
 
-		PROCEDURE & InitReader*( receive: Receiver;  size: Offset );
+		PROCEDURE & InitReader*( receive: Receiver;  size: BufferOffset );
 		BEGIN
 			ASSERT ( receive # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -585,8 +495,8 @@ TYPE
 		END SetPos;
 
 	(** Return bytes currently available in input buffer. *)
-		PROCEDURE Available*( ): Offset;
-		VAR n: Offset;
+		PROCEDURE Available*( ): BufferOffset;
+		VAR n: BufferOffset;
 		BEGIN
 			IF (res = Ok) THEN
 				IF (head = tail) THEN head := 0;  receive( buf^, 0, LEN( buf ), 0, tail, res );  INC( received, tail );
@@ -634,8 +544,8 @@ TYPE
 		END Peek;
 
 	(** Read size bytes into x, starting at ofs.  The len parameter returns the number of bytes that were actually read. *)
-		PROCEDURE Bytes*( VAR x: ARRAY OF CHAR;  ofs, size: Offset;  VAR len: Offset );
-		VAR n: Offset;
+		PROCEDURE Bytes*( VAR x: ARRAY OF CHAR;  ofs, size: BufferOffset;  VAR len: BufferOffset );
+		VAR n: BufferOffset;
 		BEGIN
 			ASSERT ( size >= 0 );
 			len := 0;
@@ -684,14 +594,14 @@ TYPE
 
 	(** Read a LONGINT. *)
 		PROCEDURE RawLInt*( VAR x: LONGINT );
-		VAR ignore: Offset;
+		VAR ignore: BufferOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawLInt;
 
 	(** Read a HUGEINT. *)
 		PROCEDURE RawHInt*( VAR x: HUGEINT );
-		VAR ignore: Offset;
+		VAR ignore: BufferOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawHInt;
@@ -722,7 +632,7 @@ TYPE
 
 	(** Read a SET. *)
 		PROCEDURE RawSet*( VAR x: SET );
-		VAR ignore: Offset;
+		VAR ignore: BufferOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawSet;
@@ -735,21 +645,21 @@ TYPE
 
 	(** Read a REAL. *)
 		PROCEDURE RawReal*( VAR x: REAL );
-		VAR ignore: Offset;
+		VAR ignore: BufferOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawReal;
 
 	(** Read a LONGREAL. *)
 		PROCEDURE RawLReal*( VAR x: LONGREAL );
-		VAR ignore: Offset;
+		VAR ignore: BufferOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawLReal;
 
 	(** Read a 0X-terminated string.  If the input string is larger than x, read the full string and assign the truncated 0X-terminated value to x. *)
 		PROCEDURE RawString*( VAR x: ARRAY OF CHAR );
-		VAR i, m: Offset;  ch: CHAR;
+		VAR i, m: BufferOffset;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -804,45 +714,6 @@ TYPE
 			IF (res = 0) & ~ok THEN res := FormatError END
 		END Int;
 
-	(** Read a floating-point number. EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
-		PROCEDURE Real* (VAR real: LONGREAL);
-		VAR e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN; ch: CHAR;
-		BEGIN
-			ch := Get();
-			WHILE (ch = "0") DO ch := Get() END;
-			IF ch = "-" THEN neg := TRUE; ch := Get(); ELSE neg := FALSE END;
-			WHILE (ch = " ") OR (ch = "0") DO ch := Get(); END;
-			y := 0;
-			WHILE ("0" <= ch) & (ch <= "9") DO
-				y := y * 10 + (ORD(ch) - ORD("0"));
-				ch := Get();
-			END;
-			IF ch = "." THEN
-				ch := Get();
-				g := 1;
-				WHILE ("0" <= ch) & (ch <= "9") DO
-					g := g / 10; y := y + g * (ORD(ch) - ORD("0"));
-					ch := Get();
-				END;
-			END;
-			IF (ch = "d") OR (ch = "D") OR (ch = "e") OR (ch = "E") THEN
-				ch := Get(); e := 0;
-				IF ch = "-" THEN negE := TRUE; ch := Get()
-				ELSIF ch = "+" THEN negE := FALSE; ch := Get()
-				ELSE negE := FALSE
-				END;
-				WHILE (ch = "0") DO ch := Get() END;
-				WHILE ("0" <= ch) & (ch <= "9") DO
-					e := e * 10 + (ORD(ch) - ORD("0"));
-					ch := Get();
-				END;
-				IF negE THEN y := y / Ten(e)
-				ELSE y := y * Ten(e)
-				END;
-			END;
-			IF neg THEN y := -y END;
-			real := y
-		END Real;
 
 	(** Return TRUE iff at the end of a line (or file). *)
 		PROCEDURE EOLN*( ): BOOLEAN;
@@ -854,7 +725,7 @@ TYPE
 	(** Read all characters until the end of the line (inclusive).  If the input string is larger than x, read the full string and assign
 			the truncated 0X-terminated value to x. *)
 		PROCEDURE Ln*( VAR x: ARRAY OF CHAR );
-		VAR i, m: Offset;  ch: CHAR;
+		VAR i, m: BufferOffset;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -872,7 +743,7 @@ TYPE
 			If the input string is larger than x, read the full string and assign the truncated 0X-terminated
 			value to x. *)
 		PROCEDURE LnEOT*( VAR x: ARRAY OF CHAR );
-		VAR i, m: Offset;  ch: CHAR;
+		VAR i, m: BufferOffset;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -972,7 +843,7 @@ TYPE
 		PROCEDURE GetReal*(VAR real: LONGREAL): BOOLEAN;
 		BEGIN
 			SkipWhitespace;
-			Real(real);
+			real := RC.ScanReal(Get);
 			RETURN res = Ok
 		END GetReal;
 
@@ -990,7 +861,7 @@ TYPE
 	(** A special reader that buffers input set by SetString or SetRawString. *)
 	StringReader* = OBJECT (Reader)
 
-		PROCEDURE & InitStringReader*( size: Offset );
+		PROCEDURE & InitStringReader*( size: BufferOffset );
 		BEGIN
 			InitReader( Receive, size )
 		END InitStringReader;
@@ -1004,10 +875,10 @@ TYPE
 		PROCEDURE SetPos*( pos: Position );
 		BEGIN
 			IF pos > LEN( buf ) THEN pos := LEN( buf ) END;
-			head := Offset( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;
+			head := BufferOffset( pos );  tail := LEN( buf );  received := LEN( buf );  res := Ok;
 		END SetPos;
 
-		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: Offset;  VAR len: Offset; VAR res: WORD );
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: BufferOffset;  VAR len: BufferOffset; VAR res: WORD );
 		BEGIN
 			IF min = 0 THEN res := Ok ELSE res := EOF END;
 			len := 0;
@@ -1015,7 +886,7 @@ TYPE
 
 	(** Set the contents of the string buffer.  The s parameter is a 0X-terminated string. *)
 		PROCEDURE Set*(CONST  s: ARRAY OF CHAR );
-		VAR len: Offset;
+		VAR len: BufferOffset;
 		BEGIN
 			len := 0;
 			WHILE s[len] # 0X DO INC( len ) END;
@@ -1027,7 +898,7 @@ TYPE
 		END Set;
 
 	(** Set the contents of the string buffer.  The len parameter specifies the size of the buffer s. *)
-		PROCEDURE SetRaw*(CONST s: ARRAY OF CHAR;  ofs, len: Offset );
+		PROCEDURE SetRaw*(CONST s: ARRAY OF CHAR;  ofs, len: BufferOffset );
 		BEGIN
 			IF len > LEN( buf ) THEN len := LEN( buf ) END;
 			head := 0;  tail := len;  received := len;  res := Ok;
@@ -1069,59 +940,9 @@ VAR
 		END;
 	END Copy;
 
-	(** from module Reals.Mod *)
-
-
-(*** the following procedures stem from Reals.Mod and are needed for Writer.Float and Writer.FloatFix *)
-
-(** Returns the NaN code (0 <= h < 1048576, MIN(LONGINT) <= l <= MAX(LONGINT)) or (-1,-1) if not NaN/Infinite. *)
-	PROCEDURE NaNCodeL( x: LONGREAL;  VAR h, l: LONGINT );
-	BEGIN
-		SYSTEM.GET( ADDRESSOF( x ) + H, h );  SYSTEM.GET( ADDRESSOF( x ) + L, l );
-		IF ASH( h, -20 ) MOD 2048 = 2047 THEN  (* Infinite or NaN *)
-			h := h MOD 100000H (* lowest 20 bits *)
-		ELSE h := -1;  l := -1
-		END
-	END NaNCodeL;
-
-(** Returns the shifted binary exponent (0 <= e < 2048). *)
-	PROCEDURE ExpoL( x: LONGREAL ): LONGINT;
-	VAR i: LONGINT;
-	BEGIN
-		SYSTEM.GET( ADDRESSOF( x ) + H, i );  RETURN ASH( i, -20 ) MOD 2048
-	END ExpoL;
-
-(** Convert hexadecimal to LONGREAL. h and l are the high and low parts.*)
-	PROCEDURE RealL( h, l: LONGINT ): LONGREAL;
-	VAR x: LONGREAL;
-	BEGIN
-		SYSTEM.PUT( ADDRESSOF( x ) + H, h );  SYSTEM.PUT( ADDRESSOF( x ) + L, l );  RETURN x
-	END RealL;
-
-(** Returns 10^e (e <= 308, 308 < e delivers IEEE-code +INF). *)
-	PROCEDURE Ten( e: LONGINT ): LONGREAL;   (* naiive version *)
-	VAR r: LONGREAL;
-	BEGIN
-		IF e < -307 THEN RETURN 0
-		ELSIF 308 < e THEN RETURN RealL( 2146435072, 0 )
-		END;
-		r := 1;
-		WHILE (e > 0) DO r := r * 10;  DEC( e );  END;
-		WHILE (e < 0) DO r := r / 10;  INC( e );  END;
-		RETURN r;
-	END Ten;
-
-	PROCEDURE InitHL;
-	VAR i: ADDRESS;  dmy: INTEGER;  littleEndian: BOOLEAN;
-	BEGIN
-		dmy := 1;  i := ADDRESSOF( dmy );
-		SYSTEM.GET( i, littleEndian );   (* indirection via i avoids warning on SUN cc -O *)
-		IF littleEndian THEN H := 4;  L := 0 ELSE H := 0;  L := 4 END
-	END InitHL;
-
 
 BEGIN
-	months := " Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec";  InitHL;
+	months := " Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec";
 END Streams64.
 
 (**

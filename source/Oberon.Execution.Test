@@ -7872,3 +7872,13 @@ positive: index operators on objects
 		Test;
 	END Test.
 
+positive: return string as static array of char
+	MODULE Test;
+	PROCEDURE Test(): ARRAY 32 OF CHAR;
+	BEGIN
+		RETURN "Hello";
+	END Test;
+	BEGIN
+		ASSERT(Test() = "Hello"); 
+	END Test.
+

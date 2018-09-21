@@ -11805,10 +11805,11 @@ TYPE
 						Emit(Return(position,res.op));
 						ReleaseOperand(res);
 					END;
-				ELSIF (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR type.IsPointer()
+				ELSIF (type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.ArrayType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.StringType) OR type.IsPointer()
 				THEN
 					(* return using structured return parameter *)
 					ASSERT((type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.RangeType) OR (type IS SyntaxTree.ComplexType) OR (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static)
+						OR (type IS SyntaxTree.StringType)
 						OR SemanticChecker.IsPointerType(type));
 					(* parameter := currentScope(SyntaxTree.ProcedureScope).FindParameter(Global.ReturnParameterName); *)
 					parameter :=procedureType.returnParameter;

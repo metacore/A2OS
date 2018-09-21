@@ -85,7 +85,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			file.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -117,7 +117,7 @@ TYPE
 
 TYPE
 
-		(** Writer for buffered writing of a file via Streams.Write* procedures.  See OpenWriter. *)
+	(** Writer for buffered writing of a file via Streams.Write* procedures.  See OpenWriter. *)
 	Writer* = OBJECT (Streams.Writer)	(** not sharable between multiple processes *)
 	VAR
 		file : File;
@@ -315,7 +315,7 @@ TYPE
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
 
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		BEGIN HALT(301) END Delete0;	(* abstract *)
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
@@ -343,7 +343,7 @@ TYPE
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
 
-		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT);
+		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
 		BEGIN res := -1	(* not supported *)
 		END RemoveDirectory0;
 

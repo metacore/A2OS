@@ -1,5 +1,5 @@
 MODULE Strings;
-	IMPORT SYSTEM, Streams, Reals, Dates;
+	IMPORT Streams, Dates, RC := RealConversions;
 CONST 
 	Ok* = 0; 
 TYPE 
@@ -24,6 +24,11 @@ TYPE
 VAR 
 	DateFormat*, TimeFormat*: ARRAY 32 OF CHAR; 
 
+	OPERATOR ^ "+"-(a: String; CONST b: ARRAY OF CHAR): String; 
+	OPERATOR ^ "+"-(a: String; b: CHAR): String; 
+	OPERATOR ^ "+"-(a, b: String): String; 
+	OPERATOR ^ "+"-(a: String; b: HUGEINT): String; 
+	OPERATOR ^ "+"-(a: String; b: LONGREAL): String; 
 	PROCEDURE ^ Min*(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ Max*(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ Length*(CONST string: ARRAY OF CHAR): LONGINT; 

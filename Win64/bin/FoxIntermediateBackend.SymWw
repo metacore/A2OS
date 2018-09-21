@@ -91,6 +91,11 @@ TYPE
 
 	SupportedImmediateProcedure* = PROCEDURE {DELEGATE}(CONST op: IntermediateCode.Operand):BOOLEAN; 
 
+	WriteBackCall = POINTER TO RECORD 
+		call: SyntaxTree.ProcedureCallDesignator; 
+		next: WriteBackCall; 
+	END; 
+
 	Operand = RECORD 
 		mode: SHORTINT; 
 		op: IntermediateCode.Operand; 
@@ -103,11 +108,6 @@ TYPE
 	Fixup = POINTER TO RECORD 
 		pc: LONGINT; 
 		nextFixup: Fixup; 
-	END; 
-
-	WriteBackCall = POINTER TO RECORD 
-		call: SyntaxTree.ProcedureCallDesignator; 
-		next: WriteBackCall; 
 	END; 
 
 	Label = OBJECT 
@@ -251,7 +251,7 @@ TYPE
 		arrayDestinationTag: IntermediateCode.Operand; 
 		arrayDestinationDimension: LONGINT; 
 		currentLoop: Label; 
-		trueLabel, falseLabel, exitLabel: Label; 
+		exitLabel: Label; 
 		locked: BOOLEAN; 
 		registerUsageCount: RegisterUsageCount; 
 		usedRegisters: RegisterEntry; 
@@ -313,9 +313,12 @@ TYPE
 		PROCEDURE ^ ToMemory(VAR res: IntermediateCode.Operand; type: IntermediateCode.Type; offset: LONGINT); 
 		PROCEDURE ^ LoadValue(VAR operand: Operand; type: SyntaxTree.Type); 
 		PROCEDURE ^ Evaluate(x: SyntaxTree.Expression; VAR op: Operand); 
-		PROCEDURE ^ EvaluateX(x: SyntaxTree.Expression): Operand; 
+		PROCEDURE ^ EvaluateX(CONST x: SyntaxTree.Expression; VAR result: Operand); 
 		PROCEDURE ^ Designate(x: SyntaxTree.Expression; VAR op: Operand); 
 		PROCEDURE ^ Condition(CONST x: SyntaxTree.Expression; label: Label; reason: BOOLEAN); 
+		PROCEDURE ^ EvaluateUnaryExpression(x: SyntaxTree.UnaryExpression; VAR result: Operand); 
+		PROCEDURE ^ EvaluateBinaryExpression(x: SyntaxTree.BinaryExpression; VAR result: Operand); 
+		PROCEDURE ^ EvaluateSet(x: SyntaxTree.Set; VAR result: Operand); 
 		PROCEDURE ^ NewRegisterOperand(type: IntermediateCode.Type): IntermediateCode.Operand; 
 		PROCEDURE ^ UnuseRegister(register: LONGINT); 
 		PROCEDURE ^ UseRegister(register: LONGINT); 
@@ -444,6 +447,7 @@ TYPE
 		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
 		PROCEDURE ^ OnHeap(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
+		PROCEDURE ^ EvaluateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator); 
 		PROCEDURE ^ Dereference(VAR operand: Operand; type: SyntaxTree.Type; isUnsafe: BOOLEAN); 
 		PROCEDURE ^ VisitDereferenceDesignator*(x: SyntaxTree.DereferenceDesignator); 

@@ -487,6 +487,8 @@ VAR
 	PROCEDURE ^ InitWindowWriter; 
 	PROCEDURE ^ InstallWriterFactory*(writer: WriterFactory; debug: DebugWriterFactory; diagnostics: DiagnosticsFactory); 
 	PROCEDURE ^ Replace(VAR in: ARRAY OF CHAR; CONST this, by: ARRAY OF CHAR); 
+	OPERATOR ^ "="-(CONST left: ARRAY OF CHAR; right: String): BOOLEAN; 
+	OPERATOR ^ "="-(left: String; CONST right: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ MessageS*(CONST format, s0: ARRAY OF CHAR): MessageString; 
 	PROCEDURE ^ MessageSS*(CONST format, s0, s1: ARRAY OF CHAR): MessageString; 
 	PROCEDURE ^ MessageI*(CONST format: ARRAY OF CHAR; i0: LONGINT): MessageString; 

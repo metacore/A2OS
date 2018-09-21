@@ -122,7 +122,7 @@ TYPE
 		dir: Directory; 
 		finalizeFiles: Kernel.FinalizedCollection; 
 		openFiles: DiskAdrList; 
-		tempRegFileSec: DiskAdrList; 
+		tempRegFileSec: DiskAdrTable; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
@@ -133,7 +133,7 @@ TYPE
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ CollectRegisteredFileSectors(adr: DiskAdr); 
 		PROCEDURE ^ PurgeByAdr(adr: DiskAdr); 
-		PROCEDURE ^ PurgeOpenedFile(f: File; except: DiskAdrList); 
+		PROCEDURE ^ PurgeOpenedFile(f: File; except: DiskAdrTable); 
 		PROCEDURE ^ Close(f: File); 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
@@ -146,13 +146,27 @@ TYPE
 		count: LONGINT; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ GetCount(): LONGINT; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Add(x: DiskAdr); 
 		PROCEDURE ^ Remove(x: DiskAdr); 
-		PROCEDURE ^ Clear; 
 		PROCEDURE ^ Contains(x: DiskAdr): BOOLEAN; 
 	END DiskAdrList; 
+
+	DiskAdrTable = OBJECT {EXCLUSIVE} 
+	CONST 
+		threshold = 4; 
+	VAR 
+		table: DiskAdrArray; 
+		count: SIZE; 
+		size: SIZE; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ Clear; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ HashValue(key: DiskAdr): SIZE; 
+		PROCEDURE ^ Add(x: DiskAdr); 
+		PROCEDURE ^ Contains(x: DiskAdr): BOOLEAN; 
+	END DiskAdrTable; 
 
 	File = OBJECT {EXCLUSIVE} (Files.File)
 	VAR 

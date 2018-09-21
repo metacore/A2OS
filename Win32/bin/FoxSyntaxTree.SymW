@@ -450,8 +450,6 @@ TYPE
 		modifiers-: Modifier; 
 		isObject-, isProtected: BOOLEAN; 
 		isAbstract-: BOOLEAN; 
-		arrayStructure-: MathArrayType; 
-		arrayAccessOperators-: ArrayAccessOperators; 
 
 		PROCEDURE ^  & InitRecordType(position: Position; scope: Scope; recordScope: RecordScope); 
 		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
@@ -467,9 +465,6 @@ TYPE
 		PROCEDURE ^ Extends*(this: Type): BOOLEAN; 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
-		PROCEDURE ^ SetArrayStructure*(arrayStructure: MathArrayType); 
-		PROCEDURE ^ SetArrayAccessOperators*(arrayAccessOperators: ArrayAccessOperators); 
-		PROCEDURE ^ HasArrayStructure*(): BOOLEAN; 
 		PROCEDURE ^ IsComposite*(): BOOLEAN; 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ IsRecordType*(): BOOLEAN; 
@@ -645,17 +640,13 @@ TYPE
 	Designator* = OBJECT (Expression)
 	VAR 
 		left-: Expression; 
-		relatedRhs-: Expression; 
-		relatedAsot-: Expression; 
-		relatedIndexList-: ExpressionList; 
 		modifiers-: Modifier; 
+		relatedRhs-: Expression; 
 
 		PROCEDURE ^  & InitDesignator*(position: Position); 
 		PROCEDURE ^ SetLeft*(expression: Expression); 
-		PROCEDURE ^ SetRelatedRhs*(relatedRhs: Expression); 
-		PROCEDURE ^ SetRelatedAsot*(relatedAsot: Expression); 
-		PROCEDURE ^ SetRelatedIndexList*(relatedIndexList: ExpressionList); 
 		PROCEDURE ^ SetModifiers*(flags: Modifier); 
+		PROCEDURE ^ SetRelatedRhs*(expression: Expression); 
 		PROCEDURE ^ Clone(): Expression; 
 	END Designator; 
 

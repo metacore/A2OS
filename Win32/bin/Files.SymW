@@ -31,7 +31,9 @@ CONST
 	SetSize = (MAX(SET) + 1); 
 	NeedsPrefix* = 0; 
 TYPE 
-	TSize* = Streams.TSize; 
+	Position* = Streams.Position; 
+
+	TSize* = LONGINT; 
 
 	FileName* = ARRAY (PrefixLength + NameLength) OF CHAR; 
 
@@ -49,7 +51,7 @@ TYPE
 		file: File; 
 		r: Rider; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^  & InitFileReader*(file: File; pos: LONGINT); 
@@ -92,6 +94,7 @@ TYPE
 
 		PROCEDURE ^ AllocBlock*(hint: Address; VAR adr: Address); 
 		PROCEDURE ^ FreeBlock*(adr: Address); 
+		PROCEDURE ^ FreeBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize); 
 		PROCEDURE ^ MarkBlock*(adr: Address); 
 		PROCEDURE ^ MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize); 
 		PROCEDURE ^ Marked*(adr: Address): BOOLEAN; 
@@ -112,12 +115,12 @@ TYPE
 
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): File; 
-		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
+		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
+		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END FileSystem; 

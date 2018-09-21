@@ -117,7 +117,6 @@ TYPE
 		PROCEDURE ^ VisitProcedureType*(procedureType: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 
 		PROCEDURE ^ VisitCellType*(x: SyntaxTree.CellType); 
-		PROCEDURE ^ ResolveArrayStructure*(recordType: SyntaxTree.RecordType); 
 		PROCEDURE ^ CollectArrayAccessOperators(recordScope: SyntaxTree.RecordScope; arrayStructure: SyntaxTree.MathArrayType; VAR arrayAccessOperators: SyntaxTree.ArrayAccessOperators); 
 		PROCEDURE ^ IndexOperatorHash(indexListSize, indexListKind: LONGINT; isTensor: BOOLEAN): LONGINT; 
 		PROCEDURE ^ TwoToThePowerOf(exponent: LONGINT): LONGINT; 
@@ -164,9 +163,6 @@ TYPE
 		PROCEDURE ^ SetIndexBaseType(indexDesignator: SyntaxTree.IndexDesignator; newBaseType: SyntaxTree.Type); 
 		PROCEDURE ^ AppendMathIndex(position: Position; indexDesignator: SyntaxTree.IndexDesignator; indexListItem: SyntaxTree.Expression; sourceArray: SyntaxTree.MathArrayType); 
 		PROCEDURE ^ AppendIndex(position: Position; index: SyntaxTree.IndexDesignator; expression: SyntaxTree.Expression; over: SyntaxTree.Type); 
-		PROCEDURE ^ ConvertToMathArray(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
-		PROCEDURE ^ ListOfOpenRanges(itemCount: LONGINT): SyntaxTree.ExpressionList; 
-		PROCEDURE ^ NewIndexOperatorCall*(position: Position; left: SyntaxTree.Expression; indexList: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ NewObjectOperatorCall*(position: Position; left: SyntaxTree.Expression; oper: LONGINT; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ VisitBracketDesignator*(bracketDesignator: SyntaxTree.BracketDesignator); 
 		PROCEDURE ^ ExpressionList(expressionList: SyntaxTree.ExpressionList): BOOLEAN; 
@@ -327,6 +323,7 @@ TYPE
 	PROCEDURE ^ PointerTypeDistance(from, to: SyntaxTree.PointerType): LONGINT; 
 	PROCEDURE ^ IsTypeDesignator(expression: SyntaxTree.Expression; VAR typeDeclaration: SyntaxTree.TypeDeclaration): BOOLEAN; 
 	PROCEDURE ^ IsExtensibleType(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsIndexOperator*(expression: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsUnextensibleRecord(d: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsExtensibleDesignator(d: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsBasicType(type: SyntaxTree.Type): BOOLEAN; 
@@ -340,8 +337,6 @@ TYPE
 	PROCEDURE ^ IsMathArrayType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsArrayType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsComplexType(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ IsArrayStructuredObjectType*(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ MathArrayStructureOfType(type: SyntaxTree.Type): SyntaxTree.MathArrayType; 
 	PROCEDURE ^ IsStaticRange(x: SyntaxTree.Expression; VAR firstValue, lastValue, stepValue: Basic.Integer): BOOLEAN; 
 	PROCEDURE ^ IsTensor(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticMathArray*(type: SyntaxTree.Type; VAR length: LONGINT; VAR baseType: SyntaxTree.Type): BOOLEAN; 

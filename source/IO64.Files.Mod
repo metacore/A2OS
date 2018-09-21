@@ -316,7 +316,7 @@ TYPE
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
 
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		BEGIN HALT(301) END Delete0;	(* abstract *)
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
@@ -344,7 +344,7 @@ TYPE
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
 
-		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT);
+		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
 		BEGIN res := -1	(* not supported *)
 		END RemoveDirectory0;
 

@@ -72,18 +72,6 @@ VAR
 		val := dlsym( handle, ADDRESSOF( name[0] ) );
 		SYSTEM.PUT( adr, val );	
 	END Dlsym;
-	
-	(* Return current frame pointer *)
-	PROCEDURE  -CurrentBP (): ADDRESS;
-	CODE
-	#IF I386 THEN
-		MOV EAX, EBP
-	#ELSIF AMD64 THEN
-		MOV RAX, RBP
-	#ELSE
-		unimplemented
-	#END
-	END CurrentBP;
 
 	PROCEDURE {INITIAL, NOPAF} Init0;
 	CONST CR = 0DX; NL = 0AX;
@@ -94,7 +82,7 @@ VAR
 		Trace.Init;
 		Trace.Char := Char;
 		
-		stackBottom := CurrentBP()+SIZEOF(ADDRESS);
+		stackBottom := SYSTEM.GetFramePointer()+SIZEOF(ADDRESS);
 	END Init0;
 
 END Glue.

@@ -6507,8 +6507,8 @@ TYPE
 
 				IF HasFlag(modifiers,Global.NameNoPAF,position) THEN procedureType.SetNoPAF(TRUE) END;
 				IF (procedure.scope IS SyntaxTree.ModuleScope) THEN
-					IF HasFlag(modifiers, Global.NameEntry,position) THEN procedure.SetEntry(TRUE); procedureType.SetNoPAF(TRUE);
-					ELSIF HasFlag(modifiers, Global.NameExit, position) THEN procedure.SetExit(TRUE); procedureType.SetNoPAF(TRUE);
+					IF HasFlag(modifiers, Global.NameEntry,position) THEN procedure.SetEntry(TRUE);
+					ELSIF HasFlag(modifiers, Global.NameExit, position) THEN procedure.SetExit(TRUE);
 					END;
 				END;
 				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,LONGINT(value)) (* TODO: fix explicit integer truncation *)

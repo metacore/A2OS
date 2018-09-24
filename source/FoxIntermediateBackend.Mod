@@ -665,7 +665,6 @@ TYPE
 
 			IF scope.body # NIL THEN
 
-
 				IF implementationVisitor.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
 
 				IF ~inline THEN
@@ -759,6 +758,7 @@ TYPE
 				END;
 
 				IF ~inline  & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
+					(*
 					IF ToMemoryUnits(system,stackSize) > 4*1024-256 THEN (* stack frame potentially larger than page size *) (*! get page size from backend *)
 						(*! unnecessary with new implementation of ENTER -- should potentially be called by backend
 						IF implementationVisitor.GetRuntimeProcedure(implementationVisitor.builtinsModuleName,"EnsureAllocatedStack",procedure,TRUE) THEN
@@ -769,7 +769,7 @@ TYPE
 						END;
 						*)
 					END;
-
+					*)
 
 					ir.EmitAt(pc(*+2*),implementationVisitor.Enter(x.position,callingConvention,ToMemoryUnits(system,stackSize))); (*!!*)
 
@@ -867,6 +867,8 @@ TYPE
 							END;
 						END;
 					END
+				ELSIF ~inline THEN
+					ir.Emit(Nop(x.position)); (* jump label *)
 				END;
 			ELSE (* force body for procedures *)
 				implementationVisitor.EmitEnter(ir, x.position,x,callingConvention,0);
@@ -7586,7 +7588,7 @@ TYPE
 		**)
 		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable;
 		VAR name: SyntaxTree.Identifier;  variable, v: SyntaxTree.Variable;
-		scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset, index: LONGINT;
+			scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset, index: LONGINT;
 		BEGIN
 			IF ~register THEN
 				v := temporaries.GetFreeVariable(type, untraced, index);
@@ -7594,6 +7596,9 @@ TYPE
 				index := temporaries.registerIndex; INC(temporaries.registerIndex);
 			END;
 			scope := currentScope;
+			IF (scope IS SyntaxTree.ProcedureScope) & (scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).noPAF) THEN
+				Error(scope(SyntaxTree.ProcedureScope).ownerProcedure.position,"implementation restriction: cannot allocate temporary variable in procedure without activation frame");
+			END;
 			(*
 			v := NIL; (* disable free variable managemenet for the time being *)
 			*)
@@ -7603,6 +7608,7 @@ TYPE
 			variable.SetType(type);
 			variable.SetAccess(SyntaxTree.Hidden);
 			variable.SetUntraced(untraced);
+
 
 			IF v = NIL THEN
 				temporaries.AddVariable(variable);

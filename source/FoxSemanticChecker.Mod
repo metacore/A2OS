@@ -6506,8 +6506,10 @@ TYPE
 				IF HasValue(modifiers, Global.NamePcOffset, position, value) THEN procedureType.SetPcOffset(LONGINT(value)) (* TODO: fix explicit integer truncation *) END;
 
 				IF HasFlag(modifiers,Global.NameNoPAF,position) THEN procedureType.SetNoPAF(TRUE) END;
-				IF HasFlag(modifiers, Global.NameEntry,position) THEN procedure.SetEntry(TRUE)
-				ELSIF (procedure.scope IS SyntaxTree.ModuleScope) & HasFlag(modifiers, Global.NameExit, position) THEN procedure.SetExit(TRUE)
+				IF (procedure.scope IS SyntaxTree.ModuleScope) THEN
+					IF HasFlag(modifiers, Global.NameEntry,position) THEN procedure.SetEntry(TRUE); procedureType.SetNoPAF(TRUE);
+					ELSIF HasFlag(modifiers, Global.NameExit, position) THEN procedure.SetExit(TRUE); procedureType.SetNoPAF(TRUE);
+					END;
 				END;
 				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,LONGINT(value)) (* TODO: fix explicit integer truncation *)
 				ELSIF HasValue(modifiers,Global.NameFixed,position,value) THEN procedure.SetAlignment(TRUE,LONGINT(value)) (* TODO: fix explicit integer truncation *)
@@ -7867,14 +7869,16 @@ TYPE
 		 move implementation checker to a separate object ? *)
 		PROCEDURE Implementation(scope: SyntaxTree.Scope);
 		VAR prevScope: SyntaxTree.Scope; procedure: SyntaxTree.Procedure; prevIsRealtime, prevIsBodyProcedure, prevIsCellNet: BOOLEAN;
+			procedureType: SyntaxTree.ProcedureType;
 		BEGIN
 			prevIsRealtime := currentIsRealtime;
 			prevIsBodyProcedure := currentIsBodyProcedure;
 			prevIsCellNet := currentIsCellNet;
 			prevScope := currentScope;
 			currentScope := scope;
-			IF (scope IS SyntaxTree.ProcedureScope) THEN
-				procedure := scope(SyntaxTree.ProcedureScope).ownerProcedure;
+			WITH scope: SyntaxTree.ProcedureScope DO
+				procedure := scope.ownerProcedure;
+				procedureType := procedure.type(SyntaxTree.ProcedureType);
 				currentIsBodyProcedure := currentIsBodyProcedure OR procedure.isBodyProcedure;
 				currentIsRealtime := currentIsRealtime OR procedure.type.isRealtime;
 				currentIsCellNet := InCellNetScope(procedure.scope) OR cellsAreObjects;
@@ -7883,15 +7887,22 @@ TYPE
 					Warning(procedure.position,"unsupported inline procedure - must be assembler code")
 				END;
 				*)
-			END;
-			IF (scope IS SyntaxTree.ProcedureScope) & (scope(SyntaxTree.ProcedureScope).body # NIL) (* & ~(scope IS SyntaxTree.RecordScope) *) THEN
+				IF scope.body # NIL THEN
 				(* module body, record bodies are wrapped into an artifical procedure *)
-				IF (phase = InlinePhase) & (IsOberonInline(procedure)) THEN
-					Body(scope(SyntaxTree.ProcedureScope).body)
-				ELSIF (phase = ImplementationPhase) & ~IsOberonInline(procedure) THEN
-					Body(scope(SyntaxTree.ProcedureScope).body)
+					IF (phase = InlinePhase) & (IsOberonInline(procedure)) THEN
+						Body(scope(SyntaxTree.ProcedureScope).body)
+					ELSIF (phase = ImplementationPhase) & ~IsOberonInline(procedure) THEN
+						Body(scope(SyntaxTree.ProcedureScope).body)
+					END;
 				END;
-				
+				IF procedureType.noPAF THEN 
+					IF scope.firstVariable # NIL THEN
+						Error(procedure.position, "forbidden variable in procedure without activation frame");
+					ELSIF procedureType.firstParameter # NIL THEN
+						Error(procedure.position, "forbidden parameter in procedure without activation frame");
+					END;
+				END;
+			ELSE				
 			END;
 			currentScope := prevScope;
 			currentIsRealtime := prevIsRealtime;

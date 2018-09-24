@@ -73,9 +73,19 @@ VAR
 		SYSTEM.PUT( adr, val );	
 	END Dlsym;
 	
-	
+	(* Return current frame pointer *)
+	PROCEDURE  -CurrentBP (): ADDRESS;
+	CODE
+	#IF I386 THEN
+		MOV EAX, EBP
+	#ELSIF AMD64 THEN
+		MOV RAX, RBP
+	#ELSE
+		unimplemented
+	#END
+	END CurrentBP;
+
 	PROCEDURE {INITIAL, NOPAF} Init0;
-	VAR localvar: ADDRESS;
 	CONST CR = 0DX; NL = 0AX;
 	BEGIN
 		baseAdr := ADDRESSOF( Header );
@@ -84,7 +94,7 @@ VAR
 		Trace.Init;
 		Trace.Char := Char;
 		
-		stackBottom := ADDRESSOF( localvar ) + 2*SIZEOF( ADDRESS );
+		stackBottom := CurrentBP()+SIZEOF(ADDRESS);
 	END Init0;
 
 END Glue.

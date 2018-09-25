@@ -666,7 +666,7 @@ BEGIN
 END IntToHexStr;
 
 (** converts a hex string to an integer. Leading whitespace is ignored. res=Ok indicates success, val=0 on failure. *)
-PROCEDURE HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val, res: LONGINT);
+PROCEDURE HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val: LONGINT; VAR res: WORD);
 VAR length, i : LONGINT; ch: CHAR; negative : BOOLEAN;
 BEGIN
 	length := LEN(string); val := 0; res := -1;

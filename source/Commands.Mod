@@ -58,7 +58,7 @@ TYPE
 			tracedPos := pos0;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR inReader: Streams.Reader;nextPos: LONGINT;
 		BEGIN
 			inReader := in;

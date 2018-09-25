@@ -32,7 +32,7 @@ END SendError;
 
 
 (* Receiver to be used with Stream.Reader *)
-PROCEDURE Receive* (VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+PROCEDURE Receive* (VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 VAR b: Kernel32.BOOL; tlen: LONGINT;
 BEGIN
 	len := 0;

@@ -51,7 +51,7 @@ CONST
 
 	BufferSize = 32*1024; 	(* Buffersize for file copy operation *)
 
-	SetSize = MAX (SET) + 1;
+	SetSize = MAX ( SET ) + 1;
 
 	(* file system behaviour flags *)
 	NeedsPrefix* = 0; (* if no prefix given, then this file system cannot handle it, to prevent file systems from being in the search path *)
@@ -69,7 +69,7 @@ TYPE
 	Rider* = RECORD	(** not shareable between multiple processes *)
 		(* the rider must be a record, otherwise the Oberon text system will not work *)
 		eof*: BOOLEAN;	(** has end of file been passed *)
-		res*: Streams.BufferOffset;	(** leftover byte count for ReadBytes/WriteBytes *)
+		res*: SIZE;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
 		apos*: Streams.Position;
 		bpos*: LONGINT;
@@ -81,37 +81,37 @@ TYPE
 TYPE
 
 	(** Reader for buffered reading of a file via Streams.Read* procedures.  See OpenReader. *)
-	Reader* = OBJECT (Streams.Reader)	(** not sharable between multiple processes *)
+	Reader* = OBJECT ( Streams.Reader )	(** not sharable between multiple processes *)
 	VAR
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: Streams.BufferOffset; VAR len: Streams.BufferOffset; VAR res: WORD);
+		PROCEDURE Receive* ( VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD );
 		BEGIN
-			file.ReadBytes(r, buf, ofs, size);
+			file.ReadBytes( r, buf, ofs, size );
 			len := size - r.res;
-			IF len >= min THEN res := Streams.Ok ELSE res := Streams.EOF (* end of file *) END
+			IF len >= min THEN res := Streams.Ok ELSE res := Streams.EOF (* end of file *) END;
 		END Receive;
 
-		PROCEDURE CanSetPos*() : BOOLEAN;
+		PROCEDURE CanSetPos* ( ) : BOOLEAN;
 		BEGIN
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : Streams.Position);
+		PROCEDURE SetPos* ( pos: Streams.Position );
 		BEGIN
-			file.Set(r, pos);
+			file.Set( r, pos );
 			Reset;
-			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
+			received := pos; (* this effects that Streams.Reader.Pos( ) returns the correct location in the file *)
 		END SetPos;
 
-		PROCEDURE &InitFileReader*(file : File; pos: Streams.Position);
+		PROCEDURE &InitFileReader* ( file : File; pos: Streams.Position );
 		BEGIN
-			ASSERT(file # NIL);
+			ASSERT( file # NIL );
 			SELF.file := file;
-			file.Set(r, pos);
-			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
-			InitReader(SELF.Receive, DefaultReaderSize);
+			file.Set( r, pos );
+			received := pos; (* this effects that Streams.Reader.Pos( ) returns the correct location in the file *)
+			InitReader( SELF.Receive, DefaultReaderSize );
 		END InitFileReader;
 
 	END Reader;
@@ -119,49 +119,49 @@ TYPE
 TYPE
 
 	(** Writer for buffered writing of a file via Streams.Write* procedures.  See OpenWriter. *)
-	Writer* = OBJECT (Streams.Writer)	(** not sharable between multiple processes *)
+	Writer* = OBJECT ( Streams.Writer )	(** not sharable between multiple processes *)
 	VAR
 		file : File;
 		r: Rider;
 
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: Streams.BufferOffset; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send* ( CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD );
 		BEGIN
-			r.file.WriteBytes(r, buf, ofs, len);
+			r.file.WriteBytes( r, buf, ofs, len );
 			IF propagate THEN r.file.Update END;
 			IF r.res = 0 THEN res := Streams.Ok ELSE res := WriteError (* not all bytes written *) END
 		END Send;
 
-		PROCEDURE CanSetPos*() : BOOLEAN;
+		PROCEDURE CanSetPos* ( ) : BOOLEAN;
 		BEGIN
 			RETURN TRUE;
 		END CanSetPos;
 
-		PROCEDURE SetPos*(pos : Streams.Position);
+		PROCEDURE SetPos* ( pos : Streams.Position );
 		BEGIN
 			Update;
-			file.Set(r, pos);
+			file.Set( r, pos );
 			Reset;
 		END SetPos;
 
-		PROCEDURE Pos*(): Streams.Position;
+		PROCEDURE Pos* ( ): Streams.Position;
 		BEGIN
 			Update;
-			RETURN file.Pos(r)
+			RETURN file.Pos( r )
 		END Pos;
 
-		PROCEDURE &InitFileWriter*(file: File; pos: Streams.Position);
+		PROCEDURE &InitFileWriter* ( file: File; pos: Streams.Position );
 		BEGIN
-			ASSERT(file # NIL);
+			ASSERT( file # NIL );
 			SELF.file := file;
-			file.Set(r, pos);
-			InitWriter(SELF.Send, DefaultWriterSize);
+			file.Set( r, pos );
+			InitWriter( SELF.Send, DefaultWriterSize );
 		END InitFileWriter;
 
 	END Writer;
 
 	Prefix* = ARRAY PrefixLength OF CHAR;
 
-	Address* = LONGINT;	(** Volume block address [1..size] *)
+	Address* = LONGINT;	(** Volume block address [ 1..size ] *)
 
 	Hint* = POINTER TO RECORD END;	(** for use by file system implementors. *)
 
@@ -183,110 +183,110 @@ TYPE
 			used: LONGINT;	(* used blocks *)
 			reserved: LONGINT;	(* blocks reserved for system *)
 
-		PROCEDURE AllocBlock*(hint: Address; VAR adr: Address);
+		PROCEDURE AllocBlock* ( hint: Address; VAR adr: Address );
 		BEGIN {EXCLUSIVE}
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			IF size - used <= reserved THEN HALT(VolumeFull) END;
-			ASSERT(hint >= 0);
+			IF ReadOnly IN flags THEN HALT( ReadOnlyError ) END;
+			IF size - used <= reserved THEN HALT( VolumeFull ) END;
+			ASSERT( hint >= 0 );
 			IF hint > size THEN hint := 0 END;
 			hint := hint - hint MOD SetSize; (* in order to make sure that hint is hit when increasing by SetSize *)
 			adr := hint+1;
 			LOOP
 				IF adr > size THEN adr := 0 END;
-				IF (adr MOD SetSize = 0) & (map[adr DIV SetSize] = {MIN(SET)..MAX(SET)}) THEN
-					INC(adr,SetSize);
-				ELSIF (adr MOD SetSize) IN map[adr DIV SetSize] THEN
-					INC(adr) (* Block in use *)
+				IF ( adr MOD SetSize = 0 ) & ( map[ adr DIV SetSize ] = {MIN( SET )..MAX( SET )} ) THEN
+					INC( adr,SetSize );
+				ELSIF ( adr MOD SetSize ) IN map[ adr DIV SetSize ] THEN
+					INC( adr ) (* Block in use *)
 				ELSE
-					INCL(map[adr DIV SetSize], adr MOD SetSize);
+					INCL( map[ adr DIV SetSize ], adr MOD SetSize );
 					EXIT
 				END;
-				IF adr = hint THEN HALT(VolumeFull) END
+				IF adr = hint THEN HALT( VolumeFull ) END
 			END;
-			INC(used)
+			INC( used )
 		END AllocBlock;
 
-		PROCEDURE FreeBlock*(adr: Address);
+		PROCEDURE FreeBlock* ( adr: Address );
 		BEGIN {EXCLUSIVE}
-			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			EXCL(map[adr DIV SetSize], adr MOD SetSize);
-			DEC(used)
+			IF ( adr < 1 ) OR ( adr > size ) THEN HALT( InvalidAdr ) END;
+			IF ReadOnly IN flags THEN HALT( ReadOnlyError ) END;
+			EXCL( map[ adr DIV SetSize ], adr MOD SetSize );
+			DEC( used )
 		END FreeBlock;
 
-		PROCEDURE FreeBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize);
+		PROCEDURE FreeBlocks* ( CONST a: ARRAY OF Address; ofs, len: TSize );
 		VAR i: SIZE;  adr: Address;
 		BEGIN {EXCLUSIVE}
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
+			IF ReadOnly IN flags THEN HALT( ReadOnlyError ) END;
 			FOR i := ofs TO ofs + len -1 DO
-				adr := a[i];
-				IF (adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
+				adr := a[ i ];
+				IF ( adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
 				ELSE 
-					IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-					EXCL(map[adr DIV SetSize], adr MOD SetSize);
-					DEC(used);
+					IF ( adr < 1 ) OR ( adr > size ) THEN HALT( InvalidAdr ) END;
+					EXCL( map[ adr DIV SetSize ], adr MOD SetSize );
+					DEC( used );
 				END;
 			END;
 		END FreeBlocks;
 
-		PROCEDURE MarkBlock*(adr: Address);
+		PROCEDURE MarkBlock* ( adr: Address );
 		BEGIN {EXCLUSIVE}
-			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			INCL(map[adr DIV SetSize], adr MOD SetSize);
-			INC(used)
+			IF ( adr < 1 ) OR ( adr > size ) THEN HALT( InvalidAdr ) END;
+			IF ReadOnly IN flags THEN HALT( ReadOnlyError ) END;
+			INCL( map[ adr DIV SetSize ], adr MOD SetSize );
+			INC( used )
 		END MarkBlock;
 		
-		PROCEDURE MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize);
+		PROCEDURE MarkBlocks* ( CONST a: ARRAY OF Address; ofs, len: TSize );
 		VAR i: SIZE;  adr: Address;
 		BEGIN {EXCLUSIVE}
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
+			IF ReadOnly IN flags THEN HALT( ReadOnlyError ) END;
 			FOR i := ofs TO ofs + len -1 DO
-				adr := a[i];
-				IF (adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
+				adr := a[ i ];
+				IF ( adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
 				ELSE 
-					IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-					INCL(map[adr DIV SetSize], adr MOD SetSize);
-					INC(used);
+					IF ( adr < 1 ) OR ( adr > size ) THEN HALT( InvalidAdr ) END;
+					INCL( map[ adr DIV SetSize ], adr MOD SetSize );
+					INC( used );
 				END;
 			END;
 		END MarkBlocks;
 
-		PROCEDURE Marked*(adr: Address): BOOLEAN;
+		PROCEDURE Marked* ( adr: Address ): BOOLEAN;
 		BEGIN {EXCLUSIVE}
-			IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
-			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
-			RETURN (adr MOD SetSize) IN map[adr DIV SetSize]
+			IF ( adr < 1 ) OR ( adr > size ) THEN HALT( InvalidAdr ) END;
+			IF ReadOnly IN flags THEN HALT( ReadOnlyError ) END;
+			RETURN ( adr MOD SetSize ) IN map[ adr DIV SetSize ]
 		END Marked;
 
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available* ( ): LONGINT;
 		BEGIN {EXCLUSIVE}
 			RETURN size-used
 		END Available;
 
-		PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		BEGIN HALT(301) END GetBlock;	(* abstract *)
+		PROCEDURE GetBlock* ( adr: LONGINT; VAR blk: ARRAY OF CHAR );
+		BEGIN HALT( 301 ) END GetBlock;	(* abstract *)
 
-		PROCEDURE PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		BEGIN HALT(301) END PutBlock;	(* abstract *)
+		PROCEDURE PutBlock* ( adr: LONGINT; VAR blk: ARRAY OF CHAR );
+		BEGIN HALT( 301 ) END PutBlock;	(* abstract *)
 
-		(* FIX: This procedure can not be declared exclusive, because it will be overridden by an exclusive procedure in the actual implementation, from where it will be supercalled.  This could be a good example for allowing recursive locks, or an example of where an alternative for overriding methods is needed. In this case the procedure is only called from the exclusive overridden procedure, so it is not a real problem (although it is ugly). *)
+		(* FIX: This procedure can not be declared exclusive, because it will be overridden by an exclusive procedure in the actual implementation, from where it will be supercalled.  This could be a good example for allowing recursive locks, or an example of where an alternative for overriding methods is needed. In this case the procedure is only called from the exclusive overridden procedure, so it is not a real problem ( although it is ugly ). *)
 		PROCEDURE Finalize*;
 		BEGIN
 			map := NIL; size := 0; blockSize := 0
 		END Finalize;
 
-		(** Init procedure for private data of above methods only.  If the above methods are not required, this procedure should not be called, and the volume fields should be initialized directly.  The flags parameter defines the volume flags, the size parameter its size, and the reserved parameter says how many blocks are reserved for the system (out of disk space trap occurs when less than this amount of blocks are present). *)
+		(** Init procedure for private data of above methods only.  If the above methods are not required, this procedure should not be called, and the volume fields should be initialized directly.  The flags parameter defines the volume flags, the size parameter its size, and the reserved parameter says how many blocks are reserved for the system ( out of disk space trap occurs when less than this amount of blocks are present ). *)
 
-		PROCEDURE Init*(flags: SET; size, reserved: LONGINT);
+		PROCEDURE Init* ( flags: SET; size, reserved: LONGINT );
 		VAR maplen: LONGINT;
 		BEGIN
 			SELF.flags := flags; SELF.size := size; SELF.reserved := reserved;
-			IF ~(ReadOnly IN flags) THEN
-				maplen := (size + SetSize) DIV SetSize;
-				NEW(map, maplen);
-				WHILE maplen > 0 DO DEC(maplen); map[maplen] := {} END;
-				INCL(map[0], 0);	(* reserve sector 0 (illegal to use) *)
+			IF ~( ReadOnly IN flags ) THEN
+				maplen := ( size + SetSize ) DIV SetSize;
+				NEW( map, maplen );
+				WHILE maplen > 0 DO DEC( maplen ); map[ maplen ] := {} END;
+				INCL( map[ 0 ], 0 );	(* reserve sector 0 ( illegal to use ) *)
 				used := 0
 			ELSE
 				used := size
@@ -301,50 +301,50 @@ TYPE
 			next: FileSystem;	(* list of known file systems *)
 			prefix*: Prefix;	(** mount prefix *)
 			desc*: ARRAY 32 OF CHAR;	(** description of file system *)
-			vol*: Volume;	(** underlying volume, if any (a boot FS must have a volume) *)
+			vol*: Volume;	(** underlying volume, if any ( a boot FS must have a volume ) *)
 			flags*: SET; (* flags like propagate prefix / can process  files without prefix *)
 
 		(** Create a new file with the specified name.  End users use Files.New instead. *)
 
-		PROCEDURE New0*(name: ARRAY OF CHAR): File;
-		BEGIN HALT(301) END New0;	(* abstract *)
+		PROCEDURE New0* ( name: ARRAY OF CHAR ): File;
+		BEGIN HALT( 301 ) END New0;	(* abstract *)
 
 		(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
 
-		PROCEDURE Old0*(name: ARRAY OF CHAR): File;
-		BEGIN HALT(301) END Old0;	(* abstract *)
+		PROCEDURE Old0* ( name: ARRAY OF CHAR ): File;
+		BEGIN HALT( 301 ) END Old0;	(* abstract *)
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
 
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
-		BEGIN HALT(301) END Delete0;	(* abstract *)
+		PROCEDURE Delete0* ( name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD );
+		BEGIN HALT( 301 ) END Delete0;	(* abstract *)
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
 
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: File; VAR res: WORD);
-		BEGIN HALT(301) END Rename0;	(* abstract *)
+		PROCEDURE Rename0* ( old, new: ARRAY OF CHAR; f: File; VAR res: WORD );
+		BEGIN HALT( 301 ) END Rename0;	(* abstract *)
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
 
-		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
-		BEGIN HALT(301) END Enumerate0;	(* abstract *)
+		PROCEDURE Enumerate0* ( mask: ARRAY OF CHAR; flags: SET; enum: Enumerator );
+		BEGIN HALT( 301 ) END Enumerate0;	(* abstract *)
 
 		(** Return the unique non-zero key of the named file, if it exists. *)
 
-		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
-		BEGIN HALT(301) END FileKey;	(* abstract *)
+		PROCEDURE FileKey* ( name: ARRAY OF CHAR ): LONGINT;
+		BEGIN HALT( 301 ) END FileKey;	(* abstract *)
 
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
 
-		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0* ( name: ARRAY OF CHAR; VAR res: WORD );
 		BEGIN res := -1	(* not supported *)
 		END CreateDirectory0;
 
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
 
-		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0* ( name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD );
 		BEGIN res := -1	(* not supported *)
 		END RemoveDirectory0;
 
@@ -356,12 +356,12 @@ TYPE
 		END Finalize;
 
 		(* default implementation using an enumerator *)
-		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+		PROCEDURE Has* ( CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET ): BOOLEAN;
 		VAR enum: Enumerator; time, date: LONGINT; size: Streams.Position;
 		BEGIN
-			NEW(enum);
-			enum.Open(name,{});
-			IF enum.HasMoreEntries() & enum.GetEntry(fullName, flags, time, date, size) THEN
+			NEW( enum );
+			enum.Open( name,{} );
+			IF enum.HasMoreEntries( ) & enum.GetEntry( fullName, flags, time, date, size ) THEN
 				RETURN TRUE
 			ELSE
 				RETURN FALSE
@@ -369,8 +369,8 @@ TYPE
 		END Has;
 
 (* GC
-		PROCEDURE Purge*(f: File);	(* race! *)
-		BEGIN HALT(301) END Purge;	(* by default not allowed to purge files *)
+		PROCEDURE Purge* ( f: File );	(* race! *)
+		BEGIN HALT( 301 ) END Purge;	(* by default not allowed to purge files *)
 *)
 
 	END FileSystem;
@@ -380,76 +380,76 @@ TYPE
 TYPE
 	File* = OBJECT	(** sharable *)
 		VAR
-				(** private fields for implementors *)
-			flags*: SET;			(** (read-only!) file-specific flags, i.e. Directory. *)
-			key*: LONGINT;	(* unique id for registered file, never 0 *)
+			(** private fields for implementors *)
+			flags*: SET;		(* ( read-only! ) file-specific flags, i.e. Directory. *)
+			key*: LONGINT;		(* unique id for registered file, never 0 *)
 			fs*: FileSystem;	(* file system containing file *)
 
 		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
 
-		PROCEDURE Set*(VAR r: Rider; pos: Streams.Position);
-		BEGIN HALT(301) END Set;	(* abstract *)
+		PROCEDURE Set* ( VAR r: Rider; pos: Streams.Position );
+		BEGIN HALT( 301 ) END Set;	(* abstract *)
 
 		(** Return the offset of a Rider positioned on a file. *)
 
-		PROCEDURE Pos*(VAR r: Rider): Streams.Position;
-		BEGIN HALT(301) END Pos;	(* abstract *)
+		PROCEDURE Pos* ( VAR r: Rider ): Streams.Position;
+		BEGIN HALT( 301 ) END Pos;	(* abstract *)
 
 		(** Read a byte from a file, advancing the Rider one byte further.  R.eof indicates if the end of the file has been passed. *)
 
-		PROCEDURE Read*(VAR r: Rider; VAR x: CHAR);
-		BEGIN HALT(301) END Read;	(* abstract *)
+		PROCEDURE Read* ( VAR r: Rider; VAR x: CHAR );
+		BEGIN HALT( 301 ) END Read;	(* abstract *)
 
 		(** Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 
-		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: Streams.BufferOffset);
-		BEGIN HALT(301) END ReadBytes;	(* abstract *)
+		PROCEDURE ReadBytes* ( VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE );
+		BEGIN HALT( 301 ) END ReadBytes;	(* abstract *)
 
 		(** Write a byte into the file at the Rider position, advancing the Rider by one. *)
 
-		PROCEDURE Write*(VAR r: Rider; x: CHAR);
-		BEGIN HALT(301) END Write;	(* abstract *)
+		PROCEDURE Write* ( VAR r: Rider; x: CHAR );
+		BEGIN HALT( 301 ) END Write;	(* abstract *)
 
-		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
+		(** Write the buffer x containing len bytes ( starting at offset ofs ) into a file at the Rider position. *)
 
-		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: Streams.BufferOffset);
-		BEGIN HALT(301) END WriteBytes;	(* abstract *)
+		PROCEDURE WriteBytes* ( VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE );
+		BEGIN HALT( 301 ) END WriteBytes;	(* abstract *)
 
 		(** Return the current length of a file. *)
 
-		PROCEDURE Length*(): Streams.Position;
-		BEGIN HALT(301) END Length;	(* abstract *)
+		PROCEDURE Length* ( ): Streams.Position;
+		BEGIN HALT( 301 ) END Length;	(* abstract *)
 
-		(** Return the time (t) and date (d) when a file was last modified. *)
+		(** Return the time ( t ) and date ( d ) when a file was last modified. *)
 
-		PROCEDURE GetDate*(VAR t, d: LONGINT);
-		BEGIN HALT(301) END GetDate;	(* abstract *)
+		PROCEDURE GetDate* ( VAR t, d: LONGINT );
+		BEGIN HALT( 301 ) END GetDate;	(* abstract *)
 
-		(** Set the modification time (t) and date (d) of a file. *)
+		(** Set the modification time ( t ) and date ( d ) of a file. *)
 
-		PROCEDURE SetDate*(t, d: LONGINT);
-		BEGIN HALT(301) END SetDate;	(* abstract *)
+		PROCEDURE SetDate* ( t, d: LONGINT );
+		BEGIN HALT( 301 ) END SetDate;	(* abstract *)
 
 		(** Get file attributes. *)
-		PROCEDURE GetAttributes*(): SET;
-		BEGIN HALT(301) END GetAttributes; (* abstract *)
+		PROCEDURE GetAttributes* ( ): SET;
+		BEGIN HALT( 301 ) END GetAttributes; (* abstract *)
 
 		(** Set file attributes. *)
-		PROCEDURE SetAttributes*(flags: SET);
-		BEGIN HALT(301) END SetAttributes; (* abstract *)
+		PROCEDURE SetAttributes* ( flags: SET );
+		BEGIN HALT( 301 ) END SetAttributes; (* abstract *)
 
 		(** Return the canonical name of a file. *)
-		PROCEDURE GetName*(VAR name: ARRAY OF CHAR);
-		BEGIN HALT(301) END GetName;	(* abstract *)
+		PROCEDURE GetName* ( VAR name: ARRAY OF CHAR );
+		BEGIN HALT( 301 ) END GetName;	(* abstract *)
 
 		(** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically updated.  End users use Files.Register instead. *)
-		PROCEDURE Register0*(VAR res: WORD);
-		BEGIN HALT(301) END Register0;	(* abstract *)
+		PROCEDURE Register0* ( VAR res: WORD );
+		BEGIN HALT( 301 ) END Register0;	(* abstract *)
 
 		(** Flush the changes made to a file from its buffers. Register0 will automatically update a file. *)
 
 		PROCEDURE Update*;
-		BEGIN HALT(301) END Update;	(* abstract *)
+		BEGIN HALT( 301 ) END Update;	(* abstract *)
 
 		(*
 			Usually, in Oberon a file is not closed explicitly but by a call to finalizers by the garbage colloector.
@@ -473,42 +473,42 @@ TYPE
 
 		(** Open an enumerator and enumerate the files that match mask. *)
 
-		PROCEDURE Open*(mask: ARRAY OF CHAR; flags: SET);
+		PROCEDURE Open* ( mask: ARRAY OF CHAR; flags: SET );
 		BEGIN
-			r.file := New("");
-			r.file.Set(r, 0);
+			r.file := New( "" );
+			r.file.Set( r, 0 );
 			size := 0;
 			adding := TRUE;
-			Enumerate(mask, flags, SELF);
+			Enumerate( mask, flags, SELF );
 			adding := FALSE;
-			r.file.Set(r, 0)
+			r.file.Set( r, 0 )
 		END Open;
 
 		(** reset the enumerator to the first entry *)
 
 		PROCEDURE Reset*;
 		BEGIN
-			r.file.Set(r, 0)
+			r.file.Set( r, 0 )
 		END Reset;
 
 		(** returns TRUE if the enumerator contains more entries *)
 
-		PROCEDURE HasMoreEntries*(): BOOLEAN;
+		PROCEDURE HasMoreEntries* ( ): BOOLEAN;
 		BEGIN
-			RETURN r.file.Pos(r) < r.file.Length()
+			RETURN r.file.Pos( r ) < r.file.Length( )
 		END HasMoreEntries;
 
 		(** Get one entry from the enumerator. *)
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Streams.Position): BOOLEAN;
+		PROCEDURE GetEntry* ( VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Streams.Position ): BOOLEAN;
 		VAR len: LONGINT;
 		BEGIN
-			ReadNum(r, len);
+			ReadNum( r, len );
 			IF ~r.eof THEN
-				name[len] := 0X;	(* index check *)
-				r.file.ReadBytes(r, name, 0, len);
-				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadFileSize(r, size);
-				ASSERT(~r.eof)
+				name[ len ] := 0X;	(* index check *)
+				r.file.ReadBytes( r, name, 0, len );
+				ReadSet( r, flags ); ReadNum( r, time ); ReadNum( r, date ); ReadFileSize( r, size );
+				ASSERT( ~r.eof )
 			END;
 			RETURN ~r.eof
 		END GetEntry;
@@ -517,33 +517,33 @@ TYPE
 
 		PROCEDURE Close*;
 		BEGIN
-			(*r.fs.Purge(r.file);*)
+			(*r.fs.Purge( r.file );*)
 			r.hint := NIL; r.file := NIL; r.fs := NIL
 		END Close;
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size:Streams.Position);
+		PROCEDURE PutEntry* ( VAR name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size: Streams.Position );
 		VAR len: LONGINT;
 		BEGIN
-			ASSERT(adding);
-			INC(SELF.size);
-			len := 0; WHILE name[len] # 0X DO INC(len) END;
-			WriteNum(r, len); r.file.WriteBytes(r, name, 0, len);
-			WriteSet(r, flags); WriteNum(r, time); WriteNum(r, date); WriteFileSize(r, size)
+			ASSERT( adding );
+			INC( SELF.size );
+			len := 0; WHILE name[ len ] # 0X DO INC( len ) END;
+			WriteNum( r, len ); r.file.WriteBytes( r, name, 0, len );
+			WriteSet( r, flags ); WriteNum( r, time ); WriteNum( r, date ); WriteFileSize( r, size )
 		END PutEntry;
 
 	END Enumerator;
 
 TYPE
-	(* FinalizedCollection enumerator searching for a file by (fs,key). *)
+	(* FinalizedCollection enumerator searching for a file by ( fs,key ). *)
 	FileSearcher = OBJECT
 		VAR fs: FileSystem; key: LONGINT; found: File;
 
-		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
+		PROCEDURE EnumFile( f: ANY; VAR cont: BOOLEAN );
 		BEGIN
 			WITH f: File DO
-				IF (f.fs = fs) & (f.key = key) THEN
+				IF ( f.fs = fs ) & ( f.key = key ) THEN
 					found := f; cont := FALSE
 				END
 			END
@@ -553,13 +553,13 @@ TYPE
 
 TYPE
 		(** Parameters passed to volume and file system generator commands.  The str field contains a generic parameter string from the mount command.  The vol field returns the new volume from volume generators and passes the volume parameter to file system generators.  The prefix field contains the mount prefix, mainly for file system generators to add themselves with Files.Add. *)
-	Parameters* = OBJECT(Commands.Context)
+	Parameters* = OBJECT( Commands.Context )
 	VAR
 		vol*: Volume;	(** out parameter of volume generators and in parameter of file system generators. *)
 		prefix*: Prefix;
 	END Parameters;
 
-	FileSystemFactory* = PROCEDURE(context : Parameters);
+	FileSystemFactory* = PROCEDURE( context : Parameters );
 
 VAR
 	fsroot: FileSystem;	(* list of known file systems *)
@@ -571,160 +571,160 @@ VAR
 
 (** Open a reader on a file at the specified position. *)
 
-PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: Streams.Position);
+PROCEDURE OpenReader* ( VAR b: Reader; f: File; pos: Streams.Position );
 BEGIN
 	IF b = NIL THEN
-		NEW(b, f, pos)
+		NEW( b, f, pos )
 	ELSE
-		b.InitFileReader(f,pos)
+		b.InitFileReader( f,pos )
 	END;
 END OpenReader;
 
 (** Open a writer on a file at the specified position.  Remember to call Streams.Update before registering or closing the file! *)
 
-PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: Streams.Position);
+PROCEDURE OpenWriter* ( VAR b: Writer; f: File; pos: Streams.Position );
 BEGIN
-	NEW(b, f, pos)
+	NEW( b, f, pos )
 END OpenWriter;
 
 (** File name prefix support. *)
 
 (** Split fullname = ( prefix ":" name ) into prefix and name *)
 
-PROCEDURE SplitName*(fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
+PROCEDURE SplitName* ( fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR );
 VAR i, j, len: SIZE;
 BEGIN
-	i := 0; WHILE (fullname[i] # ":") & (fullname[i] # 0X) DO INC(i) END;
-	IF (fullname[i] # ":") OR (i >= LEN(prefix)) THEN
-		COPY("", prefix); COPY(fullname, name);
+	i := 0; WHILE ( fullname[ i ] # ":" ) & ( fullname[ i ] # 0X ) DO INC( i ) END;
+	IF ( fullname[ i ] # ":" ) OR ( i >= LEN( prefix )) THEN
+		COPY( "", prefix ); COPY( fullname, name );
 	ELSE
-		j := 0; WHILE j # i DO prefix[j] := fullname[j]; INC(j) END;
-		prefix[j] := 0X;
-		j := 0; INC(i); len := LEN(name)-1;
-		WHILE (j < len) & (fullname[i] # 0X) DO name[j] := fullname[i]; INC(j); INC(i) END;
-		name[j] := 0X
+		j := 0; WHILE j # i DO prefix[ j ] := fullname[ j ]; INC( j ) END;
+		prefix[ j ] := 0X;
+		j := 0; INC( i ); len := LEN( name )-1;
+		WHILE ( j < len ) & ( fullname[ i ] # 0X ) DO name[ j ] := fullname[ i ]; INC( j ); INC( i ) END;
+		name[ j ] := 0X
 	END
 END SplitName;
 
 (** Join prefix and name to fullname = ( prefix ":" name ) *)
 
-PROCEDURE JoinName*(prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
+PROCEDURE JoinName* ( prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR );
 VAR i, j, len: SIZE;
 BEGIN
-	len := LEN(fullname)-1;
-	i := 0; WHILE (i < len) & (prefix[i] # 0X) DO fullname[i] := prefix[i]; INC(i) END;
-	IF (i < len) THEN fullname[i] := ":"; INC(i) END;
-	j := 0; WHILE (i < len) & (name[j] # 0X) DO fullname[i] := name[j]; INC(i); INC(j) END;
-	fullname[i] := 0X
+	len := LEN( fullname )-1;
+	i := 0; WHILE ( i < len ) & ( prefix[ i ] # 0X ) DO fullname[ i ] := prefix[ i ]; INC( i ) END;
+	IF ( i < len ) THEN fullname[ i ] := ":"; INC( i ) END;
+	j := 0; WHILE ( i < len ) & ( name[ j ] # 0X ) DO fullname[ i ] := name[ j ]; INC( i ); INC( j ) END;
+	fullname[ i ] := 0X
 END JoinName;
 
-(** Split a pathname at the last PathDelimiter or ":" into path and filename = ( {path (PathDelimiter|":")} filename ) *)
+(** Split a pathname at the last PathDelimiter or ":" into path and filename = ( {path ( PathDelimiter|":" )} filename ) *)
 
-PROCEDURE SplitPath*(pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR);
+PROCEDURE SplitPath* ( pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR );
 VAR i, j, len: SIZE;
 BEGIN
 	i := 0; j := -1;
-	WHILE pathname[i] # 0X DO
-		IF (pathname[i] = PathDelimiter) OR (pathname[i] = ":") THEN j := i END;
-		INC(i)
+	WHILE pathname[ i ] # 0X DO
+		IF ( pathname[ i ] = PathDelimiter ) OR ( pathname[ i ] = ":" ) THEN j := i END;
+		INC( i )
 	END;
-	i := 0; len := LEN(path)-1;
-	WHILE (i < len) & (i < j) DO path[i] := pathname[i]; INC(i) END; path[i] := 0X;
+	i := 0; len := LEN( path )-1;
+	WHILE ( i < len ) & ( i < j ) DO path[ i ] := pathname[ i ]; INC( i ) END; path[ i ] := 0X;
 
-	IF pathname[i] = ":" THEN path[i] := ":"; path[i+1] := 0X;  END; (* fof  for correct splitting of filenames such as c:test into c: and test*)
+	IF pathname[ i ] = ":" THEN path[ i ] := ":"; path[ i+1 ] := 0X;  END; (* fof  for correct splitting of filenames such as c:test into c: and test*)
 
-	INC(j); i := 0; len := LEN(name)-1;
-	WHILE (i < len) & (pathname[j] # 0X) DO name[i] := pathname[j]; INC(i); INC(j) END;
-	name[i] := 0X
+	INC( j ); i := 0; len := LEN( name )-1;
+	WHILE ( i < len ) & ( pathname[ j ] # 0X ) DO name[ i ] := pathname[ j ]; INC( i ); INC( j ) END;
+	name[ i ] := 0X
 END SplitPath;
 
 (** Join path and file name = ( path PathDelimiter name ) *)
 
-PROCEDURE JoinPath*(path, name: ARRAY OF CHAR; VAR pathname: ARRAY OF CHAR);
+PROCEDURE JoinPath* ( path, name: ARRAY OF CHAR; VAR pathname: ARRAY OF CHAR );
 VAR i, j, len: SIZE;
 BEGIN
-	len := LEN(pathname)-1;
-	i := 0; WHILE (i < len) & (path[i] # 0X) DO pathname[i] := path[i]; INC(i) END;
-	IF ((i = 0) OR (pathname[i-1] # PathDelimiter)) & (i < len) THEN pathname[i] := PathDelimiter; INC(i) END;
-	j := 0; WHILE (i < len) & (name[j] # 0X) DO pathname[i] := name[j]; INC(i); INC(j) END;
-	pathname[i] := 0X
+	len := LEN( pathname )-1;
+	i := 0; WHILE ( i < len ) & ( path[ i ] # 0X ) DO pathname[ i ] := path[ i ]; INC( i ) END;
+	IF (( i = 0 ) OR ( pathname[ i-1 ] # PathDelimiter )) & ( i < len ) THEN pathname[ i ] := PathDelimiter; INC( i ) END;
+	j := 0; WHILE ( i < len ) & ( name[ j ] # 0X ) DO pathname[ i ] := name[ j ]; INC( i ); INC( j ) END;
+	pathname[ i ] := 0X
 END JoinPath;
 
 (** Split a filename at the last '.' into name and extension = ( name "." extension ) *)
 
-PROCEDURE SplitExtension*(filename: ARRAY OF CHAR; VAR name, extension: ARRAY OF CHAR);
+PROCEDURE SplitExtension* ( filename: ARRAY OF CHAR; VAR name, extension: ARRAY OF CHAR );
 VAR i, j, len: SIZE;
 BEGIN
 	i := 0; j := 0;
-	WHILE filename[i] # 0X DO
-		IF filename[i] = "." THEN j := i END;
-		INC(i)
+	WHILE filename[ i ] # 0X DO
+		IF filename[ i ] = "." THEN j := i END;
+		INC( i )
 	END;
-	IF (j = 0) & (filename[0] # ".") THEN (* no extension *)
-		COPY(filename, name); COPY("", extension)
+	IF ( j = 0 ) & ( filename[ 0 ] # "." ) THEN (* no extension *)
+		COPY( filename, name ); COPY( "", extension )
 	ELSE
-		i := 0; len := LEN(name)-1;
-		WHILE (i < len) & (i < j) DO name[i] := filename[i]; INC(i) END; name[i] := 0X;
-		INC(j); i := 0; len := LEN(extension)-1;
-		WHILE (i < len) & (filename[j] # 0X) DO extension[i] := filename[j]; INC(i); INC(j) END;
-		extension[i] := 0X
+		i := 0; len := LEN( name )-1;
+		WHILE ( i < len ) & ( i < j ) DO name[ i ] := filename[ i ]; INC( i ) END; name[ i ] := 0X;
+		INC( j ); i := 0; len := LEN( extension )-1;
+		WHILE ( i < len ) & ( filename[ j ] # 0X ) DO extension[ i ] := filename[ j ]; INC( i ); INC( j ) END;
+		extension[ i ] := 0X
 	END
 END SplitExtension;
 
 (** Join name and extension = ( name "." extension ) *)
 
-PROCEDURE JoinExtension*(name, extension: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR);
+PROCEDURE JoinExtension* ( name, extension: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR );
 VAR i,j,len: SIZE;
 BEGIN
-	len := LEN(filename)-1;
-	i := 0; WHILE (i < len) & (name[i] # 0X) DO filename[i] := name[i]; INC(i) END;
-	IF ((i = 0) OR (filename[i-1] # ".")) & (i < len) THEN filename[i] := "."; INC(i) END;
-	j := 0; IF extension[0] = "." THEN INC(j) END;
-	WHILE (i < len) & (extension[j] # 0X) DO filename[i] := extension[j]; INC(i); INC(j) END;
-	filename[i] := 0X
+	len := LEN( filename ) - 1;
+	i := 0; WHILE ( i < len ) & ( name[ i ] # 0X ) DO filename[ i ] := name[ i ]; INC( i ) END;
+	IF (( i = 0 ) OR ( filename[ i-1 ] # "." )) & ( i < len ) THEN filename[ i ] := "."; INC( i ) END;
+	j := 0; IF extension[ 0 ] = "." THEN INC( j ) END;
+	WHILE ( i < len ) & ( extension[ j ] # 0X ) DO filename[ i ] := extension[ j ]; INC( i ); INC( j ) END;
+	filename[ i ] := 0X
 END JoinExtension;
 
 (** Append the path delimiter to path if path does not contain one *)
 
-PROCEDURE ForceTrailingDelimiter*(VAR path: ARRAY OF CHAR);
+PROCEDURE ForceTrailingDelimiter* ( VAR path: ARRAY OF CHAR );
 VAR i: SIZE;
 BEGIN
-	i := 0; WHILE path[i] # 0X DO INC(i) END;
-	IF (i = 0) OR (path[i-1] # PathDelimiter) THEN
-		path[i] := PathDelimiter;
-		path[i+1] := 0X
+	i := 0; WHILE path[ i ] # 0X DO INC( i ) END;
+	IF ( i = 0 ) OR ( path[ i-1 ] # PathDelimiter ) THEN
+		path[ i ] := PathDelimiter;
+		path[ i+1 ] := 0X
 	END
 END ForceTrailingDelimiter;
 
 (** File system list support. *)
 
-PROCEDURE WriteFS(fs: FileSystem);
+PROCEDURE WriteFS( fs: FileSystem );
 BEGIN
 	IF Trace THEN
-		IF fs.vol # NIL THEN KernelLog.String(fs.vol.name); KernelLog.Char(" ") END;
-		KernelLog.String(fs.desc)
+		IF fs.vol # NIL THEN KernelLog.String( fs.vol.name ); KernelLog.Char( " " ) END;
+		KernelLog.String( fs.desc )
 	END
 END WriteFS;
 
 (** Add file system at end of list, with specified prefix, which must be unique. *)
 
-PROCEDURE Add*(fs: FileSystem; prefix: ARRAY OF CHAR);
+PROCEDURE Add* ( fs: FileSystem; prefix: ARRAY OF CHAR );
 VAR p, c: FileSystem;
 BEGIN {EXCLUSIVE}
 	IF Trace THEN
-		KernelLog.Enter; KernelLog.String("Files: Adding "); WriteFS(fs); KernelLog.Exit
+		KernelLog.Enter; KernelLog.String( "Files: Adding " ); WriteFS( fs ); KernelLog.Exit
 	END;
-	COPY(prefix, fs.prefix);
+	COPY( prefix, fs.prefix );
 	p := NIL; c := fsroot;
 	WHILE c # NIL DO
-		ASSERT((c # fs) & (c.prefix # fs.prefix));	(* duplicate insertion not allowed *)
+		ASSERT(( c # fs ) & ( c.prefix # fs.prefix ));	(* duplicate insertion not allowed *)
 		p := c; c := c.next
 	END;
 	IF p = NIL THEN fsroot := fs ELSE p.next := fs END;
 	fs.next := NIL
 END Add;
 
-PROCEDURE DeleteFS(fs: FileSystem);
+PROCEDURE DeleteFS( fs: FileSystem );
 VAR p, c: FileSystem;
 BEGIN
 	p := NIL; c := fsroot;
@@ -735,23 +735,23 @@ END DeleteFS;
 
 (** Promote fs to the start of the list. *)
 
-PROCEDURE Promote*(fs: FileSystem);
+PROCEDURE Promote* ( fs: FileSystem );
 BEGIN {EXCLUSIVE}
-	DeleteFS(fs);
+	DeleteFS( fs );
 	fs.next := fsroot; fsroot := fs
 END Promote;
 
 (** Remove the file system and finalize it. *)
 
-PROCEDURE Remove*(fs: FileSystem);
+PROCEDURE Remove* ( fs: FileSystem );
 VAR
 	enum: OBJECT
 		VAR count: LONGINT; fs: FileSystem;
 
-		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
+		PROCEDURE EnumFile( f: ANY; VAR cont: BOOLEAN );
 		BEGIN
 			WITH f: File DO
-				IF f.fs = fs THEN INC(count); f.Update(); f.fs := NIL END
+				IF f.fs = fs THEN INC( count ); f.Update( ); f.fs := NIL END
 				(* if Update procedure calls back to this module deadlock can result *)
 			END
 		END EnumFile;
@@ -760,50 +760,50 @@ VAR
 
 BEGIN {EXCLUSIVE}
 	IF Trace THEN
-		KernelLog.Enter; KernelLog.String("Files: Removing "); WriteFS(fs); KernelLog.Exit
+		KernelLog.Enter; KernelLog.String( "Files: Removing " ); WriteFS( fs ); KernelLog.Exit
 	END;
-	NEW(enum); enum.count := 0; enum.fs := fs;
-	files.Enumerate(enum.EnumFile);
+	NEW( enum ); enum.count := 0; enum.fs := fs;
+	files.Enumerate( enum.EnumFile );
 	IF enum.count # 0 THEN
-		KernelLog.Enter; KernelLog.String("Files: "); KernelLog.Int(enum.count, 1);
-		KernelLog.String(" open files");
+		KernelLog.Enter; KernelLog.String( "Files: " ); KernelLog.Int( enum.count, 1 );
+		KernelLog.String( " open files" );
 		IF fs.vol # NIL THEN
-			KernelLog.String(" on "); KernelLog.String(fs.vol.name)
+			KernelLog.String( " on " ); KernelLog.String( fs.vol.name )
 		END;
 		KernelLog.Exit
 	END;
-	fs.Finalize();	(* potential deadlock *)
-	DeleteFS(fs)
+	fs.Finalize( );	(* potential deadlock *)
+	DeleteFS( fs )
 END Remove;
 
 (* Find the file system with specified prefix. *)
 
-PROCEDURE FindFS(prefix: ARRAY OF CHAR): FileSystem;
+PROCEDURE FindFS( prefix: ARRAY OF CHAR ): FileSystem;
 VAR fs: FileSystem;
 BEGIN
-	fs := fsroot; WHILE (fs # NIL) & (fs.prefix # prefix) DO fs := fs.next END;
+	fs := fsroot; WHILE ( fs # NIL ) & ( fs.prefix # prefix ) DO fs := fs.next END;
 	RETURN fs
 END FindFS;
 
 (** Find file system with specified prefix. *)
 
-PROCEDURE This*(prefix: ARRAY OF CHAR): FileSystem;
+PROCEDURE This* ( prefix: ARRAY OF CHAR ): FileSystem;
 BEGIN {EXCLUSIVE}
-	RETURN FindFS(prefix)
+	RETURN FindFS( prefix )
 END This;
 
 (** Get a list of file systems. *)
 
-PROCEDURE GetList*(VAR list: FileSystemTable);
+PROCEDURE GetList* ( VAR list: FileSystemTable );
 VAR fs: FileSystem; n, i: LONGINT;
 BEGIN {EXCLUSIVE}
 	fs := fsroot; n := 0;
-	WHILE (fs # NIL) DO fs := fs.next; INC(n) END;
+	WHILE ( fs # NIL ) DO fs := fs.next; INC( n ) END;
 	IF n # 0 THEN
-		NEW(list, n);
+		NEW( list, n );
 		fs := fsroot;
 		FOR i := 0 TO n-1 DO
-			list[i] := fs; fs := fs.next
+			list[ i ] := fs; fs := fs.next
 		END
 	ELSE
 		list := NIL
@@ -811,11 +811,11 @@ BEGIN {EXCLUSIVE}
 END GetList;
 
 (* GC
-PROCEDURE Collect(f: ANY);
+PROCEDURE Collect( f: ANY );
 BEGIN
 	WITH f: File DO
-		IF (f.fs # NIL) & (f.fs.vol # NIL) & ~(ReadOnly IN f.fs.vol.flags) THEN
-			IF ~f.fs.Registered(f) THEN f.fs.Purge(f) END
+		IF ( f.fs # NIL ) & ( f.fs.vol # NIL ) & ~( ReadOnly IN f.fs.vol.flags ) THEN
+			IF ~f.fs.Registered( f ) THEN f.fs.Purge( f ) END
 		END
 	END
 END Collect;
@@ -823,20 +823,20 @@ END Collect;
 
 (* Find file in open file list, or open and add it. *)
 
-PROCEDURE OpenOld(enum: FileSearcher; fs: FileSystem; VAR fname: ARRAY OF CHAR): File;
+PROCEDURE OpenOld( enum: FileSearcher; fs: FileSystem; VAR fname: ARRAY OF CHAR ): File;
 VAR f: File; key: LONGINT;
 BEGIN
 	f := NIL;
-	IF (fs # NIL) & (fname # "") THEN
-		key := fs.FileKey(fname);
-		IF key # 0 THEN f := FindOpenFile(enum, fs, key) END;
+	IF ( fs # NIL ) & ( fname # "" ) THEN
+		key := fs.FileKey( fname );
+		IF key # 0 THEN f := FindOpenFile( enum, fs, key ) END;
 		IF f = NIL THEN	(* not found *)
-			f := fs.Old0(fname);
+			f := fs.Old0( fname );
 			IF f # NIL THEN
-				ASSERT(f.key # 0);	(* key must be set *)
-				files.Add(f, NIL);
+				ASSERT( f.key # 0 );	(* key must be set *)
+				files.Add( f, NIL );
 (* GC
-				Heaps.RegisterFinalizer(f, Collect);	(* to do: use one finalizer for ordering *)
+				Heaps.RegisterFinalizer( f, Collect );	(* to do: use one finalizer for ordering *)
 *)
 			END
 		END
@@ -846,48 +846,48 @@ END OpenOld;
 
 (** Open an existing file, searching through the mounted file system list if no prefix is specified. *)
 
-PROCEDURE Old*(name: ARRAY OF CHAR): File;
+PROCEDURE Old* ( name: ARRAY OF CHAR ): File;
 VAR fs: FileSystem; f: File; prefix: Prefix; fname: FileName;
 BEGIN {EXCLUSIVE}
 	f := NIL;
-	SplitName(name, prefix, fname);
+	SplitName( name, prefix, fname );
 	IF prefix = "" THEN
 		fs := fsroot;
-		WHILE (fs # NIL) & (f = NIL) DO
-			IF ~(NeedsPrefix IN fs.flags) THEN (* fof *)
-			f := OpenOld(seacher, fs, fname);
+		WHILE ( fs # NIL ) & ( f = NIL ) DO
+			IF ~( NeedsPrefix IN fs.flags ) THEN (* fof *)
+			f := OpenOld( seacher, fs, fname );
 			END;
 			fs := fs.next
 		END
 	ELSE
-		f := OpenOld(seacher, FindFS(prefix), fname)
+		f := OpenOld( seacher, FindFS( prefix ), fname )
 	END;
 	RETURN f
 END Old;
 
 (** Create a new file.  If no prefix is specified, create the file on the first file system in the mounted list. *)
 
-PROCEDURE New*(name: ARRAY OF CHAR): File;
+PROCEDURE New* ( name: ARRAY OF CHAR ): File;
 VAR fs: FileSystem; f: File; prefix: Prefix; fname: FileName;
 BEGIN {EXCLUSIVE}
-	f := NIL; SplitName(name, prefix, fname);
+	f := NIL; SplitName( name, prefix, fname );
 	IF prefix = "" THEN
 		fs := fsroot;	(* use default file system *)
 		IF fname = "" THEN	(* anonymous file on unspecified file system *)
-			WHILE (fs # NIL) & ((fs.vol = NIL) OR (fs.vol.flags * {Boot,ReadOnly} # {Boot})) DO
+			WHILE ( fs # NIL ) & (( fs.vol = NIL ) OR ( fs.vol.flags * {Boot,ReadOnly} # {Boot} )) DO
 				fs := fs.next	(* find a writable boot file system *)
 			END;
 			IF fs = NIL THEN fs := fsroot END	(* none found, relapse to default *)
 		END
 	ELSE
-		fs := FindFS(prefix);
+		fs := FindFS( prefix );
 	END;
 	IF fs # NIL THEN
-		IF (fs.vol = NIL) OR ~(ReadOnly IN fs.vol.flags) THEN
-			f := fs.New0(fname);
+		IF ( fs.vol = NIL ) OR ~( ReadOnly IN fs.vol.flags ) THEN
+			f := fs.New0( fname );
 (* GC
 			IF f # NIL THEN
-				Heaps.RegisterFinalizer(f, Collect)
+				Heaps.RegisterFinalizer( f, Collect )
 			END
 *)
 		END
@@ -897,20 +897,20 @@ END New;
 
 (** Delete a file. res = 0 indicates success. *)
 
-PROCEDURE Delete*(VAR name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Delete* ( VAR name: ARRAY OF CHAR; VAR res: WORD );
 VAR fs: FileSystem; f: File; key: LONGINT; prefix: Prefix; fname: FileName;
 BEGIN {EXCLUSIVE}
-	SplitName(name, prefix, fname);
-	IF prefix = "" THEN fs := fsroot ELSE fs := FindFS(prefix) END;
+	SplitName( name, prefix, fname );
+	IF prefix = "" THEN fs := fsroot ELSE fs := FindFS( prefix ) END;
 
 	IF fs # NIL THEN
-		IF (fs.vol = NIL) OR ~(ReadOnly IN fs.vol.flags) THEN
-			fs.Delete0(fname, key, res);
+		IF ( fs.vol = NIL ) OR ~( ReadOnly IN fs.vol.flags ) THEN
+			fs.Delete0( fname, key, res );
 			IF key # 0 THEN
-				LOOP	(* remove all occurances of file (fs,key) from collection. *)
-					f := FindOpenFile(seacher, fs, key);
+				LOOP	(* remove all occurances of file ( fs,key ) from collection. *)
+					f := FindOpenFile( seacher, fs, key );
 					IF f = NIL THEN EXIT END;
-					files.Remove(f)
+					files.Remove( f )
 				END
 			END
 		ELSE
@@ -922,37 +922,37 @@ BEGIN {EXCLUSIVE}
 END Delete;
 
 (* copies the file with the given name to the fileClipboard *)
-PROCEDURE Copy*(name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Copy* ( name: ARRAY OF CHAR; VAR res: WORD );
 VAR file: File;
 BEGIN
 	res := -1;
-	file := Old(name);
+	file := Old( name );
 	IF file = NIL THEN RETURN END;
 	fileClipboard := file;
 	res := 0;
 END Copy;
 
 (* pastes the fileClipboard into the file with the given name if it doesn't exist already *)
-PROCEDURE Paste*(name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Paste* ( name: ARRAY OF CHAR; VAR res: WORD );
 VAR writer : Writer;
 	reader : Reader;
 	file : File;
 	chunk : ARRAY 4096 OF CHAR;
-	len : Streams.BufferOffset;
+	len : SIZE;
 BEGIN
 	IF fileClipboard = NIL THEN RETURN END;
-	IF Old(name) # NIL THEN res := FileAlreadyExists;			(* File already exists *)
+	IF Old( name ) # NIL THEN res := FileAlreadyExists;			(* File already exists *)
 	ELSE
-		file := New(name);
+		file := New( name );
 		IF file = NIL THEN res := BadFileName; RETURN END;	(* Bad Filename *)
-		NEW(writer, file, 0);
-		NEW(reader, fileClipboard, 0);
-		WHILE (reader.res = Streams.Ok) DO
-			reader.Bytes(chunk, 0, LEN(chunk), len);
-			writer.Bytes(chunk, 0, len);
+		NEW( writer, file, 0 );
+		NEW( reader, fileClipboard, 0 );
+		WHILE ( reader.res = Streams.Ok ) DO
+			reader.Bytes( chunk, 0, LEN( chunk ), len );
+			writer.Bytes( chunk, 0, len );
 		END;
 		writer.Update;
-		Register(file);
+		Register( file );
 		res := 0;
 	END;
 END Paste;
@@ -964,7 +964,7 @@ END Paste;
  * @param overwrite: @in: Overwrite existing files? @out: Has an existing file been overwritten?
  * @param res: @out: Result code
  *)
-PROCEDURE CopyFile*(source, destination : ARRAY OF CHAR; VAR overwrite : BOOLEAN; VAR res : WORD);
+PROCEDURE CopyFile* ( source, destination : ARRAY OF CHAR; VAR overwrite : BOOLEAN; VAR res : WORD );
 VAR
 	sprefix, dprefix : Prefix;
 	sname, dname, dpath, dfilename: FileName;
@@ -974,26 +974,26 @@ VAR
 	buffer : ARRAY BufferSize OF CHAR;
 	i : Streams.Position;
 BEGIN
-	SplitName(source, sprefix, sname);
-	SplitName(destination, dprefix, dname);
+	SplitName( source, sprefix, sname );
+	SplitName( destination, dprefix, dname );
 	BEGIN {EXCLUSIVE}
-		IF sprefix = "" THEN sfs := fsroot; ELSE sfs := FindFS(sprefix); END;
-		IF dprefix = "" THEN dfs := fsroot; ELSE dfs := FindFS(dprefix); END;
+		IF sprefix = "" THEN sfs := fsroot; ELSE sfs := FindFS( sprefix ); END;
+		IF dprefix = "" THEN dfs := fsroot; ELSE dfs := FindFS( dprefix ); END;
 
-		IF (sfs # NIL) & (dfs # NIL) THEN (* We found the file system *)
-			IF (dfs.vol = NIL) OR ~(ReadOnly IN dfs.vol.flags) THEN (* We may write to the target volume *)
-				sfile := OpenOld(seacher, sfs, sname);
+		IF ( sfs # NIL ) & ( dfs # NIL ) THEN (* We found the file system *)
+			IF ( dfs.vol = NIL ) OR ~( ReadOnly IN dfs.vol.flags ) THEN (* We may write to the target volume *)
+				sfile := OpenOld( seacher, sfs, sname );
 				IF sfile # NIL THEN (* We found the source file *)
-					SplitName(dname, dpath, dfilename);
-					IF (dfilename # "") THEN
-						dfile := OpenOld(seacher, dfs, dname);
-						IF (dfile = NIL) OR overwrite THEN (* We may write to the target file *)
+					SplitName( dname, dpath, dfilename );
+					IF ( dfilename # "" ) THEN
+						dfile := OpenOld( seacher, dfs, dname );
+						IF ( dfile = NIL ) OR overwrite THEN (* We may write to the target file *)
 							IF dfile # NIL THEN overwrite := TRUE; ELSE overwrite := FALSE; END;
 							IF overwrite THEN
-								dfile.GetName(dname);
-								SplitName(dname, dprefix, dname);
+								dfile.GetName( dname );
+								SplitName( dname, dprefix, dname );
 							END;
-							dfile := dfs.New0(dname);
+							dfile := dfs.New0( dname );
 							IF dfile # NIL THEN (* We could create the target file *)
 								res := Ok;
 							ELSE res := BadFileName;
@@ -1013,35 +1013,35 @@ BEGIN
 	IF res # Ok THEN RETURN END;
 
 	(* copy file content *)
-	sfile.Set(sPos, 0); dfile.Set(dPos, 0);
+	sfile.Set( sPos, 0 ); dfile.Set( dPos, 0 );
 	i := 0;
-	WHILE i < (sfile.Length() DIV BufferSize) DO
-		sfile.ReadBytes(sPos, buffer, 0, BufferSize);
-		dfile.WriteBytes(dPos, buffer, 0, BufferSize);
-		INC(i);
+	WHILE i < ( sfile.Length( ) DIV BufferSize ) DO
+		sfile.ReadBytes( sPos, buffer, 0, BufferSize );
+		dfile.WriteBytes( dPos, buffer, 0, BufferSize );
+		INC( i );
 	END;
-	sfile.ReadBytes(sPos, buffer, 0, Streams.BufferOffset(sfile.Length() MOD BufferSize));
-	dfile.WriteBytes(dPos, buffer, 0, Streams.BufferOffset(sfile.Length() MOD BufferSize));
+	sfile.ReadBytes( sPos, buffer, 0, SIZE( sfile.Length( ) MOD BufferSize ));
+	dfile.WriteBytes( dPos, buffer, 0, SIZE( sfile.Length( ) MOD BufferSize ));
 	dfile.Update;
-	Register(dfile); (* Will enter exclusive region *)
+	Register( dfile ); (* Will enter exclusive region *)
 END CopyFile;
 
 (** Rename a file. res = 0 indicates success. *)
 
-PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Rename* ( CONST old, new: ARRAY OF CHAR; VAR res: WORD );
 VAR
 	key: LONGINT; ofs, nfs: FileSystem; f: File; pold, pnew: Prefix;
 	fold, fnew: FileName;
 BEGIN {EXCLUSIVE}
-	SplitName(old, pold, fold);
-	SplitName(new, pnew, fnew);
-	IF pold = "" THEN ofs := fsroot ELSE ofs := FindFS(pold) END;
-	IF pnew = "" THEN nfs := fsroot ELSE nfs := FindFS(pnew) END;
-	IF (nfs # NIL) & (ofs = nfs) THEN
-		IF (nfs.vol = NIL) OR ~(ReadOnly IN nfs.vol.flags) THEN
-			key := nfs.FileKey(fold);
-			IF key # 0 THEN f := FindOpenFile(seacher, nfs, key) ELSE f := NIL END;
-			nfs.Rename0(fold, fnew, f, res)
+	SplitName( old, pold, fold );
+	SplitName( new, pnew, fnew );
+	IF pold = "" THEN ofs := fsroot ELSE ofs := FindFS( pold ) END;
+	IF pnew = "" THEN nfs := fsroot ELSE nfs := FindFS( pnew ) END;
+	IF ( nfs # NIL ) & ( ofs = nfs ) THEN
+		IF ( nfs.vol = NIL ) OR ~( ReadOnly IN nfs.vol.flags ) THEN
+			key := nfs.FileKey( fold );
+			IF key # 0 THEN f := FindOpenFile( seacher, nfs, key ) ELSE f := NIL END;
+			nfs.Rename0( fold, fnew, f, res )
 		ELSE
 			res := VolumeReadOnly	(* can not modify read-only volume *)
 		END
@@ -1052,46 +1052,46 @@ END Rename;
 
 (** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically closed. *)
 
-PROCEDURE Register*(f: File);
+PROCEDURE Register* ( f: File );
 VAR res: WORD;
 BEGIN {EXCLUSIVE}
 	IF f # NIL THEN
-		f.Register0(res);
-		IF res = 0 THEN	(* if register went ok (first time register) *)
-			ASSERT(f.key # 0);
-			files.Add(f, NIL)
+		f.Register0( res );
+		IF res = 0 THEN	(* if register went ok ( first time register ) *)
+			ASSERT( f.key # 0 );
+			files.Add( f, NIL )
 		END
 	END
 END Register;
 
 (** Create a directory structure. Directories are automatically registered. res=0 indicates success.
 	Use Files.RemoveDirectory to delete a directory *)
-PROCEDURE CreateDirectory*(path: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE CreateDirectory* ( path: ARRAY OF CHAR; VAR res: WORD );
 VAR prefix: Prefix; fs: FileSystem; fpath: FileName;
 BEGIN {EXCLUSIVE}
-	SplitName(path, prefix, fpath);
+	SplitName( path, prefix, fpath );
 	IF prefix = "" THEN fs := fsroot
-	ELSE fs := FindFS(prefix)
+	ELSE fs := FindFS( prefix )
 	END;
-	IF fs # NIL THEN fs.CreateDirectory0(fpath, res)
+	IF fs # NIL THEN fs.CreateDirectory0( fpath, res )
 	ELSE res := -1
 	END
 END CreateDirectory;
 
 (** Remove a directory. res=0 indicates success. If force=TRUE, any files and subdirectories are automatically deleted. *)
-PROCEDURE RemoveDirectory*(path: ARRAY OF CHAR; force: BOOLEAN; VAR res: WORD);
+PROCEDURE RemoveDirectory* ( path: ARRAY OF CHAR; force: BOOLEAN; VAR res: WORD );
 VAR prefix: Prefix; fs: FileSystem; f: File; key: LONGINT; fpath: FileName;
 BEGIN {EXCLUSIVE}
-	SplitName(path, prefix, fpath);
-	IF prefix = "" THEN fs := fsroot ELSE fs := FindFS(prefix) END;
+	SplitName( path, prefix, fpath );
+	IF prefix = "" THEN fs := fsroot ELSE fs := FindFS( prefix ) END;
 	IF fs # NIL THEN
-		IF (fs.vol = NIL) OR ~(ReadOnly IN fs.vol.flags) THEN
-			fs.RemoveDirectory0(fpath, force, key, res);
+		IF ( fs.vol = NIL ) OR ~( ReadOnly IN fs.vol.flags ) THEN
+			fs.RemoveDirectory0( fpath, force, key, res );
 			IF key # 0 THEN
-				LOOP	(* remove all aoccurances of file (fs,key) from collection. *)
-					f := FindOpenFile(seacher, fs, key);
+				LOOP	(* remove all aoccurances of file ( fs,key ) from collection. *)
+					f := FindOpenFile( seacher, fs, key );
 					IF f = NIL THEN EXIT END;
-					files.Remove(f)
+					files.Remove( f )
 				END
 			END
 		ELSE
@@ -1104,149 +1104,149 @@ END RemoveDirectory;
 
 (* Enumerates files matching mask *)
 
-PROCEDURE Enumerate(VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
+PROCEDURE Enumerate( VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator );
 VAR
 	fs: FileSystem; ft: FileSystemTable; i: LONGINT;
 	prefix: Prefix; fmask: FileName;
 BEGIN
-	SplitName(mask, prefix, fmask);
+	SplitName( mask, prefix, fmask );
 	IF prefix = "" THEN
-		GetList(ft);
+		GetList( ft );
 		IF ft # NIL THEN
 				(* FIX: deadlock possible if fs containing anonymous file does not allow concurrent Enumerate and Write *)
-			FOR i := 0 TO LEN(ft^)-1 DO
-				IF ~(NeedsPrefix IN ft[i].flags) THEN
-					ft[i].Enumerate0(fmask, flags, enum)
+			FOR i := 0 TO LEN( ft^ )-1 DO
+				IF ~( NeedsPrefix IN ft[ i ].flags ) THEN
+					ft[ i ].Enumerate0( fmask, flags, enum )
 				END;
 			END
 		END
 	ELSE
-		fs := This(prefix);
-		IF fs # NIL THEN fs.Enumerate0(fmask, flags, enum) END
+		fs := This( prefix );
+		IF fs # NIL THEN fs.Enumerate0( fmask, flags, enum ) END
 	END
 END Enumerate;
 
-PROCEDURE Exists*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
+PROCEDURE Exists* ( CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET ): BOOLEAN;
 VAR
 	fs: FileSystem; ft: FileSystemTable; i: LONGINT;
 	prefix: Prefix;
 BEGIN
 	IF prefix = "" THEN
-		GetList(ft);
+		GetList( ft );
 		IF ft # NIL THEN
 				(* FIX: deadlock possible if fs containing anonymous file does not allow concurrent Enumerate and Write *)
-			FOR i := 0 TO LEN(ft^)-1 DO
-				IF ~(NeedsPrefix IN ft[i].flags) THEN
-					IF ft[i].Has(fileName, fullName, flags) THEN RETURN TRUE END;
+			FOR i := 0 TO LEN( ft^ )-1 DO
+				IF ~( NeedsPrefix IN ft[ i ].flags ) THEN
+					IF ft[ i ].Has( fileName, fullName, flags ) THEN RETURN TRUE END;
 				END;
 			END
 		END
 	ELSE
-		fs := This(prefix);
-		RETURN fs.Has(fileName, fullName, flags);
+		fs := This( prefix );
+		RETURN fs.Has( fileName, fullName, flags );
 	END;
 	RETURN FALSE;
 END Exists;
 
 (* add a search path to the system *)
-PROCEDURE AddSearchPath*(context: Commands.Context);
+PROCEDURE AddSearchPath* ( context: Commands.Context );
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: WORD;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("HostFiles") # NIL THEN
+	IF Modules.ModuleByName( "HostFiles" ) # NIL THEN
 		cmd := "HostFiles.AddSearchPath";
 	END;
 	IF cmd # "" THEN
-		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
-		IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
+		Commands.Activate( cmd, context, {Commands.Wait}, res, msg );
+		IF res # 0 THEN context.error.String( msg ); context.error.Ln; END;
 	END
 END AddSearchPath;
 
 (* add a search path to the system *)
-PROCEDURE SetWorkPath*(context: Commands.Context);
+PROCEDURE SetWorkPath* ( context: Commands.Context );
 VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: WORD;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
-	IF Modules.ModuleByName("HostFiles") # NIL THEN
+	IF Modules.ModuleByName( "HostFiles" ) # NIL THEN
 		cmd := "HostFiles.SetWorkPath";
 	END;
 	IF cmd # "" THEN
-		Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
-		IF res # 0 THEN context.error.String(msg); context.error.Ln; END;
+		Commands.Activate( cmd, context, {Commands.Wait}, res, msg );
+		IF res # 0 THEN context.error.String( msg ); context.error.Ln; END;
 	END
 END SetWorkPath;
 
 (* Find an open file. *)
 
-PROCEDURE FindOpenFile(enum: FileSearcher; fs: FileSystem; key: LONGINT): File;
+PROCEDURE FindOpenFile( enum: FileSearcher; fs: FileSystem; key: LONGINT ): File;
 BEGIN	(* not exported, because of possible race condition *)
 	enum.fs := fs; enum.key := key; enum.found := NIL;
-	files.Enumerate(enum.EnumFile);
+	files.Enumerate( enum.EnumFile );
 	RETURN enum.found
 END FindOpenFile;
 
 (** Portable routines to read the standard Oberon types.  DEPRECATED, use Streams instead. *)
 
-PROCEDURE ReadSInt*(VAR r: Rider; VAR x: SHORTINT);
+PROCEDURE ReadSInt* ( VAR r: Rider; VAR x: SHORTINT );
 BEGIN
-	r.file.Read(r, SYSTEM.VAL(CHAR, x))
+	r.file.Read( r, SYSTEM.VAL( CHAR, x ))
 END ReadSInt;
 
-PROCEDURE ReadInt*(VAR r: Rider; VAR x: INTEGER);
+PROCEDURE ReadInt* ( VAR r: Rider; VAR x: INTEGER );
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes2, x), 0, 2)
+	r.file.ReadBytes( r, SYSTEM.VAL( Bytes2, x ), 0, 2 )
 END ReadInt;
 
-PROCEDURE ReadLInt*(VAR r: Rider; VAR x: LONGINT);
+PROCEDURE ReadLInt* ( VAR r: Rider; VAR x: LONGINT );
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
+	r.file.ReadBytes( r, SYSTEM.VAL( Bytes4, x ), 0, 4 )
 END ReadLInt;
 
-PROCEDURE ReadHInt*(VAR r: Rider; VAR x: HUGEINT);
+PROCEDURE ReadHInt* ( VAR r: Rider; VAR x: HUGEINT );
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
+	r.file.ReadBytes( r, SYSTEM.VAL( Bytes8, x ), 0, 8 )
 END ReadHInt;
 
-PROCEDURE ReadFileSize*(VAR r: Rider; VAR x: Streams.Position);
-CONST Size = SIZEOF (Streams.Position);
+PROCEDURE ReadFileSize* ( VAR r: Rider; VAR x: Streams.Position );
+CONST Size = SIZEOF ( Streams.Position );
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
+	r.file.ReadBytes( r, SYSTEM.VAL( Bytes, x ), 0, Size )
 END ReadFileSize;
 
-PROCEDURE ReadSet*(VAR r: Rider; VAR x: SET);
-CONST Size = SIZEOF (SET);
+PROCEDURE ReadSet* ( VAR r: Rider; VAR x: SET );
+CONST Size = SIZEOF ( SET );
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
+	r.file.ReadBytes( r, SYSTEM.VAL( Bytes, x ), 0, Size )
 END ReadSet;
 
-PROCEDURE ReadBool*(VAR r: Rider; VAR x: BOOLEAN);
+PROCEDURE ReadBool* ( VAR r: Rider; VAR x: BOOLEAN );
 VAR ch: CHAR;
 BEGIN
-	r.file.Read(r, ch); x := ch # 0X
+	r.file.Read( r, ch ); x := ch # 0X
 END ReadBool;
 
-PROCEDURE ReadReal*(VAR r: Rider; VAR x: REAL);
+PROCEDURE ReadReal* ( VAR r: Rider; VAR x: REAL );
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
+	r.file.ReadBytes( r, SYSTEM.VAL( Bytes4, x ), 0, 4 )
 END ReadReal;
 
-PROCEDURE ReadLReal*(VAR r: Rider; VAR x: LONGREAL);
+PROCEDURE ReadLReal* ( VAR r: Rider; VAR x: LONGREAL );
 BEGIN
-	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
+	r.file.ReadBytes( r, SYSTEM.VAL( Bytes8, x ), 0, 8 )
 END ReadLReal;
 
-PROCEDURE ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR);
+PROCEDURE ReadString* ( VAR r: Rider; VAR x: ARRAY OF CHAR );
 VAR i: SIZE; ch: CHAR; f: File;
 BEGIN
 	i := 0; f := r.file;
 	LOOP
-		f.Read(r, ch); x[i] := ch; INC(i);
+		f.Read( r, ch ); x[ i ] := ch; INC( i );
 		IF ch = 0X THEN EXIT END;
-		IF i = LEN(x) THEN
-			x[i-1] := 0X;
-			REPEAT f.Read(r, ch) UNTIL ch = 0X;
+		IF i = LEN( x ) THEN
+			x[ i-1 ] := 0X;
+			REPEAT f.Read( r, ch ) UNTIL ch = 0X;
 			EXIT
 		END
 	END
@@ -1254,140 +1254,140 @@ END ReadString;
 
 (* Reads a number in compressed format. *)
 
-PROCEDURE ReadNum*(VAR r: Rider; VAR x: LONGINT);
+PROCEDURE ReadNum* ( VAR r: Rider; VAR x: LONGINT );
 VAR ch: CHAR; n, y: LONGINT; f: File;
 BEGIN
 	n := 0; y := 0; f := r.file;
-	f.Read(r, ch);
+	f.Read( r, ch );
 	WHILE ch >= 80X DO
-		INC(y, LSH(LONG(ORD(ch)) - 128, n)); INC(n, 7);
-		f.Read(r, ch)
+		INC( y, LSH( LONG( ORD( ch )) - 128, n )); INC( n, 7 );
+		f.Read( r, ch )
 	END;
-	x := ASH(LSH(LONG(ORD(ch)), 25), n-25) + y
+	x := ASH( LSH( LONG( ORD( ch )), 25 ), n-25 ) + y
 END ReadNum;
 
 (** Portable routines to write the standard Oberon types. DEPRECATED, used Streams instead. *)
 
-PROCEDURE WriteSInt*(VAR r: Rider; x: SHORTINT);
+PROCEDURE WriteSInt* ( VAR r: Rider; x: SHORTINT );
 BEGIN
-	r.file.Write(r, SYSTEM.VAL(CHAR, x))
+	r.file.Write( r, SYSTEM.VAL( CHAR, x ))
 END WriteSInt;
 
-PROCEDURE WriteInt*(VAR r: Rider; x: INTEGER);
+PROCEDURE WriteInt* ( VAR r: Rider; x: INTEGER );
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes2, x), 0, 2)
+	r.file.WriteBytes( r, SYSTEM.VAL( Bytes2, x ), 0, 2 )
 END WriteInt;
 
-PROCEDURE WriteLInt*(VAR r: Rider; x: LONGINT);
+PROCEDURE WriteLInt* ( VAR r: Rider; x: LONGINT );
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
+	r.file.WriteBytes( r, SYSTEM.VAL( Bytes4, x ), 0, 4 )
 END WriteLInt;
 
-PROCEDURE WriteHInt*(VAR r: Rider; x: HUGEINT);
+PROCEDURE WriteHInt* ( VAR r: Rider; x: HUGEINT );
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
+	r.file.WriteBytes( r, SYSTEM.VAL( Bytes8, x ), 0, 8 )
 END WriteHInt;
 
-PROCEDURE WriteFileSize*(VAR r: Rider; x: Streams.Position);
-CONST Size = SIZEOF (Streams.Position);
+PROCEDURE WriteFileSize* ( VAR r: Rider; x: Streams.Position );
+CONST Size = SIZEOF ( Streams.Position );
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
+	r.file.WriteBytes( r, SYSTEM.VAL( Bytes, x ), 0, Size )
 END WriteFileSize;
 
-PROCEDURE WriteSet*(VAR r: Rider; x: SET);
-CONST Size = SIZEOF (SET);
+PROCEDURE WriteSet* ( VAR r: Rider; x: SET );
+CONST Size = SIZEOF ( SET );
 TYPE Bytes = ARRAY Size OF CHAR;
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes, x), 0, Size)
+	r.file.WriteBytes( r, SYSTEM.VAL( Bytes, x ), 0, Size )
 END WriteSet;
 
-PROCEDURE WriteBool*(VAR r: Rider; x: BOOLEAN);
+PROCEDURE WriteBool* ( VAR r: Rider; x: BOOLEAN );
 BEGIN
-	IF x THEN r.file.Write(r, 1X) ELSE r.file.Write(r, 0X) END
+	IF x THEN r.file.Write( r, 1X ) ELSE r.file.Write( r, 0X ) END
 END WriteBool;
 
-PROCEDURE WriteReal*(VAR r: Rider; x: REAL);
+PROCEDURE WriteReal* ( VAR r: Rider; x: REAL );
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
+	r.file.WriteBytes( r, SYSTEM.VAL( Bytes4, x ), 0, 4 )
 END WriteReal;
 
-PROCEDURE WriteLReal*(VAR r: Rider; x: LONGREAL);
+PROCEDURE WriteLReal* ( VAR r: Rider; x: LONGREAL );
 BEGIN
-	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
+	r.file.WriteBytes( r, SYSTEM.VAL( Bytes8, x ), 0, 8 )
 END WriteLReal;
 
-PROCEDURE WriteString*(VAR r: Rider; x: ARRAY OF CHAR);
-VAR i: Streams.BufferOffset;
+PROCEDURE WriteString* ( VAR r: Rider; x: ARRAY OF CHAR );
+VAR i: SIZE;
 BEGIN
-	i := 0; WHILE x[i] # 0X DO INC(i) END;
-	r.file.WriteBytes(r, x, 0, i+1)
+	i := 0; WHILE x[ i ] # 0X DO INC( i ) END;
+	r.file.WriteBytes( r, x, 0, i+1 )
 END WriteString;
 
 (* Writes a number in a compressed format. *)
 
-PROCEDURE WriteNum*(VAR r: Rider; x: LONGINT);
+PROCEDURE WriteNum* ( VAR r: Rider; x: LONGINT );
 VAR f: File;
 BEGIN
 	f := r.file;
-	WHILE (x < - 64) OR (x > 63) DO
-		f.Write(r, CHR(x MOD 128 + 128)); x := x DIV 128
+	WHILE ( x < - 64 ) OR ( x > 63 ) DO
+		f.Write( r, CHR( x MOD 128 + 128 )); x := x DIV 128
 	END;
-	f.Write(r, CHR(x MOD 128))
+	f.Write( r, CHR( x MOD 128 ))
 END WriteNum;
 
 (** Help procedures. *)
 
 (** Append first string to second string, truncating on overflow. *)
 
-PROCEDURE AppendStr*(from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR);
+PROCEDURE AppendStr* ( from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR );
 VAR i, j, m: SIZE;
 BEGIN
-	j := 0; WHILE to[j] # 0X DO INC(j) END;
-	m := LEN(to)-1;
-	i := 0; WHILE (from[i] # 0X) & (j # m) DO to[j] := from[i]; INC(i); INC(j) END;
-	to[j] := 0X
+	j := 0; WHILE to[ j ] # 0X DO INC( j ) END;
+	m := LEN( to )-1;
+	i := 0; WHILE ( from[ i ] # 0X ) & ( j # m ) DO to[ j ] := from[ i ]; INC( i ); INC( j ) END;
+	to[ j ] := 0X
 END AppendStr;
 
 (** Append unsigned integer to string in ASCII format. *)
 
-PROCEDURE AppendInt*(x: LONGINT; VAR to: ARRAY OF CHAR);
+PROCEDURE AppendInt* ( x: LONGINT; VAR to: ARRAY OF CHAR );
 VAR i: SIZE; m: LONGINT;
 BEGIN
-	ASSERT(x >= 0);
-	i := 0; WHILE to[i] # 0X DO INC(i) END;
+	ASSERT( x >= 0 );
+	i := 0; WHILE to[ i ] # 0X DO INC( i ) END;
 	IF x # 0 THEN
 		m := 1000000000;
 		WHILE x < m DO m := m DIV 10 END;
 		REPEAT
-			to[i] := CHR(48 + (x DIV m) MOD 10); INC(i);
+			to[ i ] := CHR( 48 + ( x DIV m ) MOD 10 ); INC( i );
 			m := m DIV 10
 		UNTIL m = 0
 	ELSE
-		to[i] := "0"; INC(i)
+		to[ i ] := "0"; INC( i )
 	END;
-	to[i] := 0X
+	to[ i ] := 0X
 END AppendInt;
 
 (** Get the dev#part string from the stream *)
-PROCEDURE GetDevPart*(arg : Streams.Reader; VAR deviceName : ARRAY OF CHAR; VAR partition : LONGINT);
+PROCEDURE GetDevPart* ( arg : Streams.Reader; VAR deviceName : ARRAY OF CHAR; VAR partition : LONGINT );
 VAR i: SIZE; ch : CHAR;
 BEGIN
 	arg.SkipWhitespace;
 	deviceName := ""; partition := 0;
 
 	i := 0;
-	ch := arg.Peek();
-	WHILE (i < LEN(deviceName)-1) & (ch > " ") & (ch # "#") & (ch # ",") & (arg.res = Streams.Ok) DO
-		arg.Char(ch); (* consume ch *)
-		deviceName[i] := ch; INC(i);
-		ch := arg.Peek();
+	ch := arg.Peek( );
+	WHILE ( i < LEN( deviceName )-1 ) & ( ch > " " ) & ( ch # "#" ) & ( ch # "," ) & ( arg.res = Streams.Ok ) DO
+		arg.Char( ch ); (* consume ch *)
+		deviceName[ i ] := ch; INC( i );
+		ch := arg.Peek( );
 	END;
-	deviceName[i] := 0X;
+	deviceName[ i ] := 0X;
 
-	IF (ch = "#") THEN
-		arg.Char(ch); (* consume "#" *)
-		arg.Int(partition, FALSE);
+	IF ( ch = "#" ) THEN
+		arg.Char( ch ); (* consume "#" *)
+		arg.Int( partition, FALSE );
 	ELSE
 		partition := 0;
 	END;
@@ -1398,9 +1398,9 @@ END GetDevPart;
 PROCEDURE FSCleanup;
 VAR ft: FileSystemTable; i: LONGINT;
 BEGIN
-	GetList(ft);
+	GetList( ft );
 	IF ft # NIL THEN
-		FOR i := 0 TO LEN(ft^)-1 DO Remove(ft[i]) END
+		FOR i := 0 TO LEN( ft^ )-1 DO Remove( ft[ i ] ) END
 	END
 END FSCleanup;
 
@@ -1412,31 +1412,31 @@ VAR
 	enum: OBJECT
 		VAR i: LONGINT;
 
-		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
+		PROCEDURE EnumFile( f: ANY; VAR cont: BOOLEAN );
 		VAR name: FileName;
 		BEGIN
 			WITH f: File DO
-				KernelLog.Int(i, 1); KernelLog.Char(" ");
-				(*KernelLog.String(f.fs.prefix); KernelLog.Char(" ");*)
-				KernelLog.Address(SYSTEM.VAL(ADDRESS, f)); KernelLog.Char(" ");
-				KernelLog.Int(f.key, 1); KernelLog.Char(" ");
-				KernelLog.Int(f.Length(), 1); KernelLog.Char(" ");
-				f.GetName(name);
-				KernelLog.String(name); KernelLog.Ln;
-				INC(i)
+				KernelLog.Int( i, 1 ); KernelLog.Char( " " );
+				(*KernelLog.String( f.fs.prefix ); KernelLog.Char( " " );*)
+				KernelLog.Address( SYSTEM.VAL( ADDRESS, f )); KernelLog.Char( " " );
+				KernelLog.Int( f.key, 1 ); KernelLog.Char( " " );
+				KernelLog.Int( f.Length( ), 1 ); KernelLog.Char( " " );
+				f.GetName( name );
+				KernelLog.String( name ); KernelLog.Ln;
+				INC( i )
 			END
 		END EnumFile;
 	END;
 
 BEGIN
-	NEW(enum); enum.i := 0; KernelLog.Ln;
-	files.Enumerate(enum.EnumFile)
+	NEW( enum ); enum.i := 0; KernelLog.Ln;
+	files.Enumerate( enum.EnumFile )
 END ShowList;
 *)
 
 BEGIN
-	fsroot := NIL; NEW(seacher); NEW(files);
-	Modules.InstallTermHandler(FSCleanup)
+	fsroot := NIL; NEW( seacher ); NEW( files );
+	Modules.InstallTermHandler( FSCleanup )
 END Files.
 
 (**
@@ -1445,11 +1445,11 @@ o A typical code pattern for reading a file is:
 
 	VAR f: Files.File; r: Files.Reader; ch: CHAR;
 
-	f := Files.Old(filename);	(* open an existing file *)
+	f := Files.Old( filename );	(* open an existing file *)
 	IF f # NIL THEN
-		Files.OpenReader(r, f, 0);	(* open a buffer on the file *)
+		Files.OpenReader( r, f, 0 );	(* open a buffer on the file *)
 		LOOP
-			ch := r.Get();	(* read a character from the buffer *)
+			ch := r.Get( );	(* read a character from the buffer *)
 			IF r.res # Streams.Ok THEN EXIT END;	(* end-of-file, or other error *)
 			"do something with ch"
 		END
@@ -1459,27 +1459,27 @@ o A typical code pattern for writing a file is:
 
 	VAR f: Files.File; w: Files.Writer; ch: CHAR;
 
-	f := Files.New(filename);	(* create a new file (not visible yet) *)
+	f := Files.New( filename );	(* create a new file ( not visible yet ) *)
 	IF f # NIL THEN
-		Files.OpenWriter(w, f, 0);	(* open a buffer on the file *)
+		Files.OpenWriter( w, f, 0 );	(* open a buffer on the file *)
 		WHILE "not done" DO
 			"assign ch"
-			w.Char(ch)	(* write a character to the buffer (if the buffer is full, it is written to the file) *)
+			w.Char( ch )	(* write a character to the buffer ( if the buffer is full, it is written to the file ) *)
 		END;
 		w.Update;	(* write the last buffer to the file *)
-		Files.Register(f)	(* enter the file in the directory *)
+		Files.Register( f )	(* enter the file in the directory *)
 
 o See the Streams module for more procedures operating on Reader and Writer buffers, e.g. ReadRawInt, WriteRawInt, etc.
 o Never use an exported identifier with a name ending in "0", unless you are implementing a file system.
 o Never use an exported identifier that is documented as "private".
-o File system implementations must implement the FileKey procedure to assign a unique key value to every file in the file system.  The key is used by the Files module to ensure that the Old procedure returns an existing file if it is already open.  The key need not be persistent, but must stay unique during a whole session (between mount and unmount).  The 0 key is reserved to indicate non-existent files.
+o File system implementations must implement the FileKey procedure to assign a unique key value to every file in the file system.  The key is used by the Files module to ensure that the Old procedure returns an existing file if it is already open.  The key need not be persistent, but must stay unique during a whole session ( between mount and unmount ).  The 0 key is reserved to indicate non-existent files.
 *)
 
 (*
 	On-the-fly GC by bsm
 
 	In order to be non-leaking, a file system must provide the following:
-	- FileSystem.Purge -- to reclaim blocks of an open (being closed) file
+	- FileSystem.Purge -- to reclaim blocks of an open ( being closed ) file
 	- FileSystem.Registered -- reports if a particular open file is registered in the file directory
 
 	The following procedures need to be modified to purge file blocks when appropriate.
@@ -1519,10 +1519,10 @@ Files.ReadString
 Streams.ReadRawString
 
 Files.ReadBytes
-Streams.ReadBytes [add 0 ofs parameter, and len parameter]
+Streams.ReadBytes [ add 0 ofs parameter, and len parameter ]
 
-Files.Read(
-Streams.Read(
+Files.Read( 
+Streams.Read( 
 
 Files.ReadBool
 Streams.ReadRawBool
@@ -1530,8 +1530,8 @@ Streams.ReadRawBool
 Files.WriteInt
 Streams.WriteRawInt
 
-Files.Write(
-Streams.Write(
+Files.Write( 
+Streams.Write( 
 
 Files.WriteBytes
-Streams.WriteBytes [add 0 ofs parameter]
+Streams.WriteBytes [ add 0 ofs parameter ]

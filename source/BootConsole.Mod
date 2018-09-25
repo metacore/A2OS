@@ -24,7 +24,7 @@ CONST
 	TraceBoot = FALSE;
 
 PROCEDURE BootCommand(CONST config: ARRAY OF CHAR; flags: SET);
-VAR i, j, res: LONGINT; par: ARRAY 32 OF CHAR; s: ARRAY 256 OF CHAR;
+VAR i, j: LONGINT; res: WORD; par: ARRAY 32 OF CHAR; s: ARRAY 256 OF CHAR;
 BEGIN
 	COPY(config, par);
 	i := 0; j := 0; WHILE par[j] # 0X DO INC(j) END;

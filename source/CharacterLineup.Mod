@@ -246,7 +246,7 @@ TYPE
 		END NewCharacter;
 
 		PROCEDURE NewCode(sender, data :ANY);
-		VAR code, res : LONGINT;
+		VAR code: LONGINT; res : WORD;
 			codeStr: ARRAY 9 OF CHAR;
 		BEGIN
 			codeEdit.GetAsString(codeStr);

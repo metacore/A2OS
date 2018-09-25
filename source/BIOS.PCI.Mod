@@ -78,7 +78,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIPresent;
 
 	PROCEDURE FindPCIDevice*(devId, vendId, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): LONGINT;
-	VAR pci: Pci; r0, vendorId, deviceId, index,res: LONGINT;
+	VAR pci: Pci; r0, vendorId, deviceId, index: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			StartIterate(pci); index := 0;
@@ -111,7 +111,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END FindPCIDevice;
 
 	PROCEDURE FindPCIClassCode*(classCode, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): LONGINT;
-	VAR pci: Pci; r0, r8,  index,res,class: LONGINT;
+	VAR pci: Pci; r0, r8,  index, class: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			StartIterate(pci);
@@ -214,7 +214,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END GetIrqRoutingOptions;
 
 	PROCEDURE SetPCIIrq*(IntPin, IrqNum, busNr, devNr, fktNr: LONGINT): LONGINT;
-	VAR res:WORD;
+	VAR res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			(*
@@ -293,7 +293,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 
 
 	PROCEDURE Show*;
-	VAR version, lastPCIBus, hwMech, res : LONGINT;
+	VAR version, lastPCIBus, hwMech: LONGINT; res : WORD;
 	BEGIN
 		IF ~PCIDisabled() THEN
 			res := PCIPresent(version, lastPCIBus, hwMech);
@@ -340,7 +340,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIReadConfig32;
 
 	PROCEDURE PCIReadConfig16(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: WORD; int: INTEGER;
+	VAR adr, dataAdr: LONGINT; state: SET; res: WORD; int: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -357,7 +357,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIReadConfig16;
 
 	PROCEDURE PCIReadConfig8(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: WORD; chr: CHAR;
+	VAR adr, dataAdr: LONGINT; state: SET; res: WORD; chr: CHAR;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -374,7 +374,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIReadConfig8;
 
 	PROCEDURE PCIWriteConfig32(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: WORD;
+	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -390,7 +390,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIWriteConfig32;
 
 	PROCEDURE PCIWriteConfig16(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: WORD;
+	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -406,7 +406,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIWriteConfig16;
 
 	PROCEDURE PCIWriteConfig8(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
-	VAR adr, dataAdr: LONGINT; state: SET;res: WORD;
+	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -456,7 +456,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END StartIterate;
 
 	PROCEDURE Iterate*(VAR pci: Pci): BOOLEAN;
-	VAR hdrType,res: LONGINT; multifunction: BOOLEAN;
+	VAR hdrType: LONGINT; multifunction: BOOLEAN; res: WORD;
 	BEGIN
 		IF pci.function = 0 THEN
 			(* check if multi-function device *)
@@ -589,7 +589,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END DisplayDeviceClass;
 
 	PROCEDURE TracePCIDevices;
-	VAR r0,r8,r10 : LONGINT; pci: Pci; res, class, subclass, api, vendorId, deviceId: LONGINT;
+	VAR r0,r8,r10 : LONGINT; pci: Pci; class, subclass, api, vendorId, deviceId: LONGINT; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
 			KernelLog.String("PCI Devices"); KernelLog.Ln;

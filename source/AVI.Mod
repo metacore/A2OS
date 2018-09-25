@@ -220,7 +220,7 @@ IMPORT
 
 		PROCEDURE Bytes*(VAR x: ARRAY OF CHAR; ofs, size: LONGINT; VAR len: LONGINT);
 		VAR
-			min, res: LONGINT;
+			min: LONGINT; res: WORD;
 		BEGIN
 			IF Debug THEN KernelLog.String("Bytes"); KernelLog.Ln; END;
 			demultiplexer.GetData(streamNr, x, ofs, size, min, len, res);
@@ -228,7 +228,7 @@ IMPORT
 
 		(* Set Byte Position *)
 		PROCEDURE SetPos*(pos : Streams.Position);
-		VAR seekType, itemSize, res : LONGINT;
+		VAR seekType, itemSize: LONGINT; res : WORD;
 		BEGIN
 			IF Debug THEN KernelLog.String("DemuxStream.SetPos"); KernelLog.Ln; END;
 			seekType := AOC.SeekByte;
@@ -1075,7 +1075,7 @@ IMPORT
 
 		END GetInfo;
 
-		PROCEDURE GetData*(streamNr: LONGINT;  VAR buf:  ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE GetData*(streamNr: LONGINT;  VAR buf:  ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			rres: BOOLEAN;
 		BEGIN

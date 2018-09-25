@@ -39,7 +39,7 @@ TYPE
 		f*: Files.File; 
 		streamInfo*: AVStreamInfo; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: LONGINT); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): AVStreamInfo; 
 		PROCEDURE ^ GetStream*(streamNr: LONGINT): DemuxStream; 
-		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 	END AVDemultiplexer; 
 
@@ -63,7 +63,7 @@ TYPE
 		streamInfo*: AVStreamInfo; 
 
 		PROCEDURE ^  & Open*(demultiplexer: AVDemultiplexer; streamNr: LONGINT); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^ SetPosX*(seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 	END DemuxStream; 

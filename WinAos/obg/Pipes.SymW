@@ -11,12 +11,12 @@ TYPE
 
 		PROCEDURE ^ Available*(): LONGINT; 
 		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^  & Init*(size: LONGINT); 
 		PROCEDURE ^ Close*; 
 	END Pipe; 
 
-	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 
 	ReadDecoupler* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -24,10 +24,11 @@ TYPE
 		inputReceiver: Receiver; 
 		numR: LONGINT; 
 		smallbuf: ARRAY [128] OF CHAR; 
-		len, res: LONGINT; 
+		len: LONGINT; 
+		res: WORD; 
 
 		PROCEDURE ^  & InitReadDecoupler*(inputReceiver: Receiver); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 	BEGIN{ACTIVE} 
 	END ReadDecoupler; 
 BEGIN

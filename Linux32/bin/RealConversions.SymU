@@ -1,0 +1,18 @@
+MODULE RealConversions;
+	IMPORT SYSTEM;
+CONST 
+TYPE 
+	ReadProc* = PROCEDURE {DELEGATE}():CHAR; 
+VAR 
+	H, L: INTEGER; 
+
+	PROCEDURE ^ ScanReal*(next: ReadProc): LONGREAL; 
+	PROCEDURE ^ RealToString*(x: LONGREAL; n: WORD; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ RealToStringFix*(x: LONGREAL; n, f, D: WORD; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ NaNCodeL(x: LONGREAL; VAR h, l: LONGINT); 
+	PROCEDURE ^ ExpoL(x: LONGREAL): LONGINT; 
+	PROCEDURE ^ RealL(h, l: LONGINT): LONGREAL; 
+	PROCEDURE ^ Ten(e: LONGINT): LONGREAL; 
+	PROCEDURE ^ InitHL; 
+BEGIN
+END RealConversions.

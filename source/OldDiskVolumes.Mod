@@ -37,7 +37,7 @@ TYPE
 
 		(** Get block from adr [1..size] of volume vol *)
 		PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		VAR res, block: LONGINT; buf: Caches.Buffer; valid: BOOLEAN;
+		VAR res: WORD; block: LONGINT; buf: Caches.Buffer; valid: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN SYSTEM.HALT(15) END;
 			ASSERT(startfs > 0);	(* startfs initialized *)
@@ -59,7 +59,7 @@ TYPE
 
 		(** Put block to adr [1..size] of volume vol *)
 		PROCEDURE PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		VAR res, block: LONGINT; buf: Caches.Buffer; valid: BOOLEAN;
+		VAR res: WORD; block: LONGINT; buf: Caches.Buffer; valid: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN SYSTEM.HALT(15) END;
 			ASSERT(startfs > 0);	(* startfs initialized *)
@@ -111,7 +111,7 @@ BEGIN
 END Get4;
 
 (* Get the file system parameters by reading the boot block. The pstart and psize parameters are the partition start and size in device blocks (size 512 or 2048).  The startfs parameter returns the offset of the file system from the start of the disk in device blocks.  The size parameter returns the size of the file system in volume blocks.  The vbs parameter returns the volume block size of the file system (4096 for AosFS, 2048 for NatFS). *)
-PROCEDURE GetOberonFS(dev: Disks.Device; pstart, psize: LONGINT; VAR startfs, size, vbs, res: LONGINT);
+PROCEDURE GetOberonFS(dev: Disks.Device; pstart, psize: LONGINT; VAR startfs, size, vbs: LONGINT; VAR res: WORD);
 CONST FSID = 21534F41H; FSVer = 1; AosSS = 4096; NSS = 2048;
 VAR i, x, bc, fsofs: LONGINT; b: ARRAY CDBS OF CHAR;
 BEGIN
@@ -223,7 +223,7 @@ END InitVol;
 (* Try to open the specified volume.  Sets p.vol # NIL on success. *)
 
 PROCEDURE TryOpen(context: Files.Parameters; dev: Disks.Device; part, dbs: LONGINT; readonly: BOOLEAN);
-VAR vol: Volume; startfs, size, vbs, res: LONGINT; ptable: Disks.PartitionTable;
+VAR vol: Volume; startfs, size, vbs: LONGINT; res: WORD; ptable: Disks.PartitionTable;
 BEGIN
 	context.out.String(Header); context.out.String(dev.name);
 	context.out.Char("#"); context.out.Int(part, 1); context.out.Char(" ");

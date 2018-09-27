@@ -41,7 +41,7 @@ MODULE LPR; (* AUTHOR "ejz"; PURPOSE "RFC 1179" *)
 			writer: Streams.Writer;
 			fadr: IP.Adr;
 			locport: INTEGER;
-			connres, len : LONGINT;
+			connres: WORD; len : LONGINT;
 			conn: TCP.Connection;
 			buf : ARRAY 10000 OF CHAR;
 	BEGIN
@@ -157,7 +157,7 @@ MODULE LPR; (* AUTHOR "ejz"; PURPOSE "RFC 1179" *)
 PROCEDURE ShowJobs*(out: Streams.Writer; CONST host, queue : ARRAY OF CHAR; VAR res: WORD);
 		VAR
 			job: ARRAY 64 OF CHAR;
-			connres: LONGINT;
+			connres: WORD;
 			conn: TCP.Connection;
 			reader: Streams.Reader;
 			writer: Streams.Writer;
@@ -195,7 +195,7 @@ PROCEDURE ShowJobs*(out: Streams.Writer; CONST host, queue : ARRAY OF CHAR; VAR 
 		Remove the specified job or all jobs from queue. *)
 	PROCEDURE RemoveJob*(CONST host, queue,  email, job: ARRAY OF CHAR; VAR res : WORD);
 	VAR
-		connres: LONGINT;
+		connres: WORD;
 		conn: TCP.Connection;
 		reader: Streams.Reader;
 		writer : Streams.Writer;

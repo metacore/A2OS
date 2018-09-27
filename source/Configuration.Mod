@@ -123,7 +123,7 @@ BEGIN
 END GetBoolean;
 
 PROCEDURE GetColor*(CONST key : ARRAY OF CHAR; VAR value : LONGINT; VAR res : WORD);
-VAR string : ARRAY 16 OF CHAR; tempres : LONGINT;
+VAR string : ARRAY 16 OF CHAR; tempres : WORD;
 BEGIN
 	Get(key, string, res);
 	IF (res = Ok) THEN

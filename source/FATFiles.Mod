@@ -262,11 +262,11 @@ TYPE
 		END OldX;
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE} Delete0X(name, key, res)
 		END Delete0;
 
-		PROCEDURE Delete0X(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0X(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		VAR path, filename: Filename; dir: Directory; f: File; s: SearchByName; dcc: BOOLEAN;
 		BEGIN
 			res := ErrInvalidFilename; key := 0;
@@ -461,7 +461,7 @@ TYPE
 		BEGIN INC(par(CountFiles).count); RETURN TRUE
 		END RmDirCallback;
 
-		PROCEDURE RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT);
+		PROCEDURE RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
 		VAR f: File; par: CountFiles; s: SearchByName; parent: Directory;
 		BEGIN {EXCLUSIVE}
 			IF (Files.ReadOnly IN vol.flags) THEN res := ErrReadOnly; RETURN END;
@@ -671,7 +671,7 @@ TYPE
 		PROCEDURE ReadBuffer(buffer: Buffer; pos: LONGINT);
 		VAR
 			last: Address;
-			i, res: LONGINT;
+			i: LONGINT; res: WORD;
 			bp, bc, ctrlflow, stopc: LONGINT;
 		BEGIN
 			ASSERT(buffer.pos # pos);

@@ -81,7 +81,7 @@ VAR
 	unsafeMode : BOOLEAN;
 
 PROCEDURE ExpandAlias(CONST alias : ARRAY OF CHAR; VAR genvol, genfs: ARRAY OF CHAR);
-VAR t: ARRAY 64 OF CHAR; i, j, res: LONGINT;
+VAR t: ARRAY 64 OF CHAR; i, j: LONGINT; res: WORD;
 BEGIN
 	genvol[0] := 0X; genfs[0] := 0X;
 	t := "Files.Alias.";
@@ -408,6 +408,7 @@ VAR
 	enumContext : Commands.Context;
 	arg : Streams.StringReader;
 	res : WORD;
+	ignore: LONGINT;
 BEGIN
 	NEW(options);
 	options.Add("s", "subdirectories", Options.Flag);
@@ -423,7 +424,7 @@ BEGIN
 					enum.Open(path, {});
 					NEW(arg, 4096);
 					NEW(arguments, context.arg.Available()); Strings.Truncate(arguments^, 0);
-					context.arg.Bytes(arguments^, 0, context.arg.Available(), res); (* ignore res *)
+					context.arg.Bytes(arguments^, 0, context.arg.Available(), ignore); (* ignore res *)
 					NEW(enumContext, context.in, arg, context.out, context.error, context.caller);
 
 					EnumerateDirectory(enum, enumProc, options, enumContext, filemask, arguments^);
@@ -499,7 +500,7 @@ BEGIN
 END CreateFile;
 
 PROCEDURE CopyTo*(context : Commands.Context); (** targetpath sourcepath {filename} ~ *)
-VAR targetPath, sourcePath, targetFullname, sourceFullname,  filename : Files.FileName; overwrite : BOOLEAN; nofFilesCopied, nofErrors,  res : LONGINT;
+VAR targetPath, sourcePath, targetFullname, sourceFullname,  filename : Files.FileName; overwrite : BOOLEAN; nofFilesCopied, nofErrors: LONGINT; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(targetPath);
 	context.arg.SkipWhitespace; context.arg.String(sourcePath);
@@ -534,7 +535,7 @@ PROCEDURE CopyFiles*(context : Commands.Context); (** [Options] {source  => dest
 VAR
 	source, destination : FileList;
 	overwritten, error, ignoreErrors, quiet : BOOLEAN;
-	nofFiles, res, n : LONGINT;
+	nofFiles, n : LONGINT; res: WORD;
 	options: Options.Options;
 BEGIN
 	NEW(options);
@@ -605,7 +606,7 @@ BEGIN
 END GenerateName;
 
 PROCEDURE Backup*(context: Commands.Context);
-VAR index: LONGINT; fileList: FileList; nofFiles, n, res: LONGINT; str: Files.FileName; overwritten: BOOLEAN;
+VAR index: LONGINT; fileList: FileList; nofFiles, n: LONGINT; res: WORD; str: Files.FileName; overwritten: BOOLEAN;
 BEGIN
 	overwritten := FALSE;
 	nofFiles := GetFileList(context, fileList);
@@ -628,7 +629,7 @@ PROCEDURE DeleteFiles*(context : Commands.Context); (** [Options] {file} ~ *)
 VAR
 	filelist : FileList;
 	error, ignoreErrors, silent : BOOLEAN;
-	nofFiles, res, n, ndone : LONGINT;
+	nofFiles, n, ndone : LONGINT; res: WORD;
 	options : Options.Options;
 BEGIN
 	NEW(options);
@@ -674,7 +675,7 @@ PROCEDURE RenameFiles*(context : Commands.Context); (** [Options] {source => des
 VAR
 	source, target : FileList;
 	error, ignoreErrors : BOOLEAN;
-	nofFiles, res, n : LONGINT;
+	nofFiles, n : LONGINT; res: WORD;
 	options : Options.Options;
 BEGIN
 	NEW(options);

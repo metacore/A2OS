@@ -65,7 +65,7 @@ TYPE
 			res := Unsupported
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
 		BEGIN
 			res := Unsupported
 		END GetSize;
@@ -78,7 +78,7 @@ TYPE
 		(** Open the device and increment its open count if successful. If the device is opened for the first time, lock it and update its partition table. *)
 
 		PROCEDURE Open*(VAR res: WORD);
-		VAR lockMsg: LockMsg; unlockMsg: UnlockMsg; ignore: LONGINT;
+		VAR lockMsg: LockMsg; unlockMsg: UnlockMsg; ignore: WORD;
 		BEGIN
 			res := Ok;
 			IF openCount = 0 THEN
@@ -182,7 +182,7 @@ END ValidFlag;
 
 (* Read primary partition table entries into p *)
 
-PROCEDURE ReadPrimary(VAR b: DiskBlock; dev: Device;  VAR p: PartitionTable;  VAR n, res: LONGINT; VAR valid: BOOLEAN);
+PROCEDURE ReadPrimary(VAR b: DiskBlock; dev: Device;  VAR p: PartitionTable;  VAR n: LONGINT; VAR res: WORD; VAR valid: BOOLEAN);
 VAR e, size, i: LONGINT;
 BEGIN
 	n := 0;
@@ -212,7 +212,7 @@ END ReadPrimary;
 
 (* Read "logical drive" partitions into p *)
 
-PROCEDURE ReadLogical(VAR b: DiskBlock; dev: Device;  first: LONGINT;  VAR p: PartitionTable;  VAR n, res: LONGINT);
+PROCEDURE ReadLogical(VAR b: DiskBlock; dev: Device;  first: LONGINT;  VAR p: PartitionTable;  VAR n: LONGINT; VAR res: WORD);
 VAR e, sec, size, i: LONGINT; found: BOOLEAN;
 BEGIN
 	sec := first;
@@ -291,7 +291,7 @@ END UpdatePartitionTable;
 
 (* Clean up the installed devices. *)
 PROCEDURE Cleanup;
-VAR dev: Plugins.Table; i, res: LONGINT; msg: ShutdownMsg;
+VAR dev: Plugins.Table; i: LONGINT; res: WORD; msg: ShutdownMsg;
 BEGIN
 	registry.GetAll(dev);
 	IF dev # NIL THEN

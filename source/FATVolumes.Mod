@@ -125,7 +125,7 @@ TYPE
 		END InitLowLevel;
 
 		PROCEDURE Finalize*;
-		VAR i, j, res: LONGINT; ptable: Disks.PartitionTable;
+		VAR i, j: LONGINT; res: WORD; ptable: Disks.PartitionTable;
 		BEGIN (* must be exclusive in overridden methods *)
 			quit := TRUE;
 			timer.Wakeup;
@@ -191,7 +191,7 @@ TYPE
 		END InitCache;
 
 		PROCEDURE FlushCache(cache: Cache);
-		VAR i, firstDirty, lastDirty, adr, num, ofs, res: LONGINT; start: LONGINT;
+		VAR i, firstDirty, lastDirty, adr, num, ofs: LONGINT; res: WORD; start: LONGINT;
 		BEGIN
 			IF (cache # NIL) & cache.dirty THEN
 				cache.dirty := FALSE;
@@ -387,7 +387,7 @@ TYPE
 		END FreeClusterChain;
 
 		PROCEDURE QuickFormat*;
-		VAR sec: ARRAY BS OF CHAR; i, res: LONGINT; entries: ARRAY 2 OF LONGINT;
+		VAR sec: ARRAY BS OF CHAR; i: LONGINT; res: WORD; entries: ARRAY 2 OF LONGINT;
 		BEGIN {EXCLUSIVE}
 			unsafe := TRUE; entries[0] := ReadFATEntryX(0);
 			unsafe := TRUE; entries[1] := ReadFATEntryX(1);
@@ -450,7 +450,7 @@ TYPE
 		END Initialize;
 
 		PROCEDURE InitRoot;
-		VAR sec: ARRAY BS OF CHAR; i, res: LONGINT;
+		VAR sec: ARRAY BS OF CHAR; i: LONGINT; res: WORD;
 		BEGIN
 			FOR i := 0 TO numRootSectors-1 DO
 				WriteSectorX(firstRootSector + i, sec, 0, res) (* ignore res *)
@@ -476,7 +476,7 @@ TYPE
 		END Finalize;
 
 		PROCEDURE ReadFATEntryX(adr: Address): Address;
-		VAR offset, res: LONGINT;
+		VAR offset: LONGINT; res: WORD;
 			entry: Address;
 			data: ARRAY 2*BS OF CHAR;
 		BEGIN
@@ -672,7 +672,7 @@ TYPE
 			fsInfo-: Address; 	(* sector number of FSInfo sector (relative to 'start') *)
 
 		PROCEDURE Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN;
-		VAR i, res: LONGINT; result: BOOLEAN; info: ARRAY BS OF CHAR; vcf: SET;
+		VAR i: LONGINT; res: WORD; result: BOOLEAN; info: ARRAY BS OF CHAR; vcf: SET;
 		BEGIN {EXCLUSIVE}
 			result := FALSE;
 			IF Initialize^(bpb, MaxClusters) THEN	(* see note in Volumes.Initialize *)
@@ -819,7 +819,7 @@ TYPE
 
 PROCEDURE New*(context : Files.Parameters);
 VAR
-	part, res, type, cacheSize: LONGINT; flags: SET; stop: BOOLEAN;
+	part, type, cacheSize: LONGINT; res: WORD; flags: SET; stop: BOOLEAN;
 	name: Plugins.Name; plugin: Plugins.Plugin; dev: Disks.Device;
 	ptable: Disks.PartitionTable; ch : CHAR;
 BEGIN {EXCLUSIVE}
@@ -896,7 +896,7 @@ END WritePartitionType;
 PROCEDURE InitVol(dev: Disks.Device; partIdx, type: LONGINT; VAR vol: Files.Volume; flags: SET; cacheSize: LONGINT);
 VAR
 	bpb: BPB; vol12: FAT12Volume; vol16: FAT16Volume; vol32: FAT32Volume; fatString : ARRAY 12 OF CHAR;
-	fatSize, numSectors, numClusters, reserved, numFATs, rootEntryCount, sectPC, res, fat : LONGINT;
+	fatSize, numSectors, numClusters, reserved, numFATs, rootEntryCount, sectPC, fat : LONGINT; res: WORD;
 BEGIN
 	dev.Transfer(Disks.Read, dev.table[partIdx].start, 1, bpb, 0, res);
 	IF (res = Ok) THEN

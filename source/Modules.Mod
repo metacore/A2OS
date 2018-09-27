@@ -522,7 +522,7 @@ CONST ModuleInitTimeout = HUGEINT(3000000000); (* Timeout for waiting until a mo
 
 (*	Retrieve a procedure given a module name, the procedure name and some type information (kernel call) *)
 PROCEDURE GetProcedure*(CONST moduleName, procedureName : ARRAY OF CHAR; argTdAdr, retTdAdr : ADDRESS; VAR entryAdr : ADDRESS);
-VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i, res : LONGINT; t: HUGEINT;
+VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i: LONGINT; res : WORD; t: HUGEINT;
 BEGIN
 	module := ThisModule(moduleName, res, ignoreMsg);
 	IF (res = Ok) THEN

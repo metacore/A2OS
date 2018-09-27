@@ -5,7 +5,7 @@ IMPORT
 
 (** Opens the file path; corresponding file handlers are specified in Configuration.XML *)
 PROCEDURE OpenFile* (CONST path : ARRAY OF CHAR; err: Streams.Writer; caller: OBJECT);
-VAR config,filehandler: ARRAY 128 OF CHAR; name,filename, ext : Files.FileName; index, res : LONGINT;
+VAR config,filehandler: ARRAY 128 OF CHAR; name,filename, ext : Files.FileName; index: LONGINT; res : WORD;
 	context: Commands.Context; arg: Streams.StringReader; in: Streams.Reader; out: Streams.Writer;
 BEGIN
 	Files.SplitExtension(path, name, ext);

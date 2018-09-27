@@ -35,7 +35,7 @@ MODULE ISO9660Volumes;	(* AUTHOR "?/be"; PURPOSE "ISO 9660 volume (ported from N
 			END Available;
 
 			PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-			VAR res, i: LONGINT;
+			VAR res: WORD; i: LONGINT;
 			BEGIN {EXCLUSIVE}
 				ASSERT(dev # NIL, 101);
 				i := 0;
@@ -83,7 +83,7 @@ END GetISO9660Volume;
 (** Generate a new ISO9660 volume object. Files.Par: device [# part (ignored)] *)
 PROCEDURE New*(context : Files.Parameters);
 VAR
-	name: Plugins.Name;  i, ignore, res: LONGINT;
+	name: Plugins.Name;  i, ignore: LONGINT; res: WORD;
 	table: Plugins.Table; dev: Disks.Device;
 BEGIN
 	context.vol := NIL;

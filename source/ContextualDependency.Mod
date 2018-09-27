@@ -999,7 +999,7 @@ TYPE
 		(* Parses a range string and puts the ranges into a range array *)
 		PROCEDURE ParseRangeString(rangeString : XML.String; base16, neg : BOOLEAN; VAR ranges : Ranges);
 		VAR
-			numberOfRanges, i, j, k, res : LONGINT;
+			numberOfRanges, i, j, k: LONGINT; res : WORD;
 			tempString : XML.String;
 			range : Range;
 			theseRanges, oldRanges : RangeArray;
@@ -1285,7 +1285,7 @@ VAR
 	tagName, languageAttribute, baseAttribute : XML.String;
 	base16, propertyFound : BOOLEAN;
 
-	rangeLow, rangeHigh, res : LONGINT;
+	rangeLow, rangeHigh: LONGINT; res: WORD;
 	mode, tempRangeLow, tempRangeHigh : Strings.String;
 BEGIN
 	propertyFound := FALSE;

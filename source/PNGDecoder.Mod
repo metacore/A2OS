@@ -40,7 +40,7 @@ TYPE
 			remain := firstChunk;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR i, crc, tag: LONGINT; ch: CHAR;
 		BEGIN
 			IF ~eof THEN

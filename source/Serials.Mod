@@ -90,7 +90,7 @@ TYPE
 
 		(** Receive size characters into buf, starting at ofs and return the effective number of bytes read in len.
 			Wait until at least min bytes (possibly zero) are available. res is non-zero on error. *)
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR ch: CHAR;
 		BEGIN
 			len := 0;
@@ -362,7 +362,7 @@ END GetPortParameters;
 *)
 PROCEDURE SetTrace*(context: Commands.Context);
 VAR
-	portNumber, bps, data, parity, stop, res: LONGINT; params: SET;
+	portNumber, bps, data, parity, stop: LONGINT; res: WORD; params: SET;
 BEGIN
 	GetPortParameters(context.arg, portNumber, bps, data, parity, stop, params, res);
 	IF (portNumber > 0) & (res # 0) THEN

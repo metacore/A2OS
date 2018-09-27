@@ -754,7 +754,7 @@ TYPE
 		END Send;
 
 		(** Receive secured data *)
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			applicationDataPipe.Receive(data, ofs, size, min, len ,res);
 		END Receive;
@@ -1197,7 +1197,7 @@ TYPE
 
 		PROCEDURE ReceiveClientHello( VAR data: ARRAY OF CHAR; ofs, len: LONGINT ): LONGINT;
 			VAR
-				nofSuites, i, idLen, idPos, pos, cipherSuite, major, minor, res: LONGINT;
+				nofSuites, i, idLen, idPos, pos, cipherSuite, major, minor: LONGINT; res: WORD;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ClientHello");KernelLog.Ln END;
 			pos := ofs;
@@ -1326,7 +1326,7 @@ TYPE
 		END SendClientHello;
 
 		PROCEDURE ReceiveV2ClientHello( VAR data: ARRAY OF CHAR; ofs, len: LONGINT ): LONGINT;
-			VAR nofSuites, idLen, challengeLen, i, cipherSuite, res: LONGINT;
+			VAR nofSuites, idLen, challengeLen, i, cipherSuite: LONGINT; res: WORD;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("SSLv2.0 ClientHello");KernelLog.Ln END;
 			nofSuites := ( 256 * ORD(data[ofs+3]) + ORD(data[ofs+4]) ) DIV 3;
@@ -1382,7 +1382,7 @@ TYPE
 
 		PROCEDURE ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
 		VAR
-			pos, major, minor, i, idLen, idPos, cipherSuite, res: LONGINT;
+			pos, major, minor, i, idLen, idPos, cipherSuite: LONGINT; res: WORD;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ServerHello");KernelLog.Ln END;
 			pos := ofs;

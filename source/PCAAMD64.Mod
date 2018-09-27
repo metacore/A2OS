@@ -1917,7 +1917,7 @@ END AssembleText;
 
 PROCEDURE AssembleFile* (CONST fileName: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; labels, listing: Streams.Writer);
 VAR
-	format, res: LONGINT;
+	format: LONGINT; res: WORD;
 	text: Texts.Text;
 	assembly: Assembly;
 	destFile: ARRAY Files.NameLength OF CHAR;

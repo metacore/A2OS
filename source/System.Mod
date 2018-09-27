@@ -399,7 +399,7 @@ PROCEDURE RenameExtension*(context : Commands.Context);
 VAR
 	enumerator : Files.Enumerator;
 	oe, ne, temp: ARRAY 16 OF CHAR;
-	name, file, ext : Files.FileName; flags : SET; time, date, size, res : LONGINT;
+	name, file, ext : Files.FileName; flags : SET; time, date, size: LONGINT; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(oe);
 	context.arg.SkipWhitespace; context.arg.String(ne);
@@ -468,7 +468,7 @@ VAR
 	command, parameters, paramString : Strings.String;
 	temp : Strings.String;
 	msg : ARRAY 128 OF CHAR;
-	cur, available, i, j, k, res : LONGINT;
+	cur, available, i, j, k: LONGINT; res: WORD;
 
 	PROCEDURE CreateContext(paramString : Strings.String) : Commands.Context;
 	VAR c : Commands.Context; arg : Streams.StringReader; dummy : ARRAY 1 OF CHAR;
@@ -604,7 +604,7 @@ PROCEDURE Repeat*(context : Commands.Context); (* nofTimes command [command para
 VAR
 	command, msg : ARRAY 128 OF CHAR;
 	parameterPosition : LONGINT;
-	nofTimes, res : LONGINT;
+	nofTimes: LONGINT; res : WORD;
 BEGIN
 	nofTimes := 0; command := "";
 	context.arg.SkipWhitespace;	context.arg.Int(nofTimes, FALSE);

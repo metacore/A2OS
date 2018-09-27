@@ -117,7 +117,7 @@ TYPE
 			SELF.input := input; SELF.max := size; SELF.archive := archive
 		END Init;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			IF max = 0 THEN
 				res := -1;

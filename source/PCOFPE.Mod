@@ -120,7 +120,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 		SectionReader = OBJECT (Streams.Reader)
 			VAR sect: Section; org, ofs: LONGINT;
 
-			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 			BEGIN
 				len := sect.used - SELF.ofs;
 				IF len > 0 THEN

@@ -313,7 +313,7 @@ END CompileInterface;
 PROCEDURE CompileFile*(CONST name, opt: ARRAY OF CHAR; pc: LONGINT; log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
-	atu: Texts.Text; format, res: LONGINT;
+	atu: Texts.Text; format: LONGINT; res: WORD;
 BEGIN
 	NEW(atu);
 	TextUtilities.LoadAuto(atu, name, format, res);

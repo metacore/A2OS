@@ -278,7 +278,7 @@ TYPE
 			RETURN ch;
 		END ReadCommand;
 
-		PROCEDURE Parse(VAR cmd: Command; VAR wait: BOOLEAN): LONGINT;
+		PROCEDURE Parse(VAR cmd: Command; VAR wait: BOOLEAN): WORD;
 		VAR sym: SET; pos: LONGINT; c, next: CHAR;
 
 			PROCEDURE Init;
@@ -343,7 +343,7 @@ TYPE
 				RETURN cmd
 			END Cmd;
 
-			PROCEDURE CmdLine(VAR command: Command): LONGINT;
+			PROCEDURE CmdLine(VAR command: Command): WORD;
 			VAR cmd, prev: Command; fn: Files.FileName; f: Files.File; fr: Files.Reader; fw: Files.Writer;
 				r: Streams.Reader; w: Streams.Writer; append, piped: BOOLEAN; s: ARRAY 64 OF CHAR;
 			BEGIN

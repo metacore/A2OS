@@ -284,7 +284,7 @@ BEGIN
 	KernelLog.String(ModuleName); KernelLog.String(": ");
 END ShowModule;
 
-PROCEDURE GetSlowdownValues(bps : LONGINT; VAR eachNCharacters, waitForMs, res : LONGINT);
+PROCEDURE GetSlowdownValues(bps : LONGINT; VAR eachNCharacters, waitForMs: LONGINT; VAR res : WORD);
 BEGIN
 	res := Serials.Ok;
 	waitForMs := 1;
@@ -315,7 +315,7 @@ PROCEDURE SendFileIntern(portNbr : LONGINT; CONST filename : ARRAY OF CHAR; loop
 VAR
 	port : Serials.Port;
 	file : Files.File;
-	len, res : LONGINT;
+	len: LONGINT; res : WORD;
 	in : Files.Reader; out : Streams.Writer;
 	buffer : ARRAY BufferSize OF CHAR;
 BEGIN

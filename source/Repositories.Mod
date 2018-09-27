@@ -615,7 +615,7 @@ TYPE
 		END InitializeLanguages;
 
 		PROCEDURE Find(CONST language : Localization.Language) : Translator;
-		VAR t : Translator; res, i : LONGINT;
+		VAR t : Translator; res: WORD; i : LONGINT;
 		BEGIN
 			t := NIL;
 			IF (languages # NIL) THEN
@@ -640,7 +640,7 @@ TYPE
 		END Find;
 
 		PROCEDURE GetDefaultTranslator() : Translator;
-		VAR t : Translator; i, res : LONGINT;
+		VAR t : Translator; i: LONGINT; res : WORD;
 		BEGIN
 			t := NIL;
 			IF (languages # NIL) THEN
@@ -2169,12 +2169,12 @@ BEGIN
 END DumpAll;
 
 PROCEDURE Call*(context : Commands.Context); (** moduleName.procedureName [params] ~ *)
-VAR c : Context; cmdString : POINTER TO ARRAY OF CHAR; res : WORD;
+VAR c : Context; cmdString : POINTER TO ARRAY OF CHAR; res : WORD; ignore: LONGINT;
 BEGIN
 	NEW(c,	NIL, NIL, context.out, context.error, context.caller);
 	IF (context.arg.Available() > 0) THEN
 		NEW(cmdString, context.arg.Available());
-		context.arg.Bytes(cmdString^, 0, LEN(cmdString), res);
+		context.arg.Bytes(cmdString^, 0, LEN(cmdString), ignore);
 		CallCommand(cmdString^, c, res);
 		context.out.String("res: "); context.out.Int(res, 0); context.out.Ln;
 		context.out.String("c.res: "); context.out.Int(c.result, 0); context.out.Ln;

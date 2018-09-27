@@ -199,7 +199,7 @@ TYPE
 			InitReader (Receive, Streams.DefaultReaderSize);
 		END Init;
 
-		PROCEDURE Receive (VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+		PROCEDURE Receive (VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD);
 		VAR ucs32, prevofs: LONGINT;
 		BEGIN
 			reader.text.AcquireRead;
@@ -777,7 +777,7 @@ TYPE
 		END GetUTF8Char;
 
 		PROCEDURE InsertPiece(charContent : XML.CDataSect);
-		VAR i, m, tpos, res : LONGINT; ch, last : Texts.Char32; tempUCS32 : ARRAY 1024 OF Texts.Char32;
+		VAR i, m, tpos: LONGINT; res : WORD; ch, last : Texts.Char32; tempUCS32 : ARRAY 1024 OF Texts.Char32;
 			oldpos, len : LONGINT;
 			r, sr : Streams.StringReader; token : ARRAY 256 OF CHAR;
 			tempInt: LONGINT;
@@ -830,11 +830,11 @@ TYPE
 				sr.SkipWhitespace; sr.Token(token);												(* AdHoc *)
 				sr.SkipWhitespace; sr.Token(token); COPY(token, attr.fontInfo.name); 				(* family *)
 				sr.SkipWhitespace; sr.Token(token); Strings.StrToInt(token, attr.fontInfo.size);		(* size *)
-				sr.SkipWhitespace; sr.Token(token); Strings.StrToInt(token, res); 					(* style *)
-				IF (res = 0) THEN attr.fontInfo.style := {};
-				ELSIF (res = 1) THEN attr.fontInfo.style := {0};
-				ELSIF (res = 2) THEN attr.fontInfo.style := {1};
-				ELSIF (res = 3) THEN attr.fontInfo.style := {0,1};
+				sr.SkipWhitespace; sr.Token(token); Strings.StrToInt(token, tempInt); 					(* style *)
+				IF (tempInt = 0) THEN attr.fontInfo.style := {};
+				ELSIF (tempInt = 1) THEN attr.fontInfo.style := {0};
+				ELSIF (tempInt = 2) THEN attr.fontInfo.style := {1};
+				ELSIF (tempInt = 3) THEN attr.fontInfo.style := {0,1};
 				ELSE attr.fontInfo.style := {};
 				END;
 				sr.SkipWhitespace; sr.Token(token); Strings.StrToInt(token, attr.voff);				(* voff *)
@@ -1537,7 +1537,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i, j, k : LONGINT;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i, j: LONGINT; k : WORD;
 			byte : ARRAY 2 OF CHAR;
 		BEGIN
 			res :=  -1;
@@ -1692,7 +1692,7 @@ BEGIN
 END CountWhitespace;
 
 (** Procedure to load File without explicit given Format - appropriate Format will be chosen automaticaly *)
-PROCEDURE LoadAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format, res: LONGINT);
+PROCEDURE LoadAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format: LONGINT; VAR res: WORD);
 VAR f : Files.File; re : Files.Reader; ri: Files.Rider; ch: CHAR; fstring: ARRAY 64 OF CHAR; i: LONGINT;
 BEGIN
 	(* KernelLog.String("Auto Format.... "); KernelLog.Ln; *)
@@ -2544,7 +2544,7 @@ END SetClipboard;
 PROCEDURE GetTextReader* (CONST filename: ARRAY OF CHAR): Streams.Reader;
 VAR
 	file: Files.File; fileReader: Files.Reader; offset: LONGINT;
-	text: Text; format, res: LONGINT; textReader: TextReader;
+	text: Text; format: LONGINT; res: WORD; textReader: TextReader;
 BEGIN
 	(* Optimisation: skip header of oberon files and return a file reader instead of default text reader*)
 	file := Files.Old (filename);

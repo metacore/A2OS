@@ -1395,7 +1395,7 @@ VAR
 	str: Strings.String;
 	cStyle : CharacterStyle;
 	pStyle : ParagraphStyle;
-	tempReal: LONGREAL; tempInt, tempRes : LONGINT;
+	tempReal: LONGREAL; tempInt: LONGINT; tempRes : WORD;
 BEGIN
 	NEW(scanner, r);
 	NEW(parser, scanner);

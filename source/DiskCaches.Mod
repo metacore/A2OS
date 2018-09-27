@@ -37,7 +37,7 @@ IMPORT SYSTEM, Disks;
 		END Init;
 
 		(* LONGINTs for compatibility -- should be largely replaced by SIZEs ! *)
-		PROCEDURE Transfer* (op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer* (op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR globalIndex, lineIndex, lineOfs, lineFirstBlock, lineBlocks: LONGINT;
 		BEGIN
 			WHILE num > 0 DO

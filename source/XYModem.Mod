@@ -697,7 +697,7 @@ END GetPars;
 PROCEDURE xySend(context : Commands.Context; mode: LONGINT);
 VAR
 	name: Files.FileName; F: Files.File;
-	port: Serials.Port; portn, bps, parity, stop, res: LONGINT;
+	port: Serials.Port; portn, bps, parity, stop: LONGINT; res: WORD;
 	send: Sender; error: ARRAY 64 OF CHAR;
 	W: Streams.Writer; R: Streams.Reader;
 BEGIN
@@ -744,7 +744,7 @@ END YSend;
 PROCEDURE xyReceive(context : Commands.Context; mode: LONGINT);
 VAR
 	name: Files.FileName; F: Files.File;
-	port: Serials.Port; portn, bps, parity, stop, res: LONGINT;
+	port: Serials.Port; portn, bps, parity, stop: LONGINT; res: WORD;
 	recv: Receiver; error: ARRAY 64 OF CHAR; awaitF: BOOLEAN;
 	W: Streams.Writer; R: Streams.Reader;
 BEGIN

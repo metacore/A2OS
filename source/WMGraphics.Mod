@@ -809,7 +809,7 @@ END GetExtension;
 *)
 PROCEDURE LoadImage*(CONST name : ARRAY OF CHAR; shared : BOOLEAN): Image;
 VAR img : Image;
-	res, w, h, x : LONGINT;
+	res: WORD; w, h, x : LONGINT;
 	decoder : Codecs.ImageDecoder;
 	in : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;

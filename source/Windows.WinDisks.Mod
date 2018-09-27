@@ -116,7 +116,7 @@ TYPE
 			END;
 		END Transfer;
 
-		PROCEDURE GetSize*( VAR size, res: LONGINT );
+		PROCEDURE GetSize*( VAR size: LONGINT; VAR res: WORD );
 		BEGIN
 			size := SELF.size;  res := Disks.Ok;
 		END GetSize;

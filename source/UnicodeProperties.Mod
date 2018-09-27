@@ -191,7 +191,7 @@ TYPE
 		fullname : ARRAY 256 OF CHAR;
 		file : Files.File;
 		in: Streams.Reader;
-		decoderRes : LONGINT;
+		decoderRes : WORD;
 
 		(* loads a file into a local Text and creates an associated TextReader *)
 		PROCEDURE LoadTxtFile;
@@ -352,7 +352,7 @@ TYPE
 		VAR
 			thisChar, thisInt : Texts.Char32;
 			i,j : INTEGER;
-			dummyVal : LONGINT;
+			dummyVal : WORD;
 		BEGIN
 			text.AcquireRead;
 			textReader.SetPosition(startPos);

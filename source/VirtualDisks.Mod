@@ -63,7 +63,7 @@ TYPE
 			HALT(301); (* abstract *)
 		END TransferOperation;
 
-		PROCEDURE GetSize*(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
 		BEGIN
 			size := SELF.size;	res := Disks.Ok;
 		END GetSize;
@@ -234,7 +234,7 @@ END GetOptions;
 PROCEDURE Install*(context : Commands.Context); (** [Options] diskname filename ~ *)
 VAR
 	diskname, filename : ARRAY 256 OF CHAR;
-	blocksize, c, h, s, res : LONGINT;
+	blocksize, c, h, s: LONGINT; res: WORD;
 	file : Files.File;
 	disk : FileDisk;
 
@@ -284,7 +284,7 @@ END Install;
 PROCEDURE InstallRamdisk*(context : Commands.Context); (** [Options] diskname size  ~ *)
 VAR
 	diskname  : ARRAY 256 OF CHAR;
-	size, blocksize, c, h, s, res : LONGINT;
+	size, blocksize, c, h, s: LONGINT; res: WORD;
 	memory : MemoryBlock;
 	disk : RamDisk;
 

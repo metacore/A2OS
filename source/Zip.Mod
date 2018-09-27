@@ -94,7 +94,7 @@ TYPE
 		zr: ZlibReaders.Reader
 	END;
 
-PROCEDURE ShowError*(errorCode : LONGINT; out : Streams.Writer);
+PROCEDURE ShowError*(errorCode : WORD; out : Streams.Writer);
 BEGIN
 	ASSERT(out # NIL);
 	CASE errorCode OF

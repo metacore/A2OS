@@ -225,7 +225,7 @@ VAR
 	options : Options.Options;
 	archive: Zip.Archive; entry: Zip.Entry;
 	path, overwrite, stopOnError: BOOLEAN;
-	nofExtracted, nofErrors, res: LONGINT;
+	nofExtracted, nofErrors: LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("d", "directory", Options.Flag);
@@ -296,7 +296,7 @@ VAR
 	path, overwrite, stopOnError, silent: BOOLEAN;
 	archive: Zip.Archive;
 	entry: Zip.Entry;
-	nofExtracted, nofErrors, res: LONGINT;
+	nofExtracted, nofErrors: LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("d", "directory", Options.Flag);
@@ -409,7 +409,7 @@ VAR
 	archive: Zip.Archive;
 	strategy, level: LONGINT; stopOnError : BOOLEAN;
 	oldname, newname: ARRAY 256 OF CHAR;
-	nofAdded, nofErrors, res : LONGINT;
+	nofAdded, nofErrors: LONGINT; res: WORD;
 
 	PROCEDURE ShowFile(CONST oldname, newname : ARRAY OF CHAR; out : Streams.Writer);
 	BEGIN
@@ -496,7 +496,7 @@ VAR
 	archive: Zip.Archive;
 	entry: Zip.Entry;
 	stopOnError : BOOLEAN;
-	nofDeleted, nofErrors, res: LONGINT;
+	nofDeleted, nofErrors: LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("i", "ignore", Options.Flag);

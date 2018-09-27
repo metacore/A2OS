@@ -11,7 +11,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 			END Init;
 
 			PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
-				VAR E: Unzip.Entry; key, res: LONGINT; F: File; F0: Files.File; W: Files.Writer;
+				VAR E: Unzip.Entry; key: LONGINT; res: WORD; F: File; F0: Files.File; W: Files.Writer;
 			BEGIN {EXCLUSIVE}
 				key := 0;
 				E := zip.GetFirst();

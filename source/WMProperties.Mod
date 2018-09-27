@@ -131,7 +131,7 @@ TYPE
 		END IsLink;
 
 		PROCEDURE WriteLink*(w : Streams.Writer; context: ANY;  indent : LONGINT): BOOLEAN;
-		VAR name : String; id,res: LONGINT; repository: Repositories.Repository; objectName: String;
+		VAR name : String; id: LONGINT; res: WORD; repository: Repositories.Repository; objectName: String;
 		BEGIN
 			IF object # NIL THEN
 				Indent(w, indent);
@@ -1093,7 +1093,7 @@ TYPE
 		END FromXML;
 
 		PROCEDURE ToXML*(VAR element: XML.Element);
-		VAR chars: XML.ArrayChars;s: String; w: Streams.StringWriter; res,len: LONGINT;
+		VAR chars: XML.ArrayChars;s: String; w: Streams.StringWriter; res: WORD; len: LONGINT;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
 				ToXML^(element);
@@ -1998,7 +1998,7 @@ TYPE
 		END ToXML;
 
 		PROCEDURE WriteXML*(w : Streams.Writer; context: ANY;  indent : LONGINT);
-		VAR name : String; id,res: LONGINT; repository: Repositories.Repository; objectName: String;
+		VAR name : String; id: LONGINT; res: WORD; repository: Repositories.Repository; objectName: String;
 		BEGIN
 			name := GetName();
 			IF name = NIL THEN KernelLog.String("Nameless boolean property encountered. Ignored"); KernelLog.Ln; RETURN END;

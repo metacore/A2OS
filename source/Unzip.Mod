@@ -18,7 +18,7 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 		SizeReader = OBJECT
 			VAR input: Streams.Reader; max: LONGINT;
 
-			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 			BEGIN
 				IF min > max THEN min := max END;
 				input.Bytes(buf, ofs, min, len);
@@ -338,7 +338,7 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 	(* Directory [ \d ] zip ~ *)
 	PROCEDURE Directory*(context : Commands.Context);
 	VAR
-		F: Files.File; zip: ZipFile; name: Files.FileName; res, i: LONGINT;
+		F: Files.File; zip: ZipFile; name: Files.FileName; res: WORD; i: LONGINT;
 		e: Entry; opt: ARRAY 32 OF CHAR; ch: CHAR; detail: BOOLEAN;
 	BEGIN
 		context.arg.SkipWhitespace();

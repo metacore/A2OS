@@ -162,7 +162,7 @@ TYPE
 			Prefix( name, fname );  f :=  fs.Old0( fname ); IF f # NIL THEN  f.fs := SELF; END; RETURN f;
 		END Old0;
 
-		PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key, res: LONGINT );
+		PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD);
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.Delete0( fname, key, res );
@@ -192,7 +192,7 @@ TYPE
 			Prefix( name, fname );  fs.CreateDirectory0( fname, res );
 		END CreateDirectory0;
 
-		PROCEDURE RemoveDirectory0*( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key, res: LONGINT );
+		PROCEDURE RemoveDirectory0*( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.RemoveDirectory0( fname, force, key, res );
@@ -244,7 +244,7 @@ TYPE
 			RETURN NIL
 		END Old0;
 
-		PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key, res: LONGINT );
+		PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
 		VAR fname: FileName;  F: File;  ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  key := 0;  res := 1;
@@ -397,7 +397,7 @@ TYPE
 			ELSE res := 1 END
 		END CreateDirectory0;
 
-		PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key, res: LONGINT );
+		PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 		VAR ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  key := 0;  res := 1;

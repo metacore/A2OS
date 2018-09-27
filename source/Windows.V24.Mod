@@ -162,7 +162,7 @@ TYPE
 		Wait until at least min bytes (possibly zero) are available.
 			res is non-zero on error. *)
 
-		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD);
 		VAR i, l, read, ret: LONGINT;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + size );

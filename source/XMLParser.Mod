@@ -960,7 +960,7 @@ TYPE
 		END ParseAttributeValue;
 
 		PROCEDURE ParseCharRef(): XML.CharReference;
-		VAR cRef: XML.CharReference; code, res: LONGINT; s: String;
+		VAR cRef: XML.CharReference; code: LONGINT; res: WORD; s: String;
 		BEGIN
 			s := scanner.GetString(Scanner.CharRef);
 			IF s[0] = 'x' THEN	(* hexadecimal *)

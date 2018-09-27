@@ -41,7 +41,7 @@ END Send;
 (** Write a string to the trace output. *)
 
 PROCEDURE String*(CONST s: ARRAY OF CHAR);
-VAR len, n: SIZE; res: WORD;
+VAR len, n: LONGINT; res: WORD;
 BEGIN
 	len := 0; n := LEN(s);
 	WHILE (len # n) & (s[len] # 0X) DO INC(len) END;

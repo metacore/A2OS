@@ -1540,8 +1540,8 @@ TYPE
 		BEGIN SELF.isProtected := protected
 		END SetProtected;
 
-		PROCEDURE Level*():LONGINT;
-		VAR type: RecordType; res: WORD;
+		PROCEDURE Level*(): LONGINT;
+		VAR type: RecordType; res: LONGINT;
 		BEGIN
 			type := SELF;
 			res := 0;

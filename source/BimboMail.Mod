@@ -182,7 +182,7 @@ TYPE
 		END DrawCell; *)
 
 		PROCEDURE MessageClick(sender, data : ANY);
-		VAR scol, srow, ecol, erow, y, res : LONGINT; text : Texts.Text;
+		VAR scol, srow, ecol, erow, y : LONGINT; res: WORD; text : Texts.Text;
 		BEGIN
 			messageList.GetSelection(scol, srow, ecol, erow);
 			y := srow - 1;

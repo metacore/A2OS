@@ -96,7 +96,7 @@ TYPE
 		label : WMStandardComponents.Label;
 		panel : WMStandardComponents.Panel;
 		button : WMStandardComponents.Button;
-		result, chosenColor* : LONGINT;
+		result: WORD; chosenColor* : LONGINT;
 		shown : BOOLEAN;
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
@@ -829,7 +829,7 @@ TYPE
 		PROCEDURE UpdateValueHandler(sender, data: ANY);
 		VAR tempString : ARRAY 64 OF CHAR;
 			tempLReal : LONGREAL;
-			tempInt, res : LONGINT;
+			tempInt : LONGINT; res: WORD;
 			tempCharStyle: DTPData.CharacterStyleObject;
 			tempFont: WMGraphics.Font;
 		BEGIN
@@ -1271,7 +1271,7 @@ TYPE
 		PROCEDURE ImportCharacterStyles(filename: ARRAY OF CHAR);
 		VAR tempString : ARRAY 256 OF CHAR;
 			tempReal: LONGREAL;
-			tempInt, res: LONGINT;
+			tempInt: LONGINT; res: WORD;
 			reader : Files.Reader;
 			parser : XMLParser.Parser;
 			scanner : XMLScanner.Scanner;
@@ -1338,7 +1338,7 @@ TYPE
 		PROCEDURE ApplyCHandler(sender, data: ANY);
 		VAR tempString : ARRAY 256 OF CHAR;
 			tempLReal: LONGREAL;
-			tempInt, res : LONGINT;
+			tempInt: LONGINT; res: WORD;
 			tempFont : WMGraphics.Font;
 		BEGIN
 			(* retrieve tempvalues first for those who didn't press enter after changing a value... *)

@@ -137,7 +137,7 @@ TYPE
 
 			(* get the next bit from the stream (lsb first) *)
 			PROCEDURE GetBit(): LONGINT;
-			VAR res: WORD;
+			VAR res: LONGINT;
 			BEGIN
 				IF (bsLive = 0) THEN
 					bsBuff := ORD(r.Get());
@@ -233,7 +233,7 @@ TYPE
 
 		(* get the next bit from the buffer (lsb first) *)
 		PROCEDURE GetBit(VAR buf: ARRAY OF CHAR): LONGINT;
-		VAR res: WORD;
+		VAR res: LONGINT;
 		BEGIN
 			IF ((LEN(buf) # pos) & (len # pos) & (bsLive = 0)) THEN
 				bsBuff := ORD(buf[pos]);
@@ -2193,7 +2193,7 @@ TYPE
 		END CloseSoundChannel;
 
 		PROCEDURE InitSoundChannel*(nrOfChannels, samplingRate, samplingResolution: LONGINT);
-		VAR i, res: LONGINT;
+		VAR i: LONGINT; res: WORD;
 			buffer: SoundDevices.Buffer;
 		BEGIN
 		 	IF (Trace IN Debug) THEN
@@ -2448,7 +2448,7 @@ TYPE
 
 		(* start the decoding proccess *)
 		PROCEDURE StartDecode(VAR soundOutput: SoundOutput): LONGINT;
-		VAR res: WORD;
+		VAR res: LONGINT;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@StartDecode()")
@@ -3414,7 +3414,7 @@ InverseDBLookupReal[255] := 1;
 		output: SoundOutput;
 		rh : WebHTTP.RequestHeader;
 		h : WebHTTP.ResponseHeader;
-		res, volume, nrOfBuffers: LONGINT;
+		res: WORD; volume, nrOfBuffers: LONGINT;
 		con : TCP.Connection;
 		outputFilename: ARRAY 64 OF CHAR;
 		timer: Kernel.Timer;

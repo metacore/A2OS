@@ -33,7 +33,7 @@ BEGIN
 END TestIntegerConversion;
 
 PROCEDURE TestHexConversion*(context : Commands.Context);
-VAR i, val, res : LONGINT; string : ARRAY 16 OF CHAR;
+VAR i, val : LONGINT; res: WORD; string : ARRAY 16 OF CHAR;
 BEGIN
 	context.out.String("Test hex <-> string conversion... "); context.out.Update;
 	i := MIN(LONGINT);
@@ -78,7 +78,7 @@ VAR i : LONGINT;
 	END Test;
 
 	PROCEDURE TestMaxLongintPlus1;
-	VAR string : ARRAY 16 OF CHAR; val, res : LONGINT;
+	VAR string : ARRAY 16 OF CHAR; val : LONGINT; res: WORD;
 	BEGIN
 		string := "-80000000";
 		Strings.HexStrToInt(string, val, res);

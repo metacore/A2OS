@@ -1145,7 +1145,7 @@ END Cleanup;
  ****)
 PROCEDURE LoadImage(CONST name : ARRAY OF CHAR; fmt : Raster.Format): Image;
 VAR img : Image;
-	res, w, h, x : LONGINT;
+	res: WORD; w, h, x : LONGINT;
 	decoder : Codecs.ImageDecoder;
 	in : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;

@@ -104,7 +104,7 @@ TYPE
 		VAR name : Strings.String;
 			cont: XMLObjects.Enumerator;
 			ptr: ANY;
-			tempInt, res : LONGINT;
+			tempInt : LONGINT; res: WORD;
 			tempReal : LONGREAL;
 		BEGIN
 			cont := elem.GetContents(); cont.Reset();
@@ -432,7 +432,7 @@ TYPE
 		PROCEDURE SetValueHandler(sender, data: ANY);
 		VAR
 			colorString, origString : ARRAY 128 OF CHAR;
-			color, res : LONGINT;
+			color : LONGINT; res: WORD;
 			width: LONGREAL;
 			bool: BOOLEAN;
 

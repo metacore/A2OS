@@ -158,7 +158,7 @@ TYPE
 
 (* Parse a color specified by name or value *)
 PROCEDURE Parse*(value: Strings.String; VAR color: Color):BOOLEAN;
-VAR res, i, r, g, b: LONGINT;
+VAR res: WORD; i, r, g, b: LONGINT;
 	f: LONGREAL;
 BEGIN
 	IF value[0]='#' THEN

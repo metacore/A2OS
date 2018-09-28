@@ -794,7 +794,7 @@ TYPE
 		END GeneratePackageFile;
 
 		PROCEDURE GenerateZipFiles(out, error : Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR err : BOOLEAN);
-		VAR packageArray : PackageArray; i, res : LONGINT;
+		VAR packageArray : PackageArray; i : LONGINT; res: WORD;
 
 			PROCEDURE AddFile(archive: Zip.Archive; CONST srcname,  dstname: ARRAY OF CHAR; VAR res: WORD);
 			VAR f: Files.File; r: Files.Rider; pathName, fileName: Files.FileName;
@@ -2791,7 +2791,7 @@ PROCEDURE GetReader(file : File; diagnostics : Diagnostics.Diagnostics) : Stream
 VAR
 	reader : Streams.Reader;
 	fileReader : Files.Reader; ch1, ch2 : CHAR; offset : LONGINT;
-	text : Texts.Text; textReader : TextUtilities.TextReader; format, res : LONGINT;
+	text : Texts.Text; textReader : TextUtilities.TextReader; format : LONGINT; res: WORD;
 	message : ARRAY 256 OF CHAR;
 BEGIN
 	ASSERT((file # NIL) & (diagnostics # NIL));
@@ -2867,7 +2867,7 @@ PROCEDURE ParseBuildFile*(
 	log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics
 	) : BOOLEAN;
-VAR text : Texts.Text; format, res : LONGINT; message : ARRAY 256 OF CHAR;
+VAR text : Texts.Text; format : LONGINT; res: WORD; message : ARRAY 256 OF CHAR;
 BEGIN
 	log.String("Loading package description file "); log.String(filename); log.String(" ... ");
 	log.Update;
@@ -3271,7 +3271,7 @@ VAR
 	buildname : ARRAY 32 OF CHAR;
 	start0 : Dates.DateTime;
 	error : BOOLEAN;
-	nofWorkers, res : LONGINT;
+	nofWorkers : LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("b", "build", Options.Flag);
@@ -3389,7 +3389,7 @@ VAR
 	buildname : ARRAY 32 OF CHAR;
 	start0 : Dates.DateTime;
 	error : BOOLEAN;
-	nofWorkers, res : LONGINT;
+	nofWorkers : LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("b", "build", Options.Flag);

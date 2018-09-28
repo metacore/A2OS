@@ -684,7 +684,7 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 
 	PROCEDURE OpenExtension (VAR family, style: ARRAY OF CHAR; ptsize: INTEGER; VAR m: GfxMatrix.Matrix): Font;
 		VAR
-			i, j, n, res: LONGINT;
+			i, j, n: LONGINT; res: WORD;
 			enum: Files.Enumerator; time, date, size: LONGINT;  continue: BOOLEAN;
 			name: Files.FileName; msg, cmd: ARRAY 64 OF CHAR; flags: SET;
 	BEGIN

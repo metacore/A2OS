@@ -25,7 +25,7 @@ TYPE
 
 		(* Initialize Player with the given File *)
 		PROCEDURE &Init*(in : Streams.Reader; length: LONGINT);
-		VAR i, res : LONGINT;
+		VAR i: LONGINT; res: WORD;
 		BEGIN
 			ready := FALSE; finished := FALSE; paused := FALSE; oldPos := 0;
 			SELF.in := in;

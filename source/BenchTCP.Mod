@@ -16,7 +16,9 @@ TYPE
 
 TYPE
 	Sender = OBJECT
-		VAR c: TCP.Connection; num, num0, res: LONGINT; buf: Bytes; done: BOOLEAN;
+		VAR
+			res: WORD;
+			c: TCP.Connection; num, num0: LONGINT; buf: Bytes; done: BOOLEAN;
 
 		PROCEDURE &Init*(c: TCP.Connection; buf: Bytes; num: LONGINT);
 		BEGIN
@@ -25,7 +27,7 @@ TYPE
 			done := FALSE
 		END Init;
 
-		PROCEDURE Join(): LONGINT;
+		PROCEDURE Join(): WORD;
 		BEGIN {EXCLUSIVE}
 			AWAIT(done);
 			RETURN res
@@ -45,7 +47,8 @@ TYPE
 TYPE
 	Tester = OBJECT
 		VAR
-			c: TCP.Connection; num, num0, res, port, total, len: LONGINT; fip: IP.Adr;
+			res: WORD;
+			c: TCP.Connection; num, num0, port, total, len: LONGINT; fip: IP.Adr;
 			timer: Kernel.MilliTimer; sender: Sender; server: ARRAY 64 OF CHAR;
 			time:HUGEINT;
 

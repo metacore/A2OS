@@ -836,7 +836,7 @@ TYPE
 			content : DTPData.ContentObject;
 			page : DTPData.PageObject; mpage: DTPData.MasterPageObject;
 			frame : DTPData.FrameObject;
-			tempReal: LONGREAL; tempInt, res : LONGINT; tempBool: BOOLEAN;
+			tempReal: LONGREAL; tempInt: LONGINT; res: WORD; tempBool: BOOLEAN;
 			mt, mb, ml, mr: REAL;
 		BEGIN
 			NEW(built, 0, 0, 0, 0, 0, 0, FALSE);

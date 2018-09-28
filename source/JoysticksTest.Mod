@@ -94,7 +94,7 @@ VAR
 	nbrOfJoysticks : LONGINT;
 
 PROCEDURE CreateJoystick*(context : Commands.Context); (* [nbrOfButtons] ~ *)
-VAR joystick : SimulatedJoystick; nbrOfButtons, nbrOfAxis, res : LONGINT;
+VAR joystick : SimulatedJoystick; nbrOfButtons, nbrOfAxis: LONGINT; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(nbrOfButtons, FALSE);
 	context.arg.SkipWhitespace; context.arg.Int(nbrOfAxis, FALSE);

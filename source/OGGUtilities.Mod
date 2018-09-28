@@ -479,7 +479,7 @@ TYPE
 
 	(** compute the correct length of the value index for a codebook VQ lookup table of lookup type 1 *)
 	PROCEDURE Lookup1Values*(cbEntries, cbDimensions: LONGINT): LONGINT;
-	VAR res: WORD;
+	VAR res: LONGINT;
 	BEGIN
 		res := 0;
 		WHILE (Power(res, cbDimensions) <= cbEntries) DO
@@ -596,7 +596,7 @@ TYPE
 
 	(** return x to the power of n (ASSERT(n>=0)) *)
 	PROCEDURE Power*(x,n: LONGINT): LONGINT;
-	VAR res: WORD;
+	VAR res: LONGINT;
 	BEGIN
 		IF (n < 0) THEN
 			KernelLog.String("ASSERTION failed - power of negative numbers are not allowed"); KernelLog.Ln
@@ -656,7 +656,7 @@ TYPE
 
 	(** returns the logarithm to the base 2 *)
 	PROCEDURE Log2n*(n: LONGINT): LONGINT;
-	VAR res: WORD;
+	VAR res: LONGINT;
 	BEGIN
 		ASSERT(n > 0);
 		res := 0;

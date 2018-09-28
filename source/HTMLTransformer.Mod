@@ -2726,7 +2726,7 @@ END Gb23122Utf8;
 PROCEDURE GetColor(s : String) : LONGINT;
 VAR
 	aoc : ARRAY 17 OF CHAR;
-	i, res : LONGINT;
+	i : LONGINT; res: WORD;
 BEGIN
 	IF s#NIL THEN
 		IF (s^[0]='#') THEN
@@ -3147,7 +3147,7 @@ PROCEDURE GetCharEnt(VAR ent : ARRAY OF CHAR) : String;
 VAR
 	temp : String;
 	aoc : ARRAY 5 OF CHAR;
-	res, suc, len : LONGINT;
+	res, len : LONGINT; suc: WORD;
 BEGIN
 	res := 0;
 	IF ent[0] = '#' THEN

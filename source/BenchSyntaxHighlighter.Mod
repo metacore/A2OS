@@ -136,7 +136,7 @@ VAR
 	filename : Files.FileName; highlighterName, benchmark : ARRAY 64 OF CHAR; nofIterations : LONGINT;
 	options : Options.Options;
 	text : Texts.Text; reader : Texts.TextReader;
-	format, res : LONGINT;
+	format : LONGINT; res: WORD;
 	highlighter : SyntaxHighlighter.Highlighter;
 BEGIN
 	NEW(options);
@@ -199,7 +199,7 @@ VAR
 	highlighter : SyntaxHighlighter.Highlighter;
 	text : Texts.Text; reader : Texts.TextReader; char32 : Texts.Char32;
 	token : SyntaxHighlighter.Token;
-	position, format, res : LONGINT;
+	position, format : LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("d", "details", Options.Flag);

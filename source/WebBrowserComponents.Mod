@@ -258,7 +258,7 @@ TYPE
 			hScrollbar : WMStandardComponents.Scrollbar;
 			tv : WMTextView.TextView;
 			isoDecoder : Codecs.TextDecoder;
-			result : LONGINT;
+			result : WORD;
 		BEGIN
 			Init;
 			takesFocus.Set(FALSE);
@@ -315,7 +315,7 @@ log : Streams.Writer;*)
 			con : ResourceConnection;
 			charset: WebHTTP.AdditionalField;
 			reader : Streams.Reader;
-			result : LONGINT;
+			result : WORD;
 			cnt : LONGINT;
 		BEGIN
 			server := GetServer(url^);
@@ -559,7 +559,7 @@ END GetMimeType;
 PROCEDURE LoadImage*(reader : Streams.Reader; mimeType : ARRAY OF CHAR; name : ARRAY OF CHAR): WMGraphics.Image;
 VAR
 	img : WMGraphics.Image;
-	res, w, h, x : LONGINT;
+	res: WORD; w, h, x : LONGINT;
 	decoder : Codecs.ImageDecoder;
 	ext : String;
 

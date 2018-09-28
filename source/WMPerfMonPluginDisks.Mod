@@ -90,10 +90,10 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : LONGINT;
+VAR table : Plugins.Table; i : LONGINT; res: WORD;
 BEGIN
 	IF Disks.Stats THEN
-		Disks.registry.AddEventHandler(EventHandler, i); (* ignore res *)
+		Disks.registry.AddEventHandler(EventHandler, res); (* ignore res *)
 		Disks.registry.GetAll(table);
 		IF table # NIL THEN FOR i := 0 TO LEN(table)-1 DO AddPlugin(table[i] (Disks.Device)); END; END;
 	ELSE KernelLog.String("WMPerfMonPluginDisks: Disks.PerformanceMonitoring is FALSE."); KernelLog.Ln;
@@ -104,10 +104,10 @@ PROCEDURE Install*;
 END Install;
 
 PROCEDURE Cleanup;
-VAR ignore : LONGINT;
+VAR res : WORD;
 BEGIN
 	IF Disks.Stats THEN
-		Disks.registry.RemoveEventHandler(EventHandler, ignore);
+		Disks.registry.RemoveEventHandler(EventHandler, res);
 		WMPerfMonPlugins.updater.RemoveByModuleName(ModuleName);
 	END;
 END Cleanup;

@@ -443,7 +443,7 @@ TYPE
 			w : SelectionWrapper;
 			filename : Files.FileName;
 			command : ARRAY 1024 OF CHAR;
-			position, res : LONGINT;
+			position: LONGINT; res: WORD;
 			msg : ARRAY 256 OF CHAR;
 		BEGIN
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -549,7 +549,7 @@ TYPE
 
 		PROCEDURE Rename(sender, data : ANY);
 		VAR  d : DirEntry; rename : WMDialogs.MiniStringInput;
-			wmx, wmy, res : LONGINT;
+			wmx, wmy: LONGINT; res: WORD;
 			name, op, np : ARRAY FileNameLength (* was 128*) OF CHAR;
 		BEGIN
 			IF popup # NIL THEN popup.Close; popup := NIL END;
@@ -580,7 +580,7 @@ TYPE
 
 		PROCEDURE Delete(sender, data : ANY);
 		VAR  d : DirEntry;
-			dr, res, i  : LONGINT;
+			dr, i  : LONGINT; res: WORD;
 			dp : Files.FileName;
 			delete, always, never : BOOLEAN;
 		BEGIN
@@ -843,7 +843,7 @@ END Open;
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i, res : LONGINT;
+			i : LONGINT; res: WORD;
 			sel : DirEntries;
 			url : ARRAY 1024 OF CHAR;
 			text : Texts.Text;

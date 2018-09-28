@@ -984,7 +984,7 @@ TYPE
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i, res : LONGINT;
+			i : LONGINT; res : WORD;
 			sel : NodeList;
 			url, caption : ARRAY 1024 OF CHAR;
 			text : Texts.Text;

@@ -725,7 +725,7 @@ VAR
 	alert : AlertObject; string : XML.String;
 	fullname : ARRAY 256 OF CHAR; type, trigger : LONGINT;  value1, value2 : LONGREAL;
 	plugin : WMPerfMonPlugins.Plugin;
-	index, res : LONGINT;
+	index : LONGINT; res: WORD;
 BEGIN
 	ASSERT(elem # NIL);
 	string := GetAttributeValue(elem, XmlAttributeFullname);
@@ -765,7 +765,7 @@ BEGIN
 	RETURN alert;
 END ParseXmlAlert;
 
-PROCEDURE ParseXmlDocument(document : XML.Document; VAR msg : ARRAY OF CHAR; VAR nbrOfRules, res : LONGINT) : AlertObject;
+PROCEDURE ParseXmlDocument(document : XML.Document; VAR msg : ARRAY OF CHAR; VAR nbrOfRules: LONGINT; VAR res: WORD) : AlertObject;
 VAR elem : XML.Element; enum : XMLObjects.Enumerator; listHead, alert : AlertObject; ptr : ANY; string : XML.String;
 BEGIN
 	ASSERT(document # NIL);
@@ -936,7 +936,7 @@ BEGIN {EXCLUSIVE}
 END StoreRules;
 
 PROCEDURE Load*(context : Commands.Context); (** [filename] ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; nbrOfRules, res : LONGINT; alerts : AlertObject;
+VAR filename, msg : ARRAY 256 OF CHAR; nbrOfRules: LONGINT; res: WORD; alerts : AlertObject;
 BEGIN {EXCLUSIVE}
 	IF ~context.arg.GetString(filename) THEN filename := DefaultAlertFile; END;
 	LoadRuleFileX(filename, alerts, nbrOfRules, msg, res);

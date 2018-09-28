@@ -1425,7 +1425,7 @@ BEGIN
 END GenerateName;
 
 PROCEDURE WindowShot(window: WMWindowManager.Window; scale:REAL);
-VAR str,fn: Files.FileName;  w,h, res: LONGINT; startTime: Dates.DateTime;
+VAR str,fn: Files.FileName;  w,h: LONGINT; res: WORD; startTime: Dates.DateTime;
 	img:WMGraphics.Image;
 BEGIN
 	GenerateName(window.GetTitle(),fn);

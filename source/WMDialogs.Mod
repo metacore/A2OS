@@ -700,7 +700,7 @@ TYPE
 
 		(**	Create an instance of the CustomDialog window. 'dialog' is a string reference to a component stored in a repository.
 			'width' and 'height' are taken from the component that is loaded. Only use this instance when res = ResOk *)
-		PROCEDURE &New*(CONST dialog : ARRAY OF CHAR; VAR width, height, res : LONGINT);
+		PROCEDURE &New*(CONST dialog : ARRAY OF CHAR; VAR width, height: LONGINT; VAR res : WORD);
 		VAR
 			content : WMComponents.VisualComponent;
 			c : Repositories.Component; rect : WMRectangles.Rectangle;
@@ -1031,7 +1031,7 @@ BEGIN
 END QueryUserInfo;
 
 PROCEDURE CustomDialogXY*(x, y : LONGINT; flags : SET; CONST dialog : ARRAY OF CHAR; VAR answer : ARRAY OF CHAR);
-VAR cd : CustomDialog; ignore, res : LONGINT;
+VAR cd : CustomDialog; ignore: LONGINT; res: WORD;
 BEGIN
 	answer := "";
 	NEW(cd, dialog, ignore, ignore, res);
@@ -1090,7 +1090,7 @@ BEGIN
 END TestUserInfo;
 
 PROCEDURE TestCustomDialog*(context : Commands.Context); (** dialog x y ~ *)
-VAR cd : CustomDialog; dialog, answer : ARRAY 256 OF CHAR; x, y, width, height, res : LONGINT;
+VAR cd : CustomDialog; dialog, answer : ARRAY 256 OF CHAR; x, y, width, height: LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(dialog);
 	context.arg.SkipWhitespace; context.arg.Int(x, FALSE);

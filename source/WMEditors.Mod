@@ -831,7 +831,7 @@ TYPE
 		END SelectAll;
 
 		PROCEDURE Paste;
-		VAR text : ARRAY MaxStringSize OF CHAR; valid : BOOLEAN; ignore : LONGINT;
+		VAR text : ARRAY MaxStringSize OF CHAR; valid : BOOLEAN; ignore : WORDT;
 		BEGIN
 			Texts.clipboard.AcquireRead;
 			IF (0 < Texts.clipboard.GetLength()) & (Texts.clipboard.GetLength() < MaxStringSize) THEN
@@ -1029,7 +1029,7 @@ TYPE
 			ds : DropString;
 			itf : WMDropTarget.DropInterface;
 			targetText, temp : Texts.Text;
-			pos, value, res : LONGINT;
+			pos, value : LONGINT; res : WORD;
 		BEGIN
 			IF (dragString = NIL) THEN RETURN; END;
 

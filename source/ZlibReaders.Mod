@@ -16,7 +16,7 @@ CONST
 TYPE
 	(** structure for reading from a file with deflated data **)
 	Reader* = RECORD
-		res-: LONGINT;	(** current stream state **)
+		res-: WORD;	(** current stream state **)
 		crc32-: LONGINT;	(* crc32 of uncompressed data *)
 		wrapper-: BOOLEAN;	(** if set, a zlib header and a checksum are present **)
 		eof: BOOLEAN;	(* set if at end of input file and input buffer empty *)

@@ -415,7 +415,7 @@ TYPE
 		END BGColorPopupHandler;
 
 		PROCEDURE UpdateColors(sender, data : ANY);
-		VAR colorString : ARRAY 16 OF CHAR; caption : ARRAY 2 OF CHAR;  color, res : LONGINT;
+		VAR colorString : ARRAY 16 OF CHAR; caption : ARRAY 2 OF CHAR;  color: LONGINT; res: WORD;
 		BEGIN
 			colorEdit.GetAsString(colorString);
 			Strings.HexStrToInt(colorString, color, res);

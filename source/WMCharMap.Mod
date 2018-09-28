@@ -144,7 +144,7 @@ TYPE
 
 		PROCEDURE FindChar(sender, data : ANY);
 		VAR tempString : ARRAY 16 OF CHAR;
-			pos, res : LONGINT;
+			pos: LONGINT; res: WORD;
 		BEGIN
 			IF sender IS WMEditors.Editor THEN
 				IF sender(WMEditors.Editor) = hexEd THEN

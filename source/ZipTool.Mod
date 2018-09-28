@@ -124,7 +124,7 @@ PROCEDURE DoExtract(
 	path, overwrite, show: BOOLEAN; out, error : Streams.Writer; VAR res: WORD);
 VAR
 	f, of: Files.File; r: Files.Rider;
-	bakname, temp: ARRAY 256 OF CHAR; res2: LONGINT;
+	bakname, temp: ARRAY 256 OF CHAR; res2: WORD;
 	suf: ARRAY 32 OF CHAR;
 BEGIN
 	IF action = EXTRACT THEN

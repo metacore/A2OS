@@ -199,7 +199,7 @@ TYPE
 
 		PROCEDURE Connect;
 		VAR user, pass, host, temp : ARRAY 64 OF CHAR;
-			port, res : LONGINT;
+			port: LONGINT; res: WORD;
 		BEGIN
 			IF ftp # NIL THEN
 				KernelLog.String("Already open"); KernelLog.Ln; RETURN
@@ -448,7 +448,7 @@ TYPE
 
 		PROCEDURE DeleteEntries(sender, data : ANY);
 		VAR  d : FTPClient.FTPEntry;
-			dr, res, i  : LONGINT;
+			dr, i  : LONGINT; res : WORD;
 			dp : ARRAY 128 OF CHAR;
 			delete, always, never : BOOLEAN;
 		BEGIN
@@ -661,7 +661,7 @@ TYPE
 		VAR di : WMWindowManager.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i, res : LONGINT;
+			i : LONGINT; res : WORD;
 			sel : FTPClient.FTPListing;
 			url : ARRAY 1024 OF CHAR;
 			text : Texts.Text;

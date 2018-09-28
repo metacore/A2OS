@@ -184,7 +184,7 @@ TYPE
 			tempProfile : HierarchicalProfiler.Profile;
 			mask : ARRAY 128 OF CHAR; timeStr : ARRAY 16 OF CHAR;
 			minPercent : LONGINT;
-			time, type, info, res : LONGINT;
+			time, type, info: LONGINT; res: WORD;
 			root : WMTrees.TreeNode;
 		BEGIN
 			IF (sender = startBtn) THEN

@@ -50,7 +50,7 @@ TYPE
 		dead, alive : BOOLEAN;
 
 		PROCEDURE HandleButtons(sender, data : ANY);
-		VAR string, msg : ARRAY 256 OF CHAR; nofRemoved, res : LONGINT;
+		VAR string, msg : ARRAY 256 OF CHAR; nofRemoved, res : WORD;
 		BEGIN
 			IF sender = onOffBtn THEN
 				IF status.enabled THEN
@@ -87,7 +87,7 @@ TYPE
 		END HandleButtons;
 
 		PROCEDURE ResetSelectedAlerts;
-		VAR scol, srow, ecol, erow, row, res : LONGINT; ptr : ANY; cellData : CellData; msg : ARRAY 128 OF CHAR;
+		VAR scol, srow, ecol, erow, row: LONGINT; res: WORD; ptr : ANY; cellData : CellData; msg : ARRAY 128 OF CHAR;
 		BEGIN
 			rulesGrid.Acquire;
 			rulesGrid.model.Acquire;

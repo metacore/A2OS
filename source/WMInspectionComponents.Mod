@@ -2136,7 +2136,7 @@ TYPE
 		END CountNofElements;
 
 		PROCEDURE SetProperties(component : WMComponents.Component);
-		VAR propertyArray : WMProperties.PropertyArray; res, i : LONGINT;
+		VAR propertyArray : WMProperties.PropertyArray; res: WORD; i : LONGINT;
 			init:WMProperties.BooleanProperty;
 		BEGIN
 			ASSERT(component # NIL);
@@ -3403,7 +3403,7 @@ TYPE
 		PROCEDURE HandleStoreButton(sender, data : ANY);
 		VAR
 			component : Repositories.Component; repository : Repositories.Repository;
-			name, repositoryName, componentName : ARRAY 256 OF CHAR; id, res : LONGINT;
+			name, repositoryName, componentName : ARRAY 256 OF CHAR; id: LONGINT; res: WORD;
 			filename : Files.FileName;
 		BEGIN
 			component := SELF.component;
@@ -3439,7 +3439,8 @@ TYPE
 		END HandleStoreButton;
 
 		PROCEDURE HandleRemoveButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name; repository : Repositories.Repository; refNum, res : LONGINT;
+		VAR component : Repositories.Component; ignore : Repositories.Name; repository : Repositories.Repository; refNum: LONGINT;
+			res: WORD;
 		BEGIN
 			component := SELF.component;
 			IF (component # NIL) THEN
@@ -3456,7 +3457,8 @@ TYPE
 		END HandleRemoveButton;
 
 		PROCEDURE HandleUpdateButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum, res : LONGINT;
+		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum: LONGINT;
+			res: WORD;
 		BEGIN
 			component := SELF.component;
 			IF (component # NIL) THEN
@@ -3647,7 +3649,7 @@ TYPE
 		END EditorKeyEvent;
 
 		PROCEDURE HandleShiftReturn;
-		VAR model : Models.Model; string : Types.DynamicString; length, res : LONGINT;
+		VAR model : Models.Model; string : Types.DynamicString; length : LONGINT; res: WORD;
 		BEGIN
 			model := SELF.model;
 			IF (model # NIL) THEN

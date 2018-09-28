@@ -524,7 +524,7 @@ TYPE
 			style : SET;
 			fgColor, bgColor : LONGINT;
 			name, tempString: ARRAY 256 OF CHAR;
-			res, size : LONGINT;
+			res: WORD; size : LONGINT;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				(* create new AdHoc Style *)
@@ -1082,7 +1082,7 @@ TYPE
 		PROCEDURE UpdateValueHandler(sender, data: ANY);
 		VAR tempString : ARRAY 64 OF CHAR;
 			tempLReal : LONGREAL;
-			tempInt, res : LONGINT;
+			tempInt : LONGINT; res : WORD;
 			tempCharStyle : Texts.CharacterStyle;
 			tempFont : WMGraphics.Font;
 			tempEditor : WMEditors.Editor;
@@ -1520,7 +1520,7 @@ TYPE
 		PROCEDURE ImportCharacterStyles(CONST filename: ARRAY OF CHAR);
 		VAR tempString : ARRAY 256 OF CHAR;
 			tempReal: LONGREAL;
-			tempInt, res: LONGINT;
+			tempInt: LONGINT; res: WORD;
 			reader : Files.Reader;
 			parser : XMLParser.Parser;
 			scanner : XMLScanner.Scanner;
@@ -1599,7 +1599,7 @@ TYPE
 		PROCEDURE ApplyCHandler(sender, data: ANY);
 		VAR tempString : ARRAY 256 OF CHAR;
 			tempLReal: LONGREAL;
-			tempInt, res : LONGINT;
+			tempInt : LONGINT; res: WORD;
 			tempFont : WMGraphics.Font;
 		BEGIN
 			(* retrieve tempvalues first for those who didn't press enter after changing a value... *)

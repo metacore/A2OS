@@ -34,7 +34,7 @@ PROCEDURE LoadGBTable;
 VAR f : Files.File;
 	r : Files.Reader;
 	codeS, unicodeS : ARRAY 8 OF CHAR;
-	code, unicode, res : LONGINT;
+	code, unicode: LONGINT; res : WORD;
 BEGIN
 	f := Files.Old("gb2312.txt");
 	Files.OpenReader(r, f, 0);

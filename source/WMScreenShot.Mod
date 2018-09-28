@@ -129,7 +129,7 @@ VAR manager : WM.WindowManager;
 	viewport : WM.ViewPort;
 	sv : View;
 	p : Plugins.Plugin;
-	w, h, res : LONGINT;
+	w, h: LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(fn);
 	IF ~((context.arg.Peek() >= '0') & (context.arg.Peek() <= '9')) THEN
@@ -166,7 +166,7 @@ PROCEDURE SnapShotRange*(context : Commands.Context);
 VAR manager : WM.WindowManager;
 	fn : ARRAY 100 OF CHAR;
 	sv : View;
-	w, h, rl, rt, rw, rh, res : LONGINT;
+	w, h, rl, rt, rw, rh: LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(fn);
 	context.arg.SkipWhitespace; context.arg.Int(w, FALSE);

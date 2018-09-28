@@ -239,7 +239,7 @@ END Handle;
 PROCEDURE GetMacroKeySym() : LONGINT;
 VAR
 	enum : XMLObjects.Enumerator; elem : XML.Element; s : XML.String; p : ANY;
-	keysym, res : LONGINT;
+	keysym : LONGINT; res: WORD;
 BEGIN
 	IF macros # NIL THEN
 		enum := macros.GetContents();

@@ -78,7 +78,7 @@ TYPE
 
 	Reader* = POINTER TO ReaderDesc;
 	ReaderDesc* = RECORD	(** structure for reading from a zip-file into a buffer **)
-		res-: LONGINT;	(** result of last operation **)
+		res-: WORD;	(** result of last operation **)
 		open: BOOLEAN;
 		ent: Entry
 	END;

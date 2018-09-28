@@ -291,7 +291,7 @@ TYPE
 			label : WMStandardComponents.Label;
 			dt : Dates.DateTime;
 			string : ARRAY 32 OF CHAR;
-			ignoreRes : LONGINT;
+			ignoreRes : WORD;
 
 			PROCEDURE CreateLabel(CONST caption : ARRAY OF CHAR; width : LONGINT) : WMStandardComponents.Label;
 			VAR label : WMStandardComponents.Label;

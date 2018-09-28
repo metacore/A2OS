@@ -312,7 +312,7 @@ VAR
 PROCEDURE Open*(context : Commands.Context);
 VAR
 	fullName, repositoryName, applicationName : ARRAY 128 OF CHAR;
-	refNum, res : LONGINT;
+	refNum: LONGINT; res: WORD;
 	info : ApplicationInfo;
 	window : Window;
 	gadgetWindow : GadgetWindow;
@@ -393,7 +393,7 @@ BEGIN
 	out.Update;
 END ShowRes;
 
-PROCEDURE GetApplicationInfo(CONST repositoryName, applicationName : ARRAY OF CHAR; VAR info : ApplicationInfo) : LONGINT;
+PROCEDURE GetApplicationInfo(CONST repositoryName, applicationName : ARRAY OF CHAR; VAR info : ApplicationInfo) : WORD;
 VAR repository : Repositories.Repository; application : XML.Element; res : WORD;
 BEGIN
 	repository := Repositories.ThisRepository(repositoryName);

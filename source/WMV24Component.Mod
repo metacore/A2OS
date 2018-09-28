@@ -924,7 +924,7 @@ TYPE
 			progressInfo : ProgressInfo;
 			xysender : XYModem.Sender;
 			msg : ARRAY 32 OF CHAR;
-			x, y, res : LONGINT;
+			x, y : LONGINT; res: WORD;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
@@ -971,7 +971,7 @@ TYPE
 			caption : ARRAY 128 OF CHAR;
 			xyreceiver : XYModem.Receiver;
 			msg : ARRAY 32 OF CHAR;
-			x, y, res : LONGINT;
+			x, y : LONGINT; res: WORD;
 			awaitF : BOOLEAN;
 		BEGIN
 			IF filename # "" THEN
@@ -1144,7 +1144,7 @@ TYPE
 		END EvaluateError;
 
 		PROCEDURE ReceiveCharacters;
-		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, len, res : LONGINT;
+		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, len : LONGINT; res: WORD;
 		BEGIN
 			len := 0;
 			res := Streams.Ok;

@@ -3126,13 +3126,14 @@ TYPE
 			ELSE KernelLog.String("WMTextView : Drag could not be started")
 			END;
 		END AutoStartDrag;
+
 		PROCEDURE DragWasAccepted(sender, data : ANY);
 		VAR di : WMWindowManager.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
 			targetText, temp : Texts.Text;
 			string : Strings.String;
-			pos, a, b, res : LONGINT;
+			pos, a, b: LONGINT; res: WORD;
 		BEGIN
 			IF (dragSelA = NIL) OR (dragSelB = NIL)  THEN RETURN END;
 
@@ -3760,7 +3761,7 @@ TYPE
 			s : Strings.String;
 			msg : ARRAY 128 OF CHAR;
 			ignore : Modules.Name;
-			paramSize, nofLastSelections, i, j, a, b, res : LONGINT;
+			paramSize, nofLastSelections, i, j, a, b: LONGINT; res: WORD;
 			selectionText : Texts.Text;
 			selectionOk : BOOLEAN;
 			from, to: Texts.TextPosition;

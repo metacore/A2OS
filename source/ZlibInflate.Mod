@@ -59,7 +59,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 		(** result codes **)
 		Result* = RECORD
-			code-: LONGINT;	(** result code including special conditions and errors **)
+			code-: WORD;	(** result code including special conditions and errors **)
 			msg-: POINTER TO ARRAY OF CHAR;	(** detailed error description if available **)
 		END;
 

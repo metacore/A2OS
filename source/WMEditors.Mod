@@ -831,7 +831,7 @@ TYPE
 		END SelectAll;
 
 		PROCEDURE Paste;
-		VAR text : ARRAY MaxStringSize OF CHAR; valid : BOOLEAN; ignore : WORDT;
+		VAR text : ARRAY MaxStringSize OF CHAR; valid : BOOLEAN; ignore : WORD;
 		BEGIN
 			Texts.clipboard.AcquireRead;
 			IF (0 < Texts.clipboard.GetLength()) & (Texts.clipboard.GetLength() < MaxStringSize) THEN

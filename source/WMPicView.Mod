@@ -8,7 +8,7 @@ PROCEDURE Open*(context : Commands.Context); (** filename ~ *)
 VAR
 	fn, name : Files.FileName;
 	pw : WM.BufferWindow;
-	res: WOTD; w, h, x : LONGINT;
+	res: WORD; w, h, x : LONGINT;
 	dec : Codecs.ImageDecoder;
 	rdr : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;

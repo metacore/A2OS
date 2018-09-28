@@ -27,7 +27,7 @@ TYPE
 				f: Forwarder; (* this client belogs to *)
 				p: T.Packet;
 				buf: ARRAY 64 OF CHAR;
-				len, res: LONGINT;
+				len: LONGINT; res: WORD;
 				
 			
 			
@@ -72,7 +72,8 @@ TYPE
 
 				buf: ARRAY 4096 OF CHAR;
 				type: CHAR;
-				len, res: LONGINT;
+				len: LONGINT;
+				res: WORD;
 				
 				clientHandlerRunning: BOOLEAN;
 				clientHandler: ClientHandler;
@@ -227,7 +228,7 @@ TYPE
 				END Send;
 
 
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
 				VAR
 					plen, dlen: LONGINT; pType, ch: CHAR;
 				BEGIN

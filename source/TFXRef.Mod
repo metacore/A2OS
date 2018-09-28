@@ -793,7 +793,7 @@ END InitWithText;
 PROCEDURE ProcessFile(CONST filename, targetPath : ARRAY OF CHAR; indexFile : Streams.Writer);
 VAR
 	module : TS.Module;
-	t : Texts.Text; res : WORD;
+	t : Texts.Text; res : WORD; format: LONGINT;
 	r : Streams.StringReader;
 	str : Strings.String;
 	name, path, targetFile : ARRAY 1024 OF CHAR;
@@ -809,7 +809,7 @@ BEGIN
 	TFAOParser.ScanModule(filename, FALSE, module);
 	IF module # NIL THEN
 		module.filename := Strings.NewString(filename);
-		TextUtilities.LoadAuto(t, filename, res, res);
+		TextUtilities.LoadAuto(t, filename, format, res);
 		str := InitWithText(t, 0);
 		NEW(r, Strings.Length(str^));
 		r.Set(str^);
@@ -841,7 +841,7 @@ VAR
 	sr : Streams.Reader;
 	t0, t1 : LONGINT;
 	module : TS.Module;
-	t : Texts.Text; res : WORD;
+	t : Texts.Text; res : WORD; format: LONGINT;
 	textReader : TextUtilities.TextReader;
 BEGIN
 	NEW(globalUses);
@@ -854,7 +854,7 @@ BEGIN
 	TFAOParser.ScanModule(filename, FALSE, module);
 	IF module # NIL THEN
 		module.filename := Strings.NewString(filename);
-		TextUtilities.LoadAuto(t, filename, res, res);
+		TextUtilities.LoadAuto(t, filename, format, res);
 		NEW(textReader, t);
 		GenerateModule(module, textReader, NIL);
 		TFDocGenerator.DocumentModule(module);

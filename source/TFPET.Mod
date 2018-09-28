@@ -289,7 +289,7 @@ TYPE
 
 		(* Load settings from system configuration database *)
 		PROCEDURE Load;
-		VAR string : String; temp, res : LONGINT;
+		VAR string : String; temp: LONGINT; res: WORD;
 		BEGIN
 			(* General *)
 			Configuration.Get("Applications.PET.General.BackupOnStore", string, res);
@@ -1821,7 +1821,7 @@ TYPE
 		END FilenameEditEscapeHandler;
 
 		PROCEDURE LoadHandler(sender, data : ANY);
-		VAR filename : Filename; command : ARRAY 1024 OF CHAR; msg : ARRAY 64 OF CHAR; ignoreRes : LONGINT;
+		VAR filename : Filename; command : ARRAY 1024 OF CHAR; msg : ARRAY 64 OF CHAR; ignoreRes : WORD;
 		BEGIN
 			filenameEdit.GetAsString(filename);
 			Strings.TrimWS(filename);

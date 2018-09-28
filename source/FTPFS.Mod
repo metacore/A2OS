@@ -625,7 +625,7 @@ TYPE
 		END ScheduleClose;
 
 		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
-		VAR i, res: LONGINT; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
+		VAR i: LONGINT; res: WORD; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
 		BEGIN (*{EXCLUSIVE}*)
 			lock.Acquire;
 			f := NIL; Check(name, namebuf, res);
@@ -693,7 +693,7 @@ TYPE
 
 		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
 		VAR
-			i, k, res: LONGINT; f: File; header: DiskAdr; buf: Buffer; head: FileHd;
+			i, k: LONGINT; res: WORD; f: File; header: DiskAdr; buf: Buffer; head: FileHd;
 			namebuf, local: FileName; super: SuperIndex; sub: SubIndex; sec: IndexSector;
 
 		BEGIN (*{EXCLUSIVE}*)
@@ -756,7 +756,7 @@ TYPE
 			RETURN f
 		END Old0;
 
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		VAR adr: DiskAdr; namebuf: FileName; head: FileHeader;
 		BEGIN (*{EXCLUSIVE}*)
 			lock.Acquire;

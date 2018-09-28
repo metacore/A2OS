@@ -1991,7 +1991,7 @@ PROCEDURE Highlight*(context : Commands.Context); (** filename highlighterName ~
 VAR
 	file : Files.File; filename : Files.FileName; highlighterName : Identifier;
 	highlighter : Highlighter;
-	text : Texts.Text; format, res : LONGINT;
+	text : Texts.Text; format: LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(filename);
 	context.arg.SkipWhitespace; context.arg.String(highlighterName);

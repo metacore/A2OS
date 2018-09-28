@@ -795,7 +795,7 @@ TYPE
 		END Init;
 
 		(* Post-instantiation initialization *)
-		PROCEDURE Initialize() : LONGINT;
+		PROCEDURE Initialize() : WORD;
 		VAR enum : XMLObjects.Enumerator; ptr : ANY; element : XML.Element; res : WORD;
 		BEGIN
 			nextID := 0;
@@ -1804,7 +1804,7 @@ VAR
 	archive : Archives.Archive;
 	receiver : Streams.Receiver; reader : Streams.Reader;
 	element : XML.Element;
-	ignore : LONGINT;
+	ignore : WORD;
 	errors : ErrorReporter;
 	file: Files.File; writer: Files.Writer; freader: Files.Reader; ch: CHAR; buf: ARRAY 512 OF CHAR; len: LONGINT;
 BEGIN (* {EXCLUSIVE} *)
@@ -2108,7 +2108,7 @@ PROCEDURE Put*(context : Commands.Context); (** componentName repositoryName asN
 VAR
 	componentName, repositoryName, asName : ARRAY 256 OF CHAR;
 	nbr : ARRAY 3 OF CHAR;
-	component : Component; id, res : LONGINT;
+	component : Component; id : LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(componentName);
 	context.arg.SkipWhitespace; context.arg.String(repositoryName);

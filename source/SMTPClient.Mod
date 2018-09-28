@@ -31,7 +31,7 @@ TYPE
 		BEGIN RETURN sendReady
 		END GetSendReady;
 
-		PROCEDURE GetReplyCode*(VAR code, res :LONGINT);
+		PROCEDURE GetReplyCode*(VAR code: LONGINT; VAR res: WORD); 
 		VAR msg : ARRAY 256 OF CHAR;
 		BEGIN
 			r.Ln(msg);
@@ -55,7 +55,7 @@ TYPE
 
 		PROCEDURE Open*(CONST server, thisHost : ARRAY OF CHAR; port: LONGINT; VAR result : LONGINT);
 		VAR fip : IP.Adr;
-				res, reply : LONGINT;
+				res: WORD; reply : LONGINT;
 		BEGIN
 			result := NotConnected;
 			DNS.HostByName(server, fip, res);
@@ -94,7 +94,7 @@ TYPE
 		END Close;
 
 		PROCEDURE StartMailFrom*(CONST fromAddr : ARRAY OF CHAR) : BOOLEAN;
-		VAR reply, res: LONGINT;
+		VAR reply: LONGINT; res: WORD;
 		BEGIN
 			w.String("MAIL FROM:<");  w.String(fromAddr); w.String(">"); w.Ln; w.Update;
 			IF w.res = Streams.Ok THEN
@@ -105,7 +105,7 @@ TYPE
 		END StartMailFrom;
 
 		PROCEDURE SendTo*(CONST toAddr : ARRAY OF CHAR) :BOOLEAN;
-		VAR reply, res: LONGINT;
+		VAR reply: LONGINT; res: WORD;
 		BEGIN
 			w.String("RCPT TO:<");  w.String(toAddr); w.String(">"); w.Ln; w.Update;
 			IF w.res = Streams.Ok THEN
@@ -116,7 +116,7 @@ TYPE
 		END SendTo;
 
 		PROCEDURE StartData*() : BOOLEAN;
-		VAR reply, res: LONGINT;
+		VAR reply: LONGINT; res: WORD;
 		BEGIN
 			SendCommand("DATA", "", res);
 			IF res = Ok THEN
@@ -156,7 +156,7 @@ TYPE
 		END SendRawLine;
 
 		PROCEDURE FinishSendRaw*() : BOOLEAN;
-		VAR reply, res: LONGINT;
+		VAR reply: LONGINT; res: WORD;
 		BEGIN
 			w.Update;
 			GetReplyCode(reply, res);

@@ -99,9 +99,9 @@ TYPE
 		hasMoreBytes : BOOLEAN;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR len: LONGINT; c: CHAR;
+		VAR len, inLen: LONGINT; c: CHAR;
 		BEGIN
-			res := -1;
+			res := -1; inLen := 0;
 			IF in = NIL THEN
 				KernelLog.String("WAVDecoder - InputStream is NIL"); KernelLog.Ln;
 				RETURN;
@@ -109,22 +109,22 @@ TYPE
 			SELF.in := in;
 
 			(* Read header and check for correctness *)
-			in.Bytes(h.chunkRIFF, 0, 4, res);
-			IF (res # 4) OR (h.chunkRIFF # "RIFF") THEN
+			in.Bytes(h.chunkRIFF, 0, 4, inLen);
+			IF (inLen # 4) OR (h.chunkRIFF # "RIFF") THEN
 				KernelLog.String("WAVDecoder - RIFF header ID not found"); KernelLog.Ln;
 				RETURN;
 			END;
 
 			ReadRawBELongInt(in, h.fileSize);
 
-			in.Bytes(h.chunkWAVE, 0, 4, res);
-			IF (res # 4) OR (h.chunkWAVE # "WAVE") THEN
+			in.Bytes(h.chunkWAVE, 0, 4, inLen);
+			IF (inLen # 4) OR (h.chunkWAVE # "WAVE") THEN
 				KernelLog.String("WAVDecoder - WAVE header ID not found"); KernelLog.Ln;
 				RETURN;
 			END;
 
-			in.Bytes(h.chunkfmt, 0, 4, res);
-			IF (res # 4) OR (h.chunkfmt # "fmt ") THEN
+			in.Bytes(h.chunkfmt, 0, 4, inLen);
+			IF (inLen # 4) OR (h.chunkfmt # "fmt ") THEN
 				KernelLog.String("WAVDecoder - fmt header ID not found"); KernelLog.Ln;
 				RETURN;
 			END;
@@ -156,12 +156,12 @@ TYPE
 			WHILE len > 0 DO c := in.Get(); DEC(len) END;
 
 			REPEAT
-				in.Bytes(h.chunkdata, 0, 4, res);
-			UNTIL (res = 4) & (h.chunkdata = "data") OR (in.Pos() >= (h.fileSize + 8));
+				in.Bytes(h.chunkdata, 0, 4, inLen);
+			UNTIL (inLen = 4) & (h.chunkdata = "data") OR (in.Pos() >= (h.fileSize + 8));
 
-			IF (res # 4) OR (h.chunkdata # "data") THEN
+			IF (inLen # 4) OR (h.chunkdata # "data") THEN
 				KernelLog.String("WAVDecoder - data header ID not found"); KernelLog.Ln;
-				KernelLog.String("res= "); KernelLog.Int(res, 0);
+				KernelLog.String("res= "); KernelLog.Int(inLen, 0);
 				KernelLog.String("h.chunkdata= "); KernelLog.String(h.chunkdata);
 				RETURN;
 			END;

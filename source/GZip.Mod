@@ -160,7 +160,7 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			intlen : LONGINT;
 		BEGIN

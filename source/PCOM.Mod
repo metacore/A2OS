@@ -1191,7 +1191,7 @@ END ImportComplete;
 
 PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index);
 	VAR
-			tag, res, i: LONGINT;  name: PCS.Name;  str: PCT.Struct;  vis: SET; R: PCM.SymReader;
+			res: WORD; tag, i: LONGINT;  name: PCS.Name;  str: PCT.Struct;  vis: SET; R: PCM.SymReader;
 			proc: PCT.Proc;
 			scope: PCT.ModScope;
 			pscope: PCT.ProcScope;

@@ -84,7 +84,7 @@ TYPE
 
 		(** Finalize a volume and close its device. *)
 		PROCEDURE Finalize*;
-		VAR res, i, j: LONGINT; ptable: Disks.PartitionTable;
+		VAR res: WORD; i, j: LONGINT; ptable: Disks.PartitionTable;
 		BEGIN {EXCLUSIVE}
 			IF cache # NIL THEN cache.Synchronize; cache := NIL END;
 			i := 0; j := -1; ptable := dev.table;	(* todo: fix race! *)

@@ -544,7 +544,7 @@ TYPE
 		END ClickNode;
 
 		PROCEDURE MiddleClickNode(sender, data : ANY);
-		VAR d : ANY; commandStr, ignoreMsg : ARRAY 128 OF CHAR; len, ignore : LONGINT;
+		VAR d : ANY; commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: LONGINT; ignore : WORD;
 		BEGIN
 			IF (data # NIL) & (data IS WMTrees.TreeNode) THEN
 				tree.Acquire;

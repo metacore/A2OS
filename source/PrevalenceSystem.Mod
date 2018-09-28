@@ -1286,7 +1286,7 @@ CONST
 	END ReadRegisteredModules;
 
 	PROCEDURE RegisterModuleByName(moduleName: Strings.String);
-	VAR module: Modules.Module; factory : PersistentObjectDescSetFactory; i, res: LONGINT;
+	VAR module: Modules.Module; factory : PersistentObjectDescSetFactory; i: LONGINT; res: WORD;
 		msg: ARRAY 1024 OF CHAR; desc: PersistentObjectDescriptor;
 		descList: PersistentObjectDescSet;
 	BEGIN

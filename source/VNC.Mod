@@ -39,7 +39,8 @@ TYPE
 		next: Connection;	(* link in connection pool *)
 		pcb: TCP.Connection;
 		w: Window;
-		res, id: LONGINT;
+		res: WORD;
+		id: LONGINT;
 		receiver: Receiver;
 		sender: Sender;
 		nb: Raster.Image;
@@ -169,7 +170,8 @@ TYPE
 	Sender = OBJECT
 		VAR
 			c: Connection;
-			head, middle, tail, res, lx, ly: LONGINT;
+			head, middle, tail, lx, ly: LONGINT;
+			res: WORD;
 			lkeys : SET;
 			buf: ARRAY OutBufSize OF CHAR;
 			done, poll: BOOLEAN;
@@ -885,7 +887,7 @@ END ReadString;
 
 PROCEDURE Open*(context : Commands.Context); (** server[pwd|?] port *)
 VAR
-	server: IP.Adr; res, port: LONGINT;
+	server: IP.Adr; res: WORD; port: LONGINT;
 	c: Connection; pwd: ARRAY 32 OF CHAR; svr, title: ARRAY 128 OF CHAR;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(svr); context.arg.SkipWhitespace;

@@ -397,11 +397,11 @@ BEGIN
 END execute;
 
 PROCEDURE Start*(context : Commands.Context);
-VAR msg: String; res: WORD; string : POINTER TO ARRAY OF CHAR;
+VAR msg: String; len: LONGINT; res: WORD; string : POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF (context.arg IS Streams.StringReader) & (context.arg.Available() > 0) THEN
 		NEW(string, context.arg.Available() +1);
-		context.arg.Bytes(string^, 0, context.arg.Available(), res);
+		context.arg.Bytes(string^, 0, context.arg.Available(), len);
 		string[LEN(string)-1] := 0X;
 		execute(context, string^, {}, res, msg);
 		IF res # 0 THEN

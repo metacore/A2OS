@@ -233,7 +233,7 @@ TYPE
 		END ClickNode;
 
 		PROCEDURE MiddleClickNode*(sender, data : ANY);
-		VAR commandStr, ignoreMsg : ARRAY 128 OF CHAR; len, ignore : LONGINT;
+		VAR commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: LONGINT; ignore: WORD;
 		BEGIN
 			IF (data # NIL) & (data IS TreeNode) & (data(TreeNode).commandName # NIL) & (data(TreeNode).modulename # "") THEN
 				COPY(data(TreeNode).modulename, commandStr);

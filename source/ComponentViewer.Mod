@@ -153,7 +153,7 @@ VAR
 	ignoreMsg : ARRAY 1 OF CHAR;
 	generatorProc : XML.GeneratorProcedure;
 	c : XML.Content; component : Repositories.Component;
-	id, res : LONGINT;
+	id: LONGINT; res: WORD;
 BEGIN
 	IF Repositories.SplitName(filename, repositoryName, componentName, id) & (repositoryName # "") THEN
 		(* Retrieve component from repository *)
@@ -261,7 +261,7 @@ PROCEDURE Store*(context: Commands.Context);
 VAR
 	filename, name, ext, formName : ARRAY 256 OF CHAR;
 	form: WMComponents.Component;
-	id,res: LONGINT;
+	id: LONGINT; res: WORD;
 	originator: WMComponents.Component;
 	parent: XML.Element;
 BEGIN{EXCLUSIVE}

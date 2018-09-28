@@ -1590,7 +1590,7 @@ VAR
 	module : Module;
 	scanner : FoxScanner.Scanner;
 	text : Texts.Text; reader : TextUtilities.TextReader;
-	format, res : LONGINT;
+	format: LONGINT; res : WORD;
 BEGIN
 	NEW(text);
 	TextUtilities.LoadAuto(text, filename, format, res);

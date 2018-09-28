@@ -40,7 +40,7 @@ VAR
 	index : LONGINT;
 	lastModuleName : Modules.Name;
 
-PROCEDURE GetErrorString(errorCode : LONGINT) : Strings.String;
+PROCEDURE GetErrorString(errorCode : WORD) : Strings.String;
 VAR message : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR;
 BEGIN
 	message := "Unknown error, res: ";
@@ -49,7 +49,7 @@ BEGIN
 END GetErrorString;
 
 (** Get error message for the specified error number. If no message can be found, a generic error message is generated *)
-PROCEDURE GetErrorMessage*(errorCode : LONGINT) : ErrorMessage;
+PROCEDURE GetErrorMessage*(errorCode : WORD) : ErrorMessage;
 VAR errorMessage : ErrorMessage; res : WORD;
 BEGIN {EXCLUSIVE}
 	res := -1;
@@ -62,7 +62,7 @@ BEGIN {EXCLUSIVE}
 	RETURN errorMessage;
 END GetErrorMessage;
 
-PROCEDURE ToStream*(errorCode : LONGINT; out : Streams.Writer);
+PROCEDURE ToStream*(errorCode : WORD; out : Streams.Writer);
 VAR errorMessage : ErrorMessage;
 BEGIN
 	ASSERT(out # NIL);
@@ -93,7 +93,7 @@ BEGIN
 	INC(index);
 END Add;
 
-PROCEDURE Get(number : LONGINT; VAR errorMessage : ErrorMessage; VAR res : WORD);
+PROCEDURE Get(number : WORD; VAR errorMessage : ErrorMessage; VAR res : WORD);
 VAR i : LONGINT;
 BEGIN
 	IF (cache # NIL) THEN

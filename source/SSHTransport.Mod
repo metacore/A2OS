@@ -120,7 +120,7 @@ TYPE
 
 				PROCEDURE SendClientVersion;
 				VAR
-					len, pos, res: LONGINT;
+					len, pos: LONGINT; res: WORD;
 					nl: ARRAY 4 OF CHAR;
 				BEGIN
 					pos := 0;
@@ -133,7 +133,7 @@ TYPE
 				(** Send packet p *)
 				PROCEDURE SendPacket*( p: Packet );
 				VAR
-					i, trlen, payload, pad, cbs, res: LONGINT;
+					i, trlen, payload, pad, cbs: LONGINT; res: WORD;
 					seqno: ARRAY 4 OF CHAR;
 					trbuf: ARRAY 8196 OF CHAR;
 					packType: LONGINT;
@@ -170,7 +170,7 @@ TYPE
 
 				(** Receive SSH Packet into buf,  return packet type *)
 				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR size: LONGINT ): CHAR;
-				VAR i, l, pad, trlen, cbs, pos, res: LONGINT;
+				VAR i, l, pad, trlen, cbs, pos: LONGINT; res: WORD;
 					seqno: ARRAY 4 OF CHAR; rmac, cmac: ARRAY 20 OF CHAR;
 					trbuf: ARRAY 8196 OF CHAR;
 					packType: LONGINT;
@@ -663,7 +663,7 @@ VAR hexd: ARRAY 17 OF CHAR;
 	END Head;
 
 	PROCEDURE ReceiveLine( tcp: TCP.Connection;  VAR buf: ARRAY OF CHAR ): LONGINT;
-	VAR i, l, res: LONGINT;
+	VAR i, l: LONGINT; res: WORD;
 	BEGIN
 		i := 0;
 		REPEAT tcp.Receive( buf, i, 1, 1, l, res );  INC( i );

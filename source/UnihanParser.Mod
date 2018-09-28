@@ -43,7 +43,7 @@ VAR
 	isNum : ARRAY 256 OF BOOLEAN;
 
 PROCEDURE GetHex(r : Streams.Reader) : LONGINT;
-VAR c : CHAR; res : WORD;
+VAR c : CHAR; res: LONGINT;
 BEGIN
 	res := 0;
 	c := r.Get();

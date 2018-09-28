@@ -149,7 +149,7 @@ TYPE
 		(* --------------------------------------------------------- *)
 		(* Parser utilities *)
 
-		PROCEDURE Error(n, pos: LONGINT);
+		PROCEDURE Error(n: WORD; pos: LONGINT);
 		BEGIN PCM.Error(n, pos, "")
 		END Error;
 
@@ -269,7 +269,7 @@ TYPE
 		END OperatorDef;
 
 		PROCEDURE FPSection(scope: PCT.ProcScope; pflags: SET); (* ejz *)
-			VAR name: ARRAY 32 OF PCS.Name; i, n, res: LONGINT; VarPar: BOOLEAN;
+			VAR name: ARRAY 32 OF PCS.Name; i, n: LONGINT; res: WORD; VarPar: BOOLEAN;
 				pos: ARRAY 32 OF LONGINT; t: PCT.Struct;
 			(** fof >> *)
 			ConstPar: BOOLEAN;
@@ -421,7 +421,7 @@ TYPE
 		END CheckOperator;
 
 		PROCEDURE RecordType(VAR t: PCT.Struct;  pointed: BOOLEAN);
-			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; recparser: RecordParser; bpos, res: LONGINT;
+			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; recparser: RecordParser; bpos: LONGINT; res: WORD;
 				intf: ARRAY 32 OF PCT.Interface;
 		BEGIN
 			t := PCT.NoType;
@@ -466,7 +466,7 @@ TYPE
 		END Interface;
 
 		PROCEDURE ObjectType(VAR t: PCT.Struct;  name: StringPool.Index);
-			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; parser: ObjectParser; bpos, res, i: LONGINT;
+			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; parser: ObjectParser; bpos, i: LONGINT; res: WORD;
 				intf: ARRAY 32 OF PCT.Interface;
 
 		BEGIN
@@ -540,7 +540,7 @@ TYPE
 (** << fof  *)
 
 		PROCEDURE ArrayType (VAR t: PCT.Struct;  enhArray: BOOLEAN (* fof *));
-		VAR	index: PCB.Expression;  array: PCT.Array;  pos0, pos, res: LONGINT; base: PCT.Struct;
+		VAR	index: PCB.Expression;  array: PCT.Array;  pos0, pos: LONGINT; res: WORD; base: PCT.Struct;
 			(** fof >> *)
 			earray: PCT.EnhArray;  first: BOOLEAN;  aarray: PCT.Tensor;
 			(** << fof  *)
@@ -614,7 +614,7 @@ TYPE
 		END ArrayType;
 
 		PROCEDURE PointerType(VAR t: PCT.Struct;  name: StringPool.Index);
-			VAR pos, pos1, res: LONGINT; id: PCS.Name; o: PCT.Symbol; ptr: PCT.Pointer;
+			VAR pos, pos1: LONGINT; res: WORD; id: PCS.Name; o: PCT.Symbol; ptr: PCT.Pointer;
 		BEGIN
 			IF sym = record THEN
 				scanner.Get(sym);  RecordType(t, TRUE)
@@ -661,7 +661,7 @@ TYPE
 		END PointerType;
 
 		PROCEDURE Type (VAR t: PCT.Struct;  name: StringPool.Index);
-			VAR o: PCT.Symbol; procscope: PCT.ProcScope;  pos, res: LONGINT;
+			VAR o: PCT.Symbol; procscope: PCT.ProcScope;  pos: LONGINT; res: WORD;
 				proc: PCT.Delegate; sf: SET;
 		BEGIN
 			pos := scanner.errpos;
@@ -716,7 +716,7 @@ TYPE
 		END Type;
 
 		PROCEDURE VarDecl;
-			VAR id: ARRAY MaxIdentDef OF IdentDefDesc;  pos: ARRAY MaxIdentDef OF LONGINT; (** fof  *) c, n, res: LONGINT;  t: PCT.Struct;  flag: ARRAY MaxIdentDef OF SET;
+			VAR id: ARRAY MaxIdentDef OF IdentDefDesc; pos: ARRAY MaxIdentDef OF LONGINT; (** fof  *) c, n: LONGINT; res: WORD; t: PCT.Struct; flag: ARRAY MaxIdentDef OF SET;
 		BEGIN n := 1;
 			pos[0] := scanner.errpos;   (* fof *)
 			IdentDef (id[0], TRUE);
@@ -737,7 +737,7 @@ TYPE
 		END VarDecl;
 
 		PROCEDURE TypeDecl;
-			VAR i: IdentDefDesc; pos, res: LONGINT; t: PCT.Struct;
+			VAR i: IdentDefDesc; pos: LONGINT; res: WORD; t: PCT.Struct;
 		BEGIN
 			pos := scanner.errpos;
 			IdentDef(i, FALSE); Check(eql); Type(t, i.name);
@@ -746,7 +746,7 @@ TYPE
 		END TypeDecl;
 
 		PROCEDURE ConstDecl;
-			VAR i: IdentDefDesc; x: PCB.Const; pos, res: LONGINT;long: HUGEINT;
+			VAR i: IdentDefDesc; x: PCB.Const; pos: LONGINT; res: WORD; long: HUGEINT;
 		BEGIN
 			pos := scanner.errpos;
 			IdentDef(i, FALSE);  Check(eql);  ConstExpr(x);
@@ -790,7 +790,7 @@ TYPE
 		END ListOf;
 
 		PROCEDURE DeclSeq;
-		VAR t: PCT.Struct; name: PCS.Name; pos, res: LONGINT;
+		VAR t: PCT.Struct; name: PCS.Name; pos: LONGINT; res: WORD;
 		BEGIN
 			WHILE sym = definition DO
 				pos := scanner.errpos;
@@ -1450,7 +1450,7 @@ TYPE
 			searchScope: PCT.Scope;
 			args: ARRAY 2 OF PCT.Struct;
 			dh: PCB.Designator;  h: PCT.Variable; hiddenVarName : StringPool.Index;
-			rtype: PCT.Struct; res, i : LONGINT;
+			rtype: PCT.Struct; res: WORD; i : LONGINT;
 		BEGIN
 			PCS.GetOpName(op, name);
 			IF (mod # NIL) & (mod IS PCT.Module) THEN
@@ -1609,7 +1609,7 @@ TYPE
 		END If;
 
 		PROCEDURE BlockModifier(allowBody, suppress: BOOLEAN; VAR locked: BOOLEAN);
-			VAR x: PCB.Const; c, res: LONGINT;
+			VAR x: PCB.Const; c: LONGINT; res: WORD;
 		BEGIN
 			IF sym = lbrace THEN
 				locked := FALSE;
@@ -1718,7 +1718,7 @@ TYPE
 
 		PROCEDURE StatementSeq(body, suppress: BOOLEAN; VAR awaitCount: LONGINT);
 			VAR  d, d1: PCB.Designator; x, y: PCB.Expression; c: PCB.Const; o, o1: PCT.Symbol;
-				param: PCB.ExprList;  pos, res, stack: LONGINT;
+				param: PCB.ExprList;  pos, stack: LONGINT; res: WORD;
 				oldscope: PCT.Scope; s: PCT.WithScope; procscope: PCT.ProcScope;
 				awaitparser: AwaitParser;
 				loopinfo: PCB.LoopInfo;  caseinfo: PCB.CaseInfo;
@@ -2074,7 +2074,7 @@ TYPE
 
 		PROCEDURE ProcDecl;
 		VAR
-			procparser: ProcedureParser; procscope: PCT.ProcScope; pos, res: LONGINT;
+			procparser: ProcedureParser; procscope: PCT.ProcScope; pos: LONGINT; res: WORD;
 			i: IdentDefDesc; flags: SET; rtype: PCT.Struct; forward, suppress : BOOLEAN;
 			opName: PCS.Name; pflags: SET; right: SHORTINT; (* ejz *)
 			opStr: ARRAY PCS.MaxStrLen OF CHAR;
@@ -2429,7 +2429,7 @@ TYPE
 		END Body;
 
 		PROCEDURE DeclSeq;
-			VAR name: PCS.Name; procscope: PCT.ProcScope;  t: PCT.Struct; pos, res: LONGINT;
+			VAR name: PCS.Name; procscope: PCT.ProcScope;  t: PCT.Struct; pos: LONGINT; res: WORD;
 		BEGIN
 			WHILE sym = procedure DO
 				pos := scanner.errpos;

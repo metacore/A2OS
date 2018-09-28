@@ -228,7 +228,7 @@ PROCEDURE SetTracePort*(portNumber: LONGINT; bps, data, parity, stop: LONGINT; V
 VAR
 	isOpen0: BOOLEAN;
 	bps0, data0, parity0, stop0 : LONGINT;
-	res1: LONGINT;
+	res1: WORD;
 	port: Port;
 BEGIN{EXCLUSIVE}
 	res := 0;
@@ -397,7 +397,7 @@ END Show;
 (** Test serial ports COM1 and if present COM2 with the generic driver *)
 PROCEDURE Test*(context : Commands.Context);
 VAR
-	result : LONGINT;
+	result : WORD;
 	portgotten : Port;
 BEGIN
 	context.out.String ("Testing availability of COM1 and COM2."); context.out.Ln;

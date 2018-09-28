@@ -13,7 +13,7 @@ TYPE
 			memoryAdr: ADDRESS;
 			available : LONGINT;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min : LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min : LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			ASSERT(ofs+size <= LEN(buf));
 			IF available # 0 THEN

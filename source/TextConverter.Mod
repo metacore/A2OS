@@ -5,7 +5,7 @@ IMPORT Commands, Streams, Diagnostics, Files, Texts, TextUtilities;
 TYPE Converter = PROCEDURE (text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : WORD);
 
 PROCEDURE Convert (diagnostics: Diagnostics.Diagnostics; list: Streams.Reader; converter: Converter);
-VAR text: Texts.Text; filename: Files.FileName; format, res: LONGINT;
+VAR text: Texts.Text; filename: Files.FileName; format: LONGINT; res: WORD;
 BEGIN
 	WHILE list.GetString (filename) DO
 		NEW (text);

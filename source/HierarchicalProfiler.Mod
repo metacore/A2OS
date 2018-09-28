@@ -534,7 +534,7 @@ END GetProfile;
 
 (** Start profiling. If the profiler is already running, it is stopped and the sample data is discarded before re-starting it *)
 PROCEDURE Start*(context : Commands.Context); (** [options] ~ *)
-VAR options : Options.Options; unit : ARRAY 4 OF CHAR; maxTime, bufferSize, res : LONGINT;
+VAR options : Options.Options; unit : ARRAY 4 OF CHAR; maxTime, bufferSize: LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("t", "time", Options.Integer); (* in seconds *)
@@ -677,7 +677,7 @@ BEGIN {EXCLUSIVE}
 END Show;
 
 PROCEDURE Cleanup;
-VAR ignore : LONGINT;
+VAR ignore : WORD;
 BEGIN
 	StopProfiling(ignore);
 END Cleanup;

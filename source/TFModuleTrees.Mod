@@ -460,7 +460,7 @@ TYPE
 			
 			done : BOOLEAN;
 			cr : Reference; count, i : LONGINT; refs : RefArray; 
-			t0, t1, res : LONGINT;
+			t0, t1: LONGINT; res: WORD;
 			child: WMTrees.TreeNode;
 	
 			PROCEDURE QuickSort(references: RefArray; lo, hi: LONGINT);

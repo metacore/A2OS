@@ -1847,7 +1847,7 @@ BEGIN
 END Init;
 
 (* Done - Code generator results - Installed in PCBT.CG *)
-PROCEDURE Done (VAR result: LONGINT);
+PROCEDURE Done (VAR result: WORD);
 BEGIN result := 0;
 END Done;
 

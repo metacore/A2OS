@@ -1016,7 +1016,7 @@ VAR
 
 	(* CompareSignature - res < 0 ==> s1 < s1; used for sorting overloaded procedures *)
 
-	PROCEDURE CompareSignature(s1, s2: Parameter): LONGINT;
+	PROCEDURE CompareSignature(s1, s2: Parameter): WORD;
 		VAR res: WORD;
 
 		PROCEDURE GetInfo(t: Struct;  VAR m: Module;  VAR o: Symbol);
@@ -1029,7 +1029,7 @@ VAR
 			END
 		END GetInfo;
 
-		PROCEDURE CompareType(t1, t2: Struct): LONGINT;
+		PROCEDURE CompareType(t1, t2: Struct): WORD;
 		VAR
 			m1, m2: Module;
 			o1, o2: Symbol;
@@ -1149,7 +1149,7 @@ VAR
 	END InitScope;
 
 	PROCEDURE Insert(scope: Scope; obj: Symbol; VAR res: WORD);
-	VAR  p, q: Symbol; d: LONGINT;
+	VAR  p, q: Symbol; d: WORD;
 	BEGIN
 		ASSERT((scope.ownerID = 0) OR (PCM.GetProcessID() = scope.ownerID), 501); (*fof  global scope has no process id (=0) since different processes may insert elements here, cf. procedure Init *)
 		(* ASSERT(scope.state < complete, 502); *)
@@ -1534,7 +1534,7 @@ VAR
 
 
 	PROCEDURE ChangeState*(scope: Scope;  state: SHORTINT;  pos: LONGINT);
-	VAR  rec, r, int: Record; rscope: RecScope; mth: Method; i, res: LONGINT;
+	VAR  rec, r, int: Record; rscope: RecScope; mth: Method; i: LONGINT; res: WORD;
 	BEGIN
 		WHILE scope.state < state DO
 			CASE scope.state+1 OF
@@ -1761,7 +1761,7 @@ VAR
 (** fof >> *)
 
 	PROCEDURE MakeArrayType*(len: ARRAY OF LONGINT; dim: LONGINT; base: Struct; basesize: LONGINT): Struct;
-	VAR inc: LONGINT; a: EnhArray; i,res: LONGINT;
+	VAR inc: LONGINT; a: EnhArray; i: LONGINT; res: WORD;
 	BEGIN
 		inc := basesize;
 		FOR i := dim - 1 TO 0 BY -1 DO
@@ -1918,7 +1918,7 @@ VAR
 (** << fof  *)
 
 	PROCEDURE CopyMethods(scope: RecScope; CONST intf: Interfaces; isImported: BOOLEAN);
-		VAR i, res: LONGINT; rs: RecScope; s: ProcScope; m: Method; par: Parameter;
+		VAR i: LONGINT; res: WORD; rs: RecScope; s: ProcScope; m: Method; par: Parameter;
 			f: SET;
 	BEGIN
 		i := 0;

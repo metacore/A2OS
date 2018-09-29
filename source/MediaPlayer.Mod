@@ -696,7 +696,7 @@ TYPE
 
 		(* Set position *)
 		PROCEDURE SetPos*(pos: LONGINT);
-		VAR current : Context;  audioPos, res : LONGINT; img : WMGraphics.Image;
+		VAR current : Context;  audioPos : LONGINT; res : WORD; img : WMGraphics.Image;
 		BEGIN {EXCLUSIVE}
 			IF pos < 0 THEN
 				IF Debug THEN KernelLog.String("MediaPlayer: Warning: Setpos to "); KernelLog.Int(pos, 0); KernelLog.String("!?!"); KernelLog.Ln; END;
@@ -1205,7 +1205,7 @@ TYPE
 
 		(* Resume playing the curent and next context that are paused *)
 		PROCEDURE ResumeIntern;
-		VAR audioPos, res : LONGINT;
+		VAR audioPos : LONGINT; res: WORD;
 		BEGIN
 			IF (current # NIL) THEN
 				IF current.hasVideo THEN

@@ -512,7 +512,7 @@ TYPE
 
 		PROCEDURE Reset*;
 		VAR
-			dummy, result: LONGINT;
+			dummy: LONGINT; result: WORD;
 
 		BEGIN
 			input.SetPosX(Codecs.SeekByte, 0, dummy, result);
@@ -641,7 +641,7 @@ TYPE
 
 		PROCEDURE SetPos*(pos: Streams.Position);
 		VAR
-			dummy, result: LONGINT;
+			dummy: LONGINT; result: WORD;
 
 		BEGIN
 			input.SetPosX(Codecs.SeekByte, pos, dummy, result);

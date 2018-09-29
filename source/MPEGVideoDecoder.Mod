@@ -2151,7 +2151,7 @@ TYPE
 		END GetStreamInfo;
 
 		(* read data from streamNr, store it into buffer buf starting at offset ofs, store size bytes if possible, block if not read min bytes at least. Return number of read bytes in len and return code res *)
-		PROCEDURE GetData*(streamNr : LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE GetData*(streamNr : LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			cur: POINTER TO StreamType;
 			length: LONGINT;
@@ -2219,7 +2219,7 @@ TYPE
 			END;
 		END GetData;
 
-		PROCEDURE SkipData(streamNr : LONGINT; size: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE SkipData(streamNr : LONGINT; size: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			cur: POINTER TO StreamType;
 
@@ -2455,7 +2455,7 @@ TYPE
 		file: Files.File;
 		fileinputstream: Codec.FileInputStream;
 		vstream: Codec.DemuxStream;
-		result: LONGINT;
+		result: WORD;
 		i: LONGINT;
 
 		w, h, ms: LONGINT;

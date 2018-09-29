@@ -43,7 +43,7 @@ PROCEDURE Get*(context : Commands.Context);
 VAR h : WebHTTP.ResponseHeader;
 		rh : WebHTTP.RequestHeader;
 		in : Streams.Reader;
-		res, i, cs : LONGINT;
+		res: WORD; i, cs : LONGINT;
 		ch : CHAR; token : ARRAY 16 OF CHAR;
 		name : ARRAY 32 OF CHAR;
 		url : ARRAY 256 OF CHAR;
@@ -113,7 +113,7 @@ VAR
 	h: WebHTTP.ResponseHeader;
 	con: TCP.Connection;
 	in: Streams.Reader;
-	res, i, cs: LONGINT;
+	res: WORD; i, cs: LONGINT;
 	ch : CHAR;
 BEGIN
 	IF ~context.arg.GetString(baseUrl) THEN

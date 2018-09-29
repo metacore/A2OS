@@ -1841,7 +1841,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		PROCEDURE SeekFrame*(frame : LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
 		VAR
 			seekType: LONGINT;
-			dummy: LONGINT;
+			dummy: WORD;
 		BEGIN
 			IF goKeyFrame THEN
 				seekType := Codecs.SeekKeyFrame;
@@ -1859,7 +1859,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		PROCEDURE SeekMillisecond*(millisecond: LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
 		VAR
 			frame: LONGINT;
-			dummy: LONGINT;
+			dummy: WORD;
 			seekType: LONGINT;
 		BEGIN
 			(* Now, this is wrong: we cannot assume, that microsecsperframe is always 40000 *)

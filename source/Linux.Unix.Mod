@@ -22,6 +22,8 @@ CONST
 
 	PageSize* = 4096;	(* least MMU page size *)
 
+	AlternateStackSize = 32 * 4096;
+
 	stdin* = 0;  stdout* = 1;  stderr* = 2;
 
 	(** Unix error codes:	*)
@@ -463,9 +465,6 @@ VAR
 		sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR;
 	END;
 
-	sigstack-: ARRAY 32*4096 OF CHAR;
-
-
 	sysconf: PROCEDURE {C} (name: LONGINT):WORD;
 
 	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
@@ -493,9 +492,12 @@ VAR
 	pthread_getspecific	: PROCEDURE {C} ( key: Key_t ): ADDRESS;
 
 	pthread_attr_init: PROCEDURE {C} (attr: ADDRESS);
+	pthread_attr_destroy: PROCEDURE {C} (attr: ADDRESS);
 	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD);
 	pthread_attr_setdetachstate: PROCEDURE {C}(attr: ADDRESS; set: WORD);
 	pthread_attr_setstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: SIZE);
+	pthread_attr_getstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: ADDRESS);
+	pthread_getattr_np: PROCEDURE {C} (thr: ADDRESS; attr: ADDRESS);
 	pthread_self-: PROCEDURE {C} (): Thread_t;
 
 	sched_get_priority_max: PROCEDURE {C} (policy: LONGINT): LONGINT;
@@ -737,25 +739,29 @@ VAR
 	    RETURN  param.sched_priority;
 	END ThrGetPriority;
 
-	VAR
-		sigstk: Stack;
-
-	PROCEDURE SetSigaltstack;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		IF sigaltstack(ADDRESS OF sigstk, NIL) < 0 THEN
-			Perror("sigaltstack")
-		END;
-	END SetSigaltstack;
-
 	PROCEDURE {C} Starter(proc: PROCEDURE): ADDRESS;
 	VAR
 		me: Thread_t;
 		old, new: Sigset_t;
 		param: Sched_param;
 		res: WORD;
+		attr: PThreadAttr;
+		stack: Stack;
+		size: SIZE;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		me := pthread_self();
-		SetSigaltstack();
+
+		pthread_getattr_np(me, ADDRESS OF attr);
+		pthread_attr_getstacksize (ADDRESS OF attr, ADDRESS OF size);
+		pthread_attr_destroy(ADDRESS OF attr);
+
+		stack.sp := S.GetFramePointer () - size + AlternateStackSize;
+		stack.size := AlternateStackSize;
+		stack.flags := {};
+
+		IF sigaltstack(ADDRESS OF stack, NIL) # 0 THEN
+			Perror("signaltstack")
+		END;
 
 		IF sigfillset( ADDRESS OF new ) < 0 THEN
 			Perror("sigfillset");
@@ -792,7 +798,7 @@ VAR
 		pthread_attr_setscope(ADDRESS OF attr, PTHREAD_SCOPE_SYSTEM);
 		pthread_attr_setdetachstate(ADDRESS OF attr, PTHREAD_CREATE_DETACHED);
 		(*pthread_attr_setdetachstate(ADDRESS OF attr, 0);*)
-		pthread_attr_setstacksize(ADDRESS OF attr, stackSize);
+		pthread_attr_setstacksize(ADDRESS OF attr, stackSize + AlternateStackSize);
 		res := pthread_create(ADDRESS OF id, ADDRESS OF attr, Starter, p);
 		RETURN id;
 	END ThrStart;
@@ -1002,15 +1008,6 @@ VAR
 		copy( p, sysinfo.machine );
 	END getSysinfo;
 
-	PROCEDURE CreateSignalStack;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		sigstk.sp := ADDRESS OF sigstack;
-		sigstk.size := LEN(sigstack);
-		sigstk.flags := {};
-	END CreateSignalStack;
-
-
-
 	VAR trap: SignalTrap;
 
 	PROCEDURE {C} SigHandler  ( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
@@ -1177,9 +1174,12 @@ VAR
 		Dlsym( libp, "pthread_setcancelstate", ADDRESSOF(pthread_setcancelstate) );
 		Dlsym( libp, "pthread_setcanceltype", ADDRESSOF(pthread_setcanceltype) );
 		Dlsym( libp, "pthread_attr_init", ADDRESSOF(pthread_attr_init) );
+		Dlsym( libp, "pthread_attr_destroy", ADDRESSOF(pthread_attr_destroy) );
 		Dlsym( libp, "pthread_attr_setscope", ADDRESSOF(pthread_attr_setscope) );
 		Dlsym( libp, "pthread_attr_setdetachstate", ADDRESSOF(pthread_attr_setdetachstate) );
 		Dlsym( libp, "pthread_attr_setstacksize", ADDRESSOF(pthread_attr_setstacksize) );
+		Dlsym( libp, "pthread_attr_getstacksize", ADDRESSOF(pthread_attr_getstacksize) );
+		Dlsym( libp, "pthread_getattr_np", ADDRESSOF(pthread_getattr_np) );
 		Dlsym( libp, "pthread_self", ADDRESSOF(pthread_self) );
 
 		Dlsym( libp, "sem_init", ADDRESSOF(sem_init) );
@@ -1279,8 +1279,6 @@ VAR
 		Dlsym( libc, "__errno_location",	ADDRESSOF(errno_location ) );
 
 		getSysinfo;
-
-		CreateSignalStack;
 	END Init;
 
 	(* load X11 related libaries only on demand *)

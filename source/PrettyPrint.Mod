@@ -40,7 +40,7 @@ VAR
 	
 	PROCEDURE Convert*( context: Commands.Context );	(*  {filename} ~ *)
 	VAR 
-		filename, dest: ARRAY 64 OF CHAR;  format, l, res: LONGINT;
+		filename, dest: ARRAY 64 OF CHAR;  format, l: LONGINT; res: WORD;
 		f: Files.File;  text: Texts.Text;
 		highlighter: SyntaxHighlighter.Highlighter;
 	BEGIN

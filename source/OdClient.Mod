@@ -224,7 +224,7 @@ TYPE
 			reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader;
 			doc: XML.Document; lenStr: ARRAY 16 OF CHAR;
 			root: XML.Element; s: XML.String;
-			url, info: ARRAY 128 OF CHAR; rc: LONGINT;
+			url, info: ARRAY 128 OF CHAR; rc: WORD;
 			all, unversioned, checkedin, checkedout: OdUtil.Lines;
 		BEGIN
 			toPut := ClientRes(local);
@@ -313,7 +313,7 @@ TYPE
 		VAR
 			all, unversioned, checkedin, checkedout: OdUtil.Lines;
 			reqHeader : WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader;
-			out : Streams.Reader; rc: LONGINT;
+			out : Streams.Reader; rc: WORD;
 			doc: XML.Document; root: XML.Element; info, rootStr: ARRAY 128 OF CHAR; s: XML.String;
 			props: WebHTTP.AdditionalField;
 		BEGIN
@@ -431,7 +431,7 @@ TYPE
 		PROCEDURE checkout * (CONST remote: ARRAY OF CHAR);
 		VAR
 			resHeader: WebHTTP.ResponseHeader;
-			out : Streams.Reader; rc: LONGINT;
+			out : Streams.Reader; rc: WORD;
 			doc: XML.Document; root: XML.Element; info, rootStr: ARRAY 128 OF CHAR; elName: OdUtil.Line;
 			all, unversioned, checkedin, checkedout: OdUtil.Lines;
 		BEGIN
@@ -466,7 +466,7 @@ TYPE
 		PROCEDURE uncheckout * (CONST remote: ARRAY OF CHAR);
 		VAR
 			reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader;
-			out : Streams.Reader; rc: LONGINT;
+			out : Streams.Reader; rc: WORD;
 			doc: XML.Document; root: XML.Element; info, rootStr: ARRAY 128 OF CHAR; elName: OdUtil.Line;
 			all, unversioned, checkedin, checkedout: OdUtil.Lines;
 		BEGIN

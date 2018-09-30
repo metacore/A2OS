@@ -461,7 +461,7 @@ END HandleRead;
 PROCEDURE HandleWrite(c: Connection);
 VAR
 	fidToWrite, count : INTEGER;
-	offset, len, res: LONGINT;
+	offset, len: LONGINT; res: WORD;
 	buffer: ARRAY 65536 OF CHAR;
 	filename: ARRAY 256 OF CHAR;
 	f: Files.File;

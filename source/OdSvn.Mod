@@ -546,7 +546,7 @@ TYPE
 	VAR resBody: XML.Document;
 		reqBody: UpdateReq;
 		resHeader: WebHTTP.ResponseHeader;
-		out : Streams.Reader; res2 : LONGINT;
+		out : Streams.Reader; res2 : WORD;
 		txDelta: Files.File;
 		repos : OdClient.Repos;
 	BEGIN
@@ -591,7 +591,7 @@ TYPE
 	VAR
 		pathName, path, collUrl, name, workName, workUrl, vcc, ver, err: ARRAY 256 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader;
-		version,headVersion, pos, res: LONGINT;
+		version,headVersion, pos: LONGINT; res: WORD;
 		props: WebHTTP.AdditionalField;
 		act: Activity;
 	BEGIN
@@ -1139,7 +1139,7 @@ TYPE
 		strRdr : StringReader;
 		wtr: Files.Writer;
 		f : Files.File;
-		res2 : LONGINT;
+		res2 : WORD;
 		str : U.String;
 		data : SVNAdmin.EntryEntity;
 		w : Files.Writer;
@@ -1416,7 +1416,7 @@ TYPE
 	PROCEDURE SvnWritePROPS ( CONST path, filename : ARRAY OF CHAR; props : SvnProps );
 	VAR
 		tmp,fstr,fstr2 : ARRAY 256 OF CHAR;
-		len, i, res : LONGINT;
+		len, i: LONGINT; res: WORD;
 		fr, fw : Files.File;
 		r : Files.Reader;
 		w : Files.Writer;

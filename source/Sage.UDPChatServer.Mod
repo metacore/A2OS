@@ -30,7 +30,7 @@ TYPE
 		running, terminated: BOOLEAN;
 		ip: IP.Adr;
 		branch, command, seqNum, messageType: INTEGER;
-		uin, receiverUin, port, len, res, receiveBufOffset: LONGINT;
+		uin, receiverUin, port, len, receiveBufOffset: LONGINT; res: WORD;
 		user: Base.User;
 		users: Base.Users;
 		clients: Base.List;
@@ -139,7 +139,7 @@ TYPE
 		user: Base.User; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
 		string: String;
-		res, len: LONGINT;
+		res: WORD; len: LONGINT;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.INFO_REPLY, client.inSeqNum, sendBuf);
 
@@ -189,7 +189,7 @@ TYPE
 		messageType: INTEGER; message: String; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
 		string: String;
-		res, len: LONGINT;
+		res: WORD; len: LONGINT;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.RECEIVE_MESSAGE, receiver.outSeqNum, sendBuf);
 

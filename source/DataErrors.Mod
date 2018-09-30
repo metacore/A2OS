@@ -519,7 +519,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 		Error.Log is automatically opened whenever this module is loaded into memory,
 		and it only needs to be reopened manually if you had previously closed it manually. *)
 	PROCEDURE Open*;
-	VAR ignor: NbrInt.Integer;  backup, current: Files.FileName;
+	VAR ignor: WORD;  backup, current: Files.FileName;
 	BEGIN
 		beepedError := FALSE;  beepedWarning := FALSE;  COPY( "Error.Log", current );  COPY( "Error.Log.Bak", backup );  Files.Delete( backup, ignor );
 		Files.Rename( current, backup, ignor );  F := Files.New( current );  Files.OpenWriter( W, F, 0 )

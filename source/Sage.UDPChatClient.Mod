@@ -45,7 +45,7 @@ TYPE
 		password, passwordConfirm: ARRAY 33 OF CHAR;
 		shortName, fullName, eMail: ARRAY 65 OF CHAR;
 
-		uin, res: LONGINT;
+		uin: LONGINT; res: WORD;
 		dt: Dates.DateTime;
 
 		keepAliveTimer: Kernel.MilliTimer;
@@ -109,7 +109,7 @@ TYPE
 		VAR seqNum: INTEGER; sendBuf: Base.Buffer;
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
-		len, res: LONGINT;
+		len: LONGINT; res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.NEW_USER_REG, seqNum, 0, sendBuf);
@@ -144,7 +144,7 @@ TYPE
 		VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer;
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
-		len, res: LONGINT;
+		len: LONGINT; res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.LOGIN, seqNum, uin, sendBuf);
@@ -190,7 +190,7 @@ TYPE
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
 		string: String;
-		len, res: LONGINT;
+		len: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.SEND_MESSAGE, seqNum, uin, sendBuf);
 
@@ -221,7 +221,7 @@ TYPE
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
 		string: String;
-		len, res: LONGINT;
+		len: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.SEND_TEXT_CODE, seqNum, uin, sendBuf);
 

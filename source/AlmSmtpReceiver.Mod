@@ -437,7 +437,7 @@ TYPE
 		receiveTime, remoteIP : String;
 
 		PROCEDURE WriteIPNr( ip : IP.Adr );
-			VAR result : LONGINT; str : ARRAY 128 OF CHAR;
+			VAR result : WORD; str : ARRAY 128 OF CHAR;
 		BEGIN
 					IP.AdrToStr(ip, remoteIP);
 					msgWr.String (" (");

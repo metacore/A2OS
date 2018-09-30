@@ -160,7 +160,7 @@ BEGIN
 END splitDirBase;
 
 (** Create directory for a filename if it doesn't exist. *)
-PROCEDURE makeDirs(name: ARRAY OF CHAR): LONGINT;
+PROCEDURE makeDirs(name: ARRAY OF CHAR): WORD;
 VAR
 	dir, base: ARRAY 128 OF CHAR;
 	res: WORD;
@@ -794,9 +794,9 @@ END newVersion;
 (** Get a version from <name>.VCS and save it as <newFileName>.
 DeltaV.Select: can be used because the complete paths are already given for source and sink.
 *)
-PROCEDURE View*(name: TFileName; n: LONGINT; newFileName: TFileName): LONGINT;
+PROCEDURE View*(name: TFileName; n: LONGINT; newFileName: TFileName): WORD;
 VAR
-	version, res: LONGINT;
+	version: LONGINT; res: WORD;
 	ok: BOOLEAN;
 	dFileName: TFileName;
 	old, new: TData;

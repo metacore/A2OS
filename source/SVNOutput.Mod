@@ -40,7 +40,7 @@ TYPE
 			context := c;
 		END Init;
 
-		PROCEDURE Print* ( num : LONGINT; CONST msg : ARRAY OF CHAR );
+		PROCEDURE Print* ( num : WORD; CONST msg : ARRAY OF CHAR );
 		BEGIN
 			IF num = ResOK THEN
 				RETURN;

@@ -297,7 +297,7 @@ TYPE
 
 		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keySym : LONGINT);
 		VAR
-			filename : Files.FileName; newImg : WMGraphics.Image; oldMode, res: LONGINT;
+			filename : Files.FileName; newImg : WMGraphics.Image; oldMode: LONGINT; res: WORD;
 			string : ARRAY 2 OF CHAR; dx, dy : LONGINT;
 			font : WMGraphics.Font;
 		BEGIN

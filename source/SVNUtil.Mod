@@ -181,7 +181,7 @@ END UrlEncode;
 
 PROCEDURE UrlDecode* (CONST input : ARRAY OF CHAR; VAR output : ARRAY OF CHAR );
 VAR
-	i, j, value, res : LONGINT;
+	i, j, value: LONGINT; res: WORD;
 	tmp : ARRAY 3 OF CHAR;
 BEGIN
 	i := 0; j := 0;

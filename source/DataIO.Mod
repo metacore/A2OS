@@ -105,7 +105,7 @@ TYPE
 			IF res = Streams.Ok THEN RETURN TRUE
 			ELSIF res = Streams.EOF THEN DataErrors.Error( "Attempted to read past the end of file." );  RETURN FALSE
 			ELSIF res = Streams.FormatError THEN DataErrors.Error( "A format error encounter by the reader." );  RETURN FALSE
-			ELSE DataErrors.IntError( res, "The 'res' error number originating from an Streams reader error." );  RETURN FALSE
+			ELSE DataErrors.IntError( NbrInt.Integer( res ), "The 'res' error number originating from an Streams reader error." );  RETURN FALSE
 			END
 		END ReaderAvailable;
 

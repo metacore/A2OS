@@ -577,7 +577,7 @@ BEGIN
 END GetFreq;
 
 PROCEDURE Label2(buffer : Raster.Image);
-VAR nof, length, res, i, j : LONGINT; w, h: LONGINT;
+VAR nof, length, i, j : LONGINT; w, h: LONGINT; res: WORD;
 	path : ARRAY 1024*4 OF Point;
 	poly : ARRAY 40 OF Point;
 	nofPoints : LONGINT;

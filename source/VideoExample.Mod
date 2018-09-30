@@ -144,7 +144,7 @@ VAR
 PROCEDURE SimulateImage*(context : Commands.Context); (** filename ~ *)
 VAR
 	fn, name : Files.FileName;
-	res, w, h, x : LONGINT;
+	res: WORD; w, h, x : LONGINT;
 	dec : Codecs.ImageDecoder;
 	rdr : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;

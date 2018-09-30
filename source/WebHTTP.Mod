@@ -201,7 +201,7 @@ TYPE
 			eof := FALSE; first := TRUE;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR i: LONGINT; token: ARRAY 16 OF CHAR; ch: CHAR;
 		BEGIN
 			IF ~eof THEN
@@ -297,7 +297,7 @@ TYPE
 			Streams.OpenReader(outR, Receiver);
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR l: LONGINT;
 		BEGIN
 			IF remain > 0 THEN

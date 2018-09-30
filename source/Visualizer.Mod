@@ -1421,7 +1421,7 @@ VAR
 	reader : TextUtilities.TextReader;
 	diagnostics : Diagnostics.StreamDiagnostics;
 	writer : Streams.Writer;
-	format, res : LONGINT;
+	format : LONGINT; res: WORD;
 BEGIN
 	module := NIL;
 	NEW(text);

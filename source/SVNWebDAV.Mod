@@ -179,7 +179,7 @@ IMPORT
 		vcc, vurl, ver, tmp, tmp2, path, name, date : ARRAY 256 OF CHAR;
 		creationdate, creator, status : ARRAY 33 OF CHAR;
 		version : ARRAY 10 OF CHAR;
-		len, res, ft,fd : LONGINT;
+		len, ft,fd : LONGINT; res: WORD;
 		adminDir : SVNAdmin.Entry;
 		f : Files.File;
 	BEGIN

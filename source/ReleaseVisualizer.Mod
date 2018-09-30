@@ -353,7 +353,7 @@ TYPE
 		END ParseModule;
 
 		PROCEDURE ScanModule(CONST filename : ARRAY OF CHAR);
-		VAR text : Texts.Text; format, res : LONGINT; s : Scanner.Scanner;
+		VAR text : Texts.Text; format : LONGINT; res: WORD; s : Scanner.Scanner;
 		BEGIN
 			COPY(filename, currentFile);
 			NEW(text);

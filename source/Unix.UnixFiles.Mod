@@ -83,7 +83,7 @@ TYPE
 				RETURN f;
 			END Old0;
 
-			PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key, res: LONGINT );
+			PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
 			BEGIN
 				fs.Delete0( name, key, res );
 			END Delete0;
@@ -109,7 +109,7 @@ TYPE
 				fs.CreateDirectory0( name, res );
 			END CreateDirectory0;
 
-			PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key, res: LONGINT );
+			PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 			BEGIN
 				fs.RemoveDirectory0( name, force, key, res );
 			END RemoveDirectory0;
@@ -323,7 +323,7 @@ TYPE
 					RETURN 0
 				END FileKey;
 
-				PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key, res: LONGINT );
+				PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
 				VAR r: LONGINT;
 				BEGIN  {EXCLUSIVE}
 					r := Unix.unlink( ADDRESSOF( name ) );
@@ -406,7 +406,7 @@ TYPE
 				END CreateDirectory0;
 				
 
-				PROCEDURE RemoveDirectory0*( path: ARRAY OF CHAR;  force: BOOLEAN;  VAR key, res: LONGINT );
+				PROCEDURE RemoveDirectory0*( path: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					r := Unix.rmdir( ADDRESSOF( path ) );

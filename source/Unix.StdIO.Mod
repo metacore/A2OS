@@ -93,7 +93,7 @@ END Args;
 
 #END
 
-PROCEDURE ReceiveStdin( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
+PROCEDURE ReceiveStdin( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
 VAR ures: SIZE;  i, err: LONGINT;
 BEGIN
 	len := 0;

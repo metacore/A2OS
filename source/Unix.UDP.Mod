@@ -85,7 +85,7 @@ TYPE
 					too big.
 				*)
 				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, ms: LONGINT;  
-									 VAR fip: IP.Adr;  VAR fport, len, res: LONGINT );
+									 VAR fip: IP.Adr;  VAR fport, len: LONGINT; VAR res: WORD );
 				VAR 
 					addr: Sockets.SocketAdr; i: LONGINT;
 				BEGIN {EXCLUSIVE}

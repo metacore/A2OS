@@ -136,7 +136,7 @@ VAR
 		hexToChar: ARRAY 3 OF CHAR;
 		leftParts: LONGINT;   (* number of bytes before :: *)
 		rightParts: LONGINT;   (* number of bytes after :: *)
-		val, res: LONGINT;
+		val: LONGINT; res: WORD;
 		state: LONGINT;   (* state of the FSM look at the eof for more info *)
 		dPointOcc: BOOLEAN;   (* double point occured *)
 		prefixVal: LONGINT;

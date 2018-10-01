@@ -300,7 +300,8 @@ TYPE
 
 	HTTPAgent = OBJECT (TCPServices.Agent)
 	VAR
-		res, len : LONGINT;
+		res: WORD;
+		len : LONGINT;
 		body, closeRequested: BOOLEAN;
 		out: Streams.Writer; in, inR: Streams.Reader;
 		o : ANY;
@@ -373,7 +374,7 @@ TYPE
 						listenerProc(request, reply);
 					END;
 				ELSE
-					reply.statuscode := res;
+					reply.statuscode := LONGINT( res ); (*! result type *)
 					WebHTTP.WriteStatus(reply, out)
 				END;
 				
@@ -645,7 +646,7 @@ BEGIN {EXCLUSIVE}
 END ShowHosts;
 
 PROCEDURE Cleanup;
-VAR t: Kernel.Timer; msg : ARRAY 32 OF CHAR; ignore : LONGINT;
+VAR t: Kernel.Timer; msg : ARRAY 32 OF CHAR; ignore : WORD;
 BEGIN
 	hitStat.Kill;
 	StopHTTP(msg, ignore);

@@ -87,7 +87,8 @@ TYPE
 		ip: IP.Adr;
 		method: ARRAY 16 OF CHAR;
 		uri: ARRAY 1024 OF CHAR;
-		status, result: LONGINT;
+		status: LONGINT;
+		result: WORD;
 		pending: BOOLEAN;
 	END;
 
@@ -196,7 +197,7 @@ TYPE
 
 		PROCEDURE Directory(name: ARRAY OF CHAR; full: BOOLEAN);
 		VAR data: TCP.Connection; w: Streams.Writer; e: Files.Enumerator; t: Kernel.MilliTimer;
-			prefix: Files.Prefix; str: ARRAY 20 OF CHAR; date, res, size, time: LONGINT; flags: SET; c: CHAR;
+			prefix: Files.Prefix; str: ARRAY 20 OF CHAR; date, size, time: LONGINT; res: WORD; flags: SET; c: CHAR;
 			split: BOOLEAN;
 		BEGIN
 			SendMessage(150, "Opening ASCII mode data connection for file list.");
@@ -382,7 +383,7 @@ TYPE
 		PROCEDURE Execute(VAR cmd, param: ARRAY OF CHAR);
 		VAR
 			tmp, filename, str: ARRAY dirLen OF CHAR;
-			i, code, lastState, res: LONGINT;
+			i, code, lastState: LONGINT; res: WORD;
 
 		BEGIN
 			lastState := state; state := Ok;

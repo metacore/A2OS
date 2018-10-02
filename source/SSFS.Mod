@@ -87,7 +87,7 @@ TYPE
 
 		(* finalizer: called when the filesystem goes down. As we do not make use of caches, this only closes the device for the time being *)
 		PROCEDURE Finalize;
-		VAR ignore : WORD;
+		VAR ignore : LONGINT;
 		BEGIN
 			device.Close(ignore);
 		END Finalize;
@@ -349,7 +349,7 @@ TYPE
 		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
 		VAR
 			file : File; filename : Files.FileName; fileExists : BOOLEAN;
-			inodeAdr, index, i : LONGINT; res : WORD; dateTime : Dates.DateTime;
+			inodeAdr, index, i, res : LONGINT; dateTime : Dates.DateTime;
 			inode : Inode; block : Block;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("New: "); KernelLog.String(name); KernelLog.Ln; END;
@@ -407,7 +407,7 @@ TYPE
 
 		(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
 		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
-		VAR file : File; filename : Files.FileName; block : Block; inode : Inode;  index : LONGINT; res : WORD;
+		VAR file : File; filename : Files.FileName; block : Block; inode : Inode;  index, res : LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("Old: "); KernelLog.String(name); KernelLog.Ln; END;
 			file := NIL;
@@ -471,7 +471,7 @@ TYPE
 		END FindEntry;
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
 		VAR filename : Files.FileName; index : LONGINT; block : Block;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("Delete: "); KernelLog.String(name); KernelLog.Ln; END;
@@ -530,7 +530,7 @@ TYPE
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
 		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
-		VAR i : LONGINT; block : Block; inode : Inode; name : Files.FileName; attributes : SET; time, date, size: LONGINT; res : WORD;
+		VAR i : LONGINT; block : Block; inode : Inode; name : Files.FileName; attributes : SET; time, date, size, res : LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF( mask # "") THEN
 				FOR i := 0 TO LEN(rootDirectory)-1 DO
@@ -582,7 +582,7 @@ TYPE
 
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
-		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END RemoveDirectory0;
@@ -689,7 +689,7 @@ TYPE
 		Less bytes will be read when reading over the end of the file.
 		r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 		PROCEDURE ReadBytes*(VAR r:  Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
-		VAR dnode : Dnode; dataLeft, nofBytes, pos : LONGINT; res: WORD; eof : BOOLEAN;
+		VAR dnode : Dnode; dataLeft, nofBytes, pos, res : LONGINT; eof : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
 			ASSERT(LEN(x) >= ofs + len); (* buffer big enough *)
@@ -749,7 +749,7 @@ TYPE
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
 		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
-		VAR dnode : Dnode; blockNumber, spaceLeft, nofBytes, pos : LONGINT; res : WORD;
+		VAR dnode : Dnode; blockNumber, spaceLeft, nofBytes, pos, res : LONGINT;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
 			ASSERT(r.bpos * BlockSize + r.apos <= inode.size); (* rider not positioned beyond end of file *)

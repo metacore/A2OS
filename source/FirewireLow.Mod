@@ -2576,7 +2576,7 @@ END Test1394;
 
 (** Scan the PCI for 1394 devices *)
 PROCEDURE ScanPCI(vendor,device: LONGINT);
-VAR index, bus, dev, fct,res,base,irq:LONGINT;
+VAR index, bus, dev, fct, base, irq: LONGINT; res: WORD;
 BEGIN
 	index := 0;
 	WHILE(PCI.FindPCIDevice(device, vendor, index, bus, dev, fct) = PCI.Done) (*?*)

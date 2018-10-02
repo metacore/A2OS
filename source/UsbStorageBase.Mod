@@ -291,14 +291,14 @@ TYPE
 		timer : Kernel.Timer;
 
 		(** Transport layer specific reset procedure *)
-		PROCEDURE Reset*(timeout : LONGINT) : LONGINT;
+		PROCEDURE Reset*(timeout : LONGINT) : WORD;
 		BEGIN
 			HALT(301); RETURN 0; (* abstract *)
 		END Reset;
 
 		(** Transport layer specific transfer procedure *)
 		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : LONGINT; dir :  SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : LONGINT;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : WORD;
 		BEGIN
 			HALT(301); RETURN 0;  (* abstract *)
 		END Transport;
@@ -310,7 +310,7 @@ TYPE
 		END GetMaxLun;
 
 		(* UFI command: Test whether the specified logical unit is ready *)
-		PROCEDURE TestUnitReady(lun : LONGINT) : LONGINT;
+		PROCEDURE TestUnitReady(lun : LONGINT) : WORD;
 		VAR cmd : ARRAY 12 OF CHAR; i, ignore : LONGINT;
 		BEGIN
 			cmd[0] := CHR(UfiTestUnitReady);
@@ -320,8 +320,8 @@ TYPE
 		END TestUnitReady;
 
 		(* Issues TestUnitReady commands until device is ready or an error occurs *)
-		PROCEDURE WaitForReady(lun, timeout : LONGINT) : LONGINT;
-		VAR retry, res : LONGINT;
+		PROCEDURE WaitForReady(lun, timeout : LONGINT) : WORD;
+		VAR retry : LONGINT; res : WORD;
 		BEGIN
 			IF Debug.Trace & Debug.traceScRequests THEN KernelLog.String("UsbStorageBase: WaitForReady..."); KernelLog.Ln; END;
 			retry := 0;
@@ -345,8 +345,8 @@ TYPE
 		(* UFI command: Start/Stop Unit. 														*)
 		(* Note: Since UFI devices control the motor on/off themselves, it's not implemented here.	*)
 		(* We just use the command to eject the media, thus the name							*)
-		PROCEDURE EjectMedia(lun : LONGINT) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : LONGINT;
+		PROCEDURE EjectMedia(lun : LONGINT) : WORD;
+		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen : LONGINT; res : WORD;
 		BEGIN
 			cmd[0] := CHR(UfiStartStop);
 			cmd[1] := CHR(LSH(lun, 5));
@@ -357,8 +357,8 @@ TYPE
 		END EjectMedia;
 
 		(* UFI command: Prevent/Allow Medium Removal *)
-		PROCEDURE PreventMediumRemoval(lun : LONGINT; prevent : BOOLEAN) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : LONGINT;
+		PROCEDURE PreventMediumRemoval(lun : LONGINT; prevent : BOOLEAN) : WORD;
+		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen : LONGINT; res : WORD;
 		BEGIN
 			cmd[0] := CHR(UfiAllowRemoval);
 			cmd[1] := CHR(LSH(lun, 5));
@@ -369,8 +369,8 @@ TYPE
 		END PreventMediumRemoval;
 
 		(* UFI command: Request UFI device to do a reset or perform a self-test *)
-		PROCEDURE SendDiagnostic(lun : LONGINT) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : LONGINT;
+		PROCEDURE SendDiagnostic(lun : LONGINT) : WORD;
+		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen : LONGINT; res : WORD;
 		BEGIN
 			cmd[0] := CHR(UfiSendDiag);
 			cmd[1] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LSH(lun, 5)) + {2}));
@@ -380,8 +380,8 @@ TYPE
 		END SendDiagnostic;
 
 		(* UFI command: Get the number of blocks and the blocksize of the specified logical unit *)
-		PROCEDURE ReadCapacity(lun : LONGINT; VAR blocks, blocksize : LONGINT) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; res, i, tlen : LONGINT;
+		PROCEDURE ReadCapacity(lun : LONGINT; VAR blocks, blocksize : LONGINT) : WORD;
+		VAR cmd, data : ARRAY 12 OF CHAR; res: WORD;  i, tlen : LONGINT;
 		BEGIN
 			IF Debug.Trace & Debug.traceInfo THEN KernelLog.String("UsbStorage: ReadCapacity: "); KernelLog.Ln; END;
 			cmd[0] := CHR(UfiReadCapacity);
@@ -412,7 +412,7 @@ TYPE
 
 		(* UFI command: Inquiry the specified locigal unit; Returns NIL in error case *)
 		PROCEDURE Inquiry(lun : LONGINT) : InquiryResult;
-		VAR cmd : ARRAY 12 OF CHAR; data : ARRAY 36 OF CHAR; result : InquiryResult; i, j, tlen, res : LONGINT;
+		VAR cmd : ARRAY 12 OF CHAR; data : ARRAY 36 OF CHAR; result : InquiryResult; i, j, tlen : LONGINT; res : WORD;
 		BEGIN
 			IF Debug.Trace & Debug.traceInfo THEN
 				KernelLog.String("UsbStorage: Inquiry logical device "); KernelLog.Int(lun, 0); KernelLog.String("... "); KernelLog.Ln;
@@ -458,7 +458,7 @@ TYPE
 
 		(* The mode sense command allows the UFI device to report medium or device parameters to the host *)
 		PROCEDURE ModeSense(lun, pagecontrol, page, length : LONGINT) : FlexibleDiskPage;
-		VAR cmd : ARRAY 12 OF CHAR; data : Usbdi.BufferPtr; actLen, res : LONGINT; fdp : FlexibleDiskPage;
+		VAR cmd : ARRAY 12 OF CHAR; data : Usbdi.BufferPtr; actLen : LONGINT; res : WORD; fdp : FlexibleDiskPage;
 
 			(* page[index] is first byte of flexible disk page *)
 			PROCEDURE ParseFlexibleDiskPage(page : Usbdi.BufferPtr; index : LONGINT) : FlexibleDiskPage;
@@ -528,12 +528,12 @@ TYPE
 
 		(* UFI command: The Request Sense command instructs the UFI device to transfer sense data to the host for
 		 * the specified logical unit *)
-		PROCEDURE RequestSense(lun, cmdlen : LONGINT) : LONGINT;
+		PROCEDURE RequestSense(lun, cmdlen : LONGINT) : WORD;
 		VAR
 			cmd : ARRAY 12 OF CHAR; data : ARRAY 36 OF CHAR;
 			key, asc, ascq : CHAR;
 			information : LONGINT;
-			i, tlen, res : LONGINT;
+			i, tlen : LONGINT; res : WORD;
 		BEGIN
 			IF Debug.Trace & Debug.traceSensing THEN KernelLog.String("UsbStorage: Doing auto sense..."); KernelLog.Ln; END;
 			IF (transportProtocol = ProtocolUTS) OR (transportProtocol = ProtocolRBC) THEN
@@ -649,9 +649,9 @@ TYPE
 
 		(* Generic Transport Handler  *)
 		PROCEDURE InvokeTransport (cmd : ARRAY OF CHAR; cmdlen : INTEGER; dir : SET;
-			VAR data : ARRAY OF CHAR; ofs, datalen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : LONGINT;
+			VAR data : ARRAY OF CHAR; ofs, datalen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : WORD;
 		VAR
-			sensecmdlen, res, retry, i : LONGINT; forceRetry : BOOLEAN;
+			sensecmdlen, retry, i : LONGINT; res: WORD; forceRetry : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			(* here one could add additional stuff for the different protocols *)
 			IF transportProtocol = ProtocolUFI THEN

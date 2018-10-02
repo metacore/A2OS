@@ -816,7 +816,7 @@ END Remove;
 
 PROCEDURE ScanPCI(vendor, device: LONGINT);
 VAR
-	index, bus, dev, fct, res, irq, i: LONGINT;
+	index, bus, dev, fct, irq, i: LONGINT; res: WORD;
 	base: ADDRESS;
 	d: LinkDevice;
 	c: Controller;

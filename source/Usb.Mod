@@ -1419,7 +1419,7 @@ VAR configuration : ConfigurationDescriptor; i, j, idx, num, intfNbr : LONGINT;
 
 	(* Return the number of alternate interfaces of interface <intf> starting at idx *)
 	PROCEDURE NumAltInterfaces(intf, idx : LONGINT) : LONGINT;
-	VAR res : WORD;
+	VAR res := 0: LONGINT;
 	BEGIN
 		WHILE(idx + 3 < LEN(buffer)) DO
 			IF (ORD(buffer[idx+1]) = DescriptorInterface) & (ORD(buffer[idx+2]) = intf) & (ORD(buffer[idx+3]) # 0) THEN

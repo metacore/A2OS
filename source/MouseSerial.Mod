@@ -84,7 +84,7 @@ TYPE
 		dead : BOOLEAN;
 
 		(* Read a mouse event *)
-		PROCEDURE GetMouseEvent(VAR keys: SET;  VAR dx, dy: LONGINT): LONGINT;
+		PROCEDURE GetMouseEvent(VAR keys: SET;  VAR dx, dy: LONGINT): WORD;
 		VAR ch : CHAR; b : SET; res : WORD;
 		BEGIN
 			b := {};

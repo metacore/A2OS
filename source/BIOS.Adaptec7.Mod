@@ -867,7 +867,7 @@ END SeqLoad;
 
 PROCEDURE PCIClearInt(d: Bus);
 CONST	DPR = 0;  RMA = 5;  RTA = 4;
-VAR	res, dw: LONGINT;  bus, dev, slot: LONGINT;
+VAR	res: WORD; dw: LONGINT;  bus, dev, slot: LONGINT;
 BEGIN
 	bus := d.busNo;  dev := d.devNo;  slot := d.slotNo;
 	res := PCI.ReadConfigByte(bus, dev, slot, 7H, dw);
@@ -878,7 +878,7 @@ BEGIN
 END PCIClearInt;
 
 PROCEDURE PCIInit(d: Bus;  bus, dev, slot: LONGINT);
-VAR  res, dw: LONGINT;
+VAR  res: WORD; dw: LONGINT;
 BEGIN
 	IF traceCalls IN trace THEN  BusNameMsg(d, "PCIInit"); KernelLog.Ln  END;
 	res:=PCI.ReadConfigByte(bus, dev, slot, PCI.IntlReg, dw);	(*irq*)
@@ -1598,7 +1598,7 @@ END BusInit;
 (* Bus detection *)
 
 PROCEDURE Detect;
-VAR  dummy, idx, bus, dev, slot, res, signature, i: LONGINT;  host: Bus;
+VAR  dummy, idx, bus, dev, slot, signature, i: LONGINT; res: WORD; host: Bus;
 BEGIN
 	IF traceCalls IN trace THEN KernelLog.String("Ada7: Detect"); KernelLog.Ln  END;
 	IF PCI.Done = PCI.PCIPresent(dummy, dummy, dummy) THEN

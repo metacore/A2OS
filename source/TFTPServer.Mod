@@ -174,7 +174,7 @@ TYPE
 						acked := (res = Ok) & (PacketType(ack) = ACK) & (Get2(ack, 2) = blockNr) & (IP.AdrsEqual(ip, fip)) & (fport = port);
 						IF acked THEN Log(3, "got ack") ELSE Log(3, "ack failed") END
 					ELSE
-						Log(3, "unknown error "); LogInt(3, res)
+						Log(3, "unknown error "); LogInt(3, LONGINT(res))
 					END;
 					LogExit(3)
 				UNTIL acked OR (res # Ok) OR (wait > MaxWait)
@@ -333,7 +333,7 @@ TYPE
 								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, errorMsg[1]); LogExit(2);
 								SendError(1, "", res)
 							ELSIF (res # Ok) THEN
-								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, ": error "); LogInt(2, res); LogExit(2);
+								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, ": error "); LogInt(2, LONGINT(res)); LogExit(2);
 								SendError(0, "", res)
 							ELSE
 								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, ": transfer started"); LogExit(2)
@@ -350,7 +350,7 @@ TYPE
 									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, errorMsg[6]); LogExit(2);
 									SendError(6, "", res)
 								ELSIF (res # Ok) THEN
-									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, ": error "); LogInt(2, res); LogExit(2);
+									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, ": error "); LogInt(2, LONGINT(res)); LogExit(2);
 									SendError(0, "", res)
 								ELSE
 									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, ": transfer started"); LogExit(2)
@@ -364,7 +364,7 @@ TYPE
 				ELSIF (res = UDP.Timeout) THEN (* nothing *)
 				ELSE
 					Stop := TRUE;
-					LogEnter(2); Log(2, TFTPId); Log(2, "socket error "); LogInt(2, res); LogExit(2);
+					LogEnter(2); Log(2, TFTPId); Log(2, "socket error "); LogInt(2, LONGINT(res)); LogExit(2);
 				END
 			UNTIL Stop;
 		END;

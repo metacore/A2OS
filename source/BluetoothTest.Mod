@@ -90,7 +90,7 @@ TYPE
 		END QoSViolationIndication;
 
 		PROCEDURE SendString(cid: LONGINT; VAR str: ARRAY OF CHAR);
-		VAR buf: POINTER TO ARRAY OF CHAR; i, len, res: LONGINT;
+		VAR buf: POINTER TO ARRAY OF CHAR; i, len: LONGINT; res: WORD;
 		BEGIN
 			NEW(buf,LEN(str)+2);
 			WHILE (str[i] # 0X) DO buf[i] := str[i]; INC(i) END;
@@ -624,7 +624,7 @@ END HexToChar;
 PROCEDURE ConnectTo*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	remote: Bluetooth.BDAddr; i , offset, res: LONGINT;
+	remote: Bluetooth.BDAddr; i , offset: LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(ident); context.arg.SkipWhitespace;
 	FOR i := 0 TO LEN(remote)-1 DO remote[i] := HexToChar(context.arg.Get(), context.arg.Get()) END;
@@ -756,7 +756,7 @@ END ReadClockOffset;
 PROCEDURE SendACL*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	data: ARRAY 256 OF CHAR; i, handle, cid, res: LONGINT; c1, c2: CHAR;
+	data: ARRAY 256 OF CHAR; i, handle, cid: LONGINT; res: WORD; c1, c2: CHAR;
 	l: HCI.Link;
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetInteger(handle, FALSE) & context.arg.GetInteger(cid, FALSE) THEN
@@ -819,7 +819,7 @@ END TestStringToParam;
 PROCEDURE ReadBDAddr*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	res, i: LONGINT; bdAddr: Bluetooth.BDAddr;
+	res: WORD; i: LONGINT; bdAddr: Bluetooth.BDAddr;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -875,7 +875,7 @@ END L2CAPClose;
 PROCEDURE L2CAPConnect*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	remote: Bluetooth.BDAddr; i, lcid, res, status: LONGINT;
+	remote: Bluetooth.BDAddr; i, lcid, status: LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(ident); context.arg.SkipWhitespace;
 	FOR i := 0 TO LEN(remote)-1 DO remote[i] := HexToChar(context.arg.Get(), context.arg.Get()) END;
@@ -903,7 +903,7 @@ END L2CAPConnect;
 PROCEDURE L2CAPConfigure*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	cid, res, mtu, flushTO, flow, linkTO: LONGINT;
+	cid, mtu, flushTO, flow, linkTO: LONGINT; res: WORD;
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetInteger(cid, TRUE) & context.arg.GetInteger(mtu, TRUE) &
 		context.arg.GetInteger(flushTO, TRUE) & context.arg.GetInteger(linkTO, TRUE) THEN

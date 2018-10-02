@@ -486,7 +486,7 @@ END UsbScanTab;
 
 (* Maps USB key code to X11 keysym (/usr/include/X11/keysymdef.h). *)
 PROCEDURE KeySym*(VAR ch : CHAR; VAR leds : SET): LONGINT;
-VAR res: WORD;
+VAR res: LONGINT;
 BEGIN
 	CASE ch OF
 		028X: res := Inputs.KsReturn (* Return *)
@@ -557,7 +557,7 @@ BEGIN
 END KeySym;
 
 PROCEDURE GetModifierKeysym(modifier : LONGINT) : LONGINT;
-VAR res : WORD;
+VAR res: LONGINT;
 BEGIN
 	CASE modifier OF
 		|Inputs.LeftCtrl: res := Inputs.KsControlL;

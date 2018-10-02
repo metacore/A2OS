@@ -32,7 +32,7 @@ TYPE
 			Transfer1(SELF, op, start, num, buf, ofs, res)
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
 		BEGIN
 			GetSize1(SELF, size, res)
 		END GetSize;
@@ -411,7 +411,7 @@ BEGIN {EXCLUSIVE}
 	Transfer0(d, op, start, num, buf, ofs, res)
 END Transfer1;
 
-PROCEDURE GetSize1(d: Disks.Device;  VAR size, res: LONGINT);
+PROCEDURE GetSize1(d: Disks.Device;  VAR size: LONGINT; VAR res: WORD);
 VAR dev: Device;  buf: ARRAY BS OF CHAR;
 BEGIN {EXCLUSIVE}
 	dev := d(Device);
@@ -553,7 +553,7 @@ BEGIN
 END Init;
 
 PROCEDURE Register;
-VAR i, res: LONGINT; dev: Device; name: Plugins.Name;
+VAR i: LONGINT; res: WORD; dev: Device; name: Plugins.Name;
 BEGIN
 	FOR i := 0 TO MaxDevices-1 DO
 		dev := device[i];

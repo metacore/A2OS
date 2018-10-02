@@ -106,7 +106,7 @@ TYPE
 						Log(3, "; error "); LogInt(3, Get2(ack, 2)); Log(3, ": "); Log(3, msg)
 					END
 				ELSE
-					Log(3, "unknown error "); LogInt(3, res)
+					Log(3, "unknown error "); LogInt(3, LONGINT(res))
 				END;
 				LogExit(3)
 			UNTIL acked OR (res # Ok) OR (wait > MaxWait);

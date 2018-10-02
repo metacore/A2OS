@@ -672,7 +672,7 @@ END InitRegisters;
 (* Scan the PCI bus for the specified card. *)
 
 PROCEDURE ScanPCI(vendor, device, model: LONGINT; flags, media: SET);
-VAR index, bus, dev, fct, res, base, irq, i: LONGINT; d: LinkDevice; c: Controller; name: Plugins.Name;
+VAR index, bus, dev, fct, base, irq, i: LONGINT; res: WORD; d: LinkDevice; c: Controller; name: Plugins.Name;
 BEGIN
 	index := 0;
 	WHILE (PCI.FindPCIDevice(device, vendor, index, bus, dev, fct) = PCI.Done) & (installed < 10) DO
@@ -776,7 +776,7 @@ VAR i, base, win: LONGINT; int: INTEGER; table: Plugins.Table;
 	END DWord;
 
 	PROCEDURE PCIWord(reg: ARRAY OF CHAR; ofs: LONGINT);
-	VAR x, res: LONGINT; ctrl: Controller;
+	VAR x: LONGINT; res: WORD; ctrl: Controller;
 	BEGIN
 		ctrl := table[i](LinkDevice).ctrl;
 		KernelLog.String(reg); KernelLog.Char("=");

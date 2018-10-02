@@ -832,7 +832,7 @@ TYPE
 		PROCEDURE Read*(startsec: LONGINT): LONGINT;
 		VAR
 			voldescr: PSVolumeDescriptor;
-			res, treeType: LONGINT;
+			res: WORD; treeType: LONGINT;
 			rootRec: DirectoryRecord;
 			root: Directory;
 			tmp, name: ARRAY MaxLen OF CHAR;
@@ -855,7 +855,7 @@ TYPE
 			RETURN ResOk;
 		END Read;
 
-		PROCEDURE ReadDir(parent: Directory): LONGINT;
+		PROCEDURE ReadDir(parent: Directory): WORD;
 		VAR
 			index, size, lba, len: LONGINT; res: WORD;
 			name : ARRAY MaxLen OF CHAR;
@@ -1220,7 +1220,7 @@ TYPE
 				END;
 			END GetSysType;
 
-			PROCEDURE WriteImages(w: Streams.Writer): LONGINT;
+			PROCEDURE WriteImages(w: Streams.Writer): WORD;
 			VAR
 				res : WORD;
 				cur: BCEntry;
@@ -1349,7 +1349,7 @@ BEGIN
 	END;
 END Pad;
 
-PROCEDURE WriteFiles(w: Streams.Writer; dir: Directory): LONGINT;
+PROCEDURE WriteFiles(w: Streams.Writer; dir: Directory): WORD;
 VAR
 	node: Node;
 	cur: Directory;
@@ -1588,7 +1588,7 @@ BEGIN
 	Strings.TrimRight(str, ' ');
 END ConvertIdentToUTF8;
 
-PROCEDURE MakeImageFromDir*(rootDir, isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): LONGINT;
+PROCEDURE MakeImageFromDir*(rootDir, isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): WORD;
 VAR
 	root: Directory;
 	isotree: DirectoryTree;
@@ -1603,7 +1603,7 @@ BEGIN
 	RETURN MakeImage(isotree, isoDest, settings);
 END MakeImageFromDir;
 
-PROCEDURE MakeImageFromTree*(root: Directory; isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): LONGINT;
+PROCEDURE MakeImageFromTree*(root: Directory; isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): WORD;
 VAR
 	isotree: DirectoryTree;
 BEGIN
@@ -1613,13 +1613,13 @@ BEGIN
 	RETURN MakeImage(isotree, isoDest, settings);
 END MakeImageFromTree;
 
-PROCEDURE MakeImage*(isotree: DirectoryTree; isoDest: String; settings: IsoSettings): LONGINT;
+PROCEDURE MakeImage*(isotree: DirectoryTree; isoDest: String; settings: IsoSettings): WORD;
 VAR
 	fOut: Files.File;
 	out: Files.Writer;
 	jtree : DirectoryTree;
 	isotable, jtable: PathTable;
-	lba, freeSpace, padding, res: LONGINT;
+	lba, freeSpace, padding: LONGINT; res: WORD;
 	pdescr, sdescr: PSVolumeDescriptor;
 	bdescr: BootRecord;
 	tdescr: SetTerminator;
@@ -1746,7 +1746,7 @@ BEGIN
 END DirExists;
 
 (* SaveImage is used to copy data cds *)
-PROCEDURE SaveImage*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; CONST dest: ARRAY OF CHAR; onWriteStatusChanged: Utils.StatusProc): LONGINT;
+PROCEDURE SaveImage*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; CONST dest: ARRAY OF CHAR; onWriteStatusChanged: Utils.StatusProc): WORD;
 VAR
 	sec, size: LONGINT; res: WORD;
 	buf: ARRAY TransferSize*SectorSize OF CHAR;
@@ -1793,7 +1793,7 @@ BEGIN
 	RETURN ResOk;
 END SaveImage;
 
-PROCEDURE GetVolumeDescriptor*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; VAR descr: PSVolumeDescriptor; descrType: LONGINT): LONGINT;
+PROCEDURE GetVolumeDescriptor*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; VAR descr: PSVolumeDescriptor; descrType: LONGINT): WORD;
 VAR
 	type: CHAR;
 	sec: LONGINT; res: WORD;

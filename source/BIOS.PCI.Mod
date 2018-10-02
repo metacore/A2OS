@@ -55,7 +55,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		pciEnabled: BOOLEAN;
 
 
-	PROCEDURE PCIPresent*(VAR version, lastPCIbus, hwMech: LONGINT): LONGINT;
+	PROCEDURE PCIPresent*(VAR version, lastPCIbus, hwMech: LONGINT): WORD;
 	VAR res: WORD; pci: Pci; r0: LONGINT;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
@@ -77,7 +77,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIPresent;
 
-	PROCEDURE FindPCIDevice*(devId, vendId, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): LONGINT;
+	PROCEDURE FindPCIDevice*(devId, vendId, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): WORD;
 	VAR pci: Pci; r0, vendorId, deviceId, index: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
@@ -110,7 +110,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END FindPCIDevice;
 
-	PROCEDURE FindPCIClassCode*(classCode, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): LONGINT;
+	PROCEDURE FindPCIClassCode*(classCode, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): WORD;
 	VAR pci: Pci; r0, r8,  index, class: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
@@ -141,7 +141,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END FindPCIClassCode;
 
-	PROCEDURE GenerateSpecialCycle*(busNr, specCycleData: LONGINT): LONGINT;
+	PROCEDURE GenerateSpecialCycle*(busNr, specCycleData: LONGINT): WORD;
 	VAR res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
@@ -163,7 +163,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END GenerateSpecialCycle;
 
-	PROCEDURE GetIrqRoutingOptions*(VAR rt: RouteTable; VAR IrqBitmap: SET): LONGINT;
+	PROCEDURE GetIrqRoutingOptions*(VAR rt: RouteTable; VAR IrqBitmap: SET): WORD;
 	CONST dbN = 16*8;
 	VAR
 		res: WORD;
@@ -213,7 +213,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END GetIrqRoutingOptions;
 
-	PROCEDURE SetPCIIrq*(IntPin, IrqNum, busNr, devNr, fktNr: LONGINT): LONGINT;
+	PROCEDURE SetPCIIrq*(IntPin, IrqNum, busNr, devNr, fktNr: LONGINT): WORD;
 	VAR res: WORD;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
@@ -236,7 +236,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END SetPCIIrq;
 
 	(** Set bits included in <mask> in the PCI command register if not set already *)
-	PROCEDURE Enable*(mask : SET; busNr, devNr, fktNr : LONGINT) : LONGINT;
+	PROCEDURE Enable*(mask : SET; busNr, devNr, fktNr : LONGINT) : WORD;
 	VAR cmdReg : LONGINT; res : WORD;
 	BEGIN
 		res := ReadConfigWord(busNr, devNr, fktNr, CmdReg, cmdReg);
@@ -257,35 +257,35 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res;
 	END Enable;
 
-	PROCEDURE ReadConfigByte*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): LONGINT;
+	PROCEDURE ReadConfigByte*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): WORD;
 	BEGIN
 		RETURN PCIReadConfig8(busNr, devNr, fktNr, regNr, regVal)
 	END ReadConfigByte;
 
-	PROCEDURE ReadConfigWord*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): LONGINT;
+	PROCEDURE ReadConfigWord*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): WORD;
 	BEGIN
 		ASSERT(regNr MOD 2 = 0);
 		RETURN PCIReadConfig16(busNr, devNr, fktNr, regNr, regVal)
 	END ReadConfigWord;
 
-	PROCEDURE ReadConfigDword*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): LONGINT;
+	PROCEDURE ReadConfigDword*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): WORD;
 	BEGIN
 		ASSERT(regNr MOD 4 = 0);
 		RETURN PCIReadConfig32(busNr, devNr, fktNr, regNr, regVal)
 	END ReadConfigDword;
 
-	PROCEDURE WriteConfigByte*(busNr, devNr, fktNr, regNr, regVal: LONGINT): LONGINT;
+	PROCEDURE WriteConfigByte*(busNr, devNr, fktNr, regNr, regVal: LONGINT): WORD;
 	BEGIN
 		RETURN PCIWriteConfig8(busNr, devNr, fktNr, regNr, regVal)
 	END WriteConfigByte;
 
-	PROCEDURE WriteConfigWord*(busNr, devNr, fktNr, regNr, regVal: LONGINT): LONGINT;
+	PROCEDURE WriteConfigWord*(busNr, devNr, fktNr, regNr, regVal: LONGINT): WORD;
 	BEGIN
 		ASSERT(regNr MOD 2 = 0);
 		RETURN PCIWriteConfig16(busNr, devNr, fktNr, regNr, regVal)
 	END WriteConfigWord;
 
-	PROCEDURE WriteConfigDword*(busNr, devNr, fktNr, regNr, regVal: LONGINT): LONGINT;
+	PROCEDURE WriteConfigDword*(busNr, devNr, fktNr, regNr, regVal: LONGINT): WORD;
 	BEGIN
 		ASSERT(regNr MOD 4 = 0);
 		RETURN PCIWriteConfig32(busNr, devNr, fktNr, regNr, regVal)
@@ -323,7 +323,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		END;
 	END GetAdr1;
 
-	PROCEDURE PCIReadConfig32(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
+	PROCEDURE PCIReadConfig32(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): WORD;
 	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
@@ -339,7 +339,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIReadConfig32;
 
-	PROCEDURE PCIReadConfig16(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
+	PROCEDURE PCIReadConfig16(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): WORD;
 	VAR adr, dataAdr: LONGINT; state: SET; res: WORD; int: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
@@ -356,7 +356,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIReadConfig16;
 
-	PROCEDURE PCIReadConfig8(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): LONGINT;
+	PROCEDURE PCIReadConfig8(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): WORD;
 	VAR adr, dataAdr: LONGINT; state: SET; res: WORD; chr: CHAR;
 	BEGIN
 		IF pciEnabled THEN
@@ -373,7 +373,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIReadConfig8;
 
-	PROCEDURE PCIWriteConfig32(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
+	PROCEDURE PCIWriteConfig32(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): WORD;
 	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
@@ -389,7 +389,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIWriteConfig32;
 
-	PROCEDURE PCIWriteConfig16(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
+	PROCEDURE PCIWriteConfig16(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): WORD;
 	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN
@@ -405,7 +405,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIWriteConfig16;
 
-	PROCEDURE PCIWriteConfig8(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): LONGINT;
+	PROCEDURE PCIWriteConfig8(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): WORD;
 	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
 	BEGIN
 		IF pciEnabled THEN

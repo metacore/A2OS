@@ -68,10 +68,10 @@ CONST
 TYPE
 	(* abstract class of all network clients *)
 	OSCClient = OBJECT
-		PROCEDURE Send*(p: OSC.OSCPacket): LONGINT;
+		PROCEDURE Send*(p: OSC.OSCPacket): WORD;
 		BEGIN HALT(NotImplemented); END Send;
 
-		PROCEDURE Receive*(VAR p: OSC.OSCPacket): LONGINT;
+		PROCEDURE Receive*(VAR p: OSC.OSCPacket): WORD;
 		BEGIN HALT(NotImplemented); END Receive;
 
 		PROCEDURE Close*;
@@ -105,7 +105,7 @@ TYPE
 		END InitUDP;
 
 		(* sends an OSCMessage or an OSCBundle to fip:fport. Returns the statuscode of UDP.Socket.Send *)
-		PROCEDURE Send*(p: OSC.OSCPacket): LONGINT;
+		PROCEDURE Send*(p: OSC.OSCPacket): WORD;
 		BEGIN
 			RETURN SendUDP(s, fip, fport, p);
 		END Send;
@@ -113,7 +113,7 @@ TYPE
 		(* receives a packet from the network. Only UDP packets from our partner are considered.
 			You can also supply a timeout in miliseconds. Use -1 for a infinite wait.
 			Returns Ok, ParseError or an UDP returncode (eg:. UDP.Timeout) *)
-		PROCEDURE Recieve*(VAR p: OSC.OSCPacket; timeout (* in ms *): LONGINT): LONGINT;
+		PROCEDURE Recieve*(VAR p: OSC.OSCPacket; timeout (* in ms *): LONGINT): WORD;
 		VAR
 			fip2: IP.Adr; fport2: LONGINT;
 			size: LONGINT;
@@ -185,7 +185,7 @@ TYPE
 		END InitUDPServer;
 
 		(* Returns an OSCMessage or an OSCBundle to the sender specified by data, which is indeed an instance of OSCUDPData *)
-		PROCEDURE return(p: OSC.OSCPacket; data: OBJECT): LONGINT;
+		PROCEDURE return(p: OSC.OSCPacket; data: OBJECT): WORD;
 		BEGIN
 			IF data IS OSCUDPData THEN
 				WITH data: OSCUDPData DO
@@ -257,13 +257,13 @@ TYPE
 
 		(* sends a packet to the connected OSCServer. Returns TCP.Ok if sent successfully, otherwise an TCP.* errorcode is
 			returned. *)
-		PROCEDURE Send*(p: OSC.OSCPacket): LONGINT;
+		PROCEDURE Send*(p: OSC.OSCPacket): WORD;
 		BEGIN
 			RETURN SendTCP(connection, p);
 		END Send;
 
 		(* receives a packet from the OSC Server. *)
-		PROCEDURE Receive*(VAR p: OSC.OSCPacket): LONGINT;
+		PROCEDURE Receive*(VAR p: OSC.OSCPacket): WORD;
 		BEGIN
 			RETURN ReceiveTCP(connection, p);
 		END Receive;
@@ -289,7 +289,7 @@ TYPE
 		END StartOSCAgent;
 
 		(* returns a packet to the current client. data is ignored *)
-		PROCEDURE return*(p: OSC.OSCPacket; data: OBJECT): LONGINT;
+		PROCEDURE return*(p: OSC.OSCPacket; data: OBJECT): WORD;
 		BEGIN
 			IF Trace THEN KernelLog.String('TCPServer.Return called IP: ');
 				IP.OutAdr(client.fip); KernelLog.String(' Port: '); KernelLog.Int(client.fport, 10);
@@ -341,7 +341,7 @@ TYPE
 
 
 
-	PROCEDURE SendTCP(client: TCP.Connection; p: OSC.OSCPacket): LONGINT;
+	PROCEDURE SendTCP(client: TCP.Connection; p: OSC.OSCPacket): WORD;
 	VAR
 		buffer: OSC.String;
 		size: ARRAY 4 OF CHAR;
@@ -358,7 +358,7 @@ TYPE
 		RETURN res;
 	END SendTCP;
 
-	PROCEDURE ReceiveTCP(client: TCP.Connection; VAR p: OSC.OSCPacket): LONGINT;
+	PROCEDURE ReceiveTCP(client: TCP.Connection; VAR p: OSC.OSCPacket): WORD;
 	VAR
 		res: WORD; len: LONGINT;
 		buffer: POINTER TO ARRAY OF CHAR;
@@ -383,7 +383,7 @@ TYPE
 		RETURN Ok;
 	END ReceiveTCP;
 
-	PROCEDURE SendUDP(s: UDP.Socket; fip: IP.Adr; fport: LONGINT; p: OSC.OSCPacket): LONGINT;
+	PROCEDURE SendUDP(s: UDP.Socket; fip: IP.Adr; fport: LONGINT; p: OSC.OSCPacket): WORD;
 	VAR
 		buffer: OSC.String;
 		res: WORD;

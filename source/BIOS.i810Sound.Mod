@@ -1470,7 +1470,7 @@ TYPE
 	(* Scan after PCI card and install it if found *)
 	PROCEDURE ScanPCI(vendid, devid : LONGINT);
 	VAR
-		index, res, i : LONGINT;
+		index, i : LONGINT; res: WORD;
 		CmdReg : LONGINT;
 		bus, dev, fkt : LONGINT;
 		nambar, nabmbar, irq : LONGINT;

@@ -38,7 +38,7 @@ TYPE
 		END ScmShortPack;
 
 		PROCEDURE ScmSendControl(dir : SET; req, reqtyp, value, index : LONGINT; VAR buffer : Usbdi.Buffer;
-			ofs, bufferlen, timeout : LONGINT) : LONGINT;
+			ofs, bufferlen, timeout : LONGINT) : WORD;
 		VAR status : Usbdi.Status; 	ignore : LONGINT;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN
@@ -144,7 +144,7 @@ TYPE
 			RETURN Base.ResOk;
 			END ScmBulkTransport;
 
-		PROCEDURE ScmWaitNotBusy(timeout : LONGINT) : LONGINT;
+		PROCEDURE ScmWaitNotBusy(timeout : LONGINT) : WORD;
 		VAR status : CHAR; res : WORD;
 		BEGIN
 			LOOP
@@ -170,7 +170,7 @@ TYPE
 			RETURN Base.ResTimeout;
 		END ScmWaitNotBusy;
 
-		PROCEDURE ScmReadUserIO(VAR dataflags: CHAR; timeout : LONGINT) : LONGINT;
+		PROCEDURE ScmReadUserIO(VAR dataflags: CHAR; timeout : LONGINT) : WORD;
 		VAR res : WORD;
 		BEGIN
 			res := ScmSendControl(Base.DataIn, 82H, 0C0H, 0, 0, buffer^, 0, 1, timeout);
@@ -178,12 +178,12 @@ TYPE
 			RETURN res;
 		END ScmReadUserIO;
 
-		PROCEDURE ScmWriteUserIO(enableflags, dataflags: CHAR; timeout : LONGINT) : LONGINT;
+		PROCEDURE ScmWriteUserIO(enableflags, dataflags: CHAR; timeout : LONGINT) : WORD;
 		BEGIN
 			RETURN ScmSendControl(Base.DataOut, 82H, 40H, ScmShortPack(enableflags, dataflags), 0, Usbdi.NoData, 0, 0, timeout);
 		END ScmWriteUserIO;
 
-		PROCEDURE ScmRead(access, reg : CHAR; VAR content: CHAR; timeout : LONGINT) : LONGINT;
+		PROCEDURE ScmRead(access, reg : CHAR; VAR content: CHAR; timeout : LONGINT) : WORD;
 		VAR res : WORD;
 		BEGIN
 			res := ScmSendControl(Base.DataIn, ORD(access), 0C0H, ORD(reg), 0, buffer^, 0, 1, timeout);
@@ -191,14 +191,14 @@ TYPE
 			RETURN res;
 		END ScmRead;
 
-		PROCEDURE ScmWrite(access, reg, content : CHAR; timeout : LONGINT) : LONGINT;
+		PROCEDURE ScmWrite(access, reg, content : CHAR; timeout : LONGINT) : WORD;
 		BEGIN
 			access := SYSTEM.VAL(CHAR, SYSTEM.VAL(SET, access) + {0});
 			RETURN ScmSendControl(Base.DataOut, ORD(access), 040H, ScmShortPack(reg, content), 0, Usbdi.NoData, 0, 0, timeout);
 		END ScmWrite;
 
-		PROCEDURE ScmMultipleWrite(access : CHAR; VAR registers, dataout: ARRAY OF CHAR; numregs,  timeout : LONGINT) : LONGINT;
-		VAR res, i, tlen : LONGINT;
+		PROCEDURE ScmMultipleWrite(access : CHAR; VAR registers, dataout: ARRAY OF CHAR; numregs,  timeout : LONGINT) : WORD;
+		VAR res: WORD; i, tlen : LONGINT;
 		BEGIN
 			IF numregs > 7 THEN
 				IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbStorage: ScmMultipleWrite: Numregs > 7."); KernelLog.Ln;END;
@@ -227,7 +227,7 @@ TYPE
 			RETURN ScmWaitNotBusy(timeout);
 		END ScmMultipleWrite;
 
-		PROCEDURE ScmReadBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len: LONGINT; VAR tlen : LONGINT; timeout : LONGINT): LONGINT;
+		PROCEDURE ScmReadBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len: LONGINT; VAR tlen : LONGINT; timeout : LONGINT): WORD;
 		VAR res : WORD;
 		BEGIN
 			command[0] := 0C0X;
@@ -246,7 +246,7 @@ TYPE
 			RETURN res;
 		END ScmReadBlock;
 
-		PROCEDURE ScmWriteBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len : LONGINT; VAR tlen : LONGINT; timeout : LONGINT): LONGINT;
+		PROCEDURE ScmWriteBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len : LONGINT; VAR tlen : LONGINT; timeout : LONGINT): WORD;
 		VAR res : WORD;
 		BEGIN
 			command[0] := 40X;
@@ -269,7 +269,7 @@ TYPE
 
 		PROCEDURE ScmRWBlockTest(access : CHAR; VAR registers, dataout : ARRAY OF CHAR;
 			numregs :INTEGER; datareg, statusreg, atapitimeout, qualifier : CHAR; dir : SET; VAR content : Usbdi.Buffer;
-			ofs, contentlen: LONGINT; VAR tlen : LONGINT; timeout : LONGINT): LONGINT;
+			ofs, contentlen: LONGINT; VAR tlen : LONGINT; timeout : LONGINT): WORD;
 		VAR
 			tmpreg : CHAR;
 			status : CHAR;
@@ -492,10 +492,10 @@ TYPE
 		END Initialization;
 
 		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : LONGINT; dir : SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : LONGINT;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : WORD;
 		VAR
 			registers, data : ARRAY 32 OF CHAR;
-			i, res : LONGINT;
+			i : LONGINT; res : WORD;
 			status : CHAR;
 			atapilen, tmplen, sector, transfered : LONGINT;
 			j : LONGINT;

@@ -571,7 +571,7 @@ TYPE
 			RETURN l2capLayer;
 		END GetL2CAPLayer;
 
-		PROCEDURE Start*(bdAddr: Bluetooth.BDAddr; VAR result : LONGINT);
+		PROCEDURE Start*(bdAddr: Bluetooth.BDAddr; VAR result : WORD);
 		VAR
 			status : LONGINT;
 			inMTU, outFlushTO : LONGINT;
@@ -792,7 +792,7 @@ TYPE
 		PROCEDURE SendFrame(frame : ARRAY OF CHAR;length : LONGINT);
 		VAR
 			size : LONGINT;
-			result : LONGINT;
+			result : WORD;
 			i : LONGINT;
 		BEGIN
 			IF TraceRFCOMM THEN

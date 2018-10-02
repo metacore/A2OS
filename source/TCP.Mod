@@ -1206,7 +1206,7 @@ END WriteTime;
 
 (* TCP error function. *)
 
-PROCEDURE Error(err, n: LONGINT; p: Connection);
+PROCEDURE Error(err: WORD; n: LONGINT; p: Connection);
 BEGIN
 	IF trace THEN
 		KernelLog.Enter; KernelLog.String("TCP: "); WriteTime(Kernel.GetTicks());

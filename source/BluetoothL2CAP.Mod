@@ -250,10 +250,10 @@ TYPE
 			Objects.SetTimeout(t, Timeout, ms)
 		END SetRTXTimer;
 
-		PROCEDURE Connect(psm: LONGINT; VAR status: LONGINT): LONGINT;
+		PROCEDURE Connect(psm: LONGINT; VAR status: LONGINT): WORD;
 		VAR
 			cmd: ARRAY 8 OF CHAR;
-			ofs, n, res: LONGINT;
+			ofs, n: LONGINT; res: WORD;
 			tmp: LONGINT;
 			sc: SignallingChannel;
 			identifier: CHAR;
@@ -364,12 +364,12 @@ TYPE
 			RETURN res
 		END ConnectResponse;
 
-		PROCEDURE Configure(VAR inMTU, outFlow, outFlushTO: LONGINT; linkTO: LONGINT): LONGINT;
+		PROCEDURE Configure(VAR inMTU, outFlow, outFlushTO: LONGINT; linkTO: LONGINT): WORD;
 		(* linkTO is not used!! mazda *)
 		VAR
 
 			cmd: ARRAY 48 OF CHAR;
-			ofs, pos, n, res, value: LONGINT;
+			ofs, pos, n, value: LONGINT; res: WORD;
 			tmp: LONGINT;
 			sc: SignallingChannel; identifier, type: CHAR;
 			response: Response;
@@ -468,7 +468,7 @@ TYPE
 
 		VAR
 			cmd: ARRAY 48 OF CHAR;
-			pos, res: LONGINT;
+			pos: LONGINT; res: WORD;
 			sc: SignallingChannel;
 
 		BEGIN
@@ -527,7 +527,7 @@ TYPE
 			cmd: ARRAY 8 OF CHAR;
 			identifier: CHAR;
 			response: Response;
-			ofs, rsid, rdid, res: LONGINT;
+			ofs, rsid, rdid: LONGINT; res: WORD;
 
 		BEGIN
 			IF state = Closed THEN
@@ -588,11 +588,11 @@ TYPE
 		END Disconnect;
 
 		(** sends an L2CAP packet over ACL *)
-		PROCEDURE Send(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
+		PROCEDURE Send(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): WORD;
 
 		VAR
 			hdr: ARRAY 4 OF CHAR;
-			count, res: LONGINT;
+			count: LONGINT; res: WORD;
 
 		BEGIN {EXCLUSIVE}
 
@@ -668,7 +668,7 @@ TYPE
 			END;
 		END Receive;
 
-		PROCEDURE Write*(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT; VAR size: LONGINT): LONGINT;
+		PROCEDURE Write*(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT; VAR size: LONGINT): WORD;
 
 		VAR
 			res: WORD;
@@ -880,7 +880,7 @@ TYPE
 		(* receive and parse a signalling packet *)
 		PROCEDURE Receive(p: Packet);
 		VAR
-			pos, res: LONGINT;
+			pos: LONGINT; res: WORD;
 			c: CHAR;
 			s: SignalPacket;
 			request: Request;
@@ -1478,7 +1478,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE CreateACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : LONGINT);
+		PROCEDURE CreateACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : WORD);
 		VAR link : HCI.Link;
 		BEGIN
 			result := hci.CreateConnection(bdAddr, 0);
@@ -1504,7 +1504,7 @@ TYPE
 
 		END CreateACLConnection;
 
-		PROCEDURE ReleaseACLConnection*(link:HCI.Link;VAR result:LONGINT);
+		PROCEDURE ReleaseACLConnection*(link:HCI.Link;VAR result:WORD);
 		BEGIN
 			ASSERT(link # NIL);
 			result := hci.Disconnect(link.handle,013H);
@@ -1517,7 +1517,7 @@ TYPE
 			END;
 		END ReleaseACLConnection;
 
-		PROCEDURE AcceptACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : LONGINT);
+		PROCEDURE AcceptACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : WORD);
 		VAR link : HCI.Link;
 		BEGIN
 			link := AwaitACLConnection(bdAddr);
@@ -1674,7 +1674,7 @@ TYPE
 		(** initiates the sending of a L2CAP_ConnectReq message and blocks until a corresponding L2CA_ConnectCfm(Neg)
 			or L2CA_TimeoutInd event is received.
 		*)
-		PROCEDURE Connect*(psm: LONGINT; bdAddr: Bluetooth.BDAddr; VAR lcid, result, status: LONGINT);
+		PROCEDURE Connect*(psm: LONGINT; bdAddr: Bluetooth.BDAddr; VAR lcid: LONGINT; VAR result: WORD; VAR status: LONGINT);
 		VAR
 			c: Channel;
 		BEGIN
@@ -1749,7 +1749,7 @@ TYPE
 			or L2CA_Timeout event is received.
 			inMTU, outFlow and outFlushTO: input/output parameters
 		*)
-		PROCEDURE Configure*(cid: LONGINT; VAR inMTU, outFlow, outFlushTO: LONGINT; linkTO: LONGINT; VAR result: LONGINT);
+		PROCEDURE Configure*(cid: LONGINT; VAR inMTU, outFlow, outFlushTO: LONGINT; linkTO: LONGINT; VAR result: WORD);
 		VAR c: Channel;
 		BEGIN
 			IF TraceL2CAP THEN
@@ -1841,7 +1841,7 @@ TYPE
 		(** requests the transfer of data across the channel. If the length of the data exceeds the outMTU then only the first
 			outMTU bytes are sent.
 		*)
-		PROCEDURE Write*(cid, ofs, length: LONGINT; VAR buffer: ARRAY OF CHAR; VAR size, result: LONGINT);
+		PROCEDURE Write*(cid, ofs, length: LONGINT; VAR buffer: ARRAY OF CHAR; VAR size: LONGINT; VAR result: WORD);
 		VAR c: Channel;
 		BEGIN
 
@@ -1980,13 +1980,13 @@ TYPE
 		END DisableConnectionlessTraffic;
 
 		(** general request to enable the reception of connectionless packets. *)
-		PROCEDURE EnableConnectionlessTraffic*(psm: LONGINT; VAR result: LONGINT);
+		PROCEDURE EnableConnectionlessTraffic*(psm: LONGINT; VAR result: WORD);
 		END EnableConnectionlessTraffic;
 
 		PROCEDURE Close*;
 		VAR
 			c: Channel;
-			result,i: LONGINT;
+			result: WORD; i: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF TraceL2CAP THEN
 				KernelLog.String(ModuleName);

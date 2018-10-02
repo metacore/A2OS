@@ -218,7 +218,7 @@ TYPE
 			PBF: packet boundary flag
 			BF: broadcast flag
 		*)
-		PROCEDURE SendACL*(PBF, BF: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
+		PROCEDURE SendACL*(PBF, BF: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): WORD;
 		VAR v: LONGINT; res: WORD; aclhdr: ARRAY 4 OF CHAR;
 		BEGIN
 			ASSERT((pbfContinuing <= PBF) & (PBF <= pbfFirst));
@@ -239,7 +239,7 @@ TYPE
 			RETURN res
 		END SendACL;
 
-		PROCEDURE SendACLH*(PBF, BF: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
+		PROCEDURE SendACLH*(PBF, BF: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): WORD;
 		VAR v, totlen: LONGINT; res: WORD; aclhdr: ARRAY 4 OF CHAR;
 		BEGIN
 			totlen := len + hdrlen;
@@ -389,7 +389,7 @@ TYPE
 		END Close;
 
 		(** initialize the module, get BDADDR, MTUs, etc *)
-		PROCEDURE Initialize*(): LONGINT;
+		PROCEDURE Initialize*(): WORD;
 		VAR res: WORD;
 		BEGIN
 			IF TraceHCI THEN
@@ -573,7 +573,7 @@ TYPE
 
 		(* ------- link controller  commands -------- *)
 
-		PROCEDURE Inquiry*(lap : LONGINT;inquiryLength : LONGINT; numResponses : LONGINT) : LONGINT;
+		PROCEDURE Inquiry*(lap : LONGINT;inquiryLength : LONGINT; numResponses : LONGINT) : WORD;
 		VAR
 			par: ARRAY 5 OF CHAR;
 			event: Bluetooth.EventPacket;
@@ -589,7 +589,7 @@ TYPE
 			RETURN res;
 		END Inquiry;
 
-		PROCEDURE CreateConnection*(bdAddr: Bluetooth.BDAddr; clkofs: LONGINT): LONGINT;
+		PROCEDURE CreateConnection*(bdAddr: Bluetooth.BDAddr; clkofs: LONGINT): WORD;
 		(* TODO: parameters!!! *)
 		VAR
 			par: ARRAY 13 OF CHAR;
@@ -607,7 +607,7 @@ TYPE
 			RETURN res
 		END CreateConnection;
 
-		PROCEDURE Disconnect*(linkHandle,reason : LONGINT) : LONGINT;
+		PROCEDURE Disconnect*(linkHandle,reason : LONGINT) : WORD;
 		VAR
 			par: ARRAY 3 OF CHAR;
 			event: Bluetooth.EventPacket;
@@ -623,7 +623,7 @@ TYPE
 
 		(* ------- host controller & bas band commands -------- *)
 
-		PROCEDURE SetEventMask*(eventMask : LONGINT) : LONGINT;
+		PROCEDURE SetEventMask*(eventMask : LONGINT) : WORD;
 		VAR
 			par : ARRAY 8 OF CHAR;
 			res: WORD;
@@ -641,7 +641,7 @@ TYPE
 		END SetEventMask;
 
 
-		PROCEDURE Reset*(): LONGINT;
+		PROCEDURE Reset*(): WORD;
 		VAR
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
@@ -661,7 +661,7 @@ TYPE
 			RETURN res
 		END Reset;
 
-		PROCEDURE SetEventFilter*(type, conditionType: CHAR; condition: ARRAY OF CHAR): LONGINT;
+		PROCEDURE SetEventFilter*(type, conditionType: CHAR; condition: ARRAY OF CHAR): WORD;
 		VAR
 			par: ARRAY 9 OF CHAR;
 			i, len: LONGINT; res: WORD;
@@ -697,7 +697,7 @@ TYPE
 			RETURN res
 		END SetEventFilter;
 
-		PROCEDURE WriteScanEnable*(mode: CHAR): LONGINT;
+		PROCEDURE WriteScanEnable*(mode: CHAR): WORD;
 		VAR
 			par: ARRAY 1 OF CHAR;
 			pending: BOOLEAN;
@@ -711,7 +711,7 @@ TYPE
 		END WriteScanEnable;
 
 
-		PROCEDURE ReadScanEnable*(VAR scanEnable : CHAR) : LONGINT;
+		PROCEDURE ReadScanEnable*(VAR scanEnable : CHAR) : WORD;
 		VAR
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
@@ -723,7 +723,7 @@ TYPE
 			RETURN res;
 		END ReadScanEnable;
 
-		PROCEDURE WriteLinkSupervisionTimeout*(inHandle, linkTimeout : LONGINT) : LONGINT;
+		PROCEDURE WriteLinkSupervisionTimeout*(inHandle, linkTimeout : LONGINT) : WORD;
 		VAR
 			par: ARRAY 4 OF CHAR;
 			pending: BOOLEAN;
@@ -753,7 +753,7 @@ TYPE
 			RETURN res;
 		END WriteLinkSupervisionTimeout;
 
-		PROCEDURE ReadLinkSupervisionTimeout*(inHandle : LONGINT; VAR linkTimeout : LONGINT) : LONGINT;
+		PROCEDURE ReadLinkSupervisionTimeout*(inHandle : LONGINT; VAR linkTimeout : LONGINT) : WORD;
 		VAR
 			par: ARRAY 2 OF CHAR;
 			pending: BOOLEAN;
@@ -785,7 +785,7 @@ TYPE
 
 		(* ------- Erricsson  paramters -------- *)
 
-		PROCEDURE EricssonSetUARTBaudRate*(baudRate : CHAR):LONGINT;
+		PROCEDURE EricssonSetUARTBaudRate*(baudRate : CHAR):WORD;
 		VAR
 			par: ARRAY 1 OF CHAR;
 			pending: BOOLEAN;
@@ -805,7 +805,7 @@ TYPE
 
 		(* ------- Informational paramters -------- *)
 
-		PROCEDURE ReadBDAddr*(VAR bdAddr: Bluetooth.BDAddr): LONGINT;
+		PROCEDURE ReadBDAddr*(VAR bdAddr: Bluetooth.BDAddr): WORD;
 		VAR
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
@@ -829,7 +829,7 @@ TYPE
 			RETURN res
 		END ReadBDAddr;
 
-		PROCEDURE ReadBufferSize*(VAR aclMaxLen, scoMaxLen, aclNumPackets, scoNumPackets: LONGINT): LONGINT;
+		PROCEDURE ReadBufferSize*(VAR aclMaxLen, scoMaxLen, aclNumPackets, scoNumPackets: LONGINT): WORD;
 		VAR
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;

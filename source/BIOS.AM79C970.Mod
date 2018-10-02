@@ -517,7 +517,7 @@ TYPE
 (* Scan the PCI bus for the specified card. *)
 PROCEDURE ScanPCI(vendor, device: LONGINT);
 VAR
-	index, bus, dev, fct, res, base, irq, i: LONGINT;
+	index, bus, dev, fct, base, irq, i: LONGINT; res: WORD;
 	d: LinkDevice;
 	c: Controller;
 	name: Plugins.Name;

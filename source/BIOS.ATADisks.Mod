@@ -320,7 +320,7 @@ TYPE
 			RETURN res;
 		END ExecuteCommand;
 
-		PROCEDURE Reset(): LONGINT;
+		PROCEDURE Reset(): WORD;
 		BEGIN {EXCLUSIVE}
 			RETURN ProtSwReset(ResetTimeout);
 		END Reset;
@@ -386,7 +386,7 @@ TYPE
 			RETURN Res_OK;
 		END SetupPRD;
 
-		PROCEDURE SetupDMA(command: Command): LONGINT;
+		PROCEDURE SetupDMA(command: Command): WORD;
 		VAR
 			ch: CHAR;
 			s: SET;
@@ -456,7 +456,7 @@ TYPE
 
 		(*	Software reset protocol
 			States: HSR0(ISet_SRST), HSR1 (Clear_wait), HSR2 (Check_Status) *)
-		PROCEDURE ProtSwReset(ms: LONGINT): LONGINT;
+		PROCEDURE ProtSwReset(ms: LONGINT): WORD;
 		VAR
 			t: Kernel.MilliTimer;
 			status: SET;
@@ -477,7 +477,7 @@ TYPE
 
 		(*	Bus idle protocol
 			States: HI0(Host_Idle), HI1 (Check_Status), HI2 (Device_Select), HI3 (Write_parameters), HI4(Write_command) *)
-		PROCEDURE ProtIssueCommand(cmd: Command; ms: LONGINT): LONGINT;
+		PROCEDURE ProtIssueCommand(cmd: Command; ms: LONGINT): WORD;
 		VAR
 			cmdCHS: CommandCHS;
 			cmdLBA: CommandLBA;
@@ -747,7 +747,7 @@ TYPE
 
 		(*	Packet DMA Protocol
 			States: HPD0(Check_Status_A), HPD1 (Send_Packet), HPD2 (Check_Status_B), HPD3 (INTRQ_wait), HPD4 (Transfer_Data) *)
-		PROCEDURE ProtPacketDMA(command: CommandPacket; ms: LONGINT; VAR status: SET): LONGINT;
+		PROCEDURE ProtPacketDMA(command: CommandPacket; ms: LONGINT; VAR status: SET): WORD;
 		VAR
 			res: WORD;
 			ch: CHAR;
@@ -799,7 +799,7 @@ TYPE
 			Machine.Portout8(cnlbase+Ofs_Control, CHR(i));
 		END SetInterrupt;
 
-		PROCEDURE CreateDevice(devNum: LONGINT): LONGINT;
+		PROCEDURE CreateDevice(devNum: LONGINT): WORD;
 		VAR status: SET;
 			res: WORD; dev, devATA: Device; devATAPI: DeviceATAPI; ch: CHAR;
 			buf: ARRAY BS DIV 2 OF INTEGER;
@@ -870,7 +870,7 @@ TYPE
 		END CreateDevice;
 
 		PROCEDURE InitController;
-		VAR p, res: LONGINT; status: SET;
+		VAR p: LONGINT; res: WORD; status: SET;
 		BEGIN
 			res := ProtSwReset(IdentifyTimeout);
 			(*IF res # Res_OK THEN
@@ -969,7 +969,7 @@ TYPE
 
 		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR
-			num1, try, ignore: LONGINT; bufAdr: ADDRESS;
+			num1, try: LONGINT; ignore: WORD; bufAdr: ADDRESS;
 			dma: BOOLEAN;
 		BEGIN
 			bufAdr := ADDRESSOF(data[ofs]);
@@ -1070,7 +1070,7 @@ TYPE
 			RETURN controller.ExecuteCommand(cmd, IOTimeout, status) = Res_OK;
 		END SetWriteCache;
 
-		PROCEDURE TransferEx(op: LONGINT; lba: HUGEINT; num: LONGINT; bufAdr: ADDRESS; dma: BOOLEAN): LONGINT;
+		PROCEDURE TransferEx(op: LONGINT; lba: HUGEINT; num: LONGINT; bufAdr: ADDRESS; dma: BOOLEAN): WORD;
 		VAR command: Command; status: SET;
 		BEGIN {EXCLUSIVE}
 			IF (op # Disks.Read) & (op # Disks.Write) THEN RETURN Disks.Unsupported; END;
@@ -1079,7 +1079,7 @@ TYPE
 			RETURN controller.ExecuteCommand(command, IOTimeout, status);
 		END TransferEx;
 
-		PROCEDURE Reset(): LONGINT;
+		PROCEDURE Reset(): WORD;
 		VAR res: WORD;
 		BEGIN
 			IF TraceVerbose & (trace * TraceCommands # {})  THEN Show(name); KernelLog.String(" reset controller"); KernelLog.Ln; END;
@@ -1093,7 +1093,7 @@ TYPE
 		END Reset;
 
 		(* Only for ATA 4 or older *)
-		PROCEDURE InitDevice(): LONGINT;
+		PROCEDURE InitDevice(): WORD;
 		VAR command: CommandCHS; status: SET;
 		BEGIN
 			command := cmdCHS;
@@ -1103,7 +1103,7 @@ TYPE
 			RETURN controller.ExecuteCommand(command, IOTimeout, status);
 		END InitDevice;
 
-		PROCEDURE Flush(): LONGINT;
+		PROCEDURE Flush(): WORD;
 		VAR res: WORD;
 		BEGIN
 			res := Disks.Unsupported;
@@ -1113,13 +1113,13 @@ TYPE
 			RETURN res;
 		END Flush;
 
-		PROCEDURE MediaEject(immediate, load: BOOLEAN): LONGINT;
+		PROCEDURE MediaEject(immediate, load: BOOLEAN): WORD;
 		BEGIN {EXCLUSIVE}
 			IF ~(RemovableBit IN id.type) THEN RETURN Disks.Unsupported; END;
 			RETURN SendATACommand(0EDH, IOTimeout); (* media eject *)
 		END MediaEject;
 
-		PROCEDURE MediaLock(lock: BOOLEAN): LONGINT;
+		PROCEDURE MediaLock(lock: BOOLEAN): WORD;
 		VAR
 			command: CommandLBA;
 			res: WORD;
@@ -1143,12 +1143,12 @@ TYPE
 			RETURN res;
 		END MediaLock;
 
-		PROCEDURE Powersave(): LONGINT;
+		PROCEDURE Powersave(): WORD;
 		BEGIN
 			RETURN SendATACommand(0E0H, IOTimeout); (* standby immediate *)
 		END Powersave;
 
-		PROCEDURE SendATACommand(cmd, ms: LONGINT): LONGINT;
+		PROCEDURE SendATACommand(cmd, ms: LONGINT): WORD;
 		VAR command: Command; status: SET;
 		BEGIN {EXCLUSIVE}
 			command := NewCommand(cmd, Protocol_NonData);
@@ -1240,7 +1240,7 @@ TYPE
 		END NewCommandLBA48;
 
 		(* Identify an ATA device. *)
-		PROCEDURE IdentifyDevice(buf: ARRAY OF INTEGER): LONGINT;
+		PROCEDURE IdentifyDevice(buf: ARRAY OF INTEGER): WORD;
 		VAR res, size1, hsize: LONGINT;
 		BEGIN
 			(* ATA 4 or older *)
@@ -1458,7 +1458,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE ExecuteCommand*(read: BOOLEAN; VAR packet, data: ARRAY OF CHAR; ofs, size: LONGINT; dma: BOOLEAN): LONGINT;
+		PROCEDURE ExecuteCommand*(read: BOOLEAN; VAR packet, data: ARRAY OF CHAR; ofs, size: LONGINT; dma: BOOLEAN): WORD;
 		VAR
 			command: CommandPacket;
 			i: LONGINT; res: WORD;
@@ -1506,7 +1506,7 @@ TYPE
 			END;
 		END ProcessSense;
 
-		PROCEDURE TransferEx*(op: LONGINT; lba: HUGEINT; num: LONGINT; bufAdr: ADDRESS; dma: BOOLEAN): LONGINT;
+		PROCEDURE TransferEx*(op: LONGINT; lba: HUGEINT; num: LONGINT; bufAdr: ADDRESS; dma: BOOLEAN): WORD;
 		VAR
 			command: Command;
 			res: WORD; timeout: LONGINT;
@@ -1528,7 +1528,7 @@ TYPE
 			RETURN res;
 		END TransferEx;
 
-		PROCEDURE WaitUntilReady(): LONGINT;
+		PROCEDURE WaitUntilReady(): WORD;
 		VAR res: WORD; retry: BOOLEAN;
 		BEGIN
 			REPEAT
@@ -1548,7 +1548,7 @@ TYPE
 
 	(* ATAPI funtions *)
 
-		PROCEDURE Reset(): LONGINT;
+		PROCEDURE Reset(): WORD;
 		VAR
 			i: LONGINT; res: WORD;
 			status: SET;
@@ -1577,7 +1577,7 @@ TYPE
 			RETURN Res_OK;
 		END Reset;
 
-		PROCEDURE RequestSense*(): LONGINT;
+		PROCEDURE RequestSense*(): WORD;
 		VAR
 			command: CommandPacket;
 			buf: ARRAY 18 OF CHAR;
@@ -1614,7 +1614,7 @@ TYPE
 			RETURN Res_OK;
 		END RequestSense;
 
-		PROCEDURE TestUnitReady*(): LONGINT;
+		PROCEDURE TestUnitReady*(): WORD;
 		VAR
 			command: CommandPacket;
 			res: WORD;
@@ -1634,12 +1634,12 @@ TYPE
 			RETURN res;
 		END TestUnitReady;
 
-		PROCEDURE Flush(): LONGINT;
+		PROCEDURE Flush(): WORD;
 		BEGIN
 			RETURN Flush^();
 		END Flush;
 
-		PROCEDURE MediaEject*(immediate, load: BOOLEAN): LONGINT;
+		PROCEDURE MediaEject*(immediate, load: BOOLEAN): WORD;
 		VAR
 			command: CommandPacket;
 			res: WORD; timeout: LONGINT;
@@ -1667,7 +1667,7 @@ TYPE
 			RETURN res;
 		END MediaEject;
 
-		PROCEDURE MediaLock*(lock: BOOLEAN): LONGINT;
+		PROCEDURE MediaLock*(lock: BOOLEAN): WORD;
 		VAR
 			command: CommandPacket;
 			res: WORD;
@@ -1684,7 +1684,7 @@ TYPE
 			RETURN res;
 		END MediaLock;
 
-		PROCEDURE Powersave(): LONGINT;
+		PROCEDURE Powersave(): WORD;
 		VAR
 			command: CommandPacket;
 			res: WORD;
@@ -1700,9 +1700,9 @@ TYPE
 			RETURN res;
 		END Powersave;
 
-		PROCEDURE ReadCapacity*(VAR blkSize, size: LONGINT): LONGINT;
+		PROCEDURE ReadCapacity*(VAR blkSize, size: LONGINT): WORD;
 		VAR
-			buf: ARRAY 2 OF LONGINT;  res, sense: LONGINT;
+			buf: ARRAY 2 OF LONGINT;  res: WORD; sense: LONGINT;
 			command: CommandPacket; status: SET;
 		BEGIN
 			IF TraceVerbose & (trace * (TraceCommands + TraceAtapi + TraceInit) # {}) THEN
@@ -1798,7 +1798,7 @@ TYPE
 			RETURN command;
 		END NewCommandPacket;
 
-		PROCEDURE IdentifyDevice(buf: ARRAY OF INTEGER): LONGINT;
+		PROCEDURE IdentifyDevice(buf: ARRAY OF INTEGER): WORD;
 		VAR res : WORD;
 		BEGIN
 			maxTransfer := 65535;
@@ -2191,7 +2191,7 @@ BEGIN {EXCLUSIVE}
 END AddController;
 
 PROCEDURE IdentifyController*(bus, dev, fkt: LONGINT);
-VAR res, pcmd_ba, pcnl_ba, scmd_ba, scnl_ba, bm_ba, irq: LONGINT; s: SET;
+VAR res: WORD; pcmd_ba, pcnl_ba, scmd_ba, scnl_ba, bm_ba, irq: LONGINT; s: SET;
 	c: Controller;
 BEGIN
 	res := PCI.ReadConfigDword(bus, dev, fkt,  PCI.Adr0Reg, pcmd_ba);
@@ -2272,7 +2272,7 @@ BEGIN
 END ScanPCIClass;
 
 PROCEDURE ScanIterate;
-VAR pci: PCI.Pci; res,r0,r8,class: LONGINT;
+VAR pci: PCI.Pci; res: WORD; r0,r8,class: LONGINT;
 BEGIN
 	PCI.StartIterate(pci);
 	WHILE PCI.Iterate(pci) DO

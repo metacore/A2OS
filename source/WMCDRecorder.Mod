@@ -234,7 +234,7 @@ TYPE
 			sizeLabel.caption.SetAOC(text);
 		END UpdateSize;
 
-		PROCEDURE IdentifyRecorders(): LONGINT;
+		PROCEDURE IdentifyRecorders(): WORD;
 		VAR
 			res: WORD;
 			dlg: WaitDialog;
@@ -731,7 +731,7 @@ TYPE
 
 		PROCEDURE Convert(project: AudioProject; dest: String): LONGINT;
 		VAR
-			no, res: LONGINT;
+			no: LONGINT; res: WORD;
 			cur: Node;
 			filename, path, tmp: ARRAY MaxLen OF CHAR;
 		BEGIN
@@ -932,9 +932,9 @@ TYPE
 			END;
 		END BurnDataHandler;
 
-		PROCEDURE Record(compilation: CDRecord.Compilation; recorder: CDRecord.CDRecorder; settings: CDRecord.BurnSettings): LONGINT;
+		PROCEDURE Record(compilation: CDRecord.Compilation; recorder: CDRecord.CDRecorder; settings: CDRecord.BurnSettings): WORD;
 		VAR
-			res, tmp : LONGINT;
+			res, tmp : WORD;
 			msg, str : ARRAY MaxLen OF CHAR;
 			waitDlg: WaitDialog;
 			timer: Timer;

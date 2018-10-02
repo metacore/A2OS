@@ -19,7 +19,7 @@ TYPE
 	EnhancedHostController = OBJECT (UsbEhci.EnhancedHostController)
 		(* Release the HC ownership semaphore; eecp is the EHCI Extended Capability Pointer *)
 		PROCEDURE ReleaseHcOwnerShip(bus, device, function, eecp : LONGINT);
-		VAR register, res : LONGINT; usblegsup : SET;
+		VAR register : LONGINT; res : WORD; usblegsup : SET;
 		BEGIN
 			(* 00H: No capability list; > 40H to maintain consistency with PCI header *)
 			IF (eecp > 40H) THEN
@@ -60,7 +60,7 @@ TYPE
 	VAR
 		timer : Kernel.Timer;
 		usblegsup : SET;
-		eecp, reg, res, waits : LONGINT;
+		eecp, reg, waits : LONGINT; res: WORD;
 		hcOwnedByOS : BOOLEAN;
 	BEGIN
 		(* Get the HC Capabilities Parameters register *)

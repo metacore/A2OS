@@ -1064,7 +1064,7 @@ TYPE
 
 (* Scan the PCI bus for the specified card. *)
 PROCEDURE ScanPCI(vendor, device: LONGINT);
-VAR index, bus, dev, fct, res, irq, i: LONGINT; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
+VAR index, bus, dev, fct, irq, i: LONGINT; res: WORD; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
 BEGIN
 	index := 0;
 	WHILE (PCI.FindPCIDevice(device, vendor, index, bus, dev, fct) = PCI.Done) & (installed < 16) DO

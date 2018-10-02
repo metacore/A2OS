@@ -387,7 +387,7 @@ TYPE
 			dev.GetSize(size, res);
 		END UpdateCapacity;
 
-		PROCEDURE GetBufferCapacity(VAR totalCapacity, unusedCapacity: LONGINT): LONGINT;
+		PROCEDURE GetBufferCapacity(VAR totalCapacity, unusedCapacity: LONGINT): WORD;
 		VAR
 			capacity: Lib.BufferCapacity;
 			res: WORD;
@@ -400,10 +400,10 @@ TYPE
 			RETURN res;
 		END GetBufferCapacity;
 
-		PROCEDURE Record*(VAR compilation: Compilation; settings: BurnSettings; onRecordStatusChanged: Utils.StatusProc): LONGINT;
+		PROCEDURE Record*(VAR compilation: Compilation; settings: BurnSettings; onRecordStatusChanged: Utils.StatusProc): WORD;
 		VAR
 			disc: Disc;
-			res, i, op, nwa, secs: LONGINT;
+			res: WORD; i, op, nwa, secs: LONGINT;
 			nibble: SET; (* the control nibble of the q channel *)
 			params: WriteParams;
 			cuesheet: CueSheet;
@@ -645,7 +645,7 @@ TYPE
 			reader := NIL;
 		END Abort;
 
-		PROCEDURE Write(op, startSec, nofBlocks: LONGINT; adr: ADDRESS): LONGINT;
+		PROCEDURE Write(op, startSec, nofBlocks: LONGINT; adr: ADDRESS): WORD;
 		VAR
 			res: WORD;
 		BEGIN
@@ -660,7 +660,7 @@ TYPE
 			RETURN res;
 		END Write;
 
-		PROCEDURE PadTrack(op: LONGINT; track: InformationTrack) : LONGINT;
+		PROCEDURE PadTrack(op: LONGINT; track: InformationTrack) : WORD;
 		VAR
 			res: WORD;
 			startSec, secsToPad, nofBlocks: LONGINT;
@@ -695,7 +695,7 @@ TYPE
 
 		PROCEDURE WriteTrack(op: LONGINT; VAR track: InformationTrack) : LONGINT;
 		VAR
-			res, startSec, bytesRead, count, nofBlocks: LONGINT;
+			res: WORD; startSec, bytesRead, count, nofBlocks: LONGINT;
 			timestamp, lastSecs: LONGINT;
 			buf: Buffer;
 		BEGIN
@@ -730,7 +730,7 @@ TYPE
 			RETURN ResOk;
 		END WriteTrack;
 
-		PROCEDURE SetWriteSpeed(speed: LONGINT): LONGINT;
+		PROCEDURE SetWriteSpeed(speed: LONGINT): WORD;
 		BEGIN
 			RETURN Lib.SetCDSpeed(dev, BestSpeed, speed*SingleSpeed, 0H);
 		END SetWriteSpeed;
@@ -743,7 +743,7 @@ TYPE
 		PROCEDURE GetDiscInfo*(disc: Disc): LONGINT;
 		VAR
 			info: Lib.DiscInfo;
-			res, secsize,secs, nwa: LONGINT;
+			res: WORD; secsize,secs, nwa: LONGINT;
 		BEGIN
 			IF dev.TestUnitReady() # ResOk THEN
 				res := dev.RequestSense();
@@ -821,7 +821,7 @@ TYPE
 			RETURN ResOk;
 		END GetDiscInfoEx;
 
-		PROCEDURE GetWriteParams(VAR  params: WriteParams): LONGINT;
+		PROCEDURE GetWriteParams(VAR  params: WriteParams): WORD;
 		VAR
 			res: WORD;
 			page: Lib.WriteParameterPage;
@@ -841,7 +841,7 @@ TYPE
 		PROCEDURE SetWriteParams(VAR params: WriteParams; save: BOOLEAN): LONGINT;
 		VAR
 			page: Lib.WriteParameterPage;
-			tmp: LONGINT;
+			tmp: WORD;
 
 		BEGIN
 			IF Lib.ModeSense(dev, Lib.MPCurrent, Lib.MPWriteParameters, ADDRESSOF(page), SIZEOF(Lib.WriteParameterPage)) # ResOk THEN
@@ -877,7 +877,7 @@ TYPE
 		PROCEDURE PrintWriteParams(): LONGINT;
 		VAR
 			page: Lib.WriteParameterPage;
-			tmp: LONGINT;
+			tmp: WORD;
 		BEGIN
 			IF Lib.ModeSense(dev, Lib.MPCurrent, Lib.MPWriteParameters, ADDRESSOF(page), SIZEOF(Lib.WriteParameterPage)) # ResOk THEN
 				tmp := dev.RequestSense(); RETURN ResErr;

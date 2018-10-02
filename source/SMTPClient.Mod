@@ -53,7 +53,7 @@ TYPE
 			IF w.res = Streams.Ok THEN res := Ok ELSE res := w.res END
 		END SendCommand;
 
-		PROCEDURE Open*(CONST server, thisHost : ARRAY OF CHAR; port: LONGINT; VAR result : LONGINT);
+		PROCEDURE Open*(CONST server, thisHost : ARRAY OF CHAR; port: LONGINT; VAR result : WORD);
 		VAR fip : IP.Adr;
 				res: WORD; reply : LONGINT;
 		BEGIN

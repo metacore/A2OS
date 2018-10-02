@@ -83,7 +83,7 @@ TYPE
 		PROCEDURE SaveMessage(m : Message) : BOOLEAN;
 		VAR path, filePath : ARRAY 256 OF CHAR;
 			f : Files.File; w : Files.Writer;
-			i, res : LONGINT; p : ANY;
+			i : LONGINT; res: WORD; p : ANY;
 		BEGIN
 			COPY(mailPath^, path);
 			Strings.Append(path, "/"); Strings.Append(path, userName^);
@@ -112,7 +112,7 @@ TYPE
 
 		PROCEDURE Forward(m : Message; CONST sender : ARRAY OF CHAR) : BOOLEAN;
 		VAR smtpSession : SMTPClient.SMTPSession; p : ANY;
-			res, i : LONGINT;
+			res: WORD; i : LONGINT;
 		BEGIN
 			NEW(smtpSession);
 			smtpSession.Open(mailRelay, mailHost, 25, res);
@@ -236,7 +236,7 @@ TYPE
 		PROCEDURE SaveLostMessage(m : Message) : BOOLEAN;
 		VAR path, filePath : ARRAY 256 OF CHAR;
 			f : Files.File; w : Files.Writer;
-			i, res : LONGINT; p : ANY;
+			i : LONGINT; res: WORD; p : ANY;
 		BEGIN
 			COPY(mailPath^, path);
 			Strings.Append(path, "/"); Strings.Append(path, "lost");

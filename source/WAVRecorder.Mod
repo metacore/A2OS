@@ -21,7 +21,7 @@ TYPE
 
 		(* Initialize Recorder with the given File *)
 		PROCEDURE &Init*(out : Streams.Writer);
-		VAR i, res : LONGINT;
+		VAR i: LONGINT; res: WORD;
 		BEGIN
 			ready := FALSE; recording := FALSE; paused := FALSE; finished := FALSE;
 			SELF.out := out; recLength := 0;
@@ -128,7 +128,7 @@ TYPE
 
 		(* Initialize Recorder with the given File *)
 		PROCEDURE &Init*;
-		VAR i, res : LONGINT;
+		VAR i, res : WORD;
 		BEGIN
 			ready := FALSE; recording := FALSE; paused := FALSE; finished := FALSE;
 

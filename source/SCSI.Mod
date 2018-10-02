@@ -194,7 +194,7 @@ TYPE
 			END
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
 		VAR  blkSize: LONGINT;
 		BEGIN
 			DoReadCapacity(bus, target, 0, size, blkSize, res);
@@ -331,7 +331,7 @@ BEGIN
 	c.target := t;  c.lun := l;  c.chan := 0;
 END NewCmd;
 
-PROCEDURE DoSense*(b: Bus;  target,  lun: SHORTINT;  VAR key, code, res: LONGINT);
+PROCEDURE DoSense*(b: Bus;  target,  lun: SHORTINT;  VAR key, code: LONGINT; VAR res: WORD);
 VAR requ: Command; data: ARRAY 36 OF CHAR;
 BEGIN
 	MakeCmd6(requ.cmd, RequestSense, lun, 0, 36, 0);
@@ -512,7 +512,7 @@ END NumToChar;
 (** SCSI Bus Handling *)
 
 PROCEDURE InitBus(bus: Bus);
-VAR  i: SHORTINT;  d: Disk; data: InquiryData;  max, j, k, res: LONGINT;  name: Plugins.Name;
+VAR  i: SHORTINT;  d: Disk; data: InquiryData;  max, j, k: LONGINT; res: WORD; name: Plugins.Name;
 BEGIN
 	i := 0;
 	IF bus.wide THEN  max := 16  ELSE  max := 8  END;

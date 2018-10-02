@@ -789,7 +789,7 @@ TYPE
 			);
 		END FixBounds;
 
-		PROCEDURE IsInActiveFrameHandle(x, y : LONGINT) : LONGINT;
+		PROCEDURE IsInActiveFrameHandle(x, y : LONGINT) : WORD;
 		VAR res : WORD;
 		BEGIN
 			res := IsInFrameHandle(x, y);
@@ -1312,7 +1312,7 @@ TYPE
 		insertObjAt : WMComponents.VisualComponent;
 
 		downX, downY, lastX, lastY, dragX, dragY : LONGINT;
-		oldPointerInfo: LONGINT;
+		oldPointerInfo: WORD;
 		selectInsertObjAt : BOOLEAN;
 
 		showSnapGrid : WMProperties.BooleanProperty;
@@ -1588,7 +1588,7 @@ TYPE
 			END;
 		END InvalidateFrame;
 
-		PROCEDURE GetLimitMode(x, y : LONGINT; VAR bounds : WMRectangles.Rectangle) : LONGINT;
+		PROCEDURE GetLimitMode(x, y : LONGINT; VAR bounds : WMRectangles.Rectangle) : WORD;
 		VAR
 			vc : WMComponents.VisualComponent; mode : LONGINT;
 			ci : ComponentInfo;
@@ -1864,7 +1864,7 @@ TYPE
 		END PointerLeave;
 
 		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR down : BOOLEAN; res : WORD; rect : WMRectangles.Rectangle;
+		VAR down : BOOLEAN; res: LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			PointerDown^(x, y, keys);
 			mouseKeys := keys;
@@ -2820,7 +2820,7 @@ TYPE
 		END ButtonHandler;
 
 		PROCEDURE HandleOpenBtn(sender, data : ANY);
-		VAR filename : Files.FileName; res, ignoreRes : LONGINT;
+		VAR filename : Files.FileName; res: LONGINT; ignoreRes: WORD;
 		BEGIN
 			res := WMDialogs.QueryString("Open...", filename);
 			IF (res = WMDialogs.ResOk) THEN
@@ -3367,7 +3367,7 @@ BEGIN
 END LabelComponent;
 
 PROCEDURE Open*(context : Commands.Context); (** {filename} ~ *)
-VAR window : MainWindow; filename : Files.FileName; count, ignoreRes : LONGINT;
+VAR window : MainWindow; filename : Files.FileName; count: LONGINT;  ignoreRes : WORD;
 BEGIN
 	NEW(window, NIL);
 	count := 0;

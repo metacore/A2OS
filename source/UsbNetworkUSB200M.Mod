@@ -405,7 +405,7 @@ TYPE
 
 		PROCEDURE ScanRxBuffer;
 		VAR
-			index, packetSize, packetSizeChecksum, packetSizeEven, packetStart, type, res : LONGINT;
+			index, packetSize, packetSizeChecksum, packetSizeEven, packetStart, type : LONGINT; res : WORD;
 			contiguousLength, bytesCopied : LONGINT;
 			error : BOOLEAN;
 			buffer : Network.Buffer;
@@ -828,7 +828,7 @@ TYPE
 			RETURN status = Usbdi.Ok;
 		END WriteMonitorMode;
 
-		PROCEDURE GetPhyId(VAR primaryPhyId, primaryPhyType, secondaryPhyId, secondaryPhyType, res : LONGINT);
+		PROCEDURE GetPhyId(VAR primaryPhyId, primaryPhyType, secondaryPhyId, secondaryPhyType: LONGINT; VAR res : WORD);
 		VAR set : SET; buffer : Usbdi.BufferPtr; status : Usbdi.Status;
 		BEGIN
 			NEW(buffer, 2);
@@ -974,7 +974,7 @@ TYPE
 			monitorMode, wakeupOnLinkup, wakeupOnMagicPacket : BOOLEAN; usbSpeed : LONGINT;
 			priId, priType, secId, secType : LONGINT;
 			set : SET;
-			i, word, res : LONGINT;
+			i, word : LONGINT; res : WORD;
 		BEGIN
 			Diag^;
 			GetLinkAddress(linkAdr, res);
@@ -1037,7 +1037,7 @@ TYPE
 
 (* Converts a string formatted as AA:BB:CC:DD:EE:FF:GG into a Network link address *)
 PROCEDURE StringToLinkAdr(CONST string : ARRAY OF CHAR; VAR linkAdr : Network.LinkAdr) : BOOLEAN;
-VAR stringArray : Strings.StringArray; value, i, res : LONGINT;
+VAR stringArray : Strings.StringArray; value, i : LONGINT; res : WORD;
 BEGIN
 	stringArray := Strings.Split(string, ":");
 	IF LEN(stringArray) = 6 THEN

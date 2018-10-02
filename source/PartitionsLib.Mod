@@ -184,9 +184,9 @@ TYPE
 	Disk* = RECORD
 		device* : AosDisks.Device;
 		table* : AosDisks.PartitionTable; (* extended copy of device.table *)
-		size*, res*: LONGINT; (* device.GetSize(size, res); Size is valid only when res = AosDisks.Ok *)
+		size*: LONGINT; res*: WORD; (* device.GetSize(size, res); Size is valid only when res = AosDisks.Ok *)
 		geo* : AosDisks.GetGeometryMsg; (* device.Handle(geo, res); geo is valid only when res = AosDisks.Ok *)
-		gres* : LONGINT;
+		gres* : WORD;
 		fs* : POINTER TO ARRAY OF Files.FileSystem;
 		isDiskette* : BOOLEAN; (* is this a floppy drive diskette? *)
 	END;
@@ -363,14 +363,14 @@ TYPE
 		END ShowLocks;
 
 		PROCEDURE &Init*;
-		VAR ignore : LONGINT;
+		VAR res : WORD;
 		BEGIN
 			NEW(usedDisks);
 			AosDisks.registry.GetAll(devTable);
 			NEW(onChanged, SELF,Strings.NewString("DiskModelChanged"), NIL, NIL);
 			lockLevel := 0;
 			UpdateAllDisks;
-			AosDisks.registry.AddEventHandler(DiskEventHandler, ignore);
+			AosDisks.registry.AddEventHandler(DiskEventHandler, res);
 		END Init;
 
 		(** Update partition tables & file systems of all disk devices *)
@@ -386,7 +386,7 @@ TYPE
 			doClose : BOOLEAN;
 			errorWriter : Streams.StringWriter;
 			errorString : ARRAY 1024 OF CHAR;
-			i, j, res : LONGINT;
+			i, j : LONGINT; res: WORD;
 		BEGIN (* caller must hold lock *)
 			Acquire;
 			IF devTable # NIL THEN
@@ -454,7 +454,7 @@ TYPE
 		END UpdateDisk;
 
 		PROCEDURE UpdateDiskInternal(i : LONGINT);
-		VAR dev : AosDisks.Device; errorWriter : Streams.StringWriter; errorString : ARRAY 1024 OF CHAR; doClose : BOOLEAN; j, res : LONGINT;
+		VAR dev : AosDisks.Device; errorWriter : Streams.StringWriter; errorString : ARRAY 1024 OF CHAR; doClose : BOOLEAN; j : LONGINT; res: WORD;
 		BEGIN
 			dev := disks[i].device;
 			IF dev # NIL THEN
@@ -558,7 +558,7 @@ TYPE
 
 		(* Get geometry from partition table, if possible. *)
 		PROCEDURE GetTableGeometry(dev: AosDisks.Device; VAR hds, spt: LONGINT): BOOLEAN;
-		VAR buf: ARRAY BS OF CHAR; res, p, hd, sec, i: LONGINT; ok: BOOLEAN;
+		VAR buf: ARRAY BS OF CHAR; res: WORD; p, hd, sec, i: LONGINT; ok: BOOLEAN;
 		BEGIN
 			ok := FALSE;
 			IF dev.blockSize # BS THEN RETURN FALSE; END;
@@ -887,9 +887,9 @@ TYPE
 		END PartitionsOverlap;
 
 		PROCEDURE Finalize;
-		VAR ignore : LONGINT;
+		VAR res : WORD;
 		BEGIN
-			AosDisks.registry.RemoveEventHandler(DiskEventHandler, ignore);
+			AosDisks.registry.RemoveEventHandler(DiskEventHandler, res);
 		END Finalize;
 
 	END DisksModel;
@@ -1605,7 +1605,7 @@ TYPE
 	PartitionToFile* = OBJECT(Image);
 
 		PROCEDURE DoOperation*;
-		VAR f : Files.File; w: Files.Writer; error : String; pos, i, num, res : LONGINT; temp: ARRAY 256 OF CHAR;
+		VAR f : Files.File; w: Files.Writer; error : String; pos, i, num : LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			f := Files.New(filename);
 			IF f # NIL THEN
@@ -1650,7 +1650,7 @@ TYPE
 	FileToPartition* = OBJECT(Image);
 
 		PROCEDURE DoOperation*; (** dev#part filename [block numblocks] ~ *)
-		VAR f: Files.File; r: Files.Reader; error : String; len, res, pos, num, i : LONGINT;
+		VAR f: Files.File; r: Files.Reader; error : String; len, pos, num, i : LONGINT; res: WORD;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
@@ -1775,7 +1775,7 @@ TYPE
 			maxblocks : LONGINT;
 			buf : ARRAY Size OF CHAR;
 			start, size : LONGINT;
-			seed, res, len, i, ticks: LONGINT;
+			seed, len, i, ticks: LONGINT; res: WORD;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			start := disk.table[partition].start; size := disk.table[partition].size;
@@ -1878,7 +1878,7 @@ TYPE
 		VAR
 			f : Files.File;
 			error : String;
-			fs, type, size, res : LONGINT;
+			fs, type, size : LONGINT; res : WORD;
 		BEGIN
 			IF (fsName = "NatFS") OR (fsName = "NatFS1") THEN type := NativeType1
 			ELSIF fsName = "NatFS2" THEN type := NativeType2
@@ -2112,7 +2112,7 @@ TYPE
 		PROCEDURE DoOperation*; (** dev#part block [numblocks] ~ *)
 		VAR
 			text : Texts.Text; tw : TextUtilities.TextWriter;
-			pos, num, res : LONGINT;
+			pos, num : LONGINT; res : WORD;
 			buf: POINTER TO ARRAY OF CHAR;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
@@ -2199,7 +2199,7 @@ TYPE
 		END SetParameters;
 
 		PROCEDURE DoOperation*;
-		VAR  res, fs : LONGINT; string: ARRAY 256 OF CHAR; f : Files.File;
+		VAR  res: WORD; fs : LONGINT; string: ARRAY 256 OF CHAR; f : Files.File;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs = AosFS32) OR (fs = AosFS128) THEN
@@ -2294,7 +2294,7 @@ TYPE
 
 		(* Update the boot file in an existing Oberon partition. *)
 		PROCEDURE DoOperation*; (** dev#part [ BootFile ] ~ *)
-		VAR  f : Files.File; res, fs : LONGINT; temp: ARRAY 256 OF CHAR;
+		VAR  f : Files.File; res: WORD; fs : LONGINT; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs # UnknownFS) THEN
@@ -2356,7 +2356,7 @@ TYPE
 		VAR
 			f: Files.File; r: Files.Reader; buf1, buf2: ARRAY BS OF CHAR;
 			string : ARRAY 256 OF CHAR;
-			res, len, i: LONGINT;
+			res: WORD; len, i: LONGINT;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
@@ -2424,7 +2424,7 @@ TYPE
 		END GetTable;
 
 		PROCEDURE DoOperation*;
-		VAR config : Configuration; fs, res : LONGINT; temp: ARRAY 256 OF CHAR;
+		VAR config : Configuration; fs : LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs = AosFS32) OR (fs = AosFS128) THEN
@@ -2472,7 +2472,7 @@ TYPE
 		END SetParameters;
 
 		PROCEDURE DoOperation*;
-		VAR config : Configuration; fs, i , res : LONGINT; temp: ARRAY 256 OF CHAR;
+		VAR config : Configuration; fs, i  : LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs = AosFS32) OR (fs = AosFS128) THEN
@@ -3111,7 +3111,7 @@ TYPE
 		PROCEDURE CreatePrimary(size, type: LONGINT) : BOOLEAN;
 		VAR
 			mbr, epbr : Block;
-			i, e, res : LONGINT;
+			i, e : LONGINT; res: WORD;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT((disk.device.blockSize = BS) & (disk.table[partition].type = FreeSpace));
@@ -3169,7 +3169,7 @@ TYPE
 		VAR
 			epbr, new : Block;
 			slot1, slot2 : ARRAY 16 OF CHAR;
-			extStart, extPart, lastLogical, i, res : LONGINT;
+			extStart, extPart, lastLogical, i: LONGINT; res: WORD;
 		BEGIN
 			ASSERT((disk.device.blockSize = BS) & (disk.table[partition].type = FreeSpace));
 			IF IsExtendedPartition(type) THEN
@@ -3329,7 +3329,7 @@ TYPE
 		PROCEDURE DeletePrimary(type: LONGINT) : BOOLEAN;
 		VAR
 			mbr, epbr: Block;
-			e, i, res: LONGINT;
+			e, i: LONGINT; res: WORD;
 			result : BOOLEAN;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
@@ -3372,7 +3372,7 @@ TYPE
 		PROCEDURE DeleteLogical(type: LONGINT) : BOOLEAN;
 		VAR
 			epbr, temp : Block;
-			nextLogical, i, res, start : LONGINT;
+			nextLogical, i, start : LONGINT; res: WORD;
 			slot2 : ARRAY 16 OF CHAR;
 			extStart : LONGINT; (* adr of EPBR of extended partition *)
 			writebackAdr : LONGINT;
@@ -3503,7 +3503,7 @@ TYPE
 		(* Set active bit of dev#part to <on> *)
 		PROCEDURE DoOperation*;
 		VAR
-			res, e: LONGINT; b: ARRAY BS OF CHAR; mod: BOOLEAN;
+			res: WORD; e: LONGINT; b: ARRAY BS OF CHAR; mod: BOOLEAN;
 			string : ARRAY 256 OF CHAR;
 		BEGIN
 			disk.device.Transfer(AosDisks.Read, disk.device.table[partition].ptblock, 1, b, 0, res);
@@ -3648,7 +3648,7 @@ END WritePart;
  1 for a Native file system, 2 for an old Aos file system and 3 for a new Aos file system, 4 for unknown but
  valid boot signature  *)
 PROCEDURE DetectFS*(dev: AosDisks.Device; part: LONGINT): LONGINT;
-VAR b: ARRAY BS OF CHAR; res, fs: LONGINT; doClose : BOOLEAN;
+VAR b: ARRAY BS OF CHAR; res: WORD; fs: LONGINT; doClose : BOOLEAN;
 BEGIN
 	IF dev.blockSize # BS THEN RETURN 0; END;
 	(* special handling for diskettes *)
@@ -3694,7 +3694,7 @@ BEGIN
 END DisketteInserted;
 
 (* Read OBL variables from the specified partition. *)
-PROCEDURE GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs, res: LONGINT);
+PROCEDURE GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs: LONGINT; VAR res: WORD);
 VAR b: ARRAY BS OF CHAR;
 BEGIN
 	ASSERT(dev.blockSize = BS);
@@ -3709,7 +3709,7 @@ BEGIN
 END GetVars;
 
 (* Write the specified file to the device, starting at block pos. *)
-PROCEDURE WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum, res: LONGINT);
+PROCEDURE WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum: LONGINT; VAR res: WORD);
 CONST Size = 32;
 VAR buf: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num: LONGINT;
 BEGIN
@@ -4094,7 +4094,7 @@ BEGIN
 	END;
 END GetErrorMsg;
 
-PROCEDURE GetTransferError*(dev: AosDisks.Device; op, start, res: LONGINT; VAR result: ARRAY OF CHAR);
+PROCEDURE GetTransferError*(dev: AosDisks.Device; op, start: LONGINT; res: WORD; VAR result: ARRAY OF CHAR);
 VAR w : Streams.StringWriter;
 BEGIN
 	NEW(w, 1024);

@@ -193,7 +193,7 @@ TYPE
 		t: Kernel.Timer;
 
 		PROCEDURE Config;
-		VAR size, diskres,payloadNotCoded: LONGINT;
+		VAR size ,payloadNotCoded: LONGINT; diskres: WORD;
 		BEGIN
 			payloadNotCoded:= SYSTEM.VAL(LONGINT,LSH({0},maxPayload+1));
 			NEW(dataBufferFIFO,10,payloadNotCoded);
@@ -297,7 +297,7 @@ BEGIN
 	END
 END CreateCommandOrb;
 
-PROCEDURE LinkCommandOrb(commandOrb: Sbp2CommandOrb;VAR diskres: LONGINT);
+PROCEDURE LinkCommandOrb(commandOrb: Sbp2CommandOrb;VAR diskres: WORD);
 VAR buffer: ARRAY 2 OF SET; quadlet: SET;
 BEGIN
 	diskres:= 0;
@@ -378,7 +378,7 @@ BEGIN
 	SYSTEM.PUT32(statusBufAddr,{});
 END HandleStatus;
 
-PROCEDURE SendCommand(VAR command: Command;VAR diskres: LONGINT): BOOLEAN;
+PROCEDURE SendCommand(VAR command: Command;VAR diskres: WORD): BOOLEAN;
 VAR
 	commandOrb: Sbp2CommandOrb;i,addr,retBufferAddr : LONGINT; (* t: Kernel.Timer; *)
 	statusHi,statusLow: SET;
@@ -432,7 +432,7 @@ BEGIN
 	RETURN TRUE;
 END SendCommand;
 
-PROCEDURE Handle *(VAR msg: Disks.Message; VAR diskres: LONGINT);
+PROCEDURE Handle *(VAR msg: Disks.Message; VAR diskres: WORD);
 (* VAR command: Command; cylinders,heads,sectors,i: LONGINT; *)
 BEGIN
 	KernelLog.String("HANDLE"); KernelLog.Ln;
@@ -466,7 +466,7 @@ BEGIN
 	(* KernelLog.Int(SELF.blockSize,2); *)
 END Handle;
 
-PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: LONGINT);
+PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: WORD);
 VAR i, payloadNotCoded: LONGINT; command: Command; numOfBlocks,tries: LONGINT;
 BEGIN
 
@@ -513,7 +513,7 @@ BEGIN
 	END;
 END Transfer;
 
-PROCEDURE GetSize*(VAR size: LONGINT;VAR diskres: LONGINT);
+PROCEDURE GetSize*(VAR size: LONGINT;VAR diskres: WORD);
 VAR command: Command; i: LONGINT; (* dev: Sbp2Dev; *)
 BEGIN
 
@@ -1183,7 +1183,7 @@ END Print;
 
 (** Test procedure *)
 PROCEDURE TestTransfer*;
-VAR diskres,ofs,i: LONGINT; data: ARRAY 1024 OF CHAR; dev: Sbp2Dev;grp: SbpDevGrp;
+VAR diskres: WORD; ofs,i: LONGINT; data: ARRAY 1024 OF CHAR; dev: Sbp2Dev;grp: SbpDevGrp;
 	tempSet: SET;
 BEGIN
 	ofs:= 0;

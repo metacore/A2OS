@@ -287,7 +287,7 @@ BEGIN
 	name[j] := 0X
 END Domain;
 
-PROCEDURE RetrieveInfo(qtype: LONGINT; VAR adr: IP.Adr; VAR buf, hname: ARRAY OF CHAR; VAR len, timeout, res: LONGINT);
+PROCEDURE RetrieveInfo(qtype: LONGINT; VAR adr: IP.Adr; VAR buf, hname: ARRAY OF CHAR; VAR len, timeout: LONGINT; VAR res: WORD);
 VAR
 	name0: Name;
 	adr0: IP.Adr;
@@ -382,7 +382,7 @@ BEGIN
 	INC(NDNSSent);
 END SendQuery;
 
-PROCEDURE ReceiveReply(pcb: UDP.Socket; VAR buf: ARRAY OF CHAR; VAR len, res: LONGINT);
+PROCEDURE ReceiveReply(pcb: UDP.Socket; VAR buf: ARRAY OF CHAR; VAR len: LONGINT; VAR res: WORD);
 VAR radr: IP.Adr; rport: LONGINT;
 BEGIN
 	REPEAT
@@ -391,7 +391,7 @@ BEGIN
 	IF res = Ok THEN INC(NDNSReceived) ELSE len := 0 END
 END ReceiveReply;
 
-PROCEDURE QueryDNS(type: LONGINT; VAR buf, qname, hname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR timeout, res: LONGINT);
+PROCEDURE QueryDNS(type: LONGINT; VAR buf, qname, hname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR timeout: LONGINT; VAR res: WORD);
 VAR
 	j, k, len, serverCount: LONGINT;
 	pcb: UDP.Socket;

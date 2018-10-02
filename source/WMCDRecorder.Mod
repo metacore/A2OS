@@ -307,7 +307,7 @@ TYPE
 			recorder: CDRecord.CDRecorder;
 			disc: CDRecord.Disc;
 			compilation: CDRecord.Compilation;
-			res, tmp, startsec, size, freeSpace: LONGINT;
+			res, tmp: WORD; startsec, size, freeSpace: LONGINT;
 			toc: Lib.TocDescriptor;
 			dest: String;
 			pvd: MakeIsoImages.PSVolumeDescriptor;
@@ -645,7 +645,7 @@ TYPE
 		VAR
 			audioDlg: AudioDialog;
 			waitDlg: WaitDialog;
-			tmp, res, freeSpace, wavSpace: LONGINT;
+			tmp, res: WORD; freeSpace, wavSpace: LONGINT;
 			dest:String;
 			cur: Node;
 			project: AudioProject;
@@ -841,7 +841,7 @@ TYPE
 		PROCEDURE BurnDataHandler(sender, data: ANY);
 		VAR
 			dataDlg: DataDialog;
-			res, tmp: LONGINT;
+			res, tmp: WORD;
 			root: ANY;
 			dest: String;
 			compilation: CDRecord.Compilation;

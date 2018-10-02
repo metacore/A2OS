@@ -127,7 +127,7 @@ TYPE
 		"len" returns the actual datagram size and "data[ofs..ofs+len-1]" returns the data.
 		"res" returns "Timeout" in case of a timeout and "BufferOverflow" if the received datagram was too big.
 		*)
-		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, ms: LONGINT; VAR fip: IP.Adr; VAR fport, len, res: LONGINT);
+		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, ms: LONGINT; VAR fip: IP.Adr; VAR fport, len: LONGINT; VAR res: WORD);
 		VAR
 			buffer: Network.Buffer;
 			fragmentBuffer: Network.Buffer;

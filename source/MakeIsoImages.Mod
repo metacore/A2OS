@@ -857,7 +857,7 @@ TYPE
 
 		PROCEDURE ReadDir(parent: Directory): LONGINT;
 		VAR
-			index, size, lba, len, res: LONGINT;
+			index, size, lba, len: LONGINT; res: WORD;
 			name : ARRAY MaxLen OF CHAR;
 			dirRec: DirectoryRecord;
 			file: File;
@@ -1748,7 +1748,7 @@ END DirExists;
 (* SaveImage is used to copy data cds *)
 PROCEDURE SaveImage*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; CONST dest: ARRAY OF CHAR; onWriteStatusChanged: Utils.StatusProc): LONGINT;
 VAR
-	sec, size, res: LONGINT;
+	sec, size: LONGINT; res: WORD;
 	buf: ARRAY TransferSize*SectorSize OF CHAR;
 	pvd: PSVolumeDescriptor;
 	f: Files.File;
@@ -1796,7 +1796,7 @@ END SaveImage;
 PROCEDURE GetVolumeDescriptor*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; VAR descr: PSVolumeDescriptor; descrType: LONGINT): LONGINT;
 VAR
 	type: CHAR;
-	sec, res: LONGINT;
+	sec: LONGINT; res: WORD;
 	tmp: ARRAY MaxLen OF CHAR;
 	buf: ARRAY SectorSize OF CHAR;
 BEGIN

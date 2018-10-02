@@ -441,7 +441,8 @@ PROCEDURE BuildChannelTableImpl(filename : ARRAY OF CHAR);
 CONST
 	Delay = 500;
 VAR
-	ch, max, i, found, length, res : LONGINT;
+	ch, max, i, found, length: LONGINT;
+	res: WORD;
 	tvWnd : TvWindow;
 	tvCh : TVChannels.TVChannel;
 	channels : TVChannels.ChannelList;

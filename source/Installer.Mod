@@ -456,7 +456,7 @@ TYPE
 		END PackagesProgress;
 
 		PROCEDURE DoOperation*;
-		VAR i, res : LONGINT;
+		VAR i : LONGINT; res : WORD;
 		BEGIN
 			ASSERT((config.disk.device = disk.device) & (config.partition = partition));
 			installLog.String("Starting installation on partition "); installLog.String(diskpartString); installLog.String("..."); installLog.Ln; installLog.Update;

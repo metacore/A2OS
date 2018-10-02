@@ -105,7 +105,7 @@ TYPE
 		END Diag;
 
 		PROCEDURE InitLinkDevice() : BOOLEAN;
-		VAR name : Plugins.Name; nofDevices, i, res : LONGINT;
+		VAR name : Plugins.Name; nofDevices, i : LONGINT; res : WORD;
 		BEGIN
 			NEW(linkDevice, Network.TypeEthernet, 1000, AddressSize);
 

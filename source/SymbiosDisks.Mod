@@ -122,7 +122,7 @@ MODULE SymbiosDisks;	(** non-portable *)
 *)
 			END Transfer;
 
-			PROCEDURE GetSize* (VAR size, res: LONGINT);
+			PROCEDURE GetSize* (VAR size: LONGINT; VAR res: WORD);
 			BEGIN
 				size := capacity; res := Disks.Ok;
 				IF TraceVerbose THEN
@@ -192,7 +192,7 @@ VAR
 	END GetCapacity;
 
 	PROCEDURE Init;
-	VAR res, ha, targ, lun, num, regres: LONGINT; srb: ASPI.GetDevTypeSRB; dev: Device; name: Plugins.Name;
+	VAR res, ha, targ, lun, num: LONGINT; regres: WORD; srb: ASPI.GetDevTypeSRB; dev: Device; name: Plugins.Name;
 	BEGIN
 		freeSRB := NIL;
 		NEW(fallbackBuf, 2*BS);

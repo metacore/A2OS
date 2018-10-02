@@ -27,7 +27,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 			END
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
 		BEGIN
 			size := devs[drive].capacity;
 			res := Disks.Ok
@@ -315,7 +315,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 	END Init;
 
 	PROCEDURE Register;
-	VAR i, res: LONGINT;  dev: Device; name : ARRAY 12 OF CHAR;
+	VAR i: LONGINT; res: WORD; dev: Device; name : ARRAY 12 OF CHAR;
 	BEGIN
 		FOR i := 0 TO numdevs-1 DO
 			NEW(dev); devs[i].dev := dev;

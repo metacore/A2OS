@@ -100,7 +100,7 @@ VAR
 
 (* Compare the specified XML attritbute value to the specified integer value *)
 PROCEDURE Matches(driver : XML.Element; CONST attribute : ARRAY OF CHAR; value : LONGINT) : BOOLEAN;
-VAR string : XML.String; number, res : LONGINT;
+VAR string : XML.String; number : LONGINT; res : WORD;
 BEGIN
 	ASSERT(driver # NIL);
 	string := driver.GetAttributeValue(attribute);

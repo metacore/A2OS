@@ -536,7 +536,7 @@ TYPE
 			commandLine : Strings.String;
 			nbr : ARRAY 8 OF CHAR;
 			msg, command : ARRAY 128 OF CHAR;
-			i, length, res : LONGINT;
+			i, length : LONGINT; res : WORD;
 		BEGIN
 			commandLine := textBuffer.GetCurrentLine();
 			Strings.TrimWS(commandLine^);

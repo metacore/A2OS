@@ -329,7 +329,7 @@ TYPE
 		END GetAutoNegotiationResult;
 
 		(** Get the current link status *)
-		PROCEDURE GetLinkStatus*(VAR linkStatus, res : LONGINT);
+		PROCEDURE GetLinkStatus*(VAR linkStatus: LONGINT; VAR res : WORD);
 		VAR value : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());

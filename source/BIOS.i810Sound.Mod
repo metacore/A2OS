@@ -134,7 +134,7 @@ MODULE i810Sound; (** AUTHOR "krijo210@student.liu.se"; PURPOSE "Intel 810 Sound
 
 			PROCEDURE RegRead32(offset : LONGINT) : LONGINT;
 			VAR
-				res : WORD;
+				res: LONGINT;
 			BEGIN
 				Machine.Portin32(base + offset, res);
 				RETURN res

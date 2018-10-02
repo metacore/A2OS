@@ -980,7 +980,7 @@ TYPE
 			buffer : POINTER TO ARRAY OF CHAR;
 			buffersize, reads : LONGINT;
 			operation : String;
-			i, j, k, res : LONGINT;
+			i, j, k : LONGINT; res : WORD;
 		BEGIN
 			IF Trace THEN KernelLog.String("Comparing FATs... "); END;
 			INC(curOp); operation := GetString(curOp, maxOp, "", "Comparing FAT structures");
@@ -1174,7 +1174,7 @@ TYPE
 		VAR
 			temp, temp2 : LostCluster;
 			string, error : String;
-			counter, res : LONGINT;
+			counter : LONGINT; res : WORD;
 		BEGIN
 			IF Trace THEN KernelLog.String("Deleting lost clusters... "); END;
 			ASSERT((lostErrorList#NIL) & (fileList#NIL));
@@ -1600,7 +1600,7 @@ TYPE
 			temp2 : Entry;
 			test : BOOLEAN;
 			address : Files.Address;
-			offset, res : LONGINT;
+			offset : LONGINT; res : WORD;
 		BEGIN
 			ASSERT((entry # NIL) & (vol # NIL) & (dev # NIL));
 			test:=TRUE;
@@ -1650,7 +1650,7 @@ TYPE
 			RETURN string;
 		END GetString;
 
-		PROCEDURE ReportTransferError(name : ARRAY OF CHAR; op, adr, res : LONGINT);
+		PROCEDURE ReportTransferError(name : ARRAY OF CHAR; op, adr: LONGINT; res: WORD);
 		VAR temp: ARRAY 256 OF CHAR;
 		BEGIN
 			Strings.Append(name, " (");
@@ -1731,7 +1731,7 @@ TYPE
 			rootDirSectors, firstDataSector : LONGINT;
 			freeCount, firstFree, media: LONGINT;
 			spc, type : LONGINT; (* sectors per cluster *)
-			i, res : LONGINT;
+			i : LONGINT; res : WORD;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			type := disk.table[partition].type;

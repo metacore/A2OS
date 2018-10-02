@@ -513,7 +513,7 @@ TYPE
 			arg : Streams.StringReader;
 			commandStr : ARRAY 128 OF CHAR; parameterStr : Strings.String;
 			msg : ARRAY 128 OF CHAR;
-			pos, res : LONGINT;
+			pos  : LONGINT; res : WORD;
 		BEGIN
 			NEW(parameterStr, 4096); Strings.Truncate(parameterStr^, 0);
 			r.SkipWhitespace; r.String(commandStr);

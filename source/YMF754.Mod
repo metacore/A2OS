@@ -1068,7 +1068,7 @@ TYPE
 		(* Constructor *)
 		PROCEDURE &Constr*(name: ARRAY OF CHAR; physbase, irq: LONGINT; CntrlInst1E: BOOLEAN);
 		VAR
-			i, res: LONGINT;
+			i: LONGINT; res: WORD;
 			PCDbase: LONGINT; (* physical base address of PCI Audio play control data table *)
 		BEGIN
 			SELF.irq := irq;
@@ -1396,7 +1396,7 @@ TYPE
 		END StartPCIAudio;
 
 		(* Check channel parameters and convert the values for internal use *)
-		PROCEDURE CheckChannelParam(onlyNativeFreq: BOOLEAN; VAR sRate, sResolution, nofSubCh, format, res: LONGINT);
+		PROCEDURE CheckChannelParam(onlyNativeFreq: BOOLEAN; VAR sRate, sResolution, nofSubCh, format: LONGINT; VAR res: WORD);
 		VAR i: LONGINT;
 		BEGIN
 			res := SoundDevices.ResOK;

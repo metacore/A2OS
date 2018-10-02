@@ -547,7 +547,7 @@ TYPE
 		END Init;
 
 		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
-		VAR i, res: LONGINT; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
+		VAR i: LONGINT; res: WORD; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
 		BEGIN {EXCLUSIVE}
 			f := NIL; Check(name, namebuf, res);
 			IF res <= 0 THEN

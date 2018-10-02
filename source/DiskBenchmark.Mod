@@ -149,7 +149,7 @@ TYPE
 			avgDuration : REAL;
 			milliTimer : Kernel.MilliTimer;
 			time : LONGINT;
-			i, res : LONGINT;
+			i : LONGINT; res : WORD;
 			temp : ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT((mode = Disks.Read) OR (mode = Disks.Write));
@@ -198,7 +198,7 @@ TYPE
 			nbrOfBytes : HUGEINT;
 			milliTimer : Kernel.MilliTimer;
 			time : LONGINT;
-			i, res : LONGINT;
+			i : LONGINT; res : WORD;
 			temp : ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT((mode = Disks.Read) OR (mode = Disks.Write));

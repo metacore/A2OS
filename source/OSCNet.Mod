@@ -118,7 +118,8 @@ TYPE
 			fip2: IP.Adr; fport2: LONGINT;
 			size: LONGINT;
 			buffer: Strings.String;
-			got, res: LONGINT;
+			got: LONGINT;
+			res: WORD;
 			endticks: LONGINT;
 			istimeout: BOOLEAN;
 		BEGIN
@@ -162,7 +163,8 @@ TYPE
 			newUDPData: OSCUDPData;
 			buffer: OSC.String; (* ARRAY MaxUDPPacketLength OF CHAR; *)
 			receivefip: IP.Adr; receivefport: LONGINT;
-			got, res: LONGINT;
+			got: LONGINT;
+			res: WORD;
 
 		(* Sets the signal to stop the service *)
 		PROCEDURE Stop*;
@@ -358,7 +360,7 @@ TYPE
 
 	PROCEDURE ReceiveTCP(client: TCP.Connection; VAR p: OSC.OSCPacket): LONGINT;
 	VAR
-		res, len: LONGINT;
+		res: WORD; len: LONGINT;
 		buffer: POINTER TO ARRAY OF CHAR;
 		sizebuf: ARRAY 4 OF CHAR;
 		packetsize: LONGINT;

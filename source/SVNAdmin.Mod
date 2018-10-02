@@ -270,7 +270,7 @@ TYPE
 		PROCEDURE Add* ( CONST path : ARRAY OF CHAR; CONST name : ARRAY OF CHAR; addGlobal : BOOLEAN; VAR res : WORD );
 		VAR
 			file, entryfile, tmp, tmp2 : Files.FileName;
-			res1, time, date, size : LONGINT;
+			res1 : WORD; time, date, size : LONGINT;
 			w : Files.Writer;
 			flags : SET;
 			enum : Files.Enumerator;
@@ -753,7 +753,7 @@ TYPE
 		key = "svn:wc:ra_dav:version-url";
 	VAR
 		tmp,fstr,fstr2 : ARRAY 256 OF CHAR;
-		read, len, keyLength, i, res : LONGINT;
+		read, len, keyLength, i : LONGINT; res : WORD;
 		fr, fw : Files.File;
 		r : Files.Reader;
 		w : Files.Writer;

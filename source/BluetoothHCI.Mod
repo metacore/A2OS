@@ -219,7 +219,7 @@ TYPE
 			BF: broadcast flag
 		*)
 		PROCEDURE SendACL*(PBF, BF: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
-		VAR v, res: LONGINT; aclhdr: ARRAY 4 OF CHAR;
+		VAR v: LONGINT; res: WORD; aclhdr: ARRAY 4 OF CHAR;
 		BEGIN
 			ASSERT((pbfContinuing <= PBF) & (PBF <= pbfFirst));
 			ASSERT((bfPointToPoint <= BF) & (BF <= bfPiconet));
@@ -240,7 +240,7 @@ TYPE
 		END SendACL;
 
 		PROCEDURE SendACLH*(PBF, BF: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
-		VAR v, res, totlen: LONGINT; aclhdr: ARRAY 4 OF CHAR;
+		VAR v, totlen: LONGINT; res: WORD; aclhdr: ARRAY 4 OF CHAR;
 		BEGIN
 			totlen := len + hdrlen;
 			ASSERT((pbfContinuing <= PBF) & (PBF <= pbfFirst));
@@ -595,7 +595,7 @@ TYPE
 			par: ARRAY 13 OF CHAR;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			i, res: LONGINT;
+			i: LONGINT; res: WORD;
 		BEGIN
 			FOR i := 0 TO Bluetooth.BDAddrLen-1 DO par[i] := bdAddr[i] END;
 			par[6] := 08X; par[7] := 00X;	(* packet type: DM1 only *)
@@ -664,7 +664,7 @@ TYPE
 		PROCEDURE SetEventFilter*(type, conditionType: CHAR; condition: ARRAY OF CHAR): LONGINT;
 		VAR
 			par: ARRAY 9 OF CHAR;
-			i, len, res: LONGINT;
+			i, len: LONGINT; res: WORD;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
 		BEGIN
@@ -809,7 +809,7 @@ TYPE
 		VAR
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res, i: LONGINT;
+			res: WORD; i: LONGINT;
 		BEGIN
 			IF TraceHCI THEN
 				KernelLog.String(ModuleName);

@@ -83,7 +83,7 @@ TYPE
 
 		(* ReceiveAck - receives a server answer *)
 		PROCEDURE ReceiveAck(socket: UDP.Socket; VAR fip: IP.Adr; VAR fport: LONGINT; blockNr: LONGINT; VAR ack: ARRAY OF CHAR): BOOLEAN;
-		VAR ip: IP.Adr; port, len, ofs, res, wait: LONGINT; acked: BOOLEAN; msg: ARRAY 256 OF CHAR;
+		VAR ip: IP.Adr; port, len, ofs, wait: LONGINT; res: WORD; acked: BOOLEAN; msg: ARRAY 256 OF CHAR;
 		BEGIN
 			wait := 0;
 			REPEAT
@@ -141,7 +141,7 @@ TYPE
 
 		(* GetSocket - finds & initializes a free UDP socket *)
 		PROCEDURE GetSocket*(VAR socket: UDP.Socket): BOOLEAN;
-		VAR retries, lport, res: LONGINT;
+		VAR retries, lport: LONGINT; res: WORD;
 		BEGIN
 			REPEAT
 				INC(retries); lport := 1024 + generator.Integer() MOD 64512;
@@ -154,7 +154,7 @@ TYPE
 		(* Send - send a file to TFTP server at fip:fport *)
 		PROCEDURE Send*(localFN, remoteFN: ARRAY OF CHAR; fip: IP.Adr; fport: LONGINT): BOOLEAN;
 		VAR buf, ack: ARRAY 4+BlockSize OF CHAR; socket: UDP.Socket; msg: ARRAY 256 OF CHAR;
-			file: Files.File; r: Files.Rider; ofs, res, retries, blockNr, errNo: LONGINT; acked: BOOLEAN;
+			file: Files.File; r: Files.Rider; ofs, retries, blockNr, errNo: LONGINT; res: WORD; acked: BOOLEAN;
 		BEGIN
 			acked := FALSE;
 			file := Files.Old(localFN);
@@ -232,7 +232,7 @@ TYPE
 
 		(* Receive - receive a file from TFTP server at source:port *)
 		PROCEDURE Receive*(remoteFN, localFN: ARRAY OF CHAR; fip: IP.Adr; fport: LONGINT): BOOLEAN;
-		VAR socket: UDP.Socket; ofs, blockNr, port, len, res, retries, waitPacket: LONGINT; ok, Abort: BOOLEAN; ip: IP.Adr;
+		VAR socket: UDP.Socket; ofs, blockNr, port, len, retries, waitPacket: LONGINT; res: WORD; ok, Abort: BOOLEAN; ip: IP.Adr;
 			buf: ARRAY 4+BlockSize OF CHAR; file: Files.File; r: Files.Rider;
 		BEGIN
 			ok := FALSE;

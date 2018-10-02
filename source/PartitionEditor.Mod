@@ -41,7 +41,7 @@ TYPE
 		PROCEDURE HandleButtons(sender, data : ANY);
 		VAR
 			deviceName : ARRAY 32 OF CHAR;
-			pt : PartitionTable.PartitionTable; blockNumber, res : LONGINT;
+			pt : PartitionTable.PartitionTable; blockNumber : LONGINT; res : WORD;
 			message: ARRAY 256 OF CHAR;
 		BEGIN
 			IF (sender = storeBtn) THEN

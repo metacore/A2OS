@@ -253,7 +253,7 @@ TYPE
 			fs : Files.FileSystem;
 			fstype : LONGINT;
 			doClose : BOOLEAN;
-			result, res : LONGINT;
+			result : LONGINT; res : WORD;
 		BEGIN
 			SELF.selection := selection;
 			IF IsValid(selection) THEN
@@ -533,7 +533,7 @@ TYPE
 		VAR
 			block: POINTER TO ARRAY  OF CHAR;
 			type : LONGINT;
-			res, fs: LONGINT;
+			res: WORD; fs: LONGINT;
 		BEGIN
 			IF (dev.table=NIL) OR (part >= LEN(dev.table)) THEN RETURN 0; END;
 			type := dev.table[part].type;
@@ -1448,7 +1448,7 @@ TYPE
 		VAR
 			fileToPartition : PartitionsLib.FileToPartition;
 			popup : PopupWindow; param : Parameters;
-			block, numblocks, res : LONGINT;
+			block, numblocks : LONGINT; res : WORD;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 3);
@@ -1478,7 +1478,7 @@ TYPE
 		VAR
 			partitionToFile : PartitionsLib.PartitionToFile;
 			popup : PopupWindow; param : Parameters;
-			block, numblocks, res : LONGINT;
+			block, numblocks : LONGINT; res : WORD;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 3);
@@ -1515,7 +1515,7 @@ TYPE
 		VAR
 			showBlocks : PartitionsLib.ShowBlocks;
 			popup : PopupWindow; param : Parameters;
-			block, numblocks, res : LONGINT;
+			block, numblocks : LONGINT; res : WORD;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 2);
@@ -1589,7 +1589,7 @@ TYPE
 		popup : PopupWindow;
 
 		PROCEDURE Config(sender, data : ANY);
-		VAR configEditor : ConfigEditor; doClose : BOOLEAN; fsType, res : LONGINT;
+		VAR configEditor : ConfigEditor; doClose : BOOLEAN; fsType : LONGINT; res : WORD;
 		BEGIN
 			IF IsValid(selection) &
 			    ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
@@ -2056,7 +2056,7 @@ TYPE
 			benchPartition : DiskBenchmark.DiskBench;
 			popup : PopupWindow; param : Parameters;
 			blocksizes : SET;
-			i, blocksize, res : LONGINT;
+			i, blocksize : LONGINT; res : WORD;
 			string : ARRAY 128 OF CHAR;
 		BEGIN
 			IF IsValid(selection) & (selection.disk.device # NIL) THEN

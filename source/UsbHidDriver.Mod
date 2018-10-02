@@ -1119,7 +1119,7 @@ TYPE
 		VAR
 			joystickColl		: UsbHidReport.HidCollection;
 			temp			: UsbHidReport.HidReport;
-			res,i			: LONGINT;
+			res,i			: WORD;
 		BEGIN
 			(*get joystick collection: joystick collection uses UsagePage(Generic Desktop Controlsl)->1 and Usage(Joystick)->4*)
 			joystickColl := reportManager.GetCollection(UsagePage.GenericDesktopPage,4);

@@ -51,7 +51,7 @@ TYPE
 		END FillWithTestData;
 
 		PROCEDURE DoOperation*;
-		VAR pos, num, nbrOfBlocks, blocksWritten, res : LONGINT; temp : ARRAY 256 OF CHAR;
+		VAR pos, num, nbrOfBlocks, blocksWritten : LONGINT; res : WORD; temp : ARRAY 256 OF CHAR;
 		BEGIN
 			SetStatus(state.status, "Writing test data...", 0, 0, disk.table[partition].size, TRUE);
 			NEW(buffer, disk.device.blockSize * sectorsPerTransfer);
@@ -87,7 +87,7 @@ TYPE
 
 		PROCEDURE DoOperation*;
 		VAR
-			pos, num, nbrOfBlocks, blocksRead, res : LONGINT; string, nbr : ARRAY 128 OF CHAR;
+			pos, num, nbrOfBlocks, blocksRead : LONGINT; res : WORD; string, nbr : ARRAY 128 OF CHAR;
 			expected, found, foundAt : LONGINT;
 		BEGIN
 			SetStatus(state.status, "Verifying test data...", 0, 0, disk.table[partition].size, TRUE);
@@ -220,7 +220,7 @@ TYPE
 		END WriteSummary;
 
 		PROCEDURE PerformStep;
-		VAR pos, num, res, expected, found, foundAt : LONGINT; string, nbr : ARRAY 128 OF CHAR;
+		VAR pos, num, expected, found, foundAt : LONGINT; res : WORD; string, nbr : ARRAY 128 OF CHAR;
 		BEGIN
 			num := random.Dice(maxNbrOfSectors) + 1;
 			IF maxNbrOfSectors > 1 THEN testedSectors[num - 1] := TRUE; END;
@@ -349,7 +349,7 @@ PROCEDURE TransferBlocks*(context : Commands.Context); (** dev#part "READ"|"WRIT
 VAR
 	selection : Lib.Selection;
 	string : ARRAY 32 OF CHAR; dev : Disks.Device;
-	op, block, numblocks, res : LONGINT;
+	op, block, numblocks : LONGINT; res : WORD;
 	buffer : POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF Partitions.GetSelection(context, FALSE, selection) THEN

@@ -1416,7 +1416,7 @@ BEGIN
 END Cleanup;
 
 PROCEDURE ScanPCI(vendor, device: LONGINT; name: Plugins.Name);
-VAR index, bus, dev, fct, res, base, irq, i : LONGINT;
+VAR index, bus, dev, fct, base, irq, i : LONGINT; res: WORD;
 	driver : Driver;
 	drivername : Plugins.Name;
 BEGIN

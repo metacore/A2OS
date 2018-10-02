@@ -135,7 +135,7 @@ TYPE
 		END Old0;
 
 		(** deletes a file, res = 0 indicates succsess **)
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		VAR namebuf: FileName; errorcode: LONGINT;
 		BEGIN {EXCLUSIVE}
 			Check(name, namebuf, res);

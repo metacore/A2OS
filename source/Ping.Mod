@@ -22,7 +22,7 @@ VAR
 	i: LONGINT;
 	hostname: DNS.Name;
 	fip: IP.Adr;
-	res1, res2: LONGINT;
+	res1, res2: WORD;
 	data: ARRAY PingHdrSize+MaxPingSize OF CHAR;
 
 BEGIN {EXCLUSIVE}

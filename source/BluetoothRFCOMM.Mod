@@ -55,7 +55,7 @@ TYPE
 			dead := TRUE;
 		END Close;
 
-		PROCEDURE Get(VAR ch : CHAR; VAR result : LONGINT);
+		PROCEDURE Get(VAR ch : CHAR; VAR result : WORD);
 		BEGIN {EXCLUSIVE}
 			IF TraceBuffer THEN
 				KernelLog.String(ModuleName);
@@ -480,7 +480,7 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 
 		BEGIN
 
@@ -547,7 +547,7 @@ TYPE
 
 		PROCEDURE &Init*(l2capLayer : BluetoothL2CAP.L2CAP);
 		VAR
-			result : LONGINT;
+			result : WORD;
 			controlChannel : ControlChannel;
 			i : LONGINT;
 		BEGIN
@@ -695,14 +695,14 @@ TYPE
 
 		PROCEDURE SendInformation*(serverChannel : LONGINT; info : ARRAY OF CHAR; infoLength : LONGINT);
 		VAR
-			result : LONGINT;
+			result : WORD;
 		BEGIN
 			channelList[serverChannel * 2].Sender(info,0,infoLength,TRUE,result);
 		END SendInformation;
 
 		PROCEDURE ReceiveInformation*(serverChannel : LONGINT; VAR info : ARRAY OF CHAR; VAR infoLength : LONGINT);
 		VAR
-			result : LONGINT;
+			result : WORD;
 		BEGIN
 			channelList[serverChannel * 2].Receiver(info,0,LEN(info),1,infoLength,result);
 		END ReceiveInformation;
@@ -771,7 +771,7 @@ TYPE
 
 		PROCEDURE L2CAPConfigIndication(inParam : BluetoothL2CAP.Indication);
 		VAR
-			result : LONGINT;
+			result : WORD;
 		BEGIN
 			WITH inParam : BluetoothL2CAP.ConfigInd DO
 				IF TraceRFCOMM THEN

@@ -382,7 +382,7 @@ TYPE
 
 		PROCEDURE UpdateCapacity*;
 		VAR
-			size, res: LONGINT;
+			size: LONGINT; res: WORD;
 		BEGIN
 			dev.GetSize(size, res);
 		END UpdateCapacity;
@@ -633,7 +633,7 @@ TYPE
 
 		PROCEDURE Abort;
 		VAR
-			size, res: LONGINT;
+			size: LONGINT; res: WORD;
 		BEGIN
 			Unlock();
 			(* restore previous blockSize *)
@@ -929,7 +929,7 @@ TYPE
 		PROCEDURE WaitUntilFinished*;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res, tmp: LONGINT;
+			res, tmp: WORD;
 			timer: Kernel.Timer;
 		BEGIN
 			NEW(timer);

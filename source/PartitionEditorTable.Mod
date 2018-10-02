@@ -58,7 +58,7 @@ END GetDevice;
 
 (* Get the disk geometry of a named device *)
 PROCEDURE GetDiskGeometry(CONST devicename : ARRAY OF CHAR; VAR diskGeometry : DiskGeometry; VAR res : WORD);
-VAR device : Disks.Device; geometry : Disks.GetGeometryMsg; ignore : LONGINT;
+VAR device : Disks.Device; geometry : Disks.GetGeometryMsg; ignore : WORD;
 BEGIN
 	device := GetDevice(devicename);
 	IF (device # NIL) THEN
@@ -79,7 +79,7 @@ END GetDiskGeometry;
 
 (* read a block from device with name devicename. Returns with res = Disks.Ok, if successful *)
 PROCEDURE ReadBlock*(CONST devicename : ARRAY OF CHAR;  block : LONGINT; VAR buffer: Buffer; VAR res: WORD);
-VAR device : Disks.Device; ignore : LONGINT;
+VAR device : Disks.Device; ignore : WORD;
 BEGIN
 	device := GetDevice(devicename);
 	IF (device # NIL) THEN
@@ -99,7 +99,7 @@ END ReadBlock;
 
 (* write a block to device with name devicename. Returns with res = Disks.Ok, if successful*)
 PROCEDURE WriteBlock*(CONST devicename : ARRAY OF CHAR; block : LONGINT; VAR buffer: Buffer; VAR res: WORD);
-VAR device : Disks.Device; ignore : LONGINT;
+VAR device : Disks.Device; ignore : WORD;
 BEGIN
 	device := GetDevice(devicename);
 	IF (device # NIL) THEN

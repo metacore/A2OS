@@ -157,7 +157,7 @@ TYPE
 			"bps" - V24.BPS*
 			"rate" - sample rate (not all mice support this) *)
 		PROCEDURE &Init*(port : Serials.Port; type : LONGINT);
-		VAR c: CHAR; res, n: LONGINT;
+		VAR c: CHAR; res: WORD; n: LONGINT;
 		BEGIN
 			(* ASSERT: Port is already open *)
 			ASSERT(port # NIL);
@@ -322,7 +322,7 @@ BEGIN
 END GetMouseType;
 
 PROCEDURE Detect(port : Serials.Port; VAR mouseType : LONGINT): BOOLEAN;
-VAR ch: CHAR; i, res : LONGINT; mouseIdent : ARRAY DetectMaxIdent OF CHAR;
+VAR ch: CHAR; i : LONGINT; res : WORD; mouseIdent : ARRAY DetectMaxIdent OF CHAR;
 BEGIN
 	ASSERT(port # NIL);
 	port.Open(BPS, 7,  Serials.ParNo, Serials.Stop1, res);

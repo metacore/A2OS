@@ -16,7 +16,7 @@ CONST
 TYPE
 	SetCacheMessage = POINTER TO RECORD (Machine.Message)
 		physAdr: ADDRESS; size, type: LONGINT;
-		res: ARRAY Machine.MaxCPU OF LONGINT
+		res: ARRAY Machine.MaxCPU OF WORD
 	END;
 
 (* Return the value of the MTTRcap register. *)

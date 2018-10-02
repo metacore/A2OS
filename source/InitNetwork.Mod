@@ -856,7 +856,8 @@ VAR
 	intv4: IPv4.Interface;
 	intv6: IPv6.Interface;
 	intName: IP.Name; (* if autoconf = true; there are two ip interfaces (v4 & v6) *)
-	i, res: LONGINT;
+	i: LONGINT;
+	res: WORD;
 	linkLocalAdr: IP.Adr;
 	linkLocalPrefix: IP.Adr;
 	routerConfigItem: IPv6.RouterConfig;

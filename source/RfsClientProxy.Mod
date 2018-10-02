@@ -147,7 +147,7 @@ TYPE
 
 		(** does nothing, just for benchmarking **)
 		PROCEDURE Error*(VAR errorcode: LONGINT);
-			VAR msgBytes, procID, testID, dataBytes, res, received: LONGINT;
+			VAR msgBytes, procID, testID, dataBytes, received: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := ERROR;
@@ -179,7 +179,7 @@ TYPE
 
 		(** retrieves fileLength, time and date of a file identified by fileID **)
 		PROCEDURE GetAttr*(fileID: LONGINT; VAR fileLen, time, date, errorcode: LONGINT);
-			VAR procID, testID, dataBytes, msgBytes, res, received: LONGINT;
+			VAR procID, testID, dataBytes, msgBytes,  received: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := GETATTR;
@@ -221,7 +221,7 @@ TYPE
 
 		(** Sets the attributes time and date of a file identified by filename **)
 		PROCEDURE SetAttr*(VAR filename: ARRAY OF CHAR; time, date: LONGINT; VAR errorcode: LONGINT);
-			VAR msgBytes, procID, testID, dataBytes, res, filenameLen, received: LONGINT;
+			VAR msgBytes, procID, testID, dataBytes, filenameLen, received: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := SETATTR;
@@ -256,7 +256,7 @@ TYPE
 
 		(** transforms a filename into a fileID **)
 		PROCEDURE Lookup*(VAR filename : ARRAY OF CHAR; VAR fileID, errorcode: LONGINT);
-			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, fileIDLen, res: LONGINT;
+			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, fileIDLen: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := LOOKUP;
@@ -299,7 +299,7 @@ TYPE
 
 		(** Reads len Bytes of data from a given offset off in a file identified by fileID and returns the data in buf at offset dstOff **)
 		PROCEDURE Read*(fileID, off, len: LONGINT; VAR buffer: ARRAY OF CHAR; dstOff: LONGINT; VAR received, errorcode: LONGINT);
-			VAR procID, testID, dataBytes, msgBytes, fileLen, res: LONGINT;
+			VAR procID, testID, dataBytes, msgBytes, fileLen: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := READ;
@@ -342,7 +342,7 @@ TYPE
 
 		(** Writes len Bytes of data beginning off bytes from the beginning of file into a file identified by fileID **)
 		PROCEDURE Write*(fileID, off, len: LONGINT; VAR buffer: ARRAY OF CHAR; VAR written, errorcode: LONGINT);
-			VAR procID, testID, dataBytes, msgBytes, res, received: LONGINT;
+			VAR procID, testID, dataBytes, msgBytes, received: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := WRITE;
@@ -383,7 +383,7 @@ TYPE
 
 		(** Creates a file with name filename and return a fileID for it **)
 		PROCEDURE Create*(VAR filename : ARRAY OF CHAR; VAR fileID, errorcode: LONGINT);
-			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, fileIDLen, res: LONGINT;
+			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, fileIDLen: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := CREATE;
@@ -425,7 +425,7 @@ TYPE
 
 		(** Deletes a File with name filename **)
 		PROCEDURE Remove*(VAR filename : ARRAY OF CHAR; VAR errorcode: LONGINT);
-			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, res: LONGINT;
+			VAR filenameLen, procID, testID, received, dataBytes, msgBytes: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := REMOVE;
@@ -459,7 +459,7 @@ TYPE
 
 		(** Renames a file with name filenemFrom into a new name filenameTo **)
 		PROCEDURE Rename*(VAR filenameFrom, filenameTo: ARRAY OF CHAR; VAR errorcode: LONGINT);
-			VAR filenameLenFrom, filenameLenTo, procID, testID, received, dataBytes, msgBytes, res: LONGINT;
+			VAR filenameLenFrom, filenameLenTo, procID, testID, received, dataBytes, msgBytes: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := RENAME;
@@ -498,7 +498,7 @@ TYPE
 			  the detail is set to 1 if time, data and size information is also to be retrieved. the offset value tells how many entries
 			  should be skip first **)
 		PROCEDURE ReadDir*(VAR filename, mask : ARRAY OF CHAR; detail, cookie: LONGINT; dir: Dir; VAR endOfDir, errorcode: LONGINT);
-			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, currentIndex, maskLen, res, time, date, size: LONGINT;
+			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, currentIndex, maskLen, time, date, size: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := READDIR;
@@ -565,7 +565,7 @@ TYPE
 
 		(** Creates a temporary File on the server and returns the name for it **)
 		PROCEDURE CreateTmp*(VAR filename : ARRAY OF CHAR; VAR hashval, errorcode: LONGINT);
-			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, hashvalLen, res: LONGINT;
+			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, hashvalLen: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := CREATETMP;
@@ -614,7 +614,7 @@ TYPE
 
 		(** Changes the Directory of the corresponding rfsServerProxy Process **)
 		PROCEDURE ChDir*(VAR dir : ARRAY OF CHAR; VAR errorcode: LONGINT);
-			VAR dirLen, procID, testID, received, dataBytes, msgBytes, res: LONGINT;
+			VAR dirLen, procID, testID, received, dataBytes, msgBytes: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := CHDIR;
@@ -649,7 +649,7 @@ TYPE
 
 		(** cleans the open file structure on the server an kills the process **)
 		PROCEDURE Kill*(VAR errorcode: LONGINT);
-			VAR msgBytes, procID, testID, dataBytes, res, received: LONGINT;
+			VAR msgBytes, procID, testID, dataBytes, received: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := KILL;
@@ -680,7 +680,7 @@ TYPE
 
 		(** Authenticates the session. User and Passwd are sending in plainttext **)
 		PROCEDURE Authent*(VAR user, passwd, path: ARRAY OF CHAR; VAR errorcode: LONGINT);
-			VAR userLen, passwdLen, pathLen, procID, received, dataBytes, msgBytes, res: LONGINT;
+			VAR userLen, passwdLen, pathLen, procID, received, dataBytes, msgBytes: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
 			procID := AUTHENT;

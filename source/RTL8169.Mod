@@ -114,7 +114,7 @@ TYPE
 
 		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq: LONGINT);
 		VAR
-			res, i: LONGINT;
+			res: WORD; i: LONGINT;
 			s: SET;
 		BEGIN
 			(* update list of installed controllers, insert at head *)

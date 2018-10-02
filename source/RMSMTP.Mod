@@ -41,7 +41,8 @@ END Send;
 PROCEDURE SendMessage*(message: IMAPClient.Message; CONST server, thisHost: ARRAY OF CHAR): LONGINT;
 VAR
 	smtp: SMTPClient.SMTPSession;
-	i, res: LONGINT;
+	i: LONGINT;
+	res: WORD;
 	returnValue: LONGINT;
 	w: Streams.Writer;
 	p: ANY;

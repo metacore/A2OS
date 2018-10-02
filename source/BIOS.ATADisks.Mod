@@ -215,7 +215,7 @@ TYPE
 		buffer: POINTER TO ARRAY OF CHAR;
 		bufferAdr: ADDRESS;
 
-		PROCEDURE ExecuteCommand*(command: Command; ms: LONGINT; VAR status: SET): LONGINT;
+		PROCEDURE ExecuteCommand*(command: Command; ms: LONGINT; VAR status: SET): WORD;
 		CONST
 			PIO = SYSTEM.VAL(LONGINT, Protocol_PIO);
 			DMA = SYSTEM.VAL(LONGINT, Protocol_DMA);
@@ -1021,7 +1021,7 @@ TYPE
 			END;
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
 		BEGIN
 			size := SELF.size;
 			res := Disks.Ok;
@@ -1354,7 +1354,7 @@ TYPE
 		VAR
 			name: Plugins.Name;
 			str: ARRAY 32 OF CHAR;
-			i, res: LONGINT;
+			i: LONGINT; res: WORD;
 		BEGIN
 			name := Name;
 			i := 0; WHILE name[i] # 0X DO INC(i) END;
@@ -1422,7 +1422,7 @@ TYPE
 			size := cap;
 		END SetCapacity;
 
-		PROCEDURE GetSize*(VAR asize, res: LONGINT);
+		PROCEDURE GetSize*(VAR asize: LONGINT; VAR res: WORD);
 		BEGIN
 			res := Res_OK;
 			IF RemovableBit IN id.type THEN
@@ -1461,7 +1461,7 @@ TYPE
 		PROCEDURE ExecuteCommand*(read: BOOLEAN; VAR packet, data: ARRAY OF CHAR; ofs, size: LONGINT; dma: BOOLEAN): LONGINT;
 		VAR
 			command: CommandPacket;
-			i, res: LONGINT;
+			i: LONGINT; res: WORD;
 			status: SET;
 		BEGIN {EXCLUSIVE}
 			ASSERT(LEN(packet) <= LEN(command.packet));
@@ -1509,7 +1509,7 @@ TYPE
 		PROCEDURE TransferEx*(op: LONGINT; lba: HUGEINT; num: LONGINT; bufAdr: ADDRESS; dma: BOOLEAN): LONGINT;
 		VAR
 			command: Command;
-			res, timeout: LONGINT;
+			res: WORD; timeout: LONGINT;
 			status: SET;
 		BEGIN {EXCLUSIVE}
 			IF (op # Disks.Read) & (op # Disks.Write) & (op # WriteAndVerify) THEN RETURN Disks.Unsupported; END;
@@ -1550,7 +1550,7 @@ TYPE
 
 		PROCEDURE Reset(): LONGINT;
 		VAR
-			i, res : LONGINT;
+			i: LONGINT; res: WORD;
 			status: SET;
 			command: Command;
 		BEGIN
@@ -1571,7 +1571,7 @@ TYPE
 				IF res # Res_OK THEN res := Reset^(); END;
 			END;
 			IF res # Res_OK THEN RETURN 2816; END;
-			GetSize(i, i);
+			GetSize(i, res); (* ignore res *)
 			(*undocumented: the first command after Reset Device shall be a PACKET command, other
 			   commands like Set Features otherwise abort.*)
 			RETURN Res_OK;
@@ -1642,7 +1642,7 @@ TYPE
 		PROCEDURE MediaEject*(immediate, load: BOOLEAN): LONGINT;
 		VAR
 			command: CommandPacket;
-			res, timeout: LONGINT;
+			res: WORD; timeout: LONGINT;
 			status: SET;
 		BEGIN {EXCLUSIVE}
 			command := NewCommandPacket(1BH); (* start/stop unit *)

@@ -85,10 +85,10 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : LONGINT;
+VAR table : Plugins.Table; i : LONGINT; res: WORD;
 BEGIN
 	IF UsbDebug.PerformanceMonitoring THEN
-		UsbHcdi.controllers.AddEventHandler(EventHandler, i);
+		UsbHcdi.controllers.AddEventHandler(EventHandler, res);
 		UsbHcdi.controllers.GetAll(table);
 		IF table # NIL THEN FOR i := 0 TO LEN(table)-1 DO AddPlugin(table[i] (UsbHcdi.Hcd)); END; END;
 	ELSE KernelLog.String("WMPerfMonUsbPlugin: Performance counters not enabled in UsbHcdi.Mod"); KernelLog.Ln;
@@ -99,7 +99,7 @@ PROCEDURE Install*;
 END Install;
 
 PROCEDURE Cleanup;
-VAR ignore : LONGINT;
+VAR ignore : WORD;
 BEGIN
 	IF UsbDebug.PerformanceMonitoring THEN
 		UsbHcdi.controllers.RemoveEventHandler(EventHandler, ignore);

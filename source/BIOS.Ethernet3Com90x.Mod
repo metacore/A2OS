@@ -234,7 +234,7 @@ TYPE
 		(* Initialize the controller. *)
 
 		PROCEDURE &Init*(dev: LinkDevice; base, irq, model: LONGINT; flags, media: SET);
-		VAR res, i: LONGINT;
+		VAR res: WORD; i: LONGINT;
 		BEGIN
 			SELF.interrupted := FALSE;
 			SELF.base := base; SELF.irq := irq;  SELF.dev := dev; SELF.model := model; SELF.media := media;

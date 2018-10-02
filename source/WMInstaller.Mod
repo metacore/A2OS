@@ -754,7 +754,7 @@ TYPE
 		END OpenDevice;
 
 		PROCEDURE CloseDevice(device : Disks.Device);
-		VAR ignore : LONGINT;
+		VAR ignore : WORD;
 		BEGIN
 			IF opened & (device # NIL) THEN
 				device.Close(ignore);

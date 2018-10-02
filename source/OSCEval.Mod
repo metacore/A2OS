@@ -27,7 +27,8 @@ TYPE
 			buffer: POINTER TO ARRAY OF CHAR;
 			receivefip: IP.Adr;
 			receivefport: LONGINT;
-			got, res: LONGINT;
+			got: LONGINT;
+			res: WORD;
 			fip: IP.Adr;
 		PROCEDURE &Init*;
 		VAR
@@ -57,7 +58,8 @@ TYPE
 	tcpagent = OBJECT(TCPServices.Agent);
 		VAR
 			newpacket: OSC.OSCPacket;
-			res, len: LONGINT;
+			res: WORD;
+			len: LONGINT;
 			buffer: POINTER TO ARRAY OF CHAR;
 			sizebuf: ARRAY 4 OF CHAR;
 			packetsize: LONGINT;

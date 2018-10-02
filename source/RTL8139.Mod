@@ -216,7 +216,7 @@ TYPE
 	END Reset;
 
 		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq, model: LONGINT);
-		VAR res, dp, ver, i, dummy: LONGINT; val, nval: SET;
+		VAR res: WORD; dp, ver, i, dummy: LONGINT; val, nval: SET;
 		BEGIN
 			SELF.next:=installedControllers; installedControllers:=SELF;
 			NEW(timer);

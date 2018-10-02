@@ -336,7 +336,7 @@ TYPE
 
 		END Connect;
 
-		PROCEDURE ConnectResponse(identifier: CHAR; response, status: LONGINT): LONGINT;
+		PROCEDURE ConnectResponse(identifier: CHAR; response, status: LONGINT): WORD;
 		VAR cmd: ARRAY 12 OF CHAR; res: WORD; sc: SignallingChannel;
 		BEGIN {EXCLUSIVE}
 			ASSERT(state = W4L2CAConnectRsp);
@@ -464,7 +464,7 @@ TYPE
 			END
 		END Configure;
 
-		PROCEDURE ConfigurationResponse(identifier: CHAR; outMTU, inFlow: LONGINT): LONGINT;
+		PROCEDURE ConfigurationResponse(identifier: CHAR; outMTU, inFlow: LONGINT): WORD;
 
 		VAR
 			cmd: ARRAY 48 OF CHAR;
@@ -832,7 +832,7 @@ TYPE
 
 		(* signal an remote L2CAP entity using link *)
 		(* LEN(command) must be >= 4 and the first 4 bytes of command MUST be left free *)
-		PROCEDURE Signal(link: HCI.Link; code, identifier: CHAR; command: ARRAY OF CHAR; len: LONGINT): LONGINT;
+		PROCEDURE Signal(link: HCI.Link; code, identifier: CHAR; command: ARRAY OF CHAR; len: LONGINT): WORD;
 
 		VAR
 				res : WORD;
@@ -1661,7 +1661,7 @@ TYPE
 		(*----- L2CAP interface -----*)
 
 		(** request a callback when the selected indication event occurs *)
-		PROCEDURE EventIndication*(event: Event; callback: EventIndicationCallback; VAR result: LONGINT);
+		PROCEDURE EventIndication*(event: Event; callback: EventIndicationCallback; VAR result: WORD);
 		BEGIN
 			IF (MinEventIndication <= event) & (event <= MaxEventIndication) THEN
 				indications[event-MinEventIndication] := callback;
@@ -1732,7 +1732,7 @@ TYPE
 		END Connect;
 
 		(** issues a response to a connection request event indication *)
-		PROCEDURE ConnectResponse*(bdAddr: Bluetooth.BDAddr; identifier : CHAR; lcid, response, status: LONGINT; VAR result: LONGINT);
+		PROCEDURE ConnectResponse*(bdAddr: Bluetooth.BDAddr; identifier : CHAR; lcid, response, status: LONGINT; VAR result: WORD);
 		VAR c: Channel;
 		BEGIN
 			c := channelManager.FindChannel(lcid);
@@ -1777,7 +1777,7 @@ TYPE
 		END Configure;
 
 		(** issues a response to a configuration request event indication *)
-		PROCEDURE ConfigurationResponse*(cid: LONGINT; identifier: CHAR; outMTU, inFlow: LONGINT; VAR result: LONGINT);
+		PROCEDURE ConfigurationResponse*(cid: LONGINT; identifier: CHAR; outMTU, inFlow: LONGINT; VAR result: WORD);
 		VAR c: Channel;
 		BEGIN
 			IF TraceL2CAP THEN

@@ -263,7 +263,7 @@ END TraceMode;
 PROCEDURE ReadLocalName*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	event: Bluetooth.EventPacket; pending: BOOLEAN; res, i: LONGINT;
+	event: Bluetooth.EventPacket; pending: BOOLEAN; res: WORD; i: LONGINT;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -314,7 +314,7 @@ END ChangeLocalName;
 PROCEDURE ReadClassOfDevice*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	event: Bluetooth.EventPacket; pending: BOOLEAN; res, i: LONGINT;
+	event: Bluetooth.EventPacket; pending: BOOLEAN; res: WORD; i: LONGINT;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -338,7 +338,7 @@ END ReadClassOfDevice;
 PROCEDURE WriteClassOfDevice*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	event: Bluetooth.EventPacket; pending: BOOLEAN; res, i: LONGINT; cod: Bluetooth.DeviceClass;
+	event: Bluetooth.EventPacket; pending: BOOLEAN; res: WORD;  i: LONGINT; cod: Bluetooth.DeviceClass;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(ident); context.arg.SkipWhitespace;
 	FOR i := 0 TO LEN(cod)-1 DO cod[i] := HexToChar(context.arg.Get(), context.arg.Get()) END;
@@ -404,7 +404,7 @@ END ReadScanEnable;
 PROCEDURE WriteScanEnable*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	res, scanMode: LONGINT; param: ARRAY 1 OF CHAR; event: Bluetooth.EventPacket; pending: BOOLEAN;
+	res: WORD;  scanMode: LONGINT; param: ARRAY 1 OF CHAR; event: Bluetooth.EventPacket; pending: BOOLEAN;
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetInteger(scanMode, TRUE) THEN
 		IF (0 <= scanMode) & (scanMode <= 3) THEN
@@ -445,7 +445,7 @@ END SetFilter;
 PROCEDURE ReadPageScanActivity*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	interval, window, res: LONGINT; pending: BOOLEAN; event: Bluetooth.EventPacket; intStr, winStr: ARRAY 16 OF CHAR;
+	interval, window: LONGINT; res: WORD; pending: BOOLEAN; event: Bluetooth.EventPacket; intStr, winStr: ARRAY 16 OF CHAR;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -473,7 +473,7 @@ END ReadPageScanActivity;
 PROCEDURE WritePageScanActivity*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	interval, window, res: LONGINT; pending: BOOLEAN; event: Bluetooth.EventPacket; param: ARRAY 4 OF CHAR;
+	interval, window: LONGINT; res: WORD; pending: BOOLEAN; event: Bluetooth.EventPacket; param: ARRAY 4 OF CHAR;
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetInteger(interval, TRUE) & context.arg.GetInteger(window, TRUE) THEN
 		d := Find(ident);
@@ -501,7 +501,7 @@ END WritePageScanActivity;
 PROCEDURE ReadInquiryScanActivity*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	interval, window, res: LONGINT; pending: BOOLEAN; event: Bluetooth.EventPacket; intStr, winStr: ARRAY 16 OF CHAR;
+	interval, window: LONGINT; res: WORD; pending: BOOLEAN; event: Bluetooth.EventPacket; intStr, winStr: ARRAY 16 OF CHAR;
 BEGIN
 	IF context.arg.GetString(ident) THEN
 		d := Find(ident);
@@ -529,7 +529,7 @@ END ReadInquiryScanActivity;
 PROCEDURE WriteInquiryScanActivity*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	interval, window, res: LONGINT; pending: BOOLEAN; event: Bluetooth.EventPacket; param: ARRAY 4 OF CHAR;
+	interval, window: LONGINT; res: WORD; pending: BOOLEAN; event: Bluetooth.EventPacket; param: ARRAY 4 OF CHAR;
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetInteger(interval, TRUE) & context.arg.GetInteger(window, TRUE) THEN
 		d := Find(ident);
@@ -558,7 +558,7 @@ PROCEDURE Inquiry*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device; lap: ARRAY 3 OF CHAR;
 	params: ARRAY 5 OF CHAR; event: Bluetooth.EventPacket; pending: BOOLEAN;
-	length, numResponses, i, res: LONGINT;
+	length, numResponses, i: LONGINT; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(ident); context.arg.SkipWhitespace;
 	FOR i := 0 TO LEN(lap)-1 DO lap[i] := HexToChar(context.arg.Get(), context.arg.Get()) END;
@@ -720,7 +720,7 @@ END ListHCIConnections;
 PROCEDURE ReadClockOffset*(context : Commands.Context);
 VAR
 	ident: Ident; d: Device;
-	handle, res: LONGINT; event: Bluetooth.EventPacket; pending: BOOLEAN; param: ARRAY 2 OF CHAR;
+	handle: LONGINT; res: WORD; event: Bluetooth.EventPacket; pending: BOOLEAN; param: ARRAY 2 OF CHAR;
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetInteger(handle, TRUE) THEN
 		d := Find(ident);

@@ -64,7 +64,7 @@ PROCEDURE TestNegativeHexConversion*(context : Commands.Context);
 VAR i : LONGINT;
 
 	PROCEDURE Test(number : HUGEINT);
-	VAR string, signedString : ARRAY 16 OF CHAR; val, idx, res : LONGINT;
+	VAR string, signedString : ARRAY 16 OF CHAR; val, idx: LONGINT; res: WORD;
 	BEGIN
 		Strings.IntToHexStr(number, 8, string);
 		signedString[0] := "-";

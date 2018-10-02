@@ -82,7 +82,7 @@ VAR
 	devicename, msg : ARRAY 128 OF CHAR;
 	commandList : POINTER TO ARRAY OF CHAR;
 	plugin : Plugins.Plugin;
-	i, size, len, res : LONGINT;
+	i, size, len : LONGINT; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(devicename);
 

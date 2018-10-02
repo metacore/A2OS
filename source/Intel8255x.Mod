@@ -209,7 +209,7 @@ TYPE
 			rcvAdr, rcvSize: LONGINT;
 
 		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq: LONGINT);
-		VAR res, i: LONGINT;
+		VAR res: WORD; i: LONGINT;
 			configCmd, iASetupCmd: DataBlock;
 		BEGIN
 			SELF.next := installedControllers; installedControllers := SELF;

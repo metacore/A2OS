@@ -25,7 +25,7 @@ TYPE
 		PROCEDURE & Open*( lport: LONGINT;  VAR res: WORD );
 		VAR
 			sadr: WSock32.sockaddrIn;
-			err: LONGINT;
+			err: LONGINT; winRes: LONGINT;
 			bufSize, len: LONGINT;
 		BEGIN
 			(* IF ~AosWinsock.ready THEN RETURN END;  *)
@@ -33,8 +33,8 @@ TYPE
 			IF sock # WSock32.InvalidSocket THEN
 				sadr.sinFamily := WSock32.PFINet;  sadr.sinAddr := 0;
 				IF lport # NilPort THEN sadr.sinPort := WSock32.htons( SHORT( lport ) ) ELSE sadr.sinPort := 0 END;
-				res := WSock32.bind( sock, sadr, SIZEOF( WSock32.sockaddrIn ) );
-				IF res # Ok THEN
+				winRes := WSock32.bind( sock, sadr, SIZEOF( WSock32.sockaddrIn ) );
+				IF winRes # 0 THEN
 					err := WSock32.WSAGetLastError(); (*  AosWinsock.DispError( err ); *)  SockFinalizer( SELF );  res := unknown;
 				ELSE (*  Kernel.RegisterObject( SELF, SockFinalizer, FALSE ); *)  res := Ok
 				END
@@ -63,15 +63,15 @@ TYPE
 	Sends len bytes of data (beginning at pos in buf) to the host specified by remIP and remPort. *)
 
 		PROCEDURE Send*( fip: IP.Adr;  fport: LONGINT;  CONST data: ARRAY OF CHAR;  ofs, len: LONGINT; VAR res: WORD );
-		VAR sadr: WSock32.sockaddrIn;  err: LONGINT;
+		VAR sadr: WSock32.sockaddrIn;  err: LONGINT; winRes: LONGINT;
 		BEGIN
 			ASSERT ( LEN( data ) >= (ofs + len) );
 			IF (fip.usedProtocol = IP.IPv4) THEN
 				SYSTEM.MOVE( ADDRESSOF( fip ), ADDRESSOF( sadr.sinAddr ), IPAdrLen );
 				sadr.sinFamily := WSock32.PFINet;  sadr.sinPort := WSock32.htons( SHORT( fport ) );
-				res := WSock32.sendto( sock, data[ofs], len, 0, sadr, SIZEOF( WSock32.sockaddrIn ) );
+				winRes := WSock32.sendto( sock, data[ofs], len, 0, sadr, SIZEOF( WSock32.sockaddrIn ) );
 				(* account that sendto returns number of bytes sent to the socket (Alexey) *)
-				IF res = len THEN res := Ok; ELSE err := WSock32.WSAGetLastError(); res := unknown;  END;
+				IF winRes = len THEN res := Ok; ELSE err := WSock32.WSAGetLastError(); res := unknown;  END;
 			ELSE res := unknown;
 			END;
 			IF trace THEN
@@ -94,8 +94,8 @@ TYPE
 	Stores an entire datagram in buf beginning at pos. On success (S.res = done), remIP and remPort indicate the sender, len indicate the length of valid data. *)
 
 		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, ms: LONGINT;  VAR fip: IP.Adr;
-										   VAR fport, len, res: LONGINT );
-		VAR sadr: WSock32.sockaddrIn;  err: LONGINT;  l: LONGINT;
+										   VAR fport, len: LONGINT; VAR res: WORD );
+		VAR sadr: WSock32.sockaddrIn;  err: LONGINT;  l: LONGINT; winRes: LONGINT;
 		ret: LONGINT;  fdset: WSock32.FDSet; avail: BOOLEAN; time: WSock32.TimeVal;
 		BEGIN
 			ASSERT ( ofs+size <= LEN( data ) );
@@ -104,11 +104,11 @@ TYPE
 			IF ms=-1 THEN (* do, as if data was available to invoke blocking call of recvfrom *)
 				avail := TRUE;
 			ELSE (* handle timeout *)
-				ret := WSock32.ioctlsocket( sock, WSock32.FIONRead, res );
+				ret := WSock32.ioctlsocket( sock, WSock32.FIONRead, winRes );
 				IF ret # 0 THEN (* error *)
 					err := WSock32.WSAGetLastError(); res := unknown; avail := FALSE;
 				ELSE  (* no error *)
-					avail := res > 0;
+					avail := winRes > 0;
 					IF ~avail THEN  (* nothing available yet *)
 						fdset.fdcount := 1;  fdset.socket[0] := sock;
 						IF ms = 0 THEN

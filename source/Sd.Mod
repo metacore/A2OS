@@ -495,9 +495,9 @@ CONST
 
 TYPE
 	(** Command execution procedure *)
-	CommandProcedure * = PROCEDURE (VAR command: Command; VAR result: LONGINT): BOOLEAN;
+	CommandProcedure * = PROCEDURE (VAR command: Command; VAR result: WORD): BOOLEAN;
 	(** Data command execution procedure *)
-	TransferProcedure * = PROCEDURE (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: LONGINT): BOOLEAN;
+	TransferProcedure * = PROCEDURE (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: WORD): BOOLEAN;
 	(** Procedure called to wait for interrupt. mask specifies which interrupts are expected, timeout is in ms. Returns FALSE if timeout occurred *)
 	Blocker * = PROCEDURE {DELEGATE} (hc: HostController; mask: SET; timeout: LONGINT): BOOLEAN;
 
@@ -689,7 +689,7 @@ VAR
 	END InitHostController;
 
 	(** Set external clock for a host controller. Host state must be HcConfiguring. bus is the SD bus clock frequency, timeout is the timeout clock frequency. *)
-	PROCEDURE SetExternalClock * (hc: HostController; bus, timeout: HUGEINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE SetExternalClock * (hc: HostController; bus, timeout: HUGEINT; VAR result: WORD): BOOLEAN;
 	BEGIN
 		IF hc.state # HcConfiguring THEN
 			result := ErrorInvalidParameters;
@@ -704,7 +704,7 @@ VAR
 	(** Set an event handler for a host controller *)
 	PROCEDURE SetEventHandler * (hc: HostController; handler: EventHandler; param: ANY);
 	VAR
-		result: LONGINT;
+		result: WORD;
 	BEGIN
 		hc.handle := handler;
 		hc.handlerParam := param;
@@ -755,7 +755,7 @@ VAR
 			o Execute the command
 			o Wait for response
 	*)
-	PROCEDURE ExecuteCommand (VAR command: Command; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE ExecuteCommand (VAR command: Command; VAR result: WORD): BOOLEAN;
 	VAR
 		status, r1: SET;
 	BEGIN
@@ -802,7 +802,7 @@ VAR
 		Execute command with data transfer using CPU.
 		Data is read from/written to [data[ofs], data[ofs + len]).
 	*)
-	PROCEDURE ExecuteDataCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE ExecuteDataCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: WORD): BOOLEAN;
 	TYPE
 		DataBytes = ARRAY 4 OF CHAR;
 	VAR
@@ -956,7 +956,7 @@ VAR
 		data, ofs, len: Buffer
 		result: error code
 	*)
-	PROCEDURE ExecuteAdmaCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE ExecuteAdmaCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: WORD): BOOLEAN;
 	VAR
 		tt: SdEnvironment.Time;
 		hc: HostController;
@@ -1135,7 +1135,7 @@ VAR
 	END GetResponse;
 
 	(** Issue an SD Card Transaction. [Simplified specs. 3.7.1.1 pp. 106-108] *)
-	PROCEDURE StartCommand (hc: HostController; cmd, argument, responseType: LONGINT; read, dma, busy, abort: BOOLEAN; VAR status: SET; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE StartCommand (hc: HostController; cmd, argument, responseType: LONGINT; read, dma, busy, abort: BOOLEAN; VAR status: SET; VAR result: WORD): BOOLEAN;
 	VAR
 		t: HUGEINT;
 		reg: LONGINT;
@@ -1244,7 +1244,7 @@ VAR
 		Perform error recovery as specified by the triggered error interrupts.
 		Returns an error code (result) and the interrupt status register before recovery (status)
 	*)
-	PROCEDURE ErrorRecovery (hc: HostController; VAR result: LONGINT; VAR status: SET): BOOLEAN;
+	PROCEDURE ErrorRecovery (hc: HostController; VAR result: WORD; VAR status: SET): BOOLEAN;
 	BEGIN
 		(* 1 is done *)
 		status := hc.regs.InterruptStatus;
@@ -1307,7 +1307,7 @@ VAR
 	END ErrorRecovery;
 
 	(** Wait for completion of an SD command [Simplified specs. 3.7.1.2 pp. 109-110 *)
-	PROCEDURE WaitForCompletion (hc: HostController; tryRecover: BOOLEAN; 	VAR status: SET; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE WaitForCompletion (hc: HostController; tryRecover: BOOLEAN; 	VAR status: SET; VAR result: WORD): BOOLEAN;
 	BEGIN
 		result := ErrorNone;
 
@@ -1347,7 +1347,7 @@ VAR
 	END WaitForCompletion;
 
 	(** Wait for transfer complete interrupt *)
-	PROCEDURE WaitForTransfer (hc: HostController; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE WaitForTransfer (hc: HostController; VAR result: WORD): BOOLEAN;
 	VAR
 		status: SET;
 	BEGIN
@@ -1380,7 +1380,7 @@ VAR
 	END SpinBlock;
 
 	(** Sends CMD7 if necessary to select the given card *)
-	PROCEDURE SelectCard * (hc: HostController; card: LONGINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE SelectCard * (hc: HostController; card: LONGINT; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		status: SET;
@@ -1406,10 +1406,10 @@ VAR
 	END SelectCard;
 
 	(** Deselects all cards *)
-	PROCEDURE DeselectCards * (hc: HostController; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE DeselectCards * (hc: HostController; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
-		ignoreRes: LONGINT;
+		ignoreRes: WORD;
 		ignoreBool: BOOLEAN;
 	BEGIN
 		result := ErrorNone;
@@ -1553,7 +1553,7 @@ VAR
 	END SetTimeout;
 
 	(** Set the data bus width for a given RCA. *)
-	PROCEDURE SetBusWidth (hc: HostController; card: Card; width: LONGINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE SetBusWidth (hc: HostController; card: Card; width: LONGINT; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		val: LONGINT;
@@ -1601,7 +1601,7 @@ VAR
 	END SetBusWidth;
 
 	(** Executes a switch function command *)
-	PROCEDURE SwitchFunc (card: Card; switch: BOOLEAN; funcs: ARRAY 6 OF LONGINT; VAR sts: SwitchFuncStatus; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SwitchFunc (card: Card; switch: BOOLEAN; funcs: ARRAY 6 OF LONGINT; VAR sts: SwitchFuncStatus; VAR res: WORD): BOOLEAN;
 	VAR
 		status: ARRAY 64 OF CHAR;
 		command: Command;
@@ -1668,7 +1668,7 @@ VAR
 	PROCEDURE HandleInterrupt * (hc: HostController);
 	VAR
 		card: Card;
-		result: LONGINT;
+		result: WORD;
 		interruptStatus: SET;
 	BEGIN
 		interruptStatus := hc.regs.InterruptStatus;
@@ -1790,7 +1790,7 @@ TYPE
 		Initializes a new card on the host controller.
 		Executes all commands until either an error occurs or the card is ready for data transfers.
 	*)
-	PROCEDURE InitCard * (hc: HostController; card: Card; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE InitCard * (hc: HostController; card: Card; VAR result: WORD): BOOLEAN;
 	VAR
 		response: LONGINT;
 		status: SET;
@@ -1991,7 +1991,7 @@ TYPE
 	END InitCard;
 
 	(** Write 'data[ofs, ofs + len)' to 'card', starting at block 'firstBlock'. *)
-	PROCEDURE Write * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE Write * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		start, stop: HUGEINT;
@@ -2043,7 +2043,7 @@ TYPE
 	END Write;
 
 	(** Read 'len' bytes starting from 'firstBlock' of 'card' to 'data[ofs, ofs + len)' *)
-	PROCEDURE Read * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE Read * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		start, stop: HUGEINT;
@@ -2085,7 +2085,7 @@ TYPE
 	END Read;
 
 	(** Erase blocks [block, block + num) on specified card. *)
-	PROCEDURE Erase * (card: Card; block, num: LONGINT; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE Erase * (card: Card; block, num: LONGINT; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		r1: SET;
@@ -2120,7 +2120,7 @@ TYPE
 		RETURN TRUE
 	END Erase;
 
-	PROCEDURE ReadCsd (card: Card; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE ReadCsd (card: Card; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		csd: ARRAY 4 OF LONGINT;
@@ -2147,7 +2147,7 @@ TYPE
 	END ReadCsd;
 
 	(** Read the SD card Configuration Register of a card *)
-	PROCEDURE ReadScr (card: Card; VAR result: LONGINT): BOOLEAN;
+	PROCEDURE ReadScr (card: Card; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		ofs: LONGINT;
@@ -2187,7 +2187,7 @@ TYPE
 	VAR
 		status: ARRAY 64 OF CHAR;
 		command: Command;
-		ignore: LONGINT;
+		ignore: WORD;
 		bitfield: POINTER {UNSAFE,UNTRACED} TO Bitfield;
 		c: CHAR;
 		i: LONGINT;
@@ -2216,7 +2216,7 @@ TYPE
 	VAR
 		cid: Cid;
 		command: Command;
-		res: LONGINT;
+		res: WORD;
 	BEGIN
 		IF ~DeselectCards(card.hc, res) THEN HALT(512) END;
 		command.hc := card.hc;
@@ -2265,7 +2265,7 @@ TYPE
 	END ComputeTimeouts;
 
 	(** Select card speed mode. It is necessary to set it to high in order to use higher bus clock frequencies. *)
-	PROCEDURE SelectSpeedMode(card: Card; high: BOOLEAN; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SelectSpeedMode(card: Card; high: BOOLEAN; VAR res: WORD): BOOLEAN;
 	VAR
 		funcs: ARRAY 6 OF LONGINT;
 		status: SwitchFuncStatus;

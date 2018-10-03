@@ -177,7 +177,7 @@ TYPE
 		txwm*: LONGINT;
 	END;
 
-	BusyLoopCallback* = PROCEDURE{DELEGATE}(VAR res: LONGINT): BOOLEAN;
+	BusyLoopCallback* = PROCEDURE{DELEGATE}(VAR res: WORD): BOOLEAN;
 
 VAR
 	uarts: ARRAY NumUarts OF UartRegisters;
@@ -191,7 +191,7 @@ VAR
 		inputClock: controller input clock in Hz
 		res: returned error code, 0 in case of success
 	*)
-	PROCEDURE Install* (uart: LONGINT; base: ADDRESS; inputClock: LONGINT; VAR res: LONGINT);
+	PROCEDURE Install* (uart: LONGINT; base: ADDRESS; inputClock: LONGINT; VAR res: WORD);
 	BEGIN
 		IF (uart < 0) OR (uart >= LEN(uarts)) THEN
 			res := NoSuchPort; RETURN;
@@ -259,7 +259,7 @@ VAR
 	(*
 		Setup baudrate in bps
 	*)
-	PROCEDURE SetBps*(uart: UartRegisters; baudrate: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetBps*(uart: UartRegisters; baudrate: LONGINT; VAR res: WORD): BOOLEAN;
 	VAR
 		i, clock: LONGINT;
 		valBAUDDIV, valBRGR, calcBaudrate, baudError: LONGINT;
@@ -333,7 +333,7 @@ VAR
 	(**
 		Set number of data bits
 	*)
-	PROCEDURE SetDataBits*(uart: UartRegisters; dataBits: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetDataBits*(uart: UartRegisters; dataBits: LONGINT; VAR res: WORD): BOOLEAN;
 	VAR reg: SET;
 	BEGIN
 		CASE dataBits OF
@@ -353,7 +353,7 @@ VAR
 	(**
 		Setup parity check type
 	*)
-	PROCEDURE SetParity*(uart: UartRegisters; parityType: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetParity*(uart: UartRegisters; parityType: LONGINT; VAR res: WORD): BOOLEAN;
 	VAR reg: SET;
 	BEGIN
 		CASE parityType OF
@@ -375,7 +375,7 @@ VAR
 	(**
 		Setup number of stop bits
 	*)
-	PROCEDURE SetStopBits*(uart: UartRegisters; stopBits: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetStopBits*(uart: UartRegisters; stopBits: LONGINT; VAR res: WORD): BOOLEAN;
 	VAR reg: SET;
 	BEGIN
 		CASE stopBits OF
@@ -399,7 +399,7 @@ VAR
 		propagate: TRUE for flushing the TX FIFO buffer
 		res: error code, 0 in case of success
 	*)
-	PROCEDURE SendChar*(uart: UartRegisters; ch: CHAR; propagate: BOOLEAN; onBusy: BusyLoopCallback; VAR res: LONGINT);
+	PROCEDURE SendChar*(uart: UartRegisters; ch: CHAR; propagate: BOOLEAN; onBusy: BusyLoopCallback; VAR res: WORD);
 	BEGIN
 		(* Wait until TX FIFO is not full *)
 		WHILE (XUARTPS_CR_TX_EN IN uart.cr) & (XUARTPS_SR_TXFULL IN uart.sr) DO
@@ -425,7 +425,7 @@ VAR
 
 		Remarks: blocks until a character is available
 	*)
-	PROCEDURE ReceiveChar*(uart: UartRegisters; onBusy: BusyLoopCallback; VAR res: LONGINT): CHAR;
+	PROCEDURE ReceiveChar*(uart: UartRegisters; onBusy: BusyLoopCallback; VAR res: WORD): CHAR;
 	BEGIN
 		(* wait until data is available *)
 		WHILE (XUARTPS_CR_RX_EN IN uart.cr) & (XUARTPS_SR_RXEMPTY IN uart.sr) DO

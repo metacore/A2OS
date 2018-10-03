@@ -20,7 +20,7 @@ TYPE
 			ASSERT(uart # NIL);
 		END Init;
 
-		PROCEDURE Open (bps, data, parity, stop : LONGINT; VAR res: LONGINT);
+		PROCEDURE Open (bps, data, parity, stop : LONGINT; VAR res: WORD);
 		BEGIN{EXCLUSIVE}
 			PsUart.Open(uart, bps, data, parity, stop, res);
 		END Open;
@@ -30,7 +30,7 @@ TYPE
 			PsUart.Close(uart);
 		END Close;
 
-		PROCEDURE BusyLoopCallback(VAR res: LONGINT): BOOLEAN;
+		PROCEDURE BusyLoopCallback(VAR res: WORD): BOOLEAN;
 		BEGIN
 			IF uart.open THEN
 				Objects.Yield;
@@ -41,7 +41,7 @@ TYPE
 			END;
 		END BusyLoopCallback;
 
-		PROCEDURE BusyLoopCallback0(VAR res: LONGINT): BOOLEAN;
+		PROCEDURE BusyLoopCallback0(VAR res: WORD): BOOLEAN;
 		BEGIN
 			IF uart.open THEN
 				RETURN TRUE;
@@ -52,7 +52,7 @@ TYPE
 		END BusyLoopCallback0;
 
 		(*! This method can be used for trace output *)
-		PROCEDURE SendChar(char: CHAR; VAR res: LONGINT);
+		PROCEDURE SendChar(char: CHAR; VAR res: WORD);
 		BEGIN
 			Machine.AcquireObject(sendLock);
 			(*! use BusyLoopCallback0 method to make sure no low-level lock is acquired here - required when used as trace output *)
@@ -62,7 +62,7 @@ TYPE
 		END SendChar;
 
 		(*! This method must not be used for trace output! *)
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			Machine.AcquireObject(sendLock);
 			PsUart.Send(uart, buf, ofs, len, propagate, BusyLoopCallback, res);
@@ -70,7 +70,7 @@ TYPE
 			Machine.ReleaseObject(sendLock);
 		END Send;
 
-		PROCEDURE ReceiveChar(VAR char: CHAR; VAR res: LONGINT);
+		PROCEDURE ReceiveChar(VAR char: CHAR; VAR res: WORD);
 		BEGIN
 			Machine.AcquireObject(recvLock);
 			char := PsUart.ReceiveChar(uart, BusyLoopCallback, res);
@@ -78,7 +78,7 @@ TYPE
 			Machine.ReleaseObject(recvLock);
 		END ReceiveChar;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			Machine.AcquireObject(recvLock);
 			PsUart.Receive(uart, buf, ofs, size, min, len, BusyLoopCallback, res);
@@ -107,7 +107,7 @@ VAR
 
 	PROCEDURE Init;
 	VAR
-		i, clk, res: LONGINT;
+		i, clk: LONGINT; res: WORD;
 		name, desc: ARRAY 32 OF CHAR;
 		tracePort: LONGINT;
 	BEGIN

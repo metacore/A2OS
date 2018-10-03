@@ -164,7 +164,7 @@ VAR
 		inputClock: controller input clock in Hz
 		res: returned error code, 0 in case of success
 	*)
-	PROCEDURE Install* (uart: LONGINT; base: ADDRESS; inputClock: LONGINT; VAR res: LONGINT);
+	PROCEDURE Install* (uart: LONGINT; base: ADDRESS; inputClock: LONGINT; VAR res: WORD);
 	VAR ctl: UartController;
 	BEGIN
 		PsUartMin.Install(uart, base, inputClock, res);
@@ -213,7 +213,7 @@ VAR
 		stop: number of stop bits
 		res: returned error code, 0 in case of success
 	*)
-	PROCEDURE Open*(uart: UartController; bps, data, parity, stop: LONGINT; VAR res: LONGINT);
+	PROCEDURE Open*(uart: UartController; bps, data, parity, stop: LONGINT; VAR res: WORD);
 	VAR n: LONGINT;
 	BEGIN
 		IF uart.open THEN res := PsUartMin.PortInUse; RETURN; END;
@@ -312,7 +312,7 @@ VAR
 		propagate: TRUE for flushing the TX FIFO buffer
 		res: error code, 0 in case of success
 	*)
-	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT);
+	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
 	BEGIN
 		(*! for the moment just write directly to the FIFO *)
 		res := 0;
@@ -332,7 +332,7 @@ VAR
 	(**
 		Send data to the UART
 	*)
-	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT);
+	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
 	VAR
 		bufWrPos, n: LONGINT;
 	BEGIN
@@ -419,7 +419,7 @@ VAR
 
 		Remarks: blocks until a character is available
 	*)
-	PROCEDURE ReceiveChar*(uart: UartController; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT): CHAR;
+	PROCEDURE ReceiveChar*(uart: UartController; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD): CHAR;
 	VAR
 		buf: ARRAY 1 OF CHAR;
 		len: LONGINT;
@@ -431,7 +431,7 @@ VAR
 	(**
 		Receive data from the UART
 	*)
-	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len: LONGINT; onBusy: PsUartMin.BusyLoopCallback; VAR res: LONGINT);
+	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len: LONGINT; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
 	VAR
 		bufRdPos, n: LONGINT;
 	BEGIN

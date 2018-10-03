@@ -166,7 +166,7 @@ TYPE
 		number : LONGINT; (* Suffix appended to name to get unique device name *)
 		next : UsbStorageDevice;
 
-		PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: LONGINT);
+		PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: WORD);
 		VAR direction : SET; cmd : ARRAY 12 OF CHAR; i, tlen, trans, offset, num0 : LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF (op = Disks.Read) OR (op = Disks.Write) THEN
@@ -215,7 +215,7 @@ TYPE
 		END Transfer;
 
 		(** Get number of blocks and size of blocks using the UFI Read Capacity command *)
-		PROCEDURE GetSize* (VAR size, res: LONGINT);
+		PROCEDURE GetSize* (VAR size: LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			IF Debug.Trace & Debug.traceInfo THEN KernelLog.String("UsbStorage: GetSize: "); KernelLog.Ln; END;
 			(* Some devices I've seen didn't like to be asked for their capacity when no medium was inserted... *)
@@ -235,7 +235,7 @@ TYPE
 			res := ResOk; (* Allow short transfer *)
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message; VAR diskres: LONGINT);
+		PROCEDURE Handle*(VAR msg: Disks.Message; VAR diskres: WORD);
 		VAR cmd : ARRAY 12 OF CHAR; i : LONGINT; fdp : FlexibleDiskPage;
 		BEGIN {EXCLUSIVE}
 			FOR i := 0 TO 11 DO cmd[i] := CHR(0); END;
@@ -870,7 +870,7 @@ TYPE
 		storageDeviceList : UsbStorageDevice;
 		suffixUsed : ARRAY 100 OF BOOLEAN;
 		regName : ARRAY 32 OF CHAR;
-		res : LONGINT;
+		res : WORD;
 
 		PROCEDURE Add*(dev : UsbStorageDevice);
 		VAR i : LONGINT;
@@ -1136,7 +1136,7 @@ BEGIN
 	END;
 END ShowSenseData;
 
-PROCEDURE ShowRes(res : LONGINT);
+PROCEDURE ShowRes(res : WORD);
 BEGIN
 	IF Debug.Level >= Debug.Errors THEN
 	CASE res OF

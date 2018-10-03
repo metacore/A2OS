@@ -200,7 +200,7 @@ VAR
 
 	PROCEDURE Init;
 	VAR
-		res: LONGINT;
+		res: WORD;
 		d: LONGINT;
 	BEGIN
 		SetupClocks;

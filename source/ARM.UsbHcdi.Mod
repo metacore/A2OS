@@ -1410,7 +1410,7 @@ END Copy;
 
 (** Assign a name to the host controller and add it to the controllers registry *)
 PROCEDURE RegisterHostController*(hcd : Hcd; CONST description : Plugins.Description);
-VAR name : Plugins.Name; res : LONGINT;
+VAR name : Plugins.Name; res : WORD;
 BEGIN {EXCLUSIVE}
 	name := "USBHC"; name[5] := CHR(controllerCount + 48); name[6] := 0X;
 	hcd.SetName(name); hcd.desc := description;

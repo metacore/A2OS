@@ -803,7 +803,7 @@ TYPE
 			temp : RegisteredDriver;
 			drv : Usbdi.Driver;
 			interface : InterfaceDescriptor;
-			i, res : LONGINT;
+			i : LONGINT; res : WORD;
 			name : Usbdi.Name;
 			suffix : LONGINT; (* 0-99; suffix is used to generate unique names for AosPlugin.Name *)
 		BEGIN
@@ -1726,9 +1726,9 @@ BEGIN {EXCLUSIVE}
 END RemoveRootHub;
 
 PROCEDURE InstallRootHubs;
-VAR table : Plugins.Table; i : LONGINT;
+VAR table : Plugins.Table; i : LONGINT; res: WORD;
 BEGIN
-	UsbHcdi.controllers.AddEventHandler(RootHubEvent, i); (* ignore res *)
+	UsbHcdi.controllers.AddEventHandler(RootHubEvent, res); (* ignore res *)
 	UsbHcdi.controllers.GetAll(table);
 	IF table # NIL THEN
 		FOR i := 0 TO LEN(table)-1 DO AddRootHub(table[i](UsbHcdi.Hcd)); END;

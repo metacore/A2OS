@@ -51,7 +51,7 @@ TYPE
 			END;
 		END InitSdDevice;
 
-		PROCEDURE Transfer0 * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer0 * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR ok: BOOLEAN;
 		BEGIN
 			CASE op OF
@@ -62,7 +62,7 @@ TYPE
 			END
 		END Transfer0;
 
-		PROCEDURE Transfer * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; offs: LONGINT; VAR res: LONGINT);
+		PROCEDURE Transfer * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; offs: LONGINT; VAR res: WORD);
 		VAR
 			t: SdEnvironment.Time;
 		BEGIN{EXCLUSIVE}
@@ -82,14 +82,14 @@ TYPE
 (*			TRACE(block,num,t);*)
 		END Transfer;
 
-		PROCEDURE GetSize * (VAR size, res: LONGINT);
+		PROCEDURE GetSize * (VAR size: LONGINT; VAR res: WORD);
 		BEGIN
 			size := LONGINT(card.csd.capacity);
 			IF size < 0 THEN size := MAX(LONGINT) END;
 			res := Disks.Ok
 		END GetSize;
 
-		PROCEDURE Handle * (VAR msg: Disks.Message;  VAR res: LONGINT);
+		PROCEDURE Handle * (VAR msg: Disks.Message;  VAR res: WORD);
 		BEGIN
 			res := 0;
 			IF msg IS Disks.LockMsg THEN
@@ -171,7 +171,7 @@ TYPE
 	VAR
 		disk, prev: Device;
 		name, id: ARRAY 32 OF CHAR;
-		result: LONGINT;
+		result: WORD;
 	BEGIN
 		CASE event OF
 			 Sd.OnInitialization:

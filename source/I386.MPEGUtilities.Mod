@@ -681,7 +681,7 @@ TYPE
 		PROCEDURE ReadMotionCode*(): LONGINT;
 		VAR
 			bits: LONGINT;
-			res: WORD;
+			res: LONGINT;
 
 		BEGIN
 			IF eof THEN RETURN 0 END;

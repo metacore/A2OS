@@ -367,7 +367,7 @@ TYPE
 			 RETURN videoDecoder.GetCurrentFrame()
 		END GetPos;
 
-		PROCEDURE SeekAndGetFrame(pos: LONGINT; VAR f : WMGraphics.Image; VAR res : WORD);
+		PROCEDURE SeekAndGetFrame(pos: LONGINT; VAR f : WMGraphics.Image; VAR res : LONGINT);
 		BEGIN  {EXCLUSIVE}
 			ASSERT(frame # NIL);
 			WHILE readyBufferPool.NofBuffers() > 0 DO (* flush Buffer *)
@@ -382,7 +382,7 @@ TYPE
 			IF videoDecoder.HasMoreData() THEN positionChanged := TRUE; END;
 		END SeekAndGetFrame;
 
-		PROCEDURE SeekFrame(pos : LONGINT; isKeyFrame : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekFrame(pos : LONGINT; isKeyFrame : BOOLEAN; VAR res : LONGINT);
 		BEGIN {EXCLUSIVE}
 			WHILE readyBufferPool.NofBuffers() > 0 DO (* flush Buffer *)
 				vBufferPool.Add(readyBufferPool.Remove())

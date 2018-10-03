@@ -65,7 +65,7 @@ END Args;
 			BEGIN {EXCLUSIVE}
 				Counters.Inc (Activities.awaiting);
 				AWAIT (~read.ready);
-				read.result := Unix.read( 0, read.buffer, read.size );
+				read.result := Unix.read( Unix.stdin, read.buffer, read.size );
 				read.ready := TRUE;
 				Counters.Dec (Activities.awaiting);
 			END;
@@ -88,7 +88,7 @@ END Args;
 #ELSE
 
 	PROCEDURE Read (buffer: ADDRESS; size: SIZE): SIZE;
-	BEGIN RETURN Unix.read( 0, buffer, size );
+	BEGIN RETURN Unix.read( Unix.stdin, buffer, size );
 	END Read;
 
 #END

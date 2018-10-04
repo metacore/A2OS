@@ -2449,7 +2449,7 @@ TYPE
 					*)
 				END;
 			END;
-			IF conditionalCount # 0 THEN Error (symbol.position, Basic.InvalidCode, "missing conditional end"); error := TRUE END;
+			IF conditionalCount # 0 THEN Error (symbol.position, Basic.InvalidCode, "missing conditional end") END;
 			IF Trace THEN E( "Module" ) END;
 			RETURN module
 		END Module;

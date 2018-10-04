@@ -1426,7 +1426,7 @@ KernelLog.Ln();
             expressionList.AddExpression(right);
             designator := SyntaxTree.NewIdentifierDesignator(position, lynxAsop);
             designator := SyntaxTree.NewParameterDesignator(position, designator, expressionList);
-            RETURN SyntaxTree.NewProcedureCallStatement(designator.position, designator, outer);
+            RETURN SyntaxTree.NewProcedureCallStatement(designator.position, FALSE, designator, outer);
         END NewAsopStatement;
 
 (* ACHTUNG: LYNX 15-MAY-2013 *)
@@ -1495,7 +1495,7 @@ KernelLog.Ln();
             expressionList.AddExpression(right);
             designator := SyntaxTree.NewIdentifierDesignator(position, name);
             designator := SyntaxTree.NewParameterDesignator(position, designator, expressionList);
-            RETURN SyntaxTree.NewProcedureCallStatement(designator.position, designator, outer);
+            RETURN SyntaxTree.NewProcedureCallStatement(designator.position, FALSE, designator, outer);
         END NewPortStatement; 
 
         PROCEDURE StatementExpression(
@@ -1608,7 +1608,7 @@ KernelLog.Ln();
                     expression := PatchPortReference(expression);
                     statement := NewPortStatement(position, lynxDelegate, designator, expression, outer);
                 ELSIF designator IS SyntaxTree.ParameterDesignator THEN
-                    statement := SyntaxTree.NewProcedureCallStatement(designator.position, designator, outer);
+                    statement := SyntaxTree.NewProcedureCallStatement(designator.position, FALSE, designator, outer);
                 ELSE
                     Error(position, Basic.InvalidCode, "Invalid expression statement");
                 END;
@@ -1839,7 +1839,7 @@ KernelLog.Ln();
             parameters := SyntaxTree.NewExpressionList();
             designator := SyntaxTree.NewIdentifierDesignator(position, lynxNewsel);
             designator := SyntaxTree.NewParameterDesignator(position, designator, parameters);
-            RETURN SyntaxTree.NewProcedureCallStatement(position, designator, outer);
+            RETURN SyntaxTree.NewProcedureCallStatement(position, FALSE, designator, outer);
         END NewLynxNewsel;
 
         PROCEDURE NewLynxAddsel(
@@ -1862,7 +1862,7 @@ KernelLog.Ln();
             parameters.AddExpression(channel);
             designator := SyntaxTree.NewIdentifierDesignator(position, lynxAddsel);
             designator := SyntaxTree.NewParameterDesignator(position, designator, parameters);
-            RETURN SyntaxTree.NewProcedureCallStatement(position, designator, outer);
+            RETURN SyntaxTree.NewProcedureCallStatement(position, FALSE, designator, outer);
         END NewLynxAddsel;
 
         PROCEDURE NewLynxSelect(position: Position): SyntaxTree.Expression;

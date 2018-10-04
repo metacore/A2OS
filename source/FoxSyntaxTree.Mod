@@ -3481,11 +3481,16 @@ TYPE
 
 	(** << call(...) >> **)
 	ProcedureCallStatement*= OBJECT(Statement)
+		VAR ignore-: BOOLEAN;
 		VAR call-: Designator;
 
-		PROCEDURE & InitProcedureCallStatement(position: Position; call: Designator; outer: Statement);
-		BEGIN	InitStatement(position,outer); SELF.call := call;
+		PROCEDURE & InitProcedureCallStatement(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement);
+		BEGIN	InitStatement(position,outer); SELF.ignore := ignore; SELF.call := call;
 		END InitProcedureCallStatement;
+
+		PROCEDURE SetIgnore*(ignore: BOOLEAN);
+		BEGIN	SELF.ignore := ignore;
+		END SetIgnore;
 
 		PROCEDURE SetCall*(call: Designator);
 		BEGIN	SELF.call := call;
@@ -3494,7 +3499,7 @@ TYPE
 		PROCEDURE Clone(): Statement;
 		VAR copy: ProcedureCallStatement;
 		BEGIN
-			NEW(copy, position, CloneDesignator(call), outer);
+			NEW(copy, position, ignore, CloneDesignator(call), outer);
 			RETURN copy
 		END Clone;
 
@@ -5647,10 +5652,10 @@ VAR
 		NEW( communication, position, op, left, right,outer );  RETURN communication
 	END NewCommunicationStatement;
 
-	PROCEDURE NewProcedureCallStatement*(position: Position; call: Designator; outer: Statement): ProcedureCallStatement;
+	PROCEDURE NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement): ProcedureCallStatement;
 	VAR caller: ProcedureCallStatement;
 	BEGIN
-		NEW(caller,position,call,outer); RETURN caller
+		NEW(caller,position,ignore,call,outer); RETURN caller
 	END NewProcedureCallStatement;
 
 	PROCEDURE NewCaseStatement*( position: Position ; outer: Statement): CaseStatement;

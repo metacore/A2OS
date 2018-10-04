@@ -1497,7 +1497,10 @@ TYPE
 		END VisitStatement;
 
 		PROCEDURE VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement);
-		BEGIN Expression(x.call) END VisitProcedureCallStatement;
+		BEGIN
+			IF x.ignore THEN Keyword("IGNORE " ) END;
+			Expression(x.call);
+		END VisitProcedureCallStatement;
 
 		PROCEDURE VisitAssignment*(x: SyntaxTree.Assignment);
 		BEGIN

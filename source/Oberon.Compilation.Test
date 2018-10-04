@@ -17001,84 +17001,182 @@ negative: calling procedure returning boolean
 
 	MODULE Test;
 	PROCEDURE Procedure (): BOOLEAN; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning boolean
+
+	MODULE Test;
+	PROCEDURE Procedure (): BOOLEAN; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning character
 
 	MODULE Test;
 	PROCEDURE Procedure (): CHAR; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning character
+
+	MODULE Test;
+	PROCEDURE Procedure (): CHAR; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning integer
 
 	MODULE Test;
 	PROCEDURE Procedure (): INTEGER; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning integer
+
+	MODULE Test;
+	PROCEDURE Procedure (): INTEGER; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning real
 
 	MODULE Test;
 	PROCEDURE Procedure (): REAL; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning real
+
+	MODULE Test;
+	PROCEDURE Procedure (): REAL; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning set
 
 	MODULE Test;
 	PROCEDURE Procedure (): SET; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning set
+
+	MODULE Test;
+	PROCEDURE Procedure (): SET; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning array
 
 	MODULE Test;
 	PROCEDURE Procedure (): ARRAY 10 OF CHAR; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning array
+
+	MODULE Test;
+	PROCEDURE Procedure (): ARRAY 10 OF CHAR; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning record
 
 	MODULE Test;
 	PROCEDURE Procedure (): RECORD END; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning record
+
+	MODULE Test;
+	PROCEDURE Procedure (): RECORD END; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning object
 
 	MODULE Test;
 	PROCEDURE Procedure (): OBJECT END; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning object
+
+	MODULE Test;
+	PROCEDURE Procedure (): OBJECT END; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning base object
 
 	MODULE Test;
 	PROCEDURE Procedure (): OBJECT; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning base object
+
+	MODULE Test;
+	PROCEDURE Procedure (): OBJECT; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning pointer to array
 
 	MODULE Test;
 	PROCEDURE Procedure (): POINTER TO ARRAY 10 OF CHAR; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning pointer to array
+
+	MODULE Test;
+	PROCEDURE Procedure (): POINTER TO ARRAY 10 OF CHAR; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning pointer to record
 
 	MODULE Test;
 	PROCEDURE Procedure (): POINTER TO ARRAY 10 OF RECORD END; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning pointer to record
+
+	MODULE Test;
+	PROCEDURE Procedure (): POINTER TO ARRAY 10 OF RECORD END; END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 negative: calling procedure returning procedure
 
 	MODULE Test;
 	PROCEDURE Procedure (): PROCEDURE; END Procedure;
-	BEGIN Procedure
+	BEGIN Procedure ()
+	END Test.
+
+positive: ignoring procedure call returning procedure
+
+	MODULE Test;
+	PROCEDURE Procedure (): PROCEDURE; END Procedure;
+	BEGIN IGNORE Procedure ()
+	END Test.
+
+positive: calling procedure returning nothing
+
+	MODULE Test;
+	PROCEDURE Procedure (); END Procedure;
+	BEGIN Procedure; Procedure ()
+	END Test.
+
+negative: ignoring procedure call returning nothing
+
+	MODULE Test;
+	PROCEDURE Procedure (); END Procedure;
+	BEGIN IGNORE Procedure ()
 	END Test.
 
 
@@ -29615,84 +29713,84 @@ negative: calling variable procedure returning boolean
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): BOOLEAN;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning character
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): CHAR;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning integer
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): INTEGER;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning real
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): REAL;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning set
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): SET;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning array
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): ARRAY 10 OF CHAR;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning record
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): RECORD END;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning object
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): OBJECT END;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning base object
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): OBJECT;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning pointer to array
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): POINTER TO ARRAY 10 OF CHAR;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning pointer to record
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): POINTER TO ARRAY 10 OF RECORD END;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 negative: calling variable procedure returning procedure
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): PROCEDURE;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
 

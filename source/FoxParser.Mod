@@ -1129,7 +1129,7 @@ TYPE
 						statement := SyntaxTree.NewCommunicationStatement(position, commToken, designator, expression, outer);
 						CommentStatement(statement);
 					ELSE
-						caller := SyntaxTree.NewProcedureCallStatement(designator.position, designator,outer);
+						caller := SyntaxTree.NewProcedureCallStatement(designator.position, FALSE, designator,outer);
 						statement := caller;
 						CommentStatement(statement);
 					END;
@@ -1302,6 +1302,14 @@ TYPE
 					END;
 					returnStatement.End(symbol.position);
 					statements.AddStatement( returnStatement );
+					result := TRUE;
+			| Scanner.Ignore:
+					position := symbol.position;
+					CommentStatement(statement);
+					NextSymbol;
+					designator := Designator();
+					caller := SyntaxTree.NewProcedureCallStatement(designator.position, TRUE, designator,outer);
+					statements.AddStatement( caller );
 					result := TRUE;
 			| Scanner.Begin:
 					NextSymbol;  statement := StatementBlock(outer);  statements.AddStatement( statement );  Check( Scanner.End );

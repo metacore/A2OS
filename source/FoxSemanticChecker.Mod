@@ -7030,6 +7030,7 @@ TYPE
 			IF Trace THEN D.Str("VisitProcedureCallStatement"); D.Ln; END;
 			call := procedureCall.call;
 			IF (call # NIL) &  ~(call IS SyntaxTree.ParameterDesignator) & ~(call IS SyntaxTree.ProcedureCallDesignator) & ~(call IS SyntaxTree.BuiltinCallDesignator)  THEN
+				IF procedureCall.ignore THEN Error(procedureCall.position, "ignoring non-procedure call") END;
 				call := SyntaxTree.NewParameterDesignator(call.position,call,SyntaxTree.NewExpressionList());
 			END;
 
@@ -7045,10 +7046,12 @@ TYPE
 			ELSIF (call.type # NIL) &  (call.left # NIL) THEN
 				IF call.left.type.resolved(SyntaxTree.ProcedureType).callingConvention = SyntaxTree.WinAPICallingConvention THEN
 					Warning(procedureCall.position,"ignoring return value of procedure call");
-				ELSE
+				ELSIF ~procedureCall.ignore THEN
 					Error(procedureCall.position,"calling procedure with non-void return type");
 					IF VerboseErrorMessage THEN Printout.Info("call ",call) END;
 				END;
+			ELSIF procedureCall.ignore THEN
+				Error(procedureCall.position,"ignoring procedure call without return value");
 			END;
 			procedureCall.SetCall(call);
 
@@ -7091,12 +7094,12 @@ TYPE
 			ELSIF IsIndexOperator(left) & left.assignable THEN
 				(* LHS is index write operator call *)
 				procedureCallDesignator :=  left(SyntaxTree.ProcedureCallDesignator);
-				resolvedStatement := SyntaxTree.NewProcedureCallStatement(assignment.position, procedureCallDesignator, assignment.outer);
+				resolvedStatement := SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
 			ELSIF CheckVariable(left) THEN
 				expression := NewOperatorCall(assignment.position, Scanner.Becomes, left, right, NIL);
 				IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
 					procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
-					resolvedStatement := SyntaxTree.NewProcedureCallStatement(assignment.position, procedureCallDesignator, assignment.outer);
+					resolvedStatement := SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
 				ELSIF (expression # NIL) & (expression IS SyntaxTree.StatementDesignator) THEN
 					resolvedStatement := expression(SyntaxTree.StatementDesignator).statement;
 				ELSIF AssignmentCompatible(left, right) THEN
@@ -7124,7 +7127,7 @@ TYPE
 			expression := NewOperatorCall(communication.position, communication.op, left, right, NIL);
 			IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
 				procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
-				resolvedStatement := SyntaxTree.NewProcedureCallStatement(communication.position, procedureCallDesignator, communication.outer);
+				resolvedStatement := SyntaxTree.NewProcedureCallStatement(communication.position, FALSE, procedureCallDesignator, communication.outer);
 			ELSE
 
 				IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,communication.position) END;

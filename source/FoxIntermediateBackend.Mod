@@ -10956,7 +10956,7 @@ TYPE
 		BEGIN
 			IF Trace THEN TraceEnter("VisitProcedureCallStatement") END;
 			Expression(x.call);
-			IF (x.call.type # NIL) THEN (* WINAPI call: procedure returning unused value *)
+			IF (x.call.type # NIL) THEN (* procedure returning ignored value *)
 				ReleaseOperand(result)
 			END;
 			IF Trace THEN TraceExit("VisitProcedureCallStatement") END;

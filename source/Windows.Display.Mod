@@ -1133,8 +1133,9 @@ VAR
 			Strings.Append( disp.desc, ts );  Strings.Append( disp.desc, "x" );  Strings.IntToStr( disp.format, ts );
 			Strings.Append( disp.desc, ts );  Strings.Append( disp.desc, ")" );  create.finished := FALSE;
 			CreateWin( create );
-			User32.SetWindowText(root.hWnd, windowTitle);
-			User32.BringWindowToTop( root.hWnd );  User32.SetForegroundWindow( root.hWnd );
+			IGNORE User32.SetWindowText(root.hWnd, windowTitle);
+			IGNORE User32.BringWindowToTop( root.hWnd );
+			IGNORE User32.SetForegroundWindow( root.hWnd );
 			Displays.registry.Add( disp, res );
 			ASSERT ( res = 0 );
 			IF fullscreen THEN
@@ -1157,20 +1158,20 @@ VAR
 			create.y := y;  create.w := w;  create.h := h + User32.GetSystemMetrics( User32.SMCYCaption );
 			create.finished := FALSE;
 			CreateWin( create );
-			User32.SetWindowText(root.hWnd, windowTitle);
-			User32.BringWindowToTop( root.hWnd );  disp.Update;
-			User32.SetForegroundWindow( root.hWnd );
+			IGNORE User32.SetWindowText(root.hWnd, windowTitle);
+			IGNORE User32.BringWindowToTop( root.hWnd );  disp.Update;
+			IGNORE User32.SetForegroundWindow( root.hWnd );
 		ELSE
 			KernelLog.Enter;  KernelLog.String( "Display: Display already open, window still open" );  KernelLog.Exit;
-			IF minimized IN root.state THEN User32.ShowWindow( root.hWnd, User32.SWRestore );  END;
+			IF minimized IN root.state THEN IGNORE User32.ShowWindow( root.hWnd, User32.SWRestore );  END;
 
-			User32.BringWindowToTop( root.hWnd );  User32.SetForegroundWindow( root.hWnd );
+			IGNORE User32.BringWindowToTop( root.hWnd ); IGNORE User32.SetForegroundWindow( root.hWnd );
 		END;
 
 		hDC := User32.GetDC(0);
 		disp.unit := GDI32.GetDeviceCaps(hDC,GDI32.LogPixelsX);
 		disp.unit := ENTIER((36000.0*disp.unit)/25.4);
-		User32.ReleaseDC(0,hDC);
+		IGNORE User32.ReleaseDC(0,hDC);
 	END DoInstall;
 
 	PROCEDURE Install*(context : Commands.Context); (** ["H"] [ width [height] ] ["FULLSCREEN"] [ x [y] ] *)

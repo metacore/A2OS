@@ -54,7 +54,7 @@ TYPE
 
 		PROCEDURE Finish( VAR res: WORD );
 		BEGIN
-			Kernel32.CloseHandle( handle );  KernelLog.String("Disk closed"); KernelLog.Ln;
+			IGNORE Kernel32.CloseHandle( handle );  KernelLog.String("Disk closed"); KernelLog.Ln;
 		END Finish;
 
 		PROCEDURE Transfer*( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD );
@@ -348,7 +348,7 @@ VAR
 			END;
 			GetPhysicalDrive( handle, flags,diskname, context );
 			IF ~GetDiskGeometry( handle, pdg ) THEN
-				Kernel32.CloseHandle( handle );
+				IGNORE Kernel32.CloseHandle( handle );
 				context.error.String( "Could not determine disk geometry " );  context.error.Ln;
 				context.result := Commands.CommandError;
 			ELSE
@@ -365,7 +365,7 @@ VAR
 					AddDisk( vd );
 					context.out.String( diskname );  context.out.String( " registered." ); context.out.Ln;
 				ELSE
-					Kernel32.CloseHandle( handle );
+					IGNORE Kernel32.CloseHandle( handle );
 					context.error.String( "Could not register disk, res: " ); context.error.Int( res, 0 ); context.error.Ln;
 					context.result := Commands.CommandError;
 				END;

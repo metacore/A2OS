@@ -37,7 +37,7 @@ MODULE Shell32; (** non-portable / source: Windows.Shell32.Mod *)
 	PROCEDURE TermMod;
 	BEGIN
 		IF shell32 # Kernel32.NULL THEN
-			Kernel32.FreeLibrary(shell32); shell32 := Kernel32.NULL
+			IGNORE Kernel32.FreeLibrary(shell32); shell32 := Kernel32.NULL
 		END
 	END TermMod;
 

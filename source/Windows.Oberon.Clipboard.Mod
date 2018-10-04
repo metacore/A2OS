@@ -20,7 +20,7 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 			R: Texts.Reader; ch: CHAR;
 	BEGIN
 		IF User32.OpenClipboard(0) # Kernel32.False THEN
-			User32.EmptyClipboard();
+			IGNORE User32.EmptyClipboard();
 			IF CFOberon # Kernel32.NULL THEN
 				NEW(buf); Texts.OpenBuf(buf); Texts.Save(T, beg, end, buf);
 				NEW(t); Texts.Open(t, ""); Texts.Append(t, buf);
@@ -34,7 +34,7 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 					SYSTEM.PUT(adr, ch); INC(adr);
 					Files.Read(r, ch)
 				END;
-				Kernel32.GlobalUnlock(hMem);
+				IGNORE Kernel32.GlobalUnlock(hMem);
 				hMem := User32.SetClipboardData(CFOberon, hMem)
 			END;
 			Texts.OpenReader(R, T, beg); size := 0;
@@ -55,9 +55,9 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 				END
 			END;
 			SYSTEM.PUT(adr, 0X);
-			Kernel32.GlobalUnlock(hMem);
+			IGNORE Kernel32.GlobalUnlock(hMem);
 			hMem := User32.SetClipboardData(User32.CFText, hMem);
-			User32.CloseClipboard()
+			IGNORE User32.CloseClipboard()
 		END
 	END PutToClipboard;
 
@@ -83,7 +83,7 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 					SYSTEM.GET(adr, ch); INC(adr); Files.Write(r, ch);
 					DEC(i)
 				END;
-				Kernel32.GlobalUnlock(hMem);
+				IGNORE Kernel32.GlobalUnlock(hMem);
 				Files.Set(r, f, 0); Files.ReadLInt(r, i); Files.Read(r, ch);
 				NEW(T); Texts.Load(T, f, Files.Pos(r), i)
 			ELSE
@@ -97,11 +97,11 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 						IF ch = 0DX THEN INC(adr) END;
 						SYSTEM.GET(adr, ch); INC(adr)
 					END;
-					Kernel32.GlobalUnlock(hMem);
+					IGNORE Kernel32.GlobalUnlock(hMem);
 					Texts.Append(T, W.buf)
 				END
 			END;
-			User32.CloseClipboard()
+			IGNORE User32.CloseClipboard()
 		END
 	END GetFromClipboard;
 

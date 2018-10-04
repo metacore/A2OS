@@ -350,9 +350,9 @@ TYPE
 		PROCEDURE ClearMC*( s: SET );
 		BEGIN {EXCLUSIVE}
 			IF (handle # Kernel32.InvalidHandleValue) THEN
-				IF Serials.Break IN s THEN Kernel32.ClearCommBreak( handle ) END;
-				IF Serials.DTR IN s THEN Kernel32.EscapeCommFunction( handle, Kernel32.CLRDTR ) END;
-				IF Serials.RTS IN s THEN Kernel32.EscapeCommFunction( handle, Kernel32.CLRRTS ) END
+				IF Serials.Break IN s THEN IGNORE Kernel32.ClearCommBreak( handle ) END;
+				IF Serials.DTR IN s THEN IGNORE Kernel32.EscapeCommFunction( handle, Kernel32.CLRDTR ) END;
+				IF Serials.RTS IN s THEN IGNORE Kernel32.EscapeCommFunction( handle, Kernel32.CLRRTS ) END
 			END
 		END ClearMC;
 
@@ -394,10 +394,10 @@ TYPE
 		PROCEDURE Close*;
 		BEGIN {EXCLUSIVE}
 			IF handle # Kernel32.InvalidHandleValue THEN
-				Kernel32.CancelIoEx(handle, NIL);
-				Kernel32.CloseHandle( handle );  handle := Kernel32.InvalidHandleValue;
-				IF rOverlapped.hEvent # NIL THEN Kernel32.CloseHandle(rOverlapped.hEvent); rOverlapped.hEvent := NIL; END;
-				IF wOverlapped.hEvent # NIL THEN Kernel32.CloseHandle(wOverlapped.hEvent); wOverlapped.hEvent := NIL; END;
+				IGNORE Kernel32.CancelIoEx(handle, NIL);
+				IGNORE Kernel32.CloseHandle( handle );  handle := Kernel32.InvalidHandleValue;
+				IF rOverlapped.hEvent # NIL THEN IGNORE Kernel32.CloseHandle(rOverlapped.hEvent); rOverlapped.hEvent := NIL; END;
+				IF wOverlapped.hEvent # NIL THEN IGNORE Kernel32.CloseHandle(wOverlapped.hEvent); wOverlapped.hEvent := NIL; END;
 			END
 		END Close;
 

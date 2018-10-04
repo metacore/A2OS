@@ -400,7 +400,7 @@ TYPE
 				END
 			END;
 		END;
-		IF event # 0 THEN Kernel32.CloseHandle(event); END;
+		IF event # 0 THEN IGNORE Kernel32.CloseHandle(event); END;
 	END FinalizerCaller;
 
 VAR
@@ -666,7 +666,7 @@ END ExcpFrmHandler;
 PROCEDURE RemoveExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
 VAR this: Kernel32.ExcpFrmPtr;
 BEGIN
-	Kernel32.RemoveVectoredContinueHandler(ExcpFrmHandler);
+	IGNORE Kernel32.RemoveVectoredContinueHandler(ExcpFrmHandler);
 END RemoveExcpFrm;
 
 PROCEDURE InstallExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );

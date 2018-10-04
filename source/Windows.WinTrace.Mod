@@ -16,7 +16,7 @@ VAR b: Kernel32.BOOL;
 BEGIN
 	IF mode # none THEN
 		b := Kernel32.WriteFile (hout, buf[ofs], len, len, NIL);
-		Kernel32.FlushFileBuffers(hout);
+		IGNORE Kernel32.FlushFileBuffers(hout);
 	END;
 END Send;
 
@@ -26,7 +26,7 @@ VAR b: Kernel32.BOOL;
 BEGIN
 	IF mode # none THEN
 		b := Kernel32.WriteFile (herr, buf[ofs], len, len, NIL);
-		Kernel32.FlushFileBuffers(herr);
+		IGNORE Kernel32.FlushFileBuffers(herr);
 	END;
 END SendError;
 
@@ -52,18 +52,17 @@ BEGIN
 END Init;
 
 PROCEDURE Close*;
-VAR res: WORD;
 BEGIN
 	IF traceChar0 # NIL THEN
 		Trace.Char := traceChar0; 
 	END;
 	IF mode = console THEN
-		Kernel32.CloseHandle(hout);
+		IGNORE Kernel32.CloseHandle(hout);
 	#IF ~SHAREDLIB THEN
-		res := Kernel32.FreeConsole ();
+		IGNORE Kernel32.FreeConsole ();
 	#END;
 	ELSIF mode = file THEN
-		Kernel32.CloseHandle(hout);
+		IGNORE Kernel32.CloseHandle(hout);
 	END;
 	hout := Kernel32.InvalidHandleValue;
 	mode := none;

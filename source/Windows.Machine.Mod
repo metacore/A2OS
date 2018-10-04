@@ -630,7 +630,7 @@ BEGIN
 	SetupTraceName(traceName);
 	Trace.String("trace -> file "); Trace.String(traceName); Trace.Ln;
 	hout := Kernel32.CreateFile(traceName, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
-	Kernel32.GetFullPathName(traceName, LEN(traceName),traceName, NIL);
+	IGNORE Kernel32.GetFullPathName(traceName, LEN(traceName),traceName, NIL);
 	Trace.Char := TraceChar;
 	Trace.String(version); Trace.Ln; 
 END SetTraceFile;
@@ -717,7 +717,7 @@ END RemoveTraceFile;
 PROCEDURE ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR);
 VAR i,j: LONGINT;
 BEGIN
-	Kernel32.GetModuleFileName(Kernel32.hInstance, fullName, LEN( fullName ) );
+	IGNORE Kernel32.GetModuleFileName(Kernel32.hInstance, fullName, LEN( fullName ) );
 	j := -1; i := 0;
 	WHILE fullName[i] # 0X DO
 		IF fullName[i] = '\' THEN j := i END;
@@ -768,7 +768,7 @@ BEGIN
 	IF hfile = Kernel32.InvalidHandleValue THEN
 		ToExecutablePath(UserConfigFile, userConfigFile);
 	ELSE
-		Kernel32.CloseHandle(hfile)
+		IGNORE Kernel32.CloseHandle(hfile)
 	END;
 
 	(*
@@ -1007,8 +1007,8 @@ BEGIN
 		END;
 		memBlock.next := NIL;
 		startAdr := memBlock.startAdr; (* this value must be cached for the second call of Kernel32.VirtualFree *)
-		Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, memBlock.startAdr), memBlock.size, {Kernel32.MEMDecommit});
-		Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, startAdr ), 0, {Kernel32.MEMRelease});
+		IGNORE Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, memBlock.startAdr), memBlock.size, {Kernel32.MEMDecommit});
+		IGNORE Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, startAdr ), 0, {Kernel32.MEMRelease});
 	ELSE
 		HALT(535)	(* error in memory block management *)
 	END;

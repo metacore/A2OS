@@ -62,7 +62,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 		ELSE
 			res := Failed
 		END;
-		ADVAPI32.RegCloseKey(hKey)
+		IGNORE ADVAPI32.RegCloseKey(hKey)
 	END SetKeyValue;
 
 	(** Retrieve the value stored under key. use key = "" to retrieve the default value for path. *)
@@ -77,7 +77,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 		IF (type # ADVAPI32.RegSZ) OR (ret # ADVAPI32.Success) THEN
 			IF (type = ADVAPI32.RegSZ) & (ret = ADVAPI32.ErrorMoreData) THEN
 				NEW(buf, len+1);
-				ADVAPI32.RegQueryValueEx(hKey, key, NIL, type, buf^, len);
+				IGNORE ADVAPI32.RegQueryValueEx(hKey, key, NIL, type, buf^, len);
 				COPY(buf^, value); res := Done
 			ELSE
 				res := NotFound
@@ -85,7 +85,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 		ELSE
 			res := Done
 		END;
-		ADVAPI32.RegCloseKey(hKey)
+		IGNORE ADVAPI32.RegCloseKey(hKey)
 	END GetKeyValue;
 
 	(** Delete key and its value, key = "" deletes the default value for path. *)
@@ -100,7 +100,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 		ELSE
 			res := NotFound
 		END;
-		ADVAPI32.RegCloseKey(hKey)
+		IGNORE ADVAPI32.RegCloseKey(hKey)
 	END DeleteKeyValue;
 
 	(** Recursive delete all sub-paths, keys and values in path.
@@ -115,11 +115,11 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 		WHILE ADVAPI32.RegEnumKeyEx(hKey, 0, buffer, size, NIL, NIL, NIL, NIL) = ADVAPI32.Success DO
 			DeletePath(hKey, buffer);
 			IF res # Done THEN
-				ADVAPI32.RegCloseKey(hKey); RETURN
+				IGNORE ADVAPI32.RegCloseKey(hKey); RETURN
 			END;
 			size := Kernel32.MaxPath
 		END;
-		ADVAPI32.RegCloseKey(hKey);
+		IGNORE ADVAPI32.RegCloseKey(hKey);
 		IF ADVAPI32.RegDeleteKey(root, path) = ADVAPI32.Success THEN
 			INC(stamp); res := Done
 		ELSE
@@ -142,7 +142,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 			IF ret = ADVAPI32.Success THEN enum(subPath) END;
 			INC(i)
 		END;
-		ADVAPI32.RegCloseKey(hKey); res := Done
+		IGNORE ADVAPI32.RegCloseKey(hKey); res := Done
 	END EnumeratePath;
 
 	(** Enumerate all key/value pairs in path.*)
@@ -162,7 +162,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 			IF (ret = ADVAPI32.Success) & (type = ADVAPI32.RegSZ) THEN enum(key, value) END;
 			INC(i)
 		END;
-		ADVAPI32.RegCloseKey(hKey); res := Done
+		IGNORE ADVAPI32.RegCloseKey(hKey); res := Done
 	END EnumerateKeyValue;
 
 	PROCEDURE OutputFileString(VAR str: ARRAY OF CHAR);
@@ -170,7 +170,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 	BEGIN
 		n := 0; WHILE str[n] # 0X DO INC(n) END;
 		b := Kernel32.WriteFile(hFile, str, n, n, NIL);
-		IF logfile THEN Kernel32.FlushFileBuffers(hFile) END
+		IF logfile THEN IGNORE Kernel32.FlushFileBuffers(hFile) END
 	END OutputFileString;
 
 	(*
@@ -237,16 +237,16 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 			buf: POINTER TO ARRAY OF SYSTEM.BYTE; adr: ADDRESS; len, i: LONGINT; ch: CHAR;
 	BEGIN
 		res := Done; stamp := 0;
-		Kernel32.GetModuleFileName(Kernel32.hInstance, file, Kernel32.MaxPath);
+		IGNORE Kernel32.GetModuleFileName(Kernel32.hInstance, file, Kernel32.MaxPath);
 		len := ADVAPI32.GetFileVersionInfoSize(file, NIL);
 
 		NEW(buf, len);
 
-		ADVAPI32.GetFileVersionInfo(file, 0, len, buf^);
-		ADVAPI32.VerQueryValue(buf^, "\StringFileInfo\040904e4\FileDescription", adr, len);
+		IGNORE ADVAPI32.GetFileVersionInfo(file, 0, len, buf^);
+		IGNORE ADVAPI32.VerQueryValue(buf^, "\StringFileInfo\040904e4\FileDescription", adr, len);
 		IF len >= Kernel32.MaxPath THEN HALT(99) END;
 		SYSTEM.MOVE(adr, ADDRESSOF(software), len);
-		ADVAPI32.VerQueryValue(buf^, "\StringFileInfo\040904e4\FileVersion", adr, len);
+		IGNORE ADVAPI32.VerQueryValue(buf^, "\StringFileInfo\040904e4\FileVersion", adr, len);
 		IF len >= Kernel32.MaxPath THEN HALT(99) END;
 		SYSTEM.MOVE(adr, ADDRESSOF(version), len);
 		(* cmd  { "-" name [ "=" value ] } *)

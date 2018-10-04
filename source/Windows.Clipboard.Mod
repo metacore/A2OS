@@ -45,7 +45,7 @@ VAR
 BEGIN
 	ASSERT((text # NIL) & (text.HasReadLock()));
 	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN
-		User32.EmptyClipboard;
+		IGNORE User32.EmptyClipboard ();
 		size := text.GetLength();
 		NEW(chBuff, size + 1);
 		(* UTF-8 encoding. String is truncated in case of multi-byte encoded characters! *)

@@ -154,11 +154,11 @@ VAR
 			NIL,0,NIL,NIL,NIL);
 		IF newService = Kernel32.NULL THEN
 			err := OutError("Advapi32.CreateService");
-			CloseServiceHandle(scm);
+			IGNORE CloseServiceHandle(scm);
 			RETURN FALSE;
 		END;
-		CloseServiceHandle(newService);
-		CloseServiceHandle(scm);
+		IGNORE CloseServiceHandle(newService);
+		IGNORE CloseServiceHandle(scm);
 		KernelLog.Enter;
 		KernelLog.String('Service "'); KernelLog.String(srvName); KernelLog.String('" was installed!'); KernelLog.Ln;
 		KernelLog.Exit;
@@ -188,9 +188,9 @@ VAR
 					KernelLog.String('Service "'); KernelLog.String(srvName); KernelLog.String('" was removed!'); KernelLog.Ln;
 					KernelLog.Exit;
 				END;
-				CloseServiceHandle(service);
+				IGNORE CloseServiceHandle(service);
 			END;
-			CloseServiceHandle(scm);
+			IGNORE CloseServiceHandle(scm);
 			RETURN TRUE
 		END
 	END UninstallService;
@@ -210,7 +210,7 @@ VAR
 	PROCEDURE TermMod;
 	BEGIN
 		IF advapi32 # Kernel32.NULL THEN
-			Kernel32.FreeLibrary(advapi32); advapi32 := Kernel32.NULL
+			IGNORE Kernel32.FreeLibrary(advapi32); advapi32 := Kernel32.NULL
 		END
 	END TermMod;
 

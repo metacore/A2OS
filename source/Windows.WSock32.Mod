@@ -225,10 +225,10 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 	PROCEDURE TermMod;
 	BEGIN
 		IF wsock32 # Kernel32.NULL THEN
-			Kernel32.FreeLibrary(wsock32); wsock32 := Kernel32.NULL
+			IGNORE Kernel32.FreeLibrary(wsock32); wsock32 := Kernel32.NULL
 		END;
 		IF wship6 # Kernel32.NULL THEN
-			Kernel32.FreeLibrary(wship6); wship6 := Kernel32.NULL
+			IGNORE Kernel32.FreeLibrary(wship6); wship6 := Kernel32.NULL
 		END
 	END TermMod;
 

@@ -328,7 +328,7 @@ TYPE
 			RETURN size;
 		END GetSize;
 
-		PROCEDURE AddTrack*(filename: Strings.String; trackType : LONGINT; permitCopy: BOOLEAN) : LONGINT;
+		PROCEDURE AddTrack*(filename: Strings.String; trackType : LONGINT; permitCopy: BOOLEAN) : WORD;
 		VAR
 			res: WORD;
 			track: InformationTrack;
@@ -551,7 +551,7 @@ TYPE
 		END InitWriteParams;
 
 		(* only data tracks are verified. reading DA is not accurate enough since there is no sync pattern. *)
-		PROCEDURE VerifyCompilation(compilation: Compilation): LONGINT;
+		PROCEDURE VerifyCompilation(compilation: Compilation): WORD;
 		VAR
 			i: LONGINT;
 			track: InformationTrack;
@@ -575,7 +575,7 @@ TYPE
 			RETURN ResOk;
 		END VerifyCompilation;
 
-		PROCEDURE VerifyTrack(track: InformationTrack): LONGINT;
+		PROCEDURE VerifyTrack(track: InformationTrack): WORD;
 		VAR
 			lba, secs, count, nofBlocks, timestamp, ofs: LONGINT;
 			discBuf: POINTER TO ARRAY OF LONGINT;
@@ -693,7 +693,7 @@ TYPE
 			RETURN res;
 		END PadTrack;
 
-		PROCEDURE WriteTrack(op: LONGINT; VAR track: InformationTrack) : LONGINT;
+		PROCEDURE WriteTrack(op: LONGINT; VAR track: InformationTrack) : WORD;
 		VAR
 			res: WORD; startSec, bytesRead, count, nofBlocks: LONGINT;
 			timestamp, lastSecs: LONGINT;
@@ -779,7 +779,7 @@ TYPE
 			RETURN ResOk;
 		END GetDiscInfo;
 
-		PROCEDURE GetDiscInfoEx*(disc: DiscEx): LONGINT;
+		PROCEDURE GetDiscInfoEx*(disc: DiscEx): WORD;
 		VAR
 			adr: ADDRESS;
 			res, clvLow, clvHigh: LONGINT;
@@ -838,7 +838,7 @@ TYPE
 			RETURN res;
 		END GetWriteParams;
 
-		PROCEDURE SetWriteParams(VAR params: WriteParams; save: BOOLEAN): LONGINT;
+		PROCEDURE SetWriteParams(VAR params: WriteParams; save: BOOLEAN): WORD;
 		VAR
 			page: Lib.WriteParameterPage;
 			tmp: WORD;
@@ -874,7 +874,7 @@ TYPE
 			RETURN ResOk;
 		END SetWriteParams;
 
-		PROCEDURE PrintWriteParams(): LONGINT;
+		PROCEDURE PrintWriteParams(): WORD;
 		VAR
 			page: Lib.WriteParameterPage;
 			tmp: WORD;
@@ -1164,7 +1164,7 @@ TYPE
 	END BufferedReader;
 
 
-PROCEDURE IdentifyRecorders*(VAR recorders: ARRAY OF CDRecorder): LONGINT;
+PROCEDURE IdentifyRecorders*(VAR recorders: ARRAY OF CDRecorder): WORD;
 VAR
 	devTable: Plugins.Table;
 	device : ATADisks.DeviceATAPI;
@@ -1194,7 +1194,7 @@ BEGIN
 	RETURN ResOk;
 END IdentifyRecorders;
 
-PROCEDURE GetCapabilities(VAR dev: ATADisks.DeviceATAPI; VAR cap: Capabilities) : LONGINT;
+PROCEDURE GetCapabilities(VAR dev: ATADisks.DeviceATAPI; VAR cap: Capabilities) : WORD;
 VAR
 	buf : POINTER TO ARRAY OF CHAR;
 	ofs, size, numSpeeds, i, curSpeed, maxSpeed, speed, tmp: LONGINT;

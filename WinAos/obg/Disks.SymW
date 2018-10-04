@@ -42,7 +42,7 @@ TYPE
 		NbytesRead*, NbytesWritten*, NnofReads*, NnofWrites*, NnofOthers*, NnofErrors*: HUGEINT; 
 
 		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
+		PROCEDURE ^ GetSize*(VAR size: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Handle*(VAR msg: Message; VAR res: WORD); 
 		PROCEDURE ^ Open*(VAR res: WORD); 
 		PROCEDURE ^ Close*(VAR res: WORD); 
@@ -79,8 +79,8 @@ VAR
 	PROCEDURE ^ Get4(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
 	PROCEDURE ^ Extended(type: LONGINT): BOOLEAN; 
 	PROCEDURE ^ ValidFlag(f: CHAR): BOOLEAN; 
-	PROCEDURE ^ ReadPrimary(VAR b: DiskBlock; dev: Device; VAR p: PartitionTable; VAR n, res: LONGINT; VAR valid: BOOLEAN); 
-	PROCEDURE ^ ReadLogical(VAR b: DiskBlock; dev: Device; first: LONGINT; VAR p: PartitionTable; VAR n, res: LONGINT); 
+	PROCEDURE ^ ReadPrimary(VAR b: DiskBlock; dev: Device; VAR p: PartitionTable; VAR n: LONGINT; VAR res: WORD; VAR valid: BOOLEAN); 
+	PROCEDURE ^ ReadLogical(VAR b: DiskBlock; dev: Device; first: LONGINT; VAR p: PartitionTable; VAR n: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: WORD); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

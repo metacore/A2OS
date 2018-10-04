@@ -164,7 +164,7 @@ TYPE
 		PROCEDURE ^ SetActiveHandlesFor(alignment: LONGINT); 
 		PROCEDURE ^ SetActiveHandles(activeHandles: SET); 
 		PROCEDURE ^ FixBounds; 
-		PROCEDURE ^ IsInActiveFrameHandle(x, y: LONGINT): LONGINT; 
+		PROCEDURE ^ IsInActiveFrameHandle(x, y: LONGINT): WORD; 
 		PROCEDURE ^ IsInFrameHandle(x, y: LONGINT): LONGINT; 
 		PROCEDURE ^ DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye, activeColor, inactiveColor: LONGINT; active: SET); 
 		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas); 
@@ -227,7 +227,7 @@ TYPE
 		limitMode: LONGINT; 
 		insertObjAt: WMComponents.VisualComponent; 
 		downX, downY, lastX, lastY, dragX, dragY: LONGINT; 
-		oldPointerInfo: LONGINT; 
+		oldPointerInfo: WORD; 
 		selectInsertObjAt: BOOLEAN; 
 		showSnapGrid: WMProperties.BooleanProperty; 
 		showSnapGridI: BOOLEAN; 
@@ -264,7 +264,7 @@ TYPE
 		PROCEDURE ^ SelectInsertAtObj(vc: WMComponents.VisualComponent); 
 		PROCEDURE ^ InvalidateRegion(frame, oldFrame: WMRectangles.Rectangle); 
 		PROCEDURE ^ InvalidateFrame(frame: Frame); 
-		PROCEDURE ^ GetLimitMode(x, y: LONGINT; VAR bounds: WMRectangles.Rectangle): LONGINT; 
+		PROCEDURE ^ GetLimitMode(x, y: LONGINT; VAR bounds: WMRectangles.Rectangle): WORD; 
 		PROCEDURE ^ MoveFrame(direction: LONGINT); 
 		PROCEDURE ^ CheckSelectionFrame; 
 		PROCEDURE ^ CheckCursor(x, y: LONGINT; keys, modifierFlags: SET); 

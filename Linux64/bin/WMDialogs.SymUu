@@ -124,7 +124,7 @@ TYPE
 		closingComponent: WMComponents.Component; 
 		xflags: SET; 
 
-		PROCEDURE ^  & New*(CONST dialog: ARRAY OF CHAR; VAR width, height, res: LONGINT); 
+		PROCEDURE ^  & New*(CONST dialog: ARRAY OF CHAR; VAR width, height: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Show*(x, y: LONGINT; flags: SET; VAR res: ARRAY OF CHAR); 
 		PROCEDURE ^ WireComponents(c: XML.Content; data: ANY); 
 		PROCEDURE ^ HandleEvents(sender, data: ANY); 

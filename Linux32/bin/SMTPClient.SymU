@@ -17,9 +17,9 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetSendReady*(): BOOLEAN; 
-		PROCEDURE ^ GetReplyCode*(VAR code, res: LONGINT); 
+		PROCEDURE ^ GetReplyCode*(VAR code: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ SendCommand*(CONST cmd, arg: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ Open*(CONST server, thisHost: ARRAY OF CHAR; port: LONGINT; VAR result: LONGINT); 
+		PROCEDURE ^ Open*(CONST server, thisHost: ARRAY OF CHAR; port: LONGINT; VAR result: WORD); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ StartMailFrom*(CONST fromAddr: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SendTo*(CONST toAddr: ARRAY OF CHAR): BOOLEAN; 

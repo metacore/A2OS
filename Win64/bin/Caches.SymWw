@@ -39,6 +39,6 @@ TYPE
 	BEGIN{ACTIVE, SAFE} 
 	END Cache; 
 
-	PROCEDURE ^ ReportError(dev: Disks.Device; block, num, res: LONGINT); 
+	PROCEDURE ^ ReportError(dev: Disks.Device; block, num: LONGINT; res: WORD); 
 BEGIN
 END Caches.

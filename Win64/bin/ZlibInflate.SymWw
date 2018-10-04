@@ -62,7 +62,7 @@ CONST
 	InfBad = 13; 
 TYPE 
 	Result* = RECORD 
-		code-: LONGINT; 
+		code-: WORD; 
 		msg-: POINTER TO ARRAY OF CHAR; 
 	END; 
 

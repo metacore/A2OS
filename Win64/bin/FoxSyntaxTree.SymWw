@@ -1097,9 +1097,11 @@ TYPE
 
 	ProcedureCallStatement* = OBJECT (Statement)
 	VAR 
+		ignore-: BOOLEAN; 
 		call-: Designator; 
 
-		PROCEDURE ^  & InitProcedureCallStatement(position: Position; call: Designator; outer: Statement); 
+		PROCEDURE ^  & InitProcedureCallStatement(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement); 
+		PROCEDURE ^ SetIgnore*(ignore: BOOLEAN); 
 		PROCEDURE ^ SetCall*(call: Designator); 
 		PROCEDURE ^ Clone(): Statement; 
 	END ProcedureCallStatement; 
@@ -1655,7 +1657,7 @@ VAR
 	PROCEDURE ^ NewIfStatement*(position: Position; outer: Statement): IfStatement; 
 	PROCEDURE ^ NewAssignment*(position: Position; left: Designator; right: Expression; outer: Statement): Assignment; 
 	PROCEDURE ^ NewCommunicationStatement*(position: Position; op: LONGINT; left: Designator; right: Expression; outer: Statement): CommunicationStatement; 
-	PROCEDURE ^ NewProcedureCallStatement*(position: Position; call: Designator; outer: Statement): ProcedureCallStatement; 
+	PROCEDURE ^ NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement): ProcedureCallStatement; 
 	PROCEDURE ^ NewCaseStatement*(position: Position; outer: Statement): CaseStatement; 
 	PROCEDURE ^ NewCasePart*(): CasePart; 
 	PROCEDURE ^ NewWithPart*(): WithPart; 

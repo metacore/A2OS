@@ -6,7 +6,7 @@ CONST
 	ShowErrorCode = TRUE; 
 	MaxErrorTextLength = 512; 
 
-	PROCEDURE ^ Show*(errorCode: LONGINT); 
+	PROCEDURE ^ Show*(errorCode: WORD); 
 	PROCEDURE ^ ShowMessage*(CONST message: ARRAY OF CHAR); 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 BEGIN

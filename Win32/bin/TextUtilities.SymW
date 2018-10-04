@@ -64,7 +64,7 @@ TYPE
 		remainder: LONGINT; 
 
 		PROCEDURE ^  & Init*(text: Texts.Text); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END TextReader; 
@@ -265,7 +265,7 @@ VAR
 	PROCEDURE ^ FindPosWordRight*(utilreader: Texts.TextReader; pos: LONGINT): LONGINT; 
 	PROCEDURE ^ FindPosLineStart*(utilreader: Texts.TextReader; pos: LONGINT): LONGINT; 
 	PROCEDURE ^ CountWhitespace*(utilreader: Texts.TextReader; pos: LONGINT): LONGINT; 
-	PROCEDURE ^ LoadAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format, res: LONGINT); 
+	PROCEDURE ^ LoadAuto*(text: Text; CONST fileName: ARRAY OF CHAR; VAR format: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ DecodeAuto*(CONST fileName: ARRAY OF CHAR; VAR format: ARRAY OF CHAR): Codecs.TextDecoder; 
 	PROCEDURE ^ Load*(text: Text; CONST filename, format: ARRAY OF CHAR; VAR res: WORD); 
 	PROCEDURE ^ LoadAscii*(text: Text; CONST filename: ARRAY OF CHAR; VAR res: WORD); 

@@ -210,7 +210,7 @@ VAR
 	PROCEDURE ^ DoOptimize(code: PCLIR.Code); 
 	PROCEDURE ^ IncSaveLevel; 
 	PROCEDURE ^ Init(): BOOLEAN; 
-	PROCEDURE ^ Done(VAR result: LONGINT); 
+	PROCEDURE ^ Done(VAR result: WORD); 
 	PROCEDURE ^ GetCode(VAR codeArr: PCLIR.CodeArray; VAR length, hdrlength, addressFactor: LONGINT); 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Configure; 

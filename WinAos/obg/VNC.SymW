@@ -20,7 +20,8 @@ TYPE
 		next: Connection; 
 		pcb: TCP.Connection; 
 		w: Window; 
-		res, id: LONGINT; 
+		res: WORD; 
+		id: LONGINT; 
 		receiver: Receiver; 
 		sender: Sender; 
 		nb: Raster.Image; 
@@ -71,7 +72,8 @@ TYPE
 	Sender = OBJECT {EXCLUSIVE} 
 	VAR 
 		c: Connection; 
-		head, middle, tail, res, lx, ly: LONGINT; 
+		head, middle, tail, lx, ly: LONGINT; 
+		res: WORD; 
 		lkeys: SET; 
 		buf: ARRAY OutBufSize OF CHAR; 
 		done, poll: BOOLEAN; 

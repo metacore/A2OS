@@ -110,15 +110,15 @@ TYPE
 		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ OldX(name: ARRAY OF CHAR): File; 
-		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ Delete0X(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
+		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Delete0X(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
 		PROCEDURE ^ Enumerate(file: File; par: Parameter): BOOLEAN; 
 		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ CreateDirectory0*(path: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ RmDirCallback(f: File; par: Parameter): BOOLEAN; 
-		PROCEDURE ^ RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
+		PROCEDURE ^ RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ FindDirectory(path: ARRAY OF CHAR): Directory; 
 		PROCEDURE ^ GetDirectory(cluster: Address): Directory; 

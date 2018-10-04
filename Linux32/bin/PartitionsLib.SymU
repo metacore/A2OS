@@ -66,9 +66,10 @@ TYPE
 	Disk* = RECORD 
 		device*: AosDisks.Device; 
 		table*: AosDisks.PartitionTable; 
-		size*, res*: LONGINT; 
+		size*: LONGINT; 
+		res*: WORD; 
 		geo*: AosDisks.GetGeometryMsg; 
-		gres*: LONGINT; 
+		gres*: WORD; 
 		fs*: POINTER TO ARRAY OF Files.FileSystem; 
 		isDiskette*: BOOLEAN; 
 	END; 
@@ -466,8 +467,8 @@ VAR
 	PROCEDURE ^ WritePart*(w: Streams.Writer; dev: AosDisks.Device; part: LONGINT); 
 	PROCEDURE ^ DetectFS*(dev: AosDisks.Device; part: LONGINT): LONGINT; 
 	PROCEDURE ^ DisketteInserted*(dev: AosDisks.Device): BOOLEAN; 
-	PROCEDURE ^ GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs, res: LONGINT); 
-	PROCEDURE ^ WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum, res: LONGINT); 
+	PROCEDURE ^ GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: WORD); 
 	PROCEDURE ^ Eject*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR); 
@@ -488,7 +489,7 @@ VAR
 	PROCEDURE ^ Get4*(CONST b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
 	PROCEDURE ^ WriteType*(type: LONGINT; VAR s: ARRAY OF CHAR; VAR color: LONGINT); 
 	PROCEDURE ^ GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: WORD; VAR string: ARRAY OF CHAR); 
-	PROCEDURE ^ GetTransferError*(dev: AosDisks.Device; op, start, res: LONGINT; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTransferError*(dev: AosDisks.Device; op, start: LONGINT; res: WORD; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteK*(w: Streams.Writer; k: LONGINT); 
 	PROCEDURE ^ SetBootLoaderFile*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 

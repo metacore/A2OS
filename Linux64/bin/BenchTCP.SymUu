@@ -12,20 +12,22 @@ TYPE
 
 	Sender = OBJECT {EXCLUSIVE} 
 	VAR 
+		res: WORD; 
 		c: TCP.Connection; 
-		num, num0, res: LONGINT; 
+		num, num0: LONGINT; 
 		buf: Bytes; 
 		done: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(c: TCP.Connection; buf: Bytes; num: LONGINT); 
-		PROCEDURE ^ Join(): LONGINT; 
+		PROCEDURE ^ Join(): WORD; 
 	BEGIN{ACTIVE} 
 	END Sender; 
 
 	Tester = OBJECT {EXCLUSIVE} 
 	VAR 
+		res: WORD; 
 		c: TCP.Connection; 
-		num, num0, res, port, total, len: LONGINT; 
+		num, num0, port, total, len: LONGINT; 
 		fip: IP.Adr; 
 		timer: Kernel.MilliTimer; 
 		sender: Sender; 

@@ -167,7 +167,7 @@ TYPE
 		next: Repository; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Initialize(): LONGINT; 
+		PROCEDURE ^ Initialize(): WORD; 
 		PROCEDURE ^ FindComponentInfo(CONST name: ARRAY OF CHAR; id: LONGINT): ComponentInfo; 
 		PROCEDURE ^ GetDictionary*(CONST name: ARRAY OF CHAR): Dictionary; 
 		PROCEDURE ^ AddComponentInfo(ci: ComponentInfo); 

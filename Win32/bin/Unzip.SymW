@@ -18,7 +18,7 @@ TYPE
 		input: Streams.Reader; 
 		max: LONGINT; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^  & Init*(input: Streams.Reader; size: LONGINT); 
 	END SizeReader; 
 

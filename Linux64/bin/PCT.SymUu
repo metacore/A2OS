@@ -383,7 +383,7 @@ VAR
 	PROCEDURE ^ ParameterMatch*(Pa, Pb: Parameter; VAR faulty: Symbol): BOOLEAN; 
 	PROCEDURE ^ EqualTypes*(Ta, Tb: Struct): BOOLEAN; 
 	PROCEDURE ^ CheckForRecursion(type, banned: Struct): BOOLEAN; 
-	PROCEDURE ^ CompareSignature(s1, s2: Parameter): LONGINT; 
+	PROCEDURE ^ CompareSignature(s1, s2: Parameter): WORD; 
 	PROCEDURE ^ GetProcedureAllowed*(scope: ProcScope; returnType: Struct): BOOLEAN; 
 	PROCEDURE ^ SetOwner*(scope: Scope); 
 	PROCEDURE ^ InitScope*(scope, parent: Scope; flags: SET; imported: BOOLEAN); 

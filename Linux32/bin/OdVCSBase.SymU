@@ -57,7 +57,7 @@ VAR
 	res: WORD; 
 
 	PROCEDURE ^ splitDirBase(fileName: ARRAY OF CHAR; VAR dir, base: ARRAY OF CHAR); 
-	PROCEDURE ^ makeDirs(name: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ makeDirs(name: ARRAY OF CHAR): WORD; 
 	PROCEDURE ^ DateTime*(VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ Hash(toHash: TWorkBytes): LONGINT; 
 	PROCEDURE ^ AccessArray(arr: TData; len, left, right: LONGINT; VAR ret: ARRAY OF CHAR); 
@@ -81,7 +81,7 @@ VAR
 	PROCEDURE ^ Create*(historyName, name: TFileName; log: TLog; flags: SET): LONGINT; 
 	PROCEDURE ^ NewVersion*(name: TFileName; log: TLog; flags: SET): LONGINT; 
 	PROCEDURE ^ newVersion(historyName, name: TFileName; log: TLog; flags: SET): LONGINT; 
-	PROCEDURE ^ View*(name: TFileName; n: LONGINT; newFileName: TFileName): LONGINT; 
+	PROCEDURE ^ View*(name: TFileName; n: LONGINT; newFileName: TFileName): WORD; 
 	PROCEDURE ^ Extract*(name: TFileName; n: LONGINT): LONGINT; 
 BEGIN
 END OdVCSBase.

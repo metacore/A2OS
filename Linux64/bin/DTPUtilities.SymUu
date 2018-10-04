@@ -72,7 +72,8 @@ TYPE
 		label: WMStandardComponents.Label; 
 		panel: WMStandardComponents.Panel; 
 		button: WMStandardComponents.Button; 
-		result, chosenColor*: LONGINT; 
+		result: WORD; 
+		chosenColor*: LONGINT; 
 		shown: BOOLEAN; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 

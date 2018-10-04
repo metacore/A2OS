@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE ^ Exit*; 
 		PROCEDURE ^ DeleteStringFromDisplay(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ ReadCommand(VAR command: ARRAY OF CHAR): CHAR; 
-		PROCEDURE ^ Parse(VAR cmd: Command; VAR wait: BOOLEAN): LONGINT; 
+		PROCEDURE ^ Parse(VAR cmd: Command; VAR wait: BOOLEAN): WORD; 
 		PROCEDURE ^ ReadAlias(cmd: Command; verbose: BOOLEAN); 
 		PROCEDURE ^ ReplaceAlias(cmd: Command): BOOLEAN; 
 		PROCEDURE ^ ShowHelp; 

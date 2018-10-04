@@ -133,7 +133,7 @@ TYPE
 		END; 
 		nofForwardPtr: LONGINT; 
 
-		PROCEDURE ^ Error(n, pos: LONGINT); 
+		PROCEDURE ^ Error(n: WORD; pos: LONGINT); 
 		PROCEDURE ^ Check(x: PCS.Token); 
 		PROCEDURE ^ CheckSemicolons; 
 		PROCEDURE ^ CheckSysImported(module: PCT.Module); 

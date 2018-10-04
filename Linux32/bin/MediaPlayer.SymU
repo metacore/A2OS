@@ -104,8 +104,8 @@ TYPE
 		PROCEDURE ^ ReturnBuffer(buf: VideoBuffer); 
 		PROCEDURE ^ DropFrames(n: LONGINT); 
 		PROCEDURE ^ GetPos(): LONGINT; 
-		PROCEDURE ^ SeekAndGetFrame(pos: LONGINT; VAR f: WMGraphics.Image; VAR res: WORD); 
-		PROCEDURE ^ SeekFrame(pos: LONGINT; isKeyFrame: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ SeekAndGetFrame(pos: LONGINT; VAR f: WMGraphics.Image; VAR res: LONGINT); 
+		PROCEDURE ^ SeekFrame(pos: LONGINT; isKeyFrame: BOOLEAN; VAR res: LONGINT); 
 		PROCEDURE ^ NofFullBuffers(): LONGINT; 
 		PROCEDURE ^ Stop; 
 		PROCEDURE ^ Close; 

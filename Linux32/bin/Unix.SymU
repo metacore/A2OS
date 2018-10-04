@@ -8,6 +8,7 @@ CONST
 	LittleEndian* = TRUE; 
 	LsbIs0* = TRUE; 
 	PageSize* = 4096; 
+	AlternateStackSize = (32 * 4096); 
 	stdin* = 0; 
 	stdout* = 1; 
 	stderr* = 2; 
@@ -378,7 +379,6 @@ VAR
 	sysinfo-: RECORD 
 		sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR; 
 	END; 
-	sigstack-: ARRAY (32 * 4096) OF CHAR; 
 	sysconf: PROCEDURE {C}(name: LONGINT):WORD; 
 	pthread_mutex_init: PROCEDURE {C}(mutex: ADDRESS; mutexattr: ADDRESS):WORD; 
 	pthread_mutex_destroy: PROCEDURE {C}(mutex: ADDRESS):WORD; 
@@ -400,9 +400,12 @@ VAR
 	pthread_setspecific: PROCEDURE {C}(key: Key_t; value: ADDRESS):WORD; 
 	pthread_getspecific: PROCEDURE {C}(key: Key_t):ADDRESS; 
 	pthread_attr_init: PROCEDURE {C}(attr: ADDRESS); 
+	pthread_attr_destroy: PROCEDURE {C}(attr: ADDRESS); 
 	pthread_attr_setscope: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
 	pthread_attr_setdetachstate: PROCEDURE {C}(attr: ADDRESS; set: WORD); 
 	pthread_attr_setstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: SIZE); 
+	pthread_attr_getstacksize: PROCEDURE {C}(attr: ADDRESS; stackSize: ADDRESS); 
+	pthread_getattr_np: PROCEDURE {C}(thr: ADDRESS; attr: ADDRESS); 
 	pthread_self-: PROCEDURE {C}():Thread_t; 
 	sched_get_priority_max: PROCEDURE {C}(policy: LONGINT):LONGINT; 
 	sched_get_priority_min: PROCEDURE {C}(policy: LONGINT):LONGINT; 
@@ -491,7 +494,6 @@ VAR
 	libx-: ADDRESS; 
 	libraryPaths: ARRAY 8 OF ARRAY 32 OF CHAR; 
 	noPaths: LONGINT; 
-	sigstk: Stack; 
 	suspendHandler*: PROCEDURE (c: Ucontext); 
 	trap: SignalTrap; 
 	oberonXErrorHandler: OberonXErrorHandler; 
@@ -515,7 +517,6 @@ VAR
 	PROCEDURE ^ ThrExit*; 
 	PROCEDURE ^ ThrSetPriority*(thr: Thread_t; prio: LONGINT); 
 	PROCEDURE ^ ThrGetPriority*(thr: Thread_t): LONGINT; 
-	PROCEDURE ^ SetSigaltstack; 
 	PROCEDURE ^ {C} Starter(proc: PROCEDURE ): ADDRESS; 
 	PROCEDURE ^ ThrStart*(p: PROCEDURE ; stackSize: SIZE): Thread_t; 
 	PROCEDURE ^ ThrSleep*(ms: LONGINT); 
@@ -534,7 +535,6 @@ VAR
 	PROCEDURE ^ GetArg*(no: LONGINT; VAR val: ARRAY OF CHAR); 
 	PROCEDURE ^ GetArgval*(CONST argName: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
 	PROCEDURE ^ getSysinfo; 
-	PROCEDURE ^ CreateSignalStack; 
 	PROCEDURE ^ {C} SigHandler(sig: LONGINT; scp: ADDRESS; ucp: Ucontext); 
 	PROCEDURE ^ InstallTrap*(h: SignalTrap); 
 	PROCEDURE ^ InstallHandler(sig: LONGINT); 

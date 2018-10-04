@@ -27,7 +27,8 @@ TYPE
 		login: ARRAY 9 OF CHAR; 
 		password, passwordConfirm: ARRAY 33 OF CHAR; 
 		shortName, fullName, eMail: ARRAY 65 OF CHAR; 
-		uin, res: LONGINT; 
+		uin: LONGINT; 
+		res: WORD; 
 		dt: Dates.DateTime; 
 		keepAliveTimer: Kernel.MilliTimer; 
 		s: UDP.Socket; 

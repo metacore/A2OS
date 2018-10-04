@@ -10,7 +10,7 @@ CONST
 	BufSize = 16384; 
 TYPE 
 	Reader* = RECORD 
-		res-: LONGINT; 
+		res-: WORD; 
 		crc32-: LONGINT; 
 		wrapper-: BOOLEAN; 
 		eof: BOOLEAN; 

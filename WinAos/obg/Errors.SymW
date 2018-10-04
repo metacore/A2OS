@@ -22,12 +22,12 @@ VAR
 	index: LONGINT; 
 	lastModuleName: Modules.Name; 
 
-	PROCEDURE ^ GetErrorString(errorCode: LONGINT): Strings.String; 
-	PROCEDURE ^ GetErrorMessage*(errorCode: LONGINT): ErrorMessage; 
-	PROCEDURE ^ ToStream*(errorCode: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ GetErrorString(errorCode: WORD): Strings.String; 
+	PROCEDURE ^ GetErrorMessage*(errorCode: WORD): ErrorMessage; 
+	PROCEDURE ^ ToStream*(errorCode: WORD; out: Streams.Writer); 
 	PROCEDURE ^ ResizeCache; 
 	PROCEDURE ^ Add(CONST errorMessage: ErrorMessage); 
-	PROCEDURE ^ Get(number: LONGINT; VAR errorMessage: ErrorMessage; VAR res: WORD); 
+	PROCEDURE ^ Get(number: WORD; VAR errorMessage: ErrorMessage; VAR res: WORD); 
 	PROCEDURE ^ ParseLine(reader: Streams.Reader; VAR errorMessage: ErrorMessage; VAR res: WORD); 
 	PROCEDURE ^ ParseFile(CONST filename: Files.FileName; VAR res: WORD); 
 	PROCEDURE ^ Open*(context: Commands.Context); 

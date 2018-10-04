@@ -12,7 +12,7 @@ TYPE
 
 		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
+		PROCEDURE ^ GetSize*(VAR size: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: WORD); 
 		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: LONGINT); 
 	END VirtualDisk; 

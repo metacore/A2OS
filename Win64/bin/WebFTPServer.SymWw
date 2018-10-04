@@ -56,7 +56,8 @@ TYPE
 		ip: IP.Adr; 
 		method: ARRAY 16 OF CHAR; 
 		uri: ARRAY 1024 OF CHAR; 
-		status, result: LONGINT; 
+		status: LONGINT; 
+		result: WORD; 
 		pending: BOOLEAN; 
 	END; 
 

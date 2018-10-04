@@ -252,7 +252,7 @@ TYPE
 		PROCEDURE ^ ProcessHead*; 
 		PROCEDURE ^ WriteEntry(entry: Entry); 
 		PROCEDURE ^ GetString(cur, max: LONGINT; CONST unit, status: ARRAY OF CHAR): String; 
-		PROCEDURE ^ ReportTransferError(name: ARRAY OF CHAR; op, adr, res: LONGINT); 
+		PROCEDURE ^ ReportTransferError(name: ARRAY OF CHAR; op, adr: LONGINT; res: WORD); 
 		PROCEDURE ^ ValidShortChar(ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ ValidLongChar(ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ Equals(CONST op1, op2: ARRAY OF CHAR): BOOLEAN; 

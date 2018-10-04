@@ -62,7 +62,7 @@ TYPE
 	Reader* = POINTER TO ReaderDesc; 
 
 	ReaderDesc* = RECORD 
-		res-: LONGINT; 
+		res-: WORD; 
 		open: BOOLEAN; 
 		ent: Entry; 
 	END; 
@@ -80,7 +80,7 @@ TYPE
 		zr: ZlibReaders.Reader; 
 	END; 
 
-	PROCEDURE ^ ShowError*(errorCode: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ ShowError*(errorCode: WORD; out: Streams.Writer); 
 	PROCEDURE ^ StringLength(CONST str: ARRAY OF CHAR): LONGINT; 
 	PROCEDURE ^ OberonToDosTime(t: LONGINT): INTEGER; 
 	PROCEDURE ^ OberonToDosDate(d: LONGINT): INTEGER; 

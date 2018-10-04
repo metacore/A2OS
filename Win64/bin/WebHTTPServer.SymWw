@@ -69,7 +69,8 @@ TYPE
 
 	HTTPAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
-		res, len: LONGINT; 
+		res: WORD; 
+		len: LONGINT; 
 		body, closeRequested: BOOLEAN; 
 		out: Streams.Writer; 
 		in, inR: Streams.Reader; 

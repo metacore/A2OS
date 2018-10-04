@@ -55,7 +55,7 @@ VAR
 	random: Random.Generator; 
 
 	PROCEDURE ^ ShowModule; 
-	PROCEDURE ^ GetSlowdownValues(bps: LONGINT; VAR eachNCharacters, waitForMs, res: LONGINT); 
+	PROCEDURE ^ GetSlowdownValues(bps: LONGINT; VAR eachNCharacters, waitForMs: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ IsValidPortNumber(portNbr: LONGINT): BOOLEAN; 
 	PROCEDURE ^ SendFileIntern(portNbr: LONGINT; CONST filename: ARRAY OF CHAR; loop: BOOLEAN; context: Commands.Context); 
 	PROCEDURE ^ SendFile*(context: Commands.Context); 

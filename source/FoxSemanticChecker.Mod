@@ -7356,7 +7356,7 @@ TYPE
 		VAR recentExclusive, recentUnreachable, recentRealtime: BOOLEAN; recentScope: SyntaxTree.Scope;
 		BEGIN
 			recentScope := currentScope;
-			IF statementBlock.scope # NIL THEN currentScope := statementBlock.scope END;
+			(* IF statementBlock.scope # NIL THEN currentScope := statementBlock.scope END;*)
 			BlockFlags(statementBlock);
 			IF statementBlock.isExclusive THEN
 				(* check that not in exclusive block *)

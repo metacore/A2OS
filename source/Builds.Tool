@@ -128,7 +128,7 @@ LINUX32 -- 32 bit linux a2
 LINUX64 -- 64 bit linux a2
 ================================
 
-	Release.Build --path=NewAos/ Linux64 ~
+	Release.Build  --path=NewAos/ Linux64 ~
 	
 	## X11 bootconsole ##
 		Linker.Link -p=Linux64 --path=NewAos/
@@ -146,7 +146,7 @@ LINUX64 -- 64 bit linux a2
 DARWIN32 -- 32 bit darwin a2
 ================================
 
-	Release.Build -b Darwin32 ~
+	Release.Build -b --path=NewAos/ Darwin32 ~
 	
 	## X11 bootconsole ##
 		Linker.Link -p=Darwin32 --path=./NewAos/
@@ -158,7 +158,7 @@ DARWIN32 -- 32 bit darwin a2
 SOLARIS32 -- 32 bit solaris a2
 ================================
 
-	Release.Build -b Solaris32 ~
+	Release.Build -b --path=NewAos/ Solaris32 ~
 	
 	## X11 bootconsole ##
 		Linker.Link -p=Solaris32 --path=./NewAos/

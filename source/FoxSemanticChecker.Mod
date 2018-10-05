@@ -9,7 +9,6 @@ CONST
 	Trace = FALSE;
 
 	Infinity = MAX(LONGINT); (* for type distance *)
-	MaxTensorIndexOperatorSize = 4;
 	UndefinedPhase = 0; DeclarationPhase=1; InlinePhase=2; ImplementationPhase=3;
 
 TYPE
@@ -95,7 +94,6 @@ TYPE
 			- set in AcceptXXX procedures
 			- set and read in ResolveXXX procedures
 		*)
-		resolvedType: SyntaxTree.Type; (** temporary used for type resolution **)
 		resolvedExpression: SyntaxTree.Expression; (** temporary variable used for expression resolution **)
 		resolvedStatement: SyntaxTree.Statement; (** used for statement resolution **)
 		currentScope-: SyntaxTree.Scope;
@@ -120,7 +118,6 @@ TYPE
 			error := FALSE;
 			NEW(typeFixes);
 			NEW(pointerFixes);
-			resolvedType := NIL;
 			resolvedExpression := NIL;
 			resolvedStatement := NIL;
 			currentScope := NIL;
@@ -142,6 +139,7 @@ TYPE
 			inConversion := 0;
 		END InitChecker;
 
+		(*------------ service -------------*)
 		(** report error **)
 		PROCEDURE Error(position: Position; CONST message: ARRAY OF CHAR);
 		VAR errModule: SyntaxTree.Module;
@@ -158,8 +156,7 @@ TYPE
 			IF module # NIL THEN errModule := module ELSE errModule := currentScope.ownerModule END;
 			Basic.Warning(diagnostics, errModule.sourceName, position, message);
 		END Warning;
-
-
+		
 		PROCEDURE ErrorSS(position: Position; CONST msg,msg2: ARRAY OF CHAR);
 		VAR errorMessage: ARRAY 256 OF CHAR;
 		BEGIN
@@ -233,7 +230,7 @@ TYPE
 			RETURN symbol
 		END Find;
 
-		(*** types ***)
+		(*------------ types -------------*)
 
 		(** find type declaration with name qualifiedIdentifier and return resolved type
 			- check qualified identifier prefix, set scope to module scope if appropriate
@@ -294,128 +291,8 @@ TYPE
 				ASSERT(result # NIL);
 			END;
 			currentScope := prevScope;
-
-
 			RETURN result
 		END ResolveNamedType;
-
-		(** Check if a node has already been resolved. If not then mark as currently being resolved.
-			If node is currently being resolved then emit a cyclic definition error.
-			Return TRUE only if node is fully resolved.
-		**)
-		PROCEDURE TypeNeedsResolution(x: SyntaxTree.Type): BOOLEAN;
-		VAR result: BOOLEAN;
-		BEGIN
-			IF SyntaxTree.Resolved IN x.state THEN
-				result := FALSE
-			ELSIF SyntaxTree.BeingResolved IN x.state THEN
-				Error(x.position,"cyclic definition");
-				result := FALSE;
-			ELSE
-				result := TRUE;
-				x.SetState(SyntaxTree.BeingResolved)
-			END;
-			RETURN result
-		END TypeNeedsResolution;
-
-		(** Return invalid type if x is currently being resolved, return x otherwise**)
-		PROCEDURE ResolvedType(x: SyntaxTree.Type): SyntaxTree.Type;
-		BEGIN
-			IF SyntaxTree.Resolved IN x.state THEN
-				RETURN x
-			ELSE
-				RETURN SyntaxTree.invalidType
-			END;
-		END ResolvedType;
-
-		PROCEDURE VisitType*(x: SyntaxTree.Type);
-		BEGIN
-			ASSERT(x = SyntaxTree.invalidType);
-		END VisitType;
-
-		(** resolve basic type **)
-		PROCEDURE VisitBasicType*(x: SyntaxTree.BasicType);
-		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				x.SetState(SyntaxTree.Resolved);
-			END;
-			resolvedType := ResolvedType(x)
-		END VisitBasicType;
-
-		PROCEDURE VisitByteType*(x: SyntaxTree.ByteType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitByteType;
-
-		(** resolve character type **)
-		PROCEDURE VisitCharacterType*(x: SyntaxTree.CharacterType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitCharacterType;
-
-		PROCEDURE VisitBooleanType*(x: SyntaxTree.BooleanType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitBooleanType;
-
-		PROCEDURE VisitSetType*(x: SyntaxTree.SetType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitSetType;
-
-		PROCEDURE VisitAddressType*(x: SyntaxTree.AddressType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitAddressType;
-
-		PROCEDURE VisitSizeType*(x: SyntaxTree.SizeType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitSizeType;
-
-		PROCEDURE VisitAnyType*(x: SyntaxTree.AnyType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitAnyType;
-
-		PROCEDURE VisitObjectType*(x: SyntaxTree.ObjectType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitObjectType;
-
-		PROCEDURE VisitNilType*(x: SyntaxTree.NilType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitNilType;
-
-		(** resolve integer type **)
-		PROCEDURE VisitIntegerType*(x: SyntaxTree.IntegerType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitIntegerType;
-
-		(** resolve real type **)
-		PROCEDURE VisitFloatType*(x: SyntaxTree.FloatType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitFloatType;
-
-		(** resolve complex type **)
-		PROCEDURE VisitComplexType*(x: SyntaxTree.ComplexType);
-		BEGIN
-			VisitBasicType(x);
-		END VisitComplexType;
-
-		(**
-			resolve string type: nothing to be done
-		**)
-		PROCEDURE VisitStringType*(x: SyntaxTree.StringType);
-		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				x.SetState(SyntaxTree.Resolved);
-			END;
-			resolvedType := ResolvedType(x)
-		END VisitStringType;
 
 		(**
 			check enumeration scope: enter symbols and check for duplicate names
@@ -454,62 +331,48 @@ TYPE
 		(**
 			resolve enumeration type: check enumeration scope
 		**)
-		PROCEDURE VisitEnumerationType*(x: SyntaxTree.EnumerationType);
+		PROCEDURE ResolveEnumerationType(x: SyntaxTree.EnumerationType);
 		VAR position: Position; baseScope: SyntaxTree.EnumerationScope; baseType,resolved: SyntaxTree.Type; enumerationBase: SyntaxTree.EnumerationType;
 			lowest, highest: Basic.Integer;
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				IF x.enumerationBase # NIL THEN
-					position := x.enumerationBase.position;
-					baseType := ResolveType(x.enumerationBase);
-					resolved := baseType.resolved;
-					baseScope := NIL;
-					IF resolved = SyntaxTree.invalidType THEN (* error already handled *)
-					ELSIF ~(resolved IS SyntaxTree.EnumerationType) THEN
-						Error(position, "base type is no enumeration type");
-					ELSE
-						enumerationBase := resolved(SyntaxTree.EnumerationType);
-						lowest := enumerationBase.rangeHighest+1;
-					END;
-					x.SetEnumerationBase(baseType);
-				ELSE lowest := 0;
+			IF x.enumerationBase # NIL THEN
+				position := x.enumerationBase.position;
+				baseType := ResolveType(x.enumerationBase);
+				resolved := baseType.resolved;
+				baseScope := NIL;
+				IF resolved = SyntaxTree.invalidType THEN (* error already handled *)
+				ELSIF ~(resolved IS SyntaxTree.EnumerationType) THEN
+					Error(position, "base type is no enumeration type");
+				ELSE
+					enumerationBase := resolved(SyntaxTree.EnumerationType);
+					lowest := enumerationBase.rangeHighest+1;
 				END;
-				highest := lowest-1;
-				CheckEnumerationScope(x.enumerationScope, highest);
-				x.SetRange(lowest, highest);
-				x.SetState(SyntaxTree.Resolved);
+				x.SetEnumerationBase(baseType);
+			ELSE lowest := 0;
 			END;
-			resolvedType := ResolvedType(x);
-		END VisitEnumerationType;
-
-		(**
-			resolve range type: nothing to be done
-		**)
-		PROCEDURE VisitRangeType*(x: SyntaxTree.RangeType);
-		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				x.SetState(SyntaxTree.Resolved);
-			END;
-			resolvedType := ResolvedType(x)
-		END VisitRangeType;
+			highest := lowest-1;
+			CheckEnumerationScope(x.enumerationScope, highest);
+			x.SetRange(lowest, highest);
+			x.SetState(SyntaxTree.Resolved);
+		END ResolveEnumerationType;
 
 		(**
 			resolve qualified type
 			- find and resolve named type and set resolved type
 		**)
-		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
+		PROCEDURE ResolveQualifiedType(x: SyntaxTree.QualifiedType);
 		VAR type: SyntaxTree.Type; typeDeclaration: SyntaxTree.TypeDeclaration;
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				type := ResolveNamedType(x.qualifiedIdentifier, typeDeclaration);
-				x.SetResolved(type.resolved);
-				x.SetState(SyntaxTree.Resolved);
-				x.SetTypeDeclaration (typeDeclaration);
+			type := ResolveNamedType(x.qualifiedIdentifier, typeDeclaration);
+			x.SetResolved(type.resolved);
+			x.SetState(SyntaxTree.Resolved);
+			x.SetTypeDeclaration (typeDeclaration);
+			(*
 			ELSIF ~(SyntaxTree.Resolved IN x.state) THEN
 				x.SetResolved(SyntaxTree.invalidType);
 			END;
-			resolvedType := x;
-		END VisitQualifiedType;
+			*)
+		END ResolveQualifiedType;
 
 		(**
 			resolve array type
@@ -517,52 +380,48 @@ TYPE
 				- array of math array  forbidden
 				- static array of open array forbidden
 		**)
-		PROCEDURE VisitArrayType*(x: SyntaxTree.ArrayType);
+		PROCEDURE ResolveArrayType(x: SyntaxTree.ArrayType);
 		VAR arrayBase: SyntaxTree.Type; e: SyntaxTree.Expression; pointerType: SyntaxTree.PointerType;
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				x.SetArrayBase(ResolveType(x.arrayBase));
-				IF x.arrayBase.resolved.isRealtime THEN x.SetRealtime(TRUE) END;
-				arrayBase := x.arrayBase.resolved;
-				IF (arrayBase IS SyntaxTree.CellType) (*& (cellsAreObjects)*) THEN
-					pointerType := SyntaxTree.NewPointerType(x.position, x.scope);
-					pointerType.SetPointerBase(arrayBase);
-					pointerType.SetHidden(TRUE);
-					IF x.arrayBase IS SyntaxTree.QualifiedType THEN
-						x.arrayBase(SyntaxTree.QualifiedType).SetResolved(pointerType)
-					ELSE
-						x.SetArrayBase(pointerType);
-					END;
+			x.SetArrayBase(ResolveType(x.arrayBase));
+			IF x.arrayBase.resolved.isRealtime THEN x.SetRealtime(TRUE) END;
+			arrayBase := x.arrayBase.resolved;
+			IF (arrayBase IS SyntaxTree.CellType) (*& (cellsAreObjects)*) THEN
+				pointerType := SyntaxTree.NewPointerType(x.position, x.scope);
+				pointerType.SetPointerBase(arrayBase);
+				pointerType.SetHidden(TRUE);
+				IF x.arrayBase IS SyntaxTree.QualifiedType THEN
+					x.arrayBase(SyntaxTree.QualifiedType).SetResolved(pointerType)
+				ELSE
+					x.SetArrayBase(pointerType);
 				END;
-				IF x.length # NIL THEN
-				
-					variableAccessed := FALSE;
-					e := ResolveExpression(x.length);
-			
-					IF (e.resolved = NIL) THEN
-						IF variableAccessed THEN
-							Error(e.position, "forbidden variable access");
-						END;
-						IF CheckSizeType(e) THEN
-							x.SetLength(e); x.SetForm(SyntaxTree.SemiDynamic);
-						END;
-					ELSE
-						x.SetLength(ConstantIntegerGeq0(e (*x.length*)));
-					END;
-				END;
-
-				IF arrayBase IS SyntaxTree.ArrayType THEN
-					IF (x.form = SyntaxTree.Static) & (arrayBase(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
-						Error(x.position,"forbidden static array of dynamic array");
-					END;
-				ELSIF arrayBase IS SyntaxTree.MathArrayType THEN
-					Error(x.position,"forbidden array mixed form");
-				END;
-				x.SetHasPointers(arrayBase.hasPointers);
-				x.SetState(SyntaxTree.Resolved);
 			END;
-			resolvedType := ResolvedType(x);
-		END VisitArrayType;
+			IF x.length # NIL THEN
+				variableAccessed := FALSE;
+				e := ResolveExpression(x.length);
+		
+				IF (e.resolved = NIL) THEN
+					IF variableAccessed THEN
+						Error(e.position, "forbidden variable access");
+					END;
+					IF CheckSizeType(e) THEN
+						x.SetLength(e); x.SetForm(SyntaxTree.SemiDynamic);
+					END;
+				ELSE
+					x.SetLength(ConstantIntegerGeq0(e (*x.length*)));
+				END;
+			END;
+
+			IF arrayBase IS SyntaxTree.ArrayType THEN
+				IF (x.form = SyntaxTree.Static) & (arrayBase(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
+					Error(x.position,"forbidden static array of dynamic array");
+				END;
+			ELSIF arrayBase IS SyntaxTree.MathArrayType THEN
+				Error(x.position,"forbidden array mixed form");
+			END;
+			x.SetHasPointers(arrayBase.hasPointers);
+			x.SetState(SyntaxTree.Resolved);
+		END ResolveArrayType;
 
 		PROCEDURE ImportModule(name: SyntaxTree.Identifier; position: Position);
 		VAR module: SyntaxTree.Module; import, duplicate: SyntaxTree.Import; moduleScope: SyntaxTree.ModuleScope;
@@ -601,40 +460,37 @@ TYPE
 				- math array of tensor forbidden
 				- static array of open array forbidden
 		**)
-		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
+		PROCEDURE ResolveMathArrayType(x: SyntaxTree.MathArrayType);
 		VAR arrayBase: SyntaxTree.Type; modifiers: SyntaxTree.Modifier; position: SyntaxTree.Position;
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				x.SetArrayBase(ResolveType(x.arrayBase));
-				IF x.length # NIL THEN
-					x.SetLength(ConstantIntegerGeq0(x.length));
-				END;
-				arrayBase := x.arrayBase;
-				IF arrayBase # NIL THEN
-					arrayBase := arrayBase.resolved;
-					IF arrayBase = SyntaxTree.invalidType THEN
-						(* error already handled *)
-					ELSIF arrayBase IS SyntaxTree.ArrayType THEN
-						Error(x.position,"forbidden array mixed form");
-					ELSIF arrayBase IS SyntaxTree.MathArrayType THEN
-						IF (x.form = SyntaxTree.Tensor) OR (arrayBase(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) THEN
-							Error(x.position,"forbidden Tensor Array mix")
-						ELSIF (x.form=SyntaxTree.Static) & (arrayBase(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
-							Error(x.position,"forbidden static array of dynamic array")
-						END;
-					END;
-					IF x.form = SyntaxTree.Static THEN
-						x.SetIncrement(system.SizeOf(arrayBase));
-					END;
-					x.SetHasPointers((x.form # SyntaxTree.Static) OR arrayBase.hasPointers);
-				END;
-				modifiers := x.modifiers;
-				x.SetUnsafe(HasFlag(modifiers,Global.NameUnsafe,position));
-				CheckModifiers(modifiers, TRUE);
-				x.SetState(SyntaxTree.Resolved);
+			x.SetArrayBase(ResolveType(x.arrayBase));
+			IF x.length # NIL THEN
+				x.SetLength(ConstantIntegerGeq0(x.length));
 			END;
-			resolvedType := ResolvedType(x);
-		END VisitMathArrayType;
+			arrayBase := x.arrayBase;
+			IF arrayBase # NIL THEN
+				arrayBase := arrayBase.resolved;
+				IF arrayBase = SyntaxTree.invalidType THEN
+					(* error already handled *)
+				ELSIF arrayBase IS SyntaxTree.ArrayType THEN
+					Error(x.position,"forbidden array mixed form");
+				ELSIF arrayBase IS SyntaxTree.MathArrayType THEN
+					IF (x.form = SyntaxTree.Tensor) OR (arrayBase(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor) THEN
+						Error(x.position,"forbidden Tensor Array mix")
+					ELSIF (x.form=SyntaxTree.Static) & (arrayBase(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+						Error(x.position,"forbidden static array of dynamic array")
+					END;
+				END;
+				IF x.form = SyntaxTree.Static THEN
+					x.SetIncrement(system.SizeOf(arrayBase));
+				END;
+				x.SetHasPointers((x.form # SyntaxTree.Static) OR arrayBase.hasPointers);
+			END;
+			modifiers := x.modifiers;
+			x.SetUnsafe(HasFlag(modifiers,Global.NameUnsafe,position));
+			CheckModifiers(modifiers, TRUE);
+			x.SetState(SyntaxTree.Resolved);
+		END ResolveMathArrayType;
 
 		(* anonymous type declarations are used for variables that use an anonymous type. They are not used for records that are
 			pointed to by a pointer to record. The following diagram shows the possible cases for records and pointer to records.
@@ -721,56 +577,50 @@ TYPE
 			resolve pointer type
 			- enter pointer type to list of deferred fixes (to avoid infinite loops in the declaration phase)
 		**)
-		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
+		PROCEDURE ResolvePointerType(x: SyntaxTree.PointerType);
 		VAR recordType: SyntaxTree.RecordType; recordBaseType: SyntaxTree.Type;
 		modifiers: SyntaxTree.Modifier; position: Position;
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				modifiers := x.modifiers;
-				x.SetRealtime(HasFlag(modifiers,Global.NameRealtime, position));
-				x.SetPlain(HasFlag(modifiers,Global.NamePlain,position));
-				x.SetDisposable(HasFlag(modifiers,Global.NameDisposable, position));
-				x.SetUnsafe(HasFlag(modifiers,Global.NameUnsafe,position));
-				x.SetUntraced(HasFlag(modifiers,Global.NameUntraced,position));
-				(* inheritance cycle check
-					example:
-					A=POINTER TO RECORD(B) END;
-					B=POINTER TO RECORD(A) END;
-				*)
-				IF x.pointerBase IS SyntaxTree.RecordType THEN
-					recordType := x.pointerBase(SyntaxTree.RecordType);
-					IF x.isRealtime THEN recordType.SetRealtime(TRUE) END;
-					recordBaseType := ResolveType(recordType.baseType);
-					recordType.SetBaseType(recordBaseType);
-					recordType.SetProtected(HasFlag(modifiers, Global.NameExclusive, position));
-					recordType.SetAbstract(HasFlag(modifiers, Global.NameAbstract, position));
-				END;
-				CheckModifiers(modifiers, TRUE);
-				typeFixes.Add(x,currentScope);
-				x.SetState(SyntaxTree.Resolved);
+			modifiers := x.modifiers;
+			x.SetRealtime(HasFlag(modifiers,Global.NameRealtime, position));
+			x.SetPlain(HasFlag(modifiers,Global.NamePlain,position));
+			x.SetDisposable(HasFlag(modifiers,Global.NameDisposable, position));
+			x.SetUnsafe(HasFlag(modifiers,Global.NameUnsafe,position));
+			x.SetUntraced(HasFlag(modifiers,Global.NameUntraced,position));
+			(* inheritance cycle check
+				example:
+				A=POINTER TO RECORD(B) END;
+				B=POINTER TO RECORD(A) END;
+			*)
+			IF x.pointerBase IS SyntaxTree.RecordType THEN
+				recordType := x.pointerBase(SyntaxTree.RecordType);
+				IF x.isRealtime THEN recordType.SetRealtime(TRUE) END;
+				recordBaseType := ResolveType(recordType.baseType);
+				recordType.SetBaseType(recordBaseType);
+				recordType.SetProtected(HasFlag(modifiers, Global.NameExclusive, position));
+				recordType.SetAbstract(HasFlag(modifiers, Global.NameAbstract, position));
 			END;
-			resolvedType := ResolvedType(x)
-		END VisitPointerType;
+			CheckModifiers(modifiers, TRUE);
+			typeFixes.Add(x,currentScope);
+			x.SetState(SyntaxTree.Resolved);
+		END ResolvePointerType;
 
 		(**
 			resolve port type
 			- enter port type to list of deferred fixes (to avoid infinite loops in the declaration phase)
 		**)
-		PROCEDURE VisitPortType*(x: SyntaxTree.PortType);
+		PROCEDURE ResolvePortType(x: SyntaxTree.PortType);
 		VAR value: Basic.Integer;
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				x.SetCellsAreObjects(cellsAreObjects);
-				x.SetSizeExpression(ResolveExpression(x.sizeExpression));
-				IF (x.sizeExpression # NIL) & CheckPositiveIntegerValue(x.sizeExpression,value,FALSE) THEN
-					x.SetSize(LONGINT(value)) (* TODO: fix explicit integer truncation *)
-				ELSE
-					x.SetSize(system.SizeOf(system.longintType));
-				END;
-				x.SetState(SyntaxTree.Resolved);
+			x.SetCellsAreObjects(cellsAreObjects);
+			x.SetSizeExpression(ResolveExpression(x.sizeExpression));
+			IF (x.sizeExpression # NIL) & CheckPositiveIntegerValue(x.sizeExpression,value,FALSE) THEN
+				x.SetSize(LONGINT(value)) (* TODO: fix explicit integer truncation *)
+			ELSE
+				x.SetSize(system.SizeOf(system.longintType));
 			END;
-			resolvedType := ResolvedType(x)
-		END VisitPortType;
+			x.SetState(SyntaxTree.Resolved);
+		END ResolvePortType;
 
 		(**
 			deferred procedure type resolving
@@ -926,47 +776,44 @@ TYPE
 			resolve procedure type
 			- enter procedure to list of deferred fixes (to avoid infinite loops in the declaration phase)
 		**)
-		PROCEDURE VisitProcedureType*(procedureType: SyntaxTree.ProcedureType);
+		PROCEDURE ResolveProcedureType(procedureType: SyntaxTree.ProcedureType);
 		VAR modifiers: SyntaxTree.Modifier; value: Basic.Integer; position: Position;
 		BEGIN
-			IF TypeNeedsResolution(procedureType) THEN
-				modifiers := procedureType.modifiers;
-				IF HasFlag(modifiers, Global.NameWinAPI,position) THEN procedureType.SetCallingConvention(SyntaxTree.WinAPICallingConvention)
-				ELSIF HasFlag(modifiers, Global.NameInterrupt,position) THEN
-					procedureType.SetInterrupt(TRUE);
-					procedureType.SetCallingConvention(SyntaxTree.InterruptCallingConvention)
-				ELSIF HasFlag(modifiers,Global.NameC,position) THEN
-					procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
-				ELSIF HasFlag(modifiers,Global.NamePlatformCC, position) THEN
-					IF system.platformCallingConvention = SyntaxTree.UndefinedCallingConvention THEN
-						Error(position, "undefined platform calling convention");
-					ELSE
-						procedureType.SetCallingConvention(system.platformCallingConvention); 
-					END;
+			modifiers := procedureType.modifiers;
+			IF HasFlag(modifiers, Global.NameWinAPI,position) THEN procedureType.SetCallingConvention(SyntaxTree.WinAPICallingConvention)
+			ELSIF HasFlag(modifiers, Global.NameInterrupt,position) THEN
+				procedureType.SetInterrupt(TRUE);
+				procedureType.SetCallingConvention(SyntaxTree.InterruptCallingConvention)
+			ELSIF HasFlag(modifiers,Global.NameC,position) THEN
+				procedureType.SetCallingConvention(SyntaxTree.CCallingConvention)
+			ELSIF HasFlag(modifiers,Global.NamePlatformCC, position) THEN
+				IF system.platformCallingConvention = SyntaxTree.UndefinedCallingConvention THEN
+					Error(position, "undefined platform calling convention");
+				ELSE
+					procedureType.SetCallingConvention(system.platformCallingConvention); 
 				END;
-				IF HasFlag(modifiers, Global.NameNoReturn,position) THEN procedureType.SetNoReturn(TRUE) END;
-				IF HasValue(modifiers,Global.NameStackAligned,position,value) THEN procedureType.SetStackAlignment(LONGINT (value)) END; (* TODO: fix explicit integer truncation *)
-				IF HasFlag(modifiers, Global.NameDelegate,position) THEN procedureType.SetDelegate(TRUE) END;
-				IF HasFlag(modifiers, Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;
-				CheckModifiers(modifiers, TRUE);
-				
-				modifiers := procedureType.returnTypeModifiers;
-				procedureType.SetUntracedReturn(HasFlag(modifiers, Global.NameUntraced, position));
-				CheckModifiers(modifiers, TRUE);
-				
-				typeFixes.Add(procedureType,currentScope);
-				procedureType.SetHasPointers(procedureType.isDelegate);
-				procedureType.SetState(SyntaxTree.Resolved);
 			END;
-			resolvedType := ResolvedType(procedureType)
-		END VisitProcedureType;
+			IF HasFlag(modifiers, Global.NameNoReturn,position) THEN procedureType.SetNoReturn(TRUE) END;
+			IF HasValue(modifiers,Global.NameStackAligned,position,value) THEN procedureType.SetStackAlignment(LONGINT (value)) END; (* TODO: fix explicit integer truncation *)
+			IF HasFlag(modifiers, Global.NameDelegate,position) THEN procedureType.SetDelegate(TRUE) END;
+			IF HasFlag(modifiers, Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;
+			CheckModifiers(modifiers, TRUE);
+			
+			modifiers := procedureType.returnTypeModifiers;
+			procedureType.SetUntracedReturn(HasFlag(modifiers, Global.NameUntraced, position));
+			CheckModifiers(modifiers, TRUE);
+			
+			typeFixes.Add(procedureType,currentScope);
+			procedureType.SetHasPointers(procedureType.isDelegate);
+			procedureType.SetState(SyntaxTree.Resolved);
+		END ResolveProcedureType;
 
 		(** check and resolve record type
 			- check base type: must be record, math array or array-structured object type
 			- check declarations
 			- every record type is guaranteed to have a type declaration in the module scope (anonymous or not)
 		**)
-		PROCEDURE VisitRecordType*(x: SyntaxTree.RecordType);
+		PROCEDURE ResolveRecordType(x: SyntaxTree.RecordType);
 		VAR resolved, baseType: SyntaxTree.Type; position: Position;
 			numberMethods: LONGINT; recordBase, recordType: SyntaxTree.RecordType; procedure: SyntaxTree.Procedure;
 			symbol: SyntaxTree.Symbol; isRealtime: BOOLEAN;
@@ -989,147 +836,144 @@ TYPE
 
 
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				hasPointers := FALSE;
-				
-				modifiers := x.modifiers;
-				IF HasValue(modifiers,Global.NameAligned,position,value) THEN x.SetAlignmentInBits(LONGINT(value)*system.dataUnit) (* TODO: fix explicit integer truncation *)
-				END;
-				IF HasFlag(modifiers,Global.NameAbstract,position) THEN x.SetAbstract(TRUE) END;
-				CheckModifiers(modifiers, TRUE);
-				
-				IF x.baseType # NIL THEN
-
-					position := x.baseType.position;
-					baseType := ResolveType(x.baseType);
-					resolved := baseType.resolved;
-					hasPointers := hasPointers OR resolved.hasPointers;
-
-					IF x.isObject THEN (* object *)
-						ASSERT(x.pointerType # NIL);
-						IF resolved = SyntaxTree.invalidType THEN (* error already handled *)
-						ELSIF resolved IS SyntaxTree.ObjectType THEN (* the type denoted by the <<OBJECT>> alone *)
-							baseType := NIL
-						ELSIF IsPointerToRecord(resolved,recordType) THEN
-							IF ~recordType.isObject THEN Warning(position, "deprecated extension of record to object"); END; 
-						ELSIF resolved IS SyntaxTree.MathArrayType THEN
-						ELSE
-							Error(position,"object does not extend pointer to record, object or math array ")
-						END;
-					ELSIF x.pointerType # NIL THEN (* record with type declaration POINTER TO RECORD *)
-						IF resolved = SyntaxTree.invalidType THEN (* error already handled *)
-						ELSIF IsPointerToRecord(resolved,recordType) THEN
-							IF recordType.isObject THEN Error(position,"pointer to record extends object") END;
-						ELSIF resolved IS SyntaxTree.RecordType THEN
-						ELSE
-							Error(position,"pointer to record does not extend pointer to record or record")
-						END;
-
-					ELSE
-						IF resolved IS SyntaxTree.RecordType THEN
-						ELSE
-							Error(position,"record does not extend record")
-						END;
-					END;
-
-					x.SetBaseType(baseType);
-					IF x.Level() > 15 THEN
-						Error(position, "record/object inheritance level too high");
-						(* note:
-							the restriction to inheritance with a maximum level of 15 is caused by the implementation of the
-							runtime structures: type tests are very efficient and rely on the fact that each type descriptor contains the whole
-							inheritance history of a type.
-							Example: let inhertitance oe given by B(A), C(B), D(C) etc.
-							Then the type descriptor of G contains: A|B|C|D|E|F|G|0|0|0...
-							while the type decriptor of D contains: A|B|C|D|0|0|0|0|0|0...
-						*)
-					END;
-					IF (x.pointerType # NIL) & (resolved IS SyntaxTree.PointerType) & (x.pointerType.isDisposable # resolved(SyntaxTree.PointerType).isDisposable) THEN
-						Error(position, "invalid inheritance of disposable types");
-					END;
-				END;
-				Declarations(x.recordScope, FALSE, {0});
-				
-				x.SetState(SyntaxTree.Resolved);
-				
-				Declarations(x.recordScope, FALSE, {1});
-
-				(* computation of sizes and offsets skipped -> done in backend / system *)
-
-				recordBase := x.GetBaseRecord();
-
-				IF recordBase = NIL THEN numberMethods := 0
-				ELSE numberMethods := recordBase.recordScope.numberMethods
-				END;
-
-				isRealtime := TRUE;
-				IF x.isRealtime & (x.recordScope.bodyProcedure # NIL) THEN
-					x.recordScope.bodyProcedure.type.SetRealtime(TRUE)
-				END;
-				symbol := x.recordScope.firstSymbol; (* sorted symbols, important to go through procedures in a sorted way here !*)
-				WHILE symbol # NIL DO
-					isRealtime := isRealtime & symbol.type.resolved.isRealtime;
-					IF symbol IS SyntaxTree.Variable THEN
-						hasPointers := hasPointers OR symbol.type.resolved.hasPointers & ~symbol(SyntaxTree.Variable).untraced;
-					END;
-					IF symbol IS SyntaxTree.Procedure THEN
-						procedure := symbol(SyntaxTree.Procedure);
-						IF procedure.super # NIL THEN
-							procedure.SetMethodNumber(procedure.super.methodNumber);
-						ELSIF InMethodTable(procedure) THEN (* not a static method *)
-							procedure.SetMethodNumber(numberMethods);
-							INC(numberMethods);
-						END;	
-					IF ~x.isRealtime & procedure.type.resolved.isRealtime THEN
-						Error(procedure.position,"realtime procedure in non-realtime object")
-					END;
-					END;
-					IF x.isRealtime & ~symbol.type.resolved.isRealtime THEN
-						Error(symbol.position,"non-realtime symbol in realtime object")
-					END;
-
-					symbol := symbol.nextSymbol;
-				END;
-				IF isRealtime THEN x.SetRealtime(TRUE) END;
-
-				x.recordScope.SetNumberMethods(numberMethods);
-
-				(* TODO: is this needed anymore? *)
-				IF (x.isObject) & (x.baseType # NIL) & (x.baseType.resolved IS SyntaxTree.RecordType) THEN
-					Error(x.position,"object extends a record")
-				END;
-				IF ~x.isAbstract THEN
-					IF x.recordScope.AbstractProcedure(x.recordScope) # NIL THEN
-						Error(x.position, "non-abstract object contains abstract procedure");
-					END;
-				ELSE
-					IF x.recordScope.AbstractProcedure(x.recordScope) = NIL THEN
-						Error(x.position, "abstract object does not contain an abstract method");
-					END;
-				END;
-				IF (x.typeDeclaration = NIL) THEN
-					IF (x.pointerType # NIL) & (x.pointerType.resolved.typeDeclaration # NIL) THEN
-						x.SetTypeDeclaration(x.pointerType.resolved.typeDeclaration);
-						(*
-						x.pointerType.resolved.typeDeclaration.name.GetString(name);
-						AnonymousTypeDeclaration(x,name);
-						*)
-					ELSE
-						AnonymousTypeDeclaration(x,"Anonymous");
-					END;
-				END;
-				x.SetHasPointers(hasPointers);
-				x.SetState(SyntaxTree.Resolved);
+			hasPointers := FALSE;
+			
+			modifiers := x.modifiers;
+			IF HasValue(modifiers,Global.NameAligned,position,value) THEN x.SetAlignmentInBits(LONGINT(value)*system.dataUnit) (* TODO: fix explicit integer truncation *)
 			END;
-			resolvedType := ResolvedType(x);
-		END VisitRecordType;
+			IF HasFlag(modifiers,Global.NameAbstract,position) THEN x.SetAbstract(TRUE) END;
+			CheckModifiers(modifiers, TRUE);
+			
+			IF x.baseType # NIL THEN
+
+				position := x.baseType.position;
+				baseType := ResolveType(x.baseType);
+				resolved := baseType.resolved;
+				hasPointers := hasPointers OR resolved.hasPointers;
+
+				IF x.isObject THEN (* object *)
+					ASSERT(x.pointerType # NIL);
+					IF resolved = SyntaxTree.invalidType THEN (* error already handled *)
+					ELSIF resolved IS SyntaxTree.ObjectType THEN (* the type denoted by the <<OBJECT>> alone *)
+						baseType := NIL
+					ELSIF IsPointerToRecord(resolved,recordType) THEN
+						IF ~recordType.isObject THEN Warning(position, "deprecated extension of record to object"); END; 
+					ELSIF resolved IS SyntaxTree.MathArrayType THEN
+					ELSE
+						Error(position,"object does not extend pointer to record, object or math array ")
+					END;
+				ELSIF x.pointerType # NIL THEN (* record with type declaration POINTER TO RECORD *)
+					IF resolved = SyntaxTree.invalidType THEN (* error already handled *)
+					ELSIF IsPointerToRecord(resolved,recordType) THEN
+						IF recordType.isObject THEN Error(position,"pointer to record extends object") END;
+					ELSIF resolved IS SyntaxTree.RecordType THEN
+					ELSE
+						Error(position,"pointer to record does not extend pointer to record or record")
+					END;
+
+				ELSE
+					IF resolved IS SyntaxTree.RecordType THEN
+					ELSE
+						Error(position,"record does not extend record")
+					END;
+				END;
+
+				x.SetBaseType(baseType);
+				IF x.Level() > 15 THEN
+					Error(position, "record/object inheritance level too high");
+					(* note:
+						the restriction to inheritance with a maximum level of 15 is caused by the implementation of the
+						runtime structures: type tests are very efficient and rely on the fact that each type descriptor contains the whole
+						inheritance history of a type.
+						Example: let inhertitance oe given by B(A), C(B), D(C) etc.
+						Then the type descriptor of G contains: A|B|C|D|E|F|G|0|0|0...
+						while the type decriptor of D contains: A|B|C|D|0|0|0|0|0|0...
+					*)
+				END;
+				IF (x.pointerType # NIL) & (resolved IS SyntaxTree.PointerType) & (x.pointerType.isDisposable # resolved(SyntaxTree.PointerType).isDisposable) THEN
+					Error(position, "invalid inheritance of disposable types");
+				END;
+			END;
+			Declarations(x.recordScope, FALSE, {0});
+			
+			x.SetState(SyntaxTree.Resolved);
+			
+			Declarations(x.recordScope, FALSE, {1});
+
+			(* computation of sizes and offsets skipped -> done in backend / system *)
+
+			recordBase := x.GetBaseRecord();
+
+			IF recordBase = NIL THEN numberMethods := 0
+			ELSE numberMethods := recordBase.recordScope.numberMethods
+			END;
+
+			isRealtime := TRUE;
+			IF x.isRealtime & (x.recordScope.bodyProcedure # NIL) THEN
+				x.recordScope.bodyProcedure.type.SetRealtime(TRUE)
+			END;
+			symbol := x.recordScope.firstSymbol; (* sorted symbols, important to go through procedures in a sorted way here !*)
+			WHILE symbol # NIL DO
+				isRealtime := isRealtime & symbol.type.resolved.isRealtime;
+				IF symbol IS SyntaxTree.Variable THEN
+					hasPointers := hasPointers OR symbol.type.resolved.hasPointers & ~symbol(SyntaxTree.Variable).untraced;
+				END;
+				IF symbol IS SyntaxTree.Procedure THEN
+					procedure := symbol(SyntaxTree.Procedure);
+					IF procedure.super # NIL THEN
+						procedure.SetMethodNumber(procedure.super.methodNumber);
+					ELSIF InMethodTable(procedure) THEN (* not a static method *)
+						procedure.SetMethodNumber(numberMethods);
+						INC(numberMethods);
+					END;	
+				IF ~x.isRealtime & procedure.type.resolved.isRealtime THEN
+					Error(procedure.position,"realtime procedure in non-realtime object")
+				END;
+				END;
+				IF x.isRealtime & ~symbol.type.resolved.isRealtime THEN
+					Error(symbol.position,"non-realtime symbol in realtime object")
+				END;
+
+				symbol := symbol.nextSymbol;
+			END;
+			IF isRealtime THEN x.SetRealtime(TRUE) END;
+
+			x.recordScope.SetNumberMethods(numberMethods);
+
+			(* TODO: is this needed anymore? *)
+			IF (x.isObject) & (x.baseType # NIL) & (x.baseType.resolved IS SyntaxTree.RecordType) THEN
+				Error(x.position,"object extends a record")
+			END;
+			IF ~x.isAbstract THEN
+				IF x.recordScope.AbstractProcedure(x.recordScope) # NIL THEN
+					Error(x.position, "non-abstract object contains abstract procedure");
+				END;
+			ELSE
+				IF x.recordScope.AbstractProcedure(x.recordScope) = NIL THEN
+					Error(x.position, "abstract object does not contain an abstract method");
+				END;
+			END;
+			IF (x.typeDeclaration = NIL) THEN
+				IF (x.pointerType # NIL) & (x.pointerType.resolved.typeDeclaration # NIL) THEN
+					x.SetTypeDeclaration(x.pointerType.resolved.typeDeclaration);
+					(*
+					x.pointerType.resolved.typeDeclaration.name.GetString(name);
+					AnonymousTypeDeclaration(x,name);
+					*)
+				ELSE
+					AnonymousTypeDeclaration(x,"Anonymous");
+				END;
+			END;
+			x.SetHasPointers(hasPointers);
+			x.SetState(SyntaxTree.Resolved);
+		END ResolveRecordType;
 
 			(** check and resolve cell type
 			- check base type: must be cell
 			- check declarations
 			- every cell type is guaranteed to have a type declaration in the module scope (anonymous or not)
 		**)
-		PROCEDURE VisitCellType*(x: SyntaxTree.CellType);
+		PROCEDURE ResolveCellType(x: SyntaxTree.CellType);
 		VAR
 			symbol: SyntaxTree.Symbol; isRealtime: BOOLEAN; parameter: SyntaxTree.Parameter; type: SyntaxTree.Type; len: LONGINT;
 			modifier: SyntaxTree.Modifier; position: Position; value: Basic.Integer; isEngine: BOOLEAN; property: SyntaxTree.Property;
@@ -1143,426 +987,180 @@ TYPE
 			v: SyntaxTree.Expression;
 			str: Scanner.StringType;
 			atype: SyntaxTree.ArrayType;
-			prev: SyntaxTree.Scope;
-			
+			prev: SyntaxTree.Scope;			
 		BEGIN
-			IF TypeNeedsResolution(x) THEN
-				recordBase := NIL;
-				IF cellsAreObjects THEN
-					IF x.baseType = NIL THEN 
-						qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(x.position, SyntaxTree.NewIdentifier("ActiveCellsRuntime"), SyntaxTree.NewIdentifier("Cell"));
-						ImportModule(qualifiedIdentifier.prefix, x.position);
-						x.SetBaseType(SyntaxTree.NewQualifiedType(x.position, currentScope, qualifiedIdentifier));
-						x.SetBaseType(ResolveType(x.baseType));
-						recordBase := x.GetBaseRecord();
-						IF recordBase = NIL THEN
-							Error(x.position,"ActiveCellsRuntime.Cell not present");
-						END;
-					ELSE
-						x.SetBaseType(ResolveType(x.baseType));
+			recordBase := NIL;
+			IF cellsAreObjects THEN
+				IF x.baseType = NIL THEN 
+					qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(x.position, SyntaxTree.NewIdentifier("ActiveCellsRuntime"), SyntaxTree.NewIdentifier("Cell"));
+					ImportModule(qualifiedIdentifier.prefix, x.position);
+					x.SetBaseType(SyntaxTree.NewQualifiedType(x.position, currentScope, qualifiedIdentifier));
+					x.SetBaseType(ResolveType(x.baseType));
+					recordBase := x.GetBaseRecord();
+					IF recordBase = NIL THEN
+						Error(x.position,"ActiveCellsRuntime.Cell not present");
 					END;
 				ELSE
 					x.SetBaseType(ResolveType(x.baseType));
 				END;
-				
-				IF recordBase = NIL THEN numberMethods := 0
-				ELSE numberMethods := recordBase.recordScope.numberMethods
-				END;
+			ELSE
+				x.SetBaseType(ResolveType(x.baseType));
+			END;
+			
+			IF recordBase = NIL THEN numberMethods := 0
+			ELSE numberMethods := recordBase.recordScope.numberMethods
+			END;
 
 
-				modifier := x.modifiers;
-				(*IF ~x.isCellNet THEN*)
-					IF HasValue(modifier,Global.NameDataMemorySize,position,value) THEN END;
-					IF HasValue(modifier,Global.NameCodeMemorySize,position,value) THEN END;
-					IF HasFlag(modifier, Global.NameEngine, position) THEN isEngine := TRUE ELSE isEngine := FALSE END;
-					IF HasFlag(modifier, Global.NameVector,position) THEN END;
-					IF HasFlag(modifier, Global.NameFloatingPoint, position) THEN END;
-					IF HasFlag(modifier, Global.NameNoMul,position) THEN END;
-					IF HasFlag(modifier, Global.NameNonBlockingIO,position) THEN END;
-					IF HasFlag(modifier, Global.NameTRM, position) THEN END;
-					IF HasFlag(modifier, Global.NameTRMS, position) THEN END;
-					symbol := system.activeCellsCapabilities;
-					WHILE symbol # NIL DO
-						IF HasFlag(modifier, symbol.name, position) THEN END;
-						symbol := symbol.nextSymbol;
-					END;
-					
-					modifier := x.modifiers;
-					WHILE (modifier # NIL) DO
-					
-						property := SyntaxTree.NewProperty(modifier.position, modifier.identifier);
-							
-						IF modifier.expression # NIL THEN
-							v := ConstantExpression(modifier.expression);
-							property.SetValue(v);
-							IF IsIntegerValue(modifier.expression, int) THEN
-								(*property.SetValue(modifier.expression);*)
-								modifier.SetExpression(NewConversion(modifier.position, modifier.expression, system.longintType, NIL));
-								property.SetType(system.longintType);
-							ELSIF IsRealValue(modifier.expression, real) THEN
-								modifier.SetExpression(NewConversion(modifier.position, modifier.expression, system.longrealType, NIL));
-								property.SetType(system.longrealType);
-							ELSIF IsBooleanValue(modifier.expression, bool) THEN
-								property.SetType(system.booleanType);
-							ELSIF IsSetValue(modifier.expression, set) THEN
-								property.SetType(system.setType);
-							ELSIF IsStringValue(modifier.expression, str) THEN
-								(*property.SetValue(modifier.expression);*)
-								atype := SyntaxTree.NewArrayType(Basic.invalidPosition, NIL, SyntaxTree.Static);
-								atype.SetArrayBase(modifier.expression.type(SyntaxTree.StringType).baseType);
-								atype.SetLength(Global.NewIntegerValue(system,Basic.invalidPosition, (* type(SyntaxTree.StringType).length *) 256 (*! check if this is a good idea *) ));
-								property.SetType(atype);
-								
-							ELSE
-								Error(modifier.position, "unsupported property type");
-							END;
-						ELSE (* flag property *)
-							(*property.SetValue(SyntaxTree.NewBooleanValue(position,TRUE));*)
-							property.SetType(system.booleanType);
-						END;
-						(* property.SetScope(x.cellScope); *) (* not required, will be done during entry *)
-						(* property.SetState(SyntaxTree.Resolved); *) (* not required, will be done during entry *)
-						
-						x.AddProperty(property);
-						
-						modifier := modifier.nextModifier;
-					END;
-				CheckModifiers(modifier, FALSE);
-
-				Declarations(x.cellScope, SkipImplementation(x),{0,1});
-				
-				(* process parameters *)
-				prev := currentScope;
-				currentScope := x.cellScope;
-				parameter :=x.firstParameter;
-				WHILE (parameter # NIL) DO
-					VisitParameter(parameter);
-					type := parameter.type.resolved;
-					IF ~(type IS SyntaxTree.PortType) THEN
-						WHILE IsStaticArray(type, type, len) DO
-							IF IsDynamicArray(type, type) THEN Error(parameter.position, "invalid mixture of dynamic and static array of ports") END;
-						END;
-						WHILE IsDynamicArray(type, type) DO 
-							IF IsStaticArray(type, type, len) THEN Error(parameter.position, "invalid mixture of dynamic and static array of ports") END;
-						END;
-						IF (* ~IsStaticArray(type,type,len) OR*)  ~(type IS SyntaxTree.PortType) THEN
-							Error(parameter.position, "invalid type, must be port or static array of port ");
-						END;
-					END;
-					parameter := parameter.nextParameter;
-				END;
-				
-				currentScope := prev;
-
-
-
-				symbol := x.cellScope.firstSymbol; (* sorted symbols, important to go through procedures in a sorted way here !*)
+			modifier := x.modifiers;
+			(*IF ~x.isCellNet THEN*)
+				IF HasValue(modifier,Global.NameDataMemorySize,position,value) THEN END;
+				IF HasValue(modifier,Global.NameCodeMemorySize,position,value) THEN END;
+				IF HasFlag(modifier, Global.NameEngine, position) THEN isEngine := TRUE ELSE isEngine := FALSE END;
+				IF HasFlag(modifier, Global.NameVector,position) THEN END;
+				IF HasFlag(modifier, Global.NameFloatingPoint, position) THEN END;
+				IF HasFlag(modifier, Global.NameNoMul,position) THEN END;
+				IF HasFlag(modifier, Global.NameNonBlockingIO,position) THEN END;
+				IF HasFlag(modifier, Global.NameTRM, position) THEN END;
+				IF HasFlag(modifier, Global.NameTRMS, position) THEN END;
+				symbol := system.activeCellsCapabilities;
 				WHILE symbol # NIL DO
-					IF symbol IS SyntaxTree.Variable THEN
-						isRealtime := isRealtime & symbol.type.resolved.isRealtime;
-					END;
+					IF HasFlag(modifier, symbol.name, position) THEN END;
 					symbol := symbol.nextSymbol;
 				END;
-				IF isRealtime THEN x.SetRealtime(TRUE) END;
-
-				IF (x.typeDeclaration = NIL) THEN
-					AnonymousTypeDeclaration(x,"Anonymous");
-				END;
-				x.SetState(SyntaxTree.Resolved);
-
-				IF (x.cellScope.bodyProcedure = NIL) & (~isEngine)THEN
-					Warning(x.position, "Forbidden empty Body.");
-				ELSIF (x.cellScope.bodyProcedure # NIL) & (isEngine)THEN
-					Warning(x.position, "Non-empty body for an engine?");
-				END;
-			END;
-			resolvedType := ResolvedType(x);
-		END VisitCellType;
-
-		(** collect array access operators in a record scope **)
-		PROCEDURE CollectArrayAccessOperators(recordScope: SyntaxTree.RecordScope; arrayStructure: SyntaxTree.MathArrayType; VAR arrayAccessOperators: SyntaxTree.ArrayAccessOperators);
-		VAR
-			baseType: SyntaxTree.Type;
-			operator: SyntaxTree.Operator;
-			isReadOperator, isGeneralOperator: BOOLEAN;
-			indexListSize, indexListKind, hashValue: LONGINT;
-
-		BEGIN
-			(* if a parent record scope exists, collect the operators there first *)
-			baseType := recordScope.ownerRecord.baseType;
-			IF (baseType # NIL) & (baseType.resolved IS SyntaxTree.PointerType) THEN
-				baseType := baseType.resolved(SyntaxTree.PointerType).pointerBase.resolved
-			END;
-			IF (baseType # NIL) & (baseType.resolved IS SyntaxTree.RecordType) THEN
-				CollectArrayAccessOperators(baseType(SyntaxTree.RecordType).recordScope, arrayStructure, arrayAccessOperators);
-			END;
-
-			(* go through all operators in the current record scope *)
-			operator := recordScope.firstOperator;
-			WHILE operator # NIL DO
-				IF operator.name=SyntaxTree.NewIdentifier("LEN") THEN
-					IF CheckLenOperator(operator, arrayStructure) THEN arrayAccessOperators.len := operator END
-
-				ELSIF operator.name = SyntaxTree.NewIdentifier("[]") THEN
-					IF CheckIndexOperator(operator, arrayStructure, isReadOperator, isGeneralOperator, indexListSize, indexListKind) THEN
-						IF isGeneralOperator THEN
-							IF isReadOperator THEN
-								arrayAccessOperators.generalRead := operator
-							ELSE
-								arrayAccessOperators.generalWrite := operator
-							END
+				
+				modifier := x.modifiers;
+				WHILE (modifier # NIL) DO
+				
+					property := SyntaxTree.NewProperty(modifier.position, modifier.identifier);
+						
+					IF modifier.expression # NIL THEN
+						v := ConstantExpression(modifier.expression);
+						property.SetValue(v);
+						IF IsIntegerValue(modifier.expression, int) THEN
+							(*property.SetValue(modifier.expression);*)
+							modifier.SetExpression(NewConversion(modifier.position, modifier.expression, system.longintType, NIL));
+							property.SetType(system.longintType);
+						ELSIF IsRealValue(modifier.expression, real) THEN
+							modifier.SetExpression(NewConversion(modifier.position, modifier.expression, system.longrealType, NIL));
+							property.SetType(system.longrealType);
+						ELSIF IsBooleanValue(modifier.expression, bool) THEN
+							property.SetType(system.booleanType);
+						ELSIF IsSetValue(modifier.expression, set) THEN
+							property.SetType(system.setType);
+						ELSIF IsStringValue(modifier.expression, str) THEN
+							(*property.SetValue(modifier.expression);*)
+							atype := SyntaxTree.NewArrayType(Basic.invalidPosition, NIL, SyntaxTree.Static);
+							atype.SetArrayBase(modifier.expression.type(SyntaxTree.StringType).baseType);
+							atype.SetLength(Global.NewIntegerValue(system,Basic.invalidPosition, (* type(SyntaxTree.StringType).length *) 256 (*! check if this is a good idea *) ));
+							property.SetType(atype);
+							
 						ELSE
-							hashValue := IndexOperatorHash(indexListSize, indexListKind, arrayStructure.form = SyntaxTree.Tensor);
-							IF isReadOperator THEN
-								arrayAccessOperators.read[hashValue] := operator
-							ELSE
-								arrayAccessOperators.write[hashValue] := operator
-							END
-						END
-					END
-				ELSE
-					Error(operator.position, 'invalid operator')
-
-				END;
-				operator := operator.nextOperator
-			END
-		END CollectArrayAccessOperators;
-
-		(** the hash value of an index operator **)
-		PROCEDURE IndexOperatorHash(indexListSize, indexListKind: LONGINT; isTensor: BOOLEAN): LONGINT;
-		VAR result: LONGINT;
-		BEGIN
-			IF isTensor THEN
-				IF indexListSize > MaxTensorIndexOperatorSize THEN
-					result := -1 (* no fixed-dim. index operator may exist for this scenario: thus, no hash value *)
-				ELSE
-					result := TwoToThePowerOf(indexListSize) - 2 + indexListKind
-				END
-			ELSE
-				result := indexListKind
-			END;
-			RETURN result
-		END IndexOperatorHash;
-
-		(** 2 to the power of exponent **)
-		PROCEDURE TwoToThePowerOf(exponent: LONGINT): LONGINT;
-		VAR result, i: LONGINT;
-		BEGIN
-			result := 1;
-			FOR i := 1 TO exponent DO
-				result := result * 2;
-			END;
-			RETURN result
-		END TwoToThePowerOf;
-
-		(** check if a LEN operator has a correct signature. i.e.
-		for non-tensors: 'OPERATOR "LEN"(): ARRAY [<Dimensionality>] OF <LENTYPE>;'
-		for tensors (or non-tensors): 'OPERATOR "LEN"(): ARRAY [*] OF <LENTYPE>;'
-		**)
-		PROCEDURE CheckLenOperator(operator: SyntaxTree.Operator; arrayStructure: SyntaxTree.MathArrayType): BOOLEAN;
-		VAR
-			procedureType: SyntaxTree.ProcedureType;
-			returnedArrayType: SyntaxTree.MathArrayType;
-			result: BOOLEAN;
-		BEGIN
-			result := FALSE;
-			procedureType := operator.type.resolved(SyntaxTree.ProcedureType);
-			IF (procedureType.numberParameters = 0) THEN
-				IF (procedureType.returnType # NIL) & (procedureType.returnType.resolved IS SyntaxTree.MathArrayType) THEN
-					returnedArrayType := procedureType.returnType.resolved(SyntaxTree.MathArrayType);
-					IF system.lenType.SameType(returnedArrayType.arrayBase.resolved) THEN
-						IF returnedArrayType.form = SyntaxTree.Open THEN
-							(* ARRAY [*] OF LONGINT: acceptable for both tensors and non-tensors *)
-							result := TRUE
-						ELSIF arrayStructure.form # SyntaxTree.Tensor THEN
-							(* ARRAY [<Dimensionality>] OF LONGINT: only acceptable for non-tensors *)
-							IF (returnedArrayType.form = SyntaxTree.Static) & (returnedArrayType.staticLength = arrayStructure.Dimensionality()) THEN
-								result := TRUE
-							END
-						END
-					END
-				END
-			END;
-			IF result THEN
-				(* export symbol automatically *)
-				operator.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal)
-			ELSE
-				Error(operator.position, "LEN operator with invalid signature");
-			END;
-			RETURN result
-		END CheckLenOperator;
-
-		(** check if an index operator has a correct signature. i.e.
-			- for read operators: 'OPERATOR "[]"(<IndexParameters>): <DataType>;'
-			- for write operators: 'OPERATOR "[]"(<IndexParameters>; rhs: <DataType>);'
-
-			- for general operators: <IndexParameters> = ARRAY [*] OF RANGE
-			- for fixed-dim. operators: <IndexParameters> = i0: <LONGINT/RANGE>; i1: <LONGINT/RANGE>; ...; in: <LONGINT/RANGE>
-
-			- determine if it is a read or write operator (existance of return type)
-			- check index parameters
-			- for fixed-dim. operators, determine the size of the index lists, the operator handles
-			- for fixed-dim. operators, determine the kind of the index list this operator handles. index lists kinds are calculated as follows:
-				[LONGINT] -> binary 0 -> 0
-				[RANGE] -> binary 1 -> 1
-
-				[LONGINT, LONGINT] -> binary 00 -> 0
-				[LONGINT, RANGE] -> binary 01 -> 1
-				[RANGE, LONGINT] -> binary 10 -> 2
-				[RANGE, RANGE] -> binary 11 -> 3
-
-				etc.
-			- for fixed-dim. operators and non-tensors, check if number of index parameters equals the ASOT's dimensionality
-			- for read operators, check if return type matches the type of data that is read
-			- for write operators, check if last parameter type matches the type of data that is written
-		**)
-		PROCEDURE CheckIndexOperator(operator: SyntaxTree.Operator; arrayStructure: SyntaxTree.MathArrayType; VAR isReadOperator, isGeneralOperator: BOOLEAN; VAR indexListSize, indexListKind: LONGINT): BOOLEAN;
-		VAR
-			elementType, otherElementType, dataType: SyntaxTree.Type;
-			procedureType: SyntaxTree.ProcedureType;
-			mathArrayType: SyntaxTree.MathArrayType;
-			parameter: SyntaxTree.Parameter;
-			parameterCount, rangeCount, i: LONGINT;
-			hasTypeError: BOOLEAN;
-
-		BEGIN
-			procedureType := operator.type.resolved(SyntaxTree.ProcedureType);
-			parameterCount := procedureType.numberParameters; (* true parameter count *)
-
-			(* determine if it is a read or write operator *)
-			isReadOperator := (procedureType.returnType # NIL);
-
-			IF isReadOperator THEN
-				indexListSize := parameterCount;
-			ELSE
-				indexListSize := parameterCount - 1;
-			END;
-
-			IF indexListSize < 1 THEN
-				Error(operator.position, "index operator with too few parameters");
-				RETURN FALSE
-			END;
-
-			IF procedureType.firstParameter.type.resolved IS SyntaxTree.MathArrayType THEN
-				(* general operator *)
-
-				isGeneralOperator := TRUE;
-
-				IF indexListSize > 1 THEN
-					Error(operator.position, "index operator with too many parameters");
-					RETURN FALSE
-				END;
-
-				(* ARRAY [*] OF RANGE*)
-				mathArrayType := procedureType.firstParameter.type.resolved(SyntaxTree.MathArrayType);
-				IF ~((mathArrayType.arrayBase.resolved IS SyntaxTree.RangeType) & (mathArrayType.form = SyntaxTree.Open)) THEN
-					Error(operator.position, "index parameter not dynamic math array of range");
-					RETURN FALSE
-				END;
-
-				parameter := procedureType.firstParameter.nextParameter
-			ELSE
-				(* fixed-dim. operator *)
-
-				isGeneralOperator := FALSE;
-
-				(* check number of index parameters *)
-				IF arrayStructure.form = SyntaxTree.Tensor THEN
-					(* for tensors, limited to a certain size *)
-					IF indexListSize > MaxTensorIndexOperatorSize THEN
-						Error(operator.position, "too many index parameters for tensor");
-						RETURN FALSE
-					END
-				ELSE
-					(* for non-tensors, depends on dimensionality *)
-					IF indexListSize # arrayStructure.Dimensionality() THEN
-						Error(operator.position, "index parameter count does not match dimensionality");
-						RETURN FALSE
-					END
-				END;
-
-				(* go through all index parameters
-				- count the number of ranges
-				- determine the index list kind number
-				*)
-				indexListKind := 0;
-				rangeCount := 0;
-				parameter := procedureType.firstParameter;
-				FOR i := 1 TO indexListSize DO
-					indexListKind := indexListKind * 2;
-					IF parameter.type.resolved IS SyntaxTree.IntegerType THEN
-					ELSIF parameter.type.resolved IS SyntaxTree.RangeType THEN
-						INC(indexListKind);
-						INC(rangeCount)
-					ELSE
-						Error(parameter.position, "integer or range expected");
-						RETURN FALSE
+							Error(modifier.position, "unsupported property type");
+						END;
+					ELSE (* flag property *)
+						(*property.SetValue(SyntaxTree.NewBooleanValue(position,TRUE));*)
+						property.SetType(system.booleanType);
 					END;
-					parameter := parameter.nextParameter
+					(* property.SetScope(x.cellScope); *) (* not required, will be done during entry *)
+					(* property.SetState(SyntaxTree.Resolved); *) (* not required, will be done during entry *)
+					
+					x.AddProperty(property);
+					
+					modifier := modifier.nextModifier;
 				END;
-			END;
+			CheckModifiers(modifier, FALSE);
 
-			(*
-			- for read operators: check type of last parameter
-			- for write operators: check return type
-			*)
-
-			IF isReadOperator THEN
-				dataType := procedureType.returnType (* the return type *)
-			ELSE
-				dataType := parameter.type (* the type of the last non-hidden parameter *)
-			END;
-
-			elementType := arrayStructure.ElementType();
-			hasTypeError := FALSE;
-			IF isGeneralOperator THEN
-				(* ARRAY [?] OF <Element> *)
-				IF dataType.resolved IS SyntaxTree.MathArrayType THEN
-					mathArrayType := dataType.resolved(SyntaxTree.MathArrayType);
-					IF ~((mathArrayType.arrayBase.resolved = elementType.resolved) & (mathArrayType.form = SyntaxTree.Tensor)) THEN
-						hasTypeError := TRUE
-					END
-				ELSE
-					hasTypeError := TRUE
-				END
-			ELSE
-				IF rangeCount = 0 THEN
-					(* <Element> *)
-					IF dataType.resolved # elementType.resolved THEN hasTypeError := TRUE END
-				ELSE
-					(* ARRAY [*, *, ..., *] OF <Element> *)
-					IF dataType.resolved IS SyntaxTree.MathArrayType THEN
-						mathArrayType := dataType.resolved(SyntaxTree.MathArrayType);
-						IF mathArrayType.IsFullyDynamic() THEN
-							IF mathArrayType.Dimensionality() = rangeCount THEN
-								otherElementType := mathArrayType.ElementType();
-								IF otherElementType.resolved # elementType.resolved THEN hasTypeError := TRUE END
-							ELSE
-								hasTypeError := TRUE
-							END
-						ELSE
-							hasTypeError := TRUE
-						END
-					ELSE
-						hasTypeError := TRUE
-					END
-				END
-			END;
-
-			IF hasTypeError THEN
-				IF isReadOperator THEN
-					Error(operator.position, "return type does not match")
-				ELSE
-					Error(parameter.position, "type of last parameter does not match")
+			Declarations(x.cellScope, SkipImplementation(x),{0,1});
+			
+			(* process parameters *)
+			prev := currentScope;
+			currentScope := x.cellScope;
+			parameter :=x.firstParameter;
+			WHILE (parameter # NIL) DO
+				VisitParameter(parameter);
+				type := parameter.type.resolved;
+				IF ~(type IS SyntaxTree.PortType) THEN
+					WHILE IsStaticArray(type, type, len) DO
+						IF IsDynamicArray(type, type) THEN Error(parameter.position, "invalid mixture of dynamic and static array of ports") END;
+					END;
+					WHILE IsDynamicArray(type, type) DO 
+						IF IsStaticArray(type, type, len) THEN Error(parameter.position, "invalid mixture of dynamic and static array of ports") END;
+					END;
+					IF (* ~IsStaticArray(type,type,len) OR*)  ~(type IS SyntaxTree.PortType) THEN
+						Error(parameter.position, "invalid type, must be port or static array of port ");
+					END;
 				END;
-				RETURN FALSE
+				parameter := parameter.nextParameter;
 			END;
+			
+			currentScope := prev;
+			symbol := x.cellScope.firstSymbol; (* sorted symbols, important to go through procedures in a sorted way here !*)
+			WHILE symbol # NIL DO
+				IF symbol IS SyntaxTree.Variable THEN
+					isRealtime := isRealtime & symbol.type.resolved.isRealtime;
+				END;
+				symbol := symbol.nextSymbol;
+			END;
+			IF isRealtime THEN x.SetRealtime(TRUE) END;
 
-			(* export symbol automatically *)
-			operator.SetAccess(SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal);
+			IF (x.typeDeclaration = NIL) THEN
+				AnonymousTypeDeclaration(x,"Anonymous");
+			END;
+			x.SetState(SyntaxTree.Resolved);
 
-			RETURN TRUE
-		END CheckIndexOperator;
+			IF (x.cellScope.bodyProcedure = NIL) & (~isEngine)THEN
+				Warning(x.position, "Forbidden empty Body.");
+			ELSIF (x.cellScope.bodyProcedure # NIL) & (isEngine)THEN
+				Warning(x.position, "Non-empty body for an engine?");
+			END;
+		END ResolveCellType;
+		
+
+		(** Check if a node has already been resolved. If not then mark as currently being resolved.
+			If node is currently being resolved then emit a cyclic definition error.
+			Return TRUE only if node is fully resolved.
+		**)
+		PROCEDURE TypeNeedsResolution(x: SyntaxTree.Type): BOOLEAN;
+		VAR result: BOOLEAN;
+		BEGIN
+			IF SyntaxTree.Resolved IN x.state THEN
+				result := FALSE
+			ELSIF SyntaxTree.BeingResolved IN x.state THEN
+				Error(x.position,"cyclic definition");
+				result := FALSE;
+			ELSE
+				result := TRUE;
+				x.SetState(SyntaxTree.BeingResolved)
+			END;
+			RETURN result
+		END TypeNeedsResolution;
+
+		PROCEDURE ResolveType*(x: SyntaxTree.Type): SyntaxTree.Type;
+		BEGIN
+			IF (x = NIL) OR (x = SyntaxTree.invalidType) THEN RETURN x
+			ELSIF TypeNeedsResolution(x) THEN
+				WITH x: SyntaxTree.ProcedureType DO ResolveProcedureType(x)
+				|SyntaxTree.CellType DO ResolveCellType(x)
+				|SyntaxTree.RecordType DO ResolveRecordType(x)
+				|SyntaxTree.PortType DO ResolvePortType(x)
+				|SyntaxTree.PointerType DO ResolvePointerType(x)
+				|SyntaxTree.MathArrayType DO ResolveMathArrayType(x)
+				|SyntaxTree.ArrayType DO ResolveArrayType(x)
+				|SyntaxTree.RangeType DO x.SetState(SyntaxTree.Resolved)
+				|SyntaxTree.EnumerationType DO ResolveEnumerationType(x)
+				|SyntaxTree.StringType DO x.SetState(SyntaxTree.Resolved)
+				|SyntaxTree.QualifiedType DO ResolveQualifiedType(x)
+				|SyntaxTree.BasicType DO x.SetState(SyntaxTree.Resolved)
+				END; (* no other case may remain *)
+			END;
+			IF SyntaxTree.Resolved IN x.state THEN
+				RETURN x
+			ELSE
+				RETURN SyntaxTree.invalidType
+			END;
+		END ResolveType;
+
 
 		(** resolve all pending types (late resolving).
 			- type fixes are resolved at the end of the declaration phase
@@ -1588,28 +1186,6 @@ TYPE
 			END;
 			currentScope :=prevScope;
 		END FixTypes;
-
-		(**
-			resolve type x
-			- if x is nil then return nil
-			- if x cannot be resolved then the result is invalidType else the result is x
-			- the resolved type is entered into x.resolved
-		**)
-		PROCEDURE ResolveType(x: SyntaxTree.Type): SyntaxTree.Type;
-		VAR prev,resolved: SyntaxTree.Type;
-		BEGIN
-			prev := resolvedType;
-			resolvedType := SyntaxTree.invalidType;
-			IF x = NIL THEN resolvedType := NIL
-			ELSE VType(x); ASSERT(resolvedType # NIL); (* in error cases it must be invalidType *)
-			END;
-			resolved := resolvedType;
-			resolvedType := prev;
-
-			ASSERT((resolved = NIL) OR (resolved.resolved # NIL));
-
-			RETURN resolved
-		END ResolveType;
 
 		(*** compatibility rules ***)
 
@@ -7052,21 +6628,6 @@ TYPE
 				Error(procedureCall.position,"ignoring procedure call without return value");
 			END;
 			procedureCall.SetCall(call);
-
-			(*
-			IF call = SyntaxTree.invalidDesignator THEN
-			ELSIF (call.left IS SyntaxTree.SymbolDesignator) & (call.left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) THEN
-				procedure := call.left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
-				IF IsOberonInline(procedure) THEN
-					Warning(procedure.position,"call to inline proc");
-					block := SyntaxTree.NewStatementBlock(call.position, NIL (*! todo *));
-					block.SetStatementSequence(SyntaxTree.CloneStatementSequence(procedure.procedureScope.body.statements));
-					ReplaceParameters(block, procedure.type(SyntaxTree.ProcedureType).firstParameter, call(SyntaxTree.ProcedureCallDesignator).parameters);
-					resolvedStatement := block;
-					RETURN;
-				END;
-			END;
-			*)
 		END VisitProcedureCallStatement;
 
 		(** check and resolve assignment LHS := RHS
@@ -7081,7 +6642,6 @@ TYPE
 			left: SyntaxTree.Designator;
 			right, expression: SyntaxTree.Expression;
 			procedureCallDesignator: SyntaxTree.ProcedureCallDesignator;
-
 		BEGIN
 			right := ResolveExpression(assignment.right);
 			assignment.left.SetRelatedRhs(right);
@@ -7793,8 +7353,10 @@ TYPE
 			- check statement sequence
 		**)
 		PROCEDURE VisitStatementBlock*(statementBlock: SyntaxTree.StatementBlock);
-		VAR recentExclusive, recentUnreachable, recentRealtime: BOOLEAN;
+		VAR recentExclusive, recentUnreachable, recentRealtime: BOOLEAN; recentScope: SyntaxTree.Scope;
 		BEGIN
+			recentScope := currentScope;
+			IF statementBlock.scope # NIL THEN currentScope := statementBlock.scope END;
 			BlockFlags(statementBlock);
 			IF statementBlock.isExclusive THEN
 				(* check that not in exclusive block *)
@@ -7814,6 +7376,7 @@ TYPE
 			currentIsRealtime := recentRealtime;
 			currentIsExclusive := recentExclusive;
 			currentIsUnreachable := recentUnreachable;
+			currentScope := recentScope;
 		END VisitStatementBlock;
 
 		(** check and resolve body
@@ -8306,7 +7869,7 @@ TYPE
 
 	END Checker;
 
-	Warnings*=OBJECT (SyntaxTree.Visitor)
+	Warnings*=OBJECT
 	VAR diagnostics: Diagnostics.Diagnostics; module: SyntaxTree.Module;
 
 		PROCEDURE &InitWarnings*(diagnostics: Diagnostics.Diagnostics);
@@ -8376,7 +7939,8 @@ TYPE
 
 	PROCEDURE IsOberonInline(procedure: SyntaxTree.Procedure): BOOLEAN;
 	BEGIN
-		RETURN procedure.isInline & ((procedure.procedureScope.body = NIL) OR (procedure.procedureScope.body # NIL) & (procedure.procedureScope.body.code = NIL))
+		RETURN procedure.isOberonInline OR procedure.isInline & 
+			((procedure.procedureScope.body = NIL) OR (procedure.procedureScope.body # NIL) & (procedure.procedureScope.body.code = NIL))
 	END IsOberonInline;
 
 
@@ -8394,7 +7958,7 @@ TYPE
 		END;
 		RETURN i=x
 	END PowerOf2;
-
+	
 	PROCEDURE IsCellNetScope(scope: SyntaxTree.Scope): BOOLEAN;
 	BEGIN
 		RETURN
@@ -9682,3 +9246,5 @@ TYPE
 END FoxSemanticChecker.
 
 System.FreeDownTo FoxSemanticChecker ~ 
+
+System.FreeDownTo FoxIntermediateBackend ~ 

@@ -71,7 +71,7 @@ TYPE
 		- resolves statements
 		- resolves implementations (bodies)
 	**)
-	Checker*= OBJECT (SyntaxTree.Visitor)
+	Checker*= OBJECT
 	VAR
 		module: SyntaxTree.Module;
 		diagnostics: Diagnostics.Diagnostics;
@@ -94,7 +94,6 @@ TYPE
 			- set in AcceptXXX procedures
 			- set and read in ResolveXXX procedures
 		*)
-		resolvedExpression: SyntaxTree.Expression; (** temporary variable used for expression resolution **)
 		resolvedStatement: SyntaxTree.Statement; (** used for statement resolution **)
 		currentScope-: SyntaxTree.Scope;
 		currentIsRealtime: BOOLEAN;
@@ -118,7 +117,6 @@ TYPE
 			error := FALSE;
 			NEW(typeFixes);
 			NEW(pointerFixes);
-			resolvedExpression := NIL;
 			resolvedStatement := NIL;
 			currentScope := NIL;
 			IF importCache = NIL THEN importCache := SyntaxTree.NewModuleScope() END;
@@ -437,7 +435,7 @@ TYPE
 					moduleScope.AddImport(import);
 					Register(import,moduleScope,FALSE);
 					IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(SELF.module.context) END;
-					VisitImport(import);
+					ResolveImport(import);
 				ELSIF import.direct=FALSE THEN
 					import.SetScope(module.moduleScope);
 					import.SetDirect(TRUE);
@@ -446,7 +444,7 @@ TYPE
 						duplicate.SetContext(import.context);
 						duplicate.SetModule(import.module);
 						Register(duplicate,moduleScope,TRUE);
-						VisitImport(duplicate);
+						ResolveImport(duplicate);
 					END;
 				END;
 				import.MarkUsed
@@ -643,19 +641,19 @@ TYPE
 					parameter.SetType(procedureType.returnType);
 					parameter.SetAccess(SyntaxTree.Hidden);
 					parameter.SetUntraced(procedureType.hasUntracedReturn);
-					VisitParameter(parameter);
+					ResolveParameter(parameter);
 					procedureType.SetReturnParameter(parameter); (* return parameter serves as a cache only *)
 				END;
 
 				(* process parameters *)
 				parameter :=procedureType.firstParameter;
 				WHILE (parameter # NIL) DO
-					VisitParameter(parameter);
+					ResolveParameter(parameter);
 					parameter := parameter.nextParameter;
 				END;
 				parameter := procedureType.selfParameter;
 				IF parameter # NIL THEN 
-					VisitParameter(parameter) 
+					ResolveParameter(parameter) 
 				END;
 		END FixProcedureType;
 
@@ -1078,7 +1076,7 @@ TYPE
 			currentScope := x.cellScope;
 			parameter :=x.firstParameter;
 			WHILE (parameter # NIL) DO
-				VisitParameter(parameter);
+				ResolveParameter(parameter);
 				type := parameter.type.resolved;
 				IF ~(type IS SyntaxTree.PortType) THEN
 					WHILE IsStaticArray(type, type, len) DO
@@ -1349,99 +1347,6 @@ TYPE
 			RETURN result
 		END AssignmentCompatible;
 
-		(*** values  ***)
-
-		(** check and resolve integer value **)
-		PROCEDURE VisitIntegerValue*(value: SyntaxTree.IntegerValue);
-		VAR integer: Basic.Integer;
-		BEGIN
-			integer := value(SyntaxTree.IntegerValue).value;
-			value.SetType(Global.GetIntegerType(system,integer));
-			resolvedExpression := value
-		END VisitIntegerValue;
-
-		(** check and resolve real value **)
-		PROCEDURE VisitRealValue*(value: SyntaxTree.RealValue);
-		VAR subtype: LONGINT; type: SyntaxTree.Type;
-		BEGIN
-			subtype := value(SyntaxTree.RealValue).subtype;
-			IF subtype = Scanner.Real THEN
-				type := system.realType
-			ELSIF subtype = Scanner.Longreal THEN
-				type := system.longrealType
-			ELSE
-				HALT(100)
-			END;
-			value.SetType(type);
-			resolvedExpression := value
-		END VisitRealValue;
-
-		(** check and resolve complex value **)
-		PROCEDURE VisitComplexValue*(value: SyntaxTree.ComplexValue);
-		VAR subtype: LONGINT; type: SyntaxTree.Type;
-		BEGIN
-			subtype := value(SyntaxTree.ComplexValue).subtype;
-			IF subtype = Scanner.Real THEN
-				type := system.complexType
-			ELSIF subtype = Scanner.Longreal THEN
-				type := system.longcomplexType
-			ELSE
-				HALT(100)
-			END;
-			value.SetType(type);
-			resolvedExpression := value
-		END VisitComplexValue;
-
-		(** check and resolve set value **)
-		PROCEDURE VisitSetValue*(value: SyntaxTree.SetValue);
-		BEGIN
-			value.SetType(system.setType);
-			resolvedExpression := value
-		END VisitSetValue;
-
-		(** check and resolve set value **)
-		PROCEDURE VisitMathArrayValue*(value: SyntaxTree.MathArrayValue);
-		BEGIN
-			value.SetType(SyntaxTree.invalidType);
-			resolvedExpression := value
-		END VisitMathArrayValue;
-
-		(** check and resolve boolean value **)
-		PROCEDURE VisitBooleanValue*(value: SyntaxTree.BooleanValue);
-		BEGIN
-			value.SetType(system.booleanType);
-			resolvedExpression := value
-		END VisitBooleanValue;
-
-		(** check and resolve string value **)
-		PROCEDURE VisitStringValue*(value: SyntaxTree.StringValue);
-		BEGIN
-			value.SetType(ResolveType(SyntaxTree.NewStringType(value.position,system.characterType,value.length)));
-			resolvedExpression := value
-		END VisitStringValue;
-
-		(** check and resolve character value **)
-		PROCEDURE VisitCharacterValue*(value: SyntaxTree.CharacterValue);
-		BEGIN
-			value.SetType(system.characterType);
-			resolvedExpression := value
-		END VisitCharacterValue;
-
-		(** check and resolve nil value **)
-		PROCEDURE VisitNilValue*(value: SyntaxTree.NilValue);
-		BEGIN
-			value.SetType(system.nilType);
-			resolvedExpression := value
-		END VisitNilValue;
-
-		(** check and resolve enumerator value **)
-		PROCEDURE VisitEnumerationValue*(value: SyntaxTree.EnumerationValue);
-		BEGIN
-			value.SetType(currentScope(SyntaxTree.EnumerationScope).ownerEnumeration);
-			ASSERT(value.type # NIL);
-			resolvedExpression := value
-		END VisitEnumerationValue;
-
 		(*** expressions ***)
 
 		(** check and resolve a Set expression of the form {Expression, Expression, ...}
@@ -1450,7 +1355,7 @@ TYPE
 			- if all elements constant then return constant set value else return set expression (via global variable resolvedExpression)
 			if an error occurs then report error and return invalidExpression
 		**)
-		PROCEDURE VisitSet*(set: SyntaxTree.Set);
+		PROCEDURE ResolveSet(set: SyntaxTree.Set): SyntaxTree.Expression;
 		VAR
 			i: LONGINT;
 			element: SyntaxTree.Expression;
@@ -1556,8 +1461,8 @@ TYPE
 				convert {a,b,1,2,3,4,c,d} into {a,b,c,d} + {1,2,3,4}
 				left this to the programmer...
 			*)
-			resolvedExpression := result;
-		END VisitSet;
+			RETURN result;
+		END ResolveSet;
 
 		(*
 		old variant: quite generic but needs better conversion handling, do this?
@@ -1603,7 +1508,7 @@ TYPE
 		END VisitMathArrayExpression;
 		*)
 
-		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
+		PROCEDURE ResolveMathArrayExpression(x: SyntaxTree.MathArrayExpression): SyntaxTree.Expression;
 		VAR type: SyntaxTree.Type; isValue: BOOLEAN;
 			value: SyntaxTree.MathArrayValue; arrayType: SyntaxTree.Type;
 
@@ -1692,11 +1597,11 @@ TYPE
 				value.SetType(arrayType);
 			END;
 			x.SetType(arrayType);
-			resolvedExpression := x;
-		END VisitMathArrayExpression;
+			RETURN x;
+		END ResolveMathArrayExpression;
 
 		(** check and resolve unary expression **)
-		PROCEDURE VisitUnaryExpression*(unaryExpression: SyntaxTree.UnaryExpression);
+		PROCEDURE ResolveUnaryExpression(unaryExpression: SyntaxTree.UnaryExpression): SyntaxTree.Expression;
 		VAR
 			left: SyntaxTree.Expression;
 			int: Basic.Integer; real, imaginary: LONGREAL; set: Basic.Set; operator: LONGINT;
@@ -1711,13 +1616,12 @@ TYPE
 			result := unaryExpression;
 			IF ~system.operatorDefined[operator] THEN
 				Error(left.position,"Operator Not Defined");
-				RETURN
+				RETURN SyntaxTree.invalidExpression;
 			ELSIF left.type = NIL THEN
 				Error(left.position,"Invalid Nil Argument in Unary Expression");
-				resolvedExpression := SyntaxTree.invalidExpression;
-				RETURN
+				RETURN SyntaxTree.invalidExpression;
 			ELSIF left = SyntaxTree.invalidExpression THEN (* error already handled *)
-				RETURN
+				RETURN SyntaxTree.invalidExpression;
 			END;
 			IF  ~(left.type.resolved IS SyntaxTree.BasicType) OR (left.type.resolved IS SyntaxTree.ComplexType) THEN
 				operatorCall := NewOperatorCall(unaryExpression.position, operator,left,NIL,NIL);
@@ -1828,8 +1732,8 @@ TYPE
 				END;
 			END;
 			result.SetType(type);
-			resolvedExpression := result
-		END VisitUnaryExpression;
+			RETURN result
+		END ResolveUnaryExpression;
 
 		PROCEDURE MathArrayConversion(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type): SyntaxTree.Expression;
 		VAR
@@ -2361,8 +2265,7 @@ TYPE
 		END NewOperatorCall;
 
 		(** check and resolve binary expression **)
-		(*! clean up *)
-		PROCEDURE VisitBinaryExpression*(binaryExpression: SyntaxTree.BinaryExpression);
+		PROCEDURE ResolveBinaryExpression(binaryExpression: SyntaxTree.BinaryExpression): SyntaxTree.Expression;
 		VAR left,right,result: SyntaxTree.Expression;
 			leftType, rightType: SyntaxTree.Type;
 			il,ir: Basic.Integer; rl,rr,a,b,c,d,divisor: LONGREAL; hl,hr: Basic.Integer;bl,br: BOOLEAN; sl,sr: Basic.Set;  strl,strr: Scanner.StringType;
@@ -2430,18 +2333,15 @@ TYPE
 			operator := binaryExpression.operator;
 			IF ~system.operatorDefined[operator] THEN
 				Error(left.position,"Operator Not Defined");
-				result := SyntaxTree.invalidExpression;
-				RETURN
+				RETURN SyntaxTree.invalidExpression;
 			END;
 			IF left.type = NIL THEN
 				Error(left.position,"Expression has no result type");
-				result := SyntaxTree.invalidExpression;
-				RETURN;
+				RETURN SyntaxTree.invalidExpression;
 			END;
 			IF right.type = NIL THEN
 				Error(right.position,"Expression has no result type");
-				result := SyntaxTree.invalidExpression;
-				RETURN;
+				RETURN SyntaxTree.invalidExpression;
 			END;
 			leftType := left.type.resolved; rightType := right.type.resolved;
 			IF ~(leftType IS SyntaxTree.BasicType) OR ~(rightType IS SyntaxTree.BasicType) OR (leftType IS SyntaxTree.ComplexType) OR (rightType IS SyntaxTree.ComplexType) THEN
@@ -2869,8 +2769,8 @@ TYPE
 			ELSE
 				result.SetType(type)
 			END;
-			resolvedExpression := result
-		END VisitBinaryExpression;
+			RETURN result
+		END ResolveBinaryExpression;
 
 		(** resolve a range expression of the from <<first .. last BY step>>
 		    - depending on the context different things are checked:
@@ -2892,7 +2792,7 @@ TYPE
 					- must not have step size
 		    - if error: return invalidExpression
 		**)
-		PROCEDURE VisitRangeExpression*(x: SyntaxTree.RangeExpression);
+		PROCEDURE ResolveRangeExpression(x: SyntaxTree.RangeExpression): SyntaxTree.Expression;
 		VAR
 			hasError: BOOLEAN;
 			first, last, step: SyntaxTree.Expression;
@@ -3008,28 +2908,22 @@ TYPE
 			END;
 
 			IF hasError THEN
-				resolvedExpression := SyntaxTree.invalidExpression
+				RETURN SyntaxTree.invalidExpression
 			ELSE
 				x.SetFirst(first);
 				x.SetLast(last);
 				x.SetStep(step);
 				x.SetType(system.rangeType);
-				resolvedExpression := x;
-				resolvedExpression.SetAssignable(FALSE) (* range expressions may never be assigned to *)
+				x.SetAssignable(FALSE); (* range expressions may never be assigned to *)
+				RETURN x;
 			END
-		END VisitRangeExpression;
-
-		PROCEDURE VisitTensorRangeExpression*(x: SyntaxTree.TensorRangeExpression);
-		BEGIN
-			x.SetType(NIL);
-			resolvedExpression := x;
-		END VisitTensorRangeExpression;
+		END ResolveRangeExpression;
 
 		(** resolve the expression d and return result as designator
 			- resolve expression
 			- if expression is a designator then return designator else error message and return invalidDesignator
 		**)
-		PROCEDURE ResolveDesignator*(d: SyntaxTree.Expression): SyntaxTree.Designator;
+		PROCEDURE ResolveDesignator(d: SyntaxTree.Expression): SyntaxTree.Designator;
 		VAR result: SyntaxTree.Designator; resolved: SyntaxTree.Expression;
 		BEGIN
 			IF Trace THEN D.Str("ResolveDesignator"); D.Ln; END;
@@ -3044,32 +2938,22 @@ TYPE
 				 result := SyntaxTree.invalidDesignator;
 			END;
 
-
 			(* result.type might be nil.  *)
 			RETURN result
 		END ResolveDesignator;
 
-		(**
-			symbol designator generated in this module
-			nothing to be resolved
-		**)
-		PROCEDURE VisitSymbolDesignator*(x: SyntaxTree.SymbolDesignator);
-		BEGIN
-			resolvedExpression := x;
-		END VisitSymbolDesignator;
 
 		(**
 			self designator generated in this module
 			nothing to be resolved
 		**)
-		PROCEDURE VisitSelfDesignator*(x: SyntaxTree.SelfDesignator);
+		PROCEDURE ResolveSelfDesignator(x: SyntaxTree.SelfDesignator): SyntaxTree.Expression;
 		VAR scope: SyntaxTree.Scope; record: SyntaxTree.RecordType; type: SyntaxTree.Type; cell: SyntaxTree.CellType;
 		BEGIN
 			(* check if in record scope *)
 			scope := currentScope;
 			IF (scope IS SyntaxTree.ProcedureScope) & (scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter # NIL) THEN
-				resolvedExpression := 
-					NewSymbolDesignator(x.position, NIL, scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter); RETURN; 
+					RETURN NewSymbolDesignator(x.position, NIL, scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).selfParameter);
 			END; 
 			
 			WHILE (scope # NIL) & ~(scope IS SyntaxTree.RecordScope) &~(scope IS SyntaxTree.CellScope) DO
@@ -3090,10 +2974,10 @@ TYPE
 					x.SetAssignable(TRUE); (* var parameter *)
 				END;
 			END;
-			resolvedExpression := x;
-		END VisitSelfDesignator;
+			RETURN x;
+		END ResolveSelfDesignator;
 
-		PROCEDURE VisitResultDesignator*(x: SyntaxTree.ResultDesignator);
+		PROCEDURE ResolveResultDesignator(x: SyntaxTree.ResultDesignator): SyntaxTree.Expression;
 		VAR scope: SyntaxTree.Scope; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; returnType: SyntaxTree.Type;
 		BEGIN
 			scope := currentScope;
@@ -3113,8 +2997,8 @@ TYPE
 				x.SetType(SyntaxTree.invalidType);
 			END;
 			x.SetAssignable(TRUE);
-			resolvedExpression := x;
-		END VisitResultDesignator;
+			RETURN x;
+		END ResolveResultDesignator;
 
 
 		(**
@@ -3210,7 +3094,7 @@ TYPE
 			- else find symbol in current scope
 				- if symbol found then return SymbolDesignator, else error message and return invalidDesignator
 		**)
-		PROCEDURE VisitIdentifierDesignator*(identifierDesignator: SyntaxTree.IdentifierDesignator);
+		PROCEDURE ResolveIdentifierDesignator(identifierDesignator: SyntaxTree.IdentifierDesignator): SyntaxTree.Expression;
 		VAR symbol: SyntaxTree.Symbol;
 		BEGIN
 			IF Trace THEN D.Str("VisitIdentifierDesignator "); D.Ln; END;
@@ -3218,15 +3102,15 @@ TYPE
 			IF symbol # NIL THEN
 				ResolveSymbol(symbol);
 				ASSERT(symbol.type # NIL);
-				resolvedExpression := NewSymbolDesignator(identifierDesignator.position,NIL,symbol);
+				RETURN NewSymbolDesignator(identifierDesignator.position,NIL,symbol);
 			ELSE
 				Error(identifierDesignator.position,"Undeclared Identifier");
 				IF VerboseErrorMessage THEN
 					Printout.Info("undeclared identifier designator",identifierDesignator);
 				END;
-				resolvedExpression := SyntaxTree.invalidDesignator;
+				RETURN SyntaxTree.invalidDesignator;
 			END;
-		END VisitIdentifierDesignator;
+		END ResolveIdentifierDesignator;
 
 
 		(** check and resolve a selector designator of the form left.designator
@@ -3238,7 +3122,7 @@ TYPE
 			- search symbol in computed scope
 			returns selector designator (via global variable resolvedExpression) if symbol found, else error message is given and invalidDesignator is returned
 		**)
-		PROCEDURE VisitSelectorDesignator*(selectorDesignator: SyntaxTree.SelectorDesignator);
+		PROCEDURE ResolveSelectorDesignator(selectorDesignator: SyntaxTree.SelectorDesignator): SyntaxTree.Expression;
 		VAR
 			symbol: SyntaxTree.Symbol; left: SyntaxTree.Designator; scope: SyntaxTree.Scope;
 			module: SyntaxTree.Module; result: SyntaxTree.Expression; type: SyntaxTree.Type;
@@ -3304,8 +3188,8 @@ TYPE
 				END;
 
 			END;
-			resolvedExpression := result;
-		END VisitSelectorDesignator;
+			RETURN result
+		END ResolveSelectorDesignator;
 
 		PROCEDURE IndexCheck(index,length: SyntaxTree.Expression);
 		VAR len,idx: Basic.Integer;
@@ -3621,7 +3505,7 @@ TYPE
 			Note 3: while this compiler tries to combine multiple bracket designators into a single index designator,
 			older Oberon compilers did this the other way around: a[x, y, z] -> A[x][y][z].
 		**)
-		PROCEDURE VisitBracketDesignator*(bracketDesignator: SyntaxTree.BracketDesignator);
+		PROCEDURE ResolveBracketDesignator(bracketDesignator: SyntaxTree.BracketDesignator): SyntaxTree.Expression;
 		VAR
 			leftBracketDesignator: SyntaxTree.BracketDesignator;
 			indexDesignator: SyntaxTree.IndexDesignator;
@@ -3629,7 +3513,7 @@ TYPE
 			type: SyntaxTree.Type;
 			expression: SyntaxTree.Expression;
 			i: LONGINT;
-
+			result: SyntaxTree.Expression;
 
 			PROCEDURE FinalizeIndexDesignator;
 			BEGIN
@@ -3660,7 +3544,7 @@ TYPE
 				END;
 				(* only resolve left bracket designator and use as final result *)
 				bracketDesignator.SetRelatedRhs(leftBracketDesignator.relatedRhs);
-				resolvedExpression := ResolveExpression(leftBracketDesignator)
+				result := ResolveExpression(leftBracketDesignator)
 
 			ELSE
 				ASSERT(~(bracketDesignator.left IS SyntaxTree.BracketDesignator));
@@ -3673,12 +3557,12 @@ TYPE
 				IF (type IS SyntaxTree.PointerType) & (type(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType) 
 					OR (type IS SyntaxTree.RecordType)
 				THEN
-					resolvedExpression := NewObjectOperatorCall(bracketDesignator.position, designator, 0, bracketDesignator.parameters,bracketDesignator.relatedRhs);
-					IF resolvedExpression = NIL THEN 
+					result := NewObjectOperatorCall(bracketDesignator.position, designator, 0, bracketDesignator.parameters,bracketDesignator.relatedRhs);
+					IF result = NIL THEN 
 						Error(bracketDesignator.position,"undefined operator");
-						resolvedExpression := SyntaxTree.invalidDesignator
+						result := SyntaxTree.invalidDesignator
 					END;
-					RETURN;
+					RETURN result;
 				END;
 
 				i := 0;
@@ -3750,9 +3634,10 @@ TYPE
 				END;
 
 				IF type # SyntaxTree.invalidType THEN FinalizeIndexDesignator END;
-				resolvedExpression := designator
-			END
-		END VisitBracketDesignator;
+				result := designator
+			END;
+			RETURN result;
+		END ResolveBracketDesignator;
 
 
 		(** check and resolve expression list
@@ -3857,38 +3742,19 @@ TYPE
 			RETURN result
 		END NewProcedureCallDesignator;
 
-		(**
-			builtin call designator generated in VisitParameterDesignator
-			-> nothing to be resolved
-		**)
-		PROCEDURE VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator);
-		BEGIN
-			resolvedExpression := x;
-		END VisitTypeGuardDesignator;
 
 		(**
 			builtin call designator generated in VisitParameterDesignator
 			-> nothing to be resolved
 		**)
-		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
+		PROCEDURE ResolveBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator): SyntaxTree.Expression;
 		BEGIN
 			IF (x.returnType # NIL) & ExpressionList(x.parameters) THEN
-				resolvedExpression := NewBuiltinCallDesignator(x.position,NIL, x.parameters,NIL, ResolveType(x.returnType));
-				ASSERT(resolvedExpression.type # NIL);
+				RETURN NewBuiltinCallDesignator(x.position,NIL, x.parameters,NIL, ResolveType(x.returnType));
 			ELSIF ExpressionList(x.parameters) THEN
-				resolvedExpression := x;
+				RETURN x;
 			END;
-		END VisitBuiltinCallDesignator;
-
-		(**
-			procedure call designator generated in VisitParameterDesignator
-			-> nothing to be resolved
-		**)
-		PROCEDURE VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator);
-		BEGIN
-			x.SetType(x.left.type.resolved(SyntaxTree.ProcedureType).returnType);
-			resolvedExpression := x;
-		END VisitProcedureCallDesignator;
+		END ResolveBuiltinCallDesignator;
 
 		(** return true if x is a variable else return false and report error **)
 		PROCEDURE CheckVariable(x: SyntaxTree.Expression): BOOLEAN;
@@ -5468,7 +5334,7 @@ TYPE
 				- else return is a procedure call then return ProcedureCallDesignator
 			returns invalidDesignator = invalidExpression if error
 		**)
-		PROCEDURE VisitParameterDesignator*(designator: SyntaxTree.ParameterDesignator);
+		PROCEDURE ResolveParameterDesignator(designator: SyntaxTree.ParameterDesignator): SyntaxTree.Expression;
 		VAR
 			parameters: SyntaxTree.ExpressionList;
 			left: SyntaxTree.Designator;
@@ -5529,8 +5395,8 @@ TYPE
 					result := SyntaxTree.invalidDesignator
 				END;
 			END;
-			resolvedExpression := result;
-		END VisitParameterDesignator;
+			RETURN result;
+		END ResolveParameterDesignator;
 
 		(** check dereference designator left^
 			 - check if left is pointer type or left is object type
@@ -5623,7 +5489,7 @@ TYPE
 			returns result via global variable resolvedExpression
 			error handling deferred to procedures SupercallDesignator and DereferenceDesignator
 		**)
-		PROCEDURE VisitArrowDesignator*(arrowDesignator: SyntaxTree.ArrowDesignator);
+		PROCEDURE ResolveArrowDesignator(arrowDesignator: SyntaxTree.ArrowDesignator): SyntaxTree.Expression;
 		VAR left: SyntaxTree.Designator;
 		BEGIN
 			IF Trace THEN D.Str("VisitArrowDesignator"); D.Ln; END;
@@ -5632,50 +5498,104 @@ TYPE
 				IF (left.type = NIL) THEN
 					Error(arrowDesignator.position,"Invalid arrow designator");
 				ELSIF (left.type.resolved # NIL) & (left.type.resolved IS SyntaxTree.ProcedureType) THEN
-					resolvedExpression := NewSupercallDesignator(arrowDesignator.position,left);
+					RETURN NewSupercallDesignator(arrowDesignator.position,left);
 				ELSE
 					IF IsPointerToObject(left.type) THEN
 						(* Warning(arrowDesignator.position,  "forbidden dereference on object"); *)
 					END;
-					resolvedExpression := NewDereferenceDesignator(arrowDesignator.position,left)
+					RETURN NewDereferenceDesignator(arrowDesignator.position,left)
 				END
-			END
-		END VisitArrowDesignator;
+			END;
+			RETURN arrowDesignator;
+		END ResolveArrowDesignator;
 
 		(** check and return expression
 			- if expression has no type then resolve expression
 			- resulting expression is exchanged via global variable "resolvedExpression" which makes this mechanism thread-unsafe
 			- return result
 		**)
-		PROCEDURE ResolveExpression(expression: SyntaxTree.Expression): SyntaxTree.Expression;
-		VAR result,prev: SyntaxTree.Expression;
+		PROCEDURE ResolveExpression*(x: SyntaxTree.Expression): SyntaxTree.Expression;
+		VAR result: SyntaxTree.Expression; subtype: LONGINT; type: SyntaxTree.Type;
 		BEGIN
-			IF expression = NIL THEN result := NIL
-			ELSIF (expression.type = NIL) THEN
-				prev := resolvedExpression;
-				resolvedExpression := SyntaxTree.invalidExpression;
-				IF ~(expression IS SyntaxTree.BuiltinCallDesignator) THEN
-					expression.SetType(SyntaxTree.invalidType);
+			IF (x = NIL) OR (x = SyntaxTree.invalidExpression) OR (x.type # NIL) THEN RETURN x END;
+			IF ~(x IS SyntaxTree.BuiltinCallDesignator) THEN
+				x.SetType(SyntaxTree.invalidType);
+			END;
+			result := x;
+			WITH x: 
+			  SyntaxTree.ResultDesignator DO result := ResolveResultDesignator(x)
+			| SyntaxTree.SelfDesignator DO result := ResolveSelfDesignator(x)
+			| SyntaxTree.TypeGuardDesignator DO result := x;
+			| SyntaxTree.SymbolDesignator DO result := x;
+			| SyntaxTree.BuiltinCallDesignator DO result := ResolveBuiltinCallDesignator(x)
+			| SyntaxTree.ProcedureCallDesignator DO 
+				x.SetType(x.left.type.resolved(SyntaxTree.ProcedureType).returnType);
+			| SyntaxTree.BracketDesignator DO result := ResolveBracketDesignator(x)
+			| SyntaxTree.ArrowDesignator DO result := ResolveArrowDesignator(x)
+			| SyntaxTree.ParameterDesignator DO result := ResolveParameterDesignator(x)
+			| SyntaxTree.SelectorDesignator DO result := ResolveSelectorDesignator(x)
+			| SyntaxTree.IdentifierDesignator DO result := ResolveIdentifierDesignator(x)
+			| SyntaxTree.TensorRangeExpression DO x.SetType(NIL);
+			| SyntaxTree.RangeExpression DO result := ResolveRangeExpression(x)
+			| SyntaxTree.BinaryExpression DO result := ResolveBinaryExpression(x)
+			| SyntaxTree.UnaryExpression DO result := ResolveUnaryExpression(x)
+			| SyntaxTree.MathArrayExpression DO result := ResolveMathArrayExpression(x)
+			| SyntaxTree.Set DO result := ResolveSet(x)
+			| SyntaxTree.BooleanValue DO x.SetType(system.booleanType);
+			| SyntaxTree.IntegerValue DO x.SetType(Global.GetIntegerType(system,x.value));
+			| SyntaxTree.CharacterValue DO x.SetType(system.characterType);
+			| SyntaxTree.SetValue DO 
+				x.SetType(system.setType);
+			| SyntaxTree.MathArrayValue DO 
+				x.SetType(SyntaxTree.invalidType)
+			| SyntaxTree.RealValue DO 
+				subtype := x.subtype;
+				IF subtype = Scanner.Real THEN
+					type := system.realType
+				ELSIF subtype = Scanner.Longreal THEN
+					type := system.longrealType
+				ELSE
+					HALT(100)
 				END;
-				VExpression(expression);
-				result := resolvedExpression;
-				IF currentIsRealtime THEN
-					IF (result.type # NIL) & ~result.type.resolved.isRealtime THEN
-						Error(expression.position,"forbidden non-realtime expression in realtime procedure");
+				x.SetType(type);
+			| SyntaxTree.ComplexValue DO 
+					subtype := x.subtype;
+				IF subtype = Scanner.Real THEN
+					type := system.complexType
+				ELSIF subtype = Scanner.Longreal THEN
+					type := system.longcomplexType
+				ELSE
+					HALT(100)
+				END;
+				x.SetType(type);
+			| SyntaxTree.StringValue DO 
+				x.SetType(ResolveType(SyntaxTree.NewStringType(x.position,system.characterType,x.length)));
+			| SyntaxTree.NilValue DO 
+				x.SetType(system.nilType);
+			| SyntaxTree.EnumerationValue DO 
+				x.SetType(currentScope(SyntaxTree.EnumerationScope).ownerEnumeration);
+			END;	(* no other case allowed *)	
+			
+			IF currentIsRealtime THEN
+				IF (result.type # NIL) & ~result.type.resolved.isRealtime THEN
+					Error(x.position,"forbidden non-realtime expression in realtime procedure");
+				END;
+			END;
+			(* designator modifiers for backends if they support it ...*)
+			WITH x: SyntaxTree.Designator DO
+				IF (x.modifiers # NIL) THEN
+					WITH result: SyntaxTree.Designator DO
+						result.SetModifiers(x.modifiers);
+						CheckModifiers(result.modifiers, FALSE);
+					ELSE (* error case *)
 					END;
 				END;
-				(* designator modifiers for backends if they support it ...*)
-				IF (expression IS SyntaxTree.Designator) & (expression(SyntaxTree.Designator).modifiers # NIL) & (result IS SyntaxTree.Designator) THEN
-					result(SyntaxTree.Designator).SetModifiers(expression(SyntaxTree.Designator).modifiers);
-					CheckModifiers(result(SyntaxTree.Designator).modifiers, FALSE);
-				END;
-				resolvedExpression := prev
 			ELSE
-				result := expression
 			END;
-			RETURN result
-		END ResolveExpression;
 
+			RETURN result;
+		END ResolveExpression;
+		
 		(**
 			check expression to be constant expression
 			- resolve expression
@@ -5755,12 +5675,22 @@ TYPE
 		END ResolveCondition;
 
 		(*** symbols ***)
-
-		PROCEDURE ResolveSymbol(x: SyntaxTree.Symbol);
+		
+		PROCEDURE ResolveSymbol*(x: SyntaxTree.Symbol);
 		BEGIN
-			VSymbol(x);
+			WITH 
+			  x: 
+			| SyntaxTree.TypeDeclaration DO ResolveTypeDeclaration(x)
+			| SyntaxTree.Constant DO ResolveConstant(x)
+			| SyntaxTree.Parameter DO ResolveParameter(x)
+			| SyntaxTree.Variable DO ResolveVariable(x)
+			| SyntaxTree.Operator DO ResolveOperator(x)
+			| SyntaxTree.Procedure DO ResolveProcedure(x)
+			| SyntaxTree.Builtin DO ResolveBuiltin(x)
+			| SyntaxTree.Import DO ResolveImport(x)
+			END;
 		END ResolveSymbol;
-
+		
 		(** check a symbol
 			- check visibility flags (symbols within procedure scope (direct or indirect) cannot be exported)
 		**)
@@ -5810,10 +5740,10 @@ TYPE
 			- resolve and set declared type
 			- check symbol
 		**)
-		PROCEDURE VisitTypeDeclaration*(typeDeclaration: SyntaxTree.TypeDeclaration);
+		PROCEDURE ResolveTypeDeclaration(typeDeclaration: SyntaxTree.TypeDeclaration);
 		VAR prevScope: SyntaxTree.Scope;
 		BEGIN
-			IF Trace THEN D.Str("VisitTypeDeclaration "); D.Str0(typeDeclaration.name);  D.Ln;  END;
+			IF Trace THEN D.Str("ResolveTypeDeclaration "); D.Str0(typeDeclaration.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(typeDeclaration) THEN
 				typeDeclaration.SetState(SyntaxTree.Resolved);
 				prevScope := currentScope;
@@ -5824,21 +5754,21 @@ TYPE
 				typeDeclaration.SetState(SyntaxTree.Resolved);
 				currentScope := prevScope;
 			END;
-		END VisitTypeDeclaration;
+		END ResolveTypeDeclaration;
 
 		(** check and resolve a constant declaration symbol = (constant) expression
 			- check expression
 			- set type and value
 			- check symbol
 		**)
-		PROCEDURE VisitConstant*(constant: SyntaxTree.Constant);
+		PROCEDURE ResolveConstant(constant: SyntaxTree.Constant);
 		VAR
 			expression: SyntaxTree.Expression;
 			type: SyntaxTree.Type;
 			name: Basic.SegmentedName;
 			replacement: Replacement;
 		BEGIN
-			IF Trace THEN D.Str("VisitConstant "); D.Str0(constant.name);  D.Ln;  END;
+			IF Trace THEN D.Str("ResolveConstant "); D.Str0(constant.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(constant) THEN
 				expression := constant.value;
 				IF replacements # NIL THEN
@@ -5870,7 +5800,7 @@ TYPE
 				CheckSymbolVisibility(constant);
 				constant.SetState(SyntaxTree.Resolved);
 			END;
-		END VisitConstant;
+		END ResolveConstant;
 
 		PROCEDURE AdaptStackAlignment(procedure: SyntaxTree.Procedure; alignment: LONGINT);
 		VAR procedureAlignment: LONGINT;
@@ -5904,10 +5834,10 @@ TYPE
 			- negative check on open array type
 			- check symbol
 		**)
-		PROCEDURE VisitVariable*(variable: SyntaxTree.Variable);
+		PROCEDURE ResolveVariable(variable: SyntaxTree.Variable);
 		VAR modifiers: SyntaxTree.Modifier; value: Basic.Integer; position: Position; pointerType: SyntaxTree.PointerType;
 		BEGIN
-			IF Trace THEN D.Str("VisitVariable "); D.Str0(variable.name);  D.Ln;  END;
+			IF Trace THEN D.Str("ResolveVariable "); D.Str0(variable.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(variable) THEN
 
 				modifiers := variable.modifiers;
@@ -5970,12 +5900,7 @@ TYPE
 				
 				variable.SetState(SyntaxTree.Resolved);
 			END;
-		END VisitVariable;
-
-		PROCEDURE VisitProperty*(property: SyntaxTree.Property);
-		BEGIN
-			VisitVariable(property)
-		END VisitProperty;
+		END ResolveVariable;
 		
 
 		(** check and resolve a (procedure) parameter
@@ -5983,10 +5908,10 @@ TYPE
 			- check symbol
 			- check parameter kind and set read-only flags if appropriate
 		**)
-		PROCEDURE VisitParameter*(parameter: SyntaxTree.Parameter);
+		PROCEDURE ResolveParameter(parameter: SyntaxTree.Parameter);
 		VAR modifiers: SyntaxTree.Modifier; expression: SyntaxTree.Expression; position: Position;
 		BEGIN
-			IF Trace THEN D.Str("VisitParameter "); D.Str0(parameter.name);  D.Ln;  END;
+			IF Trace THEN D.Str("ResolveParameter "); D.Str0(parameter.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(parameter) THEN
 				modifiers := parameter.modifiers;
 				parameter.SetType(ResolveType(parameter.type));
@@ -6027,7 +5952,7 @@ TYPE
 				CheckModifiers(modifiers, ~InCellNetScope(parameter.scope) & ~(parameter.type.resolved IS SyntaxTree.CellType) & ~(parameter.type.resolved IS SyntaxTree.PortType));
 				parameter.SetState(SyntaxTree.Resolved);
 			END;
-		END VisitParameter;
+		END ResolveParameter;
 
 		(** check and resolve a procedure (with declaration and implementation scope)
 			- check the procedure type
@@ -6040,7 +5965,7 @@ TYPE
 			- check declarations (including a delayed implementation check, cf procedure Declarations)
 			- check procedure symbol
 		**)
-		PROCEDURE VisitProcedure*(procedure: SyntaxTree.Procedure);
+		PROCEDURE ResolveProcedure(procedure: SyntaxTree.Procedure);
 		VAR super,proc: SyntaxTree.Procedure; record: SyntaxTree.RecordType;
 			procedureType: SyntaxTree.ProcedureType;
 			selfParameter: SyntaxTree.Parameter; qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
@@ -6050,7 +5975,7 @@ TYPE
 			position: Position;
 			fp: SyntaxTree.FingerPrint;
 		BEGIN
-			IF Trace THEN D.Str("VisitProcedure "); D.Str0(procedure.name);  D.Ln;  END;
+			IF Trace THEN D.Str("ResolveProcedure "); D.Str0(procedure.name);  D.Ln;  END;
 			IF IsOberonInline(procedure) THEN
 				IF SyntaxTree.Public * procedure.access # {} THEN
 					Warning(procedure.position,  "Export of Oberon Inline Not Yet Tested")
@@ -6240,17 +6165,17 @@ TYPE
 				currentIsRealtime := recentIsRealtime;
 				currentIsBodyProcedure := recentIsBodyProcedure;
 			END;
-		END VisitProcedure;
+		END ResolveProcedure;
 
 		(**
 			a builtin procedure is a global item that may not be modified locally
 			instead the resolving of builtin procedure calls are done in the esignator
 		**)
-		PROCEDURE VisitBuiltin*(builtinProcedure: SyntaxTree.Builtin);
+		PROCEDURE ResolveBuiltin(builtinProcedure: SyntaxTree.Builtin);
 		VAR type: SyntaxTree.Type;
 		BEGIN
 			type := ResolveType(builtinProcedure.type);
-		END VisitBuiltin;
+		END ResolveBuiltin;
 
 		(* nopov *)
 		(** check and resolve operator
@@ -6261,7 +6186,7 @@ TYPE
 				array-structured object types and checked in 'ResolveArrayStructure')
 			- also note that inter-operator conformity is not checked here
 		**)
-		PROCEDURE VisitOperator*(operator: SyntaxTree.Operator);
+		PROCEDURE ResolveOperator(operator: SyntaxTree.Operator);
 		VAR
 			procedureType: SyntaxTree.ProcedureType;
 			leftType, rightType: SyntaxTree.Type;
@@ -6293,7 +6218,7 @@ TYPE
 			IF HasFlag(modifiers, Global.NameDynamic, position) THEN operator.SetDynamic(TRUE) END;
 			CheckModifiers(modifiers, TRUE);
 
-			VisitProcedure(operator);
+			ResolveProcedure(operator);
 
 			IF operator.scope IS SyntaxTree.RecordScope THEN
 			ELSIF operator.scope IS SyntaxTree.ModuleScope THEN
@@ -6421,7 +6346,7 @@ TYPE
 					END
 				END
 			END
-		END VisitOperator;
+		END ResolveOperator;
 
 
 
@@ -6433,7 +6358,7 @@ TYPE
 			prevDiagnostics := diagnostics;
 			diagnostics := NIL; (* suppress error output *)
 			currentScope := module.moduleScope;
-			VisitImport(x);
+			ResolveImport(x);
 			IF ~error THEN
 				module.moduleScope.AddImport(x);
 				x.SetScope(module.moduleScope);
@@ -6453,7 +6378,7 @@ TYPE
 			- enter re-imports into list of imported modules as non-direct import (if not in direct import list)
 			- after this import this direct import and all indirect imports are stored in the current module's import list
 		**)
-		PROCEDURE VisitImport*(x: SyntaxTree.Import);
+		PROCEDURE ResolveImport(x: SyntaxTree.Import);
 		VAR
 			module: SyntaxTree.Module;
 			moduleScope: SyntaxTree.ModuleScope;
@@ -6554,11 +6479,33 @@ TYPE
 				(* ELSE nothing to be done *)
 				x.SetState(SyntaxTree.Resolved);
 			END;
-		END VisitImport;
+		END ResolveImport;
 
 		(*** statements ***)
 
-		PROCEDURE ResolveStatement(x: SyntaxTree.Statement): SyntaxTree.Statement;
+		PROCEDURE VStatement*(x: SyntaxTree.Statement);
+		BEGIN
+			WITH x: 
+			SyntaxTree.ProcedureCallStatement DO VisitProcedureCallStatement(x)
+			| SyntaxTree.Assignment DO VisitAssignment(x)
+			| SyntaxTree.CommunicationStatement DO VisitCommunicationStatement(x)
+			| SyntaxTree.IfStatement DO VisitIfStatement(x)
+			| SyntaxTree.WithStatement DO VisitWithStatement(x)
+			| SyntaxTree.CaseStatement DO VisitCaseStatement(x)
+			| SyntaxTree.WhileStatement DO VisitWhileStatement(x)
+			| SyntaxTree.RepeatStatement DO VisitRepeatStatement(x)
+			| SyntaxTree.ForStatement DO VisitForStatement(x)
+			| SyntaxTree.LoopStatement DO VisitLoopStatement(x)
+			| SyntaxTree.ExitableBlock DO VisitExitableBlock(x)
+			| SyntaxTree.ExitStatement DO VisitExitStatement(x)
+			| SyntaxTree.ReturnStatement DO VisitReturnStatement(x)
+			| SyntaxTree.AwaitStatement DO VisitAwaitStatement(x)
+			| SyntaxTree.StatementBlock DO VisitStatementBlock(x)
+			| SyntaxTree.Code DO VisitCode(x)
+			END;
+		END VStatement;
+
+		PROCEDURE ResolveStatement*(x: SyntaxTree.Statement): SyntaxTree.Statement;
 		VAR prev,resolved: SyntaxTree.Statement;
 		BEGIN
 			prev := resolvedStatement;

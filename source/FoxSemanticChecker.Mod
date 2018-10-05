@@ -94,7 +94,6 @@ TYPE
 			- set in AcceptXXX procedures
 			- set and read in ResolveXXX procedures
 		*)
-		resolvedStatement: SyntaxTree.Statement; (** used for statement resolution **)
 		currentScope-: SyntaxTree.Scope;
 		currentIsRealtime: BOOLEAN;
 		currentIsUnreachable: BOOLEAN;
@@ -117,7 +116,6 @@ TYPE
 			error := FALSE;
 			NEW(typeFixes);
 			NEW(pointerFixes);
-			resolvedStatement := NIL;
 			currentScope := NIL;
 			IF importCache = NIL THEN importCache := SyntaxTree.NewModuleScope() END;
 			SELF.importCache := importCache;
@@ -1989,7 +1987,7 @@ TYPE
 				- if expression is already of same type then return expression
 				- if incompatible conversion then report error and return invalidExpression
 		**)
-		PROCEDURE NewConversion*(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type; reference: SyntaxTree.Expression): SyntaxTree.Expression;
+		PROCEDURE NewConversion(position: Position; expression: SyntaxTree.Expression; type: SyntaxTree.Type; reference: SyntaxTree.Expression): SyntaxTree.Expression;
 		VAR result: SyntaxTree.Expression; value: SyntaxTree.Expression; expressionList: SyntaxTree.ExpressionList; typeDeclaration: SyntaxTree.TypeDeclaration; typeSymbol: SyntaxTree.Designator;
 		BEGIN
 			type := type.resolved;
@@ -2116,7 +2114,7 @@ TYPE
 			- search current module scope and all (directly or indirectly) imported modules for matching operator
 			- take operator with smalles distance, where signature distance is computed in procedure Distance
 		**)
-		PROCEDURE FindOperator*(system: Global.System; operator: LONGINT; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator;
+		PROCEDURE FindOperator(system: Global.System; operator: LONGINT; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator;
 		VAR bestOperator: SyntaxTree.Operator; bestDistance: LONGINT; import: SyntaxTree.Import; numberParameters: LONGINT; procedureType: SyntaxTree.ProcedureType;
 			identifier: SyntaxTree.Identifier;
 
@@ -3097,7 +3095,7 @@ TYPE
 		PROCEDURE ResolveIdentifierDesignator(identifierDesignator: SyntaxTree.IdentifierDesignator): SyntaxTree.Expression;
 		VAR symbol: SyntaxTree.Symbol;
 		BEGIN
-			IF Trace THEN D.Str("VisitIdentifierDesignator "); D.Ln; END;
+			IF Trace THEN D.Str("ResolveIdentifierDesignator "); D.Ln; END;
 			symbol := Find(currentScope,identifierDesignator.identifier,TRUE);
 			IF symbol # NIL THEN
 				ResolveSymbol(symbol);
@@ -3127,7 +3125,7 @@ TYPE
 			symbol: SyntaxTree.Symbol; left: SyntaxTree.Designator; scope: SyntaxTree.Scope;
 			module: SyntaxTree.Module; result: SyntaxTree.Expression; type: SyntaxTree.Type;
 		BEGIN
-			IF Trace THEN D.Str("VisitSelectorDesignator"); D.Ln; END;
+			IF Trace THEN D.Str("ResolveSelectorDesignator"); D.Ln; END;
 			left := ResolveDesignator(selectorDesignator.left);
 
 			result := SyntaxTree.invalidDesignator;
@@ -3533,7 +3531,7 @@ TYPE
 
 
 		BEGIN
-			IF Trace THEN D.Str("VisitBracketDesignator"); D.Ln; END;
+			IF Trace THEN D.Str("ResolveBracketDesignator"); D.Ln; END;
 
 			IF bracketDesignator.left IS SyntaxTree.BracketDesignator THEN
 				leftBracketDesignator := bracketDesignator.left(SyntaxTree.BracketDesignator);
@@ -3686,7 +3684,7 @@ TYPE
 		BEGIN
 			IF Trace THEN D.Str("ProcedureCallDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
-			formalType := left.type.resolved(SyntaxTree.ProcedureType); (* type checked in VisitParameterDesignator *)
+			formalType := left.type.resolved(SyntaxTree.ProcedureType); (* type checked in ResolveParameterDesignator *)
 			numberFormalParameters := formalType.numberParameters;
 			numberActualParameters := actualParameters.Length();
 
@@ -3744,7 +3742,7 @@ TYPE
 
 
 		(**
-			builtin call designator generated in VisitParameterDesignator
+			builtin call designator generated in ResolveParameterDesignator
 			-> nothing to be resolved
 		**)
 		PROCEDURE ResolveBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator): SyntaxTree.Expression;
@@ -5352,7 +5350,7 @@ TYPE
 			END BaseType;
 
 		BEGIN
-			IF Trace THEN D.Str("VisitParameterDesignator"); D.Ln; END;
+			IF Trace THEN D.Str("ResolveParameterDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
 			left := ResolveDesignator(designator.left);
 			IF left # SyntaxTree.invalidDesignator THEN
@@ -5492,7 +5490,7 @@ TYPE
 		PROCEDURE ResolveArrowDesignator(arrowDesignator: SyntaxTree.ArrowDesignator): SyntaxTree.Expression;
 		VAR left: SyntaxTree.Designator;
 		BEGIN
-			IF Trace THEN D.Str("VisitArrowDesignator"); D.Ln; END;
+			IF Trace THEN D.Str("ResolveArrowDesignator"); D.Ln; END;
 			left := ResolveDesignator(arrowDesignator.left);
 			IF left # NIL THEN
 				IF (left.type = NIL) THEN
@@ -6483,44 +6481,31 @@ TYPE
 
 		(*** statements ***)
 
-		PROCEDURE VStatement*(x: SyntaxTree.Statement);
-		BEGIN
-			WITH x: 
-			SyntaxTree.ProcedureCallStatement DO VisitProcedureCallStatement(x)
-			| SyntaxTree.Assignment DO VisitAssignment(x)
-			| SyntaxTree.CommunicationStatement DO VisitCommunicationStatement(x)
-			| SyntaxTree.IfStatement DO VisitIfStatement(x)
-			| SyntaxTree.WithStatement DO VisitWithStatement(x)
-			| SyntaxTree.CaseStatement DO VisitCaseStatement(x)
-			| SyntaxTree.WhileStatement DO VisitWhileStatement(x)
-			| SyntaxTree.RepeatStatement DO VisitRepeatStatement(x)
-			| SyntaxTree.ForStatement DO VisitForStatement(x)
-			| SyntaxTree.LoopStatement DO VisitLoopStatement(x)
-			| SyntaxTree.ExitableBlock DO VisitExitableBlock(x)
-			| SyntaxTree.ExitStatement DO VisitExitStatement(x)
-			| SyntaxTree.ReturnStatement DO VisitReturnStatement(x)
-			| SyntaxTree.AwaitStatement DO VisitAwaitStatement(x)
-			| SyntaxTree.StatementBlock DO VisitStatementBlock(x)
-			| SyntaxTree.Code DO VisitCode(x)
-			END;
-		END VStatement;
-
 		PROCEDURE ResolveStatement*(x: SyntaxTree.Statement): SyntaxTree.Statement;
-		VAR prev,resolved: SyntaxTree.Statement;
-		BEGIN
-			prev := resolvedStatement;
-			resolvedStatement := x;
+		VAR result: SyntaxTree.Statement;
+		BEGIN			
 			IF currentIsUnreachable THEN x.SetUnreachable(TRUE) END;
 			activeCellsStatement := FALSE;
-			VStatement(x);
-			(* removed this, implementation restriction should be resolved by backend
-			IF (inCellNetBody) & (activeCellsStatement = FALSE) THEN
-				Error(x.position, "non-activeCells statement in activeCells block - not yet implemented");
+			result := x; 
+			WITH x: 
+			SyntaxTree.ProcedureCallStatement DO result := ResolveProcedureCallStatement(x)
+			| SyntaxTree.Assignment DO result := ResolveAssignment(x)
+			| SyntaxTree.CommunicationStatement DO result := ResolveCommunicationStatement(x)
+			| SyntaxTree.IfStatement DO result := ResolveIfStatement(x)
+			| SyntaxTree.WithStatement DO result := ResolveWithStatement(x)
+			| SyntaxTree.CaseStatement DO result := ResolveCaseStatement(x)
+			| SyntaxTree.WhileStatement DO result := ResolveWhileStatement(x)
+			| SyntaxTree.RepeatStatement DO result := ResolveRepeatStatement(x)
+			| SyntaxTree.ForStatement DO result := ResolveForStatement(x)
+			| SyntaxTree.LoopStatement DO result := ResolveLoopStatement(x)
+			| SyntaxTree.ExitableBlock DO result := ResolveExitableBlock(x)
+			| SyntaxTree.ExitStatement DO result := ResolveExitStatement(x)
+			| SyntaxTree.ReturnStatement DO result := ResolveReturnStatement(x)
+			| SyntaxTree.AwaitStatement DO result := ResolveAwaitStatement(x)
+			| SyntaxTree.StatementBlock DO ResolveStatementBlock(x)
+			| SyntaxTree.Code DO ResolveCode(x)
 			END;
-			*)
-			resolved := resolvedStatement;
-			resolvedStatement := prev;
-			RETURN resolved
+			RETURN result;
 		END ResolveStatement;
 
 		(** check and resolve statement sequence
@@ -6540,17 +6525,15 @@ TYPE
 			END;
 		END StatementSequence;
 
-
-
 		(** check and resolve procedure call statement procedureCall() or procedureCall;
 			- check if call is a procedure call designator, if not (procedure type symbol) try to make one out of it
 			- check if procedure is callable
 			- check return type = NIL (otherwise must be assignment statement)
 		**)
-		PROCEDURE VisitProcedureCallStatement*(procedureCall: SyntaxTree.ProcedureCallStatement);
+		PROCEDURE ResolveProcedureCallStatement(procedureCall: SyntaxTree.ProcedureCallStatement): SyntaxTree.Statement;
 		VAR call: SyntaxTree.Designator;
 		BEGIN
-			IF Trace THEN D.Str("VisitProcedureCallStatement"); D.Ln; END;
+			IF Trace THEN D.Str("ResolveProcedureCallStatement"); D.Ln; END;
 			call := procedureCall.call;
 			IF (call # NIL) &  ~(call IS SyntaxTree.ParameterDesignator) & ~(call IS SyntaxTree.ProcedureCallDesignator) & ~(call IS SyntaxTree.BuiltinCallDesignator)  THEN
 				IF procedureCall.ignore THEN Error(procedureCall.position, "ignoring non-procedure call") END;
@@ -6558,7 +6541,6 @@ TYPE
 			END;
 
 			call := ResolveDesignator(call);
-
 
 			IF call = SyntaxTree.invalidDesignator THEN
 				(* error already handled *)
@@ -6575,7 +6557,8 @@ TYPE
 				Error(procedureCall.position,"ignoring procedure call without return value");
 			END;
 			procedureCall.SetCall(call);
-		END VisitProcedureCallStatement;
+			RETURN procedureCall;
+		END ResolveProcedureCallStatement;
 
 		(** check and resolve assignment LHS := RHS
 			- resolve LHS and RHS
@@ -6584,7 +6567,7 @@ TYPE
 			- check if LHS is variable (i.e. assignable)
 			- convert RHS if necessary
 		**)
-		PROCEDURE VisitAssignment*(assignment: SyntaxTree.Assignment);
+		PROCEDURE ResolveAssignment(assignment: SyntaxTree.Assignment): SyntaxTree.Statement;
 		VAR
 			left: SyntaxTree.Designator;
 			right, expression: SyntaxTree.Expression;
@@ -6599,24 +6582,24 @@ TYPE
 			ELSIF IsIndexOperator(left) & left.assignable THEN
 				(* LHS is index write operator call *)
 				procedureCallDesignator :=  left(SyntaxTree.ProcedureCallDesignator);
-				resolvedStatement := SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
+				RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
 			ELSIF CheckVariable(left) THEN
 				expression := NewOperatorCall(assignment.position, Scanner.Becomes, left, right, NIL);
 				IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
 					procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
-					resolvedStatement := SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
+					RETURN SyntaxTree.NewProcedureCallStatement(assignment.position, FALSE, procedureCallDesignator, assignment.outer);
 				ELSIF (expression # NIL) & (expression IS SyntaxTree.StatementDesignator) THEN
-					resolvedStatement := expression(SyntaxTree.StatementDesignator).statement;
+					RETURN expression(SyntaxTree.StatementDesignator).statement;
 				ELSIF AssignmentCompatible(left, right) THEN
 					right := NewConversion(right.position, right, left.type.resolved, NIL);
 					assignment.SetLeft(left);
 					assignment.SetRight(right);
-					resolvedStatement := assignment
 				END
-			END
-		END VisitAssignment;
+			END;
+			RETURN assignment;
+		END ResolveAssignment;
 
-		PROCEDURE VisitCommunicationStatement*(communication: SyntaxTree.CommunicationStatement);
+		PROCEDURE ResolveCommunicationStatement(communication: SyntaxTree.CommunicationStatement): SyntaxTree.Statement;
 		VAR
 			left: SyntaxTree.Designator;
 			right: SyntaxTree.Expression;
@@ -6632,7 +6615,7 @@ TYPE
 			expression := NewOperatorCall(communication.position, communication.op, left, right, NIL);
 			IF (expression # NIL) & (expression IS SyntaxTree.ProcedureCallDesignator) THEN
 				procedureCallDesignator := expression(SyntaxTree.ProcedureCallDesignator);
-				resolvedStatement := SyntaxTree.NewProcedureCallStatement(communication.position, FALSE, procedureCallDesignator, communication.outer);
+				RETURN SyntaxTree.NewProcedureCallStatement(communication.position, FALSE, procedureCallDesignator, communication.outer);
 			ELSE
 
 				IF ~cellsAreObjects THEN ImportModule(Global.NameChannelModule,communication.position) END;
@@ -6681,7 +6664,8 @@ TYPE
 					Error(communication.position, "unsupported operation");
 				END;
 			END;
-		END VisitCommunicationStatement;
+			RETURN communication;
+		END ResolveCommunicationStatement;
 
 		(** check and resolve if/eslif part
 			- check condition
@@ -6706,7 +6690,7 @@ TYPE
 		(** check and resolve if statement
 			- check if parts and else part statement sequence
 		**)
-		PROCEDURE VisitIfStatement*(ifStatement: SyntaxTree.IfStatement);
+		PROCEDURE ResolveIfStatement(ifStatement: SyntaxTree.IfStatement): SyntaxTree.Statement;
 		VAR elsif: SyntaxTree.IfPart; i: LONGINT; ifPartTrue, prevUnreachable: BOOLEAN;
 		BEGIN
 			prevUnreachable := currentIsUnreachable;
@@ -6723,7 +6707,8 @@ TYPE
 				StatementSequence(ifStatement.elsePart)
 			END;
 			currentIsUnreachable := prevUnreachable;
-		END VisitIfStatement;
+			RETURN ifStatement;
+		END ResolveIfStatement;
 
 		PROCEDURE WithPart(withPart: SyntaxTree.WithPart; variable: SyntaxTree.Designator);
 		VAR 
@@ -6784,7 +6769,7 @@ TYPE
 			- create if statement:
 				WITH variable: type DO ... END; 	--> IF ~(variable IS type) THEN HALT(withTrap) ELSE ... END;
 		**)
-		PROCEDURE VisitWithStatement*(withStatement: SyntaxTree.WithStatement);
+		PROCEDURE ResolveWithStatement(withStatement: SyntaxTree.WithStatement): SyntaxTree.Statement;
 		VAR i,j: LONGINT; prevScope: SyntaxTree.Scope; variable: SyntaxTree.Designator;
 		BEGIN
 			prevScope := currentScope;
@@ -6809,7 +6794,8 @@ TYPE
 				StatementSequence(withStatement.elsePart)
 			END;
 			currentScope := prevScope;
-		END VisitWithStatement;
+			RETURN withStatement;
+		END ResolveWithStatement;
 
 		(** check and resolve case part <<a, b, c..d: StatementSequence>>
 			- check expression to be constant or case range expression <<first .. last>> with constants 'first' and 'last' and compatible to type
@@ -6846,7 +6832,7 @@ TYPE
 					(* read out 'first' and 'last' *)
 					left := expression(SyntaxTree.RangeExpression).first;
 					right := expression(SyntaxTree.RangeExpression).last;
-					(* guaranteed by VisitRangeExpression: *)
+					(* guaranteed by ResolveRangeExpression: *)
 					ASSERT((left # NIL) & (right # NIL));
 					ASSERT(left.type.resolved = right.type.resolved);
 					left := CompatibleConversion(left.position, left, type);
@@ -6907,7 +6893,7 @@ TYPE
 			- check variable
 			- check case parts
 		**)
-		PROCEDURE VisitCaseStatement*(caseStatement: SyntaxTree.CaseStatement);
+		PROCEDURE ResolveCaseStatement(caseStatement: SyntaxTree.CaseStatement): SyntaxTree.Statement;
 		VAR expression: SyntaxTree.Expression; i: LONGINT; type: SyntaxTree.Type; caseList: SyntaxTree.CaseConstant;
 			ch: CHAR; l: Basic.Integer; min,max: Basic.Integer;
 		BEGIN
@@ -6944,14 +6930,14 @@ TYPE
 				END;
 				IF EnterCase(caseList,l,l) & (caseStatement.elsePart = NIL) THEN Error(caseStatement.position,"no matching case label") END;
 			END;
-
-		END VisitCaseStatement;
+			RETURN caseStatement;
+		END ResolveCaseStatement;
 
 		(** check and resolve while statement
 			- check condition
 			- check statement sequence
 		**)
-		PROCEDURE VisitWhileStatement*(whileStatement: SyntaxTree.WhileStatement);
+		PROCEDURE ResolveWhileStatement(whileStatement: SyntaxTree.WhileStatement): SyntaxTree.Statement;
 		VAR prevIsUnreachable,b: BOOLEAN;
 		BEGIN
 			prevIsUnreachable := currentIsUnreachable;
@@ -6962,18 +6948,20 @@ TYPE
 				END;
 			END;
 			StatementSequence(whileStatement.statements);
-			currentIsUnreachable := prevIsUnreachable
-		END VisitWhileStatement;
+			currentIsUnreachable := prevIsUnreachable;
+			RETURN whileStatement;
+		END ResolveWhileStatement;
 
 		(** check and resolve repeat statement
 			- check condition
 			- check statement sequence
 		**)
-		PROCEDURE VisitRepeatStatement*(repeatStatement: SyntaxTree.RepeatStatement);
+		PROCEDURE ResolveRepeatStatement(repeatStatement: SyntaxTree.RepeatStatement): SyntaxTree.Statement;
 		BEGIN
 			repeatStatement.SetCondition(ResolveCondition(repeatStatement.condition));
 			StatementSequence(repeatStatement.statements);
-		 END VisitRepeatStatement;
+			RETURN repeatStatement;
+		 END ResolveRepeatStatement;
 
 
 		PROCEDURE GetGuard(symbol: SyntaxTree.Symbol; VAR type: SyntaxTree.Type): BOOLEAN;
@@ -6996,7 +6984,7 @@ TYPE
 			- check that to has compatible type
 			- check that by is constant integer with compatible type
 		**)
-		PROCEDURE VisitForStatement*(forStatement: SyntaxTree.ForStatement);
+		PROCEDURE ResolveForStatement(forStatement: SyntaxTree.ForStatement): SyntaxTree.Statement;
 		VAR expression: SyntaxTree.Expression; designator: SyntaxTree.Designator; type: SyntaxTree.Type;
 		BEGIN
 			designator := ResolveDesignator(forStatement.variable);
@@ -7049,26 +7037,29 @@ TYPE
 			forStatement.SetBy(expression);
 
 			StatementSequence(forStatement.statements);
-		END VisitForStatement;
+			RETURN forStatement;
+		END ResolveForStatement;
 
 		(** check and resolve loop statement LOOP StatementSequence END
 			- check statement sequence
 		**)
-		PROCEDURE VisitLoopStatement*(loopStatement: SyntaxTree.LoopStatement);
+		PROCEDURE ResolveLoopStatement(loopStatement: SyntaxTree.LoopStatement): SyntaxTree.Statement;
 		BEGIN
-			StatementSequence(loopStatement.statements)
-		END VisitLoopStatement;
+			StatementSequence(loopStatement.statements);
+			RETURN loopStatement;
+		END ResolveLoopStatement;
 
-		PROCEDURE VisitExitableBlock*(exitableBlock: SyntaxTree.ExitableBlock);
+		PROCEDURE ResolveExitableBlock(exitableBlock: SyntaxTree.ExitableBlock): SyntaxTree.Statement;
 		BEGIN
 			StatementSequence(exitableBlock.statements);
-		END VisitExitableBlock;
+			RETURN exitableBlock;
+		END ResolveExitableBlock;
 
 
 		(** check and resolve exit statement EXIT
 			- check that exit is within LOOP statement block
 		**)
-		PROCEDURE VisitExitStatement*(exitStatement: SyntaxTree.ExitStatement);
+		PROCEDURE ResolveExitStatement(exitStatement: SyntaxTree.ExitStatement): SyntaxTree.Statement;
 		VAR outer: SyntaxTree.Statement;
 		BEGIN
 			outer := exitStatement.outer;
@@ -7078,7 +7069,8 @@ TYPE
 			IF outer = NIL THEN
 				Error(exitStatement.position,"exit statement not within loop statement");
 			END;
-		 END VisitExitStatement;
+			RETURN exitStatement;
+		 END ResolveExitStatement;
 
 		(** check and resolve return statement RETURN [expression]
 			- check expression (if any)
@@ -7086,7 +7078,7 @@ TYPE
 				- if in procedure scope then check expression compatibility
 				- if not in procecdure scope then check on return without expression
 		**)
-		PROCEDURE VisitReturnStatement*(returnStatement: SyntaxTree.ReturnStatement);
+		PROCEDURE ResolveReturnStatement(returnStatement: SyntaxTree.ReturnStatement): SyntaxTree.Statement;
 		VAR expression: SyntaxTree.Expression; position: Position; procedure: SyntaxTree.Procedure;
 			returnType: SyntaxTree.Type; outer: SyntaxTree.Statement; scope: SyntaxTree.Scope;
 		BEGIN
@@ -7133,12 +7125,13 @@ TYPE
 					END;
 				END;
 			END;
-		 END VisitReturnStatement;
+			RETURN returnStatement;
+		 END ResolveReturnStatement;
 
 		(** check and resolve await statement AWAIT(condition: Expression)
 			- check await condition
 		**)
-		PROCEDURE VisitAwaitStatement*(awaitStatement: SyntaxTree.AwaitStatement);
+		PROCEDURE ResolveAwaitStatement(awaitStatement: SyntaxTree.AwaitStatement): SyntaxTree.Statement;
 		VAR condition: SyntaxTree.Expression;
 		BEGIN
 			condition := ResolveCondition(awaitStatement.condition);
@@ -7149,7 +7142,8 @@ TYPE
 				Error(awaitStatement.position,"senseless await statement with constant condition");
 			END;
 			awaitStatement.SetCondition(condition);
-		END VisitAwaitStatement;
+			RETURN awaitStatement;
+		END ResolveAwaitStatement;
 
 		PROCEDURE CheckSystemImport(position: Position);
 		VAR import: SyntaxTree.Import;
@@ -7166,7 +7160,7 @@ TYPE
 
 		(** check and resolve code statement: do nothing, must be done by assembler
 		**)
-		PROCEDURE VisitCode*(code: SyntaxTree.Code);
+		PROCEDURE ResolveCode(code: SyntaxTree.Code);
 		VAR i: LONGINT; statement: SyntaxTree.Statement;
 		BEGIN
 			CheckSystemImport(code.position);
@@ -7194,7 +7188,7 @@ TYPE
 					Error(statement.position, "(out) can only be assignment")
 				END;
 			END;
-		END VisitCode;
+		END ResolveCode;
 
 
 		(** check and set flags of a statement block
@@ -7299,7 +7293,7 @@ TYPE
 			- check flags (exclusive)
 			- check statement sequence
 		**)
-		PROCEDURE VisitStatementBlock*(statementBlock: SyntaxTree.StatementBlock);
+		PROCEDURE ResolveStatementBlock(statementBlock: SyntaxTree.StatementBlock);
 		VAR recentExclusive, recentUnreachable, recentRealtime: BOOLEAN; recentScope: SyntaxTree.Scope;
 		BEGIN
 			recentScope := currentScope;
@@ -7324,7 +7318,7 @@ TYPE
 			currentIsExclusive := recentExclusive;
 			currentIsUnreachable := recentUnreachable;
 			currentScope := recentScope;
-		END VisitStatementBlock;
+		END ResolveStatementBlock;
 
 		(** check and resolve body
 			- check flags (active, priority, safe)
@@ -7332,7 +7326,7 @@ TYPE
 		 **)
 		PROCEDURE Body(body: SyntaxTree.Body);
 		BEGIN
-			VisitStatementBlock(body);
+			ResolveStatementBlock(body);
 			IF body.isActive THEN
 				IF  ~currentIsBodyProcedure THEN
 					Error(body.position,"active flag not in object body");

@@ -1567,15 +1567,19 @@ TYPE
 				END;
 
 				IF backend.cooperative THEN
-					IF (procedure # NIL) & (HasPointers (procedure.procedureScope) OR HasVariableParameters (procedure.procedureScope) OR IsNested (procedure)) THEN
-						GetCodeSectionNameForSymbol(procedure, name);
-						Basic.SuffixSegmentedName (name, Basic.MakeString ("@StackDescriptor"));
+					IF callconv IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention} THEN
+						Emit(Push(Basic.invalidPosition, one)) ;
 					ELSE
-						Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
+						IF (procedure # NIL) & (HasPointers (procedure.procedureScope) OR HasVariableParameters (procedure.procedureScope) OR IsNested (procedure)) THEN
+							GetCodeSectionNameForSymbol(procedure, name);
+							Basic.SuffixSegmentedName (name, Basic.MakeString ("@StackDescriptor"));
+						ELSE
+							Basic.ToSegmentedName ("BaseTypes.StackFrame",name);
+						END;
+						IntermediateCode.InitAddress(op1, addressType, name , 0, 0);
+						IntermediateCode.AddOffset(op1, 1);
+						Emit(Push(Basic.invalidPosition,op1));
 					END;
-					IntermediateCode.InitAddress(op1, addressType, name , 0, 0);
-					IntermediateCode.AddOffset(op1, 1);
-					Emit(Push(Basic.invalidPosition,op1));
 					Emit(Mov(Basic.invalidPosition,fp, sp));
 					IF (body # NIL) & (body.code = NIL) & ~procedure.procedureScope.body.isUnchecked THEN
 						NEW(call, section);

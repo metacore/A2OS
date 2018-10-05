@@ -3,7 +3,7 @@ MODULE Modules;	(** AUTHOR "pjm"; PURPOSE "Modules and types"; *)
 IMPORT SYSTEM, Trace, Machine, Heaps;
 
 #IF COOP THEN
-	IMPORT Activities, Environment, GarbageCollector, Processors, Queues;
+	IMPORT Activities, Environment, GarbageCollector, Processors, Queues, ExclusiveBlocks;
 #END
 
 CONST

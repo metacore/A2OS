@@ -354,7 +354,7 @@ TYPE
 			ELSE
 				res := ErrFileNotFound;
 			END;
-			RETURN ResOk;
+			RETURN res;
 		END AddTrack;
 	END Compilation;
 

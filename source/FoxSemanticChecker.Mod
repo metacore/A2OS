@@ -11,6 +11,8 @@ CONST
 	Infinity = MAX(LONGINT); (* for type distance *)
 	UndefinedPhase = 0; DeclarationPhase=1; InlinePhase=2; ImplementationPhase=3;
 
+	InliningSupport = FALSE;
+
 TYPE
 	Position=SyntaxTree.Position;
 	FileName=ARRAY 256 OF CHAR;
@@ -3666,6 +3668,148 @@ TYPE
 			END;
 		END CanPassInRegister;
 
+		PROCEDURE ReplaceExpressions(x: SyntaxTree.ExpressionList; rScope: SyntaxTree.Scope);
+		VAR i: LONGINT;
+		BEGIN
+				IF x # NIL THEN
+					FOR i := 0 TO x.Length()-1 DO
+						ReplaceExpression(x.GetExpression(i),rScope);
+					END;
+				END;				
+		END ReplaceExpressions;
+		
+		PROCEDURE ReplaceExpression(x: SyntaxTree.Expression; rScope: SyntaxTree.Scope);
+		VAR find: SyntaxTree.Symbol; name: ARRAY 32 OF CHAR;
+		BEGIN
+			IF x = NIL THEN RETURN END;
+			WITH
+				x: SyntaxTree.ResultDesignator DO ReplaceExpression(x.left,rScope);
+			| SyntaxTree.SelfDesignator DO ReplaceExpression(x.left,rScope);
+			| SyntaxTree.SupercallDesignator DO ReplaceExpression(x.left,rScope);
+			| SyntaxTree.DereferenceDesignator DO ReplaceExpression(x.left,rScope);
+			| SyntaxTree.TypeGuardDesignator DO ReplaceExpression(x.left,rScope);
+			| SyntaxTree.BuiltinCallDesignator DO 
+				ReplaceExpression(x.left,rScope);
+				ReplaceExpressions(x.parameters,rScope);
+			| SyntaxTree.StatementDesignator DO
+				ReplaceStatement(x.statement, rScope);
+				ReplaceExpression(x.result, rScope);
+			| SyntaxTree.ProcedureCallDesignator DO
+				ReplaceExpression(x.left,rScope);
+				ReplaceExpressions(x.parameters,rScope);
+			| SyntaxTree.InlineCallDesignator DO
+				HALT(200);
+			| SyntaxTree.IndexDesignator DO
+				ReplaceExpression(x.left,rScope);
+				ReplaceExpressions(x.parameters,rScope);
+			| SyntaxTree.SymbolDesignator DO
+				IF x.symbol IS SyntaxTree.Parameter THEN
+					find := rScope.FindSymbol(x.symbol.name);
+					IF find # NIL THEN
+						x.symbol.GetName(name);
+						TRACE(name);
+						x.SetSymbol(find);
+					END;
+				END;
+			| SyntaxTree.BracketDesignator DO HALT(100)
+			| SyntaxTree.ArrowDesignator DO HALT(100)
+			| SyntaxTree.ParameterDesignator DO HALT(100)
+			| SyntaxTree.SelectorDesignator DO HALT(100)
+			| SyntaxTree.IdentifierDesignator DO HALT(100)
+			| SyntaxTree.Conversion DO
+				ReplaceExpression(x.expression,rScope);
+			| SyntaxTree.TensorRangeExpression DO
+			| SyntaxTree.RangeExpression DO
+				ReplaceExpression(x.first, rScope);
+				ReplaceExpression(x.last, rScope);
+				ReplaceExpression(x.step, rScope);
+			| SyntaxTree.BinaryExpression DO
+				ReplaceExpression(x.left, rScope);
+				ReplaceExpression(x.right, rScope);			
+			| SyntaxTree.UnaryExpression DO
+				ReplaceExpression(x.left, rScope);
+			| SyntaxTree.MathArrayExpression DO
+				ReplaceExpressions(x.elements, rScope);
+			| SyntaxTree.Set DO
+				ReplaceExpressions(x.elements, rScope);
+			ELSE			
+			END;
+		END ReplaceExpression;
+
+		PROCEDURE ReplaceIfPart(x: SyntaxTree.IfPart; rScope: SyntaxTree.Scope);
+		BEGIN
+				ReplaceExpression(x.condition,rScope);
+				ReplaceStatements(x.statements,rScope);
+		END ReplaceIfPart;		
+
+		PROCEDURE ReplaceStatement(x: SyntaxTree.Statement; rScope: SyntaxTree.Scope);
+		VAR i: LONGINT;
+		BEGIN
+			WITH x: 
+			SyntaxTree.ProcedureCallStatement DO
+				ReplaceExpression(x.call,rScope);
+			| SyntaxTree.Assignment DO 
+				ReplaceExpression(x.left,rScope);
+				ReplaceExpression(x.right,rScope);
+			| SyntaxTree.CommunicationStatement DO
+					ReplaceExpression(x.left,rScope);
+					ReplaceExpression(x.right,rScope);
+			| SyntaxTree.IfStatement DO 
+					ReplaceIfPart(x.ifPart, rScope);
+					FOR i := 0 TO x.ElsifParts()-1 DO
+						ReplaceIfPart(x.GetElsifPart(i), rScope);
+					END;
+					IF x.elsePart # NIL THEN
+						ReplaceStatements(x.elsePart,rScope);
+					END;
+			| SyntaxTree.WithStatement DO
+					ReplaceExpression(x.variable,rScope);
+					FOR i := 0 TO x.WithParts()-1 DO
+						ReplaceStatements(x.GetWithPart(i).statements,rScope);
+					END;
+					IF x.elsePart # NIL THEN
+						ReplaceStatements(x.elsePart,rScope);
+					END;					
+			| SyntaxTree.CaseStatement DO
+					ReplaceExpression(x.variable,rScope);
+					FOR i := 0 TO x.CaseParts()-1 DO
+						ReplaceStatements(x.GetCasePart(i).statements,rScope);
+					END;
+					IF x.elsePart # NIL THEN
+						ReplaceStatements(x.elsePart,rScope);
+					END;										
+			| SyntaxTree.WhileStatement DO
+				ReplaceExpression(x.condition,rScope);
+				ReplaceStatements(x.statements,rScope);
+			| SyntaxTree.RepeatStatement DO
+				ReplaceExpression(x.condition,rScope);
+				ReplaceStatements(x.statements,rScope);
+			| SyntaxTree.ForStatement DO
+				ReplaceExpression(x.variable,rScope);
+				ReplaceExpression(x.from,rScope);
+				ReplaceExpression(x.to,rScope);
+				ReplaceExpression(x.by,rScope);
+				ReplaceStatements(x.statements,rScope);				
+			| SyntaxTree.LoopStatement DO
+				ReplaceStatements(x.statements,rScope);				
+			| SyntaxTree.ExitStatement DO 
+			| SyntaxTree.ReturnStatement DO
+				ReplaceExpression(x.returnValue,rScope);
+			| SyntaxTree.AwaitStatement DO
+				ReplaceExpression(x.condition,rScope);				
+			| SyntaxTree.StatementBlock DO
+				ReplaceStatements(x.statements,rScope);
+			ELSE
+			END;
+		END ReplaceStatement;
+
+		PROCEDURE ReplaceStatements(statements: SyntaxTree.StatementSequence; rScope: SyntaxTree.Scope);
+		VAR i: LONGINT;
+		BEGIN
+			FOR i := 0 TO statements.Length()-1 DO
+				ReplaceStatement(statements.GetStatement(i), rScope);
+			END;
+		END ReplaceStatements;
 
 		(** return procedure call designator left(actualParameters)
 			- check realtime procedure call in realtime procedure
@@ -3681,10 +3825,18 @@ TYPE
 			actualParameter: SyntaxTree.Expression;
 			i: LONGINT;
 			self: SyntaxTree.Expression;
+			inlineScope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType;
+			tooComplex : BOOLEAN;
+			duplicate: BOOLEAN;
+			procedure: SyntaxTree.Procedure;
+			block: SyntaxTree.StatementBlock;
+			returnType: SyntaxTree.Type;
+			const: SyntaxTree.Constant;
+			var: SyntaxTree.Variable;
 		BEGIN
 			IF Trace THEN D.Str("ProcedureCallDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
-			formalType := left.type.resolved(SyntaxTree.ProcedureType); (* type checked in ResolveParameterDesignator *)
+			formalType := left.type.resolved(SyntaxTree.ProcedureType); (* type checked in VisitParameterDesignator *)
 			numberFormalParameters := formalType.numberParameters;
 			numberActualParameters := actualParameters.Length();
 
@@ -3737,8 +3889,69 @@ TYPE
 
 			END;
 
+
+
+			IF result = SyntaxTree.invalidDesignator THEN
+			ELSIF (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) THEN
+				procedure := left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+			END;
+
+			IF InliningSupport & (procedure # NIL) & IsOberonInline(procedure) THEN
+				NEW(inlineScope, currentScope); 
+				procedureType := procedure.type(SyntaxTree.ProcedureType);
+
+				formalParameter := procedureType.firstParameter;
+				actualParameters := result(SyntaxTree.ProcedureCallDesignator).parameters;
+
+				tooComplex := FALSE;
+
+				i := 0;
+				WHILE (i < actualParameters.Length()) & ~tooComplex DO
+					actualParameter := actualParameters.GetExpression(i);
+					IF actualParameter.resolved # NIL THEN
+						actualParameter := actualParameter.resolved
+					END;
+					IF (actualParameter.resolved # NIL) & (actualParameter.resolved IS SyntaxTree.Value) THEN
+						const := SyntaxTree.NewConstant(actualParameter.position,formalParameter.name);
+						const.SetValue(actualParameter);
+						const.SetType(actualParameter.type);
+						inlineScope.AddConstant(const);
+						inlineScope.EnterSymbol(const, duplicate);
+					ELSE
+						var := SyntaxTree.NewVariable(actualParameter.position, formalParameter.name); 
+						(* copy expression to var *)
+						var.SetType(actualParameter.type);
+						inlineScope.AddVariable(var); 
+						inlineScope.EnterSymbol(var, duplicate);
+					END;
+					formalParameter := formalParameter.nextParameter;
+					INC(i);
+ 				END;
+			(*IF ~tooComplex & (procedureType.returnType # NIL) THEN
+				IF resultDesignator # NIL THEN
+					returnDesignator := resultDesignator
+				ELSE
+					returnDesignator := GetTemp(procedureType.returnType, TRUE);
+				END;
+				currentMapper.Add(NIL, returnDesignator, NIL, resultDesignator # NIL);
+			END;
+			*)
+					
+				Warning(result.position,"call to inline proc");
+				
+				block := SyntaxTree.NewStatementBlock(result.position, NIL, inlineScope);
+				block.SetStatementSequence(SyntaxTree.CloneStatementSequence(procedure.procedureScope.body.statements));
+				(*Parameters(block, procedure.type(SyntaxTree.ProcedureType).firstParameter, call(SyntaxTree.ProcedureCallDesignator).parameters);*)					
+				ReplaceStatements(block.statements, block.scope); 
+				ResolveStatementBlock(block);
+				returnType := result.type; 
+				result := SyntaxTree.NewInlineCallDesignator(result.position, result(SyntaxTree.ProcedureCallDesignator), block); 
+				result.SetType(returnType); 
+			END;
+
 			RETURN result
 		END NewProcedureCallDesignator;
+
 
 
 		(**
@@ -7884,7 +8097,18 @@ TYPE
 			((procedure.procedureScope.body = NIL) OR (procedure.procedureScope.body # NIL) & (procedure.procedureScope.body.code = NIL))
 	END IsOberonInline;
 
-
+	PROCEDURE SimpleExpression(e: SyntaxTree.Expression): BOOLEAN;
+	BEGIN
+		IF e = NIL THEN RETURN TRUE
+		ELSIF (e IS SyntaxTree.SymbolDesignator) THEN RETURN SimpleExpression(e(SyntaxTree.SymbolDesignator).left)
+		ELSIF (e IS SyntaxTree.Value) THEN RETURN TRUE
+		ELSIF (e IS SyntaxTree.SelfDesignator) THEN RETURN TRUE
+		ELSIF (e IS SyntaxTree.ResultDesignator) THEN RETURN TRUE
+		ELSIF (e IS SyntaxTree.DereferenceDesignator) THEN RETURN SimpleExpression(e(SyntaxTree.DereferenceDesignator).left)
+		ELSE RETURN FALSE
+		END;
+	END SimpleExpression;
+	
 	PROCEDURE Resolved(x: SyntaxTree.Type): SyntaxTree.Type;
 	BEGIN
 		IF x = NIL THEN RETURN NIL ELSE RETURN x.resolved END;
@@ -8831,6 +9055,8 @@ TYPE
 		IF expression IS SyntaxTree.ProcedureCallDesignator THEN
 			RETURN TRUE
 		ELSIF expression IS SyntaxTree.BuiltinCallDesignator THEN
+			RETURN TRUE
+		ELSIF expression IS SyntaxTree.InlineCallDesignator THEN
 			RETURN TRUE
 		ELSIF (expression.type # NIL) & (expression.type.resolved IS SyntaxTree.ProcedureType) THEN
 			RETURN TRUE

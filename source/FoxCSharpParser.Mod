@@ -637,7 +637,7 @@ KernelLog.Ln();
         PROCEDURE EnterInit;
             VAR block: SyntaxTree.StatementBlock;
         BEGIN
-            block := SyntaxTree.NewStatementBlock(invalidPosition, NIL);
+            block := SyntaxTree.NewStatementBlock(invalidPosition, NIL, NIL);
             initOuter := block;
             initStatements := SyntaxTree.NewStatementSequence();
             block.SetStatementSequence(initStatements);
@@ -1355,7 +1355,7 @@ KernelLog.Ln();
             END;
             Check(Scanner.LeftBrace);
             position := symbol.position; position.start := position.end; 
-            block := SyntaxTree.NewStatementBlock(position, outer);
+            block := SyntaxTree.NewStatementBlock(position, outer, NIL);
             (* CommentStatement(block); *)
             IF ~Optional(Scanner.RightBrace) THEN
                 localIdentTable.OpenScope;

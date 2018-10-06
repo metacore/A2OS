@@ -1381,7 +1381,7 @@ TYPE
 			IF Trace THEN S( "StatementBlock" ) END;
 			position := symbol.position;
 			position.start := position.end;
-			block := SyntaxTree.NewStatementBlock( position, outer );
+			block := SyntaxTree.NewStatementBlock( position, outer, NIL );
 			CommentStatement(block);
 			IF Optional( Scanner.LeftBrace ) THEN
 				block.SetModifier(Flags());

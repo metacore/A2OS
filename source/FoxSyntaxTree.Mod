@@ -234,6 +234,10 @@ TYPE
 		PROCEDURE VisitProcedureCallDesignator*(x: ProcedureCallDesignator);
 		BEGIN HALT(100) (* abstract *) END VisitProcedureCallDesignator;
 
+		PROCEDURE VisitInlineCallDesignator*(x: InlineCallDesignator);
+		BEGIN HALT(100) (* abstract *) END VisitInlineCallDesignator;
+
+
 		PROCEDURE VisitStatementDesignator*(x: StatementDesignator);
 		BEGIN HALT(100) (* abstract *) END VisitStatementDesignator;
 
@@ -300,6 +304,7 @@ TYPE
 			| BuiltinCallDesignator DO VisitBuiltinCallDesignator(x)
 			| StatementDesignator DO VisitStatementDesignator(x)
 			| ProcedureCallDesignator DO VisitProcedureCallDesignator(x)
+			| InlineCallDesignator DO VisitInlineCallDesignator(x)
 			| IndexDesignator DO VisitIndexDesignator(x)
 			| SymbolDesignator DO VisitSymbolDesignator(x)
 			| BracketDesignator DO VisitBracketDesignator(x)
@@ -2435,6 +2440,20 @@ TYPE
 		END Clone;
 
 	END ProcedureCallDesignator;
+	
+	InlineCallDesignator*= OBJECT(Designator)
+	VAR
+		procedureCall-: ProcedureCallDesignator;
+		block-: StatementBlock; (* contains scope *)
+		
+		PROCEDURE & InitInlineCall*(position: Position; o: ProcedureCallDesignator; b: StatementBlock);
+		BEGIN
+			InitDesignator(position); 
+			procedureCall := o;
+			block := b;
+		END InitInlineCall;
+		
+	END InlineCallDesignator;
 
 	(** <<procedure(parameters)>>
 		builtin procedure call **)
@@ -4108,14 +4127,16 @@ TYPE
 			isRealtime-: BOOLEAN;
 			isUnchecked-: BOOLEAN;
 			isUncooperative-: BOOLEAN;
+			scope-: Scope;
 
-		PROCEDURE & InitStatementBlock( position: Position ; outer: Statement);
+		PROCEDURE & InitStatementBlock( position: Position ; outer: Statement; s: Scope);
 		BEGIN
 			InitStatement( position ,outer);  statements := NIL;  blockModifiers := NIL;
 			isExclusive := FALSE;
 			isRealtime := FALSE;
 			isUnchecked := FALSE;
 			isUncooperative := FALSE;
+			scope := s; 
 		END InitStatementBlock;
 
 		PROCEDURE SetRealtime*(b: BOOLEAN);
@@ -4198,7 +4219,7 @@ TYPE
 
 		PROCEDURE & InitBody(position: Position; scope: ProcedureScope);
 		BEGIN
-			InitStatementBlock(position,NIL); finally := NIL; priority := NIL; inScope := scope; code := NIL;
+			InitStatementBlock(position,NIL,scope); finally := NIL; priority := NIL; inScope := scope; code := NIL;
 			isActive := FALSE; isSafe := FALSE; isRealtime := FALSE;
 		END InitBody;
 
@@ -4272,7 +4293,7 @@ TYPE
 		ownerModule-: Module;
 
 
-		PROCEDURE & InitScope(outer: Scope);
+		PROCEDURE & InitScope*(outer: Scope);
 		BEGIN
 			firstSymbol := NIL; numberSymbols := 0;
 			firstConstant := NIL; lastConstant := NIL; numberConstants := 0;
@@ -5404,6 +5425,12 @@ VAR
 	BEGIN
 		NEW(procedureCallDesignator, position, left, parameters); RETURN procedureCallDesignator
 	END NewProcedureCallDesignator;
+	
+	PROCEDURE NewInlineCallDesignator*(position: Position; o: ProcedureCallDesignator; block: StatementBlock): InlineCallDesignator;
+	VAR inlineCall: InlineCallDesignator;
+	BEGIN
+		NEW(inlineCall, position, o, block); RETURN inlineCall;
+	END NewInlineCallDesignator;
 
 	PROCEDURE NewBuiltinCallDesignator*(position: Position; id: LONGINT; left: Designator; parameters: ExpressionList): BuiltinCallDesignator;
 	VAR builtinCallDesignator: BuiltinCallDesignator;
@@ -5609,10 +5636,10 @@ VAR
 		NEW(blockModifier,position,identifier,expression); RETURN blockModifier
 	END NewModifier;
 
-	PROCEDURE NewStatementBlock*( position: Position ; outer: Statement): StatementBlock;
+	PROCEDURE NewStatementBlock*( position: Position ; outer: Statement; scope: Scope): StatementBlock;
 	VAR statementBlock: StatementBlock;
 	BEGIN
-		NEW( statementBlock, position, outer );  RETURN statementBlock
+		NEW( statementBlock, position, outer, scope );  RETURN statementBlock
 	END NewStatementBlock;
 
 	PROCEDURE NewStatementDesignator*(position: Position; s: Statement): StatementDesignator;

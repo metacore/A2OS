@@ -6157,7 +6157,12 @@ TYPE
 			currentIsInline := wasInline;
 			RETURN ~tooComplex
 		END InlineProcedureCall;
-
+		
+		PROCEDURE VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator);
+		BEGIN
+			VisitStatementBlock(x.block);
+		END VisitInlineCallDesignator;
+			
 		PROCEDURE VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator);
 		VAR
 			parameters: SyntaxTree.ExpressionList;
@@ -12065,6 +12070,7 @@ TYPE
 
 		PROCEDURE VisitStatementBlock*(x: SyntaxTree.StatementBlock);
 		VAR previouslyUnchecked, previouslyCooperativeSwitches: BOOLEAN; end: Label;
+			prevScope: SyntaxTree.Scope;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitStatementBlock") END;
 			IF emitLabels THEN Emit(LabelInstruction(x.position)) END;
@@ -12073,6 +12079,8 @@ TYPE
 			isUnchecked := isUnchecked OR x.isUnchecked;
 			previouslyCooperativeSwitches := cooperativeSwitches;
 			cooperativeSwitches := cooperativeSwitches & ~x.isUncooperative;
+			prevScope := currentScope;
+			IF x.scope # NIL THEN currentScope := x.scope END;
 
 			IF x.isExclusive THEN Lock(TRUE); ASSERT(~locked);  locked := TRUE; END;
 			IF x.statements # NIL THEN
@@ -12096,7 +12104,7 @@ TYPE
 			IF x.isExclusive THEN Lock(FALSE); ASSERT(locked); locked := FALSE; END;
 			isUnchecked := previouslyUnchecked;
 			cooperativeSwitches := previouslyCooperativeSwitches;
-
+			currentScope := prevScope;
 			IF Trace THEN TraceExit("VisitStatementBlock") END;
 		END VisitStatementBlock;
 

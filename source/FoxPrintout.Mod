@@ -733,6 +733,12 @@ TYPE
 			w.String("("); ExpressionList(x.parameters); w.String(")");
 		END VisitProcedureCallDesignator;
 
+		PROCEDURE VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator);
+		BEGIN
+			VisitStatementBlock(x.block);
+		END VisitInlineCallDesignator;
+		
+
 		PROCEDURE VisitStatementDesignator*(x: SyntaxTree.StatementDesignator);
 		BEGIN
 			Indent; Keyword("STATEMENT-DESIGNATOR ");

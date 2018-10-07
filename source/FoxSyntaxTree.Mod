@@ -361,6 +361,9 @@ TYPE
 		PROCEDURE VisitProcedure*(x: Procedure);
 		BEGIN HALT(100) (* abstract *) END VisitProcedure;
 
+		PROCEDURE VisitAlias*(x: Alias);
+		BEGIN HALT(100) (* abstract *) END VisitAlias;
+
 		PROCEDURE VisitBuiltin*(x: Builtin);
 		BEGIN HALT(100) (* abstract *) END VisitBuiltin;
 
@@ -381,6 +384,7 @@ TYPE
 			| Variable DO VisitVariable(x)
 			| Operator DO VisitOperator(x)
 			| Procedure DO VisitProcedure(x)
+			| Alias DO VisitAlias(x)
 			| Builtin DO VisitBuiltin(x)
 			| Import DO VisitImport(x)
 			ELSE 
@@ -2445,6 +2449,7 @@ TYPE
 	VAR
 		procedureCall-: ProcedureCallDesignator;
 		block-: StatementBlock; (* contains scope *)
+		result-: Expression;
 		
 		PROCEDURE & InitInlineCall*(position: Position; o: ProcedureCallDesignator; b: StatementBlock);
 		BEGIN
@@ -2453,6 +2458,11 @@ TYPE
 			block := b;
 		END InitInlineCall;
 		
+		PROCEDURE SetResult*(e: Expression);
+		BEGIN
+			result := e;
+		END SetResult;
+
 	END InlineCallDesignator;
 
 	(** <<procedure(parameters)>>
@@ -3210,6 +3220,23 @@ TYPE
 		END SetValue;
 
 	END Property;
+	
+	Alias* = OBJECT (Symbol)
+	VAR
+		expression-: Expression;
+		
+		PROCEDURE & InitAlias*(position: Position; name: Identifier; e: Expression);
+		BEGIN
+			InitSymbol(position, name); 
+			expression := e;
+		END InitAlias;
+		
+		PROCEDURE SetExpression*(e: Expression);
+		BEGIN
+			expression := e;
+		END SetExpression;
+		
+	END Alias;
 
 
 	(** Procedure declaration symbol. Represents a procedure being defined in the form PROCEDURE name(parameters): returnType;
@@ -4219,7 +4246,7 @@ TYPE
 
 		PROCEDURE & InitBody(position: Position; scope: ProcedureScope);
 		BEGIN
-			InitStatementBlock(position,NIL,scope); finally := NIL; priority := NIL; inScope := scope; code := NIL;
+			InitStatementBlock(position,NIL,NIL); finally := NIL; priority := NIL; inScope := scope; code := NIL;
 			isActive := FALSE; isSafe := FALSE; isRealtime := FALSE;
 		END InitBody;
 
@@ -4293,7 +4320,7 @@ TYPE
 		ownerModule-: Module;
 
 
-		PROCEDURE & InitScope*(outer: Scope);
+		PROCEDURE & InitScope(outer: Scope);
 		BEGIN
 			firstSymbol := NIL; numberSymbols := 0;
 			firstConstant := NIL; lastConstant := NIL; numberConstants := 0;
@@ -4511,7 +4538,9 @@ TYPE
 		END NeedsTrace;
 
 	END ProcedureScope;
-
+		
+	BlockScope* = OBJECT(Scope)
+	END BlockScope; 
 
 	EnumerationScope*= OBJECT(Scope)
 	VAR
@@ -5153,6 +5182,12 @@ VAR
 		NEW( procedure, position, name, scope);  RETURN procedure
 	END NewProcedure;
 
+	PROCEDURE NewAlias*( position: Position;  name: Identifier; expression: Expression): Alias;
+	VAR alias: Alias;
+	BEGIN
+		NEW( alias, position, name, expression);  RETURN alias
+	END NewAlias;
+
 	PROCEDURE NewBuiltin*(position: Position; name: Identifier; id: LONGINT): Builtin;
 	VAR builtin: Builtin;
 	BEGIN
@@ -5767,6 +5802,11 @@ VAR
 	VAR scope: ProcedureScope;
 	BEGIN	NEW(scope,outer); RETURN scope
 	END NewProcedureScope;
+
+	PROCEDURE NewBlockScope*(outer: Scope): BlockScope;
+	VAR scope: BlockScope;
+	BEGIN	NEW(scope,outer); RETURN scope
+	END NewBlockScope;
 
 	PROCEDURE NewModuleScope*(): ModuleScope;
 	VAR scope: ModuleScope;

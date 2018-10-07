@@ -3833,6 +3833,7 @@ TYPE
 			returnType: SyntaxTree.Type;
 			const: SyntaxTree.Constant;
 			var: SyntaxTree.Variable;
+			alias: SyntaxTree.Alias;
 		BEGIN
 			IF Trace THEN D.Str("ProcedureCallDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
@@ -3897,7 +3898,7 @@ TYPE
 			END;
 
 			IF InliningSupport & (procedure # NIL) & IsOberonInline(procedure) THEN
-				NEW(inlineScope, currentScope); 
+				inlineScope := SyntaxTree.NewBlockScope(currentScope);
 				procedureType := procedure.type(SyntaxTree.ProcedureType);
 
 				formalParameter := procedureType.firstParameter;
@@ -3917,6 +3918,10 @@ TYPE
 						const.SetType(actualParameter.type);
 						inlineScope.AddConstant(const);
 						inlineScope.EnterSymbol(const, duplicate);
+					ELSIF (formalParameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter}) & SimpleExpression(actualParameter) THEN
+						alias := SyntaxTree.NewAlias(actualParameter.position, formalParameter.name, actualParameter);
+						alias.SetType(actualParameter.type);
+						inlineScope.EnterSymbol(alias, duplicate);
 					ELSE
 						var := SyntaxTree.NewVariable(actualParameter.position, formalParameter.name); 
 						(* copy expression to var *)
@@ -5897,6 +5902,7 @@ TYPE
 			| SyntaxTree.Variable DO ResolveVariable(x)
 			| SyntaxTree.Operator DO ResolveOperator(x)
 			| SyntaxTree.Procedure DO ResolveProcedure(x)
+			| SyntaxTree.Alias DO ResolveAlias(x)
 			| SyntaxTree.Builtin DO ResolveBuiltin(x)
 			| SyntaxTree.Import DO ResolveImport(x)
 			END;
@@ -6377,6 +6383,11 @@ TYPE
 				currentIsBodyProcedure := recentIsBodyProcedure;
 			END;
 		END ResolveProcedure;
+		
+		PROCEDURE ResolveAlias(x: SyntaxTree.Alias);
+		BEGIN
+			x.SetExpression(ResolveExpression(x.expression));
+		END ResolveAlias;
 
 		(**
 			a builtin procedure is a global item that may not be modified locally

@@ -10599,6 +10599,9 @@ TYPE
 		PROCEDURE GetBaseRegister(VAR result: IntermediateCode.Operand; scope,baseScope: SyntaxTree.Scope);
 		VAR left,right: IntermediateCode.Operand;level: LONGINT;
 		BEGIN
+			WHILE (scope # NIL) & (scope IS SyntaxTree.BlockScope) DO
+				scope := scope.outerScope;
+			END;
 			IF scope # baseScope THEN
 				(* left := [fp+8] *)
 				IntermediateCode.InitMemory(right,addressType,fp,ToMemoryUnits(system,2*addressType.sizeInBits));
@@ -10958,6 +10961,12 @@ TYPE
 		BEGIN
 			VisitProcedure(x);
 		END VisitOperator;
+		
+		PROCEDURE VisitAlias(x: SyntaxTree.Alias);
+		BEGIN
+			VExpression(x.expression);
+		END VisitAlias;
+		
 
 		(** statements *)
 

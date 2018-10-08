@@ -2458,6 +2458,12 @@ negative: redefining if
 	CONST IF = 0;
 	END Test.
 
+negative: redefining ignore
+
+	MODULE Test;
+	CONST IF = 0;
+	END Test.
+
 negative: redefining import
 
 	MODULE Test;
@@ -29411,16 +29417,16 @@ negative: calling variable pointer to array
 	END Test.
 
 
-# variable procedures
+# procedure variables
 
-negative: arithmetic negation on variable procedure
+negative: arithmetic negation on procedure variable
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := -procedure;
 	END Test.
 
-negative: logical negation on variable procedure
+negative: logical negation on procedure variable
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
@@ -29434,133 +29440,133 @@ negative: dereferencing variable pointer to procedure
 	BEGIN result := procedure^;
 	END Test.
 
-negative: addition on variable procedures
+negative: addition on procedure variables
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := procedure + procedure;
 	END Test.
 
-negative: subtraction on variable procedures
+negative: subtraction on procedure variables
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := procedure - procedure
 	END Test.
 
-negative: multiplication on variable procedures
+negative: multiplication on procedure variables
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := procedure * procedure
 	END Test.
 
-negative: integer division on variable procedures
+negative: integer division on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: INTEGER;
 	BEGIN result := procedure DIV procedure
 	END Test.
 
-negative: real division on variable procedures
+negative: real division on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: REAL;
 	BEGIN result := procedure / procedure
 	END Test.
 
-negative: modulo on variable procedures
+negative: modulo on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: INTEGER;
 	BEGIN result := procedure MOD procedure
 	END Test.
 
-positive: equal relation on variable procedures
+positive: equal relation on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure = procedure
 	END Test.
 
-positive: equal relation on compatible variable procedures
+positive: equal relation on compatible procedure variables
 
 	MODULE Test;
 	VAR procedure1: PROCEDURE; procedure2: PROCEDURE; result: BOOLEAN;
 	BEGIN result := (procedure1 = procedure2) OR (procedure2 = procedure1)
 	END Test.
 
-negative: equal relation on incompatible variable procedures
+negative: equal relation on incompatible procedure variables
 
 	MODULE Test;
 	VAR procedure1: PROCEDURE; procedure2: PROCEDURE (p: PROCEDURE); result: BOOLEAN;
 	BEGIN result := (procedure1 = procedure2) OR (procedure2 = procedure1)
 	END Test.
 
-positive: unequal relation on variable procedures
+positive: unequal relation on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure # procedure
 	END Test.
 
-positive: unequal relation on compatible variable procedures
+positive: unequal relation on compatible procedure variables
 
 	MODULE Test;
 	VAR procedure1: PROCEDURE; procedure2: PROCEDURE; result: BOOLEAN;
 	BEGIN result := (procedure1 # procedure2) OR (procedure2 # procedure1)
 	END Test.
 
-negative: unequal relation on incompatible variable procedures
+negative: unequal relation on incompatible procedure variables
 
 	MODULE Test;
 	VAR procedure1: PROCEDURE; procedure2: PROCEDURE (p: PROCEDURE); result: BOOLEAN;
 	BEGIN result := (procedure1 # procedure2) OR (procedure2 # procedure1)
 	END Test.
 
-negative: less relation on variable procedures
+negative: less relation on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure < procedure
 	END Test.
 
-negative: less or equal relation on variable procedures
+negative: less or equal relation on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure <= procedure
 	END Test.
 
-negative: greater relation on variable procedures
+negative: greater relation on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure > procedure
 	END Test.
 
-negative: greater or equal relation on variable procedures
+negative: greater or equal relation on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure >= procedure
 	END Test.
 
-negative: set membership on variable procedures
+negative: set membership on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure IN procedure
 	END Test.
 
-negative: type test on variable procedures
+negative: type test on procedure variables
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := procedure IS procedure
 	END Test.
 
-negative: type test on variable procedure
+negative: type test on procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
@@ -29575,14 +29581,14 @@ negative: type test on pointer to procedure type
 	BEGIN result := procedure IS Type
 	END Test.
 
-negative: type guard on variable procedures
+negative: type guard on procedure variables
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := procedure(procedure)
 	END Test.
 
-negative: type guard on variable procedure
+negative: type guard on procedure variable
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
@@ -29597,200 +29603,298 @@ negative: type guard on pointer to procedure type
 	BEGIN result := procedure(Type)
 	END Test.
 
-negative: logical and on variable procedures
+negative: logical and on procedure variables
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := procedure & procedure
 	END Test.
 
-negative: logical or on variable procedures
+negative: logical or on procedure variables
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := procedure OR procedure
 	END Test.
 
-negative: ordinal value of variable procedure
+negative: ordinal value of procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: INTEGER;
 	BEGIN result := ORD (procedure)
 	END Test.
 
-negative: character value of variable procedure
+negative: character value of procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: CHAR;
 	BEGIN result := CHR (procedure)
 	END Test.
 
-negative: absolute value of variable procedure
+negative: absolute value of procedure variable
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := ABS (procedure)
 	END Test.
 
-negative: odd test on variable procedure
+negative: odd test on procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: BOOLEAN;
 	BEGIN result := ODD (procedure)
 	END Test.
 
-negative: capital letter of variable procedure
+negative: capital letter of procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: CHAR;
 	BEGIN result := CAP (procedure)
 	END Test.
 
-negative: arithmetic shift of variable procedures
+negative: arithmetic shift of procedure variables
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := ASH (procedure, procedure)
 	END Test.
 
-negative: short on variable procedure
+negative: short on procedure variable
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := SHORT (procedure)
 	END Test.
 
-negative: long on variable procedure
+negative: long on procedure variable
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := LONG (procedure)
 	END Test.
 
-negative: entier on variable procedure
+negative: entier on procedure variable
 
 	MODULE Test;
 	VAR procedure, result: PROCEDURE;
 	BEGIN result := ENTIER (procedure)
 	END Test.
 
-negative: unary length of variable procedure
+negative: unary length of procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: LONGINT;
 	BEGIN result := LEN (procedure)
 	END Test.
 
-negative: binary length of variable procedure
+negative: binary length of procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: LONGINT;
 	BEGIN result := LEN (procedure, 0)
 	END Test.
 
-negative: indexing variable procedure
+negative: indexing procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE; result: CHAR;
 	BEGIN result := procedure[0]
 	END Test.
 
-negative: variable procedure as index
+negative: procedure variable as index
 
 	MODULE Test;
 	VAR array: ARRAY 10 OF CHAR; result: CHAR; procedure: PROCEDURE;
 	BEGIN result := array[procedure]
 	END Test.
 
-positive: calling variable procedure
+positive: calling procedure variable
 
 	MODULE Test;
 	VAR procedure: PROCEDURE;
-	BEGIN procedure
+	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning boolean
+negative: ignoring procedure variable
+
+	MODULE Test;
+	VAR procedure: PROCEDURE;
+	BEGIN IGNORE procedure
+	END Test.
+
+negative: ignoring procedure variable call
+
+	MODULE Test;
+	VAR procedure: PROCEDURE;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning boolean
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): BOOLEAN;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning character
+positive: ignoring procedure variable returning boolean
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): BOOLEAN;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning character
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): CHAR;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning integer
+positive: ignoring procedure variable returning character
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): CHAR;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning integer
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): INTEGER;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning real
+positive: ignoring procedure variable returning integer
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): INTEGER;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning real
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): REAL;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning set
+positive: ignoring procedure variable returning real
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): REAL;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning set
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): SET;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning array
+positive: ignoring procedure variable returning set
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): SET;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning array
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): ARRAY 10 OF CHAR;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning record
+positive: ignoring procedure variable returning array
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): ARRAY 10 OF CHAR;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning record
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): RECORD END;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning object
+positive: ignoring procedure variable returning record
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): RECORD END;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning object
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): OBJECT END;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning base object
+positive: ignoring procedure variable returning object
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): OBJECT END;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning base object
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): OBJECT;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning pointer to array
+positive: ignoring procedure variable returning base object
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): OBJECT;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning pointer to array
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): POINTER TO ARRAY 10 OF CHAR;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning pointer to record
+positive: ignoring procedure variable returning pointer to array
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): POINTER TO ARRAY 10 OF CHAR;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning pointer to record
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): POINTER TO ARRAY 10 OF RECORD END;
 	BEGIN procedure ()
 	END Test.
 
-negative: calling variable procedure returning procedure
+positive: ignoring procedure variable returning pointer to record
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): POINTER TO ARRAY 10 OF RECORD END;
+	BEGIN IGNORE procedure ()
+	END Test.
+
+negative: calling procedure variable returning procedure
 
 	MODULE Test;
 	VAR procedure: PROCEDURE (): PROCEDURE;
 	BEGIN procedure ()
+	END Test.
+
+positive: ignoring procedure variable returning procedure
+
+	MODULE Test;
+	VAR procedure: PROCEDURE (): PROCEDURE;
+	BEGIN IGNORE procedure ()
 	END Test.
 
 

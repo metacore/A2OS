@@ -245,7 +245,7 @@ TYPE
 			END;
 		END MiddleClickNode;
 
-		PROCEDURE SetNodeInfo(node : TreeNode; mnode : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortHint, color: LONGINT; style: SET);
+		PROCEDURE SetNodeInfo(node : TreeNode; mnode : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortHint: LONGINT; color: WMGraphics.Color; style: SET);
 		VAR moduleNode : ModuleParser.Module; font: WMGraphics.Font;
 		BEGIN
 			node.flags := {};
@@ -523,7 +523,7 @@ TYPE
 		PROCEDURE AddProcHead(treeNode: WMTrees.TreeNode; procHead: ModuleParser.ProcHead): WMTrees.TreeNode;
 		VAR
 			newNode: TreeNode; caption: Strings.String;
-			color : LONGINT; image : WMGraphics.Image; type : LONGINT;
+			color : WMGraphics.Color; image : WMGraphics.Image; type : LONGINT;
 		BEGIN
 			IF (procHead # NIL) THEN
 				color := GetColor(procHead.modifiers, ColorProcedure);
@@ -748,7 +748,7 @@ TYPE
 			RETURN newNode;
 		END NewNode;
 
-		PROCEDURE AddQualident(parent: WMTrees.TreeNode; qualident: ModuleParser.Qualident; color: LONGINT; style: SET):
+		PROCEDURE AddQualident(parent: WMTrees.TreeNode; qualident: ModuleParser.Qualident; color: WMGraphics.Color; style: SET):
 				WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 			n: ModuleParser.NodeList;
@@ -943,7 +943,7 @@ TYPE
 		PROCEDURE AddIdentDef(
 			parent: WMTrees.TreeNode;
 			node : ModuleParser.Node; identDef: ModuleParser.IdentDef;
-			sortHint, color: LONGINT; style: SET) : TreeNode;
+			sortHint: LONGINT; color: WMGraphics.Color; style: SET) : TreeNode;
 		VAR
 			newNode: TreeNode;
 		BEGIN
@@ -963,7 +963,7 @@ TYPE
 		PROCEDURE AddInfoItem(
 			parent: WMTrees.TreeNode;
 			node : ModuleParser.Node; infoItem: ModuleParser.InfoItem;
-			isPublic : BOOLEAN; sortHint, color : LONGINT; style: SET) : TreeNode;
+			isPublic : BOOLEAN; sortHint: LONGINT; color: WMGraphics.Color; style: SET) : TreeNode;
 		VAR
 			newNode: TreeNode;
 		BEGIN
@@ -983,8 +983,8 @@ VAR
 	StrUNKNOWN, StrVAR, StrCONST, StrIMPORT, StrIN, StrBODY, StrRETURN, StrARRAY, StrOF,
 	StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite : Strings.String;
 
-PROCEDURE GetColor(modifiers : SET; defaultColor : LONGINT) : LONGINT;
-VAR color : LONGINT;
+PROCEDURE GetColor(modifiers : SET; defaultColor : WMGraphics.Color) : WMGraphics.Color;
+VAR color : WMGraphics.Color;
 BEGIN
 	IF (ModuleParser.Exclusive IN modifiers) THEN color := ColorExclusive;
 	ELSIF (ModuleParser.HasExclusiveBlock IN modifiers) THEN color := ColorHasExclusiveBlock;

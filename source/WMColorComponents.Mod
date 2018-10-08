@@ -10,7 +10,7 @@ TYPE
 	ColorChangeHandler = PROCEDURE {DELEGATE} (sender, color : ANY);
 
 	Color* = OBJECT
-	VAR value* : LONGINT
+	VAR value* : WMGraphics.Color
 	END Color;
 
 	ColorDropTarget = OBJECT(WMDropTarget.DropTarget)
@@ -345,7 +345,7 @@ TYPE
 		showColor : ColorPot;
 
 		onColorChosen : WMEvents.EventSource;
-		color : LONGINT;
+		color : WMGraphics.Color;
 
 		PROCEDURE & Init*;
 		VAR main, pnl : WMStandardComponents.Panel; pot : ColorPot;
@@ -384,7 +384,7 @@ TYPE
 			SetColor(000000FFH);
 		END Init;
 
-		PROCEDURE SetColor(color : LONGINT);
+		PROCEDURE SetColor(color : WMGraphics.Color);
 		VAR c : Color;
 		BEGIN
 			SELF.color := color;

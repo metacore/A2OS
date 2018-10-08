@@ -621,7 +621,7 @@ TYPE
 	TextView* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		defaultTextColor-, defaultTextBgColor- : WMProperties.ColorProperty;
-		defaultTextColorI, defaultTextBgColorI : LONGINT;
+		defaultTextColorI, defaultTextBgColorI : WMGraphics.Color;
 
 		isMultiLine- : WMProperties.BooleanProperty;
 		isMultiLineI : BOOLEAN;
@@ -680,14 +680,14 @@ TYPE
 		showLineNumbersI : BOOLEAN;
 
 		lineNumberColor-, lineNumberBgColor- : WMProperties.ColorProperty;
-		lineNumberColorI, lineNumberBgColorI : LONGINT;
+		lineNumberColorI, lineNumberBgColorI : WMGraphics.Color;
 		lineNumberFont, lineNumberFont10 : WMGraphics.Font;
 
 		indicateTabs- : WMProperties.BooleanProperty;
 		indicateTabsI : BOOLEAN;
 
 		clBgCurrentLine- : WMProperties.ColorProperty;
-		clBgCurrentLineI : LONGINT;
+		clBgCurrentLineI : WMGraphics.Color;
 
 		selection- : Highlight;
 		cursor- : Cursor;
@@ -2336,10 +2336,11 @@ TYPE
 			cliprect, temp : WMRectangles.Rectangle;
 			highlighterStyle, lastHighlighterStyle : SyntaxHighlighter.Style;
 			currentStyle, lastStyle : ANY;
-			lastColor : LONGINT;
+			lastColor : WMGraphics.Color;
 			cf: WMGraphics.Font;
 			style : RECORD
-				color, bgColor, voff : LONGINT;
+				color, bgColor : WMGraphics.Color;
+				voff : LONGINT;
 				font : WMGraphics.Font;
 			END;
 		BEGIN

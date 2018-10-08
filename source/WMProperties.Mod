@@ -1154,7 +1154,7 @@ TYPE
 
 	ColorProperty* = OBJECT(Property)
 	VAR
-		value : LONGINT;
+		value : WMGraphics.Color;
 
 		(* TODO: read hex from CCG FontConverter *)
 		PROCEDURE FromStream*(r : Streams.Reader);
@@ -1192,8 +1192,8 @@ TYPE
 			END;
 		END UpdateModel;
 
-		PROCEDURE Get*() : LONGINT;
-		VAR r : LONGINT;
+		PROCEDURE Get*() : WMGraphics.Color;
+		VAR r : WMGraphics.Color;
 		BEGIN
 			AcquireRead;
 			IF nonDefault OR (prototype = NIL) THEN r := value

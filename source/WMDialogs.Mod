@@ -775,7 +775,7 @@ TYPE
 
 (** Helper procedures *)
 
-PROCEDURE NewPanel(fillColor, alignment, width, height : LONGINT) : WMStandardComponents.Panel;
+PROCEDURE NewPanel(fillColor: WMGraphics.Color; alignment, width, height : LONGINT) : WMStandardComponents.Panel;
 VAR panel : WMStandardComponents.Panel;
 BEGIN
 	NEW(panel); panel.alignment.Set(alignment); panel.bounds.SetExtents(width, height);
@@ -791,7 +791,7 @@ BEGIN
 	RETURN label;
 END NewLabel;
 
-PROCEDURE NewEditor*(CONST uid : ARRAY OF CHAR; textColor, textBgColor, alignment, width, height : LONGINT) : WMEditors.Editor;
+PROCEDURE NewEditor*(CONST uid : ARRAY OF CHAR; textColor, textBgColor: WMGraphics.Color; alignment, width, height : LONGINT) : WMEditors.Editor;
 VAR editor : WMEditors.Editor;
 BEGIN
 	NEW(editor); editor.uid.SetAOC(uid);

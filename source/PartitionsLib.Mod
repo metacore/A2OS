@@ -3942,7 +3942,7 @@ BEGIN
 END Get4;
 
 (* Write partition type *)
-PROCEDURE WriteType*(type: LONGINT; VAR s : ARRAY OF CHAR; VAR color : LONGINT);
+PROCEDURE WriteType*(type: LONGINT; VAR s : ARRAY OF CHAR; VAR color : WMGraphics.Color);
 CONST
 	ColorFAT12 = WMGraphics.Red;
 	ColorFAT16 = WMGraphics.Red;

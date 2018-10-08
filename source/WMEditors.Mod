@@ -107,7 +107,7 @@ TYPE
 
 		textBorder-: WMProperties.Int32Property;
 		textColor- : WMProperties.ColorProperty;
-		textColorI : LONGINT;
+		textColorI : WMGraphics.Color;
 
 		alignH- : WMProperties.Int32Property;
 		alignV- : WMProperties.Int32Property;

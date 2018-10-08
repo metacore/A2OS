@@ -11,7 +11,7 @@ TYPE
 		caption- : Strings.String;
 		w : LONGINT;
 		width : LONGINT; (* if 0, automatically determine width based on caption string size *)
-		color- : LONGINT;
+		color- : WMGraphics.Color;
 		data- : ANY;
 		inserted, attention* : BOOLEAN;
 		next- : Tab;
@@ -390,7 +390,7 @@ TYPE
 			IF tab.inserted THEN Invalidate END
 		END SetTabCaption;
 
-		PROCEDURE SetTabColor*(tab : Tab; color : LONGINT);
+		PROCEDURE SetTabColor*(tab : Tab; color : WMGraphics.Color);
 		BEGIN
 			Acquire;
 			tab.color := color;

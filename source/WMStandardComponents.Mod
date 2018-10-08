@@ -1034,7 +1034,7 @@ TYPE
  		END GetThisDecoration;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR mode, mid, borderWidth : LONGINT;
+		VAR mode, borderWidth : LONGINT; mid: WMGraphics.Color;
 			 tc : WMGraphics.Color; r, rect : WMGraphics.Rectangle; down : BOOLEAN;
 			 str : String;
 		BEGIN
@@ -1779,8 +1779,8 @@ TYPE
 			END;
 		END UpdateLayout;
 
-		PROCEDURE GetButtonColor(area : SHORTINT) : LONGINT;
-		VAR color : LONGINT;
+		PROCEDURE GetButtonColor(area : SHORTINT) : WMGraphics.Color;
+		VAR color : WMGraphics.Color;
 		BEGIN
 			IF (area = pressed) THEN color := clBtnPressed.Get();
 			ELSIF (area = hover) THEN color := clBtnHover.Get();
@@ -1789,8 +1789,8 @@ TYPE
 			RETURN color;
 		END GetButtonColor;
 
-		PROCEDURE GetPageColor(area : SHORTINT) : LONGINT;
-		VAR color : LONGINT;
+		PROCEDURE GetPageColor(area : SHORTINT) : WMGraphics.Color;
+		VAR color : WMGraphics.Color;
 		BEGIN
 			IF (area = pressed) THEN color := clPressed.Get();
 			ELSIF (area = hover) THEN color := clHover.Get();
@@ -1935,7 +1935,7 @@ TYPE
 			END;
 		END DrawVerticalBackground;
 
-		PROCEDURE DrawSimpleRepresentation(canvas : WMGraphics.Canvas; area : LONGINT; rect : WMRectangles.Rectangle; color , effect3D : LONGINT);
+		PROCEDURE DrawSimpleRepresentation(canvas : WMGraphics.Canvas; area : LONGINT; rect : WMRectangles.Rectangle; color: WMGraphics.Color; effect3D : LONGINT);
 		BEGIN
 			IF (color # 0) THEN canvas.Fill(rect, color, WMGraphics.ModeSrcOverDst) END;
 			IF (effect3D > 0) THEN WMGraphicUtilities.RectGlassShade(canvas, rect, effect3D, area = pressed) END

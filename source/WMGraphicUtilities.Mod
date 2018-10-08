@@ -7,7 +7,7 @@ TYPE
 	EllipsePixelsFiller* = PROCEDURE(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; dx, dy : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
 
 (* factor in 1/256, alpha remains unchanged *)
-PROCEDURE ScaleColor*(color : LONGINT; factor : LONGINT): LONGINT;
+PROCEDURE ScaleColor*(color : WMGraphics.Color; factor : LONGINT): WMGraphics.Color;
 VAR r, g, b, a : LONGINT;
 BEGIN
 	WMGraphics.ColorToRGBA(color, r, g, b, a);
@@ -24,7 +24,7 @@ BEGIN
 END InterpolateLinear;
 
 (* interpolate between two colors; percent [0..256]*)
-PROCEDURE InterpolateColorLinear*(cl0, cl1, percent : LONGINT) : LONGINT;
+PROCEDURE InterpolateColorLinear*(cl0, cl1: WMGraphics.Color; percent : LONGINT) : WMGraphics.Color;
 VAR r0, g0, b0, a0, r1, g1, b1, a1: LONGINT;
 BEGIN
 	WMGraphics.ColorToRGBA(cl0, r0, g0, b0, a0);
@@ -36,8 +36,8 @@ BEGIN
 END InterpolateColorLinear;
 
 (** Draw a 3d effect border *)
-PROCEDURE DrawBevel*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; borderWidth : LONGINT; down : BOOLEAN; color, mode : LONGINT);
-VAR i, ul, dr : LONGINT;
+PROCEDURE DrawBevel*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; borderWidth : LONGINT; down : BOOLEAN; color: WMGraphics.Color; mode : LONGINT);
+VAR i: LONGINT; ul, dr : WMGraphics.Color;
 BEGIN
 	IF down THEN ul := ScaleColor(color, 128); dr :=  ScaleColor(color, 256 + 128)
 	ELSE dr := ScaleColor(color, 128); ul :=  ScaleColor(color, 256 + 128)
@@ -51,14 +51,14 @@ BEGIN
 END DrawBevel;
 
 (** Draw a 3d effect panel *)
-PROCEDURE DrawBevelPanel*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; borderWidth : LONGINT; down : BOOLEAN; color, mode : LONGINT);
+PROCEDURE DrawBevelPanel*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; borderWidth : LONGINT; down : BOOLEAN; color: WMGraphics.Color; mode : LONGINT);
 BEGIN
 	canvas.Fill(WMRectangles.ResizeRect(rect, -1), color, mode);
 	DrawBevel(canvas, rect, borderWidth, down, color, mode)
 END DrawBevelPanel;
 
-PROCEDURE FillGradientHorizontal*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; clLeft, clRight, mode : LONGINT);
-VAR dist, cl, i, f : LONGINT;
+PROCEDURE FillGradientHorizontal*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; clLeft, clRight: WMGraphics.Color; mode : LONGINT);
+VAR dist, i, f : LONGINT; cl: WMGraphics.Color;
 BEGIN
 	dist := rect.r - rect.l;
 	FOR i := 0 TO dist - 1 DO
@@ -68,8 +68,8 @@ BEGIN
 	END;
 END FillGradientHorizontal;
 
-PROCEDURE FillGradientVertical*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; clTop, clBottom, mode : LONGINT);
-VAR dist, cl, i, f : LONGINT;
+PROCEDURE FillGradientVertical*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; clTop, clBottom: WMGraphics.Color; mode : LONGINT);
+VAR dist, i, f : LONGINT; cl: WMGraphics.Color;
 BEGIN
 	dist := rect.b - rect.t;
 	FOR i := 0 TO dist - 1 DO
@@ -79,8 +79,8 @@ BEGIN
 	END;
 END FillGradientVertical;
 
-PROCEDURE FillRoundHorizontalBar*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; down : BOOLEAN; color, mode : LONGINT);
-VAR cl2, d : LONGINT;
+PROCEDURE FillRoundHorizontalBar*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; down : BOOLEAN; color: WMGraphics.Color; mode : LONGINT);
+VAR cl2: WMGraphics.Color; d : LONGINT;
 BEGIN
 	cl2 := ScaleColor(color, 200);
 	IF down THEN d := (rect.b - rect.t) * 5 DIV 16;
@@ -90,8 +90,8 @@ BEGIN
 	FillGradientVertical(canvas, WMRectangles.MakeRect(rect.l, rect.t + d, rect.r, rect.b), cl2, color, WMGraphics.ModeCopy);
 END FillRoundHorizontalBar;
 
-PROCEDURE FillRoundVerticalBar*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; down : BOOLEAN; color, mode : LONGINT);
-VAR cl2, d : LONGINT;
+PROCEDURE FillRoundVerticalBar*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; down : BOOLEAN; color: WMGraphics.Color; mode : LONGINT);
+VAR cl2: WMGraphics.Color; d : LONGINT;
 BEGIN
 	cl2 := ScaleColor(color, 200);
 	IF down THEN d := (rect.r - rect.l) * 5 DIV 16;

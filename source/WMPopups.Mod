@@ -166,8 +166,8 @@ TYPE
 (** Open a color swatch dialog *)
 	ColorSwatchPopup* = OBJECT (WMComponents.FormWindow)
 	VAR colorPanel : ColorSwatchPanel;
-		color- : LONGINT;
-		onColorChosen* : PROCEDURE {DELEGATE} (color : LONGINT);
+		color- : WMGraphics.Color;
+		onColorChosen* : PROCEDURE {DELEGATE} (color : WMGraphics.Color);
 
 		PROCEDURE &New*;
 		BEGIN
@@ -205,7 +205,7 @@ TYPE
 			manager.SetFocus(SELF)
 		END FocusGot;
 
-		PROCEDURE SetColor(color : LONGINT);
+		PROCEDURE SetColor(color : WMGraphics.Color);
 		BEGIN
 			SELF.color := color;
 			IF onColorChosen # NIL THEN onColorChosen(color) END;
@@ -217,7 +217,7 @@ TYPE
 (** Color Swatch Visual Component *)
 	ColorSwatchPanel* = OBJECT(WMComponents.VisualComponent)
 	VAR colors : ARRAY 19 OF LONGINT;
-		ChosenColorProc* : PROCEDURE {DELEGATE} (color: LONGINT);
+		ChosenColorProc* : PROCEDURE {DELEGATE} (color: WMGraphics.Color);
 		(* CloseProc : PROCEDURE {DELEGATE}; *)
 
 		PROCEDURE &Init*;
@@ -228,7 +228,7 @@ TYPE
 		END Init;
 
 		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR r, g, b, a, i, j, cColor: LONGINT;
+		VAR r, g, b, a, i, j: LONGINT; cColor: WMGraphics.Color;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;
 			IF (i>= 0) & (i<=2) THEN
@@ -250,7 +250,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
-		VAR r, g, b, a, i, j, color: LONGINT;
+		VAR r, g, b, a, i, j: LONGINT; color: WMGraphics.Color;
 		BEGIN
 			DrawBackground^(canvas);
 

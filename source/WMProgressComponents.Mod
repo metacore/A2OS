@@ -135,7 +135,7 @@ TYPE
 			rect: WMRectangles.Rectangle;
 			width: LONGINT;
 			string : ARRAY 32 OF CHAR;
-			min, max, cur, percent, color : LONGINT;
+			min, max, cur, percent : LONGINT; color: WMGraphics.Color;
 			isVertical : BOOLEAN;
 		BEGIN
 			min := SELF.min.Get();

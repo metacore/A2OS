@@ -54,7 +54,7 @@ TYPE
 	TreeNode* = OBJECT(WMTrees.TreeNode)
 	VAR
 		pos* : Texts.TextPosition;
-		color* : LONGINT;
+		color* : WMGraphics.Color;
 		font* : WMGraphics.Font;
 		external* : BOOLEAN;
 

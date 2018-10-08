@@ -227,7 +227,7 @@ TYPE
 
 		(* floating point version *)
 		PROCEDURE RenderGlyphReal*(canvas : WMGraphics.Canvas; glyph : Glyph;
-					x, y, w, h : REAL; level : LONGINT;  filled : BOOLEAN; color, mode : LONGINT; VAR points : ARRAY OF WMGraphics.Point2d);
+					x, y, w, h : REAL; level : LONGINT;  filled : BOOLEAN; color: WMGraphics.Color; mode : LONGINT; VAR points : ARRAY OF WMGraphics.Point2d);
 		VAR i : LONGINT;  tx, ty, cx, cy, dx, dy : REAL; ctrl : BOOLEAN; g : Glyph; r, bb : WMRectangles.Rectangle;
 			dtx, dty, dtw, dth : REAL;
 			nofPoints : LONGINT;
@@ -309,7 +309,7 @@ BEGIN
 	INC(nofPoints)
 END AddPoint;
 
-PROCEDURE SplineReal(canvas : WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h : REAL; color, mode : LONGINT);
+PROCEDURE SplineReal(canvas : WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h : REAL; color: WMGraphics.Color; mode : LONGINT);
 VAR i: LONGINT;  tx, ty, nx, ny : REAL;
 	t, onet, dt : REAL;
 BEGIN

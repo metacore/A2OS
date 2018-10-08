@@ -274,7 +274,7 @@ TYPE
 		minI, maxI, deltaxI, deltaXGridI, deltaXGridSmallI, glassShadeI, valueWidthI : LONGINT;
 
 		color-, gridColor- : WMProperties.ColorProperty;
-		colorI, gridColorI : LONGINT;
+		colorI, gridColorI : WMGraphics.Color;
 
 		autoMin-, autoMax-, showValues-: WMProperties.BooleanProperty;
 		autoMinI, autoMaxI, showValuesI : BOOLEAN;
@@ -442,7 +442,7 @@ TYPE
 		PROCEDURE DrawAreas(canvas : WMGraphics.Canvas; w, h, border : LONGINT; VAR tmin, tmax : REAL);
 		VAR
 			nofPoints, nofVisible, nofStandalone : LONGINT;
-			dim, index, x, y0, y1, colorLine, color : LONGINT;
+			dim, index, x, y0, y1: LONGINT; colorLine, color : WMGraphics.Color;
 			maxSumIdx : LONGINT;
 			v0, v1 : LONGINT;
 			factor : REAL;
@@ -553,7 +553,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			w, h, yborder, color, t, virtp   : LONGINT;
+			w, h, yborder, t, virtp : LONGINT; color: WMGraphics.Color;
 			mode : LONGINT;
 			tmin, tmax : REAL;
 			str : ARRAY 16 OF CHAR;

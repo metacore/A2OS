@@ -383,7 +383,7 @@ TYPE
 		CONST pi=3.1516; 
 		VAR  alpha: REAL;
 			 head: LONGREAL;
-			col:LONGINT;
+			col: WMGraphics.Color;
 		BEGIN
 				alpha:=arctan2(p1.x-p0.x, p1.y-p0.y);
 				head:=MAX( 4,  0.05 * MAX(ABS(p1.x-p0.x), ABS(p1.y-p0.y))); (*avoid sqrt for performance reasons*) 
@@ -768,7 +768,7 @@ TYPE
 		END Normalize;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR p,pa: Point; col: LONGINT; d:REAL;
+		VAR p,pa: Point; col: WMGraphics.Color; d:REAL;
 		BEGIN
 			DrawBackground^(canvas); 
 			IF mouseOver THEN col:=clHover.Get() ELSE col:=color.Get() END;

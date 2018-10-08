@@ -637,7 +637,7 @@ TYPE
 	END BottomWindow;
 
 	BackWindow* = OBJECT(WM.Window)
-	VAR color : LONGINT;
+	VAR color : Graphics.Color;
 
 		PROCEDURE &New*(bgColor: LONGINT);
 		BEGIN

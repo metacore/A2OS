@@ -1303,7 +1303,7 @@ TYPE
 
 		(** Is called before any sub-components are drawn *)
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR color,i : LONGINT; name:Strings.String;
+		VAR color: WMGraphics.Color; i : LONGINT; name:Strings.String;
 		(* DebugUpdates can be used in order to visualize updates via some color cycling 
 			Moreover, it slows down display extremely such that updates can be seen
 		*)
@@ -1339,9 +1339,9 @@ TYPE
 		END DrawForeground;
 
 		PROCEDURE DrawSelection(canvas : WMGraphics.Canvas);
-		VAR r,r0: Rectangles.Rectangle; x,y,x0,y0: LONGINT; color: LONGINT;
+		VAR r,r0: Rectangles.Rectangle; x,y,x0,y0: LONGINT; color: WMGraphics.Color;
 
-			PROCEDURE MarkSelected(r: Rectangles.Rectangle; w, color: LONGINT);
+			PROCEDURE MarkSelected(r: Rectangles.Rectangle; w: LONGINT; color: WMGraphics.Color);
 			VAR r0: Rectangles.Rectangle;
 			BEGIN
 				r0 :=r; r0.r := r.l+w; r0.b := r.t+w;
@@ -1372,7 +1372,7 @@ TYPE
 					WHILE x < r.r DO
 						r0.l := x; r0.r := x+2;
 						IF ODD(x DIV 8+y DIV 8) THEN color := 060H;
-						ELSE color := LONGINT(0FFFFFF60H);
+						ELSE color := WMGraphics.Color(0FFFFFF60H);
 						END;
 						canvas.Fill(r0,color, WMGraphics.ModeSrcOverDst);
 						INC(x,8); INC(x0);
@@ -1381,15 +1381,15 @@ TYPE
 				END;
 				IF selection.rectOwner = SELF THEN
 					r0 := selection.rect;
-				 	color := LONGINT(0FF000080H);
+				 	color := WMGraphics.Color(0FF000080H);
 					canvas.Fill(r0, color, WMGraphics.ModeCopy); 
 				END; 			
 			END;
 			IF selection.Has(SELF) THEN
 				IF selection.state = 0 THEN
-					MarkSelected(r,8,LONGINT(080H));
+					MarkSelected(r,8,WMGraphics.Color(080H));
 				ELSE
-					MarkSelected(r,8,LONGINT(0FFFFFFFF80H));
+					MarkSelected(r,8,WMGraphics.Color(0FFFFFFFF80H));
 				END;
 			END;
 		END DrawSelection;

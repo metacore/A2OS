@@ -230,7 +230,7 @@ TYPE
 			color := x
 		END SetColor;
 
-		PROCEDURE GetColor*() : LONGINT;
+		PROCEDURE GetColor*() : Color;
 		BEGIN
 			RETURN color;
 		END GetColor;

@@ -15,7 +15,7 @@ TYPE
 	Cell* = OBJECT
 	VAR
 		caption : String;
-		color, textColor : LONGINT;
+		color, textColor : WMGraphics.Color;
 		align: LONGINT;
 		img : WMGraphics.Image;
 		data : ANY;
@@ -197,7 +197,7 @@ TYPE
 			END
 		END GetCellTextAOC;
 
-		PROCEDURE SetCellColors*(col, row, color, textColor : LONGINT);
+		PROCEDURE SetCellColors*(col, row : LONGINT; color, textColor : WMGraphics.Color);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -214,7 +214,7 @@ TYPE
 			END;
 		END SetCellColors;
 
-		PROCEDURE GetCellColors*(col, row : LONGINT; VAR color, textColor : LONGINT; VAR valid : BOOLEAN);
+		PROCEDURE GetCellColors*(col, row : LONGINT; VAR color, textColor : WMGraphics.Color; VAR valid : BOOLEAN);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			valid := FALSE;
@@ -334,7 +334,7 @@ TYPE
 	StringGrid* = OBJECT(WMGrids.GenericGrid)
 	VAR
 		model- : StringGridModel;
-		cellColor, hoverColor, selectedColor, fixedColor, textHoverColor, textColor, textSelectedColor : LONGINT;
+		cellColor, hoverColor, selectedColor, fixedColor, textHoverColor, textColor, textSelectedColor : WMGraphics.Color;
 		clCell-, clFixed-, clHover-, clSelected-, clTextDefault-, clTextHover-, clTextSelected- : WMProperties.ColorProperty;
 
 		PROCEDURE &Init*;
@@ -404,7 +404,7 @@ TYPE
 
 		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
 		VAR
-			s : String; font : WMGraphics.Font; left, c, tc: LONGINT; img : WMGraphics.Image; dispW, dispH: LONGINT;
+			s : String; font : WMGraphics.Font; left: LONGINT; c, tc: WMGraphics.Color; img : WMGraphics.Image; dispW, dispH: LONGINT;
 			valid : BOOLEAN;
 		BEGIN
 			s := model.GetCellText(x, y);

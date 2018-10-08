@@ -8,7 +8,7 @@ TYPE
 	Line* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		color- : WMProperties.ColorProperty;
-		colorI : LONGINT;
+		colorI : WMGraphics.Color;
 
 		isVertical- : WMProperties.BooleanProperty;
 		isVerticalI : BOOLEAN;
@@ -129,7 +129,7 @@ TYPE
 	Rectangle* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		clBorder- : WMProperties.ColorProperty;
-		clBorderI : LONGINT;
+		clBorderI : WMGraphics.Color;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -167,7 +167,7 @@ TYPE
 	Circle* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		color : WMProperties.ColorProperty;
-		colorI : LONGINT;
+		colorI : WMGraphics.Color;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -207,7 +207,7 @@ TYPE
 	Ellipse* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		color : WMProperties.ColorProperty;
-		colorI : LONGINT;
+		colorI : WMGraphics.Color;
 
 		PROCEDURE &Init*;
 		BEGIN

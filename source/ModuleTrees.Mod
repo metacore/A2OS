@@ -48,7 +48,7 @@ TYPE
 		flags : SET;
 		pos : Texts.TextPosition;
 		name : Strings.String;
-		color : LONGINT;
+		color : WMGraphics.Color;
 		sortInfo : LONGINT;
 		font : WMGraphics.Font;
 		node : ModuleParser.Node;
@@ -563,7 +563,7 @@ TYPE
 			END;
 		END MiddleClickNode;
 
-		PROCEDURE GetTextInfo(node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo, color: LONGINT; style: SET): TextInfo;
+		PROCEDURE GetTextInfo(node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo: LONGINT; color: WMGraphics.Color; style: SET): TextInfo;
 		VAR newInfo: TextInfo; moduleNode : ModuleParser.Module; font: WMGraphics.Font;
 		BEGIN
 			NEW(newInfo);
@@ -798,7 +798,7 @@ TYPE
 		PROCEDURE AddProcHead(treeNode: WMTrees.TreeNode; procHead: ModuleParser.ProcHead): WMTrees.TreeNode;
 		VAR
 			newNode: WMTrees.TreeNode; caption: Strings.String;
-			color : LONGINT; image : WMGraphics.Image; type : LONGINT; d : ANY;
+			color : WMGraphics.Color; image : WMGraphics.Image; type : LONGINT; d : ANY;
 		BEGIN
 			IF (procHead # NIL) THEN
 				color := GetColor(procHead.modifiers, ColorProcedure);
@@ -1014,7 +1014,7 @@ TYPE
 			RETURN newNode;
 		END NewNode;
 
-		PROCEDURE AddQualident(parent: WMTrees.TreeNode; qualident: ModuleParser.Qualident; color: LONGINT; style: SET):
+		PROCEDURE AddQualident(parent: WMTrees.TreeNode; qualident: ModuleParser.Qualident; color: WMGraphics.Color; style: SET):
 				WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 			n: ModuleParser.NodeList;
@@ -1217,7 +1217,7 @@ TYPE
 			AddNumberPostfixToCaption(parent, nofConstants);
 		END AddConstDecl;
 
-		PROCEDURE AddIdentDef(parent: WMTrees.TreeNode; node : ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo, color: LONGINT; style: SET):
+		PROCEDURE AddIdentDef(parent: WMTrees.TreeNode; node : ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo: LONGINT; color: WMGraphics.Color; style: SET):
 			WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 		BEGIN
@@ -1234,7 +1234,7 @@ TYPE
 			END
 		END AddIdentDef;
 
-		PROCEDURE AddInfoItem(parent: WMTrees.TreeNode; node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo, color : LONGINT; style: SET):
+		PROCEDURE AddInfoItem(parent: WMTrees.TreeNode; node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo : LONGINT; color : WMGraphics.Color; style: SET):
 			WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 		BEGIN
@@ -1253,8 +1253,8 @@ VAR
 	PrototypeShowTypeHierarchy : WMProperties.BooleanProperty;
 	treeFontPlain, treeFontBold, treeFontItalic: WMGraphics.Font;
 
-	PROCEDURE GetColor(modifiers : SET; defaultColor : LONGINT) : LONGINT;
-	VAR color : LONGINT;
+	PROCEDURE GetColor(modifiers : SET; defaultColor : WMGraphics.Color) : WMGraphics.Color;
+	VAR color : WMGraphics.Color;
 	BEGIN
 		IF (ModuleParser.Exclusive IN modifiers) THEN color := ColorExclusive;
 		ELSIF (ModuleParser.HasExclusiveBlock IN modifiers) THEN color := ColorHasExclusiveBlock;

@@ -301,7 +301,8 @@ TYPE
 					t := 0;  d := 0;
 					REPEAT
 						IF Files.EnumTime IN flags THEN
-							Kernel32.FileTimeToLocalFileTime( FD.ftLastWriteTime, ft );  Kernel32.FileTimeToSystemTime( ft, st );
+							IGNORE Kernel32.FileTimeToLocalFileTime( FD.ftLastWriteTime, ft );
+							IGNORE Kernel32.FileTimeToSystemTime( ft, st );
 							d := LONG( st.wYear - 1900 ) * 200H + LONG( st.wMonth ) * 20H + LONG( st.wDay );  t := LONG( st.wHour ) * 1000H + LONG( st.wMinute ) * 40H + LONG( st.wSecond );
 						END;
 						Join( curPath, "/", FD.cFileName, longname );
@@ -311,7 +312,7 @@ TYPE
 							enum.PutEntry( longname, {Files.Directory}, t, d, HUGEINT(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
 						END;
 					UNTIL Kernel32.FindNextFile( h, FD ) = Kernel32.False;
-					Kernel32.FindClose( h )
+					IGNORE Kernel32.FindClose( h )
 				END;
 			END EnumeratePath;
 
@@ -980,11 +981,11 @@ VAR
 		VAR ch: CHAR; i: LONGINT;
 		BEGIN
 			IF (dir[0] = "~") & (dir[1] = PathDelimiter) THEN
-				Kernel32.SetCurrentDirectory( sysPath );
+				IGNORE Kernel32.SetCurrentDirectory( sysPath );
 				i := 2;
 				REPEAT ch := dir[i]; dir[i-2] := ch; INC(i) UNTIL ch = 0X;
 			ELSE
-				Kernel32.SetCurrentDirectory(workPath)
+				IGNORE Kernel32.SetCurrentDirectory(workPath)
 			END;
 		END SetSysPath;
 
@@ -997,7 +998,8 @@ VAR
 				ConvertChar( dir, Files.PathDelimiter, PathDelimiter );
 				SetSysPath(dir);
 				IF Kernel32.SetCurrentDirectory( dir ) # Kernel32.False THEN
-					Kernel32.GetCurrentDirectory( LEN( dir ), dir );  searchPath[i] := ";";  INC( i );  k := 0;
+					IGNORE Kernel32.GetCurrentDirectory( LEN( dir ), dir );
+					searchPath[i] := ";";  INC( i );  k := 0;
 					WHILE dir[k] # 0X DO searchPath[i] := dir[k];  INC( i );  INC( k ) END
 				END;
 				k := 0
@@ -1008,14 +1010,14 @@ VAR
 		Machine.GetConfig( "Paths.Files", files ); Machine.GetConfig( "Paths.Search", directories );
 		Machine.GetConfig( "Paths.Temp", temp ); Machine.GetConfig( "Paths.Work", work );
 
-		Kernel32.GetCurrentDirectory( LEN( workPath ), workPath );  i := 0;  ret := 0;
+		IGNORE Kernel32.GetCurrentDirectory( LEN( workPath ), workPath );  i := 0;  ret := 0;
 
 		IF files # "" THEN
 			COPY( files, sysPath );
 			IF Kernel32.SetCurrentDirectory( sysPath ) # Kernel32.False THEN ret := Kernel32.GetCurrentDirectory( LEN( sysPath ), sysPath ) END
 		END;
 		IF ret = 0 THEN
-			Kernel32.GetModuleFileName( Kernel32.hInstance, sysPath, LEN( sysPath ) );  j := -1;
+			IGNORE Kernel32.GetModuleFileName( Kernel32.hInstance, sysPath, LEN( sysPath ) );  j := -1;
 			WHILE sysPath[i] # 0X DO
 				IF sysPath[i] = PathDelimiter THEN j := i END;
 				INC( i )
@@ -1042,15 +1044,15 @@ VAR
 			SetSysPath(tempPath);
 			IF Kernel32.SetCurrentDirectory( tempPath ) # Kernel32.False THEN ret := Kernel32.GetCurrentDirectory( LEN( tempPath ), tempPath ) END
 		END;
-		IF ret = 0 THEN Kernel32.GetTempPath( LEN( tempPath ), tempPath ) END;
+		IF ret = 0 THEN IGNORE Kernel32.GetTempPath( LEN( tempPath ), tempPath ) END;
 
 		COPY( work, dir );
 		IF dir # "" THEN
 			ConvertChar( dir, Files.PathDelimiter, PathDelimiter );
 			SetSysPath(dir);
-			IF Kernel32.SetCurrentDirectory( dir ) # Kernel32.False THEN Kernel32.GetCurrentDirectory( LEN( workPath ), workPath ) END
+			IF Kernel32.SetCurrentDirectory( dir ) # Kernel32.False THEN IGNORE Kernel32.GetCurrentDirectory( LEN( workPath ), workPath ) END
 		END;
-		Kernel32.SetCurrentDirectory( workPath );
+		IGNORE Kernel32.SetCurrentDirectory( workPath );
 	END SetPaths;
 
 	PROCEDURE SameName*( VAR a, b: ARRAY OF CHAR ): BOOLEAN;   (** non-portable *)
@@ -1072,7 +1074,7 @@ VAR
 		IF j > 0 THEN fullName[j] := 0X END;
 		BEGIN {EXCLUSIVE}
 			done := Kernel32.SetCurrentDirectory( fullName ) # Kernel32.False;
-			Kernel32.SetCurrentDirectory( workPath );  RETURN done
+			IGNORE Kernel32.SetCurrentDirectory( workPath );  RETURN done
 		END;
 	END CheckPath;
 
@@ -1105,25 +1107,27 @@ VAR
 
 	PROCEDURE SetAttributes*( file: ARRAY OF CHAR;  attrs: WORDSET );   (** non-portable *)
 	BEGIN
-		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, attrs )
+		ConvertChar( file, Files.PathDelimiter, PathDelimiter );
+		IGNORE Kernel32.SetFileAttributes( file, attrs )
 	END SetAttributes;
 
 	PROCEDURE SetFileAttributes*( file: ARRAY OF CHAR;  attrs: WORDSET );   (** non-portable *)
 	BEGIN
-		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  Kernel32.SetFileAttributes( file, attrs )
+		ConvertChar( file, Files.PathDelimiter, PathDelimiter );
+		IGNORE Kernel32.SetFileAttributes( file, attrs )
 	END SetFileAttributes;
 
 
 (** Get the current directory. *)
 	PROCEDURE GetWorkingDirectory*( VAR path: ARRAY OF CHAR );
 	BEGIN {EXCLUSIVE}
-		Kernel32.GetCurrentDirectory( Kernel32.MaxPath, workPath );  COPY( workPath, path );  ConvertChar( path, PathDelimiter, Files.PathDelimiter ); FixDriveLetter (path);
+		IGNORE Kernel32.GetCurrentDirectory( Kernel32.MaxPath, workPath );  COPY( workPath, path );  ConvertChar( path, PathDelimiter, Files.PathDelimiter ); FixDriveLetter (path);
 	END GetWorkingDirectory;
 
 (** Change to directory path. *)
 	PROCEDURE ChangeDirectory*( path: ARRAY OF CHAR;  VAR done: BOOLEAN );
 	BEGIN {EXCLUSIVE}
-		ConvertChar( path, Files.PathDelimiter, PathDelimiter );  done := Kernel32.SetCurrentDirectory( path ) # Kernel32.False;  Kernel32.GetCurrentDirectory( Kernel32.MaxPath, workPath );
+		ConvertChar( path, Files.PathDelimiter, PathDelimiter );  done := Kernel32.SetCurrentDirectory( path ) # Kernel32.False;  IGNORE Kernel32.GetCurrentDirectory( Kernel32.MaxPath, workPath );
 	END ChangeDirectory;
 
 (** Get the directory for temporary files. *)
@@ -1137,7 +1141,8 @@ VAR
 	VAR i, j, k, p: LONGINT;  fullName: FileName;  fileNamePart: Kernel32.LPSTR;
 	BEGIN
 		IF ~FindFile( fileName, fullName ) THEN  (* file does not exist -> would be created in the current dir *)
-			ConvertChar( fileName, Files.PathDelimiter, PathDelimiter );  Kernel32.GetFullPathName( fileName, Kernel32.MaxPath, fullName, fileNamePart ); FixDriveLetter (fullName);
+			ConvertChar( fileName, Files.PathDelimiter, PathDelimiter );
+			IGNORE Kernel32.GetFullPathName( fileName, Kernel32.MaxPath, fullName, fileNamePart ); FixDriveLetter (fullName);
 		ELSE ConvertChar( fullName, Files.PathDelimiter, PathDelimiter )
 		END;   (* from here on all with PathDelimiter and drive letter *)
  		IF CAP( workPath[0] ) # CAP( fullName[0] ) THEN  (* different drive letters -> nothing to be done *)
@@ -1214,14 +1219,18 @@ VAR
 		drives := drives - {0,1}; (* do not scan for diskettes *)
 		AutoMountWindowsLogicalDrives( drives );
 
-		Kernel32.GetCurrentDirectory( LEN( workPath ), workPath );  i := 0;  Kernel32.GetModuleFileName( Kernel32.hInstance, sysPath, LEN( sysPath ) );  j := -1;
+		IGNORE Kernel32.GetCurrentDirectory( LEN( workPath ), workPath );
+		i := 0;
+		IGNORE Kernel32.GetModuleFileName( Kernel32.hInstance, sysPath, LEN( sysPath ) );  j := -1;
 		FixDriveLetter (workPath); FixDriveLetter (sysPath);
 		WHILE sysPath[i] # 0X DO
 			IF sysPath[i] = PathDelimiter THEN j := i END;
 			INC( i )
 		END;
 
-		i := j + 1;  sysPath[i] := 0X;  COPY( sysPath, searchPath );  Kernel32.GetTempPath( LEN( tempPath ), tempPath );  Kernel32.SetCurrentDirectory( workPath );
+		i := j + 1;  sysPath[i] := 0X;  COPY( sysPath, searchPath );
+		IGNORE Kernel32.GetTempPath( LEN( tempPath ), tempPath );
+		IGNORE Kernel32.SetCurrentDirectory( workPath );
 
 		notifications := NIL;
 	END Init;

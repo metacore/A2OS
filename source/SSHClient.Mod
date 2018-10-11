@@ -29,7 +29,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 		Attribute = POINTER TO RECORD
 			fnt: WMG.Font;
-			bg, fg: LONGINT;
+			bg, fg: WMG.Color;
 			special: SET (* 0: underscore *)
 		END;
 
@@ -60,7 +60,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 				mode: SET;
 				closeWindow: WindowCloser;
 
-				first, top: Line; bg: LONGINT;
+				first, top: Line; bg: WMG.Color;
 				scrollTop, scrollBottom: Line;
 				scrollBegin, scrollEnd: LONGINT;
 
@@ -424,7 +424,7 @@ Out.String("Dim"); Out.Ln()
 			END Dim;
 
 			PROCEDURE SetAttributes( CONST attrs: ARRAY OF LONGINT; n: LONGINT );
-			VAR c, i: LONGINT;
+			VAR c: WMG.Color; i: LONGINT;
 			BEGIN {EXCLUSIVE}
 				NewAttr();
 				i := 0;

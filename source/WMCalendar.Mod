@@ -264,7 +264,7 @@ TYPE
 			rect : WMRectangles.Rectangle;
 			dt : Dates.DateTime;
 			string : ARRAY 16 OF CHAR;
-			column, row, color, temp : LONGINT;
+			column, temp, row : LONGINT; color: WMGraphics.Color;
 
 			PROCEDURE DrawStringInRect(rect : WMRectangles.Rectangle; CONST string : ARRAY OF CHAR);
 			BEGIN
@@ -289,10 +289,10 @@ TYPE
 						color := clTextTitle.Get();
 					ELSE
 						IF (column = mouseOverColumn) & (row = mouseOverRow) & allowSelection.Get() THEN
-							temp := clMouseOver.Get();
-	 						canvas.Fill(rect, temp, WMGraphics.ModeSrcOverDst);
-	 						temp := temp - (temp MOD 100H) + 0FFH;
-	 						WMGraphicUtilities.DrawRect(canvas, rect, temp, WMGraphics.ModeCopy);
+							color := clMouseOver.Get();
+	 						canvas.Fill(rect, color, WMGraphics.ModeSrcOverDst);
+	 						color := color - (color MOD 100H) + 0FFH;
+	 						WMGraphicUtilities.DrawRect(canvas, rect, color, WMGraphics.ModeCopy);
 	 					END;
 						Strings.IntToStr(dt.day, string);
 						IF (dt.month = month.Get()) THEN

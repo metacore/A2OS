@@ -199,7 +199,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 		Attribute = POINTER TO RECORD
 			fnt: WMGraphics.Font;
-			bg, fg: LONGINT;
+			bg, fg: WMGraphics.Color;
 			special: SET (* 0: underscore *)
 		END;
 
@@ -223,7 +223,7 @@ MODULE WMVT100; (* ejz,  ph *)
 		Frame = OBJECT (WMComponents.VisualComponent)
 			VAR
 				C: Connection;
-				first, last, top: Line; bg: LONGINT;
+				first, last, top: Line; bg: WMGraphics.Color;
 				rows, cols, boxW, boxH, dX, dY: LONGINT;
 				tabs: POINTER TO ARRAY OF BOOLEAN;
 				attr: Attribute; cursor: Position;
@@ -465,7 +465,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END Dim;
 
 			PROCEDURE SetAttributes(attrs: ARRAY OF LONGINT; n: LONGINT);
-				VAR c, i: LONGINT;
+				VAR c: WMGraphics.Color; i: LONGINT;
 			BEGIN {EXCLUSIVE}
 				NewAttr();
 				i := 0;
@@ -737,7 +737,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END CursorKey;
 
 			PROCEDURE KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT);
-			VAR echo: ARRAY 1 OF LONGINT; col:LONGINT;
+			VAR echo: ARRAY 1 OF LONGINT; col: WMGraphics.Color;
 			BEGIN
 				IF ~(Inputs.Release IN flags) & hasFocus THEN
 					IF (keySym DIV 256) = 0 THEN

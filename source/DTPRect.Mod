@@ -26,7 +26,7 @@ TYPE
 
 	RectObject* = OBJECT(DTPData.ContentObject);
 	VAR
-		lineColor, rectColor, rectColor2: LONGINT;
+		lineColor, rectColor, rectColor2: WMGraphics.Color;
 		lineWidth : REAL;
 		fillMode : LONGINT;
 		gradientHorizontal: BOOLEAN;
@@ -199,7 +199,7 @@ TYPE
 			colorString: ARRAY 16 OF CHAR;
 			button: WMStandardComponents.Button;
 			windowStyle : WMWindowManager.WindowStyle;
-			panelColor : LONGINT;
+			panelColor : WMGraphics.Color;
 		BEGIN
 			windowStyle := manager.GetStyle();
 			panelColor := windowStyle.bgColor;
@@ -303,7 +303,7 @@ TYPE
 		PROCEDURE LineColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: DTPUtilities.ColorChooserWindow;
 			rectangle: WMRectangles.Rectangle;
-			result: LONGINT;
+			result: WMGraphics.Color;
 			replaceColor: BOOLEAN;
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -322,7 +322,7 @@ TYPE
 		PROCEDURE RectColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: DTPUtilities.ColorChooserWindow;
 			rectangle: WMRectangles.Rectangle;
-			result: LONGINT;
+			result: WMGraphics.Color;
 			replaceColor: BOOLEAN;
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -341,7 +341,7 @@ TYPE
 		PROCEDURE RectColor2Handler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: DTPUtilities.ColorChooserWindow;
 			rectangle: WMRectangles.Rectangle;
-			result: LONGINT;
+			result: WMGraphics.Color;
 			replaceColor: BOOLEAN;
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN

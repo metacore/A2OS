@@ -730,7 +730,7 @@ TYPE
 		PROCEDURE InitView*;
 		VAR
 			labels : POINTER TO ARRAY OF Strings.String;
-			colors : POINTER TO ARRAY OF LONGINT;
+			colors : POINTER TO ARRAY OF WMGraphics.Color;
 			i : LONGINT;
 		BEGIN
 			ds := plugin.p.datasetDescriptor;

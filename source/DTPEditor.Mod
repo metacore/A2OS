@@ -132,7 +132,7 @@ TYPE
 			label : WMStandardComponents.Label;
 			manager : WMWindowManager.WindowManager;
 			windowStyle : WMWindowManager.WindowStyle;
-			panelColor : LONGINT;
+			panelColor : WMGraphics.Color;
 
 		BEGIN
 			manager := WMWindowManager.GetDefaultManager();
@@ -1907,7 +1907,7 @@ TYPE
 			labelPanel, editorsPanel : WMStandardComponents.Panel;
 		 	dh, dw, dmt, dmb, dml, dmr, dfp : WMStandardComponents.Label;
 			windowStyle : WMWindowManager.WindowStyle;
-			panelColor : LONGINT;
+			panelColor : WMGraphics.Color;
 		BEGIN
 			windowStyle := manager.GetStyle();
 			panelColor := windowStyle.bgColor;

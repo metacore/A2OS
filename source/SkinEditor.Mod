@@ -461,7 +461,7 @@ TYPE
 		END SearchHandler;
 
 		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
-		VAR color : LONGINT; str : ARRAY 128 OF CHAR;
+		VAR color : WMGraphics.Color; str : ARRAY 128 OF CHAR;
 		BEGIN
 			color := WMGraphics.RGBAToColor(255, 255, 255, 255);
 			IF state * {WMGrids.CellFixed, WMGrids.CellSelected} = {WMGrids.CellFixed, WMGrids.CellSelected} THEN

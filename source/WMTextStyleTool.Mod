@@ -607,7 +607,7 @@ TYPE
 			handled := TRUE;
 		END ColorHandler;
 
-		PROCEDURE ColorPopupHandler(result: LONGINT);
+		PROCEDURE ColorPopupHandler(result: WMGraphics.Color);
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -625,7 +625,7 @@ TYPE
 			handled := TRUE;
 		END BGColorHandler;
 
-		PROCEDURE BGColorPopupHandler(result: LONGINT);
+		PROCEDURE BGColorPopupHandler(result: WMGraphics.Color);
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -1756,7 +1756,7 @@ TYPE
 			handled := TRUE;
 		END ColorHandler;
 
-		PROCEDURE ColorPopupHandler(result: LONGINT);
+		PROCEDURE ColorPopupHandler(result: WMGraphics.Color);
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -1776,7 +1776,7 @@ TYPE
 			handled := TRUE;
 		END BGColorHandler;
 
-		PROCEDURE BGColorPopupHandler(result: LONGINT);
+		PROCEDURE BGColorPopupHandler(result: WMGraphics.Color);
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN

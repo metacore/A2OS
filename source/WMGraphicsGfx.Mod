@@ -43,7 +43,7 @@ TYPE Canvas*= OBJECT(WMGraphics.BufferCanvas)
 		END SetLineWidth;
 		
 		(* set line color*)
-		PROCEDURE SetColor*(color:LONGINT);
+		PROCEDURE SetColor*(color:WMGraphics.Color);
 		BEGIN
 			IF color#SELF.color THEN
 				SetColor^(color);
@@ -72,7 +72,7 @@ TYPE Canvas*= OBJECT(WMGraphics.BufferCanvas)
 			END;	
 		END SetFillColor;
 		
-		PROCEDURE ColorToGfxColor(color:LONGINT):Gfx.Color;
+		PROCEDURE ColorToGfxColor(color:WMGraphics.Color):Gfx.Color;
 			VAR gfxcolor:Gfx.Color;
 		BEGIN
 			gfxcolor.a := INTEGER(color MOD 100H);

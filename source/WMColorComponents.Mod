@@ -169,7 +169,7 @@ TYPE
 		END Init;
 
 		PROCEDURE SetColor*(sender, color : ANY);
-		VAR c : LONGINT;
+		VAR c : WMGraphics.Color;
 		BEGIN
 			IF color IS Color THEN
 				c := color(Color).value;

@@ -92,12 +92,12 @@ TYPE
 			END;
 	 	END UpdateTaskInfo;
 
-		PROCEDURE GetFillColor(secondsLeft : LONGINT) : LONGINT;
+		PROCEDURE GetFillColor(secondsLeft : LONGINT) : WMGraphics.Color;
 		BEGIN
 			RETURN WMGraphicUtilities.InterpolateColorLinear(LONGINT(0FFFF00C0H), LONGINT(0FF0000FFH), ENTIER(256 * ((3600 - secondsLeft) / 3600)));
 		END GetFillColor;
 
-		PROCEDURE GetIndicationColor() : LONGINT;
+		PROCEDURE GetIndicationColor() : WMGraphics.Color;
 		BEGIN
 			IF (indicationValue = 256) THEN
 				indicationStep := -256;
@@ -112,7 +112,7 @@ TYPE
 		VAR
 			trigger : Dates.DateTime;
 			newDateString : ARRAY 32 OF CHAR;
-			lastFillColor, newFillColor : LONGINT;
+			lastFillColor, newFillColor : WMGraphics.Color;
 			days, hours, minutes, seconds : LONGINT;
 		BEGIN
 			COPY(dateString, newDateString);

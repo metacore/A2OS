@@ -663,7 +663,7 @@ TYPE
 		font : Font;
 		next : PDFCanvas;
 		prl, prt, prr, prb, scale : REAL;
-		colrg, colRG: LONGINT;
+		colrg, colRG: WMGraphics.Color;
 		fSize : REAL;
 		xfont : Font;
 
@@ -704,7 +704,7 @@ TYPE
 			WriteReal(w, rx); w.Char(" "); WriteReal(w, ry)
 		END WriteTrafoCoord;
 
-		PROCEDURE SetColor*(col : LONGINT);
+		PROCEDURE SetColor*(col : WMGraphics.Color);
 		BEGIN
 			IF col # color THEN
 				SetColor^(col);
@@ -712,7 +712,7 @@ TYPE
 			END
 		END SetColor;
 
-		PROCEDURE SetColrg(col : LONGINT);
+		PROCEDURE SetColrg(col : WMGraphics.Color);
 		BEGIN
 			IF col # colrg THEN
 				WriteReal(w, ((col DIV 1000000H) MOD 100H)/ 255);w.Char(" ");
@@ -722,7 +722,7 @@ TYPE
 			END
 		END SetColrg;
 
-		PROCEDURE SetColRG(col : LONGINT);
+		PROCEDURE SetColRG(col : WMGraphics.Color);
 		BEGIN
 			IF col # colRG THEN
 				WriteReal(w, ((col DIV 1000000H) MOD 100H)/ 255);w.Char(" ");
@@ -732,7 +732,7 @@ TYPE
 			END
 		END SetColRG;
 
-		PROCEDURE Fill*(r : WMRectangles.Rectangle; col : LONGINT; mode : LONGINT);
+		PROCEDURE Fill*(r : WMRectangles.Rectangle; col : WMGraphics.Color; mode : LONGINT);
 		VAR ax, ay, bx ,by : REAL;
 		BEGIN
 			SetColrg(col);
@@ -982,7 +982,7 @@ TYPE
 			w.String("f*"); w.Ln
 		END FillPoly;
 
-		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : LONGINT; mode : LONGINT);
+		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : WMGraphics.Color; mode : LONGINT);
 		BEGIN
 			SetColRG(color);
 			WriteTrafoCoord(x0, y0); w.String(" m ");

@@ -3346,11 +3346,11 @@ BEGIN
 									IF ~options.GetInteger("workers", nofWorkers) THEN nofWorkers := 0; END;
 									build.Compile(nofWorkers, context.out, context.error, options.GetFlag("verbose"), diagnostics, error);
 								ELSE
-									CallCommand("Notepad.Open", fullname, context);
+									CallCommand("PET.Open", fullname, context);
 								END;
 							ELSE
 								IF ~options.GetFlag("build") THEN
-									CallCommand("Notepad.Open", fullname, context);
+									CallCommand("PET.Open", fullname, context);
 								END;
 								context.out.String("error, res: "); context.out.Int(res, 0); context.out.Ln;
 								context.result := Commands.CommandError;
@@ -3461,7 +3461,7 @@ BEGIN
 									END;
 									build.Compile(nofWorkers, context.out, context.error, options.GetFlag("verbose"), diagnostics, error);
 								ELSIF ~options.GetFlag("zip") THEN
-									CallCommand("Notepad.Open", fullname, context);
+									CallCommand("PET.Open", fullname, context);
 								END;
 								IF ~error & options.GetFlag("zip") & CheckDiagnostics(diagnostics, options.GetFlag("warnings"), context.out) THEN
 									build.GenerateZipFiles(context.out, context.error, diagnostics, error);
@@ -3482,7 +3482,7 @@ BEGIN
 								END;
 							ELSE
 								IF ~options.GetFlag("build") THEN
-									CallCommand("Notepad.Open", fullname, context);
+									CallCommand("PET.Open", fullname, context);
 								END;
 								context.out.String("error, res: "); context.out.Int(res, 0); context.out.Ln;
 							END;

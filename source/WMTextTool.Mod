@@ -28,7 +28,7 @@ TYPE
 	ChangeInfo = OBJECT(Texts.Attributes);
 	VAR
 		name : ARRAY 128 OF CHAR; 	(* font name *)
-		fgColor, bgColor : LONGINT;		(* foreground and background color *)
+		fgColor, bgColor : WMGraphics.Color;		(* foreground and background color *)
 		deltaSize : LONGINT;			(* new font size, interpretation depends on deltaSizeMode field *)
 		deltaSizeMode : LONGINT;		(* Absolute, IncrementBy or DecrementBy *)
 		style : SET;						(* font style *)
@@ -386,7 +386,7 @@ TYPE
 			handled := TRUE;
 		END ColorHandler;
 
-		PROCEDURE ColorPopupHandler(result: LONGINT);
+		PROCEDURE ColorPopupHandler(result: WMGraphics.Color);
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -405,7 +405,7 @@ TYPE
 			handled := TRUE;
 		END BGColorHandler;
 
-		PROCEDURE BGColorPopupHandler(result: LONGINT);
+		PROCEDURE BGColorPopupHandler(result: WMGraphics.Color);
 		VAR
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN

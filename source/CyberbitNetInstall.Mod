@@ -196,7 +196,7 @@ TYPE
 	BevelPanel* = OBJECT(WMStandardComponents.Panel);
 	VAR
 		bevelWidth* : LONGINT;
-		bevelColor* : LONGINT;
+		bevelColor* : WMGraphics.Color;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN

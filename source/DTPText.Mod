@@ -2854,7 +2854,7 @@ TYPE
 			resizerV: WMStandardComponents.Resizer;
 			label: WMStandardComponents.Label;
 			windowStyle : WMWindowManager.WindowStyle;
-			labelWidth, panelColor : LONGINT;
+			labelWidth: LONGINT; panelColor : WMGraphics.Color;
 		BEGIN
 			labelWidth := 90;
 			windowStyle := manager.GetStyle();

@@ -96,7 +96,7 @@ TYPE
 		label : WMStandardComponents.Label;
 		panel : WMStandardComponents.Panel;
 		button : WMStandardComponents.Button;
-		result: WORD; chosenColor* : LONGINT;
+		result: WORD; chosenColor* : WMGraphics.Color;
 		shown : BOOLEAN;
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
@@ -117,7 +117,7 @@ TYPE
 			(* SetTitle(Strings.NewString("Color Chooser")); *)
 		END New;
 
-		PROCEDURE Show*(x, y: LONGINT; VAR chosen: LONGINT):BOOLEAN;
+		PROCEDURE Show*(x, y: LONGINT; VAR chosen: WMGraphics.Color):BOOLEAN;
 		BEGIN
 			IF ~shown THEN
 				result := -1; shown := TRUE;
@@ -188,7 +188,7 @@ TYPE
 		END SetCaller;
 
 		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR r, g, b, a, i, j, cColor: LONGINT;
+		VAR r, g, b, a, i, j: LONGINT; cColor: WMGraphics.Color;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;
 			IF (i>= 0) & (i<=2) THEN
@@ -219,7 +219,7 @@ TYPE
 		END FocusLost;
 *)
 		PROCEDURE Draw*(canvas: WMGraphics.Canvas);
-		VAR r, g, b, a, i, j, color: LONGINT;
+		VAR r, g, b, a, i, j: LONGINT; color: WMGraphics.Color;
 		BEGIN
 			Draw^(canvas);
 
@@ -320,7 +320,7 @@ TYPE
 			lineP: LinePanel;
 			manager : WMWindowManager.WindowManager;
 			windowStyle : WMWindowManager.WindowStyle;
-			panelColor : LONGINT;
+			panelColor : WMGraphics.Color;
 
 		BEGIN
 			labelWidth := 130;
@@ -1531,7 +1531,7 @@ TYPE
 
 		PROCEDURE ColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: ColorChooserWindow;
-			result: LONGINT;
+			result: WMGraphics.Color;
 			replaceColor: BOOLEAN;
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -1548,7 +1548,7 @@ TYPE
 
 		PROCEDURE BGColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: ColorChooserWindow;
-			result: LONGINT;
+			result: WMGraphics.Color;
 			replaceColor: BOOLEAN;
 			colorString: ARRAY 16 OF CHAR;
 		BEGIN
@@ -1722,8 +1722,8 @@ TYPE
 	END Checkbox;
 
 	PreviewPanel* = OBJECT(WMStandardComponents.Label)
-	VAR fontColor*: LONGINT;
-		fontBackColor*: LONGINT;
+	VAR fontColor*: WMGraphics.Color;
+		fontBackColor*: WMGraphics.Color;
 		oldFont : WMGraphics.Font;
 
 		PROCEDURE &Init*;
@@ -1931,19 +1931,19 @@ TYPE
 		spacerLeft, spacerTop, spacerRight, spacerBottom : WMStandardComponents.Panel;
 
 		caption* : ARRAY 128 OF CHAR;
-		textColor* : LONGINT;
+		textColor* : WMGraphics.Color;
 		font*: WMGraphics.Font;
 		alignH*, alignV* : LONGINT;			(*	0:	AlignLeft/AlignTop				*)
 											(*	1:	AlignCenter						*)
 		 									(*	2:	AlignRight/Bottom				*)
 		hasBevel* : BOOLEAN;
 		bevelWidth* : LONGINT;
-		bevelColor* : LONGINT;
+		bevelColor* : WMGraphics.Color;
 		bevelDown* : BOOLEAN;
 
 		hasInnerBevel* : BOOLEAN;
 		innerBevelWidth* : LONGINT;
-		innerBevelColor* : LONGINT;
+		innerBevelColor* : WMGraphics.Color;
 		innerBevelDown* : BOOLEAN;
 
 		hasGlass* : BOOLEAN;
@@ -1953,7 +1953,7 @@ TYPE
 
 		img* : Raster.Image;
 		imgBorderWidth* : LONGINT;
-		altFillColor* : LONGINT;
+		altFillColor* : WMGraphics.Color;
 		fillMode* : LONGINT;				(*	0:	Solid							*)
 											(*	1:	Gradient Horizontal				*)
 											(*	2:	Gradient Vertical				*)
@@ -2017,7 +2017,7 @@ TYPE
 
 		PROCEDURE Draw*(canvas: WMGraphics.Canvas);
 		VAR rect, rect1, rect2: WMRectangles.Rectangle;
-			color, mode: LONGINT;
+			color: WMGraphics.Color; mode: LONGINT;
 		BEGIN
 			(* DrawBackground(canvas); *)
 			rect := GetClientRect(); color := fillColor.Get(); mode := WMGraphics.ModeSrcOverDst;

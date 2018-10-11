@@ -709,7 +709,7 @@ VAR
 	mode : Raster.Mode;
 	canvas : WMGraphics.BufferCanvas;
 	pix : Raster.Pixel; (* pixel read from a or b *)
-	ca, cb : LONGINT; (* color of pixel in a and b *)
+	ca, cb : WMGraphics.Color; (* color of pixel in a and b *)
 	red, green, blue, alpha : LONGINT;
 BEGIN
 	IF (DEBUG) THEN

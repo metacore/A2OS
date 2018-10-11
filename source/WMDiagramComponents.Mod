@@ -67,7 +67,7 @@ TYPE
 	DataDescriptor* = RECORD
 		name* : ARRAY 32 OF CHAR;
 		unit* : ARRAY 16 OF CHAR;
-		color* : LONGINT;
+		color* : WMGraphics.Color;
 		flags* : SET;
 	END;
 
@@ -745,7 +745,7 @@ TYPE
 		numberData-: LONGINT; (* number of box plot data *)
 		heights-: POINTER TO ARRAY OF LONGREAL; (* bin height *)
 		labels-: POINTER TO ARRAY OF Strings.String; (* bin label (if any) *)
-		colors- : POINTER TO ARRAY OF LONGINT;
+		colors- : POINTER TO ARRAY OF WMGraphics.Color;
 		c: CoordinateSystem;
 		vertical: BOOLEAN;
 
@@ -809,7 +809,7 @@ TYPE
 			Invalidate;
 		END SetLabels;
 
-		PROCEDURE SetColors*(CONST colors: ARRAY OF LONGINT);
+		PROCEDURE SetColors*(CONST colors: ARRAY OF WMGraphics.Color);
 		VAR i: LONGINT;
 		BEGIN
 			Acquire();

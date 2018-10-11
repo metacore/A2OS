@@ -97,7 +97,7 @@ TYPE
 		END PaintBoxPaint;
 
 		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
-		VAR color : LONGINT; g : Glyph; ptr : ANY; str : ARRAY 32 OF CHAR;
+		VAR color : WMGraphics.Color; g : Glyph; ptr : ANY; str : ARRAY 32 OF CHAR;
 		BEGIN
 			color := WMGraphics.RGBAToColor(255, 255, 255, 255);
 			IF state * {WMGrids.CellFixed, WMGrids.CellSelected} = {WMGrids.CellFixed, WMGrids.CellSelected} THEN

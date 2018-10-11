@@ -313,7 +313,7 @@ TYPE
 
 		PROCEDURE DrawHands(canvas : WMGraphics.Canvas; time : Dates.DateTime);
 
-			PROCEDURE DrawLine(handLengthInPercent : LONGINT; color : LONGINT; angle : REAL);
+			PROCEDURE DrawLine(handLengthInPercent : LONGINT; color : WMGraphics.Color; angle : REAL);
 			VAR deltaX, deltaY : LONGINT; radiants : REAL; lengthX, lengthY : LONGINT;
 			BEGIN
 				lengthX := handLengthInPercent * bounds.GetWidth() DIV 2 DIV 100;

@@ -43,7 +43,7 @@ TYPE
 	VAR text : Texts.Text;
 		ucs32buf : POINTER TO ARRAY OF LONGINT;
 		fontName : ARRAY 32 OF CHAR;
-		fontSize, fontColor, fontBgColor, fontVOff : LONGINT;
+		fontSize, fontBgColor, fontVOff : LONGINT; fontColor: WMGraphics.Color;
 		fontStyle : SET;
 		currentAttributes- : Texts.Attributes;
 		oldBytes : ARRAY 7 OF CHAR;
@@ -157,7 +157,7 @@ TYPE
 			SetAttributes(NewAttributes());
 		END SetFontStyle;
 
-		PROCEDURE SetFontColor* (color : LONGINT);
+		PROCEDURE SetFontColor* (color : WMGraphics.Color);
 		BEGIN
 			fontColor := color;
 			SetAttributes(NewAttributes());

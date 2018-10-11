@@ -161,7 +161,7 @@ TYPE
 		VAR panel: WMStandardComponents.Panel;
 			label: WMStandardComponents.Label;
 			windowStyle : WMWindowManager.WindowStyle;
-			panelColor : LONGINT;
+			panelColor : WMGraphics.Color;
 		BEGIN
 			windowStyle := manager.GetStyle();
 			panelColor := windowStyle.bgColor;

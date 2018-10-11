@@ -1165,7 +1165,7 @@ TYPE
 		END Apply;
 
 		PROCEDURE Synchronize(force : BOOLEAN);
-		VAR color : WMProperties.ColorProperty;  string : ARRAY 16 OF CHAR; value : LONGINT;
+		VAR color : WMProperties.ColorProperty;  string : ARRAY 16 OF CHAR; value : WMGraphics.Color;
 		BEGIN
 			Synchronize^(force);
 			color := SELF.color;

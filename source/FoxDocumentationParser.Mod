@@ -1,7 +1,6 @@
 (**
 	@description
-	The documentation parser parses a documentation comment according to the following EBNF (taken from Compiler Suite - Generic DCoocumentation Generation by Florian Negele, slightly modified)
-	and stores the result in a data structure defined in module [[FoxDocumentationParser]].
+	The documentation parser parses a documentation comment according to the following EBNF	and stores the result in a data structure defined in module [[FoxDocumentationParser]].
 
 	{{{
 	Documentation = {Document}.
@@ -63,9 +62,8 @@
 
 	@author Felix Friedrich
 *)
-(** Parser for documentation comments. Independent of the programming language Oberon.
-	Inspired and partially cloned from Florian Negele's Compiler Suite.
-*)
+
+(** Parser for documentation comments. Independent of the programming language Oberon. *)
 MODULE FoxDocumentationParser;
 
 IMPORT Scanner := FoxDocumentationScanner, Tree := FoxDocumentationTree, D := Debugging;

@@ -1,6 +1,5 @@
 (**
-	Documentation tree to represent a module documentation. Independent of source language. \
-	Implemented according to Compiler Suite - Generic Documentation Generation by Florian Negele.
+	Documentation tree to represent a module documentation. Independent of source language.
 
 	The documentation tree represents the [[docuEBNF|EBNF]] as implemented by [[FoxDocumentationParser]]
 	#author# Felix Friedrich

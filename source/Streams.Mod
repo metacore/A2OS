@@ -242,7 +242,7 @@ TYPE
 		VAR i: LONGINT;
 		BEGIN
 			i := 0;
-			WHILE x[i] # 0X DO Char( x[i] );  INC( i ) END
+			WHILE (i<LEN(x)) & (x[i] # 0X) DO Char( x[i] );  INC( i ) END
 		END String;
 
 	(** Write an integer in decimal right-justified in a field of at least w characters. *)

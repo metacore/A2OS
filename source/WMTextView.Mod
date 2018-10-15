@@ -198,7 +198,7 @@ TYPE
 			WHILE pos < text.GetLength() DO
 				oldpos := pos;
 				LayoutLine(pos, lines[nofLines]); INC(textHeight, lines[nofLines].height);
-				textWidth := Strings.Max(textWidth, lines[nofLines].width);
+				textWidth := MAX(textWidth, lines[nofLines].width);
 				ASSERT(pos > oldpos);
 				IF TraceLayout IN Trace THEN KernelLog.String("Line from : "); KernelLog.Int(lines[nofLines].pos, 5); KernelLog.Ln END;
 				INC(nofLines); IF nofLines >= LEN(lines) THEN GrowLines END
@@ -231,7 +231,7 @@ TYPE
 					WHILE (pos < text.GetLength())   DO
 						DEC(textHeight, lines[l].height);
 						LayoutLine(pos, lines[l]);
-						textWidth := Strings.Max(textWidth, lines[l].width);
+						textWidth := MAX(textWidth, lines[l].width);
 						INC(textHeight, lines[nofLines].height);
 						INC(dl);
 						IF TraceLayout IN Trace THEN KernelLog.String("Line from : "); KernelLog.Int(lines[nofLines].pos, 5); KernelLog.Ln END;
@@ -246,7 +246,7 @@ TYPE
 					linesChanged := TRUE;
 					DEC(textHeight, (lines[l].height));
 					LayoutLine(pos, lines[l]);
-					textWidth := Strings.Max(textWidth, lines[l].width);
+					textWidth := MAX(textWidth, lines[l].width);
 					INC(textHeight, (lines[nofLines].height));
 					INC(dl);
 					IF TraceLayout IN Trace THEN KernelLog.String("Line from : "); KernelLog.Int(lines[nofLines].pos, 5); KernelLog.Ln END;
@@ -1235,12 +1235,12 @@ TYPE
 				IF (sender # NIL) & (sender IS Highlight) THEN
 					hl := sender(Highlight);
 					IF ((hl.oldFrom # hl.from.GetPosition()) & (hl.oldTo # hl.to.GetPosition())) OR (hl.oldColor # hl.color) THEN (* both changed *)
-						min := Strings.Min(
-										Strings.Min(hl.oldFrom, hl.from.GetPosition()),
-										Strings.Min(hl.oldTo, hl.to.GetPosition()));
-						max := Strings.Max(
-										Strings.Max(hl.oldFrom, hl.from.GetPosition()),
-										Strings.Max(hl.oldTo, hl.to.GetPosition()));
+						min := MIN(
+										MIN(hl.oldFrom, hl.from.GetPosition()),
+										MIN(hl.oldTo, hl.to.GetPosition()));
+						max := MAX(
+										MAX(hl.oldFrom, hl.from.GetPosition()),
+										MAX(hl.oldTo, hl.to.GetPosition()));
 						InvalidateRange(min, max)
 					ELSIF hl.oldTo # hl.to.GetPosition() THEN (* to changed *)
 						InvalidateRange(hl.oldTo, hl.to.GetPosition())
@@ -1393,7 +1393,7 @@ TYPE
 			l := layout.FindLineNrByPos(cursor.GetPosition());
 			IF (l < firstLineI) THEN
 				(* move the cursor down by 3 lines to get more context *)
-				l := Strings.Max(0, l - 3);
+				l := MAX(0, l - 3);
 				firstLine.Set(l);
 			ELSIF (l < layout.GetNofLines()) THEN
 				ty := bordersI.t; i := firstLineI;
@@ -1405,7 +1405,7 @@ TYPE
 				END;
 				ty := ty + layout.lines[i].height;
 				IF ty >= bounds.GetHeight() - bordersI.b THEN
-					l := Strings.Max(0, l - 3);
+					l := MAX(0, l - 3);
 					firstLine.Set(l)
 				END
 			END;
@@ -1615,7 +1615,7 @@ TYPE
 				CheckParagraphEnd(i, ypos);
 				INC(i);
 			END;
-			RETURN Strings.Max(i -1, 0)
+			RETURN MAX(i -1, 0)
 		END FindLineByY;
 
 		PROCEDURE ViewToTextPos*(x, y: LONGINT; VAR pos : LONGINT);
@@ -1627,10 +1627,10 @@ TYPE
 		BEGIN
 			text.AcquireRead;
 			pos := -1;
-			x := Strings.Max(0, Strings.Min(x, bounds.GetWidth()));
-			y := Strings.Max(0, Strings.Min(y, bounds.GetHeight()));
+			x := MAX(0, MIN(x, bounds.GetWidth()));
+			y := MAX(0, MIN(y, bounds.GetHeight()));
 
-			l := FindLineByY(firstLineI, Strings.Min(Strings.Max(y, bordersI.t), bounds.GetHeight() - bordersI.b));
+			l := FindLineByY(firstLineI, MIN(MAX(y, bordersI.t), bounds.GetHeight() - bordersI.b));
 
 			x := x - bordersI.l - x0 + leftShiftI;
 			IF x < 0 THEN x := 0 END;
@@ -1779,14 +1779,14 @@ TYPE
 				GetWidth(ch, dx);
 
 				IF (ch = Texts.ObjectChar) THEN
-					word := Strings.Max(word, dx);
+					word := MAX(word, dx);
 					cls := cls + dx;
 					cws := 0
 				ELSIF (ch = Texts.NewLineChar) THEN
-					line := Strings.Max(line, cls);
+					line := MAX(line, cls);
 					cls := 0
 				ELSIF (ch = 32) THEN
-					word := Strings.Max(word, cws);
+					word := MAX(word, cws);
 					cws := 0
 				ELSE
 					cws := cws + dx;
@@ -1794,8 +1794,8 @@ TYPE
 				END;
 
 			UNTIL utilreader.eot;
-			line := Strings.Max(line, cls);
-			word := Strings.Max(word, cws);
+			line := MAX(line, cls);
+			word := MAX(word, cws);
 			text.ReleaseRead;
 
 		END GetMinMaxWidth;
@@ -2268,8 +2268,8 @@ TYPE
 				INC(pos);
 				IF (stopPos < 0) OR (pos <= stopPos) THEN
 					IF (ch # Texts.NewLineChar) & (ch # 0) THEN
-						GetExtents(ch, dx, a, d); ascent := Strings.Max(ascent, a); descent := Strings.Max(descent, d);
-						IF ld = 0 THEN ld := ascent + descent; ELSE ld := Strings.Max(ld, ascent + descent); END; leading := Strings.Max(leading, ld);
+						GetExtents(ch, dx, a, d); ascent := MAX(ascent, a); descent := MAX(descent, d);
+						IF ld = 0 THEN ld := ascent + descent; ELSE ld := MAX(ld, ascent + descent); END; leading := MAX(leading, ld);
 						IF isMultiLineI & (wrapModeI # NoWrap) & (i > 0) & (x0 + x + dx > wrapwidth) THEN
 							eol := TRUE; DEC(pos); wrapPos := pos;
 							(* Go left for last space *)
@@ -3096,7 +3096,7 @@ TYPE
 			h := 0; w := 0;
 			FOR i := la TO lb DO
 				h := h + (layout.lines[i].height);
-				w := Strings.Max(w, layout.lines[i].width);
+				w := MAX(w, layout.lines[i].width);
 			END;
 			h := Limit(h, 20, 200);
 			w := Limit(w, 20, 400);
@@ -3350,7 +3350,7 @@ TYPE
 			IF cl > 0 THEN
 				DEC(cl);
 				lineStart := layout.GetLineStartPos(cl);
-				cPos := lineStart + Strings.Min(layout.GetLineLength(cl) - 1, lineEnter);
+				cPos := lineStart + MIN(layout.GetLineLength(cl) - 1, lineEnter);
 				cursor.SetPosition(cPos);
 				IF cl < firstLineI THEN firstLine.Set(cl) END
 			END;
@@ -3380,7 +3380,7 @@ TYPE
 			IF cl < layout.GetNofLines() - 1 THEN
 				INC(cl);
 				lineStart := layout.GetLineStartPos(cl);
-				cPos := lineStart + Strings.Min(layout.GetLineLength(cl) - 1, lineEnter);
+				cPos := lineStart + MIN(layout.GetLineLength(cl) - 1, lineEnter);
 
 				cursor.SetPosition(cPos);
 				IF cl > FindLineByY(firstLineI, bounds.GetHeight() - bordersI.b) THEN firstLine.Set(firstLineI + 1 ) END
@@ -3774,7 +3774,7 @@ TYPE
 			IF openFile THEN FindCommand(pos, start, end)
 			ELSE FindCommandRange(pos, start, end, nofLastSelections)
 			END;
-			bufSize := Strings.Max(Strings.Min((end - start) * 5 + 1 (* for UTF *), MaxCallParameterBuf), 1);
+			bufSize := MAX(MIN((end - start) * 5 + 1 (* for UTF *), MaxCallParameterBuf), 1);
 			NEW(s, bufSize);
 			paramSize := 0;
 			TextUtilities.SubTextToStrAt(text, start, end - start, paramSize, s^);
@@ -3831,8 +3831,8 @@ TYPE
 						IF Texts.GetLastSelection(selectionText, from, to) THEN
 							selectionOk := TRUE;
 							selectionText.AcquireRead;
-							a := Strings.Min(from.GetPosition(), to.GetPosition());
-							b := Strings.Max(from.GetPosition(), to.GetPosition());
+							a := MIN(from.GetPosition(), to.GetPosition());
+							b := MAX(from.GetPosition(), to.GetPosition());
 							INC(paramSize, b - a + 1);
 						END;
 					END;
@@ -3930,12 +3930,12 @@ TYPE
 			ASSERT(IsCallFromSequencer());
 			text.AcquireRead;
 			FindCommand(cursor.GetPosition(), start, end);
-			bufSize := Strings.Max(Strings.Min((end - start) * 5 + 1 (* for UTF *), 4096), 1);
+			bufSize := MAX(MIN((end - start) * 5 + 1 (* for UTF *), 4096), 1);
 			NEW(command, bufSize);
 			TextUtilities.SubTextToStr(text, start, end - start, command^);
 
 			FindCommandRange(cursor.GetPosition(), start, end, nofLastSelections);
-			bufSize := Strings.Max(Strings.Min((end - start) * 5 + 1 (* for UTF *), MaxCallParameterBuf), 1);
+			bufSize := MAX(MIN((end - start) * 5 + 1 (* for UTF *), MaxCallParameterBuf), 1);
 			NEW(s, bufSize);
 			TextUtilities.SubTextToStr(text, start, end - start, s^);
 			text.ReleaseRead;

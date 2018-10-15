@@ -155,14 +155,14 @@ TYPE
 			FOR i := 0 TO 5 DO
 				GetTitleStr(i, str);
 				f.GetStringSize(str, dx, dy);
-				colWidth[i] := Strings.Max(dx + 4, 30);
+				colWidth[i] := MAX(dx + 4, 30);
 				grid.model.SetCellText(i, 0, Strings.NewString(str));
 				grid.model.SetTextAlign(i, 0, WMGraphics.AlignCenter)
 			END;
 			FOR i := 6 TO 11 - 1 DO
 				GetTitleStr(i, str);
 				f.GetStringSize(str, dx, dy);
-				colWidth[i] := Strings.Max(dx + 4, minWidth+ 40);
+				colWidth[i] := MAX(dx + 4, minWidth+ 40);
 				grid.model.SetCellText(i, 0, Strings.NewString(str));
 				grid.model.SetTextAlign(i, 0, WMGraphics.AlignCenter)
 			END;

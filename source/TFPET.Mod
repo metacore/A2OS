@@ -2265,8 +2265,8 @@ TYPE
 			IF currentPage = NIL THEN RETURN; END;
 			IF Texts.GetLastSelection(selectionText, from, to) THEN
 				selectionText.AcquireRead;
-				a := Strings.Min(from.GetPosition(), to.GetPosition());
-				b := Strings.Max(from.GetPosition(), to.GetPosition());
+				a := MIN(from.GetPosition(), to.GetPosition());
+				b := MAX(from.GetPosition(), to.GetPosition());
 				TextUtilities.SubTextToStr(selectionText, a, b - a, pcStr);
 				selectionText.ReleaseRead;
 				Strings.Trim(pcStr, " ");
@@ -2682,8 +2682,8 @@ VAR a, b : LONGINT; string : ARRAY 4 OF Texts.Char32;
 BEGIN
 	ASSERT((text # NIL) & (from # NIL) & (to # NIL));
 	text.AcquireWrite;
-	a := Strings.Min(from.GetPosition(), to.GetPosition());
-	b := Strings.Max(from.GetPosition(), to.GetPosition());
+	a := MIN(from.GetPosition(), to.GetPosition());
+	b := MAX(from.GetPosition(), to.GetPosition());
 	string[0] := ORD(" "); string[1] := ORD("*"); string[2] := ORD(")"); string[3] := 0;
 	text.InsertUCS32(b, string);
 	string[0] := ORD("("); string[1] := ORD("*"); string[2] := ORD(" "); string[3] := 0;
@@ -2701,8 +2701,8 @@ VAR
 	openPos, closePos, openLen, closeLen : LONGINT;
 BEGIN
 	text.AcquireWrite;
-	a := Strings.Min(from.GetPosition(), to.GetPosition());
-	b := Strings.Max(from.GetPosition(), to.GetPosition());
+	a := MIN(from.GetPosition(), to.GetPosition());
+	b := MAX(from.GetPosition(), to.GetPosition());
 
 	NEW(reader, text);
 

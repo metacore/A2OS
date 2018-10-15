@@ -158,8 +158,8 @@ TYPE
 							draggingWidth := draggingWidth + dx;
 						END;
 
-						newWidth := Strings.Max(1, draggingWidth);
-						newHeight := Strings.Max(1, draggingHeight);
+						newWidth := MAX(1, draggingWidth);
+						newHeight := MAX(1, draggingHeight);
 
 						IF modKeys * Inputs.Alt # {} THEN
 							snapWidth := newWidth; snapHeight := newHeight;

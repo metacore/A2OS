@@ -269,10 +269,10 @@ TYPE
 			IF selecting THEN
 				WMGraphicUtilities.RectGlassShade(canvas,
 					WMRectangles.MakeRect(
-						Strings.Min(x0, x1),
-						Strings.Min(y0, y1),
-						Strings.Max(x1, x0),
-						Strings.Max(y1, y0)), 5, FALSE)
+						MIN(x0, x1),
+						MIN(y0, y1),
+						MAX(x1, x0),
+						MAX(y1, y0)), 5, FALSE)
 			END;
 			IF recalcNeeded THEN
 				canvas.SetColor(LONGINT(0FFFF00FFH));

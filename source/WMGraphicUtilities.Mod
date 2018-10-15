@@ -1,7 +1,7 @@
 MODULE WMGraphicUtilities;	(** AUTHOR "TF"; PURPOSE "Tools using WMGraphics"; *)
 
 IMPORT
-	WMGraphics, WMRectangles, Strings;
+	WMGraphics, WMRectangles;
 
 TYPE
 	EllipsePixelsFiller* = PROCEDURE(CONST canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; dx, dy : LONGINT; lineColor, fillColor : WMGraphics.Color; mode : LONGINT);
@@ -11,9 +11,9 @@ PROCEDURE ScaleColor*(color : WMGraphics.Color; factor : LONGINT): WMGraphics.Co
 VAR r, g, b, a : LONGINT;
 BEGIN
 	WMGraphics.ColorToRGBA(color, r, g, b, a);
-	r := Strings.Min(r * factor DIV 256, 255);
-	g := Strings.Min(g * factor DIV 256, 255);
-	b := Strings.Min(b * factor DIV 256, 255);
+	r := MIN(r * factor DIV 256, 255);
+	g := MIN(g * factor DIV 256, 255);
+	b := MIN(b * factor DIV 256, 255);
 	RETURN WMGraphics.RGBAToColor(r, g, b, a)
 END ScaleColor;
 

@@ -223,8 +223,8 @@ TYPE
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
-				a := Strings.Min(from.GetPosition(), to.GetPosition());
-				b := Strings.Max(from.GetPosition(), to.GetPosition());
+				a := MIN(from.GetPosition(), to.GetPosition());
+				b := MAX(from.GetPosition(), to.GetPosition());
 				NEW(utilreader, text);
 				utilreader.SetPosition(a);
 				utilreader.ReadCh(ch);
@@ -596,8 +596,8 @@ BEGIN
 	ASSERT(changeInfo # NIL);
 	IF Texts.GetLastSelection(text, from, to) THEN
 		text.AcquireWrite;
-		a := Strings.Min(from.GetPosition(), to.GetPosition());
-		b := Strings.Max(from.GetPosition(), to.GetPosition());
+		a := MIN(from.GetPosition(), to.GetPosition());
+		b := MAX(from.GetPosition(), to.GetPosition());
 
 		NEW(utilreader, text);
 		utilreader.SetPosition(a);

@@ -461,11 +461,11 @@ TYPE
 		BEGIN
 			in.SkipBytes(3); (* padding *)
 			len := in.Net32();
-			NEW(text, Strings.Min(MaxCutSize, len + 1));
+			NEW(text, MIN(MaxCutSize, len + 1));
 			FOR i := 0 TO len - 1 DO
 				IF len < MaxCutSize - 1 THEN text[i] := in.Get() ELSE skip := in.Get() END;
 			END;
-			text[Strings.Min(MaxCutSize - 1, len)] := 0X;
+			text[MIN(MaxCutSize - 1, len)] := 0X;
 			IF vncInfo.cutl # NIL THEN vncInfo.cutl(text) END;
 		END ClientCutText;
 

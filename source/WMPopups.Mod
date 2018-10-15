@@ -77,7 +77,7 @@ TYPE
 				entry := entry.next;
 			END;
 
-			width := Strings.Min(width, 1024);
+			width := MIN(width, 1024);
 
 			panel.bounds.SetExtents(width, height);
 

@@ -151,7 +151,7 @@ TYPE
 			ASSERT((menu # NIL) & (root # NIL));
 			Acquire;
 			SELF.menu := menu; SELF.root := root; hover := NIL;
-			greyBoxWidth := Strings.Max(MinImageWidth + 2 * HMenuDistance , MaxImageWidth() + 2 * HMenuDistance);
+			greyBoxWidth := MAX(MinImageWidth + 2 * HMenuDistance , MaxImageWidth() + 2 * HMenuDistance);
 			Invalidate;
 			Release
 		END SetMenu;
@@ -174,7 +174,7 @@ TYPE
 				child := menu.GetChildren(root);
 				WHILE (child # NIL) DO
 					height := height + ItemHeight(child);
-					width := Strings.Max(width, ItemWidth(child, FALSE));
+					width := MAX(width, ItemWidth(child, FALSE));
 					child := menu.GetNextSibling(child);
 				END;
 				menu.Release;

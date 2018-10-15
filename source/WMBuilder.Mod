@@ -782,10 +782,10 @@ TYPE
 		PROCEDURE FixBounds;
 		BEGIN
 			bounds := WMRectangles.MakeRect(
-				Strings.Min(bounds.l, bounds.r),
-				Strings.Min(bounds.t, bounds.b),
-				Strings.Max(bounds.l, bounds.r),
-				Strings.Max(bounds.t, bounds.b)
+				MIN(bounds.l, bounds.r),
+				MIN(bounds.t, bounds.b),
+				MAX(bounds.l, bounds.r),
+				MAX(bounds.t, bounds.b)
 			);
 		END FixBounds;
 
@@ -1186,10 +1186,10 @@ TYPE
 					IF (rect.l # 0) OR (rect.t # 0) OR (rect.r # 0) OR (rect.b # 0) THEN
 						bounds := components[i](WMComponents.VisualComponent).bounds.Get();
 						ToEditorCoordinates(components[i](WMComponents.VisualComponent), bounds);
-						rect.l := Strings.Min(rect.l, bounds.l);
-						rect.t := Strings.Min(rect.t, bounds.t);
-						rect.r := Strings.Max(rect.r, bounds.r);
-						rect.b := Strings.Max(rect.b, bounds.b);
+						rect.l := MIN(rect.l, bounds.l);
+						rect.t := MIN(rect.t, bounds.t);
+						rect.r := MAX(rect.r, bounds.r);
+						rect.b := MAX(rect.b, bounds.b);
 					ELSE
 						rect := components[i](WMComponents.VisualComponent).bounds.Get();
 						ToEditorCoordinates(components[i](WMComponents.VisualComponent), rect);

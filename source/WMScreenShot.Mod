@@ -1,7 +1,7 @@
 MODULE WMScreenShot;	(** AUTHOR "TF"; PURPOSE "Screenshot utility"; *)
 
 IMPORT
-	Commands, Plugins, Raster, Strings, WMGraphics, WMRectangles,
+	Commands, Plugins, Raster, WMGraphics, WMRectangles,
 	WM := WMWindowManager;
 
 TYPE
@@ -102,9 +102,9 @@ TYPE
 						(* calculate bottom rectangle *)
 						IF wr.b < r.b THEN WMRectangles.SetRect(nr, r.l, wr.b, r.r, r.b); Draw(nr, cur.prev) END;
 						(* calculate left rectangle *)
-						IF wr.l > r.l THEN WMRectangles.SetRect(nr, r.l, Strings.Max(r.t, wr.t), wr.l, Strings.Min(r.b, wr.b)); Draw(nr, cur.prev) END;
+						IF wr.l > r.l THEN WMRectangles.SetRect(nr, r.l, MAX(r.t, wr.t), wr.l, MIN(r.b, wr.b)); Draw(nr, cur.prev) END;
 						(* calculate left rectangle *)
-						IF wr.r < r.r THEN WMRectangles.SetRect(nr, wr.r, Strings.Max(r.t, wr.t), r.r, Strings.Min(r.b, wr.b)); Draw(nr, cur.prev) END;
+						IF wr.r < r.r THEN WMRectangles.SetRect(nr, wr.r, MAX(r.t, wr.t), r.r, MIN(r.b, wr.b)); Draw(nr, cur.prev) END;
 						(* calculate overlapping *)
 						nr := r; WMRectangles.ClipRect(nr, wr);
 						IF ~WMRectangles.RectEmpty(nr) THEN InternalDraw(nr, cur) END
@@ -140,8 +140,8 @@ BEGIN
 	p := manager.viewRegistry.Get(viewportName);
 	IF p # NIL THEN viewport := p(WM.ViewPort) ELSE viewport := WM.GetDefaultView() END;
 
-	w := Strings.Max(ENTIER(viewport.range.r - viewport.range.l), 1);
-	h := Strings.Max(ENTIER(viewport.range.b - viewport.range.t), 1);
+	w := MAX(ENTIER(viewport.range.r - viewport.range.l), 1);
+	h := MAX(ENTIER(viewport.range.b - viewport.range.t), 1);
 	context.arg.SkipWhitespace;
 	IF (context.arg.Peek() >= '0') & (context.arg.Peek() <= '9') THEN context.arg.Int(w, FALSE) END;
 	context.arg.SkipWhitespace;

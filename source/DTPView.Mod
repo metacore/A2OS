@@ -623,7 +623,7 @@ TYPE
 								cframe.SetPosition(fx, fy);
 							END;
 							x1 := ENTIER(fx*zoomFactor)-dx+docOriginX; y1 := ENTIER(fy*zoomFactor)-dy+docOriginY;
-							InvalidateRect(WMRectangles.MakeRect(Strings.Min(x1, oldx1)+dx-10, Strings.Min(oldy1, y1)+dy-10, ENTIER(cframe.GetWidth()*zoomFactor)+Strings.Max(x1, oldx1)+dx+10, ENTIER(cframe.GetHeight()*zoomFactor)+Strings.Max(y1, oldy1)+dy+10));
+							InvalidateRect(WMRectangles.MakeRect(MIN(x1, oldx1)+dx-10, MIN(oldy1, y1)+dy-10, ENTIER(cframe.GetWidth()*zoomFactor)+MAX(x1, oldx1)+dx+10, ENTIER(cframe.GetHeight()*zoomFactor)+MAX(y1, oldy1)+dy+10));
 						ELSIF resize THEN										(* resize frame *)
 							quality := FALSE;
 							xs := ENTIER(cframe.GetX()*zoomFactor)+docOriginX;
@@ -663,21 +663,21 @@ TYPE
 									ELSE cguide.SetPosition((y-docOriginY)/zoomFactor); END;
 								END;
 								oldy1 := gy; gy := y;
-								InvalidateRect(WMRectangles.MakeRect(0, Strings.Min(oldy1, gy)-10, ENTIER(document.GetPageWidth()*zoomFactor)+docOriginX, Strings.Max(oldy1, gy)+10));
+								InvalidateRect(WMRectangles.MakeRect(0, MIN(oldy1, gy)-10, ENTIER(document.GetPageWidth()*zoomFactor)+docOriginX, MAX(oldy1, gy)+10));
 							ELSE
 								IF WillSnap((x-docOriginX)/zoomFactor, 0, (x-docOriginX)/zoomFactor,1, snapLeft, snapTop, snapRight, snapBottom, tx, ty) THEN
 									IF snapLeft THEN cguide.SetPosition(tx);		(* snap guide *)
 									ELSE cguide.SetPosition((x-docOriginX)/zoomFactor); END;
 								END;
 								oldx1 := gx; gx := x;
-								InvalidateRect(WMRectangles.MakeRect(Strings.Min(oldx1, gx)-10, 0, Strings.Max(oldx1, gx)+10, ENTIER(document.GetPageHeight()*zoomFactor)+docOriginX));
+								InvalidateRect(WMRectangles.MakeRect(MIN(oldx1, gx)-10, 0, MAX(oldx1, gx)+10, ENTIER(document.GetPageHeight()*zoomFactor)+docOriginX));
 							END;
 						ELSIF addguide THEN									(* create new guide object *)
 							oldx1 := gx; gx := x;
 							IF res2 = 0 THEN										(* Horizontal guide *)
-								InvalidateRect(WMRectangles.MakeRect(0, Strings.Min(oldy1, gy)-10, ENTIER(document.GetPageWidth()*zoomFactor)+docOriginX, Strings.Max(oldy1, gy)+10));
+								InvalidateRect(WMRectangles.MakeRect(0, MIN(oldy1, gy)-10, ENTIER(document.GetPageWidth()*zoomFactor)+docOriginX, MAX(oldy1, gy)+10));
 							ELSE												(* Vertical guide *)
-								InvalidateRect(WMRectangles.MakeRect(Strings.Min(oldx1, gx)-10, 0, Strings.Max(oldx1, gx)+10, ENTIER(document.GetPageHeight()*zoomFactor)+docOriginX));
+								InvalidateRect(WMRectangles.MakeRect(MIN(oldx1, gx)-10, 0, MAX(oldx1, gx)+10, ENTIER(document.GetPageHeight()*zoomFactor)+docOriginX));
 							END;
 						ELSE
 						END;
@@ -746,7 +746,7 @@ TYPE
 					ELSE												(* plugin selected *)
 						IF down THEN
 							IF addobject THEN							(* on create new content object *)
-								InvalidateRect(WMRectangles.MakeRect(Strings.Min(vx0, vx1)-10, Strings.Min(vy0, vy1)-10, Strings.Max(vx0, vx1)+10, Strings.Max(vy0, vy1)+10));
+								InvalidateRect(WMRectangles.MakeRect(MIN(vx0, vx1)-10, MIN(vy0, vy1)-10, MAX(vx0, vx1)+10, MAX(vy0, vy1)+10));
 							ELSE
 								IF  (cframe # NIL) & WMRectangles.PointInRect(x, y, WMRectangles.MakeRect(ENTIER(cframe.GetX()*zoomFactor)+docOriginX, ENTIER(cframe.GetY()*zoomFactor)+docOriginY, ENTIER((cframe.GetX()+cframe.GetWidth())*zoomFactor)+docOriginX, ENTIER((cframe.GetY()+cframe.GetHeight())*zoomFactor)+docOriginY)) THEN
 									ccontent := cframe.GetContent();
@@ -828,10 +828,10 @@ TYPE
 						ELSE											(* dragged *)
 							IF addobject THEN
 								IF (cpage # NIL) THEN					(* create frame *)
-(*									fx := (Strings.Min(x0,x1)-docOriginX)/zoomFactor;
-									fy := (Strings.Min(y0,y1)-docOriginY)/zoomFactor;
-									fw := (Strings.Max(x0,x1)-Strings.Min(x0,x1))/zoomFactor;
-									fh := (Strings.Max(y0,y1)-Strings.Min(y0,y1))/zoomFactor;
+(*									fx := (MIN(x0,x1)-docOriginX)/zoomFactor;
+									fy := (MIN(y0,y1)-docOriginY)/zoomFactor;
+									fw := (MAX(x0,x1)-MIN(x0,x1))/zoomFactor;
+									fh := (MAX(y0,y1)-MIN(y0,y1))/zoomFactor;
 *)
 									fx := (x0-docOriginX)/zoomFactor;
 									fy := (y0-docOriginY)/zoomFactor;
@@ -877,7 +877,7 @@ TYPE
 										activeContent.Hide;
 									END;
 									content.Show(propsX, propsY); activeFrame := cframe;
-									InvalidateRect(WMRectangles.MakeRect(Strings.Min(x0, x1)-5, Strings.Min(y0, y1)-5, Strings.Max(x0, x1)+5, Strings.Max(y0, y1)+5));
+									InvalidateRect(WMRectangles.MakeRect(MIN(x0, x1)-5, MIN(y0, y1)-5, MAX(x0, x1)+5, MAX(y0, y1)+5));
 								END;
 							ELSE										(* forward click to plugin *)
 								IF (cframe # NIL) & WMRectangles.PointInRect(x, y, WMRectangles.MakeRect(ENTIER(cframe.GetX()*zoomFactor)+docOriginX, ENTIER(cframe.GetY()*zoomFactor)+docOriginY, ENTIER((cframe.GetX()+cframe.GetWidth())*zoomFactor)+docOriginX, ENTIER((cframe.GetY()+cframe.GetHeight())*zoomFactor)+docOriginY)) THEN

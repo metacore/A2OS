@@ -180,7 +180,7 @@ TYPE
 		PROCEDURE NewTextReaderArray(VAR trArray : TextReaderArray; size : LONGINT);
 		BEGIN
 			IF trArray = NIL THEN
-				NEW(trArray,Strings.Max(initialCacheElementSize,2*size));
+				NEW(trArray,MAX(initialCacheElementSize,2*size));
 			ELSIF LEN(trArray) < size THEN
 				NEW(trArray,2*size);
 			END;
@@ -221,7 +221,7 @@ TYPE
 		PROCEDURE NewBoolArray(VAR bArray : BoolArray; size : LONGINT);
 		BEGIN
 			IF bArray = NIL THEN
-				NEW(bArray,Strings.Max(initialCacheElementSize,2*size));
+				NEW(bArray,MAX(initialCacheElementSize,2*size));
 			ELSIF LEN(bArray) < size THEN
 				NEW(bArray,2*size);
 			END;
@@ -231,7 +231,7 @@ TYPE
 		PROCEDURE NewPosArrays(VAR pArrays : PosArrays; size : LONGINT);
 		BEGIN
 			IF pArrays = NIL THEN
-				NEW(pArrays,Strings.Max(initialCacheElementSize,2*size));
+				NEW(pArrays,MAX(initialCacheElementSize,2*size));
 			ELSIF LEN(pArrays) < size THEN
 				NEW(pArrays,2*size);
 			END;
@@ -251,7 +251,7 @@ TYPE
 			(* pool is empty *)
 			IF posArrayPool.first = NIL THEN
 				NEW(pArray);
-				NEW(pArray.array,Strings.Max(initialCacheElementSize,2*size));
+				NEW(pArray.array,MAX(initialCacheElementSize,2*size));
 				pArray.size := size;
 				RETURN;
 			END;
@@ -284,7 +284,7 @@ TYPE
 
 			(* if no position array was found, resize the first one and use it *)
 			pArray := posArrayPool.first;
-			NEW(pArray.array,Strings.Max(initialCacheElementSize,2*size));
+			NEW(pArray.array,MAX(initialCacheElementSize,2*size));
 			pArray.size := size;
 			posArrayPool.first := pArray.next;
 			pArray.next := NIL;
@@ -294,7 +294,7 @@ TYPE
 		PROCEDURE NewIntegerArray(VAR iArray : IntegerArray; size : LONGINT);
 		BEGIN
 			IF iArray = NIL THEN
-				NEW(iArray,Strings.Max(initialCacheElementSize,2*size));
+				NEW(iArray,MAX(initialCacheElementSize,2*size));
 			ELSIF LEN(iArray) < size THEN
 				NEW(iArray,2*size);
 			END;
@@ -304,7 +304,7 @@ TYPE
 		PROCEDURE NewStringArray(VAR sArray : Strings.StringArray; size : LONGINT);
 		BEGIN
 			IF sArray = NIL THEN
-				NEW(sArray,Strings.Max(initialCacheElementSize,2*size));
+				NEW(sArray,MAX(initialCacheElementSize,2*size));
 			ELSIF LEN(sArray) < size THEN
 				NEW(sArray,2*size);
 			END;
@@ -314,7 +314,7 @@ TYPE
 		PROCEDURE NewCharArray(VAR cArray : CharArray; size : LONGINT);
 		BEGIN
 			IF cArray = NIL THEN
-				NEW(cArray,Strings.Max(initialCacheElementSize,2*size));
+				NEW(cArray,MAX(initialCacheElementSize,2*size));
 			ELSIF LEN(cArray) < size THEN
 				NEW(cArray,2*size);
 			END;
@@ -1223,7 +1223,7 @@ TYPE
 
 				(* W1. *)
 				IF cacheElement.characterTypes[i]^ = "NSM" THEN
-					Strings.Copy(lastCharType^,0,Strings.Min(LEN(cacheElement.characterTypes[i]),LEN(lastCharType)),cacheElement.characterTypes[i]^);
+					Strings.Copy(lastCharType^,0,MIN(LEN(cacheElement.characterTypes[i]),LEN(lastCharType)),cacheElement.characterTypes[i]^);
 				END;
 
 				(* border of two runs *)
@@ -1243,7 +1243,7 @@ TYPE
 
 				(* remember strong type for W2 *)
 				ELSIF IsStrongCharacterType(cacheElement.characterTypes[i]) & ~newLevel THEN
-					Strings.Copy(cacheElement.characterTypes[i]^,0,Strings.Min(LEN(cacheElement.characterTypes[i]),LEN(lastCharType)),lastCharType^);
+					Strings.Copy(cacheElement.characterTypes[i]^,0,MIN(LEN(cacheElement.characterTypes[i]),LEN(lastCharType)),lastCharType^);
 					lastStrongType := NeutralType;
 
 				(* W2. remember the new type for W1 *)
@@ -1256,13 +1256,13 @@ TYPE
 						END;
 					ELSE
 						charType := HL2(cacheElement,i,lastStrongType);
-						Strings.Copy(charType^,0,Strings.Min(LEN(cacheElement.characterTypes[i]),LEN(charType)),cacheElement.characterTypes[i]^);
-						Strings.Copy(charType^,0,Strings.Min(LEN(lastCharType),LEN(charType)),lastCharType^);
+						Strings.Copy(charType^,0,MIN(LEN(cacheElement.characterTypes[i]),LEN(charType)),cacheElement.characterTypes[i]^);
+						Strings.Copy(charType^,0,MIN(LEN(lastCharType),LEN(charType)),lastCharType^);
 					END;
 
 				(* remember character type for W1, exept for BN *)
 				ELSIF cacheElement.characterTypes[i]^ # "BN" THEN
-					Strings.Copy(cacheElement.characterTypes[i]^,0,Strings.Min(LEN(cacheElement.characterTypes[i]),LEN(lastCharType)),lastCharType^);
+					Strings.Copy(cacheElement.characterTypes[i]^,0,MIN(LEN(cacheElement.characterTypes[i]),LEN(lastCharType)),lastCharType^);
 				END;
 				newLevel := FALSE;
 			END;
@@ -1641,7 +1641,7 @@ TYPE
 			END;
 
 			(* the length of the text cannot be longer than the actual line *)
-			length := Strings.Min(length,cacheElement.lineLength-relStart);
+			length := MIN(length,cacheElement.lineLength-relStart);
 
 			IF CharacterDebugging THEN
 				KernelLog.Ln;
@@ -1842,7 +1842,7 @@ TYPE
 			lineCache.FindElement(pos,cacheElement);
 			IF (cacheElement = NIL) OR (cacheElement.characterEmbeddingLevels = NIL) THEN
 
-				RETURN Strings.Max(0,cacheElement.paragraphEmbeddingLevel);
+				RETURN MAX(0,cacheElement.paragraphEmbeddingLevel);
 			END;
 
 			IF cacheElement.pos + cacheElement.lineLength <= pos THEN
@@ -2157,7 +2157,7 @@ TYPE
 		(* Returns the character type of the higher of two levels *)
 		PROCEDURE GetBorderOfRunCharacterType(thisLevel, otherLevel : LONGINT; VAR result : Strings.String);
 		BEGIN
-			IF (ODD(Strings.Max(thisLevel,otherLevel))) THEN
+			IF (ODD(MAX(thisLevel,otherLevel))) THEN
 				result^ := "R";
 			ELSE
 				result^ := "L";

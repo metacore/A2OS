@@ -196,7 +196,7 @@ TYPE
 					ELSE
 						canvas.Line(lx, ly, x, y, color, WMGraphics.ModeCopy);
 					END;
-					Invalidate(WMRectangles.MakeRect(Strings.Min(lx, x), Strings.Min(ly, y), Strings.Max(lx, x) + 1, Strings.Max(ly, y) + 1));
+					Invalidate(WMRectangles.MakeRect(MIN(lx, x), MIN(ly, y), MAX(lx, x) + 1, MAX(ly, y) + 1));
 				END;
 			ELSIF (currentPointer # Pointer_Arrow) THEN
 				currentPointer := Pointer_Arrow;

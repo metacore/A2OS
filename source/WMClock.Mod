@@ -146,8 +146,8 @@ TYPE
 					ELSE
 						width := GetWidth();
 						height := GetHeight();
-						width := Strings.Max(10, width + dx);
-						height := Strings.Max(10, height + dy);
+						width := MAX(10, width + dx);
+						height := MAX(10, height + dy);
 						manager.SetWindowSize(SELF, width, height);
 					END;
 				END;

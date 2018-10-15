@@ -195,7 +195,7 @@ TYPE
 			IF (colorI # 0) THEN
 				rect := bounds.Get();
 				canvas.SetColor(colorI);
-				radius := Strings.Min((rect.r - rect.l) DIV 2, (rect.b - rect.t) DIV 2) - 1;
+				radius := MIN((rect.r - rect.l) DIV 2, (rect.b - rect.t) DIV 2) - 1;
 				WMGraphicUtilities.Circle(canvas, (rect.r - rect.l) DIV 2, (rect.b - rect.t) DIV 2, radius);
 			END;
 		END DrawBackground;

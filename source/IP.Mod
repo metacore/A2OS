@@ -1678,7 +1678,7 @@ BEGIN
 	IF all THEN
 		length := LEN(buffer) -1;
 	ELSE
-		length := Strings.Min(LEN(buffer) - 1, 256);
+		length := MIN(LEN(buffer) - 1, 256);
 	END;
 
 	FOR i := 0 TO length DO

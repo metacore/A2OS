@@ -496,7 +496,7 @@ VAR
 
 				(* DNS *)
 				dnsElems := GetSettings(intElem, "DNS");
-				FOR i := 0 TO Strings.Min(dnsElems.GetNumberOfElements(), DNSMod.MaxNofServer) - 1 DO
+				FOR i := 0 TO MIN(dnsElems.GetNumberOfElements(), DNSMod.MaxNofServer) - 1 DO
 					p := dnsElems.GetElement(i);
 					elem := p(XML.Element);
 					attribute := elem.GetAttribute("value");
@@ -562,7 +562,7 @@ VAR
 
 				(* DNS *)
 				dnsElems := GetSettings(intElem, "DNS");
-				FOR i := 0 TO Strings.Min(dnsElems.GetNumberOfElements(), DNSMod.MaxNofServer) - 1 DO
+				FOR i := 0 TO MIN(dnsElems.GetNumberOfElements(), DNSMod.MaxNofServer) - 1 DO
 					p := dnsElems.GetElement(i);
 					elem := p(XML.Element);
 					attribute := elem.GetAttribute("value");
@@ -794,7 +794,7 @@ BEGIN
 
 					(* DNS *)
 					dnsElems := GetSettings(elem, "DNS");
-					FOR i := 0 TO Strings.Min(dnsElems.GetNumberOfElements(), DNSMod.MaxNofServer) - 1 DO
+					FOR i := 0 TO MIN(dnsElems.GetNumberOfElements(), DNSMod.MaxNofServer) - 1 DO
 						p := dnsElems.GetElement(i);
 						elem := p(XML.Element);
 						attribute := elem.GetAttribute("value");

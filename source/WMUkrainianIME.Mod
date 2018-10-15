@@ -126,7 +126,7 @@ BEGIN
 	IF Texts.GetLastSelection(selectionText, from, to) THEN
 		selectionText.AcquireRead;
 		NEW(r, selectionText);
-		r.SetPosition(Strings.Min(from.GetPosition(), to.GetPosition()));
+		r.SetPosition(MIN(from.GetPosition(), to.GetPosition()));
 		r.ReadCh(ucs);
 		selectionText.ReleaseRead;
 		KernelLog.String("InsertChar("); KernelLog.Hex(ucs, 0); KernelLog.String("H) (**)"); KernelLog.Ln;

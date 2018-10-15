@@ -89,10 +89,10 @@ TYPE
 		VAR i : LONGINT; newRows : RowArray;
 		BEGIN
 			NEW(newRows, newSize);
-			FOR i := 0 TO Strings.Min(nofRows, newSize) - 1 DO
+			FOR i := 0 TO MIN(nofRows, newSize) - 1 DO
 				newRows[i] := rows[i]
 			END;
-			FOR i := Strings.Min(nofRows, newSize)  TO newSize - 1 DO
+			FOR i := MIN(nofRows, newSize)  TO newSize - 1 DO
 				NEW(newRows[i]);
 				AdjustRow(newRows[i])
 			END;
@@ -105,7 +105,7 @@ TYPE
 			IF row.cells = NIL THEN NEW(row.cells, nofCols) END;
 			IF LEN(row.cells) # nofCols THEN
 				NEW(newCells, nofCols);
-				FOR i := 0 TO Strings.Min(nofCols, LEN(row.cells)) - 1 DO
+				FOR i := 0 TO MIN(nofCols, LEN(row.cells)) - 1 DO
 					newCells[i] := row.cells[i]
 				END;
 				row.cells := newCells
@@ -170,7 +170,7 @@ TYPE
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
 				IF rows[row].cells[col] = NIL THEN NEW(rows[row].cells[col]) END;
-				length := Strings.Max(minBufferSize, Strings.Length(caption) + 1); (* 0X *)
+				length := MAX(minBufferSize, Strings.Length(caption) + 1); (* 0X *)
 				cell := rows[row].cells[col];
 				IF (cell.caption = NIL) OR ~(UseInternalBuffer IN cell.flags) OR (LEN(cell.caption) < length) THEN
 					NEW(cell.caption, length);

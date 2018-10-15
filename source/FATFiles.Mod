@@ -794,7 +794,7 @@ TYPE
 				WHILE (len > 0) & (Pos(r) < size) DO
 					IF (buffer.pos # r.apos) THEN ReadBuffer(buffer, r.apos) END;
 					src := ADDRESSOF(buffer.data[r.bpos]);
-					m := Strings.Min(Strings.Min(size - Pos(r), clusterSize - r.bpos), len);
+					m := MIN(MIN(size - Pos(r), clusterSize - r.bpos), len);
 					SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), m);
 					INC(ofs, m); DEC(len, m);
 					INC(r.bpos, m); ASSERT(r.bpos <= clusterSize);
@@ -839,7 +839,7 @@ TYPE
 				WHILE (len > 0) DO
 					IF (buffer.pos # r.apos) THEN ReadBuffer(buffer, r.apos) END;
 					dst := ADDRESSOF(buffer.data[r.bpos]);
-					m := Strings.Min(clusterSize-r.bpos, len);
+					m := MIN(clusterSize-r.bpos, len);
 					SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, m);
 					WriteBuffer(buffer);
 					INC(ofs, m); DEC(len, m);
@@ -1011,7 +1011,7 @@ TYPE
 					name[pos] := PathDelimiter; INC(pos)
 				END
 			END;
-			name[Strings.Min(LEN(name)-1, pos)] := 0X
+			name[MIN(LEN(name)-1, pos)] := 0X
 		END GetFullName;
 
 	END File;
@@ -1225,7 +1225,7 @@ TYPE
 					END
 				END
 			UNTIL (data[0] = deLast) OR r.eof OR ~cont;
-			IF (firstFreePos = MAX(LONGINT)) THEN firstFreePos := Strings.Max(Pos(r)-32, 0) END;
+			IF (firstFreePos = MAX(LONGINT)) THEN firstFreePos := MAX(Pos(r)-32, 0) END;
 			ASSERT(firstFreePos MOD 32 = 0)
 		END EnumerateX;
 
@@ -1655,7 +1655,7 @@ TYPE
 			IF (pos < LEN(name)-1) THEN
 				name[pos] := PathDelimiter; INC(pos)
 			END;
-			name[Strings.Min(LEN(name)-1, pos)] := 0X
+			name[MIN(LEN(name)-1, pos)] := 0X
 		END GetFullName;
 	END RootDirectory;
 

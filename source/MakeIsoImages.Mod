@@ -457,13 +457,13 @@ TYPE
 			IF type = Joliet THEN
 				COPY(root.name^, name);
 				ReplaceNonJolietChars(name);
-				len := Strings.Min(UTF8Strings.Length(name), 32 DIV 2);
+				len := MIN(UTF8Strings.Length(name), 32 DIV 2);
 				UTF8Strings.Extract(name, 0, len, shortname);
 			ELSE
 				count := UTF8Strings.UTF8toASCII(root.name^, CHR(95), name);
 				Strings.UpperCase(name);
 				ReplaceNonDChars(name);
-				len := Strings.Min(Strings.Length(name), 32);
+				len := MIN(Strings.Length(name), 32);
 				Strings.Copy(name, 0, len, shortname);
 			END;
 			root.shortname := Strings.NewString(shortname);
@@ -511,13 +511,13 @@ TYPE
 			IF (node IS File) & GetExtension(name, file, ext) THEN
 				ReplaceNonDChars(file);
 				ReplaceNonDChars(ext);
-				len := Strings.Min(Strings.Length(file), 8);
+				len := MIN(Strings.Length(file), 8);
 				Strings.Copy(file, 0, len, shortname);
 				Strings.Append(shortname, ".");
 				ext[3] := 0X;
 				Strings.Append(shortname, ext);
 			ELSE
-				len := Strings.Min(Strings.Length(name), 8);
+				len := MIN(Strings.Length(name), 8);
 				Strings.Copy(name, 0, len, shortname);
 				ReplaceNonDChars(shortname);
 			END;
@@ -536,18 +536,18 @@ TYPE
 				IF GetExtension(name, file, ext) THEN
 					ReplaceNonDChars(file);
 					ReplaceNonDChars(ext);
-					len := Strings.Min(Strings.Length(file), 30-Strings.Length(ext)-1);
+					len := MIN(Strings.Length(file), 30-Strings.Length(ext)-1);
 					Strings.Copy(file, 0, len, shortname);
 					Strings.Append(shortname, ".");
 					ext[30] := 0X;
 					Strings.Append(shortname, ext);
 				ELSE
-					len := Strings.Min(Strings.Length(name), 30);
+					len := MIN(Strings.Length(name), 30);
 					Strings.Copy(name, 0, len, shortname);
 					ReplaceNonDChars(shortname);
 				END;
 			ELSE
-				len := Strings.Min(Strings.Length(name), 31);
+				len := MIN(Strings.Length(name), 31);
 				Strings.Copy(name, 0, len, shortname);
 				ReplaceNonDChars(shortname);
 			END;
@@ -566,12 +566,12 @@ TYPE
 			COPY(node.name^, name);
 			ReplaceNonJolietChars(name);
 			IF (node IS File) & GetExtension(name, file, ext) THEN
-				len := Strings.Min(UTF8Strings.Length(file), 64 - UTF8Strings.Length(ext) -1);
+				len := MIN(UTF8Strings.Length(file), 64 - UTF8Strings.Length(ext) -1);
 				UTF8Strings.Extract(name, 0, len, shortname);
 				Strings.Append(shortname, ".");
 				Strings.Append(shortname, ext);
 			ELSE
-				len := Strings.Min(UTF8Strings.Length(name), 64);
+				len := MIN(UTF8Strings.Length(name), 64);
 				UTF8Strings.Extract(name, 0, len, shortname);
 			END;
 			RETURN len;
@@ -629,13 +629,13 @@ TYPE
 			node := dir.content;
 			WHILE node # NIL DO
 				len := UTF8Strings.Length(node.shortname^);
-				max := Strings.Max(max, len);
+				max := MAX(max, len);
 				node := node.next;
 			END;
 			cur := dir.subdir;
 			WHILE cur # NIL DO
 				len :=GetMaxPathLengthDir(cur);
-				max := Strings.Max(max, len);
+				max := MAX(max, len);
 				cur := cur.nextdir;
 			END;
 			IF dir.parent # dir THEN (* root directory *)
@@ -1557,7 +1557,7 @@ VAR
 BEGIN
 	UTF8Strings.UTF8toUnicode(src, ucs4, len);
 	DEC(len);
-	i := 0; len := Strings.Min(len, LEN(dst) DIV 2);
+	i := 0; len := MIN(len, LEN(dst) DIV 2);
 	FOR i := 0 TO len-1 DO
 		dst[2*i] := CHR(ucs4[i] DIV 100H MOD 100H);
 		dst[2*i+1] :=  CHR(ucs4[i] MOD 100H);

@@ -479,7 +479,7 @@ TYPE
 				INC(lines);
 				h := DefaultHeight; w := bounds.GetWidth();
 				IF measureNode # NIL THEN measureNode(x, w, h) END;
-				width := Strings.Max(width, w + level * indent);
+				width := MAX(width, w + level * indent);
 				INC(cury, h);
 				IF NodeExpanded IN x.state THEN
 					a := tree.GetChildren(x);
@@ -850,7 +850,7 @@ TYPE
 
 		PROCEDURE WheelMove*(dz: LONGINT); (** PROTECTED *)
 		BEGIN
-			SetFirstLine(Strings.Min(Strings.Max(firstLine + dz, 0), lines - 1), TRUE)
+			SetFirstLine(MIN(MAX(firstLine + dz, 0), lines - 1), TRUE)
 		END WheelMove;
 
 		PROCEDURE SelectNode*(node : TreeNode);

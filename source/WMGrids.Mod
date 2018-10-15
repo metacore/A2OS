@@ -159,8 +159,8 @@ TYPE
 			defaultRowHeightC := defaultRowHeight.Get();
 			fixedColsC := fixedCols.Get();
 			fixedRowsC := fixedRows.Get();
-			tableStart.row := Strings.Max(tableStart.row, fixedRowsC);
-			tableStart.col := Strings.Max(tableStart.col, fixedColsC);
+			tableStart.row := MAX(tableStart.row, fixedRowsC);
+			tableStart.col := MAX(tableStart.col, fixedColsC);
 
 			nofRowsC := nofRows.Get();
 			nofColsC := nofCols.Get();
@@ -426,8 +426,8 @@ TYPE
 				r, clip : WMRectangles.Rectangle;
 		BEGIN
 			DrawBackground^(canvas);
-			tableStart.row := Strings.Max(tableStart.row, fixedRowsC);
-			tableStart.col := Strings.Max(tableStart.col, fixedColsC);
+			tableStart.row := MAX(tableStart.row, fixedRowsC);
+			tableStart.col := MAX(tableStart.col, fixedColsC);
 
 			canvas.GetClipRect(clip);
 			canvas.SaveState(state); (* save the current clip-state for the scrollbars *)
@@ -531,8 +531,8 @@ TYPE
 		PROCEDURE SetTopPosition*(col, row : LONGINT; updateScrollbar : BOOLEAN);
 		BEGIN
 			Acquire;
-			col := Strings.Min(Strings.Max(col, fixedColsC), nofColsC - 1);
-			row := Strings.Min(Strings.Max(row, fixedRowsC), nofRowsC - 1);
+			col := MIN(MAX(col, fixedColsC), nofColsC - 1);
+			row := MIN(MAX(row, fixedRowsC), nofRowsC - 1);
 			IF (col # tableStart.col) OR (row # tableStart.row) THEN
 				tableStart.col := col; tableStart.row := row;
 				IF pointerInside THEN FindCellXY(lastPointerX, lastPointerY, highlight.col, highlight.row) END;
@@ -557,8 +557,8 @@ TYPE
 			r := GetVisibleCellRect(col, row);
 			WHILE (r.r > w) & (cur.col < col) DO DEC(r.r, GetColWidth(cur.col)); INC(cur.col) END;
 			WHILE (r.b > h) & (cur.row < row) DO DEC(r.b, GetRowHeight(cur.row)); INC(cur.row) END;
-			cur.col := Strings.Min(cur.col, col);
-			cur.row := Strings.Min(cur.row, row);
+			cur.col := MIN(cur.col, col);
+			cur.row := MIN(cur.row, row);
 			SetTopPosition(cur.col, cur.row, TRUE)
 		END ScrollCellVisible;
 
@@ -644,8 +644,8 @@ TYPE
 		BEGIN
 			Acquire;
 			oldStart := selStart; oldEnd := selEnd;
-			selStart.col := Strings.Min(scol, ecol); selStart.row := Strings.Min(srow, erow);
-			selEnd.col := Strings.Max(scol, ecol); selEnd.row := Strings.Max(srow, erow);
+			selStart.col := MIN(scol, ecol); selStart.row := MIN(srow, erow);
+			selEnd.col := MAX(scol, ecol); selEnd.row := MAX(srow, erow);
 			IF (oldStart.col = selStart.col) & (oldStart.row= selStart.row) &
 				(oldEnd.col = selEnd.col) & (oldEnd.row= selEnd.row) THEN
 				Release;
@@ -766,15 +766,15 @@ TYPE
 		VAR col, row : LONGINT; manager : WM.WindowManager; cell, pos : LONGINT;
 		BEGIN
 			IF dragCellSpacingWidth THEN
-				x := Strings.Min(x, bounds.GetWidth());
+				x := MIN(x, bounds.GetWidth());
 				IF (colWidths # NIL) & (dragCellSpacingNr < LEN(colWidths)) THEN
-					colWidths[dragCellSpacingNr] := Strings.Max(x - dragCellSpacingPos, 1);
+					colWidths[dragCellSpacingNr] := MAX(x - dragCellSpacingPos, 1);
 					Invalidate()
 				END;
 			ELSIF dragCellSpacingHeight THEN
-				y := Strings.Min(y, bounds.GetHeight());
+				y := MIN(y, bounds.GetHeight());
 				IF (rowHeights # NIL) & (dragCellSpacingNr < LEN(rowHeights)) THEN
-					rowHeights[dragCellSpacingNr] := Strings.Max(y - dragCellSpacingPos, 1);
+					rowHeights[dragCellSpacingNr] := MAX(y - dragCellSpacingPos, 1);
 					Invalidate()
 				END;
 			ELSIF dragPossible THEN

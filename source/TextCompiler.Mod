@@ -35,8 +35,8 @@ CONST
 	BEGIN
 		IF Texts.GetLastSelection(selectionText, from, to) THEN
 			selectionText.AcquireRead;
-			a := Strings.Min(from.GetPosition(), to.GetPosition());
-			b := Strings.Max(from.GetPosition(), to.GetPosition());
+			a := MIN(from.GetPosition(), to.GetPosition());
+			b := MAX(from.GetPosition(), to.GetPosition());
 			size := UTF8Size(selectionText,a,b-a+1)+1;
 			NEW(pcStr,size);
 			TextUtilities.SubTextToStr(selectionText, a, b - a+1, pcStr^);

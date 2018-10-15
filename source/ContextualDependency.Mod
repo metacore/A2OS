@@ -251,7 +251,7 @@ TYPE
 
 				(* if rotations need to be done thisNode's depth is passed back *)
 				ELSE
-					IF Strings.Max(leftDepth,rightDepth) = leftDepth THEN
+					IF MAX(leftDepth,rightDepth) = leftDepth THEN
 						RETURN leftDepth + 1;
 					ELSE
 						RETURN rightDepth + 1;
@@ -274,8 +274,8 @@ TYPE
 			thisNode.leftNode.rightNode := thisNode;
 			thisNode := thisNode.leftNode;
 			thisNode.rightNode.leftNode := tempNode;
-			thisNode.rightNode.depth := Strings.Max(GetNodeDepth(thisNode.rightNode.leftNode),GetNodeDepth(thisNode.rightNode.rightNode)) + 1;
-			thisNode.depth := Strings.Max(thisNode.leftNode.depth,thisNode.rightNode.depth) + 1;
+			thisNode.rightNode.depth := MAX(GetNodeDepth(thisNode.rightNode.leftNode),GetNodeDepth(thisNode.rightNode.rightNode)) + 1;
+			thisNode.depth := MAX(thisNode.leftNode.depth,thisNode.rightNode.depth) + 1;
 		END RotateRight;
 
 		(* Rotate the current tree to the left *)
@@ -287,8 +287,8 @@ TYPE
 			thisNode.rightNode.leftNode := thisNode;
 			thisNode := thisNode.rightNode;
 			thisNode.leftNode.rightNode := tempNode;
-			thisNode.leftNode.depth := Strings.Max(GetNodeDepth(thisNode.leftNode.leftNode),GetNodeDepth(thisNode.leftNode.rightNode)) + 1;
-			thisNode.depth := Strings.Max(thisNode.leftNode.depth,thisNode.rightNode.depth) + 1;
+			thisNode.leftNode.depth := MAX(GetNodeDepth(thisNode.leftNode.leftNode),GetNodeDepth(thisNode.leftNode.rightNode)) + 1;
+			thisNode.depth := MAX(thisNode.leftNode.depth,thisNode.rightNode.depth) + 1;
 		END RotateLeft;
 
 		(* Auxiliary procedure that returns the node's depth while checking for the node's existence *)

@@ -250,9 +250,9 @@ TYPE
 								(* calculate bottom rectangle *)
 								IF wr.b < r.b THEN WMRectangles.SetRect(nr, r.l, wr.b, r.r, r.b); Draw(nr, cur.prev) END;
 								(* calculate left rectangle *)
-								IF wr.l > r.l THEN WMRectangles.SetRect(nr, r.l, Strings.Max(r.t, wr.t), wr.l, Strings.Min(r.b, wr.b)); Draw(nr, cur.prev) END;
+								IF wr.l > r.l THEN WMRectangles.SetRect(nr, r.l, MAX(r.t, wr.t), wr.l, MIN(r.b, wr.b)); Draw(nr, cur.prev) END;
 								(* calculate left rectangle *)
-								IF wr.r < r.r THEN WMRectangles.SetRect(nr, wr.r, Strings.Max(r.t, wr.t), r.r, Strings.Min(r.b, wr.b)); Draw(nr, cur.prev) END;
+								IF wr.r < r.r THEN WMRectangles.SetRect(nr, wr.r, MAX(r.t, wr.t), r.r, MIN(r.b, wr.b)); Draw(nr, cur.prev) END;
 								(* calculate overlapping *)
 								nr := r; WMRectangles.ClipRect(nr, wr);
 								IF ~WMRectangles.RectEmpty(nr) THEN InternalDraw(nr, cur) END

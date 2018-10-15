@@ -158,7 +158,7 @@ TYPE
 							imp := modules[j].imports;
 							WHILE imp # NIL DO
 								IF imp.m =  modules[i] THEN
-									l := Strings.Min(l, modules[j].level -1);
+									l := MIN(l, modules[j].level -1);
 								END;
 								imp := imp.next
 							END
@@ -675,7 +675,7 @@ TYPE
 
 	(*			i := 0; l := Strings.Length(m.purpose^);
 				WHILE i < l DO
-					Strings.Copy(m.purpose^, i, Strings.Min(25, l - i), sec);
+					Strings.Copy(m.purpose^, i, MIN(25, l - i), sec);
 					canvas.DrawString(ENTIER(r.l + fx), r.t + ENTIER(ty * fy), sec);
 					ty := ty + 15;
 					INC(i, 25)
@@ -978,7 +978,7 @@ TYPE
 				m.reference := NIL;
 				m.subsystems := {};
 				subSystems.CheckModule(m);
-				maxDepth := Strings.Max(maxDepth, ml.GetDepth(m));
+				maxDepth := MAX(maxDepth, ml.GetDepth(m));
 			END;
 			INC(maxDepth);
 
@@ -1016,7 +1016,7 @@ TYPE
 					(* calculate max length for each group *)
 					levels[i].nofGroups := 0;
 					FOR j := 0 TO 31 DO
-						ms[j] := Strings.Max(ms[j], levels[i].groupLength[j]);
+						ms[j] := MAX(ms[j], levels[i].groupLength[j]);
 						IF levels[i].groupLength[j] > 0 THEN INC(levels[i].nofGroups) END;
 					END;
 					j := 0;
@@ -1039,7 +1039,7 @@ TYPE
 				ELSE
 					totSlots := 0;
 					FOR j := 0 TO levels[i].nofGroups -1 DO
-						levels[i].groupSlots[j] := Strings.Max(1, levels[i].groupCounts[j] * (maxW DIV 2 (* spare space for leveling out *))  DIV levels[i].n);
+						levels[i].groupSlots[j] := MAX(1, levels[i].groupCounts[j] * (maxW DIV 2 (* spare space for leveling out *))  DIV levels[i].n);
 						INC(totSlots, levels[i].groupSlots[j])
 					END;
 					(* level out *)
@@ -1056,7 +1056,7 @@ TYPE
 					END;
 					(* calc yAdvance *)
 					FOR j := 0 TO levels[i].nofGroups -1 DO
-						levels[i].yAdvance := Strings.Max(levels[i].yAdvance, levels[i].groupCounts[j] DIV levels[i].groupSlots[j] + 1);
+						levels[i].yAdvance := MAX(levels[i].yAdvance, levels[i].groupCounts[j] DIV levels[i].groupSlots[j] + 1);
 					END;
 
 				END
@@ -1080,10 +1080,10 @@ TYPE
 						mb.aabb.l := (sp + gc MOD levels[i].groupSlots[g])* (BoxW + HSpace) ; mb.aabb.r := mb.aabb.l + BoxW;
 						mb.aabb.t := (y + gc DIV levels[i].groupSlots[g]) * (BoxH + VSpace); mb.aabb.b := mb.aabb.t + BoxH;
 						mb.rellayerpos := (VSpace - 5) - (j / levels[i].n) * (VSpace / 2);
-						range.l := Strings.Min(range.l, ENTIER(mb.aabb.l));
-						range.t:= Strings.Min(range.t, ENTIER(mb.aabb.t));
-						range.r := Strings.Max(range.r, ENTIER(mb.aabb.r));
-						range.b := Strings.Max(range.b, ENTIER(mb.aabb.b));
+						range.l := MIN(range.l, ENTIER(mb.aabb.l));
+						range.t:= MIN(range.t, ENTIER(mb.aabb.t));
+						range.r := MAX(range.r, ENTIER(mb.aabb.r));
+						range.b := MAX(range.b, ENTIER(mb.aabb.b));
 						IF m.file # NIL THEN COPY(m.file^, mb.name);
 						ELSE COPY(m.name, mb.name);
 						END;

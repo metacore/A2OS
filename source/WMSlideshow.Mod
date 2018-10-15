@@ -551,7 +551,7 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 		END;
 		(* correct window width & height *)
 		manager := WMWindowManager.GetDefaultManager();
-		w := Strings.Max(w, 180);
+		w := MAX(w, 180);
 		manager.SetWindowSize(SELF, w, h);
 		Resized(w, h);
 		Invalidate( WMRectangles.MakeRect(0, 0, w, h) );

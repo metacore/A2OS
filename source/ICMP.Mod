@@ -23,7 +23,7 @@ MODULE ICMP; (** AUTHOR "mvt"; PURPOSE "ICMP protocol"; *)
 	o Always access fields as 8-, 16- or 32-bit values and use DIV, MOD, ASH, ODD for bit access.
 *)
 
-IMPORT SYSTEM, Machine, Modules, KernelLog, IP, IPv6, Network, Strings;
+IMPORT SYSTEM, Machine, Modules, KernelLog, IP, IPv6, Network;
 
 CONST
 	(* DEBUG *)
@@ -578,7 +578,7 @@ BEGIN
 	Network.Put4(teData, 0, 0); (* Unused *)
 
 	(* add portion of discarded packet *)
-	teDataLen := Strings.Min(TimeExcHdrLen + 1280 - IPv6.MaxIPHdrLen - ICMPHdrLen, TimeExcHdrLen + discardedPacket.len);
+	teDataLen := MIN(TimeExcHdrLen + 1280 - IPv6.MaxIPHdrLen - ICMPHdrLen, TimeExcHdrLen + discardedPacket.len);
 	FOR i := TimeExcHdrLen TO teDataLen - 1 DO
 		teData[i] := discardedPacket.data[i - TimeExcHdrLen];
 	END;
@@ -599,7 +599,7 @@ BEGIN
 	Network.Put4(ppData, 0, probPointer);
 
 	(* add portion of discarded packet *)
-	ppDataLen := Strings.Min(ParamExcHdrLen + 1280 - IPv6.MaxIPHdrLen - ICMPHdrLen, ParamExcHdrLen + discardedPacket.len);
+	ppDataLen := MIN(ParamExcHdrLen + 1280 - IPv6.MaxIPHdrLen - ICMPHdrLen, ParamExcHdrLen + discardedPacket.len);
 	FOR i := ParamExcHdrLen TO ppDataLen - 1 DO
 		ppData[i] := discardedPacket.data[i - ParamExcHdrLen];
 	END;

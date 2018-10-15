@@ -403,7 +403,7 @@ TYPE
 		BEGIN
 			model.Acquire;
 			nofPoints := model.GetNofPoints();
-			nofVisible := Strings.Min(nofPoints - 1, w DIV deltaxI + 1);
+			nofVisible := MIN(nofPoints - 1, w DIV deltaxI + 1);
 
 			IF nofVisible >= 2 THEN
 				index := nofPoints - 1;
@@ -450,7 +450,7 @@ TYPE
 		BEGIN
 			model.Acquire;
 			nofPoints := model.GetNofPoints();
-			nofVisible := Strings.Min(nofPoints - 1, w DIV deltaxI + 1);
+			nofVisible := MIN(nofPoints - 1, w DIV deltaxI + 1);
 			nofStandalone := GetNumberOf(Standalone, 0, MAX(LONGINT), model.descriptor);
 
 			IF nofVisible >= 2 THEN

@@ -112,7 +112,7 @@ TYPE
 			FOR i := 0 TO 33 - 1 DO
 				GetTitleStr(i, str);
 				f.GetStringSize(str, dx, dy);
-				colWidth[i] := Strings.Max(dx + 4, minWidth);
+				colWidth[i] := MAX(dx + 4, minWidth);
 				grid.model.SetCellText(i, 0, Strings.NewString(str));
 				grid.model.SetTextAlign(i, 0, WMGraphics.AlignCenter);
 			END;

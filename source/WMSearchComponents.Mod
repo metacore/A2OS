@@ -266,8 +266,8 @@ TYPE
 			searchString := "";
 			IF Texts.GetLastSelection(selectionText, from, to) THEN
 				selectionText.AcquireRead;
-				a := Strings.Min(from.GetPosition(), to.GetPosition());
-				b := Strings.Max(from.GetPosition(), to.GetPosition());
+				a := MIN(from.GetPosition(), to.GetPosition());
+				b := MAX(from.GetPosition(), to.GetPosition());
 				IF ((b - a) <= SearchStringMaxLen) THEN
 					TextUtilities.SubTextToStr(selectionText, a, b - a, searchString);
 				END;

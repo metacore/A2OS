@@ -1010,7 +1010,7 @@ TYPE
 			INC(bytesRead, amount);
 			IF (amount < track.bytespt) THEN
 				r := NIL;
-				rem := Strings.Min(track.bytespt-amount, track.size  - bytesRead);
+				rem := MIN(track.bytespt-amount, track.size  - bytesRead);
 				Utils.ClearBuffer(buffer^, amount, rem);
 				INC(amount, rem); INC(bytesRead, rem);
 			END;
@@ -1109,7 +1109,7 @@ TYPE
 				r.Bytes(rBuffer.buf^, 0, track.bytespt, amount);
 				INC(bytesRead, amount);
 				IF amount < track.bytespt THEN
-					rem := Strings.Min(track.bytespt-amount, track.size - bytesRead);
+					rem := MIN(track.bytespt-amount, track.size - bytesRead);
 					Utils.ClearBuffer(rBuffer.buf^, amount, rem);
 					INC(amount, rem); INC(bytesRead, rem);
 				END;
@@ -1119,7 +1119,7 @@ TYPE
 
 			WHILE bytesRead < track.size DO
 				rBuffer := WaitBufferAvailable(FALSE);
-				amount := Strings.Min(track.bytespt, track.size  - bytesRead);
+				amount := MIN(track.bytespt, track.size  - bytesRead);
 				Utils.ClearBuffer(rBuffer.buf^, 0, amount);
 				rBuffer.len := amount;
 				INC(bytesRead, amount);

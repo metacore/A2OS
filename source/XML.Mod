@@ -1826,7 +1826,7 @@ BEGIN
 			END;
 		ELSIF (codeLength > 0) THEN
 			FlushEscapeBuffer;
-			len := Strings.Min(codeLength, stringLength - 1 - i);
+			len := MIN(codeLength, stringLength - 1 - i);
 			IF (len > 0) THEN
 				r.Bytes(string, i, len, actLen);
 				IF (actLen # len) THEN

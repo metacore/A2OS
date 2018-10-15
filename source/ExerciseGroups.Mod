@@ -1446,7 +1446,7 @@ TYPE
 				ELSE
 					WebStd.AppendXMLContent(td, WebStd.CreateXMLText(" "))
 				END;
-				FOR i := 0 TO Strings.Min(person.grades.GetCount(), nofCols)-1 DO
+				FOR i := 0 TO MIN(person.grades.GetCount(), nofCols)-1 DO
 					number := person.grades.GetItem(i);
 					tr.AddContent(GetInputField(i, number))
 				END;

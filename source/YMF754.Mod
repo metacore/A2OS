@@ -793,7 +793,7 @@ TYPE
 				IF copySize < 0 THEN
 					copySize := playRecBuffSize - playRecBuffPos;
 				END;
-				copySize := Strings.Min(copySize, buffFirst.buff.len - buffFirstPos);
+				copySize := MIN(copySize, buffFirst.buff.len - buffFirstPos);
 				(* Copy *)
 				SYSTEM.MOVE(
 					ADDRESSOF(buffFirst.buff.data^) + buffFirstPos,
@@ -830,7 +830,7 @@ TYPE
 			playRecBuffPos := 0;
 			WHILE (buffFirst # NIL) & (playRecBuffPos < playRecBuffSize) DO
 				(* Calculate copy size *)
-				copySize := Strings.Min(buffFirst.buff.len, playRecBuffSize - playRecBuffPos);
+				copySize := MIN(buffFirst.buff.len, playRecBuffSize - playRecBuffPos);
 				(* Copy *)
 				SYSTEM.MOVE(
 					ADDRESSOF(buffFirst.buff.data^),
@@ -974,7 +974,7 @@ TYPE
 				IF copySize < 0 THEN
 					copySize := playRecBuffSize - playRecBuffPos;
 				END;
-				copySize := Strings.Min(copySize, buffFirst.buff.len - buffFirstPos);
+				copySize := MIN(copySize, buffFirst.buff.len - buffFirstPos);
 				(* Copy *)
 				SYSTEM.MOVE(
 					ADDRESSOF(playRecBuff^) + playRecBuffPos,

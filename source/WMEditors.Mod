@@ -1610,7 +1610,7 @@ TYPE
 
 					lineStart := TextUtilities.FindPosLineStart(utilreader, pos);
 					nofWhitespace := TextUtilities.CountWhitespace(utilreader, lineStart);
-					nofWhitespace := Strings.Min(nofWhitespace, pos - lineStart);
+					nofWhitespace := MIN(nofWhitespace, pos - lineStart);
 
 					IF (nofWhitespace > 0) THEN
 						idx := 0;
@@ -1670,8 +1670,8 @@ TYPE
 				text.AcquireWrite;
 				IF Texts.GetLastSelection(selectionText, from, to) THEN
 					selectionText.AcquireWrite;
-					a := Strings.Min(from.GetPosition(), to.GetPosition());
-					b := Strings.Max(from.GetPosition(), to.GetPosition());
+					a := MIN(from.GetPosition(), to.GetPosition());
+					b := MAX(from.GetPosition(), to.GetPosition());
 
 					tv.ViewToTextPos(x, y, pos);
 					(* get the internal position of the cursor *)

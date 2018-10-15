@@ -44,7 +44,7 @@ TCP - Transmission Control Protocol. Based on the 4.4BSD-Lite distribution descr
 
 *)
 
-IMPORT SYSTEM, Machine, KernelLog, Clock, Modules, Objects, Kernel, Commands, Network, IP, Streams, ActiveTimers, Strings;
+IMPORT SYSTEM, Machine, KernelLog, Clock, Modules, Objects, Kernel, Commands, Network, IP, Streams, ActiveTimers;
 
 CONST
 	StrongChecks = FALSE;
@@ -482,7 +482,7 @@ TYPE
 				WHILE (rcvhead # NIL) & (rcvhead # rcvreasm) & (size > 0) DO
 					IF rcvhead.nextFragment = NIL THEN
 						(* read all available data until user buffer is full *)
-						rlen := Strings.Min(rcvhead.len, size);
+						rlen := MIN(rcvhead.len, size);
 						IF SystemMove THEN
 							SYSTEM.MOVE(ADDRESSOF(rcvhead.data[rcvhead.ofs]), ADDRESSOF(data[ofs]), rlen);
 						ELSE
@@ -511,7 +511,7 @@ TYPE
 						IF rcvheadFragment = NIL THEN
 							rcvheadFragment := rcvhead;
 						END;
-						rlen := Strings.Min(rcvheadFragment.len, size);
+						rlen := MIN(rcvheadFragment.len, size);
 						IF SystemMove THEN
 							SYSTEM.MOVE(ADDRESSOF(rcvheadFragment.data[rcvheadFragment.ofs]), ADDRESSOF(data[ofs]), rlen);
 						ELSE
@@ -798,7 +798,7 @@ TYPE
 					END;
 					sndnxt := snduna; rtt := 0;
 					sndcwnd := maxseg; dupacks := 0;
-					sndssthresh := Strings.Max(Strings.Min(sndwnd, sndcwnd) DIV 2 DIV maxseg, 2) * maxseg;
+					sndssthresh := MAX(MIN(sndwnd, sndcwnd) DIV 2 DIV maxseg, 2) * maxseg;
 					IF TraceCongestion THEN
 						KernelLog.String("ST sndssthresh := "); KernelLog.Int(sndssthresh, 1); KernelLog.Ln
 					END;
@@ -1826,7 +1826,7 @@ VAR
 				|3X: (* Window Scaling *)
 					IF (optlen = 3) & (Syn IN pf) THEN
 						INCL(p.flags, RcvdScale);
-						p.requestedsscale := Strings.Min(LONG(ORD(buffer.data[i+2])), MaxWinShift);
+						p.requestedsscale := MIN(LONG(ORD(buffer.data[i+2])), MaxWinShift);
 					END;
 				|8X: (* Timestamp *)
 					IF DoRFC1323 & (optlen = 10) THEN
@@ -2025,7 +2025,7 @@ VAR
 						INC(p.dupacks);
 						IF p.dupacks = ReXmtThresh THEN
 							onxt := p.sndnxt;
-							p.sndssthresh := Strings.Max(Strings.Min(p.sndwnd, p.sndcwnd) DIV 2 DIV p.maxseg, 2) * p.maxseg;
+							p.sndssthresh := MAX(MIN(p.sndwnd, p.sndcwnd) DIV 2 DIV p.maxseg, 2) * p.maxseg;
 							IF TraceCongestion THEN
 								KernelLog.String("DA sndssthresh := "); KernelLog.Int(p.sndssthresh, 1); KernelLog.Ln
 							END;
@@ -2068,7 +2068,7 @@ VAR
 			END;
 			cw := p.sndcwnd; incr := p.maxseg;
 			IF cw > p.sndssthresh THEN incr := incr * incr DIV cw END;
-			p.sndcwnd := Strings.Min(cw + incr, ASH(MaxWin, p.sndscale));
+			p.sndcwnd := MIN(cw + incr, ASH(MaxWin, p.sndscale));
 			IF acked > p.sndcc THEN
 				DEC(p.sndwnd, p.sndcc); SbDrop(p, p.sndcc); finacked := TRUE
 			ELSE
@@ -2410,7 +2410,7 @@ BEGIN
 	END;
 
 	(* slow path *)
-	p.rcvwnd := Strings.Max(Strings.Max(p.rcvspace, 0), p.rcvadv - p.rcvnxt);
+	p.rcvwnd := MAX(MAX(p.rcvspace, 0), p.rcvadv - p.rcvnxt);
 	CASE p.state OF
 		Listen:
 			IF ProcessListen() THEN Trim1 ELSE RETURN END

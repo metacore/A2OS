@@ -248,8 +248,8 @@ TYPE
 				cStyle := data(Texts.CharacterStyle);
 				IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
-				a := Strings.Min(from.GetPosition(), to.GetPosition());
-				b := Strings.Max(from.GetPosition(), to.GetPosition());
+				a := MIN(from.GetPosition(), to.GetPosition());
+				b := MAX(from.GetPosition(), to.GetPosition());
 				text.SetCharacterStyle(a, b - a, cStyle);
 				text.ReleaseWrite
 				END
@@ -284,8 +284,8 @@ TYPE
 					cStyle := Texts.GetCharacterStyleByName("Highlight");
 				END;
 				text.AcquireWrite;
-				a := Strings.Min(from.GetPosition(), to.GetPosition());
-				b := Strings.Max(from.GetPosition(), to.GetPosition());
+				a := MIN(from.GetPosition(), to.GetPosition());
+				b := MAX(from.GetPosition(), to.GetPosition());
 				text.SetCharacterStyle(a, b - a, cStyle);
 				text.ReleaseWrite
 			END
@@ -302,8 +302,8 @@ TYPE
 				IF WMDialogs.QueryString("Enter Link", tempLink) = WMDialogs.ResOk THEN
 					link := Strings.NewString(tempLink);
 					text.AcquireWrite;
-					a := Strings.Min(from.GetPosition(), to.GetPosition());
-					b := Strings.Max(from.GetPosition(), to.GetPosition());
+					a := MIN(from.GetPosition(), to.GetPosition());
+					b := MAX(from.GetPosition(), to.GetPosition());
 					text.SetLink(a, b - a, link);
 					text.ReleaseWrite
 				END
@@ -321,7 +321,7 @@ TYPE
 				IF WMDialogs.QueryString("Enter Label", label) = WMDialogs.ResOk THEN
 					NEW(lp); lp.label := Strings.NewString(label);
 					text.AcquireWrite;
-					a := Strings.Min(from.GetPosition(), to.GetPosition());
+					a := MIN(from.GetPosition(), to.GetPosition());
 					text.InsertPiece(a, lp);
 					text.ReleaseWrite
 				END
@@ -460,8 +460,8 @@ TYPE
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
-				a := Strings.Min(from.GetPosition(), to.GetPosition());
-				b := Strings.Max(from.GetPosition(), to.GetPosition());
+				a := MIN(from.GetPosition(), to.GetPosition());
+				b := MAX(from.GetPosition(), to.GetPosition());
 				NEW(utilreader, text);
 				utilreader.SetPosition(a);
 				utilreader.ReadCh(ch);
@@ -556,8 +556,8 @@ TYPE
 
 				(* Set the style *)
 				text.AcquireWrite;
-				a := Strings.Min(from.GetPosition(), to.GetPosition());
-				b := Strings.Max(from.GetPosition(), to.GetPosition());
+				a := MIN(from.GetPosition(), to.GetPosition());
+				b := MAX(from.GetPosition(), to.GetPosition());
 				text.SetCharacterStyle(a, b - a, cStyle);
 				text.ReleaseWrite
 			END
@@ -1924,8 +1924,8 @@ BEGIN
 	ASSERT(changeInfo # NIL);
 	IF Texts.GetLastSelection(text, from, to) THEN
 		text.AcquireWrite;
-		a := Strings.Min(from.GetPosition(), to.GetPosition());
-		b := Strings.Max(from.GetPosition(), to.GetPosition());
+		a := MIN(from.GetPosition(), to.GetPosition());
+		b := MAX(from.GetPosition(), to.GetPosition());
 
 		NEW(utilreader, text);
 		utilreader.SetPosition(a);
@@ -2036,8 +2036,8 @@ BEGIN
 		cStyle := Texts.GetCharacterStyleByName(cStyleStr);
 		IF cStyle # NIL THEN
 			text.AcquireWrite;
-			a := Strings.Min(from.GetPosition(), to.GetPosition());
-			b := Strings.Max(from.GetPosition(), to.GetPosition());
+			a := MIN(from.GetPosition(), to.GetPosition());
+			b := MAX(from.GetPosition(), to.GetPosition());
 			text.SetCharacterStyle(a, b - a, cStyle);
 			text.ReleaseWrite
 		END;

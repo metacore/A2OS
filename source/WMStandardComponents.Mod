@@ -1747,12 +1747,12 @@ TYPE
 		BEGIN
 			width := bounds.GetWidth(); height := bounds.GetHeight();
 			tmin := min.Get(); tmax := max.Get();
-			ps := Strings.Min(tmax - tmin, pageSize.Get());
+			ps := MIN(tmax - tmin, pageSize.Get());
 			IF vertical.Get() THEN
 				IF tmax > tmin THEN
 					h := (height - 2 * width);
 					f := ps / (tmax - tmin);
-					ts := Strings.Min(h, Strings.Max(ENTIER(f * h), SELF.minTrackerSize.Get()));
+					ts := MIN(h, MAX(ENTIER(f * h), SELF.minTrackerSize.Get()));
 					tp := (pos.Get() - tmin) * (h - ts) DIV (tmax - tmin);
 				ELSE
 					ts := (height - 2 * width); tp := 0;
@@ -1766,7 +1766,7 @@ TYPE
 				IF tmax > tmin THEN
 					w := (width - 2 * height);
 					f := ps / (tmax - tmin);
-					ts := Strings.Min(w, Strings.Max(ENTIER(f * w), SELF.minTrackerSize.Get()));
+					ts := MIN(w, MAX(ENTIER(f * w), SELF.minTrackerSize.Get()));
 					tp := (pos.Get() - tmin) * (w - ts) DIV (tmax - tmin);
 				ELSE
 					ts := (width - 2 * height); tp := 0;
@@ -2255,7 +2255,7 @@ TYPE
 			IF aligning THEN EnableUpdate; Release; RETURN END;
 			aligning := TRUE;
 			tmin := min.Get(); tmax := max.Get();
-			ps := Strings.Min(tmax - tmin, pageSize.Get());
+			ps := MIN(tmax - tmin, pageSize.Get());
 			IF vertical.Get() THEN
 				IF tmax > tmin THEN
 					h := bounds.GetHeight();

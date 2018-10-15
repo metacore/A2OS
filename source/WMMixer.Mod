@@ -201,7 +201,7 @@ BEGIN
 		device.GetMixerChannel(0, master)
 	END;
 	IF master # NIL THEN
-		master.SetVolume(Strings.Min(255, master.GetVolume() + 4))
+		master.SetVolume(MIN(255, master.GetVolume() + 4))
 	END;
 END MasterIncVol;
 
@@ -212,7 +212,7 @@ BEGIN
 		device.GetMixerChannel(0, master)
 	END;
 	IF master # NIL THEN
-		master.SetVolume(Strings.Max(0, master.GetVolume() - 4))
+		master.SetVolume(MAX(0, master.GetVolume() - 4))
 	END;
 END MasterDecVol;
 

@@ -1678,8 +1678,8 @@ TYPE
 
 			(* Get Path Maximum transmission unit *)
 			pmtu := destCache.GetPMTU(destAdr);
-			pmtu := Strings.Min(pmtu, linkMTU);
-			pmtu := Strings.Min(pmtu, dev.mtu);
+			pmtu := MIN(pmtu, linkMTU);
+			pmtu := MIN(pmtu, dev.mtu);
 
 			IF h3len+h4len+dlen > pmtu THEN
 				(* fragment packet *)
@@ -2235,8 +2235,8 @@ TYPE
 							END;
 							hasMTUOption := TRUE;
 							icmpMTUOption(buffer, mtu);
-							mtu := Strings.Min(mtu, linkMTU);
-							mtu := Strings.Min(mtu, dev.mtu);
+							mtu := MIN(mtu, linkMTU);
+							mtu := MIN(mtu, dev.mtu);
 
 						|IP.ICMPAdvIntOptionType:
 							(* Check length field *)

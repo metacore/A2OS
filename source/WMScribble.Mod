@@ -21,7 +21,7 @@ TYPE
 		BEGIN
 			IF 0 IN keys THEN canvas.Line(lx, ly, x, y, WMGraphics.Blue, WMGraphics.ModeSrcOverDst);
 				Invalidate(
-					WMRectangles.MakeRect(Strings.Min(lx, x), Strings.Min(ly, y), Strings.Max(lx, x) + 1, Strings.Max(ly, y) + 1)
+					WMRectangles.MakeRect(MIN(lx, x), MIN(ly, y), MAX(lx, x) + 1, MAX(ly, y) + 1)
 				)
 			 END;
 			lx := x; ly := y

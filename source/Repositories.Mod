@@ -807,7 +807,7 @@ TYPE
 					IF (ptr # NIL) & (ptr IS ComponentInfo) THEN
 						ptr(ComponentInfo).next := components;
 						components := ptr(ComponentInfo);
-						nextID := Strings.Max(nextID, components(ComponentInfo).id);
+						nextID := MAX(nextID, components(ComponentInfo).id);
 					END;
 				END;
 			ELSE

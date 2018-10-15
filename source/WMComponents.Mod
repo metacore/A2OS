@@ -2935,8 +2935,8 @@ BEGIN
 	ASSERT(w # NIL);
 	IF Texts.GetLastSelection(text, from, to) THEN
 		text.AcquireRead;
-		a := Strings.Min(from.GetPosition(), to.GetPosition());
-		b := Strings.Max(from.GetPosition(), to.GetPosition());
+		a := MIN(from.GetPosition(), to.GetPosition());
+		b := MAX(from.GetPosition(), to.GetPosition());
 		IF (text.GetLength() > 0) THEN
 			TextUtilities.SubTextToStream(text, a, b - a + 1, w);
 		END;

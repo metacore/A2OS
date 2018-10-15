@@ -121,7 +121,7 @@ TYPE
 					IF HasChar(code) THEN GetGlyphSpacings(code, g);
 					ELSE FBGetGlyphSpacings(code, g)
 					END;
-					dy := Strings.Max(dy, g.height);
+					dy := MAX(dy, g.height);
 					dx := dx + g.bearing.l + g.width + g.bearing.r
 				ELSE INC(i) (* avoid endless loop *)
 				END

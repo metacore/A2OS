@@ -52,8 +52,8 @@ TYPE
 				END;
 				c := GetNext(c);
 			END;
-			dx :=  Strings.Max(0, (rEnclosing.r-rEnclosing.l)-(rCopy.r-rCopy.l));
-			dy := Strings.Max(0, (rEnclosing.b-rEnclosing.t)-(rCopy.b-rCopy.t));
+			dx :=  MAX(0, (rEnclosing.r-rEnclosing.l)-(rCopy.r-rCopy.l));
+			dy := MAX(0, (rEnclosing.b-rEnclosing.t)-(rCopy.b-rCopy.t));
 			CheckLeftTop;
 			aligning := FALSE;
 			Release;
@@ -62,8 +62,8 @@ TYPE
 
 		PROCEDURE CheckLeftTop;
 		BEGIN
-			left := Strings.Min(left, dx);
-			top := Strings.Min(top, dy);
+			left := MIN(left, dx);
+			top := MIN(top, dy);
 		END CheckLeftTop;
 
 		PROCEDURE SetLeftTop(dxf, dyf: REAL);
@@ -218,11 +218,11 @@ TYPE
 					dx := tw- rw;
 					hScrollbar.visible.Set(TRUE);
 					IF rw > 0 THEN
-					nofLevels := Strings.Max(minNofLevels.Get(), nofLevelsPerPage.Get() * dx DIV rw);
+					nofLevels := MAX(minNofLevels.Get(), nofLevelsPerPage.Get() * dx DIV rw);
 					END;
 					hScrollbar.max.Set(nofLevels);
-					(* hScrollbar.pageSize.Set(Strings.Max(1, (rw * nofLevels) DIV dx)); *)
-					hScrollbar.pageSize.Set(Strings.Max(1, (rw * nofLevels) DIV th) + 1);
+					(* hScrollbar.pageSize.Set(MAX(1, (rw * nofLevels) DIV dx)); *)
+					hScrollbar.pageSize.Set(MAX(1, (rw * nofLevels) DIV th) + 1);
 					IF (sequencer # NIL) & sequencer.IsCallFromSequencer() THEN
 						hScrollbar.RecacheProperties; (* workaround because, InternalPropertyChanged is InUpdate *)
 					END;
@@ -237,11 +237,11 @@ TYPE
 					dy := th - rh;
 					vScrollbar.visible.Set(TRUE);
 					IF rh > 0 THEN
-						nofLevels := Strings.Max(minNofLevels.Get(), nofLevelsPerPage.Get() * dy DIV rh)
+						nofLevels := MAX(minNofLevels.Get(), nofLevelsPerPage.Get() * dy DIV rh)
 					END;
 					vScrollbar.max.Set(nofLevels);
-					(* vScrollbar.pageSize.Set(Strings.Max(1, (rh * nofLevels) DIV dy)); *)
-					vScrollbar.pageSize.Set(Strings.Max(1, (rh * nofLevels) DIV th) + 1);
+					(* vScrollbar.pageSize.Set(MAX(1, (rh * nofLevels) DIV dy)); *)
+					vScrollbar.pageSize.Set(MAX(1, (rh * nofLevels) DIV th) + 1);
 					vScrollbar.RecacheProperties; (* workaround because, InternalPropertyChanged is InUpdate *)
 				ELSE
 					dy := 0;

@@ -203,7 +203,7 @@ TYPE
 		VAR intStr: ARRAY 32 OF CHAR; nofRows: LONGINT; diffState : DiffState; lineWidth, dy: LONGINT;
 		BEGIN
 			font.GetStringSize(string^, lineWidth, dy); INC(lineWidth,4);
-			maxLineWidth := Strings.Max(lineWidth, maxLineWidth);
+			maxLineWidth := MAX(lineWidth, maxLineWidth);
 			lineNbr.model.Acquire;
 			grid.model.Acquire;
 			nofRows := grid.model.GetNofRows();
@@ -249,7 +249,7 @@ TYPE
 		VAR intStr: ARRAY 32 OF CHAR; nofRows, lineWidth, dy: LONGINT;
 		BEGIN
 			font.GetStringSize(string^, lineWidth, dy); INC(lineWidth, 4);
-			maxLineWidth := Strings.Max(lineWidth, maxLineWidth);
+			maxLineWidth := MAX(lineWidth, maxLineWidth);
 			lineNbr.model.Acquire;
 			grid.model.Acquire;
 			nofRows := grid.model.GetNofRows();
@@ -339,8 +339,8 @@ TYPE
 			barHeight := bounds.GetHeight()- 2*ScrollbarWidth;
 			pageStart := barHeight * pageStart DIV nofRows;
 			pageSize := pageSize * barHeight DIV nofRows;
-			SELF.pageStart := Strings.Max(pageStart, 0);
-			SELF.pageSize := Strings.Min(barHeight-pageStart, Strings.Max(pageSize, 1));
+			SELF.pageStart := MAX(pageStart, 0);
+			SELF.pageSize := MIN(barHeight-pageStart, MAX(pageSize, 1));
 			Invalidate;
 		END SetPage;
 
@@ -395,7 +395,7 @@ TYPE
 						pos := ENTIER(fact * i + 0.5);
 						IF ~prev THEN rect.t := pos; rect.b := pos + 1; prev := TRUE
 						ELSE
-							rect.b := Strings.Max(rect.b, pos+1);
+							rect.b := MAX(rect.b, pos+1);
 						END;
 					ELSE
 						IF prev THEN
@@ -582,7 +582,7 @@ TYPE
 		BEGIN
 			pageSize := leftView.grid.bounds.GetHeight() DIV leftView.grid.defaultRowHeight.Get();
 			scrolly.pageSize.Set(pageSize);
-			scrolly.min.Set(0); scrolly.max.Set(Strings.Max(leftView.curLine, rightView.curLine) - pageSize);
+			scrolly.min.Set(0); scrolly.max.Set(MAX(leftView.curLine, rightView.curLine) - pageSize);
 		END SetScrollbarProperties;
 
 		PROCEDURE Update;

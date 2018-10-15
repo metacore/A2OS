@@ -629,7 +629,7 @@ TYPE
 
 		PROCEDURE Validate(v : LONGINT) : LONGINT;
 		BEGIN
-			IF bounded THEN RETURN Strings.Max(min, Strings.Min(max, v))
+			IF bounded THEN RETURN MAX(min, MIN(max, v))
 			ELSE RETURN v
 			END
 		END Validate;

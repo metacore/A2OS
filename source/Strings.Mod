@@ -32,7 +32,7 @@ TYPE
 		VAR newSize, i : LONGINT; n : String;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
-				newSize := Max(LEN(data) * 2, length + len + 1);
+				newSize := MAX(LEN(data) * 2, length + len + 1);
 				NEW(n, newSize);
 				FOR i := 0 TO length - 1 DO n[i] := data[i] END;
 				data := n;
@@ -132,16 +132,6 @@ TYPE
 	END "+"; 
 	
 	
-(** useful functions *)
-
-PROCEDURE Min*(a,b: LONGINT): LONGINT;
-BEGIN IF (a < b) THEN RETURN a ELSE RETURN b END
-END Min;
-
-PROCEDURE Max*(a,b: LONGINT): LONGINT;
-BEGIN IF (a > b) THEN RETURN a ELSE RETURN b END
-END Max;
-
 (** string handling *)
 
 (** returns the length of a string *)

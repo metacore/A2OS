@@ -287,7 +287,7 @@ TYPE
 
 		(* Options = [ "-" Option [ WhiteSpace { "-" Option} ] ] *)
 		PROCEDURE ParseOptions() : BOOLEAN;
-		VAR ch : CHAR; oldPos : LONGINT;
+		VAR ch : CHAR; oldPos : Streams.Position;
 		BEGIN
 			oldPos := arg.Pos();
 			ch := arg.Peek();
@@ -358,7 +358,7 @@ TYPE
 
 		(*  Name = Char Char {Char} *)
 		PROCEDURE ParseName(VAR name : ARRAY OF CHAR; firstChar : CHAR) : BOOLEAN;
-		VAR ch : CHAR; i : LONGINT; pos : LONGINT;
+		VAR ch : CHAR; i : LONGINT; pos : Streams.Position;
 		BEGIN
 			pos := arg.Pos();
 			IF (firstChar # 0X) OR ParseChar(name[0]) THEN
@@ -569,7 +569,7 @@ TYPE
 			END;
 		END WrongUsage;
 
-		PROCEDURE ShowPos(pos : LONGINT);
+		PROCEDURE ShowPos(pos : Streams.Position);
 		BEGIN
 			IF (error # NIL) THEN
 				error.String("Pos "); error.Int(pos, 2); error.String(": ");

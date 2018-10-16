@@ -330,6 +330,12 @@ TYPE
 			Hex(x,-2*SIZEOF(ADDRESS));
 		END Address;
 
+		(** Write "x" as a size. *)
+		PROCEDURE Size* (x: SIZE);
+		BEGIN
+			Int(x, 0);
+		END Size;
+
 		PROCEDURE Pair( ch: CHAR;  x: LONGINT );
 		BEGIN
 			IF ch # 0X THEN Char( ch ) END;
@@ -714,6 +720,29 @@ TYPE
 			IF (res = 0) & ~ok THEN res := FormatError END
 		END Int;
 
+	 (** Read a size value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
+
+		PROCEDURE Size*( VAR x: SIZE;  hex: BOOLEAN );
+		VAR vd, vh: SIZE; d: WORD;  ch: CHAR;  ok: BOOLEAN;
+		BEGIN
+			vd := 0;  vh := 0; ok := FALSE;
+			LOOP
+				ch := Peek();
+				IF (ch >= "0") & (ch <= "9") THEN d := ORD( ch ) - ORD( "0" )
+				ELSIF hex & (CAP( ch ) >= "A") & (CAP( ch ) <= "F") THEN d := ORD( CAP( ch ) ) - ORD( "A" ) + 10
+				ELSE EXIT
+				END;
+				vd := 10 * vd + d;  vh := 16 * vh + d;   (* ignore overflow *)
+				ch := Get();  ok := TRUE
+			END;
+			IF hex & (CAP( ch ) = "H") THEN  (* optional "H" present *)
+				vd := vh;   (* use the hex value *)
+				ch := Get()
+			END;
+			x := vd;
+			IF (res = 0) & ~ok THEN res := FormatError END
+		END Size;
+
 
 	(** Return TRUE iff at the end of a line (or file). *)
 		PROCEDURE EOLN*( ): BOOLEAN;
@@ -838,6 +867,14 @@ TYPE
 			Int(integer, isHexadecimal);
 			RETURN res = Ok;
 		END GetInteger;
+
+		(** First skip whitespace, then read size *)
+		PROCEDURE GetSize*(VAR size : SIZE; isHexadecimal : BOOLEAN): BOOLEAN;
+		BEGIN
+			SkipWhitespace;
+			Size(size, isHexadecimal);
+			RETURN res = Ok;
+		END GetSize;
 
 		(** First skip whitespace, then read a real *)
 		PROCEDURE GetReal*(VAR real: LONGREAL): BOOLEAN;

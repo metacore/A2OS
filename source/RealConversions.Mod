@@ -50,7 +50,45 @@ VAR
 		RETURN y
 	END ScanReal;
 	
+	(**	Convert a string to a floating-point number.
+		EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
+	PROCEDURE StringToReal*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
+	VAR p, e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN;
+	BEGIN
+		p := 0;
+		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
+		IF s[p] = "-" THEN neg := TRUE; INC(p) ELSE neg := FALSE END;
+		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
 
+		y := 0;
+		WHILE ("0" <= s[p]) & (s[p] <= "9") DO
+			y := y * 10 + (ORD(s[p]) - 30H);
+			INC(p);
+		END;
+		IF s[p] = "." THEN
+			INC(p); g := 1;
+			WHILE ("0" <= s[p]) & (s[p] <= "9") DO
+				g := g / 10; y := y + g * (ORD(s[p]) - 30H);
+				INC(p);
+			END;
+		END;
+		IF (s[p] = "d") OR (s[p] = "D") OR (s[p] = "e") OR (s[p] = "E") THEN
+			INC(p); e := 0;
+			IF s[p] = "-" THEN negE := TRUE; INC(p)
+			ELSIF s[p] = "+" THEN negE := FALSE; INC(p)
+			ELSE negE := FALSE
+			END;
+			WHILE (s[p] = "0") DO INC(p) END;
+			WHILE ("0" <= s[p]) & (s[p] <= "9") DO
+				e := e * 10 + (ORD(s[p]) - 30H);
+				INC(p);
+			END;
+			IF negE THEN y := y / Ten(e)
+			ELSE y := y * Ten(e) END;
+		END;
+		IF neg THEN y := -y END;
+		r := y
+	END StringToReal;
 
 	(**	Convert LONGREAL x  to string using n character positions. *)
 	PROCEDURE RealToString*( x: LONGREAL;  n: WORD;  VAR buf: ARRAY OF CHAR );

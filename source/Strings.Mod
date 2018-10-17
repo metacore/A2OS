@@ -700,10 +700,8 @@ END AddressToStr;
 (** converts a string to a real value *)
 (* adopted from Strings.Mod *)
 PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
-VAR sr: Streams.StringReader;
 BEGIN
-	NEW( sr, 64 );  sr.Set( s );
-	r := RC.ScanReal( sr.Get );
+	RC.StringToReal(s,r);
 END StrToFloat;
 
 (** converts a set to a string *)

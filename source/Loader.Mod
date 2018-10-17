@@ -139,7 +139,7 @@ TYPE
 			IF (used / size) > maxLoadFactor THEN Grow END;
 		END Put;
 
-		PROCEDURE Get*(key: LONGINT):ANY;
+		PROCEDURE Get*(key: SIZE):ANY;
 		BEGIN
 			RETURN table[HashValue(key)].value;
 		END Get;

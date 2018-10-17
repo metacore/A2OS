@@ -1077,6 +1077,9 @@ TYPE
 					Indent;
 					Comments(x.comment, x, FALSE);
 					PrintSymbol(x); Flags(x);
+					IF x.initializer # NIL THEN
+						w.String( " := " ); Expression (x.initializer);
+					END;
 					WHILE(next # NIL) & (next.type = x.type) & ((next.access # SyntaxTree.Hidden) OR (mode > SourceCode)) DO
 
 						w.String(", "); PrintSymbol(next); Flags(next);

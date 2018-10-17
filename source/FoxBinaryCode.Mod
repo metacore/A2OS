@@ -29,7 +29,7 @@ TYPE
 		PROCEDURE Dump*(w: Streams.Writer);
 		BEGIN
 			Basic.WriteSegmentedName(w, identifier.name);
-			IF identifier.fingerprint # 0 THEN w.String("["); w.Hex(identifier.fingerprint,-8); w.String("]") END;
+			IF identifier.fingerprint # 0 THEN w.String("["); w.Hex(identifier.fingerprint,0); w.String("]") END;
 			w.String(" "); w.Int(offset,1);
 		END Dump;
 
@@ -122,7 +122,7 @@ TYPE
 		VAR i: LONGINT;
 		BEGIN
 			Basic.WriteSegmentedName(w, symbol.name);
-			IF symbol.fingerprint # 0 THEN w.String("["); w.Hex(symbol.fingerprint,-8); w.String("]") END;
+			IF symbol.fingerprint # 0 THEN w.String("["); w.Hex(symbol.fingerprint,0); w.String("]") END;
 			IF symbolOffset # 0 THEN w.String(":"); w.Int(symbolOffset, 0) END;
 
 			w.String(" (displ="); w.Int(displacement, 0); w.String(")");

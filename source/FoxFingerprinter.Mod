@@ -469,7 +469,7 @@ TYPE
 					FPNumber(fp, 0);
 				END;
 				IF Trace THEN
-					D.Str(", fp = "); D.Hex(fp,-8); D.Ln;
+					D.Str(", fp = "); D.Hex(fp,0); D.Ln;
 				END
 			END
 		END TypeName;
@@ -575,15 +575,15 @@ TYPE
 				fp := fingerprint.shallow;
 			END;
 			IF procedure.access * SyntaxTree.Public # {} THEN (* visible method or visible supermethod *)
-				IF Trace THEN D.String("fp before method number"); D.Hex(fp,-8); D.Ln END;
+				IF Trace THEN D.String("fp before method number"); D.Hex(fp,0); D.Ln END;
 				FPNumber(fp,procedure.methodNumber);
-				IF Trace THEN D.String("fp after method number"); D.Hex(fp,-8); D.Ln END;
+				IF Trace THEN D.String("fp after method number"); D.Hex(fp,0); D.Ln END;
 				IF procedure # body THEN
 					FPNumber(private,fp); FPNumber(public,fp);
 				END;
 			END;
 			IF Trace THEN
-				TraceIndent; D.Str("Method, fp = "); D.Hex(private,-8); D.Str(" "); D.Hex(public,-8); D.Ln;
+				TraceIndent; D.Str("Method, fp = "); D.Hex(private,0); D.Str(" "); D.Hex(public,0); D.Ln;
 				TraceExit("Method",fingerprint)
 			END;
 		END FPrintMethod;
@@ -634,7 +634,7 @@ TYPE
 				fp := 0;
 				FPNumber(fp, fpTypeComposite); FPNumber(fp, fpTypeRecord);
 				TypeName(fp,x);
-				IF Trace THEN TraceIndent; D.Str("RecordType Name ");D.Hex(fp,-8);  D.Ln; END;
+				IF Trace THEN TraceIndent; D.Str("RecordType Name ");D.Hex(fp,0);  D.Ln; END;
 
 				IF (x.baseType # NIL) THEN
 					baseType := x.GetBaseRecord();
@@ -921,7 +921,7 @@ TYPE
 
 		BEGIN
 			IF Trace THEN
-				TraceIndent; D.Str("FPSignature enter "); D.Hex(fp,-8); D.Ln;
+				TraceIndent; D.Str("FPSignature enter "); D.Hex(fp,0); D.Ln;
 			END;
 			deep := SELF.deep;
 			SELF.deep := FALSE;
@@ -929,7 +929,7 @@ TYPE
 			SELF.deep := deep;
 			
 			IF Trace THEN
-				TraceIndent; D.Str("FPSignature after return type "); D.Hex(fp,-8); D.Ln;
+				TraceIndent; D.Str("FPSignature after return type "); D.Hex(fp,0); D.Ln;
 			END;
 
 			IF IsOberonProcedure(t) THEN
@@ -945,25 +945,25 @@ TYPE
 				*)
 
 				IF Trace THEN
-					TraceIndent; D.Str("FPSignature after self "); D.Hex(fp,-8); D.Ln;
+					TraceIndent; D.Str("FPSignature after self "); D.Hex(fp,0); D.Ln;
 				END;
 				par := t.firstParameter;
 				WHILE (par#self) DO (*! done as in PACO *)
 					FPPar(fp, par);
 					IF Trace THEN
-						TraceIndent; D.Str("FPSignature par "); D.Hex(fp,-8); D.Ln;
+						TraceIndent; D.Str("FPSignature par "); D.Hex(fp,0); D.Ln;
 					END;
 					par:=par.nextParameter;
 				END;
 				IF Trace THEN
-					TraceIndent; D.Str("FPSignature exit "); D.Hex(fp,-8); D.Ln;
+					TraceIndent; D.Str("FPSignature exit "); D.Hex(fp,0); D.Ln;
 				END;
 			ELSE
 				par := t.lastParameter;
 				WHILE (par#NIL) DO (*! done as in PACO *)
 					FPPar(fp, par);
 					IF Trace THEN
-						TraceIndent; D.Str("FPSignature par "); D.Hex(fp,-8); D.Ln;
+						TraceIndent; D.Str("FPSignature par "); D.Hex(fp,0); D.Ln;
 					END;
 					par:=par.prevParameter;
 				END;
@@ -1187,7 +1187,7 @@ TYPE
 				FPNumber(fp, fpTypeModule); 
 				FPName(fp,x.name);
 
-				IF Trace THEN TraceIndent; D.Str("Module Name ");D.Hex(fp,-8);  D.Ln; END;
+				IF Trace THEN TraceIndent; D.Str("Module Name ");D.Hex(fp,0);  D.Ln; END;
 
 				fingerprint.shallow := fp;
 				fingerprint.public := fingerprint.shallow;
@@ -1263,8 +1263,8 @@ TYPE
 
 		PROCEDURE TraceFP(CONST fingerprint: SyntaxTree.Fingerprint);
 		BEGIN
-			D.Hex(fingerprint.shallow,-8); D.Str(" "); D.Hex(fingerprint.private,-8);
-			D.Str(" "); D.Hex(fingerprint.public,-8);
+			D.Hex(fingerprint.shallow,0); D.Str(" "); D.Hex(fingerprint.private,0);
+			D.Str(" "); D.Hex(fingerprint.public,0);
 		END TraceFP;
 
 
@@ -1357,9 +1357,9 @@ TYPE
 	PROCEDURE DumpFingerprint*(w: Streams.Writer; CONST fp: SyntaxTree.Fingerprint);
 	BEGIN
 		w.String("fingerprint: ");
-		w.String("shallow = "); w.Hex(fp.shallow,8);
-		w.String(", private = "); w.Hex(fp.private,8);
-		w.String(", public = "); w.Hex(fp.public,8);
+		w.String("shallow = "); w.Hex(fp.shallow,0);
+		w.String(", private = "); w.Hex(fp.private,0);
+		w.String(", public = "); w.Hex(fp.public,0);
 		w.Ln;
 	END DumpFingerprint;
 

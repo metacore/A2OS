@@ -344,8 +344,8 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 	END ObjectFileFormat;
 
-	PROCEDURE GetFingerprint (section: Sections.Section; fingerprinter: Fingerprinter.Fingerprinter): LONGINT;
-	VAR fingerprint: SyntaxTree.Fingerprint; fp: LONGINT; string: Basic.SectionName;
+	PROCEDURE GetFingerprint (section: Sections.Section; fingerprinter: Fingerprinter.Fingerprinter): ObjectFile.Fingerprint;
+	VAR fingerprint: SyntaxTree.Fingerprint; fp: ObjectFile.Fingerprint; string: Basic.SectionName;
 	BEGIN
 		IF section.fingerprint # 0 THEN
 			fp := section.fingerprint

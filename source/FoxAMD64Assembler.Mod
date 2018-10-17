@@ -2647,7 +2647,7 @@ TYPE
 	BEGIN  InitMem128 (operand,reg, displacement); RETURN operand
 	END NewMem128;
 
-	PROCEDURE SetSymbol*(VAR operand: Operand; symbol: Sections.SectionName; fingerprint: LONGINT; symbolOffset, displacement: LONGINT);
+	PROCEDURE SetSymbol*(VAR operand: Operand; symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset, displacement: LONGINT);
 	BEGIN
 		operand.symbol.name := symbol;
 		operand.symbol.fingerprint := fingerprint;

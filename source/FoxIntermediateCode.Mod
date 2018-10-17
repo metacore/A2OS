@@ -958,7 +958,7 @@ TYPE
 		op.offset := offset
 	END SetOffset;
 
-	PROCEDURE SetSymbol*(VAR op: Operand; symbol: Sections.SectionName; fp: LONGINT);
+	PROCEDURE SetSymbol*(VAR op: Operand; symbol: Sections.SectionName; fp: Basic.Fingerprint);
 	BEGIN
 		op.symbol.name := symbol;
 		op.symbol.fingerprint := fp;
@@ -988,14 +988,14 @@ TYPE
 		op.type := type;
 	END MakeAddress;
 
-	PROCEDURE InitAddress*(VAR op: Operand; type: Type; symbol: Sections.SectionName; fp: LONGINT; symbolOffset: LONGINT);
+	PROCEDURE InitAddress*(VAR op: Operand; type: Type; symbol: Sections.SectionName; fp: Basic.Fingerprint; symbolOffset: LONGINT);
 	BEGIN
 		Assert(symbol # "","forbidden nil symbol");
 		ASSERT(symbol[0] # 0); (* not initialized *)
 		InitImmediate(op,type,0); op.symbol.name := symbol; op.symbol.fingerprint := fp; op.type := type; op.symbolOffset := symbolOffset
 	END InitAddress;
 
-	PROCEDURE Address*(type: Type; symbol: Sections.SectionName; fp: LONGINT; offset: LONGINT): Operand;
+	PROCEDURE Address*(type: Type; symbol: Sections.SectionName; fp: Basic.Fingerprint; offset: LONGINT): Operand;
 	VAR op: Operand;
 	BEGIN InitAddress(op,type,symbol,fp, offset); RETURN op
 	END Address;

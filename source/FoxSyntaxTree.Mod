@@ -476,7 +476,7 @@ TYPE
 	END;
 
 	Fingerprint*= RECORD
-		shallow*,public*, private*: LONGINT;
+		shallow*,public*, private*: Basic.Fingerprint;
 		shallowAvailable*, deepAvailable*: BOOLEAN;
 	END;
 

@@ -31,6 +31,8 @@ TYPE
 	Unit* = LONGINT;
 	Bits* = LONGINT;
 
+	Fingerprint* = LONGINT;
+
 	SectionType = INTEGER;
 
 	SegmentedName*= ARRAY SegmentedNameLength OF StringPool.Index;
@@ -56,7 +58,7 @@ TYPE
 
 	Identifier*= RECORD
 		name*: SegmentedName;
-		fingerprint*: LONGINT;
+		fingerprint*: Fingerprint;
 	END;
 
 	Pattern*= POINTER TO RECORD (* this is the same for many fixups *)
@@ -1158,7 +1160,7 @@ VAR
 	END AddPatch;
 	*)
 
-	PROCEDURE AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: LONGINT; mode: INTEGER; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT;
+	PROCEDURE AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: INTEGER; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT;
 	VAR i: LONGINT; newFixups, index: LONGINT; newFixup: Fixups;
 	BEGIN
 		FOR i := 0 TO fixups-1 DO
@@ -1188,7 +1190,7 @@ VAR
 		RETURN index;
 	END AddFixup;
 
-	PROCEDURE AddAlias*(VAR aliases: LONGINT; VAR alias: Aliases; CONST name: SegmentedName; fingerprint, offset: LONGINT): LONGINT;
+	PROCEDURE AddAlias*(VAR aliases: LONGINT; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: LONGINT): LONGINT;
 	VAR i: LONGINT; newAliases, index: LONGINT; newAlias: Aliases;
 	BEGIN
 		newAliases := aliases+1;

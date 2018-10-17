@@ -361,7 +361,7 @@ TYPE
 			RETURN TRUE
 		END ConstantSymbol;
 
-		PROCEDURE GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT;
+		PROCEDURE GetFingerprint(symbol: SyntaxTree.Symbol): Basic.Fingerprint;
 		BEGIN
 			IF (symbol # NIL) THEN RETURN symbol.fingerprint.shallow END;
 		END GetFingerprint;

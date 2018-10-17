@@ -57,6 +57,7 @@ TYPE
 	
 	ErrorCode*=LONGINT;
 
+	Fingerprint* = ObjectFile.Fingerprint;
 
 	List* = OBJECT  (* by Luc Bläser *)
 	VAR

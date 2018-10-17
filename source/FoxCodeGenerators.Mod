@@ -334,7 +334,7 @@ TYPE
 			VAR
 				parSize: LONGINT; sectionName: Basic.SegmentedName; source: Sections.Section; op: IntermediateCode.Operand;
 				instruction: IntermediateCode.Instruction;
-				symbol: SyntaxTree.Symbol; fp: LONGINT;
+				symbol: SyntaxTree.Symbol; fp: Basic.Fingerprint;
 				hasDestination: BOOLEAN;
 
 				PROCEDURE Emit(instruction: IntermediateCode.Instruction; CONST str: ARRAY OF CHAR);

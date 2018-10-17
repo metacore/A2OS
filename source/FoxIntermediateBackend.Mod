@@ -3909,7 +3909,7 @@ TYPE
 
 		(* needed for old binary object file format*)
 		PROCEDURE EnsureSymbol(CONST moduleName,procedureName: SyntaxTree.IdentifierString);
-		VAR r: Operand; procedure: SyntaxTree.Procedure; module: SyntaxTree.Module; s: ARRAY 128 OF CHAR; fp: LONGINT;
+		VAR r: Operand; procedure: SyntaxTree.Procedure; module: SyntaxTree.Module; s: ARRAY 128 OF CHAR; fp: Basic.Fingerprint;
 		BEGIN
 			IF AddImport(moduleName,module,TRUE) THEN
 				procedure := module.moduleScope.FindProcedure(SyntaxTree.NewIdentifier(procedureName));
@@ -12343,7 +12343,7 @@ TYPE
 			END;
 		END InitVariables;
 
-		PROCEDURE GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT;
+		PROCEDURE GetFingerprint(symbol: SyntaxTree.Symbol): Basic.Fingerprint;
 		BEGIN
 			IF (symbol # NIL) THEN
 				RETURN fingerprinter.SymbolFP(symbol).public

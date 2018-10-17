@@ -31,7 +31,7 @@ TYPE
 
 		fixed-: BOOLEAN; (* whether the position of the section is fixed, as opposed to being restricted by an alignment *)
 		positionOrAlignment-: LONGINT; (* the alignment OR the position *)
-		fingerprint-: LONGINT; (* fingerprint of the corresponding syntax tree node *)
+		fingerprint-: Basic.Fingerprint; (* fingerprint of the corresponding syntax tree node *)
 		bitsPerUnit-: LONGINT; (* the unit size given in bits *)
 
 		symbol-: SyntaxTree.Symbol; (* corresponding symbol in AST *)
@@ -83,7 +83,7 @@ TYPE
 		BEGIN RETURN UnknownSize
 		END GetSize;
 
-		PROCEDURE SetFingerprint*(fingerprint: LONGINT);
+		PROCEDURE SetFingerprint*(fingerprint: Basic.Fingerprint);
 		BEGIN SELF.fingerprint := fingerprint
 		END SetFingerprint;
 

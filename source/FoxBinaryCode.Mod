@@ -110,7 +110,7 @@ TYPE
 			SELF.offset := offset;
 		END SetFixupOffset;
 
-		PROCEDURE SetSymbol*(symbol: Sections.SectionName; fp: LONGINT; symbolOffset: LONGINT; displacement: Unit);
+		PROCEDURE SetSymbol*(symbol: Sections.SectionName; fp: ObjectFile.Fingerprint; symbolOffset: LONGINT; displacement: Unit);
 		BEGIN
 			SELF.symbol.name := symbol;
 			SELF.symbol.fingerprint := fp;

@@ -222,13 +222,6 @@ TYPE
 			Char( CHR( x MOD 128 ) )
 		END RawNum;
 
-	(** Write a size in a compressed format. *)
-		PROCEDURE RawSize*( x: SIZE );
-		BEGIN
-			WHILE (x < -64) OR (x > 63) DO Char( CHR( x MOD 128 + 128 ) );  x := x DIV 128 END;
-			Char( CHR( x MOD 128 ) )
-		END RawSize;
-
 		(** -- Write formatted data -- *)
 
 	(** Write an ASCII end-of-line (CR/LF). *)

@@ -1528,7 +1528,7 @@ TYPE
 		BEGIN  w.RawString(x)
 		END RawString;
 
-		PROCEDURE RawNum*( x: LONGINT );
+		PROCEDURE RawNum*( x: HUGEINT );
 		BEGIN  w.RawNum(x)
 		END RawNum;
 

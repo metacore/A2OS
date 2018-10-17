@@ -198,13 +198,13 @@ TYPE
 		bigEndian-: BOOLEAN; (* endianess of bits (not bytes) *)
 		pc-: Unit; (* current position, in units *)
 
-		PROCEDURE GetPC(): LONGINT;
+		PROCEDURE GetPC(): Unit;
 		BEGIN
 			RETURN pc
 		END GetPC;
 
 
-		PROCEDURE & InitBinarySection*(type: SHORTINT; unit: LONGINT; CONST name:Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN);
+		PROCEDURE & InitBinarySection*(type: SHORTINT; unit: Bits; CONST name:Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN);
 		BEGIN
 			ASSERT(unit > 0);
 			ASSERT(unit <= 32); (* implementation restriction *)
@@ -296,7 +296,7 @@ TYPE
 		END PutBits;
 
 		PROCEDURE PutBitsAt*(at: Unit; d: HUGEINT; size: Bits);
-		VAR oldpc: LONGINT;
+		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
 			pc := at;
@@ -304,13 +304,13 @@ TYPE
 			pc := oldpc;
 		END PutBitsAt;
 
-		PROCEDURE PutByte* (b: LONGINT);
+		PROCEDURE PutByte* (b: WORD);
 		BEGIN
 			PutBits(b,Byte);
 		END PutByte;
 
-		PROCEDURE PutWord*(w: LONGINT);
-		VAR c1,c2: LONGINT;
+		PROCEDURE PutWord*(w: WORD);
+		VAR c1,c2: WORD;
 		BEGIN
 			ASSERT((2*Byte) MOD os.unit = 0);
 			CheckSize(2*Byte);
@@ -326,8 +326,8 @@ TYPE
 			INC(pc,(2*Byte) DIV os.unit);
 		END PutWord;
 
-		PROCEDURE PutDWord*(d: LONGINT);
-		VAR c1,c2,c3,c4: LONGINT;
+		PROCEDURE PutDWord*(d: WORD);
+		VAR c1,c2,c3,c4: WORD;
 		BEGIN
 			ASSERT((4*Byte) MOD os.unit = 0);
 			CheckSize(4*Byte);
@@ -350,7 +350,7 @@ TYPE
 		END PutDWord;
 
 		PROCEDURE PutQWord* (q: HUGEINT);
-		VAR c: ARRAY 8 OF LONGINT; i: LONGINT;
+		VAR c: ARRAY 8 OF WORD; i: WORD;
 		BEGIN
 			ASSERT((8*Byte) MOD os.unit = 0);
 			CheckSize(8*Byte);
@@ -372,21 +372,17 @@ TYPE
 
 
 		PROCEDURE PutReal*(f: REAL);
-		VAR x: LONGINT;
 		BEGIN
-			x := ConvertReal(f);
-			PutDWord(x)
+			PutDWord(ConvertReal(f))
 		END PutReal;
 
 		PROCEDURE PutLongreal*(f: LONGREAL);
-		VAR x: HUGEINT;
 		BEGIN
-			x := ConvertLongreal(f);
-			PutQWord(x)
+			PutQWord(ConvertLongreal(f))
 		END PutLongreal;
 
-		PROCEDURE PutByteAt*(at: Unit; d: LONGINT);
-		VAR oldpc: LONGINT;
+		PROCEDURE PutByteAt*(at: Unit; d: WORD);
+		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
 			pc := at;
@@ -394,8 +390,8 @@ TYPE
 			pc := oldpc;
 		END PutByteAt;
 
-		PROCEDURE PutWordAt*(at: Unit; d: LONGINT);
-		VAR oldpc: LONGINT;
+		PROCEDURE PutWordAt*(at: Unit; d: WORD);
+		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
 			pc := at;
@@ -403,8 +399,8 @@ TYPE
 			pc := oldpc;
 		END PutWordAt;
 
-		PROCEDURE PutDWordAt*(at: Unit; d: LONGINT);
-		VAR oldpc: LONGINT;
+		PROCEDURE PutDWordAt*(at: Unit; d: WORD);
+		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
 			pc := at;
@@ -413,7 +409,7 @@ TYPE
 		END PutDWordAt;
 
 		PROCEDURE PutQWordAt*(at: Unit; d: HUGEINT);
-		VAR oldpc: LONGINT;
+		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
 			pc := at;
@@ -436,7 +432,7 @@ TYPE
 			RETURN CHR(os.bits.GetBits(pc*os.unit,8));
 		END GetByte;
 
-		PROCEDURE GetWord*(pc: Unit): LONGINT;
+		PROCEDURE GetWord*(pc: Unit): WORD;
 		VAR c1,c2: WORD;
 		BEGIN
 			c1 := os.bits.GetBits(pc*os.unit,8);
@@ -448,7 +444,7 @@ TYPE
 			END
 		END GetWord;
 
-		PROCEDURE GetDWord*(pc: Unit): LONGINT;
+		PROCEDURE GetDWord*(pc: Unit): WORD;
 		VAR c1,c2,c3,c4: WORD;
 		BEGIN
 			c1 := os.bits.GetBits(pc*os.unit+0*Byte,Byte);
@@ -463,7 +459,7 @@ TYPE
 		END GetDWord;
 
 		PROCEDURE GetQWord*(pc: Unit): HUGEINT;
-		VAR i: LONGINT; h: HUGEINT;
+		VAR i: WORD; h: HUGEINT;
 		BEGIN
 			h := 0;
 			IF bigEndian THEN
@@ -481,17 +477,13 @@ TYPE
 		END GetQWord;
 
 		PROCEDURE GetReal*(pc: Unit): REAL;
-		VAR x: LONGINT;
 		BEGIN
-			x := GetDWord(pc);
-			RETURN ConvertToReal(x)
+			RETURN ConvertToReal(GetDWord(pc))
 		END GetReal;
 
 		PROCEDURE GetLongreal*(pc: Unit): LONGREAL;
-		VAR x: HUGEINT;
 		BEGIN
-			x := GetDWord(pc);
-			RETURN ConvertToLongreal(x)
+			RETURN ConvertToLongreal(GetDWord(pc))
 		END GetLongreal;
 
 		PROCEDURE GetBits*(pc: Unit; size: Bits): WORD;

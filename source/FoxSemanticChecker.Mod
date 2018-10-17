@@ -6190,7 +6190,7 @@ TYPE
 			value: Basic.Integer;
 			modifiers: SyntaxTree.Modifier; recentIsRealtime, recentIsBodyProcedure: BOOLEAN;
 			position: Position;
-			fp: SyntaxTree.FingerPrint;
+			fp: SyntaxTree.Fingerprint;
 		BEGIN
 			IF Trace THEN D.Str("ResolveProcedure "); D.Str0(procedure.name);  D.Ln;  END;
 			IF IsOberonInline(procedure) THEN
@@ -6244,12 +6244,12 @@ TYPE
 				ELSIF HasFlag(modifiers,Global.NameAbstract,position) THEN procedure.SetAbstract(TRUE)
 				END;
 				IF HasValue(modifiers, Global.NameFingerprint, position, value) THEN 
-					SyntaxTree.InitFingerPrint(fp);
+					SyntaxTree.InitFingerprint(fp);
 					fp.shallow := LONGINT(value); (* TODO: fix explicit integer truncation *)
 					fp.public := LONGINT(value); (* TODO: fix explicit integer truncation *)
 					fp.private := LONGINT(value); (* TODO: fix explicit integer truncation *)
 					fp.shallowAvailable := TRUE;
-					procedure.SetFingerPrint(fp);
+					procedure.SetFingerprint(fp);
 				END;
 
 				CheckModifiers(modifiers, TRUE);

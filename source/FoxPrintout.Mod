@@ -2,7 +2,7 @@ MODULE FoxPrintout; (** AUTHOR "fof & fn"; PURPOSE "Oberon Compiler Module Outpu
 (* (c) fof ETHZ 2009 *)
 
 IMPORT
-	Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, FingerPrinter := FoxFingerPrinter, Streams, D:=Debugging, SYSTEM;
+	Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, Fingerprinter := FoxFingerprinter, Streams, D:=Debugging, SYSTEM;
 
 CONST
 	(* print modes *)
@@ -19,7 +19,7 @@ TYPE
 		useCase: BOOLEAN; (* TRUE to enable case conversion in "Identifier" *)
 
 		alertCount, commentCount: LONGINT;
-		fingerPrinter:FingerPrinter.FingerPrinter;
+		fingerprinter:Fingerprinter.Fingerprinter;
 
 		PROCEDURE Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
 		VAR ch: CHAR; i: LONGINT;
@@ -1187,7 +1187,7 @@ TYPE
 		END Access;
 
 		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
-		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN; fp: SyntaxTree.FingerPrint;
+		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN; fp: SyntaxTree.Fingerprint;
 		BEGIN
 			IF Visible(x) THEN
 				
@@ -1218,8 +1218,8 @@ TYPE
 				END;
 
 				IF x.isInline & (mode = SymbolFile) THEN
-					IF fingerPrinter = NIL THEN NEW(fingerPrinter) END;
-					fp := fingerPrinter.SymbolFP(x);
+					IF fingerprinter = NIL THEN NEW(fingerprinter) END;
+					fp := fingerprinter.SymbolFP(x);
 					Value(Global.NameFingerprint, fp.public, first) 
 				END;
 				FlagEnd(first);

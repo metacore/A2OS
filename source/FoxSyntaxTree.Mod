@@ -49,7 +49,7 @@ CONST
 	SemiDynamic*=4;
 
 	(** node states, important for checker to avoid cycles *)
-	Undefined*={}; BeingResolved*=1; Resolved*=2; FingerPrinted*=3; Warned*=4;
+	Undefined*={}; BeingResolved*=1; Resolved*=2; Fingerprinted*=3; Warned*=4;
 
 	(* context in which a range expression is used *)
 	ArrayIndex* = 0;
@@ -475,7 +475,7 @@ TYPE
 		read*, write*: POINTER TO ARRAY OF Operator; (* fixed-dim. operators *)
 	END;
 
-	FingerPrint*= RECORD
+	Fingerprint*= RECORD
 		shallow*,public*, private*: LONGINT;
 		shallowAvailable*, deepAvailable*: BOOLEAN;
 	END;
@@ -545,7 +545,7 @@ TYPE
 			state-: SET;
 			hasPointers-: BOOLEAN;
 
-			fingerprint-: FingerPrint;
+			fingerprint-: Fingerprint;
 
 			isRealtime-: BOOLEAN;
 			recursion: BOOLEAN;
@@ -565,7 +565,7 @@ TYPE
 			isRealtime := FALSE;
 			recursion := FALSE;
 			hasPointers := FALSE;
-			InitFingerPrint(fingerprint);
+			InitFingerprint(fingerprint);
 		END InitType;
 
 		
@@ -582,10 +582,10 @@ TYPE
 		BEGIN SELF.position.end := position;
 		END End;
 
-		PROCEDURE SetFingerPrint*(CONST fp: FingerPrint);
+		PROCEDURE SetFingerprint*(CONST fp: Fingerprint);
 		BEGIN
 			SELF.fingerprint := fp
-		END SetFingerPrint;
+		END SetFingerprint;
 
 		PROCEDURE SetState*(state: LONGINT);
 		BEGIN	INCL(SELF.state,state);
@@ -2595,16 +2595,16 @@ TYPE
 	(**** values ****)
 
 	Value* = OBJECT (Expression)
-	VAR fingerprint-: FingerPrint;
+	VAR fingerprint-: Fingerprint;
 
 		PROCEDURE &InitValue(position: Position);
-		BEGIN SELF.position := position; resolved := SELF; InitFingerPrint(fingerprint);
+		BEGIN SELF.position := position; resolved := SELF; InitFingerprint(fingerprint);
 		END InitValue;
 
-		PROCEDURE SetFingerPrint*(CONST fp: FingerPrint);
+		PROCEDURE SetFingerprint*(CONST fp: Fingerprint);
 		BEGIN
 			SELF.fingerprint := fp
-		END SetFingerPrint;
+		END SetFingerprint;
 
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
@@ -2912,7 +2912,7 @@ TYPE
 		alignment-: LONGINT;
 
 		position-, end-: Position; state-: SET;
-		fingerprint-: FingerPrint;
+		fingerprint-: Fingerprint;
 
 		comment-: Comment;
 
@@ -2932,7 +2932,7 @@ TYPE
 			alignment := 0; (* take default *)
 			fixed := FALSE;
 			used := FALSE; written := FALSE;
-			InitFingerPrint(fingerprint);
+			InitFingerprint(fingerprint);
 			comment := NIL;
 		END InitSymbol;
 
@@ -2940,10 +2940,10 @@ TYPE
 		BEGIN SELF.alignment := align; fixed := fix;
 		END SetAlignment;
 
-		PROCEDURE SetFingerPrint*(CONST fp: FingerPrint);
+		PROCEDURE SetFingerprint*(CONST fp: Fingerprint);
 		BEGIN
 			SELF.fingerprint := fp
-		END SetFingerPrint;
+		END SetFingerprint;
 
 		PROCEDURE SetState*(state: LONGINT);
 		BEGIN	INCL(SELF.state,state);
@@ -5143,14 +5143,14 @@ VAR
 
 	indexListSeparator-: Expression;
 
-	PROCEDURE InitFingerPrint*(VAR fingerprint: FingerPrint);
+	PROCEDURE InitFingerprint*(VAR fingerprint: Fingerprint);
 	BEGIN
 		fingerprint.shallowAvailable := FALSE;
 		fingerprint.deepAvailable := FALSE;
 		fingerprint.shallow := 0;
 		fingerprint.private := 0;
 		fingerprint.public := 0;
-	END InitFingerPrint;
+	END InitFingerprint;
 
 	PROCEDURE NewModule*( CONST sourceName: ARRAY OF CHAR; position: Position;  name: Identifier;scope: ModuleScope; case: LONGINT ): Module;
 	VAR module: Module;

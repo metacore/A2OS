@@ -1,6 +1,6 @@
 MODULE FoxInterfaceComparison; (** AUTHOR "fof"; PURPOSE "compare interfaces / check symbol file compliances"; *)
 
-IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, FingerPrinter := FoxFingerPrinter, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Diagnostics, Strings, D := Debugging;
+IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Fingerprinter := FoxFingerprinter, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Diagnostics, Strings, D := Debugging;
 
 CONST
 	Redefined*=0;
@@ -8,10 +8,10 @@ CONST
 	Trace=FALSE;
 
 	PROCEDURE CompareThis*(module: SyntaxTree.Module; symbolFileFormat: Formats.SymbolFileFormat; diagnostics: Diagnostics.Diagnostics; importCache: SyntaxTree.ModuleScope;  VAR flags: SET);
-	VAR fname: Basic.FileName; importedModule: SyntaxTree.Module; fingerprinter: FingerPrinter.FingerPrinter;
+	VAR fname: Basic.FileName; importedModule: SyntaxTree.Module; fingerprinter: Fingerprinter.Fingerprinter;
 
 	PROCEDURE SameType(new,old: SyntaxTree.Type): BOOLEAN;
-	VAR fpNew,fpOld: SyntaxTree.FingerPrint;
+	VAR fpNew,fpOld: SyntaxTree.Fingerprint;
 	BEGIN
 		old := old.resolved; new := new.resolved;
 
@@ -25,14 +25,14 @@ CONST
 		fpOld := fingerprinter.TypeFP(old);
 		IF Trace THEN
 			D.String("-->"); D.Ln;
-			D.String("fpOld "); FingerPrinter.DumpFingerPrint(D.Log,fpOld); D.Ln;
-			D.String("fpNew "); FingerPrinter.DumpFingerPrint(D.Log,fpNew); D.Ln;
+			D.String("fpOld "); Fingerprinter.DumpFingerprint(D.Log,fpOld); D.Ln;
+			D.String("fpNew "); Fingerprinter.DumpFingerprint(D.Log,fpNew); D.Ln;
 		END;
 		RETURN (fpNew.private = fpOld.private) & (fpNew.public = fpOld.public) & (fpNew.shallow = fpOld.shallow);
 	END SameType;
 
 	PROCEDURE CompareSymbols(new,old: SyntaxTree.Symbol): BOOLEAN;
-	VAR fpNew,fpOld: SyntaxTree.FingerPrint; oldType, newType: SyntaxTree.Type;
+	VAR fpNew,fpOld: SyntaxTree.Fingerprint; oldType, newType: SyntaxTree.Type;
 	BEGIN
 		fpNew := fingerprinter.SymbolFP(new);
 		fpOld := fingerprinter.SymbolFP(old);
@@ -42,8 +42,8 @@ CONST
 		IF (fpNew.shallow # fpOld.shallow) THEN
 			IF Trace THEN
 				D.String("fp of "); D.Str0(new.name); D.Ln;
-				D.String("fpOld "); FingerPrinter.DumpFingerPrint(D.Log,fpOld); D.Ln;
-				D.String("fpNew "); FingerPrinter.DumpFingerPrint(D.Log,fpNew); D.Ln;
+				D.String("fpOld "); Fingerprinter.DumpFingerprint(D.Log,fpOld); D.Ln;
+				D.String("fpNew "); Fingerprinter.DumpFingerprint(D.Log,fpNew); D.Ln;
 			END;
 			RETURN FALSE
 		ELSIF (new IS SyntaxTree.TypeDeclaration) & (old IS SyntaxTree.TypeDeclaration) THEN

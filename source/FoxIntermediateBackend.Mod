@@ -3,7 +3,7 @@ MODULE FoxIntermediateBackend; (** AUTHOR ""; PURPOSE ""; *)
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal,
 	Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode,  Printout := FoxPrintout,
 	SYSTEM, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging,
-	FingerPrinter := FoxFingerPrinter, StringPool, CRC;
+	Fingerprinter := FoxFingerprinter, StringPool, CRC;
 
 CONST
 		(* operand modes *)
@@ -1327,7 +1327,7 @@ TYPE
 		numberProcedures: LONGINT;
 		procedureResultDesignator : SyntaxTree.Designator;
 		operatorInitializationCodeSection: IntermediateCode.Section;
-		fingerPrinter: FingerPrinter.FingerPrinter;
+		fingerprinter: Fingerprinter.Fingerprinter;
 
 		temporaries: Variables;
 		canBeLoaded : BOOLEAN;
@@ -1399,7 +1399,7 @@ TYPE
 			NEW(registerUsageCount);
 			usedRegisters := NIL;
 			procedureResultDesignator := NIL;
-			NEW(fingerPrinter);
+			NEW(fingerprinter);
 			NEW(temporaries);
 			currentIsInline := FALSE;
 			NeedDescriptor := FALSE;
@@ -1436,10 +1436,10 @@ TYPE
 		END ReturnToContext;
 
 		PROCEDURE NewSection(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): IntermediateCode.Section;
-		VAR fp: SyntaxTree.FingerPrint; section: IntermediateCode.Section;
+		VAR fp: SyntaxTree.Fingerprint; section: IntermediateCode.Section;
 		BEGIN
 			IF (syntaxTreeSymbol # NIL) & ~((syntaxTreeSymbol IS SyntaxTree.Procedure) & (syntaxTreeSymbol(SyntaxTree.Procedure).isInline)) THEN
-				fp := fingerPrinter.SymbolFP(syntaxTreeSymbol)
+				fp := fingerprinter.SymbolFP(syntaxTreeSymbol)
 			END;
 			section := IntermediateCode.NewSection(list, type, name, syntaxTreeSymbol, dump);
 			section.SetExported(IsExported(syntaxTreeSymbol));
@@ -1456,13 +1456,13 @@ TYPE
 
 		PROCEDURE GetFingerprintString(symbol: SyntaxTree.Symbol; VAR string: ARRAY OF CHAR);
 		VAR
-			fingerPrint: SyntaxTree.FingerPrint;
-			fingerPrintString: ARRAY 32 OF CHAR;
+			fingerprint: SyntaxTree.Fingerprint;
+			fingerprintString: ARRAY 32 OF CHAR;
 		BEGIN
-			fingerPrint := fingerPrinter.SymbolFP(symbol);
+			fingerprint := fingerprinter.SymbolFP(symbol);
 			string := "[";
-			Strings.IntToHexStr(fingerPrint.public, 8, fingerPrintString);
-			Strings.Append(string, fingerPrintString);
+			Strings.IntToHexStr(fingerprint.public, 8, fingerprintString);
+			Strings.Append(string, fingerprintString);
 			Strings.Append(string, "]");
 		END GetFingerprintString;
 		
@@ -6185,7 +6185,7 @@ TYPE
 			recordType: SyntaxTree.RecordType;
 			operatorSelectionProcedureOperand: Operand;
 			operatorSelectionProcedure: SyntaxTree.Procedure;
-			fingerPrint: SyntaxTree.FingerPrint;
+			fingerprint: SyntaxTree.Fingerprint;
 			isCallOfDynamicOperator, hasDynamicOperands: BOOLEAN;
 			identifierNumber: LONGINT;
 
@@ -6520,8 +6520,8 @@ TYPE
 
 							(* push fingerprint *)
 							(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-							fingerPrint := fingerPrinter.TypeFP(formalParameter.type.resolved);
-							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.public))) (* TODO: push the type's fingerprint *)
+							fingerprint := fingerprinter.TypeFP(formalParameter.type.resolved);
+							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerprint.public))) (* TODO: push the type's fingerprint *)
 						END
 					END;
 					formalParameter := formalParameter.nextParameter
@@ -6870,7 +6870,7 @@ TYPE
 			VAR
 				arg: IntermediateCode.Operand;
 				recordType: SyntaxTree.RecordType;
-				fingerPrint: SyntaxTree.FingerPrint;
+				fingerprint: SyntaxTree.Fingerprint;
 			BEGIN
 				IF type = NIL THEN
 					(* no type: push 'NoType' *)
@@ -6884,8 +6884,8 @@ TYPE
 				ELSE
 					(* non-pointer to record type: push fingerprint *)
 					(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-					fingerPrint := fingerPrinter.TypeFP(type.resolved);
-					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerPrint.public)
+					fingerprint := fingerprinter.TypeFP(type.resolved);
+					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerprint.public)
 				END;
 				operatorInitializationCodeSection.Emit(Push(position,arg))
 			END PushTypeInfo;
@@ -12346,7 +12346,7 @@ TYPE
 		PROCEDURE GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT;
 		BEGIN
 			IF (symbol # NIL) THEN
-				RETURN fingerPrinter.SymbolFP(symbol).public
+				RETURN fingerprinter.SymbolFP(symbol).public
 			ELSE
 				RETURN 0
 			END;
@@ -12962,7 +12962,7 @@ TYPE
 
 		PROCEDURE ExportDesc(source: IntermediateCode.Section);
 		VAR
-			i: LONGINT; section: Sections.Section; fingerPrinter : FingerPrinter.FingerPrinter;
+			i: LONGINT; section: Sections.Section; fingerprinter : Fingerprinter.Fingerprinter;
 			sectionArray: POINTER TO ARRAY OF Sections.Section;
 			poolMap: Basic.HashTableInt;
 			namePool: IntermediateCode.Section;
@@ -13021,12 +13021,12 @@ TYPE
 		PROCEDURE ExportDesc2(
 			source: IntermediateCode.Section; 
 			namePool: IntermediateCode.Section;
-			fingerPrinter: FingerPrinter.FingerPrinter;
+			fingerprinter: Fingerprinter.Fingerprinter;
 			symbol: Sections.Section;
 			name: StringPool.Index;
 			VAR patchAdr: LONGINT
 			): BOOLEAN;
-		VAR fingerPrint: SyntaxTree.FingerPrint; 
+		VAR fingerprint: SyntaxTree.Fingerprint; 
 		BEGIN
 			(*IF  (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection)
 				& (symbol.type # Sections.InlineCodeSection)
@@ -13039,8 +13039,8 @@ TYPE
 
 				IF (symbol = NIL) OR (symbol # NIL) & (symbol.type # Sections.InlineCodeSection) THEN
 					IF (symbol # NIL) & (symbol.symbol # NIL) THEN 
-						fingerPrint := fingerPrinter.SymbolFP(symbol.symbol);
-						Longint(source,fingerPrint.public);
+						fingerprint := fingerprinter.SymbolFP(symbol.symbol);
+						Longint(source,fingerprint.public);
 					ELSE
 						Longint(source, 0);
 					END;
@@ -13124,7 +13124,7 @@ TYPE
 								ELSE
 									sym := NIL;
 								END;
-								IF ExportDesc2(scopes[level].section, namePool, fingerPrinter, sym, this[level], scopes[level].patchAdr)
+								IF ExportDesc2(scopes[level].section, namePool, fingerprinter, sym, this[level], scopes[level].patchAdr)
 								THEN
 									INC(scopes[olevel].elements);
 								END;
@@ -13160,7 +13160,7 @@ TYPE
 			END Export;
 			
 		BEGIN
-			NEW(fingerPrinter);
+			NEW(fingerprinter);
 			NEW(poolMap, 64);
 			(* this is the name pool private to the export table -- it is sorted and should not be mixed / used for other names in a module *)
 			namePool := Block("Heaps","SystemBlockDesc",".@NamePool",namePoolOffset); 

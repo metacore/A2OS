@@ -39,7 +39,7 @@ CONST
 	StringRealtime* = "REALTIME";
 	StringDynamic* = "DYNAMIC";
 	
-	StringFingerprint*="FingerPrint";
+	StringFingerprint*="Fingerprint";
 	
 	StringInstructionWidth*="InstructionWidth";
 	StringDataMemorySize*= "DataMemorySize";

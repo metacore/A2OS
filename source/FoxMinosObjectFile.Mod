@@ -1,7 +1,7 @@
 MODULE FoxMinosObjectFile; (** AUTHOR "fof"; PURPOSE "Oberon Compiler Minos Object File Writer"; *)
 
 IMPORT
-	Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, FingerPrinter := FoxFingerPrinter, Sections := FoxSections,
+	Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Fingerprinter := FoxFingerprinter, Sections := FoxSections,
 	Streams, D := Debugging, Files, SYSTEM,Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Options,
 	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine
 	;
@@ -260,9 +260,9 @@ TYPE
 
 	PROCEDURE WriteObjectFile*(w:Streams.Writer; module: Sections.Module; symbolFile: Files.File; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 	VAR codeSize, dataSize, bodyOffset: LONGINT;
-		moduleScope: SyntaxTree.ModuleScope; fingerprinter: FingerPrinter.FingerPrinter;
+		moduleScope: SyntaxTree.ModuleScope; fingerprinter: Fingerprinter.Fingerprinter;
 		code: ByteArray;
-		fp: SyntaxTree.FingerPrint;
+		fp: SyntaxTree.Fingerprint;
 		error : BOOLEAN;
 		(** helper procedures *)
 		PROCEDURE GetEntries(moduleScope: SyntaxTree.ModuleScope; VAR numberEntries: LONGINT; VAR entries: ARRAY 256 OF IntermediateCode.Section);

@@ -216,7 +216,7 @@ TYPE
 		END RawString;
 
 	(** Write a number in a compressed format. *)
-		PROCEDURE RawNum*( x: LONGINT );
+		PROCEDURE RawNum*( x: HUGEINT );
 		BEGIN
 			WHILE (x < -64) OR (x > 63) DO Char( CHR( x MOD 128 + 128 ) );  x := x DIV 128 END;
 			Char( CHR( x MOD 128 ) )
@@ -685,6 +685,15 @@ TYPE
 			x := ASH( LSH( LONGINT( ORD( ch ) ), 25 ), n - 25 ) + y
 		END RawNum;
 
+	(** Read a huge number in a compressed format. *)
+		PROCEDURE RawHNum*( VAR x: HUGEINT );
+		VAR ch: CHAR;  n, y: HUGEINT;
+		BEGIN
+			n := 0;  y := 0;  ch := Get();
+			WHILE ch >= 80X DO INC( y, LSH( HUGEINT( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
+			x := ASH( LSH( LONGINT( ORD( ch ) ), 57 ), n - 57 ) + y
+		END RawHNum;
+
 	(** Read a size in a compressed format. *)
 		PROCEDURE RawSize*( VAR x: SIZE );
 		VAR ch: CHAR;  n, y: SIZE;
@@ -699,7 +708,7 @@ TYPE
 	 (** Read an integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
 
 		PROCEDURE Int*( VAR x: LONGINT;  hex: BOOLEAN );
-		VAR vd, vh, sgn, d: LONGINT;  ch: CHAR;  ok: BOOLEAN;
+		VAR vd, vh: LONGINT; sgn, d: WORD;  ch: CHAR;  ok: BOOLEAN;
 		BEGIN
 			vd := 0;  vh := 0;  sgn := 1;  ok := FALSE;
 			IF Peek() = "-" THEN sgn := -1;  ch := Get() END;
@@ -719,6 +728,30 @@ TYPE
 			x := sgn * vd;
 			IF (res = 0) & ~ok THEN res := FormatError END
 		END Int;
+
+	 (** Read a huge integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
+
+		PROCEDURE HInt*( VAR x: HUGEINT;  hex: BOOLEAN );
+		VAR vd, vh: HUGEINT; sgn, d: WORD;  ch: CHAR;  ok: BOOLEAN;
+		BEGIN
+			vd := 0;  vh := 0;  sgn := 1;  ok := FALSE;
+			IF Peek() = "-" THEN sgn := -1;  ch := Get() END;
+			LOOP
+				ch := Peek();
+				IF (ch >= "0") & (ch <= "9") THEN d := ORD( ch ) - ORD( "0" )
+				ELSIF hex & (CAP( ch ) >= "A") & (CAP( ch ) <= "F") THEN d := ORD( CAP( ch ) ) - ORD( "A" ) + 10
+				ELSE EXIT
+				END;
+				vd := 10 * vd + d;  vh := 16 * vh + d;   (* ignore overflow *)
+				ch := Get();  ok := TRUE
+			END;
+			IF hex & (CAP( ch ) = "H") THEN  (* optional "H" present *)
+				vd := vh;   (* use the hex value *)
+				ch := Get()
+			END;
+			x := sgn * vd;
+			IF (res = 0) & ~ok THEN res := FormatError END
+		END HInt;
 
 	 (** Read a size value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
 

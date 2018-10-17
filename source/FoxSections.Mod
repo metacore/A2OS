@@ -133,7 +133,7 @@ TYPE
 			Basic.WriteSegmentedName(w,name);
 			w.RawBool(fixed);
 			w.RawLInt(positionOrAlignment); 
-			w.RawLInt(fingerprint);
+			w.RawHInt(fingerprint);
 			w.RawLInt(bitsPerUnit);
 		END WriteRaw;
 

@@ -12651,6 +12651,13 @@ TYPE
 			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.longintType),value);
 			section.Emit(Data(Basic.invalidPosition,op));
 		END Longint;
+
+		PROCEDURE Hugeint(section: IntermediateCode.Section; value: HUGEINT);
+		VAR op: IntermediateCode.Operand;
+		BEGIN
+			IntermediateCode.InitImmediate(op,IntermediateCode.GetType(module.system, module.system.hugeintType),value);
+			section.Emit(Data(Basic.invalidPosition,op));
+		END Hugeint;
 		
 		PROCEDURE PatchSize(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT);
 		VAR op,noOperand: IntermediateCode.Operand;
@@ -13018,49 +13025,45 @@ TYPE
 	ExportArray* = POINTER {UNSAFE} TO ARRAY OF ExportDesc;
 	*)
 	
-		PROCEDURE ExportDesc2(
-			source: IntermediateCode.Section; 
-			namePool: IntermediateCode.Section;
-			fingerprinter: Fingerprinter.Fingerprinter;
-			symbol: Sections.Section;
-			name: StringPool.Index;
-			VAR patchAdr: LONGINT
-			): BOOLEAN;
-		VAR fingerprint: SyntaxTree.Fingerprint; 
-		BEGIN
-			(*IF  (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection)
-				& (symbol.type # Sections.InlineCodeSection)
-			THEN
-			*)
-			IF (symbol = NIL) OR ( (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection)
-				& (symbol.type # Sections.ExitCodeSection)
-				& (symbol.type # Sections.InlineCodeSection))
-			THEN
+			PROCEDURE ExportDesc2(
+				source: IntermediateCode.Section; 
+				namePool: IntermediateCode.Section;
+				fingerprinter: Fingerprinter.Fingerprinter;
+				symbol: Sections.Section;
+				name: StringPool.Index;
+				VAR patchAdr: LONGINT
+				): BOOLEAN;
+			VAR fingerprint: SyntaxTree.Fingerprint; 
+			BEGIN
+				(*IF  (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection)
+					& (symbol.type # Sections.InlineCodeSection)
+				THEN
+				*)
+				IF (symbol = NIL) OR ( (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection)
+					& (symbol.type # Sections.ExitCodeSection)
+					& (symbol.type # Sections.InlineCodeSection))
+				THEN
 
-				IF (symbol = NIL) OR (symbol # NIL) & (symbol.type # Sections.InlineCodeSection) THEN
-					IF (symbol # NIL) & (symbol.symbol # NIL) THEN 
-						fingerprint := fingerprinter.SymbolFP(symbol.symbol);
-						Longint(source,fingerprint.public);
-					ELSE
-						Longint(source, 0);
-					END;
-					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0);END;
-
+					IF (symbol = NIL) OR (symbol # NIL) & (symbol.type # Sections.InlineCodeSection) THEN
+						IF (symbol # NIL) & (symbol.symbol # NIL) THEN 
+							fingerprint := fingerprinter.SymbolFP(symbol.symbol);
+							Hugeint(source,fingerprint.public);
+						ELSE
+							Hugeint(source, 0);
+						END;
 					
-					Symbol(source, namePool, DynamicName(namePool, name, poolMap), 0); (* reference to dynamic name *)
-					Symbol(source, symbol,0,0);
-					patchAdr := source.pc;
-					Longint(source, 0);
-					IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0); END;
-					Address(source,0);
+						Symbol(source, namePool, DynamicName(namePool, name, poolMap), 0); (* reference to dynamic name *)
+						Symbol(source, symbol,0,0);
+						patchAdr := source.pc;
+						Longint(source, 0);
+						IF module.system.addressType.sizeInBits = 64 THEN Longint(source, 0); END;
+						Address(source,0);
+					END;
+					RETURN TRUE
+				ELSE
+					RETURN FALSE
 				END;
-				RETURN TRUE
-			ELSE
-				RETURN FALSE
-			END;
-		END ExportDesc2;
-		
-		
+			END ExportDesc2;
 			
 			PROCEDURE Export(CONST sections: ARRAY OF Sections.Section);
 			VAR level, olevel, s: LONGINT; prev, this: Basic.SegmentedName; name: ARRAY 256 OF CHAR;

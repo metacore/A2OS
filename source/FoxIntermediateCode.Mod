@@ -695,7 +695,7 @@ TYPE
 				w.RawLInt(operand.offset);
 			ELSIF operand.symbol.name # "" THEN
 				Basic.WriteSegmentedName(w,operand.symbol.name);
-				IF operand.symbol.fingerprint # 0 THEN w.RawLInt(operand.symbol.fingerprint);END;
+				IF operand.symbol.fingerprint # 0 THEN w.RawHInt(operand.symbol.fingerprint);END;
 				w.RawLInt(operand.symbolOffset);
 				w.RawLInt(operand.offset);
 			ELSE w.RawLInt(SHORT(operand.intValue));
@@ -708,7 +708,7 @@ TYPE
 		|ModeImmediate:
 			IF operand.symbol.name # "" THEN
 				Basic.WriteSegmentedName(w,operand.symbol.name);
-				IF operand.symbol.fingerprint # 0 THEN w.RawLInt(operand.symbol.fingerprint);END;
+				IF operand.symbol.fingerprint # 0 THEN w.RawHInt(operand.symbol.fingerprint);END;
 				w.RawLInt(operand.symbolOffset);
 				w.RawLInt(operand.offset);
 			ELSE

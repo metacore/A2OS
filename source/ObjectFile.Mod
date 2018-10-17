@@ -31,7 +31,7 @@ TYPE
 	Unit* = LONGINT;
 	Bits* = LONGINT;
 
-	Fingerprint* = LONGINT;
+	Fingerprint* = HUGEINT;
 
 	SectionType = INTEGER;
 
@@ -543,7 +543,7 @@ VAR
 			reader.SkipWhitespace;
 			reader.String(name);
 			StringToSegmentedName(name,identifier.name);
-			reader.SkipWhitespace; reader.Int (identifier.fingerprint,FALSE);
+			reader.SkipWhitespace; reader.HInt (identifier.fingerprint,FALSE);
 		END ReadIdentifier;
 
 		PROCEDURE ReadPattern(VAR pattern: Pattern);
@@ -920,7 +920,7 @@ VAR
 			WHILE i < LEN(identifier.name) DO
 				identifier.name[i] := -1; INC(i);
 			END;
-			 reader.RawNum (identifier.fingerprint);
+			 reader.RawHNum (identifier.fingerprint);
 		END ReadIdentifier;
 
 		PROCEDURE ReadFixupPattern (VAR pattern: FixupPattern);

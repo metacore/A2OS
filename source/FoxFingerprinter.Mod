@@ -812,21 +812,23 @@ TYPE
 
 		(* fp = fp & (HugeInt | Number) *)
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
-		BEGIN FPHugeInt(SELF.fp,x.value)
+		BEGIN FPNumber(SELF.fp,x.value)
 		END VisitIntegerValue;
 
 		(* fp = fp & (HugeInt | Number) *)
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
-		BEGIN FPHugeInt(SELF.fp,x.value)
+		BEGIN FPNumber(SELF.fp,x.value)
 		END VisitEnumerationValue;
 
 		(* fp = fp & ORD(char) *)
 		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
-		BEGIN FPNumber(SELF.fp,ORD(x.value)) END VisitCharacterValue;
+		BEGIN FPNumber(SELF.fp,ORD(x.value))
+		END VisitCharacterValue;
 
 		(* fp = fp & Set *)
 		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
-		BEGIN FPHugeInt(SELF.fp,SYSTEM.VAL(HUGEINT,x.value)) END VisitSetValue;
+		BEGIN FPSet(SELF.fp,x.value)
+		END VisitSetValue;
 
 		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
 		VAR element: SyntaxTree.Expression; i: LONGINT;
@@ -845,20 +847,17 @@ TYPE
 
 		(* fp = fp & (Real | LongReal) *)
 		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);
-		BEGIN
-			IF x.type.sizeInBits=32 THEN FPReal(SELF.fp,SHORT(x.value))
-			ELSE FPLongReal(SELF.fp,x.value)
-			END;
+		BEGIN FPReal(SELF.fp,x.value);
 		END VisitRealValue;
 
 		PROCEDURE VisitComplexValue*(x: SyntaxTree.ComplexValue);
 		BEGIN
-			FPLongReal(SELF.fp,x.realValue);
-			FPLongReal(SELF.fp,x.imagValue);
+			FPReal(SELF.fp,x.realValue);
+			FPReal(SELF.fp,x.imagValue);
 		END VisitComplexValue;
 		
 		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
-		BEGIN IF x.type.sizeInBits = 64 THEN FPHugeInt(SELF.fp, 0) ELSE FPNumber(SELF.fp, 0) END;
+		BEGIN FPNumber(SELF.fp, 0);
 		END VisitNilValue;
 
 		(* fp = fp & String *)
@@ -1315,36 +1314,20 @@ TYPE
 	END IsOberonProcedure;
 
 	(* fp = fp <*> val *)
-	PROCEDURE FPNumber*(VAR fp: Basic.Fingerprint; val: LONGINT);
+	PROCEDURE FPNumber*(VAR fp: Basic.Fingerprint; val: HUGEINT);
 	BEGIN
-		fp:=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(fp, 7)) / SYSTEM.VAL(SET, val))
+		fp:=SYSTEM.VAL(Basic.Fingerprint, SYSTEM.VAL(SET64, ROT(fp, 7)) / SYSTEM.VAL(SET64, val))
 	END FPNumber;
 
 	(* fp = fp <*> set *)
-	PROCEDURE FPSet*(VAR fp: Basic.Fingerprint; set: SET);
-	BEGIN FPNumber(fp, SYSTEM.VAL(LONGINT, set))
+	PROCEDURE FPSet*(VAR fp: Basic.Fingerprint; set: SET64);
+	BEGIN FPNumber(fp, SYSTEM.VAL(HUGEINT, set))
 	END FPSet;
 
 	(* fp = fp <*> real *)
-	PROCEDURE FPReal*(VAR fp: Basic.Fingerprint; real: REAL);
-	BEGIN FPNumber(fp, SYSTEM.VAL(LONGINT, real))
+	PROCEDURE FPReal*(VAR fp: Basic.Fingerprint; real: LONGREAL);
+	BEGIN FPNumber(fp, SYSTEM.VAL(HUGEINT, real))
 	END FPReal;
-
-	(* fp = fp <*> low <*> high *)
-	PROCEDURE FPLongReal*(VAR fp: Basic.Fingerprint; lr: LONGREAL);
-		VAR l, h: LONGINT;
-	BEGIN
-		SYSTEM.GET(ADDRESSOF(lr)+4, l); SYSTEM.GET(ADDRESSOF(lr), h);
-		FPNumber(fp, l); FPNumber(fp, h);
-	END FPLongReal;
-
-	(* fp = fp <*> low <*> high *)
-	PROCEDURE FPHugeInt*(VAR fp: Basic.Fingerprint; huge: HUGEINT);
-	VAR l, h: LONGINT;
-	BEGIN
-		SYSTEM.GET(ADDRESSOF(huge)+4, l); SYSTEM.GET(ADDRESSOF(huge), h);
-		FPNumber(fp, l); FPNumber(fp, h);
-	END FPHugeInt;
 
 	(* fp = fp -> String *)
 	PROCEDURE FPName*(VAR fp: Basic.Fingerprint; x: SyntaxTree.Identifier);
@@ -1367,7 +1350,7 @@ TYPE
 		ELSIF SyntaxTree.PublicRead IN vis THEN  FPNumber(fp, fpExternR)
 		ELSIF SyntaxTree.Internal * vis #{} THEN  FPNumber(fp, fpIntern)
 		ELSE
-			FPNumber(fp, fpOther + SYSTEM.VAL(LONGINT, vis))
+			FPNumber(fp, fpOther + SYSTEM.VAL(WORD, vis))
 		END
 	END FPVisibility;
 

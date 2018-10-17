@@ -413,7 +413,7 @@ TYPE
 		BEGIN
 			Global.ModuleFileName(module.module.name,module.module.context,moduleName);
 			fp := fingerprinter.SymbolFP(module.module);
-			w.RawString(moduleName); w.RawLInt(fp.public);
+			w.RawString(moduleName); w.RawLInt(LONGINT(fp.public));
 			w.RawLInt(FixSelf());
 			Imports;
 			Commands;
@@ -476,7 +476,7 @@ TYPE
 					END;
 					w.RawString(name);
 					fp := fingerprinter.SymbolFP(import.module);
-					w.RawLInt(fp.public);
+					w.RawLInt(LONGINT(fp.public));
 
 					(* get all imported entries of imported module *)
 					GetEntries(import.module.moduleScope, numberEntries, entries);

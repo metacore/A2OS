@@ -52,7 +52,7 @@ TYPE
 	END;
 
 	ExportDesc* = RECORD
-		fp*: ADDRESS;
+		fp*: HUGEINT;
 		name* {UNTRACED}: DynamicName;
 		adr*: ADDRESS;
 		exports*: LONGINT; (* number of exports referenced by ExportArray *)

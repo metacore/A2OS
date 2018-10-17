@@ -399,7 +399,7 @@ TYPE
 		END FlagEnd;
 
 
-		PROCEDURE Value(identifier: SyntaxTree.Identifier; value: LONGINT; VAR first: BOOLEAN);
+		PROCEDURE Value(identifier: SyntaxTree.Identifier; value: HUGEINT; VAR first: BOOLEAN);
 		BEGIN
 			Flag(identifier,first);
 			w.String("("); w.Int(value,1); w.String(")");

@@ -286,7 +286,7 @@ TYPE
 							END;
 						END;
 					END;
-					modList.Put(scope.fp, adr)
+					modList.Put(SIZE(scope.fp), adr)
 				END;
 				FOR i := 0 TO scope.exports-1 DO
 					IF scope.dsc # NIL THEN TraverseScopes(scope.dsc[i],level+1) END;
@@ -332,7 +332,7 @@ TYPE
 				IF identifier.fingerprint = 0 THEN (* not identifiable via fingerprint *)
 					block := FindBlock^(identifier);
 				ELSE
-					any := hash.Get(identifier.fingerprint);
+					any := hash.Get(SYSTEM.VAL(SIZE, identifier.fingerprint));
 					IF any # NIL THEN block := any(GenericLinker.Block)  (* local block *) END;
 					IF (block # NIL) & (block.identifier.name # identifier.name) THEN (* local block, false or duplicate fingerprint *)
 						block := FindBlock^(identifier)
@@ -345,7 +345,7 @@ TYPE
 		PROCEDURE ExportBlock*(block: GenericLinker.Block);
 		BEGIN
 			IF block.identifier.fingerprint # 0 THEN
-				hash.Put(block.identifier.fingerprint, block)
+				hash.Put(SYSTEM.VAL(SIZE, block.identifier.fingerprint), block)
 			END;
 			IF (block.identifier.name[0] >= 0) & (block.identifier.name[1] >= 0)  THEN
 				IF (block.identifier.name[1] = InternalModuleName) & (block.identifier.name[2]<0) OR (block.identifier.name[2] = InternalModuleName) & (block.identifier.name[3] < 0) THEN
@@ -358,7 +358,7 @@ TYPE
 		VAR name: Modules.Name; res: WORD;
 			msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: ADDRESS; m: HashTableInt;
 			s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;
-			fp: LONGINT;
+			fp: HUGEINT;
 
 			PROCEDURE CheckName(n: StringPool.Index;  name {UNTRACED}: Modules.DynamicName): LONGINT;
 			VAR s: ObjectFile.SectionName; i: LONGINT;
@@ -457,7 +457,7 @@ TYPE
 				(*D.String("Loader Fatal error: did not find block "); s := identifier.name; D.String(s); D.Ln;*)
 				RETURN NIL;
 			ELSE (* found *)
-				importBlock.identifier.fingerprint := LONGINT(fp); importBlock.address := adr
+				importBlock.identifier.fingerprint := fp; importBlock.address := adr
 			END;
 			RETURN importBlock
 		END ImportBlock;

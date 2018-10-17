@@ -131,7 +131,7 @@ BUILDS
 		COMPILEOPTIONS "-p=Bios32"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	Bios32C {
@@ -147,7 +147,7 @@ BUILDS
 		COMPILEOPTIONS "-p=Bios64"
 		EXTENSION "Gof"
 		SYMBOLEXTENSION "Sym"
-		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
+		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
 	RPiC {

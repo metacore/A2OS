@@ -392,7 +392,7 @@ VAR
 			SegmentedNameToString(identifier.name, name);
 			writer.String (name);
 			writer.Char (Separator);
-			writer.Int (identifier.fingerprint, 0);
+			writer.Hex (identifier.fingerprint, 0);
 		END WriteIdentifier;
 
 		PROCEDURE WritePattern(pattern: Pattern);
@@ -543,7 +543,7 @@ VAR
 			reader.SkipWhitespace;
 			reader.String(name);
 			StringToSegmentedName(name,identifier.name);
-			reader.SkipWhitespace; reader.HInt (identifier.fingerprint,FALSE);
+			reader.SkipWhitespace; reader.HInt (identifier.fingerprint,TRUE);
 		END ReadIdentifier;
 
 		PROCEDURE ReadPattern(VAR pattern: Pattern);

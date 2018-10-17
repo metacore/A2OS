@@ -684,7 +684,7 @@ TYPE
 		BEGIN
 			n := 0;  y := 0;  ch := Get();
 			WHILE ch >= 80X DO INC( y, LSH( HUGEINT( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
-			x := ASH( LSH( LONGINT( ORD( ch ) ), 57 ), n - 57 ) + y
+			x := ASH( LSH( HUGEINT( ORD( ch ) ), 57 ), n - 57 ) + y
 		END RawHNum;
 
 	(** Read a size in a compressed format. *)

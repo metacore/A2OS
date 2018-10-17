@@ -77,7 +77,7 @@ TYPE
 		END DisassembleInstruction;
 
 		PROCEDURE DisassembleBlock(from, to: LONGINT);
-		VAR adr, prevadr, max, digit,value: LONGINT; string: ARRAY 256 OF CHAR;
+		VAR adr, prevadr, max, digit: LONGINT; value: WORD; string: ARRAY 256 OF CHAR;
 		BEGIN
 			IF code = NIL THEN RETURN END;
 			adr := from;
@@ -102,7 +102,7 @@ TYPE
 		END DisassembleBlock;
 
 		PROCEDURE DataBlock(from, to: LONGINT);
-		VAR adr,width,max,value: LONGINT;
+		VAR adr,width,max: LONGINT; value: WORD;
 		BEGIN
 			IF data = NIL THEN RETURN END;
 			adr := from;

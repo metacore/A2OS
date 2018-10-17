@@ -437,7 +437,7 @@ TYPE
 		END GetByte;
 
 		PROCEDURE GetWord*(pc: Unit): LONGINT;
-		VAR c1,c2: LONGINT;
+		VAR c1,c2: WORD;
 		BEGIN
 			c1 := os.bits.GetBits(pc*os.unit,8);
 			c2 := os.bits.GetBits(pc*os.unit+8,8);
@@ -449,7 +449,7 @@ TYPE
 		END GetWord;
 
 		PROCEDURE GetDWord*(pc: Unit): LONGINT;
-		VAR c1,c2,c3,c4: LONGINT;
+		VAR c1,c2,c3,c4: WORD;
 		BEGIN
 			c1 := os.bits.GetBits(pc*os.unit+0*Byte,Byte);
 			c2 := os.bits.GetBits(pc*os.unit+1*Byte,Byte);
@@ -494,7 +494,7 @@ TYPE
 			RETURN ConvertToLongreal(x)
 		END GetLongreal;
 
-		PROCEDURE GetBits*(pc: Unit; size: Bits): LONGINT;
+		PROCEDURE GetBits*(pc: Unit; size: Bits): WORD;
 		BEGIN
 			RETURN os.bits.GetBits(pc*os.unit,size)
 		END GetBits;
@@ -557,7 +557,7 @@ TYPE
 
 
 			PROCEDURE DumpUnit(at: LONGINT);
-			VAR val: LONGINT; a: ARRAY 9 OF CHAR; bits: LONGINT;
+			VAR val: WORD; a: ARRAY 9 OF CHAR; bits: LONGINT;
 			BEGIN
 				val := GetBits(at,os.unit);
 				bits := os.unit;

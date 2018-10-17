@@ -352,7 +352,7 @@ VAR
 		dest.bits := NIL;
 	END InitSection;
 
-	PROCEDURE NibbleToCharacter* (value: LONGINT): CHAR;
+	PROCEDURE NibbleToCharacter* (value: WORD): CHAR;
 	BEGIN
 		IF value >= 10 THEN
 			RETURN CHR ((ORD ('A') - 10) + value);
@@ -470,14 +470,14 @@ VAR
 		END GetSegment;
 
 		PROCEDURE WriteSegment(offset,len: LONGINT); (* offset in bits *)
-		VAR bits: LONGINT;
+		VAR value: WORD;
 		BEGIN
 			ASSERT(len MOD 4 = 0); ASSERT(offset MOD 4 = 0);
 			len := len DIV 4;
 			writer.Int(len,1); writer.Char(Separator); writer.Int(offset DIV 4,1); writer.Char(Separator);
 			WHILE len > 0 DO
-				bits := section.bits.GetBits(offset, MIN(4, size-offset));
-				writer.Char(NibbleToCharacter(bits));
+				value := section.bits.GetBits(offset, MIN(4, size-offset));
+				writer.Char(NibbleToCharacter(value));
 				INC(offset, 4);
 				DEC(len);
 			END;
@@ -820,7 +820,7 @@ VAR
 		END GetSegment;
 
 		PROCEDURE WriteSegment(offset,len: LONGINT); (* offset in bits *)
-		VAR bits: LONGINT; pos: LONGINT;
+		VAR value: WORD; pos: LONGINT;
 		BEGIN
 			pos := writer.Pos();
 			ASSERT(len > 0);
@@ -828,10 +828,10 @@ VAR
 			len := len DIV ByteSize;
 			writer.RawNum(len); writer.RawNum(offset DIV ByteSize);
 			WHILE len > 0 DO
-				bits := section.bits.GetBits(offset, MIN(ByteSize, size-offset));
+				value := section.bits.GetBits(offset, MIN(ByteSize, size-offset));
 				INC(offset, ByteSize);
 				DEC(len);
-				writer.Char(CHR(bits));
+				writer.Char(CHR(value));
 			END;
 			INC(statSegments); INC(statSegmentsSize, writer.Pos()-pos);
 		END WriteSegment;

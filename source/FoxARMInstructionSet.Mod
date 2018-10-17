@@ -2866,7 +2866,7 @@ CONST
 		Disasm = OBJECT (Disassembler.Disassembler)
 
 			PROCEDURE DisassembleInstruction(bitSet: BitSets.BitSet; VAR adr: LONGINT; maxInstructionSize: LONGINT; w:Streams.Writer);
-			VAR instruction: Instruction; value: LONGINT; mnemonic: LONGINT;
+			VAR instruction: Instruction; value: WORD; mnemonic: LONGINT;
 			BEGIN
 				(* maxInstructionSize can be ignored here *)
 				value := bitSet.GetBits(adr*8,32);

@@ -275,7 +275,7 @@ Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
 System.DoCommands
 
-Compiler.Compile  -b=AMD --bits=32 --objectFileExtension=.Obx --symbolFileExtension=.Obx --destPath=../Test/ BIOS.PCI.Mod UsbEhci.Mod UsbEhciPCI.Mod  ~
+Compiler.Compile -p=Bios32 --destPath=../Test/ BIOS.PCI.Mod UsbEhci.Mod BIOS.UsbEhciPCI.Mod  ~
 
 PCAAMD64.Assemble OBLUnreal.Asm ~
 PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
@@ -283,12 +283,12 @@ PCAAMD64.Assemble BootManager.Asm ~
 BootManager.Split BootManager.Bin ~
 System.Timer start ~
 
-FSTools.DeleteFiles ../Test/A2HDD.img ~
+FSTools.DeleteFiles -i ../Test/A2HDD.img ~
 
 VirtualDisks.Create ../Test/A2HDD.img 320000 512 ~
 VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
 
-Linker.Link \P../Test/ \.Obx ../Test/USB.Bin 0100000H 100000H Kernel Traps
+Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin Kernel Traps
 	UsbHubDriver UsbEhci UsbEhciPCI UsbStorageBoot
 	DiskVolumes DiskFS Loader BootConsole ~
 

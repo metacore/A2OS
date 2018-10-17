@@ -129,6 +129,8 @@ BUILDS
 		INCLUDE "BIOS NATIVE I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Bios32"
+		EXTENSION "Gof"
+		SYMBOLEXTENSION "Sym"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -143,6 +145,8 @@ BUILDS
 		INCLUDE "BIOS NATIVE AMD64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Bios64"
+		EXTENSION "Gof"
+		SYMBOLEXTENSION "Sym"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -1608,7 +1612,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Oberon.Objects.Mod
 	OberonInput.Mod	# WM-less Oberon I/O
 
-	OberonDisplay.Mod Oberon.Display.Mod Oberon.Display.Mod
+	OberonDisplay.Mod Oberon.Display.Mod
 	Oberon.Input.Mod	# WM-based Display & Input
 	Oberon.Viewers.Mod Oberon.Fonts.Mod
 

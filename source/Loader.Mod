@@ -144,7 +144,7 @@ TYPE
 			RETURN table[HashValue(key)].value;
 		END Get;
 
-		PROCEDURE Has*(key: LONGINT):BOOLEAN;
+		PROCEDURE Has*(key: SIZE):BOOLEAN;
 		BEGIN
 			RETURN table[HashValue(key)].key = key;
 		END Has;
@@ -295,12 +295,12 @@ TYPE
 			END TraverseScopes;
 
 		BEGIN{EXCLUSIVE}
-			IF hash.Has(SYSTEM.VAL(LONGINT, module)) THEN
-				any := hash.Get(SYSTEM.VAL(LONGINT,module));
+			IF hash.Has(SYSTEM.VAL(SIZE, module)) THEN
+				any := hash.Get(SYSTEM.VAL(SIZE,module));
 				modList := any(HashTableInt);
 			ELSE
 				NEW(modList,256);  TraverseScopes(module.export,0);
-				hash.Put(SYSTEM.VAL(LONGINT,module), modList);
+				hash.Put(SYSTEM.VAL(SIZE,module), modList);
 				RETURN modList
 			END;
 			RETURN modList;
@@ -358,7 +358,7 @@ TYPE
 		VAR name: Modules.Name; res: WORD;
 			msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: ADDRESS; m: HashTableInt;
 			s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;
-			fp: SIZE;
+			fp: LONGINT;
 
 			PROCEDURE CheckName(n: StringPool.Index;  name {UNTRACED}: Modules.DynamicName): LONGINT;
 			VAR s: ObjectFile.SectionName; i: LONGINT;

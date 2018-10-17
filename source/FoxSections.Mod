@@ -117,7 +117,7 @@ TYPE
 				w.String(" aligned="); w.Int(positionOrAlignment, 0)
 			END;
 
-			IF fingerprint # 0 THEN w.String(" fingerprint="); w.Hex(fingerprint, -8) END;
+			IF fingerprint # 0 THEN w.String(" fingerprint="); w.Hex(fingerprint, SIZE OF Basic.Fingerprint * 2) END;
 
 			IF bitsPerUnit # UnknownSize THEN w.String(" unit="); w.Int(bitsPerUnit, 0) END;
 

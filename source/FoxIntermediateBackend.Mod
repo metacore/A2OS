@@ -1457,11 +1457,11 @@ TYPE
 		PROCEDURE GetFingerprintString(symbol: SyntaxTree.Symbol; VAR string: ARRAY OF CHAR);
 		VAR
 			fingerprint: SyntaxTree.Fingerprint;
-			fingerprintString: ARRAY 32 OF CHAR;
+			fingerprintString: ARRAY SIZE OF Basic.Fingerprint * 2 + 1 OF CHAR;
 		BEGIN
 			fingerprint := fingerprinter.SymbolFP(symbol);
 			string := "[";
-			Strings.IntToHexStr(fingerprint.public, 8, fingerprintString);
+			Strings.IntToHexStr(fingerprint.public, SIZE OF Basic.Fingerprint * 2, fingerprintString);
 			Strings.Append(string, fingerprintString);
 			Strings.Append(string, "]");
 		END GetFingerprintString;
@@ -6521,7 +6521,7 @@ TYPE
 							(* push fingerprint *)
 							(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
 							fingerprint := fingerprinter.TypeFP(formalParameter.type.resolved);
-							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerprint.public))) (* TODO: push the type's fingerprint *)
+							Emit(Push(position,IntermediateCode.Immediate(IntermediateCode.GetType(system, system.hugeintType), fingerprint.public))) (* TODO: push the type's fingerprint *)
 						END
 					END;
 					formalParameter := formalParameter.nextParameter
@@ -6885,7 +6885,7 @@ TYPE
 					(* non-pointer to record type: push fingerprint *)
 					(* IF dump # NIL THEN dump.String("push fingerprint"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
 					fingerprint := fingerprinter.TypeFP(type.resolved);
-					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.longintType), fingerprint.public)
+					arg := IntermediateCode.Immediate(IntermediateCode.GetType(system, system.hugeintType), fingerprint.public)
 				END;
 				operatorInitializationCodeSection.Emit(Push(position,arg))
 			END PushTypeInfo;
@@ -13016,7 +13016,7 @@ TYPE
 		
 	(*
 	ExportDesc* = RECORD
-		fp*: ADDRESS;
+		fp*: HUGEINT;
 		name* {UNTRACED}: DynamicName;
 		adr*: ADDRESS;
 		exports*: LONGINT;

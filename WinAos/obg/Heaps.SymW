@@ -220,7 +220,7 @@ VAR
 	resets, refers, assigns: SIZE; 
 	cardSet: ARRAY ((4294967296 DIV SetSize) DIV CardSize) OF SET; 
 	youngCounts: LONGINT; 
-	throughput: SIZE; 
+	throughput := 0: SIZE; 
 
 	PROCEDURE ^ SetAllocationLogger*(a: PROCEDURE (p: ANY)); 
 	PROCEDURE ^ CheckPointer(p: ADDRESS): BOOLEAN; 

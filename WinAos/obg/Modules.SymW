@@ -30,7 +30,7 @@ TYPE
 	END; 
 
 	ExportDesc* = RECORD 
-		fp*: ADDRESS; 
+		fp*: HUGEINT; 
 		name*{UNTRACED} : DynamicName; 
 		adr*: ADDRESS; 
 		exports*: LONGINT; 

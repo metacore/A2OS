@@ -1,5 +1,5 @@
 MODULE FoxIntermediateBackend;
-	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal, Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode, Printout := FoxPrintout, SYSTEM, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging, FingerPrinter := FoxFingerPrinter, StringPool, CRC;
+	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Backend := FoxBackend, Global := FoxGlobal, Scanner := FoxScanner, IntermediateCode := FoxIntermediateCode, Sections := FoxSections, BinaryCode := FoxBinaryCode, Printout := FoxPrintout, SYSTEM, Strings, Options, Streams, Compiler, Formats := FoxFormats, SymbolFileFormat := FoxTextualSymbolFile, D := Debugging, Fingerprinter := FoxFingerprinter, StringPool, CRC;
 CONST 
 	ModeUndefined = 0; 
 	ModeReference = 1; 
@@ -272,7 +272,7 @@ TYPE
 		numberProcedures: LONGINT; 
 		procedureResultDesignator: SyntaxTree.Designator; 
 		operatorInitializationCodeSection: IntermediateCode.Section; 
-		fingerPrinter: FingerPrinter.FingerPrinter; 
+		fingerprinter: Fingerprinter.Fingerprinter; 
 		temporaries: Variables; 
 		canBeLoaded: BOOLEAN; 
 		currentIsInline: BOOLEAN; 
@@ -289,7 +289,7 @@ TYPE
 			register: IntermediateCode.Operand; 
 			memory: IntermediateCode.Operand; 
 		END; 
-		modifyAssignmentCounter: LONGINT; 
+		modifyAssignmentCounter := 0: LONGINT; 
 
 		PROCEDURE ^  & Init(system: Global.System; checker: SemanticChecker.Checker; supportedInstructionProcedure: SupportedInstructionProcedure; supportedImmediateProcedure: SupportedImmediateProcedure; emitLabels: BOOLEAN; CONST runtime: SyntaxTree.IdentifierString; backend: IntermediateBackend); 
 		PROCEDURE ^ SwitchContext(new: IntermediateCode.Section): Context; 
@@ -403,6 +403,7 @@ TYPE
 		PROCEDURE ^ PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; register: WORD); 
 		PROCEDURE ^ VisitStatementDesignator*(x: SyntaxTree.StatementDesignator); 
 		PROCEDURE ^ InlineProcedureCall(x: SyntaxTree.ProcedureCallDesignator): BOOLEAN; 
+		PROCEDURE ^ VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator); 
 		PROCEDURE ^ VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator); 
 		PROCEDURE ^ TypeDescriptorAdr(t: SyntaxTree.Type): IntermediateCode.Operand; 
 		PROCEDURE ^ ProfilerInit; 
@@ -478,6 +479,7 @@ TYPE
 		PROCEDURE ^ StaticCallOperand(VAR operand: Operand; x: SyntaxTree.Procedure); 
 		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
 		PROCEDURE ^ VisitOperator*(x: SyntaxTree.Operator); 
+		PROCEDURE ^ VisitAlias*(x: SyntaxTree.Alias); 
 		PROCEDURE ^ VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement); 
 		PROCEDURE ^ AssignMathArray(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ ModifyAssignments(CONST value: IntermediateCode.Operand); 
@@ -508,7 +510,7 @@ TYPE
 		PROCEDURE ^ ProcParametersSize(procedure: SyntaxTree.Procedure): LONGINT; 
 		PROCEDURE ^ ParameterCopies(x: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ InitVariables(scope: SyntaxTree.Scope); 
-		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT; 
+		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): Basic.Fingerprint; 
 		PROCEDURE ^ Body(x: SyntaxTree.Body; scope: SyntaxTree.Scope; ir: IntermediateCode.Section; moduleBody: BOOLEAN); 
 	END ImplementationVisitor; 
 
@@ -546,6 +548,7 @@ TYPE
 		PROCEDURE ^ Size(section: IntermediateCode.Section; value: SIZE); 
 		PROCEDURE ^ Set(section: IntermediateCode.Section; value: Basic.Set); 
 		PROCEDURE ^ Longint(section: IntermediateCode.Section; value: LONGINT); 
+		PROCEDURE ^ Hugeint(section: IntermediateCode.Section; value: HUGEINT); 
 		PROCEDURE ^ PatchSize(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 
 		PROCEDURE ^ PatchLongint(section: IntermediateCode.Section; pc: LONGINT; value: LONGINT); 
 		PROCEDURE ^ PatchSymbol(section: IntermediateCode.Section; pc: LONGINT; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT); 

@@ -29,7 +29,7 @@ TYPE
 		flags: SET; 
 		pos: Texts.TextPosition; 
 		name: Strings.String; 
-		color: LONGINT; 
+		color: WMGraphics.Color; 
 		sortInfo: LONGINT; 
 		font: WMGraphics.Font; 
 		node: ModuleParser.Node; 
@@ -80,7 +80,7 @@ TYPE
 		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: WMTrees.TreeNode; state: SET); 
 		PROCEDURE ^ ClickNode(sender, data: ANY); 
 		PROCEDURE ^ MiddleClickNode(sender, data: ANY); 
-		PROCEDURE ^ GetTextInfo(node: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortInfo, color: LONGINT; style: SET): TextInfo; 
+		PROCEDURE ^ GetTextInfo(node: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortInfo: LONGINT; color: WMGraphics.Color; style: SET): TextInfo; 
 		PROCEDURE ^ IsPublic(identDef: ModuleParser.IdentDef): BOOLEAN; 
 		PROCEDURE ^ HasPublicConsts(constDecl: ModuleParser.ConstDecl): BOOLEAN; 
 		PROCEDURE ^ HasPublicVars(varDecl: ModuleParser.VarDecl): BOOLEAN; 
@@ -102,7 +102,7 @@ TYPE
 		PROCEDURE ^ AddPointer(parent: WMTrees.TreeNode; pointer: ModuleParser.Pointer); 
 		PROCEDURE ^ AddArray(parent: WMTrees.TreeNode; array: ModuleParser.Array); 
 		PROCEDURE ^ NewNode(parent: WMTrees.TreeNode; caption: Strings.String): WMTrees.TreeNode; 
-		PROCEDURE ^ AddQualident(parent: WMTrees.TreeNode; qualident: ModuleParser.Qualident; color: LONGINT; style: SET): WMTrees.TreeNode; 
+		PROCEDURE ^ AddQualident(parent: WMTrees.TreeNode; qualident: ModuleParser.Qualident; color: WMGraphics.Color; style: SET): WMTrees.TreeNode; 
 		PROCEDURE ^ AddSuperRecords(parent: WMTrees.TreeNode; record: ModuleParser.Record); 
 		PROCEDURE ^ AddSuperClasses(parent: WMTrees.TreeNode; object: ModuleParser.Object); 
 		PROCEDURE ^ AddObject(parent: WMTrees.TreeNode; object: ModuleParser.Object; anonymous, addSuperClasses: BOOLEAN); 
@@ -113,14 +113,14 @@ TYPE
 		PROCEDURE ^ AddNumberPostfixToCaption(node: WMTrees.TreeNode; number: LONGINT); 
 		PROCEDURE ^ AddIdentList(parent: WMTrees.TreeNode; identList: ModuleParser.IdentList; VAR nofIdents: LONGINT); 
 		PROCEDURE ^ AddConstDecl(parent: WMTrees.TreeNode; constDecl: ModuleParser.ConstDecl); 
-		PROCEDURE ^ AddIdentDef(parent: WMTrees.TreeNode; node: ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo, color: LONGINT; style: SET): WMTrees.TreeNode; 
-		PROCEDURE ^ AddInfoItem(parent: WMTrees.TreeNode; node: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortInfo, color: LONGINT; style: SET): WMTrees.TreeNode; 
+		PROCEDURE ^ AddIdentDef(parent: WMTrees.TreeNode; node: ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo: LONGINT; color: WMGraphics.Color; style: SET): WMTrees.TreeNode; 
+		PROCEDURE ^ AddInfoItem(parent: WMTrees.TreeNode; node: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortInfo: LONGINT; color: WMGraphics.Color; style: SET): WMTrees.TreeNode; 
 	END ModuleTree; 
 VAR 
 	PrototypeShowTypeHierarchy: WMProperties.BooleanProperty; 
 	treeFontPlain, treeFontBold, treeFontItalic: WMGraphics.Font; 
 	font: WMGraphics.Font; 
 
-	PROCEDURE ^ GetColor(modifiers: SET; defaultColor: LONGINT): LONGINT; 
+	PROCEDURE ^ GetColor(modifiers: SET; defaultColor: WMGraphics.Color): WMGraphics.Color; 
 BEGIN
 END ModuleTrees.

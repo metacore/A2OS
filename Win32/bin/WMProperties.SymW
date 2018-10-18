@@ -157,13 +157,13 @@ TYPE
 
 	ColorProperty* = OBJECT (Property)
 	VAR 
-		value: LONGINT; 
+		value: WMGraphics.Color; 
 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ UpdateModel; 
-		PROCEDURE ^ Get*(): LONGINT; 
+		PROCEDURE ^ Get*(): WMGraphics.Color; 
 		PROCEDURE ^ Set*(value: HUGEINT); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 

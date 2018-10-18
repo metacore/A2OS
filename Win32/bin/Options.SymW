@@ -62,7 +62,7 @@ TYPE
 		PROCEDURE ^ SetStringIntern(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR; checkTimestamp: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ FindOption(CONST name: Name): LONGINT; 
 		PROCEDURE ^ WrongUsage(option: Option); 
-		PROCEDURE ^ ShowPos(pos: LONGINT); 
+		PROCEDURE ^ ShowPos(pos: Streams.Position); 
 		PROCEDURE ^ ShowOption(ch: CHAR; CONST name: Name); 
 		PROCEDURE ^ Show*(out: Streams.Writer); 
 	END Options; 

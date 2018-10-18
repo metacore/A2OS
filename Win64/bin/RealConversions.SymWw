@@ -7,6 +7,7 @@ VAR
 	H, L: INTEGER; 
 
 	PROCEDURE ^ ScanReal*(next: ReadProc): LONGREAL; 
+	PROCEDURE ^ StringToReal*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL); 
 	PROCEDURE ^ RealToString*(x: LONGREAL; n: WORD; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ RealToStringFix*(x: LONGREAL; n, f, D: WORD; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ NaNCodeL(x: LONGREAL; VAR h, l: LONGINT); 

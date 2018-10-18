@@ -1,17 +1,17 @@
 MODULE WMGraphicUtilities;
-	IMPORT WMGraphics, WMRectangles, Strings;
+	IMPORT WMGraphics, WMRectangles;
 TYPE 
 	EllipsePixelsFiller* = PROCEDURE (CONST canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; dx, dy: LONGINT; lineColor, fillColor: WMGraphics.Color; mode: LONGINT); 
 
-	PROCEDURE ^ ScaleColor*(color: LONGINT; factor: LONGINT): LONGINT; 
+	PROCEDURE ^ ScaleColor*(color: WMGraphics.Color; factor: LONGINT): WMGraphics.Color; 
 	PROCEDURE ^ InterpolateLinear*(a, b, percent: LONGINT): LONGINT; 
-	PROCEDURE ^ InterpolateColorLinear*(cl0, cl1, percent: LONGINT): LONGINT; 
-	PROCEDURE ^ DrawBevel*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN; color, mode: LONGINT); 
-	PROCEDURE ^ DrawBevelPanel*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN; color, mode: LONGINT); 
-	PROCEDURE ^ FillGradientHorizontal*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; clLeft, clRight, mode: LONGINT); 
-	PROCEDURE ^ FillGradientVertical*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; clTop, clBottom, mode: LONGINT); 
-	PROCEDURE ^ FillRoundHorizontalBar*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; down: BOOLEAN; color, mode: LONGINT); 
-	PROCEDURE ^ FillRoundVerticalBar*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; down: BOOLEAN; color, mode: LONGINT); 
+	PROCEDURE ^ InterpolateColorLinear*(cl0, cl1: WMGraphics.Color; percent: LONGINT): WMGraphics.Color; 
+	PROCEDURE ^ DrawBevel*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ DrawBevelPanel*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ FillGradientHorizontal*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; clLeft, clRight: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ FillGradientVertical*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; clTop, clBottom: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ FillRoundHorizontalBar*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; down: BOOLEAN; color: WMGraphics.Color; mode: LONGINT); 
+	PROCEDURE ^ FillRoundVerticalBar*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; down: BOOLEAN; color: WMGraphics.Color; mode: LONGINT); 
 	PROCEDURE ^ DrawRect*(canvas: WMGraphics.Canvas; r: WMRectangles.Rectangle; color: WMGraphics.Color; mode: LONGINT); 
 	PROCEDURE ^ RectGlassShade*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; borderWidth: LONGINT; down: BOOLEAN); 
 	PROCEDURE ^ ExtRectGlassShade*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; openSides: SET; borderWidth: LONGINT; down: BOOLEAN); 

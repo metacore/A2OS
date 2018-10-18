@@ -91,49 +91,49 @@ VAR
 	allocT-, copyT-, zeroT-, compT-: HUGEINT; 
 	cachePool: CachePool; 
 
-	PROCEDURE {FingerPrint(1567398664)}  - L1Block1XA(adrA, adrB, adrC, K: LONGINT);
+	PROCEDURE {Fingerprint(-2412484596828882686)}  - L1Block1XA(adrA, adrB, adrC, K: LONGINT);
 	CODE
 	END L1Block1XA; 
-	PROCEDURE {FingerPrint(-1103416808)}  - L1Block1XSSE(adrA, adrB, adrC, K: LONGINT);
+	PROCEDURE {Fingerprint(-811284660577988866)}  - L1Block1XSSE(adrA, adrB, adrC, K: LONGINT);
 	CODE
 	END L1Block1XSSE; 
-	PROCEDURE {FingerPrint(-863605617)}  - L1Block5XSSE(adrA, adrB, adrC, IncC, K: LONGINT);
+	PROCEDURE {Fingerprint(8014598234817166894)}  - L1Block5XSSE(adrA, adrB, adrC, IncC, K: LONGINT);
 	CODE
 	END L1Block5XSSE; 
-	PROCEDURE {FingerPrint(-2016777711)}  - L1Block1RA(adrA, adrB, adrC, K: LONGINT);
+	PROCEDURE {Fingerprint(-9052589194880953338)}  - L1Block1RA(adrA, adrB, adrC, K: LONGINT);
 	CODE
 	END L1Block1RA; 
-	PROCEDURE {FingerPrint(-1103419880)}  - L1Block1RSSE(adrA, adrB, adrC, K: LONGINT);
+	PROCEDURE {Fingerprint(-811306650810544386)}  - L1Block1RSSE(adrA, adrB, adrC, K: LONGINT);
 	CODE
 	END L1Block1RSSE; 
-	PROCEDURE {FingerPrint(-913937265)}  - L1Block5RSSE(adrA, adrB, adrC, IncC, K: LONGINT);
+	PROCEDURE {Fingerprint(7654310264627527214)}  - L1Block5RSSE(adrA, adrB, adrC, IncC, K: LONGINT);
 	CODE
 	END L1Block5RSSE; 
-	PROCEDURE {FingerPrint(-410736588)}  - Align4(adr: LONGINT): LONGINT;
+	PROCEDURE {Fingerprint(-1739286657647478732)}  - Align4(adr: LONGINT): LONGINT;
 	CODE
 	END Align4; 
-	PROCEDURE {FingerPrint(-410734540)}  - Align2(adr: LONGINT): LONGINT;
+	PROCEDURE {Fingerprint(-1739295453740500940)}  - Align2(adr: LONGINT): LONGINT;
 	CODE
 	END Align2; 
-	PROCEDURE {FingerPrint(-1888682025)}  - ZeroR(adr: LONGINT; count: LONGINT);
+	PROCEDURE {Fingerprint(-3314648911860400201)}  - ZeroR(adr: LONGINT; count: LONGINT);
 	CODE
 	END ZeroR; 
-	PROCEDURE {FingerPrint(-2056454185)}  - ZeroX(adr: LONGINT; count: LONGINT);
+	PROCEDURE {Fingerprint(-2882303347632832585)}  - ZeroX(adr: LONGINT; count: LONGINT);
 	CODE
 	END ZeroX; 
-	PROCEDURE {FingerPrint(-2043961113)}  - ZeroRI(adr, inc: LONGINT; count: LONGINT);
+	PROCEDURE {Fingerprint(4980407673688384)}  - ZeroRI(adr, inc: LONGINT; count: LONGINT);
 	CODE
 	END ZeroRI; 
-	PROCEDURE {FingerPrint(-2044010265)}  - ZeroXI(adr, inc: LONGINT; count: LONGINT);
+	PROCEDURE {Fingerprint(4980407673770304)}  - ZeroXI(adr, inc: LONGINT; count: LONGINT);
 	CODE
 	END ZeroXI; 
-	PROCEDURE {FingerPrint(-1528439671)}  - MovR(from, to0, frominc, count: LONGINT);
+	PROCEDURE {Fingerprint(73640408233558790)}  - MovR(from, to0, frominc, count: LONGINT);
 	CODE
 	END MovR; 
-	PROCEDURE {FingerPrint(-1538925431)}  - MovX(from, to0, frominc, count: LONGINT);
+	PROCEDURE {Fingerprint(73640408223073030)}  - MovX(from, to0, frominc, count: LONGINT);
 	CODE
 	END MovX; 
-	PROCEDURE {FingerPrint(1715167892)}  - MovR5(src, inc, stride, dest, count: LONGINT);
+	PROCEDURE {Fingerprint(8573341742047281776)}  - MovR5(src, inc, stride, dest, count: LONGINT);
 	CODE
 	END MovR5; 
 	PROCEDURE ^ AddAXAXLoopA(ladr, radr, dadr, linc, rinc, dinc, len: LONGINT); 
@@ -179,7 +179,7 @@ VAR
 	PROCEDURE ^ CopyAR(matrixA, dest: LONGINT; IncA, StrideA: LONGINT; K, M, L2BlockK, L2BlockM: LONGINT); 
 	PROCEDURE ^ CopyBX(matrixB, dest: LONGINT; IncB, StrideB: LONGINT; N, K, L2BlockN, L2BlockK: LONGINT); 
 	PROCEDURE ^ CopyBR(matrixB, dest: LONGINT; IncB, StrideB: LONGINT; N, K, L2BlockN, L2BlockK: LONGINT); 
-	PROCEDURE {FingerPrint(1951090261)}  - GetTimer(): HUGEINT;
+	PROCEDURE {Fingerprint(6112430532310135162)}  - GetTimer(): HUGEINT;
 	CODE
 	END GetTimer; 
 	PROCEDURE ^ Tic(VAR t: HUGEINT); 

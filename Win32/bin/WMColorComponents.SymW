@@ -8,7 +8,7 @@ TYPE
 
 	Color* = OBJECT 
 	VAR 
-		value*: LONGINT; 
+		value*: WMGraphics.Color; 
 	END Color; 
 
 	ColorDropTarget = OBJECT (WMDropTarget.DropTarget)
@@ -82,10 +82,10 @@ TYPE
 		palette: WMPopups.ColorSwatchPanel; 
 		showColor: ColorPot; 
 		onColorChosen: WMEvents.EventSource; 
-		color: LONGINT; 
+		color: WMGraphics.Color; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetColor(color: LONGINT); 
+		PROCEDURE ^ SetColor(color: WMGraphics.Color); 
 		PROCEDURE ^ SetColor2(sender, color: ANY); 
 		PROCEDURE ^ ShowColorChangeHandler(sender, color: ANY); 
 	END ColorChooser; 

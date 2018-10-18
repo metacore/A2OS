@@ -99,7 +99,7 @@ TYPE
 		PROCEDURE ^ GetClipRect*(VAR rect: Rectangle); 
 		PROCEDURE ^ SetClipMode*(mode: SET); 
 		PROCEDURE ^ SetColor*(x: Color); 
-		PROCEDURE ^ GetColor*(): LONGINT; 
+		PROCEDURE ^ GetColor*(): Color; 
 		PROCEDURE ^ SetFont*(f: Font); 
 		PROCEDURE ^ GetFont*(): Font; 
 		PROCEDURE ^ DrawString*(x, y: LONGINT; CONST text: ARRAY OF CHAR); 

@@ -9,7 +9,7 @@ TYPE
 	Cell* = OBJECT 
 	VAR 
 		caption: String; 
-		color, textColor: LONGINT; 
+		color, textColor: WMGraphics.Color; 
 		align: LONGINT; 
 		img: WMGraphics.Image; 
 		data: ANY; 
@@ -48,8 +48,8 @@ TYPE
 		PROCEDURE ^ GetCellText*(col, row: LONGINT): String; 
 		PROCEDURE ^ SetCellTextAOC*(col, row, minBufferSize: LONGINT; CONST caption: ARRAY OF CHAR); 
 		PROCEDURE ^ GetCellTextAOC*(col, row: LONGINT; VAR caption: ARRAY OF CHAR); 
-		PROCEDURE ^ SetCellColors*(col, row, color, textColor: LONGINT); 
-		PROCEDURE ^ GetCellColors*(col, row: LONGINT; VAR color, textColor: LONGINT; VAR valid: BOOLEAN); 
+		PROCEDURE ^ SetCellColors*(col, row: LONGINT; color, textColor: WMGraphics.Color); 
+		PROCEDURE ^ GetCellColors*(col, row: LONGINT; VAR color, textColor: WMGraphics.Color; VAR valid: BOOLEAN); 
 		PROCEDURE ^ SetCellData*(col, row: LONGINT; data: ANY); 
 		PROCEDURE ^ GetCellData*(col, row: LONGINT): ANY; 
 		PROCEDURE ^ SetCellImage*(col, row: LONGINT; img: WMGraphics.Image); 
@@ -63,7 +63,7 @@ TYPE
 	StringGrid* = OBJECT {EXCLUSIVE} (WMGrids.GenericGrid)
 	VAR 
 		model-: StringGridModel; 
-		cellColor, hoverColor, selectedColor, fixedColor, textHoverColor, textColor, textSelectedColor: LONGINT; 
+		cellColor, hoverColor, selectedColor, fixedColor, textHoverColor, textColor, textSelectedColor: WMGraphics.Color; 
 		clCell-, clFixed-, clHover-, clSelected-, clTextDefault-, clTextHover-, clTextSelected-: WMProperties.ColorProperty; 
 
 		PROCEDURE ^  & Init*; 

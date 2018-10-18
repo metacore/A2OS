@@ -241,15 +241,15 @@ TYPE
 		PROCEDURE ^ PageUp*(sender, par: ANY); 
 		PROCEDURE ^ PageDown*(sender, par: ANY); 
 		PROCEDURE ^ UpdateLayout; 
-		PROCEDURE ^ GetButtonColor(area: SHORTINT): LONGINT; 
-		PROCEDURE ^ GetPageColor(area: SHORTINT): LONGINT; 
+		PROCEDURE ^ GetButtonColor(area: SHORTINT): WMGraphics.Color; 
+		PROCEDURE ^ GetPageColor(area: SHORTINT): WMGraphics.Color; 
 		PROCEDURE ^ GetMinusButtonImage(vertical: BOOLEAN; area: SHORTINT; VAR image: WMGraphics.Image); 
 		PROCEDURE ^ GetPlusButtonImage(vertical: BOOLEAN; area: SHORTINT; VAR image: WMGraphics.Image); 
 		PROCEDURE ^ GetTrackerImages(vertical: BOOLEAN; area: SHORTINT; VAR a, b, c: WMGraphics.Image); 
 		PROCEDURE ^ GetBgImage(vertical: BOOLEAN; area: SHORTINT; VAR image: WMGraphics.Image); 
 		PROCEDURE ^ DrawHorizontalBackground(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; image, imgLeft, imgMiddle, imgRight: WMGraphics.Image); 
 		PROCEDURE ^ DrawVerticalBackground(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; image, imgTop, imgMiddle, imgBottom: WMGraphics.Image); 
-		PROCEDURE ^ DrawSimpleRepresentation(canvas: WMGraphics.Canvas; area: LONGINT; rect: WMRectangles.Rectangle; color, effect3D: LONGINT); 
+		PROCEDURE ^ DrawSimpleRepresentation(canvas: WMGraphics.Canvas; area: LONGINT; rect: WMRectangles.Rectangle; color: WMGraphics.Color; effect3D: LONGINT); 
 		PROCEDURE ^ DrawImage(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; image: WMGraphics.Image; repeat, vertical: BOOLEAN); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Scrollbar; 

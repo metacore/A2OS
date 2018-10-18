@@ -185,7 +185,7 @@ TYPE
 	TextView* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		defaultTextColor-, defaultTextBgColor-: WMProperties.ColorProperty; 
-		defaultTextColorI, defaultTextBgColorI: LONGINT; 
+		defaultTextColorI, defaultTextBgColorI: WMGraphics.Color; 
 		isMultiLine-: WMProperties.BooleanProperty; 
 		isMultiLineI: BOOLEAN; 
 		wrapMode-: WMProperties.Int32Property; 
@@ -218,12 +218,12 @@ TYPE
 		showLineNumbers-: WMProperties.BooleanProperty; 
 		showLineNumbersI: BOOLEAN; 
 		lineNumberColor-, lineNumberBgColor-: WMProperties.ColorProperty; 
-		lineNumberColorI, lineNumberBgColorI: LONGINT; 
+		lineNumberColorI, lineNumberBgColorI: WMGraphics.Color; 
 		lineNumberFont, lineNumberFont10: WMGraphics.Font; 
 		indicateTabs-: WMProperties.BooleanProperty; 
 		indicateTabsI: BOOLEAN; 
 		clBgCurrentLine-: WMProperties.ColorProperty; 
-		clBgCurrentLineI: LONGINT; 
+		clBgCurrentLineI: WMGraphics.Color; 
 		selection-: Highlight; 
 		cursor-: Cursor; 
 		onLinkClicked-: WMEvents.EventSource; 

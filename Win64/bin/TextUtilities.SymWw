@@ -37,7 +37,8 @@ TYPE
 		text: Texts.Text; 
 		ucs32buf: POINTER TO ARRAY OF LONGINT; 
 		fontName: ARRAY 32 OF CHAR; 
-		fontSize, fontColor, fontBgColor, fontVOff: LONGINT; 
+		fontSize, fontBgColor, fontVOff: LONGINT; 
+		fontColor: WMGraphics.Color; 
 		fontStyle: SET; 
 		currentAttributes-: Texts.Attributes; 
 		oldBytes: ARRAY 7 OF CHAR; 
@@ -52,7 +53,7 @@ TYPE
 		PROCEDURE ^ SetFontName*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ SetFontSize*(size: LONGINT); 
 		PROCEDURE ^ SetFontStyle*(style: SET); 
-		PROCEDURE ^ SetFontColor*(color: LONGINT); 
+		PROCEDURE ^ SetFontColor*(color: WMGraphics.Color); 
 		PROCEDURE ^ SetBgColor*(bgColor: LONGINT); 
 		PROCEDURE ^ SetVerticalOffset*(voff: LONGINT); 
 		PROCEDURE ^ AddObject*(obj: ANY); 

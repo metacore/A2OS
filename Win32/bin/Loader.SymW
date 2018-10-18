@@ -47,8 +47,8 @@ TYPE
 
 		PROCEDURE ^  & Init*(initialSize: LONGINT); 
 		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
-		PROCEDURE ^ Get*(key: LONGINT): ANY; 
-		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Get*(key: SIZE): ANY; 
+		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
 		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ HashValue(key: SIZE): SIZE; 

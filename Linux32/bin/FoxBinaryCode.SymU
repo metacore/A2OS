@@ -48,7 +48,7 @@ TYPE
 
 		PROCEDURE ^  & InitFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: LONGINT; displacement: Unit; scale: LONGINT; fixupPattern: ObjectFile.FixupPatterns); 
 		PROCEDURE ^ SetFixupOffset*(offset: Unit); 
-		PROCEDURE ^ SetSymbol*(symbol: Sections.SectionName; fp: LONGINT; symbolOffset: LONGINT; displacement: Unit); 
+		PROCEDURE ^ SetSymbol*(symbol: Sections.SectionName; fp: ObjectFile.Fingerprint; symbolOffset: LONGINT; displacement: Unit); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END Fixup; 
 
@@ -79,8 +79,8 @@ TYPE
 		bigEndian-: BOOLEAN; 
 		pc-: Unit; 
 
-		PROCEDURE ^ GetPC(): LONGINT; 
-		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
+		PROCEDURE ^ GetPC(): Unit; 
+		PROCEDURE ^  & InitBinarySection*(type: SHORTINT; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ AddLabel*(position: Basic.Position); 
 		PROCEDURE ^ SetPC*(pc: Unit); 
@@ -91,24 +91,24 @@ TYPE
 		PROCEDURE ^ CopyBits*(src: BitSets.BitSet; srcPos, len: Bits); 
 		PROCEDURE ^ PutBits*(d: HUGEINT; size: Bits); 
 		PROCEDURE ^ PutBitsAt*(at: Unit; d: HUGEINT; size: Bits); 
-		PROCEDURE ^ PutByte*(b: LONGINT); 
-		PROCEDURE ^ PutWord*(w: LONGINT); 
-		PROCEDURE ^ PutDWord*(d: LONGINT); 
+		PROCEDURE ^ PutByte*(b: WORD); 
+		PROCEDURE ^ PutWord*(w: WORD); 
+		PROCEDURE ^ PutDWord*(d: WORD); 
 		PROCEDURE ^ PutQWord*(q: HUGEINT); 
 		PROCEDURE ^ PutReal*(f: REAL); 
 		PROCEDURE ^ PutLongreal*(f: LONGREAL); 
-		PROCEDURE ^ PutByteAt*(at: Unit; d: LONGINT); 
-		PROCEDURE ^ PutWordAt*(at: Unit; d: LONGINT); 
-		PROCEDURE ^ PutDWordAt*(at: Unit; d: LONGINT); 
+		PROCEDURE ^ PutByteAt*(at: Unit; d: WORD); 
+		PROCEDURE ^ PutWordAt*(at: Unit; d: WORD); 
+		PROCEDURE ^ PutDWordAt*(at: Unit; d: WORD); 
 		PROCEDURE ^ PutQWordAt*(at: Unit; d: HUGEINT); 
 		PROCEDURE ^ PutBytes*(data: HUGEINT; bytes: SHORTINT); 
 		PROCEDURE ^ GetByte*(pc: Unit): CHAR; 
-		PROCEDURE ^ GetWord*(pc: Unit): LONGINT; 
-		PROCEDURE ^ GetDWord*(pc: Unit): LONGINT; 
+		PROCEDURE ^ GetWord*(pc: Unit): WORD; 
+		PROCEDURE ^ GetDWord*(pc: Unit): WORD; 
 		PROCEDURE ^ GetQWord*(pc: Unit): HUGEINT; 
 		PROCEDURE ^ GetReal*(pc: Unit): REAL; 
 		PROCEDURE ^ GetLongreal*(pc: Unit): LONGREAL; 
-		PROCEDURE ^ GetBits*(pc: Unit; size: Bits): LONGINT; 
+		PROCEDURE ^ GetBits*(pc: Unit; size: Bits): WORD; 
 		PROCEDURE ^ ApplyFixup*(fixup: Fixup): BOOLEAN; 
 		PROCEDURE ^ DumpCode*(w: Streams.Writer; from, to: Unit); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 

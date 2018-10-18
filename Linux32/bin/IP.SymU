@@ -51,7 +51,7 @@ VAR
 	PROCEDURE ^ IsValidIPv4Str(CONST ipString: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ IsValidIPv6Str(ipString: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ SetIPv6AdrNil(adr: Adr); 
-	PROCEDURE {FingerPrint(1732388717)}  - SwapEndian(VAR adr: LONGINT);
+	PROCEDURE {Fingerprint(7622940362159962290)}  - SwapEndian(VAR adr: LONGINT);
 	CODE
 	END SwapEndian; 
 BEGIN

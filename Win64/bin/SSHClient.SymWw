@@ -22,7 +22,7 @@ TYPE
 
 	Attribute = POINTER TO RECORD 
 		fnt: WMG.Font; 
-		bg, fg: LONGINT; 
+		bg, fg: WMG.Color; 
 		special: SET; 
 	END; 
 
@@ -57,7 +57,7 @@ TYPE
 		mode: SET; 
 		closeWindow: WindowCloser; 
 		first, top: Line; 
-		bg: LONGINT; 
+		bg: WMG.Color; 
 		scrollTop, scrollBottom: Line; 
 		scrollBegin, scrollEnd: LONGINT; 
 		tabs: POINTER TO ARRAY OF BOOLEAN; 

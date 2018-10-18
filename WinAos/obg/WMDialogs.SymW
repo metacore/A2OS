@@ -132,9 +132,9 @@ TYPE
 		PROCEDURE ^ Close*; 
 	END CustomDialog; 
 
-	PROCEDURE ^ NewPanel(fillColor, alignment, width, height: LONGINT): WMStandardComponents.Panel; 
+	PROCEDURE ^ NewPanel(fillColor: WMGraphics.Color; alignment, width, height: LONGINT): WMStandardComponents.Panel; 
 	PROCEDURE ^ NewLabel*(CONST caption: ARRAY OF CHAR; alignment, width, height: LONGINT): WMStandardComponents.Label; 
-	PROCEDURE ^ NewEditor*(CONST uid: ARRAY OF CHAR; textColor, textBgColor, alignment, width, height: LONGINT): WMEditors.Editor; 
+	PROCEDURE ^ NewEditor*(CONST uid: ARRAY OF CHAR; textColor, textBgColor: WMGraphics.Color; alignment, width, height: LONGINT): WMEditors.Editor; 
 	PROCEDURE ^ InstantiateButton*(CONST uid, caption: ARRAY OF CHAR): WMStandardComponents.Button; 
 	PROCEDURE ^ FindComponent*(c: WMComponents.Component; CONST id: ARRAY OF CHAR): WMComponents.Component; 
 	PROCEDURE ^ FindButton*(c: WMComponents.Component; CONST id: ARRAY OF CHAR): WMStandardComponents.Button; 

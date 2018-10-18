@@ -17,7 +17,7 @@ TYPE
 
 	RectObject* = OBJECT (DTPData.ContentObject)
 	VAR 
-		lineColor, rectColor, rectColor2: LONGINT; 
+		lineColor, rectColor, rectColor2: WMGraphics.Color; 
 		lineWidth: REAL; 
 		fillMode: LONGINT; 
 		gradientHorizontal: BOOLEAN; 

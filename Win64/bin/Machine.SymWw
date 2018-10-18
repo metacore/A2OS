@@ -80,7 +80,7 @@ VAR
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 
 	PROCEDURE ^ StrToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE {FingerPrint(2114384799)}  - AtomicInc*(VAR x: LONGINT);
+	PROCEDURE {Fingerprint(-4906166419077515203)}  - AtomicInc*(VAR x: LONGINT);
 	CODE
 
 		POP RAX
@@ -89,7 +89,7 @@ VAR
 
 	
 	END AtomicInc; 
-	PROCEDURE {FingerPrint(381088663)}  - AtomicDec*(VAR x: LONGINT);
+	PROCEDURE {Fingerprint(-4906166419489605579)}  - AtomicDec*(VAR x: LONGINT);
 	CODE
 
 		POP RAX
@@ -99,7 +99,7 @@ VAR
 	
 	END AtomicDec; 
 	PROCEDURE ^ AtomicExcl*(VAR s: SET; bit: LONGINT); 
-	PROCEDURE {FingerPrint(59150593)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+	PROCEDURE {Fingerprint(-8128385309809622434)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
 	CODE
 
 		POP EBX
@@ -109,7 +109,7 @@ VAR
 
 	
 	END AtomicAdd; 
-	PROCEDURE {FingerPrint(423481940)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
+	PROCEDURE {Fingerprint(3527218884401619127)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
 	CODE
 
 		POP RBX
@@ -118,7 +118,7 @@ VAR
 
 	
 	END AtomicTestSet; 
-	PROCEDURE {FingerPrint(-31252743)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	PROCEDURE {Fingerprint(-519038113181393041)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
 	CODE
 
 		POP EBX		; new
@@ -128,34 +128,34 @@ VAR
 
 	
 	END AtomicCAS; 
-	PROCEDURE {FingerPrint(-414159379)}  - SpinHint*;
+	PROCEDURE {Fingerprint(7628482207854476747)}  - SpinHint*;
 	CODE
 		PAUSE
 	
 	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
-	PROCEDURE {FingerPrint(368510835)}  - CurrentBP*(): ADDRESS;
+	PROCEDURE {Fingerprint(4803519866585645229)}  - CurrentBP*(): ADDRESS;
 	CODE
 
 		MOV RAX, RBP
 
 	
 	END CurrentBP; 
-	PROCEDURE {FingerPrint(247209244)}  - SetBP*(bp: ADDRESS);
+	PROCEDURE {Fingerprint(5764612334986991996)}  - SetBP*(bp: ADDRESS);
 	CODE
 
 		POP RBP
 
 	
 	END SetBP; 
-	PROCEDURE {FingerPrint(702750756)}  - CurrentSP*(): ADDRESS;
+	PROCEDURE {Fingerprint(7340254540714668729)}  - CurrentSP*(): ADDRESS;
 	CODE
 
 		MOV RAX, RSP
 
 	
 	END CurrentSP; 
-	PROCEDURE {FingerPrint(-1900274411)}  - SetSP*(sp: ADDRESS);
+	PROCEDURE {Fingerprint(-3458759701867783819)}  - SetSP*(sp: ADDRESS);
 	CODE {SYSTEM.AMD64}
 
 		POP RSP
@@ -163,20 +163,20 @@ VAR
 	
 	END SetSP; 
 	PROCEDURE ^ Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
-	PROCEDURE {FingerPrint(1201501690)}  - SetFCR(s: SET);
+	PROCEDURE {Fingerprint(5082109869366590970)}  - SetFCR(s: SET);
 	CODE
 	END SetFCR; 
-	PROCEDURE {FingerPrint(538123933)}  - FCR(): SET;
+	PROCEDURE {Fingerprint(5376736950748288)}  - FCR(): SET;
 	CODE
 	END FCR; 
-	PROCEDURE {FingerPrint(971517682)}  - InitFPU;
+	PROCEDURE {Fingerprint(7631660203431244919)}  - InitFPU;
 	CODE
 	END InitFPU; 
 	PROCEDURE ^ SetupFPU*; 
 	PROCEDURE ^ CPUID*(VAR vendor: Vendor; VAR version: LONGINT; VAR features1, features2: SET); 
 	PROCEDURE ^ GetConfig*(CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
 	PROCEDURE ^ Shutdown*(restart: BOOLEAN); 
-	PROCEDURE {FingerPrint(1951073877)}  - GetTimer*(): HUGEINT;
+	PROCEDURE {Fingerprint(6112430532310118778)}  - GetTimer*(): HUGEINT;
 	CODE {SYSTEM.Pentium}
 	RDTSC	; set EDX:EAX
 

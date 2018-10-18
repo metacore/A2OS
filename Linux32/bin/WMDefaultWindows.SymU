@@ -88,7 +88,7 @@ TYPE
 
 	BackWindow* = OBJECT (WM.Window)
 	VAR 
-		color: LONGINT; 
+		color: Graphics.Color; 
 
 		PROCEDURE ^  & New*(bgColor: LONGINT); 
 		PROCEDURE ^ StyleChanged*; 

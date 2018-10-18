@@ -1,5 +1,5 @@
 MODULE FoxInterfaceComparison;
-	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, FingerPrinter := FoxFingerPrinter, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Diagnostics, Strings, D := Debugging;
+	IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Formats := FoxFormats, Fingerprinter := FoxFingerprinter, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Diagnostics, Strings, D := Debugging;
 CONST 
 	Redefined* = 0; 
 	Extended* = 1; 

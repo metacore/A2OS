@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ SetResult(CONST name: ARRAY OF CHAR; CONST r: Result); 
 		PROCEDURE ^ SymbolInScope(CONST ident: ARRAY OF CHAR): SyntaxTree.Symbol; 
 		PROCEDURE ^ ConstantSymbol(pos: Position; constant: SyntaxTree.Constant; VAR result: Result): BOOLEAN; 
-		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): LONGINT; 
+		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): Basic.Fingerprint; 
 		PROCEDURE ^ NonConstantSymbol(pos: Position; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN; 
 		PROCEDURE ^ GetNonConstant*(pos: Position; CONST ident: ARRAY OF CHAR; VAR result: Result): BOOLEAN; 
 		PROCEDURE ^ LocalOffset(pos: Position; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN; 

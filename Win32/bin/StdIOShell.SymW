@@ -5,8 +5,8 @@ CONST
 TYPE 
 	Executor = OBJECT {EXCLUSIVE} 
 	VAR 
-		done: BOOLEAN; 
-		code: LONGINT; 
+		done := FALSE: BOOLEAN; 
+		code := Modules.PowerDown: LONGINT; 
 
 		PROCEDURE ^ Wait; 
 	BEGIN{ACTIVE, EXCLUSIVE} 

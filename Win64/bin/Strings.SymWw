@@ -29,8 +29,6 @@ VAR
 	OPERATOR ^ "+"-(a, b: String): String; 
 	OPERATOR ^ "+"-(a: String; b: HUGEINT): String; 
 	OPERATOR ^ "+"-(a: String; b: LONGREAL): String; 
-	PROCEDURE ^ Min*(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ Max*(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ Length*(CONST string: ARRAY OF CHAR): LONGINT; 
 	PROCEDURE ^ Find*(CONST string: ARRAY OF CHAR; pos: LONGINT; ch: CHAR): LONGINT; 
 	PROCEDURE ^ Count*(CONST string: ARRAY OF CHAR; ch: CHAR): LONGINT; 

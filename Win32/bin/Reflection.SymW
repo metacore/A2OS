@@ -4,10 +4,7 @@ CONST
 	ShowAllProcs = TRUE; 
 	MaxFrames = 128; 
 	MaxString = 64; 
-	MaxArray = 8; 
-	MaxCols = 70; 
 	Sep = \"  "\; 
-	SepLen = 2; 
 	LineDelay = 0; 
 	sfTypeNone* = 0X; 
 	sfTypeCHAR* = 1X; 
@@ -69,7 +66,7 @@ CONST
 	sfTypeDeclaration* = 0F4X; 
 	sfModule* = 0FFX; 
 TYPE 
-	Name = ARRAY 128 OF CHAR; 
+	Name = ARRAY 256 OF CHAR; 
 
 	Meta* = RECORD 
 		module-: Modules.Module; 

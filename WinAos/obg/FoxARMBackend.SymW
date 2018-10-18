@@ -217,7 +217,7 @@ TYPE
 		identifier: ObjectFile.Identifier; 
 		symbolOffset: LONGINT; 
 
-		PROCEDURE ^  & InitSym(s: Sections.SectionName; fp: LONGINT; offs: LONGINT); 
+		PROCEDURE ^  & InitSym(s: Sections.SectionName; fp: Basic.Fingerprint; offs: LONGINT); 
 		PROCEDURE ^ Emit(out: BinaryCode.Section); 
 	END SymbolReference; 
 
@@ -231,7 +231,7 @@ TYPE
 		PROCEDURE ^ UpdateDue(pc: LONGINT; bits: LONGINT; shift: LONGINT); 
 		PROCEDURE ^ AddCitation(reference: Reference; pc: LONGINT; bits: LONGINT; shift: LONGINT); 
 		PROCEDURE ^ AddReference(reference: Reference): Reference; 
-		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: LONGINT; symbolOffset: LONGINT; pc: LONGINT; bits: LONGINT); 
+		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: LONGINT; pc: LONGINT; bits: LONGINT); 
 		PROCEDURE ^ AddImmediate(value: LONGINT; pc: LONGINT; bits: LONGINT); 
 		PROCEDURE ^ AddHImmediate(value: HUGEINT; pc: LONGINT; bits: LONGINT); 
 	END ListOfReferences; 
@@ -298,7 +298,7 @@ TYPE
 		PROCEDURE ^ RegisterFromIrRegister(CONST irRegisterOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ Load(targetRegister, memoryOperand: Operand; irType: IntermediateCode.Type); 
 		PROCEDURE ^ Store(sourceRegister, memoryOperand: Operand; type: IntermediateCode.Type); 
-		PROCEDURE ^ RegisterFromSymbol(symbol: Sections.SectionName; fingerprint: LONGINT; resolved: Sections.Section; symbolOffset: LONGINT; CONST registerHint: Operand): Operand; 
+		PROCEDURE ^ RegisterFromSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; resolved: Sections.Section; symbolOffset: LONGINT; CONST registerHint: Operand): Operand; 
 		PROCEDURE ^ MemoryOperandFromIrMemoryOperand(VAR irMemoryOperand: IntermediateCode.Operand; part: LONGINT; CONST registerHint: Operand): Operand; 
 		PROCEDURE ^ RegisterOrImmediateFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ RegisterFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 

@@ -40,8 +40,8 @@ TYPE
 	ColorSwatchPopup* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		colorPanel: ColorSwatchPanel; 
-		color-: LONGINT; 
-		onColorChosen*: PROCEDURE {DELEGATE}(color: LONGINT); 
+		color-: WMGraphics.Color; 
+		onColorChosen*: PROCEDURE {DELEGATE}(color: WMGraphics.Color); 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ CreatePopup; 
@@ -49,13 +49,13 @@ TYPE
 		PROCEDURE ^ Clicked(sender, data: ANY); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ FocusGot*; 
-		PROCEDURE ^ SetColor(color: LONGINT); 
+		PROCEDURE ^ SetColor(color: WMGraphics.Color); 
 	END ColorSwatchPopup; 
 
 	ColorSwatchPanel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		colors: ARRAY 19 OF LONGINT; 
-		ChosenColorProc*: PROCEDURE {DELEGATE}(color: LONGINT); 
+		ChosenColorProc*: PROCEDURE {DELEGATE}(color: WMGraphics.Color); 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 

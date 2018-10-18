@@ -199,17 +199,17 @@ TYPE
 		font: Font; 
 		next: PDFCanvas; 
 		prl, prt, prr, prb, scale: REAL; 
-		colrg, colRG: LONGINT; 
+		colrg, colRG: WMGraphics.Color; 
 		fSize: REAL; 
 		xfont: Font; 
 
 		PROCEDURE ^  & Init*(pc: PDFCreator; pageFormat: LONGINT; landscape: BOOLEAN; unit: LONGINT); 
 		PROCEDURE ^ Transform(x, y: LONGINT; VAR rx, ry: REAL); 
 		PROCEDURE ^ WriteTrafoCoord(x, y: LONGINT); 
-		PROCEDURE ^ SetColor*(col: LONGINT); 
-		PROCEDURE ^ SetColrg(col: LONGINT); 
-		PROCEDURE ^ SetColRG(col: LONGINT); 
-		PROCEDURE ^ Fill*(r: WMRectangles.Rectangle; col: LONGINT; mode: LONGINT); 
+		PROCEDURE ^ SetColor*(col: WMGraphics.Color); 
+		PROCEDURE ^ SetColrg(col: WMGraphics.Color); 
+		PROCEDURE ^ SetColRG(col: WMGraphics.Color); 
+		PROCEDURE ^ Fill*(r: WMRectangles.Rectangle; col: WMGraphics.Color; mode: LONGINT); 
 		PROCEDURE ^ GetPDFFont(f: WMGraphics.Font): Font; 
 		PROCEDURE ^ PDFSetFont*(name: ARRAY OF CHAR; size: LONGINT; style: SET); 
 		PROCEDURE ^ DrawString*(x, y: LONGINT; CONST text: ARRAY OF CHAR); 
@@ -219,7 +219,7 @@ TYPE
 		PROCEDURE ^ PDFSetLineJoin*(param: INTEGER); 
 		PROCEDURE ^ PolyLine*(CONST points: ARRAY OF WMGraphics.Point2d; nofPoints: LONGINT; closed: BOOLEAN; color: WMGraphics.Color; mode: LONGINT); 
 		PROCEDURE ^ FillPoly*(CONST points: ARRAY OF WMGraphics.Point2d; nofPoints: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
-		PROCEDURE ^ Line*(x0, y0, x1, y1: LONGINT; color: LONGINT; mode: LONGINT); 
+		PROCEDURE ^ Line*(x0, y0, x1, y1: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
 		PROCEDURE ^ Close; 
 	END PDFCanvas; 
 

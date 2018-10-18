@@ -1,5 +1,5 @@
 MODULE FoxMinosObjectFile;
-	IMPORT Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, FingerPrinter := FoxFingerPrinter, Sections := FoxSections, Streams, D := Debugging, Files, SYSTEM, Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Options, Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine;
+	IMPORT Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Fingerprinter := FoxFingerprinter, Sections := FoxSections, Streams, D := Debugging, Files, SYSTEM, Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Options, Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine;
 CONST 
 	Trace = FALSE; 
 TYPE 

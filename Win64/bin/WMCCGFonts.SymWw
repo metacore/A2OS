@@ -60,7 +60,7 @@ TYPE
 		PROCEDURE ^ Load*(fontName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ FindGlyphSubComponent(VAR ref: GlyphRef): Glyph; 
 		PROCEDURE ^ CalcBB(glyph: Glyph): WMRectangles.Rectangle; 
-		PROCEDURE ^ RenderGlyphReal*(canvas: WMGraphics.Canvas; glyph: Glyph; x, y, w, h: REAL; level: LONGINT; filled: BOOLEAN; color, mode: LONGINT; VAR points: ARRAY OF WMGraphics.Point2d); 
+		PROCEDURE ^ RenderGlyphReal*(canvas: WMGraphics.Canvas; glyph: Glyph; x, y, w, h: REAL; level: LONGINT; filled: BOOLEAN; color: WMGraphics.Color; mode: LONGINT; VAR points: ARRAY OF WMGraphics.Point2d); 
 	END GenericFont; 
 VAR 
 	fontCache: Kernel.FinalizedCollection; 
@@ -68,7 +68,7 @@ VAR
 	foundFont: GenericFont; 
 
 	PROCEDURE ^ AddPoint(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: LONGINT; x, y: LONGINT); 
-	PROCEDURE ^ SplineReal(canvas: WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h: REAL; color, mode: LONGINT); 
+	PROCEDURE ^ SplineReal(canvas: WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h: REAL; color: WMGraphics.Color; mode: LONGINT); 
 	PROCEDURE ^ AddSplinePoints(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: LONGINT; x0, y0, x1, y1, x2, y2, x, y, w, h: REAL); 
 	PROCEDURE ^ CheckFont(obj: ANY; VAR cont: BOOLEAN); 
 	PROCEDURE ^ LoadExactFont*(fi: WMFontManager.FontInfo): WMGraphics.Font; 

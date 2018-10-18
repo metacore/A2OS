@@ -5,7 +5,7 @@ TYPE
 	Line* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		color-: WMProperties.ColorProperty; 
-		colorI: LONGINT; 
+		colorI: WMGraphics.Color; 
 		isVertical-: WMProperties.BooleanProperty; 
 		isVerticalI: BOOLEAN; 
 		start-, end-: WMProperties.PointProperty; 
@@ -24,7 +24,7 @@ TYPE
 	Rectangle* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		clBorder-: WMProperties.ColorProperty; 
-		clBorderI: LONGINT; 
+		clBorderI: WMGraphics.Color; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
@@ -34,7 +34,7 @@ TYPE
 	Circle* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		color: WMProperties.ColorProperty; 
-		colorI: LONGINT; 
+		colorI: WMGraphics.Color; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
@@ -44,7 +44,7 @@ TYPE
 	Ellipse* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		color: WMProperties.ColorProperty; 
-		colorI: LONGINT; 
+		colorI: WMGraphics.Color; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 

@@ -93,49 +93,49 @@ VAR
 	allocT-, copyT-, zeroT-, compT-: HUGEINT; 
 	cachePool: CachePool; 
 
-	PROCEDURE {FingerPrint(2113020961)}  - L1Block1XA(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	PROCEDURE {Fingerprint(-2627754146740407385)}  - L1Block1XA(adrA, adrB, adrC: ADDRESS; K: SIZE);
 	CODE
 	END L1Block1XA; 
-	PROCEDURE {FingerPrint(-1118880696)}  - L1Block1XSSE(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	PROCEDURE {Fingerprint(-825922115293773698)}  - L1Block1XSSE(adrA, adrB, adrC: ADDRESS; K: SIZE);
 	CODE
 	END L1Block1XSSE; 
-	PROCEDURE {FingerPrint(-820878638)}  - L1Block5XSSE(adrA, adrB, adrC: ADDRESS; IncC, K: SIZE);
+	PROCEDURE {Fingerprint(8002213129622646947)}  - L1Block5XSSE(adrA, adrB, adrC: ADDRESS; IncC, K: SIZE);
 	CODE
 	END L1Block5XSSE; 
-	PROCEDURE {FingerPrint(1209696010)}  - L1Block1RA(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	PROCEDURE {Fingerprint(-3157554898498460794)}  - L1Block1RA(adrA, adrB, adrC: ADDRESS; K: SIZE);
 	CODE
 	END L1Block1RA; 
-	PROCEDURE {FingerPrint(-1118885816)}  - L1Block1RSSE(adrA, adrB, adrC: ADDRESS; K: SIZE);
+	PROCEDURE {Fingerprint(-825944105526329218)}  - L1Block1RSSE(adrA, adrB, adrC: ADDRESS; K: SIZE);
 	CODE
 	END L1Block1RSSE; 
-	PROCEDURE {FingerPrint(-904764718)}  - L1Block5RSSE(adrA, adrB, adrC: ADDRESS; IncC, K: SIZE);
+	PROCEDURE {Fingerprint(7641925159433007267)}  - L1Block5RSSE(adrA, adrB, adrC: ADDRESS; IncC, K: SIZE);
 	CODE
 	END L1Block5RSSE; 
-	PROCEDURE {FingerPrint(-456874700)}  - Align4(adr: ADDRESS): ADDRESS;
+	PROCEDURE {Fingerprint(-1739286657601342156)}  - Align4(adr: ADDRESS): ADDRESS;
 	CODE
 	END Align4; 
-	PROCEDURE {FingerPrint(-456868556)}  - Align2(adr: ADDRESS): ADDRESS;
+	PROCEDURE {Fingerprint(-1739295453694364364)}  - Align2(adr: ADDRESS): ADDRESS;
 	CODE
 	END Align2; 
-	PROCEDURE {FingerPrint(-1943211689)}  - ZeroR(adr: ADDRESS; count: SIZE);
+	PROCEDURE {Fingerprint(-3314648911847821001)}  - ZeroR(adr: ADDRESS; count: SIZE);
 	CODE
 	END ZeroR; 
-	PROCEDURE {FingerPrint(-2043874985)}  - ZeroX(adr: ADDRESS; count: SIZE);
+	PROCEDURE {Fingerprint(-2882303347620253385)}  - ZeroX(adr: ADDRESS; count: SIZE);
 	CODE
 	END ZeroX; 
-	PROCEDURE {FingerPrint(-2054443377)}  - ZeroRI(adr: SIZE; inc, count: SIZE);
+	PROCEDURE {Fingerprint(4980029706084288)}  - ZeroRI(adr: SIZE; inc, count: SIZE);
 	CODE
 	END ZeroRI; 
-	PROCEDURE {FingerPrint(-2054492489)}  - ZeroXI(adr: ADDRESS; inc, count: SIZE);
+	PROCEDURE {Fingerprint(4980201504858048)}  - ZeroXI(adr: ADDRESS; inc, count: SIZE);
 	CODE
 	END ZeroXI; 
-	PROCEDURE {FingerPrint(-1484795167)}  - MovR(from, to0, frominc, count: SIZE);
+	PROCEDURE {Fingerprint(89965785090379142)}  - MovR(from, to0, frominc, count: SIZE);
 	CODE
 	END MovR; 
-	PROCEDURE {FingerPrint(-1479421223)}  - MovX(from, to0: ADDRESS; frominc, count: SIZE);
+	PROCEDURE {Fingerprint(86025101067177350)}  - MovX(from, to0: ADDRESS; frominc, count: SIZE);
 	CODE
 	END MovX; 
-	PROCEDURE {FingerPrint(1698786545)}  - MovR5(src: ADDRESS; inc, stride: SIZE; dest: ADDRESS; count: SIZE);
+	PROCEDURE {Fingerprint(8557015265731267837)}  - MovR5(src: ADDRESS; inc, stride: SIZE; dest: ADDRESS; count: SIZE);
 	CODE
 	END MovR5; 
 	PROCEDURE ^ AddAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 

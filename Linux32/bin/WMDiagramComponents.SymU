@@ -25,7 +25,7 @@ TYPE
 	DataDescriptor* = RECORD 
 		name*: ARRAY 32 OF CHAR; 
 		unit*: ARRAY 16 OF CHAR; 
-		color*: LONGINT; 
+		color*: WMGraphics.Color; 
 		flags*: SET; 
 	END; 
 
@@ -73,7 +73,7 @@ TYPE
 		min-, max-, deltax-, deltaXGrid-, deltaXGridSmall-, glassShade-, valueWidth-: WMProperties.Int32Property; 
 		minI, maxI, deltaxI, deltaXGridI, deltaXGridSmallI, glassShadeI, valueWidthI: LONGINT; 
 		color-, gridColor-: WMProperties.ColorProperty; 
-		colorI, gridColorI: LONGINT; 
+		colorI, gridColorI: WMGraphics.Color; 
 		autoMin-, autoMax-, showValues-: WMProperties.BooleanProperty; 
 		autoMinI, autoMaxI, showValuesI: BOOLEAN; 
 		unit-: WMProperties.StringProperty; 
@@ -123,7 +123,7 @@ TYPE
 		numberData-: LONGINT; 
 		heights-: POINTER TO ARRAY OF LONGREAL; 
 		labels-: POINTER TO ARRAY OF Strings.String; 
-		colors-: POINTER TO ARRAY OF LONGINT; 
+		colors-: POINTER TO ARRAY OF WMGraphics.Color; 
 		c: CoordinateSystem; 
 		vertical: BOOLEAN; 
 
@@ -131,7 +131,7 @@ TYPE
 		PROCEDURE ^ UpdateCoordinateSystem; 
 		PROCEDURE ^ SetData*(CONST heights: ARRAY OF LONGREAL; numberData: LONGINT); 
 		PROCEDURE ^ SetLabels*(CONST labels: ARRAY OF Strings.String); 
-		PROCEDURE ^ SetColors*(CONST colors: ARRAY OF LONGINT); 
+		PROCEDURE ^ SetColors*(CONST colors: ARRAY OF WMGraphics.Color); 
 		PROCEDURE ^ SetWidthOffset*(width, offset: LONGREAL); 
 		PROCEDURE ^ SetVertical*(vertical: BOOLEAN); 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 

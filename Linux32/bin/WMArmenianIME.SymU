@@ -1,5 +1,5 @@
 MODULE WMArmenianIME;
-	IMPORT Strings, WMInputMethods, Texts, KernelLog;
+	IMPORT WMInputMethods, Texts, KernelLog;
 CONST 
 	imeName* = \"Armenian"\; 
 TYPE 

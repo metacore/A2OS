@@ -24,7 +24,7 @@ TYPE
 		type-: SHORTINT; 
 		fixed-: BOOLEAN; 
 		positionOrAlignment-: LONGINT; 
-		fingerprint-: LONGINT; 
+		fingerprint-: Basic.Fingerprint; 
 		bitsPerUnit-: LONGINT; 
 		symbol-: SyntaxTree.Symbol; 
 		offset-: LONGINT; 
@@ -38,7 +38,7 @@ TYPE
 		PROCEDURE ^ IsAligned*(): BOOLEAN; 
 		PROCEDURE ^ SetPositionOrAlignment*(isFixed: BOOLEAN; positionOrAlignment: LONGINT); 
 		PROCEDURE ^ GetSize*(): LONGINT; 
-		PROCEDURE ^ SetFingerprint*(fingerprint: LONGINT); 
+		PROCEDURE ^ SetFingerprint*(fingerprint: Basic.Fingerprint); 
 		PROCEDURE ^ SetType*(type: SHORTINT); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 		PROCEDURE ^ WriteRaw*(w: Streams.Writer); 

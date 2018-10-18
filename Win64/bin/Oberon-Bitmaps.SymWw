@@ -33,7 +33,7 @@ VAR
 	PROCEDURE ^ DisplayBlock*(B: Bitmap; SX, SY, W, H, DX, DY, mode: INTEGER; VAR colortable: ARRAY OF LONGINT); 
 	PROCEDURE ^ GetPix*(VAR addr: ADDRESS; VAR buf: SYSTEM.BYTE; depth: INTEGER); 
 	PROCEDURE ^ PutPix*(VAR addr: ADDRESS; border: ADDRESS; buf: SYSTEM.BYTE; depth: INTEGER); 
-	PROCEDURE {FingerPrint(-435604338)}  - Copy0(src, dst: ADDRESS; hx, sw2, dw2: LONGINT);
+	PROCEDURE {Fingerprint(-664009434103430530)}  - Copy0(src, dst: ADDRESS; hx, sw2, dw2: LONGINT);
 	CODE
 	END Copy0; 
 	PROCEDURE ^ Copy*(sB, dB: Bitmap; SX, SY, SW, SH, DX, DY, DW, DH, mode: INTEGER); 

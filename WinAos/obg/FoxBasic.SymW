@@ -52,6 +52,8 @@ TYPE
 
 	ErrorCode* = LONGINT; 
 
+	Fingerprint* = ObjectFile.Fingerprint; 
+
 	List* = OBJECT 
 	VAR 
 		list: ObjectArray; 
@@ -394,7 +396,7 @@ TYPE
 		PROCEDURE ^ RawReal*(x: REAL); 
 		PROCEDURE ^ RawLReal*(x: LONGREAL); 
 		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ RawNum*(x: LONGINT); 
+		PROCEDURE ^ RawNum*(x: HUGEINT); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ Int*(x: HUGEINT; wd: SIZE); 

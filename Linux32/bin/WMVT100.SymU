@@ -32,7 +32,7 @@ TYPE
 
 	Attribute = POINTER TO RECORD 
 		fnt: WMGraphics.Font; 
-		bg, fg: LONGINT; 
+		bg, fg: WMGraphics.Color; 
 		special: SET; 
 	END; 
 
@@ -60,7 +60,7 @@ TYPE
 	VAR 
 		C: Connection; 
 		first, last, top: Line; 
-		bg: LONGINT; 
+		bg: WMGraphics.Color; 
 		rows, cols, boxW, boxH, dX, dY: LONGINT; 
 		tabs: POINTER TO ARRAY OF BOOLEAN; 
 		attr: Attribute; 

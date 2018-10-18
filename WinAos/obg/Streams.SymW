@@ -60,14 +60,14 @@ TYPE
 		PROCEDURE ^ RawReal*(x: REAL); 
 		PROCEDURE ^ RawLReal*(x: LONGREAL); 
 		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ RawNum*(x: LONGINT); 
-		PROCEDURE ^ RawSize*(x: SIZE); 
+		PROCEDURE ^ RawNum*(x: HUGEINT); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ Int*(x: HUGEINT; w: SIZE); 
 		PROCEDURE ^ Set*(s: SET); 
 		PROCEDURE ^ Hex*(x: HUGEINT; w: SIZE); 
 		PROCEDURE ^ Address*(x: ADDRESS); 
+		PROCEDURE ^ Size*(x: SIZE); 
 		PROCEDURE ^ Pair(ch: CHAR; x: LONGINT); 
 		PROCEDURE ^ Date*(t, d: LONGINT); 
 		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
@@ -119,8 +119,11 @@ TYPE
 		PROCEDURE ^ RawLReal*(VAR x: LONGREAL); 
 		PROCEDURE ^ RawString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ RawNum*(VAR x: LONGINT); 
+		PROCEDURE ^ RawHNum*(VAR x: HUGEINT); 
 		PROCEDURE ^ RawSize*(VAR x: SIZE); 
 		PROCEDURE ^ Int*(VAR x: LONGINT; hex: BOOLEAN); 
+		PROCEDURE ^ HInt*(VAR x: HUGEINT; hex: BOOLEAN); 
+		PROCEDURE ^ Size*(VAR x: SIZE; hex: BOOLEAN); 
 		PROCEDURE ^ EOLN*(): BOOLEAN; 
 		PROCEDURE ^ Ln*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ LnEOT*(VAR x: ARRAY OF CHAR); 
@@ -131,6 +134,7 @@ TYPE
 		PROCEDURE ^ String*(VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetString*(VAR string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetInteger*(VAR integer: LONGINT; isHexadecimal: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ GetSize*(VAR size: SIZE; isHexadecimal: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ GetReal*(VAR real: LONGREAL): BOOLEAN; 
 		PROCEDURE ^ GetChar*(VAR ch: CHAR): BOOLEAN; 
 	END Reader; 

@@ -76,9 +76,9 @@ TYPE
 		PROCEDURE ^ StyleDrop(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
 		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ ColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ BGColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ Close*; 
 	END AdHocStyleWindow; 
 
@@ -129,9 +129,9 @@ TYPE
 		PROCEDURE ^ StyleHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
 		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ ColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ BGColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
 	END StyleEditor; 
 VAR 
 	nofWindows: LONGINT; 

@@ -1,5 +1,5 @@
 MODULE FoxPrintout;
-	IMPORT Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, FingerPrinter := FoxFingerPrinter, Streams, D := Debugging, SYSTEM;
+	IMPORT Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Basic := FoxBasic, Fingerprinter := FoxFingerprinter, Streams, D := Debugging, SYSTEM;
 CONST 
 	Exported* = 0; 
 	SymbolFile* = 1; 
@@ -18,7 +18,7 @@ TYPE
 		case: LONGINT; 
 		useCase: BOOLEAN; 
 		alertCount, commentCount: LONGINT; 
-		fingerPrinter: FingerPrinter.FingerPrinter; 
+		fingerprinter: Fingerprinter.Fingerprinter; 
 
 		PROCEDURE ^ Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
 		PROCEDURE ^ Big(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
@@ -56,7 +56,7 @@ TYPE
 		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 
 		PROCEDURE ^ Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN); 
 		PROCEDURE ^ FlagEnd(first: BOOLEAN); 
-		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: LONGINT; VAR first: BOOLEAN); 
+		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: HUGEINT; VAR first: BOOLEAN); 
 		PROCEDURE ^ VisitProcedureType*(x: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ ExpressionList(x: SyntaxTree.ExpressionList); 
 		PROCEDURE ^ Expression*(x: SyntaxTree.Expression); 
@@ -83,6 +83,7 @@ TYPE
 		PROCEDURE ^ VisitDereferenceDesignator*(x: SyntaxTree.DereferenceDesignator); 
 		PROCEDURE ^ VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator); 
 		PROCEDURE ^ VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator); 
+		PROCEDURE ^ VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator); 
 		PROCEDURE ^ VisitStatementDesignator*(x: SyntaxTree.StatementDesignator); 
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
 		PROCEDURE ^ VisitValue*(x: SyntaxTree.Value); 

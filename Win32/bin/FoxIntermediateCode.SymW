@@ -205,12 +205,12 @@ VAR
 	PROCEDURE ^ RegisterOffset*(type: Type; registerClass: RegisterClass; register, offset: LONGINT): Operand; 
 	PROCEDURE ^ AddOffset*(VAR op: Operand; offset: LONGINT); 
 	PROCEDURE ^ SetOffset*(VAR op: Operand; offset: LONGINT); 
-	PROCEDURE ^ SetSymbol*(VAR op: Operand; symbol: Sections.SectionName; fp: LONGINT); 
+	PROCEDURE ^ SetSymbol*(VAR op: Operand; symbol: Sections.SectionName; fp: Basic.Fingerprint); 
 	PROCEDURE ^ SetIntValue*(VAR op: Operand; intValue: HUGEINT); 
 	PROCEDURE ^ MakeMemory*(VAR op: Operand; type: Type); 
 	PROCEDURE ^ MakeAddress*(VAR op: Operand; CONST type: Type); 
-	PROCEDURE ^ InitAddress*(VAR op: Operand; type: Type; symbol: Sections.SectionName; fp: LONGINT; symbolOffset: LONGINT); 
-	PROCEDURE ^ Address*(type: Type; symbol: Sections.SectionName; fp: LONGINT; offset: LONGINT): Operand; 
+	PROCEDURE ^ InitAddress*(VAR op: Operand; type: Type; symbol: Sections.SectionName; fp: Basic.Fingerprint; symbolOffset: LONGINT); 
+	PROCEDURE ^ Address*(type: Type; symbol: Sections.SectionName; fp: Basic.Fingerprint; offset: LONGINT): Operand; 
 	PROCEDURE ^ InitMemory*(VAR op: Operand; type: Type; base: Operand; offset: LONGINT); 
 	PROCEDURE ^ Memory*(type: Type; base: Operand; offset: LONGINT): Operand; 
 	PROCEDURE ^ IsConstantInteger*(CONST op: Operand; VAR value: HUGEINT): BOOLEAN; 

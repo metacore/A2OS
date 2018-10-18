@@ -19,6 +19,8 @@ TYPE
 
 	Bits* = LONGINT; 
 
+	Fingerprint* = HUGEINT; 
+
 	SectionType = INTEGER; 
 
 	SegmentedName* = ARRAY SegmentedNameLength OF StringPool.Index; 
@@ -33,7 +35,7 @@ TYPE
 
 	Identifier* = RECORD 
 		name*: SegmentedName; 
-		fingerprint*: LONGINT; 
+		fingerprint*: Fingerprint; 
 	END; 
 
 	Pattern* = POINTER TO RECORD 
@@ -132,7 +134,7 @@ VAR
 	PROCEDURE ^ CopyAlias*(CONST source: Alias; VAR dest: Alias); 
 	PROCEDURE ^ CopySection*(CONST source: Section; VAR dest: Section); 
 	PROCEDURE ^ InitSection*(VAR dest: Section); 
-	PROCEDURE ^ NibbleToCharacter*(value: LONGINT): CHAR; 
+	PROCEDURE ^ NibbleToCharacter*(value: WORD): CHAR; 
 	PROCEDURE ^ CharacterToNibble*(char: CHAR): LONGINT; 
 	PROCEDURE ^ WriteSectionTextual(writer: Streams.Writer; CONST section: Section); 
 	PROCEDURE ^ ReadSectionTextual(reader: Streams.Reader; version: LONGINT; VAR section: Section); 
@@ -147,8 +149,8 @@ VAR
 	PROCEDURE ^ AddPatch*(VAR patches: LONGINT; VAR patch: Patches; disp, ofs: LONGINT); 
 	PROCEDURE ^ SameFixupPattern(patterns: LONGINT; left, right: FixupPatterns): BOOLEAN; 
 	PROCEDURE ^ HasPattern(pat: Pattern; mode, scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): BOOLEAN; 
-	PROCEDURE ^ AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: LONGINT; mode: INTEGER; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT; 
-	PROCEDURE ^ AddAlias*(VAR aliases: LONGINT; VAR alias: Aliases; CONST name: SegmentedName; fingerprint, offset: LONGINT): LONGINT; 
+	PROCEDURE ^ AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: INTEGER; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT; 
+	PROCEDURE ^ AddAlias*(VAR aliases: LONGINT; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: LONGINT): LONGINT; 
 	PROCEDURE ^ StringToSegmentedName*(CONST name: ARRAY OF CHAR; VAR segmentedName: SegmentedName); 
 	PROCEDURE ^ SegmentedNameToString*(CONST segmentedName: SegmentedName; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ CompareSegmentedNames*(CONST s1, s2: SegmentedName): LONGINT; 

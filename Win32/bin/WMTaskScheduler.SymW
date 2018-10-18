@@ -38,8 +38,8 @@ TYPE
 
 		PROCEDURE ^  & New(task: TaskScheduler.Task); 
 		PROCEDURE ^ UpdateTaskInfo(forceUpdate: BOOLEAN); 
-		PROCEDURE ^ GetFillColor(secondsLeft: LONGINT): LONGINT; 
-		PROCEDURE ^ GetIndicationColor(): LONGINT; 
+		PROCEDURE ^ GetFillColor(secondsLeft: LONGINT): WMGraphics.Color; 
+		PROCEDURE ^ GetIndicationColor(): WMGraphics.Color; 
 		PROCEDURE ^ Update(dt: Dates.DateTime); 
 		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
 		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 

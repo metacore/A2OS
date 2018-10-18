@@ -73,12 +73,12 @@ TYPE
 		panel: WMStandardComponents.Panel; 
 		button: WMStandardComponents.Button; 
 		result: WORD; 
-		chosenColor*: LONGINT; 
+		chosenColor*: WMGraphics.Color; 
 		shown: BOOLEAN; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Show*(x, y: LONGINT; VAR chosen: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Show*(x, y: LONGINT; VAR chosen: WMGraphics.Color): BOOLEAN; 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ PressHandler(sender, data: ANY); 
@@ -185,8 +185,8 @@ TYPE
 
 	PreviewPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Label)
 	VAR 
-		fontColor*: LONGINT; 
-		fontBackColor*: LONGINT; 
+		fontColor*: WMGraphics.Color; 
+		fontBackColor*: WMGraphics.Color; 
 		oldFont: WMGraphics.Font; 
 
 		PROCEDURE ^  & Init*; 
@@ -240,16 +240,16 @@ TYPE
 		centerContent, panel: WMStandardComponents.Panel; 
 		spacerLeft, spacerTop, spacerRight, spacerBottom: WMStandardComponents.Panel; 
 		caption*: ARRAY 128 OF CHAR; 
-		textColor*: LONGINT; 
+		textColor*: WMGraphics.Color; 
 		font*: WMGraphics.Font; 
 		alignH*, alignV*: LONGINT; 
 		hasBevel*: BOOLEAN; 
 		bevelWidth*: LONGINT; 
-		bevelColor*: LONGINT; 
+		bevelColor*: WMGraphics.Color; 
 		bevelDown*: BOOLEAN; 
 		hasInnerBevel*: BOOLEAN; 
 		innerBevelWidth*: LONGINT; 
-		innerBevelColor*: LONGINT; 
+		innerBevelColor*: WMGraphics.Color; 
 		innerBevelDown*: BOOLEAN; 
 		hasGlass*: BOOLEAN; 
 		glassWidth*: LONGINT; 
@@ -257,7 +257,7 @@ TYPE
 		glassOpenSides*: SET; 
 		img*: Raster.Image; 
 		imgBorderWidth*: LONGINT; 
-		altFillColor*: LONGINT; 
+		altFillColor*: WMGraphics.Color; 
 		fillMode*: LONGINT; 
 
 		PROCEDURE ^  & Init*; 

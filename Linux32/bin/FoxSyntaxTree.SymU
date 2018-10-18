@@ -30,7 +30,7 @@ CONST
 	Undefined* = {}; 
 	BeingResolved* = 1; 
 	Resolved* = 2; 
-	FingerPrinted* = 3; 
+	Fingerprinted* = 3; 
 	Warned* = 4; 
 	ArrayIndex* = 0; 
 	SetElement* = 1; 
@@ -97,6 +97,7 @@ TYPE
 		PROCEDURE ^ VisitSymbolDesignator*(x: SymbolDesignator); 
 		PROCEDURE ^ VisitIndexDesignator*(x: IndexDesignator); 
 		PROCEDURE ^ VisitProcedureCallDesignator*(x: ProcedureCallDesignator); 
+		PROCEDURE ^ VisitInlineCallDesignator*(x: InlineCallDesignator); 
 		PROCEDURE ^ VisitStatementDesignator*(x: StatementDesignator); 
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: BuiltinCallDesignator); 
 		PROCEDURE ^ VisitTypeGuardDesignator*(x: TypeGuardDesignator); 
@@ -124,6 +125,7 @@ TYPE
 		PROCEDURE ^ VisitParameter*(x: Parameter); 
 		PROCEDURE ^ VisitProperty*(x: Property); 
 		PROCEDURE ^ VisitProcedure*(x: Procedure); 
+		PROCEDURE ^ VisitAlias*(x: Alias); 
 		PROCEDURE ^ VisitBuiltin*(x: Builtin); 
 		PROCEDURE ^ VisitOperator*(x: Operator); 
 		PROCEDURE ^ VisitImport*(x: Import); 
@@ -154,8 +156,8 @@ TYPE
 		read*, write*: POINTER TO ARRAY OF Operator; 
 	END; 
 
-	FingerPrint* = RECORD 
-		shallow*, public*, private*: LONGINT; 
+	Fingerprint* = RECORD 
+		shallow*, public*, private*: Basic.Fingerprint; 
 		shallowAvailable*, deepAvailable*: BOOLEAN; 
 	END; 
 
@@ -178,7 +180,7 @@ TYPE
 		position-, end-: Position; 
 		state-: SET; 
 		hasPointers-: BOOLEAN; 
-		fingerprint-: FingerPrint; 
+		fingerprint-: Fingerprint; 
 		isRealtime-: BOOLEAN; 
 		recursion: BOOLEAN; 
 		sizeInBits-: LONGINT; 
@@ -188,7 +190,7 @@ TYPE
 		PROCEDURE ^ SetSize*(sizeInBits: LONGINT); 
 		PROCEDURE ^ SetAlignmentInBits*(alignmentInBits: LONGINT); 
 		PROCEDURE ^ End*(position: LONGINT); 
-		PROCEDURE ^ SetFingerPrint*(CONST fp: FingerPrint); 
+		PROCEDURE ^ SetFingerprint*(CONST fp: Fingerprint); 
 		PROCEDURE ^ SetState*(state: LONGINT); 
 		PROCEDURE ^ SetHasPointers*(has: BOOLEAN); 
 		PROCEDURE ^ RemoveState*(state: LONGINT); 
@@ -729,6 +731,16 @@ TYPE
 		PROCEDURE ^ Clone(): Expression; 
 	END ProcedureCallDesignator; 
 
+	InlineCallDesignator* = OBJECT (Designator)
+	VAR 
+		procedureCall-: ProcedureCallDesignator; 
+		block-: StatementBlock; 
+		result-: Expression; 
+
+		PROCEDURE ^  & InitInlineCall*(position: Position; o: ProcedureCallDesignator; b: StatementBlock); 
+		PROCEDURE ^ SetResult*(e: Expression); 
+	END InlineCallDesignator; 
+
 	BuiltinCallDesignator* = OBJECT (Designator)
 	VAR 
 		id-: LONGINT; 
@@ -779,10 +791,10 @@ TYPE
 
 	Value* = OBJECT (Expression)
 	VAR 
-		fingerprint-: FingerPrint; 
+		fingerprint-: Fingerprint; 
 
 		PROCEDURE ^  & InitValue(position: Position); 
-		PROCEDURE ^ SetFingerPrint*(CONST fp: FingerPrint); 
+		PROCEDURE ^ SetFingerprint*(CONST fp: Fingerprint); 
 		PROCEDURE ^ Equals*(v: Value): BOOLEAN; 
 	END Value; 
 
@@ -904,12 +916,12 @@ TYPE
 		alignment-: LONGINT; 
 		position-, end-: Position; 
 		state-: SET; 
-		fingerprint-: FingerPrint; 
+		fingerprint-: Fingerprint; 
 		comment-: Comment; 
 
 		PROCEDURE ^  & InitSymbol(position: Position; name: Identifier); 
 		PROCEDURE ^ SetAlignment*(fix: BOOLEAN; align: LONGINT); 
-		PROCEDURE ^ SetFingerPrint*(CONST fp: FingerPrint); 
+		PROCEDURE ^ SetFingerprint*(CONST fp: Fingerprint); 
 		PROCEDURE ^ SetState*(state: LONGINT); 
 		PROCEDURE ^ SetScope*(scope: Scope); 
 		PROCEDURE ^ SetType*(type: Type); 
@@ -997,6 +1009,14 @@ TYPE
 		PROCEDURE ^  & InitProperty(position: Position; name: Identifier); 
 		PROCEDURE ^ SetValue*(e: Expression); 
 	END Property; 
+
+	Alias* = OBJECT (Symbol)
+	VAR 
+		expression-: Expression; 
+
+		PROCEDURE ^  & InitAlias*(position: Position; name: Identifier; e: Expression); 
+		PROCEDURE ^ SetExpression*(e: Expression); 
+	END Alias; 
 
 	Procedure* = OBJECT (Symbol)
 	VAR 
@@ -1325,8 +1345,9 @@ TYPE
 		isRealtime-: BOOLEAN; 
 		isUnchecked-: BOOLEAN; 
 		isUncooperative-: BOOLEAN; 
+		scope-: Scope; 
 
-		PROCEDURE ^  & InitStatementBlock(position: Position; outer: Statement); 
+		PROCEDURE ^  & InitStatementBlock(position: Position; outer: Statement; s: Scope); 
 		PROCEDURE ^ SetRealtime*(b: BOOLEAN); 
 		PROCEDURE ^ SetUnchecked*(unchecked: BOOLEAN); 
 		PROCEDURE ^ SetUncooperative*(uncooperative: BOOLEAN); 
@@ -1424,6 +1445,9 @@ TYPE
 		PROCEDURE ^ SetBody*(body: Body); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 	END ProcedureScope; 
+
+	BlockScope* = OBJECT (Scope)
+	END BlockScope; 
 
 	EnumerationScope* = OBJECT (Scope)
 	VAR 
@@ -1566,12 +1590,13 @@ VAR
 	moduleType-: Type; 
 	indexListSeparator-: Expression; 
 
-	PROCEDURE ^ InitFingerPrint*(VAR fingerprint: FingerPrint); 
+	PROCEDURE ^ InitFingerprint*(VAR fingerprint: Fingerprint); 
 	PROCEDURE ^ NewModule*(CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT): Module; 
 	PROCEDURE ^ NewComment*(position: Position; scope: Scope; CONST source: ARRAY OF CHAR; length: LONGINT): Comment; 
 	PROCEDURE ^ NewImport*(position: Position; alias, name: Identifier; direct: BOOLEAN): Import; 
 	PROCEDURE ^ NewConstant*(position: Position; name: Identifier): Constant; 
 	PROCEDURE ^ NewProcedure*(position: Position; name: Identifier; scope: ProcedureScope): Procedure; 
+	PROCEDURE ^ NewAlias*(position: Position; name: Identifier; expression: Expression): Alias; 
 	PROCEDURE ^ NewBuiltin*(position: Position; name: Identifier; id: LONGINT): Builtin; 
 	PROCEDURE ^ NewCustomBuiltin*(position: Position; name: Identifier; id: LONGINT; subType: SHORTINT): CustomBuiltin; 
 	PROCEDURE ^ NewOperator*(position: Position; name: Identifier; scope: ProcedureScope): Operator; 
@@ -1617,6 +1642,7 @@ VAR
 	PROCEDURE ^ NewSymbolDesignator*(position: Position; left: Designator; symbol: Symbol): SymbolDesignator; 
 	PROCEDURE ^ NewIndexDesignator*(position: Position; left: Designator): IndexDesignator; 
 	PROCEDURE ^ NewProcedureCallDesignator*(position: Position; left: Designator; parameters: ExpressionList): ProcedureCallDesignator; 
+	PROCEDURE ^ NewInlineCallDesignator*(position: Position; o: ProcedureCallDesignator; block: StatementBlock): InlineCallDesignator; 
 	PROCEDURE ^ NewBuiltinCallDesignator*(position: Position; id: LONGINT; left: Designator; parameters: ExpressionList): BuiltinCallDesignator; 
 	PROCEDURE ^ NewTypeGuardDesignator*(position: Position; left: Designator; type: Type): TypeGuardDesignator; 
 	PROCEDURE ^ NewDereferenceDesignator*(position: Position; left: Designator): DereferenceDesignator; 
@@ -1650,7 +1676,7 @@ VAR
 	PROCEDURE ^ NewStatementSequence*(): StatementSequence; 
 	PROCEDURE ^ CloneStatementSequence*(statementSequence: StatementSequence): StatementSequence; 
 	PROCEDURE ^ NewModifier*(position: Position; identifier: Identifier; expression: Expression): Modifier; 
-	PROCEDURE ^ NewStatementBlock*(position: Position; outer: Statement): StatementBlock; 
+	PROCEDURE ^ NewStatementBlock*(position: Position; outer: Statement; scope: Scope): StatementBlock; 
 	PROCEDURE ^ NewStatementDesignator*(position: Position; s: Statement): StatementDesignator; 
 	PROCEDURE ^ NewBody*(position: Position; scope: ProcedureScope): Body; 
 	PROCEDURE ^ NewIfPart*(): IfPart; 
@@ -1672,6 +1698,7 @@ VAR
 	PROCEDURE ^ NewAwaitStatement*(position: Position; outer: Statement): AwaitStatement; 
 	PROCEDURE ^ NewCode*(position: Position; outer: Statement): Code; 
 	PROCEDURE ^ NewProcedureScope*(outer: Scope): ProcedureScope; 
+	PROCEDURE ^ NewBlockScope*(outer: Scope): BlockScope; 
 	PROCEDURE ^ NewModuleScope*(): ModuleScope; 
 	PROCEDURE ^ NewRecordScope*(outer: Scope): RecordScope; 
 	PROCEDURE ^ NewCellScope*(outer: Scope): CellScope; 

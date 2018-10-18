@@ -16,7 +16,7 @@ TYPE
 	ChangeInfo = OBJECT (Texts.Attributes)
 	VAR 
 		name: ARRAY 128 OF CHAR; 
-		fgColor, bgColor: LONGINT; 
+		fgColor, bgColor: WMGraphics.Color; 
 		deltaSize: LONGINT; 
 		deltaSizeMode: LONGINT; 
 		style: SET; 
@@ -42,9 +42,9 @@ TYPE
 		PROCEDURE ^ StyleDrop(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
 		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ ColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ BGColorPopupHandler(result: LONGINT); 
+		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ UpdateColors(sender, data: ANY); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ LoadData(elem: XML.Element); 

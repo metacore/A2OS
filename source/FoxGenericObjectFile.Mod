@@ -6,7 +6,7 @@ IMPORT
 	Fingerprinter := FoxFingerprinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 
 CONST
-	Version = 5;
+	Version = 6;
 	Trace = FALSE;
 	TraceAliases = FALSE;
 	WarnDuplicateFingerprints = FALSE;

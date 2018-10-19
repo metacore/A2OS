@@ -1289,9 +1289,9 @@ TYPE
 					(* offset cannot be encoded directly _> it has to be provided by means of an adapted base register *)
 					tempRegister := RegisterFromValue(ABS(offset), emptyOperand);
 					IF offset < 0 THEN
-						Emit3(opSUB, tempRegister, tempRegister, baseAddressRegister)
+						Emit3(opSUB, tempRegister, baseAddressRegister, tempRegister)
 					ELSE
-						Emit3(opADD, tempRegister, tempRegister, baseAddressRegister)
+						Emit3(opADD, tempRegister, baseAddressRegister, tempRegister)
 					END;
 					ReleaseHint(baseAddressRegister.register);
 					baseAddressRegister := tempRegister;

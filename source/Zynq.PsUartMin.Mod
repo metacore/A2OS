@@ -441,8 +441,6 @@ VAR
 
 	(**
 		Returns number of bytes available in the receive FIFO of the UART controller
-
-		res: error code, 0 in case of success
 	*)
 	PROCEDURE Available*(uart: UartRegisters): LONGINT;
 	BEGIN

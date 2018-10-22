@@ -58,7 +58,7 @@ TYPE
 		sent*: LONGINT;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
 
-		PROCEDURE & InitWriter*( send: Sender;  size: LONGINT );
+		PROCEDURE & InitWriter*( send: Sender;  size: SIZE );
 		BEGIN
 			ASSERT ( send # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -410,7 +410,7 @@ TYPE
 	(** A special writer that buffers output to be fetched by GetString or GetRawString. *)
 	StringWriter* = OBJECT (Writer)
 
-		PROCEDURE & InitStringWriter*( size: LONGINT );
+		PROCEDURE & InitStringWriter*( size: SIZE );
 		BEGIN
 			InitWriter( Send, size )
 		END InitStringWriter;
@@ -467,7 +467,7 @@ TYPE
 		received*: LONGINT;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
 
-		PROCEDURE & InitReader*( receive: Receiver;  size: LONGINT );
+		PROCEDURE & InitReader*( receive: Receiver;  size: SIZE );
 		BEGIN
 			ASSERT ( receive # NIL );
 			IF (buf = NIL) OR (LEN(buf) # size) THEN
@@ -924,7 +924,7 @@ TYPE
 	(** A special reader that buffers input set by SetString or SetRawString. *)
 	StringReader* = OBJECT (Reader)
 
-		PROCEDURE & InitStringReader*( size: LONGINT );
+		PROCEDURE & InitStringReader*( size: SIZE );
 		BEGIN
 			InitReader( Receive, size )
 		END InitStringReader;

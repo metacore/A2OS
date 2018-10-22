@@ -33,7 +33,7 @@ TYPE
 
 	Fingerprint* = HUGEINT;
 
-	SectionType = INTEGER;
+	SectionType = WORD;
 
 	SegmentedName*= ARRAY SegmentedNameLength OF StringPool.Index;
 	SectionName* = ARRAY 128 OF CHAR;
@@ -62,7 +62,7 @@ TYPE
 	END;
 
 	Pattern*= POINTER TO RECORD (* this is the same for many fixups *)
-		mode-: INTEGER;
+		mode-: WORD;
 		scale-: Bits;
 		patterns-: LONGINT;
 		pattern-: FixupPatterns
@@ -374,7 +374,7 @@ VAR
 	CONST Separator = ' '; Tab = 09X;
 	VAR i,offset,start, len: LONGINT; size: Bits;
 
-		PROCEDURE WriteValueIdentifier (value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
 			writer.String (identifiers[value]);
 		END WriteValueIdentifier;
@@ -520,9 +520,9 @@ VAR
 	END WriteSectionTextual;
 
 	PROCEDURE ReadSectionTextual (reader: Streams.Reader; version: WORD; VAR section: Section);
-	VAR i, size: LONGINT; char: CHAR; relocatibility: INTEGER; priority: LONGINT;
+	VAR i, size: LONGINT; char: CHAR; relocatibility, priority: WORD;
 
-		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		VAR identifier: ARRAY 10 OF CHAR;
 		BEGIN
 			value := 0;
@@ -725,7 +725,7 @@ VAR
 	VAR pos, i, offset, start, len: LONGINT; size: Bits;
 	CONST ByteSize=8;
 
-		PROCEDURE WriteValueIdentifier (value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
 			writer.RawNum(value);
 			(*
@@ -890,15 +890,13 @@ VAR
 	END WriteSectionBinary;
 
 	PROCEDURE ReadSectionBinary (reader: Streams.Reader; version: WORD; VAR section: Section; poolMap: PoolMap);
-	VAR i, size: LONGINT; relocatibility: INTEGER; ch: CHAR; priority: LONGINT;
+	VAR i, size: LONGINT; relocatibility, priority: WORD; ch: CHAR;;
 	CONST ByteSize=8;
 
-		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		(* VAR identifier: ARRAY 10 OF CHAR; *)
-		VAR num: LONGINT;
 		BEGIN
-			reader.RawNum(num);
-			value := SHORT(num);
+			reader.RawNum(value);
 			(*
 			value := 0;
 			reader.RawString (identifier);
@@ -1123,7 +1121,7 @@ VAR
 
 
 	(*
-	PROCEDURE AddPatch(VAR patches: LONGINT; VAR patch: Patches; mode: INTEGER; displacement, scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns; offset: LONGINT);
+	PROCEDURE AddPatch(VAR patches: LONGINT; VAR patch: Patches; mode: WORD; displacement, scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns; offset: LONGINT);
 	VAR i: LONGINT; newPatches: LONGINT; newPatch: Patches; len: LONGINT;
 	BEGIN
 		FOR i := 0 TO patches-1 DO
@@ -1160,7 +1158,7 @@ VAR
 	END AddPatch;
 	*)
 
-	PROCEDURE AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: INTEGER; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT;
+	PROCEDURE AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT;
 	VAR i: LONGINT; newFixups, index: LONGINT; newFixup: Fixups;
 	BEGIN
 		FOR i := 0 TO fixups-1 DO

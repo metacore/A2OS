@@ -31,6 +31,8 @@ CONST
 	(* TX error interrupts *)
 	TxErrorInterrupts = {PsUartMin.XUARTPS_IXR_TOVR};
 
+	TxOverrunError = 9;
+
 TYPE
 
 	UartController* = POINTER TO RECORD
@@ -120,9 +122,7 @@ VAR
 	BEGIN
 		IF intrStatus * TxErrorInterrupts # {} THEN
 			IF PsUartMin.XUARTPS_IXR_TOVR IN intrStatus THEN
-				INCL(uart.errors,OverrunError);
-				Trace.String("---tx overrun---: intrStatus="); Trace.Set(intrStatus); Trace.Ln;
-				RETURN;
+				INCL(uart.errors,TxOverrunError);
 			END;
 		END;
 
@@ -342,7 +342,7 @@ VAR
 		WHILE uart.open & (len > 0) DO
 
 			bufWrPos := uart.txBufWrPos;
-			n := AvailableBufSpace(bufWrPos,uart.txBufWrPos,LEN(uart.txBuf));
+			n := AvailableBufSpace(bufWrPos,uart.txBufRdPos,LEN(uart.txBuf));
 
 			IF n # 0 THEN
 
@@ -384,7 +384,7 @@ VAR
 		IF uart.open THEN
 			res := 0;
 		ELSE
-			IF OverrunError IN uart.errors THEN res := OverrunError;
+			IF TxOverrunError IN uart.errors THEN res := OverrunError;
 			ELSE res := PsUartMin.Closed;
 			END;
 		END;

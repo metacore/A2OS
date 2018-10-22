@@ -26,7 +26,7 @@ TYPE
 
 TYPE
 	Position* = HUGEINT; (* position in the stream *)
-	StreamSize* = HUGEINT; (* size of hte stream *)
+	StreamSize* = HUGEINT; (* size of the stream *)
 
 	(** Any stream output procedure or method. *)
 	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: BufferOffset;  propagate: BOOLEAN;  VAR res: WORD );

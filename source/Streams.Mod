@@ -26,7 +26,7 @@ TYPE
 
 TYPE
 	Position* = LONGINT; (* position in the stream *)
-	StreamSize* = LONGINT; (* size of hte stream *)
+	StreamSize* = LONGINT; (* size of the stream *)
 
 	(** Any stream output procedure or method. *)
 	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );

@@ -119,7 +119,7 @@ TYPE
 		VAR n: SIZE;
 		BEGIN
 			LOOP
-				n := LEN( buf ) - tail; (* space available in hte internal buffer *)
+				n := LEN( buf ) - tail; (* space available in the internal buffer *)
 				IF n = 0 THEN
 					IF res = Ok THEN  (* send current buffer *)
 						send( buf^, 0, tail, FALSE, res );

@@ -43,7 +43,7 @@ TYPE
 	VAR text : Texts.Text;
 		ucs32buf : POINTER TO ARRAY OF LONGINT;
 		fontName : ARRAY 32 OF CHAR;
-		fontSize, fontBgColor, fontVOff : LONGINT; fontColor: WMGraphics.Color;
+		fontSize, x, fontVOff : LONGINT; fontColor, fontBgColor: WMGraphics.Color;
 		fontStyle : SET;
 		currentAttributes- : Texts.Attributes;
 		oldBytes : ARRAY 7 OF CHAR;

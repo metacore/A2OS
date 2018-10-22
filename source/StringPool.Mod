@@ -24,13 +24,13 @@ TYPE
 VAR
 	pool: StringPool;
 	poolLen: LONGINT;
-	poolIndex: POINTER TO ARRAY OF LONGINT;
+	poolIndex: POINTER TO ARRAY OF Index;
 	poolIndexSize: LONGINT;	(* LEN(poolIndex)-1 *)
 
 	ALastGet,
-	AStrings, AGetString, ACompareString, ACompareString0, AStringCmpHit, ASearchHits, ASearchMisses: LONGINT;
-	AInsertHashRetries: ARRAY 10 OF LONGINT;
-	ASearchHashRetries: ARRAY 10 OF LONGINT;
+	AStrings, AGetString, ACompareString, ACompareString0, AStringCmpHit, ASearchHits, ASearchMisses: SIZE;
+	AInsertHashRetries: ARRAY 10 OF SIZE;
+	ASearchHashRetries: ARRAY 10 OF SIZE;
 
 	(** ----------------- String Pool functions ------------------ *)
 
@@ -61,7 +61,7 @@ VAR
 	(* GrowHashTable - Increase Hash table size and recompute all entries *)
 
 	PROCEDURE GrowHashTable;
-		VAR i, t, h, idx, idx0: LONGINT; ch: CHAR;
+		VAR i, t, h: LONGINT; idx, idx0: Index; ch: CHAR;
 	BEGIN
 		t := (poolIndexSize+1)*2;
 		NEW(poolIndex, t);
@@ -125,7 +125,7 @@ VAR
 	(** GetIndex - Retrieve a string from the pool, add if not present *)
 
 	PROCEDURE GetIndex*(CONST str: ARRAY OF CHAR;  VAR index: Index);
-		VAR i, h, idx: LONGINT;
+		VAR i, h: LONGINT; idx: Index;
 	BEGIN {EXCLUSIVE}
 		IF AStrings > poolIndexSize DIV 4 THEN GrowHashTable END;
 		h := Hash(str);
@@ -154,8 +154,8 @@ VAR
 		END;
 	END GetIndex;
 
-	PROCEDURE GetIndex1*(CONST str: ARRAY OF CHAR): LONGINT;
-		VAR idx: LONGINT;
+	PROCEDURE GetIndex1*(CONST str: ARRAY OF CHAR): Index;
+		VAR idx: Index;
 	BEGIN
 		GetIndex(str, idx); RETURN idx
 	END GetIndex1;
@@ -166,7 +166,7 @@ VAR
 		CompareString > 0 <==> Str(index1) > Str(index2)
 	*)
 
-	PROCEDURE CompareString*(index1, index2: Index): LONGINT;
+	PROCEDURE CompareString*(index1, index2: Index): WORD;
 		VAR  ch: CHAR;
 	BEGIN
 		INC(ACompareString);
@@ -181,7 +181,7 @@ VAR
 		RETURN ORD(ch) - ORD(pool[index2])
 	END CompareString;
 
-	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): LONGINT;
+	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): WORD;
 		(* using VAR str makes the _whole_ compiler 10% faster!!! *)
 		VAR  ch1, ch2: CHAR; i: LONGINT;
 	BEGIN
@@ -197,7 +197,7 @@ VAR
 (*
 	optimized version (no index checks)
 
-	PROCEDURE CompareString0*(index: Index;  VAR str: ARRAY OF CHAR): LONGINT;
+	PROCEDURE CompareString0*(index: Index;  VAR str: ARRAY OF CHAR): WORD;
 		(* using VAR str makes the _whole_ compiler 10% faster!!! *)
 		VAR  ch1, ch2: CHAR; adr1, adr2: ADDRESS; i: LONGINT;
 	BEGIN

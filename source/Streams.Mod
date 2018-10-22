@@ -693,7 +693,7 @@ TYPE
 		BEGIN
 			n := 0;  y := 0;  ch := Get();
 			WHILE ch >= 80X DO INC( y, LSH( SIZE( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
-			x := ASH( LSH( SIZE( ORD( ch ) ), SIZE OF SIZE * 8 - 7 ), n - SIZE OF SIZE * 8 - 7 ) + y
+			x := ASH( LSH( SIZE( ORD( ch ) ), SIZE OF SIZE * 8 - 7 ), n - (SIZE OF SIZE * 8 - 7) ) + y
 		END RawSize;
 
 		(** -- Read formatted data (uses Peek for one character lookahead) -- *)

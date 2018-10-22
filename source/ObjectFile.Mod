@@ -64,7 +64,7 @@ TYPE
 	Pattern*= POINTER TO RECORD (* this is the same for many fixups *)
 		mode-: WORD;
 		scale-: Bits;
-		patterns-: LONGINT;
+		patterns-: SIZE;
 		pattern-: FixupPatterns
 	END;
 
@@ -76,8 +76,8 @@ TYPE
 	Fixup* = RECORD
 		identifier*: Identifier;
 		pattern-: Pattern;
-		index*: LONGINT;
-		patches*: LONGINT;
+		index*: SIZE;
+		patches*: SIZE;
 		patch*: Patches;
 	END;
 
@@ -96,9 +96,9 @@ TYPE
 		unit*: Bits;
 		fixed*: BOOLEAN;
 		alignment*: Unit;
-		fixups-: LONGINT;
+		fixups-: SIZE;
 		fixup-: Fixups;
-		aliases-: LONGINT;
+		aliases-: SIZE;
 		alias-: Aliases;
 		bits*: BitSets.BitSet;
 	END;
@@ -277,7 +277,7 @@ VAR
 	END CopyIdentifier;
 
 	PROCEDURE CopyPattern( source: Pattern; VAR dest: Pattern);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		NEW(dest);
 		dest.mode := source.mode;
@@ -289,8 +289,8 @@ VAR
 		END;
 	END CopyPattern;
 
-	PROCEDURE CopyPatches(sourcePatches: LONGINT; source: Patches; VAR destPatches: LONGINT; VAR dest: Patches);
-	VAR i: LONGINT;
+	PROCEDURE CopyPatches(sourcePatches: SIZE; source: Patches; VAR destPatches: SIZE; VAR dest: Patches);
+	VAR i: SIZE;
 	BEGIN
 		destPatches := sourcePatches;
 		NEW(dest, destPatches);
@@ -314,7 +314,7 @@ VAR
 
 
 	PROCEDURE CopySection* (CONST source: Section; VAR dest: Section);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		dest.type := source.type;
 		dest.identifier := source.identifier;
@@ -361,7 +361,7 @@ VAR
 		END;
 	END NibbleToCharacter;
 
-	PROCEDURE CharacterToNibble* (char: CHAR): LONGINT;
+	PROCEDURE CharacterToNibble* (char: CHAR): WORD;
 	BEGIN
 		IF ORD (char) >= ORD ('A') THEN
 			RETURN ORD (char) - (ORD ('A') - 10);
@@ -372,7 +372,7 @@ VAR
 
 	PROCEDURE WriteSectionTextual (writer: Streams.Writer; CONST section: Section);
 	CONST Separator = ' '; Tab = 09X;
-	VAR i,offset,start, len: LONGINT; size: Bits;
+	VAR i: SIZE; offset,start, len: LONGINT; size: Bits;
 
 		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
@@ -396,13 +396,13 @@ VAR
 		END WriteIdentifier;
 
 		PROCEDURE WritePattern(pattern: Pattern);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			WriteValueIdentifier (pattern.mode, modes);
 			writer.Char (Separator);
 			writer.Int (pattern.scale, 0);
 			writer.Char (Separator);
-			writer.Int (pattern.patterns, 0);
+			writer.Size (pattern.patterns);
 			writer.Char (Separator);
 			FOR i := 0 TO pattern.patterns - 1 DO
 				WriteFixupPattern (pattern.pattern[i]);
@@ -418,13 +418,13 @@ VAR
 		END WritePatch;
 
 		PROCEDURE WriteFixup (CONST fixup: Fixup);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			WriteIdentifier(fixup.identifier);
 			writer.Char (Separator);
 			WritePattern(fixup.pattern);
 			writer.Char(Separator);
-			writer.Int(fixup.patches,1);
+			writer.Size(fixup.patches);
 			writer.Char(Separator);
 			FOR i := 0 TO fixup.patches-1 DO
 				WritePatch(fixup.patch[i]);
@@ -497,9 +497,9 @@ VAR
 		writer.Int (section.alignment, 0);
 		writer.Char (Separator);
 
-		writer.Int (section.aliases, 0);
+		writer.Size (section.aliases);
 		writer.Char (Separator);
-		writer.Int (section.fixups, 0);
+		writer.Size (section.fixups);
 		writer.Char (Separator);
 		size := section.bits.GetSize ();
 		writer.Int (size DIV section.unit, 1);
@@ -520,7 +520,7 @@ VAR
 	END WriteSectionTextual;
 
 	PROCEDURE ReadSectionTextual (reader: Streams.Reader; version: WORD; VAR section: Section);
-	VAR i, size: LONGINT; char: CHAR; relocatibility, priority: WORD;
+	VAR i: SIZE; size: LONGINT; char: CHAR; relocatibility, priority: WORD;
 
 		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		VAR identifier: ARRAY 10 OF CHAR;
@@ -547,12 +547,12 @@ VAR
 		END ReadIdentifier;
 
 		PROCEDURE ReadPattern(VAR pattern: Pattern);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			reader.SkipWhitespace;
 			ReadValueIdentifier (pattern.mode, modes);
 			reader.SkipWhitespace; reader.Int (pattern.scale, FALSE);
-			reader.SkipWhitespace; reader.Int (pattern.patterns, FALSE);
+			reader.SkipWhitespace; reader.Size (pattern.patterns, FALSE);
 
 			IF (pattern.pattern = NIL) OR (LEN (pattern.pattern) < pattern.patterns) THEN
 				NEW (pattern.pattern, pattern.patterns);
@@ -569,12 +569,12 @@ VAR
 		END ReadPatch;
 
 		PROCEDURE ReadFixup (VAR fixup: Fixup);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			reader.SkipWhitespace; ReadIdentifier (fixup.identifier);
 			IF fixup.pattern = NIL THEN NEW(fixup.pattern) END;
 			reader.SkipWhitespace; ReadPattern(fixup.pattern);
-			reader.SkipWhitespace; reader.Int (fixup.patches, FALSE);
+			reader.SkipWhitespace; reader.Size (fixup.patches, FALSE);
 			IF (fixup.patch = NIL) OR (LEN (fixup.patch) < fixup.patches) THEN
 				NEW (fixup.patch, fixup.patches);
 			END;
@@ -621,8 +621,8 @@ VAR
 				END;
 			END;
 		END;
-		reader.SkipWhitespace; reader.Int (section.aliases, FALSE);
-		reader.SkipWhitespace; reader.Int (section.fixups, FALSE);
+		reader.SkipWhitespace; reader.Size (section.aliases, FALSE);
+		reader.SkipWhitespace; reader.Size (section.fixups, FALSE);
 		reader.SkipWhitespace; reader.Int (size, FALSE); size := size * section.unit;
 		IF (section.aliases > 0) & ((section.alias = NIL) OR (LEN (section.alias) < section.aliases)) THEN
 			NEW (section.alias, section.aliases);
@@ -722,7 +722,7 @@ VAR
 	
 
 	PROCEDURE WriteSectionBinary (writer: Streams.Writer; CONST section: Section; poolMap: PoolMap);
-	VAR pos, i, offset, start, len: LONGINT; size: Bits;
+	VAR i: SIZE; pos, offset, start, len: LONGINT; size: Bits;
 	CONST ByteSize=8;
 
 		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -753,7 +753,7 @@ VAR
 		END WriteIdentifier;
 
 		PROCEDURE WritePattern(pattern: Pattern);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			WriteValueIdentifier (pattern.mode, modes);
 			writer.RawNum (pattern.scale);
@@ -771,7 +771,7 @@ VAR
 		END WritePatch;
 
 		PROCEDURE WriteFixup (CONST fixup: Fixup);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			INC(statFixups);
 			WriteIdentifier(fixup.identifier);
@@ -890,7 +890,7 @@ VAR
 	END WriteSectionBinary;
 
 	PROCEDURE ReadSectionBinary (reader: Streams.Reader; version: WORD; VAR section: Section; poolMap: PoolMap);
-	VAR i, size: LONGINT; relocatibility, priority: WORD; ch: CHAR;;
+	VAR i: SIZE; size: LONGINT; relocatibility, priority: WORD; ch: CHAR;;
 	CONST ByteSize=8;
 
 		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -928,11 +928,11 @@ VAR
 		END ReadFixupPattern;
 
 		PROCEDURE ReadPattern(VAR pattern: Pattern);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			ReadValueIdentifier (pattern.mode, modes);
 			reader.RawNum (pattern.scale);
-			reader.RawNum (pattern.patterns);
+			reader.RawSize (pattern.patterns);
 			IF (pattern.pattern = NIL) OR (LEN (pattern.pattern) < pattern.patterns) THEN
 				NEW (pattern.pattern, pattern.patterns);
 			END;
@@ -948,12 +948,12 @@ VAR
 		END ReadPatch;
 
 		PROCEDURE ReadFixup (VAR fixup: Fixup);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			ReadIdentifier (fixup.identifier);
 			IF fixup.pattern = NIL THEN NEW(fixup.pattern) END;
 			ReadPattern(fixup.pattern);
-			reader.RawNum (fixup.patches);
+			reader.RawSize (fixup.patches);
 			IF fixup.patches > 0 THEN
 				IF (fixup.patch = NIL) OR (LEN (fixup.patch) < fixup.patches) THEN
 					NEW (fixup.patch, fixup.patches);
@@ -1026,8 +1026,8 @@ VAR
 				END;
 			END;
 		END;
-		reader.RawNum (section.aliases);
-		reader.RawNum (section.fixups);
+		reader.RawSize (section.aliases);
+		reader.RawSize (section.fixups);
 		reader.RawNum (size); size := size * section.unit;
 		IF (section.aliases > 0) &((section.alias = NIL) OR (LEN (section.alias) < section.aliases)) THEN
 			NEW (section.alias, section.aliases);
@@ -1073,20 +1073,20 @@ VAR
 		INC(statSections); INC(statSectionsTotalSize, writer.Pos()-pos);
 	END WriteSection;
 
-	PROCEDURE SetFixups*(VAR section: Section; fixups: LONGINT; fixup: Fixups);
+	PROCEDURE SetFixups*(VAR section: Section; fixups: SIZE; fixup: Fixups);
 	BEGIN
 		section.fixups := fixups;
 		section.fixup := fixup;
 	END SetFixups;
 
-	PROCEDURE SetAliases*(VAR section: Section; aliases: LONGINT; alias: Aliases);
+	PROCEDURE SetAliases*(VAR section: Section; aliases: SIZE; alias: Aliases);
 	BEGIN
 		section.aliases := aliases;
 		section.alias := alias;
 	END SetAliases;
 
-	PROCEDURE AddPatch*(VAR patches: LONGINT; VAR patch: Patches; disp, ofs: LONGINT);
-	VAR newPatch: Patches; newPatches:LONGINT; i: LONGINT;
+	PROCEDURE AddPatch*(VAR patches: SIZE; VAR patch: Patches; disp, ofs: LONGINT);
+	VAR newPatch: Patches; newPatches, i: SIZE;
 	BEGIN
 		FOR i := 0 TO patches-1 DO
 			ASSERT(patch[i].offset # ofs);
@@ -1105,8 +1105,8 @@ VAR
 		patches := newPatches;
 	END AddPatch;
 
-	PROCEDURE SameFixupPattern(patterns: LONGINT; left, right: FixupPatterns): BOOLEAN;
-	VAR i: LONGINT;
+	PROCEDURE SameFixupPattern(patterns: SIZE; left, right: FixupPatterns): BOOLEAN;
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO patterns-1 DO
 			IF (left[i].offset # right[i].offset) OR (left[i].bits # right[i].bits) THEN RETURN FALSE END;
@@ -1114,15 +1114,15 @@ VAR
 		RETURN TRUE
 	END SameFixupPattern;
 	
-	PROCEDURE HasPattern(pat: Pattern; mode, scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): BOOLEAN;
+	PROCEDURE HasPattern(pat: Pattern; mode, scale: LONGINT; patterns: SIZE; pattern: FixupPatterns): BOOLEAN;
 	BEGIN
 		RETURN (pat.mode = mode) & (pat.scale = scale) & (pat.patterns = patterns) & SameFixupPattern(patterns, pat.pattern, pattern);
 	END HasPattern;
 
 
 	(*
-	PROCEDURE AddPatch(VAR patches: LONGINT; VAR patch: Patches; mode: WORD; displacement, scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns; offset: LONGINT);
-	VAR i: LONGINT; newPatches: LONGINT; newPatch: Patches; len: LONGINT;
+	PROCEDURE AddPatch(VAR patches: SIZE; VAR patch: Patches; mode: WORD; displacement, scale: LONGINT; patterns: SIZE; pattern: FixupPatterns; offset: LONGINT);
+	VAR i, newPatches, len: SIZE; newPatch: Patches;
 	BEGIN
 		FOR i := 0 TO patches-1 DO
 			len := LEN(patch);
@@ -1158,8 +1158,8 @@ VAR
 	END AddPatch;
 	*)
 
-	PROCEDURE AddFixup*(VAR fixups: LONGINT; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: LONGINT; patterns: LONGINT; pattern: FixupPatterns): LONGINT;
-	VAR i: LONGINT; newFixups, index: LONGINT; newFixup: Fixups;
+	PROCEDURE AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: LONGINT; patterns: SIZE; pattern: FixupPatterns): SIZE;
+	VAR i, newFixups, index: SIZE; newFixup: Fixups;
 	BEGIN
 		FOR i := 0 TO fixups-1 DO
 			IF (fixup[i].identifier.fingerprint = fingerprint) & (name =fixup[i].identifier.name) & HasPattern(fixup[i].pattern, mode, scale, patterns, pattern) THEN
@@ -1188,8 +1188,8 @@ VAR
 		RETURN index;
 	END AddFixup;
 
-	PROCEDURE AddAlias*(VAR aliases: LONGINT; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: LONGINT): LONGINT;
-	VAR i: LONGINT; newAliases, index: LONGINT; newAlias: Aliases;
+	PROCEDURE AddAlias*(VAR aliases: SIZE; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: LONGINT): SIZE;
+	VAR i, newAliases, index: SIZE; newAlias: Aliases;
 	BEGIN
 		newAliases := aliases+1;
 		IF (alias = NIL) OR (LEN(alias) < newAliases) THEN

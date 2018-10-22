@@ -76,7 +76,7 @@ TYPE
 		mode-: INTEGER; (* fixup mode: relative or absolute *)
 		displacement-: Unit; (* displacement of the fixup ('source') *)
 		scale-: ObjectFile.Bits; (* exponent of scale factor (factor=2^scale) *)
-		patterns-: LONGINT;
+		patterns-: SIZE;
 		pattern-: FixupPatterns; (* patterns describing the fixup format, cf. above *)
 		offset-: Unit;
 
@@ -492,7 +492,7 @@ TYPE
 		END GetBits;
 
 		PROCEDURE ApplyFixup*(fixup: Fixup): BOOLEAN;
-		VAR address,i: LONGINT;
+		VAR address: LONGINT; i: SIZE;
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
@@ -503,7 +503,7 @@ TYPE
 			END PatchPattern;
 
 			PROCEDURE CheckBits(): BOOLEAN;
-			VAR nobits,remainder,i: LONGINT;
+			VAR nobits,remainder: LONGINT; i: SIZE;
 			BEGIN
 				nobits := 0;
 				FOR i := 0 TO fixup.patterns-1 DO

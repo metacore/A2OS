@@ -384,11 +384,11 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
 
 	PROCEDURE CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: LONGINT);
-	VAR fixup: BinaryCode.Fixup; i: INTEGER; index: LONGINT;	fixupList: ObjectFile.Fixups; fixups: LONGINT;
+	VAR fixup: BinaryCode.Fixup; i, index, fixups: SIZE; fixupList: ObjectFile.Fixups;
 		aliasSymbol: ObjectFile.Identifier; aliasOffset: LONGINT;
 
 		PROCEDURE PatchFixup (fixup: BinaryCode.Fixup; fixupOffset, targetOffset: LONGINT);
-		VAR target, address: ObjectFile.Unit; j: LONGINT;
+		VAR target, address: ObjectFile.Unit; j: SIZE;
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
@@ -396,7 +396,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END PatchPattern;
 
 			PROCEDURE CheckBits(value: LONGINT; offset: LONGINT);
-			VAR i, nobits,remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
+			VAR i: SIZE; nobits,remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
 			BEGIN
 				nobits := 0;
 				FOR i := 0 TO fixup.patterns-1 DO
@@ -450,7 +450,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	END CopyFixups;
 
 	PROCEDURE UpdateAliases (section: BinaryCode.Section;  fingerprinter: Fingerprinter.Fingerprinter);
-	VAR alias: BinaryCode.Alias; i: INTEGER; aliasList: ObjectFile.Aliases; aliases: LONGINT; index: LONGINT;
+	VAR alias: BinaryCode.Alias; aliasList: ObjectFile.Aliases; i, aliases, index: SIZE;
 	BEGIN
 		alias := section.aliasList.firstAlias; i := 0; aliases := 0; aliasList := NIL;
 		WHILE alias # NIL DO
@@ -504,7 +504,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	VAR i: LONGINT; section: Sections.Section;
 
 		PROCEDURE ProcessSection(section: IntermediateCode.Section);
-		VAR i: LONGINT; fixup: BinaryCode.Fixup; alias: BinaryCode.Alias;
+		VAR i: SIZE; fixup: BinaryCode.Fixup; alias: BinaryCode.Alias;
 		BEGIN
 			IF (section.resolved # NIL)  & (section.alias = NIL)  THEN
 				poolMap.PutSegmentedName(section.resolved.os.identifier.name);

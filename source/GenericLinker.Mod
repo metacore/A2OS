@@ -226,7 +226,7 @@ VAR
 
 
 	PROCEDURE AddSection* (CONST section: ObjectFile.Section);
-	VAR block, current, previous,newBlock: Block; name: ARRAY 256 OF CHAR; i: LONGINT; alias: ObjectFile.Alias;
+	VAR block, current, previous,newBlock: Block; name: ARRAY 256 OF CHAR; i: SIZE; alias: ObjectFile.Alias;
 	BEGIN
 		IF FindBlock (section.identifier) # NIL THEN ObjectFile.SegmentedNameToString(section.identifier.name,name); Error (name, "duplicated section"); RETURN; END;
 		NEW (block); ObjectFile.CopySection (section, block^); block.address := InvalidAddress; block.referenced := FALSE; block.used := FALSE;
@@ -307,7 +307,7 @@ VAR
 	END Link;
 
 	PROCEDURE Reference (block: Block; used: BOOLEAN);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 
 		PROCEDURE ReferenceFixup (CONST fixup: ObjectFile.Fixup);
 		VAR reference: Block; str,name: ARRAY 256 OF CHAR;

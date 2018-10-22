@@ -119,7 +119,7 @@ TYPE
 	END InitArrangement;
 
 	PROCEDURE Allocate* (CONST section: ObjectFile.Section): GenericLinker.Address;
-	VAR address, alignment: ObjectFile.Bits; i, j: LONGINT; name: ObjectFile.SegmentedName;
+	VAR address, alignment: ObjectFile.Bits; i, j: SIZE; name: ObjectFile.SegmentedName;
 	BEGIN
 		IF section.unit > maxUnitSize THEN maxUnitSize := section.unit END;
 		IF section.fixed THEN

@@ -204,7 +204,7 @@ TYPE
 		PROCEDURE SetClipRect*(rect : Rectangle);
 		BEGIN
 			INCL(clipMode, ClipRect);
-			rect.r := Max(rect.r, rect.l); rect.b := Max(rect.b, rect.t);
+			rect.r := MAX(rect.r, rect.l); rect.b := MAX(rect.b, rect.t);
 			Rectangles.MoveRel(rect, dx, dy);
 			Rectangles.ClipRect(rect, limits);
 			clipRect := rect
@@ -526,7 +526,7 @@ TYPE
 
 		PROCEDURE SetLimits*(r : Rectangle);
 		BEGIN
-			r.r := Max(r.r, r.l); r.b := Max(r.t, r.b);
+			r.r := MAX(r.r, r.l); r.b := MAX(r.t, r.b);
 			Rectangles.ClipRect(r, bounds); SetLimits^(r)
 		END SetLimits;
 
@@ -724,11 +724,6 @@ VAR imgCache : Kernel.FinalizedCollection;
 CONST
 	AlignLeft* = 0; AlignCenter* = 1; AlignRight* = 2;
 	AlignTop* = 0; AlignBottom* = 2;
-
-PROCEDURE Max(a, b:LONGINT):LONGINT;
-BEGIN
-	IF a>b THEN RETURN a ELSE RETURN b END
-END Max;
 
 PROCEDURE Swap(VAR a,b: LONGINT);
 VAR t: LONGINT;

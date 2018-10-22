@@ -1,6 +1,6 @@
 MODULE PsUartMin;
 (**
-	AUTHOR: Alexey Morozov, Timothee Martiel, HighDim GmbH, 2013-2017
+	AUTHOR: Alexey Morozov, Timothee Martiel
 	PURPOSE: minimal driver implementation for Xilinx Zynq UART PS controller
 *)
 

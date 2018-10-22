@@ -246,18 +246,18 @@ VAR
 
 
 
-	statHeaders, statHeadersSize: LONGINT;
-	statFixups, statFixupsSize, statFixupPatterns, statFixupPatches: LONGINT;
-	statAliases, statAliasesSize: LONGINT;
-	statSegments, statSegmentsSize: LONGINT;
+	statHeaders, statHeadersSize: SIZE;
+	statFixups, statFixupsSize, statFixupPatterns, statFixupPatches: SIZE;
+	statAliases, statAliasesSize: SIZE;
+	statSegments, statSegmentsSize: SIZE;
 
-	statCodeSections, statCodeSectionsSize: LONGINT;
-	statDataSections, statDataSectionsSize: LONGINT;
-	statConstSections, statConstSectionsSize: LONGINT;
-	statInitSections, statInitSectionsSize: LONGINT;
-	statBodySections, statBodySectionsSize: LONGINT;
+	statCodeSections, statCodeSectionsSize: SIZE;
+	statDataSections, statDataSectionsSize: SIZE;
+	statConstSections, statConstSectionsSize: SIZE;
+	statInitSections, statInitSectionsSize: SIZE;
+	statBodySections, statBodySectionsSize: SIZE;
 
-	statSections, statSectionsTotalSize: LONGINT;
+	statSections, statSectionsTotalSize: SIZE;
 
 
 	PROCEDURE IsCode* (type: SectionType): BOOLEAN;
@@ -519,7 +519,7 @@ VAR
 		writer.Ln;
 	END WriteSectionTextual;
 
-	PROCEDURE ReadSectionTextual (reader: Streams.Reader; version: LONGINT; VAR section: Section);
+	PROCEDURE ReadSectionTextual (reader: Streams.Reader; version: WORD; VAR section: Section);
 	VAR i, size: LONGINT; char: CHAR; relocatibility: INTEGER; priority: LONGINT;
 
 		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -889,7 +889,7 @@ VAR
 		END;
 	END WriteSectionBinary;
 
-	PROCEDURE ReadSectionBinary (reader: Streams.Reader; version: LONGINT; VAR section: Section; poolMap: PoolMap);
+	PROCEDURE ReadSectionBinary (reader: Streams.Reader; version: WORD; VAR section: Section; poolMap: PoolMap);
 	VAR i, size: LONGINT; relocatibility: INTEGER; ch: CHAR; priority: LONGINT;
 	CONST ByteSize=8;
 
@@ -1054,7 +1054,7 @@ VAR
 		END;
 	END ReadSectionBinary;
 
-	PROCEDURE ReadSection*(reader: Streams.Reader; version: LONGINT; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap);
+	PROCEDURE ReadSection*(reader: Streams.Reader; version: WORD; VAR section: Section; binary: BOOLEAN; poolMap: PoolMap);
 	BEGIN
 		IF binary THEN
 			ReadSectionBinary(reader,version, section,poolMap)
@@ -1212,7 +1212,7 @@ VAR
 	END AddAlias;
 
 	PROCEDURE StringToSegmentedName*(CONST name: ARRAY OF CHAR; VAR segmentedName: SegmentedName);
-	VAR i,j,segment: LONGINT; n: SectionName;
+	VAR i, j, segment: SIZE; n: SectionName;
 	BEGIN
 		(* convert a string of the form A.B.C.suffix to [S(A), S(B), S(C), S(suffix)] *)
 		segment := 0; i := 0;
@@ -1235,7 +1235,7 @@ VAR
 	END StringToSegmentedName;
 
 	PROCEDURE SegmentedNameToString*(CONST segmentedName: SegmentedName; VAR name: ARRAY OF CHAR);
-	VAR i,j, segment: LONGINT; n: SectionName;
+	VAR i, j, segment: SIZE; n: SectionName;
 	BEGIN
 		i := 0; segment := 0;
 		WHILE (segment < LEN(segmentedName)) & (segmentedName[segment] >= 0) DO
@@ -1251,8 +1251,8 @@ VAR
 	END SegmentedNameToString;
 	
 	(* result = 0 : equal strings, result < 0: s1 before s2, result > 0 : s1 after s2 (alphanumerically) *)
-	PROCEDURE CompareSegmentedNames*(CONST s1, s2: SegmentedName): LONGINT;
-	VAR n1, n2: SectionName; index: LONGINT; ch1, ch2: CHAR;
+	PROCEDURE CompareSegmentedNames*(CONST s1, s2: SegmentedName): WORD;
+	VAR n1, n2: SectionName; index: SIZE; ch1, ch2: CHAR;
 	BEGIN
 		SegmentedNameToString(s1,n1);
 		SegmentedNameToString(s2,n2);
@@ -1267,9 +1267,8 @@ VAR
 		RETURN ORD(ch1) - ORD(ch2);
 	END CompareSegmentedNames;
 
-
 	OPERATOR "="*(CONST l,r: SegmentedName): BOOLEAN;
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		i := 0; WHILE (i < LEN(l)) & (l[i] = r[i]) & (l[i] # -1)  DO INC(i) END; RETURN (i = LEN(l)) OR (l[i] = r[i]);
 	END "=";
@@ -1295,7 +1294,7 @@ VAR
 	END ":=";
 
 	OPERATOR "="*(CONST l: SegmentedName; CONST r: ARRAY OF CHAR): BOOLEAN;
-	VAR i,j,segment: LONGINT; n: SectionName;
+	VAR i, j, segment: SIZE; n: SectionName;
 	BEGIN
 		i := 0; segment := 0;
 		WHILE (segment < LEN(l)) DO
@@ -1333,13 +1332,13 @@ VAR
 	END "#";
 
 	OPERATOR "#"*(CONST l,r: SegmentedName): BOOLEAN;
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		i := 0; WHILE (i<LEN(l)) & (l[i] = r[i]) & (l[i] # -1)  DO INC(i) END; RETURN (i<LEN(l)) & (l[i] # r[i]);
 	END "#";
 
 	PROCEDURE Statistics*;
-	VAR sections: LONGINT; sectionsContentSize: LONGINT;
+	VAR sections, sectionsContentSize: SIZE;
 	BEGIN
 		TRACE(statHeaders, statHeadersSize);
 		TRACE(statFixups, statFixupsSize, statFixupPatterns, statFixupPatches);

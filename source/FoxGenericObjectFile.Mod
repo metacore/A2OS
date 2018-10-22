@@ -467,9 +467,9 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	BEGIN NEW(objectFileFormat); RETURN objectFileFormat
 	END Get;
 
-	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT;
+	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): WORD;
 	VAR ch: CHAR; string: ARRAY 32 OF CHAR;
-	VAR version: LONGINT;
+	VAR version: WORD;
 	BEGIN
 		reader.String(string);
 		binary := string="FoxOFB";
@@ -597,7 +597,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		fileName: Files.FileName; file: Files.File; reader: Files.Reader; writer: Streams.Writer;
 		section: ObjectFile.Section; binary: BOOLEAN; poolMap, poolMapDummy: ObjectFile.PoolMap;
 		offers, requires: ObjectFile.NameList;
-		version: LONGINT;
+		version: WORD;
 	BEGIN
 		IF context.arg.GetString(fileName) THEN
 			file := Files.Old(fileName);
@@ -632,7 +632,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		 dest: Files.FileName;
 		 writer: Files.Writer;
 		 name: ObjectFile.SegmentedName;
-		 version: LONGINT;
+		 version: WORD;
 		 offers, requires: ObjectFile.NameList;
 	BEGIN
 		NEW(sectionList);

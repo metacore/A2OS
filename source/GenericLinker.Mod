@@ -358,17 +358,17 @@ VAR
 	END Arrange;
 
 	PROCEDURE Patch (block: Block);
-	VAR arrangement: Arrangement; i: LONGINT;
+	VAR arrangement: Arrangement; i: SIZE;
 
 		PROCEDURE PatchFixup (CONST fixup: ObjectFile.Fixup);
-		VAR reference: Block; target, address: Address; i: LONGINT;
+		VAR reference: Block; target, address: Address; i: SIZE;
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN arrangement.Patch (target, address, pattern.offset, pattern.bits, block.unit); address := ASH (address, -pattern.bits);
 			END PatchPattern;
 
 			PROCEDURE CheckBits(pattern: ObjectFile.Pattern; offset: LONGINT);
-			VAR i, nobits,remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
+			VAR i: SIZE; nobits, remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
 			BEGIN
 				nobits := 0;
 				FOR i := 0 TO pattern.patterns-1 DO
@@ -391,7 +391,7 @@ VAR
 			END CheckBits;
 
 			PROCEDURE ApplyPatch(pattern: ObjectFile.Pattern; CONST patch: ObjectFile.Patch);
-			VAR j: LONGINT;
+			VAR j: SIZE;
 			BEGIN
 				target := block.address + patch.offset;
 				address := reference.address + patch.displacement;
@@ -476,7 +476,7 @@ BEGIN
 END GetPriority;
 
 PROCEDURE Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT;
-VAR ch: CHAR; version: LONGINT; string: ARRAY 32 OF CHAR;
+VAR ch: CHAR; version: WORD; string: ARRAY 32 OF CHAR;
 BEGIN
 	reader.String(string);
 	binary := string="FoxOFB";
@@ -513,13 +513,13 @@ BEGIN
 END Header;
 
 PROCEDURE OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList);
-VAR binary: BOOLEAN; poolMap: ObjectFile.PoolMap;  version: LONGINT;
+VAR binary: BOOLEAN; poolMap: ObjectFile.PoolMap;  version: WORD;
 BEGIN
 	version := Header(reader, NIL, binary, poolMap, offers, requires);
 END OffersRequires;
 
 PROCEDURE Process* (reader: Streams.Reader; linker: Linker);
-VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; version: LONGINT;
+VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; version: WORD;
 BEGIN
 	version := Header(reader, linker, binary, poolMap, offers, requires);
 	WHILE reader.Peek () # 0X DO

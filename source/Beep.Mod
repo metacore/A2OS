@@ -1,6 +1,6 @@
 MODULE Beep;
 
-	PROCEDURE Beep*( hz: LONGINT );
+	PROCEDURE Beep*( hz: WORD );
 	BEGIN
 	END Beep;
 

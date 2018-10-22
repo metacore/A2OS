@@ -9,7 +9,7 @@ CONST
 	(** Sound the PC speaker continuously at the specified frequency.  Use 0 to switch off the sound.  Not sharable. *)
 TYPE
 	Beeper = OBJECT
-	VAR hz: LONGINT;
+	VAR hz: WORD;
 		beep: BOOLEAN;
 
 		PROCEDURE & Init*;
@@ -18,18 +18,14 @@ TYPE
 			beep := FALSE;
 		END Init;
 
-		PROCEDURE On( hz: LONGINT );
-		BEGIN
-			BEGIN {EXCLUSIVE}
-				SELF.hz := hz;  beep := TRUE;
-			END;
+		PROCEDURE On( hz: WORD );
+		BEGIN {EXCLUSIVE}
+			SELF.hz := hz;  beep := TRUE;
 		END On;
 
 		PROCEDURE Off;
-		BEGIN
-			BEGIN {EXCLUSIVE}
-				beep := FALSE;
-			END;
+		BEGIN {EXCLUSIVE}
+			beep := FALSE;
 		END Off;
 
 		PROCEDURE Beep;
@@ -51,7 +47,7 @@ TYPE
 VAR
 	beep: Beeper;
 
-	PROCEDURE Beep*( hz: LONGINT );
+	PROCEDURE Beep*( hz: WORD );
 	VAR s: SET;
 	BEGIN
 		IF (hz # 0) THEN

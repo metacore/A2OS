@@ -7,7 +7,7 @@ IMPORT X11, Displays, XDisplay, Plugins;
 VAR
 	disp: XDisplay.Display;
 
-	PROCEDURE Beep*( hz: LONGINT );
+	PROCEDURE Beep*( hz: WORD );
 	BEGIN
 		X11.Bell( disp.xdisp, 100 )
 	END Beep;

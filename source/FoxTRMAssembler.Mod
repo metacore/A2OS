@@ -39,23 +39,23 @@ TYPE
 
 				IF numberOperands >= 2 THEN Error(errorPosition,"too many operands")
 				ELSE
-					memory := ThisToken(Scanner.LeftBracket);
-					IF (symbol.token = Scanner.Identifier) & GetRegister(symbol.identifierString,register1) THEN
-						NextSymbol;
-						stop := ~ThisToken(Scanner.Plus);
+					memory := ThisSymbol(Scanner.LeftBracket);
+					IF (token.symbol = Scanner.Identifier) & GetRegister(token.identifierString,register1) THEN
+						NextToken;
+						stop := ~ThisSymbol(Scanner.Plus);
 					END;
 					IF ~stop THEN
-						IF (symbol.token = Scanner.Identifier) THEN
-							IF GetRegister(symbol.identifierString,register2) THEN
-								NextSymbol;
-							ELSIF GetNonConstant(errorPosition,symbol.identifierString, result) THEN
-								NextSymbol;
+						IF (token.symbol = Scanner.Identifier) THEN
+							IF GetRegister(token.identifierString,register2) THEN
+								NextToken;
+							ELSIF GetNonConstant(errorPosition,token.identifierString, result) THEN
+								NextToken;
 							ELSIF Expression(result,FALSE) THEN
 							END;
 						ELSIF Expression(result,FALSE) THEN
 						END;
 					END;
-					IF memory & ExpectToken(Scanner.RightBracket) THEN
+					IF memory & ExpectSymbol(Scanner.RightBracket) THEN
 						instructionSet.InitMemory(operand,register1,LONGINT(result.value));
 					ELSIF register1 # -1 THEN
 						instructionSet.InitRegister(operand,register1);
@@ -78,11 +78,11 @@ TYPE
 			IF mnem >= 0 THEN
 				FOR i := 0 TO 2 DO instructionSet.InitOperand(operands[i]) END;
 				numberOperands := 0;
-				IF symbol.token # Scanner.Ln THEN
+				IF token.symbol # Scanner.Ln THEN
 					REPEAT
 						ParseOperand;
 						INC(numberOperands);
-					UNTIL error OR ~ThisToken(Scanner.Comma);
+					UNTIL error OR ~ThisSymbol(Scanner.Comma);
 				END;
 				IF ~error THEN
 					instructionSet.MakeInstruction(instruction,mnem,operands[0],operands[1]);

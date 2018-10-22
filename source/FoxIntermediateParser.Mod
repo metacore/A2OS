@@ -20,7 +20,7 @@ TYPE
 	VAR
 		diagnostics: Diagnostics.Diagnostics;
 		error: BOOLEAN;
-		symbol: Scanner.Symbol;
+		token: Scanner.Token;
 		scanner: Scanner.AssemblerScanner;
 		system: Global.System;
 
@@ -41,37 +41,37 @@ TYPE
 			IF Trace THEN D.TraceBack END
 		END Error;
 
-		PROCEDURE NextSymbol;
-		BEGIN error := error OR ~scanner.GetNextSymbol(symbol)
-		END NextSymbol;
+		PROCEDURE NextToken;
+		BEGIN error := error OR ~scanner.GetNextToken(token)
+		END NextToken;
 
-		PROCEDURE ThisToken(x: LONGINT): BOOLEAN;
+		PROCEDURE ThisSymbol(x: Scanner.Symbol): BOOLEAN;
 		BEGIN
-			IF ~error & (symbol.token = x) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
-		END ThisToken;
+			IF ~error & (token.symbol = x) THEN NextToken; RETURN TRUE ELSE RETURN FALSE END;
+		END ThisSymbol;
 
 		PROCEDURE GetIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
-			pos := symbol.position;
-			IF symbol.token # Scanner.Identifier THEN RETURN FALSE
-			ELSE COPY(symbol.identifierString,identifier); NextSymbol; RETURN TRUE
+			pos := token.position;
+			IF token.symbol # Scanner.Identifier THEN RETURN FALSE
+			ELSE COPY(token.identifierString,identifier); NextToken; RETURN TRUE
 			END;
 		END GetIdentifier;
 
-		PROCEDURE ExpectToken(x: LONGINT): BOOLEAN;
+		PROCEDURE ExpectSymbol(x: Scanner.Symbol): BOOLEAN;
 		VAR
 			s: MessageString;
 		BEGIN
-			IF ThisToken(x) THEN RETURN TRUE
+			IF ThisSymbol(x) THEN RETURN TRUE
 			ELSE
-				s := "expected token "; Strings.Append(s,Scanner.tokens[x]); Strings.Append(s," but got "); Strings.Append(s,Scanner.tokens[symbol.token]);
-				Error(symbol.position, s);RETURN FALSE
+				s := "expected symbol "; Strings.Append(s,Scanner.symbols[x]); Strings.Append(s," but got "); Strings.Append(s,Scanner.symbols[token.symbol]);
+				Error(token.position, s);RETURN FALSE
 			END;
-		END ExpectToken;
+		END ExpectSymbol;
 
 		PROCEDURE ThisIdentifier(CONST this: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
-			IF ~error & (symbol.token = Scanner.Identifier) & (this = symbol.identifierString) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
+			IF ~error & (token.symbol = Scanner.Identifier) & (this = token.identifierString) THEN NextToken; RETURN TRUE ELSE RETURN FALSE END;
 		END ThisIdentifier;
 
 		PROCEDURE ExpectAnyIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN;
@@ -85,12 +85,12 @@ TYPE
 		VAR
 			result, isNegated: BOOLEAN;
 		BEGIN
-			isNegated := ThisToken(Scanner.Minus);
-			IF ExpectToken(Scanner.Number) & (symbol.numberType = Scanner.Integer) THEN
+			isNegated := ThisSymbol(Scanner.Minus);
+			IF ExpectSymbol(Scanner.Number) & (token.numberType = Scanner.Integer) THEN
 				IF isNegated THEN
-					integer := -symbol.integer
+					integer := -token.integer
 				ELSE
-					integer := symbol.integer
+					integer := token.integer
 				END;
 				result := TRUE
 			ELSE
@@ -103,8 +103,8 @@ TYPE
 		VAR
 			result: BOOLEAN;
 		BEGIN
-			IF ExpectToken(Scanner.Number) & (symbol.numberType = Scanner.Integer) THEN
-				integer := symbol.integer;
+			IF ExpectSymbol(Scanner.Number) & (token.numberType = Scanner.Integer) THEN
+				integer := token.integer;
 				result := TRUE
 			ELSE
 				result := FALSE
@@ -114,17 +114,17 @@ TYPE
 
 		PROCEDURE IgnoreNewLines;
 		BEGIN
-			WHILE ThisToken(Scanner.Ln) DO END;
+			WHILE ThisSymbol(Scanner.Ln) DO END;
 		END IgnoreNewLines;
 
-		(* expect the newline or end-of-text symbol *)
+		(* expect the newline or end-of-text token *)
 		PROCEDURE ExpectLineDelimiter(): BOOLEAN;
 		BEGIN
-			IF ~error & ((symbol.token = Scanner.Ln) OR (symbol.token = Scanner.EndOfText)) THEN
-				NextSymbol;
+			IF ~error & ((token.symbol = Scanner.Ln) OR (token.symbol = Scanner.EndOfText)) THEN
+				NextToken;
 				RETURN TRUE
 			ELSE
-				Error(symbol.position, "end of line/text expected");
+				Error(token.position, "end of line/text expected");
 				RETURN FALSE
 			END;
 		END ExpectLineDelimiter;
@@ -138,10 +138,10 @@ TYPE
 		BEGIN
 			IF Trace THEN D.String(">>> ParseLineNumber"); D.Ln END;
 
-			positionOfLine := symbol.position;
-			IF ThisToken(Scanner.Number) THEN (* note: line numbers are optional *)
-				specifiedLineNumber := symbol.integer;
-				IF ExpectToken(Scanner.Colon) THEN
+			positionOfLine := token.position;
+			IF ThisSymbol(Scanner.Number) THEN (* note: line numbers are optional *)
+				specifiedLineNumber := token.integer;
+				IF ExpectSymbol(Scanner.Colon) THEN
 					IF Strict & (specifiedLineNumber # expectedLineNumber) THEN
 						message := "invalid code line number (";
 						Strings.IntToStr(specifiedLineNumber, tempString); Strings.Append(message, tempString);
@@ -169,7 +169,7 @@ TYPE
 		BEGIN
 			IF Trace THEN D.String(">>> ParseOperand"); D.Ln END;
 
-			positionOfOperand := symbol.position;
+			positionOfOperand := token.position;
 
 			(* defaults *)
 			hasTypeDescriptor := FALSE;
@@ -184,7 +184,7 @@ TYPE
 
 			(* consume optional memory operand bracket *)
 			IF ~lastWasIdentifier THEN
-				isMemoryOperand := ThisToken(Scanner.LeftBracket);
+				isMemoryOperand := ThisSymbol(Scanner.LeftBracket);
 				lastWasIdentifier := GetIdentifier(pos, identifier)
 			END;
 
@@ -199,11 +199,11 @@ TYPE
 					symbolOffset := 0;
 
 					(* consume optional symbol offset *)
-					IF ThisToken(Scanner.Colon) THEN
+					IF ThisSymbol(Scanner.Colon) THEN
 						IF ExpectIntegerWithSign(integer) THEN
 							symbolOffset := integer
 						ELSE
-							Error(symbol.position, "invalid symbol offset")
+							Error(token.position, "invalid symbol offset")
 						END
 					END;
 
@@ -213,18 +213,18 @@ TYPE
 					IntermediateCode.InitAddress(operand, IntermediateCode.UnsignedIntegerType(system.addressSize), name, 0, symbolOffset)
 				END
 
-			ELSIF symbol.token = Scanner.String THEN
+			ELSIF token.symbol = Scanner.String THEN
 				(* string constant *)
-				IntermediateCode.InitString(operand, symbol.string);
-				NextSymbol
+				IntermediateCode.InitString(operand, token.string);
+				NextToken
 
 			ELSE
 				(* immediate values/numbers *)
-				isNegated := ThisToken(Scanner.Minus);
-				IF ThisToken(Scanner.Number) THEN
-					CASE symbol.numberType OF
+				isNegated := ThisSymbol(Scanner.Minus);
+				IF ThisSymbol(Scanner.Number) THEN
+					CASE token.numberType OF
 					| Scanner.Integer:
-						IF isNegated THEN someLongint := -symbol.integer ELSE someLongint := symbol.integer END;
+						IF isNegated THEN someLongint := -token.integer ELSE someLongint := token.integer END;
 						IF ~hasTypeDescriptor THEN
 							(* if no type description was included: use number type *)
 							IntermediateCode.InitNumber(operand, someLongint);
@@ -236,7 +236,7 @@ TYPE
 							IntermediateCode.InitImmediate(operand, type, someLongint)
 						END
 					| Scanner.Hugeint:
-						IF isNegated THEN someHugeint := - symbol.hugeint ELSE someHugeint := symbol.hugeint END;
+						IF isNegated THEN someHugeint := - token.hugeint ELSE someHugeint := token.hugeint END;
 						IF ~hasTypeDescriptor THEN
 							(* if no type description was included: use number type *)
 							IntermediateCode.InitNumber(operand, someHugeint)
@@ -248,7 +248,7 @@ TYPE
 							IntermediateCode.InitImmediate(operand, type, someHugeint)
 						END
 					| Scanner.Real, Scanner.Longreal:
-						IF isNegated THEN someLongreal := -symbol.real ELSE someLongreal := symbol.real END;
+						IF isNegated THEN someLongreal := -token.real ELSE someLongreal := token.real END;
 						(* if no type description was included: use float type with same amount of bits as address type *)
 						IF ~hasTypeDescriptor THEN
 							IntermediateCode.InitType(type, IntermediateCode.Float, INTEGER(system.addressSize))
@@ -266,22 +266,22 @@ TYPE
 			END;
 
 			(* consume optional offset given in system units *)
-			IF ThisToken(Scanner.Plus) THEN
+			IF ThisSymbol(Scanner.Plus) THEN
 				IF ExpectIntegerWithoutSign(integer) THEN
 					IntermediateCode.SetOffset(operand, integer)
 				ELSE
-					Error(symbol.position, "invalid offset")
+					Error(token.position, "invalid offset")
 				END
-			ELSIF ThisToken(Scanner.Minus) THEN
+			ELSIF ThisSymbol(Scanner.Minus) THEN
 				IF ExpectIntegerWithoutSign(integer) THEN
 					IntermediateCode.SetOffset(operand, -integer)
 				ELSE
-					Error(symbol.position, "invalid offset")
+					Error(token.position, "invalid offset")
 				END
 			END;
 
 			(* wrap memory operand around current operand if necessary *)
-			IF isMemoryOperand & ExpectToken(Scanner.RightBracket) THEN
+			IF isMemoryOperand & ExpectSymbol(Scanner.RightBracket) THEN
 				IntermediateCode.SetType(operand, IntermediateCode.UnsignedIntegerType(system.addressSize)); (* set the type of the inner operand to the platform's address type *)
 				IF ~hasTypeDescriptor THEN
 					IntermediateCode.InitType(type, IntermediateCode.SignedInteger, INTEGER(system.addressSize)) (* default: signed integer type of address size *)
@@ -303,7 +303,7 @@ TYPE
 		BEGIN
 			IF Trace THEN D.String(">>> ParseInstruction"); D.Ln END;
 
-			positionOfInstruction := symbol.position;
+			positionOfInstruction := token.position;
 			IF ExpectAnyIdentifier(positionOfInstruction, identifier) THEN
 				(* TODO: detect labels of the form << labelName: >> *)
 				opCode := IntermediateCode.FindMnemonic(identifier);
@@ -318,9 +318,9 @@ TYPE
 					IntermediateCode.InitOperand(operands[2]);
 
 					operandNumber := 0;
-					IF ~ThisToken(Scanner.Ln) & ~ThisToken(Scanner.EndOfText) THEN
+					IF ~ThisSymbol(Scanner.Ln) & ~ThisSymbol(Scanner.EndOfText) THEN
 						REPEAT
-							positionOfOperand := symbol.position;
+							positionOfOperand := token.position;
 							IF operandNumber > 2 THEN
 								Error(positionOfInstruction, "instruction has too many operands")
 							ELSE
@@ -335,7 +335,7 @@ TYPE
 									INC(operandNumber)
 								END
 							END
-						UNTIL error OR ~ThisToken(Scanner.Comma);
+						UNTIL error OR ~ThisSymbol(Scanner.Comma);
 						IF ~error & ExpectLineDelimiter() THEN END
 					END;
 
@@ -362,7 +362,7 @@ TYPE
 			SELF.scanner := scanner;
 			IgnoreNewLines;
 			lineNumber := 0;
-			WHILE ~error & (symbol.token # Scanner.Period) & (symbol.token # Scanner.EndOfText) DO
+			WHILE ~error & (token.symbol # Scanner.Period) & (token.symbol # Scanner.EndOfText) DO
 				(* consume optional line number *)
 				ParseLineNumber(lineNumber);
 				IF ~error THEN
@@ -384,11 +384,11 @@ TYPE
 		BEGIN
 			IF Trace THEN D.Ln; D.String(">>> ParseSectionProperties"); D.Ln END;
 
-			WHILE ~error & (symbol.token # Scanner.EndOfText) & (symbol.token # Scanner.Ln) DO
-				positionOfProperty := symbol.position;
+			WHILE ~error & (token.symbol # Scanner.EndOfText) & (token.symbol # Scanner.Ln) DO
+				positionOfProperty := token.position;
 
 				(* fingerprint *)
-				IF ThisIdentifier("fingerprint") & ExpectToken(Scanner.Equal) THEN
+				IF ThisIdentifier("fingerprint") & ExpectSymbol(Scanner.Equal) THEN
 					IF ExpectIntegerWithSign(integer) THEN
 						IF (section.fingerprint # 0) & (section.fingerprint # integer) THEN
 							Error(positionOfProperty, "incompatible fingerprint");
@@ -400,7 +400,7 @@ TYPE
 					END
 
 				(* position *)
-				ELSIF ThisIdentifier("aligned") & ExpectToken(Scanner.Equal) THEN
+				ELSIF ThisIdentifier("aligned") & ExpectSymbol(Scanner.Equal) THEN
 					IF ExpectIntegerWithSign(integer) THEN
 						section.SetPositionOrAlignment(FALSE, integer)
 					ELSE
@@ -408,7 +408,7 @@ TYPE
 					END
 
 				(* fixed position *)
-				ELSIF ThisIdentifier("fixed") & ExpectToken(Scanner.Equal) THEN
+				ELSIF ThisIdentifier("fixed") & ExpectSymbol(Scanner.Equal) THEN
 					IF ExpectIntegerWithSign(integer) THEN
 						section.SetPositionOrAlignment(TRUE, integer)
 					ELSE
@@ -416,7 +416,7 @@ TYPE
 					END
 
 				(* unit size of the section in bits *)
-				ELSIF ThisIdentifier("unit") & ExpectToken(Scanner.Equal) THEN
+				ELSIF ThisIdentifier("unit") & ExpectSymbol(Scanner.Equal) THEN
 					IF ExpectIntegerWithSign(integer) THEN
 						section.SetBitsPerUnit(integer) (* overwrite default unit size *)
 					ELSE
@@ -424,7 +424,7 @@ TYPE
 					END
 
 				(* total size of the section in units *)
-				ELSIF ThisIdentifier("size") & ExpectToken(Scanner.Equal) THEN
+				ELSIF ThisIdentifier("size") & ExpectSymbol(Scanner.Equal) THEN
 					IF ExpectIntegerWithSign(integer) THEN
 						 (* nothing to do (this property is ignored, since the size is calculated from the actual content) *)
 					ELSE
@@ -455,16 +455,16 @@ TYPE
 
 			ASSERT(scanner # NIL);
 			SELF.scanner := scanner;
-			NextSymbol; (* read first symbol *)
+			NextToken; (* read first token *)
 
 			(* go through directives *)
 			afterModuleDirective := FALSE;
 			afterImportsDirective := FALSE;
 			afterFirstSection := FALSE;
 			IgnoreNewLines;
-			WHILE ~error & (symbol.token # Scanner.EndOfText) DO
-				positionOfDirective := symbol.position;
-				IF ExpectToken(Scanner.Period) & ExpectAnyIdentifier(pos, identifier) THEN
+			WHILE ~error & (token.symbol # Scanner.EndOfText) DO
+				positionOfDirective := token.position;
+				IF ExpectSymbol(Scanner.Period) & ExpectAnyIdentifier(pos, identifier) THEN
 					(* 'module' directive *)
 					IF identifier = "module" THEN
 						IF afterModuleDirective THEN
@@ -502,7 +502,7 @@ TYPE
 									IF ~loader(identifier) THEN Error(positionOfDirective, "could not import") END;
 									*)
 								END
-							UNTIL error OR ~ThisToken(Scanner.Comma);
+							UNTIL error OR ~ThisSymbol(Scanner.Comma);
 							IF ExpectLineDelimiter() THEN
 								afterImportsDirective := TRUE
 							END
@@ -512,8 +512,8 @@ TYPE
 					ELSE
 						(* determine if section is external *)
 						IF identifier = "external" THEN
-							positionOfDirective := symbol.position;
-							IF ExpectToken(Scanner.Period) & ExpectAnyIdentifier(pos, identifier) THEN END;
+							positionOfDirective := token.position;
+							IF ExpectSymbol(Scanner.Period) & ExpectAnyIdentifier(pos, identifier) THEN END;
 							isExternalSection := TRUE
 						ELSE
 							isExternalSection := FALSE

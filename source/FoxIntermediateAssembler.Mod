@@ -29,23 +29,23 @@ TYPE
 
 				IF numberOperands >= 3 THEN Error(errorPosition,"too many operands")
 				ELSE
-					memory := ThisToken(Scanner.LeftBracket);
-					IF (symbol.token = Scanner.Identifier) & IntermediateCode.DenotesRegister(symbol.identifierString,class1,register1) THEN
-						NextSymbol;
-						stop := ~ThisToken(Scanner.Plus);
+					memory := ThisSymbol(Scanner.LeftBracket);
+					IF (token.symbol = Scanner.Identifier) & IntermediateCode.DenotesRegister(token.identifierString,class1,register1) THEN
+						NextToken;
+						stop := ~ThisSymbol(Scanner.Plus);
 					END;
 					IF ~stop THEN
-						IF (symbol.token = Scanner.Identifier) THEN
-							IF IntermediateCode.DenotesRegister(symbol.identifierString,class2,register2) THEN
-								NextSymbol;
-							ELSIF GetNonConstant(errorPosition,symbol.identifierString,result) THEN
-								NextSymbol;
+						IF (token.symbol = Scanner.Identifier) THEN
+							IF IntermediateCode.DenotesRegister(token.identifierString,class2,register2) THEN
+								NextToken;
+							ELSIF GetNonConstant(errorPosition,token.identifierString,result) THEN
+								NextToken;
 							ELSIF Expression(result,FALSE) THEN
 							END;
 						ELSIF Expression(result,FALSE) THEN
 						END;
 					END;
-					IF memory & ExpectToken(Scanner.RightBracket) THEN
+					IF memory & ExpectSymbol(Scanner.RightBracket) THEN
 						(*
 						IntermediateCode.InitMemory(operand,register1,register2,result.value);
 						*)
@@ -76,11 +76,11 @@ TYPE
 			IF mnem >= 0 THEN
 				FOR i := 0 TO 2 DO IntermediateCode.InitOperand(operands[i]) END;
 				numberOperands := 0;
-				IF symbol.token # Scanner.Ln THEN
+				IF token.symbol # Scanner.Ln THEN
 					REPEAT
 						ParseOperand;
 						INC(numberOperands);
-					UNTIL error OR ~ThisToken(Scanner.Comma);
+					UNTIL error OR ~ThisSymbol(Scanner.Comma);
 				END;
 
 				IF ~error THEN

@@ -121,35 +121,35 @@ TYPE
 
 		PROCEDURE ParseLogFile*(file: Files.File): Block;
 		VAR reader: Files.Reader; newline: BOOLEAN; sectionName: ObjectFile.SectionName; scanner: Scanner.AssemblerScanner;
-			symbol: Scanner.Symbol; b: BOOLEAN; block: Block; first: Block; last: Block;
+			token: Scanner.Token; b: BOOLEAN; block: Block; first: Block; last: Block;
 
-			PROCEDURE GetNextSymbol;
+			PROCEDURE GetNextToken;
 			VAR b: BOOLEAN;
-			BEGIN b := scanner.GetNextSymbol(symbol)
-			END GetNextSymbol;
+			BEGIN b := scanner.GetNextToken(token)
+			END GetNextToken;
 
-			PROCEDURE ExpectToken(token: LONGINT): BOOLEAN;
-			BEGIN IF symbol.token = token THEN GetNextSymbol; RETURN TRUE ELSE RETURN FALSE END;
+			PROCEDURE ExpectToken(symbol: Scanner.Symbol): BOOLEAN;
+			BEGIN IF token.symbol = symbol THEN GetNextToken; RETURN TRUE ELSE RETURN FALSE END;
 			END ExpectToken;
 
 			PROCEDURE ExpectIdentifier(VAR name: ARRAY OF CHAR): BOOLEAN;
 			BEGIN
-				IF (symbol.token = Scanner.Identifier) THEN COPY(symbol.identifierString,name); GetNextSymbol; RETURN TRUE
+				IF (token.symbol = Scanner.Identifier) THEN COPY(token.identifierString,name); GetNextToken; RETURN TRUE
 				ELSE RETURN FALSE
 				END;
 			END ExpectIdentifier;
 
 			PROCEDURE ExpectThisIdentifier(CONST name: ARRAY OF CHAR): BOOLEAN;
 			BEGIN
-				IF (symbol.token = Scanner.Identifier) & (symbol.identifierString = name) THEN GetNextSymbol; RETURN TRUE
+				IF (token.symbol = Scanner.Identifier) & (token.identifierString = name) THEN GetNextToken; RETURN TRUE
 				ELSE RETURN FALSE
 				END;
 			END ExpectThisIdentifier;
 
 			PROCEDURE ExpectNumber(VAR int: LONGINT):BOOLEAN;
 			BEGIN
-				IF (symbol.token = Scanner.Number) THEN
-					int := SHORT(symbol.hugeint); GetNextSymbol; RETURN TRUE
+				IF (token.symbol = Scanner.Number) THEN
+					int := SHORT(token.hugeint); GetNextToken; RETURN TRUE
 				ELSE RETURN FALSE
 				END;
 			END ExpectNumber;
@@ -168,7 +168,7 @@ TYPE
 					codeDisplacement := displacement; dataDisplacement := displacement
 				ELSIF ExpectThisIdentifier("data") & ExpectThisIdentifier("displacement") & ExpectNumber(displacement) THEN
 					dataDisplacement := displacement;
-				ELSE scanner.SkipToEndOfLine; GetNextSymbol;	scanner.ResetError;
+				ELSE scanner.SkipToEndOfLine; GetNextToken;	scanner.ResetError;
 				END;
 				IF (block # NIL) & Trace THEN
 					D.String("found section ");
@@ -185,14 +185,14 @@ TYPE
 			IF file = NIL THEN RETURN NIL END;
 			NEW(reader, file, 0);
 			scanner := Scanner.NewAssemblerScanner("",reader,0,NIL);
-			b := scanner.GetNextSymbol(symbol);
+			b := scanner.GetNextToken(token);
 			REPEAT
 				block := ParseLine();
 				IF block # NIL THEN
 					IF first = NIL THEN first := block; last := block ELSE last.next := block; last := block END;
 				END;
-				GetNextSymbol
-			UNTIL symbol.token = Scanner.EndOfText;
+				GetNextToken
+			UNTIL token.symbol = Scanner.EndOfText;
 			RETURN first;
 		END ParseLogFile;
 

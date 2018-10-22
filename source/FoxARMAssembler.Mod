@@ -18,11 +18,11 @@ TYPE
 		BEGIN
 			registerNumber := InstructionSet.None;
 			result := FALSE;
-			IF symbol.token = Scanner.Identifier THEN
-				registerNumber := InstructionSet.RegisterNumberFromName(symbol.identifierString);
+			IF token.symbol = Scanner.Identifier THEN
+				registerNumber := InstructionSet.RegisterNumberFromName(token.identifierString);
 				IF registerNumber # InstructionSet.None THEN
 					result := TRUE;
-					NextSymbol
+					NextToken
 				END
 			END;
 			RETURN result
@@ -32,20 +32,20 @@ TYPE
 		VAR num: LONGINT;
 		BEGIN
 			registerList := {};
-			IF symbol.token = Scanner.LeftBrace THEN
+			IF token.symbol = Scanner.LeftBrace THEN
 				REPEAT
-					NextSymbol;
+					NextToken;
 					IF GetRegister(num) THEN
 						IF (num > 16) THEN
 							Error(errorPosition, "invalid register in list (not yet implemented)")
 						END;
 						INCL(registerList, num);
 					END;
-				UNTIL symbol.token # Scanner.Comma;
-				IF symbol.token # Scanner.RightBrace THEN 
+				UNTIL token.symbol # Scanner.Comma;
+				IF token.symbol # Scanner.RightBrace THEN 
 					Error(errorPosition, "'}' expected.")
 				ELSE
-					NextSymbol;
+					NextToken;
 					RETURN TRUE
 				END;
 			END;
@@ -64,8 +64,8 @@ TYPE
 			registerNumber := InstructionSet.None;
 			fields := {};
 
-			IF symbol.token = Scanner.Identifier THEN
-				strings := Strings.Split(symbol.identifierString, '_'); (* split the identifier at the underscore symbol *)
+			IF token.symbol = Scanner.Identifier THEN
+				strings := Strings.Split(token.identifierString, '_'); (* split the identifier at the underscore symbol *)
 				IF LEN(strings) = 2 THEN
 					IF (strings[0]^ = "CPSR") OR (strings[0]^ = "SPSR") THEN
 						IF strings[0]^ = "CPSR" THEN registerNumber := InstructionSet.CPSR
@@ -82,7 +82,7 @@ TYPE
 								END
 							END;
 							result := TRUE;
-							NextSymbol
+							NextToken
 						END
 					END
 				END
@@ -97,11 +97,11 @@ TYPE
 		BEGIN
 			shiftModeNumber := InstructionSet.None;
 			result := FALSE;
-			IF symbol.token = Scanner.Identifier THEN
-				shiftModeNumber := InstructionSet.ShiftModeNumberFromName(symbol.identifierString);
+			IF token.symbol = Scanner.Identifier THEN
+				shiftModeNumber := InstructionSet.ShiftModeNumberFromName(token.identifierString);
 				IF shiftModeNumber # InstructionSet.None THEN
 					result := TRUE;
-					NextSymbol
+					NextToken
 				END
 			END;
 			RETURN result
@@ -115,11 +115,11 @@ TYPE
 			coprocessorNumber := InstructionSet.None;
 			result := FALSE;
 
-			IF symbol.token = Scanner.Identifier THEN
-				coprocessorNumber := InstructionSet.CoprocessorNumberFromName(symbol.identifierString);
+			IF token.symbol = Scanner.Identifier THEN
+				coprocessorNumber := InstructionSet.CoprocessorNumberFromName(token.identifierString);
 				IF coprocessorNumber # InstructionSet.None THEN
 					result := TRUE;
-					NextSymbol
+					NextToken
 				END
 			END;
 
@@ -131,10 +131,10 @@ TYPE
 		VAR
 			result: BOOLEAN;
 		BEGIN
-			IF (symbol.token = Scanner.Number) & (symbol.numberType = Scanner.Integer) & (symbol.integer >= 0) & (symbol.integer <= 7) THEN
-				coprocessorOpcode := symbol.integer;
+			IF (token.symbol = Scanner.Number) & (token.numberType = Scanner.Integer) & (token.integer >= 0) & (token.integer <= 7) THEN
+				coprocessorOpcode := token.integer;
 				result := TRUE;
-				NextSymbol
+				NextToken
 			ELSE
 				coprocessorOpcode := InstructionSet.None;
 				result := FALSE
@@ -162,7 +162,7 @@ TYPE
 			i.e., the '#'-sign followed by any expression that evaluates to a constant value
 		**)
 		PROCEDURE GetImmediateValue*(VAR immediateValue: LONGINT): BOOLEAN;
-		BEGIN RETURN ThisToken(Scanner.Unequal) & GetPlainValue(immediateValue)
+		BEGIN RETURN ThisSymbol(Scanner.Unequal) & GetPlainValue(immediateValue)
 		END GetImmediateValue;
 
 		PROCEDURE Instruction*(CONST mnemonic: ARRAY OF CHAR);
@@ -194,17 +194,17 @@ TYPE
 					Error(position, "too many operands")
 				ELSE
 					InstructionSet.InitOperand(operand);
-					IF ThisToken(Scanner.LeftBracket) THEN
+					IF ThisSymbol(Scanner.LeftBracket) THEN
 						bracketIsOpen := TRUE;
 						(* memory operand *)
 						indexingMode := {};
 						IF GetRegister(registerNumber) THEN
-							IF ThisToken(Scanner.RightBracket) THEN
+							IF ThisSymbol(Scanner.RightBracket) THEN
 								bracketIsOpen := FALSE;
 								(* post indexing *)
 								INCL(indexingMode, InstructionSet.PostIndexed)
 							END;
-							IF ExpectToken(Scanner.Comma) THEN
+							IF ExpectSymbol(Scanner.Comma) THEN
 								IF GetImmediateValue(offsetImmediateValue) THEN
 									(* immediate offset memory operand *)
 									isImmediateOffset := TRUE;
@@ -223,9 +223,9 @@ TYPE
 									isImmediateOffset := FALSE;
 
 									(* parse sign *)
-									IF ThisToken(Scanner.Plus) THEN
+									IF ThisSymbol(Scanner.Plus) THEN
 										INCL(indexingMode, InstructionSet.Increment)
-									ELSIF ThisToken(Scanner.Minus) THEN
+									ELSIF ThisSymbol(Scanner.Minus) THEN
 										INCL(indexingMode, InstructionSet.Decrement)
 									ELSE
 										Error(errorPosition, "plus or minus sign expected")
@@ -254,8 +254,8 @@ TYPE
 							END;
 
 							IF bracketIsOpen THEN
-								IF ExpectToken(Scanner.RightBracket) THEN
-									IF ThisToken(Scanner.ExclamationMark) THEN
+								IF ExpectSymbol(Scanner.RightBracket) THEN
+									IF ThisSymbol(Scanner.ExclamationMark) THEN
 										(* preindexing *)
 										INCL(indexingMode, InstructionSet.PreIndexed)
 									END
@@ -277,7 +277,7 @@ TYPE
 							ELSE
 								Error(errorPosition, "immediate offset is out of range")
 							END;
-							IF ExpectToken(Scanner.RightBracket) THEN
+							IF ExpectSymbol(Scanner.RightBracket) THEN
 							END;
 						ELSE
 							Error(errorPosition, "register expected")
@@ -301,10 +301,10 @@ TYPE
 						shiftRegisterNumber := InstructionSet.None;
 						shiftImmediateValue := 0;
 
-						IF ThisToken(Scanner.ExclamationMark) THEN
+						IF ThisSymbol(Scanner.ExclamationMark) THEN
 							INCL(flags, InstructionSet.flagBaseRegisterUpdate);
 						END;
-						IF ThisToken(Scanner.Comma) THEN
+						IF ThisSymbol(Scanner.Comma) THEN
 							(* parse shift mode *)
 							IF GetShiftMode(shiftModeNumber) THEN
 								IF shiftModeNumber # InstructionSet.shiftRRX THEN (* RRX shift amount is always 1 *)
@@ -322,7 +322,7 @@ TYPE
 						END
 					ELSIF GetRegisterList(registerList) THEN
 						InstructionSet.InitRegisterList(operand, InstructionSet.R0, registerList);
-						IF ThisToken(Scanner.Arrow) THEN
+						IF ThisSymbol(Scanner.Arrow) THEN
 							INCL(flags, InstructionSet.flagUserMode);
 						END;
 	
@@ -338,12 +338,12 @@ TYPE
 						(* ARM immediate value *)
 						InstructionSet.InitImmediate(operand, value)
 
-					ELSIF GetNonConstant(errorPosition,symbol.identifierString, result) THEN
+					ELSIF GetNonConstant(errorPosition,token.identifierString, result) THEN
 						InstructionSet.InitImmediate(operand,LONGINT(result.value));
 						IF result.fixup # NIL THEN
 							InstructionSet.AddFixup(operand,result.fixup);
 						END;
-						NextSymbol;
+						NextToken;
 					ELSIF GetPlainValue(value) THEN (* expression that evaluates to constant value *)
 						(* resolved label name *)
 						InstructionSet.InitImmediate(operand, value)
@@ -352,11 +352,11 @@ TYPE
 						Error(position, "invalid operand")
 					END;
 
-					IF ThisToken(Scanner.ExclamationMark) THEN
+					IF ThisSymbol(Scanner.ExclamationMark) THEN
 						INCL(flags, InstructionSet.flagBaseRegisterUpdate);
 					END;
 
-					IF ~newOperandExpected THEN newOperandExpected := ThisToken(Scanner.Comma) END; (* a comma means that there is one more operand *)
+					IF ~newOperandExpected THEN newOperandExpected := ThisSymbol(Scanner.Comma) END; (* a comma means that there is one more operand *)
 
 					operands[operandNumber] := operand;
 					
@@ -383,7 +383,7 @@ TYPE
 				END;
 
 				operandNumber := 0;
-				IF symbol.token # Scanner.Ln THEN
+				IF token.symbol # Scanner.Ln THEN
 					REPEAT
 						ParseOperand;
 

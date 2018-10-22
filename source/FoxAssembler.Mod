@@ -157,7 +157,7 @@ TYPE
 		diagnostics: Diagnostics.Diagnostics;
 		error-: BOOLEAN;
 		errorPosition-: Position;
-		symbol-: Scanner.Symbol;
+		token-: Scanner.Token;
 		scanner: Scanner.AssemblerScanner;
 		orgOffset: LONGINT;
 		section-: IntermediateCode.Section;
@@ -175,7 +175,7 @@ TYPE
 
 		PROCEDURE SetContext(CONST context: Scanner.Context);
 		BEGIN
-			scanner.SetContext(context); NextSymbol;
+			scanner.SetContext(context); NextToken;
 		END SetContext;
 
 		PROCEDURE Error*(pos: SyntaxTree.Position; CONST msg: ARRAY OF CHAR);
@@ -189,26 +189,26 @@ TYPE
 		BEGIN COPY(s1,msg); Strings.Append(msg,s2); Error(pos, msg);
 		END ErrorSS;
 
-		PROCEDURE NextSymbol*;
-		BEGIN error := error OR ~scanner.GetNextSymbol(symbol); errorPosition := symbol.position;
-		END NextSymbol;
+		PROCEDURE NextToken*;
+		BEGIN error := error OR ~scanner.GetNextToken(token); errorPosition := token.position;
+		END NextToken;
 
-		PROCEDURE ThisToken*(x: LONGINT): BOOLEAN;
+		PROCEDURE ThisSymbol*(x: Scanner.Symbol): BOOLEAN;
 		BEGIN
-			IF ~error & (symbol.token = x) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
-		END ThisToken;
+			IF ~error & (token.symbol = x) THEN NextToken; RETURN TRUE ELSE RETURN FALSE END;
+		END ThisSymbol;
 
 		PROCEDURE GetIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
-			pos := symbol.position;
-			IF symbol.token # Scanner.Identifier THEN RETURN FALSE
-			ELSE COPY(symbol.identifierString,identifier); NextSymbol; RETURN TRUE
+			pos := token.position;
+			IF token.symbol # Scanner.Identifier THEN RETURN FALSE
+			ELSE COPY(token.identifierString,identifier); NextToken; RETURN TRUE
 			END;
 		END GetIdentifier;
 
 		PROCEDURE ThisIdentifier*(CONST this: ARRAY OF CHAR): BOOLEAN;
 		BEGIN
-			IF ~error & (symbol.token = Scanner.Identifier) & (this = symbol.identifierString) THEN NextSymbol; RETURN TRUE ELSE RETURN FALSE END;
+			IF ~error & (token.symbol = Scanner.Identifier) & (this = token.identifierString) THEN NextToken; RETURN TRUE ELSE RETURN FALSE END;
 		END ThisIdentifier;
 
 		PROCEDURE ExpectIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN;
@@ -218,15 +218,15 @@ TYPE
 			END;
 		END ExpectIdentifier;
 
-		PROCEDURE ExpectToken*(x: LONGINT): BOOLEAN;
+		PROCEDURE ExpectSymbol*(x: Scanner.Symbol): BOOLEAN;
 		VAR s: Basic.MessageString;
 		BEGIN
-			IF ThisToken(x) THEN RETURN TRUE
+			IF ThisSymbol(x) THEN RETURN TRUE
 			ELSE
-				s := "expected token "; Strings.Append(s,Scanner.tokens[x]); Strings.Append(s," but got "); Strings.Append(s,Scanner.tokens[symbol.token]);
+				s := "expected token "; Strings.Append(s,Scanner.symbols[x]); Strings.Append(s," but got "); Strings.Append(s,Scanner.symbols[token.symbol]);
 				Error(errorPosition,s);RETURN FALSE
 			END;
-		END ExpectToken;
+		END ExpectSymbol;
 
 		PROCEDURE ExpectConstantInteger*(VAR x: Result; critical: BOOLEAN): BOOLEAN;
 		VAR result: Result;
@@ -242,7 +242,7 @@ TYPE
 		PROCEDURE Section;
 		VAR sectionType: Scanner.IdentifierString; pos: Position;
 		BEGIN
-			IF ExpectToken(Scanner.Period) THEN
+			IF ExpectSymbol(Scanner.Period) THEN
 				IF ExpectIdentifier(pos,sectionType) THEN
 					IF sectionType = "data" THEN
 						IF Trace THEN D.String("data section"); D.Ln END;
@@ -322,10 +322,10 @@ TYPE
 			END;
 
 			IF (sym # NIL) & (sym IS SyntaxTree.Import)  THEN
-				NextSymbol;
-				IF ExpectToken(Scanner.Period) & (symbol.token = Scanner.Identifier) THEN
-					identifier := SyntaxTree.NewIdentifier(symbol.identifierString);
-					IF Trace THEN D.String("GetScopeSymbol  :"); D.String(symbol.identifierString); D.Ln; END;
+				NextToken;
+				IF ExpectSymbol(Scanner.Period) & (token.symbol = Scanner.Identifier) THEN
+					identifier := SyntaxTree.NewIdentifier(token.identifierString);
+					IF Trace THEN D.String("GetScopeSymbol  :"); D.String(token.identifierString); D.Ln; END;
 					localScope := sym(SyntaxTree.Import).module.moduleScope;
 					sym := NIL;
 					WHILE (sym = NIL) & (localScope # NIL) DO
@@ -487,21 +487,21 @@ TYPE
 		PROCEDURE Factor (VAR x: Result; critical: BOOLEAN): BOOLEAN;
 		VAR label: NamedLabel; identifier: Scanner.IdentifierString; pos: Position;
 		BEGIN
-			IF ThisToken(Scanner.Number) THEN
+			IF ThisSymbol(Scanner.Number) THEN
 				(* ASSERT(symbol.numberType = Scanner.Integer); *)
-				IF symbol.numberType = Scanner.Integer THEN
-					x.value := symbol.integer
-				ELSIF symbol.numberType = Scanner.Hugeint THEN
-					x.value := symbol.hugeint;
+				IF token.numberType = Scanner.Integer THEN
+					x.value := token.integer
+				ELSIF token.numberType = Scanner.Hugeint THEN
+					x.value := token.hugeint;
 					(* ASSERT(x.value < 0); (* the resulting 32 bit integer must be negative when interpreted as a signed value *)*)
 				END;
 				x.type := ConstantInteger;
 				RETURN TRUE;
-			ELSIF ThisToken(Scanner.PC) THEN (* pc IN units ! *)
+			ELSIF ThisSymbol(Scanner.PC) THEN (* pc IN units ! *)
 				x.value := code.pc;
 				x.type := ConstantInteger; (* TODO: should it be 'x.type := Offset'? *)
 				RETURN TRUE;
-			ELSIF ThisToken(Scanner.PCOffset) THEN
+			ELSIF ThisSymbol(Scanner.PCOffset) THEN
 				x.value := code.pc-orgOffset;
 				x.type := ConstantInteger; (* TODO: should it be 'x.type := Offset'? *)
 				RETURN TRUE;
@@ -517,8 +517,8 @@ TYPE
 					x.value := 0; x.type := ConstantInteger; RETURN TRUE
 				ELSE Error(pos,"undefined symbol"); RETURN FALSE
 				END;
-			ELSIF ThisToken(Scanner.LeftParenthesis)  THEN
-				RETURN Expression (x, critical) & ExpectToken(Scanner.RightParenthesis);
+			ELSIF ThisSymbol(Scanner.LeftParenthesis)  THEN
+				RETURN Expression (x, critical) & ExpectSymbol(Scanner.RightParenthesis);
 			END;
 			RETURN FALSE
 		END Factor;
@@ -528,8 +528,8 @@ TYPE
 		VAR y: Result; op : LONGINT;
 		BEGIN
 			IF Factor (x, critical) THEN
-				WHILE (symbol.token = Scanner.Times) OR (symbol.token = Scanner.Div) OR (symbol.token = Scanner.Mod) DO
-					op := symbol.token; NextSymbol;
+				WHILE (token.symbol = Scanner.Times) OR (token.symbol = Scanner.Div) OR (token.symbol = Scanner.Mod) DO
+					op := token.symbol; NextToken;
 					IF Factor (y, critical) THEN
 						IF (x.type IN ConstantIntegerOrOffset) & (y.type IN ConstantIntegerOrOffset) THEN
 							IF op = Scanner.Times THEN x.value := x.value * y.value
@@ -557,8 +557,8 @@ TYPE
 		PROCEDURE Expression*(VAR x: Result; critical: BOOLEAN): BOOLEAN;
 		VAR y: Result; op : LONGINT;
 		BEGIN
-			op := symbol.token;
-			IF ThisToken(Scanner.Minus) THEN
+			op := token.symbol;
+			IF ThisSymbol(Scanner.Minus) THEN
 				IF Term (x, critical) THEN
 					IF x.type IN ConstantIntegerOrOffset THEN
 						x.value := -x.value; x.valueR := x.value
@@ -570,12 +570,12 @@ TYPE
 				ELSE
 					RETURN FALSE;
 				END;
-			ELSIF ThisToken(Scanner.Plus) THEN
+			ELSIF ThisSymbol(Scanner.Plus) THEN
 				IF ~Term (x, critical) THEN RETURN FALSE
 				ELSE
 					RETURN (x.type IN ConstantIntegerOrOffset) OR (x.type = ConstantFloat)
 				END;
-			ELSIF ThisToken(Scanner.Not) THEN
+			ELSIF ThisSymbol(Scanner.Not) THEN
 				IF Term (x, critical) THEN
 					IF x.type IN ConstantIntegerOrOffset THEN
 						x.value := -x.value-1; x.valueR := x.value
@@ -585,8 +585,8 @@ TYPE
 				END;
 			ELSIF ~Term (x, critical) THEN RETURN FALSE
 			END;
-			WHILE (symbol.token = Scanner.Plus) OR (symbol.token = Scanner.Minus) DO
-				op := symbol.token; NextSymbol;
+			WHILE (token.symbol = Scanner.Plus) OR (token.symbol = Scanner.Minus) DO
+				op := token.symbol; NextToken;
 				IF Term (y, critical) THEN
 					IF op = Scanner.Plus THEN
 						IF (x.type IN ConstantIntegerOrOffset) & (y.type IN ConstantIntegerOrOffset) THEN
@@ -640,26 +640,26 @@ TYPE
 				IF Trace THEN D.String("Data"); D.Ln; END;
 				REPEAT
 					pos := errorPosition;
-					IF symbol.token = Scanner.String THEN
+					IF token.symbol = Scanner.String THEN
 						IF (pass = MaxPasses) & (code.comments # NIL) THEN
 							code.comments.String(ident); section.comments.String(' "');
-							code.comments.String(symbol.string^);
+							code.comments.String(token.string^);
 							code.comments.String('"');
 							code.comments.Ln;
 							code.comments.Update
 						END;
 						i := 0;
-						WHILE symbol.string[i] # 0X DO
-							PutBitsIfLastPass(ORD(symbol.string[i]),size);
+						WHILE token.string[i] # 0X DO
+							PutBitsIfLastPass(ORD(token.string[i]),size);
 							INC(i);
 						END;
-						NextSymbol;
+						NextToken;
 
-					ELSIF (symbol.token = Scanner.Identifier) & GetNonConstant(errorPosition,symbol.identifierString,result) THEN
+					ELSIF (token.symbol = Scanner.Identifier) & GetNonConstant(errorPosition,token.identifierString,result) THEN
 						IF (pass = MaxPasses) & (code.comments # NIL) THEN
 							code.comments.String(ident);
 							code.comments.String(" ");
-							code.comments.String(symbol.identifierString);
+							code.comments.String(token.identifierString);
 							code.comments.Ln;
 							code.comments.Update
 						END;
@@ -675,7 +675,7 @@ TYPE
 						END;
 
 						PutBitsIfLastPass(0,size);
-						NextSymbol;
+						NextToken;
 
 					ELSIF Expression(x,FALSE) THEN
 						IF x.type # ConstantInteger THEN Error(pos,"forbidden non-constant value") END;
@@ -697,7 +697,7 @@ TYPE
 
 					ELSE Error(pos,"expected string or expression");
 					END;
-				UNTIL error OR ~ThisToken(Scanner.Comma);
+				UNTIL error OR ~ThisSymbol(Scanner.Comma);
 			END;
 			RETURN TRUE
 		END Data;
@@ -729,24 +729,24 @@ TYPE
 				result: Result; first: BOOLEAN; str: ARRAY 256 OF CHAR;
 			BEGIN
 				first := TRUE;
-				WHILE ~error & (symbol.token # Scanner.Ln) & (symbol.token # Scanner.Comma) DO
-					IF (symbol.token = Scanner.Identifier) & GetNonConstant(errorPosition,symbol.identifierString,result) THEN
+				WHILE ~error & (token.symbol # Scanner.Ln) & (token.symbol # Scanner.Comma) DO
+					IF (token.symbol = Scanner.Identifier) & GetNonConstant(errorPosition,token.identifierString,result) THEN
 							D.String("(* non constant ");
-							D.String(symbol.identifierString); D.String("="); DumpResult(D.Log,result);
+							D.String(token.identifierString); D.String("="); DumpResult(D.Log,result);
 							D.String("*)");
-					ELSIF (symbol.token = Scanner.Identifier) & GetConstant(errorPosition,symbol.identifierString,result) THEN
+					ELSIF (token.symbol = Scanner.Identifier) & GetConstant(errorPosition,token.identifierString,result) THEN
 							D.String("(* constant ");
 							DumpResult(D.Log,result);
 							D.String("*)");
 					END;
 					IF first THEN first := FALSE ELSE Strings.Append(operand," ") END;
-					Scanner.SymbolToString(symbol, scanner.case, str);
+					Scanner.TokenToString(token, scanner.case, str);
 					Strings.Append(operand, str);
-					NextSymbol;
+					NextToken;
 				END;
 				IF Trace THEN
 					D.String("operand= ");
-					D.String(operand); IF symbol.token = Scanner.Comma THEN D.String(" , ") END;
+					D.String(operand); IF token.symbol = Scanner.Comma THEN D.String(" , ") END;
 				END;
 			END ParseOperand;
 		BEGIN
@@ -754,19 +754,19 @@ TYPE
 				D.String("Instruction= "); D.String(mnemonic);  D.String(" ");
 			END;
 			numberOperands := 0;
-			IF ~ThisToken(Scanner.Ln) THEN
+			IF ~ThisSymbol(Scanner.Ln) THEN
 				REPEAT
 					ParseOperand(errorPosition,numberOperands);
 					INC(numberOperands);
-				UNTIL error OR ~ThisToken(Scanner.Comma);
-				IF ~error & ExpectToken(Scanner.Ln) THEN END;
+				UNTIL error OR ~ThisSymbol(Scanner.Comma);
+				IF ~error & ExpectSymbol(Scanner.Ln) THEN END;
 			END;
 			IF Trace THEN D.Ln END
 		END Instruction;
 
 		PROCEDURE IgnoreNewLines;
 		BEGIN
-			WHILE ThisToken(Scanner.Ln) DO END;
+			WHILE ThisSymbol(Scanner.Ln) DO END;
 		END IgnoreNewLines;
 
 		PROCEDURE DoAssemble();
@@ -781,21 +781,21 @@ TYPE
 			NEW(results);
 
 			scanner.GetContext(context);
-			NextSymbol;
+			NextToken;
 			IgnoreNewLines;
-			WHILE ~error & (symbol.token # Scanner.Period) & (symbol.token # Scanner.EndOfText) DO
-				IF ThisToken(Scanner.Number) THEN
-					line := symbol.integer;
-					IF ThisToken(Scanner.Colon) THEN (* line number *)
-					ELSE Error(symbol.position,"Identifier expected");
+			WHILE ~error & (token.symbol # Scanner.Period) & (token.symbol # Scanner.EndOfText) DO
+				IF ThisSymbol(Scanner.Number) THEN
+					line := token.integer;
+					IF ThisSymbol(Scanner.Colon) THEN (* line number *)
+					ELSE Error(token.position,"Identifier expected");
 					END;
 				END;
 				IF ExpectIdentifier(pos,identifier) THEN
-					IF ThisToken(Scanner.Colon) THEN (* label *)
+					IF ThisSymbol(Scanner.Colon) THEN (* label *)
 						DefineLabel(pos,identifier)
-					ELSIF ThisIdentifier("equ") OR ThisToken(Scanner.Equal) THEN
+					ELSIF ThisIdentifier("equ") OR ThisSymbol(Scanner.Equal) THEN
 						IF Expression(result,FALSE) THEN DefineResult(pos,identifier,result) END;
-					ELSE scanner.SkipToEndOfLine; NextSymbol;
+					ELSE scanner.SkipToEndOfLine; NextToken;
 					END;
 				END;
 				IgnoreNewLines;
@@ -807,17 +807,17 @@ TYPE
 				code.SetPC(orgCodePos);
 				SetContext(context);
 				IgnoreNewLines;
-				WHILE ~error & (symbol.token # Scanner.EndOfText) & (symbol.token # Scanner.Period) DO
-					IF ThisToken(Scanner.Number) THEN
-						line := symbol.integer;
-						IF ThisToken(Scanner.Colon) THEN (* line number *)
-						ELSE Error(symbol.position,"Identifier expected");
+				WHILE ~error & (token.symbol # Scanner.EndOfText) & (token.symbol # Scanner.Period) DO
+					IF ThisSymbol(Scanner.Number) THEN
+						line := token.integer;
+						IF ThisSymbol(Scanner.Colon) THEN (* line number *)
+						ELSE Error(token.position,"Identifier expected");
 						END;
 					END;
 					IF ExpectIdentifier(pos,identifier) THEN
-						IF ThisToken(Scanner.Colon) THEN (* label *)
+						IF ThisSymbol(Scanner.Colon) THEN (* label *)
 							SetLabel(pos,identifier);
-						ELSIF ThisIdentifier("equ") OR ThisToken(Scanner.Equal) THEN (* constant definition *)
+						ELSIF ThisIdentifier("equ") OR ThisSymbol(Scanner.Equal) THEN (* constant definition *)
 							IF Expression(result,FALSE) THEN SetResult(identifier,result) END;
 						ELSE
 							IF identifier = "section" THEN
@@ -832,7 +832,7 @@ TYPE
 								errorPosition := pos;
 								Instruction(identifier);
 								(*
-								IF ~error & ExpectToken(Scanner.Ln) THEN END;
+								IF ~error & ExpectSymbol(Scanner.Ln) THEN END;
 								*)
 							END;
 						END;
@@ -872,7 +872,7 @@ TYPE
 			IF Trace THEN D.String("AllSections"); D.Ln END;
 			SetContext(scanner.startContext);
 			IgnoreNewLines;
-			WHILE ThisToken(Scanner.Period) & ExpectIdentifier(pos,sectionType) & ExpectIdentifier(pos,sectionName) DO
+			WHILE ThisSymbol(Scanner.Period) & ExpectIdentifier(pos,sectionType) & ExpectIdentifier(pos,sectionName) DO
 				D.String("section "); D.String(sectionType); D.String(" "); D.String(sectionName); D.Ln;
 				DoAssemble;
 			END;
@@ -913,12 +913,12 @@ TYPE
 	END Test;
 
 	PROCEDURE TestScanner*(context: Commands.Context);
-	VAR scanner: Scanner.AssemblerScanner;  diagnostics: Diagnostics.StreamDiagnostics; symbol: Scanner.Symbol;
+	VAR scanner: Scanner.AssemblerScanner;  diagnostics: Diagnostics.StreamDiagnostics; token: Scanner.Token;
 	BEGIN
 		NEW(diagnostics,context.out);
 		scanner := Scanner.NewAssemblerScanner("command",context.arg,0,diagnostics);
-		WHILE scanner.GetNextSymbol(symbol) & (symbol.token # Scanner.EndOfText)  DO
-			Scanner.OutSymbol(context.out, symbol); context.out.Ln;
+		WHILE scanner.GetNextToken(token) & (token.symbol # Scanner.EndOfText)  DO
+			Scanner.PrintToken(context.out, token); context.out.Ln;
 		END;
 	END TestScanner;
 

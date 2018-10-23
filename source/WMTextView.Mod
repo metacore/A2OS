@@ -2605,7 +2605,7 @@ TYPE
 				FOR j := 0 TO nofHighlights - 1 DO
 					IF (p >= highlights[j].a) & (p < highlights[j].b) THEN
 						CASE highlights[j].kind OF
-							|HLOver: canvas.Fill(WMGraphics.MakeRectangle(x + sx, top, x + dx + sx, top + (l.height)), highlights[j].color, WMGraphics.ModeSrcOverDst)
+							|HLOver: canvas.Fill(WMRectangles.MakeRect(x + sx, top, x + dx + sx, top + (l.height)), highlights[j].color, WMGraphics.ModeSrcOverDst)
 							|HLUnder: canvas.Line(x + sx, top + (l.ascent), x + dx + sx, top + (l.ascent), highlights[j].color, WMGraphics.ModeSrcOverDst);
 							|HLWave:
 								FOR k := 0 TO dx - 1 DO

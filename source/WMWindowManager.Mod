@@ -205,7 +205,7 @@ TYPE
 		BEGIN
 			id := GetId();
 			timestamp := 0;
-			bounds := Graphics.MakeRectangle(0, 0, w, h);
+			bounds := Rectangles.MakeRect(0, 0, w, h);
 			initialBounds := bounds;
 			normalBounds := bounds;
 			manager := NIL; sequencer := NIL;

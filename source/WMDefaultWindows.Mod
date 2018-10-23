@@ -494,7 +494,7 @@ TYPE
 			minimizeOffset := s.minimizeOffset;
 			manager.lock.AcquireWrite;
 			r := bounds;
-			bounds := Graphics.MakeRectangle(master.bounds.l - s.lw, master.bounds.t - s.th, master.bounds.r + s.rw, master.bounds.t);
+			bounds := WMRectangles.MakeRect(master.bounds.l - s.lw, master.bounds.t - s.th, master.bounds.r + s.rw, master.bounds.t);
 			WMRectangles.ExtendRect(r, bounds);
 			manager.lock.ReleaseWrite;
 			manager.AddDirty(r)
@@ -512,7 +512,7 @@ TYPE
 				GetActivePics(a, b, c);
 				RepeatMiddleVertical(canvas, GetWidth(), GetHeight(), w, h, q, a, b, c)
 			ELSE
-				canvas.Fill(Graphics.MakeRectangle(0, 0, w, h), color, Graphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), color, Graphics.ModeSrcOverDst);
 				WMGraphicUtilities.ExtRectGlassShade(canvas, WMRectangles.MakeRect(0, 0, w, h), {0, 2, 3}, sw, FALSE);
 			END
 		END Draw;
@@ -539,7 +539,7 @@ TYPE
 			picAb := s.lia; picBb := s.lib; picCb := s.lic;
 			manager.lock.AcquireWrite;
 			r :=bounds;
-			bounds := Graphics.MakeRectangle(master.bounds.l - s.lw, master.bounds.t, master.bounds.l, master.bounds.b);
+			bounds := WMRectangles.MakeRect(master.bounds.l - s.lw, master.bounds.t, master.bounds.l, master.bounds.b);
 			WMRectangles.ExtendRect(r, bounds);
 			manager.lock.ReleaseWrite;
 			manager.AddDirty(r)
@@ -557,7 +557,7 @@ TYPE
 				GetActivePics(a, b, c);
 				RepeatMiddleVertical(canvas, GetWidth(), GetHeight(), w, h, q, a, b, c)
 			ELSE
-				canvas.Fill(Graphics.MakeRectangle(0, 0, w, h), color, Graphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), color, Graphics.ModeSrcOverDst);
 				WMGraphicUtilities.ExtRectGlassShade(canvas, WMRectangles.MakeRect(0, 0, w, h), {0, 1, 2}, sw, FALSE);
 			END
 		END Draw;
@@ -584,7 +584,7 @@ TYPE
 			picAb := s.ria; picBb := s.rib; picCb := s.ric;
 			manager.lock.AcquireWrite;
 			r :=bounds;
-			bounds := Graphics.MakeRectangle(master.bounds.r, master.bounds.t, master.bounds.r + s.rw, master.bounds.b);
+			bounds := WMRectangles.MakeRect(master.bounds.r, master.bounds.t, master.bounds.r + s.rw, master.bounds.b);
 			WMRectangles.ExtendRect(r, bounds);
 			manager.lock.ReleaseWrite;
 			manager.AddDirty(r)
@@ -628,7 +628,7 @@ TYPE
 			picAb := s.bia; picBb := s.bib; picCb := s.bic;
 			manager.lock.AcquireWrite;
 			r := bounds;
-			bounds := Graphics.MakeRectangle(master.bounds.l - s.lw, master.bounds.b, master.bounds.r + s.rw, master.bounds.b + s.bh);
+			bounds := WMRectangles.MakeRect(master.bounds.l - s.lw, master.bounds.b, master.bounds.r + s.rw, master.bounds.b + s.bh);
 			WMRectangles.ExtendRect(r, bounds);
 			manager.lock.ReleaseWrite;
 			manager.AddDirty(r)

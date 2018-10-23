@@ -1,6 +1,6 @@
 MODULE Presentation; (** AUTHOR "TF"; PURPOSE "Dia-Show"; *)
 
-IMPORT Streams, Commands, KernelLog, WM := WMWindowManager, Graphics := WMGraphics, Files, Raster, WMTransitions,
+IMPORT Streams, Commands, KernelLog, WM := WMWindowManager, WMRectangles, Graphics := WMGraphics, Files, Raster, WMTransitions,
 	Strings, WMDialogs;
 
 TYPE
@@ -60,7 +60,7 @@ TYPE
 						IF current.prev # head THEN
 							transition.CalcImage(current.prev.img, current.img, fadeImage, i * 18);
 							canvas.DrawImage(0, 0, fadeImage, Graphics.ModeCopy);
-							Invalidate(Graphics.MakeRectangle(0, 0, img.width, img.height))
+							Invalidate(WMRectangles.MakeRect(0, 0, img.width, img.height))
 						END;
 					END;
 				END;
@@ -69,7 +69,7 @@ TYPE
 					canvas.SetColor(Graphics.White);
 					canvas.DrawString(10, 750, current.text^);
 				END;
-				Invalidate(Graphics.MakeRectangle(0, 0, img.width, img.height))
+				Invalidate(WMRectangles.MakeRect(0, 0, img.width, img.height))
 			END;
 		END DrawImg;
 

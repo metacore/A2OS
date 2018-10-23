@@ -512,8 +512,8 @@ TYPE
 			ELSE canvas.SetColor(clTextDefault.Get())
 			END;
 			f.GetStringSize(node.caption^, tdx, tdy);
-			IF StateSelected IN state THEN canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), clSelected.Get(), WMGraphics.ModeSrcOverDst)
-			ELSIF StateHover IN state THEN canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), clHover.Get(), WMGraphics.ModeSrcOverDst)
+			IF StateSelected IN state THEN canvas.Fill(Rect.MakeRect(0, 0, dx + tdx, h), clSelected.Get(), WMGraphics.ModeSrcOverDst)
+			ELSIF StateHover IN state THEN canvas.Fill(Rect.MakeRect(0, 0, dx + tdx, h), clHover.Get(), WMGraphics.ModeSrcOverDst)
 			END;
 			IF node.caption # NIL THEN canvas.DrawString(dx, h - f.descent -1, node.caption^) END;
 		END DrawNode;
@@ -599,7 +599,7 @@ TYPE
 			END;
 
 			IF drawNode # NIL THEN
-				canvas.SetClipRect(WMGraphics.MakeRectangle(x, y, bounds.GetWidth(), y + height));
+				canvas.SetClipRect(Rect.MakeRect(x, y, bounds.GetWidth(), y + height));
 				canvas.ClipRectAsNewLimits(x, y);
 				state := {};
 				IF node = selectedNode THEN INCL(state, StateSelected) END;

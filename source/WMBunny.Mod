@@ -24,7 +24,7 @@ TYPE
 
 		PROCEDURE &New*(movie : Raster.Image; frames, step : LONGINT);
 		BEGIN
-			bounds :=WMGraphics.MakeRectangle(0, 0, movie.width DIV frames, movie.height);
+			bounds := Rectangles.MakeRect(0, 0, movie.width DIV frames, movie.height);
 			useAlpha := TRUE;
 			isVisible := TRUE;
 			NEW(random);

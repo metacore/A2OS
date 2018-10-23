@@ -464,13 +464,13 @@ TYPE
 			f.GetStringSize(caption^, tdx, tdy);
 
 			IF (bgColor # 0) THEN
-				canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), bgColor, WMGraphics.ModeSrcOverDst)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, dx + tdx, h), bgColor, WMGraphics.ModeSrcOverDst)
 			END;
 
 			IF WMTrees.StateSelected IN state THEN
-				canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), treeView.clSelected.Get(), WMGraphics.ModeSrcOverDst)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, dx + tdx, h), treeView.clSelected.Get(), WMGraphics.ModeSrcOverDst)
 			ELSIF WMTrees.StateHover IN state THEN
-				canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), treeView.clHover.Get(), WMGraphics.ModeSrcOverDst)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, dx + tdx, h), treeView.clHover.Get(), WMGraphics.ModeSrcOverDst)
 			END;
 			IF caption # NIL THEN canvas.DrawString(dx, h - f.descent - 1 , caption^); END;
 		END DrawNode;

@@ -468,7 +468,7 @@ TYPE
 			IF img # NIL THEN
 					IF img.width > 16 THEN width := 16 ELSE width := img.width END;
 				IF img.height > 16 THEN height := 16 ELSE height := img.height END;
-				canvas.ScaleImage(img, WMGraphics.MakeRectangle(0, 0, img.width, img.height), WMGraphics.MakeRectangle(0, 0, width, height), WMGraphics.ModeSrcOverDst, WMGraphics.ScaleBox);
+				canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, img.width, img.height), WMRectangles.MakeRect(0, 0, width, height), WMGraphics.ModeSrcOverDst, WMGraphics.ScaleBox);
 				dx := 21;
 			END;
 			canvas.SetFont(f);
@@ -477,8 +477,8 @@ TYPE
 			ELSE canvas.SetColor(treeView.clTextDefault.Get())
 			END;
 			f.GetStringSize(caption^, tdx, tdy);
-			IF WMTrees.StateSelected IN state THEN canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), treeView.clSelected.Get(), WMGraphics.ModeSrcOverDst)
-			ELSIF WMTrees.StateHover IN state THEN canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), treeView.clHover.Get(), WMGraphics.ModeSrcOverDst)
+			IF WMTrees.StateSelected IN state THEN canvas.Fill(WMRectangles.MakeRect(0, 0, dx + tdx, h), treeView.clSelected.Get(), WMGraphics.ModeSrcOverDst)
+			ELSIF WMTrees.StateHover IN state THEN canvas.Fill(WMRectangles.MakeRect(0, 0, dx + tdx, h), treeView.clHover.Get(), WMGraphics.ModeSrcOverDst)
 			END;
 
 			IF caption # NIL THEN canvas.DrawString(dx, h - f.descent -1, caption^) END;

@@ -1,7 +1,7 @@
 MODULE ModuleTrees; (** AUTHOR "?"; PURPOSE "Visualize module structure as tree"; *)
 
 IMPORT
-	Streams, Commands, Diagnostics, WMStandardComponents, WMGraphics, WMProperties, WMComponents,
+	Streams, Commands, Diagnostics, WMStandardComponents, WMRectangles, WMGraphics, WMProperties, WMComponents,
 	WMTextView, WMEditors, Strings, Texts, TextUtilities, KernelLog,
 	WMTrees, WMEvents,
 	FoxScanner, ModuleParser;
@@ -486,9 +486,9 @@ TYPE
 			caption := tree.GetNodeCaption(node);
 			f.GetStringSize(caption^, tdx, tdy);
 			IF WMTrees.StateSelected IN state THEN
-				canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), treeView.clSelected.Get(), WMGraphics.ModeSrcOverDst)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, dx + tdx, h), treeView.clSelected.Get(), WMGraphics.ModeSrcOverDst)
 			ELSIF WMTrees.StateHover IN state THEN
-				canvas.Fill(WMGraphics.MakeRectangle(0, 0, dx + tdx, h), treeView.clHover.Get(), WMGraphics.ModeSrcOverDst)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, dx + tdx, h), treeView.clHover.Get(), WMGraphics.ModeSrcOverDst)
 			END;
 			IF caption # NIL THEN canvas.DrawString(dx, h - f.descent - 1 , caption^) END;
 		END DrawNode;

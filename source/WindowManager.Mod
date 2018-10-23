@@ -1338,23 +1338,23 @@ TYPE
 			top.useBitmaps := FALSE; left.useBitmaps := FALSE;
 			right.useBitmaps := FALSE; bottom.useBitmaps := FALSE;
 			(* Top *)
-			top.bounds := Graphics.MakeRectangle(l - lw, t - th, r + rw, t);
+			top.bounds := Rect.MakeRect(l - lw, t - th, r + rw, t);
 			top.mode := 0; top.distXY := XYResizeHandleSize;
 			top.SetPointerInfo(pointerMove); top.vertical := FALSE;
 			top.threshold := 110; top.focusthreshold := 200;
 
 			(* Left *)
-			left.bounds := Graphics.MakeRectangle(l - lw, t, l, b);
+			left.bounds := Rect.MakeRect(l - lw, t, l, b);
 			left.mode := 3; left.distXY := XYResizeHandleSize; left.vertical := TRUE;
 			left.threshold := 110; left.focusthreshold := 200;
 
 			(* Right *)
-			right.bounds := Graphics.MakeRectangle(r + 1, t, r + 1 + rw, b);
+			right.bounds := Rect.MakeRect(r + 1, t, r + 1 + rw, b);
 			right.mode := 1; right.distXY := XYResizeHandleSize; right.vertical := TRUE;
 			right.threshold := 110; right.focusthreshold := 200;
 
 			(* Bottom *)
-			bottom.bounds := Graphics.MakeRectangle(l - lw, b + 1, r + rw, b + 1 + bh);
+			bottom.bounds := Rect.MakeRect(l - lw, b + 1, r + rw, b + 1 + bh);
 			bottom.mode := 2; bottom.distXY :=   lw + XYResizeHandleSize; bottom.vertical := FALSE;
 			bottom.threshold := 110; bottom.focusthreshold := 200;
 
@@ -1623,9 +1623,9 @@ BEGIN
 	FillSession(session, color, noPointer);
 
 	IF (view.width0 > 0) & (view.height0 > 0) THEN
-		r := Graphics.MakeRectangle(0, 0, view.width0, view.height0);
+		r := Rect.MakeRect(0, 0, view.width0, view.height0);
 	ELSE
-		r := Graphics.MakeRectangle(0, 0, 1600, 1200);
+		r := Rect.MakeRect(0, 0, 1600, 1200);
 	END;
 	session.AddDirty(r);
 	WM.registry.Add(session, res);

@@ -40,7 +40,7 @@ TYPE
 			END;
 			canvas:=canvasGen(img);
 			Update(width, height);
-			rect := WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight());
+			rect := WMRectangles.MakeRect(0,0,GetWidth(), GetHeight());
 			Invalidate(rect);
 		END Resized;
 		
@@ -90,7 +90,7 @@ TYPE
 		BEGIN
 			SELF.data:=data;
 			Update(GetWidth(), GetHeight());
-			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+			Invalidate(WMRectangles.MakeRect(0,0,GetWidth(), GetHeight()));
 		END NewData;
 		
 		PROCEDURE Update(w,h: LONGINT);
@@ -126,7 +126,7 @@ TYPE
 			Init(width, height, TRUE );
 			offset:=0; gain:=255/max;
 			IF( width<10) OR (height<10) THEN 
-				bounds := WMGraphics.MakeRectangle(0, 0, 10*width, 10*height);(* grow small images *)
+				bounds := WMRectangles.MakeRect(0, 0, 10*width, 10*height);(* grow small images *)
 				Resized(GetWidth(), GetHeight());
 			END;
 			WM.GetDefaultManager().Add(PosX, PosY, SELF, {WM.FlagFrame,WM.FlagClose});
@@ -144,7 +144,7 @@ TYPE
 			IF max=0 THEN max:=1 END;
 			offset:=0; gain:=255/max;
 			Update(GetWidth(), GetHeight());
-			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+			Invalidate(WMRectangles.MakeRect(0,0,GetWidth(), GetHeight()));
 		END NewData;
 
 		PROCEDURE Update(w,h: LONGINT);
@@ -198,7 +198,7 @@ TYPE
 			max:=MAX(1, MAX(data));
 			min:=MIN(0, MIN(data)); 
 			Update(GetWidth(), GetHeight());
-			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+			Invalidate(WMRectangles.MakeRect(0,0,GetWidth(), GetHeight()));
 		END NewData;
 
 		PROCEDURE Update(w,h: LONGINT);
@@ -251,7 +251,7 @@ Graphs* = OBJECT (Window);
 			max:=MAX(1, MAX(data));
 			min:=MIN(0, MIN(data)); 
 			Update(GetWidth(), GetHeight());
-			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+			Invalidate(WMRectangles.MakeRect(0,0,GetWidth(), GetHeight()));
 		END NewData;
 
 		PROCEDURE Update(w,h: LONGINT);		
@@ -308,7 +308,7 @@ GraphXY* = OBJECT (Window);
 			maxx:=MAX(0,MAX(data[0]));maxy:=MAX(0,MAX(data[1]));
 			minx:=MIN(0, MIN(data[0])); miny:=MIN(0, MIN(data[1])); 
 			Update(GetWidth(), GetHeight());
-			Invalidate(WMGraphics.MakeRectangle(0,0,GetWidth(), GetHeight()));
+			Invalidate(WMRectangles.MakeRect(0,0,GetWidth(), GetHeight()));
 		END NewData;
 
 		

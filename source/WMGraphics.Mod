@@ -437,7 +437,7 @@ TYPE
 		(** set a pixel within the current clipping rectangle *)
 		PROCEDURE SetPixel*(x, y : LONGINT; color : Color; mode : LONGINT);
 		BEGIN
-			Fill(MakeRectangle(x, y, x + 1, y + 1), color, mode)
+			Fill(Rectangles.MakeRect(x, y, x + 1, y + 1), color, mode)
 		END SetPixel;
 
 		(** fill a rectangle within the current clipping rectangle *)
@@ -508,7 +508,7 @@ TYPE
 		PROCEDURE &New*(img : Raster.Image);
 		BEGIN
 			SELF.img := img;				
-			bounds := MakeRectangle(0, 0, img.width, img.height);
+			bounds := Rectangles.MakeRect(0, 0, img.width, img.height);
 			SetLimits(bounds);
 			clipRect := bounds;
 			clipMode := { ClipRect };
@@ -673,7 +673,7 @@ TYPE
 		BEGIN
 			IF (img = NIL) OR (img.adr = NIL) THEN RETURN END;
 			dx := SELF.dx; dy := SELF.dy; (* avoid race below *)
-			imgBounds := MakeRectangle(0, 0, img.width, img.height);
+			imgBounds := Rectangles.MakeRect(0, 0, img.width, img.height);
 
 			(* to super coordinates *)
 			Rectangles.MoveRel(imgBounds, x + dx, y + dy);

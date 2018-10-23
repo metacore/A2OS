@@ -207,14 +207,14 @@ BEGIN
 	RadiusError := 0;
 
 	WHILE ( X>= Y ) DO
-		c.Fill(WMGraphics.MakeRectangle(CX+X, CY+Y,CX+X+1,CY+Y+1),c.color,1);
-		c.Fill(WMGraphics.MakeRectangle(CX-X, CY+Y,CX-X+1, CY+Y+1),c.color,1);
-		c.Fill(WMGraphics.MakeRectangle(CX-X, CY-Y,CX-X+1, CY-Y+1),c.color,1);
-		c.Fill(WMGraphics.MakeRectangle(CX+X, CY-Y,CX+X+1, CY-Y+1),c.color,1);
-		c.Fill(WMGraphics.MakeRectangle(CX+Y, CY+X,CX+Y+1,CY+X+1),c.color,1);
-		c.Fill(WMGraphics.MakeRectangle(CX-Y, CY+X,CX-Y+1, CY+X+1),c.color,1);
-		c.Fill(WMGraphics.MakeRectangle(CX-Y, CY-X,CX-Y+1, CY-X+1),c.color,1);
-		c.Fill(WMGraphics.MakeRectangle(CX+Y, CY-X,CX+Y+1, CY-X+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX+X, CY+Y,CX+X+1,CY+Y+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX-X, CY+Y,CX-X+1, CY+Y+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX-X, CY-Y,CX-X+1, CY-Y+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX+X, CY-Y,CX+X+1, CY-Y+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX+Y, CY+X,CX+Y+1,CY+X+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX-Y, CY+X,CX-Y+1, CY+X+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX-Y, CY-X,CX-Y+1, CY-X+1),c.color,1);
+		c.Fill(WMRectangles.MakeRect(CX+Y, CY-X,CX+Y+1, CY-X+1),c.color,1);
 		INC(Y);
 		INC(RadiusError, YChange);
 		INC(YChange,2);
@@ -245,10 +245,10 @@ BEGIN
 	StoppingX := TwoBSquare*XRadius;
 	StoppingY := 0;
 	WHILE ( StoppingX>= StoppingY ) DO (* 1st set of points, y>1 *)
-		c.Fill(WMGraphics.MakeRectangle(CX+X, CY+Y-1,CX+X+1,CY+Y+1),c.color,1); (*point in quadrant 1*)
-		c.Fill(WMGraphics.MakeRectangle(CX-X, CY+Y-1,CX-X+1, CY+Y+1),c.color,1); (*point in quadrant 2*)
-		c.Fill(WMGraphics.MakeRectangle(CX-X, CY-Y-1,CX-X+1, CY-Y+1),c.color,1); (*point in quadrant 3*)
-		c.Fill(WMGraphics.MakeRectangle(CX+X, CY-Y-1,CX+X+1, CY-Y+1),c.color,1); (*point in quadrant 4*)
+		c.Fill(WMRectangles.MakeRect(CX+X, CY+Y-1,CX+X+1,CY+Y+1),c.color,1); (*point in quadrant 1*)
+		c.Fill(WMRectangles.MakeRect(CX-X, CY+Y-1,CX-X+1, CY+Y+1),c.color,1); (*point in quadrant 2*)
+		c.Fill(WMRectangles.MakeRect(CX-X, CY-Y-1,CX-X+1, CY-Y+1),c.color,1); (*point in quadrant 3*)
+		c.Fill(WMRectangles.MakeRect(CX+X, CY-Y-1,CX+X+1, CY-Y+1),c.color,1); (*point in quadrant 4*)
 		INC(Y);
 		INC(StoppingY, TwoASquare);
 		INC(EllipseError, YChange);
@@ -269,10 +269,10 @@ BEGIN
 	StoppingX := 0;
 	StoppingY := TwoASquare*YRadius;
 	WHILE ( StoppingX<= StoppingY ) DO  (*2nd set of points, y < 1*)
-		c.Fill(WMGraphics.MakeRectangle(CX+X, CY+Y,CX+X+1,CY+Y+1),c.color,1); (*point in quadrant 1*)
-		c.Fill(WMGraphics.MakeRectangle(CX-X, CY+Y,CX-X+1, CY+Y+1),c.color,1); (*point in quadrant 2*)
-		c.Fill(WMGraphics.MakeRectangle(CX-X, CY-Y,CX-X+1, CY-Y+1),c.color,1); (*point in quadrant 3*)
-		c.Fill(WMGraphics.MakeRectangle(CX+X, CY-Y,CX+X+1, CY-Y+1),c.color,1); (*point in quadrant 4*)
+		c.Fill(WMRectangles.MakeRect(CX+X, CY+Y,CX+X+1,CY+Y+1),c.color,1); (*point in quadrant 1*)
+		c.Fill(WMRectangles.MakeRect(CX-X, CY+Y,CX-X+1, CY+Y+1),c.color,1); (*point in quadrant 2*)
+		c.Fill(WMRectangles.MakeRect(CX-X, CY-Y,CX-X+1, CY-Y+1),c.color,1); (*point in quadrant 3*)
+		c.Fill(WMRectangles.MakeRect(CX+X, CY-Y,CX+X+1, CY-Y+1),c.color,1); (*point in quadrant 4*)
 		INC(X);
 		INC(StoppingX, TwoBSquare);
 		INC(EllipseError, XChange);

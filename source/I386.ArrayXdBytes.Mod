@@ -588,11 +588,6 @@ TYPE
 
 (** helper procedures , should be in-lined some time*)
 
-	PROCEDURE Min( l, r: LONGINT ): LONGINT;
-	BEGIN
-		IF l < r THEN RETURN l ELSE RETURN r END;
-	END Min;
-
 	PROCEDURE CheckIndexArray( dim: Index;  VAR a: IndexArray );
 	BEGIN
 		IF (a = NIL ) OR (LEN( a ) # dim) THEN NEW( a, dim ) END;
@@ -609,7 +604,7 @@ TYPE
 	VAR i, dim: LONGINT;  o1, o2, l1, l2: LONGINT;
 	BEGIN
 		IF (LEN( org1 ) # LEN( len1 )) OR (LEN( org2 ) # LEN( len2 )) THEN HALT( 1000 ) END;
-		dim := Min( LEN( org1 ), LEN( org2 ) );  NEW( org, dim );  NEW( len, dim );  i := 0;
+		dim := MIN( LEN( org1 ), LEN( org2 ) );  NEW( org, dim );  NEW( len, dim );  i := 0;
 		(*dbgSISISI("Intersection, from dims ",LEN(org1)," & ",LEN(org2)," to ",dim); *)
 		WHILE (i < dim) DO
 			o1 := org1[i];  o2 := org2[i];  l1 := len1[i] + o1;  l2 := len2[i] + o2;
@@ -884,7 +879,7 @@ TYPE
 	PROCEDURE CopyDataRaw*( srcmem, destmem: ArrayMemoryStructure );
 	VAR len: LONGINT;
 	BEGIN
-		len := Min( srcmem.bytes, destmem.bytes );  SYSTEM.MOVE( srcmem.baseadr, destmem.baseadr, len );
+		len := MIN( srcmem.bytes, destmem.bytes );  SYSTEM.MOVE( srcmem.baseadr, destmem.baseadr, len );
 	END CopyDataRaw;
 
 	PROCEDURE CopyDataPositionPreserving*( srcmem, destmem: ArrayMemoryStructure );

@@ -260,25 +260,6 @@ TYPE
 		END Int;
 
 	(** Write a SET in Oberon notation. *)
-	(*	PROCEDURE Set*( s: SET );   (* from P. Saladin *)
-		VAR i, last: LONGINT;  dots: BOOLEAN;
-		BEGIN
-			Char( "{" );  last := MIN( LONGINT );  dots := FALSE;
-			FOR i := MIN( SET ) TO MAX( SET ) DO
-				IF i IN s THEN
-					IF last = (i - 1) THEN
-						IF dots THEN String( ".." );  dots := FALSE END;
-						IF (i = MAX( SET )) OR ~((i + 1) IN s) THEN Int( i, 1 ) END
-					ELSE
-						IF last >= MIN( SET ) THEN String( ", " ) END;
-						Int( i, 1 );  dots := TRUE
-					END;
-					last := i
-				END
-			END;
-			Char( "}" )
-		END Set;	*)
-
 		PROCEDURE Set*( s: SET );   (* from P. Saladin *)
 		VAR i, last: LONGINT;  dots: BOOLEAN;
 		BEGIN

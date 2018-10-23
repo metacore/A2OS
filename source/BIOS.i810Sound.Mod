@@ -473,7 +473,7 @@ TYPE
 				WHILE item # NIL DO
 					IF item.channel.state = StatePlaying THEN
 						playSamplingRate[playCurrentBufferIndex] :=
-							Max(playSamplingRate[playCurrentBufferIndex], item.channel.samplingRate);
+							MAX(playSamplingRate[playCurrentBufferIndex], item.channel.samplingRate);
 						silent := FALSE
 					END;
 					item := item.next
@@ -776,7 +776,7 @@ TYPE
 				recSamplingRate := 1;
 				item := firstRecChannel;
 				WHILE item # NIL DO
-					recSamplingRate := Max(recSamplingRate, item.channel.samplingRate);
+					recSamplingRate := MAX(recSamplingRate, item.channel.samplingRate);
 					item := item.next;
 				END;
 
@@ -1446,12 +1446,6 @@ TYPE
 	BEGIN
 		RETURN n IN SYSTEM.VAL(SET, a);
 	END TestBit;
-
-	(* Return maximum value *)
-	PROCEDURE Max(i, j : LONGINT) : LONGINT;
-	BEGIN
-		IF i > j THEN RETURN i ELSE RETURN j END
-	END Max;
 
 	(* Get physical address for DMA transfers *)
 	PROCEDURE GetPhysicalAdr(adr: ADDRESS; size : SIZE) : Machine.Address32;

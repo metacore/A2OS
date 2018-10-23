@@ -337,12 +337,12 @@ PROCEDURE AddGame;
 BEGIN {EXCLUSIVE}
 	INC(gamesTotal);
 	INC(gamesRunning);
-	maxConcurrent := Max(gamesRunning, maxConcurrent)
+	maxConcurrent := MAX(gamesRunning, maxConcurrent)
 END AddGame;
 
 PROCEDURE ReportScore(score:LONGINT);
 BEGIN {EXCLUSIVE}
-	highScore := Max(score, highScore)
+	highScore := MAX(score, highScore)
 END ReportScore;
 
 PROCEDURE GetGamesTotal():LONGINT;
@@ -376,11 +376,6 @@ BEGIN {EXCLUSIVE}
 END SubGame;
 
 (* Standard Procedures *)
-
-PROCEDURE Max(x, y: LONGINT): LONGINT;
-BEGIN
-	IF x > y THEN RETURN x ELSE RETURN y END
-END Max;
 
 PROCEDURE Run*(context : Commands.Context);
 BEGIN

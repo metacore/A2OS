@@ -443,13 +443,6 @@ VAR
 
 
 
-(*	-------------------------- internal functions --------------------------	*)
-
-PROCEDURE Min(x, y: LONGINT): LONGINT;
-BEGIN
-	IF x > y THEN RETURN y ELSE RETURN x END
-END Min;
-
 (*	-------------------------- interface to core functions --------------------------	*)
 
 PROCEDURE AllocConnect*(hdbc: HDBC; VAR res: INTEGER);
@@ -510,7 +503,7 @@ PROCEDURE StatementError*(hstmt: HSTMT; VAR SqlState: ARRAY OF CHAR; VAR NativeE
 VAR ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR state: ARRAY 6 OF CHAR; len, msgSize: INTEGER;
 BEGIN
-	len:= SHORT(Min(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
+	len:= SHORT(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
 	res:= SQLError(0, 0, hstmt.hstmt, ADDRESSOF(state), ADDRESSOF(NativeError), ADDRESSOF(ErrorMsg), len,
 		ADDRESSOF(msgSize));
 	COPY (state, SqlState);
@@ -520,7 +513,7 @@ PROCEDURE ConnectionError*(hdbc: HDBC; VAR SqlState: ARRAY OF CHAR; VAR NativeEr
 ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR state: ARRAY 6 OF CHAR; len, msgSize: INTEGER;
 BEGIN
-	len:= SHORT(Min(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
+	len:= SHORT(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
 	IF hdbc # NIL THEN
 		res:= SQLError(0, hdbc.hdbc, 0, ADDRESSOF(state), ADDRESSOF(NativeError), ADDRESSOF(ErrorMsg), len, ADDRESSOF(msgSize))
 	ELSE

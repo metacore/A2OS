@@ -2081,15 +2081,6 @@ VAR
 	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData;
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData;
 
-PROCEDURE Min*(a, b: REAL): REAL;
-BEGIN
-	IF a <= b THEN RETURN a ELSE RETURN b END;
-END Min;
-
-PROCEDURE Max*(a, b: REAL): REAL;
-BEGIN
-	IF a >= b THEN RETURN a ELSE RETURN b END;
-END Max;
 
 PROCEDURE Inc*(VAR a, b: REAL);
 BEGIN

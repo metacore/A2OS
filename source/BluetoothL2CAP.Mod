@@ -607,7 +607,7 @@ TYPE
 			hdr[0] := CHR(len MOD 100H); hdr[1] := CHR(len DIV 100H);
 			hdr[2] := CHR(did MOD 100H); hdr[3] := CHR(did DIV 100H);
 
-			count := Min(Bluetooth.MaxACLDataLen - 4, len); (* Min(l2cap.aclMTU - 4, len); *)
+			count := MIN(Bluetooth.MaxACLDataLen - 4, len); (* MIN(l2cap.aclMTU - 4, len); *)
 			IF TraceChannel THEN
 				KernelLog.String(ModuleName);
 				KernelLog.String("Channel.Send: first packet (payload: "); KernelLog.Int(count, 0); KernelLog.String(" bytes)");
@@ -620,7 +620,7 @@ TYPE
 
 			DEC(len, count); INC(ofs, count);
 			WHILE (len > 0) DO
-				count := Min(Bluetooth.MaxACLDataLen, len); (* Min(l2cap.aclMTU, len); *)
+				count := MIN(Bluetooth.MaxACLDataLen, len); (* MIN(l2cap.aclMTU, len); *)
 				IF TraceChannel THEN
 					KernelLog.String(ModuleName);
 					KernelLog.String("Channel.Send: continuing packet (payload: "); KernelLog.Int(count, 0); KernelLog.String(" bytes)");
@@ -687,7 +687,7 @@ TYPE
 				KernelLog.Ln; KernelLog.Ln; KernelLog.String("**** Warning: MTU = 0 ****"); KernelLog.Ln; KernelLog.Ln; KernelLog.Ln;
 				mtu := 1000H
 			END;
-			len := Min(len, mtu);
+			len := MIN(len, mtu);
 			res := Send(buffer, ofs, len);
 			IF (res = 0) THEN
 				size := len
@@ -727,7 +727,7 @@ TYPE
 				END;
 				*)
 					(*
-					FOR i := 0 TO Min(readerData.len, min-size)-1 DO
+					FOR i := 0 TO MIN(readerData.len, min-size)-1 DO
 						buffer[size] := readerData.data[i]; INC(size)
 					END;
 					readerData := NIL
@@ -1927,7 +1927,7 @@ TYPE
 					signallingChannel.WaitForReply(id, RTXTimeout, response);
 					IF (response # NIL) THEN
 						result := 0;
-						length := Min(response.length, LEN(echoData));
+						length := MIN(response.length, LEN(echoData));
 						FOR i := 0 TO length-1 DO echoData[i] := response.data[response.ofs+i] END
 					ELSE
 						result := 1	(* Ping timeout *)
@@ -1959,7 +1959,7 @@ TYPE
 						it := ORD(response.data[response.ofs])+LONG(ORD(response.data[response.ofs+1]))*100H;
 						IF (infoType = it) THEN
 							result := ORD(response.data[response.ofs+2])+LONG(ORD(response.data[response.ofs+3]))*100H;
-							size := Min(response.length-4, LEN(infoData));
+							size := MIN(response.length-4, LEN(infoData));
 							FOR i := 0 TO size-1 DO infoData[i] := response.data[response.ofs+4+i] END
 						ELSE
 							result := 1	(* wrong infoType in reply *)
@@ -2234,13 +2234,6 @@ BEGIN
 	data[2] := CHR(cid MOD 100H); data[3] := CHR(cid DIV 100H)
 END SetL2CAPHeader;
 *)
-
-PROCEDURE Min(a,b: LONGINT): LONGINT;
-BEGIN
-	IF (a <= b) THEN RETURN a
-	ELSE RETURN b
-	END
-END Min;
 
 PROCEDURE InitL2CAP*(hci : HCI.HCI);
 BEGIN

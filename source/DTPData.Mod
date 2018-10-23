@@ -1187,8 +1187,8 @@ TYPE
 		VAR cx, cy, cw, ch: REAL;
 		BEGIN
 			cx := x; cy := y; cw := w; ch := h;
-			x := Min(cx, cx+cw); y := Min(cy, cy+ch);
-			w := Max(cx, cx+cw)-Min(cx, cx+cw); h := Max(cy, cy+ch)-Min(cy, cy+ch);
+			x := MIN(cx, cx+cw); y := MIN(cy, cy+ch);
+			w := MAX(cx, cx+cw)-MIN(cx, cx+cw); h := MAX(cy, cy+ch)-MIN(cy, cy+ch);
 
 		END FixExtent;
 
@@ -1470,14 +1470,5 @@ BEGIN
 	RETURN newObject;
 END NewObject;
 
-PROCEDURE Min(a, b: REAL): REAL;
-BEGIN
-	IF a <= b THEN RETURN a ELSE RETURN b END;
-END Min;
-
-PROCEDURE Max(a, b: REAL): REAL;
-BEGIN
-	IF a >= b THEN RETURN a ELSE RETURN b END;
-END Max;
 
 END DTPData.	

@@ -6,16 +6,6 @@ TYPE
 			This is to ensure consistency between the continuous and discrete case
 		*)
 
-	PROCEDURE Min(a, b:LONGINT):LONGINT;
-	BEGIN
-		IF a<b THEN RETURN a ELSE RETURN b END;
-	END Min;
-
-	PROCEDURE Max(a, b:LONGINT):LONGINT;
-	BEGIN
-		IF a>b THEN RETURN a ELSE RETURN b END;
-	END Max;
-
 	(** move the rectangle by deltaX, deltaY *)
 	PROCEDURE MoveRel*(VAR x:Rectangle; deltaX, deltaY:LONGINT);
 	BEGIN
@@ -79,8 +69,8 @@ TYPE
 	(** Extend old to contain addition *)
 	PROCEDURE ExtendRect*(VAR old, addition : Rectangle);
 	BEGIN
-		old.l := Min(old.l, addition.l); old.r := Max(old.r,addition.r);
-		old.t := Min(old.t, addition.t); old.b := Max(old.b, addition.b)
+		old.l := MIN(old.l, addition.l); old.r := MAX(old.r,addition.r);
+		old.t := MIN(old.t, addition.t); old.b := MAX(old.b, addition.b)
 	END ExtendRect;
 
 	(** return the Rectangle (l, t, r, b) *)

@@ -349,9 +349,9 @@ TYPE
 							(* calculate bottom rectangle *)
 							IF wr.b < r.b THEN Rect.SetRect(nr, r.l, wr.b, r.r, r.b); Draw(nr, cur.prev) END;
 							(* calculate left rectangle *)
-							IF wr.l > r.l THEN Rect.SetRect(nr, r.l, Max(r.t, wr.t), wr.l, Min(r.b, wr.b)); Draw(nr, cur.prev) END;
+							IF wr.l > r.l THEN Rect.SetRect(nr, r.l, MAX(r.t, wr.t), wr.l, MIN(r.b, wr.b)); Draw(nr, cur.prev) END;
 							(* calculate left rectangle *)
-							IF wr.r < r.r THEN Rect.SetRect(nr, wr.r, Max(r.t, wr.t), r.r, Min(r.b, wr.b)); Draw(nr, cur.prev) END;
+							IF wr.r < r.r THEN Rect.SetRect(nr, wr.r, MAX(r.t, wr.t), r.r, MIN(r.b, wr.b)); Draw(nr, cur.prev) END;
 							(* calculate overlapping *)
 							nr := r; Rect.ClipRect(nr, wr);
 							IF ~Rect.RectEmpty(nr) THEN InternalDraw(nr, cur) END
@@ -1237,9 +1237,9 @@ TYPE
 						(* calculate bottom rectangle *)
 						IF bounds.b < r.b THEN Rect.SetRect(nr, r.l, bounds.b, r.r, r.b);Sub(x.next, nr) END;
 						(* calculate left rectangle *)
-						IF bounds.l > r.l THEN Rect.SetRect(nr, r.l, Max(r.t, bounds.t), bounds.l, Min(r.b, bounds.b)); Sub(x.next, nr) END;
+						IF bounds.l > r.l THEN Rect.SetRect(nr, r.l, MAX(r.t, bounds.t), bounds.l, MIN(r.b, bounds.b)); Sub(x.next, nr) END;
 						(* calculate right rectangle *)
-						IF bounds.r < r.r THEN Rect.SetRect(nr, bounds.r, Max(r.t, bounds.t), r.r, Min(r.b, bounds.b)); Sub(x.next, nr) END
+						IF bounds.r < r.r THEN Rect.SetRect(nr, bounds.r, MAX(r.t, bounds.t), r.r, MIN(r.b, bounds.b)); Sub(x.next, nr) END
 					ELSE (* the window x is not in front *)
 						Sub(x.next, r)
 					END
@@ -1567,16 +1567,6 @@ VAR
 	defaultMouse : MouseObj;
 	CharToUnicode: ARRAY 256 OF LONGINT; (** mapping from Oberon character codes to Unicodes **)
 
-
-PROCEDURE Min(a, b:LONGINT):LONGINT;
-BEGIN
-	IF a < b THEN RETURN a ELSE RETURN b END;
-END Min;
-
-PROCEDURE Max(a, b:LONGINT):LONGINT;
-BEGIN
-	IF a > b THEN RETURN a ELSE RETURN b END;
-END Max;
 
 PROCEDURE Bound(VAR x:LONGINT; min, max:LONGINT);
 BEGIN

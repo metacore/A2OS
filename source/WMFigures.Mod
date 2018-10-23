@@ -630,10 +630,10 @@ TYPE
 			IF (points=NIL) OR (points.next=NIL) THEN RETURN END;
 			p := points;
 			q := points.next;
-			rect.l := Min(p.x, q.x);
-			rect.r := Max(p.x, q.x);
-			rect.t := Min(p.y, q.y);
-			rect.b := Max(p.y, q.y);
+			rect.l := MIN(p.x, q.x);
+			rect.r := MAX(p.x, q.x);
+			rect.t := MIN(p.y, q.y);
+			rect.b := MAX(p.y, q.y);
 			IF (*Filled IN state *) FALSE THEN (*canvas.FillPolygonFlat(pointArray^, nofPoints, color.Get(), WMGraphics.ModeSrcOverDst);*) (*! to be done *)
 			ELSE WMGraphicUtilities.DrawRect(canvas, rect, color.Get(), WMGraphics.ModeSrcOverDst);
 			END;
@@ -841,12 +841,12 @@ BEGIN
 	points[0].x := SHORT(ENTIER(RX[1])); points[0].y := SHORT(ENTIER(RY[1]));
 	L := MAX(LONGINT);  B := MAX(LONGINT); R := MIN(LONGINT); T := MIN(LONGINT);
 	i := 1; WHILE i <= n DO
-		L := Min(L,SHORT(ENTIER(RX[i]))); B := Min(B,SHORT(ENTIER(RY[i])));
-		R := Max(R,SHORT(ENTIER(RX[i]))); T := Max(T,SHORT(ENTIER(RY[i])));
+		L := MIN(L,SHORT(ENTIER(RX[i]))); B := MIN(B,SHORT(ENTIER(RY[i])));
+		R := MAX(R,SHORT(ENTIER(RX[i]))); T := MAX(T,SHORT(ENTIER(RY[i])));
 		INC(i);
 	END;
 
-	dW := Max(1,Min((Max(R-L ,T-B)  * 3 DIV n DIV 20),4));
+	dW := MAX(1,MIN((MAX(R-L ,T-B)  * 3 DIV n DIV 20),4));
 	i := 1; k := 1;
 	WHILE i < n DO
 		GetPolynom(RX[i], RX[i+1], RXstrich[i], RXstrich[i+1], px);
@@ -1013,7 +1013,7 @@ VAR  w, h, pw, ph, det,len : LONGINT;
 	PROCEDURE Between(x, a, b: LONGINT): BOOLEAN;
 	VAR min, max: LONGINT;
 	BEGIN
-		min := Min(a, b); max := Max(a, b);
+		min := MIN(a, b); max := MAX(a, b);
 		RETURN (min - gravity <= x) & (x <= max + gravity);
 	END Between;
 
@@ -1048,14 +1048,6 @@ VAR dx, dy: LONGINT;
 BEGIN dx := x - x0; dy := y - y0;
 	RETURN ENTIER(Math.sqrt(dx * dx + dy * dy))
 END Distance;
-
-PROCEDURE Min(x, y: LONGINT): LONGINT;
-BEGIN IF x < y THEN RETURN x ELSE RETURN y END
-END Min;
-
-PROCEDURE Max(x, y: LONGINT): LONGINT;
-BEGIN IF x > y THEN RETURN x ELSE RETURN y END
-END Max;
 
 PROCEDURE GenLine*() : XML.Element; (* needs AddPoint(); AddPoint(), before a prototype becomes visible  *)
 VAR line : Line;

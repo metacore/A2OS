@@ -150,7 +150,7 @@ TYPE
 				s := el.GetName(); IF s^ = "Entry" THEN
 					s := el.GetAttributeValue("Host");
 					NEW(x, world, pos, s^, interval, Render); x.index := index; INC(index); w.infoList.Add(x);
-					x.pos := pos; mx := Max(pos.x, mx);
+					x.pos := pos; mx := MAX(pos.x, mx);
 					pos.x := pos.x + BoxDistance
 				END
 			END
@@ -164,7 +164,7 @@ TYPE
 				p := cont.GetNext();
 				el := p(XML.Element);
 				s := el.GetName(); IF s^ = "Line" THEN
-					ParseLine(el, pos); mz := Max(pos.z, mz);
+					ParseLine(el, pos); mz := MAX(pos.z, mz);
 					pos.z := pos.z + BoxDistance
 				END
 			END
@@ -197,7 +197,7 @@ TYPE
 				el := p(XML.Element);
 				IF el IS XML.Element THEN
 					s := el(XML.Element).GetName(); IF s^ = "Layer" THEN
-						ParseLayer(el(XML.Element), pos); my := Max(pos.z, my);
+						ParseLayer(el(XML.Element), pos); my := MAX(pos.z, my);
 						pos.y := pos.y + BoxDistance;
 					END
 				END
@@ -310,10 +310,6 @@ END Watch;
 
 PROCEDURE Cleanup;
 END Cleanup;
-
-PROCEDURE Max(a, b: LONGREAL):LONGREAL;
-BEGIN IF a > b THEN RETURN a ELSE RETURN b END
-END Max;
 
 BEGIN
 	timg := WMGraphics.LoadImage("W3dClusterWatchIcons.tar://tux.bmp", TRUE);

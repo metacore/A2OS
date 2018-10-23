@@ -441,11 +441,6 @@ VAR
 		IF hCurrentCursor # hCursor THEN hCurrentCursor := hCursor;  ChangeCursor() END
 	END SetCursor;
 
-	PROCEDURE Min( a, b: LONGINT ): LONGINT;
-	BEGIN
-		IF a < b THEN RETURN a ELSE RETURN b END;
-	END Min;
-
 	PROCEDURE HandleMouse( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;  lParam: User32.LParam );
 	VAR m: AosInputs.AbsMouseMsg;  oldx, oldy: LONGINT;  keys: SET; ret: Kernel32.HANDLE;
 	BEGIN
@@ -458,11 +453,11 @@ VAR
 		m.dx := 0;  m.dy := 0;  m.dz := 0;
 
 		IF (m.x <= 0) THEN m.dx := win.track.dx - 2;
-		ELSIF (m.x >= Min( win.width, disp.width ) - 1) THEN m.x := disp.width - 1;  m.dx := win.track.dx + 2;
+		ELSIF (m.x >= MIN( win.width, disp.width ) - 1) THEN m.x := disp.width - 1;  m.dx := win.track.dx + 2;
 		END;
 
 		IF (m.y <= 0) THEN m.dy := win.track.dy - 2;
-		ELSIF (m.y >= Min( win.height, disp.height ) - 1) THEN m.y := disp.height - 1;  m.dy := win.track.dy + 2;
+		ELSIF (m.y >= MIN( win.height, disp.height ) - 1) THEN m.y := disp.height - 1;  m.dy := win.track.dy + 2;
 		END;
 
 		win.track.dx := m.dx;  win.track.dy := m.dy;

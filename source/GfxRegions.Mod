@@ -137,15 +137,6 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 		again, at the same time eliminating multiple points and overlapping spans.
 	*)
 
-	PROCEDURE Min (x, y: INTEGER): INTEGER;
-	BEGIN
-		IF x <= y THEN RETURN x ELSE RETURN y END
-	END Min;
-
-	PROCEDURE Max (x, y: INTEGER): INTEGER;
-	BEGIN
-		IF x >= y THEN RETURN x ELSE RETURN y END
-	END Max;
 
 	(* encode point coordinates and curve direction into a LONGINT *)
 	PROCEDURE Encode (VAR item: LONGINT; u, v, dir: LONGINT);
@@ -373,7 +364,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 		WHILE (n < N) & (m < M) DO
 			tmp := p;
-			v := Min(nv, mv);
+			v := MIN(nv, mv);
 
 			(* eliminate overlapping spans before copying them *)
 			sum := 0;
@@ -572,7 +563,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 				Decode(data[n], u, v, dir)
 			UNTIL v > y;
 			hi := n;
-			top := Min(v, ury);
+			top := MIN(v, ury);
 
 			(* enumerate spans of current slice *)
 			n := lo;
@@ -583,7 +574,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 					IF dir = enter THEN
 						x := u
 					ELSE
-						enum(x, y, Min(u, urx), top, edata)
+						enum(x, y, MIN(u, urx), top, edata)
 					END
 				END;
 				INC(n);
@@ -787,8 +778,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 		END;
 
 		rdata := reg.data; adata := arg.data;
-		bot := Max(reg.lly, arg.lly);
-		top := Min(reg.ury, arg.ury);
+		bot := MAX(reg.lly, arg.lly);
+		top := MIN(reg.ury, arg.ury);
 		FindLower(reg, bot, rn);
 		FindLower(arg, bot, an);
 		Decode(rdata[rn], ru, rv, rdir);
@@ -966,11 +957,11 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 				Decode(rdata[rn], ru, rv, rdir);
 				Decode(adata[an], au, av, adir);
 				rslice := rn; aslice := an;
-				top := Min(reg.ury, arg.ury);
+				top := MIN(reg.ury, arg.ury);
 
 				WHILE (av < top) OR (rv < top) DO
 					(* merge slices *)
-					ry := rv; ay := av; y := Max(ry, ay);
+					ry := rv; ay := av; y := MAX(ry, ay);
 					REPEAT
 						IF (av > ay) OR (rv = ry) & (ru <= au) THEN
 							IF rv # y THEN	(* do not duplicate points *)
@@ -1042,10 +1033,10 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 				Decode(adata[an], au, av, adir);
 
 				rslice := rn; aslice := an;
-				top := Min(reg.ury, arg.ury);
+				top := MIN(reg.ury, arg.ury);
 				WHILE (rv < top) OR (av < top) DO
 					(* merge slices *)
-					ry := rv; ay := av; y := Max(ry, ay);
+					ry := rv; ay := av; y := MAX(ry, ay);
 					REPEAT
 						IF (av > ay) OR (rv = ry) & (ru <= au) THEN
 							IF rv # y THEN	(* do not duplicate points *)
@@ -1140,7 +1131,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 			WHILE rv < reg.ury DO
 				(* merge intersecting slices *)
-				ry := rv; ay := av; y := Max(ry, ay);
+				ry := rv; ay := av; y := MAX(ry, ay);
 				Append(reg, LBound, y, Exit);
 				REPEAT
 					IF (av > ay) OR (rv = ry) & (ru <= au) THEN

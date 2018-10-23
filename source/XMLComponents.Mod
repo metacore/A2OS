@@ -493,8 +493,8 @@ TYPE
 		PROCEDURE ClipRect*(x, y, w, h: LONGINT);
 		VAR ur: LONGINT;
 		BEGIN
-			ur := Min(SELF.x + SELF.w, x + w); SELF.x := Max(SELF.x, x); SELF.w := Max(0, ur - SELF.x);
-			ur := Min(SELF.y + SELF.h, y + h); SELF.y := Max(SELF.y, y); SELF.h := Max(0, ur - SELF.y)
+			ur := MIN(SELF.x + SELF.w, x + w); SELF.x := MAX(SELF.x, x); SELF.w := MAX(0, ur - SELF.x);
+			ur := MIN(SELF.y + SELF.h, y + h); SELF.y := MAX(SELF.y, y); SELF.h := MAX(0, ur - SELF.y)
 		END ClipRect;
 
 		PROCEDURE Extend*(box: Box);
@@ -505,8 +505,8 @@ TYPE
 		PROCEDURE ExtendRect*(x, y, w, h: LONGINT);
 		VAR ur: LONGINT;
 		BEGIN
-			ur := Max(SELF.x + SELF.w, x + w); SELF.x := Min(SELF.x, x); SELF.w := ur - SELF.x;
-			ur := Max(SELF.y + SELF.h, y + h); SELF.y := Min(SELF.y, y); SELF.h := ur - SELF.y
+			ur := MAX(SELF.x + SELF.w, x + w); SELF.x := MIN(SELF.x, x); SELF.w := ur - SELF.x;
+			ur := MAX(SELF.y + SELF.h, y + h); SELF.y := MIN(SELF.y, y); SELF.h := ur - SELF.y
 		END ExtendRect;
 
 	END Box;
@@ -1098,16 +1098,6 @@ TYPE
 		COPY(value, s^);
 		RETURN s
 	END NewString;
-
-	PROCEDURE Min*(a, b: LONGINT): LONGINT;
-	BEGIN
-		IF a > b THEN RETURN b ELSE RETURN a END
-	END Min;
-
-	PROCEDURE Max*(a, b: LONGINT): LONGINT;
-	BEGIN
-		IF a < b THEN RETURN b ELSE RETURN a END
-	END Max;
 
 (*	PROCEDURE DrawClipRect*(ctxt: Gfx.Context; x, y, w, h: LONGINT);
 	VAR llx, lly, urx, ury: INTEGER;

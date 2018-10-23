@@ -795,7 +795,7 @@ TYPE
 				dz := ((1 / (invz + SubDiv * invdz)) - z) * SubDivInv;
 
 				i := 0;
-				FOR ix := ENTIER(xr) TO Min(width, ENTIER(b.x + 0.5)) - 1 DO
+				FOR ix := ENTIER(xr) TO MIN(width, ENTIER(b.x + 0.5)) - 1 DO
 					INC(i);
 					IF i = SubDiv THEN
 						z := 1 / invz;
@@ -833,7 +833,7 @@ TYPE
 				dz := ((1 / (invz + SubDiv * invdz)) - z) * SubDivInv;
 
 				i := 0;
-				FOR iy := ENTIER(yr) TO Min(height, ENTIER(b.y + 0.5)) - 1 DO
+				FOR iy := ENTIER(yr) TO MIN(height, ENTIER(b.y + 0.5)) - 1 DO
 					INC(i);
 					IF i = SubDiv THEN
 						z := 1 / invz;
@@ -853,10 +853,5 @@ TYPE
 		END SubDivLine;
 
 	END Rasterizer;
-
-PROCEDURE Min(a, b: LONGINT): LONGINT;
-BEGIN
-	IF a < b THEN RETURN a ELSE RETURN b END
-END Min;
 
 END W3dRasterizer.

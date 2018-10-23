@@ -654,7 +654,7 @@ TYPE
 							ELSE
 							END;
 							ccontent := cframe.GetContent(); ccontent.SetSize(ENTIER(cframe.GetWidth()*zoomFactor), ENTIER(cframe.GetHeight()*zoomFactor));
-							InvalidateRect(WMRectangles.MakeRect(ENTIER(DTPUtilities.Min(cframe.GetX(), DTPUtilities.Min(oldfx0, oldfx1))*zoomFactor)+docOriginX-10, ENTIER(DTPUtilities.Min(cframe.GetY(), DTPUtilities.Min(oldfy0, oldfy1))*zoomFactor)+docOriginY-10, ENTIER(DTPUtilities.Max((cframe.GetX()+cframe.GetWidth()), DTPUtilities.Max(oldfx1, oldfx0))*zoomFactor)+docOriginX+15, ENTIER(DTPUtilities.Max(cframe.GetY()+cframe.GetHeight(), DTPUtilities.Max(oldfy1, oldfy0))*zoomFactor)+docOriginY+15));
+							InvalidateRect(WMRectangles.MakeRect(ENTIER(MIN(cframe.GetX(), MIN(oldfx0, oldfx1))*zoomFactor)+docOriginX-10, ENTIER(MIN(cframe.GetY(), MIN(oldfy0, oldfy1))*zoomFactor)+docOriginY-10, ENTIER(MAX((cframe.GetX()+cframe.GetWidth()), MAX(oldfx1, oldfx0))*zoomFactor)+docOriginX+15, ENTIER(MAX(cframe.GetY()+cframe.GetHeight(), MAX(oldfy1, oldfy0))*zoomFactor)+docOriginY+15));
 							oldfx0 := cframe.GetX(); oldfy0 := cframe.GetY(); oldfx1:= cframe.GetX()+cframe.GetWidth(); oldfy1:= cframe.GetY()+cframe.GetHeight();
 						ELSIF moveguide THEN									(* move guide *)
 							IF cguide.GetHorizontal() THEN

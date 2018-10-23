@@ -154,7 +154,7 @@ TYPE
 				(* KernelLog.String("LineNR: "); KernelLog.Int(nofLines, 0); KernelLog.Ln; *)
 				LayoutLine(pos, lines[nofLines], nofLines);
 				realHeight := realHeight + lines[nofLines].height; textHeight := ENTIER(realHeight);
-				textWidth := ENTIER(DTPUtilities.Max(textWidth, lines[nofLines].width));
+				textWidth := MAX(textWidth, lines[nofLines].width);
 				ASSERT(pos > oldpos);
 				IF TraceLayout IN Trace THEN KernelLog.String("Line from : "); KernelLog.Int(lines[nofLines].pos, 5); KernelLog.Ln END;
 				(* lines[nofLines].align := AlignLeft; *)
@@ -195,7 +195,7 @@ TYPE
 					*)	IF (l >= LEN(lines)) THEN tempHeight := 0.0 ELSE tempHeight := lines[l].height; END;
 						realHeight := realHeight -  tempHeight;
 						LayoutLine(pos, lines[l], l);
-						textWidth := ENTIER(DTPUtilities.Max(textWidth, lines[l].width));
+						textWidth := MAX(textWidth, lines[l].width);
 						realHeight := realHeight + lines[nofLines].height;
 						INC(dl);
 						IF TraceLayout IN Trace THEN KernelLog.String("Line from : "); KernelLog.Int(lines[nofLines].pos, 5); KernelLog.Ln END;
@@ -210,7 +210,7 @@ TYPE
 					linesChanged := TRUE;
 					realHeight := realHeight - lines[l].height;
 					LayoutLine(pos, lines[l], l);
-					textWidth := ENTIER(DTPUtilities.Max(textWidth, lines[l].width));
+					textWidth := MAX(textWidth, lines[l].width);
 					realHeight := realHeight + lines[nofLines].height;
 					INC(dl);
 					IF TraceLayout IN Trace THEN KernelLog.String("Line from : "); KernelLog.Int(lines[nofLines].pos, 5); KernelLog.Ln END;
@@ -1258,8 +1258,8 @@ TYPE
 							(* KernelLog.String("nofSpaces: "); KernelLog.Int(nofSpaces, 0); KernelLog.Ln; *)
 						END;
 						IF (leadi = -1) THEN leadi := ascent + descent; END;
-						ascent := DTPUtilities.Max(ascent, a); descent := DTPUtilities.Max(descent, d);
-						leading := DTPUtilities.Max(leading, leadi);
+						ascent := MAX(ascent, a); descent := MAX(descent, d);
+						leading := MAX(leading, leadi);
 						IF (wrap # {}) & (i > 0) & (x + dx > wrapwidth) THEN
 							eol := TRUE; DEC(pos); wrapPos := pos;
 							(* Go left for last space *)
@@ -1367,7 +1367,7 @@ TYPE
 				IF (align = 3) THEN l.spaceSize := spaceRSize; ELSE l.spaceSize := 0; END;
 			END;
 			l.firstIndent := firstIndent; l.leftIndent := leftIndent; l.rightIndent := rightIndent; l.align := align;
-			l.ascent := ascent; l.height := leading; (* DTPUtilities.Max(leading, ascent + descent); *)
+			l.ascent := ascent; l.height := leading; (* MAX(leading, ascent + descent); *)
 (*			KernelLog.String("Height(ascent): "); DTPUtilities.OutReal(ascent, 4); KernelLog.Ln;
 			KernelLog.String("Height(descent): "); DTPUtilities.OutReal(descent, 4); KernelLog.Ln;
 			KernelLog.String("Size(height): "); DTPUtilities.OutReal(ascent + descent, 4); KernelLog.Ln;
@@ -1916,7 +1916,7 @@ TYPE
 			h := 0; w := 0;
 			FOR i := la TO lb DO
 				realH := realH + (layout.lines[i].height);
-				w := ENTIER(DTPUtilities.Max(w, layout.lines[i].width));
+				w := MAX(w, layout.lines[i].width);
 			END;
 			h := Limit(ENTIER(realH), 20, 200);
 			w := Limit(w, 20, 400);

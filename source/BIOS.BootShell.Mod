@@ -375,7 +375,7 @@ TYPE
 		BEGIN
 			lock.Acquire;
 			d := Difference(firstLineShown, firstLine, LEN(lines));
-			nofLines := Min(nofLines, d - 1);
+			nofLines := MIN(nofLines, d - 1);
 			IF (nofLines > 0) THEN
 				firstLineShown := Subtract(firstLineShown, nofLines, LEN(lines));
 			END;
@@ -388,7 +388,7 @@ TYPE
 		BEGIN
 			lock.Acquire;
 			d := Difference(lastLine, firstLineShown, LEN(lines));
-			nofLines := Min(nofLines, d - 1);
+			nofLines := MIN(nofLines, d - 1);
 			IF (nofLines > 0) THEN
 				firstLineShown := Add(firstLineShown, nofLines, LEN(lines));
 			END;
@@ -652,11 +652,6 @@ PROCEDURE IsWhitespace(ch : CHAR) : BOOLEAN;
 BEGIN
 	RETURN (ch = SPACE) OR (ch = TAB) OR (ch = CR) OR (ch = LF);
 END IsWhitespace;
-
-PROCEDURE Min(a, b : LONGINT) : LONGINT;
-BEGIN
-	IF (a <= b) THEN RETURN a; ELSE RETURN b; END;
-END Min;
 
 PROCEDURE Invalidate(textBuffer : TextBuffer);
 VAR offset, index, i, nofLines : LONGINT; line : Line; character : Character; ch : CHAR;

@@ -156,7 +156,7 @@ TYPE
 					s := el.GetAttributeValue("cmd"); IF s = NIL THEN NEW(x, world, pos, "hello") ELSE NEW(x, world, pos, s^) END;
 					x.index := index; INC(index); infoList.Add(x);
 
-					x.pos := pos; mx := Max(pos.x, mx);
+					x.pos := pos; mx := MAX(pos.x, mx);
 					pos.x := pos.x + BoxDistance;
 					s := el.GetAttributeValue("img");
 					IF s = NIL THEN NEW(s, 16) END;
@@ -169,7 +169,7 @@ TYPE
 					s := el.GetAttributeValue("cmd"); IF s = NIL THEN NEW(x, world, pos, "hello") ELSE NEW(x, world, pos, s^) END;
 					x.index := index; INC(index); winstance.infoList.Add(x);
 
-					x.pos := pos; mx := Max(pos.x, mx);
+					x.pos := pos; mx := MAX(pos.x, mx);
 					pos.x := pos.x + BoxDistance;
 					s := el.GetAttributeValue("img"); IF s = NIL THEN NEW(s, 16) END;
 					t := el.GetAttributeValue("title"); IF t = NIL THEN NEW(t, 16) END;
@@ -190,7 +190,7 @@ TYPE
 				p := cont.GetNext();
 				el := p(XML.Element);
 				s := el.GetName(); IF s^ = "Line" THEN
-					ParseLine(el, pos); mz := Max(pos.z, mz);
+					ParseLine(el, pos); mz := MAX(pos.z, mz);
 					pos.z := pos.z + BoxDistance
 				END
 			END
@@ -227,7 +227,7 @@ TYPE
 					IF p IS XML.Element THEN
 						el := p(XML.Element);
 						s := el(XML.Element).GetName(); IF s^ = "Layer" THEN
-							ParseLayer(el(XML.Element), pos); my := Max(pos.z, my);
+							ParseLayer(el(XML.Element), pos); my := MAX(pos.z, my);
 							pos.y := pos.y + BoxDistance
 						END
 					END
@@ -409,7 +409,7 @@ BEGIN
 	Raster.Fill(img, 9, 14, 54, 60, pix, mode);
 	timg := WMGraphics.LoadImage(icon, TRUE);	tex := NIL;
 	IF res THEN
-		tw := Min(timg.width, 46); th := Min(timg.height, 46);
+		tw := MIN(timg.width, 46); th := MIN(timg.height, 46);
 		dx := (46 - tw) DIV 2 + 9;
 		dy := (46 - th) DIV 2 + 14;
 		Raster.Copy(timg, img, 0, 0, tw, th, dx, dy, mode)
@@ -468,13 +468,6 @@ BEGIN
 	IF winstance # NIL THEN winstance.Close END
 END Cleanup;
 
-PROCEDURE Min(a, b: LONGINT):LONGINT;
-BEGIN IF a < b THEN RETURN a ELSE RETURN b END
-END Min;
-
-PROCEDURE Max(a, b: LONGREAL):LONGREAL;
-BEGIN IF a > b THEN RETURN a ELSE RETURN b END
-END Max;
 
 BEGIN
 	NEW(textures);

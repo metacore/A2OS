@@ -334,13 +334,13 @@ BEGIN
 		dst := 0; len := 0;
 		LOOP
 			IF size <= 0 THEN EXIT END;
-			n := Min(c.rcvbuflen, size);	(* n is number of bytes to copy from buffer now *)
+			n := MIN(c.rcvbuflen, size);	(* n is number of bytes to copy from buffer now *)
 			IF n = 0 THEN	(* buffer empty *)
 					(* attempt to read at least size bytes, but at most a full buffer *)
 				c.pcb.Receive(c.rcvbuf^, 0, LEN(c.rcvbuf), size, n, c.res);
 				IF c.res # Ok THEN EXIT END;
 				c.rcvbufpos := 0; c.rcvbuflen := n;
-				n := Min(n, size)	(* n is number of bytes to copy from buffer now *)
+				n := MIN(n, size)	(* n is number of bytes to copy from buffer now *)
 			END;
 			ASSERT(dst+n <= LEN(buf));	(* index check *)
 			SYSTEM.MOVE(ADDRESSOF(c.rcvbuf[c.rcvbufpos]), ADDRESSOF(buf[dst]), n);
@@ -389,10 +389,6 @@ BEGIN
 	buf[0] := x; c.pcb.Send(buf, 0, 1, FALSE, c.res)
 END Send;
 
-PROCEDURE Min(x, y: LONGINT): LONGINT;
-BEGIN
-	IF x <= y THEN RETURN x ELSE RETURN y END
-END Min;
 
 (* Get the server's version number and send our version number. *)
 
@@ -424,7 +420,7 @@ BEGIN
 		IF x = 0 THEN	(* failed *)
 			ReceiveLInt(c, len);	(* read reason *)
 			WHILE (len > 0) & (c.res = Ok) DO
-				len0 := Min(len, LEN(buf));
+				len0 := MIN(len, LEN(buf));
 				ReceiveBytes(c, buf, len0, len0);
 				DEC(len, len0)
 			END;
@@ -500,7 +496,7 @@ BEGIN
 				KernelLog.Exit
 			END;
 			WHILE (len > 0) & (c.res = Ok) DO
-				len0 := Min(len, LEN(buf));
+				len0 := MIN(len, LEN(buf));
 				ReceiveBytes(c, buf, len0, len0);
 				DEC(len, len0)
 			END;

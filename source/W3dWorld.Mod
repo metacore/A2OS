@@ -359,21 +359,14 @@ TYPE
 
 	END World;
 
-PROCEDURE Min(a, b: LONGREAL):LONGREAL;
-BEGIN IF a < b THEN RETURN a ELSE RETURN b END
-END Min;
-
-PROCEDURE Max(a, b: LONGREAL):LONGREAL;
-BEGIN IF a > b THEN RETURN a ELSE RETURN b END
-END Max;
 
 PROCEDURE GrowAABB(VAR aabb : AABB; p : Vectors.TVector3d);
 BEGIN
 	IF aabb.empty THEN
 		aabb.a := p; aabb.b := p; aabb.empty := FALSE
 	ELSE
-		aabb.a.x := Min(aabb.a.x, p.x); aabb.a.y := Min(aabb.a.y, p.y); aabb.a.z := Min(aabb.a.z, p.z);
-		aabb.b.x := Max(aabb.b.x, p.x); aabb.b.y := Max(aabb.b.y, p.y); aabb.b.z := Max(aabb.b.z, p.z)
+		aabb.a.x := MIN(aabb.a.x, p.x); aabb.a.y := MIN(aabb.a.y, p.y); aabb.a.z := MIN(aabb.a.z, p.z);
+		aabb.b.x := MAX(aabb.b.x, p.x); aabb.b.y := MAX(aabb.b.y, p.y); aabb.b.z := MAX(aabb.b.z, p.z)
 	END
 END GrowAABB;
 

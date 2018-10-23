@@ -2387,17 +2387,6 @@ VAR
 	plugRegistry*: PluginRegistry;
 	Unassigned: DTPData.ContentFactory;
 
-(*
-PROCEDURE Min(a, b: REAL): REAL;
-BEGIN
-	IF a <= b THEN RETURN a ELSE RETURN b END;
-END Min;
-
-PROCEDURE Max(a, b: REAL): REAL;
-BEGIN
-	IF a >= b THEN RETURN a ELSE RETURN b END;
-END Max;
-*)
 
 PROCEDURE OpenNew*;
 VAR instance : Window;

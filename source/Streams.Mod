@@ -208,7 +208,7 @@ TYPE
 
 	(** Write a 0X-terminated string, including the 0X terminator. *)
 		PROCEDURE RawString*(CONST x: ARRAY OF CHAR );
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			i := 0;
 			WHILE x[i] # 0X DO Char( x[i] );  INC( i ) END;
@@ -232,7 +232,7 @@ TYPE
 
 	(** Write a 0X-terminated string, excluding the 0X terminator. *)
 		PROCEDURE String*(CONST x: ARRAY OF CHAR );
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			i := 0;
 			WHILE (i<LEN(x)) & (x[i] # 0X) DO Char( x[i] );  INC( i ) END
@@ -261,9 +261,9 @@ TYPE
 
 	(** Write a SET in Oberon notation. *)
 		PROCEDURE Set*( s: SET );   (* from P. Saladin *)
-		VAR i, last: LONGINT;  dots: BOOLEAN;
+		VAR i, last: WORD;  dots: BOOLEAN;
 		BEGIN
-			Char( "{" );  last := MAX( LONGINT );  dots := FALSE;
+			Char( "{" );  last := MAX( WORD );  dots := FALSE;
 			FOR i := MAX( SET ) TO 0 BY -1 DO
 				IF i IN s THEN
 					IF last = (i + 1) THEN
@@ -419,7 +419,7 @@ TYPE
 
 	(** Return the contents of the string writer (0X-terminated). *)
 		PROCEDURE Get*( VAR s: ARRAY OF CHAR );
-		VAR i, m: LONGINT;
+		VAR i, m: SIZE;
 		BEGIN
 			m := LEN( s ) - 1;  i := 0;
 			WHILE (i # tail) & (i < m) DO s[i] := buf[i];  INC( i ) END;
@@ -639,7 +639,7 @@ TYPE
 
 	(** Read a 0X-terminated string.  If the input string is larger than x, read the full string and assign the truncated 0X-terminated value to x. *)
 		PROCEDURE RawString*( VAR x: ARRAY OF CHAR );
-		VAR i, m: LONGINT;  ch: CHAR;
+		VAR i, m: SIZE;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -761,7 +761,7 @@ TYPE
 	(** Read all characters until the end of the line (inclusive).  If the input string is larger than x, read the full string and assign
 			the truncated 0X-terminated value to x. *)
 		PROCEDURE Ln*( VAR x: ARRAY OF CHAR );
-		VAR i, m: LONGINT;  ch: CHAR;
+		VAR i, m: SIZE;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -779,7 +779,7 @@ TYPE
 			If the input string is larger than x, read the full string and assign the truncated 0X-terminated
 			value to x. *)
 		PROCEDURE LnEOT*( VAR x: ARRAY OF CHAR );
-		VAR i, m: LONGINT;  ch: CHAR;
+		VAR i, m: SIZE;  ch: CHAR;
 		BEGIN
 			i := 0;  m := LEN( x ) - 1;
 			LOOP
@@ -831,7 +831,7 @@ TYPE
 
 	(** Read a token, consisting of any string of characters terminated by space, TAB or EOLN. *)
 		PROCEDURE Token*( VAR token: ARRAY OF CHAR );
-		VAR j, max: LONGINT;  ch: CHAR;
+		VAR j, max: SIZE;  ch: CHAR;
 		BEGIN
 			j := 0;  max := LEN( token ) - 1;
 			LOOP
@@ -845,7 +845,7 @@ TYPE
 
 	(** Read an optionally "" or '' enquoted string.  Will not read past the end of a line. *)
 		PROCEDURE String*( VAR string: ARRAY OF CHAR );
-		VAR c, delimiter: CHAR;  i, len: LONGINT;
+		VAR c, delimiter: CHAR;  i, len: SIZE;
 		BEGIN
 			c := Peek();
 			IF (c # "'") & (c # '"') THEN Token( string )

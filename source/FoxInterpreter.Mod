@@ -60,13 +60,13 @@ TYPE
 		PROCEDURE Statement*(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
 		VAR statement: SyntaxTree.Statement;
 		BEGIN
-			IF (Token() = Scanner.ExclamationMark) THEN
+			IF (Symbol() = Scanner.ExclamationMark) THEN
 				statement := Cmd();
 				IF statement # NIL THEN 
 					statements.AddStatement(statement);
 				END;
 				RETURN TRUE
-			ELSIF (Token() = Scanner.Questionmark) THEN
+			ELSIF (Symbol() = Scanner.Questionmark) THEN
 				statement := Print();
 				IF statement # NIL THEN 
 					statements.AddStatement(statement);
@@ -80,7 +80,7 @@ TYPE
 		PROCEDURE Cmd(): SyntaxTree.Statement;
 		VAR cmd: CommandStatement; string: Strings.String;
 		BEGIN
-			NextSymbol;
+			NextToken;
 			IF MandatoryString(string) THEN
 			NEW(cmd, string);
 			(* TRACE(string^) *)
@@ -91,7 +91,7 @@ TYPE
 		PROCEDURE Print(): SyntaxTree.Statement;
 		VAR print: PrintStatement;
 		BEGIN
-			NextSymbol;
+			NextToken;
 			NEW(print, Expression());
 			RETURN print;
 		END Print;

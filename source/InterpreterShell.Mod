@@ -853,7 +853,7 @@ TYPE
 						context.out.Update;
 					END;
 					IF parser.error THEN parser.Reset END;
-					parser.NextSymbol;
+					parser.NextToken;
 					(*NEW(scanner, "",r, 0, diagnostics);
 					NEW(parser, scanner, diagnostics, ""); (* silent *)*)
 				END;

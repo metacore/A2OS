@@ -202,8 +202,8 @@ TYPE
 			IF mode # Terminated THEN
 				
 				IF SELF = CurrentProcess() THEN
-					state.SP := Machine.CurrentSP( );
-					state.BP := Machine.CurrentBP( );
+					state.SP := S.GetStackPointer( );
+					state.BP := S.GetFramePointer( );
 				END;
 				sp := state.SP; bp := state.BP; 
 			
@@ -327,8 +327,8 @@ TYPE
 			IF value THEN
 				Machine.Acquire( Machine.Objects );	
 				Machine.Acquire( Machine.Heaps );
-				cur.state.SP := Machine.CurrentSP();
-				cur.state.BP := Machine.CurrentBP();
+				cur.state.SP := S.GetStackPointer();
+				cur.state.BP := S.GetFramePointer();
 				cur.state.PC := ADDRESSOF( GCLoop );
 					
 				SuspendActivities;
@@ -352,7 +352,7 @@ TYPE
 			p := newProcess;  newProcess := NIL;
 			Unix.WriteKey( processPointer, p );
 			p.id := nextPID;  INC( nextPID );
-			p.stackBottom := Machine.CurrentBP( );
+			p.stackBottom := S.GetFramePointer( );
 			S.GET( p.stackBottom, prevBP );
 			S.PUT( prevBP, S.VAL( ADDRESS, 0 ) );	(* for terminating Reflection.StackTraceBack *)
 			Unix.MtxLock( processList );
@@ -415,8 +415,8 @@ TYPE
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
-		p.state.SP := Machine.CurrentSP( );
-		p.state.BP := Machine.CurrentBP( );
+		p.state.SP := S.GetStackPointer( );
+		p.state.BP := S.GetFramePointer( );
 		p.state.PC := Machine.CurrentPC( );
 		p.mode := AwaitingLock;
 
@@ -451,8 +451,8 @@ TYPE
 		hdr.lockedBy := c;
 		IF c # NIL THEN  Unix.CondSignal( c.continue )  ELSE  Unix.CondSignal( lock.enter )  END;
 
-		p.state.SP := Machine.CurrentSP( );
-		p.state.BP := Machine.CurrentBP( );
+		p.state.SP := S.GetStackPointer( );
+		p.state.BP := S.GetFramePointer( );
 		p.state.PC := Machine.CurrentPC( );
 		Unix.CondWait( p.continue, lock.mtx );   
 		
@@ -754,8 +754,8 @@ TYPE
 	BEGIN 
 		IF p.threadId = Unix.ThrThis( ) THEN
 			p.state.PC := Machine.CurrentPC( );
-			p.state.BP := Machine.CurrentBP( );
-			p.state.SP := Machine.CurrentSP( )	
+			p.state.BP := S.GetFramePointer( );
+			p.state.SP := S.GetStackPointer( )	
 		ELSE
 			IF p.mode = Running THEN
 				timerStopped := TRUE;
@@ -824,7 +824,7 @@ TYPE
 		IF clock = NIL THEN  RETURN  END;
 		cur := CurrentProcess();
 		IF cur # NIL THEN 
-			bp := Machine.CurrentBP();
+			bp := S.GetFramePointer();
 			S.GET( bp, n );
 			IF ODD( n ) THEN S.GET( bp + SIZEOF( ADDRESS ), bp )  ELSE  bp := n  END;
 			cur.state.BP := bp;

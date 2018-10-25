@@ -1313,7 +1313,7 @@ PROCEDURE SetPC*(p: DataBlockU);
 VAR bp: ADDRESS;
 BEGIN
 	IF p # NIL THEN
-		bp := CheckBP(Machine.CurrentBP()); 
+		bp := CheckBP(SYSTEM.GetFramePointer()); 
 		SYSTEM.GET(bp, bp); 
 		bp := CheckBP(bp);
 		SYSTEM.GET(bp+SIZEOF(ADDRESS), p.heapBlock.heapBlock);

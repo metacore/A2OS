@@ -320,7 +320,7 @@ VAR time: HUGEINT; bp: ADDRESS; i: LONGINT;pc: ADDRESS;
 BEGIN
 	time := Machine.GetTimer();
 
-	bp := Machine.CurrentBP();
+	bp := SYSTEM.GetFramePointer();
 
 	SYSTEM.GET(bp+SIZEOF(ADDRESS),pc);
 

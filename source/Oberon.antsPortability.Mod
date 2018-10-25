@@ -320,7 +320,7 @@ PROCEDURE IdentifyCaller*(VAR m: Modules.Module; VAR pc: LONGINT);
 (* note: proc works correct only, if caller has been a command *) 
 VAR ebp, eip: LONGINT; i,adr: LONGINT; 
 BEGIN
-  ebp := Machine.CurrentBP();
+  ebp := SYSTEM.GetFramePointer();
   SYSTEM.GET(ebp, ebp);  (* stack frame of caller *)
   SYSTEM.GET(ebp+4, eip);  (* return address from caller *)
   m := AosModules.ThisModuleByAdr(eip);

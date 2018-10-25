@@ -57,7 +57,7 @@ VAR
 	PROCEDURE Stack*(CONST s: ARRAY OF CHAR);
 	VAR bp,oldbp: ADDRESS;
 	BEGIN
-		bp := Machine.CurrentBP();
+		bp := SYSTEM.GetFramePointer();
 		oldbp := CallerBP(bp);
 		ViewStack(oldbp,bp+4*SIZEOF(ADDRESS),s);
 	END Stack;
@@ -74,7 +74,7 @@ VAR
 	PROCEDURE TraceBack*;   (* do a stack trace back starting at the calling instruction position *)
 	BEGIN
 		Enter;
-		TraceBackThis( Machine.CurrentPC(), Machine.CurrentBP(), Machine.CurrentSP(), Objects.GetStackBottom(Objects.CurrentProcess()) );
+		TraceBackThis( Machine.CurrentPC(), SYSTEM.GetFramePointer(), SYSTEM.GetStackPointer(), Objects.GetStackBottom(Objects.CurrentProcess()) );
 		Exit;
 	END TraceBack;
 

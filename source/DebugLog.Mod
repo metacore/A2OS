@@ -203,7 +203,7 @@ BEGIN
 	END;
 
 	(* Find the caller outside of this module *)
-	bp := Machine.CurrentBP ();
+	bp := SYSTEM.GetFramePointer ();
 	REPEAT
 		SYSTEM.GET(bp + SIZEOF (ADDRESS), pc);
 		module := Modules.ThisModuleByAdr(pc);

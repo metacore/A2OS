@@ -303,7 +303,7 @@ CONST
 	PROCEDURE ErrorCaller( VAR m: Modules.Module;  VAR pc, ebp, eip: NbrInt.Integer );
 	VAR i, reg: NbrInt.Integer;  timer: Kernel.Timer;
 	BEGIN
-		reg := LONGINT(Machine.CurrentBP ());
+		reg := LONGINT(SYSTEM.GetFramePointer ());
 		SYSTEM.GET( reg, ebp );   (* stack frame of caller *)
 		SYSTEM.GET( ebp + 4, eip );   (* return address from caller *)
 		m := Modules.ThisModuleByAdr( eip );
@@ -319,7 +319,7 @@ CONST
 	PROCEDURE WarningCaller( VAR m: Modules.Module;  VAR pc, ebp, eip: NbrInt.Integer );
 	VAR reg: NbrInt.Integer;  timer: Kernel.Timer;
 	BEGIN
-		reg := LONGINT(Machine.CurrentBP ());
+		reg := LONGINT(SYSTEM.GetFramePointer ());
 		SYSTEM.GET( reg, ebp );   (* stack frame of caller *)
 		SYSTEM.GET( ebp + 4, eip );   (* return address from caller *)
 		m := Modules.ThisModuleByAdr( eip );

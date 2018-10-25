@@ -543,14 +543,14 @@ BEGIN
 	END;
 	(* save current state *)
 	running.state.PC := SYSTEM.PC();(*Machine.CurrentPC ();*)	(* for GC *) (* ug *)
-	running.state.SP := SYSTEM.SP();(*Machine.CurrentSP ();*)	(* for GC *)
-	running.state.BP := SYSTEM.FP();(*Machine.CurrentBP ();*)	(* save state *)
+	running.state.SP := SYSTEM.SP();(*SYSTEM.GetStackPointer ();*)	(* for GC *)
+	running.state.BP := SYSTEM.FP();(*SYSTEM.GetFramePointer ();*)	(* save state *)
 	Machine.FPUSaveMin(running.sse);
 	running := new; new.mode := Running;
 	IF Preempted IN new.flags THEN
 		EXCL(new.flags, Preempted);
 		perfTsc[id] := Machine.GetTimer ();
-		(*Machine.SetSP (new.state.SP);*) (* for UpdateState - run on new stack (EBP on old) *)
+		(*SYSTEM.SetStackPointer (new.state.SP);*) (* for UpdateState - run on new stack (EBP on old) *)
 		SYSTEM.SETSP(new.state.SP);
 		Machine.PushState(new.state);
 		Machine.FPURestoreFull(new.sse);
@@ -1045,7 +1045,7 @@ VAR bp: ADDRESS; p: Process;
 BEGIN
 	p := running[Machine.ID ()];
 	ASSERT(p.oldReturnPC # -1);
-	bp := Machine.CurrentBP ();
+	bp := SYSTEM.GetFramePointer ();
 	SYSTEM.PUT (bp + AddressSize, p.oldReturnPC);
 	CASE haltCode OF
 		|halt: HALT(halt);
@@ -1056,18 +1056,18 @@ END HaltAltPC;
 PROCEDURE HaltReturn;
 VAR bp: ADDRESS;
 BEGIN
-	bp := Machine.CurrentBP ();
+	bp := SYSTEM.GetFramePointer ();
 	SYSTEM.GET (bp, bp); (* Get the dynamic link *)
-	Machine.SetBP (bp); (* Undo the actual paf *)
+	SYSTEM.SetFramePointer (bp); (* Undo the actual paf *)
 	HaltAltPC(halt);
 END HaltReturn;
 
 PROCEDURE HaltUnbreakableReturn;
 VAR bp: ADDRESS;
 BEGIN
-	bp := Machine.CurrentBP ();
+	bp := SYSTEM.GetFramePointer ();
 	SYSTEM.GET (bp, bp); (* Get the dynamic link *)
-	Machine.SetBP (bp); (* Undo the actual paf *)
+	SYSTEM.SetFramePointer (bp); (* Undo the actual paf *)
 	HaltAltPC(haltUnbreakable);
 END HaltUnbreakableReturn;
 
@@ -1718,8 +1718,8 @@ BEGIN (* interrupts off *)
 	ASSERT(t # NIL);
 	IF t # NIL THEN
  		t.state.PC := Machine.CurrentPC(); (* ug: required information for GC with meta data for stack inspection *)
- 		t.state.SP := Machine.CurrentSP(); (* ug: not necessarily needed for GC *)
- 		t.state.BP := Machine.CurrentBP(); (* ug: necessary information for GC with meta data for stack inspection *)
+ 		t.state.SP := SYSTEM.GetStackPointer(); (* ug: not necessarily needed for GC *)
+ 		t.state.BP := SYSTEM.GetFramePointer(); (* ug: necessary information for GC with meta data for stack inspection *)
 	END;
 	Machine.Release(Machine.Objects)
 END UpdateState;
@@ -1837,7 +1837,7 @@ BEGIN
 	InitGCHandling;
 	Heaps.gcStatus := GCStatusFactory();
 	(* create a process for rest of init code, which runs at user level *)
-	entry := Machine.CurrentBP ();
+	entry := SYSTEM.GetFramePointer ();
 	SYSTEM.GET (entry+AddressSize, entry);	(* return address into linker-generated call table *)
 	NEW(initObject);
 	NewProcess(SYSTEM.VAL (Body, entry-ReturnStackDisplacement), {Resistant}, initObject, init); (* create init process *)

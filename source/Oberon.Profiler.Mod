@@ -383,7 +383,7 @@ BEGIN
 
 	(* perform *)
 	max := 0;  n := times;
-	stopBP := Machine.CurrentBP ();
+	stopBP := SYSTEM.GetFramePointer ();
 	WHILE n > 0 DO
 		FOR i := 0 TO Machine.MaxCPU-1 DO tracePos[i] := 0 END;
 		Machine.InstallEventHandler(HandleTimer);

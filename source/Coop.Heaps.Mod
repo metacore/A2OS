@@ -253,7 +253,7 @@ BEGIN
 	IF systemBlockAdr # 0 THEN
 		INC (systemBlockAdr, BlockHeaderSize);
 		SYSTEM.PUT(systemBlockAdr + TypeDescOffset, systemBlockTag);
-		SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS),pc);
+		SYSTEM.GET(SYSTEM.GetFramePointer()+SIZEOF(ADDRESS),pc);
 		SYSTEM.PUT(systemBlockAdr + HeapBlockOffset,pc);
 		dataBlockAdr := systemBlockAdr + systemBlockSize (* - BlockHeaderSize + BlockHeaderSize *);
 		SYSTEM.PUT(dataBlockAdr + TypeDescOffset, NilVal);		(* no type descriptor *)
@@ -296,7 +296,7 @@ BEGIN
 	SYSTEM.GET (typeInfoAdr + FlagsOfs, flags);
 	IF ProtTypeBit IN flags THEN
 		NewProtRec(p, tag, isRealtime);
-		SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS), pc);
+		SYSTEM.GET(SYSTEM.GetFramePointer()+SIZEOF(ADDRESS), pc);
 		SetPC2(p,pc);
 	ELSE
 		SYSTEM.GET(tag, size);
@@ -309,7 +309,7 @@ BEGIN
 		IF recordBlockAdr # 0 THEN
 			INC (recordBlockAdr, BlockHeaderSize);
 			SYSTEM.PUT(recordBlockAdr + TypeDescOffset, recordBlockTag);
-			SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS),pc);
+			SYSTEM.GET(SYSTEM.GetFramePointer()+SIZEOF(ADDRESS),pc);
 			SYSTEM.PUT(recordBlockAdr + HeapBlockOffset,pc);
 			dataBlockAdr := recordBlockAdr + SIZEOF(RecordBlockDesc) + BlockHeaderSize;
 			SYSTEM.PUT(dataBlockAdr + TypeDescOffset, tag);
@@ -348,7 +348,7 @@ BEGIN
 	IF protRecBlockAdr # 0 THEN
 		INC (protRecBlockAdr, BlockHeaderSize);
 		SYSTEM.PUT(protRecBlockAdr + TypeDescOffset, protRecBlockTag);
-		SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS),pc);
+		SYSTEM.GET(SYSTEM.GetFramePointer()+SIZEOF(ADDRESS),pc);
 		SYSTEM.PUT(protRecBlockAdr + HeapBlockOffset,pc);
 		dataBlockAdr := protRecBlockAdr + SIZEOF(ProtRecBlockDesc) + BlockHeaderSize;
 		SYSTEM.PUT(dataBlockAdr + TypeDescOffset, tag);
@@ -393,7 +393,7 @@ BEGIN
 	arrSize := numElems * elemSize;
 	IF arrSize = 0 THEN
 		NewSys(p, numDims * AddressSize + 3 * AddressSize, isRealtime); (* no data, thus no specific alignment *)
-		SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS), pc);
+		SYSTEM.GET(SYSTEM.GetFramePointer()+SIZEOF(ADDRESS), pc);
 		SetPC2(p,pc);
 	ELSE
 		ASSERT(BlockHeaderSize MOD ArrayAlignment = 0);
@@ -403,7 +403,7 @@ BEGIN
 		IF ptrOfs = MinPtrOfs - AddressSize THEN (* no pointers in element type *)
 			size := arrayDataOffset + arrSize;
 			NewSys(p, size, isRealtime);
-			SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS), pc);
+			SYSTEM.GET(SYSTEM.GetFramePointer()+SIZEOF(ADDRESS), pc);
 			SetPC2(p, pc);
 		ELSE
 			arrayBlockSize := BlockHeaderSize + SIZEOF(ArrayBlockDesc);
@@ -414,7 +414,7 @@ BEGIN
 			IF arrayBlockAdr # 0 THEN
 				INC (arrayBlockAdr, BlockHeaderSize);
 				SYSTEM.PUT(arrayBlockAdr + TypeDescOffset, arrayBlockTag);
-				SYSTEM.GET(Machine.CurrentBP()+SIZEOF(ADDRESS),pc);
+				SYSTEM.GET(SYSTEM.GetFramePointer()+SIZEOF(ADDRESS),pc);
 				SYSTEM.PUT(arrayBlockAdr + HeapBlockOffset,pc);
 				dataBlockAdr := arrayBlockAdr + arrayBlockSize (* - BlockHeaderSize + BlockHeaderSize *);
 				SYSTEM.PUT(dataBlockAdr + TypeDescOffset, elemTag);

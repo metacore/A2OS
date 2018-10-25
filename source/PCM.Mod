@@ -344,7 +344,7 @@ IMPORT
 
 	PROCEDURE TraceBack*;   (* do a stack trace back starting at the calling instruction position *)
 	BEGIN
-		TraceBackThis( Machine.CurrentPC(), Machine.CurrentBP() );
+		TraceBackThis( Machine.CurrentPC(), SYSTEM.GetFramePointer() );
 	END TraceBack;
 
 	PROCEDURE Error* (err: WORD; pos: LONGINT;  CONST msg: ARRAY OF CHAR);

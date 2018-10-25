@@ -180,7 +180,7 @@ TYPE
 			END;
 						
 			IF CurrentProcess() = SELF THEN
-				sp := Machine.CurrentSP();  bp :=Machine.CurrentBP(); pc := Machine.CurrentPC(); 
+				sp := SYSTEM.GetStackPointer();  bp :=SYSTEM.GetFramePointer(); pc := Machine.CurrentPC(); 
 			ELSE
 				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
 				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
@@ -761,8 +761,8 @@ BEGIN
 	t := lpParameter(Process);  obj := t.obj;
 	ASSERT(res # 0);
 	SetPriority(t.priority);
-	bp := Machine.CurrentBP();
-	sp := Machine.CurrentSP();
+	bp := SYSTEM.GetFramePointer();
+	sp := SYSTEM.GetStackPointer();
 	t.restartSP := sp;
 	t.stackBottom := bp;
 	IF t.restartPC = SYSTEM.VAL(ADDRESS, terminateProc) THEN DEC(t.restartSP, SIZEOF(ADDRESS))
@@ -1339,7 +1339,7 @@ BEGIN
 
 	cur := CurrentProcess();
 	IF cur # NIL THEN 
-		ebp := Machine.CurrentBP();
+		ebp := SYSTEM.GetFramePointer();
 		SYSTEM.GET(ebp, n);
 		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
 		cur.gcContext.last[cur.gcContext.nextPos] := ebp;

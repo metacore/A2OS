@@ -289,13 +289,13 @@ TYPE
 			p: P; 
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
-			esp := Machine.CurrentSP();
-			Machine.SetSP(esp-size);
+			esp := SYSTEM.GetStackPointer();
+			SYSTEM.SetStackPointer(esp-size);
 			IF size > 0 THEN 
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			p();
-			Machine.SetSP(esp);
+			SYSTEM.SetStackPointer(esp);
 		END Call; 
 
 		PROCEDURE CallH(adr: ADDRESS): HUGEINT;
@@ -306,13 +306,13 @@ TYPE
 			p: P; 
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
-			esp := Machine.CurrentSP();
-			Machine.SetSP(esp-size);
+			esp := SYSTEM.GetStackPointer();
+			SYSTEM.SetStackPointer(esp-size);
 			IF size > 0 THEN 
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			res := p();
-			Machine.SetSP(esp);
+			SYSTEM.SetStackPointer(esp);
 			RETURN res;
 		END CallH; 
 
@@ -324,13 +324,13 @@ TYPE
 			p: P; 
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
-			esp := Machine.CurrentSP();
-			Machine.SetSP(esp-size);
+			esp := SYSTEM.GetStackPointer();
+			SYSTEM.SetStackPointer(esp-size);
 			IF size > 0 THEN 
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			res := p();
-			Machine.SetSP(esp);
+			SYSTEM.SetStackPointer(esp);
 			RETURN res;
 		END CallR; 
 
@@ -342,13 +342,13 @@ TYPE
 			p: P; 
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
-			esp := Machine.CurrentSP();
-			Machine.SetSP(esp-size);
+			esp := SYSTEM.GetStackPointer();
+			SYSTEM.SetStackPointer(esp-size);
 			IF size > 0 THEN 
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			res := p();
-			Machine.SetSP(esp);
+			SYSTEM.SetStackPointer(esp);
 			RETURN res;
 		END CallX; 
 	END Callstack;

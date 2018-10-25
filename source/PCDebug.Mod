@@ -119,7 +119,7 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 	PROCEDURE ToDo*(class: LONGINT);
 		VAR pc, bp: ADDRESS; p, q: List; name: ARRAY 64 OF CHAR;
 	BEGIN {EXCLUSIVE}
-		bp := Machine.CurrentBP ();
+		bp := SYSTEM.GetFramePointer ();
 		SYSTEM.GET (bp + SIZEOF(ADDRESS), pc);
 		p := pclist;
 		WHILE (p.next # NIL) & (p.next.pc < pc) DO p := p.next END;

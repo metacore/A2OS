@@ -1075,43 +1075,10 @@ VAR
 		MOV R0, R0
 	END DrainWriteBuffer;
 
-	PROCEDURE -CurrentBP*(): ADDRESS;
-	CODE
-		MOV R0, FP
-	END CurrentBP;
-
-	PROCEDURE -CurrentSP*(): ADDRESS;
-	CODE
-		MOV R0, SP
-	END CurrentSP;
-
 	PROCEDURE -CurrentPC*(): ADDRESS;
 	CODE
 		MOV R0, PC
 	END CurrentPC;
-
-	PROCEDURE -SetSP*(sp: ADDRESS);
-	CODE
-		LDR R0, [SP, #sp]
-		MOV SP, R0
-		;STR SP, [SP, #sp]
-	END SetSP;
-
-	PROCEDURE -SetBP*(bp: ADDRESS);
-	CODE
-		STR FP, [SP, #bp]
-		ADD SP, SP, #4
-	END SetBP;
-
-	PROCEDURE -GetSP*(): LONGINT;
-	CODE
-		MOV R0, SP
-	END GetSP;
-
-	PROCEDURE -GetBP*(): LONGINT;
-	CODE
-		MOV R0, FP
-	END GetBP;
 
 	PROCEDURE GetTimer*(): HUGEINT;
 	VAR t: ARRAY 2 OF LONGINT;
@@ -3583,8 +3550,8 @@ VAR
 		BootConfig.Init;
 		ReadMemLayout;
 
-		sp := GetSP();
-		fp := GetBP();
+		sp := SYSTEM.GetStackPointer();
+		fp := SYSTEM.GetFramePointer();
 
 		SYSTEM.LDPSR( 0, Platform.IRQMode + Platform.FIQDisabled + Platform.IRQDisabled );
 		SYSTEM.SETSP(sysIntStackStart + 1000H);

@@ -141,30 +141,6 @@ CODE
 #END
 END CurrentPC;
 
-(* Return current frame pointer *)
-PROCEDURE -CurrentBP* (): ADDRESS;
-CODE
-#IF I386 THEN
-	MOV EAX, EBP
-#ELSIF AMD64 THEN
-	MOV RAX, RBP
-#ELSE
-	unimplemented
-#END
-END CurrentBP;
-
-(* Return current stack pointer *)
-PROCEDURE -CurrentSP* (): ADDRESS;
-CODE
-#IF I386 THEN
-	MOV EAX, ESP
-#ELSIF AMD64 THEN
-	MOV RAX, RSP
-#ELSE
-	unimplemented
-#END
-END CurrentSP;
-
 PROCEDURE MapPhysical*(physAdr: ADDRESS; size: SIZE; VAR virtAdr: ADDRESS);
 BEGIN
 	virtAdr := physAdr;

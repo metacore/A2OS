@@ -263,55 +263,6 @@ VAR
 #END
 	END CurrentPC;
 
-	(* Return current frame pointer *)
-	PROCEDURE -CurrentBP* (): ADDRESS;
-	CODE
-#IF AMD64 THEN
-		MOV RAX, RBP
-#ELSIF I386 THEN
-		MOV EAX, EBP
-#ELSE
-	UNIMPLEMENTED
-#END
-	END CurrentBP;
-
-	(* Set current frame pointer *)
-	PROCEDURE -SetBP* (bp: ADDRESS);
-	CODE
-#IF AMD64 THEN
-		POP RBP
-#ELSIF I386 THEN
-		POP EBP
-#ELSE
-	UNIMPLEMENTED
-#END
-	END SetBP;
-
-	(* Return current stack pointer *)
-	PROCEDURE -CurrentSP* (): ADDRESS;
-	CODE
-#IF AMD64 THEN
-		MOV RAX, RSP
-#ELSIF I386 THEN
-		MOV EAX, ESP
-#ELSE
-	UNIMPLEMENTED
-#END
-	END CurrentSP;
-
-	(* Set current stack pointer *)
-	PROCEDURE -SetSP* (sp: ADDRESS);
-	CODE {SYSTEM.AMD64}
-#IF AMD64 THEN
-		POP RSP
-#ELSIF I386 THEN
-		POP ESP
-#ELSE
-	UNIMPLEMENTED
-#END
-	END SetSP;
-
-
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
 	PROCEDURE Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE
@@ -789,7 +740,7 @@ END Init;
 
 	PROCEDURE {INITIAL, NOPAF} Start*;
 	BEGIN
-		stackBottom := CurrentSP();
+		stackBottom := SYSTEM.GetStackPointer();
 		Init; (* cannot allocate variables in here *)
 	END Start;
 

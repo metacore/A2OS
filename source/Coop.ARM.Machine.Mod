@@ -116,18 +116,6 @@ CODE
 	MOV R0, PC
 END CurrentPC;
 
-(* Return current frame pointer *)
-PROCEDURE -CurrentBP* (): ADDRESS;
-CODE
-	MOV R0, FP
-END CurrentBP;
-
-(* Return current stack pointer *)
-PROCEDURE -CurrentSP* (): ADDRESS;
-CODE
-	MOV R0, SP
-END CurrentSP;
-
 PROCEDURE MapPhysical*(physAdr: ADDRESS; size: SIZE; VAR virtAdr: ADDRESS);
 BEGIN
 	virtAdr := physAdr;

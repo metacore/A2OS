@@ -1788,7 +1788,7 @@ PROCEDURE WorkingOnKernelStack* (): BOOLEAN;
 VAR id: LONGINT; sp: ADDRESS;
 BEGIN
 	ASSERT(KernelStackSize # MaxUserStackSize - UserStackGuardSize); (* detection does only work with this assumption *)
-	sp := CurrentSP ();
+	sp := SYSTEM.GetStackPointer ();
 	id := ID ();
 	RETURN (sp >= procm[id].stack.low) & (sp <= procm[id].stack.high)
 END WorkingOnKernelStack;
@@ -1833,7 +1833,7 @@ BEGIN
 	ASSERT(CS () MOD 4 = 0);	(* to get kernel stack pointer *)
 	id := ID ();
 	ASSERT(procm[id].stack.high # 0);	(* current processor stack has been assigned *)
-	procm[id].sp := CurrentBP ()	(* instead of ESP, just fetch EBP of current procedure (does not contain pointers) *)
+	procm[id].sp := SYSTEM.GetFramePointer ()	(* instead of ESP, just fetch EBP of current procedure (does not contain pointers) *)
 END UpdateState;
 
 (** Get kernel stack regions for garbage collection. (for Heaps) *)
@@ -2831,30 +2831,6 @@ PROCEDURE CurrentPC* (): ADDRESS;
 CODE {SYSTEM.AMD64}
 	MOV RAX, [RBP + 8]
 END CurrentPC;
-
-(* Return current frame pointer *)
-PROCEDURE -CurrentBP* (): ADDRESS;
-CODE {SYSTEM.AMD64}
-	MOV RAX, RBP
-END CurrentBP;
-
-(* Set current frame pointer *)
-PROCEDURE -SetBP* (bp: ADDRESS);
-CODE {SYSTEM.AMD64}
-	POP RBP
-END SetBP;
-
-(* Return current stack pointer *)
-PROCEDURE -CurrentSP* (): ADDRESS;
-CODE {SYSTEM.AMD64}
-	MOV RAX, RSP
-END CurrentSP;
-
-(* Set current stack pointer *)
-PROCEDURE -SetSP* (sp: ADDRESS);
-CODE {SYSTEM.AMD64}
-	POP RSP
-END SetSP;
 
 PROCEDURE -SetRAX(n: SIZE);
 CODE{SYSTEM.AMD64}	

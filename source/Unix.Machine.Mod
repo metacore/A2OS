@@ -435,54 +435,6 @@ CODE
 #END
 END CurrentPC;
 
-(* Return current frame pointer *)
-PROCEDURE  -CurrentBP* (): ADDRESS;
-CODE
-#IF I386 THEN
-	MOV EAX, EBP
-#ELSIF AMD64 THEN
-	MOV RAX, RBP
-#ELSE
-	unimplemented
-#END
-END CurrentBP;
-
-(* Set current frame pointer *)
-PROCEDURE  -SetBP* (bp: ADDRESS);
-CODE
-#IF I386 THEN
-	POP EBP
-#ELSIF AMD64 THEN
-	POP RBP
-#ELSE
-	unimplemented
-#END
-END SetBP;
-
-(* Return current stack pointer *)
-PROCEDURE  -CurrentSP* (): ADDRESS;
-CODE
-#IF I386 THEN
-	MOV EAX, ESP
-#ELSIF AMD64 THEN
-	MOV RAX, RSP
-#ELSE
-	unimplemented
-#END
-END CurrentSP;
-
-(* Set current stack pointer *)
-PROCEDURE  -SetSP* (sp: ADDRESS);
-CODE
-#IF I386 THEN
-	POP ESP
-#ELSIF AMD64 THEN
-	POP RSP
-#ELSE
-	unimplemented
-#END
-END SetSP;
-
 PROCEDURE -GetTimer* (): HUGEINT;
 CODE
 #IF I386 THEN

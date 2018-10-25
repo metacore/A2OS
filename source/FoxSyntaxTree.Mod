@@ -476,8 +476,8 @@ TYPE
 	END;
 
 	Fingerprint*= RECORD
-		shallow*,public*, private*: Basic.Fingerprint;
-		shallowAvailable*, deepAvailable*: BOOLEAN;
+		shallow* := 0, public* := 0, private* := 0: Basic.Fingerprint;
+		shallowAvailable* := FALSE, deepAvailable* := FALSE: BOOLEAN;
 	END;
 
 	(** identifiers in a program text **)
@@ -565,10 +565,7 @@ TYPE
 			isRealtime := FALSE;
 			recursion := FALSE;
 			hasPointers := FALSE;
-			InitFingerprint(fingerprint);
 		END InitType;
-
-		
 
 		PROCEDURE SetSize*(sizeInBits: LONGINT);
 		BEGIN SELF.sizeInBits := sizeInBits
@@ -2598,7 +2595,7 @@ TYPE
 	VAR fingerprint-: Fingerprint;
 
 		PROCEDURE &InitValue(position: Position);
-		BEGIN SELF.position := position; resolved := SELF; InitFingerprint(fingerprint);
+		BEGIN SELF.position := position; resolved := SELF;
 		END InitValue;
 
 		PROCEDURE SetFingerprint*(CONST fp: Fingerprint);
@@ -2932,7 +2929,6 @@ TYPE
 			alignment := 0; (* take default *)
 			fixed := FALSE;
 			used := FALSE; written := FALSE;
-			InitFingerprint(fingerprint);
 			comment := NIL;
 		END InitSymbol;
 
@@ -5142,15 +5138,6 @@ VAR
 	moduleType-: Type;
 
 	indexListSeparator-: Expression;
-
-	PROCEDURE InitFingerprint*(VAR fingerprint: Fingerprint);
-	BEGIN
-		fingerprint.shallowAvailable := FALSE;
-		fingerprint.deepAvailable := FALSE;
-		fingerprint.shallow := 0;
-		fingerprint.private := 0;
-		fingerprint.public := 0;
-	END InitFingerprint;
 
 	PROCEDURE NewModule*( CONST sourceName: ARRAY OF CHAR; position: Position;  name: Identifier;scope: ModuleScope; case: LONGINT ): Module;
 	VAR module: Module;

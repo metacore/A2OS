@@ -6244,7 +6244,6 @@ TYPE
 				ELSIF HasFlag(modifiers,Global.NameAbstract,position) THEN procedure.SetAbstract(TRUE)
 				END;
 				IF HasValue(modifiers, Global.NameFingerprint, position, value) THEN 
-					SyntaxTree.InitFingerprint(fp);
 					fp.shallow := LONGINT(value); (* TODO: fix explicit integer truncation *)
 					fp.public := LONGINT(value); (* TODO: fix explicit integer truncation *)
 					fp.private := LONGINT(value); (* TODO: fix explicit integer truncation *)

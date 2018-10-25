@@ -5507,9 +5507,7 @@ VAR
 			copy.assignable := e.assignable;
 			copy.position := e.position;
 			copy.state := e.state;
-			IF e.resolved = e THEN copy.resolved := copy(Value);
-			ELSIF e.resolved # NIL THEN copy.resolved := CloneExpression(e.resolved)(Value);
-			END;
+			IF e.resolved = e THEN copy.resolved := copy(Value) ELSE copy.resolved := e.resolved END;
 			RETURN copy
 		END;
 	END CloneExpression;

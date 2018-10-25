@@ -6244,9 +6244,9 @@ TYPE
 				ELSIF HasFlag(modifiers,Global.NameAbstract,position) THEN procedure.SetAbstract(TRUE)
 				END;
 				IF HasValue(modifiers, Global.NameFingerprint, position, value) THEN 
-					fp.shallow := LONGINT(value); (* TODO: fix explicit integer truncation *)
-					fp.public := LONGINT(value); (* TODO: fix explicit integer truncation *)
-					fp.private := LONGINT(value); (* TODO: fix explicit integer truncation *)
+					fp.shallow := value;
+					fp.public := value;
+					fp.private := value;
 					fp.shallowAvailable := TRUE;
 					procedure.SetFingerprint(fp);
 				END;

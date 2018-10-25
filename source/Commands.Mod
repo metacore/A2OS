@@ -24,7 +24,6 @@ CONST
 	Started = 0; Loaded = 1; Finished = 2;
 
 TYPE
-
 	Context* = OBJECT
 	VAR
 		in-, arg- : Streams.Reader;
@@ -44,52 +43,6 @@ TYPE
 
 	END Context;
 
-
-	(*see StreamUtilities.Mod: reader that can daisychained with another reader that extracts a copy of the data flow to a monitor stream*)
-	ReaderMonitor* = OBJECT(Streams.Reader)
-		VAR in: Streams.Reader; tracer: Streams.Writer; pos0: Streams.Position; tracedPos: LONGINT;
-
-		PROCEDURE &Init(in: Streams.Reader; tracer: Streams.Writer);
-		BEGIN
-			SELF.tracer := tracer;
-			InitReader(Receiver, 1024);
-			SELF.in := in;
-			pos0 := in.Pos();
-			tracedPos := pos0;
-		END Init;
-
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
-		VAR inReader: Streams.Reader;nextPos: LONGINT;
-		BEGIN
-			inReader := in;
-			ASSERT((size > 0) & (min <= size) & (min >= 0));
-			in.Bytes(buf, ofs, size, len);
-			(* filter out 0X characters *)
-			nextPos := tracedPos;
-			WHILE (nextPos < ofs + len) & (buf[nextPos] # 0X) DO
-				INC(nextPos);
-			END;
-			IF nextPos > tracedPos THEN
-				tracer.Bytes(buf,tracedPos,nextPos-tracedPos);
-			END;
-			tracedPos := nextPos;
-			res:=in.res
-		END Receiver;
-
-		PROCEDURE CanSetPos*(): BOOLEAN;
-		BEGIN RETURN in.CanSetPos()
-		END CanSetPos;
-
-		PROCEDURE SetPos*(pos: Streams.Position);
-		BEGIN Reset; pos0 := pos; in.SetPos(pos)
-		END SetPos;
-
-		PROCEDURE Pos*(): Streams.Position;
-		BEGIN RETURN Pos^()+pos0;
-		END Pos;
-
-	END ReaderMonitor;
-
 	(* Procedure types that can be called be runner thread *)
 	CommandProc = PROCEDURE;
 	CommandContextProc = PROCEDURE(context : Context);
@@ -101,8 +54,6 @@ TYPE
 		moduleName, commandName : Modules.Name;
 		context : Context;
 
-		tracer: Streams.Writer; r: ReaderMonitor;
-
 		proc : CommandProc;
 		commandProc : CommandContextProc;
 
@@ -113,15 +64,20 @@ TYPE
 		exception : BOOLEAN;
 
 		PROCEDURE &Init*(CONST moduleName, commandName : Modules.Name; context : Context);
+		VAR origin: Streams.Position; char: CHAR;
 		BEGIN
 			SELF.moduleName := moduleName; SELF.commandName := commandName;
 
 			IF (context = NIL) THEN NEW(context, NIL, NIL, NIL, NIL, NIL); END;
 			IF trace THEN
-				Streams.OpenWriter(tracer, Trace.Send);
-				NEW(r , context.arg, tracer); context.arg:=r;
-				tracer.String("Commands.Activate ");
-				tracer.String(moduleName); tracer.String(Delimiter); tracer.String(commandName); tracer.Char(" ");
+				Trace.String("Commands.Activate ");
+				Trace.String(moduleName); Trace.String(Delimiter); Trace.String(commandName);
+				IF context.arg.CanSetPos () THEN
+					origin := context.arg.Pos ();
+					LOOP context.arg.Char (char); IF context.arg.res # Streams.Ok THEN EXIT END; Trace.Char (char); END;
+					context.arg.SetPos (origin);
+				END;
+				Trace.Char ("~"); Trace.Ln;
 			END;
 			SELF.context := context;
 			res := CommandError; COPY("Error starting command", msg);
@@ -170,11 +126,6 @@ TYPE
 			END;
 		ELSE
 			res := CommandTrapped; COPY("Exception during command execution", msg);
-		END;
-		IF trace THEN
-			tracer.String(" ~"); 
-			tracer.Ln; 
-			tracer.Update
 		END;
 		BEGIN {EXCLUSIVE} state := Finished; END;
 	END Runner;
@@ -273,7 +224,7 @@ PROCEDURE Call*(cmds : ARRAY OF CHAR; flags : SET; VAR res : WORD; VAR msg : ARR
 VAR  outer, context : Context; arg : Streams.StringReader; i, j, k : LONGINT; mode : ARRAY 5 OF CHAR;
 par : POINTER TO ARRAY OF CHAR;
 BEGIN
-	IF trace THEN 	Trace.String("Commands.Call "); Trace.String(cmds); Trace.String("~ "); Trace.Ln END;
+	IF trace THEN Trace.String("Commands.Call "); Trace.String(cmds); Trace.String("~"); Trace.Ln END;
 	NEW(par,LEN(cmds));
 	i := 0; WHILE (i # 4) & (i # LEN(cmds)) DO mode[i] := cmds[i]; INC(i); END;
 	mode[i] := 0X;	(* copy at most first 4 characters *)

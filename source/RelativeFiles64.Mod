@@ -1,6 +1,6 @@
 MODULE RelativeFiles64;	(**  AUTHOR "fof"; PURPOSE "";  **)
 
-IMPORT Files := Files64,UTF8Strings;
+IMPORT Files := Files64,UTF8Strings, Commands;
 TYPE PathName=ARRAY 272 OF CHAR;
 
 	FileSystem = OBJECT(Files.FileSystem)

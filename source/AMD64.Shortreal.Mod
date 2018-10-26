@@ -1,3 +1,7 @@
+(**
+	AUTHOR: Alexey Morozov
+	PURPOSE: AMD64 half precision floating point runtime
+*)
 MODULE Shortreal;
 
 IMPORT

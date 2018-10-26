@@ -754,7 +754,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	System.Mod
 	Reboot.Mod # Tool to reboot machine after delay (and write system reboot time to file)
 
-	WIN { Windows.WinApplications.Mod }
+	WIN { Windows.PrecisionTimer.Mod Windows.HostLibs.Mod Windows.WinApplications.Mod }
+	UNIX { Unix.PrecisionTimer.Mod Unix.HostLibs.Mod }
 
 	NATIVE {
 		DriverDatabase.Mod DriverDatabase.XML

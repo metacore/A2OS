@@ -1,4 +1,8 @@
-MODULE PrecisionTimer; (** AUTHOR ""; PURPOSE ""; *)
+(**
+	AUTHOR: Alexey Morozov
+	PURPOSE: high precision timer support for Xilinx Zynq platform
+*)
+MODULE PrecisionTimer;
 
 IMPORT
 	Machine, BootConfig;

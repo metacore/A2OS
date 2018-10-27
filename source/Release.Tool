@@ -738,7 +738,7 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	I386 { I386.FoxArrayBaseOptimized.Mod }
 	AMD64 { AMD64.FoxArrayBaseOptimized.Mod}
 
-	PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod
+	~COOP { PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod }
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"

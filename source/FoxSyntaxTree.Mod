@@ -2592,17 +2592,10 @@ TYPE
 	(**** values ****)
 
 	Value* = OBJECT (Expression)
-	VAR fingerprint-: Fingerprint;
 
 		PROCEDURE &InitValue(position: Position);
 		BEGIN SELF.position := position; resolved := SELF;
 		END InitValue;
-
-		PROCEDURE SetFingerprint*(CONST fp: Fingerprint);
-		BEGIN
-			SELF.fingerprint := fp
-		END SetFingerprint;
-
 
 		PROCEDURE Equals*(v: Value):BOOLEAN;
 		BEGIN HALT(100); (* abstract *) RETURN FALSE; END Equals;

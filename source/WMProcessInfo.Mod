@@ -244,7 +244,7 @@ TYPE
 			END GetValues;
 			
 		BEGIN
-			t1 := Machine.GetTimer() - lastProcTime;
+			t1 := ABS( Machine.GetTimer() - lastProcTime );
 			lastProcTime := Machine.GetTimer();
 
 			grid.model.Acquire;

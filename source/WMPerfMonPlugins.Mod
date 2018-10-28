@@ -762,7 +762,7 @@ BEGIN
 	END;
 	endTime := Machine.GetTimer();
 	IF nbrOfGcRuns # Heaps.Ngc THEN RETURN FALSE; END;
-	timeDiff := endTime - startTime;
+	timeDiff := ABS( endTime - startTime );
 	clockrate := SHORT (timeDiff DIV (1000*1000));
 	RETURN TRUE;
 END EstimateCpuClockrate;
@@ -774,7 +774,7 @@ END EstimateCpuClockrate;
 *)
 PROCEDURE CyclesToMs*(cycles : HUGEINT; mhz : LONGINT) : LONGINT;
 BEGIN
-	RETURN SHORT (cycles DIV (1000*mhz));
+	RETURN SHORT (ABS(cycles) DIV (1000*ABS(mhz)));
 END CyclesToMs;
 
 (** Convert number of milliseconds into string of the form d:h:m:s if m >= 1 or x.xxxs if m < 1*)

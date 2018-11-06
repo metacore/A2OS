@@ -163,6 +163,7 @@ BEGIN
 			NEW(mount, selection.disk, selection.partition, context.out);
 			mount.SetParameters(prefix, alias, volumePars, fsPars);
 			mount.SetBlockingStart;
+			IF Lib.StatusError IN mount.state.status THEN context.result := Commands.CommandError END;
 		ELSE
 			context.error.String("Expected parameters: dev#part alias prefix"); context.error.Ln;
 			context.result := Commands.CommandError;
@@ -186,6 +187,7 @@ BEGIN
 				NEW(formatFat, selection.disk, selection.partition, context.out);
 				formatFat.SetParameters(Strings.NewString("no name"), quickFormat);
 				formatFat.SetBlockingStart;
+				IF Lib.StatusError IN formatFat.state.status THEN context.result := Commands.CommandError END;
 				context.out.String("Partitions UID "); context.out.Int(formatFat.uid, 0);
 				context.out.String(": Started FAT format on "); context.out.String(formatFat.diskpartString); context.out.Ln;
 			ELSIF (fsname = "AosFS") OR (fsname = "NatFS") OR (fsname = "NatFS1") OR (fsname = "NatFS2") THEN
@@ -198,6 +200,7 @@ BEGIN
 				NEW(formatAos, selection.disk, selection.partition, context.out);
 				formatAos.SetParameters(fsname, bootfile, fsRes, flags);
 				formatAos.SetBlockingStart;
+				IF Lib.StatusError IN formatAos.state.status THEN context.result := Commands.CommandError END;
 			ELSE
 				context.error.String("File system "); context.error.String(fsname); context.error.String(" is not supported"); context.error.Ln;
 				context.result := Commands.CommandError;
@@ -206,6 +209,7 @@ BEGIN
 			NEW(formatAos, selection.disk, selection.partition, context.out);
 			formatAos.SetParameters("AosFS", "", -2, 0);
 			formatAos.SetBlockingStart;
+			IF Lib.StatusError IN formatAos.state.status THEN context.result := Commands.CommandError END;
 			context.out.String("Partitions UID "); context.out.Int(formatAos.uid, 0);
 			context.out.String(": Started format on "); context.out.String(formatAos.diskpartString); context.out.Ln;
 		END;
@@ -224,6 +228,7 @@ BEGIN
 			NEW(updateBootFile, selection.disk, selection.partition, context.out);
 			updateBootFile.SetParameters(filename);
 			updateBootFile.SetBlockingStart;
+			IF Lib.StatusError IN updateBootFile.state.status THEN context.result := Commands.CommandError END;
 		ELSE
 			context.error.String("Expected parameters: dev#part bootfilename"); context.error.Ln;
 			context.result := Commands.CommandParseError;
@@ -290,6 +295,7 @@ BEGIN
 			NEW(setConfig, selection.disk, selection.partition, context.out);
 			setConfig.SetParameters(configString, 0);
 			setConfig.SetBlockingStart;
+			IF Lib.StatusError IN setConfig.state.status THEN context.result := Commands.CommandError END;
 		ELSE
 			context.error.String("Expected argument stream that supports SetPos"); context.error.Ln;
 			context.result := Commands.CommandError;
@@ -306,6 +312,7 @@ BEGIN
 	IF GetSelection(context, FALSE, selection) THEN
 		NEW(checkPartition, selection.disk, selection.partition, context.out);
 		checkPartition.SetBlockingStart;
+		IF Lib.StatusError IN checkPartition.state.status THEN context.result := Commands.CommandError END;
 	ELSE (* skip; error written to <w> by ScanOpenPart *)
 	END;
 END Check;
@@ -324,6 +331,7 @@ BEGIN
 					NEW(change, selection.disk, selection.partition, context.out);
 					change.SetParameters(oldtype, newtype);
 					change.SetBlockingStart;
+					IF Lib.StatusError IN change.state.status THEN context.result := Commands.CommandError END;
 				ELSE
 					context.error.String("Expected parameters: dev#part oldtype newtype, failed to parse newtype"); context.error.Ln;
 					context.result := Commands.CommandParseError;
@@ -352,6 +360,7 @@ BEGIN
 				NEW(delete, selection.disk, selection.partition, context.out);
 				delete.SetParameters(type);
 				delete.SetBlockingStart;
+				IF Lib.StatusError IN delete.state.status THEN context.result := Commands.CommandError END;
 			ELSE
 				context.error.String("Expected parameters: dev#part type sizeMB, error while parsing type"); context.error.Ln;
 				context.result := Commands.CommandParseError;
@@ -376,6 +385,7 @@ BEGIN
 					NEW(create, selection.disk, selection.partition, context.out);
 					create.SetParameters(size, type, FALSE);
 					create.SetBlockingStart;
+					IF Lib.StatusError IN create.state.status THEN context.result := Commands.CommandError END;
 				ELSE
 					context.error.String("Expected parameters: dev#part type sizeMB, error while parsing size"); context.error.Ln;
 					context.result := Commands.CommandParseError;
@@ -413,6 +423,7 @@ BEGIN
 			NEW(setFlags, selection.disk, selection.partition, context.out);
 			setFlags.SetParameters(active);
 			setFlags.SetBlockingStart;
+			IF Lib.StatusError IN setFlags.state.status THEN context.result := Commands.CommandError END;
 		ELSE
 			context.error.String("Operation not supported for floppy disks"); context.error.Ln;
 			context.result := Commands.CommandError;
@@ -442,6 +453,7 @@ BEGIN
 			NEW(fileToPartition, selection.disk, selection.partition, context.out);
 			fileToPartition.SetParameters(filename, block, numblocks);
 			fileToPartition.SetBlockingStart;
+			IF Lib.StatusError IN fileToPartition.state.status THEN context.result := Commands.CommandError END;
 		ELSE
 			context.error.String("Exspected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
 			context.result := Commands.CommandParseError;
@@ -472,6 +484,7 @@ BEGIN
 			NEW(partitionToFile, selection.disk, selection.partition, context.out);
 			partitionToFile.SetParameters(filename, block, numblocks);
 			partitionToFile.SetBlockingStart;
+			IF Lib.StatusError IN partitionToFile.state.status THEN context.result := Commands.CommandError END;
 			context.out.String("Partitions UID "); context.out.Int(partitionToFile.uid, 0); context.out.String(": Started PartitionToFile on ");
 			context.out.String(partitionToFile.diskpartString); context.out.Ln;
 		ELSE
@@ -501,6 +514,7 @@ BEGIN
 						writeMBR.SetParameters(filename, TRUE, FALSE);
 					END;
 					writeMBR.SetBlockingStart;
+					IF Lib.StatusError IN writeMBR.state.status THEN context.result := Commands.CommandError END;
 				ELSE
 					context.error.String("Expected parameters: dev#0 filename, failed to parse filename"); context.error.Ln;
 					context.result := Commands.CommandParseError;
@@ -529,6 +543,7 @@ BEGIN
 			NEW(updateLoader, selection.disk, selection.partition, context.out);
 			updateLoader.SetParameters(filename);
 			updateLoader.SetBlockingStart;
+			IF Lib.StatusError IN updateLoader.state.status THEN context.result := Commands.CommandError END;
 		ELSE
 			context.error.String("Expected parameters: dev#part bootloader"); context.error.Ln;
 			context.result := Commands.CommandError;
@@ -546,6 +561,7 @@ BEGIN
 		NEW(installBootManager, selection.disk, selection.partition, context.out);
 		installBootManager.SetParameters(mbrFile, tailFile);
 		installBootManager.SetBlockingStart;
+		IF Lib.StatusError IN installBootManager.state.status THEN context.result := Commands.CommandError END;
 	END;
 END InstallBootManager;
 
@@ -573,6 +589,7 @@ BEGIN
 			showBlocks.SetParameters(block, numblocks);
 			showBlocks.SetCallback(ShowBlockCallback);
 			showBlocks.SetBlockingStart;
+			IF Lib.StatusError IN showBlocks.state.status THEN context.result := Commands.CommandError END;
 		ELSE
 			context.error.String("Exspected parameters: dev#part block [numblocks], failed to parse block"); context.error.Ln;
 			context.result := Commands.CommandParseError;

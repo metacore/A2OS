@@ -14631,7 +14631,8 @@ TYPE
 								sym := NIL;
 							END;
 							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-								tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
+								tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+								tir.SetExported(IsExported(td));
 							ELSE
 								tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
 							END;

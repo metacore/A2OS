@@ -380,8 +380,8 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	NATIVE & ~BIOS { Clock.Mod}
 
 	# Memory cache control
-	BIOS { BIOS.MemCache.Mod }
-	COOP { Coop.MemCache.Mod }
+	BIOS & ~COOP { BIOS.MemCache.Mod }
+	BIOS & COOP { Coop.MemCache.Mod }
 
 	# Block device interface
 	Disks.Mod
@@ -679,7 +679,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		BluetoothHCI.Mod BluetoothL2CAP.Mod BluetoothRFCOMM.Mod
 	}
 
-	BIOS {
+	BIOS & ~COOP {
 		# Floppy disk driver
 		BIOS.Diskettes.Mod
 	}
@@ -954,7 +954,7 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 
 	ShellCommands.Mod Telnet.Mod	# Telnet Shell (currently broken)
 
-	BIOS { BIOS.MemInfo.Mod }
+	BIOS & ~COOP { BIOS.MemInfo.Mod }
 	BIOS, WIN { Info.Mod }
 
 	TFClasses.Mod Mail.Mod SMTPClient.Mod
@@ -1163,11 +1163,11 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMPerfMonAlerts.Mod WMPerfMonAlertsUtils.Mod WMPerfMonAlerts.XML
 
 	# perfmon kernel plugins
-	NATIVE {
+	NATIVE & ~COOP {
 		WMPerfMonPluginCpu.Mod WMPerfMonPluginMemory.Mod
 	}
 
-	BIOS {
+	BIOS & ~COOP {
 		BIOS.WMPerfMonPluginInterrupts.Mod
 	}
 
@@ -1175,7 +1175,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
 	}
 	WIN { Windows.WMPerfMonPluginCpu.Mod Windows.WMPerfMonPluginMemory.Mod }
-	UNIX { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
+	UNIX, COOP { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
 
 	NATIVE, WIN {
 		WMPerfMonPluginModVars.Mod WMPerfMonPluginHeap.Mod
@@ -1391,15 +1391,14 @@ PACKAGE Testing ARCHIVE "Testing.zip" SOURCE "TestingSrc.zip" DESCRIPTION "Tests
 
 	CSV.Test
 
-	BIOS {
+	BIOS & ~COOP {
 		TestLocks.Mod
 		BenchSpeedup.Mod BenchObjCount.Mod
 		BenchClockDrift.Mod BenchNew.Mod BenchLocks.Mod
 		BenchPingPong.Mod
 		BluetoothTest.Mod
+		BIOS.BenchInterrupts.Mod
 	}
-
-	BIOS { BIOS.BenchInterrupts.Mod }
 
 	BenchTCP.Mod
 

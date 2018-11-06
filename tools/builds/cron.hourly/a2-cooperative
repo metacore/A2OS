@@ -22,6 +22,7 @@ process ()
 	notify
 }
 
+process Bios32C &
 process Linux32C &
 process Linux64C &
 process RPiC &

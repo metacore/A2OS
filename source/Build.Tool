@@ -176,7 +176,7 @@ VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
 Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 100000H Kernel Traps
 	ATADisks DiskVolumes DiskFS Loader BootConsole ~
 
-Partitions.WriteMBR VDISK0#0 OBEMBR.Bin ~
+Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
 Partitions.InstallBootManager VDISK0#0 ~
 Partitions.Create VDISK0#1 76 32 ~
 
@@ -227,7 +227,7 @@ VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
 Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 1000H Kernel Traps
 	ATADisks DiskVolumes DiskFS Loader BootConsole ~
 
-Partitions.WriteMBR VDISK0#0 OBEMBR.Bin ~
+Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
 Partitions.InstallBootManager VDISK0#0 ~
 Partitions.Create VDISK0#1 76 32 ~
 
@@ -292,7 +292,7 @@ Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin Ke
 	UsbHubDriver UsbEhci UsbEhciPCI UsbStorageBoot
 	DiskVolumes DiskFS Loader BootConsole ~
 
-Partitions.WriteMBR VDISK0#0 OBEMBR.Bin ~
+Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
 Partitions.InstallBootManager VDISK0#0 BootManagerMBR.Bin BootManagerTail.Bin ~
 Partitions.Create VDISK0#1 76 150 ~
 

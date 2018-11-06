@@ -20,7 +20,7 @@ System.DoCommands
 	Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 1000H Kernel Traps
 		ATADisks DiskVolumes DiskFS Loader BootConsole ~
 
-	Partitions.WriteMBR VDISK0#0 OBEMBR.Bin ~
+	Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
 	Partitions.InstallBootManager VDISK0#0 ~
 	Partitions.Create VDISK0#1 76 9999 ~
 	Partitions.Format VDISK0#1 AosFS 1024 ../Test/IDE.Bin ~
@@ -205,7 +205,7 @@ System.DoCommands
 	VirtualDisks.Create ../Test/FATHDD.img 200000 512~
 	VirtualDisks.Install VDISK1 ../Test/FATHDD.img ~
 
-	Partitions.WriteMBR VDISK1#0 OBEMBR.Bin ~
+	Partitions.WriteMBR VDISK1#0 OBEMBR.BIN ~
 	Partitions.Create VDISK1#1 12 9999 ~
 	Partitions.Format VDISK1#1 FatFS ~
 

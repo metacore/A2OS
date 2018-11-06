@@ -1213,13 +1213,13 @@ TYPE
 		PROCEDURE Update;
 		VAR state : PartitionsLib.OperationState;
 		BEGIN
-			IF (last = 100) OR (state.status * (PartitionsLib.StatusFinished + PartitionsLib.StatusAborted) # {}) THEN alive := FALSE; END;
+			IF (last = 100) OR (PartitionsLib.StatusFinished IN state.status) OR (PartitionsLib.StatusAborted IN state.status) THEN alive := FALSE; END;
 			state := installer.GetState();
 			IF state.cur # last THEN
 				progressBar.SetCurrent(SHORT(state.cur));
 				last := state.cur;
 			END;
-			IF (alive = FALSE) & (notifyProc # NIL) THEN notifyProc(state.status * PartitionsLib.StatusAborted # {}); END;
+			IF (alive = FALSE) & (notifyProc # NIL) THEN notifyProc(PartitionsLib.StatusAborted IN state.status); END;
 		END Update;
 
 		PROCEDURE SetNotifyProc(notifyProc : NotifyProc);

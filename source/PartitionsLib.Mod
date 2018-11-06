@@ -94,11 +94,11 @@ CONST
 	Ok* = 0;
 
 	(* Operation status *)
-	StatusRunning* = {1};
-	StatusAborted* = {2};
-	StatusWaiting* = {3};
-	StatusFinished* = {5};
-	StatusError* = {4};
+	StatusRunning* = 1;
+	StatusAborted* = 2;
+	StatusWaiting* = 3;
+	StatusFinished* = 5;
+	StatusError* = 4;
 
 	(* Disk model lock types. More restrictive lock types must have lower numbers! *)
 	WriterLock* = 0; (* default *)
@@ -921,7 +921,7 @@ TYPE
 	 *	3. IF parameters are valid, set alive := TRUE, else, set alive := FALSE
 	 *	4. Add object to PartitionsLib.registry via Add
  	 *	5. Call SetStart
-	 *	6. As long status * StatusRunning # {} the object is active
+	 *	6. As long as StatusRunning IN state.status the object is active
 	 * 	7. Terminate object via Abort & AwaitDead
 	 *)
 	Operation* = OBJECT
@@ -941,7 +941,7 @@ TYPE
 		uid- : LONGINT;
 		disk- : Disk; partition- : LONGINT;
 		diskpartString- : String; (* dev#part; Set at &Init *)
-		starttime-, endtime- : Dates.DateTime; (* endtime only valid if state.status * StatusFinished # {} *)
+		starttime-, endtime- : Dates.DateTime; (* endtime only valid if StatusFinished IN state.status *)
 
 		(* internal variables *)
 		alive*, dead, start : BOOLEAN; (* synchronization *)
@@ -975,7 +975,7 @@ TYPE
 			NEW(resultText); NEW(result, resultText);
 			NEW(infoText); NEW(info, infoText);
 			NEW(errorsText); NEW(errors, errorsText);
-			SetStatus(StatusWaiting, "Waiting", 0, 0, 0, FALSE);
+			SetStatus({StatusWaiting}, "Waiting", 0, 0, 0, FALSE);
 		END Init;
 
 		(** synchronized access to the object's state *)
@@ -998,7 +998,7 @@ TYPE
 
 		PROCEDURE ReportError*(CONST error : ARRAY OF CHAR);
 		BEGIN {EXCLUSIVE}
-			state.status := state.status + StatusError;
+			INCL(state.status, StatusError);
 			INC(state.errorCount);
 			errors.String("Error "); errors.Int(state.errorCount, 3); errors.String(" : "); errors.String(error); errors.Ln;
 		END ReportError;
@@ -1009,7 +1009,7 @@ TYPE
 			string := Strings.NewString(""); result.Update;
 			resultText.AcquireRead;
 			length := resultText.GetLength() + 1;
-			IF (state.status * StatusFinished # {}) & (length > 0) THEN
+			IF (StatusFinished IN state.status) & (length > 0) THEN
 				NEW(string, length);
 				TextUtilities.TextToStr(resultText, string^);
 			END;
@@ -1022,7 +1022,7 @@ TYPE
 		BEGIN
 			string := Strings.NewString(""); info.Update;
 			infoText.AcquireRead;
-			IF (state.status * StatusFinished # {}) & (infoText.GetLength() > 0) THEN
+			IF (StatusFinished IN state.status) & (infoText.GetLength() > 0) THEN
 				NEW(string, infoText.GetLength() + 1);
 				TextUtilities.TextToStr(infoText, string^);
 			END;
@@ -1061,7 +1061,7 @@ TYPE
 		(* The object shall abort its current operation and call SetDead when it's finished *)
 		PROCEDURE Abort*;
 		BEGIN {EXCLUSIVE}
-			state.status := state.status + StatusAborted;
+			INCL(state.status, StatusAborted);
 			state.statusString := "Aborted";
 			result.String("Operation aborted");
 			alive := FALSE; start := TRUE;
@@ -1126,7 +1126,7 @@ TYPE
 			w.String("UID "); w.Int(uid, 0); w.String(": ");  w.String(name); w.Ln;
 			IF ~details THEN
 				w.String(" on "); w.String(diskpartString); w.String(", Status: ");
-				IF state.status * StatusFinished = {} THEN
+				IF ~(StatusFinished IN state.status) THEN
 					 w.String(state.statusString);
 					IF state.progressValid THEN
 						w.String(" (Progress: "); w.Int(ENTIER(100.0 * state.cur / state.max), 1); w.String("%"); w.String(")");
@@ -1154,14 +1154,14 @@ TYPE
 				(* Time information *)
 				w.SetFontStyle({WMGraphics.FontBold}); w.String("Started: "); w.SetFontStyle({});
 				Strings.FormatDateTime(DateTimeFormat, starttime, temp); w.String(temp);
-				IF state.status * StatusFinished # {} THEN
+				IF StatusFinished IN state.status THEN
 					w.SetFontStyle({WMGraphics.FontBold}); w.String("    Ended: ");  w.SetFontStyle({});
 					Strings.FormatDateTime(DateTimeFormat, endtime, temp); w.String(temp);
 				END;
 				w.Ln;
 				(* Status information *)
 				w.SetFontStyle({WMGraphics.FontBold}); w.String("Status: "); w.SetFontStyle({});
-				IF state.status * StatusFinished # {} THEN
+				IF StatusFinished IN state.status THEN
 					w.Update; result.Update;
 					resultText.AcquireRead;
 					text.AcquireWrite;
@@ -1171,7 +1171,7 @@ TYPE
 					w.Ln;
 				ELSE
 					w.String(state.statusString);
-					IF (state.status * StatusFinished = {}) & state.progressValid THEN
+					IF ~(StatusFinished IN state.status) & state.progressValid THEN
 						w.String(" (Progress: "); w.Int(ENTIER(100.0 * state.cur / state.max), 1); w.String("%"); w.String(")");
 					END;
 				END;
@@ -1242,7 +1242,7 @@ TYPE
 	BEGIN {ACTIVE}
 		locked := FALSE;
 		AwaitStart;
-		SetStatus(StatusRunning, "Running", 0, 0, 0, FALSE);
+		SetStatus({StatusRunning}, "Running", 0, 0, 0, FALSE);
 		IF (out # NIL) THEN Indent; out.String(desc); out.String(" "); out.String(diskpartString); out.String(" ... "); out.Update; END;
 		IF alive THEN
 			operations.Add(SELF);
@@ -1277,8 +1277,8 @@ TYPE
 			ReportError("Operation trapped");
 			SetStatus(state.status, "TRAPPED", state.min, state.cur, state.max, state.progressValid);
 			IF (out # NIL) THEN out.String("trapped."); out.Ln; out.Update; END;
-		ELSIF state.status * StatusAborted = {} THEN
-			SetStatus(state.status + StatusFinished, "Finished", state.min, state.cur, state.max, state.progressValid);
+		ELSIF ~(StatusAborted IN state.status) THEN
+			SetStatus(state.status + {StatusFinished}, "Finished", state.min, state.cur, state.max, state.progressValid);
 			IF (out # NIL) THEN
 				IF (state.errorCount = 0) THEN
 					info.Update;
@@ -1335,7 +1335,7 @@ TYPE
 			found := FALSE;
 			IF operations = operation THEN
 				found := TRUE;
-				IF operation.state.status * StatusFinished = {} THEN (* operation is still running *)
+				IF ~(StatusFinished IN operation.state.status) THEN (* operation is still running *)
 					Terminate(operation);
 				END;
 				operations := operations.next;
@@ -1345,7 +1345,7 @@ TYPE
 					WHILE (temp.next # operation) & (temp.next # NIL) DO temp := temp.next; END;
 					IF temp.next = operation THEN (* found *)
 						found := TRUE;
-						IF operation.state.status * StatusFinished = {} THEN (* operation is still running *)
+						IF ~(StatusFinished IN operation.state.status) THEN (* operation is still running *)
 							Terminate(operation);
 						END;
 						temp.next := temp.next.next;
@@ -1392,7 +1392,7 @@ TYPE
 			IF temp # NIL THEN
 				IF temp.uid = uid THEN
 					found := TRUE;
-					IF temp.state.status * StatusFinished = {} THEN (* operation is still running *)
+					IF ~(StatusFinished IN temp.state.status) THEN (* operation is still running *)
 						Terminate(temp);
 					END;
 					operations := operations.next;
@@ -1400,7 +1400,7 @@ TYPE
 					WHILE (temp.next # NIL) & (temp.next.uid # uid) DO temp := temp.next; END;
 					IF temp.next # NIL THEN
 						found := TRUE;
-						IF temp.next.state.status * StatusFinished = {} THEN (* operation is still running *)
+						IF ~(StatusFinished IN temp.state.status) THEN (* operation is still running *)
 							Terminate(temp.next);
 						END;
 						temp.next := temp.next.next;
@@ -1419,7 +1419,7 @@ TYPE
 			IF finishedOnly THEN
 				IF temp # NIL THEN
 					WHILE (temp # NIL) & (temp.next # NIL) DO
-						IF temp.next.state.status * StatusFinished # {} THEN
+						IF StatusFinished IN temp.next.state.status THEN
 							temp.next := temp.next.next;
 							INC(counter);
 						ELSE
@@ -1427,14 +1427,14 @@ TYPE
 						END;
 					END;
 					(* now look at the head of the list *)
-					IF operations.state.status * StatusFinished # {} THEN
+					IF StatusFinished IN operations.state.status THEN
 						operations := operations.next;
 						INC(counter);
 					END;
 				END;
 			ELSE
 				WHILE (temp # NIL) DO (* terminate operations which are still in progress *)
-					IF temp.state.status * StatusFinished = {} THEN
+					IF ~(StatusFinished IN temp.state.status) THEN
 						Terminate(temp);
 					END;
 					INC(counter);
@@ -2419,7 +2419,7 @@ TYPE
 
 		PROCEDURE GetTable*() : ConfigString;
 		BEGIN
-			IF (state.status * StatusFinished # {}) & (state.status * StatusError = {}) THEN RETURN table END;
+			IF (StatusFinished IN state.status) & ~(StatusError IN state.status) THEN RETURN table END;
 			RETURN NIL;
 		END GetTable;
 

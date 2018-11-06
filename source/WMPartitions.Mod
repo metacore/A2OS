@@ -602,7 +602,7 @@ TYPE
 				IF (fs = PartitionsLib.AosFS32) OR (fs = PartitionsLib.AosFS128) THEN (* new AosFS *)
 					NEW(getConfig, selection.disk, selection.partition, NIL);
 					getConfig.SetBlockingStart;
-					IF getConfig.state.status * PartitionsLib.StatusError = {} THEN
+					IF ~(PartitionsLib.StatusError IN getConfig.state.status) THEN
 						config.table := getConfig.GetTable();
 						configTable.ParseRawTable(config);
 						caption := " Configuration string loaded from partition "; Strings.Append(caption, getConfig.diskpartString);
@@ -647,7 +647,7 @@ TYPE
 						NEW(setConfig, selection.disk, selection.partition, NIL);
 						setConfig.SetParameters(string, 0);
 						setConfig.SetBlockingStart;
-						IF setConfig.state.status * PartitionsLib.StatusError = {} THEN
+						IF ~(PartitionsLib.StatusError IN setConfig.state.status) THEN
 							caption := "Configuration loaded from "; Strings.Append(caption, setConfig.diskpartString);
 							statusLabel.caption.Set(Strings.NewString(caption));
 						ELSE

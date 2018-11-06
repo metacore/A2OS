@@ -717,7 +717,7 @@ TYPE
 		VAR noErrors : BOOLEAN; state : PartitionsLib.OperationState; errors: Strings.String;
 		BEGIN
 			state := operation.GetState();
-			noErrors := (state.status * PartitionsLib.StatusFinished = PartitionsLib.StatusFinished) & (state.errorCount = 0);
+			noErrors := (PartitionsLib.StatusFinished IN state.status) & (state.errorCount = 0);
 			IF noErrors THEN
 				installLog.String("done."); installLog.Ln;
 			ELSE

@@ -882,10 +882,10 @@ TYPE
 
 			IF alive THEN
 				result.String("Scavenger on "); result.String(diskpartString); result.String(" finished ");
-				IF state.status * PartitionsLib.StatusError = {} THEN
-					result.String("without errors");
+				IF PartitionsLib.StatusError IN state.status THEN
+					result.String("with "); result.Int(state.errorCount, 0); result.String(" errors");
 				ELSE
-					result.String("width "); result.Int(state.errorCount, 0); result.String(" errors");
+					result.String("without errors");
 				END;
 				BuildInfo;
 	          	END;
@@ -1838,10 +1838,10 @@ TYPE
 					ELSIF fs = FAT16 THEN result.String("FAT16 ");
 					ELSIF fs = FAT32 THEN result.String("FAT32 ");
 					END;
-					IF state.status * PartitionsLib.StatusError = {} THEN
-						result.String("without errors");
-					ELSE
+					IF PartitionsLib.StatusError IN state.status THEN
 						result.String("with "); result.Int(state.errorCount, 0); result.String(" errors");
+					ELSE
+						result.String("without errors");
 					END;
 				END;
 			END;

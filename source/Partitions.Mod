@@ -244,7 +244,9 @@ BEGIN
 	IF GetSelection(context, TRUE, selection) THEN
 		NEW(getConfig, selection.disk, selection.partition, context.out);
 		getConfig.SetBlockingStart;
-		IF getConfig.state.status * Lib.StatusError = {} THEN
+		IF Lib.StatusError IN getConfig.state.status THEN
+			context.result := Commands.CommandError;
+		ELSE
 			NEW(configuration);
 			configuration.table := getConfig.GetTable();
 			table := configuration.GetTableAsString();

@@ -4,7 +4,7 @@ MODULE CryptoRSA;	(** AUTHOR "G.F."; PURPOSE "RSA"; *)
 
 IMPORT
 	B := CryptoBigNumbers, U := CryptoUtils, MD5 := CryptoMD5, Ciphers := CryptoCiphers,
-	Base64 := CryptoBase64, Streams, Clock;
+	Base64 := CryptoBase64, Streams, Clock, Log := KernelLog;
 
 CONST
 	chinese = TRUE;
@@ -309,21 +309,28 @@ VAR
 
 
 	PROCEDURE LoadPublicKey*( r: Streams.Reader ): Key;
+	VAR str: ARRAY 64 OF CHAR;
+	BEGIN
+		r.SkipWhitespace; r.String( str );
+		ASSERT( str = "ssh-rsa" );	
+		RETURN ExtractPublicKey( r )
+	END LoadPublicKey;
+	
+	PROCEDURE ExtractPublicKey*( r: Streams.Reader ): Key;
 	VAR buf: ARRAY 4096 OF CHAR; len, pos: LONGINT;
 		str: ARRAY 64 OF CHAR;
 		k: Key;
 	BEGIN
 		NEW( k ); k.private := FALSE;
-		r.String(str);
-		ASSERT( str = "ssh-rsa" );
 		len := Base64.DecodeStream( r, buf );
+		Log.String( buf ); Log.Ln;
 		pos := 0;
 		U.GetString( buf, pos, str );
-		ASSERT( str = "ssh-rsa" );
+		ASSERT( str = "ssh-rsa" );	
 		U.GetBigNumber( buf, pos, k.exponent );
 		U.GetBigNumber( buf, pos, k.modulus );
 		RETURN k
-	END LoadPublicKey;
+	END ExtractPublicKey;
 
 BEGIN
 	B.AssignInt( one, 1 );

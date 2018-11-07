@@ -144,7 +144,7 @@ TYPE
 				RETURN TRUE
 			END
 		END;
-		knownKey := RSA.LoadPublicKey( r );
+		knownKey := RSA.ExtractPublicKey( r );
 		IF B.Cmp( key.modulus, knownKey.modulus ) # 0 THEN
 			Out.String( "### error: hostkey of remote host has changed" ); Out.Ln;
 			RETURN FALSE

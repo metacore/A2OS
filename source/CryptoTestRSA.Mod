@@ -44,7 +44,7 @@ CONST
 	VAR
 		pub, priv: RSA.Key;
 		signature: B.BigNumber;
-		pw, digest, str: ARRAY 64 OF CHAR;
+		pw, digest: ARRAY 64 OF CHAR;
 		f: Files.File; r: Files.Reader;
 		i, ignore: LONGINT;
 	BEGIN
@@ -61,10 +61,7 @@ CONST
 		END;
 
 		f := Files.Old( PublicKeyFile ); Files.OpenReader( r, f, 0 );
-		r.SkipWhitespace; r.String( str );
-		IF str = "ssh-rsa" THEN
-			pub := RSA.LoadPublicKey( r )
-		END;
+		pub := RSA.LoadPublicKey( r );
 
 		digest := "Everyone gets Friday off her panties.";
 		signature :=  priv.Sign( digest, 32 );
@@ -78,6 +75,7 @@ CONST
 
 END CryptoTestRSA.
 
+Compiler.Compile CryptoRSA.Mod CryptoTestRSA.Mod ~
 
 System.Free CryptoTestRSA CryptoRSA CryptoPrimes CryptoBigNumbers~
 

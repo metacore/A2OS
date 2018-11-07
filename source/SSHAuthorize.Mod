@@ -267,9 +267,7 @@ VAR
 			RETURN FALSE
 		END;
 		Files.OpenReader( r, f, 0 );
-		IF r.GetString( str ) & (str = "ssh-rsa") THEN
-			pubKey := RSA.LoadPublicKey( r )
-		END;
+		pubKey := RSA.LoadPublicKey( r );
 
 		IF CheckAuthorizeKey( ssh, user ) THEN
 			RETURN RequestAuthorizeKey( ssh, user )

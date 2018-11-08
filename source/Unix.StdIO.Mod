@@ -8,8 +8,8 @@ IMPORT SYSTEM, Modules, Commands, Streams,Pipes , Unix;
 	IMPORT Activities, Counters, Environment;
 #END
 
-CONST 
-	AddrSize = SIZEOF( ADDRESS );
+CONST
+	Echo* = FALSE;
 TYPE
 	String=POINTER TO ARRAY OF CHAR;
 VAR 

@@ -5,7 +5,7 @@ MODULE StdIO;	(** AUTHOR gf;  PURPOSE "Unix standard IO and argument channels *)
 IMPORT S := SYSTEM, Modules, Commands, Streams, Pipes, WinTrace, Kernel32;
 
 CONST 
-	AddrSize = SIZEOF( ADDRESS );
+	Echo* = FALSE;
 TYPE
 	String=POINTER TO ARRAY OF CHAR;
 VAR 

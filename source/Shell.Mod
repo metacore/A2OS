@@ -674,7 +674,14 @@ TYPE
 		NEW(shell, context.in, context.out, context.error, FALSE, ">");
 		shell.AwaitDeath()
 	END Start;
-	
+
+	PROCEDURE StartEchoed*(context: Commands.Context);
+	VAR shell: Shell;
+	BEGIN
+		NEW(shell, context.in, context.out, context.error, TRUE, ">");
+		shell.AwaitDeath()
+	END StartEchoed;
+
 END Shell.
 
 System.Free Shell ~

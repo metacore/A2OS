@@ -19,11 +19,11 @@ PROCEDURE Execute(context: Commands.Context): BOOLEAN;
 VAR str: ARRAY 256 OF CHAR;
 BEGIN
 	IF ~context.arg.GetString(str) THEN  
-		context.out.String("Critical error: no arg"); 
+		context.error.String("Critical error: no arg"); context.error.Update;
 		RETURN FALSE;
 	END;
-	IF ~context.arg.GetString(str) THEN 
-		str := "Shell.Start";
+	IF ~context.arg.GetString(str) THEN
+		IF StdIO.Echo THEN str := "Shell.StartEchoed" ELSE str := "Shell.Start" END;
 	ELSIF (str = "compile") THEN str := "Compiler.Compile";
 	ELSIF (str = "link") THEN str := "Linker.Link";
 	ELSIF (str = "interpreter") OR (str = "i") THEN str := "InterpreterShell.Start";

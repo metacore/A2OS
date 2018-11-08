@@ -17,6 +17,7 @@ CONST
 	
 	TraceCollection = 0;
 	Trace = {};
+	Separator = 0AX;
 VAR
 	tempno: INTEGER;
 	openfiles: LONGINT;
@@ -467,7 +468,7 @@ TYPE
 						END;
 					END EnumDir;
 
-					
+				
 				BEGIN {EXCLUSIVE}
 					Files.SplitName( mask, prefix, fullName );
 					Files.SplitPath( fullName, path, filemask );
@@ -482,7 +483,7 @@ TYPE
 					ELSE (*no path or relative path*)
 						i := 0;  j := 0;  
 						LOOP (*go through the search paths, every time a complete search path has been traversed, look for the element there*)
-							IF (searchPath[i] = " ") OR (searchPath[i] = 0X) THEN
+							IF (searchPath[i] = Separator) OR (searchPath[i] = 0X) THEN
 								dirName[j] := 0X;
 								IF isPath THEN (*if relative path: add relative path to the current search path*)
 									Files.JoinPath(dirName, path, dirName);
@@ -1042,8 +1043,8 @@ TYPE
 	VAR i: LONGINT;  ch: CHAR;
 	BEGIN
 		i := 0;  ch := searchPath[pos];
-		WHILE ch = " " DO  INC( pos );  ch := searchPath[pos]  END;
-		WHILE ch > " " DO  dir[i] := ch;  INC( i );  INC( pos );  ch := searchPath[pos]  END;
+		WHILE ch = Separator DO  INC( pos );  ch := searchPath[pos]  END;
+		WHILE (ch >= " ") & (ch # Separator) DO  dir[i] := ch;  INC( i );  INC( pos );  ch := searchPath[pos]  END;
 		dir[i] := 0X
 	END ScanPath;
 
@@ -1102,7 +1103,7 @@ TYPE
 		ELSE
 			REPEAT
 				S.GET( a, ch );  INC( a );
-				IF ch = ":" THEN  ch := " "  END;
+				IF ch = ":" THEN  ch := Separator  END;
 				searchPath[i] := ch;  INC( i )
 			UNTIL ch = 0X;
 		END;
@@ -1162,7 +1163,7 @@ TYPE
 			CleanPath( name ); 
 			i := 0;  j := 0;
 			WHILE searchPath[i] # 0X DO  INC( i )  END;
-			searchPath[i] := " ";  INC( i );
+			searchPath[i] := Separator;  INC( i );
 			REPEAT
 				ch := name[j];  searchPath[i] := ch;
 				INC( j );  INC( i );

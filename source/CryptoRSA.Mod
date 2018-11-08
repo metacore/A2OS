@@ -4,7 +4,7 @@ MODULE CryptoRSA;	(** AUTHOR "G.F."; PURPOSE "RSA"; *)
 
 IMPORT
 	B := CryptoBigNumbers, U := CryptoUtils, MD5 := CryptoMD5, Ciphers := CryptoCiphers,
-	Base64 := CryptoBase64, Streams, Clock, Log := KernelLog;
+	Base64 := CryptoBase64, Streams, Clock;
 
 CONST
 	chinese = TRUE;
@@ -323,7 +323,6 @@ VAR
 	BEGIN
 		NEW( k ); k.private := FALSE;
 		len := Base64.DecodeStream( r, buf );
-		Log.String( buf ); Log.Ln;
 		pos := 0;
 		U.GetString( buf, pos, str );
 		ASSERT( str = "ssh-rsa" );	

@@ -3305,6 +3305,7 @@ TYPE
 			
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
+			IF module.allSections.FindByName(name) # NIL THEN RETURN END;
 			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,TRUE));
 			section.SetExported (TRUE);
 
@@ -3344,15 +3345,16 @@ TYPE
 			ELSE
 				Emit(Exit(position,0,0, 0));
 			END;
+
+			INC(statCoopAssignProcedure, section.pc);
+			ReturnToContext(context);
 			
 			IF ~recordType.isObject THEN
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Assign"));
-				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 				section.SetExported (TRUE);
-				NEW(registerUsageCount);
-				usedRegisters := NIL;
 
 				dst := NewRegisterOperand (addressType);
 				src := NewRegisterOperand (addressType);
@@ -3374,9 +3376,8 @@ TYPE
 				Emit(Sub(position, parameter0, parameter0, IntermediateCode.Immediate(sizeType, 1)));
 				BrneL(label, parameter0, IntermediateCode.Immediate(sizeType, 0));
 				Emit(Exit(position,0,0, 0));
+				ReturnToContext(context);
 			END;
-			INC(statCoopAssignProcedure, section.pc);
-			ReturnToContext(context);
 			IF dump # NIL THEN dump := section.comments END;
 		END CreateAssignProcedure;
 		
@@ -3437,6 +3438,7 @@ TYPE
 			parameter1 (* address *) := IntermediateCode.Memory(addressType,sp,ToMemoryUnits(system,1*addressType.sizeInBits));
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
+			IF module.allSections.FindByName(name) # NIL THEN RETURN END;
 			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 			section.SetExported (TRUE);
 
@@ -3493,15 +3495,16 @@ TYPE
 				Emit(Br(position,op));
 			END;
 
+			INC(statCoopTraceMethod, section.pc);
+			ReturnToContext(context);
+
 			IF ~recordType.isObject THEN
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 				section.SetExported (TRUE);
 
-				NEW(registerUsageCount);
-				usedRegisters := NIL;
 				IF dump # NIL THEN dump := section.comments END;
 				
 				register := NewRegisterOperand (addressType);
@@ -3517,14 +3520,13 @@ TYPE
 				Emit(Call(position,op, ToMemoryUnits(system, system.addressSize)));
 				ReleaseIntermediateOperand(register);
 				Emit(Exit(position,0,0,0));
+				ReturnToContext(context);
 				
 				GetRecordTypeName (recordType,name);
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@Trace"));
-				section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+				context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 				section.SetExported (TRUE);
-				NEW(registerUsageCount);
-				usedRegisters := NIL;
 
 				register := NewRegisterOperand (addressType);
 				ofs := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(recordType)));
@@ -3541,10 +3543,9 @@ TYPE
 				Emit(Sub(position, parameter0, parameter0, IntermediateCode.Immediate(sizeType, 1)));
 				BrneL(label, parameter0, IntermediateCode.Immediate(sizeType, 0));
 				Emit(Exit(position,0,0,0));
+				ReturnToContext(context);
 			END;
-			INC(statCoopTraceMethod, section.pc);
 
-			ReturnToContext(context);
 			IF dump # NIL THEN dump := section.comments END;
 		END CreateTraceMethod;
 
@@ -3560,6 +3561,7 @@ TYPE
 			
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
+			IF module.allSections.FindByName(name) # NIL THEN RETURN END;
 			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 			section.SetExported (TRUE);
 
@@ -3596,14 +3598,15 @@ TYPE
 			ELSE
 				Emit(Exit(position,0,0, 0));
 			END;
+
+			INC(statCoopResetProcedure, section.pc);
+			ReturnToContext(context);
 			
 			GetRecordTypeName (recordType,name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Array"));
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@Reset"));
-			section := NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL);
+			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, name,NIL,dump # NIL));
 			section.SetExported (TRUE);
-			NEW(registerUsageCount);
-			usedRegisters := NIL;
 
 			dst := NewRegisterOperand (addressType);
 			ofs := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(recordType)));
@@ -3620,9 +3623,8 @@ TYPE
 			Emit(Sub(position, parameter0, parameter0, IntermediateCode.Immediate(sizeType, 1)));
 			BrneL(label, parameter0, IntermediateCode.Immediate(sizeType, 0));
 			Emit(Exit(position,0,0, 0));
-			INC(statCoopResetProcedure, section.pc);
-
 			ReturnToContext(context);
+
 			IF dump # NIL THEN dump := section.comments END;
 		END CreateResetProcedure;
 		

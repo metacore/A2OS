@@ -279,8 +279,13 @@ TYPE
 		PROCEDURE SetPriority( prio: LONGINT );
 		VAR pr: LONGINT;
 		BEGIN
-			pr := max( Machine.prioLow, min( prio, Machine.prioHigh ) );
-			Unix.ThrSetPriority( threadId, pr );	(* works only if SUID root *)
+		(*
+			Linux/Solaris11: works only with SUID root and FIFO threads
+			Solaris10: woks only with SUID root
+			Darwin: works allways
+		*)
+			pr := MAX( Machine.prioLow, MIN( prio, Machine.prioHigh ) );
+			Unix.ThrSetPriority( threadId, pr );	
 			priority := GetPriority( )	
 		END SetPriority;
 		
@@ -594,17 +599,6 @@ TYPE
 	(*-----------------------------------------------------------------------*)
 	
 	
-	PROCEDURE min( a, b: LONGINT ): LONGINT;
-	BEGIN
-		IF a <= b THEN  RETURN a  ELSE  RETURN b  END
-	END min;
-
-	PROCEDURE max( a, b: LONGINT ): LONGINT;
-	BEGIN
-		IF a >= b THEN  RETURN a  ELSE  RETURN b  END
-	END max;
-	
-	
 	PROCEDURE RegisterFinalizer( obj: ANY;  fin: Heaps.Finalizer );
 	VAR n: Heaps.FinalizerNode;
 	BEGIN
@@ -818,7 +812,7 @@ TYPE
 	END TimerFrequency;
 
 
-	PROCEDURE LeaveA2;
+	PROCEDURE LeaveA2-;
 	VAR cur: Process; bp, n: ADDRESS;
 	BEGIN
 		IF clock = NIL THEN  RETURN  END;
@@ -831,7 +825,7 @@ TYPE
 		END;
 	END LeaveA2;
 
-	PROCEDURE ReenterA2;
+	PROCEDURE ReenterA2-;
 	VAR cur : Process;
 	BEGIN
 		IF clock = NIL THEN  RETURN  END;

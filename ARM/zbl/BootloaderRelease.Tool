@@ -59,6 +59,18 @@ BUILDS
 		PATH ""
 		DISABLED "FALSE"
 	}
+	
+	TE0720 {
+		INCLUDE "ZYNQ TE0720"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:TE0720.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		TARGET "ARM"
+		LINKER "MinosLinker.Link"
+		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
+		EXCLUDEPACKAGES "Fpga Scheduler"
+		PATH ""
+		DISABLED "FALSE"
+	}
 END
 
 #### Core Packages ####
@@ -71,6 +83,7 @@ PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION 
 	ZYBO { ZBL:Zybo.TclInit.Mos }
 	KRM { ZBL:KRM.TclInit.Mos }
 	TE0726 { ZBL:TE0726.TclInit.Mos }
+	TE0720 { ZBL:TE0720.TclInit.Mos }
 
 	MINOS:/HAL/zynq/Zynq.Initializer.Mos
 	ARM.FPE64.Mod

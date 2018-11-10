@@ -204,7 +204,7 @@ TYPE
 			END;
 
 			contextPos := gcContext.nextPos;
-			
+			IF contextPos < 0 THEN RETURN END; (* this thread is currently not active in A2 *)
 			(* stack garbage collection *)
 
 			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN

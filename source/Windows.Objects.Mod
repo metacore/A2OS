@@ -19,9 +19,9 @@ CONST
 	Preempted* = 27;   (* Has been preempted. *)
 	Resistant* = 28;   (* Can only be destroyed by itself *)
 	PleaseStop* = 31;   (* Process requested to Terminate or Halt itself soon *)
-#IF SHAREDLIB THEN
+(*#IF SHAREDLIB THEN*)
 	External = 13; (* external (non A2) process attached in case of a DLL *)
-#END;
+(*#END;*)
 
 	InActive* = 26;   (* needed to prevent processes to call finalizers while in await or lock or unlock, see Kernel.GC *)
 
@@ -237,10 +237,12 @@ TYPE
 						(* ok, valid stack frame from A2, we can trace this *)
 					ELSE
 						(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
-						DEC(contextPos); 
-						IF (contextPos >= 0) THEN
-							bp := gcContext.last[contextPos];
-						ELSE
+						bp := NIL;
+						WHILE (contextPos > 0) & (bp = NIL) DO
+							DEC(contextPos); 
+							bp := gcContext.last[contextPos]; 
+						END; 
+						IF bp = NIL THEN
 							EXIT;
 						END;
 					END;
@@ -306,7 +308,7 @@ TYPE
 				p := ready.head;
 				WHILE p # NIL DO
 					cur := p(Process);
-					IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) THEN
+					IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) & (cur.gcContext.nextPos >= 0) THEN
 						res := Kernel32.SuspendThread(cur.handle);
 						ASSERT(res >= 0);
 						cur.mode := Suspended
@@ -1322,6 +1324,7 @@ END TimerFrequency;
 
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
 
+(* Leave A2 is called when a process leaves A2 by a call to the windows API *)
 PROCEDURE LeaveA2*;
 VAR cur: Process; ebp,n: ADDRESS;
 BEGIN
@@ -1345,8 +1348,6 @@ BEGIN
 		cur.gcContext.last[cur.gcContext.nextPos] := ebp;
 		INC(cur.gcContext.nextPos);
 		ASSERT(cur.gcContext.nextPos < 255); 
-		IF cur.gcContext.nextPos > 255 THEN cur.gcContext.nextPos := 255 END;
-		(* IF (cur.gcContext.nextPos > 4) THEN cur.gcContext.nextPos := 2 END;*)
 	END;
 	#IF AMD64 THEN
 	CODE
@@ -1358,18 +1359,123 @@ BEGIN
 	#END
 END LeaveA2;
 
+(* reenter is called when a process returns from a call to the windows API *)
 PROCEDURE ReenterA2*;
 VAR cur: Process;
 BEGIN
 	IF clock = NIL THEN RETURN END;
 	cur := CurrentProcess();
 	IF cur # NIL THEN
-		(* cur.gcContext.first[cur.gcContext.next] := NIL;*)
-		DEC(cur.gcContext.nextPos);
-		IF (cur.gcContext.nextPos <0 ) THEN cur.gcContext.nextPos := 0 END;
+		IF (cur.gcContext.nextPos > 0) THEN 
+			DEC(cur.gcContext.nextPos);
+		END;
 		cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* returned *)
+		(*cur.gcContext.first[cur.gcContext.nextPos] := NIL; (* returned *)*)
 	END;	
 END ReenterA2;
+
+    PROCEDURE RegisterExternalThread*;
+    CONST THREAD_PRIORITY_ERROR_RETURN = 0x7fffffff;
+    VAR
+        t: Process;
+        proc: Kernel32.HANDLE;
+        res: Kernel32.BOOL;
+        low, high: SIZE;
+    BEGIN
+        (*!TODO: the allocation below can potentially invoke the GC and can cause a crash
+            since the current thread is not yet registered.
+            Consider to use a preallocated array of Process descriptors *)
+        NEW(t);
+        NEW(t.obj); (*! required for ActiveObject() to return non-NIL *)
+
+        t.gcContext.nextPos := 0;
+        t.next := NIL;  t.prev := NIL;
+        t.waitingOn := NIL;
+        t.flags := {External}; (*! mark the process as external (non A2) *)
+        t.mode := Unknown; t.body := NIL;
+
+        t.handle := Kernel32.GetCurrentThread();
+
+        t.priority := Kernel32.GetThreadPriority(t.handle);
+        ASSERT(t.priority # THREAD_PRIORITY_ERROR_RETURN);
+        CASE t.priority OF
+            |Kernel32.ThreadPriorityIdle: t.priority := MinPriority;
+            |Kernel32.ThreadPriorityBelowNormal: t.priority := Low;
+            |Kernel32.ThreadPriorityAboveNormal: t.priority := High;
+            |Kernel32.ThreadPriorityTimeCritical: t.priority := Realtime;
+        ELSE
+            ASSERT(t.priority = Kernel32.ThreadPriorityNormal);
+            t.priority := Normal;
+        END;
+
+        t.id := Kernel32.GetCurrentThreadId();
+        proc := Kernel32.GetCurrentProcess();
+        res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
+        ASSERT(res # 0);
+        Kernel32.GetCurrentThreadStackLimits(low,high);
+        t.stackBottom := high;
+        t.mode := Running;
+        res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
+        ASSERT(res # 0);
+
+        Machine.Acquire(Machine.Objects);
+        Put(ready, t);
+        Machine.Release(Machine.Objects);
+
+        Machine.Acquire(Machine.TraceOutput);
+        Trace.String("registered an external thread: id=");
+        Trace.Int(t.id,0);
+        Trace.String(", handle=");
+        Trace.Int(t.handle,0);
+        Trace.String(", stackBottom=");
+        Trace.Hex(t.stackBottom,-8);
+        Trace.Ln;
+        Machine.Release(Machine.TraceOutput);
+    END RegisterExternalThread; 
+    
+(* enter A2 should be called when a process enters A2 from windows or from A2 via a call to a WINAPI A2 function *)
+PROCEDURE EnterA2*;
+VAR cur: Process; ebp, n: ADDRESS;
+BEGIN
+	cur := CurrentProcess();
+	IF cur = NIL THEN (* create a process descriptor *)
+		RegisterExternalThread();
+		cur := CurrentProcess();
+		Trace.String("First Enter: "); Trace.Address(cur); Trace.Ln; 
+	ELSE
+		ebp := SYSTEM.GetFramePointer();
+		SYSTEM.GET(ebp, n);
+		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
+		IF cur.gcContext.nextPos = -1 THEN (* re-entry *)
+			cur.gcContext.nextPos := 0; 
+			cur.stackBottom := ebp;
+			Trace.String("Reenter: "); Trace.Address(cur); Trace.Ln; 
+		ELSE
+			INC(cur.gcContext.nextPos);
+			cur.gcContext.last[cur.gcContext.nextPos] := NIL;
+		END;	
+	END;
+	
+	(*
+	cur.gcContext.first[cur.gcContext.nextPos] := ebp; (* here our responsibility starts -- currently this field is not strictly required to be set valid *)
+	cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* we do not know where it ends yet *)
+	*)
+END EnterA2;
+
+(* exit A2 should be called when a process exits a WINAPI procedure *)
+PROCEDURE ExitA2*();
+VAR cur: Process;
+BEGIN
+	cur := CurrentProcess();
+	ASSERT(cur # NIL); 
+	DEC(cur.gcContext.nextPos);
+	cur.gcContext.last[cur.gcContext.nextPos] := NIL;	
+	IF cur.gcContext.nextPos < 0 THEN (* process exits A2 *)
+		Trace.String("Exit: "); Trace.Address(cur); Trace.Ln; 
+	END;
+END ExitA2;
+
+
 
 #IF SHAREDLIB THEN
 
@@ -1583,3 +1689,9 @@ BEGIN
 	
 	Init;
 END Objects.
+
+
+
+		Linker.Link --fileFormat=PE32CUI --fileName=oberonn.exe --extension=GofW --displacement=401000H
+			Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
+			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System ~

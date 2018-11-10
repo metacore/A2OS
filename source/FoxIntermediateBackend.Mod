@@ -9522,7 +9522,7 @@ TYPE
 			|Global.All: HALT(200);
 			(* ---- CAS ----- *)
 			|Global.Cas:
-				needsTrace := p0.NeedsTrace();
+				needsTrace := backend.cooperative & p0.NeedsTrace();
 				IF needsTrace THEN ModifyAssignments(true) END;
 				Designate(p0,s0);
 				Evaluate(p1,s1);

@@ -879,13 +879,16 @@ END Main;
 
 (* procedure that will be called last in a linked kernel *)
 PROCEDURE {FINAL, NOPAF} Main-;
+PROCEDURE ExitA2 EXTERN "Objects.ExitA2"();
 BEGIN
 	(*Machine.Init;*)
 	IF TraceBoot THEN
 		Trace.String("publish registered modules"); Trace.Ln;
 	END;
 	PublishRegisteredModules;
-#IF ~SHAREDLIB THEN
+#IF SHAREDLIB THEN
+	ExitA2; (*! at this point the DLL loading thread exits the A2 (returns from Kernel32.EntryPoint/DllMain) *)
+#ELSE
 	(* a standard A2 kernel does not reach this point, but for standalone executables this is required *)
 	Machine.Shutdown(FALSE);
 #END;

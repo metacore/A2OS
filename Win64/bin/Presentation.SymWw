@@ -1,5 +1,5 @@
 MODULE Presentation;
-	IMPORT Streams, Commands, KernelLog, WM := WMWindowManager, Graphics := WMGraphics, Files, Raster, WMTransitions, Strings, WMDialogs;
+	IMPORT Streams, Commands, KernelLog, WM := WMWindowManager, WMRectangles, Graphics := WMGraphics, Files, Raster, WMTransitions, Strings, WMDialogs;
 CONST 
 TYPE 
 	Slide = POINTER TO RECORD 

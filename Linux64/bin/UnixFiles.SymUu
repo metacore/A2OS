@@ -11,6 +11,7 @@ CONST
 	CreateFlags = ((Unix.rdwr + Unix.creat) + Unix.trunc); 
 	TraceCollection = 0; 
 	Trace = {}; 
+	Separator = 0AX; 
 TYPE 
 	Filename = ARRAY 256 OF CHAR; 
 

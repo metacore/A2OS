@@ -15,16 +15,16 @@ TYPE
 	VAR 
 		diagnostics: Diagnostics.Diagnostics; 
 		error: BOOLEAN; 
-		symbol: Scanner.Symbol; 
+		token: Scanner.Token; 
 		scanner: Scanner.AssemblerScanner; 
 		system: Global.System; 
 
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; s: Global.System); 
 		PROCEDURE ^ Error(pos: Position; CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ NextSymbol; 
-		PROCEDURE ^ ThisToken(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ NextToken; 
+		PROCEDURE ^ ThisSymbol(x: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ GetIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ ExpectToken(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ExpectSymbol(x: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ ThisIdentifier(CONST this: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ ExpectAnyIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ ExpectIntegerWithSign(VAR integer: LONGINT): BOOLEAN; 

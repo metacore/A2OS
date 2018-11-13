@@ -81,7 +81,6 @@ TYPE
 
 	PROCEDURE ^ StoreMemory(W: DataIO.Writer; baseadr: LONGINT; len: LONGINT); 
 	PROCEDURE ^ ReadMemory(R: DataIO.Reader; baseadr: LONGINT; size: LONGINT; VAR len: LONGINT); 
-	PROCEDURE ^ Min(l, r: LONGINT): LONGINT; 
 	PROCEDURE ^ CheckIndexArray(dim: Index; VAR a: IndexArray); 
 	PROCEDURE ^ CopyIndexArray(src: ARRAY OF Index; dest: IndexArray); 
 	PROCEDURE ^ Intersect*(org1, len1, org2, len2: IndexArray; VAR org, len: IndexArray): BOOLEAN; 

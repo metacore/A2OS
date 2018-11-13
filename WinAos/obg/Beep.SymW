@@ -3,11 +3,11 @@ MODULE Beep;
 TYPE 
 	Beeper = OBJECT {EXCLUSIVE} 
 	VAR 
-		hz: LONGINT; 
+		hz: WORD; 
 		beep: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ On(hz: LONGINT); 
+		PROCEDURE ^ On(hz: WORD); 
 		PROCEDURE ^ Off; 
 		PROCEDURE ^ Beep; 
 	BEGIN{ACTIVE} 
@@ -15,7 +15,7 @@ TYPE
 VAR 
 	beep: Beeper; 
 
-	PROCEDURE ^ Beep*(hz: LONGINT); 
+	PROCEDURE ^ Beep*(hz: WORD); 
 	PROCEDURE ^ Test*; 
 	PROCEDURE ^ TestOn*; 
 	PROCEDURE ^ TestOff*; 

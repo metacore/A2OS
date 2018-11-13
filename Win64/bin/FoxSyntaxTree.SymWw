@@ -157,8 +157,8 @@ TYPE
 	END; 
 
 	Fingerprint* = RECORD 
-		shallow*, public*, private*: Basic.Fingerprint; 
-		shallowAvailable*, deepAvailable*: BOOLEAN; 
+		shallow* := 0, public*, private*: Basic.Fingerprint; 
+		shallowAvailable* := FALSE, deepAvailable*: BOOLEAN; 
 	END; 
 
 	Identifier* = Basic.String; 
@@ -790,11 +790,8 @@ TYPE
 	END ResultDesignator; 
 
 	Value* = OBJECT (Expression)
-	VAR 
-		fingerprint-: Fingerprint; 
 
 		PROCEDURE ^  & InitValue(position: Position); 
-		PROCEDURE ^ SetFingerprint*(CONST fp: Fingerprint); 
 		PROCEDURE ^ Equals*(v: Value): BOOLEAN; 
 	END Value; 
 
@@ -1590,7 +1587,6 @@ VAR
 	moduleType-: Type; 
 	indexListSeparator-: Expression; 
 
-	PROCEDURE ^ InitFingerprint*(VAR fingerprint: Fingerprint); 
 	PROCEDURE ^ NewModule*(CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT): Module; 
 	PROCEDURE ^ NewComment*(position: Position; scope: Scope; CONST source: ARRAY OF CHAR; length: LONGINT): Comment; 
 	PROCEDURE ^ NewImport*(position: Position; alias, name: Identifier; direct: BOOLEAN): Import; 

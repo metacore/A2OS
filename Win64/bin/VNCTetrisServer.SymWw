@@ -69,7 +69,6 @@ VAR
 	PROCEDURE ^ GetGamesRunning(): LONGINT; 
 	PROCEDURE ^ GetIsShuttingDown(): BOOLEAN; 
 	PROCEDURE ^ SubGame; 
-	PROCEDURE ^ Max(x, y: LONGINT): LONGINT; 
 	PROCEDURE ^ Run*(context: Commands.Context); 
 	PROCEDURE ^ StopNew*(context: Commands.Context); 
 	PROCEDURE ^ Uninstall*; 

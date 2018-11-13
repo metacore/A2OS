@@ -71,7 +71,7 @@ TYPE
 		diagnostics: Diagnostics.Diagnostics; 
 		error-: BOOLEAN; 
 		errorPosition-: Position; 
-		symbol-: Scanner.Symbol; 
+		token-: Scanner.Token; 
 		scanner: Scanner.AssemblerScanner; 
 		orgOffset: LONGINT; 
 		section-: IntermediateCode.Section; 
@@ -86,12 +86,12 @@ TYPE
 		PROCEDURE ^ SetContext(CONST context: Scanner.Context); 
 		PROCEDURE ^ Error*(pos: SyntaxTree.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSS*(pos: SyntaxTree.Position; CONST s1, s2: ARRAY OF CHAR); 
-		PROCEDURE ^ NextSymbol*; 
-		PROCEDURE ^ ThisToken*(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ NextToken*; 
+		PROCEDURE ^ ThisSymbol*(x: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ GetIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ ThisIdentifier*(CONST this: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ ExpectIdentifier*(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ ExpectToken*(x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ExpectSymbol*(x: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ ExpectConstantInteger*(VAR x: Result; critical: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ Section; 
 		PROCEDURE ^ DefineLabel(pos: Position; CONST name: ARRAY OF CHAR); 

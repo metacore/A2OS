@@ -134,34 +134,6 @@ VAR
 	
 	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
-	PROCEDURE {Fingerprint(4803519866585645229)}  - CurrentBP*(): ADDRESS;
-	CODE
-
-		MOV RAX, RBP
-
-	
-	END CurrentBP; 
-	PROCEDURE {Fingerprint(5764612334986991996)}  - SetBP*(bp: ADDRESS);
-	CODE
-
-		POP RBP
-
-	
-	END SetBP; 
-	PROCEDURE {Fingerprint(7340254540714668729)}  - CurrentSP*(): ADDRESS;
-	CODE
-
-		MOV RAX, RSP
-
-	
-	END CurrentSP; 
-	PROCEDURE {Fingerprint(-3458759701867783819)}  - SetSP*(sp: ADDRESS);
-	CODE {SYSTEM.AMD64}
-
-		POP RSP
-
-	
-	END SetSP; 
 	PROCEDURE ^ Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
 	PROCEDURE {Fingerprint(5082109869366590970)}  - SetFCR(s: SET);
 	CODE

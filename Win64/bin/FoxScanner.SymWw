@@ -158,13 +158,13 @@ TYPE
 		PROCEDURE ^ PutString*(CONST name: ARRAY OF CHAR; index: LONGINT); 
 	END KeywordTable; 
 
-	Token* = LONGINT; 
+	Symbol* = LONGINT; 
 
 	Position* = Basic.Position; 
 
-	Symbol* = RECORD 
+	Token* = RECORD 
 		position*: Position; 
-		token*: Token; 
+		symbol*: Symbol; 
 		identifier*: IdentifierType; 
 		identifierString*: IdentifierString; 
 		string*: StringType; 
@@ -212,14 +212,14 @@ TYPE
 		PROCEDURE ^ Error(code: INTEGER); 
 		PROCEDURE ^ GetNextCharacter*; 
 		PROCEDURE ^ ConsumeStringUntil(CONST endString: ARRAY OF CHAR; useControl: BOOLEAN); 
-		PROCEDURE ^ GetEscapedString(VAR symbol: Symbol); 
-		PROCEDURE ^ GetString(VAR symbol: Symbol; multiLine, multiString, useControl: BOOLEAN); 
-		PROCEDURE ^ GetIdentifier(VAR symbol: Symbol); 
-		PROCEDURE ^ GetNumber(VAR symbol: Symbol): Token; 
-		PROCEDURE ^ ReadComment(VAR symbol: Symbol); 
-		PROCEDURE ^ SkipToEndOfCode*(VAR startPos, endPos: LONGINT; VAR symbol: Symbol): Token; 
+		PROCEDURE ^ GetEscapedString(VAR token: Token); 
+		PROCEDURE ^ GetString(VAR token: Token; multiLine, multiString, useControl: BOOLEAN); 
+		PROCEDURE ^ GetIdentifier(VAR token: Token); 
+		PROCEDURE ^ GetNumber(VAR token: Token): Symbol; 
+		PROCEDURE ^ ReadComment(VAR token: Token); 
+		PROCEDURE ^ SkipToEndOfCode*(VAR startPos, endPos: LONGINT; VAR token: Token): Symbol; 
 		PROCEDURE ^ SkipBlanks; 
-		PROCEDURE ^ GetNextSymbol*(VAR symbol: Symbol): BOOLEAN; 
+		PROCEDURE ^ GetNextToken*(VAR token: Token): BOOLEAN; 
 		PROCEDURE ^ ResetError*; 
 		PROCEDURE ^ ResetErrorDiagnostics*(VAR diagnostics: Diagnostics.Diagnostics); 
 	END Scanner; 
@@ -238,21 +238,21 @@ TYPE
 		PROCEDURE ^ GetContext*(VAR context: Context); 
 		PROCEDURE ^ SetContext*(CONST context: Context); 
 		PROCEDURE ^ SkipToEndOfLine*; 
-		PROCEDURE ^ GetIdentifier(VAR symbol: Symbol); 
-		PROCEDURE ^ GetNextSymbol*(VAR symbol: Symbol): BOOLEAN; 
+		PROCEDURE ^ GetIdentifier(VAR token: Token); 
+		PROCEDURE ^ GetNextToken*(VAR token: Token): BOOLEAN; 
 	END AssemblerScanner; 
 VAR 
 	reservedCharacter: ARRAY 256 OF BOOLEAN; 
-	tokens-: ARRAY (EndOfText + 1) OF Keyword; 
+	symbols-: ARRAY (EndOfText + 1) OF Keyword; 
 	keywordsLower, keywordsUpper: KeywordTable; 
 
 	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics): Scanner; 
 	PROCEDURE ^ NewAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics): AssemblerScanner; 
-	PROCEDURE ^ SymbolToString*(CONST symbol: Symbol; case: LONGINT; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ OutSymbol*(w: Streams.Writer; CONST symbol: Symbol); 
+	PROCEDURE ^ TokenToString*(CONST token: Token; case: LONGINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ PrintToken*(w: Streams.Writer; CONST token: Token); 
 	PROCEDURE ^ InitReservedCharacters; 
-	PROCEDURE ^ GetKeyword*(case: LONGINT; token: LONGINT; VAR identifier: IdentifierType); 
-	PROCEDURE ^ InitTokens; 
+	PROCEDURE ^ GetKeyword*(case: LONGINT; symbol: LONGINT; VAR identifier: IdentifierType); 
+	PROCEDURE ^ InitSymbols; 
 	PROCEDURE ^ InitKeywords; 
 	PROCEDURE ^ ReportKeywords*(context: Commands.Context); 
 BEGIN

@@ -117,8 +117,6 @@ VAR
 	PROCEDURE ^ InLineVicinity(mx, my, X, Y, X1, Y1: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Intersect(X, Y, x0, y0, x1, y1: LONGINT): BOOLEAN; 
 	PROCEDURE ^ Distance(x, y, x0, y0: LONGINT): LONGINT; 
-	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
-	PROCEDURE ^ Max(x, y: LONGINT): LONGINT; 
 	PROCEDURE ^ GenLine*(): XML.Element; 
 	PROCEDURE ^ GenCircle*(): XML.Element; 
 	PROCEDURE ^ GenRectangle*(): XML.Element; 

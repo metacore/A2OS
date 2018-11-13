@@ -88,7 +88,5 @@ VAR
 	PROCEDURE ^ TextureByName(name: ARRAY OF CHAR; obj: AbstractWorld.Object): AbstractWorld.Texture; 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ Max(a, b: LONGREAL): LONGREAL; 
 BEGIN
 END W3dMenu.

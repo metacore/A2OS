@@ -256,7 +256,6 @@ VAR
 	PROCEDURE ^ {WINAPI} DummyProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
 	PROCEDURE ^ ChangeCursor; 
 	PROCEDURE ^ SetCursor(hCursor: User32.HCursor); 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ HandleMouse(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam); 
 	PROCEDURE ^ GetKeyFlags(VAR flags: SET); 
 	PROCEDURE ^ HandleChar(win: Window; wParam: User32.WParam; lParam: User32.LParam); 

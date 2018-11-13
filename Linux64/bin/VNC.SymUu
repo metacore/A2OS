@@ -111,7 +111,6 @@ VAR
 	PROCEDURE ^ ReceiveLInt(c: Connection; VAR x: LONGINT); 
 	PROCEDURE ^ ReceiveIgnore(c: Connection; len: LONGINT); 
 	PROCEDURE ^ Send(c: Connection; x: CHAR); 
-	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
 	PROCEDURE ^ DoVersion(c: Connection): BOOLEAN; 
 	PROCEDURE ^ DoAuthentication(c: Connection; VAR pwd: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ PutEncodings(VAR buf: ARRAY OF CHAR; ofs: LONGINT; code: ARRAY OF CHAR; VAR len: LONGINT); 

@@ -42,5 +42,6 @@ VAR
 	PROCEDURE ^ StorePrivateKey*(w: Streams.Writer; k: Key; CONST passwd: ARRAY OF CHAR); 
 	PROCEDURE ^ StorePublicKey*(w: Streams.Writer; k: Key); 
 	PROCEDURE ^ LoadPublicKey*(r: Streams.Reader): Key; 
+	PROCEDURE ^ ExtractPublicKey*(r: Streams.Reader): Key; 
 BEGIN
 END CryptoRSA.

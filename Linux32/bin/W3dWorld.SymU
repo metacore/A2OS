@@ -71,8 +71,6 @@ TYPE
 		PROCEDURE ^ GetOwnerIndex*(x, y: LONGINT): LONGINT; 
 	END World; 
 
-	PROCEDURE ^ Min(a, b: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Max(a, b: LONGREAL): LONGREAL; 
 	PROCEDURE ^ GrowAABB(VAR aabb: AABB; p: Vectors.TVector3d); 
 BEGIN
 END W3dWorld.

@@ -130,34 +130,6 @@ VAR
 
 	END AtomicCAS; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
-	PROCEDURE {Fingerprint(4803519866585645229)}  - CurrentBP*(): ADDRESS;
-	CODE
-
-	MOV RAX, RBP
-
-
-	END CurrentBP; 
-	PROCEDURE {Fingerprint(5764612334986991996)}  - SetBP*(bp: ADDRESS);
-	CODE
-
-	POP RBP
-
-
-	END SetBP; 
-	PROCEDURE {Fingerprint(6028498965230420133)}  - CurrentSP*(): ADDRESS;
-	CODE
-
-	MOV RAX, RSP
-
-
-	END CurrentSP; 
-	PROCEDURE {Fingerprint(-3458759701867783819)}  - SetSP*(sp: ADDRESS);
-	CODE
-
-	POP RSP
-
-
-	END SetSP; 
 	PROCEDURE {Fingerprint(6112430532310118778)}  - GetTimer*(): HUGEINT;
 	CODE
 

@@ -1,5 +1,5 @@
 MODULE PETTrees;
-	IMPORT KernelLog, Streams, Diagnostics, Strings, Texts, WMStandardComponents, WMGraphics, WMComponents, WMTextView, WMEditors, WMTrees, WMEvents;
+	IMPORT KernelLog, Streams, Diagnostics, Strings, Texts, WMStandardComponents, WMRectangles, WMGraphics, WMComponents, WMTextView, WMEditors, WMTrees, WMEvents;
 CONST 
 	InvalidPosition* =  -1; 
 TYPE 

@@ -64,7 +64,5 @@ TYPE
 		PROCEDURE ^ SubDivTriangle*(VAR tri: Triangle); 
 		PROCEDURE ^ SubDivLine*(a, b: Vertex); 
 	END Rasterizer; 
-
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
 BEGIN
 END W3dRasterizer.

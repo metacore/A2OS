@@ -2,11 +2,11 @@ MODULE PartitionsLib;
 	IMPORT KernelLog, Kernel, Modules, Commands, AosDisks := Disks, Files, Dates, Strings, Plugins, Streams, Objects, WMGraphics, WMEvents, DiskVolumes, OldDiskVolumes, FATVolumes, ISO9660Volumes, Texts, TextUtilities;
 CONST 
 	Ok* = 0; 
-	StatusRunning* = {1}; 
-	StatusAborted* = {2}; 
-	StatusWaiting* = {3}; 
-	StatusFinished* = {5}; 
-	StatusError* = {4}; 
+	StatusRunning* = 1; 
+	StatusAborted* = 2; 
+	StatusWaiting* = 3; 
+	StatusFinished* = 5; 
+	StatusError* = 4; 
 	WriterLock* = 0; 
 	ReaderLock* = 1; 
 	UnknownFS* = 0; 

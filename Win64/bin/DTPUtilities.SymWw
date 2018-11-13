@@ -273,8 +273,6 @@ VAR
 	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
 
-	PROCEDURE ^ Min*(a, b: REAL): REAL; 
-	PROCEDURE ^ Max*(a, b: REAL): REAL; 
 	PROCEDURE ^ Inc*(VAR a, b: REAL); 
 	PROCEDURE ^ Dec*(VAR a, b: REAL); 
 	PROCEDURE ^ FixpToFloat*(x: LONGINT): REAL; 

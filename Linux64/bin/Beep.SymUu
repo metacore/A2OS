@@ -4,7 +4,7 @@ CONST
 VAR 
 	disp: XDisplay.Display; 
 
-	PROCEDURE ^ Beep*(hz: LONGINT); 
+	PROCEDURE ^ Beep*(hz: WORD); 
 	PROCEDURE ^ GetDisplay; 
 BEGIN
 END Beep.

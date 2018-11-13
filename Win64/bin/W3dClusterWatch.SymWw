@@ -69,6 +69,5 @@ VAR
 	PROCEDURE ^ MatchI(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Watch*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
-	PROCEDURE ^ Max(a, b: LONGREAL): LONGREAL; 
 BEGIN
 END W3dClusterWatch.

@@ -1,5 +1,5 @@
 MODULE ModuleTrees;
-	IMPORT Streams, Commands, Diagnostics, WMStandardComponents, WMGraphics, WMProperties, WMComponents, WMTextView, WMEditors, Strings, Texts, TextUtilities, KernelLog, WMTrees, WMEvents, FoxScanner, ModuleParser;
+	IMPORT Streams, Commands, Diagnostics, WMStandardComponents, WMRectangles, WMGraphics, WMProperties, WMComponents, WMTextView, WMEditors, Strings, Texts, TextUtilities, KernelLog, WMTrees, WMEvents, FoxScanner, ModuleParser;
 CONST 
 	TreeLabelCaption = \" Program Structure"\; 
 	TreeLabelCaptionError = \" Program Structure (Errors)"\; 

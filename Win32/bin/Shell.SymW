@@ -101,5 +101,6 @@ TYPE
 	END Shell; 
 
 	PROCEDURE ^ Start*(context: Commands.Context); 
+	PROCEDURE ^ StartEchoed*(context: Commands.Context); 
 BEGIN
 END Shell.

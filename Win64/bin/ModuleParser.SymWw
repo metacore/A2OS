@@ -276,12 +276,12 @@ TYPE
 
 	Parser = OBJECT 
 	VAR 
-		symbol: FoxScanner.Symbol; 
+		token: FoxScanner.Token; 
 		scanner: FoxScanner.Scanner; 
 		hasError: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(scanner: FoxScanner.Scanner); 
-		PROCEDURE ^ NextSymbol; 
+		PROCEDURE ^ NextToken; 
 		PROCEDURE ^ ModuleP(VAR module: Module); 
 		PROCEDURE ^ ImportListP(import: Import); 
 		PROCEDURE ^ DefinitionP(definition: Definition); 
@@ -306,14 +306,14 @@ TYPE
 		PROCEDURE ^ ObjectP(object: Object); 
 		PROCEDURE ^ CellP(cell: Cell); 
 		PROCEDURE ^ ProcedureP(proc: Procedure); 
-		PROCEDURE ^ ConstExprP(delimiter1, delimiter2: FoxScanner.Token; expr: InfoItem); 
+		PROCEDURE ^ ConstExprP(delimiter1, delimiter2: FoxScanner.Symbol; expr: InfoItem); 
 		PROCEDURE ^ BlockModifierP(allowBody: BOOLEAN; VAR modifiers: SET); 
 		PROCEDURE ^ ProcedureModifierP(procHead: ProcHead); 
 		PROCEDURE ^ ModifierValueP(VAR value: LONGINT); 
 		PROCEDURE ^ BodyP(allowBody: BOOLEAN; VAR modifiers: SET); 
 		PROCEDURE ^ QualidentP(qualident: Qualident); 
 		PROCEDURE ^ IdentDefP(identDef: IdentDef); 
-		PROCEDURE ^ Check(token: FoxScanner.Token); 
+		PROCEDURE ^ Check(symbol: FoxScanner.Symbol); 
 		PROCEDURE ^ Error(pos: LONGINT); 
 	END Parser; 
 

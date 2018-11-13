@@ -39,7 +39,7 @@ TYPE
 		mode-: INTEGER; 
 		displacement-: Unit; 
 		scale-: ObjectFile.Bits; 
-		patterns-: LONGINT; 
+		patterns-: SIZE; 
 		pattern-: FixupPatterns; 
 		offset-: Unit; 
 		symbol-: ObjectFile.Identifier; 

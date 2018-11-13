@@ -195,8 +195,6 @@ VAR
 
 	PROCEDURE ^ NoReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
 	PROCEDURE ^ NewString*(value: ARRAY OF CHAR): String; 
-	PROCEDURE ^ Min*(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ Max*(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ ExtractEvent(VAR string: ARRAY OF CHAR): String; 
 BEGIN
 END XMLComponents.

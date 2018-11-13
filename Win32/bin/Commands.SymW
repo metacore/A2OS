@@ -24,20 +24,6 @@ TYPE
 		PROCEDURE ^  & Init*(in, arg: Streams.Reader; out, error: Streams.Writer; caller: OBJECT); 
 	END Context; 
 
-	ReaderMonitor* = OBJECT (Streams.Reader)
-	VAR 
-		in: Streams.Reader; 
-		tracer: Streams.Writer; 
-		pos0: Streams.Position; 
-		tracedPos: LONGINT; 
-
-		PROCEDURE ^  & Init(in: Streams.Reader; tracer: Streams.Writer); 
-		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ SetPos*(pos: Streams.Position); 
-		PROCEDURE ^ Pos*(): Streams.Position; 
-	END ReaderMonitor; 
-
 	CommandProc = PROCEDURE ; 
 
 	CommandContextProc = PROCEDURE (context: Context); 
@@ -46,8 +32,6 @@ TYPE
 	VAR 
 		moduleName, commandName: Modules.Name; 
 		context: Context; 
-		tracer: Streams.Writer; 
-		r: ReaderMonitor; 
 		proc: CommandProc; 
 		commandProc: CommandContextProc; 
 		msg: ARRAY 128 OF CHAR; 

@@ -1,7 +1,7 @@
 MODULE StdIO;
 	IMPORT SYSTEM, Modules, Commands, Streams, Pipes, Unix;
 CONST 
-	AddrSize = SIZEOF(ADDRESS); 
+	Echo* = FALSE; 
 TYPE 
 	String = POINTER TO ARRAY OF CHAR; 
 VAR 

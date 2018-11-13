@@ -39,7 +39,7 @@ TYPE
 		send: Sender; 
 		sent*: LONGINT; 
 
-		PROCEDURE ^  & InitWriter*(send: Sender; size: LONGINT); 
+		PROCEDURE ^  & InitWriter*(send: Sender; size: SIZE); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
@@ -77,7 +77,7 @@ TYPE
 
 	StringWriter* = OBJECT (Writer)
 
-		PROCEDURE ^  & InitStringWriter*(size: LONGINT); 
+		PROCEDURE ^  & InitStringWriter*(size: SIZE); 
 		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
@@ -94,7 +94,7 @@ TYPE
 		receive: Receiver; 
 		received*: LONGINT; 
 
-		PROCEDURE ^  & InitReader*(receive: Receiver; size: LONGINT); 
+		PROCEDURE ^  & InitReader*(receive: Receiver; size: SIZE); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
@@ -141,7 +141,7 @@ TYPE
 
 	StringReader* = OBJECT (Reader)
 
-		PROCEDURE ^  & InitStringReader*(size: LONGINT); 
+		PROCEDURE ^  & InitStringReader*(size: SIZE); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
 		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 

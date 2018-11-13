@@ -18,7 +18,7 @@ TYPE
 		transfer: TransferProcedure; 
 
 		PROCEDURE ^  & Init*(transfer: TransferProcedure; blocksPerCacheLine= 32: LONGINT); 
-		PROCEDURE ^ Transfer*(op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Transfer*(op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: LONGINT); 
 	END Cache; 
 BEGIN
 END DiskCaches.

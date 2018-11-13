@@ -169,8 +169,6 @@ VAR
 	defaultMouse: MouseObj; 
 	CharToUnicode: ARRAY 256 OF LONGINT; 
 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ Max(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
 	PROCEDURE ^ ClipAtImage(VAR x: Rectangle; img: Raster.Image); 
 	PROCEDURE ^ FillSession(wm: WindowManager; bgColor: LONGINT; noPointer: BOOLEAN); 

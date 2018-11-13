@@ -84,7 +84,6 @@ VAR
 	SQLSetStmtAttr: PROCEDURE {WINAPI}(hstmt: ADDRESS; attribute: LONGINT; value: LONGINT; stringlength: LONGINT):INTEGER; 
 	SQLSetConnectAttr: PROCEDURE {WINAPI}(hdbc: ADDRESS; attribute: LONGINT; valuePtr: LONGINT; stringLength: LONGINT):INTEGER; 
 
-	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
 	PROCEDURE ^ AllocConnect*(hdbc: HDBC; VAR res: INTEGER); 
 	PROCEDURE ^ AllocEnv(henv: HENV; VAR res: INTEGER); 
 	PROCEDURE ^ AllocStmt*(hdbc: HDBC; hstmt: HSTMT; VAR res: INTEGER); 

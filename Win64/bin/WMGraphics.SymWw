@@ -161,7 +161,6 @@ VAR
 	fallbackFonts*: ARRAY 5 OF Font; 
 	nofFallbackFonts: LONGINT; 
 
-	PROCEDURE ^ Max(a, b: LONGINT): LONGINT; 
 	PROCEDURE ^ Swap(VAR a, b: LONGINT); 
 	PROCEDURE ^ MakeRectangle*(l, t, r, b: LONGINT): Rectangle; 
 	PROCEDURE ^ ColorToRGBA*(color: Color; VAR r, g, b, a: LONGINT); 

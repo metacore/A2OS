@@ -281,7 +281,5 @@ VAR
 	dollyFrame*: FrameObject; 
 
 	PROCEDURE ^ NewObject*(): ContentObject; 
-	PROCEDURE ^ Min(a, b: REAL): REAL; 
-	PROCEDURE ^ Max(a, b: REAL): REAL; 
 BEGIN
 END DTPData.

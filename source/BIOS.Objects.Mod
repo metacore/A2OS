@@ -1235,7 +1235,9 @@ BEGIN
 	NewProcess(body, flags, obj, t);
 	Machine.Acquire(Machine.Objects);
 	t.id := nextProcessID; INC(nextProcessID);
-	t.context := CurrentContext();
+	IF ~Machine.WorkingOnKernelStack () THEN
+		t.context := CurrentContext();
+	END;
 	IF priority = 0 THEN	(* no priority specified *)
 		t.priority := running[Machine.ID ()].priority (* inherit priority of creator *)
 	ELSIF priority > 0 THEN (* positive priority specified *)

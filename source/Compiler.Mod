@@ -313,7 +313,7 @@ TYPE
 		IF options.GetString("platform", name) OR GetDefaultPlatform(name) THEN
 			defaults := platforms.Get(name);
 			IF defaults = NIL THEN 	
-				error.String("Unknown platform"); error.Ln 
+				error.String("Unknown platform"); error.Ln; result := FALSE;
 			ELSE
 				parsed := options.ParseStaged(defaults, error) & parsed;
 				input.SetPos(position);
@@ -488,6 +488,8 @@ TYPE
 					replacement := replacement.next;
 				END;
 			END;
+		ELSE
+			context.result := Commands.CommandParseError;
 		END;
 		IF error THEN context.result := Commands.CommandError ELSE context.result := Commands.Ok END;
 
@@ -511,6 +513,8 @@ TYPE
 				error := ~Modules(filename, reader, 0, diagnostics, context.out, options, importCache);
 			END;
 			context.out.Update;
+		ELSE
+			context.result := Commands.CommandParseError;
 		END;
 	END CompileReader;
 

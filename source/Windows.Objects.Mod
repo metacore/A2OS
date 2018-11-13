@@ -182,7 +182,9 @@ TYPE
 			IF CurrentProcess() = SELF THEN
 				sp := SYSTEM.GetStackPointer();  bp :=SYSTEM.GetFramePointer(); pc := Machine.CurrentPC(); 
 			ELSE
-				res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
+				(*! this should never happen or must be changed with mode change eetc.
+					res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
+				*)
 				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 				res := Kernel32.GetThreadContext( handle, state );
 				IF res = 0 THEN Trace.String("could not get thread context:"); Trace.Int(Kernel32.GetLastError(),1) END;
@@ -1135,37 +1137,29 @@ END Terminate;
 PROCEDURE Init;   (* can not use NEW *)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
-	lib: Kernel32.HMODULE;
-	low, high: SIZE;
 BEGIN
 	Kernel32.AddVectoredExceptionHandler(1, ExcpFrmHandler); 
 	Kernel32.InitializeCriticalSection(excplock);
 	numberOfProcessors := Machine.NumberOfProcessors();
 
+#IF SHAREDLIB THEN
+	EnterA2; (*! ExitA2 for the DLL loading thread will be called after execution of all module bodies (see Modules.Main) *)
+#ELSE
 	NEW(t);
-#IF ~SHAREDLIB THEN
 	NEW(fn);
-#END;
 
 	Machine.Acquire(Machine.Objects);
 	t.gcContext.nextPos := 0;
 	nProcs := 1;
 	t.next := NIL;  t.prev := NIL;
-	t.waitingOn := NIL; 
-#IF ~SHAREDLIB THEN
+	t.waitingOn := NIL;
 	t.flags := {};
 	t.obj := NIL;
-#ELSE 
-	t.flags := {External}; (*! mark the process as external (non A2) *)
-	NEW(t.obj); (*! required for ActiveObject() to return non-NIL *)
-#END;
 	t.mode := Unknown; t.body := NIL;
 	t.priority := Normal;
-	
-#IF ~SHAREDLIB THEN (*! do not allow to finalize the dll loading thread *)
+
 	fn.finalizer := FinalizeProcess;
 	Heaps.AddFinalizer(t, fn);
-#END;
 
 	t.handle := Kernel32.GetCurrentThread();
 	t.id := Kernel32.GetCurrentThreadId();
@@ -1174,16 +1168,13 @@ BEGIN
 	ASSERT(res # 0);
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
 	ASSERT(res # 0);
-#IF ~SHAREDLIB THEN
 	t.stackBottom := Machine.stackBottom;
-#ELSE
-	Kernel32.GetCurrentThreadStackLimits(low,high);
-	t.stackBottom := high;
-#END;
 	t.mode := Running;
 	Put( ready, t );
 	ASSERT(t.handle # 0);
 	Machine.Release(Machine.Objects);
+#END;
+
 	InitEventHandling; (* implicit call of NewProcess! *)
 	InitGCHandling; (* do. *)
 	Heaps.gcStatus := GCStatusFactory();
@@ -1374,159 +1365,51 @@ BEGIN
 	END;	
 END ReenterA2;
 
-    PROCEDURE RegisterExternalThread*;
-    CONST THREAD_PRIORITY_ERROR_RETURN = 0x7fffffff;
+#IF SHAREDLIB THEN
+
+	PROCEDURE AcquireLock(VAR lock: BOOLEAN);
+	BEGIN
+		REPEAT UNTIL CAS(lock, FALSE, TRUE) = FALSE;
+	END AcquireLock;
+
+	PROCEDURE ReleaseLock(VAR lock: BOOLEAN);
+	BEGIN
+		IGNORE CAS(lock, TRUE, FALSE);
+	END ReleaseLock;
+
+VAR
+	protect: Process;
+	protectLock: BOOLEAN;
+
+    PROCEDURE RegisterExternalProcess;
     VAR
         t: Process;
         proc: Kernel32.HANDLE;
         res: Kernel32.BOOL;
         low, high: SIZE;
     BEGIN
-        (*!TODO: the allocation below can potentially invoke the GC and can cause a crash
-            since the current thread is not yet registered.
-            Consider to use a preallocated array of Process descriptors *)
-        NEW(t);
-        NEW(t.obj); (*! required for ActiveObject() to return non-NIL *)
+        (*! global variable "protect" is used for avoiding problems when GC is invoked
+        	by calling NEW while the current external thread is not yet registered.
+        *)
+		AcquireLock(protectLock);
 
-        t.gcContext.nextPos := 0;
-        t.next := NIL;  t.prev := NIL;
-        t.waitingOn := NIL;
-        t.flags := {External}; (*! mark the process as external (non A2) *)
-        t.mode := Unknown; t.body := NIL;
-
-        t.handle := Kernel32.GetCurrentThread();
-
-        t.priority := Kernel32.GetThreadPriority(t.handle);
-        ASSERT(t.priority # THREAD_PRIORITY_ERROR_RETURN);
-        CASE t.priority OF
-            |Kernel32.ThreadPriorityIdle: t.priority := MinPriority;
-            |Kernel32.ThreadPriorityBelowNormal: t.priority := Low;
-            |Kernel32.ThreadPriorityAboveNormal: t.priority := High;
-            |Kernel32.ThreadPriorityTimeCritical: t.priority := Realtime;
-        ELSE
-            ASSERT(t.priority = Kernel32.ThreadPriorityNormal);
-            t.priority := Normal;
-        END;
-
-        t.id := Kernel32.GetCurrentThreadId();
-        proc := Kernel32.GetCurrentProcess();
-        res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
-        ASSERT(res # 0);
-        Kernel32.GetCurrentThreadStackLimits(low,high);
-        t.stackBottom := high;
-        t.mode := Running;
-        res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
-        ASSERT(res # 0);
-
-        Machine.Acquire(Machine.Objects);
-        Put(ready, t);
-        Machine.Release(Machine.Objects);
-
-        Machine.Acquire(Machine.TraceOutput);
-        Trace.String("registered an external thread: id=");
-        Trace.Int(t.id,0);
-        Trace.String(", handle=");
-        Trace.Int(t.handle,0);
-        Trace.String(", stackBottom=");
-        Trace.Hex(t.stackBottom,-8);
-        Trace.Ln;
-        Machine.Release(Machine.TraceOutput);
-    END RegisterExternalThread; 
-    
-(* enter A2 should be called when a process enters A2 from windows or from A2 via a call to a WINAPI A2 function *)
-PROCEDURE EnterA2*;
-VAR cur: Process; ebp, n: ADDRESS;
-BEGIN
-	cur := CurrentProcess();
-	IF cur = NIL THEN (* create a process descriptor *)
-		RegisterExternalThread();
-		cur := CurrentProcess();
-		Trace.String("First Enter: "); Trace.Address(cur); Trace.Ln; 
-	ELSE
-		ebp := SYSTEM.GetFramePointer();
-		SYSTEM.GET(ebp, n);
-		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
-		IF cur.gcContext.nextPos = -1 THEN (* re-entry *)
-			cur.gcContext.nextPos := 0; 
-			cur.stackBottom := ebp;
-			Trace.String("Reenter: "); Trace.Address(cur); Trace.Ln; 
-		ELSE
-			INC(cur.gcContext.nextPos);
-			cur.gcContext.last[cur.gcContext.nextPos] := NIL;
-		END;	
-	END;
-	
-	(*
-	cur.gcContext.first[cur.gcContext.nextPos] := ebp; (* here our responsibility starts -- currently this field is not strictly required to be set valid *)
-	cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* we do not know where it ends yet *)
-	*)
-END EnterA2;
-
-(* exit A2 should be called when a process exits a WINAPI procedure *)
-PROCEDURE ExitA2*();
-VAR cur: Process;
-BEGIN
-	cur := CurrentProcess();
-	ASSERT(cur # NIL); 
-	DEC(cur.gcContext.nextPos);
-	cur.gcContext.last[cur.gcContext.nextPos] := NIL;	
-	IF cur.gcContext.nextPos < 0 THEN (* process exits A2 *)
-		Trace.String("Exit: "); Trace.Address(cur); Trace.Ln; 
-	END;
-END ExitA2;
-
-
-
-#IF SHAREDLIB THEN
-
-	PROCEDURE InQueueById( queue: ProcessQueue;  id: LONGINT ): BOOLEAN;
-	VAR p: Heaps.ProcessLink;
-	BEGIN
-		p := queue.head;
-		WHILE (p # NIL ) & (p(Process).id # id) DO p := p.next;  END;
-		RETURN (p # NIL);
-	END InQueueById;
-
-	PROCEDURE AttachThread*();
-	CONST THREAD_PRIORITY_ERROR_RETURN = 0x7fffffff;
-	VAR
-		t: Process;
-		proc: Kernel32.HANDLE;
-		res: Kernel32.BOOL;
-		low, high: SIZE;
-	BEGIN
-		(*! this thread attach event could be invoked by Kernel32.CreateThread called within Objects.NewProcess. 
-			In such cases the created process will be already in the process queue and we must skip it.
-			All other cases correspond to external threads. *)
-		Machine.Acquire(Machine.Objects);
-		IF InQueueById(ready,Kernel32.GetCurrentThreadId()) THEN
-			Machine.Release(Machine.Objects);
-			RETURN;
-		END;
-		Machine.Release(Machine.Objects);
-		
-		(*!TODO: this can potentially invoke the GC and can cause a crash 
-			since the current thread is not yet registered.
-			Consider to use a preallocated array of Process descriptors *)
-		NEW(t);
-
-		Machine.Acquire(Machine.Objects);
-
-		t.gcContext.nextPos := 0;
-		t.next := NIL;  t.prev := NIL;
-		t.waitingOn := NIL; 
-		t.flags := {External}; (*! mark the process as external (non A2) *)
+		NEW(protect); t := protect;
 		NEW(t.obj); (*! required for ActiveObject() to return non-NIL *)
+
+		t.gcContext.nextPos := 0; (*! the registered process is considered as entered into A2 *)
+		t.next := NIL;  t.prev := NIL;
+		t.waitingOn := NIL;
+		t.flags := {External}; (*! mark the process as external (non A2) *)
 		t.mode := Unknown; t.body := NIL;
 
 		t.handle := Kernel32.GetCurrentThread();
 
 		t.priority := Kernel32.GetThreadPriority(t.handle);
-		ASSERT(t.priority # THREAD_PRIORITY_ERROR_RETURN);
+		ASSERT(t.priority # Kernel32.ThreadPriorityErrorReturn);
 		CASE t.priority OF
 			|Kernel32.ThreadPriorityIdle: t.priority := MinPriority;
 			|Kernel32.ThreadPriorityBelowNormal: t.priority := Low;
-			|Kernel32.ThreadPriorityAboveNormal: t.priority := High;
+			|Kernel32.ThreadPriorityAboveNormal,Kernel32.ThreadPriorityHighest: t.priority := High;
 			|Kernel32.ThreadPriorityTimeCritical: t.priority := Realtime;
 		ELSE
 			ASSERT(t.priority = Kernel32.ThreadPriorityNormal);
@@ -1537,15 +1420,21 @@ END ExitA2;
 		proc := Kernel32.GetCurrentProcess();
 		res := Kernel32.DuplicateHandle(proc, t.handle, proc, t.handle, {}, 0, {Kernel32.DuplicateSameAccess});
 		ASSERT(res # 0);
-		res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
-		ASSERT(res # 0);
 		Kernel32.GetCurrentThreadStackLimits(low,high);
 		t.stackBottom := high;
 		t.mode := Running;
+		res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, t));
+		ASSERT(res # 0);
+
+		Machine.Acquire(Machine.Objects);
 		Put(ready, t);
+		INC(nProcs);
+		Machine.Release(Machine.Objects);
+
+		ReleaseLock(protectLock);
 
 		Machine.Acquire(Machine.TraceOutput);
-		Trace.String("attached thread: id=");
+		Trace.String("registered an external thread: id=");
 		Trace.Int(t.id,0);
 		Trace.String(", handle=");
 		Trace.Int(t.handle,0);
@@ -1553,40 +1442,103 @@ END ExitA2;
 		Trace.Hex(t.stackBottom,-8);
 		Trace.Ln;
 		Machine.Release(Machine.TraceOutput);
+    END RegisterExternalProcess;
 
-		Machine.Release(Machine.Objects);
+	(* enter A2 should be called when a process enters A2 from windows or from A2 via a call to a WINAPI A2 function *)
+	PROCEDURE EnterA2*;
+	VAR cur: Process; ebp, n: ADDRESS;
+	BEGIN
+		cur := CurrentProcess();
+		IF cur = NIL THEN (* create a process descriptor *)
+			RegisterExternalProcess;
+			cur := CurrentProcess();
+			Machine.Acquire(Machine.TraceOutput);
+			Trace.String("First Enter: "); Trace.Int(cur.id,0); Trace.Ln;
+			Machine.Release(Machine.TraceOutput);
+		ELSE
+			ebp := SYSTEM.GetFramePointer();
+			SYSTEM.GET(ebp, n);
+			IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
+			IF cur.gcContext.nextPos = -1 THEN (* re-entry *)
+				cur.gcContext.nextPos := 0;
+				cur.stackBottom := ebp;
+				Machine.Acquire(Machine.TraceOutput);
+				Trace.String("Reenter: "); Trace.Int(cur.id,0); Trace.Ln;
+				Machine.Release(Machine.TraceOutput);
+			ELSE
+				INC(cur.gcContext.nextPos);
+				cur.gcContext.last[cur.gcContext.nextPos] := NIL;
+			END;
+		END;
+
+		(*
+		cur.gcContext.first[cur.gcContext.nextPos] := ebp; (* here our responsibility starts -- currently this field is not strictly required to be set valid *)
+		cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* we do not know where it ends yet *)
+		*)
+	END EnterA2;
+
+	(* exit A2 should be called when a process exits a WINAPI procedure *)
+	PROCEDURE ExitA2*();
+	VAR cur: Process;
+	BEGIN
+		cur := CurrentProcess();
+		ASSERT(cur # NIL);
+		IF cur.gcContext.nextPos > 0 THEN
+			DEC(cur.gcContext.nextPos);
+			cur.gcContext.last[cur.gcContext.nextPos] := NIL;
+		ELSE
+			Machine.Acquire(Machine.TraceOutput);
+			Trace.String("Exiting: "); Trace.Int(cur.id,0); Trace.Ln;
+			Machine.Release(Machine.TraceOutput);
+			cur.gcContext.nextPos := -1;
+		END;
+	END ExitA2;
+
+	PROCEDURE AttachThread*();
+	BEGIN
 	END AttachThread;
-	
+
+	(* Cleanup resources of an external process. Must be called while Objects lock is taken *)
 	PROCEDURE CleanupExternalProcess(t: Process);
 	BEGIN
 		ASSERT(External IN t.flags);
-		IF InQueue(ready,t) THEN Remove(ready,t); END;
-		IF t.event # 0 THEN Kernel32.CloseHandle(t.event); END;
-		DEC(nProcs);
+		IF InQueue(ready,t) THEN
+			Remove(ready,t); DEC(nProcs);
+		END;
+		IF t.event # 0 THEN IGNORE Kernel32.CloseHandle(t.event); END;
 	END CleanupExternalProcess;
-	
+
+	(* Called when a thread is detaching from the DLL *)
 	PROCEDURE DetachThread*();
-	VAR t: Process;
+	VAR
+		t: Process;
+		res: Kernel32.BOOL;
 	BEGIN
 		t := CurrentProcess();
-		IF ~(External IN t.flags) THEN RETURN; END;
+		IF (t = NIL) OR ~(External IN t.flags) THEN RETURN; END;
+
+		Machine.Acquire (Machine.TraceOutput);
+		Trace.String("detaching a thread: id="); Trace.Int(t.id,0); Trace.Ln;
+		Machine.Release (Machine.TraceOutput);
 
 		Machine.Acquire(Machine.Objects);
 		CleanupExternalProcess(t);
+		res := Kernel32.TlsSetValue(tlsIndex, NIL);
+        ASSERT(res # 0);
 		Machine.Release(Machine.Objects);
 
 		Machine.Acquire (Machine.TraceOutput);
 		Trace.String("detached a thread: id="); Trace.Int(t.id,0); Trace.Ln;
 		Machine.Release (Machine.TraceOutput);
 	END DetachThread;
-	
+
 	PROCEDURE CleanupProcesses;
-	VAR 
+	VAR
 		t: Process;
 		res: Kernel32.BOOL;
 	BEGIN
 		Machine.Acquire(Machine.Objects);
-		Get(ready, t);
+		Get(ready, t); DEC(nProcs);
 		WHILE t # NIL DO
 			IF t.mode # Terminated THEN
 				IF External IN t.flags THEN
@@ -1606,11 +1558,13 @@ END ExitA2;
 					END;
 				END;
 			END;
-			Get(ready, t);
+			Get(ready, t); DEC(nProcs);
 		END;
+		Trace.String("nProcs="); Trace.Int(nProcs,0); Trace.Ln;
 		Machine.Release(Machine.Objects);
 	END CleanupProcesses;
 
+	(* Called when the DLL loading process is detaching from the DLL *)
 	PROCEDURE DetachProcess*();
 	CONST
 		TerminationTimeout = 1000;
@@ -1621,14 +1575,20 @@ END ExitA2;
 		tick: LONGINT;
 		numNonTerminated, numExternals: SIZE;
 	BEGIN
+		EnterA2;
+
+		Machine.Acquire(Machine.TraceOutput);
+		Trace.String("detaching the process: id="); Trace.Int(Kernel32.GetCurrentThreadId(),0); Trace.Ln;
+		Machine.Release(Machine.TraceOutput);
+
 		Modules.Shutdown(-1);
 		finalizerCaller.Exit;
 		clock.Exit;
-		
+
 		Machine.Acquire(Machine.TraceOutput);
 		Trace.StringLn("wait until all A2 processes terminate");
 		Machine.Release(Machine.TraceOutput);
-			
+
 		tick := Kernel32.GetTickCount();
 		REPEAT
 			numNonTerminated := 0;
@@ -1646,7 +1606,7 @@ END ExitA2;
 			END;
 			Machine.Release(Machine.Objects);
 		UNTIL (numNonTerminated = 0) OR (Kernel32.GetTickCount() - tick >= TerminationTimeout);
-		
+
 		IF numNonTerminated # 0 THEN
 			Machine.Acquire(Machine.TraceOutput);
 			Trace.String("there are "); Trace.Int(numNonTerminated,0); Trace.StringLn(" A2 processes to terminate forcedly");

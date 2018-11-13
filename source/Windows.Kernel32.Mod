@@ -1126,7 +1126,7 @@ VAR hout: HANDLE;
 		PROCEDURE ObjectsAttachThread();
 		PROCEDURE AttachThread EXTERN "Objects.AttachThread"();
 		BEGIN
-			AttachThread();
+			AttachThread;
 		END ObjectsAttachThread;
 		
 		PROCEDURE ObjectsDetachThread();

@@ -224,12 +224,12 @@ END CurrentProcess;
 
 PROCEDURE CurrentContext*(): ANY;
 BEGIN
-	RETURN NIL; (* stub *)
+	RETURN Activities.GetCurrentActivity ().context;
 END CurrentContext;
 
 PROCEDURE SetContext*(context: ANY);
 BEGIN
-	(* stub *)
+	Activities.GetCurrentActivity ().context := context;
 END SetContext;
 
 (* Return stack bottom of process. For compatibility WinAos/UnixAos/NativeAos  *)

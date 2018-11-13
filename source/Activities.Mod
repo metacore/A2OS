@@ -49,6 +49,7 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 	VAR startTime-: Timer.Counter;
 	VAR time- := 0: HUGEINT;
 	VAR stack {UNTRACED}: Stack;
+	VAR context*: OBJECT;
 
 	PROCEDURE &InitializeActivity (procedure: PROCEDURE; priority: Priority);
 	VAR stackRecord {UNTRACED}: StackRecord; stackFrame {UNTRACED}: BaseTypes.StackFrame;
@@ -69,6 +70,11 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		stackFrame.previous := NIL;
 		stackFrame.descriptor := ADDRESS OF StackFrameDescriptor;
 		SELF.procedure := procedure;
+		IF SYSTEM.GetActivity () # NIL THEN
+			context := SYSTEM.GetActivity ()(Activity).context;
+		ELSE
+			context := NIL;
+		END;
 	END InitializeActivity;
 
 	PROCEDURE ~Finalize;

@@ -13,7 +13,8 @@ CONST
 	BufferPoolSize = 16;
 
 TYPE
-	digits = POINTER TO ARRAY OF LONGINT;
+	BNdigit = UNSIGNED32;
+	digits = POINTER TO ARRAY OF BNdigit;
 
 	BigNumber* = OBJECT
 			VAR
@@ -25,7 +26,7 @@ TYPE
 				VAR n: LONGINT;
 				BEGIN
 					IF bitsize # 0 THEN
-						n := SHORT( (bitsize + 31) DIV 32 );
+						n := (bitsize + 31) DIV 32;
 						INC( n, (-n) MOD 16 );
 						NEW( d, n );
 					END;
@@ -37,7 +38,7 @@ TYPE
 				BEGIN
 					w := bits DIV 32;  b := bits MOD 32;  len := w;
 					IF b # 0 THEN  INC( len );
-						d[w] := S.VAL( LONGINT,  S.VAL( SET32, d[w] ) * {0..b} )
+						d[w] := S.VAL( UNSIGNED32,  S.VAL( SET32, d[w] ) * {0..b} )
 					END
 				END Mask;
 
@@ -70,7 +71,7 @@ TYPE
 
 
 				PROCEDURE Shift*( n: LONGINT );
-				VAR right: BOOLEAN;  w, bits, i, l: LONGINT;  a, b: LONGINT;
+				VAR right: BOOLEAN;  w, bits, i, l: LONGINT;  a, b: BNdigit;
 				BEGIN
 					IF len = 0 THEN  RETURN  END;
 					IF n < 0 THEN  right := TRUE;  n := ABS( n )  ELSE  right := FALSE  END;
@@ -142,7 +143,7 @@ TYPE
 				END Negate;
 	
 				PROCEDURE BitSize*( ): LONGINT;
-				VAR n, t: LONGINT;
+				VAR n: LONGINT; t: BNdigit;
 				BEGIN
 					IF len = 0 THEN  RETURN 0
 					ELSE  n := (len - 1) * 32
@@ -176,8 +177,8 @@ TYPE
 
 			END BigNumber;
 
-	dig2 = ARRAY 2 OF LONGINT;
-	dig3 = ARRAY 3 OF LONGINT;
+	dig2 = ARRAY 2 OF BNdigit;
+	dig3 = ARRAY 3 OF BNdigit;
 
 	Montgomery = OBJECT
 				VAR
@@ -230,28 +231,6 @@ VAR
 
 	randomgenerator: Random.Generator;
 
-
-	PROCEDURE max( a, b: LONGINT ): LONGINT;
-	BEGIN
-		IF a >= b THEN  RETURN a  ELSE  RETURN b  END;
-	END max;
-
-	PROCEDURE LessThan( x, y: LONGINT ): BOOLEAN;  (* unsigned < *)
-	VAR a, b: LONGINT;
-	BEGIN
-		a := LSH( x, -1 );  b := LSH( y, -1 );
-		IF a = b THEN  RETURN (x MOD 2) < (y MOD 2)  ELSE  RETURN a < b  END
-	END LessThan;
-
-	PROCEDURE LessOrEqual( x, y: LONGINT ): BOOLEAN;  (* unsigned <= *)
-	VAR a, b: LONGINT;
-	BEGIN
-		IF x = y THEN  RETURN TRUE
-		ELSE
-			a := LSH( x, -1 );  b := LSH( y, -1 );
-			IF a = b THEN  RETURN (x MOD 2) < (y MOD 2)  ELSE  RETURN a < b  END
-		END
-	END LessOrEqual;
 
 	PROCEDURE RandomBytes*( VAR buf: ARRAY OF CHAR;  p: LONGINT;  n: LONGINT );
 	VAR i: LONGINT;
@@ -348,7 +327,7 @@ VAR
 	(** Returns the value of b as a binary string 'data' starting at ofs.
 		The Length of 'data' must be longer or equal to 4*b.len + ofs. *)
 	PROCEDURE GetBinaryValue*( VAR b: BigNumber; VAR data: ARRAY OF CHAR; ofs: LONGINT );
-	VAR j, n, tmp: LONGINT;
+	VAR j, n: LONGINT;  tmp: BNdigit;
 	BEGIN
 		ASSERT( LEN( data ) >= 4 * b.len + ofs );
 		FOR n := b.len-1 TO 0 BY -1 DO
@@ -375,7 +354,7 @@ VAR
 		WHILE (i >= 0) & (a[i] = b[i]) DO  DEC( i )  END;
 		IF i < 0 THEN  RETURN 0
 		ELSE
-			IF LessThan( b[i], a[i] ) THEN  RETURN 1  ELSE  RETURN -1  END
+			IF b[i] < a[i] THEN  RETURN 1  ELSE  RETURN -1  END
 		END
 	END cmpd;
 
@@ -409,23 +388,21 @@ VAR
 		copy( a.d, b.d, a.len );  b.len := a.len
 	END Copy;
 
-	PROCEDURE Invert( x: LONGINT ): LONGINT;
+	PROCEDURE Invert( x: BNdigit ): BNdigit;
 	BEGIN
-		RETURN S.VAL( LONGINT, -S.VAL( SET32, x ) )
+		RETURN S.VAL( BNdigit, -S.VAL( SET32, x ) )
 	END Invert;
 
 	PROCEDURE add( a, b: digits; VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );
-	VAR i, n: LONGINT;  A, B, x: LONGINT;  carry: BOOLEAN;
+	VAR i, n: LONGINT;  A, B, x: BNdigit;  carry: BOOLEAN;
 	BEGIN
-		n := max( al, bl );  carry := FALSE;
+		n := MAX( al, bl );  carry := FALSE;
 		IF LEN( c^ ) < (n + 1) THEN  adjust( c, cl, n + 1 )  END;
 		FOR i := 0 TO n - 1 DO
 			IF i >= al THEN  A := 0  ELSE  A := a[i]  END;
 			IF i >= bl THEN  B := 0  ELSE  B := b[i]  END;
 			x := A + B;
-			IF carry THEN  INC( x );  carry := LessOrEqual( Invert( A ), B )  
-			ELSE  carry := LessThan( x, B )  
-			END;
+			IF carry THEN  INC( x );  carry := Invert(A) <= B  ELSE  carry := x < B  END;
 			c[i]:= x
 		END;
 		IF carry  THEN  c[n] := 1;  INC( n )  END;
@@ -433,15 +410,15 @@ VAR
 	END add;
 
 	PROCEDURE sub( a, b: digits;  VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );
-	VAR i, n: LONGINT;  A, B, x: LONGINT;  borrow: BOOLEAN;
+	VAR i, n: LONGINT;  A, B, x: BNdigit;  borrow: BOOLEAN;
 	BEGIN
-		n := max( al, bl );  borrow := FALSE;
+		n := MAX( al, bl );  borrow := FALSE;
 		IF LEN( c^ ) < n THEN  adjust( c, cl, n )  END;
 		FOR i := 0 TO n - 1 DO
 			IF i >= al THEN  A := 0  ELSE  A := a[i]  END;
 			IF i >= bl THEN  B := 0  ELSE  B := b[i]  END;
 			x := A - B;
-			IF borrow THEN  DEC( x );  borrow := LessOrEqual( A, B )  ELSE  borrow := LessThan( A, B )  END;
+			IF borrow THEN  DEC( x );  borrow := A <= B  ELSE  borrow := A < B  END;
 			c[i]:= x
 		END;
 		ASSERT( ~borrow );
@@ -453,7 +430,7 @@ VAR
 	VAR sd: digits;  l, sl: LONGINT;  c: BigNumber;
 	BEGIN
 		ASSERT( (a # NIL) & (b # NIL) );
-		l := max( a.len, b.len ) + 1;
+		l := MAX( a.len, b.len ) + 1;
 		NEW( c, l*32 );  sd := c.d;
 		IF a.neg = b.neg THEN  add( a.d, b.d, sd, a.len, b.len, sl );  c.neg := a.neg
 		ELSE
@@ -471,7 +448,7 @@ VAR
 	VAR sd: digits;  l, sl: LONGINT;  c: BigNumber;
 	BEGIN
 		ASSERT( (a # NIL) & (b # NIL) );
-		l := max( a.len, b.len ) + 1;
+		l := MAX( a.len, b.len ) + 1;
 		NEW( c, l*32 );  sd := c.d;
 		IF a.neg # b.neg THEN  add( a.d, b.d, sd, a.len, b.len, sl );  c.neg := a.neg
 		ELSE
@@ -486,29 +463,10 @@ VAR
 	END Sub;
 
 
-	PROCEDURE MulAdd( VAR high, low: LONGINT;  b, c, d: LONGINT );  	(* high | low := b * c + d *)
-	VAR bh, bl, ch, cl, u, t, sum: LONGINT;
-	BEGIN
-		bh := LSH( b, -16 );  bl := b MOD 10000H;
-		ch := LSH( c, -16 );  cl := c MOD 10000H;
-		low := bl*cl;  t := ch*bl;  u := cl*bh;  high := bh*ch;
-		INC( t, u );
-		IF LessThan( t, u ) THEN  INC( high, 10000H )  END;
-		u := t*10000H;  INC( low, u );
-		IF LessThan( low, u ) THEN  INC( high )  END;
-		INC( high, LSH( t, -16 ) );
-
-		sum := low + d;
-		IF LessThan( sum, low ) THEN  INC( high )  END;
-		low := sum
-	END MulAdd;
-
-
-
-	PROCEDURE mul( a, b: digits; VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );  (* c := a*b *)
+	PROCEDURE mul( a, b: digits; VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );  (* c = a*b *)
 	VAR
-		prod, sum, tmp, mulc: LONGINT;  addc: BOOLEAN;  i, j: LONGINT;  pl: LONGINT;
-		p: digits;
+		prod, sum, tmp, mulc: BNdigit;  addc: BOOLEAN;  i, j: LONGINT;  pl: LONGINT;
+		p: digits;  tmp64: UNSIGNED64;
 	BEGIN
 		pl := 0;  NEW( p, al + bl + 2 );
 		FOR i := 0 TO al + bl + 1 DO  p[i] := 0  END;	(* clear acc *)
@@ -516,10 +474,12 @@ VAR
 			mulc := 0;  addc := FALSE;  pl := i;
 			FOR j := 0 TO al - 1 DO
 				tmp := p[pl];
-				MulAdd( mulc, prod, a[j], b[i], mulc );
+				tmp64 := UNSIGNED64( a[j] )*b[i] + mulc;
+				prod := BNdigit( tmp64 MOD 100000000H );
+				mulc := BNdigit( tmp64 DIV 100000000H );
 				sum := prod + tmp;
-				IF addc THEN  INC( sum );  addc := LessOrEqual( Invert( prod ), tmp )
-				ELSE  addc := LessThan( sum, tmp )
+				IF addc THEN  INC( sum );  addc := Invert(prod) <= tmp
+				ELSE  addc := sum < tmp
 				END;
 				p[pl] := sum;  INC( pl );
 			END;
@@ -531,12 +491,14 @@ VAR
 		c := p;  cl := pl;  fixlen( c, cl );
 	END mul;
 
-	PROCEDURE muls( a: digits;  b: LONGINT; c: digits;  al: LONGINT;  VAR cl: LONGINT );  (* c := a * b *)
-	VAR carry: LONGINT;  i: LONGINT;
+	PROCEDURE muls( a: digits;  b: BNdigit; c: digits;  al: LONGINT;  VAR cl: LONGINT );  (* c = a*b *)
+	VAR carry: BNdigit;  tmp64: UNSIGNED64;  i: LONGINT;
 	BEGIN
 		carry := 0;  cl := al;
 		FOR i := 0 TO al - 1 DO
-			MulAdd( carry, c[i], a[i], b, carry );
+			tmp64 := UNSIGNED64( a[i] )*b + carry;
+			c[i] := BNdigit( tmp64 MOD 100000000H );
+			carry := BNdigit( tmp64 DIV 100000000H );
 		END;
 		IF carry # 0 THEN  c[cl] := carry;  INC( cl )  END
 	END muls;
@@ -556,12 +518,12 @@ VAR
 		RETURN c
 	END Mul;
 
-	PROCEDURE div64( CONST a: dig2;  VAR b: LONGINT ): LONGINT;   (* a div b *)
-	VAR bit: LONGINT;  q, r: LONGINT;  overflow: BOOLEAN;
+	PROCEDURE div64( CONST a: dig2;  VAR b: BNdigit ): LONGINT;   (* a div b *)
+	VAR bit, q: LONGINT;  r: BNdigit;  overflow: BOOLEAN;
 	BEGIN
 		IF a[1] = 0 THEN
-			IF (a[0] >= 0) & (b >= 0 ) THEN  RETURN a[0] DIV b
-			ELSIF LessThan( a[0], b ) THEN  RETURN 0
+			IF (a[0] < 80000000H) & (b < 80000000H ) THEN  RETURN LONGINT( a[0] DIV b )
+			ELSIF a[0] < b THEN  RETURN 0
 			ELSIF a[0] = b THEN  RETURN 1
 			END;
 			bit := 31
@@ -571,9 +533,9 @@ VAR
 		q := 0;  r := 0;
 		WHILE (bit >= 0) & ~(bit MOD 32 IN S.VAL( SET32, a[bit DIV 32]) ) DO  DEC( bit )  END;
 		WHILE bit >= 0 DO
-			overflow := r < 0;  r := ASH( r, 1 );
+			overflow := 31 IN S.VAL( SET32, r );  r := ASH( r, 1 );
 			IF bit MOD 32 IN S.VAL( SET32, a[bit DIV 32] ) THEN  INC( r )  END;
-			IF overflow OR LessOrEqual( b, r ) THEN  r := r - b;
+			IF overflow OR (b <= r) THEN  r := r - b;
 				IF bit < 32 THEN  INCL( S.VAL( SET32, q ), bit )  ELSE  q := -1  END;
 			END;
 			DEC( bit )
@@ -586,21 +548,21 @@ VAR
 
 		PROCEDURE ge( CONST a, b: dig2 ): BOOLEAN;
 		BEGIN
-			IF a[1] = b[1] THEN  RETURN ~LessThan( a[0], b[0] )
-			ELSE  RETURN ~LessThan( a[1], b[1] )
+			IF a[1] = b[1] THEN  RETURN a[0] >= b[0]
+			ELSE  RETURN a[1] >= b[1]
 			END
 		END ge;
 
 		PROCEDURE shift( VAR x: dig2 );
 		BEGIN
-			overflow := x[1] < 0;  x[1] := ASH( x[1], 1 );
-			IF x[0] < 0 THEN  INC( x[1] )  END;
+			overflow := 31 IN S.VAL( SET32, x[1] );  x[1] := ASH( x[1], 1 );
+			IF 31 IN S.VAL( SET32, x[0] ) THEN  INC( x[1] )  END;
 			x[0] := ASH( x[0], 1 );
 		END shift;
 
 	BEGIN
 		IF a[2] = 0 THEN
-			IF LessThan( a[1], b[1] ) THEN  RETURN 0  END;
+			IF a[1] < b[1] THEN  RETURN 0  END;
 			bit := 63
 		ELSE  bit := 95
 		END;
@@ -610,7 +572,7 @@ VAR
 			shift( r );	(* r := r*2 *)
 			IF bit MOD 32 IN S.VAL( SET32, a[bit DIV 32] ) THEN  INC( r[0] )  END;
 			IF overflow OR ge( r, b ) THEN
-				borrow := LessOrEqual( r[0], b[0] );  r[0] := r[0] - b[0];  r[1] := r[1] - b[1];
+				borrow := r[0] <= b[0];  r[0] := r[0] - b[0];  r[1] := r[1] - b[1];
 				IF borrow  THEN  DEC( r[1] )  END;
 				IF bit < 32 THEN  INCL( S.VAL( SET32, q ), bit )  ELSE  q := -1  END;
 			END;
@@ -619,8 +581,8 @@ VAR
 		RETURN q
 	END div96;
 
-	PROCEDURE Div2*( a, b: BigNumber;  VAR q, r: BigNumber );   (** q := a div b;  r := a mod b *)
-	VAR x: LONGINT;  td, sd, bd, qd: digits;  i, tail, bl, tl, sl, ql, qi: LONGINT;
+	PROCEDURE Div2*( a, b: BigNumber;  VAR q, r: BigNumber );   (** q = a div b;  r = a mod b *)
+	VAR td, sd, bd, qd: digits;  x, i, tail, bl, tl, sl, ql, qi: LONGINT;
 		t3: dig3;  t2, d0: dig2;
 		aq, ar: ADDRESS;
 	BEGIN
@@ -673,8 +635,8 @@ VAR
 		IF (r.len # 0) & a.neg THEN  q.Dec;  r := Sub( b, r )  END;
 	END Div2;
 
-	PROCEDURE ModWord*( VAR a: BigNumber;  b: LONGINT ): LONGINT;   (**  a mod b *)
-	VAR x: LONGINT;  td, sd, bd: digits;  tail, tl, sl, bl: LONGINT;  t2: dig2;
+	PROCEDURE ModWord*( VAR a: BigNumber;  b: BNdigit ): BNdigit;   (**  a mod b *)
+	VAR x: BNdigit;  td, sd, bd: digits;  tail, tl, sl, bl: LONGINT;  t2: dig2;
 	BEGIN
 		ASSERT( a # NIL );
 		td := GetBuffer();
@@ -859,7 +821,7 @@ VAR
 	VAR i: LONGINT;
 	BEGIN
 		IF b.neg THEN Out.String( "-" ) END;
-		IF b.len = 0 THEN  Out.String( " 00000000" )
+		IF b.len = 0 THEN  Out.String( "00000000" )
 		ELSE  i := b.len;
 			WHILE i > 0 DO
 				DEC( i );  Out.Hex( b.d[i], -8 );
@@ -899,20 +861,20 @@ VAR
 	(*--------------------------- File I/O ---------------------------------*)
 
 	PROCEDURE FileRead*( r: Streams.Reader;  VAR b: BigNumber );
-	VAR i, j: LONGINT;
+	VAR i, j, v: LONGINT;
 	BEGIN
 		r.RawLInt( j );
 		NEW( b, 32 * j );
 		b.len := j;
-		FOR i := 0 TO j - 1 DO  r.RawLInt( b.d[ i ] )  END
+		FOR i := 0 TO j - 1 DO  r.RawLInt( v ); b.d[ i ] := v  END
 	END FileRead;
 
 	PROCEDURE FileWrite*( w: Streams.Writer;  b: BigNumber );
-	VAR i, j: LONGINT;
+	VAR i, j, v: LONGINT;
 	BEGIN
 		j := b.len;
 		w.RawLInt( j );
-		FOR i := 0 TO j - 1 DO  w.RawLInt( b.d[ i ] )  END
+		FOR i := 0 TO j - 1 DO  w.RawLInt( v ); b.d[ i ] := v  END
 	END FileWrite;
 
 

@@ -946,14 +946,13 @@ TYPE
 		END Grow;
 		
 		PROCEDURE HashValue(key: DiskAdr):SIZE;
-		VAR index, h1, h2, i: SIZE;
+		VAR index, h, i := 0 : SIZE;
 		BEGIN
-			index := key;
-			h1 := key MOD size;
-			(* h2 := 1; -- linear probing *) 
+			h := key MOD size;
 			REPEAT
-				index := (h1 + i) MOD size;
-			UNTIL((table[index] = 0) OR (table[index] = key));
+				index := (h + i) MOD size;
+				INC(i);
+			UNTIL((table[index] = 0) OR (table[index] = key) OR (i > size));
 			ASSERT((table[index] = 0) OR (table[index] = key));
 			RETURN index;
 		END HashValue;

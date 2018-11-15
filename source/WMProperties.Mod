@@ -370,6 +370,15 @@ TYPE
 			ReleaseWrite;
 		END Set;
 
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value : BOOLEAN);
+		BEGIN
+			AcquireWrite;
+			SELF.value := value;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
+
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR en : XMLObjects.Enumerator; p : ANY; s : String;
 		BEGIN
@@ -511,6 +520,15 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
+
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value : SET);
+		BEGIN
+			AcquireWrite;
+			SELF.value := value;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 (*! to discuss: should a SET be written explicitely - readability at cost of overhead*)
 		PROCEDURE FromXML*(xml : XML.Element);
@@ -660,18 +678,7 @@ TYPE
 			ReleaseRead;
 			RETURN r
 		END Get;
-		
-		(* set without updates -- use only when you definitely want to avoid updates *)
-		PROCEDURE SetPassive*(value: LONGINT);
-		VAR v: LONGINT;
-		BEGIN
-			v := Validate(value);
-			AcquireWrite;
-			SELF.value := v;
-			NotDefault;
-			ReleaseWrite
-		END SetPassive;
-		
+
 		PROCEDURE Set*(value : LONGINT);
 		VAR v: LONGINT;
 		BEGIN
@@ -687,6 +694,17 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
+
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value : LONGINT);
+		VAR v: LONGINT;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			SELF.value := v;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
@@ -843,16 +861,6 @@ TYPE
 			RETURN r
 		END Get;
 
-		PROCEDURE SetPassive*(value: LONGREAL);
-		VAR v: LONGREAL;
-		BEGIN
-			v := Validate(value);
-			AcquireWrite;
-			SELF.value := v;
-			NotDefault;
-			ReleaseWrite
-		END SetPassive;
-		
 		PROCEDURE Set*(value : LONGREAL);
 		VAR v: LONGREAL;
 		BEGIN
@@ -868,8 +876,17 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
-		
-		
+
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value : LONGREAL);
+		VAR v: LONGREAL;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			SELF.value := v;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
@@ -1026,28 +1043,31 @@ TYPE
 			END;
 		END UpdateModel;
 
-		PROCEDURE SetPassive*(value : String);
-		BEGIN
-			AcquireWrite;
-				IF (value = SELF.value) (* reset with self must lead to update *) OR (value = NIL) OR (SELF.value = NIL) OR (value^ # SELF.value^) THEN
-					SELF.value := value; Translate;
-				END;
-				NotDefault;
-			ReleaseWrite
-		END SetPassive;
-
 		PROCEDURE Set*(value : String);
 		BEGIN
 			AcquireWrite;
-				IF (value = SELF.value) (* reset with self must lead to update *) OR (value = NIL) OR (SELF.value = NIL) OR (value^ # SELF.value^) THEN
-					SELF.value := value; Translate;Changed;
-					IF (object # NIL) THEN UpdateModel END;
-				ELSIF ~nonDefault THEN
-					Changed
-				END;
-				NotDefault;
+			IF (value = SELF.value) (* reset with self must lead to update *) OR (value = NIL) OR (SELF.value = NIL) OR (value^ # SELF.value^) THEN
+				SELF.value := value; Translate;Changed;
+				IF (object # NIL) THEN UpdateModel END;
+			ELSIF ~nonDefault THEN
+				Changed
+			END;
+			NotDefault;
 			ReleaseWrite
 		END Set;
+
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value : String);
+		BEGIN
+			AcquireWrite;
+			IF (value # NIL) & (SELF.value # NIL) & (value^ # SELF.value^) THEN
+				SELF.value := value; Translate;
+			ELSE
+				SELF.value := value;
+			END;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE UpdateProperty;
 		VAR type: Types.String; model: Models.Model; res: WORD;
@@ -1215,6 +1235,15 @@ TYPE
 			ReleaseWrite
 		END Set;
 
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value: HUGEINT);
+		BEGIN
+			AcquireWrite;
+			SELF.value := SHORT(value);
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
+
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
 			en : XMLObjects.Enumerator;
@@ -1329,6 +1358,17 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
+		
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(font: WMGraphics.Font);
+		BEGIN
+			IF (font = NIL) THEN font := WMGraphics.GetDefaultFont(); END;
+			ASSERT(font # NIL);
+			AcquireWrite;
+			SELF.font := font;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE GetFont*(VAR name : ARRAY OF CHAR; VAR size : LONGINT; VAR style : SET);
 		VAR font : WMGraphics.Font;
@@ -1512,8 +1552,7 @@ TYPE
 		BEGIN
 			AcquireWrite;
 			IF (SELF.value.x#value.x) OR (SELF.value.y#value.y) THEN
-				SELF.value.x:=value.x;
-				SELF.value.y:=value.y;
+				SELF.value:=value;
 				IF object # NIL THEN UpdateModel END;
 				Changed;
 			ELSIF ~nonDefault THEN Changed
@@ -1521,6 +1560,15 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
+
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value : WMGraphics.Point2d);
+		BEGIN
+			AcquireWrite;
+			SELF.value := value;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE SetCoordinate*(x,y : LONGINT);
 		BEGIN
@@ -1670,6 +1718,15 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
+
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(value : WMRectangles.Rectangle);
+		BEGIN
+			AcquireWrite;
+			SELF.value := value;
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE SetWidth*(w : LONGINT);
 		BEGIN
@@ -1937,6 +1994,15 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
+
+		(* set without updates -- use only when you definitely want to avoid updates *)
+		PROCEDURE SetPassive*(object : Repositories.Component);
+		BEGIN
+			AcquireWrite;
+			ReplaceLink(object);
+			NotDefault;
+			ReleaseWrite
+		END SetPassive;
 
 		PROCEDURE LinkChanged(sender, object: ANY);
 		BEGIN

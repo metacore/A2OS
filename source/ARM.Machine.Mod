@@ -1114,11 +1114,18 @@ VAR
 	BEGIN
 	END StartAll;
 
+	(* Send event instruction *)
+	PROCEDURE -Sev;
+	CODE
+		SEV
+	END Sev;
+
 	(** Start core id on procedure p. *)
 	PROCEDURE StartProcessor(id: LONGINT; p: PROCEDURE);
 	VAR
-		time: LONGINT;
+		time, ticks0: LONGINT;
 		started: BOOLEAN;
+		sevCount: SIZE;
 	BEGIN
 		IF traceCpus THEN
 			Acquire(TraceOutput);
@@ -1129,18 +1136,31 @@ VAR
 			Trace.Ln;
 			Release(TraceOutput)
 		END;
-		time := ticks + 5000;
 		Initializer.secondaryProcId := id;
 		Initializer.secondaryBootProc :=  SYSTEM.VAL(ADDRESS, p);
 		FlushDCacheRange(ADDRESSOF(Initializer.secondaryProcId), 4);
 		FlushDCacheRange(ADDRESSOF(Initializer.secondaryBootProc), 4);
-		CODE
-			SEV
-		END;
 
+		(* wake up the other cores *)
+		Sev;
+
+		time := ticks + 1000;
+		sevCount := 0;
+		ticks0 := ticks;
 		REPEAT
 			started := id IN allProcessors;
+			(*! a workaround for rare but nevertheless occurring case when the other CPU does not wake up  *)
+			IF ~started & (ticks - ticks0 > 1) THEN
+				Sev;
+				ticks0 := ticks;
+				INC(sevCount);
+			END;
 		UNTIL started OR (time <= ticks);
+		IF traceCpus THEN
+			Acquire(TraceOutput);
+			Trace.String("SEV call count="); Trace.Int(sevCount,0); Trace.Ln;
+			Release(TraceOutput);
+		END;
 		IF id IN allProcessors THEN
 			IF traceCpus THEN
 				Acquire(TraceOutput);

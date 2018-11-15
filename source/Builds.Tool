@@ -213,7 +213,7 @@ WIN64 -- 64-bit windows a2
 		Release.Build --build --path=NewAos/ Win32 ~
 		Linker.Link --path=NewAos/ --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H
 			Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
-			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System ~
+			StringPool ObjectFile GenericLinker Reflection Traps Loader Shell StdIOShell System ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Win32/bin/*.* ~
 		FSTools.CopyFiles -o oberon.exe => ../../Win32/oberon.exe ~
 
@@ -221,7 +221,7 @@ WIN64 -- 64-bit windows a2
 		Release.Build --build --path=NewAos/ Win64 ~
 		Linker.Link --path=NewAos/ --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H
 			Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
-			StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System ~
+			StringPool ObjectFile GenericLinker Reflection Traps Loader Shell StdIOShell System ~
 		FSTools.CopyFiles -oq NewAos/*.* => ../../Win64/bin/*.* ~
 		FSTools.CopyFiles -o oberon.exe => ../../Win64/oberon.exe ~
 

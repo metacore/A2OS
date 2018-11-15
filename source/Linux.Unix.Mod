@@ -789,7 +789,7 @@ VAR
 	VAR
 		attr: PThreadAttr;
 		id: Thread_t;
-		res,i: LONGINT;
+		res: WORD;
 	CONST
 		PTHREAD_SCOPE_SYSTEM = 0;
 		PTHREAD_CREATE_DETACHED = 1;
@@ -837,12 +837,12 @@ VAR
 	PROCEDURE ThrResume*( thr: Thread_t );
 	VAR  res: WORD;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		res := pthread_mutex_lock( ADDRESS OF suspend_mutex );
+		res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
 		resume_done := 0; 
 		res := pthread_kill( thr, T_SIGRESUME );
+		ASSERT(res = 0);
 
-		WHILE (resume_done # 1)  DO ThrSleep(1); END;
-
+		WHILE (CAS(resume_done,0,0) # 1) DO ThrSleep(1) END;
 		res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 	END ThrResume;
 
@@ -852,23 +852,22 @@ VAR
 	VAR block: Sigset_t; res: WORD;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF suspendHandler # NIL THEN suspendHandler( S.VAL( Ucontext, ucp) ) END;
-	    res := sigfillset( ADDRESS OF block );
-	    sigdelset(  ADDRESS OF block, T_SIGRESUME );
-	    suspend_done := 1;   (*this is ok because ThrSuspend is protected by a mutex, so no race condidtion. It may alert the ThrSuspend too early though!*)
-	    res := sigsuspend(  ADDRESS OF block ); (* await T_SIGRESUME *)
-	    resume_done := 1; (*makes no difference if we do that here or in the resume handler*)
+		res := sigfillset( ADDRESS OF block );
+		sigdelset(  ADDRESS OF block, T_SIGRESUME );
+		ASSERT(CAS(suspend_done,0,1)=0);
+		res := sigsuspend(  ADDRESS OF block ); (* await T_SIGRESUME *)
+		ASSERT(CAS(resume_done,0,1) = 0); (*makes no difference if we do that here or in the resume handler*)
 	END suspend_handler;
 
 	PROCEDURE ThrSuspend*(thr: Thread_t; saveContext: BOOLEAN);
 	VAR res: WORD;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-	    res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
-	    suspend_done := 0;
-	    res := pthread_kill( thr, T_SIGSUSPEND );
-	    WHILE (suspend_done # 1) DO ThrSleep( 1 ) END; (*this should bettr check the actual thread status!*)
-	    ThrSleep( 1 ); (*improves the probability of the suspednd actually being done*)
-	    
-	    res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
+		res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
+		suspend_done := 0;
+		res := pthread_kill( thr, T_SIGSUSPEND );
+		ASSERT(res = 0); 
+		WHILE (CAS(suspend_done,0,0) # 1) DO ThrSleep( 1 ) END;  
+		res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 	END ThrSuspend;
 
 
@@ -1084,7 +1083,6 @@ VAR
 	PROCEDURE {C} X11ErrorHandler(d: ADDRESS; err: ADDRESS): WORD;
 	VAR res: WORD;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		TRACE(d,err);
 		IF oberonXErrorHandler # NIL THEN
 			res := oberonXErrorHandler(d, err);
 		END;
@@ -1094,7 +1092,6 @@ VAR
 	PROCEDURE {C} X11IOErrorHandler(d: ADDRESS): WORD;
 	VAR res: WORD;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		TRACE(d);
 		IF oberonXIOErrorHandler # NIL THEN
 			res := oberonXIOErrorHandler(d);
 		END;
@@ -1111,7 +1108,6 @@ VAR
 	END InitXErrorHandlers;
 
 	PROCEDURE Init;
-	VAR test: ADDRESS; i: LONGINT; s: ARRAY 256 OF CHAR;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		argc := Glue.argc;
 		argv := Glue.argv;

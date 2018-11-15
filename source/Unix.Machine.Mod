@@ -37,6 +37,7 @@ CONST
 	
 	MaxCPU* = 4;
 	IsCooperative* = FALSE;
+	StrongChecks = FALSE;
 
 TYPE	
 	Vendor* = ARRAY 13 OF CHAR;	
@@ -57,6 +58,7 @@ TYPE
 	
 VAR
 	mtx	: ARRAY MaxLocks OF Unix.Mutex_t;
+	taken: ARRAY MaxLocks OF ADDRESS; (* for lock order check *)
 	
 	version-: ARRAY 64 OF CHAR;	(** Aos version *)
 	
@@ -736,7 +738,7 @@ END GetTimer;
 	VAR i: LONGINT; 
 	BEGIN 
 		i := 0;  
-		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  INC( i )  END;   
+		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  taken[i] := NIL; INC( i )  END;   
 	END InitLocks;  
 
 	PROCEDURE CleanupLocks*;  
@@ -748,13 +750,29 @@ END GetTimer;
 	
 	(** Acquire a spin-lock. *)
 	PROCEDURE  Acquire*( level: LONGINT );   (* non reentrant lock *)
+	VAR i: WORD; 
 	BEGIN 
 		Unix.MtxLock( mtx[level] );
+		IF StrongChecks THEN
+			ASSERT(taken[level] = NIL); 
+			taken[level] := Unix.ThrThis( );
+			FOR i := 0 TO level-1 DO
+				ASSERT(taken[i] # Unix.ThrThis( )); (*! lock order *)
+			END;
+		END;
 	END Acquire;  
 
 	(** Release a spin-lock. *)
 	PROCEDURE  Release*( level: LONGINT );   
+	VAR i: WORD;
 	BEGIN 
+		IF StrongChecks THEN
+			ASSERT(taken[level] = Unix.ThrThis( )); 
+			taken[level] := NIL;
+			FOR i := 0 TO level-1 DO
+				ASSERT(taken[i] # Unix.ThrThis( )); (*! lock order *)
+			END;		
+		END;
 		Unix.MtxUnlock( mtx[level] );
 	END Release;  
 	

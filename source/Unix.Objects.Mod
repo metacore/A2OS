@@ -50,6 +50,7 @@ VAR
 	processList		: Unix.Mutex_t;
 	createProcess	: Unix.Mutex_t;
 	startProcess		: Unix.Mutex_t;
+	startEventLock		: Unix.Mutex_t;
 	lockMutex		: Unix.Mutex_t;
 	childrunning		: Unix.Condition_t;
 	
@@ -302,8 +303,10 @@ TYPE
 				ASSERT( bodyProc # NIL );
 				body := bodyProc;  
 				Unix.MtxLock( startProcess );
+				Unix.MtxLock( startEventLock ); (* the cond wait below opens this lock again! *)
 				threadId := Unix.ThrStart( BodyStarter, stacksize );
-				Unix.CondWait( childrunning, startProcess );
+				Unix.CondWait( childrunning, startEventLock );
+				Unix.MtxUnlock( startEventLock );
 				Unix.MtxUnlock( startProcess );
 				RegisterFinalizer( SELF, FinalizeProcess );
 			ELSE 
@@ -335,13 +338,11 @@ TYPE
 				cur.state.SP := S.GetStackPointer();
 				cur.state.BP := S.GetFramePointer();
 				cur.state.PC := ADDRESSOF( GCLoop );
-					
 				SuspendActivities;
 				Heaps.CollectGarbage( Modules.root );
-					
+				ResumeActivities;
 				Machine.Release( Machine.Heaps );
 				Machine.Release( Machine.Objects );
-				ResumeActivities;
 				finalizerCaller.Activate;
 			END;	
 		END SetgcOngoing;
@@ -353,7 +354,7 @@ TYPE
 	PROCEDURE BodyStarter;
 	VAR p: Process;  res: WORD; prevBP, sp: ADDRESS;
 	BEGIN
-		Unix.MtxLock( startProcess );
+		Unix.MtxLock( startEventLock );
 			p := newProcess;  newProcess := NIL;
 			Unix.WriteKey( processPointer, p );
 			p.id := nextPID;  INC( nextPID );
@@ -364,7 +365,7 @@ TYPE
 				p.nextProcess := root;  root := p;
 			Unix.MtxUnlock( processList );
 			Unix.CondSignal( childrunning );
-		Unix.MtxUnlock( startProcess );
+		Unix.MtxUnlock( startEventLock );
 
 		p.SetPriority( p.priority );
 
@@ -766,19 +767,22 @@ TYPE
 	PROCEDURE SuspendActivities;
 	VAR t, me: Process;  
 	BEGIN
+		Unix.MtxLock( processList ); (* no process should silently quit during global thread suspension *) 		
 		me := CurrentProcess();
 		t := root;
 		WHILE t # NIL DO
-			IF t # me THEN  
+			IF t # me THEN 
 				Unix.ThrSuspend( t.threadId, t.mode = Running );
 			END;
 			t := t.nextProcess
 		END;
+		Unix.MtxUnlock( processList );
 	END SuspendActivities;
 
 	PROCEDURE ResumeActivities;
 	VAR t, me: Process;  
 	BEGIN
+		Unix.MtxLock( processList ); (* no process should silently quit during global thread suspension *) 		
 		me := CurrentProcess();
 		t := root;
 		WHILE t # NIL DO
@@ -787,6 +791,7 @@ TYPE
 			END;
 			t := t.nextProcess
 		END;
+		Unix.MtxUnlock( processList );
 	END ResumeActivities;
 	
 
@@ -874,8 +879,9 @@ TYPE
 		Unix.suspendHandler := GetContext;
 		
 		createProcess := Unix.NewMtx( );  processList := Unix.NewMtx( );
-		startProcess := Unix.NewMtx( );  childrunning := Unix.NewCond( ); 
+		startEventLock := Unix.NewMtx( );  childrunning := Unix.NewCond( ); 
 		lockMutex := Unix.NewMtx( );
+		startProcess := Unix.NewMtx( ); 
 		
 		processPointer := Unix.NewKey( );
 											

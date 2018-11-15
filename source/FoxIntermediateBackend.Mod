@@ -3202,15 +3202,14 @@ TYPE
 		END Warning;
 
 		PROCEDURE CreateTraceModuleMethod(mod: SyntaxTree.Module);
-		VAR name: Basic.SectionName; pooledName: Basic.SegmentedName; previousSection: IntermediateCode.Section;
+		VAR name: Basic.SectionName; pooledName: Basic.SegmentedName; context: Context;
 		VAR variable: SyntaxTree.Variable; register,op: IntermediateCode.Operand; 
 			operand:Operand; 
 		BEGIN
-			previousSection := section;
 			Global.GetModuleName(mod,name);
 			Strings.Append(name,".@Trace");
 			Basic.ToSegmentedName(name, pooledName);
-			section := NewSection(module.allSections, Sections.CodeSection, pooledName,NIL,TRUE);
+			context := SwitchContext(NewSection(module.allSections, Sections.CodeSection, pooledName,NIL,TRUE));
 			IF dump # NIL THEN dump := section.comments END;
 			IF backend.hasLinkRegister THEN
 				Emit(Push(Basic.invalidPosition, lr));
@@ -3234,7 +3233,7 @@ TYPE
 			IntermediateCode.InitAddress(op, addressType, pooledName , 0, 0);
 			Emit(Br(position,op));
 			INC(statCoopTraceModule, section.pc);
-			section := previousSection;
+			ReturnToContext(context);
 			IF dump # NIL THEN dump := section.comments END;
 
 		END CreateTraceModuleMethod;
@@ -3429,11 +3428,9 @@ TYPE
 		END CallTraceMethod;
 		
 		PROCEDURE CreateTraceMethod (recordType: SyntaxTree.RecordType);
-		VAR name: Basic.SegmentedName; previousSection: IntermediateCode.Section;
-		VAR variable: SyntaxTree.Variable; register,op,ofs: IntermediateCode.Operand; recordBase: SyntaxTree.RecordType; 
+		VAR name: Basic.SegmentedName; variable: SyntaxTree.Variable; register,op,ofs: IntermediateCode.Operand; recordBase: SyntaxTree.RecordType; 
 			parameter0, parameter1: IntermediateCode.Operand; label: Label; context: Context;
 		BEGIN
-			previousSection := section;
 			parameter0 (* size *) := IntermediateCode.Memory(sizeType,sp,ToMemoryUnits(system,2*addressType.sizeInBits));
 			parameter1 (* address *) := IntermediateCode.Memory(addressType,sp,ToMemoryUnits(system,1*addressType.sizeInBits));
 			GetRecordTypeName (recordType,name);
@@ -3841,10 +3838,8 @@ TYPE
 		END ResetVariables2;
 		
 		PROCEDURE CreateProcedureDescriptor (procedure: SyntaxTree.Procedure);
-		VAR previousSection: IntermediateCode.Section; name: Basic.SegmentedName;
-		VAR op: IntermediateCode.Operand; context: Context;
+		VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; context: Context;
 		BEGIN
-			previousSection := section;
 			GetCodeSectionNameForSymbol(procedure, name);
 			Basic.SuffixSegmentedName (name, Basic.MakeString ("@StackDescriptor"));
 			context := SwitchContext(NewSection(module.allSections, Sections.ConstSection, name,NIL,dump # NIL));

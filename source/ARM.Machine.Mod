@@ -2399,48 +2399,6 @@ VAR
 		RETURN proc[id].preemptCount;
 	END PreemptCount;
 
-	(* Acquire spinlock 'lock'. Does not time out *)
-	PROCEDURE AcquireSpin(VAR lock: BOOLEAN); (* DEBUG: temporarily exported *)
-	CODE
-		CLREX
-		DMB
-		LDR R0, [FP, #lock]
-		MOV R1, #1
-	loop:
-		LDREXB R2, R0	; R2 := lock
-		CMP R2, #0		; if R2 != 0 => lock held, try again
-		BNE loop
-		STREXB R2, R1, R0	; lock := R1
-		CMP R2, #0		; if R2 # 0 exclusive write failed: try whole process again.
-		BNE loop
-		;DSB				; Data Memory Barrier
-	END AcquireSpin;
-
-	(* Releases spinlock 'lock'. *)
-	PROCEDURE ReleaseSpin(VAR lock: BOOLEAN); (* DEBUG: temporarily exported *)
-	BEGIN
-		CODE
-			CLREX
-			DMB
-		END;
-		lock := FALSE;
-		(*CODE
-		loop:
-			LDR R0, [FP, #lock]
-			LDREX R1, R0
-			MOV R1, #0
-			STREX R2, R1, R0
-			CMP R2, #0
-			BNE loop
-		END;*)
-		(*CODE
-			DMB
-			DSB
-			LDR R0, [FP, #lock]
-			MCR P15, 0, R0, C7, C10, 4
-		END;*)
-	END ReleaseSpin;
-
 	(* Acquire lock. Disables interrupts. *)
 	PROCEDURE Acquire*(level: LONGINT);
 	VAR
@@ -2460,7 +2418,7 @@ VAR
 			ASSERT(~(level IN proc[id].locksHeld))	(* recursive locks not allowed *)
 		END;
 
-		AcquireSpin(lock[level].locked);
+		AcquireObject(lock[level].locked);
 		(* Now, we hold the lock *)
 		INCL(proc[id].locksHeld, level);
 
@@ -2483,7 +2441,7 @@ VAR
 		END;
 
 		EXCL(proc[id].locksHeld, level);
-		ReleaseSpin(lock[level].locked);
+		ReleaseObject(lock[level].locked);
 
 		ReleasePreemption;
 		IF (proc[id].locksHeld = {}) & proc[id].intStatus THEN
@@ -2510,15 +2468,39 @@ VAR
 	END ReleaseAll;
 
 	(** Acquire a fine-grained lock on an active object. *)
+	(* Based on the code from "Barrier Litmus Tests and Cookbook" by Richard Grisenthwaite, ARM, 26.11.2009 *)
 	PROCEDURE AcquireObject*(VAR locked: BOOLEAN);
-	BEGIN
-		AcquireSpin(locked)
+	CODE
+		CLREX ; ensure that the local monitor is in the Open Access state after a context switch
+
+		LDR R1, [FP, #locked]
+
+		MOV R0, #1
+	Loop:
+		LDREXB R5, R1 ; read lock
+		CMP R5, #0 ; check if 0
+		WFENE ; sleep if the lock is held
+
+		STREXBEQ R5, R0, R1 ; attempt to store new value
+		CMPEQ R5, #0 ; test if store suceeded
+		BNE Loop ; retry if not
+
+		DMB ; ensures that all subsequent accesses are observed after the gaining of the lock is observed
+
+		; loads and stores in the critical region can now be performed
 	END AcquireObject;
 
 	(** Release an active object lock. *)
+	(* Based on the code from "Barrier Litmus Tests and Cookbook" by Richard Grisenthwaite, ARM, 26.11.2009 *)
 	PROCEDURE ReleaseObject*(VAR locked: BOOLEAN);
-	BEGIN
-		ReleaseSpin(locked)
+	CODE
+		LDR R1, [FP, #locked]
+
+		MOV R0, #0
+		DMB ; ensure all previous accesses are observed before the lock is cleared
+		STRB R0, [R1, #0] ; clear the lock.
+		DSB ; ensure completion of the store that cleared the lock before sending the event
+		SEV
 	END ReleaseObject;
 
 	(** Break all locks held by current processor (for exception handling).  Returns levels released. *)

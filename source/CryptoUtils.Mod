@@ -162,7 +162,7 @@ VAR
 
 
 	PROCEDURE PutBigNumber*( VAR buf: ARRAY OF CHAR;  VAR pos: LONGINT;  b: B.BigNumber );
-	VAR i, j, len, x: LONGINT;  tmp: ARRAY 2048 OF CHAR;
+	VAR i, j, len: LONGINT;  x: UNSIGNED32;  tmp: ARRAY 2048 OF CHAR;
 	BEGIN
 		len := 0;
 		FOR i := b.len - 1 TO 0 BY -1 DO

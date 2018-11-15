@@ -85,7 +85,7 @@ VAR
 
 
 	(* converts LONGINT to ARRAY OF CHAR; big endian order *)
-	PROCEDURE l2n( l: LONGINT;  VAR buf: Buffer;  pos: LONGINT );
+	PROCEDURE l2n( l: UNSIGNED32;  VAR buf: Buffer;  pos: LONGINT );
 	VAR i: LONGINT;
 	BEGIN
 		i := pos + 3;

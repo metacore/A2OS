@@ -88,7 +88,7 @@ VAR
 
 	PROCEDURE ProbablePrime( bits: INTEGER ): BigNumber;
 	VAR t: BigNumber;  delta, i: LONGINT; p: BigNumber;
-		mods: ARRAY N OF LONGINT;
+		mods: ARRAY N OF UNSIGNED32;
 	BEGIN
 		LOOP
 			p := B.NewRand( bits, 1, 1 );

@@ -1,8 +1,8 @@
+MODULE PsUartMin;
 (**
 	AUTHOR: Alexey Morozov, Timothee Martiel
 	PURPOSE: minimal driver implementation for Xilinx Zynq UART PS controller
 *)
-MODULE PsUartMin;
 
 IMPORT SYSTEM;
 
@@ -167,10 +167,10 @@ TYPE
 		XUARTPS_RXBS_OFFSET = 0x0048;  (* RX FIFO Byte Status [11:0] *)
 	*)
 	UartRegisters* = POINTER {UNSAFE, UNTRACED}  TO RECORD
-		cr*, mr*, ier*, idr*, imr*, isr*: SET;
+		cr*, mr*, ier*, idr*, imr*, isr*: SET32;
 		baudgen*, rxtout*, rxwm*: LONGINT;
-		modemcr*, modemsr*: SET;
-		sr*: SET;
+		modemcr*, modemsr*: SET32;
+		sr*: SET32;
 		fifo*: LONGINT;
 		bauddiv*, flowdel*: LONGINT;
 		padding2: ARRAY 2 OF LONGINT;
@@ -231,9 +231,9 @@ VAR
 	PROCEDURE Enable*(uart: UartRegisters; enable: BOOLEAN);
 	BEGIN
 		IF enable THEN
-			uart.cr := uart.cr * SET(-XUARTPS_CR_EN_DIS_MASK) + {XUARTPS_CR_RX_EN, XUARTPS_CR_TX_EN};
+			uart.cr := uart.cr * SET32(-XUARTPS_CR_EN_DIS_MASK) + {XUARTPS_CR_RX_EN, XUARTPS_CR_TX_EN};
 		ELSE
-			uart.cr := uart.cr * SET(-XUARTPS_CR_EN_DIS_MASK) + {XUARTPS_CR_RX_DIS, XUARTPS_CR_TX_DIS};
+			uart.cr := uart.cr * SET32(-XUARTPS_CR_EN_DIS_MASK) + {XUARTPS_CR_RX_DIS, XUARTPS_CR_TX_DIS};
 		END;
 	END Enable;
 
@@ -338,7 +338,7 @@ VAR
 		Set number of data bits
 	*)
 	PROCEDURE SetDataBits*(uart: UartRegisters; dataBits: LONGINT; VAR res: WORD): BOOLEAN;
-	VAR reg: SET;
+	VAR reg: SET32;
 	BEGIN
 		CASE dataBits OF
 			 6: reg := XUARTPS_MR_CHARLEN_6;
@@ -348,7 +348,7 @@ VAR
 			res := WrongData; RETURN FALSE;
 		END;
 
-		uart.mr := uart.mr * SET(-XUARTPS_MR_CHARLEN_MASK) + reg;
+		uart.mr := uart.mr * SET32(-XUARTPS_MR_CHARLEN_MASK) + reg;
 
 		res := Ok;
 		RETURN TRUE
@@ -358,7 +358,7 @@ VAR
 		Setup parity check type
 	*)
 	PROCEDURE SetParity*(uart: UartRegisters; parityType: LONGINT; VAR res: WORD): BOOLEAN;
-	VAR reg: SET;
+	VAR reg: SET32;
 	BEGIN
 		CASE parityType OF
 			 ParNo: reg := XUARTPS_MR_PARITY_NONE;
@@ -370,7 +370,7 @@ VAR
 			res := WrongParity; RETURN FALSE;
 		END;
 
-		uart.mr := uart.mr * SET(-XUARTPS_MR_PARITY_MASK) + reg;
+		uart.mr := uart.mr * SET32(-XUARTPS_MR_PARITY_MASK) + reg;
 
 		res := Ok;
 		RETURN TRUE
@@ -380,7 +380,7 @@ VAR
 		Setup number of stop bits
 	*)
 	PROCEDURE SetStopBits*(uart: UartRegisters; stopBits: LONGINT; VAR res: WORD): BOOLEAN;
-	VAR reg: SET;
+	VAR reg: SET32;
 	BEGIN
 		CASE stopBits OF
 			 Stop1: reg := XUARTPS_MR_STOPMODE_1;
@@ -390,7 +390,7 @@ VAR
 			res := WrongStop; RETURN FALSE;
 		END;
 
-		uart.mr := uart.mr * SET(-XUARTPS_MR_STOPMODE_MASK) + reg;
+		uart.mr := uart.mr * SET32(-XUARTPS_MR_STOPMODE_MASK) + reg;
 
 		res := Ok;
 		RETURN TRUE

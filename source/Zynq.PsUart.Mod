@@ -2,6 +2,7 @@
 	AUTHOR: Alexey Morozov, Timothee Martiel
 	PURPOSE: driver implementation for Xilinx Zynq UART PS controller
 *)
+
 MODULE PsUart;
 
 IMPORT SYSTEM, PsUartMin, PsUartInterrupts, Trace;
@@ -42,7 +43,7 @@ TYPE
 		rxBuf: POINTER TO ARRAY OF CHAR; (* receive (RX) circular buffer *)
 		rxBufRdPos, rxBufWrPos: SIZE; (* RX buffer read and write positions *)
 
-		errors: SET;
+		errors: SET32;
 	END;
 
 VAR
@@ -57,7 +58,7 @@ VAR
 	PROCEDURE IntrHandler(param: ANY);
 	VAR
 		uart: UartController;
-		intrStatus: SET;
+		intrStatus: SET32;
 	BEGIN
 		uart := param(UartController);
 		intrStatus := uart.regs.imr * uart.regs.isr;
@@ -68,7 +69,7 @@ VAR
 		END;
 	END IntrHandler;
 
-	PROCEDURE IntrHandlerRx(uart: UartController; intrStatus: SET);
+	PROCEDURE IntrHandlerRx(uart: UartController; intrStatus: SET32);
 	VAR
 		bufWrPos: SIZE;
 	BEGIN

@@ -46,7 +46,7 @@ VAR
 
 		Returns the frequency in Hz
 	*)
-	PROCEDURE GetPllClockFrequency*(srcSel: LONGINT; VAR res: LONGINT): HUGEINT;
+	PROCEDURE GetPllClockFrequency*(srcSel: LONGINT; VAR res: WORD): HUGEINT;
 	BEGIN
 		CASE srcSel OF
 			|IoPll: RETURN HUGEINT(LSH(SYSTEM.MSK(Platform.slcr.IO_PLL_CTRL,0x7F000),-12)) * psRefClockHz;
@@ -65,7 +65,7 @@ VAR
 
 		Returns TRUE in case of success
 	*)
-	PROCEDURE SetPlResets*(assertedChannels: SET; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetPlResets*(assertedChannels: SET; VAR res: WORD): BOOLEAN;
 	BEGIN
 		IF assertedChannels * {4..31} # {} THEN res := InvalidChannel; RETURN FALSE; END;
 
@@ -88,7 +88,7 @@ VAR
 
 		Returns TRUE in case of success
 	*)
-	PROCEDURE SetPlClock*(channel: LONGINT; srcSel: LONGINT; divisor0, divisor1: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetPlClock*(channel: LONGINT; srcSel: LONGINT; divisor0, divisor1: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
 		IF (srcSel > 0) OR (srcSel > 3) THEN res := InvalidClockSource; RETURN FALSE; END;
 		IF (divisor0 < 1) OR (divisor0 > 63) OR (divisor1 < 0) OR (divisor1 > 63) THEN res := InvalidDivisor; RETURN FALSE; END;
@@ -119,7 +119,7 @@ VAR
 
 		Returns the frequency in Hz
 	*)
-	PROCEDURE GetPlClockFrequency*(channel: LONGINT; VAR res: LONGINT): HUGEINT;
+	PROCEDURE GetPlClockFrequency*(channel: LONGINT; VAR res: WORD): HUGEINT;
 	VAR
 		d, srcSel, divisor0, divisor1: LONGINT;
 	BEGIN
@@ -148,7 +148,7 @@ VAR
 
 		Returns TRUE in case of success
 	*)
-	PROCEDURE StopPlClock*(channel: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE StopPlClock*(channel: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
 
 		Platform.slcr.SLCR_UNLOCK := Platform.SlcrUnlockKey; (* enable writing to SLCR registers *)
@@ -178,7 +178,7 @@ VAR
 
 		Returns TRUE in case of success
 	*)
-	PROCEDURE StartPlClock*(channel: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE StartPlClock*(channel: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
 		Platform.slcr.SLCR_UNLOCK := Platform.SlcrUnlockKey; (* enable writing to SLCR registers *)
 
@@ -207,7 +207,7 @@ VAR
 
 		Returns TRUE in case of success
 	*)
-	PROCEDURE StopPlClocks*(channels: SET; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE StopPlClocks*(channels: SET; VAR res: WORD): BOOLEAN;
 	BEGIN
 		IF channels * {0,1,2,3} = {} THEN res := InvalidChannel; RETURN FALSE; END;
 
@@ -232,7 +232,7 @@ VAR
 
 		Returns TRUE in case of success
 	*)
-	PROCEDURE StartPlClocks*(channels: SET; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE StartPlClocks*(channels: SET; VAR res: WORD): BOOLEAN;
 	BEGIN
 		IF channels * {0,1,2,3} = {} THEN res := InvalidChannel; RETURN FALSE; END;
 
@@ -249,7 +249,7 @@ VAR
 		RETURN TRUE;
 	END StartPlClocks;
 
-	PROCEDURE GetIoClockFrequency*(module: LONGINT; VAR res: LONGINT): HUGEINT;
+	PROCEDURE GetIoClockFrequency*(module: LONGINT; VAR res: WORD): HUGEINT;
 	VAR
 		baseFreq: HUGEINT;
 		val: LONGINT;
@@ -283,7 +283,7 @@ VAR
 		RETURN baseFreq DIV val
 	END GetIoClockFrequency;
 
-	PROCEDURE GetIoClockSource*(module: LONGINT; VAR res: LONGINT): LONGINT;
+	PROCEDURE GetIoClockSource*(module: LONGINT; VAR res: WORD): LONGINT;
 	VAR
 		pll, val: LONGINT;
 	BEGIN
@@ -316,7 +316,7 @@ VAR
 		RETURN pll
 	END GetIoClockSource;
 
-	PROCEDURE SetIoClockFrequency*(module: LONGINT; freq: HUGEINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetIoClockFrequency*(module: LONGINT; freq: HUGEINT; VAR res: WORD): BOOLEAN;
 	VAR
 		baseFreq: HUGEINT;
 		val, div: LONGINT;
@@ -356,17 +356,17 @@ VAR
 		RETURN TRUE
 	END SetIoClockFrequency;
 
-	PROCEDURE SetIoClockSource*(module, source: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetIoClockSource*(module, source: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
 		
 	END SetIoClockSource;
 
-	PROCEDURE StartIoClock*(module, device: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE StartIoClock*(module, device: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
 		
 	END StartIoClock;
 
-	PROCEDURE StopIoClock*(module, device: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE StopIoClock*(module, device: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
 		
 	END StopIoClock;

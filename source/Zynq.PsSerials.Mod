@@ -11,10 +11,10 @@ TYPE
 	VAR
 		uart: PsUart.UartController;
 
-		recvLock := FALSE : BOOLEAN;
-		sendLock := FALSE : BOOLEAN;
+		recvLocked := FALSE : BOOLEAN;
+		sendLocked := FALSE : BOOLEAN;
 
-		PROCEDURE & Init (id: LONGINT);
+		PROCEDURE & Init (id: PsUart.UartId);
 		BEGIN
 			uart := PsUart.GetUart(id);
 			ASSERT(uart # NIL);
@@ -51,43 +51,40 @@ TYPE
 			END;
 		END BusyLoopCallback0;
 
-		(*! This method can be used for trace output *)
+		(* This method can be safely used for trace output *)
 		PROCEDURE SendChar(char: CHAR; VAR res: WORD);
 		BEGIN
-			Machine.AcquireObject(sendLock);
 			(*! use BusyLoopCallback0 method to make sure no low-level lock is acquired here - required when used as trace output *)
 			PsUart.SendChar(uart, char, TRUE, BusyLoopCallback0, res);
-		FINALLY
-			Machine.ReleaseObject(sendLock);
 		END SendChar;
 
-		(*! This method must not be used for trace output! *)
+		(*! This method must not be used for trace output - danger of a dead lock! *)
 		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
-			Machine.AcquireObject(sendLock);
+			Machine.AcquireObject(sendLocked);
 			PsUart.Send(uart, buf, ofs, len, propagate, BusyLoopCallback, res);
 		FINALLY
-			Machine.ReleaseObject(sendLock);
+			Machine.ReleaseObject(sendLocked);
 		END Send;
 
 		PROCEDURE ReceiveChar(VAR char: CHAR; VAR res: WORD);
 		BEGIN
-			Machine.AcquireObject(recvLock);
+			Machine.AcquireObject(recvLocked);
 			char := PsUart.ReceiveChar(uart, BusyLoopCallback, res);
 		FINALLY
-			Machine.ReleaseObject(recvLock);
+			Machine.ReleaseObject(recvLocked);
 		END ReceiveChar;
 
 		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
-			Machine.AcquireObject(recvLock);
+			Machine.AcquireObject(recvLocked);
 			PsUart.Receive(uart, buf, ofs, size, min, len, BusyLoopCallback, res);
 		FINALLY
-			Machine.ReleaseObject(recvLock);
+			Machine.ReleaseObject(recvLocked);
 		END Receive;
 
 		PROCEDURE Available(): LONGINT;
-		BEGIN{EXCLUSIVE}
+		BEGIN
 			RETURN PsUart.Available(uart);
 		END Available;
 
@@ -107,9 +104,10 @@ VAR
 
 	PROCEDURE Init;
 	VAR
-		i, clk: LONGINT; res: WORD;
+		i: SIZE;
+		clk: PsUart.ClockFrequency; res: WORD;
 		name, desc: ARRAY 32 OF CHAR;
-		tracePort: LONGINT;
+		tracePort: SIZE;
 	BEGIN
 		clk := BootConfig.GetIntValue("UartInputClockHz");
 		FOR i := 0 TO LEN(Platform.UartBase,0)-1 DO
@@ -140,7 +138,7 @@ VAR
 	END Init;
 
 	PROCEDURE Cleanup;
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO LEN(ports) - 1 DO
 			IF ports[i] # NIL THEN Serials.UnRegisterPort(ports[i]) END

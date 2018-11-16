@@ -25,29 +25,23 @@ CONST
 	(* RX error interrupts *)
 	RxErrorInterrupts = {PsUartMin.XUARTPS_IXR_PARITY , PsUartMin.XUARTPS_IXR_FRAMING , PsUartMin.XUARTPS_IXR_OVER};
 
-	(* TX data interrupts *)
-	TxDataInterrupts = {PsUartMin.XUARTPS_IXR_TXEMPTY, PsUartMin.XUARTPS_IXR_TTRIG};
-
-	(* TX error interrupts *)
-	TxErrorInterrupts = {PsUartMin.XUARTPS_IXR_TOVR};
-
-	TxOverrunError = 9;
+	RxInterrupts = RxDataInterrupts + RxErrorInterrupts;
 
 TYPE
 
+	UartId* = PsUartMin.UartId;
+	ClockFrequency* = PsUartMin.ClockFrequency;
+
 	UartController* = POINTER TO RECORD
-		id-: LONGINT; (** UART controller ID *)
+		id-: UartId; (** UART controller ID *)
 		regs-: PsUartMin.UartRegisters; (** controller registers *)
-		inputClock-: LONGINT; (** controller input clock in Hz *)
+		inputClock-: ClockFrequency; (** controller input clock in Hz *)
 		bps-, data-, parity-, stop-: LONGINT; (** current parameter values *)
 
 		open-: BOOLEAN; (** TRUE if the controller is open *)
 
 		rxBuf: POINTER TO ARRAY OF CHAR; (* receive (RX) circular buffer *)
-		rxBufRdPos, rxBufWrPos: LONGINT; (* RX buffer read and write positions *)
-
-		txBuf: POINTER TO ARRAY OF CHAR; (* transmit (TX) circular buffer *)
-		txBufRdPos, txBufWrPos: LONGINT; (* TX buffer read and write positions *)
+		rxBufRdPos, rxBufWrPos: SIZE; (* RX buffer read and write positions *)
 
 		errors: SET;
 	END;
@@ -67,26 +61,17 @@ VAR
 		intrStatus: SET;
 	BEGIN
 		uart := param(UartController);
-		(*Trace.String("imr="); Trace.Set(uart.regs.imr); Trace.Ln;
-		Trace.String("isr="); Trace.Set(uart.regs.isr); Trace.Ln;*)
-
 		intrStatus := uart.regs.imr * uart.regs.isr;
 		uart.regs.isr := intrStatus; (* clear the interrupt *)
 
-		(*Trace.String("intrStatus="); Trace.Set(intrStatus); Trace.Ln;*)
-
-		IF intrStatus * (RxDataInterrupts+RxErrorInterrupts) # {} THEN
+		IF intrStatus * RxInterrupts # {} THEN
 			IntrHandlerRx(uart,intrStatus);
-		END;
-
-		IF intrStatus * TxDataInterrupts # {} THEN
-			IntrHandlerTx(uart,intrStatus);
 		END;
 	END IntrHandler;
 
 	PROCEDURE IntrHandlerRx(uart: UartController; intrStatus: SET);
 	VAR
-		bufWrPos: LONGINT;
+		bufWrPos: SIZE;
 	BEGIN
 
 		IF intrStatus * RxErrorInterrupts # {} THEN
@@ -117,37 +102,10 @@ VAR
 		uart.rxBufWrPos := bufWrPos;
 	END IntrHandlerRx;
 
-	PROCEDURE IntrHandlerTx(uart: UartController; intrStatus: SET);
-	VAR bufRdPos: LONGINT;
-	BEGIN
-		IF intrStatus * TxErrorInterrupts # {} THEN
-			IF PsUartMin.XUARTPS_IXR_TOVR IN intrStatus THEN
-				INCL(uart.errors,TxOverrunError);
-			END;
-		END;
-
-		bufRdPos := uart.txBufRdPos;
-
-		WHILE (bufRdPos # uart.txBufWrPos) & ~(PsUartMin.XUARTPS_SR_TXFULL IN uart.regs.sr) DO
-			uart.regs.fifo := ORD(uart.txBuf[bufRdPos]);
-			INC(bufRdPos);
-			IF bufRdPos = LEN(uart.txBuf) THEN
-				bufRdPos := 0;
-			END;
-		END;
-
-		(* disable TX data interrupts if the buffer is empty *)
-		IF bufRdPos = uart.txBufWrPos THEN
-			uart.regs.idr := uart.regs.idr + TxDataInterrupts;
-		END;
-
-		uart.txBufRdPos := bufRdPos;
-	END IntrHandlerTx;
-
 	(*
 		Returns TRUE if a cyclic buffer is full
 	*)
-	PROCEDURE BufIsFull(bufWrPos, bufRdPos, bufSize: LONGINT): BOOLEAN;
+	PROCEDURE BufIsFull(bufWrPos, bufRdPos, bufSize: SIZE): BOOLEAN;
 	BEGIN
 		IF bufWrPos # (bufSize-1) THEN
 			RETURN bufRdPos = (bufWrPos+1);
@@ -164,7 +122,7 @@ VAR
 		inputClock: controller input clock in Hz
 		res: returned error code, 0 in case of success
 	*)
-	PROCEDURE Install* (uart: LONGINT; base: ADDRESS; inputClock: LONGINT; VAR res: WORD);
+	PROCEDURE Install* (uart: UartId; base: ADDRESS; inputClock: ClockFrequency; VAR res: WORD);
 	VAR ctl: UartController;
 	BEGIN
 		PsUartMin.Install(uart, base, inputClock, res);
@@ -183,7 +141,6 @@ VAR
 		ctl.stop := PsUartMin.DefaultStop;
 
 		NEW(ctl.rxBuf,DefaultRxBufSize);
-		NEW(ctl.txBuf,DefaultTxBufSize);
 
 		ASSERT(PsUartInterrupts.InstallInterruptHandler(uart,IntrHandler,ctl));
 	END Install;
@@ -195,7 +152,7 @@ VAR
 
 		Returns NIL in case if no controller with given ID has been installed
 	*)
-	PROCEDURE GetUart*(uart: LONGINT): UartController;
+	PROCEDURE GetUart*(uart: UartId): UartController;
 	BEGIN
 		IF (uart >= 0) & (uart < LEN(uarts)) THEN
 			RETURN uarts[uart];
@@ -214,7 +171,7 @@ VAR
 		res: returned error code, 0 in case of success
 	*)
 	PROCEDURE Open*(uart: UartController; bps, data, parity, stop: LONGINT; VAR res: WORD);
-	VAR n: LONGINT;
+	VAR n: SIZE;
 	BEGIN
 		IF uart.open THEN res := PsUartMin.PortInUse; RETURN; END;
 
@@ -234,22 +191,16 @@ VAR
 		uart.rxBufWrPos := 0;
 		uart.rxBufRdPos := 0;
 
-		uart.txBufWrPos := 0;
-		uart.txBufRdPos := 0;
-
 		(* configure receive timeout to be as close as possible to ReceiveTimeoutInUs *)
 		n := ENTIER((ReceiveTimeoutInUs*REAL(bps)+1000000) / 4000000 + 0.5);
 		n := MAX(1,MIN(255,n-1));
-		TRACE(n);
 		uart.regs.rxtout := n;
 
 		uart.regs.cr := uart.regs.cr + {PsUartMin.XUARTPS_CR_TORST}; (* restart receive timeout counter *)
 
 		uart.regs.rxwm := 32; (* RX FIFO triggering threshold *)
 
-		uart.regs.txwm := 32; (* TX FIFO triggering threshold *)
-
-		uart.regs.ier := (RxDataInterrupts+RxErrorInterrupts+TxErrorInterrupts);
+		uart.regs.ier := RxInterrupts;
 
 		PsUartMin.Enable(uart.regs,TRUE);
 
@@ -271,8 +222,8 @@ VAR
 		END;
 	END Close;
 
-	PROCEDURE OccupiedBufSpace(bufWrPos, bufRdPos, bufSize: LONGINT): LONGINT;
-	VAR n: LONGINT;
+	PROCEDURE OccupiedBufSpace(bufWrPos, bufRdPos, bufSize: SIZE): SIZE;
+	VAR n: SIZE;
 	BEGIN
 		n := bufWrPos - bufRdPos;
 		IF n >= 0 THEN
@@ -283,8 +234,8 @@ VAR
 	END OccupiedBufSpace;
 
 	(* Returns the amount of available free space in a cyclic buffer *)
-	PROCEDURE AvailableBufSpace(bufWrPos, bufRdPos, bufSize: LONGINT): LONGINT;
-	VAR n: LONGINT;
+	PROCEDURE AvailableBufSpace(bufWrPos, bufRdPos, bufSize: SIZE): SIZE;
+	VAR n: SIZE;
 	BEGIN
 		n := bufWrPos - bufRdPos;
 		IF n >= 0 THEN
@@ -300,7 +251,7 @@ VAR
 		uart: UART controller
 		res: error code, 0 in case of success
 	*)
-	PROCEDURE Available*(uart: UartController): LONGINT;
+	PROCEDURE Available*(uart: UartController): SIZE;
 	BEGIN
 		RETURN OccupiedBufSpace(uart.rxBufWrPos,uart.rxBufRdPos,LEN(uart.rxBuf));
 	END Available;
@@ -314,82 +265,14 @@ VAR
 	*)
 	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
 	BEGIN
-		(*! for the moment just write directly to the FIFO *)
-		res := 0;
-		WHILE uart.open DO
-			IF ~(PsUartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
-				uart.regs.fifo := ORD(ch); RETURN;
-			END;
-		END;
-
-		res := PsUartMin.Closed;
-	(*TYPE ArrayOfChar1 = ARRAY 1 OF CHAR;
-	BEGIN
-		(*!TODO: do not use interrupts here to avoid problems when SendChar is used for trace output *)
-		Send(uart, SYSTEM.VAL(ArrayOfChar1,ch), 0, 1, propagate, onBusy, res);*)
+		PsUartMin.SendChar(uart.regs,ch,propagate,onBusy,res);
 	END SendChar;
 
 	(**
 		Send data to the UART
 	*)
 	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
-	VAR
-		bufWrPos, n: LONGINT;
 	BEGIN
-
-		IF ~uart.open THEN res := PsUartMin.Closed; RETURN; END;
-
-		WHILE uart.open & (len > 0) DO
-
-			bufWrPos := uart.txBufWrPos;
-			n := AvailableBufSpace(bufWrPos,uart.txBufRdPos,LEN(uart.txBuf));
-
-			IF n # 0 THEN
-
-				n := MIN(n,len);
-				DEC(len,n);
-
-				WHILE n > 0 DO
-					uart.txBuf[bufWrPos] := buf[offs];
-					INC(bufWrPos);
-					IF bufWrPos = LEN(uart.txBuf) THEN
-						bufWrPos := 0;
-					END;
-					INC(offs); DEC(n);
-				END;
-
-				uart.txBufWrPos := bufWrPos;
-
-				(* enable TX interrupts *)
-				uart.regs.ier := uart.regs.ier + TxDataInterrupts;
-			ELSE
-				(* enable TX interrupts *)
-				uart.regs.ier := uart.regs.ier + TxDataInterrupts;
-				IF (onBusy # NIL) & ~onBusy(res) THEN RETURN; END;
-			END;
-		END;
-
-		IF propagate THEN
-			(* flush the buffer *)
-			WHILE uart.open & (uart.txBufRdPos # uart.txBufWrPos) DO
-				IF (onBusy # NIL) & ~onBusy(res) THEN RETURN; END;
-			END;
-
-			(* flush the FIFO *)
-			WHILE uart.open & ~(PsUartMin.XUARTPS_SR_TXEMPTY IN uart.regs.sr) DO
-				IF (onBusy # NIL) & ~onBusy(res) THEN RETURN; END;
-			END;
-		END;
-
-		IF uart.open THEN
-			res := 0;
-		ELSE
-			IF TxOverrunError IN uart.errors THEN res := OverrunError;
-			ELSE res := PsUartMin.Closed;
-			END;
-		END;
-(*	BEGIN
-
 		WHILE uart.open & (len > 0) DO
 			IF ~(PsUartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
 				uart.regs.fifo := ORD(buf[offs]);
@@ -409,7 +292,7 @@ VAR
 			res := PsUartMin.Ok;
 		ELSE
 			res := PsUartMin.Closed;
-		END;*)
+		END;
 	END Send;
 
 	(**
@@ -433,7 +316,7 @@ VAR
 	*)
 	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len: LONGINT; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
 	VAR
-		bufRdPos, n: LONGINT;
+		bufRdPos, bufWrPos, n: SIZE;
 	BEGIN
 		IF ~uart.open THEN res := PsUartMin.Closed; RETURN; END;
 
@@ -447,14 +330,23 @@ VAR
 		WHILE uart.open & (size > 0) DO
 
 			bufRdPos := uart.rxBufRdPos;
+			bufWrPos := uart.rxBufWrPos;
 
-			n := OccupiedBufSpace(uart.rxBufWrPos,bufRdPos,LEN(uart.rxBuf));
+			n := OccupiedBufSpace(bufWrPos,bufRdPos,LEN(uart.rxBuf));
 
 			IF n # 0 THEN
 
 				n := MIN(n,size);
 				DEC(size,n); INC(len,n);
 				IF min > 0 THEN DEC(min,n); END;
+
+				(*!
+					Make sure the receive buffer content
+					corresponds to the state of uart.rxBufWrPos
+				*)
+				CODE
+					DMB
+				END;
 
 				WHILE n > 0 DO
 					buf[offs] := uart.rxBuf[bufRdPos];
@@ -473,29 +365,6 @@ VAR
 				RETURN;
 			END;
 		END;
-
-	(*BEGIN
-		res := Ok;
-		len := 0;
-
-		IF size = 0 THEN RETURN; END;
-
-		min := MIN(size,min);
-
-		WHILE uart.open & (~(PsUartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) OR (min > 0)) DO
-			IF ~(PsUartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) THEN
-				WHILE (size > 0) & ~(PsUartMin.XUARTPS_SR_RXEMPTY IN uart.regs.sr) DO
-					buf[offs] := uart.regs.fifo;
-					DEC(min); DEC(size); INC(offs); INC(len);
-				END;
-			ELSIF (onBusy # NIL) & ~onBusy(res) THEN
-				RETURN;
-			END;
-		END;
-
-		IF ~uart.open THEN
-			res := Closed;
-		END;*)
 	END Receive;
 
 	PROCEDURE PrintRegisters(regs: PsUartMin.UartRegisters);
@@ -525,8 +394,6 @@ VAR
 			PrintRegisters(uarts[0].regs);
 			Trace.String("rxBufRdPos="); Trace.Int(uarts[0].rxBufRdPos,0); Trace.Ln;
 			Trace.String("rxBufWrPos="); Trace.Int(uarts[0].rxBufWrPos,0); Trace.Ln;
-			Trace.String("txBufRdPos="); Trace.Int(uarts[0].txBufRdPos,0); Trace.Ln;
-			Trace.String("txBufWrPos="); Trace.Int(uarts[0].txBufWrPos,0); Trace.Ln;
 			Trace.Ln;
 		END;
 		IF uarts[1] # NIL THEN
@@ -534,8 +401,6 @@ VAR
 			PrintRegisters(uarts[1].regs);
 			Trace.String("rxBufRdPos="); Trace.Int(uarts[1].rxBufRdPos,0); Trace.Ln;
 			Trace.String("rxBufWrPos="); Trace.Int(uarts[1].rxBufWrPos,0); Trace.Ln;
-			Trace.String("txBufRdPos="); Trace.Int(uarts[1].txBufRdPos,0); Trace.Ln;
-			Trace.String("txBufWrPos="); Trace.Int(uarts[1].txBufWrPos,0); Trace.Ln;
 			Trace.Ln;
 		END;
 

@@ -2,7 +2,6 @@
 	AUTHOR: Alexey Morozov, Timothee Martiel
 	PURPOSE: driver implementation for Xilinx Zynq UART PS controller
 *)
-
 MODULE PsUart;
 
 IMPORT SYSTEM, PsUartMin, PsUartInterrupts, Trace;

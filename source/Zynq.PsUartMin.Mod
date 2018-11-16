@@ -1,8 +1,8 @@
-MODULE PsUartMin;
 (**
 	AUTHOR: Alexey Morozov, Timothee Martiel
 	PURPOSE: minimal driver implementation for Xilinx Zynq UART PS controller
 *)
+MODULE PsUartMin;
 
 IMPORT SYSTEM;
 

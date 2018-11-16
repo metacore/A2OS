@@ -195,7 +195,7 @@ TYPE
 		SMC_RST_CTRL*: LONGINT; (** 0x00000234 32 rw 0x00000000 SMC Software Reset Control *)
 		OCM_RST_CTRL*: LONGINT; (** 0x00000238 32 rw 0x00000000 OCM Software Reset Control *)
 		padding3: LONGINT;
-		FPGA_RST_CTRL*: SET; (** 0x00000240 32 rw 0x01F33F0F FPGA Software Reset Control *)
+		FPGA_RST_CTRL*: SET32; (** 0x00000240 32 rw 0x01F33F0F FPGA Software Reset Control *)
 		A9_CPU_RST_CTRL*: LONGINT; (** 0x00000244 32 rw 0x00000000 CPU Reset and Clock control *)
 		padding4: LONGINT;
 		RS_AWDT_CTRL*: LONGINT; (** 0x0000024C 32 rw 0x00000000 Watchdog Timer Reset Control *)

@@ -544,14 +544,14 @@ VAR
 
 	END ReceiveMultiple;
 
-	OPERATOR "<<"*(port: Output; x: SET); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END "<<";
-	OPERATOR ">>"*(x: SET; port: Output); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END ">>";
-	OPERATOR "<<?"*(port: Output; x: SET): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
-	OPERATOR ">>?"*(x: SET; port: Output): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
-	OPERATOR ">>"*(port: Input; VAR x: SET); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END ">>";
-	OPERATOR "<<"*(VAR x: SET; port: Input); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END "<<";
-	OPERATOR ">>?"*(port: Input; VAR x: SET): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
-	OPERATOR "<<?"*(VAR x: SET; port: Input): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
+	OPERATOR "<<"*(port: Output; x: SET32); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END "<<";
+	OPERATOR ">>"*(x: SET32; port: Output); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END ">>";
+	OPERATOR "<<?"*(port: Output; x: SET32): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
+	OPERATOR ">>?"*(x: SET32; port: Output): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
+	OPERATOR ">>"*(port: Input; VAR x: SET32); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END ">>";
+	OPERATOR "<<"*(VAR x: SET32; port: Input); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END "<<";
+	OPERATOR ">>?"*(port: Input; VAR x: SET32): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
+	OPERATOR "<<?"*(VAR x: SET32; port: Input): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
 
 	OPERATOR "<<"*(port: Output; x: REAL); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END "<<";
 	OPERATOR ">>"*(x: REAL; port: Output); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END ">>";

@@ -16,11 +16,11 @@
 #	Linker.Link --fileName=kernel.bin --extension=Gof --displacement=100000H Builtins Trace CPU Runtime Counters Processors Queues BaseTypes Timer Activities ExclusiveBlocks HeapManager Interrupts Environment Mutexes Machine Heaps Modules GarbageCollector Objects Kernel ~
 #
 # WINAOS
-#	Release.Build Win32 ~
+#	Release.Build --path=../newbin/ Win64 ~
 #	Linker.Link --fileFormat=PE32 --fileName=A2.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader BootConsole ~
 #	Do not forget to add the object file path to the path and to add ObjectFileExtension= ".ObfW" to your .ini file in order to configure the loader.
 # Command line shell:
-# Linker.Link --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO Traps RelativeFileSystem WMDefaultFont System StdIOShell ~
+# Linker.Link --path=../newbin/ --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO Traps RelativeFileSystem WMDefaultFont System StdIOShell ~
 #
 # LinuxAOS
 #	Release.Build Linux32 ~

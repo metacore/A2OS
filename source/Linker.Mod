@@ -971,7 +971,7 @@ VAR options: Options.Options;
 	diagnostics: Diagnostics.StreamDiagnostics; code, data: Arrangement; linker: GenericLinker.Linker;
 	linkRoot: ARRAY 256 OF CHAR; logFile: Files.File; log: Files.Writer;
 	use: SET;
-	exportString: ARRAY 1024 OF CHAR;
+	exportString: ARRAY 1024*2 OF CHAR;
 	parsed: BOOLEAN;
 	position: LONGINT;
 	name: ARRAY 32 OF CHAR;

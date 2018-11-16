@@ -1,8 +1,8 @@
-MODULE TraceDevice;
 (**
-	AUTHOR: Timothee Martiel, Alexey Morozov, HighDim GmbH, 2013-2017
+	AUTHOR: Timothee Martiel, Alexey Morozov
 	PURPOSE: simple abtraction for installing kernel tracing over Zynq PS UART
 *)
+MODULE TraceDevice;
 
 IMPORT SYSTEM, Platform, BootConfig, Trace, PsUartMin;
 
@@ -17,7 +17,7 @@ VAR
 
 	PROCEDURE Install *;
 	VAR
-		uartId: LONGINT;
+		uartId: PsUartMin.UartId;
 		res: WORD;
 	BEGIN
 		Trace.Init;

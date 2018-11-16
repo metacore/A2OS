@@ -141,7 +141,7 @@ BEGIN
 END IsIRQEnabled;
 
 (* DefaultUndef - default handler for undefined instruction exceptions *)
-PROCEDURE DefaultUndefined;
+PROCEDURE {INTERRUPT, PCOFFSET=4} DefaultUndefined;
 VAR
 	adr, fp: ADDRESS;
 	udf, resFP: LONGINT;
@@ -166,7 +166,7 @@ BEGIN
 END DefaultUndefined;
 
 (* DefaultSWI - default handler for software interrupts *)
-PROCEDURE DefaultSWI;
+PROCEDURE {INTERRUPT, PCOFFSET=4} DefaultSWI;
 VAR
 	adr: ADDRESS;
 	fp, resFP : LONGINT;
@@ -211,7 +211,7 @@ BEGIN
 END DefaultPrefetchAbort;
 
 (* DefaultDataAbort - default handler for data abort exceptions *)
-PROCEDURE {NOPAF} DefaultDataAbort;
+PROCEDURE {INTERRUPT, PCOFFSET=4} DefaultDataAbort;
 VAR
 	pcAdr, faultAdr: ADDRESS;
 	inst, stat: LONGINT;
@@ -372,7 +372,7 @@ END IRQTrap;
 
 
 (* DefaultFIQ - default handler for fast interrupts *)
-PROCEDURE DefaultFIQ;
+PROCEDURE {INTERRUPT, PCOFFSET=4} DefaultFIQ;
 BEGIN
 	Trace.StringLn("Fast IRQ Trap");
 	Trace.String("  CPU: "); Trace.Address(ID()); Trace.Ln;
@@ -388,12 +388,12 @@ BEGIN
 	
 	base := InterruptVector;
 	
-	p := DefaultUndefined; SYSTEM.PUT32(base + 024H, SYSTEM.VAL(LONGINT, p));
-	p := DefaultSWI; SYSTEM.PUT32(base + 028H, SYSTEM.VAL(LONGINT, p));
+	pi := DefaultUndefined; SYSTEM.PUT32(base + 024H, SYSTEM.VAL(LONGINT, pi));
+	pi := DefaultSWI; SYSTEM.PUT32(base + 028H, SYSTEM.VAL(LONGINT, pi));
 	pi := DefaultPrefetchAbort; SYSTEM.PUT32(base + 02CH, SYSTEM.VAL(LONGINT, pi));
-	p := DefaultDataAbort; SYSTEM.PUT32(base + 030H, SYSTEM.VAL(LONGINT, p));
+	pi := DefaultDataAbort; SYSTEM.PUT32(base + 030H, SYSTEM.VAL(LONGINT, pi));
 	pi := IRQTrap; SYSTEM.PUT32(base + 038H, SYSTEM.VAL(LONGINT, pi));
-	p := DefaultFIQ; SYSTEM.PUT32(base + 03CH, SYSTEM.VAL(LONGINT, p));
+	pi := DefaultFIQ; SYSTEM.PUT32(base + 03CH, SYSTEM.VAL(LONGINT, pi));
 
 	FOR int := 0 TO MaxIRQ DO
 		FOR i := 0 TO MaxIRQHandlers -1 DO

@@ -90,7 +90,7 @@ PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION 
 	ARM.Builtins.Mod
 	MINOS:/Trace.Mos
 	Zynq.PsUartMin.Mod
-	ZBL:Zynq.PsTraceDevice.Mos
+	ZBL:Zynq.TraceDevice.Mos
 	MINOS:/HAL/zynq/Zynq.Caches.Mos
 	MINOS:/HAL/zynq/Zynq.Memory.Mos
 	ZBL:/MemoryMapping.Mos

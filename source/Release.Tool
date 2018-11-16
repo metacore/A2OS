@@ -325,7 +325,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	COOP & ~ARM { Mutexes.Mod Coop.Machine.Mod }
 	COOP & ARM { Mutexes.Mod Coop.ARM.Machine.Mod }
 	UNIX & ~COOP { Unix.Machine.Mod }
-	ZYNQ & ~COOP { Zynq.PsUartMin.Mod Zynq.PsTraceDevice.Mod Zynq.PrivateWatchdog.Mod ARM.Machine.Mod }
+	ZYNQ & ~COOP { Zynq.PsUartMin.Mod Zynq.TraceDevice.Mod Zynq.PrivateWatchdog.Mod ARM.Machine.Mod }
 
 	~COOP { Heaps.Mod }
 	COOP { Coop.Heaps.Mod GarbageCollector.Mod }

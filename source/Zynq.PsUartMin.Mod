@@ -178,10 +178,13 @@ TYPE
 	END;
 
 	BusyLoopCallback* = PROCEDURE{DELEGATE}(VAR res: WORD): BOOLEAN;
+	
+	UartId* = SIZE;
+	ClockFrequency* = LONGINT;
 
 VAR
 	uarts: ARRAY NumUarts OF UartRegisters;
-	inputClocks: ARRAY NumUarts OF LONGINT;
+	inputClocks: ARRAY NumUarts OF ClockFrequency;
 
 	(**
 		Install a UART controller
@@ -191,7 +194,7 @@ VAR
 		inputClock: controller input clock in Hz
 		res: returned error code, 0 in case of success
 	*)
-	PROCEDURE Install* (uart: LONGINT; base: ADDRESS; inputClock: LONGINT; VAR res: WORD);
+	PROCEDURE Install* (uart: UartId; base: ADDRESS; inputClock: ClockFrequency; VAR res: WORD);
 	BEGIN
 		IF (uart < 0) OR (uart >= LEN(uarts)) THEN
 			res := NoSuchPort; RETURN;
@@ -212,7 +215,7 @@ VAR
 	(**
 		Get UART controller with a given ID
 	*)
-	PROCEDURE GetUart*(uart: LONGINT): UartRegisters;
+	PROCEDURE GetUart*(uart: UartId): UartRegisters;
 	BEGIN
 		IF (uart >= 0) & (uart < LEN(uarts)) THEN
 			RETURN uarts[uart];
@@ -261,7 +264,8 @@ VAR
 	*)
 	PROCEDURE SetBps*(uart: UartRegisters; baudrate: LONGINT; VAR res: WORD): BOOLEAN;
 	VAR
-		i, clock: LONGINT;
+		i: SIZE;
+		clock: ClockFrequency;
 		valBAUDDIV, valBRGR, calcBaudrate, baudError: LONGINT;
 		bestError, bestBRGR, bestBAUDDIV: LONGINT;
 	BEGIN
@@ -442,7 +446,7 @@ VAR
 	(**
 		Returns number of bytes available in the receive FIFO of the UART controller
 	*)
-	PROCEDURE Available*(uart: UartRegisters): LONGINT;
+	PROCEDURE Available*(uart: UartRegisters): SIZE;
 	BEGIN
 		IF ~(XUARTPS_SR_RXEMPTY IN uart.sr) THEN
 			RETURN 1;

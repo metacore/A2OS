@@ -62,7 +62,7 @@ CONST
 TYPE
 
 	Name* = ARRAY 32 OF CHAR;
-	Parameter* = ARRAY 256*8 OF CHAR;
+	Parameter* = ARRAY 256 OF CHAR;
 
 	Option = RECORD
 		isSet : BOOLEAN;

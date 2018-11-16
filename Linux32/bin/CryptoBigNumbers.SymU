@@ -3,7 +3,9 @@ MODULE CryptoBigNumbers;
 CONST 
 	BufferPoolSize = 16; 
 TYPE 
-	digits = POINTER TO ARRAY OF LONGINT; 
+	BNdigit = UNSIGNED32; 
+
+	digits = POINTER TO ARRAY OF BNdigit; 
 
 	BigNumber* = OBJECT 
 	VAR 
@@ -27,9 +29,9 @@ TYPE
 		PROCEDURE ^ adjust(newlen: LONGINT); 
 	END BigNumber; 
 
-	dig2 = ARRAY 2 OF LONGINT; 
+	dig2 = ARRAY 2 OF BNdigit; 
 
-	dig3 = ARRAY 3 OF LONGINT; 
+	dig3 = ARRAY 3 OF BNdigit; 
 
 	Montgomery = OBJECT 
 	VAR 
@@ -46,9 +48,6 @@ VAR
 	nextFreeBuffer: LONGINT; 
 	randomgenerator: Random.Generator; 
 
-	PROCEDURE ^ max(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ LessThan(x, y: LONGINT): BOOLEAN; 
-	PROCEDURE ^ LessOrEqual(x, y: LONGINT): BOOLEAN; 
 	PROCEDURE ^ RandomBytes*(VAR buf: ARRAY OF CHAR; p: LONGINT; n: LONGINT); 
 	PROCEDURE ^ adjust(VAR d: digits; dl, len: LONGINT); 
 	PROCEDURE ^ NewRand*(bits: LONGINT; top, bottom: SHORTINT): BigNumber; 
@@ -64,19 +63,18 @@ VAR
 	PROCEDURE ^ Cmp*(a, b: BigNumber): SHORTINT; 
 	PROCEDURE ^ copy(a, b: digits; len: LONGINT); 
 	PROCEDURE ^ Copy*(VAR a, b: BigNumber); 
-	PROCEDURE ^ Invert(x: LONGINT): LONGINT; 
+	PROCEDURE ^ Invert(x: BNdigit): BNdigit; 
 	PROCEDURE ^ add(a, b: digits; VAR c: digits; al, bl: LONGINT; VAR cl: LONGINT); 
 	PROCEDURE ^ sub(a, b: digits; VAR c: digits; al, bl: LONGINT; VAR cl: LONGINT); 
 	PROCEDURE ^ Add*(a, b: BigNumber): BigNumber; 
 	PROCEDURE ^ Sub*(a, b: BigNumber): BigNumber; 
-	PROCEDURE ^ MulAdd(VAR high, low: LONGINT; b, c, d: LONGINT); 
 	PROCEDURE ^ mul(a, b: digits; VAR c: digits; al, bl: LONGINT; VAR cl: LONGINT); 
-	PROCEDURE ^ muls(a: digits; b: LONGINT; c: digits; al: LONGINT; VAR cl: LONGINT); 
+	PROCEDURE ^ muls(a: digits; b: BNdigit; c: digits; al: LONGINT; VAR cl: LONGINT); 
 	PROCEDURE ^ Mul*(a, b: BigNumber): BigNumber; 
-	PROCEDURE ^ div64(CONST a: dig2; VAR b: LONGINT): LONGINT; 
+	PROCEDURE ^ div64(CONST a: dig2; VAR b: BNdigit): LONGINT; 
 	PROCEDURE ^ div96(CONST a: dig3; CONST b: dig2): LONGINT; 
 	PROCEDURE ^ Div2*(a, b: BigNumber; VAR q, r: BigNumber); 
-	PROCEDURE ^ ModWord*(VAR a: BigNumber; b: LONGINT): LONGINT; 
+	PROCEDURE ^ ModWord*(VAR a: BigNumber; b: BNdigit): BNdigit; 
 	PROCEDURE ^ Div*(a, b: BigNumber): BigNumber; 
 	PROCEDURE ^ Mod*(a, b: BigNumber): BigNumber; 
 	PROCEDURE ^ Exp*(a, b: BigNumber): BigNumber; 

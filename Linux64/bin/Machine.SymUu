@@ -22,6 +22,7 @@ CONST
 	MaxLocks* = 9; 
 	MaxCPU* = 4; 
 	IsCooperative* = FALSE; 
+	StrongChecks = FALSE; 
 TYPE 
 	Vendor* = ARRAY 13 OF CHAR; 
 
@@ -39,6 +40,7 @@ TYPE
 	END; 
 VAR 
 	mtx: ARRAY MaxLocks OF Unix.Mutex_t; 
+	taken: ARRAY MaxLocks OF ADDRESS; 
 	version-: ARRAY 64 OF CHAR; 
 	features-, features2: SET; 
 	MMXSupport-: BOOLEAN; 

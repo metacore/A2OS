@@ -153,7 +153,7 @@ BUILDS
 	RPiC {
 		INCLUDE "RPI NATIVE ARM COOP"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=ARM --cooperative --traceModule=Trace --preciseGC=no --define=NATIVE,ARM,COOP"
+		COMPILEOPTIONS "-p=ARMA2 --cooperative --traceModule=Trace --preciseGC=no --define=NATIVE,ARM,COOP"
 		EXCLUDEPACKAGES "System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications Fun Testing Education Build EFI Contributions Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}

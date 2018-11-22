@@ -70,11 +70,6 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		stackFrame.previous := NIL;
 		stackFrame.descriptor := ADDRESS OF StackFrameDescriptor;
 		SELF.procedure := procedure;
-		IF SYSTEM.GetActivity () # NIL THEN
-			context := SYSTEM.GetActivity ()(Activity).context;
-		ELSE
-			context := NIL;
-		END;
 	END InitializeActivity;
 
 	PROCEDURE ~Finalize;
@@ -298,6 +293,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF priority = IdlePriority THEN priority := SYSTEM.GetActivity ()(Activity).priority END;
 	NEW (activity, body, priority, object);
 	ASSERT (activity # NIL);
+	activity.context := GetCurrentActivity ().context;
 	Resume (activity);
 END Create;
 

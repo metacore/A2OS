@@ -30,8 +30,6 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 		NumTables = 32;										(* maximal number of tables in font file *)
 		CharMapSize = 254;										(* number of unicode characters with equivalent Mac character *)
 
-		CallStackSize = 32;
-
 		X = OpenTypeInt.X; Y = OpenTypeInt.Y;
 
 		Debug = FALSE;
@@ -131,8 +129,6 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 
 			fontProg, cvtProg, glyphProg: OpenTypeInt.Code;
 
-			stack: OpenTypeInt.Stack;
-			callStack: OpenTypeInt.CallStack;
 			func: OpenTypeInt.Functions;
 			instr: OpenTypeInt.Instructions;
 			store: OpenTypeInt.Store;
@@ -633,9 +629,6 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 			IF Debug THEN KernelLog.String("NewCode: "); KernelLog.Int(font.maxp.maxSizeOfInstructions, 0); KernelLog.Ln END;
 			OpenTypeInt.NewCode(font.glyphProg, font.maxp.maxSizeOfInstructions);
 			IF Debug THEN KernelLog.String("NewStack: "); KernelLog.Int(font.maxp.maxStackElements, 0); KernelLog.Ln END;
-			OpenTypeInt.NewStack(font.stack, font.maxp.maxStackElements);
-			IF Debug THEN KernelLog.String("NewCallStack: "); KernelLog.Int(CallStackSize, 0); KernelLog.Ln END;
-			OpenTypeInt.NewCallStack(font.callStack, CallStackSize);
 			IF Debug THEN KernelLog.String("NewFunctions: "); KernelLog.Int(font.maxp.maxFunctionDefs, 0); KernelLog.Ln END;
 			OpenTypeInt.NewFunctions(font.func, font.maxp.maxFunctionDefs);
 			IF Debug THEN KernelLog.String("NewInstructions: "); KernelLog.Int(font.maxp.maxInstructionDefs, 0); KernelLog.Ln END;
@@ -645,6 +638,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 			IF Debug THEN KernelLog.String("NewZone: "); KernelLog.Int(font.maxp.maxTwilightPoints, 0); KernelLog.Ln END;
 			OpenTypeInt.NewZone(font.twilight, 1, font.maxp.maxTwilightPoints);
 			IF Debug THEN KernelLog.String("-- done"); KernelLog.Ln END;
+			ok := font.maxp.maxStackElements <= OpenTypeInt.StackSize;
 		END;
 
 		RETURN ok
@@ -658,7 +652,6 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 			OpenTypeInt.NewCode(font.fontProg, len);
 			font.file.Set(r, pos);
 			r.file.ReadBytes(r, font.fontProg^, 0,len);
-			OpenTypeInt.SetStacks(context, font.stack, font.callStack);
 			OpenTypeInt.SetStructures(context, font.func, font.instr, font.store, font.cvt);
 			OpenTypeInt.SetResolution(context, 10*40H, (10*40H+36) DIV 72, (10*40H+36) DIV 72, font.head.unitsPerEm, FALSE, FALSE);
 			OpenTypeInt.InitState(context);
@@ -849,7 +842,6 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 				font.file.Set(r, pos);
 				r.file.ReadBytes(r, font.cvtProg^, 0,len)
 			END;
-			OpenTypeInt.SetStacks(context, font.stack, font.callStack);
 			OpenTypeInt.SetStructures(context, inst.func, inst.instr, inst.store, inst.cvt);
 			OpenTypeInt.SetResolution(context, ptsize, xppm, yppm, font.head.unitsPerEm, inst.rotated, inst.stretched);
 			OpenTypeInt.Execute(context, font.cvtProg, len, inst.twilight, OpenTypeInt.EmptyZone)
@@ -1041,7 +1033,6 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 			FOR i := 0 TO font.maxp.maxStorage-1 DO glyph.store[i] := inst.store[i] END;
 			FOR i := 0 TO SHORT(font.cvtLen-1) DO glyph.cvt[i] := inst.cvt[i] END;
 			FOR i := 0 TO font.maxp.maxTwilightPoints-1 DO font.twilight.pt[i] := inst.twilight.pt[i] END;
-			OpenTypeInt.SetStacks(context, font.stack, font.callStack);
 			OpenTypeInt.SetStructures(context, inst.func, inst.instr, glyph.store, glyph.cvt);
 			OpenTypeInt.SetResolution(context, inst.ptsize, inst.xppm, inst.yppm, font.head.unitsPerEm, rotated, stretched);
 			OpenTypeInt.Execute(context, font.glyphProg, instrLen, font.twilight, zone);
@@ -1198,7 +1189,6 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 						FOR i := 0 TO font.maxp.maxStorage-1 DO glyph.store[i] := inst.store[i] END;
 						FOR i := 0 TO SHORT(font.cvtLen-1) DO glyph.cvt[i] := inst.cvt[i] END;
 						FOR i := 0 TO font.maxp.maxTwilightPoints-1 DO font.twilight.pt[i] := inst.twilight.pt[i] END;
-						OpenTypeInt.SetStacks(context, font.stack, font.callStack);
 						OpenTypeInt.SetStructures(context, inst.func, inst.instr, glyph.store, glyph.cvt);
 						OpenTypeInt.SetResolution(context, inst.ptsize, inst.xppm, inst.yppm, font.head.unitsPerEm, rotated, stretched);
 						OpenTypeInt.Execute(context, font.glyphProg, instrLen, font.twilight, comp);

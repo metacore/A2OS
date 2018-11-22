@@ -3,6 +3,8 @@ MODULE OpenTypeInt; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType";
 CONST
 	X* = 1; Y* = 0;							(** indices for coordinates into Coord structure **)
 
+	StackSize* = 8192;
+
 TYPE
 	F26D6* = LONGINT;						(** fixed point format 26.6 used for fractional pixel coordinates **)
 	F2D14* = INTEGER;						(** fixed point format 2.14 used for unit vectors **)
@@ -15,7 +17,7 @@ TYPE
 	Code* = POINTER TO ARRAY OF CHAR;
 
 	(** program stack **)
-	Stack* = POINTER TO ARRAY OF LONGINT;
+	Stack* = ARRAY StackSize OF LONGINT;
 
 	(** addresses within code blocks **)
 	Address* = RECORD
@@ -40,7 +42,7 @@ TYPE
 		start*: LONGINT;					(* starting pc of function (within context.code) *)
 		count*: INTEGER;					(* number of times the function has to be evaluated *)
 	END;
-	CallStack* = POINTER TO ARRAY OF Frame;
+	CallStack* = ARRAY 32 OF Frame;
 
 	(** program store **)
 	Store* = POINTER TO ARRAY OF LONGINT;
@@ -1970,16 +1972,6 @@ PROCEDURE NewCode* (VAR code: Code; size: LONGINT);
 BEGIN
 	IF size > 0 THEN NEW(code, size) ELSE code := NIL END
 END NewCode;
-
-PROCEDURE NewStack* (VAR stack: Stack; size: LONGINT);
-BEGIN
-	IF size > 0 THEN NEW(stack, size) ELSE stack := NIL END
-END NewStack;
-
-PROCEDURE NewCallStack* (VAR stack: CallStack; size: LONGINT);
-BEGIN
-	IF size > 0 THEN NEW(stack, size) ELSE stack := NIL END
-END NewCallStack;
 
 PROCEDURE NewFunctions* (VAR func: Functions; size: LONGINT);
 BEGIN

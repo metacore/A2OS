@@ -231,6 +231,8 @@ BUILDS
 		INCLUDE "LINUX UNIX AMD64 COOP"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Unix64 --cooperative --traceModule=Trace --preciseGC=no --define=UNIX,AMD64,COOP"
+		EXTENSION "GofUc"
+		SYMBOLEXTENSION "SymUc"
 		PATH "./NewAos/"
 		EXCLUDEPACKAGES "Oberon OberonGadgets OberonApplications OberonDocumentation OberonVoyager OberonAnts TrueTypeFonts CjkFonts Pr3Fonts ScreenFonts Pr6Fonts"
 		DISABLED "FALSE"

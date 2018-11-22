@@ -9,7 +9,7 @@ CONST
 
 	#IF UNIX THEN
 		#IF AMD64 THEN
-			DefaultObjectFileExtension* = ".GofUu";
+			DefaultObjectFileExtension* = ".GofUc";
 		#ELSE
 			DefaultObjectFileExtension* = ".GofU";
 		#END

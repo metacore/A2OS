@@ -178,7 +178,7 @@ TYPE
 	END;
 
 	BusyLoopCallback* = PROCEDURE{DELEGATE}(VAR res: WORD): BOOLEAN;
-	
+
 	UartId* = SIZE;
 	ClockFrequency* = LONGINT;
 
@@ -450,8 +450,9 @@ VAR
 	BEGIN
 		IF ~(XUARTPS_SR_RXEMPTY IN uart.sr) THEN
 			RETURN 1;
+		ELSE
+			RETURN 0;
 		END;
-		RETURN 0;
 	END Available;
 
 END PsUartMin.

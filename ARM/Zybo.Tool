@@ -63,8 +63,13 @@ FSTools.Mount ZBL RelativeFileSystem ARM/zbl~
 FSTools.Mount ZYNQ RelativeFileSystem ARM/ARM.A2 ~
 FSTools.Mount USB RelativeFileSystem ARM/USB ~
 
+FSTools.CreateDirectory build/ ~
+~
+
+System.DoCommands
+
 (* Cleanup bootloader-specific files *)
-FSTools.DeleteFiles WORK:*.Syb WORK:*.arm WORK:Init.Bin WORK:Zbl.Bin WORK:BOOT.BIN ~
+FSTools.DeleteFiles -i -s WORK:*.Syb WORK:*.arm WORK:Init.Bin WORK:Zbl.Bin WORK:BOOT.BIN ~
 
 (*
 	Build everything required for the bootloader
@@ -131,37 +136,23 @@ Release.Build -b -f=ZBL:/BootloaderRelease.Tool --only=MD5Checksum Zybo ~
 (*
 	Build everything required for the A2 on Zynq
 *)
-FSTools.CreateDirectory build/ ~
-FSTools.DeleteFiles build/* ~
-Release.Build -b --path='build/' -f=ZYNQ:/ARM.Release.Tool
-	-o='--mergeSections --traceModule=Trace --noInitLocals --useFPU64' --only=Kernel
-	ZynqDynamic
-~
-Release.Build -b --path='build/' -f=ZYNQ:/ARM.Release.Tool --only='System SD BootConsole' ZynqDynamic ~
+FSTools.DeleteFiles -i -s build/* ~
 
-Release.Build -b -z --path='build/' -f=ZYNQ:/ARM.Release.Tool
-	--only='System SystemExt FpgaDisplay Kernel Math SD Shell SystemTools Usb DMA FS Profiler Crypto GUI Compiler Archives Gfx'
-	--exclude="Network Enet Inga" ZynqDynamic ~
+Release.Build -b --path='build/' ZynqKernel ~
+
+Release.Build -b -z --path='build/' --only='System Drivers Compiler ApplicationsMini Applications GuiApplicationsMini GuiApplications TrueTypeFonts' Zynq ~
 
 Compiler.Compile -p=ARMA2 --mergeSections  --useFPU64 --replacements=Zybo.DisplayLinear.Replacements.tmp --destPath='build/'
-ZYNQ:/Zynq.DisplayLinear.Mod
+Zynq.DisplayLinear.Mod
 ~
 
-
+(* Link A2 kernel *)
 Linker.Link --fileName=A2.Bin --displacement=100000H -a --path=build/
-Runtime Initializer Platform FPE64 Builtins Trace BootConfig PsUartMin PsUart TraceDevice PrivateWatchdog Machine Heaps Modules Objects Kernel KernelLog Plugins
-Streams Pipes Commands Reals Clock Dates Strings Files Disks Reflection TrapWriters Traps Locks Options PsConfig SdEnvironment
-Sd SdDisks SdControllers Caches DiskVolumes DiskFS BitSets StringPool ObjectFile Diagnostics GenericLinker Loader
-BootConsole ~
-
-(* ShellController Shell Displays AcAxisIo StreamVideoOut AxiDma DisplayLinear UTF8Strings CLUTs Raster WMRectangles
-WMRasterScale SoundDevices Configuration XMLObjects XML DynamicStrings XMLScanner XMLParser Inflate CRC Unzip FP1616 WMEvents
-Texts Archives Codecs WMGraphics WMDefaultFont WMFontManager OpenTypeInt OpenTypeScan OpenType WMOTFonts WMBitmapFont WMOberonFonts
-Debugging WMMessages WMWindowManager Inputs WMGraphicUtilities WMDefaultWindows WindowManager PNGDecoder SystemTools ProcessInfo
-ProcessInfo0 SystemVersion Localization Repositories UnicodeProperties TextUtilities Types Models WMProperties Events WMDropTarget
-WMComponents WMStandardComponents WMTrees WMMenus IngaObjects IngaContexts WMRestorable IngaViews Math GfxMatrix GfxPaths
-GfxRegions GfxImages GfxFonts Gfx GfxRaster GfxBuffer IngaContexts2d IngaImshow Random MathL FoxArrayBase IngaArrays IngaLine
-Buffers IngaRealTimePlot IngaLinePlot IngaExampleLayer ComponentViewer IngaScale FSTools WMTabComponents MainMenu ~ *)
+	Initializer Platform FPE64 Builtins Trace BootConfig PsUartMin TraceDevice PrivateWatchdog Machine Heaps Modules Objects Kernel KernelLog Plugins
+	Streams Pipes Commands Reals Clock Dates Strings Files Disks DiskCaches Reflection TrapWriters Traps Locks Options PsConfig SdEnvironment
+	Sd SdDisks SdControllers Caches DiskVolumes DiskFS BitSets StringPool ObjectFile Diagnostics GenericLinker Loader
+	BootConsole
+~
 
 (* 5. Preparing the Boot SD Card*)
 (* The installation is done in a virtual disk that will be copied to the SD card: *)
@@ -201,9 +192,8 @@ FSTools.CopyFiles -o ARM/Zybo.bootconfig.txt => BLAOSFS:bootconfig ~
 (* o A2ConfigProgrammer: *) FSTools.CopyTo BLAOSFS:/ WORK:/ A2ConfigProgrammer.arm ~
 
 (* Setup bootloader initialization script *)
-FSTools.CreateFile BLAOSFS:/init.txt netstart 10.3.34.8 255.255.255.0 0.0.0.0
-timeout 1
-setinput UDP
+FSTools.CreateFile BLAOSFS:/init.txt timeout 3
+setinput UART
 ~
 
 (* Setup bootloader auto script *)
@@ -225,12 +215,8 @@ Partitions.Create VDISK0#3 76 256 ~
 Partitions.Format VDISK0#3 AosFS ~
 FSTools.Mount ZYNQA2 AosFS VDISK0#3 ~
 ZipTool.ExtractAll --prefix=ZYNQA2: --sourcePath=build/ --overwrite --silent
-	BootConsole.zip DMA.zip FpgaDisplay.zip FS.zip Kernel.zip Math.zip
-	SD.zip Shell.zip System.zip SystemExt.zip SystemTools.zip Usb.zip 
-	Profiler.zip GUI.zip Gfx.zip Crypto.zip
-	Compiler.zip PET.zip Zip.zip
-~
-
+			System.zip Drivers.zip Compiler.zip ApplicationsMini.zip Applications.zip GuiApplicationsMini.zip GuiApplications.zip TrueTypeFonts.zip
+		~
 FSTools.CopyFiles -o
 	build/DisplayLinear.Gof => ZYNQA2:/DisplayLinear.Gof
 	build/DisplayLinear.Sym => ZYNQA2:/DisplayLinear.Sym

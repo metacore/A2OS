@@ -25,7 +25,6 @@ VAR
 	passwords: Password;
 
 	privKey, pubKey: RSA.Key;
-	hexd: ARRAY 17 OF CHAR;
 
 	PROCEDURE GetPW( CONST host, user: ARRAY OF CHAR; VAR pw: ARRAY OF CHAR );
 	VAR n: Password;
@@ -88,7 +87,7 @@ VAR
 
 
 	PROCEDURE RequestConnPW( ssh: Connection;  CONST user, host: ARRAY OF CHAR; try: LONGINT );
-	VAR p: T.Packet;  headline, pw: ARRAY 64 OF CHAR;  ignore: LONGINT;
+	VAR p: T.Packet;  headline, pw: ARRAY 64 OF CHAR; 
 	BEGIN
 		headline := "SSH: Enter Password for ";
 		Strings.Append( headline, user );
@@ -103,7 +102,7 @@ VAR
 		IF try = 1 THEN  GetPW( host, user, pw ) ELSE  pw := ""  END;
 		IF pw = "" THEN
 			Beep.Beep( 1000 );
-			ignore := WMDialogs.QueryPassword( headline, pw);
+			IGNORE WMDialogs.QueryPassword( headline, pw);
 			AddPW( host, user, pw );
 		END;
 		p.AppString( pw );
@@ -127,7 +126,7 @@ VAR
 					Out.String( "password authentication succeeded" );  Out.Ln;
 					RETURN TRUE
 			| UserauthFailure:
-					IF try > 2 THEN
+					IF try > 1 THEN
 						Out.String( "password authentication failed" );  Out.Ln;
 						RETURN FALSE
 					ELSE
@@ -229,7 +228,7 @@ VAR
 		ssh.SendPacket( p );
 		IF ssh.ReceivePacket( buf, len ) # UserauthSuccess THEN
 			U.PrintBufferString( buf, 1 );  Out.Ln;
-			Out.String( "public key  authentication failed" );  Out.Ln;
+			Out.String( "public key authentication failed" );  Out.Ln;
 			RETURN FALSE
 		END;
 		Out.String( "public key authentication succeeded" );  Out.Ln;
@@ -240,8 +239,8 @@ VAR
 	CONST
 		headline = "enter passphrase for opening your private key";
 	VAR
-		f: Files.File; r: Files.Reader; i, ignore: LONGINT;
-		pw, str: ARRAY 64 OF CHAR;
+		f: Files.File; r: Files.Reader; i: LONGINT;
+		pw: ARRAY 64 OF CHAR;
 	BEGIN
 		IF privKey = NIL THEN
 			f := Files.Old( G.PrivateKeyFile );
@@ -252,11 +251,12 @@ VAR
 			END;
 			Files.OpenReader( r, f, 0 );  i := 0;
 			REPEAT
-				ignore := WMDialogs.QueryPassword( headline, pw );
+				Beep.Beep( 1000 );
+				IGNORE WMDialogs.QueryPassword( headline, pw );
 				r.SetPos( 0 );
 				privKey := RSA.LoadPrivateKey( r, pw );
 				INC( i )
-			UNTIL (privKey # NIL) OR (i = 3);
+			UNTIL (privKey # NIL) OR (i = 2);
 			IF privKey = NIL THEN
 				Out.String( "### error: wrong passphrase" ); Out.Ln;  RETURN FALSE
 			END;
@@ -305,8 +305,6 @@ VAR
 		END
 	END OpenConnection;
 
-BEGIN
-	hexd := "0123456789ABCDEF"
 END SSHAuthorize.
 
 

@@ -1452,9 +1452,11 @@ VAR
 		IF cur = NIL THEN (* create a process descriptor *)
 			RegisterExternalProcess;
 			cur := CurrentProcess();
-			Machine.Acquire(Machine.TraceOutput);
-			Trace.String("First Enter: "); Trace.Int(cur.id,0); Trace.Ln;
-			Machine.Release(Machine.TraceOutput);
+			IF TraceVerbose THEN
+				Machine.Acquire(Machine.TraceOutput);
+				Trace.String("First Enter: "); Trace.Int(cur.id,0); Trace.Ln;
+				Machine.Release(Machine.TraceOutput);
+			END;
 		ELSE
 			ebp := SYSTEM.GetFramePointer();
 			SYSTEM.GET(ebp, n);
@@ -1462,9 +1464,11 @@ VAR
 			IF cur.gcContext.nextPos = -1 THEN (* re-entry *)
 				cur.gcContext.nextPos := 0;
 				cur.stackBottom := ebp;
-				Machine.Acquire(Machine.TraceOutput);
-				Trace.String("Reenter: "); Trace.Int(cur.id,0); Trace.Ln;
-				Machine.Release(Machine.TraceOutput);
+				IF TraceVerbose THEN
+					Machine.Acquire(Machine.TraceOutput);
+					Trace.String("Reenter: "); Trace.Int(cur.id,0); Trace.Ln;
+					Machine.Release(Machine.TraceOutput);
+				END;
 			ELSE
 				INC(cur.gcContext.nextPos);
 				cur.gcContext.last[cur.gcContext.nextPos] := NIL;
@@ -1487,9 +1491,11 @@ VAR
 			DEC(cur.gcContext.nextPos);
 			cur.gcContext.last[cur.gcContext.nextPos] := NIL;
 		ELSE
-			Machine.Acquire(Machine.TraceOutput);
-			Trace.String("Exiting: "); Trace.Int(cur.id,0); Trace.Ln;
-			Machine.Release(Machine.TraceOutput);
+			IF TraceVerbose THEN
+				Machine.Acquire(Machine.TraceOutput);
+				Trace.String("Exiting: "); Trace.Int(cur.id,0); Trace.Ln;
+				Machine.Release(Machine.TraceOutput);
+			END;
 			cur.gcContext.nextPos := -1;
 		END;
 	END ExitA2;

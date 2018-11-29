@@ -29,7 +29,7 @@ TYPE
 			hash[0] := 6A09E667H;	hash[1] := LONGINT( 0BB67AE85H );
 			hash[2] := 3C6EF372H;	hash[3] := LONGINT( 0A54FF53AH );
 			hash[4] := 510E527FH;	hash[5] := LONGINT( 09B05688CH );
-			hash[6] := 1F83D9ABH;	hash[7] := 5BE0CD19H;
+			hash[6] := 1F83D9ABH;	hash[7] := LONGINT( 05BE0CD19H );
 			Nl := 0;
 			Nh := 0;
 			cn := 0;
@@ -47,13 +47,13 @@ TYPE
 				IF i < 16 THEN
 					X[i] := U.IntFromBufferBE( buf, pos );  INC( pos, 4 )
 				ELSE
-					s0 := sigma0( S.VAL( SET32, X[(i + 1) MOD 16] ) );
-					s1 := sigma1( S.VAL( SET32, X[(i + 14) MOD 16] ) );
+					s0 := sigma0( X[(i + 1) MOD 16] );
+					s1 := sigma1( X[(i + 14) MOD 16] );
 					s := s0 + s1 + X[(i + 9) MOD 16];
 					INC( X[i MOD 16], s );  
 				END;
-				T1 := X[i MOD 16] + h + Sigma1Ch( S.VAL(SET32, e), f, g) + K256[i];
-				T2 := Sigma0Maj( S.VAL(SET32, a), b, c );
+				T1 := X[i MOD 16] + h + Sigma1Ch( e, f, g ) + K256[i];
+				T2 := Sigma0Maj( a, b, c );
 				h := g;  g := f;  f := e;  e := d + T1;
 				d := c;  c := b;  b := a;  a := T1 + T2;
 			END;
@@ -129,30 +129,35 @@ TYPE
 
 
 
-	PROCEDURE Sigma0Maj( x: SET32; y, z: LONGINT ): LONGINT;
-	VAR a, b: LONGINT; 
+	PROCEDURE -Sigma0Maj( px, py, pz: LONGINT ): LONGINT;
+	VAR x, y, z, a, b: SET32; 
 	BEGIN 
-		a := S.VAL( LONGINT, ROT( x , 30 ) / ROT( x, 19 ) / ROT( x, 10 ) );
-		b := S.VAL( LONGINT, (x * S.VAL( SET32, y )) / 
-							  (x * S.VAL( SET32, z )) / (S.VAL( SET32, y ) * S.VAL( SET32, z )) );
-		RETURN a + b
+		x := S.VAL( SET32, px );  y := S.VAL( SET32, py );  z := S.VAL( SET32, pz );
+		a := ROT( x, 30 ) / ROT( x, 19 ) / ROT( x, 10 );
+		b := (x*y) / (x*z) / (y*z);
+		RETURN S.VAL( LONGINT, a ) + S.VAL( LONGINT, b )
 	END Sigma0Maj;
 	
-	PROCEDURE Sigma1Ch( x: SET32;  y, z: LONGINT ): LONGINT;
-	VAR a, b: LONGINT; 
+	PROCEDURE -Sigma1Ch( px, py, pz: LONGINT ): LONGINT;
+	VAR x, y, z, a, b: SET32;
 	BEGIN 
-		a := S.VAL( LONGINT, ROT( x , 26 ) / ROT( x, 21 ) / ROT( x, 7 ) );
-		b := S.VAL( LONGINT, (x * S.VAL( SET32, y )) / ((-x ) * S.VAL( SET32, z )) );
-		RETURN a + b
+		x := S.VAL( SET32, px );  y := S.VAL( SET32, py );  z := S.VAL( SET32, pz );
+		a := ROT( x, 26 ) / ROT( x, 21 ) / ROT( x, 7 );
+		b := (x*y) / ((-x)*z);
+		RETURN S.VAL( LONGINT, a ) + S.VAL( LONGINT, b )
 	END Sigma1Ch;
 
-	PROCEDURE sigma0( x: SET32 ): LONGINT;
+	PROCEDURE -sigma0( px: LONGINT ): LONGINT;
+	VAR x: SET32;
 	BEGIN 
+		x :=S.VAL( SET32, px );
 		RETURN S.VAL( LONGINT, ROT( x , 25 ) / ROT( x, 14 ) / LSH( x, -3 ) )
 	END sigma0;
 	
-	PROCEDURE sigma1( x: SET32 ): LONGINT;
+	PROCEDURE -sigma1( px: LONGINT ): LONGINT;
+	VAR x: SET32;
 	BEGIN 
+		x := S.VAL( SET32, px );
 		RETURN S.VAL( LONGINT, ROT( x , 15 ) / ROT( x, 13 ) / LSH( x, -10 ) )
 	END sigma1;
 	

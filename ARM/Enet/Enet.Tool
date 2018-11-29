@@ -3,6 +3,7 @@ HEADER
 END
 
 PACKAGE EnetMinos ARCHIVE "EnetMinos.zip" SOURCE "EnetMinosSrc.zip" DESCRIPTION "MINOS runtime needed by Enet"
+	ARM/Minos/Trace.Mos
 	ARM/Minos/UncachedHeaps.Mos
 	ARM/Minos/StreamReaders.Mos
 	ARM/Minos/StreamWriters.Mos

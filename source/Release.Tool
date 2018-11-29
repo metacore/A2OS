@@ -434,10 +434,12 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Configuration.Mod Configuration.XML Save.Configuration.XML FileHandlers.Mod		# XML-based configuration file
 
 	BIOS { BIOS.BootShell.Mod }
-
+	
 	BIOS, UNIX { Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
+
+	ZYNQ { Zynq.XEmac.Mod }
 
 	ActiveTimers.Mod
 

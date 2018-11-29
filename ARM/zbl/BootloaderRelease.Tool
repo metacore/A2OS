@@ -131,7 +131,7 @@ END
 
 #### Additional Loaders ####
 PACKAGE TFTPLoader ARCHIVE "TFTPLoader.zip" SOURCE "TFTPLoaderSrc.zip" DESCRIPTION "TFTP Loader Plugin"
-	ARM/zbl/TftpLoader.Mos
+	ARM/zbl/TFTPLoader.Mos
 END
 
 PACKAGE XModemLoader ARCHIVE "XModemLoader.zip" SOURCE "XModemLoaderSrc.zip" DESCRIPTION "XMODEM Loader Plugin"

@@ -180,8 +180,8 @@ TYPE
 				fragmentOffset := ofs + buffer.len - UDPHdrLen;
 				fragmentBuffer := buffer.next;
 				WHILE fragmentBuffer # NIL DO
-					Network.Copy(fragmentBuffer.data, data, buffer.ofs, fragmentOffset, buffer.len);
-					INC(fragmentOffset, buffer.len);
+					Network.Copy(fragmentBuffer.data, data, fragmentBuffer.ofs, fragmentOffset, fragmentBuffer.len);
+					INC(fragmentOffset, fragmentBuffer.len);
 
 					fragmentBuffer := fragmentBuffer.nextFragment;
 				END;

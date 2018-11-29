@@ -3,25 +3,25 @@ HEADER
 END
 
 PACKAGE EnetMinos ARCHIVE "EnetMinos.zip" SOURCE "EnetMinosSrc.zip" DESCRIPTION "MINOS runtime needed by Enet"
-	MINOS:/UncachedHeaps.Mos
-	MINOS:/StreamReaders.Mos
-	MINOS:/StreamWriters.Mos
+	ARM/Minos/UncachedHeaps.Mos
+	ARM/Minos/StreamReaders.Mos
+	ARM/Minos/StreamWriters.Mos
 END
 
 PACKAGE Enet ARCHIVE "Enet.zip" SOURCE "EnetSrc.zip" DESCRIPTION "Enet network stack for Minos"
-	ENET:/Minos.EnetEnvironment.Mod
-	ENET:/EnetTiming.Mod
-	ENET:/EnetUtils.Mod
-	ENET:/EnetTrace.Mod
-	ENET:/EnetBase.Mod
-	ENET:/EnetInterfaces.Mod
-	ENET:/EnetArp.Mod
-	ENET:/EnetIcmp.Mod
-	ENET:/Minos.EnetStreams.Mod
-	ENET:/EnetUdp.Mod
-	ENET:/EnetUdpChannels.Mod
-	ENET:/EnetTftp.Mod
-	ENET:/Enet.Mod
-	ENET:/EnetPhy.Mod
-	ENET:/Zynq.EnetEmacPs7.Mod
+	ARM/Enet/Minos.EnetEnvironment.Mod
+	ARM/Enet/EnetTiming.Mod
+	ARM/Enet/EnetUtils.Mod
+	ARM/Enet/EnetTrace.Mod
+	ARM/Enet/EnetBase.Mod
+	ARM/Enet/EnetInterfaces.Mod
+	ARM/Enet/EnetArp.Mod
+	ARM/Enet/EnetIcmp.Mod
+	ARM/Enet/Minos.EnetStreams.Mod
+	ARM/Enet/EnetUdp.Mod
+	ARM/Enet/EnetUdpChannels.Mod
+	ARM/Enet/EnetTftp.Mod
+	ARM/Enet/Enet.Mod
+	ARM/Enet/EnetPhy.Mod
+	ARM/Enet/Zynq.EnetEmacPs7.Mod
 END

@@ -7,15 +7,15 @@ HEADER
 END
 
 IMPORT
-	MINOS:/Minos.Tool
-	ENET:/Enet.Tool
+	ARM/Minos/Minos.Tool
+	ARM/Enet/Enet.Tool
 END
 
 BUILDS
 	Zedboard  {
 		INCLUDE "ZYNQ ZEDBOARD"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:Zedboard.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ARM/zbl/Zedboard.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -27,7 +27,7 @@ BUILDS
 	Zybo {
 		INCLUDE "ZYNQ ZYBO"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:Zybo.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ARM/zbl/Zybo.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -39,7 +39,7 @@ BUILDS
 	KRM {
 		INCLUDE "ZYNQ KRM"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:KRM.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ARM/zbl/KRM.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -51,7 +51,7 @@ BUILDS
 	TE0726 {
 		INCLUDE "ZYNQ TE0726"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:TE0726.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ARM/zbl/TE0726.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -63,7 +63,7 @@ BUILDS
 	TE0720 {
 		INCLUDE "ZYNQ TE0720"
 		COMPILER "Compiler.Compile"
-		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ZBL:TE0720.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ARM/zbl/TE0720.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
 		TARGET "ARM"
 		LINKER "MinosLinker.Link"
 		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
@@ -75,81 +75,81 @@ END
 
 #### Core Packages ####
 PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION "Static image that loads the bootloader features"
-	MINOS:/HAL/zynq/Zynq.Platform.Mos
-	ZBL:Zynq.Board.Mos
+	ARM/Minos/HAL/zynq/Zynq.Platform.Mos
+	ARM/zbl/Zynq.Board.Mos
 
 	# Specialization on this file is handled with replacements
-	ZEDBOARD { ZBL:Zedboard.TclInit.Mos }
-	ZYBO { ZBL:Zybo.TclInit.Mos }
-	KRM { ZBL:KRM.TclInit.Mos }
-	TE0726 { ZBL:TE0726.TclInit.Mos }
-	TE0720 { ZBL:TE0720.TclInit.Mos }
+	ZEDBOARD { ARM/zbl/Zedboard.TclInit.Mos }
+	ZYBO { ARM/zbl/Zybo.TclInit.Mos }
+	KRM { ARM/zbl/KRM.TclInit.Mos }
+	TE0726 { ARM/zbl/TE0726.TclInit.Mos }
+	TE0720 { ARM/zbl/TE0720.TclInit.Mos }
 
-	MINOS:/HAL/zynq/Zynq.Initializer.Mos
+	ARM/Minos/HAL/zynq/Zynq.Initializer.Mos
 	ARM.FPE64.Mod
 	ARM.Builtins.Mod
-	MINOS:/Trace.Mos
+	ARM/Minos/Trace.Mos
 	Zynq.PsUartMin.Mod
-	ZBL:Zynq.TraceDevice.Mos
-	MINOS:/HAL/zynq/Zynq.Caches.Mos
-	MINOS:/HAL/zynq/Zynq.Memory.Mos
-	ZBL:/MemoryMapping.Mos
-	MINOS:/HAL/zynq/Zynq.Interrupts.Mos
-	MINOS:/Bit.Mos
-	MINOS:/HAL/zynq/Zynq.Clocks.Mos
-	MINOS:/KernelUtils.Mos
-	MINOS:/HAL/zynq/Zynq.GlobalTimer.Mos
-	ZBL:/Kernel.Mos
-	MINOS:/Utils.Mos
-	MINOS:/Strings.Mos
-	MINOS:/Heaps.Mos
-	ZBL:/OFS.Mos
-	ZBL:/Modules.Mos
+	ARM/zbl/Zynq.TraceDevice.Mos
+	ARM/Minos/HAL/zynq/Zynq.Caches.Mos
+	ARM/Minos/HAL/zynq/Zynq.Memory.Mos
+	ARM/zbl/MemoryMapping.Mos
+	ARM/Minos/HAL/zynq/Zynq.Interrupts.Mos
+	ARM/Minos/Bit.Mos
+	ARM/Minos/HAL/zynq/Zynq.Clocks.Mos
+	ARM/Minos/KernelUtils.Mos
+	ARM/Minos/HAL/zynq/Zynq.GlobalTimer.Mos
+	ARM/zbl/Kernel.Mos
+	ARM/Minos/Utils.Mos
+	ARM/Minos/Strings.Mos
+	ARM/Minos/Heaps.Mos
+	ARM/zbl/OFS.Mos
+	ARM/zbl/Modules.Mos
 
-	MINOS:/HAL/zynq/Zynq.SdEnvironment.Mos
+	ARM/Minos/HAL/zynq/Zynq.SdEnvironment.Mos
 	Sd.Mod
-	ZBL:/Disks.Mos
+	ARM/zbl/Disks.Mos
 
-	MINOS:SdDisks.Mos
-	MINOS:/HAL/zynq/Zynq.SdControllers.Mod
-	ZBL:/OFSDiskVolumes.Mos
-	ZBL:/Bootstrap.Mos
+	ARM/Minos/SdDisks.Mos
+	ARM/Minos/HAL/zynq/Zynq.SdControllers.Mod
+	ARM/zbl/OFSDiskVolumes.Mos
+	ARM/zbl/Bootstrap.Mos
 END
 
 PACKAGE Bootloader ARCHIVE "Bootloader.zip" SOURCE "BootloaderSrc.zip" DESCRIPTION "Bootloader Core"
-	ZBL:Zynq.PsUartInterrupts.Mos
+	ARM/zbl/Zynq.PsUartInterrupts.Mos
 	Zynq.PsUart.Mod
 
-	MINOS:OFSStreams.Mos
+	ARM/Minos/OFSStreams.Mos
 	Zynq.PrivateWatchdog.Mod
 
-	ZBL:Loader.Mos
-	ZBL:Programmer.Mos
-	ZBL:Checksum.Mos
-	ZBL:Bootloader.Mos
+	ARM/zbl/Loader.Mos
+	ARM/zbl/Programmer.Mos
+	ARM/zbl/Checksum.Mos
+	ARM/zbl/Bootloader.Mos
 END
 
 #### Additional Loaders ####
 PACKAGE TFTPLoader ARCHIVE "TFTPLoader.zip" SOURCE "TFTPLoaderSrc.zip" DESCRIPTION "TFTP Loader Plugin"
-	ZBL:TftpLoader.Mos
+	ARM/zbl/TftpLoader.Mos
 END
 
 PACKAGE XModemLoader ARCHIVE "XModemLoader.zip" SOURCE "XModemLoaderSrc.zip" DESCRIPTION "XMODEM Loader Plugin"
-	ZBL:XModem.Mos
-	ZBL:XModemLoader.Mos
+	ARM/zbl/XModem.Mos
+	ARM/zbl/XModemLoader.Mos
 END
 
 #### Additional Programmers ####
 PACKAGE ZynqFpgaProgrammer ARCHIVE "ZynqFpgaProgrammer.zip" SOURCE "ZynqFpgaProgrammerSrc.zip" DESCRIPTION "Programmer for Zynq FPGA"
-	ZBL:ZynqFpgaProgrammer.Mos
+	ARM/zbl/ZynqFpgaProgrammer.Mos
 END
 
 PACKAGE A2ConfigProgrammer ARCHIVE "A2ConfigProgrammer.zip" SOURCE "A2ConfigProgrammerSrc.zip" DESCRIPTION "Programmer for A2 BootConfig"
-	ZBL:A2ConfigProgrammer.Mos
+	ARM/zbl/A2ConfigProgrammer.Mos
 END
 
 #### Additional Checksums ####
 PACKAGE MD5Checksum ARCHIVE "MD5Checksum.zip" SOURCE "MD5ChecksumSrc.zip" DESCRIPTION "MD5 Checksum Algorithm"
 	MD5.Mod
-	ZBL:MD5Checksum.Mos
+	ARM/zbl/MD5Checksum.Mos
 END

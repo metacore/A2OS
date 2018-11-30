@@ -743,6 +743,8 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	AMD64 { AMD64.FoxArrayBaseOptimized.Mod}
 
 	~COOP { PersistentObjects.Mod FoxInterpreterSymbols.Mod FoxInterpreter.Mod }
+
+	MinosLinker.Mod
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"

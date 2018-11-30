@@ -330,7 +330,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 	ZYNQ & ~COOP { Zynq.PsUartMin.Mod Zynq.TraceDevice.Mod Zynq.PrivateWatchdog.Mod ARM.Machine.Mod }
 
 	~COOP { Heaps.Mod }
-	COOP { Coop.Heaps.Mod GarbageCollector.Mod }
+	COOP { GarbageCollector.Mod Coop.Heaps.Mod }
 
 	Modules.Mod
 

@@ -10,7 +10,7 @@ MODULE Heaps;	(** AUTHOR "pjm/Luc Bläser/U. Glavitsch (ug)"; PURPOSE "Heap mana
 		Knuth, The Art of Computer Programming, Volume 1, Section 2.3.5, Algorithm C
 *)
 
-IMPORT SYSTEM, Trace, Machine;
+IMPORT SYSTEM, Trace, Machine, GarbageCollector;
 
 CONST
 	Stats* = TRUE;					(* maintain statistical counters *)
@@ -213,8 +213,7 @@ BEGIN
 END CleanupModuleFinalizers;
 
 PROCEDURE InvokeGC*;
-PROCEDURE Collect EXTERN "GarbageCollector.Collect";
-BEGIN Collect;
+BEGIN GarbageCollector.Collect;
 END InvokeGC;
 
 PROCEDURE LazySweepGC*;

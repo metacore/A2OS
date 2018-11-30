@@ -657,8 +657,8 @@ TYPE
 					AddObject(parent, type.object, anonymous, TRUE);
 				ELSIF type.procedure # NIL THEN
 					AddProcedure(parent, type.procedure);
-				ELSIF type.enum # NIL THEN
-					AddEnum(parent, type.enum);
+				ELSIF type.enumeration # NIL THEN
+					AddEnumeration(parent, type.enumeration);
 				ELSIF type.cell # NIL THEN
 					AddCell(parent, type.cell, anonymous)
 				ELSIF type.port # NIL THEN
@@ -684,13 +684,10 @@ TYPE
 			END;
 		END AddRecord;
 
-		PROCEDURE AddEnum(parent: WMTrees.TreeNode; enum: ModuleParser.Enum);
-		VAR p: WMTrees.TreeNode; num: LONGINT;
+		PROCEDURE AddEnumeration(parent: WMTrees.TreeNode; enumeration: ModuleParser.Enumeration);
 		BEGIN
-			IF enum # NIL THEN
-				AddIdentList(parent, enum.identList,num);
-			END;
-		END AddEnum;
+			AddConstDecl(parent, enumeration.enumeratorList);
+		END AddEnumeration;
 
 		PROCEDURE AddFieldDecl(parent: WMTrees.TreeNode; fieldDecl: ModuleParser.FieldDecl);
 		VAR newNode: WMTrees.TreeNode; n, l: ModuleParser.NodeList;

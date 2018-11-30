@@ -92,7 +92,7 @@ TYPE
 		record*: Record;
 		pointer*: Pointer;
 		object*: Object;
-		enum*: Enum;
+		enumeration*: Enumeration;
 		cell*: Cell;
 		port*: Port;
 		procedure*: Procedure;
@@ -123,9 +123,10 @@ TYPE
 		type*: Type;
 	END Pointer;
 
-	Enum* = OBJECT(Node)
-	VAR identList*: IdentList;
-	END Enum;
+	Enumeration* = OBJECT(Node)
+	VAR
+		enumeratorList*: ConstDecl;
+	END Enumeration;
 
 	Port*= OBJECT(Node)
 	END Port;
@@ -828,7 +829,7 @@ TYPE
 			| FoxScanner.Object: NextToken; NEW(type.object, type); ObjectP(type.object);
 			| FoxScanner.Port: NextToken; NEW(type.port, type); PortP(type.port);
 			| FoxScanner.Cell, FoxScanner.CellNet: NextToken; NEW(type.cell, type); CellP(type.cell);
-			| FoxScanner.Enum: NextToken; NEW(type.enum, type); EnumP(type.enum);
+			| FoxScanner.Enum: NextToken; NEW(type.enumeration, type); EnumerationP(type.enumeration);
 			| FoxScanner.Procedure, FoxScanner.Operator: NextToken; NEW(type.procedure, type); ProcedureP(type.procedure);
 			| FoxScanner.Identifier: NEW(type.qualident, type); QualidentP(type.qualident);
 			| FoxScanner.Address, FoxScanner.Size: NEW(type.qualident, type); NEW(type.qualident.ident);
@@ -933,23 +934,33 @@ TYPE
 			TypeP(pointer.type);
 		END PointerP;
 
-		PROCEDURE EnumP(enum: Enum);
-		VAR identDef: IdentDef; identList: IdentList;
+		PROCEDURE EnumerationP(enumeration: Enumeration);
+		VAR identDef: IdentDef; enumerator: ConstDecl;
 		BEGIN
-			NEW(enum.identList, enum);
-			NEW(enum.identList.identDef);
-			IdentDefP(enum.identList.identDef);
-			SysFlag;
+			NEW(enumerator, enumeration);
+			EnumeratorP(enumerator);
+			enumeration.enumeratorList := enumerator;
 			WHILE token.symbol = FoxScanner.Comma DO
 				NextToken;	(* avoids endless loop *)
-				NEW(identDef);
-				IdentDefP(identDef);
-				NEW(identList, enum);
-				identList.identDef := identDef;
-				AppendLast(enum.identList, identList);
+				NEW(enumerator, enumeration);
+				EnumeratorP(enumerator);
+				AppendLast(enumeration.enumeratorList, enumerator);
 			END;
 			Check(FoxScanner.End);
-		END EnumP;
+		END EnumerationP;
+
+		PROCEDURE EnumeratorP(enumerator: ConstDecl);
+		BEGIN
+			NEW(enumerator.identDef);
+			IdentDefP(enumerator.identDef);
+			IF token.symbol = FoxScanner.Equal THEN
+				NextToken;
+				(* NEW(enumerator.constExpr);
+				ExprP(enumerator.constExpr); *)
+				NEW(enumerator.expr);
+				ConstExprP(FoxScanner.Comma, FoxScanner.End, enumerator.expr);
+			END;
+		END EnumeratorP;
 
 		PROCEDURE PortP(port: Port);
 		BEGIN

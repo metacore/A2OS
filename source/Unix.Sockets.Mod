@@ -309,7 +309,7 @@ VAR
 	PROCEDURE Requested*( s: LONGINT ): BOOLEAN;
 	CONST
 		SLen = Unix.FdSetLen;
-		SetBits = SIZEOF( SET ) * 8;
+		SetBits = SIZEOF( SET32 ) * 8;
 	VAR 
 		res, i: LONGINT;
 		readfds: Unix.FdSet;
@@ -326,7 +326,7 @@ VAR
 	PROCEDURE AwaitPacket*( s: LONGINT; ms: LONGINT ): BOOLEAN;
 	CONST
 		SLen = Unix.FdSetLen;
-		SetBits = SIZEOF( SET ) * 8;
+		SetBits = SIZEOF( SET32 ) * 8;
 	VAR 
 		res, err, i: LONGINT;
 		readfds: Unix.FdSet;

@@ -1883,10 +1883,10 @@ TYPE
 						filenameEdit.SetAsString("");
 					END;
 				ELSE
-					Load(filename, codecFormat);
 					IF (currentPage # NIL) THEN
 						optionsEdit.GetAsString(currentPage.options);
 					END;
+					Load(filename, codecFormat);
 				END;
 			END;
 		END LoadHandler;

@@ -129,7 +129,7 @@
 				</Group>
 				<Group style="Structure">
 					MODULE IMPORT TYPE DEFINITION REFINES IMPLEMENTS PROCEDURE OPERATOR
-					OBJECT RECORD
+					OBJECT RECORD ENUM
 				</Group>
 				<Group style="Values">
 					NIL TRUE FALSE IMAG
@@ -303,7 +303,7 @@
 				</Group>
 				<Group style="Structure">
 					module import type definition refines implements procedure operator
-					object record
+					object record enum
 				</Group>
 				<Group style="Values">
 					nil true false imag
@@ -460,7 +460,7 @@
 				</Group>
 				<Group style="Structure">
 					MODULE IMPORT TYPE DEFINITION REFINES IMPLEMENTS PROCEDURE
-					OBJECT RECORD
+					OBJECT RECORD ENUM
 				</Group>
 				<Group style="Values">
 					NIL TRUE FALSE

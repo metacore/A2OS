@@ -30,5 +30,5 @@ VAR
 	frequencyInHz: Counter;
 
 BEGIN
-	frequencyInHz := BootConfig.GetIntValue("CpuClockHz");
+	frequencyInHz := BootConfig.GetIntValue("CpuClockHz") DIV 2;
 END PrecisionTimer.

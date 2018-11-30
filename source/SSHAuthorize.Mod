@@ -279,27 +279,23 @@ VAR
 	(** Open an outhorized SSH connection, returns NIL on failure *)
 	PROCEDURE OpenConnection*( CONST host, user: ARRAY OF CHAR ): Connection;
 	VAR
-		ssh: Connection; authorized: BOOLEAN;
+		conn: Connection; authorized: BOOLEAN;
 	BEGIN
-		NEW( ssh, host );
-		IF ssh.state = Connected THEN
-			IF RequestService( ssh, "ssh-userauth" ) THEN
-				authorized := RequestAuthorizeNone( ssh, user );
+		NEW( conn, host );
+		IF conn.state = Connected THEN
+			IF RequestService( conn, "ssh-userauth" ) THEN
+				authorized := RequestAuthorizeNone( conn, user );
 				IF ~authorized THEN
 					Out.String( "trying public key authentication" ); Out.Ln;
-					authorized := AuthorizeKey( ssh, user );
+					authorized := AuthorizeKey( conn, user );
 				END;
 				IF ~authorized THEN
 					Out.String( "trying password authentication" ); Out.Ln;
-					authorized := AuthorizePasswd( ssh, host, user )
+					authorized := AuthorizePasswd( conn, host, user )
 				END;
-				IF ~authorized THEN
-					ssh.Disconnect( 11, "" );  RETURN NIL
-				END;
-				RETURN ssh
-			ELSE
-				RETURN NIL
-			END
+				IF authorized THEN  RETURN conn  END
+			END;
+			conn.Disconnect( 11, "" );  RETURN NIL
 		ELSE
 			RETURN NIL
 		END

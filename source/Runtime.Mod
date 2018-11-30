@@ -19,7 +19,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ELSE
 		Trace.Red; Trace.String ("trap: "); Trace.Int (number, 0); Trace.Ln;
 		Trace.Default; Trace.StackFrames (1, 8, 20 * SIZE OF ADDRESS);
-	 END;
+	END;
 	Abort;
 END Trap;
 

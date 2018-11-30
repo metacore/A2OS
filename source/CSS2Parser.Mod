@@ -599,7 +599,6 @@ TYPE
 		KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 		KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", row "); KernelLog.Int(row, 0);
 		KernelLog.String("    "); KernelLog.String(msg); KernelLog.Exit;
-		HALT(99)
 	END DefaultReportError;
 
 END CSS2Parser.

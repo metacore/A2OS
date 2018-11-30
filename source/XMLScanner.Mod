@@ -522,7 +522,6 @@ TYPE
 		KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 		KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", col "); KernelLog.Int(col, 0);
 		KernelLog.String("    "); KernelLog.String(msg); KernelLog.Exit;
-		HALT(99)
 	END DefaultReportError;
 
 END XMLScanner.

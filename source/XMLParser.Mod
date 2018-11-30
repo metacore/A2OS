@@ -685,7 +685,7 @@ TYPE
 		END ParseCharData;
 
 		PROCEDURE ParseElement(): XML.Element;
-		VAR e: XML.Element; empty: BOOLEAN;
+		VAR e: XML.Element; c: XML.Content; empty: BOOLEAN;
 		BEGIN
 			ParseStartTag(e, empty);
 			IF e = NIL THEN RETURN NIL END;
@@ -693,18 +693,19 @@ TYPE
 				REPEAT
 					scanner.ScanContent();
 					CASE scanner.sym OF
-					| Scanner.CharData: e.AddContent( ParseCharData() )
-					| Scanner.TagElemStartOpen: e.AddContent(ParseElement())
-					| Scanner.CharRef: e.AddContent(ParseCharRef())
-					| Scanner.EntityRef: e.AddContent(ParseEntityRef())
-					| Scanner.CDataSect: e.AddContent(ParseCDataSect())
-					| Scanner.Comment: e.AddContent(ParseComment())
-					| Scanner.TagPIOpen: e.AddContent(ParseProcessingInstruction())
-					| Scanner.TagElemEndOpen: (* do nothing *)
+					| Scanner.CharData: c := ParseCharData();
+					| Scanner.TagElemStartOpen: c := ParseElement();
+					| Scanner.CharRef: c := ParseCharRef();
+					| Scanner.EntityRef: c := ParseEntityRef();
+					| Scanner.CDataSect: c := ParseCDataSect();
+					| Scanner.Comment: c := ParseComment();
+					| Scanner.TagPIOpen: c := ParseProcessingInstruction();
+					| Scanner.TagElemEndOpen: c := NIL; (* do nothing *)
 					| Scanner.Eof: Error("element not closed"); RETURN e
 					ELSE
 						Error("unknown Element Content"); RETURN e
-					END
+					END;
+					IF c # NIL THEN e.AddContent(c) END;
 				UNTIL scanner.sym = Scanner.TagElemEndOpen;
 				ParseEndTag(e);
 			END;
@@ -1029,7 +1030,6 @@ BEGIN
 	KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 	KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", column "); KernelLog.Int(col, 0);
 	KernelLog.String("    "); KernelLog.String(msg); KernelLog.Exit;
-	HALT(99)
 END DefaultReportError;
 
 PROCEDURE ExpandPredefinedEntity(CONST name : ARRAY OF CHAR) : Strings.String;

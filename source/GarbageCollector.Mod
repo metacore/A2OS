@@ -7,6 +7,9 @@ MODULE GarbageCollector;
 
 IMPORT Activities, BaseTypes, Counters, CPU;
 
+(** Notifies interested parties before collecting. *)
+VAR finalize*: PROCEDURE (cycle: LONGWORD);
+
 VAR tracings: Counters.AlignedCounter;
 VAR currentCycle, oldestCycle: LONGWORD;
 VAR firstMarked {UNTRACED}, firstWatched {UNTRACED}: BaseTypes.Pointer;
@@ -168,6 +171,9 @@ BEGIN {UNCHECKED}
 	(* mark all remaining pointers *)
 	WHILE Counters.Read (tracings) # 0 DO TraceMarkedPointers END; TraceMarkedPointers;
 	ASSERT (CAS (oldestCycle, cycle, cycle + 1) = cycle);
+
+	(* notify interested parties *)
+	IF finalize # NIL THEN finalize (cycle) END;
 
 	(* collect garbage *)
 	Sweep (first, cycle);

@@ -10,7 +10,7 @@ MODULE Heaps;	(** AUTHOR "pjm/Luc Bläser/U. Glavitsch (ug)"; PURPOSE "Heap mana
 		Knuth, The Art of Computer Programming, Volume 1, Section 2.3.5, Algorithm C
 *)
 
-IMPORT SYSTEM, Trace, Machine, GarbageCollector, BaseTypes;
+IMPORT SYSTEM, Trace, Machine, GarbageCollector, BaseTypes, Activities;
 
 CONST
 	Stats* = TRUE;					(* maintain statistical counters *)
@@ -162,18 +162,26 @@ END CheckCandidates;
 PROCEDURE CheckAssignment*(dest, src: ADDRESS);
 END CheckAssignment;
 
+PROCEDURE CallFinalizers;
+VAR n: FinalizerNode;
+BEGIN
+	LOOP
+		n := GetFinalizer();
+		IF n = NIL THEN EXIT END;
+		IF n.collection # NIL THEN
+			n.collection.RemoveAll(n.objStrong)	(* remove it if it is not removed yet *)
+		END;
+		IF n.finalizer # NIL THEN
+			n.finalizer(n.objStrong)	(* may acquire locks *)
+		END;
+	END;
+END CallFinalizers;
+
 (* Check reachability of finalized objects. *)
 PROCEDURE CheckFinalizedObjects (cycle: LONGWORD);
 VAR n, p, t: FinalizerNode; pointer {UNTRACED}: BaseTypes.Pointer;
-
-	PROCEDURE MarkDelegate(p: Finalizer);
-	VAR pointer {UNTRACED}: ANY;
-	BEGIN
-		SYSTEM.GET(ADDRESSOF(p)+SIZEOF(ADDRESS),pointer);
-		IF pointer # NIL THEN Mark(pointer) END;
-	END MarkDelegate;
-
 BEGIN
+	Machine.Acquire(Machine.Heaps);
 	n := checkRoot;
 	WHILE n # NIL DO	(* move unmarked checked objects to finalize list *)
 		pointer := SYSTEM.VAL(BaseTypes.Pointer, n.objWeak);
@@ -187,19 +195,8 @@ BEGIN
 			p := n; n := n.nextFin
 		END
 	END;
-
-	(* now trace the weak references to keep finalized objects alive during this collection *)
-	n := finalizeRoot;
-	WHILE n # NIL DO
-		MarkDelegate(n.finalizerStrong);
-		Mark(n.objStrong); n := n.nextFin
-	END;
-
-	n := checkRoot;
-	WHILE n # NIL DO (* list of objects that had been marked before entering CheckFinalizedObjects *)
-		(* we still have to mark the weak finalizers, as they might have not been marked before  *)
-		MarkDelegate(n.finalizer); n := n.nextFin
-	END;
+	Machine.Release(Machine.Heaps);
+	Activities.Call (CallFinalizers);
 END CheckFinalizedObjects;
 
 (** Return the next scheduled finalizer or NIL if none available. Called by finalizer object in Kernel. *)

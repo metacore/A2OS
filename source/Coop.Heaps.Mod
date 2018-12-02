@@ -180,6 +180,14 @@ END CallFinalizers;
 (* Check reachability of finalized objects. *)
 PROCEDURE CheckFinalizedObjects (cycle: LONGWORD);
 VAR n, p, t: FinalizerNode; pointer {UNTRACED}: BaseTypes.Pointer;
+
+	PROCEDURE MarkDelegate(p: Finalizer);
+	VAR pointer {UNTRACED}: ANY;
+	BEGIN
+		SYSTEM.GET(ADDRESSOF(p)+SIZEOF(ADDRESS),pointer);
+		IF pointer # NIL THEN Mark(pointer) END;
+	END MarkDelegate;
+
 BEGIN
 	Machine.Acquire(Machine.Heaps);
 	n := checkRoot;
@@ -195,6 +203,20 @@ BEGIN
 			p := n; n := n.nextFin
 		END
 	END;
+
+	(* now trace the weak references to keep finalized objects alive during this collection *)
+	n := finalizeRoot;
+	WHILE n # NIL DO
+		MarkDelegate(n.finalizerStrong);
+		Mark(n.objStrong); n := n.nextFin
+	END;
+
+	n := checkRoot;
+	WHILE n # NIL DO (* list of objects that had been marked before entering CheckFinalizedObjects *)
+		(* we still have to mark the weak finalizers, as they might have not been marked before  *)
+		MarkDelegate(n.finalizer); n := n.nextFin
+	END;
+
 	Machine.Release(Machine.Heaps);
 	Activities.Call (CallFinalizers);
 END CheckFinalizedObjects;
@@ -518,8 +540,13 @@ BEGIN
 	Machine.Release(Machine.Heaps)
 END FillStaticType;
 
+VAR File EXTERN "UnixFiles.File": RECORD END;
+
 PROCEDURE AddFinalizer*(obj: ANY; n: FinalizerNode);
+VAR pointer {UNTRACED}: BaseTypes.Pointer;
 BEGIN
+	pointer := SYSTEM.VAL (BaseTypes.Pointer, obj);
+IF pointer.descriptor = ADDRESS OF File THEN TRACE (obj, n) END;
 	n.objWeak := obj; n.objStrong := NIL; n.finalizerStrong := NIL;
 	Machine.Acquire(Machine.Heaps);
 	n.nextFin := checkRoot; checkRoot := n;

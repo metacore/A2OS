@@ -153,7 +153,7 @@ BEGIN
 END SetAllocationLogger;
 
 (** Mark - Mark an object and its decendents. Used by findRoots. *)
-PROCEDURE Mark* EXTERN "GarbageCollector.Mark" (p: ANY);
+PROCEDURE Mark* EXTERN "GarbageCollector.Mark" (p {UNTRACED}: ANY);
 
 (* CheckCandidates - Check which candidates could be pointers, and mark them. (exported for debugging only) *)
 PROCEDURE CheckCandidates*;

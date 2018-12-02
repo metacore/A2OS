@@ -331,15 +331,6 @@ TYPE
 		END
 	END GCActivity;
 
-	FinalizedCollection* = OBJECT (* base type for collection, extended in Kernel.Mod *)
-		PROCEDURE RemoveAll*(obj: ANY); (** abstract *)
-		BEGIN HALT(301) END RemoveAll;
-	END FinalizedCollection;
-
-	FinalizerNode* = POINTER TO RECORD (Heaps.FinalizerNode)
-		c*: FinalizedCollection (* base type for collection containing object *)
-	END;
-
 	FinalizerCaller = OBJECT	(* separate active object that calls finalizers *)
 		VAR n: Heaps.FinalizerNode;
 
@@ -356,8 +347,8 @@ TYPE
 			LOOP
 				n := Heaps.GetFinalizer();
 				IF n = NIL THEN EXIT END;
-				IF n IS FinalizerNode THEN
-					n(FinalizerNode).c.RemoveAll(n.objStrong)	(* remove it if it is not removed yet *)
+				IF n.collection # NIL THEN
+					n.collection.RemoveAll(n.objStrong)	(* remove it if it is not removed yet *)
 				END;
 				IF n.finalizer # NIL THEN
 					n.finalizer(n.objStrong)	(* may acquire locks *)

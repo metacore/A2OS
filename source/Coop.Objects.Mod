@@ -91,15 +91,6 @@ TYPE
 		restartSP-: LONGINT;   (** stack level at start of body, for SAFE exception recovery *)
 		cpuCycles, lastCpuCycles : CpuCyclesArray;
 	END Process;
-
-	FinalizedCollection* = OBJECT
-		PROCEDURE RemoveAll*(obj: ANY); (** abstract *)
-		BEGIN HALT(301) END RemoveAll;
-	END FinalizedCollection;
-
-	FinalizerNode* = POINTER TO RECORD (Heaps.FinalizerNode)
-		c*: FinalizedCollection (* base type for collection containing object *)
-	END;
 	
 	InterruptList = POINTER TO RECORD
 		next: InterruptList;

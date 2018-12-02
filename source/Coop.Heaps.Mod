@@ -56,9 +56,15 @@ TYPE
 		objWeak* {UNTRACED}: ANY;	(* weak reference to checked object *)
 		nextFin: FinalizerNode;			(* in finalization list *)
 		objStrong*: ANY;				(* strong reference to object to be finalized *)
-		finalizer* {UNTRACED}: Finalizer;(* finalizer, if any. Untraced for the case that a finalizer points to objWeak *)
+		finalizer* {UNTRACED} : Finalizer;(* finalizer, if any. Untraced for the case that a finalizer points to objWeak *)
 		finalizerStrong: Finalizer; 		(* strong reference to the object that is referenced by the finalizer, if any *)
+		collection*: FinalizedCollection;	(* collection containing object *)
 	END;
+
+	FinalizedCollection* = OBJECT (* base type for collection, extended in Kernel.Mod *)
+		PROCEDURE RemoveAll*(obj: ANY); (** abstract *)
+		BEGIN HALT(301) END RemoveAll;
+	END FinalizedCollection;
 
 	HeapBlock* = POINTER TO HeapBlockDesc;	(* base object of all heap blocks *)
 	HeapBlockDesc* = RECORD

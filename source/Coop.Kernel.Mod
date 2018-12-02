@@ -19,8 +19,8 @@ TYPE
 	(** Enumerator for FinalizedCollection.Enumerate. *)
 	Enumerator* = PROCEDURE {DELEGATE} ( obj: ANY;  VAR cont: BOOLEAN );
 
-	FinalizerNode = POINTER TO RECORD (Objects.FinalizerNode)
-		nextObj {UNTRACED} : FinalizerNode;   (* in Collection c *)
+	FinalizerNode = POINTER TO RECORD (Heaps.FinalizerNode)
+		nextObj {UNTRACED}: FinalizerNode;	(* in collection *)
 	END;
 
 	(** Polling timer. *)
@@ -78,14 +78,14 @@ TYPE
 
 TYPE
 	(** A collection of objects that are finalized automatically by the garbage collector. *)
-	FinalizedCollection* = OBJECT (Objects.FinalizedCollection)
+	FinalizedCollection* = OBJECT (Heaps.FinalizedCollection)
 		VAR root: FinalizerNode;	(* weak list of contents linked by nextObj *)
 
 		(** Add obj to collection. Parameter fin specifies finalizer, or NIL if not required. *)	(* may be called multiple times *)
 		PROCEDURE Add*(obj: ANY; fin: Finalizer);
 		VAR n: FinalizerNode;
 		BEGIN
-			NEW(n); n.c := SELF; n.finalizer := fin;
+			NEW(n); n.collection := SELF; n.finalizer := fin;
 			Heaps.AddFinalizer(obj, n);
 			BEGIN {EXCLUSIVE}
 				n.nextObj := root.nextObj; root.nextObj := n	(* add to collection *)

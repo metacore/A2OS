@@ -122,18 +122,6 @@ TYPE
 
 	END AliasFileSystem;
 	
-	
-	FinalizeFiles = OBJECT
-
-		PROCEDURE EnumFile( f: ANY;  VAR cont: BOOLEAN );
-		VAR F: File;
-		BEGIN
-			F := f( File );  F.Finalize();  cont := TRUE
-		END EnumFile;
-
-	END FinalizeFiles;
-	
-
 	SearchByFstat = OBJECT
 	VAR 
 		found: File;
@@ -199,12 +187,10 @@ TYPE
 		END ByStat;
 		
 		PROCEDURE Finalize;
-		VAR fin: FinalizeFiles;
 		BEGIN {EXCLUSIVE}
 			IF TraceCollection IN Trace THEN Log.String( "Collections.Finalize " );  Log.Ln;  END;
-			NEW( fin );  
-			newFiles.Enumerate( fin.EnumFile );  newFiles.Clear();  
-			oldFiles.Enumerate( fin.EnumFile );  oldFiles.Clear();
+			newFiles.Enumerate( EnumFinalize );  newFiles.Clear();  
+			oldFiles.Enumerate( EnumFinalize );  oldFiles.Clear();
 		END Finalize;
 
 		PROCEDURE FinalizeFile( obj: ANY );
@@ -855,9 +841,13 @@ TYPE
 				END GetName;
 
 			END File;
-			
-		
-	
+
+	PROCEDURE EnumFinalize( f: ANY;  VAR cont: BOOLEAN );
+	VAR F: File;
+	BEGIN
+		F := f( File );  F.Finalize();  cont := TRUE;
+	END EnumFinalize;
+
 (*===================================================================*)
 
 	(** Get the current directory. *)
@@ -1067,7 +1057,6 @@ TYPE
 		pid := Unix.getpid();
 		AppendInt( tempName, pid )
 	END GetTempName;
-
 
 	PROCEDURE Install;
 	VAR aliasFS: AliasFileSystem;

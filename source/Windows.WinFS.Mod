@@ -58,16 +58,6 @@ TYPE
 
 	END SearchByName;
 
-	FinalizeFiles = OBJECT
-
-		PROCEDURE EnumFile( f: ANY;  VAR cont: BOOLEAN );
-		VAR F: File;
-		BEGIN
-			F := f( File );  F.Finalize();  cont := TRUE
-		END EnumFile;
-
-	END FinalizeFiles;
-
 	Collection = OBJECT  (* methods in Collection shared by objects Filesystem and File *)
 	VAR oldFiles, newFiles: Kernel.FinalizedCollection;
 		search: SearchByName;
@@ -120,10 +110,9 @@ TYPE
 		END ByNameNotGC;
 
 		PROCEDURE Finalize;
-		VAR fin: FinalizeFiles;
 		BEGIN {EXCLUSIVE}
 			IF TraceCollection IN Trace THEN KernelLog.String( "Collections.Finalize " );  KernelLog.Ln;  END;
-			NEW( fin );  newFiles.Enumerate( fin.EnumFile );  newFiles.Clear();  oldFiles.Enumerate( fin.EnumFile );  oldFiles.Clear();
+			newFiles.Enumerate( EnumFinalize );  newFiles.Clear();  oldFiles.Enumerate( EnumFinalize );  oldFiles.Clear();
 		END Finalize;
 
 		PROCEDURE FinalizeFile( obj: ANY );
@@ -721,6 +710,11 @@ TYPE
 VAR
 	winFS: WinFileSystem;   (* must be unique *)
 
+	PROCEDURE EnumFinalize( f: ANY;  VAR cont: BOOLEAN );
+	VAR F: File;
+	BEGIN
+		F := f( File );  F.Finalize();  cont := TRUE;
+	END EnumFinalize;
 
 	PROCEDURE DebugFile(f: File);
 	BEGIN

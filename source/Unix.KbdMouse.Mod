@@ -91,9 +91,8 @@ VAR
 		be : Api.XButtonPressedEvent;
 		em: Api.XExposeEvent;
 		cm : Api.XClientMessageEvent;
-		datal: Api.Data40l;
 		cn: Api.XConfigureEvent;
-		res, events: LONGINT;
+		events: LONGINT;
 		buffer: ARRAY bufsize OF CHAR;
 	BEGIN
 		xd := disp.xdisp;
@@ -189,26 +188,18 @@ VAR
 					X11.QueryPointer( xd, event.window, rw, cw, xr, yr, x, y, xbuttons );
 					SendMouseMsg( x, y, 0, xbuttons )
 			| Api.Expose, Api.GraphicsExpose: 
-					(* hacking, clear all expoure events in queue *)
-					REPEAT res := Api.CheckTypedEvent(xd, Api.Expose, event) UNTIL res # X11.True; 
-					REPEAT 
-						res := Api.CheckWindowEvent(xd, disp.primary, Api.ExposureMask, event) 
-					UNTIL res # X11.True; 
 					em := S.VAL( Api.XExposeEvent, event );
 					IF em.count = 0 THEN  (* wait until last message*) 
 						(* Let DisplayRefresher handle this *)						
 						km.keysym := 0FFC6H;
 						SendKeyboardMsg( km );
 					END;
-					(* clear all expoure events in queue, again *)
-					REPEAT res := Api.CheckTypedEvent(xd, Api.Expose, event) UNTIL res # X11.True; 
 			| Api.NoExpose:
 			| Api.MappingNotify:
 					X11.RefreshKeyboardMapping( ADDRESSOF( event ) )
 			| Api.ClientMessage: 
 					cm := S.VAL( Api.XClientMessageEvent, event );
-					datal := S.VAL( Api.Data40l, cm.data );
-					IF  S.VAL( X11.Atom,datal[0] ) = disp.wmDelete THEN									
+					IF  cm.data[0] = disp.wmDelete THEN									
 						(* shutdown *)
 						Machine.Release( Machine.X11 );
 						TerminateA2;

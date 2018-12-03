@@ -272,7 +272,7 @@ VAR
 	VAR options: Options.Options;
 	BEGIN
 		NEW(options);
-		options.Add("p","primary", Options.String);
+		options.Add("p","primary", Options.Flag);
 		IF Unix.Version = "Darwin" THEN
 			Log.String( "Can't register the X11 clipboard in the Darwin port (ABI incompatiblity)" ); Log.Ln
 		ELSE

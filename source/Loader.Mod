@@ -524,7 +524,7 @@ VAR
 		address := data.address;
 		size := section.bits.GetSize();
 		section.bits.CopyTo(address, size);
-		INC(data.address, LONGINT(size DIV 8));
+		INC(data.address, size DIV 8);
 		RETURN address
 	END DoAllocate;
 	

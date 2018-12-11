@@ -191,7 +191,7 @@ TYPE
 
 	END HashTableIntAny;
 
-	Data=RECORD size, pos: LONGINT; bytes: Modules.Bytes; firstAddress: ADDRESS; END;
+	Data=RECORD size, alignment: SIZE; bytes: Modules.Bytes; address: ADDRESS; END;
 
 	Arrangement* = OBJECT (GenericLinker.Arrangement);
 	VAR
@@ -471,7 +471,7 @@ VAR
 
 	PROCEDURE InitData(VAR data: Data);
 	BEGIN
-		data.pos := 0; data.size := 0; data.bytes := NIL; data.firstAddress := 0;
+		data.address := 0; data.size := 0; data.alignment := 0; data.bytes := NIL;
 	END InitData;
 
 	PROCEDURE IsPrefix(CONST prefix, of: ObjectFile.SegmentedName): BOOLEAN;
@@ -498,7 +498,10 @@ VAR
 	BEGIN
 		ASSERT(section.bits.GetSize() MOD 8 = 0);
 		IF section.alignment > 0 THEN
-			INC(data.size, (-data.size) MOD section.alignment); (* here we assume that base-alignment is ok *)
+			INC(data.size, (-data.size) MOD section.alignment);
+			IF section.alignment > data.alignment THEN
+				data.alignment := section.alignment;
+			END;
 		END;
 		INC(data.size, section.bits.GetSize() DIV 8);
 	END DoPreallocate;
@@ -506,24 +509,22 @@ VAR
 	PROCEDURE DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): ADDRESS;
 	VAR address: ADDRESS; size: SIZE;
 	BEGIN
-		IF (data.bytes = NIL) OR (LEN(data.bytes) # data.size) THEN NEW(data.bytes, data.size) END;
+		IF (data.bytes = NIL) OR (LEN(data.bytes) # data.size + data.alignment) THEN
+			NEW(data.bytes, data.size + data.alignment);
+			data.address := ADDRESSOF(data.bytes[0]);
+			IF data.alignment > 0 THEN
+				INC(data.address, (-data.address) MOD data.alignment);
+			END;
+		END;
 
 		IF section.alignment > 0 THEN
-			INC(data.pos, (-data.pos) MOD section.alignment); (* here we assume that base-alignment is ok *)
+			INC(data.address, (-data.address) MOD section.alignment);
 		END;
-		address := ADDRESSOF(data.bytes[0])+data.pos; (*  to account for potentially empty variable at end of data ... *)
+
+		address := data.address;
 		size := section.bits.GetSize();
 		section.bits.CopyTo(address, size);
-		INC(data.pos, LONGINT(size DIV 8));
-		(*
-		bitPos:= 0;
-		WHILE size > 0 DO
-			value := section.bits.GetBits(bitPos,8);
-			data.bytes[data.pos] := CHR(value);
-			DEC(size,8); INC(data.pos); INC(bitPos,8);
-		END;
-		*)
-		IF data.firstAddress = 0 THEN data.firstAddress := address END;
+		INC(data.address, LONGINT(size DIV 8));
 		RETURN address
 	END DoAllocate;
 	
@@ -564,7 +565,7 @@ VAR
 				module.data := arrangement.data.bytes;
 				module.code := arrangement.code.bytes;
 
-				module.sb := 0 (*arrangement.data.firstAddress*); (* zero is correct ! *)
+				module.sb := 0;
 				module.body := SYSTEM.VAL(Body, arrangement.bodyAddress);
 				
 				(*

@@ -183,10 +183,20 @@ TYPE
 		END Net8;
 
 	(** Write a SET. *)
-		PROCEDURE RawSet*( x: SET );
+		PROCEDURE RawSet* ( x: SET ); (*! note: in case of -bits=64 only 32 bits are written ! *)
 		BEGIN
-			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4 )
+			RawSet32( SET32( x ) );
 		END RawSet;
+		
+		PROCEDURE RawSet32* ( x: SET32 ); 
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4 );
+		END RawSet32;
+		
+		PROCEDURE RawSet64* ( x: SET64 ); 
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8 );
+		END RawSet64;
 
 	(** Write a BOOLEAN. *)
 		PROCEDURE RawBool*( x: BOOLEAN );
@@ -631,11 +641,23 @@ TYPE
 		END Net8;
 
 	(** Read a SET. *)
-		PROCEDURE RawSet*( VAR x: SET );
+		PROCEDURE RawSet* ( VAR x: SET ); (*! note: in case of -bits=64 only 32 bits are read ! *)
+		VAR lx: SET32;
+		BEGIN
+			RawSet32( lx ); x := lx
+		END RawSet;
+		
+		PROCEDURE RawSet32* ( VAR x: SET32 );
 		VAR ignore: BufferOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
-		END RawSet;
+		END RawSet32;
+		
+		PROCEDURE RawSet64* ( VAR x: SET64 );
+		VAR ignore: BufferOffset;
+		BEGIN
+			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
+		END RawSet64;
 
 	(** Read a BOOLEAN. *)
 		PROCEDURE RawBool*( VAR x: BOOLEAN );

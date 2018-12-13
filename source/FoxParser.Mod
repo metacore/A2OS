@@ -90,7 +90,7 @@ CONST
 						['else' StatementSequence]
 						'end'
 					| 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence 
-						{'|' Identifier ':' QualifiedIdentifier 'do' StatementSequence}
+						{['|' Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
 						[else StatementSequence]
 						 'end'
 					| 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
@@ -1088,7 +1088,7 @@ TYPE
                         ['else' StatementSequence]
                         'end'
                      | 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence 
-                         {'|' Identifier ':' QualifiedIdentifier 'do' StatementSequence}
+                         {'|' [Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
                 				[else StatementSequence]
                          'end'
                      | 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
@@ -1187,7 +1187,7 @@ TYPE
 						withStatement.AddWithPart(withPart);
 						qualifiedIdentifier := QualifiedIdentifier();
 						IF Optional(Scanner.Colon) THEN (* compatibility with old format *)
-							Basic.Warning(diagnostics, scanner.source^, position, "deprecate form of with statement, remove the repeated variable");
+							Basic.Warning(diagnostics, scanner.source^, qualifiedIdentifier.position, "deprecated form of with statement, remove the repeated variable");
 							qualifiedIdentifier := QualifiedIdentifier();
 						END;
 						qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, currentScope, qualifiedIdentifier);

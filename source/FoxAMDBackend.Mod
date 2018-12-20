@@ -3613,7 +3613,7 @@ TYPE
 
 		PROCEDURE GetOptions*(options: Options.Options);
 		BEGIN
-			IF ~options.GetInteger("bits",bits) THEN bits := 32 END;
+			IF ~options.GetInteger("bits",bits) THEN bits := SIZE OF ADDRESS * 8 END;
 			traceable := options.GetFlag("traceable");
 			forceFPU := options.GetFlag("useFPU");
 			GetOptions^(options);

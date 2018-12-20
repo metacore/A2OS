@@ -195,8 +195,6 @@ BEGIN
 		pointer := SYSTEM.VAL(BaseTypes.Pointer, n.objWeak);
 		IF pointer.cycle - cycle <= 0 THEN
 			IF n = checkRoot THEN checkRoot := n.nextFin ELSE p.nextFin := n.nextFin END;
-			n.objStrong := n.objWeak;	(* anchor the object for finalization *)
-			n.finalizerStrong := n.finalizer; (* anchor the finalizer for finalization *)
 			t := n.nextFin; n.nextFin := finalizeRoot; finalizeRoot := n; n := t;
 			IF Stats THEN DEC(NfinalizeAlive); INC(NfinalizeDead) END
 		ELSE
@@ -207,14 +205,15 @@ BEGIN
 	(* now trace the weak references to keep finalized objects alive during this collection *)
 	n := finalizeRoot;
 	WHILE n # NIL DO
-		MarkDelegate(n.finalizerStrong);
-		Mark(n.objStrong); n := n.nextFin
+		n.objStrong := n.objWeak;	(* anchor the object for finalization *)
+		n.finalizerStrong := n.finalizer; (* anchor the finalizer for finalization *)
+		n := n.nextFin;
 	END;
 
 	n := checkRoot;
 	WHILE n # NIL DO (* list of objects that had been marked before entering CheckFinalizedObjects *)
 		(* we still have to mark the weak finalizers, as they might have not been marked before  *)
-		MarkDelegate(n.finalizer); n := n.nextFin
+		Mark(n.objWeak); MarkDelegate(n.finalizer); n := n.nextFin
 	END;
 
 	Machine.Release(Machine.Heaps);
@@ -546,7 +545,6 @@ PROCEDURE AddFinalizer*(obj: ANY; n: FinalizerNode);
 VAR pointer {UNTRACED}: BaseTypes.Pointer;
 BEGIN
 	pointer := SYSTEM.VAL (BaseTypes.Pointer, obj);
-IF pointer.descriptor = ADDRESS OF File THEN TRACE (obj, n) END;
 	n.objWeak := obj; n.objStrong := NIL; n.finalizerStrong := NIL;
 	Machine.Acquire(Machine.Heaps);
 	n.nextFin := checkRoot; checkRoot := n;

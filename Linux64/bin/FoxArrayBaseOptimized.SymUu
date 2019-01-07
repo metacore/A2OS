@@ -13,7 +13,7 @@ CONST
 	parallel = TRUE; 
 	SSE = TRUE; 
 	MaxCachePoolSize = 0; 
-	maxProcesses = 32; 
+	maxProcesses = 48; 
 	cMatMulDynamic* =  -1; 
 	cMatMulScalarProduct* = 0; 
 	cMatMulNaive* = 1; 

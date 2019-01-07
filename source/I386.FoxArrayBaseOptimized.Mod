@@ -27,7 +27,7 @@ CONST
 	debug = FALSE;  parallel = TRUE;  SSE = TRUE;
 
 	MaxCachePoolSize = 0 (* disabled *)  (*  646*1024*1024  *)  (* enabled *) ;
-	maxProcesses = 32;
+	maxProcesses = 48;
 
 	cMatMulDynamic* = -1;  cMatMulScalarProduct* = 0;
 	cMatMulNaive* = 1;  cMatMulTransposed* = 2;
@@ -4740,7 +4740,7 @@ VAR
 		END;
 
 		IF parallel & (M > L2BlockM) THEN
-			inc := Align( M DIV nrProcesses, L2BlockM );  M1 := 0;
+			inc := Align( MAX(M DIV nrProcesses,L2BlockM), L2BlockM );  M1 := 0;
 			i := 0;
 			WHILE (M1 < M) DO
 				M2 := M1 + inc;
@@ -4798,7 +4798,7 @@ VAR
 			END;
 		END;
 		IF parallel & (M > L2BlockM) THEN
-			inc := Align( M DIV nrProcesses, L2BlockM );  M1 := 0;
+			inc := Align( MAX(M DIV nrProcesses,L2BlockM), L2BlockM );  M1 := 0;
 			i := 0;
 			WHILE (M1 < M) DO
 				M2 := M1 + inc;

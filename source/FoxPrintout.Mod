@@ -1356,7 +1356,7 @@ TYPE
 			IF (x.scope = NIL) OR (x.scope.ownerModule = NIL) THEN context := SyntaxTree.invalidIdentifier ELSE context := x.scope.ownerModule.context END;
 			Identifier(x.moduleName);
 			IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#context) THEN
-				w.String(" IN ");
+				Keyword(" IN ");
 				Identifier(x.context)
 			END;
 		END VisitImport;
@@ -1847,7 +1847,7 @@ TYPE
 				Keyword("MODULE ");
 				Identifier(x.name);
 				IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#Global.A2Name) THEN
-					w.String(" IN ");
+					Keyword(" IN ");
 					Identifier(x.context)
 				END;
 

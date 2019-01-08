@@ -309,7 +309,8 @@ TYPE
 
 	(** A 64-bit signed integer value. *)
 	LargeInteger* = RECORD
-		LowPart*, HighPart*: LONGINT
+		LowPart*, HighPart*: LONGINT;
+		QuadPart*{ FICTIVE = 0 }: HUGEINT;
 	END;
 
 	(** A 64-bit unsigned integer value. *)

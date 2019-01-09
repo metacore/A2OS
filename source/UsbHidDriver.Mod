@@ -746,6 +746,10 @@ TYPE
 			x,y: LONGINT; 
 			displayWidth, displayHeight: LONGINT;
 		BEGIN
+			IF (touchscreenState.x = NIL) OR (touchscreenState.y = NIL) OR (touchscreenState.tipSwitch = NIL) THEN
+				RETURN;
+			END;
+
 			getDisplayDimensions(displayWidth, displayHeight); 
 			x := (touchscreenState.x.usageValue-touchscreenState.minX) * displayWidth DIV (touchscreenState.maxX-touchscreenState.minX +1);
 			y := (touchscreenState.y.usageValue-touchscreenState.minY) * displayHeight DIV  (touchscreenState.maxY -touchscreenState.minY + 1);
@@ -757,19 +761,30 @@ TYPE
 			END;
 			*)
 			
+			mm.keys := {};  mm.x := x; mm.y := y;
+(*
+			Trace.String("HIDTouch x: "); Trace.Int(mm.x,1); 
+			Trace.String(", y: "); Trace.Int(mm.y,1); 
+			Trace.String("prev keys: "); Trace.Set(touchscreenState.prevkeys); 
+			Trace.String(", tip: "); Trace.Int(touchscreenState.tipSwitch.usageValue,1);
+			Trace.String(", prevtip: "); Trace.Boolean(touchscreenState.prevTip);
+			Trace.String(", prev: "); Trace.Boolean(touchscreenState.prev);
+			Trace.String(", tiptime: "); Trace.Int(touchscreenState.tipTime,1);
+			Trace.String(", now: "); Trace.Int(Kernel.GetTicks(),1);
+			Trace.Ln; 
+*)
 			IF (touchscreenState.tipSwitch.usageValue#0) THEN 
-				IF (touchConfidenceDelay#0) & ~touchscreenState.prevTip THEN
+				IF (touchConfidenceDelay = 0) THEN
+					mm.keys := mm.keys + {0}; 					
+				ELSIF ~touchscreenState.prevTip THEN
 					touchscreenState.tipTime := Kernel.GetTicks();
 					touchscreenState.prevTip := TRUE
-				ELSIF (touchConfidenceDelay =0) OR (Kernel.GetTicks()-touchscreenState.tipTime > touchConfidenceDelay) THEN
+				ELSIF (Kernel.GetTicks()-touchscreenState.tipTime > touchConfidenceDelay) THEN
 					mm.keys := mm.keys + {0}; 
 				END
 			ELSE
 				touchscreenState.prevTip := FALSE;
 			END;
-			
-			
-			mm.x := x; mm.y := y;
 
 			IF ~(0 IN mm.keys) THEN (* up event  *)
 				touchscreenState.prev := FALSE;
@@ -782,6 +797,7 @@ TYPE
 					mm.x := touchscreenState.prevx;
 					mm.y := touchscreenState.prevy;
 					touchscreenState.prevkeys := mm.keys;
+					(*Trace.String("Handle0: "); Trace.Set(mm.keys); Trace.String(","); Trace.Int(mm.x,1); Trace.String(","); Trace.Int(mm.y,1); Trace.Ln; *)
 					Inputs.mouse.Handle(mm);
 				END;
 			ELSIF (0 IN mm.keys) THEN (* down event or pointer move *)
@@ -789,12 +805,15 @@ TYPE
 					(* artificial initial up event in order to set mouse coordinates like with a "real" mouse before sending the down event *)
 					touchscreenState.prev := TRUE;
 					EXCL(mm.keys, 0);
+					(*Trace.String("Handle1: "); Trace.Set(mm.keys); Trace.String(","); Trace.Int(mm.x,1); Trace.String(","); Trace.Int(mm.y,1); Trace.Ln; *)
 					Inputs.mouse.Handle(mm);
+					INCL(mm.keys, 0);
 				END;
 				(* down event or pointer event *)
 				touchscreenState.prevx := x;
 				touchscreenState.prevy := y;
 				touchscreenState.prevkeys := mm.keys;
+				(*Trace.String("Handle2: "); Trace.Set(mm.keys); Trace.String(","); Trace.Int(mm.x,1); Trace.String(","); Trace.Int(mm.y,1); Trace.Ln; *)
 				Inputs.mouse.Handle(mm);
 			END;
 		END HandleTouchscreenDriver;
@@ -1206,8 +1225,9 @@ TYPE
 		VAR
 			mouseCollection	: UsbHidReport.HidCollection;
 			temp			: UsbHidReport.HidReport;
-			i				: LONGINT;
-			isReportProtocol: BOOLEAN;
+			deviceConfigCollection: UsbHidReport.HidCollection;
+			deviceModeUsage: UsbHidReport.UsageTuple;
+			reportData: ARRAY 3 OF CHAR;
 		BEGIN
 			(*get mouse collection: mouse collection uses UsagePage(Generic Desktop Controlsl)->1 and Usage(Mouse)->2*)
 			mouseCollection := reportManager.GetCollection(0DH, 04H);
@@ -1215,14 +1235,42 @@ TYPE
 				NEW(touchscreenState);
 				touchscreenState.prev := FALSE;
 				touchscreenState.x 		:= reportManager.GetUsage(UsagePage.GenericDesktopPage, 30H, mouseCollection,temp);
-				touchscreenState.minX := temp.logicalMinimum;
-				touchscreenState.maxX := temp.logicalMaximum;
+				IF touchscreenState.x # NIL THEN
+					touchscreenState.minX := temp.logicalMinimum;
+					touchscreenState.maxX := temp.logicalMaximum;
+				ELSE
+					KernelLog.String("UsbHidDriver.InitializeTouchscreenDriver: error did not find x axis"); KernelLog.Ln;
+				END;
 				touchscreenState.y 		:= reportManager.GetUsage(UsagePage.GenericDesktopPage, 31H, mouseCollection,temp);
-				touchscreenState.minY := temp.logicalMinimum;
-				touchscreenState.maxY := temp.logicalMaximum;
+				IF touchscreenState.y # NIL THEN
+					touchscreenState.minY := temp.logicalMinimum;
+					touchscreenState.maxY := temp.logicalMaximum;
+				ELSE
+					KernelLog.String("UsbHidDriver.InitializeTouchscreenDriver: error did not find y axis"); KernelLog.Ln;
+				END;
 				touchscreenState.tipSwitch := reportManager.GetUsage(0DH, 042H, mouseCollection,temp);
+				IF touchscreenState.tipSwitch = NIL THEN
+					KernelLog.String("UsbHidDriver.InitializeTouchscreenDriver: error did not find tipSwitch"); KernelLog.Ln;
+				END;
 				touchscreenState.inRange := reportManager.GetUsage(0DH, 032H, mouseCollection,temp);
-				touchscreenState.confidence := reportManager.GetUsage(0DH, 047H, mouseCollection, temp); 
+				touchscreenState.confidence := reportManager.GetUsage(0DH, 047H, mouseCollection, temp);
+				
+				deviceConfigCollection := reportManager.GetCollection(0DH, 0EH); (* Collection for "Digitizer" user page (0x0D) and "Device Configuration" (0x0E) usage  *)
+				IF deviceConfigCollection # NIL THEN					
+					deviceModeUsage := reportManager.GetUsage(0DH, 52H, deviceConfigCollection,temp);
+					(* Check whether we can configure "Device Mode" and "Device Identifier" usages for "Digitizer" usage page; 
+					both usages must be within the same "Feature" HidReport *)
+					IF (deviceModeUsage # NIL) & (temp.reportType = 0BH) & (temp.reportCount = 2) & (temp.reportSize = 8) THEN
+						(* switch the device to "Multi-input" (0x02) mode as described in "Digitizer Drivers for Windows Touch and Pen-Based Computers" (October 21, 2010) on page 14 *)
+						reportData[0] := CHR(temp.reportID);
+						reportData[1] := 02X; (* Device Mode *)
+						reportData[2] := 00X; (* Device Identifier *)
+						IF ~SetReport(UsbHid.ReportFeature, temp.reportID, reportData, 3) THEN
+							KernelLog.String("UsbHidDriver.InitializeTouchscreenDriver: error failed to setup Device Mode usage");
+						END;
+					END;
+				END;
+
 				KernelLog.String("Touchscreen device registered with ");
 				KernelLog.String("minX = "); KernelLog.Int(touchscreenState.minX,1); 
 				KernelLog.String(", maxX = "); KernelLog.Int(touchscreenState.maxX,1); 

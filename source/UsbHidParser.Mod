@@ -724,40 +724,41 @@ TYPE
 			isArrayFlagSet:	BOOLEAN;
 			diff, maxVal:	LONGINT;
 		BEGIN
-			IF(reportType=IDMainItemInput) THEN
-				NEW(hidReport);
-				hidReport.reportID 			:= globalState.State(IDReportID);
-				hidReport.reportType		:= reportType;
-				hidReport.reportSize		:= globalState.State(IDReportSize);
-				hidReport.usagePage		:= globalState.State(IDUsagePage);
-				hidReport.mainState		:= mainState;
-				(*hidReport.reportOffset		:= UndefinedState;*)
-				hidReport.reportCount		:= globalState.State(IDReportCount);
-				hidReport.logicalMinimum	:= globalState.State(IDLogicalMinimum);
-				hidReport.logicalMaximum	:= globalState.State(IDLogicalMaximum);
-				hidReport.physicalMinimum	:= globalState.State(IDPhysicalMinimum);
-				hidReport.physicalMaximum	:= globalState.State(IDPhysicalMaximum);
-				hidReport.unitExponent		:= globalState.State(IDUnitExponent);
-				hidReport.unit				:= globalState.State(IDUnit);
+			ASSERT((reportType=IDMainItemInput) OR (reportType = IDMainItemFeature));
+			NEW(hidReport);
+			hidReport.reportID 			:= globalState.State(IDReportID);
+			hidReport.reportType		:= reportType;
+			hidReport.reportSize		:= globalState.State(IDReportSize);
+			hidReport.usagePage		:= globalState.State(IDUsagePage);
+			hidReport.mainState		:= mainState;
+			(*hidReport.reportOffset		:= UndefinedState;*)
+			hidReport.reportCount		:= globalState.State(IDReportCount);
+			hidReport.logicalMinimum	:= globalState.State(IDLogicalMinimum);
+			hidReport.logicalMaximum	:= globalState.State(IDLogicalMaximum);
+			hidReport.physicalMinimum	:= globalState.State(IDPhysicalMinimum);
+			hidReport.physicalMaximum	:= globalState.State(IDPhysicalMaximum);
+			hidReport.unitExponent		:= globalState.State(IDUnitExponent);
+			hidReport.unit				:= globalState.State(IDUnit);
 
-				isArrayFlagSet := {IDMainIsVariable} * SYSTEM.VAL(SET,mainState) = {};
+			isArrayFlagSet := {IDMainIsVariable} * SYSTEM.VAL(SET,mainState) = {};
 
-				IF UsbHidReport.UseUsageDictionaryExt THEN
-					(*only append the usageDictionary when mainState has set array flag (usageID sent but not usageValues)*)
-					IF isArrayFlagSet THEN
-						hidReport.supportedUsages := localState.CreateUsageDictionary();
-					END;
+			IF UsbHidReport.UseUsageDictionaryExt THEN
+				(*only append the usageDictionary when mainState has set array flag (usageID sent but not usageValues)*)
+				IF isArrayFlagSet THEN
+					hidReport.supportedUsages := localState.CreateUsageDictionary();
 				END;
-				hidReport.usages := localState.CreateUsageArray(hidReport.reportCount, isArrayFlagSet);
 			END;
+			hidReport.usages := localState.CreateUsageArray(hidReport.reportCount, isArrayFlagSet);
 			(*check the remaining possible errors*)
 
 			(*reportSize too small*)
-			diff:=hidReport.logicalMaximum-hidReport.logicalMinimum;
-			maxVal := SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,{hidReport.reportSize}));
-			IF((diff>maxVal)&(hidReport.reportSize<32)) THEN
-				errorList.Add(itemNr, UsbHidErrors.GlobalItemLogicalMinimum,0H);
-				errorList.Add(itemNr, UsbHidErrors.GlobalItemLogicalMaximum,0H);
+			IF hidReport.reportSize<32 THEN
+				diff:=hidReport.logicalMaximum-hidReport.logicalMinimum;
+				maxVal := SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,{hidReport.reportSize}));
+				IF diff>maxVal THEN
+					errorList.Add(itemNr, UsbHidErrors.GlobalItemLogicalMinimum,0H);
+					errorList.Add(itemNr, UsbHidErrors.GlobalItemLogicalMaximum,0H);
+				END;
 			END;
 
 			(*array has to have logical Minimum=1 &
@@ -874,8 +875,9 @@ TYPE
 					inputOutputFeatureParsed := TRUE;
 					mainState:= si.data;
 					VerifyMainPreconditions;
-					(*localState.AppendUsageMinMaxArray(mainState, globalState);
-					reportManager.AddReport(CreateHidReport(IDMainItemFeature));*)
+					localState.AppendUsageMinMaxArray(mainState, globalState);
+					aReport := CreateHidReport(IDMainItemFeature,itemNr);
+					reportManager.AddReport(aReport);
 				|IDMainItemCollection: (*Collection*)
 					INC(depth);
 					IF (si.data>6H) THEN

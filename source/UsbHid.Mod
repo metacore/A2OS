@@ -199,7 +199,7 @@ TYPE
 PROCEDURE ParseHidDescriptor(descriptor : Usbdi.BufferPtr) : HidDescriptor;
 VAR hid : HidDescriptor;  i : LONGINT;
 BEGIN
-	IF (descriptor # NIL) & (LEN(descriptor) >= 8) THEN
+	IF (descriptor # NIL) & (LEN(descriptor) >= 9) THEN
 		NEW(hid);
 		hid.bLength := ORD(descriptor[0]);
 		hid.bDescriptorType := ORD(descriptor[1]);
@@ -207,18 +207,18 @@ BEGIN
 		hid.bCountryCode := ORD(descriptor[4]);
 		hid.bNumDescriptors := ORD(descriptor[5]);
 		hid.bClassDescriptorType := ORD(descriptor[6]);
-		hid.wDescriptorLength := ORD(descriptor[7]);
+		hid.wDescriptorLength := ORD(descriptor[7]) + LONGINT(ORD(descriptor[8]))*100H;
 
 		(* Parse the optional descriptors if there are some *)
 		IF hid.bNumDescriptors > 1 THEN
-			IF LEN(descriptor) >= (3 * (hid.bNumDescriptors-2)) + 7 THEN
+			IF LEN(descriptor) < (3 * (hid.bNumDescriptors-1)) + 9 THEN
 				KernelLog.String("UsbHid: Warning: HID descriptor too short"); KernelLog.Ln;
 				RETURN hid;
 			END;
 			NEW(hid.optionalDescriptors, hid.bNumDescriptors-1);
 			FOR i := 0 TO hid.bNumDescriptors-2 DO
-				hid.optionalDescriptors[i].bDescriptorType := ORD(descriptor[(3 * i) + 6]);
-				hid.optionalDescriptors[i].wDescriptorLength := ORD(descriptor[(3 * i) + 7]);
+				hid.optionalDescriptors[i].bDescriptorType := ORD(descriptor[(3 * i) + 9]);
+				hid.optionalDescriptors[i].wDescriptorLength := ORD(descriptor[(3 * i) + 10]) + LONGINT(ORD(descriptor[(3 * i) + 11]))*100H;
 			END;
 		END;
 	END;

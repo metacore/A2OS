@@ -142,8 +142,8 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Terminate;
 
 BEGIN
-	Trace.String ("Build "); Trace.String (SYSTEM.Date); Trace.String (" (Unix, ");
-	Trace.String ("GC, ");
+	Trace.String ("Build "); Trace.String (SYSTEM.Date); Trace.String (" (");
+	Trace.String (Unix.Version); Trace.String (", GC, ");
 	Trace.Int (Processors.count, 0); Trace.String (" CPU");
 	IF Processors.count > 1 THEN Trace.Char ('s') END; Trace.String (", ");
 	Trace.Int (SIZE OF ADDRESS * 8, 0); Trace.String ("-bit)"); Trace.Ln;

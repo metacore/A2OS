@@ -101,8 +101,7 @@ TYPE
 
 TYPE
 
-	Layout = OBJECT
-	VAR
+	Layout = RECORD
 		nofLines : LONGINT;
 		lines : LineInfoArray;
 		text : Texts.Text;
@@ -265,7 +264,7 @@ TYPE
 			text.ReleaseRead
 		END FixLayoutFrom;
 
-	END Layout;
+	END (*Layout*);
 
 CONST HLOver* = 0; HLUnder* = 1; HLWave* = 2;
 
@@ -788,7 +787,8 @@ TYPE
 			NEW(onCtrlClicked, SELF, PTVonCtrlLinkClick, PTVonCtrlLinkClickInfo, SELF.StringToCompCommand); events.Add(onCtrlClicked);
 
 			(* selection and cursor *)
-			NEW(layout);
+(*!			NEW(layout);*)
+			layout.New();
 			layout.layoutLineProc := LayoutLine;
 			nofHighlights := 0;
 			NEW(highlights, 4);
@@ -2648,8 +2648,6 @@ TYPE
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR la, lb, i, top, t, b : LONGINT; rect, clip : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 		BEGIN
-			ASSERT(layout # NIL);
-
 			canvas.GetClipRect(clip);
 			IF WMRectangles.RectEmpty(clip) THEN RETURN END;
 			rect := GetClientRect();

@@ -11,7 +11,7 @@ MODULE UsbHidDriver;  (** AUTHOR "ottigerm"; PURPOSE "USB HID Parser"; *)
  *
  * Usage:
  *	UsbHidDriver.Install ~ load this driver
- *	SystemTools.Free UsbHidDriver ~ unload this driver
+ *	System.Free UsbHidDriver ~ unload this driver
  *
  * Remarks:
  *
@@ -1610,4 +1610,4 @@ BEGIN
 	Setup;
 END UsbHidDriver.
 
-UsbHidDriver.Install ~  SystemTools.Free UsbHidDriver UsbHidParser UsbHidErrors UsbHidParserExt UsbHidReport UsbHidUP~
+UsbHidDriver.Install ~  System.Free UsbHidDriver UsbHidParser UsbHidErrors UsbHidParserExt UsbHidReport UsbHidUP~

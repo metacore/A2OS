@@ -7,7 +7,7 @@ MODULE UsbHubDriver; (** AUTHOR "staubesv"; PURPOSE "USB 2.0 Hub Driver"; *)
  * Usage:
  *
  *	UsbHubDriver.Install ~ will load this device driver
- *	SystemTools.Free UsbHubDriver ~ unloads it
+ *	System.Free UsbHubDriver ~ unloads it
  *
  * Overview:
  *
@@ -1563,4 +1563,4 @@ BEGIN
 	Usbdi.drivers.Add(Probe, Name, Description, 10);
 END UsbHubDriver.
 
-UsbHubDriver.Install ~  SystemTools.Free UsbHubDriver ~
+UsbHubDriver.Install ~  System.Free UsbHubDriver ~

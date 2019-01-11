@@ -323,12 +323,12 @@ BEGIN
 	Init;
 END DisplayLinear.
 
-SystemTools.DoCommands
+System.DoCommands
 
 WinDisks.Install I: RW ~
 FSTools.Mount AOS AosFS PhysicalDrive4#3 ~
 
-SystemTools.DoCommands
+System.DoCommands
 
 FSTools.CopyFiles -o WORK:/build/DisplayLinear.Gof => AOS:/DisplayLinear.Gof ~
 FSTools.CopyFiles -o WORK:/build/DisplayLinear.Sym => AOS:/DisplayLinear.Sym ~

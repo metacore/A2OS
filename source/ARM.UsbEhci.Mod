@@ -9,7 +9,7 @@ MODULE UsbEhci; (** AUTHOR "staubesv"; PURPOSE "USB Enhanced Host Controller Dri
  * module to increase flexibility. If your EHCI controller is accessible with PCI, the command:
  * 		UsbEhciPCI.Install ~
  * will install EHCI drivers as needed. To remove them, simply uninstall Ehci modules:
- * 		SystemTools.Free UsbEhciPCI UsbEhci ~
+ * 		System.Free UsbEhciPCI UsbEhci ~
  *
  * In other cases, specific modules can be written, that will instanciate drivers as needed.
  *
@@ -3247,4 +3247,4 @@ BEGIN
 	Modules.InstallTermHandler(Cleanup);
 END UsbEhci.
 
-UsbEhci.Install ~  SystemTools.Free UsbEhci ~
+UsbEhci.Install ~  System.Free UsbEhci ~

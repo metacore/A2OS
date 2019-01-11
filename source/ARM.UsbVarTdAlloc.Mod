@@ -289,7 +289,7 @@ END Test;
 
 END TestUsbVarTdAlloc.
 
-SystemTools.Free TestUsbVarTdAlloc UsbVarTdAlloc ~
+System.Free TestUsbVarTdAlloc UsbVarTdAlloc ~
 
 TestUsbVarTdAlloc.Test ~
 

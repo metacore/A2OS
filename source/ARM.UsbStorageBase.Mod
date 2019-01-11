@@ -1197,6 +1197,6 @@ BEGIN
 	performance := Usbdi.MaxPerformance;
 END UsbStorageBase.
 
-UsbStorage.Install ~ SystemTools.Free UsbStorage ~
+UsbStorage.Install ~ System.Free UsbStorage ~
 
 UsbStorage.Show ~

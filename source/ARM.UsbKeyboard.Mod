@@ -4,7 +4,7 @@ MODULE UsbKeyboard; (** AUTHOR "cplattner; staubesv"; PURPOSE "Bluebottle USB Ke
  *
  * Usage:
  *
- *	UsbKeyboard.Install ~ loads this driver		SystemTools.Free UsbKeyboard ~ unloads it
+ *	UsbKeyboard.Install ~ loads this driver		System.Free UsbKeyboard ~ unloads it
  *
  *	UsbKeyboard.SetLayout dev file ~ sets the keyboard layout
  * 	UsbKeyboard.SetLayout UsbKeyboard00 KeyCH.Bin ~ sets the CH keyboard layout, for example
@@ -739,7 +739,7 @@ BEGIN
 	Usbdi.drivers.Add(Probe, Name, Description, Priority);
 END UsbKeyboard.
 
-UsbKeyboard.Install ~ SystemTools.Free UsbKeyboard ~
+UsbKeyboard.Install ~ System.Free UsbKeyboard ~
 
 UsbKeyboard.SetLayout UsbKeyboard00 KeyBE.Bin ~
 UsbKeyboard.SetLayout UsbKeyboard00 KeyCA.Bin ~
@@ -755,4 +755,4 @@ UsbKeyboard.SetLayout UsbKeyboard00 KeyTR.Bin ~
 UsbKeyboard.SetLayout UsbKeyboard00 KeyUK.Bin ~
 UsbKeyboard.SetLayout UsbKeyboard00 KeyUS.Bin ~
 
-WMKeyCode.Open ~	SystemTools.Free WMKeyCode ~
+WMKeyCode.Open ~	System.Free WMKeyCode ~

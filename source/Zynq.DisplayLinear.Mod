@@ -256,19 +256,19 @@ VAR
 		Machine.Fill32(bufAddr,Width*Height*4,DefaultColor); (* fill the framebuffer with the default color *)
 		Machine.FlushDCacheRange(bufAddr,Width*Height*4);
 
-		AcAxiDma.InitController(rdma,rCfgCmd,rCfgData,rStatus,4,16);
-		AcAxiDma.SetBurstLen(rdma,DmaBurstLen);
+		NEW(rdma,rCfgCmd,rCfgData,rStatus,4,16);
+		rdma.SetBurstLen(DmaBurstLen);
 
 		(* configure read DMA transfer *)
-		AcAxiDma.SetAddr(rdma,bufAddr);
-		AcAxiDma.SetCount(rdma,Width*Height);
-		AcAxiDma.SetWrap(rdma,TRUE); (* recurring transfer *)
+		rdma.SetAddr(bufAddr);
+		rdma.SetCount(Width*Height);
+		rdma.SetWrap(TRUE); (* recurring transfer *)
 		
 		(*
 			Enable video output
 		*)
 		Video.Enable(vout,TRUE);
-		AcAxiDma.Start(rdma);
+		rdma.Start;
 		
 		(*
 			Install the display

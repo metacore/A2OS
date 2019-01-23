@@ -154,6 +154,7 @@ VAR
 	loopSPAXAX*, loopSPARAR*: BinaryAASLoop;
 	loopSPAZAZ, loopSPALZALZ: BinaryAASLoop;
 	loopAddAXAX*, loopAddARAR*, loopAddAZAZ*, loopAddALZALZ*: BinaryAAALoop;
+	loopSubAXAX*, loopSubARAR*, loopSubAZAZ*, loopSubALZALZ*: BinaryAAALoop;
 	loopMatMulAXAX*, loopMatMulARAR*: BinaryAASLoop;
 	loopMatMulIncAXAX*, loopMatMulIncARAR*: BinaryAASLoop;
 	loopMulAXSX*, loopMulARSR*, loopMulAZSZ*, loopMulALZSLZ*: BinaryASALoop;
@@ -185,10 +186,10 @@ VAR
 	PROCEDURE SetDefaults*;   (* set standard procedures *)
 	BEGIN
 		KernelLog.String( "ArrayBase XXXXXXX: setting runtime library (semi-optimized) default methods." );  KernelLog.Ln;  loopSPAXAX := SPAXAXLoop;
-		loopSPARAR := SPARARLoop;  loopAddAXAX := AddAXAXLoop;
+		loopSPARAR := SPARARLoop;  loopAddAXAX := AddAXAXLoop;  loopSubAXAX := SubAXAXLoop;
 		loopSPAZAZ := SPAZAZLoop; loopSPALZALZ := SPALZALZLoop;
-		loopAddARAR := AddARARLoop;  loopMatMulAXAX := MatMulAXAXLoop;
-		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop;
+		loopAddARAR := AddARARLoop; loopSubARAR := SubARARLoop;  loopMatMulAXAX := MatMulAXAXLoop;
+		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop; loopSubAZAZ := SubAZAZLoop; loopSubALZALZ := SubALZALZLoop;
 		loopMatMulIncAXAX := MatMulIncAXAXLoop;
 		loopMatMulARAR := MatMulARARLoop;  loopMulAXSX := MulAXSXLoop;
 		loopIncMulAXSX := IncMulAXSXLoop;
@@ -2673,7 +2674,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR "-"*(CONST left,right: ARRAY [?] OF REAL): ARRAY {UNSAFE} [?] OF REAL;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( REAL ),
-										  SubARARLoop );
+										  loopSubARAR );
 		RETURN RESULT
 	END "-";
 
@@ -2690,7 +2691,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR "-"*(CONST left,right: ARRAY [?] OF LONGREAL): ARRAY {UNSAFE} [?] OF LONGREAL;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right,
-										  SIZEOF( LONGREAL ), SubAXAXLoop );
+										  SIZEOF( LONGREAL ), loopSubAXAX );
 		RETURN RESULT
 	END "-";
 
@@ -2707,7 +2708,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR "-"*(CONST left,right: ARRAY [?] OF COMPLEX): ARRAY {UNSAFE} [?] OF COMPLEX;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right,
-										  SIZEOF( COMPLEX ), SubAZAZLoop );
+										  SIZEOF( COMPLEX ), loopSubAZAZ );
 		RETURN RESULT
 	END "-";
 
@@ -2727,7 +2728,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR "-"*(CONST left,right: ARRAY [?] OF LONGCOMPLEX): ARRAY {UNSAFE} [?] OF LONGCOMPLEX;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right,
-										  SIZEOF( LONGCOMPLEX ), SubALZALZLoop );
+										  SIZEOF( LONGCOMPLEX ), loopSubALZALZ );
 		RETURN RESULT
 	END "-";
 

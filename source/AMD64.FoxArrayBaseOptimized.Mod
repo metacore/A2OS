@@ -1460,6 +1460,344 @@ VAR
 		JMP	singlepieces	;
 		endL:
 	END AddARARLoopSSE;
+	
+(* *)
+	PROCEDURE SubAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	CODE {SYSTEM.AMD64, SYSTEM.FPU}
+		MOV	RAX, [RBP+len]	;
+		MOV	RBX, [RBP+ladr]	;
+		MOV	RCX, [RBP+radr]	;
+		MOV	RDX, [RBP+dadr]	;
+		start:
+		CMP	RAX, 0	;
+		JLE	endL	;
+		FLD	QWORD [RBX]	;
+		ADD	RBX, [RBP+linc]	;
+		FLD	QWORD [RCX]	;
+		ADD	RCX, [RBP+rinc]	;
+		FSUBP	;
+		FSTP	QWORD [RDX]	;
+		ADD	RDX, [RBP+dinc]	;
+		DEC	RAX	;
+		JMP	start	;
+		endL:
+		FWAIT	;
+	END SubAXAXLoopA;
+
+	PROCEDURE SubARARLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	CODE {SYSTEM.AMD64, SYSTEM.FPU}
+		MOV	RAX, [RBP+len]	;
+		MOV	RBX, [RBP+ladr]	;
+		MOV	RCX, [RBP+radr]	;
+		MOV	RDX, [RBP+dadr]	;
+		start:
+		CMP	RAX, 0	;
+		JLE	endL	;
+		FLD	DWORD [RBX]	;
+		ADD	RBX, [RBP+linc]	;
+		FLD	DWORD [RCX]	;
+		ADD	RCX, [RBP+rinc]	;
+		FSUBP	;
+		FSTP	DWORD [RDX]	;
+		ADD	RDX, [RBP+dinc]	;
+		DEC	RAX	;
+		JMP	start	;
+		endL:
+		FWAIT	;
+	END SubARARLoopA;
+
+	PROCEDURE SubAXAXLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	CODE {SYSTEM.AMD64, SYSTEM.SSE2}
+		MOV	RAX, [RBP+len]	;
+		CMP	RAX, 0	;
+		JLE	endL	;  nothing TO be done, RAX > 0 guaranteed from here on
+		MOV	RBX, [RBP+ladr]	;
+		MOV	RCX, [RBP+radr]	;
+		MOV	RDX, [RBP+dadr]	;
+		;  check IF data are contiguous IN memory
+		CMP	[RBP+linc], 8	;  check left FOR contiunuity
+		JNE	single	;  not continuous- > simplest method
+		CMP	[RBP+rinc], 8	;  check right FOR contiunuity
+		JNE	single	;  not continuous- > simplest method
+		CMP	[RBP+dinc], 8	;  check destination FOR contiunuity
+		JNE	single	;  not continuous- > simplest method
+		;  check FOR alignment
+		MOV	RSI, RBX	;
+		AND	RSI, 7	;  ladr MOD 8
+		CMP	RSI, 0	;  = 0- > 64 Bit alignment
+		JNE	unaligned	;  not 64 bit aligned
+		MOV	RSI, RCX	;
+		AND	RSI, 7	;  radr MOD 8
+		CMP	RSI, 0	;  = 0- > 64 Bit alignment
+		JNE	unaligned	;  not 64 bit aligned
+		MOV	RSI, RDX	;
+		AND	RSI, 7	;  dadr MOD 8
+		CMP	RSI, 0	;  = 0- > 64 Bit alignment
+		JNE	unaligned	;  not 64 bit aligned
+		MOV	RSI, RBX	;
+		AND	RSI, 8	;  16 byte alignment
+		MOV	RDI, RCX	;
+		AND	RDI, 8	;  16 byte alignment
+		CMP	RSI, RDI	;
+		JNE	unaligned	;  different 16 byte = 128 bit alignment OF ladr and radr
+		MOV	RDI, RDX	;
+		AND	RDI, 8	;  16 byte alignment
+		CMP	RSI, RDI	;
+		JNE	unaligned	;  different 16 byte = 128 bit alignment OF dadr and radr
+		CMP	RSI, 8	;
+		JNE	aligned	;  lad, radr and dadr already 128 bit aligned
+		;  one single element processing TO achieve 128 bt alignment
+		MOVSD	XMM1, [RBX]	;
+		MOVSD	XMM0, [RCX]	;
+		SUBSD	XMM0, XMM1	;
+		MOVSD	[RDX], XMM0	;
+		ADD	RBX, 8	;  now RBX IS 16 byte aligned
+		ADD	RCX, 8	;  now RDX IS 16 byte aligned	;
+		ADD	RDX, 8	;  now RDX IS 16 byte aligned	;
+		DEC	RAX	;  one element has been processed
+		aligned:
+		aligned8:
+		CMP	RAX, 8	;
+		JL	aligned2	;  len < 4- > EXIT TO singlepieces
+		MOVAPD	XMM0, [RBX]	;
+		MOVAPD	XMM1, [RBX+16]	;
+		MOVAPD	XMM2, [RBX+32]	;
+		MOVAPD	XMM3, [RBX+48]	;
+		ADD	RBX, 64	;
+		MOVAPD	XMM4, [RCX]	;
+		MOVAPD	XMM5, [RCX+16]	;
+		MOVAPD	XMM6, [RCX+32]	;
+		MOVAPD	XMM7, [RCX+48]	;
+		ADD	RCX, 64	;
+		SUBPD	XMM0, XMM4	;
+		SUBPD	XMM1, XMM5	;
+		SUBPD	XMM2, XMM6	;
+		SUBPD	XMM3, XMM7	;
+		MOVAPD	[RDX], XMM0	;
+		MOVAPD	[RDX+16], XMM1	;
+		MOVAPD	[RDX+32], XMM2	;
+		MOVAPD	[RDX+48], XMM3	;
+		ADD	RDX, 64	;
+		SUB	RAX, 8	;
+		JMP	aligned8	;
+		;  LOOP FOR 2 pieces aligned
+		aligned2: ;
+		CMP	RAX, 2	;
+		JL	singlepieces	;  len < 2- > EXIT TO singlepieces
+		MOVAPD	XMM0, [RBX]	;
+		ADD	RBX, 16	;
+		MOVAPD	XMM1, [RCX]	;
+		ADD	RCX, 16	;
+		SUBPD	XMM0, XMM1	;
+		MOVAPD	[RDX], XMM0	;
+		ADD	RDX, 16	;
+		SUB	RAX, 2	;
+		JMP	aligned2	;
+		;  LOOP FOR 8 unaligned pieces(14 pieces not better!)
+		unaligned: ;
+		unaligned8: ;
+		CMP	RAX, 8	;
+		JL	unaligned2	;  len < 4- > EXIT TO singlepieces
+		MOVUPD	XMM0, [RBX]	;
+		MOVUPD	XMM1, [RBX+16]	;
+		MOVUPD	XMM2, [RBX+32]	;
+		MOVUPD	XMM3, [RBX+48]	;
+		ADD	RBX, 64	;
+		MOVUPD	XMM4, [RCX]	;
+		MOVUPD	XMM5, [RCX+16]	;
+		MOVUPD	XMM6, [RCX+32]	;
+		MOVUPD	XMM7, [RCX+48]	;
+		ADD	RCX, 64	;
+		SUBPD	XMM0, XMM4	;
+		SUBPD	XMM1, XMM5	;
+		SUBPD	XMM2, XMM6	;
+		SUBPD	XMM3, XMM7	;
+		MOVUPD	[RDX], XMM0	;
+		MOVUPD	[RDX+16], XMM1	;
+		MOVUPD	[RDX+32], XMM2	;
+		MOVUPD	[RDX+48], XMM3	;
+		ADD	RDX, 64	;
+		SUB	RAX, 8	;
+		JMP	unaligned8	;
+		;  LOOP FOR 2 pieces aligned
+		unaligned2: ;
+		CMP	RAX, 2	;
+		JL	singlepieces	;  len < 2- > EXIT TO singlepieces
+		MOVUPD	XMM0, [RBX]	;
+		ADD	RBX, 16	;
+		MOVUPD	XMM1, [RCX]	;
+		ADD	RCX, 16	;
+		SUBPD	XMM0, XMM1	;
+		MOVUPD	[RDX], XMM0	;
+		ADD	RDX, 16	;
+		SUB	RAX, 2	;
+		JMP	unaligned2	;
+		;  one piece left OR non-contiguous data
+		single:
+		singlepieces: ;
+		CMP	RAX, 0	;
+		JLE	endL	;  len <= 0- > EXIT
+		MOVSD	XMM0, [RBX]
+		ADD	RBX, [RBP+linc]	;  INC(ladr, incl)
+		MOVSD	XMM1, [RCX]
+		ADD	RCX, [RBP+rinc]	;  INC(ladr, incl)
+		SUBSD	XMM0, XMM1	;
+		MOVSD	[RDX], XMM0
+		ADD	RDX, [RBP+dinc]	;  INC(radr, incr)
+		DEC	RAX	;  DEC(len)
+		JMP	singlepieces	;
+		endL:
+	END SubAXAXLoopSSE;
+
+	PROCEDURE SubARARLoopSSE( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
+	CODE {SYSTEM.AMD64, SYSTEM.SSE2}
+		MOV	RAX, [RBP+len]	;
+		CMP	RAX, 0	;
+		JLE	endL	;  nothing TO be done, RAX > 0 guaranteed from here on
+		MOV	RBX, [RBP+ladr]	;
+		MOV	RCX, [RBP+radr]	;
+		MOV	RDX, [RBP+dadr]	;
+		;  check IF data are contiguous IN memory
+		CMP	[RBP+linc], 4	;  check left FOR contiunuity
+		JNE	single	;  not continuous- > simplest method
+		CMP	[RBP+rinc], 4	;  check right FOR contiunuity
+		JNE	single	;  not continuous- > simplest method
+		CMP	[RBP+dinc], 4	;  check destination FOR contiunuity
+		JNE	single	;  not continuous- > simplest method
+		;  check FOR alignment
+		MOV	RSI, RBX	;
+		AND	RSI, 3	;  ladr MOD 4
+		CMP	RSI, 0	;  = 0- > 32 Bit alignment
+		JNE	unaligned	;  not 32 bit aligned
+		MOV	RSI, RCX	;
+		AND	RSI, 3	;  radr MOD 4
+		CMP	RSI, 0	;  = 0- > 32 Bit alignment
+		JNE	unaligned	;  not 32 bit aligned
+		MOV	RSI, RDX	;
+		AND	RSI, 3	;  dadr MOD 4
+		CMP	RSI, 0	;  = 0- > 32 Bit alignment
+		JNE	unaligned	;  not 32 bit aligned
+		MOV	RSI, RBX	;
+		AND	RSI, 8+4	;  16 byte alignment?
+		MOV	RDI, RCX	;
+		AND	RDI, 8+4	;  16 byte alignment?
+		CMP	RSI, RDI	;
+		JNE	unaligned	;  different 16 byte = 128 bit alignment OF ladr and radr
+		MOV	RDI, RDX	;
+		AND	RDI, 8+4	;  16 byte alignment
+		CMP	RSI, RDI	;
+		JNE	unaligned	;  different 16 byte = 128 bit alignment OF dadr and radr
+		CMP	RSI, 0	;
+		JE	aligned	;  already aligned
+		align:
+		;  one single element processing UNTIL 128 bt alignment achieved
+		MOVSS	XMM1, [RBX]	;
+		MOVSS	XMM0, [RCX]	;
+		SUBSS	XMM0, XMM1	;
+		MOVSS	[RDX], XMM0	;
+		ADD	RBX, 4	;
+		ADD	RCX, 4	;
+		ADD	RDX, 4	;
+		DEC	RAX	;  one element has been processed	;
+		CMP	RAX, 0	;  all elements already processed?
+		JLE	single	;
+		MOV	RSI, RBX	;
+		AND	RSI, 8+4	;
+		CMP	RSI, 0	;
+		JNE	align	;
+		aligned:
+		aligned16:
+		CMP	RAX, 16	;
+		JL	aligned4	;  len < 16- > EXIT TO singlepieces
+		MOVAPS	XMM0, [RBX]	;
+		MOVAPS	XMM1, [RBX+16]	;
+		MOVAPS	XMM2, [RBX+32]	;
+		MOVAPS	XMM3, [RBX+48]	;
+		ADD	RBX, 64	;
+		MOVAPS	XMM4, [RCX]	;
+		MOVAPS	XMM5, [RCX+16]	;
+		MOVAPS	XMM6, [RCX+32]	;
+		MOVAPS	XMM7, [RCX+48]	;
+		ADD	RCX, 64	;
+		SUBPS	XMM0, XMM4	;
+		SUBPS	XMM1, XMM5	;
+		SUBPS	XMM2, XMM6	;
+		SUBPS	XMM3, XMM7	;
+		MOVAPS	[RDX], XMM0	;
+		MOVAPS	[RDX+16], XMM1	;
+		MOVAPS	[RDX+32], XMM2	;
+		MOVAPS	[RDX+48], XMM3	;
+		ADD	RDX, 64	;
+		SUB	RAX, 16	;
+		JMP	aligned16	;
+		;  LOOP FOR 2 pieces aligned
+		aligned4: ;
+		CMP	RAX, 4	;
+		JL	singlepieces	;  len < 2- > EXIT TO singlepieces
+		MOVAPS	XMM0, [RBX]	;
+		ADD	RBX, 16	;
+		MOVAPS	XMM1, [RCX]	;
+		ADD	RCX, 16	;
+		SUBPS	XMM0, XMM1	;
+		MOVAPS	[RDX], XMM0	;
+		ADD	RDX, 16	;
+		SUB	RAX, 4	;
+		JMP	aligned4	;
+		;  LOOP FOR 8 unaligned pieces(14 pieces not better!)
+		unaligned: ;
+		unaligned16: ;
+		CMP	RAX, 16	;
+		JL	unaligned4	;  len < 4- > EXIT TO singlepieces
+		MOVUPS	XMM0, [RBX]	;
+		MOVUPS	XMM1, [RBX+16]	;
+		MOVUPS	XMM2, [RBX+32]	;
+		MOVUPS	XMM3, [RBX+48]	;
+		ADD	RBX, 64	;
+		MOVUPS	XMM4, [RCX]	;
+		MOVUPS	XMM5, [RCX+16]	;
+		MOVUPS	XMM6, [RCX+32]	;
+		MOVUPS	XMM7, [RCX+48]	;
+		ADD	RCX, 64	;
+		SUBPS	XMM0, XMM4	;
+		SUBPS	XMM1, XMM5	;
+		SUBPS	XMM2, XMM6	;
+		SUBPS	XMM3, XMM7	;
+		MOVUPS	[RDX], XMM0	;
+		MOVUPS	[RDX+16], XMM1	;
+		MOVUPS	[RDX+32], XMM2	;
+		MOVUPS	[RDX+48], XMM3	;
+		ADD	RDX, 64	;
+		SUB	RAX, 16	;
+		JMP	unaligned16	;
+		;  LOOP FOR 2 pieces aligned
+		unaligned4: ;
+		CMP	RAX, 4	;
+		JL	singlepieces	;  len < 2- > EXIT TO singlepieces
+		MOVUPS	XMM0, [RBX]	;
+		ADD	RBX, 16	;
+		MOVUPS	XMM1, [RCX]	;
+		ADD	RCX, 16	;
+		SUBPS	XMM0, XMM1	;
+		MOVUPS	[RDX], XMM0	;
+		ADD	RDX, 16	;
+		SUB	RAX, 4	;
+		JMP	unaligned4	;
+		;  one piece left OR non-contiguous data
+		single:
+		singlepieces: ;
+		CMP	RAX, 0	;
+		JLE	endL	;  len <= 0- > EXIT
+		MOVSS	XMM0, [RBX]
+		ADD	RBX, [RBP+linc]	;  INC(ladr, incl)
+		MOVSS	XMM1, [RCX]
+		ADD	RCX, [RBP+rinc]	;  INC(ladr, incl)
+		SUBSS	XMM0, XMM1	;
+		MOVSS	[RDX], XMM0
+		ADD	RDX, [RBP+dinc]	;  INC(radr, incr)
+		DEC	RAX	;  DEC(len)
+		JMP	singlepieces	;
+		endL:
+	END SubARARLoopSSE;
 
 	PROCEDURE SPAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	CODE {SYSTEM.AMD64, SYSTEM.FPU}
@@ -6435,6 +6773,8 @@ VAR
 		ArrayBase.loopSPARAR := SPARARLoopA;
 		ArrayBase.loopAddAXAX := AddAXAXLoopA;
 		ArrayBase.loopAddARAR := AddARARLoopA;
+		ArrayBase.loopSubAXAX := SubAXAXLoopA;
+		ArrayBase.loopSubARAR := SubARARLoopA;
 		ArrayBase.loopMatMulAXAX := MatMulAXAXLoopA;
 		ArrayBase.loopMatMulARAR := MatMulARARLoopA;
 		ArrayBase.loopMulAXSX := MulAXSXLoopA;
@@ -6453,6 +6793,7 @@ VAR
 			KernelLog.String( "SSE " );
 			ArrayBase.loopSPARAR := SPARARLoopSSE;
 			ArrayBase.loopAddARAR := AddARARLoopSSE;
+			ArrayBase.loopSubARAR := SubARARLoopSSE;
 			ArrayBase.loopMulARSR := MulARSRLoopSSE;
 			ArrayBase.loopIncMulARSR := IncMulARSRLoopSSE;
 			ArrayBase.loopMatMulARAR := MatMulARARLoopSSE;
@@ -6476,6 +6817,7 @@ VAR
 			KernelLog.String( "SSE2 " );
 			ArrayBase.loopSPAXAX := SPAXAXLoopSSE;
 			ArrayBase.loopAddAXAX := AddAXAXLoopSSE;
+			ArrayBase.loopSubAXAX := SubAXAXLoopSSE;
 			ArrayBase.loopMulAXSX := MulAXSXLoopSSE;
 			ArrayBase.loopIncMulAXSX := IncMulAXSXLoopSSE;
 			ArrayBase.loopMatMulAXAX := MatMulAXAXLoopSSE;

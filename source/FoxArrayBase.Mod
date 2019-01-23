@@ -155,6 +155,7 @@ VAR
 	loopSPAZAZ, loopSPALZALZ: BinaryAASLoop;
 	loopAddAXAX*, loopAddARAR*, loopAddAZAZ*, loopAddALZALZ*: BinaryAAALoop;
 	loopSubAXAX*, loopSubARAR*, loopSubAZAZ*, loopSubALZALZ*: BinaryAAALoop;
+	loopEMulAXAX*, loopEMulARAR*, loopEMulAZAZ*, loopEMulALZALZ*: BinaryAAALoop;
 	loopMatMulAXAX*, loopMatMulARAR*: BinaryAASLoop;
 	loopMatMulIncAXAX*, loopMatMulIncARAR*: BinaryAASLoop;
 	loopMulAXSX*, loopMulARSR*, loopMulAZSZ*, loopMulALZSLZ*: BinaryASALoop;
@@ -186,10 +187,11 @@ VAR
 	PROCEDURE SetDefaults*;   (* set standard procedures *)
 	BEGIN
 		KernelLog.String( "ArrayBase XXXXXXX: setting runtime library (semi-optimized) default methods." );  KernelLog.Ln;  loopSPAXAX := SPAXAXLoop;
-		loopSPARAR := SPARARLoop;  loopAddAXAX := AddAXAXLoop;  loopSubAXAX := SubAXAXLoop;
+		loopSPARAR := SPARARLoop;  loopAddAXAX := AddAXAXLoop;  loopSubAXAX := SubAXAXLoop; loopEMulAXAX := EMulAXAXLoop;
 		loopSPAZAZ := SPAZAZLoop; loopSPALZALZ := SPALZALZLoop;
-		loopAddARAR := AddARARLoop; loopSubARAR := SubARARLoop;  loopMatMulAXAX := MatMulAXAXLoop;
-		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop; loopSubAZAZ := SubAZAZLoop; loopSubALZALZ := SubALZALZLoop;
+		loopAddARAR := AddARARLoop; loopSubARAR := SubARARLoop; loopEMulARAR := EMulARARLoop; loopMatMulAXAX := MatMulAXAXLoop;
+		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop; loopSubAZAZ := SubAZAZLoop; loopSubALZALZ := SubALZALZLoop; 
+		loopEMulAZAZ := EMulAZAZLoop; loopEMulALZALZ := EMulALZALZLoop;
 		loopMatMulIncAXAX := MatMulIncAXAXLoop;
 		loopMatMulARAR := MatMulARARLoop;  loopMulAXSX := MulAXSXLoop;
 		loopIncMulAXSX := IncMulAXSXLoop;
@@ -3005,7 +3007,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR ".*"*(CONST left,right: ARRAY [?] OF REAL): ARRAY {UNSAFE} [?] OF REAL;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( REAL ),
-										  EMulARARLoop );
+										  loopEMulARAR );
 		RETURN RESULT
 	END ".*";
 
@@ -3022,7 +3024,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR ".*"*(CONST left,right: ARRAY [?] OF LONGREAL): ARRAY {UNSAFE} [?] OF LONGREAL;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right,
-										  SIZEOF( LONGREAL ), EMulAXAXLoop );
+										  SIZEOF( LONGREAL ), loopEMulAXAX );
 		RETURN RESULT
 	END ".*";
 
@@ -3040,7 +3042,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR ".*"*(CONST left,right: ARRAY [?] OF COMPLEX): ARRAY {UNSAFE} [?] OF COMPLEX;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right,
-										  SIZEOF( COMPLEX ), EMulAZAZLoop );
+										  SIZEOF( COMPLEX ), loopEMulAZAZ );
 		RETURN RESULT
 	END ".*";
 
@@ -3060,7 +3062,7 @@ Sufficient (but not necessary) conditions:
 	OPERATOR ".*"*(CONST left,right: ARRAY [?] OF LONGCOMPLEX): ARRAY {UNSAFE} [?] OF LONGCOMPLEX;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right,
-										  SIZEOF( LONGCOMPLEX ), EMulALZALZLoop );
+										  SIZEOF( LONGCOMPLEX ), loopEMulALZALZ );
 		RETURN RESULT
 	END ".*";
 

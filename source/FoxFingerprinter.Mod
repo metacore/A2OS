@@ -480,7 +480,7 @@ TYPE
 		PrivateFP(PointerType)     = 0.
 		*)
 		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
-		VAR fp: Basic.Fingerprint; deep: BOOLEAN;
+		VAR fp: Basic.Fingerprint; deep: BOOLEAN; fingerprint: SyntaxTree.Fingerprint;
 		BEGIN
 			IF Trace THEN TraceEnter("PointerType");  END;
 			fingerprint := x.fingerprint;
@@ -1053,7 +1053,7 @@ TYPE
 			FP(VariableDeclaration)    = 0 <*> fpModePar -> Name -> Visibility <*> FP(Type).
 		*)
 		PROCEDURE VisitVariable*(x: SyntaxTree.Variable);
-		VAR fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; name: SyntaxTree.IdentifierString;
+		VAR fp: Basic.Fingerprint; fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; name: SyntaxTree.IdentifierString;
 		BEGIN
 			fingerprint := x.fingerprint;
 
@@ -1087,7 +1087,7 @@ TYPE
 			FP(ParameterDeclaration)    = 0 <*> fpModePar -> Name -> Visibility <*> FP(Type).
 		*)
 		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
-		VAR fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; name: SyntaxTree.IdentifierString;
+		VAR fp: Basic.Fingerprint; fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; name: SyntaxTree.IdentifierString;
 		BEGIN
 			fingerprint := x.fingerprint;
 

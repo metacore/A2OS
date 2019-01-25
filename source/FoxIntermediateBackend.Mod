@@ -14361,14 +14361,7 @@ TYPE
 						END;
 						parameter := parameter.nextParameter;
 					END;
-					IF scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).isDelegate THEN 
-						parametersSize := implementationVisitor.ProcParametersSize(scope(SyntaxTree.ProcedureScope).ownerProcedure);
-						INC(parametersSize,ToMemoryUnits(module.system,module.system.addressSize));
-						IF implementationVisitor.backend.preciseGC THEN
-							INC(parametersSize,ToMemoryUnits(module.system,module.system.addressSize));
-						END;
-						Symbol(source, NIL, 0, parametersSize); INC(numberPointers);
-					END;
+					(* a self parameter does not need to be traced *)
 					variable := scope(SyntaxTree.ProcedureScope).firstVariable;
 					WHILE(variable # NIL) DO
 						IF ~(variable.untraced) & (variable.externalName = NIL) THEN

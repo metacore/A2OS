@@ -6524,7 +6524,7 @@ TYPE
 						| Global.Re, Global.Im:
 						| Global.Dim: mustBeUnary := TRUE; mustReturnInteger := TRUE;
 						| Scanner.Alias:
-						
+						| Global.Reshape: 
 						| Scanner.GreaterGreater, Scanner.LessLess:
 							mustBeBinary := TRUE; hasReturnType := FALSE;
 						| Scanner.GreaterGreaterQ, Scanner.LessLessQ:

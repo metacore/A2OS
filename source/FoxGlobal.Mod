@@ -1014,6 +1014,7 @@ TYPE
 		OperatorDefined(system,Max,TRUE);
 		OperatorDefined(system,Min,TRUE);
 		OperatorDefined(system,Odd,TRUE);
+		OperatorDefined(system,Reshape,TRUE);
 		OperatorDefined(system,Short,TRUE);
 		OperatorDefined(system,Sum,TRUE);
 		OperatorDefined(system,Dim,TRUE);
@@ -1699,6 +1700,7 @@ TYPE
 		NewBuiltinIdentifier(Odd,"ODD");
 		NewBuiltinIdentifier(Ord,"ORD");
 		NewBuiltinIdentifier(Ord32,"ORD32");
+		NewBuiltinIdentifier(Reshape,"RESHAPE");
 		NewBuiltinIdentifier(Ror,"ROR");
 		NewBuiltinIdentifier(Rot,"ROT");
 		NewBuiltinIdentifier(Short,"SHORT");

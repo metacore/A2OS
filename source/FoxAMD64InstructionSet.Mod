@@ -3705,14 +3705,6 @@ VAR
 		AddInstruction(opMOVD, "mmx,reg/mem64", "0F6E/r", {}, {cpuAMD64,cpuMMX});
 		AddInstruction(opMOVD, "reg/mem32,mmx", "0F7E/r", {}, {cpuMMX});
 		AddInstruction(opMOVD, "reg/mem64,mmx", "0F7E/r", {}, {cpuAMD64,cpuMMX});
-		AddInstruction(opMOVD, "xmm,reg/mem32", "660F6E/r", {}, {cpuSSE2});
-		AddInstruction(opMOVD, "xmm,reg/mem64", "660F6E/r", {}, {cpuAMD64,cpuSSE2});
-		AddInstruction(opMOVD, "reg/mem32,xmm", "660F7E/r", {}, {cpuSSE2});
-		AddInstruction(opMOVD, "reg/mem64,xmm", "660F7E/r", {}, {cpuAMD64,cpuSSE2});
-		AddInstruction(opMOVD, "mmx,reg/mem32", "0F6E/r", {}, {cpuMMX});
-		AddInstruction(opMOVD, "mmx,reg/mem64", "0F6E/r", {}, {cpuAMD64,cpuMMX});
-		AddInstruction(opMOVD, "reg/mem32,mmx", "0F7E/r", {}, {cpuMMX});
-		AddInstruction(opMOVD, "reg/mem64,mmx", "0F7E/r", {}, {cpuAMD64,cpuMMX});
 		AddInstruction(opMOVDDUP, "xmm1,xmm2/mem64", "F20F12/r", {}, {cpuSSE3});
 		AddInstructionV(opVMOVDDUP,"xmm1,xmm2/mem64","C4 RXB.00001 X.1111.0.11 12 /r");
 		AddInstructionV(opVMOVDDUP,"ymm1,ymm2/mem256","C4 RXB.00001 X.1111.1.11 12 /r");

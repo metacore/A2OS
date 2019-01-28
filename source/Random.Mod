@@ -12,6 +12,8 @@ CONST
 	allbits   = 7FFFFFFFH;
 	halfrange = 20000000H;
 	step      = 7;
+	
+	allbitsInv = 1 / REAL(allbits);
 
 TYPE
 		(** A pseudo-random number generator.  This object is not reentrant. *)
@@ -86,7 +88,7 @@ TYPE
 
 		PROCEDURE Uniform*(): REAL;
 		BEGIN
-			RETURN Integer() / allbits;
+			RETURN Integer() * allbitsInv;
 		END Uniform;
 
 		(** Return a pseudo-random real number, exponentially distributed. *)

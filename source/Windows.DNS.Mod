@@ -9,6 +9,7 @@ CONST
 TYPE
 	DomainName* = ARRAY 64 OF CHAR;
 	HostName* = ARRAY 128 OF CHAR;
+	Name* = ARRAY 128 OF CHAR; (* domain or host name type *)
 
 VAR
 	server*: ARRAY 4 OF IP.Adr;

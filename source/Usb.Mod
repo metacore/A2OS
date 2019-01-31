@@ -804,10 +804,13 @@ TYPE
 			interface := dev.actConfiguration.interfaces[interfaceIdx] (InterfaceDescriptor);
 			(* Search an USB device driver for this device (See USB Common Class Specification, 3.10 Locating USB Drivers) *)
 			(* we have to consult the database first always because of priorities. If a driver has already been loaded previously, this will return FALSE anyway *)
-			IF ConsultDriverDatabase(dev) THEN
-				RETURN;  (* Appropriate device driver has been loaded from driver database. Loading will force bus enumeration, so don't continue here. *)
-			ELSE
-				drv := LookupDriver(dev, interface, temp);
+			drv := LookupDriver(dev, interface, temp); (* account for cases when a driver has been installed directly, not via DriverDatabase *)
+			IF drv = NIL THEN
+				IF ConsultDriverDatabase(dev) THEN
+					RETURN;  (* Appropriate device driver has been loaded from driver database. Loading will force bus enumeration, so don't continue here. *)
+				ELSE
+					drv := LookupDriver(dev, interface, temp);
+				END;
 			END;
 
 			BEGIN {EXCLUSIVE}

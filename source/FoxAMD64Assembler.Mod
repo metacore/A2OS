@@ -1183,7 +1183,7 @@ TYPE
 		VAR
 			symbol, reg: LONGINT;
 			ident, idents: Name;
-			val, times, val2, val3: LONGINT;
+			val, times: HUGEINT;
 
 			currentLabel: NamedLabel;
 			labels: NamedLabelList;
@@ -1191,9 +1191,8 @@ TYPE
 			prevPC: LONGINT;
 			pass: LONGINT;
 			absoluteMode: BOOLEAN;
-			absoluteOffset: LONGINT;
-			alignment: LONGINT;
-			orgOffset: LONGINT;
+			absoluteOffset: HUGEINT;
+			orgOffset: HUGEINT;
 			char: CHAR;
 			orgReaderPos: LONGINT;
 			orgCodePos: LONGINT;
@@ -1202,6 +1201,7 @@ TYPE
 			prevCpuBits: Size;
 			prevCpuOptions: InstructionSet.CPUOptions;
 			prevAssembly: Assembly;
+
 			PROCEDURE NextChar;
 			BEGIN
 				(*
@@ -1219,7 +1219,7 @@ TYPE
 				END;
 			END SkipBlanks;
 
-			PROCEDURE GetNumber (VAR intval: LONGINT);
+			PROCEDURE GetNumber (VAR intval: HUGEINT);
 			VAR i, m, n: INTEGER; dig: ARRAY 24 OF CHAR;
 			BEGIN
 				i := 0; m := 0; n := 0;
@@ -1392,7 +1392,7 @@ TYPE
 			END GetCPU;
 
 
-			PROCEDURE Factor (VAR x: LONGINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
+			PROCEDURE Factor (VAR x: HUGEINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
 			VAR label: NamedLabel; l: LONGINT;
 			BEGIN
 				IF symbol = symNumber THEN
@@ -1416,7 +1416,7 @@ TYPE
 						type := ioffset;
 						currentLabel := label;
 						(*
-						IF x = MAX(LONGINT) THEN
+						IF x = MAX(HUGEINT) THEN
 							x := -label.index;
 							currentFixup := in;
 						END;
@@ -1450,8 +1450,8 @@ TYPE
 				RETURN FALSE
 			END Factor;
 
-			PROCEDURE Term (VAR x: LONGINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
-			VAR y, op : LONGINT;
+			PROCEDURE Term (VAR x: HUGEINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
+			VAR y: HUGEINT; op : WORD;
 			BEGIN
 				IF Factor (x, critical,type) THEN
 					WHILE (symbol = symTimes) OR (symbol = symDiv) OR (symbol = symMod) DO
@@ -1471,8 +1471,8 @@ TYPE
 				END;
 			END Term;
 
-			PROCEDURE Expression (VAR x: LONGINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
-			VAR y, op : LONGINT;
+			PROCEDURE Expression (VAR x: HUGEINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
+			VAR y: HUGEINT; op : WORD;
 			BEGIN
 				IF symbol = symMinus THEN
 					op := symbol; NextSymbol;
@@ -1520,7 +1520,7 @@ TYPE
 			
 
 			PROCEDURE PutData (size: Size): BOOLEAN;
-			VAR i: LONGINT; type:SHORTINT; ofs: Operand;
+			VAR i: SIZE; x: HUGEINT; type:SHORTINT; ofs: Operand;
 			BEGIN
 				NextSymbol;
 
@@ -1544,21 +1544,21 @@ TYPE
 						NextSymbol;
 						IF symbol = symPlus THEN
 							NextSymbol;
-							IF Expression(i, FALSE, type) THEN
-								ofs.displacement := i
+							IF Expression(x, FALSE, type) THEN
+								ofs.displacement := LONGINT (x)
 							END;
 						ELSIF symbol = symMinus THEN
 							NextSymbol;
-							IF Expression(i, FALSE, type) THEN
-								ofs.displacement := - i
+							IF Expression(x, FALSE, type) THEN
+								ofs.displacement := - LONGINT (x)
 							END;
 						END;
 						IF pass = maxPasses THEN
 							emitter.AddFixup(BinaryCode.Absolute, ofs.sizeInBytes, emitter.code.pc, ofs.symbol, ofs.symbolOffset,ofs.displacement);
 						END;
 						emitter.code.PutBytes (0, size );
-					ELSIF Expression (i, FALSE,type) THEN
-						emitter.code.PutBytes (i, size );
+					ELSIF Expression (x, FALSE,type) THEN
+						emitter.code.PutBytes (x, size );
 					ELSE
 						RETURN FALSE;
 					END;
@@ -1608,10 +1608,10 @@ TYPE
 			END Duplicate;
 
 			PROCEDURE Reserve (size: Size) : BOOLEAN;
-			VAR type : SHORTINT;
+			VAR type : SHORTINT; x: HUGEINT;
 			BEGIN
-				IF Expression (val2, TRUE, type) THEN
-					absoluteOffset := absoluteOffset + val2 * size;
+				IF Expression (x, TRUE, type) THEN
+					absoluteOffset := absoluteOffset + x * size;
 					RETURN TRUE;
 				ELSE
 					RETURN FALSE;
@@ -1646,7 +1646,7 @@ TYPE
 				RETURN sym
 			END GetScopeSymbol;
 
-			PROCEDURE GetValue(CONST ident: ARRAY OF CHAR; VAR x: LONGINT): BOOLEAN;
+			PROCEDURE GetValue(CONST ident: ARRAY OF CHAR; VAR x: HUGEINT): BOOLEAN;
 			VAR scopeSymbol:SyntaxTree.Symbol;
 			BEGIN
 				scopeSymbol := GetScopeSymbol (ident);
@@ -1656,7 +1656,7 @@ TYPE
 					IF (scopeSymbol.type.resolved IS SyntaxTree.CharacterType) & (scopeSymbol.type.resolved.sizeInBits=8)  THEN
 						x := ORD(scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.CharacterValue).value)
 					ELSIF scopeSymbol.type.resolved IS SyntaxTree.IntegerType THEN
-						x := LONGINT (scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.IntegerValue).value) (* TODO: fix explicit integer truncation *)
+						x := scopeSymbol(SyntaxTree.Constant).value.resolved(SyntaxTree.IntegerValue).value
 					ELSE
 						Error("number expected");
 						RETURN FALSE;
@@ -1771,6 +1771,7 @@ TYPE
 				mem: Operand;
 				offset: Operand;
 				i: LONGINT;
+				x: HUGEINT;
 				type: SHORTINT;
 			BEGIN
 				position := errPos;
@@ -1849,9 +1850,10 @@ TYPE
 
 									IF symbol = symTimes THEN (* register multiply as in [EAX*4] *)
 										NextSymbol;
-										IF ~Factor (mem.scale, FALSE,type) THEN
+										IF ~Factor (x, FALSE,type) THEN
 											RETURN FALSE;
 										END;
+										mem.scale := LONGINT (x);
 										mem.index := mem.register;
 										mem.register :=  InstructionSet.none;
 									END;
@@ -1865,9 +1867,10 @@ TYPE
 													mem.index := reg;
 													IF symbol = symTimes THEN
 														NextSymbol;
-														IF ~Factor (mem.scale, FALSE,type) THEN
+														IF ~Factor (x, FALSE,type) THEN
 															RETURN FALSE;
 														END;
+														mem.scale := LONGINT (x);
 													END;
 												ELSE
 													mem.register := reg;
@@ -1887,11 +1890,10 @@ TYPE
 							END;
 
 							IF (symbol # symRBraket) & (symbol # symNegate) THEN
-								val2 := 0;
-								IF ~Expression (val2, FALSE ,type) THEN
+								IF ~Expression (x, FALSE ,type) THEN
 									RETURN FALSE;
 								END;
-								INC (mem.displacement, val2);
+								INC (mem.displacement, LONGINT (x));
 							ELSIF (mem.register = InstructionSet.none) & (mem.index = InstructionSet.none)  THEN
 								Error("operand missing: no register provided");
 								RETURN FALSE;
@@ -1915,31 +1917,29 @@ TYPE
 
 							IF offset.symbol.name = "" THEN (* nothing could be fixuped, must be a number / constant *)
 								type := offset.type; currentFixup := ""; currentLabel := NIL;
-								IF ~Expression (val2, FALSE,type) THEN
+								IF ~Expression (offset.val, FALSE,type) THEN
 									RETURN FALSE;
-								ELSE
-									offset.type := type;
-									IF currentFixup # "" THEN
-										offset.symbol.name := currentFixup; offset.symbolOffset := val2;
-									ELSIF currentLabel # NIL THEN
-										IF (offset.sizeInBytes = bitsDefault ) & (val2 > emitter.code.pc) THEN (* forward jump *)
-											offset.sizeInBytes := bits32
-										END;
-
-										(*
-										IF offset.sizeInBytes = bitsDefault THEN
-											offset.sizeInBytes := bits32;
-										END;
-										*)
-									END;
 								END;
-								offset.val := val2;
+								offset.type := type;
+								IF currentFixup # "" THEN
+									offset.symbol.name := currentFixup; offset.symbolOffset := LONGINT (offset.val);
+								ELSIF currentLabel # NIL THEN
+									IF (offset.sizeInBytes = bitsDefault ) & (offset.val > emitter.code.pc) THEN (* forward jump *)
+										offset.sizeInBytes := bits32
+									END;
+
+									(*
+									IF offset.sizeInBytes = bitsDefault THEN
+										offset.sizeInBytes := bits32;
+									END;
+									*)
+								END;
 								IF symbol = symColon THEN (* additional prefixed operand separated by ":", segmentation register *)
 									NextSymbol;
-									IF ~Expression (val3, FALSE, type) THEN
+									IF ~Expression (x, FALSE, type) THEN
 										RETURN FALSE;
 									END;
-									InitOffset(operands[opCount],bitsDefault,val3);
+									InitOffset(operands[opCount],bitsDefault,LONGINT (x));
 									INC (opCount);
 								END;
 							ELSE
@@ -2106,7 +2106,7 @@ TYPE
 						currentLabel := labels.Find(idents);
 						ASSERT(currentLabel # NIL);
 						IF absoluteMode THEN
-							currentLabel.SetOffset(absoluteOffset);
+							currentLabel.SetOffset(LONGINT (absoluteOffset));
 						ELSE
 							currentLabel.SetOffset(emitter.code.pc)
 						END;
@@ -2116,15 +2116,15 @@ TYPE
 							symbol := symNone;
 						ELSIF ident = "BITS" THEN
 							NextSymbol;
-							IF ~Ensure (symNumber, 553) OR ~emitter.SetBits (val) THEN
+							IF ~Ensure (symNumber, 553) OR ~emitter.SetBits (LONGINT (val)) THEN
 								SkipLine;
 							ELSE
 								NextSymbol;
 							END;
 						ELSIF ident = "ALIGN" THEN
 							NextSymbol;
-							IF Expression(alignment, TRUE, type) THEN
-								Align(alignment);
+							IF Expression(val, TRUE, type) THEN
+								Align(LONGINT (val));
 							END;
 						ELSIF ~(scope # NIL) & (ident = "CPU") THEN
 							IF ~GetCPU (FALSE) THEN

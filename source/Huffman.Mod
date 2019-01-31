@@ -52,6 +52,7 @@ TYPE
 			PROCEDURE Initialize( CONST source: ARRAY OF CHAR; len: LONGINT );
 			VAR pf: PatternFrequencies;
 			BEGIN
+				w.RawNum( len );
 				pf := CountPatterns( source, len );
 				WriteFrequencies( pf );
 				BuildCodeTable( BuildTree( pf ) );				
@@ -66,9 +67,7 @@ TYPE
 				n := LEN( pf^ );
 				IF n < 128 THEN
 					w.Char( CHR( n ) );
-					FOR i := 0 TO n - 1 DO  
-						w.RawNum( pf[i].freq );  w.Char( CHR( pf[i].pattern ) )  
-					END
+					FOR i := 0 TO n - 1 DO  w.RawNum( pf[i].freq );  w.Char( CHR( pf[i].pattern ) )  END
 				ELSE
 					w.Char( 0X );
 					FOR i := 0 TO 255 DO  a[i] := 0  END;
@@ -87,7 +86,7 @@ TYPE
 				FOR i := 0 TO 255 DO  
 					IF a[i].freq > 0 THEN (* scale => [1..101H] *)
 						a[i].freq := 100H * a[i].freq DIV len + 1;
-					END
+					END;
 				END;
 				RETURN SortPatterns( a )
 			END CountPatterns;
@@ -137,18 +136,15 @@ TYPE
 			
 			
 			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: LONGINT );
-			VAR i, codesize: LONGINT;
+			VAR i: LONGINT;
 			BEGIN
 				Initialize( source, len );
 				FOR i := 0 TO len - 1 DO  Append( codeTable[ORD( source[i] )] )  END;
 				
-				codesize := 8*bpos;
 				IF curBit # 7 THEN  
-					INC( codesize, (7 - curBit) );
 					buffer[bpos] := CHR( byte );  INC( bpos ); 
 				END;
 				
-				w.RawNum( codesize );
 				FOR i := 0 TO bpos - 1 DO  w.Char( buffer[i] )  END;
 				w.Update
 			END CompressBlock;
@@ -159,7 +155,7 @@ TYPE
 	
 	Decoder* = OBJECT
 		VAR
-			codesize: LONGINT;	(* bits! *)
+			blockSize: LONGINT;
 			r: Streams.Reader;
 			tree: Node;
 			byte, curBit: LONGINT;
@@ -174,7 +170,6 @@ TYPE
 			BEGIN
 				pf := ReadFrequencies( r );
 				tree := BuildTree( pf );
-				r.RawNum( codesize );
 				curBit := -1
 			END Initialize;
 			
@@ -207,10 +202,12 @@ TYPE
 			END GetBit;	
 			
 			
-			PROCEDURE ExtractBlock*( VAR buf: ARRAY OF CHAR; VAR len: LONGINT );
+			PROCEDURE ExtractBlock*( VAR buf: ARRAY OF CHAR ): LONGINT;
 			VAR 
-				i: LONGINT;  n: Node;
+				i, len: LONGINT;  n: Node;
 			BEGIN
+				r.RawNum( blockSize ); 
+				IF blockSize = 0 THEN  (* end of stream *) RETURN 0  END;
 				Initialize;  i := 0;  len := 0;
 				REPEAT
 					n := tree; 
@@ -219,7 +216,8 @@ TYPE
 						INC( i )
 					UNTIL n.left = NIL;	(* leaf *)
 					buf[len] := CHR( n.pattern );  INC( len )
-				UNTIL i >= codesize;
+				UNTIL len >= blockSize;
+				RETURN blockSize
 			END ExtractBlock;
 				
 	END Decoder;

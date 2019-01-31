@@ -947,6 +947,8 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	TCPServices.Mod TestServer.Mod	# TCP services
 	TCPTools.Mod						# Some useful TCP-related commands
 
+	IPBandwidth.Mod
+
 	BIOS & ~COOP { Performance.Mod }
 	WIN, UNIX, BIOS & COOP, ZYNQ { Windows.Performance.Mod } # This is just a dummy
 

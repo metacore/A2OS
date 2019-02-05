@@ -722,7 +722,7 @@ VAR
 	
 
 	PROCEDURE WriteSectionBinary (writer: Streams.Writer; CONST section: Section; poolMap: PoolMap);
-	VAR i: SIZE; pos, offset, start, len: LONGINT; size: Bits;
+	VAR i: SIZE; pos: Streams.Position; offset, start, len: LONGINT; size: Bits;
 	CONST ByteSize=8;
 
 		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -820,7 +820,7 @@ VAR
 		END GetSegment;
 
 		PROCEDURE WriteSegment(offset,len: LONGINT); (* offset in bits *)
-		VAR value: WORD; pos: LONGINT;
+		VAR value: WORD; pos: Streams.Position;
 		BEGIN
 			pos := writer.Pos();
 			ASSERT(len > 0);
@@ -1062,7 +1062,7 @@ VAR
 	END ReadSection;
 
 	PROCEDURE WriteSection*(writer: Streams.Writer; CONST section: Section; binary: BOOLEAN; poolMap: PoolMap);
-	VAR pos: LONGINT;
+	VAR pos: Streams.Position;
 	BEGIN
 		pos := writer.Pos();
 		IF binary THEN

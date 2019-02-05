@@ -56,7 +56,7 @@ TYPE BitSet* = OBJECT
 		RETURN pos MOD Elements IN data[pos DIV Elements];
 	END GetBit;
 
-	PROCEDURE SetBits* (startPos: SIZE; bits: LONGINT; value: HUGEINT);
+	PROCEDURE SetBits* (startPos, bits: SIZE; value: HUGEINT);
 	VAR adr: ADDRESS;
 	BEGIN
 		ASSERT (startPos >= 0); ASSERT (startPos+bits <= size);
@@ -75,7 +75,7 @@ TYPE BitSet* = OBJECT
 		END;
 	END SetBits;
 	
-	PROCEDURE SetBytes*(startPos: SIZE; bytes: LONGINT; CONST values: ARRAY OF CHAR);
+	PROCEDURE SetBytes*(startPos, bytes: SIZE; CONST values: ARRAY OF CHAR);
 	VAR adr: ADDRESS;
 	BEGIN
 		ASSERT (startPos >= 0); ASSERT (startPos+8*bytes <= size); ASSERT(startPos MOD 8 = 0);
@@ -83,7 +83,7 @@ TYPE BitSet* = OBJECT
 		SYSTEM.MOVE(ADDRESS OF values[0], adr, bytes);
 	END SetBytes;
 
-	PROCEDURE GetBits* (startPos: SIZE; bits: LONGINT): WORD;
+	PROCEDURE GetBits* (startPos, bits: SIZE): WORD;
 	VAR value: WORD; adr: ADDRESS;
 	BEGIN
 		ASSERT (startPos >= 0); ASSERT (startPos+bits <= size);

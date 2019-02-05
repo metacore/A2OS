@@ -367,7 +367,7 @@ VAR
 			BEGIN arrangement.Patch (target, address, pattern.offset, pattern.bits, block.unit); address := ASH (address, -pattern.bits);
 			END PatchPattern;
 
-			PROCEDURE CheckBits(pattern: ObjectFile.Pattern; offset: LONGINT);
+			PROCEDURE CheckBits(pattern: ObjectFile.Pattern; offset: ObjectFile.Unit);
 			VAR i: SIZE; nobits, remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
 			BEGIN
 				nobits := 0;

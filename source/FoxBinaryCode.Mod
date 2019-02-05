@@ -17,9 +17,9 @@ TYPE
 	VAR
 		nextAlias-: Alias;
 		identifier-: ObjectFile.Identifier;
-		offset-: LONGINT;
+		offset-: Unit;
 
-		PROCEDURE & InitAlias*(identifier: ObjectFile.Identifier; offset: LONGINT);
+		PROCEDURE & InitAlias*(identifier: ObjectFile.Identifier; offset: Unit);
 		BEGIN
 			nextAlias := NIL;
 			SELF.identifier := identifier;
@@ -182,7 +182,7 @@ TYPE
 	END FixupList;
 
 	LabelList*= POINTER TO RECORD
-		offset-: LONGINT; position-: Basic.Position;
+		offset-: Unit; position-: Basic.Position;
 		prev-: LabelList;
 	END;
 
@@ -492,7 +492,7 @@ TYPE
 		END GetBits;
 
 		PROCEDURE ApplyFixup*(fixup: Fixup): BOOLEAN;
-		VAR address: LONGINT; i: SIZE;
+		VAR address: Unit; i: SIZE;
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
@@ -503,7 +503,7 @@ TYPE
 			END PatchPattern;
 
 			PROCEDURE CheckBits(): BOOLEAN;
-			VAR nobits,remainder: LONGINT; i: SIZE;
+			VAR nobits, remainder: Bits; i: SIZE;
 			BEGIN
 				nobits := 0;
 				FOR i := 0 TO fixup.patterns-1 DO
@@ -534,7 +534,7 @@ TYPE
 		END ApplyFixup;
 
 		PROCEDURE DumpCode*(w: Streams.Writer; from,to: Unit);
-		VAR i: LONGINT; c: Sections.Comment; nextpos: LONGINT;
+		VAR i: Unit; c: Sections.Comment; nextpos: Unit;
 
 			PROCEDURE Hex(i: LONGINT): CHAR;
 			BEGIN
@@ -548,8 +548,8 @@ TYPE
 			END Hex;
 
 
-			PROCEDURE DumpUnit(at: LONGINT);
-			VAR val: WORD; a: ARRAY 9 OF CHAR; bits: LONGINT;
+			PROCEDURE DumpUnit(at: Unit);
+			VAR val: WORD; a: ARRAY 9 OF CHAR; bits: Bits;
 			BEGIN
 				val := GetBits(at,os.unit);
 				bits := os.unit;
@@ -562,8 +562,8 @@ TYPE
 				w.String(a);
 			END DumpUnit;
 
-			PROCEDURE DumpBlock(from,to: LONGINT);
-			VAR i: LONGINT; nr: LONGINT;
+			PROCEDURE DumpBlock(from,to: Unit);
+			VAR i: Unit; nr: WORD;
 			BEGIN
 				i := from; nr := 0;
 				IF to >= pc THEN to := pc-1 END;

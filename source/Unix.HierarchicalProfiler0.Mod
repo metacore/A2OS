@@ -118,7 +118,6 @@ PROCEDURE HandleProcess(process : Objects.Process);
 VAR
 	threadId: Unix.Thread_t;
 	stackBottom, sp, bp: ADDRESS;
-	context: Unix.McontextDesc;
 BEGIN
 	ASSERT(process # NIL);
 	threadId:=process.threadId;
@@ -126,17 +125,16 @@ BEGIN
 	
 	(*todo: validate thread ID*)
 	TRACE('suspending thread',threadId);
-	Unix.ThrSuspend(threadId);
+	Unix.ThrSuspend(threadId, TRUE);
 	(*because thread suspending is under a mutex in Unix.Mod, this call is guaranteed to have finished with the handler when it returns.*)
 	TRACE('suspend successful',threadId);
 	
-	context:=process.context;
-	IF (context.r_pc #0) THEN
+	IF (process.state.PC #0) THEN
 		stackBottom:=Objects.GetStackBottom(process);
-		sp:=context.r_sp_x;
-		bp:=context.r_bp;
+		sp:=process.state.SP;
+		bp:=process.state.BP;
 		IF bp<=stackBottom THEN
-			callback(1, process, context.r_pc,bp,sp,  stackBottom  );
+			callback(1, process, process.state.PC,bp,sp,  stackBottom  );
 		ELSE	
 				Unix.ThrResume(threadId);
 				TRACE('bp smaller than stack bottom found',threadId);

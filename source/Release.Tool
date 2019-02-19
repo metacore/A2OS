@@ -898,9 +898,10 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	config.txt # default config string settings
 	PartitionEditorTable.Mod
 
-	# { Profiler.Mod HierarchicalProfiler0.Mod } # Hierarchical profiler has GUI: WMProfiler.Mod
-	WIN { Windows.HierarchicalProfiler0.Mod }
-	WIN { HierarchicalProfiler.Mod }
+	NATIVE & ~COOP { Profiler.Mod HierarchicalProfiler0.Mod }
+	UNIX & ~COOP { Unix.HierarchicalProfiler0.Mod }
+	WIN & ~COOP { Windows.HierarchicalProfiler0.Mod }
+	~COOP { HierarchicalProfiler.Mod } # Hierarchical profiler has GUI: WMProfiler.Mod
 
 	FTPClient.Mod
 
@@ -1208,7 +1209,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMShell.Mod	# GUI for Shell
 
 	# GUI for hierarchical profiler (HierarchicalProfiler.Mod)
-	WIN { WMProfiler.Mod }
+	~COOP { WMProfiler.Mod }
 
 	# ssh
 	SSH.Tool

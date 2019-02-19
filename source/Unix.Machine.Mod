@@ -424,6 +424,17 @@ CODE
 #END
 END AtomicCAS;
 
+(** This procedure should be called in all spin loops as a hint to the processor (e.g. Pentium 4). *)
+PROCEDURE  -SpinHint*;
+CODE
+#IF I386 THEN
+	PAUSE
+#ELSIF AMD64 THEN
+	PAUSE
+#ELSE
+	unimplemented
+#END
+END SpinHint;
 
 (* Return current instruction pointer *)
 PROCEDURE  CurrentPC* (): ADDRESS;

@@ -457,6 +457,8 @@ CODE
 	RDTSC	; set EDX:EAX
 	SHL RDX, 32
 	OR RAX, RDX
+#ELSE
+	unimplemented
 #END
 END GetTimer;
 

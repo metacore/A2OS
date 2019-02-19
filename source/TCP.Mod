@@ -48,7 +48,6 @@ IMPORT SYSTEM, Machine, KernelLog, Clock, Modules, Objects, Kernel, Commands, Ne
 
 CONST
 	StrongChecks = FALSE;
-	SystemMove = FALSE;
 
 	TraceProtocol = FALSE;
 	TraceError = FALSE;
@@ -432,11 +431,7 @@ TYPE
 				END;
 				buf := sndtail;
 				IF LEN(buf.data^) - (buf.ofs+buf.len) >= len0 THEN	(* last buffer has space for data *)
-					IF SystemMove THEN
-						SYSTEM.MOVE(ADDRESSOF(data[ofs]), ADDRESSOF(buf.data[buf.ofs+buf.len]), len0)
-					ELSE
-						Network.Copy(data, buf.data^, ofs, buf.ofs+buf.len, len0)
-					END;
+					Network.Copy(data, buf.data^, ofs, buf.ofs+buf.len, len0);
 					INC(buf.len, len0)
 				ELSE	(* last buffer has no space for data *)
 					buf := buf.next;
@@ -450,11 +445,7 @@ TYPE
 						buf.next := sndtail.next; sndtail.next := buf;
 						ASSERT(LEN(buf.data^) >= len0)	(* index check *)
 					END;
-					IF SystemMove THEN
-						SYSTEM.MOVE(ADDRESSOF(data[ofs]), ADDRESSOF(buf.data[0]), len0)
-					ELSE
-						Network.Copy(data, buf.data^, ofs, 0, len0)
-					END;
+					Network.Copy(data, buf.data^, ofs, 0, len0);
 					buf.len := len0; sndtail := buf
 				END;
 				INC(sndcc, len0); DEC(sndspace, len0);
@@ -483,11 +474,7 @@ TYPE
 					IF rcvhead.nextFragment = NIL THEN
 						(* read all available data until user buffer is full *)
 						rlen := MIN(rcvhead.len, size);
-						IF SystemMove THEN
-							SYSTEM.MOVE(ADDRESSOF(rcvhead.data[rcvhead.ofs]), ADDRESSOF(data[ofs]), rlen);
-						ELSE
-							Network.Copy(rcvhead.data, data, rcvhead.ofs, ofs, rlen);
-						END;
+						Network.Copy(rcvhead.data, data, rcvhead.ofs, ofs, rlen);
 						INC(len, rlen);
 						INC(ofs, rlen);
 						DEC(size, rlen);
@@ -512,11 +499,7 @@ TYPE
 							rcvheadFragment := rcvhead;
 						END;
 						rlen := MIN(rcvheadFragment.len, size);
-						IF SystemMove THEN
-							SYSTEM.MOVE(ADDRESSOF(rcvheadFragment.data[rcvheadFragment.ofs]), ADDRESSOF(data[ofs]), rlen);
-						ELSE
-							Network.Copy(rcvheadFragment.data, data, rcvheadFragment.ofs, ofs, rlen);
-						END;
+						Network.Copy(rcvheadFragment.data, data, rcvheadFragment.ofs, ofs, rlen);
 						INC(len, rlen);
 						INC(ofs, rlen);
 						DEC(size, rlen);
@@ -1418,20 +1401,12 @@ BEGIN
 				data := p.sndcontig;
 				ASSERT(len <= LEN(data^));
 				ASSERT(buf.len-off <= len);	(* index check *)
-				IF SystemMove THEN
-					SYSTEM.MOVE(ADDRESSOF(buf.data[off+buf.ofs]), ADDRESSOF(data[0]), buf.len-off)
-				ELSE
-					Network.Copy(buf.data^, data^, off+buf.ofs, 0, buf.len-off)
-				END;
+				Network.Copy(buf.data^, data^, off+buf.ofs, 0, buf.len-off);
 				off := buf.len-off; left := len-off;
 				WHILE left # 0 DO
 					buf := buf.next; IF left <= buf.len THEN x := left ELSE x := buf.len END;
 					ASSERT(off+x <= len);	(* index check *)
-					IF SystemMove THEN
-						SYSTEM.MOVE(ADDRESSOF(buf.data[buf.ofs]), ADDRESSOF(data[off]), x)
-					ELSE
-						Network.Copy(buf.data^, data^, buf.ofs, off, x)
-					END;
+					Network.Copy(buf.data^, data^, buf.ofs, off, x);
 					INC(off, x); DEC(left, x)
 				END;
 				off := 0

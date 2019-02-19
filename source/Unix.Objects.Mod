@@ -184,6 +184,7 @@ TYPE
 		state-			: Machine.State;	
 		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)					
 		context: ANY; (* commands context *)
+		lastThreadTimes: HUGEINT;
 
 		PROCEDURE FindRoots*;
 		VAR sp, bp, n, a0, a1, adr: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
@@ -577,10 +578,16 @@ TYPE
 
 	
 	PROCEDURE GetCpuCycles*( process : Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN );
-	VAR i: LONGINT;
+	VAR temp : HUGEINT; 
 	BEGIN
-		ASSERT( process # NIL );
-		FOR i := 0 TO Machine.MaxCPU-1 DO  cpuCycles[i] := 0  END;
+		ASSERT(process # NIL);
+		cpuCycles[0] := Machine.GetTimer();
+
+		IF ~all THEN
+			temp := process.lastThreadTimes;
+			process.lastThreadTimes := cpuCycles[0];
+			cpuCycles[0] := cpuCycles[0] - temp;
+		END;
 	END GetCpuCycles;
 	
 	

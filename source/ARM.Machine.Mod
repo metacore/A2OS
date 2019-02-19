@@ -2574,10 +2574,29 @@ VAR
 		ADD SP, SP, #8
 	END AtomicAdd;
 
+	(* Atomic test-and-set. Set x = TRUE and return old value of x. *)
+	PROCEDURE -AtomicTestSet * (VAR x: BOOLEAN): BOOLEAN;
+	CODE
+		LDR	R3, [SP, #x]			; R3 := ADDRESSOF(x)
+		MOV	R1, #0				; R1 := FALSE
+		MOV	R2, #1				; R2 := TRUE
+		ADD	SP, SP, #4				; pop variable from stack
+
+	loop:
+		LDREXB	R0, R3					; load excl x
+		CMP	R0, R1
+		BNE	exit						; x # old -> exit
+		STREXB	R4, R2, R3				; x = old -> store excl new -> x
+		CMP	R4, #0
+		BNE	loop					; store exclusive failed: retry
+
+	exit:
+	END AtomicTestSet;
+
 	(* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
 	PROCEDURE -AtomicCAS * (VAR x: LONGINT; old, new: LONGINT): LONGINT;
 	CODE
-		LDR	R3, [SP, #x]			; R0 := ADDRESSOF(x)
+		LDR	R3, [SP, #x]			; R3 := ADDRESSOF(x)
 		LDR	R1, [SP, #old]			; R1 := old
 		LDR	R2, [SP, #new]			; R2 := new
 		ADD	SP, SP, #12				; pop variable from stack

@@ -5,6 +5,7 @@ create=Tar.Create
 decode=Decoder.Open
 diff=DiffLib.Compare
 extract=Tar.Extract
+execute=System.DoFile
 free=System.Free
 freeall=System.FreeDownTo
 find=SearchTools.Find

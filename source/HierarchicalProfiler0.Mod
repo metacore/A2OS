@@ -33,6 +33,7 @@ BEGIN {EXCLUSIVE}
 	ASSERT(state = HandlerNotInstalled);
 	Machine.InstallEventHandler(HandleTimer);
 	state := HandlerInstalled;
+	callback := proc;
 END Enable;
 
 (** Stop profiling. The profile data is not discarded. It can be retrieved using the procedure 'GetProfile' *)

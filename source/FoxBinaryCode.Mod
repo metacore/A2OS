@@ -568,7 +568,9 @@ TYPE
 				i := from; nr := 0;
 				IF to >= pc THEN to := pc-1 END;
 				WHILE i <= to DO
-					w.String("["); w.Hex(i,3); w.String("] ");
+					w.String("[");
+					IF comments = NIL THEN w.Hex(i,3) ELSE w.Int(i,4) END;
+					w.String("] ");
 					nr := 0;
 					WHILE (i<=to) & (nr<16) DO
 						IF i = 8 THEN w.String(" ") END;

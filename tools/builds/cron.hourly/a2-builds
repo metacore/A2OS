@@ -1,7 +1,7 @@
 #!/bin/sh
 
 directory="/var/tmp/a2-builds/"
-update () { svn checkout --non-interactive --quiet --username eth.a2guest --password a2guest https://svn.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$directory" && make --directory "$directory" --quiet oberon && version=$(svnversion "$directory/source"); }
+update () { svn checkout --non-interactive --quiet https://svn-dept.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$directory" && make --directory "$directory" --quiet oberon && version=$(svnversion "$directory/source"); }
 check () { make --question --directory "$directory" --quiet build platform="$target"; }
 build () { timeout 1h make --directory "$directory" --quiet build platform="$target"; }
 notify () { echo "$output" | sendbuild "A2 Builds" "$target" "$version" "$status"; }

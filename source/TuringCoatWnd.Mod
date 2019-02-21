@@ -1,7 +1,7 @@
 MODULE TuringCoatWnd;	(* Soren Renner / TF *)
 
 IMPORT
-	Raster, Random, Objects, WMRectangles, WMGraphics, Modules, Strings,
+	Raster, Random, Objects, Kernel, WMRectangles, WMGraphics, Modules, Strings,
 	WM := WMWindowManager, WMMessages;
 
 CONST
@@ -20,7 +20,8 @@ TYPE
 		mesh1, mesh2, n1 : ARRAY m, m OF REAL;
 		random : Random.Generator;
 		alive, dead, alpha : BOOLEAN;
-		i : LONGINT;
+		t0 : LONGINT;
+		timer : Kernel.Timer;
 
 		PROCEDURE &New*(alpha : BOOLEAN);
 		VAR i, j : LONGINT;
@@ -33,7 +34,9 @@ TYPE
 			SetTitle(Strings.NewString("Turing"));
 			SetIcon(WMGraphics.LoadImage("WMIcons.tar://TuringCoatWnd.png", TRUE));
 
-			NEW(random);
+			NEW(random);  
+			
+			NEW( timer );  t0 := Kernel.GetTicks( );
 
 			FOR i := 0 TO m - 1 DO
 				FOR j := 0 TO m - 1 DO
@@ -70,6 +73,16 @@ TYPE
 			Close^;
 			DecCount;
 		END Close;
+		
+		PROCEDURE Delay;
+		VAR t: LONGINT;
+		BEGIN
+			t := Kernel.GetTicks( ) - t0;
+			IF t < 8 THEN
+				IF t >= 0 THEN  timer.Sleep( 8 - t )  END;  
+			END;
+			t0 := Kernel.GetTicks( )
+		END Delay;
 
 		PROCEDURE Generation;
 		VAR i, j : LONGINT;
@@ -129,10 +142,11 @@ TYPE
 		END DrawIt;
 
 	BEGIN {ACTIVE}
-		alive := TRUE;
+		alive := TRUE; 
 		Objects.SetPriority(Objects.Low);
 		WHILE alive DO
-			FOR i := 0 TO 0 DO Generation END;
+			Generation;	
+			Delay;	(* GF, make animation speed independent of CPU speed *)
 			DrawIt;
 		END;
 		BEGIN {EXCLUSIVE} dead := TRUE; END;

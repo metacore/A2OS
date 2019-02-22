@@ -1,6 +1,6 @@
-MODULE SortDemo;	(** AUTHOR "g.f."; PURPOSE sort demo *)
+MODULE SortDemo;	(** AUTHOR "GF"; PURPOSE "animated sort demo" *)
 
-(* this is an A2-port of the SortDemo done by W.Weck in 1993 for Oberon V4 *)
+(* this is an extended A2-port of the SortDemo done by W.Weck in 1993 for Oberon V4 *)
 
 IMPORT
 	Raster, Random, WMRectangles, Strings, WMMessages, WMDialogs,
@@ -10,17 +10,14 @@ IMPORT
 CONST
 	N = 120;  ElemSize = 5;
 	MaxConcurrentSorters = 5;	(* assuming we have 6 processor cores *)
-	WindowSize = N*ElemSize;
-	
-VAR
-	compareWeight: LONGINT; (* times move *)
+	WindowSize = N*ElemSize;	
 	
 TYPE	
 	ElementType = LONGINT;
 	Index = INTEGER;
-	SortData = ARRAY N OF ElementType;
+	SortValues = ARRAY N OF ElementType;
 
-	ArrayView* =  OBJECT (WM.BufferWindow)		
+	SortArray =  OBJECT (WM.BufferWindow)		
 	VAR
 		cw: ControlWindow;
 		white, grey, col1, yellow: Raster.Pixel;
@@ -30,9 +27,11 @@ TYPE
 		ha, hb: Index;  (* highlighted elements *)
 		concurrent: BOOLEAN;  concSorters: LONGINT;
 		nofcomps, nofswaps, nofmoves: LONGINT; 
+		compareWeight, swapWeight: LONGREAL; (* in relation to element move *)
 		timer: Kernel.Timer;
 		
-		data, backup: SortData;
+		data, backup: SortValues;
+		highlighted: ARRAY N OF BOOLEAN;
 		
 		
 		PROCEDURE &New( win: ControlWindow );
@@ -49,10 +48,10 @@ TYPE
 			
 			concSorters :=  0;  concurrent := FALSE;
 			delay := 16;  NEW( timer );
-			compareWeight := 3;
+			compareWeight := 3.0;  swapWeight := 2.4;
+			ShowWeightings;
 			
 			OrderData;  backup :=data;
-			Log.String( "SortDemo,  weightings: move = 1, swap = 2.5, compare = 3" ); Log.Ln;
 		END New;
 		
 		
@@ -72,6 +71,33 @@ TYPE
 			END
 		END Pause;
 		
+		PROCEDURE ShowWeightings;
+		VAR digits: ARRAY 8 OF CHAR;
+		BEGIN
+			Log.Ln;
+			Log.String( "SortDemo weightings: element move = 1, element swap =");
+			Strings.FloatToStr( swapWeight, 3, 1, 0, digits );
+			Log.String( digits ); 
+			Log.String( ", compare =" ); 
+			Strings.FloatToStr( compareWeight, 3, 1, 0, digits );
+			Log.String( digits );  Log.Ln;
+		END ShowWeightings;
+		
+		PROCEDURE AdjWeightings;
+		VAR digits: ARRAY 8 OF CHAR;
+		BEGIN
+			Strings.FloatToStr( compareWeight, 3, 1, 0, digits );
+			IF WMDialogs.QueryString( "Input compare weight", digits ) = 0 THEN
+				Strings.StrToFloat( digits, compareWeight )
+			END;
+			Strings.FloatToStr( swapWeight, 3, 1, 0, digits );
+			IF WMDialogs.QueryString( "Input swap weight", digits ) = 0 THEN
+				Strings.StrToFloat( digits, swapWeight )
+			END;
+			ShowWeightings
+		END AdjWeightings;
+			
+			
 		PROCEDURE InitSort;
 		BEGIN
 			nofcomps := 0;  nofswaps := 0;  nofmoves := 0;
@@ -80,12 +106,12 @@ TYPE
 		
 		PROCEDURE FinishSort;
 		BEGIN
-			UnHighlight( ha ); UnHighlight( hb );  Update;
+			UnHighlight( ha ); UnHighlight( hb ); 
 			Log.String( sortname );  Log.String( ":  " ); 
 			Log.Int( nofcomps, 1 );  Log.String( " compares,  " );
 			Log.Int( nofswaps, 1 );  Log.String( " swaps,  " );
 			Log.Int( nofmoves, 1 );  Log.String( " moves,  total effort: " );
-			Log.Int( nofcomps*compareWeight + ENTIER(nofswaps*2.5) + nofmoves, 0 );  Log.Ln;
+			Log.Int( ENTIER( nofcomps*compareWeight) + ENTIER(nofswaps*swapWeight) + nofmoves, 0 );  Log.Ln;
 		END FinishSort;
 		
 		
@@ -103,6 +129,7 @@ TYPE
 				Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, grey, mode );
 				Raster.Fill( img, x+ElemSize-1, y+ElemSize+1, x+ElemSize, WindowSize, white, mode );
 			END;
+			Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
 		END DrawElement;
 		
 		
@@ -110,42 +137,46 @@ TYPE
 		VAR mode: Raster.Mode;
 			x, y, len: LONGINT;
 		BEGIN
-			len := data[n];
-			x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
-			Raster.InitMode( mode, Raster.srcCopy );
-			IF len > 1 THEN  
-				Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, yellow, mode )  
-			END;
+			IF ~highlighted[n] THEN
+				len := data[n];
+				x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
+				Raster.InitMode( mode, Raster.srcCopy );
+				IF len > 1 THEN  
+					Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, yellow, mode )
+				END;
+				Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
+				highlighted[n] := TRUE
+			END
 		END Highlight;
 		
 		PROCEDURE UnHighlight( n: Index );
 		VAR mode: Raster.Mode;
 			x, y, len: LONGINT;
 		BEGIN
-			len := data[n];
-			x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
-			Raster.InitMode( mode, Raster.srcCopy );
-			IF len > 1 THEN  
-				Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, grey, mode )  
-			END;
+			IF highlighted[n] THEN
+				len := data[n];
+				x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
+				Raster.InitMode( mode, Raster.srcCopy );
+				IF len > 1 THEN  
+					Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, grey, mode );
+				END;
+				Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
+				highlighted[n] := FALSE
+			END
 		END UnHighlight;
 		
 		PROCEDURE Highlight2( a, b: Index );
 		BEGIN
 			IF ~concurrent THEN
 				IF (ha # a) & (ha # b) THEN  UnHighlight( ha )  END;
-				IF (hb # a) & (hb # b) THEN  UnHighlight( hb )  END
+				IF (hb # a) & (hb # b) THEN  UnHighlight( hb )  END;
 			END;
 			Highlight( a );  Highlight( b );
-			ha := a;  hb := b
+			ha := a;  hb := b;
+			Pause
 		END Highlight2;
 		
 		
-		PROCEDURE Update;
-		BEGIN
-			Invalidate( WMRectangles.MakeRect( 0, 0, GetWidth(), GetHeight() ) );
-			Pause
-		END Update;
 		
 		PROCEDURE Randomize( n: INTEGER );
 		VAR i, j, k: Index;  
@@ -165,14 +196,12 @@ TYPE
 		VAR i: Index;
 		BEGIN
 			FOR i := 0 TO N-1 DO  data[i] := i + 1;  DrawElement( i )  END;
-			Update
 		END OrderData;
 		
 		PROCEDURE RevOrderData;
 		VAR i: Index;
 		BEGIN
 			FOR i := 0 TO N-1 DO  data[i] := N - i;  DrawElement( i )  END;
-			Update
 		END RevOrderData;
 		
 		PROCEDURE BadOrder;	(* worst case for quicksort *)
@@ -181,31 +210,26 @@ TYPE
 			m := (N - 1) DIV 2;
 			FOR i := 0 TO m-1 DO  data[i] := i + 1  END;
 			data[m] := N;
-			FOR i := m+1 TO N-1 DO  data[i] := i   END;
-			
+			FOR i := m+1 TO N-1 DO  data[i] := i   END;	
 			FOR i := 0 TO N-1 DO  DrawElement( i )  END;
-			Update
 		END BadOrder;
 		
-		PROCEDURE LastOrder;	(* worst case for quicksort *)
+		PROCEDURE PrevOrder;
 		VAR i: Index;
 		BEGIN
 			data := backup;
 			FOR i := 0 TO N-1 DO  DrawElement( i )  END;
-			Update
-		END LastOrder;
+		END PrevOrder;
 		
 		
 		PROCEDURE DecSpeed;
 		BEGIN
 			IF delay # 0 THEN  delay := 2*delay  ELSE  delay := 4 END;
-			Log.String( "delay = " ); Log.Int( delay, 1 );  Log.Ln
 		END DecSpeed;
 		
 		PROCEDURE IncSpeed;
 		BEGIN
 			IF delay > 4 THEN  delay := delay DIV 2   ELSE  delay := 0 END;
-			Log.String( "delay = " ); Log.Int( delay, 1 );  Log.Ln
 		END IncSpeed;
 		
 		
@@ -215,7 +239,7 @@ TYPE
 		BEGIN
 			IF i # j THEN
 				tmp := data[i];  data[i] := data[j];  data[j] := tmp;
-				DrawElement( i );  DrawElement( j );  Update;
+				DrawElement( i );  DrawElement( j );  Pause;
 				Machine.AtomicInc( nofswaps )
 			END
 		END Swap;
@@ -224,165 +248,134 @@ TYPE
 		PROCEDURE Less( i, j: Index ): BOOLEAN;
 		BEGIN
 			IF delay > 0 THEN
-				Highlight2( i, j );  Update;
+				Highlight2( i, j );  Pause;
 			END;
 			Machine.AtomicInc( nofcomps );
 			RETURN data[i] < data[j];
 		END Less;
-				
 		
-		PROCEDURE BubbleSort;
-		VAR i, n: Index;  swaps: LONGINT; 
+		
+			
+		PROCEDURE BubbleSort( lo, hi: Index );
+		VAR i: Index;  swaps: LONGINT; 
 		BEGIN
-			sortname := "BubbleSort";
-			n := N - 2;
 			REPEAT
 				swaps := 0;  
-				FOR i := 0 TO n DO
+				FOR i := lo TO hi - 1 DO
 					IF Less( i + 1, i )  THEN  Swap( i, i + 1 );  INC( swaps )  END
 				END;
-				DEC( n )
-			UNTIL swaps = 0;
+			UNTIL swaps = 0
 		END BubbleSort;
 		
+				
+		PROCEDURE BubbleSortOptim( lo, hi: Index );
+		VAR i, first, last: Index;  swaps: LONGINT; 
+		BEGIN
+			first := lo;  last := hi - 1;
+			LOOP
+				swaps := 0;  
+				FOR i := first TO last DO
+					IF Less( i + 1, i )  THEN  Swap( i, i + 1 );  INC( swaps );  last := i END
+				END;
+				IF swaps = 0 THEN  EXIT  END;
+				swaps := 0;
+				FOR i := last TO first + 1 BY -1 DO
+					IF Less( i, i - 1 )  THEN  Swap( i, i - 1 );  INC( swaps );  first := i - 1 END
+				END;
+				IF swaps = 0 THEN  EXIT  END;
+			END
+		END BubbleSortOptim;
 		
 		
-		PROCEDURE SelectSort;
+		PROCEDURE SelectSort( lo, hi: Index );
 		VAR i, j, min: Index;
 		BEGIN
-			sortname := "SelectSort";
-			FOR i := 0 TO N-1 DO
-				min := i;  j := i + 1;
-				FOR j := i+1 TO N-1 DO
+			FOR i := lo TO hi DO
+				min := i; 
+				FOR j := i + 1 TO hi DO
 					IF Less( j, min ) THEN  min := j  END
 				END;
 				IF i # min THEN  Swap( i, min )  END
 			END
 		END SelectSort;
+	
 		
-
-
-		PROCEDURE ShellSort;
+		PROCEDURE ShellSort( lo, hi: Index );
 		VAR i, j, h: Index;
 		BEGIN
-			sortname := "ShellSort";
 			i := 4;  h := 1;
-			WHILE i < N DO  i := i*2;  h := h*2 + 1  END;
+			WHILE (lo+i) <= hi DO  i := i*2;  h := h*2 + 1  END;
 			WHILE h # 0 DO
-				i := h;
-				WHILE i < N DO
+				i := lo + h;
+				WHILE i <= hi DO
 					j := i - h;
-					WHILE (j >= 0) & Less( j + h, j ) DO  Swap( j, j + h );  j := j - h  END;
+					WHILE (j >= lo) & Less( j + h, j ) DO  Swap( j, j + h );  j := j - h  END;
 					INC( i )
 				END;
 				h := (h - 1) DIV 2
 			END;
 		END ShellSort;
 		
-		
-		
-		PROCEDURE Quick( lo, hi: Index; conc: BOOLEAN );
-		VAR i, j, m: Index;
-			concurrentSorter: ConcurrentQuick;
-			
-			PROCEDURE Inc( VAR i: Index );
-			BEGIN
-				UnHighlight( i );  INC( i )
-			END Inc;
-			
-			PROCEDURE Dec( VAR i: Index );
-			BEGIN
-				UnHighlight( i );  DEC( i )
-			END Dec;
-			
-		BEGIN
-			IF lo < hi THEN
-				i := lo;  j := hi;  m := (lo + hi) DIV 2;
-				REPEAT
-					WHILE Less( i, m ) DO  Inc( i )  END;  UnHighlight( i );
-					WHILE Less( m, j ) DO  Dec( j )  END;  UnHighlight( j );
-					UnHighlight( m );  
-					IF i <= j THEN
-						IF m = i THEN  m := j  ELSIF m = j THEN  m := i  END;
-						Swap( i, j );  INC( i );  DEC( j )
-					END
-				UNTIL i > j;
-				IF conc & (concSorters < MaxConcurrentSorters) THEN  
-					NEW( concurrentSorter, SELF, lo, j );  Quick( i, hi, conc )
-				ELSE
-					Quick( lo, j, conc );  Quick( i, hi, conc )
-				END
-			END;
-		END Quick;
-			
-				
-		PROCEDURE QuickSort;
-		BEGIN
-			sortname := "QuickSort";
-			Quick( 0, N-1, FALSE );
-		END QuickSort;
-		
-
-		PROCEDURE ConcQuickSort;
-		VAR t: Kernel.Timer;
-		BEGIN
-			sortname := "QuickSort";
-			concurrent := TRUE;  concSorters := 0;
-			Quick( 0, N-1, TRUE );
-			(* now wait until all concurrent activities have finished *)
-			NEW( t );  WHILE concSorters > 0 DO  t.Sleep( 50 )  END;
-			concurrent := FALSE;  
-		END ConcQuickSort;
-		
-
-
 
 		PROCEDURE InsertSort( lo, hi: Index );
-		VAR x, l, h, m, ip: Index;
-		
-			PROCEDURE Insert; (* insert data[x] at position ip *)
-			VAR  i: Index;  tmp: ElementType;
-			BEGIN				
-				tmp := data[x];  i := x;
-				REPEAT  data[i] := data[i - 1];  DEC( i )  UNTIL i = ip;
-				data[ip] := tmp;
-				
-				INC( nofmoves,  x - ip );
-				FOR i := ip TO x DO  DrawElement( i )  END;  Update
-			END Insert;
-		
+		VAR 
+			x, l, h, m, ip, i: Index;  
+			tmp: ElementType;
 		BEGIN
 			x := lo + 1; 
 			WHILE x <= hi DO
-				IF Less( x, x - 1 )  THEN
-					(* find insert position ip *)
+				IF Less( x, x - 1 )THEN
+					(* find insert position ip, binary search *)
 					ip := x - 1;  l := lo;  h := ip - 1;
 					WHILE l <= h DO
 						m := (l + h) DIV 2; 
 						IF Less( x, m ) THEN  ip := m;  h := m - 1  ELSE  l := m + 1  END
 					END;
-					Insert;
+					(* insert data[x] at position ip *)
+					tmp := data[x];  i := x;
+					REPEAT  
+						data[i] := data[i - 1];  DrawElement( i );  INC( nofmoves );  DEC( i )
+					UNTIL i = ip;
+					data[ip] := tmp;  DrawElement( ip );  Pause;
+					DEC( nofmoves );  INC( nofswaps )
 				END;
 				INC( x )
 			END
 		END InsertSort;
 		
-		PROCEDURE OptimQuick( lo, hi: Index );
+		
+		PROCEDURE QuickSort( lo, hi: Index );
+		VAR 
+			i, j, m: Index;
+		BEGIN
+			IF lo < hi THEN
+				i := lo;  j := hi;  m := (lo + hi) DIV 2;
+				REPEAT
+					WHILE Less( i, m ) DO  INC( i )  END; 
+					WHILE Less( m, j ) DO  DEC( j )  END; 
+					IF i <= j THEN
+						IF m = i THEN  m := j  ELSIF m = j THEN  m := i  END;
+						Swap( i, j );  INC( i );  DEC( j )
+					END
+				UNTIL i > j;
+				QuickSort( lo, j );  QuickSort( i, hi )
+			END;
+		END QuickSort;
+			
+
+		
+		PROCEDURE QuickSortOptim( lo, hi: Index );
 		VAR i, j, m: Index;  n: LONGINT;
 		BEGIN
 			IF lo < hi THEN
-				i := lo;  j := hi;  m := (lo + hi) DIV 2;  n := hi - lo + 1;
+				n := hi - lo + 1;
 				IF n = 2 THEN 
-					IF Less( hi, lo ) THEN  Swap( lo, hi )  END;
-				ELSIF n = 3 THEN 
-					IF Less( m, lo ) THEN  Swap( lo, m )  END;
-					IF Less( hi, m ) THEN  
-						Swap( m, hi );
-						IF Less( m, lo ) THEN  Swap( lo, m )  END	
-					END
-				ELSIF n < 16 THEN  
-					InsertSort( lo, hi )
-				ELSE (* QuickSort *)
+					IF Less( hi, lo ) THEN  Swap( lo, hi )  END
+				ELSIF (n < 16) & (compareWeight > 1.7) THEN  
+					InsertSort( lo, hi )  (* less expensive compares! *)
+				ELSE 
+					(* QuickSort *)
+					i := lo;  j := hi;  m := (lo + hi) DIV 2;  
 					REPEAT
 						WHILE Less( i, m ) DO  INC( i )  END;
 						WHILE Less( m, j ) DO  DEC( j )  END;
@@ -391,18 +384,94 @@ TYPE
 							Swap( i, j );  INC( i );  DEC( j )
 						END
 					UNTIL i > j;
-					OptimQuick( lo, j );  OptimQuick( i, hi )
+					QuickSortOptim( lo, j );  QuickSortOptim( i, hi )
 				END
 			END;
-		END OptimQuick;
-	
-		PROCEDURE OptimQuickSort;
+		END QuickSortOptim;
+		
+		
+		PROCEDURE QuickSortConc( lo, hi: Index );
+		VAR 
+			i, j, m: Index;
+			csorter: ConcurrentSorter;
 		BEGIN
-			sortname := "Optim. QuickSort";
-			OptimQuick( 0, N - 1 );
-		END OptimQuickSort;
+			IF lo < hi THEN
+				i := lo;  j := hi;  m := (lo + hi) DIV 2;
+				REPEAT
+					WHILE Less( i, m ) DO  UnHighlight( i );  INC( i )  END;  UnHighlight( i );
+					WHILE Less( m, j ) DO  UnHighlight( j );  DEC( j )  END;  UnHighlight( j );  
+					UnHighlight( m );
+					IF i <= j THEN
+						IF m = i THEN  m := j  ELSIF m = j THEN  m := i  END;
+						Swap( i, j );  INC( i );  DEC( j )
+					END
+				UNTIL i > j;
+				IF concSorters < MaxConcurrentSorters THEN  
+					NEW( csorter, SELF, lo, j );  QuickSortConc( i, hi )
+				ELSE
+					QuickSortConc( lo, j );  QuickSortConc( i, hi )
+				END
+			END;
+		END QuickSortConc;
+			
+		
+		PROCEDURE DoBubbleSort;
+		BEGIN
+			sortname := "BubbleSort";
+			BubbleSort( 0, N-1 )
+		END DoBubbleSort;
+		
+		PROCEDURE DoBubbleSortOptim;
+		BEGIN
+			sortname := "BubbleSort optim.";
+			BubbleSortOptim( 0, N-1 )
+		END DoBubbleSortOptim;
+		
+		PROCEDURE DoSelectSort;
+		BEGIN
+			sortname := "SelectSort";
+			SelectSort( 0, N-1 )
+		END DoSelectSort;
+		
+
+		PROCEDURE DoShellSort;
+		BEGIN
+			sortname := "ShellSort";
+			ShellSort( 0, N-1 )
+		END DoShellSort;
 		
 		
+		PROCEDURE DoInsertSort;
+		BEGIN
+			sortname := "InsertSort";
+			InsertSort( 0, N-1 )
+		END DoInsertSort;
+		
+		
+		PROCEDURE DoQuickSort;
+		BEGIN
+			sortname := "QuickSort";
+			QuickSort( 0, N-1 );
+		END DoQuickSort;
+		
+		PROCEDURE DoQuickSortOptim;
+		BEGIN
+			sortname := "QuickSort optim.";
+			QuickSortOptim( 0, N - 1 );
+		END DoQuickSortOptim;
+		
+		PROCEDURE DoQuickSortConc;
+		VAR t: Kernel.Timer;
+		BEGIN
+			sortname := "QuickSort conc.";
+			concurrent := TRUE;  concSorters := 0;
+			QuickSortConc( 0, N-1 );
+			(* now wait until all concurrent activities have finished *)
+			NEW( t );  WHILE concSorters > 0 DO  t.Sleep( 50 )  END;
+			concurrent := FALSE;  
+		END DoQuickSortConc;
+		
+	
 			
 		PROCEDURE HeapSort;
 		VAR l, r: Index;
@@ -499,39 +568,41 @@ TYPE
 			END;  
 		END SmoothSort;  
 		
-	END ArrayView;
+		
+	END SortArray;
 	
 	
-	
-	ConcurrentQuick = OBJECT
+TYPE	
+	ConcurrentSorter = OBJECT
 	VAR 
 		lo, hi: Index;  
-		av: ArrayView;
+		av: SortArray;
 			
-		PROCEDURE &Init ( sdw: ArrayView;  low, high: Index );
+		PROCEDURE &Init ( a: SortArray;  low, high: Index );
 		BEGIN
-			av := sdw;
+			av := a;
 			lo := low; hi := high; 
 		END Init;
 				
 	BEGIN {ACTIVE}
 		Machine.AtomicInc( av.concSorters );
-		av.Quick( lo, hi, TRUE );
+		av.QuickSortConc( lo, hi );
 		Machine.AtomicDec( av.concSorters )
-	END ConcurrentQuick;	
+	END ConcurrentSorter;	
 	
 	
-	SortProcedure = PROCEDURE {DELEGATE};
-	
-	Sorter = OBJECT
+TYPE
+	SortStarter = OBJECT
+	TYPE
+		SortProcedure = PROCEDURE {DELEGATE};
 	VAR
 		sort: SortProcedure;
-		av: ArrayView;
+		av: SortArray;
 		running, terminated: BOOLEAN;
 		
-		PROCEDURE &Init( win: ArrayView );
+		PROCEDURE &Init( a: SortArray );
 		BEGIN
-			sort := NIL;  av := win;  
+			sort := NIL;  av := a;  
 			running := FALSE;  terminated := FALSE
 		END Init;
 				
@@ -559,16 +630,16 @@ TYPE
 				sort := NIL
 			UNTIL terminated
 		END
-	END Sorter;
+	END SortStarter;
 	
-	
+TYPE
 	ControlWindow = OBJECT( WMComponents.FormWindow )
 		VAR
 			toolbar: WMStandardComponents.Panel;
 			button : WMStandardComponents.Button;
 			
-			av: ArrayView;
-			sorter: Sorter;
+			av: SortArray;
+			sorter: SortStarter;
 			
 
 			PROCEDURE &New;
@@ -601,7 +672,7 @@ TYPE
 			BEGIN
 				NEW( panel );
 					panel.bounds.SetWidth( 560 );
-					panel.bounds.SetHeight( 60 );
+					panel.bounds.SetHeight( 80 );
 					panel.fillColor.Set( LONGINT( 0FFFFFFFFH ) );
 				
 				
@@ -642,8 +713,8 @@ TYPE
 				NEW( button );
 					button.bounds.SetWidth( 70 );
 					button.alignment.Set( WMComponents.AlignLeft );
-					button.caption.SetAOC( "last order" );
-					button.onClick.Add( LastOrder );
+					button.caption.SetAOC( "prev. order" );
+					button.onClick.Add( PrevOrder );
 				toolbar.AddContent( button );
 			
 				NEW( button );
@@ -735,6 +806,57 @@ TYPE
 				NEW( label );
 					label.bounds.SetWidth( 70 );
 					label.alignment.Set( WMComponents.AlignLeft );
+					label.caption.SetAOC( " Sorter: " );
+					label.textColor.Set( 0000000FFH );
+				toolbar.AddContent(label);
+
+
+				NEW( button );
+					button.bounds.SetWidth( 80 );
+					button.alignment.Set( WMComponents.AlignLeft );
+					button.caption.SetAOC( "opt Bubble" );
+					button.onClick.Add( StartBubbleSortOptim );
+				toolbar.AddContent( button );
+				
+				NEW( button );
+					button.bounds.SetWidth( 80 );
+					button.alignment.Set( WMComponents.AlignLeft );
+					button.caption.SetAOC( "Insert" );
+					button.onClick.Add( StartInsertSort );
+				toolbar.AddContent( button );
+				
+				NEW( label );
+					label.bounds.SetWidth( 80 );
+					label.alignment.Set( WMComponents.AlignLeft );
+					label.textColor.Set( 0000000FFH );
+				toolbar.AddContent(label);
+				
+				NEW( button );
+					button.bounds.SetWidth( 125 );
+					button.alignment.Set( WMComponents.AlignLeft );
+					button.caption.SetAOC( " optim. Quick " );
+					button.onClick.Add( StartQuickSortOptim );
+				toolbar.AddContent( button );
+								
+				NEW( button );
+					button.bounds.SetWidth( 125 );
+					button.alignment.Set( WMComponents.AlignLeft );
+					button.caption.SetAOC( " concurrent Quick " );
+					button.onClick.Add( StartQuickSortConc );
+				toolbar.AddContent( button );
+				
+				panel.AddContent( toolbar );
+				
+				
+				
+				NEW( toolbar );
+					toolbar.bounds.SetHeight( 20 );
+					toolbar.alignment.Set( WMComponents.AlignTop );
+					toolbar.fillColor.Set( LONGINT( 0CCCCCCFFH ) );
+
+				NEW( label );
+					label.bounds.SetWidth( 70 );
+					label.alignment.Set( WMComponents.AlignLeft );
 					label.caption.SetAOC( " Speed: " );
 					label.textColor.Set( 0000000FFH );
 				toolbar.AddContent(label);
@@ -754,38 +876,27 @@ TYPE
 					button.caption.SetAOC( " + " );
 					button.onClick.Add( IncSpeed );
 				toolbar.AddContent( button );
-
-				NEW( button );
-					button.bounds.SetWidth( 120 );
-					button.alignment.Set( WMComponents.AlignLeft );
-					button.caption.SetAOC( "adj. comp. weight" );
-					button.onClick.Add( SetCompareWeight );
-				toolbar.AddContent( button );
+				
 				
 				NEW( label );
-					label.bounds.SetWidth( 40 );
+					label.bounds.SetWidth( 80 );
 					label.alignment.Set( WMComponents.AlignLeft );
 					label.textColor.Set( 0000000FFH );
 				toolbar.AddContent(label);
-								
-				NEW( button );
-					button.bounds.SetWidth( 125 );
-					button.alignment.Set( WMComponents.AlignLeft );
-					button.caption.SetAOC( " concurrent Quick " );
-					button.onClick.Add( StartConcQuickSort );
-				toolbar.AddContent( button );
 				
 				NEW( button );
-					button.bounds.SetWidth( 125 );
+					button.bounds.SetWidth( 160 );
 					button.alignment.Set( WMComponents.AlignLeft );
-					button.caption.SetAOC( " optim. Quick " );
-					button.onClick.Add( StartOptimQuickSort );
+					button.caption.SetAOC( "adjust weightings" );
+					button.onClick.Add( AdjWeightings );
 				toolbar.AddContent( button );
+				
 				
 				panel.AddContent( toolbar );
 				
 				RETURN panel
 			END CreateForm;
+			
 			
 			PROCEDURE Order( sender, data: ANY );
 			BEGIN
@@ -802,10 +913,10 @@ TYPE
 				IF ~ sorter.running THEN  av.BadOrder  END
 			END BadOrder;
 			
-			PROCEDURE LastOrder( sender, data: ANY );
+			PROCEDURE PrevOrder( sender, data: ANY );
 			BEGIN
-				IF ~ sorter.running THEN  av.LastOrder  END
-			END LastOrder;
+				IF ~ sorter.running THEN  av.PrevOrder  END
+			END PrevOrder;
 			
 			
 			PROCEDURE Rand10( sender, data: ANY );
@@ -834,50 +945,53 @@ TYPE
 				av.DecSpeed
 			END DecSpeed;
 			
-			PROCEDURE SetCompareWeight( sender, data: ANY );
-			VAR digits: ARRAY 8 OF CHAR;
+			PROCEDURE AdjWeightings( sender, data: ANY );
 			BEGIN
-				digits := "3";
-				IF WMDialogs.QueryString( "Input compare weight", digits ) = 0 THEN
-					Strings.StrToInt( digits, compareWeight );
-					Log.String( "new weightings: move = 1, swap = 2.5, compare = " ); 
-					Log.Int( compareWeight, 1 );  Log.Ln;
-				END
-			END SetCompareWeight;
+				av.AdjWeightings
+			END AdjWeightings;
 			
 			PROCEDURE StartBubbleSort( sender, data: ANY );
 			BEGIN
-				sorter.Start( av.BubbleSort )
+				sorter.Start( av.DoBubbleSort )
 			END StartBubbleSort;
 				
+			PROCEDURE StartBubbleSortOptim( sender, data: ANY );
+			BEGIN
+				sorter.Start( av.DoBubbleSortOptim )
+			END StartBubbleSortOptim;
+			
+			PROCEDURE StartInsertSort( sender, data: ANY );
+			BEGIN
+				sorter.Start( av.DoInsertSort )
+			END StartInsertSort;
 			
 			PROCEDURE StartSelectSort( sender, data: ANY );
 			BEGIN
-				sorter.Start( av.SelectSort )
+				sorter.Start( av.DoSelectSort )
 			END StartSelectSort;
 				
 			
-			PROCEDURE StartOptimQuickSort( sender, data: ANY );
+			PROCEDURE StartQuickSortOptim( sender, data: ANY );
 			BEGIN
-				sorter.Start( av.OptimQuickSort )
-			END StartOptimQuickSort;
+				sorter.Start( av.DoQuickSortOptim )
+			END StartQuickSortOptim;
 				
 			PROCEDURE StartShellSort( sender, data: ANY );
 			BEGIN
-				sorter.Start( av.ShellSort )
+				sorter.Start( av.DoShellSort )
 			END StartShellSort;
 				
 					
 			PROCEDURE StartQuickSort( sender, data: ANY );
 			BEGIN
-				sorter.Start( av.QuickSort )
+				sorter.Start( av.DoQuickSort )
 			END StartQuickSort;
 			
 			
-			PROCEDURE StartConcQuickSort( sender, data: ANY );
+			PROCEDURE StartQuickSortConc( sender, data: ANY );
 			BEGIN
-				sorter.Start( av.ConcQuickSort )
-			END StartConcQuickSort;
+				sorter.Start( av.DoQuickSortConc )
+			END StartQuickSortConc;
 			
 			
 			PROCEDURE StartHeapSort( sender, data: ANY );

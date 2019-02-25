@@ -1,223 +1,237 @@
 MODULE Huffman;  (** AUTHOR GF;  PURPOSE "Huffman compression";  *)
 
 IMPORT Streams;
-
-CONST
-	BlockSize = 8*1024;
 	
 TYPE 
+	BitReader = OBJECT
+		VAR
+			in: Streams.Reader;
+			curByte, curBit: LONGINT;
+			
+			PROCEDURE &New( r: Streams.Reader );
+			BEGIN
+				in := r;  curBit := -1;  curByte := 0
+			END New;
+			
+			PROCEDURE Initialize;
+			BEGIN
+				curBit := -1;  curByte := 0
+			END Initialize;
+			
+			PROCEDURE Bit( ): LONGINT;
+			VAR
+				bit: LONGINT;  ch: CHAR;
+			BEGIN
+				IF curBit < 0 THEN
+					in.Char( ch );  curByte := ORD( ch );  curBit := 7
+				END;
+				bit := ASH( curByte, -curBit ) MOD 2;
+				DEC( curBit );
+				RETURN bit
+			END Bit;
 	
-	Pattern = RECORD  pattern, freq: LONGINT  END;
-	
-	PatternCounts = ARRAY 256 OF Pattern;
-	PatternFrequencies = POINTER TO ARRAY OF Pattern;		(* ordered by frequency *)
+	END BitReader;
 	
 	
+TYPE
+	BitWriter = OBJECT
+		VAR
+			out: Streams.Writer;
+			curByte, curBit: LONGINT;
+			
+			PROCEDURE &New( w: Streams.Writer );
+			BEGIN
+				out := w;  curBit := 0;  curByte := 0
+			END New;
+			
+			PROCEDURE Bit( bit: LONGINT );
+			BEGIN
+				curByte := 2*curByte + bit;
+				INC( curBit );
+				IF curBit > 7 THEN
+					out.Char( CHR( curByte ) );  curByte := 0;  curBit := 0
+				END
+			END Bit;
+		
+			PROCEDURE Finish;	(* flush last few bits *)
+			BEGIN
+				WHILE curBit # 0 DO  Bit( 0 )  END;
+				out.Update
+			END Finish;
+				
+	END BitWriter;
 	
+	
+TYPE	
+	PatternCounts = ARRAY 256 OF LONGINT;		(* scaled to 0 .. 101H *)
+	
+	Pattern = RECORD  patt, weight: LONGINT  END;
+	PatternWeights = POINTER TO ARRAY OF Pattern;		(* weights of patterns contained in block *)
+	
+	HuffCode = RECORD  bits, val: LONGINT  END;
+	
+TYPE	
 	Node = OBJECT 
 		VAR 
-			freq: LONGINT;
+			weight: LONGINT;
+			pattern: LONGINT;		(* node pattern if node is leaf *)
 			left, right: Node;		(* both NIL in case of leaf *)
-			pattern: LONGINT;						
-		
-		PROCEDURE & Init( patt, f: LONGINT );
-		BEGIN
-			pattern := patt;  freq := f;  left := NIL;  right := NIL
-		END Init;
-		
-		PROCEDURE AddChildren( l, r: Node );
-		BEGIN
-			left := l;  right := r;  freq := l.freq + r.freq
-		END AddChildren;
+									
+			PROCEDURE &Init( patt, w: LONGINT );
+			BEGIN
+				pattern := patt;  weight := w;  left := NIL;  right := NIL
+			END Init;
+			
+			PROCEDURE AddChildren( l, r: Node );
+			BEGIN
+				left := l;  right := r;  weight := l.weight + r.weight
+			END AddChildren;
 			
 	END Node;
 	
 	
-	
-	Encoder* = OBJECT
-		TYPE
-			HCode = RECORD  len, val: LONGINT  END;
+TYPE
+	Encoder* = OBJECT			
 		VAR
 			w: Streams.Writer;
-			codeTable: ARRAY 256 OF HCode;
-			buffer: ARRAY 2*BlockSize OF CHAR;
-			byte, curBit, bpos: LONGINT;
+			out: BitWriter;
+			codeTable: ARRAY 256 OF HuffCode;
+		
 			
 			
 			PROCEDURE &New*( output: Streams.Writer );
 			BEGIN
 				w := output;
+				NEW( out, w )
 			END New;
 			
-			PROCEDURE Initialize( CONST source: ARRAY OF CHAR; len: LONGINT );
-			VAR pf: PatternFrequencies;
-			BEGIN
-				w.RawNum( len );
-				pf := CountPatterns( source, len );
-				WriteFrequencies( pf );
-				BuildCodeTable( BuildTree( pf ) );				
-				byte := 0;  bpos := 0;  curBit := 7;
-			END Initialize;
 			
-			
-			PROCEDURE WriteFrequencies( pf: PatternFrequencies );
+			PROCEDURE WriteFrequencies( pw: PatternWeights );
 			VAR i, n: LONGINT;
-				a: ARRAY 256 OF LONGINT;
+				pc: PatternCounts;
 			BEGIN
-				n := LEN( pf^ );
+				n := LEN( pw^ );
 				IF n < 128 THEN
 					w.Char( CHR( n ) );
-					FOR i := 0 TO n - 1 DO  w.RawNum( pf[i].freq );  w.Char( CHR( pf[i].pattern ) )  END
+					FOR i := 0 TO n - 1 DO  w.RawNum( pw[i].weight );  w.Char( CHR( pw[i].patt ) )  END
 				ELSE
 					w.Char( 0X );
-					FOR i := 0 TO 255 DO  a[i] := 0  END;
-					FOR i := 0 TO n -1 DO  a[pf[i].pattern] := pf[i].freq  END;
-					FOR i := 0 TO 255 DO  w.RawNum( a[i] )  END
-				END
+					FOR i := 0 TO 255 DO  pc[i] := 0  END;
+					FOR i := 0 TO n -1 DO  pc[pw[i].patt] := pw[i].weight  END;
+					FOR i := 0 TO 255 DO  w.RawNum( pc[i] )  END
+				END;
 			END WriteFrequencies;
 			
 			
-			PROCEDURE CountPatterns( CONST source: ARRAY OF CHAR; len: LONGINT ): PatternFrequencies;
+			PROCEDURE CountPatterns( CONST source: ARRAY OF CHAR; len: LONGINT ): PatternWeights;
 			VAR 
-				i: LONGINT;  a: PatternCounts;
+				i: LONGINT;  pc: PatternCounts;
 			BEGIN
-				FOR i := 0 TO 255 DO  a[i].pattern := i;  a[i].freq := 0  END;
-				FOR i := 0 TO len - 1 DO  INC( a[ORD( source[i] )].freq )  END;
+				FOR i := 0 TO 255 DO  pc[i] := 0  END;
+				FOR i := 0 TO len - 1 DO  INC( pc[ORD( source[i] )] )  END;
 				FOR i := 0 TO 255 DO  
-					IF a[i].freq > 0 THEN (* scale => [1..101H] *)
-						a[i].freq := 100H * a[i].freq DIV len + 1;
+					IF pc[i] > 0 THEN (* scale => [1..101H] *)
+						pc[i] := 100H * pc[i] DIV len + 1;
 					END;
 				END;
-				RETURN SortPatterns( a )
+				RETURN ContainedPatterns( pc )
 			END CountPatterns;
 			
 			
-			PROCEDURE BuildCodeTable( tree: Node );
+			PROCEDURE BuildCodeTable( pw: PatternWeights );
 			VAR 
-				initval: HCode; i: LONGINT;
+				initval: HuffCode;
+				tree: Node;
 			
-				PROCEDURE Traverse( node: Node;  code: HCode );
+				PROCEDURE Traverse( node: Node;  code: HuffCode );
 				BEGIN
 					IF node.left = NIL THEN  (* leaf *)
 						codeTable[node.pattern] := code;
 					ELSE
-						INC( code.len );  
+						INC( code.bits );  
 						code.val := 2*code.val;  Traverse( node.right, code );	(* ..xx0 *)
 						code.val := code.val + 1;  Traverse( node.left, code );	(* ..xx1 *)
 					END;
 				END Traverse;
 			
 			BEGIN
-				FOR i := 0 TO 255 DO  codeTable[i].len := 0;  codeTable[i].val := 0  END;
-				initval.len := 0;  initval.val := 0;
+				tree := BuildTree( pw );
+				initval.bits := 0;  initval.val := 0;
 				Traverse( tree, initval );
 			END BuildCodeTable;	
 			
 			
-			PROCEDURE AppendBit( bit: LONGINT );
-			BEGIN
-				IF bit # 0 THEN  byte := byte + ASH( 1, curBit )  END;
-				DEC( curBit );
-				IF curBit < 0 THEN
-					buffer[bpos] := CHR( byte );  INC( bpos );
-					byte := 0; curBit := 7
-				END
-			END AppendBit;
-			
-			
-			PROCEDURE Append( code: HCode );
+			PROCEDURE PutCode( code: HuffCode );
 			VAR len, val: LONGINT;
 			BEGIN
-				len := code.len;  val := code.val;
+				len := code.bits;  val := code.val;
 				WHILE len > 0 DO
-					DEC( len );  AppendBit( ASH( val, -len ) MOD 2 )
+					DEC( len );  out.Bit( ASH( val, -len ) MOD 2 )
 				END
-			END Append;
+			END PutCode;
 			
 			
 			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: LONGINT );
-			VAR i: LONGINT;
+			VAR 
+				i: LONGINT;
+				pw: PatternWeights;
 			BEGIN
-				Initialize( source, len );
-				FOR i := 0 TO len - 1 DO  Append( codeTable[ORD( source[i] )] )  END;
-				
-				IF curBit # 7 THEN  
-					buffer[bpos] := CHR( byte );  INC( bpos ); 
-				END;
-				
-				FOR i := 0 TO bpos - 1 DO  w.Char( buffer[i] )  END;
-				w.Update
+				pw := CountPatterns( source, len );
+				WriteFrequencies( pw );
+				BuildCodeTable( pw );
+				FOR i := 0 TO len - 1 DO  PutCode( codeTable[ORD( source[i] )] )  END;
+				out.Finish;
 			END CompressBlock;
 				
 	END Encoder;
 	
 	
-	
+TYPE
 	Decoder* = OBJECT
 		VAR
-			blockSize: LONGINT;
 			r: Streams.Reader;
+			in: BitReader;
 			tree: Node;
-			byte, curBit: LONGINT;
 		
 			PROCEDURE &New*( input: Streams.Reader );
 			BEGIN
 				r := input;  
+				NEW( in, r )
 			END New;
 			
-			PROCEDURE Initialize;
-			VAR  pf: PatternFrequencies;
-			BEGIN
-				pf := ReadFrequencies( r );
-				tree := BuildTree( pf );
-				curBit := -1
-			END Initialize;
 			
-			
-			PROCEDURE ReadFrequencies( r: Streams.Reader ): PatternFrequencies;
-			VAR i, n: LONGINT;  c: CHAR;
-				pf: PatternFrequencies;
-				a: PatternCounts;
+			PROCEDURE ReadFrequencies( r: Streams.Reader ): PatternWeights;
+			VAR 
+				i, n: LONGINT;  c: CHAR;
+				pw: PatternWeights;
+				pc: PatternCounts;
 			BEGIN
 				r.Char( c );  n := ORD( c );
 				IF n > 0 THEN
-					NEW( pf, n );
-					FOR i := 0 TO n - 1 DO  r.RawNum( pf[i].freq );  r.Char( c );  pf[i].pattern := ORD( c )  END
+					NEW( pw, n );
+					FOR i := 0 TO n - 1 DO  r.RawNum( pw[i].weight );  r.Char( c );  pw[i].patt := ORD( c )  END
 				ELSE
-					FOR i := 0 TO 255 DO  a[i].pattern := i;  r.RawNum( a[i].freq )  END;
-					pf := SortPatterns( a )
+					FOR i := 0 TO 255 DO  r.RawNum( pc[i] )  END;
+					pw := ContainedPatterns( pc )
 				END;
-				RETURN pf
+				RETURN pw
 			END ReadFrequencies;
 		
-		
-			PROCEDURE GetBit( ): LONGINT;
-			VAR bit: LONGINT;  c: CHAR;
-			BEGIN
-				IF curBit < 0 THEN
-					r.Char( c );  byte := ORD( c );  curBit := 7
-				END;
-				bit := ASH( byte, -curBit ) MOD 2;  DEC( curBit );
-				RETURN bit
-			END GetBit;	
 			
-			
-			PROCEDURE ExtractBlock*( VAR buf: ARRAY OF CHAR ): LONGINT;
+			PROCEDURE ExtractBlock*( VAR buf: ARRAY OF CHAR; len: LONGINT );
 			VAR 
-				i, len: LONGINT;  n: Node;
+				i: LONGINT;  n: Node;
 			BEGIN
-				r.RawNum( blockSize ); 
-				IF blockSize = 0 THEN  (* end of stream *) RETURN 0  END;
-				Initialize;  i := 0;  len := 0;
+				tree := BuildTree( ReadFrequencies( r ) );
+				in.Initialize;
+				i := 0; 
 				REPEAT
 					n := tree; 
 					REPEAT
-						IF GetBit() # 0 THEN  n := n.left  ELSE  n := n.right  END;
-						INC( i )
+						IF in.Bit() = 1 THEN  n := n.left  ELSE  n := n.right  END;
 					UNTIL n.left = NIL;	(* leaf *)
-					buf[len] := CHR( n.pattern );  INC( len )
-				UNTIL len >= blockSize;
-				RETURN blockSize
+					buf[i] := CHR( n.pattern );  INC( i )
+				UNTIL i >= len;
 			END ExtractBlock;
 				
 	END Decoder;
@@ -226,10 +240,12 @@ TYPE
 	
 	
 	
-	(* sort patterns by frequency, omit unused patterns *)
-	PROCEDURE SortPatterns( VAR a: PatternCounts ): PatternFrequencies;
+	(* sort patterns by weight, omit unused patterns *)
+	PROCEDURE ContainedPatterns( VAR pc: PatternCounts ): PatternWeights;
 	VAR 
-		i, n, start: LONGINT;  pf: PatternFrequencies;
+		i, n, start: LONGINT;  
+		pw: PatternWeights;
+		a: ARRAY 256 OF Pattern;
 		
 		PROCEDURE Sort( low, high: LONGINT );  
 		VAR 
@@ -238,8 +254,8 @@ TYPE
 			IF low < high THEN
 				i := low;  j := high;  m := (i + j) DIV 2;
 				REPEAT
-					WHILE a[i].freq < a[m].freq DO  INC( i )  END;
-					WHILE a[j].freq > a[m].freq DO  DEC( j )  END;
+					WHILE a[i].weight < a[m].weight DO  INC( i )  END;
+					WHILE a[j].weight > a[m].weight DO  DEC( j )  END;
 					IF i <= j THEN
 						IF i = m THEN  m := j  ELSIF j = m THEN  m := i  END;
 						tmp := a[i];  a[i] := a[j];  a[j] := tmp;
@@ -251,24 +267,25 @@ TYPE
 		END Sort;
 		
 	BEGIN
-		Sort( 0, 255 );	(* sort patterns by frequency *)
+		FOR i := 0 TO 255 DO  a[i].patt := i;  a[i].weight := pc[i]  END;
+		Sort( 0, 255 );	(* sort patterns by weight *)
 		i := 0;
-		WHILE a[i].freq = 0 DO  INC( i )  END; 	(* skip unused patterns *)
+		WHILE a[i].weight = 0 DO  INC( i )  END; 	(* skip unused patterns *)
 		n := 256 - i;  start := i;
-		NEW( pf, n );
-		FOR i := 0 TO n - 1 DO  pf[i] := a[start + i]  END;
-		RETURN pf
-	END SortPatterns;
+		NEW( pw, n );
+		FOR i := 0 TO n - 1 DO  pw[i] := a[start + i]  END;
+		RETURN pw
+	END ContainedPatterns;
 
 	
-	PROCEDURE BuildTree( pf: PatternFrequencies ): Node;
+	PROCEDURE BuildTree( pw: PatternWeights ): Node;
 	VAR 
 		i, start, top: LONGINT;  node, n2: Node;
 		a: POINTER TO ARRAY OF Node;
 		patt: LONGINT;
 	BEGIN
-		NEW( a, LEN( pf^ ) );  top := LEN( pf^ ) - 1;
-		FOR i := 0 TO top DO  NEW( a[i], pf[i].pattern, pf[i].freq )  END;
+		NEW( a, LEN( pw^ ) );  top := LEN( pw^ ) - 1;
+		FOR i := 0 TO top DO  NEW( a[i], pw[i].patt, pw[i].weight )  END;
 		IF top = 0 THEN  
 			(* the whole, probably last small block contains only a single pattern *)
 			patt := (a[0].pattern + 1) MOD 256;	(* some different pattern *)
@@ -278,7 +295,7 @@ TYPE
 			WHILE start < top DO  
 				NEW( node, 0, 0 );  node.AddChildren( a[start], a[start+1] ); 
 				i := start + 1;  
-				WHILE (i < top) & (a[i+1].freq < node.freq) DO  a[i] := a[i+1];  INC( i )  END;
+				WHILE (i < top) & (a[i+1].weight < node.weight) DO  a[i] := a[i+1];  INC( i )  END;
 				a[i] := node;  
 				INC( start );
 			END

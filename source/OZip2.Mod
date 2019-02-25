@@ -1,17 +1,17 @@
 MODULE OZip2; (** AUTHOR GF; PURPOSE "files and streams compression tool"; *)
 
 IMPORT Streams, Commands, Files, Strings, 
-	BWT :=  BorrowsWheeler, AH := AdaptiveHuffman;
+	BW :=  BorrowsWheeler, AH := AdaptiveHuffman;
 
 (*
 	Format	=	ComprTag { Block }
-	Block		=	bwindex  size { CHAR }
+	Block		=	size  bwindex  { CHAR }
 	bwindex	=	RawNum
 	size		=	RawNum
 *)
 
 CONST
-	BlockSize = 8*1024;
+	BlockSize* = 8*1024;
 	ComprTag = LONGINT(0FEFD1F18H);
 	Suffix = ".oz2";
 		
@@ -19,44 +19,41 @@ CONST
 	PROCEDURE Compress*( r: Streams.Reader;  w: Streams.Writer );
 	VAR 
 		huff: AH.Encoder; 
-		bw: BWT.Encoder;  index: LONGINT; 
+		bw: BW.Encoder; 
 		buffer: ARRAY BlockSize OF CHAR;  len: LONGINT;
 	BEGIN 
 		NEW( huff, w );  NEW( bw );
 		w.RawLInt( ComprTag );
 		LOOP
 			r.Bytes( buffer, 0, BlockSize, len );
-			IF len < 1 THEN  EXIT  END;
-			index := bw.EncodeBlock( buffer, len );
-			w.RawNum( index );
+			IF len = 0 THEN  EXIT  END;
+			w.RawNum( len );
+			w.RawNum( bw.EncodeBlock( buffer, len ) );
 			huff.CompressBlock( buffer, len );
 		END;
-		w.RawNum( 0 );	(* bw index*)
-		w.RawNum( 0 );	(* lenght of block, (end of stream) *)
+		w.RawNum( 0 );	(* mark end of stream *)
 		w.Update
 	END Compress;
 	
 	
-	(* returns false if input is not an OZip compressed stream *)	
+	(* returns false if input is not an OZip2 compressed stream *)	
 	PROCEDURE Uncompress*( r: Streams.Reader;  w: Streams.Writer ): BOOLEAN;
 	VAR 
 		huff: AH.Decoder;
-		bw: BWT.Decoder;
-		tag, len, i, bwIndex: LONGINT;
+		bw: BW.Decoder;
+		tag, len, bwIndex: LONGINT;
 		buffer: ARRAY BlockSize OF CHAR;
 	BEGIN 
 		r.RawLInt( tag );
 		IF tag = ComprTag  THEN
 			NEW( huff, r );  NEW( bw );
 			LOOP
+				r.RawNum( len );
+				IF len = 0 THEN  EXIT  END;
 				r.RawNum( bwIndex );
-				len := huff.ExtractBlock( buffer );	
-				IF len > 0 THEN  
-					bw.DecodeBlock( buffer, len, bwIndex );
-					FOR i := 0 TO len - 1 DO  w.Char( buffer[i] )  END;
-				ELSE
-					EXIT
-				END
+				huff.ExtractBlock( buffer, len );	
+				bw.DecodeBlock( buffer, len, bwIndex );
+				w.Bytes( buffer, 0, len )
 			END;
 			w.Update;
 			RETURN TRUE
@@ -70,9 +67,11 @@ CONST
 	
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR ): Files.File;
 	VAR
-		name2: ARRAY 128 OF CHAR;  res: LONGINT;
+		tname, name2: ARRAY 128 OF CHAR;  res: LONGINT;
 	BEGIN
-		IF Files.Old( name ) # NIL THEN
+		tname := "./";
+		Strings.Append( tname, name );
+		IF Files.Old( tname ) # NIL THEN
 			COPY( name, name2);  Strings.Append( name2, ".Bak" );
 			Files.Rename( name, name2, res );
 		END;
@@ -147,11 +146,11 @@ END OZip2.
 
 
 	OZip2.CompressFile   TLS.Mod ~
-	OZip2.CompressFile   OZip2.GofU ~
+	OZip2.CompressFile   OZip2.GofUu ~
 	OZip2.CompressFile   guide.pdf ~
 		
-	OZip2.UncompressFile   TLS.Modc.oz2  TTT.Mod ~
-	OZip2.UncompressFile   OZip2.GofU.oz2  TTT.GofU ~
+	OZip2.UncompressFile   TLS.Mod.oz2  TTT.Mod ~
+	OZip2.UncompressFile   OZip2.GofUu.oz2  TTT.GofUu ~
 	OZip2.UncompressFile   guide.pdf.oz2  TTT.pdf ~
 	
 	System.Free  OZip2 AdaptiveHuffman  BorrowsWheeler ~

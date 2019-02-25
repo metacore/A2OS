@@ -147,6 +147,7 @@ VAR
 		NEW( rsa );
 		rsa.name := "unkown";
 		rsa.private := FALSE;
+		rsa.size := m.len*32;
 		B.Copy( e, rsa.exponent );
 		B.Copy( m, rsa.modulus );
 		RETURN rsa

@@ -1,7 +1,7 @@
 MODULE XEmac; (** AUTHOR "Timothee Martiel"; PURPOSE "Zynq7000 Ethernet Controller Driver"; *)
 (** 2014.08.26		Adapted the driver for Minos to A2 *)
 
-IMPORT SYSTEM, Machine, Objects, Kernel, KernelLog, Network;
+IMPORT SYSTEM, Machine, Objects, Kernel, KernelLog, Network, Commands, Modules, Plugins;
 
 CONST
 	Trace = FALSE;
@@ -428,9 +428,10 @@ TYPE
 			ctrl.SendFrame(dst, type, l3hdr, l4hdr, data, h3len, h4len, dofs, dlen);
 		END DoSend;
 
-		PROCEDURE Finalize * (on: BOOLEAN);
+		PROCEDURE Finalize * (connected: BOOLEAN);
 		BEGIN
-			Finalize^(on)
+			ctrl.Finalize;
+			Finalize^(connected);
 		END Finalize;
 	END LinkDevice;
 
@@ -1371,12 +1372,21 @@ TYPE
 			END;
 		END DumpDBMem;
 
+		PROCEDURE Finalize;
+		BEGIN
+			Stop;
+			Objects.RemoveHandler(SELF.InterruptHandler, IRQ);
+			Network.registry.Remove(dev);
+			dev.ctrl := NIL;
+			dev := NIL;
+		END Finalize;
+
 	BEGIN {ACTIVE}
 		(* Receive is done by polling *)
 		(*BEGIN {EXCLUSIVE}
 			AWAIT(start)
 		END;*)
-		LOOP
+		WHILE dev # NIL DO
 			(*BEGIN {EXCLUSIVE}
 				IF kill THEN EXIT END
 			END;*)
@@ -1591,12 +1601,30 @@ TYPE
 		END Read;
 	END Phy;
 
-VAR
-	ld: LinkDevice;
-	res: LONGINT;
-BEGIN
+PROCEDURE Install* (context: Commands.Context);
+VAR ld: LinkDevice; res: WORD;
+BEGIN {EXCLUSIVE}
 	NEW(ld, Network.TypeEthernet, 1500, 6); (*! What is the correct MTU? *)
 	ld.SetName("XEmac");
 	Network.registry.Add(ld, res);
+	IF res # 0 THEN
+		context.error.String("failed to install"); context.error.Ln;
+		context.result := Commands.CommandError; RETURN;
+	END;
 	NEW(ld.ctrl, ADDRESS(0E000B000H), ld);
+END Install;
+
+PROCEDURE Remove*;
+VAR table: Plugins.Table; i: SIZE;
+BEGIN {EXCLUSIVE}
+	Network.registry.GetAll(table);
+	IF table # NIL THEN
+		FOR i := 0 TO LEN(table)-1 DO
+			IF table[i] IS LinkDevice THEN table[i](LinkDevice).Finalize(TRUE) END
+		END
+	END;
+END Remove;
+
+BEGIN
+	Modules.InstallTermHandler(Remove);
 END XEmac.

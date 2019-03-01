@@ -2353,7 +2353,7 @@ TYPE
 			Import     = Identifier [':=' Identifier] ['in' Identifier].
 		**)
 		PROCEDURE ImportList( scope: SyntaxTree.Scope );
-		VAR alias, name, context: SyntaxTree.Identifier;  import: SyntaxTree.Import; position, idPosition: Position;
+		VAR alias, name, context: SyntaxTree.Identifier; import: SyntaxTree.Import; position, idPosition: Position; aliased: BOOLEAN;
 		BEGIN
 			IF Trace THEN S( "ImportList" ) END;
 			(* import token already consumed *)
@@ -2361,13 +2361,16 @@ TYPE
 				alias := Identifier(idPosition);
 				position := token.position;
 				IF alias # SyntaxTree.invalidIdentifier THEN
-					IF Optional( Scanner.Becomes ) THEN name := Identifier(idPosition) ELSE name := alias;  END;
+					aliased := Optional( Scanner.Becomes );
+					IF aliased THEN name := Identifier(idPosition) ELSE name := alias END;
 					import := SyntaxTree.NewImport( position, alias, name, TRUE );
 					CommentSymbol(import);
 					IF Optional(Scanner.In) THEN
 						position := token.position;
 						context := Identifier(idPosition);
 						IF context # SyntaxTree.invalidIdentifier THEN  import.SetContext(context) END;
+					ELSIF aliased & (name = alias) THEN
+						Basic.Warning(diagnostics, scanner.source^, position, "duplicated import alias");
 					END;
 					WITH scope: 
 					SyntaxTree.ModuleScope DO

@@ -236,6 +236,19 @@ TYPE
 
 	END VideoDecoder;
 
+	VideoEncoder* = OBJECT
+		(* open the encoder *)
+		PROCEDURE Open*(out : Streams.Writer; VAR res : WORD);
+		END Open;
+
+		PROCEDURE Write*(img : Raster.Image);
+		END Write;
+
+		PROCEDURE Close*(VAR res : WORD);
+		END Close;
+
+	END  VideoEncoder;
+
 	ImageDecoder* = OBJECT
 		(* open the decoder on an InputStream *)
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
@@ -373,6 +386,7 @@ TYPE
 	AudioEncoderFactory = PROCEDURE () : AudioEncoder;
 
 	VideoDecoderFactory = PROCEDURE () : VideoDecoder;
+	VideoEncoderFactory = PROCEDURE () : VideoEncoder;
 
 	ImageDecoderFactory = PROCEDURE () : ImageDecoder;
 	ImageEncoderFactory = PROCEDURE () : ImageEncoder;
@@ -489,6 +503,23 @@ BEGIN
 	RETURN decoder;
 END GetVideoDecoder;
 
+(** Return a registered video encoder *)
+PROCEDURE GetVideoEncoder*(CONST name : ARRAY OF CHAR) : VideoEncoder;
+VAR
+	encoder : VideoEncoder; factory : VideoEncoderFactory;
+	moduleName, procedureName : Modules.Name; res : WORD;
+BEGIN
+	encoder := NIL;
+	GetEncoderFactoryName("Video", name, moduleName, procedureName, res);
+	IF (res = ResOk) THEN
+		GETPROCEDURE(moduleName, procedureName, factory);
+		IF (factory # NIL) THEN
+			encoder := factory();
+		END;
+	END;
+	RETURN encoder;
+END GetVideoEncoder;
+
 (** Return a registered audio decoder e.g. "MP3" *)
 PROCEDURE GetAudioDecoder*(CONST name : ARRAY OF CHAR) : AudioDecoder;
 VAR
@@ -523,6 +554,7 @@ BEGIN
 	RETURN encoder;
 END GetAudioEncoder;
 
+(** Return a registered text decoder e.g. "UTF-8" *)
 PROCEDURE GetTextDecoder*(CONST name : ARRAY OF CHAR) : TextDecoder;
 VAR
 	decoder : TextDecoder; factory : TextDecoderFactory;
@@ -539,7 +571,7 @@ BEGIN
 	RETURN decoder;
 END GetTextDecoder;
 
-(** Return a registered image decoder e.g. "BMP" *)
+(** Return a registered text encoder e.g. "Oberon" *)
 PROCEDURE GetTextEncoder*(CONST name : ARRAY OF CHAR) : TextEncoder;
 VAR
 	encoder : TextEncoder; factory : TextEncoderFactory;

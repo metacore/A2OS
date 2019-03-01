@@ -6,7 +6,7 @@ MODULE AVI;
 (* Cleaned by PL, March 2005 *)
 
 IMPORT
-	SYSTEM, Machine, Streams, KernelLog, AOC := Codecs;
+	SYSTEM, Machine, Streams, KernelLog, Codecs;
 
 	CONST
 		Debug = FALSE;
@@ -95,7 +95,7 @@ IMPORT
 	TYPE IndexArrayPointer* = POINTER TO ARRAY OF AVIIndexEntry;
 
 	(* Stream for reading a Stream of an .avi file *)
-	TYPE AVIStream* = OBJECT(AOC.DemuxStream)
+	TYPE AVIStream* = OBJECT(Codecs.DemuxStream)
 		VAR
 			bufAdr: LONGINT;
 			r : Streams.Reader;
@@ -231,7 +231,7 @@ IMPORT
 		VAR seekType, itemSize: LONGINT; res : WORD;
 		BEGIN
 			IF Debug THEN KernelLog.String("DemuxStream.SetPos"); KernelLog.Ln; END;
-			seekType := AOC.SeekByte;
+			seekType := Codecs.SeekByte;
 			demultiplexer.SetStreamPos(streamNr, seekType, pos, itemSize, res);
 			Reset;
 		END SetPos;
@@ -239,7 +239,7 @@ IMPORT
 	END AVIStream;
 
 	(* The .avi File Demultiplexer *)
-	AVIDemux* = OBJECT(AOC.AVDemultiplexer)
+	AVIDemux* = OBJECT(Codecs.AVDemultiplexer)
 	VAR
 		r : Streams.Reader;
 		filename* : ARRAY 256 OF CHAR;
@@ -270,11 +270,11 @@ IMPORT
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		BEGIN
 			r := in;
-			res := AOC.ResFailed;
+			res := Codecs.ResFailed;
 
-			IF in IS AOC.FileInputStream	THEN
-				in(AOC.FileInputStream).f.GetName(filename);
-				IF ReadHeader() THEN res := AOC.ResOk 	END
+			IF in IS Codecs.FileInputStream	THEN
+				in(Codecs.FileInputStream).f.GetName(filename);
+				IF ReadHeader() THEN res := Codecs.ResOk 	END
 			ELSE RETURN END;													(* bad bad bad *)
 
 		END Open;
@@ -899,26 +899,26 @@ IMPORT
 		END GetVideoStreamHeader;
 
 		(* Muss noch generischer werden *)
-		PROCEDURE GetStream*(streamNr: LONGINT): AOC.DemuxStream;
+		PROCEDURE GetStream*(streamNr: LONGINT): Codecs.DemuxStream;
 		VAR
 			(* reader : AVIReader; *)
-			(* reader: AOC.FileInputStream; *)
+			(* reader: Codecs.FileInputStream; *)
 			reader : Streams.Reader;
 			i: LONGINT;
 
-			streamInfo : AOC.AVStreamInfo;
+			streamInfo : Codecs.AVStreamInfo;
 			tag : ARRAY 4 OF CHAR;
 
 		BEGIN
 
-			reader := AOC.OpenInputStream(filename);				(* should be only one reader ideally... *)
+			reader := Codecs.OpenInputStream(filename);				(* should be only one reader ideally... *)
 			reader.SetPos(r.Pos());
 
 			IF streamNr = 0 THEN
 				NEW(videoStream, reader, videoStreamHeader);
 				videoFramePos := 0;
 				(* Add streamInfo to Stream *)
-				streamInfo.streamType := AOC.STVideo;
+				streamInfo.streamType := Codecs.STVideo;
 				FOR i := 0 TO 3 DO streamInfo.contentType[i] := videoStreamHeader.fccHandler[i] END;
 				IF videoIndex = NIL THEN streamInfo.seekability := {};
 				ELSE streamInfo.seekability := {3,4}; END;
@@ -932,7 +932,7 @@ IMPORT
 				NEW(audioStream, reader, audioStreamHeader);
 				audioFramePos := 0;
 				(* Add streamInfo to Stream *)
-				streamInfo.streamType := AOC.STAudio;
+				streamInfo.streamType := Codecs.STAudio;
 				IF (audioStreamHeader.waveFormatEx # NIL) THEN
 					CASE audioStreamHeader.waveFormatEx.formatTag OF
 						1 :	COPY("PCM", tag);
@@ -1003,14 +1003,14 @@ IMPORT
 		END GetNumberOfStreams;
 
 		(* Could be optimized, as we assume videostream beeing at index 0 and that there is only one *)
-		PROCEDURE GetStreamInfo*(streamNr: LONGINT): AOC.AVStreamInfo;
-		VAR streamInfo : AOC.AVStreamInfo;
+		PROCEDURE GetStreamInfo*(streamNr: LONGINT): Codecs.AVStreamInfo;
+		VAR streamInfo : Codecs.AVStreamInfo;
 			i: INTEGER;
 			tag : ARRAY 4 OF CHAR;
 		BEGIN
 
  			IF streamNr = 0 THEN							(* Video *)
-				streamInfo.streamType := AOC.STVideo;
+				streamInfo.streamType := Codecs.STVideo;
 				FOR i := 0 TO 3 DO
 					streamInfo.contentType[i] := videoStreamHeader.fccHandler[i];
 				END;
@@ -1024,7 +1024,7 @@ IMPORT
 				streamInfo.frames := videoFrames;
 				streamInfo.rate := videoStreamHeader.rate;
 			ELSE											(* Audio *)
-				streamInfo.streamType := AOC.STAudio;
+				streamInfo.streamType := Codecs.STAudio;
 
 				IF (audioStreamHeader.waveFormatEx # NIL) THEN
 					CASE audioStreamHeader.waveFormatEx.formatTag OF
@@ -1053,9 +1053,9 @@ IMPORT
 		PROCEDURE GetStreamType*(streamNr : LONGINT): LONGINT;
 		VAR type : LONGINT;
 		BEGIN
-			IF streamNr = 0 THEN type :=  AOC.STVideo;
-			ELSIF streamNr = 1 THEN type := AOC.STAudio;
-			ELSE type := AOC.STUnknown;
+			IF streamNr = 0 THEN type :=  Codecs.STVideo;
+			ELSIF streamNr = 1 THEN type := Codecs.STAudio;
+			ELSE type := Codecs.STUnknown;
 			END;
 			RETURN type
 		END GetStreamType;
@@ -1085,20 +1085,20 @@ IMPORT
 						len := videoIndex[videoFramePos].length;
 						IF (len > (size-4)) THEN
 							len := len+4;
-							res := AOC.ResFailed;
+							res := Codecs.ResFailed;
 							RETURN;
 						END;
 						rres := videoStream.Resynch(buf);
 						INC(videoFramePos);
 						IF rres THEN
 							videoStream.res := Streams.Ok;
-							res := AOC.ResOk;
+							res := Codecs.ResOk;
 						ELSE
-							res := AOC.ResFailed;
+							res := Codecs.ResFailed;
 							videoStream.res := Streams.EOF;
 						END
 					ELSE
-						res := AOC.ResFailed;
+						res := Codecs.ResFailed;
 						videoStream.res := Streams.EOF;
 						len := 0;
 					END;
@@ -1109,7 +1109,7 @@ IMPORT
 						len := audioIndex[audioFramePos].length;
 						IF (LEN(buf) < len+4) THEN
 							len := len+4;
-							res := AOC.ResFailed;
+							res := Codecs.ResFailed;
 							audioStream.res := Streams.EOF;
 							RETURN;
 						END;
@@ -1118,13 +1118,13 @@ IMPORT
 						INC(audioFramePos);
 						IF rres THEN
 							audioStream.res := Streams.Ok;
-							res := AOC.ResOk;
+							res := Codecs.ResOk;
 						ELSE
-							(* res := AOC.ResFailed; *)
+							(* res := Codecs.ResFailed; *)
 							audioStream.res := Streams.EOF;
 						END
 					ELSE
-						res := AOC.ResFailed;
+						res := Codecs.ResFailed;
 						audioStream.res := Streams.EOF;
 						len := 0;
 					END;
@@ -1141,7 +1141,7 @@ IMPORT
 			IF Debug THEN KernelLog.String("AVIDemux.SetStreamPos: "); KernelLog.Int(pos, 0); KernelLog.Ln; END;
 			IF streamNr = 0 THEN
 				IF videoIndex # NIL THEN
-					IF seekType = AOC.SeekKeyFrame THEN
+					IF seekType = Codecs.SeekKeyFrame THEN
 						IF pos > itemSize THEN
 							IF pos >= videoStreamHeader.length-1 THEN
 								pos := videoStreamHeader.length-1;
@@ -1159,7 +1159,7 @@ IMPORT
 							END;
 						END;
 					END;
-					IF ((seekType = AOC.SeekFrame) OR (seekType = AOC.SeekKeyFrame)) THEN
+					IF ((seekType = Codecs.SeekFrame) OR (seekType = Codecs.SeekKeyFrame)) THEN
 						IF pos < LEN(videoIndex) THEN
 							videoStream.SetAVIPos(videoIndex[pos].offset, itemSize);
 							itemSize := pos;
@@ -1171,7 +1171,7 @@ IMPORT
 				END;
 			ELSE
 				IF audioIndex # NIL THEN
-					IF seekType = AOC.SeekSample THEN
+					IF seekType = Codecs.SeekSample THEN
 						IF pos < 0 THEN
 							pos := 0;
 						END;
@@ -1192,7 +1192,7 @@ IMPORT
 						END;
 						audioStream.SetAVIPos(audioIndex[n0].offset, itemSize);
 						audioFramePos := n0;
-					ELSIF seekType = AOC.SeekByte THEN
+					ELSIF seekType = Codecs.SeekByte THEN
 						(* spos := ENTIER(pos * 8 *  audioStreamHeader.waveFormatEx.samplesPerSec/audioStreamHeader.rate / 1000); *)
 						spos := ENTIER(pos / audioStreamHeader.rate * audioStreamHeader.waveFormatEx.samplesPerSec);
 
@@ -1244,13 +1244,13 @@ IMPORT
 				IF videoFramePos < videoFrames THEN
 					RETURN videoIndex[videoFramePos].length;
 				ELSE
-					RETURN AOC.ResFailed;
+					RETURN Codecs.ResFailed;
 				END;
 			ELSE
 				IF audioFramePos < audioChunks THEN
 					RETURN audioIndex[audioFramePos].length;
 				ELSE
-					RETURN AOC.ResFailed;
+					RETURN Codecs.ResFailed;
 				END;
 			END;
 		END GetNextFrameSize;
@@ -1380,7 +1380,7 @@ BEGIN
 	index := index + n
 END SkipBits;
 
-PROCEDURE Factory*() : AOC.AVDemultiplexer;
+PROCEDURE Factory*() : Codecs.AVDemultiplexer;
 VAR p: AVIDemux;
 BEGIN
 	NEW(p);

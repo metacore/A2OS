@@ -315,15 +315,13 @@ CODE{SYSTEM.i386}
 	; EBX (initially=EAX) -> EDX -> EAX
 	; Shift EDX:EAX right, shift count in ECX (count
 	; applied modulo 64).
-	MOV EBX,EAX
-	SHRD EAX,EDX,CL		; First apply shift count.
-	SHRD EDX,EBX,CL 		; mod 32 to EDX:EAX
-	TEST ECX,32 			; Need to shift by another 32?
-	JZ rshiftdone 			; No, done.
+	TEST ECX,32 			; Need to shift by 32?
+	JZ rest					; No.
+	XCHG EDX,EAX
+rest:
 	MOV EBX,EAX
 	SHRD EAX,EDX,CL
 	SHRD EDX,EBX,CL
-	rshiftdone:
 	POP	ECX
 END RorH;
 
@@ -337,15 +335,13 @@ CODE{SYSTEM.i386}
 	; EDX <- EAX <- EBX (intially=EDX)
 	; Shift EDX:EAX left, shift count in ECX (count
 	; applied modulo 64).
-	MOV EBX,EDX
-	SHLD EDX,EAX,CL		; First apply shift count.
-	SHLD EAX, EBX, CL
-	TEST ECX,32 			; Need to shift by another 32?
-	JZ lshiftdone 			; No, done.
+	TEST ECX,32				; Need to shift by 32?
+	JZ rest					; No.
+	XCHG EDX,EAX
+rest:	
 	MOV EBX,EDX
 	SHLD EDX,EAX,CL
-	SHLD EAX, EBX, CL
-	lshiftdone:
+	SHLD EAX,EBX,CL
 	POP	ECX
 END RolH;
 

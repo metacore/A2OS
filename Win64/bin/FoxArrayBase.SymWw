@@ -184,6 +184,8 @@ VAR
 	loopSPAXAX*, loopSPARAR*: BinaryAASLoop; 
 	loopSPAZAZ, loopSPALZALZ: BinaryAASLoop; 
 	loopAddAXAX*, loopAddARAR*, loopAddAZAZ*, loopAddALZALZ*: BinaryAAALoop; 
+	loopSubAXAX*, loopSubARAR*, loopSubAZAZ*, loopSubALZALZ*: BinaryAAALoop; 
+	loopEMulAXAX*, loopEMulARAR*, loopEMulAZAZ*, loopEMulALZALZ*: BinaryAAALoop; 
 	loopMatMulAXAX*, loopMatMulARAR*: BinaryAASLoop; 
 	loopMatMulIncAXAX*, loopMatMulIncARAR*: BinaryAASLoop; 
 	loopMulAXSX*, loopMulARSR*, loopMulAZSZ*, loopMulALZSLZ*: BinaryASALoop; 

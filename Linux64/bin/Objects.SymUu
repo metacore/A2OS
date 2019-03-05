@@ -61,15 +61,6 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Clock; 
 
-	FinalizedCollection* = OBJECT 
-
-		PROCEDURE ^ RemoveAll*(obj: ANY); 
-	END FinalizedCollection; 
-
-	FinalizerNode* = POINTER TO RECORD (Heaps.FinalizerNode)
-		c*: FinalizedCollection; 
-	END; 
-
 	FinalizerCaller = OBJECT {EXCLUSIVE} 
 	VAR 
 		n: Heaps.FinalizerNode; 
@@ -103,6 +94,7 @@ TYPE
 		state-: Machine.State; 
 		state0: ARRAY 2048 OF CHAR; 
 		context: ANY; 
+		lastThreadTimes: HUGEINT; 
 
 		PROCEDURE ^ FindRoots*; 
 		PROCEDURE ^ Cancel; 

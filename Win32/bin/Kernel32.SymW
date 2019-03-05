@@ -245,6 +245,7 @@ TYPE
 
 	LargeInteger* = RECORD 
 		LowPart*, HighPart*: LONGINT; 
+		QuadPart*{FICTIVE(0)} : HUGEINT; 
 	END; 
 
 	ULargeInteger* = LargeInteger; 

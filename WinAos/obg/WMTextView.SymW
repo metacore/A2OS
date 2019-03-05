@@ -66,8 +66,7 @@ TYPE
 
 	LineInfoArray = POINTER TO ARRAY OF LineInfo; 
 
-	Layout = OBJECT 
-	VAR 
+	Layout = RECORD 
 		nofLines: LONGINT; 
 		lines: LineInfoArray; 
 		text: Texts.Text; 
@@ -88,7 +87,8 @@ TYPE
 		PROCEDURE ^ LayoutLine(VAR pos: LONGINT; VAR lineInfo: LineInfo); 
 		PROCEDURE ^ FullLayout(textChanged: BOOLEAN); 
 		PROCEDURE ^ FixLayoutFrom(pos, delta: LONGINT; VAR first, last: LONGINT; VAR linesChanged: BOOLEAN); 
-	END Layout; 
+	END
+	; 
 
 	Highlight* = OBJECT 
 	VAR 

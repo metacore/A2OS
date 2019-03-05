@@ -6,6 +6,7 @@ CONST
 	allbits = 2147483647; 
 	halfrange = 536870912; 
 	step = 7; 
+	allbitsInv = (1 / REAL(allbits)); 
 TYPE 
 	Generator* = OBJECT 
 	VAR 

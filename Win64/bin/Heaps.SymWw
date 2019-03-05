@@ -57,7 +57,13 @@ TYPE
 		objStrong*: ANY; 
 		finalizer*{UNTRACED} : Finalizer; 
 		finalizerStrong: Finalizer; 
+		collection*: FinalizedCollection; 
 	END; 
+
+	FinalizedCollection* = OBJECT 
+
+		PROCEDURE ^ RemoveAll*(obj: ANY); 
+	END FinalizedCollection; 
 
 	HeapBlock* = POINTER TO HeapBlockDesc; 
 

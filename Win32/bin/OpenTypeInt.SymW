@@ -2,6 +2,7 @@ MODULE OpenTypeInt;
 CONST 
 	X* = 1; 
 	Y* = 0; 
+	StackSize* = 8192; 
 TYPE 
 	F26D6* = LONGINT; 
 
@@ -15,7 +16,7 @@ TYPE
 
 	Code* = POINTER TO ARRAY OF CHAR; 
 
-	Stack* = POINTER TO ARRAY OF LONGINT; 
+	Stack* = ARRAY StackSize OF LONGINT; 
 
 	Address* = RECORD 
 		code*: Code; 
@@ -38,7 +39,7 @@ TYPE
 		count*: INTEGER; 
 	END; 
 
-	CallStack* = POINTER TO ARRAY OF Frame; 
+	CallStack* = ARRAY 32 OF Frame; 
 
 	Store* = POINTER TO ARRAY OF LONGINT; 
 
@@ -258,8 +259,6 @@ VAR
 	PROCEDURE ^ GETINFO(VAR c: Context); 
 	PROCEDURE ^ InitBuiltins; 
 	PROCEDURE ^ NewCode*(VAR code: Code; size: LONGINT); 
-	PROCEDURE ^ NewStack*(VAR stack: Stack; size: LONGINT); 
-	PROCEDURE ^ NewCallStack*(VAR stack: CallStack; size: LONGINT); 
 	PROCEDURE ^ NewFunctions*(VAR func: Functions; size: LONGINT); 
 	PROCEDURE ^ NewInstructions*(VAR instr: Instructions; size: LONGINT); 
 	PROCEDURE ^ NewStore*(VAR store: Store; size: LONGINT); 

@@ -17,9 +17,9 @@ TYPE
 	VAR 
 		nextAlias-: Alias; 
 		identifier-: ObjectFile.Identifier; 
-		offset-: LONGINT; 
+		offset-: Unit; 
 
-		PROCEDURE ^  & InitAlias*(identifier: ObjectFile.Identifier; offset: LONGINT); 
+		PROCEDURE ^  & InitAlias*(identifier: ObjectFile.Identifier; offset: Unit); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END Alias; 
 
@@ -63,7 +63,7 @@ TYPE
 	END FixupList; 
 
 	LabelList* = POINTER TO RECORD 
-		offset-: LONGINT; 
+		offset-: Unit; 
 		position-: Basic.Position; 
 		prev-: LabelList; 
 	END; 

@@ -20,7 +20,6 @@ TYPE
 VAR 
 	passwords: Password; 
 	privKey, pubKey: RSA.Key; 
-	hexd: ARRAY 17 OF CHAR; 
 
 	PROCEDURE ^ GetPW(CONST host, user: ARRAY OF CHAR; VAR pw: ARRAY OF CHAR); 
 	PROCEDURE ^ AddPW(CONST host, user, pw: ARRAY OF CHAR); 

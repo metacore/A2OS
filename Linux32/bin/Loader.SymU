@@ -56,9 +56,9 @@ TYPE
 	END HashTableIntAny; 
 
 	Data = RECORD 
-		size, pos: LONGINT; 
+		size, alignment: SIZE; 
 		bytes: Modules.Bytes; 
-		firstAddress: ADDRESS; 
+		address: ADDRESS; 
 	END; 
 
 	Arrangement* = OBJECT (GenericLinker.Arrangement)

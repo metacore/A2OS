@@ -116,15 +116,6 @@ TYPE
 		PROCEDURE ^ SetgcOngoing*(value: BOOLEAN); 
 	END GCStatusExt; 
 
-	FinalizedCollection* = OBJECT 
-
-		PROCEDURE ^ RemoveAll*(obj: ANY); 
-	END FinalizedCollection; 
-
-	FinalizerNode* = POINTER TO RECORD (Heaps.FinalizerNode)
-		c*: FinalizedCollection; 
-	END; 
-
 	FinalizerCaller = OBJECT {EXCLUSIVE} 
 	VAR 
 		n: Heaps.FinalizerNode; 

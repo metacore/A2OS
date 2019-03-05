@@ -1,5 +1,5 @@
 MODULE AVI;
-	IMPORT SYSTEM, Machine, Streams, KernelLog, AOC := Codecs;
+	IMPORT SYSTEM, Machine, Streams, KernelLog, Codecs;
 CONST 
 	Debug = FALSE; 
 	DefaultReaderSize = 4096; 
@@ -79,7 +79,7 @@ TYPE
 
 	IndexArrayPointer* = POINTER TO ARRAY OF AVIIndexEntry; 
 
-	AVIStream* = OBJECT (AOC.DemuxStream)
+	AVIStream* = OBJECT (Codecs.DemuxStream)
 	VAR 
 		bufAdr: LONGINT; 
 		r: Streams.Reader; 
@@ -99,7 +99,7 @@ TYPE
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END AVIStream; 
 
-	AVIDemux* = OBJECT (AOC.AVDemultiplexer)
+	AVIDemux* = OBJECT (Codecs.AVDemultiplexer)
 	VAR 
 		r: Streams.Reader; 
 		filename*: ARRAY 256 OF CHAR; 
@@ -136,7 +136,7 @@ TYPE
 		PROCEDURE ^ DumpAudioIndex*; 
 		PROCEDURE ^ GetAudioStreamHeader*(): AVIStreamHeader; 
 		PROCEDURE ^ GetVideoStreamHeader*(): AVIStreamHeader; 
-		PROCEDURE ^ GetStream*(streamNr: LONGINT): AOC.DemuxStream; 
+		PROCEDURE ^ GetStream*(streamNr: LONGINT): Codecs.DemuxStream; 
 		PROCEDURE ^ GetMilliSecondsPerFrame*(): LONGINT; 
 		PROCEDURE ^ GetNofChannels*(): LONGINT; 
 		PROCEDURE ^ GetSamplesPerSecond*(): LONGINT; 
@@ -147,7 +147,7 @@ TYPE
 		PROCEDURE ^ GetAudioBytes*(): LONGINT; 
 		PROCEDURE ^ GetVideoFrames*(): LONGINT; 
 		PROCEDURE ^ GetNumberOfStreams*(): LONGINT; 
-		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): AOC.AVStreamInfo; 
+		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): Codecs.AVStreamInfo; 
 		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetInfo*(VAR vl, vf, vr, mspf, al, af, ar: LONGINT); 
 		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
@@ -165,6 +165,6 @@ TYPE
 	PROCEDURE ^ ShowBitsByteAligned*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
 	PROCEDURE ^ GetBits*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
 	PROCEDURE ^ SkipBits*(n: LONGINT; VAR index: LONGINT); 
-	PROCEDURE ^ Factory*(): AOC.AVDemultiplexer; 
+	PROCEDURE ^ Factory*(): Codecs.AVDemultiplexer; 
 BEGIN
 END AVI.

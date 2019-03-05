@@ -131,6 +131,13 @@ VAR
 
 
 	END AtomicCAS; 
+	PROCEDURE {Fingerprint(7628482207854476747)}  - SpinHint*;
+	CODE
+
+	PAUSE
+
+
+	END SpinHint; 
 	PROCEDURE ^ CurrentPC*(): ADDRESS; 
 	PROCEDURE {Fingerprint(6112430532310118778)}  - GetTimer*(): HUGEINT;
 	CODE

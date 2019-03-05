@@ -38,11 +38,6 @@ TYPE
 		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
 	END SearchByName; 
 
-	FinalizeFiles = OBJECT 
-
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
-	END FinalizeFiles; 
-
 	Collection = OBJECT {EXCLUSIVE} 
 	VAR 
 		oldFiles, newFiles: Kernel.FinalizedCollection; 
@@ -138,6 +133,7 @@ VAR
 	notifications: Notification; 
 	winFS: WinFileSystem; 
 
+	PROCEDURE ^ EnumFinalize(f: ANY; VAR cont: BOOLEAN); 
 	PROCEDURE ^ DebugFile(f: File); 
 	PROCEDURE ^ IsLocalPath(path: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ FixDriveLetter(VAR path: ARRAY OF CHAR); 

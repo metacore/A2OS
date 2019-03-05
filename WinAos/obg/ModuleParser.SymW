@@ -66,7 +66,7 @@ TYPE
 		record*: Record; 
 		pointer*: Pointer; 
 		object*: Object; 
-		enum*: Enum; 
+		enumeration*: Enumeration; 
 		cell*: Cell; 
 		port*: Port; 
 		procedure*: Procedure; 
@@ -97,10 +97,10 @@ TYPE
 		type*: Type; 
 	END Pointer; 
 
-	Enum* = OBJECT (Node)
+	Enumeration* = OBJECT (Node)
 	VAR 
-		identList*: IdentList; 
-	END Enum; 
+		enumeratorList*: ConstDecl; 
+	END Enumeration; 
 
 	Port* = OBJECT (Node)
 	END Port; 
@@ -301,7 +301,8 @@ TYPE
 		PROCEDURE ^ FieldListP(fieldList: FieldDecl); 
 		PROCEDURE ^ FieldDeclP(fieldDecl: FieldDecl); 
 		PROCEDURE ^ PointerP(pointer: Pointer); 
-		PROCEDURE ^ EnumP(enum: Enum); 
+		PROCEDURE ^ EnumerationP(enumeration: Enumeration); 
+		PROCEDURE ^ EnumeratorP(enumerator: ConstDecl); 
 		PROCEDURE ^ PortP(port: Port); 
 		PROCEDURE ^ ObjectP(object: Object); 
 		PROCEDURE ^ CellP(cell: Cell); 

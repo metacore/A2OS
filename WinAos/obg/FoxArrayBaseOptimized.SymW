@@ -13,7 +13,7 @@ CONST
 	parallel = TRUE; 
 	SSE = TRUE; 
 	MaxCachePoolSize = 0; 
-	maxProcesses = 32; 
+	maxProcesses = 48; 
 	cMatMulDynamic* =  -1; 
 	cMatMulScalarProduct* = 0; 
 	cMatMulNaive* = 1; 
@@ -142,6 +142,14 @@ VAR
 	PROCEDURE ^ AddARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	PROCEDURE ^ AddAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	PROCEDURE ^ AddARARLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ SubAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ SubARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ SubAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ SubARARLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ EMulAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ EMulARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ EMulAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
+	PROCEDURE ^ EMulARARLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE); 
 	PROCEDURE ^ SPAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
 	PROCEDURE ^ SPARARLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
 	PROCEDURE ^ SPAXAXLoopSSE(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 

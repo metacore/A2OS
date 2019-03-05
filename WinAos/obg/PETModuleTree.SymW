@@ -72,7 +72,7 @@ TYPE
 		PROCEDURE ^ AddTypeDecl(parent: WMTrees.TreeNode; typeDecl: ModuleParser.TypeDecl); 
 		PROCEDURE ^ AddType(parent: WMTrees.TreeNode; type: ModuleParser.Type; anonymous: BOOLEAN); 
 		PROCEDURE ^ AddRecord(parent: WMTrees.TreeNode; record: ModuleParser.Record; anonymous, addSuperRecords: BOOLEAN); 
-		PROCEDURE ^ AddEnum(parent: WMTrees.TreeNode; enum: ModuleParser.Enum); 
+		PROCEDURE ^ AddEnumeration(parent: WMTrees.TreeNode; enumeration: ModuleParser.Enumeration); 
 		PROCEDURE ^ AddFieldDecl(parent: WMTrees.TreeNode; fieldDecl: ModuleParser.FieldDecl); 
 		PROCEDURE ^ AddPointer(parent: WMTrees.TreeNode; pointer: ModuleParser.Pointer); 
 		PROCEDURE ^ AddArray(parent: WMTrees.TreeNode; array: ModuleParser.Array); 

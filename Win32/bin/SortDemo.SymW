@@ -1,79 +1,101 @@
 MODULE SortDemo;
-	IMPORT Raster, Random, WMRectangles, Strings, WMMessages, WM := WMWindowManager, WMComponents, WMStandardComponents, Log := KernelLog, Clock, Kernel, Machine;
+	IMPORT Raster, Random, WMRectangles, Strings, WMMessages, WMDialogs, WM := WMWindowManager, WMComponents, WMStandardComponents, Log := KernelLog, Clock, Kernel, Machine;
 CONST 
 	N = 120; 
 	ElemSize = 5; 
 	MaxConcurrentSorters = 5; 
 	WindowSize = (N * ElemSize); 
 TYPE 
-	SortData = POINTER TO ARRAY N OF LONGINT; 
+	ElementType = LONGINT; 
 
-	ArrayView* = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	Index = INTEGER; 
+
+	SortValues = ARRAY N OF ElementType; 
+
+	SortArray = OBJECT {EXCLUSIVE} (WM.BufferWindow)
 	VAR 
 		cw: ControlWindow; 
 		white, grey, col1, yellow: Raster.Pixel; 
-		data: SortData; 
 		sortname: ARRAY 32 OF CHAR; 
-		random: Random.Generator; 
 		delay: LONGINT; 
+		ha, hb: Index; 
+		concurrent: BOOLEAN; 
 		concSorters: LONGINT; 
-		nofcomps, nofswaps: LONGINT; 
+		nofcomps, nofswaps, nofmoves: LONGINT; 
+		compareWeight, swapWeight: LONGREAL; 
+		timer: Kernel.Timer; 
+		data, backup: SortValues; 
+		highlighted: ARRAY N OF BOOLEAN; 
 
 		PROCEDURE ^  & New(win: ControlWindow); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+		PROCEDURE ^ Pause; 
+		PROCEDURE ^ ShowWeightings; 
+		PROCEDURE ^ AdjWeightings; 
 		PROCEDURE ^ InitSort; 
 		PROCEDURE ^ FinishSort; 
-		PROCEDURE ^ DrawElement(n: LONGINT); 
-		PROCEDURE ^ Highlight(n: LONGINT); 
-		PROCEDURE ^ Clear(n: LONGINT); 
-		PROCEDURE ^ Update; 
-		PROCEDURE ^ Randomize(n: LONGINT); 
+		PROCEDURE ^ DrawElement(n: Index); 
+		PROCEDURE ^ Highlight(n: Index); 
+		PROCEDURE ^ UnHighlight(n: Index); 
+		PROCEDURE ^ Highlight2(a, b: Index); 
+		PROCEDURE ^ Randomize(n: INTEGER); 
 		PROCEDURE ^ OrderData; 
 		PROCEDURE ^ RevOrderData; 
 		PROCEDURE ^ BadOrder; 
-		PROCEDURE ^ Swap(i, j: LONGINT); 
-		PROCEDURE ^ Less(i, j: LONGINT): BOOLEAN; 
+		PROCEDURE ^ PrevOrder; 
 		PROCEDURE ^ DecSpeed; 
 		PROCEDURE ^ IncSpeed; 
-		PROCEDURE ^ BubbleSort; 
-		PROCEDURE ^ SelectSort; 
-		PROCEDURE ^ ShellSort; 
-		PROCEDURE ^ QuickSort; 
-		PROCEDURE ^ ConcQuickSort; 
-		PROCEDURE ^ Quick(lo, hi: LONGINT; conc: BOOLEAN); 
+		PROCEDURE ^ Swap(i, j: Index); 
+		PROCEDURE ^ Less(i, j: Index): BOOLEAN; 
+		PROCEDURE ^ BubbleSort(lo, hi: Index); 
+		PROCEDURE ^ BubbleSortOptim(lo, hi: Index); 
+		PROCEDURE ^ SelectSort(lo, hi: Index); 
+		PROCEDURE ^ ShellSort(lo, hi: Index); 
+		PROCEDURE ^ InsertSort(lo, hi: Index); 
+		PROCEDURE ^ QuickSort(lo, hi: Index); 
+		PROCEDURE ^ QuickSortOptim(lo, hi: Index); 
+		PROCEDURE ^ QuickSortConc(lo, hi: Index); 
+		PROCEDURE ^ DoBubbleSort; 
+		PROCEDURE ^ DoBubbleSortOptim; 
+		PROCEDURE ^ DoSelectSort; 
+		PROCEDURE ^ DoShellSort; 
+		PROCEDURE ^ DoInsertSort; 
+		PROCEDURE ^ DoQuickSort; 
+		PROCEDURE ^ DoQuickSortOptim; 
+		PROCEDURE ^ DoQuickSortConc; 
 		PROCEDURE ^ HeapSort; 
 		PROCEDURE ^ SmoothSort; 
-	END ArrayView; 
+	END SortArray; 
 
-	ConcurrentQuick = OBJECT {EXCLUSIVE} 
+	ConcurrentSorter = OBJECT {EXCLUSIVE} 
 	VAR 
-		lo, hi: LONGINT; 
-		av: ArrayView; 
+		lo, hi: Index; 
+		av: SortArray; 
 
-		PROCEDURE ^  & Init(sdw: ArrayView; low, high: LONGINT); 
+		PROCEDURE ^  & Init(a: SortArray; low, high: Index); 
 	BEGIN{ACTIVE} 
-	END ConcurrentQuick; 
+	END ConcurrentSorter; 
 
-	SortProcedure = PROCEDURE {DELEGATE}; 
-
-	Sorter = OBJECT {EXCLUSIVE} 
+	SortStarter = OBJECT {EXCLUSIVE} 
+	TYPE 
+		SortProcedure = PROCEDURE {DELEGATE}; 
 	VAR 
 		sort: SortProcedure; 
-		av: ArrayView; 
+		av: SortArray; 
 		running, terminated: BOOLEAN; 
 
-		PROCEDURE ^  & Init(win: ArrayView); 
+		PROCEDURE ^  & Init(a: SortArray); 
 		PROCEDURE ^ Start(proc: SortProcedure); 
 		PROCEDURE ^ Terminate; 
 	BEGIN{ACTIVE} 
-	END Sorter; 
+	END SortStarter; 
 
 	ControlWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		toolbar: WMStandardComponents.Panel; 
 		button: WMStandardComponents.Button; 
-		av: ArrayView; 
-		sorter: Sorter; 
+		av: SortArray; 
+		sorter: SortStarter; 
 
 		PROCEDURE ^  & New; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
@@ -82,16 +104,21 @@ TYPE
 		PROCEDURE ^ Order(sender, data: ANY); 
 		PROCEDURE ^ RevOrder(sender, data: ANY); 
 		PROCEDURE ^ BadOrder(sender, data: ANY); 
+		PROCEDURE ^ PrevOrder(sender, data: ANY); 
 		PROCEDURE ^ Rand10(sender, data: ANY); 
 		PROCEDURE ^ Rand100(sender, data: ANY); 
 		PROCEDURE ^ Rand200(sender, data: ANY); 
 		PROCEDURE ^ IncSpeed(sender, data: ANY); 
 		PROCEDURE ^ DecSpeed(sender, data: ANY); 
+		PROCEDURE ^ AdjWeightings(sender, data: ANY); 
 		PROCEDURE ^ StartBubbleSort(sender, data: ANY); 
+		PROCEDURE ^ StartBubbleSortOptim(sender, data: ANY); 
+		PROCEDURE ^ StartInsertSort(sender, data: ANY); 
 		PROCEDURE ^ StartSelectSort(sender, data: ANY); 
+		PROCEDURE ^ StartQuickSortOptim(sender, data: ANY); 
 		PROCEDURE ^ StartShellSort(sender, data: ANY); 
 		PROCEDURE ^ StartQuickSort(sender, data: ANY); 
-		PROCEDURE ^ StartConcQuickSort(sender, data: ANY); 
+		PROCEDURE ^ StartQuickSortConc(sender, data: ANY); 
 		PROCEDURE ^ StartHeapSort(sender, data: ANY); 
 		PROCEDURE ^ StartSmoothSort(sender, data: ANY); 
 	END ControlWindow; 

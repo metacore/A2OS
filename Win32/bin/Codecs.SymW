@@ -106,6 +106,13 @@ TYPE
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END VideoDecoder; 
 
+	VideoEncoder* = OBJECT 
+
+		PROCEDURE ^ Open*(out: Streams.Writer; VAR res: WORD); 
+		PROCEDURE ^ Write*(img: Raster.Image); 
+		PROCEDURE ^ Close*(VAR res: WORD); 
+	END VideoEncoder; 
+
 	ImageDecoder* = OBJECT 
 
 		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
@@ -178,6 +185,8 @@ TYPE
 
 	VideoDecoderFactory = PROCEDURE ():VideoDecoder; 
 
+	VideoEncoderFactory = PROCEDURE ():VideoEncoder; 
+
 	ImageDecoderFactory = PROCEDURE ():ImageDecoder; 
 
 	ImageEncoderFactory = PROCEDURE ():ImageEncoder; 
@@ -199,6 +208,7 @@ TYPE
 	PROCEDURE ^ GetImageDecoder*(CONST name: ARRAY OF CHAR): ImageDecoder; 
 	PROCEDURE ^ GetImageEncoder*(CONST name: ARRAY OF CHAR): ImageEncoder; 
 	PROCEDURE ^ GetVideoDecoder*(CONST name: ARRAY OF CHAR): VideoDecoder; 
+	PROCEDURE ^ GetVideoEncoder*(CONST name: ARRAY OF CHAR): VideoEncoder; 
 	PROCEDURE ^ GetAudioDecoder*(CONST name: ARRAY OF CHAR): AudioDecoder; 
 	PROCEDURE ^ GetAudioEncoder*(CONST name: ARRAY OF CHAR): AudioEncoder; 
 	PROCEDURE ^ GetTextDecoder*(CONST name: ARRAY OF CHAR): TextDecoder; 

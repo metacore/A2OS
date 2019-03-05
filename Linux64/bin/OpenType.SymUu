@@ -23,7 +23,6 @@ CONST
 	DefaultCacheSize* = 8; 
 	NumTables = 32; 
 	CharMapSize = 254; 
-	CallStackSize = 32; 
 	X = OpenTypeInt.X; 
 	Y = OpenTypeInt.Y; 
 	Debug = FALSE; 
@@ -116,8 +115,6 @@ TYPE
 		hmtx: HorMetrics; 
 		LTSH: LinearThresholds; 
 		fontProg, cvtProg, glyphProg: OpenTypeInt.Code; 
-		stack: OpenTypeInt.Stack; 
-		callStack: OpenTypeInt.CallStack; 
 		func: OpenTypeInt.Functions; 
 		instr: OpenTypeInt.Instructions; 
 		store: OpenTypeInt.Store; 

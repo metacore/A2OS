@@ -56,6 +56,8 @@ TYPE
 		PROCEDURE ^ Net16*(x: LONGINT); 
 		PROCEDURE ^ Net8*(x: LONGINT); 
 		PROCEDURE ^ RawSet*(x: SET); 
+		PROCEDURE ^ RawSet32*(x: SET32); 
+		PROCEDURE ^ RawSet64*(x: SET64); 
 		PROCEDURE ^ RawBool*(x: BOOLEAN); 
 		PROCEDURE ^ RawReal*(x: REAL); 
 		PROCEDURE ^ RawLReal*(x: LONGREAL); 
@@ -114,6 +116,8 @@ TYPE
 		PROCEDURE ^ Net16*(): LONGINT; 
 		PROCEDURE ^ Net8*(): LONGINT; 
 		PROCEDURE ^ RawSet*(VAR x: SET); 
+		PROCEDURE ^ RawSet32*(VAR x: SET32); 
+		PROCEDURE ^ RawSet64*(VAR x: SET64); 
 		PROCEDURE ^ RawBool*(VAR x: BOOLEAN); 
 		PROCEDURE ^ RawReal*(VAR x: REAL); 
 		PROCEDURE ^ RawLReal*(VAR x: LONGREAL); 

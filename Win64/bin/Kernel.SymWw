@@ -11,7 +11,7 @@ TYPE
 
 	Enumerator* = PROCEDURE {DELEGATE}(obj: ANY; VAR cont: BOOLEAN); 
 
-	FinalizerNode = POINTER TO RECORD (Objects.FinalizerNode)
+	FinalizerNode = POINTER TO RECORD (Heaps.FinalizerNode)
 		nextObj{UNTRACED} : FinalizerNode; 
 	END; 
 
@@ -33,7 +33,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 	END Timer; 
 
-	FinalizedCollection* = OBJECT {EXCLUSIVE} (Objects.FinalizedCollection)
+	FinalizedCollection* = OBJECT {EXCLUSIVE} (Heaps.FinalizedCollection)
 	VAR 
 		root: FinalizerNode; 
 

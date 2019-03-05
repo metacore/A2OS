@@ -40,11 +40,6 @@ TYPE
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END AliasFileSystem; 
 
-	FinalizeFiles = OBJECT 
-
-		PROCEDURE ^ EnumFile(f: ANY; VAR cont: BOOLEAN); 
-	END FinalizeFiles; 
-
 	SearchByFstat = OBJECT 
 	VAR 
 		found: File; 
@@ -131,6 +126,7 @@ VAR
 	unixFS: UnixFileSystem; 
 	collection: Collection; 
 
+	PROCEDURE ^ EnumFinalize(f: ANY; VAR cont: BOOLEAN); 
 	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 
 	PROCEDURE ^ ChangeDirectory*(CONST path: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ StripPath*(CONST path: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 

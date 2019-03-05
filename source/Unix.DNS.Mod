@@ -15,8 +15,8 @@ TYPE
 	Name* = ARRAY 128 OF CHAR;   (* domain or host name type *)
 	
 	
-	Hostent = POINTER TO RECORD
-			name		: ADDRESS;
+	Hostent = POINTER {UNSAFE, UNTRACED} TO RECORD
+			name		: POINTER {UNSAFE, UNTRACED} TO Name;
 			aliases	: ADDRESS;
 			addrtype	: LONGINT;
 			length		: LONGINT;
@@ -71,8 +71,6 @@ VAR
 	PROCEDURE HostByNumber*( addr: IP.Adr;  VAR hostname: ARRAY OF CHAR;  VAR res: WORD );
 	VAR 
 		hostent: Hostent;
-		namePtr: ADDRESS;
-		ch: CHAR; i: INTEGER;
 	BEGIN {EXCLUSIVE}
 		IF IP.IsNilAdr( addr ) THEN
 			hostname[0] := 0X;  res := BadName;  RETURN
@@ -83,12 +81,7 @@ VAR
 			hostent := gethostbyaddr( ADDRESSOF( addr.ipv6Adr ), 16, Unix.PFINET6 )
 		END;		
 		IF hostent # NIL THEN	(* err points to struct hostent *)
-			S.GET( hostent.name, namePtr );
-			i := 0;
-			REPEAT		
-				S.GET( namePtr + i, ch ); 
-				hostname[i]:= ch;  INC( i )
-			UNTIL ch = 0X;
+			COPY (hostent.name^, hostname);
 			res := Ok
 		ELSE	
 			res := NotFound

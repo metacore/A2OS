@@ -42,25 +42,21 @@ TYPE
 	END;
 
 
-	SocketOption = POINTER TO RECORD END;
+	SocketOption = RECORD END;
 		
-	Linger = POINTER TO RECORD (SocketOption)
+	Linger = RECORD (SocketOption)
 		onoff	: LONGINT;
 		linger	: LONGINT;
 	END;
 		
-	Switch = POINTER TO RECORD (SocketOption)
+	Switch = RECORD (SocketOption)
 		onoff	: LONGINT
 	END;
-
-CONST 
-	LingerSize = 8;
-
 
 
 VAR
 	socket		: PROCEDURE {C} ( af, typ, protocol: LONGINT ): LONGINT;		
-	setsockopt	: PROCEDURE {C} ( s: LONGINT; level, optname: LONGINT; opt: SocketOption; optlen: LONGINT): LONGINT;
+	setsockopt	: PROCEDURE {C} ( s: LONGINT; level, optname: LONGINT; VAR opt: SocketOption; optlen: LONGINT): LONGINT;
 	accept		: PROCEDURE {C} ( s: LONGINT; adrPtr: ADDRESS; VAR adrlen: LONGINT ): LONGINT;
 	bind		: PROCEDURE {C} ( s: LONGINT; adr: SocketAdr; adrlen: LONGINT ): LONGINT;
 	connect		: PROCEDURE {C} ( s: LONGINT; adr: SocketAdr; adrlen: LONGINT ): LONGINT;
@@ -349,8 +345,8 @@ VAR
 		linger: Linger;
 		err: LONGINT;
 	BEGIN
-		NEW( linger);  linger.onoff := 1;  linger.linger := 1;
-		err := setsockopt( s, Unix.SoLSocket, Unix.SoLinger, linger, LingerSize );
+		linger.onoff := 1;  linger.linger := 1;
+		err := setsockopt( s, Unix.SoLSocket, Unix.SoLinger, linger, SIZE OF Linger);
 		IF err # 0 THEN  Unix.Perror(  "Sockets.SetLinger (setsockopt)" )  END;
 		RETURN err = 0 
 	END SetLinger;
@@ -360,9 +356,8 @@ VAR
 		opt: Switch;
 		err: LONGINT;
 	BEGIN
-		NEW( opt );  
 		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;  
-		err := setsockopt( s, Unix.SoLSocket, Unix.SoKeepAlive, opt, 4 );
+		err := setsockopt( s, Unix.SoLSocket, Unix.SoKeepAlive, opt, SIZE OF Switch );
 		IF err # 0 THEN  Unix.Perror(  "Sockets.KeepAlive (setsockopt)" )  END;
 		RETURN err = 0 
 	END KeepAlive;
@@ -373,9 +368,8 @@ VAR
 		opt: Switch;
 		err: LONGINT;
 	BEGIN
-		NEW( opt );  
 		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;  
-		err := setsockopt( s, Unix.SoLSocket, Unix.SoNoDelay, opt, 4 );
+		err := setsockopt( s, Unix.SoLSocket, Unix.SoNoDelay, opt, SIZE OF Switch );
 		IF err # 0 THEN  Unix.Perror(  "Sockets.NoDelay (setsockopt)" )  END;
 		RETURN err = 0 
 	END NoDelay;

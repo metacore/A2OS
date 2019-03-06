@@ -369,7 +369,7 @@ VAR
 		err: LONGINT;
 	BEGIN
 		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;  
-		err := setsockopt( s, Unix.SoLSocket, Unix.SoNoDelay, opt, SIZE OF Switch );
+		err := setsockopt( s, Unix.IpProtoTCP, Unix.SoNoDelay, opt, SIZE OF Switch );
 		IF err # 0 THEN  Unix.Perror(  "Sockets.NoDelay (setsockopt)" )  END;
 		RETURN err = 0 
 	END NoDelay;

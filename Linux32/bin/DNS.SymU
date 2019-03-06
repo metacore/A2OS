@@ -8,8 +8,8 @@ CONST
 TYPE 
 	Name* = ARRAY 128 OF CHAR; 
 
-	Hostent = POINTER TO RECORD 
-		name: ADDRESS; 
+	Hostent = POINTER {UNSAFE, UNTRACED} TO RECORD 
+		name: POINTER {UNSAFE, UNTRACED} TO Name; 
 		aliases: ADDRESS; 
 		addrtype: LONGINT; 
 		length: LONGINT; 

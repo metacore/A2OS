@@ -1,0 +1,351 @@
+MODULE FoxInterpreterSymbols;
+	IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObjects, Modules, Machine, SyntaxTree := FoxSyntaxTree, SYSTEM, Reflection;
+CONST 
+	TAB = 9X; 
+	StrValue = \"value"\; 
+TYPE 
+	Item* = PersistentObjects.Object; 
+
+	Object* = PersistentObjects.Object; 
+
+	Content* = PersistentObjects.Content; 
+
+	Name* = ARRAY 128 OF CHAR; 
+
+	Meta* = RECORD 
+		module*: Modules.Module; 
+		refs*: Modules.Bytes; 
+		offset*: SIZE; 
+	END; 
+
+	Result* = OBJECT (Item)
+
+		PROCEDURE ^ Evaluate*(): Value; 
+		PROCEDURE ^ SetV*(v: Value): BOOLEAN; 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): Result; 
+		PROCEDURE ^ Address*(): ADDRESS; 
+		PROCEDURE ^ Trace*; 
+	END Result; 
+
+	SymbolResult* = OBJECT (Result)
+	VAR 
+		name: ARRAY 32 OF CHAR; 
+
+		PROCEDURE ^ InitSymbol(CONST n: ARRAY OF CHAR); 
+	END SymbolResult; 
+
+	TypeResult* = OBJECT (SymbolResult)
+	VAR 
+		type-: Meta; 
+		address: ADDRESS; 
+
+		PROCEDURE ^  & InitType(CONST name: ARRAY OF CHAR; t: Meta); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+		PROCEDURE ^ Constructor*(): ProcedureResult; 
+	END TypeResult; 
+
+	ModuleResult* = OBJECT (SymbolResult)
+	VAR 
+		self: Meta; 
+
+		PROCEDURE ^  & InitModule(CONST name: ARRAY OF CHAR; m: Meta); 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): Result; 
+	END ModuleResult; 
+
+	Callstack = OBJECT 
+	VAR 
+		data: ARRAY 1024 OF CHAR; 
+		pos: SIZE; 
+		size: SIZE; 
+		H: HUGEINT; 
+		pPos: LONGINT; 
+
+		PROCEDURE ^  & Init; 
+		PROCEDURE ^ Next(s: SIZE): ADDRESS; 
+		PROCEDURE ^ PushH(h: HUGEINT); 
+		PROCEDURE ^ PushL(i: LONGINT); 
+		PROCEDURE ^ PushI(i: INTEGER); 
+		PROCEDURE ^ PushS(i: SHORTINT); 
+		PROCEDURE ^ PushB(b: BOOLEAN); 
+		PROCEDURE ^ PushC(c: CHAR); 
+		PROCEDURE ^ PushSet(set: SET); 
+		PROCEDURE ^ PushR(r: REAL); 
+		PROCEDURE ^ PushX(x: LONGREAL); 
+		PROCEDURE ^ PushA(a: ADDRESS); 
+		PROCEDURE ^ PushSz(s: SIZE); 
+		PROCEDURE ^ Call(adr: ADDRESS); 
+		PROCEDURE ^ CallH(adr: ADDRESS): HUGEINT; 
+		PROCEDURE ^ CallR(adr: ADDRESS): REAL; 
+		PROCEDURE ^ CallX(adr: ADDRESS): LONGREAL; 
+	END Callstack; 
+
+	ProcedureResult* = OBJECT (SymbolResult)
+	VAR 
+		meta: Meta; 
+		address: ADDRESS; 
+		stack: Callstack; 
+		index: LONGINT; 
+		caller-: Result; 
+		parameters: Meta; 
+		flags: SET; 
+
+		PROCEDURE ^ Parameters(): Meta; 
+		PROCEDURE ^ ReturnType(): Meta; 
+		PROCEDURE ^ ReturnsPointer*(): BOOLEAN; 
+		PROCEDURE ^ Address*(): ADDRESS; 
+		PROCEDURE ^  & InitProcedure(c: Result; CONST name: ARRAY OF CHAR; m: Meta); 
+		PROCEDURE ^ Pars*; 
+		PROCEDURE ^ PushAddress*(adr: ADDRESS); 
+		PROCEDURE ^ PushTyped*(o: Result; mode: CHAR; refs: Modules.Bytes; VAR offset: SIZE): BOOLEAN; 
+		PROCEDURE ^ Push*(o: Result): BOOLEAN; 
+		PROCEDURE ^ Check*(): BOOLEAN; 
+		PROCEDURE ^ Evaluate*(): Value; 
+	END ProcedureResult; 
+
+	FieldResult* = OBJECT (SymbolResult)
+	VAR 
+		address: ADDRESS; 
+		meta: Meta; 
+
+		PROCEDURE ^  & InitField(CONST name: ARRAY OF CHAR; meta: Meta; base: ADDRESS); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+		PROCEDURE ^ Evaluate*(): Value; 
+		PROCEDURE ^ SetV*(v: Value): BOOLEAN; 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): Result; 
+	END FieldResult; 
+
+	Value* = OBJECT (Result)
+
+		PROCEDURE ^  & InitValue; 
+		PROCEDURE ^ Evaluate*(): Value; 
+		PROCEDURE ^ GetInt*(VAR h: HUGEINT): BOOLEAN; 
+		PROCEDURE ^ GetAddress*(VAR a: ADDRESS): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR x: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetBoolean*(VAR x: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ GetSet*(VAR x: SET): BOOLEAN; 
+		PROCEDURE ^ GetChar*(VAR x: CHAR): BOOLEAN; 
+		PROCEDURE ^ GetRange*(VAR x: RANGE): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ GetString*(VAR w: ARRAY OF CHAR); 
+	END Value; 
+
+	AnyValue* = OBJECT (Value)
+	VAR 
+		value*: ANY; 
+
+		PROCEDURE ^  & InitAny*(value: ANY); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ GetAddress*(VAR a: ADDRESS): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): Result; 
+	END AnyValue; 
+
+	AddressValue* = OBJECT (Value)
+	VAR 
+		value*: ADDRESS; 
+
+		PROCEDURE ^  & InitAny*(value: ADDRESS); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetAddress*(VAR a: ADDRESS): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END AddressValue; 
+
+	IntegerValue* = OBJECT (Value)
+	VAR 
+		value*: HUGEINT; 
+
+		PROCEDURE ^  & InitInteger*(value: HUGEINT); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetInt*(VAR v: HUGEINT): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR x: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END IntegerValue; 
+
+	RealValue* = OBJECT (Value)
+	VAR 
+		value*: LONGREAL; 
+
+		PROCEDURE ^  & InitReal*(value: LONGREAL); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetReal*(VAR x: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END RealValue; 
+
+	BooleanValue* = OBJECT (Value)
+	VAR 
+		value*: BOOLEAN; 
+
+		PROCEDURE ^  & InitBoolean*(value: BOOLEAN); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetBoolean*(VAR x: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END BooleanValue; 
+
+	StringValue* = OBJECT (Value)
+	VAR 
+		value*: Strings.String; 
+
+		PROCEDURE ^  & InitString*(CONST value: ARRAY OF CHAR); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END StringValue; 
+
+	SetValue* = OBJECT (Value)
+	VAR 
+		value*: SET; 
+
+		PROCEDURE ^  & InitSet*(value: SET); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetSet*(VAR x: SET): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END SetValue; 
+
+	RangeValue* = OBJECT (Value)
+	VAR 
+		value*: RANGE; 
+
+		PROCEDURE ^  & InitRange*(r: RANGE); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetRange*(VAR x: RANGE): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END RangeValue; 
+
+	CharValue* = OBJECT (Value)
+	VAR 
+		value: CHAR; 
+
+		PROCEDURE ^  & InitChar*(c: CHAR); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetChar*(VAR c: CHAR): BOOLEAN; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END CharValue; 
+
+	EnumValue* = OBJECT (Value)
+	VAR 
+		value: HUGEINT; 
+		translation: PersistentObjects.Translation; 
+
+		PROCEDURE ^  & InitEnumValue*(trans: PersistentObjects.Translation; v: HUGEINT); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+		PROCEDURE ^ Address*(): ADDRESS; 
+	END EnumValue; 
+
+	MathArrayValue* = OBJECT (Value)
+	VAR 
+		values: ARRAY [*] OF Value; 
+
+		PROCEDURE ^  & InitMathArrayValue*(len: LONGINT); 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ SetValue*(at: LONGINT; value: Value); 
+		PROCEDURE ^ GetValue*(at: LONGINT): Value; 
+		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
+	END MathArrayValue; 
+
+	Symbol* = OBJECT 
+	VAR 
+		name: StringPool.Index; 
+		item-: Item; 
+
+		PROCEDURE ^  & InitSymbol(name: StringPool.Index; index: LONGINT); 
+		PROCEDURE ^ GetName(VAR name: ARRAY OF CHAR); 
+	END Symbol; 
+
+	Container* = OBJECT (Item)
+	VAR 
+		symbols-: Basic.List; 
+		lookup-: Basic.HashTableInt; 
+
+		PROCEDURE ^  & InitContainer*; 
+		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ GetItem*(index: LONGINT): Item; 
+		PROCEDURE ^ Enter1*(item: Item; name: StringPool.Index); 
+		PROCEDURE ^ Enter*(item: Item; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ Find1*(id: LONGINT): Item; 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): Item; 
+	END Container; 
+
+	Scope* = OBJECT 
+	VAR 
+		outer-: Scope; 
+		object-: Object; 
+		level: LONGINT; 
+
+		PROCEDURE ^  & InitScope*(outer: Scope; object: Object); 
+		PROCEDURE ^ Enter*(object: Object): Scope; 
+		PROCEDURE ^ FindObject*(CONST name: ARRAY OF CHAR; index: LONGINT; VAR in: Object): Object; 
+		PROCEDURE ^ FindObject1*(name: StringPool.Index; index: LONGINT; VAR in: Object): Object; 
+		PROCEDURE ^ Leave*(): Scope; 
+		PROCEDURE ^ Dump*(log: Streams.Writer); 
+	END Scope; 
+
+	ObjectFilter* = OBJECT 
+	VAR 
+		content: Content; 
+		object: Object; 
+		found: Container; 
+		attribute, value: ARRAY 256 OF CHAR; 
+
+		PROCEDURE ^  & InitObjectFilter*; 
+		PROCEDURE ^ AddFiltered(obj: Object); 
+		PROCEDURE ^ Enumerate(CONST name: ARRAY OF CHAR; array: BOOLEAN); 
+		PROCEDURE ^ Filter*(obj: Object; attribute, value: ARRAY OF CHAR): Container; 
+	END ObjectFilter; 
+
+	PROCEDURE ^ FindSymbol*(CONST name: ARRAY OF CHAR; meta: Meta): Meta; 
+	PROCEDURE ^ SymbolKind*(meta: Meta): CHAR; 
+	PROCEDURE ^ SymbolParent*(meta: Meta): Meta; 
+	PROCEDURE ^ SymbolName*(meta: Meta; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ VariableMode*(meta: Meta): Meta; 
+	PROCEDURE ^ VariableType*(meta: Meta): Meta; 
+	PROCEDURE ^ SymbolAddress*(meta: Meta; base: ADDRESS): ADDRESS; 
+	PROCEDURE ^ FindInType(scope: Result; address: ADDRESS; type: ADDRESS; CONST name: ARRAY OF CHAR): Result; 
+	PROCEDURE ^ FindConstructor(scope: Result; type: ADDRESS): ProcedureResult; 
+	PROCEDURE ^ Indent(w: Streams.Writer; level: LONGINT); 
+	PROCEDURE ^ Test*(context: Commands.Context); 
+	PROCEDURE ^ ContentGetValue(c: Content): Value; 
+	PROCEDURE ^ NewIntegerValue(value: HUGEINT): IntegerValue; 
+	PROCEDURE ^ NewFloatValue(value: LONGREAL): RealValue; 
+	PROCEDURE ^ NewBooleanValue(value: BOOLEAN): BooleanValue; 
+	PROCEDURE ^ NewStringValue(CONST value: ARRAY OF CHAR): StringValue; 
+	PROCEDURE ^ NewNameValue(CONST value: ARRAY OF CHAR): StringValue; 
+	PROCEDURE ^ NewRangeValue(value: RANGE): RangeValue; 
+	PROCEDURE ^ NewCharValue(value: CHAR): CharValue; 
+	PROCEDURE ^ NewSetValue(value: SET): SetValue; 
+	PROCEDURE ^ NewEnumValue(translation: PersistentObjects.Translation; value: HUGEINT): EnumValue; 
+	PROCEDURE ^ FindInObject*(in: Object; CONST name: ARRAY OF CHAR; index: LONGINT): Object; 
+	PROCEDURE ^ GetModule*(CONST name: ARRAY OF CHAR): ModuleResult; 
+	PROCEDURE ^ FindInObject1*(in: Object; name: StringPool.Index; index: LONGINT): Object; 
+BEGIN
+END FoxInterpreterSymbols.

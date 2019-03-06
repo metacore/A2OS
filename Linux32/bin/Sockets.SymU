@@ -2,7 +2,6 @@ MODULE Sockets;
 	IMPORT S := SYSTEM, Unix, Trace, IP;
 CONST 
 	Backlog = 5; 
-	LingerSize = 8; 
 TYPE 
 	SocketAdr* = POINTER TO RECORD 
 		family*: INTEGER; 
@@ -25,20 +24,20 @@ TYPE
 		buf: ARRAY 64 OF CHAR; 
 	END; 
 
-	SocketOption = POINTER TO RECORD 
+	SocketOption = RECORD 
 	END; 
 
-	Linger = POINTER TO RECORD (SocketOption)
+	Linger = RECORD (SocketOption)
 		onoff: LONGINT; 
 		linger: LONGINT; 
 	END; 
 
-	Switch = POINTER TO RECORD (SocketOption)
+	Switch = RECORD (SocketOption)
 		onoff: LONGINT; 
 	END; 
 VAR 
 	socket: PROCEDURE {C}(af, typ, protocol: LONGINT):LONGINT; 
-	setsockopt: PROCEDURE {C}(s: LONGINT; level, optname: LONGINT; opt: SocketOption; optlen: LONGINT):LONGINT; 
+	setsockopt: PROCEDURE {C}(s: LONGINT; level, optname: LONGINT; VAR opt: SocketOption; optlen: LONGINT):LONGINT; 
 	accept: PROCEDURE {C}(s: LONGINT; adrPtr: ADDRESS; VAR adrlen: LONGINT):LONGINT; 
 	bind: PROCEDURE {C}(s: LONGINT; adr: SocketAdr; adrlen: LONGINT):LONGINT; 
 	connect: PROCEDURE {C}(s: LONGINT; adr: SocketAdr; adrlen: LONGINT):LONGINT; 

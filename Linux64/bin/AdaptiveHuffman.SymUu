@@ -1,0 +1,81 @@
+MODULE AdaptiveHuffman;
+	IMPORT Streams;
+CONST 
+	AlphabetSize = 256; 
+	BlockSize* = (8 * 1024); 
+	ScaleLimit = (4 * 1024); 
+	Encode = 0; 
+	Decode = 1; 
+TYPE 
+	BitReader = OBJECT 
+	VAR 
+		in: Streams.Reader; 
+		curByte, curBit: LONGINT; 
+
+		PROCEDURE ^  & New(r: Streams.Reader); 
+		PROCEDURE ^ Initialize; 
+		PROCEDURE ^ Bit(): LONGINT; 
+	END BitReader; 
+
+	BitWriter = OBJECT 
+	VAR 
+		out: Streams.Writer; 
+		curByte, curBit: LONGINT; 
+
+		PROCEDURE ^  & New(w: Streams.Writer); 
+		PROCEDURE ^ Bit(bit: LONGINT); 
+		PROCEDURE ^ Finish; 
+	END BitWriter; 
+
+	HuffmanCoder = OBJECT 
+	TYPE 
+		Index = INTEGER; 
+
+		Pattern = INTEGER; 
+
+		Node = RECORD 
+			weight: INTEGER; 
+			pattern: Pattern; 
+			up: Index; 
+			down: Index; 
+		END; 
+	VAR 
+		mode: SHORTINT; 
+		in: BitReader; 
+		out: BitWriter; 
+		esc: Index; 
+		root: Index; 
+		map: ARRAY AlphabetSize OF Index; 
+		table: ARRAY ((2 * AlphabetSize) + 2) OF Node; 
+
+		PROCEDURE ^  & New(m: SHORTINT; input: Streams.Reader; output: Streams.Writer); 
+		PROCEDURE ^ Initialize; 
+		PROCEDURE ^ Finish; 
+		PROCEDURE ^ GetPattern(): Pattern; 
+		PROCEDURE ^ PutPattern(patt: Pattern); 
+		PROCEDURE ^ AddPattern(patt: Pattern): Index; 
+		PROCEDURE ^ GroupLeader(node: Index): Index; 
+		PROCEDURE ^ SlideNode(node: Index): Index; 
+		PROCEDURE ^ IncrementWeight(node: Index); 
+		PROCEDURE ^ Scale; 
+		PROCEDURE ^ EncodeByte(ch: CHAR); 
+		PROCEDURE ^ ExtractByte(): CHAR; 
+	END HuffmanCoder; 
+
+	Encoder* = OBJECT 
+	VAR 
+		huff: HuffmanCoder; 
+
+		PROCEDURE ^  & New*(archive: Streams.Writer); 
+		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: LONGINT); 
+	END Encoder; 
+
+	Decoder* = OBJECT 
+	VAR 
+		huff: HuffmanCoder; 
+
+		PROCEDURE ^  & New*(archive: Streams.Reader); 
+		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: LONGINT); 
+	END Decoder; 
+BEGIN
+END AdaptiveHuffman.

@@ -1,0 +1,31 @@
+MODULE PrecisionTimer;
+	IMPORT Unix, KernelLog;
+CONST 
+	CLOCK_REALTIME = 0; 
+	CLOCK_MONOTONIC = 1; 
+	CLOCK_PROCESS_CPUTIME_ID = 2; 
+	CLOCK_THREAD_CPUTIME_ID = 3; 
+	CLOCK_MONOTONIC_RAW = 4; 
+	CLOCK_REALTIME_COARSE = 5; 
+	CLOCK_MONOTONIC_COARSE = 6; 
+	CLOCK_BOOTTIME = 7; 
+	CLOCK_REALTIME_ALARM = 8; 
+	CLOCK_BOOTTIME_ALARM = 9; 
+TYPE 
+	Counter* = HUGEINT; 
+
+	Timespec = RECORD 
+		sec: LONGWORD; 
+		nsec: LONGINT; 
+	END; 
+VAR 
+	clock_gettime: PROCEDURE {C}(clk_id: LONGINT; CONST tp: Timespec):LONGINT; 
+	clock_getres: PROCEDURE {C}(clk_id: LONGINT; CONST res: Timespec):LONGINT; 
+	clockType := CLOCK_MONOTONIC: LONGINT; 
+	frequency: Counter; 
+
+	PROCEDURE ^ GetCounter*(): Counter; 
+	PROCEDURE ^ GetFrequency*(): Counter; 
+	PROCEDURE ^ InitMod; 
+BEGIN
+END PrecisionTimer.

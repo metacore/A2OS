@@ -1,0 +1,12 @@
+MODULE HostLibs;
+	IMPORT SYSTEM, Unix;
+CONST 
+	NilLibHandle* = NIL; 
+TYPE 
+	LibHandle* = ADDRESS; 
+
+	PROCEDURE ^ LoadLibrary*(CONST fileName: ARRAY OF CHAR; VAR lib: LibHandle): BOOLEAN; 
+	PROCEDURE ^ FreeLibrary*(CONST lib: LibHandle): BOOLEAN; 
+	PROCEDURE ^ GetProcedure*(CONST lib: LibHandle; CONST name: ARRAY OF CHAR; CONST procAddr: ADDRESS): BOOLEAN; 
+BEGIN
+END HostLibs.

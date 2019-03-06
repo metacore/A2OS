@@ -1,0 +1,74 @@
+MODULE Huffman;
+	IMPORT Streams;
+TYPE 
+	BitReader = OBJECT 
+	VAR 
+		in: Streams.Reader; 
+		curByte, curBit: LONGINT; 
+
+		PROCEDURE ^  & New(r: Streams.Reader); 
+		PROCEDURE ^ Initialize; 
+		PROCEDURE ^ Bit(): LONGINT; 
+	END BitReader; 
+
+	BitWriter = OBJECT 
+	VAR 
+		out: Streams.Writer; 
+		curByte, curBit: LONGINT; 
+
+		PROCEDURE ^  & New(w: Streams.Writer); 
+		PROCEDURE ^ Bit(bit: LONGINT); 
+		PROCEDURE ^ Finish; 
+	END BitWriter; 
+
+	PatternCounts = ARRAY 256 OF LONGINT; 
+
+	Pattern = RECORD 
+		patt, weight: LONGINT; 
+	END; 
+
+	PatternWeights = POINTER TO ARRAY OF Pattern; 
+
+	HuffCode = RECORD 
+		bits, val: LONGINT; 
+	END; 
+
+	Node = OBJECT 
+	VAR 
+		weight: LONGINT; 
+		pattern: LONGINT; 
+		left, right: Node; 
+
+		PROCEDURE ^  & Init(patt, w: LONGINT); 
+		PROCEDURE ^ AddChildren(l, r: Node); 
+	END Node; 
+
+	Encoder* = OBJECT 
+	VAR 
+		w: Streams.Writer; 
+		out: BitWriter; 
+		codeTable: ARRAY 256 OF HuffCode; 
+
+		PROCEDURE ^  & New*(output: Streams.Writer); 
+		PROCEDURE ^ WriteFrequencies(pw: PatternWeights); 
+		PROCEDURE ^ CountPatterns(CONST source: ARRAY OF CHAR; len: LONGINT): PatternWeights; 
+		PROCEDURE ^ BuildCodeTable(pw: PatternWeights); 
+		PROCEDURE ^ PutCode(code: HuffCode); 
+		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: LONGINT); 
+	END Encoder; 
+
+	Decoder* = OBJECT 
+	VAR 
+		r: Streams.Reader; 
+		in: BitReader; 
+		tree: Node; 
+
+		PROCEDURE ^  & New*(input: Streams.Reader); 
+		PROCEDURE ^ ReadFrequencies(r: Streams.Reader): PatternWeights; 
+		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: LONGINT); 
+	END Decoder; 
+
+	PROCEDURE ^ ContainedPatterns(VAR pc: PatternCounts): PatternWeights; 
+	PROCEDURE ^ BuildTree(pw: PatternWeights): Node; 
+BEGIN
+END Huffman.

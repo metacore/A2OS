@@ -1,0 +1,260 @@
+MODULE PersistentObjects;
+	IMPORT XML, XMLParser, XMLScanner, Basic := FoxBasic, Strings, StringPool, Streams, Commands, FoxBasic, Files, XMLObjects, Modules, D := Debugging;
+CONST 
+	Persistent = 0; 
+	None* =  -1; 
+	EnableTrace = FALSE; 
+TYPE 
+	Translation* = OBJECT 
+	TYPE 
+		Entry = RECORD 
+			name: ARRAY 32 OF CHAR; 
+			key: LONGINT; 
+		END; 
+
+		Table = POINTER TO ARRAY OF Entry; 
+	VAR 
+		table: Table; 
+		len: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Grow; 
+		PROCEDURE ^ Add*(CONST name: ARRAY OF CHAR; key: LONGINT); 
+		PROCEDURE ^ Key*(CONST name: ARRAY OF CHAR; VAR key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Name*(index: SIZE; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	END Translation; 
+
+	Action* = PROCEDURE {DELEGATE}(o: Object); 
+
+	Class* = ENUM Char* = 0, Object* = 1, String* = 2, Integer* = 3, Float* = 4, Boolean* = 5, Enum* = 6, Name* = 7, Range* = 8, Set* = 9 END; 
+
+	Name = ARRAY 128 OF CHAR; 
+
+	Content* = OBJECT 
+	VAR 
+		class*: Class; 
+		name*, type*: Name; 
+		string*: Strings.String; 
+		persistent*: BOOLEAN; 
+		object*: Object; 
+		char*: CHAR; 
+		integer*: HUGEINT; 
+		float*: LONGREAL; 
+		boolean*: BOOLEAN; 
+		translation*: Translation; 
+		range*: RANGE; 
+		set*: SET; 
+		success*: BOOLEAN; 
+
+		PROCEDURE ^ SetClass*(class: Class; persistent: BOOLEAN); 
+		PROCEDURE ^ GetChar*(VAR char: CHAR); 
+		PROCEDURE ^ SetChar*(char: CHAR); 
+		PROCEDURE ^ GetString*(VAR string: Strings.String); 
+		PROCEDURE ^ SetString*(string: Strings.String); 
+		PROCEDURE ^ SetAsString*(CONST s: ARRAY OF CHAR); 
+		PROCEDURE ^ Equals*(CONST s: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ SetName*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ GetInteger*(VAR integer: HUGEINT); 
+		PROCEDURE ^ SetInteger*(integer: SIZE); 
+		PROCEDURE ^ GetSet*(VAR set: SET); 
+		PROCEDURE ^ SetSet*(set: SET); 
+		PROCEDURE ^ GetEnum*(translation: Translation; VAR integer: HUGEINT); 
+		PROCEDURE ^ SetEnum*(translation: Translation; integer: HUGEINT); 
+		PROCEDURE ^ GetRange*(VAR range: RANGE); 
+		PROCEDURE ^ SetRange*(CONST range: RANGE); 
+		PROCEDURE ^ GetFloat*(VAR float: LONGREAL); 
+		PROCEDURE ^ SetFloat*(float: LONGREAL); 
+		PROCEDURE ^ GetBoolean*(VAR boolean: BOOLEAN); 
+		PROCEDURE ^ SetBoolean*(boolean: BOOLEAN); 
+		PROCEDURE ^ GetObject*(VAR object: Object); 
+		PROCEDURE ^ SetObject*(object: Object; CONST optionalType: ARRAY OF CHAR); 
+	END Content; 
+
+	Enumerator* = PROCEDURE {DELEGATE}(CONST name: ARRAY OF CHAR; array: BOOLEAN); 
+
+	Interpretation* = POINTER TO RECORD 
+		name-, str-: Strings.String; 
+		next-: Interpretation; 
+	END; 
+
+	Object* = OBJECT 
+	CONST 
+		StrType = \"type"\; 
+	VAR 
+		reader: Reader; 
+		writer: Writer; 
+		content: Content; 
+		action: Action; 
+		firstTranslation-: Interpretation; 
+		type*: ARRAY 64 OF CHAR; 
+
+		PROCEDURE ^  & InitObject*; 
+		PROCEDURE ^ ActionEnumerator(CONST name: ARRAY OF CHAR; array: BOOLEAN); 
+		PROCEDURE ^ Traverse*(action: Action); 
+		PROCEDURE ^ Enumerate*(enum: Enumerator); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ AddTranslation*(CONST name: ARRAY OF CHAR; str: Strings.String); 
+		PROCEDURE ^ FindTranslation*(CONST name: ARRAY OF CHAR; VAR translation: Interpretation): BOOLEAN; 
+		PROCEDURE ^ RemoveTranslation*(CONST name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ReadContent*(CONST name: ARRAY OF CHAR; array: BOOLEAN); 
+		PROCEDURE ^ WriteContent*(CONST name: ARRAY OF CHAR; array: BOOLEAN); 
+		PROCEDURE ^ Write*(w: Writer); 
+		PROCEDURE ^ Read*(r: Reader): BOOLEAN; 
+		PROCEDURE ^ Dump*(log: Streams.Writer; CONST name: ARRAY OF CHAR); 
+	END Object; 
+
+	ObjectList* = OBJECT (Object)
+	VAR 
+		list*: FoxBasic.List; 
+		baseType*: Name; 
+
+		PROCEDURE ^  & InitList*(initialSize: LONGINT; CONST baseType: ARRAY OF CHAR); 
+		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ GetElement*(i: LONGINT): Object; 
+		PROCEDURE ^ SetElement*(i: LONGINT; o: Object); 
+		PROCEDURE ^ Enumerate*(enum: Enumerator); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Add*(o: Object); 
+		PROCEDURE ^ Contains*(o: Object): BOOLEAN; 
+		PROCEDURE ^ Traverse*(action: Action); 
+		PROCEDURE ^ IndexOf*(o: Object): LONGINT; 
+	END ObjectList; 
+
+	Generator = PROCEDURE {DELEGATE}(CONST type: ARRAY OF CHAR):Object; 
+
+	Reader* = OBJECT 
+	VAR 
+		generator: Generator; 
+		error: Streams.Writer; 
+		err-: BOOLEAN; 
+		filename*: Files.FileName; 
+
+		PROCEDURE ^  & InitReader(gen: Generator); 
+		PROCEDURE ^ Error(CONST s1, s2: ARRAY OF CHAR); 
+		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 
+		PROCEDURE ^ ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN; 
+		PROCEDURE ^ NeedsTranslation(CONST s: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ AttributeNeedingTranslation*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 
+		PROCEDURE ^ NameAttribute*(CONST name: ARRAY OF CHAR; VAR str: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ BooleanAttribute*(CONST name: ARRAY OF CHAR; VAR value: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ IntegerAttribute*(CONST name: ARRAY OF CHAR; VAR value: HUGEINT): BOOLEAN; 
+		PROCEDURE ^ FloatAttribute*(CONST name: ARRAY OF CHAR; VAR value: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; VAR value: HUGEINT): BOOLEAN; 
+		PROCEDURE ^ RangeAttribute*(CONST name: ARRAY OF CHAR; VAR value: RANGE): BOOLEAN; 
+		PROCEDURE ^ SetAttribute*(CONST name: ARRAY OF CHAR; VAR set: SET): BOOLEAN; 
+	END Reader; 
+
+	Writer* = OBJECT 
+
+		PROCEDURE ^  & InitWriter*; 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ NameAttribute*(CONST name, str: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteObject*(CONST name: ARRAY OF CHAR; index: LONGINT; o: Object); 
+		PROCEDURE ^ StartObjectArray*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; str: Strings.String); 
+		PROCEDURE ^ IntegerAttribute*(CONST name: ARRAY OF CHAR; value: HUGEINT); 
+		PROCEDURE ^ FloatAttribute*(CONST name: ARRAY OF CHAR; value: LONGREAL); 
+		PROCEDURE ^ BooleanAttribute*(CONST name: ARRAY OF CHAR; value: BOOLEAN); 
+		PROCEDURE ^ EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; value: HUGEINT); 
+		PROCEDURE ^ RangeAttribute*(CONST name: ARRAY OF CHAR; value: RANGE); 
+		PROCEDURE ^ SetAttribute*(CONST name: ARRAY OF CHAR; value: SET); 
+	END Writer; 
+
+	WrittenTable = OBJECT (Basic.HashTable)
+	TYPE 
+		ObjectId = POINTER TO RECORD 
+			num: LONGINT; 
+		END; 
+	VAR 
+		length: LONGINT; 
+
+		PROCEDURE ^ Enter(o: Object; VAR entry: LONGINT): BOOLEAN; 
+	END WrittenTable; 
+
+	XMLWriter* = OBJECT (Writer)
+	VAR 
+		w: Streams.Writer; 
+		document-: XML.Document; 
+		element: XML.Element; 
+		current: XML.Container; 
+		scope: Scope; 
+		written: WrittenTable; 
+
+		PROCEDURE ^  & InitXMLWriter*(writer: Streams.Writer); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ NameAttribute*(CONST name, str: ARRAY OF CHAR); 
+		PROCEDURE ^ Enter(CONST name: ARRAY OF CHAR; o: Object); 
+		PROCEDURE ^ Exit(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteObject*(CONST name: ARRAY OF CHAR; index: LONGINT; o: Object); 
+	END XMLWriter; 
+
+	ReadTable = OBJECT (Basic.List)
+
+		PROCEDURE ^ Enter(o: Object); 
+		PROCEDURE ^ GetObject(index: HUGEINT): Object; 
+	END ReadTable; 
+
+	Element = POINTER TO RECORD 
+		index: LONGINT; 
+		e: XML.Element; 
+		next: Element; 
+	END; 
+
+	Symbol = POINTER TO RECORD 
+		name: LONGINT; 
+		first, last: Element; 
+		numberElements: LONGINT; 
+		next: Symbol; 
+	END; 
+
+	Stack = POINTER TO RECORD 
+		container: XML.Container; 
+		symbols: Basic.HashTableInt; 
+		firstSymbol: Symbol; 
+		used: Basic.HashTable; 
+		next: Stack; 
+	END; 
+
+	Scope = OBJECT 
+	VAR 
+		stack: Stack; 
+
+		PROCEDURE ^  & InitScope(c: XML.Container); 
+		PROCEDURE ^ Enter(c: XML.Container); 
+		PROCEDURE ^ Register(c: XML.Container); 
+		PROCEDURE ^ Exit(VAR c: XML.Container); 
+		PROCEDURE ^ Use(o: ANY); 
+		PROCEDURE ^ Used(o: ANY): BOOLEAN; 
+		PROCEDURE ^ AddSymbol(CONST name: ARRAY OF CHAR): Symbol; 
+		PROCEDURE ^ FindElement(CONST name: ARRAY OF CHAR; index: LONGINT): XML.Element; 
+		PROCEDURE ^ PutElement(symbol: Symbol; element: Element); 
+		PROCEDURE ^ EnterElement(e: XML.Element); 
+		PROCEDURE ^ Write(w: Streams.Writer); 
+	END Scope; 
+
+	XMLReader* = OBJECT (Reader)
+	VAR 
+		element: XML.Element; 
+		current: XML.Container; 
+		scope: Scope; 
+		read: ReadTable; 
+
+		PROCEDURE ^ ReportXMLError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^  & InitXMLReader*(reader: Streams.Reader; generator: Generator); 
+		PROCEDURE ^ Error(CONST s1, s2: ARRAY OF CHAR); 
+		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 
+		PROCEDURE ^ Enter(CONST name: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN; 
+		PROCEDURE ^ Exit(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ CheckUse(o: ANY); 
+		PROCEDURE ^ ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN; 
+	END XMLReader; 
+
+	PROCEDURE ^ NewXMLWriter*(w: Streams.Writer): Writer; 
+	PROCEDURE ^ NewXMLReader*(r: Streams.Reader; generator: Generator): Reader; 
+	PROCEDURE ^ Clone*(o: Object; gen: Generator): Object; 
+	PROCEDURE ^ Trace*(o: Object); 
+BEGIN
+END PersistentObjects.

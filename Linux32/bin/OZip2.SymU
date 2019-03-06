@@ -1,0 +1,14 @@
+MODULE OZip2;
+	IMPORT Streams, Commands, Files, Strings, BW := BorrowsWheeler, AH := AdaptiveHuffman;
+CONST 
+	BlockSize* = (8 * 1024); 
+	ComprTag = LONGINT(4278001432); 
+	Suffix = \".oz2"\; 
+
+	PROCEDURE ^ Compress*(r: Streams.Reader; w: Streams.Writer); 
+	PROCEDURE ^ Uncompress*(r: Streams.Reader; w: Streams.Writer): BOOLEAN; 
+	PROCEDURE ^ NewFile(CONST name: ARRAY OF CHAR): Files.File; 
+	PROCEDURE ^ CompressFile*(c: Commands.Context); 
+	PROCEDURE ^ UncompressFile*(c: Commands.Context); 
+BEGIN
+END OZip2.

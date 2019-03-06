@@ -1,0 +1,11 @@
+MODULE PrecisionTimer;
+	IMPORT SYSTEM, Kernel32, KernelLog;
+CONST 
+TYPE 
+	Counter* = HUGEINT; 
+
+	PROCEDURE ^ GetCounter*(): Counter; 
+	PROCEDURE ^ GetFrequency*(): Counter; 
+	PROCEDURE ^ InitMod; 
+BEGIN
+END PrecisionTimer.

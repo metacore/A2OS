@@ -789,9 +789,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	CLUTs.Mod AosDefault.Pal
 
 	# raster images (eos)
-	I386 { I386.Raster.Mod }
-	AMD64 { AMD64.Raster.Mod }
-	ARM { ARM.Raster.Mod }
+	Raster.Mod
 
 	Localization.Mod
 	Archives.Mod

@@ -34,20 +34,44 @@ CONST
 VAR
 	trace: BOOLEAN;
 
+TYPE 
+	Sender = OBJECT
+		VAR 
+			conn: Connection;
+		
+			PROCEDURE &New( c: Connection );
+			BEGIN
+				conn := c
+			END New;
+			
+			PROCEDURE SendPacket( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT ): BOOLEAN;
+			VAR n: LONGINT;
+			BEGIN {EXCLUSIVE}
+				WHILE len > 0 DO
+					n := len;
+					IF ~Sockets.Send( conn.socket, data, ofs, n ) THEN  RETURN FALSE  END;
+					DEC( len, n );  INC( ofs, n )						
+				END;
+				RETURN TRUE
+			END SendPacket;
+			
+	END Sender;
+	
+	
 TYPE
 	(** Connection object.
 		NOTE: Only one process should access a Connection!  *)
-
 	Connection* = OBJECT (Streams.Connection)
 			VAR
 				int-	: IP.Interface;	(*! Unix port: dummy, only 'int.localAdr' contains valid data *)
 				
 				lport-	: LONGINT;
-				fip-		: IP.Adr;  (* foreign protocol address *)
+				fip-	: IP.Adr;  (* foreign protocol address *)
 				fport-	: LONGINT;
 				state*	: SHORTINT;   (* TCP state *)
 
-				socket	: LONGINT;  localAdr, foreignAdr: Sockets.SocketAdr;
+				socket	: LONGINT;  
+				sender: Sender;
 				
 				(* the next variables are for interface compatibility only *)
 				irs-		: LONGINT;	(* initial receive sequence number *)
@@ -67,7 +91,8 @@ TYPE
 				(** Open a TCP connection (only use once per Connection instance).
 					Use TCP.NilPort for lport to automatically assign an unused local port.*)
 				PROCEDURE Open*( lport: LONGINT;  fip: IP.Adr;  fport: LONGINT;  VAR res: WORD );
-				VAR ignore: BOOLEAN;
+				VAR
+					localAdr, foreignAdr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
 					ASSERT( (state = Unused) & (lport >= 0) & (lport < 10000H) & (fport >= 0) & (fport < 10000H) );
 					IF trace THEN  Out.String( "Open connection " )  END;
@@ -78,11 +103,13 @@ TYPE
 							(* active open (connect) *)
 							foreignAdr := Sockets.NewSocketAdr( fip, fport );
 							IF Sockets.Connect( socket, foreignAdr ) THEN
-								ignore := Sockets.SetLinger( socket );
+								IGNORE Sockets.SetLinger( socket );
 								SELF.fip := fip;  SELF.fport := fport;
 								localAdr := Sockets.GetSockName( socket );
 								SELF.lport := Sockets.GetPortNumber( localAdr );
-								state := Established;  res := Ok
+								state := Established;  
+								NEW( sender, SELF );
+								res := Ok
 							ELSE  
 								Out.String( "connect failed" ); Out.Ln;
 								Sockets.Close( socket );  res := ConnectionRefused
@@ -96,7 +123,7 @@ TYPE
 								localAdr := Sockets.GetSockName( socket );
 								SELF.lport := Sockets.GetPortNumber( localAdr );
 								IF Sockets.Listen( socket ) THEN
-									ignore := Sockets.SetLinger( socket );
+									IGNORE Sockets.SetLinger( socket );
 									SELF.fip := IP.NilAdr;
 									state := Listen;  res := Ok
 								ELSE  Sockets.Close( socket );  res := NotConnected
@@ -127,18 +154,13 @@ TYPE
 
 				(** Send data on a TCP connection. *)
 				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
-				VAR n: LONGINT;
-				BEGIN {EXCLUSIVE}
+				BEGIN 
 					IF trace THEN  Out.String( "Send: socket=" );  Out.Int( socket, 0 )  END;
 					IF state = Established THEN
-						res := Ok;
-						WHILE len > 0 DO
-							n := len;
-							IF Sockets.Send( socket, data, ofs, n ) THEN  
-								DEC( len, n );  INC( ofs, n )
-							ELSE  
-								res := ConnectionReset;  len := 0
-							END
+						IF sender.SendPacket( data, ofs, len ) THEN  
+							res := Ok
+						ELSE  
+							res := ConnectionReset
 						END
 					ELSE
 						res := NotConnected (* Send on a Connection with state=Listen *)

@@ -2749,7 +2749,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		MOV		EAX, 0FFFFFFFFH
 		MOVD		MMX7, EAX
-		PUNPCKLBW MMX7, MMX0  ; (* 00FF00FF00FF00FF *)
+		PUNPCKLBW MMX7, MMX0  ; 00FF00FF00FF00FF
 
 		MOV		ECX, [EBP+len]
 	loop:
@@ -2795,10 +2795,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		MOVD		MMX2, EAX
 
-		PUNPCKLBW  MMX1, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW  MMX1, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW  	MMX1, MMX7
 
-		PUNPCKLBW  MMX2, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW  MMX2, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW 	MMX2, MMX6
 
 		PADDUSW 	MMX1, MMX2
@@ -2871,7 +2871,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		MOV		EAX, 0FFFFFFFFH
 		MOVD		MMX7, EAX
-		PUNPCKLBW MMX7, MMX0  ; (* 00FF00FF00FF00FF *)
+		PUNPCKLBW MMX7, MMX0  ; 00FF00FF00FF00FF
 
 		MOV		ECX, [RBP + len]
 	loop:
@@ -2917,10 +2917,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		MOVD		MMX2, EAX
 
-		PUNPCKLBW  MMX1, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW  MMX1, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW  	MMX1, MMX7
 
-		PUNPCKLBW  MMX2, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW  MMX2, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW 	MMX2, MMX6
 
 		PADDUSW 	MMX1, MMX2
@@ -3054,7 +3054,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		; src := SYSTEM.VAL(Pixel, SYSTEM.GET32(sadr));
 		; Load data into memory
-		; (* MOV 	XMM4, 0FF000000FF000000FF000000FF000000H *)
+		; MOV 	XMM4, 0FF000000FF000000FF000000FF000000H
 
 		MOVDQA 	XMM2, [ESI] ;src 5-8
 		MOVQ2DQ	XMM4,  MMX3     ; 000000000000000000000000000000FFH
@@ -3089,7 +3089,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		; mask out alpha = zero
 
 		; fd := 255-ORD(src[a]); fd = XMM4
-		; (* MOV 	XMM4, 00FF00FF00FF00FF00FF00FF00FF00FFH *)
+		; MOV 	XMM4, 00FF00FF00FF00FF00FF00FF00FF00FFH
 		PXOR 		XMM4, XMM4
 		MOV	 	EAX, 00FFH
 		PINSRW	XMM4, EAX ,0
@@ -3116,7 +3116,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		PSLLD 		XMM3, 16
 
 		; sred14 = src14 && (srcMask << 24)
-		; src14 must be copied because it must not be changed
+		; src14 must be copied because it mustn't be changed
 		PAND 		XMM5, XMM3 ; sred14
 		PSRLD 		XMM5, 16
 
@@ -3140,7 +3140,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		; src is now ready
 
 		; destination
-		; dest18 must be copied because it must not be changed
+		; dest18 must be copied because it mustn't be changed
 		; Load data into memory
 		MOVDQU 	XMM3, [EDI]  ;dest 1-8
 		MOVQ2DQ 	XMM6, MMX4
@@ -3192,7 +3192,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		PSHUFD  	XMM5, XMM5,0D0H ; sgreen14s
 
 		; sgreen58 = src58&& (srcMask << 8)
-		; src58 must be copied because it must not be changed
+		; src58 must be copied because it mustn't be changed
 
 		; sgreen58s = shuffled sgreen58
 		PSHUFHW 	XMM6, XMM6,85H
@@ -3250,7 +3250,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		MOVDQU 	XMM6, XMM2
 
 		; sblue14 = src14 && (srcMask)
-		; src14 must be copied because it must not be changed
+		; src14 must be copied because it mustn't be changed
 		PAND 		XMM5, XMM7 ; sblue14
 
 		; sblue14s = shuffled sblue14
@@ -3314,7 +3314,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	singlepixel: ; original code from MMXBGRA8888Over565, adjusted to fit this procedure
 		MOV	 	EAX, 0FFFFFFFFH
 		MOVD		MMX7, EAX
-		PUNPCKLBW  MMX7, MMX0  ; (* 00FF00FFH00FF00FFH *)
+		PUNPCKLBW  MMX7, MMX0  ; 00FF00FFH00FF00FFH
 
 		MOV 		EAX,[ESI]
 		XOR		EBX, EBX
@@ -3355,9 +3355,9 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		OR			EAX, EDX
 
 		MOVD		MMX2, EAX
-		PUNPCKLBW MMX1, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW MMX1, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW 	MMX1, MMX7
-		PUNPCKLBW MMX2, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW MMX2, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW 	MMX2, MMX6
 		PADDUSW 	MMX1, MMX2
 
@@ -3464,7 +3464,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		; src := SYSTEM.VAL(Pixel, SYSTEM.GET32(sadr));
 		; Load data into memory
-		; (* MOV 	XMM4, 0FF000000FF000000FF000000FF000000H *)
+		; MOV 	XMM4, 0FF000000FF000000FF000000FF000000H
 
 		MOVDQA 	XMM2, [RSI] ;src 5-8
 		MOVQ2DQ	XMM4,  MMX3     ; 000000000000000000000000000000FFH
@@ -3499,7 +3499,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		; mask out alpha = zero
 
 		; fd := 255-ORD(src[a]); fd = XMM4
-		; (* MOV 	XMM4, 00FF00FF00FF00FF00FF00FF00FF00FFH *)
+		; MOV 	XMM4, 00FF00FF00FF00FF00FF00FF00FF00FFH
 		PXOR 		XMM4, XMM4
 		MOV	 	EAX, 00FFH
 		PINSRW	XMM4, EAX ,0
@@ -3526,7 +3526,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		PSLLD 		XMM3, 16
 
 		; sred14 = src14 && (srcMask << 24)
-		; src14 must be copied because it must not be changed
+		; src14 must be copied because it mustn't be changed
 		PAND 		XMM5, XMM3 ; sred14
 		PSRLD 		XMM5, 16
 
@@ -3550,7 +3550,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		; src is now ready
 
 		; destination
-		; dest18 must be copied because it must not be changed
+		; dest18 must be copied because it mustn't be changed
 		; Load data into memory
 		MOVDQU 	XMM3, [RDI]  ;dest 1-8
 		MOVQ2DQ 	XMM6, MMX4
@@ -3602,7 +3602,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		PSHUFD  	XMM5, XMM5,0D0H ; sgreen14s
 
 		; sgreen58 = src58&& (srcMask << 8)
-		; src58 must be copied because it must not be changed
+		; src58 must be copied because it mustn't be changed
 
 		; sgreen58s = shuffled sgreen58
 		PSHUFHW 	XMM6, XMM6,85H
@@ -3660,7 +3660,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		MOVDQU 	XMM6, XMM2
 
 		; sblue14 = src14 && (srcMask)
-		; src14 must be copied because it must not be changed
+		; src14 must be copied because it mustn't be changed
 		PAND 		XMM5, XMM7 ; sblue14
 
 		; sblue14s = shuffled sblue14
@@ -3724,7 +3724,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	singlepixel: ; original code from MMXBGRA8888Over565, adjusted to fit this procedure
 		MOV	 	EAX, 0FFFFFFFFH
 		MOVD		MMX7, EAX
-		PUNPCKLBW  MMX7, MMX0  ; (* 00FF00FF00FF00FF *)
+		PUNPCKLBW  MMX7, MMX0  ; 00FF00FF00FF00FF
 
 		MOV 		EAX,[RSI]
 		XOR		EBX, EBX
@@ -3765,9 +3765,9 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		OR			EAX, EDX
 
 		MOVD		MMX2, EAX
-		PUNPCKLBW MMX1, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW MMX1, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW 	MMX1, MMX7
-		PUNPCKLBW MMX2, MMX0  ; (* 0000ARGB --> 0A0R0G0B *)
+		PUNPCKLBW MMX2, MMX0  ; 0000ARGB --> 0A0R0G0B
 		PMULLW 	MMX2, MMX6
 		PADDUSW 	MMX1, MMX2
 

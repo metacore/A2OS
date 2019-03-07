@@ -271,7 +271,7 @@ TYPE
 		(* conditional compilation according to the following syntax *)
 		(* Block = '#' 'if' Condition 'then' Block { '#' 'elsif' Condition 'then' Block } ['#' 'else' Block] '#' 'end' | any symbol until next new line. *)
 		PROCEDURE GetNextToken(VAR token: Scanner.Token): BOOLEAN;
-		VAR line: Streams.Position;
+		VAR line: Streams.Position; end: Scanner.Symbol; startPos, endPos: LONGINT;
 		BEGIN
 			LOOP
 				line := token.position.line;
@@ -280,6 +280,8 @@ TYPE
 					IF ~ConditionalStatement (token) THEN RETURN FALSE END;
 				ELSIF (conditional = Processing) OR (conditional = ProcessingElse) THEN
 					RETURN TRUE;
+				ELSIF token.symbol = Scanner.Code THEN
+					REPEAT end := scanner.SkipToEndOfCode(startPos, endPos, token) UNTIL end # Scanner.Unequal;
 				END;
 			END;
 		END GetNextToken;

@@ -302,6 +302,7 @@ TYPE
 							IF trace THEN
 								Out.String( "Accept done, client socket=" );  Out.Int( newsocket, 0 );  Out.Ln
 							END;
+							NEW( sender, SELF );
 							res := Ok
 						ELSE
 							res := NotConnected ;

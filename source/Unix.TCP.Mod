@@ -83,6 +83,7 @@ TYPE
 				PROCEDURE & Init*;
 				BEGIN
 					state := Unused;
+					NEW( sender, SELF );
 					irs := 0; iss := 0;  rcvnxt := 0;  sndnxt := 0
 				END Init;
 				
@@ -108,7 +109,6 @@ TYPE
 								localAdr := Sockets.GetSockName( socket );
 								SELF.lport := Sockets.GetPortNumber( localAdr );
 								state := Established;  
-								NEW( sender, SELF );
 								res := Ok
 							ELSE  
 								Out.String( "connect failed" ); Out.Ln;
@@ -302,7 +302,6 @@ TYPE
 							IF trace THEN
 								Out.String( "Accept done, client socket=" );  Out.Int( newsocket, 0 );  Out.Ln
 							END;
-							NEW( sender, SELF );
 							res := Ok
 						ELSE
 							res := NotConnected ;

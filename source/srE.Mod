@@ -16,7 +16,8 @@ BEGIN
 END E;
 
 PROCEDURE Eprime(VAR in:ARRAY OF SREAL; VAR out: ARRAY OF INTEGER);
-CODE {SYSTEM.i386, SYSTEM.FPU}
+CODE
+#IF I386 THEN
    PUSH  ECX
    MOV   EDI, [EBP+out+0]         ; dest   = ADR(out)
    MOV   ECX, [EBP+out+4]       ; count  = LEN(out)
@@ -45,6 +46,42 @@ Check:
    FLDCW [ESP]               ; restore original FPU configuration
    ADD   ESP, 8
    POP   ECX
+#ELSIF AMD64 THEN
+   #IF COOP THEN
+      PUSH   RBX
+   #END
+   MOV   RDI, [RBP+out+0]         ; dest   = ADR(out)
+   MOV   RCX, [RBP+out+8]       ; count  = LEN(out)
+   MOV   RSI, [RBP+in+0]        ; source = ADR(in)
+   CMP   RCX, [RBP+in+8]
+   JGE   Ok
+   PUSH  99                  ; LEN(in) > LEN(out)  then TRAP(99)
+   INT   3
+Ok:
+   SUB   RSP, 8              ; change FPU rounding to "chop"
+   FSTCW [RSP]
+   FWAIT
+   MOV   EBX, [RSP]
+   OR    EBX, 0400H          ; clear bit 10,11 (chop/truncate toward zero)
+   MOV   [RSP+4], EBX
+   FLDCW [RSP+4]
+   JMP   Check
+Loop:
+   DEC   RCX
+   FLD   DWORD [RSI+RCX*4]  ; in: SREAL
+   FISTP WORD [RDI+RCX*2]   ; out: INTEGER
+   FWAIT
+Check:
+   CMP   RCX, 0
+   JG    Loop
+   FLDCW [RSP]               ; restore original FPU configuration
+   ADD   RSP, 8
+   #IF COOP THEN
+      POP   RBX
+   #END
+#ELSE
+   unimplemented
+#END
 END Eprime;
 
 PROCEDURE E2*(in: srBase.PT; VAR out: srBase.IPT);
@@ -70,11 +107,20 @@ CODE {SYSTEM.i386, SYSTEM.FPU}
 END ROUND; *)
 
 PROCEDURE -ROUND*(x: SREAL; VAR y: LONGINT);
-CODE {SYSTEM.i386, SYSTEM.FPU}
+CODE
+#IF I386 THEN
        POP EAX
        FLD DWORD [EBP]
        ADD ESP, 4
        FISTP DWORD [EAX]
+#ELSIF AMD64 THEN
+       POP RAX
+       FLD DWORD [RBP]
+       ADD RSP, 8
+       FISTP DWORD [RAX]
+#ELSE
+       unimplemented
+#END
 END ROUND;
 
 (* PROCEDURE -ROUND(x: LONGSREAL; VAR y: LONGINT);

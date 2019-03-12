@@ -15,11 +15,6 @@ CONST
 	(* Interrupts Dummy Test *)
 	DummyTest = FALSE;
 	
-	(*
-		Used for compatibility with WMPerfMon
-	*)
-	MMX* = 23; (** bits in features variable *)
-
 	(* Lock levels *)
 	TraceOutput* = 0;
 	Memory* = 1;
@@ -126,14 +121,6 @@ CONST
 
 	Preemption* = 31;	(** flag for BreakAll() *)
 
-	(* TEMP. Temporary implementation to get Objects to compile *)
-	SSESupport* = FALSE;
-	SSE2Support* = FALSE;
-	KernelLevel * = 1;
-	UserLevel* = 1;
-	(*CS* = 1;*)
-	VMBit* = 2;
-
 	(** Period at which the CPU timer interrupts, in micro seconds *)
 	TimerPeriod* = 1000;
 
@@ -227,8 +214,6 @@ TYPE
 VAR
 	version -: ARRAY 64 OF CHAR;
 	
-	features-: SET;	(** processor features *)
-
 	sp, fp: ADDRESS;
 
 	(** Interrupt Mask *)

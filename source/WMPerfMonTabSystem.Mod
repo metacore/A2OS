@@ -191,14 +191,18 @@ TYPE
 
 			uptimeLabel := Perf.NewIndicator("--", WMComponents.AlignClient, 0, 0); line.AddContent(uptimeLabel);
 
-			(* 4th Line: MMX/SSE/SSE2 capabilities *)
+			(* 4th Line: capabilities *)
 
 			line := Perf.NewPanel(WMComponents.AlignTop, 0, Perf.LineHeight); panel.AddContent(line);
 			label := Perf.NewLabel("Capabilities:", WMComponents.AlignLeft, 100, 0); line.AddContent(label);
 
-			caption := "MMX: "; AppendBoolean(caption, Machine.MMX IN Machine.features);
-			Strings.Append(caption, ", SSE: "); AppendBoolean(caption, Machine.SSESupport);
-			Strings.Append(caption, ", SSE2: "); AppendBoolean(caption, Machine.SSE2Support);
+			#IF I386 OR AMD64 THEN
+				caption := "MMX: "; AppendBoolean(caption, Machine.MMX IN Machine.features);
+				Strings.Append(caption, ", SSE: "); AppendBoolean(caption, Machine.SSESupport);
+				Strings.Append(caption, ", SSE2: "); AppendBoolean(caption, Machine.SSE2Support);
+			#ELSE
+				caption := "None";
+			#END
 
 			label := Perf.NewLabel(caption, WMComponents.AlignClient, 0, 0); line.AddContent(label);
 

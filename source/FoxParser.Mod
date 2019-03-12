@@ -281,7 +281,11 @@ TYPE
 				ELSIF (conditional = Processing) OR (conditional = ProcessingElse) THEN
 					RETURN TRUE;
 				ELSIF token.symbol = Scanner.Code THEN
-					REPEAT end := scanner.SkipToEndOfCode(startPos, endPos, token) UNTIL end # Scanner.Unequal;
+					end := scanner.SkipToEndOfCode(startPos, endPos, token);
+					WHILE end = Scanner.Unequal DO
+						REPEAT scanner.GetNextCharacter() UNTIL (scanner.ch # Scanner.LF) & (scanner.ch # 0X);
+						end := scanner.SkipToEndOfCode(startPos, endPos, token);
+					END;
 				END;
 			END;
 		END GetNextToken;

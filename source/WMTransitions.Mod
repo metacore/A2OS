@@ -170,22 +170,30 @@ TYPE
 				 * 565-Format (16 Bit):  ( case1: MMX,  case2: optimized Aos code)
 				 *
 				 ****************************************************************)
-				IF (MMXenabled) THEN
-					Calc565MMX(a, b, result, per255);
-				ELSE
+				#IF I386 OR AMD64 THEN
+					IF Machine.MMX IN Machine.features THEN
+						Calc565MMX(a, b, result, per255);
+					ELSE
+						Calc565Opt(a, b, result, per255);
+					END;
+				#ELSE
 					Calc565Opt(a, b, result, per255);
-				END;
+				#END
 			ELSIF (a.fmt.code = Raster.bgr888) & (b.fmt.code = Raster.bgr888) THEN
 				(****************************************************************
 				 *
 				 * 888-Format (24 Bit):  ( case1: MMX,  case2: optimized Aos code)
 				 *
 				 ****************************************************************)
-				IF (MMXenabled) THEN
-					Calc888MMX(a, b, result, per255);
-				ELSE
+				#IF I386 OR AMD64 THEN
+					IF Machine.MMX IN Machine.features THEN
+						Calc888MMX(a, b, result, per255);
+					ELSE
+						Calc888Opt(a, b, result, per255);
+					END;
+				#ELSE
 					Calc888Opt(a, b, result, per255);
-				END;
+				#END
 			ELSIF (a.fmt.code = b.fmt.code) THEN
 				(****************************************************************
 				 *
@@ -201,9 +209,6 @@ TYPE
 		END CalcImage;
 
 	END TransitionFade;
-
-VAR
-	MMXenabled : BOOLEAN;
 
 (* ***
  *
@@ -285,7 +290,7 @@ BEGIN
 	END;
 END Calc565Opt;
 
-
+#IF I386 OR AMD64 THEN
 
 (* ***
  *
@@ -356,15 +361,139 @@ BEGIN
 	END;
 END Calc565MMX;
 
-
-
 (* ***
  *
  * Helper Function for Calc565MMX: :Calculate fade for just one line using assembler code (MMX technology)
  *
  *** *)
 PROCEDURE Calc565MMXLine (adra, adrb, adrr: ADDRESS; i, alpha : LONGINT; a64, mr64, mg64, mb64 : HUGEINT);
-CODE {SYSTEM.AMD64, SYSTEM.MMX}
+CODE
+#IF I386 THEN
+	;
+	; Initialize the counter and skip if the latter is equal to zero
+	;
+	PUSH		ECX
+	MOV		ECX, [EBP+i]
+	CMP		ECX, 0
+	JZ			skip565
+
+	;
+	; Load the frame buffer pointers into the registers
+	;
+	PUSH		EDI
+	PUSH		ESI
+	PUSH		EAX
+	MOV		EDI, [EBP+adra]			; source address of image A
+	MOV		ESI, [EBP+adrb]			; source address of image B
+	MOV		EAX, [EBP+adrr]			; destination address of image RESULT
+
+
+doblend565:
+	;
+	;  Alpha blend four target and source pixels
+	;
+
+	;
+	; The mmx registers will basically be used in the following way:
+	;	MMX0:	red source value A
+	;	MMX1:	red source value B
+	;	MMX2:	green source value A
+	;	MMX3:	green source value B
+	;	MMX4:	blue source value A
+	;	MMX5:	blue source value B
+	;	MMX6:	original source pixel A
+	;	MMX7:	original source pixel B
+	;
+
+	;
+	;  Note: Two lines together are assumed to pair
+	;    		 in the processornd V-pipes
+	;
+
+	MOVQ		MMX6, [EDI]				; Load the original source pixel A
+	NOP
+
+	MOVQ		MMX7, [ESI]				; Load the original source pixel B
+	MOVQ		MMX0, MMX6				; Load the register for the red source A
+
+	PAND		MMX0, [EBP+mr64]		; Extract the red source A channel
+	MOVQ		MMX1, MMX7				; Load the register for the red source B
+
+	PAND		MMX1, [EBP+mr64]		; Extract the red source B channel
+	PSRLW		MMX0, 11				; Shift down the red source A channel
+
+	MOVQ		MMX2, MMX6				; Load the register for the green source A
+	PSRLW		MMX1, 11				; Shift down the red source B channel
+
+	MOVQ		MMX3, MMX7				; Load the register for the green source B
+	PSUBW		MMX1, MMX0				; Calculate red source B minus red source A
+
+	PMULLW	MMX1, [EBP+a64]			; Multiply the red result with alpha
+	NOP
+
+	PAND		MMX2, [EBP+mg64]		; Extract the green source A channel
+	NOP
+
+	PAND		MMX3, [EBP+mg64]		; Extract the green source B channel
+	PSRAW		MMX1, 8					; Divide the red result by 256
+
+	PSRLW		MMX2, 5					; Shift down the green source B channel
+	PADDW		MMX1, MMX0				; Add the red source B to the red result
+
+	PSLLW		MMX1, 11				; Shift up the red source A again
+	MOVQ		MMX4, MMX6				; Load the register for the blue source A
+
+	PSRLW		MMX3, 5					; Shift down the green source B channel
+	MOVQ		MMX5, MMX7				; Load the register for the blue source B
+
+	PAND		MMX4, [EBP+mb64]		; Extract the blue source A channel
+	PSUBW		MMX3, MMX2				; Calculate green source B minus green source A
+
+	PAND		MMX5, [EBP+mb64]		; Extract the blue source B channel
+	PMULLW	MMX3, [EBP+a64]			; Multiply the green result with alpha
+
+	PSUBW		MMX5, MMX4				; Calculate blue source B minus blue source A
+	NOP
+
+	PMULLW	MMX5, [EBP+a64]			; Multiply the blue result with alpha
+	PSRAW		MMX3, 8					; Divide the green result by 256
+
+	PADDW		MMX3, MMX2				; Add the green source A to the green result
+	NOP
+
+	PSRAW		MMX5, 8					; Divide the blue result by 256
+	PSLLW		MMX3, 5					; Shift up the green source B again
+
+	PADDW		MMX5, MMX4				; Add the blue source A to the blue result
+	POR		MMX1, MMX3				; Combine the new red and green values
+
+	POR		MMX1, MMX5				; Combine new blue value with the others to RESULT pixel
+	MOVQ		[EAX], MMX1				; Write back RESULT  value
+
+	;
+	; Advance to the next four pixels
+	;
+	ADD		EDI, 8
+	ADD		ESI, 8
+	ADD		EAX, 8
+
+	;
+	; Loop again or break
+	;
+	DEC		ECX
+	JNZ			doblend565
+
+	;
+	; Clean up
+	;
+	POP		EAX
+	POP		ESI
+	POP		EDI
+	EMMS								; Declare FPU registers free
+
+skip565:
+	POP		ECX
+#ELSIF AMD64 THEN
 	;
 	; Initialize the counter and skip if the latter is equal to zero
 	;
@@ -487,8 +616,12 @@ doblend565:
 	EMMS								; Declare FPU registers free
 
 skip565:
+#ELSE
+	unimplemented
+#END
 END Calc565MMXLine;
 
+#END
 
 (* ***
  *
@@ -546,6 +679,7 @@ BEGIN
 	END;
 END Calc888Opt;
 
+#IF I386 OR AMD64 THEN
 
 (* ***
  *
@@ -578,19 +712,127 @@ BEGIN
 	END;
 END Calc888MMX;
 
-
 (* ***
  *
  * Helper Function for Calc888MMX: :Calculate fade for just one line using assembler code (MMX technology)
  *
  *** *)
 PROCEDURE Calc888MMXLine (adra, adrb, adrr: ADDRESS; i : LONGINT; a64, m64 : HUGEINT);
-CODE {SYSTEM.AMD64, SYSTEM.MMX}
-
+CODE
+#IF I386 THEN
 	; (re)load the width counter
+	PUSH			ECX
+	MOV			ECX, [EBP+i]
+
+	;
+	; Load the frame buffer pointers into the registers
+	;
+	PUSH			EDI
+	PUSH			ESI
+	PUSH			EBX
+
+	MOV			EDI, [EBP+adra]		; source address of image A
+	MOV			ESI, [EBP+adrb]		; source address of image B
+	MOV			EBX, [EBP+adrr]		; destination address of image RESULT
+
+
+	; Load the mask into an mmx register
+	MOVQ			MMX3, [EBP+m64]
+
+	; Load the alpha value into an mmx register
+	MOVQ			MMX5, [EBP+a64]
+
+	; Clear an mmx register to facilitate unpacking
+	PXOR			MMX6, MMX6
+
+doblend24:
+	; The mmx registers will basically be used in the following way:
+	;
+	;	MMX0:	source value A
+	;	MMX1:	source value B
+	;	MMX2:	working register
+	;	MMX3:	mask ( 0x00ffffff )
+	;	MMX4:	working register
+	;	MMX5:	alpha value
+	;	MMX6:	zero for unpacking
+	;	MMX7:	original result value
+	;
+
+	; Note: Two lines together are assumed to pair
+	;     	  	 in the processornd V-pipes
+
+	MOVD			MMX0, [EDI]			; Load the original source pixel A
+	MOVQ			MMX4, MMX3			; Reload the mask ( 0x00ffffff )
+
+	MOVQ			MMX1, [ESI]			; Load the original source pixel B
+	MOVQ			MMX7, MMX0			; Save the original result pixel
+
+	PUNPCKLBW	MMX0, MMX6			; Unpack the source pixel A
+	PUNPCKLBW	MMX1, MMX6			; Unpack the source pixel B
+
+	MOVQ			MMX2, MMX0			; Save the unpacked source A values
+	NOP
+
+	PMULLW		MMX0, MMX5			; Multiply the source A with the alpha value
+	NOP
+
+	PMULLW		MMX1, MMX5			; Multiply the source B with the alpha value
+	NOP
+
+	PSRLW			MMX0, 8				; Divide the source A by 256
+	NOP
+
+	PSRLW			MMX1, 8				; Divide the source B by 256
+	NOP
+
+	PSUBW			MMX1, MMX0			; Calculate the source B minus source A
+	NOP
+
+	PADDW			MMX2, MMX1			; Add former result value to the new result
+	NOP
+
+	PACKUSWB		MMX2, MMX2			; Pack the new result
+	NOP
+
+	PAND			MMX2, MMX4			; Mask of unwanted bytes
+	NOP
+
+	PANDN			MMX4, MMX7			; Get the high order byte we must keep
+	NOP
+
+	POR			MMX2, MMX4			; Assemble the value to write back
+	NOP
+
+	MOVD			[EBX], MMX2			; Write back the new value to result image
+
+	;
+	; Advance to the next pixel
+	;
+	ADD			EDI, 3
+	ADD			ESI, 3
+	ADD			EBX, 3
+
+	;
+	; Loop again or break
+	;
+	DEC			ECX
+	JNZ				doblend24
+
+	;
+	; Write back the frame buffer pointers and clean up
+	;
+	POP			EBX
+	POP			ESI
+	POP			EDI
+	EMMS								; Declare FPU registers free
+
+	POP			ECX
+#ELSIF AMD64 THEN
 	#IF COOP THEN
 		PUSH		RBX
 	#END
+
+	; (re)load the width counter
 	MOV			ECX, [RBP + i]
 
 	;
@@ -698,7 +940,12 @@ doblend24:
 	#IF COOP THEN
 		POP		RBX
 	#END
+#ELSE
+	unimplemented
+#END
 END Calc888MMXLine;
+
+#END
 
 (* ***
  *
@@ -786,8 +1033,6 @@ BEGIN
 	END;
 END Test2;
 
-BEGIN
-	MMXenabled := 23 IN Machine.features;
 END WMTransitions.
 
 System.Free WMTransitions ~

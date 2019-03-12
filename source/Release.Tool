@@ -1307,11 +1307,9 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 		TVRemoteControl.Mod TV.Tool
 	}
 
-	I386 { I386.WMTransitions.Mod }
-	AMD64 { AMD64.WMTransitions.Mod }
-	I386, AMD64 {
-		MediaPlayer.Mod Presentation.Mod
-	}
+	WMTransitions.Mod
+	MediaPlayer.Mod Presentation.Mod
+
 	MP3Player.Mod
 	I386, AMD64 { WMPlayer.Mod }
 	WAVRecorder.Mod

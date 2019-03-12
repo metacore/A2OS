@@ -36,7 +36,6 @@ CONST
 	MaxLocks* = 9;   (* { <= 32 } *)
 	
 	MaxCPU* = 4;
-	IsCooperative* = FALSE;
 	StrongChecks = FALSE;
 
 TYPE	

@@ -61,7 +61,7 @@ CONST
 		(* error codes *)
 		Ok* = 0;
 		NilAdr* = -1;	(* nil value for addresses (not same as pointer NIL value) *)
-		IsCooperative* = FALSE;
+
 TYPE
 	Vendor* = ARRAY 13 OF CHAR;
 	IDMap* = ARRAY 16 OF SHORTINT;

@@ -136,8 +136,6 @@ CONST
 	(** Needed, but not used yet by Reals.Mod *)
 	fcr * = {};
 
-	IsCooperative * = FALSE;
-
 TYPE
 	(** processor state *)
 	State* = RECORD

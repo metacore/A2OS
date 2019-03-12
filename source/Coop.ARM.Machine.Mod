@@ -14,8 +14,6 @@ CONST
 
 	debug* = FALSE;   (** display more debug output during booting *)
 
-	IsCooperative*= TRUE;
-
 CONST
 (** standard lock levels (in order) *)  (* also refer to Traps.Show *)
 	TraceOutput* = 0;   (* Trace output *)

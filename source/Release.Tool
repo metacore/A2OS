@@ -434,7 +434,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	Configuration.Mod Configuration.XML Save.Configuration.XML FileHandlers.Mod		# XML-based configuration file
 
 	BIOS { BIOS.BootShell.Mod }
-	
+
 	BIOS, UNIX { Network.Mod }
 	ARM { ARM.Network.Mod }
 	NATIVE { NetworkMii.Mod }
@@ -641,7 +641,7 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		#USB <-> RS232 FTDI driver
 		UsbFTDI.Mod
 	}
-	
+
 	NATIVE & ARM {
 		ARM.UsbMouse.Mod
 	}
@@ -687,14 +687,14 @@ PACKAGE Drivers ARCHIVE "Drivers.zip" SOURCE "DriversSrc.zip" DESCRIPTION "Devic
 		# Floppy disk driver
 		BIOS.Diskettes.Mod
 	}
-	
+
 	# Zynq PS UART driver
 	ZYNQ & ~COOP {
 		Zynq.PsUartInterrupts.Mod
 		Zynq.PsUart.Mod
 		Zynq.PsSerials.Mod
 	}
-	
+
 	# SD card driver
 	ZYNQ & ~COOP {
 		Zynq.SdEnvironment.Mod
@@ -877,18 +877,11 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 
 	# Animation codecs
 	AnimationCodec.Mod
-	
-	NATIVE & ~ARM { # USB info tools & documentation
-		UsbInfo.Mod
-	}
-	
-	NATIVE & ARM {
-		ARM.UsbInfo.Mod
-	}
-	
-	NATIVE { # USB info tools & documentation
-		UsbSkeleton.Mod UsbTools.Mod Usb.Text
-	}
+
+	# USB info tools & documentation
+	NATIVE & ~ARM { UsbInfo.Mod }
+	NATIVE & ARM { ARM.UsbInfo.Mod }
+	NATIVE { UsbSkeleton.Mod UsbTools.Mod Usb.Text }
 
 	# Partitions Framework
 	PartitionsLib.Mod FATScavenger.Mod Partitions.Mod
@@ -1170,23 +1163,13 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMPerfMonAlerts.Mod WMPerfMonAlertsUtils.Mod WMPerfMonAlerts.XML
 
 	# perfmon kernel plugins
-	NATIVE & ~COOP {
-		WMPerfMonPluginCpu.Mod WMPerfMonPluginMemory.Mod
-	}
-
-	BIOS & ~COOP {
-		BIOS.WMPerfMonPluginInterrupts.Mod
-	}
-
-	NATIVE {
-		WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod
-	}
+	NATIVE & ~COOP { WMPerfMonPluginCpu.Mod WMPerfMonPluginMemory.Mod }
+	BIOS & ~COOP { BIOS.WMPerfMonPluginInterrupts.Mod }
+	NATIVE { WMPerfMonPluginUsb.Mod WMPerfMonPluginNetStats.Mod }
 	WIN { Windows.WMPerfMonPluginCpu.Mod Windows.WMPerfMonPluginMemory.Mod }
 	UNIX, COOP { Unix.WMPerfMonPluginCpu.Mod Unix.WMPerfMonPluginMemory.Mod }
+	NATIVE, WIN { WMPerfMonPluginModVars.Mod WMPerfMonPluginHeap.Mod }
 
-	NATIVE, WIN {
-		WMPerfMonPluginModVars.Mod WMPerfMonPluginHeap.Mod
-	}
 	WMPerfMonPluginProcesses.Mod
 	WMPerfMonPluginSerials.Mod	# perfmon device plugins
 	WMPerfMonPluginNetwork.Mod WMPerfMonPluginDisks.Mod
@@ -1310,9 +1293,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	WMTransitions.Mod
 	MediaPlayer.Mod Presentation.Mod
 
-	MP3Player.Mod
-	I386, AMD64 { WMPlayer.Mod }
-	WAVRecorder.Mod
+	MP3Player.Mod WMPlayer.Mod WAVRecorder.Mod
 	OGGUtilities.Mod OGGVorbisPlayer.Mod OGGRadios.Text WMOGGPlayer.Mod	# OGG Player/Radio
 
 	# DTP editor

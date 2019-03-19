@@ -6,7 +6,7 @@ TYPE
 	NameEntry = POINTER TO RECORD
 		name: ARRAY 265 OF CHAR;
 	END;
-	
+
 	NameList = OBJECT(Basic.List)
 		PROCEDURE & Init;
 		BEGIN InitList(256)
@@ -25,7 +25,7 @@ TYPE
 			any: ANY;
 		BEGIN
 			any := Get(index);
-			ASSERT(any IS NameEntry);			
+			ASSERT(any IS NameEntry);
 			COPY(any(NameEntry).name, name)
 		END GetName;
 
@@ -40,7 +40,7 @@ TYPE
 			END;
 			RETURN FALSE
 		END ContainsName;
-		
+
 		PROCEDURE DumpNames(w: Streams.Writer);
 		VAR
 			i: LONGINT;
@@ -53,17 +53,17 @@ TYPE
 			END;
 			w.Ln
 		END DumpNames;
-		
+
 		PROCEDURE SortNames;
 		BEGIN Sort(NameComparator)
 		END SortNames;
 	END NameList;
-	
+
 	(** string comparator function that is used to sort strings alphabetically **)
 	PROCEDURE NameComparator(left, right: ANY): BOOLEAN;
 	VAR
 		result: SHORTINT;
-		i: LONGINT;		
+		i: LONGINT;
 		leftChar, rightChar: CHAR;
 	BEGIN
 		result := 0; i := 0;
@@ -74,11 +74,11 @@ TYPE
 			ELSIF leftChar > rightChar THEN result := +1
 			END;
 			INC(i)
-		UNTIL (result # 0) OR (leftChar = 0X) OR (rightChar = 0X);					
+		UNTIL (result # 0) OR (leftChar = 0X) OR (rightChar = 0X);
 		RETURN result < 0
 	END NameComparator;
-	
-	PROCEDURE ParseARMInstructionSet*(context: Commands.Context);	
+
+	PROCEDURE ParseARMInstructionSet*(context: Commands.Context);
 	CONST
 		PrependIS = FALSE;
 	TYPE
@@ -97,7 +97,7 @@ TYPE
 		file: Files.File;
 		reader: Files.Reader;
 		encodingNames: NameList;
-		
+
 		PROCEDURE AppendMaskName(VAR string: ARRAY OF CHAR; mask: SET);
 		VAR
 			j, start: LONGINT;
@@ -111,7 +111,7 @@ TYPE
 				inside := FALSE;
 				FOR j := 0 TO 31 + 1 DO
 					IF (j < 32) & (j IN mask) THEN
-						IF ~inside THEN							
+						IF ~inside THEN
 							IF first THEN first := FALSE ELSE Strings.Append(string, "and") END;
 							Strings.IntToStr(j, numString);
 							Strings.Append(string, numString);
@@ -123,15 +123,15 @@ TYPE
 							IF j - 1 > start THEN
 								Strings.Append(string, "to");
 								Strings.IntToStr(j - 1, numString);
-								Strings.Append(string, numString);								
+								Strings.Append(string, numString);
 							END;
 							inside := FALSE
 						END
 					END
-				END;				
+				END;
 			END
 		END AppendMaskName;
-		
+
 		PROCEDURE Error(CONST message: ARRAY OF CHAR);
 		BEGIN
 			context.out.Ln;
@@ -151,23 +151,23 @@ TYPE
 			context.out.Update
 		END Log;
 		*)
-		
+
 		PROCEDURE IsUpperCase(char: CHAR): BOOLEAN;
 		BEGIN RETURN (ORD(char) >= ORD('A')) & (ORD(char) <= ORD('Z'))
 		END IsUpperCase;
-		
+
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String(filename);
 		IF filename # "" THEN
-			
+
 			file := Files.Old(filename);
 			IF file = NIL THEN Error("file not found"); RETURN END;
 			context.out.String("parsing file "); context.out.String(filename); context.out.Ln; context.out.Ln; context.out.Update;
 			NEW(reader, file, 0);
-			
+
 			mnemonic := "";
 			NEW(encodingNames);
-			
+
 			reader.Token(token);
 			WHILE reader.Available() > 0 DO
 				IF token = "" THEN
@@ -175,13 +175,13 @@ TYPE
 				ELSIF token[0] = '%' THEN (* comment *)
 					reader.SkipLn
 				ELSIF (token = "T") OR (token = "A") THEN
-					
+
 					IF mnemonic = "" THEN Error("no mnemonic specified"); RETURN END;
 					isThumb := token = 'T';
-					
+
 					(* parse flags *)
 					reader.SkipWhitespace; reader.Token(token);
-					
+
 					flagString := "{";
 					comma := FALSE;
 					i := 0;
@@ -197,14 +197,14 @@ TYPE
 						INC(i)
 					END;
 					Strings.Append(flagString, "}");
-					
+
 					(* reset operands *)
 					FOR i := 0 TO LEN(operands) - 1 DO
 						operand.type := "?";
 						operand.mask := {};
 						operands[i] := operand
 					END;
-					
+
 					(* parse bit pattern *)
 					reader.SkipWhitespace;
 					pattern := "";
@@ -224,9 +224,9 @@ TYPE
 						context.out.String(pattern); context.out.Ln; context.out.Update;
 						RETURN
 					END;
-					
+
 					ones := {};
-					mask := {};	
+					mask := {};
 					i := 0;
 					WHILE pattern[i] # 0X DO
 						pos := numBits - 1 - i;
@@ -235,14 +235,14 @@ TYPE
 							| '0': INCL(mask, pos)
 							| '1': INCL(mask, pos); INCL(ones, pos)
 							| '-': (* ignore *)
-							| '+': INCL(ones, pos)							
+							| '+': INCL(ones, pos)
 							| 'a' .. 'f': INCL(operands[ORD(char) - ORD('a')].mask, pos)
 							ELSE (* ignore *)
 						END;
 						INC(i)
 					END;
 
-					(* parse operand types *)		
+					(* parse operand types *)
 					i := 0;
 					WHILE ~reader.EOLN() DO
 						reader.SkipWhitespace;
@@ -250,9 +250,9 @@ TYPE
 						IF token # "-" THEN operands[i].type := token; INC(i) END
 					END;
 					numOps := i;
-					
+
 					(* print Oberon line of code that registers this encoding *)
-					
+
 					context.out.String("EnterInstruction(instr"); context.out.String(mnemonic);
 					context.out.String(", "); IF isThumb THEN context.out.String("Thumb") ELSE context.out.String("ARM") END;
 					context.out.String(", "); context.out.Int(numBits DIV 16, 0);
@@ -260,15 +260,15 @@ TYPE
 					context.out.String(", "); context.out.Set(mask);
 					context.out.String(", "); context.out.String(flagString);
 					context.out.Update;
-					
+
 					FOR i := 0 TO numOps - 1 DO
 						operand := operands[i];
 						context.out.String(", ");
-						
+
 						(* compose encoding name *)
 						encodingName := "enc";
 						IF PrependIS THEN IF isThumb THEN Strings.AppendChar(encodingName, 'T') ELSE Strings.AppendChar(encodingName, 'A') END END;
-						
+
 						(* manual names: *)
 						type := operand.type;
 						IF type = "r" THEN Strings.Append(encodingName, "Reg");
@@ -285,14 +285,14 @@ TYPE
 						ELSIF type = "*" THEN (* ignore *)
 						ELSE Error("unknown operand type found"); RETURN
 						END;
-						
+
 						(* alternative, which works for arbitrary type strings
 						COPY(Strings.UpperCaseInNew(operand.type)^, type);
 						*)
-						
+
 						AppendMaskName(encodingName, operand.mask);
 						context.out.String(encodingName);
-						
+
 						IF ~encodingNames.ContainsName(encodingName) THEN encodingNames.AddName(encodingName) END;
 					END;
 					context.out.String(");"); context.out.Ln;
@@ -311,7 +311,7 @@ TYPE
 			Error("filename missing")
 		END
 	END ParseARMInstructionSet;
-	
+
 	(* e.g. InstructionBits "100xx0x0x" ~
 	0: should be 0
 	1: should be 1
@@ -431,7 +431,7 @@ TYPE
 			IF ~options.GetInteger("s",start) THEN start := 0 END;
 			export := options.GetFlag("e");
 			incremental := options.GetFlag("i");
-			hex := options.GetFlag("h");			
+			hex := options.GetFlag("h");
 			IF ~options.GetString("p", prefix) THEN prefix := "" END;
 			IF ~options.GetInteger("l",lf) THEN lf := MAX(LONGINT) END;
 			nr := start;
@@ -969,7 +969,7 @@ TYPE
 			numberMnemonics := 0;
 			numberInstructions := 0;
 			maxMnemonicNameLength := 0;
-			
+
 			mnemonic := firstMnemonic;
 			WHILE (mnemonic # NIL) DO
 				w.Char(09X); w.Char(09X); w.String("AddMnemonic(");
@@ -985,12 +985,12 @@ TYPE
 				w.String(");");
 				w.Ln;
 				mnemonic := mnemonic.next;
-			END; 
+			END;
 
 			mnemonic := firstMnemonic;
 			maxOpcodeLength:= 0;
-			
-			
+
+
 			WHILE(mnemonic # NIL) DO
 				(*
 				IF Strings.Length(mnemonic.name)+1 > maxMnemonicNameLength THEN maxMnemonicNameLength := Strings.Length(mnemonic.name)+1 END;
@@ -1024,12 +1024,12 @@ TYPE
 
 				instruction := mnemonic.firstInstruction;
 				WHILE(instruction # NIL) DO
-					w.Char(09X); w.Char(09X); 
+					w.Char(09X); w.Char(09X);
 					w.String("AddInstruction(");
 					w.String("op");
 					w.String(mnemonic.name);
 					w.String(", ");
-					
+
 					w.String('"');
 					w.String(instruction.op1);
 					IF instruction.op2 # "" THEN
@@ -1042,9 +1042,9 @@ TYPE
 						w.String(instruction.op3);
 					END;
 					w.String('", ');
-					
+
 					OpCode(instruction.opcode); w.String(", ");
-					
+
 					Options("opt",instruction.bitwidth); w.String(", ");
 					Options("cpu",instruction.target); w.String(");");
 					(*

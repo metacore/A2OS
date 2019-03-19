@@ -4,7 +4,7 @@ IMPORT XML, XMLParser, XMLScanner, Basic := FoxBasic, Strings, StringPool, Strea
 CONST
 	Persistent = 0;
 	None* = -1; (* no index *)
-	
+
 	EnableTrace = FALSE;
 
 TYPE
@@ -639,7 +639,7 @@ TYPE
 		END FloatAttribute;
 
 		PROCEDURE EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; VAR value:HUGEINT): BOOLEAN;
-		VAR str: ARRAY 32 OF CHAR; v: LONGINT; 
+		VAR str: ARRAY 32 OF CHAR; v: LONGINT;
 		BEGIN
 			IF NameAttribute(name, str) & translation.Key(str, v) THEN value := v; RETURN TRUE ELSE RETURN FALSE END;
 		END EnumAttribute;

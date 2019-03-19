@@ -79,11 +79,11 @@ CONST
 	(* Chunker stuff *)
 	BufSize = 400H;
 	TokenSize = 10H;
-	
+
 	MaxRequestHeaderFields* = 47+10; (* at most 47 standard headers of RFC 2616 plus a number of additional header fields*)
-	
+
 	DocType* = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">';
-	
+
 TYPE
 	AdditionalField* = POINTER TO RECORD
 		key* : ARRAY 64 OF CHAR;
@@ -230,19 +230,19 @@ TYPE
 			END
 		END Receiver;
 	END ChunkedInStream;
-	
+
 (* writing to stream 'inW' writes 'size' characters to 'outW' and then stops, returning Streams.EOF when attempting to write beyond stream end *)
 (* implementation limination: 'remainder' bookkeeping and EOF detection occurs with Update(); but not after each Char() or Bytes(); a too large last data chunk may therefore be written only in part. when EOF is detected *)
-		
+
 	LimitedOutStream* = OBJECT
 		VAR outW: Streams.Writer;
 			buf: ARRAY BufSize OF CHAR;
 			bufPos: LONGINT;
 			remain-: LONGINT;
-	
+
 		PROCEDURE &Init*(VAR inW, outW: Streams.Writer; size : LONGINT);
 		BEGIN
-			SELF.outW := outW;	
+			SELF.outW := outW;
 			remain := size;
 			bufPos:=0;
 			Streams.OpenWriter(inW, Sender);
@@ -263,19 +263,19 @@ TYPE
 			END;
 			IF (remain=0) & (i < ofs+len) THEN res:= Streams.EOF END;
 		END Sender;
-		
+
 		PROCEDURE Write;
 		BEGIN
 			outW.Bytes(buf, 0, bufPos);
 			bufPos := 0
 		END Write;
-		
+
 		PROCEDURE Update*;
 		BEGIN
 			Write;
 			outW.Update;
 		END Update;
-		
+
 		PROCEDURE Padding*(ch: CHAR);
 		VAR i:LONGINT;
 		BEGIN
@@ -283,14 +283,14 @@ TYPE
 			WHILE remain>0 DO outW.Char(ch); DEC(remain) END;
 			outW.Update;
 		END Padding;
-		
-	
+
+
 	END LimitedOutStream;
-	
+
 	LimitedInStream* = OBJECT
 		VAR inR: Streams.Reader;
 			remain-: LONGINT;
-	
+
 		PROCEDURE &Init*(VAR inR, outR: Streams.Reader; size : LONGINT);
 		BEGIN
 			SELF.inR := inR;	remain := size;
@@ -506,7 +506,7 @@ BEGIN
 	(*in.SkipWhitespace; *)(* optimization PH 2012: to avoid unnecessary work in malformed requests*)
 	GetToken(in, s); GetMethod(s, header.method);
 	GetToken(in, header.uri);
-	GetToken(in, s); 
+	GetToken(in, s);
 	wellformed:=GetVersion(s, header.maj, header.min);
 	header.host := ""; header.referer := ""; header.useragent := ""; header.accept := ""; header.transferencoding := "";
 	header.additionalFields := NIL;
@@ -553,7 +553,7 @@ PROCEDURE ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR re
 VAR s, sLow: ARRAY 32 OF CHAR; af: AdditionalField;
 	i :LONGINT; ch :CHAR; wellformed: BOOLEAN;
 BEGIN
-	GetToken(in, s); 
+	GetToken(in, s);
 	wellformed:=GetVersion(s, header.maj, header.min);
 	GetToken(in, s); i := 0; GetInt(i, s, header.statuscode); in.Ln(header.reasonphrase);
 	header.server := ""; header.date := ""; header.contenttype := "";
@@ -781,15 +781,15 @@ BEGIN
 END SendResponseHeader;
 
 PROCEDURE SendStatusReply*(code:LONGINT; VAR request: RequestHeader; VAR reply: ResponseHeader; VAR out: Streams.Writer);
-VAR w : Streams.Writer; 
+VAR w : Streams.Writer;
 	chunker: ChunkedOutStream;
 BEGIN
-	reply.statuscode := code; 
+	reply.statuscode := code;
 	GetReasonPhrase(code, reply.reasonphrase);
 	reply.contenttype := "text/html; charset=UTF-8";
 	NEW(chunker, w, out, request, reply);
-	SendResponseHeader(reply, out); 
-	WriteHTMLStatus(reply, w); 
+	SendResponseHeader(reply, out);
+	WriteHTMLStatus(reply, w);
 	w.Update;
 	chunker.Close
 END SendStatusReply;
@@ -819,12 +819,12 @@ PROCEDURE SplitHTTPAdr*(url : ARRAY OF CHAR; VAR host, path: ARRAY OF CHAR; VAR 
 VAR i, j : LONGINT;
 BEGIN
 	(*assuming HTTP or HTTPS*)
-	
+
 	IF (LEN(url)>7) &(url[4] = ":") & (url[5] = "/") & (url[6] = "/") THEN i:=7; port:=HTTPPort;
 	ELSIF (LEN(url)>8) & (url[5] = ":") & (url[6] = "/") & (url[7] = "/") THEN i:=8; port:=HTTPSPort;
 	ELSE RETURN FALSE
 	END;
-	
+
 	(* get host *)
 	j := 0;
 	WHILE (url[i] # ":") & (url[i] # "/") & (url[i] # 0X) DO

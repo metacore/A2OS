@@ -7,7 +7,7 @@ IMPORT Streams, Commands, Files, Strings, BW := BorrowsWheeler, Huffman;
 	Block		=	size  bwindex Freqs  { CHAR }
 	Freqs		= 	num { freq } 			(num = 0,  (256 * freq))
 				|	num { freq patt }		(num = 1..127)
-	num		=	CHAR			
+	num		=	CHAR
 	patt		=	CHAR
 	freq		=	RawNum
 	bwindex	=	RawNum
@@ -18,14 +18,14 @@ CONST
 	BlockSize* = 8*1024;
 	ComprTag = LONGINT(0FEFD1F2FH);
 	Suffix = ".oz";
-		
+
 
 	PROCEDURE Compress*( r: Streams.Reader;  w: Streams.Writer );
-	VAR 
-		huff: Huffman.Encoder; 
-		bw: BW.Encoder;  
+	VAR
+		huff: Huffman.Encoder;
+		bw: BW.Encoder;
 		buffer: ARRAY BlockSize OF CHAR;  len: LONGINT;
-	BEGIN 
+	BEGIN
 		NEW( huff, w );  NEW( bw );
 		w.RawLInt( ComprTag );
 		LOOP
@@ -38,16 +38,16 @@ CONST
 		w.RawNum( 0 );	(* mark end of stream *)
 		w.Update
 	END Compress;
-	
-	
+
+
 	(* returns false if input is not an OZip compressed stream *)
 	PROCEDURE Uncompress*( r: Streams.Reader;  w: Streams.Writer ): BOOLEAN;
-	VAR 
+	VAR
 		huff: Huffman.Decoder;
-		tag, len, bwIndex: LONGINT; 
+		tag, len, bwIndex: LONGINT;
 		bw: BW.Decoder;
 		buffer: ARRAY BlockSize OF CHAR;
-	BEGIN 
+	BEGIN
 		r.RawLInt( tag );
 		IF tag = ComprTag  THEN
 			NEW( huff, r );  NEW( bw );
@@ -66,9 +66,9 @@ CONST
 		END
 	END Uncompress;
 
-	
 
-	
+
+
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR ): Files.File;
 	VAR
 		tname, name2: ARRAY 128 OF CHAR;  res: LONGINT;
@@ -81,9 +81,9 @@ CONST
 		END;
 		RETURN Files.New( name )
 	END NewFile;
-	
-	
-	
+
+
+
 	(** OZip.CompressFile  infile [outfile] ~ *)
 	PROCEDURE CompressFile*( c: Commands.Context );
 	VAR
@@ -98,10 +98,10 @@ CONST
 			END;
 			f1 := Files.Old( name1 );
 			IF f1 # NIL THEN
-				Files.OpenReader( r, f1, 0 ); 
+				Files.OpenReader( r, f1, 0 );
 				f2 := NewFile( name2 );  Files.OpenWriter( w, f2, 0 );
 				Compress( r, w );  Files.Register( f2 );
-				c.out.String( " => " );  c.out.String( name2 );  c.out.Ln; 
+				c.out.String( " => " );  c.out.String( name2 );  c.out.Ln;
 			ELSE
 				c.error.String( "   ### file not found" );  c.error.Ln
 			END
@@ -110,9 +110,9 @@ CONST
 		END;
 		c.error.Update
 	END CompressFile;
-	
-	
-	
+
+
+
 	(** OZip.UncompressFile  infile [outfile] ~ *)
 	PROCEDURE UncompressFile*( c: Commands.Context );
 	VAR
@@ -130,7 +130,7 @@ CONST
 			END;
 			f1 := Files.Old( name1 );
 			IF f1 # NIL THEN
-				Files.OpenReader( r, f1, 0 );	 
+				Files.OpenReader( r, f1, 0 );
 				f2 := NewFile( name2 );  Files.OpenWriter( w, f2, 0 );
 				IF Uncompress( r, w ) THEN
 					Files.Register( f2 );
@@ -146,16 +146,16 @@ CONST
 		END;
 		c.error.Update
 	END UncompressFile;
-	
+
 END OZip.
 
 
 	OZip.CompressFile   TLS.Mod ~
 	OZip.CompressFile   OZip.GofUu ~
 	OZip.CompressFile   guide.pdf ~
-		
+
 	OZip.UncompressFile   TLS.Mod.oz TTT.Mod ~
 	OZip.UncompressFile   OZip.GofUu.oz  TTT.GofUu ~
 	OZip.UncompressFile   guide.pdf.oz  TTT.pdf ~
-	
+
 	System.Free  OZip Huffman  BorrowsWheeler ~

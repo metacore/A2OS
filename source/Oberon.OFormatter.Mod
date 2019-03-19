@@ -1078,4 +1078,4 @@ OFormatter.RemoveOldStyleWith *  ~
 IF A IS B THEN WITH A: B
 END; ELSIF A IS C THEN WITH | A: C
 END; ELSE
-END; END; 
+END; END;

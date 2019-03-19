@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (*		(c) Project Voyager, StatLab Heidelberg
@@ -121,7 +121,7 @@ VAR
 	faceDepths: POINTER TO ARRAY OF LONGREAL;
 	faceIndex: POINTER TO ARRAY OF LONGINT;  (* POINTER ! *)
 	triangulate: BOOLEAN;
-	lines: BOOLEAN; 
+	lines: BOOLEAN;
 	colorTable*: ColorMap;
 	(**  general help routines  *)
 
@@ -349,7 +349,7 @@ END PrefFaceConnection;
 PROCEDURE InstallHalfEdgeDesc (map: tMap;      update: BOOLEAN);
 	(* *)
 	VAR m: vyRealVec.tMatrixChunk;      row, col, i, j: INTEGER;      dx, dy: Real;
-	face, lastFace: tFace;      lastVertex: tVertex;     faces: LONGINT; n: LONGINT; 
+	face, lastFace: tFace;      lastVertex: tVertex;     faces: LONGINT; n: LONGINT;
 
 PROCEDURE UpdateSurface;
 	(** vs 0.0d0 *)	(* md  28.08.95 16:29:38 *)
@@ -368,12 +368,12 @@ BEGIN m := map.mdata.buf;
 	face := map.firstFace.next;
 	WHILE face # NIL DO
 		sx := 0;      sy := 0;      sz := 0;
-		edge := face.firstHalfEdge; n := 0; 
+		edge := face.firstHalfEdge; n := 0;
 		WHILE edge # NIL DO
 			sx := sx + edge.startVertex.x;
 			sy := sy + edge.startVertex.y;
 			sz := sz + edge.startVertex.z;
-			INC(n); 
+			INC(n);
 			edge := edge.next
 		END;
 		face.sx := sx / n;      face.sy := sy / n;      face.sz := sz / n;
@@ -886,11 +886,11 @@ END ReplPainter;
 
 PROCEDURE PainterMap (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 15:26:48 *)
-	VAR self: tMap;     sort: BOOLEAN;     t0, t1: LONGINT; lightingMap: tPlotRoutine; 
+	VAR self: tMap;     sort: BOOLEAN;     t0, t1: LONGINT; lightingMap: tPlotRoutine;
 
 BEGIN IF vyPort.onTheFly THEN ReplOnTheFly (o3d);     RETURN END;
 	self := o3d(tMap);     sort := FALSE;
-	lightingMap := LightingMap; 
+	lightingMap := LightingMap;
 	IF ((self.mdata.buf.row) > 512) OR ((self.mdata.buf.col) > 512) THEN WireFrameMap(o3d);  RETURN
 	ELSIF ((self.mdata.buf.row) > 32) OR ((self.mdata.buf.col) > 32)  THEN triangulate := FALSE
 	ELSIF (self.plot = lightingMap) THEN  triangulate := TRUE
@@ -965,17 +965,17 @@ BEGIN
 				vyGraphBase.FrameFillArea2d (x, y, 3);
 				*)
 				vyHostDisplay.SetForeColor (15);
-				IF lines THEN 
+				IF lines THEN
 				vyGraphBase.Line2d(x[0], y[0], x[1], y[1]);
-				END; 
+				END;
 			ELSE
 
 				vyGraphBase.PaintFillArea2d (x, y, 4);
 
 				vyHostDisplay.SetForeColor (15);
-				IF lines THEN 
+				IF lines THEN
 				vyGraphBase.FrameFillArea2d (x, y, 4);
-				END; 
+				END;
 			END;
 		END;
 
@@ -1072,7 +1072,7 @@ BEGIN ResetDoneMarker (map);
 	WHILE face # map.firstFace DO
 		PaintFace (face);
 		IF lines THEN FrameFace (face);
-		END; 
+		END;
 		face := face.pref
 	END;
 END ReplSmoothLighting;
@@ -1143,16 +1143,16 @@ BEGIN ResetDoneMarker (map);
 		IF ~triangulate THEN
 			vyGraphBase.PaintFillArea2d (x, y, 4);
 			vyHostDisplay.SetForeColor (15);
-			IF lines THEN 
+			IF lines THEN
 			vyGraphBase.FrameFillArea2d (x, y, 4);
-			END; 
+			END;
 		ELSE
 			vyGraphBase.PaintFillArea2d (x, y, 3);
 			vyHostDisplay.SetForeColor (15);
 			(*vyGraphBase.FrameFillArea2d (x, y, 3);*)
-			IF lines THEN 
+			IF lines THEN
 			vyGraphBase.Line2d(x[0], y[0], x[1], y[1]);
-			END; 
+			END;
 
 		END;
 		face := face.pref;     (*Pause*)
@@ -1325,18 +1325,18 @@ BEGIN
 	END;
 END SetColorMap;
 
-PROCEDURE SetLines*(VAR b: BOOLEAN); 
-VAR temp: BOOLEAN; 
-BEGIN 
-	temp := b; 
-	b := lines; 
-	lines := temp; 
-END SetLines; 
+PROCEDURE SetLines*(VAR b: BOOLEAN);
+VAR temp: BOOLEAN;
+BEGIN
+	temp := b;
+	b := lines;
+	lines := temp;
+END SetLines;
 
 
 BEGIN
 	SetLightDirection (12 , - 4, 12);
 	SetHLHSRIdentifier (wireFrameId);
-	triangulate := TRUE; lines := TRUE; 
+	triangulate := TRUE; lines := TRUE;
 	InitColorMap;
-END vyPolyWorld. 
+END vyPolyWorld.

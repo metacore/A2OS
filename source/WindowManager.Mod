@@ -116,7 +116,7 @@ TYPE
 						ZoomToWindow(w); ignore := TRUE
 					ELSIF ((2 IN lastKeys) # (2 IN keys)) & (2 IN keys) THEN
 						SetInitialWindowBounds(w);  ignore := TRUE
-					END;					
+					END;
 				END;
 				IF (dz # 0) THEN
 					navig := TRUE;
@@ -572,10 +572,10 @@ TYPE
 				pointerOwner := GetPositionOwnerIntern(pointerX, pointerY, NIL);
 			END;
 			CheckPointerImage; (* maybe some other window got below the cursor *)
-	
+
 			m.sender:=w; m.msgType := Messages.MsgInvalidate; m.msgSubType := Messages.MsgSubAll;
 			IF (w.sequencer#NIL) & w.sequencer.Add(m) THEN END; (* Invalidate window contents when first put on display. *)
-			
+
 			lock.ReleaseWrite;
 			WM.IncWTimestamp;
 		END Add;
@@ -1433,8 +1433,8 @@ TYPE
 						dx := -msg.dx;
 						dy := -msg.dy;
 					ELSE
-						nx := msg.x;  
-						ny := msg.y;  
+						nx := msg.x;
+						ny := msg.y;
 						dx := msg.dx;
 						dy := msg.dy;
 					END;
@@ -1447,8 +1447,8 @@ TYPE
 						ELSE
 							lastTime := time; lastX := nx; lastY := ny;
 						END;
-					ELSIF inDoubleClick & (msg.keys = {0}) THEN 
-						msg.keys := {1}; 
+					ELSIF inDoubleClick & (msg.keys = {0}) THEN
+						msg.keys := {1};
 						(* no change after double click -- avoid sending a click event right after a double click event *)
 					ELSE
 						inDoubleClick := FALSE;
@@ -1458,10 +1458,10 @@ TYPE
 					IF dx # 0 THEN INC( x, dx );
 					ELSE dx := nx-x; x:= nx;
 					END;
-					IF dy # 0 THEN INC( y, dy );  
+					IF dy # 0 THEN INC( y, dy );
 					ELSE dy := ny - y;  y := ny;
 					END;
-					IF dz # 0 THEN INC( z, dz );  
+					IF dz # 0 THEN INC( z, dz );
 					(*ELSE dz := nz - z; z := nz;*)
 					END;
 

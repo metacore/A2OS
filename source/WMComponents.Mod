@@ -30,7 +30,7 @@ MODULE WMComponents;	(** AUTHOR "TF"; PURPOSE "Component Framework based on XML"
 	^attribute=[component "."] attribute
 	^property=[component "."] property
 
-	is replaced by the value of <attribute> or <property>. 
+	is replaced by the value of <attribute> or <property>.
 	If the component qualifier is omitted, <attribute> or <property> is supposed to be an attribute or property of the originator of the event.
 
 	If no MacroHandlerProcedure is found for a given macro, no substitution takes place.
@@ -41,10 +41,10 @@ MODULE WMComponents;	(** AUTHOR "TF"; PURPOSE "Component Framework based on XML"
 
 *)
 
-(*PH 08/14: 
+(*PH 08/14:
 - avoid parallel call of FormWindow.SetContent, Component.AddContent, Form.InvalidateRect by different processes, through use of EXCLUSIVE sections.
 - send an "invalidate content" message to a window after it appears on the display, which is handled after "form" field is ready
-- restructure FormWindow.SetContent() to assure coherent displays and to assure FormWindow.content is consistent 
+- restructure FormWindow.SetContent() to assure coherent displays and to assure FormWindow.content is consistent
 *)
 
 IMPORT
@@ -91,7 +91,7 @@ CONST
 	MacroAttributePrefix = "attribute=";
 	MacroPropertyPrefix = "property=";
 	CanYield = TRUE;
-	
+
 	(*temporary - to be removed*)
 	FlagDirty=13;
 
@@ -166,7 +166,7 @@ TYPE
 	ToggleEditMode* = POINTER TO RECORD
 		recursion*: Recursion;
 	END;
-	
+
 	FindComponentMode* = POINTER TO RECORD END;
 
 	Event* = RECORD
@@ -273,8 +273,8 @@ TYPE
 				c := enum.GetNext();
 				IF ~(c IS WMProperties.Properties) THEN
 					IF ~((c IS Component) & ((c(Component).internal) OR c(Component).IsLocked())) THEN NewLine(w, 0); NewLine(w, nextLevel); END;
-					c(XML.Content).Write(w, context, nextLevel); 
-					(*c(Component).Write(w, context, nextLevel)*) 
+					c(XML.Content).Write(w, context, nextLevel);
+					(*c(Component).Write(w, context, nextLevel)*)
 				END;
 			END;
 			IF ~internal THEN
@@ -339,7 +339,7 @@ TYPE
 					END;
 				END;
 			END;
-			
+
 			enum :=xml.GetAttributes();
 			WHILE enum.HasMoreElements() DO
 				c := enum.GetNext();
@@ -347,7 +347,7 @@ TYPE
 					SetAttributeValue(c(XML.Attribute).GetName()^, c(XML.Attribute).GetValue()^);
 				END;
 			END;
-			
+
 			(*Initialize;*) (* redundant *)
 		END FromXML;
 
@@ -404,15 +404,15 @@ TYPE
 			Acquire;
 			BEGIN (*{EXCLUSIVE}*)(* EXCLUSIVE leads to deadlock ?*)
 				IF c IS WMProperties.Properties THEN
-					properties.SetXML(c(WMProperties.Properties)); 
+					properties.SetXML(c(WMProperties.Properties));
 				ELSIF c IS Component THEN
-					IF sequencer#NIL THEN 
-						c(Component).SetSequencer(sequencer); 
+					IF sequencer#NIL THEN
+						c(Component).SetSequencer(sequencer);
 						c(Component).Reset(SELF,NIL); (* will be scheduled by sequencer. implied RecacheProperties*)
 						Initialize; (*? there is also a Initialize() within Reset() above, but that one seems sometimes not be effective because scheduled later; however ,this is partial redundancy *)
 					ELSE (* no tree traversal - is less costly *)
-						c(Component).initialized:=FALSE; 
-						c(Component).sequencer:=NIL; 
+						c(Component).initialized:=FALSE;
+						c(Component).sequencer:=NIL;
 					END;
 				ELSIF ~(c IS XML.Comment) THEN
 					Release; RETURN
@@ -586,11 +586,11 @@ TYPE
 					RecacheProperties;
 					c := GetFirst();
 					WHILE (c # NIL) DO
-						IF c IS Component THEN 
-							c(Component).Reset(sender, data) 
+						IF c IS Component THEN
+							c(Component).Reset(sender, data)
 						END;
 						c := GetNext(c);
-					END;	
+					END;
 					IF ~initialized THEN Initialize END;
 				END;
 			END
@@ -671,7 +671,7 @@ TYPE
 		BEGIN ASSERT(IsCallFromSequencer());
 		END LinkChanged;
 
-		(* will be called synchronously if a property of the component changes. May not be called directly. 
+		(* will be called synchronously if a property of the component changes. May not be called directly.
 			Call Invalidate in this procedure whenever a property changed that impacts the visualization.
 			No such messages are sent until the component is initialized *)
 		PROCEDURE PropertyChanged*(sender, property : ANY);(** PROTECTED *)
@@ -925,7 +925,7 @@ TYPE
 				Invalidate;
 			ELSIF (property = scaleFont) THEN ScaleFont(bounds.GetHeight(),scaleFont.Get());  (*implicit Invalidate*)
 			ELSIF property = visible THEN Resized (*Implicit Invalidate*)
-			(* ELSIF takesFocus, needsTab...*)			
+			(* ELSIF takesFocus, needsTab...*)
 			ELSIF property = editMode THEN Invalidate;
 			ELSIF property = model THEN LinkChanged(model, model.Get());
 			ELSE PropertyChanged^(sender, property)
@@ -1135,7 +1135,7 @@ TYPE
 				m.msgType := Messages.MsgInvalidate;
 				m.msgSubType := Messages.MsgSubAll;
 				(* SELF(VisualComponent).Invalidate ...*)
-				IF sequencer.Add(m) THEN  END; 
+				IF sequencer.Add(m) THEN  END;
 			END;
 		END AddContent;
 		*)
@@ -1145,7 +1145,7 @@ TYPE
 		VAR bounds : Rectangles.Rectangle;canvas: WMGraphics.BufferCanvas; relativeAlignment: BOOLEAN;
 		BEGIN
 			ASSERT(c # NIL);
-			
+
 			IF (c.bounds.GetWidth() < 10) OR (c.bounds.GetHeight() < 10) THEN
 				c.bounds.SetExtents(40, 20);
 			END;
@@ -1162,7 +1162,7 @@ TYPE
 			AddContent(c);
 			Release;
 		END AddVisualComponent;
-		
+
 		PROCEDURE EditDragDropped(x,y: LONGINT; dragInfo: WM.DragInfo): BOOLEAN;
 		VAR data: ANY; e: ComponentListEntry; parent: XML.Element; dt: DropTarget; pos: LONGINT;
 		BEGIN
@@ -1304,7 +1304,7 @@ TYPE
 		(** Is called before any sub-components are drawn *)
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR color: WMGraphics.Color; i : LONGINT; name:Strings.String;
-		(* DebugUpdates can be used in order to visualize updates via some color cycling 
+		(* DebugUpdates can be used in order to visualize updates via some color cycling
 			Moreover, it slows down display extremely such that updates can be seen
 		*)
 		CONST DebugUpdates = FALSE;
@@ -1324,12 +1324,12 @@ TYPE
 			END;
 			*)
 			CheckReadLock;
-			
+
 			IF DebugUpdates THEN
 				canvas.Fill(GetClientRect(), Kernel.GetTicks()*100H +0FFH, WMGraphics.ModeSrcOverDst);
 				FOR i := 0 TO 10000000 DO END;
 			ELSE
-				color := fillColor.Get();			
+				color := fillColor.Get();
 				IF color # 0 THEN canvas.Fill(GetClientRect(), color, WMGraphics.ModeSrcOverDst) END;
 			END;
 		END DrawBackground;
@@ -1382,8 +1382,8 @@ TYPE
 				IF selection.rectOwner = SELF THEN
 					r0 := selection.rect;
 				 	color := WMGraphics.Color(0FF000080H);
-					canvas.Fill(r0, color, WMGraphics.ModeCopy); 
-				END; 			
+					canvas.Fill(r0, color, WMGraphics.ModeCopy);
+				END;
 			END;
 			IF selection.Has(SELF) THEN
 				IF selection.state = 0 THEN
@@ -1506,7 +1506,7 @@ TYPE
 				END
 			END
 		END InvalidateRect;
-		
+
 		PROCEDURE PostInvalidateCommand*(sender, par : ANY);
 		VAR m: Messages.Message; r, b: Rectangles.Rectangle; client: VisualComponent; parent: XML.Element;
 		BEGIN
@@ -1525,7 +1525,7 @@ TYPE
 			m.msgSubType := Messages.MsgSubRectangle;
 			m.x := r.l; m.y := r.t; m.dx := r.r; m.dy := r.b;
 			m.sender := client;
-			IF sequencer.Add(m) THEN IF CanYield THEN Objects.Yield END END;			
+			IF sequencer.Add(m) THEN IF CanYield THEN Objects.Yield END END;
 		END PostInvalidateCommand;
 
 		PROCEDURE InvalidateCommand*(sender, par : ANY);
@@ -1533,7 +1533,7 @@ TYPE
 		BEGIN
 			IF ~initialized OR ~visible.Get() THEN RETURN END; (*? double call to visible.Get here and below. Which one is better ?*)
 			IF ~IsCallFromSequencer() OR ~visible.Get() THEN
-				PostInvalidateCommand(sender, par); 
+				PostInvalidateCommand(sender, par);
 			ELSE
 				InvalidateRect(GetClientRect());
 			END;
@@ -1682,8 +1682,8 @@ TYPE
 	(** Indicates the pointer was moved. keys is the set of buttons currently pressed. x, y is the position in component
 		coordinates.
 		May only be called from the sequencer thread.
-		Components interested in this message can override this method instead of searching for the message in HandleInternal. 
-		When using PointerMove to move the component itself within a context (window or parent component), 
+		Components interested in this message can override this method instead of searching for the message in HandleInternal.
+		When using PointerMove to move the component itself within a context (window or parent component),
 		remember that Component.PointerMove are given in component coordinates (thus, a moving coordinate origin ...), but you want to move the component in context coordinates !
 		*)
 		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET); (** PROTECTED *)
@@ -1749,7 +1749,7 @@ TYPE
 						entry := selection.first;
 						WHILE entry # NIL DO
 							clone := Clone(entry.component);
-							parent := selection.first.component.GetParent(); 
+							parent := selection.first.component.GetParent();
 							c := clone(VisualComponent);
 							IF c.sequencer # parent(Component).sequencer THEN c.SetSequencer(parent(Component).sequencer) END;
 							c.Reset(NIL, NIL);
@@ -1912,7 +1912,7 @@ TYPE
 					tr.l :=MIN (editX,msg.x); ;
 					tr.t := MIN(editY, msg.y);
 					tr.r := MAX(editX, msg.x);
-					tr.b := MAX(editY, msg.y); 
+					tr.b := MAX(editY, msg.y);
 					selection.rectOwner := SELF;
 					selection.rect := tr;
 					Invalidate;
@@ -2053,7 +2053,7 @@ TYPE
 						ELSIF msg.msgSubType = Messages.MsgSubPointerDown THEN
 							IF parentEditMode THEN
 								editRegion := InEditBounds(msg.x, msg.y);
-							ELSIF editMode.Get() THEN 
+							ELSIF editMode.Get() THEN
 								editRegion := None;
 
 								editX := msg.x; editY := msg.y;
@@ -2069,7 +2069,7 @@ TYPE
 							IF (editRegion # None) & parentEditMode THEN
 								IF (keyFlags # {}) & (keyFlags <= Inputs.Shift) THEN
 									selection.Toggle(SELF)
-								ELSIF ~selection.Has(SELF) THEN 
+								ELSIF ~selection.Has(SELF) THEN
 									selection.Reset(SELF);
 									selection.Add(SELF);
 								END;
@@ -2081,7 +2081,7 @@ TYPE
 							END;
 							SetFocus
 						ELSIF msg.msgSubType = Messages.MsgSubPointerUp THEN
-							IF selection.rectOwner = SELF THEN 
+							IF selection.rectOwner = SELF THEN
 								Invalidate;
 								selection.rectOwner := NIL;
 							END;
@@ -2105,7 +2105,7 @@ TYPE
 					 fPointerOwner.Handle(msg)
 				END
 			ELSIF msg.msgType = Messages.MsgKey THEN
-				IF fPointerOwner.EditKeyEvents(msg.x, msg.flags, msg.y) THEN 
+				IF fPointerOwner.EditKeyEvents(msg.x, msg.flags, msg.y) THEN
 					handled := TRUE
 				ELSIF focusComponent # SELF THEN focusComponent.Handle(msg)
 				ELSIF (visible.Get()) THEN
@@ -2143,7 +2143,7 @@ TYPE
 					ELSIF msg.msgSubType = Messages.MsgDragDropped THEN
 						IF (msg.ext # NIL) THEN
 							IF (msg.ext(WM.DragInfo).data # NIL) & (msg.ext(WM.DragInfo).data IS FindComponentMode) THEN
-								IF msg.ext(WM.DragInfo).onAccept # NIL THEN 
+								IF msg.ext(WM.DragInfo).onAccept # NIL THEN
 									msg.ext(WM.DragInfo).onAccept(po, msg.ext(WM.DragInfo));
 								END;
 							ELSIF (msg.ext(WM.DragInfo).data # NIL) & (msg.ext(WM.DragInfo).data IS ToggleEditMode) THEN
@@ -2209,8 +2209,8 @@ TYPE
 		VAR winx: XML.Element; a: XML.Attribute; string: ARRAY 128 OF CHAR; title:Strings.String;
 		BEGIN {EXCLUSIVE}
 			NEW(winx); winx.SetName("FormWindow");
-			NEW(a); a.SetName("name"); 
-				title:=GetTitle(); IF title=NIL THEN a.SetValue("componentWindow") ELSE a.SetValue(title^) END; 
+			NEW(a); a.SetName("name");
+				title:=GetTitle(); IF title=NIL THEN a.SetValue("componentWindow") ELSE a.SetValue(title^) END;
 				winx.AddAttribute(a);
 			NEW(a); a.SetName("loader"); a.SetValue("WMComponents.FormWindowGen"); winx.AddAttribute(a);
 			NEW(a); a.SetName("l"); Strings.IntToStr(bounds.l, string); a.SetValue(string); winx.AddAttribute(a);
@@ -2222,9 +2222,9 @@ TYPE
 			winx.AddContent(form);
 			RETURN winx
 		END ToXML;
-		
+
 		PROCEDURE LoadComponents*(xml: XML.Element);
-		VAR component: Repositories.Component; 
+		VAR component: Repositories.Component;
 		BEGIN
 			IF xml # NIL THEN
 				component := Repositories.ComponentFromXML(xml);
@@ -2243,9 +2243,9 @@ TYPE
 		PROCEDURE SetContent*(x : XML.Content);
 		VAR c: XML.Content;
 			m:Messages.Message;
-		BEGIN 
+		BEGIN
 			IF sequencer # NIL THEN sequencer.WaitFree() END;
-			BEGIN{EXCLUSIVE} 
+			BEGIN{EXCLUSIVE}
 				INC(disableUpdate);
 				INCL(flags, 13); (* render windows background non-displayed*)
 				IF form # NIL THEN form.Finalize; form.sequencer.Stop; content:=NIL END;
@@ -2263,7 +2263,7 @@ TYPE
 					form.uid.Set(NewString("form"));
 					c:=x;
 				END;
-				IF (c#NIL) & (c IS VisualComponent) THEN 
+				IF (c#NIL) & (c IS VisualComponent) THEN
 					content := c(VisualComponent);
 					form.initialized:=TRUE;
 					form.AddContent(content);
@@ -2271,7 +2271,7 @@ TYPE
 					form.fPointerOwner := content;
 				END;
 				DEC(disableUpdate);
-			END;			
+			END;
 			(*form.Initialize;*)(*implied above*)
 			(*form.Invalidate;*)(*implied above*)
 		END SetContent;
@@ -2328,12 +2328,12 @@ TYPE
 			CopyRect(rect);
 			Invalidate(rect)
 		END Update;
-		
+
 		PROCEDURE Handle*(VAR m : Messages.Message);
 		VAR pendingM: Messages.Message;
 		BEGIN
 			Handle^(m);
-			
+
 			IF (m.msgType = Messages.MsgExt) & (m.ext # NIL) THEN
 				IF (m.ext = componentStyleMsg) THEN CSChanged
 				END;
@@ -2344,7 +2344,7 @@ TYPE
 			ELSIF (m.msgType = Messages.MsgSetLanguage) & (m.ext # NIL) & (m.ext IS LanguageExtension) THEN
 				LanguageChanged(m.ext(LanguageExtension).languages);
 			ELSIF (m.msgType=Messages.MsgInvalidate) THEN  (* sent by WindowManager when a window is added to display space to assure it is up-to-date*)
-				IF form=NIL THEN RETURN 
+				IF form=NIL THEN RETURN
 				ELSE m.sender:=form; (* will be passed to form below, which will call sender.InvalidateRect *)
 				END;
 			END;
@@ -2359,7 +2359,7 @@ TYPE
 					KernelLog.String("Focus chain: "); form.TraceFocusChain;
 				END;
 			END;
-			
+
 			IF (form # NIL) THEN form.Handle(m); END;
 		END Handle;
 
@@ -2394,20 +2394,20 @@ TYPE
 		lastFocusComponent : VisualComponent;
 
 		PROCEDURE &New*(window : FormWindow);
-		BEGIN 
+		BEGIN
 			Init;
 			SetGenerator("WMComponents.NewForm");
 			lastFocusComponent := NIL;
 			SetNameAsString(StrForm);
 			SetWindow(window);
 		END New;
-		
+
 		PROCEDURE SetWindow*(window: FormWindow);
-		VAR seq: Messages.MsgSequencer; 
+		VAR seq: Messages.MsgSequencer;
 		BEGIN {EXCLUSIVE}
 			IF window # NIL THEN
-				SELF.window := window; 
-				window.form := SELF; 
+				SELF.window := window;
+				window.form := SELF;
 				bounds.Set(Rectangles.MakeRect(0, 0, window.GetWidth(), window.GetHeight()));
 				NEW(seq, Handle); seq.SetTrapHandler(window.Trap); SetSequencer(seq);
 			END;
@@ -2438,10 +2438,10 @@ TYPE
 		END EnableUpdate;
 
 		PROCEDURE InvalidateRect*(rect : Rectangles.Rectangle);
-		BEGIN 
-			IF window # NIL THEN 
+		BEGIN
+			IF window # NIL THEN
 				BEGIN{EXCLUSIVE} AWAIT(initialized) END;
-				window.Update(rect) 
+				window.Update(rect)
 			END;
 		END InvalidateRect;
 
@@ -3392,7 +3392,7 @@ BEGIN {EXCLUSIVE}
 	RETURN NIL
 END Load;
 
-PROCEDURE FormWindowGen*(xml:XML.Content): WM.Window; 
+PROCEDURE FormWindowGen*(xml:XML.Content): WM.Window;
 VAR winx: XML.Element; formx: XML.Content; window: FormWindow; name, string:Strings.String; canvas:WMGraphics.BufferCanvas;
 	canvasGenerator: WMGraphics.CanvasGenerator;
 	moduleName, procedureName : Modules.Name;
@@ -3422,7 +3422,7 @@ BEGIN
 					END;
 				END;
 			END;
-			
+
 			formx:=winx.GetFirst(); (* this typically has name="Form" *)
 			IF (formx#NIL)&(formx IS XML.Element) THEN
 				window.LoadComponents(formx(XML.Element)); (* at the price of duplication of component tree construction ...*)
@@ -3472,14 +3472,14 @@ BEGIN
 END LoadFormWindow;
 
 (** Open form window and build its component tree *)
-PROCEDURE Open*(context : Commands.Context); 
+PROCEDURE Open*(context : Commands.Context);
 VAR filename: Files.FileName; window: WM.Window; xml:XML.Content;
 BEGIN
 	IF context.arg.GetString(filename) & (Strings.Length(filename)>0) THEN
 		xml:=Load(filename); (* here, the xml tree is already constructed, however not in the right sequence for component contruction ( [Init()..loadProperties()..Initialize()] )*)
 		window:=LoadFormWindow(xml);
-		IF window#NIL THEN 
-			WM.AddWindow(window,window.bounds.l,window.bounds.t); 
+		IF window#NIL THEN
+			WM.AddWindow(window,window.bounds.l,window.bounds.t);
 		END;
 	END;
 END Open;

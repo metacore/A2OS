@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 
@@ -217,10 +217,10 @@ BEGIN	Texts.OpenReader(r, sc.text, pos);
 	(* post *)
 	IF okSoFar THEN
 		more := TRUE; WHILE (i < len) & more DO Texts.Read(r, c);  INC(i);
-			IF ("0" <= c) & (c <= "9") THEN 
-								IF post < MAX(LONGINT)/100 THEN 
+			IF ("0" <= c) & (c <= "9") THEN
+								IF post < MAX(LONGINT)/100 THEN
 				post := post * 10 + (ORD(c) - 30H); pow := pow * 10;
-				END; 
+				END;
 ASSERT(post >= 0, 102); ASSERT(pow >= 0, 103)  (* catch overflow *)
 			ELSE more := FALSE;   okSoFar := ( (c = "E") OR (c="D") OR (c="e"))  END
 		END (* WHILE *)
@@ -314,7 +314,7 @@ BEGIN
 	FOR i := ORD("a") TO ORD("z") DO DefaultStart[i] := ccAlpha END;
 	DefaultStart[ORD(CR)] := ccCR;
 	DefaultStart[ORD(EOT)] := ccEOT;
-	DefaultStart[ORD("(")] := ccComment;  
+	DefaultStart[ORD("(")] := ccComment;
 	FOR i := ORD("0") TO ORD("9") DO DefaultStart[i] := ccDigit END;
 	AddReservedSym("!", csExclam, NIL, DefaultStart);
 	AddReservedSym('"', csTicTic, NIL, DefaultStart);
@@ -323,7 +323,7 @@ BEGIN
 	AddReservedSym('%', csPercent, NIL, DefaultStart);
 	AddReservedSym('&', csAnd, NIL, DefaultStart);
 	AddReservedSym("'", csTic, NIL, DefaultStart);
-	(* AddReservedSym("(", csLBrac, NIL, DefaultStart); *) 
+	(* AddReservedSym("(", csLBrac, NIL, DefaultStart); *)
 	AddReservedSym(")", csRBrac, NIL, DefaultStart);
 	AddReservedSym("[", csLBrac1, NIL, DefaultStart);
 	AddReservedSym("]", csRBrac1, NIL, DefaultStart);
@@ -364,7 +364,7 @@ END GetCurTok;
 
 (* Token separators. Consume all chars of token, set at least curtokpos and cutoklen *)
 PROCEDURE OneCh (VAR sc: Scanner);
-BEGIN	sc.curTokPos := sc.chpos; 	sc.curTokLen := 1;  Ch(sc) 
+BEGIN	sc.curTokPos := sc.chpos; 	sc.curTokLen := 1;  Ch(sc)
 END OneCh;
 
 PROCEDURE TwoCh (VAR sc: Scanner);
@@ -382,11 +382,11 @@ BEGIN	sc.TokDelLPos := sc.chpos; sc.TokDelLLen := 1; del := sc.ch; Ch(sc);
 	sc.curTokPos := sc.chpos;
 	WHILE (sc.ch # 0X) & (sc.ch # del) & (sc.ch # CR) DO  Ch(sc)  END;
 	sc.TokDelRPos := sc.chpos; sc.TokDelRLen := 1;
-	sc.curTokLen := sc.chpos - 
+	sc.curTokLen := sc.chpos -
 	sc.curTokPos;
 	IF (sc.ch = CR) OR  (sc.ch = 0X) THEN (*OString("pos");OInt(TokDelLPos);
 		OString(" String not closed.");OLn;*)
-	ELSE (*Ch(sc)*) 
+	ELSE (*Ch(sc)*)
 	END
 END String;
 
@@ -453,7 +453,7 @@ END Sym;
 
 PROCEDURE IsComment (VAR sc: Scanner): BOOLEAN;
 	VAR commentlevel: INTEGER;
-BEGIN	
+BEGIN
 
 		IF  (sc.chnext = "*") THEN
 		commentlevel := 1; sc.curTokPos := sc.chnextpos + 1;
@@ -469,7 +469,7 @@ BEGIN
 		ELSE
 			sc.curTokLen := sc.chpos - sc.curTokPos; sc.TokDelRPos := sc.chpos; sc.TokDelRLen := 0
 		END;
-		Ch(sc); (* remove last char *) 
+		Ch(sc); (* remove last char *)
 		RETURN TRUE
 	ELSE
 		RETURN FALSE
@@ -483,7 +483,7 @@ END IsReserved;
 
 PROCEDURE StopGet(VAR sc: Scanner): INTEGER;
 BEGIN
-	sc.eot := TRUE; sc.class := ctEOT; sc.chnext := EOT; 
+	sc.eot := TRUE; sc.class := ctEOT; sc.chnext := EOT;
 	RETURN ctEOT;
 END StopGet;
 
@@ -597,18 +597,18 @@ PROCEDURE SuperSwitch (VAR sc: Scanner);
 upon * insert switch to marked viewer
 upon  ^, switch permanent  *)
 (*! needs strict testing *)
-VAR scnew: Scanner; dummy: INTEGER; 
+VAR scnew: Scanner; dummy: INTEGER;
 BEGIN
 	CASE sc.v OF
 		csArrow: NewScanner(scnew); OpenSelXScanner(scnew);  IF scnew # NIL THEN sc := scnew END;   (* fof 0103xx *)
 	|csAt: NewScanner(scnew); OpenSelScanner(scnew); IF scnew # NIL  THEN scnew.prevScanner := sc; sc := scnew END;
-	|csStar: 
-		IF sc.ch = ")" THEN 
+	|csStar:
+		IF sc.ch = ")" THEN
 			(* end of a comment, do nothing *)
-			Ch(sc); 
-			RETURN  
-		END; 
-		NewScanner(scnew); OpenMarkedScanner(scnew); 
+			Ch(sc);
+			RETURN
+		END;
+		NewScanner(scnew); OpenMarkedScanner(scnew);
 		IF scnew # NIL THEN sc := scnew  ELSE sc.GetNext := StopGet END
 	END
 END SuperSwitch;

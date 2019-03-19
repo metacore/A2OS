@@ -262,7 +262,7 @@ TYPE
 			ELSE
 				KernelLog.String("Registered NON ARP receiver"); KernelLog.Ln
 			END;
-			
+
 			(* exists the type already? *)
 			typeItem := typeList;
 			WHILE (typeItem # NIL) & (typeItem^.type # type) DO

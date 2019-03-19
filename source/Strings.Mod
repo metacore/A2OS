@@ -83,55 +83,55 @@ TYPE
 	END Buffer;
 
 
-	
-	
+
+
 	OPERATOR "+"*( a: String; CONST b: ARRAY OF CHAR ): String;
-	VAR str: String; 
+	VAR str: String;
 	BEGIN
-		NEW( str, LEN( a ) + Length( b ) );  
+		NEW( str, LEN( a ) + Length( b ) );
 		COPY( a^, str^ );  Append( str^, b );
 		RETURN str
-	END "+"; 
+	END "+";
 
 	OPERATOR "+"*( a: String; b: CHAR ): String;
-	VAR str: String; 
+	VAR str: String;
 	BEGIN
-		NEW( str, LEN( a ) + 1 );  
+		NEW( str, LEN( a ) + 1 );
 		COPY( a^, str^ );  AppendChar( str^, b );
 		RETURN str
-	END "+"; 
-	
+	END "+";
+
 	OPERATOR "+"*( a, b: String ): String;
-	VAR str: String; 
+	VAR str: String;
 	BEGIN
-		NEW( str, LEN( a ) + LEN( b ) );  
+		NEW( str, LEN( a ) + LEN( b ) );
 		COPY( a^, str^ );  Append( str^, b^ );
 		RETURN str
-	END "+"; 
-	
+	END "+";
+
 	OPERATOR "+"*( a: String; b: HUGEINT ): String;
-	VAR 
+	VAR
 		digits: ARRAY 32 OF CHAR;
-		str: String;  
+		str: String;
 	BEGIN
 		IntToStr( b, digits );
-		NEW( str, LEN( a ) + Length( digits ) );  
+		NEW( str, LEN( a ) + Length( digits ) );
 		COPY( a^, str^ );  Append( str^, digits );
 		RETURN str
-	END "+"; 
+	END "+";
 
 	OPERATOR "+"*( a: String; b: LONGREAL ): String;
-	VAR 
+	VAR
 		digits: ARRAY 32 OF CHAR;
-		str: String;  
+		str: String;
 	BEGIN
 		RC.RealToString( b, 18, digits );
-		NEW( str, LEN( a ) + Length( digits ) );  
+		NEW( str, LEN( a ) + Length( digits ) );
 		COPY( a^, str^ );  Append( str^, digits );
 		RETURN str
-	END "+"; 
-	
-	
+	END "+";
+
+
 (** string handling *)
 
 (** returns the length of a string *)

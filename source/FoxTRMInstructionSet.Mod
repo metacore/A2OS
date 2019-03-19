@@ -286,7 +286,7 @@ TYPE
 				|MemRegImm7: Unsigned(op.register, 0, 2); Unsigned(op.imm, regselW, instructionW-opcodeW-regselW-2);
 					IF op.fixup # NIL THEN Fixup(regselW, instructionW-opcodeW-regselW-2) END;
 			END;
-			
+
 		END EncodeOperand;
 
 	BEGIN
@@ -593,7 +593,7 @@ TYPE
 			oooo ddd 1 xxxxxxxsss
 		*)
 
-		
+
 		isimmP:=instructionW-1-opcodeW-regselW; (*18bit inW=> bit 10. If this bit is NOT set, there is an immediate.*)
 		isfloatP:=isimmP-2; (*18 bit insW => bit 8*)
 		isvecP:=isimmP-1; (*18 bit insW=> bit 9*)
@@ -781,25 +781,25 @@ TYPE
 		currOpCode:=makeOpcode(14);
 		AddMnemonic(opBEQ, "BEQ"); 	AddInstruction(currOpCode+makeCondition(0), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBNE, "BNE"); 	AddInstruction(currOpCode+makeCondition(1), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		
+
 		AddMnemonic(opBAE, "BAE");  	AddInstruction(currOpCode+makeCondition(2), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBB, "BB");      	AddInstruction(currOpCode+makeCondition(3), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		
+
 		AddMnemonic(opBN, "BN");     	AddInstruction(currOpCode+makeCondition(4), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBNN, "BNN"); 	AddInstruction(currOpCode+makeCondition(5), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
 		AddMnemonic(opBO, "BO");     	AddInstruction(currOpCode+makeCondition(6), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBNO, "BNO"); 	AddInstruction(currOpCode+makeCondition(7), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		
+
 		AddMnemonic(opBA, "BA"); 		AddInstruction(currOpCode+makeCondition(8), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBBE, "BBE"); 	AddInstruction(currOpCode+makeCondition(9), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		
+
 		AddMnemonic(opBGE, "BGE"); 	AddInstruction(currOpCode+makeCondition(10), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBLT, "BLT"); 	AddInstruction(currOpCode+makeCondition(11), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		
+
 		AddMnemonic(opBGT, "BGT"); 	AddInstruction(currOpCode+makeCondition(12), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBLE, "BLE"); 	AddInstruction(currOpCode+makeCondition(13), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		
+
 		AddMnemonic(opBT, "BT"); 		AddInstruction(currOpCode+makeCondition(14), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 		AddMnemonic(opBF, "BF"); 		AddInstruction(currOpCode+makeCondition(15), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
@@ -1025,9 +1025,9 @@ TYPE
 		lineNr := 0;
 		NEW(r, file, 0);
 		NEW(bitSet,0);
-		
-		
-		
+
+
+
 		WHILE r.Available()>0 DO
 			r.Ln(line);
 			val:=0;
@@ -1035,13 +1035,13 @@ TYPE
 			WHILE ORD(line[i])>0 DO(*read entire line*)
 				val:=val*10H;
 				val:=val+Hex(line[i]);
-				INC(i);				
+				INC(i);
 			END;
 			INC(lineNr);
 			bitSet.Resize(lineNr*36);(*bitset is treated as series of 36 bit slots into which the individual words fit left aligned.*)
 			bitSet.SetBits((lineNr-1)*36,decodeInstance.instructionW,val); (*extract word*)
 		END;
-		
+
 		RETURN bitSet
 	END ReadCode;
 
@@ -1066,7 +1066,7 @@ TYPE
 		RETURN bitSet
 	END ReadData;
 
-	PROCEDURE Disassemble*(context: Commands.Context); 
+	PROCEDURE Disassemble*(context: Commands.Context);
 	TYPE
 		Disasm = OBJECT (Disassembler.Disassembler)
 

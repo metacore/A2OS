@@ -51,7 +51,7 @@ TYPE
 		BEGIN
 			SELF.capabilities := capabilities;
 		END SetCapabilities;
-		
+
 		PROCEDURE SetHasLinkRegister*;
 		BEGIN
 			hasLinkRegister := TRUE;
@@ -77,7 +77,7 @@ TYPE
 			SELF.checker := checker;
 			SELF.system := system;
 		END Initialize;
-		
+
 		PROCEDURE SetName*(CONST name: ARRAY OF CHAR);
 		BEGIN
 			COPY(name, SELF.name);
@@ -88,7 +88,7 @@ TYPE
 		BEGIN
 			RETURN Global.DefaultSystem();
 		END GetSystem;
-		
+
 
 
 		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: LONGINT; CONST err: ARRAY OF CHAR);
@@ -125,7 +125,7 @@ TYPE
 		PROCEDURE GetDescription*(VAR instructionSet: ARRAY OF CHAR);
 		BEGIN instructionSet := "undefined";
 		END GetDescription;
-		
+
 		PROCEDURE CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN;
 		BEGIN RETURN FALSE
 		END CanPassInRegister;

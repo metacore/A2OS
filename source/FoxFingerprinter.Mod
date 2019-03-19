@@ -205,7 +205,7 @@ TYPE
 
 		PROCEDURE VisitSizeType*(x: SyntaxTree.SizeType);
 		BEGIN
-			SetTypeFingerprint(x, fpTypeSize); 
+			SetTypeFingerprint(x, fpTypeSize);
 		END VisitSizeType;
 
 		PROCEDURE VisitObjectType*(x: SyntaxTree.ObjectType);
@@ -447,7 +447,7 @@ TYPE
 					D.Str0(x.scope.ownerModule.name);
 				END;
 				typeDeclaration := x.typeDeclaration;
-				IF(typeDeclaration # NIL) & (typeDeclaration.access # SyntaxTree.Hidden) THEN 
+				IF(typeDeclaration # NIL) & (typeDeclaration.access # SyntaxTree.Hidden) THEN
 					FPName(fp,x.scope.ownerModule.name);
 					IF (typeDeclaration.declaredType.resolved # x) THEN
 						(* in record type: pointer to type declaration of a pointer *)
@@ -509,8 +509,8 @@ TYPE
 				x.SetFingerprint(fingerprint);
 				SELF.deep := deep;
 			END;
-			
-			
+
+
 			IF Trace THEN TraceExit("PointerType",fingerprint) END;
 
 			SELF.fingerprint := fingerprint;
@@ -640,7 +640,7 @@ TYPE
 					baseType := x.GetBaseRecord();
 					FPType(fp,baseType);
 				END;
-				
+
 				SELF.deep := TRUE;
 				(* methods, sorted *)
 				scope := x.recordScope;
@@ -855,7 +855,7 @@ TYPE
 			FPReal(SELF.fp,x.realValue);
 			FPReal(SELF.fp,x.imagValue);
 		END VisitComplexValue;
-		
+
 		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
 		BEGIN FPNumber(SELF.fp, 0);
 		END VisitNilValue;
@@ -927,7 +927,7 @@ TYPE
 			SELF.deep := FALSE;
 			FPType(fp,t.returnType);
 			SELF.deep := deep;
-			
+
 			IF Trace THEN
 				TraceIndent; D.Str("FPSignature after return type "); D.Hex(fp,0); D.Ln;
 			END;
@@ -1000,7 +1000,7 @@ TYPE
 				SELF.deep := deep;
 				IF Trace THEN TraceExit("TypeDeclaration",fingerprint) END;
 			END;
-			
+
 			IF deep & ~fingerprint.deepAvailable THEN
 				fingerprint := x.fingerprint;
 				typeFP := TypeFP(x.declaredType);
@@ -1076,12 +1076,12 @@ TYPE
 			END;
 			SELF.fingerprint := fingerprint
 		END VisitVariable;
-		
+
 		PROCEDURE VisitProperty*(x: SyntaxTree.Property);
 		BEGIN
 			VisitVariable(x);
 		END VisitProperty;
-		
+
 
 		(*
 			FP(ParameterDeclaration)    = 0 <*> fpModePar -> Name -> Visibility <*> FP(Type).
@@ -1171,7 +1171,7 @@ TYPE
 		BEGIN
 			VisitProcedure(x) (* same finger print as a procedure *)
 		END VisitOperator;
-		
+
 		PROCEDURE VisitModule*(x: SyntaxTree.Module);
 		VAR fingerprint, symbolFingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; fp: Basic.Fingerprint; symbol: SyntaxTree.Symbol; scope: SyntaxTree.ModuleScope;
 		BEGIN
@@ -1184,7 +1184,7 @@ TYPE
 				IF Trace THEN TraceIndent; D.Str("Module Enter Shallow "); D.Ln; END;
 				SELF.deep := FALSE;
 				fp := 0;
-				FPNumber(fp, fpTypeModule); 
+				FPNumber(fp, fpTypeModule);
 				FPName(fp,x.name);
 
 				IF Trace THEN TraceIndent; D.Str("Module Name ");D.Hex(fp,0);  D.Ln; END;
@@ -1202,7 +1202,7 @@ TYPE
 				IF Trace THEN TraceIndent; D.Str("Module Enter Deep "); D.Ln; END;
 				fingerprint.private := fingerprint.shallow;
 				fingerprint.public := fingerprint.shallow;
-				
+
 				scope := x.moduleScope;
 				IF Trace THEN TraceIndent; D.Str("RecordType before methods"); TraceFP(fingerprint); D.Ln; END;
 

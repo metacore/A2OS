@@ -51,7 +51,7 @@ IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Out := KernelLog
 	BEGIN
 		Do( "dh.ssh.group1" )
 	END SSH;
-	
+
 	PROCEDURE SSL2048*;
 	BEGIN
 		Do( "dh.2048.MODP.256"  )

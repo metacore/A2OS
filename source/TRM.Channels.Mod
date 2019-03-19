@@ -55,7 +55,7 @@ CONST
 			INC(offs); DEC(len);
 		END;
 	END SendBytes;
-	
+
 	(** Receive a block of bytes from a port *)
 	PROCEDURE ReceiveBytes*(portAddr: ADDRESS; VAR x: ARRAY OF CHAR; offs, len: LONGINT);
 	VAR v: LONGINT;

@@ -57,14 +57,14 @@ CONST ID = 20H; Interrupts = CPU.Interrupts;
 CODE
 bootcodebegin:
 	BITS	16
-	
+
 	; enter protected mode
 	CLI
 	DB		00fh, 001h, 016h, gdt32 - bootcodebegin, 000H
 	MOV	EAX, CR0
 	OR		EAX, 1
 	MOV	CR0, EAX
-	
+
 	; prepare segment registers
 	MOV	BX, 16
 	MOV	DS, BX
@@ -85,7 +85,7 @@ gdt32begin:
 code32:	DB	0ffh, 0ffh, 000h, 000h, 000h, 09eh, 0cfh, 000h
 data32:		DB	0ffh, 0ffh, 000h, 000h, 000h, 092h, 0cfh, 000h
 gdt32end:
-	
+
 protected:
 	BITS	32
 

@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 
@@ -1061,7 +1061,7 @@ BEGIN
 		IF len < 5 THEN RETURN temp END
 	END;
 	FOR i := m + xstart TO xstart + len - 1 BY 5 DO
-		temp := temp + x[i] * y[i] + x[i + 1] * y[i + 1] + x[i + 2] * y[i + 2] + x[i + 3] * y[i + 3] + 
+		temp := temp + x[i] * y[i] + x[i + 1] * y[i + 1] + x[i + 2] * y[i + 2] + x[i + 3] * y[i + 3] +
 		x[i + 4] * y[i + 4]
 	END;  (* FOR CONTINUE *)
 	RETURN temp

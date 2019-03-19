@@ -502,7 +502,7 @@ TYPE
 			FOR i := 0 TO 6000000 DO END;
 
 			InitDMA;
-			
+
 			(* preallocate network stack buffers *)
 			FOR i := 0 TO LEN(buf,0)-1 DO
 				buf[i] := Network.GetNewBuffer();
@@ -725,11 +725,11 @@ TYPE
 				IF Trace THEN KernelLog.String("END OF TXBUFFERS"); KernelLog.Ln END;
 				SYSTEM.PUT(txbd + BdStatOffset, {TxBufLast, TxBufWrap} + SYSTEM.VAL(SET, txLen));
 			END;
-			
+
 			(* no need to flush/invalidate cache for BD memory space
 			Machine.FlushDCacheRange(txbd, BdSize);
 			*)
-			
+
 			CODE
 				DSB
 			END;
@@ -777,7 +777,7 @@ TYPE
 					(* no need to flush/invalidate cache for BD memory space
 					Machine.InvalidateDCacheRange(currentBd,BdSize);
 					*)
-					Machine.InvalidateDCacheRange(adr,len);					
+					Machine.InvalidateDCacheRange(adr,len);
 
 					(* Construct Frame *)
 					buf := Network.GetNewBuffer(); ASSERT(buf # NIL);
@@ -786,9 +786,9 @@ TYPE
 					buf.next := NIL;
 					buf.prev := NIL;
 					buf.calcChecksum := dev.calcChecksum;
-					
+
 					SYSTEM.MOVE(adr+6,ADDRESSOF(buf.src[0]),6);
-					
+
 					type := INTEGER(SYSTEM.GET8(adr + 12)) * 100H + INTEGER(SYSTEM.GET8(adr + 13));
 					SYSTEM.MOVE(adr,ADDRESSOF(buf.data[0]),len);
 					dev.QueueBuffer(buf, type)
@@ -803,7 +803,7 @@ TYPE
 				INC(lastRxQBar, BdSize)
 			END;
 			SYSTEM.PUT32(currentBd + BdStatOffset, 0);
-			
+
 			(* no need to flush/invalidate cache for BD memory space
 			Machine.FlushDCacheRange(currentBd, BdSize);
 			*)
@@ -1103,12 +1103,12 @@ TYPE
 			i: LONGINT;
 		BEGIN
 			IF Trace THEN KernelLog.String("XEmac: Starting DMA"); KernelLog.Ln END;
-			
+
 			(*
 			NEW(buffer, (RxBdCount + TxBdCount + 20) * BdSize);
 			*)
 
-			(* allocate 2 pages (each page is 1 MBytes) of memory in Heaps for mapping one full page uncached 
+			(* allocate 2 pages (each page is 1 MBytes) of memory in Heaps for mapping one full page uncached
 				without affecting any adjacent data *)
 			NEW(buffer,2*MB);
 			ASSERT((RxBdCount + TxBdCount + 20) * BdSize <= MB);
@@ -1116,7 +1116,7 @@ TYPE
 			beginAdr := beginAdr + (MB - beginAdr MOD MB);
 			ASSERT(beginAdr MOD MB = 0);
 			Machine.DisableDCacheRange(beginAdr,MB);
-			
+
 			(* setup DMA RX buffer descriptors *)
 			rxBdStartAdr := beginAdr;
 			endAdr := beginAdr + (RxBdCount - 1) * BdSize;
@@ -1135,12 +1135,12 @@ TYPE
 			CODE
 				DSB
 			END;
-			
+
 			(* no need to flush/invalidate cache for BD memory space
 			(* Flush DCache *)
 			Machine.FlushDCacheRange(beginAdr, RxBdCount * BdSize);
 			*)
-			
+
 			IF Trace THEN KernelLog.String("XEmac: RX buffers are set up."); KernelLog.Ln END;
 
 			(* setup DMA TX buffer descriptors *)
@@ -1160,12 +1160,12 @@ TYPE
 			CODE
 				DSB
 			END;
-			
+
 			(* no need to flush/invalidate cache for BD memory space
 			(* Flush DCache *)
 			Machine.FlushDCacheRange(txBdBase, TxBdCount * BdSize);
 			*)
-			
+
 			IF Trace THEN KernelLog.String("XEmac: TX buffers are set up."); KernelLog.Ln END;
 
 			Objects.InstallHandler(SELF.InterruptHandler, IRQ);
@@ -1343,11 +1343,11 @@ TYPE
 			ELSE
 				SYSTEM.PUT(txbd + BdStatOffset, {TxBufLast, TxBufWrap} + SYSTEM.VAL(SET, 60));
 			END;
-			
+
 			(* no need to flush/invalidate cache for BD memory space
 			Machine.FlushDCacheRange(txbd, BdSize);
 			*)
-			
+
 			CODE
 				DSB
 			END;

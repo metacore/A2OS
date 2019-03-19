@@ -25,7 +25,7 @@ TYPE
 	GlyphRangeArray* = POINTER TO ARRAY OF GlyphRange;
 
 
-TYPE 
+TYPE
 	RasterData = RECORD (OpenType.RasterData)
 		cache-: POINTER TO ARRAY OF ARRAY OF CHAR;
 	END;
@@ -45,7 +45,7 @@ TYPE
 			END;
 		END;
 	END FillRect;
-	
+
 TYPE
 	Font*  = OBJECT(WMGraphics.Font)
 	VAR nofGlyphs- : LONGINT;
@@ -58,9 +58,9 @@ TYPE
 		ofont : OpenType.Font;
 		inst: OpenType.Instance;
 		glyph : OpenType.Glyph;
-		
-		cache-: POINTER TO ARRAY OF ARRAY OF CHAR;		
-		
+
+		cache-: POINTER TO ARRAY OF ARRAY OF CHAR;
+
 		ras: OpenTypeScan.Rasterizer;
 
 		PROCEDURE &Init*;
@@ -180,7 +180,7 @@ TYPE
 			END;
 			RETURN c
 		END CountGlyphes;
-		
+
 		PROCEDURE ReadGlyph(code : LONGINT; VAR g : Glyph);
 		VAR no, dw, dh, y, x: LONGINT; mode: Raster.Mode; data: RasterData;
 		BEGIN{EXCLUSIVE}
@@ -188,9 +188,9 @@ TYPE
 
 			no := OpenType.UnicodeToGlyph(ofont, code);
 			IF Debug THEN KernelLog.String("Reading Glyph Nr: "); KernelLog.Int(no, 0); KernelLog.String(" Code: u"); KernelLog.Hex(code, 4); KernelLog.Ln END;
-				
+
 			OpenType.LoadGlyph(inst, glyph, ras, no,  {OpenType.Hinted, OpenType.Width , OpenType.Raster, OpenType.Grey});
-			
+
 			g.dx := glyph.awx;													(* advance *)
 			g.x := glyph.hbx;													(* horizontal bearing x *)
 			g.y := glyph.hby;													(* horizontal bearing y *)
@@ -200,13 +200,13 @@ TYPE
 
 			dh := glyph.rh;
 			dw := glyph.rw;
-			
+
 			IF dw*dh # 0 THEN
 				IF (cache = NIL) OR (LEN(cache,0) < dh) OR (LEN(cache,1) < dw) THEN
 					NEW(cache,dh,dw);
 				END;
 				data.cache := cache;
-				data.rect := FillRect; 
+				data.rect := FillRect;
 				FOR y := 0 TO dh-1 DO
 					FOR x := 0 TO dw-1 DO
 						cache[y,x] := 0X;
@@ -215,18 +215,18 @@ TYPE
 				OpenType.EnumRaster(ras, data);
 				NEW(g.img);
 				Raster.Create(g.img, dw, dh, Raster.A8);
-				
+
 				FOR y := 0 TO dh-1 DO
 					Raster.PutPixels(g.img, 0, dh - y -1, dw, Raster.A8, cache[y], 0, mode);
 				END;
-				
+
 				OpenTypeScan.DisposeRasterizer(ras);
 			END;
 		END ReadGlyph;
 
 		PROCEDURE Load(filename : ARRAY OF CHAR; size : LONGINT) : BOOLEAN;
 		VAR i, j, k, ngri, splitCount : LONGINT; res : INTEGER;
-			ascent, descent : LONGINT; 
+			ascent, descent : LONGINT;
 		BEGIN
 
 			fontFile := Files.Old(filename);															(* open file *)
@@ -312,7 +312,7 @@ BEGIN
 	try := 0;
 	LOOP
 		COPY(fi.name^, exactName);
-		
+
 		(* possible suffixes
 			bold:  b, B, bd, Bd, _bd
 			italic: i, I, _i
@@ -324,7 +324,7 @@ BEGIN
 				|0: Strings.Append(exactName, "bi");
 				|1: Strings.Append(exactName, "_bi");
 				|2: Strings.Append(exactName, "BI");
-				ELSE EXIT 
+				ELSE EXIT
 				END
 			ELSE
 				CASE try OF
@@ -333,7 +333,7 @@ BEGIN
 				|2: Strings.Append(exactName, "_bd");
 				|3: Strings.Append(exactName, "B");
 				|4: Strings.Append(exactName, "Bd");
-				ELSE EXIT 
+				ELSE EXIT
 				END
 			END;
 		ELSIF WMGraphics.FontItalic IN fi.style THEN
@@ -347,11 +347,11 @@ BEGIN
 		ELSIF try > 0 THEN
 			EXIT
 		END;
-		
+
 		Strings.Append(exactName, ".ttf");
 		f := LoadFont(exactName, fi.size);
 		IF f # NIL THEN EXIT END;
-		
+
 		INC( try )
 	END;
 	IF f # NIL THEN

@@ -1471,4 +1471,4 @@ BEGIN
 END NewObject;
 
 
-END DTPData.	
+END DTPData.

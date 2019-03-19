@@ -90,17 +90,17 @@ VAR
 				w.String(", Locks: "); w.Set(exc.locks)
 			END;
 			w.Ln; w.String("System: "); w.String(Machine.version); w.String(" Kernel_CRC=");(* w.Hex(SystemVersion.BootCRC,8);*)
-			IF long THEN 
+			IF long THEN
 				w.Char(0EX);	(* "fixed font" *)
 				w.Ln;
 				w.String("Processor:");
 				(* output values *)
 				Val("CS", int.CS); Val("DS", exc.DS); Val("ES", exc.ES); Val("SS", exc.SS); Val("CR0", exc.CR[0]);
-				Val("FPU", SYSTEM.VAL(LONGINT, exc.FPU[1] * {0..15} + LSH(exc.FPU[2], 16))); 
+				Val("FPU", SYSTEM.VAL(LONGINT, exc.FPU[1] * {0..15} + LSH(exc.FPU[2], 16)));
 				Val("PC", int.PC); Val("ESI", int.ESI); Val("EDI", int.EDI); Val("SP", exc.SP); Val("CR2", exc.CR[2]);
 				Val("PID", id);
 				Val("EAX", int.EAX); Val("EBX", int.EBX); Val("ECX", int.ECX); Val("EDX", int.EDX); Val("CR3", exc.CR[3]);
-				Val("LCK", SYSTEM.VAL(LONGINT, exc.locks)); 
+				Val("LCK", SYSTEM.VAL(LONGINT, exc.locks));
 				Val("BP", int.BP); Val("FS", exc.FS); Val("GS", exc.GS); Val("ERR", int.ERR); Val("CR4", exc.CR[4]);
 				Val("TMR", Kernel.GetTicks()); w.Ln;
 				IF SYSTEM.VAL(CHAR, exc.DR[7]) # 0X THEN	(* some breakpoints enabled *)

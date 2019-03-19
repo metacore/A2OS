@@ -50,7 +50,7 @@ TYPE
 				BEGIN
 					ASSERT( isKeyInitialized );   (* initKey must have been called before *)
 					ASSERT( mode IN {CBC, CTR} );
-					SELF.mode := mode;  
+					SELF.mode := mode;
 					IF mode = CBC THEN  appmode( "-cbc" ) ELSE  appmode( "-ctr" )  END
 				END SetIV;
 

@@ -131,7 +131,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		WHILE reader.Available()>0 DO (*assumes number of words is a multiple of baseDiv. make sure in static linker*)
 			base.Zero;
 			(*read a BASE line*)
-			FOR k:=0 TO baseDiv-1 DO 
+			FOR k:=0 TO baseDiv-1 DO
 				(*read a word into the base*)
 				word.Zero;
 				j:=0;
@@ -144,7 +144,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 				nibble:=ObjectFile.CharacterToNibble(line[0]);
 				j:=j+payloadInLeadingNibble;
 				word.SetBits(instructionWidth-j,payloadInLeadingNibble, nibble);
-				
+
 				(*read rest*)
 				FOR i:=1 TO numReadNibbles-1 DO
 					(*TRACE(line[i]);*)
@@ -156,7 +156,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 				BitSets.CopyBits(word,0,base,k*unCutWordLength,instructionWidth);
 			END;
 			FOR j:= 0 TO numBase-1 DO (*divide base into the columns*)
-				(*write 36 bits to appropriate file*)	(*writing msb first*)	
+				(*write 36 bits to appropriate file*)	(*writing msb first*)
 				FOR k:=8 TO 0 BY -1 DO
 					writers[j].Char(ObjectFile.NibbleToCharacter(base.GetBits((j)*36+k*4,4) ) );
 				END;
@@ -170,7 +170,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		RETURN TRUE
 	END SplitColumns;
 
-	
+
 	PROCEDURE DoSplitFiles*(CONST source, dest, extension: ARRAY OF CHAR; blocks, blockSize: LONGINT; verbose,strided,patchSpartan6: BOOLEAN; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 	VAR line: LONGINT; fileName: Files.FileName; oldFile: Files.File;
 		newFiles: POINTER TO ARRAY OF Files.File;
@@ -190,9 +190,9 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 
 
 	BEGIN
-	
+
 		TRACE(source);
-	
+
 		COPY(source, fileName);
 		oldFile := Files.Old(fileName);
 		IF oldFile = NIL THEN
@@ -295,11 +295,11 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		IF ~options.GetInteger("baseDivider",baseD) THEN baseD:=2 END;
 		IF ~options.GetString("target",targetName) THEN targetName:="default.mem" END;
 		NEW(diagnostics,context.out);
-		
+
 		diagnostics.Information("target name", Streams.Invalid, targetName);
 		done:=TRUE;
 		WHILE done & context.arg.GetString (name) DO
-		
+
 			diagnostics.Information("source name", Streams.Invalid, name);
 			done := SplitColumns(name,  targetName, insW, numB, baseD, diagnostics);
 		END;

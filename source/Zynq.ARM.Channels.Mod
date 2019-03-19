@@ -58,16 +58,16 @@ VAR
 		inpDesc := portDesc.portAddr;
 		data := inpDesc.data;
 	END ReadFromPort;
-	
+
 	where OutputDesc and InputDesc are defined as follows:
-	
+
 	(** AXI4 Stream output port descriptor *)
 	OutputDesc* = POINTER{UNSAFE,UNTRACED} TO RECORD
 		data: LONGINT; (** output data, write only *)
 		ready: BOOLEAN; (** TRUE when output is available for sending data *)
 		padding: ARRAY 3 OF CHAR;
 	END;
-	
+
 	(** AXI4 Stream input port descriptor *)
 	InputDesc* = POINTER{UNSAFE,UNTRACED} TO RECORD
 		available: BOOLEAN; (** TRUE when input data is available *)

@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
@@ -32,13 +32,13 @@ TYPE
 
 	FullCache* = OBJECT (* POINTER TO FullCacheDesc;
 	FullCacheDesc* = RECORD
-	*) 
-	VAR 
+	*)
+	VAR
 		values*: POINTER TO ARRAY OF LONGREAL;
 		offset: POINTER TO ARRAY  OF LONGINT;
 		len-: POINTER TO ARRAY OF LONGINT;
-		d-, size-: LONGINT; 
-		
+		d-, size-: LONGINT;
+
 		PROCEDURE (*c: FullCache*) Offset* (VAR point: ARRAY OF INTEGER;  level: LONGINT): LONGINT;
 	VAR i: LONGINT;  offset: LONGINT;
 BEGIN
@@ -110,9 +110,9 @@ BEGIN
 	END;
 	c.size := offset;
 	IF c.size <= maxsize THEN
-		aM.vSI("antsCaches: creating a cache with size, this can be a lengthy operation.",c.size); 
+		aM.vSI("antsCaches: creating a cache with size, this can be a lengthy operation.",c.size);
 		NEW(c.values, c.size);
-		aM.vS("antsCaches: done."); 
+		aM.vS("antsCaches: done.");
 		IF debug THEN
 			Out.String("antsCaches: Created Cache of Size");  Out.Int(c.size, 10);  Out.Ln();
 			Out.String("c.d");  Out.Int(c.d, 10);  Out.Ln()
@@ -137,13 +137,13 @@ END Cube;
 PROCEDURE Disable*;
 BEGIN
 	enabled := FALSE;
-	aM.S("Caching disabled");  
+	aM.S("Caching disabled");
 END Disable;
 
 PROCEDURE Enable*;
 BEGIN
 	enabled := TRUE;
-	aM.S("Caching enabled");  
+	aM.S("Caching enabled");
 END Enable;
 
 PROCEDURE Test*;
@@ -204,7 +204,7 @@ END Test;
 
 BEGIN
 	aM.launch;
-	Enable;  
+	Enable;
 END antsCaches.
 
 antsCaches.Test ~

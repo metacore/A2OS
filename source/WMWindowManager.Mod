@@ -499,7 +499,7 @@ TYPE
 		img* : Graphics.Image;
 		canvas* : Graphics.BufferCanvas;
 		canvasGen-: Graphics.CanvasGenerator;
-		pointerThreshold*, 
+		pointerThreshold*,
 		maxInterpolation* : LONGINT; (* allows limiting the interpolation degree on Draw *)
 
 		PROCEDURE &Init*(w, h : LONGINT; alpha : BOOLEAN);
@@ -517,7 +517,7 @@ TYPE
 			SELF.canvasGen:=canvasGen; IF img # NIL THEN canvas:=canvasGen(img); END;
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
 		END SetCanvasGenerator;
-		
+
 		PROCEDURE IsHit*(x, y  : LONGINT) : BOOLEAN;
 		VAR w, h : LONGINT; fx, fy : REAL;
 		BEGIN
@@ -586,7 +586,7 @@ TYPE
 
 		PROCEDURE &Init*(w, h: LONGINT; alpha : BOOLEAN);
 		BEGIN
-			NEW(backImg); 
+			NEW(backImg);
 			IF alpha THEN Raster.Create(backImg, w, h, Raster.BGRA8888) ELSE Raster.Create(backImg, w, h, format) END;
 			Init^(w, h, alpha);
 		END Init;
@@ -604,10 +604,10 @@ TYPE
 			visibleCanvas:=canvasGen(img);
 			canvas:=canvasGen(backImg);
 		END ReInit;
-		
+
 		PROCEDURE SetCanvasGenerator*(canvasGen:Graphics.CanvasGenerator);
 		BEGIN
-			SELF.canvasGen:=canvasGen; 
+			SELF.canvasGen:=canvasGen;
 			IF img # NIL THEN visibleCanvas:=canvasGen(img); END;
 			IF backImg # NIL THEN canvas:=canvasGen(backImg); END;
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
@@ -1065,7 +1065,7 @@ VAR
 	format* : Raster.Format;
 
 	nextId : LONGINT;
-	
+
 	standardCursorImage: Graphics.Image;
 
 (* Get a unique identifier *)

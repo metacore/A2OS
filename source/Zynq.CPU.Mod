@@ -127,10 +127,10 @@ CODE
 	LDR	R4, [FP, #value]
 	LDR	R5, [R2, #0]
 	BIC	R5, R5, R3
-	ORR R5, R5, R4 
+	ORR R5, R5, R4
 	STR	R5, [R2, #0]
 END MaskIn;
-	
+
 (* interrupt handling *)
 CONST Interrupts* = 7;
 CONST UndefinedInstruction* = 1; SoftwareInterrupt* = 2; PrefetchAbort* = 3; DataAbort* = 4; IRQ* = 5; FIQ* = 6; IRQ0* = IRQ;

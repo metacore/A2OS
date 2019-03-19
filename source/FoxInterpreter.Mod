@@ -20,14 +20,14 @@ TYPE
 	Char*=InterpreterSymbols.CharValue;
 	Any*=InterpreterSymbols.AnyValue;
 	MathArrayValue*= InterpreterSymbols.MathArrayValue;
-	
+
 	Scope*=InterpreterSymbols.Scope;
 	Container*= InterpreterSymbols.Container;
-	
+
 	Builtin*=OBJECT (InterpreterSymbols.Object)
 	VAR id: LONGINT;
 	END Builtin;
-	
+
 	Item*= RECORD
 		object*: InterpreterSymbols.Item;
 		in*: InterpreterSymbols.Item;
@@ -62,13 +62,13 @@ TYPE
 		BEGIN
 			IF (Symbol() = Scanner.ExclamationMark) THEN
 				statement := Cmd();
-				IF statement # NIL THEN 
+				IF statement # NIL THEN
 					statements.AddStatement(statement);
 				END;
 				RETURN TRUE
 			ELSIF (Symbol() = Scanner.Questionmark) THEN
 				statement := Print();
-				IF statement # NIL THEN 
+				IF statement # NIL THEN
 					statements.AddStatement(statement);
 				END;
 				RETURN TRUE
@@ -110,8 +110,8 @@ TYPE
 		error-: BOOLEAN;
 		diagnostics: Diagnostics.Diagnostics;
 		context-: Commands.Context;
-		
-		
+
+
 		PROCEDURE & Init*(scope: Scope; diagnostics: Diagnostics.Diagnostics; context: Commands.Context);
 		BEGIN
 			IF scope = NIL THEN scope := global END;
@@ -227,9 +227,9 @@ TYPE
 		VAR value: Value; i: HUGEINT; r: LONGREAL; b: BOOLEAN; operator: LONGINT;
 		BEGIN
 			operator := x.operator;
-			IF ~GetValue(x.left, value) THEN 
+			IF ~GetValue(x.left, value) THEN
 				Error("no operand");
-				RETURN 
+				RETURN
 			END;
 			IF value IS Integer THEN
 				i := value(Integer).value;
@@ -373,17 +373,17 @@ TYPE
 		(** designators (expressions) *)
 		PROCEDURE VisitDesignator*(x: SyntaxTree.Designator);
 		BEGIN HALT(100) (* abstract *) END VisitDesignator;
-		
+
 		PROCEDURE VisitQualifiedType*(x: SyntaxTree.QualifiedType);
-		VAR moduleName, name: Modules.Name; 
+		VAR moduleName, name: Modules.Name;
 		BEGIN
 			IF x.qualifiedIdentifier.prefix # SyntaxTree.invalidIdentifier THEN
 				item.name := x.qualifiedIdentifier.prefix;
 				item.object := scope.FindObject1(item.name, -1, item.in);
-				
+
 				IF item.object = NIL THEN
 					StringPool.GetString(item.name, moduleName);
-					item.object :=InterpreterSymbols.GetModule(moduleName); 
+					item.object :=InterpreterSymbols.GetModule(moduleName);
 				END;
 			END;
 			item.name := x.qualifiedIdentifier.suffix;
@@ -399,10 +399,10 @@ TYPE
 				ErrorSS("invalid selector",item.name);
 				item.in := NIL;
 			END;
-				
-				
+
+
 		END VisitQualifiedType;
-		
+
 
 		(*
 		PROCEDURE FindInScope(scope: Scope; symbol: StringPool.Index): Value;
@@ -427,7 +427,7 @@ TYPE
 		BEGIN
 		IF types = NIL THEN RETURN NIL END;
 		FOR i := 0 TO LEN(types)-1 DO
-			IF types[i].name = name THEN 
+			IF types[i].name = name THEN
 				RETURN types[i];
 			END;
 		END;
@@ -438,7 +438,7 @@ TYPE
 		BEGIN
 		IF types = NIL THEN RETURN FALSE END;
 		FOR num := 0 TO LEN(types)-1 DO
-			IF types[num].name^ = name THEN 
+			IF types[num].name^ = name THEN
 				RETURN TRUE;
 			END;
 		END;
@@ -449,7 +449,7 @@ TYPE
 		BEGIN
 		IF types = NIL THEN RETURN FALSE END;
 		FOR num := 0 TO LEN(types)-1 DO
-			IF types[num].name^ = name THEN 
+			IF types[num].name^ = name THEN
 				RETURN TRUE;
 			END;
 		END;
@@ -467,19 +467,19 @@ TYPE
 			(*
 			item.object := FindInScope(item.scope, item.name);
 			*)
-			IF item.name = Basic.MakeString("trace") THEN 
+			IF item.name = Basic.MakeString("trace") THEN
 				NEW(builtin); builtin.id :=  Global.systemTrace;
 				item.object := builtin;
 			ELSIF item.name = Basic.MakeString("context") THEN
 				NEW(anyValue, context);
 				item.object :=  anyValue;
 			ELSE
-				
+
 				item.object := scope.FindObject1(item.name, -1, item.in);
-				
+
 				IF item.object = NIL THEN
 					StringPool.GetString(item.name, moduleName);
-					item.object :=InterpreterSymbols.GetModule(moduleName); 
+					item.object :=InterpreterSymbols.GetModule(moduleName);
 				END;
 			END;
 		END VisitIdentifierDesignator;
@@ -503,8 +503,8 @@ TYPE
 				item.in := NIL;
 			END;
 		END VisitSelectorDesignator;
-		
-	
+
+
 		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
 		VAR e: SyntaxTree.Expression; proc: InterpreterSymbols.ProcedureResult; i: LONGINT;
 			adr: ADDRESS; adrValue: Value; any: InterpreterSymbols.AnyValue;
@@ -514,23 +514,23 @@ TYPE
 			IF (item.object # NIL) THEN
 				IF (item.object IS InterpreterSymbols.ProcedureResult) THEN
 					proc := item.object(InterpreterSymbols.ProcedureResult);
-					(* self pointer *) 
+					(* self pointer *)
 					proc.Pars();
 					IF ~(proc.caller IS InterpreterSymbols.ModuleResult) THEN
 						adrValue := proc.caller.Evaluate();
-						ASSERT(adrValue.GetAddress(adr)); 
+						ASSERT(adrValue.GetAddress(adr));
 						proc.PushAddress(adr);
 					END;
-					(* result pointer *) 
+					(* result pointer *)
 					IF proc.ReturnsPointer() THEN
 						NEW(any,NIL);
 						proc.PushAddress(any.Address());
-					END; 
+					END;
 					FOR i := 0 TO x.parameters.Length()-1 DO
 						e := x.parameters.GetExpression(i);
 						IF ~proc.Push(Designate(e)) THEN Error("wrong parameter"); RETURN END;
 					END;
-					IF ~proc.Check() THEN Error("non-matching parameter number"); RETURN END; 
+					IF ~proc.Check() THEN Error("non-matching parameter number"); RETURN END;
 					item.object := proc.Evaluate();
 					IF any # NIL THEN item.object := any END;
 				ELSIF (item.object IS Builtin) THEN
@@ -612,7 +612,7 @@ TYPE
 		PROCEDURE VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator);
 		BEGIN HALT(100)
 		END VisitProcedureCallDesignator;
-		
+
 		PROCEDURE SystemTrace(x: SyntaxTree.ExpressionList);
 		VAR
 			printout: Printout.Printer;
@@ -640,7 +640,7 @@ TYPE
 			out.Ln;
 			out.Update;
 		END SystemTrace;
-		
+
 		PROCEDURE FindType(type: SyntaxTree.Type): Result;
 		BEGIN
 			VType(type);
@@ -649,13 +649,13 @@ TYPE
 			END;
 			RETURN NIL;
 		END FindType;
-		
-		
+
+
 		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		VAR p,p0,p1,p2: SyntaxTree.Expression;
 			type,t0,t1,t2: SyntaxTree.Type;
 			len: LONGINT;
-			i: LONGINT; 
+			i: LONGINT;
 			parameter: SyntaxTree.Parameter;
 			name: Basic.SectionName;
 			modifier: SyntaxTree.Modifier;
@@ -670,8 +670,8 @@ TYPE
 			e: SyntaxTree.Expression;
 		BEGIN
 			position := x.position;
-			p0 := NIL; p1 := NIL; p2 := NIL; 
-			IF x.parameters # NIL THEN 
+			p0 := NIL; p1 := NIL; p2 := NIL;
+			IF x.parameters # NIL THEN
 				len := x.parameters.Length();
 			ELSE
 				len := 0
@@ -684,7 +684,7 @@ TYPE
 					address := result.Address();
 					Heaps.NewRec(o, address, FALSE);
 					NEW(anyValue, o);
-					
+
 					proc := result(InterpreterSymbols.TypeResult).Constructor();
 					IF proc # NIL THEN
 						proc.Pars();
@@ -693,7 +693,7 @@ TYPE
 							e := x.parameters.GetExpression(i);
 							IF ~proc.Push(Designate(e)) THEN Error("wrong parameter"); item.object := NIL; RETURN END;
 						END;
-						IF ~proc.Check() THEN Error("non-matching parameter number"); item.object := NIL; RETURN END; 
+						IF ~proc.Check() THEN Error("non-matching parameter number"); item.object := NIL; RETURN END;
 						ignore := proc.Evaluate();
 					END;
 					item.object := anyValue;
@@ -860,17 +860,17 @@ TYPE
 				(* remove comments *)
 				ELSIF ch = "(" THEN
 					Next(ch);
-					IF ch = "*" THEN 
+					IF ch = "*" THEN
 						INC(comment); Next(ch);
-					ELSIF comment = 0 THEN 
+					ELSIF comment = 0 THEN
 						destinationWriter.Char("(");
 					END;
 				ELSIF ch="*" THEN
 					Next(ch);
-					IF ch = ")" THEN 
-						DEC(comment); 
+					IF ch = ")" THEN
+						DEC(comment);
 						IF comment < 0 THEN comment := 0 END; Next(ch);
-					ELSIF comment = 0 THEN 
+					ELSIF comment = 0 THEN
 						destinationWriter.Char("*")
 					END;
 				ELSE
@@ -882,7 +882,7 @@ TYPE
 			dest := destination.GetString(len);
 			RETURN ~error
 		END TranslateString;
-		
+
 		PROCEDURE VisitCommandStatement(x: CommandStatement);
 		VAR t: Strings.String; res: WORD; msg: ARRAY 128 OF CHAR; i: LONGINT; array: Strings.StringArray; pos: LONGINT;
 			command: ARRAY 256 OF CHAR; context: Commands.Context;
@@ -937,7 +937,7 @@ TYPE
 		PROCEDURE VisitPrintStatement(x: PrintStatement);
 		VAR out: Streams.Writer; printout: Printout.Printer; expression: SyntaxTree.Expression; value: Value;
 		BEGIN
-		
+
 			out := context.out;
 			printout := Printout.NewPrinter(out,Printout.SourceCode,FALSE);
 				expression := x.expression;
@@ -993,28 +993,28 @@ TYPE
 			Expression(x);
 			IF error THEN RETURN FALSE END;
 			LoadValue();
-			IF item.object # NIL THEN 
+			IF item.object # NIL THEN
 				w := item.object(Value);
 			END;
 			RETURN ~error
 		END GetValue;
-		
+
 		PROCEDURE Designate(x: SyntaxTree.Expression): Result;
 		BEGIN
 			Expression(x);
-			IF item.object # NIL THEN 
+			IF item.object # NIL THEN
 				RETURN item.object(Result);
-			ELSE 
+			ELSE
 				RETURN NIL
 			END;
 		END Designate;
-		
+
 		PROCEDURE Evaluate(x: SyntaxTree.Expression): Value;
 		VAR w: Value;
 		BEGIN
 			 IF GetValue(x, w) THEN RETURN w ELSE RETURN NIL END;
 		END Evaluate;
-		
+
 
 		PROCEDURE GetInteger(x: SyntaxTree.Expression; VAR i: Integer): BOOLEAN;
 		VAR v: Value;
@@ -1178,7 +1178,7 @@ TYPE
 			value := FALSE;
 			VExpression(x);
 		END Expression;
-		
+
 		PROCEDURE Statement*(x: SyntaxTree.Statement);
 		BEGIN
 			item.object := NIL;
@@ -1337,20 +1337,20 @@ VAR d: RECORD e: LONGINT END;
 		TRACE(a);
 		RETURN a+123;
 	END Setter;
-	
+
 	TYPE TestO= OBJECT
 	VAR i: LONGINT;
 	PROCEDURE &P(s: SHORTINT);
 	BEGIN
 		i := 999+s;
 	END P;
-	
+
 	END TestO;
-	
+
 
 BEGIN
 	InitGlobalScope;
-	c := 10; 
+	c := 10;
 	d.e := 20;
 END FoxInterpreter.
 
@@ -1381,21 +1381,21 @@ FoxInterpreter.Statements
 
 FoxInterpreter.Expression
 	Test.c.b;
-	~ 
-	
+	~
+
 FoxInterpreter.Expression
 	Test.Test(5);
 	~
 FoxInterpreter.Statements
 	a := Test.c.b;
 	Test.c.b := Test.c.b + 1;
-	~	
+	~
 FoxInterpreter.Expression
 	a;
-	~	
+	~
 FoxInterpreter.Expression
 	Test.c.b;
-	~	
+	~
 
 FoxInterpreter.Statements
 	Test.Test(123)
@@ -1421,8 +1421,8 @@ FoxInterpreter.Expression
 FoxInterpreter.Statements
 	o := Test.TestO();
 	~
-	
-	
+
+
 
 FoxInterpreter.Statements
 	s := {0..10, 15};
@@ -1466,7 +1466,7 @@ FoxInterpreter.Statements
 	FOR j := 0 TO 2 DO
 		! \+"System.Show ?{a[i,j]}? ;"+\
 	END;
-		! \+"System.Ln;"+\ 
+		! \+"System.Ln;"+\
 	END;
 	! "System.Show ?{a}? ";
 	? a;

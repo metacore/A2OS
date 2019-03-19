@@ -27,7 +27,7 @@ TYPE
 			END;
 			RETURN result
 		END GetRegister;
-		
+
 		PROCEDURE GetRegisterList(VAR registerList: SET): BOOLEAN;
 		VAR num: LONGINT;
 		BEGIN
@@ -42,7 +42,7 @@ TYPE
 						INCL(registerList, num);
 					END;
 				UNTIL token.symbol # Scanner.Comma;
-				IF token.symbol # Scanner.RightBrace THEN 
+				IF token.symbol # Scanner.RightBrace THEN
 					Error(errorPosition, "'}' expected.")
 				ELSE
 					NextToken;
@@ -51,7 +51,7 @@ TYPE
 			END;
 			RETURN FALSE;
 		END GetRegisterList;
-		
+
 
 		(** parse a special register name, along with fields **)
 		PROCEDURE GetSpecialRegisterWithFields(VAR registerNumber: LONGINT; VAR fields: SET): BOOLEAN;
@@ -169,12 +169,12 @@ TYPE
 		VAR
 			instruction: InstructionSet.Instruction;
 			operands: ARRAY InstructionSet.MaxOperands OF InstructionSet.Operand;
-			position: Basic.Position; 
+			position: Basic.Position;
 			opCode, condition, i, operandNumber: LONGINT;
 			flags: SET;
 			newOperandExpected: BOOLEAN;
 			result: FoxAssembler.Result;
-			
+
 			(** parse an operand
 				- note that a subsequent comma is consumed as well
 				- 'newOperandExpected' indicates if any more operands are expected
@@ -265,8 +265,8 @@ TYPE
 							(* pc label of the form [labelName], translated to [PC, #labelName - $ - 8] *)
 							registerNumber := InstructionSet.PC;
 							isImmediateOffset := TRUE;
-							DEC(offsetImmediateValue, 8); 
-							DEC(offsetImmediateValue, code.pc); 
+							DEC(offsetImmediateValue, 8);
+							DEC(offsetImmediateValue, code.pc);
 							IF ABS(offsetImmediateValue) < InstructionSet.Bits12 THEN
 								IF offsetImmediateValue >= 0 THEN
 									INCL(indexingMode, InstructionSet.Increment)
@@ -325,7 +325,7 @@ TYPE
 						IF ThisSymbol(Scanner.Arrow) THEN
 							INCL(flags, InstructionSet.flagUserMode);
 						END;
-	
+
 					ELSIF GetCoprocessor(value) THEN
 						(* coprocessor name *)
 						InstructionSet.InitCoprocessor(operand, value)
@@ -359,7 +359,7 @@ TYPE
 					IF ~newOperandExpected THEN newOperandExpected := ThisSymbol(Scanner.Comma) END; (* a comma means that there is one more operand *)
 
 					operands[operandNumber] := operand;
-					
+
 				END
 			END ParseOperand;
 
@@ -370,13 +370,13 @@ TYPE
 
 			position := errorPosition;
 			IF InstructionSet.FindMnemonic(mnemonic, opCode, condition, flags) THEN
-				
+
 				(*IF Trace THEN
 					D.String("    opCode="); D.Int(opCode, 0); D.Ln;
 					D.String("    condition="); D.Int(condition, 0); D.Ln;
 					D.String("    flags="); D.Set(flags); D.Ln;
 				END;*)
-				
+
 
 				FOR i := 0 TO InstructionSet.MaxOperands - 1 DO
 					InstructionSet.InitOperand(operands[i])
@@ -401,7 +401,7 @@ TYPE
 						ELSE
 							(* last pass: emit the instruction *)
 							IF ~InstructionSet.EmitInstruction(instruction, section.resolved) THEN
-								ErrorSS(position, "wrong instruction format (encoding failed): ", mnemonic);								
+								ErrorSS(position, "wrong instruction format (encoding failed): ", mnemonic);
 							END;
 						END
 					END

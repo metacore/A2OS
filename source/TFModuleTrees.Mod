@@ -132,7 +132,7 @@ TYPE
 
 		PROCEDURE ListKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
 		BEGIN
-			IF keySym = 0FF0DH THEN handled := TRUE; Ok(SELF, NIL); (*edit.SetFocus*) 
+			IF keySym = 0FF0DH THEN handled := TRUE; Ok(SELF, NIL); (*edit.SetFocus*)
 			ELSIF keySym = 0FF1BH THEN ScheduleHide
 			END;
 		END ListKeyPressed;
@@ -457,12 +457,12 @@ TYPE
 		VAR
 			p : TFAOParser.Parser;
 			scanner: BimboScanner.Scanner;
-			
+
 			done : BOOLEAN;
-			cr : Reference; count, i : LONGINT; refs : RefArray; 
+			cr : Reference; count, i : LONGINT; refs : RefArray;
 			t0, t1: LONGINT; res: WORD;
 			child: WMTrees.TreeNode;
-	
+
 			PROCEDURE QuickSort(references: RefArray; lo, hi: LONGINT);
 			VAR i, j: LONGINT; x, t: Reference;
 			BEGIN
@@ -485,9 +485,9 @@ TYPE
 			child := tree.GetChildren(rootNode);
 			WHILE child # NIL DO
 				tree.RemoveNode(child);
-				child := tree.GetChildren(rootNode)				
+				child := tree.GetChildren(rootNode)
 			END;
-			
+
 			done := FALSE;
 			IF DoAutoRefresh THEN
 				updateTimer.Stop(SELF, NIL);
@@ -548,7 +548,7 @@ TYPE
 			AddNodes^(parent, diagnostics, log);
 			Refresh(parent)
 		END AddNodes;
-		
+
 		PROCEDURE HighlightReferences(no : TS.NamedObject);
 		VAR
 			cur : CurrentHighlights;
@@ -564,15 +564,15 @@ TYPE
 					cur.h.SetFromTo(posKeeper.GetPos(cr.fp),posKeeper.GetPos(cr.tp));
 				END;
 				cr := cr.next
-			END;			
+			END;
 		END HighlightReferences;
-		
+
 		PROCEDURE SelectReferences(d : TextInfo; gotoDef : BOOLEAN);
 		BEGIN
 			editor.DisableUpdate;
 			currentNode := d;
 			currentUse := NIL;
-			
+
 			HighlightReferences(d.def);
 			IF gotoDef THEN
 				editor.tv.cursor.SetPosition(posKeeper.GetPos(currentNode.fp));

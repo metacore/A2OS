@@ -238,7 +238,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.SetActivity (NIL);
 
 	IF handlers[index] # NIL THEN handlers[index] (index) ELSE HALT (1234) END;
-	
+
 	IF index >= IRQ8 THEN
 		OutByte (PIC2CommandPort, PIC_EOI); OutByte (PIC1CommandPort, PIC_EOI);
 	ELSIF index >= IRQ0 THEN
@@ -319,7 +319,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(* mask all maskable interrupts *)
 	OutChar (PIC1DataPort, 0FBX);
 	OutChar (PIC2DataPort, 0FFX);
-	
+
 	FOR i := 0 TO Interrupts - 1 DO
 		IF (i # 9) & (i # 15) & ((i < 20) OR (i > 29)) & (i # 31) THEN
 			idt[i][0] := INTEGER (ADDRESS OF wrapper[i] MOD 10000H);
@@ -354,7 +354,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 			idt[i][3] := 0;
 		END;
 	END;
-	
+
 	CODE
 		LEA	EAX, idt
 		PUSH	EAX
@@ -393,7 +393,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(* mask all maskable interrupts *)
 	OutChar (PIC1DataPort, 0FBX);
 	OutChar (PIC2DataPort, 0FFX);
-	
+
 	FOR i := 0 TO Interrupts - 1 DO
 		IF (i # 9) & (i # 15) & ((i < 20) OR (i > 29)) & (i # 31) THEN
 			idt[i][0] := INTEGER (ADDRESS OF wrapper[i] MOD 10000H);
@@ -434,7 +434,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		idt[i][6] := 0;
 		idt[i][7] := 0;
 	END;
-	
+
 	CODE
 		LEA	RAX, idt
 		PUSH	RAX

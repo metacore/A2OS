@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 
@@ -90,7 +90,7 @@ BEGIN
 	RETURN mmCache
 END NewBufMinCache;
 BEGIN  IF buf # NIL THEN
-		IF buf IS tBuf THEN 
+		IF buf IS tBuf THEN
 		WITH buf: tBuf DO  mmCache := NIL;   cache := buf.cache;
 			WHILE (mmCache = NIL) & (cache # NIL) DO (* changed from (mmCache#NIL) & (cache#NIL), fof 980615, mf 981015 *)
 				IF cache IS tMinMaxCache THEN mmCache := cache(tMinMaxCache)
@@ -115,7 +115,7 @@ BEGIN
 	RETURN meanCache
 END NewBufMeanCache;
 BEGIN  IF buf # NIL THEN
-		IF buf IS tBuf THEN 
+		IF buf IS tBuf THEN
 		WITH buf: tBuf DO  meanCache := NIL;   cache := buf.cache;
 			WHILE (meanCache = NIL) & (cache # NIL) DO (* changed from (meanCache#NIL) & (cache#NIL), fof 980615, mf 981014 *)
 				IF cache IS tMeanCache THEN meanCache := cache(tMeanCache)
@@ -123,7 +123,7 @@ BEGIN  IF buf # NIL THEN
 			END;
 			IF meanCache = NIL THEN meanCache := NewBufMeanCache(buf)  END;
 			RETURN	 meanCache
-			END; 
+			END;
 		ELSE RETURN NIL
 		END   (* WHILE *)
 	ELSE RETURN NIL END
@@ -242,8 +242,8 @@ END HandleAttributesLONGINT;
 PROCEDURE Handler* (o: Objects.Object;  VAR M: Objects.ObjMsg);
 VAR copy: tVector;
 BEGIN
-	IF o IS tVector THEN WITH o: tVector DO 
-		IF M IS Objects.AttrMsg THEN 
+	IF o IS tVector THEN WITH o: tVector DO
+		IF M IS Objects.AttrMsg THEN
 			HandleAttributes(o, M(Objects.AttrMsg))
 		ELSIF M IS Objects.CopyMsg THEN  (* fof 0111 *)
 			IF M(Objects.CopyMsg).id = Objects.deep THEN
@@ -254,7 +254,7 @@ BEGIN
 				vyBase.VectorHandler(o, M)
 			END;
 
-		ELSIF M IS Objects.FileMsg THEN 
+		ELSIF M IS Objects.FileMsg THEN
 			IF M(Objects.FileMsg).id = Objects.load THEN
 				Load0(M(Objects.FileMsg).R, o);
 				vyBase.VectorHandler(o, M)
@@ -267,12 +267,12 @@ BEGIN
 		ELSE
 			vyBase.VectorHandler(o, M)
 		END;  (*WITH*)
-		END; 
-	ELSIF  o IS tLONGINT THEN 
-		WITH o: tLONGINT DO 
-		IF M IS Objects.AttrMsg THEN 
+		END;
+	ELSIF  o IS tLONGINT THEN
+		WITH o: tLONGINT DO
+		IF M IS Objects.AttrMsg THEN
 			HandleAttributesLONGINT(o, M(Objects.AttrMsg))
-		ELSIF  M IS Objects.FileMsg THEN 
+		ELSIF  M IS Objects.FileMsg THEN
 			IF M(Objects.FileMsg).id = Objects.load THEN
 				Load0LONGINT(M(Objects.FileMsg).R, o);
 				vyBase.DataHandler(o, M)
@@ -285,7 +285,7 @@ BEGIN
 		ELSE
 			vyBase.DataHandler(o, M)
 		END (* WITH*)
-		END; 
+		END;
 	END; (* tVector*)
 END Handler;
 

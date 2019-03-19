@@ -14,7 +14,7 @@ CONST
 
 	(* Interrupts Dummy Test *)
 	DummyTest = FALSE;
-	
+
 	(* Lock levels *)
 	TraceOutput* = 0;
 	Memory* = 1;
@@ -211,7 +211,7 @@ TYPE
 	CacheRefs = POINTER {UNSAFE,UNTRACED} TO ARRAY MaxCacheRefSize OF SHORTINT;
 VAR
 	version -: ARRAY 64 OF CHAR;
-	
+
 	sp, fp: ADDRESS;
 
 	(** Interrupt Mask *)
@@ -502,7 +502,7 @@ VAR
 		ISB
 		MOV R0, #0x40000000;
 		VMSR FPEXC, R0;
-		
+
 		VMRS R0, FPSCR
 		BIC R0, R0, #0x0c00000 ; round to nearest as the default
 		; remark: if we put round to minus infinity as the default, we can spare quite some instructions in emission of ENTIER
@@ -1378,7 +1378,7 @@ VAR
 		ADD R0, R0, #8
 		VST1 D15, R0
 		ADD R0, R0, #8
-		
+
 		VSTR D16, R0, #0
 		ADD R0, R0, #8
 		VSTR D17, R0, #0
@@ -2287,7 +2287,7 @@ VAR
 	BEGIN	(* {interrupts off} *)
 		timer(ID(), state);
 		SYSTEM.PUT32(Platform.PrivateTimerInterruptStatusRegister, 1);
-		
+
 		(* Shutdown if requested *)
 		IF ~(ID() IN allProcessors) THEN ShutdownSecondary END;
 		IF enableWatchdog THEN PrivateWatchdog.Feed(Second) END;
@@ -2531,7 +2531,7 @@ VAR
 		CMP	R2, #0
 		BNE	loop
 	END AtomicInc;
-	
+
 	(* Atomic INC(x) *)
 	PROCEDURE -AtomicDec*(VAR x: LONGINT);
 	CODE
@@ -3076,7 +3076,7 @@ VAR
 			END
 		ELSE
 			Acquire(TraceOutput);
-			Trace.StringLn("Address not in stack");Trace.Address(virtAdr); 
+			Trace.StringLn("Address not in stack");Trace.Address(virtAdr);
 			Release(TraceOutput);
 			ok := FALSE
 		END;
@@ -3118,7 +3118,7 @@ VAR
 		s.adr := s.high - InitStackSize;	(* at the top of the virtual area *)
 		initSP := s.high;
 		b := AllocatePage(s.adr, FullAccess, flags); (* allocate one physical page first *)
-		
+
 		ASSERT(b);
 		FlushDCacheRange(sysSecondLvlPtStart, sysSecondLvlPtStop - sysSecondLvlPtStart);
 		Release(Memory)
@@ -3595,10 +3595,10 @@ VAR
 		InitLocks;
 		InitGlobalTimer
 	END Init;
-	
+
 	PROCEDURE {INITIAL} Initial;
 	BEGIN
 		Init;
 	END Initial;
-	
+
 END Machine.

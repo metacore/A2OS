@@ -7,7 +7,7 @@ MODULE FoxArrayBase; (* stubs for array base runtime - can only be compiled by o
 IMPORT SYSTEM, KernelLog, Heaps, MathL;
 
 TYPE
-	
+
 	GenericUnaryAALoopS = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: SHORTINT): SHORTINT );
 	GenericUnaryAALoopI = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: INTEGER): INTEGER );
 	GenericUnaryAALoopL = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGINT): LONGINT );
@@ -24,9 +24,9 @@ TYPE
 	BinaryAASLoop = PROCEDURE ( ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE );
 	BinaryAABLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, rinc, len: SIZE ): BOOLEAN;
 	BinaryASBLoop = PROCEDURE ( ladr, radr: ADDRESS; linc, len: SIZE ): BOOLEAN;
-	
+
 	LenType = SIZE; (* should be SIZE but for legacy reasons we have to use this *)
-	
+
 CONST
 	debug = FALSE;   (* warning: debug=true -> a lot of output is generated -> traps are not displayed in Oberon (Kernel overflow) *)
 	statistics= FALSE;
@@ -46,7 +46,7 @@ CONST
 	GeometryMismatch = 400;
 	DimensionMismatch=401;
 	AllocationForbidden=402;
-	
+
 	ArrayAlignment=16;
 
 	TensorFlag = 0;  RangeFlag = 1;  TemporaryFlag = 2;
@@ -106,9 +106,9 @@ TYPE
 		dim*: SIZE;
 		elementSize*: SIZE;
 	END;
-	
+
 	Tensor = POINTER TO ArrayDescriptor;
-	
+
 	UnsafeArray*= POINTER {UNSAFE,UNTRACED} TO RECORD(ArrayDescriptor)
 		lens*: ARRAY 8 OF LenInc;
 	END;
@@ -116,7 +116,7 @@ TYPE
 	UnsafeArrayT*= POINTER {UNSAFE} TO RECORD(ArrayDescriptor)
 		lens*: ARRAY 8 OF LenInc;
 	END;
-	
+
 	A0 = RECORD(ArrayDescriptor) END;
 	A1 = RECORD(ArrayDescriptor) lens : ARRAY 1 OF LenInc; END;
 	A2 = RECORD(ArrayDescriptor) lens : ARRAY 2 OF LenInc; END;
@@ -126,7 +126,7 @@ TYPE
 	A6 = RECORD(ArrayDescriptor) lens : ARRAY 6 OF LenInc; END;
 	A7 = RECORD(ArrayDescriptor) lens : ARRAY 7 OF LenInc; END;
 	A8 = RECORD(ArrayDescriptor) lens : ARRAY 8 OF LenInc; END;
-	
+
 	T0 = POINTER TO A0;
 	T1 = POINTER TO A1;
 	T2 = POINTER TO A2;
@@ -136,12 +136,12 @@ TYPE
 	T6 = POINTER TO A6;
 	T7 = POINTER TO A7;
 	T8 = POINTER TO A8;
-	
+
 
 	(* used for optimizations of MatMul with small sizes (Alexey Morozov) *)
 	SmallMatMul* = PROCEDURE(dadr, ladr, radr: ADDRESS);
-	
-	
+
+
 
 
 VAR
@@ -190,7 +190,7 @@ VAR
 		loopSPARAR := SPARARLoop;  loopAddAXAX := AddAXAXLoop;  loopSubAXAX := SubAXAXLoop; loopEMulAXAX := EMulAXAXLoop;
 		loopSPAZAZ := SPAZAZLoop; loopSPALZALZ := SPALZALZLoop;
 		loopAddARAR := AddARARLoop; loopSubARAR := SubARARLoop; loopEMulARAR := EMulARARLoop; loopMatMulAXAX := MatMulAXAXLoop;
-		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop; loopSubAZAZ := SubAZAZLoop; loopSubALZALZ := SubALZALZLoop; 
+		loopAddAZAZ := AddAZAZLoop; loopAddALZALZ := AddALZALZLoop; loopSubAZAZ := SubAZAZLoop; loopSubALZALZ := SubALZALZLoop;
 		loopEMulAZAZ := EMulAZAZLoop; loopEMulALZALZ := EMulALZALZLoop;
 		loopMatMulIncAXAX := MatMulIncAXAXLoop;
 		loopMatMulARAR := MatMulARARLoop;  loopMulAXSX := MulAXSXLoop;
@@ -243,11 +243,11 @@ VAR
 	BEGIN
 		base.adr := value
 	END PutAdr;
-	
+
 	PROCEDURE Align(value: ADDRESS): ADDRESS;
 	BEGIN RETURN value + (-value) MOD ArrayAlignment;
 	END Align;
-	
+
 
 	(* get data base pointer (GC protection) *)
 	PROCEDURE GetPtr(base: UnsafeArray): ANY;
@@ -259,7 +259,7 @@ VAR
 	BEGIN
 		dest := src;
 	END SafePut;
-	
+
 	(* set data base pointer (GC protection) *)
 	PROCEDURE PutPtr(CONST base: UnsafeArrayT; value: ANY);
 	BEGIN
@@ -339,7 +339,7 @@ VAR
 	PROCEDURE GetArrayDesc( dim: SIZE ): Tensor;
 	VAR (* t: TensorType;  *) ptr: Tensor;
 		p0: T0;
-		p1: T1; p2: T2; p3: T3; p4: T4; p5: T5; p6: T6; p7: T7; p8: T8; 
+		p1: T1; p2: T2; p3: T3; p4: T4; p5: T5; p6: T6; p7: T7; p8: T8;
 
 	BEGIN
 		CASE dim OF
@@ -352,14 +352,14 @@ VAR
 		|6:NEW(p6); ptr := p6;
 		|7:NEW(p7); ptr := p7;
 		|8:NEW(p8); ptr := p8;
-		ELSE 
+		ELSE
 			HALT(200)
 		END;
 		ptr.dim := dim;
 		ptr.flags := {TensorFlag};
 		RETURN ptr;
 	END GetArrayDesc;
-	
+
 	PROCEDURE EnsureArrayDesc*(dim: SIZE; VAR d: Tensor);
 	BEGIN
 		IF d = NIL THEN
@@ -373,7 +373,7 @@ VAR
 		(* ELSE keep as is *)
 		END;
 	END EnsureArrayDesc;
-	
+
 
 	PROCEDURE Halt( code: SIZE;  left, right, dest: ADDRESS );
 	VAR reason: ARRAY 64 OF CHAR;
@@ -501,7 +501,7 @@ Sufficient (but not necessary) conditions:
 												  Size: SIZE ): ANY;
 	(* allocate a temporary block containing both descriptor and data *)
 	BEGIN
-		HALT(100); 
+		HALT(100);
 		(*
 		IF statistics THEN INC( allocTemp ) END;
 		d := 0;  len := Size;  dim := GetDim( src );
@@ -518,17 +518,17 @@ Sufficient (but not necessary) conditions:
 		RETURN p;
 		*)
 	END AllocateTemp;
-	
+
 
 
 	(*** procedures to traverse arrays and apply operators *)
-	
+
 	(** apply unary operator to array:  array SHORTINT -> array SHORTINT *)
 	PROCEDURE ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -543,7 +543,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -555,7 +555,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -571,7 +571,7 @@ Sufficient (but not necessary) conditions:
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -586,7 +586,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -598,7 +598,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -614,7 +614,7 @@ Sufficient (but not necessary) conditions:
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -629,7 +629,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -641,7 +641,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -651,13 +651,13 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 	END ApplyGenericUnaryAAOpL;
-	
+
 	(** apply unary operator to array:  array HUGEINT -> array HUGEINT *)
 	PROCEDURE ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -672,7 +672,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -684,7 +684,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -694,13 +694,13 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 	END ApplyGenericUnaryAAOpH;
-	
+
 	(** apply unary operator to array:  array REAL -> array REAL *)
 	PROCEDURE ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -715,7 +715,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -727,7 +727,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -737,13 +737,13 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 	END ApplyGenericUnaryAAOpR;
-	
+
 	(** apply unary operator to array:  array LONGREAL -> array LONGREAL *)
 	PROCEDURE ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -758,7 +758,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -770,7 +770,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -780,13 +780,13 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 	END ApplyGenericUnaryAAOpX;
-	
+
 	(** apply unary operator to array:  array COMPLEX -> array COMPLEX *)
 	PROCEDURE ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -801,7 +801,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -813,7 +813,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -823,13 +823,13 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 	END ApplyGenericUnaryAAOpZ;
-	
+
 	(** apply unary operator to array:  array LONGCOMPLEX -> array LONGCOMPLEX *)
 	PROCEDURE ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
-			
+
 		PROCEDURE Traverse( dim: SIZE;  ladr, dadr: ADDRESS );
 		VAR len: SIZE;  linc, dinc: SIZE;
 		BEGIN
@@ -844,7 +844,7 @@ Sufficient (but not necessary) conditions:
 				END;
 			END;
 		END Traverse;
-		
+
 	BEGIN
 		dim := GetDim( left );
 		origdest := 0;  modes := {up, down};
@@ -856,7 +856,7 @@ Sufficient (but not necessary) conditions:
 			ELSE origdest := dest;  p := AllocateTemp( dest, origdest, elementSize );
 			END;
 		END;
-		
+
 		IF debug THEN Report( "AA: left", left );  Report( "AA: dest", dest );  END;
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( left, dest, dim, loopd, looplen, loopli, loopdi );
@@ -866,7 +866,7 @@ Sufficient (but not necessary) conditions:
 		ELSE CopyContent( origdest, dest, elementSize );
 		END;
 	END ApplyGenericUnaryAAOpLZ;
-	
+
 (** apply unary operator to array:  array -> array *)
 	PROCEDURE ApplyUnaryAAOp*(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE;
 														Loop: UnaryAALoop );
@@ -1371,7 +1371,7 @@ Sufficient (but not necessary) conditions:
 
 		(* check pattern: longest piece that can be done with a loop *)
 		FindPattern2( src, dest, dim, loopd, looplen, loopli, loopdi );
-		
+
 		Traverse( 0, GetAdr( src ), GetAdr( dest ) );
 
 		IF up IN modes THEN  (* nothing to be done *)
@@ -1403,7 +1403,7 @@ Sufficient (but not necessary) conditions:
 		IF dest # NIL THEN Size := GetSize( dest );  ASSERT ((Size=0) OR (Size = elementsize ));  END;
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
 		IF dest = NIL THEN  (* NIL pointer, guaranteed to be tensor *)
-			dest := GetArrayDesc( GetDim( src ) ); 
+			dest := GetArrayDesc( GetDim( src ) );
 			PutFlags(dest, {TensorFlag});
 			NewData();
 			RETURN TRUE;
@@ -1413,7 +1413,7 @@ Sufficient (but not necessary) conditions:
 				~(TemporaryFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				HALT( 100 );
 			END;
-			dest := GetArrayDesc( GetDim( src ) ); 
+			dest := GetArrayDesc( GetDim( src ) );
 			PutFlags(dest, {TensorFlag});
 			NewData();
 			RETURN TRUE;
@@ -1437,7 +1437,7 @@ Sufficient (but not necessary) conditions:
 			IF (TensorFlag IN GetFlags( dest )) THEN (* old heap pointer overwritten *)
 				oldDest := dest;
 				Heaps.Assign(dest, src);
-				
+
 			ELSE
 				(*
 				Heaps.ResetMathArray(dest);
@@ -1447,7 +1447,7 @@ Sufficient (but not necessary) conditions:
 		ELSE
 (*			Heaps.Refer(src);*)
 			dest := src;
-		END; 
+		END;
 	END Assign;
 
 	PROCEDURE TempDescCopy( CONST src: UnsafeArrayT ): UnsafeArrayT;
@@ -1458,7 +1458,7 @@ Sufficient (but not necessary) conditions:
 		SYSTEM.MOVE( src, dest, dim * SIZEOF(LenInc) + MathLenOffset );
 		dest.adr := NIL;
 		SYSTEM.PUT(ADDRESS OF dest.ptr, NIL); (* no refcounting here ! *)
-		PutFlags( dest, {} );  
+		PutFlags( dest, {} );
 		RETURN dest;
 	END TempDescCopy;
 
@@ -1466,7 +1466,7 @@ Sufficient (but not necessary) conditions:
 	PROCEDURE CopyArraySelf*( VAR dest: UnsafeArrayT; CONST src: UnsafeArrayT;  elementsize: SIZE );
 	VAR p: UnsafeArrayT;
 	BEGIN
-		ASSERT( src = dest );  
+		ASSERT( src = dest );
 		p := TempDescCopy( dest ); (* copy and prepare dest to be copied over *)
 		CopyArray( dest, p, elementsize );
 	END CopyArraySelf;
@@ -1527,7 +1527,7 @@ Sufficient (but not necessary) conditions:
 		 *)
 
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
-			dest := GetArrayDesc( GetDim( src ) ); 
+			dest := GetArrayDesc( GetDim( src ) );
 			CopyDescriptor();
 			PutFlags(dest, {TensorFlag});
 		ELSIF GetDim( dest ) # GetDim( src ) THEN  (* different dimension *)
@@ -1538,7 +1538,7 @@ Sufficient (but not necessary) conditions:
 			END;
 
 			(* create a new descriptor!!! (added by Alexey) *)
-			dest := GetArrayDesc( GetDim( src ) );  
+			dest := GetArrayDesc( GetDim( src ) );
 			CopyDescriptor();
 			PutFlags(dest, flags);
 		ELSE
@@ -1562,7 +1562,7 @@ Sufficient (but not necessary) conditions:
 		SYSTEM.MOVE( src, dest, 2*SIZEOF(ADDRESS) );   (* adr and ptr *)
 		SYSTEM.MOVE( src + MathLenOffset, dest + MathLenOffset, SIZEOF(LenInc) *  GetDim( src ));   (* lens and increments *)
 	END DescriptorCopy;
-*) 
+*)
 
 	PROCEDURE ZeroCopy*(CONST src: ARRAY [?]; VAR dest: ARRAY {UNSAFE} [?]);
 	BEGIN
@@ -1942,14 +1942,14 @@ Sufficient (but not necessary) conditions:
 		ApplyUnaryAAOp(RESULT, src,SIZEOF( LONGINT ),ConvertLoopXL );
 		RETURN RESULT
 	END "@Convert";
-	
+
 
 	OPERATOR "ENTIER"*(CONST src: ARRAY [ ? ] OF LONGREAL ):  ARRAY {UNSAFE} [ ? ] OF LONGINT;
 	BEGIN
 		ApplyUnaryAAOp(RESULT, src,SIZEOF( LONGINT ),ConvertLoopXL );
 		RETURN RESULT
 	END "ENTIER";
-	
+
 	(** SIZES **)
 
 	PROCEDURE ConvertLoopLY( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
@@ -1960,7 +1960,7 @@ Sufficient (but not necessary) conditions:
 			INC( ladr, linc );  INC( dadr, dinc );  DEC( len );
 		END;
 	END ConvertLoopLY;
-	
+
 	OPERATOR "@Convert"*(CONST src: ARRAY [ ? ] OF LONGINT ): ARRAY {UNSAFE} [ ? ] OF SIZE;
 	BEGIN
 		ApplyUnaryAAOp(RESULT, src,SIZEOF( SIZE ), ConvertLoopLY );
@@ -2015,7 +2015,7 @@ Sufficient (but not necessary) conditions:
 		ApplyUnaryAAOp(RESULT, src,SIZEOF( BOOLEAN ), NotLoopAB );
 		RETURN RESULT
 	END "~";
-	
+
 	(*** monadic generic (A) -> -A  ********************************************************************)
 
 (** SHORTINT *)
@@ -2027,7 +2027,7 @@ Sufficient (but not necessary) conditions:
 			DEC( len );
 		END;
 	END GenericLoopS;
-	
+
 (** INTEGER *)
 	PROCEDURE GenericLoopI( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: INTEGER): INTEGER );
 	VAR lval: INTEGER;
@@ -2077,10 +2077,10 @@ Sufficient (but not necessary) conditions:
 			DEC( len );
 		END;
 	END GenericLoopX;
-	
+
 (** COMPLEX *)
 	PROCEDURE GenericLoopZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: COMPLEX): COMPLEX );
-	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: COMPLEX END;	
+	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: COMPLEX END;
 	BEGIN
 		WHILE (len > 0) DO
 			lval := ladr;
@@ -2093,7 +2093,7 @@ Sufficient (but not necessary) conditions:
 
 (** LONGCOMPLEX *)
 	PROCEDURE GenericLoopLZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
-	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: LONGCOMPLEX END;	
+	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: LONGCOMPLEX END;
 	BEGIN
 		WHILE (len > 0) DO
 			lval := ladr;
@@ -2515,7 +2515,7 @@ Sufficient (but not necessary) conditions:
 										  AddAZSZLoop );
 		RETURN RESULT
 	END "+";
-	
+
 (** HUGEINT *)
 	PROCEDURE AddAHSHLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: HUGEINT;
@@ -2763,7 +2763,7 @@ Sufficient (but not necessary) conditions:
 		RESULT := left + (-right);
 		RETURN RESULT
 	END "-";
-	
+
 (** REAL *)
 	OPERATOR "-"*(CONST left: ARRAY [ ? ] OF REAL; right: REAL ): ARRAY {UNSAFE} [ ? ] OF REAL;
 	BEGIN
@@ -2847,7 +2847,7 @@ Sufficient (but not necessary) conditions:
 										  SIZEOF( LONGINT ), SubSLALLoop );
 		RETURN RESULT
 	END "-";
-	
+
 (** SIZE *)
 	PROCEDURE SubSYAYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval, dval: SIZE;
@@ -4391,8 +4391,8 @@ Sufficient (but not necessary) conditions:
 										  SIZEOF( LONGINT ), ModSLALLoop );
 		RETURN RESULT
 	END "MOD";
-	
-	
+
+
 (** SIZE *)
 	PROCEDURE ModAYSYLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, rval: SIZE;  dval: SIZE;
@@ -6243,7 +6243,7 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( left, right, GeqAXAXLoop , FALSE);
 	END ">=";
 
-	
+
 	(*** less than, greater or equal: array x array -> boolean  ********************************************************************)
 
 (** SHORTINT *)
@@ -7485,11 +7485,11 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		RETURN ApplyBinaryASBOp( right , ADDRESSOF( left ), LssAXSXLoop );
 	END ">";
-	
+
 
 	(**** binary max/min operators array x scalar-> array ********************************************************************)
-	
-	PROCEDURE MaxAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+
+	PROCEDURE MaxAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7497,10 +7497,10 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxAXSXLoop;
-	
+
 	OPERATOR "MAX"*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): ARRAY {UNSAFE} [?] OF LONGREAL;
 	TYPE Type = LONGREAL;
 	BEGIN
@@ -7508,7 +7508,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MaxARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+	PROCEDURE MaxARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: REAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7516,19 +7516,19 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxARSRLoop;
-	
+
 	OPERATOR "MAX"*(CONST left: ARRAY [?] OF REAL; right: REAL): ARRAY {UNSAFE} [?] OF REAL;
 	TYPE Type = REAL;
 	BEGIN
 		ApplyBinaryASAOp( RESULT , left, ADDRESSOF( right ), SIZEOF( Type ), MaxARSRLoop );
 		RETURN RESULT
 	END "MAX";
-	
-	
-	PROCEDURE MaxALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+
+
+	PROCEDURE MaxALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7536,19 +7536,19 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxALSLLoop;
-	
+
 	OPERATOR "MAX"*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): ARRAY {UNSAFE} [?] OF LONGINT;
 	TYPE Type = LONGINT;
 	BEGIN
 		ApplyBinaryASAOp( RESULT , left, ADDRESSOF( right ), SIZEOF( Type ), MaxALSLLoop );
 		RETURN RESULT
 	END "MAX";
-	
 
-	PROCEDURE MaxAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+
+	PROCEDURE MaxAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7556,10 +7556,10 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxAISILoop;
-	
+
 	OPERATOR "MAX"*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): ARRAY {UNSAFE} [?] OF INTEGER;
 	TYPE Type = INTEGER;
 	BEGIN
@@ -7567,7 +7567,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MaxASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+	PROCEDURE MaxASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7575,19 +7575,19 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval>val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxASSSLoop;
-	
+
 	OPERATOR "MAX"*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): ARRAY {UNSAFE} [?] OF SHORTINT;
 	TYPE Type = SHORTINT;
 	BEGIN
 		ApplyBinaryASAOp( RESULT , left, ADDRESSOF( right ), SIZEOF( Type ), MaxASSSLoop );
 		RETURN RESULT
 	END "MAX";
-	
 
-	PROCEDURE MinAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+
+	PROCEDURE MinAXSXLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: LONGREAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7595,18 +7595,18 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinAXSXLoop;
-	
+
 	OPERATOR "MIN"*(CONST left: ARRAY [?] OF LONGREAL; right: LONGREAL): ARRAY {UNSAFE} [?] OF LONGREAL;
 	TYPE Type = LONGREAL;
 	BEGIN
 		ApplyBinaryASAOp( RESULT , left, ADDRESSOF( right ), SIZEOF( Type ), MinAXSXLoop );
 		RETURN RESULT
 	END "MIN";
-	
-	PROCEDURE MinARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+
+	PROCEDURE MinARSRLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: REAL;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7614,18 +7614,18 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinARSRLoop;
-	
+
 	OPERATOR "MIN"*(CONST left: ARRAY [?] OF REAL; right: REAL): ARRAY {UNSAFE} [?] OF REAL;
 	TYPE Type = REAL;
 	BEGIN
 		ApplyBinaryASAOp( RESULT , left, ADDRESSOF( right ), SIZEOF( Type ), MinARSRLoop );
 		RETURN RESULT
 	END "MIN";
-	
-	PROCEDURE MinALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+
+	PROCEDURE MinALSLLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: LONGINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7633,10 +7633,10 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinALSLLoop;
-	
+
 	OPERATOR "MIN"*(CONST left: ARRAY [?] OF LONGINT; right: LONGINT): ARRAY {UNSAFE} [?] OF LONGINT;
 	TYPE Type = LONGINT;
 	BEGIN
@@ -7644,7 +7644,7 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MIN";
 
-	PROCEDURE MinAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+	PROCEDURE MinAISILoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: INTEGER;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7652,18 +7652,18 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinAISILoop;
-	
+
 	OPERATOR "MIN"*(CONST left: ARRAY [?] OF INTEGER; right: INTEGER): ARRAY {UNSAFE} [?] OF INTEGER;
 	TYPE Type = INTEGER;
 	BEGIN
 		ApplyBinaryASAOp( RESULT , left, ADDRESSOF( right ), SIZEOF( Type ), MinAISILoop );
 		RETURN RESULT
 	END "MIN";
-	
-	PROCEDURE MinASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE ); 
+
+	PROCEDURE MinASSSLoop( ladr, radr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	VAR lval, val: SHORTINT;
 	BEGIN
 		SYSTEM.GET( radr, val );
@@ -7671,10 +7671,10 @@ Sufficient (but not necessary) conditions:
 			SYSTEM.GET( ladr, lval );
 			INC( ladr, linc ); DEC( len );
 			IF lval<val THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT(dadr, val) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinASSSLoop;
-	
+
 	OPERATOR "MIN"*(CONST left: ARRAY [?] OF SHORTINT; right: SHORTINT): ARRAY {UNSAFE} [?] OF SHORTINT;
 	TYPE Type = SHORTINT;
 	BEGIN
@@ -7684,14 +7684,14 @@ Sufficient (but not necessary) conditions:
 
 	(**** binary max/min operators array x array -> array ********************************************************************)
 
-	PROCEDURE MaxAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+	PROCEDURE MaxAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval>rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxAXAXLoop;
 
@@ -7700,16 +7700,16 @@ Sufficient (but not necessary) conditions:
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( LONGREAL ), MaxAXAXLoop );
 		RETURN RESULT
 	END "MAX";
-	
 
-	PROCEDURE MaxARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+
+	PROCEDURE MaxARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL ;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval>rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxARARLoop;
 
@@ -7719,14 +7719,14 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MaxALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+	PROCEDURE MaxALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval>rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxALALLoop;
 
@@ -7735,15 +7735,15 @@ Sufficient (but not necessary) conditions:
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( LONGINT ), MaxALALLoop );
 		RETURN RESULT
 	END "MAX";
-	
-		PROCEDURE MaxAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+
+		PROCEDURE MaxAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval>rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxAIAILoop;
 
@@ -7752,15 +7752,15 @@ Sufficient (but not necessary) conditions:
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( INTEGER ), MaxAIAILoop );
 		RETURN RESULT
 	END "MAX";
-	
-	PROCEDURE MaxASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+
+	PROCEDURE MaxASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval>rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MaxASASLoop;
 
@@ -7770,32 +7770,32 @@ Sufficient (but not necessary) conditions:
 		RETURN RESULT
 	END "MAX";
 
-	PROCEDURE MinAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+	PROCEDURE MinAXAXLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
 			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval<rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinAXAXLoop;
-	
+
 	OPERATOR "MIN"*(CONST left, right: ARRAY [?] OF LONGREAL): ARRAY {UNSAFE} [?] OF LONGREAL;
 	BEGIN
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( LONGREAL ), MinAXAXLoop );
 		RETURN RESULT
 	END "MIN";
-		
 
-	PROCEDURE MinARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+
+	PROCEDURE MinARARLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: REAL ;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval<rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinARARLoop;
 
@@ -7806,30 +7806,30 @@ Sufficient (but not necessary) conditions:
 	END "MIN";
 
 
-	
-	(*PROCEDURE MinALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+
+	(*PROCEDURE MinALALLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval<rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinALALLoop;
 	*)
 
-TYPE 
+TYPE
 	LongintPtr = POINTER {UNSAFE,UNTRACED} TO RECORD val: LONGINT END;
-	
-	PROCEDURE MinALALLoop( ladr, radr, dadr: LongintPtr; linc, rinc, dinc, len: SIZE); 
+
+	PROCEDURE MinALALLoop( ladr, radr, dadr: LongintPtr; linc, rinc, dinc, len: SIZE);
 	BEGIN
 		WHILE (len > 0) DO
 			IF ladr.val < ladr.val THEN dadr.val := ladr.val ELSE dadr.val := radr.val END;
 			ladr := ladr + linc;
 			radr := radr + rinc;
 			dadr := dadr + dinc;
-			DEC(len); 
+			DEC(len);
 		END;
 	END MinALALLoop;
 
@@ -7840,15 +7840,15 @@ TYPE
 	END "MIN";
 
 	TYPE SizePtr = POINTER {UNSAFE,UNTRACED} TO RECORD val: SIZE END;
-	
-	PROCEDURE MinAYAYLoop( ladr, radr, dadr: SizePtr; linc, rinc, dinc, len: SIZE); 
+
+	PROCEDURE MinAYAYLoop( ladr, radr, dadr: SizePtr; linc, rinc, dinc, len: SIZE);
 	BEGIN
 		WHILE (len > 0) DO
 			IF ladr.val < ladr.val THEN dadr.val := ladr.val ELSE dadr.val := radr.val END;
 			ladr := ladr + linc;
 			radr := radr + rinc;
 			dadr := dadr + dinc;
-			DEC(len); 
+			DEC(len);
 		END;
 	END MinAYAYLoop;
 
@@ -7857,15 +7857,15 @@ TYPE
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( SIZE ), MinAYAYLoop );
 		RETURN RESULT
 	END "MIN";
-	
-	PROCEDURE MinAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+
+	PROCEDURE MinAIAILoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval<rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinAIAILoop;
 
@@ -7874,15 +7874,15 @@ TYPE
 		ApplyBinaryAAAOp( RESULT, left, right, SIZEOF( INTEGER ), MinAIAILoop );
 		RETURN RESULT
 	END "MIN";
-	
-	PROCEDURE MinASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE ); 
+
+	PROCEDURE MinASASLoop( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	VAR lval, rval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
-			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval ); 
+			SYSTEM.GET( ladr, lval ); SYSTEM.GET( radr, rval );
 			INC( ladr, linc ); INC(radr,rinc ); DEC( len );
 			IF lval<rval THEN SYSTEM.PUT( dadr, lval) ELSE SYSTEM.PUT (dadr,rval) END;
-			INC(dadr,dinc); 
+			INC(dadr,dinc);
 		END;
 	END MinASASLoop;
 
@@ -8474,10 +8474,10 @@ TYPE
 	BEGIN
 		dval := dadr;
 		SYSTEM.GET( ladr, lval );
-		WHILE (len > 0) DO 
+		WHILE (len > 0) DO
 			dval.val := lval;
 			dval := dval + dinc;
-			DEC( len );  
+			DEC( len );
 		END;
 	END AssignSHAHLoop;
 
@@ -9648,7 +9648,7 @@ TYPE
 		RESULT[1] := vl3 * vr1 - vl1 * vr3;  RESULT[2] := vl1 * vr2 - vl2 * vr1;
 		RETURN RESULT
 	END "*";
-	
+
 
 	OPERATOR "*"*(CONST left, right: ARRAY [ ? ] OF LONGREAL ): ARRAY {UNSAFE} [ ? ] OF LONGREAL;
 	VAR tensor: Tensor;
@@ -9778,7 +9778,7 @@ TYPE
 		END TransposedShape;
 
 		PROCEDURE NewData;
-		VAR max,dim, len, size: SIZE; data: ANY; 
+		VAR max,dim, len, size: SIZE; data: ANY;
 		BEGIN
 			dim := GetDim( src );  size := elementsize;
 			PutDim( dest, dim );
@@ -9798,9 +9798,9 @@ TYPE
 		IF dest # 0 THEN Size := GetSize( dest );  ASSERT( Size = elementsize );  END;
 		IF debug THEN KernelLog.String( "Allocate same " );  Report( "allocation source", src );  Report( "allocation des", dest );  END;
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
-			dest := GetArrayDesc( GetDim( src ) );  
+			dest := GetArrayDesc( GetDim( src ) );
 			PutFlags(dest, {TensorFlag});
-			NewData();  
+			NewData();
 			RETURN TRUE;
 		ELSIF GetDim( dest ) # GetDim( src ) THEN  (* different dimension *)
 			(* check if re-allocation of descriptor is allowed *)
@@ -9808,7 +9808,7 @@ TYPE
 				~(TemporaryFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				HALT( 100 );
 			END;
-			dest := GetArrayDesc( GetDim( src ) );  
+			dest := GetArrayDesc( GetDim( src ) );
 			PutFlags(dest, {TensorFlag});
 			NewData();
 			RETURN TRUE;
@@ -9841,7 +9841,7 @@ TYPE
 			PutInc( dest, 1, GetIncr( left, 0 ) );  PutInc( dest, 0, GetIncr( left, 1 ) );
 		ELSE
 			len0 := GetLen( left, 0 );  len1 := GetLen( left, 1 );
-			IF AllocateTransposed(dest,left,Size) THEN Halt(AllocationForbidden,dest,0,0); END; 
+			IF AllocateTransposed(dest,left,Size) THEN Halt(AllocationForbidden,dest,0,0); END;
 			IF Overlap( left, dest ) THEN  (* copy data first, then transpose *)
 				SYSTEM.NEW( p, len0 * len1 * Size  + ArrayAlignment);  dinc0 := Size;  dinc1 := len0 * Size;
 				dadr := Align(p);  linc0 := GetIncr( left, 0 );
@@ -9936,12 +9936,12 @@ TYPE
 		BEGIN
 			ASSERT( (dest = NIL) OR (TensorFlag IN GetFlags(dest)) & ~(RangeFlag IN GetFlags(dest)) );
 		END CheckAlloc;
-		
+
 
 		PROCEDURE NewDescriptor(): UnsafeArrayT;
 		BEGIN
 			CheckAlloc;
-			RETURN GetArrayDesc(newDim); 
+			RETURN GetArrayDesc(newDim);
 		END NewDescriptor;
 
 		(* 	Added by Alexey
@@ -9967,7 +9967,7 @@ TYPE
 
 			RETURN squeezingReshape;
 		END SqueezingReshape;
-		
+
 		(*returns TRUE if the target is already allocated coninuous memory of correct length*)
 		PROCEDURE TargetContinuous(): BOOLEAN;
 		VAR
@@ -9985,7 +9985,7 @@ TYPE
 			(*tod obviously size is not what I expect it to be*)
 			IF (i = 0) & (n#0) & continue & (Size=GetSize(dest))  THEN (* destination array is continuous memory of the proper lenght *)
 				RETURN TRUE;
-			ELSE 
+			ELSE
 				RETURN FALSE;
 			END;
 		END TargetContinuous;
@@ -10041,7 +10041,7 @@ TYPE
 			PutAdr( new, GetAdr(src) );
 			PutPtr( new, GetPtr(src) );  PutDim( new, newDim );
 			PutSize( new, Size );
-			
+
 			RETURN new;
 		END NewDescriptorForSameData;
 
@@ -10135,7 +10135,7 @@ TYPE
 			ELSIF ((newDim = oldDim) & ~ShapeDiffers()) THEN
 				(* create a copy of the original descriptor *)
 				CheckAlloc();
-				dest := GetArrayDesc(newDim); 
+				dest := GetArrayDesc(newDim);
 				CopyDescriptor(src,dest);
 			ELSE
 				Err( "RESHAPE: given RANGE array can not be reshaped!" );
@@ -10151,10 +10151,10 @@ TYPE
 			IF ~(TensorFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				Err( "RESHAPE: new dimension only allowed for TENSOR" );
 			END;
-			dest := NewDescriptor();  NewData(dest);  CopyData(src, dest);  
+			dest := NewDescriptor();  NewData(dest);  CopyData(src, dest);
 		ELSIF ShapeDiffers() THEN  (* same dim but shape of destination does not match *)
 			IF RangeFlag IN GetFlags( dest ) THEN Err( "RESHAPE: new shape not allowed for RANGE" );  END;
-			NewData(dest);  CopyData(src, dest);  
+			NewData(dest);  CopyData(src, dest);
 		ELSIF ~SameShape( src, dest ) THEN  (* shape for destination matches but that of src is different *)
 			new := NewDescriptor();  NewData(new);  CopyData(src, new); CopyData(new, dest);
 		ELSE  (* same shape, just copy *)
@@ -10196,7 +10196,7 @@ TYPE
 			IF dest # 0 THEN
 				IF (~(TensorFlag IN GetFlags( dest ))) THEN Err( "Array's number of dimension must not be modified (no TENSOR !)" );  END;
 			END;
-			descr := GetArrayDesc( LEN( a,0 ) );  
+			descr := GetArrayDesc( LEN( a,0 ) );
 			dest := descr;
 			NewData;
 			Heaps.SetPC(data);
@@ -10213,7 +10213,7 @@ TYPE
 				Heaps.SetPC(data);
 			ELSE ClearData
 			END;
-		END;		
+		END;
 	END AllocateTensorA;
 
 	PROCEDURE AllocateArrayA*( CONST a: ARRAY OF SIZE;  elementSize: SIZE; tag: ADDRESS; dest: UnsafeArray);
@@ -10236,12 +10236,12 @@ TYPE
 				*)
 				PutInc( dest, i, size );  PutLen( dest, i, len );  size := size * len;
 			END;
-			IF tag = 0 THEN			
+			IF tag = 0 THEN
 				SYSTEM.NEW( data, size  + ArrayAlignment);   (* Zero(data,size*Size); *)
 				PutAdr( dest, Align(data) );
 			ELSE
 				Heaps.NewArr(data, tag, size DIV Size,1,FALSE);
-				PutAdr( dest, data+ ADDRESS(ArrDataArrayOffset) );			
+				PutAdr( dest, data+ ADDRESS(ArrDataArrayOffset) );
 			END;
 			PutPtr( dest, data );  PutSize( dest, Size );
 		END NewData;
@@ -10274,12 +10274,12 @@ TYPE
 			END;
 		END;
 	END DoAllocateTensorX;
-	
+
 	PROCEDURE AllocateTensorX( VAR dest: ARRAY {UNSAFE} [?] OF SIZE; CONST a: ARRAY [ * ] OF SIZE;  Size: SIZE; tag: ADDRESS );
 	BEGIN
 		DoAllocateTensorX(dest,a,Size,tag);
 	END AllocateTensorX;
-	
+
 
 	PROCEDURE LenA*( VAR dest: ARRAY [ * ] OF SIZE;  src: ADDRESS );
 	VAR dim, i: SIZE;
@@ -10323,7 +10323,7 @@ TYPE
 	VAR ldim, rdim: SIZE;
 
 		PROCEDURE NewData;
-		VAR len, size, i: SIZE; data: ANY; 
+		VAR len, size, i: SIZE; data: ANY;
 		BEGIN
 			size := 1;
 			FOR i := 0 TO ldim - 1 DO
@@ -10348,14 +10348,14 @@ TYPE
 	BEGIN
 		ldim := GetDim( left );  rdim := GetDim( right );
 		IF dest = 0 THEN  (* NIL pointer, guaranteed to be tensor *)
-			dest := GetArrayDesc( ldim + rdim );  
+			dest := GetArrayDesc( ldim + rdim );
 			NewData();
 		ELSIF (ldim + rdim # GetDim( dest )) THEN
 			IF ~(TensorFlag IN GetFlags( dest )) &
 				~(TemporaryFlag IN GetFlags( dest )) THEN  (* no, not allowed*)
 				HALT( 100 );
 			END;
-			dest := GetArrayDesc( ldim + rdim );  
+			dest := GetArrayDesc( ldim + rdim );
 			NewData();
 		ELSIF ~CheckTensorGeometry( left, right, dest, ldim, rdim ) THEN  (* dimension matches but not geometry *)
 			IF RangeFlag IN GetFlags( dest ) THEN  (* no! not allowed *)
@@ -10520,7 +10520,7 @@ TYPE
 		ELSE
 			srcDim := GetDim(src);
 			destDim := srcDim - prefixIndices - suffixIndices;
-			
+
 			(*
 			KernelLog.String("srcDim "); KernelLog.Int(srcDim,1); KernelLog.Ln;
 			KernelLog.String("prefixIndices "); KernelLog.Int(prefixIndices,1); KernelLog.Ln;
@@ -10548,7 +10548,7 @@ TYPE
 			(*
 			Report("copy descriptor src",src);
 			Report("copy descriptor dest",dest);
-			*) 
+			*)
 		END;
 	END CopyDescriptor;
 
@@ -10644,7 +10644,7 @@ TYPE
 		RETURN result
 	END "LEN";
 
-	
+
 	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF SHORTINT; op: PROCEDURE(x: SHORTINT): SHORTINT): ARRAY {UNSAFE} [?] OF SHORTINT;
 	BEGIN
 		ApplyGenericUnaryAAOpS(RESULT, x, SIZEOF(SHORTINT),GenericLoopS,op);
@@ -10656,13 +10656,13 @@ TYPE
 		ApplyGenericUnaryAAOpI(RESULT,x,SIZEOF(INTEGER),GenericLoopI,op);
 		RETURN RESULT;
 	END "ALL";
-	
+
 	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF LONGINT; op: PROCEDURE(x: LONGINT): LONGINT): ARRAY {UNSAFE} [?] OF LONGINT;
 	BEGIN
 		ApplyGenericUnaryAAOpL(RESULT,x,SIZEOF(LONGINT),GenericLoopL,op);
 		RETURN RESULT;
 	END "ALL";
-	
+
 	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF HUGEINT; op: PROCEDURE(x: HUGEINT): HUGEINT): ARRAY {UNSAFE} [?] OF HUGEINT; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpH(RESULT,x,SIZEOF(HUGEINT),GenericLoopH,op);
@@ -10680,7 +10680,7 @@ TYPE
 		ApplyGenericUnaryAAOpX(RESULT,x,SIZEOF(LONGREAL),GenericLoopX,op);
 		RETURN RESULT;
 	END "ALL";
-	
+
 	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF COMPLEX; op: PROCEDURE(x: COMPLEX): COMPLEX): ARRAY {UNSAFE} [?] OF COMPLEX; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpZ(RESULT,x,SIZEOF(COMPLEX),GenericLoopZ,op);
@@ -10694,7 +10694,7 @@ TYPE
 	END "ALL";
 
 BEGIN
-	alloc := 0;  NEW(temporary); 
+	alloc := 0;  NEW(temporary);
 	PutFlags(temporary,{TensorFlag});
 	PutDim(temporary, 0);
 	SetDefaults();  InitOptimization();  (* CreateTypePool;  *)
@@ -10702,11 +10702,11 @@ END FoxArrayBase.
 
 Compiler.Compile FoxArrayBase.Mod ~
 
-System.ListModules 
+System.ListModules
 
-System.FreeDownTo FoxArrayBase ~ 
-
-
+System.FreeDownTo FoxArrayBase ~
 
 
-Debugging.DisableGC 
+
+
+Debugging.DisableGC

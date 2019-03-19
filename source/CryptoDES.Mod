@@ -5,7 +5,7 @@ MODULE CryptoDES;	(** AUTHOR "G.F."; PUROSE "DES Cipher";	 *)
 
 
 IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
-CONST 
+CONST
 	Mask01 = S.VAL( SET32, 0AAAAAAAAH );
 	Mask02 = S.VAL( SET32, 33333333H );
 	Mask04 = S.VAL( SET32, 0F0F0F0FH );
@@ -16,41 +16,41 @@ TYPE
 	Sandbox = ARRAY 64 OF SET32;
 	BitSwap = ARRAY 16 OF SET32;
 	Ind4* = RECORD a-, b-, c-, d-: LONGINT END;
-	
+
 VAR
 	sb1-, sb2-, sb3-, sb4-, sb5-, sb6-, sb7-, sb8-: Sandbox;
 	LHs, RHs: BitSwap;
-	
-TYPE 
-	Cipher* = OBJECT (Ciphers.Cipher)		
+
+TYPE
+	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR
 		ske, skd: ARRAY 32 OF SET32;  ki: LONGINT;
 		ivx, ivy: SET32;
-	
+
 		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: LONGINT );
 		VAR X, Y: SET32;  i: LONGINT;
 		BEGIN
 			ASSERT( keybits = 64 );
 			InitKey^( src, keybits );
-			
+
 			X := U.SetFromBufferBE( src, 0 );  Y := U.SetFromBufferBE( src, 4 );
-			
+
 			ComputeSubkeys( X, Y, ske, 0 );
-			
-			FOR i := 0 TO 31 BY 2 DO  
-				skd[i] := ske[30 - i];  
+
+			FOR i := 0 TO 31 BY 2 DO
+				skd[i] := ske[30 - i];
 				skd[i + 1] := ske[31 - i]
 			END;
 		END InitKey;
-		
-		
+
+
 		PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
 		BEGIN
 			SetIV^( src, mode );   (* set mode *)
 			ivx := U.SetFromBufferBE( src, 0 );  ivy := U.SetFromBufferBE( src, 4 )
 		END SetIV;
-		
-		
+
+
 		PROCEDURE  Encrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
 		VAR i, r: LONGINT;   X, Y: SET32;
 		BEGIN
@@ -60,19 +60,19 @@ TYPE
 			WHILE i < len DO
 				X := U.SetFromBufferBE( buf, ofs + i );  Y := U.SetFromBufferBE( buf, ofs + i + 4 );
 				IF mode = Ciphers.CBC THEN  X := X / ivx;  Y := Y / ivy   END;
-				IP( X, Y );  
+				IP( X, Y );
 				ki := 0;
-				FOR r := 0 TO 7 DO  
+				FOR r := 0 TO 7 DO
 					RoundE( Y, X );  RoundE( X, Y );
 				END;
 				FP( Y, X );
-				U.SetToBufferBE( Y, buf, ofs + i );   U.SetToBufferBE( X, buf, ofs + i + 4); 
+				U.SetToBufferBE( Y, buf, ofs + i );   U.SetToBufferBE( X, buf, ofs + i + 4);
 				IF mode = Ciphers.CBC THEN  ivx := Y;  ivy := X  END;
 				INC( i, blockSize )
 			END
-		END Encrypt;	
-		
-		
+		END Encrypt;
+
+
 		PROCEDURE  Decrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
 		VAR i, r: LONGINT;  X, Y: SET32;  X0, Y0: SET32;
 		BEGIN
@@ -82,22 +82,22 @@ TYPE
 			WHILE i < len DO
 				X := U.SetFromBufferBE( buf, ofs + i );  Y := U.SetFromBufferBE( buf, ofs + i + 4 );
 				IF mode = Ciphers.CBC THEN  X0 := X;  Y0 := Y  END;
-				IP( X, Y );  
+				IP( X, Y );
 				ki := 0;
-				FOR r := 0 TO 7 DO  
+				FOR r := 0 TO 7 DO
 					RoundD( Y, X );  RoundD( X, Y );
 				END;
 				FP( Y, X );
-				IF mode = Ciphers.CBC THEN  
-					Y := Y / ivx;  X := X / ivy  ; 
-					ivx := X0;  ivy := Y0  
+				IF mode = Ciphers.CBC THEN
+					Y := Y / ivx;  X := X / ivy  ;
+					ivx := X0;  ivy := Y0
 				END;
-				U.SetToBufferBE( Y, buf, ofs + i );   U.SetToBufferBE( X, buf, ofs + i + 4); 
+				U.SetToBufferBE( Y, buf, ofs + i );   U.SetToBufferBE( X, buf, ofs + i + 4);
 				INC( i, blockSize )
 			END
 		END Decrypt;
-		
-				
+
+
 		PROCEDURE RoundE*( VAR x, y: SET32 );
 		VAR i: Ind4;
 		BEGIN
@@ -106,7 +106,7 @@ TYPE
 			Split( ske[ki] / ROT( x, -4 ), i );  INC( ki );
 			y := y / sb7[i.a] / sb5[i.b] / sb3[i.c] / sb1[i.d]
 		END RoundE;
-		
+
 		PROCEDURE RoundD*( VAR x, y: SET32 );
 		VAR i: Ind4;
 		BEGIN
@@ -115,32 +115,32 @@ TYPE
 			Split( skd[ki] / ROT( x, -4 ), i );  INC( ki );
 			y := y / sb7[i.a] / sb5[i.b] / sb3[i.c] / sb1[i.d]
 		END RoundD;
-		
-		
+
+
 		PROCEDURE & Init*;
 		BEGIN
 			SetNameAndBlocksize( "des", 8 );
 		END Init;
-	
+
 	END Cipher;
-	
+
 	PROCEDURE -Split*( x: SET32; VAR i4: Ind4 );
 	BEGIN
 		i4.a := S.VAL( LONGINT, x ) MOD 40H;
 		i4.b := S.VAL( LONGINT, x ) DIV 100H MOD 40H;
 		i4.c := S.VAL( LONGINT, x ) DIV 10000H MOD 40H;
 		i4.d := S.VAL( LONGINT, x ) DIV 1000000H MOD 40H
-	END Split; 
-	
-	
+	END Split;
+
+
 	PROCEDURE NewCipher*( ): Ciphers.Cipher;
 	VAR cipher: Cipher;
 	BEGIN
 		NEW( cipher );  RETURN cipher
 	END NewCipher;
-	
-	
-			
+
+
+
 	PROCEDURE IP*( VAR x, y: SET32 );	(* initial permutation *)
 	VAR t: SET32;
 	BEGIN
@@ -149,10 +149,10 @@ TYPE
 		t := (LSH( y,   -2 ) / x) * Mask02;	 x := x / t;  y := y / LSH( t, 2 );
 		t := (LSH( y,   -8 ) / x) * Mask08;	 x := x / t;  y := y / LSH( t, 8 );
 		y := ROT( y, 1 );
-		t := (x / y) * Mask01;  y := y / t;  x := x / t; 
-		x := ROT( x, 1 );			
+		t := (x / y) * Mask01;  y := y / t;  x := x / t;
+		x := ROT( x, 1 );
 	END IP;
-		
+
 	PROCEDURE FP*( VAR x, y: SET32 );	(* final permutation *)
 	VAR t: SET32;
 	BEGIN
@@ -164,32 +164,32 @@ TYPE
 		t := (LSH( x, -16 ) / y) * Mask16;	 y := y / t;  x := x / LSH( t, 16 );
 		t := (LSH( x,   -4 ) / y) * Mask04;	 y := y / t;  x := x / LSH( t, 4 );
 	END FP;
-	
-	
-	
+
+
+
 	PROCEDURE ComputeSubkeys*( x, y: SET32;  VAR sk: ARRAY OF SET32; ofs: LONGINT );
 	VAR t: SET32; i: LONGINT;
-		
+
 		PROCEDURE sms( CONST LRHs: BitSwap;  x: SET32; rs, ls: LONGINT ): SET32;
 		VAR i: LONGINT;
 		BEGIN
 			i := S.VAL( LONGINT, LSH( x, -rs ) ) MOD 16;
-			RETURN LSH( LRHs[i], ls ) 
+			RETURN LSH( LRHs[i], ls )
 		END sms;
-			
+
 		PROCEDURE sm( b: SET32; shift, mask: LONGINT ): SET32;
 		BEGIN
 			RETURN LSH( b, shift ) * S.VAL( SET32,  mask )
 		END sm;
-		
+
 	BEGIN
-		t := (LSH( y, -4 ) / x) * S.VAL( SET32, 0F0F0F0FH );  x := x / t;  y := y / LSH( t, 4 );		
+		t := (LSH( y, -4 ) / x) * S.VAL( SET32, 0F0F0F0FH );  x := x / t;  y := y / LSH( t, 4 );
 		t := (y / x) * S.VAL( SET32, 10101010H ); x := x / t;  y := y / t;
-			
-		x := 
+
+		x :=
 			sms( LHs, x, 0, 3 ) + sms( LHs, x, 8, 2 ) + sms( LHs, x, 16, 1 ) + sms( LHs, x, 24, 0 ) +
 			sms( LHs, x, 5, 7 ) + sms( LHs, x, 13, 6 ) + sms( LHs, x, 21, 5 ) + sms( LHs, x, 29, 4 );
-		y :=	
+		y :=
 			sms( RHs, y, 1, 3 ) + sms( RHs, y, 9, 2 ) + sms( RHs, y, 17, 1 ) + sms( RHs, y, 25, 0 ) +
 			sms( RHs, y, 4, 7 ) + sms( RHs, y, 12, 6 ) + sms( RHs, y, 20, 5 ) + sms( RHs, y, 28, 4 );
 
@@ -199,8 +199,8 @@ TYPE
 			ELSE
 				x := LSH( x, 2 ) + LSH( x, -26 );  y := LSH( y, 2 ) + LSH( y, -26 )
 			END;
-					
-			sk[ofs + 2*i] :=	
+
+			sk[ofs + 2*i] :=
 					sm( x, 4,		24000000H ) + sm( x, 28,	10000000H ) +
 					sm( x, 14, 	08000000H ) + sm( x, 18,	02080000H ) +
 					sm( x, 6,		01000000H ) + sm( x, 9,		00200000H ) +
@@ -213,7 +213,7 @@ TYPE
 					sm( y, -3,		00000008H ) + sm( y, -18,	00000004H ) +
 					sm( y, -26,	00000002H ) + sm( y, -24,	00000001H );
 
-	        	sk[ofs + 2*i + 1] :=   
+	        	sk[ofs + 2*i + 1] :=
 	        			sm( x, 15,		20000000H ) + sm( x, 17,	10000000H ) +
 					sm( x, 10,		08000000H ) + sm( x, 22,	04000000H ) +
 					sm( x, -2,		02000000H ) + sm( x, 1,		01000000H ) +
@@ -228,18 +228,18 @@ TYPE
 		END
 	END ComputeSubkeys;
 
-	
+
 	PROCEDURE InitializeSandboxes;
-	VAR 
+	VAR
 		buf: U.InitBuffer;
-		
-	
+
+
 		PROCEDURE InitTable( VAR tab: ARRAY OF SET32 );
-		VAR i: LONGINT; 
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN( tab ) - 1 DO  tab[i] := buf.GetSet( )  END
 		END InitTable;
-	
+
 	BEGIN
 		NEW( buf, 1024 );
 		buf.Add( "01010400 00000000 00010000 01010404 01010004 00010404 00000004 00010000 " );
@@ -284,7 +284,7 @@ TYPE
 		buf.Add( "00802081 00000081 00000001 00002000 00800001 00002001 00802080 00800081 " );
 		buf.Add( "00002001 00002080 00800000 00802001 00000080 00800000 00002000 00802080 " );
 		InitTable( sb4 );
-	    
+
 		buf.Init( 1024 );
 		buf.Add( "00000100 02080100 02080000 42000100 00080000 00000100 40000000 02080000 " );
 		buf.Add( "40080100 00080000 02000100 40080100 42000100 42080000 00080100 40000000 " );
@@ -328,17 +328,17 @@ TYPE
 		buf.Add( "00000000 10041040 00040040 10000040 10040000 10001000 10001040 00000000 " );
 		buf.Add( "10041040 00041000 00041000 00001040 00001040 00040040 10000000 10041000 " );
 		InitTable( sb8 );
-		
+
 		buf.Init( 512 );
 		buf.Add( "00000000 00000001 00000100 00000101 00010000 00010001 00010100 00010101 " );
 		buf.Add( "01000000 01000001 01000100 01000101 01010000 01010001 01010100 01010101 " );
 		InitTable( LHs );
-		
+
 		buf.Init( 512 );
 		buf.Add( "00000000 01000000 00010000 01010000 00000100 01000100 00010100 01010100 " );
 		buf.Add( "00000001 01000001 00010001 01010001 00000101 01000101 00010101 01010101 " );
 		InitTable( RHs );
-				
+
 	END InitializeSandboxes;
 
 BEGIN

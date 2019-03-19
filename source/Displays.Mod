@@ -42,7 +42,7 @@ TYPE
 				IF reverse THEN
 				dispadr := fbadr + (height-y-1) * fbstride + (width-x-1) * format;
 				END;
-				
+
 				ASSERT((dispadr >= fbadr) & ((y+h-1)*fbstride + (x+w-1)*format <=  fbsize));	(* display index check *)
 				w := w * format;	(* convert to bytes *)
 				CASE op OF

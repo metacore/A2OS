@@ -2,7 +2,7 @@ MODULE MinosLinker;   (**  AUTHOR "fof"; PURPOSE "Link Minos Image. Standalone L
 
 IMPORT Streams, Commands, Files, KernelLog;
 
-TYPE 
+TYPE
 	Name = ARRAY 32 OF CHAR;
 	Command = RECORD name: Name; offset: LONGINT END;
 	Module = POINTER TO RECORD
@@ -17,7 +17,7 @@ TYPE
 	END ;
 
 	Linker* = OBJECT
-	VAR 
+	VAR
 		first, last: Module;
 		base, heap, descriptorBase, bodyBase: LONGINT;
 		W: Streams.Writer;

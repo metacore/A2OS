@@ -338,7 +338,7 @@ CODE{SYSTEM.i386}
 	TEST ECX,32				; Need to shift by 32?
 	JZ rest					; No.
 	XCHG EDX,EAX
-rest:	
+rest:
 	MOV EBX,EDX
 	SHLD EDX,EAX,CL
 	SHLD EAX,EBX,CL

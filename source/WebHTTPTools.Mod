@@ -191,7 +191,7 @@ VAR
 	res: WORD;
 BEGIN
 	IF ~context.arg.GetString(url) THEN RETURN END;
-	
+
 	log.Enter; log.TimeStamp; log.String("GET "); log.String(url); log.Exit;
 	rh.useragent := "WebHTTPTool/0.1";
 	WebHTTPClient.Get(url, rh, con, h, in, res);

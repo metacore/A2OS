@@ -688,9 +688,9 @@ TYPE
 				END;
 				ignore := bulkIn.Transfer(64, 0, data64^);(* get next data *)
 			ELSE
-				IF Debug THEN ShowModule("UpdateDataStatus failed."); KernelLog.Ln; 
+				IF Debug THEN ShowModule("UpdateDataStatus failed."); KernelLog.Ln;
 					TRACE(status);
-					
+
 				END;
 				ignore := bulkIn.Transfer(64, 0, data64^);(* get next data *)
 			END;
@@ -1061,7 +1061,7 @@ TYPE
 					EXIT;
 				END;
 				INC(i);
-				diagnostic := SYSTEM.VAL(LONGINT, driver.diagnostics - {Serials.OverrunError, Serials.ParityError, Serials.FramingError, Serials.BreakInterrupt}); 
+				diagnostic := SYSTEM.VAL(LONGINT, driver.diagnostics - {Serials.OverrunError, Serials.ParityError, Serials.FramingError, Serials.BreakInterrupt});
 					(* not including Serials.OE, Serials.PE, Serials.FE & Serials.BI, otherwise the driver stops receiving data when frame errors occur *)
 			END;
 		END HandleData;
@@ -1270,4 +1270,4 @@ System.Free UsbFTDI ~
 UsbFTDI.Install ~
 UsbFTDI.Open ~
 UsbFTDI.Send ~
-UsbFTDI.Close~ 
+UsbFTDI.Close~

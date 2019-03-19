@@ -40,7 +40,7 @@ TYPE
 				END
 			ELSE res := unknown;
 			END;
-			
+
 			bufSize := SendBufSize; len := SIZEOF(LONGINT);
 			err := WSock32.setsockopt(sock,WSock32.SOLSocket,WSock32.SOSndBuf,bufSize,len);
 			IF (err # 0) & trace THEN

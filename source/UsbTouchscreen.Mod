@@ -19,7 +19,7 @@ BEGIN
 		w := 1024; h := 768
 	END;
 END GetDisplayDimensions;
-						
+
 PROCEDURE Cleanup;
 BEGIN
 	UsbHidDriver.InstallDisplayDimensions(NIL);
@@ -32,7 +32,7 @@ END Install;
 
 
 BEGIN
-	display := NIL; 
+	display := NIL;
 	Modules.InstallTermHandler(Cleanup);
 	Install;
 END UsbTouchscreen.

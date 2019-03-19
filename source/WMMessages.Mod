@@ -15,14 +15,14 @@ CONST
 	MsgInvalidate*= 11;
 	MsgSerialize*=12;
 	MsgMerged*=15;
-	
+
 	MsgSubPointerMove* = 0; MsgSubPointerDown* = 1; MsgSubPointerUp* = 2; MsgSubPointerLeave* = 3;
 	MsgSubFocusGot* = 0; MsgSubFocusLost* = 1; MsgSubMasterFocusGot* = 2; MsgSubMasterFocusLost* = 3;
 
 	MsgSubAll*=0; MsgSubRectangle*=1; MsgSubNothing*=2; (* regions: all or rectangle as defined by x, y, dx, dy *)
 
 	MsgDragOver* = 0; MsgDragDropped* = 1;
-	
+
 	MsgSubSerializeView*=0; MsgSubSerializeComponent*=1; MsgSubSerializeData*=2;
 
 	(** Gather statistics about added/discarded messages? *)
@@ -98,9 +98,9 @@ TYPE
 		BEGIN
 			head := 0; num := 0;
 			NEW(msgQ, size);
-			SELF.owner := o;			
+			SELF.owner := o;
 		END InitQ;
-		
+
 		PROCEDURE Grow(trace: BOOLEAN);
 		VAR new: POINTER TO ARRAY (* MsgQSize*)  OF Message; i: LONGINT; name: ARRAY 128 OF CHAR; VAR pc: ADDRESS;
 			type: Modules.TypeDesc; msg: Message;
@@ -211,10 +211,10 @@ TYPE
 				END
 			END;
 
-						
-			
+
+
 			(* filter out duplicate MsgInvokeEvents - was a hack (but effecting in avoiding MessageQ congestion)*)
-			IF MergeInvokeEvents & (msg.msgType = MsgInvokeEvent) & (msg.msgSubType = 0) & (num > 0) THEN  
+			IF MergeInvokeEvents & (msg.msgType = MsgInvokeEvent) & (msg.msgSubType = 0) & (num > 0) THEN
 				i := num - 1;
 				WHILE i >= 0 DO
 					pos := (head + i) MOD LEN(msgQ);

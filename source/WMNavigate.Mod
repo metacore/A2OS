@@ -246,7 +246,7 @@ TYPE
 
 TYPE
 	(*
-	StoreCommand*=PROCEDURE{DELEGATE}(sender, par: ANY);	
+	StoreCommand*=PROCEDURE{DELEGATE}(sender, par: ANY);
 	*)
 	Base* = OBJECT(WMComponents.VisualComponent)
 	VAR
@@ -595,8 +595,8 @@ TYPE
 
 		lastKeys : SET;
 		lastWindow : WMWindowManager.Window;
-		
-		msg: WMMessages.Message; 
+
+		msg: WMMessages.Message;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -692,7 +692,7 @@ TYPE
 
 		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		VAR
-			index : LONGINT; window : WMWindowManager.Window; 
+			index : LONGINT; window : WMWindowManager.Window;
 			info2 : WMWindowManager.WindowInfo;
 			gx, gy: LONGINT;
 			menu : MenuWindow;
@@ -755,7 +755,7 @@ TYPE
 								ELSIF (index2 = SystemCommand_StoreComponent) THEN
 									StoreWindow(window);
 								ELSIF (index2 = SystemCommand_StoreData) THEN
-									msg.msgType := WMMessages.MsgSerialize; 
+									msg.msgType := WMMessages.MsgSerialize;
 									msg.msgSubType := WMMessages.MsgSubSerializeData;
 									window.Handle(msg);
 							ELSIF (index2 = SystemCommand_Frame) THEN
@@ -1253,7 +1253,7 @@ TYPE
 		);
 		VAR height : LONGINT;
 		BEGIN
-			
+
 			ASSERT((width > 0));
 			isClosed := FALSE;
 
@@ -1433,14 +1433,14 @@ BEGIN
 	Strings.FormatDateTime("_yyyymmdd__hhnnss",Dates.Now(),str);
 	Strings.Concat(fn,str,fn);
 	Strings.Append(fn,".bmp");
-	
+
 	(* TBD: scaled storing not yet implemented *)
-	
+
 	IF window IS WMWindowManager.DoubleBufferWindow THEN
 		WMGraphics.StoreImage(window(WMWindowManager.DoubleBufferWindow).backImg, fn, res);
 	ELSIF window IS WMWindowManager.BufferWindow THEN
 		WMGraphics.StoreImage(window(WMWindowManager.BufferWindow).img, fn, res);
-	ELSE 
+	ELSE
 		NEW(img); Raster.Create(img, window.GetWidth(), window.GetHeight(),Raster.BGRA8888);
 		window.Draw(WMGraphics.GenCanvas(img), window.GetWidth(), window.GetHeight(), 0);
 		WMGraphics.StoreImage(img, fn, res);
@@ -1453,37 +1453,37 @@ END WindowShot;
 
 PROCEDURE StoreWindow(window: WMWindowManager.Window); (*! o do: move this to WMComponents.Mod, or use WMRestorable.Mod *)
 VAR fn0,fn: Files.FileName;  s: ARRAY 6 OF CHAR; i, res: LONGINT; f:Files.File; w:Files.Writer;
-	xml:XML.Content; msg: WMMessages.Message; 
+	xml:XML.Content; msg: WMMessages.Message;
 BEGIN
 	IF (WMWindowManager.FlagStorable IN window.flags) THEN
 		GenerateName(window.GetTitle(),fn0);
 		IF window IS WMComponents.FormWindow THEN
 			Strings.Concat(fn0,".Cwd",fn); (* component window *)
-			f:=Files.Old(fn); 
+			f:=Files.Old(fn);
 			i:=0;
-			WHILE f#NIL DO 
+			WHILE f#NIL DO
 				f:=NIL;
 				Strings.IntToStr(i,s);
 				COPY (fn0,fn);
 				Strings.Append(fn,"_");
 				Strings.Append(fn,s);
 				Strings.Append(fn,".Cwd");
-				f:=Files.Old(fn); 
+				f:=Files.Old(fn);
 				INC(i);
 			END;
 			(*? WMRestorable.StoreWindow*(window: WM.Window; CONST fileName: ARRAY OF CHAR);*)
 			f:=Files.New(fn);
-			IF f#NIL THEN 
+			IF f#NIL THEN
 				Files.OpenWriter(w,f,0);
 				w.String('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'); w.Ln;
 				window(WMComponents.FormWindow).ToXML().Write(w,NIL,0);
 				w.Update;
 				Files.Register(f);
 				KernelLog.String("WMNavigate.StoreWindow  "); KernelLog.String(fn); KernelLog.Ln;
-			END;	
+			END;
 		ELSE (* try to serialize by sending a message*)
-			msg.msgType := WMMessages.MsgSerialize; 
-			msg.msgSubType := WMMessages.MsgSubSerializeComponent; 
+			msg.msgType := WMMessages.MsgSerialize;
+			msg.msgSubType := WMMessages.MsgSubSerializeComponent;
 			window.Handle(msg);
 		(*	IF (window.manager#NIL) & window.manager.SendMessage(window, msg) THEN END;*)
 		END;
@@ -1616,7 +1616,7 @@ BEGIN {EXCLUSIVE}
 							IF options.GetFlag("frame") THEN INCL(flags, WMWindowManager.FlagFrame); END;
 							IF options.GetFlag("stayOnTop") THEN INCL(flags, WMWindowManager.FlagStayOnTop); END;
 							IF options.GetFlag("viewport") THEN INCL(flags, WMWindowManager.FlagNavigation); END;
-							
+
 							NEW(windows[id], id, content(WMComponents.VisualComponent), x, y, w, h, TRUE, flags);
 							WMWindowManager.IncWTimestamp;
 							windows[id].CSChanged;
@@ -1775,7 +1775,7 @@ VAR window : WMWindowManager.Window; newWidth, newHeight : LONGINT;
 BEGIN {EXCLUSIVE}
 	manager.lock.AcquireWrite;
 	window := manager.GetFocusOwner();
-	
+
 	IF (window # NIL) & (window.flags * {WMWindowManager.FlagNavigation, WMWindowManager.FlagHidden, WMWindowManager.FlagNoResizing} = {}) THEN
 		IF (window.GetWidth() = width) & (window.GetHeight() = height) THEN
 			manager.SetWindowPos(window, window.normalBounds.l, window.normalBounds.t);

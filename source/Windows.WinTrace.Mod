@@ -7,7 +7,7 @@ CONST
 VAR
 	hin-, hout-, herr-: Kernel32.HANDLE;
 	mode: LONGINT; (* none, console or file *)
-	
+
 	traceChar0: PROCEDURE(ch: CHAR);
 
 (* Sender to be used with Stream.Writer *)
@@ -54,7 +54,7 @@ END Init;
 PROCEDURE Close*;
 BEGIN
 	IF traceChar0 # NIL THEN
-		Trace.Char := traceChar0; 
+		Trace.Char := traceChar0;
 	END;
 	IF mode = console THEN
 		IGNORE Kernel32.CloseHandle(hout);
@@ -71,7 +71,7 @@ END Close;
 PROCEDURE OpenConsole*;
 VAR res: WORD;
 BEGIN
-	IF mode = console THEN RETURN 
+	IF mode = console THEN RETURN
 	ELSIF mode = file THEN Close
 	END;
 	IF Kernel32.AttachConsole(-1) = Kernel32.False THEN
@@ -86,7 +86,7 @@ BEGIN
 
 	herr := Kernel32.GetStdHandle (Kernel32.STDError);
 	ASSERT ((herr) # (Kernel32.InvalidHandleValue));
-	
+
 	traceChar0 := Trace.Char;
 	Trace.Char := Char;
 	mode := console;
@@ -125,4 +125,4 @@ END WinTrace.
 WinTrace.OpenFile ~
 WinTrace.OpenFile myTrace.Text ~
 WinTrace.OpenConsole
-WinTrace.Close 
+WinTrace.Close

@@ -25,7 +25,7 @@ MODULE Release; (** AUTHOR "staubesv"; PURPOSE "Release build tool"; *)
  *		Option f, file		: Specify the package description file [default: Release.Tool]
  *		Option n, nocheck	: Skip file existence and import order checks
  *		Option o, options	: Override the compiler options specified in the package description file
- *      Option only			: Only compile the packages provided in a list. No other effect applies 
+ *      Option only			: Only compile the packages provided in a list. No other effect applies
 							  i.e. packages are fully taken into account otherwise.
 							  if packages need to be excluded, use exclude instead
  *		Option p, path		: Override the path option specified in the package description file
@@ -545,7 +545,7 @@ TYPE
 		prefixes : ARRAY MaxPrefixes OF Name;
 		excludedPackages : Strings.StringArray;
 		onlyPackages: Strings.StringArray;
-		compileOptions, linkOptions: Options.Parameter; 
+		compileOptions, linkOptions: Options.Parameter;
 		compiler, linker: ARRAY 128 OF CHAR;
 		target : ARRAY 32 OF CHAR;
 		extension : ARRAY 8 OF CHAR;
@@ -934,7 +934,7 @@ TYPE
 					out.Int(nofFilesAdded, 0); out.String(" files added."); out.Ln; out.Update;
 				END;
 			END GenerateZipFile;
-			
+
 			PROCEDURE PackageIsExcludedFromZip(package: Package): BOOLEAN;
 			VAR k: SIZE;
 			BEGIN
@@ -2421,7 +2421,7 @@ TYPE
 				END;
 				RETURN TRUE;
 			END Term;
-				
+
 			(* Prefixes = Term {('|'|',') Term}. *)
 			PROCEDURE Prefixes (VAR value: Expression): BOOLEAN;
 			VAR left: Expression;
@@ -2462,76 +2462,76 @@ TYPE
 	PROCEDURE SetAll(VAR s: Set);
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO 
+		FOR i := 0 TO LEN(s)-1 DO
 			s[i] := {MIN(SET)..MAX(SET)};
 		END;
 	END SetAll;
-	
+
 	PROCEDURE SetEmpty(VAR s: Set);
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO 
+		FOR i := 0 TO LEN(s)-1 DO
 			s[i] := {};
 		END;
 	END SetEmpty;
-	
+
 	PROCEDURE IsAll(CONST s: Set): BOOLEAN;
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO 
-			IF s[i] # {MIN(SET)..MAX(SET)} THEN RETURN FALSE END; 
+		FOR i := 0 TO LEN(s)-1 DO
+			IF s[i] # {MIN(SET)..MAX(SET)} THEN RETURN FALSE END;
 		END;
 		RETURN TRUE;
 	END IsAll;
-	
+
 	PROCEDURE IsEmpty(CONST s: Set): BOOLEAN;
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO 
-			IF s[i] # {} THEN RETURN FALSE END; 
+		FOR i := 0 TO LEN(s)-1 DO
+			IF s[i] # {} THEN RETURN FALSE END;
 		END;
 		RETURN TRUE;
 	END IsEmpty;
-	
+
 	PROCEDURE Incl(VAR s: Set; i: LONGINT);
 	BEGIN
-		INCL(s[i DIV SetSize], i MOD SetSize); 
+		INCL(s[i DIV SetSize], i MOD SetSize);
 	END Incl;
 
 	PROCEDURE Excl(VAR s: Set; i: LONGINT);
 	BEGIN
-		EXCL(s[i DIV SetSize], i MOD SetSize); 
+		EXCL(s[i DIV SetSize], i MOD SetSize);
 	END Excl;
-	
+
 	PROCEDURE Complement(VAR s: Set);
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO 
+		FOR i := 0 TO LEN(s)-1 DO
 			s[i] := -s[i];
 		END;
 	END Complement;
-	
+
 	PROCEDURE Union(VAR s: Set; CONST t: Set);
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO 
+		FOR i := 0 TO LEN(s)-1 DO
 			s[i] := s[i] + t[i];
 		END;
 	END Union;
-	
+
 	PROCEDURE Intersection(VAR s: Set; CONST t: Set);
 	VAR i: LONGINT;
 	BEGIN
-		FOR i := 0 TO LEN(s)-1 DO 
+		FOR i := 0 TO LEN(s)-1 DO
 			s[i] := s[i] * t[i];
 		END;
 	END Intersection;
-	
+
 	PROCEDURE In(CONST s: Set; i: LONGINT): BOOLEAN;
 	BEGIN
 		RETURN i MOD SetSize IN s[i DIV SetSize];
 	END In;
-	
+
 PROCEDURE GetModuleInfo(
 					in : Streams.Reader;
 					VAR mi : ModuleInfo;

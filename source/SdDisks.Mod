@@ -241,7 +241,7 @@ TYPE
 					SdEnvironment.Ln;
 					prev.next := disk.next
 				END;
-				
+
 				disk.next := NIL;
 				Disks.registry.Remove(disk);
 		END

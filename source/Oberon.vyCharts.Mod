@@ -1,4 +1,4 @@
-MODULE vyCharts IN Oberon;  
+MODULE vyCharts IN Oberon;
 (* Copyright notice:
 
 This file is part of Voyager
@@ -37,68 +37,68 @@ MouseData, ARMACoeff, Sketch etc.. *)
 25.10.94 md 0.0d4	VoyagerTypes.CHunkREALEntry
 28.07.94 0.0d1		created *)
 (*!	clear a chart *)
-IMPORT Files, Objects, Display, vyHostDisplay := vyGraphBase, vyHostTexts, vyHostStrings, vyBase, vyGraphBase, vyLinks, 
-	vyName, vyRealVec, vyTypes, vyPort, vyEvents, vyLongrealVec, Attributes;  
+IMPORT Files, Objects, Display, vyHostDisplay := vyGraphBase, vyHostTexts, vyHostStrings, vyBase, vyGraphBase, vyLinks,
+	vyName, vyRealVec, vyTypes, vyPort, vyEvents, vyLongrealVec, Attributes;
 
-CONST 
-	idversion* = "vyCharts v0r0a4";  
+CONST
+	idversion* = "vyCharts v0r0a4";
 
-TYPE 
-	Real = vyGraphBase.Real;  Coordinate = vyGraphBase.Coordinate;  
-	tLayer* = POINTER TO tLayerDesc;  
+TYPE
+	Real = vyGraphBase.Real;  Coordinate = vyGraphBase.Coordinate;
+	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
-		paint: BOOLEAN;  
+		paint: BOOLEAN;
 		(* closed: BOOLEAN by way of Attributes.Mod *)
-	END;  
+	END;
 
-VAR 
-	slink*, dlink*: Objects.Object;  
+VAR
+	slink*, dlink*: Objects.Object;
 
-	PROCEDURE Recall( chart: tLayer );  
+	PROCEDURE Recall( chart: tLayer );
 	VAR i: LONGINT;  closed: BOOLEAN;   (* fof 020624 *)
-		
-		PROCEDURE Min( x, y: LONGINT ): LONGINT;  
-		BEGIN 
-			IF (x < y) THEN RETURN x ELSE RETURN y END;  
-		END Min;  
+
+		PROCEDURE Min( x, y: LONGINT ): LONGINT;
+		BEGIN
+			IF (x < y) THEN RETURN x ELSE RETURN y END;
+		END Min;
 
 	BEGIN  (*ASSERT((chart.X.nrData=chart.y.nrData) & (chart.x.nrData>0));*)
-		IF Min( (chart.x.nrData - 1), (chart.y.nrData - 1) ) > 0 THEN 
-			vyGraphBase.MoveTo2d( vyTypes.VGetR( chart.x, 0 ), vyTypes.VGetR( chart.y, 0 ) );  
-		END;  
-		FOR i := 0 TO Min( (chart.x.nrData - 1), (chart.y.nrData - 1) ) DO 
+		IF Min( (chart.x.nrData - 1), (chart.y.nrData - 1) ) > 0 THEN
+			vyGraphBase.MoveTo2d( vyTypes.VGetR( chart.x, 0 ), vyTypes.VGetR( chart.y, 0 ) );
+		END;
+		FOR i := 0 TO Min( (chart.x.nrData - 1), (chart.y.nrData - 1) ) DO
 			vyGraphBase.LineTo2d( vyTypes.VGetR( chart.x, i ), vyTypes.VGetR( chart.y, i ) )
-		END;  
-		Attributes.GetBool( chart, "closed", closed );  
-		IF closed THEN vyGraphBase.LineTo2d( vyTypes.VGetR( chart.x, 0 ), vyTypes.VGetR( chart.y, 0 ) ) END;  
-	END Recall;  
+		END;
+		Attributes.GetBool( chart, "closed", closed );
+		IF closed THEN vyGraphBase.LineTo2d( vyTypes.VGetR( chart.x, 0 ), vyTypes.VGetR( chart.y, 0 ) ) END;
+	END Recall;
 
-	PROCEDURE Respond( chart: tLayer;  VAR event: vyEvents.EventMsg );  
-	VAR x, y: Coordinate;  
+	PROCEDURE Respond( chart: tLayer;  VAR event: vyEvents.EventMsg );
+	VAR x, y: Coordinate;
 
-		PROCEDURE WriteData;  
-		VAR x2d, y2d: Real;  
-		BEGIN 
-			vyGraphBase.PointToPoint2d( x, y, x2d, y2d );  
+		PROCEDURE WriteData;
+		VAR x2d, y2d: Real;
+		BEGIN
+			vyGraphBase.PointToPoint2d( x, y, x2d, y2d );
 			IF chart.x IS vyRealVec.tVector THEN vyRealVec.Append( x2d, chart.x );  vyRealVec.Append( y2d, chart.y )
 			ELSIF chart.x IS vyLongrealVec.tVector THEN  (* fof 020624 *)
 				vyLongrealVec.Append( x2d, chart.x );  vyLongrealVec.Append( y2d, chart.y )
-			END 
+			END
 			(*	chart.firstUnUsed := chart.firstUnUsed+1;*)
-		END WriteData;  
+		END WriteData;
 
-	BEGIN 
-		vyHostDisplay.SetStyle( chart.style );  vyHostDisplay.SetDisplayMode( vyHostDisplay.replace );  x := event.x;  
-		y := event.y;  WriteData;  
-		WHILE event.gesture = vyEvents.EvtIdent DO 
-			IF (x # event.x) OR (y # event.y) THEN 
-				vyHostDisplay.FadeCursor;  vyHostDisplay.Line( x, y, event.x, event.y );  
+	BEGIN
+		vyHostDisplay.SetStyle( chart.style );  vyHostDisplay.SetDisplayMode( vyHostDisplay.replace );  x := event.x;
+		y := event.y;  WriteData;
+		WHILE event.gesture = vyEvents.EvtIdent DO
+			IF (x # event.x) OR (y # event.y) THEN
+				vyHostDisplay.FadeCursor;  vyHostDisplay.Line( x, y, event.x, event.y );
 				vyHostDisplay.DrawCursor( event.x, event.y );  x := event.x;  y := event.y;  WriteData
-			END;  
+			END;
 			vyEvents.GetEvent( event )
 		END;   (* WHILE (event IS Events.tPick) *)
-		vyBase.Update( chart );  
-	END Respond;  
+		vyBase.Update( chart );
+	END Respond;
 
 (*PROCEDURE Copy (src, dest: tLayer);
 (*VAR i: LONGINT;*)
@@ -114,68 +114,68 @@ END
 *)
 (*	dest.firstUnUsed := src.firstUnUsed*)
 END Copy; *)
-	PROCEDURE Copy*( VAR M: Objects.CopyMsg;  src, dest: tLayer );  
-	BEGIN 
-		vyPort.LayerCopy( M, src, dest );  
+	PROCEDURE Copy*( VAR M: Objects.CopyMsg;  src, dest: tLayer );
+	BEGIN
+		vyPort.LayerCopy( M, src, dest );
 		(* (* never deepcopy data in a layer ! *)
 	IF M.id = Objects.deep THEN
 	ELSE
 	END;
 	*)
 		dest.paint := src.paint
-	END Copy;  
+	END Copy;
 
-	PROCEDURE Responsible( chart: tLayer;  VAR event: vyEvents.EventMsg );  
-	VAR priority: INTEGER;  
-	BEGIN 
-		priority := vyEvents.PrioNone;  
-		IF event.gesture = vyEvents.EvtIdent THEN priority := vyEvents.PrioNormal END;  
-		IF event.priority < priority THEN event.responder := chart;  event.priority := priority END 
-	END Responsible;  
+	PROCEDURE Responsible( chart: tLayer;  VAR event: vyEvents.EventMsg );
+	VAR priority: INTEGER;
+	BEGIN
+		priority := vyEvents.PrioNone;
+		IF event.gesture = vyEvents.EvtIdent THEN priority := vyEvents.PrioNormal END;
+		IF event.priority < priority THEN event.responder := chart;  event.priority := priority END
+	END Responsible;
 
-	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );  
-	VAR v, w: vyBase.tVector;  minX, maxX, minY, maxY: REAL;  pict: vyPort.Picture;  data: Objects.Object;  nans: LONGINT;  
-	BEGIN 
-		pict := msg.dlink( vyPort.Picture );  data := msg.obj;  v := vyBase.GetVFromObj( data );  data := data.slink;  
-		w := vyBase.GetVFromObj( data );  
-		IF (v # NIL ) & (w # NIL ) THEN Open( o, msg.obj );  
+	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );
+	VAR v, w: vyBase.tVector;  minX, maxX, minY, maxY: REAL;  pict: vyPort.Picture;  data: Objects.Object;  nans: LONGINT;
+	BEGIN
+		pict := msg.dlink( vyPort.Picture );  data := msg.obj;  v := vyBase.GetVFromObj( data );  data := data.slink;
+		w := vyBase.GetVFromObj( data );
+		IF (v # NIL ) & (w # NIL ) THEN Open( o, msg.obj );
 
-			vyTypes.VGetMinMaxR( o.x, minX, maxX, nans );  vyTypes.VGetMinMaxR( o.y, minY, maxY, nans );  
+			vyTypes.VGetMinMaxR( o.x, minX, maxX, nans );  vyTypes.VGetMinMaxR( o.y, minY, maxY, nans );
 			vyPort.SetNewC2d( pict, minX, minY, maxX - minX, maxY - minY );  vyBase.Update( v )
-		END 
-	END Consume;  
+		END
+	END Consume;
 
-	PROCEDURE Store0( o: tLayer;  VAR M: Objects.FileMsg );  
-	BEGIN 
+	PROCEDURE Store0( o: tLayer;  VAR M: Objects.FileMsg );
+	BEGIN
 		Files.WriteBool( M.R, o.paint ) (* fof, no chance for version management, use Attributes for extensions, bad. *)
-	END Store0;  
+	END Store0;
 
-	PROCEDURE Load0( o: tLayer;  VAR M: Objects.FileMsg );  
-	BEGIN 
+	PROCEDURE Load0( o: tLayer;  VAR M: Objects.FileMsg );
+	BEGIN
 		Files.ReadBool( M.R, o.paint ) (* fof, no chance for version management, use Attributes for extensions,  bad. *)
-	END Load0;  
+	END Load0;
 
-	PROCEDURE HandleAttributes( obj: tLayer;  VAR M: Objects.AttrMsg );  
-	BEGIN 
-		IF M.id = Objects.get THEN 
+	PROCEDURE HandleAttributes( obj: tLayer;  VAR M: Objects.AttrMsg );
+	BEGIN
+		IF M.id = Objects.get THEN
 			IF M.name = "Gen" THEN COPY( 'vyCharts.Alloc', M.s );  M.class := Objects.String;  M.res := 0
 			ELSIF M.name = "paint" THEN M.class := Objects.Bool;  M.b := obj.paint;  M.res := 0
-			ELSIF M.name = "closed" THEN 
-				vyPort.LayerHandler( obj, M );  
-				IF M.class # Objects.Bool THEN M.class := Objects.Bool;  M.b := FALSE END;  
+			ELSIF M.name = "closed" THEN
+				vyPort.LayerHandler( obj, M );
+				IF M.class # Objects.Bool THEN M.class := Objects.Bool;  M.b := FALSE END;
 			ELSE vyPort.LayerHandler( obj, M )
-			END 
+			END
 		ELSIF M.id = Objects.set THEN  (* fof 020624 *)
-			IF M.name = "paint" THEN 
-				IF M.class = Objects.Bool THEN obj.paint := M.b;  M.res := 0 END 
-			ELSIF M.name = "closed" THEN vyPort.LayerHandler( obj, M );  vyBase.Update( obj );  
+			IF M.name = "paint" THEN
+				IF M.class = Objects.Bool THEN obj.paint := M.b;  M.res := 0 END
+			ELSIF M.name = "closed" THEN vyPort.LayerHandler( obj, M );  vyBase.Update( obj );
 			ELSE vyPort.LayerHandler( obj, M )
-			END 
+			END
 		ELSIF M.id = Objects.enum THEN M.Enum( "paint" );  M.Enum( "closed" );  vyPort.LayerHandler( obj, M )
 		ELSE vyPort.LayerHandler( obj, M )
-		END 
-	END HandleAttributes;  
-	
+		END
+	END HandleAttributes;
+
 	(*
 PROCEDURE Store0 (obj: tLayer;      VAR M: Objects.FileMsg);
 BEGIN
@@ -251,51 +251,51 @@ END
 END
 END Handler;
 *)
-	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );  
-	VAR copy: tLayer;  uhandle: Objects.Handler;  gen: PROCEDURE;  
-	BEGIN 
+	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
+	VAR copy: tLayer;  uhandle: Objects.Handler;  gen: PROCEDURE;
+	BEGIN
 		uhandle := vyPort.LayerHandler;   (* handler of root object*)
 		gen := Alloc;   (* gen Procedure as PROCEDURE *)
-		
-		WITH o: tLayer DO 
-			IF M IS Display.DisplayMsg THEN 
-				WITH M: Display.DisplayMsg DO 
+
+		WITH o: tLayer DO
+			IF M IS Display.DisplayMsg THEN
+				WITH M: Display.DisplayMsg DO
 					uhandle( o, M );  Recall( o ) (* call root handle first if in background *)
-				END;  
-			ELSIF M IS vyEvents.EventMsg THEN 
-				WITH M: vyEvents.EventMsg DO 
-					IF M.callForResponder THEN 
+				END;
+			ELSIF M IS vyEvents.EventMsg THEN
+				WITH M: vyEvents.EventMsg DO
+					IF M.callForResponder THEN
 						Responsible( o, M );  uhandle( o, M ) (* if not responsible: maybe root is *)
-					ELSE 
-						IF M.gesture = vyEvents.EvtIdent THEN 
-							IF o.paint = TRUE THEN Respond( o, M ) END 
-						ELSE 
+					ELSE
+						IF M.gesture = vyEvents.EvtIdent THEN
+							IF o.paint = TRUE THEN Respond( o, M ) END
+						ELSE
 							uhandle( o, M ) (* that M belongs to root *)
-						END 
-					END;  
-				END;  
-			ELSIF M IS Objects.CopyMsg THEN 
-				WITH M: Objects.CopyMsg DO 
-					IF M.stamp = o.stamp THEN 
+						END
+					END;
+				END;
+			ELSIF M IS Objects.CopyMsg THEN
+				WITH M: Objects.CopyMsg DO
+					IF M.stamp = o.stamp THEN
 						M.obj := o.dlink (* copy M arrives again *)
-					ELSE 
+					ELSE
 						gen;  copy := Objects.NewObj( tLayer );  M.obj := copy;   (* Generator  *)
 						Copy( M, o, M.obj( tLayer ) ) (* do not call uhanlde, may result in new object of type "root" *)
-					END;  
-				END;  
-			ELSIF M IS Objects.FileMsg THEN 
-				WITH M: Objects.FileMsg DO 
-					uhandle( o, M );  
+					END;
+				END;
+			ELSIF M IS Objects.FileMsg THEN
+				WITH M: Objects.FileMsg DO
+					uhandle( o, M );
 					IF M.id = Objects.load THEN Load0( o, M )
 					ELSIF M.id = Objects.store THEN Store0( o, M )
-					END;  
-				END;  
-			ELSIF M IS Display.ConsumeMsg THEN 
+					END;
+				END;
+			ELSIF M IS Display.ConsumeMsg THEN
 				WITH M: Display.ConsumeMsg DO Consume( o, M );  vyPort.LayerHandler( o, M )
-				END;  
-			ELSIF M IS Objects.AttrMsg THEN 
-				WITH M: Objects.AttrMsg DO 
-					HandleAttributes( o, M );  
+				END;
+			ELSIF M IS Objects.AttrMsg THEN
+				WITH M: Objects.AttrMsg DO
+					HandleAttributes( o, M );
 					(*
 			IF M.id = Objects.get THEN
 			IF M.name = "Gen"THEN
@@ -308,60 +308,60 @@ END Handler;
 			ELSE uhandle(o, M)
 
 			END*)
-				END;  
-			ELSIF M IS Objects.BindMsg THEN 
-				WITH M: Objects.BindMsg DO 
+				END;
+			ELSIF M IS Objects.BindMsg THEN
+				WITH M: Objects.BindMsg DO
 					uhandle( o, M )
 					(* add own binds here: Bind(o.entry,M) *)
-				END;  
+				END;
 			ELSE uhandle( o, M )
-			END 
-		END 
-	END Handler;  
+			END
+		END
+	END Handler;
 
-	PROCEDURE OpenChart128*( chart: tLayer;  id: vyName.tNameArray );  
-	BEGIN 
-		vyPort.OpenLayer( chart, id );  chart.x := vyRealVec.New( 128 );  chart.y := vyRealVec.New( 128 );  
+	PROCEDURE OpenChart128*( chart: tLayer;  id: vyName.tNameArray );
+	BEGIN
+		vyPort.OpenLayer( chart, id );  chart.x := vyRealVec.New( 128 );  chart.y := vyRealVec.New( 128 );
 		(*	chart.firstUnUsed := 0;*)
-		chart.handle := Handler;  chart.paint := TRUE;  
+		chart.handle := Handler;  chart.paint := TRUE;
 		(*! RENAME OpenChart 128 to OpenDrawChart, when should drawing be allowed ? *)
-	END OpenChart128;  
+	END OpenChart128;
 
-	PROCEDURE Open*( chart: tLayer;  data: Objects.Object );  
-	VAR id: vyName.tNameArray;  inconsistentConditions: BOOLEAN;  
-	BEGIN 
-		chart.x := vyBase.GetVFromObj( data );  data := data.slink;  chart.y := vyBase.GetVFromObj( data );  
-		IF (chart.x = NIL ) OR (chart.y = NIL ) THEN vyHostTexts.Msg( "can't plot this data as lines : not the right type!" );  inconsistentConditions := TRUE;  
+	PROCEDURE Open*( chart: tLayer;  data: Objects.Object );
+	VAR id: vyName.tNameArray;  inconsistentConditions: BOOLEAN;
+	BEGIN
+		chart.x := vyBase.GetVFromObj( data );  data := data.slink;  chart.y := vyBase.GetVFromObj( data );
+		IF (chart.x = NIL ) OR (chart.y = NIL ) THEN vyHostTexts.Msg( "can't plot this data as lines : not the right type!" );  inconsistentConditions := TRUE;
 			ASSERT ( ~inconsistentConditions )
-		ELSIF (chart.x.nrData # chart.y.nrData) THEN vyHostTexts.Msg( "can't plot this data as lines : not the same length!" );  inconsistentConditions := TRUE;  
+		ELSIF (chart.x.nrData # chart.y.nrData) THEN vyHostTexts.Msg( "can't plot this data as lines : not the same length!" );  inconsistentConditions := TRUE;
 			ASSERT ( ~inconsistentConditions )
-		END;  
-		COPY( "lines: ", id );  vyName.AppendObjId( chart.y, id );  vyHostStrings.Append( id, " by " );  vyName.AppendObjId( chart.x, id );  
-		vyPort.OpenLayer( chart, id );  chart.handle := Handler;  chart.paint := FALSE;  
-		vyBase.Subscribe( (*for messages from source*) chart.x, chart );  
+		END;
+		COPY( "lines: ", id );  vyName.AppendObjId( chart.y, id );  vyHostStrings.Append( id, " by " );  vyName.AppendObjId( chart.x, id );
+		vyPort.OpenLayer( chart, id );  chart.handle := Handler;  chart.paint := FALSE;
+		vyBase.Subscribe( (*for messages from source*) chart.x, chart );
 		vyBase.Subscribe( (*for messages from source*) chart.y, chart )
-	END Open;  
+	END Open;
 
-	PROCEDURE OpenO*( chart: tLayer;  x, y: Objects.Object );  
-	VAR id: vyName.tNameArray;  inconsistentConditions: BOOLEAN;  
-	BEGIN 
-		chart.x := vyBase.GetVFromObj( x );  chart.y := vyBase.GetVFromObj( y );  
-		IF (chart.x = NIL ) OR (chart.y = NIL ) THEN vyHostTexts.Msg( "can't plot this data as lines : not the right type!" );  inconsistentConditions := TRUE;  
+	PROCEDURE OpenO*( chart: tLayer;  x, y: Objects.Object );
+	VAR id: vyName.tNameArray;  inconsistentConditions: BOOLEAN;
+	BEGIN
+		chart.x := vyBase.GetVFromObj( x );  chart.y := vyBase.GetVFromObj( y );
+		IF (chart.x = NIL ) OR (chart.y = NIL ) THEN vyHostTexts.Msg( "can't plot this data as lines : not the right type!" );  inconsistentConditions := TRUE;
 			ASSERT ( ~inconsistentConditions )
-		ELSIF (chart.x.nrData # chart.y.nrData) THEN vyHostTexts.Msg( "can't plot this data as lines : not the same length!" );  inconsistentConditions := TRUE;  
+		ELSIF (chart.x.nrData # chart.y.nrData) THEN vyHostTexts.Msg( "can't plot this data as lines : not the same length!" );  inconsistentConditions := TRUE;
 			ASSERT ( ~inconsistentConditions )
-		END;  
-		COPY( "lines: ", id );  vyName.AppendObjId( chart.y, id );  vyHostStrings.Append( id, " by " );  vyName.AppendObjId( chart.x, id );  
-		vyPort.OpenLayer( chart, id );  chart.handle := Handler;  chart.paint := FALSE;  
-		vyBase.Subscribe( (*for messages from source*) chart.x, chart );  
+		END;
+		COPY( "lines: ", id );  vyName.AppendObjId( chart.y, id );  vyHostStrings.Append( id, " by " );  vyName.AppendObjId( chart.x, id );
+		vyPort.OpenLayer( chart, id );  chart.handle := Handler;  chart.paint := FALSE;
+		vyBase.Subscribe( (*for messages from source*) chart.x, chart );
 		vyBase.Subscribe( (*for messages from source*) chart.y, chart )
-	END OpenO;  
+	END OpenO;
 
-	PROCEDURE OpenL*( chart: tLayer;  data: vyLinks.Link );  
-	VAR x, y: Objects.Object;  
-	BEGIN 
+	PROCEDURE OpenL*( chart: tLayer;  data: vyLinks.Link );
+	VAR x, y: Objects.Object;
+	BEGIN
 		x := data.obj;  data := data.link;  y := data.obj;  OpenO( chart, x, y )
-	END OpenL;  
+	END OpenL;
 
 (*PROCEDURE New*;
 VAR layer: tLayer; data: Objects.Object;
@@ -372,49 +372,49 @@ NEW (layer); Open (layer, data);
 vyPort.NewObj := layer
 END New;*)
 
-	PROCEDURE New*;  
-	VAR layer: tLayer;  data: Objects.Object;  
-	BEGIN 
-		IF Objects.NewObj # NIL THEN data := Objects.NewObj ELSE RETURN END;  
+	PROCEDURE New*;
+	VAR layer: tLayer;  data: Objects.Object;
+	BEGIN
+		IF Objects.NewObj # NIL THEN data := Objects.NewObj ELSE RETURN END;
 		NEW( layer );  Open( layer, data );  Objects.NewObj := layer
-	END New;  
+	END New;
 
-	PROCEDURE Alloc*;  
-	VAR layer: tLayer;  
-	BEGIN 
-		NEW( layer );  layer.handle := Handler;  Objects.NewObj := layer;  
-	END Alloc;  
+	PROCEDURE Alloc*;
+	VAR layer: tLayer;
+	BEGIN
+		NEW( layer );  layer.handle := Handler;  Objects.NewObj := layer;
+	END Alloc;
 
-	PROCEDURE ShowP*;  
-	VAR chart: tLayer;  data: Objects.Object;  pic: vyPort.Picture;  
-	BEGIN 
-		data := vyBase.NextParObj();  
-		WHILE (data # NIL ) & (vyBase.parameterCount >= 1) DO 
+	PROCEDURE ShowP*;
+	VAR chart: tLayer;  data: Objects.Object;  pic: vyPort.Picture;
+	BEGIN
+		data := vyBase.NextParObj();
+		WHILE (data # NIL ) & (vyBase.parameterCount >= 1) DO
 			data.slink := vyBase.NextParObj();   (* y coordinate *)
-			NEW( chart );  Open( chart, data );  pic := vyPort.InsertNewVecPicture( chart.x, chart.y );  vyPort.AddLayer( pic, chart );  
+			NEW( chart );  Open( chart, data );  pic := vyPort.InsertNewVecPicture( chart.x, chart.y );  vyPort.AddLayer( pic, chart );
 			Objects.NewObj := pic;  data := vyBase.NextParObj()
-		END 
-	END ShowP;  
+		END
+	END ShowP;
 
-	PROCEDURE ShowL*( list: vyLinks.Link );  
-	VAR chart: tLayer;  pic: vyPort.Picture;  i: INTEGER;  
-	BEGIN 
-		WHILE list # NIL DO 
-			NEW( chart );  OpenL( chart, list );  pic := vyPort.InsertNewVecPicture( chart.x, chart.y );  vyPort.AddLayer( pic, chart );  
-			FOR i := 1 TO 2 DO 
-				IF list # NIL THEN 
-					IF list.link = NIL THEN list := NIL ELSE list := list.link END 
-				END 
-			END;  
+	PROCEDURE ShowL*( list: vyLinks.Link );
+	VAR chart: tLayer;  pic: vyPort.Picture;  i: INTEGER;
+	BEGIN
+		WHILE list # NIL DO
+			NEW( chart );  OpenL( chart, list );  pic := vyPort.InsertNewVecPicture( chart.x, chart.y );  vyPort.AddLayer( pic, chart );
+			FOR i := 1 TO 2 DO
+				IF list # NIL THEN
+					IF list.link = NIL THEN list := NIL ELSE list := list.link END
+				END
+			END;
 			Objects.NewObj := pic
-		END 
-	END ShowL;  
+		END
+	END ShowL;
 
-	PROCEDURE ShowO*( x, y: Objects.Object );  
-	VAR chart: tLayer;  pic: vyPort.Picture;  
-	BEGIN 
-		NEW( chart );  OpenO( chart, x, y );  pic := vyPort.InsertNewVecPicture( chart.x, chart.y );  vyPort.AddLayer( pic, chart );  
+	PROCEDURE ShowO*( x, y: Objects.Object );
+	VAR chart: tLayer;  pic: vyPort.Picture;
+	BEGIN
+		NEW( chart );  OpenO( chart, x, y );  pic := vyPort.InsertNewVecPicture( chart.x, chart.y );  vyPort.AddLayer( pic, chart );
 		Objects.NewObj := pic
-	END ShowO;  
+	END ShowO;
 
 END vyCharts.

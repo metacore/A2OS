@@ -262,7 +262,7 @@ TYPE
 		BEGIN
 			pc := (out.os.alignment + out.pc);
 			ASSERT(~patchSpartan6 OR ~out.os.fixed OR ((out.os.alignment + out.pc) MOD 1024 < 960) OR ((out.os.alignment + out.pc) MOD 1024 > 975) );
-			
+
 			instructionSet.Emit(op, op1, op2, out);
 			(* do this AFTER each instruction because otherwise presumptions on the size of the PC in the generator are wrong *)
 			(* note, in general, by the inclusion of the following code, no assumptions are true about the actual size of instructions in code emission
@@ -312,9 +312,9 @@ TYPE
 			END CheckEmptySpillStack;
 
 		BEGIN
-		
-		 
-		 	
+
+
+
 			physicalRegisters(PhysicalRegisters).SupportFP(FPSupported);
 			supportFP := FPSupported;
 			tickets.Init;
@@ -401,7 +401,7 @@ TYPE
 				IF instr.op1.type.sizeInBits = IntermediateCode.Bits64 THEN
 					CASE instr.opcode OF
 					IntermediateCode.div: procedureName := "DivH";  RETURN FALSE
-					| IntermediateCode.mod: 
+					| IntermediateCode.mod:
 						IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE END;
 						procedureName := "ModH"; RETURN FALSE
 					| IntermediateCode.abs: procedureName := "AbsH"; RETURN FALSE;
@@ -423,18 +423,18 @@ TYPE
 					END
 				ELSIF instr.op1.type.sizeInBits = IntermediateCode.Bits32 THEN
 					CASE instr.opcode OF
-					IntermediateCode.div:	
-						IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE 
+					IntermediateCode.div:
+						IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE
 						ELSE procedureName := "DivL"; RETURN FALSE END;
-					| IntermediateCode.mod: 
+					| IntermediateCode.mod:
 						IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE END;
 						procedureName := "ModL"; RETURN FALSE
 					| IntermediateCode.mul:
 						IF (Global.NoMulCapability IN backend.capabilities) THEN  (*mul forbidden*)
-							IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE 
+							IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE
 							ELSE procedureName:="MulL"; RETURN FALSE	 END;
 						ELSE
-							RETURN TRUE;	
+							RETURN TRUE;
 						END
 					ELSE
 					RETURN TRUE
@@ -494,9 +494,9 @@ TYPE
 		PROCEDURE GetSpillOperand(ticket: Ticket; VAR mem: Operand);
 		VAR offset: LONGINT; register: LONGINT;
 		BEGIN
-			
+
 			D.String("spill stack used in "); Basic.WriteSegmentedName(D.Log, in.name); D.String(": "); D.Int(inPC,1); D.Ln;
-			
+
 			offset :=  spillStackPosition-ticket.offset; (* relative to logical frame pointer ! *)
 			register := PhysicalRegister(IntermediateCode.FP,Low,offset);
 			instructionSet.InitMemory(mem, register, offset);
@@ -542,7 +542,7 @@ TYPE
 				Emit2(opST,temp,op1);
 			END;
 			ReleaseHint(temp.register);
-			(* spill stack not yet supported *)		
+			(* spill stack not yet supported *)
 		END ExchangeTickets;
 
 		PROCEDURE CheckFixups;
@@ -591,7 +591,7 @@ TYPE
 					forwardFixups.Enter(newFixup, out.pc, instructionSet.RelativeBranchFixupBits);
 					Emit1(opBT, fixupOp);
 					SetTarget(forward);
-				END;  
+				END;
 				fixup := forwardFixups.Check(CheckPC());
 			END;
 		END CheckFixups;
@@ -1097,7 +1097,7 @@ TYPE
 			section := vop.resolved; offset := vop.offset;
 			IF (section # NIL) & (section(IntermediateCode.Section).resolved # NIL) & (section(IntermediateCode.Section).resolved.os.fixed) THEN
 				INC(offset, section(IntermediateCode.Section).resolved.os.alignment);
-				IF vop.symbolOffset > 0 THEN 
+				IF vop.symbolOffset > 0 THEN
 					INC(offset, section(IntermediateCode.Section).instructions[vop.symbolOffset].pc);
 				END;
 				sectionName.name := "";
@@ -1831,7 +1831,7 @@ TYPE
 						ASSERT(offset < 0); offset := -offset;
 						IF offset >= ASH(1,instructionSet.RelativeBranchFixupBits-1)-1 THEN
 							(*D.String("fixup too far for immediate fixup, offset=");D.Int(offset,1);D.Ln;*)
-						
+
 							(* cannot enter fixup / use immediate jump, jump too far *)
 							fixup := BrForward(instructionSet.inverseCondition[brop]); (* jump over absolute branch (skip) *)
 							(*
@@ -2214,7 +2214,7 @@ TYPE
 		patchSpartan6: BOOLEAN;
 		myInstructionSet: InstructionSet.InstructionSet;
 		recentInstructionWidth : LONGINT;
-		
+
 		PROCEDURE &InitBackendTRM;
 		BEGIN
 			InitIntermediateBackend;
@@ -2229,13 +2229,13 @@ TYPE
 		VAR
 		BEGIN
 			Initialize^(diagnostics, log, flags, checker, system); (*goes up the inheritance hierarchy all the way to Backend.Mod*)
-			
-			
+
+
 			NEW(cg, builtinsModuleName, diagnostics, SELF,myInstructionSet);
 			cg.patchSpartan6 := patchSpartan6;
 			recentInstructionWidth := Sections.UnknownSize;
 		END Initialize;
-		
+
 		PROCEDURE SetInstructionWidth* (instructionWidth: LONGINT);  (*override*)
 		BEGIN
 			IF SELF.instructionWidth # instructionWidth THEN
@@ -2244,7 +2244,7 @@ TYPE
 				cg.SetInstructionSet(myInstructionSet);
 			END;
 		END SetInstructionWidth;
-		
+
 		PROCEDURE GetSystem*(): Global.System;
 		VAR system: System;
 		BEGIN
@@ -2340,7 +2340,7 @@ TYPE
 			 		IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
 				 		out := ResolvedSection(in(IntermediateCode.Section));
 			 			SetInstructionWidth(out.os.unit);
-				 		cg.Section(in(IntermediateCode.Section),out);  
+				 		cg.Section(in(IntermediateCode.Section),out);
 			 		END
 			 	END
 			UNTIL initialSectionCount = module.allSections.Length(); (* process remaining sections that have been added during traversal of sections *)
@@ -2376,7 +2376,7 @@ TYPE
 			ASSERT(intermediateCodeModule IS Sections.Module);
 			result := ProcessIntermediateCodeModule^(intermediateCodeModule);
 			recentInstructionWidth := Sections.UnknownSize;
-			
+
 			IF ~error THEN
 				GenerateBinary(result(Sections.Module), dump);
 				IF dump # NIL THEN
@@ -2474,11 +2474,11 @@ TYPE
 				adr := (adr DIV 1024) * 1024 +976;
 			END;
 		END CheckCodeAddress;
-		
+
 		PROCEDURE ResolvedSection(in: IntermediateCode.Section): BinaryCode.Section;
 		VAR section: BinaryCode.Section; unit: LONGINT;
 		BEGIN
-		
+
 			(*VAR and CONST sections go to the data memory, only code sections go to code memory
 			    Note that data memory has 32 bit words while code has standard 18.
 			*)
@@ -2492,7 +2492,7 @@ TYPE
 				ELSE
 					unit:=18;
 				END
-				
+
 			END;
 
 			IF in.IsCode() THEN
@@ -2511,7 +2511,7 @@ TYPE
 
 	END BackendTRM;
 
-	VAR 
+	VAR
 	defaultInstructionSet: InstructionSet.InstructionSet;
 	emptyOperand: InstructionSet.Operand;
 
@@ -2525,14 +2525,14 @@ TYPE
 		HALT(100);
 	END Halt;
 
-	
+
 
 
 	PROCEDURE Init;
 	BEGIN
 		NEW(defaultInstructionSet,18); (*TODO: maybe it's better to have all these init functions outside of instruction set object?*)
 		defaultInstructionSet.InitOperand(emptyOperand);
-		
+
 	END Init;
 
 	PROCEDURE Get*(): Backend.Backend;

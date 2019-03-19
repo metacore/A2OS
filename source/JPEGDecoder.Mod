@@ -1,4 +1,4 @@
-MODULE JPEGDecoder; 
+MODULE JPEGDecoder;
 
 IMPORT
 	SYSTEM, Codecs, KernelLog, Streams, Raster, WMGraphics, 	BIT,  Images := Raster;
@@ -131,7 +131,7 @@ CONST
 TYPE
 	JSampRow = POINTER TO ARRAY  OF CHAR;  (* JPEGMAXDIMENSION * RGBPIXELSIZE *)
 
-	(*es*) 
+	(*es*)
 	JSampRowList = POINTER TO RECORD row: JSampRow; next: JSampRowList; END; (* *)
 	JSampArray = POINTER TO JSADesc;
 	JSADesc = RECORD
@@ -415,9 +415,9 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		END;
 	FINALLY
 		IF trap THEN res:=-1
-		ELSIF cInfo.err = 0 THEN res := Codecs.ResOk 
-		ELSE res:=cInfo.err 
-		END; 
+		ELSIF cInfo.err = 0 THEN res := Codecs.ResOk
+		ELSE res:=cInfo.err
+		END;
 	END Open;
 
 	PROCEDURE GetImageInfo*(VAR width, height, format, maxProgressionLevel : LONGINT);
@@ -494,7 +494,7 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 			ELSIF cInfo.numComponents=1 THEN
 				WHILE x < w DO
 					ch:=cInfo.bmpRows.row[rowOffset];
-					img.mem[p   ] := ch; 
+					img.mem[p   ] := ch;
 					img.mem[p+1] := ch;
 					img.mem[p+2] := ch;
 					INC(rowOffset);
@@ -526,8 +526,8 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 	PROCEDURE ErrMsg(msg: ARRAY OF CHAR; num: INTEGER);
 	BEGIN
 		IF (logger#NIL) & (cInfo.err = 0) THEN	(* first error *)
-			logger.String("JPEG: ");  logger.String(msg);  logger.String( "("); 
-			logger.Int(num, 1);  logger.String( ")");  logger.Ln(); 
+			logger.String("JPEG: ");  logger.String(msg);  logger.String( "(");
+			logger.Int(num, 1);  logger.String( ")");  logger.Ln();
 			logger.Update;
 		END;
 		cInfo.err := num
@@ -3490,7 +3490,7 @@ KernelLog.String("  MCUColNum"); KernelLog.Int(lastMCUCol - cInfo.coef.MCUColNum
 			END;
 		END;
 	END jpegFinishDecompress;
-	
+
 			(* Farb Quantifizierung bei n-Farbkomponenten ohne Dithering *)
 	PROCEDURE colorQuantize( inputBuf: JSampArray; outputBuf: JSampArray;  outRowCtr:INTEGER; numRows: INTEGER);
 	VAR
@@ -3595,8 +3595,8 @@ KernelLog.String("  MCUColNum"); KernelLog.Int(lastMCUCol - cInfo.coef.MCUColNum
 		jpegCreateDecompress();
 		cInfo.reader := reader;
 		jpegReadHeader();
-		IF logger#NIL THEN 
-			logger.String("jpegColorSpace "); logger.Int(cInfo.jpegColorSpace,6); logger.Ln; logger.Update; 
+		IF logger#NIL THEN
+			logger.String("jpegColorSpace "); logger.Int(cInfo.jpegColorSpace,6); logger.Ln; logger.Update;
 		END;
 		IF colorMode=ColorsGray THEN cInfo.outColorSpace := JCSGRAYSCALE END;
 		IF cInfo.err#0 THEN RETURN END;
@@ -3640,9 +3640,9 @@ KernelLog.String("  MCUColNum"); KernelLog.Int(lastMCUCol - cInfo.coef.MCUColNum
 			END;
 		jpegFinishDecompress();
 	END Decode;
-	
+
 	END JPEGDecoder;
-	
+
 
 	(* JPEG Hauptprozedur: Files oeffnen, Dekompressions und Outputobjekte generieren, Files schliessen *)
 	(** JPEG.Decode Decode file to pict

@@ -558,7 +558,7 @@ TYPE
 				ASSERT(~error);
 			ELSIF cpuBits=64 THEN
 				NEW(physicalRegisters64, backend.forceFPU, backend.cooperative); physicalRegisters := physicalRegisters64; error := ~emitter.SetBits(64);
-				opBP := opRBP; opSP := opRSP; 
+				opBP := opRBP; opSP := opRSP;
 				opRA := registerOperands[RAX]; opRC := registerOperands[RCX];
 				opRB := registerOperands[RBX]; opRD := registerOperands[RDX];
 				opRDI := registerOperands[RDI]; opRSI := registerOperands[RSI];
@@ -606,7 +606,7 @@ TYPE
 			END;
 			ASSERT(fpStackPointer = 0);
 			CheckEmptySpillStack;
-			IF backend.cooperative THEN 
+			IF backend.cooperative THEN
 				UnmapTicket(ap);
 			END;
 			error := error OR emitter.error;
@@ -855,7 +855,7 @@ TYPE
 		END GetTemporaryRegister;
 
 		PROCEDURE GetImmediateMem(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR imm: Assembler.Operand);
-		VAR data: IntermediateCode.Section;pc: LONGINT; source, dest: Assembler.Operand; ticket: Ticket; 
+		VAR data: IntermediateCode.Section;pc: LONGINT; source, dest: Assembler.Operand; ticket: Ticket;
 		BEGIN
 			data := GetDataSection();
 			pc := IntermediateBackend.EnterImmediate(data,vop);
@@ -890,12 +890,12 @@ TYPE
 				value := value DIV 10000H DIV 10000H;
 				RETURN (value = 0) OR (value=-1);
 			END IsImm32;
-			
+
 			PROCEDURE IsSignedImm32(value: HUGEINT): BOOLEAN;
 			BEGIN
 				RETURN (value <= MAX(SIGNED32)) & (value >= MIN(SIGNED32));
 			END IsSignedImm32;
-			
+
 
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeImmediate);
@@ -910,8 +910,8 @@ TYPE
 
 				IF virtual.symbol.name # "" THEN size := SHORT(type.sizeInBits DIV 8);
 				ELSIF forbidden16Bit & IsImm16(value) & ~(IsImm8(value)) THEN size := Assembler.bits32;
-				ELSIF (type.sizeInBits = 64) & (type.form = IntermediateCode.UnsignedInteger) & (value > MAX(LONGINT)) THEN 
-					size := 8; (* don't use negative signed 32-bit value  to encode 64-bit unsigned value! *)	
+				ELSIF (type.sizeInBits = 64) & (type.form = IntermediateCode.UnsignedInteger) & (value > MAX(LONGINT)) THEN
+					size := 8; (* don't use negative signed 32-bit value  to encode 64-bit unsigned value! *)
 				ELSE size := 0
 				END;
 				Assembler.InitImm(physical,size ,value);
@@ -984,7 +984,7 @@ TYPE
 				Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+ (cpuBits DIV 8) *part);
 			END;
 		END GetMemory;
-		
+
 		PROCEDURE GetRegister(CONST virtual: IntermediateCode.Operand; part:LONGINT; VAR physical: Assembler.Operand; VAR ticket: Ticket);
 		VAR type: IntermediateCode.Type; virtualRegister, tempReg: LONGINT;
 			tmp,imm: Assembler.Operand; index: LONGINT;
@@ -1281,13 +1281,13 @@ TYPE
 		PROCEDURE EmitEnter(CONST instruction: IntermediateCode.Instruction);
 		VAR op1,imm,target: Assembler.Operand; cc,size,numberMachineWords,destPC,firstPC,secondPC,x: LONGINT; body: SyntaxTree.Body; name: Basic.SegmentedName;
 		parametersSize: SIZE;
-		CONST initialize=TRUE; FirstOffset = 5; SecondOffset = 11; 
+		CONST initialize=TRUE; FirstOffset = 5; SecondOffset = 11;
 		BEGIN
 			stackSize := SHORT(instruction.op2.intValue);
 			size := stackSize;
 
 			INC(traceStackSize, stackSize);
-			
+
 			IF initialize THEN
 				(* always including this instruction make trace insertion possible *)
 				IF backend.traceable THEN
@@ -1372,7 +1372,7 @@ TYPE
 					emitter.Emit1(InstructionSet.opPOP,opRDI);
 					emitter.Emit1(InstructionSet.opPOP,opRB);
 				END;
-				
+
 			END;
 		END EmitLeave;
 
@@ -1433,7 +1433,7 @@ TYPE
 		BEGIN
 			sizeInBytes := SHORTINT(vdest.type.sizeInBits DIV 8);
 			stackSize := sizeInBytes;
-			Basic.Align(stackSize, cpuBits DIV 8); 
+			Basic.Align(stackSize, cpuBits DIV 8);
 			IF vdest.type.form IN IntermediateCode.Integer THEN
 				(* e.g. in SYSTEM.VAL(LONGINT, r) *)
 				IF vsrc.mode = IntermediateCode.ModeMemory THEN
@@ -1575,7 +1575,7 @@ TYPE
 		PROCEDURE EmitConvertFloat(CONST instruction: IntermediateCode.Instruction);
 		VAR destType, srcType, dtype: IntermediateCode.Type; dest,src,espm,imm: Assembler.Operand; sizeInBytes, index: LONGINT;
 		temp, temp2, temp3, temp4, zero: Assembler.Operand; ticket: Ticket; vdest, vsrc: IntermediateCode.Operand;
-			unsigned: BOOLEAN; 
+			unsigned: BOOLEAN;
 		BEGIN
 			vdest := instruction.op1; vsrc := instruction.op2;
 			srcType := vsrc.type;
@@ -1622,9 +1622,9 @@ TYPE
 						sizeInBytes := 8;
 						Assembler.InitImm(zero,0,0);
 						emitter.Emit1(InstructionSet.opPUSH,zero);
-						EmitPush(vsrc,Low);						
+						EmitPush(vsrc,Low);
 					ELSIF unsigned & ( vsrc.type.sizeInBits = IntermediateCode.Bits32) THEN (* UNSIGNED32 on 64-bit *)
-						MakeRegister(vsrc, Low, src); 
+						MakeRegister(vsrc, Low, src);
 						index := src.register;
 						index := index MOD 32 + RAX;
 						src := registerOperands[index];
@@ -1915,10 +1915,10 @@ TYPE
 
 				(* make sure that result registers are not used during emission of Low / High *)
 				lowReserved := physicalRegisters.Reserved(register);
-				physicalRegisters.SetReserved(register, TRUE); 
+				physicalRegisters.SetReserved(register, TRUE);
 				highReserved := physicalRegisters.Reserved(highRegister);
 				physicalRegisters.SetReserved(highRegister,TRUE);
-				
+
 				MakeOperand(instruction.op1,Low,op, NIL);
 				IF Assembler.SameOperand(op, resultHigh) THEN
 					emitter.Emit2(InstructionSet.opXCHG, result, resultHigh); (* low register already mapped ok *)
@@ -2290,7 +2290,7 @@ TYPE
 
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
-				IF instruction.opcode = IntermediateCode.div THEN					
+				IF instruction.opcode = IntermediateCode.div THEN
 					IntermediateCode.InitImmediate(iop3, IntermediateCode.uint32, exp);
 					IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.shr, instruction.op1, instruction.op2, iop3);
 					EmitShift(inst);
@@ -2299,7 +2299,7 @@ TYPE
 					IntermediateCode.InitImmediate(iop3, instruction.op3.type, value-1);
 					IntermediateCode.InitInstruction(inst, Basic.invalidPosition, IntermediateCode.and, instruction.op1, instruction.op2, iop3);
 					EmitArithmetic3(inst,InstructionSet.opAND);
-					RETURN;					
+					RETURN;
 				END;
 			END;
 
@@ -2479,7 +2479,7 @@ TYPE
 
 			IF instruction.op3.mode # IntermediateCode.ModeImmediate THEN
 				IF backend.cooperative THEN ap.spillable := TRUE END;
-				Spill(physicalRegisters.Mapped(ECX)); 
+				Spill(physicalRegisters.Mapped(ECX));
 				ecx := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,ECX,inPC);
 			END;
 
@@ -2603,18 +2603,18 @@ TYPE
 				MakeRegister(instruction.op2,Low,op2);
 				Assembler.InitMem(op2,SHORTINT(size),op2.register,0);
 
-				type := IntermediateCode.NewType(IntermediateCode.SignedInteger, SHORTINT(size*8)); 
+				type := IntermediateCode.NewType(IntermediateCode.SignedInteger, SHORTINT(size*8));
 				rd := TemporaryTicket(IntermediateCode.GeneralPurposeRegister, type);
 				TicketToOperand(rd,op3);
-				
-				
-				Move(op3, op2, type); 
-				Move(op1, op3, type); 
+
+
+				Move(op3, op2, type);
+				Move(op1, op3, type);
 			ELSE
 				Spill(physicalRegisters.Mapped(RS));
 				Spill(physicalRegisters.Mapped(RD));
 				IF backend.cooperative THEN ap.spillable := TRUE END;
-				Spill(physicalRegisters.Mapped(RC)); 
+				Spill(physicalRegisters.Mapped(RC));
 
 				rs := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RS,inPC);
 				rd := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RD,inPC);
@@ -3028,7 +3028,7 @@ TYPE
 			ELSE
 				sizeInBytes := vop.type.sizeInBits DIV 8;
 				length := vop.type.length;
-				IF sizeInBytes * length * 8 < cpuBits THEN 
+				IF sizeInBytes * length * 8 < cpuBits THEN
 					ModifyStackPointer(cpuBits DIV 8);
 				ELSE
 					ModifyStackPointer(sizeInBytes*length);
@@ -3064,7 +3064,7 @@ TYPE
 					MakeOperand(vop,Low,op,NIL);
 					Move(op, memop, vop.type)
 				END;
-				IF sizeInBytes * length * 8 < cpuBits THEN 
+				IF sizeInBytes * length * 8 < cpuBits THEN
 					ModifyStackPointer(-cpuBits DIV 8);
 				ELSE
 					ModifyStackPointer(-sizeInBytes*length);
@@ -3248,19 +3248,19 @@ TYPE
 			InitIntermediateBackend;
 			bits := 32;
 			forceFPU := FALSE;
-						
+
 			winAPIRegisters[0] := RCX - RAX;
 			winAPIRegisters[1] := RDX - RAX;
 			winAPIRegisters[2] := R8 - RAX;
-			winAPIRegisters[3] := R9 - RAX; 
-			
+			winAPIRegisters[3] := R9 - RAX;
+
 			cRegisters[0] := RDI - RAX;
 			cRegisters[1] := RSI - RAX;
 			cRegisters[2] := RDX - RAX;
-			cRegisters[3] := RCX - RAX; 
+			cRegisters[3] := RCX - RAX;
 			cRegisters[4] := R8 - RAX;
-			cRegisters[5] := R9 - RAX; 
-			
+			cRegisters[5] := R9 - RAX;
+
 			SetName("AMD");
 		END InitBackendAMD64;
 
@@ -3334,15 +3334,15 @@ TYPE
 			END;
 			RETURN system
 		END GetSystem;
-			
+
 		(* returns the following register (or part thereof)
-			0: regRAX; 
-			1: regRCX; 
-			2: regRDX; 
+			0: regRAX;
+			1: regRCX;
+			2: regRDX;
 			3: regRBX;
-			4: regRSP; 
-			5: regRBP; 
-			6: regRSI; 
+			4: regRSP;
+			5: regRBP;
+			6: regRSI;
 			7: regRDI;
 			8 .. 15: regRx;
 		*)
@@ -3358,28 +3358,28 @@ TYPE
 		END HardwareIntegerRegister;
 
 		PROCEDURE HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
-		BEGIN 
+		BEGIN
 			ASSERT((sizeInBits = 32) OR (sizeInBits = 64));
 			RETURN XMM0 + index;
 		END HardwareFloatRegister;
-		
+
 		PROCEDURE ResetParameterRegisters*;
 		BEGIN
 			intParameterIndex := 0;
-			floatParameterIndex := 0; 
+			floatParameterIndex := 0;
 		END ResetParameterRegisters;
-		
+
 		PROCEDURE GetParameterRegister*(callingConvention: SyntaxTree.CallingConvention;  type: IntermediateCode.Type; VAR register: WORD): BOOLEAN;
 		VAR index: WORD;
 		BEGIN
 			IF bits = 32 THEN register := -1; RETURN FALSE END;
-			
+
 			IF type.form IN IntermediateCode.Integer THEN
 				CASE callingConvention OF
-					|SyntaxTree.WinAPICallingConvention:  
+					|SyntaxTree.WinAPICallingConvention:
 						IF intParameterIndex >= 4 THEN register := -1; RETURN FALSE END;
 						index := winAPIRegisters[intParameterIndex];
-					|SyntaxTree.CCallingConvention: 
+					|SyntaxTree.CCallingConvention:
 						IF intParameterIndex >= 6 THEN register := -1; RETURN FALSE END;
 						index := cRegisters[intParameterIndex];
 				ELSE
@@ -3390,11 +3390,11 @@ TYPE
 				RETURN TRUE;
 			ELSIF type.form = IntermediateCode.Float THEN
 				CASE callingConvention OF
-					|SyntaxTree.WinAPICallingConvention:  
+					|SyntaxTree.WinAPICallingConvention:
 						IF intParameterIndex >= 4 THEN register := -1; RETURN FALSE END;
 						index := intParameterIndex;
 						INC(intParameterIndex);
-					|SyntaxTree.CCallingConvention: 
+					|SyntaxTree.CCallingConvention:
 						IF floatParameterIndex >= 8 THEN register := -1; RETURN FALSE END;
 						index := floatParameterIndex;
 						INC(floatParameterIndex);
@@ -3589,11 +3589,11 @@ TYPE
 		PROCEDURE CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN;
 		VAR length: LONGINT; baseType: SyntaxTree.Type; b: BOOLEAN;
 		BEGIN
-			b := SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.FloatType) & 
+			b := SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.FloatType) &
 			(baseType.sizeInBits <= 32) & (length = 4);
-			b := b OR SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.CharacterType) & 
+			b := b OR SemanticChecker.IsStaticMathArray(type, length, baseType) & (baseType IS SyntaxTree.CharacterType) &
 			(baseType.sizeInBits = 8) & (length = 4);
-			b := b OR SemanticChecker.IsStaticArray(type, baseType, length) & (baseType.resolved IS SyntaxTree.CharacterType) & 
+			b := b OR SemanticChecker.IsStaticArray(type, baseType, length) & (baseType.resolved IS SyntaxTree.CharacterType) &
 			(baseType.resolved.sizeInBits = 8) & (length = 4);
 			RETURN b
 		END CanPassInRegister;

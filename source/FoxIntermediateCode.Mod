@@ -71,7 +71,7 @@ CONST
 	NofOpcodes*= 40;
 
 	NotYetCalculatedSize = -2;
-	
+
 TYPE
 	Type*=RECORD
 		form-: SHORTINT; (* SignedInteger, UnsignedInteger or Float *)
@@ -261,7 +261,7 @@ TYPE
 			IF Op1IsDestination IN instructionFormat[instruction.opcode].flags THEN
 				Assert((instruction.op1.mode # ModeRegister) OR (instruction.op1.offset = 0),"destination operand may not be register with nonzero offset");
 			END;
-			
+
 			Assert(instruction.op1.mode IN instructionFormat[instruction.opcode].op1,"invalid format of op 1");
 			Assert(instruction.op2.mode IN instructionFormat[instruction.opcode].op2,"invalid format of op 2");
 			Assert(instruction.op3.mode IN instructionFormat[instruction.opcode].op3,"invalid format of op 3");
@@ -297,9 +297,9 @@ TYPE
 		PROCEDURE Reset*;
 		BEGIN
 			sizeInUnits := NotYetCalculatedSize;
-			pc := 0; 
+			pc := 0;
 		END Reset;
-		
+
 		PROCEDURE PatchOperands*(pc: LONGINT; op1,op2,op3: Operand);
 		BEGIN instructions[pc].op1 := op1; instructions[pc].op2 := op2; instructions[pc].op3 := op3;
 		END PatchOperands;
@@ -368,7 +368,7 @@ TYPE
 				ww.DecIndent;
 			END;
 		END Dump;
-		
+
 		PROCEDURE WriteRaw*(w: Streams.Writer);
 		VAR i: LONGINT;
 		BEGIN
@@ -378,7 +378,7 @@ TYPE
 				INC(i);
 			END;
 		END WriteRaw;
-		
+
 
 	END Section;
 
@@ -678,7 +678,7 @@ TYPE
 		CheckOperand(operand);
 		*)
 	END DumpOperand;
-	
+
 	PROCEDURE WriteRawOperand*(w: Streams.Writer; CONST operand: Operand );
 	VAR i: LONGINT;
 	BEGIN
@@ -755,9 +755,9 @@ TYPE
 		IF instr.op1.mode # Undefined THEN WriteRawOperand(w,instr.op1) END;
 		IF instr.op2.mode # Undefined THEN WriteRawOperand(w,instr.op2) END;
 		IF instr.op3.mode # Undefined THEN WriteRawOperand(w,instr.op3) END;
-		IF instr.opcode = special THEN w.RawLInt(instr.subtype) END;		
+		IF instr.opcode = special THEN w.RawLInt(instr.subtype) END;
 	END WriteRawInstruction;
-	
+
 
 	PROCEDURE DumpInstruction*(w: Streams.Writer; CONST instr: Instruction);
 	BEGIN
@@ -975,7 +975,7 @@ TYPE
 		op.mode := ModeMemory;
 		ASSERT(op.register # 0);
 	END MakeMemory;
-	
+
 	PROCEDURE MakeAddress*(VAR op: Operand; CONST type: Type);
 	BEGIN
 		ASSERT(op.mode = ModeMemory);
@@ -1078,7 +1078,7 @@ TYPE
 	PROCEDURE ToVectorType*(VAR type: Type; length: LONGINT);
 	BEGIN type.length := length
 	END ToVectorType;
-	
+
 	PROCEDURE IsVectorRegister*(CONST op: Operand): BOOLEAN;
 	BEGIN
 		RETURN (op.mode = ModeRegister) & (op.type.length > 1);
@@ -1091,7 +1091,7 @@ TYPE
 	PROCEDURE InitParameterRegisterClass*(VAR registerClass: RegisterClass; number: LONGINT);
 	BEGIN registerClass.class := Parameter; registerClass.number := INTEGER(number)
 	END InitParameterRegisterClass;
-	
+
 	PROCEDURE NewType*(form: SHORTINT; sizeInBits: INTEGER): Type;
 	VAR type: Type;
 	BEGIN InitType(type, form, sizeInBits); RETURN type
@@ -1282,7 +1282,7 @@ TYPE
 					ToVectorType(t, type.staticLength);
 					RETURN t
 				END;
-			END;		
+			END;
 			RETURN GetType(system,system.addressType);
 		ELSIF type IS SyntaxTree.PortType THEN
 			RETURN GetType(system, system.addressType);

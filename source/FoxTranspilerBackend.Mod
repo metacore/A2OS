@@ -925,7 +925,7 @@ TYPE
 		END PrintStatement;
 
 		PROCEDURE PrintExpression (expression: SyntaxTree.Expression);
-		BEGIN ASSERT (expression # NIL); 
+		BEGIN ASSERT (expression # NIL);
 			VExpression(expression);
 		END PrintExpression;
 

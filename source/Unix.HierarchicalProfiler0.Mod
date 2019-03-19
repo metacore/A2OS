@@ -35,7 +35,7 @@ TYPE
 			NEW(times); Clear(times);
 			NEW(oldTimes); Clear(oldTimes);
 		END Init;
-	
+
 
 		PROCEDURE Terminate;
 		BEGIN {EXCLUSIVE}
@@ -69,7 +69,7 @@ TYPE
 			FOR i := 0 TO nofProcesses - 1 DO
 				process := processes[i];
 
-				Objects.GetCpuCycles(process, cycles, FALSE); 
+				Objects.GetCpuCycles(process, cycles, FALSE);
 				times[i] := cycles[0];
 				(*TRACE(process,me,cycles[0],process.mode,Objects.Running);*)
 				(*the damned thing might go into waiting or some other unwanted state before we suspend it todo*)
@@ -80,7 +80,7 @@ TYPE
 			temp := oldTimes;
 			oldTimes := times;
 			times := temp;
-			ProcessInfo.Copy(processes, oldProcesses); 
+			ProcessInfo.Copy(processes, oldProcesses);
 			oldNofProcesses := nofProcesses;
 			ProcessInfo.Clear(processes);
 			Heaps.GC := NormalGC; (*re-enable gc*)
@@ -113,7 +113,7 @@ END Nothing;
 
 
 PROCEDURE HandleProcess(process : Objects.Process);
-(*VAR context : Kernel32.Context; handle : Kernel32.HANDLE; res : Kernel32.BOOL;*) 
+(*VAR context : Kernel32.Context; handle : Kernel32.HANDLE; res : Kernel32.BOOL;*)
 
 VAR
 	threadId: Unix.Thread_t;
@@ -121,25 +121,25 @@ VAR
 BEGIN
 	ASSERT(process # NIL);
 	threadId:=process.threadId;
-	
-	
+
+
 	(*todo: validate thread ID*)
 	TRACE('suspending thread',threadId);
 	Unix.ThrSuspend(threadId, TRUE);
 	(*because thread suspending is under a mutex in Unix.Mod, this call is guaranteed to have finished with the handler when it returns.*)
 	TRACE('suspend successful',threadId);
-	
+
 	IF (process.state.PC #0) THEN
 		stackBottom:=Objects.GetStackBottom(process);
 		sp:=process.state.SP;
 		bp:=process.state.BP;
 		IF bp<=stackBottom THEN
 			callback(1, process, process.state.PC,bp,sp,  stackBottom  );
-		ELSE	
+		ELSE
 				Unix.ThrResume(threadId);
 				TRACE('bp smaller than stack bottom found',threadId);
 		END;
-	END;				
+	END;
 	TRACE('resuming thread',threadId);
 	Unix.ThrResume(threadId);
 	TRACE('successful resume',threadId);

@@ -63,7 +63,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 		PROCEDURE Enumerate0* (mask: ARRAY OF CHAR;     flags: SET;     enum: Files.Enumerator);
 		VAR new: PathName;
 		BEGIN
-			MakeRel(mask,new); 
+			MakeRel(mask,new);
 			fs.Enumerate0(new,flags,enum);
 		END Enumerate0;
 

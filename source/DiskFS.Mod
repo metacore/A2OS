@@ -385,14 +385,14 @@ TYPE
 					vol.MarkBlocks(mark,0,markPosition);
 					markPosition := 0;
 				END FinishMarking;
-				
+
 				PROCEDURE MarkSector(vol: Files.Volume (* ignored *); sec: LONGINT);
 				BEGIN
 					mark[markPosition] := sec DIV SectorFactor;
-					INC(markPosition); 
+					INC(markPosition);
 					IF markPosition = LEN(mark) THEN
 						FinishMarking;
-					END; 
+					END;
 				END MarkSector;
 
 				PROCEDURE sift(L, R: LONGINT);
@@ -783,14 +783,14 @@ TYPE
 				vol.FreeBlocks(free,0,freePosition);
 				freePosition := 0;
 			END FinishFreeing;
-			
+
 			PROCEDURE FreeSector(vol: Files.Volume (* ignored *); sec: LONGINT);
 			BEGIN
 				free[freePosition] := sec DIV SectorFactor;
-				INC(freePosition); 
+				INC(freePosition);
 				IF freePosition = LEN(free) THEN
 					FinishFreeing;
-				END; 
+				END;
 			END FreeSector;
 
 			PROCEDURE FreeExcept(sec: DiskAdr);
@@ -901,20 +901,20 @@ TYPE
 			RETURN FALSE
 		END Contains;
 	END DiskAdrList;
-			
+
 	DiskAdrTable = OBJECT
 		VAR
 			table : DiskAdrArray;
 			count :SIZE;
 			size: SIZE; (* cache: invariant size  = LEN(table) *)
-			
+
 		CONST
 			threshold = 4; (* 1/4 filled -> grow*)
 
 		PROCEDURE &New*;
-		BEGIN NEW(table, 8); size := LEN(table)-1; count := 0; 
+		BEGIN NEW(table, 8); size := LEN(table)-1; count := 0;
 		END New;
-		
+
 		PROCEDURE Clear;
 		VAR i: SIZE;
 		BEGIN{EXCLUSIVE}
@@ -923,7 +923,7 @@ TYPE
 			END;
 			count := 0;
 		END Clear;
-		
+
 		PROCEDURE Grow;
 		VAR old: DiskAdrArray; i,x: LONGINT; index: SIZE;
 		BEGIN
@@ -935,7 +935,7 @@ TYPE
 				x := old[i];
 				IF (x # 0) THEN
 					index := HashValue(x);
-					IF (table[index] = 0) THEN 
+					IF (table[index] = 0) THEN
 						table[index] := x;
 						INC(count);
 					ELSE
@@ -944,7 +944,7 @@ TYPE
 				END;
 			END;
 		END Grow;
-		
+
 		PROCEDURE HashValue(key: DiskAdr):SIZE;
 		VAR index, h, i := 0 : SIZE;
 		BEGIN
@@ -963,14 +963,14 @@ TYPE
 			ASSERT(x # 0);
 			IF count > size DIV threshold THEN Grow END;
 			index := HashValue(x);
-			IF table[index] = 0 THEN 
+			IF table[index] = 0 THEN
 				table[index] := x;
 				INC(count);
 			ELSE
 				ASSERT(table[index] = x);
 			END;
 		END Add;
-		
+
 		PROCEDURE Contains(x: DiskAdr) : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			RETURN table[HashValue(x)] = x;
@@ -1467,7 +1467,7 @@ VAR fs: FileSystem; fh: FileHeader; skipIndexMapWriteback: BOOLEAN; options: ARR
 BEGIN
 	(* Get options *)
 	context.arg.SkipWhitespace;
-	REPEAT UNTIL ~context.arg.GetString(options) OR (options = '|'); 
+	REPEAT UNTIL ~context.arg.GetString(options) OR (options = '|');
 	IF context.arg.GetString(options) THEN
 		skipIndexMapWriteback := options = 'N'
 	END;

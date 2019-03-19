@@ -11,26 +11,26 @@ CONST
 	NBufs = 4;  Bufsize = 4096;  NoDesc = -1;
 
 	Open = 0;  Create = 1;  Closed = 2;	(* file states *)
-	
+
 	NoKey = -1;
 	CreateFlags = Unix.rdwr + Unix.creat + Unix.trunc;
-	
+
 	TraceCollection = 0;
 	Trace = {};
 	Separator = 0AX;
 VAR
 	tempno: INTEGER;
 	openfiles: LONGINT;
-	
+
 	searchPath: ARRAY 1024 OF CHAR;
 	cwd: ARRAY 256 OF CHAR;
-	
+
 	unixFS: UnixFileSystem; (* must be unique *)
 	collection: Collection; (* must be unique *)
 
-TYPE	
+TYPE
 	Filename = ARRAY 256 OF CHAR;
-	
+
 	NameSet = OBJECT
 			VAR
 				name: ARRAY 64 OF CHAR;
@@ -58,29 +58,29 @@ TYPE
 				END Init;
 
 			END NameSet;
-			
+
 	AliasFileSystem = OBJECT (Files.FileSystem)
-		VAR 
+		VAR
 			fs: UnixFileSystem;
-	
+
 			PROCEDURE & Init*( realFS: UnixFileSystem);
 			BEGIN
-				SELF.fs := realFS;  
+				SELF.fs := realFS;
 			END Init;
 
 			PROCEDURE New0( name: ARRAY OF CHAR ): Files.File;
 			VAR f: Files.File;
 			BEGIN
-				f := fs.New0( name ); 
-				IF f # NIL THEN  f.fs := SELF  END;  
+				f := fs.New0( name );
+				IF f # NIL THEN  f.fs := SELF  END;
 				RETURN f;
 			END New0;
 
 			PROCEDURE Old0( name: ARRAY OF CHAR ): Files.File;
 			VAR f: Files.File;
 			BEGIN
-				f :=  fs.Old0( name ); 
-				IF f # NIL THEN  f.fs := SELF  END; 
+				f :=  fs.Old0( name );
+				IF f # NIL THEN  f.fs := SELF  END;
 				RETURN f;
 			END Old0;
 
@@ -100,7 +100,7 @@ TYPE
 			END Enumerate0;
 
 			PROCEDURE FileKey( name: ARRAY OF CHAR ): LONGINT;
-			VAR 
+			VAR
 			BEGIN
 				RETURN fs.FileKey( name );
 			END FileKey;
@@ -114,22 +114,22 @@ TYPE
 			BEGIN
 				fs.RemoveDirectory0( name, force, key, res );
 			END RemoveDirectory0;
-			
+
 			PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
 			BEGIN
 				RETURN fs.Has(name, fullName, flags);
 			END Has;
 
 	END AliasFileSystem;
-	
+
 	SearchByFstat = OBJECT
-	VAR 
+	VAR
 		found: File;
 		stat: Unix.Status;
-		
+
 		PROCEDURE Init( s: Unix.Status );
 		BEGIN
-			found := NIL;  
+			found := NIL;
 			stat := s;
 		END Init;
 
@@ -147,15 +147,15 @@ TYPE
 	END SearchByFstat;
 
 
-	
-	
+
+
 	Collection = OBJECT  (* methods in Collection shared by objects Filesystem and File *)
 	VAR oldFiles, newFiles: Kernel.FinalizedCollection;
 		ssearch: SearchByFstat;
-	
+
 		PROCEDURE & Init*;
 		BEGIN
-			NEW( oldFiles );  NEW( newFiles );   NEW( ssearch ); 
+			NEW( oldFiles );  NEW( newFiles );   NEW( ssearch );
 		END Init;
 
 		PROCEDURE AddNew( F: File );
@@ -172,24 +172,24 @@ TYPE
 
 		PROCEDURE ByStat(CONST stat: Unix.Status): File;
 		BEGIN{EXCLUSIVE}
-			ssearch.Init(stat); 
-			oldFiles.EnumerateN(ssearch.EnumFile); 
+			ssearch.Init(stat);
+			oldFiles.EnumerateN(ssearch.EnumFile);
 			IF ssearch.found = NIL THEN
 				newFiles.EnumerateN(ssearch.EnumFile)
 			END;
-			
-			IF TraceCollection IN Trace THEN 
-				Log.String( "Collections.ByStatus: " );  Log.Ln;  
+
+			IF TraceCollection IN Trace THEN
+				Log.String( "Collections.ByStatus: " );  Log.Ln;
 				IF ssearch.found = NIL THEN Log.String("not found") ELSE Log.String("found") END;
 			END;
-			
+
 			RETURN ssearch.found;
 		END ByStat;
-		
+
 		PROCEDURE Finalize;
 		BEGIN {EXCLUSIVE}
 			IF TraceCollection IN Trace THEN Log.String( "Collections.Finalize " );  Log.Ln;  END;
-			newFiles.Enumerate( EnumFinalize );  newFiles.Clear();  
+			newFiles.Enumerate( EnumFinalize );  newFiles.Clear();
 			oldFiles.Enumerate( EnumFinalize );  oldFiles.Clear();
 		END Finalize;
 
@@ -213,10 +213,10 @@ TYPE
 
 
 				PROCEDURE New0*( name: ARRAY OF CHAR ): Files.File;
-				VAR f: File; stat: Unix.Status;		
+				VAR f: File; stat: Unix.Status;
 					  res, err: LONGINT;
 					  path, nameonly: ARRAY 512 OF CHAR;
-				BEGIN {EXCLUSIVE}					
+				BEGIN {EXCLUSIVE}
 					(*first check if the path actually exits first using fstat. fstat returns -1 and sets erno to ENOENT when a component of the path doesn't exist or the entire path is empty*)
 					Files.SplitPath( name, path, nameonly );
 					res:=Unix.stat( ADDRESSOF( path ), stat ) ;
@@ -229,13 +229,13 @@ TYPE
 						f.key := NoKey;  f.fs := SELF;
 						f.tempFile := name = "";
 						RETURN f;
-					ELSE				
+					ELSE
 						Log.String( "UnixFileSystem.New0: file allocation failed. Probably a nonexistent path." );  Log.Ln;
 						RETURN NIL;
 					END;
 				END New0;
-				
-				
+
+
 				PROCEDURE IsDirectory( VAR stat: Unix.Status ): BOOLEAN;
 				VAR mode: LONGINT;
 				BEGIN
@@ -245,18 +245,18 @@ TYPE
 
 
 				PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
-				VAR f: File;  stat: Unix.Status;  fd, r, pos: LONGINT; 
-					oflags: SET32;  nextdir, path: Filename; 
+				VAR f: File;  stat: Unix.Status;  fd, r, pos: LONGINT;
+					oflags: SET32;  nextdir, path: Filename;
 				BEGIN  {EXCLUSIVE}
 					IF name = "" THEN  RETURN NIL  END;
-					
-					IF IsFullName( name ) THEN  
-						COPY( name, path );  nextdir := "";  
+
+					IF IsFullName( name ) THEN
+						COPY( name, path );  nextdir := "";
 					ELSE
 						pos := 0;  ScanPath( pos, nextdir );  MakePath( nextdir, name, path );
 						ScanPath( pos, nextdir )
 					END;
-											
+
 					LOOP
 						f := NIL;
 						r := Unix.access( ADDRESSOF( path ), Unix.R_OK );
@@ -271,17 +271,17 @@ TYPE
 									(* use the file already cached *)  r := Unix.close( fd );  EXIT
 								ELSE
 									NEW( f, SELF );
-									f.fd := fd;  f.dev := stat.dev;  f.ino := stat.ino;  
-									f.mtime := stat.mtime.sec;  f.fsize := stat.size;  f.fpos := 0;  
+									f.fd := fd;  f.dev := stat.dev;  f.ino := stat.ino;
+									f.mtime := stat.mtime.sec;  f.fsize := stat.size;  f.fpos := 0;
 									f.state := Open;  f.swapper := -1;   (*all f.buf[i] = NIL*)
-									COPY( path, f.workName );  f.registerName := "";  
+									COPY( path, f.workName );  f.registerName := "";
 									f.tempFile := FALSE;
 									IF IsDirectory( stat ) THEN
 										f.flags := {Files.Directory, Files.ReadOnly}
 									ELSIF oflags = Unix.rdonly THEN
 										f.flags := {Files.ReadOnly}
 									END;
-									f.key := NoKey;  f.fs := SELF; 
+									f.key := NoKey;  f.fs := SELF;
 									IncOpenFiles();
 									collection.AddOld(f);
 									EXIT
@@ -291,7 +291,7 @@ TYPE
 							END
 						ELSIF nextdir # "" THEN
 							MakePath( nextdir, name, path );  ScanPath( pos, nextdir );
-						ELSE  
+						ELSE
 							f := NIL;  EXIT
 						END;
 					END; (* loop *)
@@ -301,7 +301,7 @@ TYPE
 
 				(** Return the unique non-zero key of the named file, if it exists. *)
 				PROCEDURE FileKey*( name: ARRAY OF CHAR ): LONGINT;
-				(* 	Can not be used for Unix files as LONGINT is too small. 
+				(* 	Can not be used for Unix files as LONGINT is too small.
 					In the Unix filesystem a file is identified by
 					- dev	(64 bit (Linux), 32 bit (Solaris, Darwin))	+
 					- ino	(32 bit)
@@ -319,8 +319,8 @@ TYPE
 					END;
 					key := 0;
 				END Delete0;
-				
-				
+
+
 				(* return remaining old file, if any *)
 				PROCEDURE TryRename*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: WORD ): LONGINT;
 				CONST Bufsize = 4096;
@@ -341,36 +341,36 @@ TYPE
 							IF (res = Unix.EXDEV) OR (res = Unix.ETXTBSY) THEN  (* cross device link, move the file / file busy frequently happens in VirtualBox *)
 								fdold := UnixOpen( ADDRESSOF( old ), Unix.rdonly, 0 );
 								fo := fdold;
-								IF fdold < 0 THEN    
-									res := Unix.errno( );  
+								IF fdold < 0 THEN
+									res := Unix.errno( );
 									RETURN NoDesc;
 								END;
 								fdnew := UnixOpen( ADDRESSOF( new ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
-								IF fdnew < 0 THEN    
-									res := Unix.errno( );  
+								IF fdnew < 0 THEN
+									res := Unix.errno( );
 									RETURN NoDesc;
 								END;
 								REPEAT
-									n := UnixRead( fdold, ADDRESSOF( buf ), Bufsize ); 
+									n := UnixRead( fdold, ADDRESSOF( buf ), Bufsize );
 									IF n > 0 THEN
 										n2 := UnixWrite( fdnew, ADDRESSOF( buf ), n );
 										IF n2 < 0 THEN
-											r := Unix.close( fdold );  
-											r := Unix.close( fdnew );   
+											r := Unix.close( fdold );
+											r := Unix.close( fdnew );
 											RETURN NoDesc;
 										END;
 									END
 								UNTIL n = 0;
 								r := Unix.unlink( ADDRESSOF( old ) );
 								r := Unix.close( fdold );
-								r := Unix.close( fdnew );  
+								r := Unix.close( fdnew );
 								res := Files.Ok
 							ELSE
 								RETURN NoDesc (* res is Unix.rename return code *)
 							END
 						END;
 						res := Files.Ok
-					ELSE  
+					ELSE
 						res := Unix.errno();
 					END;
 					RETURN fo;
@@ -381,17 +381,17 @@ TYPE
 				BEGIN
 					of := TryRename(old, new, f, res);
 				END Rename0;
-				
+
 
 				PROCEDURE CreateDirectory0*( path: ARRAY OF CHAR;  VAR res: WORD );
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					r := Unix.mkdir( ADDRESSOF( path ), Unix.rwxrwxrwx );
-					IF r = 0 THEN  res := Files.Ok   
+					IF r = 0 THEN  res := Files.Ok
 					ELSE res := Unix.errno( )
-					END	
+					END
 				END CreateDirectory0;
-				
+
 
 				PROCEDURE RemoveDirectory0*( path: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 				VAR r: LONGINT;
@@ -404,31 +404,31 @@ TYPE
 
 
 				PROCEDURE Enumerate0*( mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
-				VAR 
+				VAR
 					path, filemask: Filename;
 					isPath: BOOLEAN;
 					i, j: INTEGER;  dirName, fileName, fullName, xName: Filename;
-					checkSet: NameSet;  ent: Unix.Dirent; 
-					
+					checkSet: NameSet;  ent: Unix.Dirent;
+
 					PROCEDURE GetEntryName;
 					VAR i: INTEGER;  adr: ADDRESS;
 					BEGIN
 						i := -1;  adr := ADDRESSOF( ent.name );
 						REPEAT  INC( i );  S.GET( adr, fileName[i] );  INC( adr )  UNTIL fileName[i] = 0X
 					END GetEntryName;
-					
+
 					PROCEDURE EnumDir( CONST dirName: ARRAY OF CHAR );
 					VAR
-						dir: ADDRESS;   
-						tm: Unix.TmPtr;  date, time: LONGINT;  
+						dir: ADDRESS;
+						tm: Unix.TmPtr;  date, time: LONGINT;
 						stat: Unix.Status; r: LONGINT; p: ADDRESS;
 					BEGIN
 						dir := Unix.opendir( ADDRESSOF( dirName ) );
 						IF dir # 0 THEN
 							ent := Unix.readdir( dir );
 							WHILE ent # NIL DO
-								COPY( dirName, fullName );  
-								
+								COPY( dirName, fullName );
+
 								GetEntryName;  AppendName( fullName, fileName );
 								IF (fileName[0] # '.')  & Match( fileName, filemask, 0, 0 ) THEN
 									IF checkSet.Add( fileName ) THEN  (* not a covered name *)
@@ -440,7 +440,7 @@ TYPE
 										IF IsDirectory( stat ) THEN
 											flags := {Files.ReadOnly, Files.Directory}
 										ELSE
-											r := Unix.access( ADDRESSOF( fullName ), Unix.W_OK ); 
+											r := Unix.access( ADDRESSOF( fullName ), Unix.W_OK );
 											IF r < 0 THEN  flags := {Files.ReadOnly}  END
 										END;
 										p := Unix.realpath(ADDRESSOF(fullName), ADDRESSOF(xName));
@@ -454,7 +454,7 @@ TYPE
 						END;
 					END EnumDir;
 
-				
+
 				BEGIN {EXCLUSIVE}
 					Files.SplitName( mask, prefix, fullName );
 					Files.SplitPath( fullName, path, filemask );
@@ -467,7 +467,7 @@ TYPE
 					IF isPath & (path[0] = '/') THEN (*check for absolute path*)
 						EnumDir( path);
 					ELSE (*no path or relative path*)
-						i := 0;  j := 0;  
+						i := 0;  j := 0;
 						LOOP (*go through the search paths, every time a complete search path has been traversed, look for the element there*)
 							IF (searchPath[i] = Separator) OR (searchPath[i] = 0X) THEN
 								dirName[j] := 0X;
@@ -475,17 +475,17 @@ TYPE
 									Files.JoinPath(dirName, path, dirName);
 								END;
 								EnumDir( dirName );
-								IF searchPath[i] = 0X THEN  EXIT   
-								ELSE  INC( i );  j := 0  
+								IF searchPath[i] = 0X THEN  EXIT
+								ELSE  INC( i );  j := 0
 								END
 							ELSE
-								dirName[j] := searchPath[i];  INC( j );  INC( i )    
+								dirName[j] := searchPath[i];  INC( j );  INC( i )
 							END
 						END
 					END;
 					checkSet := NIL;
 				END Enumerate0;
-				
+
 				PROCEDURE Has(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
 				VAR r: LONGINT; p: ADDRESS; stat: Unix.Status;
 				BEGIN
@@ -495,7 +495,7 @@ TYPE
 					IF IsDirectory( stat ) THEN
 						flags := {Files.ReadOnly, Files.Directory}
 					ELSE
-						r := Unix.access( ADDRESSOF( name ), Unix.W_OK ); 
+						r := Unix.access( ADDRESSOF( name ), Unix.W_OK );
 						IF r < 0 THEN  flags := {Files.ReadOnly}  END
 					END;
 					p := Unix.realpath(ADDRESSOF(name), ADDRESSOF(fullName));
@@ -504,14 +504,14 @@ TYPE
 				END Has;
 
 	END UnixFileSystem;
-	
-	
+
+
 	Buffer =	POINTER TO RECORD (Files.Hint)
 					chg: BOOLEAN;
 					org, size: SIZE;
 					data: ARRAY Bufsize OF CHAR;
 				END;
-	
+
 	File* = OBJECT (Files.File)
 			VAR
 				fd: LONGINT;
@@ -531,10 +531,10 @@ TYPE
 				END Init;
 
 				PROCEDURE CreateUnixFile;
-				VAR 
+				VAR
 					stat: Unix.Status;  r: LONGINT;
-				BEGIN				
-					IF state = Create THEN  
+				BEGIN
+					IF state = Create THEN
 						GetTempName( registerName, workName )
 					ELSIF state = Closed THEN
 						IF registerName # "" THEN
@@ -546,29 +546,29 @@ TYPE
 					END;
 					r := Unix.unlink( ADDRESSOF( workName ) );
 					(*unlink first to avoid stale NFS handles and to avoid reuse of inodes*)
-											
+
 					fd := UnixOpen( ADDRESSOF( workName ), CreateFlags, Unix.rwrwr );
 					IF fd >= 0 THEN
-						r := Unix.fstat( fd, stat );  
+						r := Unix.fstat( fd, stat );
 						dev := stat.dev;  ino := stat.ino;  mtime := stat.mtime.sec;
 						state := Open;  fpos := 0;
 						IncOpenFiles( );
 						collection.AddNew( SELF );
-					ELSE  
+					ELSE
 						Halt( SELF, TRUE, "UnixFiles.File.CreateUnixFile: open failed" );
 					END
 				END CreateUnixFile;
-				
-						
+
+
 				PROCEDURE Flush( buf: Buffer );
 				VAR n: SIZE;  res: WORD;  stat: Unix.Status;
 				BEGIN
 					IF buf.chg THEN
 						IF fd = NoDesc THEN  CreateUnixFile  END;
-						IF buf.org # fpos THEN  
+						IF buf.org # fpos THEN
 							IF Unix.lseek( fd, buf.org, 0 ) = -1 THEN
-								Halt( SELF, TRUE, "UnixFiles.File.Flush: lseek failed" ) 
-							END 
+								Halt( SELF, TRUE, "UnixFiles.File.Flush: lseek failed" )
+							END
 						END;
 						n := UnixWrite( fd, ADDRESSOF( buf.data ), buf.size );
 						IF n < 0 THEN  Halt( SELF, TRUE, "UnixFiles.File.Flush: write failed" )  END;
@@ -576,48 +576,48 @@ TYPE
 						res := Unix.fstat( fd, stat );  mtime := stat.mtime.sec
 					END
 				END Flush;
-		
-	
+
+
 				PROCEDURE Set*( VAR r: Files.Rider;  pos: LONGINT );
 				BEGIN {EXCLUSIVE}
 					SetX( r, pos )
 				END Set;
-						
+
 				PROCEDURE SetX( VAR r: Files.Rider;  p: LONGINT );
 				VAR  org, offset, i: LONGINT;  n: SIZE;  buf: Buffer;
-				BEGIN 
+				BEGIN
 					r.file := SELF;  r.fs := fs;
 					IF p > fsize THEN  p := LONGINT(fsize)
 					ELSIF p < 0 THEN  p := 0
 					END;
-					offset := p MOD Bufsize;  org := p - offset;  
+					offset := p MOD Bufsize;  org := p - offset;
 					i := 0;
 					WHILE (i < NBufs) & (bufs[i] # NIL) & (org # bufs[i].org) DO  INC( i )  END;
 					IF i < NBufs THEN
-						IF bufs[i] = NIL THEN  
+						IF bufs[i] = NIL THEN
 							NEW( buf );  buf.chg := FALSE;  buf.org := -1;
 							bufs[i] := buf
-						ELSE  
+						ELSE
 							swapper := i;
 							buf := bufs[swapper];  Flush( buf )
 						END
-					ELSE  
-						swapper := (swapper + 1) MOD NBufs;  
+					ELSE
+						swapper := (swapper + 1) MOD NBufs;
 						buf := bufs[swapper];  Flush( buf )
 					END;
 					IF buf.org # org THEN
-						IF org = fsize THEN  
+						IF org = fsize THEN
 							buf.size := 0
 						ELSE
 							IF fd = NoDesc THEN  CreateUnixFile  END;
-							IF fpos # org THEN  
+							IF fpos # org THEN
 								IF Unix.lseek( fd, org, 0 ) = -1 THEN
-									Halt( SELF, TRUE, "UnixFiles.File.Set: lseek failed" ) 
-								END  
+									Halt( SELF, TRUE, "UnixFiles.File.Set: lseek failed" )
+								END
 							END;
-							n := UnixRead( fd, ADDRESSOF( buf.data ), Bufsize ); 
-							IF n < 0 THEN  
-								IF p < fsize THEN  Halt( SELF, TRUE, "UnixFiles.File.Set: read failed" )  
+							n := UnixRead( fd, ADDRESSOF( buf.data ), Bufsize );
+							IF n < 0 THEN
+								IF p < fsize THEN  Halt( SELF, TRUE, "UnixFiles.File.Set: read failed" )
 								ELSE n := 0
 								END
 							END;
@@ -628,10 +628,10 @@ TYPE
 						org := LONGINT(buf.org)
 					END;
 
-					r.hint := buf;  r.apos := org;  r.bpos := offset;  
+					r.hint := buf;  r.apos := org;  r.bpos := offset;
 					r.res := 0;  r.eof := FALSE;
 				END SetX;
-				
+
 
 				PROCEDURE Pos*( VAR r: Files.Rider ): LONGINT;
 				BEGIN
@@ -643,29 +643,29 @@ TYPE
 				VAR offset: LONGINT;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
 					buf := r.hint(Buffer);  offset := r.bpos;
-					IF r.apos # buf.org THEN  
-						SetX( r, r.apos + offset );  
-						buf := r.hint(Buffer);  offset := r.bpos  
+					IF r.apos # buf.org THEN
+						SetX( r, r.apos + offset );
+						buf := r.hint(Buffer);  offset := r.bpos
 					END;
-					IF (offset < buf.size) THEN  
+					IF (offset < buf.size) THEN
 						x := buf.data[offset];  r.bpos := offset + 1
-					ELSIF r.apos + offset < fsize THEN  
-						SetX( r, r.apos + offset );  
+					ELSIF r.apos + offset < fsize THEN
+						SetX( r, r.apos + offset );
 						x := r.hint(Buffer).data[0];  r.bpos := 1
-					ELSE  
+					ELSE
 						x := 0X;  r.eof := TRUE
 					END
 				END Read;
 
 				PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR xpos, offset, restInBuf: SIZE;  min: LONGINT;  buf: Buffer;  
+				VAR xpos, offset, restInBuf: SIZE;  min: LONGINT;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
-					x[ofs] := 0X;  xpos := ofs;  
+					x[ofs] := 0X;  xpos := ofs;
 					buf := r.hint(Buffer);  offset := r.bpos;
 					WHILE len > 0 DO
-						IF (r.apos # buf.org) OR (offset >= Bufsize) THEN  
-							SetX( r, r.apos + LONGINT(offset) );  
-							buf := r.hint(Buffer);  offset := r.bpos  
+						IF (r.apos # buf.org) OR (offset >= Bufsize) THEN
+							SetX( r, r.apos + LONGINT(offset) );
+							buf := r.hint(Buffer);  offset := r.bpos
 						END;
 						restInBuf := buf.size - offset;
 						IF restInBuf = 0 THEN  r.res := len;  r.eof := TRUE;  RETURN
@@ -678,15 +678,15 @@ TYPE
 					END;
 					r.res := 0;  r.eof := FALSE;
 				END ReadBytes;
-				
-				
+
+
 				PROCEDURE Write*( VAR r: Files.Rider;  x: CHAR );
 				VAR buf: Buffer;  offset: LONGINT;
 				BEGIN  {EXCLUSIVE}
 					buf := r.hint(Buffer);  offset := r.bpos;
-					IF (r.apos # buf.org) OR (offset >= Bufsize) THEN  
-						SetX( r, r.apos + offset );  
-						buf := r.hint(Buffer);  offset := r.bpos  
+					IF (r.apos # buf.org) OR (offset >= Bufsize) THEN
+						SetX( r, r.apos + offset );
+						buf := r.hint(Buffer);  offset := r.bpos
 					END;
 					buf.data[offset] := x;  buf.chg := TRUE;
 					IF offset = buf.size THEN  INC( buf.size );  INC( fsize )  END;
@@ -698,22 +698,22 @@ TYPE
 				BEGIN  {EXCLUSIVE}
 					xpos := ofs;  buf := r.hint(Buffer);  offset := r.bpos;
 					WHILE len > 0 DO
-						IF (r.apos # buf.org) OR (offset >= Bufsize) THEN  
-							SetX( r, r.apos + offset );  
-							buf := r.hint(Buffer);  offset := r.bpos  
+						IF (r.apos # buf.org) OR (offset >= Bufsize) THEN
+							SetX( r, r.apos + offset );
+							buf := r.hint(Buffer);  offset := r.bpos
 						END;
 						restInBuf := Bufsize - offset;
 						IF len > restInBuf THEN  min := restInBuf  ELSE  min := len  END;
-						S.MOVE( ADDRESSOF( x ) + xpos, ADDRESSOF( buf.data ) + offset, min );  
+						S.MOVE( ADDRESSOF( x ) + xpos, ADDRESSOF( buf.data ) + offset, min );
 						INC( offset, min );  r.bpos := offset;
-						IF offset > buf.size THEN  
-							INC( fsize, offset - buf.size );  buf.size := offset  
+						IF offset > buf.size THEN
+							INC( fsize, offset - buf.size );  buf.size := offset
 						END;
 						INC( xpos, min );  DEC( len, min );  buf.chg := TRUE
 					END;
 					r.res := Files.Ok
 				END WriteBytes;
-				
+
 
 				PROCEDURE Length*( ): LONGINT;
 				BEGIN
@@ -722,9 +722,9 @@ TYPE
 
 
 				PROCEDURE GetDate*( VAR t, d: LONGINT );
-				VAR stat: Unix.Status;   r: LONGINT;  time: Unix.TmPtr;				
+				VAR stat: Unix.Status;   r: LONGINT;  time: Unix.TmPtr;
 				BEGIN {EXCLUSIVE}
-					IF fd = NoDesc THEN  CreateUnixFile  END;  
+					IF fd = NoDesc THEN  CreateUnixFile  END;
 					r := Unix.fstat( fd, stat );
 					time := Unix.localtime( stat.mtime );
 					t := time.sec + ASH( time.min, 6 ) + ASH( time.hour, 12 );
@@ -733,17 +733,17 @@ TYPE
 
 
 				PROCEDURE SetDate*( t, d: LONGINT );
-				TYPE 
+				TYPE
 					Time = RECORD actime, modtime: LONGINT END;
 				VAR
 					tm: Unix.Tm;  buf: Time;  r: LONGINT;  path: Filename;
 				BEGIN {EXCLUSIVE}
-					IF registerName # "" THEN  COPY( registerName, path )  
-					ELSE  COPY( workName, path )  
+					IF registerName # "" THEN  COPY( registerName, path )
+					ELSE  COPY( workName, path )
 					END;
 					(* get year and timezone *)
 					(* fill in new date *)
-					tm.isdst := -1;  tm.sec := t MOD 64;  tm.min := t DIV 64 MOD 64;  
+					tm.isdst := -1;  tm.sec := t MOD 64;  tm.min := t DIV 64 MOD 64;
 					tm.hour := t DIV 4096 MOD 32;
 					tm.mday := d MOD 32;  tm.mon := d DIV 32 MOD 16 - 1;  tm.year := d DIV 512;
 					tm.wday := 0;  tm.yday := 0;
@@ -766,55 +766,55 @@ TYPE
 				PROCEDURE Register0*( VAR res: WORD );
 				VAR fo, r: LONGINT;
 				BEGIN {EXCLUSIVE}
-					IF (state = Create) & (registerName # "") THEN  
+					IF (state = Create) & (registerName # "") THEN
 						state := Closed (* shortcut renaming *)   ;
 					END;
-					
+
 					FlushBuffers;
-					
+
 					IF registerName # "" THEN
 						fo := unixFS.TryRename( workName, registerName, SELF, res );
-						IF res # Files.Ok THEN  
-							Halt( SELF, FALSE, "UnixFiles.File.Register: rename failed" )  
+						IF res # Files.Ok THEN
+							Halt( SELF, FALSE, "UnixFiles.File.Register: rename failed" )
 						END;
 
 						IF fo # NoDesc THEN (* SELF still refers to old file *)
 							r := Unix.close( fd );  (* VirtualBox ! Can only delete file when closed. *)
-							r := Unix.unlink( ADDRESSOF( workName ) ); 
+							r := Unix.unlink( ADDRESSOF( workName ) );
 							fd := UnixOpen( ADDRESSOF( registerName ), Unix.rdwr, Unix.rwrwr );
 						END;
 
 						workName := registerName;  registerName := ""
 					END;
 				END Register0;
-				
+
 
 				PROCEDURE Update*;
 				BEGIN {EXCLUSIVE}
 					FlushBuffers
 				END Update;
-				
-				
+
+
 				PROCEDURE FlushBuffers;
-				VAR i: LONGINT; 
-				BEGIN 
-					IF fd = NoDesc THEN  CreateUnixFile  END;  
+				VAR i: LONGINT;
+				BEGIN
+					IF fd = NoDesc THEN  CreateUnixFile  END;
 					FOR i := 0 TO NBufs - 1 DO
 						IF bufs[i] # NIL THEN  Flush( bufs[i] )  END
 					END;
 				END FlushBuffers;
-				
-				
+
+
 				PROCEDURE Finalize*;
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
-					IF tempFile THEN  
-						IF fd # NoDesc THEN  
+					IF tempFile THEN
+						IF fd # NoDesc THEN
 							r := Unix.close( fd );
 							fd := NoDesc
 						END;
 						r := Unix.unlink( ADDRESSOF( workName ) );
-					ELSE  
+					ELSE
 						FlushBuffers;
 						IF fd # NoDesc THEN
 							r := Unix.close( fd );
@@ -824,14 +824,14 @@ TYPE
 					state := Closed;
 					DecOpenFiles()
 				END Finalize;
-				
+
 				PROCEDURE Close;
 				BEGIN
 					Finalize;
 					collection.newFiles.Remove( SELF );
 					collection.oldFiles.Remove( SELF );
 				END Close;
-				
+
 				PROCEDURE GetName*( VAR name: ARRAY OF CHAR );
 				BEGIN {EXCLUSIVE}
 					IF registerName = "" THEN  COPY( workName, name ) ;
@@ -855,14 +855,14 @@ TYPE
 	BEGIN
 		COPY( cwd, path )
 	END GetWorkingDirectory;
-	
-	(** Change to directory path. *)	
+
+	(** Change to directory path. *)
 	PROCEDURE ChangeDirectory*( CONST path: ARRAY OF CHAR;  VAR done: BOOLEAN );
 	VAR r: LONGINT;  newdir: Filename;
 	BEGIN
-		IF path[0] # '/' THEN  
+		IF path[0] # '/' THEN
 			COPY( cwd, newdir );  AppendName( newdir, path );
-			CleanPath( newdir )  
+			CleanPath( newdir )
 		ELSE
 			COPY( path, newdir );
 		END;
@@ -871,7 +871,7 @@ TYPE
 	END ChangeDirectory;
 
 (*===================================================================*)
-	
+
 	PROCEDURE StripPath*( CONST path: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR );
 	VAR i, p: INTEGER;  c: CHAR;
 	BEGIN
@@ -883,14 +883,14 @@ TYPE
 		i := 0;
 		REPEAT  c := path[p];  name[i] := c;  INC( i );  INC( p )  UNTIL c = 0X
 	END StripPath;
-	
-	
+
+
 	PROCEDURE CleanPath*( VAR path: ARRAY OF CHAR );
-	(*  
+	(*
 		/aaa/../bbb/./ccc/../ddd/.  ==>   /bbb/ddd
 		../aaa  ==>  CWD/../aaa  ==>  . . .
 	*)
-	VAR 
+	VAR
 		i, prevNameStart, nameStart: INTEGER;
 		c1, c2, c3: CHAR;
 
@@ -899,7 +899,7 @@ TYPE
 		BEGIN
 			COPY( cwd, tmp ); AppendName( tmp, path );  COPY( tmp, path )
 		END prependCWD;
-	
+
 		PROCEDURE restart;
 		BEGIN
 			IF path[0] = '/' THEN  nameStart := 1  ELSE  nameStart := 0  END;
@@ -921,7 +921,7 @@ TYPE
 				c1 := path[i];  c2 := path[i + 1];  c3 := path[i + 2];
 				IF c1 = '/' THEN  shift( i, i + 1 ) (* // *)
 				ELSIF c1 = '.' THEN
-					IF c2 = 0X THEN  
+					IF c2 = 0X THEN
 						IF i > 1 THEN  DEC( i )  END;
 						path[i] := 0X
 					ELSIF c2 = '/' THEN  shift( i, i + 2 );   (* ./ *)
@@ -951,12 +951,12 @@ TYPE
 			RETURN Match( name, pat, i, j + 1 ) OR ((name[i] # 0X) & Match( name, pat, i + 1, j ))
 		END
 	END Match;
-	
-	
+
+
 	PROCEDURE Append( VAR a: Filename;  CONST this: ARRAY OF CHAR );
-	VAR i, j: LONGINT; 
+	VAR i, j: LONGINT;
 	BEGIN
-		i := 0;  j := 0;  
+		i := 0;  j := 0;
 		WHILE a[i] # 0X DO  INC( i )  END;
 		WHILE (i < LEN( a ) - 1) & (this[j] # 0X) DO  a[i] := this[j];  INC( i );  INC( j )  END;
 		a[i] := 0X
@@ -970,8 +970,8 @@ TYPE
 		IF (i > 0) & (path[i - 1] # "/") THEN  path[i] := "/";  INC( i );  path[i] := 0X  END;
 		Append( path, filename );
 	END AppendName;
-	
-	
+
+
 	PROCEDURE AppendInt( VAR str: Filename; n: LONGINT );
 	VAR i: LONGINT;
 	BEGIN
@@ -994,10 +994,10 @@ TYPE
 	VAR fd, errno, state: LONGINT;
 		workName, registerName: Filename;
 	BEGIN
-		IF f = NIL THEN  
+		IF f = NIL THEN
 			workName := "???";  registerName := "???"
-		ELSE  
-			workName := f.workName;  registerName := f.registerName;  
+		ELSE
+			workName := f.workName;  registerName := f.registerName;
 			fd := f.fd; state := f.state
 		END;
 		IF unixError THEN  errno := Unix.errno( );  Unix.Perror( msg )  END;
@@ -1027,8 +1027,8 @@ TYPE
 		WHILE name[j] # 0X DO  dest[i] := name[j];  INC( i );  INC( j )  END;
 		dest[i] := 0X
 	END MakePath;
-	
-	
+
+
 	PROCEDURE ScanPath( VAR pos: LONGINT;  VAR dir: ARRAY OF CHAR );
 	VAR i: LONGINT;  ch: CHAR;
 	BEGIN
@@ -1040,7 +1040,7 @@ TYPE
 
 
 	PROCEDURE GetTempName( CONST finalName: ARRAY OF CHAR;  VAR tempName: Filename );
-	VAR n, i, j, pe, pid: LONGINT; 
+	VAR n, i, j, pe, pid: LONGINT;
 	BEGIN
 		INC(tempno);  n := tempno;  i := 0;  j := 0; pe := 1;
 		WHILE finalName[j] = ' ' DO  INC(j)  END;   (* skip leading spaces *)
@@ -1052,7 +1052,7 @@ TYPE
 		WHILE finalName[j] # 0X DO  tempName[i] := finalName[j];  INC(i);  INC(j)  END;
 		WHILE (i > pe) & (tempName[i-1] # '/') DO  DEC(i)  END;  (* remove filename *)
 		tempName[i] := 0X;
-		Append( tempName, ".tmp." );  
+		Append( tempName, ".tmp." );
 		AppendInt( tempName, n );  Append( tempName, "." );
 		pid := Unix.getpid();
 		AppendInt( tempName, pid )
@@ -1067,7 +1067,7 @@ TYPE
 	END Install;
 
 
-	
+
 	PROCEDURE Initialize;
 	VAR a: ADDRESS;  i: INTEGER;  ch: CHAR;
 	BEGIN
@@ -1077,7 +1077,7 @@ TYPE
 			i := 0;
 			REPEAT  S.GET( a, ch );  INC( a );  cwd[i] := ch;  INC( i )  UNTIL ch = 0X;
 		ELSE
-			(* $PWD not set *)  
+			(* $PWD not set *)
 			a := Unix.getcwd( ADDRESSOF( cwd ), LEN( cwd ) )
 		END;
 		i := 0;
@@ -1096,16 +1096,16 @@ TYPE
 				searchPath[i] := ch;  INC( i )
 			UNTIL ch = 0X;
 		END;
-		tempno := 1;  openfiles := 0;  
-		Modules.InstallTermHandler( Finalization )	
+		tempno := 1;  openfiles := 0;
+		Modules.InstallTermHandler( Finalization )
 	END Initialize;
-	
-	
-	(*!	The system calls open, read and write return -1 when they get interrupted 
+
+
+	(*!	The system calls open, read and write return -1 when they get interrupted
 		by receiving a signal. Possibly through Objects.SuspendActivities() (GC).
 	*)
 	PROCEDURE UnixOpen( path: ADDRESS; flags: SET32; permissions: Unix.mode_t ): LONGINT;
-	VAR 
+	VAR
 		fd, fo, errno: LONGINT;  failure: BOOLEAN;
 	BEGIN
 		failure := FALSE;
@@ -1125,7 +1125,7 @@ TYPE
 		UNTIL (fd >= 0) OR failure;
 		RETURN fd
 	END UnixOpen;
-	
+
 	PROCEDURE UnixRead( fd: LONGINT; buf: ADDRESS; len: SIZE ): SIZE;
 	VAR n: SIZE;
 	BEGIN
@@ -1133,8 +1133,8 @@ TYPE
 			n := Unix.read( fd, buf, len )
 		UNTIL (n >= 0) OR (Unix.errno() # Unix.EINTR);
 		RETURN n
-	END UnixRead;	
-	
+	END UnixRead;
+
 	PROCEDURE UnixWrite( fd: LONGINT; buf: ADDRESS; len: SIZE ): SIZE;
 	VAR n: SIZE;
 	BEGIN
@@ -1142,14 +1142,14 @@ TYPE
 			n := Unix.write( fd, buf, len )
 		UNTIL (n >= 0) OR (Unix.errno() # Unix.EINTR);
 		RETURN n
-	END UnixWrite;	
-	
-	
+	END UnixWrite;
+
+
 	PROCEDURE AddSearchPath*( context: Commands.Context );
 	VAR name: Files.FileName;  i, j: LONGINT;  ch : CHAR;
 	BEGIN
 		IF context.arg.GetString( name ) THEN
-			CleanPath( name ); 
+			CleanPath( name );
 			i := 0;  j := 0;
 			WHILE searchPath[i] # 0X DO  INC( i )  END;
 			searchPath[i] := Separator;  INC( i );
@@ -1159,18 +1159,18 @@ TYPE
 			UNTIL ch = 0X;
 		END;
 	END AddSearchPath;
-	
+
 	PROCEDURE SetWorkPath*( context: Commands.Context );
 	VAR name: Files.FileName; done: BOOLEAN;
 	BEGIN
 		IF context.arg.GetString( name ) THEN
-			ChangeDirectory( name, done ); 
-			IF ~done THEN 
+			ChangeDirectory( name, done );
+			IF ~done THEN
 				context.error.String( "could not change directory to " );  context.error.String( name );  context.error.Ln
 			END
 		END
 	END SetWorkPath;
-	
+
 	PROCEDURE Finalization;
 	VAR ft: Files.FileSystemTable;  i: LONGINT;
 	BEGIN
@@ -1183,7 +1183,7 @@ TYPE
 		collection.Finalize;
 		unixFS.Finalize;
 	END Finalization;
-	
+
 	PROCEDURE DecOpenFiles;
 	BEGIN{EXCLUSIVE}
 		DEC(openfiles);
@@ -1193,13 +1193,13 @@ TYPE
 	BEGIN{EXCLUSIVE}
 		INC(openfiles);
 	END IncOpenFiles;
-	
-	
+
+
 	PROCEDURE WaitClose(no: LONGINT);
 	BEGIN{EXCLUSIVE}
 		AWAIT(openfiles < no);
 	END WaitClose;
-	
+
 
 BEGIN
 	Initialize;

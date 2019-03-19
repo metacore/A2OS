@@ -101,7 +101,7 @@ TYPE
 				KernelLog.String("Clock: ClockMode = ");  KernelLog.Int(clockmode, 1);  KernelLog.Ln
 			END
 		END InitClock;
-		
+
 		PROCEDURE Terminate;
 		BEGIN
 			IF clockmode # 1 THEN

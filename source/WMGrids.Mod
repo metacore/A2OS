@@ -154,7 +154,7 @@ TYPE
 		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
-			
+
 			defaultColWidthC := defaultColWidth.Get();
 			defaultRowHeightC := defaultRowHeight.Get();
 			fixedColsC := fixedCols.Get();

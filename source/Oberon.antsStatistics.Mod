@@ -25,106 +25,106 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 
 
-IMPORT antsMessages, antsArrayObjects, antsCommands, vyBase, vyLongrealVec := vyRealVec, Math := MathL IN A2, antsDirSet, aM := antsMessages;  
+IMPORT antsMessages, antsArrayObjects, antsCommands, vyBase, vyLongrealVec := vyRealVec, Math := MathL IN A2, antsDirSet, aM := antsMessages;
 
-VAR 
-	v1, v2: vyBase.tVector;  t1d, t2d, ph1, ph2: LONGREAL;  wd, hd: LONGINT;  
-	t1, t2: POINTER TO ARRAY OF LONGREAL;  
-	
-	PROCEDURE bin( x: INTEGER ): INTEGER;  
-	BEGIN 
+VAR
+	v1, v2: vyBase.tVector;  t1d, t2d, ph1, ph2: LONGREAL;  wd, hd: LONGINT;
+	t1, t2: POINTER TO ARRAY OF LONGREAL;
+
+	PROCEDURE bin( x: INTEGER ): INTEGER;
+	BEGIN
 		RETURN 2 * x - 1
-	END bin;  
+	END bin;
 
-	PROCEDURE t1t2*;  
-	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  x, y: LONGINT;  t1, t2: LONGREAL;  b: BOOLEAN;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "from=OBJ" );  b := antsCommands.ExpectObjectFromKeyword( l, "from", obj );  
-		WITH obj: antsArrayObjects.tINTEGERObject DO 
-			t1 := 0;  t2 := 0;  
-			FOR y := 0 TO obj.h - 1 DO 
-				FOR x := 0 TO obj.w - 1 DO 
-					t1 := t1 + bin( obj.A[y, x] );  t2 := t2 + bin( obj.A[y, x] ) * bin( obj.A[(y - 1) MOD obj.h, x] );  
-					t2 := t2 + bin( obj.A[y, x] ) * bin( obj.A[(y + 1) MOD obj.h, x] );  
-					t2 := t2 + bin( obj.A[y, x] ) * bin( obj.A[y, (x - 1) MOD obj.w] );  
+	PROCEDURE t1t2*;
+	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  x, y: LONGINT;  t1, t2: LONGREAL;  b: BOOLEAN;
+	BEGIN
+		l := antsCommands.ScanFromPar( "from=OBJ" );  b := antsCommands.ExpectObjectFromKeyword( l, "from", obj );
+		WITH obj: antsArrayObjects.tINTEGERObject DO
+			t1 := 0;  t2 := 0;
+			FOR y := 0 TO obj.h - 1 DO
+				FOR x := 0 TO obj.w - 1 DO
+					t1 := t1 + bin( obj.A[y, x] );  t2 := t2 + bin( obj.A[y, x] ) * bin( obj.A[(y - 1) MOD obj.h, x] );
+					t2 := t2 + bin( obj.A[y, x] ) * bin( obj.A[(y + 1) MOD obj.h, x] );
+					t2 := t2 + bin( obj.A[y, x] ) * bin( obj.A[y, (x - 1) MOD obj.w] );
 					t2 := t2 + bin( obj.A[y, x] ) * bin( obj.A[y, (x + 1) MOD obj.w] )
-				END 
-			END;  
-			antsMessages.SR( " ", t1 / obj.w / obj.h );  antsMessages.SR( " ", t2 / obj.w / obj.h );  antsMessages.S( "" );  
+				END
+			END;
+			antsMessages.SR( " ", t1 / obj.w / obj.h );  antsMessages.SR( " ", t2 / obj.w / obj.h );  antsMessages.S( "" );
 			t1d := t1 / obj.w / obj.h;  t2d := t2 / obj.w / obj.h
-		END 
-	END t1t2;  
+		END
+	END t1t2;
 
-	PROCEDURE Max( x1, x2: LONGREAL ): LONGREAL;  
-	BEGIN 
-		IF x1 > x2 THEN RETURN x1 ELSE RETURN x2 END 
-	END Max;  
+	PROCEDURE Max( x1, x2: LONGREAL ): LONGREAL;
+	BEGIN
+		IF x1 > x2 THEN RETURN x1 ELSE RETURN x2 END
+	END Max;
 
-	PROCEDURE est( VAR A: ARRAY OF LONGREAL ): LONGREAL;  
-	VAR i: LONGINT;  dd: LONGREAL;  a1, a2: LONGREAL;  max, exp, val: LONGREAL;  len: LONGINT;  
-	BEGIN 
-		a1 := A[0];  a2 := A[1];  len := vyLongrealVec.Len( v1 );  
-		ASSERT ( len > 0 );  
-		max := 0;  
-		FOR i := 0 TO len - 1 DO val := wd * hd * ((A[0] - ph1) * t1[i] + (A[1] - ph2) * t2[i]);  max := Max( max, val ) END;  
-		
-		dd := 0;  
-		FOR i := 0 TO len - 1 DO 
+	PROCEDURE est( VAR A: ARRAY OF LONGREAL ): LONGREAL;
+	VAR i: LONGINT;  dd: LONGREAL;  a1, a2: LONGREAL;  max, exp, val: LONGREAL;  len: LONGINT;
+	BEGIN
+		a1 := A[0];  a2 := A[1];  len := vyLongrealVec.Len( v1 );
+		ASSERT ( len > 0 );
+		max := 0;
+		FOR i := 0 TO len - 1 DO val := wd * hd * ((A[0] - ph1) * t1[i] + (A[1] - ph2) * t2[i]);  max := Max( max, val ) END;
+
+		dd := 0;
+		FOR i := 0 TO len - 1 DO
 			val := wd * hd * ((A[0] - ph1) * t1[i] + (A[1] - ph2) * t2[i]);  exp := val - max;  dd := dd + Math.exp( exp )
-		END;  
-		dd := dd / len;  
-		
+		END;
+		dd := dd / len;
+
 		IF dd = 0 THEN RETURN -((A[0] - ph1) * t1d * wd * hd + (A[1] - ph2) * t2d * wd * hd - max)
 		ELSE RETURN -((A[0] - ph1) * t1d * wd * hd + (A[1] - ph2) * t2d * wd * hd - max - Math.ln( dd ))
-		END 
-	END est;  
+		END
+	END est;
 
-	PROCEDURE DefineValues*;  
-	VAR l: antsCommands.tScanList;  obj1, obj2: vyBase.Object;  i: LONGINT;  b: BOOLEAN;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "t1=OBJ t2=OBJ t1d=REAL t2d=REAL wd=INT hd=INT ph1=REAL ph2=REAL" );  b := antsCommands.ExpectObjectFromKeyword( l, "t1", obj1 );  
-		v1 := obj1( vyBase.tVector );  b := antsCommands.ExpectObjectFromKeyword( l, "t2", obj2 );  v2 := obj2( vyBase.tVector );  
-		b := antsCommands.ExpectRealFromKeyword( l, "t1d", t1d );  b := antsCommands.ExpectRealFromKeyword( l, "t2d", t2d );  
-		b := antsCommands.ExpectNumberFromKeyword( l, "wd", wd );  b := antsCommands.ExpectNumberFromKeyword( l, "hd", hd );  
-		b := antsCommands.ExpectRealFromKeyword( l, "ph1", ph1 );  b := antsCommands.ExpectRealFromKeyword( l, "ph2", ph2 );  
-		NEW( t1, vyLongrealVec.Len( v1 ) );  NEW( t2, vyLongrealVec.Len( v2 ) );  
-		FOR i := 0 TO vyLongrealVec.Len( v1 ) - 1 DO t1[i] := vyLongrealVec.Get( v1, i );  t2[i] := vyLongrealVec.Get( v2, i ) END 
-	END DefineValues;  
+	PROCEDURE DefineValues*;
+	VAR l: antsCommands.tScanList;  obj1, obj2: vyBase.Object;  i: LONGINT;  b: BOOLEAN;
+	BEGIN
+		l := antsCommands.ScanFromPar( "t1=OBJ t2=OBJ t1d=REAL t2d=REAL wd=INT hd=INT ph1=REAL ph2=REAL" );  b := antsCommands.ExpectObjectFromKeyword( l, "t1", obj1 );
+		v1 := obj1( vyBase.tVector );  b := antsCommands.ExpectObjectFromKeyword( l, "t2", obj2 );  v2 := obj2( vyBase.tVector );
+		b := antsCommands.ExpectRealFromKeyword( l, "t1d", t1d );  b := antsCommands.ExpectRealFromKeyword( l, "t2d", t2d );
+		b := antsCommands.ExpectNumberFromKeyword( l, "wd", wd );  b := antsCommands.ExpectNumberFromKeyword( l, "hd", hd );
+		b := antsCommands.ExpectRealFromKeyword( l, "ph1", ph1 );  b := antsCommands.ExpectRealFromKeyword( l, "ph2", ph2 );
+		NEW( t1, vyLongrealVec.Len( v1 ) );  NEW( t2, vyLongrealVec.Len( v2 ) );
+		FOR i := 0 TO vyLongrealVec.Len( v1 ) - 1 DO t1[i] := vyLongrealVec.Get( v1, i );  t2[i] := vyLongrealVec.Get( v2, i ) END
+	END DefineValues;
 
-	PROCEDURE Estimate*;  
-	VAR A: POINTER TO ARRAY OF LONGREAL;  
-		ret: LONGREAL;  
-	BEGIN 
-		NEW( A, 2 );  
+	PROCEDURE Estimate*;
+	VAR A: POINTER TO ARRAY OF LONGREAL;
+		ret: LONGREAL;
+	BEGIN
+		NEW( A, 2 );
 
-		A[0] := ph1;  A[1] := ph2;  antsDirSet.EasyMinimize( A^, ret, 1.0D-16, est, FALSE );  antsMessages.SR( "th1", A[0] );  
+		A[0] := ph1;  A[1] := ph2;  antsDirSet.EasyMinimize( A^, ret, 1.0D-16, est, FALSE );  antsMessages.SR( "th1", A[0] );
 		antsMessages.SR( "   th2", A[1] );  antsMessages.S( "" )
-	END Estimate;  
+	END Estimate;
 
-	PROCEDURE WriteOutInter*;  
-	VAR obj: vyBase.Object;  i, j,k : LONGINT;  count, count2: LONGINT;  
-	BEGIN 
-		antsCommands.InitScan( "name=OBJ" );  
-		IF antsCommands.ExpectObject( "name", obj ) THEN 
-			WITH obj: antsArrayObjects.tINTEGERObject DO 
-				count := 0;  count2 := 0;  
-				FOR j := 0 TO obj.h - 1 DO 
-					FOR i := 0 TO obj.w - 1 DO 
-						k := (j - 1) MOD obj.h; 
-						IF obj.A[j, i] = obj.A[k, i] THEN INC( count ) END; 
+	PROCEDURE WriteOutInter*;
+	VAR obj: vyBase.Object;  i, j,k : LONGINT;  count, count2: LONGINT;
+	BEGIN
+		antsCommands.InitScan( "name=OBJ" );
+		IF antsCommands.ExpectObject( "name", obj ) THEN
+			WITH obj: antsArrayObjects.tINTEGERObject DO
+				count := 0;  count2 := 0;
+				FOR j := 0 TO obj.h - 1 DO
+					FOR i := 0 TO obj.w - 1 DO
+						k := (j - 1) MOD obj.h;
+						IF obj.A[j, i] = obj.A[k, i] THEN INC( count ) END;
 						k := (i - 1) MOD obj.h;
-						IF obj.A[j, i] = obj.A[j, k] THEN INC( count ) END;   
+						IF obj.A[j, i] = obj.A[j, k] THEN INC( count ) END;
 						INC( count2, 2 )
-					END 
-				END;  
+					END
+				END;
 					antsMessages.SR( "", count / count2 )
-			END 
-		END 
-	END WriteOutInter;  
- 
+			END
+		END
+	END WriteOutInter;
 
-BEGIN 
-	aM.launch;  
+
+BEGIN
+	aM.launch;
 END antsStatistics.
 
 fofAutomatic.Do

@@ -253,7 +253,7 @@ TYPE
 			END;
 
 			typeDesc:=Modules.TypeOf(window);
-			COPY(caption, s); Strings.AppendChar(s,":"); 
+			COPY(caption, s); Strings.AppendChar(s,":");
 			Strings.Append(s, typeDesc.mod.name); 	Strings.AppendChar(s,".");
 			Strings.Append(s, typeDesc.name);
 
@@ -267,7 +267,7 @@ TYPE
 				AddComponents(window.form, node);
 			END;
 		END AddFormWindow;
-		
+
 		PROCEDURE AddNonFormWindow(window : WMWindowManager.Window; parent : WMTrees.TreeNode);
 		VAR node : WMTrees.TreeNode; string : Strings.String;
 			caption, s,path: ARRAY 256 OF CHAR; typeDesc:Modules.TypeDesc;
@@ -280,7 +280,7 @@ TYPE
 
 			typeDesc:=Modules.TypeOf(window);
 			COPY(caption, s); Files.SplitPath(s, path,caption);
-			Strings.AppendChar(caption,":"); 
+			Strings.AppendChar(caption,":");
 			Strings.Append(caption, typeDesc.mod.name); 	Strings.AppendChar(caption,".");
 			Strings.Append(caption, typeDesc.name);
 
@@ -521,15 +521,15 @@ TYPE
 			NEW(treePanel); treePanel.alignment.Set(WMComponents.AlignLeft);
 			treePanel.bounds.SetWidth(200);
 			AddContent(treePanel);
-			
+
 			NEW(resizer); resizer.alignment.Set(WMComponents.AlignRight);
 			resizer.bounds.SetWidth(5);
 			treePanel.AddContent(resizer);
 
 			NEW(tabPanel); tabPanel.alignment.Set(WMComponents.AlignClient);
 			treePanel.AddContent(tabPanel);
-			
-			
+
+
 
 			NEW(tabControl); tabControl.alignment.Set(WMComponents.AlignTop);
 			tabControl.bounds.SetHeight(20);
@@ -822,10 +822,10 @@ TYPE
 			IncCount;
 			NEW(upperVisible); upperVisible.Set(FALSE);
 			SetContent(CreateF());
-			
+
 			SetTitle(Strings.NewString("Inspector"));
 			SetIcon(WMGraphics.LoadImage("WMInspector.tar://WMInspector.png", TRUE));
-			
+
 		END New;
 
 		PROCEDURE CreateF(): WMComponents.VisualComponent;
@@ -847,7 +847,7 @@ TYPE
 			NEW(lower,FALSE, upperVisible); lower.alignment.Set(WMComponents.AlignClient);
 			lower.fillColor.Set(WMGraphics.White);
 			panel.AddContent(lower);
-			
+
 			RETURN panel
 		END CreateF;
 

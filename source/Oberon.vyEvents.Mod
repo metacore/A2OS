@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* fof, 020624, added DoubleClick Event *)
@@ -40,11 +40,11 @@ CONST
 	EvtCmdPoint* = 9;
 	EvtDoubleClick* = 10;  	(* fof 020624 *)
 	EvtWheelDown*=11;
-	  EvtWheelUp*=12; 
+	  EvtWheelUp*=12;
 	  EvtPointWheelDown*=13;
-	  EvtPointWheelUp*=15; 
+	  EvtPointWheelUp*=15;
 	  EvtSelectWheelDown*=16;
-	  EvtSelectWheelUp*=17; 
+	  EvtSelectWheelUp*=17;
 
 	CdoubleClickTime* = 300;   (* fof 020624 *)
 
@@ -83,27 +83,27 @@ TYPE
 	doubleClickTime*: LONGINT;
 
 PROCEDURE GetWheelEvent*(VAR event: EventMsg; up: BOOLEAN);
-VAR keys: SET; x,y: INTEGER; 
+VAR keys: SET; x,y: INTEGER;
 BEGIN
 	Input.Mouse (keys, x, y);  vyHostDisplay.DrawCursor (x, y);
-	IF keys = {} THEN 
+	IF keys = {} THEN
 		IF up THEN event.gesture := EvtWheelUp
 		ELSE event.gesture := EvtWheelDown
-		END; 
-	ELSIF keys = pointKeys THEN 
+		END;
+	ELSIF keys = pointKeys THEN
 		IF up THEN event.gesture := EvtPointWheelUp
 		ELSE event.gesture := EvtPointWheelDown
-		END; 
-	ELSIF keys = selectKeys THEN 
+		END;
+	ELSIF keys = selectKeys THEN
 		IF up THEN event.gesture := EvtSelectWheelUp
 		ELSE event.gesture := EvtSelectWheelDown
-		END; 
+		END;
 
-	END; 
-	event.x := x; event.y := y; 
+	END;
+	event.x := x; event.y := y;
 	event.time := Oberon.Time();
-	event.keys := keys + {31}; 	
-	context := event; 
+	event.keys := keys + {31};
+	context := event;
 END GetWheelEvent;
 
 
@@ -114,13 +114,13 @@ PROCEDURE GetEvent* (VAR nextEvent: EventMsg);  (*vs 0.0a2 md  20.06.95 09:59:20
 BEGIN
 	Input.Mouse (keys, x, y);  vyHostDisplay.DrawCursor (x, y);
 	IF keys = context.keys THEN nextEvent.gesture := context.gesture
-	ELSIF (context.gesture >= EvtWheelDown) & (context.gesture <= EvtSelectWheelUp) THEN 
+	ELSIF (context.gesture >= EvtWheelDown) & (context.gesture <= EvtSelectWheelUp) THEN
 			nextEvent.gesture := context.gesture;
 	ELSIF keys = {} THEN nextEvent.gesture := EvtEmpty
 	ELSE
 		IF context.gesture = EvtEmpty THEN
 			IF keys = pointKeys THEN nextEvent.gesture :=  EvtLoc;
-				IF (- lastloc + Oberon.Time()) < doubleClickTime THEN nextEvent.gesture := EvtDoubleClick; 
+				IF (- lastloc + Oberon.Time()) < doubleClickTime THEN nextEvent.gesture := EvtDoubleClick;
 					lastloc := Oberon.Time() - 2*doubleClickTime    (* fof 020624 *)
 				ELSE
 					lastloc := Oberon.Time()
@@ -164,5 +164,5 @@ BEGIN
 END ClearCurrentEvent;
 
 BEGIN
-	doubleClickTime := CdoubleClickTime;  lastloc := Oberon.Time() - 2*doubleClickTime; 
+	doubleClickTime := CdoubleClickTime;  lastloc := Oberon.Time() - 2*doubleClickTime;
 END vyEvents.

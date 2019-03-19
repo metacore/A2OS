@@ -298,10 +298,10 @@ VAR
 		| IPv6:
 				FOR i := 0 TO LEN( adr.ipv6Adr ) - 1 BY 2 DO
 					(* simple version *)
-					val := ORD( adr.ipv6Adr[i] )*256;  
+					val := ORD( adr.ipv6Adr[i] )*256;
 					val := val + ORD( adr.ipv6Adr[i + 1] );
 					Strings.IntToHexStr( val, 3, hexToStr );
-					
+
 					(* Delete leading zeros *)
 					WHILE (hexToStr[0] = "0") & (hexToStr[1] # 0X) DO  Strings.Delete( hexToStr, 0, 1 )  END;
 					Strings.Append( string, hexToStr );
@@ -644,4 +644,4 @@ BEGIN
 END IP.
 
 
-			
+

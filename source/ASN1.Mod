@@ -21,46 +21,46 @@ ASN1Context*=2;
 ASN1Private*=3;
 
 (*
-BER_TAG_UNKNOWN 0 
-BER_TAG_BOOLEAN 1 
-BER_TAG_INTEGER 2 
-BER_TAG_BIT_STRING 3 
-BER_TAG_OCTET_STRING 4 
-BER_TAG_NULL 5 
-BER_TAG_OID 6 
-BER_TAG_OBJECT_DESCRIPTOR 7 
-BER_TAG_EXTERNAL 8 
-BER_TAG_REAL 9 
+BER_TAG_UNKNOWN 0
+BER_TAG_BOOLEAN 1
+BER_TAG_INTEGER 2
+BER_TAG_BIT_STRING 3
+BER_TAG_OCTET_STRING 4
+BER_TAG_NULL 5
+BER_TAG_OID 6
+BER_TAG_OBJECT_DESCRIPTOR 7
+BER_TAG_EXTERNAL 8
+BER_TAG_REAL 9
 BER_TAG_ENUMERATED 10
-  12 to 15 are reserved for future versions of the recommendation 
+  12 to 15 are reserved for future versions of the recommendation
 BER_TAG_PKIX_UTF8_STRING 12
-BER_TAG_SEQUENCE 16 
+BER_TAG_SEQUENCE 16
 BER_TAG_SET 17
-BER_TAG_NUMERIC_STRING 18 
-BER_TAG_PRINTABLE_STRING 19 
-BER_TAG_T61_STRING 20 
-BER_TAG_TELETEX_STRING BER_TAG_T61_STRING 
-BER_TAG_VIDEOTEX_STRING 21 
+BER_TAG_NUMERIC_STRING 18
+BER_TAG_PRINTABLE_STRING 19
+BER_TAG_T61_STRING 20
+BER_TAG_TELETEX_STRING BER_TAG_T61_STRING
+BER_TAG_VIDEOTEX_STRING 21
 BER_TAG_IA5_STRING 22
-BER_TAG_UTC_TIME 23 
+BER_TAG_UTC_TIME 23
 BER_TAG_GENERALIZED_TIME 24
-BER_TAG_GRAPHIC_STRING 25 
-BER_TAG_ISO646_STRING 26 
-BER_TAG_GENERAL_STRING 27 
+BER_TAG_GRAPHIC_STRING 25
+BER_TAG_ISO646_STRING 26
+BER_TAG_GENERAL_STRING 27
 BER_TAG_VISIBLE_STRING BER_TAG_ISO646_STRING
- 28 - are reserved for future versions of the recommendation 
-BER_TAG_PKIX_UNIVERSAL_STRING 28 
-BER_TAG_PKIX_BMP_STRING 30 
+ 28 - are reserved for future versions of the recommendation
+BER_TAG_PKIX_UNIVERSAL_STRING 28
+BER_TAG_PKIX_BMP_STRING 30
 *)
 
 Boolean* =1H;
 Integer* =2H;
 BitString* =3H;
 (*
-BIT STRING: BER encoding. Primitive or constructed. 
-In a primitive encoding, the first contents octet gives the number of bits by which the length of the bit string 
-is less than the next multiple of eight (this is called the "number of unused bits"). 
-The second and following contents octets give the value of the bit string, converted to an octet string. 
+BIT STRING: BER encoding. Primitive or constructed.
+In a primitive encoding, the first contents octet gives the number of bits by which the length of the bit string
+is less than the next multiple of eight (this is called the "number of unused bits").
+The second and following contents octets give the value of the bit string, converted to an octet string.
 The conversion process is as follows:
      1.   The bit string is padded after the last bit with zero to seven bits of any value to make the length
           of the bit string a multiple of eight. If the  length of the bit string is a multiple of eight
@@ -120,20 +120,20 @@ TYPE Triplet* = OBJECT (* todo: 1 Byte tags are sufficient for certificates, but
 				unusedbits*:LONGINT;
 				constructed*:BOOLEAN;
 				definite*: BOOLEAN;
-				
+
 				bvalue*:BOOLEAN;
 				ivalue*:LONGINT;
 				svalue*:POINTER TO ARRAY OF CHAR;
-				
+
 				child*, curchild:Triplet;
 				next*:Triplet;
 				level*:LONGINT; (*pretty print*)
-				
+
 			PROCEDURE AppendChild*(t:Triplet);
 			BEGIN
 				IF child=NIL THEN child:=t; curchild:=t ELSE curchild.next:=t; curchild:=t; END;
 			END AppendChild;
-			
+
 			PROCEDURE Print*(w: Streams.Writer);
 			VAR i:LONGINT;
 			BEGIN
@@ -141,7 +141,7 @@ TYPE Triplet* = OBJECT (* todo: 1 Byte tags are sufficient for certificates, but
 				FOR i:=0 TO level-1 DO w.String("- "); END;
 				w.Hex(tag,4); w.String("H[");
 				w.Int(length,0); w.String("]");
-				CASE tag OF 
+				CASE tag OF
 				| Boolean: IF bvalue THEN w.String("true") ELSE w.String("false") END;
 				| Integer: IF length<=4 THEN w.Int(ivalue,0);ELSE PrintHexString(w,svalue^) END;
 				| Oid: PrintNumericString(w, svalue^); w.String("  "); PrintHexString(w, svalue^);
@@ -149,22 +149,22 @@ TYPE Triplet* = OBJECT (* todo: 1 Byte tags are sufficient for certificates, but
 				| UTCTime: PrintString(w,svalue^);
 				| BitString: w.Char("("); w.Int(unusedbits,0); w.Char(")"); IF svalue#NIL THEN PrintHexString(w, svalue^) END;
 				| Sequence, Set:
-				ELSE 
+				ELSE
 					IF svalue#NIL THEN PrintHexString(w,svalue^);END;
 				END;
 				w.Ln;
 			END Print;
 		END Triplet;
-		
+
 VAR log*: Streams.Writer;
-		
+
 PROCEDURE PrintHexString*(w:Streams.Writer; CONST s: ARRAY OF CHAR);
 CONST hex="0123456789ABCDEF";
 VAR i:LONGINT; c:CHAR;
 BEGIN
 	FOR i:=0 TO LEN(s)-1 DO
 		c:=s[i];
-		w.Char(hex[ORD(c) DIV 16]); 
+		w.Char(hex[ORD(c) DIV 16]);
 		w.Char(hex[ORD(c) MOD 16]);
 		w.Char(" ");
 	END;
@@ -210,7 +210,7 @@ BEGIN
 	IF ORD(c)<128 THEN t.length:=ORD(c); t.definite:=TRUE;
 	ELSIF ORD(c)=128 THEN t.definite:=FALSE;
 	(* to do: class=0, length=0 is used to encode end of bit stream of undefined length, see ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc*)
-	ELSE 
+	ELSE
 		lengthbytes:= ORD(c) MOD 128; t.definite:=TRUE;
 		FOR i:=0 TO lengthbytes-1 DO (* read all length bytes here ...*)
 			t.length:=256*t.length;
@@ -220,30 +220,30 @@ BEGIN
 	END;
 	CASE t.tag OF
 	| Boolean: reader.Char(c);INC(len); t.bvalue:=c#0X;
-	| Integer: 
-		IF t.length<=4 THEN 
-			 NEW(t.svalue,t.length); 
-			 FOR i:=0 TO t.length-1 DO 
+	| Integer:
+		IF t.length<=4 THEN
+			 NEW(t.svalue,t.length);
+			 FOR i:=0 TO t.length-1 DO
 					t.ivalue:=256*t.ivalue;
 					reader.Char(c); INC(len);
 					t.svalue[i]:=c;
 					t.ivalue:=t.ivalue+ORD(c);
 			END;
 		ELSE
-			NEW(t.svalue,t.length); 
+			NEW(t.svalue,t.length);
 			reader.Bytes(t.svalue^,0,t.length,len0); len:=len+len0;
 		END;
-	| BitString: 
+	| BitString:
 		reader.Char(c); t.unusedbits:=ORD(c); INC(len);
 		IF FALSE & (ORD(reader.Peek())=30H) (*rsa bit string 1024b*) THEN (*unreliable hack. to do: pass info about recursive bitstring to child*)
 			IF Trace & (log#NIL) THEN log.String("(BitSRec  "); log.Int(len,0); log.String(")");t.Print(log);  END;
 			t.child:=Decode(reader,level+1, len0);  len:=len+len0;
 		ELSE
-			NEW(t.svalue,t.length-1); 
+			NEW(t.svalue,t.length-1);
 			IF t.length>0 THEN reader.Bytes(t.svalue^,0,t.length-1,len0); len:=len+len0; END;
 		END;
 	| String:
-		NEW(t.svalue,t.length); 
+		NEW(t.svalue,t.length);
 		reader.Bytes(t.svalue^,0,t.length,len0);len:=len+len0;
 	| Set:
 		IF Trace & (log#NIL) THEN log.String("(Set  "); log.Int(len,0); log.String("+)"); t.Print(log); END; (*bytes not including body*)
@@ -256,13 +256,13 @@ BEGIN
 			t.AppendChild(t1);
 		END;
 	ELSE
-		NEW(t.svalue,t.length); 
+		NEW(t.svalue,t.length);
 		IF t.length>0 THEN reader.Bytes(t.svalue^,0,t.length,len0); len:=len+len0; END;
 	END;
 	IF Trace & (log#NIL) THEN
 		CASE t.tag OF
 		| Integer: log.String("(Integer  "); log.Int(len,4); log.Char(")"); t.Print(log);(*bytes including header*)
-		| BitString: 
+		| BitString:
 			IF t.constructed THEN log.String("(constrBitString "); ELSE log.String("(BitString "); END;
 			log.Int(len,4); log.Char(")"); t.Print(log); (*bytes including header*)
 		| String: log.String("(String   ");log.Int(len,4); log.Char(")"); t.Print(log);(*bytes including header*)
@@ -270,7 +270,7 @@ BEGIN
 		| Oid: log.String("(OID");log.Int(len,4); log.Char(")"); t.Print(log);(*bytes including header*)
 		| PrintableString: log.String("(Printable");log.Int(len,4); log.Char(")"); t.Print(log);(*bytes including header*)
 		| UTCTime: log.String("(UTCTime");log.Int(len,4); log.Char(")"); t.Print(log);(*bytes including header*)
-		| Set: 
+		| Set:
 		| Sequence:
 		ELSE log.String("(t.tag="); log.Hex(t.tag,4);log.Int(len,4); log.Char(")"); t.Print(log); (*bytes including header*)
 		END;

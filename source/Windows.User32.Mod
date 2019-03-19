@@ -5,7 +5,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 
 	(** This module defines all the Win32 User32 APIs used by Oberon. *)
 
-	TYPE 
+	TYPE
 		DWORD = Kernel32.DWORD;
 	CONST
 		(** window messages *)
@@ -185,7 +185,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		END;
 
 		(** The MSG structure contains message information from a thread's message queue. *)
-		Msg* = RECORD  			
+		Msg* = RECORD
 			hwnd*: HWND;
 			message*: LONGINT;
 			wParam*: WParam;

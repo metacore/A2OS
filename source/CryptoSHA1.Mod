@@ -15,8 +15,8 @@ TYPE
 			Nl, Nh: LONGINT;
 			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
 			cn: LONGINT	(* number of chars in data *)
-			
-			
+
+
 		PROCEDURE &Init*;
 		BEGIN
 			SetNameAndSize( "sha1", 20 );
@@ -35,8 +35,8 @@ TYPE
 			cn := 0;
 			initialized := TRUE
 		END Initialize;
-		
-		
+
+
 		PROCEDURE HashContextBlock;
 		BEGIN
 			HashBlock( hash, cdata, 0 );  cn := 0
@@ -65,7 +65,7 @@ TYPE
 			END;
 
 			n := 0;
-			WHILE n < len DIV BlockSize  DO  
+			WHILE n < len DIV BlockSize  DO
 				HashBlock( hash, data, pos );  INC( n ); INC( pos, BlockSize )
 			END;
 			len := len MOD BlockSize;
@@ -122,7 +122,7 @@ TYPE
 
 	PROCEDURE -tr0019( a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR  f: LONGINT; x: SET32 );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + 5A827999H + ROT( a, 5 ) + 
+		f := S.VAL( LONGINT, x ) + e + 5A827999H + ROT( a, 5 ) +
 			(*F1( b, c, d );*)
 			S.VAL( LONGINT, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
@@ -130,7 +130,7 @@ TYPE
 
 	PROCEDURE -tr2039( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32 );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + 6ED9EBA1H + ROT( a, 5 ) + 
+		f := S.VAL( LONGINT, x ) + e + 6ED9EBA1H + ROT( a, 5 ) +
 			(*F2( b, c, d );*)
 			S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
@@ -138,7 +138,7 @@ TYPE
 
 	PROCEDURE -tr4059( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32);
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + LONGINT(8F1BBCDCH) + ROT( a, 5 ) + 
+		f := S.VAL( LONGINT, x ) + e + LONGINT(8F1BBCDCH) + ROT( a, 5 ) +
 			(*F3( b, c, d );*)
 			S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) );
 		b := ROT( b, 30 )
@@ -146,14 +146,14 @@ TYPE
 
 	PROCEDURE -tr6079( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32 );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + LONGINT(0CA62C1D6H) + ROT( a, 5 ) + 
+		f := S.VAL( LONGINT, x ) + e + LONGINT(0CA62C1D6H) + ROT( a, 5 ) +
 			(*F2( b, c, d );*)
 			S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
 	END tr6079;
 
 	PROCEDURE HashBlock( VAR state: State;  CONST buf: ARRAY OF CHAR;  pos: LONGINT );
-	VAR 
+	VAR
 		A, B, C, D, E, T: LONGINT;
 		x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, xa, xb, xc, xd, xe, xf: SET32;
 	BEGIN
@@ -244,7 +244,7 @@ TYPE
 		xe := ROT( xe / x0 / x6 / xb, 1 );		tr6079( A, B, C, D, E, T, xe );
 		xf  := ROT( xf  / x1 / x7 / xc, 1 );		tr6079( T, A, B, C, D, E, xf  );
 
-		INC( state[0], E );  INC( state[1], T );  INC( state[2], A );  
+		INC( state[0], E );  INC( state[1], T );  INC( state[2], A );
 		INC( state[3], B );  INC( state[4], C );
 	END HashBlock;
 

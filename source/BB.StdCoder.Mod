@@ -3,7 +3,7 @@ MODULE StdCoder; (** AUTHOR "GF"; PURPOSE "Extract sources from BlackBox standar
 IMPORT Streams, Commands, Files, Strings, Log := KernelLog;
 
 CONST
-	Tag = "StdCoder.Decode";	
+	Tag = "StdCoder.Decode";
 	Ok = Streams.Ok;
 	OldVersion = 0; ThisVersion = 1;
 	View = 1; File = 2; List = 3;
@@ -11,15 +11,15 @@ CONST
 
 TYPE
 	FileType = ARRAY 16 OF CHAR;
-	
+
 	FileList = POINTER TO RECORD
 		next: FileList;
 		oberonSource: BOOLEAN;
 		oberonDoku: BOOLEAN;
 		name: Files.FileName
 	END;
-	
-	
+
+
 VAR
 	code: ARRAY 64 OF CHAR;
 	revCode: ARRAY 256 OF SHORTINT;
@@ -29,18 +29,18 @@ VAR
 	BEGIN
 		Log.String( "### StdCoder.Decode: " );
 		CASE n OF
-		|  1: Log.String("bad characters or EOT" ); 
-		|  2: Log.String("checksum error" ); 
-		|  3: Log.String("incompatible version" ); 
-		|  4: Log.String("filing error" ); 
-		|  5: Log.String("directory ^0 not found" ); 
-		|  6: Log.String("file ^0 not found" ); 
-		|  7: Log.String("illegal path" ); 
-		|  8: Log.String("bad tag" ); 
-		|  9: Log.String("disk write protected" ); 
-		| 10: Log.String("io error" ); 
+		|  1: Log.String("bad characters or EOT" );
+		|  2: Log.String("checksum error" );
+		|  3: Log.String("incompatible version" );
+		|  4: Log.String("filing error" );
+		|  5: Log.String("directory ^0 not found" );
+		|  6: Log.String("file ^0 not found" );
+		|  7: Log.String("illegal path" );
+		|  8: Log.String("bad tag" );
+		|  9: Log.String("disk write protected" );
+		| 10: Log.String("io error" );
 		END;
-		Log.Ln	
+		Log.Ln
 	END ShowError;
 
 
@@ -54,8 +54,8 @@ VAR
 		IF res # 0 THEN  x := 0  END;
 		RETURN x
 	END read;
-	
-	
+
+
 	PROCEDURE peeknext( r: Streams.Reader ): CHAR;
 	VAR ch: CHAR;
 	BEGIN
@@ -63,9 +63,9 @@ VAR
 	END peeknext;
 
 
-	PROCEDURE ReadHeader(		r: Streams.Reader; 
+	PROCEDURE ReadHeader(		r: Streams.Reader;
 									VAR res: WORD;  VAR name: ARRAY OF CHAR;  VAR type: LONGINT );
-	VAR 
+	VAR
 		x, bits, i: LONGINT; ch: CHAR; tag: ARRAY 16 OF CHAR;
 	BEGIN
 		tag := Tag; i := 0;  res := 0;
@@ -78,11 +78,11 @@ VAR
 		IF res = 0 THEN
 			i := 0;  bits := 0;  x := 0;
 			REPEAT
-				WHILE (res = 0) & (bits < 8) DO 
-					INC( x, ASH( read( r, res ), bits ) ); INC( bits, 6 ) 
+				WHILE (res = 0) & (bits < 8) DO
+					INC( x, ASH( read( r, res ), bits ) ); INC( bits, 6 )
 				END;
 				IF res = 0 THEN
-					ch := CHR(x MOD 256);  x := x DIV 256;  DEC( bits, 8 ); 
+					ch := CHR(x MOD 256);  x := x DIV 256;  DEC( bits, 8 );
 					name[i] := ch; INC(i);
 				END
 			UNTIL (res # 0) OR (ch = 0X);
@@ -93,24 +93,24 @@ VAR
 				END
 			END
 		ELSE  res := 8
-		END 
+		END
 	END ReadHeader;
-	
-	
+
+
 	PROCEDURE SkipFileType(r: Streams.Reader; VAR res: WORD ): BOOLEAN;
-	VAR x, bits, i: LONGINT; ch: CHAR;  ftype: FileType; 
+	VAR x, bits, i: LONGINT; ch: CHAR;  ftype: FileType;
 	BEGIN
 		res := 0;  i := 0; bits := 0;  x := 0;
 		REPEAT
 			WHILE (res = 0) & (bits < 8) DO  INC( x, ASH( read( r, res ), bits ) ); INC( bits, 6 )  END;
-			IF res = 0 THEN  
-				ch := CHR( x MOD 256 );  x := x DIV 256;  DEC( bits, 8 );  ftype[i] := ch;  INC( i )  
+			IF res = 0 THEN
+				ch := CHR( x MOD 256 );  x := x DIV 256;  DEC( bits, 8 );  ftype[i] := ch;  INC( i )
 			END
 		UNTIL (res # 0) OR (ch = 0X);
 		RETURN res = 0
 	END SkipFileType;
-	
-	
+
+
 	PROCEDURE ReadInteger( r: Streams.Reader; VAR res: WORD ): LONGINT;
 	VAR bits, val: LONGINT;
 	BEGIN
@@ -118,10 +118,10 @@ VAR
 		REPEAT  val := val + ASH( read( r, res ), bits ); INC( bits, 6 )  UNTIL (res # 0) OR (bits >= 32);
 		RETURN val
 	END ReadInteger;
-	
-	
+
+
 	PROCEDURE ReadFile( r: Streams.Reader; VAR res: WORD ): Files.File;
-	VAR 
+	VAR
 		hash, x, bits, i, len, sum, s: LONGINT; byte: SHORTINT;  f: Files.File;  w: Files.Writer;
 	BEGIN
 		f := Files.New( "" );  Files.OpenWriter( w, f, 0 );
@@ -137,11 +137,11 @@ VAR
 				byte := SHORTINT( i );  x := x DIV 256;  DEC( bits, 8 );
 				table[hash] := byte
 			ELSE  (* correct prediction *)
-				byte := table[hash];  x := x DIV 2;  DEC( bits )	
+				byte := table[hash];  x := x DIV 2;  DEC( bits )
 			END;
 			hash := (16 * hash + byte MOD 256) MOD N;
 			sum := (sum + byte MOD 256) MOD (16 * 1024);
-			
+
 			w.Char( CHR( byte ) );  DEC( len );
 		END;
 		IF res = 0 THEN
@@ -151,11 +151,11 @@ VAR
 		w.Update;
 		RETURN f
 	END ReadFile;
-	
-	
+
+
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR ): Files.File;
 	VAR
-		f: Files.File;  res: WORD;  name2: Files.FileName; 
+		f: Files.File;  res: WORD;  name2: Files.FileName;
 	BEGIN
 		f := Files.Old( name );
 		IF f # NIL THEN
@@ -164,26 +164,26 @@ VAR
 		END;
 		RETURN Files.New( name );
 	END NewFile;
-	
-	
+
+
 	PROCEDURE CutSuffixODC( VAR n: Files.FileName );
 	VAR i: LONGINT
 	BEGIN
 		i := 0;  WHILE n[i] # 0X DO  INC(i)  END;
-		IF (i > 4) & (n[i -4] = ".") & (CAP(n[i-3]) = "O") & (CAP(n[i-2]) = "D") & (CAP(n[i-1]) = "C") THEN 
+		IF (i > 4) & (n[i -4] = ".") & (CAP(n[i-3]) = "O") & (CAP(n[i-2]) = "D") & (CAP(n[i-1]) = "C") THEN
 			n[i - 4] := 0X
 		END;
 	END CutSuffixODC;
-	
-	
+
+
 	PROCEDURE PositionReader( VAR r: Files.Reader; str: ARRAY OF CHAR );
-	VAR pos, i: LONGINT; c: CHAR; 
+	VAR pos, i: LONGINT; c: CHAR;
 	BEGIN
 		pos := 0;
 		LOOP
 			r.SetPos( pos );
 			REPEAT r.Char( c ); INC( pos )  UNTIL (c = str[0]) OR (r.res # Ok);
-			i := 1; 
+			i := 1;
 			LOOP
 				IF r.res = Ok THEN  r.Char( c )  ELSE (*failed*) r.SetPos( 0 );  RETURN  END;
 				IF c # str[i] THEN  (*try again*)  EXIT  END;
@@ -192,26 +192,26 @@ VAR
 			END
 		END
 	END PositionReader;
-	
-	
+
+
 	PROCEDURE ExtractAscii( src: Files.File;  CONST startstring, destname: ARRAY OF CHAR );
 	CONST CR = 0DX; LF = 0AX;  HT = 09X;
 	VAR r: Files.Reader; w: Files.Writer; destfile: Files.File; ch: CHAR;
 	BEGIN
-		Log.String( "extract: " ); Log.String( destname ); Log.Ln; 
+		Log.String( "extract: " ); Log.String( destname ); Log.Ln;
 		destfile := NewFile( destname );  Files.OpenWriter( w, destfile, 0 );
-		Files.OpenReader( r, src, 0 );  PositionReader( r, startstring );  
+		Files.OpenReader( r, src, 0 );  PositionReader( r, startstring );
 		r.Char( ch );
 		REPEAT
 			IF (ch = CR) OR (ch = LF) THEN  w.Ln
-			ELSIF ((ch >= ' ') & (ch <= '~')) OR (ch = HT) THEN  w.Char( ch ) 
+			ELSIF ((ch >= ' ') & (ch <= '~')) OR (ch = HT) THEN  w.Char( ch )
 			END;
 			r.Char( ch )
 		UNTIL r.res # Ok;
 		w.Update;  Files.Register( destfile )
 	END ExtractAscii;
-	
-	
+
+
 	PROCEDURE DecodeFile( r: Streams.Reader; CONST name: Files.FileName );
 	VAR res: WORD; f: Files.File;
 	BEGIN
@@ -223,10 +223,10 @@ VAR
 		ELSE  ShowError( res )
 		END
 	END DecodeFile;
-	
-	
+
+
 	PROCEDURE DecodeFileList ( r: Streams.Reader; VAR res: WORD );
-	VAR 
+	VAR
 		i: LONGINT; p, files: FileList; ch: CHAR;
 		f: Files.File; fr: Files.Reader; path: Files.FileName;
 		sa: Strings.StringArray; suffix: ARRAY 16 OF CHAR;
@@ -257,10 +257,10 @@ VAR
 					ELSE res := 1
 					END
 				END;
-				p := files; 
+				p := files;
 				WHILE (res = 0) & (p # NIL) DO
 					IF SkipFileType( r, res ) THEN
-						f := ReadFile( r, res ); 
+						f := ReadFile( r, res );
 						IF res = 0 THEN
 							IF p.oberonSource THEN  ExtractAscii( f, "MODULE", p.name )
 							ELSIF p.oberonDoku THEN  ExtractAscii( f, "DEFINITION", p.name )
@@ -273,12 +273,12 @@ VAR
 			END
 		END
 	END DecodeFileList;
-	
-	
+
+
 	PROCEDURE Decode* ( c: Commands.Context );
 	VAR
 		name: Files.FileName;
-		res, type: LONGINT; 
+		res, type: LONGINT;
 		r: Streams.Reader;
 	BEGIN
 		r := c.arg;
@@ -300,7 +300,7 @@ VAR
 	VAR i: SHORTINT;  j: LONGINT;
 	BEGIN
 		FOR j := 0 TO 255 DO  revCode[j] := -1  END;
-		code[0] := ".";  revCode[ORD(".")] := 0; 
+		code[0] := ".";  revCode[ORD(".")] := 0;
 		code[1] := ",";  revCode[ORD(",")] := 1;
 		i := 2;  j := ORD("0");
 		WHILE j <= ORD("9") DO code[i] := CHR(j); revCode[j] := i; INC(i); INC(j) END;
@@ -309,8 +309,8 @@ VAR
 		j := ORD("a");
 		WHILE j <= ORD("z") DO code[i] := CHR(j); revCode[j] := i; INC(i); INC(j) END;
 		ASSERT(i = 64, 60)
-	END InitCodes;		
-		
+	END InitCodes;
+
 BEGIN
 	InitCodes
 END StdCoder.

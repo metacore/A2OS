@@ -134,7 +134,7 @@ END Hex;
 	If w < 0, the w least significant hex digits of x are written (potentially including leading zeros)
 *)
 PROCEDURE Hex*( x: HUGEINT;  w: WORD );
-VAR filler: CHAR; i, maxi, y: WORD;  buf: ARRAY 20 OF CHAR; 
+VAR filler: CHAR; i, maxi, y: WORD;  buf: ARRAY 20 OF CHAR;
 BEGIN
 	IF w < 0 THEN  filler := '0';  w := -w;  maxi := w  ELSE  filler := ' ';  maxi := 16  END;
 	i := 0;
@@ -151,7 +151,7 @@ END Hex;
 (** Write "x" as a hexadecimal address. *)
 
 PROCEDURE Address* (x: ADDRESS);
-BEGIN 
+BEGIN
 	Hex(x, -SIZEOF(ADDRESS)*2)
 END Address;
 

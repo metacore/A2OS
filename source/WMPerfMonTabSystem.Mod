@@ -104,7 +104,7 @@ TYPE
 			w.Reset;
 			w.String("Sweep phase: "); w.Int(Heaps.NgcSweeps, 0); w.String(" calls to sweep in ");
 			Plugins.MsToString(Plugins.CyclesToMs(Heaps.NgcSweepTime, clockrate), nbr); w.String(nbr);
-			w.String(" (max "); 
+			w.String(" (max ");
 			Plugins.MsToString(Plugins.CyclesToMs(Heaps.NgcSweepMax, clockrate), nbr); w.String(nbr);
 			w.String(")");
 			w.Get(string);

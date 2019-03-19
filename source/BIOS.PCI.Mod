@@ -91,11 +91,11 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 						IF idx = index THEN
 							busNr := pci.bus; devNr := pci.device; fktNr := pci.function;
 							IF debug THEN
-								KernelLog.String("FindPCIDevice "); 
-								KernelLog.Int(devId,1); KernelLog.String(", "); 
-								KernelLog.Int(vendId,1); KernelLog.String(","); 
+								KernelLog.String("FindPCIDevice ");
+								KernelLog.Int(devId,1); KernelLog.String(", ");
+								KernelLog.Int(vendId,1); KernelLog.String(",");
 								KernelLog.Int(idx,1);
-								KernelLog.String(" found."); KernelLog.Ln; 
+								KernelLog.String(" found."); KernelLog.Ln;
 							END;
 							RETURN Done
 						ELSE INC(index)
@@ -124,9 +124,9 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 						IF idx = index THEN
 							busNr := pci.bus; devNr := pci.device; fktNr := pci.function;
 							IF debug THEN
-								KernelLog.String("FindPCIClassCode "); 
+								KernelLog.String("FindPCIClassCode ");
 								KernelLog.Int(classCode,1); KernelLog.String(","); KernelLog.Int(idx,1);
-								KernelLog.String(" found."); KernelLog.Ln; 
+								KernelLog.String(" found."); KernelLog.Ln;
 							END;
 							RETURN Done
 						ELSE INC(index)
@@ -465,7 +465,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		ELSE multifunction := TRUE
 		END;
 		INC(pci.function);
-		
+
 		IF ~multifunction OR (pci.function >= 8) THEN
 			pci.function := 0;
 			INC(pci.device);
@@ -613,7 +613,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 						KernelLog.String(" class="); KernelLog.Int(class,1);
 						KernelLog.String(" subclass="); KernelLog.Int(subclass,1);
 						KernelLog.String(" api="); KernelLog.Int(api,1);
-						KernelLog.String(" classCode= "); KernelLog.Address(r8 DIV 100H MOD 1000000H); 
+						KernelLog.String(" classCode= "); KernelLog.Address(r8 DIV 100H MOD 1000000H);
 						KernelLog.String(" : ");
 						DisplayDeviceClass(class, subclass);
 						KernelLog.Ln;
@@ -642,10 +642,10 @@ BEGIN
 	Show;
 END PCI.
 
-useful sources: 
+useful sources:
 
 http://tldp.org/LDP/tlk/dd/pci.html
-http://my.execpc.com/~geezer/code/pci.c 
+http://my.execpc.com/~geezer/code/pci.c
 
 
 (**

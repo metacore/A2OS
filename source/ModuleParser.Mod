@@ -622,14 +622,14 @@ TYPE
 		VAR
 			identDef: IdentDef;
 			identList: IdentList;
-			
+
 			PROCEDURE Initializer;
 			VAR expr: InfoItem;
 			BEGIN
 				Check (FoxScanner.Becomes); NEW (expr);
 				ConstExprP(FoxScanner.Colon, FoxScanner.Comma, expr);
 			END Initializer;
-			
+
 		BEGIN
 			(*SysFlag;*)
 			NEW(var.identList, var);

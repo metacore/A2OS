@@ -9,8 +9,8 @@ MODULE WMVT100; (* ejz,  ph *)
 		Left = 0; Right = 2;
 		Underscore = 0; Blink = 1;
 		CursorKeyMode = 0; AppKeypadMode = 1; AutoWrapMode = 2; WindowSize = 31;
-		
-	TYPE 
+
+	TYPE
 		KillerMsg=OBJECT END KillerMsg;
 
 	TYPE
@@ -36,7 +36,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END Do;
 
-			PROCEDURE SB*(option: CHAR); 
+			PROCEDURE SB*(option: CHAR);
 				VAR ch: CHAR;
 			BEGIN
 				IF (option = Telnet.OptTerminalType) & (R.Peek() = 01X) THEN (* SEND *)
@@ -120,7 +120,7 @@ MODULE WMVT100; (* ejz,  ph *)
 								END
 						|"m": frame.SetAttributes(par, n);done := TRUE
 					ELSE
-					END; 
+					END;
 					IF ~done THEN
 						KernelLog.String("ESC [ ");
 						i := 0;
@@ -316,10 +316,10 @@ MODULE WMVT100; (* ejz,  ph *)
 			END UpdateAll;
 
 
-			
+
 			PROCEDURE writeChars(VAR buf: ARRAY OF LONGINT; n: LONGINT);
 				VAR l: Line; i, ofs: LONGINT; wrap: BOOLEAN;
-			BEGIN 
+			BEGIN
 				wrap := FALSE;
 				l := cursor.line; ofs := cursor.ofs; i := 0;
 				LOOP
@@ -359,7 +359,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 			PROCEDURE goto(col, row: LONGINT; scroll: BOOLEAN);
 				VAR l: Line; y, b: LONGINT;
-			BEGIN 
+			BEGIN
 				(* top = row 0, < 0 => scroll up *)
 				ASSERT(row >= 0);
 				IF col < 0 THEN col := 0 ELSIF col >= cols THEN col := cols-1 END;
@@ -440,7 +440,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				attr.bg := WMGraphics.RGBAToColor(255, 255, 255, 255);
 				attr.fg := WMGraphics.RGBAToColor(0, 0, 0, 255)
 			END NewAttr;
-			
+
 
 			PROCEDURE Bright;
 				VAR style: SET;
@@ -742,7 +742,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				IF ~(Inputs.Release IN flags) & hasFocus THEN
 					IF (keySym DIV 256) = 0 THEN
 						C.W.Char(CHR(keySym)); C.W.Update();
-						
+
 						IF doEcho THEN
 							col:=attr.fg;
 							attr.fg:=WMGraphics.Red;
@@ -750,7 +750,7 @@ MODULE WMVT100; (* ejz,  ph *)
 							writeChars(echo,1);
 							attr.fg:=col;
 						END;
-						
+
 					ELSIF (keySym DIV 256) = 0FFH THEN
 						CASE keySym OF
 							0FF51H .. 0FF54H: CursorKey(keySym)
@@ -758,12 +758,12 @@ MODULE WMVT100; (* ejz,  ph *)
 							|0FF57H: (* End *)
 							|0FFFFH: (* Delete *)
 							|0FF08H: C.W.Char(07FX); C.W.Update()
-							|0FF0DH: 
+							|0FF0DH:
 								C.W.Char(0DX); C.W.Char(0AX);	C.W.Update(); (* insertion of 0AX after 0DX is not strictly raw TCP ! *)
 								IF doEcho THEN goto(GetCol(), GetRow()+1, TRUE); goto(0, GetRow(), TRUE) END; (* if you do it in one step, the color is not currently handled well*)
 							|0FF1BH: C.W.Char(01BX); C.W.Update()
-							|0FF8DH: 
-								IF AppKeypadMode IN C.mode THEN 
+							|0FF8DH:
+								IF AppKeypadMode IN C.mode THEN
 										C.W.Char(01BX); C.W.Char("O"); C.W.Char("M")
 								ELSE	C.W.Char(0DX); C.W.Char(0AX)
 								END;
@@ -837,7 +837,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			PROCEDURE &New*(C: Connection; cols, rows: LONGINT);
 				VAR i: LONGINT;
 			BEGIN
-				Init(); 
+				Init();
 				SetNameAsString(Strings.NewString("VT100Frame"));
 				(*SetGenerator("WMVT100.GenFrame");*)
 				SELF.C := C;
@@ -857,15 +857,15 @@ MODULE WMVT100; (* ejz,  ph *)
 				popup.Add("Paste", ClickHandler);
 				doEcho:=TRUE;
 			END New;
-			
-			
+
+
 		END Frame;
 
 		Window = OBJECT (WMComponents.FormWindow)
 			VAR
 				panel: WMStandardComponents.Panel;
 				frame: Frame;
-				
+
 
 
 			PROCEDURE &New*(C: Connection);
@@ -880,7 +880,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				manager := WMWindowManager.GetDefaultManager();
 				manager.Add(100, 100, SELF, {WMWindowManager.FlagFrame, WMWindowManager.FlagClose})
 			END New;
-			
+
 			PROCEDURE Handle*(VAR x: WMMessages.Message);
 			BEGIN
 				IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) & (x.ext IS KillerMsg) THEN Close
@@ -895,17 +895,17 @@ MODULE WMVT100; (* ejz,  ph *)
 				DecCount;
 			END Close;
 		END Window;
-		
-		
+
+
 	VAR nofWindows:LONGINT;
-	
+
 
 
 	PROCEDURE Open*(CONST name: ARRAY OF CHAR; port:LONGINT; type:LONGINT; error:Streams.Writer):Window;
 	VAR
 		inst: Window;
 		title: Strings.String; adr: IP.Adr; res: WORD;
-		C: TCP.Connection; TC: Connection; 
+		C: TCP.Connection; TC: Connection;
 	BEGIN
 		IF port = 0 THEN port := 23 END;
 		DNS.HostByName(name, adr, res);
@@ -918,11 +918,11 @@ MODULE WMVT100; (* ejz,  ph *)
 			error.String(name); error.String(" open failed");
 			error.Ln(); RETURN NIL;
 		END;
-		NEW(TC, C); 
+		NEW(TC, C);
 			IF type=Telnet.Tcp THEN TC.flags:={Telnet.Echo}; title:=WMWindowManager.NewString("TCP Terminal");
 			ELSIF type=Telnet.Telnet THEN TC.flags:={Telnet.Telnet}; title:=WMWindowManager.NewString("Telnet Terminal");
 			ELSIF type=Telnet.VT100 THEN TC.flags:={Telnet.Telnet};  (*! add VT100?*) title:=WMWindowManager.NewString("VT100 Terminal");
-			ELSE HALT(200) 
+			ELSE HALT(200)
 			END;
 		NEW(inst, TC); inst.SetTitle(title);
 		IncCount();
@@ -934,20 +934,20 @@ MODULE WMVT100; (* ejz,  ph *)
 		 sr: Streams.StringReader;
 	BEGIN
 		IF (context=NIL) OR  ~context.arg.GetString(name) OR ~ context.arg.GetInteger(port,FALSE) THEN
-			IF WMDialogs.QueryString("Remote address and port", name) = WMDialogs.ResOk THEN 
-				NEW(sr,256); sr.Set(name); 
-				IF ~sr.GetString(name) OR ~ sr.GetInteger(port,FALSE) THEN 
+			IF WMDialogs.QueryString("Remote address and port", name) = WMDialogs.ResOk THEN
+				NEW(sr,256); sr.Set(name);
+				IF ~sr.GetString(name) OR ~ sr.GetInteger(port,FALSE) THEN
 					WMDialogs.Information("Connecting failed", "insufficient info on address, port"); RETURN
 				END;
 			ELSE
 				WMDialogs.Information("Connect failed", "insufficient info on address, port"); RETURN
 			END;
-		END;	
+		END;
 	END GetRemote;
 
 	PROCEDURE Start*(context : Commands.Context);
 	VAR
-		name,protocol: ARRAY 256 OF CHAR; port: LONGINT; 
+		name,protocol: ARRAY 256 OF CHAR; port: LONGINT;
 		window:Window;
 	BEGIN
 		IF (context=NIL) OR ~context.arg.GetString(protocol) OR ((protocol#"Tcp")&(protocol#"Telnet")&(protocol#"VT100")) THEN
@@ -969,7 +969,7 @@ MODULE WMVT100; (* ejz,  ph *)
 	BEGIN {EXCLUSIVE}
 		DEC(nofWindows);
 	END DecCount;
-	
+
 	PROCEDURE Cleanup;
 	VAR die : KillerMsg;
 		 msg : WMMessages.Message;
@@ -992,15 +992,15 @@ WMVT100.Start Tcp "127.0.0.1" 80~ (* manual access to HTTP server *)
 WMVT100.Start Telnet <server> <portNr>~ (* will include Telnet control characters *)
 WMVT100.Start VT100 <server> <portNr>~ (* will include Telnet/VT100 control characters *)
 
-System.Free WMVT100 ~	
+System.Free WMVT100 ~
 
 from wikipedia: Telnet
-All data octets except 0xff are transmitted over Telnet as is. 
-Therefore, a Telnet client application may also be used to establish an interactive raw TCP session, 
+All data octets except 0xff are transmitted over Telnet as is.
+Therefore, a Telnet client application may also be used to establish an interactive raw TCP session,
 and it is commonly believed that such session which does not use the IAC (0xff, or 255 in decimal) is functionally identical.
-This is not the case, however, because there are other network virtual terminal (NVT) rules, 
-such as the requirement for a bare carriage return character (CR, ASCII 13) to be followed by a NUL (ASCII 0) character or a LF character, 
+This is not the case, however, because there are other network virtual terminal (NVT) rules,
+such as the requirement for a bare carriage return character (CR, ASCII 13) to be followed by a NUL (ASCII 0) character or a LF character,
 that distinguish the telnet protocol from raw TCP sessions.
-Another difference of Telnet from a raw TCP session is that Telnet is not 8-bit clean by default. 
-8-bit mode may be negotiated, but high-bit-set octets may be garbled until this mode was requested, and it obviously will not be requested in non-Telnet connection. 
+Another difference of Telnet from a raw TCP session is that Telnet is not 8-bit clean by default.
+8-bit mode may be negotiated, but high-bit-set octets may be garbled until this mode was requested, and it obviously will not be requested in non-Telnet connection.
 The standard suggests the interpretation of codes 0000-0176 as ASCII, but does not offer any meaning for high-bit-set data octets.

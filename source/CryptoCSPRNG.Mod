@@ -1,19 +1,19 @@
 MODULE CryptoCSPRNG;	(** AUTHOR "GF"; PURPOSE "Cryptographically Secure Pseudo-Random Generator."*)
- 
- 
+
+
 IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 
 
 	PROCEDURE CSRand*( VAR rand: ARRAY OF CHAR; bits: LONGINT );
-	VAR 
+	VAR
 		seed: HUGEINT; i, j, len: LONGINT;
 		h: SHA3.Hash;
 		buf: ARRAY 64 OF CHAR;
 	BEGIN
 		ASSERT( (bits MOD 8 = 0) & (bits DIV 8 <= LEN( rand )) );
 		seed := Noise();
-		FOR i := 0 TO 7 DO  
-			buf[i] := CHR( seed MOD 100H );  seed := seed DIV 100H  
+		FOR i := 0 TO 7 DO
+			buf[i] := CHR( seed MOD 100H );  seed := seed DIV 100H
 		END;
 		NEW( h );  h.SetNameAndSize( "", 64 );
 		h.Update( buf, 0, 8 );
@@ -21,7 +21,7 @@ IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 		i := 0;  j := 0;  len := bits DIV 8;
 		WHILE j < len DO
 			IF i = 64 THEN
-				h.Initialize;  
+				h.Initialize;
 				h.Update( buf, 0, 64 );
 				h.GetHash( buf, 0 );
 				i := 0
@@ -29,17 +29,17 @@ IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 			rand[j] := buf[i];  INC( j ); INC( i )
 		END
 	END CSRand;
-	
+
 	PROCEDURE Noise( ): HUGEINT;
 	VAR tm, dt: HUGEINT; t, d: LONGINT;  total, free, largest: SIZE;
 	BEGIN
 		tm := Machine.GetTimer( );
-		Clock.Get( t, d );  
+		Clock.Get( t, d );
 		dt := LONG( d ) * 1000000H + t;
-		Heaps.GetHeapInfo( total, free, largest ); 
+		Heaps.GetHeapInfo( total, free, largest );
 		RETURN  (tm + 4*dt + Heaps.Nmark) * (Heaps.Ngc + 1) + (total - free + largest )
 	END Noise;
-	
+
 	(*
 	PROCEDURE Test*;
 	CONST HT = 09X;
@@ -55,11 +55,11 @@ IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 		Out.Ln
 	END Test;
 	*)
-	
+
 
 END CryptoCSPRNG.
 
 
 	CryptoCSPRNG.Test ~
-	
+
 	System.Free CryptoCSPRNG ~

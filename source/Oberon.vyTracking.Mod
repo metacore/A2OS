@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (*		(c) Project Voyager, StatLab Heidelberg
@@ -41,7 +41,7 @@ For an quick porting, you can renounce on the visual feedback and just return th
 *)
 
 IMPORT
-	Input,  Display, Display3, Fonts, Texts, vyGraphBase, vyBase, vyHostDisplay := vyGraphBase,  (*Bitmaps*)Effects, 
+	Input,  Display, Display3, Fonts, Texts, vyGraphBase, vyBase, vyHostDisplay := vyGraphBase,  (*Bitmaps*)Effects,
 	vyName, vyRectangles,  Oberon, vyPortability;
 
 CONST
@@ -70,7 +70,7 @@ TYPE
 
 	VAR Wr: vyBase.TextsWriter;
 	BorderBGColor, BorderFGColor, BGColor, FGColor, SelectColor: Display.Color;  (* for Lists *)
-	inHelp: BOOLEAN; 
+	inHelp: BOOLEAN;
 
 	Rectangle*: PROCEDURE (x, y, w, h:  INTEGER;  VAR dx, dy: INTEGER);
 	Rectangles*: PROCEDURE (x, y, w, h: ARRAY OF INTEGER;  rectCount: INTEGER;  VAR dx, dy: INTEGER);
@@ -465,26 +465,26 @@ END string;
 PROCEDURE help (s: ARRAY OF CHAR);
 VAR set: SET; x,y: INTEGER;
 BEGIN
-	Input.Mouse(set,x,y); 
-	HelpAt(x,y,s);  
+	Input.Mouse(set,x,y);
+	HelpAt(x,y,s);
 	(* for consistency with service modules in ANTS used by vyPort *)
 END help;
 
 PROCEDURE helpAt (x, y: INTEGER;  s: ARRAY OF CHAR);
 BEGIN
 	IF inHelp THEN RETURN END;
-	Texts.WriteString(Wr,"vyTracking Help : "); 
-	Texts.WriteString(Wr,s); 
-	Texts.WriteLn(Wr); 
-	Texts.Append(Oberon.Log,Wr.buf); 
-	inHelp := TRUE; 
+	Texts.WriteString(Wr,"vyTracking Help : ");
+	Texts.WriteString(Wr,s);
+	Texts.WriteLn(Wr);
+	Texts.Append(Oberon.Log,Wr.buf);
+	inHelp := TRUE;
 	(* for consistency with service modules in ANTS used by vyPort *)
 END helpAt;
 
 PROCEDURE helpEnd;
 BEGIN
 	IF ~inHelp THEN RETURN END;
-	inHelp := FALSE; 
+	inHelp := FALSE;
 	(* for consistency with service modules in ANTS used by vyPort *)
 END helpEnd;
 
@@ -507,7 +507,7 @@ END trackMouseCont;
 BEGIN Texts.OpenWriter(Wr);
 	BorderFGColor := vyHostDisplay.white;  BorderBGColor := vyHostDisplay.black;
 	FGColor := vyHostDisplay.textC;  BGColor := vyHostDisplay.textbackC;  SelectColor := vyHostDisplay.bottomC;
-	inHelp := FALSE; 
+	inHelp := FALSE;
 	Rectangle := rectangle;
 	Rectangles := rectangles;
 	GrowRectangleRL := growRectangleRL;
@@ -525,7 +525,7 @@ BEGIN Texts.OpenWriter(Wr);
 
 END vyTracking.
 
- - - - - - -   Testing   - - - - - - 
+ - - - - - -   Testing   - - - - - -
 PROCEDURE TestScroll*;
 VAR
 	teststring: ARRAY 10 OF ARRAY 32 OF CHAR;

@@ -25,16 +25,16 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 
 
-IMPORT antsArrayObjects, Math := MathL IN A2, antsPEV, antsKernel, antsModels, antsCommands, vyCG := vyName, antsCaches, 
-	Files, Objects, vyHostStrings, vyRanBase, aM := antsMessages;  
+IMPORT antsArrayObjects, Math := MathL IN A2, antsPEV, antsKernel, antsModels, antsCommands, vyCG := vyName, antsCaches,
+	Files, Objects, vyHostStrings, vyRanBase, aM := antsMessages;
 
-TYPE 
-	tModel* = POINTER TO tModelDesc;  
-	tModelDesc* = RECORD (antsModels.tModelDesc);  
+TYPE
+	tModel* = POINTER TO tModelDesc;
+	tModelDesc* = RECORD (antsModels.tModelDesc);
 	(* a0  a[0] ,a1 a[1] ,a2 a[2] ,a3 a[3] ,a4 a[4] ,a5 a[5] ,b2 a[6] ,b4 a[7] ,b5 a[8] ,g0 a[9] ,g1 a[10] ,g2 a[11] ,d a[12] ,
 		e  a[13] ,pen a[14] : LONGREAL; *)
-		a: ARRAY 14 OF LONGREAL;  
-		
+		a: ARRAY 14 OF LONGREAL;
+
 		(* Parameters:
 		a[0] : No Edges  .
 		a[1] : One Edge _
@@ -51,368 +51,368 @@ TYPE
 		a[12]: General tendency of Edges
 		a[13]: Penalizing term
 		*)
-		
+
 		cp, ce: antsCaches.FullCache
-	END;  
-VAR 
-	GM: tModel;  depth: INTEGER;  
+	END;
+VAR
+	GM: tModel;  depth: INTEGER;
 
-	PROCEDURE Open*( M: tModel );  
-	BEGIN 
-		M.cp := NIL;  M.ce := NIL;  M.synced := FALSE 
-	END Open;  
+	PROCEDURE Open*( M: tModel );
+	BEGIN
+		M.cp := NIL;  M.ce := NIL;  M.synced := FALSE
+	END Open;
 
-	PROCEDURE dist( e1, e2: INTEGER ): LONGREAL;  
-	BEGIN 
+	PROCEDURE dist( e1, e2: INTEGER ): LONGREAL;
+	BEGIN
 		RETURN -((e1 - e2) * (e1 - e2) / depth)
-	END dist;  
+	END dist;
 
-	PROCEDURE f1( e1, e2, e3, e4: INTEGER ): LONGREAL;  
+	PROCEDURE f1( e1, e2, e3, e4: INTEGER ): LONGREAL;
 	(*
 	| e4
 	- e1   -e2
 	| e3
 	*)
-	VAR sum: INTEGER;  
-	BEGIN 
-		sum := e1 + e2 + e3 + e4;  
+	VAR sum: INTEGER;
+	BEGIN
+		sum := e1 + e2 + e3 + e4;
 		IF sum = 0 THEN RETURN GM.a[0]
 		ELSIF sum = 1 THEN RETURN GM.a[1]
-		ELSIF sum = 2 THEN 
-			IF e1 = e2 THEN RETURN GM.a[2] ELSE RETURN GM.a[3] END 
+		ELSIF sum = 2 THEN
+			IF e1 = e2 THEN RETURN GM.a[2] ELSE RETURN GM.a[3] END
 		ELSIF sum = 3 THEN RETURN GM.a[4]
 		ELSE RETURN GM.a[5]
-		END 
-	END f1;  
+		END
+	END f1;
 
-	PROCEDURE f2( e1, e2, e3, e4: INTEGER ): LONGREAL;  
+	PROCEDURE f2( e1, e2, e3, e4: INTEGER ): LONGREAL;
 	(*
 	- e4
 	| e1          |e2
 	- e3
 	*)
-	VAR sum: INTEGER;  
-	BEGIN 
-		
-		sum := e1 + e2 + e3 + e4;  
+	VAR sum: INTEGER;
+	BEGIN
+
+		sum := e1 + e2 + e3 + e4;
 		IF sum = 0 THEN RETURN GM.a[0]
 		ELSIF sum = 1 THEN RETURN GM.a[1]
-		ELSIF sum = 2 THEN 
-			IF e1 = e2 THEN RETURN GM.a[6] ELSE RETURN GM.a[3] END 
+		ELSIF sum = 2 THEN
+			IF e1 = e2 THEN RETURN GM.a[6] ELSE RETURN GM.a[3] END
 		ELSIF sum = 3 THEN RETURN GM.a[7]
 		ELSE RETURN GM.a[8]
-		END 
-	END f2;  
+		END
+	END f2;
 
-	PROCEDURE f3( e, p1, p2: INTEGER ): LONGREAL;  
+	PROCEDURE f3( e, p1, p2: INTEGER ): LONGREAL;
 	(* p1 * |e * p2 *)
-	BEGIN 
-		IF e = 1 THEN RETURN dist( p1, p2 ) * GM.a[9] ELSE RETURN dist( p1, p2 ) * GM.a[10] END 
-	END f3;  
+	BEGIN
+		IF e = 1 THEN RETURN dist( p1, p2 ) * GM.a[9] ELSE RETURN dist( p1, p2 ) * GM.a[10] END
+	END f3;
 
-	PROCEDURE f4( p: INTEGER ): LONGREAL;  
-	BEGIN 
+	PROCEDURE f4( p: INTEGER ): LONGREAL;
+	BEGIN
 		RETURN GM.a[11] * p
-	END f4;  
+	END f4;
 
-	PROCEDURE f5( e: INTEGER ): LONGREAL;  
-	BEGIN 
+	PROCEDURE f5( e: INTEGER ): LONGREAL;
+	BEGIN
 		RETURN GM.a[12] * e
-	END f5;  
+	END f5;
 
-	PROCEDURE f6( p1, p2: INTEGER ): LONGREAL;  
-	BEGIN 
+	PROCEDURE f6( p1, p2: INTEGER ): LONGREAL;
+	BEGIN
 		RETURN GM.a[13] * dist( p1, p2 )
-	END f6;  
+	END f6;
 
-	PROCEDURE UP( VAR a: ARRAY OF INTEGER ): LONGREAL;  
-	BEGIN 
-		RETURN f3( a[5], a[0], a[1] ) + f3( a[6], a[0], a[2] ) + f3( a[7], a[0], a[3] ) + f3( a[8], a[0], a[4] ) + f4( a[0] ) + 
+	PROCEDURE UP( VAR a: ARRAY OF INTEGER ): LONGREAL;
+	BEGIN
+		RETURN f3( a[5], a[0], a[1] ) + f3( a[6], a[0], a[2] ) + f3( a[7], a[0], a[3] ) + f3( a[8], a[0], a[4] ) + f4( a[0] ) +
 				    f6( a[0], a[9] )
-	END UP;  
+	END UP;
 
-	PROCEDURE EP( cooling: LONGREAL;  VAR a: ARRAY OF INTEGER ): LONGREAL;  
-	BEGIN 
-		RETURN Math.exp( cooling * UP( a ) );  
-	END EP;  
+	PROCEDURE EP( cooling: LONGREAL;  VAR a: ARRAY OF INTEGER ): LONGREAL;
+	BEGIN
+		RETURN Math.exp( cooling * UP( a ) );
+	END EP;
 
-	PROCEDURE DistriFromLocalChar( F: antsPEV.tField;  y, x: LONGINT );  
-	VAR po, p, p1, p2, p3, p4, e1, e2, e3, e4: INTEGER;  nges, prob, rand: LONGREAL;  
-	BEGIN 
+	PROCEDURE DistriFromLocalChar( F: antsPEV.tField;  y, x: LONGINT );
+	VAR po, p, p1, p2, p3, p4, e1, e2, e3, e4: INTEGER;  nges, prob, rand: LONGREAL;
+	BEGIN
 		(* insert penalization to AOrig here *)
-		po := F.Aorig.A[y, x];  antsPEV.EGetPNeighbours( F, y, x, p, p1, p2, p3, p4, e1, e2, e3, e4 );  nges := 0;  
-		FOR p := 0 TO SHORT( F.A.depth - 1 ) DO 
-			nges := nges + Math.exp( f3( e1, p, p1 ) + f3( e2, p, p2 ) + f3( e3, p, p3 ) + f3( e4, p, p4 ) + f4( p ) + f6( p, po ) );  
-		END;  
-		rand := vyRanBase.RandomU();  prob := 0;  p := 0;  
-		REPEAT 
-			prob := 
-				prob + Math.exp( f3( e1, p, p1 ) + f3( e2, p, p2 ) + f3( e3, p, p3 ) + f3( e4, p, p4 ) + f4( p ) + f6( p, po ) ) / nges;  
-			INC( p );  
-		UNTIL prob >= rand;  
-		F.A.A[y, x] := p - 1;  
-	END DistriFromLocalChar;  
+		po := F.Aorig.A[y, x];  antsPEV.EGetPNeighbours( F, y, x, p, p1, p2, p3, p4, e1, e2, e3, e4 );  nges := 0;
+		FOR p := 0 TO SHORT( F.A.depth - 1 ) DO
+			nges := nges + Math.exp( f3( e1, p, p1 ) + f3( e2, p, p2 ) + f3( e3, p, p3 ) + f3( e4, p, p4 ) + f4( p ) + f6( p, po ) );
+		END;
+		rand := vyRanBase.RandomU();  prob := 0;  p := 0;
+		REPEAT
+			prob :=
+				prob + Math.exp( f3( e1, p, p1 ) + f3( e2, p, p2 ) + f3( e3, p, p3 ) + f3( e4, p, p4 ) + f4( p ) + f6( p, po ) ) / nges;
+			INC( p );
+		UNTIL prob >= rand;
+		F.A.A[y, x] := p - 1;
+	END DistriFromLocalChar;
 
-	PROCEDURE FastestC( F: antsPEV.tField );  
-	VAR y, x, w, h, offset: LONGINT;  p: INTEGER;  
-		a: ARRAY 11 OF INTEGER;  
-		rand: LONGREAL;  c: antsCaches.FullCache;  A, H, V, O: antsArrayObjects.tINTEGERArray;  
-	BEGIN 
-		c := GM.cp;  A := F.A.A;  V := F.Ev.A;  H := F.Eh.A;  O := F.Aorig.A;  w := F.w;  h := F.h;  
-		FOR y := 0 TO h - 1 DO 
-			FOR x := 0 TO w - 1 DO 
+	PROCEDURE FastestC( F: antsPEV.tField );
+	VAR y, x, w, h, offset: LONGINT;  p: INTEGER;
+		a: ARRAY 11 OF INTEGER;
+		rand: LONGREAL;  c: antsCaches.FullCache;  A, H, V, O: antsArrayObjects.tINTEGERArray;
+	BEGIN
+		c := GM.cp;  A := F.A.A;  V := F.Ev.A;  H := F.Eh.A;  O := F.Aorig.A;  w := F.w;  h := F.h;
+		FOR y := 0 TO h - 1 DO
+			FOR x := 0 TO w - 1 DO
 			(* a[0] := 0; *)
-				a[1] := A[y, (x - 1) MOD w];  a[2] := A[y, (x + 1) MOD w];  a[3] := A[(y - 1) MOD h, x];  a[4] := A[(y + 1) MOD h, x];  
-				a[5] := V[y, x];  a[6] := V[y, (x + 1) MOD w];  a[7] := H[y, x];  a[8] := H[(y + 1) MOD h, x];  a[9] := O[y, x];  p := 0;  
-				offset := c.Offset( a, 1 );  rand := vyRanBase.RandomU();  
-				WHILE c.values[offset + p] < rand DO INC( p );  END;  
-				A[y, x] := p;  
-			END;  
-		END;  
-	END FastestC;  
+				a[1] := A[y, (x - 1) MOD w];  a[2] := A[y, (x + 1) MOD w];  a[3] := A[(y - 1) MOD h, x];  a[4] := A[(y + 1) MOD h, x];
+				a[5] := V[y, x];  a[6] := V[y, (x + 1) MOD w];  a[7] := H[y, x];  a[8] := H[(y + 1) MOD h, x];  a[9] := O[y, x];  p := 0;
+				offset := c.Offset( a, 1 );  rand := vyRanBase.RandomU();
+				WHILE c.values[offset + p] < rand DO INC( p );  END;
+				A[y, x] := p;
+			END;
+		END;
+	END FastestC;
 
-	PROCEDURE UE( VAR a: ARRAY OF INTEGER ): LONGREAL;  
-	BEGIN 
-		RETURN f1( a[1], a[0], a[3], a[4] ) + f1( a[0], a[2], a[5], a[6] ) + f2( a[0], a[7], a[3], a[5] ) + f2( a[0], a[8], a[4], a[6] ) + 
-				    f3( a[0], a[9], a[10] ) + f5( a[0] );  
-	END UE;  
+	PROCEDURE UE( VAR a: ARRAY OF INTEGER ): LONGREAL;
+	BEGIN
+		RETURN f1( a[1], a[0], a[3], a[4] ) + f1( a[0], a[2], a[5], a[6] ) + f2( a[0], a[7], a[3], a[5] ) + f2( a[0], a[8], a[4], a[6] ) +
+				    f3( a[0], a[9], a[10] ) + f5( a[0] );
+	END UE;
 
-	PROCEDURE EE( cooling: LONGREAL;  VAR a: ARRAY OF INTEGER ): LONGREAL;  
-	BEGIN 
-		RETURN Math.exp( cooling * UE( a ) );  
-	END EE;  
+	PROCEDURE EE( cooling: LONGREAL;  VAR a: ARRAY OF INTEGER ): LONGREAL;
+	BEGIN
+		RETURN Math.exp( cooling * UE( a ) );
+	END EE;
 
-	PROCEDURE DistriFromLocalCharE( F: antsPEV.tField;  y, x: LONGINT );  
-	VAR e, p1, p2, e1, e2, e3, e4, e5, e6, e7, e8: INTEGER;  nges, ges, prob: LONGREAL;  
-	BEGIN 
-		antsPEV.EGetENeighboursH( F, y, x, e, p1, p2 );  
-		antsPEV.E2GetENeighboursH( F, y, x, e, e1, e2, e3, e4, e5, e6, e7, e8 );  
-		nges := f1( e1, 0, e3, e4 ) + f1( 0, e2, e5, e6 ) + f2( 0, e7, e3, e5 ) + f2( 0, e8, e4, e6 ) + f3( 0, p1, p2 ) + f5( 0 );  
-		ges := f1( e1, 1, e3, e4 ) + f1( 1, e2, e5, e6 ) + f2( 1, e7, e3, e5 ) + f2( 1, e8, e4, e6 ) + f3( 1, p1, p2 ) + f5( 1 );  
-		prob := Math.exp( ges );  prob := prob / (prob + Math.exp( nges ));  
-		IF vyRanBase.RandomU() < prob THEN F.Eh.A[y, x] := 1 ELSE F.Eh.A[y, x] := 0 END;  
-		
-		antsPEV.EGetENeighboursV( F, y, x, e, p1, p2 );  antsPEV.E2GetENeighboursV( F, y, x, e, e1, e2, e3, e4, e5, e6, e7, e8 );  
-		nges := f1( e1, 0, e3, e4 ) + f1( 0, e2, e5, e6 ) + f2( 0, e7, e3, e5 ) + f2( 0, e8, e4, e6 ) + f3( 0, p1, p2 ) + f5( 0 );  
-		ges := f1( e1, 1, e3, e4 ) + f1( 1, e2, e5, e6 ) + f2( 1, e7, e3, e5 ) + f2( 1, e8, e4, e6 ) + f3( 1, p1, p2 ) + f5( 1 );  
-		prob := Math.exp( ges );  prob := prob / (prob + Math.exp( nges ));  
-		IF vyRanBase.RandomU() < prob THEN F.Ev.A[y, x] := 1 ELSE F.Ev.A[y, x] := 0 END;  
-	
-	END DistriFromLocalCharE;  
+	PROCEDURE DistriFromLocalCharE( F: antsPEV.tField;  y, x: LONGINT );
+	VAR e, p1, p2, e1, e2, e3, e4, e5, e6, e7, e8: INTEGER;  nges, ges, prob: LONGREAL;
+	BEGIN
+		antsPEV.EGetENeighboursH( F, y, x, e, p1, p2 );
+		antsPEV.E2GetENeighboursH( F, y, x, e, e1, e2, e3, e4, e5, e6, e7, e8 );
+		nges := f1( e1, 0, e3, e4 ) + f1( 0, e2, e5, e6 ) + f2( 0, e7, e3, e5 ) + f2( 0, e8, e4, e6 ) + f3( 0, p1, p2 ) + f5( 0 );
+		ges := f1( e1, 1, e3, e4 ) + f1( 1, e2, e5, e6 ) + f2( 1, e7, e3, e5 ) + f2( 1, e8, e4, e6 ) + f3( 1, p1, p2 ) + f5( 1 );
+		prob := Math.exp( ges );  prob := prob / (prob + Math.exp( nges ));
+		IF vyRanBase.RandomU() < prob THEN F.Eh.A[y, x] := 1 ELSE F.Eh.A[y, x] := 0 END;
 
-	PROCEDURE FastestEC( F: antsPEV.tField );  
-	VAR y, x, w, h, offset: LONGINT;  
-		a: ARRAY 11 OF INTEGER;  
-		c: antsCaches.FullCache;  A, H, V: antsArrayObjects.tINTEGERArray;  
-	BEGIN 
-		c := GM.ce;  A := F.A.A;  H := F.Eh.A;  V := F.Ev.A;  w := F.w;  h := F.h;  
-		FOR y := 0 TO h - 1 DO 
-			FOR x := 0 TO w - 1 DO 
-				a[1] := H[y, (x - 1) MOD w];  a[2] := H[y, (x + 1) MOD w];  a[3] := V[(y - 1) MOD h, x];  a[4] := V[y, x];  
-				a[5] := V[(y - 1) MOD h, (x + 1) MOD w];  a[6] := V[y, (x + 1) MOD w];  a[7] := H[(y - 1) MOD h, x];  
-				a[8] := H[(y + 1) MOD h, x];  a[9] := A[y, x];  a[10] := A[(y - 1) MOD F.h, x];  offset := c.Offset( a, 1 );  
-				IF vyRanBase.RandomU() < c.values[offset] THEN H[y, x] := 0 ELSE H[y, x] := 1 END;  
-				a[1] := V[(y - 1) MOD h, x];  a[2] := V[(y + 1) MOD h, x];  a[3] := H[y, (x - 1) MOD w];  a[4] := H[y, x];  
-				a[5] := H[(y + 1) MOD h, (x - 1) MOD w];  a[6] := H[(y + 1) MOD h, x];  a[7] := V[y, (x - 1) MOD w];  
-				a[8] := V[y, (x + 1) MOD w];  a[9] := A[y, x];  a[10] := A[y, (x - 1) MOD F.w];  offset := c.Offset( a, 1 );  
-				IF vyRanBase.RandomU() < c.values[offset] THEN V[y, x] := 0 ELSE V[y, x] := 1 END;  
-			END 
-		END;  
-	END FastestEC;  
+		antsPEV.EGetENeighboursV( F, y, x, e, p1, p2 );  antsPEV.E2GetENeighboursV( F, y, x, e, e1, e2, e3, e4, e5, e6, e7, e8 );
+		nges := f1( e1, 0, e3, e4 ) + f1( 0, e2, e5, e6 ) + f2( 0, e7, e3, e5 ) + f2( 0, e8, e4, e6 ) + f3( 0, p1, p2 ) + f5( 0 );
+		ges := f1( e1, 1, e3, e4 ) + f1( 1, e2, e5, e6 ) + f2( 1, e7, e3, e5 ) + f2( 1, e8, e4, e6 ) + f3( 1, p1, p2 ) + f5( 1 );
+		prob := Math.exp( ges );  prob := prob / (prob + Math.exp( nges ));
+		IF vyRanBase.RandomU() < prob THEN F.Ev.A[y, x] := 1 ELSE F.Ev.A[y, x] := 0 END;
 
-	PROCEDURE CreateCaches( m: tModel;  d: INTEGER );  
-	VAR A: ARRAY 11 OF INTEGER;  
-		i: INTEGER;  offset: LONGINT;  c: antsCaches.FullCache;  s: LONGREAL;  
-	BEGIN 
-		FOR i := 0 TO 4 DO A[i] := d;  END;  
-		FOR i := 5 TO 8 DO A[i] := 2 END;  
-		A[9] := d;  
-		
-		IF m.coolingTemp > 1.01 THEN c := antsCaches.Cuboid( 10, A, 10000 );  
-		ELSE c := antsCaches.Cuboid( 10, A, 1000000 );  
-		END;  
-		m.cp := c;  
-		IF c # NIL THEN 
-			aM.vS( "Computing Pixel-edge cache" );  offset := -1;  
-			WHILE (c.NextPoint( offset, A, 1 )) DO 
-				s := 0;  i := 0;  
-				WHILE (i < d) DO A[0] := i;  s := s + EP( m.coolingTemp, A );  c.values[i + offset] := s;  INC( i );  END;  
-				A[0] := 0;  
+	END DistriFromLocalCharE;
+
+	PROCEDURE FastestEC( F: antsPEV.tField );
+	VAR y, x, w, h, offset: LONGINT;
+		a: ARRAY 11 OF INTEGER;
+		c: antsCaches.FullCache;  A, H, V: antsArrayObjects.tINTEGERArray;
+	BEGIN
+		c := GM.ce;  A := F.A.A;  H := F.Eh.A;  V := F.Ev.A;  w := F.w;  h := F.h;
+		FOR y := 0 TO h - 1 DO
+			FOR x := 0 TO w - 1 DO
+				a[1] := H[y, (x - 1) MOD w];  a[2] := H[y, (x + 1) MOD w];  a[3] := V[(y - 1) MOD h, x];  a[4] := V[y, x];
+				a[5] := V[(y - 1) MOD h, (x + 1) MOD w];  a[6] := V[y, (x + 1) MOD w];  a[7] := H[(y - 1) MOD h, x];
+				a[8] := H[(y + 1) MOD h, x];  a[9] := A[y, x];  a[10] := A[(y - 1) MOD F.h, x];  offset := c.Offset( a, 1 );
+				IF vyRanBase.RandomU() < c.values[offset] THEN H[y, x] := 0 ELSE H[y, x] := 1 END;
+				a[1] := V[(y - 1) MOD h, x];  a[2] := V[(y + 1) MOD h, x];  a[3] := H[y, (x - 1) MOD w];  a[4] := H[y, x];
+				a[5] := H[(y + 1) MOD h, (x - 1) MOD w];  a[6] := H[(y + 1) MOD h, x];  a[7] := V[y, (x - 1) MOD w];
+				a[8] := V[y, (x + 1) MOD w];  a[9] := A[y, x];  a[10] := A[y, (x - 1) MOD F.w];  offset := c.Offset( a, 1 );
+				IF vyRanBase.RandomU() < c.values[offset] THEN V[y, x] := 0 ELSE V[y, x] := 1 END;
+			END
+		END;
+	END FastestEC;
+
+	PROCEDURE CreateCaches( m: tModel;  d: INTEGER );
+	VAR A: ARRAY 11 OF INTEGER;
+		i: INTEGER;  offset: LONGINT;  c: antsCaches.FullCache;  s: LONGREAL;
+	BEGIN
+		FOR i := 0 TO 4 DO A[i] := d;  END;
+		FOR i := 5 TO 8 DO A[i] := 2 END;
+		A[9] := d;
+
+		IF m.coolingTemp > 1.01 THEN c := antsCaches.Cuboid( 10, A, 10000 );
+		ELSE c := antsCaches.Cuboid( 10, A, 1000000 );
+		END;
+		m.cp := c;
+		IF c # NIL THEN
+			aM.vS( "Computing Pixel-edge cache" );  offset := -1;
+			WHILE (c.NextPoint( offset, A, 1 )) DO
+				s := 0;  i := 0;
+				WHILE (i < d) DO A[0] := i;  s := s + EP( m.coolingTemp, A );  c.values[i + offset] := s;  INC( i );  END;
+				A[0] := 0;
 				(* divide by normalizing constant *)
-				i := 0;  
-				WHILE (i < d) DO c.values[offset + i] := c.values[offset + i] / s;  INC( i );  END;  
-			
-			END;  
-			aM.vS( "done." );  
-		
-		END;  
-		
-		FOR i := 0 TO 8 DO A[i] := 2 END;  
-		FOR i := 9 TO 10 DO A[i] := d END;  
-		
-		IF m.coolingTemp > 1.01 THEN c := antsCaches.Cuboid( 11, A, 10000 );  
-		ELSE c := antsCaches.Cuboid( 11, A, 1000000 );  
-		END;  
-		m.ce := c;  
-		IF c # NIL THEN 
-			aM.vS( "Computing Edge-Pixel-Cache" );  offset := -1;  
-			WHILE (c.NextPoint( offset, A, 1 )) DO 
-				s := 0;  i := 0;  
-				WHILE (i < 2) DO A[0] := i;  s := s + EE( m.coolingTemp, A );  c.values[i + offset] := s;  INC( i );  END;  
-				A[0] := 0;  
-				(* divide by normalizing constant *)
-				i := 0;  
-				WHILE (i < 2) DO c.values[offset + i] := c.values[offset + i] / s;  INC( i );  END;  
-			
-			END;  
-			aM.vS( "done." );  
-		END;  
-	END CreateCaches;  
+				i := 0;
+				WHILE (i < d) DO c.values[offset + i] := c.values[offset + i] / s;  INC( i );  END;
 
-	PROCEDURE OneSweep*( s: antsKernel.Kernel );  
-	VAR F: antsPEV.tField;  
-	BEGIN 
-		GM := s.par( tModel );  F := s.A( antsPEV.tField );  depth := SHORT( F.A.depth );  
-		IF ~GM.synced THEN CreateCaches( GM, depth );  GM.synced := TRUE;  END;  
+			END;
+			aM.vS( "done." );
+
+		END;
+
+		FOR i := 0 TO 8 DO A[i] := 2 END;
+		FOR i := 9 TO 10 DO A[i] := d END;
+
+		IF m.coolingTemp > 1.01 THEN c := antsCaches.Cuboid( 11, A, 10000 );
+		ELSE c := antsCaches.Cuboid( 11, A, 1000000 );
+		END;
+		m.ce := c;
+		IF c # NIL THEN
+			aM.vS( "Computing Edge-Pixel-Cache" );  offset := -1;
+			WHILE (c.NextPoint( offset, A, 1 )) DO
+				s := 0;  i := 0;
+				WHILE (i < 2) DO A[0] := i;  s := s + EE( m.coolingTemp, A );  c.values[i + offset] := s;  INC( i );  END;
+				A[0] := 0;
+				(* divide by normalizing constant *)
+				i := 0;
+				WHILE (i < 2) DO c.values[offset + i] := c.values[offset + i] / s;  INC( i );  END;
+
+			END;
+			aM.vS( "done." );
+		END;
+	END CreateCaches;
+
+	PROCEDURE OneSweep*( s: antsKernel.Kernel );
+	VAR F: antsPEV.tField;
+	BEGIN
+		GM := s.par( tModel );  F := s.A( antsPEV.tField );  depth := SHORT( F.A.depth );
+		IF ~GM.synced THEN CreateCaches( GM, depth );  GM.synced := TRUE;  END;
 		(* antsPEV.ForAllDo(F,F.V,DistriFromLocalCharV); *)
-		IF F.A.depth <= 2 THEN 
+		IF F.A.depth <= 2 THEN
 			(* vyHostTexts.Note(vyHostTexts.cWarning,"You use a binary picture, try using Ising model first !");  *)
-		ELSE 
-		END;  
-		IF GM.ce # NIL THEN FastestEC( F );  ELSE antsPEV.ForAllDo( F, DistriFromLocalCharE );  END;  
-		IF GM.cp # NIL THEN FastestC( F );  ELSE antsPEV.ForAllDo( F, DistriFromLocalChar );  END;  
+		ELSE
+		END;
+		IF GM.ce # NIL THEN FastestEC( F );  ELSE antsPEV.ForAllDo( F, DistriFromLocalCharE );  END;
+		IF GM.cp # NIL THEN FastestC( F );  ELSE antsPEV.ForAllDo( F, DistriFromLocalChar );  END;
 		(* antsPEV.FieldHasChanged(F); *)
-	END OneSweep;  
+	END OneSweep;
 
-	PROCEDURE Uniform*( s: antsKernel.Kernel );  
-	BEGIN 
-		antsPEV.DoUniform( s.A( antsPEV.tField ) );  
-	END Uniform;  
+	PROCEDURE Uniform*( s: antsKernel.Kernel );
+	BEGIN
+		antsPEV.DoUniform( s.A( antsPEV.tField ) );
+	END Uniform;
 
-	PROCEDURE WriteArray( VAR R: Files.Rider;  VAR A: ARRAY OF LONGREAL );  
-	VAR i: LONGINT;  
-	BEGIN 
-		Files.WriteLInt( R, LEN( A ) );  aM.dSISI( "Writing len at pos", LEN( A ), "  ", Files.Pos( R ) );  
-		FOR i := 0 TO LEN( A ) - 1 DO Files.WriteLReal( R, A[i] );  END;  
-	END WriteArray;  
+	PROCEDURE WriteArray( VAR R: Files.Rider;  VAR A: ARRAY OF LONGREAL );
+	VAR i: LONGINT;
+	BEGIN
+		Files.WriteLInt( R, LEN( A ) );  aM.dSISI( "Writing len at pos", LEN( A ), "  ", Files.Pos( R ) );
+		FOR i := 0 TO LEN( A ) - 1 DO Files.WriteLReal( R, A[i] );  END;
+	END WriteArray;
 
-	PROCEDURE ReadArray( VAR R: Files.Rider;  VAR A: ARRAY OF LONGREAL );  
-	VAR i, len: LONGINT;  
-	BEGIN 
-		Files.ReadLInt( R, len );  aM.dSISI( "Reading len at pos", len, "   ", Files.Pos( R ) );  
-		FOR i := 0 TO len - 1 DO Files.ReadLReal( R, A[i] );  END;  
-	END ReadArray;  
+	PROCEDURE ReadArray( VAR R: Files.Rider;  VAR A: ARRAY OF LONGREAL );
+	VAR i, len: LONGINT;
+	BEGIN
+		Files.ReadLInt( R, len );  aM.dSISI( "Reading len at pos", len, "   ", Files.Pos( R ) );
+		FOR i := 0 TO len - 1 DO Files.ReadLReal( R, A[i] );  END;
+	END ReadArray;
 
-	PROCEDURE StoreM( VAR R: Files.Rider;  s: tModel );  
-	BEGIN 
-		Files.WriteInt( R, 0 );  WriteArray( R, s.a );  
-	END StoreM;  
+	PROCEDURE StoreM( VAR R: Files.Rider;  s: tModel );
+	BEGIN
+		Files.WriteInt( R, 0 );  WriteArray( R, s.a );
+	END StoreM;
 
-	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );  
-	VAR version: INTEGER;  
-	BEGIN 
-		Files.ReadInt( R, version );  ReadArray( R, s.a );  
-	END LoadM;  
+	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
+	VAR version: INTEGER;
+	BEGIN
+		Files.ReadInt( R, version );  ReadArray( R, s.a );
+	END LoadM;
 
-	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF LONGREAL ): BOOLEAN;  
-	VAR cur: ARRAY 64 OF CHAR;  
-		i: LONGINT;  len: LONGINT;  
-	BEGIN 
-		len := LEN( array );  
-		IF M.id = Objects.enum THEN 
-			FOR i := 0 TO len - 1 DO 
-				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );  
-				M.Enum( cur );  
-			END;  
-			RETURN TRUE;  
-		ELSIF M.id = Objects.get THEN 
-			FOR i := 0 TO len - 1 DO 
-				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );  
-				IF vyHostStrings.Equal( M.name, cur ) THEN M.y := array[i];  M.class := Objects.LongReal;  M.res := 0;  RETURN TRUE END;  
-			END;  
-		ELSIF M.id = Objects.set THEN 
-			FOR i := 0 TO len - 1 DO 
-				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );  
-				IF vyHostStrings.Equal( M.name, cur ) THEN 
-					IF M.class = Objects.LongReal THEN array[i] := M.y;  M.res := 0;  RETURN TRUE 
-					ELSIF M.class = Objects.Real THEN array[i] := M.x;  M.res := 0;  RETURN TRUE 
-					END;  
-				END;  
-			END;  
-		
-		END;  
-		RETURN FALSE;  
-	END ArrayHandleAttribute;  
+	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF LONGREAL ): BOOLEAN;
+	VAR cur: ARRAY 64 OF CHAR;
+		i: LONGINT;  len: LONGINT;
+	BEGIN
+		len := LEN( array );
+		IF M.id = Objects.enum THEN
+			FOR i := 0 TO len - 1 DO
+				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );
+				M.Enum( cur );
+			END;
+			RETURN TRUE;
+		ELSIF M.id = Objects.get THEN
+			FOR i := 0 TO len - 1 DO
+				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );
+				IF vyHostStrings.Equal( M.name, cur ) THEN M.y := array[i];  M.class := Objects.LongReal;  M.res := 0;  RETURN TRUE END;
+			END;
+		ELSIF M.id = Objects.set THEN
+			FOR i := 0 TO len - 1 DO
+				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );
+				IF vyHostStrings.Equal( M.name, cur ) THEN
+					IF M.class = Objects.LongReal THEN array[i] := M.y;  M.res := 0;  RETURN TRUE
+					ELSIF M.class = Objects.Real THEN array[i] := M.x;  M.res := 0;  RETURN TRUE
+					END;
+				END;
+			END;
 
-	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );  
-	BEGIN 
-		WITH o: tModel DO 
-			IF M IS antsKernel.samplingMsg THEN 
-				WITH M: antsKernel.samplingMsg DO 
-					antsModels.SetTemperature( o, M.temp );  OneSweep( M.dlink( antsKernel.Kernel ) );  
-				END;  
-			ELSIF M IS antsKernel.Init THEN 
-				WITH M: antsKernel.Init DO Uniform( M.dlink( antsKernel.Kernel ) );  o.synced := FALSE;  
-				END;  
-			ELSIF M IS Objects.AttrMsg THEN 
-				WITH M: Objects.AttrMsg DO 
-					IF M.id = Objects.enum THEN 
-						IF ArrayHandleAttribute( M, "array", o.a ) THEN END;  
+		END;
+		RETURN FALSE;
+	END ArrayHandleAttribute;
+
+	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
+	BEGIN
+		WITH o: tModel DO
+			IF M IS antsKernel.samplingMsg THEN
+				WITH M: antsKernel.samplingMsg DO
+					antsModels.SetTemperature( o, M.temp );  OneSweep( M.dlink( antsKernel.Kernel ) );
+				END;
+			ELSIF M IS antsKernel.Init THEN
+				WITH M: antsKernel.Init DO Uniform( M.dlink( antsKernel.Kernel ) );  o.synced := FALSE;
+				END;
+			ELSIF M IS Objects.AttrMsg THEN
+				WITH M: Objects.AttrMsg DO
+					IF M.id = Objects.enum THEN
+						IF ArrayHandleAttribute( M, "array", o.a ) THEN END;
 						antsModels.Handler( o, M )
-					ELSIF M.id = Objects.get THEN 
-						IF M.name = "Gen" THEN COPY( 'antsPEIsingDS.Gen', M.s );  M.class := Objects.String;  M.res := 0;  RETURN 
-						ELSIF ArrayHandleAttribute( M, "array", o.a ) THEN 
+					ELSIF M.id = Objects.get THEN
+						IF M.name = "Gen" THEN COPY( 'antsPEIsingDS.Gen', M.s );  M.class := Objects.String;  M.res := 0;  RETURN
+						ELSIF ArrayHandleAttribute( M, "array", o.a ) THEN
 						ELSE antsModels.Handler( o, M )
-						END 
-					ELSIF M.id = Objects.set THEN 
-						IF ArrayHandleAttribute( M, "array", o.a ) THEN o.synced := FALSE ELSE antsModels.Handler( o, M ) END;  
+						END
+					ELSIF M.id = Objects.set THEN
+						IF ArrayHandleAttribute( M, "array", o.a ) THEN o.synced := FALSE ELSE antsModels.Handler( o, M ) END;
 					ELSE antsModels.Handler( o, M )
-					END;  
-				END;  
-			ELSIF M IS Objects.FileMsg THEN 
-				WITH M: Objects.FileMsg DO 
+					END;
+				END;
+			ELSIF M IS Objects.FileMsg THEN
+				WITH M: Objects.FileMsg DO
 					IF M.id = Objects.load THEN antsModels.Handler( o, M );  LoadM( M.R, o )
 					ELSIF M.id = Objects.store THEN antsModels.Handler( o, M );  StoreM( M.R, o )
-					END 
-				END;  
+					END
+				END;
 			ELSE antsModels.Handler( o, M )
-			END 
+			END
 		END;   (* tVector*)
-	END Handler;  
+	END Handler;
 
-	PROCEDURE OpenModel*( M: tModel;  name: vyCG.tNameArray );  
-	BEGIN 
-		antsModels.Open( M );  Open( M );  M.handle := Handler;  vyCG.RegisterNamed( M, name );  
-	END OpenModel;  
+	PROCEDURE OpenModel*( M: tModel;  name: vyCG.tNameArray );
+	BEGIN
+		antsModels.Open( M );  Open( M );  M.handle := Handler;  vyCG.RegisterNamed( M, name );
+	END OpenModel;
 
-	PROCEDURE Gen*;  
-	VAR M: tModel;  
-	BEGIN 
-		aM.cmd;  NEW( M );  M.handle := Handler;  Objects.NewObj := M;  M.synced := FALSE;  
-	END Gen;  
+	PROCEDURE Gen*;
+	VAR M: tModel;
+	BEGIN
+		aM.cmd;  NEW( M );  M.handle := Handler;  Objects.NewObj := M;  M.synced := FALSE;
+	END Gen;
 
-	PROCEDURE NewModel*;  
-	VAR l: antsCommands.tScanList;  name: vyCG.tNameArray;  M: tModel;  
-		a: ARRAY 14 OF LONGREAL;  
-		i: LONGINT;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "name= NAME a0=REAL a1=REAL a2=REAL a3=REAL a4=REAL a5=REAL b2=REAL b4=REAL b5=REAL g1=REAL g2=REAL d=REAL e=REAL pen=REAL" );  
-		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "a0", a[0] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "a1", a[1] ) & antsCommands.ExpectRealFromKeyword( l, "a2", a[2] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "a3", a[3] ) & antsCommands.ExpectRealFromKeyword( l, "a4", a[4] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "a5", a[5] ) & antsCommands.ExpectRealFromKeyword( l, "b2", a[6] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "b4", a[7] ) & antsCommands.ExpectRealFromKeyword( l, "b5", a[8] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "g1", a[9] ) & antsCommands.ExpectRealFromKeyword( l, "g2", a[10] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "d", a[11] ) & antsCommands.ExpectRealFromKeyword( l, "e", a[12] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "pen", a[13] ) THEN 
-			NEW( M );  
-			FOR i := 0 TO 13 DO M.a[i] := a[i] END;  
-			OpenModel( M, name );  
-		END;  
-	END NewModel;  
+	PROCEDURE NewModel*;
+	VAR l: antsCommands.tScanList;  name: vyCG.tNameArray;  M: tModel;
+		a: ARRAY 14 OF LONGREAL;
+		i: LONGINT;
+	BEGIN
+		l := antsCommands.ScanFromPar( "name= NAME a0=REAL a1=REAL a2=REAL a3=REAL a4=REAL a5=REAL b2=REAL b4=REAL b5=REAL g1=REAL g2=REAL d=REAL e=REAL pen=REAL" );
+		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "a0", a[0] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "a1", a[1] ) & antsCommands.ExpectRealFromKeyword( l, "a2", a[2] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "a3", a[3] ) & antsCommands.ExpectRealFromKeyword( l, "a4", a[4] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "a5", a[5] ) & antsCommands.ExpectRealFromKeyword( l, "b2", a[6] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "b4", a[7] ) & antsCommands.ExpectRealFromKeyword( l, "b5", a[8] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "g1", a[9] ) & antsCommands.ExpectRealFromKeyword( l, "g2", a[10] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "d", a[11] ) & antsCommands.ExpectRealFromKeyword( l, "e", a[12] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "pen", a[13] ) THEN
+			NEW( M );
+			FOR i := 0 TO 13 DO M.a[i] := a[i] END;
+			OpenModel( M, name );
+		END;
+	END NewModel;
 
-BEGIN 
-	aM.launch;  
+BEGIN
+	aM.launch;
 END antsPEIsingDS.
 
 System.Free antsPEIsingDS ~

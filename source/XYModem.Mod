@@ -459,11 +459,11 @@ CONST
 				END;
 				TRACE(dataLen);
 			END;
-			
+
 			(* write the last data block *)
 			dataWriter.Bytes(data,0,dataLen);
 			IF dataWriter.res # Streams.Ok THEN res := DataIoError; TRACE(dataWriter.res); RETURN; END;
-			
+
 			IF mode = YModem THEN
 				modemWriter.Char(NAK); modemWriter.Update;
 				IF ~WaitForData(modemReader,1,timeout,yield) THEN
@@ -582,11 +582,11 @@ CONST
 			END;
 		END;
 	END ReceiveFileData;
-	
-	(** XMODEM or YMODEM receive 
+
+	(** XMODEM or YMODEM receive
 
 		modemReader, modemWriter: input/output modem streams
-		fileName: name of the file where to store received data; can be "" in case of YMODEM, where the file name can be transmitted by the sender 
+		fileName: name of the file where to store received data; can be "" in case of YMODEM, where the file name can be transmitted by the sender
 		mode: receive mode XModem or XModem1K or YModem
 		initTimeout: timeout in ms for initiation of the transfer
 		dataTimeout: timeout in ms for receiving file data

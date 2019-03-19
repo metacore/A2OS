@@ -338,13 +338,13 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				r.RawNum(fingerprint);
 				r.RawNum(bitsPerUnit);
 
-				section := IntermediateCode.NewSection(sectionList, SHORTINT(type), name, NIL, FALSE); (* keeps section if already present *)				
+				section := IntermediateCode.NewSection(sectionList, SHORTINT(type), name, NIL, FALSE); (* keeps section if already present *)
 				IF bitsPerUnit < 0 THEN (* unknown *)
 					IF (type = Sections.VarSection) OR (type = Sections.ConstSection) THEN
 						bitsPerUnit := system.dataUnit
 					ELSE
 						(*bitsPerUnit := system.codeUnit*)
-						(*Unit is already set.*)						
+						(*Unit is already set.*)
 					END;
 				END;
 				section.SetBitsPerUnit(bitsPerUnit);
@@ -433,7 +433,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		PROCEDURE SetExtension*(CONST ext: ARRAY OF CHAR);
 		BEGIN COPY(ext, extension)
 		END SetExtension;
-		
+
 	END ObjectFileFormat;
 
 	PROCEDURE Get*(): Formats.ObjectFileFormat;
@@ -517,7 +517,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		IF DeveloperVersion THEN
 			IF context.arg.GetString(fileName) THEN
 				backend := Backend.GetBackendByName("TRM");
-				Files.SplitExtension(fileName, fileName, extension); 
+				Files.SplitExtension(fileName, fileName, extension);
 				NEW(objectFile);
 				IF extension # "" THEN objectFile.SetExtension(extension) END;
 				module := objectFile.Import(fileName, backend.GetSystem());

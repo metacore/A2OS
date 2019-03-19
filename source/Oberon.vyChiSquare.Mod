@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* 0.1 d1 *)
@@ -93,7 +93,7 @@ BEGIN(*Gauss*)
 				(*4*)
 				y := y + K[10];
 				z := K[11] * y + K[12];
-				FOR i := 13 TO 25 DO z := z * y + K[i] END 
+				FOR i := 13 TO 25 DO z := z * y + K[i] END
 			END (* IF *);  (*4*)
 		END;    (*1*)
 		IF upperintbound > 0.0 THEN	RETURN (z + 1.0) / 2.0

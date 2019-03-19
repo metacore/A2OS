@@ -12,14 +12,14 @@ CONST
 	(* priorities -- do not coincide with ObjecFile section types *)
 	Fixed* = 0; (* placed accroding to placement *)
 	EntryCode*= 1; (* must be placed before all other code *)
-	InitCode*=2; 
+	InitCode*=2;
 	ExitCode*=3; (* must be placed after initcode but before code *)
-	BodyCode* = 4; 
-	Code* = 5; 
-	Data* = 6; 
-	Const* = 7; 
+	BodyCode* = 4;
+	Code* = 5;
+	Data* = 6;
+	Const* = 7;
 	Empty* = 8; (* must be placed last *)
-	
+
 	(* refers to priority classes, not to ObjectFile section types *)
 	UseAll *= {Fixed .. Empty};
 	UseInitCode*={Fixed .. ExitCode};
@@ -72,7 +72,7 @@ TYPE
 				RETURN NIL
 			END;
 		END Get;
-		
+
 
 		PROCEDURE Clear;
 		VAR i: LONGINT;
@@ -332,8 +332,8 @@ VAR
 		IF used & ~block.used THEN block.used := TRUE;
 		ELSIF block.referenced THEN RETURN; END; block.referenced := TRUE;
 		IF ~used THEN RETURN END;
-		FOR i := 0 TO block.fixups - 1 DO 
-			ReferenceFixup (block.fixup[i]); 
+		FOR i := 0 TO block.fixups - 1 DO
+			ReferenceFixup (block.fixup[i]);
 			IF error THEN RETURN END;
 		END;
 	END Reference;
@@ -491,16 +491,16 @@ BEGIN
 		NEW(poolMap,64);
 		poolMap.Read(reader);
 	END;
-	
+
 	offers := NIL;
 	requires := NIL;
 	IF version >= 4 THEN
-		IF ~binary THEN 
-			reader.String(string); 
+		IF ~binary THEN
+			reader.String(string);
 			ASSERT(string = "offers");
 			ObjectFile.ReadNameList(reader, offers, binary, poolMap);
 			reader.SkipWhitespace;
-			reader.String(string); 
+			reader.String(string);
 			ASSERT(string = "requires");
 			ObjectFile.ReadNameList(reader, requires, binary, poolMap);
 			reader.SkipWhitespace;

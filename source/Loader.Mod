@@ -8,8 +8,8 @@ CONST
 	Ok = 0;
 	LinkerError=3400;
 	FileNotFound = 3401;
-	CommandTrapped* = 3904; (* cf module Commands *) 
-	
+	CommandTrapped* = 3904; (* cf module Commands *)
+
 	SupportOldObjectFileFormat = FALSE;
 	TraceLoading = FALSE;
 TYPE
@@ -364,22 +364,22 @@ TYPE
 			VAR s: ObjectFile.SectionName; i: LONGINT;
 			BEGIN
 				IF name = NIL THEN RETURN -1 END;
-				StringPool.GetString(n, s); 
+				StringPool.GetString(n, s);
 				i := 0;
 				WHILE (s[i] # 0X) & (name[i] # 0X) & (s[i] = name[i]) DO
 					INC(i);
 				END;
 				RETURN ORD(s[i]) - ORD(name[i]);
 			END CheckName;
-			
+
 			PROCEDURE Error(n: StringPool.Index);
 			VAR name: ARRAY 256 OF CHAR;
 			BEGIN
-				StringPool.GetString(n, name); 
+				StringPool.GetString(n, name);
 				TRACE("Fingerprint does not match",name);
 			END Error;
-			
-		
+
+
 			(* stupid implementation: just search for fp in all exports *)
 			PROCEDURE CheckScope(CONST scope: Modules.ExportDesc; level: LONGINT): ADDRESS;
 			VAR adr,lo,hi,m,res: SIZE;
@@ -390,7 +390,7 @@ TYPE
 				WHILE (lo <= hi) DO
 				 	m := (lo + hi) DIV 2;
 					res := CheckName(identifier.name[level], scope.dsc[m].name);
-					IF res = 0 THEN 
+					IF res = 0 THEN
 						IF (level = LEN(identifier.name)-1) OR (identifier.name[level+1] <= 0) THEN
 							(*IF (scope.dsc[m].fp # identifier.fingerprint) & (scope.dsc[m].fp # 0) & (identifier.fingerprint # 0) THEN
 								Error(identifier.name[level]);
@@ -407,7 +407,7 @@ TYPE
 				END;
 				RETURN 0;
 			END CheckScope;
-						
+
 
 		BEGIN
 			identifier := fixup.identifier;
@@ -527,7 +527,7 @@ VAR
 		INC(data.address, size DIV 8);
 		RETURN address
 	END DoAllocate;
-	
+
 	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: WORD; VAR msg: ARRAY OF CHAR): Modules.Module;
 	TYPE Body=PROCEDURE;
 	VAR
@@ -567,7 +567,7 @@ VAR
 
 				module.sb := 0;
 				module.body := SYSTEM.VAL(Body, arrangement.bodyAddress);
-				
+
 				(*
 				SortProcTable(module);
 				SelectionSort(module.exTable);
@@ -577,8 +577,8 @@ VAR
 					careful: when GC uses a heuristic for pointer detection on the stack, it will not
 					trace the module because the module is not reachable as a heap block in a sweep
 					Therefore the code and data array has to be secured in addition.
-					Here this is made sure to enter the module in the data structure before returning it. 
-				*) 
+					Here this is made sure to enter the module in the data structure before returning it.
+				*)
 				Modules.Initialize(module);
 			ELSE module := NIL; res := LinkerError; stringWriter.Update; stringWriter.Get(msg);
 
@@ -601,7 +601,7 @@ VAR
 		IF extension = "" THEN
 			COPY(Machine.DefaultObjectFileExtension, extension)
 		END;
-		Modules.AddLoader(extension, LoadObj); 
+		Modules.AddLoader(extension, LoadObj);
 	END Install;
 
 	PROCEDURE Remove*;
@@ -644,4 +644,4 @@ VAR
 		startConcurrentLoad := TRUE;
 	END ConcurrentLoad;
 	*)
-	
+

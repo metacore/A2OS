@@ -15,7 +15,7 @@ TYPE
 	VAR
 		w-: Basic.Writer; mode: LONGINT; singleStatement: BOOLEAN;
 		currentScope: SyntaxTree.Scope; ws: Streams.StringWriter;
-		info: BOOLEAN; case: LONGINT; 
+		info: BOOLEAN; case: LONGINT;
 		useCase: BOOLEAN; (* TRUE to enable case conversion in "Identifier" *)
 
 		alertCount, commentCount: LONGINT;
@@ -33,7 +33,7 @@ TYPE
 				result[i] := ch; INC(i);
 			UNTIL ch = 0X;
 		END Small;
-		
+
 		PROCEDURE Big(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
 		VAR ch: CHAR; i: LONGINT;
 		BEGIN
@@ -265,7 +265,7 @@ TYPE
 			IF x.isPlain THEN Flag(Global.NamePlain,first) END;
 			FlagEnd(first);
 		END PointerFlags;
-		
+
 		PROCEDURE ObjectFlags ( rec: SyntaxTree.RecordType; x: SyntaxTree.PointerType);
 		VAR first: BOOLEAN;
 		BEGIN
@@ -278,7 +278,7 @@ TYPE
 			IF rec.IsProtected() THEN Flag(Global.NameExclusive, first) END;
 			FlagEnd(first);
 		END ObjectFlags;
-		
+
 
 		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
 		VAR pointerBase: SyntaxTree.Type;
@@ -337,7 +337,7 @@ TYPE
 		BEGIN
 			IF x.isObject THEN
 				Keyword("OBJECT ");
-				IF x.pointerType # NIL THEN ObjectFlags(x, x.pointerType) 
+				IF x.pointerType # NIL THEN ObjectFlags(x, x.pointerType)
 				END;
 				IF info THEN
 					BeginComment; w.String("ObjectType");
@@ -437,14 +437,14 @@ TYPE
 			IF (x.firstParameter # NIL) OR (x.returnType # NIL) THEN
 				ParameterList(x.firstParameter)
 			END;
-			IF x.returnType # NIL THEN 
-				w.String( ":" );  					
+			IF x.returnType # NIL THEN
+				w.String( ":" );
 				IF x.hasUntracedReturn THEN
 						first := TRUE;
 						Flag(Global.NameUntraced, first);
 						FlagEnd(first);
 				END;
-				Type(x.returnType) 
+				Type(x.returnType)
 			END;
 			IF info & (x.returnParameter # NIL) THEN
 				BeginComment;
@@ -636,8 +636,8 @@ TYPE
 			IF x.symbol IS SyntaxTree.Operator THEN
 				w.String('"'); Identifier(x.symbol.name); w.String('"');
 			ELSE
-				useCase := 
-					(x.symbol IS SyntaxTree.Builtin) 
+				useCase :=
+					(x.symbol IS SyntaxTree.Builtin)
 					OR ((x.symbol IS SyntaxTree.TypeDeclaration) & (x.symbol(SyntaxTree.TypeDeclaration).declaredType IS SyntaxTree.BasicType))
 					OR (x.symbol IS SyntaxTree.Module) & ((x.symbol.name = Global.systemName) OR (x.symbol.name = Global.SystemName));
 				Identifier(x.symbol.name);
@@ -737,7 +737,7 @@ TYPE
 		BEGIN
 			VisitStatementBlock(x.block);
 		END VisitInlineCallDesignator;
-		
+
 
 		PROCEDURE VisitStatementDesignator*(x: SyntaxTree.StatementDesignator);
 		BEGIN
@@ -1129,18 +1129,18 @@ TYPE
 			PROCEDURE Flags(x: SyntaxTree.Parameter);
 			VAR first: BOOLEAN;
 			BEGIN
-				IF x.modifiers # NIL THEN 
-					Modifiers(x.modifiers) 
+				IF x.modifiers # NIL THEN
+					Modifiers(x.modifiers)
 				ELSE
 					first := TRUE;
 					IF x.untraced THEN
 						Flag(Global.NameUntraced,first)
 					END;
-					
+
 					FlagEnd(first);
 				END;
 			END Flags;
-			
+
 		BEGIN
 			first := TRUE;
 			w.String( "(" );
@@ -1193,7 +1193,7 @@ TYPE
 		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN; fp: SyntaxTree.Fingerprint;
 		BEGIN
 			IF Visible(x) THEN
-				
+
 				Indent;
 				Comments(x.comment,x,FALSE);
 				Keyword("PROCEDURE " );
@@ -1223,7 +1223,7 @@ TYPE
 				IF x.isInline & (mode = SymbolFile) THEN
 					IF fingerprinter = NIL THEN NEW(fingerprinter) END;
 					fp := fingerprinter.SymbolFP(x);
-					Value(Global.NameFingerprint, fp.public, first) 
+					Value(Global.NameFingerprint, fp.public, first)
 				END;
 				FlagEnd(first);
 
@@ -1334,12 +1334,12 @@ TYPE
 			w.IncIndent;
 			FOR i := 0 TO list.Length()-1 DO
 				x := list.GetProcedure(i);
-				IF (x.access # SyntaxTree.Hidden) & ~(x.isBodyProcedure) OR (mode > SourceCode)  
+				IF (x.access # SyntaxTree.Hidden) & ~(x.isBodyProcedure) OR (mode > SourceCode)
 				THEN
 					type := x.type(SyntaxTree.ProcedureType);
 					IF (type.selfParameter = NIL) OR (type.selfParameter.name = "@Self") & (currentScope IS SyntaxTree.RecordScope)
 						OR ~ (type.selfParameter.name = "@Self") & ~(currentScope IS SyntaxTree.RecordScope)
-					THEN				
+					THEN
 						Symbol(x);
 						w.String( "; " );
 					END;
@@ -1467,8 +1467,8 @@ TYPE
 		BEGIN
 			prevScope := currentScope;
 			currentScope := x;
-			IF (mode  >= SourceCode) OR (x.ownerProcedure.isInline) OR (x.ownerProcedure.isOberonInline) THEN 
-				Scope(x); 
+			IF (mode  >= SourceCode) OR (x.ownerProcedure.isInline) OR (x.ownerProcedure.isOberonInline) THEN
+				Scope(x);
 			END;
 			IF (mode >= SymbolFile) & (x.body # NIL) THEN Body(x.body,  (mode  >= SourceCode) OR (x.ownerProcedure.isInline) OR (x.ownerProcedure.isOberonInline) ) END;
 			currentScope := prevScope;
@@ -1971,4 +1971,4 @@ BEGIN
 	Init;
 END FoxPrintout.
 
-System.FreeDownTo FoxPrintout ~ 
+System.FreeDownTo FoxPrintout ~

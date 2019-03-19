@@ -813,7 +813,7 @@ VAR address : ADDRESS; module : Modules.Module; variable : Reflection.Variable;
 BEGIN
 	address := Heaps.NilVal;
 	module := Modules.ModuleByName("Heaps");
-	ASSERT(module # NIL); 
+	ASSERT(module # NIL);
 	IF (module # NIL) THEN
 		IF Reflection.FindVar(module, "currentMarkValue", variable) THEN
 			(*
@@ -841,7 +841,7 @@ END Info.
 System.Free Info ~
 
 Debugging.DisableGC
-Debugging.EnableGC 
+Debugging.EnableGC
 Compiler.Compile -p=Win32 FoxIntermediateBackend.Mod ~
 Info.AllObjects ~
 Info.AllObjects * ~

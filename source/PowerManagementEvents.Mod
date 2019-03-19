@@ -1,10 +1,10 @@
 MODULE PowerManagementEvents; (** AUTHOR "Patrick Hunziker"; PURPOSE "Wake-On-LAN - trigger computer booting by sending a magic network packet"; *)
-(**  see http://en.wikipedia.org/wiki/Wake-on-LAN or BIOS "PME = Power Management Events". 
+(**  see http://en.wikipedia.org/wiki/Wake-on-LAN or BIOS "PME = Power Management Events".
    	for details , and how to use it in wired and wireless networks depending on the hardware used.
   	BIOS settings of the computer need to have PME events or 'wake-on-lan' or similar  setting activated.
   	according to ACPI specification, wake-on-lan should be effective in computer power-down states S3, S4 and S5.
   	UDP is used here, but other protocols containing the same magic string are possible, too ;
-  	routers can interfere with such signals, in particular if sent accross internet across firewalls: consult http://en.wikipedia.org/wiki/Wake-on-LAN 
+  	routers can interfere with such signals, in particular if sent accross internet across firewalls: consult http://en.wikipedia.org/wiki/Wake-on-LAN
   	for solutions, also taking security aspects (brute force attacks) into account.
   *)
 
@@ -24,9 +24,9 @@ VAR
 	socket: UDP.Socket;
 
 BEGIN
-	context.arg.SkipWhitespace; 
+	context.arg.SkipWhitespace;
 	context.arg.String(hostname);
-	context.arg.SkipWhitespace; 
+	context.arg.SkipWhitespace;
 	FOR i:=0 TO 5 DO
 		context.arg.Int(hex, TRUE); (*! to do: accept Hex numbers without leading 0 and trailing H for MAC in the format AA:BB:CC:DD:EE:FF *)
 		mac[i] := CHR(hex);

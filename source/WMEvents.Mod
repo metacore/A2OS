@@ -31,7 +31,7 @@ TYPE
 		owner : ANY;
 		finder : CompCommandFinder;
 		next : EventSource;
-		
+
 		minimalDelay: LONGINT;
 		updateTimer:Kernel.MilliTimer;
 		lastFrameTimer: Objects.Timer;
@@ -42,10 +42,10 @@ TYPE
 		BEGIN
 			SELF.owner := owner; SELF.name := name; SELF.info := info; SELF.finder := finder;
 			listeners.event := NIL; listeners.string := NIL; listeners.next := NIL;
-			next := NIL; 
+			next := NIL;
 			minimalDelay:=0;
 		END New;
-		
+
 		PROCEDURE SetMinimalDelay*(ms:LONGINT);
 		BEGIN
 			minimalDelay:=MAX(0,ms);
@@ -162,20 +162,20 @@ TYPE
 				END;
 			END;
 		END CallWithSender;
-		
-		(** Call the event with parameter par. 
+
+		(** Call the event with parameter par.
 		The owner of the EventInfo class will be added in the event's sender parameter.
 		The rate of triggered events can be limited by setting minimalDelay>0. *)
 		PROCEDURE Call*(par: ANY);
 		BEGIN
-			IF minimalDelay=0 THEN 
-				CallWithSender(owner, par);  
+			IF minimalDelay=0 THEN
+				CallWithSender(owner, par);
 			ELSE
 				Objects.CancelTimeout(lastFrameTimer);
-				IF Kernel.Expired(updateTimer) THEN  (* limit rate of triggered events *)	
+				IF Kernel.Expired(updateTimer) THEN  (* limit rate of triggered events *)
 					CallWithSender(owner, par);
 					Kernel.SetTimer(updateTimer,minimalDelay);
-				ELSE 
+				ELSE
 					lastPar:=par;
 					Objects.SetTimeout(lastFrameTimer, Call0, minimalDelay); (* guarantee that the last call leads to a message*)
 				END;

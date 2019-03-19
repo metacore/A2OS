@@ -303,4 +303,4 @@ TYPE
 
 BEGIN
 	tolerance := MathRe.Sqrt( NbrRe.Epsilon )
-END MathMitLef. 
+END MathMitLef.

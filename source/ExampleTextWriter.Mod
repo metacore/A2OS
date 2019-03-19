@@ -81,4 +81,3 @@ END ExampleTextWriter.
 
 System.Free ExampleTextWriter ~
 ExampleTextWriter.Open
- 

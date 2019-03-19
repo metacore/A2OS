@@ -147,17 +147,17 @@ TYPE
 		END GetBytes;
 	END DoubleLong;
 	*)  (*! contains a large gap between 80000000 and 100000000. g.f.	*)
-	
-	
+
+
 	DoubleLong = OBJECT	(* 64-bit counter, the initial value is -1 *)
-		VAR 
+		VAR
 			numH, numL: LONGINT;
-	
+
 		PROCEDURE &Init;
 		BEGIN
 			numH := -1; numL := -1
 		END Init;
-		
+
 		PROCEDURE Inc;
 		BEGIN
 			IF numL # -1 THEN  INC( numL )
@@ -165,21 +165,21 @@ TYPE
 			ELSE  INC( numH );  numL := 0
 			END
 		END Inc;
-		
+
 		(* write the current value of num in big-endian to buf starting at ofs *)
 		PROCEDURE GetBytes( VAR buf: ARRAY OF CHAR;  ofs: LONGINT );
 		VAR p, val: LONGINT;
 		BEGIN
 			p := ofs + 7;  val := numL;
 			REPEAT
-				buf[p] := CHR( val MOD 256 );  
+				buf[p] := CHR( val MOD 256 );
 				IF p = ofs + 4 THEN  val := numH  ELSE  val := val DIV 256  END;
 				DEC( p )
 			UNTIL p < ofs;
 		END GetBytes;
-	
+
 	END DoubleLong;
-	
+
 
 	(* data expansion function as defined in rfc2246, section 5 *)
 	PHash = OBJECT
@@ -655,13 +655,13 @@ TYPE
 			(*ASSERT( IP.IsNilAdr(fip) );	(* only server-side is implemented *)*)
 			(*ASSERT( context # NIL );*)	(* context must be set before calling Open *)
 			ASSERT( conn = NIL );	(* invoke this method only once per instance *)
-			
+
 			IF context=NIL THEN
 				SetDefaultPolicy
 			END;
-			
+
 			client := ~IP.IsNilAdr(fip);
-			
+
 			(* open TCPConnection *)
 			NEW( SELF.conn );
 			SELF.conn.Open( lport, fip, fport, res );
@@ -672,7 +672,7 @@ TYPE
 			IF client THEN Connect END;
 			ASSERT( conn # NIL )
 		END Open;
-		
+
 		PROCEDURE SetDefaultPolicy*;
 		VAR ctx:Context;
 		BEGIN
@@ -1937,7 +1937,7 @@ VAR
 		defaultCipherPolicy.SetCipherSuites(defaultSuites, DefaultSuitesNbr);
 		defaultCipherPolicy.SetVersion(1, 2)
 	END InitDefaults;
-	
+
 
 BEGIN
 	InitDefaults

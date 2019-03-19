@@ -1,5 +1,5 @@
 MODULE ComplexNumbers;
-(* 
+(*
 	operators for complex numbers
 	this module is automatically loaded (FoxSemanticChecker) when operators on complex numbers are encountered
 *)

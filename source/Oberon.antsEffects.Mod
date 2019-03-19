@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
@@ -43,9 +43,9 @@ TYPE
 	END;
 
 VAR
-	copy: Images.Image; 
+	copy: Images.Image;
 	db: vyGraphBase.doubleBuffer;
-	fb: tBuffer; 
+	fb: tBuffer;
 
 	(** Snap X, Y to the snapping grid. *)
 
@@ -128,124 +128,124 @@ BEGIN
 END Ants;
 
 PROCEDURE FadeImage*(fimg,timg: Images.Image; factor: REAL);
-VAR pix:  Images.Pixel; y,x: INTEGER; r,g,b,a: INTEGER;  
+VAR pix:  Images.Pixel; y,x: INTEGER; r,g,b,a: INTEGER;
 BEGIN
 	FOR y := 0 TO fimg.height-1 DO
 		FOR x := 0 TO fimg.width-1 DO
-			Images.Get(fimg,x,y,pix,Images.SrcCopy);  
-			Images.GetRGBA(pix,r,g,b,a); 
-			Images.SetRGBA(pix,r,g,b,SHORT(ENTIER(a*factor+0.5))); 
-			Images.Put(timg,x,y,pix,Images.SrcCopy);  
-		END; 
-	END; 
+			Images.Get(fimg,x,y,pix,Images.SrcCopy);
+			Images.GetRGBA(pix,r,g,b,a);
+			Images.SetRGBA(pix,r,g,b,SHORT(ENTIER(a*factor+0.5)));
+			Images.Put(timg,x,y,pix,Images.SrcCopy);
+		END;
+	END;
 END FadeImage;
 
 PROCEDURE FadeIn*(pict: Images.Image;  time: LONGINT; x,y,w,h: INTEGER);
-VAR   t, time0: LONGINT; 
-	fact: REAL;  
+VAR   t, time0: LONGINT;
+	fact: REAL;
 	cur: antsPortability.display;
 BEGIN
 	NEW(copy);
 	Images.Create(copy, pict.width, pict.height, Images.BGRA8888);
 	time := time * Input.TimeUnit DIV 1000;
 	cur := antsPortability.GetCurrentDisplay();
-	antsPortability.SetCurrentDisplay(antsPortability.Desktop()); 
+	antsPortability.SetCurrentDisplay(antsPortability.Desktop());
 	Display.ResetClip();
 	vyGraphBase.UseClipMask(NIL);
 	OpenBuffer(fb, x, y, w, h);
 	time0 := Oberon.Time();
-	t := 0; 
+	t := 0;
 	vyGraphBase.SetAlpha(255);
 	WHILE(t < time) DO
-		fact := (t+1) / time  ; 
+		fact := (t+1) / time  ;
 		Images.Copy(fb.buf, fb.img, 0, 0, fb.img.width, fb.img.height, 0, 0, Images.SrcCopy);   (* SrcOverDst *)
-		FadeImage(pict,copy,fact);  
+		FadeImage(pict,copy,fact);
 		vyGraphBase.openDB(db, x, y,w,h,TRUE);
-		vyGraphBase0.UseAsBufferBG(db,fb.img); 
+		vyGraphBase0.UseAsBufferBG(db,fb.img);
 		vyGraphBase.StretchedImage(copy,0,0,pict.width,pict.height,x,y,w,h);
 		vyGraphBase.writeDB( );
 		vyPortability.DisplayUpdate;
-		vyGraphBase.closeDB(); 
+		vyGraphBase.closeDB();
 		t := Oberon.Time() - time0;
-	END; 
+	END;
 END FadeIn;
 
 PROCEDURE Launch*(pict: Images.Image; x,y,w,h: INTEGER);
-VAR   t, time0,time: LONGINT; 
-	fact: REAL;  
+VAR   t, time0,time: LONGINT;
+	fact: REAL;
 	cur: antsPortability.display;
 
 BEGIN
 	NEW(copy);
 	Images.Create(copy, pict.width, pict.height, Images.BGRA8888);
 	cur := antsPortability.GetCurrentDisplay();
-	antsPortability.SetCurrentDisplay(antsPortability.Desktop()); 
+	antsPortability.SetCurrentDisplay(antsPortability.Desktop());
 	Display.ResetClip();
 	vyGraphBase.UseClipMask(NIL);
 	OpenBuffer(fb, x, y, w, h);
-	time := 3*Input.TimeUnit DIV 2 ; 
+	time := 3*Input.TimeUnit DIV 2 ;
 	time0 := Oberon.Time();
-	t := 0; 
+	t := 0;
 	vyGraphBase.SetAlpha(255);
 	WHILE(t < time) DO
-		fact := (t+1)*(t+1) /time/ time  ; 
+		fact := (t+1)*(t+1) /time/ time  ;
 		Images.Copy(fb.buf, fb.img, 0, 0, fb.img.width, fb.img.height, 0, 0, Images.SrcCopy);   (* SrcOverDst *)
-		FadeImage(pict,copy,fact);  
+		FadeImage(pict,copy,fact);
 		vyGraphBase.openDB(db, x, y,w,h,TRUE);
-		vyGraphBase0.UseAsBufferBG(db,fb.img); 
+		vyGraphBase0.UseAsBufferBG(db,fb.img);
 		vyGraphBase.StretchedImage(copy,0,0,pict.width,pict.height,x,y,w,h);
 		vyGraphBase.writeDB( );
 		vyPortability.DisplayUpdate;
-		vyGraphBase.closeDB(); 
+		vyGraphBase.closeDB();
 		t := Oberon.Time() - time0;
-	END; 
-	
+	END;
+
 	Images.Copy(fb.buf, fb.img, 0, 0, fb.img.width, fb.img.height, 0, 0, Images.SrcCopy);   (* SrcOverDst *)
-	FadeImage(pict,copy,1);  
+	FadeImage(pict,copy,1);
 	vyGraphBase.openDB(db, x, y,w,h,TRUE);
 	vyGraphBase0.UseAsBufferBG(db,fb.img);
 	vyGraphBase.StretchedImage(copy,0,0,pict.width,pict.height,x,y,w,h);
 	vyGraphBase.writeDB( );
 	vyPortability.DisplayUpdate;
-	vyGraphBase.closeDB(); 
-	
+	vyGraphBase.closeDB();
+
 	Ants(0, 0, SHORT(vyPortability.DisplayWidth()), SHORT(vyPortability.DisplayHeight()), 1000, 1500);
 
 	time :=  Input.TimeUnit;
 	time0 := Oberon.Time();
-	t := 0; 
+	t := 0;
 	vyGraphBase.SetAlpha(255);
 	WHILE(t < time) DO
-		fact := 1- (t+1) / time ; 
+		fact := 1- (t+1) / time ;
 		Images.Copy(fb.buf, fb.img, 0, 0, fb.img.width, fb.img.height, 0, 0, Images.SrcCopy);   (* SrcOverDst *)
-		FadeImage(pict,copy,fact);  
-		vyGraphBase.openDB(db, x, y,w,h,TRUE);  
+		FadeImage(pict,copy,fact);
+		vyGraphBase.openDB(db, x, y,w,h,TRUE);
 		vyGraphBase0.UseAsBufferBG(db,fb.img);
 		vyGraphBase.StretchedImage(copy,0,0,pict.width,pict.height,x,y,w,h);
 		vyGraphBase.writeDB( );
 		vyPortability.DisplayUpdate;
-		vyGraphBase.closeDB(); 
+		vyGraphBase.closeDB();
 			t := Oberon.Time() - time0;
-	END; 
+	END;
 	Images.Copy(fb.buf, fb.img, 0, 0, fb.img.width, fb.img.height, 0, 0, Images.SrcCopy);   (* SrcOverDst *)
 	vyGraphBase.openDB(db, x, y,w,h,TRUE);
-	vyGraphBase0.UseAsBufferBG(db,fb.img); 
+	vyGraphBase0.UseAsBufferBG(db,fb.img);
 	vyGraphBase.writeDB( );
 	vyPortability.DisplayUpdate;
-	vyGraphBase.closeDB(); 
+	vyGraphBase.closeDB();
 
 END Launch;
 
 
 
 PROCEDURE Init;
-VAR m: Modules.Module; 
+VAR m: Modules.Module;
 BEGIN
-	 m := Modules.ThisMod("antsTracking"); (* Install ants Tracking routines *) 
+	 m := Modules.ThisMod("antsTracking"); (* Install ants Tracking routines *)
 END Init;
 
 
 BEGIN
-	aM.launch; Init(); 
+	aM.launch; Init();
 END antsEffects.
 

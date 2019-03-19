@@ -1944,4 +1944,4 @@ END WMEditors.
 
 
 ComponentViewer.Open WMStandardComponents.GenPanel ~
-ComponentViewer.Open WMEditors.GenTextField  ~ 
+ComponentViewer.Open WMEditors.GenTextField  ~

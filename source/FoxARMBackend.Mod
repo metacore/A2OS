@@ -124,18 +124,18 @@ TYPE
 	VAR
 		firstCitation, lastCitation: Citation; (* linked list of citations *)
 		next: Reference;
-		size: LONGINT; (* storage size of this reference *) 
+		size: LONGINT; (* storage size of this reference *)
 
 		PROCEDURE & Init(size: LONGINT);
 		BEGIN
 			firstCitation := NIL; lastCitation := NIL; next := NIL; SELF.size := size;
 		END Init;
-		
+
 		PROCEDURE Emit(out: BinaryCode.Section);
 		BEGIN
 			HALT(100);
 		END Emit;
-		
+
 
 		PROCEDURE AddCitation(pc: LONGINT; bits: LONGINT; shift: LONGINT);
 		VAR
@@ -156,7 +156,7 @@ TYPE
 			Init(4);
 			SELF.value := v;
 		END InitImm;
-		
+
 		PROCEDURE Emit(out: BinaryCode.Section);
 		BEGIN
 			IF out.comments # NIL THEN
@@ -217,15 +217,15 @@ TYPE
 			fixup := BinaryCode.NewFixup(BinaryCode.Absolute, out.pc, identifier, symbolOffset, 0, 0, rFixupPattern);
 			out.fixupList.AddFixup(fixup);
 			out.PutBits(0, 32);
-		END Emit; 
-		
+		END Emit;
+
 	END SymbolReference;
 
 	ListOfReferences = OBJECT
 	VAR
 		firstReference, lastReference: Reference; (* linked list of all symbol references *)
 		size: LONGINT; (* length of the required fixup block *)
-		due: LONGINT; (* the PC at which the reference block has to be written (the latest) *) 
+		due: LONGINT; (* the PC at which the reference block has to be written (the latest) *)
 
 		PROCEDURE & Init;
 		BEGIN
@@ -233,7 +233,7 @@ TYPE
 			size := 0;
 			due := MAX(LONGINT);
 		END Init;
-		
+
 		PROCEDURE UpdateDue(pc: LONGINT; bits: LONGINT; shift: LONGINT);
 		VAR max: LONGINT;
 		BEGIN
@@ -243,13 +243,13 @@ TYPE
 				due := max;
 			END;
 		END UpdateDue;
-		
+
 		PROCEDURE AddCitation(reference: Reference; pc: LONGINT; bits: LONGINT; shift: LONGINT);
 		BEGIN
 			reference.AddCitation(pc, bits, shift);
 			UpdateDue(pc, bits, shift);
 		END AddCitation;
-		
+
 		PROCEDURE AddReference(reference: Reference): Reference;
 		BEGIN
 			IF firstReference = NIL THEN firstReference := reference ELSE lastReference.next := reference END;
@@ -349,7 +349,7 @@ TYPE
 		toVirtual: ARRAY InstructionSet.NumberRegisters OF Ticket; (* registers real register -> none / reserved / split / blocked / virtual register (>0) *)
 		reserved: ARRAY InstructionSet.NumberRegisters OF BOOLEAN;
 		unusable: Ticket;
-		blocked: Ticket; 
+		blocked: Ticket;
 		hint: LONGINT;
 		useFPU32:BOOLEAN;
 		useFPU64:BOOLEAN;
@@ -396,7 +396,7 @@ TYPE
 			IF ~useFPU64 THEN
 				(* disable double precision VFP registers *)
 				FOR i := InstructionSet.DR0 TO InstructionSet.DR31 DO toVirtual[i] := unusable END;
-			END; 
+			END;
 
 		END InitPhysicalRegisters;
 
@@ -420,9 +420,9 @@ TYPE
 				index := physicalRegisterNumber - InstructionSet.DR0;
 				IF index*2 < 32 THEN
 					toVirtual[InstructionSet.SR0 + index *2] := blocked;
-					toVirtual[InstructionSet.SR0 + index *2 + 1] := blocked;				
+					toVirtual[InstructionSet.SR0 + index *2 + 1] := blocked;
 				END;
-			END; 
+			END;
 		END Allocate;
 
 		(** set whether a certain physical register is reserved or not **)
@@ -457,7 +457,7 @@ TYPE
 					toVirtual[InstructionSet.SR0 + index *2] := NIL;
 					toVirtual[InstructionSet.SR0 + index *2 + 1] := NIL;
 				END;
-			END; 
+			END;
 		END Free;
 
 		(** get the number of the next free physical register for a certain data type
@@ -640,11 +640,11 @@ TYPE
 		BEGIN
 			CASE irInstruction.opcode OF
 			| IntermediateCode.add, IntermediateCode.sub, IntermediateCode.mul, IntermediateCode.abs, IntermediateCode.neg:
-				
+
 				result :=  ~IsFloat(irInstruction.op1) OR backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1);
 
 			| IntermediateCode.div:
-				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1) 
+				result :=  backend.useFPU32 & IsSinglePrecisionFloat(irInstruction.op1)
 							OR backend.useFPU64 & IsDoublePrecisionFloat(irInstruction.op1)
 							OR backend.useFPU64 & IsNonComplexInteger(irInstruction.op1);
 				result := result OR IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
@@ -661,7 +661,7 @@ TYPE
 				END;
 			| IntermediateCode.mod:
 				result :=  IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
-				
+
 			| IntermediateCode.rol, IntermediateCode.ror:
 				result := ~IsComplex(irInstruction.op1)
 			ELSE
@@ -747,8 +747,8 @@ TYPE
 
 			(* emit the instruction *)
 			InstructionSet.Emit(opCode, condition, flags, operands, out);
-			
-			
+
+
 		END Emit;
 
 		(** emit an ARM instruction with no operand **)
@@ -1585,7 +1585,7 @@ TYPE
 		*)
 		PROCEDURE EmitFixupBlockIfNeeded;
 		BEGIN
-			IF out.pc >= listOfReferences.due THEN 
+			IF out.pc >= listOfReferences.due THEN
 				listOfReferences.due := MAX(LONGINT);
 				Emit1(opB, InstructionSet.NewImmediate(4 + listOfReferences.size - 8 )); (* emit branch instruction that skips the fixup block *)
 				EmitFixupBlock; (* emit the fixup block *)
@@ -1982,7 +1982,7 @@ TYPE
 			Basic.Align(allocationSize, 4); (* 4 byte alignment *)
 			AllocateStack(allocationSize, TRUE, backend.initLocals);
 			(* allocate space on stack for register spills *)
-			spillStackStart := -stackSize; 
+			spillStackStart := -stackSize;
 			IF spillStack.MaxSize() > 0 THEN AllocateStack(spillStack.MaxSize(), TRUE, FALSE) END
 		END EmitEnter;
 
@@ -2206,7 +2206,7 @@ TYPE
 
 		PROCEDURE EmitMul(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
-			destination, left, right: ARRAY 2 OF Operand; inst: IntermediateCode.Instruction; 
+			destination, left, right: ARRAY 2 OF Operand; inst: IntermediateCode.Instruction;
 			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand;
 			temp: Operand;
 		BEGIN
@@ -2217,7 +2217,7 @@ TYPE
 				RETURN;
 			END;
 
-		
+
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
 				ASSERT(backend.useFPU32);
 				PrepareDoubleSourceOp(irInstruction, Low, destination[Low], left[Low], right[Low]);
@@ -2229,11 +2229,11 @@ TYPE
 				Emit3(opFMULD, destination[Low], left[Low], right[Low]);
 				WriteBack(irInstruction.op1, Low, destination[Low])
 			ELSIF IsInteger(irInstruction.op1) THEN
-				IF IsComplex(irInstruction.op1) THEN					
+				IF IsComplex(irInstruction.op1) THEN
 					PrepareDoubleSourceOp(irInstruction, Low, destination[Low], left[Low], right[Low]);
 					PrepareDoubleSourceOp(irInstruction, High, destination[High], left[High], right[High]);
 					temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
-					Emit3(opMUL, temp, left[Low], right[High]); 
+					Emit3(opMUL, temp, left[Low], right[High]);
 					Emit4(opMLA, temp, left[High], right[Low], temp);
 					Emit4(opUMULL, destination[Low], destination[High], left[Low], right[Low]); (* signed long multiplication *)
 					Emit3(opADD, destination[High], destination[High],temp);
@@ -2254,7 +2254,7 @@ TYPE
 
 		PROCEDURE EmitDiv(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
-			destination, left, right, float, leftd, rightd, fpstatus: Operand; 
+			destination, left, right, float, leftd, rightd, fpstatus: Operand;
 			value: HUGEINT; exp: LONGINT; op3: IntermediateCode.Operand;
 			inst: IntermediateCode.Instruction;
 		BEGIN
@@ -2265,7 +2265,7 @@ TYPE
 				RETURN;
 			END;
 
-		
+
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
 				ASSERT(backend.useFPU32);
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
@@ -2440,7 +2440,7 @@ TYPE
 			ELSE
 				shiftAmountImmediate := 0;
 				shiftAmountRegister := RegisterFromIrOperand(irShiftOperand, Low, emptyOperand);
-				IF ~IsComplex(irShiftOperand) THEN 
+				IF ~IsComplex(irShiftOperand) THEN
 					ZeroExtendOperand(shiftAmountRegister, irShiftOperand.type.sizeInBits)
 				END;
 			END;
@@ -2478,8 +2478,8 @@ TYPE
 					ELSIF irInstruction.op1.type.sizeInBits = 16 THEN
 						(* simple 16 bit rotation: *)
 						ZeroExtendOperand(source[Low], 16);
-						IF IsSameRegister(destination[Low], source[Low]) THEN 
-							temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)) ELSE temp := destination[Low] 
+						IF IsSameRegister(destination[Low], source[Low]) THEN
+							temp := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)) ELSE temp := destination[Low]
 						END;
 						Emit2(opMOV, temp, InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftROR, shiftAmountRegister.register, shiftAmountImmediate));
 						Emit3(opORR, destination[Low], temp, InstructionSet.NewRegister(temp.register, InstructionSet.shiftLSR, None, 16))
@@ -2571,7 +2571,7 @@ TYPE
 							Emit3(opORR, destination[Low], temp, InstructionSet.NewRegister(source[Low].register, InstructionSet.shiftLSR, None, shiftAmountImmediate));
 							Emit2(opMOV, destination[High], InstructionSet.NewRegister(source[High].register, shiftMode, None, shiftAmountImmediate))
 						ELSIF shiftAmountImmediate >= 32 THEN
-							ASSERT(shiftAmountImmediate < 64); 
+							ASSERT(shiftAmountImmediate < 64);
 							Emit2(opMOV, destination[Low], InstructionSet.NewRegister(source[High].register, shiftMode, None, shiftAmountImmediate - 32));
 							IF  irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
 								Emit2(opMOV, destination[High], InstructionSet.NewImmediate(0))
@@ -2816,7 +2816,7 @@ TYPE
 			fixupPatternList: ObjectFile.FixupPatterns;
 			identifier: ObjectFile.Identifier;
 			hiHit, hiFail, lowHit: LONGINT;
-			unsigned: BOOLEAN; 
+			unsigned: BOOLEAN;
 
 			PROCEDURE JmpDest(branchConditionCode: LONGINT);
 			BEGIN
@@ -2911,41 +2911,41 @@ TYPE
 							left[Low] := RegisterFromIrOperand(irLeft, Low, left[High]);
 							right[Low] := RegisterOrImmediateFromIrOperand(irRight, Low, right[High]);
 							Emit2WithCondition(opCMP, left[Low], right[Low], lowHit);
-							
+
 							IF irInstruction.opcode = IntermediateCode.brne THEN lowHit := InstructionSet.conditionNE END;
 
 						| IntermediateCode.brlt, IntermediateCode.brge: (* left < right, left >= right *)
 							CASE irInstruction.opcode OF
 							IntermediateCode.brge:
 								IF isSwapped THEN
-									IF unsigned THEN 
-										hiHit := InstructionSet.conditionLO; hiFail := InstructionSet.conditionHI; 
+									IF unsigned THEN
+										hiHit := InstructionSet.conditionLO; hiFail := InstructionSet.conditionHI;
 									ELSE
-										hiHit := InstructionSet.conditionLT; hiFail := InstructionSet.conditionGT; 
+										hiHit := InstructionSet.conditionLT; hiFail := InstructionSet.conditionGT;
 									END;
 									lowHit := InstructionSet.conditionLS
 								ELSE
-									IF unsigned THEN 
-										hiHit := InstructionSet.conditionHI; hiFail := InstructionSet.conditionLO; 
+									IF unsigned THEN
+										hiHit := InstructionSet.conditionHI; hiFail := InstructionSet.conditionLO;
 									ELSE
-										hiHit := InstructionSet.conditionGT; hiFail := InstructionSet.conditionLT; 
+										hiHit := InstructionSet.conditionGT; hiFail := InstructionSet.conditionLT;
 									END;
 									lowHit := InstructionSet.conditionHS
-									
+
 								END;
 							|IntermediateCode.brlt:
 								IF isSwapped THEN
-									IF unsigned THEN 
-										hiHit := InstructionSet.conditionHI; hiFail := InstructionSet.conditionLO; 
+									IF unsigned THEN
+										hiHit := InstructionSet.conditionHI; hiFail := InstructionSet.conditionLO;
 									ELSE
-										hiHit := InstructionSet.conditionGT; hiFail := InstructionSet.conditionLT; 
-									END; 
+										hiHit := InstructionSet.conditionGT; hiFail := InstructionSet.conditionLT;
+									END;
 									lowHit := InstructionSet.conditionHI
 								ELSE
-									IF unsigned THEN 
-										hiHit := InstructionSet.conditionLO; hiFail := InstructionSet.conditionHI; 
+									IF unsigned THEN
+										hiHit := InstructionSet.conditionLO; hiFail := InstructionSet.conditionHI;
 									ELSE
-										hiHit := InstructionSet.conditionLT; hiFail := InstructionSet.conditionGT; 
+										hiHit := InstructionSet.conditionLT; hiFail := InstructionSet.conditionGT;
 									END;
 									lowHit := InstructionSet.conditionLO
 								END;
@@ -3108,14 +3108,14 @@ TYPE
 			Emit3(opORR, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
 			Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
 		END RoundDown;
-		
+
 		PROCEDURE ResetRounding(VAR fpstatus: Operand);
 		BEGIN
 			(* reset rounding mode *)
 			Emit3(opBIC, fpstatus, fpstatus, InstructionSet.NewImmediate(0x800000));
 			Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
 		END ResetRounding;
-		
+
 
 		PROCEDURE EmitConv(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
@@ -3123,8 +3123,8 @@ TYPE
 			destination, source: ARRAY 2 OF Operand;
 			temp, fpstatus: Operand;
 			partType: IntermediateCode.Type;
-			
-			
+
+
 		BEGIN
 			irDestination := irInstruction.op1; irSource := irInstruction.op2;
 
@@ -3174,7 +3174,7 @@ TYPE
 						ASSERT(backend.useFPU32);
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
-						
+
 						RoundDown(fpstatus);
 						IF irDestination.type.form = IntermediateCode.UnsignedInteger THEN
 							(* single precision float to non-complex unsigned integer: *)
@@ -3252,7 +3252,7 @@ TYPE
 			 	ELSE
 			 		(* anything else to single precision float: *)
 			 		HALT(200)
-			 	END				
+			 	END
 			ELSE
 				(* to anything else: *)
 				HALT(200)
@@ -3273,10 +3273,10 @@ TYPE
 				ELSE HALT(200)
 				END
 			ELSIF type.form = IntermediateCode.Float THEN
-				IF (type.sizeInBits = 32) THEN 
+				IF (type.sizeInBits = 32) THEN
 					IF backend.useFPU32 THEN
 						result := opRESFS
-					ELSE 
+					ELSE
 						result := opRES
 					END;
 				ELSE
@@ -3339,7 +3339,7 @@ TYPE
 				Emit3WithCondition(opSTREX, tempReg, comparatorReg, addressReg, InstructionSet.conditionEQ);
 				Emit2WithCondition(opCMP, tempReg, InstructionSet.NewImmediate(1), InstructionSet.conditionEQ);
 				Emit1WithCondition(opB, InstructionSet.NewImmediate (-24), InstructionSet.conditionEQ);
-			END;	
+			END;
 		END EmitCas;
 
 		(* possible optimization: use a combination of LDR and LDRB (would be 4x faster on average) *)
@@ -3668,7 +3668,7 @@ TYPE
 			BEGIN
 				IF (fixup.symbol.name # "") & (fixup.resolved = NIL) THEN fixup.resolved := module.allSections.FindByName(fixup.symbol.name) END;
 			END Resolve;
-			
+
 		 	(* recompute fixup positions and assign binary sections *)
 		 	PROCEDURE PatchFixups(section: BinaryCode.Section);
 			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; symbolOffset, offsetWithinSection: LONGINT; in: IntermediateCode.Section;
@@ -3850,7 +3850,7 @@ TYPE
 VAR
 	emptyOperand: Operand;
 	rFixupPattern: ObjectFile.FixupPatterns; (* pattern for an absolute 32-bit fixup *)
-	
+
 	PROCEDURE Assert(condition: BOOLEAN; CONST message: ARRAY OF CHAR);
 	BEGIN ASSERT(condition, 100)
 	END Assert;
@@ -3884,7 +3884,7 @@ VAR
 
 	(** initialize the module **)
 	PROCEDURE Init;
-	BEGIN 
+	BEGIN
 		InstructionSet.InitOperand(emptyOperand);
 		NEW(rFixupPattern, 1);
 		rFixupPattern[0].offset := 0;

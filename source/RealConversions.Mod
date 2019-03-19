@@ -2,16 +2,16 @@ MODULE RealConversions;  (* GF *)
 
 IMPORT SYSTEM;
 
-TYPE 
+TYPE
 	ReadProc* = PROCEDURE {DELEGATE} ( ): CHAR;
 
 VAR
 	H, L: INTEGER;
 
-	(**	Scan a floating-point number. 
+	(**	Scan a floating-point number.
 		EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
 	PROCEDURE ScanReal*( next: ReadProc ): LONGREAL;
-	VAR 
+	VAR
 		e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN; ch: CHAR;
 	BEGIN
 		ch := next();
@@ -49,7 +49,7 @@ VAR
 		IF neg THEN  y := -y  END;
 		RETURN y
 	END ScanReal;
-	
+
 	(**	Convert a string to a floating-point number.
 		EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
 	PROCEDURE StringToReal*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
@@ -93,21 +93,21 @@ VAR
 	(**	Convert LONGREAL x  to string using n character positions. *)
 	PROCEDURE RealToString*( x: LONGREAL;  n: WORD;  VAR buf: ARRAY OF CHAR );
 	(* BM 1993.4.22. Do not simplify rounding! *)
-	VAR 
+	VAR
 		e, h, l, i, pos: LONGINT;  z: LONGREAL;  d: ARRAY 16 OF CHAR;
-		
+
 		PROCEDURE Char( c: CHAR );
 		BEGIN
 			buf[pos] := c;  INC( pos )
 		END Char;
-		
+
 		PROCEDURE String( CONST s: ARRAY OF CHAR );
 		VAR i: LONGINT;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO  Char( s[i] );  INC( i )  END
 		END String;
-			
+
 	BEGIN
 		pos := 0;
 		e := ExpoL( x );
@@ -141,35 +141,35 @@ VAR
 			Char( d[0] );  Char( "." );  i := 1;
 			WHILE i <= n DO  Char( d[i] );  INC( i )  END;
 			IF e < 0 THEN  String( "E-" );  e := -e  ELSE  String( "E+" )  END;
-			Char( CHR( e DIV 100 + ORD( "0" ) ) );  e := e MOD 100;  
+			Char( CHR( e DIV 100 + ORD( "0" ) ) );  e := e MOD 100;
 			Char( CHR( e DIV 10 + ORD( "0" ) ) );  Char( CHR( e MOD 10 + ORD( "0" ) ) )
 		END;
 		Char( 0X )
 	END RealToString;
 
 
-	(**	Convert LONGREAL x to string in a fixed point notation. 
-		n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, 
+	(**	Convert LONGREAL x to string in a fixed point notation.
+		n is the overall minimal length for the output field, f the number of fraction digits following the decimal point,
 		D the fixed exponent (printed only when D # 0). *)
 	PROCEDURE RealToStringFix*( x: LONGREAL;  n, f, D: WORD; VAR buf: ARRAY OF CHAR );
 	(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
-	VAR 
+	VAR
 		e, h, l, i, pos: LONGINT;  r, z: LONGREAL;
 		d: ARRAY 16 OF CHAR;
 		s: CHAR;  dot: BOOLEAN;
-		
+
 		PROCEDURE Char( c: CHAR );
 		BEGIN
 			buf[pos] := c;  INC( pos )
 		END Char;
-		
+
 		PROCEDURE String( CONST s: ARRAY OF CHAR );
 		VAR i: LONGINT; ch: CHAR;
 		BEGIN
 			ch := s[0]; i := 1;
 			WHILE ch # 0X DO  Char( ch );  ch := s[i];  INC( i )  END
 		END String;
-			
+
 	BEGIN
 		pos := 0;
 		e := ExpoL( x );
@@ -181,9 +181,9 @@ VAR
 			ELSE  String( "  INF" )
 			END
 		ELSE
-			IF D = 0 THEN 
-				IF f = 0 THEN  dot := FALSE; DEC( n, 1 )  ELSE  dot := TRUE;  DEC( n, 2 )  END 
-			ELSE  dot := TRUE;  DEC( n, 7 ) 
+			IF D = 0 THEN
+				IF f = 0 THEN  dot := FALSE; DEC( n, 1 )  ELSE  dot := TRUE;  DEC( n, 2 )  END
+			ELSE  dot := TRUE;  DEC( n, 7 )
 			END;
 			IF n < 2 THEN  n := 2  END;
 			IF f < 0 THEN  f := 0  END;
@@ -228,14 +228,14 @@ VAR
 			END;
 			IF D # 0 THEN
 				IF D < 0 THEN  String( "E-" );  D := -D  ELSE  String( "E+" )  END;
-				Char( CHR( D DIV 100 + ORD( "0" ) ) );  D := D MOD 100;  
+				Char( CHR( D DIV 100 + ORD( "0" ) ) );  D := D MOD 100;
 				Char( CHR( D DIV 10 + ORD( "0" ) ) );  Char( CHR( D MOD 10 + ORD( "0" ) ) )
 			END
 		END;
 		Char( 0X )
 	END RealToStringFix;
-	
-	
+
+
 
 	(*** the following procedures stem from Reals.Mod *)
 
@@ -286,7 +286,7 @@ VAR
 		IF littleEndian THEN  H := 4;  L := 0  ELSE  H := 0;  L := 4  END
 	END InitHL;
 
-BEGIN  
+BEGIN
 	InitHL
 END RealConversions.
 

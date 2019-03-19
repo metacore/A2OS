@@ -312,7 +312,7 @@ VAR
 	chs: ARRAY MaxDisks OF RECORD cyls, hds, spt: LONGINT END;
 	initRegs0, initRegs1: LONGINT;
 	initRegs: ARRAY 2 OF LONGINT;	(* kernel parameters *)
-	fbadr*, fbInfoPtr*: ADDRESS; 
+	fbadr*, fbInfoPtr*: ADDRESS;
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 	bootFlag: ADDRESS;
 
@@ -574,9 +574,9 @@ CONST
 	SSE2Flag = 26;
 	SSE3Flag = 0; (*IN features2 from ECX*) (*PH 04/11*)
 	SSSE3Flag =9;
-	SSE41Flag =19; 
+	SSE41Flag =19;
 	SSE42Flag =20;
-	SSE5Flag = 11; 
+	SSE5Flag = 11;
 	AVXFlag = 28;
 BEGIN
 	SSE2Support := FALSE;
@@ -1847,10 +1847,10 @@ BEGIN
 	NewPage(kernelPD); ASSERT(kernelPD # NilAdr);
 	Fill32(kernelPD, PTEs*4, PageNotPresent);
 	IF ~MapDirect(LowAdr, mTop-LowAdr, LowAdr + UserPage) THEN HALT(99) END	;(* map heap direct *)
-	
+
 	IF ~MapDirect(fbadr, PS*1024*10, fbadr + UserPage) THEN  (* map frame buffer  direct *)
 		Trace.String("map direct failed at fbadr"); Trace.Address(fbadr); Trace.Ln;
-	END; 
+	END;
 
 END InitPages;
 
@@ -2073,7 +2073,7 @@ END InModuleHeap;
 (* returns if an address is a currently allocated heap address *)
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 BEGIN
-	RETURN 
+	RETURN
 		(p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
 		OR InModuleHeap(p);
 END ValidHeapAddress;
@@ -3468,8 +3468,8 @@ VAR status: SHORTINT;
 	PROCEDURE Scroll;
 	VAR adr: ADDRESS; off: SIZE; i,j: LONGINT;
 	BEGIN
-		IF (traceDelay > 0) & (scrollLines MOD TraceHeight = 0) THEN 
-			FOR i := 0 TO traceDelay-1 DO 
+		IF (traceDelay > 0) & (scrollLines MOD TraceHeight = 0) THEN
+			FOR i := 0 TO traceDelay-1 DO
 				FOR j := 0 TO 1000000 DO END;
 			END;
 		END;
@@ -3513,7 +3513,7 @@ PROCEDURE TraceColor (c: SHORTINT);
 BEGIN traceColor := c;
 END TraceColor;
 
-VAR traceDelay: LONGINT; 
+VAR traceDelay: LONGINT;
 (* Initialise tracing. *)
 PROCEDURE InitTrace;
 CONST MaxPorts = 8;
@@ -3532,8 +3532,8 @@ BEGIN
 		Portout8(3D5H, CHR((TraceWidth*TraceHeight) DIV 100H));
 		Portout8(3D4H, 0FX);
 		Portout8(3D5H, CHR((TraceWidth*TraceHeight) MOD 100H));
-		GetConfig("TraceDelay", s); 
-		p := 0; traceDelay := StrToInt(p, s); 
+		GetConfig("TraceDelay", s);
+		p := 0; traceDelay := StrToInt(p, s);
 
 	END;
 	IF TraceV24 IN traceMode THEN
@@ -3584,7 +3584,7 @@ BEGIN
 		MOV bootFlag, EAX
 		MOV initRegs0,ESI
 		MOV initRegs1, ECX
-		
+
 		MOV fbadr, EDI
 		MOV fbInfoPtr, EDX
 	END;
@@ -3629,11 +3629,11 @@ BEGIN
 	InitPages;	(* create page tables *)
 	InitMemory;	(* switch on segmentation, paging and switch stack *)
 	Trace.Green; Trace.StringLn("Ok"); Trace.Default;
-	
-	
+
+
 	(*FOR i := 0 TO 1024*128 DO SYSTEM.PUT(fbadr+i, 0X)	END;*)
-	
-	
+
+
 	(* allocate empty memory block with enough space for at least one free block *)
 	memBlockHead := SYSTEM.VAL (MemoryBlock, ADDRESSOF (initialMemBlock));
 	memBlockTail := memBlockHead;
@@ -3647,9 +3647,9 @@ BEGIN
 			intHandler[i, j].handler := NIL
 		END
 	END;
-	Trace.String("Machine done."); Trace.Ln; 
+	Trace.String("Machine done."); Trace.Ln;
 	default.valid := FALSE;	(* initialized later *)
-	
+
 
 END Init;
 

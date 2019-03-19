@@ -125,7 +125,7 @@ TYPE
 			END
 
 		END Get;
-		
+
 				(*POST HTTP/1.1 message. needs either a Content-Length of the body or a chunked transfer encoding*)
 		PROCEDURE Post*(CONST url : ARRAY OF CHAR; CONST headervars: ARRAY OF CHAR; MIME: ARRAY OF CHAR; body: Streams.Reader; length: LONGINT;  VAR out : Streams.Reader; VAR res : WORD);
 		VAR w : Streams.Writer; r : Streams.Reader;
@@ -159,9 +159,9 @@ TYPE
 				IF requestHeader.referer # "" THEN w.String("Referer: "); w.String(requestHeader.referer); w.Ln() END;
 				IF requestHeader.useragent # "" THEN w.String("User-Agent: "); w.String(requestHeader.useragent); w.Ln() END;
 				IF requestHeader.accept # "" THEN w.String("Accept: "); w.String(requestHeader.accept); w.Ln() END;
-				WebHTTP.SetAdditionalFieldValue(requestHeader.additionalFields,"Content-Type",MIME); 
+				WebHTTP.SetAdditionalFieldValue(requestHeader.additionalFields,"Content-Type",MIME);
 				IF length>0 THEN
-					Strings.IntToStr(length,len); 
+					Strings.IntToStr(length,len);
 					WebHTTP.SetAdditionalFieldValue(requestHeader.additionalFields,"Content-Length", len);
 				ELSE HALT(300) (*chunked sending not yet implemented - need adaptation of WebHTTP.ChunkedOutStream*)
 				END;
@@ -170,10 +170,10 @@ TYPE
 					w.String(x.key);  w.String(": "); w.String(x.value);w.Ln();
 					x := x.next
 				END;
-				w.Ln(); 
-				
+				w.Ln();
+
 				WHILE length>0 DO
-					body.Bytes(buf, 0, MIN(LEN(buf),length), l); 
+					body.Bytes(buf, 0, MIN(LEN(buf),length), l);
 					w.Bytes(buf,0,l);
 					DEC(length,l);
 				END;

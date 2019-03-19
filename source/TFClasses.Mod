@@ -236,7 +236,7 @@ TYPE
 		BEGIN
 			NEW(hashtable, 256);
 		END Init;
-		
+
 		PROCEDURE CalcHash(CONST buffer : ARRAY OF CHAR) : LONGINT;
 		VAR hash, i : LONGINT; ch : CHAR;
 		BEGIN
@@ -256,7 +256,7 @@ TYPE
 			hash := CalcHash(key);
 			e := hashtable[hash MOD LEN(hashtable)];
 			WHILE (e # NIL) & (e.key^ # key) DO e := e.next END;
-			IF e # NIL THEN RETURN e.value 
+			IF e # NIL THEN RETURN e.value
 			ELSE RETURN NIL
 			END;
 		END Find;
@@ -275,12 +275,12 @@ TYPE
 			e.next := hashtable[hash MOD LEN(hashtable)];
 			hashtable[hash MOD LEN(hashtable)] := e;
 		END Add;
-		
+
 		PROCEDURE GetKeys;
 		BEGIN
-			
+
 		END GetKeys;
-		
+
 
 	END StringHashMap;
 

@@ -258,7 +258,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 					longLo := lo; longHi := j;
 					shortLo := i; shortHi := hi;
 				END;
-				IF (shortLo < shortHi) THEN 
+				IF (shortLo < shortHi) THEN
 					SafeQuickSort(data, shortLo, shortHi);
 				END;
 				(* now: tail recursion, call of: SortRange(data, longLo, longHi) *)
@@ -266,7 +266,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 			END
 		END;
 	END SafeQuickSort;
-	
+
 	(*	haven't needed this in a long time but better keep my fingers crossed
 	PROCEDURE Show* (data: RegionData; points: LONGINT);
 		VAR n: LONGINT; y, x, dir, v: INTEGER;

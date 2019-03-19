@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
@@ -33,9 +33,9 @@ PROCEDURE MakeEdges*;
 	pyx, pyxm, pymx : INTEGER;
 BEGIN
 	l := antsCommands.ScanFromPar("from=OBJ ver=OBJ hor=OBJ threshold=REAL # make edge Arrays from Array ");
-	IF antsCommands.ExpectObjectFromKeyword(l, "from", obj) & 
-		antsCommands.ExpectObjectFromKeyword(l, "ver", objh) & 
-		antsCommands.ExpectObjectFromKeyword(l, "hor", objv) & 
+	IF antsCommands.ExpectObjectFromKeyword(l, "from", obj) &
+		antsCommands.ExpectObjectFromKeyword(l, "ver", objh) &
+		antsCommands.ExpectObjectFromKeyword(l, "hor", objv) &
 		antsCommands.ExpectRealFromKeyword(l, "threshold", beta) THEN
 		A := obj(antsArrayObjects.tINTEGERObject);
 		hor := objh(antsArrayObjects.tINTEGERObject);
@@ -58,8 +58,8 @@ PROCEDURE MakeDiff*;
 BEGIN
 	l := antsCommands.ScanFromPar("from=OBJ ver=OBJ hor=OBJ  # make ABS(diff) Arrays from Array" );
 	IF
-		antsCommands.ExpectObjectFromKeyword(l, "from", obj) & 
-		antsCommands.ExpectObjectFromKeyword(l, "ver", objh) & 
+		antsCommands.ExpectObjectFromKeyword(l, "from", obj) &
+		antsCommands.ExpectObjectFromKeyword(l, "ver", objh) &
 		antsCommands.ExpectObjectFromKeyword(l, "hor", objv) THEN
 		A := obj(antsArrayObjects.tINTEGERObject);
 		hor := objh(antsArrayObjects.tINTEGERObject);
@@ -74,7 +74,7 @@ BEGIN
 	END
 END MakeDiff;
 
-BEGIN aM.launch; 
+BEGIN aM.launch;
 END antsEdges.
 
 fofAutomatic.Do

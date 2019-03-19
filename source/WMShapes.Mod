@@ -12,12 +12,12 @@ TYPE
 
 		isVertical- : WMProperties.BooleanProperty;
 		isVerticalI : BOOLEAN;
-		
+
 		start-, end-: WMProperties.PointProperty;
 		startI, endI: WMGraphics.Point2d;
-		
+
 		arrowAtStart-, arrowAtEnd-:WMProperties.BooleanProperty;
-		arrowAtStartI, arrowAtEndI: BOOLEAN;		
+		arrowAtStartI, arrowAtEndI: BOOLEAN;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -40,20 +40,20 @@ TYPE
 		END Init;
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
-		VAR dx, dy :LONGINT; rect, rect0: WMRectangles.Rectangle; 
+		VAR dx, dy :LONGINT; rect, rect0: WMRectangles.Rectangle;
 		BEGIN
-			IF (property = color) THEN colorI := color.Get(); Invalidate; 
+			IF (property = color) THEN colorI := color.Get(); Invalidate;
 			ELSIF (property = isVertical) THEN isVerticalI := isVertical.Get(); Invalidate;
-			ELSIF (property = start) OR (property = end) THEN	 
+			ELSIF (property = start) OR (property = end) THEN
 				rect0:=bounds.Get();	startI := start.Get(); endI := end.Get();
-				
+
 				rect:=WMRectangles.MakeRect(MIN(startI.x,endI.x)+rect0.l-5, MIN(startI.y,endI.y)+rect0.t-5, MAX(startI.x, endI.x)+rect0.l+5, MAX(startI.y,endI.y)+rect0.t+5); (* add border for arrowhead display *)
 
 				dx:=rect.l - rect0.l;
 				dy:=rect.t - rect0.t;
 				startI.x:=startI.x-dx; endI.x:=endI.x-dx;
 				startI.y:=startI.y-dy; endI.y:=endI.y-dy;
-				
+
 				IF ~WMRectangles.IsEqual(rect,rect0) THEN bounds.Set(rect); END;
 				start.Set(startI);
 				end.Set(endI);
@@ -65,24 +65,24 @@ TYPE
 		END PropertyChanged;
 
 		(* position a line line in parent coordinates*)
-		PROCEDURE Set*(x0,y0, x1, y1: LONGINT); 
+		PROCEDURE Set*(x0,y0, x1, y1: LONGINT);
 		VAR rect:WMRectangles.Rectangle; changed:BOOLEAN;
 		BEGIN
-			rect:=bounds.Get(); 
+			rect:=bounds.Get();
 			changed:=FALSE;
 			IF (x0 # rect.l + startI.x) OR (y0#rect.t+startI.y) THEN start.SetCoordinate(x0-rect.l, y0-rect.t); changed:=TRUE END;
 			IF (x1 # rect.l + endI.x) OR (y1#rect.t+endI.y) THEN end.SetCoordinate(x1-rect.l, y1-rect.t); changed:=TRUE END;
 			IF changed THEN	PropertyChanged(SELF, start); PropertyChanged(SELF, end) END;
 		END Set;
-		
+
 		(** Return if the line is hit at (x, y) in parent coordinates *)
-		PROCEDURE IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE IsHit*(x, y: LONGINT): BOOLEAN;
 		VAR r: WMRectangles.Rectangle; X0,Y0, X1,Y1: LONGINT; hit:BOOLEAN;
 		BEGIN
-			IF ~visible.Get() THEN hit:= FALSE 
+			IF ~visible.Get() THEN hit:= FALSE
 			ELSE
 				r:=GetClientRect();
-				X0:=startI.x+r.l; Y0:=startI.y+r.t; 
+				X0:=startI.x+r.l; Y0:=startI.y+r.t;
 				X1:=endI.x+r.l; Y1:=endI.y+r.t;
 				IF X0=X1 THEN hit:=WMRectangles.PointInRect(x, y, r) & (2>ABS(x-X0))
 				ELSIF Y0=Y1 THEN hit:=WMRectangles.PointInRect(x, y, r) & (2>ABS(y-Y0))
@@ -91,13 +91,13 @@ TYPE
 			END;
 			RETURN hit;
 		END IsHit;
-		
+
 		PROCEDURE SetArrowheads*(arrows:SET);
 		BEGIN
 			IF (0 IN arrows)#arrowAtStartI THEN arrowAtStart.Set(0 IN arrows); PropertyChanged(SELF, arrowAtStart); END;
 			IF (1 IN arrows)#arrowAtEndI THEN arrowAtEnd.Set(1 IN arrows); PropertyChanged(SELF, arrowAtEnd); END;
 		END SetArrowheads;
-		
+
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		CONST pi=3.1516; headscale= 0.25;
 		VAR  alpha: REAL;
@@ -302,7 +302,7 @@ PROCEDURE arctan2(x,y: REAL): REAL; (*arctan in range 0..2pi*)
 		ELSIF x<0 THEN RETURN Math.arctan(y/x)+Math.pi
 		ELSIF (x=0) & (y>0) THEN RETURN Math.pi/2
 		ELSIF (x=0) & (y<0) THEN RETURN 3*Math.pi/2
-		ELSE (*( x=0) & (y=0) *) RETURN 0 (*or RETURN NaN ?*) 
+		ELSE (*( x=0) & (y=0) *) RETURN 0 (*or RETURN NaN ?*)
 		END
 	END arctan2;
 

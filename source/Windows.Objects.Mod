@@ -79,7 +79,7 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			res := Kernel32.SetEvent(hevent)
 		END Wakeup;
-		
+
 		PROCEDURE Exit;
 		BEGIN
 			exiting := TRUE;
@@ -132,7 +132,7 @@ TYPE
 TYPE
 
 	Win32Event = Kernel32.HANDLE;
-	
+
 	GCContext = RECORD
 		nextPos: SIZE; (* 0 to start with *)
 		(*first,*)  last: ARRAY 256 OF ADDRESS; (* first might be not required *)
@@ -178,9 +178,9 @@ TYPE
 			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
 				RETURN
 			END;
-						
+
 			IF CurrentProcess() = SELF THEN
-				sp := SYSTEM.GetStackPointer();  bp :=SYSTEM.GetFramePointer(); pc := Machine.CurrentPC(); 
+				sp := SYSTEM.GetStackPointer();  bp :=SYSTEM.GetFramePointer(); pc := Machine.CurrentPC();
 			ELSE
 				(*! this should never happen or must be changed with mode change eetc.
 					res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
@@ -188,19 +188,19 @@ TYPE
 				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 				res := Kernel32.GetThreadContext( handle, state );
 				IF res = 0 THEN Trace.String("could not get thread context:"); Trace.Int(Kernel32.GetLastError(),1) END;
-				
+
 				sp :=  state.SP; bp := state.BP; pc := state.PC;
-				
+
 				mod := Modules.ThisModuleByAdr0(pc);
 				IF mod # NIL THEN
 					COPY(mod.name, modName);
 					proc := Modules.FindProc(pc,mod.procTable);
 				END;
-				
+
 				obp := bp; osb := stackBottom; opc := pc;
 				osbp := state.BP;
 			END;
-			
+
 			IF TraceProcessHook # NIL THEN
 				TraceProcessHook(SELF,pc,bp,sp,stackBottom);
 			END;
@@ -225,7 +225,7 @@ TYPE
 			#ELSE
 				ASSERT(FALSE);
 			#END
-				
+
 				IF (stackBottom # 0) & (sp # 0) THEN
 					Heaps.RegisterCandidates( sp, stackBottom - sp );
 				END;
@@ -241,14 +241,14 @@ TYPE
 						(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
 						bp := NIL;
 						WHILE (contextPos > 0) & (bp = NIL) DO
-							DEC(contextPos); 
-							bp := gcContext.last[contextPos]; 
-						END; 
+							DEC(contextPos);
+							bp := gcContext.last[contextPos];
+						END;
 						IF bp = NIL THEN
 							EXIT;
 						END;
 					END;
-					
+
 					SYSTEM.GET(bp, n);
 					IF ODD(n) THEN (* procedure descriptor at bp *)
 						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
@@ -262,28 +262,28 @@ TYPE
 							FOR i := 0 TO LEN(desc.offsets)-1 DO
 								adr := bp + desc.offsets[i]; (* pointer at offset *)
 								SYSTEM.GET(adr, p); (* load pointer *)
-								IF p # NIL THEN 
+								IF p # NIL THEN
 									Heaps.Mark(p);
 								END;
 							END;
 						END;
-						SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc); 
+						SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
 						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
 					ELSE (* classical stack frame without procedure descriptor *)
-						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc); 
-						bp := n; 
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
+						bp := n;
 					END;
 				END;
 				(* ASSERT((bp = stackBottom) OR (bp=0) ,12345); can be violated when coming from windows *)
-			END; 
-			
+			END;
+
 			IF (CurrentProcess() # SELF) (* & (mode # Suspended) *) THEN
 				res := Kernel32.ResumeThread(handle);
 				ASSERT(res # -1);
 			END;
 
 		END FindRoots;
-		
+
 	END Process;
 
 TYPE
@@ -293,7 +293,7 @@ TYPE
 
 
 	GCStatusExt = OBJECT(Heaps.GCStatus)
-	
+
 	(* called from Heaps.InvokeGC, i.e. this is a hidden upcall. However, it is necessary to take the Machine.Objects lock here since writing
 		    the set of variables here must not be interrupted, i.e. atomic writing of the set of variables is absolutely necessary.  They system may hang
 		    if the lock is not taken. *)
@@ -374,7 +374,7 @@ TYPE
 		BEGIN
 			res := Kernel32.SetEvent(event);
 		END Activate;
-		
+
 		PROCEDURE Exit;
 		BEGIN
 			exiting := TRUE;
@@ -564,37 +564,37 @@ BEGIN
 				Trace.String( "ECX " );  Trace.Hex( exceptionPointers.context.RC, 1 );  Trace.String( "  EDX " );
 				Trace.Hex( exceptionPointers.context.RD, 1 );  Trace.Ln();  Trace.String( "EDI " );
 				Trace.Hex( exceptionPointers.context.RDI, 1 );  Trace.String( "  ESI " );
-				Trace.Hex( exceptionPointers.context.RSI, 1 );  Trace.Ln();  
+				Trace.Hex( exceptionPointers.context.RSI, 1 );  Trace.Ln();
 			#ELSIF AMD64 THEN
 				Trace.Ln();  Trace.String( "RAX " );  Trace.Address(exceptionPointers.context.RA);
 				Trace.String( "  RBX " );  Trace.Address(exceptionPointers.context.RB);  Trace.Ln();
 				Trace.String( "RCX " );  Trace.Address(exceptionPointers.context.RC);  Trace.String( "  RDX " );
 				Trace.Address(exceptionPointers.context.RD);  Trace.Ln();  Trace.String( "RDI " );
 				Trace.Address(exceptionPointers.context.RDI);  Trace.String( "  RSI " );
-				Trace.Address(exceptionPointers.context.RSI);  Trace.Ln(); 
-				
+				Trace.Address(exceptionPointers.context.RSI);  Trace.Ln();
+
 				Trace.String( "R8 " ); Trace.Address(exceptionPointers.context.R8);
-				Trace.String( " R9 " ); Trace.Address(exceptionPointers.context.R9);  Trace.Ln();  
+				Trace.String( " R9 " ); Trace.Address(exceptionPointers.context.R9);  Trace.Ln();
 				Trace.String( "R10 " ); Trace.Address(exceptionPointers.context.R10);
-				Trace.String( " R11 " ); Trace.Address(exceptionPointers.context.R11);  Trace.Ln();  
+				Trace.String( " R11 " ); Trace.Address(exceptionPointers.context.R11);  Trace.Ln();
 				Trace.String( "R12 " ); Trace.Address(exceptionPointers.context.R12);
-				Trace.String( " R13 " ); Trace.Address(exceptionPointers.context.R13);  Trace.Ln();  
+				Trace.String( " R13 " ); Trace.Address(exceptionPointers.context.R13);  Trace.Ln();
 				Trace.String( "R14 " ); Trace.Address(exceptionPointers.context.R14);
-				Trace.String( " R15 " ); Trace.Address(exceptionPointers.context.R15);  Trace.Ln();  
-				Trace.Ln; 
-			#ELSE 
+				Trace.String( " R15 " ); Trace.Address(exceptionPointers.context.R15);  Trace.Ln();
+				Trace.Ln;
+			#ELSE
 				-- UNIMPLEMENTED --
 			#END
-			
+
 			Trace.String( "BP " );
 			Trace.Address(exceptionPointers.context.BP);  Trace.String( "  SP " );
 			Trace.Address(exceptionPointers.context.SP);  Trace.Ln();  Trace.String( "PC " );
-			Trace.Address(exceptionPointers.context.PC);  Trace.Ln();  
-			
-			
+			Trace.Address(exceptionPointers.context.PC);  Trace.Ln();
+
+
 			Trace.Ln();
 
-			
+
 			eip := exceptionPointers.exception.ExceptionAddress;  ebp := exceptionPointers.context.BP;
 			IF eip = 0 THEN SYSTEM.GET( exceptionPointers.context.SP, eip ) END;
 			stack := t.stackBottom;
@@ -614,7 +614,7 @@ BEGIN
 				END
 			END;
 			Trace.Ln();
-			
+
 			handled := FALSE;  fp := exceptionPointers.context.BP;  sp := exceptionPointers.context.SP;
 			pc := exceptionPointers.context.PC;  handler := Modules.GetExceptionHandler( pc );
 			IF handler # -1 THEN  (* Handler in the current PAF *)
@@ -639,8 +639,8 @@ BEGIN
 		END
 	ELSE exceptionhandler(exceptionPointers.context^, exceptionPointers.exception^,handled );
 	END;
-	IF ~handled THEN 
-		exceptionPointers.context.PC := t.restartPC ; 
+	IF ~handled THEN
+		exceptionPointers.context.PC := t.restartPC ;
 		exceptionPointers.context.SP := t.restartSP;
 		exceptionPointers.context.BP := t.stackBottom;
 	ELSIF TraceVerbose THEN Trace.StringLn ( "trying to jump to FINALLY pc..." );
@@ -666,7 +666,7 @@ END RemoveExcpFrm;
 
 PROCEDURE InstallExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
 BEGIN
-	Kernel32.AddVectoredContinueHandler(1, ExcpFrmHandler); 
+	Kernel32.AddVectoredContinueHandler(1, ExcpFrmHandler);
 END InstallExcpFrm;
 
 PROCEDURE InQueue( queue: ProcessQueue;  t: Process ): BOOLEAN;
@@ -832,7 +832,7 @@ PROCEDURE NewProcess(body: Body; priority: LONGINT;  flags: SET; obj: ProtectedO
 VAR t,r: Process;  fn: Heaps.FinalizerNode;
 BEGIN
 	NEW(t);
-	t.gcContext.nextPos := 0; 
+	t.gcContext.nextPos := 0;
 	t.context := CurrentContext(); (* inherit context from parent process *)
 	t.handle := 0;
 	IF priority = 0 THEN  (* no priority specified *)
@@ -856,9 +856,9 @@ BEGIN
 	ELSE  (* terminate process *)
 		t.restartPC := SYSTEM.VAL(ADDRESS, terminateProc);
 	END;
-	
+
 	(*! Put the process into the process queue before the thread is created.
-		this is highly important in case of a DLL, where Objects.AttachThread 
+		this is highly important in case of a DLL, where Objects.AttachThread
 		will be called by Kernel32.EntryPoint (DllMain)
 	*)
 	Put(ready, t);
@@ -880,7 +880,7 @@ VAR t : Process; heapBlock {UNTRACED}: Heaps.HeapBlock;
 BEGIN
 	ASSERT(priority >= 0, 1000); ASSERT(priority <=Realtime, 1001);
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, heapBlock);
-	
+
 	ASSERT(heapBlock IS Heaps.ProtRecBlock); (* protected object *)
 	IF Restart IN flags THEN INCL(flags, Resistant) END;   (* SAFE => Restart & Resistant *)
 	NewProcess(body, priority, flags, obj, t);  INC(nProcs);  (* acquires Machine.Objects lock *)
@@ -1129,7 +1129,7 @@ PROCEDURE Init;   (* can not use NEW *)
 VAR t: Process;  fn: Heaps.FinalizerNode;  proc: Kernel32.HANDLE;
 	res: Kernel32.BOOL;
 BEGIN
-	Kernel32.AddVectoredExceptionHandler(1, ExcpFrmHandler); 
+	Kernel32.AddVectoredExceptionHandler(1, ExcpFrmHandler);
 	Kernel32.InitializeCriticalSection(excplock);
 	numberOfProcessors := Machine.NumberOfProcessors();
 
@@ -1216,7 +1216,7 @@ BEGIN
 	Machine.Acquire(Machine.Objects);
 	ASSERT (t # event );
 	IF t.next # NIL THEN
-		t.next.prev := t.prev;  
+		t.next.prev := t.prev;
 		IF t.prev#NIL THEN t.prev.next := t.next; END;
 		t.next := NIL;
 		t.prev := NIL
@@ -1272,7 +1272,7 @@ END NumReady;
 	return the number of cycles since the process has been created. If FALSE, return the number of cycles
 	consumed since the last time asked. *)
 PROCEDURE GetCpuCycles*(process : Process; VAR cpuCycles : CpuCyclesArray; all : BOOLEAN);
-VAR res : Kernel32.BOOL; temp : HUGEINT; 
+VAR res : Kernel32.BOOL; temp : HUGEINT;
 BEGIN
 	ASSERT(process # NIL);
 	IF (Kernel32.QueryThreadCycleTime # NIL) THEN
@@ -1310,7 +1310,7 @@ VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: AD
 PROCEDURE LeaveA2*;
 VAR cur: Process; ebp,n: ADDRESS;
 BEGIN
-	#IF AMD64 THEN	
+	#IF AMD64 THEN
 	CODE
 		PUSH RCX
 		PUSH RDX
@@ -1318,18 +1318,18 @@ BEGIN
 		PUSH R9
 	END;
 	#END
-	IF clock = NIL THEN 
-		RETURN 
+	IF clock = NIL THEN
+		RETURN
 	END;
 
 	cur := CurrentProcess();
-	IF cur # NIL THEN 
+	IF cur # NIL THEN
 		ebp := SYSTEM.GetFramePointer();
 		SYSTEM.GET(ebp, n);
 		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
 		cur.gcContext.last[cur.gcContext.nextPos] := ebp;
 		INC(cur.gcContext.nextPos);
-		ASSERT(cur.gcContext.nextPos < 255); 
+		ASSERT(cur.gcContext.nextPos < 255);
 	END;
 	#IF AMD64 THEN
 	CODE
@@ -1348,12 +1348,12 @@ BEGIN
 	IF clock = NIL THEN RETURN END;
 	cur := CurrentProcess();
 	IF cur # NIL THEN
-		IF (cur.gcContext.nextPos > 0) THEN 
+		IF (cur.gcContext.nextPos > 0) THEN
 			DEC(cur.gcContext.nextPos);
 		END;
 		cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* returned *)
 		(*cur.gcContext.first[cur.gcContext.nextPos] := NIL; (* returned *)*)
-	END;	
+	END;
 END ReenterA2;
 
 #IF SHAREDLIB THEN
@@ -1633,7 +1633,7 @@ VAR
 
 VAR
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
-	
+
 BEGIN
 	TraceProcessHook := NIL;
 	exceptionhandler := NIL;
@@ -1642,8 +1642,7 @@ BEGIN
 	tlsIndex := Kernel32.TlsAlloc();
 	ASSERT ( tlsIndex # Kernel32.TLSOutOfIndexes );
 	Kernel32.SendToDebugger("Modules.root", ADDRESSOF(Modules.root));
-	
-	
+
 	Init;
 END Objects.
 

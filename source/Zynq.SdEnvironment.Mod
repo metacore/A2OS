@@ -6,7 +6,7 @@ MODULE SdEnvironment;
 
 IMPORT
 	Machine, Objects, KernelLog, Strings, Locks, PsConfig, BootConfig;
-	
+
 TYPE
 	Time* = HUGEINT; (* Time type *)
 
@@ -23,9 +23,9 @@ VAR
 	Ln *: PROCEDURE;
 	FlushDCacheRange *,
 	InvalidateDCacheRange *: PROCEDURE (adr: ADDRESS; len: SIZE);
-	
+
 	GetTimeCounter-: PROCEDURE(): Time;
-	
+
 	cpuClockHz: LONGINT;
 
 	PROCEDURE Enable * (sd: LONGINT): BOOLEAN;
@@ -56,7 +56,7 @@ VAR
 		acq := lock.Acquire;
 		rel := lock.Release
 	END GetLock;
-	
+
 	(** Convert microseconds to time counts *)
 	PROCEDURE FromMicro*(us: Time): Time;
 	BEGIN
@@ -87,14 +87,14 @@ VAR
 		t := GetTimeCounter() + FromMilli(ms);
 		WHILE GetTimeCounter() <= t DO END;
 	END WaitMilli;
-	
+
 	PROCEDURE WaitMicro*(us: Time);
 	VAR t: Time;
 	BEGIN
 		t := GetTimeCounter() + FromMicro(us);
 		WHILE GetTimeCounter() <= t DO END;
 	END WaitMicro;
-	
+
 BEGIN
 	InstallHandler := Objects.InstallHandler;
 	Char := KernelLog.Char;
@@ -108,6 +108,6 @@ BEGIN
 	FlushDCacheRange := Machine.FlushDCacheRange;
 	InvalidateDCacheRange := Machine.InvalidateDCacheRange;
 	cpuClockHz := BootConfig.GetIntValue("CpuClockHz");
-	
+
 	GetTimeCounter := Machine.GetTimer;
 END SdEnvironment.2

@@ -12,13 +12,13 @@ CONST
 	Width* = Keccak.Width;
 	DefaultRate* = 1024;
 	DefaultCapacity* = 576;
-	
-TYPE 
-	Instance* = OBJECT 
+
+TYPE
+	Instance* = OBJECT
 	VAR
 		state: Keccak.Instance;	(* The state processed by the permutation. *)
 		chunk: LONGINT;		(* The value of the rate in bytes *)
-		index: LONGINT;			(* The position in the state of the next byte to be 
+		index: LONGINT;			(* The position in the state of the next byte to be
 									input (when absorbing) or output (when squeezing). *)
 		squeezing: BOOLEAN	;	(* false: in the absorbing phase; otherwise, in the squeezing phase. *)
 		cmodl: LONGINT;		(* chunk MOD LaneSize *)
@@ -29,8 +29,8 @@ TYPE
 			NEW( state );
 			Initialize( DefaultRate, DefaultCapacity )
 		END Init;
-		
-		
+
+
 		PROCEDURE Initialize*( rate, capacity: LONGINT );
 		BEGIN
 			ASSERT( rate + capacity = Width );
@@ -42,20 +42,20 @@ TYPE
 			cdivl := chunk DIV LaneSize;
 			squeezing := FALSE
 		END Initialize;
-	
-		
+
+
 		PROCEDURE Absorb*( CONST data: ARRAY OF CHAR; offset, len: LONGINT );
-		VAR 
+		VAR
 			piece, lanes, laneNo, laneOffset, bytes: LONGINT;
 		BEGIN
-			ASSERT( squeezing = FALSE ); 
+			ASSERT( squeezing = FALSE );
 			WHILE len > 0 DO
 				IF (index = 0) & ( len >= chunk) THEN
 					(* fast lane: processing whole blocks first *)
 					state.XORLanes( data, offset, cdivl );
 					IF cmodl # 0 THEN  state.XORBytesInLane( cdivl, 0, cmodl, data, offset )  END;
 					state.Permute;
-					INC( offset, chunk );  DEC( len, chunk );  
+					INC( offset, chunk );  DEC( len, chunk );
 				ELSE
 					(* normal lane: using the message queue*)
 					piece := len;
@@ -63,8 +63,8 @@ TYPE
 					IF (index = 0) & (piece >=  LaneSize) THEN
 						lanes := piece DIV LaneSize;  bytes := lanes*LaneSize;
 						state.XORLanes( data, offset, lanes );
-						INC( offset, bytes );  DEC( len, bytes );  DEC( piece, bytes ); 
-						INC( index, bytes );   
+						INC( offset, bytes );  DEC( len, bytes );  DEC( piece, bytes );
+						INC( index, bytes );
 					END;
 					WHILE piece > 0 DO
 						laneNo := index DIV LaneSize;
@@ -79,9 +79,9 @@ TYPE
 				END
 			END
 		END Absorb;
-		
-		
-		
+
+
+
 		PROCEDURE Squeeze*( VAR data: ARRAY OF CHAR;  offset, len: LONGINT );
 		VAR piece, lanes, laneNo, laneOffset, bytes: LONGINT;
 		BEGIN
@@ -116,11 +116,11 @@ TYPE
 				END
 			END;
 		END Squeeze;
-		
+
 		PROCEDURE AbsorbLastFewBits*( data: CHAR );
 		VAR tmp: ARRAY 4 OF CHAR;
 		BEGIN
-			ASSERT( (data # 0X) & (squeezing = FALSE) ); 
+			ASSERT( (data # 0X) & (squeezing = FALSE) );
 			tmp[0] := data;
 			state.XORBytesInLane( index DIV LaneSize, index MOD LaneSize, 1, tmp, 0 );
 			IF (data >= 80X) & (index = chunk - 1) THEN  state.Permute  END;
@@ -129,9 +129,9 @@ TYPE
 			index := 0;
 			squeezing := TRUE
 		END AbsorbLastFewBits;
-	
+
 	END Instance;
-	
+
 
 
 END CryptoKeccakSponge.

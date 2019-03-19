@@ -4,11 +4,11 @@ IMPORT Serials, Network, Plugins, Commands, Modules, Strings;
 
 TYPE
 	LinkDevice = OBJECT (Network.LinkDevice)
-	
+
 		VAR port: Serials.Port;
 		VAR next: LinkDevice;
 		VAR status: LONGINT;
-		
+
 		PROCEDURE & Init (port: Serials.Port; next: LinkDevice);
 		VAR name: ARRAY 20 OF CHAR; result: LONGINT;
 		BEGIN
@@ -42,7 +42,7 @@ TYPE
 				QueueBuffer(buffer, 0);
 			END;
 		END Receive;
-		
+
 		PROCEDURE Finalize (connected: BOOLEAN);
 		BEGIN
 			IF connected THEN port.Close END;
@@ -50,12 +50,12 @@ TYPE
 			Network.registry.Remove(SELF);
 			Finalize^(connected);
 		END Finalize;
-		
+
 	BEGIN {ACTIVE}
 		Receive;
 		BEGIN {EXCLUSIVE} status := Network.LinkNotLinked END;
 	END LinkDevice;
-	
+
 VAR device: LinkDevice;
 
 (* SerialNetwork.Install portnr bps data parity *)
@@ -81,7 +81,7 @@ BEGIN
 				ELSE
 					context.error.String ("Serial network: Failed to open port "); context.error.Int (portNr, 0); context.error.Ln;
 					context.result := Commands.CommandError;
-				END;				
+				END;
 			ELSE
 				context.error.String ("Serial network: Port "); context.error.Int (portNr, 0); context.error.String (" is not available"); context.error.Ln;
 				context.result := Commands.CommandError;

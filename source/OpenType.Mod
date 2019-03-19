@@ -13,7 +13,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 		KernelLog, Strings, Files;
 
 
-	CONST 
+	CONST
 		SharpenContours = TRUE; (* switching off sharpening can result in visually hard to see lines in small chinese fonts *)
 
 	CONST
@@ -1345,30 +1345,30 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 
 	PROCEDURE SharpenC(VAR x0,x1,a0,a1: INTEGER);
 	BEGIN
-		IF x0=x1 THEN 
+		IF x0=x1 THEN
 			a0 := 0; a1 := 0; INC(x1)
 		ELSIF ((x1-x0) = 1) & (a0 # 0) THEN
-			
-			IF 40H-a0 > a1 THEN 
-				a0 := 0; 
+
+			IF 40H-a0 > a1 THEN
+				a0 := 0;
 				(*a1 := 0;*)
 				(*DEC(a0,a1); a1 := 0;*)
-			ELSE 
+			ELSE
 				(*a0 := 0; *) a1 := 0; (* INC(x0); *) INC(x1);
 				(*INC(a1, 40H-a0); a0 := 3FH;*)
 			END;
 		END;
 	END SharpenC;
-	
+
 	PROCEDURE EnumRow (row: INTEGER; beg, end: F26D6; VAR data: OpenTypeScan.EnumData);
 	VAR x0, a0, x1, a1: INTEGER;
 	BEGIN
 		WITH data: RasterData DO
 			x0 := SHORT(beg DIV 40H); a0 := SHORT(beg MOD 40H);
 			x1 := SHORT(end DIV 40H); a1 := SHORT(end MOD 40H);
-			
+
 			IF SharpenContours THEN SharpenC(x0,x1,a0,a1) END;
-			
+
 			IF x0 < x1 THEN
 				IF a0 # 0 THEN
 					data.rect(x0, row, x0+1, row+1, 4*(40H-a0), data);

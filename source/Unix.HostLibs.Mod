@@ -12,10 +12,10 @@ TYPE
 
 CONST
 	NilLibHandle* = NIL; (** invalid library handle *)
-	
+
 (*
 	dlopen flags
-	
+
 	#define RTLD_LAZY     0x0001
 	#define RTLD_NOW      0x0002
 	#define RTLD_GLOBAL   0x0100
@@ -45,7 +45,7 @@ CONST
 		Free a previously loaded dynamic library
 
 		lib: library handle
-		
+
 		Return: TRUE in case of success
 	*)
 	PROCEDURE FreeLibrary*(CONST lib: LibHandle): BOOLEAN;

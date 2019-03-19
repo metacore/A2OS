@@ -19,43 +19,43 @@ CONST
 	Backlog = 5;		(* max number of pending connections *)
 
 
-TYPE				
-	SocketAdr* = POINTER TO RECORD 
+TYPE
+	SocketAdr* = POINTER TO RECORD
 		family*		: INTEGER;
 		port*		: INTEGER;	(* in network byte order! *)
 	END;
-		
+
 	SocketAdrV4* = POINTER TO RECORD (SocketAdr)
 		v4Adr*		: LONGINT;
 		zero*		: ARRAY 8 OF CHAR
 	END;
-		
+
 	SocketAdrV6* = POINTER TO RECORD (SocketAdr)
 		flowinfo*	: LONGINT;
 		v6Adr*		: ARRAY 16 OF CHAR;
 		scopeId*	: LONGINT;
 		srcId*		: LONGINT
 	END;
-		
+
 	NameBuf = POINTER TO RECORD
 		buf: ARRAY 64 OF CHAR
 	END;
 
 
 	SocketOption = RECORD END;
-		
+
 	Linger = RECORD (SocketOption)
 		onoff	: LONGINT;
 		linger	: LONGINT;
 	END;
-		
+
 	Switch = RECORD (SocketOption)
 		onoff	: LONGINT
 	END;
 
 
 VAR
-	socket		: PROCEDURE {C} ( af, typ, protocol: LONGINT ): LONGINT;		
+	socket		: PROCEDURE {C} ( af, typ, protocol: LONGINT ): LONGINT;
 	setsockopt	: PROCEDURE {C} ( s: LONGINT; level, optname: LONGINT; VAR opt: SocketOption; optlen: LONGINT): LONGINT;
 	accept		: PROCEDURE {C} ( s: LONGINT; adrPtr: ADDRESS; VAR adrlen: LONGINT ): LONGINT;
 	bind		: PROCEDURE {C} ( s: LONGINT; adr: SocketAdr; adrlen: LONGINT ): LONGINT;
@@ -66,16 +66,16 @@ VAR
 	recvfrom	: PROCEDURE {C} ( s: LONGINT; buf: ADDRESS; len, flags: LONGINT; from: NameBuf; VAR flen: LONGINT ): LONGINT;
 	sendto		: PROCEDURE {C} ( s: LONGINT; buf: ADDRESS; len, flags: LONGINT; to: SocketAdr; tolen: LONGINT ): LONGINT;
 	shutdown	: PROCEDURE {C} ( s: LONGINT; how: LONGINT );
-	
+
 	getpeername	: PROCEDURE {C} ( s: LONGINT; adr: NameBuf; VAR adrlen: LONGINT ): LONGINT;
 	getsockname	: PROCEDURE {C} ( s: LONGINT; adr: NameBuf; VAR adrlen: LONGINT ): LONGINT;
-	
+
 	htonl	: PROCEDURE {C} ( hostlong	: LONGINT ): LONGINT;
 	htons	: PROCEDURE {C} ( hostshort	: LONGINT ): LONGINT;
 	ntohl	: PROCEDURE {C} ( netlong		: LONGINT ): LONGINT;
 	ntohs	: PROCEDURE {C} ( netshort	: LONGINT ): LONGINT;
-	
-	
+
+
 	PROCEDURE NewSocketAdr*( ip: IP.Adr; port: LONGINT ): SocketAdr;
 	VAR sadr4: SocketAdrV4;  sadr6: SocketAdrV6; i: LONGINT;
 	BEGIN
@@ -105,7 +105,7 @@ VAR
 			HALT( 99 )
 		END
 	END NewSocketAdr;
-	
+
 	PROCEDURE SockAdrToIPAdr*( sadr: SocketAdr ): IP.Adr;
 	VAR ip: IP.Adr;  i: LONGINT;
 	BEGIN
@@ -122,7 +122,7 @@ VAR
 		END;
 		RETURN ip
 	END SockAdrToIPAdr;
-	
+
 	PROCEDURE GetPortNumber*( sadr: SocketAdr ): LONGINT;
 	VAR port: LONGINT;
 	BEGIN
@@ -132,14 +132,14 @@ VAR
 	END GetPortNumber;
 
 	PROCEDURE BufToSocketAdr( CONST buf: ARRAY OF CHAR; len: LONGINT ): SocketAdr;
-	VAR adr4: SocketAdrV4; adr6: SocketAdrV6; 
+	VAR adr4: SocketAdrV4; adr6: SocketAdrV6;
 	BEGIN
 		IF len = Unix.SockAddrSizeV4 THEN
-			NEW( adr4 ); 
+			NEW( adr4 );
 			S.MOVE( ADDRESSOF( buf ), ADDRESSOF( adr4^), len );
 			RETURN adr4
 		ELSE
-			NEW( adr6 ); 
+			NEW( adr6 );
 			S.MOVE( ADDRESSOF( buf ), ADDRESSOF( adr6^), len );
 			RETURN adr6
 		END
@@ -158,11 +158,11 @@ VAR
 	END Accept;
 
 	PROCEDURE Bind*( s: LONGINT; addr: SocketAdr): BOOLEAN;
-	VAR err, len: LONGINT;  
+	VAR err, len: LONGINT;
 	BEGIN
 		IF addr.family = Unix.AFINET THEN  len := Unix.SockAddrSizeV4  ELSE  len := Unix.SockAddrSizeV6  END;
 		err:= bind( s, addr, len );
-		RETURN err = 0 
+		RETURN err = 0
 	END Bind;
 
 	PROCEDURE Close*( s: LONGINT );
@@ -177,9 +177,9 @@ VAR
 	BEGIN
 		IF addr.family = Unix.AFINET THEN  len := Unix.SockAddrSizeV4  ELSE  len := Unix.SockAddrSizeV6  END;
 		err:= connect( s, addr, len );
-		IF err = 0 THEN 
-			RETURN TRUE 
-		ELSE 
+		IF err = 0 THEN
+			RETURN TRUE
+		ELSE
 			Unix.Perror( "Sockets.Connect: " );
 			RETURN FALSE
 		END;
@@ -191,11 +191,11 @@ VAR
 	BEGIN
 		NEW( buf );  len := 64;
 		err := getsockname( s, buf, len );
-		IF err = 0 THEN 
+		IF err = 0 THEN
 			RETURN BufToSocketAdr( buf.buf, len )
 		ELSE
 			Unix.Perror( "Sockets.GetSockName" );
-			RETURN NIL 
+			RETURN NIL
 		END
 	END GetSockName;
 
@@ -205,11 +205,11 @@ VAR
 	BEGIN
 		NEW( buf );  len := 64;
 		err:= getpeername( s, buf, len );
-		IF err = 0 THEN 
+		IF err = 0 THEN
 			RETURN BufToSocketAdr( buf.buf, len )
-		ELSE 
+		ELSE
 			Unix.Perror( "Sockets.GetPeerName" );
-			RETURN NIL 
+			RETURN NIL
 		END
 	END GetPeerName;
 
@@ -217,7 +217,7 @@ VAR
 	VAR err: LONGINT;
 	BEGIN
 		err := listen( s, Backlog );
-		RETURN err = 0 
+		RETURN err = 0
 	END Listen;
 
 	PROCEDURE Recv*( s: LONGINT; VAR buf: ARRAY OF CHAR; pos: LONGINT; VAR len: LONGINT; flags: LONGINT ): BOOLEAN;
@@ -227,11 +227,11 @@ VAR
 			res := recv( s, ADDRESSOF( buf[pos] ), len, flags );
 			IF res < 0 THEN  err := Unix.errno()  END
 		UNTIL (res >= 0) OR (err # Unix.EINTR);
-		IF err >= 0 THEN 
-			len:= res;  RETURN TRUE 
-		ELSE 
+		IF err >= 0 THEN
+			len:= res;  RETURN TRUE
+		ELSE
 			Unix.Perror( "Sockets.Recv" );
-			len:= 0;  RETURN FALSE 
+			len:= 0;  RETURN FALSE
 		END
 	END Recv;
 
@@ -240,17 +240,17 @@ VAR
 	BEGIN
 		ASSERT( LEN(buf)-pos >= len );
 		err := send( s, ADDRESSOF( buf[pos] ), len, 0 );
-		IF err >= 0 THEN 
-			len := err;  RETURN TRUE 
-		ELSE 
+		IF err >= 0 THEN
+			len := err;  RETURN TRUE
+		ELSE
 			Unix.Perror( "Sockets.Send" );
-			len := 0;  RETURN FALSE 
+			len := 0;  RETURN FALSE
 		END
 	END Send;
-	
-	
-	
-	PROCEDURE RecvFrom*( s: LONGINT; VAR from: SocketAdr; 
+
+
+
+	PROCEDURE RecvFrom*( s: LONGINT; VAR from: SocketAdr;
 						    VAR buf: ARRAY OF CHAR; pos: LONGINT;  VAR len: LONGINT ): BOOLEAN;
 	VAR res, err, size: LONGINT; nbuf: NameBuf;
 	BEGIN
@@ -259,12 +259,12 @@ VAR
 			res := recvfrom( s, ADDRESSOF(buf[pos]), LEN( buf ) - pos, 0, nbuf, size );
 			IF res < 0 THEN  err := Unix.errno()  END
 		UNTIL (res >= 0) OR (err # Unix.EINTR);
-		IF res >= 0 THEN 
+		IF res >= 0 THEN
 			from := BufToSocketAdr( nbuf.buf, size );
-			len := res;  RETURN TRUE 
-		ELSE 
+			len := res;  RETURN TRUE
+		ELSE
 			Unix.Perror( "Sockets.RecvFrom" );
-			len := 0;  RETURN FALSE 
+			len := 0;  RETURN FALSE
 		END
 	END RecvFrom;
 
@@ -274,11 +274,11 @@ VAR
 		ASSERT( LEN(buf) - pos >= len );
 		IF dest.family = Unix.AFINET THEN  size := Unix.SockAddrSizeV4  ELSE  size := Unix.SockAddrSizeV6  END;
 		err:= sendto( s, ADDRESSOF( buf[pos] ), len, 0, dest, size );
-		IF err >= 0 THEN 
-			RETURN TRUE 
-		ELSE 
+		IF err >= 0 THEN
+			RETURN TRUE
+		ELSE
 			Unix.Perror( "Sockets.SendTo" );
-			RETURN FALSE 
+			RETURN FALSE
 		END
 	END SendTo;
 
@@ -286,11 +286,11 @@ VAR
 	VAR s: LONGINT;
 	BEGIN
 		s := socket( af, typ, protocol );
-		RETURN s 
+		RETURN s
 	END Socket;
 
 	PROCEDURE Available*( s: LONGINT ): LONGINT;
-	VAR available, err: LONGINT; 
+	VAR available, err: LONGINT;
 	BEGIN
 		available := 0;
 		err := Unix.ioctl( s, Unix.FioNRead, ADDRESSOF( available ) );
@@ -306,7 +306,7 @@ VAR
 	CONST
 		SLen = Unix.FdSetLen;
 		SetBits = SIZEOF( SET32 ) * 8;
-	VAR 
+	VAR
 		res, i: LONGINT;
 		readfds: Unix.FdSet;
 		timeout: Unix.Timeval;
@@ -315,15 +315,15 @@ VAR
 		FOR i := 0 TO SLen - 1  DO readfds[i] := {} END;
 		INCL( readfds[s DIV SetBits],  s MOD SetBits );
 		res := Unix.select( s+1, ADDRESSOF( readfds ), 0, 0, timeout );
-		RETURN res > 0 
+		RETURN res > 0
 	END Requested;
-	
-	
+
+
 	PROCEDURE AwaitPacket*( s: LONGINT; ms: LONGINT ): BOOLEAN;
 	CONST
 		SLen = Unix.FdSetLen;
 		SetBits = SIZEOF( SET32 ) * 8;
-	VAR 
+	VAR
 		res, err, i: LONGINT;
 		readfds: Unix.FdSet;
 		timeout: Unix.Timeval;
@@ -336,45 +336,45 @@ VAR
 			res := Unix.select( s+1, ADDRESSOF( readfds ), 0, 0, timeout );
 			IF res < 0 THEN  err := Unix.errno()  END
 		UNTIL (res >= 0) OR (err # Unix.EINTR);
-		RETURN res > 0 
+		RETURN res > 0
 	END AwaitPacket;
 
-	
+
 	PROCEDURE SetLinger* ( s: LONGINT ): BOOLEAN;
-	VAR 
+	VAR
 		linger: Linger;
 		err: LONGINT;
 	BEGIN
 		linger.onoff := 1;  linger.linger := 1;
 		err := setsockopt( s, Unix.SoLSocket, Unix.SoLinger, linger, SIZE OF Linger);
 		IF err # 0 THEN  Unix.Perror(  "Sockets.SetLinger (setsockopt)" )  END;
-		RETURN err = 0 
+		RETURN err = 0
 	END SetLinger;
-	
+
 	PROCEDURE KeepAlive* ( s: LONGINT; enable: BOOLEAN ): BOOLEAN;
-	VAR 
+	VAR
 		opt: Switch;
 		err: LONGINT;
 	BEGIN
-		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;  
+		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;
 		err := setsockopt( s, Unix.SoLSocket, Unix.SoKeepAlive, opt, SIZE OF Switch );
 		IF err # 0 THEN  Unix.Perror(  "Sockets.KeepAlive (setsockopt)" )  END;
-		RETURN err = 0 
+		RETURN err = 0
 	END KeepAlive;
-	
-	
+
+
 	PROCEDURE NoDelay* ( s: LONGINT; enable: BOOLEAN ): BOOLEAN;
-	VAR 
+	VAR
 		opt: Switch;
 		err: LONGINT;
 	BEGIN
-		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;  
+		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;
 		err := setsockopt( s, Unix.IpProtoTCP, Unix.SoNoDelay, opt, SIZE OF Switch );
 		IF err # 0 THEN  Unix.Perror(  "Sockets.NoDelay (setsockopt)" )  END;
-		RETURN err = 0 
+		RETURN err = 0
 	END NoDelay;
-	
-	
+
+
 	PROCEDURE NetToInt* (x: INTEGER): INTEGER;
 	BEGIN
 		RETURN SHORT(ntohs(LONG(x)))

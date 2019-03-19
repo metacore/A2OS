@@ -25,149 +25,149 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 
 
-IMPORT antsObjects, Objects, Files, antsArrayObjects, antsKernel, antsModels, antsCommands, vyName, Links, aM := antsMessages;  
+IMPORT antsObjects, Objects, Files, antsArrayObjects, antsKernel, antsModels, antsCommands, vyName, Links, aM := antsMessages;
 
-TYPE 
-	
-	tModel* = POINTER TO tModelDesc;  
-	tModelDesc* = RECORD (antsModels.tModelDesc);  
+TYPE
+
+	tModel* = POINTER TO tModelDesc;
+	tModelDesc* = RECORD (antsModels.tModelDesc);
 		synchroneus: BOOLEAN
-	END;  
-	
-	PROCEDURE StoreM( VAR R: Files.Rider;  s: tModel );  
-	BEGIN 
+	END;
+
+	PROCEDURE StoreM( VAR R: Files.Rider;  s: tModel );
+	BEGIN
 		Files.WriteInt( R, 0 )
-	END StoreM;  
+	END StoreM;
 
-	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );  
-	VAR version: INTEGER;  
-	BEGIN 
+	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
+	VAR version: INTEGER;
+	BEGIN
 		Files.ReadInt( R, version )
-	END LoadM;  
+	END LoadM;
 
-	PROCEDURE OneSweep( s: antsKernel.Kernel );  
-	VAR x, y, maxx, maxy: LONGINT;  A: antsArrayObjects.tINTEGERArray;  ym, yp, xm, xp, config: LONGINT;  model: tModel;  
-		AO: antsArrayObjects.tINTEGERObject;  tempA: antsArrayObjects.tINTEGERObject;  orig: Objects.Object;  
+	PROCEDURE OneSweep( s: antsKernel.Kernel );
+	VAR x, y, maxx, maxy: LONGINT;  A: antsArrayObjects.tINTEGERArray;  ym, yp, xm, xp, config: LONGINT;  model: tModel;
+		AO: antsArrayObjects.tINTEGERObject;  tempA: antsArrayObjects.tINTEGERObject;  orig: Objects.Object;
 
-		PROCEDURE DistriFromLocalChar;  
-		BEGIN 
-			config := 0;  
-			IF A[ym, x] = 1 THEN INC( config, 1 ) END;  
-			IF A[y, xm] = 1 THEN INC( config, 1 ) END;  
-			IF A[yp, x] = 1 THEN INC( config, 1 ) END;  
-			IF A[y, xp] = 1 THEN INC( config, 1 ) END;  
-			IF A[ym, xm] = 1 THEN INC( config, 1 ) END;  
-			IF A[ym, xp] = 1 THEN INC( config, 1 ) END;  
-			IF A[yp, xm] = 1 THEN INC( config, 1 ) END;  
-			IF A[yp, xp] = 1 THEN INC( config, 1 ) END;  
+		PROCEDURE DistriFromLocalChar;
+		BEGIN
+			config := 0;
+			IF A[ym, x] = 1 THEN INC( config, 1 ) END;
+			IF A[y, xm] = 1 THEN INC( config, 1 ) END;
+			IF A[yp, x] = 1 THEN INC( config, 1 ) END;
+			IF A[y, xp] = 1 THEN INC( config, 1 ) END;
+			IF A[ym, xm] = 1 THEN INC( config, 1 ) END;
+			IF A[ym, xp] = 1 THEN INC( config, 1 ) END;
+			IF A[yp, xm] = 1 THEN INC( config, 1 ) END;
+			IF A[yp, xp] = 1 THEN INC( config, 1 ) END;
 			IF config = 3 THEN tempA.A[y, x] := 1
 			ELSIF config = 2 THEN tempA.A[y, x] := A[y, x]
 			ELSE tempA.A[y, x] := 0
-			END 
-		END DistriFromLocalChar;  
+			END
+		END DistriFromLocalChar;
 
-		PROCEDURE CorrectBorder;  
-		BEGIN 
-			IF x = 0 THEN xm := maxx ELSE xm := x - 1 END;  
-			IF x = maxx THEN xp := 0 ELSE xp := x + 1 END;  
-			IF y = maxy THEN yp := 0 ELSE yp := y + 1 END;  
-			IF y = 0 THEN ym := maxy ELSE ym := y - 1 END 
-		END CorrectBorder;  
+		PROCEDURE CorrectBorder;
+		BEGIN
+			IF x = 0 THEN xm := maxx ELSE xm := x - 1 END;
+			IF x = maxx THEN xp := 0 ELSE xp := x + 1 END;
+			IF y = maxy THEN yp := 0 ELSE yp := y + 1 END;
+			IF y = 0 THEN ym := maxy ELSE ym := y - 1 END
+		END CorrectBorder;
 
-		PROCEDURE SimpleBorder;  
-		BEGIN 
+		PROCEDURE SimpleBorder;
+		BEGIN
 			xm := x - 1;  xp := x + 1;  ym := y - 1;  yp := y + 1
-		END SimpleBorder;  
+		END SimpleBorder;
 
-	BEGIN 
-		model := s.par( tModel );  AO := s.A( antsArrayObjects.tINTEGERObject );  
-		IF model.synchroneus THEN Links.GetLink( AO, "orig", orig );  tempA := orig( antsArrayObjects.tINTEGERObject ) 
+	BEGIN
+		model := s.par( tModel );  AO := s.A( antsArrayObjects.tINTEGERObject );
+		IF model.synchroneus THEN Links.GetLink( AO, "orig", orig );  tempA := orig( antsArrayObjects.tINTEGERObject )
 		ELSE tempA := s.A( antsArrayObjects.tINTEGERObject )
-		END;  
-		maxx := AO.w - 1;  maxy := AO.h - 1;  A := AO.A;  y := 0;  
-		FOR x := 0 TO maxx DO CorrectBorder();  DistriFromLocalChar() END;  
-		FOR y := 1 TO maxy - 1 DO 
-			x := 0;  CorrectBorder();  DistriFromLocalChar();  
-			FOR x := 1 TO maxx - 1 DO SimpleBorder();  DistriFromLocalChar() END;  
+		END;
+		maxx := AO.w - 1;  maxy := AO.h - 1;  A := AO.A;  y := 0;
+		FOR x := 0 TO maxx DO CorrectBorder();  DistriFromLocalChar() END;
+		FOR y := 1 TO maxy - 1 DO
+			x := 0;  CorrectBorder();  DistriFromLocalChar();
+			FOR x := 1 TO maxx - 1 DO SimpleBorder();  DistriFromLocalChar() END;
 			x := maxx;  CorrectBorder();  DistriFromLocalChar()
-		END;  
-		y := maxy;  
-		FOR x := 0 TO maxx DO CorrectBorder();  DistriFromLocalChar() END;  
-		IF model.synchroneus THEN 
-			FOR x := 0 TO maxx DO 
-				FOR y := 0 TO maxy DO A[y, x] := tempA.A[y, x] END 
-			END 
-		END 
-	END OneSweep;  
+		END;
+		y := maxy;
+		FOR x := 0 TO maxx DO CorrectBorder();  DistriFromLocalChar() END;
+		IF model.synchroneus THEN
+			FOR x := 0 TO maxx DO
+				FOR y := 0 TO maxy DO A[y, x] := tempA.A[y, x] END
+			END
+		END
+	END OneSweep;
 
-	PROCEDURE Uniform( s: antsKernel.Kernel );  
-	BEGIN 
-		antsArrayObjects.UniformO( s.A( antsArrayObjects.tINTEGERObject ) );  
-		s.A( antsArrayObjects.tINTEGERObject ).Cache := NIL 
-	END Uniform;  
+	PROCEDURE Uniform( s: antsKernel.Kernel );
+	BEGIN
+		antsArrayObjects.UniformO( s.A( antsArrayObjects.tINTEGERObject ) );
+		s.A( antsArrayObjects.tINTEGERObject ).Cache := NIL
+	END Uniform;
 
-	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );  
-	BEGIN 
-		WITH o: tModel DO 
-			IF M IS antsKernel.samplingMsg THEN 
-				WITH M: antsKernel.samplingMsg DO 
-					antsModels.SetTemperature( o, M.temp );  OneSweep( M.dlink( antsKernel.Kernel ) );  
-				END;  
-			ELSIF M IS antsKernel.Init THEN 
-				WITH M: antsKernel.Init DO Uniform( M.dlink( antsKernel.Kernel ) );  o.synced := FALSE;  
-				END;  
-			ELSIF M IS Objects.AttrMsg THEN 
-				WITH M: Objects.AttrMsg DO 
+	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
+	BEGIN
+		WITH o: tModel DO
+			IF M IS antsKernel.samplingMsg THEN
+				WITH M: antsKernel.samplingMsg DO
+					antsModels.SetTemperature( o, M.temp );  OneSweep( M.dlink( antsKernel.Kernel ) );
+				END;
+			ELSIF M IS antsKernel.Init THEN
+				WITH M: antsKernel.Init DO Uniform( M.dlink( antsKernel.Kernel ) );  o.synced := FALSE;
+				END;
+			ELSIF M IS Objects.AttrMsg THEN
+				WITH M: Objects.AttrMsg DO
 					IF M.id = Objects.enum THEN M.Enum( "synchroneus" );  antsModels.Handler( o, M )
-					ELSIF M.id = Objects.get THEN 
-						IF M.name = "Gen" THEN COPY( 'antsantsLife.Gen', M.s );  M.class := Objects.String;  M.res := 0;  RETURN 
-						ELSIF M.name = "synchroneus" THEN M.class := Objects.Bool;  M.b := o.synchroneus;  M.res := 0;  RETURN 
+					ELSIF M.id = Objects.get THEN
+						IF M.name = "Gen" THEN COPY( 'antsantsLife.Gen', M.s );  M.class := Objects.String;  M.res := 0;  RETURN
+						ELSIF M.name = "synchroneus" THEN M.class := Objects.Bool;  M.b := o.synchroneus;  M.res := 0;  RETURN
 						ELSE antsModels.Handler( o, M )
-						END 
-					ELSIF M.id = Objects.set THEN 
-						IF M.name = "synchroneus" THEN 
-							IF M.class = Objects.Bool THEN o.synchroneus := M.b;  M.res := 0 END 
+						END
+					ELSIF M.id = Objects.set THEN
+						IF M.name = "synchroneus" THEN
+							IF M.class = Objects.Bool THEN o.synchroneus := M.b;  M.res := 0 END
 						ELSE antsModels.Handler( o, M )
-						END 
+						END
 					ELSE antsModels.Handler( o, M )
-					
-					END;  
-				
-				END;  
-			ELSIF M IS Objects.FileMsg THEN 
-				WITH M: Objects.FileMsg DO 
+
+					END;
+
+				END;
+			ELSIF M IS Objects.FileMsg THEN
+				WITH M: Objects.FileMsg DO
 					IF M.id = Objects.load THEN antsModels.Handler( o, M );  LoadM( M.R, o )
 					ELSIF M.id = Objects.store THEN antsModels.Handler( o, M );  StoreM( M.R, o )
-					END 
-				END;  
+					END
+				END;
 			ELSE antsModels.Handler( o, M )
-			END 
+			END
 		END  (* tVector*)
-	END Handler;  
+	END Handler;
 
-	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h: LONGREAL );  
-	BEGIN 
-		IF M.handle # NIL THEN M.handle := Handler END;  
+	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h: LONGREAL );
+	BEGIN
+		IF M.handle # NIL THEN M.handle := Handler END;
 		vyName.RegisterNamed( M, name )
-	END OpenModel;  
+	END OpenModel;
 
-	PROCEDURE Gen*;  
-	VAR m: tModel;  
-	BEGIN 
-		aM.cmd;  NEW( m );  m.handle := Handler;  Objects.NewObj := m;  antsObjects.Register( m );  m.synchroneus := TRUE 
-	END Gen;  
+	PROCEDURE Gen*;
+	VAR m: tModel;
+	BEGIN
+		aM.cmd;  NEW( m );  m.handle := Handler;  Objects.NewObj := m;  antsObjects.Register( m );  m.synchroneus := TRUE
+	END Gen;
 
-	PROCEDURE NewModel*;  
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h: LONGREAL;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "name=NAME" );  
-		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN 
+	PROCEDURE NewModel*;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h: LONGREAL;
+	BEGIN
+		l := antsCommands.ScanFromPar( "name=NAME" );
+		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN
 			Gen;  M := Objects.NewObj( tModel );  antsModels.Open( M );  OpenModel( M, name, beta, h )
-		END 
-	END NewModel;  
+		END
+	END NewModel;
 
-BEGIN 
-	aM.launch;  
+BEGIN
+	aM.launch;
 END antsLife.
 
 System.Free antsLife antsModels~

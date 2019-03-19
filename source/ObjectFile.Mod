@@ -236,7 +236,7 @@ TYPE
 		END EndWriting;
 
 	END PoolMap;
-	
+
 	NameList*= POINTER TO ARRAY OF SegmentedName;
 
 VAR
@@ -335,7 +335,7 @@ VAR
 		NEW (dest.bits, source.bits.GetSize ());
 		BitSets.CopyBits (source.bits, 0, dest.bits, 0, source.bits.GetSize ());
 	END CopySection;
-	
+
 	PROCEDURE InitSection*(VAR dest: Section);
 	BEGIN
 		dest.type := 0;
@@ -719,7 +719,7 @@ VAR
 			writer.Ln;
 		END;
 	END WriteNameList;
-	
+
 
 	PROCEDURE WriteSectionBinary (writer: Streams.Writer; CONST section: Section; poolMap: PoolMap);
 	VAR i: SIZE; pos: Streams.Position; offset, start, len: LONGINT; size: Bits;
@@ -982,14 +982,14 @@ VAR
 				reader.Bytes(segment, 0, LEN(segment), received);
 				ASSERT(received = LEN(segment));
 				section.bits.SetBytes(offset, LEN(segment), segment);
-				DEC(len, received); 
+				DEC(len, received);
 				INC(offset, received*ByteSize);
 			END;
 			IF size MOD 8 # 0 THEN
 				reader.Bytes(segment, 0, len-1, received);
 				ASSERT(received = len-1);
 				section.bits.SetBytes(offset, received, segment);
-				DEC(len, received); 
+				DEC(len, received);
 				INC(offset, received*ByteSize);
 				(* last byte: only part of a byte *)
 				reader.Char(c);
@@ -1113,7 +1113,7 @@ VAR
 		END;
 		RETURN TRUE
 	END SameFixupPattern;
-	
+
 	PROCEDURE HasPattern(pat: Pattern; mode, scale: LONGINT; patterns: SIZE; pattern: FixupPatterns): BOOLEAN;
 	BEGIN
 		RETURN (pat.mode = mode) & (pat.scale = scale) & (pat.patterns = patterns) & SameFixupPattern(patterns, pat.pattern, pattern);
@@ -1247,14 +1247,14 @@ VAR
 		END;
 		name[i] := 0X;
 	END SegmentedNameToString;
-	
+
 	(* result = 0 : equal strings, result < 0: s1 before s2, result > 0 : s1 after s2 (alphanumerically) *)
 	PROCEDURE CompareSegmentedNames*(CONST s1, s2: SegmentedName): WORD;
 	VAR n1, n2: SectionName; index: SIZE; ch1, ch2: CHAR;
 	BEGIN
 		SegmentedNameToString(s1,n1);
 		SegmentedNameToString(s2,n2);
-		index := 0; 
+		index := 0;
 		ch1 := n1[index];
 		ch2 := n2[index];
 		WHILE (ch1 # 0X) & (ch1 = ch2)  DO

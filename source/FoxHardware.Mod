@@ -78,7 +78,7 @@ TYPE
 	BEGIN
 		RETURN (sizeInUnits-1) DIV blockSize +1
 	END SizeInBlocks;
-	
+
 END FoxHardware.
 
 FoxHardware.Emit ML505 TL.spec ~

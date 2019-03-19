@@ -105,9 +105,9 @@ TYPE
 				VAR x0, x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET32;
 				BEGIN
 					(* copy in the block, add whitening *)
-					FOR i := 0 TO 3 DO  
-						x0[i] := U.SetFromBufferLE( buf, pos + i*4 );  
-						x[i] := x0[i] / S.VAL( SET32, subkeys[4 + i] );   
+					FOR i := 0 TO 3 DO
+						x0[i] := U.SetFromBufferLE( buf, pos + i*4 );
+						x[i] := x0[i] / S.VAL( SET32, subkeys[4 + i] );
 					END;
 					(* main Twofish decryption loop *)
 					FOR r := N - 1 TO 0 BY -1 DO
@@ -150,8 +150,8 @@ CONST
 	Byte0 = S.VAL( SET32, 0FFH );
 	S14d = S.VAL( SET32, 14DH );
 	S0a6 = S.VAL( SET32, 0A6H );
-	
-	
+
+
 	PROCEDURE m1( x: LONGINT ): SET32;
 	BEGIN
 		RETURN S.VAL( SET32, x )
@@ -182,12 +182,12 @@ CONST
 		v[1] := S.VAL( SET32, x DIV 100H MOD 100H );
 		v[0] := S.VAL( SET32, x MOD 100H );
 	END split;
-	
+
 	PROCEDURE -Int( x: SET32 ): LONGINT;
 	BEGIN
 		RETURN S.VAL( LONGINT, x )
 	END Int;
-	
+
 
 	PROCEDURE F32( x: SET32;  CONST k32: ARRAY OF LONGINT;  keybits: LONGINT ): LONGINT;
 	VAR a, b, c, d, l: LONGINT;  k, k1: SKey;
@@ -201,21 +201,21 @@ CONST
 
 		l := ((keybits + 63) DIV 64) MOD 4;
 		IF l = 0 THEN  (* 256 bits of key *)
-			split( k32[3], k );  
-			a := Int( tab1[a] / k[0] );  
-			b := Int( tab0[b] / k[1] );  
+			split( k32[3], k );
+			a := Int( tab1[a] / k[0] );
+			b := Int( tab0[b] / k[1] );
 			c := Int( tab0[c] / k[2] );
 			d := Int( tab1[d] / k[3] );
 		END;
 		IF l IN {0, 3} THEN  (* 192 <= bits of key *)
-			split( k32[2], k );  
+			split( k32[2], k );
 			a := Int( tab1[a] / k[0] );
 			b := Int( tab1[b] / k[1] );
 			c := Int( tab0[c] / k[2] );
 			d := Int( tab0[d] / k[3] )
 		END;
 		(* 128 <= bits of key *)
-		split( k32[1], k1 );  split( k32[0], k );  
+		split( k32[1], k1 );  split( k32[0], k );
 		a := Int( tab1[Int( tab0[Int( tab0[a] / k1[0] )] / k[0] )] );
 		b := Int( tab0[Int( tab0[Int( tab1[b] / k1[1] )] / k[1] )] );
 		c := Int( tab1[Int( tab1[Int( tab0[c] / k1[2] )] / k[2] )] );
@@ -247,7 +247,7 @@ CONST
 				g3s8 := LSH( g3, 8 );
 				g3s24 := LSH( g3s8, 16 );
 
-				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / S.VAL( SET32, b ) 
+				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / S.VAL( SET32, b )
 			END
 		END;
 		RETURN S.VAL( LONGINT, r )
@@ -296,8 +296,8 @@ CONST
 		buf.Add( "022 0C9 0C0 09B 089 0D4 0ED 0AB 012 0A2 00D 052 0BB 002 02F 0A9 " );
 		buf.Add( "0D7 061 01E 0B4 050 004 0F6 0C2 016 025 086 056 055 009 0BE 091 " );
 		FOR i := 0 TO 255 DO  tab1[i] :=  buf.GetSet()  END;
-	END Init0;	
-		
+	END Init0;
+
 BEGIN
 	Init0
 END CryptoTwofish.

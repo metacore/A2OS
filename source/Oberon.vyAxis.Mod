@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (*
@@ -665,7 +665,7 @@ PROCEDURE Prepare* (Axe: tAxe;  x1, y1, x2, y2: Coordinate;  r1, r2, dr: Real);
 	VAR label: Label;
 BEGIN
 	IF Axe = NIL THEN RETURN END;
-	IF dr > 1000000 THEN EFormat := TRUE ELSE EFormat := FALSE END; 
+	IF dr > 1000000 THEN EFormat := TRUE ELSE EFormat := FALSE END;
 	IF UsePaint2d THEN
 		Axe.UsePaint2d := TRUE;
 		Axe.RtoXY := GetXYbyR2

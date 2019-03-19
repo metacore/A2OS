@@ -26,7 +26,7 @@ VAR
 
 
 TYPE
-	
+
 	RGB =	RECORD
 				r, g, b: INTEGER
 			END;
@@ -101,13 +101,13 @@ TYPE
 				secondary-			: X11.Window;
 				currwin				: X11.Window;
 				wmDelete- 		: X11.Atom;
-				screen				: LONGINT;	
+				screen				: LONGINT;
 				visual{UNTRACED}		: X11.VisualPtr;
 				depth				: LONGINT;
 				bigEndian			: BOOLEAN;
 				gc					: X11.GC;
 				clip					: Clip;
-				
+
 				cmap				: X11.Colormap;
 				planesMask			: LONGINT;
 				foreground,
@@ -118,8 +118,8 @@ TYPE
 				xformat				: LONGINT;
 				currcol, currmode	: LONGINT;
 				xfunc				: ARRAY 3 OF LONGINT;
-				
-				
+
+
 
 				PROCEDURE SetMode( col: LONGINT );
 				VAR mode: LONGINT;
@@ -161,17 +161,17 @@ TYPE
 				CONST  Get = 0;  Set = 1;
 				VAR image: X11.Image;
 					imp: X11.ImagePtr;
-					bp, ip: ADDRESS; 
+					bp, ip: ADDRESS;
 					line, ll: LONGINT;
 				BEGIN
 					ll := w*(xformat DIV 8);
 					IF (ofs + (h - 1)*stride + ll > LEN( buf )) OR (ofs + (h - 1)*stride < 0) THEN  HALT( 99 )  END;
-		
+
 					IF LEN( imgBuffer ) < 4*w*h THEN
 						NEW( imgBuffer, 4*w*h );	(* create buffer outside lock to avoid deadlock *)
 					END;
-			
-					bp := ADDRESSOF( buf[ofs] );  
+
+					bp := ADDRESSOF( buf[ofs] );
 					IF op = Set THEN
 						Machine.Acquire( Machine.X11 );
 						image := X11.CreateImage( xdisp, visual, depth, X11.ZPixmap, 0, 0, w, h, 32, 0 );
@@ -188,8 +188,8 @@ TYPE
 								INC( bp, stride );  INC( ip, imp.bytesPerLine )
 							END;
 						END;
-						IF currmode # replace THEN  
-							X11.SetFunction( xdisp, gc, xfunc[replace] );  currmode := replace  
+						IF currmode # replace THEN
+							X11.SetFunction( xdisp, gc, xfunc[replace] );  currmode := replace
 						END;
 						X11.PutImage( xdisp, primary, gc, image, 0, 0, x, y, w, h );
 						X11.Free( image );  imp := NIL;
@@ -320,7 +320,7 @@ TYPE
 						IF res # 0 THEN  pixel[col] := LONGINT (xcol.pixel)  END
 					ELSE
 						xcol.flags := CHR( X11.DoAll );  xcol.pixel := pixel[col];
-						X11.StoreColor( xdisp, cmap, ADDRESSOF( xcol ) ) 
+						X11.StoreColor( xdisp, cmap, ADDRESSOF( xcol ) )
 					END;
 					Machine.Release( Machine.X11 )
 				END SetColor;
@@ -361,7 +361,7 @@ TYPE
 					ELSE  (* index8 *)
 						i := 0;  ii := 0;  min := MAX( LONGINT );
 						WHILE (i < 256) & (min > 0) DO
-							rc := rgb[i];  
+							rc := rgb[i];
 							x := ABS( r - rc.r );  y := ABS( g - rc.g );  z := ABS( b - rc.b );  m := x;
 							IF y > m THEN  m := y  END;
 							IF z > m THEN  m := z  END;
@@ -376,15 +376,15 @@ TYPE
 
 
 				PROCEDURE  & Initialize( disp: X11.DisplayPtr; absWidth, absHeight, relWidth, relHeight: LONGINT );
-				VAR 
-					event: Api.XEvent;  root: X11.Window;  
+				VAR
+					event: Api.XEvent;  root: X11.Window;
 					gRoot, gX, gY, gW, gH, gBW, gD, res: LONGINT;  screenw, screenh	: LONGINT;
 				BEGIN
-					
-					xdisp := disp;  
+
+					xdisp := disp;
 					screen := X11.DefaultScreen( xdisp );
 					screenw := X11.DisplayWidth( xdisp, screen );
-					screenh := X11.DisplayHeight( xdisp, screen );	
+					screenh := X11.DisplayHeight( xdisp, screen );
 					depth := X11.DefaultDepth( xdisp, screen );
 					cmap := X11.DefaultColormap( xdisp, screen );
 					foreground := X11.BlackPixel( xdisp, screen );
@@ -398,12 +398,12 @@ TYPE
 					X11.SetIconName( xdisp, primary, ADDRESSOF( iconName ) );
 					X11.SetCommand( xdisp, primary, Unix.argv, Unix.argc );
 					X11.SelectInput( xdisp, primary, X11.ExposureMask );
-					
-					
+
+
 					(* set wm_delete_events if in windowed mode *)
-					wmDelete := Api.InternAtom(xdisp, "WM_DELETE_WINDOW", Api.True);   
+					wmDelete := Api.InternAtom(xdisp, "WM_DELETE_WINDOW", Api.True);
 					res := Api.SetWMProtocols(xdisp, primary, ADDRESSOF(wmDelete), 1);
-							
+
 					X11.MapRaised( xdisp, primary );
 					REPEAT  Api.NextEvent( xdisp, event )
 					UNTIL (event.typ = Api.Expose) & (event.window = primary);
@@ -430,7 +430,7 @@ TYPE
 					secondary := X11.CreatePixmap( xdisp, primary, gW, gH, depth );
 					Machine.Release( Machine.X11 );
 
-					CreateColors( SELF );  InitPalette( SELF );  SuppressX11Cursors( SELF ); 
+					CreateColors( SELF );  InitPalette( SELF );  SuppressX11Cursors( SELF );
 					InitFormat( SELF );  CreateGC( SELF );  InitFunctions( SELF );
 
 					NEW( clip, SELF )
@@ -450,7 +450,7 @@ TYPE
 
 VAR
 	dispname: ARRAY 128 OF CHAR;
-	
+
 	imgBuffer: POINTER TO ARRAY OF CHAR;
 
 
@@ -501,7 +501,7 @@ VAR
 
 	PROCEDURE GetLine( xformat, width: LONGINT;  ip, bp: ADDRESS );
 	VAR i: LONGINT;  byte: CHAR;
-	BEGIN			
+	BEGIN
 		CASE xformat OF
 		| index8:
 				S.MOVE(ip, bp, width);
@@ -592,7 +592,7 @@ VAR
 
 
 	PROCEDURE NewPattern( d: Display;
-							CONST image: ARRAY OF SET;  
+							CONST image: ARRAY OF SET;
 							width, height: INTEGER ): X11.Pattern;
 	VAR
 		pixmap: X11.Pixmap;  pat {UNTRACED}: X11.PatternPtr;
@@ -638,9 +638,9 @@ VAR
 	VAR cwd: ARRAY 128 OF CHAR;  i: LONGINT;
 	BEGIN
 		UnixFiles.GetWorkingDirectory( cwd );
-		COPY( Machine.version, winName );  
+		COPY( Machine.version, winName );
 		Strings.Append( winName, ",  Work: " );  Strings.Append( winName, cwd );
-		COPY( winName, iconName);  
+		COPY( winName, iconName);
 		i := 0;
 		WHILE iconName[i] > ' ' DO  INC( i )  END;
 		iconName[i] := 0X
@@ -670,7 +670,7 @@ VAR
 		END;
 		screen := X11.DefaultScreen( xdisp );
 		depth := X11.DefaultDepth( xdisp, screen );
-		IF depth < 8 THEN  
+		IF depth < 8 THEN
 			Trace.StringLn( "UnixAos needs a color display. sorry." );  Unix.exit( 1 )
 		END;
 		Trace.String( "X11 Display depth = " ); Trace.Int( depth, 1 ); Trace.Ln;
@@ -680,7 +680,7 @@ VAR
 
 	PROCEDURE CreateColors( d: Display );
 	VAR col: INTEGER;
-		visualInfo: X11.VisualInfo;  
+		visualInfo: X11.VisualInfo;
 	BEGIN
 		Machine.Acquire( Machine.X11 );
 		col := 0;
@@ -691,8 +691,8 @@ VAR
 			d.visual := visualInfo.visual
 		END;
 		d.bigEndian := FALSE;
-		IF d.depth > 8 THEN  
-			d.bigEndian := d.visual.blueMask > d.visual.redMask 
+		IF d.depth > 8 THEN
+			d.bigEndian := d.visual.blueMask > d.visual.redMask
 		ELSE (* pseudo color *)
 			d.cmap := X11.CreateColormap( d.xdisp, d.primary, d.visual, X11.AllocAll );
 			X11.SetWindowColormap( d.xdisp, d.primary, d.cmap );
@@ -723,7 +723,7 @@ VAR
 
 
 	PROCEDURE SuppressX11Cursors( d: Display );
-	VAR 
+	VAR
 		fg, bg: X11.Color;  src {UNTRACED}, msk {UNTRACED}: X11.PatternPtr;
 		image: ARRAY 17 OF SET;  i: INTEGER;
 		noCursor: X11.Cursor;
@@ -732,22 +732,22 @@ VAR
 		bg.red := 256*d.rgb[BG].r;  bg.green := 256*d.rgb[BG].g;  bg.blue := 256*d.rgb[BG].b;
 
 		FOR i := 1 TO 16 DO  image[i] := {}  END;
-		src := S.VAL( X11.PatternPtr, NewPattern( d, image, 16, 16 ) );  
+		src := S.VAL( X11.PatternPtr, NewPattern( d, image, 16, 16 ) );
 		msk := S.VAL( X11.PatternPtr, NewPattern( d, image, 16, 16 ) );
-		
+
 		Machine.Acquire( Machine.X11 );
 		noCursor := X11.CreatePixmapCursor( d.xdisp, src.pixmap, msk.pixmap, fg, bg, 1, 1 );
 		X11.DefineCursor( d.xdisp, d.primary, noCursor );
 		Machine.Release( Machine.X11 )
 	END SuppressX11Cursors;
-	
+
 
 	PROCEDURE InitFormat( d: Display );
 	BEGIN
-		IF d.depth = 8 THEN  
+		IF d.depth = 8 THEN
 			d.format := Displays.index8;
 			d.xformat := index8
-		ELSIF d.depth = 15 THEN  
+		ELSIF d.depth = 15 THEN
 			d.format := Displays.color565;
 			d.xformat := color555
 		ELSIF d.depth = 16 THEN
@@ -755,13 +755,13 @@ VAR
 			IF d.visual.blueMask = 0FH THEN  d.xformat := color664
 			ELSE  d.xformat := color565
 			END
-		ELSIF d.depth = 24 THEN  
+		ELSIF d.depth = 24 THEN
 			d.format := Displays.color8888;
 			d.xformat := color888
-		ELSIF d.depth = 32 THEN  
+		ELSIF d.depth = 32 THEN
 			d.format := Displays.color8888;
 			d.xformat := color8888
-		ELSE  
+		ELSE
 			d.format := unknown
 		END;
 	END InitFormat;

@@ -7,14 +7,14 @@ TYPE
 	CommandProc = PROCEDURE;
 
 	CommandThread = OBJECT
-	VAR 
+	VAR
 		mod, cmd: Modules.Name;
-	
+
 		PROCEDURE &Init( CONST modName, cmdName: Modules.Name );
 		BEGIN
 			mod := modName;  cmd := cmdName
 		END Init;
-		
+
 	BEGIN {ACTIVE}
 		Execute( mod, cmd );
 		Modules.Shutdown( Modules.Reboot )
@@ -47,14 +47,14 @@ VAR
 	(** Return the named command. *)
 	PROCEDURE ThisCommand( m: Module;  CONST name: Modules.Name ): CommandProc;
 	VAR cmd: Modules.Command; i: LONGINT;  found: BOOLEAN;
-	BEGIN		
+	BEGIN
 		i := 0;  found := FALSE;
 		WHILE ~found & (i # LEN( m.command^ )) DO
 			IF m.command[i].name = name THEN  found := TRUE;  cmd := m.command[i]  ELSE  INC( i )  END
 		END;
 		IF (cmd.entryAdr # 0) & (cmd.argTdAdr = 0) & (cmd.retTdAdr = 0) THEN
 			RETURN S.VAL( CommandProc, cmd.entryAdr )
-		ELSE  
+		ELSE
 			RETURN NIL
 		END
 	END ThisCommand;
@@ -72,8 +72,8 @@ VAR
 				Trace.String( "' has no command '" );  Trace.String( procName );  Trace.Char( "'" );
 				Trace.Ln;
 			END
-		ELSE  
-			Trace.String( "BootConsole.Execute:  could not load module " );  Trace.String( modName );  
+		ELSE
+			Trace.String( "BootConsole.Execute:  could not load module " );  Trace.String( modName );
 			Trace.Ln;
 			Trace.String( msg );  Trace.Ln
 		END
@@ -82,24 +82,24 @@ VAR
 
 	PROCEDURE CommandError( CONST cmd, msg: ARRAY OF CHAR );
 	BEGIN
-		Trace.String( "bad command line parameter: -x " );  Trace.String( cmd );  
+		Trace.String( "bad command line parameter: -x " );  Trace.String( cmd );
 		Trace.String( ": " );  Trace.String( msg );  Trace.Ln;
 	END CommandError;
-	
-	
+
+
 	PROCEDURE TryCommand( ): BOOLEAN;
-	VAR 
-		cmd: ARRAY 128 OF CHAR; ci: INTEGER;  
+	VAR
+		cmd: ARRAY 128 OF CHAR; ci: INTEGER;
 		modName, cmdName: Modules.Name;
-		
+
 		PROCEDURE IsCharacter( c: CHAR ): BOOLEAN;
 		BEGIN  RETURN (('a' <= c) & (c <= 'z')) OR (( 'A' <= c) & (c <= 'Z'))
 		END IsCharacter;
-		
+
 		PROCEDURE IsCharOrDigit( c: CHAR ): BOOLEAN;
 		BEGIN  RETURN IsCharacter( c ) OR (("0" <= c) & (c <= "9"))
 		END IsCharOrDigit;
-		
+
 		PROCEDURE GetName( VAR name: ARRAY OF CHAR ): BOOLEAN;
 		VAR j: LONGINT;  c: CHAR;
 		BEGIN
@@ -119,29 +119,29 @@ VAR
 				RETURN FALSE
 			END
 		END GetName;
-		
+
 	BEGIN
 		Unix.GetArgval( "-x", cmd );
-		IF cmd # "" THEN  	
+		IF cmd # "" THEN
 			ci := 0;
-			IF GetName( modName ) & GetName( cmdName ) THEN  
+			IF GetName( modName ) & GetName( cmdName ) THEN
 				IF Glue.debug # {} THEN
 					Trace.String( "Starting " );
 					Trace.String( modName );  Trace.Char( "." );  Trace.String( cmdName );
 					Trace.Ln
 				END;
 				NEW( appl, modName, cmdName );
-				RETURN TRUE  
-			ELSE  
+				RETURN TRUE
+			ELSE
 				(* invalid command string*)
 				Unix.exit( 1 )
 			END
 		END;
 		RETURN FALSE
 	END TryCommand;
-	
-	
-	
+
+
+
 	PROCEDURE InitializeCoreModules;
 	TYPE Body = PROCEDURE;
 	VAR m: Modules.Module;  body: Body;  trace: BOOLEAN;
@@ -150,13 +150,13 @@ VAR
 		LOOP
 			IF m.name = "BootConsole" THEN  EXIT   END;   (* initialize modules belonging to bootfile only *)
 			IF trace THEN
-				Trace.String( "#### Initializing " );  Trace.String( m.name ); 
+				Trace.String( "#### Initializing " );  Trace.String( m.name );
 				Trace.String( "     code: [" ); Trace.Hex( ADDRESSOF( m.code[0] ), -8 );
 				Trace.String( ".." ); Trace.Hex( ADDRESSOF( m.code[0] ) + LEN( m.code^ ), -8 );
 				Trace.Char( ']' ); Trace.Ln
 			END;
 			body := S.VAL( Body, ADDRESSOF( m.code[0] ) );
-			body;	
+			body;
 			m := m.next
 		END
 	END InitializeCoreModules;
@@ -186,7 +186,7 @@ VAR
 		Unix.HandleSignal( Unix.SIGQUIT );
 		Unix.HandleSignal( Unix.SIGILL );
 		Unix.HandleSignal( Unix.SIGTRAP );
-		
+
 		Unix.HandleSignal( Unix.SIGABRT );
 		Unix.HandleSignal( Unix.SIGBUS );
 		Unix.HandleSignal( Unix.SIGFPE );
@@ -195,7 +195,7 @@ VAR
 		Unix.HandleSignal( Unix.SIGALRM );
 		Unix.HandleSignal( Unix.SIGTERM );
 	END InitSignalHandling;
-	
+
 BEGIN
 	Machine.VerboseLog;
 	InitializeCoreModules;

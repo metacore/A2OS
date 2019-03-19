@@ -130,89 +130,89 @@ CONST
 	*)
 	(** operand types, numbers assigned to the types do not have a special meaning **)
 	(* register classes first *)
-	reg8*= 0; 
-	reg16*= 1; 
-	reg32*= 2; 
-	reg64*= 3; 
-	CRn*= 4; 
-	DRn*= 5; 
-	segReg*= 6; 
-	mmx*= 7; 
-	xmm*= 8; 
-	ymm*= 9; 
-	sti*= 10; 
+	reg8*= 0;
+	reg16*= 1;
+	reg32*= 2;
+	reg64*= 3;
+	CRn*= 4;
+	DRn*= 5;
+	segReg*= 6;
+	mmx*= 7;
+	xmm*= 8;
+	ymm*= 9;
+	sti*= 10;
 	(* other classes *)
-	mem*= 11; 
-	imm*= 12; 
-	ioffset*= 13; 
-	pntr1616*= 14; 
-	pntr1632*= 15; 
+	mem*= 11;
+	imm*= 12;
+	ioffset*= 13;
+	pntr1616*= 14;
+	pntr1632*= 15;
 	(* special registers *)
-	AL*= 16; 
-	AX*= 17; 
-	CL*= 18; 
-	CR8*= 19; 
-	CS*= 20; 
-	DS*= 21; 
-	DX*= 22; 
-	EAX*= 23; 
-	ECX*= 24; 
-	ES*= 25; 
-	FS*= 26; 
-	GS*= 27; 
-	RAX*= 28; 
-	SS*= 29; 
-	rAX*= 30; 
-	st0*= 31; 
+	AL*= 16;
+	AX*= 17;
+	CL*= 18;
+	CR8*= 19;
+	CS*= 20;
+	DS*= 21;
+	DX*= 22;
+	EAX*= 23;
+	ECX*= 24;
+	ES*= 25;
+	FS*= 26;
+	GS*= 27;
+	RAX*= 28;
+	SS*= 29;
+	rAX*= 30;
+	st0*= 31;
 	(* immediates and memory locations *)
-	imm16*= 32; 
-	imm32*= 33; 
-	imm64*= 34; 
-	imm8*= 35; 
-	uimm16*= 36; 
-	uimm32*= 37; 
-	uimm8*= 38; 
-	simm16*= 39; 
-	simm32*= 40; 
-	simm8*= 41; 
-	mem256*= 42; 
-	mem128*= 43; 
-	mem16*= 44; 
-	mem32*= 45; 
-	mem64*= 46; 
-	mem8*= 47; 
-	moffset16*= 48; 
-	moffset32*= 49; 
-	moffset64*= 50; 
-	moffset8*= 51; 
-	rel16off*= 52; 
-	rel32off*= 53; 
-	rel8off*= 54; 
+	imm16*= 32;
+	imm32*= 33;
+	imm64*= 34;
+	imm8*= 35;
+	uimm16*= 36;
+	uimm32*= 37;
+	uimm8*= 38;
+	simm16*= 39;
+	simm32*= 40;
+	simm8*= 41;
+	mem256*= 42;
+	mem128*= 43;
+	mem16*= 44;
+	mem32*= 45;
+	mem64*= 46;
+	mem8*= 47;
+	moffset16*= 48;
+	moffset32*= 49;
+	moffset64*= 50;
+	moffset8*= 51;
+	rel16off*= 52;
+	rel32off*= 53;
+	rel8off*= 54;
 	(* ambivalent operand types *)
-	reg3264*= 55; 
-	regmem16*= 56; 
-	regmem32*= 57; 
-	regmem64*= 58; 
-	regmem8*= 59; 
-	reg32mem16*= 60; 
-	mmxmem32*= 61; 
-	mmxmem64*= 62; 
-	xmmmem256*= 63; 
-	xmmmem128*= 64; 
-	xmmmem32*= 65; 
-	xmmmem64*= 66; 
-	xmmmem8*= 67; 
-	xmmmem16*= 68; 
-	ymmmem128*= 69; 
-	ymmmem256*= 70; 
+	reg3264*= 55;
+	regmem16*= 56;
+	regmem32*= 57;
+	regmem64*= 58;
+	regmem8*= 59;
+	reg32mem16*= 60;
+	mmxmem32*= 61;
+	mmxmem64*= 62;
+	xmmmem256*= 63;
+	xmmmem128*= 64;
+	xmmmem32*= 65;
+	xmmmem64*= 66;
+	xmmmem8*= 67;
+	xmmmem16*= 68;
+	ymmmem128*= 69;
+	ymmmem256*= 70;
 	(* miscellaneous *)
-	one*= 71; 
-	three*= 72; 
-	vm32x*= 73; 
-	vm32y*= 74; 
-	vm64x*= 75; 
-	vm64y*= 76; 
-	m2z*= 77; 
+	one*= 71;
+	three*= 72;
+	vm32x*= 73;
+	vm32y*= 74;
+	vm64x*= 75;
+	vm64y*= 76;
+	m2z*= 77;
 
 	(** prefixes **)
 	prfOP* = 066H;
@@ -317,20 +317,20 @@ CONST
 	regR8*= 104; regR9*= 105; regR10*= 106; regR11*= 107; regR12*= 108; regR13*= 109; regR14*= 110; regR15*= 111;
 	regRIP*= 112;
 	(** other registers **)
-	regES*= 128; regCS*= 129; regSS*= 130; regDS*= 131; regFS*= 132; regGS*= 133; regCR0*= 134; regCR1*= 135; 
-	regCR2*= 136; regCR3*= 137; regCR4*= 138; regCR5*= 139; regCR6*= 140; regCR7*= 141; regCR8*= 142; regCR9*= 143; 
-	regCR10*= 144; regCR11*= 145; regCR12*= 146; regCR13*= 147; regCR14*= 148; regCR15*= 149; regDR0*= 150; regDR1*= 151; 
-	regDR2*= 152; regDR3*= 153; regDR4*= 154; regDR5*= 155; regDR6*= 156; regDR7*= 157; regDR8*= 158; regDR9*= 159; 
-	regDR10*= 160; regDR11*= 161; regDR12*= 162; regDR13*= 163; regDR14*= 164; regDR15*= 165; regST0*= 166; regST1*= 167; 
-	regST2*= 168; regST3*= 169; regST4*= 170; regST5*= 171; regST6*= 172; regST7*= 173; regXMM0*= 174; regXMM1*= 175; 
-	regXMM2*= 176; regXMM3*= 177; regXMM4*= 178; regXMM5*= 179; regXMM6*= 180; regXMM7*= 181; regXMM8*= 182; regXMM9*= 183; 
-	regXMM10*= 184; regXMM11*= 185; regXMM12*= 186; regXMM13*= 187; regXMM14*= 188; regXMM15*= 189; regMMX0*= 190; regMMX1*= 191; 
-	regMMX2*= 192; regMMX3*= 193; regMMX4*= 194; regMMX5*= 195; regMMX6*= 196; regMMX7*= 197; regYMM0*= 198; regYMM1*= 199; 
-	regYMM2*= 200; regYMM3*= 201; regYMM4*= 202; regYMM5*= 203; regYMM6*= 204; regYMM7*= 205; regYMM8*= 206; regYMM9*= 207; 
-	regYMM10*= 208; regYMM11*= 209; regYMM12*= 210; regYMM13*= 211; regYMM14*= 212; regYMM15*= 213; 
-	numberRegisters*= 214; 
+	regES*= 128; regCS*= 129; regSS*= 130; regDS*= 131; regFS*= 132; regGS*= 133; regCR0*= 134; regCR1*= 135;
+	regCR2*= 136; regCR3*= 137; regCR4*= 138; regCR5*= 139; regCR6*= 140; regCR7*= 141; regCR8*= 142; regCR9*= 143;
+	regCR10*= 144; regCR11*= 145; regCR12*= 146; regCR13*= 147; regCR14*= 148; regCR15*= 149; regDR0*= 150; regDR1*= 151;
+	regDR2*= 152; regDR3*= 153; regDR4*= 154; regDR5*= 155; regDR6*= 156; regDR7*= 157; regDR8*= 158; regDR9*= 159;
+	regDR10*= 160; regDR11*= 161; regDR12*= 162; regDR13*= 163; regDR14*= 164; regDR15*= 165; regST0*= 166; regST1*= 167;
+	regST2*= 168; regST3*= 169; regST4*= 170; regST5*= 171; regST6*= 172; regST7*= 173; regXMM0*= 174; regXMM1*= 175;
+	regXMM2*= 176; regXMM3*= 177; regXMM4*= 178; regXMM5*= 179; regXMM6*= 180; regXMM7*= 181; regXMM8*= 182; regXMM9*= 183;
+	regXMM10*= 184; regXMM11*= 185; regXMM12*= 186; regXMM13*= 187; regXMM14*= 188; regXMM15*= 189; regMMX0*= 190; regMMX1*= 191;
+	regMMX2*= 192; regMMX3*= 193; regMMX4*= 194; regMMX5*= 195; regMMX6*= 196; regMMX7*= 197; regYMM0*= 198; regYMM1*= 199;
+	regYMM2*= 200; regYMM3*= 201; regYMM4*= 202; regYMM5*= 203; regYMM6*= 204; regYMM7*= 205; regYMM8*= 206; regYMM9*= 207;
+	regYMM10*= 208; regYMM11*= 209; regYMM12*= 210; regYMM13*= 211; regYMM14*= 212; regYMM15*= 213;
+	numberRegisters*= 214;
 
-VAR 
+VAR
 	opAAA*,
 	opAAD*,
 	opAAM*,
@@ -1403,10 +1403,10 @@ VAR
 	(* repository *)
 	mnemonics-: ARRAY maxNumberMnemonics OF Mnemonic;
 	numberMnemonics: LONGINT;
-	
+
 	instructions-: ARRAY maxNumberInstructions OF Instruction;
-	numberInstructions: LONGINT; 
-	
+	numberInstructions: LONGINT;
+
 	registers-: ARRAY numberRegisters OF Register;
 	registersByClass-: ARRAY sti+1 OF ARRAY 17 OF LONGINT;
 
@@ -1596,26 +1596,26 @@ VAR
 					ELSIF name = "vm64x" THEN RETURN vm64x
 					ELSIF name = "vm64y" THEN RETURN vm64y
 					ELSIF name = "m2z" THEN RETURN m2z
-					ELSE HALT(200) 
+					ELSE HALT(200)
 					END;
 				END StringToOperand;
 
 			PROCEDURE ParseOperand(CONST op: ARRAY OF CHAR; VAR at: LONGINT): SHORTINT;
 			VAR name: ARRAY 32 OF CHAR; i: LONGINT;
 			BEGIN
-				i := 0; 
+				i := 0;
 				WHILE(op[at] # 0X) & (op[at] # ",") DO
 					name[i] := op[at];
-					INC(i); INC(at); 
+					INC(i); INC(at);
 				END;
 				name[i] := 0X;
 				IF op[at] = "," THEN INC(at) END;
-				RETURN StringToOperand(name); 
+				RETURN StringToOperand(name);
 			END ParseOperand;
 
 	(** setup instruction and mnemonic tables **)
 	PROCEDURE InitInstructions;
-	VAR 
+	VAR
 
 		PROCEDURE AddMnemonic(VAR op: LONGINT; CONST name: ARRAY OF CHAR);
 		BEGIN
@@ -1739,13 +1739,13 @@ VAR
 
 			all symbols 8 bit wide, numbers also 8 bits wide
 		*)
-		
+
 			PROCEDURE GetCode(CONST charcode: ARRAY OF CHAR; VAR at: LONGINT; VAR cd: ARRAY OF CHAR): BOOLEAN;
 			VAR i: LONGINT;
 			BEGIN
 				WHILE(charcode[at] = " ") DO INC(at) END;
 				IF charcode[at] = 0X THEN RETURN FALSE END;
-				i := 0; 
+				i := 0;
 				WHILE (charcode[at] # " ") & (charcode[at] # 0X) DO
 					cd[i] := charcode[at];
 					INC(i); INC(at);
@@ -1753,7 +1753,7 @@ VAR
 				cd[i] := 0X;
 				RETURN TRUE;
 			END GetCode;
-		
+
 		VAR i,k,length: SHORTINT; ch1,ch2: CHAR; cdc: ARRAY 32 OF CHAR; at,mul,val: LONGINT;
 		BEGIN
 			i := 0; k := 0; at := 0;
@@ -1769,30 +1769,30 @@ VAR
 						IF (cdc[i] ="0") OR (cdc[i]="X") THEN
 							mul := mul DIV 2;
 						ELSIF cdc[i] = "1" THEN
-							INC(val, mul); 
+							INC(val, mul);
 							mul := mul DIV 2;
 						ELSIF cdc[i] = "." (* next *) THEN
 						ELSIF cdc[i] = "c" THEN
-							INC(i); ASSERT(cdc[i] ="o"); 
+							INC(i); ASSERT(cdc[i] ="o");
 							INC(i); ASSERT(cdc[i] ="u");
 							INC(i); ASSERT(cdc[i] ="n");
 							INC(i); ASSERT(cdc[i] ="t");
 							code[k] := CHR(CountPrefix);
 							mul := mul DIV 10H;
 						ELSIF cdc[i] = "d" THEN
-							INC(i); ASSERT(cdc[i] ="e"); 
+							INC(i); ASSERT(cdc[i] ="e");
 							INC(i); ASSERT(cdc[i] ="s");
 							INC(i); ASSERT(cdc[i] ="t");
 							code[k] := CHR(DestPrefix);
 							mul := mul DIV 10H;
 						ELSIF cdc[i] = "s" THEN
-							INC(i); ASSERT(cdc[i] ="r"); 
+							INC(i); ASSERT(cdc[i] ="r");
 							INC(i); ASSERT(cdc[i] ="c");
 							code[k] := CHR(Src1Prefix);
-							ASSERT(mul = 64); 
-							IF (cdc[i+1] = "1") THEN 
+							ASSERT(mul = 64);
+							IF (cdc[i+1] = "1") THEN
 								INC(i);
-							ELSIF (cdc[i+1] = "2") THEN 
+							ELSIF (cdc[i+1] = "2") THEN
 								code[k] := CHR(Src2Prefix);
 								INC(i);
 							END;
@@ -1804,7 +1804,7 @@ VAR
 					INC(k);
 					code[k] := CHR(val); INC(k);
 				ELSIF (ch1="R") THEN
-					code[k] := CHR(RXB); INC(k); 
+					code[k] := CHR(RXB); INC(k);
 					IF (cdc = "RXB.00001") OR  (cdc ="RXB.01") THEN
 						code[k] := CHR(1);
 					ELSIF (cdc ="RXB.00011") OR (cdc = "RXB.03") THEN
@@ -1830,12 +1830,12 @@ VAR
 						CASE ch2 OF
 							'r': code[k] := CHR(modRMBoth); INC(k);
 							|'0'..'7': code[k] := CHR(modRMExtension); INC(k); code[k] := CHR(HexOrd(ch2)); INC(k);
-						ELSE 
-							IF cdc = "/imm8" THEN 
+						ELSE
+							IF cdc = "/imm8" THEN
 								(*todo*)
-							ELSIF cdc = "/is4" THEN 
+							ELSIF cdc = "/is4" THEN
 								(*todo*)
-							ELSIF cdc = "/ib" THEN 
+							ELSIF cdc = "/ib" THEN
 								code[k] := CHR(ib); INC(k);
 							ELSE
 								HALT(100)
@@ -1855,7 +1855,7 @@ VAR
 							|'w': code[k] := CHR(iw); INC(k);
 							|'d': code[k] := CHR(id); INC(k);
 							|'q': code[k] := CHR(iq); INC(k);
-						ELSE 
+						ELSE
 							IF cdc = "is4" THEN
 								(*todo*)
 							ELSIF cdc = "is5" THEN
@@ -1895,7 +1895,7 @@ VAR
 				INC(k);
 			END;
 		END EncodeV;
-		
+
 		PROCEDURE AddInstructionV(mnemonic: LONGINT; CONST operands, code: ARRAY OF CHAR);
 		VAR i, at: LONGINT; name: ARRAY 32 OF CHAR;
 		BEGIN
@@ -1905,9 +1905,9 @@ VAR
 				INC(i);
 			END;
 			ASSERT(operands[at] = 0X); (* all operands parsed *)
-			
+
 			EncodeV(code,instructions[numberInstructions].code);
-			
+
 			COPY(mnemonics[mnemonic].name,name);
 			IF mnemonics[mnemonic].firstInstruction = -1 THEN
 				mnemonics[mnemonic].firstInstruction := numberInstructions;
@@ -1922,9 +1922,9 @@ VAR
 
 		PROCEDURE AddInstruction(mnemonic: LONGINT; CONST op,code: ARRAY OF CHAR; bitwidthOptions, cpuOptions: SET);
 		VAR i: SHORTINT; at: LONGINT;
-		
-		
-			
+
+
+
 		BEGIN
 			i := 0; at := 0;
 			WHILE (i<maxNumberOperands) DO
@@ -1935,7 +1935,7 @@ VAR
 
 			instructions[numberInstructions].bitwidthOptions := bitwidthOptions;
 			instructions[numberInstructions].cpuOptions := cpuOptions;
-			
+
 			IF mnemonics[mnemonic].firstInstruction = -1 THEN
 				mnemonics[mnemonic].firstInstruction := numberInstructions;
 				mnemonics[mnemonic].lastInstruction := numberInstructions;
@@ -1943,7 +1943,7 @@ VAR
 				ASSERT(mnemonics[mnemonic].lastInstruction = numberInstructions-1);
 				mnemonics[mnemonic].lastInstruction := numberInstructions;
 			END;
-			
+
 			INC(numberInstructions);
 		END AddInstruction;
 
@@ -1956,9 +1956,9 @@ VAR
 
 
 	BEGIN
-		numberMnemonics := 0; 
-		numberInstructions := 0; 
-		
+		numberMnemonics := 0;
+		numberInstructions := 0;
+
 		AddMnemonic(opAAA, "AAA");
 		AddMnemonic(opAAD, "AAD");
 		AddMnemonic(opAAM, "AAM");
@@ -2969,7 +2969,7 @@ VAR
 		AddMnemonic(opXOR, "XOR");
 		AddMnemonic(opXORPD, "XORPD");
 		AddMnemonic(opXORPS, "XORPS");
-		
+
 
 		AddInstruction(opAAA, "", "37", {optNot64}, {cpu8086});
 		AddInstruction(opAAD, "", "D50A", {optNot64}, {cpu8086});

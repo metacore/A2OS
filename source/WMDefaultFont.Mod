@@ -160,7 +160,7 @@ BEGIN
 		r.RawInt(t); font.glyphs[i].x := t;
 		r.RawInt(t); font.glyphs[i].y := t;
 		r.RawInt(t); font.glyphs[i].w := t;
-		r.RawInt(t); font.glyphs[i].h := t; 
+		r.RawInt(t); font.glyphs[i].h := t;
 		font.glyphs[i].available := TRUE;
 		INC(i);
 		IF i >= runs[run].end THEN INC(run); i := runs[run].beg END

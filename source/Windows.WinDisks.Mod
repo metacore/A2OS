@@ -69,7 +69,7 @@ TYPE
 			large.LowPart := poslow;  large.HighPart := poshigh;
 
 			IF ~LockVolume(handle) THEN END;
-			
+
 			bool := SetFilePointer( handle, poslow, poshigh, Kernel32.FileBegin );
 			IF bool = -1 THEN res := BlockNumberInvalid;  HALT( 101 );  RETURN;  END;
 
@@ -96,7 +96,7 @@ TYPE
 				END;
 			ELSE res := Disks.Unsupported;
 			END;
-			
+
 			IF ~UnlockVolume(handle) THEN END;
 
 			IF Disks.Stats THEN
@@ -229,31 +229,31 @@ VAR
 	BEGIN
 		done := DeviceIoControl( handle, IOCTL_DISK_GET_DRIVE_GEOMETRY, NIL , 0, pdg, SIZEOF( DISK_GEOMETRY ), returned, NIL );  RETURN done > 0;
 	END GetDiskGeometry;
-	
+
 	(* lock, unlock and dismount only works on volumes specified as "X:". It does not work with PhysicalDrive.
-	
+
 	 *)
 	PROCEDURE LockVolume(handle: Kernel32.HANDLE): BOOLEAN;
 	VAR done,returned: LONGINT;
 	BEGIN
-		done := DeviceIoControl(handle, FSCTL_LOCK_VOLUME, NIL,0, NIL, 0, returned, NIL); 
+		done := DeviceIoControl(handle, FSCTL_LOCK_VOLUME, NIL,0, NIL, 0, returned, NIL);
 		RETURN done > 0;
 	END LockVolume;
-	
+
 	PROCEDURE UnlockVolume(handle: Kernel32.HANDLE): BOOLEAN;
 	VAR done,returned: LONGINT;
 	BEGIN
-		done := DeviceIoControl(handle, FSCTL_UNLOCK_VOLUME, NIL,0, NIL, 0, returned, NIL); 
+		done := DeviceIoControl(handle, FSCTL_UNLOCK_VOLUME, NIL,0, NIL, 0, returned, NIL);
 		RETURN done > 0;
 	END UnlockVolume;
-	
+
 	PROCEDURE DismountVolume(handle: Kernel32.HANDLE): BOOLEAN;
 	VAR done,returned: LONGINT;
 	BEGIN
-		done := DeviceIoControl(handle, FSCTL_DISMOUNT_VOLUME, NIL,0, NIL, 0, returned, NIL); 
+		done := DeviceIoControl(handle, FSCTL_DISMOUNT_VOLUME, NIL,0, NIL, 0, returned, NIL);
 		RETURN done > 0;
 	END DismountVolume;
-	
+
 
 	PROCEDURE AppendInt( VAR name: ARRAY OF CHAR;  i: LONGINT );
 	VAR str: ARRAY 8 OF CHAR;
@@ -307,8 +307,8 @@ VAR
 				context.out.String( "Partition from Block " );  context.out.Int( ENTIER( first ), 1 );  context.out.String( " to " );  context.out.Int( ENTIER( last ), 1 );
 				context.out.String( " in physical drive # " );  context.out.Int( drive, 1 );  OutSize( extents.extents[0].ExtentLength, context.out);  context.out.Ln;
 				name := "PhysicalDrive";  AppendInt( name, drive );  context.out.String( "Mapping to drive : " );  context.out.String( name );  context.out.Ln;
-				IF ~OpenVolume( handle, flags,name, context) THEN 
-					context.error.String( "volume could not be opened. " ); context.error.Ln; 
+				IF ~OpenVolume( handle, flags,name, context) THEN
+					context.error.String( "volume could not be opened. " ); context.error.Ln;
 					context.result := Commands.CommandError;
 				END;
 			ELSE
@@ -425,7 +425,7 @@ where
 - DriveName can be one of "A:" to "Z:" or "PhysicalDriveX" where X has to be replaced by the physical drive number.
 A drive name such as "C:" is matched to a PhysicalDriveX name, if appropriate.
 It is better to use the "X:" format because the system can in general then perform an automatic unregistering if the device is becoming unavailable in Windows.
-- If "PhysicalDriveX" is used to specify the drive, the logical volumes associated with it will not be dismounted, which can mean that write operations are unsuccesful 
+- If "PhysicalDriveX" is used to specify the drive, the logical volumes associated with it will not be dismounted, which can mean that write operations are unsuccesful
 - A volume is inserted read-only unless the optional parameter "RW" is provided.
 
 To access the partitions of the drive you may use the Partition Tool.

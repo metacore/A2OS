@@ -52,7 +52,7 @@ TYPE
 		adr*: ADDRESS;		(* lowest address on allocated stack *)	(* exported for Objects only *)
 		high*: ADDRESS;	(* next virtual address after stack *)	(* exported for Objects only *)
 	END;
-	
+
 	Address32* = LONGINT;
 
 VAR
@@ -322,12 +322,12 @@ END NumberOfProcessors;
 
 PROCEDURE InvalidateDCacheRange*(a: ADDRESS; s: SIZE);
 BEGIN
-	
+
 END InvalidateDCacheRange;
 
 PROCEDURE FlushDCacheRange*(a: ADDRESS; s: SIZE);
 BEGIN
-	
+
 END FlushDCacheRange;
 
 

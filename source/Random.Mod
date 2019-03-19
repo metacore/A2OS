@@ -12,7 +12,7 @@ CONST
 	allbits   = 7FFFFFFFH;
 	halfrange = 20000000H;
 	step      = 7;
-	
+
 	allbitsInv = 1 / REAL(allbits);
 
 TYPE
@@ -97,7 +97,7 @@ TYPE
 		BEGIN
 			RETURN -Math.ln(Uniform())/mu
 		END Exp;
-		
+
 		PROCEDURE Gaussian*(): REAL; (*generates a normal distribution with mean 0, variance 1 using the Box-Muller Transform*)
 		VAR
 			x1,x2,w,y1: REAL;
@@ -149,7 +149,7 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			RETURN r.Exp(mu)
 		END Exp;
-		
+
 		PROCEDURE Gaussian*(): REAL; (*generates a normal distribution with mean 0, variance 1 using the Box-Muller Transform*)
 		BEGIN{EXCLUSIVE}
 			RETURN r.Gaussian();

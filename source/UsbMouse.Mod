@@ -140,4 +140,4 @@ BEGIN
 	Usbdi.drivers.Add(Probe, Name, Description, 10)
 END UsbMouse.
 
-UsbMouse.Install ~  System.Free UsbMouse ~ 
+UsbMouse.Install ~  System.Free UsbMouse ~

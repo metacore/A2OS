@@ -31,7 +31,7 @@ VAR
 
 	PROCEDURE LEntier*( x: Real ): NbrInt64.Integer;
 	BEGIN
-		RETURN ENTIERH(x); 
+		RETURN ENTIERH(x);
 	END LEntier;
 
 	PROCEDURE Long*( x: NbrRe32.Real ): Real;

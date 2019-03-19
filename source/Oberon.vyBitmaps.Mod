@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 IMPORT Files, vyBase, vyHostTexts;
@@ -789,7 +789,7 @@ BEGIN
 	NumOfBytes := (source.W * source.H) * source.Depth DIV MAX(SET) + 1 ;
 	count := 0;
 	WHILE(count < NumOfBytes) DO
-		dest.PCluster[count DIV ClusterSize].pixel[count MOD ClusterSize] := 
+		dest.PCluster[count DIV ClusterSize].pixel[count MOD ClusterSize] :=
 		source.PCluster[count DIV ClusterSize].pixel[count MOD ClusterSize];
 		INC(count);
 	END;

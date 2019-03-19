@@ -34,26 +34,26 @@ Report any problems as soon as possible to ants@AntsInFields.de
 (** Module for procedures called in a Windows environment, Prevents from System-Halts due to lost Displays,
 for consistency reasons only ONE thread at a time allowed to be run in background !
 background threads must not open or close any displays !*)
- 
+
 (*
 
-*) 
+*)
 (*----------------- non-windows module ---------------*)
 
 IMPORT Oberon,Texts,Modules,Objects,Strings;
 VAR
 	allowMultipleThreads*: BOOLEAN;
-	blocked*: BOOLEAN; 
-	w: Texts.Writer; 
+	blocked*: BOOLEAN;
+	w: Texts.Writer;
 
 	PROCEDURE Assert* (asserted: BOOLEAN; fail: ARRAY OF CHAR);
 	BEGIN
-		IF ~asserted THEN Texts.WriteString(w,fail); Texts.WriteLn(w); Texts.Append(Oberon.Log,w.buf); ASSERT(asserted) END; 
-	END Assert; 
-	
-	PROCEDURE Block*; (* Block + release only used for Windows *) END Block; 
-	
-	PROCEDURE Release*; END Release; 
+		IF ~asserted THEN Texts.WriteString(w,fail); Texts.WriteLn(w); Texts.Append(Oberon.Log,w.buf); ASSERT(asserted) END;
+	END Assert;
+
+	PROCEDURE Block*; (* Block + release only used for Windows *) END Block;
+
+	PROCEDURE Release*; END Release;
 
 	PROCEDURE Command* (P: ARRAY OF CHAR);
 	BEGIN
@@ -61,7 +61,7 @@ VAR
 	END Command;
 
 	PROCEDURE Call*;
-	VAR sc: Texts.Scanner; res: INTEGER; 
+	VAR sc: Texts.Scanner; res: INTEGER;
 	BEGIN
 	Texts.OpenScanner(sc, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(sc);
@@ -69,35 +69,35 @@ VAR
 		INC(Oberon.Par.pos, Strings.Length(sc.s) + 1);
 		Oberon.Call(sc.s, Oberon.Par, FALSE, res)
 	END
-	END Call; 
-	
-	PROCEDURE CheckDisplay* (halt: BOOLEAN): BOOLEAN; BEGIN RETURN TRUE END CheckDisplay; 
-	
-	PROCEDURE Execute* (P: Modules.Command); BEGIN P() END Execute; 
-	
+	END Call;
+
+	PROCEDURE CheckDisplay* (halt: BOOLEAN): BOOLEAN; BEGIN RETURN TRUE END CheckDisplay;
+
+	PROCEDURE Execute* (P: Modules.Command); BEGIN P() END Execute;
+
 	PROCEDURE Halt* (cause: ARRAY OF CHAR);
-	BEGIN Texts.WriteString(w,cause); Texts.WriteLn(w); Texts.Append(Oberon.Log,w.buf); HALT(101); 
-	END Halt; 
-		
-	PROCEDURE Kill*; END Kill; 
-	
-	PROCEDURE Stop*; END Stop; 
-	
-	PROCEDURE OpenScript* (t: Texts.Text; pos, num: LONGINT; executorObj, context: Objects.Object): BOOLEAN; BEGIN RETURN FALSE END OpenScript; 
-	
-	PROCEDURE SetProgress* (i: INTEGER); END SetProgress; (* for interactive visualization of progress *) 
-	
-	PROCEDURE Init*; END Init; 
+	BEGIN Texts.WriteString(w,cause); Texts.WriteLn(w); Texts.Append(Oberon.Log,w.buf); HALT(101);
+	END Halt;
+
+	PROCEDURE Kill*; END Kill;
+
+	PROCEDURE Stop*; END Stop;
+
+	PROCEDURE OpenScript* (t: Texts.Text; pos, num: LONGINT; executorObj, context: Objects.Object): BOOLEAN; BEGIN RETURN FALSE END OpenScript;
+
+	PROCEDURE SetProgress* (i: INTEGER); END SetProgress; (* for interactive visualization of progress *)
+
+	PROCEDURE Init*; END Init;
 
 BEGIN
-	  allowMultipleThreads := FALSE; Texts.OpenWriter(w); blocked := FALSE; 
+	  allowMultipleThreads := FALSE; Texts.OpenWriter(w); blocked := FALSE;
 END antsSecurity.
 
 (*
-; 
-*) 
+;
+*)
 
-(* testing  
+(* testing
 _____________________________________________________________________________________________________________________________________________________________________________________
 antsSecurity.Call antsSecurity.TestBigMatrix
 
@@ -291,4 +291,4 @@ BEGIN
 Threads.Enumerate(p);
 END ShowThreads;
 *)
-*) 
+*)

@@ -23,9 +23,9 @@ TYPE
 		BEGIN
 			N := 0;
 			(* Initialize chaining values *)
-			A := LONGINT( 067452301H );  
-			B := LONGINT( 0EFCDAB89H );  
-			C := LONGINT( 098BADCFEH );  
+			A := LONGINT( 067452301H );
+			B := LONGINT( 0EFCDAB89H );
+			C := LONGINT( 098BADCFEH );
 			D := LONGINT( 010325476H );
 			initialized := TRUE
 		END Initialize;
@@ -92,11 +92,11 @@ VAR
 		NEW( h );  RETURN h
 	END NewHash;
 
-	
+
 
 	PROCEDURE MD5( CONST X: Buffer; VAR A, B, C, D: LONGINT );
 	VAR  a, b, c, d: LONGINT;
-	
+
 		PROCEDURE -F1( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
 		VAR f: LONGINT;
 		BEGIN
@@ -124,7 +124,7 @@ VAR
 			f := S.VAL( LONGINT, S.VAL( SET32, c ) / (S.VAL( SET32, b ) + (-S.VAL( SET32, d ))) );
 			a := ROT( a + f + x + t, s ) + b
 		END F4;
-	
+
 	BEGIN
 		a := A;  b := B;  c := C;  d := D;
 
@@ -166,9 +166,9 @@ VAR
 
 		INC( A, a );  INC( B, b );  INC( C, c );  INC( D, d );
 	END MD5;
-	
+
 	PROCEDURE Initialize;
-	VAR 
+	VAR
 		buf: U.InitBuffer;  i: LONGINT;
 	BEGIN
 		NEW( buf, 1024 );

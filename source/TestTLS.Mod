@@ -24,7 +24,7 @@ VAR
 	BEGIN
 		server.Close
 	END StopServer;
-	
+
 	PROCEDURE OpenClient*(lport:LONGINT; fadr:IP.Adr; fport:LONGINT; VAR res:WORD);
 	BEGIN
 		client := TLS.GetConnection();
@@ -42,7 +42,7 @@ VAR
 	BEGIN
 		OpenClient(TCP.NilPort, IP.StrToAdr("127.0.0.1"), 443, res);
 	END StartClient;
-	
+
 	PROCEDURE StopClient*;
 	BEGIN
 		IF client#NIL THEN
@@ -50,10 +50,10 @@ VAR
 			client:=NIL;
 		END;
 	END StopClient;
-	
-	
+
+
 	PROCEDURE Get*(context:Commands.Context);
-		VAR 
+		VAR
 			requestHeader: WebHTTP.RequestHeader;
 			responseHeader: WebHTTP.ResponseHeader;
 			w : Streams.Writer; r : Streams.Reader;
@@ -71,24 +71,24 @@ VAR
 		BEGIN
 			requestHeader.referer := "";
 			requestHeader.useragent := "A2 https client";
-			requestHeader.maj := 1; 
+			requestHeader.maj := 1;
 			requestHeader.min := 1;
 			success:=context.arg.GetString(url);
-			
+
 			StopClient;
 			IF WebHTTP.SplitHTTPAdr(url, host, path, port) THEN
 				DNS.HostByName(host, fadr, res);
-				IF res = DNS.Ok THEN 
+				IF res = DNS.Ok THEN
 
 					OpenClient(TCP.NilPort, fadr, port, res);
 					IF res#0 THEN context.out.String("connection failed"); context.out.Ln; context.out.Update; RETURN END;
-								
+
 					Streams.OpenWriter(w, client.Send); Streams.OpenReader(r, client.Receive);
-					
-					IF path="" THEN path:="/" END;	
+
+					IF path="" THEN path:="/" END;
 					WebHTTP.WriteRequestLine(w, requestHeader.maj, requestHeader.min, WebHTTP.GetM, path, host);
 					WebHTTP.WriteRequestLine(context.out, requestHeader.maj, requestHeader.min, WebHTTP.GetM, path, host);
-					
+
 					IF requestHeader.referer # "" THEN w.String("Referer: "); w.String(requestHeader.referer); w.Ln() END;
 					IF requestHeader.useragent # "" THEN w.String("User-Agent: "); w.String(requestHeader.useragent); w.Ln() END;
 					IF requestHeader.accept # "" THEN w.String("Accept: "); w.String(requestHeader.accept); w.Ln() END;
@@ -113,16 +113,16 @@ VAR
 					WHILE x # NIL DO
 						x := x.next
 					END;
-					
+
 					context.out.String("Response:"); context.out.Ln;
-		
+
 					LOOP
-						ch:=out.Get();  
+						ch:=out.Get();
 						IF out.res#Streams.Ok THEN EXIT END;
-						context.out.Char(ch); 
+						context.out.Char(ch);
 					END;
 					context.out.Ln;
-					context.out.String("TestTLS.Get done"); 
+					context.out.String("TestTLS.Get done");
 				END;
 			ELSE
 				res := ErrIllegalURL

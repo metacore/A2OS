@@ -413,7 +413,7 @@ VAR
 		IF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), userConfigFile) # 0 THEN
 		ELSIF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), defaultConfigFile) # 0 THEN
 		END;
-		
+
 		IF (name = "ObjectFileExtension") & (val = "") THEN
 #IF AMD64 THEN
 			IF Kernel32.Generic THEN
@@ -583,7 +583,7 @@ BEGIN
 	hout := Kernel32.CreateFile(traceName, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
 	IGNORE Kernel32.GetFullPathName(traceName, LEN(traceName),traceName, NIL);
 	Trace.Char := TraceChar;
-	Trace.String(version); Trace.Ln; 
+	Trace.String(version); Trace.Ln;
 END SetTraceFile;
 
 PROCEDURE SetTraceConsole*;
@@ -594,7 +594,7 @@ BEGIN
 	hin := Kernel32.GetStdHandle (Kernel32.STDInput);
 	hout := Kernel32.GetStdHandle (Kernel32.STDOutput);
 	Trace.Char := TraceChar;
-	Trace.String(version); Trace.Ln; 
+	Trace.String(version); Trace.Ln;
 END SetTraceConsole;
 
 PROCEDURE SetupTraceName(VAR traceName: ARRAY OF CHAR);
@@ -684,7 +684,7 @@ END ToExecutablePath;
 PROCEDURE Append(VAR s: ARRAY OF CHAR; CONST t: ARRAY OF CHAR);
 VAR i,j: LONGINT;
 BEGIN
-	i := 0; 
+	i := 0;
 	WHILE(s[i] # 0X) DO INC(i) END;
 	j := 0;
 	WHILE (t[j] # 0X) DO
@@ -814,7 +814,7 @@ END SetGCParams;
 (** Get first memory block and first free address, the first free address is identical to memBlockHead.endBlockAdr *)
 PROCEDURE GetStaticHeap*(VAR beginBlockAdr, endBlockAdr, freeBlockAdr: ADDRESS);
 BEGIN
-	beginBlockAdr := NIL; endBlockAdr := NIL; freeBlockAdr := NIL; 
+	beginBlockAdr := NIL; endBlockAdr := NIL; freeBlockAdr := NIL;
 END GetStaticHeap;
 
 (* returns if an address is a currently allocated heap address *)
@@ -880,7 +880,7 @@ END InsertMemoryBlock;
 	(* expand heap by allocating a new memory block *)
 	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
 	VAR mBlock: MemoryBlock;  alloc: SIZE;  adr,initVal: ADDRESS; continue: BOOLEAN;
-	BEGIN 
+	BEGIN
 		ASSERT(SIZEOF(MemoryBlockDesc) <= StaticBlockSize); (* make sure MemoryBlock contents fits into one StaticBlock *)
 		alloc := size + StaticBlockSize;
 		IF alloc < MemBlockSize THEN alloc := MemBlockSize END;
@@ -897,7 +897,7 @@ END InsertMemoryBlock;
 		END;
 		continue := adr = initVal;
 		ASSERT(adr MOD StaticBlockSize = 0); (* is fulfilled because VirtualAlloc is on page granularity *)
-	
+
 	IF adr # 0 THEN
 
 		IF continue THEN
@@ -908,19 +908,19 @@ END InsertMemoryBlock;
 			endBlockAdr := beginBlockAdr;
 			INC(endBlockAdr, alloc);
 		ELSE
-			mBlock := adr;  
-			mBlock.next := NIL;  
+			mBlock := adr;
+			mBlock.next := NIL;
 			mBlock.startAdr := adr;
-			mBlock.size := alloc;  
+			mBlock.size := alloc;
 
 			beginBlockAdr := adr + StaticBlockSize;
 			endBlockAdr := beginBlockAdr + alloc - StaticBlockSize;
 
-			mBlock.beginBlockAdr := beginBlockAdr;  
+			mBlock.beginBlockAdr := beginBlockAdr;
 			mBlock.endBlockAdr := beginBlockAdr; (* block is still empty -- Heaps module will set the upper bound *)
-			
+
 			InsertMemoryBlock( mBlock );
-						
+
 			memoryBlock := mBlock;
 		END;
 	ELSE

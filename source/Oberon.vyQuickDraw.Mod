@@ -1,4 +1,4 @@
-MODULE vyQuickDraw IN Oberon;	
+MODULE vyQuickDraw IN Oberon;
 (* Copyright notice:
 
 This file is part of Voyager
@@ -20,8 +20,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
- 
+*)
+
 
 (* 	(c) Project Voyager, StatLab Heidelberg
 		(c) M. Diller, StatLab Heidelberg
@@ -34,12 +34,12 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 		03.07.95 11:15:11 md 0.0d0	created and Median implemented
 *)
 
-IMPORT	
-	vyTypes, 
+IMPORT
+	vyTypes,
 	vyHostDisplay :=vyGraphBase, vyGraphBase,vyPatterns,
 	vyStd2dLayer;
 
-CONST 
+CONST
 	idversion*=	"vyQuickDraw v0r0a2";
 
 	PROCEDURE Median*;
@@ -50,7 +50,7 @@ CONST
 		vyTypes.Sort (vyStd2dLayer.x);
 
 		IF count MOD 2 = 0 THEN
-			med := 0.5*(vyTypes.VGetR (vyStd2dLayer.x, (count-1) DIV 2) + 
+			med := 0.5*(vyTypes.VGetR (vyStd2dLayer.x, (count-1) DIV 2) +
 			vyTypes.VGetR (vyStd2dLayer.x, (count+1) DIV 2))
 		ELSE
 			med := vyTypes.VGetR (vyStd2dLayer.x, (count+1) DIV 2 - 1)

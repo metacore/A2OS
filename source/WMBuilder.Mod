@@ -2095,7 +2095,7 @@ TYPE
 		END DragOver;
 
 		PROCEDURE DragAddComponent(component : Repositories.Component; VAR res : WORD); (* ! needs work work hierarchical buildup *)
-		VAR x, y : LONGINT; c: WMComponents.VisualComponent; 
+		VAR x, y : LONGINT; c: WMComponents.VisualComponent;
 			rect:WMRectangles.Rectangle; id:ARRAY 64 OF CHAR; b:BOOLEAN;
 		BEGIN
 			ASSERT(component # NIL);
@@ -2109,7 +2109,7 @@ TYPE
 				(* button/event pairs are connected implicitly *)
 				IF (c IS WMStandardComponents.Button) & ((component IS WMStandardComponents.SystemCommand)OR(component IS WMStandardComponents.Event)) THEN
 					id:="";
-					IF ~component(WMComponents.Component).properties.GetPropertyValue("ID",id) OR (id="") THEN id:="X"; b:=component(WMComponents.Component).properties.SetPropertyValue("ID",id) END; 
+					IF ~component(WMComponents.Component).properties.GetPropertyValue("ID",id) OR (id="") THEN id:="X"; b:=component(WMComponents.Component).properties.SetPropertyValue("ID",id) END;
 					id:="";
 					IF ~ c.properties.GetPropertyValue("OnClickHandler",id) OR (id="") THEN id:="X Run"; b:=c.properties.SetPropertyValue("OnClickHandler",id) END;
 				END;
@@ -2119,7 +2119,7 @@ TYPE
 				c:=FindPositionOwner(x,y);
 				c.AddContent(component);
 				WMRectangles.MoveRel(rect, x-c.bounds.GetLeft(), y-c.bounds.GetTop());
-				component(WMComponents.VisualComponent).bounds.Set(rect);	
+				component(WMComponents.VisualComponent).bounds.Set(rect);
 				component(WMComponents.VisualComponent).Invalidate;
 			END;
 		END DragAddComponent;

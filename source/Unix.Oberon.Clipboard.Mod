@@ -16,10 +16,10 @@ of the source code to another platform with the name OBERON. *)
 
 MODULE Clipboard IN Oberon;	(* mad 4.9.1997 *)
 
-IMPORT	SYSTEM, Files, Texts, Oberon, Displays IN A2, XDisplay IN A2, Plugins IN A2, Display, 
+IMPORT	SYSTEM, Files, Texts, Oberon, Displays IN A2, XDisplay IN A2, Plugins IN A2, Display,
 		X11 IN A2, X11Api IN A2, Strings, Modules IN A2, Machine IN A2 ;
 
-CONST  CR = 0DX; LF = 0AX; 
+CONST  CR = 0DX; LF = 0AX;
 
 VAR
 	scrap: Texts.Text; B: Texts.Buffer;
@@ -100,7 +100,7 @@ BEGIN
 			Machine.Acquire(Machine.X11);
 			X11.ChangeProperty(disp.xdisp, ev.requestor, ev.property, ev.target, 8, X11.PropModeReplace,
 				ADDRESSOF(selectionData[0]), i);
-			Machine.Release(Machine.X11);	
+			Machine.Release(Machine.X11);
 		END
 	ELSE
 		ev.property := X11.None
@@ -186,7 +186,7 @@ PROCEDURE OnClose;
 BEGIN
 	X11Api.SendSelection := NIL;
 	X11Api.ReceiveSelection := NIL;
-	X11Api.ClearSelection := NIL;	
+	X11Api.ClearSelection := NIL;
 END OnClose;
 
 

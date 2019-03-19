@@ -383,7 +383,7 @@ TYPE
 
 			mode.Set(Mode_Eager);
 			SetMode(Mode_Eager);
-			
+
 			SetGenerator("WMDropDownLists.GenDropDownList");
 		END Init;
 

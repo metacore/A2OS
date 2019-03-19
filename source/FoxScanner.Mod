@@ -17,7 +17,7 @@ CONST
 
 	(* scanner constants *)
 	EOT* = 0X; LF* = 0AX; CR* = 0DX; TAB* = 09X; ESC* = 1BX;
- 
+
 TYPE
 	StringType* = Strings.String;
 	IdentifierType* = StringPool.Index;
@@ -34,7 +34,7 @@ CONST
 	(* RelationOps: Equal ... Is *)
     	Equal DotEqual Unequal DotUnequal
     	Less DotLess  LessEqual DotLessEqual Greater DotGreater GreaterEqual DotGreaterEqual
-    	LessLessQ GreaterGreaterQ Questionmarks ExclamationMarks 
+    	LessLessQ GreaterGreaterQ Questionmarks ExclamationMarks
     	In Is
     	(* MulOps: Times ... And *)
     	Times TimesTimes DotTimes PlusTimes Slash Backslash DotSlash Div Mod And
@@ -47,9 +47,9 @@ CONST
 		(* statementy may start with Self ... Begin *)
 		If Case While Repeat For Loop With Exit Await Return Ignore Begin
 		(* symbols, expressions and statements cannot start with *)
-		Semicolon Transpose RightBrace RightBracket RightParenthesis 
+		Semicolon Transpose RightBrace RightBracket RightParenthesis
 		Questionmark ExclamationMark
-		LessLess GreaterGreater 
+		LessLess GreaterGreater
 		Upto Arrow Period Comma Colon Of Then Do To By Becomes Bar End Else Elsif Until Finally
 		(* declaration elements *)
 		Code Const Type Var Out Procedure Operator Import Definition Module Cell CellNet Extern
@@ -62,43 +62,43 @@ CONST
 		Comment EndOfText Escape
 		~
 	*)
-	None*= 0; 
+	None*= 0;
 	(* RelationOps: Equal ... Is *)
-	Equal*= 1; DotEqual*= 2; Unequal*= 3; DotUnequal*= 4; Less*= 5; DotLess*= 6; 
-	LessEqual*= 7; DotLessEqual*= 8; Greater*= 9; DotGreater*= 10; GreaterEqual*= 11; DotGreaterEqual*= 12; 
-	LessLessQ*= 13; GreaterGreaterQ*= 14; Questionmarks*= 15; ExclamationMarks*= 16; In*= 17; Is*= 18; 
+	Equal*= 1; DotEqual*= 2; Unequal*= 3; DotUnequal*= 4; Less*= 5; DotLess*= 6;
+	LessEqual*= 7; DotLessEqual*= 8; Greater*= 9; DotGreater*= 10; GreaterEqual*= 11; DotGreaterEqual*= 12;
+	LessLessQ*= 13; GreaterGreaterQ*= 14; Questionmarks*= 15; ExclamationMarks*= 16; In*= 17; Is*= 18;
 	(* MulOps: Times ... And *)
-	Times*= 19; TimesTimes*= 20; DotTimes*= 21; PlusTimes*= 22; Slash*= 23; Backslash*= 24; 
-	DotSlash*= 25; Div*= 26; Mod*= 27; And*= 28; 
+	Times*= 19; TimesTimes*= 20; DotTimes*= 21; PlusTimes*= 22; Slash*= 23; Backslash*= 24;
+	DotSlash*= 25; Div*= 26; Mod*= 27; And*= 28;
 	(* AddOps: Or ... Minus *)
-	Or*= 29; Plus*= 30; Minus*= 31; 
+	Or*= 29; Plus*= 30; Minus*= 31;
 	(* Prefix Unary Operators Plus ... Not *)
-	Not*= 32; 
+	Not*= 32;
 	(* expressions may start with Plus ... Identifier *)
-	LeftParenthesis*= 33; LeftBracket*= 34; LeftBrace*= 35; Number*= 36; Character*= 37; String*= 38; 
-	Nil*= 39; Imag*= 40; True*= 41; False*= 42; Self*= 43; Result*= 44; 
-	New*= 45; Identifier*= 46; 
+	LeftParenthesis*= 33; LeftBracket*= 34; LeftBrace*= 35; Number*= 36; Character*= 37; String*= 38;
+	Nil*= 39; Imag*= 40; True*= 41; False*= 42; Self*= 43; Result*= 44;
+	New*= 45; Identifier*= 46;
 	(* statementy may start with Self ... Begin *)
-	If*= 47; Case*= 48; While*= 49; Repeat*= 50; For*= 51; Loop*= 52; 
-	With*= 53; Exit*= 54; Await*= 55; Return*= 56; Ignore*= 57; Begin*= 58; 
+	If*= 47; Case*= 48; While*= 49; Repeat*= 50; For*= 51; Loop*= 52;
+	With*= 53; Exit*= 54; Await*= 55; Return*= 56; Ignore*= 57; Begin*= 58;
 	(* symbols, expressions and statements cannot start with *)
-	Semicolon*= 59; Transpose*= 60; RightBrace*= 61; RightBracket*= 62; RightParenthesis*= 63; Questionmark*= 64; 
-	ExclamationMark*= 65; LessLess*= 66; GreaterGreater*= 67; Upto*= 68; Arrow*= 69; Period*= 70; 
-	Comma*= 71; Colon*= 72; Of*= 73; Then*= 74; Do*= 75; To*= 76; 
-	By*= 77; Becomes*= 78; Bar*= 79; End*= 80; Else*= 81; Elsif*= 82; 
-	Until*= 83; Finally*= 84; 
+	Semicolon*= 59; Transpose*= 60; RightBrace*= 61; RightBracket*= 62; RightParenthesis*= 63; Questionmark*= 64;
+	ExclamationMark*= 65; LessLess*= 66; GreaterGreater*= 67; Upto*= 68; Arrow*= 69; Period*= 70;
+	Comma*= 71; Colon*= 72; Of*= 73; Then*= 74; Do*= 75; To*= 76;
+	By*= 77; Becomes*= 78; Bar*= 79; End*= 80; Else*= 81; Elsif*= 82;
+	Until*= 83; Finally*= 84;
 	(* declaration elements *)
-	Code*= 85; Const*= 86; Type*= 87; Var*= 88; Out*= 89; Procedure*= 90; 
-	Operator*= 91; Import*= 92; Definition*= 93; Module*= 94; Cell*= 95; CellNet*= 96; 
-	Extern*= 97; 
+	Code*= 85; Const*= 86; Type*= 87; Var*= 88; Out*= 89; Procedure*= 90;
+	Operator*= 91; Import*= 92; Definition*= 93; Module*= 94; Cell*= 95; CellNet*= 96;
+	Extern*= 97;
 	(* composite type symbols *)
-	Array*= 98; Object*= 99; Record*= 100; Pointer*= 101; Enum*= 102; Port*= 103; 
-	Address*= 104; Size*= 105; Alias*= 106; 
+	Array*= 98; Object*= 99; Record*= 100; Pointer*= 101; Enum*= 102; Port*= 103;
+	Address*= 104; Size*= 105; Alias*= 106;
 	(* assembler constants *)
-	Ln*= 107; PC*= 108; PCOffset*= 109; 
+	Ln*= 107; PC*= 108; PCOffset*= 109;
 	(* number types *)
-	Shortint*= 110; Integer*= 111; Longint*= 112; Hugeint*= 113; Real*= 114; Longreal*= 115; 
-	Comment*= 116; EndOfText*= 117; Escape*= 118; 
+	Shortint*= 110; Integer*= 111; Longint*= 112; Hugeint*= 113; Real*= 114; Longreal*= 115;
+	Comment*= 116; EndOfText*= 117; Escape*= 118;
 
 	SingleQuote = 27X;  DoubleQuote* = 22X;
 	Ellipsis = 7FX;   (* used in Scanner.GetNumber to return with ".." when reading an interval like 3..5 *)
@@ -262,7 +262,7 @@ TYPE
 	(** scanner reflects the following EBNF
 		Token 				= String | Symbol | Number | Keyword | Identifier.
 		Symbol 				=  | '#' | '&' | '(' ['*' any '*' ')'] | ')' | '*'['*'] | '+'['*'] | ',' | '-' | '.' [ '.' | '*' | '/' | '=' | '#' | '>'['='] | '<' ['=']
-											  | '/' | ':' ['='] | ';'  | '<' ['=' | '<' ['?'] ] | '=' | '>' [ '=' | '>' ['?']]  
+											  | '/' | ':' ['='] | ';'  | '<' ['=' | '<' ['?'] ] | '=' | '>' [ '=' | '>' ['?']]
 											  | '[' | ']' | '^' | '{' | '|' | '}' | '~' | '\' |  '`' |  '?' ['?'] | '!' ['!']
 		Identifier			= Letter {Letter | Digit | '_'}.
 		Letter					= 'A' | 'B' | .. | 'Z' | 'a' | 'b' | .. | 'z'.
@@ -293,7 +293,7 @@ TYPE
 		case-: LONGINT;
 		stringWriter: Streams.Writer;
 		stringMaker: StringMaker;
-	
+
 		useLineNumbers*: BOOLEAN;
 
 		(*
@@ -314,23 +314,23 @@ TYPE
 			ch := " ";
 			case := Unknown;
 			firstIdentifier := TRUE;
-			SELF.position := pos; 
+			SELF.position := pos;
 			DEC(position.start, 1); (* one token lookahead *)
 			IF reader = NIL THEN ch := EOT ELSE 	GetNextCharacter END;
 			IF Trace THEN D.Str( "New scanner  " );   D.Ln;  END;
-			IF source = "" THEN SELF.position.reader := reader END; 
+			IF source = "" THEN SELF.position.reader := reader END;
 			useLineNumbers := FALSE;
 		END InitializeScanner;
-		
+
 		PROCEDURE ResetCase*; (*! needs a better naming ! *)
 		BEGIN
 			firstIdentifier := TRUE; case := Unknown;
 		END ResetCase;
-		
+
 		PROCEDURE SetCase*(c: LONGINT);
 		BEGIN
 			case := c;
-		END SetCase;		
+		END SetCase;
 
 		(** report an error occured during scanning **)
 		PROCEDURE ErrorS(CONST msg: ARRAY OF CHAR);
@@ -632,22 +632,22 @@ TYPE
 				ELSE Error( Basic.NumberIllegalCharacter );  RETURN 0
 				END
 			END Hexadecimal;
-			
+
 			PROCEDURE IsHexDigit(ch: CHAR): BOOLEAN;
 			BEGIN
-				RETURN (ch >= "0") & (ch <= "9") OR (ch >= "a") & (ch <="f") OR (ch >= "A") & (ch <= "F") 
+				RETURN (ch >= "0") & (ch <= "9") OR (ch >= "a") & (ch <="f") OR (ch >= "A") & (ch <= "F")
 			END IsHexDigit;
 
 			PROCEDURE IsBinaryDigit(ch: CHAR): BOOLEAN;
 			BEGIN
-				RETURN (ch >= "0") & (ch <= "1") 
+				RETURN (ch >= "0") & (ch <= "1")
 			END IsBinaryDigit;
-			
+
 
 		BEGIN  (* ("0" <= ch) & (ch <= "9") *)
 			result := Number;
 			i := 0;  m := 0;  n := 0;  d := 0;  si := 0;  long := FALSE;
-			
+
 			IF (ch = "0") THEN
 				IF (reader.Peek() = "x") THEN (* hex number *)
 					digits := 0;
@@ -688,7 +688,7 @@ TYPE
 					RETURN result;
 				END;
 			END;
-			
+
 			LOOP  (* read mantissa *)
 				IF ("0" <= ch) & (ch <= "9") OR (d = 0) & ("A" <= ch) & (ch <= "F") THEN
 					IF (m > 0) OR (ch # "0") THEN  (* ignore leading zeros *)
@@ -933,17 +933,17 @@ TYPE
 					IF ch = '=' THEN GetNextCharacter;  s := Becomes  ELSE s := Colon END
 			| ';':     s := Semicolon;  GetNextCharacter
 			| '<':     GetNextCharacter;
-					IF ch = '=' THEN GetNextCharacter;  s := LessEqual 
-					ELSIF ch ='<' THEN GetNextCharacter; 
+					IF ch = '=' THEN GetNextCharacter;  s := LessEqual
+					ELSIF ch ='<' THEN GetNextCharacter;
 						IF ch ='?' THEN GetNextCharacter; s := LessLessQ
 						ELSE s := LessLess
 						END;
-					ELSE s := Less;  
+					ELSE s := Less;
 					END
 			| '=':     s := Equal;  GetNextCharacter
 			| '>':     GetNextCharacter;
-					IF ch = '=' THEN GetNextCharacter;  s := GreaterEqual 
-					ELSIF ch ='>' THEN GetNextCharacter; 
+					IF ch = '=' THEN GetNextCharacter;  s := GreaterEqual
+					ELSIF ch ='>' THEN GetNextCharacter;
 						IF ch ='?' THEN GetNextCharacter; s := GreaterGreaterQ
 						ELSE s := GreaterGreater
 						END;
@@ -1143,8 +1143,8 @@ TYPE
 				| ']':     s := RightBracket;  GetNextCharacter
 				| '{':     s := LeftBrace;  GetNextCharacter
 				| '}':     s := RightBrace;  GetNextCharacter
-				| '!':     s := ExclamationMark; GetNextCharacter; 
-				| '^':     s := Arrow; GetNextCharacter; 
+				| '!':     s := ExclamationMark; GetNextCharacter;
+				| '^':     s := Arrow; GetNextCharacter;
 
 				| 'A'..'Z': s := Identifier; GetIdentifier( token );
 				| 'a'..'z': s := Identifier; GetIdentifier( token);
@@ -1173,7 +1173,7 @@ TYPE
 
 	(** return a new scanner on a stream, error output via diagnostics  **)
 	PROCEDURE NewScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics ): Scanner;
-	VAR s: Scanner; pos: Position; 
+	VAR s: Scanner; pos: Position;
 	BEGIN
 		pos.start := position;
 		pos.end := position;
@@ -1183,7 +1183,7 @@ TYPE
 	END NewScanner;
 
 	PROCEDURE NewAssemblerScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics ): AssemblerScanner;
-	VAR s: AssemblerScanner;pos: Position; 
+	VAR s: AssemblerScanner;pos: Position;
 	BEGIN
 		pos.start := position;
 		pos.end := position;

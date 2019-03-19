@@ -3911,7 +3911,7 @@ BEGIN
 											SYSTEM.VAL( LONGINT, {RangeFlag} ) );   (* flags, no reallocation *)
 		PCLIR.Emit01( code, PCLIR.push, adr );
 		PCLIR.Emit01( code, PCLIR.push, ap.adr );   (* push array reference  *)
-		
+
 		IF descr.mode # Reg THEN LoadAdr( code, descr );  END;
 		PCLIR.EmitLoadRelative(code,PCLIR.Address,TRUE,adr,Descr_PtrOffs*PCT.AddressSize,descr.adr); (* load current flags from the descriptor *)
 		PCLIR.Emit01( code, PCLIR.push, adr );   (*  ptr *)

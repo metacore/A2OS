@@ -146,10 +146,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		LDRB R1, [FP, #blue]
 		LDRB R2, [FP, #green]
 		LDRB R3, [FP, #red]
-		
+
 		ANDS R5, R0, #3 ; R0 MOD 4
 		BNE unaligned_store
-		
+
 		; aligned store
 		ORR R1, R1, R2, LSL #8
 		ORR R1, R1, R3, LSL #16
@@ -186,22 +186,22 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		LDRB R2, [FP, #green]
 		LDRB R3, [FP, #red]
 		LDRB R4, [FP, #alpha]
-		
+
 		CMP R4, #255
 		BEQ store ; if alpha =255 store colors as they are
-		
+
 		; apply alpha to the colors
-		MUL R1, R1, R4 ; blue * alpha 
+		MUL R1, R1, R4 ; blue * alpha
 		MUL R2, R2, R4 ; green * alpha
 		MUL R3, R3, R4 ; red * alpha
-		LSR R1, R1, #8 ; (blue * alpha) DIV 256 
-		LSR R2, R2, #8 ; (green * alpha) DIV 256 
-		LSR R3, R3, #8 ; (red * alpha) DIV 256 
-	
+		LSR R1, R1, #8 ; (blue * alpha) DIV 256
+		LSR R2, R2, #8 ; (green * alpha) DIV 256
+		LSR R3, R3, #8 ; (red * alpha) DIV 256
+
 	store:
 		ANDS R5, R0, #3 ; R0 MOD 4
 		BNE unaligned_store
-		
+
 		; aligned store
 		ORR R1, R1, R2, LSL #8
 		ORR R1, R1, R3, LSL #16
@@ -899,7 +899,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 			SYSTEM.PUT(dadr, out)
 		END
 	END Clear1;
-	
+
 	(*
 	PROCEDURE ClearBytes (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	BEGIN
@@ -912,7 +912,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END
 	END ClearBytes;
 	*)
-	
+
 	PROCEDURE ClearBytes (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE
 	#IF I386 THEN
@@ -936,7 +936,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R1, #0
 		BLE end ; exit if len <= 0
-		
+
 		STRB R2, [R0, #0]
 		ADD R0, R0, #1 ; INC(dadr);
 		SUB R1, R1, #1 ; DEC(len);
@@ -945,8 +945,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	#ELSE
 		unimplemented
 	#END
-	END ClearBytes;	
-	
+	END ClearBytes;
+
 	(* len is nr of DWords*)
 	PROCEDURE Clear32 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE
@@ -971,7 +971,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R1, #0
 		BLE end ; exit if len <= 0
-		
+
 		STR R2, [R0, #0]
 		ADD R0, R0, #4 ; INC(dadr,4);
 		SUB R1, R1, #1 ; DEC(len);
@@ -980,8 +980,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	#ELSE
 		unimplemented
 	#END
-	END Clear32;	
-	
+	END Clear32;
+
 	(*---- fill --------------*)
 	PROCEDURE Fill8(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE
@@ -1006,7 +1006,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R1, #0
 		BEQ end ; exit if size = 0
-		
+
 		STRB R2, [R0, #0]
 		ADD R0, R0, #1 ; INC(destAdr);
 		SUB R1, R1, #1 ; DEC(size);
@@ -1016,7 +1016,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		unimplemented
 	#END
 	END Fill8;
-	
+
 	(* size in 16bit words*)
 	PROCEDURE Fill16(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE
@@ -1041,7 +1041,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R1, #0
 		BEQ end ; exit if size = 0
-		
+
 		STRH R2, [R0, #0]
 		ADD R0, R0, #2 ; INC(destAdr,2);
 		SUB R1, R1, #1 ; DEC(size);
@@ -1051,7 +1051,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		unimplemented
 	#END
 	END Fill16;
-	
+
 	(* size in 24bit entities*)
 	PROCEDURE Fill24(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
 	CODE
@@ -1078,7 +1078,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R1, #0
 		BEQ end ; exit if size = 0
-		
+
 		STRB R2, [R0, #0]
 		STRB R4, [R0, #1]
 		STRB R5, [R0, #2]
@@ -1090,7 +1090,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		unimplemented
 	#END
 	END Fill24;
-	
+
 	(* size in DWords*)
 	PROCEDURE Fill32(destAdr: ADDRESS; size: SIZE; filler: LONGINT); (*! to do: change interface, introduce in Blend()*)
 	CODE
@@ -1115,7 +1115,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R1, #0
 		BEQ end ; exit if size = 0
-		
+
 		STR R2, [R0, #0]
 		ADD R0, R0, #4 ; INC(destAdr,4);
 		SUB R1, R1, #1 ; DEC(size);
@@ -1251,7 +1251,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R1, #0
 		BLE end ; exit if len <= 0
-		
+
 		LDR R4, [R2, #0] ; R4 := src
 		STR R4, [R0, #0] ; dst := src
 		ADD R0, R0, #4 ; INC(dadr,4);
@@ -2328,7 +2328,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		rc := mode.col[r];
 		gc := mode.col[g];
 		bc := mode.col[b];
-		
+
 		WHILE len > 0 DO
 			SYSTEM.GET(sadr, alpha);
 			alpha := CHR(ORD(ac) * ORD(alpha) DIV 255);
@@ -2356,37 +2356,37 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		LDR R0, [FP, #sadr]
 		LDR R1, [FP, #dadr]
 		LDR R2, [FP, #len]
-		
+
 		LDR R6, [FP, #col]
 		LDRB R3, [R6, #0] ; col[b]
-		LDRB R4, [R6, #1] ; col[g] 
+		LDRB R4, [R6, #1] ; col[g]
 		LDRB R5, [R6, #2] ; col[r]
 		LDRB R10, [R6, #3] ; col[a]
 		ADD R10, R10, #1; to account for DIV 256 i/o DIV 255 below
-		
+
 	loop:
 		CMP R2, #0
 		BLE end ; exit if len <= 0
-		
+
 		LDRB R6, [R0, #0] ; src[a]
 		MUL R6, R10, R6 ; alpha := src0[a]*col[a]
 		LSR R6, R6, #8 ; alpha := alpha DIV 256
 
 		CMP R6, #255
 		BNE compute ; src[a] # 255 -> compute blended colors
-		
+
 		; src[a] = 255 -> just move src to dst
 		MOV R8, R3 ; dst[b] := src0[b]
 		ORR R8, R8, R4, LSL #8 ; dst[g] := src0[g]
 		ORR R8, R8, R5, LSL #16 ; dst[r] := src0[r]
 		ORR R8, R8, R6, LSL #24 ; dst[a] := src[a]
 		B store ; go to the actual data move
-		
+
 	compute:
 		RSB R7, R6, #255 ; fd := 255 - src[a]
-		
+
 		LDR R8, [R1, #0] ; R8 := dst
-		
+
 		; compute src[b]
 		MUL R9, R3, R6 ; src0[b]*src[a]
 		LSR R9, R9, #8 ; src[b] := (src0[b]*src[a]) DIV 256
@@ -2398,11 +2398,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_b
 		MOV R11, #255
-	
+
 	put_b:
 		BIC R8, R8, #0FFH ; clear dst[b]
 		ORR R8, R8, R11
-		
+
 		; compute src[g]
 		MUL R9, R4, R6 ; src0[g]*src[a]
 		LSR R9, R9, #8 ; src[g] := (src0[g]*src[a]) DIV 256
@@ -2415,11 +2415,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_g
 		MOV R11, #255
-	
+
 	put_g:
 		BIC R8, R8, #0FF00H ; clear dst[g]
 		ORR R8, R8, R11, LSL #8
-		
+
 		; compute src[r]
 		MUL R9, R5, R6 ; src0[r]*src[a]
 		LSR R9, R9, #8 ; src[r] := (src0[r]*src[a]) DIV 256
@@ -2432,11 +2432,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_r
 		MOV R11, #255
-	
+
 	put_r:
 		BIC R8, R8, #0FF0000H ; clear dst[r]
 		ORR R8, R8, R11, LSL #16
-		
+
 		; compute dst[a]
 		AND R11, R8, #0FF000000H ; dst[a]*16777216
 		LSR R11, R11, #24 ; dst[a]
@@ -2446,11 +2446,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_a
 		MOV R11, #255
-	
+
 	put_a:
 		BIC R8, R8, #0FF000000H ; clear dst[a]
 		ORR R8, R8, R11, LSL #24
-		
+
 	store:
 		STR R8, [R1, #0]
 		ADD R0, R0, #1 ; INC(sadr);
@@ -2459,14 +2459,14 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		B loop
 	end:
 	END A8OverBGRA8888Asm;
-	
+
 	PROCEDURE A8OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	BEGIN
 		A8OverBGRA8888Asm(mode.col,sadr,sbit,dadr,dbit,len);
 	END A8OverBGRA8888;
 
 #ELSE
-	
+
 	PROCEDURE A8OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	VAR src , dst: Pixel; rc,gc,bc,ac, fd, fs: LONGINT;
 	BEGIN
@@ -2485,12 +2485,12 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 				src[b] := CHR(bc * ORD(src[a]) DIV 255);
 
 				fd := 255-ORD(src[a]);
-				
+
 				dst[0] := Clamp[200H + (fs * ORD(src[0]) + fd * ORD(dst[0])) DIV 255];
 				dst[1] := Clamp[200H + (fs * ORD(src[1]) + fd * ORD(dst[1])) DIV 255];
 				dst[2] := Clamp[200H + (fs * ORD(src[2]) + fd * ORD(dst[2])) DIV 255];
 				dst[3] := Clamp[200H + (fs * ORD(src[3]) + fd * ORD(dst[3])) DIV 255];
-				
+
 				SYSTEM.MOVE(ADDRESSOF(dst),dadr,4);
 			INC(sadr); INC(dadr,4); DEC(len);
 		END
@@ -2515,7 +2515,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 #IF ARM THEN
 
-	
+
 	PROCEDURE BGRA8888OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
 	CODE
 		LDR R0, [FP, #sadr]
@@ -2525,13 +2525,13 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	loop:
 		CMP R2, #0
 		BLE end ; exit if len <= 0
-		
+
 		LDR R8, [R0, #0] ; R8 := src
 		LSR R6, R8, #24 ; R6 := src[a]
-		
+
 		CMP R6, #255
 		BEQ store ; src[a] = 255 -> just move src to dst
-		
+
 		MOV R9, #0FFH ; LSB mask
 		AND R3, R9, R8 ; R3 := src[b]
 		AND R4, R9, R8, LSR #8 ; R4 := src[g]
@@ -2539,9 +2539,9 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	compute:
 		RSB R7, R6, #255 ; fd := 255 - src[a]
-		
+
 		LDR R8, [R1, #0] ; R8 := dst
-		
+
 		; compute dst[b]
 		AND R11, R8, #0FFH ; dst[b]
 		MUL R11, R11, R7 ; dst[b]*fd
@@ -2550,11 +2550,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_b
 		MOV R11, #255
-	
+
 	put_b:
 		BIC R8, R8, #0FFH ; clear dst[b]
 		ORR R8, R8, R11
-		
+
 		; compute dst[g]
 		AND R11, R8, #0FF00H ; dst[g]*256
 		LSR R11, R11, #8 ; dst[g]
@@ -2564,11 +2564,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_g
 		MOV R11, #255
-	
+
 	put_g:
 		BIC R8, R8, #0FF00H ; clear dst[g]
 		ORR R8, R8, R11, LSL #8
-		
+
 		; compute dst[r]
 		AND R11, R8, #0FF0000H ; dst[r]*65536
 		LSR R11, R11, #16 ; dst[r]
@@ -2578,11 +2578,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_r
 		MOV R11, #255
-	
+
 	put_r:
 		BIC R8, R8, #0FF0000H ; clear dst[r]
 		ORR R8, R8, R11, LSL #16
-		
+
 		; compute dst[a]
 		AND R11, R8, #0FF000000H ; dst[a]*16777216
 		LSR R11, R11, #24 ; dst[a]
@@ -2592,11 +2592,11 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		CMP R11, #255
 		BLT put_a
 		MOV R11, #255
-	
+
 	put_a:
 		BIC R8, R8, #0FF000000H ; clear dst[a]
 		ORR R8, R8, R11, LSL #24
-		
+
 	store:
 		STR R8, [R1, #0]
 		ADD R0, R0, #4 ; INC(sadr,4);
@@ -4240,7 +4240,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	(** copy rectangular area to the same or another image in specified mode **)
 	PROCEDURE Copy* (src, dst: Image; llx, lly, urx, ury, dx, dy: LONGINT; VAR mode: Mode);
 		VAR w, h, sbit, dbit, slen, sb, db, len, l, w1, h1: LONGINT; sadr, dadr, sa, da: ADDRESS;
-				
+
 	BEGIN
 		ASSERT((0 <= llx) & (llx <= urx) & (urx <= src.width) & (0 <= lly) & (lly <= ury) & (ury <= src.height), 100);
 		ASSERT((0 <= dx) & (dx + urx - llx <= dst.width) & (0 <= dy) & (dy + ury - lly <= dst.height), 101);

@@ -735,9 +735,9 @@ TYPE
 				END
 			END
 		END EditText;
-		
+
 		(*
-		PROCEDURE Open*(sender, data : ANY); 
+		PROCEDURE Open*(sender, data : ANY);
 VAR options : Options.Options; window : Window; filename : Files.FileName; format : ARRAY 32 OF CHAR;
 BEGIN
 	NEW(options);
@@ -750,7 +750,7 @@ BEGIN
 		END;
 	END;
 END Open;
-		
+
 		*)
 
 		PROCEDURE MyDragDropped(x, y : LONGINT; dragInfo : WM.DragInfo; VAR handled : BOOLEAN);
@@ -1112,8 +1112,8 @@ END Open;
 				x := dir[i]; L := 0; R := i;
 				IF Files.Directory IN x.flags THEN xFlag := 0 ELSE xFlag := 1 END;
 				WHILE L < R DO
-					m := (L + R) DIV 2; 
-					dirTime := dir[m].time; dirDate:= dir[m].date; 
+					m := (L + R) DIV 2;
+					dirTime := dir[m].time; dirDate:= dir[m].date;
 					IF Files.Directory IN dir[m].flags THEN dirFlag := 0 ELSE dirFlag := 1 END;
 					IF (dirFlag < xFlag) OR ((dirFlag=xFlag) & ((dirDate< x.date) OR ((dirDate=x.date)&(dirTime<x.time)))) THEN
 						R := m

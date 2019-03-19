@@ -10,7 +10,7 @@ CONST
 	InvalidPosition* =MIN(LONGINT);
 	FlagMoveable* = 20;
 	FlagSmoothGraphics* = 21;
-	
+
 TYPE
 
 	KillerMsg = OBJECT
@@ -59,7 +59,7 @@ TYPE
 			ELSE Handle^(m);
 			END;
 		END Handle;
-		
+
 		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
 		BEGIN
 			lastX := bounds.l + x; lastY:=bounds.t + y;
@@ -67,7 +67,7 @@ TYPE
 				dragging := TRUE;
 				PointerDown^(x,y,keys);
 			ELSE
-				PointerDown^(x,y,keys); 
+				PointerDown^(x,y,keys);
 			END;
 		END PointerDown;
 
@@ -88,7 +88,7 @@ TYPE
 			dragging := FALSE;
 			PointerDown^(x,y,keys);
 		END PointerUp;
-		
+
 	END Window;
 
 VAR
@@ -143,7 +143,7 @@ BEGIN
 	ELSE
 		window.SetContent(vc);
 	END;
-	
+
 END DoShow;
 
 PROCEDURE DoLoad*(CONST filename: ARRAY OF CHAR; error: Streams.Writer): WMComponents.VisualComponent;
@@ -208,7 +208,7 @@ PROCEDURE SetProperties(c:WMComponents.Component; CONST attr: ARRAY OF CHAR);
 VAR property, value: ARRAY 32 OF CHAR;
 VAR r: Streams.StringReader;
 BEGIN
-	NEW(r, LEN(attr)); 
+	NEW(r, LEN(attr));
 	r.Set(attr);
 	WHILE r.GetString(property) & r.GetString(value) DO
 		IF ~c.properties.SetPropertyValue(property, value) THEN END;

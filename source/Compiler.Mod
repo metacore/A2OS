@@ -106,7 +106,7 @@ TYPE
 		BEGIN
 			message := "";
 			IF module # NIL THEN
-				Global.GetModuleName(module, message); 
+				Global.GetModuleName(module, message);
 			END;
 			Strings.Append (message, msg);
 			IF error THEN
@@ -160,7 +160,7 @@ TYPE
 		REPEAT
 			(** first phase: scan and parse **)
 			module := options.frontend.Parse();
-			IF options.frontend.Error() THEN 
+			IF options.frontend.Error() THEN
 				FinalMessage(TRUE," could not be compiled (parser errors).");
 				RETURN FALSE;
 			END;
@@ -279,11 +279,11 @@ TYPE
 	BEGIN
 		result := TRUE;
 		NEW(options);
-		
+
 		options.Add("p","platform",Options.String);
 		options.Add(0X,"showOptions",Options.Flag);
 		options.Add("l","lineNumbers", Options.Flag);
-		
+
 		options.Add(0X,"print",Options.Flag);
 		options.Add(0X,"Print",Options.Flag);
 		options.Add(0X,"silent",Options.Flag);
@@ -312,14 +312,14 @@ TYPE
 		parsed := options.ParseStaged(input, error);
 		IF options.GetString("platform", name) OR GetDefaultPlatform(name) THEN
 			defaults := platforms.Get(name);
-			IF defaults = NIL THEN 	
+			IF defaults = NIL THEN
 				error.String("Unknown platform"); error.Ln; result := FALSE;
 			ELSE
 				parsed := options.ParseStaged(defaults, error) & parsed;
 				input.SetPos(position);
 				parsed := options.ParseStaged(input, error) & parsed; (* reparse overwrites *)
 			END;
-		ELSE 
+		ELSE
 			defaults := NIL;
 		END;
 
@@ -334,7 +334,7 @@ TYPE
 		ELSE compilerOptions.backend := Backend.GetBackendByName(DefaultBackend);
 			IF compilerOptions.backend = NIL THEN Error("default backend could not be installed"); result := FALSE END;
 		END;
-		
+
 		IF options.GetString("F", name) THEN
 			IF name = "" THEN compilerOptions.frontend := NIL
 			ELSE
@@ -518,20 +518,20 @@ TYPE
 		END;
 	END CompileReader;
 
-	VAR 
+	VAR
 		platforms: Options.Defaults;
 		defaultPlatform: ARRAY 32 OF CHAR;
-	
+
 	PROCEDURE DoAddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR);
 	BEGIN
 		platforms.Add(name, defaults);
 	END DoAddPlatform;
-	
+
 	PROCEDURE ShowDefaults*(context: Commands.Context);
 	BEGIN
 		platforms.Show(context.out)
 	END ShowDefaults;
-	
+
 	PROCEDURE AddPlatform*(context: Commands.Context);
 	VAR name: ARRAY 32 OF CHAR; defaults: ARRAY 1024 OF CHAR;
 	BEGIN
@@ -541,7 +541,7 @@ TYPE
 			context.result := Commands.CommandParseError;
 		END;
 	END AddPlatform;
-	
+
 	PROCEDURE SetDefaultPlatform*(context: Commands.Context);
 	VAR name: ARRAY 32 OF CHAR;
 	BEGIN
@@ -549,7 +549,7 @@ TYPE
 			COPY(name, defaultPlatform);
 		END;
 	END SetDefaultPlatform;
-	
+
 	PROCEDURE GetDefaultPlatform(VAR name: ARRAY OF CHAR): BOOLEAN;
 	BEGIN
 		IF defaultPlatform # "" THEN
@@ -559,7 +559,7 @@ TYPE
 			RETURN FALSE
 		END
 	END GetDefaultPlatform;
-	
+
 	PROCEDURE SetupDefaults;
 	VAR extension: Files.FileName;
 	BEGIN
@@ -570,9 +570,9 @@ TYPE
 		(* infer platform from default object file extension *)
 		platforms.Find("objectFileExtension", extension, defaultPlatform);
 	END SetupDefaults;
-	
-	
-	
+
+
+
 BEGIN
 	NEW(platforms);
 
@@ -582,12 +582,12 @@ BEGIN
 	DoAddPlatform("Win32","-b=AMD --bits=32 --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI --define=WIN,I386");
 	DoAddPlatform("Win64","-b=AMD --bits=64 --mergeSections --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI --define=WIN,AMD64");
 	DoAddPlatform("ARM","-b=ARM --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya --define=ARM");
-	DoAddPlatform("Minos","-b=ARM --objectFile=Minos --define=ARM"); 
+	DoAddPlatform("Minos","-b=ARM --objectFile=Minos --define=ARM");
 	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT --define=TRM");
 	DoAddPlatform("TRMI","-b=TRM --objectFile=Intermediate --metaData=simple --objectFileExtension=.IroT --symbolFileExtension=.IrsT --define=TRM");
 	DoAddPlatform("ARMA2","-b=ARM --mergeSections --define=ARM --objectFileExtension=.Gof --symbolFileExtension=.Sym");
 	DoAddPlatform("Unix32","-b=AMD --bits=32 --mergeSections --traceModule=Trace --objectFileExtension=.GofU --symbolFileExtension=.SymU --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,I386");
 	DoAddPlatform("Unix64","-b=AMD --bits=64 --mergeSections --traceModule=Trace --objectFileExtension=.GofUu --symbolFileExtension=.SymUu --preciseGC --cellsAreObjects --platformCC=C --define=UNIX,AMD64");
-	
+
 	SetupDefaults;
 END Compiler.

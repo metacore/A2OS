@@ -151,7 +151,7 @@ CONST
 	Third*=4;
 
 	DefaultTemplateFile="oc/DocuTemplate.txt";
-	
+
 	KeywordElementType = ElementType.Bold;
 	QualifiedIdentifierElementType = ElementType.Bold;
 
@@ -1014,7 +1014,7 @@ TYPE
 		END VisitOperator;
 
 		PROCEDURE VisitImport*(x: SyntaxTree.Import);
-		VAR context: SyntaxTree.Identifier; name: Basic.SectionName; 
+		VAR context: SyntaxTree.Identifier; name: Basic.SectionName;
 		BEGIN
 			x.GetName(name);
 			current.text.WriteLabel(name);
@@ -1209,7 +1209,7 @@ TYPE
 			doc.description.ForAllParagraphsDo(PatchLinksP);
 			current.scope := prev
 		END PatchLinks;
-		
+
 		PROCEDURE Modifiers(x: SyntaxTree.Modifier);
 		VAR name: Scanner.IdentifierString; first: BOOLEAN;
 		BEGIN
@@ -1381,7 +1381,7 @@ TYPE
 			NEW(parser, scanner);
 			document := DocumentationTree.NewDocument();
 			parser.ParseDocument(document);
-			
+
 			RETURN document
 		END ParseFile;
 

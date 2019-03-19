@@ -12,10 +12,10 @@ CONST
 	Echo* = FALSE;
 TYPE
 	String=POINTER TO ARRAY OF CHAR;
-VAR 
+VAR
 	env-: Commands.Context;
 	stdInDecoupler: Pipes.ReadDecoupler;
-	
+
 PROCEDURE Args(): String;
 VAR size, pos: SIZE; i,j: LONGINT; str: String;
 	argc: LONGINT;
@@ -25,7 +25,7 @@ BEGIN
 	argv := Unix.argv;
 	pos := 0;
 	FOR i := 0 TO argc-1 DO
-		j := 0; 
+		j := 0;
 		WHILE argv[i,j] # 0X DO
 			INC(pos); INC(j);
 		END;
@@ -35,7 +35,7 @@ BEGIN
 	NEW(str, size);
 	pos := 0;
 	FOR i := 0 TO argc-1 DO
-		j := 0; 
+		j := 0;
 		WHILE argv[i,j] # 0X DO
 			str[pos] := argv[i,j];
 			INC(pos); INC(j);
@@ -99,8 +99,8 @@ BEGIN
 	len := 0;
 	REPEAT
 		ures := Read( ADDRESSOF (data[ofs]), size );
-		IF ures > 0 THEN  
-			INC( ofs, LONGINT(ures) );  DEC( size, LONGINT(ures) );  INC( len, LONGINT(ures) )  
+		IF ures > 0 THEN
+			INC( ofs, LONGINT(ures) );  DEC( size, LONGINT(ures) );  INC( len, LONGINT(ures) )
 		END;
 		IF ures < 0 THEN err := Unix.errno() END;
 	UNTIL (len >= min) OR ((ures <= 0) & (err # Unix.EINTR) & (err # 0));

@@ -4,16 +4,16 @@ IMPORT Modules, WMDialogs, Commands, Kernel;
 
 CONST
 	Ok = WMDialogs.ResOk;
-	Abort = WMDialogs.ResAbort;	
+	Abort = WMDialogs.ResAbort;
 
 PROCEDURE Shutdown*;
 VAR res: WORD;  msg: ARRAY 128 OF CHAR;
 	t: Kernel.Timer;
-BEGIN 
+BEGIN
 	NEW( t );
 	IF  WMDialogs.Message( 1, "A2 terminator", "  Are you sure you want to stop A2 execution ?", {Ok, Abort} ) = Ok THEN
 		Commands.Call( "WMTerminator.Do", {}, res, msg );
-		
+
 		(* in case the termination handler (Modules.Shutdown) hangs, retry!*)
 		t.Sleep( 1000 );
 		Commands.Call( "WMTerminator.Do", {}, res, msg );

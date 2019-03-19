@@ -998,7 +998,7 @@ MODULE PSPrinter IN Oberon; (** portable *)	(*UNIX version: JT 11.5.90, RC 2.7.9
 				Str("%!PS-Adobe-1.0"); Ln;
 				Str("%%BoundingBox: ");
 				Int(0); Ch(' '); Int(0); Ch(' ');
-				Int((P.r - P.l + 1)* 72 DIV (914400 DIV P.Unit)); Ch(' '); 
+				Int((P.r - P.l + 1)* 72 DIV (914400 DIV P.Unit)); Ch(' ');
 				Int((P.t - P.b + 1) * 72 DIV (914400 DIV P.Unit)); Ch(' ');
 				Ln;
 				Str("%%Creator: ETH Oberon"); Ln;
@@ -1107,9 +1107,9 @@ MODULE PSPrinter IN Oberon; (** portable *)	(*UNIX version: JT 11.5.90, RC 2.7.9
 			END;
 
 			Files.Set(reader, bodyF, 0);
-			REPEAT 
-				Files.ReadBytes(reader, buffer, bufSize); 
-				Files.WriteBytes(writer, buffer, bufSize - reader.res) 
+			REPEAT
+				Files.ReadBytes(reader, buffer, bufSize);
+				Files.WriteBytes(writer, buffer, bufSize - reader.res)
 			UNTIL reader.eof;
 			IF ~P.anonymous THEN Printer.Spool(P.printF) END;
 			P.res := Printer.res;

@@ -118,7 +118,7 @@ VAR
 		res := ReadTime(r, c.validity.notBefore);
 		(*Check(res);*)
 		r.SetRaw(data.child.next.svalue^, 0, LEN(data.child.next.svalue^));
-		r.SetPos(0);			
+		r.SetPos(0);
 		res := ReadTime(r, c.validity.notAfter);
 		(*Check(res);*)
 
@@ -264,7 +264,7 @@ VAR
 		char := reader.Get();
 		IF ~IsDigit(char) THEN RETURN FALSE END;
 		INC(date.year, ORD(char) - ORD('0'));
-		
+
 		(* Month, 2 digits *)
 		char := reader.Get();
 		IF ~IsDigit(char) THEN RETURN FALSE END;
@@ -391,7 +391,7 @@ VAR
 		len0:LONGINT;
 		modulus, exponent: CryptoBigNumbers.BigNumber;
 	BEGIN
-		algo := publicKey.child.child.svalue; 
+		algo := publicKey.child.child.svalue;
 
 		NEW(sr, LEN(publicKey.child.next.svalue^));
 		sr.SetRaw(publicKey.child.next.svalue^, 0, LEN(publicKey.child.next.svalue^));
@@ -440,7 +440,7 @@ VAR
 			writer.String("	common name:	"); writer.Bytes(entity.commonName^, 0, LEN(entity.commonName)); writer.Ln
 		END;
 	END PrintEntity;
-	
+
 	(** Prints a certificate in human readable form *)
 	PROCEDURE PrintCertificate * (certificate: Certificate; writer: Streams.Writer);
 	VAR

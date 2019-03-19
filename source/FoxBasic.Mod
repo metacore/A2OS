@@ -49,12 +49,12 @@ TYPE
 	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index;
 
 	ComparisonFunction = PROCEDURE {DELEGATE} (object1, object2: ANY): BOOLEAN;
-	
+
 	Position*= RECORD
 		start*, end*, line*, linepos*: LONGINT;
 		reader*: Streams.Reader;
 	END;
-	
+
 	ErrorCode*=LONGINT;
 
 	Fingerprint* = ObjectFile.Fingerprint;
@@ -585,27 +585,27 @@ TYPE
 	VAR
 		table: HashIntArray;
 		count : LONGINT;
-		
+
 		PROCEDURE & Init(t: HashIntArray);
 		BEGIN
 			table := t;
 			count := -1;
 		END Init;
-		
+
 		PROCEDURE GetNext*(VAR key: LONGINT; VAR value: ANY): BOOLEAN;
 		BEGIN
 			REPEAT
 				INC(count);
 			UNTIL (count = LEN(table)) OR (table[count].value # NIL);
-			IF count = LEN(table) THEN 
+			IF count = LEN(table) THEN
 				RETURN FALSE
 			END;
 			key := table[count].key;
 			value := table[count].value;
 			RETURN TRUE;
 		END GetNext;
-		
-		
+
+
 	END IntIterator;
 
 	HashTableInt* = OBJECT
@@ -717,7 +717,7 @@ TYPE
 			NEW(iterator, table);
 			RETURN iterator;
 		END GetIterator;
-		
+
 	END HashTableInt;
 
 	HashEntrySegmentedName = RECORD
@@ -1727,13 +1727,13 @@ VAR
 	PROCEDURE AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position);
 	BEGIN
 		IF pos.line >= 0 THEN
-			Strings.Append(msg, " in line "); 
-			Strings.AppendInt(msg, pos.line); 
-			Strings.Append(msg, ", col "); 
+			Strings.Append(msg, " in line ");
+			Strings.AppendInt(msg, pos.line);
+			Strings.Append(msg, ", col ");
 			Strings.AppendInt(msg, pos.start- pos.linepos);
 		END;
 	END AppendPosition;
-	
+
 	PROCEDURE MakeMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; VAR message: ARRAY OF CHAR);
 	BEGIN
 		MakeDetailedMessage(pos, code, msg, NIL, message);
@@ -1778,8 +1778,8 @@ VAR
 	BEGIN
 		ErrorC(diagnostics, source, pos, InvalidCode, msg);
 	END Error;
-	
-	
+
+
 
 	PROCEDURE Warning*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR);
 	VAR message: ARRAY 256 OF CHAR;
@@ -1930,7 +1930,7 @@ VAR
 		END;
 		END;
 	END RemoveSuffix;
-	
+
 	PROCEDURE GetSuffix*(CONST name: SegmentedName; VAR string: ARRAY OF CHAR);
 	VAR i,pos,pos0: LONGINT;
 	BEGIN
@@ -1948,7 +1948,7 @@ VAR
 			END;
 			IF pos # 0 THEN (* no dot in name or name starts with dot *)
 				pos0 := 0;
-				REPEAT 
+				REPEAT
 					INC(pos); (* start with character after "." *)
 					string[pos0] := string[pos];
 					INC(pos0);
@@ -2126,14 +2126,14 @@ VAR
 		ELSE NEW(diagnostics,w); RETURN diagnostics
 		END;
 	END GetDiagnostics;
-	
+
 	PROCEDURE GetDefaultDiagnostics*(): Diagnostics.Diagnostics;
 	VAR w: Streams.Writer;
 	BEGIN
 		NEW(w, KernelLog.Send,128);
 		RETURN GetDiagnostics(w);
 	END GetDefaultDiagnostics;
-	
+
 
 	PROCEDURE InitWindowWriter;
 	VAR install: PROCEDURE;
@@ -2161,7 +2161,7 @@ VAR
 			Strings.Insert(by, in, pos);
 		END;
 	END Replace;
-	
+
 	OPERATOR "="*(CONST left: ARRAY OF CHAR; right: String): BOOLEAN;
 	BEGIN
 		RETURN right = StringPool.GetIndex1(left);

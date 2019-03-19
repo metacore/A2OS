@@ -5,10 +5,10 @@ IMPORT StdIO, Commands, Modules, Trace;
 CONST Verbose = FALSE;
 
 PROCEDURE Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN;
-VAR msg: ARRAY 256 OF CHAR;  res: WORD; 
+VAR msg: ARRAY 256 OF CHAR;  res: WORD;
 BEGIN
-	IF Verbose THEN 
-		Trace.String("StdIOShell: Activate Command "); Trace.String(cmd); Trace.Ln; 
+	IF Verbose THEN
+		Trace.String("StdIOShell: Activate Command "); Trace.String(cmd); Trace.Ln;
 	END;
 	Commands.Activate(cmd, context, {Commands.Wait}, res, msg);
 	IF res # 0 THEN context.error.String(msg); context.error.Ln; RETURN FALSE END;
@@ -18,7 +18,7 @@ END Activate;
 PROCEDURE Execute(context: Commands.Context): BOOLEAN;
 VAR str: ARRAY 256 OF CHAR;
 BEGIN
-	IF ~context.arg.GetString(str) THEN  
+	IF ~context.arg.GetString(str) THEN
 		context.error.String("Critical error: no arg"); context.error.Update;
 		RETURN FALSE;
 	END;
@@ -29,14 +29,14 @@ BEGIN
 	ELSIF (str = "interpreter") OR (str = "i") THEN str := "InterpreterShell.Start";
 	ELSIF (str = "execute") OR (str = "e") THEN str := "System.DoFile";
 	ELSIF (str = "do") OR (str = "d") THEN str := "System.DoCommands";
-	ELSIF (str = "run") OR (str = "r") THEN 
+	ELSIF (str = "run") OR (str = "r") THEN
 		IF ~Activate(context, "System.DoFile") THEN RETURN FALSE END;
 		str := "Shell.Start";
 	END;
 	RETURN Activate(context, str);
 END Execute;
 
-TYPE 
+TYPE
 	(* excute the shell and termination in separate thread with proper process data structure *)
 	Executor=OBJECT
 	VAR done := FALSE: BOOLEAN;
@@ -46,7 +46,7 @@ TYPE
 		BEGIN{EXCLUSIVE}
 			AWAIT(done);
 		END Wait;
-		
+
 	BEGIN {ACTIVE, EXCLUSIVE}
 		IF Execute(StdIO.env) THEN code := Modules.Reboot END;
 	FINALLY
@@ -56,7 +56,7 @@ TYPE
 VAR execute: Executor;
 
 (* do not add commands here -- the module loader does not finish here and they will not become available *)
-BEGIN	
+BEGIN
 	NEW(execute);
 	execute.Wait;
 	IF Verbose THEN Trace.String("StdIOShell: Exit"); Trace.Ln END;
@@ -69,7 +69,7 @@ Command line shell: (Windows):
 Linker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO  Traps RelativeFileSystem WMDefaultFont System Shell StdIOShell ~
 
 Command line shell including compiler (and linker)
-Linker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO  Traps RelativeFileSystem System FSTools StdIOShell 
+Linker.Link  --fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H Builtins Trace Kernel32 Machine Heaps Modules Objects Kernel KernelLog Streams Commands Files  WinFS Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Reflection Loader WinTrace StdIO  Traps RelativeFileSystem System FSTools StdIOShell
 Shell Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend
 ~
 
@@ -78,7 +78,7 @@ Command line shell: (Linux):
 Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   Loader Shell System StdIOShell ~
 
 Command line shell including compiler (and linker)
-Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   Loader Shell System StdIOShell 
+Linker.Link -p=Linux32 Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog  Streams Commands Pipes StdIO TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker   Loader Shell System StdIOShell
 Linker Compiler FoxOberonFrontend FoxARMBackend FoxAMDBackend
 ~
 

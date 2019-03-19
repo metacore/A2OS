@@ -569,7 +569,7 @@ TYPE
 			*)
 			ASSERT(pipe.descriptors[0] # 0);
 			qh := pipe.descriptors[0];
-			
+
 			(* Queue Head Horizontal Link Pointer is not set here *)
 			(* Queue Head Endpoint Capabilities 1 *)
 			nakRL := 3;
@@ -1159,8 +1159,8 @@ TYPE
 			(*Machine.FlushDCacheRange(ADDRESSOF(buffer[0]), bufferLen);*)
 			(* pipe.tdBase = pipe.descriptors[0] + 32 in UsbHcdi *)
 (*			pipe.firstTD := pipe.tdBase;
-			ASSERT(pipe.firstTD = pipe.descriptors[0] + alignQh); 
-*)			
+			ASSERT(pipe.firstTD = pipe.descriptors[0] + alignQh);
+*)
 			pipe.firstTD := pipe.tdBase - 32 + alignQh;
 			AssertAlignment(pipe.firstTD, alignQtd);
 			ASSERT(SYSTEM.VAL(SET, pipe.firstTD) * {0..4} = {}); (* qTDs must be 32byte aligned *)
@@ -1273,10 +1273,10 @@ TYPE
 			Machine.FlushDCacheRange(ADDRESSOF(buffer[offset]), bufferLen);
 			SYSTEM.PUT32(pipe.descriptors[0] + QhCurrentQtdPointer, 0);
 (*			pipe.firstTD := pipe.tdBase;
-			ASSERT(pipe.firstTD = pipe.descriptors[0] + alignQh); 
+			ASSERT(pipe.firstTD = pipe.descriptors[0] + alignQh);
 *)
 			pipe.firstTD :=  pipe.tdBase - 32 + alignQh;
-			
+
 			AssertAlignment(pipe.firstTD, alignQtd);
 			ASSERT(pipe.firstTD MOD alignQtd = 0);
 			ASSERT(SYSTEM.VAL(SET, pipe.firstTD) * {0..4} = {}); (* qTDs must be 32byte aligned *)
@@ -1440,7 +1440,7 @@ TYPE
 				SYSTEM.PUT32(qtd + QtdExtBufferPtr4, 0);*)
 			END;
 			(*Machine.FlushDCacheRange(curr, sizeQtd);*)
-	
+
 			(* Setup phase always starts with dataToggle = FALSE, so now it must be TRUE *)
 			pipe.dataToggle := TRUE;
 
@@ -1949,7 +1949,7 @@ TYPE
 				(* The HC hasn't yet executed the transaction *)
 				RETURN
 			END;*)
-			(*! 
+			(*!
 				Disabling scheduling here leads to problems: some of the transfers does not get finished!
 			*)
 			(*REPEAT UNTIL (SYSTEM.VAL(SET, qh.token) * TdActive = {}) OR (SYSTEM.GET32(iobase + HcAsyncListAddr) # qh);*)
@@ -2509,16 +2509,16 @@ TYPE
 	  	 *)
 		PROCEDURE Start * ():BOOLEAN;
 		VAR dword : SET;
-		TYPE 
+		TYPE
 			IRQPoller = OBJECT (* support polling i/o IRQ -- for testing *)
 				VAR handler: PROCEDURE {DELEGATE}; timer: Kernel.Timer;
-				
+
 				PROCEDURE & Init* (h: PROCEDURE {DELEGATE});
 				BEGIN
 					handler := h;
-					NEW(timer); 
+					NEW(timer);
 				END Init;
-				
+
 			BEGIN{ACTIVE}
 				LOOP
 					handler();
@@ -2529,7 +2529,7 @@ TYPE
 		BEGIN
 			IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbEhci: Starting host controller... "); KernelLog.Ln; END;
 			(* Enable Interrupts *)
-			
+
 			IF Polling THEN
 				NEW(is, InterruptHandler)
 			ELSE
@@ -2538,7 +2538,7 @@ TYPE
 
 			(* Clear interrupts *)
 			SYSTEM.PUT32(iobase + HcUsbSts, 0);
-			
+
 			(* Enable all interrupts except the frame list rollover interrupt *)
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcUsbIntr));
 			interruptsEnabled := dword + {0..5}  - StsFrameListRollover;
@@ -2829,7 +2829,7 @@ BEGIN
 		next := sgList[idx].adr + size
 	END;
 	RETURN next
-END AdvancePhysBuf;	
+END AdvancePhysBuf;
 
 PROCEDURE Indent(spaces : LONGINT);
 VAR i : LONGINT;

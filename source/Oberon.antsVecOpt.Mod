@@ -20,21 +20,21 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
 
 IMPORT vyLongrealVec, antsCommands, vyBase, vyRandom, aM := antsMessages, Objects, antsArrays, Attributes;
 
-CONST 
+CONST
           cNoisedByName*= "noised by";
           cGauss*="Gauss";
           cExp*="Exponential";
           cLaplace*="Laplace";
           cUni*="Uniform";
           clocpar*="location parameter";
-          cscalepar*="scale parameter";		
+          cscalepar*="scale parameter";
 
 PROCEDURE DoAddConst* (data, result: vyBase.tVector;  const: LONGREAL);
 	VAR i: LONGINT;             val: LONGREAL;
@@ -89,7 +89,7 @@ BEGIN
 	END
 END DoAddLaplaceNoise;
 
-PROCEDURE DoAddExpNoise* (data, degraded: vyBase.tVector;             mu: LONGREAL ); (*! exchange mu by lambda ! *) 
+PROCEDURE DoAddExpNoise* (data, degraded: vyBase.tVector;             mu: LONGREAL ); (*! exchange mu by lambda ! *)
 	VAR i: LONGINT;             val: LONGREAL;
 BEGIN
 	WITH data: vyLongrealVec.tVector DO
@@ -136,7 +136,7 @@ PROCEDURE AddGaussNoise*;
 BEGIN
 	antsCommands.InitScan("src=OBJ dest=OBJ var=REAL [mean=REAL] [>attributes]");
 	IF antsCommands.ExpectObject("src", v1) & antsCommands.ExpectObject("dest", v2) & antsCommands.ExpectReal("var", var) THEN
-		mean := 0; IF antsCommands.GetReal("mean",mean) THEN END; 
+		mean := 0; IF antsCommands.GetReal("mean",mean) THEN END;
 		DoAddGaussNoise(v1(vyBase.tVector), v2(vyBase.tVector), mean, var);
 		IF antsCommands.Find("attributes") THEN
 		    Attributes.SetString(v2,cNoisedByName,cGauss);
@@ -170,7 +170,7 @@ BEGIN
 		IF antsCommands.Find("attributes") THEN
 		    Attributes.SetString(v2,cNoisedByName,cLaplace);
 		    Attributes.SetLongReal(v2,clocpar,par);
-		END;	
+		END;
 		vyBase.Update(v2)
 	END
 END AddLaplaceNoise;
@@ -231,7 +231,7 @@ PROCEDURE UniformMovingAverage*;
 	VAR v1, v2: vyBase.Object;  i, iter, len: LONGINT;
 BEGIN
 	antsCommands.InitScan("src=OBJ dest=OBJ len=INT iter=INT");
-	IF antsCommands.ExpectObject("src", v1) & antsCommands.ExpectObject("dest", v2)  & antsCommands.ExpectNumber("len", len) & 
+	IF antsCommands.ExpectObject("src", v1) & antsCommands.ExpectObject("dest", v2)  & antsCommands.ExpectNumber("len", len) &
 	antsCommands.ExpectNumber("iter", iter) THEN
 		WITH v1: vyLongrealVec.tVector DO
 			WITH v2: vyLongrealVec.tVector DO
@@ -288,7 +288,7 @@ PROCEDURE MedianFilter*;
 	VAR v1, v2: vyBase.Object;  i, iter, len: LONGINT;
 BEGIN
 	antsCommands.InitScan("src=OBJ dest=OBJ len=INT iter=INT");
-	IF antsCommands.ExpectObject("src", v1) & antsCommands.ExpectObject("dest", v2) & antsCommands.ExpectNumber("len", len) & 
+	IF antsCommands.ExpectObject("src", v1) & antsCommands.ExpectObject("dest", v2) & antsCommands.ExpectNumber("len", len) &
 	antsCommands.ExpectNumber("iter", iter) THEN
 		WITH v1: vyLongrealVec.tVector DO
 			WITH v2: vyLongrealVec.tVector DO
@@ -320,7 +320,7 @@ PROCEDURE AppendValue*;
 	VAR v, obj: vyBase.Object;  name: ARRAY 256 OF CHAR;  msg: Objects.AttrMsg;
 BEGIN
 	antsCommands.InitScan("src=OBJ attribute=NAME dest=OBJ");
-	IF antsCommands.ExpectObject("src", obj) & antsCommands.ExpectName("attribute", name) & 
+	IF antsCommands.ExpectObject("src", obj) & antsCommands.ExpectName("attribute", name) &
 		antsCommands.ExpectObject("dest", v) THEN
 		WITH v: vyLongrealVec.tVector DO
 			msg.id := Objects.get;  COPY(name, msg.name);  msg.res := - 1;

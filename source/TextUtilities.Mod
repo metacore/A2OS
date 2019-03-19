@@ -243,9 +243,9 @@ TYPE
 	LongintArray = POINTER TO ARRAY OF LONGINT;
 	Operation = RECORD op, pos, len : LONGINT END;
 	Operations  = POINTER TO ARRAY OF Operation;
-	
+
 	TextSelection*=OBJECT
-		VAR text* : Texts.Text; 
+		VAR text* : Texts.Text;
 		from*, to* : Texts.TextPosition;
 	END TextSelection;
 
@@ -486,7 +486,7 @@ TYPE
 					reader.RawSInt(lib);
 					IF lib = n THEN
 						reader.RawString(lName);
-						
+
 						NEW(fonts[n]);
 						COPY(lName, fonts[n].name);
 						DecodeOberonFontName(lName, fonts[n].name, fonts[n].size, fonts[n].style);
@@ -1562,7 +1562,7 @@ TYPE
 
 VAR
 	unicodePropertyReader : UnicodeProperties.UnicodeTxtReader;
-	
+
 	oberonFontAllocatable*: PROCEDURE( CONST name: ARRAY OF CHAR ): BOOLEAN;
 
 (* ----------------------------------------------------------------------------------- *)

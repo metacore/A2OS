@@ -76,7 +76,7 @@ CONST
 	rdonly* = SET32({});  rdwr* = SET32({1});  creat* = SET32({6});  trunc* = SET32({9});
 
 	(* access modes *)
-	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH;  
+	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH;
 
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
 
@@ -121,7 +121,7 @@ CONST
 	SIG_BLOCK		= 1;
 	SIG_UNBLOCK	= 2;
 	SIG_SETMASK	= 3;
-	
+
 	SA_ONSTACK		= 0x0001;	(* take signal on signal stack *)
 	SA_RESTART		= 0x0002;	(* restart system on signal return *)
 	SA_RESETHAND	= 0x0004;	(* reset to SIG_DFL when taking signal *)
@@ -132,13 +132,13 @@ CONST
 
 	PTHREAD_CREATE_JOINABLE	= 1;
 	PTHREAD_CREATE_DETACHED	= 2;
-	
+
 	PTHREAD_CANCEL_ENABLE 	= 1;
 	PTHREAD_CANCEL_DISABLE	= 0;
 
 	PTHREAD_CANCEL_ASYNCHRONOUS	= 0;
 	PTHREAD_CANCEL_DEFERRED	= 2;
-	
+
 	PTHREAD_SCOPE_SYSTEM		= 1;
 	PTHREAD_SCOPE_PROCESS	= 2;
 
@@ -146,7 +146,7 @@ CONST
 
 TYPE
 	MachPort = LONGINT;
-	
+
 	Thread_t* = ADDRESS;
 	Mutex_t* = ADDRESS;
 	Condition_t* = ADDRESS;
@@ -156,7 +156,7 @@ TYPE
 	MutexType			= ARRAY 44 OF CHAR;
 	MutexAttributeType	= ARRAY 12 OF CHAR;
 	ConditionType		= ARRAY 28 OF CHAR;
-#ELSIF AMD64 THEN	
+#ELSIF AMD64 THEN
 	PThreadAttrType		= ARRAY 64 OF CHAR;
 	MutexType			= ARRAY 64 OF CHAR;
 	MutexAttributeType	= ARRAY 16 OF CHAR;
@@ -166,10 +166,10 @@ TYPE
 #END
 
 	Key_t* = ADDRESS;
-	
+
 	Sigset = ARRAY 4 OF CHAR;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
-	
+
 	path_t*	= ARRAY OF CHAR;
 	arg_t*		= ARRAY OF CHAR;
 	argv_t*	= ARRAY OF arg_t;
@@ -177,7 +177,7 @@ TYPE
 
 CONST
 	(* Thread priorities *)
-	ThreadLow* = 15; ThreadNormal* = 20; ThreadHigh* = 47;	
+	ThreadLow* = 15; ThreadNormal* = 20; ThreadHigh* = 47;
 	NumPriorities* = 33;	(* number of priority levels *)
 
 	(*---------------------------- IP -----------------------------------*)
@@ -186,14 +186,14 @@ CONST
 	(* domain *)
 		AFINET*		= 2;
 		AFINET6*	= 26;
-		
+
 		PFINET*		= AFINET;
 		PFINET6*	= AFINET6;
-		
+
 	(* types of connection *)
 		SockStream*	= 1;
 		SockDGram*	= 2;
-		
+
 	(* Protocols *)
 		IpProtoUDP*		= 17;
 		IpProtoTCP*		= 6;
@@ -206,27 +206,27 @@ CONST
 
 	(* ioctl *)
 		FioNRead*		= 4004667FH;	(* something to read ? *)
-		
-		
+
+
 	(* recv *)
 		MsgPeek*		= 2;
 		MsgDontWait*	= 80H;		(* non blocking read *)
-		
+
 	(* shutdown *)
 		ShutRDWR*	= 2;
 
 	SockAddrSizeV4*	= 16;
 	SockAddrSizeV6*	= 28;
 
-	
+
 	(*-------------------seral line ---------------------------------------*)
-	
+
 	FIONREAD*		= LONGINT( 4004667FH );
 	TIOCMGET*		= LONGINT( 4004746AH );
 	TIOCMBIC*		= LONGINT( 8004746BH );
 	TIOCMBIS*		= LONGINT( 8004746CH );
 	TIOCMSET*		= LONGINT( 8004746DH );
-	
+
 	(* speeds *)
 	B0*	= 0;
 	B50*	= 50;
@@ -261,7 +261,7 @@ CONST
 	PARODD*	= {13};	(* odd parity, else even *)
 	HUPCL*		= {14};	(* hang up on last close *)
 	CLOCAL*	= {15};	(* ignore modem status lines *)
-	
+
 TYPE
 	Termios* = RECORD
 		iflags*, oflags*, cflags*, lflags*: SET32;
@@ -357,7 +357,7 @@ TYPE
 
 CONST
 	FdSetLen* = 32;
-	
+
 TYPE
 	FdSet* = ARRAY FdSetLen OF SET;
 
@@ -368,8 +368,8 @@ TYPE
 				namlen-	: SHORTINT;
 				name-	:  (*array of*) CHAR;
 			END;
-			
-			
+
+
 
 	Stack* = RECORD
 				sp*		: ADDRESS;
@@ -384,7 +384,7 @@ TYPE
 				stack-	: Stack;
 				link-		: ADDRESS;	(* Ucontext *)
 				mclen-	: SIZE;
-				mc-{UNTRACED}: Mcontext 
+				mc-{UNTRACED}: Mcontext
 			END;
 
 	Mcontext* = POINTER TO McontextDesc;
@@ -393,7 +393,7 @@ TYPE
 				trapno-	: LONGINT;
 				err			: LONGINT;
 				faultvaddr	: ADDRESS;
-				
+
 				r_ax		: ADDRESS;
 				r_bx		: ADDRESS;
 				r_cx		: ADDRESS;
@@ -410,7 +410,7 @@ TYPE
 				r_es		: ADDRESS;
 				r_fs		: ADDRESS;
 				r_gs		: ADDRESS;
-				
+
 				flavor		: LONGINT;
 				count		: LONGINT;
 				(* ... *)
@@ -419,7 +419,7 @@ TYPE
 				cpu		: INTEGER;
 				err			: LONGINT;
 				faultvaddr	: HUGEINT;
-				
+
 				r_ax		: HUGEINT;
 				r_bx		: HUGEINT;
  				r_cx		: HUGEINT;
@@ -446,13 +446,13 @@ TYPE
 			#END
 		END;
 
-	Sigaction = RECORD	
+	Sigaction = RECORD
 		sa_handler: ADDRESS;
 		sa_mask: Sigset;
 		sa_flags: LONGINT;
 	END;
 
-	Sched_param = RECORD	
+	Sched_param = RECORD
 		sched_priority: LONGINT;
 		safety: ARRAY 8 OF LONGINT;
 	END;
@@ -491,7 +491,7 @@ VAR
 	pthread_kill		: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
 	pthread_cancel	: PROCEDURE {C} (thr: ADDRESS);
 	pthread_self		: PROCEDURE {C} (): Thread_t;
-	
+
 	pthread_key_create	: PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): WORD;
 	pthread_setspecific	: PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
 	pthread_getspecific	: PROCEDURE {C} ( key: Key_t ): ADDRESS;
@@ -500,21 +500,21 @@ VAR
 	pthread_attr_setscope			: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
 	pthread_attr_setdetachstate	: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
 	pthread_attr_setstacksize		: PROCEDURE {C} ( attr: ADDRESS; stackSize: SIZE );
-	
+
 	pthread_mach_thread_np: PROCEDURE {C} ( thr: Thread_t ): MachPort;
-	
+
 	thread_suspend:	PROCEDURE {C} ( mthr: MachPort );
 	thread_resume:	PROCEDURE {C} ( mthr: MachPort );
-	
+
 	sched_get_priority_max		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
 	sched_get_priority_min		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
-	
+
 	pthread_setschedparam 	: PROCEDURE {C} ( thread: Thread_t; policy: LONGINT; param: ADDRESS ): LONGINT;
 	pthread_getschedparam	 	: PROCEDURE {C} ( thread: Thread_t; policy: ADDRESS; param: ADDRESS ): LONGINT;
 	pthread_setcancelstate		: PROCEDURE {C} ( state: LONGINT; oldstate: ADDRESS ): LONGINT;
 	pthread_setcanceltype		: PROCEDURE {C} ( type: LONGINT; oldtype: ADDRESS ): LONGINT;
 	pthread_sigmask 			: PROCEDURE {C} ( how: LONGINT; set: ADDRESS; oldset: ADDRESS ): LONGINT;
-	
+
 	sigaction		: PROCEDURE {C} (signum: LONGINT; CONST act, oldact: ADDRESS): LONGINT;
 	sigemptyset	: PROCEDURE {C} (set: ADDRESS);
 	sigfillset		: PROCEDURE {C} (set: ADDRESS): LONGINT;
@@ -523,15 +523,15 @@ VAR
 	sigdelset		: PROCEDURE {C} (set: ADDRESS; signo: LONGINT);
 	nanosleep		: PROCEDURE {C} (req, rem: ADDRESS): LONGINT;
 	sigaltstack	: PROCEDURE {C} (ss, oss: ADDRESS): LONGINT;
-	
 
-	(*	pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. 
-		file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. 
+
+	(*	pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable.
+		file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process.
 		attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
 	posix_spawnp- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
 	(*more restrictive than spawnp*)
 	posix_spawn- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
-	
+
 	waitpid-		: PROCEDURE {C} ( pid: pid_t; status: ADDRESS; options: LONGINT ): pid_t;
 	pipe-			: PROCEDURE {C} ( pipefd: ADDRESS ): LONGINT; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)
 	dup2-			: PROCEDURE {C} ( oldfd, newfd: LONGINT ): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
@@ -565,7 +565,7 @@ VAR
 
 	getpid-		: PROCEDURE {C} ( ): LONGINT;
 	getuid-		: PROCEDURE {C} ( ): LONGINT;
-	
+
 	posix_memalign-	: PROCEDURE {C} ( VAR p: ADDRESS;  alignment, size: SIZE ): LONGINT;
 	malloc-		: PROCEDURE {C} ( size: SIZE ): ADDRESS;
 	free-			: PROCEDURE {C} ( p: ADDRESS );
@@ -625,7 +625,7 @@ VAR
 		ASSERT(pthread_key_create(ADDRESSOF(key), NIL) = 0);
 		RETURN key;
 	END NewKey;
- 
+
 	PROCEDURE ReadKey* (key: Key_t): ADDRESS;
 	BEGIN
 		RETURN pthread_getspecific(key);
@@ -635,8 +635,8 @@ VAR
 	BEGIN
 		ASSERT(pthread_setspecific(key, value) = 0);
 	END WriteKey;
-	
-	
+
+
 	PROCEDURE NewMtx*( ): Mutex_t;
 	VAR
 		mtx: Mutex_t;
@@ -727,7 +727,7 @@ VAR
 	BEGIN
 		res := pthread_getschedparam( thr, ADDRESSOF( policy ), ADDRESSOF( param ) );
 		param.sched_priority := prio;
-		res := pthread_setschedparam( thr, SCHED_RR, ADDRESSOF( param ) ) 
+		res := pthread_setschedparam( thr, SCHED_RR, ADDRESSOF( param ) )
 	END ThrSetPriority;
 
 	PROCEDURE ThrGetPriority*( thr: Thread_t ): LONGINT;
@@ -770,12 +770,12 @@ VAR
 		sigdelset( ADDRESSOF( new ), SIGTERM );
 		sigdelset( ADDRESSOF( new ), SIGUSR1 );
 		res := pthread_sigmask( SIG_SETMASK, ADDRESSOF( new ), ADDRESSOF( old ) );
-		
+
 		res := pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NIL );
 		res := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
 		param.sched_priority := 0;
 		res := pthread_setschedparam( me, SCHED_RR, ADDRESSOF( param ) );
-		
+
 		proc();
 
 		pthread_exit( NIL );
@@ -830,23 +830,23 @@ VAR
 	BEGIN
 		machthr := pthread_mach_thread_np( thr );
 		thread_resume( machthr );
-	END ThrResume;	
+	END ThrResume;
 
-	
+
 	PROCEDURE ThrSuspend*( thr: Thread_t; saveContext: BOOLEAN );
 	VAR r: LONGINT;  machthr: MachPort;
 	BEGIN
 		IF saveContext THEN
 			handler_done := FALSE;
-			r := pthread_kill( thr, SIGUSR1 );	
+			r := pthread_kill( thr, SIGUSR1 );
 			(*	not working in Solaris when the thread is stalled in a mutex.
-				handler gets arrived but has bad side effects, 
+				handler gets arrived but has bad side effects,
 				yields traps and locks the system *)
 			WHILE ~handler_done DO  ThrSleep( 1 )  END;
 		END;
 		machthr := pthread_mach_thread_np( thr );
 		thread_suspend( machthr )
-	END ThrSuspend;	
+	END ThrSuspend;
 
 
 
@@ -986,16 +986,16 @@ VAR
 	BEGIN
 		trap := h;
 	END InstallTrap;
-	
-	
+
+
 	VAR suspendHandler*: PROCEDURE( c: Ucontext );
-	
+
 	PROCEDURE {C} SigHandler( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
 	BEGIN
 		IF sig = SIGUSR1 THEN
 			suspendHandler( ucp );
 			handler_done := TRUE;
-		ELSIF trap # NIL THEN 
+		ELSIF trap # NIL THEN
 			trap( sig, ucp.mc );
 		ELSE
 			Trace.String( "Unix.SigHandler: sig = " ); Trace.Int( sig, 0 ); Trace.Ln;  exit( -1 );
@@ -1021,13 +1021,13 @@ VAR
 		END;
 	END InstallHandler;
 
-	
+
 	PROCEDURE HandleSignal*( sig: LONGINT );
 	BEGIN
 		InstallHandler( sig )
 	END HandleSignal;
-	
-	
+
+
 	PROCEDURE errno*(): LONGINT;
 	VAR loc: ADDRESS;
 	BEGIN
@@ -1083,7 +1083,7 @@ VAR
 		noPaths := 4;
 
 		libc := Dlopen( libcname, 2 );
-		libp := Dlopen( libpthreadname, 2 ); 
+		libp := Dlopen( libpthreadname, 2 );
 
 		Dlsym( libc, "exit",			ADDRESSOF(exit) );
 		Dlsym( libc, "sysconf", 	ADDRESSOF(sysconf) );
@@ -1107,7 +1107,7 @@ VAR
 		Dlsym( libp, "pthread_detach",	ADDRESSOF(pthread_detach) );
 		Dlsym( libp, "pthread_cancel",	ADDRESSOF(pthread_cancel) );
 		Dlsym( libp, "pthread_kill",		ADDRESSOF(pthread_kill) );
-		
+
 		Dlsym( libp, "pthread_key_create", ADDRESSOF( pthread_key_create ) );
 		Dlsym( libp, "pthread_getspecific", ADDRESSOF( pthread_getspecific ) );
 		Dlsym( libp, "pthread_setspecific", ADDRESSOF( pthread_setspecific ) );
@@ -1120,7 +1120,7 @@ VAR
 		Dlsym( libp, "pthread_attr_setdetachstate", ADDRESSOF(pthread_attr_setdetachstate) );
 		Dlsym( libp, "pthread_attr_setstacksize", ADDRESSOF(pthread_attr_setstacksize) );
 		Dlsym( libp, "pthread_self", ADDRESSOF(pthread_self) );
-		
+
 		Dlsym( libc, "pthread_mach_thread_np", ADDRESSOF( pthread_mach_thread_np ) );
 		Dlsym( libc, "thread_suspend", ADDRESSOF( thread_suspend ) );
 		Dlsym( libc, "thread_resume", ADDRESSOF( thread_resume ) );
@@ -1167,7 +1167,7 @@ VAR
 		Dlsym( libc, "chdir",	ADDRESSOF( chdir ) );
 		Dlsym( libc, "mkdir",	ADDRESSOF( mkdir ) );
 		Dlsym( libc, "rmdir",	ADDRESSOF( rmdir ) );
-		
+
 #IF I386 THEN
 		Dlsym( libc, "stat",		ADDRESSOF( stat ) );
 		Dlsym( libc, "lstat",	ADDRESSOF( lstat ) );

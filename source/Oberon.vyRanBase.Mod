@@ -1,4 +1,4 @@
-MODULE vyRanBase IN Oberon;  
+MODULE vyRanBase IN Oberon;
 (* Copyright notice:
 
 This file is part of Voyager
@@ -52,81 +52,81 @@ See also G. Marsaglia's home page on http://stat.fso.edu/~geo/
 (* gs 23.1.98 replace naive Parks&Miller by left-adjusted version. Naive version is kept as example. *)
 (* gs 1.6.96 moved from 32 bit LONGINT to generic seed *)
 
-IMPORT SYSTEM, Oberon, Objects, Gadgets, Files;  
+IMPORT SYSTEM, Oberon, Objects, Gadgets, Files;
 
-CONST 
-	cModuleName = "vyRanBase";  idversion* = 'vyRanBase 0.0a7';  
+CONST
+	cModuleName = "vyRanBase";  idversion* = 'vyRanBase 0.0a7';
 
-	cBaseVersion* = 1;  cLongintSeedVersion* = 0;  
+	cBaseVersion* = 1;  cLongintSeedVersion* = 0;
 	cMagic = "nmfsrg";   (* "New Mechansism For Storing Random Generators" *)
-	
-	ccbase = 100;  
 
-CONST 
+	ccbase = 100;
+
+CONST
 	(* system dependent constants, change when necessary *)
-	sysBitsTypeSize* = 4;  
+	sysBitsTypeSize* = 4;
 	sysHalfBitsType* = 10000H;   (* = 2 ^ (SIZEOF(LONGINT) * 8 / 2) *)
 	sysMaskFirstHalf* = LONGINT(0FFFF0000H);  sysMaskSecondHalf* = 0FFFFH;   (* mask first/second half of a LONGINT value *)
 	sysMaxUnsigned* = LONGINT(0FFFFFFFFH);   (* = 2 ^ (SIZEOF(LONGINT) * 8) - 1 *)
 	sysSHL* = 1;  sysSHR* = -1;   (* sign for left/right shift of a LONGINT value when using LSH *)
-	
-TYPE 
-	Bits* = LONGINT;  
-	
-	(*** The general type used as seed, and for task communcation ***)
-	tMsg* = OBJECT 
-		PROCEDURE (* VAR seed: tSeedDesc*)Store*( VAR r: Files.Rider );  
-	BEGIN 
-		HALT( 100 )
-	END Store;  
 
-	PROCEDURE (* VAR seed: tSeedDesc*)Load*( VAR r: Files.Rider;  seedVersion: INTEGER );  
+TYPE
+	Bits* = LONGINT;
+
+	(*** The general type used as seed, and for task communcation ***)
+	tMsg* = OBJECT
+		PROCEDURE (* VAR seed: tSeedDesc*)Store*( VAR r: Files.Rider );
+	BEGIN
+		HALT( 100 )
+	END Store;
+
+	PROCEDURE (* VAR seed: tSeedDesc*)Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
 	(* if you do not store seeds without storing the whole generator, i. e. if you do not call seed.Store and
 	seed.Load yourself, you do not have to worry about seed versions; otherwise the seed version code must be
 	stored somewhere in the file and passed to this procedure as parameter seedVersion *)
-	BEGIN 
+	BEGIN
 		HALT( 100 )
-	END Load;  
+	END Load;
 	PROCEDURE (* VAR seed: tSeedDesc*)Copy*( ): tSeed;   (* fof 020625 *)
-	BEGIN 
+	BEGIN
 		HALT( 100 )
-	END Copy;  
+	END Copy;
 
-	END tMsg; (*  POINTER TO tMsgDesc;  *) 
-	(* tMsgDesc* = RECORD END;  *) 
-	tSeed* = tMsg;  
+	END tMsg; (*  POINTER TO tMsgDesc;  *)
+	(* tMsgDesc* = RECORD END;  *)
+	tSeed* = tMsg;
 	(* tSeedDesc* = tMsgDesc; *)   (*= an abstract type is used to allow for various seed types *)
 	(*? could this be replaced by a variant of Attribute? *)
-	
-	tShortIdStr* = ARRAY 8 OF CHAR;  
-	tIdStr* = ARRAY 64 OF CHAR;  
-	
+
+	tShortIdStr* = ARRAY 8 OF CHAR;
+	tIdStr* = ARRAY 64 OF CHAR;
+
 	(*** The general type for random number generators ***)
 	(*= a new random number generator should shield its internal structure,
 	but allow as efficient access as possible. The minimum is to supply a LONGINT variant
 	Random with values in 0..MAX, and a LONGREAL variant normed to [0,1] *)
-	
-	tRandom* = POINTER TO tRandomNumberDesc;  
+
+	tRandom* = POINTER TO tRandomNumberDesc;
 	(*	tRandomFct*=PROCEDURE (gen:tRandom):;*)
-	
-	
+
+
 	tRandomNumberDesc* = RECORD (Gadgets.ObjDesc)
-		seedVersion*: INTEGER;  
-		seed-: tSeed;  
+		seedVersion*: INTEGER;
+		seed-: tSeed;
 		(** This information should be supplied to allow identification **)
 		shortid*: tShortIdStr;   (*= a short string to identify the generator in synthetic names *)
 		id*: tIdStr;   (*= generator id *)
-		
+
 		(** These routines must be supplied for each basic generator **)
 		(* Init replaced by Reset - jb 21.2.00 *)
 		Reset*: PROCEDURE ( gen: tRandom );   (*= set default seed; reset other things when necessary *)
-		
+
 		(*= Read out functions. Supply best attempts for each generator *)
 		GetRandom*: PROCEDURE ( gen: tRandom ): Bits;   (*= A bit pattern within [0, unsigned (MAX)] *)
 		GetRandomU*: PROCEDURE ( gen: tRandom ): LONGREAL;   (*= U[0,1] *)
 		NextRandom*: PROCEDURE ( gen: tRandom );   (*= advance random number generator. Status is kept in seed *)
 		Max*: PROCEDURE ( gen: tRandom ): Bits;   (*= maximum value returned by GetRandom *)
-		
+
 		(*= Read out functions which can be savely kept to defaults. Replace, if this gives a speed advantage *)
 		GetRandomBitV*: PROCEDURE ( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );   (*= A bit pattern *)
 		(* jb28.3.00 - replaced by GetRandomBitV
@@ -134,7 +134,7 @@ TYPE
 		*)
 		GetRandomUV*: PROCEDURE ( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF REAL;  start: LONGINT );   (*= U[0,1] *)
 		GetRandomUVX*: PROCEDURE ( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF LONGREAL;  start: LONGINT );   (*= U[0,1] *)
-		
+
 		(* the following procedures generate a random LONGINT within [0; top) *)
 		(* if top <= 0 or top > min ( MAX (LONGINT), unsigned (MAX ()) ), a non-negative random LONGINT
 		within [ 0; min ( MAX (LONGINT), unsigned (MAX ()) ) ] is returned *)
@@ -144,103 +144,103 @@ TYPE
 		theoretical value of chi square test statistic is then given by unsigned (MAX ()) * (SumPSqr () * top - 1),
 		unsigned (MAX ()) - 1 degrees of freedom *)
 		(* jb 6.3.01 *)
-		SumPSqr*: PROCEDURE ( gen: tRandom;  top: LONGINT ): LONGREAL;  
-		GetRandomL*: PROCEDURE ( gen: tRandom;  top: LONGINT ): LONGINT;  
-		GetRandomLV*: PROCEDURE ( gen: tRandom;  top: LONGINT;  count: LONGINT;  VAR nrs: ARRAY OF LONGINT;  start: LONGINT );  
-		
+		SumPSqr*: PROCEDURE ( gen: tRandom;  top: LONGINT ): LONGREAL;
+		GetRandomL*: PROCEDURE ( gen: tRandom;  top: LONGINT ): LONGINT;
+		GetRandomLV*: PROCEDURE ( gen: tRandom;  top: LONGINT;  count: LONGINT;  VAR nrs: ARRAY OF LONGINT;  start: LONGINT );
+
 		(* deprecated *)
-		GetRandomSet*: PROCEDURE ( gen: tRandom ): SET;  
-		MAXSet*: PROCEDURE ( gen: tRandom ): SET;  
-		
+		GetRandomSet*: PROCEDURE ( gen: tRandom ): SET;
+		MAXSet*: PROCEDURE ( gen: tRandom ): SET;
+
 		(*= general purpose hook for extensions *)
-		RandomHandler*: PROCEDURE ( r: tRandom;  VAR msg: tMsg );  
-		
+		RandomHandler*: PROCEDURE ( r: tRandom;  VAR msg: tMsg );
+
 		AllocSeed*: PROCEDURE ( ): tSeed;   (* jb10.1.01 *)
-		
+
 		(** These routines usually take some default **)
-		GetSeed*: PROCEDURE ( gen: tRandom;  VAR s: tSeed );  
-		SetSeed*: PROCEDURE ( gen: tRandom;  s: tSeed );  
+		GetSeed*: PROCEDURE ( gen: tRandom;  VAR s: tSeed );
+		SetSeed*: PROCEDURE ( gen: tRandom;  s: tSeed );
 		Name*: PROCEDURE ( r: tRandom;  pre: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR );   (* return encoded seed and generator *)
-	END;  
-	
+	END;
+
 	(*** Example ***)
-	tLongintSeed* = OBJECT (* POINTER TO tLongintSeedDesc;  
+	tLongintSeed* = OBJECT (* POINTER TO tLongintSeedDesc;
 	tLongintSeedDesc* = RECORD*)   (tSeed)
 	VAR
-		val*: LONGINT;  
-		
-		PROCEDURE  (*VAR seed: tLongintSeedDesc*) Store*( VAR r: Files.Rider );  
-		BEGIN 
-			Files.WriteLInt( r, (*seed.*)val )
-		END Store;  
+		val*: LONGINT;
 
-		PROCEDURE  (*VAR seed: tLongintSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );  
-		BEGIN 
-			IF seedVersion # cLongintSeedVersion THEN HALT( 100 ) END;  
+		PROCEDURE  (*VAR seed: tLongintSeedDesc*) Store*( VAR r: Files.Rider );
+		BEGIN
+			Files.WriteLInt( r, (*seed.*)val )
+		END Store;
+
+		PROCEDURE  (*VAR seed: tLongintSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+		BEGIN
+			IF seedVersion # cLongintSeedVersion THEN HALT( 100 ) END;
 			Files.ReadLInt( r, (*seed.*)val )
-		END Load;  
+		END Load;
 
 		PROCEDURE  (*VAR seed: tLongintSeedDesc*) Copy*( ): tSeed;   (* fof 020625 *)
-		VAR cp: tSeed;  copy: tLongintSeed;  
-		BEGIN 
-			cp := AllocLongintSeed();  copy := cp( tLongintSeed );  
+		VAR cp: tSeed;  copy: tLongintSeed;
+		BEGIN
+			cp := AllocLongintSeed();  copy := cp( tLongintSeed );
 			copy^ := SELF^ (*seed*);   (* copy of content *)
 			RETURN copy
-		END Copy;  
+		END Copy;
 
-	END tLongintSeed;  
+	END tLongintSeed;
 	(*fof val not write-protected for access from outside this module *)
-	
+
 	(*tNameArray*= ARRAY 32 OF CHAR; 	(*= should be same as vyName.tNameArray *)*)
-	
+
 	(*** The global random number generator ***)
-VAR 
-	RandomGenerator-: tRandom;  initSeed1, initSeed2, initSeed3: LONGINT;  
-	
+VAR
+	RandomGenerator-: tRandom;  initSeed1, initSeed2, initSeed3: LONGINT;
+
 	(*** procedures to load/store seeds - jb 29.11.00 *** *)
-	
+
 	(* must be implemented in derived types  *)
-	
+
 	PROCEDURE WriteSeedVersion*( VAR r: Files.Rider;  seedVersion: INTEGER );   (* jb 5.5.01 *)
-	BEGIN 
+	BEGIN
 		Files.WriteInt( r, seedVersion )
-	END WriteSeedVersion;  
+	END WriteSeedVersion;
 
 	(*
-	PROCEDURE ( VAR seed: tSeedDesc)Store*( VAR r: Files.Rider );  
-	BEGIN 
+	PROCEDURE ( VAR seed: tSeedDesc)Store*( VAR r: Files.Rider );
+	BEGIN
 		HALT( 100 )
-	END Store;  
-	*) 
+	END Store;
+	*)
 
 	PROCEDURE ReadSeedVersion*( VAR r: Files.Rider;  VAR seedVersion: INTEGER );   (* jb 5.5.01 *)
-	BEGIN 
+	BEGIN
 		Files.ReadInt( r, seedVersion )
-	END ReadSeedVersion;  
+	END ReadSeedVersion;
 
 	(*
-	PROCEDURE ( VAR seed: tSeedDesc)Load*( VAR r: Files.Rider;  seedVersion: INTEGER );  
+	PROCEDURE ( VAR seed: tSeedDesc)Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
 	(* if you do not store seeds without storing the whole generator, i. e. if you do not call seed.Store and
 	seed.Load yourself, you do not have to worry about seed versions; otherwise the seed version code must be
 	stored somewhere in the file and passed to this procedure as parameter seedVersion *)
-	BEGIN 
+	BEGIN
 		HALT( 100 )
-	END Load;  
+	END Load;
 
 	PROCEDURE ( VAR seed: tSeedDesc)Copy*( ): tSeed;   (* fof 020625 *)
-	BEGIN 
+	BEGIN
 		HALT( 100 )
-	END Copy;  
+	END Copy;
 	*)
 
 
 (*** Access routines ***)
 
-	PROCEDURE RandomBits*( ): Bits;  
+	PROCEDURE RandomBits*( ): Bits;
 	(*= return a random number from RandomGenerator *)
-	BEGIN 
+	BEGIN
 		RETURN RandomGenerator.GetRandom( RandomGenerator )
-	END RandomBits;  
+	END RandomBits;
 
 (* jb 28.3.00 - replaced by RandomBits
 PROCEDURE Random* (): LONGINT;
@@ -248,23 +248,23 @@ PROCEDURE Random* (): LONGINT;
 BEGIN RETURN RandomGenerator.GetRandomL(RandomGenerator, MAX(LONGINT)) END Random;
 *)
 
-	PROCEDURE RandomU*( ): LONGREAL;  
+	PROCEDURE RandomU*( ): LONGREAL;
 	(*= return a random number from RandomGenerator, transformed to U[0,1] *)
-	BEGIN 
+	BEGIN
 		RETURN RandomGenerator.GetRandomU( RandomGenerator )
-	END RandomU;  
+	END RandomU;
 
-	PROCEDURE RandomName*( pre: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR );  
+	PROCEDURE RandomName*( pre: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR );
 	(*= prefix and name of currently installed generator *)
-	BEGIN 
+	BEGIN
 		RandomGenerator.Name( RandomGenerator, pre, name )
-	END RandomName;  
+	END RandomName;
 
 (** Vector access to current generator **)
-	PROCEDURE RandomBitV*( count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );  
-	BEGIN 
+	PROCEDURE RandomBitV*( count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );
+	BEGIN
 		RandomGenerator.GetRandomBitV( RandomGenerator, count, nrs, start )
-	END RandomBitV;  
+	END RandomBitV;
 
 (* jb 28.3.00 - replaced by RandomBitV
 PROCEDURE RandomV* (count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT);
@@ -277,38 +277,38 @@ RandomGenerator.GetRandomV (RandomGenerator, count, nrs, start)
 END RandomV;
 *)
 
-	PROCEDURE RandomLV*( top: LONGINT;  exact: BOOLEAN;  count: LONGINT;  VAR nrs: ARRAY OF LONGINT;  start: LONGINT );  
+	PROCEDURE RandomLV*( top: LONGINT;  exact: BOOLEAN;  count: LONGINT;  VAR nrs: ARRAY OF LONGINT;  start: LONGINT );
 	(* VAR i: LONGINT; *)
-	BEGIN 
+	BEGIN
 		(* jb 12.3.00
 	FOR i := start TO start + count - 1 DO nrs[i] := RandomGenerator.GetRandomL(RandomGenerator, top) END
 	*)
 		RandomGenerator.GetRandomLV( RandomGenerator, top, count, nrs, start )
-	END RandomLV;  
+	END RandomLV;
 
-	PROCEDURE RandomUV*( count: LONGINT;  VAR nrs: ARRAY OF REAL;  start: LONGINT );  
+	PROCEDURE RandomUV*( count: LONGINT;  VAR nrs: ARRAY OF REAL;  start: LONGINT );
 	(* VAR i: LONGINT; *)
-	BEGIN 
+	BEGIN
 		(* jb 12.3.00
 	FOR i := start TO start + count - 1 DO nrs[i] := SHORT(RandomGenerator.GetRandomU(RandomGenerator)) END
 	*)
 		RandomGenerator.GetRandomUV( RandomGenerator, count, nrs, start )
-	END RandomUV;  
+	END RandomUV;
 
-	PROCEDURE RandomUVX*( count: LONGINT;  VAR nrs: ARRAY OF LONGREAL;  start: LONGINT );  
+	PROCEDURE RandomUVX*( count: LONGINT;  VAR nrs: ARRAY OF LONGREAL;  start: LONGINT );
 	(* VAR i: LONGINT; *)
-	BEGIN 
+	BEGIN
 		(* jb 12.3.00
 	FOR i := start TO start + count - 1 DO nrs[i] := RandomGenerator.GetRandomU(RandomGenerator) END
 	*)
 		RandomGenerator.GetRandomUVX( RandomGenerator, count, nrs, start )
-	END RandomUVX;  
+	END RandomUVX;
 
 
 
 (* auxiliary procedures *)
 
-	PROCEDURE GetRandomLExact*( gen: tRandom;  max, top, maxtries: LONGINT ): LONGINT;  
+	PROCEDURE GetRandomLExact*( gen: tRandom;  max, top, maxtries: LONGINT ): LONGINT;
 	(*= get a random value which is (theoretically) uniformly distributed within [0, top)
 
 	pass the result of gen.MAX (gen) as parameter max
@@ -319,51 +319,51 @@ END RandomV;
 	interval, if not, another random number is drawn; if we were not successful within maxtries times, -1
 	is returned
 	*)
-	VAR m1, m2, m3, max1, max2, max3, c, nTry, z: LONGINT;  
-	BEGIN 
-		IF max < 0 THEN max2 := max1 - MIN( LONGINT );  max1 := MAX( LONGINT ) ELSE max2 := -1;  max1 := max END;  
-		c := max1 MOD top + 1;  
-		IF c = top THEN m1 := max1 ELSE m1 := max1 - c END;  
+	VAR m1, m2, m3, max1, max2, max3, c, nTry, z: LONGINT;
+	BEGIN
+		IF max < 0 THEN max2 := max1 - MIN( LONGINT );  max1 := MAX( LONGINT ) ELSE max2 := -1;  max1 := max END;
+		c := max1 MOD top + 1;
+		IF c = top THEN m1 := max1 ELSE m1 := max1 - c END;
 		ASSERT ( -1 MOD 3 = -1, 100 );   (* if not, the cases max2 = -1 and max3 = -1
 	must be handled separately when setting m2 and m3 *)
-		c := max2 MOD top + 1;  
-		IF c = top THEN m2 := max2 ELSE m2 := max2 - c END;  
-		max3 := max1 - m1 + max2 - m2 - 1;  c := max3 MOD top + 1;  
-		IF c = top THEN m3 := max3 ELSE m3 := max3 - c END;  
-		
-		nTry := 1;  
-		LOOP 
-			z := gen.GetRandom( gen );  
-			IF z >= 0 THEN 
-				IF z <= m1 THEN RETURN z MOD top END;  
+		c := max2 MOD top + 1;
+		IF c = top THEN m2 := max2 ELSE m2 := max2 - c END;
+		max3 := max1 - m1 + max2 - m2 - 1;  c := max3 MOD top + 1;
+		IF c = top THEN m3 := max3 ELSE m3 := max3 - c END;
+
+		nTry := 1;
+		LOOP
+			z := gen.GetRandom( gen );
+			IF z >= 0 THEN
+				IF z <= m1 THEN RETURN z MOD top END;
 				z := z - m1 - 1
-			ELSE 
-				DEC( z, MIN( LONGINT ) );  
-				IF z <= m2 THEN RETURN z MOD top END;  
+			ELSE
+				DEC( z, MIN( LONGINT ) );
+				IF z <= m2 THEN RETURN z MOD top END;
 				z := z - m2 - 1 + max1 - m1
-			END;  
-			
+			END;
+
 			IF z <= m3 THEN RETURN z MOD top
-			END;  
-			
+			END;
+
 			IF nTry = maxtries THEN RETURN -1
-			END;  
+			END;
 			INC( nTry )
-		END 
-	END GetRandomLExact;  
-	
-	
-	
+		END
+	END GetRandomLExact;
+
+
+
 	(* default routines which are set by SetDefaultProcs *)
-	
+
 (** These are the default routines for vector oriented usage **)
 
-	PROCEDURE DefaultRandomBitV*( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );  
-	VAR i: LONGINT;  
-	BEGIN 
-		FOR i := start TO start + count - 1 DO nrs[i] := gen.GetRandom( gen ) END 
-	END DefaultRandomBitV;  
-	
+	PROCEDURE DefaultRandomBitV*( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := start TO start + count - 1 DO nrs[i] := gen.GetRandom( gen ) END
+	END DefaultRandomBitV;
+
 	(* jb 28.3.00 *)
 (*
 PROCEDURE DefaultRandomV* (gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT);
@@ -373,75 +373,75 @@ FOR i := start TO start + count - 1 DO nrs[i] := gen.GetRandomL(gen, MAX(LONGINT
 END DefaultRandomV;
 *)
 
-	PROCEDURE DefaultRandomLV*( gen: tRandom;  top: LONGINT;  count: LONGINT;  VAR nrs: ARRAY OF LONGINT;  start: LONGINT );  
-	VAR i: LONGINT;  
-	BEGIN 
-		FOR i := start TO start + count - 1 DO nrs[i] := gen.GetRandomL( gen, top ) END 
-	END DefaultRandomLV;  
+	PROCEDURE DefaultRandomLV*( gen: tRandom;  top: LONGINT;  count: LONGINT;  VAR nrs: ARRAY OF LONGINT;  start: LONGINT );
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := start TO start + count - 1 DO nrs[i] := gen.GetRandomL( gen, top ) END
+	END DefaultRandomLV;
 
-	PROCEDURE DefaultRandomUV*( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF REAL;  start: LONGINT );  
-	VAR i: LONGINT;  
-	BEGIN 
-		FOR i := start TO start + count - 1 DO nrs[i] := SHORT( gen.GetRandomU( gen ) ) END 
-	END DefaultRandomUV;  
+	PROCEDURE DefaultRandomUV*( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF REAL;  start: LONGINT );
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := start TO start + count - 1 DO nrs[i] := SHORT( gen.GetRandomU( gen ) ) END
+	END DefaultRandomUV;
 
-	PROCEDURE DefaultRandomUVX*( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF LONGREAL;  start: LONGINT );  
-	VAR i: LONGINT;  
-	BEGIN 
-		FOR i := start TO start + count - 1 DO nrs[i] := gen.GetRandomU( gen ) END 
-	END DefaultRandomUVX;  
+	PROCEDURE DefaultRandomUVX*( gen: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF LONGREAL;  start: LONGINT );
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := start TO start + count - 1 DO nrs[i] := gen.GetRandomU( gen ) END
+	END DefaultRandomUVX;
 
 (* default routines which return SET, jb 28.3.00*)
 
-	PROCEDURE DefaultGetSet*( gen: tRandom ): SET;  
-	BEGIN 
+	PROCEDURE DefaultGetSet*( gen: tRandom ): SET;
+	BEGIN
 		RETURN SYSTEM.VAL( SET, gen.GetRandom( gen ) )
-	END DefaultGetSet;  
+	END DefaultGetSet;
 
-	PROCEDURE DefaultMAXSet*( gen: tRandom ): SET;  
-	BEGIN 
+	PROCEDURE DefaultMAXSet*( gen: tRandom ): SET;
+	BEGIN
 		RETURN SYSTEM.VAL( SET, gen.Max( gen ) )
-	END DefaultMAXSet;  
+	END DefaultMAXSet;
 
-	PROCEDURE GetSeed( r: tRandom;  VAR s: tSeed );  
-	BEGIN 
+	PROCEDURE GetSeed( r: tRandom;  VAR s: tSeed );
+	BEGIN
 		s := r.seed
-	END GetSeed;  
+	END GetSeed;
 
-	PROCEDURE SetSeed( r: tRandom;  s: tSeed );  
-	BEGIN 
+	PROCEDURE SetSeed( r: tRandom;  s: tSeed );
+	BEGIN
 		r.seed := s
-	END SetSeed;  
+	END SetSeed;
 
-	PROCEDURE DefaultName( r: tRandom;  pre: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR );  
-	VAR i, j: LONGINT;  x, y: LONGINT;  
-	BEGIN 
-		j := 0;  
+	PROCEDURE DefaultName( r: tRandom;  pre: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR );
+	VAR i, j: LONGINT;  x, y: LONGINT;
+	BEGIN
+		j := 0;
 		(*	vyHostTexts.MsgSS('shortid:',r.shortid);vyHostTexts.MsgSS(' pre:',pre);vyHostTexts.MsgSS(' name:',name); *)
-		i := 0;  
-		WHILE pre[i] # 0X DO name[j] := pre[i];  INC( i );  INC( j ) END;  
-		i := 0;  
-		WHILE r.shortid[i] # 0X DO name[j] := r.shortid[i];  INC( i );  INC( j ) END;  
-		name[j] := 0X;  
+		i := 0;
+		WHILE pre[i] # 0X DO name[j] := pre[i];  INC( i );  INC( j ) END;
+		i := 0;
+		WHILE r.shortid[i] # 0X DO name[j] := r.shortid[i];  INC( i );  INC( j ) END;
+		name[j] := 0X;
 		(*>*	vyHostStrings.AppendHex(r.seed,name); -- expanded to avoid dependeny on Strings *)
-		x := r.seed( tLongintSeed ).val;  i := j;  j := j + 8;  name[j] := 0X;  
-		REPEAT 
-			DEC( j );  y := x MOD 10H;  
-			IF y < 10 THEN name[j] := CHR( y + 30H ) ELSE name[j] := CHR( y + 37H ) END;  
+		x := r.seed( tLongintSeed ).val;  i := j;  j := j + 8;  name[j] := 0X;
+		REPEAT
+			DEC( j );  y := x MOD 10H;
+			IF y < 10 THEN name[j] := CHR( y + 30H ) ELSE name[j] := CHR( y + 37H ) END;
 			x := x DIV 10H
-		UNTIL j = i;  
+		UNTIL j = i;
 		(*<*	vyHostStrings.AppendHex(r.seed,name); -- expanded to avoid dependeny on Strings *)
-		
-		(*		vyHostTexts.MsgSS('shortid:',r.shortid);vyHostTexts.MsgSS(' pre:',pre);vyHostTexts.MsgSS(' name:',name); *)
-	END DefaultName;  
 
-	PROCEDURE HandleAttributes( obj: tRandom;  VAR M: Objects.AttrMsg );  
-	BEGIN 
-		IF M.id = Objects.get THEN 
+		(*		vyHostTexts.MsgSS('shortid:',r.shortid);vyHostTexts.MsgSS(' pre:',pre);vyHostTexts.MsgSS(' name:',name); *)
+	END DefaultName;
+
+	PROCEDURE HandleAttributes( obj: tRandom;  VAR M: Objects.AttrMsg );
+	BEGIN
+		IF M.id = Objects.get THEN
 			IF M.name = "ShortClass" THEN COPY( obj.shortid, M.s );  M.class := Objects.String;  M.res := 0
 			ELSIF M.name = "Class" THEN COPY( obj.id, M.s );  M.class := Objects.String;  M.res := 0
 			ELSE Gadgets.objecthandle( obj, M )
-			END 
+			END
 			(*	ELSIF M.id = Objects.set THEN
 		IF (M.name = "Value") OR (M.name="Seed") THEN
 		IF M.class = Objects.Int THEN obj.seed(tSeed).val:= M.i; M.res := 0 END
@@ -450,25 +450,25 @@ END DefaultRandomV;
 		*)
 		ELSIF M.id = Objects.enum THEN M.Enum( "ShortClass" );  M.Enum( "Class" );  Gadgets.objecthandle( obj, M )
 		ELSE Gadgets.objecthandle( obj, M )
-		END 
-	END HandleAttributes;  
+		END
+	END HandleAttributes;
 
-	PROCEDURE StoreVersionInformation( VAR r: Files.Rider;  shortid: tShortIdStr;  seedVersion: INTEGER );  
-	BEGIN 
-		Files.WriteString( r, cMagic );  Files.WriteString( r, shortid );  Files.WriteInt( r, cBaseVersion );  
+	PROCEDURE StoreVersionInformation( VAR r: Files.Rider;  shortid: tShortIdStr;  seedVersion: INTEGER );
+	BEGIN
+		Files.WriteString( r, cMagic );  Files.WriteString( r, shortid );  Files.WriteInt( r, cBaseVersion );
 		Files.WriteInt( r, seedVersion )
-	END StoreVersionInformation;  
+	END StoreVersionInformation;
 
-	PROCEDURE LoadVersionInformation( VAR r: Files.Rider;  VAR shortid: tShortIdStr;  VAR baseVersion, seedVersion: INTEGER );  
-	VAR dummy: tIdStr;  
-	BEGIN 
-		Files.ReadString( r, shortid );  
-		IF shortid = cMagic THEN Files.ReadString( r, shortid );  Files.ReadInt( r, baseVersion );  Files.ReadInt( r, seedVersion ) 
+	PROCEDURE LoadVersionInformation( VAR r: Files.Rider;  VAR shortid: tShortIdStr;  VAR baseVersion, seedVersion: INTEGER );
+	VAR dummy: tIdStr;
+	BEGIN
+		Files.ReadString( r, shortid );
+		IF shortid = cMagic THEN Files.ReadString( r, shortid );  Files.ReadInt( r, baseVersion );  Files.ReadInt( r, seedVersion )
 				ELSE  (* for compatibility with older versions of vyRanBase *)
-			baseVersion := 0;  seedVersion := 0;  
+			baseVersion := 0;  seedVersion := 0;
 			Files.ReadString( r, dummy ) (* obj.id - no longer stored *)
-		END 
-	END LoadVersionInformation;  
+		END
+	END LoadVersionInformation;
 
 (*
 PROCEDURE Store (obj: tRandom; VAR M: Objects.FileMsg);
@@ -480,141 +480,141 @@ Gadgets.objecthandle(obj, M)
 END Store;
 *)
 
-	PROCEDURE Store( obj: tRandom;  VAR M: Objects.FileMsg );  
-	BEGIN 
+	PROCEDURE Store( obj: tRandom;  VAR M: Objects.FileMsg );
+	BEGIN
 		StoreVersionInformation( M.R, obj.shortid, obj.seedVersion );  obj.seed.Store( M.R );  Gadgets.objecthandle( obj, M )
-	END Store;  
+	END Store;
 
-	PROCEDURE Load( obj: tRandom;  VAR M: Objects.FileMsg );  
-	VAR shortid: tShortIdStr;  baseVersion, seedVersion: INTEGER;  seed: tSeed;  
-	BEGIN 
-		LoadVersionInformation( M.R, shortid, baseVersion, seedVersion );  
-		IF shortid # obj.shortid THEN HALT( 100 ) END;  
-		IF (baseVersion < 0) OR (baseVersion > 1) THEN HALT( 101 ) END;  
+	PROCEDURE Load( obj: tRandom;  VAR M: Objects.FileMsg );
+	VAR shortid: tShortIdStr;  baseVersion, seedVersion: INTEGER;  seed: tSeed;
+	BEGIN
+		LoadVersionInformation( M.R, shortid, baseVersion, seedVersion );
+		IF shortid # obj.shortid THEN HALT( 100 ) END;
+		IF (baseVersion < 0) OR (baseVersion > 1) THEN HALT( 101 ) END;
 		seed := obj.AllocSeed();  seed.Load( M.R, seedVersion );  obj.seed := seed;  Gadgets.objecthandle( obj, M )
-	END Load;  
+	END Load;
 
-	PROCEDURE Handler*( obj: Objects.Object;  VAR M: Objects.ObjMsg );  
-	BEGIN 
-		WITH obj: tRandom DO 
-			IF M IS Objects.AttrMsg THEN 
+	PROCEDURE Handler*( obj: Objects.Object;  VAR M: Objects.ObjMsg );
+	BEGIN
+		WITH obj: tRandom DO
+			IF M IS Objects.AttrMsg THEN
 				WITH M: Objects.AttrMsg DO HandleAttributes( obj, M )
-				END 
-			ELSIF M IS Objects.FileMsg THEN 
-				WITH M: Objects.FileMsg DO 
+				END
+			ELSIF M IS Objects.FileMsg THEN
+				WITH M: Objects.FileMsg DO
 					IF M.id = Objects.store THEN Store( obj, M )
 					ELSIF M.id = Objects.load THEN Load( obj, M )
-					END 
-				END 
-			
+					END
+				END
+
 			ELSE Gadgets.objecthandle( obj, M )
-			END 
+			END
 		END;   (*WITH obj:tRandom DO*)
-		
-	END Handler;  
+
+	END Handler;
 
 	PROCEDURE SetDefaultProcs*( gen: tRandom );   (* changed, jb 21.2.00 *)
 	(*= install default access routines in random number generator
 	call this first before installing your own procedures *)
-	BEGIN 
-		gen.GetRandomBitV := DefaultRandomBitV;  
+	BEGIN
+		gen.GetRandomBitV := DefaultRandomBitV;
 		(* gen.GetRandomV := DefaultRandomV; *)  (* jb 28.3.00 *)
-		gen.GetRandomLV := DefaultRandomLV;  gen.GetRandomUV := DefaultRandomUV;  
-		gen.GetRandomUVX := DefaultRandomUVX;  
+		gen.GetRandomLV := DefaultRandomLV;  gen.GetRandomUV := DefaultRandomUV;
+		gen.GetRandomUVX := DefaultRandomUVX;
 
-		gen.GetRandomSet := DefaultGetSet;  gen.MAXSet := DefaultMAXSet;  
+		gen.GetRandomSet := DefaultGetSet;  gen.MAXSet := DefaultMAXSet;
 
-		gen.RandomHandler := NIL;  
+		gen.RandomHandler := NIL;
 
-		gen.GetSeed := GetSeed;  gen.SetSeed := SetSeed;  gen.Name := DefaultName;  
+		gen.GetSeed := GetSeed;  gen.SetSeed := SetSeed;  gen.Name := DefaultName;
 
 		gen.handle := Handler
-	END SetDefaultProcs;  
-	
-	
+	END SetDefaultProcs;
+
+
 	(** Default implementations not set by SetDefaultProcs **)
-	
+
 (* jb 2.3.01 - Reset mechanism changed *)
-	PROCEDURE Combo( VAR x, y, z: LONGINT ): LONGINT;  
+	PROCEDURE Combo( VAR x, y, z: LONGINT ): LONGINT;
 	(*= One step of Combo random number generator. *)
 	(*! only for DefaultLongSeed, Combo implemented in own Module vyRanCombo.Mod *)
-	CONST mwcParam = 30903;  
-	VAR v: LONGINT;  
-	BEGIN 
-		v := x * y;  x := y;  y := v;  
-		z := 
-			mwcParam * SYSTEM.VAL( Bits, SYSTEM.VAL( SET, z ) * SYSTEM.VAL( SET, sysMaskSecondHalf ) ) + 
-			LSH( z, sysBitsTypeSize DIV 2 * sysSHR );  
+	CONST mwcParam = 30903;
+	VAR v: LONGINT;
+	BEGIN
+		v := x * y;  x := y;  y := v;
+		z :=
+			mwcParam * SYSTEM.VAL( Bits, SYSTEM.VAL( SET, z ) * SYSTEM.VAL( SET, sysMaskSecondHalf ) ) +
+			LSH( z, sysBitsTypeSize DIV 2 * sysSHR );
 		RETURN y + z
-	END Combo;  
+	END Combo;
 
-	PROCEDURE SetInitSeeds;  
-	VAR res: WORD;  i: INTEGER;  
-	BEGIN 
-		initSeed1 := Oberon.Time();  Oberon.GetClock( initSeed2, initSeed3 );  
-		FOR i := 1 TO 10 DO res := Combo( initSeed1, initSeed2, initSeed3 ) END 
-	END SetInitSeeds;  
+	PROCEDURE SetInitSeeds;
+	VAR res: WORD;  i: INTEGER;
+	BEGIN
+		initSeed1 := Oberon.Time();  Oberon.GetClock( initSeed2, initSeed3 );
+		FOR i := 1 TO 10 DO res := Combo( initSeed1, initSeed2, initSeed3 ) END
+	END SetInitSeeds;
 
-	PROCEDURE DefaultLongSeed*( ): LONGINT;  
+	PROCEDURE DefaultLongSeed*( ): LONGINT;
 	(*= return a seed, to be used with the Init procedure of the random number generator
 	!!! use with care - this procedure gives a full LONGINT, which may be negative or zero !!! *)
-	BEGIN 
+	BEGIN
 		RETURN Combo( initSeed1, initSeed2, initSeed3 )
-	END DefaultLongSeed;  
+	END DefaultLongSeed;
 
 	PROCEDURE DefaultLongintReset*( gen: tRandom );   (* jb 21.2.00 *)
 	(* !!! use with care - this procedure gives a full LONGINT, which may be negative or zero !!!
 	if something different is needed, you have to create your one Reset procedure *)
-	VAR seed: tSeed;  
-	BEGIN 
-		seed := gen.seed;  
+	VAR seed: tSeed;
+	BEGIN
+		seed := gen.seed;
 		WITH seed: tLongintSeed DO seed.val := DefaultLongSeed()
-		END 
-	END DefaultLongintReset;  
+		END
+	END DefaultLongintReset;
 
-	PROCEDURE DefaultSumPSqr*( gen: tRandom;  top: LONGINT ): LONGREAL;  
+	PROCEDURE DefaultSumPSqr*( gen: tRandom;  top: LONGINT ): LONGREAL;
 	(* default procedure if MAX () = sysMaxUnsigned *)
-	CONST N = MAX( LONGINT );  
-	VAR k, t: LONGREAL;  
-	BEGIN 
-		IF top <= 0 THEN RETURN 1 / top END;  
-		
+	CONST N = MAX( LONGINT );
+	VAR k, t: LONGREAL;
+	BEGIN
+		IF top <= 0 THEN RETURN 1 / top END;
+
 		t := N DIV top;  k := N - t * top;  RETURN (k * (t + 1) / N + t) / N
-	END DefaultSumPSqr;  
+	END DefaultSumPSqr;
 
 
 
 
 (* added - jb 29.11.00, changed - jb 10.1.01 *)
-	PROCEDURE AllocLongintSeed*( ): tSeed;  
-	VAR seed: tLongintSeed;  
-	BEGIN 
+	PROCEDURE AllocLongintSeed*( ): tSeed;
+	VAR seed: tLongintSeed;
+	BEGIN
 		NEW( seed );  RETURN seed
-	END AllocLongintSeed;  
+	END AllocLongintSeed;
 
 (*
-	PROCEDURE ( VAR seed: tLongintSeedDesc)Store*( VAR r: Files.Rider );  
-	BEGIN 
+	PROCEDURE ( VAR seed: tLongintSeedDesc)Store*( VAR r: Files.Rider );
+	BEGIN
 		Files.WriteLInt( r, seed.val )
-	END Store;  
+	END Store;
 
-	PROCEDURE ( VAR seed: tLongintSeedDesc)Load*( VAR r: Files.Rider;  seedVersion: INTEGER );  
-	BEGIN 
-		IF seedVersion # cLongintSeedVersion THEN HALT( 100 ) END;  
+	PROCEDURE ( VAR seed: tLongintSeedDesc)Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+	BEGIN
+		IF seedVersion # cLongintSeedVersion THEN HALT( 100 ) END;
 		Files.ReadLInt( r, seed.val )
-	END Load;  
+	END Load;
 
 	PROCEDURE ( VAR seed: tLongintSeedDesc)Copy*( ): tSeed;   (* fof 020625 *)
-	VAR cp: tSeed;  copy: tLongintSeed;  
-	BEGIN 
-		cp := AllocLongintSeed();  copy := cp( tLongintSeed );  
+	VAR cp: tSeed;  copy: tLongintSeed;
+	BEGIN
+		cp := AllocLongintSeed();  copy := cp( tLongintSeed );
 		copy^ := seed;   (* copy of content *)
 		RETURN copy
-	END Copy;  
-*) 
-		
+	END Copy;
+*)
+
 	(* probably not necessary - jb 21.2.00 *)
-	
+
 (*
 
 PROCEDURE FixDefaults* (generator: tRandom);
@@ -631,9 +631,9 @@ END FixDefaults;
 
 *)
 
-	PROCEDURE Install*( generator: tRandom );  
-	BEGIN 
-		ASSERT ( generator # NIL , 100 );  
+	PROCEDURE Install*( generator: tRandom );
+	BEGIN
+		ASSERT ( generator # NIL , 100 );
 		(*! find a mechanism to check if generator has been inited *)
 		(* ASSERT(generator.Init # NIL, 101); *)
 		(* not needed - jb 21.2.00
@@ -647,42 +647,42 @@ END FixDefaults;
 	*)
 		RandomGenerator := generator;   (* RandomGenerator.Init(RandomGenerator) *)
 		(* RandomGenerator.Reset (RandomGenerator) *)
-	END Install;  
+	END Install;
 
 (* No Gen procedure for abstract generator *)
-	PROCEDURE NewAbstractGenerator;  
-	BEGIN 
+	PROCEDURE NewAbstractGenerator;
+	BEGIN
 		HALT( ccbase )
-	END NewAbstractGenerator;  
+	END NewAbstractGenerator;
 
-	PROCEDURE Deposit*;  
+	PROCEDURE Deposit*;
 	(*= Copy RandomGenerator to Objects.New, to allow access from Gadgets system *)
-	BEGIN 
+	BEGIN
 		Objects.NewObj := RandomGenerator
-	END Deposit;  
+	END Deposit;
 
-	PROCEDURE NextRandom*;  
-	BEGIN 
-		IF RandomGenerator # NIL THEN 
+	PROCEDURE NextRandom*;
+	BEGIN
+		IF RandomGenerator # NIL THEN
 			RandomGenerator.NextRandom( RandomGenerator );  Gadgets.Update( RandomGenerator )
-		END 
-	END NextRandom;  
+		END
+	END NextRandom;
 
-	PROCEDURE DoAsserts;  
-	VAR tmp: Bits;  
-	BEGIN 
+	PROCEDURE DoAsserts;
+	VAR tmp: Bits;
+	BEGIN
 		ASSERT ( SIZEOF( LONGINT ) = sysBitsTypeSize, 100 );   (* jb 28.3.00 *)
 		ASSERT ( sysMaxUnsigned = -1, 101 );   (* jb 10.1.01 *)
 		ASSERT ( sysHalfBitsType = LSH( 80000000H, -(sysBitsTypeSize * 8) DIV 2 + 1 ), 102 );   (* jb 10.1.01 *)
-		tmp := 1;  
+		tmp := 1;
 		ASSERT ( LSH( tmp, sysSHL ) = 2, 103 );   (* jb 2.3.01 *)
-		tmp := -1;  
+		tmp := -1;
 		ASSERT ( LSH( tmp, sysSHR ) > 0, 104 );   (* jb 2.3.01 - assert shift is unsigned *)
 		ASSERT ( SIZEOF( SET ) = SIZEOF( LONGINT ), 105 )
-	END DoAsserts;  
+	END DoAsserts;
 
-BEGIN 
-	DoAsserts;  RandomGenerator := NIL;  
+BEGIN
+	DoAsserts;  RandomGenerator := NIL;
 	SetInitSeeds (* jb 2.3.01 *)
 END vyRanBase.
 

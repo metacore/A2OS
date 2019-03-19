@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (*		(c) Project Voyager, StatLab Heidelberg
@@ -962,15 +962,15 @@ PROCEDURE InitGlobals;
 BEGIN
 NEW (m1);   NEW (m2);   NEW (m3);   NEW (m4);   NEW (m5);
 NEW (smrx);   NEW (smry);   NEW (smrz);   NEW (smr);   NEW (rotation);
-ASSERT 	((m1 # NIL) & 
-(m2 # NIL) & 
-(m3 # NIL) & 
-(m4 # NIL) & 
-(m5 # NIL) & 
-(smrx # NIL) & 
-(smry # NIL) & 
-(smrz # NIL) & 
-(smr # NIL) & 
+ASSERT 	((m1 # NIL) &
+(m2 # NIL) &
+(m3 # NIL) &
+(m4 # NIL) &
+(m5 # NIL) &
+(smrx # NIL) &
+(smry # NIL) &
+(smrz # NIL) &
+(smr # NIL) &
 (rotation # NIL));
 InitMatrix (rotation)
 END InitGlobals;

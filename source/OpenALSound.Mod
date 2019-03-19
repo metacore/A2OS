@@ -1,7 +1,7 @@
 
 MODULE OpenALSound; (** AUTHOR "g.f."; PURPOSE "OpenAL sound driver"; *)
 
-IMPORT S := SYSTEM, Modules, SoundDevices, AL := OpenAL, Objects, Files, 
+IMPORT S := SYSTEM, Modules, SoundDevices, AL := OpenAL, Objects, Files,
 			Strings, Streams, Log := KernelLog;
 
 CONST
@@ -16,7 +16,7 @@ CONST
 		Debug = TRUE;
 
 		NumBuffers = 20;
-		
+
 		OpenALConfig ="openalplay.ini";
 
 TYPE
@@ -34,7 +34,7 @@ TYPE
 				enabled := FALSE;
 				playChannel := NIL
 			END Initialize;
-			
+
 			PROCEDURE CreateALContext( ): BOOLEAN;
 			VAR name: ARRAY 64 OF CHAR; ok: BOOLEAN;
 			BEGIN
@@ -48,7 +48,7 @@ TYPE
 				Log.Enter;  Log.String( "OpenALSound.Driver.CreateALContext:  failed!" );  Log.Exit;
 				RETURN FALSE
 			END CreateALContext;
-			
+
 			PROCEDURE DestroyALContext;
 			VAR ignore: BOOLEAN;
 			BEGIN
@@ -77,26 +77,26 @@ TYPE
 
 
 
-			PROCEDURE OpenPlayChannel*(	VAR channel: SoundDevices.Channel; 
+			PROCEDURE OpenPlayChannel*(	VAR channel: SoundDevices.Channel;
 												samplingRate, samplingResolution: LONGINT;
-												nofSubChannels, format : LONGINT; 
+												nofSubChannels, format : LONGINT;
 											VAR res : WORD );
 			BEGIN {EXCLUSIVE}
 				IF ~enabled  THEN
 					Log.Enter;
-					Log.String( "OpenALSound.OpenPlayChannel: OpenAL driver is disabled" );  
+					Log.String( "OpenALSound.OpenPlayChannel: OpenAL driver is disabled" );
 					Log.Exit;
 					res := SoundDevices.ResNoMoreChannels;
 					RETURN
 				END;
 				IF playChannel # NIL THEN
 					Log.Enter;
-					Log.String( "OpenALSound.OpenPlayChannel: OpenAL driver already in use" );  
+					Log.String( "OpenALSound.OpenPlayChannel: OpenAL driver already in use" );
 					Log.Exit;
 					res := SoundDevices.ResNoMoreChannels;
 					RETURN
 				END;
-								
+
 				channel := NIL;
 
 				IF ~((samplingRate > 0) & (samplingRate <= 48000)) THEN
@@ -126,17 +126,17 @@ TYPE
 				IF ~CreateALContext( ) THEN
 					res := SoundDevices.ResNoMoreChannels;
 					RETURN
-				END; 
-				
+				END;
+
 				NEW( playChannel, SELF, samplingRate, samplingResolution, nofSubChannels );
 				channel := playChannel;
 
 				IF Debug THEN
 					Log.Enter;
-					Log.String("OpenALSound.OpenPlayChannel: "); 
+					Log.String("OpenALSound.OpenPlayChannel: ");
 					Log.Int(samplingRate, 1); Log.String("Hz, ");
 					Log.Int(samplingResolution, 1); Log.String("bit, ");
-					Log.Int(nofSubChannels, 1); Log.String(" channel(s)"); 
+					Log.Int(nofSubChannels, 1); Log.String(" channel(s)");
 					Log.Exit
 				END;
 
@@ -145,9 +145,9 @@ TYPE
 
 
 
-			PROCEDURE OpenRecordChannel*(	VAR channel: SoundDevices.Channel; 
+			PROCEDURE OpenRecordChannel*(	VAR channel: SoundDevices.Channel;
 													samplingRate, samplingResolution: LONGINT;
-													 nofSubChannels, format : LONGINT; 
+													 nofSubChannels, format : LONGINT;
 												VAR res : WORD );
 			BEGIN {EXCLUSIVE}
 				(* not impemented *)
@@ -180,34 +180,34 @@ TYPE
 
 
 
-	
+
 
 		PlayChannel = OBJECT( SoundDevices.Channel );
-		VAR  
+		VAR
 			source: AL.ALuint;
 			buffers: ARRAY NumBuffers OF AL.ALuint;
 			freeBuffers: AL.ALint;
-			
+
 			bufferListener: SoundDevices.BufferListener;
-			
+
 			frequency: AL.ALuint;
 			format: AL.ALenum;
 			count: LONGINT;
-			
+
 			volume: LONGINT;
 			state: LONGINT;
-			
+
 			driver: Driver;
 
 			PROCEDURE &Initialize*( driver: Driver;  samplingRate, bitsPerSample, nofChannels : LONGINT );
-			BEGIN				
+			BEGIN
 				SELF.driver := driver;
-				
+
 				AL.alGenBuffers( NumBuffers, ADDRESSOF( buffers[0] ) );
 				AL.alGenSources( 1, ADDRESSOF( source ) );
 				IF AL.alGetError() # AL.AL_NO_ERROR THEN
 					Log.Enter;
-					Log.String( "PlayChannel.Initialize: failed to allocat sources" );  
+					Log.String( "PlayChannel.Initialize: failed to allocat sources" );
 					Log.Exit
 				END;
 				frequency := samplingRate;
@@ -216,33 +216,33 @@ TYPE
 				  	CASE bitsPerSample OF
 				  		| 8:  format := AL.AL_FORMAT_MONO8
 				  		|16: format := AL.AL_FORMAT_MONO16
-				  	ELSE 
-				  		format:= AL.AL_FORMAT_MONO8;	
+				  	ELSE
+				  		format:= AL.AL_FORMAT_MONO8;
 				  	END;
 				ELSIF nofChannels = 2 THEN
 				  	CASE bitsPerSample OF
 				  		| 8:  format := AL.AL_FORMAT_STEREO8
 				  		|16: format := AL.AL_FORMAT_STEREO16
-				  	ELSE 
-				  		format:= AL.AL_FORMAT_STEREO8;	
+				  	ELSE
+				  		format:= AL.AL_FORMAT_STEREO8;
 				  	END;
-				ELSE 
+				ELSE
 					format := AL.AL_FORMAT_MONO8
 				END;
 				count := 0;  freeBuffers := 0;
 				state := StateStoped
 			END Initialize;
-			
 
-			
+
+
 			PROCEDURE RegisterBufferListener*( bufferListener : SoundDevices.BufferListener );
-			BEGIN 
+			BEGIN
 				SELF.bufferListener := bufferListener
 			END RegisterBufferListener;
 
 
 			PROCEDURE QueueBuffer*( x : SoundDevices.Buffer );
-			VAR buffer: AL.ALuint;  alstate: AL.ALint;  
+			VAR buffer: AL.ALuint;  alstate: AL.ALint;
 			BEGIN {EXCLUSIVE}
 				AWAIT( state = StatePlaying );
 				IF count < NumBuffers THEN
@@ -254,24 +254,24 @@ TYPE
 						AL.alSourcePlay( source );
 						IF AL.alGetError() # AL.AL_NO_ERROR THEN
 							Log.Enter;
-							Log.String( "OpenALSound.PlayChannel.QueueBuffer: start paying failed" ); 
+							Log.String( "OpenALSound.PlayChannel.QueueBuffer: start paying failed" );
 							Log.Exit
 						END
 					END
 				ELSE
 					REPEAT
 						AL.alGetSourcei( source, AL.AL_BUFFERS_PROCESSED, freeBuffers );
-						IF freeBuffers <= 0 THEN  Objects.Sleep( 5 )  END;	
+						IF freeBuffers <= 0 THEN  Objects.Sleep( 5 )  END;
 					UNTIL freeBuffers > 0;
 					AL.alSourceUnqueueBuffers( source, 1, ADDRESSOF( buffer ) );
 					DEC( freeBuffers );
 					AL.alBufferData( buffer, format, ADDRESSOF( x.data[0] ),  x.len, frequency );
 					bufferListener( x );
-					INC( count ); 
+					INC( count );
 					AL.alSourceQueueBuffers( source, 1, ADDRESSOF( buffer ) );
 					IF AL.alGetError( ) # AL.AL_NO_ERROR THEN
 						Log.Enter;
-						Log.String( "OpenALSound.PlayChannel.QueueBuffer: queueing failed" );  Log.Int( count, 5 ); 
+						Log.String( "OpenALSound.PlayChannel.QueueBuffer: queueing failed" );  Log.Int( count, 5 );
 						Log.Exit;
 						RETURN
 					END;
@@ -281,7 +281,7 @@ TYPE
 					END;
 				END
 			END QueueBuffer;
-			
+
 
 			PROCEDURE SetVolume*( vol : LONGINT );
 			VAR gain: AL.ALfloat;
@@ -303,7 +303,7 @@ TYPE
 			PROCEDURE GetPosition*() : LONGINT;
 			BEGIN
 				RETURN 0
-			END GetPosition;	
+			END GetPosition;
 
 			PROCEDURE Start*;
 			BEGIN {EXCLUSIVE}
@@ -335,7 +335,7 @@ TYPE
 					Log.Enter;  Log.String( "OpenALSound: play cannel closed" );  Log.Exit
 				END
 			END Close;
-	
+
 
 		END PlayChannel;
 
@@ -350,7 +350,7 @@ VAR  driver: Driver;
 		rd: Files.Reader;
 		found: BOOLEAN;
 	BEGIN
-		sdev := ""; 
+		sdev := "";
 		file := Files.Old( OpenALConfig );
 		IF file = NIL THEN  RETURN  END;
 		Files.OpenReader( rd, file, 0 );
@@ -361,7 +361,7 @@ VAR  driver: Driver;
 			Strings.Trim(sdev, " ");
 			found := sdev[0] # "#";
 			rd.SkipWhitespace( );
-		END;	
+		END;
 	END GetDeviceName;
 
 
@@ -396,30 +396,30 @@ VAR  driver: Driver;
 	PROCEDURE Cleanup;
 	BEGIN
 		Disable;
-		IF driver # NIL THEN  
+		IF driver # NIL THEN
 			SoundDevices.devices.Remove( driver );
 			driver := NIL;
 			Log.Enter;  Log.String( "OpenAL sound driver removed" );  Log.Exit
 		END
 	END Cleanup;
-	
+
 
 BEGIN
 	Modules.InstallTermHandler( Cleanup )
 END OpenALSound.
 
 
- 
- 
- 
- 
- System.Free MP3Player OpenALSound ~ 
- 
+
+
+
+
+ System.Free MP3Player OpenALSound ~
+
  OpenALSound.Install ~
 
- OpenALSound.Disable ~ 
+ OpenALSound.Disable ~
  OpenALSound.Enable ~
 
   MP3Player.Open test.mp3 ~
-  
+
   MP3Player.Open sesta.mp3 ~

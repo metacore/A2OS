@@ -5,16 +5,16 @@ MODULE CryptoAES;   (** AES (Rijndael) de/encryption *)
 IMPORT  S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
 
 CONST
-	MaxRounds = 14;  
+	MaxRounds = 14;
 	ECB = Ciphers.ECB;  CBC = Ciphers.CBC;  CTR = Ciphers.CTR;
-	
-	b0 = S.VAL( SET32, 0000000FFH );  b1 = S.VAL( SET32, 00000FF00H );  
+
+	b0 = S.VAL( SET32, 0000000FFH );  b1 = S.VAL( SET32, 00000FF00H );
 	b2 = S.VAL( SET32, 000FF0000H );  b3 = S.VAL( SET32, 0FF000000H );
 
 TYPE
 	RTable = ARRAY 256 OF SET32;
 	RKeys = ARRAY 4*(MaxRounds + 1) OF SET32;
-	
+
 VAR
 	e0, e1, e2, e3, e4: RTable;
 	d0, d1, d2, d3, d4: RTable;
@@ -45,7 +45,7 @@ TYPE
 					SetIV^( src, mode );   (* set mode *)
 					U.BufferToBlockBE( src, 0, iv );
 				END SetIV;
-				
+
 				PROCEDURE IncIV;
 				VAR i, x: LONGINT;
 				BEGIN
@@ -157,7 +157,7 @@ TYPE
 					b[2] := (d4[t2.d]*b3)/(d4[t1.c]*b2)/(d4[t0.b]*b1)/(d4[t3.a]*b0)/dkey[p + 2];
 					b[3] := (d4[t3.d]*b3)/(d4[t2.c]*b2)/(d4[t1.b]*b1)/(d4[t0.a]*b0)/dkey[p + 3];
 				END RoundD;
-				
+
 				PROCEDURE -split( s: SET32;  VAR b: Ind4 );   (* split set into 4 indexes *)
 				BEGIN
 					b.a := S.VAL( LONGINT, s ) MOD 100H;
@@ -184,7 +184,7 @@ TYPE
 					END;
 					RETURN 10
 				END Init128;
-				
+
 				PROCEDURE Init192( CONST src: ARRAY OF CHAR ): SHORTINT;
 				VAR i, p: LONGINT;  ib: Ind4;
 				BEGIN
@@ -204,7 +204,7 @@ TYPE
 					END;
 					RETURN 12
 				END Init192;
-	
+
 				PROCEDURE Init256( CONST src: ARRAY OF CHAR ): SHORTINT;
 				VAR i, p: LONGINT;  ib: Ind4;
 				BEGIN
@@ -227,16 +227,16 @@ TYPE
 					END;
 					RETURN 14
 				END Init256;
-				
-				
+
+
 				PROCEDURE InvertKeys;
 				VAR i, j, k, p: LONGINT;  t: SET32;  ib: Ind4;
-				
+
 					PROCEDURE ind( s: SET32 ): LONGINT;   (* extract index byte 0 *)
 					BEGIN
 						RETURN S.VAL( LONGINT, s ) MOD 100H
 					END ind;
-					
+
 				BEGIN
 					dkey := key;
 					(* invert the order of the round keys: *)
@@ -247,7 +247,7 @@ TYPE
 					END;
 					(* apply the inverse MixColumn transform to all round keys but the first and the last: *)
 					FOR i := 1 TO rounds - 1 DO
-						p := 4*i;  
+						p := 4*i;
 						split( dkey[p + 0], ib );
 						dkey[p + 0] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
 						split( dkey[p + 1], ib );
@@ -258,8 +258,8 @@ TYPE
 						dkey[p + 3] := d0[ind( e4[ib.d] )] / d1[ind( e4[ib.c] )] / d2[ind( e4[ib.b] )] / d3[ind( e4[ib.a] )];
 					END;
 				END InvertKeys;
-	
-	
+
+
 				PROCEDURE & Init*;
 				BEGIN
 					SetNameAndBlocksize( "aes", 16 )
@@ -276,7 +276,7 @@ TYPE
 (*-------------------------------------------------------------------------------*)
 
 	PROCEDURE Initialize;
-	VAR 
+	VAR
 		i1, i2, i4, i8, i9, ib, id, ie, v1, v2, v3, t: LONGINT;
 		buf: U.InitBuffer;
 
@@ -284,7 +284,7 @@ TYPE
 		BEGIN
 			RETURN S.VAL( LONGINT, S.VAL( SET32, a ) / S.VAL( SET32, b ) )
 		END xor;
-		
+
 		PROCEDURE f1( x: LONGINT ): LONGINT;
 		VAR y: LONGINT;
 		BEGIN
@@ -310,10 +310,10 @@ TYPE
 		buf.Add( " 70 3E B5 66 48 03 F6 0E 61 35 57 B9 86 C1 1D 9E " );
 		buf.Add( " E1 F8 98 11 69 D9 8E 94 9B 1E 87 E9 CE 55 28 DF " );
 		buf.Add( " 8C A1 89 0D BF E6 42 68 41 99 2D 0F B0 54 BB 16 " );
-		
+
 		FOR i1 := 0 TO 255 DO
 			v1 := buf.GetInt();  v2 := f1( v1 );  v3 := xor( v2, v1 );
-			i2 := f1( i1 );  i4 := f1( i2 );  i8 := f1( i4 );  i9 := xor( i8, i1 );  
+			i2 := f1( i1 );  i4 := f1( i2 );  i8 := f1( i4 );  i9 := xor( i8, i1 );
 			ib := xor( i9, i2 );  id := xor( i9, i4 );  ie := xor( i8, xor( i4, i2 ) );
 
 			e0[i1] := S.VAL( SET32, ((v2*100H + v1)*100H + v1)*100H + v3 );
@@ -334,7 +334,7 @@ TYPE
 			t := f1( t );
 		END;
 	END Initialize;
-	
+
 
 BEGIN
 	Initialize;

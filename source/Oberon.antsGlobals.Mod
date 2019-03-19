@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
@@ -34,7 +34,7 @@ TYPE
 
 	Parameters* = POINTER TO ARRAY OF LONGREAL;
 	ParameterNames* = POINTER TO ARRAY OF ARRAY 64 OF CHAR;
-	
+
 
 	Name = ARRAY 256 OF CHAR;
 
@@ -48,8 +48,8 @@ TYPE
 VAR
 	globals, last: List;   current*: Objects.Object;
 	globalParameters*: Parameters;
-	debug*: BOOLEAN; 
-	
+	debug*: BOOLEAN;
+
 PROCEDURE ParameterHandleAttribute*(VAR M: Objects.AttrMsg;  VAR p: Parameters;  VAR pn: ParameterNames): BOOLEAN;
 	VAR cur: ARRAY 64 OF CHAR;  i: LONGINT;  len: LONGINT;
 BEGIN
@@ -121,8 +121,8 @@ BEGIN
 		ELSE current := last.object;   RETURN l.object
 		END
 	END;
-	aM.eSS("Warning: antsGlobals could not find ",name); 
-	aM.eS("Global Objects:"); 
+	aM.eSS("Warning: antsGlobals could not find ",name);
+	aM.eS("Global Objects:");
 	Dump;
 	RETURN NIL
 END Get;
@@ -155,7 +155,7 @@ PROCEDURE Dump*;
 	VAR l: List;
 BEGIN
 	l := globals;
-	DumpOne(l) 
+	DumpOne(l)
 END Dump;
 
 (*
@@ -177,8 +177,8 @@ END Test;
 
 
 BEGIN
-	debug := FALSE; 
-	aM.launch; Init; 
-	
+	debug := FALSE;
+	aM.launch; Init;
+
 END antsGlobals.
 antsGlobals.Test ~

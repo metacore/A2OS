@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
@@ -30,48 +30,48 @@ IMPORT vyLinks, antsArrayObjects, antsCommands, vyRealVec, vyBase, vyCG := vyNam
 
 TYPE
 	ConsistencyObject= OBJECT (antsHybridObjects.Object)
-	VAR in: antsArrayObjects.tINTEGERObject; 
+	VAR in: antsArrayObjects.tINTEGERObject;
 		out: vyRealVec.tChunkedMatrix;  x0, y0, w0, h0: LONGINT;
-	
+
 	PROCEDURE Update*;
 	BEGIN
-		UpdateMatrix(in,out.buf,x0, y0, w0, h0,TRUE); 
-		(* vyBase.Update(out); *) 
+		UpdateMatrix(in,out.buf,x0, y0, w0, h0,TRUE);
+		(* vyBase.Update(out); *)
 	END Update;
-	
+
 	PROCEDURE Bind*(VAR M:Objects.BindMsg);
 	BEGIN
-		BindObj(M,in); BindObj(M,out); Bind^(M); 
+		BindObj(M,in); BindObj(M,out); Bind^(M);
 	END Bind;
 
 	PROCEDURE Load*(VAR R: Files.Rider);
-	VAR obj: Objects.Object; 
+	VAR obj: Objects.Object;
 	BEGIN
-		Load^(R); 
-		Files.ReadLInt(R,x0); Files.ReadLInt(R,y0);Files.ReadLInt(R,w0); Files.ReadLInt(R,h0); 
-		Gadgets.ReadRef(R,lib,obj); IF obj # NIL THEN in := obj(antsArrayObjects.tINTEGERObject) END; 
-		Gadgets.ReadRef(R,lib,obj); IF obj # NIL THEN out := obj(vyRealVec.tChunkedMatrix) END; 
+		Load^(R);
+		Files.ReadLInt(R,x0); Files.ReadLInt(R,y0);Files.ReadLInt(R,w0); Files.ReadLInt(R,h0);
+		Gadgets.ReadRef(R,lib,obj); IF obj # NIL THEN in := obj(antsArrayObjects.tINTEGERObject) END;
+		Gadgets.ReadRef(R,lib,obj); IF obj # NIL THEN out := obj(vyRealVec.tChunkedMatrix) END;
 
 	END Load;
-	
+
 	PROCEDURE Store*(VAR R: Files.Rider);
 	BEGIN
 		Store^(R);
-		Files.WriteLInt(R,x0); Files.WriteLInt(R,y0); Files.WriteLInt(R,w0); Files.WriteLInt(R,h0); 
-		Gadgets.WriteRef(R,lib,in); Gadgets.WriteRef(R,lib,out); 
+		Files.WriteLInt(R,x0); Files.WriteLInt(R,y0); Files.WriteLInt(R,w0); Files.WriteLInt(R,h0);
+		Gadgets.WriteRef(R,lib,in); Gadgets.WriteRef(R,lib,out);
 	END Store;
 
 
-	END ConsistencyObject; 
-	
+	END ConsistencyObject;
+
 PROCEDURE GenConsistencyObject*;
-VAR c: ConsistencyObject; 
+VAR c: ConsistencyObject;
 BEGIN
-	NEW(c); Objects.NewObj := c; 
+	NEW(c); Objects.NewObj := c;
 END GenConsistencyObject;
 
 PROCEDURE UpdateMatrix(A: antsArrayObjects.tINTEGERObject;  VAR m: vyRealVec.tMatrixChunk;  x0, y0, w0, h0: LONGINT;  scaleminmax: BOOLEAN);
-	VAR min, max: LONGINT;  x, y: LONGINT; 
+	VAR min, max: LONGINT;  x, y: LONGINT;
 BEGIN
 	IF scaleminmax THEN
 		min := MAX(INTEGER);  max := MIN(INTEGER);
@@ -82,7 +82,7 @@ BEGIN
 			END
 		END;
 		IF min = max THEN max := min + 1 END
-	ELSE min := 0;  max := SHORT(A.depth) 
+	ELSE min := 0;  max := SHORT(A.depth)
 	END;
 	FOR y := y0 TO y0 + h0 - 1 DO
 		FOR x := x0 TO x0 + w0 - 1 DO
@@ -95,14 +95,14 @@ END UpdateMatrix;
 PROCEDURE MatrixFromArray (A: antsArrayObjects.tINTEGERObject;  VAR m: vyRealVec.tMatrixChunk;  x0, y0, w0, h0: LONGINT;  scaleminmax: BOOLEAN);
 BEGIN
 	m := vyRealVec.NEWMatrix (h0, w0);
-	UpdateMatrix(A,m,x0,y0,w0,h0,scaleminmax); 
+	UpdateMatrix(A,m,x0,y0,w0,h0,scaleminmax);
 END MatrixFromArray;
 
 PROCEDURE ScaleMatrix*;
 	VAR  obj: vyBase.Object;  par: LONGREAL;  y, x: LONGINT;
 BEGIN
 	antsCommands.InitScan("name=NAME scale=REAL");
-	IF antsCommands.ExpectObject("name", obj) & 
+	IF antsCommands.ExpectObject("name", obj) &
 		antsCommands.ExpectReal("scale", par) THEN
 		WITH obj: vyRealVec.tChunkedMatrix DO
 			FOR y := 0 TO obj.buf.row - 1 DO
@@ -117,17 +117,17 @@ END ScaleMatrix;
 
 PROCEDURE MatrixObjectFromArray* (A: antsArrayObjects.tINTEGERObject;  x, y, w, h: LONGINT;  scaleminmax: BOOLEAN):
 vyRealVec.tChunkedMatrix;
-	VAR m: vyRealVec.tMatrixChunk;  data: vyRealVec.tChunkedMatrix; c: ConsistencyObject; 
+	VAR m: vyRealVec.tMatrixChunk;  data: vyRealVec.tChunkedMatrix; c: ConsistencyObject;
 BEGIN
-	IF x < 0 THEN w := w+x; x := 0 END; 
-	IF y<0 THEN h := h+y; y := 0; END; 
-	IF x+w>A.w THEN w := A.w-x END; 
-	IF y+h > A.h THEN h := A.h-y END; 
+	IF x < 0 THEN w := w+x; x := 0 END;
+	IF y<0 THEN h := h+y; y := 0; END;
+	IF x+w>A.w THEN w := A.w-x END;
+	IF y+h > A.h THEN h := A.h-y END;
 	MatrixFromArray(A, m, x, y, w, h, scaleminmax);
 	data := vyRealVec.NewMatrixObject(m);
-	NEW(c); 
-	c.in := A; c.out := data; c.x0 := x; c.y0 := y; c.w0 := w; c.h0 := h; 
-	vyBase.Subscribe(c.in,c); vyBase.Subscribe(c,c.out); 
+	NEW(c);
+	c.in := A; c.out := data; c.x0 := x; c.y0 := y; c.w0 := w; c.h0 := h;
+	vyBase.Subscribe(c.in,c); vyBase.Subscribe(c,c.out);
 	RETURN data
 END MatrixObjectFromArray;
 
@@ -161,15 +161,15 @@ PROCEDURE MakeMatrixFromArray*;
 BEGIN
 	l := antsCommands.ScanFromPar("from=OBJ name=NAME [x=INT y=INT w=INT h=INT]");
 	IF
-		antsCommands.GetObjectFromKeyword(l, "from", obj) & 
+		antsCommands.GetObjectFromKeyword(l, "from", obj) &
 		antsCommands.GetNameFromKeyword(l, "name", name)
 		THEN
 		A := obj(antsArrayObjects.tINTEGERObject);
 
 		IF
-			antsCommands.GetNumberFromKeyword (l, "x", x) & 
-			antsCommands.GetNumberFromKeyword (l, "y", y) & 
-			antsCommands.GetNumberFromKeyword (l, "w", w) & 
+			antsCommands.GetNumberFromKeyword (l, "x", x) &
+			antsCommands.GetNumberFromKeyword (l, "y", y) &
+			antsCommands.GetNumberFromKeyword (l, "w", w) &
 			antsCommands.GetNumberFromKeyword (l, "h", h) THEN
 		ELSE
 			x := 0;  y := 0;  w := A.w;  h := A.h
@@ -227,8 +227,8 @@ PROCEDURE MakeVectorFromLine*;
 BEGIN
 	l := antsCommands.ScanFromPar("from=OBJ name=NAME y=INT [>vertical] ~# put content of line in <from> in new vector <name> ");
 	IF
-		antsCommands.ExpectObjectFromKeyword(l, "from", obj) & 
-		antsCommands.ExpectNameFromKeyword(l, "name", name) & 
+		antsCommands.ExpectObjectFromKeyword(l, "from", obj) &
+		antsCommands.ExpectNameFromKeyword(l, "name", name) &
 		antsCommands.ExpectNumberFromKeyword (l, "y", y)
 		THEN
 		vertical := antsCommands.FindKeyword(l, "vertical");

@@ -124,7 +124,7 @@ CONST
 	opVSUB* = 157;
 	opVABS* = 158;
 	opVABD* = 159;
-	
+
 	(* Usual shifts *)
 	opLSL* = 160;
 	opLSR* = 161;
@@ -134,7 +134,7 @@ CONST
 	opVST1* = 163;
 	opVPADD* = 164;
 	opVMOV* = 165;
-	
+
 	(* Non NEON Instructions *)
 	opSEV* = 166;
 	opDSB* = 167;
@@ -150,7 +150,7 @@ CONST
 	opUXTH* = 177;
 	opWFE* = 178;
 	opWFI* = 179;
-	
+
 	opMOVW* = 180;
 
 	NumberMnemonics*= 181;
@@ -176,7 +176,7 @@ CONST
 
 	(* Flags not used *)
 	flagCondition*= 23; flagUserMode*= 24;
-	flagBaseRegisterUpdate*= 25;	
+	flagBaseRegisterUpdate*= 25;
 
 	NumberInstructions= NumberMnemonics + 19;
 
@@ -213,7 +213,7 @@ CONST
 	encodingNEONQorDd = 44; encodingNEONQorDn = 45; encodingNEONQorDm = 46;
 	encodingNEONDorSd = 47; encodingNEONDorSn = 48; encodingNEONDorSm = 49;
 	encodingNEONDRegList = 50; encodingNEONSysReg = 51; encodingNEONSigned8bitImm = 52;
-	
+
 	encodingImm7to11 = 53;
 	encodingImm12a0imm4a16 = 54; (* immediate encoded 19...16, 11..0 *)
 
@@ -272,7 +272,7 @@ CONST
 	(* Continue at 82 to skip CPSR and SPSR *)
 	SR16*= 82; SR17*= SR0+17; SR18*= SR0+18; SR19*= SR0+19; SR20*= SR0+20; SR21*= SR0+21; SR22*= SR0+22; SR23*= SR0+23;
 	SR24*= SR0+24; SR25*= SR0+25; SR26*= SR0+26; SR27*= SR0+27; SR28*= SR0+28; SR29*= SR0+29; SR30*= SR0+30; SR31*= SR0+31;
-	
+
 	(* NEON SIMD quadword registers *)
 	QR0* = 98; QR1* = QR0 + 1; QR2* = QR0 + 2;QR3* = QR0 + 3; QR4* = QR0 + 4; QR5* = QR0 + 5; QR6* = QR0 + 6;
 	QR7* = QR0 + 7; QR8* = QR0 + 8; QR9* = QR0 + 9; QR10* = QR0 + 10; QR11* = QR0 + 11; QR12* = QR0 + 12;
@@ -493,7 +493,7 @@ CONST
 			InitOperand(instruction.operands[i]);
 		END;
 	END InitInstruction;
-	
+
 	(* generate immediate operand with fixup *)
 	PROCEDURE InitFixup*(VAR operand: Operand; bits: SHORTINT; fixup: BinaryCode.Fixup (*symbol: Sections.Section; offset, displacement: LONGINT *));
 	BEGIN
@@ -969,13 +969,13 @@ CONST
 		VAR
 			imm, rot, firstRegister, num, shiftMode, shiftImmediate: LONGINT;
 			NEONRegisterPos: ARRAY 5 OF INTEGER;
-			
+
 			PROCEDURE Fixup(from, to: LONGINT);
 			VAR patterns: ObjectFile.FixupPatterns; displacement: LONGINT; mode: SHORTINT;
 			BEGIN
 				NEW(patterns, 1);
 				patterns[0].offset := from; patterns[0].bits := to-from+1;
-				
+
 				(*ASSERT(format.mnemonic = opBL); currently only implemented for this case *)
 				(*
 				IF (opBL <= instructionFormat.mnemonic) & (instructionFormat.mnemonic <= opBF) THEN
@@ -987,7 +987,7 @@ CONST
 					mode := BinaryCode.Relative;
 					displacement := operand.fixup.displacement;
 				END;
-					
+
 				(*
 				ELSE
 					mode := BinaryCode.Absolute;
@@ -996,7 +996,7 @@ CONST
 				*)
 				operand.fixup.InitFixup(mode, 0, operand.fixup.symbol, operand.fixup.symbolOffset, displacement, -2, patterns);
 			END Fixup;
-			
+
 		BEGIN
 			CASE operandEncoding OF
 				|None: error :=  operand.mode # None;
@@ -1420,13 +1420,13 @@ CONST
 						D.String("Register list too long");
 						error := TRUE
 					END
-				
+
 				|encodingNEONSysReg:
 					IF operand.mode # modeRegister THEN error := TRUE
 					ELSIF operand.shiftMode # None THEN error := TRUE
 					ELSIF (operand.register < FPSID) & (operand.register > FPEXC) THEN error := TRUE
 					END;
-					
+
 					CASE operand.register OF
 						(* FPSID - 0b0; FPSCR - 0b1; FPEXC - 0b1000 at bits 19:16 *)
 						 FPSCR: INCL(codeSet, 16)
@@ -1465,12 +1465,12 @@ CONST
 					codeSet := codeSet + format.Unsigned
 				END
 			END;
-			
+
 			(* Set the Float bit *)
 			IF flagNEONFloat IN instruction.flags THEN
 				codeSet := codeSet + format.Float
 			END;
-			
+
 			(* Set the Q bit *)
 			FOR i := 0 TO MaxOperands - 1 DO
 				CASE format.operands[i] OF
@@ -1832,7 +1832,7 @@ CONST
 	VAR
 		encoding: LONGINT;
 		(*decoded: Instruction;*)
-		
+
 		PROCEDURE PatchFixup(op: Operand);
 		BEGIN
 			IF op.fixup # NIL THEN
@@ -1845,7 +1845,7 @@ CONST
 		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(instruction.operands)-1 DO
-				PatchFixup(instruction.operands[i]);				
+				PatchFixup(instruction.operands[i]);
 			END;
 		END PatchFixups;
 
@@ -1857,7 +1857,7 @@ CONST
 		END;
 		IF ~Encode(instruction, encoding) THEN RETURN FALSE END;
 		PatchFixups();
-		
+
 		(*
 		IF (code.comments # NIL) THEN
 			IF ~Decode(encoding, decoded) THEN HALT(100) END;
@@ -1988,7 +1988,7 @@ CONST
 			END;
 			(* Only allow 32 elements wide formats *)
 			ASSERT(count = 32);
-			
+
 			(* DEBUG *)
 			(*D.String("Parsing results:"); D.Ln;
 			D.String("    "); D.String(format); D.Ln;
@@ -2599,7 +2599,7 @@ CONST
 		EnterInstruction(opTST, {20, 24}, {20..24, 26, 27}, {flagCondition}, encodingR16, encodingAddressingMode1, None, None, None, None);
 		EnterInstruction(opUMLAL, {4, 7, 21, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
 		EnterInstruction(opUMULL, {4, 7, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
-		
+
 		EnterNEONInstruction(opMOVW,	"XXXX 0011 0000 XXXX XXXX XXXX XXXX XXXX",{flagCondition}, encodingR12, encodingImm12a0imm4a16, None, None, None, None);
 		EnterNEONInstruction(opLDM, 	"XXXX 100X X101 XXXX 0XXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
 		EnterNEONInstruction(opSTM, 	"XXXX 100X X100 XXXX XXXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
@@ -2880,7 +2880,7 @@ CONST
 						(* LDR? ..., [PC, #...] or STR? ..., [PC, #...] *)
 						ASSERT(instruction.operands[1].mode = modeMemory);
 						IF (instruction.operands[1].register = PC) & (instruction.operands[1].offsetRegister = None) THEN
-							IF Decrement IN instruction.operands[1].indexing THEN 
+							IF Decrement IN instruction.operands[1].indexing THEN
 								value := -instruction.operands[1].offsetImmediate + adr + 8;
 							ELSE
 								value := instruction.operands[1].offsetImmediate + adr + 8;

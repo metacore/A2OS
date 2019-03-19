@@ -21,46 +21,46 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
- 
-(* -----bluebottle module -------*) 
-(* implementation of HUGEINT is quick and dirty, only used for one demonstrational issue (antsRandom), 
-when MathH available use MathH instead *) 
+
+(* -----bluebottle module -------*)
+(* implementation of HUGEINT is quick and dirty, only used for one demonstrational issue (antsRandom),
+when MathH available use MathH instead *)
 
 IMPORT Display,Objects,Strings,vyHost,Gadgets,antsCommandInvoker,Oberon, Modules, SYSTEM,
 Attributes,ListRiders,Desktops,vyPortability,Out,Kernel,AosModules := Modules IN A2, Machine IN A2;
-TYPE 
-	display* = ANY; 
+TYPE
+	display* = ANY;
 	dialog*= POINTER TO RECORD (Objects.ObjDesc)
 		context*: ANY;
 		cmd*: ARRAY 64 OF CHAR;
 		time: LONGINT;
-		filter : ARRAY 256 OF CHAR; 
-	END; 
+		filter : ARRAY 256 OF CHAR;
+	END;
 	storeFileDialog* = POINTER TO RECORD (dialog)
 		name*: ARRAY 256 OF CHAR;
-	END; 
+	END;
 	openFileDialog*= POINTER TO RECORD (dialog)
-		name*: ARRAY 257 OF CHAR; 
-	END; 
+		name*: ARRAY 257 OF CHAR;
+	END;
 	Type*= vyPortability.Type;
 	FileEnum*  = PROCEDURE (path, name: ARRAY OF CHAR;              time, date, size: LONGINT;              attrs: SET);
-	
-	Hugeint*= HUGEINT; 
-	
-VAR dialogtime: LONGINT; (* to prevent from execution of old "forgotten" dialogs, we do not force the user to close open dialogs, do a warning ? *) 
-thed: dialog; 
- PathChar*: CHAR; 
- ONE* :HUGEINT; 
- 
+
+	Hugeint*= HUGEINT;
+
+VAR dialogtime: LONGINT; (* to prevent from execution of old "forgotten" dialogs, we do not force the user to close open dialogs, do a warning ? *)
+thed: dialog;
+ PathChar*: CHAR;
+ ONE* :HUGEINT;
+
 PROCEDURE SetMousePointDisplay*;
-(* do nothing, there is only one display in Native Oberon *) 
+(* do nothing, there is only one display in Native Oberon *)
 END SetMousePointDisplay;
 
 PROCEDURE GetCurrentDisplay*(): display;
 BEGIN
-	RETURN NIL; 
+	RETURN NIL;
 END GetCurrentDisplay;
 
 PROCEDURE SetCurrentDisplay*(d: display);
@@ -68,108 +68,108 @@ END SetCurrentDisplay;
 
 PROCEDURE Desktop*(): display;
 BEGIN
-	RETURN NIL; 
+	RETURN NIL;
 END Desktop;
 
 PROCEDURE EmptyFilter*(d: dialog);
 BEGIN
-	d.filter := ""; 
+	d.filter := "";
 END EmptyFilter;
 
 PROCEDURE AddFilter*(d: dialog; filtername,filter: ARRAY OF CHAR);
 BEGIN
-	 Strings.Append(d.filter,";"); Strings.Append(d.filter,filter); 
+	 Strings.Append(d.filter,";"); Strings.Append(d.filter,filter);
 END AddFilter;
 
 PROCEDURE FilterName(d: dialog; VAR pos: LONGINT; VAR name: ARRAY OF CHAR ): BOOLEAN;
 VAR i: LONGINT;
 BEGIN
-	IF d.filter[pos] = 0X THEN RETURN FALSE END; 
-	i := pos; 
+	IF d.filter[pos] = 0X THEN RETURN FALSE END;
+	i := pos;
 	LOOP
-		name[i-pos] := d.filter[i]; 
+		name[i-pos] := d.filter[i];
 		IF (d.filter[i] = ";") THEN name[i-pos] := 0X; pos := i+1;  RETURN TRUE
 		ELSIF d.filter[i] = 0X THEN pos := i; RETURN TRUE
 		ELSIF i = LEN(d.filter) THEN RETURN FALSE
-		END; 
-		INC(i); 
-	END; 
+		END;
+		INC(i);
+	END;
 END FilterName;
 
 
 PROCEDURE InitDialog*;
-VAR context,obj: Objects.Object; C: ListRiders.ConnectMsg;R: ListRiders.Rider; pos: LONGINT; d: ListRiders.String; s: ARRAY 64 OF CHAR; 
+VAR context,obj: Objects.Object; C: ListRiders.ConnectMsg;R: ListRiders.Rider; pos: LONGINT; d: ListRiders.String; s: ARRAY 64 OF CHAR;
 BEGIN
-	IF thed = NIL THEN RETURN END; 
-	NEW(d); 
-	context := antsCommandInvoker.context; 
-	IF context # NIL THEN 
-		WITH context: Gadgets.Frame DO 
-			dialogtime := Oberon.Time(); thed.time := dialogtime; 
+	IF thed = NIL THEN RETURN END;
+	NEW(d);
+	context := antsCommandInvoker.context;
+	IF context # NIL THEN
+		WITH context: Gadgets.Frame DO
+			dialogtime := Oberon.Time(); thed.time := dialogtime;
 			Attributes.SetInt(context,"dialogtime",dialogtime);
-			obj := Gadgets.FindObj(context,"BasicButton"); 
-			IF obj # NIL THEN 
-						IF thed IS openFileDialog THEN 
-						WITH thed: openFileDialog DO Attributes.SetString( obj, "Caption", "Open" );  
-						END;  
-					ELSIF thed IS storeFileDialog THEN 
-						WITH thed: storeFileDialog DO Attributes.SetString( obj, "Caption", "Store" );  
-						END;  
-					END;  
-				Gadgets.Update(obj); 
-			END;  
-			obj := Gadgets.FindObj(context,"Filter"); 
-			IF obj # NIL THEN  
+			obj := Gadgets.FindObj(context,"BasicButton");
+			IF obj # NIL THEN
+						IF thed IS openFileDialog THEN
+						WITH thed: openFileDialog DO Attributes.SetString( obj, "Caption", "Open" );
+						END;
+					ELSIF thed IS storeFileDialog THEN
+						WITH thed: storeFileDialog DO Attributes.SetString( obj, "Caption", "Store" );
+						END;
+					END;
+				Gadgets.Update(obj);
+			END;
+			obj := Gadgets.FindObj(context,"Filter");
+			IF obj # NIL THEN
 				C.R := NIL; Objects.Stamp(C); obj.handle(obj, C);
 				IF C.R # NIL THEN
 					R := C.R;
 					WHILE ~R.eol DO R.do.DeleteLink(NIL, R) END;
 					R.do.Set(R, 0);
-					pos := 0; 
+					pos := 0;
 					WHILE (FilterName(thed,pos,s)) DO
-						IF s # "" THEN 
-						NEW(d); COPY(s,d.s); 
-						R.do.Write(R, d);  
-						END; 
-					END; 
+						IF s # "" THEN
+						NEW(d); COPY(s,d.s);
+						R.do.Write(R, d);
+						END;
+					END;
 					Gadgets.Update(obj);
-				END; 
-			END; 
-		END; 
-	END; 
+				END;
+			END;
+		END;
+	END;
 END InitDialog;
 
 PROCEDURE ExecuteDialog*;
-VAR context,fileobj: Objects.Object; time: LONGINT; filestring: ARRAY 256 OF CHAR; res: INTEGER; 
+VAR context,fileobj: Objects.Object; time: LONGINT; filestring: ARRAY 256 OF CHAR; res: INTEGER;
 BEGIN
-	 context := Gadgets.context; 
-	 Attributes.GetInt(context,"dialogtime",time); 
-	 IF time = dialogtime THEN 
-	 	fileobj := Gadgets.FindObj(context,"File"); 
-	 	IF fileobj # NIL THEN 
+	 context := Gadgets.context;
+	 Attributes.GetInt(context,"dialogtime",time);
+	 IF time = dialogtime THEN
+	 	fileobj := Gadgets.FindObj(context,"File");
+	 	IF fileobj # NIL THEN
 	 		Attributes.GetString(fileobj,"Value",filestring);
-	 				IF thed IS openFileDialog THEN 
-					WITH thed: openFileDialog DO COPY( filestring, thed.name );  
-					END;  
-				ELSIF thed IS storeFileDialog THEN 
-					WITH thed: storeFileDialog DO COPY( filestring, thed.name );  
-					END;  
-				END;  
-	 		Desktops.CloseDoc; 
-	 		vyHost.CallWString(thed.cmd,"",FALSE,res);   
-	 	END; 
+	 				IF thed IS openFileDialog THEN
+					WITH thed: openFileDialog DO COPY( filestring, thed.name );
+					END;
+				ELSIF thed IS storeFileDialog THEN
+					WITH thed: storeFileDialog DO COPY( filestring, thed.name );
+					END;
+				END;
+	 		Desktops.CloseDoc;
+	 		vyHost.CallWString(thed.cmd,"",FALSE,res);
+	 	END;
 	 ELSE
-	 	fileobj := Gadgets.FindObj(context,"outoftime"); 
-	 	IF fileobj # NIL THEN Attributes.SetInt(fileobj,"Color",0) END; 
-	 	Out.String("Sorry, this dialog is out of time"); Out.Ln; 
-	 END; 
+	 	fileobj := Gadgets.FindObj(context,"outoftime");
+	 	IF fileobj # NIL THEN Attributes.SetInt(fileobj,"Color",0) END;
+	 	Out.String("Sorry, this dialog is out of time"); Out.Ln;
+	 END;
 END ExecuteDialog;
 
 
 PROCEDURE ShowDialog*(d: dialog);
 VAR res: INTEGER;
 BEGIN
-	thed := d; 
+	thed := d;
 	 vyHost.CallWString("Desktops.OpenDoc","antsFiles.Panel",FALSE,res);
 END ShowDialog;
 
@@ -194,7 +194,7 @@ BEGIN RETURN AosModules.ThisType(m,name)
 END TypesThis;
 
 PROCEDURE TypesTypeOf*(p: ANY): Type;
-BEGIN RETURN vyPortability.TypeOf(p) 
+BEGIN RETURN vyPortability.TypeOf(p)
 END TypesTypeOf;
 
 PROCEDURE TypesLevelOf*(t: Type): INTEGER;
@@ -225,42 +225,42 @@ VAR notyetimplemented: BOOLEAN;
 BEGIN notyetimplemented := TRUE; HALT(100);
 END EnumerateFiles;
 
-	PROCEDURE HIToLR*( h: HUGEINT ): LONGREAL;  
-	BEGIN 
+	PROCEDURE HIToLR*( h: HUGEINT ): LONGREAL;
+	BEGIN
 		RETURN h;
 		(*
-		RETURN 1.0D0 * h.low + 1.0D0 * h.hi * MAX( LONGINT );  
-		*) 
-	END HIToLR;  
-	PROCEDURE LRToHI*( l: LONGREAL ): HUGEINT;  
-	VAR h: HUGEINT;  
-	BEGIN 
-		RETURN ENTIER(l); 
-		(*
-		h.hi := ENTIER( l / MAX( LONGINT ) );  h.low := ENTIER( l - 1.0D0 * h.hi * MAX( LONGINT ) + 0.5 );  RETURN h;  
+		RETURN 1.0D0 * h.low + 1.0D0 * h.hi * MAX( LONGINT );
 		*)
-	END LRToHI;  
-	PROCEDURE LIToHI*( l: LONGINT ): HUGEINT;  
-	VAR h: HUGEINT;  
-	BEGIN 
+	END HIToLR;
+	PROCEDURE LRToHI*( l: LONGREAL ): HUGEINT;
+	VAR h: HUGEINT;
+	BEGIN
+		RETURN ENTIER(l);
+		(*
+		h.hi := ENTIER( l / MAX( LONGINT ) );  h.low := ENTIER( l - 1.0D0 * h.hi * MAX( LONGINT ) + 0.5 );  RETURN h;
+		*)
+	END LRToHI;
+	PROCEDURE LIToHI*( l: LONGINT ): HUGEINT;
+	VAR h: HUGEINT;
+	BEGIN
 		RETURN l;
 		(*
-		h.hi := 0;  h.low := l;  RETURN h;  
-		*) 
-	END LIToHI;  
+		h.hi := 0;  h.low := l;  RETURN h;
+		*)
+	END LIToHI;
 
 PROCEDURE Modulus*(x,y: HUGEINT): HUGEINT;
-VAR xr,yr,mod: LONGREAL; 
+VAR xr,yr,mod: LONGREAL;
 BEGIN
-	xr := HIToLR(x); 
-	yr := HIToLR(y); 
+	xr := HIToLR(x);
+	yr := HIToLR(y);
 	mod := xr- ENTIER(xr / yr)*yr;
-	RETURN LRToHI(mod);  
+	RETURN LRToHI(mod);
 END Modulus;
 
 PROCEDURE Multiply*(x,y: HUGEINT): HUGEINT;
 BEGIN
-	RETURN LRToHI(HIToLR(x)*HIToLR(y)); 
+	RETURN LRToHI(HIToLR(x)*HIToLR(y));
 END Multiply;
 
 PROCEDURE Add*(x,y: HUGEINT): HUGEINT;
@@ -268,63 +268,63 @@ BEGIN
 	RETURN LRToHI(HIToLR(x)+HIToLR(y));
 END Add;
 
-	PROCEDURE Equal*( x, y: HUGEINT ): BOOLEAN;  
-	BEGIN 
-		RETURN x=y; 
+	PROCEDURE Equal*( x, y: HUGEINT ): BOOLEAN;
+	BEGIN
+		RETURN x=y;
 		(*
-			IF x.low # y.low THEN RETURN FALSE END;  
-		IF x.hi # y.hi THEN RETURN FALSE END;  
-		RETURN TRUE;  
-		*) 
-	END Equal;  
+			IF x.low # y.low THEN RETURN FALSE END;
+		IF x.hi # y.hi THEN RETURN FALSE END;
+		RETURN TRUE;
+		*)
+	END Equal;
 
 (*
 PROCEDURE Test*;
-VAR l: LONGREAL; h: HUGEINT; 
+VAR l: LONGREAL; h: HUGEINT;
 BEGIN
-	l := 1.2345D13; 
-	aM.SR("l = ",l);  
-	h := LRToHI(l); 
-	aM.SISI("l.low",h.low,"l.hi",h.hi); 
-	l := HIToLR(h); 
-	aM.SR("l = ",l); 
+	l := 1.2345D13;
+	aM.SR("l = ",l);
+	h := LRToHI(l);
+	aM.SISI("l.low",h.low,"l.hi",h.hi);
+	l := HIToLR(h);
+	aM.SR("l = ",l);
 END Test;
 *)
 
-(*! use AOSModules.Module *) 
+(*! use AOSModules.Module *)
 
 PROCEDURE IdentifyCommand*(m: Modules.Module; pc: LONGINT; VAR pname: ARRAY OF CHAR);
 (* not failsafe, especially not if no command called *)
-VAR codeadr,adr,maxadr,i: LONGINT; cname: ARRAY 256 OF CHAR; 
+VAR codeadr,adr,maxadr,i: LONGINT; cname: ARRAY 256 OF CHAR;
 BEGIN
-	COPY("",pname); 
-	IF (m # NIL) & (LEN(m.command)>0) THEN 
-	cname := ""; COPY(m.name,pname); 
+	COPY("",pname);
+	IF (m # NIL) & (LEN(m.command)>0) THEN
+	cname := ""; COPY(m.name,pname);
 	i := 0; codeadr := ADDRESSOF(m.code[0]);
-	maxadr := 0; 
+	maxadr := 0;
 	WHILE(i<LEN(m.command))  DO
    	adr := SYSTEM.VAL(LONGINT,m.command[i].entryAdr)-codeadr;
 
-   	IF (adr < pc) & (adr > maxadr) THEN 
-   		maxadr := adr;  
-       	COPY(m.command[i].name,cname); 
-       END; 
-   	INC(i); 
+   	IF (adr < pc) & (adr > maxadr) THEN
+   		maxadr := adr;
+       	COPY(m.command[i].name,cname);
+       END;
+   	INC(i);
     END;
-	Strings.Append(pname,"."); Strings.Append(pname,cname); 
-    END; 
+	Strings.Append(pname,"."); Strings.Append(pname,cname);
+    END;
  END IdentifyCommand;
 
 
 PROCEDURE IdentifyCaller*(VAR m: Modules.Module; VAR pc: LONGINT);
-(* note: proc works correct only, if caller has been a command *) 
-VAR ebp, eip: LONGINT; i,adr: LONGINT; 
+(* note: proc works correct only, if caller has been a command *)
+VAR ebp, eip: LONGINT; i,adr: LONGINT;
 BEGIN
   ebp := SYSTEM.GetFramePointer();
   SYSTEM.GET(ebp, ebp);  (* stack frame of caller *)
   SYSTEM.GET(ebp+4, eip);  (* return address from caller *)
   m := AosModules.ThisModuleByAdr(eip);
-  IF m # NIL THEN	
+  IF m # NIL THEN
     pc := eip - ADDRESSOF(m.code[0]);
   ELSE
     pc := MAX(LONGINT);
@@ -343,9 +343,9 @@ END FileDirSameName;
 
 PROCEDURE FileDirRelFileName*(fileName: ARRAY OF CHAR; VAR relFileName: ARRAY OF CHAR);
 BEGIN
-	COPY(fileName,relFileName); 
+	COPY(fileName,relFileName);
 END FileDirRelFileName;
 
-BEGIN PathChar := "/"; NEW(thed);  ONE := 1; Out.String("antsPortability: bluebottle version launched"); Out.Ln; 
+BEGIN PathChar := "/"; NEW(thed);  ONE := 1; Out.String("antsPortability: bluebottle version launched"); Out.Ln;
 END antsPortability.
 antsPortability.Test ~

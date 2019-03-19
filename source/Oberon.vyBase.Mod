@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* changed ad hoc. Mpp needs adjustment  gs 17.4.00 *)
@@ -62,7 +62,7 @@ IMPORT SYSTEM, Oberon, Texts, Files, vyLinks, vyOOPT := OPT,  Objects, Display,
 	(***** Iddentification and Version Maintenance *)
 CONST
 	(* may be maintained or changed by tools.  *)
-	idversion* = 
+	idversion* =
 
 	"vy0.0a5";       	(* Used as magic token for Voyager files. Must be 7 chars. *)
 
@@ -1211,7 +1211,7 @@ BEGIN
 			WITH o:Link DO
 			Gadgets.objecthandle(obj,M)
 			END; *)
-		(* ELSE Gadgets.objecthandle(obj, M)*) 
+		(* ELSE Gadgets.objecthandle(obj, M)*)
 		END
 	ELSE
 		IF obj IS Gadgets.Object THEN
@@ -1346,7 +1346,7 @@ BEGIN
 			ELSE Gadgets.framehandle(obj, M)
 			END
 		(* ELSE
-			Gadgets.framehandle(obj, M)*) 
+			Gadgets.framehandle(obj, M)*)
 		END
 	ELSE
 		IF obj IS Gadgets.Frame THEN
@@ -1570,7 +1570,7 @@ BEGIN
 		ELSE
 			RETURN v.Layout(tArray).lens[dim]
 		END
-		END 
+		END
 	ELSE RETURN 0
 	END
 END Len;
@@ -1645,7 +1645,7 @@ PROCEDURE GC* (count: LONGINT;       v: tData;       pos: LONGINT);
 	(*! interface to be specified *)
 	VAR oldchunk, chunk:  tBuf;
 BEGIN
-	IF v IS tVector THEN 
+	IF v IS tVector THEN
 	WITH v:  tVector DO
 		ASSERT((v.buf # NIL) , 100);
 		WHILE (v.buf # NIL) & (v.buf( tBuf).usedentries = 0) DO v.buf := v.buf( tBuf).next END;
@@ -1655,7 +1655,7 @@ BEGIN
 			IF chunk.usedentries = 0 THEN oldchunk.next := chunk.next ELSE oldchunk := oldchunk.next END;
 			chunk := chunk.next
 		END
-	END; 
+	END;
 	END
 END GC;
 

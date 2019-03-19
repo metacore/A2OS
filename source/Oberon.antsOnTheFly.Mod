@@ -20,12 +20,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
 
-IMPORT vyHost, vyHostTexts, Texts, Modules, (* Compiler, *)  Oberon, vyHostStrings, Files, 
+IMPORT vyHost, vyHostTexts, Texts, Modules, (* Compiler, *)  Oberon, vyHostStrings, Files,
 Objects, (* OPS,*)  aM := antsMessages,Builder,Display, antsTexts,PC,AosModules := Modules IN A2;
 
 	VAR debug*: BOOLEAN;
@@ -34,7 +34,7 @@ TYPE
 	Function1d* = PROCEDURE{DELEGATE} (x: LONGREAL): LONGREAL;
 	FunctionXd* = PROCEDURE{DELEGATE} (x: ARRAY OF LONGREAL): LONGREAL;
 
-CONST 
+CONST
 	standardModule = "antsOnTheFlyMod.Text";
 
 VAR
@@ -44,13 +44,13 @@ VAR
 
 PROCEDURE Module (source: Texts.Text;   opt: ARRAY OF CHAR;    log: Texts.Text;   VAR error: BOOLEAN);
 BEGIN
-	(* 
+	(*
 	OPS.Init;
-	*) 
-	PC.CompileText(source,"",0,NIL,opt,NIL,error); 
-	(* 
+	*)
+	PC.CompileText(source,"",0,NIL,opt,NIL,error);
+	(*
 	Compiler.Module(source, "", opt, 0, log, error)
-	*) 
+	*)
 END Module;
 
 
@@ -148,25 +148,25 @@ BEGIN
 	IF p = NIL THEN vyHostTexts.Note(vyHostTexts.cAlert, "Error: Procedure SetFunction1d does not exist");    RETURN FALSE END;
 	p;
 	COPY(function, f1dName);
-	
+
 	COPY(ModuleName,mn);
 	vyHostStrings.Append(mn, ".Obj");
-	F := Files.Old(mn); 
-	IF F=NIL THEN 
+	F := Files.Old(mn);
+	IF F=NIL THEN
 	COPY(ModuleName,mn);
 	vyHostStrings.Append(mn, ".Obx");
 	F := Files.Old(mn);
-	END; 
-	IF F=NIL THEN 
+	END;
+	IF F=NIL THEN
 	COPY(ModuleName,mn);
 	vyHostStrings.Append(mn, ".Obw");
 	F := Files.Old(mn);
-	END; 
-	IF F=NIL THEN 
+	END;
+	IF F=NIL THEN
 	COPY(ModuleName,mn);
 	vyHostStrings.Append(mn, AosModules.extension[0]);
 	F := Files.Old(mn);
-	END; 
+	END;
 
 	IF F # NIL THEN
 		Files.GetName(F, name);
@@ -238,13 +238,13 @@ BEGIN
 	COPY(function, fXdName);
 	COPY(ModuleName,mn);
 	vyHostStrings.Append(mn, ".Obj");
-	F := Files.Old(mn); 
-	IF F=NIL THEN 
+	F := Files.Old(mn);
+	IF F=NIL THEN
 	COPY(ModuleName,mn);
 	vyHostStrings.Append(mn, ".Obx");
 	F := Files.Old(mn);
 	END;
-	IF F=NIL THEN 
+	IF F=NIL THEN
 	COPY(ModuleName,mn);
 	vyHostStrings.Append(mn, ".Obw");
 	F := Files.Old(mn);
@@ -373,9 +373,9 @@ BEGIN
 		l := 0;  WHILE (l # c) & (marked[l] < pos) DO INC(l) END;
 		k := c;  WHILE k # l DO marked[k] := marked[k-1];  DEC(k) END;
 		marked[l] := pos;
-		IF (pos+l-offset >=0) & (pos+l-offset<len) THEN 
+		IF (pos+l-offset >=0) & (pos+l-offset<len) THEN
 		MarkErrorPos(errtext, pos + l-offset, err); INC(c);
-		END; 
+		END;
 		IF beg < 0 THEN
 			beg := pos+l
 		END;
@@ -388,85 +388,85 @@ BEGIN
 END markErrors;
 
 PROCEDURE GetModuleName*(VAR modName: ARRAY OF CHAR);
-VAR  T: Builder.Tree; 
+VAR  T: Builder.Tree;
 BEGIN
-	Builder.AddModule(T,modName,""); 
-	COPY(T.list.name,modName); 
+	Builder.AddModule(T,modName,"");
+	COPY(T.list.name,modName);
 END GetModuleName;
 
 
 PROCEDURE CompileText*(t: Texts.Text; inModule,cmd: ARRAY OF CHAR; begpat,endpat: ARRAY OF CHAR): BOOLEAN;
-VAR  buf: Texts.Buffer; T: Texts.Text; pos: LONGINT; source: Texts.Reader; fbeg: LONGINT; error: BOOLEAN; 
-S1: Texts.Scanner; m: Modules.Module; p: Modules.Command;name,mn: ARRAY 256 OF CHAR; F: Files.File; res: INTEGER; 
-BEGIN		
-	aM.dS("enterCompileText"); 
+VAR  buf: Texts.Buffer; T: Texts.Text; pos: LONGINT; source: Texts.Reader; fbeg: LONGINT; error: BOOLEAN;
+S1: Texts.Scanner; m: Modules.Module; p: Modules.Command;name,mn: ARRAY 256 OF CHAR; F: Files.File; res: INTEGER;
+BEGIN
+	aM.dS("enterCompileText");
 	RemoveErrors(t);
-	NEW(buf); Texts.OpenBuf(buf); 
+	NEW(buf); Texts.OpenBuf(buf);
 	Texts.Save(t,0,t.len,buf);
-	NEW(T); Texts.Open(T,inModule); 
-	IF ~antsTexts.ReplaceTextPart(T,begpat,endpat,buf,pos) THEN aM.eS("antsOnTheFly: Could not replace"); RETURN FALSE END; 
-	Texts.OpenReader(source,T,0); 
+	NEW(T); Texts.Open(T,inModule);
+	IF ~antsTexts.ReplaceTextPart(T,begpat,endpat,buf,pos) THEN aM.eS("antsOnTheFly: Could not replace"); RETURN FALSE END;
+	Texts.OpenReader(source,T,0);
 	fbeg := Oberon.Log.len;
-	Module(T,"\s2",Oberon.Log,error); 
-	(* 
+	Module(T,"\s2",Oberon.Log,error);
+	(*
 	OPS.Init;
 	Compiler.Module(source, "", "\s2", MAX(LONGINT), Oberon.Log, error);
-	*) 
+	*)
 	IF error THEN
 		Texts.OpenScanner(S1, Oberon.Log, fbeg); Texts.Scan(S1);
 		(* markErrors(S1, ct, NIL,0,ct.len); *)
 		markErrors(S1, t, NIL,pos,t.len);
 		RETURN FALSE;
 	ELSE
-		GetModuleName(inModule); 
-		aM.dSS("modulename=",inModule); 
-		Modules.Free(inModule,FALSE); 
-		m := Modules.ThisMod(inModule); 
-		IF m = NIL THEN RETURN FALSE END; 
-		aM.dSc(m#NIL,"m exists"); 
-		IF (m#NIL) & (cmd#"") THEN 
-			p := Modules.ThisCommand(m, cmd); 
-			IF p#NIL THEN 
-				aM.dSS("executing ",cmd); p 
-			ELSE 
-				aM.eSS("does not exist",cmd); 
-				RETURN FALSE; 
-			END 
-		END; 
-		
+		GetModuleName(inModule);
+		aM.dSS("modulename=",inModule);
+		Modules.Free(inModule,FALSE);
+		m := Modules.ThisMod(inModule);
+		IF m = NIL THEN RETURN FALSE END;
+		aM.dSc(m#NIL,"m exists");
+		IF (m#NIL) & (cmd#"") THEN
+			p := Modules.ThisCommand(m, cmd);
+			IF p#NIL THEN
+				aM.dSS("executing ",cmd); p
+			ELSE
+				aM.eSS("does not exist",cmd);
+				RETURN FALSE;
+			END
+		END;
+
 	COPY(inModule,mn);
 	vyHostStrings.Append(mn, ".Obj");
-	F := Files.Old(mn); 
-	
-	IF F=NIL THEN 
+	F := Files.Old(mn);
+
+	IF F=NIL THEN
 	COPY(inModule,mn);
 	vyHostStrings.Append(mn, ".Obx");
 	F := Files.Old(mn);
-	END; 
-	
-	IF F=NIL THEN 
+	END;
+
+	IF F=NIL THEN
 	COPY(inModule,mn);
 	vyHostStrings.Append(mn, ".Obw");
 	F := Files.Old(mn);
-	END; 
+	END;
 
 	IF F # NIL THEN
 		Files.GetName(F, name);
 		Files.Delete(name, res);
-		IF res # 0 THEN vyHostTexts.NoteSS(vyHostTexts.cAlert, "File could not be deleted: ", name) 
+		IF res # 0 THEN vyHostTexts.NoteSS(vyHostTexts.cAlert, "File could not be deleted: ", name)
 		ELSE
-			aM.dSS("deleted: ",name); 
+			aM.dSS("deleted: ",name);
 		END
 	ELSE
 		vyHostTexts.NoteSS(vyHostTexts.cAlert, "File could not be deleted: ", inModule)
 	END;
 
-	END; 
-	RETURN TRUE; 
+	END;
+	RETURN TRUE;
 END CompileText;
 
 
-BEGIN aM.launch; debug := FALSE; Texts.OpenWriter(W); 
+BEGIN aM.launch; debug := FALSE; Texts.OpenWriter(W);
 END antsOnTheFly.
 
 antsOnTheFly.Test ~

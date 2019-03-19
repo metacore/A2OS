@@ -442,7 +442,7 @@ TYPE
 			IF TraceFile IN Trace THEN KernelLog.String( "Init: " );  KernelLog.String( name );  KernelLog.String( " (" );  KernelLog.Int( key, 1 );  KernelLog.String( ")" );  KernelLog.Ln;  END;
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
 			IF hfile # Kernel32.InvalidHandleValue THEN
-				ASSERT(Kernel32.GetFileSizeEx(hfile, fsize) # Kernel32.False); 
+				ASSERT(Kernel32.GetFileSizeEx(hfile, fsize) # Kernel32.False);
 				s := Kernel32.GetFileAttributes( name );
 				IF Kernel32.FileAttributeTemporary IN s THEN EXCL( s, Kernel32.FileAttributeTemporary );  res := Kernel32.SetFileAttributes( name, s );  ASSERT( res # 0 );  s := Kernel32.GetFileAttributes( name ) END;
 				flags := FileFlags( s )
@@ -1254,9 +1254,9 @@ VAR
 	VAR name: FileName; done: BOOLEAN;
 	BEGIN
 		IF context.arg.GetString(name) THEN
-			ChangeDirectory(name, done); 
-			IF ~done THEN 
-				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln; 
+			ChangeDirectory(name, done);
+			IF ~done THEN
+				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln;
 			END
 		END;
 	END SetWorkPath;

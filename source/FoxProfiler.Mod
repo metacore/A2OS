@@ -364,7 +364,7 @@ VAR
 		EnterProcedure(0,0);
 		ExitProcedure(0,0);
 	END CalibrateProc;
-	
+
 
 	PROCEDURE Calibrate;
 	VAR cal: LONGINT; i: SIZE; process: Process;
@@ -377,7 +377,7 @@ VAR
 		process := GetProcess();
 		FOR i := 1 TO 1000 DO
 			CalibrateProc();
-		END;		
+		END;
 	END Calibrate;
 
 	PROCEDURE Init;

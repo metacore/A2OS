@@ -214,7 +214,7 @@ TYPE
 		VAR
 			ch: CHAR;
 			currentIndex : LONGINT;
-			
+
 
 			PROCEDURE IsAsciiCharacter(ch : CHAR) : BOOLEAN;
 			BEGIN
@@ -260,8 +260,8 @@ TYPE
 
 
 						IF ((ch = CR) OR (ch = LF)) OR (ch = Streams.EOT) OR (context.in.res # Streams.Ok) THEN
-							IF seenCR = 0X THEN seenCR := ch 
-							ELSIF seenCR = ch THEN 
+							IF seenCR = 0X THEN seenCR := ch
+							ELSIF seenCR = ch THEN
 								EXIT
 							ELSE (* ignore *)
 							END;
@@ -372,7 +372,7 @@ TYPE
 						(*	IF runner # NIL THEN AosActive.TerminateThis(runner); END; *)
 						ELSIF (ch = EscapeChar1) THEN (* Escape sequence *)
 							IF context.in.Peek() = EscapeChar2 THEN ch := context.in.Get(); HandleEscapeSequence;
-							ELSIF context.in.Peek() = 
+							ELSIF context.in.Peek() =
 							ELSIF context.in.Peek() = 0DX THEN (* command *)
 								ch := context.in.Get();
 								INC(currentIndex); command[currentIndex] := ch;
@@ -724,8 +724,8 @@ TYPE
 		END Execute;
 		*)
 
-		TYPE 
-		
+		TYPE
+
 	StringType = POINTER TO ARRAY OF CHAR;
 	Reader* = OBJECT (Streams.Reader)
 	VAR length : LONGINT;
@@ -766,23 +766,23 @@ TYPE
 				INC(ofs); DEC(length); INC(len); DEC(size);
 			END;
 			rofs := pos;
-			IF ofs < size THEN 
+			IF ofs < size THEN
 				buf[ofs] := 0X; (* safety / trace *)
 			END;
 		END Receive;
 
 	END Reader;
-		
+
 		PROCEDURE Run;
 		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT; interpreter: Interpreter.Interpreter; s: Scanner.StringMaker; w: Streams.Writer; r: Streams.Reader;
-			scanner: Scanner.Scanner; parser: Interpreter.Parser; 
-			
+			scanner: Scanner.Scanner; parser: Interpreter.Parser;
+
 			diagnostics: Diagnostics.StreamDiagnostics; seq: SyntaxTree.StatementSequence;
 			str: Scanner.StringType; len: LONGINT; container: Interpreter.Container; scope: Interpreter.Scope; e: SyntaxTree.Expression; value: Interpreter.Value;
-			reader: Reader; 
-			
+			reader: Reader;
+
 			runner: OBJECT
-			VAR 
+			VAR
 			r: Streams.Reader;
 			scanner: Scanner.Scanner; parser: Interpreter.Parser;
 			stm: SyntaxTree.Statement;
@@ -790,7 +790,7 @@ TYPE
 			seq: SyntaxTree.StatementSequence;
 			expression: SyntaxTree.Expression;
 			interpreter: Interpreter.Interpreter;
-			container: Interpreter.Container; scope: Interpreter.Scope; 
+			container: Interpreter.Container; scope: Interpreter.Scope;
 			context: Commands.Context;
 			value: Interpreter.Value;
 			first: BOOLEAN;
@@ -800,7 +800,7 @@ TYPE
 					 SELF.r := r; diagnostics := diag; SELF.r := r;
 					 context := ctxt;
 				END Init;
-				
+
 			BEGIN{ACTIVE}
 				first := TRUE;
 				ASSERT(diagnostics # NIL);
@@ -809,9 +809,9 @@ TYPE
 				context.out.Update;
 				scanner := Scanner.NewScanner("", r, 0, diagnostics);
 				scanner.SetCase(Scanner.Lowercase);
-				NEW(parser, scanner, diagnostics, ""); (* silent *) 
+				NEW(parser, scanner, diagnostics, ""); (* silent *)
 				parser.SetLax;
-				
+
 				NEW(container);
 				NEW(scope, Interpreter.global, container);
 				NEW(interpreter, scope, diagnostics, context);
@@ -829,7 +829,7 @@ TYPE
 					context.out.Ln;
 					context.out.String(">");
 					context.out.Update;
-					WHILE parser.Optional(Scanner.Escape)  DO 
+					WHILE parser.Optional(Scanner.Escape)  DO
 					END;
 				ELSIF parser.Statement(seq, NIL) THEN
 					first := TRUE;
@@ -840,12 +840,12 @@ TYPE
 					context.out.String(">");
 					context.out.Update;
 					IF interpreter.error THEN interpreter.Reset END;
-					WHILE parser.Optional(Scanner.Escape) OR parser.Optional(Scanner.Semicolon) DO 
+					WHILE parser.Optional(Scanner.Escape) OR parser.Optional(Scanner.Semicolon) DO
 						(*TRACE(parser.Token());*)
 					END;
 					IF interpreter.error THEN interpreter.Reset END;
 				ELSE
-					IF ~parser.error & first THEN 
+					IF ~parser.error & first THEN
 						diagnostics.Error("",Streams.Invalid, "no statement");
 						first := FALSE;
 						context.out.Ln;
@@ -857,9 +857,9 @@ TYPE
 					(*NEW(scanner, "",r, 0, diagnostics);
 					NEW(parser, scanner, diagnostics, ""); (* silent *)*)
 				END;
-				
+
 				END;
-			END; 
+			END;
 		BEGIN
 			NEW(s,0);
 			w := s.GetWriter();
@@ -872,8 +872,8 @@ TYPE
 			NEW(reader, 1024);
 			(*NEW(w, reader.Add,1024);*)
 			NEW(runner, reader, diagnostics, context);
-			
-			
+
+
 			(*seq := parser.StatementSequence(NIL);*)
 			WHILE ~close & ~exit & (context.in.res = Streams.Ok) DO
 				s.Clear;
@@ -883,10 +883,10 @@ TYPE
 				*)
 				str := s.GetString(len);
 				reader.Add(str^,0,len,TRUE,res);
-				
-				
-				
-				
+
+
+
+
 				(*
 				NEW(scanner, "", s.GetReader(), 0, diagnostics);
 				NEW(parser, scanner, NIL); (* silent *)
@@ -968,14 +968,14 @@ TYPE
 		IF (upcall # NIL) THEN upcall(ExitShell); END;
 		BEGIN {EXCLUSIVE} dead := TRUE; END;
 	END Shell;
-	
+
 	PROCEDURE Start*(context: Commands.Context);
 	VAR shell: Shell;
 	BEGIN
 		NEW(shell, context.in, context.out, context.error, FALSE, ">");
 		shell.AwaitDeath()
 	END Start;
-	
+
 
 END InterpreterShell.
 

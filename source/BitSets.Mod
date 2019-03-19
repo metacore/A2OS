@@ -74,7 +74,7 @@ TYPE BitSet* = OBJECT
 			END;
 		END;
 	END SetBits;
-	
+
 	PROCEDURE SetBytes*(startPos, bytes: SIZE; CONST values: ARRAY OF CHAR);
 	VAR adr: ADDRESS;
 	BEGIN

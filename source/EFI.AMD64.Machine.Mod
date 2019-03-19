@@ -300,7 +300,7 @@ VAR
 
 	chs: ARRAY MaxDisks OF RECORD cyls, hds, spt: LONGINT END;
 	initRegs0, initRegs1: HUGEINT;
-	fbadr*, fbInfoPtr*: ADDRESS; 
+	fbadr*, fbInfoPtr*: ADDRESS;
 	initRegs: ARRAY 2 OF HUGEINT;	(* kernel parameters *)
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 	bootFlag: ADDRESS;
@@ -1531,7 +1531,7 @@ BEGIN
 	ASSERT((virtAdr MOD PS = 0) & (size MOD PS = 0));
 	TRACE(virtAdr, phys, size);
 	WHILE size # 0 DO
-		
+
 		IF ~ODD(MappedPage(virtAdr)) THEN
 			IF ~MapPage(virtAdr, phys) THEN RETURN FALSE END;
 		END;
@@ -1910,12 +1910,12 @@ heapEndAdr := 0;
 	NewPage(kernelPML4); ASSERT(kernelPML4 # NilAdr);
 	Fill32(kernelPML4, TPS, PageNotPresent);
 	IF ~MapDirect(LowAdr, memTop-LowAdr, LowAdr + UserPage) THEN HALT(99) END;	(* map heap direct *)
-	
+
 (*	IF ~MapDirect(fbadr, PS*1024*1, fbadr + UserPage) THEN  (* map frame buffer  direct *)
 		Trace.String("map direct failed at fbadr"); Trace.Address(fbadr); Trace.Ln;
 	ELSE
 		Trace.String("fbuffer mapped"); Trace.Address(fbadr); Trace.Ln;
-	END; 
+	END;
 *)
 END InitPages;
 
@@ -2599,7 +2599,7 @@ entry:
 
 	LEA RBP, [RSP + 136]
 	MOV RBX, [RSP + 128]	; RBX = int number
-	
+
 	IMUL RBX, RBX, MaxNumHandlers
 	IMUL RBX, RBX, SizeOfHandlerRec
 	; todo: replace LEA by MOV when compiler supports this
@@ -2833,7 +2833,7 @@ CODE {SYSTEM.AMD64}
 END CurrentPC;
 
 PROCEDURE -SetRAX(n: SIZE);
-CODE{SYSTEM.AMD64}	
+CODE{SYSTEM.AMD64}
 	NOP
 	POP RAX
 END SetRAX;
@@ -3788,7 +3788,7 @@ BEGIN
 		MOV bootFlag, RAX
 		MOV initRegs0,RSI
 		MOV initRegs1, RCX
-		
+
 		MOV fbadr, RDI
 		MOV fbInfoPtr, RDX
 	END;
@@ -3801,29 +3801,29 @@ PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
 CODE{SYSTEM.AMD64}
 	; relocate the bootfile from 0x1000 to target address 0x100000
 
-	
-	
+
+
 	PUSH RAX
 	PUSH RSI
 	PUSH RDI
 
-	
+
 	MOV RSI,1000H
 	MOV RDI,100000H
 	MOV RCX, LastAddress
 	SUB RCX, RDI
-	
+
 	; CLD
 	; REP MOVSB
-	
+
 	ADD RSI, RCX
 	ADD RDI, RCX
 	STD
-	REP MOVSB 
-	
+	REP MOVSB
+
 	POP RDI
 	POP RSI
-	POP RAX	
+	POP RAX
 
 
 

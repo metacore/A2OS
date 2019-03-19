@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* 	(c) Project Voyager, StatLab Heidelberg
@@ -540,7 +540,7 @@ BEGIN
 			RETURN
 		END
 	(* ELSIF caret THEN
-		RETURN *) 
+		RETURN *)
 	ELSE
 		OFR := NIL;   OT := Oberon.Log;   OPos := Oberon.Log.len;   RETURN
 	END
@@ -554,7 +554,7 @@ BEGIN
 		Cmsg.id := Oberon.set;    Cmsg.car := OutFrame;   Cmsg.text := OutText;    Cmsg.F := OutFrame ;   Cmsg.pos := OutPos;   Cmsg.res := - 1;
 		Display.Broadcast(Cmsg)
 	END;
-	IF OutText = NIL THEN OutText := Oberon.Log END; 
+	IF OutText = NIL THEN OutText := Oberon.Log END;
 	newPos := OutPos + B.len;
 	Texts.Insert(OutText, OutPos, B);
 	IF OutFrame # NIL THEN

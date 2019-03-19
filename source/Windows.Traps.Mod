@@ -22,7 +22,7 @@ VAR
 	VAR  overflow: BOOLEAN;
 		desc: ARRAY 128 OF CHAR;
 		code: LONGINT;
-		pc: ADDRESS; 
+		pc: ADDRESS;
 		w: Streams.Writer;
 
 		(* Write flag values. *)
@@ -128,8 +128,8 @@ VAR
 			w.Int( int.CS MOD 4, 2 );  w.Char( " " );  GetDescription();
 			w.String( desc );  	w.Ln;		w.Update;
 
-			w.String( "System: " );  w.String( Machine.version ); 
-			w.String(" Kernel_CRC="); w.Hex(SystemVersion.BootCRC,8); 
+			w.String( "System: " );  w.String( Machine.version );
+			w.String(" Kernel_CRC="); w.Hex(SystemVersion.BootCRC,8);
 			w.String(" Uptime="); w.Hex(Machine.GetTimer()- Machine.boottime, 8);
 			IF long THEN
 				w.Char( 0EX );   (* "fixed font" *)
@@ -138,7 +138,7 @@ VAR
 				(* output values *)
 				Val( "CS", int.CS );  Val( "DS", int.DS );  Val( "ES", int.ES );  Val( "SS", int.SS );
 
-				Val( "PC", int.PC );  
+				Val( "PC", int.PC );
 				#IF I386 THEN
 					Val( "ESI", int.RSI );  Val( "EDI", int.RDI );  Val( "ESP", int.SP );
 					Val( "PID", p.id ); Val( "EAX", int.RA );  Val( "EBX", int.RB );  Val( "ECX", int.RC );  Val( "EDX", int.RD );
@@ -191,7 +191,7 @@ VAR
 		END;
 		RETURN fp;
 	END CheckBP;
-	
+
 
 	(**  Handles an exception. Interrupts are on during this procedure. *)
 	PROCEDURE HandleException( VAR int: Kernel32.Context;  VAR exc: Kernel32.ExceptionRecord;  VAR handled: BOOLEAN );
@@ -200,7 +200,7 @@ VAR
 		fp := int.BP;  sp := int.SP;  pc := int.PC;  handler := Modules.GetExceptionHandler( pc );
 		IF handler # -1 THEN  (* Handler in the current PAF *)
 			int.PC := handler;  handled := TRUE;  SetTrapVariable( pc, fp );  SetLastExceptionState( int )
-		ELSE			
+		ELSE
 			WHILE (fp # 0) & (handler = -1) DO
 				fp := CheckBP(fp);
 				SYSTEM.GET( fp + SIZEOF(ADDRESS), pc );
@@ -265,7 +265,7 @@ VAR
 					SYSTEM.PUT( ebpSave + SIZEOF(ADDRESS), handler );   (* Adapt the return pc *)
 					SYSTEM.PUT( ebpSave, ebp );   (* Adapt the dynamic link *)
 					ebpSave := checkedBP;
-				ELSE 
+				ELSE
 					int.PC := handler;  int.BP := ebp;  ebpSave := checkedBP;  hasFinally := TRUE;
 				END;
 				SetTrapVariable( pc, ebp )
@@ -337,7 +337,7 @@ VAR
 		END;
 
 		IF TestTrap & (s[0] = "2") THEN HALT( 99 ) END;
-		Objects.InstallExceptionHandler( Exception );  
+		Objects.InstallExceptionHandler( Exception );
 	END Init;
 
 	PROCEDURE Install*; (* for loading this module *)

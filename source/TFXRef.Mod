@@ -50,19 +50,19 @@ TYPE
 		END Grow;
 
 	END LocalExternalUsesSet;
-	
+
 	StringList = POINTER TO ARRAY OF Strings.String;
 	GlobalUse = OBJECT
 	VAR
 		items : StringList;
 		nofItems : LONGINT;
-		
+
 		PROCEDURE &Init;
 		BEGIN
 			NEW(items, 16);
 			nofItems := 0;
 		END Init;
-		
+
 		PROCEDURE AddFile(CONST filename : ARRAY OF CHAR);
 		BEGIN
 			IF nofItems = LEN(items) THEN Grow END;
@@ -80,7 +80,7 @@ TYPE
 			END;
 			items := temp
 		END Grow;
-		
+
 	END GlobalUse;
 
 VAR
@@ -353,9 +353,9 @@ BEGIN
 							END
 						ELSE
 							KernelLog.String("Expressionlist ist NIL"); KernelLog.Ln
-						END						
+						END
 					END
-				ELSE 
+				ELSE
 				END
 			ELSE
 				(* not found... fallback *)
@@ -547,14 +547,14 @@ BEGIN
 			IF Strings.Pos("PURPOSE", cur.str^) >= 0 THEN
 				NEW(r, LEN(cur.str^));
 				r.Set(cur.str^);
-				
+
 				WHILE r.res # Streams.EOF DO
 					r.SkipWhitespace;
 					r.Token(token);
 					r.SkipWhitespace;
 					IF token = "AUTHOR" THEN
 						r.String(currentAuthor);
-						KernelLog.String("currentAuthor= "); KernelLog.String(currentAuthor); KernelLog.Ln; 
+						KernelLog.String("currentAuthor= "); KernelLog.String(currentAuthor); KernelLog.Ln;
 					ELSIF token = "PURPOSE" THEN
 						r.String(currentPurpose);
 						KernelLog.String("currentPurpose= "); KernelLog.String(currentPurpose); KernelLog.Ln;
@@ -818,7 +818,7 @@ BEGIN
 		currentAuthor := "";
 		currentPurpose := "";
 		GenerateModule(module, r, fw);
-		IF (indexFile # NIL) THEN 
+		IF (indexFile # NIL) THEN
 			indexFile.String('<tr><td><a href="'); indexFile.String(name); indexFile.String('.html">');
 			indexFile.String(module.name^); indexFile.String('</a></td><td>');
 			indexFile.String(currentPurpose); indexFile.String('</td><td>');
@@ -887,7 +887,7 @@ BEGIN
 	KernelLog.String("Processing ... "); KernelLog.Ln;
 	f := Files.New("xref/index.html");
 	Files.OpenWriter(indexFileWriter, f, 0);
-	
+
 	indexFileWriter.String("<html><table>"); indexFileWriter.Ln;
 	WHILE e.HasMoreEntries() DO
 		IF e.GetEntry(name, flags, time, date, size) THEN

@@ -1012,7 +1012,7 @@ TYPE
 			PROCEDURE Spillable(ticket: Ticket; best:BOOLEAN): BOOLEAN;
 			BEGIN
 				RETURN
-					~ticket.spilled & ticket.spillable & (ticket.register # None) 
+					~ticket.spilled & ticket.spillable & (ticket.register # None)
 					& ((ticket.type.form = IntermediateCode.Float) = (type.form = IntermediateCode.Float)) (* don't spill float when int is needed *)
 					& (~best OR (ticket.type.sizeInBits = type.sizeInBits))
 					& (~physicalRegisters.Reserved(ticket.register))

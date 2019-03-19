@@ -11,8 +11,8 @@ PROCEDURE GetProcesses*(VAR array : ProcessArray; VAR nofProcesses : LONGINT);
 VAR
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock {UNTRACED}: Heaps.HeapBlock;
-	process: Objects.Process; 
-	(* otherwise dead process can be traced after leaving the saved block 
+	process: Objects.Process;
+	(* otherwise dead process can be traced after leaving the saved block
 		Lazy-Sweep might become active
 	*)
 	blockAdr, tag : ADDRESS;
@@ -21,9 +21,9 @@ BEGIN
 	length := LEN(array); nofProcesses := 0;
 	FOR i := 0 TO i-1 DO array[i] := NIL; END;
 	Machine.Acquire(Machine.Heaps);
-	
+
 	Heaps.FullSweep; (* this is strictly required because when the sweep phase has not yet finished, heap blocks might be free *)
-	
+
 	memBlock := Machine.memBlockHead;
 	WHILE (memBlock # NIL) DO
 		blockAdr := memBlock.beginBlockAdr;
@@ -58,9 +58,9 @@ BEGIN
 	i := 0;
 	process := NIL;
 	Machine.Acquire(Machine.Heaps);
-	
+
 	Heaps.FullSweep; (* this is strictly required because when the sweep phase has not yet finished, heap blocks might be free *)
-	
+
 	memBlock := Machine.memBlockHead;
 	WHILE (memBlock # NIL) & (process = NIL) DO
 		blockAdr := memBlock.beginBlockAdr;

@@ -50,14 +50,14 @@ TYPE
 
 
 	PROCEDURE GetDHPrime( CONST name: ARRAY OF CHAR;  VAR p, g: B.BigNumber );
-	VAR 
-		buf: ARRAY 1048 OF CHAR; 
+	VAR
+		buf: ARRAY 1048 OF CHAR;
 		pos: LONGINT;
 
 		PROCEDURE Append( CONST val: ARRAY OF CHAR );
 		VAR i: LONGINT;  c: CHAR;
 		BEGIN
-			FOR i := 0 TO LEN( val ) - 1 DO  
+			FOR i := 0 TO LEN( val ) - 1 DO
 				c := val[i];
 				IF c > ' ' THEN  buf[pos] := c;  INC( pos )  END
 			END;

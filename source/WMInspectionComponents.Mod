@@ -2142,7 +2142,7 @@ TYPE
 			ASSERT(component # NIL);
 			NEW(init, WMProperties.NewBoolean(), Strings.NewString("Initialized"), Strings.NewString("component is initialized (readonly field). Required for proper function. "));
 			init.Set(component.initialized);
-			componentView.SetProperty(init, res); 
+			componentView.SetProperty(init, res);
 			componentView.initializedView.Disable; (*! currently readonly. tbd: allow modification by inspector *)
 			nofElements := 0;
 			propertyArray := component.properties.Enumerate();
@@ -2873,7 +2873,7 @@ TYPE
 		BEGIN
 			Init^;
 			SetNameAsString(Strings.NewString("Attributes"));
-			
+
 			NEW(controlPanel); controlPanel.alignment.Set(WMComponents.AlignTop);
 			controlPanel.bounds.SetHeight(LineHeight);
 			controlPanel.bearing.Set(WMRectangles.MakeRect(LineBearing, LineBearing, LineBearing, LineBearing));

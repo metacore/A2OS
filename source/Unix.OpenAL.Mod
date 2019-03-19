@@ -633,8 +633,8 @@ alcGetIntegerv -: PROCEDURE { C } ( device : ALCdevice; param : ALCenum; size : 
 
 (* Capture functions *)
 (*! alcCaptureOpenDevice-:  PROCEDURE { C } (CONST devicename: ARRAY OF CHAR; frequency: ALCuint; format: ALCenum; buffersize: ALCsizei): ALCdevice; *)
-alcCaptureOpenDeviceXXX-:  PROCEDURE { C } (devicename: ADDRESS; 
-										frequency: ALCuint; format: ALCenum; buffersize: ALCsizei): ALCdevice; 
+alcCaptureOpenDeviceXXX-:  PROCEDURE { C } (devicename: ADDRESS;
+										frequency: ALCuint; format: ALCenum; buffersize: ALCsizei): ALCdevice;
 
 
 
@@ -792,8 +792,8 @@ BEGIN
 	RETURN dev
 END alcOpenDevice;
 
-PROCEDURE alcCaptureOpenDevice*( CONST deviceName: ARRAY OF CHAR; 
-								frequency: ALCuint; format: ALCenum; buffersize: ALCsizei): ALCdevice; 
+PROCEDURE alcCaptureOpenDevice*( CONST deviceName: ARRAY OF CHAR;
+								frequency: ALCuint; format: ALCenum; buffersize: ALCsizei): ALCdevice;
 VAR dev: ALCdevice;
 BEGIN
 	dev := alcCaptureOpenDeviceXXX( ADDRESSOF( deviceName[0] ), frequency, format, buffersize );

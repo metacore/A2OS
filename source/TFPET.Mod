@@ -1985,7 +1985,7 @@ TYPE
 				END;
 			END
 		END StoreHandler;
-		
+
 		PROCEDURE CompleteHandler(sender, data : ANY);
 		BEGIN
 			IF currentPage.tree IS TFModuleTrees.ModuleTree THEN

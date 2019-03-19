@@ -428,11 +428,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END EnqueueWaiting;
 
 PROCEDURE  ReturnToStackSegment*;
-VAR 
+VAR
 	stackFrame {UNTRACED}: BaseTypes.StackFrame;
-	currentActivity {UNTRACED}: Activity; 
+	currentActivity {UNTRACED}: Activity;
 	newStack {UNTRACED}: Stack;
-	stackRecord {UNTRACED}: StackRecord; 
+	stackRecord {UNTRACED}: StackRecord;
 BEGIN{UNCOOPERATIVE, UNCHECKED}
 	(* old stack pointer and base pointer have been pushed again, we have to revert this *)
 	stackFrame := SYSTEM.GetFramePointer();
@@ -460,24 +460,24 @@ END ReturnToStackSegment0;
 
 (** Expands the stack memory of the current activity to include the specified stack address and returns the new stack pointer to be set after the call. *)
 PROCEDURE ExpandStack- (address: ADDRESS; parSize: SIZE): ADDRESS;
-VAR 
-	currentActivity {UNTRACED}: Activity; 
+VAR
+	currentActivity {UNTRACED}: Activity;
 	varSize, minSize, newSize: SIZE;  sp: ADDRESS;
-	newStack {UNTRACED}: POINTER {DISPOSABLE} TO ARRAY OF CHAR; 
+	newStack {UNTRACED}: POINTER {DISPOSABLE} TO ARRAY OF CHAR;
 	stackFrame {UNTRACED}, previousFrame {UNTRACED}, newFrame {UNTRACED}: BaseTypes.StackFrame;
 	stackRecord{UNTRACED}, newStackRecord{UNTRACED}: StackRecord;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(* check for valid argument *)
 	currentActivity := SYSTEM.GetActivity ()(Activity);
-	
+
 	stackFrame := SYSTEM.GetFramePointer ();
 	previousFrame := stackFrame.previous;
 	varSize := stackFrame.previous - address;
-	
+
 	(*
 	TRACE(SYSTEM.GetFramePointer(), address, varSize, parSize, size, stackFrame.caller);
 	*)
-	ASSERT(varSize >= 0); 
+	ASSERT(varSize >= 0);
 	ASSERT(parSize >= 0);
 
 	newSize := LEN (currentActivity.stack); (* current stack size *)
@@ -486,20 +486,20 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (newSize <= MaximumStackSize);
 	stackRecord := ADDRESS OF currentActivity.stack[0];
 	newStack := stackRecord.next;
-	IF (newStack = NIL) OR (LEN(newStack) < newSize) THEN 
-		NEW (newStack, newSize); 
+	IF (newStack = NIL) OR (LEN(newStack) < newSize) THEN
+		NEW (newStack, newSize);
 		ASSERT (newStack # NIL);
 		newStackRecord := ADDRESS OF newStack[0];
 		newStackRecord.prev := currentActivity.stack;
 		newStackRecord.next := NIL;
 		stackRecord.next := newStack;
-	ELSE 
+	ELSE
 		newStackRecord := ADDRESS OF newStack[0];
 		ASSERT(newStackRecord.prev = currentActivity.stack);
 		ASSERT(stackRecord.next = newStack);
 	END;
-	newSize := LEN(newStack); 
-	newFrame := ADDRESS OF newStack[0] + newSize- parSize -  3*SIZE OF ADDRESS; 
+	newSize := LEN(newStack);
+	newFrame := ADDRESS OF newStack[0] + newSize- parSize -  3*SIZE OF ADDRESS;
 	newFrame.previous := stackFrame.previous;
 	newFrame.descriptor := previousFrame.descriptor;
 	newFrame.caller := ReturnToStackSegment0;
@@ -507,12 +507,12 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 
 	stackFrame.previous := newFrame;
 	SYSTEM.MOVE(ADDRESS OF previousFrame.caller + SIZE OF ADDRESS, ADDRESS OF newFrame.caller + SIZE OF ADDRESS, parSize); (* copy parameters *)
-		
-	sp := ADDRESSOF(newFrame.descriptor) - varSize; 
+
+	sp := ADDRESSOF(newFrame.descriptor) - varSize;
 	DISPOSE (currentActivity.stack); currentActivity.stack := newStack;
 	currentActivity.stackLimit := ADDRESS OF newStack[SafeStackSize + 3 * SIZE OF ADDRESS];
 
-	RETURN sp; 
+	RETURN sp;
 END ExpandStack;
 
 (** Returns whether the specified address corresponds to a local variable that resides on the stack of the current activity calling this procedure. *)

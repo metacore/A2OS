@@ -74,7 +74,7 @@ TYPE
 					KernelLog.Int(time MOD 60,6); time:=time DIV 60; KernelLog.String("min");
 					KernelLog.Int(time MOD 24,6); time:=time DIV 24; KernelLog.String("hh");
 					KernelLog.Int(time,7);  KernelLog.String("days since 1.1.1900");
-					KernelLog.Ln;   
+					KernelLog.Ln;
 				ELSE
 					NEW(sender, c, buf, num);
 					IF port = EchoPort THEN
@@ -82,7 +82,7 @@ TYPE
 						WHILE (res = 0) & (num > 0) DO
 							num0 := LEN(buf^) DIV 1024;
 							IF num0 > num THEN num0 := num END;
-							
+
 							c.Receive(buf^, 0, num0*1024, num0*1024, len, res);
 							DEC(num, num0)
 						END

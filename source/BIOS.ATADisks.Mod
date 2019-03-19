@@ -2253,7 +2253,7 @@ VAR idx, bus, dev, fkt: LONGINT;
 BEGIN
 	idx := 0; Dot();
 	WHILE PCI.FindPCIDevice(id, vendor, idx, bus, dev, fkt) = PCI.Done DO
-		Show("Found PCI device "); KernelLogHex(vendor, 4, 0); KernelLog.String(":"); KernelLogHex(id, 4, 0); KernelLog.Ln; 
+		Show("Found PCI device "); KernelLogHex(vendor, 4, 0); KernelLog.String(":"); KernelLogHex(id, 4, 0); KernelLog.Ln;
 		IdentifyController(bus, dev, fkt);
 		INC(idx);
 	END;
@@ -2265,7 +2265,7 @@ BEGIN
 	idx := 0; Dot();
 	WHILE PCI.FindPCIClassCode(class, idx, bus, dev, fkt) = PCI.Done DO
 		Show("Found PCI device on bus "); KernelLog.Int(bus, 0); KernelLog.String(", device "); KernelLog.Int(dev, 0);
-		KernelLog.String(", function "); KernelLog.Int(fkt, 0); KernelLog.Ln; 
+		KernelLog.String(", function "); KernelLog.Int(fkt, 0); KernelLog.Ln;
 		IdentifyController(bus, dev, fkt);
 		INC(idx);
 	END;

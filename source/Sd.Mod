@@ -317,7 +317,7 @@ CONST
 	SdStatus_PerformanceMoveOfs = 432;
 	SdStatus_PerformanceMoveWidth = 8;
 	SdStatus_SpeedClassOfs = 440;
-	SdStatus_SpeedClassWidth = 8; 
+	SdStatus_SpeedClassWidth = 8;
 	SdStatus_SizeOfProtectedAreaOfs = 448;
 	SdStatus_SizeOfProtectedAreaWidth = 32;
 	SdStatus_SdCardTypeOfs = 480;
@@ -2244,7 +2244,7 @@ TYPE
 			for a normal SD card and
 				TimeoutReadFix
 			for a SDHC card.
-		
+
 			Write timeout is very similar to read timeout, except that (CSD.TAAC + CSD.NSAC) * CSD.R2W is used.
 		*)
 		IF card.scr.version >= TypeSDHC THEN

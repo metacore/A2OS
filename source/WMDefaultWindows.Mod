@@ -216,7 +216,7 @@ TYPE
 				END;
 				RETURN r;
 			END Pow2;
-			
+
 			PROCEDURE FindNearestPow2 (value: REAL): LONGINT;
 			VAR result: LONGINT;
 			BEGIN

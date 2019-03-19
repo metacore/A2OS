@@ -103,7 +103,7 @@ TYPE
 				ErrorSS(pos,"unknown instruction ",mnemonic)
 			END
 		END Instruction;
-		
+
 		PROCEDURE GetRegister(CONST ident: ARRAY OF CHAR; VAR register: SHORTINT): BOOLEAN;
 		BEGIN
 			register := instructionSet.FindRegister(ident);
@@ -111,7 +111,7 @@ TYPE
 		END GetRegister;
 	END Assembler;
 
-	
+
 
 
 END FoxTRMAssembler.

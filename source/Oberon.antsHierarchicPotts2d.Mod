@@ -42,80 +42,80 @@ antsSecurity.Call antsHierarchicPotts2d.OnDirectory inDirectory = "katrin/fromPo
 
 IMPORT antsToolbox, antsArrayObjects, Strings := vyHostStrings, antsCommands, vyBase,vyLongrealVec,
 	Input,  Oberon,  vyLongreal, antsRegions,   antsSecurity, antsPortability,
-	antsBellman, antsArrays, antsReadWrite,  antsPlots, aM := antsMessages;  
-	
+	antsBellman, antsArrays, antsReadWrite,  antsPlots, aM := antsMessages;
+
 VAR
-	globalStat: antsBellman.Statistic;  
-	globalGamma: LONGREAL;  
-	globaly1, globaly2: LONGINT;  
-	globalRstern: antsArrays.I1d;      globalBellman: antsArrays.X1d;  
-	globalMinWeite, globalMaxWeite: LONGINT;  
-	inDirectory, outDirectory: ARRAY 256 OF CHAR;  
-	
+	globalStat: antsBellman.Statistic;
+	globalGamma: LONGREAL;
+	globaly1, globaly2: LONGINT;
+	globalRstern: antsArrays.I1d;      globalBellman: antsArrays.X1d;
+	globalMinWeite, globalMaxWeite: LONGINT;
+	inDirectory, outDirectory: ARRAY 256 OF CHAR;
+
 	(* Interaktive Routine zum Anwenden des Minimierers auf Array oder Teil davon per Mausklick *)
-PROCEDURE ApplyInteractively*;  
-VAR   		A: antsArrayObjects.tObject;            		r: antsRegions.tRegion;            		gamma: LONGREAL;  
-	w, h, minweit, maxweit, 			this, last: LONGINT;  
-	Aorig, Aorigtr, APott1, Apotttr, APott2: antsArrayObjects.tLONGREALArray;  
-	lengths: BOOLEAN;  
+PROCEDURE ApplyInteractively*;
+VAR   		A: antsArrayObjects.tObject;            		r: antsRegions.tRegion;            		gamma: LONGREAL;
+	w, h, minweit, maxweit, 			this, last: LONGINT;
+	Aorig, Aorigtr, APott1, Apotttr, APott2: antsArrayObjects.tLONGREALArray;
+	lengths: BOOLEAN;
 BEGIN
-	antsCommands.InitScan("gamma=REAL minwidth=INT maxwidth=INT");  
-	IF  antsCommands.ExpectReal( "gamma", gamma) & 
-		antsCommands.ExpectNumber( "minwidth",  minweit) & 
+	antsCommands.InitScan("gamma=REAL minwidth=INT maxwidth=INT");
+	IF  antsCommands.ExpectReal( "gamma", gamma) &
+		antsCommands.ExpectNumber( "minwidth",  minweit) &
 		antsCommands.ExpectNumber( "maxwidth",  maxweit)
-		
+
 		THEN
-	IF antsCommands.Find( "region") THEN NEW(r) ELSE r := NIL END;  
-		lengths := antsCommands.Find("lengths");  
-		A := antsRegions.InteractiveGetArray(r);  
+	IF antsCommands.Find( "region") THEN NEW(r) ELSE r := NIL END;
+		lengths := antsCommands.Find("lengths");
+		A := antsRegions.InteractiveGetArray(r);
 		IF A # NIL THEN
 			WITH A: antsArrayObjects.tINTEGERObject DO
 				IF r = NIL THEN
 					antsArrayObjects.CopyUnsignedIR(A.A, Aorig, 0, 0, A.w, A.h, 0, 0)
 				ELSE
-					IF (r.w < 2)OR (r.h < 2) THEN RETURN END;  
+					IF (r.w < 2)OR (r.h < 2) THEN RETURN END;
 					antsArrayObjects.CopyUnsignedIR(A.A, Aorig, r.x, r.y, r.w, r.h, 0, 0)
-				END;  
-				w := LEN(Aorig[0]);            		h := LEN(Aorig);  
-				
+				END;
+				w := LEN(Aorig[0]);            		h := LEN(Aorig);
+
 				(* Skalieren gamma mit Median*Median*)
-				ScaleMatrix(Aorig^, gamma);  
-				globalGamma := gamma;  
-				
+				ScaleMatrix(Aorig^, gamma);
+				globalGamma := gamma;
+
 				(* Potts2 auf Matrix Orig mit ssq und median aus Matrix mit kumulativen Summen*)
 				(* Originalbild*)
-				antsPlots.ShowArray(antsArrayObjects.IntObjR(Aorig, A.depth), "Original Data", FALSE, FALSE);  
-				
-				antsToolbox.NameOpenedWId("Original Data ", A);  
-				
-				NEW(Aorigtr, w, h);  
-				NEW(APott1, h, w);  
-				NEW(Apotttr, h, w);  
-				NEW(APott2, w, h);  
-				
-				last := Oberon.Time();  
-				
-				MatrixPottsLongreal(Aorig^, APott1^, minweit, maxweit, lengths);  
+				antsPlots.ShowArray(antsArrayObjects.IntObjR(Aorig, A.depth), "Original Data", FALSE, FALSE);
+
+				antsToolbox.NameOpenedWId("Original Data ", A);
+
+				NEW(Aorigtr, w, h);
+				NEW(APott1, h, w);
+				NEW(Apotttr, h, w);
+				NEW(APott2, w, h);
+
+				last := Oberon.Time();
+
+				MatrixPottsLongreal(Aorig^, APott1^, minweit, maxweit, lengths);
 				(* zeigt Potts2 horizontal*)
-				antsPlots.ShowArray(antsArrayObjects.IntObjR(APott1, A.depth), "Apott", TRUE, TRUE);  
-				
+				antsPlots.ShowArray(antsArrayObjects.IntObjR(APott1, A.depth), "Apott", TRUE, TRUE);
+
 				(*...auf  transponierte Matrix Aorig*)
-				Aorigtr := antsArrays.Transpose2dX(Aorig^);  
-				MatrixPottsLongreal(Aorigtr^, APott2^, minweit, maxweit, lengths);  
-				Apotttr := antsArrays.Transpose2dX(APott2^);  
-				
-				this := Oberon.Time();  
-				aM.vSR("Zeit fuer MatrixPottsLongreal (mit Cum):",(this - last) / Input.TimeUnit);   
-				
+				Aorigtr := antsArrays.Transpose2dX(Aorig^);
+				MatrixPottsLongreal(Aorigtr^, APott2^, minweit, maxweit, lengths);
+				Apotttr := antsArrays.Transpose2dX(APott2^);
+
+				this := Oberon.Time();
+				aM.vSR("Zeit fuer MatrixPottsLongreal (mit Cum):",(this - last) / Input.TimeUnit);
+
 				(* zeigt Potts2 vertikal*)
-				antsPlots.ShowArray(antsArrayObjects.IntObjR(Apotttr, A.depth), "Apott ver", TRUE, TRUE);  
-				
-				antsToolbox.NameOpenedWId("rows Potts", A);  
-				
+				antsPlots.ShowArray(antsArrayObjects.IntObjR(Apotttr, A.depth), "Apott ver", TRUE, TRUE);
+
+				antsToolbox.NameOpenedWId("rows Potts", A);
+
 				(*Summe von Potts2 horizontal und Potts2 vertikal*)
-				antsPlots.ShowArray(antsArrayObjects.IntObjR((APott1 + Apotttr) / (2), A.depth), "Apott sum", TRUE, TRUE);  
-				antsToolbox.NameOpenedWId("Sum of PottsH, PottsV of", A);  
-				
+				antsPlots.ShowArray(antsArrayObjects.IntObjR((APott1 + Apotttr) / (2), A.depth), "Apott sum", TRUE, TRUE);
+				antsToolbox.NameOpenedWId("Sum of PottsH, PottsV of", A);
+
 				(* ab hier nur für Zeitvergleich *)
 				(*
 				(* PottstatLongreal, Potts auf Matrix Aorig1 mit statistic (ssq, median)*)
@@ -148,284 +148,284 @@ BEGIN
 			END
 		END
 	END
-END ApplyInteractively;  
-	
+END ApplyInteractively;
+
 	(* Routine um Minimierer auf ganze Verzeichnisse anzuwenden *)
-PROCEDURE PottsFile (in, out: ARRAY OF CHAR;               		minWeite, maxWeite: LONGINT);  
-VAR A: antsArrayObjects.tLONGREALArray;                o: antsArrayObjects.tINTEGERObject;                AL: antsArrayObjects.tLONGINTArray;                 w, h: LONGINT;  
-	Aorigtr, APott1, Apotttr, APott2: antsArrayObjects.tLONGREALArray;                       gamma: LONGREAL;  
+PROCEDURE PottsFile (in, out: ARRAY OF CHAR;               		minWeite, maxWeite: LONGINT);
+VAR A: antsArrayObjects.tLONGREALArray;                o: antsArrayObjects.tINTEGERObject;                AL: antsArrayObjects.tLONGINTArray;                 w, h: LONGINT;
+	Aorigtr, APott1, Apotttr, APott2: antsArrayObjects.tLONGREALArray;                       gamma: LONGREAL;
 BEGIN
-	antsArrayObjects.ReadPGM(o, in);  
-	IF o = NIL THEN HALT(100) END;  
-	antsArrayObjects.CopyIR(o.A, A, 0, 0, o.w, o.h, 0, 0);  
-	
+	antsArrayObjects.ReadPGM(o, in);
+	IF o = NIL THEN HALT(100) END;
+	antsArrayObjects.CopyIR(o.A, A, 0, 0, o.w, o.h, 0, 0);
+
 	(* Potts2 berechnen (wie Testget)... *)
-	w := LEN(A[0]);            		h := LEN(A);  
-	
-	NEW(Aorigtr, w, h);  
-	NEW(APott1, h, w);  
-	NEW(Apotttr, h, w);  
-	NEW(APott2, w, h);  
-	
-	Aorigtr := antsArrays.Transpose2dX(A^);  
-	gamma := globalGamma;  
-	ScaleMatrix(A^, globalGamma);  
-	
-	MatrixPottsLongreal(A^, APott1^, minWeite, maxWeite, FALSE);  
-	MatrixPottsLongreal(Aorigtr^, APott2^,  minWeite, maxWeite, FALSE);  
-	
+	w := LEN(A[0]);            		h := LEN(A);
+
+	NEW(Aorigtr, w, h);
+	NEW(APott1, h, w);
+	NEW(Apotttr, h, w);
+	NEW(APott2, w, h);
+
+	Aorigtr := antsArrays.Transpose2dX(A^);
+	gamma := globalGamma;
+	ScaleMatrix(A^, globalGamma);
+
+	MatrixPottsLongreal(A^, APott1^, minWeite, maxWeite, FALSE);
+	MatrixPottsLongreal(Aorigtr^, APott2^,  minWeite, maxWeite, FALSE);
+
 	globalGamma := gamma;              (* rücksetzen, da nächstes File denselben Wert benutzt *)
-	
-	Apotttr :=  antsArrays.Transpose2dX(APott2^);  
-	
-	antsArrayObjects.CopyRL((APott1 + Apotttr) / (2), AL, 0, 0, o.w, o.h, 0, 0);  
+
+	Apotttr :=  antsArrays.Transpose2dX(APott2^);
+
+	antsArrayObjects.CopyRL((APott1 + Apotttr) / (2), AL, 0, 0, o.w, o.h, 0, 0);
 	IF ~antsReadWrite.StorePGM(AL, out, o.depth) THEN END;           (*speichert die Summe von Potts2 horizontal und Potts2 vertikal in out*)
-END PottsFile;  
-	
-	
-PROCEDURE FileEnum (path, name: ARRAY OF CHAR;                time, date, size: LONGINT;                attrs: SET);  
-VAR outname, outlongname: ARRAY 256 OF CHAR;  
+END PottsFile;
+
+
+PROCEDURE FileEnum (path, name: ARRAY OF CHAR;                time, date, size: LONGINT;                attrs: SET);
+VAR outname, outlongname: ARRAY 256 OF CHAR;
 BEGIN
 	(* zusammensetzen: path/name*)
-	COPY(name, outname);  
-	COPY(path, name);               Strings.Append(name, "/");  
-	Strings.Append(name, outname);  
-	outname[Strings.Length(outname) - 4] := 0X;  
+	COPY(name, outname);
+	COPY(path, name);               Strings.Append(name, "/");
+	Strings.Append(name, outname);
+	outname[Strings.Length(outname) - 4] := 0X;
 	(* zusammensetzen: outDirectory/name.Potts.PGM*)
-	Strings.Append(outname, ".Potts.PGM");  
-	COPY(outDirectory, outlongname);  
-	Strings.Append(outlongname, "/");  
-	Strings.Append(outlongname, outname);  
-	aM.SS("Applying algorithm to ",name);   
-	aM.SS(" => ",outlongname);  
-	PottsFile(name, outlongname, globalMinWeite, globalMaxWeite);  
+	Strings.Append(outname, ".Potts.PGM");
+	COPY(outDirectory, outlongname);
+	Strings.Append(outlongname, "/");
+	Strings.Append(outlongname, outname);
+	aM.SS("Applying algorithm to ",name);
+	aM.SS(" => ",outlongname);
+	PottsFile(name, outlongname, globalMinWeite, globalMaxWeite);
 	aM.S("done.")
-END FileEnum;  
-	
+END FileEnum;
+
 	(* Kommando um Minimierer auf ganze Verzeichnisse von Bildern des Typs PGM anzuwenden *)
-PROCEDURE OnDirectory*;  
-VAR       done: BOOLEAN;               path: ARRAY 256 OF CHAR;  
+PROCEDURE OnDirectory*;
+VAR       done: BOOLEAN;               path: ARRAY 256 OF CHAR;
 BEGIN
-	antsCommands.InitScan("inDirectory=STR outDirectory=STR gamma=REAL minWidth=INT maxWidth=INT");  
-	IF antsCommands.ExpectString("inDirectory", inDirectory) & 
-		antsCommands.ExpectString("outDirectory",  outDirectory) & 
-		antsCommands.ExpectReal( "gamma", globalGamma) & 
-		antsCommands.ExpectNumber( "minWidth", globalMinWeite) & 
+	antsCommands.InitScan("inDirectory=STR outDirectory=STR gamma=REAL minWidth=INT maxWidth=INT");
+	IF antsCommands.ExpectString("inDirectory", inDirectory) &
+		antsCommands.ExpectString("outDirectory",  outDirectory) &
+		antsCommands.ExpectReal( "gamma", globalGamma) &
+		antsCommands.ExpectNumber( "minWidth", globalMinWeite) &
 		antsCommands.ExpectNumber("maxWidth",  globalMaxWeite) THEN
-		antsPortability.GetWorkingDirectory(path);  
-		antsPortability.ChangeDirectory(inDirectory, done);  
-		IF ~done THEN antsSecurity.Halt("in Directory not found")        	 END;  
-		antsPortability.ChangeDirectory(path, done);  
-		antsPortability.ChangeDirectory(outDirectory, done);  
-		IF ~done THEN antsSecurity.Halt("out Directory not found") END;  
-		antsPortability.ChangeDirectory(path, done);  
+		antsPortability.GetWorkingDirectory(path);
+		antsPortability.ChangeDirectory(inDirectory, done);
+		IF ~done THEN antsSecurity.Halt("in Directory not found")        	 END;
+		antsPortability.ChangeDirectory(path, done);
+		antsPortability.ChangeDirectory(outDirectory, done);
+		IF ~done THEN antsSecurity.Halt("out Directory not found") END;
+		antsPortability.ChangeDirectory(path, done);
 		antsPortability.EnumerateFiles(inDirectory, "*.pgm", FALSE, FileEnum)
 	END
-END OnDirectory;  
-	
+END OnDirectory;
+
 	(* gamma + ssq (aus statistic)*)
-PROCEDURE Function1d (from, to: LONGINT): LONGREAL;  
+PROCEDURE Function1d (from, to: LONGINT): LONGREAL;
 BEGIN
 	RETURN globalStat.s[from, to] + globalGamma
-END Function1d;  
-	
+END Function1d;
+
 	(* gamma + ssq (aus Matrix der kumulativen Summen)*)
-PROCEDURE CumFunction (from, to: LONGINT): LONGREAL;  
+PROCEDURE CumFunction (from, to: LONGINT): LONGREAL;
 BEGIN
 	RETURN globalGamma + antsBellman.GetSsq2d(globalStat, from, globaly1, to, globaly2)
-END CumFunction;  
-	
-PROCEDURE MatrixFunction (from, to: LONGINT): LONGREAL;  
+END CumFunction;
+
+PROCEDURE MatrixFunction (from, to: LONGINT): LONGREAL;
 BEGIN
-	globaly1 := from;            		globaly2 := to;  
-	antsSecurity.SetProgress(SHORT(ENTIER(to / globalStat.N * 100)));  
-	
+	globaly1 := from;            		globaly2 := to;
+	antsSecurity.SetProgress(SHORT(ENTIER(to / globalStat.N * 100)));
+
 	antsBellman.Bellman(globalRstern, globalBellman, SHORT(LEN(globalStat.m[0])) - 1, 0, MAX(LONGINT), CumFunction, - globalGamma);                (*  frage: setzen wir hier nicht lieber auch minweite und maxweite ein ? *)
 	RETURN globalBellman[LEN(globalStat.m[0]) - 1] (* fof 020709, -1 -> -2 *)
-END MatrixFunction;  
-	
-PROCEDURE CumFunction2 (from, to: LONGINT): LONGREAL;  
+END MatrixFunction;
+
+PROCEDURE CumFunction2 (from, to: LONGINT): LONGREAL;
 BEGIN
 	RETURN globalGamma * (globaly2 - globaly1 + 1) + antsBellman.GetSsq2d(globalStat, from, globaly1, to, globaly2)
-END CumFunction2;  
-	
-PROCEDURE MatrixFunction2 (from, to: LONGINT): LONGREAL;  
+END CumFunction2;
+
+PROCEDURE MatrixFunction2 (from, to: LONGINT): LONGREAL;
 BEGIN
-	globaly1 := from;            		globaly2 := to;  
-	antsSecurity.SetProgress(SHORT(ENTIER(to / LEN(globalStat.m) * 100)));  
-	
+	globaly1 := from;            		globaly2 := to;
+	antsSecurity.SetProgress(SHORT(ENTIER(to / LEN(globalStat.m) * 100)));
+
 	antsBellman.Bellman(globalRstern, globalBellman, SHORT(LEN(globalStat.m[0])) - 1, 0, MAX(LONGINT), CumFunction2, - globalGamma);                (*  frage: setzen wir hier nicht lieber auch minweite und maxweite ein ? *)
 	RETURN globalBellman[LEN(globalStat.m[0]) - 1] + globalGamma * LEN(globalStat.m[0])
-END MatrixFunction2;  
-	
-PROCEDURE statMean (k1, k2: LONGINT): LONGREAL;  
+END MatrixFunction2;
+
+PROCEDURE statMean (k1, k2: LONGINT): LONGREAL;
 BEGIN RETURN globalStat.m[k1, k2]
-END statMean;  
-	
+END statMean;
+
 	(* Berechnen der besten Partition fuer Matrix mit Mittelwert aus den kumulativen Summen*)
-PROCEDURE CumWritePartition* (s: antsBellman.Statistic;         VAR   Parti: ARRAY OF ARRAY OF LONGREAL;                   		rstern: antsArrays.I1d;                   		y1, y2: LONGINT);                      VAR k, next, y: LONGINT;                   		mean: LONGREAL;  
+PROCEDURE CumWritePartition* (s: antsBellman.Statistic;         VAR   Parti: ARRAY OF ARRAY OF LONGREAL;                   		rstern: antsArrays.I1d;                   		y1, y2: LONGINT);                      VAR k, next, y: LONGINT;                   		mean: LONGREAL;
 BEGIN
 	k := LEN(s.m[0]) - 1;          (* fof 020709 *)
 	WHILE(k > 0) DO
-		next := rstern[k];  
+		next := rstern[k];
 		mean := antsBellman.GetMean2d(s, next, y1, k - 1, y2);                    (*Mittelwert aus der Matrix der kumulativen Summen*)
 		FOR y := y1 TO y2 DO
 			vyLongreal.Fill(k - next, Parti[y], next, mean)
-		END;  
+		END;
 		k := next
 	END
-END CumWritePartition;  
-	
-PROCEDURE MatrixWritePartition* (s: antsBellman.Statistic;         VAR Parti: ARRAY OF ARRAY OF LONGREAL;            		rstern: antsArrays.I1d);  
-VAR k, next: LONGINT;                   		bellmanneu: antsArrays.X1d;                   		rsternneu : antsArrays.I1d;  
+END CumWritePartition;
+
+PROCEDURE MatrixWritePartition* (s: antsBellman.Statistic;         VAR Parti: ARRAY OF ARRAY OF LONGREAL;            		rstern: antsArrays.I1d);
+VAR k, next: LONGINT;                   		bellmanneu: antsArrays.X1d;                   		rsternneu : antsArrays.I1d;
 BEGIN
-	k := LEN(s.m) - 1;  
+	k := LEN(s.m) - 1;
 	WHILE(k > 0) DO
-		next := rstern[k];  
-		globaly1 := next;                  		globaly2 := k - 1;  
+		next := rstern[k];
+		globaly1 := next;                  		globaly2 := k - 1;
 		(* fuer jedes Intervall der besten zeilenweise Partition nochmal bellmann...*)
-		antsBellman.Bellman(rsternneu, bellmanneu, LEN(s.m[0]) - 1, 0, MAX(LONGINT), CumFunction, - globalGamma);  
+		antsBellman.Bellman(rsternneu, bellmanneu, LEN(s.m[0]) - 1, 0, MAX(LONGINT), CumFunction, - globalGamma);
 		(* und die beste Partition*)
-		CumWritePartition(s, Parti, rsternneu, globaly1, globaly2);  
+		CumWritePartition(s, Parti, rsternneu, globaly1, globaly2);
 		k := next
 	END
-END MatrixWritePartition;  
-	
-	
+END MatrixWritePartition;
+
+
 	(* Skalieren von gamma  mit Min und Max von einem Vektor orig*)
-PROCEDURE Scale* (VAR orig: ARRAY OF LONGREAL;                  		VAR gamma: LONGREAL);  
-VAR max, min: LONGREAL;                  		na, minpos, maxpos: LONGINT;  
+PROCEDURE Scale* (VAR orig: ARRAY OF LONGREAL;                  		VAR gamma: LONGREAL);
+VAR max, min: LONGREAL;                  		na, minpos, maxpos: LONGINT;
 BEGIN
-	vyLongreal.MinMax(LEN(orig), orig, 0, min, minpos, max, maxpos, na);  
+	vyLongreal.MinMax(LEN(orig), orig, 0, min, minpos, max, maxpos, na);
 	gamma := gamma * (max - min) * (max - min)
-END Scale;  
-	
+END Scale;
+
 	(* Skalieren von gamma mit Median von Matrix S*)
-PROCEDURE ScaleMatrix* (VAR S: ARRAY OF ARRAY OF LONGREAL;                       VAR gamma: LONGREAL);  
-VAR   median: LONGREAL;  
+PROCEDURE ScaleMatrix* (VAR S: ARRAY OF ARRAY OF LONGREAL;                       VAR gamma: LONGREAL);
+VAR   median: LONGREAL;
 BEGIN
 	median := antsArrays.Median2dX(S);                       	(* Median von S*)
 	gamma := gamma * median * median
-END ScaleMatrix;  
-	
+END ScaleMatrix;
+
 	(* Potts auf Matrix Orig mit statistic (ssq, median)*)
-PROCEDURE PottsStatLongreal* (VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL);  
-VAR i, h, w: LONGINT;           parti: antsArrays.X1d;       		this, last: LONGINT;  
+PROCEDURE PottsStatLongreal* (VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL);
+VAR i, h, w: LONGINT;           parti: antsArrays.X1d;       		this, last: LONGINT;
 BEGIN
-	h := LEN(Orig);            		w := LEN(Orig[0]);  
+	h := LEN(Orig);            		w := LEN(Orig[0]);
 	FOR i := 0 TO h - 1 DO
 		vyLongreal.Copy(w, Orig[i], 0, Pott[i], 0)
-	END;  
-	last := Oberon.Time();  
-	
+	END;
+	last := Oberon.Time();
+
 	FOR i :=  0 TO h - 1 DO
 		(*
 		DoInitStatistic(globalStat, w);
 		UpdateStatistic(Pott[i], globalStat);
 		*)
-		antsBellman.InitStatistic1d(globalStat, w);  
-		antsBellman.ComputeMeanStat1d(Pott[i], globalStat);  
-		antsBellman.Bellman(globalRstern, globalBellman, SHORT(w), 0, MAX(LONGINT), Function1d, - globalGamma);  
+		antsBellman.InitStatistic1d(globalStat, w);
+		antsBellman.ComputeMeanStat1d(Pott[i], globalStat);
+		antsBellman.Bellman(globalRstern, globalBellman, SHORT(w), 0, MAX(LONGINT), Function1d, - globalGamma);
 		antsBellman.Partition(globalRstern, parti, statMean);      vyLongreal.Copy(LEN(parti), parti^, 0, Pott[i], 0)
 		(*
 		WritePartition(Pott[i], globalRstern, globalStat, w)
 		*)
-	END;  
-	
-	this := Oberon.Time();  
-	aM.vSR("Zeit fuer Bellmann und und WritePartition:",(this - last) / Input.TimeUnit);   
-	
-END PottsStatLongreal;  
-	
+	END;
+
+	this := Oberon.Time();
+	aM.vSR("Zeit fuer Bellmann und und WritePartition:",(this - last) / Input.TimeUnit);
+
+END PottsStatLongreal;
+
 	(* Potts2 auf Matrix Orig mit ssq und median aus Matrix mit kumulativen Summen*)
-PROCEDURE MatrixPottsLongreal* (VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL;    minweit, maxweit: LONGINT;    lengths: BOOLEAN);  
-VAR i, h, w: LONGINT;                   	  	(* 	Akum, AkumSq: antsArrayObjects.tLONGREALArray;     *)		this, last: LONGINT;  
-	Rstern: antsArrays.I1d;                Bellman: antsArrays.X1d;          s: antsBellman.Statistic;  
+PROCEDURE MatrixPottsLongreal* (VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL;    minweit, maxweit: LONGINT;    lengths: BOOLEAN);
+VAR i, h, w: LONGINT;                   	  	(* 	Akum, AkumSq: antsArrayObjects.tLONGREALArray;     *)		this, last: LONGINT;
+	Rstern: antsArrays.I1d;                Bellman: antsArrays.X1d;          s: antsBellman.Statistic;
 BEGIN
-	h := LEN(Orig);                                w := LEN(Orig[0]);  
+	h := LEN(Orig);                                w := LEN(Orig[0]);
 	FOR i := 0 TO h - 1 DO
 		vyLongreal.Copy(w, Orig[i], 0, Pott[i], 0)
-	END;  
-	
+	END;
+
 	(* Berechnen der Matrix mit kumulativen Summen (Akum) bzw. mit kumulativen Summe der Quadrate (AkumSq)*)
 	(*
 	NEW(Akum, h + 1, w + 1);
 	NEW(AkumSq, h + 1, w + 1);
 	*)
-	
-	antsBellman.ComputeMeanStat2d(Pott, s);  
+
+	antsBellman.ComputeMeanStat2d(Pott, s);
 	(*
 	CumSum(Pott, Akum^, AkumSq^);
 
 	(* globale Variablen*)
 	globalAkum := Akum;                 globalAkumSq := AkumSq;
 	*)
-	globalStat := s;  
-	
-	NEW(globalRstern, w + 1);             		NEW(globalBellman, w + 1);  
-	
-	last := Oberon.Time();  
-	
+	globalStat := s;
+
+	NEW(globalRstern, w + 1);             		NEW(globalBellman, w + 1);
+
+	last := Oberon.Time();
+
 	IF lengths THEN
 		antsBellman.Bellman(Rstern, Bellman, SHORT(h), minweit, maxweit, MatrixFunction2, - globalGamma)
 	ELSE
 		antsBellman.Bellman(Rstern, Bellman, SHORT(h), minweit, maxweit, MatrixFunction, - globalGamma)
-	END;  
-	MatrixWritePartition(globalStat, Pott, Rstern);  
-	
-	this := Oberon.Time();  
-	aM.vSR("Zeit fuer Setbellmann und MatrixWritePartition:",(this - last) / Input.TimeUnit);   
-END MatrixPottsLongreal;  
+	END;
+	MatrixWritePartition(globalStat, Pott, Rstern);
 
-PROCEDURE PottsToVec*;  
-VAR          		obj1, obj2, obj3: vyBase.Object;                  		vec1, vec2, vec3: vyLongrealVec.tVector;  
-	i, N, this, last: LONGINT;                  		rstern: antsArrays.I1d;                  		bellman, maxima, maxima2, data: antsArrays.X1d;                  		gamma: LONGREAL;  
+	this := Oberon.Time();
+	aM.vSR("Zeit fuer Setbellmann und MatrixWritePartition:",(this - last) / Input.TimeUnit);
+END MatrixPottsLongreal;
+
+PROCEDURE PottsToVec*;
+VAR          		obj1, obj2, obj3: vyBase.Object;                  		vec1, vec2, vec3: vyLongrealVec.tVector;
+	i, N, this, last: LONGINT;                  		rstern: antsArrays.I1d;                  		bellman, maxima, maxima2, data: antsArrays.X1d;                  		gamma: LONGREAL;
 BEGIN
-	antsCommands.InitScan("data=OBJ rek=OBJ gamma=REAL");  
+	antsCommands.InitScan("data=OBJ rek=OBJ gamma=REAL");
 	IF antsCommands.ExpectObject( "data",  obj1) &
 		antsCommands.ExpectObject( "rek",  obj2) &
 		antsCommands.ExpectReal( "gamma",  gamma)
 		THEN
-		last := Oberon.Time();  
-		
-		vec1 := obj1(vyLongrealVec.tVector);  
-		vec2 := obj2(vyLongrealVec.tVector);  
-		
+		last := Oberon.Time();
+
+		vec1 := obj1(vyLongrealVec.tVector);
+		vec2 := obj2(vyLongrealVec.tVector);
+
 		IF antsCommands.Find( "init") THEN
 			(* vektoren mit Eintrag 1*)
 			FOR i :=  0 TO  vyLongrealVec.Len(vec1) - 1 DO
 				vyLongrealVec.Set(1, vec1, i)
-			END;  
+			END;
 			FOR i :=  0 TO  vyLongrealVec.Len(vec2) - 1 DO
 				vyLongrealVec.Set(1, vec2, i)
 			END
-		END;  
-		
-		N := vyLongrealVec.Len(vec1);  
-		NEW(data, N);  
-		vyLongrealVec.CopyToArray(vec1, data^);  
-		
-		antsBellman.InitStatistic1d(globalStat,N);  
-		IF antsCommands.Find("median") THEN 
+		END;
+
+		N := vyLongrealVec.Len(vec1);
+		NEW(data, N);
+		vyLongrealVec.CopyToArray(vec1, data^);
+
+		antsBellman.InitStatistic1d(globalStat,N);
+		IF antsCommands.Find("median") THEN
 		antsBellman.ComputeMedianStat1d(data^,globalStat)
 		ELSE
-		antsBellman.ComputeMeanStat1d(data^,globalStat);  
-		END; 
-		globalGamma := gamma;  
-		antsBellman.Bellman(rstern, bellman, SHORT(N), 0, MAX(LONGINT), Function1d, - globalGamma);  
- 
-		antsBellman.Partition(rstern,data,statMean);  
-		
-		vyLongrealVec.SetLen(vec2, N);  
-		vyLongrealVec.CopyToVec(data^, vec2, N, 0, 0);  
-		vyBase.Update(vec1);  
-		vyBase.Update(vec2);  
+		antsBellman.ComputeMeanStat1d(data^,globalStat);
+		END;
+		globalGamma := gamma;
+		antsBellman.Bellman(rstern, bellman, SHORT(N), 0, MAX(LONGINT), Function1d, - globalGamma);
+
+		antsBellman.Partition(rstern,data,statMean);
+
+		vyLongrealVec.SetLen(vec2, N);
+		vyLongrealVec.CopyToVec(data^, vec2, N, 0, 0);
+		vyBase.Update(vec1);
+		vyBase.Update(vec2);
 	END
-END  PottsToVec;  
-	
-	
-	
-BEGIN aM.launch;  
+END  PottsToVec;
+
+
+
+BEGIN aM.launch;
 END antsHierarchicPotts2d.
 
 (* testing *)

@@ -1,12 +1,12 @@
-MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32 APIs used by Oberon"; *)	
-	
+MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32 APIs used by Oberon"; *)
+
 	IMPORT SYSTEM, Kernel32, Modules, User32,KernelLog;
 
 	CONST
 		MAXGETHOSTSTRUCT* = 1024;
-		
+
 		AFINet* = 2; PFINet* = AFINet;
-		
+
 		IPProtoIP* = 0;
 		IPProtoICMP* = 1;
 		IPProtoIGMP* = 2;
@@ -14,40 +14,40 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		IPProtoUDP* = 17;
 		IPProtoRAW* = 255;
 		InvalidSocket* = -1;
-		
-		SocketError* = -1;	
-		SockUndefined* = 0; (*may default to TCP*) 
-		SockStream* = 1; (*for TCP*) 
-		SockDGram* = 2; (*for UDP*) 
+
+		SocketError* = -1;
+		SockUndefined* = 0; (*may default to TCP*)
+		SockStream* = 1; (*for TCP*)
+		SockDGram* = 2; (*for UDP*)
 		SockRaw* = 3; (*for low-level; not allowed on newer Windows versions*)
 		SockRDM* = 4;(* reliable message datagram*)
 		SockSeqPacket* = 5; (*pseudo stream-packet*)
-		
-		
+
+
 		FDRead* = 01H; FDWrite* = 02H; FDAccept *= 08H; FDConnect* = 010H; FDClose* = 020H;
-		
+
 		WSADescriptionLen* = 256; WSASysStatusLen* = 128;
-		
+
 		WSABaseErr = 10000;
 		WSAEInProgress* = WSABaseErr+36; WSAEConnAborted* = WSABaseErr+53;
 		WSAEConnReset* = WSABaseErr+54; WSAEShutdown* = WSABaseErr+58;
 		WSAEInval* = WSABaseErr+22; WSAEWouldBlock* = WSABaseErr+35;
 		WSAENoBufs* = WSABaseErr+55;
 		WSAEConnRefused*= WSABaseErr+61;
-		
+
 		FIONRead* = 4004667FH;
-		
-		SOLSocket* = 0FFFFH; 
+
+		SOLSocket* = 0FFFFH;
 		SOMaxConn* = 07FFFFFFFH;
 		SOSndBuf* = 01001H; (** send buffer size *)
 		SORcvBuf* = 01002H; (** receive buffer size *)
 		SOSndTimeo* = 01005H; SORcvTimeo* = 01006H;
 		SIORcvAll* = LONGINT(98000001H);
-		
+
 		SDReceive*=0; SDSend*=1; SDboth* = 2; (* graceful shutdown modes *)
-		
+
 		MsgPeek* = 2;
-		
+
 	TYPE
 		TimeVal* = POINTER TO TimeValDesc;
 		TimeValDesc* = RECORD
@@ -95,7 +95,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		WSAProtocolInfo* = RECORD
 			data: ARRAY 372 OF SYSTEM.BYTE
 		END;
-		
+
 		(** The Windows Sockets hostent structure is used by functions to store information about a given host,
 			such as host name, IP address, and so forth. *)
 		LPHostent* = ADDRESS;

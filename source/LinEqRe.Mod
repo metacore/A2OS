@@ -75,4 +75,4 @@ TYPE
 		END
 	END NormalizeMatrix;
 
-END LinEqRe. 
+END LinEqRe.

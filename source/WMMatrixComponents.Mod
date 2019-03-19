@@ -79,7 +79,7 @@ TYPE
 			depthClueI := depthClue.Get();
 			CheckModel;
 		END RecacheProperties;
-		
+
 		PROCEDURE CheckModel;
 		VAR newModel : XML.Element;
 		BEGIN
@@ -92,7 +92,7 @@ TYPE
 				END;
 			END;
 		END CheckModel;
-		
+
 		PROCEDURE SetModel(model : MatrixModels.MatrixModel);
 		BEGIN
 			IF (model #  modelI) THEN
@@ -103,12 +103,12 @@ TYPE
 				Invalidate;
 			END;
 		END SetModel;
-		
+
 		PROCEDURE ModelChanged(sender, data : ANY);
 		BEGIN
 			Invalidate;
 		END ModelChanged;
-		
+
 		PROCEDURE Finalize;
 		BEGIN
 			Finalize^;

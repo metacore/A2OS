@@ -8,25 +8,25 @@ CONST
 	AlphabetSize = 256;		(* byte *)
 	BlockSize* = 8*1024;
 	ScaleLimit = 4*1024;
-	
+
 	Encode = 0;  Decode = 1;
 
-TYPE	
+TYPE
 	BitReader = OBJECT
 		VAR
 			in: Streams.Reader;
 			curByte, curBit: LONGINT;
-			
+
 			PROCEDURE &New( r: Streams.Reader );
 			BEGIN
 				in := r;  curBit := -1;  curByte := 0
 			END New;
-			
+
 			PROCEDURE Initialize;
 			BEGIN
 				curBit := -1;  curByte := 0
 			END Initialize;
-			
+
 			PROCEDURE Bit( ): LONGINT;
 			VAR
 				bit: LONGINT;  ch: CHAR;
@@ -38,21 +38,21 @@ TYPE
 				DEC( curBit );
 				RETURN bit
 			END Bit;
-	
+
 	END BitReader;
-	
+
 
 TYPE
 	BitWriter = OBJECT
 		VAR
 			out: Streams.Writer;
 			curByte, curBit: LONGINT;
-			
+
 			PROCEDURE &New( w: Streams.Writer );
 			BEGIN
 				out := w;  curBit := 0;  curByte := 0
 			END New;
-			
+
 			PROCEDURE Bit( bit: LONGINT );
 			BEGIN
 				curByte := 2*curByte + bit;
@@ -61,20 +61,20 @@ TYPE
 					out.Char( CHR( curByte ) );  curByte := 0;  curBit := 0
 				END
 			END Bit;
-		
+
 			PROCEDURE Finish;	(* flush last few bits *)
 			BEGIN
 				WHILE curBit # 0 DO  Bit( 0 )  END;
 				out.Update
 			END Finish;
-				
+
 	END BitWriter;
-	
-	
+
+
 
 
 TYPE
-	HuffmanCoder = OBJECT		
+	HuffmanCoder = OBJECT
 		TYPE
 			Index = INTEGER;		(* 16-bit integer to keep the table small *)
 			Pattern = INTEGER;
@@ -88,50 +88,50 @@ TYPE
 			mode: SHORTINT;	(* Encode, Decode *)
 			in: BitReader;		(* input from archive *)
 			out: BitWriter;	(* output to archive *)
-			
+
 			esc: Index;		(* the current escape node	*)
 			root: Index;         (* the root of the tree	*)
 			map: ARRAY AlphabetSize OF Index;			(* mapping of patterns to nodes	*)
 			table: ARRAY 2*AlphabetSize + 2 OF Node;	(* the Huffman tree	*)
-		
-		
-		
+
+
+
 		PROCEDURE &New( m: SHORTINT;  input: Streams.Reader;  output: Streams.Writer );
 		BEGIN
 			ASSERT( m IN {Encode, Decode} );
 			mode := m;
 			IF mode = Encode THEN  NEW( out, output )  ELSE  NEW( in, input )  END;
 		END New;
-		
+
 		PROCEDURE Initialize;
 		VAR  i: Index;
 		BEGIN
-			root := 2*AlphabetSize + 2 - 1; 
+			root := 2*AlphabetSize + 2 - 1;
 			FOR i := 0 TO root DO
 				table[i].up := 0;  table[i].down := 0;  table[i].pattern := 0;  table[i].weight := 0
 			END;
 			FOR i := 0 TO AlphabetSize - 1 DO  map[i]  := 0  END;
 			esc := root;
 			IF mode = Decode THEN  in.Initialize  END
-		END Initialize;		
-		
-		PROCEDURE Finish;	
+		END Initialize;
+
+		PROCEDURE Finish;
 		BEGIN
 			ASSERT( mode = Encode );
 			out.Finish  (* flush last few bits *)
-		END Finish;	
+		END Finish;
 
-		
+
 		PROCEDURE GetPattern(  ): Pattern;
 		VAR  i: INTEGER;  patt: Pattern;
 		BEGIN
-			patt := 0; 
+			patt := 0;
 			FOR i := 0 TO 7 DO
 				IF in.Bit() = 1 THEN  patt := patt + INTEGER(ASH( 1, i ))  END;
 			END;
 			RETURN patt
 		END GetPattern;
-		
+
 		PROCEDURE PutPattern( patt: Pattern );
 		VAR i: LONGINT;
 		BEGIN
@@ -140,27 +140,27 @@ TYPE
 			END
 		END PutPattern;
 
-		
+
 		(* split escape node to incorporate a new pattern *)
 		PROCEDURE AddPattern( patt: Pattern ): Index;
 		VAR  pair, node: Index;
 		BEGIN
 			ASSERT( esc > 1 );
 			pair := esc;  node := esc - 1;  esc := esc - 2 ;
-			
-			table[pair].down := node;  table[pair].weight := 1;  
-			
+
+			table[pair].down := node;  table[pair].weight := 1;
+
 			table[node].up := pair;
-			table[node].down := 0;  table[node].weight := 0;  table[node].pattern := patt; 
-			
+			table[node].down := 0;  table[node].weight := 0;  table[node].pattern := patt;
+
 			table[esc].up := pair;
-			table[esc].down := 0;  table[esc].weight := 0;  
-			
+			table[esc].down := 0;  table[esc].weight := 0;
+
 			map[patt] := node;
-			
+
 			RETURN node;
-		END AddPattern;		
-		
+		END AddPattern;
+
 
 		(* swap leaf to group leader position, return pattern's new node *)
 		PROCEDURE GroupLeader( node: Index ): Index;
@@ -171,7 +171,7 @@ TYPE
 		BEGIN
 			weight := table[node].weight;  leader := node;
 			WHILE (leader < root) & (weight = table[leader + 1].weight) DO  INC( leader )  END;
-			IF leader # node THEN  
+			IF leader # node THEN
 				(* swap the leaf nodes *)
 				patt := table[node].pattern;
 				prev := table[leader].pattern;
@@ -181,8 +181,8 @@ TYPE
 				map[prev] := node;
 			END;
 			RETURN leader
-		END GroupLeader;		
-				
+		END GroupLeader;
+
 
 		(*	slide internal node up over all leaves of equal weight
 			or exchange leaf with next smaller weight internal node.
@@ -209,7 +209,7 @@ TYPE
 				map[swap.pattern] := next;
 			END;
 			RETURN next;
-		END SlideNode;		
+		END SlideNode;
 
 
 		(* increment pattern weight and re balance the tree. *)
@@ -237,20 +237,20 @@ TYPE
 				INC( table[node].weight, 2 );  up := table[node].up
 			END;
 		END IncrementWeight;
-		
-			
+
+
 		(*  scale all weights and rebalance the tree,
 		    zero weight nodes are removed from the tree	*)
 		PROCEDURE Scale;
 		VAR  node, prev: Index;  weight: INTEGER;
-		
+
 			PROCEDURE Weight( idx: Index ): INTEGER;
 			VAR w: INTEGER;
 			BEGIN
 				w := table[idx].weight;
 				IF ODD( w ) THEN  RETURN w - 1  ELSE  RETURN w  END
 			END Weight;
-			
+
 		BEGIN
 			node := esc + 1;
 			(* work up the tree from the escape node scaling weights *)
@@ -276,23 +276,23 @@ TYPE
 			(* prepare a new escape node *)
 			table[esc].down := 0;  table[esc].weight := 0;
 		END Scale;
-		
-		
-		
-	
+
+
+
+
 		PROCEDURE EncodeByte( ch: CHAR );
 		VAR
-			code, bits: LONGINT;  
+			code, bits: LONGINT;
 			cur, node: Index;  patt: Pattern;
 		BEGIN
-			patt := ORD( ch );  node := map[patt];  
-			
+			patt := ORD( ch );  node := map[patt];
+
 			(* accumulate the code bits by working up from the node to the root	*)
 			cur := node;  code := 0;  bits := 0;
 			IF cur = 0 THEN  cur := esc  END;
 			WHILE table[cur].up # 0 DO
 				IF ODD( cur ) THEN  code := code*2 + 1  ELSE  code := code*2  END;
-				INC( bits );  cur := table[cur].up	
+				INC( bits );  cur := table[cur].up
 			END;
 			(* send the code *)
 			WHILE bits > 0 DO
@@ -309,7 +309,7 @@ TYPE
 
 		PROCEDURE ExtractByte( ): CHAR;
 		VAR
-			node, down: Index; 
+			node, down: Index;
 			patt: Pattern;
 		BEGIN
 			(* work down the tree from the root until reaching either a leaf or the escape node *)
@@ -327,7 +327,7 @@ TYPE
 			IncrementWeight( node );
 			RETURN CHR( patt );
 		END ExtractByte;
-		
+
 	END HuffmanCoder;
 
 
@@ -336,16 +336,16 @@ TYPE
 	Encoder* =OBJECT
 		VAR
 			huff: HuffmanCoder;
-			
+
 			PROCEDURE & New*( archive: Streams.Writer );
 			BEGIN
 				NEW( huff, Encode, NIL, archive );
 			END New;
-			
+
 			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: LONGINT );
 			VAR  i: LONGINT;
 			BEGIN
-				huff.Initialize;	
+				huff.Initialize;
 				i := 0;
 				WHILE i < len DO
 					huff.EncodeByte( source[i] );  INC( i );
@@ -355,23 +355,23 @@ TYPE
 			END CompressBlock;
 
 	END Encoder;
-	
-	
-	
+
+
+
 TYPE
 	Decoder* =OBJECT
 		VAR
 			huff: HuffmanCoder;
-			
+
 			PROCEDURE & New*( archive: Streams.Reader );
 			BEGIN
 				NEW( huff, Decode, archive, NIL );
 			END New;
-			
+
 			PROCEDURE ExtractBlock*( VAR buf: ARRAY OF CHAR; len: LONGINT );
-			VAR  i: LONGINT; 
+			VAR  i: LONGINT;
 			BEGIN
-				huff.Initialize;  
+				huff.Initialize;
 				i := 0;
 				WHILE i < len DO
 					buf[i] := huff.ExtractByte( );  INC( i );
@@ -380,8 +380,8 @@ TYPE
 			END ExtractBlock;
 
 	END Decoder;
-	
-	
+
+
 END AdaptiveHuffman.
 
 

@@ -56,7 +56,7 @@ CONST
 	HeapNoSerialize* = 2H;
 	HeapGenerateExceptions* = 4H;
 	HeapZeroMemory* = 8H;
-	
+
 	(** protect (VirtualAlloc) flags *)
 	PageReadWrite* = 2;  PageExecuteReadWrite* = 6;
 
@@ -152,7 +152,7 @@ CONST
 	(** GetLastError *)
 	ErrorSuccess* = 0;  ErrorFileNotFound* = 2;  ErrorAccessDenied* = 5;
 	ErrorInvalidParameter* = 87;
-	
+
 	ErrorIoPending* = 997; (** Overlapped I/O operation is in progress *)
 TYPE
 	(* OutputStringProc* = PROCEDURE (VAR str: ARRAY OF CHAR); *)
@@ -216,7 +216,7 @@ TYPE
 	Wow64Context*= RECORD (Context)
 		extension: ARRAY 512 (* MaxWOW64Extension *) OF CHAR;
 	END;
-	
+
 	ExceptionRecordPtr* = POINTER TO ExceptionRecord;
 	ExceptionRecord* = RECORD
 		ExceptionCode*, ExceptionFlags*: LONGINT;
@@ -338,7 +338,7 @@ TYPE
 		DaylightDate*: SystemTime;
 		DaylightBias*: LONGINT;
 	END;
-	
+
 	(** Contains information used in asynchronous (or overlapped) input and output (I/O). *)
 	Overlapped* = RECORD
 		Internal*: LONGINT;
@@ -518,11 +518,11 @@ VAR
 	(** The GetModuleHandle function returns a module handle for the specified module if the file has been mapped
 			into the address space of the calling process. *)
 	GetModuleHandle-: PROCEDURE {WINAPI} ( CONST lpModuleName: ARRAY   OF CHAR ): HMODULE;
-	
-	(** Retrieves the results of an overlapped operation on the specified file, named pipe, or communications device. 
+
+	(** Retrieves the results of an overlapped operation on the specified file, named pipe, or communications device.
 			To specify a timeout interval or wait on an alertable thread. *)
 	GetOverlappedResult-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL ): BOOL;
-	
+
 	(** The GetPrivateProfileString function retrieves a string from the specified section in an initialization file.*)
 	GetPrivateProfileString-: PROCEDURE {WINAPI} ( CONST lpAppName: ARRAY OF CHAR;
 																			CONST lpKeyName: ARRAY OF CHAR;
@@ -996,9 +996,9 @@ VAR
 		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;
 		END Init;
 
-		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
+		(* The following procedure is linked as the first block in the code section of a PE32 executable file
 			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
-			are patched by the PE linker. 
+			are patched by the PE linker.
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
 		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint;
@@ -1009,31 +1009,31 @@ VAR
 			DB 0
 
 		ImportTable:
-			DD Kernel32Import + 1000H 
+			DD Kernel32Import + 1000H
 			DD 0
 			DD -1
 			DD Kernel32Name + 1000H
 			DD Kernel32Import + 1000H
 			DD 0, 0, 0, 0, 0
-		
+
 		Kernel32Import:
-		adrLoadLibrary:			
+		adrLoadLibrary:
 			DD LoadLibraryA + 1000H
-		adrGetProcAddress:			
+		adrGetProcAddress:
 			DD GetProcAddress + 1000H
 			DD 0
-			
+
 		Kernel32Name:
 			DB 'KERNEL32.DLL' , 0
-			
-		LoadLibraryA:			
+
+		LoadLibraryA:
 			DW 0
 			DB 'LoadLibraryA',0,0
-			
+
 		GetProcAddress:
 			DW 0
 			DB 'GetProcAddress',0
-			
+
 		end:
 			MOV EAX,[401000H+adrLoadLibrary]
 			MOV LoadLibrary, EAX
@@ -1043,4 +1043,4 @@ VAR
 		END EntryPoint;
 
 END Kernel32.
-	
+

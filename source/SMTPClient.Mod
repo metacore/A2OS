@@ -31,7 +31,7 @@ TYPE
 		BEGIN RETURN sendReady
 		END GetSendReady;
 
-		PROCEDURE GetReplyCode*(VAR code: LONGINT; VAR res: WORD); 
+		PROCEDURE GetReplyCode*(VAR code: LONGINT; VAR res: WORD);
 		VAR msg : ARRAY 256 OF CHAR;
 		BEGIN
 			r.Ln(msg);
@@ -260,14 +260,14 @@ TYPE
 						w.Ln;
 					END;
 				END;
-				
+
 				IF m.GetNofHeaders() > 0 THEN
 					FOR i := 0 TO m.GetNofHeaders() - 1 DO
 						m.GetHeader(i, id, content);
 						w.String(id); w.String(" : "); w.String(content); w.Ln;
 					END;
 				END;
-				
+
 				w.Ln;
 
 				FOR i := 0 TO m.GetNofLines() - 1 DO

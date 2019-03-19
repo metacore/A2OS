@@ -22,20 +22,20 @@ CONST
 	(*---------------------- TCP/IP port forwarding ----------------------------*)
 
 TYPE
-	ClientHandler = OBJECT 
+	ClientHandler = OBJECT
 			VAR
 				f: Forwarder; (* this client belogs to *)
 				p: T.Packet;
 				buf: ARRAY 64 OF CHAR;
 				len: LONGINT; res: WORD;
-				
-			
-			
+
+
+
 			PROCEDURE & Init( forw: Forwarder );
 			BEGIN
 				f := forw
 			END Init;
-			
+
 		BEGIN {ACTIVE}
 			f.clientHandlerRunning := TRUE;
 			LOOP
@@ -54,7 +54,7 @@ TYPE
 			END;
 			f.clientHandlerRunning := FALSE;
 		END ClientHandler;
-	
+
 	Forwarder = OBJECT
 			VAR
 				next: Forwarder;
@@ -74,7 +74,7 @@ TYPE
 				type: CHAR;
 				len: LONGINT;
 				res: WORD;
-				
+
 				clientHandlerRunning: BOOLEAN;
 				clientHandler: ClientHandler;
 
@@ -90,7 +90,7 @@ TYPE
 					ptype: CHAR;
 				BEGIN
 					NEW( chan, remConn );
-					
+
 					IP.AdrToStr( clientConn.fip, clientAddress );
 					clientPort := clientConn.fport;
 					chanNo := remConn.GetChannelNo();
@@ -112,11 +112,11 @@ TYPE
 					IF ptype # OpenConfirm THEN
 						ErrorResponse( "SSH.OpenTunnel", buf, len );  RETURN FALSE
 					END;
-					
+
 					chan.rchan := U.GetInt( buf, 5 );
 					chan.wsize := U.GetInt( buf, 9 );
 					chan.pmax := U.GetInt( buf, 13 );
-					
+
 					chan.interactive := TRUE;
 					chan.state := ChanOpen;
 					RETURN TRUE
@@ -130,13 +130,13 @@ TYPE
 
 				PROCEDURE CloseAllConnections;
 				BEGIN
-					IF chan # NIL THEN  chan.Close;  chan := NIL  END;  
+					IF chan # NIL THEN  chan.Close;  chan := NIL  END;
 					remConn.Disconnect( 11, "god bye" );  remConn := NIL;
-					IF clientConn # NIL THEN  clientConn.Close;  clientConn := NIL  END;  
+					IF clientConn # NIL THEN  clientConn.Close;  clientConn := NIL  END;
 					localConn.Close;  localConn := NIL
 				END CloseAllConnections;
-				
-				
+
+
 				PROCEDURE & Init*( lConn: TCP.Connection; lPort: LONGINT; rConn: T.Connection; dPort: LONGINT );
 				BEGIN
 					localConn := lConn;
@@ -146,7 +146,7 @@ TYPE
 
 					NEW( timer );  active := TRUE;
 				END Init;
-				
+
 
 			BEGIN {ACTIVE}
 				Log.String( "Start forwarding port " ); Log.Int( localPort, 0 );  Log.Ln;
@@ -166,13 +166,13 @@ TYPE
 					NEW( clientHandler, SELF );
 					WHILE ~clientHandlerRunning DO  timer.Sleep( 10 )  END;
 					LOOP
-						IF clientHandlerRunning & remConn.PacketAvailable() THEN	
+						IF clientHandlerRunning & remConn.PacketAvailable() THEN
 							type := chan.ReceivePacket( buf, len );
 							IF type = Data THEN
 								len := U.GetInt( buf, 5 );
 								clientConn.Send( buf, 9, len, TRUE, res )
-							ELSIF type = 0X THEN  
-								Stop  
+							ELSIF type = 0X THEN
+								Stop
 							END
 						ELSE
 							IF ~active THEN
@@ -181,7 +181,7 @@ TYPE
 								IF ~clientHandlerRunning THEN  EXIT  END;
 								timer.Sleep( 50 )
 							END
-						END	
+						END
 					END; (* loop *)
 				UNTIL ~active;
 				Log.String( "Terminate forwarding port " ); Log.Int( localPort, 0 );  Log.Ln;
@@ -265,7 +265,7 @@ TYPE
 				END NewDataPacket;
 
 
-				
+
 				PROCEDURE SendPacket*( p: T.Packet );
 				VAR buf: ARRAY 4096 OF CHAR;
 					len, dsize: LONGINT;  t: CHAR;
@@ -335,7 +335,7 @@ TYPE
 									NEW( p, WindAdjust, 128 );
 									p.AppInteger( rchan );  p.AppInteger( newspace );
 									conn.SendPacket( p );
-								END;	
+								END;
 								done := TRUE
 						| ExtData:  (* stderr *)
 								l := U.GetInt( buf, 9 );
@@ -358,12 +358,12 @@ TYPE
 								conn.SendPacket( p );
 								Log.String( "Channel open request rejected by client" );  Log.Ln;
 						| ChannelRequest:
-								pos := 5;  U.GetString( buf, pos, req );  
+								pos := 5;  U.GetString( buf, pos, req );
 								wantreply := buf[pos] # 0X;
 								IF wantreply THEN
 									NEW( p, ChannelSuccess, 64 ); p.AppInteger( rchan );
-									conn.SendPacket( p );	
-								END	
+									conn.SendPacket( p );
+								END
 						ELSE
 							ErrorResponse( "SSH.Channel.read", buf, len );  Close;
 							ptype := 0X; done := TRUE
@@ -413,7 +413,7 @@ TYPE
 				VAR p: T.Packet;
 				BEGIN
 					p := NewDataPacket( 512 );  p.AppString( cmd );  SendPacket( p );
-					SendNL; 
+					SendNL;
 				END RemoteCommand;
 
 				PROCEDURE Sync*;
@@ -440,7 +440,7 @@ TYPE
 					NEW( p, ChannelEOF, 64 );  p.AppInteger( rchan );  SendPacket( p );
 				END SendEOF;
 
-				
+
 				PROCEDURE SkipInput;  (* consume any incoming packets until connection is quiet *)
 				VAR buf: POINTER TO  ARRAY OF CHAR;
 					len: LONGINT;  t: CHAR;
@@ -458,7 +458,7 @@ TYPE
 				BEGIN
 					Pause( 100 );
 					IF state = ChanOpen THEN
-						NEW( p, ChannelEOF, 64 );  p.AppInteger( rchan );  SendPacket( p );	
+						NEW( p, ChannelEOF, 64 );  p.AppInteger( rchan );  SendPacket( p );
 						NEW( p, ChannelClose, 64 );  p.AppInteger( rchan );  SendPacket( p );
 						SkipInput
 					END;
@@ -567,7 +567,7 @@ TYPE
 		Log.Ln;
 	END ErrorResponse;
 
-	
+
 	PROCEDURE ShowChar( c: CHAR );
 	BEGIN
 		CASE c OF
@@ -580,17 +580,17 @@ TYPE
 			Log.Char( '\' );  Log.Hex( ORD( c ), -2 )
 		END
 	END ShowChar;
-	
-	
+
+
 	PROCEDURE ShowPacket( CONST buf: ARRAY OF CHAR; len: LONGINT );
-	VAR i: LONGINT; 
+	VAR i: LONGINT;
 	BEGIN
 		Log.Ln;  Log.Hex( ORD( buf[0] ), -2 ); Log.Ln;
 		i := 1;
 		WHILE i < len DO  ShowChar( buf[i] );  INC( i )  END;
 		Log.Ln
 	END ShowPacket;
-	
+
 	PROCEDURE Pause( ms: LONGINT );
 	VAR  t: Kernel.Timer;
 	BEGIN
@@ -658,10 +658,10 @@ TYPE
 				cmd := "stty -echo raw;  scp -q -t ";  Strings.Append( cmd, remFileName );
 				chan.RemoteCommand( cmd );
 				Pause( 500 );
-				t := chan.ReceivePacket( buf, len );	(* sync *)	
-				
+				t := chan.ReceivePacket( buf, len );	(* sync *)
+
 				SendFile( f, chan, remFileName );
-				chan.Sync; 
+				chan.Sync;
 				chan.Close
 			ELSE  Log.String( "file not found" )
 			END;
@@ -676,8 +676,8 @@ TYPE
 		lbuf: ARRAY 16 OF CHAR;
 		r: Files.Reader;  i, j: LONGINT;
 	BEGIN
-		flen := f.Length( );  Strings.IntToStr( flen, lbuf );  
-		buf := "C0644 "; Strings.Append( buf, lbuf );  Strings.Append( buf, " " );  Strings.Append( buf, name );  
+		flen := f.Length( );  Strings.IntToStr( flen, lbuf );
+		buf := "C0644 "; Strings.Append( buf, lbuf );  Strings.Append( buf, " " );  Strings.Append( buf, name );
 		chan.SendBuffer( buf, Strings.Length( buf ) );
 		chan.SendNL;
 		Files.OpenReader( r, f, 0 );  i := 0;  j := 0;  sent := 0;
@@ -688,8 +688,8 @@ TYPE
 				j := 0;  Log.Char( '.' )
 			END
 		END;
-		IF j > 0 THEN  
-			chan.SendBuffer( buf, j );  INC( sent, j ); Log.Char( '.' )  
+		IF j > 0 THEN
+			chan.SendBuffer( buf, j );  INC( sent, j ); Log.Char( '.' )
 		END;
 		Log.Char( ' ' );  Log.Int( sent, 0 ); Log.String( " bytes sent." ); Log.Ln
 	END SendFile;

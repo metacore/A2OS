@@ -229,7 +229,7 @@ TYPE
 		BEGIN (* need protection? *)
 			INC(timestamp)
 		END Stamp;
-		
+
 		PROCEDURE GetTimestamp*() : LONGINT;
 		BEGIN
 			RETURN timestamp;
@@ -832,7 +832,7 @@ TYPE
 		END ToStream;
 
 		PROCEDURE UpdateProperty;
-		VAR longreal: Types.Longreal; model: Models.Model; res: WORD; silent: BOOLEAN; 
+		VAR longreal: Types.Longreal; model: Models.Model; res: WORD; silent: BOOLEAN;
 		BEGIN
 			IF GetModel(object, model) THEN
 				 model.GetGeneric(longreal, res);
@@ -1358,7 +1358,7 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
-		
+
 		(* set without updates -- use only when you definitely want to avoid updates *)
 		PROCEDURE SetPassive*(font: WMGraphics.Font);
 		BEGIN

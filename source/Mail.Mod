@@ -9,7 +9,7 @@ TYPE
 	Recipient* = OBJECT
 		VAR name-, address- : MailAddress;
 	END Recipient;
-	
+
 	Header* = OBJECT
 		VAR id-: ARRAY 128 OF CHAR;
 			content-: ARRAY 128 OF CHAR;
@@ -130,7 +130,7 @@ TYPE
 			p := bccList.GetItem(nr); old := p(Recipient);
 			COPY(old.name, name); COPY(old.address, address)
 		END GetBcc;
-		
+
 		PROCEDURE AddHeader*(CONST id, content:ARRAY OF CHAR);
 		VAR new : Header;
 		BEGIN NEW(new); COPY(id, new.id); COPY(content, new.content); headerList.Add(new)

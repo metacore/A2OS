@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* setting individual components may lead to consistency problems and is discouraged *)
@@ -28,7 +28,7 @@ IMPORT M := MathL IN A2;
 TYPE real = LONGREAL;
 
 TYPE Complex* = OBJECT (* POINTER TO ComplexDesc;
-	ComplexDesc* = RECORD *) 
+	ComplexDesc* = RECORD *)
 	VAR
 		polarvalid, cartvalid, cartfirst: BOOLEAN;
 		re, im, rho, phi: real  (* default: 0<= phi < 2pi *);

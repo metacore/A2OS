@@ -13,12 +13,12 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		background*: Graphics.Image;
 		canvas* : Graphics.BufferCanvas;
 		canvasGen-: Graphics.CanvasGenerator;
-		pointerThreshold*, 
+		pointerThreshold*,
 		maxInterpolation* : LONGINT; (* allows limiting the interpolation degree on Draw *)
 		hs,ws: POINTER TO ARRAY OF LONGINT;
 		totalW, totalH: LONGINT;
-		gap: LONGINT;		
-		
+		gap: LONGINT;
+
 		PROCEDURE &Init1*( CONST Ws, Hs: ARRAY OF LONGINT; alpha : BOOLEAN);
 		VAR
 			i,j: LONGINT;
@@ -34,16 +34,16 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 				totalW:=totalW+Ws[i];
 			END;
 			totalW:=totalW+gap*(LEN(Ws,0)-1);
-			
+
 			FOR i:=0 TO LEN(Hs,0)-1 DO
 				ASSERT(Hs[i]>0);
 				SELF.hs[i]:=Hs[i];
 				totalH:=totalH+Hs[i];
 			END;
-			totalH:=totalH+gap*(LEN(Hs,0)-1);			
-			
+			totalH:=totalH+gap*(LEN(Hs,0)-1);
+
 			Init(totalW, totalH, alpha); (*parent constructor*)
-			
+
 			NEW(imgs,LEN(Ws,0),LEN(Hs,0));
 			FOR i:=0 TO LEN(Ws,0)-1 DO
 				FOR j:=0 TO LEN(Hs,0)-1 DO
@@ -66,7 +66,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 			SELF.canvasGen:=canvasGen; IF background # NIL THEN canvas:=canvasGen(background); END;
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
 		END SetCanvasGenerator;
-		
+
 		PROCEDURE IsHit(x, y  : LONGINT) : BOOLEAN;
 		VAR w, h : LONGINT; fx, fy : REAL;
 		BEGIN
@@ -80,18 +80,18 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		END IsHit;
 
 		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
-		VAR 
+		VAR
 			mode: LONGINT;
 			isScaled: BOOLEAN;
 			i,j: LONGINT;
 			x,y: LONGINT;
-			
+
 			PROCEDURE DrawSingle(CONST  img: Graphics.Image; offX,offY: LONGINT; isScaled: BOOLEAN; mode: LONGINT);
 			VAR
 				wscaled,hscaled: LONGINT;
 			BEGIN
 				IF img # NIL THEN
-				IF ~isScaled THEN				
+				IF ~isScaled THEN
 					canvas.DrawImage(offX,offY,img, mode);
 				ELSE
 					offX:=offX*w DIV totalW;  (*these are not pixel perfect, but I can't think of anything better*)
@@ -102,7 +102,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 				END
 			END;
 			END DrawSingle;
-			
+
 		BEGIN
 			IF useAlpha THEN
 				mode:=Graphics.ModeSrcOverDst;
@@ -110,7 +110,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 				mode:=Graphics.ModeCopy;
 			END;
 			isScaled:=~((w = totalW) & (h = totalH));
-		
+
 			IF reduceQuality THEN q := 0 END;
 			DrawSingle(background, 0,0, isScaled, mode);
 			x:=0;
@@ -119,11 +119,11 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 				FOR j:=0 TO LEN(imgs,1)-1 DO
 					DrawSingle(imgs[i,j], x,y, isScaled,mode);
 					y:=y+hs[j]+gap;
-				END;				
+				END;
 				x:=x+ws[i]+gap;
 			END;
-			
-			
+
+
 			INC(timestamp);
 		END Draw;
 
@@ -154,8 +154,8 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 					Invalidate(Rectangles.MakeRect(0, 0, totalW, totalH));
 				ELSE
 					HALT(200)
-				END;			
-			ELSE 
+				END;
+			ELSE
 				Handle^(m)
 			END;
 		END Handle;
@@ -172,25 +172,25 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		rm: Raster.Mode;
 		pix: Raster.Pixel;
 	BEGIN
-	
+
 		FOR i:=0 TO 2 DO
 			Ws[i]:=100*i+30;
 			Hs[i]:=20+200*i;
 		END;
 		NEW(w,Ws,Hs, TRUE);
-		
-		
+
+
 		Raster.InitMode(rm, Raster.srcOverDst);
-		Raster.SetRGBA(pix, 255,0,0,255);	
+		Raster.SetRGBA(pix, 255,0,0,255);
 		Raster.Fill(w.imgs[0,0], 0,0, Ws[0],Hs[0],pix, rm);
-		Raster.SetRGBA(pix, 0,255,0,255);	
+		Raster.SetRGBA(pix, 0,255,0,255);
 		Raster.Fill(w.imgs[1,1], 0,0, Ws[1],Hs[1],pix, rm);
-		Raster.SetRGBA(pix, 0,0,255,255);	
+		Raster.SetRGBA(pix, 0,0,255,255);
 		Raster.Fill(w.imgs[2,2], 0,0, Ws[2],Hs[2],pix, rm);
-		
+
 		WMWindowManager.DefaultAddWindow(w);
-		
-		
+
+
 	END Test;
 
 

@@ -9,7 +9,7 @@ MODULE FPE64;
 		Float64* = RECORD
 			low*, high*: LONGINT
 		END;
-		
+
 		Float32* = LONGINT;
 
 	PROCEDURE Addd(VAR x1, x0: LONGINT; y1, y0: LONGINT);

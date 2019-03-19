@@ -116,12 +116,12 @@ TYPE
 		PROCEDURE GetExtension*(VAR ext: ARRAY OF CHAR);
 		BEGIN COPY(SELF.extension, ext);
 		END GetExtension;
-		
+
 		PROCEDURE SetPath*(CONST path: ARRAY OF CHAR);
 		BEGIN
 			COPY(path, SELF.path);
 		END SetPath;
-		
+
 		PROCEDURE GetPath*(VAR path: ARRAY OF CHAR);
 		BEGIN
 			COPY(SELF.path, path);

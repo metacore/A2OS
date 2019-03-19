@@ -2,7 +2,7 @@ MODULE TFScopeTools;
 
 IMPORT
 	KernelLog, TS := TFTypeSys, Strings;
-	
+
 
 PROCEDURE FindType*(d : TS.Designator; scope : TS.Scope) : TS.Type;
 VAR

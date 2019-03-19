@@ -138,7 +138,7 @@ TYPE
 			SELF.client := c; SELF.s := s;
 			IF Trace & (c # NIL) THEN
 				KernelLog.Enter; KernelLog.String("Agent "); KernelLog.Int(c.lport, 1);
-				KernelLog.String(" on interface "); IP.AdrToStr(c.int.localAdr, str); KernelLog.String(str); 
+				KernelLog.String(" on interface "); IP.AdrToStr(c.int.localAdr, str); KernelLog.String(str);
 				KernelLog.String(" connected to "); IP.AdrToStr(c.fip, str); KernelLog.String(str);
 				KernelLog.Char(":"); KernelLog.Int(c.fport, 1); KernelLog.Exit;
 			END

@@ -1,4 +1,4 @@
-MODULE antsReadWrite IN Oberon;  
+MODULE antsReadWrite IN Oberon;
 (* Copyright notice:
 
 This file is part of AntsInFields
@@ -30,485 +30,485 @@ All but numbers are ignored in a file.
 *)
 
 
-IMPORT aM := antsMessages, vyLongrealVec, vyLongintVec, vyIntVec, antsCommands, vyBase, vyName, antsSecurity, 
-	antsArrays, antsFiles, vyPort,SYSTEM;  
+IMPORT aM := antsMessages, vyLongrealVec, vyLongintVec, vyIntVec, antsCommands, vyBase, vyName, antsSecurity,
+	antsArrays, antsFiles, vyPort,SYSTEM;
 
-TYPE 
-	
+TYPE
+
 	Rider* = OBJECT (antsFiles.Rider)
 
-		PROCEDURE  (*VAR R: Rider*) ReadI1d*( VAR x: antsArrays.I1d );  
-		VAR v: vyIntVec.tVector;  
-		BEGIN 
-			SELF.ReadIntsLine( v );  
-			IF vyIntVec.Len( v ) = 0 THEN x := NIL;  RETURN END;  
-			IF (x = NIL ) OR (LEN( x ) < vyIntVec.Len( v )) THEN NEW( x, vyIntVec.Len( v ) ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadI1d*( VAR x: antsArrays.I1d );
+		VAR v: vyIntVec.tVector;
+		BEGIN
+			SELF.ReadIntsLine( v );
+			IF vyIntVec.Len( v ) = 0 THEN x := NIL;  RETURN END;
+			IF (x = NIL ) OR (LEN( x ) < vyIntVec.Len( v )) THEN NEW( x, vyIntVec.Len( v ) ) END;
 			vyIntVec.CopyToArray( v, x^ )
-		END ReadI1d;  
+		END ReadI1d;
 
-		PROCEDURE  (*VAR R: Rider*) ReadL1d*( VAR x: antsArrays.L1d );  
-		VAR v: vyLongintVec.tVector;  
-		BEGIN 
-			SELF.ReadLIntsLine( v );  
-			IF vyLongintVec.Len( v ) = 0 THEN x := NIL;  RETURN END;  
-			IF (x = NIL ) OR (LEN( x ) < vyLongintVec.Len( v )) THEN NEW( x, vyIntVec.Len( v ) ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadL1d*( VAR x: antsArrays.L1d );
+		VAR v: vyLongintVec.tVector;
+		BEGIN
+			SELF.ReadLIntsLine( v );
+			IF vyLongintVec.Len( v ) = 0 THEN x := NIL;  RETURN END;
+			IF (x = NIL ) OR (LEN( x ) < vyLongintVec.Len( v )) THEN NEW( x, vyIntVec.Len( v ) ) END;
 			vyLongintVec.CopyToArray( v, x^ )
-		END ReadL1d;  
+		END ReadL1d;
 
-		PROCEDURE  (*VAR R: Rider*) ReadX1d*( VAR x: antsArrays.X1d );  
-		VAR v: vyLongrealVec.tVector;  
-		BEGIN 
-			SELF.ReadLRealsLine( v );  
-			IF vyLongrealVec.Len( v ) = 0 THEN x := NIL;  RETURN END;  
-			IF (x = NIL ) OR (LEN( x ) < vyLongrealVec.Len( v )) THEN NEW( x, vyIntVec.Len( v ) ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadX1d*( VAR x: antsArrays.X1d );
+		VAR v: vyLongrealVec.tVector;
+		BEGIN
+			SELF.ReadLRealsLine( v );
+			IF vyLongrealVec.Len( v ) = 0 THEN x := NIL;  RETURN END;
+			IF (x = NIL ) OR (LEN( x ) < vyLongrealVec.Len( v )) THEN NEW( x, vyIntVec.Len( v ) ) END;
 			vyLongrealVec.CopyToArray( v, x^ )
-		END ReadX1d;  
+		END ReadX1d;
 
-		PROCEDURE  (*VAR R: Rider*) WriteI1d*( x: antsArrays.I1d );  
-		BEGIN 
+		PROCEDURE  (*VAR R: Rider*) WriteI1d*( x: antsArrays.I1d );
+		BEGIN
 			SELF.WriteIntsLine( antsArrays.VecFromArrayI( x^ ) )
-		END WriteI1d;  
+		END WriteI1d;
 
-		PROCEDURE  (*VAR R: Rider*) WriteL1d*( x: antsArrays.L1d );  
-		BEGIN 
+		PROCEDURE  (*VAR R: Rider*) WriteL1d*( x: antsArrays.L1d );
+		BEGIN
 			SELF.WriteLIntsLine( antsArrays.VecFromArrayL( x^ ) )
-		END WriteL1d;  
+		END WriteL1d;
 
-		PROCEDURE  (*VAR R: Rider*) WriteX1d*( x: antsArrays.X1d );  
-		BEGIN 
+		PROCEDURE  (*VAR R: Rider*) WriteX1d*( x: antsArrays.X1d );
+		BEGIN
 			SELF.WriteLRealsLine( antsArrays.VecFromArrayX( x^ ) )
-		END WriteX1d;  
+		END WriteX1d;
 
-		PROCEDURE  (*VAR R: Rider*) ScanMatrix*( VAR rows, cols: LONGINT );  
-		VAR pos: LONGINT;  min, max: LONGINT;  v: vyLongrealVec.tVector;  
-		BEGIN 
-			pos := SELF.Pos();  
-			IF SELF.type = antsFiles.ascii THEN 
-				rows := 0;  cols := 0;  min := MAX( LONGINT );  max := MIN( LONGINT );  
+		PROCEDURE  (*VAR R: Rider*) ScanMatrix*( VAR rows, cols: LONGINT );
+		VAR pos: LONGINT;  min, max: LONGINT;  v: vyLongrealVec.tVector;
+		BEGIN
+			pos := SELF.Pos();
+			IF SELF.type = antsFiles.ascii THEN
+				rows := 0;  cols := 0;  min := MAX( LONGINT );  max := MIN( LONGINT );
 				(*
 		aM.SI("pos ",SELF.Pos()); *)
-				SELF.ReadLRealsLine( v );  cols := vyLongrealVec.Len( v );  
-				WHILE (cols > 0) DO 
-					IF min > cols THEN min := cols END;  
-					IF max < cols THEN max := cols END;  
+				SELF.ReadLRealsLine( v );  cols := vyLongrealVec.Len( v );
+				WHILE (cols > 0) DO
+					IF min > cols THEN min := cols END;
+					IF max < cols THEN max := cols END;
 					(* aM.SI("cols ",cols);
 			aM.SI("pos ",SELF.Pos());*)
 					SELF.ReadLRealsLine( v );  cols := vyLongrealVec.Len( v );  INC( rows )
-				END;  
-				cols := min;  
-				ASSERT ( min = max );  
+				END;
+				cols := min;
+				ASSERT ( min = max );
 				aM.SI( "Read Ascii File, end: ", SELF.Pos() );  SELF.SetPos( pos )
 			ELSE SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  SELF.SetPos( pos )
-			END 
-		END ScanMatrix;  
+			END
+		END ScanMatrix;
 
-		PROCEDURE  (*VAR R: Rider*) WriteNilMatrix*;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN SELF.WriteLInt( 0 );  SELF.WriteLInt( 0 );  ELSE SELF.WriteEmptyLine() END;  
-		END WriteNilMatrix;  
+		PROCEDURE  (*VAR R: Rider*) WriteNilMatrix*;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN SELF.WriteLInt( 0 );  SELF.WriteLInt( 0 );  ELSE SELF.WriteEmptyLine() END;
+		END WriteNilMatrix;
 
-		PROCEDURE  (*VAR R: Rider*) WriteMatrixX*( VAR A: ARRAY OF ARRAY OF LONGREAL );  
-		VAR i: LONGINT;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.WriteLInt( LEN( A ) );  SELF.WriteLInt( LEN( A[0] ) );  
-				FOR i := 0 TO LEN( A ) - 1 DO SELF.WriteLRealsFix( A[i], LEN( A[0] ) ) END 
-			ELSE 
-				i := 0;  
-				WHILE (i < LEN( A )) DO SELF.WriteLRealsLine( antsArrays.VecFromArrayX( A[i] ) );  INC( i ) END;  
+		PROCEDURE  (*VAR R: Rider*) WriteMatrixX*( VAR A: ARRAY OF ARRAY OF LONGREAL );
+		VAR i: LONGINT;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.WriteLInt( LEN( A ) );  SELF.WriteLInt( LEN( A[0] ) );
+				FOR i := 0 TO LEN( A ) - 1 DO SELF.WriteLRealsFix( A[i], LEN( A[0] ) ) END
+			ELSE
+				i := 0;
+				WHILE (i < LEN( A )) DO SELF.WriteLRealsLine( antsArrays.VecFromArrayX( A[i] ) );  INC( i ) END;
 				SELF.WriteEmptyLine()
-			END 
-		END WriteMatrixX;  
+			END
+		END WriteMatrixX;
 
-		PROCEDURE  (*VAR R: Rider*) ReadMatrixX*( VAR A: ARRAY OF ARRAY OF LONGREAL );  
-		VAR rows, cols, i: LONGINT;  v: vyLongrealVec.tVector;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				FOR i := 0 TO rows - 1 DO SELF.ReadLRealsFix( A[i], cols ) END 
-			ELSE 
-				i := 0;  SELF.ReadLRealsLine( v );  
-				WHILE (v.nrData > 0) DO vyLongrealVec.CopyToArray( v, A[i] );  INC( i );  SELF.ReadLRealsLine( v ) END 
-			END 
-		END ReadMatrixX;  
+		PROCEDURE  (*VAR R: Rider*) ReadMatrixX*( VAR A: ARRAY OF ARRAY OF LONGREAL );
+		VAR rows, cols, i: LONGINT;  v: vyLongrealVec.tVector;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				FOR i := 0 TO rows - 1 DO SELF.ReadLRealsFix( A[i], cols ) END
+			ELSE
+				i := 0;  SELF.ReadLRealsLine( v );
+				WHILE (v.nrData > 0) DO vyLongrealVec.CopyToArray( v, A[i] );  INC( i );  SELF.ReadLRealsLine( v ) END
+			END
+		END ReadMatrixX;
 
-		PROCEDURE  (*VAR R: Rider*) WriteMatrixL*( VAR A: ARRAY OF ARRAY OF LONGINT );  
-		VAR row, i: LONGINT;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.WriteLInt( LEN( A ) );  SELF.WriteLInt( LEN( A[0] ) );  
-				FOR i := 0 TO LEN( A ) - 1 DO SELF.WriteLIntsFix( A[i], LEN( A[0] ) ) END 
-			ELSE 
-				row := 0;  
-				WHILE (row < LEN( A )) DO SELF.WriteLIntsLine( antsArrays.VecFromArrayL( A[row] ) );  INC( row ) END;  
+		PROCEDURE  (*VAR R: Rider*) WriteMatrixL*( VAR A: ARRAY OF ARRAY OF LONGINT );
+		VAR row, i: LONGINT;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.WriteLInt( LEN( A ) );  SELF.WriteLInt( LEN( A[0] ) );
+				FOR i := 0 TO LEN( A ) - 1 DO SELF.WriteLIntsFix( A[i], LEN( A[0] ) ) END
+			ELSE
+				row := 0;
+				WHILE (row < LEN( A )) DO SELF.WriteLIntsLine( antsArrays.VecFromArrayL( A[row] ) );  INC( row ) END;
 				SELF.WriteEmptyLine()
-			END 
-		END WriteMatrixL;  
+			END
+		END WriteMatrixL;
 
-		PROCEDURE  (*VAR R: Rider*) ReadMatrixL*( VAR A: ARRAY OF ARRAY OF LONGINT );  
-		VAR i, rows, cols: LONGINT;  v: vyLongintVec.tVector;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				FOR i := 0 TO rows - 1 DO SELF.ReadLIntsFix( A[i], cols ) END 
-			ELSE 
-				i := 0;  SELF.ReadLIntsLine( v );  
-				WHILE (v.nrData > 0) DO vyLongintVec.CopyToArray( v, A[i] );  INC( i );  SELF.ReadLIntsLine( v ) END 
-			END 
-		END ReadMatrixL;  
+		PROCEDURE  (*VAR R: Rider*) ReadMatrixL*( VAR A: ARRAY OF ARRAY OF LONGINT );
+		VAR i, rows, cols: LONGINT;  v: vyLongintVec.tVector;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				FOR i := 0 TO rows - 1 DO SELF.ReadLIntsFix( A[i], cols ) END
+			ELSE
+				i := 0;  SELF.ReadLIntsLine( v );
+				WHILE (v.nrData > 0) DO vyLongintVec.CopyToArray( v, A[i] );  INC( i );  SELF.ReadLIntsLine( v ) END
+			END
+		END ReadMatrixL;
 
-		PROCEDURE  (*VAR R: Rider*) WriteMatrixI*( VAR A: ARRAY OF ARRAY OF INTEGER );  
-		VAR row, i: LONGINT;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.WriteLInt( LEN( A ) );  SELF.WriteLInt( LEN( A[0] ) );  
-				FOR i := 0 TO LEN( A ) - 1 DO SELF.WriteIntsFix( A[i], LEN( A[0] ) ) END 
-			ELSE 
-				row := 0;  
-				WHILE (row < LEN( A )) DO SELF.WriteIntsLine( antsArrays.VecFromArrayI( A[row] ) );  INC( row ) END;  
+		PROCEDURE  (*VAR R: Rider*) WriteMatrixI*( VAR A: ARRAY OF ARRAY OF INTEGER );
+		VAR row, i: LONGINT;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.WriteLInt( LEN( A ) );  SELF.WriteLInt( LEN( A[0] ) );
+				FOR i := 0 TO LEN( A ) - 1 DO SELF.WriteIntsFix( A[i], LEN( A[0] ) ) END
+			ELSE
+				row := 0;
+				WHILE (row < LEN( A )) DO SELF.WriteIntsLine( antsArrays.VecFromArrayI( A[row] ) );  INC( row ) END;
 				SELF.WriteEmptyLine()
-			END 
-		END WriteMatrixI;  
+			END
+		END WriteMatrixI;
 
-		PROCEDURE  (*VAR R: Rider*) ReadMatrixI*( VAR A: ARRAY OF ARRAY OF INTEGER );  
-		VAR i, rows, cols: LONGINT;  v: vyIntVec.tVector;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				FOR i := 0 TO rows - 1 DO SELF.ReadIntsFix( A[i], cols ) END 
-			ELSE 
-				i := 0;  SELF.ReadIntsLine( v );  
-				WHILE (v.nrData > 0) DO vyIntVec.CopyToArray( v, A[i] );  INC( i );  SELF.ReadIntsLine( v ) END 
-			END 
-		END ReadMatrixI;  
+		PROCEDURE  (*VAR R: Rider*) ReadMatrixI*( VAR A: ARRAY OF ARRAY OF INTEGER );
+		VAR i, rows, cols: LONGINT;  v: vyIntVec.tVector;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				FOR i := 0 TO rows - 1 DO SELF.ReadIntsFix( A[i], cols ) END
+			ELSE
+				i := 0;  SELF.ReadIntsLine( v );
+				WHILE (v.nrData > 0) DO vyIntVec.CopyToArray( v, A[i] );  INC( i );  SELF.ReadIntsLine( v ) END
+			END
+		END ReadMatrixI;
 
-		PROCEDURE  (*VAR R: Rider*) ReadRowX*( VAR v: vyLongrealVec.tVector;  row: LONGINT );  
-		VAR r, rows, cols: LONGINT;  A: antsArrays.X1d;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				IF row >= rows THEN v := NIL;  RETURN END;  
-				SELF.SetPos( SELF.Pos() + row * cols * SIZEOF( LONGREAL ) );  NEW( A, cols );  SELF.ReadLRealsFix( A^, cols );  
-				IF v = NIL THEN v := vyLongrealVec.New( cols ) ELSE vyLongrealVec.SetLen( v, cols ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadRowX*( VAR v: vyLongrealVec.tVector;  row: LONGINT );
+		VAR r, rows, cols: LONGINT;  A: antsArrays.X1d;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				IF row >= rows THEN v := NIL;  RETURN END;
+				SELF.SetPos( SELF.Pos() + row * cols * SIZEOF( LONGREAL ) );  NEW( A, cols );  SELF.ReadLRealsFix( A^, cols );
+				IF v = NIL THEN v := vyLongrealVec.New( cols ) ELSE vyLongrealVec.SetLen( v, cols ) END;
 				vyLongrealVec.CopyToVec( A^, v, cols, 0, 0 )
-			ELSE 
-				r := 0;  
-				WHILE (row >= r) DO 
-					SELF.ReadLRealsLine( v );  
-					IF vyLongrealVec.Len( v ) = 0 THEN v := NIL;  RETURN END;  
+			ELSE
+				r := 0;
+				WHILE (row >= r) DO
+					SELF.ReadLRealsLine( v );
+					IF vyLongrealVec.Len( v ) = 0 THEN v := NIL;  RETURN END;
 					INC( r )
-				END 
-			END 
-		END ReadRowX;  
+				END
+			END
+		END ReadRowX;
 
-		PROCEDURE  (*VAR R: Rider*) ReadRowL*( VAR v: vyLongintVec.tVector;  row: LONGINT );  
-		VAR r, rows, cols: LONGINT;  A: antsArrays.L1d;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				IF row >= rows THEN v := NIL;  RETURN END;  
-				SELF.SetPos( SELF.Pos() + row * cols * SIZEOF( LONGINT ) );  NEW( A, cols );  SELF.ReadLIntsFix( A^, cols );  
-				IF v = NIL THEN v := vyLongintVec.New( cols ) ELSE vyLongintVec.SetLen( v, cols ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadRowL*( VAR v: vyLongintVec.tVector;  row: LONGINT );
+		VAR r, rows, cols: LONGINT;  A: antsArrays.L1d;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				IF row >= rows THEN v := NIL;  RETURN END;
+				SELF.SetPos( SELF.Pos() + row * cols * SIZEOF( LONGINT ) );  NEW( A, cols );  SELF.ReadLIntsFix( A^, cols );
+				IF v = NIL THEN v := vyLongintVec.New( cols ) ELSE vyLongintVec.SetLen( v, cols ) END;
 				vyLongintVec.CopyToVec( A^, v, cols, 0, 0 )
-			ELSE 
-				r := 0;  
-				WHILE (row >= r) DO 
-					SELF.ReadLIntsLine( v );  
-					IF vyLongintVec.Len( v ) = 0 THEN v := NIL;  RETURN END;  
+			ELSE
+				r := 0;
+				WHILE (row >= r) DO
+					SELF.ReadLIntsLine( v );
+					IF vyLongintVec.Len( v ) = 0 THEN v := NIL;  RETURN END;
 					INC( r )
-				END 
-			END 
-		END ReadRowL;  
+				END
+			END
+		END ReadRowL;
 
-		PROCEDURE  (*VAR R: Rider*) ReadRowI*( VAR v: vyIntVec.tVector;  row: LONGINT );  
-		VAR r, rows, cols: LONGINT;  A: antsArrays.I1d;  
-		BEGIN 
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				IF row >= rows THEN v := NIL;  RETURN END;  
-				SELF.SetPos( SELF.Pos() + row * cols * SIZEOF( INTEGER ) );  NEW( A, cols );  SELF.ReadIntsFix( A^, cols );  
-				IF v = NIL THEN v := vyIntVec.New( cols ) ELSE vyIntVec.SetLen( v, cols ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadRowI*( VAR v: vyIntVec.tVector;  row: LONGINT );
+		VAR r, rows, cols: LONGINT;  A: antsArrays.I1d;
+		BEGIN
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				IF row >= rows THEN v := NIL;  RETURN END;
+				SELF.SetPos( SELF.Pos() + row * cols * SIZEOF( INTEGER ) );  NEW( A, cols );  SELF.ReadIntsFix( A^, cols );
+				IF v = NIL THEN v := vyIntVec.New( cols ) ELSE vyIntVec.SetLen( v, cols ) END;
 				vyIntVec.CopyToVec( A^, v, cols, 0, 0 )
-			ELSE 
-				r := 0;  
-				WHILE (row >= r) DO 
-					SELF.ReadIntsLine( v );  
-					IF vyIntVec.Len( v ) = 0 THEN v := NIL;  RETURN END;  
+			ELSE
+				r := 0;
+				WHILE (row >= r) DO
+					SELF.ReadIntsLine( v );
+					IF vyIntVec.Len( v ) = 0 THEN v := NIL;  RETURN END;
 					INC( r )
-				END 
-			END 
-		END ReadRowI;  
+				END
+			END
+		END ReadRowI;
 
-		PROCEDURE  (*VAR R: Rider*) ReadColX*( VAR v: vyLongrealVec.tVector;  col: LONGINT );  
-		VAR r, rows, cols: LONGINT;  v2: vyLongrealVec.tVector;  x: LONGREAL;  
-		BEGIN 
-			IF v = NIL THEN v := vyLongrealVec.New( 0 ) ELSE vyLongrealVec.SetLen( v, 0 ) END;  
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				IF col >= cols THEN v := NIL;  RETURN END;  
-				SELF.SetPos( SELF.Pos() + col * SIZEOF( LONGREAL ) );  
-				FOR r := 0 TO rows - 1 DO 
+		PROCEDURE  (*VAR R: Rider*) ReadColX*( VAR v: vyLongrealVec.tVector;  col: LONGINT );
+		VAR r, rows, cols: LONGINT;  v2: vyLongrealVec.tVector;  x: LONGREAL;
+		BEGIN
+			IF v = NIL THEN v := vyLongrealVec.New( 0 ) ELSE vyLongrealVec.SetLen( v, 0 ) END;
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				IF col >= cols THEN v := NIL;  RETURN END;
+				SELF.SetPos( SELF.Pos() + col * SIZEOF( LONGREAL ) );
+				FOR r := 0 TO rows - 1 DO
 					SELF.ReadLReal( x );  vyLongrealVec.Append( x, v );  SELF.SetPos( SELF.Pos() + (cols - 1) * SIZEOF( LONGREAL ) )
-				END;  
+				END;
 				SELF.SetPos( SELF.Pos() + (cols - 1 - col) * SIZEOF( LONGREAL ) )
-			ELSE 
-				r := 0;  
-				LOOP 
-					SELF.ReadLRealsLine( v2 );  
-					IF vyLongrealVec.Len( v2 ) = 0 THEN RETURN 
-					ELSIF vyLongrealVec.Len( v2 ) <= col THEN v := NIL;  RETURN 
-					END;  
+			ELSE
+				r := 0;
+				LOOP
+					SELF.ReadLRealsLine( v2 );
+					IF vyLongrealVec.Len( v2 ) = 0 THEN RETURN
+					ELSIF vyLongrealVec.Len( v2 ) <= col THEN v := NIL;  RETURN
+					END;
 					vyLongrealVec.Append( vyLongrealVec.Get( v2, col ), v );  INC( r )
-				END 
-			END 
-		END ReadColX;  
+				END
+			END
+		END ReadColX;
 
-		PROCEDURE  (*VAR R: Rider*) ReadColL*( VAR v: vyLongintVec.tVector;  col: LONGINT );  
-		VAR r, rows, cols: LONGINT;  v2: vyLongintVec.tVector;  x: LONGINT;  
-		BEGIN 
-			IF v = NIL THEN v := vyLongintVec.New( 0 ) ELSE vyLongintVec.SetLen( v, 0 ) END;  
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				IF col >= cols THEN v := NIL;  RETURN END;  
-				SELF.SetPos( SELF.Pos() + col * SIZEOF( LONGINT ) );  
-				FOR r := 0 TO rows - 1 DO 
+		PROCEDURE  (*VAR R: Rider*) ReadColL*( VAR v: vyLongintVec.tVector;  col: LONGINT );
+		VAR r, rows, cols: LONGINT;  v2: vyLongintVec.tVector;  x: LONGINT;
+		BEGIN
+			IF v = NIL THEN v := vyLongintVec.New( 0 ) ELSE vyLongintVec.SetLen( v, 0 ) END;
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				IF col >= cols THEN v := NIL;  RETURN END;
+				SELF.SetPos( SELF.Pos() + col * SIZEOF( LONGINT ) );
+				FOR r := 0 TO rows - 1 DO
 					SELF.ReadLInt( x );  vyLongintVec.Append( x, v );  SELF.SetPos( SELF.Pos() + (cols - 1) * SIZEOF( LONGINT ) )
-				END;  
+				END;
 				SELF.SetPos( SELF.Pos() + (cols - 1 - col) * SIZEOF( LONGINT ) )
-			ELSE 
-				r := 0;  
-				LOOP 
-					SELF.ReadLIntsLine( v2 );  
-					IF vyLongintVec.Len( v2 ) = 0 THEN RETURN 
-					ELSIF vyLongintVec.Len( v2 ) <= col THEN v := NIL;  RETURN 
-					END;  
+			ELSE
+				r := 0;
+				LOOP
+					SELF.ReadLIntsLine( v2 );
+					IF vyLongintVec.Len( v2 ) = 0 THEN RETURN
+					ELSIF vyLongintVec.Len( v2 ) <= col THEN v := NIL;  RETURN
+					END;
 					vyLongintVec.Append( vyLongintVec.Get( v2, col ), v );  INC( r )
-				END 
-			END 
-		END ReadColL;  
+				END
+			END
+		END ReadColL;
 
-		PROCEDURE  (*VAR R: Rider*) ReadColI*( VAR v: vyIntVec.tVector;  col: LONGINT );  
-		VAR r, rows, cols: LONGINT;  v2: vyIntVec.tVector;  x: INTEGER;  
-		BEGIN 
-			IF v = NIL THEN v := vyIntVec.New( 0 ) ELSE vyIntVec.SetLen( v, 0 ) END;  
-			IF SELF.type = antsFiles.bin THEN 
-				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );  
-				IF col >= cols THEN v := NIL;  RETURN END;  
-				SELF.SetPos( SELF.Pos() + col * SIZEOF( LONGINT ) );  
-				FOR r := 0 TO rows - 1 DO SELF.ReadInt( x );  vyIntVec.Append( x, v );  SELF.SetPos( SELF.Pos() + (cols - 1) * SIZEOF( LONGINT ) ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadColI*( VAR v: vyIntVec.tVector;  col: LONGINT );
+		VAR r, rows, cols: LONGINT;  v2: vyIntVec.tVector;  x: INTEGER;
+		BEGIN
+			IF v = NIL THEN v := vyIntVec.New( 0 ) ELSE vyIntVec.SetLen( v, 0 ) END;
+			IF SELF.type = antsFiles.bin THEN
+				SELF.ReadLInt( rows );  SELF.ReadLInt( cols );
+				IF col >= cols THEN v := NIL;  RETURN END;
+				SELF.SetPos( SELF.Pos() + col * SIZEOF( LONGINT ) );
+				FOR r := 0 TO rows - 1 DO SELF.ReadInt( x );  vyIntVec.Append( x, v );  SELF.SetPos( SELF.Pos() + (cols - 1) * SIZEOF( LONGINT ) ) END;
 				SELF.SetPos( SELF.Pos() + (cols - 1 - col) * SIZEOF( LONGINT ) )
-			ELSE 
-				r := 0;  
-				LOOP 
-					SELF.ReadIntsLine( v2 );  
-					IF vyIntVec.Len( v2 ) = 0 THEN RETURN 
-					ELSIF vyIntVec.Len( v2 ) <= col THEN v := NIL;  RETURN 
-					END;  
+			ELSE
+				r := 0;
+				LOOP
+					SELF.ReadIntsLine( v2 );
+					IF vyIntVec.Len( v2 ) = 0 THEN RETURN
+					ELSIF vyIntVec.Len( v2 ) <= col THEN v := NIL;  RETURN
+					END;
 					vyIntVec.Append( vyIntVec.Get( v2, col ), v );  INC( r )
-				END 
-			END 
-		END ReadColI;  
+				END
+			END
+		END ReadColI;
 
-		PROCEDURE  (*VAR R: Rider*) WriteX2d*( A: antsArrays.X2d );  
-		BEGIN 
-			IF A = NIL THEN SELF.WriteNilMatrix ELSE SELF.WriteMatrixX( A^ ) END;  
-		END WriteX2d;  
+		PROCEDURE  (*VAR R: Rider*) WriteX2d*( A: antsArrays.X2d );
+		BEGIN
+			IF A = NIL THEN SELF.WriteNilMatrix ELSE SELF.WriteMatrixX( A^ ) END;
+		END WriteX2d;
 
-		PROCEDURE  (*VAR R: Rider*) WriteL2d*( A: antsArrays.L2d );  
-		BEGIN 
-			IF A = NIL THEN SELF.WriteNilMatrix ELSE SELF.WriteMatrixL( A^ ) END;  
-		END WriteL2d;  
+		PROCEDURE  (*VAR R: Rider*) WriteL2d*( A: antsArrays.L2d );
+		BEGIN
+			IF A = NIL THEN SELF.WriteNilMatrix ELSE SELF.WriteMatrixL( A^ ) END;
+		END WriteL2d;
 
-		PROCEDURE  (*VAR R: Rider*) WriteI2d*( A: antsArrays.I2d );  
-		BEGIN 
-			IF A = NIL THEN SELF.WriteNilMatrix ELSE SELF.WriteMatrixI( A^ ) END;  
-		END WriteI2d;  
+		PROCEDURE  (*VAR R: Rider*) WriteI2d*( A: antsArrays.I2d );
+		BEGIN
+			IF A = NIL THEN SELF.WriteNilMatrix ELSE SELF.WriteMatrixI( A^ ) END;
+		END WriteI2d;
 
-		PROCEDURE  (*VAR R: Rider*) ReadX2d*( VAR A: antsArrays.X2d );  
-		VAR rows, cols: LONGINT;  
-		BEGIN 
-			SELF.ScanMatrix( rows, cols );  
-			IF (rows = 0) OR (cols = 0) THEN A := NIL;  RETURN END;  
-			IF (A = NIL ) OR (LEN( A ) # rows) OR (LEN( A[0] ) # cols) THEN NEW( A, rows, cols ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadX2d*( VAR A: antsArrays.X2d );
+		VAR rows, cols: LONGINT;
+		BEGIN
+			SELF.ScanMatrix( rows, cols );
+			IF (rows = 0) OR (cols = 0) THEN A := NIL;  RETURN END;
+			IF (A = NIL ) OR (LEN( A ) # rows) OR (LEN( A[0] ) # cols) THEN NEW( A, rows, cols ) END;
 			SELF.ReadMatrixX( A^ )
-		END ReadX2d;  
+		END ReadX2d;
 
-		PROCEDURE  (*VAR R: Rider*) ReadI2d*( VAR A: antsArrays.I2d );  
-		VAR rows, cols: LONGINT;  
-		BEGIN 
-			SELF.ScanMatrix( rows, cols );  
-			IF (rows = 0) OR (cols = 0) THEN A := NIL;  RETURN END;  
-			IF (A = NIL ) OR (LEN( A ) # rows) OR (LEN( A[0] ) # cols) THEN NEW( A, rows, cols ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadI2d*( VAR A: antsArrays.I2d );
+		VAR rows, cols: LONGINT;
+		BEGIN
+			SELF.ScanMatrix( rows, cols );
+			IF (rows = 0) OR (cols = 0) THEN A := NIL;  RETURN END;
+			IF (A = NIL ) OR (LEN( A ) # rows) OR (LEN( A[0] ) # cols) THEN NEW( A, rows, cols ) END;
 			SELF.ReadMatrixI( A^ )
-		END ReadI2d;  
+		END ReadI2d;
 
-		PROCEDURE  (*VAR R: Rider*) ReadL2d*( VAR A: antsArrays.L2d );  
-		VAR rows, cols: LONGINT;  
-		BEGIN 
-			SELF.ScanMatrix( rows, cols );  
-			IF (rows = 0) OR (cols = 0) THEN A := NIL;  RETURN END;  
-			IF (A = NIL ) OR (LEN( A ) # rows) OR (LEN( A[0] ) # cols) THEN NEW( A, rows, cols ) END;  
+		PROCEDURE  (*VAR R: Rider*) ReadL2d*( VAR A: antsArrays.L2d );
+		VAR rows, cols: LONGINT;
+		BEGIN
+			SELF.ScanMatrix( rows, cols );
+			IF (rows = 0) OR (cols = 0) THEN A := NIL;  RETURN END;
+			IF (A = NIL ) OR (LEN( A ) # rows) OR (LEN( A[0] ) # cols) THEN NEW( A, rows, cols ) END;
 			SELF.ReadMatrixL( A^ )
-		END ReadL2d;  
+		END ReadL2d;
 
-	END Rider;  
-	
-	PROCEDURE StorePGM*( VAR A: antsArrays.L2d;  fname: ARRAY OF CHAR;  d: LONGINT ): BOOLEAN;  
-	VAR w, h: LONGINT;  R: antsFiles.Rider;  x, y: LONGINT;  
-	BEGIN 
-		IF ~R.New( fname ) THEN aM.eSS( "could not open ", fname );  RETURN FALSE END;  
-		R.SetAscii;  R.WriteString( "P5" );  R.WriteLn();  h := LEN( A );  w := LEN( A[0] );  R.WriteLInt( w );  R.WriteLInt( h );  R.WriteLn();  
-		R.WriteLInt( d );  R.Write( 0DX );  R.Write( 0AX );  R.Write( 0DX );  R.Write( 0AX );  R.SetBin;  
+	END Rider;
+
+	PROCEDURE StorePGM*( VAR A: antsArrays.L2d;  fname: ARRAY OF CHAR;  d: LONGINT ): BOOLEAN;
+	VAR w, h: LONGINT;  R: antsFiles.Rider;  x, y: LONGINT;
+	BEGIN
+		IF ~R.New( fname ) THEN aM.eSS( "could not open ", fname );  RETURN FALSE END;
+		R.SetAscii;  R.WriteString( "P5" );  R.WriteLn();  h := LEN( A );  w := LEN( A[0] );  R.WriteLInt( w );  R.WriteLInt( h );  R.WriteLn();
+		R.WriteLInt( d );  R.Write( 0DX );  R.Write( 0AX );  R.Write( 0DX );  R.Write( 0AX );  R.SetBin;
 		(* data *)
 		R.reverse := TRUE;   (*  writer higher  bits then lower  bits *)
-		FOR y := 0 TO h - 1 DO 
-			FOR x := 0 TO w - 1 DO R.WriteInt( SHORT( A[y, x] ) ) END 
-		END;  
-		R.Close;  RETURN TRUE 
-	END StorePGM;  
+		FOR y := 0 TO h - 1 DO
+			FOR x := 0 TO w - 1 DO R.WriteInt( SHORT( A[y, x] ) ) END
+		END;
+		R.Close;  RETURN TRUE
+	END StorePGM;
 
-	PROCEDURE ReadLine( VAR RR: antsFiles.Rider );  
-	VAR ch: CHAR;  
-	CONST CR = 0DX;  LF = 0AX;  
-	BEGIN 
-		RR.Read( ch );  
-		WHILE (ch # CR) & (ch # LF) DO RR.Read( ch ) END;  
-		IF ch = CR THEN 
-			RR.Read( ch );  
-			IF ch # LF THEN RR.SetPos( RR.Pos() - 1 ) END 
-		END 
-	END ReadLine;  
+	PROCEDURE ReadLine( VAR RR: antsFiles.Rider );
+	VAR ch: CHAR;
+	CONST CR = 0DX;  LF = 0AX;
+	BEGIN
+		RR.Read( ch );
+		WHILE (ch # CR) & (ch # LF) DO RR.Read( ch ) END;
+		IF ch = CR THEN
+			RR.Read( ch );
+			IF ch # LF THEN RR.SetPos( RR.Pos() - 1 ) END
+		END
+	END ReadLine;
 
-	PROCEDURE ReadPGM*( VAR A: antsArrays.L2d;  fname: ARRAY OF CHAR;  VAR d: LONGINT ): BOOLEAN;  
-	VAR name: ARRAY 64 OF CHAR;  
-		ch: CHAR;  pos: LONGINT;  w, h: LONGINT;  x, y: LONGINT;  R: antsFiles.Rider;  int: INTEGER;  lint: LONGINT;  
-	BEGIN 
-		IF ~R.Old( fname ) THEN aM.eSS( "could not open ", fname );  RETURN FALSE END;  
-		R.SetAscii;  R.ReadString( name );  
-		IF (R.err) OR (name # "P5") THEN aM.SS( "no (variant of) PGM:", fname );  RETURN FALSE END;  
+	PROCEDURE ReadPGM*( VAR A: antsArrays.L2d;  fname: ARRAY OF CHAR;  VAR d: LONGINT ): BOOLEAN;
+	VAR name: ARRAY 64 OF CHAR;
+		ch: CHAR;  pos: LONGINT;  w, h: LONGINT;  x, y: LONGINT;  R: antsFiles.Rider;  int: INTEGER;  lint: LONGINT;
+	BEGIN
+		IF ~R.Old( fname ) THEN aM.eSS( "could not open ", fname );  RETURN FALSE END;
+		R.SetAscii;  R.ReadString( name );
+		IF (R.err) OR (name # "P5") THEN aM.SS( "no (variant of) PGM:", fname );  RETURN FALSE END;
 		R.ReadLInt( w );   (* dimensions *)
-		R.ReadLInt( h );  R.ReadLInt( d );  
+		R.ReadLInt( h );  R.ReadLInt( d );
 		ReadLine( R );   (* one empty line *)
-		ReadLine( R );  
-		IF R.err THEN RETURN FALSE END;  
-		NEW( A, h, w );  
+		ReadLine( R );
+		IF R.err THEN RETURN FALSE END;
+		NEW( A, h, w );
 		R.SetBin;  R.reverse := TRUE;   (*  read higher  bits then lower  bits *)
 		(* data *)
-		FOR y := 0 TO h - 1 DO 
-			FOR x := 0 TO w - 1 DO 
-				R.ReadInt( int );  lint := int;  
-				IF lint < 0 THEN INC( lint, 65536 ) END;  
+		FOR y := 0 TO h - 1 DO
+			FOR x := 0 TO w - 1 DO
+				R.ReadInt( int );  lint := int;
+				IF lint < 0 THEN INC( lint, 65536 ) END;
 				A[y, x] := lint
-			END 
-		END;  
-		
-		pos := 0;  
-		WHILE ~R.eot DO 
-			INC( pos );  
-			IF pos > 100 THEN antsSecurity.Halt( "File end expected, PGM wrong format" ) END;  
+			END
+		END;
+
+		pos := 0;
+		WHILE ~R.eot DO
+			INC( pos );
+			IF pos > 100 THEN antsSecurity.Halt( "File end expected, PGM wrong format" ) END;
 			R.Read( ch )
-		END;  
-		R.Close;  RETURN TRUE 
-	END ReadPGM;  
+		END;
+		R.Close;  RETURN TRUE
+	END ReadPGM;
 
-	PROCEDURE Analyze*;  
-	VAR l: antsCommands.tScanList;  
-		str: ARRAY 64 OF CHAR;  
-		rows, columns: LONGINT;  R: Rider;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "filename=STR [>ignoreNL]" );  
-		IF antsCommands.ExpectStringFromKeyword( l, "filename", str ) THEN 
-			IF ~R.Old( str ) THEN aM.eSS( "antsReadWrite:Can not open ", str );  RETURN END;  
-			IF antsCommands.FindKeyword( l, "ignoreNL" ) THEN R.ignoreNL := TRUE END;  
-			R.ReadType;  
-			IF R.type = antsFiles.ascii THEN aM.SS( str, " is of type ASCII" ) ELSE aM.vSS( str, " is of type BIN" ) END;  
+	PROCEDURE Analyze*;
+	VAR l: antsCommands.tScanList;
+		str: ARRAY 64 OF CHAR;
+		rows, columns: LONGINT;  R: Rider;
+	BEGIN
+		l := antsCommands.ScanFromPar( "filename=STR [>ignoreNL]" );
+		IF antsCommands.ExpectStringFromKeyword( l, "filename", str ) THEN
+			IF ~R.Old( str ) THEN aM.eSS( "antsReadWrite:Can not open ", str );  RETURN END;
+			IF antsCommands.FindKeyword( l, "ignoreNL" ) THEN R.ignoreNL := TRUE END;
+			R.ReadType;
+			IF R.type = antsFiles.ascii THEN aM.SS( str, " is of type ASCII" ) ELSE aM.vSS( str, " is of type BIN" ) END;
 			R.ScanMatrix( rows, columns );  aM.SISI( "File has rows: ", rows, " and columns: ", columns )
-		END 
-	END Analyze;  
+		END
+	END Analyze;
 
-	PROCEDURE Read*;  
-	VAR l: antsCommands.tScanList;  
-		str: ARRAY 64 OF CHAR;  
-		data: vyBase.Object;  row, col, len: LONGINT;  
-		dataname: ARRAY 64 OF CHAR;  
-		R: Rider;  msg: vyPort.AdjustCoordMsg;  
-	BEGIN 
-		NEW(R); 
-		l := antsCommands.ScanFromPar( "filename=STR data=NAME (>row|>col) [>ignoreNL]" );  
-		IF antsCommands.ExpectStringFromKeyword( l, "filename", str ) & antsCommands.ExpectNameFromKeyword( l, "data", dataname ) THEN 
-			IF ~antsCommands.GetNumberFromKeyword( l, "row", row ) THEN row := -1 END;  
-			IF ~antsCommands.GetNumberFromKeyword( l, "col", col ) THEN col := -1 END;  
-			data := vyName.FindObj( dataname );  
-			IF data = NIL THEN data := vyLongrealVec.New( 0 );  vyName.RegisterNamed( data, dataname ) END;  
-			WITH data: vyLongrealVec.tVector DO 
-				len := 0;  
-				IF ~R.Old( str ) THEN aM.eSS( "antsReadWrite: Can not open ", str );  RETURN END;  
-				IF antsCommands.FindKeyword( l, "ignoreNL" ) THEN R.ignoreNL := TRUE END;  
-				R.ReadType;  
+	PROCEDURE Read*;
+	VAR l: antsCommands.tScanList;
+		str: ARRAY 64 OF CHAR;
+		data: vyBase.Object;  row, col, len: LONGINT;
+		dataname: ARRAY 64 OF CHAR;
+		R: Rider;  msg: vyPort.AdjustCoordMsg;
+	BEGIN
+		NEW(R);
+		l := antsCommands.ScanFromPar( "filename=STR data=NAME (>row|>col) [>ignoreNL]" );
+		IF antsCommands.ExpectStringFromKeyword( l, "filename", str ) & antsCommands.ExpectNameFromKeyword( l, "data", dataname ) THEN
+			IF ~antsCommands.GetNumberFromKeyword( l, "row", row ) THEN row := -1 END;
+			IF ~antsCommands.GetNumberFromKeyword( l, "col", col ) THEN col := -1 END;
+			data := vyName.FindObj( dataname );
+			IF data = NIL THEN data := vyLongrealVec.New( 0 );  vyName.RegisterNamed( data, dataname ) END;
+			WITH data: vyLongrealVec.tVector DO
+				len := 0;
+				IF ~R.Old( str ) THEN aM.eSS( "antsReadWrite: Can not open ", str );  RETURN END;
+				IF antsCommands.FindKeyword( l, "ignoreNL" ) THEN R.ignoreNL := TRUE END;
+				R.ReadType;
 				IF row # -1 THEN aM.SI( "antsReadWrite:reading row", row );  R.ReadRowX( data, row )
 				ELSIF col # -1 THEN R.ReadColX( data, col )
-				END;  
-				R.Close;  
-				IF data # NIL THEN aM.vSI( "antsReadWrite:Read File, len of data : ", vyLongrealVec.Len( data ) ) ELSE aM.eS( "antsReadWrite:Problems reading, check filename, row/column (index: 0..len-1)" ) END;  
+				END;
+				R.Close;
+				IF data # NIL THEN aM.vSI( "antsReadWrite:Read File, len of data : ", vyLongrealVec.Len( data ) ) ELSE aM.eS( "antsReadWrite:Problems reading, check filename, row/column (index: 0..len-1)" ) END;
 				vyBase.ForUsersHandle( data, msg )
-			END 
-		END 
-	END Read;  
+			END
+		END
+	END Read;
 
-	PROCEDURE Write*;  
-	VAR l: antsCommands.tScanList;  
-		str: ARRAY 64 OF CHAR;  
-		data: vyBase.Object;  R: Rider;  len: LONGINT;  vec: antsArrays.X1d;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "data=OBJ  filename=STR " );  
-		IF antsCommands.ExpectStringFromKeyword( l, "filename", str ) & antsCommands.ExpectObjectFromKeyword( l, "data", data ) THEN 
-			IF data = NIL THEN aM.eS( "antsReadWrite: no Object " );  RETURN 
-			ELSE 
-				R.ForceNew( str );  
+	PROCEDURE Write*;
+	VAR l: antsCommands.tScanList;
+		str: ARRAY 64 OF CHAR;
+		data: vyBase.Object;  R: Rider;  len: LONGINT;  vec: antsArrays.X1d;
+	BEGIN
+		l := antsCommands.ScanFromPar( "data=OBJ  filename=STR " );
+		IF antsCommands.ExpectStringFromKeyword( l, "filename", str ) & antsCommands.ExpectObjectFromKeyword( l, "data", data ) THEN
+			IF data = NIL THEN aM.eS( "antsReadWrite: no Object " );  RETURN
+			ELSE
+				R.ForceNew( str );
 				R.SetAscii;   (* remove if binary preferred *)
-				R.WriteType;  len := vyLongrealVec.Len( data( vyLongrealVec.tVector ) );  
-				IF (vec = NIL ) OR (LEN( vec ) # len) THEN NEW( vec, len ) END;  
-				vyLongrealVec.CopyToArray( data( vyLongrealVec.tVector ), vec^ );  R.WriteX1d( vec );  R.Close;  
-			END 
-		END 
-	END Write;  
+				R.WriteType;  len := vyLongrealVec.Len( data( vyLongrealVec.tVector ) );
+				IF (vec = NIL ) OR (LEN( vec ) # len) THEN NEW( vec, len ) END;
+				vyLongrealVec.CopyToArray( data( vyLongrealVec.tVector ), vec^ );  R.WriteX1d( vec );  R.Close;
+			END
+		END
+	END Write;
 
-	PROCEDURE ToBin*;  
-	VAR from, to: ARRAY 256 OF CHAR;  
-		R: Rider;  A: antsArrays.X2d;  
-	BEGIN 
-		antsCommands.InitScan( "from=STR to=STR" );  
-		IF antsCommands.ExpectString( "from", from ) & antsCommands.ExpectString( "to", to ) THEN 
-			aM.S( "converting" );  aM.S( from );  aM.S( to );  
-			IF ~R.Old( from ) THEN aM.eSS( "antsReadWrite: could not open ", from );  RETURN END;  
-			IF antsCommands.Find( "ignoreNL" ) THEN R.ignoreNL := TRUE END;  
-			R.ReadType;  
-			IF R.type = antsFiles.bin THEN aM.SS( from, " is of type bin, nothing to do" );  RETURN END;  
-			R.ReadX2d( A );  R.Close;  
-			IF ~R.New( to ) THEN aM.eSS( "antsReadWrite: could not open ", to );  RETURN END;  
+	PROCEDURE ToBin*;
+	VAR from, to: ARRAY 256 OF CHAR;
+		R: Rider;  A: antsArrays.X2d;
+	BEGIN
+		antsCommands.InitScan( "from=STR to=STR" );
+		IF antsCommands.ExpectString( "from", from ) & antsCommands.ExpectString( "to", to ) THEN
+			aM.S( "converting" );  aM.S( from );  aM.S( to );
+			IF ~R.Old( from ) THEN aM.eSS( "antsReadWrite: could not open ", from );  RETURN END;
+			IF antsCommands.Find( "ignoreNL" ) THEN R.ignoreNL := TRUE END;
+			R.ReadType;
+			IF R.type = antsFiles.bin THEN aM.SS( from, " is of type bin, nothing to do" );  RETURN END;
+			R.ReadX2d( A );  R.Close;
+			IF ~R.New( to ) THEN aM.eSS( "antsReadWrite: could not open ", to );  RETURN END;
 			R.SetBin;  R.WriteType;  R.WriteX2d( A );  R.Close;  aM.S( "done." )
-		END 
-	END ToBin;  
+		END
+	END ToBin;
 
-	PROCEDURE Test*;  
-	VAR i, j, rows, cols: LONGINT;  R, RR: Rider;  AA: antsArrays.X2d;  v: vyLongrealVec.tVector;  
-	BEGIN 
+	PROCEDURE Test*;
+	VAR i, j, rows, cols: LONGINT;  R, RR: Rider;  AA: antsArrays.X2d;  v: vyLongrealVec.tVector;
+	BEGIN
 	(*
 	b :=  ReadPGM(A,"private/fromPotts/patch071010.pgm",depth);
 	b := StorePGM(A,"testpgm",depth);
 	b := ReadPGM(A,"testpgm",depth);
 	*)
 		(* ReadPGM(A,"test.pgm",depth); *)
-		
-		rows := 10;  cols := 10;  NEW( AA, rows, cols );  
-		
-		FOR i := 0 TO rows - 1 DO 
-			FOR j := 0 TO cols - 1 DO AA[i, j] := i * j END 
-		END;  
-		
-		R.ForceNew( "testd" );  R.Set( antsFiles.ascii );  R.WriteType;  R.WriteMatrixX( AA^ );  R.Close;  
 
-		R.ForceOld( "testd" );  R.ReadType;  R.ScanMatrix( rows, cols );  aM.SISI( "rows", rows, "cols", cols );  R.ReadMatrixX( AA^ );  
+		rows := 10;  cols := 10;  NEW( AA, rows, cols );
+
+		FOR i := 0 TO rows - 1 DO
+			FOR j := 0 TO cols - 1 DO AA[i, j] := i * j END
+		END;
+
+		R.ForceNew( "testd" );  R.Set( antsFiles.ascii );  R.WriteType;  R.WriteMatrixX( AA^ );  R.Close;
+
+		R.ForceOld( "testd" );  R.ReadType;  R.ScanMatrix( rows, cols );  aM.SISI( "rows", rows, "cols", cols );  R.ReadMatrixX( AA^ );
 		(*
 	FOR i := 0 TO rows-1 DO
 	FOR j := 0 TO cols-1 DO
@@ -516,26 +516,26 @@ TYPE
 	END;
 	END;
 	*)
-		
-		R.Close;  
 
-		R.ForceNew( "testd" );  R.SetBin;  R.WriteType;  R.WriteMatrixX( AA^ );  R.Close;  
+		R.Close;
 
-		R.ForceOld( "testd" );  R.ReadType;  R.ScanMatrix( rows, cols );  aM.SISI( "rows", rows, "cols", cols );  R.ReadMatrixX( AA^ );  
-		
-		FOR i := 0 TO rows - 1 DO 
-			FOR j := 0 TO cols - 1 DO aM.SR( "val", AA[i, j] ) END 
-		END;  
-		R.Close;  
+		R.ForceNew( "testd" );  R.SetBin;  R.WriteType;  R.WriteMatrixX( AA^ );  R.Close;
 
-		RR.ForceOld( "testd" );  RR.ReadType;  RR.ScanMatrix( rows, cols );  aM.S( "before scan" );  RR.ReadRowX( v, 3 );  aM.S( "after read" );  
-		FOR i := 0 TO vyLongrealVec.Len( v ) - 1 DO aM.SR( " value    ***", vyLongrealVec.Get( v, i ) ) END;  
-		
-		RR.ForceOld( "testd" );  RR.ReadType;  RR.ScanMatrix( rows, cols );  aM.S( "before scan" );  
+		R.ForceOld( "testd" );  R.ReadType;  R.ScanMatrix( rows, cols );  aM.SISI( "rows", rows, "cols", cols );  R.ReadMatrixX( AA^ );
 
-		RR.ReadColX( v, 3 );  aM.S( "after read col" );  
-		FOR i := 0 TO vyLongrealVec.Len( v ) - 1 DO aM.SR( " value    ***", vyLongrealVec.Get( v, i ) ) END;  
-		
+		FOR i := 0 TO rows - 1 DO
+			FOR j := 0 TO cols - 1 DO aM.SR( "val", AA[i, j] ) END
+		END;
+		R.Close;
+
+		RR.ForceOld( "testd" );  RR.ReadType;  RR.ScanMatrix( rows, cols );  aM.S( "before scan" );  RR.ReadRowX( v, 3 );  aM.S( "after read" );
+		FOR i := 0 TO vyLongrealVec.Len( v ) - 1 DO aM.SR( " value    ***", vyLongrealVec.Get( v, i ) ) END;
+
+		RR.ForceOld( "testd" );  RR.ReadType;  RR.ScanMatrix( rows, cols );  aM.S( "before scan" );
+
+		RR.ReadColX( v, 3 );  aM.S( "after read col" );
+		FOR i := 0 TO vyLongrealVec.Len( v ) - 1 DO aM.SR( " value    ***", vyLongrealVec.Get( v, i ) ) END;
+
 		RR.Close
 		(*
 	R.ForceOld("angie/private/testMatr");
@@ -551,10 +551,10 @@ TYPE
 	END;
 	END;
 	*)
-	END Test;  
+	END Test;
 
-BEGIN 
-	aM.launch;  
+BEGIN
+	aM.launch;
 END antsReadWrite.
 
 testd

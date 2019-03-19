@@ -22,7 +22,7 @@ CONST
 
 	(** Process priorities *)
 	Low* = Activities.DefaultPriority;								(* "user" priorities *)
-	Normal* = Activities.DefaultPriority;	
+	Normal* = Activities.DefaultPriority;
 	High* = Activities.HighPriority;
 	Realtime* = Activities.RealtimePriority;						(* reserved for interrupt handling and realtime apps *)
 
@@ -91,7 +91,7 @@ TYPE
 		restartSP-: LONGINT;   (** stack level at start of body, for SAFE exception recovery *)
 		cpuCycles, lastCpuCycles : CpuCyclesArray;
 	END Process;
-	
+
 	InterruptList = POINTER TO RECORD
 		next: InterruptList;
 		handler: EventHandler
@@ -102,7 +102,7 @@ TYPE
 		VAR root: InterruptList;
 		VAR cancelled: BOOLEAN;
 		VAR interrupt: Interrupts.Interrupt;
-		
+
 		PROCEDURE &Init (irq: SIZE);
 		BEGIN
 			Interrupts.Install (interrupt, irq);
@@ -116,7 +116,7 @@ TYPE
 			item.handler := handler;
 			root := item;
 		END Add;
-		
+
 		PROCEDURE Remove (handler: EventHandler);
 		VAR previous, current: InterruptList;
 		BEGIN {EXCLUSIVE}
@@ -132,7 +132,7 @@ TYPE
 				END;
 			END;
 		END Remove;
-		
+
 		PROCEDURE Count(): SIZE;
 		VAR count := 0: SIZE; item: InterruptList;
 		BEGIN {EXCLUSIVE}
@@ -140,7 +140,7 @@ TYPE
 			WHILE item # NIL DO INC (count); item := item.next END;
 			RETURN count;
 		END Count;
-		
+
 		PROCEDURE Cancel;
 		BEGIN {EXCLUSIVE}
 			IF ~cancelled THEN
@@ -178,7 +178,7 @@ VAR
 
 	(* for compatibility and later extension *)
 	TraceProcessHook* := NIL: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
-	
+
 (* Set the current process' priority. *)
 PROCEDURE SetPriority*( priority: LONGINT );
 BEGIN
@@ -249,7 +249,7 @@ PROCEDURE TerminateThis*( t: Process;  halt: BOOLEAN );
 END TerminateThis;
 
 (* called by WMProcessInfo to obtain the current state of a running process *)
-PROCEDURE UpdateProcessState*( p: Process );	
+PROCEDURE UpdateProcessState*( p: Process );
 BEGIN
 	(*  update p.stat.{PC,BP,SP}  *)
 END UpdateProcessState;

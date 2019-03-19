@@ -99,7 +99,7 @@ BEGIN
 	memsize := 0;
 	FOR i := 0 TO numEntries-1 DO
 		MemMapElement := SYSTEM.VAL(EFI.MemoryDescriptorPointer, ADDRESSOF(MemMap[0])+i*DescriptorSize);
-		
+
 (*		IF (MemMapElement.Type #  EFI.MTConventionalMemory *)
 		IF ( (MemMapElement.Type = EFI.MTRuntimeServicesCode) OR ( MemMapElement.Type = EFI.MTRuntimeServicesData)
 			OR (MemMapElement.Type = EFI.MTUnusableMemory) OR (MemMapElement.Type = EFI.MTACPIReclaimMemory)
@@ -119,7 +119,7 @@ BEGIN
 			Trace.Ln;
 
 
-			
+
 			IF (tmp # MemMapElement.PhysicalStart) THEN
 				SYSTEM.PUT(ADDRESS(adr+(numcritEntries*2+1+1)*8), MemMapElement.PhysicalStart);
 				tmp := MemMapElement.PhysicalStart+MemMapElement.NumberOfPages*LONG(EFI.PageSize);

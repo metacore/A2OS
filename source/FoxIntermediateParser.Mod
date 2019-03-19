@@ -294,7 +294,7 @@ TYPE
 		PROCEDURE ParseInstruction(VAR instruction: IntermediateCode.Instruction; sectionList: Sections.SectionList);
 		VAR
 			opCode: SHORTINT;
-			positionOfInstruction, positionOfOperand: Position; 
+			positionOfInstruction, positionOfOperand: Position;
 			operandNumber: LONGINT;
 			operand: IntermediateCode.Operand;
 			operands: ARRAY 3 OF IntermediateCode.Operand;
@@ -586,7 +586,7 @@ TYPE
 		assemblerScanner: Scanner.AssemblerScanner;
 		intermediateCodeParser: IntermediateCodeParser;
 	BEGIN
-		assemblerScanner := Scanner.NewAssemblerScanner("",reader,0,diagnostics); 
+		assemblerScanner := Scanner.NewAssemblerScanner("",reader,0,diagnostics);
 		NEW(intermediateCodeParser, diagnostics, module.system);
 		RETURN intermediateCodeParser.ParseModuleContent(assemblerScanner, module)
 	END ParseReader;

@@ -13,8 +13,8 @@ IMPORT SYSTEM, Disks;
 		END;
 
 	TYPE
-	
-	(* Yet very simple disk cache. 
+
+	(* Yet very simple disk cache.
 		- synchronous
 		- One-way associative
 		- Write-through
@@ -72,7 +72,7 @@ IMPORT SYSTEM, Disks;
 
 END DiskCaches.
 
-(** USAGE PATTERN: 
+(** USAGE PATTERN:
 
 	VirtualDisk = OBJECT(Disks.Device)
 	VAR
@@ -83,13 +83,13 @@ END DiskCaches.
 		BEGIN
 			.... OLD TRANSFER CODE
 		END TransferX;
-		
+
 		PROCEDURE Transfer(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN{EXCLUSIVE}
-			cache.Transfer(op,block,num,data,ofs,res) 
+			cache.Transfer(op,block,num,data,ofs,res)
 		END Transfer;
 
-		....		
+		....
 
 		PROCEDURE &Init(CONST name : ARRAY OF CHAR; blockSize, cyls, hds, spt : LONGINT);
 		BEGIN

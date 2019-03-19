@@ -133,4 +133,4 @@ TYPE
 		RETURN inverse
 	END Invert;
 
-END LinEqLU. 
+END LinEqLU.

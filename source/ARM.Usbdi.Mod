@@ -214,7 +214,7 @@ TYPE
 		maxPacketSize* : LONGINT;
 
 		mode* : LONGINT;
-		
+
 		(** Transfer 'bufferLen' bytes from/to the specified buffer, starting at 'offset' *)
 
 		PROCEDURE Transfer*(bufferLen, offset : LONGINT; VAR buffer : Buffer) : Status;

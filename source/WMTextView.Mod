@@ -671,7 +671,7 @@ TYPE
 		highlighter : SyntaxHighlighter.Highlighter;
 		state : SyntaxHighlighter.State;
 		fontCache : FontCache;
-		
+
 		(** vertical centering -- momentarily only working for a single line *)
 		textAlignV-: WMProperties.Int32Property;
 
@@ -834,9 +834,9 @@ TYPE
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			(*Initialize^; RecacheProperties;*)
-			
+
 			IF text#NIL THEN	Resized 	END; (*implicit redundant invalidate in Resized *)(*! Resized is probably redundant*)
-			
+
 			(* from now on, bidi-formatting can be done *)
 			layout.initialized := TRUE;
 			Initialize^;
@@ -900,7 +900,7 @@ TYPE
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			RecacheProperties^;
-			
+
 			defaultTextColorI := defaultTextColor.Get();
 			defaultTextBgColorI := defaultTextBgColor.Get();
 			isMultiLineI := isMultiLine.Get();
@@ -920,13 +920,13 @@ TYPE
 			indicateTabsI := indicateTabs.Get();
 			clBgCurrentLineI := clBgCurrentLine.Get();
 			string := highlighting.Get();
-			
+
 			IF (string # NIL) THEN
 				highlighter := SyntaxHighlighter.GetHighlighter(string^);
 			ELSE
 				highlighter := NIL;
 			END;
-			IF text#NIL THEN 
+			IF text#NIL THEN
 				SetSyntaxHighlighter(highlighter);
 				UpdateScrollbars;
 				IF ~WMRectangles.IsEqual(oldBorders, bordersI) THEN BordersChanged END;
@@ -2046,10 +2046,10 @@ TYPE
 						ascent := vc.bounds.GetHeight() - style.voff;
 						descent := style.voff;
 						(* Add a Sequencer to the object if none exists *)
-			
+
 						IF (vc.sequencer = NIL) OR (vc.sequencer # sequencer) THEN
 							vc.SetSequencer(sequencer);
-							IF sequencer#NIL THEN vc.Reset(NIL, NIL); END; 
+							IF sequencer#NIL THEN vc.Reset(NIL, NIL); END;
 						END;
 					END
 				ELSIF ch = Texts.TabChar THEN
@@ -2684,7 +2684,7 @@ TYPE
 			END;
 
 			top := borderClip.t;
-			IF (la = lb) & (textAlignV.Get() = WMGraphics.AlignCenter) THEN 
+			IF (la = lb) & (textAlignV.Get() = WMGraphics.AlignCenter) THEN
 				top := (borderClip.t+borderClip.b-layout.lines[la].height) DIV 2;
 				(* something is wrong with ascent and height here, does not comply with the notions in fonts *)
 			END;
@@ -2720,12 +2720,12 @@ TYPE
 
 	(* navigation *)
 		PROCEDURE WheelMove*(dz: LONGINT); (** PROTECTED *)
-		VAR ddz: DZ; 
+		VAR ddz: DZ;
 		BEGIN
 			IF modifierFlags * Inputs.Ctrl # {} THEN (* CTRL pressed -> Resize Font*)
 				text.AcquireWrite;
 				IF dz > 0 THEN dz := 1 ELSIF dz<0 THEN dz := -1 END;
-				NEW(ddz, dz); 
+				NEW(ddz, dz);
 				text.UpdateAttributes(0, text.GetLength(), ChangeAttribute, ddz);
 				text.ReleaseWrite;
 			ELSIF mouseWheelScrollSpeedI # 0 THEN
@@ -3223,14 +3223,14 @@ TYPE
 				text.ReleaseRead
 			END;
 		END DragOver;
-		
+
 		PROCEDURE ConfirmDrag*(accept: BOOLEAN; dragInfo: WMWindowManager.DragInfo);
 		BEGIN
-			IF dragInfo.onAccept # NIL THEN 
-				dragInfo.onAccept(SELF, dragInfo) 
+			IF dragInfo.onAccept # NIL THEN
+				dragInfo.onAccept(SELF, dragInfo)
 			END;
 		END ConfirmDrag;
-		
+
 		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
 		VAR dropTarget : TextDropTarget;
 			pos, internalPos : LONGINT;
@@ -4220,7 +4220,7 @@ BEGIN
 	IF (newSize < 8) THEN newSize := 8; END;
 END GetNewSize;
 
-TYPE 
+TYPE
 
 DZ = OBJECT (Texts.Attributes);
 VAR value: LONGINT;
@@ -4228,7 +4228,7 @@ VAR value: LONGINT;
 	BEGIN
 		value := v;
 	END Init;
-END DZ; 
+END DZ;
 
 PROCEDURE EnsureAttribute(VAR attr : Texts.Attributes);
 BEGIN

@@ -364,7 +364,7 @@ BEGIN
 
 	w.String("MODULE "); w.String(m.name^); w.Ln;
 	w.Ln;
-	
+
 	IF m.preComment # NIL THEN
 		comment := m.preComment.first;
 		WHILE comment # NIL DO

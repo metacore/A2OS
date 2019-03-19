@@ -1,4 +1,4 @@
-(* Copyright (c) Felix Friedrich, ETH Zürich, 2017 
+(* Copyright (c) Felix Friedrich, ETH Zürich, 2017
 	This is the 64-bit version of Kernel32. The name may be misleading but it copies 1:1 what the Microsoft developers did
 	[There is no Kernel64 DLL in WIndows. Kernel32 is chosen according to the bit-width of the application]
 *)
@@ -9,7 +9,7 @@ IMPORT SYSTEM,Trace;
 
 CONST
 	Generic*= TRUE;
-	
+
 	(** NIL pointer/address value *)
 	NULL* = 0;
 
@@ -61,7 +61,7 @@ CONST
 	HeapNoSerialize* = 2H;
 	HeapGenerateExceptions* = 4H;
 	HeapZeroMemory* = 8H;
-	
+
 	(** protect (VirtualAlloc) flags *)
 	PageReadWrite* = 2;  PageExecuteReadWrite* = 6;
 
@@ -157,7 +157,7 @@ CONST
 	(** GetLastError *)
 	ErrorSuccess* = 0;  ErrorFileNotFound* = 2;  ErrorAccessDenied* = 5;
 	ErrorInvalidParameter* = 87;
-	
+
 	ErrorIoPending* = 997; (** Overlapped I/O operation is in progress *)
 TYPE
 	(* OutputStringProc* = PROCEDURE (VAR str: ARRAY OF CHAR); *)
@@ -223,21 +223,21 @@ TYPE
 	END;
 	#ELSIF AMD64 THEN
 	Context*= RECORD
-		P1Home, P2Home, P3Home, P4Home, P5Home, P6Home: SIZE; 
-		
-		ContextFlags*: WORDSET; 
-		MxCsr*: DWORD; 
-		
-		CS*, DS*, ES*, FS*, GS*, SS*: INTEGER; 
+		P1Home, P2Home, P3Home, P4Home, P5Home, P6Home: SIZE;
+
+		ContextFlags*: WORDSET;
+		MxCsr*: DWORD;
+
+		CS*, DS*, ES*, FS*, GS*, SS*: INTEGER;
 		FLAGS*: DWORD;
-		
+
 		Dr0*, Dr1*, Dr2*, Dr3*, Dr6*, Dr7*: SIZE;
-		
+
 		RA*, RC*, RD*, RB*, SP*, BP*, RSI*, RDI*, R8*, R9*, R10*, R11*, R12*, R13*, R14*, R15*: ADDRESS;
-		PC*: ADDRESS; 
-		
+		PC*: ADDRESS;
+
 		remainder (* leave enough space for the rest here *): ARRAY 1024 OF CHAR;
-		
+
 		(*    union {
 			XMM_SAVE_AREA32 FltSave;
 			struct {
@@ -272,9 +272,9 @@ TYPE
 			DWORD64 LastExceptionFromRip;
 		} CONTEXT, *PCONTEXT;
 		*)
-	END; 
-	#END;			
-	
+	END;
+	#END;
+
 	ExceptionRecordPtr* = POINTER {UNSAFE,UNTRACED} TO ExceptionRecord;
 	ExceptionRecord* = RECORD
 		ExceptionCode*, ExceptionFlags*: LONGINT;
@@ -293,7 +293,7 @@ TYPE
 	ExceptionPointers* = RECORD
 		exception* {UNTRACED}: ExceptionRecordPtr;
 		context*: ContextPtr;
-	END; 																														   
+	END;
 
 	VectoredExceptionHandler* = PROCEDURE {WINAPI} ( CONST e: ExceptionPointers): DWORD;
 
@@ -362,7 +362,7 @@ TYPE
 		exc*: ExceptionRecord;
 		cont*: Context
 	END;
-	
+
 
 	CommTimeouts* = RECORD
 		ReadIntervalTimeout*, ReadTotalTimeoutMultiplier*, ReadTotalTimeoutConstant*, WriteTotalTimeoutMultiplier*, WriteTotalTimeoutConstant*: LONGINT
@@ -405,7 +405,7 @@ TYPE
 		DaylightDate*: SystemTime;
 		DaylightBias*: LONGINT;
 	END;
-	
+
 	(** Contains information used in asynchronous (or overlapped) input and output (I/O). *)
 	Overlapped* = RECORD
 		Internal*: LONGINT;
@@ -426,9 +426,9 @@ VAR
 	(** The LoadLibrary function maps the specified executable module into the address space of the calling process. *)
 	LoadLibrary-: PROCEDURE {WINAPI} ( CONST lpLibFileName: ARRAY   OF CHAR ): HINSTANCE;   (* must be patched by linker / PE loader *)
 	(** registers a vectored continue handler. **)
-	AddVectoredContinueHandler-: PROCEDURE {WINAPI} (firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler); 
+	AddVectoredContinueHandler-: PROCEDURE {WINAPI} (firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler);
 	(** registers a vectored exception handler. **)
-	AddVectoredExceptionHandler-: PROCEDURE {WINAPI} (firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler); 
+	AddVectoredExceptionHandler-: PROCEDURE {WINAPI} (firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler);
 	(** The AllocConsole function allocates a new console for the calling process. *)
 	AllocConsole-: PROCEDURE {WINAPI} ( ): BOOL;
 	(** The AttachConsole function attaches the calling process to the console of the specified process. *)
@@ -493,7 +493,7 @@ VAR
 																			 dwOptions: WORDSET ): BOOL;
 	(** The EnterCriticalSection function waits for ownership of the specified critical section object. *)
 	EnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
-	
+
 	(** The EscapeCommFunction function directs a specified communications device to perform an extended function. *)
 	EscapeCommFunction-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																					  dwFunc: LONGINT ): BOOL;
@@ -596,11 +596,11 @@ VAR
 	(** The GetModuleHandle function returns a module handle for the specified module if the file has been mapped
 			into the address space of the calling process. *)
 	GetModuleHandle-: PROCEDURE {WINAPI} ( CONST lpModuleName: ARRAY   OF CHAR ): HMODULE;
-	
-	(** Retrieves the results of an overlapped operation on the specified file, named pipe, or communications device. 
+
+	(** Retrieves the results of an overlapped operation on the specified file, named pipe, or communications device.
 			To specify a timeout interval or wait on an alertable thread. *)
 	GetOverlappedResult-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL ): BOOL;
-	
+
 	(** The GetPrivateProfileString function retrieves a string from the specified section in an initialization file.*)
 	GetPrivateProfileString-: PROCEDURE {WINAPI} ( CONST lpAppName: ARRAY OF CHAR;
 																			CONST lpKeyName: ARRAY OF CHAR;
@@ -703,7 +703,7 @@ VAR
 
 	(** The LeaveCriticalSection function releases ownership of the specified critical section object. *)
 	LeaveCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
-		
+
 	(** The LocalFileTimeToFileTime function converts a local file time to a file time based on the Coordinated
 			Universal Time (UTC). *)
 	LocalFileTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpLocalFileTime: FileTime;
@@ -752,9 +752,9 @@ VAR
 	(** The RemoveDirectory function deletes an existing empty directory. *)
 	RemoveDirectory-: PROCEDURE {WINAPI} ( VAR lpPathName: ARRAY   OF CHAR ): BOOL;
 	(** unregisters a vectored continue handler. **)
-	RemoveVectoredContinueHandler-: PROCEDURE {WINAPI} (vectoredHandler: VectoredExceptionHandler): ULONG; 
+	RemoveVectoredContinueHandler-: PROCEDURE {WINAPI} (vectoredHandler: VectoredExceptionHandler): ULONG;
 	(** unregisters a vectored exception handler. **)
-	RemoveVectoredExceptionHandler-: PROCEDURE {WINAPI} (vectoredHandler: VectoredExceptionHandler): ULONG; 
+	RemoveVectoredExceptionHandler-: PROCEDURE {WINAPI} (vectoredHandler: VectoredExceptionHandler): ULONG;
 	(** The ResetEvent function sets the state of the specified event object to nonsignaled. *)
 	ResetEvent-: PROCEDURE {WINAPI} ( hEvent: HANDLE ): BOOL;
 	(** The ResumeThread function decrements a thread's suspend count. *)
@@ -858,10 +858,10 @@ VAR
 															   VAR lpOverlapped: Overlapped ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)
-	
+
 	(** Method used to write text to the Console. *)
 	OutputString*: PROCEDURE ( CONST a: ARRAY OF CHAR );
-	
+
 
 	(* OutputString*: OutputStringProc; *)
 	Shutdown*: PROCEDURE ( code: LONGINT );
@@ -894,13 +894,13 @@ VAR
 	PROCEDURE NoOutputString(CONST str: ARRAY OF CHAR);
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END NoOutputString;
-	
+
 	PROCEDURE ConsoleString(CONST str: ARRAY OF CHAR);
 	VAR i: LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		i := 0; 
+		i := 0;
 		WHILE (i<LEN(str)) & (str[i] # 0X) DO
-			TraceChar(str[i]);INC(i); 
+			TraceChar(str[i]);INC(i);
 		END;
 	END ConsoleString;
 
@@ -917,7 +917,7 @@ VAR
 		pad: ARRAY 256 OF CHAR;
 	BEGIN
 		IF IsDebuggerPresent() = True THEN
-			OutputDebugString( str );  
+			OutputDebugString( str );
 			s[8] := 0X;
 			FOR i := 7 TO 0 BY -1 DO
 				d := x MOD 16;
@@ -936,7 +936,7 @@ VAR
 		ExitProcess(l);
 	#END;
 	END ShutdownP;
-	
+
 	PROCEDURE Init*;
 	VAR mod: HMODULE;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -997,9 +997,9 @@ VAR
 		GetProcAddress(mod, "GetLogicalDriveStringsA",SYSTEM.VAL(ADDRESS,GetLogicalDriveStrings));
 		GetProcAddress(mod, "GetLogicalDrives",SYSTEM.VAL(ADDRESS,GetLogicalDrives));
 		GetProcAddress(mod, "GetModuleFileNameA",SYSTEM.VAL(ADDRESS,GetModuleFileName));
-		
+
 		GetProcAddress(mod, "GetModuleHandleA",SYSTEM.VAL(ADDRESS,GetModuleHandle));
-		
+
 		GetProcAddress(mod, "GetOverlappedResult",SYSTEM.VAL(ADDRESS,GetOverlappedResult));
 		GetProcAddress(mod, "GetPrivateProfileStringA",SYSTEM.VAL(ADDRESS,GetPrivateProfileString));
 		(* must be done by linker: GetProcAddress(mod, "GetProcAddress",SYSTEM.VAL(ADDRESS,getProcAddress)); *)
@@ -1007,9 +1007,9 @@ VAR
 		GetProcAddress(mod, "GetProcessHeap",SYSTEM.VAL(ADDRESS,GetProcessHeap));
 		GetProcAddress(mod, "GetProcessTimes", SYSTEM.VAL(ADDRESS, GetProcessTimes));
 		GetProcAddress(mod, "GetStartupInfoA",SYSTEM.VAL(ADDRESS,GetStartupInfo));
-		
+
 		GetProcAddress(mod, "GetStdHandle",SYSTEM.VAL(ADDRESS,GetStdHandle));
-		
+
 		GetProcAddress(mod, "GetSystemInfo",SYSTEM.VAL(ADDRESS,GetSystemInfo));
 		GetProcAddress(mod, "GetSystemTime",SYSTEM.VAL(ADDRESS,GetSystemTime));
 		GetProcAddress(mod, "GetTempFileNameA",SYSTEM.VAL(ADDRESS,GetTempFileName));
@@ -1035,9 +1035,9 @@ VAR
 		GetProcAddress(mod, "InitializeCriticalSection",SYSTEM.VAL(ADDRESS,InitializeCriticalSection));
 		GetProcAddress(mod, "InterlockedDecrement",SYSTEM.VAL(ADDRESS,InterlockedDecrement));
 		GetProcAddress(mod, "InterlockedIncrement",SYSTEM.VAL(ADDRESS,InterlockedIncrement));
-		
+
 		GetProcAddress(mod, "IsDebuggerPresent",SYSTEM.VAL(ADDRESS,IsDebuggerPresent));
-		
+
 		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,LeaveCriticalSection));
 		(* must be done by linker: GetProcAddress(mod, "LoadLibraryA",SYSTEM.VAL(ADDRESS,LoadLibrary)); *)
 		GetProcAddress(mod, "LocalFileTimeToFileTime",SYSTEM.VAL(ADDRESS,LocalFileTimeToFileTime));
@@ -1091,11 +1091,11 @@ VAR
 		GetProcAddress(mod, "VirtualAlloc",SYSTEM.VAL(ADDRESS,VirtualAlloc));
 		GetProcAddress(mod, "VirtualFree",SYSTEM.VAL(ADDRESS,VirtualFree));
 		GetProcAddress(mod, "WaitForSingleObject",SYSTEM.VAL(ADDRESS,WaitForSingleObject));
-		
+
 		GetProcAddress(mod, "WriteFile",SYSTEM.VAL(ADDRESS,WriteFile));
-		
+
 		GetProcAddress(mod, "GlobalMemoryStatusEx",SYSTEM.VAL(ADDRESS,GlobalMemoryStatusEx));
-		
+
 		isEXE := hInstance = NULL;
 		IF isEXE THEN hInstance := GetModuleHandle( NIL ) END;
 
@@ -1106,7 +1106,7 @@ VAR
 			OutputString := ConsoleString
 		END;
 	END Init;
-	
+
 	VAR g: BOOLEAN;
 
 VAR hout: HANDLE;
@@ -1121,7 +1121,7 @@ VAR hout: HANDLE;
 
 
 #IF I386 THEN
-	
+
 	#IF SHAREDLIB THEN
 
 		PROCEDURE ObjectsAttachThread();
@@ -1129,22 +1129,22 @@ VAR hout: HANDLE;
 		BEGIN
 			AttachThread;
 		END ObjectsAttachThread;
-		
+
 		PROCEDURE ObjectsDetachThread();
 		PROCEDURE DetachThread EXTERN "Objects.DetachThread"();
 		BEGIN
 			DetachThread;
 		END ObjectsDetachThread;
-		
+
 		PROCEDURE ObjectsDetachProcess();
 		PROCEDURE DetachProcess EXTERN "Objects.DetachProcess"();
 		BEGIN
 			DetachProcess;
 		END ObjectsDetachProcess;
-		
+
 		(**
 			DLL entry point that corresponds to
-			
+
 			BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 		*)
 		PROCEDURE {INITIAL, NOPAF} EntryPoint*;
@@ -1192,7 +1192,7 @@ VAR hout: HANDLE;
 				JZ ThreadAttach
 				CMP EAX, 3 ; DLL_THREAD_DETACH (3)
 				JZ ThreadDetach
-				
+
 				JMP ret
 
 			ProcessAttach:
@@ -1215,9 +1215,9 @@ VAR hout: HANDLE;
 				POP EDI
 				POP ESI
 				POP EBX
-		
+
 				JMP ret
-				
+
 			ThreadAttach:
 				PUSH EBX
 				PUSH ESI
@@ -1226,9 +1226,9 @@ VAR hout: HANDLE;
 				POP EDI
 				POP ESI
 				POP EBX
-				
+
 				JMP ret
-				
+
 			ThreadDetach:
 				PUSH EBX
 				PUSH ESI
@@ -1237,7 +1237,7 @@ VAR hout: HANDLE;
 				POP EDI
 				POP ESI
 				POP EBX
-				
+
 			ret:
 				POP EBP
 				RET 12
@@ -1246,9 +1246,9 @@ VAR hout: HANDLE;
 		END EntryPoint;
 
 	#ELSE
-		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
+		(* The following procedure is linked as the first block in the code section of a PE32 executable file
 			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
-			are patched by the PE linker. 
+			are patched by the PE linker.
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
 		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint*;
@@ -1259,44 +1259,44 @@ VAR hout: HANDLE;
 			DB 0
 
 		ImportTable:
-			DD Kernel32Import + 1000H 
+			DD Kernel32Import + 1000H
 			DD 0
 			DD -1
 			DD Kernel32Name + 1000H
 			DD Kernel32Import + 1000H
 			DD 0, 0, 0, 0, 0
-		
+
 		Kernel32Import:
-		adrLoadLibrary:			
+		adrLoadLibrary:
 			DD LoadLibraryA + 1000H
-		adrGetProcAddress:			
+		adrGetProcAddress:
 			DD GetProcAddress + 1000H
 			DD 0
-			
+
 		Kernel32Name:
 			DB 'KERNEL32.DLL' , 0
-			
-		LoadLibraryA:			
+
+		LoadLibraryA:
 			DW 0
 			DB 'LoadLibraryA',0,0
-			
+
 		GetProcAddress:
 			DW 0
 			DB 'GetProcAddress',0
-			
+
 		end:
 			MOV EAX,[401000H+adrLoadLibrary]
 			MOV LoadLibrary, EAX
 			MOV EAX,[401000H+adrGetProcAddress]
 			MOV getProcAddress, EAX
-			
+
 		END EntryPoint;
 	#END;
-		
+
 #ELSIF AMD64 THEN
-		(* The following procedure is linked as the first block in the code section of a PE32 executable file 
+		(* The following procedure is linked as the first block in the code section of a PE32 executable file
 			It contains the import table for the two procedures Kernel32.GetProcAddress and Kernel32.LoadLibrary that
-			are patched by the PE linker. 
+			are patched by the PE linker.
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
 		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint*;
@@ -1307,34 +1307,34 @@ VAR hout: HANDLE;
 			DB 0
 
 		ImportTable:
-			DD Kernel32Import + 1000H 
+			DD Kernel32Import + 1000H
 			DD 0
 			DD -1
 			DD Kernel32Name + 1000H
 			DD Kernel32Import + 1000H
 			DD 0, 0, 0, 0, 0
-		
+
 		Kernel32Import:
-		adrLoadLibrary:			
+		adrLoadLibrary:
 			DD LoadLibraryA + 1000H
 			DD 0
-		adrGetProcAddress:			
+		adrGetProcAddress:
 			DD GetProcAddress + 1000H
 			DD 0
 			DD 0
 			DD 0
-			
+
 		Kernel32Name:
 			DB 'KERNEL32.DLL' , 0
-			
-		LoadLibraryA:			
+
+		LoadLibraryA:
 			DW 0
 			DB 'LoadLibraryA',0,0
-			
+
 		GetProcAddress:
 			DW 0
 			DB 'GetProcAddress',0
-			
+
 		end:
 			MOV RAX,[401000H+adrLoadLibrary]
 			MOV LoadLibrary, RAX

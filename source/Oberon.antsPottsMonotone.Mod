@@ -1,4 +1,4 @@
-MODULE antsPottsMonotone IN Oberon;  
+MODULE antsPottsMonotone IN Oberon;
 
 (* Copyright notice:
 
@@ -29,271 +29,271 @@ Angela Kempe, 2003
 *)
 
 
-IMPORT Math := MathL IN A2, Out, vyLongreal, vyLongrealVec, vyBase, antsCommands, Input, vyName, Display3, vyLinks, vyPort, aM := antsMessages, vyHostStrings, 
-	antsReadWrite, Objects, antsSecurity, Texts, vyHostTexts, Gadgets, Attributes, antsBellman, antsArrays, antsVecOpt, antsPotts1DSurvey;  
+IMPORT Math := MathL IN A2, Out, vyLongreal, vyLongrealVec, vyBase, antsCommands, Input, vyName, Display3, vyLinks, vyPort, aM := antsMessages, vyHostStrings,
+	antsReadWrite, Objects, antsSecurity, Texts, vyHostTexts, Gadgets, Attributes, antsBellman, antsArrays, antsVecOpt, antsPotts1DSurvey;
 
-CONST 
-	cMedian* = 0;  cMean* = 1;  cAbs* = 0;  cLog* = 1;  cIncr* = 0;  cDecr* = 1;  
-TYPE 
-	
-	ArrayFunction = PROCEDURE ( VAR f: ARRAY OF LONGREAL;  i: LONGINT ): LONGREAL;  
-	
-	PROCEDURE MakeMonotoneRec*;  
-	VAR name: ARRAY 64 OF CHAR;  
-		obj, degraded: vyBase.Object;  type: INTEGER;  vec: vyLongrealVec.tVector;  
-	BEGIN 
-		antsCommands.InitScan( "data=OBJ (vec=OBJ ) | (vec=NAME >create)" );  
-		IF antsCommands.ExpectObject( "data", degraded ) & antsCommands.GetObject( "vec", obj ) THEN 
+CONST
+	cMedian* = 0;  cMean* = 1;  cAbs* = 0;  cLog* = 1;  cIncr* = 0;  cDecr* = 1;
+TYPE
+
+	ArrayFunction = PROCEDURE ( VAR f: ARRAY OF LONGREAL;  i: LONGINT ): LONGREAL;
+
+	PROCEDURE MakeMonotoneRec*;
+	VAR name: ARRAY 64 OF CHAR;
+		obj, degraded: vyBase.Object;  type: INTEGER;  vec: vyLongrealVec.tVector;
+	BEGIN
+		antsCommands.InitScan( "data=OBJ (vec=OBJ ) | (vec=NAME >create)" );
+		IF antsCommands.ExpectObject( "data", degraded ) & antsCommands.GetObject( "vec", obj ) THEN
 			vec := obj( vyLongrealVec.tVector );  vyLongrealVec.SetLen( vec, 0 )
 		ELSIF antsCommands.GetName( "vec", name ) & antsCommands.Find( "create" ) THEN vec := vyLongrealVec.New( 0 );  vyName.RegisterNamed( vec, name )
-		ELSE RETURN 
-		END;  
-		
+		ELSE RETURN
+		END;
+
 		IF antsCommands.Find( "median" ) THEN type := cMedian
 		ELSIF antsCommands.Find( "mean" ) THEN type := cMean
 		ELSE antsSecurity.Halt( "keyword >mean or >median expected" )
-		END;  
-		
-		DoMonotone( degraded, type, vec )
-	
-	END MakeMonotoneRec;  
+		END;
 
-	PROCEDURE DoMonotone( degraded: vyBase.Object;  type: INTEGER;  VAR vec: vyLongrealVec.tVector );  
-	VAR N, i, j: LONGINT;  data: antsArrays.X1d;  pos: LONGINT;  multi: antsArrays.L1d;  start, end: LONGINT;  mean, ssq: LONGREAL;  nrNaNs: LONGINT;  
-		len: LONGINT;  interval: vyLongrealVec.tVector;  
-	BEGIN 
-		ASSERT ( (degraded # NIL ) & (degraded IS vyLongrealVec.tVector), 109 );  
-		N := vyLongrealVec.Len( degraded( vyLongrealVec.tVector ) );  
-		
+		DoMonotone( degraded, type, vec )
+
+	END MakeMonotoneRec;
+
+	PROCEDURE DoMonotone( degraded: vyBase.Object;  type: INTEGER;  VAR vec: vyLongrealVec.tVector );
+	VAR N, i, j: LONGINT;  data: antsArrays.X1d;  pos: LONGINT;  multi: antsArrays.L1d;  start, end: LONGINT;  mean, ssq: LONGREAL;  nrNaNs: LONGINT;
+		len: LONGINT;  interval: vyLongrealVec.tVector;
+	BEGIN
+		ASSERT ( (degraded # NIL ) & (degraded IS vyLongrealVec.tVector), 109 );
+		N := vyLongrealVec.Len( degraded( vyLongrealVec.tVector ) );
+
 		(*Eingabedaten werden in data kopiert, aus dem dann wieder herausgestrichen wird*)
-		IF (data = NIL ) OR (LEN( data ) # N) THEN NEW( data, N ) END;  
-		vyLongrealVec.CopyToArray( degraded( vyLongrealVec.tVector ), data^ );  
-		
+		IF (data = NIL ) OR (LEN( data ) # N) THEN NEW( data, N ) END;
+		vyLongrealVec.CopyToArray( degraded( vyLongrealVec.tVector ), data^ );
+
 		IF (multi = NIL ) OR (LEN( multi ) # N) THEN NEW( multi, N )
-		END;  
-		
+		END;
+
 		(*Initialisierung des Vielfachheiten-Vektors multi*)
-		FOR i := 0 TO N - 1 DO multi^[i] := 1 END;  
-		
-		len := LEN( data );  pos := 1;  
-		
-		WHILE pos <= len - 1 DO 
-			IF pos > 0 THEN 
-				IF data^[pos - 1] < data^[pos] THEN 
-					start := 1;  
-					FOR i := 1 TO pos - 2 DO start := start + multi^[i - 1] END;  
-					end := start - 1 + multi^[pos - 1] + multi^[pos];  
-					IF (interval = NIL ) OR (vyLongrealVec.Len( interval ) # end - start + 1) THEN interval := vyLongrealVec.New( end - start + 1 ) END;  
-					FOR i := 0 TO end - start + 1 - 1 DO vyLongrealVec.Set( vyLongrealVec.Get( degraded( vyLongrealVec.tVector ), i ), interval, i ) END;  
+		FOR i := 0 TO N - 1 DO multi^[i] := 1 END;
+
+		len := LEN( data );  pos := 1;
+
+		WHILE pos <= len - 1 DO
+			IF pos > 0 THEN
+				IF data^[pos - 1] < data^[pos] THEN
+					start := 1;
+					FOR i := 1 TO pos - 2 DO start := start + multi^[i - 1] END;
+					end := start - 1 + multi^[pos - 1] + multi^[pos];
+					IF (interval = NIL ) OR (vyLongrealVec.Len( interval ) # end - start + 1) THEN interval := vyLongrealVec.New( end - start + 1 ) END;
+					FOR i := 0 TO end - start + 1 - 1 DO vyLongrealVec.Set( vyLongrealVec.Get( degraded( vyLongrealVec.tVector ), i ), interval, i ) END;
 					IF type = cMedian THEN data^[pos] := vyLongrealVec.GetMedian( degraded( vyLongrealVec.tVector ) )
 					ELSIF type = cMean THEN vyLongrealVec.GetMeanSsq( degraded( vyLongrealVec.tVector ), mean, ssq, nrNaNs );  data^[pos] := mean
 					ELSE aM.S( "wrong type" )
-					END;  
+					END;
 					multi^[pos] := multi^[pos - 1] + multi^[pos];  DropX1d( data, pos - 1, data );  DropL1d( multi, pos - 1, multi );  pos := pos - 1;  len := LEN( data )
 				ELSE pos := pos + 1
-				END 
-			END 
-		
+				END
+			END
+
 		END;   (*of WHILE*)
-		
-		
-		
-		
+
+
+
+
 		(*Herausschreiben des Ergebnis-Vektor mittels data und multi*)
-		
-		FOR i := 0 TO LEN( multi ) - 1 DO 
-			FOR j := 1 TO multi^[i] DO vyLongrealVec.Append( data[i], vec ) END 
-		END 
-	END DoMonotone;  
+
+		FOR i := 0 TO LEN( multi ) - 1 DO
+			FOR j := 1 TO multi^[i] DO vyLongrealVec.Append( data[i], vec ) END
+		END
+	END DoMonotone;
 
 (*
 this generates a new vector where the value at position is dropped out
 *)
-	PROCEDURE DropX1d*( vec: antsArrays.X1d;  position: LONGINT;  VAR new: antsArrays.X1d );  
-	VAR N, k: LONGINT;  
-	BEGIN 
+	PROCEDURE DropX1d*( vec: antsArrays.X1d;  position: LONGINT;  VAR new: antsArrays.X1d );
+	VAR N, k: LONGINT;
+	BEGIN
 		(* N := vyLongrealVec.Len(vec); *)
-		N := LEN( vec^ );  NEW( new, N - 1 );  
-		FOR k := 0 TO N - 1 DO 
-			IF k < position THEN 
+		N := LEN( vec^ );  NEW( new, N - 1 );
+		FOR k := 0 TO N - 1 DO
+			IF k < position THEN
 				new^[k] := vec^[k];   (*vyLongrealVec.Set(vyLongrealVec.Get(vec,k), new, k) *)
-			ELSIF k > position THEN 
+			ELSIF k > position THEN
 				new^[k - 1] := vec^[k] (*vyLongrealVec.Set(vyLongrealVec.Get(vec,k), new, k-1) *)
-			END 
-		END 
-	END DropX1d;  
+			END
+		END
+	END DropX1d;
 
-	PROCEDURE DropL1d*( vec: antsArrays.L1d;  position: LONGINT;  VAR new: antsArrays.L1d );  
-	VAR N, k: LONGINT;  
-	BEGIN 
+	PROCEDURE DropL1d*( vec: antsArrays.L1d;  position: LONGINT;  VAR new: antsArrays.L1d );
+	VAR N, k: LONGINT;
+	BEGIN
 		(* N := vyLongrealVec.Len(vec); *)
-		N := LEN( vec^ );  NEW( new, N - 1 );  
-		FOR k := 0 TO N - 1 DO 
-			IF k < position THEN 
+		N := LEN( vec^ );  NEW( new, N - 1 );
+		FOR k := 0 TO N - 1 DO
+			IF k < position THEN
 				new^[k] := vec^[k];   (*vyLongrealVec.Set(vyLongrealVec.Get(vec,k), new, k) *)
-			ELSIF k > position THEN 
+			ELSIF k > position THEN
 				new^[k - 1] := vec^[k] (*vyLongrealVec.Set(vyLongrealVec.Get(vec,k), new, k-1) *)
-			END 
-		END 
-	END DropL1d;  
+			END
+		END
+	END DropL1d;
 
-	PROCEDURE TestMonotone( VAR vector: ARRAY OF LONGREAL;  montype: INTEGER ): BOOLEAN;  
-	VAR i, N: LONGINT;  flag: BOOLEAN;  
-	BEGIN 
-		N := LEN( vector );  i := 0;  flag := TRUE;  
-		WHILE (i < N - 1) & (flag = TRUE ) DO 
-			IF ((montype = cDecr) & (vector[i] < vector[i + 1])) THEN flag := FALSE END;  
-			IF ((montype = cIncr) & (vector[i] > vector[i + 1])) THEN flag := FALSE END;  
+	PROCEDURE TestMonotone( VAR vector: ARRAY OF LONGREAL;  montype: INTEGER ): BOOLEAN;
+	VAR i, N: LONGINT;  flag: BOOLEAN;
+	BEGIN
+		N := LEN( vector );  i := 0;  flag := TRUE;
+		WHILE (i < N - 1) & (flag = TRUE ) DO
+			IF ((montype = cDecr) & (vector[i] < vector[i + 1])) THEN flag := FALSE END;
+			IF ((montype = cIncr) & (vector[i] > vector[i + 1])) THEN flag := FALSE END;
 			INC( i )
-		END;  
+		END;
 		RETURN flag
-	END TestMonotone;  
+	END TestMonotone;
 
-	PROCEDURE MakeMatrix*( VAR Xstern: antsArrays.X2d;  VAR jumps: antsArrays.I1d;  VAR gamma: antsArrays.X1d;  VAR matrix: antsArrays.X2d );  
-	VAR N, jumpN, i: LONGINT;  
-	BEGIN 
-		N := LEN( Xstern^ );  
+	PROCEDURE MakeMatrix*( VAR Xstern: antsArrays.X2d;  VAR jumps: antsArrays.I1d;  VAR gamma: antsArrays.X1d;  VAR matrix: antsArrays.X2d );
+	VAR N, jumpN, i: LONGINT;
+	BEGIN
+		N := LEN( Xstern^ );
 		jumpN := antsArrays.FindFirstX( gamma^, 0 ) + 1;   (*! changed 031027 *)
-		
-		
-		NEW( matrix, jumpN, N );  i := 0;  
+
+
+		NEW( matrix, jumpN, N );  i := 0;
 		(*
    WHILE (jumps^[i] # 0) OR (i = 0) DO
-			vyLongreal.Copy(N, Xstern^[ jumps^[i] ], 0, matrix^[i], 0); 
+			vyLongreal.Copy(N, Xstern^[ jumps^[i] ], 0, matrix^[i], 0);
 		    INC( i )
-   END; 
+   END;
     *)
-		FOR i := 0 TO jumpN - 1 DO vyLongreal.Copy( N, Xstern^[jumps^[i]], 0, matrix^[i], 0 );  END;  
-	
-	END MakeMatrix;  
+		FOR i := 0 TO jumpN - 1 DO vyLongreal.Copy( N, Xstern^[jumps^[i]], 0, matrix^[i], 0 );  END;
 
-	PROCEDURE LastMonotone*( VAR matrix: antsArrays.X2d;  montype: INTEGER;  VAR lastmon: antsArrays.X1d );  
-	VAR N, i, jumpN: LONGINT;  
+	END MakeMatrix;
+
+	PROCEDURE LastMonotone*( VAR matrix: antsArrays.X2d;  montype: INTEGER;  VAR lastmon: antsArrays.X1d );
+	VAR N, i, jumpN: LONGINT;
 		(* flag : BOOLEAN;*)
-	BEGIN 
-		N := LEN( matrix[0] );  jumpN := LEN( matrix );  NEW( lastmon, N );  
+	BEGIN
+		N := LEN( matrix[0] );  jumpN := LEN( matrix );  NEW( lastmon, N );
 
-		i := 0;  
-		WHILE (i < jumpN) & (TestMonotone( matrix[i], montype )) DO INC( i );  END;  
-		vyLongreal.Copy( N, matrix^[i - 1], 0, lastmon^, 0 );  
-		
+		i := 0;
+		WHILE (i < jumpN) & (TestMonotone( matrix[i], montype )) DO INC( i );  END;
+		vyLongreal.Copy( N, matrix^[i - 1], 0, lastmon^, 0 );
+
 		(*
      flag := TRUE;
      WHILE (i <= jumpN - 1) & (flag = TRUE) DO
         aM.SI("i=  ",i);
         vyLongreal.Copy(N, matrix^[i],0, lastmon^,0);
-		IF TestMonotone(lastmon,montype)=TRUE THEN INC(i) 
-		ELSE flag := FALSE END; 
-	END; 
+		IF TestMonotone(lastmon,montype)=TRUE THEN INC(i)
+		ELSE flag := FALSE END;
+	END;
 	vyLongreal.Copy(N, matrix^[i-1],0, lastmon^,0);
 	*)
-	END LastMonotone;  
+	END LastMonotone;
 
-	PROCEDURE FindLastMonotonePotts*;  
-	VAR statistic: antsPotts1DSurvey.StatisticObj;  degraded, vec: vyBase.Object;  matrix: antsArrays.X2d;  lastmon: antsArrays.X1d;  
-		name: ARRAY 64 OF CHAR;  
-		i: LONGINT;  
-	BEGIN 
-		antsCommands.InitScan( "data=OBJ" );  
-		
-		IF antsCommands.ExpectObject( "data", degraded ) THEN 
-			NEW( statistic );  antsPotts1DSurvey.CreateStatistics( statistic, degraded, antsPotts1DSurvey.cMean );  
-			antsBellman.gammaScanning( statistic.Bellman, statistic.jumps, statistic.gamma );  
-			(* 
+	PROCEDURE FindLastMonotonePotts*;
+	VAR statistic: antsPotts1DSurvey.StatisticObj;  degraded, vec: vyBase.Object;  matrix: antsArrays.X2d;  lastmon: antsArrays.X1d;
+		name: ARRAY 64 OF CHAR;
+		i: LONGINT;
+	BEGIN
+		antsCommands.InitScan( "data=OBJ" );
+
+		IF antsCommands.ExpectObject( "data", degraded ) THEN
+			NEW( statistic );  antsPotts1DSurvey.CreateStatistics( statistic, degraded, antsPotts1DSurvey.cMean );
+			antsBellman.gammaScanning( statistic.Bellman, statistic.jumps, statistic.gamma );
+			(*
          vec := vyLongrealVec.New(LEN(statistic.data)); vyName.RegisterNamed(vec, name);
         *)
-			MakeMatrix( statistic.Xstern, statistic.jumps, statistic.gamma, matrix );  LastMonotone( matrix, cDecr, lastmon );  
-			IF antsCommands.GetObject( "vec", vec ) THEN 
-			ELSIF antsCommands.ExpectName( "vec", name ) THEN vec := vyLongrealVec.New( LEN( statistic.data ) );  vyName.RegisterNamed( vec, name );  
-			ELSE RETURN 
-			END;  
-			antsPotts1DSurvey.LineToVec( lastmon^, vec );  
-		END;  
-	END FindLastMonotonePotts;  
+			MakeMatrix( statistic.Xstern, statistic.jumps, statistic.gamma, matrix );  LastMonotone( matrix, cDecr, lastmon );
+			IF antsCommands.GetObject( "vec", vec ) THEN
+			ELSIF antsCommands.ExpectName( "vec", name ) THEN vec := vyLongrealVec.New( LEN( statistic.data ) );  vyName.RegisterNamed( vec, name );
+			ELSE RETURN
+			END;
+			antsPotts1DSurvey.LineToVec( lastmon^, vec );
+		END;
+	END FindLastMonotonePotts;
 
-	PROCEDURE FindLastMonotone*;  
-	VAR statistic: antsPotts1DSurvey.StatisticObj;  vec, statvec: vyBase.Object;  bool: BOOLEAN;  matrix: antsArrays.X2d;  lastmon: antsArrays.X1d;  
-		montype: INTEGER;  
-	BEGIN 
-		IF ~antsPotts1DSurvey.Header( statistic, vec ) THEN RETURN END;  
-		
+	PROCEDURE FindLastMonotone*;
+	VAR statistic: antsPotts1DSurvey.StatisticObj;  vec, statvec: vyBase.Object;  bool: BOOLEAN;  matrix: antsArrays.X2d;  lastmon: antsArrays.X1d;
+		montype: INTEGER;
+	BEGIN
+		IF ~antsPotts1DSurvey.Header( statistic, vec ) THEN RETURN END;
+
 		IF antsCommands.Find( "increase" ) THEN montype := cIncr
 		ELSIF antsCommands.Expect( "decrease" ) THEN montype := cDecr
-		END;  
-		
-		bool := antsCommands.GetObject( "statvec", statvec );  antsBellman.gammaScanning( statistic.Bellman, statistic.jumps, statistic.gamma );  
+		END;
+
+		bool := antsCommands.GetObject( "statvec", statvec );  antsBellman.gammaScanning( statistic.Bellman, statistic.jumps, statistic.gamma );
 		(*
-	 vec := vyLongrealVec.New(LEN(statistic.data)); vyName.RegisterNamed(vec, name); 
+	 vec := vyLongrealVec.New(LEN(statistic.data)); vyName.RegisterNamed(vec, name);
 	*)
-		MakeMatrix( statistic.Xstern, statistic.jumps, statistic.gamma, matrix );  LastMonotone( matrix, montype, lastmon );  
-		antsPotts1DSurvey.LineToVec( lastmon^, vec );  
-		
-		(*	
-	
-	statistic.scanningOpt := statistic.jumps[MaxLenPos(statistic.gamma^, ALen)]; 
-	LineToVec(statistic.Xstern[statistic.scanningOpt], vec); 		AppendValue(statistic.scanningOpt, statvec); 
-	
+		MakeMatrix( statistic.Xstern, statistic.jumps, statistic.gamma, matrix );  LastMonotone( matrix, montype, lastmon );
+		antsPotts1DSurvey.LineToVec( lastmon^, vec );
+
+		(*
+
+	statistic.scanningOpt := statistic.jumps[MaxLenPos(statistic.gamma^, ALen)];
+	LineToVec(statistic.Xstern[statistic.scanningOpt], vec); 		AppendValue(statistic.scanningOpt, statvec);
+
 	IF antsCommands.Find("compare") THEN
-		LargestJump( vec, MaxJump ); 
+		LargestJump( vec, MaxJump );
 		(*writing in a text field in a panel***)
-		outputMaxJump := Gadgets.FindObj( Gadgets.context, "outputMaxJump"); 
-		IF outputMaxJump # NIL THEN 
+		outputMaxJump := Gadgets.FindObj( Gadgets.context, "outputMaxJump");
+		IF outputMaxJump # NIL THEN
 		    Attributes.SetLongReal( outputMaxJump, "Value", MaxJump );
-		    Gadgets.Update(outputMaxJump); 
-		END; 
+		    Gadgets.Update(outputMaxJump);
+		END;
 	END
 *)
-	END FindLastMonotone;  
+	END FindLastMonotone;
 
-	PROCEDURE ApproxMonotone*;  
-	VAR datain, dataout: ARRAY 64 OF CHAR;  
-		Matrix: antsArrays.X2d;  MatrixOut: antsArrays.X2d;  type: INTEGER;  R: antsReadWrite.Rider;  
-	BEGIN 
-		antsCommands.InitScan( "DataIn=STR  DataOut=STR (>median|>mean)" );  
-		
-		IF antsCommands.ExpectString( "DataIn", datain ) & antsCommands.ExpectString( "DataOut", dataout ) THEN 
-			antsSecurity.SetProgress( 0 );  
-			IF ~R.Old( datain ) THEN RETURN END;  
-			R.ignoreNL := TRUE;  
+	PROCEDURE ApproxMonotone*;
+	VAR datain, dataout: ARRAY 64 OF CHAR;
+		Matrix: antsArrays.X2d;  MatrixOut: antsArrays.X2d;  type: INTEGER;  R: antsReadWrite.Rider;
+	BEGIN
+		antsCommands.InitScan( "DataIn=STR  DataOut=STR (>median|>mean)" );
+
+		IF antsCommands.ExpectString( "DataIn", datain ) & antsCommands.ExpectString( "DataOut", dataout ) THEN
+			antsSecurity.SetProgress( 0 );
+			IF ~R.Old( datain ) THEN RETURN END;
+			R.ignoreNL := TRUE;
 			(*     R.noExponent := TRUE;  *)
-			R.ReadType;  R.ReadX2d( Matrix );  R.Close;  
-		ELSE RETURN 
-		END;  
-		
+			R.ReadType;  R.ReadX2d( Matrix );  R.Close;
+		ELSE RETURN
+		END;
+
 		IF antsCommands.Find( "median" ) THEN type := antsPotts1DSurvey.cMedian
 		ELSIF antsCommands.Expect( "mean" ) THEN type := antsPotts1DSurvey.cMean
-		END;  
-		
-		DoApproxMonotonePotts( Matrix, type, MatrixOut );  
+		END;
 
-		R.ForceNew( dataout );  R.noExponent := TRUE;  
+		DoApproxMonotonePotts( Matrix, type, MatrixOut );
+
+		R.ForceNew( dataout );  R.noExponent := TRUE;
 		R.SetAscii;   (* remove if binary preferred *)
-		R.WriteType;  R.WriteX2d( MatrixOut );  R.Close;  
-	
-	END ApproxMonotone;  
+		R.WriteType;  R.WriteX2d( MatrixOut );  R.Close;
 
-	PROCEDURE DoApproxMonotonePotts( VAR Matrix: antsArrays.X2d;  type: INTEGER;  VAR MatrixOut: antsArrays.X2d );  
-	VAR i, j, rows, columns: LONGINT;  spotdata: vyLongrealVec.tVector;  statistic: antsPotts1DSurvey.StatisticObj;  ScanningMatrix: antsArrays.X2d;  
-		lastmon: antsArrays.X1d;  
-	BEGIN 
-		rows := LEN( Matrix );  columns := LEN( Matrix[0] );  NEW( MatrixOut, rows, columns );  
+	END ApproxMonotone;
 
-		spotdata := vyLongrealVec.New( columns );  
-		
-		FOR i := 0 TO rows - 1 DO 
-			aM.SI( " ", i );  aM.S( "" );  
-			
-			FOR j := 0 TO columns - 1 DO vyLongrealVec.Set( Matrix[i, j], spotdata, j ) END;  
-			
-			NEW( statistic );  statistic.s := NIL;  statistic.rstern := NIL;  statistic.Xstern := NIL;  statistic.Bellman := NIL;  
+	PROCEDURE DoApproxMonotonePotts( VAR Matrix: antsArrays.X2d;  type: INTEGER;  VAR MatrixOut: antsArrays.X2d );
+	VAR i, j, rows, columns: LONGINT;  spotdata: vyLongrealVec.tVector;  statistic: antsPotts1DSurvey.StatisticObj;  ScanningMatrix: antsArrays.X2d;
+		lastmon: antsArrays.X1d;
+	BEGIN
+		rows := LEN( Matrix );  columns := LEN( Matrix[0] );  NEW( MatrixOut, rows, columns );
 
-			antsPotts1DSurvey.CreateStatistics( statistic, spotdata, type );  antsBellman.gammaScanning( statistic.Bellman, statistic.jumps, statistic.gamma );  
-			MakeMatrix( statistic.Xstern, statistic.jumps, statistic.gamma, ScanningMatrix );  LastMonotone( ScanningMatrix, cDecr, lastmon );  
-			vyLongreal.Copy( columns, lastmon^, 0, MatrixOut^[i], 0 );  
-		
-		END;  
-	
-	END DoApproxMonotonePotts;  
+		spotdata := vyLongrealVec.New( columns );
+
+		FOR i := 0 TO rows - 1 DO
+			aM.SI( " ", i );  aM.S( "" );
+
+			FOR j := 0 TO columns - 1 DO vyLongrealVec.Set( Matrix[i, j], spotdata, j ) END;
+
+			NEW( statistic );  statistic.s := NIL;  statistic.rstern := NIL;  statistic.Xstern := NIL;  statistic.Bellman := NIL;
+
+			antsPotts1DSurvey.CreateStatistics( statistic, spotdata, type );  antsBellman.gammaScanning( statistic.Bellman, statistic.jumps, statistic.gamma );
+			MakeMatrix( statistic.Xstern, statistic.jumps, statistic.gamma, ScanningMatrix );  LastMonotone( ScanningMatrix, cDecr, lastmon );
+			vyLongreal.Copy( columns, lastmon^, 0, MatrixOut^[i], 0 );
+
+		END;
+
+	END DoApproxMonotonePotts;
 
 END antsPottsMonotone.
 

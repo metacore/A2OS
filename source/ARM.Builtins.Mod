@@ -16,7 +16,7 @@ TYPE
 	DoubleWord = RECORD
 		low*: UNSIGNED32; high*: SIGNED32;
 	END;
-		
+
 	PROCEDURE DivS8*(left, right: SHORTINT): SHORTINT;
 	VAR result, dummy: LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, result, dummy); RETURN SHORTINT(result)
@@ -105,7 +105,7 @@ TYPE
 	PROCEDURE RorS64*(source: HUGEINT; amount: ULONGINT): HUGEINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, 64 - (amount MOD 64))
 	END RorS64;
-	
+
 	PROCEDURE RorU64*(source: HUGEINT; amount: ULONGINT): HUGEINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, 64 - (amount MOD 64))
 	END RorU64;
@@ -143,7 +143,7 @@ TYPE
 		CMP R0, R1
 		BEQ Equal
 		BLS Exit ; nothing to do than setting quotient to 0 and remainder to dividend (R0)
-	
+
 		CLZ R3, R0 ; R3 := clz(dividend)
 		CLZ R4, R1 ; R4 := clz(divisor)
 
@@ -159,13 +159,13 @@ TYPE
 		BPL Loop
 
 		; R0 holds the remainder
-		
+
 		B Exit
-		
+
 	Equal:
 		MOV R2, #1
 		MOV R0, #0
-		
+
 	Exit:
 		LDR R1, [FP,#quotient] ; R1 := address of quotient
 		LDR R3, [FP,#remainder] ; R3 := address of remainder
@@ -309,7 +309,7 @@ TYPE
 		END ;
 		RETURN x
 	END AddF32;
-	
+
 	(* only called when no FPU64 is available *)
 	PROCEDURE AddF64*(x,y: FLOAT64): FLOAT64;
 	VAR z: FLOAT64;
@@ -390,7 +390,7 @@ TYPE
 	(* stub in order to make the runtime itself compile, cf next procedure. This module needs to be compiled with FPU support on *)
 	PROCEDURE ConvF64U32*(x: UNSIGNED32): FLOAT64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		HALT(100); 
+		HALT(100);
 	END ConvF64U32;
 
 	(* if an FPU64 is available, the result must be made available via FPU register *)
@@ -419,13 +419,13 @@ TYPE
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN ConvF32S32(LONGINT(x))
 	END ConvF32S16;
-	
+
 	(* only called when no FPU32 is available *)
 	PROCEDURE ConvF32S8*(x: SHORTINT): FLOAT32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN ConvF32S16(INTEGER(x))
 	END ConvF32S8;
-	
+
 	(* only called when no FPU64 is available *)
 	PROCEDURE ConvF64S8*(x: SHORTINT): FLOAT64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -449,9 +449,9 @@ TYPE
 			x := (x MOD C + C) * 20H;
 			y := (y MOD C + C) * 20H;
 			xe := xe + ye - B; (* exponent with bias *)
-			
+
 			SYSTEM.MULD(ye, x, y); (* note that this implicitly changes zh *)
-			
+
 			IF zh >= 4*C THEN
 				x := (zh+2) DIV 4;
 				INC(xe);
@@ -468,7 +468,7 @@ TYPE
 		END ;
 		RETURN x
 	END MulF32;
-	
+
 	(* only called when no FPU32 is available *)
 	PROCEDURE DivF32*(x, y: FLOAT32): FLOAT32;
 	VAR xe, ye, q, s: LONGINT;
@@ -524,7 +524,7 @@ TYPE
 		END ;
 		RETURN x
 	END ConvS32F32;
-	
+
 	(** converts an integer into a float, ignores the non-integer part
 	- corresponds to REAL(int)
 	- note that no rounding occurs
@@ -559,9 +559,9 @@ TYPE
 	(* stub in order to make the runtime itself compile, cf next procedure. This module needs to be compiled with FPU support on *)
 	PROCEDURE ConvF32U32*(x: UNSIGNED32): FLOAT32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		HALT(100); 
+		HALT(100);
 	END ConvF32U32;
-	
+
 	(* if an FPU32 is available, the result must be made available via FPU register *)
 	PROCEDURE ConvF32S64F*(x: DoubleWord): REAL;
 	VAR l,h:REAL;

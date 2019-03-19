@@ -543,4 +543,3 @@ DataErrors.Close ~
 EditTools.OpenAscii  Error.Log ~
 EditTools.OpenAscii  Error.Log.Bak ~
 
-			

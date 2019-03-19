@@ -100,7 +100,7 @@ VAR m: Modules.Module; options: Options.Options; details: BOOLEAN; first, revers
 		IF options.GetFlag("crc") THEN context.out.String(" crc="); context.out.Hex(m.crc,-8); context.out.String("") END;
 		IF~reverse THEN List(m.next) END;
 	END List;
-	
+
 
 BEGIN
 	NEW(options);
@@ -217,14 +217,14 @@ END IsLoaded;
 
 PROCEDURE ModuleState*(context: Commands.Context);
 VAR name: Modules.Name; module: Modules.Module; msg: ARRAY 256 OF CHAR; res: WORD;
-BEGIN	
+BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.String(name);
 	module := Modules.ThisModule(name, res, msg);
 	context.result := res;
 	IF (res = Modules.Ok) THEN
-		context.out.String(name); 
-		context.out.String(" crc "); context.out.Hex(module.crc,-8); 
+		context.out.String(name);
+		context.out.String(" crc "); context.out.Hex(module.crc,-8);
 		context.out.String(" state: "); context.out.Ln;
 		Reflection.ModuleState(context.out, module);
 	ELSE
@@ -430,16 +430,16 @@ BEGIN
 END IsDelimiter;
 
 PROCEDURE DoFile*(context: Commands.Context);
-VAR 
+VAR
 	newContext: Commands.Context;
-	file: Files.File; 
+	file: Files.File;
 	r: Streams.Reader;
 	filename: Files.FileName;
 	res: WORD;
 	msg: ARRAY 256 OF CHAR;
 BEGIN
 	IF context.arg.GetString(filename) THEN
-		file := Files.Old(filename); 
+		file := Files.Old(filename);
 		IF file # NIL THEN
 			r := NEW Files.Reader(file, 0);
 			NEW(newContext, context.in, r, context.out, context.error, context.caller);

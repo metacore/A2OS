@@ -86,7 +86,7 @@ TYPE
 				IF i <= j THEN
 					IF m = i THEN  m := j (* pivot will be moved by Swap *)
 					ELSIF m = j THEN  m := i (* pivot will be moved by Swap *)
-					END; 
+					END;
 					Swap(i,j);
 					INC(i); DEC(j)
 				END
@@ -114,7 +114,7 @@ TYPE
 
 	PROCEDURE & InitArrangement* (displacement: GenericLinker.Address);
 	BEGIN
-		
+
 	 SELF.displacement := displacement; maxUnitSize := 1; NEW (bits, 0); exportInfo := NIL; NEW(relocInfo);
 	END InitArrangement;
 
@@ -173,7 +173,7 @@ END Arrangement;
 
 TYPE FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
 
-VAR defaults: Options.Defaults; 
+VAR defaults: Options.Defaults;
 	processing, finished: GenericLinker.Block;
 
 PROCEDURE Align(this, to: LONGINT): LONGINT;
@@ -194,7 +194,7 @@ BEGIN
 		linker.Error(moduleName, "cyclic import");
 		RETURN;
 	END;
-	
+
 	IF path # "" THEN Files.JoinPath (path, moduleName, fileName); ELSE COPY(moduleName,fileName); END;
 	file := Files.Old (fileName);
 	IF file = NIL THEN (* try with extension *)
@@ -202,21 +202,21 @@ BEGIN
 		file := Files.Old (fileName);
 	END;
 	IF file = NIL THEN (* try without extension *)
-		
+
 	END;
 	IF file = NIL THEN linker.Error (fileName, "failed to open file"); RETURN; END;
 	Files.OpenReader (reader, file, 0);
-	
+
 	GenericLinker.OffersRequires(reader, offers, requires);
 	IF (moduleList # NIL) & (offers # NIL) THEN
 		FOR i := 0 TO LEN(offers)-1 DO
 			moduleList.Put(offers[i],processing);
 		END;
 	END;
-	
+
 	IF (moduleList # NIL) & (requires # NIL) THEN
 		FOR i := 0 TO LEN(requires)-1 DO
-			IF moduleList.Get(requires[i]) = NIL THEN 
+			IF moduleList.Get(requires[i]) = NIL THEN
 				name := requires[i];
 				(*linker.Information(name, "auto");*)
 				ReadObjectFile(name,path,extension, linker, moduleList);
@@ -230,7 +230,7 @@ BEGIN
 		END;
 	END;
 	linker.Information (moduleName, "processing");
-	
+
 	reader.SetPos(0);
 	GenericLinker.Process (reader, linker);
 	IF (moduleList # NIL) & (offers # NIL) THEN
@@ -306,23 +306,23 @@ VAR i,j,size,end,nonZeroInLeadingNibble: LONGINT;
 		RETURN arrangement.bits.GetBits(pos,nonZeroInLeadingNibble);
 	END GetFirstNibble;
 BEGIN
-(*allow line size not divisible by 4 by padding the line to a multiple of 4 bits with leading zeros*)	
+(*allow line size not divisible by 4 by padding the line to a multiple of 4 bits with leading zeros*)
 	size := arrangement.bits.GetSize();
-	
+
 	end := (size-1) DIV bitsPerLine + 1;
-	
+
 	(*
 	D.String("bits per line: ");D.Int(bitsPerLine,0);
 	D.String("  number of bits: ");D.Int(size,0);
 	D.String("  number of words: ");D.Int(end,0);D.Ln;
 	*)
-	
+
 	nonZeroInLeadingNibble:=bitsPerLine MOD 4;
 	FOR i := 0 TO end-1 DO
 		(*be aware we are writing msb first here*)
 		(*padded first nibble*)
 		IF nonZeroInLeadingNibble > 0 THEN
-			writer.Char(ObjectFile.NibbleToCharacter(GetFirstNibble(i*bitsPerLine+bitsPerLine-nonZeroInLeadingNibble) ) ) ; 
+			writer.Char(ObjectFile.NibbleToCharacter(GetFirstNibble(i*bitsPerLine+bitsPerLine-nonZeroInLeadingNibble) ) ) ;
 		END;
 		(*rest of the instruction word*)
 		FOR j := bitsPerLine DIV 4 -1 TO 0 BY -1 DO
@@ -337,13 +337,13 @@ BEGIN
 		FOR j:=1 TO (bitsPerLine-1) DIV 4 + 1 BY 1 DO
 			writer.Char('F');
 		END;
-		
+
 		writer.Ln;
 	END;
 END WriteTRMFile;
 
 PROCEDURE WriteTRMCodeFile* (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
-BEGIN 
+BEGIN
 	WriteTRMFile (arrangement, writer, arrangement.maxUnitSize,1024);
 END WriteTRMCodeFile;
 
@@ -996,7 +996,7 @@ BEGIN
 	parsed := options.ParseStaged(context.arg, context.error);
 	IF options.GetString("platform", name) THEN
 		reader := defaults.Get(name);
-		IF reader = NIL THEN 
+		IF reader = NIL THEN
 			context.error.String("Unknown platform"); context.error.Ln;
 			context.result := Commands.CommandError;
 			RETURN;
@@ -1007,7 +1007,7 @@ BEGIN
 			parsed := options.Parse(context.arg, context.error) & parsed; (* reparse overwrites *)
 		END;
 	END;
-		
+
 	IF ~parsed THEN context.result := Commands.CommandParseError; RETURN; END;
 	silent := options.GetFlag ("silent");
 	useAll := options.GetFlag ("useAll");
@@ -1049,7 +1049,7 @@ BEGIN
 	moduleList.Put(segmentedName, finished);
 	segmentedName := "system";
 	moduleList.Put(segmentedName, finished);
-	
+
 	WHILE ~linker.error & context.arg.GetString (moduleName) DO
 		ReadObjectFile (moduleName, path, extension, linker, moduleList);
 		IF strict & ~linker.error THEN linker.Resolve END;

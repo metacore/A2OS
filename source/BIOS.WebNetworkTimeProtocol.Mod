@@ -1,17 +1,17 @@
 MODULE WebNetworkTimeProtocol; (** AUTHOR "Patrick Hunziker"; PURPOSE "SimpleNetworkTimeProtocol RFC4330 and NetworkTimeProtocol RFC5905 "; *)
 
 (**
-NTP operates over the User Datagram Protocol (UDP). An NTP server listens for client NTP packets on port 123. 
-The NTP server is stateless and responds to each received client NTP packet in a simple transactional manner 
+NTP operates over the User Datagram Protocol (UDP). An NTP server listens for client NTP packets on port 123.
+The NTP server is stateless and responds to each received client NTP packet in a simple transactional manner
 by adding fields to the received packet and passing the packet back to the original sender, without reference to preceding NTP transactions.
 
-Upon receipt of a client NTP packet, the receiver time-stamps receipt of the packet as soon as possible within the packet assembly logic of the server. 
-The packet is then passed to the NTP server process. 
-This process interchanges the IP Header Address and Port fields in the packet, overwrites numerous fields in the NTP packet with local clock values, 
+Upon receipt of a client NTP packet, the receiver time-stamps receipt of the packet as soon as possible within the packet assembly logic of the server.
+The packet is then passed to the NTP server process.
+This process interchanges the IP Header Address and Port fields in the packet, overwrites numerous fields in the NTP packet with local clock values,
 time-stamps the egress of the packet, recalculates the checksum, and sends the packet back to the client.
 
-Time is given as 64-bit time-stamp value. 
-This value is an unsigned 32-bit seconds value, and a 32-bit fractional part. 
+Time is given as 64-bit time-stamp value.
+This value is an unsigned 32-bit seconds value, and a 32-bit fractional part.
 The unit of time is in seconds, and the epoch is 1 January 1900, meaning that the NTP time will cycle in the year 2036 (two years before the 32-bit Unix time cycle event in 2038).
 
 for best NTP server pools for a given region see wikipedia: NTP-Pool
@@ -67,8 +67,8 @@ BEGIN
 		sw.Net32(LONGINT(packet.TransmitTimestamp DIV 100000000H));    sw.Net32(LONGINT(packet.TransmitTimestamp MOD 100000000H));
 		sw.Update;
 		sw.GetRaw(buf, len);
-		socket.Send( fip, fport, buf, 0, 48, res );  
-		
+		socket.Send( fip, fport, buf, 0, 48, res );
+
 		socket.Receive(buf,0,48, 1000, fip1, fport1, len, res);
 		IF (res=UDP.Ok)&(len>=48) THEN (* receive the modified NTP record *)
 			NEW(sr,1024);
@@ -93,18 +93,18 @@ END Get;
 PROCEDURE SetSystemTime* (time: HUGEINT; timeZone, daylightSaving: LONGINT);
 VAR dt: Dates.DateTime; frac:HUGEINT;
 BEGIN {EXCLUSIVE}
-		frac:=time MOD 100000000H; 
-	time:=time DIV 100000000H MOD 100000000H; 
+		frac:=time MOD 100000000H;
+	time:=time DIV 100000000H MOD 100000000H;
 	dt:=Dates.ZeroDateNTP;
 	Dates.AddSeconds(dt, LONGINT(time MOD (60*60*24)));
 	Dates.AddMinutes(dt, timeZone+daylightSaving);
 	time:=time DIV (60*60*24);
 	Dates.AddDays(dt, LONGINT(time));
-	
+
 	Machine.PutNVByte(0BH, 82X);	(* disable clock & interrupt *)
-	Machine.PutNVByte(0, CHR(dt.seconds0)); 
-	Machine.PutNVByte(2, CHR(dt.minutes)); 
-	Machine.PutNVByte(4, CHR(dt.hours)); 
+	Machine.PutNVByte(0, CHR(dt.seconds0));
+	Machine.PutNVByte(2, CHR(dt.minutes));
+	Machine.PutNVByte(4, CHR(dt.hours));
 	Machine.PutNVByte(7, CHR(dt.day));
 	Machine.PutNVByte(8, CHR(dt.month));
 	Machine.PutNVByte(9, CHR(dt.year));
@@ -130,26 +130,26 @@ BEGIN
 	DNS.HostByName("0.ch.pool.ntp.org", fip, port);
 	Get(fip, NTPPort, packet, res);
 	IF res=UDP.Ok THEN
-		SetSystemTime(packet.TransmitTimestamp, 60, 60);  
-		context.out.String("Set system time to "); 
-		context.out.Int(packet.TransmitTimestamp  MOD 100000000H, 16); 
-		context.out.Int(packet.TransmitTimestamp  DIV 100000000H MOD 100000000H, 16); 
-		context.out.Ln; context.out.Update; 
+		SetSystemTime(packet.TransmitTimestamp, 60, 60);
+		context.out.String("Set system time to ");
+		context.out.Int(packet.TransmitTimestamp  MOD 100000000H, 16);
+		context.out.Int(packet.TransmitTimestamp  DIV 100000000H MOD 100000000H, 16);
+		context.out.Ln; context.out.Update;
 	END;
 END SynchronizeSNTP;
 
 
 PROCEDURE GetSimpleTime*(context:Commands.Context);
 VAR ipstr: ARRAY 64 OF CHAR; port, res, i:LONGINT;machineTimer1,machineTimer2: HUGEINT; fip: IP.Adr; packet:Packet;
-BEGIN 
-	
+BEGIN
+
 	IF ~context.arg.GetString(ipstr) THEN	Configuration.Get("NTP.Server0",ipstr,res); END;
 	(* note that DNS.HostByName might also deliver a default NTP server when an empty string and an NTP port number is given*)
 	DNS.HostByName(ipstr, fip, port);
-	
+
 	IF ~context.arg.GetInteger(port,FALSE) THEN port:=NTPPort END;
 	Get(fip, port, packet, res);
-	
+
 	context.out.String("checking server "); context.out.String(ipstr);context.out.Char(":"); context.out.Int(port,0);  context.out.Ln; context.out.Update;
 	context.out.String("SNTP result, transmit time [seconds.fraction]: "); context.out.Ln;
 

@@ -149,7 +149,7 @@ TYPE
 
 		commandHistory : CommandHistory;
 		firstCR : CHAR;
-		
+
 		currentCommand: Command;
 
 		PROCEDURE &Init*(in: Streams.Reader; out, err: Streams.Writer; echo: BOOLEAN; CONST prompt: ARRAY OF CHAR);
@@ -272,7 +272,7 @@ TYPE
 
 			IF (ch = LF) OR (ch =CR)  THEN
 				commandHistory.AddCommand(command);
-				
+
 				IF echo THEN context.out.Ln; context.out.Update END
 			END;
 			RETURN ch;
@@ -586,7 +586,7 @@ TYPE
 		END Execute;
 
 		PROCEDURE Run;
-		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT; ch: CHAR; 
+		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT; ch: CHAR;
 		BEGIN
 			exit := FALSE;
 			WHILE ~close & ~exit & (context.in.res = Streams.Ok) DO
@@ -606,7 +606,7 @@ TYPE
 			END;
 			context.out.Update; context.error.Update
 		END Run;
-		
+
 		(**
 			Returns TRUE if the given context is the context of currently executed command
 		*)

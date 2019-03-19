@@ -220,6 +220,6 @@ VAR
 	END Init;
 
 BEGIN
-	Init;  B.AssignInt( one, 1 ); 
+	Init;  B.AssignInt( one, 1 );
 END CryptoPrimes.
 

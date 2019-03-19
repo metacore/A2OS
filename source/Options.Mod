@@ -205,7 +205,7 @@ TYPE
 		END SetString;
 
 
-		
+
 		PROCEDURE GetReal*(CONST name : Name; VAR real: LONGREAL) : BOOLEAN;
 		VAR index: LONGINT;
 		BEGIN{EXCLUSIVE}
@@ -231,8 +231,8 @@ TYPE
 				options[i].isSet := FALSE;
 			END;
 		END Clear;
-		
-		
+
+
 		(** Remove all declared options *)
 		PROCEDURE Reset*;
 		VAR i : LONGINT;
@@ -629,16 +629,16 @@ TYPE
 		defaults: Strings.String;
 		next: Default;
 	END;
-	
+
 	Defaults* = OBJECT
 	VAR
 		head, tail: Default;
-		
+
 		PROCEDURE &InitDefaults*;
 		BEGIN
 			head := NIL; tail := NIL;
 		END InitDefaults;
-		
+
 		PROCEDURE Add*(CONST name, defaults: ARRAY OF CHAR);
 		VAR default: Default;
 		BEGIN
@@ -646,10 +646,10 @@ TYPE
 			WHILE (default # NIL) & (default.name # name) DO
 				default := default.next;
 			END;
-			IF default = NIL THEN 
-				NEW(default); 
+			IF default = NIL THEN
+				NEW(default);
 				COPY(name, default.name); default.defaults := Strings.NewString(defaults);
-				IF tail = NIL THEN head := default 
+				IF tail = NIL THEN head := default
 				ELSE tail.next := default;
 				END;
 				tail := default;
@@ -658,7 +658,7 @@ TYPE
 				default.defaults := Strings.ConcatToNew(default.defaults^, defaults);
 			END;
 		END Add;
-	
+
 		PROCEDURE Get*(CONST name: ARRAY OF CHAR): Streams.Reader;
 		VAR s: Streams.StringReader; default: Default;
 		BEGIN
@@ -673,7 +673,7 @@ TYPE
 			END;
 			RETURN s;
 		END Get;
-		
+
 		PROCEDURE Show*(out: Streams.Writer);
 		VAR default: Default;
 		BEGIN
@@ -703,7 +703,7 @@ TYPE
 			name := "";
 		END Find;
 
-	END Defaults; 
+	END Defaults;
 
 (** merge base options into options -- replacing only options that had not been set previously *)
 PROCEDURE Merge*(VAR this: Options;  base: Options);

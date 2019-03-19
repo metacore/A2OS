@@ -211,7 +211,7 @@ TYPE
 			mod : Modules.Module;
 			str : ARRAY 256 OF CHAR;
 			t0, t1 : HUGEINT;
-			
+
 			pc, relpc : ADDRESS;
 			mode: LONGINT;
 
@@ -224,11 +224,11 @@ TYPE
 				grid.model.SetTextAlign(cell, line + 1, GetAlign(cell));
 				grid.model.SetCellText(cell, line + 1, s)
 			END SetText;
-			
+
 			PROCEDURE GetValues( p: Objects.Process );
-			VAR bp: ADDRESS; 
+			VAR bp: ADDRESS;
 			BEGIN
-				Objects.UpdateProcessState( p );	
+				Objects.UpdateProcessState( p );
 				mode := p.mode;
 				pc := p.state.PC;
 				bp := p.state.BP;
@@ -242,7 +242,7 @@ TYPE
 					END
 				END
 			END GetValues;
-			
+
 		BEGIN
 			t1 := ABS( Machine.GetTimer() - lastProcTime );
 			lastProcTime := Machine.GetTimer();
@@ -251,9 +251,9 @@ TYPE
 			grid.model.SetNofRows(nofProcesses + 1);
 
 			FOR i := 0 TO nofProcesses - 1 DO
-				ASSERT(processes[i] # NIL);				
+				ASSERT(processes[i] # NIL);
 				GetValues( processes[i] );
-				
+
 				(* PID Process ID - 0 *)
 				Strings.IntToStr(processes[i].id, str); SetText(i, 0, str);
 

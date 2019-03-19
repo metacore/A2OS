@@ -8,12 +8,12 @@ TYPE
 	Frontend* = OBJECT
 	VAR
 		flags-: SET;
-		
+
 		PROCEDURE & InitFrontEnd*;
 		BEGIN
 			Initialize(NIL, {}, NIL, "", "", 0);
 		END InitFrontEnd;
-		
+
 		(* initialize frontend for usage *)
 		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader;CONST fileName, definitions: ARRAY OF CHAR; pos: LONGINT);
 		BEGIN
@@ -23,15 +23,15 @@ TYPE
 		PROCEDURE Parse*(): SyntaxTree.Module;
 		BEGIN RETURN NIL
 		END Parse;
-		
+
 		PROCEDURE Done*(): BOOLEAN;
 		BEGIN RETURN TRUE;
 		END Done;
-		
+
 		PROCEDURE Error*(): BOOLEAN;
 		BEGIN RETURN TRUE;
 		END Error;
-		
+
 	END Frontend;
 
 	PROCEDURE GetDummy*():Frontend;

@@ -690,7 +690,7 @@ PROCEDURE CurrentProcess*( ): Process;
 BEGIN
 	RETURN SYSTEM.VAL(Process, Machine.GetProcessPtr());
 END CurrentProcess;
-	
+
 PROCEDURE CurrentContext*(): ANY;
 VAR p: Process;
 BEGIN
@@ -827,16 +827,16 @@ BEGIN
 			processingIRQ[state.INT-MinIRQ] := TRUE;
 		END;
 	END;
-	
+
 	(* if the reenabling of interrupts cannot be circumvented, then it is REQUIRED to acknowledge interrupts
 		BEFORE reenabling. Otherwise spurious IRQs cannot be identified as such.
 		Please note that this particular problem with spurious IRQs cannot observed on many machines but IF it is observed
 		then the machine will behave unexpected. Very hard to debug and trace!
 
-		Machine.Ack(state.INT); 
+		Machine.Ack(state.INT);
 		Machine.Sti ();	(* avoid Processors.StopAll deadlock when waiting for locks below (remove this) *)
 	*)
-	
+
 	Machine.Acquire(Machine.Objects);
 	t := interrupt[state.INT-MinIRQ].process;
 	IF StrongChecks THEN ASSERT(t.mode = AwaitingEvent) END;
@@ -1007,8 +1007,8 @@ PROCEDURE CancelTimeout*(t: Timer);
 BEGIN
 	Machine.Acquire(Machine.Objects);
 	ASSERT(t # event);
-	IF t.next # NIL THEN 
-		t.next.prev := t.prev; 
+	IF t.next # NIL THEN
+		t.next.prev := t.prev;
 		IF t.prev #NIL THEN t.prev.next := t.next END;
 	END;
 	t.next := NIL; t.prev := NIL;
@@ -1161,7 +1161,7 @@ BEGIN
 END TerminateThis;
 
 (* called by WMProcessInfo to obtain the current state of a running process *)
-PROCEDURE UpdateProcessState*( p: Process );	
+PROCEDURE UpdateProcessState*( p: Process );
 BEGIN
 	(*  update p.stat.{PC,BP,SP}  *)
 END UpdateProcessState;
@@ -1801,7 +1801,7 @@ END InitPrioRequest;
 VAR
 	(* for compatibility and later extension *)
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
-	
+
 BEGIN
 	TraceProcessHook := NIL;
 	IF Stats THEN InitStats; END;

@@ -358,17 +358,17 @@ VAR
 
 	PROCEDURE SetIoClockSource*(module, source: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
-		
+
 	END SetIoClockSource;
 
 	PROCEDURE StartIoClock*(module, device: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
-		
+
 	END StartIoClock;
 
 	PROCEDURE StopIoClock*(module, device: LONGINT; VAR res: WORD): BOOLEAN;
 	BEGIN
-		
+
 	END StopIoClock;
 
 BEGIN

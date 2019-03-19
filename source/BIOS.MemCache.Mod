@@ -32,7 +32,7 @@ CODE
 	RDMSR
 #ELSE
 	unimplemented
-#END	
+#END
 END GetMTTRcapLow;
 
 (*
@@ -49,7 +49,7 @@ CODE
 	RDMSR
 #ELSE
 	unimplemented
-#END	
+#END
 END GetMTTRdefTypeLow;
 *)
 
@@ -70,7 +70,7 @@ CODE
 	RDMSR
 #ELSE
 	unimplemented
-#END	
+#END
 END GetMTTRphysBaseLow;
 
 (* Return the value of the specified MTTRphysMask register. *)
@@ -90,7 +90,7 @@ CODE
 	RDMSR
 #ELSE
 	unimplemented
-#END	
+#END
 END GetMTTRphysMaskLow;
 
 (* Set the specified MTTRphysBase register. *)
@@ -113,7 +113,7 @@ CODE
 	WRMSR
 #ELSE
 	unimplemented
-#END	
+#END
 END SetMTTRphysBase;
 
 (* Set the specified MTTRphysMask register. *)
@@ -136,7 +136,7 @@ CODE
 	WRMSR
 #ELSE
 	unimplemented
-#END	
+#END
 END SetMTTRphysMask;
 
 (** Set the cache properties of the specified physical memory area on the current processor. {physAdr, size MOD PS = 0}  Must be called from supervisor mode. *)

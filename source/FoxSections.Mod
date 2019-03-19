@@ -126,13 +126,13 @@ TYPE
 
 			w.Update
 		END Dump;
-		
+
 		PROCEDURE WriteRaw*(w: Streams.Writer);
 		BEGIN
-			w.RawInt(type); 
+			w.RawInt(type);
 			Basic.WriteSegmentedName(w,name);
 			w.RawBool(fixed);
-			w.RawLInt(positionOrAlignment); 
+			w.RawLInt(positionOrAlignment);
 			w.RawHInt(fingerprint);
 			w.RawLInt(bitsPerUnit);
 		END WriteRaw;
@@ -359,11 +359,11 @@ TYPE
 				section.WriteRaw(w);
 			END;
 		END WriteRaw;
-		
-		
+
+
 	END SectionList;
-	
-	
+
+
 
 	NameEntry = POINTER TO RECORD
 		name: SyntaxTree.IdentifierString;

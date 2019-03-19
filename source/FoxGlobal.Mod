@@ -38,9 +38,9 @@ CONST
 	StringSafe* = "SAFE";
 	StringRealtime* = "REALTIME";
 	StringDynamic* = "DYNAMIC";
-	
+
 	StringFingerprint*="Fingerprint";
-	
+
 	StringInstructionWidth*="InstructionWidth";
 	StringDataMemorySize*= "DataMemorySize";
 	StringCodeMemorySize*= "CodeMemorySize";
@@ -50,7 +50,7 @@ CONST
 
 	StringSystemModule* = "SYSTEM";
 	StringsystemModule* = "system";
-	
+
 	StringBaseMem*= "BaseMem";
 	StringBaseDiv*= "BaseDiv";
 
@@ -109,20 +109,20 @@ CONST
 	*)
 
 	(* global proper procedures *)
-	Assert*= Scanner.EndOfText+1; Copy*= Assert+1; Dec*= Copy+1; Excl*= Dec+1; Halt*= Excl+1; Inc*= Halt+1; Incl*= Inc+1; New*= Incl+1; Dispose*= New+1; GetProcedure*= Dispose+1; Connect*= GetProcedure+1; Delegate*= Connect+1; Read*= Delegate+1; Write*= Read+1; Reshape*= Write+1; Wait*= Reshape+1; 
+	Assert*= Scanner.EndOfText+1; Copy*= Assert+1; Dec*= Copy+1; Excl*= Dec+1; Halt*= Excl+1; Inc*= Halt+1; Incl*= Inc+1; New*= Incl+1; Dispose*= New+1; GetProcedure*= Dispose+1; Connect*= GetProcedure+1; Delegate*= Connect+1; Read*= Delegate+1; Write*= Read+1; Reshape*= Write+1; Wait*= Reshape+1;
 	(* global functions *)
-	Abs*= Wait+1; Cap*= Abs+1; Chr*= Cap+1; Chr32*= Chr+1; Entier*= Chr32+1; EntierH*= Entier+1; Incr*= EntierH+1; Len*= Incr+1; Long*= Len+1; Max*= Long+1; Min*= Max+1; Odd*= Min+1; Ord*= Odd+1; Ord32*= Ord+1; Short*= Ord32+1; Size*= Short+1; Sum*= Size+1; Dim*= Sum+1; Cas*= Dim+1; First*= Cas+1; Last*= First+1; Step*= Last+1; Re*= Step+1; Im*= Re+1; Ash*= Im+1; Lsh*= Ash+1; Rot*= Lsh+1; 
+	Abs*= Wait+1; Cap*= Abs+1; Chr*= Cap+1; Chr32*= Chr+1; Entier*= Chr32+1; EntierH*= Entier+1; Incr*= EntierH+1; Len*= Incr+1; Long*= Len+1; Max*= Long+1; Min*= Max+1; Odd*= Min+1; Ord*= Odd+1; Ord32*= Ord+1; Short*= Ord32+1; Size*= Short+1; Sum*= Size+1; Dim*= Sum+1; Cas*= Dim+1; First*= Cas+1; Last*= First+1; Step*= Last+1; Re*= Step+1; Im*= Re+1; Ash*= Im+1; Lsh*= Ash+1; Rot*= Lsh+1;
 	All* = Rot+1;
 	(* system proper procedures *)
-	systemGet*= All+1; systemPut*= systemGet+1; systemMove*= systemPut+1; systemNew*= systemMove+1; systemRef*= systemNew+1; systemTypeCode*= systemRef+1; systemHalt*= systemTypeCode+1; systemPut8*= systemHalt+1; systemPut16*= systemPut8+1; systemPut32*= systemPut16+1; systemPut64*= systemPut32+1; systemTrace*= systemPut64+1; systemSetStackPointer*= systemTrace+1; systemSetFramePointer*= systemSetStackPointer+1; systemSetActivity*= systemSetFramePointer+1; 
+	systemGet*= All+1; systemPut*= systemGet+1; systemMove*= systemPut+1; systemNew*= systemMove+1; systemRef*= systemNew+1; systemTypeCode*= systemRef+1; systemHalt*= systemTypeCode+1; systemPut8*= systemHalt+1; systemPut16*= systemPut8+1; systemPut32*= systemPut16+1; systemPut64*= systemPut32+1; systemTrace*= systemPut64+1; systemSetStackPointer*= systemTrace+1; systemSetFramePointer*= systemSetStackPointer+1; systemSetActivity*= systemSetFramePointer+1;
 	(* system functions *)
-	systemAdr*= systemSetActivity+1; systemSize*= systemAdr+1; systemBit*= systemSize+1; systemGet64*= systemBit+1; systemGet32*= systemGet64+1; systemGet16*= systemGet32+1; systemGet8*= systemGet16+1; systemVal*= systemGet8+1; systemMsk*= systemVal+1; systemGetStackPointer*= systemMsk+1; systemGetFramePointer*= systemGetStackPointer+1; systemGetActivity*= systemGetFramePointer+1; 
+	systemAdr*= systemSetActivity+1; systemSize*= systemAdr+1; systemBit*= systemSize+1; systemGet64*= systemBit+1; systemGet32*= systemGet64+1; systemGet16*= systemGet32+1; systemGet8*= systemGet16+1; systemVal*= systemGet8+1; systemMsk*= systemVal+1; systemGetStackPointer*= systemMsk+1; systemGetFramePointer*= systemGetStackPointer+1; systemGetActivity*= systemGetFramePointer+1;
 	(* for active cells *)
-	Send*= systemGetActivity+1; Receive*= Send+1; 
+	Send*= systemGetActivity+1; Receive*= Send+1;
 	(* for backend specific extensions *)
-	systemSpecial*= Receive+1; 
+	systemSpecial*= Receive+1;
 	(* compatibility with Oberon07 -- other mappings: LSL -> LSH, FLOOR -> Entier, Pack und Unpk currently unsupported *)
-	Asr*= systemSpecial+1; Ror*= Asr+1; Flt*= Ror+1; Conversion*= Flt+1; DotTimesPlus*= Conversion+1; AtMulDec*= DotTimesPlus+1; AtMulInc*= AtMulDec+1; DecMul*= AtMulInc+1; IncMul*= DecMul+1; endFox*= IncMul+1; 
+	Asr*= systemSpecial+1; Ror*= Asr+1; Flt*= Ror+1; Conversion*= Flt+1; DotTimesPlus*= Conversion+1; AtMulDec*= DotTimesPlus+1; AtMulInc*= AtMulDec+1; DecMul*= AtMulInc+1; IncMul*= DecMul+1; endFox*= IncMul+1;
 
 	VectorCapability* = 0;
 	FloatingPointCapability*= 1;
@@ -130,7 +130,7 @@ CONST
 	TRMSCapability*= 3;
 	NoMulCapability*=4;
 	NonBlockingIOCapability*=5;
-CONST    
+CONST
     (* LYNX extensions *)
 
     (* different naming schema to satisfy FoxScanner when parsing imports *)
@@ -210,7 +210,7 @@ VAR
 
 TYPE
 	Position = SyntaxTree.Position;
-	
+
 	Alignment* = RECORD
 		min, max: LONGINT; (* alignments in bits *)
 	END;
@@ -289,7 +289,7 @@ TYPE
 		BEGIN
 			cellsAreObjects := c;
 		END SetCellsAreObjects;
-		
+
 
 		PROCEDURE SetRegisterPassCallback*(canPassInRegister: PassInRegisterProc);
 		BEGIN
@@ -313,7 +313,7 @@ TYPE
 				IF~ GenerateRecordOffsets(baseType) THEN RETURN FALSE END;
 			END;
 			IF baseType # NIL THEN
-				offset := baseType.sizeInBits; 
+				offset := baseType.sizeInBits;
 				alignment := baseType.alignmentInBits;
 			ELSE
 				offset := 0; alignment := x.alignmentInBits;
@@ -366,7 +366,7 @@ TYPE
 			END;
 
 			IF baseType # NIL THEN
-				offset := baseType.sizeInBits; 
+				offset := baseType.sizeInBits;
 				alignment := baseType.alignmentInBits;
 			ELSE
 				offset := 0; alignment := x.alignmentInBits;
@@ -434,12 +434,12 @@ TYPE
 			Basic.Align(offset, alignment); (* strictly speaking not necessary, but with the old object file format otherwise problems with the GC show up *)
 			x.SetSize(offset);
 			RETURN TRUE
-			
+
 		END GenerateCellOffsets;
-		
+
 
 		PROCEDURE GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN;
-		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT; 
+		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT;
 		BEGIN
 			IF scope IS SyntaxTree.RecordScope THEN (* increasing indices *)
 				RETURN GenerateRecordOffsets(scope(SyntaxTree.RecordScope).ownerRecord)
@@ -963,7 +963,7 @@ TYPE
         NewBuiltin(SymLynxBinop, LynxBinop, system.globalScope, TRUE);
         NewBuiltin(SymLynxRecvnb, LynxRecvnb, system.globalScope, TRUE);
 
-        (* 
+        (*
             LynxCompiler will register builtins for send/receive/connect/delegate
             under "lynx@*" names but with their original Fox numeric identifiers,
             so that no modifications will be required in the semantic checker and
@@ -975,7 +975,7 @@ TYPE
         NewBuiltin(SymLynxSelect, LynxSelect, system.globalScope, TRUE);
         NewBuiltin(SymLynxSelidx, LynxSelidx, system.globalScope, TRUE);
 	*)
-	
+
 	END SetDefaultDeclarations;
 
 	PROCEDURE OperatorDefined*(system: System; op: LONGINT; defined: BOOLEAN);
@@ -1024,7 +1024,7 @@ TYPE
 		OperatorDefined(system,All,TRUE);
 		OperatorDefined(system,Re,TRUE);
 		OperatorDefined(system,Im,TRUE);
-		
+
 		OperatorDefined(system, Scanner.Questionmarks, TRUE);
 
 		OperatorDefined(system, Scanner.GreaterGreater, TRUE);
@@ -1202,18 +1202,18 @@ TYPE
 	END NewCustomBuiltin;
 
 	PROCEDURE GetModuleSectionName*(name, context: SyntaxTree.Identifier; VAR n: ARRAY OF CHAR);
-	VAR s: SyntaxTree.IdentifierString; 
+	VAR s: SyntaxTree.IdentifierString;
 	BEGIN
 		IF context # SyntaxTree.invalidIdentifier THEN
 			Basic.GetString(context,n);
-			IF n = "A2" THEN 
+			IF n = "A2" THEN
 				Basic.GetString(name,n);
 				RETURN;
 			END;
 			Basic.GetString(name,s);
 			Strings.Append(n,"-");Strings.Append(n,s);
 		ELSE
-			IF name # SyntaxTree.invalidIdentifier THEN 
+			IF name # SyntaxTree.invalidIdentifier THEN
 				Basic.GetString(name,n);
 			ELSE
 				n := ""
@@ -1225,9 +1225,9 @@ TYPE
 	BEGIN
 		GetModuleSectionName(name, context, n);
 	END ModuleFileName;
-	
+
 	PROCEDURE ModuleSectionIdentifier*(name, context: SyntaxTree.Identifier): SyntaxTree.Identifier;
-	VAR n: SyntaxTree.IdentifierString; 
+	VAR n: SyntaxTree.IdentifierString;
 	BEGIN
 		IF context # SyntaxTree.invalidIdentifier THEN
 			GetModuleSectionName(name, context, n);
@@ -1517,7 +1517,7 @@ TYPE
 		ELSE RETURN Integer64
 		END;
 	END GetSignedIntegerType;
-	
+
 	PROCEDURE GetIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType;
 	BEGIN
 		IF IsSignedInteger(this,8) THEN RETURN Integer8
@@ -1530,7 +1530,7 @@ TYPE
 		ELSE RETURN Integer64
 		END;
 	END GetIntegerType;
-	
+
 	PROCEDURE NewIntegerValue*(system: System; position: Position; hugeint: HUGEINT): SyntaxTree.Value;
 	VAR value: SyntaxTree.IntegerValue;
 	BEGIN
@@ -1546,7 +1546,7 @@ TYPE
 		value.SetType(system.booleanType);
 		RETURN value
 	END NewBooleanValue;
-	
+
 	PROCEDURE GetSetType*(system: System; this: Basic.Set): SyntaxTree.SetType;
 	BEGIN
 		IF this * {0 .. 7} = this THEN RETURN Set8
@@ -1588,8 +1588,8 @@ TYPE
 		distance := -1;
 		IF (from IS SyntaxTree.IntegerType) & (to IS SyntaxTree.IntegerType) & (toSize >= fromSize) THEN
 			IF from(SyntaxTree.IntegerType).signed # to(SyntaxTree.IntegerType).signed THEN
-				IF (toSize=fromSize) & to(SyntaxTree.IntegerType).signed THEN 
-					distance := MIN(LONGINT) 
+				IF (toSize=fromSize) & to(SyntaxTree.IntegerType).signed THEN
+					distance := MIN(LONGINT)
 				ELSE
 					INC(distance,2);
 				END;

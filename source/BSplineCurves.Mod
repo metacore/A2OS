@@ -214,7 +214,7 @@ TYPE
 			closed - TRUE for closed curve
 		*)
 		PROCEDURE &Init*(degree: LONGINT; closed: BOOLEAN);
-		BEGIN		
+		BEGIN
 			IF closed THEN boundary := Periodic; ELSE boundary := MirrorW; END;
 
 			IF degree > 1 THEN
@@ -646,6 +646,6 @@ TYPE
 		ELSE
 			RETURN 0;
 		END;
-	END IPower;	
+	END IPower;
 
 END BSplineCurves.

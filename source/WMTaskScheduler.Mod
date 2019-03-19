@@ -170,7 +170,7 @@ TYPE
 				indicationValue := 256;
 			END;
 		END PointerUp;
-		
+
 		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
 		VAR popup : WMPopups.Popup; str : ARRAY 256 OF CHAR; command, s : Strings.String; clickInfo:ClickInfo;
 		BEGIN
@@ -181,16 +181,16 @@ TYPE
 				NEW(clickInfo);
 				clickInfo.cmd:=Strings.NewString("Edit"); (* call command cmd on Popup click *)
 				popup.AddParButton("Edit", RightClickAction, clickInfo);
-				
+
 				NEW(clickInfo);
 				clickInfo.cmd := Strings.NewString("Remove"); (* open file in cmdPar on Popup click *)
 				popup.AddParButton("Remove", RightClickAction, clickInfo);
-				
+
 				ToWMCoordinates(x,y,x,y);
-				popup.Popup(x, y); 
+				popup.Popup(x, y);
 			END
 		END PointerDown;
-		
+
 		PROCEDURE RightClickAction(sender, data: ANY);
 		VAR error : BOOLEAN; inputWindow:InputWindow;
 		BEGIN
@@ -200,7 +200,7 @@ TYPE
 						NEW(inputWindow, 100, 100, 420, 240);
 						inputWindow.SetTaskContent(task);
 						inputWindow.EditTask(task, error);
-						inputWindow.Close; 
+						inputWindow.Close;
 						UpdateTaskInfo(TRUE);
 					ELSIF data(ClickInfo).cmd^ = "Remove" THEN  task.list.Remove(task);
 					END;
@@ -1052,5 +1052,5 @@ END WMTaskScheduler.
 
 WMTaskScheduler.Open ~
 
-System.Free WMTaskScheduler WMTaskScheduler TaskScheduler 
+System.Free WMTaskScheduler WMTaskScheduler TaskScheduler
 System.Free WMClock~

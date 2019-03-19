@@ -65,18 +65,18 @@ TYPE
 					END;
 				END;	(* 0X (end), 0DX (CR), 0AX (LF), 0EX (FixedFont), 0FX (NormalFont) *)
 				IF (ch = 0X) OR ~alive THEN EXIT END;
-				
+
 				INC(limitCounter);
-				
+
 				IF limitCounter >= 1024 THEN
 					kernelLog.AcquireWrite;
 					n := kernelLog.GetLength();
 					IF n > MaxLogSize THEN
-						kernelLog.Delete(0,n-MaxLogSize);					
+						kernelLog.Delete(0,n-MaxLogSize);
 					END;
 					kernelLog.ReleaseWrite;
 					limitCounter := 0;
-				END;	
+				END;
 			END;
 			IF added THEN
 				tw.Update;
@@ -84,7 +84,7 @@ TYPE
 				kernelLog.AcquireWrite;
 				n := kernelLog.GetLength();
 				IF n > MaxLogSize+1024 THEN
-					kernelLog.Delete(0,n-MaxLogSize);					
+					kernelLog.Delete(0,n-MaxLogSize);
 				END;
 				kernelLog.ReleaseWrite;
 			END;

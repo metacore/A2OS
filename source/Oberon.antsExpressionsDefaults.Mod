@@ -25,114 +25,114 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 
 
-IMPORT SYSTEM, vyBase, vyLinks, antsExpressions, vyTypes, vyHostTexts, Texts, vyLongrealVec, vyRealVec, vyLongintVec, 
-	vyRandom, vyScale, vyPort, Objects, Gadgets, Out;  
+IMPORT SYSTEM, vyBase, vyLinks, antsExpressions, vyTypes, vyHostTexts, Texts, vyLongrealVec, vyRealVec, vyLongintVec,
+	vyRandom, vyScale, vyPort, Objects, Gadgets, Out;
 
-VAR 
-	defaultPlot*: ARRAY 64 OF CHAR;  
-	
-	PROCEDURE ShowAs*( a: vyBase.Object;  s: ARRAY OF CHAR ): Objects.Object;  
-	VAR link: vyLinks.Link;  
-	BEGIN 
+VAR
+	defaultPlot*: ARRAY 64 OF CHAR;
+
+	PROCEDURE ShowAs*( a: vyBase.Object;  s: ARRAY OF CHAR ): Objects.Object;
+	VAR link: vyLinks.Link;
+	BEGIN
 		link := NIL;  vyLinks.InsertObj( link, a );  vyBase.Show( link, 1, s );  vyScale.Insert;  RETURN vyPort.newframe
-	END ShowAs;  
+	END ShowAs;
 
-	PROCEDURE Show*( a: Objects.Object ): Objects.Object;  
-	BEGIN 
-		IF a = NIL THEN RETURN NIL END;  
-		IF a IS vyBase.tData THEN 
-			WITH a: vyBase.tData DO RETURN ShowAs( a, defaultPlot );  
-			END;  
-		ELSIF a IS Gadgets.Frame THEN 
+	PROCEDURE Show*( a: Objects.Object ): Objects.Object;
+	BEGIN
+		IF a = NIL THEN RETURN NIL END;
+		IF a IS vyBase.tData THEN
+			WITH a: vyBase.tData DO RETURN ShowAs( a, defaultPlot );
+			END;
+		ELSIF a IS Gadgets.Frame THEN
 			WITH a: Gadgets.Frame DO vyHostTexts.InsertGadget( a );  RETURN a
-			END;  
+			END;
 		ELSE RETURN a
-		END 
-	END Show;  
+		END
+	END Show;
 
-	PROCEDURE Write*( ob: vyBase.Object );  
-	BEGIN 
-		IF ob # NIL THEN 
-			IF ob IS vyBase.tData THEN 
-				vyTypes.Write( vyHostTexts.w, ob( vyBase.tData ) );  Texts.WriteLn( vyHostTexts.w );  
+	PROCEDURE Write*( ob: vyBase.Object );
+	BEGIN
+		IF ob # NIL THEN
+			IF ob IS vyBase.tData THEN
+				vyTypes.Write( vyHostTexts.w, ob( vyBase.tData ) );  Texts.WriteLn( vyHostTexts.w );
 				vyHostTexts.InsertLog( vyHostTexts.w.buf )
-			ELSE 
-			END 
-		END 
-	END Write;  
+			ELSE
+			END
+		END
+	END Write;
 
-	PROCEDURE RanV*( len: LONGINT ): vyBase.Object;  
-	VAR i: LONGINT;  
-	VAR v: vyLongrealVec.tVector;  
-	BEGIN 
-		v := vyLongrealVec.New( len );  
-		FOR i := 0 TO vyLongrealVec.Len( v ) - 1 DO vyLongrealVec.Set( vyRandom.Uniform(), v, i ) END;  
+	PROCEDURE RanV*( len: LONGINT ): vyBase.Object;
+	VAR i: LONGINT;
+	VAR v: vyLongrealVec.tVector;
+	BEGIN
+		v := vyLongrealVec.New( len );
+		FOR i := 0 TO vyLongrealVec.Len( v ) - 1 DO vyLongrealVec.Set( vyRandom.Uniform(), v, i ) END;
 		RETURN v
-	END RanV;  
+	END RanV;
 
-	PROCEDURE Ran*( ): LONGREAL;  
-	BEGIN 
+	PROCEDURE Ran*( ): LONGREAL;
+	BEGIN
 		RETURN vyRandom.Uniform()
-	END Ran;  
+	END Ran;
 
-	PROCEDURE Vec*( len: LONGINT ): vyBase.Object;  
-	BEGIN 
+	PROCEDURE Vec*( len: LONGINT ): vyBase.Object;
+	BEGIN
 		RETURN vyLongrealVec.New( len )
-	END Vec;  
+	END Vec;
 
-	PROCEDURE VecR*( len: LONGINT ): vyBase.Object;  
-	BEGIN 
+	PROCEDURE VecR*( len: LONGINT ): vyBase.Object;
+	BEGIN
 		RETURN vyRealVec.New( len )
-	END VecR;  
+	END VecR;
 
-	PROCEDURE VecL*( len: LONGINT ): vyBase.Object;  
-	BEGIN 
+	PROCEDURE VecL*( len: LONGINT ): vyBase.Object;
+	BEGIN
 		RETURN vyLongintVec.New( len )
-	END VecL;  
+	END VecL;
 
-	PROCEDURE Len*( ob: ANY ): LONGINT;  
-	BEGIN 
-		IF ob IS vyBase.tVector THEN 
+	PROCEDURE Len*( ob: ANY ): LONGINT;
+	BEGIN
+		IF ob IS vyBase.tVector THEN
 			WITH ob: vyBase.tVector DO RETURN ob.nrData
-			END;  
+			END;
 		ELSE RETURN 0
-		END 
-	END Len;  
+		END
+	END Len;
 
-	PROCEDURE ChunkSummary*( v: vyBase.tVector );  
-	VAR buf: vyBase.tBuf;  
-	BEGIN 
-		buf := v.buf;  
-		WHILE (buf # NIL ) DO Out.Ln;  Out.String( "BUF: " );  Out.Int( buf.len, 10 );  Out.Int( buf.usedentries, 10 );  buf := buf.next END 
-	END ChunkSummary;  
+	PROCEDURE ChunkSummary*( v: vyBase.tVector );
+	VAR buf: vyBase.tBuf;
+	BEGIN
+		buf := v.buf;
+		WHILE (buf # NIL ) DO Out.Ln;  Out.String( "BUF: " );  Out.Int( buf.len, 10 );  Out.Int( buf.usedentries, 10 );  buf := buf.next END
+	END ChunkSummary;
 
-	PROCEDURE Ptr*( i: LONGINT ): ANY;  
-	BEGIN 
+	PROCEDURE Ptr*( i: LONGINT ): ANY;
+	BEGIN
 		RETURN SYSTEM.VAL( ANY, i )
-	END Ptr;  
+	END Ptr;
 
-	PROCEDURE Selection*( ): ANY;  
-	VAR obj: Objects.Object;  t2: LONGINT;  
-	BEGIN 
-		Gadgets.GetSelection( obj, t2 );  
-		IF t2 >= 0 THEN RETURN obj ELSE RETURN NIL END 
-	END Selection;  
+	PROCEDURE Selection*( ): ANY;
+	VAR obj: Objects.Object;  t2: LONGINT;
+	BEGIN
+		Gadgets.GetSelection( obj, t2 );
+		IF t2 >= 0 THEN RETURN obj ELSE RETURN NIL END
+	END Selection;
 
-	PROCEDURE EnableCR*;  
-	BEGIN 
-		antsExpressions.enableCR := TRUE 
-	END EnableCR;  
+	PROCEDURE EnableCR*;
+	BEGIN
+		antsExpressions.enableCR := TRUE
+	END EnableCR;
 
-	PROCEDURE DisableCR*;  
-	BEGIN 
-		antsExpressions.enableCR := FALSE 
-	END DisableCR;  
+	PROCEDURE DisableCR*;
+	BEGIN
+		antsExpressions.enableCR := FALSE
+	END DisableCR;
 
-	PROCEDURE Init;  
-	BEGIN 
+	PROCEDURE Init;
+	BEGIN
 		defaultPlot := "LinePlot"
-	END Init;  
+	END Init;
 
-BEGIN 
-	Init;  
+BEGIN
+	Init;
 END antsExpressionsDefaults.

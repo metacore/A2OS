@@ -256,7 +256,7 @@ END NullColor;
 PROCEDURE Init*;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Char := NullChar;
-	Color := NullColor;	
+	Color := NullColor;
 END Init;
 
 

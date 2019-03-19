@@ -8,7 +8,7 @@ IMPORT In, Out, Commands, Streams;
 PROCEDURE Hello*;
 VAR name: ARRAY 32 OF CHAR;
 BEGIN
-	IF In.String(name) THEN 
+	IF In.String(name) THEN
 		Out.String("Hello "); Out.String(name); Out.Ln;
 	ELSE
 		Out.String("Hello World!"); Out.Ln;
@@ -18,7 +18,7 @@ END Hello;
 PROCEDURE Number*;
 VAR r: LONGREAL; name: ARRAY 32 OF CHAR;
 BEGIN
-	IF In.String(name) & In.Real(r) THEN 
+	IF In.String(name) & In.Real(r) THEN
 		Out.String(name); Out.String(" = "); Out.Float(r); Out.Ln;
 		Out.String(name); Out.String(" = "); Out.Float(r,20); Out.Ln;
 		Out.String(name); Out.String(" = "); Out.Float(r,20,15,-1); Out.Ln;

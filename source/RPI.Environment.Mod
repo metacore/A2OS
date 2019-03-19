@@ -97,13 +97,13 @@ END HandleTimer;
 
 PROCEDURE LED- (led: LONGINT; status: BOOLEAN);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	IF led = 0 THEN 
+	IF led = 0 THEN
 	CPU.MaskIn (CPU.GPFSEL4, {21..23}, {21});
 	IF status THEN CPU.WriteMask (CPU.GPSET1, {15}) ELSE CPU.WriteMask (CPU.GPCLR1, {15}) END;
 	ELSE (* power led *)
-		IF status THEN 
+		IF status THEN
 			CPU.MaskIn (CPU.GPFSEL3, {15..17}, {17});
-		ELSE 
+		ELSE
 			CPU.MaskIn (CPU.GPFSEL3, {15..17}, {15});
 		END;
 	END;
@@ -181,7 +181,7 @@ END RestoreActivity;
 PROCEDURE Initialize-;
 VAR i: LONGINT;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	SYSTEM.SetActivity (NIL); 
+	SYSTEM.SetActivity (NIL);
 	CPU.Initialize; InitTrace; InitMemory;
 	frequency := Timer.GetFrequency () DIV 1000;
 END Initialize;

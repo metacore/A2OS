@@ -118,7 +118,7 @@ TYPE
 	Result*= RECORD
 		type*: INTEGER; (* ConstantInteger, ConstantFloat, Fixup, Offset *)
 		sizeInBits*: INTEGER;
-		value*: HUGEINT; 
+		value*: HUGEINT;
 		valueR*: LONGREAL;
 		fixup*: BinaryCode.Fixup;
 	END;

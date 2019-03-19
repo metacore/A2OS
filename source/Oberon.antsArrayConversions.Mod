@@ -29,87 +29,87 @@ difference of these two formats is mainly speed and accesibility of colors,
 PICTURE is indexed color format
 IMAGE is mainly true color *)
 
-IMPORT antsArrayImages, antsArrayPictures, Files, antsCommands, antsToolbox, Strings, Objects, Links, aM := antsMessages, 
-	antsSecurity, vyBase, vyName, vyTracking, Effects, Pictures, Display, antsArrayObjects, antsArrayPictures16;  
+IMPORT antsArrayImages, antsArrayPictures, Files, antsCommands, antsToolbox, Strings, Objects, Links, aM := antsMessages,
+	antsSecurity, vyBase, vyName, vyTracking, Effects, Pictures, Display, antsArrayObjects, antsArrayPictures16;
 
-	PROCEDURE getSuffix( name: ARRAY OF CHAR;  VAR suffix: ARRAY OF CHAR );  
-	VAR lastptpos, end: LONGINT;  i: LONGINT;  
-	BEGIN 
-		suffix[0] := 0X;  i := 0;  lastptpos := -1;  
-		WHILE (name[i] # 0X) DO 
-			IF name[i] = "." THEN lastptpos := i END;  
+	PROCEDURE getSuffix( name: ARRAY OF CHAR;  VAR suffix: ARRAY OF CHAR );
+	VAR lastptpos, end: LONGINT;  i: LONGINT;
+	BEGIN
+		suffix[0] := 0X;  i := 0;  lastptpos := -1;
+		WHILE (name[i] # 0X) DO
+			IF name[i] = "." THEN lastptpos := i END;
 			INC( i )
-		END;  
-		end := i;  i := lastptpos + 1;  
-		WHILE (i < end) DO suffix[i - lastptpos - 1] := Strings.UpperCh( name[i] );  INC( i ) END 
-	END getSuffix;  
+		END;
+		end := i;  i := lastptpos + 1;
+		WHILE (i < end) DO suffix[i - lastptpos - 1] := Strings.UpperCh( name[i] );  INC( i ) END
+	END getSuffix;
 
-	PROCEDURE finish( VAR f: Files.File;  name: ARRAY OF CHAR );  
-	VAR suffix: ARRAY 256 OF CHAR;  
-		obj: antsArrayObjects.tObject;  pobj: antsArrayPictures16.tObject;  
-	BEGIN 
-		IF f = NIL THEN RETURN END;  
-		getSuffix( name, suffix );  
+	PROCEDURE finish( VAR f: Files.File;  name: ARRAY OF CHAR );
+	VAR suffix: ARRAY 256 OF CHAR;
+		obj: antsArrayObjects.tObject;  pobj: antsArrayPictures16.tObject;
+	BEGIN
+		IF f = NIL THEN RETURN END;
+		getSuffix( name, suffix );
 		IF (suffix = "GIF") OR (suffix = "PICT") THEN antsArrayPictures.finishFile( f, name )
-		ELSIF suffix = "PGM" THEN 
-			antsArrayObjects.finishload( f, name );  obj := antsArrayObjects.loadedobj;  
-			IF obj = NIL THEN RETURN END;  
-			WITH obj: antsArrayObjects.tINTEGERObject DO 
-				antsArrayPictures16.Gen;  pobj := Objects.NewObj( antsArrayPictures16.tObject );  
+		ELSIF suffix = "PGM" THEN
+			antsArrayObjects.finishload( f, name );  obj := antsArrayObjects.loadedobj;
+			IF obj = NIL THEN RETURN END;
+			WITH obj: antsArrayObjects.tINTEGERObject DO
+				antsArrayPictures16.Gen;  pobj := Objects.NewObj( antsArrayPictures16.tObject );
 				antsArrayPictures16.FromArray( pobj, obj )
-			END;  
+			END;
 			antsSecurity.Halt( "not yet supported" )
 		ELSE  (* BMP,ICO,IFF,JPG,PCX,PPM,PSD,TGA,XBM,XPM *)
 			antsArrayImages.finishFile( f, name )
-		END 
-	END finish;  
+		END
+	END finish;
 
-	PROCEDURE LoadDialoged*;  
-	BEGIN 
+	PROCEDURE LoadDialoged*;
+	BEGIN
 		antsCommands.InitScan( "" );  antsToolbox.FileOpen( finish, "Pictures (GIF,PICT,BMP,ICO,IFF,JPG,PCX,PPM,PSD,TGA,XBM,XPM,PGM)", "*.GIF;*.PICT;*.BMP;*.ICO;*.IFF;*.JPG;*.JPEG;*.PCX;*.PPM;*.PSD; *.TGY;*.XBM;*.XPM;*.PGM" )
-	END LoadDialoged;  
+	END LoadDialoged;
 
-	PROCEDURE Grey*;  
-	VAR obj: vyBase.Object;  name: vyName.tNameArray;  depth: LONGINT;  
-	BEGIN 
-		antsCommands.InitScan( "from=OBJ to=NAME depth=INT ~# Attach Array  with name <to> to Image or Picture  <from> " );  
-		IF antsCommands.ExpectObject( "from", obj ) & antsCommands.ExpectName( "to", name ) & 
-		    antsCommands.ExpectNumber( "depth", depth ) THEN 
-			IF obj IS antsArrayPictures.tObject THEN 
-				WITH obj: antsArrayPictures.tObject DO antsArrayPictures.DoToArray( obj, depth, name );  
-				END;  
-			ELSIF obj IS antsArrayImages.tObject THEN 
+	PROCEDURE Grey*;
+	VAR obj: vyBase.Object;  name: vyName.tNameArray;  depth: LONGINT;
+	BEGIN
+		antsCommands.InitScan( "from=OBJ to=NAME depth=INT ~# Attach Array  with name <to> to Image or Picture  <from> " );
+		IF antsCommands.ExpectObject( "from", obj ) & antsCommands.ExpectName( "to", name ) &
+		    antsCommands.ExpectNumber( "depth", depth ) THEN
+			IF obj IS antsArrayPictures.tObject THEN
+				WITH obj: antsArrayPictures.tObject DO antsArrayPictures.DoToArray( obj, depth, name );
+				END;
+			ELSIF obj IS antsArrayImages.tObject THEN
 				WITH obj: antsArrayImages.tObject DO antsArrayImages.DoToArray( obj, depth, name )
-				END;  
+				END;
 			ELSE antsSecurity.Halt( "Can't convert, wrong format" )
-			END 
-		END 
-	END Grey;  
+			END
+		END
+	END Grey;
 
-	PROCEDURE Put*;  
-	VAR msg: antsArrayPictures.setPictMsg;  obj: vyBase.Object;  keys: SET;  dx, dy: INTEGER;  pict: Pictures.Picture;  i, r, g, b: INTEGER;  
-		copy: antsArrayObjects.tINTEGERArray;  orig: Objects.Object;  
-	BEGIN 
-		antsCommands.InitScan( "from=OBJ ~# Interactively put obj <from> to some Port" );  
-		IF antsCommands.ExpectObject( "from", obj ) THEN 
-			IF obj IS antsArrayPictures.tObject THEN 
-				WITH obj: antsArrayPictures.tObject DO 
-					NEW( pict );  Pictures.Create( pict, obj.pict.width, obj.pict.height, obj.pict.depth );  
-					Pictures.Copy( obj.pict, pict, 0, 0, obj.pict.width, obj.pict.height, 0, 0, obj.pict.width, obj.pict.height, 
-										    Display.replace );  
-					FOR i := 0 TO 255 DO Pictures.GetColor( obj.pict, i, r, g, b );  Pictures.SetColor( pict, i, r, g, b ) END;  
-					msg.pict := pict;  vyTracking.TrackMouseCont( keys, dx, dy, Effects.PointHand );  
-					antsToolbox.MsgToTypedXY( dx, dy, msg, "antsViews.tLayerDesc" );  
+	PROCEDURE Put*;
+	VAR msg: antsArrayPictures.setPictMsg;  obj: vyBase.Object;  keys: SET;  dx, dy: INTEGER;  pict: Pictures.Picture;  i, r, g, b: INTEGER;
+		copy: antsArrayObjects.tINTEGERArray;  orig: Objects.Object;
+	BEGIN
+		antsCommands.InitScan( "from=OBJ ~# Interactively put obj <from> to some Port" );
+		IF antsCommands.ExpectObject( "from", obj ) THEN
+			IF obj IS antsArrayPictures.tObject THEN
+				WITH obj: antsArrayPictures.tObject DO
+					NEW( pict );  Pictures.Create( pict, obj.pict.width, obj.pict.height, obj.pict.depth );
+					Pictures.Copy( obj.pict, pict, 0, 0, obj.pict.width, obj.pict.height, 0, 0, obj.pict.width, obj.pict.height,
+										    Display.replace );
+					FOR i := 0 TO 255 DO Pictures.GetColor( obj.pict, i, r, g, b );  Pictures.SetColor( pict, i, r, g, b ) END;
+					msg.pict := pict;  vyTracking.TrackMouseCont( keys, dx, dy, Effects.PointHand );
+					antsToolbox.MsgToTypedXY( dx, dy, msg, "antsViews.tLayerDesc" );
 					IF msg.changed # NIL THEN  (* now look for original array, maybe we changed the sampling array *)
-						Links.GetLink( msg.changed, "orig", orig );  
-						IF orig # NIL THEN 
-							WITH orig: antsArrayObjects.tINTEGERObject DO 
-								antsArrayObjects.CopyII( msg.changed( antsArrayObjects.tINTEGERObject ).A, copy, 0, 0, 
-																		 msg.changed( antsArrayObjects.tINTEGERObject ).w, 
-																		 msg.changed( antsArrayObjects.tINTEGERObject ).h, 0, 0 );  
+						Links.GetLink( msg.changed, "orig", orig );
+						IF orig # NIL THEN
+							WITH orig: antsArrayObjects.tINTEGERObject DO
+								antsArrayObjects.CopyII( msg.changed( antsArrayObjects.tINTEGERObject ).A, copy, 0, 0,
+																		 msg.changed( antsArrayObjects.tINTEGERObject ).w,
+																		 msg.changed( antsArrayObjects.tINTEGERObject ).h, 0, 0 );
 								antsArrayObjects.EmbedINTEGERArray( copy, orig )
-							END 
-						END 
+							END
+						END
 						(*
 				vyName.GetObjId(msg.changed,name);
 				(* name := msg.changed; *)
@@ -125,16 +125,16 @@ IMPORT antsArrayImages, antsArrayPictures, Files, antsCommands, antsToolbox, Str
 				END;
 				END;
 				*)
-					END 
-				END;  
+					END
+				END;
 			ELSE aM.eS( "Can't put, wrong format" )
-			END 
-		
-		END 
-	END Put;  
+			END
 
-BEGIN 
-	aM.launch;  
+		END
+	END Put;
+
+BEGIN
+	aM.launch;
 END antsArrayConversions.
 antsArrayConversions.LoadDialoged myname ~
 Voyager.Show myname as antsViews ~

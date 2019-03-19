@@ -25,179 +25,179 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 
 
-IMPORT antsObjects, vyBase, antsCommands, antsKernel, antsMC, vyName, aM := antsMessages, antsArrayObjects, 
-	vyHostTexts, Objects, Gadgets, Files, Math := MathL IN A2;  
+IMPORT antsObjects, vyBase, antsCommands, antsKernel, antsMC, vyName, aM := antsMessages, antsArrayObjects,
+	vyHostTexts, Objects, Gadgets, Files, Math := MathL IN A2;
 
-TYPE 
-	
-	tSamplingScheme = POINTER TO tSamplingSchemeDesc;  
+TYPE
+
+	tSamplingScheme = POINTER TO tSamplingSchemeDesc;
 	tSamplingSchemeDesc = RECORD (vyBase.ObjDesc)
-		c: antsMC.Chain;  
-		nrsamples: LONGINT;  
-		maxnrsamples: LONGINT;  
+		c: antsMC.Chain;
+		nrsamples: LONGINT;
+		maxnrsamples: LONGINT;
 		coalescence: BOOLEAN
-	END;  
-	
-	PROCEDURE Store0( o: tSamplingScheme;  VAR M: Objects.FileMsg );  
-	BEGIN 
+	END;
+
+	PROCEDURE Store0( o: tSamplingScheme;  VAR M: Objects.FileMsg );
+	BEGIN
 		Files.WriteInt( M.R, 0 );  Gadgets.WriteRef( M.R, o.lib, o.c );  Files.WriteLInt( M.R, o.maxnrsamples )
-	END Store0;  
+	END Store0;
 
-	PROCEDURE Load0( o: tSamplingScheme;  VAR M: Objects.FileMsg );  
-	VAR objsub: Objects.Object;  version: INTEGER;  
-	BEGIN 
-		Files.ReadInt( M.R, version );  Gadgets.ReadRef( M.R, o.lib, objsub );  
-		IF objsub # NIL THEN o.c := objsub( antsMC.Chain ) END;  
+	PROCEDURE Load0( o: tSamplingScheme;  VAR M: Objects.FileMsg );
+	VAR objsub: Objects.Object;  version: INTEGER;
+	BEGIN
+		Files.ReadInt( M.R, version );  Gadgets.ReadRef( M.R, o.lib, objsub );
+		IF objsub # NIL THEN o.c := objsub( antsMC.Chain ) END;
 		Files.ReadLInt( M.R, o.maxnrsamples )
-	END Load0;  
+	END Load0;
 
-	PROCEDURE Copy*( VAR M: Objects.CopyMsg;  src, dest: tSamplingScheme );  
-	BEGIN 
-		vyBase.CopyObject( M, src, dest );  
+	PROCEDURE Copy*( VAR M: Objects.CopyMsg;  src, dest: tSamplingScheme );
+	BEGIN
+		vyBase.CopyObject( M, src, dest );
 		(* (* never deepcopy data in a layer ! *)
 	IF M.id = Objects.deep THEN
 	ELSE
 	END;
 	*)
 		dest.c := src.c
-	
-	END Copy;  
 
-	PROCEDURE Gen*;  
-	VAR s: tSamplingScheme;  
-	BEGIN 
+	END Copy;
+
+	PROCEDURE Gen*;
+	VAR s: tSamplingScheme;
+	BEGIN
 		aM.cmd;  NEW( s );  s.handle := Handler;  Objects.NewObj := s;  antsObjects.Register( s )
-	END Gen;  
+	END Gen;
 
-	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );  
-	VAR copy: tSamplingScheme;  uhandle: Objects.Handler;  gen: PROCEDURE;  
-	
+	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
+	VAR copy: tSamplingScheme;  uhandle: Objects.Handler;  gen: PROCEDURE;
+
 	CONST GenProc = "antsPerfectS.Gen";   (* Gen Procedure as String *)
-	BEGIN 
+	BEGIN
 		uhandle := vyBase.objecthandle;   (* handler of root object*)
 		gen := Gen;   (* gen Procedure as PROCEDURE *)
-		
-		WITH o: tSamplingScheme DO 
-			IF M IS Objects.CopyMsg THEN 
-				WITH M: Objects.CopyMsg DO 
-					IF M.stamp = o.stamp THEN 
+
+		WITH o: tSamplingScheme DO
+			IF M IS Objects.CopyMsg THEN
+				WITH M: Objects.CopyMsg DO
+					IF M.stamp = o.stamp THEN
 						M.obj := o.dlink (* copy M arrives again *)
-					ELSE 
+					ELSE
 						gen;  copy := Objects.NewObj( tSamplingScheme );  M.obj := copy;   (* Generator  *)
 						Copy( M, o, M.obj( tSamplingScheme ) ) (* do not call uhanlde, may result in new object of type "root" *)
-					END;  
-				END;  
-			ELSIF M IS Objects.FileMsg THEN 
-				WITH M: Objects.FileMsg DO 
-					uhandle( o, M );  
+					END;
+				END;
+			ELSIF M IS Objects.FileMsg THEN
+				WITH M: Objects.FileMsg DO
+					uhandle( o, M );
 					IF M.id = Objects.load THEN Load0( o, M )
 					ELSIF M.id = Objects.store THEN Store0( o, M )
-					END;  
-				END;  
-			ELSIF M IS Objects.AttrMsg THEN 
-				WITH M: Objects.AttrMsg DO 
+					END;
+				END;
+			ELSIF M IS Objects.AttrMsg THEN
+				WITH M: Objects.AttrMsg DO
 					IF M.id = Objects.enum THEN M.Enum( "Gen" );  M.Enum( "NrSamples" );  M.Enum( "MaxNrSamples" );  M.Enum( "coalescence" );  uhandle( o, M )
-					ELSIF M.id = Objects.get THEN 
+					ELSIF M.id = Objects.get THEN
 						IF M.name = "Gen" THEN COPY( GenProc, M.s );  M.class := Objects.String;  M.res := 0
 						ELSIF M.name = "NrSamples" THEN M.class := Objects.Int;  M.i := o.nrsamples;  M.res := 0
 						ELSIF M.name = "coalescence" THEN M.class := Objects.Bool;  M.b := o.coalescence;  M.res := 0
 						ELSIF M.name = "MaxNrSamples" THEN M.class := Objects.Int;  M.i := o.maxnrsamples;  M.res := 0
 						ELSE uhandle( o, M )
-						END 
-					ELSIF M.id = Objects.set THEN 
-						IF M.name = "MaxNrSamples" THEN 
-							IF M.class = Objects.Int THEN o.maxnrsamples := Power2( ENTIER( Math.ln( M.i ) / Math.ln( 2 ) + 0.5 ) );  M.res := 0 END 
+						END
+					ELSIF M.id = Objects.set THEN
+						IF M.name = "MaxNrSamples" THEN
+							IF M.class = Objects.Int THEN o.maxnrsamples := Power2( ENTIER( Math.ln( M.i ) / Math.ln( 2 ) + 0.5 ) );  M.res := 0 END
 						ELSE uhandle( o, M )
-						END 
+						END
 					ELSE uhandle( o, M )
-					END 
-				END;  
-			ELSIF M IS Objects.LinkMsg THEN 
-				WITH M: Objects.LinkMsg DO 
+					END
+				END;
+			ELSIF M IS Objects.LinkMsg THEN
+				WITH M: Objects.LinkMsg DO
 					IF M.id = Objects.enum THEN M.Enum( "Chain" )
-					ELSIF M.id = Objects.get THEN 
-						IF M.name = "Chain" THEN M.obj := o.c;  M.res := 0 ELSE uhandle( o, M ) END 
+					ELSIF M.id = Objects.get THEN
+						IF M.name = "Chain" THEN M.obj := o.c;  M.res := 0 ELSE uhandle( o, M ) END
 					ELSE uhandle( o, M )
-					END 
-				
-				END;  
-			ELSIF M IS Objects.BindMsg THEN 
-				WITH M: Objects.BindMsg DO 
+					END
+
+				END;
+			ELSIF M IS Objects.BindMsg THEN
+				WITH M: Objects.BindMsg DO
 					uhandle( o, M )
 					(* add own binds here: Bind(o.entry,M) *)
-				END;  
+				END;
 			ELSE uhandle( o, M )
-			END 
-		END 
-	END Handler;  
+			END
+		END
+	END Handler;
 
-	PROCEDURE Compare( A1, A2: antsArrayObjects.tINTEGERObject ): BOOLEAN;  
-	VAR y, x: LONGINT;  
-	BEGIN 
-		FOR y := 0 TO A1.h - 1 DO 
-			FOR x := 0 TO A1.w - 1 DO 
-				IF A1.A[y, x] # A2.A[y, x] THEN RETURN FALSE END 
-			END 
-		END;  
-		RETURN TRUE 
-	END Compare;  
+	PROCEDURE Compare( A1, A2: antsArrayObjects.tINTEGERObject ): BOOLEAN;
+	VAR y, x: LONGINT;
+	BEGIN
+		FOR y := 0 TO A1.h - 1 DO
+			FOR x := 0 TO A1.w - 1 DO
+				IF A1.A[y, x] # A2.A[y, x] THEN RETURN FALSE END
+			END
+		END;
+		RETURN TRUE
+	END Compare;
 
-	PROCEDURE Power2( l: LONGINT ): LONGINT;  
-	VAR t: LONGINT;  p: LONGINT;  
-	BEGIN 
-		p := 1;  
-		FOR t := 1 TO l DO p := p * 2 END;  
+	PROCEDURE Power2( l: LONGINT ): LONGINT;
+	VAR t: LONGINT;  p: LONGINT;
+	BEGIN
+		p := 1;
+		FOR t := 1 TO l DO p := p * 2 END;
 		RETURN p
-	END Power2;  
+	END Power2;
 
-	PROCEDURE DoRunScheme( S: tSamplingScheme );  
-	VAR a1, a2: antsArrayObjects.tINTEGERObject;  s1, s2: antsKernel.Kernel;  i: LONGINT;  c: antsMC.Chain;  o1, o2: vyBase.Object;  
-	BEGIN 
-		vyHostTexts.Note( vyHostTexts.cNotify, "Running a backward sampling exponential scheme" );  c := S.c( antsMC.Chain );  o1 := c.getKernel( 0 );  o2 := c.getKernel( 1 );  
-		s1 := o1( antsKernel.Kernel );  s2 := o2( antsKernel.Kernel );  a1 := s1.A( antsArrayObjects.tINTEGERObject );  
-		a2 := s2.A( antsArrayObjects.tINTEGERObject );  
-		IF ((a1.w) # (a2.w)) OR ((a1.h) # (a2.h)) OR ((a1.depth) # (a2.depth)) THEN 
-			vyHostTexts.Note( vyHostTexts.cAlert, "antsPerfectS: Arrays do not coincide in size or depth" );  vyBase.Update( S );  RETURN 
-		END;  
-		c.init();  i := 0;  
-		WHILE (S.nrsamples < S.maxnrsamples) DO 
-			Gadgets.Update( S );  c.jumpTo( -Power2( i ) );  S.nrsamples := Power2( i );  c.toLast();  
-			IF Compare( a1, a2 ) THEN aM.S( "Coalescence reached" );  S.coalescence := TRUE;  Gadgets.Update( S );  RETURN END;  
+	PROCEDURE DoRunScheme( S: tSamplingScheme );
+	VAR a1, a2: antsArrayObjects.tINTEGERObject;  s1, s2: antsKernel.Kernel;  i: LONGINT;  c: antsMC.Chain;  o1, o2: vyBase.Object;
+	BEGIN
+		vyHostTexts.Note( vyHostTexts.cNotify, "Running a backward sampling exponential scheme" );  c := S.c( antsMC.Chain );  o1 := c.getKernel( 0 );  o2 := c.getKernel( 1 );
+		s1 := o1( antsKernel.Kernel );  s2 := o2( antsKernel.Kernel );  a1 := s1.A( antsArrayObjects.tINTEGERObject );
+		a2 := s2.A( antsArrayObjects.tINTEGERObject );
+		IF ((a1.w) # (a2.w)) OR ((a1.h) # (a2.h)) OR ((a1.depth) # (a2.depth)) THEN
+			vyHostTexts.Note( vyHostTexts.cAlert, "antsPerfectS: Arrays do not coincide in size or depth" );  vyBase.Update( S );  RETURN
+		END;
+		c.init();  i := 0;
+		WHILE (S.nrsamples < S.maxnrsamples) DO
+			Gadgets.Update( S );  c.jumpTo( -Power2( i ) );  S.nrsamples := Power2( i );  c.toLast();
+			IF Compare( a1, a2 ) THEN aM.S( "Coalescence reached" );  S.coalescence := TRUE;  Gadgets.Update( S );  RETURN END;
 			INC( i )
-		END;  
+		END;
 		Gadgets.Update( S );  aM.S( "Coalescence not reached" )
-	END DoRunScheme;  
+	END DoRunScheme;
 
-	PROCEDURE RunScheme*;  
-	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  S: tSamplingScheme;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "name=OBJ" );  
-		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN 
+	PROCEDURE RunScheme*;
+	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  S: tSamplingScheme;
+	BEGIN
+		l := antsCommands.ScanFromPar( "name=OBJ" );
+		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN
 			S := obj( tSamplingScheme );  S.nrsamples := 0;  S.coalescence := FALSE;  DoRunScheme( S )
-		END 
-	END RunScheme;  
+		END
+	END RunScheme;
 
-	PROCEDURE InitScheme*;  
-	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  S: tSamplingScheme;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "name=OBJ" );  
-		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN 
-			S := obj( tSamplingScheme );  S.nrsamples := 0;  S.coalescence := FALSE;  vyBase.Update( S );  
-		END 
-	END InitScheme;  
+	PROCEDURE InitScheme*;
+	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  S: tSamplingScheme;
+	BEGIN
+		l := antsCommands.ScanFromPar( "name=OBJ" );
+		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN
+			S := obj( tSamplingScheme );  S.nrsamples := 0;  S.coalescence := FALSE;  vyBase.Update( S );
+		END
+	END InitScheme;
 
-	PROCEDURE NewScheme*;  
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  S: tSamplingScheme;  c: vyBase.Object;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "name= NAME chain=OBJ" );  
-		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectObjectFromKeyword( l, "chain", c ) THEN 
-			Gen;  S := Objects.NewObj( tSamplingScheme );  S.c := c( antsMC.Chain );  S.maxnrsamples := 100;  
+	PROCEDURE NewScheme*;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  S: tSamplingScheme;  c: vyBase.Object;
+	BEGIN
+		l := antsCommands.ScanFromPar( "name= NAME chain=OBJ" );
+		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectObjectFromKeyword( l, "chain", c ) THEN
+			Gen;  S := Objects.NewObj( tSamplingScheme );  S.c := c( antsMC.Chain );  S.maxnrsamples := 100;
 			vyBase.Subscribe( S, c );  vyName.RegisterNamed( S, name )
-		END 
-	END NewScheme;  
+		END
+	END NewScheme;
 
-BEGIN 
-	aM.launch;  
+BEGIN
+	aM.launch;
 END antsPerfectS.
 
 (*

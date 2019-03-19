@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* 0103xx fof: Complete redesign for use of images, images as double buffer, alpha channel etc. *)
@@ -41,10 +41,10 @@ We will not use Gfx, might be too slow. Whenever you needs Gfx displays, impleme
 
 
 IMPORT  Display,  Pictures, Display3, Fonts, Printer, Printer3, Files,  Images, Objects, vyPortability;
-CONST 
+CONST
 	BrushSize = 100;
 	cDisplayBuffer*= 0;
-	cImageBuffer*=1; 
+	cImageBuffer*=1;
 TYPE
 	tPatPrinter* = PROCEDURE (x, y: INTEGER);
 
@@ -55,19 +55,19 @@ TYPE
 		w-, h-: INTEGER;
 		wDIV2-, hDIV2-: INTEGER
 	END;
-	
+
 	doubleBuffer*= POINTER TO doubleBufferDesc;
 	doubleBufferDesc*= RECORD
 		new-: BOOLEAN;
 		displayBuffer: vyPortability.displayBuffer;
-		imageBuffer: Images.Image; 
-		mask: Display3.Mask; 
-		x,y,w,h: INTEGER; 
-		active-: BOOLEAN; 
-		type-: INTEGER; 
-	END; 
+		imageBuffer: Images.Image;
+		mask: Display3.Mask;
+		x,y,w,h: INTEGER;
+		active-: BOOLEAN;
+		type-: INTEGER;
+	END;
 
-	
+
 	(* brush for drawing in images *)
 	Brush = RECORD
 		brul, brur: ARRAY BrushSize OF INTEGER;
@@ -376,8 +376,8 @@ PROCEDURE StretchedImageC (VAR sP: Images.Image;  X, Y, W, H, DX, DY, DW, DH: IN
 	scalexl, scaleyl: INTEGER;
 BEGIN
 	IF (W = DW) & (H = DH) THEN ImageC(sP, X, Y, W, H, DX, DY) END;
-(*	ASSERT(RectInRect(X, Y, W, H, 0, 0, sP.width, sP.height), 100);*) 
-	RectIntersection(X,Y,W,H,0,0,sP.width, sP.height); 
+(*	ASSERT(RectInRect(X, Y, W, H, 0, 0, sP.width, sP.height), 100);*)
+	RectIntersection(X,Y,W,H,0,0,sP.width, sP.height);
 	(* first check if displayed: *)
 	IF (DW = 0) OR (DH = 0) THEN RETURN END;
 	oldpix := contextfpix;
@@ -523,9 +523,9 @@ END ReplConsti;
 
 PROCEDURE DirectReplConsti (x, y, w, h: INTEGER);  (* faster, but assert x,y in Image range FIRST !! *)
 BEGIN
-	IF (x>=0) & (y>=0) & (1.0D0+x+LONG(w) < 10000) & (1.0D0+ y+LONG(h) < 10000) THEN 
+	IF (x>=0) & (y>=0) & (1.0D0+x+LONG(w) < 10000) & (1.0D0+ y+LONG(h) < 10000) THEN
 	Images.Fill(contextimg, x, y, x + w, y + h, contextfpix, Images.SrcOverDst)
-	END; 
+	END;
 END DirectReplConsti;
 
 PROCEDURE PatternToImage (pat: Display.Pattern;  patimg: Images.Image);
@@ -1138,15 +1138,15 @@ BEGIN
 			WHILE x0 < xe DO
 				x1 := x0;
 				Pictures.GetRun(sP, idx, x1, y);
-				IF x1 > xe THEN x1 := xe 
+				IF x1 > xe THEN x1 := xe
 				END;
 				thisx := SHORT(ENTIER(DX + (x0 - X) * scalex + 0.5));  (* fof 010406 *)
 				nextx := SHORT(ENTIER(DX + (x1 - X) * scalex + 0.5));
 				contextfpix := pixs[idx];
 				ReplConsti(thisx, thisy, nextx - thisx, nexty - thisy);
-				IF (x1 <= x0) THEN x1 := xe END; 
+				IF (x1 <= x0) THEN x1 := xe END;
 				x0 := x1
-				
+
 			END;
 			INC(y)
 		END
@@ -1454,7 +1454,7 @@ BEGIN
 	NEW(sgn);
 	sgn.w := w;
 	Files.ReadInt(R, sgn.h);
-	Files.ReadLInt(R, adr);  
+	Files.ReadLInt(R, adr);
 	sgn.pat := adr;
 	(*! Is the store of sgn.pat allright*)
 	sgn.wDIV2 := sgn.w DIV 2;  sgn.hDIV2 := sgn.h DIV 2;
@@ -1550,43 +1550,43 @@ END ClosePrinter;
 PROCEDURE OpenBuffer*(VAR b: doubleBuffer; x,y,w,h: INTEGER; translucent: BOOLEAN);
 VAR newdisplayb: BOOLEAN;
 BEGIN
-	IF b = NIL THEN 
-		NEW(b); b.new := TRUE 
-	ELSIF (w # b.w) OR (h# b.h) THEN 
-		b.new := TRUE 	
-	ELSE 
-		b.new := FALSE; 
-	END; 
-	b.x := x; b.y := y; b.w := w; b.h := h; b.mask := clipMask; 
-	IF ~translucent THEN 
-		newdisplayb := (b.displayBuffer = NIL); 
-		vyPortability.OpenBuffer(b.displayBuffer,w,h); 
-		IF (b.displayBuffer#NIL)  THEN 
-			IF newdisplayb THEN b.new := TRUE; END; 
+	IF b = NIL THEN
+		NEW(b); b.new := TRUE
+	ELSIF (w # b.w) OR (h# b.h) THEN
+		b.new := TRUE
+	ELSE
+		b.new := FALSE;
+	END;
+	b.x := x; b.y := y; b.w := w; b.h := h; b.mask := clipMask;
+	IF ~translucent THEN
+		newdisplayb := (b.displayBuffer = NIL);
+		vyPortability.OpenBuffer(b.displayBuffer,w,h);
+		IF (b.displayBuffer#NIL)  THEN
+			IF newdisplayb THEN b.new := TRUE; END;
 			b.imageBuffer := NIL;
-			b.type := cDisplayBuffer;  
-			clipMask := NIL; 
+			b.type := cDisplayBuffer;
+			clipMask := NIL;
 			SetDisplayPrimitives;
 		END;
-	ELSE 
-		b.displayBuffer := NIL;  
-	END; 
-	IF b.displayBuffer = NIL THEN 
-		IF (b.imageBuffer = NIL) THEN NEW(b.imageBuffer);  b.new := TRUE END;  
-		IF b.new THEN 
+	ELSE
+		b.displayBuffer := NIL;
+	END;
+	IF b.displayBuffer = NIL THEN
+		IF (b.imageBuffer = NIL) THEN NEW(b.imageBuffer);  b.new := TRUE END;
+		IF b.new THEN
 			Images.Create(b.imageBuffer, w, h, Images.DisplayFormat);
 		END;
 		contextimg := b.imageBuffer;
-		SetImagePrimitives; 
-		b.type := cImageBuffer; 
-	END; 
-	b.active := TRUE; 
-	db := b; 
+		SetImagePrimitives;
+		b.type := cImageBuffer;
+	END;
+	b.active := TRUE;
+	db := b;
 END OpenBuffer;
 
 PROCEDURE UseAsBufferBG*(db: doubleBuffer; img: Images.Image);
 BEGIN
-	IF (img.width = db.w) & (img.height = db.h) & (img.fmt.code =  Images.DisplayFormat.code) THEN 
+	IF (img.width = db.w) & (img.height = db.h) & (img.fmt.code =  Images.DisplayFormat.code) THEN
 		db.imageBuffer := img
 	ELSE
 		stretchedimage(img,0,0,img.width,img.height, db.x,db.y,db.w,db.h)
@@ -1598,19 +1598,19 @@ PROCEDURE WriteBuffer*(b: doubleBuffer);
 BEGIN
 	IF b.displayBuffer # NIL THEN vyPortability.WriteBuffer(b.displayBuffer,b.mask,b.x,b.y);
 	ELSIF b.imageBuffer # NIL THEN ImageC(b.imageBuffer, 0, 0, b.w, b.h, b.x, b.y)
-	END; 
+	END;
 END WriteBuffer;
 
 PROCEDURE CloseBuffer*(b: doubleBuffer; VAR x,y: INTEGER);
 BEGIN
-	IF b.displayBuffer # NIL THEN 
-		vyPortability.CloseBuffer(b.displayBuffer); 
-		clipMask := b.mask; 
-	END; 
-	SetDisplayPrimitives; 
-	b.active := FALSE; 
-	db := NIL; 
-	x := b.x; y := b.y; 
+	IF b.displayBuffer # NIL THEN
+		vyPortability.CloseBuffer(b.displayBuffer);
+		clipMask := b.mask;
+	END;
+	SetDisplayPrimitives;
+	b.active := FALSE;
+	db := NIL;
+	x := b.x; y := b.y;
 END CloseBuffer;
 
 (*

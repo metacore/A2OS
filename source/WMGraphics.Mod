@@ -1,5 +1,5 @@
 MODULE WMGraphics;	(** AUTHOR "TF"; PURPOSE "Generic Graphic Support"; *)
- 
+
 IMPORT
 	Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale,
 	Codecs, Files, Streams;
@@ -18,12 +18,12 @@ CONST
 	FontBold* = 0; FontItalic* = 1;
 
 	Black* = 0FFH; White* = LONGINT(0FFFFFFFFH); Transparent*=0H;
-	Gray*=LONGINT(0777777FFH); 
-	Red* = LONGINT(0FF0000FFH); 
-	DarkRed* = LONGINT(08C0000FFH); 
+	Gray*=LONGINT(0777777FFH);
+	Red* = LONGINT(0FF0000FFH);
+	DarkRed* = LONGINT(08C0000FFH);
 	Green* = 000FF00FFH; Blue* = 0FFFFH;
-	Yellow* = LONGINT(0FFFF00FFH); 
-	Magenta* = LONGINT(0FF00FFFFH); 
+	Yellow* = LONGINT(0FFFF00FFH);
+	Magenta* = LONGINT(0FF00FFFFH);
 	Cyan* = 00FFFFFFH;
 	Gold* = LONGINT(0FFD700FFH);
 
@@ -268,9 +268,9 @@ TYPE
 		(** Override for improved speed *)
 		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : Color; mode : LONGINT);
 		VAR t, xi, mi, xf, mf, dt2, ds2 : LONGINT; r: Rectangles.Rectangle;
-		
-		
-		(* clipped bresenham algorithm according to 
+
+
+		(* clipped bresenham algorithm according to
 			Bresenham's Line Generation Algorithm with Built-in Clipping, Yevgeny P. Kuzmin, 1995
 		*)
 		PROCEDURE ClippedLine(x0,y0,x1,y1: LONGINT; r: Rectangle; color : Color; mode : LONGINT);
@@ -280,98 +280,98 @@ TYPE
 			rev,setx: BOOLEAN;
 		BEGIN
 			(* standardization && trivial reject *)
-			IF( x1 - x0 > 0 ) THEN 
-				IF ( x0 > r.r) OR (x1 < r.l ) THEN RETURN END; 
-				stx := 1; 
-			ELSE 
+			IF( x1 - x0 > 0 ) THEN
+				IF ( x0 > r.r) OR (x1 < r.l ) THEN RETURN END;
+				stx := 1;
+			ELSE
 				IF ( x1 > r.r) OR ( x0 < r.l ) THEN RETURN END;
-				stx := -1; 
-				x0 :=-x0; x1 :=-x1; 
-				r.l :=-r.l; r.r :=-r.r; 
-				Swap(r.l,r.r); 
+				stx := -1;
+				x0 :=-x0; x1 :=-x1;
+				r.l :=-r.l; r.r :=-r.r;
+				Swap(r.l,r.r);
 			END;
 
-			IF ( y1 - y0 > 0 ) THEN 
-				IF ( y0 > r.b) OR (y1 < r.t ) THEN RETURN END; 
-				sty:=1; 
-			ELSE 
-				IF ( y1 > r.b) OR (y0 < r.t ) THEN RETURN END; 
-				sty :=-1; 
-				y0 :=-y0; y1 :=-y1; 
-				r.t :=-r.t; r.b :=-r.b; 
+			IF ( y1 - y0 > 0 ) THEN
+				IF ( y0 > r.b) OR (y1 < r.t ) THEN RETURN END;
+				sty:=1;
+			ELSE
+				IF ( y1 > r.b) OR (y0 < r.t ) THEN RETURN END;
+				sty :=-1;
+				y0 :=-y0; y1 :=-y1;
+				r.t :=-r.t; r.b :=-r.b;
 				Swap(r.t,r.b);
-			END; 
-			
-			dsx := x1-x0; dsy := y1-y0; 
+			END;
+
+			dsx := x1-x0; dsy := y1-y0;
 			IF ( dsx < dsy ) THEN
 				rev := TRUE;
-				Swap(x0,y0); Swap(x1,y1); Swap(dsx,dsy); 
-				Swap(r.l,r.t); Swap(r.r,r.b); Swap(stx,sty); 
+				Swap(x0,y0); Swap(x1,y1); Swap(dsx,dsy);
+				Swap(r.l,r.t); Swap(r.r,r.b); Swap(stx,sty);
 			ELSE
 				rev := FALSE;
 			END;
-		
-			(* Bresenham's set up *) 
-			dx2 := 2*dsx; dy2 := 2*dsy; 
-			xd := x0; yd :=y0; 
-			e := 2*dsy-dsx; term := x1; 
+
+			(* Bresenham's set up *)
+			dx2 := 2*dsx; dy2 := 2*dsy;
+			xd := x0; yd :=y0;
+			e := 2*dsy-dsx; term := x1;
 			setx := TRUE;
 			IF (y0 < r.t) THEN
-				(* window horizontal entry *) 
-				tmp := HUGEINT(dx2) *(r.t-y0)-dsx; 
+				(* window horizontal entry *)
+				tmp := HUGEINT(dx2) *(r.t-y0)-dsx;
 				INC(xd,LONGINT(tmp DIV dy2));
-				rem := LONGINT(tmp MOD dy2); 
-				IF ( xd>r.r ) THEN RETURN END; 
+				rem := LONGINT(tmp MOD dy2);
+				IF ( xd>r.r ) THEN RETURN END;
 				IF ( xd+1>=r.l ) THEN
-					yd := r.t; DEC(e,rem+dsx); 
-					IF (rem>0 ) THEN INC(xd); INC(e,dy2) END; 
+					yd := r.t; DEC(e,rem+dsx);
+					IF (rem>0 ) THEN INC(xd); INC(e,dy2) END;
 					setx := FALSE;
 				END;
 			END;
-			
+
 			IF setx & ( x0 < r.l )  THEN
-				(* window vertical entry *) 
-				tmp := HUGEINT(dy2) * (r.l-x0); 
-				INC(yd, LONGINT(tmp DIV dx2)); 
-				rem := LONGINT(tmp MOD dx2); 
-				IF ( yd>r.b) OR (yd=r.b) & (rem>=dsx) THEN RETURN END; 
-				xd :=r.l; INC(e,rem); 
-				IF( rem>=dsx ) THEN INC(yd); DEC(e,dx2) END; 
+				(* window vertical entry *)
+				tmp := HUGEINT(dy2) * (r.l-x0);
+				INC(yd, LONGINT(tmp DIV dx2));
+				rem := LONGINT(tmp MOD dx2);
+				IF ( yd>r.b) OR (yd=r.b) & (rem>=dsx) THEN RETURN END;
+				xd :=r.l; INC(e,rem);
+				IF( rem>=dsx ) THEN INC(yd); DEC(e,dx2) END;
 			END;
-			
+
 			IF ( y1 > r.b )  THEN
-				(* window exit *) 
-				tmp := HUGEINT(dx2)*(r.b-y0)+dsx; 
-				term := x0+LONGINT(tmp DIV dy2); 
-				rem := LONGINT(tmp MOD dy2); 
+				(* window exit *)
+				tmp := HUGEINT(dx2)*(r.b-y0)+dsx;
+				term := x0+LONGINT(tmp DIV dy2);
+				rem := LONGINT(tmp MOD dy2);
 				IF ( rem=0 ) THEN DEC(term) END;
 			END;
 			IF ( term>r.r) THEN term := r.r; END;
-			INC(term); 
+			INC(term);
 			IF ( sty =-1 ) THEN yd := -yd END;
-			
+
 			(* reverse transformation *)
 			IF ( stx =-1 ) THEN xd := -xd; term := -term; END;
 			DEC(dx2,dy2);
-			
-			(* Bresenham's line drawing *) 
+
+			(* Bresenham's line drawing *)
 			IF rev THEN
-				WHILE ( xd # term ) DO 
+				WHILE ( xd # term ) DO
 					SetPixel(yd, xd, color, mode);
-					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2) 
-					ELSE INC(xd, stx); INC(e, dy2); 
+					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2)
+					ELSE INC(xd, stx); INC(e, dy2);
 					END;
 				END;
 			ELSE
-				WHILE ( xd # term ) DO (* Bresenham's line drawing *) 
+				WHILE ( xd # term ) DO (* Bresenham's line drawing *)
 						SetPixel(xd,yd, color, mode);
-					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2) 
-					ELSE INC(xd, stx); INC(e, dy2); 
+					IF ( e >= 0 ) THEN INC(xd, stx); INC(yd, sty); DEC(e,dx2)
+					ELSE INC(xd, stx); INC(e, dy2);
 					END;
 				END;
 			END;
 		END ClippedLine;
-		
+
 		BEGIN
 			IF y0 = y1 THEN (* horizontal case *)
 				IF x0 > x1 THEN t := x0; x0 := x1; x1 := t END;
@@ -387,7 +387,7 @@ TYPE
 					IF y0 > y1 THEN t := y0; y0 := y1; y1 := t; t := x0; x0 := x1; x1 := t END;
 					xi := x0; xf :=	y0 - y1; mi := (x1 - x0) DIV (y1 - y0); mf := 2 * ( (x1 - x0) MOD (y1 - y0)); dt2 := 2 * (y1 - y0);
 					GetClipRect(r);
-					IF y0 < r.t THEN 
+					IF y0 < r.t THEN
 						(* this loop should be replaced by a closed expression *)
 						FOR t := y0 TO r.t-1 DO
 							INC(xi, mi); INC(xf, mf);
@@ -398,7 +398,7 @@ TYPE
 					IF y1 > r.b THEN
 						y1 := r.b;
 					END;
-					
+
 					FOR t := y0 TO y1 DO
 						SetPixel(xi, t, color, mode);
 						INC(xi, mi); INC(xf, mf);
@@ -408,7 +408,7 @@ TYPE
 					IF x0 > x1 THEN t := y0; y0 := y1; y1 := t; t := x0; x0 := x1; x1 := t END;
 					xi := y0; xf :=	x0 - x1; mi := (y1 - y0) DIV (x1 - x0); mf := 2 * ( (y1 - y0) MOD (x1 - x0)); dt2 := 2 * (x1 - x0);
 					GetClipRect(r);
-					IF x0 < r.l THEN 
+					IF x0 < r.l THEN
 						(* this loop should be replaced by a closed expression *)
 						FOR t := x0 TO r.l-1 DO
 							INC(xi, mi); INC(xf, mf);
@@ -428,7 +428,7 @@ TYPE
 				*)
 			END
 		END Line;
-		
+
 		PROCEDURE LineReal*(x0, y0, x1, y1 : Real; color : Color; mode : LONGINT);
 		BEGIN
 			Line(ENTIER(x0),ENTIER(y0),ENTIER(x1),ENTIER(y1),color,mode);
@@ -507,7 +507,7 @@ TYPE
 
 		PROCEDURE &New*(img : Raster.Image);
 		BEGIN
-			SELF.img := img;				
+			SELF.img := img;
 			bounds := Rectangles.MakeRect(0, 0, img.width, img.height);
 			SetLimits(bounds);
 			clipRect := bounds;
@@ -898,7 +898,7 @@ END DrawStringInRect;
 PROCEDURE GenCanvas*(img:Raster.Image):BufferCanvas;
 VAR c:BufferCanvas;
 BEGIN
-	NEW(c,img); RETURN c 
+	NEW(c,img); RETURN c
 END GenCanvas;
 
 

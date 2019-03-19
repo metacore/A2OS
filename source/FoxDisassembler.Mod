@@ -54,7 +54,7 @@ TYPE
 			WHILE (b # NIL) & ((adr < b.alignment-offset) OR (adr > b.to - offset) OR (ObjectFile.IsCode(b.type)#isCode)) DO
 				b := b.next;
 			END;
-			IF b = NIL THEN 
+			IF b = NIL THEN
 				(* try to find any matching section *)
 				b := first;
 				WHILE (b # NIL) & ((adr < b.alignment-offset) OR (adr > b.to - offset))  DO
@@ -227,7 +227,7 @@ TYPE
 			codeDisplacement := code;
 			dataDisplacement := data;
 		END SetDisplacements;
-		
+
 
 	END Disassembler;
 

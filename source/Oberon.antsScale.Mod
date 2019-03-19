@@ -1,4 +1,4 @@
-MODULE antsScale IN Oberon;  
+MODULE antsScale IN Oberon;
 (* Copyright notice:
 
 This file is part of AntsInFields
@@ -25,51 +25,51 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 
 
-IMPORT antsContainers, Objects, Display, vyGraphBase, Files, vyDisplay2d, vyPort, vyBase, vyHostTexts, vyAxis, vyEvents, aM := antsMessages;  
+IMPORT antsContainers, Objects, Display, vyGraphBase, Files, vyDisplay2d, vyPort, vyBase, vyHostTexts, vyAxis, vyEvents, aM := antsMessages;
 
-CONST 
-	left = 0;  right = 1;  top = 2;  bottom = 3;  
+CONST
+	left = 0;  right = 1;  top = 2;  bottom = 3;
 
-TYPE 
-	Coordinate = vyGraphBase.Coordinate;  
+TYPE
+	Coordinate = vyGraphBase.Coordinate;
 
-	tLayer* = POINTER TO tLayerDesc;  
+	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
-		pos: INTEGER;  
+		pos: INTEGER;
 		digits: INTEGER
-	END;  
+	END;
 
-VAR 
-	newlayer-: tLayer;  
+VAR
+	newlayer-: tLayer;
 
-	PROCEDURE Min( a, b: INTEGER ): INTEGER;  
-	BEGIN 
-		IF a < b THEN RETURN a ELSE RETURN b END 
-	END Min;  
+	PROCEDURE Min( a, b: INTEGER ): INTEGER;
+	BEGIN
+		IF a < b THEN RETURN a ELSE RETURN b END
+	END Min;
 
-	PROCEDURE Max( a, b: INTEGER ): INTEGER;  
-	BEGIN 
-		IF a > b THEN RETURN a ELSE RETURN b END 
-	END Max;  
+	PROCEDURE Max( a, b: INTEGER ): INTEGER;
+	BEGIN
+		IF a > b THEN RETURN a ELSE RETURN b END
+	END Max;
 
-	PROCEDURE Recall( scale: tLayer;  VAR msg: Display.DisplayMsg );  
-	VAR x, y, w, h: Coordinate;  x2d1, x2d2, y2d1, y2d2: LONGREAL;  
-	BEGIN 
-		vyAxis.SetColors( scale.style.fcol, scale.style.fcol, scale.style.fcol );  vyAxis.PlotLabels( TRUE );  
-		vyAxis.SetLabelFont( scale.style.fnt );  vyAxis.AutomaticTicks( TRUE );  
-		vyPort.GetPictureScreenRegion( msg.dlink( vyPort.Picture ), x, y, w, h );  vyAxis.FlipAxesOrientation( TRUE );  
-		vyGraphBase.PointToPoint2d( x, y, x2d1, y2d1 );  vyGraphBase.PointToPoint2d( x + w, y + h, x2d2, y2d2 );  
-		vyAxis.SetDigitsAfterPoint( scale.digits );  vyAxis.SetLabelFont( scale.style.fnt );  
-		IF scale.pos = top THEN 
+	PROCEDURE Recall( scale: tLayer;  VAR msg: Display.DisplayMsg );
+	VAR x, y, w, h: Coordinate;  x2d1, x2d2, y2d1, y2d2: LONGREAL;
+	BEGIN
+		vyAxis.SetColors( scale.style.fcol, scale.style.fcol, scale.style.fcol );  vyAxis.PlotLabels( TRUE );
+		vyAxis.SetLabelFont( scale.style.fnt );  vyAxis.AutomaticTicks( TRUE );
+		vyPort.GetPictureScreenRegion( msg.dlink( vyPort.Picture ), x, y, w, h );  vyAxis.FlipAxesOrientation( TRUE );
+		vyGraphBase.PointToPoint2d( x, y, x2d1, y2d1 );  vyGraphBase.PointToPoint2d( x + w, y + h, x2d2, y2d2 );
+		vyAxis.SetDigitsAfterPoint( scale.digits );  vyAxis.SetLabelFont( scale.style.fnt );
+		IF scale.pos = top THEN
 			vyAxis.FlipAxesOrientation( TRUE );  vyAxis.ForcePlot( x, y, x + w, y, x2d1, x2d2, (x2d2 - x2d1) / 2 )
-		ELSIF scale.pos = bottom THEN 
+		ELSIF scale.pos = bottom THEN
 			vyAxis.FlipAxesOrientation( FALSE );  vyAxis.ForcePlot( x, y + h - 1, x + w, y + h - 1, x2d1, x2d2, (x2d2 - x2d1) / 2 )
-		ELSIF scale.pos = left THEN 
+		ELSIF scale.pos = left THEN
 			vyAxis.FlipAxesOrientation( TRUE );  vyAxis.ForcePlot( x, y, x, y + h, y2d1, y2d2, (y2d2 - y2d1) / 2 )
-		ELSIF scale.pos = right THEN 
+		ELSIF scale.pos = right THEN
 			vyAxis.FlipAxesOrientation( FALSE );  vyAxis.ForcePlot( x + w - 1, y, x + w - 1, y + h, y2d1, y2d2, (y2d2 - y2d1) / 2 )
-		END 
-	END Recall;  
+		END
+	END Recall;
 
 (* PROCEDURE DoControl (scale: tLayer; VAR event: vyEvents.EventMsg);
 VAR x,y,w,h: INTEGER; X,Y,W,H: INTEGER;
@@ -82,181 +82,181 @@ END DoControl; *)
 
 
 
-	PROCEDURE DoControl2( scale: tLayer;  VAR event: vyEvents.EventMsg );  
-	VAR pict: vyPort.Picture;  x, y: Coordinate;  
-	BEGIN 
-		x := event.x;  y := event.y;  pict := event.dlink( vyPort.Picture );  
-		WHILE event.gesture = vyEvents.EvtSelect DO vyEvents.GetEvent( event ) END;  
-		IF (x # event.x) THEN 
-			IF x - event.x > 0 THEN 
+	PROCEDURE DoControl2( scale: tLayer;  VAR event: vyEvents.EventMsg );
+	VAR pict: vyPort.Picture;  x, y: Coordinate;
+	BEGIN
+		x := event.x;  y := event.y;  pict := event.dlink( vyPort.Picture );
+		WHILE event.gesture = vyEvents.EvtSelect DO vyEvents.GetEvent( event ) END;
+		IF (x # event.x) THEN
+			IF x - event.x > 0 THEN
 				(*reduce digits*)
 				scale.digits := Max( 0, scale.digits - 1 )
 			ELSE scale.digits := Min( 8, scale.digits + 1 )
-			END;  
+			END;
 			vyPort.PictureUpdate( pict )
-		END 
-	END DoControl2;  
+		END
+	END DoControl2;
 
-	PROCEDURE Responsible( scale: tLayer;  VAR event: vyEvents.EventMsg );  
-	VAR priority: INTEGER;  
-	BEGIN 
-		priority := vyEvents.PrioNone;  
-		IF ((event.gesture = vyEvents.EvtIdent) OR (event.gesture = vyEvents.EvtSelect)) THEN 
-			priority := vyEvents.PrioNormal;  
-			IF event.priority < priority THEN event.responder := scale;  event.priority := priority END 
-		END 
-	END Responsible;  
+	PROCEDURE Responsible( scale: tLayer;  VAR event: vyEvents.EventMsg );
+	VAR priority: INTEGER;
+	BEGIN
+		priority := vyEvents.PrioNone;
+		IF ((event.gesture = vyEvents.EvtIdent) OR (event.gesture = vyEvents.EvtSelect)) THEN
+			priority := vyEvents.PrioNormal;
+			IF event.priority < priority THEN event.responder := scale;  event.priority := priority END
+		END
+	END Responsible;
 
-	PROCEDURE Store0( o: tLayer;  VAR M: Objects.FileMsg );  
-	BEGIN 
+	PROCEDURE Store0( o: tLayer;  VAR M: Objects.FileMsg );
+	BEGIN
 		Files.WriteInt( M.R, 0 );  Files.WriteInt( M.R, o.pos );  Files.WriteInt( M.R, o.digits )
-	END Store0;  
+	END Store0;
 
-	PROCEDURE Load0( o: tLayer;  VAR M: Objects.FileMsg );  
-	VAR version: INTEGER;  
-	BEGIN 
+	PROCEDURE Load0( o: tLayer;  VAR M: Objects.FileMsg );
+	VAR version: INTEGER;
+	BEGIN
 		Files.ReadInt( M.R, version );  Files.ReadInt( M.R, o.pos );  Files.ReadInt( M.R, o.digits )
-	END Load0;  
+	END Load0;
 
-	PROCEDURE Copy*( VAR M: Objects.CopyMsg;  src, dest: tLayer );  
-	BEGIN 
+	PROCEDURE Copy*( VAR M: Objects.CopyMsg;  src, dest: tLayer );
+	BEGIN
 		dest^ := src^;  vyPort.LayerCopy( M, src, dest )
 		(* (* never deepcopy data in a layer ! *)
 	IF M.id = Objects.deep THEN
 	ELSE
 	END;
 	*)
-	END Copy;  
+	END Copy;
 
-	PROCEDURE Alloc*;  
-	BEGIN 
+	PROCEDURE Alloc*;
+	BEGIN
 		NEW( newlayer );  newlayer.handle := Handler;  Objects.NewObj := newlayer
-	END Alloc;  
+	END Alloc;
 
-	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );  
-	VAR copy: tLayer;  uhandle: Objects.Handler;  gen: PROCEDURE;  
-	
+	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
+	VAR copy: tLayer;  uhandle: Objects.Handler;  gen: PROCEDURE;
+
 	CONST GenProc = "antsScale.Alloc";   (* Gen Procedure as String *)
-	BEGIN 
+	BEGIN
 		uhandle := vyPort.LayerHandler;   (* handler of root object*)
 		gen := Alloc;   (* gen Procedure as PROCEDURE *)
-		
-		WITH o: tLayer DO 
-			IF M IS Display.DisplayMsg THEN 
-				WITH M: Display.DisplayMsg DO 
+
+		WITH o: tLayer DO
+			IF M IS Display.DisplayMsg THEN
+				WITH M: Display.DisplayMsg DO
 					uhandle( o, M );  Recall( o, M ) (* call root handle first if in background *)
-				END;  
-			ELSIF M IS vyEvents.EventMsg THEN 
-				WITH M: vyEvents.EventMsg DO 
-					IF M.callForResponder THEN 
+				END;
+			ELSIF M IS vyEvents.EventMsg THEN
+				WITH M: vyEvents.EventMsg DO
+					IF M.callForResponder THEN
 						Responsible( o, M );  uhandle( o, M ) (* if not responsible: maybe root is *)
-					ELSE 
-						IF M.gesture = vyEvents.EvtIdent THEN 
+					ELSE
+						IF M.gesture = vyEvents.EvtIdent THEN
 						ELSIF M.gesture = vyEvents.EvtSelect THEN DoControl2( o, M )
-						ELSE 
+						ELSE
 							uhandle( o, M ) (* that M belongs to root *)
-						END 
-					END;  
-				END;  
-			ELSIF M IS Objects.CopyMsg THEN 
-				WITH M: Objects.CopyMsg DO 
-					IF M.stamp = o.stamp THEN 
+						END
+					END;
+				END;
+			ELSIF M IS Objects.CopyMsg THEN
+				WITH M: Objects.CopyMsg DO
+					IF M.stamp = o.stamp THEN
 						M.obj := o.dlink (* copy M arrives again *)
-					ELSE 
+					ELSE
 						gen;  copy := Objects.NewObj( tLayer );  M.obj := copy;   (* Generator  *)
 						Copy( M, o, M.obj( tLayer ) ) (* do not call uhanlde, may result in new object of type "root" *)
-					END;  
-				END;  
-			ELSIF M IS Objects.FileMsg THEN 
-				WITH M: Objects.FileMsg DO 
-					uhandle( o, M );  
+					END;
+				END;
+			ELSIF M IS Objects.FileMsg THEN
+				WITH M: Objects.FileMsg DO
+					uhandle( o, M );
 					IF M.id = Objects.load THEN Load0( o, M )
 					ELSIF M.id = Objects.store THEN Store0( o, M )
-					END;  
-				END;  
-			ELSIF M IS Objects.AttrMsg THEN 
-				WITH M: Objects.AttrMsg DO 
-					IF M.id = Objects.get THEN 
+					END;
+				END;
+			ELSIF M IS Objects.AttrMsg THEN
+				WITH M: Objects.AttrMsg DO
+					IF M.id = Objects.get THEN
 						IF M.name = "Gen" THEN COPY( GenProc, M.s );  M.class := Objects.String;  M.res := 0
 						ELSIF M.name = "Position" THEN M.class := Objects.Int;  M.i := o.pos;  M.res := 0
 						ELSE uhandle( o, M )
-						END 
-					ELSIF M.id = Objects.set THEN 
-						IF M.name = "Position" THEN 
-							IF M.class = Objects.Int THEN o.pos := SHORT( M.i );  M.res := 0;  vyBase.Update( o ) END 
+						END
+					ELSIF M.id = Objects.set THEN
+						IF M.name = "Position" THEN
+							IF M.class = Objects.Int THEN o.pos := SHORT( M.i );  M.res := 0;  vyBase.Update( o ) END
 						ELSE uhandle( o, M )
-						END 
+						END
 					ELSIF M.id = Objects.enum THEN M.Enum( "Position" );  uhandle( o, M )
 					ELSE uhandle( o, M )
-					END 
-				END;  
-			ELSIF M IS Objects.BindMsg THEN 
-				WITH M: Objects.BindMsg DO 
+					END
+				END;
+			ELSIF M IS Objects.BindMsg THEN
+				WITH M: Objects.BindMsg DO
 					uhandle( o, M )
 					(* add own binds here: Bind(o.entry,M) *)
-				END;  
+				END;
 			ELSE uhandle( o, M )
-			END 
-		END 
-	END Handler;  
+			END
+		END
+	END Handler;
 
-	PROCEDURE Open*( scale: tLayer;  id: ARRAY OF CHAR );  
-	BEGIN 
+	PROCEDURE Open*( scale: tLayer;  id: ARRAY OF CHAR );
+	BEGIN
 		vyPort.OpenLayer( scale, id );  scale.handle := Handler;  scale.style.fnt := vyAxis.DefaultLabelFont
-	END Open;  
+	END Open;
 
-	PROCEDURE New*;  
-	BEGIN 
+	PROCEDURE New*;
+	BEGIN
 		aM.cmd;  NEW( newlayer );  Open( newlayer, "scale" );  Objects.NewObj := newlayer
-	END New;  
+	END New;
 
-	PROCEDURE Insert*;  
-	VAR pict: vyPort.Picture;  layer: tLayer;  
-	BEGIN 
-		New;  layer := Objects.NewObj( tLayer );  Open( layer, "test" );  layer.digits := 2;  layer.pos := 0;  
-		pict := vyPort.NewP( vyDisplay2d.NewC2d( 0, 0, 1, 1 ) );  
-		vyGraphBase.SetCoordinate( pict.gcontext( vyDisplay2d.tCoordinate2d ).c2d );  vyPort.AddLayer( pict, layer );  
+	PROCEDURE Insert*;
+	VAR pict: vyPort.Picture;  layer: tLayer;
+	BEGIN
+		New;  layer := Objects.NewObj( tLayer );  Open( layer, "test" );  layer.digits := 2;  layer.pos := 0;
+		pict := vyPort.NewP( vyDisplay2d.NewC2d( 0, 0, 1, 1 ) );
+		vyGraphBase.SetCoordinate( pict.gcontext( vyDisplay2d.tCoordinate2d ).c2d );  vyPort.AddLayer( pict, layer );
 		vyPort.Write( pict )
-	END Insert;  
+	END Insert;
 
-	PROCEDURE ScaleToPicture( p: vyPort.Picture;  posx, posy: LONGINT );  
-	VAR p1: vyPort.Picture;  a: Objects.AttrMsg;  layer: tLayer;  minw, minh: INTEGER;  x, y, w, h, dsr: INTEGER;  
-	BEGIN 
-		New;  layer := Objects.NewObj( tLayer );  layer.digits := 2;  minw := vyAxis.MinStdWidth();  
-		minh := vyAxis.MinStdWidth();  vyGraphBase.GetStringFrame( 0, 0, layer.style.fnt, "999.99", x, y, w, h, dsr );  INC( minw, w );  
-		INC( minh, h );  INC( minh, dsr );  
+	PROCEDURE ScaleToPicture( p: vyPort.Picture;  posx, posy: LONGINT );
+	VAR p1: vyPort.Picture;  a: Objects.AttrMsg;  layer: tLayer;  minw, minh: INTEGER;  x, y, w, h, dsr: INTEGER;
+	BEGIN
+		New;  layer := Objects.NewObj( tLayer );  layer.digits := 2;  minw := vyAxis.MinStdWidth();
+		minh := vyAxis.MinStdWidth();  vyGraphBase.GetStringFrame( 0, 0, layer.style.fnt, "999.99", x, y, w, h, dsr );  INC( minw, w );
+		INC( minh, h );  INC( minh, dsr );
 		IF (ABS( posx ) = 1) & (ABS( posy ) = 1) THEN layer.pos := -1
 		ELSIF posx > 0 THEN layer.pos := left
 		ELSIF posx < 0 THEN layer.pos := right
 		ELSIF posy > 0 THEN layer.pos := top
 		ELSIF posy < 0 THEN layer.pos := bottom
-		END;  
-		p1 := vyPort.NewP( p.gcontext( vyBase.Object ) );  vyPort.AddLayer( p1, layer );  
-		antsContainers.Resize( p1, minw, minh );  
+		END;
+		p1 := vyPort.NewP( p.gcontext( vyBase.Object ) );  vyPort.AddLayer( p1, layer );
+		antsContainers.Resize( p1, minw, minh );
 
-		a.res := -1;  a.name := "hdr";  a.class := Objects.Bool;  a.b := FALSE;  a.id := Objects.set;  p1.handle( p1, a );  a.res := -1;  
-		a.name := "borderW";  a.class := Objects.Int;  a.i := 0;  a.id := Objects.set;  p1.handle( p1, a );  
+		a.res := -1;  a.name := "hdr";  a.class := Objects.Bool;  a.b := FALSE;  a.id := Objects.set;  p1.handle( p1, a );  a.res := -1;
+		a.name := "borderW";  a.class := Objects.Int;  a.i := 0;  a.id := Objects.set;  p1.handle( p1, a );
 
 		vyHostTexts.InsertGadget( p1 );  antsContainers.StickOn( p, p1, posx, posy )
-	END ScaleToPicture;  
+	END ScaleToPicture;
 
-	PROCEDURE ScalesToPort*;  
-	VAR M: Display.SelectMsg;  pict: vyPort.Picture;  i, j: INTEGER;  a: Objects.AttrMsg;  
-	BEGIN 
-		M.id := Display.get;  M.F := NIL;  M.sel := NIL;  M.obj := NIL;  M.time := -1;  Display.Broadcast( M );  
-		IF M.time # -1 THEN 
-			pict := M.obj( vyPort.Picture );  a.res := -1;  a.name := "borderW";  a.class := Objects.Int;  a.i := 0;  a.id := Objects.set;  
-			pict.handle( pict, a );  
-			FOR i := -1 TO 1 DO 
-				FOR j := -1 TO 1 DO 
-					IF ~((i = 0) & (j = 0)) THEN ScaleToPicture( pict, i, j ) END 
-				END 
-			END 
-		END 
-	END ScalesToPort;  
+	PROCEDURE ScalesToPort*;
+	VAR M: Display.SelectMsg;  pict: vyPort.Picture;  i, j: INTEGER;  a: Objects.AttrMsg;
+	BEGIN
+		M.id := Display.get;  M.F := NIL;  M.sel := NIL;  M.obj := NIL;  M.time := -1;  Display.Broadcast( M );
+		IF M.time # -1 THEN
+			pict := M.obj( vyPort.Picture );  a.res := -1;  a.name := "borderW";  a.class := Objects.Int;  a.i := 0;  a.id := Objects.set;
+			pict.handle( pict, a );
+			FOR i := -1 TO 1 DO
+				FOR j := -1 TO 1 DO
+					IF ~((i = 0) & (j = 0)) THEN ScaleToPicture( pict, i, j ) END
+				END
+			END
+		END
+	END ScalesToPort;
 
-BEGIN 
-	aM.launch;  
+BEGIN
+	aM.launch;
 END antsScale.
 
 antsFunctions.Define test ~

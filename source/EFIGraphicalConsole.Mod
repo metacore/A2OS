@@ -439,13 +439,13 @@ TYPE
 		Trace.String("Graphical Console, depth = "); Trace.Address(depth); Trace.Ln;
 
 		FOR i := 0 TO w*h*depth DIV 8-1  DO SYSTEM.PUT(adr+i,0)	END;
-		
-		
+
+
 		RenderChar("X"); RenderChar("X");
 
 		traceChar := Trace.Char;
 		Trace.Char := RenderChar;
-		
+
 		Trace.String("Graphical Console started"); Trace.Ln;
 	END SetupConsole;
 
@@ -456,7 +456,7 @@ TYPE
 		MakeFont(font);
 		Trace.String("Graphical Console Exit"); Trace.Ln;
 	END Init;
-	
+
 
 (*BEGIN
 	Trace.String("Graphical Console Enter"); Trace.Ln;

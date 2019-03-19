@@ -308,7 +308,7 @@ TYPE
 									IF m = "diffie-hellman-group1-sha1" THEN kex := 1
 									ELSIF m = "diffie-hellman-group14-sha1" THEN kex := 2
 									ELSIF m = "diffie-hellman-group-exchange-sha1" THEN kex := 3
-									ELSE 
+									ELSE
 										Out.String( 'no common kex alg found' ); Out.Ln;
 										Out.String( "   client: " ); Out.String( KEXAlgorythms );  Out.Ln;
 										Out.String( "   server: " ); Out.String( x );  Out.Ln;
@@ -316,11 +316,11 @@ TYPE
 									END
 							|2:
 									algoMatch( SHKAlgorythms, x, m );
-									IF m = "" THEN  
+									IF m = "" THEN
 										Out.String( 'no common server host key alg found' ); Out.Ln;
 										Out.String( "   client: " ); Out.String( SHKAlgorythms );  Out.Ln;
 										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN  
+										Disconnect( 2, "protocol error" );  RETURN
 									END
 							|3, 4:
 									algoMatch( cipherList, x, m );
@@ -328,7 +328,7 @@ TYPE
 										Out.String( 'no common cipher found' ); Out.Ln;
 										Out.String( "   client: " ); Out.String( cipherList );  Out.Ln;
 										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN  
+										Disconnect( 2, "protocol error" );  RETURN
 									END;
 									G.GetCipherParams( m, modname, keybits, mode );
 									cipher := Ciphers.NewCipher( modname );
@@ -343,7 +343,7 @@ TYPE
 									ELSIF m # "" THEN
 										G.GetHMacParams( m, modname, maclen );
 										NEW( mac, modname )
-									ELSE 
+									ELSE
 										Out.String( 'no common hmac found' ); Out.Ln;
 										Out.String( "   client: " ); Out.String( hmacList );  Out.Ln;
 										Out.String( "   server: " ); Out.String( x );  Out.Ln;
@@ -356,20 +356,20 @@ TYPE
 									END;
 							|7, 8:
 									algoMatch( ComprAlgorythms, x, m );
-									IF m # "none" THEN 
+									IF m # "none" THEN
 										Out.String( 'no common compr alg found' ); Out.Ln;
 										Out.String( "   client: " ); Out.String( ComprAlgorythms );  Out.Ln;
 										Out.String( "   server: " ); Out.String( x );  Out.Ln;
-										Disconnect( 2, "protocol error" );  RETURN 
+										Disconnect( 2, "protocol error" );  RETURN
 									END
 							END;
 						END;
 					ELSE Disconnect( 2, "protocol error" );  RETURN
 					END;
 					Out.String( "exchanging keys" ); Out.Ln;
-					IF kex = 1 THEN Group1( sha1 ) 
+					IF kex = 1 THEN Group1( sha1 )
 					ELSIF kex = 2 THEN Group14( sha1 )
-					ELSIF kex = 3 THEN GroupExchange( sha1 ) 
+					ELSIF kex = 3 THEN GroupExchange( sha1 )
 					END;
 					IF state # Closed THEN
 						ActivateNewKeys;
@@ -432,7 +432,7 @@ TYPE
 						Disconnect( 2, "protocol error: 'DH REPLY' package expected" );
 					END
 				END Group1;
-				
+
 				PROCEDURE Group14( sha1: SHA1.Hash );
 				CONST DHInit = 1EX;  DHReply = 1FX;
 				VAR

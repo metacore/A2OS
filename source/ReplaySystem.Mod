@@ -14,8 +14,8 @@ BEGIN
 	WHILE r.res#Streams.EOF DO
 		len:=1024;
 		SearchTools.SearchPatternRaw(r, NIL, "Commands.Activate");
-		SearchTools.SearchPatternRaw(r, w, "~"); 
-		w.GetRaw(args, len); 
+		SearchTools.SearchPatternRaw(r, w, "~");
+		w.GetRaw(args, len);
 		cmdline.SetRaw(args, 0, len);
 		ok:=cmdline.GetString(cmd);
 		(*KernelLog.String(cmd); KernelLog.Char("|"); KernelLog.String(args); KernelLog.Ln;*)
@@ -39,7 +39,7 @@ END Replay;
 
 END ReplaySystem.
 
-how to use: 
+how to use:
 
 ReplaySystem.Replay SystemTrace20120309_114313_07.txt~
 

@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* 	(c) Project Voyager, StatLab Heidelberg  *)
@@ -253,20 +253,20 @@ PROCEDURE GetMarkedViewer*;
 END GetMarkedViewer;
 
 PROCEDURE GetMarkedText* (VAR text: Texts.Text);
-	VAR V: Viewer;gadget: Objects.Object; 
+	VAR V: Viewer;gadget: Objects.Object;
 BEGIN
 	V := Oberon.MarkedViewer();
 	IF (V # NIL) & (V.dsc # NIL) & (V.dsc.next # NIL)
 		 & (V.dsc.next IS TextFrames.Frame) THEN
 		text := V.dsc.next(TextFrames.Frame).text
-	ELSIF (V # NIL) THEN 
-		Links.GetLink(V,"Model",gadget); 
+	ELSIF (V # NIL) THEN
+		Links.GetLink(V,"Model",gadget);
 		WHILE(gadget # NIL) DO
-			IF gadget IS Texts.Text THEN 
-				text := gadget(Texts.Text); RETURN; 
-			END; 
+			IF gadget IS Texts.Text THEN
+				text := gadget(Texts.Text); RETURN;
+			END;
 			Links.GetLink(gadget,"Model",gadget);
-		END; 
+		END;
 	ELSE text := NIL
 	END
 END GetMarkedText;

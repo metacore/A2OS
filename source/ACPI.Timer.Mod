@@ -16,13 +16,13 @@ CODE
 END GetInstructionTimer;
 
 PROCEDURE GetCounter- (): Counter;
-BEGIN {UNCOOPERATIVE, UNCHECKED} 
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF counter = NIL THEN RETURN  SHORT(GetInstructionTimer() DIV (1024*1024));  (* return millions of instructions *) END;
 	ASSERT (counter # NIL); RETURN SHORT (counter.value);
 END GetCounter;
 
 PROCEDURE GetFrequency- (): Counter;
-BEGIN {UNCOOPERATIVE, UNCHECKED} 
+BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF counter = NIL THEN RETURN 1024 (* giga instructions as a rough guess *) END;
 	RETURN frequency;
 END GetFrequency;

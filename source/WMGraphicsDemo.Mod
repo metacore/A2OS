@@ -138,7 +138,7 @@ TYPE
 VAR s : TestWindow;
 
 (*Gfx offers advanced drawing features, see GfxOverview.html and GfxHowTo.html*)
-PROCEDURE TestGfx*; 
+PROCEDURE TestGfx*;
 VAR w:WMWindowManager.BufferWindow; c: WMGraphicsGfx.Canvas; t,x0,y0,x,y:LONGINT;
 BEGIN
 	NEW(w, 500,500, FALSE);
@@ -146,28 +146,28 @@ BEGIN
 	c:=w.canvas(WMGraphicsGfx.Canvas);
 
 	c.Fill(w.bounds, WMGraphics.Red, WMGraphics.ModeCopy);
-	
+
 	c.SetLineWidth(5);
 	c.Line(10,10,100,100, WMGraphics.Blue, WMGraphics.ModeCopy);
-	
+
 	c.SetPixel (50,30, WMGraphics.White, WMGraphics.ModeCopy);
-	
+
 	c.SetFillColor(WMGraphics.Yellow);
 	c.DrawString(60,40,"Hello World");
-	
+
 	c.SetColor(WMGraphics.Black);
-	
+
 	(*c.Circle(150,200, 100);*)
-	
+
 	x0:=250; y0:=250;
 	FOR t:=0 TO 1000 DO
 		c.SetLineWidth(MAX (t/400,1));
-		x:= 250+ENTIER(t/5 * Math.sin(t/10)); 
+		x:= 250+ENTIER(t/5 * Math.sin(t/10));
 		y:= 250+ENTIER(t/5 * Math.cos(t/10));
 		c.Line(x0,y0,x,y, t*800H + 0FFH, WMGraphics.ModeCopy);
 		x0:=x; y0:=y;
 	END;
-	
+
 	WMWindowManager.DefaultAddWindow(w);
 	w.Invalidate(w.bounds);
 END TestGfx;

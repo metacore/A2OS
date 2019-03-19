@@ -52,7 +52,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 
 	(* check whether an interrupt was missed *)
 	IF CAS (timestamps[interrupt.index], 0, 0) = interrupt.timestamp THEN
-		
+
 		(* this is a workaround for a buggy USB driver that sends too many interrupts *)
 		IF interrupt.index # CPU.IRQ0 (* timer interrupt *) THEN CPU.EnableIRQ(interrupt.index) END;
 

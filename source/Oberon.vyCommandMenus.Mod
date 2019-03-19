@@ -25,126 +25,126 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 
 (* (c)  F.Friedrich *)
 
-IMPORT vyTracking, vyEvents, vyGraphBase, Objects, Strings, vyName, vyBase, Input, vyPortability;  
+IMPORT vyTracking, vyEvents, vyGraphBase, Objects, Strings, vyName, vyBase, Input, vyPortability;
 
-TYPE 
-	PROC = PROCEDURE;  
-	
-	List* = POINTER TO ListDesc;  
+TYPE
+	PROC = PROCEDURE;
+
+	List* = POINTER TO ListDesc;
 	ListDesc* = RECORD (vyTracking.ListDesc)
-		command*: PROC;  
+		command*: PROC;
 		obj*: Objects.Object
-	END;  
-	
-	enumProc* = PROCEDURE ( name: ARRAY OF CHAR;  cmd: PROC;  obj: Objects.Object );  
-	
+	END;
+
+	enumProc* = PROCEDURE ( name: ARRAY OF CHAR;  cmd: PROC;  obj: Objects.Object );
+
 	enumMsg* = RECORD (Objects.ObjMsg)
-		Enum*: enumProc;  
-		EnumSender*: enumProc;  
-		mode*: INTEGER;  
+		Enum*: enumProc;
+		EnumSender*: enumProc;
+		mode*: INTEGER;
 		x*, y*: INTEGER
-	END;  
+	END;
 
-CONST 
-	emptyLine* = "______________________________";  click* = 0;  select* = 1;  
+CONST
+	emptyLine* = "______________________________";  click* = 0;  select* = 1;
 
-VAR 
-	dynamic*: List;  msg*: enumMsg;  res*: vyTracking.List;  recentx*, recenty*: INTEGER;  noWait*: BOOLEAN;  current*: List;  
-	currentmode*: INTEGER;  
+VAR
+	dynamic*: List;  msg*: enumMsg;  res*: vyTracking.List;  recentx*, recenty*: INTEGER;  noWait*: BOOLEAN;  current*: List;
+	currentmode*: INTEGER;
 
-	PROCEDURE GetCopy( l: List ): List;  
-	VAR new, temp, t: List;  
-	BEGIN 
-		NEW( new );  temp := new;  temp.command := l.command;  COPY( l.name, temp.name );  temp.obj := l.obj;  
-		IF l.next # NIL THEN l := l.next( List ) ELSE l := NIL END;  
-		WHILE (l # NIL ) DO 
-			NEW( t );  temp.next := t;  temp := t;  temp.command := l.command;  temp.obj := l.obj;  COPY( l.name, temp.name );  
-			IF l.next # NIL THEN l := l.next( List ) ELSE l := NIL END 
-		END;  
+	PROCEDURE GetCopy( l: List ): List;
+	VAR new, temp, t: List;
+	BEGIN
+		NEW( new );  temp := new;  temp.command := l.command;  COPY( l.name, temp.name );  temp.obj := l.obj;
+		IF l.next # NIL THEN l := l.next( List ) ELSE l := NIL END;
+		WHILE (l # NIL ) DO
+			NEW( t );  temp.next := t;  temp := t;  temp.command := l.command;  temp.obj := l.obj;  COPY( l.name, temp.name );
+			IF l.next # NIL THEN l := l.next( List ) ELSE l := NIL END
+		END;
 		RETURN new
-	END GetCopy;  
+	END GetCopy;
 
-	PROCEDURE Add*( VAR l: List;  command: PROC;  name: ARRAY OF CHAR );  
-	VAR newl, oldl: List;  
-	BEGIN 
-		oldl := l;  
-		IF l = NIL THEN NEW( l );  l.command := command;  COPY( name, l.name ) ELSE 
-			WHILE oldl.next # NIL DO oldl := oldl.next( List ) END;  
+	PROCEDURE Add*( VAR l: List;  command: PROC;  name: ARRAY OF CHAR );
+	VAR newl, oldl: List;
+	BEGIN
+		oldl := l;
+		IF l = NIL THEN NEW( l );  l.command := command;  COPY( name, l.name ) ELSE
+			WHILE oldl.next # NIL DO oldl := oldl.next( List ) END;
 			NEW( newl );  oldl.next := newl;  newl.command := command;  COPY( name, newl.name )
-		END 
-	END Add;  
+		END
+	END Add;
 
-	PROCEDURE Prev( VAR l: List;  command: PROC;  name: ARRAY OF CHAR );  
-	VAR list: List;  
-	BEGIN 
+	PROCEDURE Prev( VAR l: List;  command: PROC;  name: ARRAY OF CHAR );
+	VAR list: List;
+	BEGIN
 		NEW( list );  list.command := command;  COPY( name, list.name );  list.next := l;  l := list
-	END Prev;  
+	END Prev;
 
-	PROCEDURE AddGeneric( name: ARRAY OF CHAR;  cmd: PROC;  obj: Objects.Object );  
-	BEGIN 
+	PROCEDURE AddGeneric( name: ARRAY OF CHAR;  cmd: PROC;  obj: Objects.Object );
+	BEGIN
 		Prev( dynamic, cmd, name )
-	END AddGeneric;  
+	END AddGeneric;
 
-	PROCEDURE AddSender( name: ARRAY OF CHAR;  cmd: PROC;  obj: Objects.Object );  
-	VAR objname, temp: ARRAY 128 OF CHAR;  
-	BEGIN 
-		objname := "______(";  
-		IF (name = "") & (obj # NIL ) THEN 
-			IF obj IS vyBase.Object THEN 
+	PROCEDURE AddSender( name: ARRAY OF CHAR;  cmd: PROC;  obj: Objects.Object );
+	VAR objname, temp: ARRAY 128 OF CHAR;
+	BEGIN
+		objname := "______(";
+		IF (name = "") & (obj # NIL ) THEN
+			IF obj IS vyBase.Object THEN
 				WITH obj: vyBase.Object DO vyName.GetObjId( obj, temp )
-				END;  
-			ELSE 
-			END 
+				END;
+			ELSE
+			END
 		ELSE COPY( name, temp )
-		END;  
-		Strings.Append( objname, temp );  Strings.Append( objname, ")______" );  
-		IF temp = "" THEN objname := emptyLine END;  
+		END;
+		Strings.Append( objname, temp );  Strings.Append( objname, ")______" );
+		IF temp = "" THEN objname := emptyLine END;
 		Prev( dynamic, cmd, objname )
-	END AddSender;  
+	END AddSender;
 
-	PROCEDURE Init*( VAR l: List;  atx, aty: INTEGER );  
-	BEGIN 
-		msg.Enum := AddGeneric;  msg.EnumSender := AddSender;  
-		IF l # NIL THEN dynamic := GetCopy( l ) ELSE dynamic := NIL END;  
+	PROCEDURE Init*( VAR l: List;  atx, aty: INTEGER );
+	BEGIN
+		msg.Enum := AddGeneric;  msg.EnumSender := AddSender;
+		IF l # NIL THEN dynamic := GetCopy( l ) ELSE dynamic := NIL END;
 		msg.x := atx;  msg.y := aty
 		(* AddGeneric("- - - - - - - - - - - - -",nothing,NIL);  *)
-	END Init;  
+	END Init;
 
-	PROCEDURE Ask*( obj: Objects.Object );  
-	BEGIN 
-		IF obj # NIL THEN 
-			IF obj.handle # NIL THEN obj.handle( obj, msg ) END 
-		END 
-	END Ask;  
+	PROCEDURE Ask*( obj: Objects.Object );
+	BEGIN
+		IF obj # NIL THEN
+			IF obj.handle # NIL THEN obj.handle( obj, msg ) END
+		END
+	END Ask;
 
-	PROCEDURE Wait*;  
-	VAR keys: SET;  x, y: INTEGER;  
-	BEGIN 
-		IF noWait THEN RETURN END;  
-		Input.Mouse( keys, x, y );  
-		WHILE (keys # {}) DO 
-			Input.Mouse( keys, x, y );  
-			IF ~vyPortability.DisplayAvailable() THEN  (* Display not available*) RETURN END 
-		END 
-	
-	END Wait;  
+	PROCEDURE Wait*;
+	VAR keys: SET;  x, y: INTEGER;
+	BEGIN
+		IF noWait THEN RETURN END;
+		Input.Mouse( keys, x, y );
+		WHILE (keys # {}) DO
+			Input.Mouse( keys, x, y );
+			IF ~vyPortability.DisplayAvailable() THEN  (* Display not available*) RETURN END
+		END
 
-	PROCEDURE ExecuteListedCommand*( atx, aty: INTEGER;  VAR event: vyEvents.EventMsg;  from: List );  
-	BEGIN 
-		noWait := FALSE;  
-		IF from = NIL THEN RETURN END;  
-		vyGraphBase.SetStyle( vyGraphBase.defaultStyle );  vyTracking.ScrollList( from, atx, aty, res );  
+	END Wait;
+
+	PROCEDURE ExecuteListedCommand*( atx, aty: INTEGER;  VAR event: vyEvents.EventMsg;  from: List );
+	BEGIN
+		noWait := FALSE;
+		IF from = NIL THEN RETURN END;
+		vyGraphBase.SetStyle( vyGraphBase.defaultStyle );  vyTracking.ScrollList( from, atx, aty, res );
 		(* Input.Mouse(keys,x,y); WHILE (keys#{}) DO Input.Mouse(keys,x,y); END; *)
-		recentx := atx;  recenty := aty;  
-		IF res # NIL THEN 
-			IF res( List ).command # NIL THEN res( List ).command() END 
-		END 
-	END ExecuteListedCommand;  
+		recentx := atx;  recenty := aty;
+		IF res # NIL THEN
+			IF res( List ).command # NIL THEN res( List ).command() END
+		END
+	END ExecuteListedCommand;
 
-	PROCEDURE Execute*( atx, aty: INTEGER );  
-	VAR event: vyEvents.EventMsg;  
-	BEGIN 
+	PROCEDURE Execute*( atx, aty: INTEGER );
+	VAR event: vyEvents.EventMsg;
+	BEGIN
 		ExecuteListedCommand( atx, aty, event, dynamic )
-	END Execute;  
+	END Execute;
 
 END vyCommandMenus.

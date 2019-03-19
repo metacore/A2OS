@@ -1,4 +1,4 @@
-MODULE vyRanCombo IN Oberon;  
+MODULE vyRanCombo IN Oberon;
 (* Copyright notice:
 
 This file is part of Voyager
@@ -36,206 +36,206 @@ based on a Fortran algorithm from the "Diehard" package by G. Marsaglia
 28.3.00 by Johannes Becker - new version of vyRanBase
 *)
 
-IMPORT vyRanBase, Files, Objects, S := SYSTEM;  
+IMPORT vyRanBase, Files, Objects, S := SYSTEM;
 
-CONST 
-	cModuleName = "vyRanCombo";  cSeedVersion = 0;  
+CONST
+	cModuleName = "vyRanCombo";  cSeedVersion = 0;
 
-	sysBitsTypeSize = vyRanBase.sysBitsTypeSize;  sysMaxUnsigned = vyRanBase.sysMaxUnsigned;  
-	sysMaskSecondHalf = vyRanBase.sysMaskSecondHalf;  sysSHR = vyRanBase.sysSHR;  
+	sysBitsTypeSize = vyRanBase.sysBitsTypeSize;  sysMaxUnsigned = vyRanBase.sysMaxUnsigned;
+	sysMaskSecondHalf = vyRanBase.sysMaskSecondHalf;  sysSHR = vyRanBase.sysSHR;
 
-	mwcParam = 30903;  
+	mwcParam = 30903;
 
-TYPE 
-	tRandom = vyRanBase.tRandom;  
+TYPE
+	tRandom = vyRanBase.tRandom;
 	tSeed = OBJECT  (* POINTER TO tSeedDesc;
 	tSeedDesc = RECORD (vyRanBase.tSeedDesc)*)
 	(vyRanBase.tSeed)
-	VAR x, y, z: LONGINT;  
-		
-		PROCEDURE  (*VAR seed: tSeedDesc*) Store*( VAR r: Files.Rider );  
-		BEGIN 
+	VAR x, y, z: LONGINT;
+
+		PROCEDURE  (*VAR seed: tSeedDesc*) Store*( VAR r: Files.Rider );
+		BEGIN
 			Files.WriteLInt( r, SELF.x );  Files.WriteLInt( r, SELF.y );  Files.WriteLInt( r, SELF.z )
-		END Store;  
+		END Store;
 
-		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );  
-		BEGIN 
-			IF seedVersion # cSeedVersion THEN HALT( 100 ) END;  
+		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+		BEGIN
+			IF seedVersion # cSeedVersion THEN HALT( 100 ) END;
 			Files.ReadLInt( r, SELF.x );  Files.ReadLInt( r, SELF.y );  Files.ReadLInt( r, SELF.z )
-		END Load;  
+		END Load;
 
-	END tSeed;  
-	
-	Bits = vyRanBase.Bits;  
-	
+	END tSeed;
+
+	Bits = vyRanBase.Bits;
+
 	(* added - jb 29.11.00 *)
-	PROCEDURE AllocSeed*( ): vyRanBase.tSeed;  
-	VAR seed: tSeed;  
-	BEGIN 
+	PROCEDURE AllocSeed*( ): vyRanBase.tSeed;
+	VAR seed: tSeed;
+	BEGIN
 		NEW( seed );  RETURN seed
-	END AllocSeed;  
+	END AllocSeed;
 
-	PROCEDURE Combo*( VAR x, y, z: LONGINT ): LONGINT;  
-	VAR v: LONGINT;  
-	BEGIN 
-		v := x * y;  x := y;  y := v;  
-		z := mwcParam * S.VAL( Bits, S.VAL( SET, z ) * S.VAL( SET, sysMaskSecondHalf ) ) + LSH( z, sysBitsTypeSize DIV 2 * sysSHR );  
+	PROCEDURE Combo*( VAR x, y, z: LONGINT ): LONGINT;
+	VAR v: LONGINT;
+	BEGIN
+		v := x * y;  x := y;  y := v;
+		z := mwcParam * S.VAL( Bits, S.VAL( SET, z ) * S.VAL( SET, sysMaskSecondHalf ) ) + LSH( z, sysBitsTypeSize DIV 2 * sysSHR );
 		RETURN y + z
-	END Combo;  
+	END Combo;
 
-	PROCEDURE Next( r: tRandom );  
-	VAR seed: vyRanBase.tSeed;  dummy: LONGINT;  
-	BEGIN 
-		seed := r.seed;  
+	PROCEDURE Next( r: tRandom );
+	VAR seed: vyRanBase.tSeed;  dummy: LONGINT;
+	BEGIN
+		seed := r.seed;
 		WITH seed: tSeed DO dummy := Combo( seed.x, seed.y, seed.z )
-		END 
-	END Next;  
+		END
+	END Next;
 
-	PROCEDURE Max( r: tRandom ): Bits;  
-	BEGIN 
+	PROCEDURE Max( r: tRandom ): Bits;
+	BEGIN
 		RETURN sysMaxUnsigned
-	END Max;  
+	END Max;
 
-	PROCEDURE Get( r: tRandom ): Bits;  
-	VAR seed: vyRanBase.tSeed;  
-	BEGIN 
-		seed := r.seed;  
+	PROCEDURE Get( r: tRandom ): Bits;
+	VAR seed: vyRanBase.tSeed;
+	BEGIN
+		seed := r.seed;
 		WITH seed: tSeed DO RETURN Combo( seed.x, seed.y, seed.z )
-		END 
-	END Get;  
+		END
+	END Get;
 
-	PROCEDURE GetUniform( r: tRandom ): LONGREAL;  
-	CONST posScalefact = 0.5 / MAX( LONGINT );  negScalefact = 0.5 / MIN( LONGINT );  
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;  
-	BEGIN 
-		seed := r.seed;  
-		WITH seed: tSeed DO 
-			n := Combo( seed.x, seed.y, seed.z );  
-			IF n >= 0 THEN RETURN n * posScalefact + 0.5 ELSE RETURN n * negScalefact END 
-		END 
-	END GetUniform;  
+	PROCEDURE GetUniform( r: tRandom ): LONGREAL;
+	CONST posScalefact = 0.5 / MAX( LONGINT );  negScalefact = 0.5 / MIN( LONGINT );
+	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	BEGIN
+		seed := r.seed;
+		WITH seed: tSeed DO
+			n := Combo( seed.x, seed.y, seed.z );
+			IF n >= 0 THEN RETURN n * posScalefact + 0.5 ELSE RETURN n * negScalefact END
+		END
+	END GetUniform;
 
-	PROCEDURE GetL( r: tRandom;  top: LONGINT ): LONGINT;  
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;  
-	BEGIN 
-		seed := r.seed;  
-		WITH seed: tSeed DO 
-			n := Combo( seed.x, seed.y, seed.z );  
-			IF n < 0 THEN DEC( n, MIN( LONGINT ) ) END;  
-			IF top <= 0 THEN RETURN n ELSE RETURN n MOD top END 
-		END 
-	END GetL;  
+	PROCEDURE GetL( r: tRandom;  top: LONGINT ): LONGINT;
+	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	BEGIN
+		seed := r.seed;
+		WITH seed: tSeed DO
+			n := Combo( seed.x, seed.y, seed.z );
+			IF n < 0 THEN DEC( n, MIN( LONGINT ) ) END;
+			IF top <= 0 THEN RETURN n ELSE RETURN n MOD top END
+		END
+	END GetL;
 
-	PROCEDURE Reset( r: tRandom );  
-	VAR seed: vyRanBase.tSeed;  tmp: LONGINT;  
-	BEGIN 
-		seed := r.seed;  
-		WITH seed: tSeed DO 
-			tmp := 2 * vyRanBase.DefaultLongSeed() + 1;  seed.x := 3 * tmp * tmp;  
-			seed.y := 2 * vyRanBase.DefaultLongSeed() + 1;  seed.z := vyRanBase.DefaultLongSeed();  
+	PROCEDURE Reset( r: tRandom );
+	VAR seed: vyRanBase.tSeed;  tmp: LONGINT;
+	BEGIN
+		seed := r.seed;
+		WITH seed: tSeed DO
+			tmp := 2 * vyRanBase.DefaultLongSeed() + 1;  seed.x := 3 * tmp * tmp;
+			seed.y := 2 * vyRanBase.DefaultLongSeed() + 1;  seed.z := vyRanBase.DefaultLongSeed();
 			IF seed.z = 0 THEN INC( seed.z ) END  (* jb 2.3.01 *)
-		END 
-	END Reset;  
+		END
+	END Reset;
 
-	PROCEDURE HandleAttributes( obj: tRandom;  VAR M: Objects.AttrMsg );  
-	VAR seed: vyRanBase.tSeed;  
-	BEGIN 
-		CASE M.id OF 
-		Objects.get: 
+	PROCEDURE HandleAttributes( obj: tRandom;  VAR M: Objects.AttrMsg );
+	VAR seed: vyRanBase.tSeed;
+	BEGIN
+		CASE M.id OF
+		Objects.get:
 				IF M.name = "Gen" THEN COPY( "vyRanCombo.Alloc", M.s );  M.class := Objects.String;  M.res := 0
-				ELSIF M.name = "Value" THEN 
-					seed := obj.seed;  
+				ELSIF M.name = "Value" THEN
+					seed := obj.seed;
 					WITH seed: tSeed DO M.i := seed.y + seed.z
-					END;  
+					END;
 					M.class := Objects.Int;  M.res := 0
 				ELSIF M.name = "SeedX" THEN M.i := obj.seed( tSeed ).x;  M.class := Objects.Int;  M.res := 0
 				ELSIF M.name = "SeedY" THEN M.i := obj.seed( tSeed ).y;  M.class := Objects.Int;  M.res := 0
 				ELSIF M.name = "SeedZ" THEN M.i := obj.seed( tSeed ).z;  M.class := Objects.Int;  M.res := 0
 				ELSE vyRanBase.Handler( obj, M )
-				END 
-		
-		| Objects.set: 
-				IF M.name = "SeedX" THEN 
+				END
+
+		| Objects.set:
+				IF M.name = "SeedX" THEN
 					(*??? Wertebereich überprüfen? *)
-					IF M.class = Objects.Int THEN obj.seed( tSeed ).x := M.i;  M.res := 0 END 
-				ELSIF M.name = "SeedY" THEN 
+					IF M.class = Objects.Int THEN obj.seed( tSeed ).x := M.i;  M.res := 0 END
+				ELSIF M.name = "SeedY" THEN
 					(*??? Wertebereich überprüfen? *)
-					IF M.class = Objects.Int THEN obj.seed( tSeed ).y := M.i;  M.res := 0 END 
-				ELSIF M.name = "SeedZ" THEN 
+					IF M.class = Objects.Int THEN obj.seed( tSeed ).y := M.i;  M.res := 0 END
+				ELSIF M.name = "SeedZ" THEN
 					(*??? Wertebereich überprüfen? *)
-					IF M.class = Objects.Int THEN obj.seed( tSeed ).z := M.i;  M.res := 0 END 
+					IF M.class = Objects.Int THEN obj.seed( tSeed ).z := M.i;  M.res := 0 END
 				ELSE vyRanBase.Handler( obj, M )
-				END 
-		
-		| Objects.enum: 
+				END
+
+		| Objects.enum:
 				M.Enum( "Seed" );  vyRanBase.Handler( obj, M )
 		ELSE vyRanBase.Handler( obj, M )
-		END 
-	END HandleAttributes;  
+		END
+	END HandleAttributes;
 
-	PROCEDURE Handler*( obj: Objects.Object;  VAR M: Objects.ObjMsg );  
-	BEGIN 
-		WITH obj: tRandom DO 
-			IF M IS Objects.AttrMsg THEN 
+	PROCEDURE Handler*( obj: Objects.Object;  VAR M: Objects.ObjMsg );
+	BEGIN
+		WITH obj: tRandom DO
+			IF M IS Objects.AttrMsg THEN
 				WITH M: Objects.AttrMsg DO HandleAttributes( obj, M )
-				END;  
+				END;
 			ELSE vyRanBase.Handler( obj, M )
-			END 
-		END 
-	END Handler;  
+			END
+		END
+	END Handler;
 
-	PROCEDURE InitBasic( r: tRandom );  
-	BEGIN 
-		r.id := 'v0.0a1 Combo';  r.shortid := 'Combo';  r.seedVersion := cSeedVersion;  
+	PROCEDURE InitBasic( r: tRandom );
+	BEGIN
+		r.id := 'v0.0a1 Combo';  r.shortid := 'Combo';  r.seedVersion := cSeedVersion;
 
-		vyRanBase.SetDefaultProcs( r );  
+		vyRanBase.SetDefaultProcs( r );
 
-		r.SumPSqr := vyRanBase.DefaultSumPSqr;  r.Reset := Reset;  r.GetRandom := Get;  r.GetRandomL := GetL;  
-		r.GetRandomU := GetUniform;  r.NextRandom := Next;  r.Max := Max;  
+		r.SumPSqr := vyRanBase.DefaultSumPSqr;  r.Reset := Reset;  r.GetRandom := Get;  r.GetRandomL := GetL;
+		r.GetRandomU := GetUniform;  r.NextRandom := Next;  r.Max := Max;
 
-		r.handle := Handler;  
+		r.handle := Handler;
 
 		r.AllocSeed := AllocSeed
-	END InitBasic;  
+	END InitBasic;
 
-	PROCEDURE Init( r: tRandom );  
-	VAR seed: tSeed;  
-	BEGIN 
+	PROCEDURE Init( r: tRandom );
+	VAR seed: tSeed;
+	BEGIN
 		InitBasic( r );  NEW( seed );  r.SetSeed( r, seed )
-	END Init;  
+	END Init;
 
 (* added - jb 29.11.00 *)
-	PROCEDURE Alloc*;  
-	VAR r: tRandom;  
-	BEGIN 
+	PROCEDURE Alloc*;
+	VAR r: tRandom;
+	BEGIN
 		NEW( r );  InitBasic( r );  Objects.NewObj := r
-	END Alloc;  
+	END Alloc;
 
-	PROCEDURE GetNew*( ): tRandom;  
-	VAR r: tRandom;  
-	BEGIN 
+	PROCEDURE GetNew*( ): tRandom;
+	VAR r: tRandom;
+	BEGIN
 		NEW( r );  Init( r );  r.Reset( r );  RETURN r
-	END GetNew;  
+	END GetNew;
 
-	PROCEDURE New*;  
-	BEGIN 
+	PROCEDURE New*;
+	BEGIN
 		Objects.NewObj := GetNew()
-	END New;  
+	END New;
 
-	PROCEDURE Install*;  
-	BEGIN 
+	PROCEDURE Install*;
+	BEGIN
 		vyRanBase.Install( GetNew() )
-	END Install;  
+	END Install;
 
-	PROCEDURE DoAsserts;  
-	VAR tmp: LONGINT;  
-	BEGIN 
-		ASSERT ( SIZEOF( SET ) = sysBitsTypeSize, 100 );  
-		tmp := -1;  
+	PROCEDURE DoAsserts;
+	VAR tmp: LONGINT;
+	BEGIN
+		ASSERT ( SIZEOF( SET ) = sysBitsTypeSize, 100 );
+		tmp := -1;
 		ASSERT ( LSH( tmp, sysSHR ) > 0, 101 )
-	END DoAsserts;  
+	END DoAsserts;
 
-BEGIN 
+BEGIN
 	DoAsserts
 END vyRanCombo.
 

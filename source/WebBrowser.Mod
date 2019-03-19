@@ -1,7 +1,7 @@
 MODULE WebBrowser; (** AUTHOR "Simon L. Keel"; PURPOSE "Simple Web Browser GUI"; *)
 
 IMPORT
-	WebBrowserPanel, 
+	WebBrowserPanel,
 	Strings, KernelLog, WMGraphics, WMComponents, WMStandardComponents, WMWindowManager, WMEditors,
 	Modules, WMRestorable, XML, WMRectangles, WMMessages, Commands, Files;
 
@@ -378,7 +378,7 @@ BEGIN
 			INC(j);
 		END;
 		name[j]:=0X;
-		path:="file://"; 
+		path:="file://";
 		IF prefix#"" THEN Strings.Append(path,prefix); Strings.Append(path,":"); END;
 		url := Strings.ConcatToNew(path, name);
 		NEW(inst, NIL, url);

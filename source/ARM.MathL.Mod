@@ -18,7 +18,7 @@ VAR
 	y: Flt; h: HUGEINT;
 BEGIN
 	y := SYSTEM.VAL(Flt, x);
-	h := y[0] + LSH(SYSTEM.VAL(HUGEINT, SYSTEM.VAL(SET, y[1])*{0..19}), 32); 
+	h := y[0] + LSH(SYSTEM.VAL(HUGEINT, SYSTEM.VAL(SET, y[1])*{0..19}), 32);
 	RETURN h;
 END Mantissa;
 

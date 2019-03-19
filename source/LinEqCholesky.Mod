@@ -116,4 +116,4 @@ TYPE
 		RETURN inverse
 	END Invert;
 
-END LinEqCholesky. 
+END LinEqCholesky.

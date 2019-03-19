@@ -79,7 +79,7 @@ TYPE
 		handle: Kernel32.HANDLE;
 		portname: ARRAY 6 OF CHAR; (* Name COM1 to COM8 must terminate with a 0X *)
 		timer : Kernel.Timer;
-		
+
 		rOverlapped, wOverlapped: Kernel32.Overlapped;
 
 		PROCEDURE & Init*( port: LONGINT );
@@ -168,9 +168,9 @@ TYPE
 			ASSERT ( LEN( buf ) >= ofs + size );
 			ASSERT ( LEN( buf ) >= ofs + min );   (* array bound check not implemented in Kernel32.ReadFile *)
 			IF handle # Kernel32.InvalidHandleValue THEN
-				
+
 				res := Serials.Ok; len := 0;
-				
+
 				(* blocking read of the minimally required amount of data *)
 				IF min > 0 THEN
 					read := 0;
@@ -183,7 +183,7 @@ TYPE
 						res := Serials.TransportError; RETURN;
 					END;
 				END;
-				
+
 				(* Non-blocking read of available data *)
 				l := MIN(size,Available());
 				IF l > 0 THEN
@@ -195,7 +195,7 @@ TYPE
 					INC(len,read); INC(charactersReceived,read);
 					IF ret = Kernel32.False THEN (* we've already received <min> bytes, but there was an error and we are going to report it anyway! *)
 						res := Serials.TransportError;
-					END; 
+					END;
 				END;
 			ELSE
 				res := Serials.Closed;

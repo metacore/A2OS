@@ -14,9 +14,9 @@ IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands,
 
 CONST
 	ML = 0;  MM = 1;  MR = 2;
-	
+
 	ModeSwitch = 13;
-	
+
 	MetaMask = { Api.Mod4Mask, ModeSwitch };
 
 
@@ -27,9 +27,9 @@ VAR
 	disp: XDisplay.Display;
 
 	MMseen, MRseen: BOOLEAN;
-		
+
 TYPE
-	Poll = OBJECT 
+	Poll = OBJECT
 		BEGIN {ACTIVE, SAFE,PRIORITY(Objects.High - 1)}
 			LOOP
 				Objects.Sleep( 15 );  PollXQueue;
@@ -41,7 +41,7 @@ TYPE
 
 VAR
 	poll: Poll; keySymbol: ARRAY 256 OF LONGINT;
-	
+
 	PROCEDURE TerminateA2;
 	VAR
 		res: WORD;
@@ -49,7 +49,7 @@ VAR
 	BEGIN
 		Commands.Call( "WMTerminator.Shutdown", {}, res, s );
 	END TerminateA2;
-	
+
 
 	PROCEDURE CheckAlternateKeys( VAR mb: SET );
 	BEGIN
@@ -61,7 +61,7 @@ VAR
 	PROCEDURE SendMouseMsg( x, y, dz: LONGINT; xbuttons: SET32 );
 	VAR mm: Inputs.AbsMouseMsg;
 	BEGIN
-		Machine.Release( Machine.X11 ); 
+		Machine.Release( Machine.X11 );
 		mm.keys := {};
 		mm.x := x;  mm.y := y;  mm.dz := dz;
 		IF Api.Button1Mask IN xbuttons THEN  INCL( mm.keys, ML )  END;
@@ -77,13 +77,13 @@ VAR
 	BEGIN
 		Machine.Release( Machine.X11 );
 		Inputs.keyboard.Handle( km );
-		Machine.Acquire( Machine.X11 ) 
+		Machine.Acquire( Machine.X11 )
 	END SendKeyboardMsg;
 
 	PROCEDURE PollXQueue;
 	CONST bufsize = 20;
 	VAR keycount, xr, yr, x, y, dz, i: LONGINT;
-		rw, cw: X11.Window;   
+		rw, cw: X11.Window;
 		keysym: X11.KeySym;  xd: X11.DisplayPtr;
 		newxbuttons, bdiff: SET32;
 		km: Inputs.KeyboardMsg;
@@ -98,30 +98,30 @@ VAR
 		xd := disp.xdisp;
 		Machine.Acquire( Machine.X11 );
 		events := Api.Pending( xd );
-		WHILE events > 0 DO 
+		WHILE events > 0 DO
 			Api.NextEvent( xd, event );
 			CASE event.typ OF
 			| Api.KeyPress: kp := S.VAL( Api.XKeyEvent, event );
 					X11.lastEventTime := kp.time;
-					keycount := Api.LookupString( kp, buffer, bufsize, keysym, compstatus );					
+					keycount := Api.LookupString( kp, buffer, bufsize, keysym, compstatus );
 					X11.QueryPointer( xd, event.window, rw, cw, xr, yr, x, y, newxbuttons );
-					
+
 					IF keycount = 0 THEN
 						bdiff := newxbuttons / xbuttons;  xbuttons := newxbuttons;
-						km.ch := 0X;						
+						km.ch := 0X;
 						IF Api.ShiftMask IN bdiff THEN km.keysym := Inputs.KsShiftL
-						ELSIF Api.ControlMask IN bdiff THEN 
+						ELSIF Api.ControlMask IN bdiff THEN
 							km.keysym := Inputs.KsControlL;
 							IF ~MMseen THEN  SendMouseMsg( x, y, 0, xbuttons )  END
-						ELSIF Api.Mod1Mask IN bdiff THEN 
+						ELSIF Api.Mod1Mask IN bdiff THEN
 							km.keysym := Inputs.KsAltL;
 							IF ~MRseen THEN SendMouseMsg( x, y, 0, xbuttons )  END
 						ELSIF MetaMask*bdiff # {} THEN km.keysym := Inputs.KsMetaL
-						ELSIF Api.Mod5Mask IN bdiff THEN km.keysym := Inputs.KsAltR	
+						ELSIF Api.Mod5Mask IN bdiff THEN km.keysym := Inputs.KsAltR
 						ELSIF keysym = 0FE20H THEN  (* handle Shift-Tab key *)
 							km.keysym := Inputs.KsTab; km.ch :=09X
 						ELSE
-							km.keysym := LONGINT(keysym);				
+							km.keysym := LONGINT(keysym);
 						END;
 						km.flags := KeyState( );
 						SendKeyboardMsg( km )
@@ -133,7 +133,7 @@ VAR
 						ELSE
 							xbuttons := newxbuttons;  i := 0;
 							WHILE i < keycount DO
-								km.ch := buffer[i];  
+								km.ch := buffer[i];
 								IF km.ch = 0F1X THEN  km.ch := 0A4X
 								ELSIF km.ch = 0F2X THEN km.ch := 0A5X
 								END;
@@ -142,7 +142,7 @@ VAR
 								SendKeyboardMsg( km );
 								INC( i )
 							END
-						END;	
+						END;
 					END;
 			| Api.KeyRelease: kp := S.VAL(Api.XKeyEvent, event);
 					X11.lastEventTime := kp.time;
@@ -151,10 +151,10 @@ VAR
 					IF bdiff # {} THEN
 						km.ch := 0X;
 						IF Api.ShiftMask IN bdiff THEN km.keysym := Inputs.KsShiftL
-						ELSIF Api.ControlMask IN bdiff THEN 
+						ELSIF Api.ControlMask IN bdiff THEN
 							km.keysym := Inputs.KsControlL;
 							IF ~MMseen THEN  SendMouseMsg( x, y, 0, xbuttons )  END
-						ELSIF Api.Mod1Mask IN bdiff THEN 
+						ELSIF Api.Mod1Mask IN bdiff THEN
 							km.keysym := Inputs.KsAltL;
 							IF ~MRseen THEN SendMouseMsg( x, y, 0, xbuttons )  END
 						ELSIF MetaMask*bdiff # {} THEN km.keysym := Inputs.KsMetaL
@@ -187,27 +187,27 @@ VAR
 			| Api.MotionNotify:
 					X11.QueryPointer( xd, event.window, rw, cw, xr, yr, x, y, xbuttons );
 					SendMouseMsg( x, y, 0, xbuttons )
-			| Api.Expose, Api.GraphicsExpose: 
+			| Api.Expose, Api.GraphicsExpose:
 					em := S.VAL( Api.XExposeEvent, event );
-					IF em.count = 0 THEN  (* wait until last message*) 
-						(* Let DisplayRefresher handle this *)						
+					IF em.count = 0 THEN  (* wait until last message*)
+						(* Let DisplayRefresher handle this *)
 						km.keysym := 0FFC6H;
 						SendKeyboardMsg( km );
 					END;
 			| Api.NoExpose:
 			| Api.MappingNotify:
 					X11.RefreshKeyboardMapping( ADDRESSOF( event ) )
-			| Api.ClientMessage: 
+			| Api.ClientMessage:
 					cm := S.VAL( Api.XClientMessageEvent, event );
-					IF  cm.data[0] = disp.wmDelete THEN									
+					IF  cm.data[0] = disp.wmDelete THEN
 						(* shutdown *)
 						Machine.Release( Machine.X11 );
 						TerminateA2;
 						RETURN;
 					(*	Modules.Shutdown( Modules.Reboot ); *)
-					END; 
+					END;
 			| Api.UnmapNotify:
-			| Api.MapNotify: 
+			| Api.MapNotify:
 			| Api.SelectionClear:
 					IF Api.ClearSelection # NIL THEN Api.ClearSelection(); END
 			| Api.SelectionNotify:
@@ -218,7 +218,7 @@ VAR
 					END
 			| Api.SelectionRequest:
 					IF Api.SendSelection # NIL THEN
-						Machine.Release( Machine.X11 );  
+						Machine.Release( Machine.X11 );
 							Api.SendSelection( S.VAL( Api.XSelectionRequestEvent, event ) );
 						Machine.Acquire( Machine.X11 )
 					END
@@ -251,17 +251,17 @@ VAR
 	BEGIN
 		RETURN X11.StringToKeysym( ADDRESSOF( str ) )
 	END Keysym;
-	
+
 	PROCEDURE DisableMouseEmulation*;
 	BEGIN
 		MMseen := TRUE; MRseen := TRUE;
 	END DisableMouseEmulation;
-	
+
 
 	PROCEDURE Init*;
 	VAR FK: ARRAY 8 OF CHAR;
 		n, i, k: LONGINT;  modifiers: X11.Modifiers;
-		shift, control, meta, alt, capslock, numlock: X11.KeySym;  
+		shift, control, meta, alt, capslock, numlock: X11.KeySym;
 
 
 		PROCEDURE Rebind( CONST keystr: ARRAY OF CHAR;  nofmod: LONGINT;  key: CHAR );
@@ -336,43 +336,43 @@ VAR
 			Rebind4( "Home", n, 0A8X );  Rebind4( "KP_Home", n, 0A8X );
 			Rebind4( "End", n, 0A9X );  Rebind4( "KP_End", n, 0A9X );
 		END;
-		
-		
+
+
 		(* special keyboard: *)
 		modifiers[0] := shift;  modifiers[1] := meta;
-		FOR i := 0 TO 2 DO  
-			Rebind( "aacute", i, 094X );	
-			Rebind( "agrave", i, 08BX );	
+		FOR i := 0 TO 2 DO
+			Rebind( "aacute", i, 094X );
+			Rebind( "agrave", i, 08BX );
 			Rebind( "Adiaeresis", i, 080X );		Rebind( "adiaeresis", i, 083X );
-			Rebind( "acircumflex", i, 086X );	
-			Rebind( "eacute", i, 090X );	
-			Rebind( "egrave", i, 08CX );	
-			Rebind( "ediaeresis", i, 091X );	
-			Rebind( "ecircumflex", i, 087X );	
-			Rebind( "igrave", i, 08DX );	
-			Rebind( "idiaeresis", i, 092X );	
-			Rebind( "icircumflex", i, 088X );	
-			Rebind( "ograve", i, 08EX );	
-			Rebind( "Odiaeresis", i, 081X );		Rebind( "odiaeresis", i, 084X );	
+			Rebind( "acircumflex", i, 086X );
+			Rebind( "eacute", i, 090X );
+			Rebind( "egrave", i, 08CX );
+			Rebind( "ediaeresis", i, 091X );
+			Rebind( "ecircumflex", i, 087X );
+			Rebind( "igrave", i, 08DX );
+			Rebind( "idiaeresis", i, 092X );
+			Rebind( "icircumflex", i, 088X );
+			Rebind( "ograve", i, 08EX );
+			Rebind( "Odiaeresis", i, 081X );		Rebind( "odiaeresis", i, 084X );
 			Rebind( "ocircumflex", i, 089X );
-			Rebind( "ugrave", i, 08FX );	
-			Rebind( "Udiaeresis", i, 082X );		Rebind( "udiaeresis", i, 085X );	
+			Rebind( "ugrave", i, 08FX );
+			Rebind( "Udiaeresis", i, 082X );		Rebind( "udiaeresis", i, 085X );
 			Rebind( "ucircumflex", i, 08AX );
-			Rebind( "ccedilla", i, 093X );			
+			Rebind( "ccedilla", i, 093X );
 			Rebind( "ntilde", i, 095X );
 			Rebind( "ssharp", i, 096X );
-			
-			Rebind( "idotless", i, 0FDX); 
+
+			Rebind( "idotless", i, 0FDX);
 			Rebind( "Iabovedot", i, 0DDX);
-			Rebind( "gbreve", i, 0F0X ); 
+			Rebind( "gbreve", i, 0F0X );
 			Rebind( "Gbreve", i, 0D0X );
-			Rebind( "scedilla", i, 0FEX ); 
+			Rebind( "scedilla", i, 0FEX );
 			Rebind( "Scedilla", i, 0DEX );
 		END;
-					 
+
 		InitKeysym;
 
-		NEW( poll );  
+		NEW( poll );
 	END Init;
 
 	PROCEDURE InitKeysym;
@@ -396,7 +396,7 @@ VAR
 		keySymbol[0A8H] := Inputs.KsHome;
 		keySymbol[0A9H] := Inputs.KsEnd;
 		keySymbol[01BH] := Inputs.KsEscape;
-		
+
 		FOR i := 0F1H TO 0FCH DO keySymbol[i] := 0FFBEH + (i - 0F1H) END;
 		keySymbol[0A4H] := Inputs.KsF1;
 		keySymbol[0A5H] := Inputs.KsF2;
@@ -410,7 +410,7 @@ VAR
 
 BEGIN
 	ASSERT( S.VAL( LONGINT, {0} ) = 1 );
-	GetXDisplay;  
+	GetXDisplay;
 END KbdMouse.
 
 
@@ -429,12 +429,12 @@ END KbdMouse.
 	DELETE	0A1X
 	PAGE-UP	0A2X
 	PAGE-DOWN	0A3X
-	
+
 	some none ascii character get mapped to UTF8:
 	ä, Ä	131, 128
 	ö, Ö	132, 129
 	ü, Ü	133, 130
 	ß	150
 	. . .
-	
-*) 
+
+*)

@@ -9,18 +9,18 @@ IMPORT SYSTEM, WSock32, Network, Strings, Kernel, KernelLog;
 CONST
 	(** Error codes *)
 	Ok* = 0;
-	
+
 	(** TCP connection states *)
 	NumStates* = 12;  Closed* = 0;  Listen* = 1;  SynSent* = 2;
 	SynReceived* = 3;  Established* = 4;  CloseWait* = 5;  FinWait1* = 6;
 	Closing* = 7;  LastAck* = 8;  FinWait2* = 9;  TimeWait* = 10;
 	Unused* = 11;   (* no real state, only used in this implementation *)
-	
+
 	Trace=TRUE;
 
 	(** IP address constants *)
 	NilAdrIPv4 = 0;
-	
+
 	NilPort* = 0;
 
 	(* Comparators for Adr.usedProtocols *)
@@ -53,11 +53,11 @@ TYPE
 		localAdr-: Adr;
 		next*:Interface;
 	END Interface;
-	
+
 
 VAR
 	pool*: Kernel.FinalizedCollection;   (* pool of all IP.Socket *)
-	
+
 	(* Interfaces *)
 	default-: Interface;
 	interfaces*: Interface; (* list of all installed interfaces *)
@@ -422,15 +422,15 @@ PROCEDURE InitInterfaces( hostname: ARRAY OF CHAR; VAR res: WORD );
 				(*adr := hostent.hName;
 				adr.ipv4Adr := hostent.hName;*)
 				SYSTEM.GET(hostent.hAddrList+i*SIZEOF(ADDRESS), addr (*adr.ipv4Adr*));
-				IF addr # NIL (*adr.ipv4Adr # 0*) THEN 
-					SYSTEM.GET(addr (*adr.ipv4Adr*), adr.ipv4Adr); 
+				IF addr # NIL (*adr.ipv4Adr # 0*) THEN
+					SYSTEM.GET(addr (*adr.ipv4Adr*), adr.ipv4Adr);
 					NEW(int); int.localAdr:=adr;
-					IF int0=NIL THEN 
+					IF int0=NIL THEN
 						int0:=int; interfaces:=int0; default:=int0;
-					ELSE 
-						int0.next:=int; int0:=int; 
+					ELSE
+						int0.next:=int; int0:=int;
 					END;
-					INC(i); 
+					INC(i);
 					KernelLog.String("added IP interface "); AdrToStr(adr, str);  KernelLog.String(str); KernelLog.Ln;
 				END;
 				DEC(hostent.hLength);
@@ -440,7 +440,7 @@ PROCEDURE InitInterfaces( hostname: ARRAY OF CHAR; VAR res: WORD );
 END InitInterfaces;
 
 PROCEDURE Init;
-	VAR name: ARRAY 256 OF CHAR; res: WORD; 
+	VAR name: ARRAY 256 OF CHAR; res: WORD;
 BEGIN
 	KernelLog.String("IP.Init: Hostname ");
 	res := WSock32.gethostname(name, 256);
@@ -450,9 +450,9 @@ BEGIN
 		KernelLog.String("failed "); KernelLog.Int(res, 0);KernelLog.Ln;
 		RETURN
 	END;
-	
+
 	NilAdr.usedProtocol := IPv4;
-	
+
 	InitInterfaces(name, res);
 END Init;
 
@@ -479,7 +479,7 @@ CODE
 END SwapEndian;
 
 BEGIN
-	default := NIL; 
+	default := NIL;
 	Init;
 END IP.
 

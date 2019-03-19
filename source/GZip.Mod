@@ -298,11 +298,11 @@ PROCEDURE GZip*(context:Commands.Context);
 VAR filename: Files.FileName; from,to: Files.File; compression, strategy: LONGINT;
 BEGIN
 	IF context.arg.GetString(filename) THEN
-		from:=Files.Old(filename); 
+		from:=Files.Old(filename);
 		Strings.Append(filename, ".gz");
 		to:=Files.New(filename);
 		IF (from#NIL)&(to#NIL) THEN
-			IF ~context.arg.GetInteger(compression,FALSE) THEN 
+			IF ~context.arg.GetInteger(compression,FALSE) THEN
 				compression:=DefaultCompression;
 				strategy:=DefaultStrategy;
 			ELSIF ~context.arg.GetInteger(strategy,FALSE) THEN
@@ -310,11 +310,11 @@ BEGIN
 			END;
 			Deflate(from,to,SHORTINT(compression), SHORTINT(strategy), FullFlush(*?*));
 			Files.Register(to);
-			context.out.String("gzipped "); context.out.String(filename);context.out.Ln; context.out.Update;	
+			context.out.String("gzipped "); context.out.String(filename);context.out.Ln; context.out.Update;
 		ELSE
 			context.out.String("gzip failed for "); context.out.String(filename);context.out.Ln; context.out.Update;
 		END;
-	ELSE 
+	ELSE
 		context.error.String("file not found"); context.error.Ln; context.error.Update;
 	END;
 END GZip;
@@ -324,15 +324,15 @@ VAR filename: Files.FileName; from,to: Files.File; pos:LONGINT;
 BEGIN
 	IF context.arg.GetString(filename) THEN
 		pos:=Strings.Pos(".gz", filename);
-		IF pos<0 THEN 
+		IF pos<0 THEN
 			context.error.String("no .gz file found"); context.error.Ln; context.error.Update;
 		ELSE
-			from:=Files.Old(filename); 
+			from:=Files.Old(filename);
 			filename[pos]:=0X;
 			to:=Files.New(filename);
 			Inflate(from,to);
 			Files.Register(to);
-			context.out.String("un-gzipped "); context.out.String(filename);context.out.Ln; context.out.Update;	
+			context.out.String("un-gzipped "); context.out.String(filename);context.out.Ln; context.out.Update;
 		END;
 	ELSE
 		context.error.String("no file to UnGZip"); context.error.Ln; context.error.Update;

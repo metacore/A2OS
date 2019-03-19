@@ -78,7 +78,7 @@ TYPE
 
 		BEGIN
 			pos := 0;
-			IF (~isUrlEncoded & WebHTTP.HasAdditionalField(header.additionalFields, "Content-Length") 
+			IF (~isUrlEncoded & WebHTTP.HasAdditionalField(header.additionalFields, "Content-Length")
 				& WebHTTP.GetAdditionalFieldValue(header.additionalFields, "Content-Length", s))THEN
 				Strings.StrToInt(s, size); close := FALSE;
 			ELSE
@@ -244,16 +244,16 @@ challenge           = ("Digest" LWS digest-cln *(COMMA digest-cln))
 digest-cln          = realm / domain / nonce
                       / opaque / stale / algorithm
                       / qop-options / auth-param
-algorithm           = "algorithm" EQUAL 
+algorithm           = "algorithm" EQUAL
                       ( "MD5" / "MD5-sess"/ "SHA256-sess" / token )
-msspi-cln           = realm / opaque 
+msspi-cln           = realm / opaque
                       / targetname / gssapi-data / version / sts-uri
 targetname          = "targetname" EQUAL target-value
-target-value        = DQUOTE ( ntlm-target-val 
+target-value        = DQUOTE ( ntlm-target-val
                       / ( "sip/" kerberos-target-val)
                       / tls-dsk-target-val ) DQUOTE
 ntlm-target-val     = token
-kerberos-target-val = token      
+kerberos-target-val = token
 tls-dsk-target-val  = token
 gssapi-data         = "gssapi-data" EQUAL gssapi-data-value
 gssapi-data-value   = quoted-string

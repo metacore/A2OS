@@ -228,11 +228,11 @@ of characters, each character being a pattern and and metric data.
 				IF id = FontId THEN Files.Read(R, L.type);
 					IF (L.type = metric) OR (L.type = font) THEN Internalize(L, R, L.type) ELSE Substitute(L) END
 				ELSE Substitute(L) END
-			ELSE 
+			ELSE
 				COPY(L.name, name); i := 0;
 				WHILE name[i] # 0X DO INC(i) END;
 				IF (i >= 8) & (name[i-8] = ".") & (name[i-7] = "M") & (name[i-6] = "d") THEN
-					name[i-7] := "P"; name[i-6] := "r"; 
+					name[i-7] := "P"; name[i-6] := "r";
 					OberonFonts.ProvideFont(name);
 					f := Files.Old(name);
 					IF f # NIL THEN

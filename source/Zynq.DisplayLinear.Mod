@@ -184,7 +184,7 @@ VAR
 
 		(*
 			Setup display clocks
-		*)		
+		*)
 		(* pixel clock *)
 		pixelClock := REAL(freq)/PlClkDiv1;
 		IF PsConfig.SetPlClock(1,PsConfig.IoPll,PlClkDiv1,1,res) THEN
@@ -252,7 +252,7 @@ VAR
 
 		(* configure read channel of S_AXI_HP0 as a 32-bit interface *)
 		d := SYSTEM.GET32(0xF8008000); SYSTEM.PUT32(0xF8008000,SYSTEM.MSK(d,0xFFFFFFFE)+1);
-		
+
 		Machine.Fill32(bufAddr,Width*Height*4,DefaultColor); (* fill the framebuffer with the default color *)
 		Machine.FlushDCacheRange(bufAddr,Width*Height*4);
 
@@ -263,13 +263,13 @@ VAR
 		rdma.SetAddr(bufAddr);
 		rdma.SetCount(Width*Height);
 		rdma.SetWrap(TRUE); (* recurring transfer *)
-		
+
 		(*
 			Enable video output
 		*)
 		Video.Enable(vout,TRUE);
 		rdma.Start;
-		
+
 		(*
 			Install the display
 		*)
@@ -284,7 +284,7 @@ VAR
 		display.Update;
 		Displays.registry.Add(display,res);
 		ASSERT(res = Plugins.Ok);
-	END Init;	
+	END Init;
 
 	PROCEDURE Install*(context: Commands.Context);
 	VAR options: Options.Options;

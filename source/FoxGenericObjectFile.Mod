@@ -26,7 +26,7 @@ TYPE
 		entries: LONGINT;
 		size: LONGINT;
 	END;
-	
+
 VAR
 	statPool : Basic.HashTableInt;
 
@@ -252,7 +252,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			PROCEDURE ExportModule (module: Sections.Module): BOOLEAN;
 			VAR result: BOOLEAN; pos: LONGINT;
 				offers, requires: ObjectFile.NameList;
-				numImports: LONGINT; 
+				numImports: LONGINT;
 				name: ObjectFile.SectionName;
 				import: SyntaxTree.Import;
 			BEGIN
@@ -262,7 +262,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				END;
 				IF mergeSections & ~MergeSections(module.allSections) THEN RETURN FALSE END;
 				NEW (offers, 1); offers[0] := module.moduleName;
-				
+
 				IF module.module#NIL THEN
 					import := module.module.moduleScope.firstImport;
 					numImports := 0;
@@ -329,7 +329,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		PROCEDURE GetOptions* (options: Options.Options);
 		VAR extension: Files.FileName;
 		BEGIN
-			IF options.GetString("objectFileExtension",extension) THEN 
+			IF options.GetString("objectFileExtension",extension) THEN
 				SetExtension(extension);
 			END;
 			binary := ~options.GetFlag("textualObjectFile");
@@ -487,7 +487,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		offers := NIL;
 		requires := NIL;
 		IF version >= 4 THEN
-			IF ~binary THEN 
+			IF ~binary THEN
 				reader.String(string); ObjectFile.ReadNameList(reader, offers, binary, poolMap);
 				reader.SkipWhitespace;
 				reader.String(string); ObjectFile.ReadNameList(reader, requires, binary, poolMap);
@@ -527,7 +527,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				END;
 			END;
 		END ProcessSection;
-		
+
 		PROCEDURE NameList(CONST names: ObjectFile.NameList);
 		BEGIN
 			IF names # NIL THEN
@@ -543,7 +543,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END;
 		writer.Char(' ');
 		writer.Char('v'); writer.Int(Version,0); writer.Char(".");
-		IF ~binary THEN 
+		IF ~binary THEN
 				writer.Ln;
 				writer.String("offers "); ObjectFile.WriteNameList(writer, offers, binary, poolMap);
 				writer.String("requires "); ObjectFile.WriteNameList(writer, requires, binary, poolMap);
@@ -619,7 +619,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			context.error.String("no file specificed"); context.error.Ln
 		END;
 	END Show;
-	
+
 	PROCEDURE MakeLibrary*(context: Commands.Context);
 	VAR
 		fileName: Files.FileName; file: Files.File; reader: Files.Reader; (*writer: Streams.Writer;*)
@@ -650,18 +650,18 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 						bs.os := section;
 						NEW(is, SHORTINT(bs.os.type),  bs.os.identifier.name,NIL, FALSE);
 						is.SetResolved(bs);
-						sectionList.AddSection(is);		
+						sectionList.AddSection(is);
 						reader.SkipWhitespace;
 					END;
 				ELSE
-					context.error.String("file not found "); context.error.String(fileName); context.error.Ln; 
+					context.error.String("file not found "); context.error.String(fileName); context.error.Ln;
 					RETURN;
 				END;
 			END;
 			file := Files.New(dest);
 			Files.OpenWriter(writer, file, 0);
 			WriteHeader(writer, TRUE, sectionList, poolMapDummy, NIL, NIL, NIL);
-			
+
 			FOR i := 0 TO sectionList.Length()-1 DO
 				is := sectionList.GetSection(i)(IntermediateCode.Section);
 				ObjectFile.WriteSection(writer, is.resolved.os, TRUE, poolMapDummy); (* binary *)
@@ -671,7 +671,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			context.out.String("Created library "); context.out.String(dest); context.out.Ln;
 		END;
 	END MakeLibrary;
-	
+
 
 	PROCEDURE Statistics*;
 	VAR iterator: Basic.IntIterator; stat: SectionStat; index: StringPool.Index; any: ANY;

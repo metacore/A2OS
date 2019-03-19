@@ -1,13 +1,13 @@
 MODULE V24;		(** AUTHOR "F.Necati"; PURPOSE "V24 serial lines"; *)
 
 IMPORT Unix, Log := KernelLog, Serials, Objects, Commands, Strings;
-	
+
 CONST
 	(* modem lines  bits *)
 	TIOCM_LE = 0;  TIOCM_DTR = 1; TIOCM_RTS = 2; TIOCM_ST = 3;
 	TIOCM_SR = 4;  TIOCM_CTS = 5; TIOCM_CAR = 6; TIOCM_RNG = 7;
 	TIOCM_DSR	= 8;  TIOCM_CD = TIOCM_CAR; TIOCM_RI = TIOCM_RNG;
-	
+
 	(* tio.iflag bits *)
 	IGNBRK  = {0};
 	BRKINT  = {1};
@@ -19,8 +19,8 @@ CONST
 	TCSAFLUSH  = 2;
 
 	NumberOfPorts = 4;
-	
-	
+
+
 VAR
 	tcgetattr	: PROCEDURE {C} ( fd: LONGINT;  VAR tio: Unix.Termios ): LONGINT;
 	tcsetattr	: PROCEDURE {C} ( fd: LONGINT; action: LONGINT;  VAR tio: Unix.Termios ): LONGINT;
@@ -28,48 +28,48 @@ VAR
 	cfsetospeed	: PROCEDURE {C} ( VAR tio: Unix.Termios; speed: LONGINT ): LONGINT;
 	cfgetispeed	: PROCEDURE {C} ( VAR tio: Unix.Termios ): LONGINT;
 	cfgetospeed	: PROCEDURE {C} ( VAR tio: Unix.Termios ): LONGINT;
-	
-	
 
-	
-TYPE 
+
+
+
+TYPE
 	Port* = OBJECT (Serials.Port)
 	VAR
 		 fd: LONGINT;
 		 portname: ARRAY 128 OF CHAR;
-		 
+
 		PROCEDURE & Init*( port: LONGINT; CONST name: ARRAY OF CHAR );
-		BEGIN 
+		BEGIN
 			COPY(name, portname);
 			fd := 0;
 		END Init;
-		
+
 		(* adapted from LNO.V24.Mod *)
 		PROCEDURE Open*( bps, data, parity, stop: LONGINT;  VAR res: WORD );
-		VAR 
+		VAR
 			err, speed: LONGINT;
 			tio: Unix.Termios;
 		BEGIN {EXCLUSIVE}
-			IF fd > 0 THEN res := Serials.PortInUse; RETURN END;			
-		
-			IF (data < 5) OR ( data > 8) OR ( parity = Serials.ParMark) OR 
+			IF fd > 0 THEN res := Serials.PortInUse; RETURN END;
+
+			IF (data < 5) OR ( data > 8) OR ( parity = Serials.ParMark) OR
 			    ( parity = Serials.ParSpace) OR (stop = Serials.Stop1dot5) THEN
 				res := Serials.WrongData;  RETURN;
 			END;
 
 			fd := Unix.open( ADDRESSOF(portname), Unix.rdwr, 0 );
-			IF fd = -1 THEN  
-				fd := 0;  res := Serials.NoSuchPort;  RETURN 
+			IF fd = -1 THEN
+				fd := 0;  res := Serials.NoSuchPort;  RETURN
 			END;
-			
+
 			err := tcgetattr( fd, tio );
-			
+
 			tio.iflags:= IGNBRK + IGNPAR;
 			tio.oflags:={};
 			tio.cflags:= Unix.CREAD + Unix.HUPCL + Unix.CLOCAL;
 			tio.lflags:={};
 
-			IF bps < 50 THEN speed := Unix.B0	
+			IF bps < 50 THEN speed := Unix.B0
 			ELSIF bps < 75 THEN speed := Unix.B50
 			ELSIF bps < 110 THEN speed := Unix.B75
 			ELSIF bps < 134 THEN speed := Unix.B110
@@ -91,24 +91,24 @@ TYPE
 			END;
 			err := cfsetispeed( tio, speed );
 			err := cfsetospeed( tio, speed );
-			
+
 			tio.cflags := tio.cflags - Unix.CSIZE;
 			IF data= 5 THEN tio.cflags:= tio.cflags + Unix.CS5;
 			ELSIF data= 6 THEN tio.cflags:= tio.cflags + Unix.CS6;
 			ELSIF data= 7 THEN tio.cflags:= tio.cflags + Unix.CS7;
 			ELSIF data= 8 THEN tio.cflags:= tio.cflags + Unix.CS8;
 			END;
-			
+
 			IF parity # Serials.ParNo THEN
 				tio.cflags := tio.cflags + Unix.PARENB;
 				IF parity= Serials.ParOdd THEN  tio.cflags := tio.cflags + Unix.PARODD   END;
 			END;
 			IF stop= Serials.Stop2 THEN tio.cflags := tio.cflags + Unix.CSTOPB  END;
-			
-			err := tcsetattr( fd, TCSAFLUSH, tio);	
-			IF err # -1 THEN 
+
+			err := tcsetattr( fd, TCSAFLUSH, tio);
+			IF err # -1 THEN
 				Log.String( "V24 opened the port: " ); Log.String( portname ); Log.Ln;
-				res := Serials.Ok; 
+				res := Serials.Ok;
 			ELSE
 				Close;
 				res := Serials.NoSuchPort;
@@ -117,7 +117,7 @@ TYPE
 
 		PROCEDURE Close*;
 		VAR err: LONGINT;
-		BEGIN 
+		BEGIN
 			IF fd > 0  THEN
 				err:= Unix.close( fd );
 				fd := 0
@@ -125,7 +125,7 @@ TYPE
 		END Close;
 
 		PROCEDURE Available*(): LONGINT;
-		VAR  
+		VAR
 			 num, err: LONGINT;
 		BEGIN
 		 	err := Unix.ioctl( fd, Unix.FIONREAD, ADDRESSOF(num) );
@@ -134,25 +134,25 @@ TYPE
 
 		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: WORD );
 		VAR r: SIZE;
-		BEGIN	
+		BEGIN
 			r := Unix.read( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
-			IF res = 1 THEN 
+			IF res = 1 THEN
 				INC( charactersReceived );
 				res := Serials.Ok;
-			ELSE 
-				res := Serials.TransportError; 
+			ELSE
+				res := Serials.TransportError;
 			END;
 		END ReceiveChar;
 
-		(** Send - Send a byte to the specified port.  Waits until buffer space is available.  res = 0 iff ok. *)		
+		(** Send - Send a byte to the specified port.  Waits until buffer space is available.  res = 0 iff ok. *)
 		PROCEDURE SendChar*( ch: CHAR;  VAR res: WORD );
 		VAR r: SIZE;
 		BEGIN
 			r := Unix.write( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
-			IF res = 1 THEN 
+			IF res = 1 THEN
 				INC( charactersSent );
 				res := Serials.Ok;
-			ELSE 
+			ELSE
 				res := Serials.TransportError;
 			END;
 		END SendChar;
@@ -164,10 +164,10 @@ TYPE
 			r := Unix.write( fd, ADDRESSOF(buf[ofs]), len );  writeRes := LONGINT( r );
 			IF writeRes < 0 THEN
 				res := Serials.TransportError;
-			ELSE	
+			ELSE
 				INC( charactersSent, writeRes );
 				res := Serials.Ok;
-			END;			
+			END;
 		END Send;
 
 		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
@@ -200,7 +200,7 @@ TYPE
 		(** Get the port state: state (open, closed), speed in bps, no. of data bits, parity, stop bit length. *)
 		PROCEDURE GetPortState*( VAR openstat : BOOLEAN;  VAR bps, data, parity, stop : LONGINT );
 		VAR
-			err, br: LONGINT;  t: SET;  tio: Unix.Termios; 
+			err, br: LONGINT;  t: SET;  tio: Unix.Termios;
 		BEGIN
 			IF fd > 0 THEN
 				err := tcgetattr( fd, tio );
@@ -250,24 +250,24 @@ TYPE
 			err := Unix.ioctl( fd, Unix.TIOCMGET , ADDRESSOF(stat) );
 			IF Serials.DTR IN s THEN  EXCL( stat, TIOCM_DTR )  END;
 			IF Serials.RTS IN s THEN  EXCL( stat, TIOCM_RTS )  END;
-			err := Unix.ioctl( fd, Unix.TIOCMSET , ADDRESSOF(stat) );			
+			err := Unix.ioctl( fd, Unix.TIOCMSET , ADDRESSOF(stat) );
 		END ClearMC;
 
 		(** Set the specified modem control lines.  s may contain DTR, RTS & Break. *)
 		PROCEDURE SetMC*( s: SET );
-		VAR 
+		VAR
 			err : LONGINT;  stat: SET;
 		BEGIN
 			err := Unix.ioctl( fd, Unix.TIOCMGET , ADDRESSOF(stat) );
 			IF Serials.DTR IN s THEN  INCL( stat, TIOCM_DTR )  ELSE  EXCL( stat, TIOCM_DTR )  END;
 			IF Serials.RTS IN s THEN  INCL( stat, TIOCM_RTS )  ELSE  EXCL( stat, TIOCM_RTS )  END;
-			err := Unix.ioctl( fd, Unix.TIOCMSET , ADDRESSOF(stat) );			
+			err := Unix.ioctl( fd, Unix.TIOCMSET , ADDRESSOF(stat) );
 		END SetMC;
 
 		(** Return the state of the specified modem control lines. s contains
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
 		PROCEDURE GetMC*( VAR s: SET );
-		VAR 
+		VAR
 			err : LONGINT;  stat: SET;
 		BEGIN
 			err := Unix.ioctl( fd, Unix.TIOCMGET , ADDRESSOF(stat) );
@@ -280,7 +280,7 @@ TYPE
 			IF TIOCM_CAR IN stat THEN  INCL( s, Serials.DCD )  END;
 		END GetMC;
 
-		
+
 	END Port;
 
 	PROCEDURE Install*();
@@ -297,18 +297,18 @@ TYPE
 			Serials.RegisterOnboardPort( i+1 , port, name, ttyname);
 		END;
 	END Install;
-	
+
 	PROCEDURE Map*(context: Commands.Context);
 	VAR	number: LONGINT; name, ttyname: ARRAY 128 OF CHAR; port: Port;
 	BEGIN
 		IF context.arg.GetInteger(number, FALSE) & context.arg.GetString(ttyname) THEN
 			name := "COM";
 			Strings.AppendInt(name, number);
-			NEW(port, number, ttyname); 
+			NEW(port, number, ttyname);
 			Serials.RegisterOnboardPort( number, port, name, ttyname);
 		END;
 	END Map;
-	
+
 
 	PROCEDURE Initialize;
 	BEGIN
@@ -325,12 +325,12 @@ BEGIN
 (*	Install;*)
 END V24.
 
-V24.Install ~ 
-V24.Map 5 ttyUSB0 ~ 
+V24.Install ~
+V24.Map 5 ttyUSB0 ~
 
-Serials.Show ~ 
+Serials.Show ~
 
-System.Free V24~ 
+System.Free V24~
 
 
 
@@ -342,46 +342,46 @@ System.Free V24~
 	COM2 -> /dev/ttyS1
 	COM3 -> /dev/ttyS2
 	COM4 -> /dev/ttyS3
-	
+
 	On Solaris and Darwin hosts the tty lines have different names.
 	To make them useable for Aos create symbolic links
-	
+
 	Solaris:	ln -s  /dev/ttya  /dev/ttyS0
-	
+
 
 	------------------------------------------
-	
+
 	you must have access rights to serial port:
-	
+
 	first method:
 	must give username exclusive access to the device file, the first serial port on linux:
-	
+
 	# chown username /dev/ttyS0
 	# chmod 0600 /dev/ttyS0
-	
+
 	#  ls -ls  /dev/ttyS0
-	
+
 	second method: allow anybody to use serial port 0 (be carefull for security)
-	
+
 	# chmod a+rw  /dev/ttyS0
-	
+
 	---------------------
 	permanent setting:
-	
-	# groups   
-	
-	see which groups you belong	    
+
+	# groups
+
+	see which groups you belong
 	if you dont belong to "dialout" group, add yourself to this group by
-	
+
 	# sudo usermode -a -G dialout your_username
 	or
 	# sudo adduser your_username group
 	 logout and login to system. that is all.
-	 
-	
-	  removing: 
+
+
+	  removing:
 	# sudo deluser your_username group
-	
+
 	---------------------
 	------------------------------------------
 

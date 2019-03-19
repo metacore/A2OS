@@ -12,18 +12,18 @@ CONST
 		Version = "A2 Gen. 64-bit, ";
 		DefaultObjectFileExtension* = ".GofUu";
 	#END
-	
+
 	Second* = 1000; (* frequency of ticks increments in Hz *)
 
 	(** bits in features variable *)
-	MTTR* = 12;  MMX* = 23; 
-	
-	
+	MTTR* = 12;  MMX* = 23;
+
+
 	AddressSize = SIZEOF(ADDRESS);
 	StaticBlockSize = 8 * AddressSize;	(* static heap block size *)
 
 	MemBlockSize* = 64*1024*1024;
-	
+
 	TraceOutput* = 0;	(* Trace output *)
 	Memory* = 1;		(*!  Virtual memory management, stack and page allocation,  not used in UnixAos *)
 	Heaps* = 2;   		(* Storage allocation and Garbage collection *)
@@ -34,33 +34,33 @@ CONST
 	KernelLog* = 7;		(* Atomic output *)
 	X11* = 8;				(* XWindows I/O *)
 	MaxLocks* = 9;   (* { <= 32 } *)
-	
+
 	MaxCPU* = 4;
 	StrongChecks = FALSE;
 
-TYPE	
-	Vendor* = ARRAY 13 OF CHAR;	
+TYPE
+	Vendor* = ARRAY 13 OF CHAR;
 
 	MemoryBlock* = POINTER {UNSAFE, UNTRACED} TO MemoryBlockDesc;
 	MemoryBlockDesc* = RECORD
 		next- : MemoryBlock;
 		startAdr-: ADDRESS; 		(* sort key in linked list of memory blocks *)
-		size-: SIZE; 					
+		size-: SIZE;
 		beginBlockAdr-, endBlockAdr-: ADDRESS
 	END;
-	
+
 	(** processor state *)
-	State* = RECORD	
+	State* = RECORD
 		PC*, BP*, SP*: ADDRESS
 	END;
-	
-	
+
+
 VAR
 	mtx	: ARRAY MaxLocks OF Unix.Mutex_t;
 	taken: ARRAY MaxLocks OF ADDRESS; (* for lock order check *)
-	
+
 	version-: ARRAY 64 OF CHAR;	(** Aos version *)
-	
+
 	features-, features2 : SET;
 	MMXSupport-	: BOOLEAN;
 	SSESupport-	: BOOLEAN;
@@ -71,19 +71,19 @@ VAR
 	SSE42Support-	: BOOLEAN;
 	SSE5Support-	: BOOLEAN;
 	AVXSupport-		: BOOLEAN;
-		
+
 	ticks-: LONGINT;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
-	
+
 	prioLow-, prioHigh-: LONGINT;	(* permitted thread priorities *)
-	
+
 	fcr-: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
 	mhz-: HUGEINT;	(** clock rate of GetTimer in MHz, or 0 if not known *)
-	
+
 	gcThreshold-: SIZE;
 	memBlockHead-{UNTRACED}, memBlockTail-{UNTRACED}: MemoryBlock; (* head and tail of sorted list of memory blocks *)
-	
+
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
-	
+
 	logname: ARRAY 32 OF CHAR;
 	logfile: LONGINT;
 	traceHeap: BOOLEAN;
@@ -119,7 +119,7 @@ VAR
 	 *)
 	PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
 	END InvalidateICacheRange;
-	
+
 	(* insert given memory block in sorted list of memory blocks, sort key is startAdr field - called during GC *)
 	PROCEDURE InsertMemoryBlock(memBlock: MemoryBlock);
 	VAR cur {UNTRACED}, prev {UNTRACED}: MemoryBlock;
@@ -142,7 +142,7 @@ VAR
 		END
 	END InsertMemoryBlock;
 
-		
+
 	(* Free unused memory block - called during GC *)
 	PROCEDURE FreeMemBlock*(memBlock: MemoryBlock);
 	VAR cur {UNTRACED}, prev {UNTRACED}: MemoryBlock;
@@ -153,8 +153,8 @@ VAR
 			prev := cur;
 			cur := cur.next
 		END;
-		IF cur = memBlock THEN 
-			IF traceHeap THEN  
+		IF cur = memBlock THEN
+			IF traceHeap THEN
 				Trace.String( "Release memory block " );  Trace.Hex( memBlock.startAdr, -8 );  Trace.Ln
 			END;
 			IF prev = NIL THEN
@@ -171,12 +171,12 @@ VAR
 		END;
 	END FreeMemBlock;
 
-	
+
 
 	(* expand heap by allocating a new memory block *)
 	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
-	VAR mBlock: MemoryBlock;  alloc: SIZE;  adr: ADDRESS; 
-	BEGIN 
+	VAR mBlock: MemoryBlock;  alloc: SIZE;  adr: ADDRESS;
+	BEGIN
 		ASSERT(SIZEOF(MemoryBlockDesc) <= StaticBlockSize); (* make sure MemoryBlock contents fits into one StaticBlock *)
 		alloc := size + StaticBlockSize;
 		IF alloc < MemBlockSize THEN alloc := MemBlockSize END;
@@ -192,25 +192,25 @@ VAR
 		ELSE
 			IF Unix.mprotect( adr, alloc, 7 (* READ WRITE EXEC *) ) # 0 THEN
 				Unix.Perror( "Machine.ExpandHeap: mprotect" )
-			END;			
-			mBlock := adr;  
-			mBlock.next := NIL;  
+			END;
+			mBlock := adr;
+			mBlock.next := NIL;
 			mBlock.startAdr := adr;
-			mBlock.size := alloc;  
+			mBlock.size := alloc;
 
 			beginBlockAdr := adr + StaticBlockSize;
 			endBlockAdr := beginBlockAdr + alloc - StaticBlockSize;
 
-			mBlock.beginBlockAdr := beginBlockAdr;  
+			mBlock.beginBlockAdr := beginBlockAdr;
 			mBlock.endBlockAdr := beginBlockAdr; (* block is still empty -- Heaps module will set the upper bound *)
-			
+
 			InsertMemoryBlock( mBlock );
 			IF traceHeap THEN TraceHeap( mBlock )  END;
-						
+
 			memoryBlock := mBlock;
-		END  
+		END
 	END ExpandHeap;
-		
+
 	(* Set memory block end address *)
 	PROCEDURE SetMemoryBlockEndAddress*(memBlock: MemoryBlock; endBlockAdr: ADDRESS);
 	BEGIN
@@ -223,7 +223,7 @@ VAR
 	BEGIN
 		Trace.Ln;
 		Trace.String( "Heap expanded" );  Trace.Ln;
-		Trace.String("Static Heap: "); Trace.Hex(Glue.baseAdr, -8); Trace.String(" - "); Trace.Hex(Glue.endAdr, -8); 
+		Trace.String("Static Heap: "); Trace.Hex(Glue.baseAdr, -8); Trace.String(" - "); Trace.Hex(Glue.endAdr, -8);
 		Trace.Ln;
 		cur := memBlockHead;
 		WHILE cur # NIL DO
@@ -243,17 +243,17 @@ VAR
 
 	(* returns if an address is a currently allocated heap address *)
 	PROCEDURE ValidHeapAddress*( p: ADDRESS ): BOOLEAN;
-	VAR mb: MemoryBlock; 
+	VAR mb: MemoryBlock;
 	BEGIN
 		IF (p>=Glue.baseAdr) & (p<=Glue.endAdr) THEN RETURN TRUE END;
-		mb := memBlockHead;  
+		mb := memBlockHead;
 		WHILE mb # NIL DO
-			IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;  
-			mb := mb.next;  
-		END;  
+			IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;
+			mb := mb.next;
+		END;
 		RETURN FALSE;
 	END ValidHeapAddress;
-	
+
 
 	(** Return information on free memory in Kbytes. *)
 	PROCEDURE GetFreeK*(VAR total, lowFree, highFree: SIZE);
@@ -263,8 +263,8 @@ VAR
 		lowFree := 0;
 		highFree := 0
 	END GetFreeK;
-	
-	
+
+
 
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
 	PROCEDURE  Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
@@ -469,11 +469,11 @@ END GetTimer;
 	VAR i, src: LONGINT; ch: CHAR;
 	BEGIN
 		ASSERT (name[0] # "=");	(* no longer supported, use GetInit instead *)
-		
+
 		src := -1;  val := "";
 		LOOP
 			REPEAT
-				INC( src );  ch := config[src]; 
+				INC( src );  ch := config[src];
 				IF ch = 0X THEN EXIT END;
 			UNTIL ch > ' ';
 			i := 0;
@@ -488,7 +488,7 @@ END GetTimer;
 					INC (src); ch := config[src]; val[i] := ch; INC (i);
 					IF i = LEN(val) THEN val[i - 1] := 0X; RETURN END	(* val too short *)
 				UNTIL ch <= ' ';
-				IF ch = ' ' THEN val[i -1] := 0X END; 
+				IF ch = ' ' THEN val[i -1] := 0X END;
 				RETURN
 			ELSE
 				WHILE ch > ' ' DO	(* skip to end of name *)
@@ -500,7 +500,7 @@ END GetTimer;
 				UNTIL ch <= ' '
 			END
 		END;
-		IF (name = "ObjectFileExtension") & (val = "") THEN  
+		IF (name = "ObjectFileExtension") & (val = "") THEN
 			val := DefaultObjectFileExtension
 		END;
 	END GetConfig;
@@ -524,7 +524,7 @@ END GetTimer;
 		IF hex THEN vd := vh END;
 		RETURN sgn * vd
 	END StrToInt;
-	
+
 
 	(* function returning the number of processors that are available to Aos *)
 	PROCEDURE NumberOfProcessors*( ): LONGINT;
@@ -632,7 +632,7 @@ END GetTimer;
 		unimplemented
 	#END
 	END CPUID;
-	
+
 
 	(* If the CPUID instruction is supported, the ID flag (bit 21) of the EFLAGS register is r/w *)
 	PROCEDURE CpuIdSupported( ) : BOOLEAN;
@@ -664,7 +664,7 @@ END GetTimer;
 	#END
 	END CpuIdSupported;
 
-	
+
 	(* setup MMX, SSE and SSE2..SSE5 and AVX extension *)
 
 	PROCEDURE SetupSSE2Ext;
@@ -694,7 +694,7 @@ END GetTimer;
 			(* InitSSE(); *) (*! not privileged mode in Windows and Unix, not allowed *)
 		END;
 	END SetupSSE2Ext;
-	
+
 
 	(** -- Processor initialization -- *)
 	PROCEDURE -SetFCR( s: SET );
@@ -746,49 +746,49 @@ END GetTimer;
 
 
 	(* Initialize locks. *)
-	PROCEDURE InitLocks;  
-	VAR i: LONGINT; 
-	BEGIN 
-		i := 0;  
-		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  taken[i] := NIL; INC( i )  END;   
-	END InitLocks;  
+	PROCEDURE InitLocks;
+	VAR i: LONGINT;
+	BEGIN
+		i := 0;
+		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  taken[i] := NIL; INC( i )  END;
+	END InitLocks;
 
-	PROCEDURE CleanupLocks*;  
-	VAR i: LONGINT;  
-	BEGIN 
-		i := 0;  
-		WHILE i < MaxLocks DO  Unix.MtxDestroy( mtx[i] );  INC( i ) END;  	
-	END CleanupLocks;  
-	
+	PROCEDURE CleanupLocks*;
+	VAR i: LONGINT;
+	BEGIN
+		i := 0;
+		WHILE i < MaxLocks DO  Unix.MtxDestroy( mtx[i] );  INC( i ) END;
+	END CleanupLocks;
+
 	(** Acquire a spin-lock. *)
 	PROCEDURE  Acquire*( level: LONGINT );   (* non reentrant lock *)
-	VAR i: WORD; 
-	BEGIN 
+	VAR i: WORD;
+	BEGIN
 		Unix.MtxLock( mtx[level] );
 		IF StrongChecks THEN
-			ASSERT(taken[level] = NIL); 
+			ASSERT(taken[level] = NIL);
 			taken[level] := Unix.ThrThis( );
 			FOR i := 0 TO level-1 DO
 				ASSERT(taken[i] # Unix.ThrThis( )); (*! lock order *)
 			END;
 		END;
-	END Acquire;  
+	END Acquire;
 
 	(** Release a spin-lock. *)
-	PROCEDURE  Release*( level: LONGINT );   
+	PROCEDURE  Release*( level: LONGINT );
 	VAR i: WORD;
-	BEGIN 
+	BEGIN
 		IF StrongChecks THEN
-			ASSERT(taken[level] = Unix.ThrThis( )); 
+			ASSERT(taken[level] = Unix.ThrThis( ));
 			taken[level] := NIL;
 			FOR i := 0 TO level-1 DO
 				ASSERT(taken[i] # Unix.ThrThis( )); (*! lock order *)
-			END;		
+			END;
 		END;
 		Unix.MtxUnlock( mtx[level] );
-	END Release;  
-	
-	
+	END Release;
+
+
 	PROCEDURE Shutdown*( reboot: BOOLEAN );
 	VAR r: LONGINT;  logstat: Unix.Status;
 	BEGIN
@@ -799,9 +799,9 @@ END GetTimer;
 		END;
 		IF reboot THEN  Unix.exit( 0 )  ELSE  Unix.exit( 1 )  END;
 	END Shutdown;
-		
 
-		
+
+
 
 	(* Set machine-dependent parameter gcThreshold *)
 	PROCEDURE SetGCParams*;
@@ -820,31 +820,31 @@ END GetTimer;
 			UNTIL c = 0X
 		END
 	END InitConfig;
-	
-	
+
+
 	PROCEDURE UpdateTicks*;
 	BEGIN
 		ticks := SHORT( (GetTimer() - timer0) DIV (mhz * 1000) );
 	END UpdateTicks;
-	
-	
+
+
 	PROCEDURE InitThreads;
-	VAR res: BOOLEAN; 
+	VAR res: BOOLEAN;
 	BEGIN
 		res := Unix.ThrInitialize( prioLow, prioHigh );
 		IF ~res THEN
-			Trace.StringLn( "Machine.InitThreads: no threads support in boot environment.  teminating" ); 
+			Trace.StringLn( "Machine.InitThreads: no threads support in boot environment.  teminating" );
 			Unix.exit( 1 )
 		END;
 		IF Glue.debug # {} THEN
-			Trace.String( "Threads initialized, priorities low, high: " ); 
+			Trace.String( "Threads initialized, priorities low, high: " );
 			Trace.Int( prioLow, 0 ); Trace.String( ", " ); Trace.Int( prioHigh, 0 );
 			Trace.Ln
 		END
 	END InitThreads;
-	
+
 	PROCEDURE CPUSpeed;
-	VAR t0, t1: HUGEINT; 
+	VAR t0, t1: HUGEINT;
 	BEGIN
 		t0 := GetTimer();  Unix.ThrSleep( 100 );  t1 := GetTimer();
 		mhz := (t1 - t0) DIV 100000;
@@ -852,62 +852,62 @@ END GetTimer;
 			Trace.String( "CPU speed: ~" );  Trace.Int( SHORT( mhz ), 0);  Trace.String( " MHz" );  Trace.Ln
 		END
 	END CPUSpeed;
-	
+
 	PROCEDURE Log( c: CHAR );
 	VAR ignore: SIZE;
 	BEGIN
 		ignore := Unix.write( 1, ADDRESSOF( c ), 1 );
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
 	END Log;
-	
+
 	PROCEDURE LogFileOnly( c: CHAR );
 	VAR ignore: SIZE;
 	BEGIN
 		ignore := Unix.write( logfile, ADDRESSOF( c ), 1 );
 	END LogFileOnly;
-	
-	
+
+
 	PROCEDURE InitLog;
-	VAR pid, i: LONGINT; 
+	VAR pid, i: LONGINT;
 	BEGIN
 		IF logfile > 0 THEN RETURN END;
 		logname := "AOS.xxxxx.Log";
 		pid := Unix.getpid();  i := 8;
 		REPEAT
 			logname[i] := CHR( pid MOD 10 + ORD( '0' ) );  DEC( i );
-			pid := pid DIV 10;		
+			pid := pid DIV 10;
 		UNTIL i = 3;
 		logfile := Unix.open( ADDRESSOF( logname ), Unix.rdwr + Unix.creat + Unix.trunc, Unix.rwrwr );
 	END InitLog;
-	
+
 	PROCEDURE SilentLog*;
 	BEGIN
 		InitLog;
 		Trace.Char := LogFileOnly
 	END SilentLog;
-	
+
 	PROCEDURE VerboseLog*;
 	BEGIN
 		InitLog;
 		Trace.Char := Log
 	END VerboseLog;
 
-	
+
 	PROCEDURE Append( VAR a: ARRAY OF CHAR; CONST this: ARRAY OF CHAR );
 	VAR i, j: LONGINT;
 	BEGIN
-		i := 0;  j := 0;  
+		i := 0;  j := 0;
 		WHILE a[i] # 0X DO  INC( i )  END;
 		WHILE (i < LEN( a ) - 1) & (this[j] # 0X) DO a[i] := this[j];  INC( i );  INC( j )  END;
 		a[i] := 0X
 	END Append;
-	
+
 
 	PROCEDURE Init;
 	VAR vendor: Vendor; ver: LONGINT;
-	BEGIN		
+	BEGIN
 		COPY( Unix.Version, version );  Append( version, Version ); Append(version, S.Date);
-		
+
 		timer0 := GetTimer( );  ticks := 0;
 		InitThreads;
 		InitLocks;
@@ -924,7 +924,7 @@ END GetTimer;
 	BEGIN
 		Init;
 	END Init0;
-	
+
 END Machine.
 
 (*

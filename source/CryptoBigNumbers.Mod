@@ -32,7 +32,7 @@ TYPE
 					END;
 					len := 0;  neg := FALSE
 				END Init;
-				
+
 				PROCEDURE Mask*( bits: LONGINT );
 				VAR w, b: LONGINT;
 				BEGIN
@@ -42,27 +42,27 @@ TYPE
 					END
 				END Mask;
 
-				
+
 				PROCEDURE IsZero*( ): BOOLEAN;
 				BEGIN
 					RETURN (len = 0) OR ((len = 1) & (d[0] = 0))
 				END IsZero;
-				
+
 				PROCEDURE EQ* ( b: BigNumber ): BOOLEAN;
 				BEGIN
 					RETURN Cmp( SELF, b ) = 0
 				END EQ;
-				
+
 				PROCEDURE NEQ* ( b: BigNumber ): BOOLEAN;
 				BEGIN
 					RETURN Cmp( SELF, b ) # 0
 				END NEQ;
-				
+
 				PROCEDURE GT* ( b: BigNumber ): BOOLEAN;
 				BEGIN
 					RETURN Cmp( SELF, b ) > 0
 				END GT;
-				
+
 				PROCEDURE GEQ* ( b: BigNumber ): BOOLEAN;
 				BEGIN
 					RETURN Cmp( SELF, b ) >= 0
@@ -76,16 +76,16 @@ TYPE
 					IF len = 0 THEN  RETURN  END;
 					IF n < 0 THEN  right := TRUE;  n := ABS( n )  ELSE  right := FALSE  END;
 					w := n DIV 32;  bits := n MOD 32;
-					IF ~right THEN  
+					IF ~right THEN
 						adjust( len + w + 1 );
 						IF w > 0 THEN
 							FOR i := len - 1 TO 0 BY -1 DO  d[i + w] := d[i]  END;
 							FOR i := 0 TO w - 1 DO  d[i] := 0  END;
 							INC( len, w )
 						END;
-						IF bits > 0 THEN  
+						IF bits > 0 THEN
 							d[len] := 0;
-							FOR i := len TO 0 BY -1 DO  
+							FOR i := len TO 0 BY -1 DO
 								a := d[i];
 								IF i > 0 THEN  b := d[i - 1]  ELSE  b := 0  END;
 								d[i] := LSH( a, bits ) + LSH( b, -32 + bits )
@@ -97,7 +97,7 @@ TYPE
 							FOR i := 0 TO len - w - 1 DO  d[i] := d[i + w]  END;
 							DEC( len, w )
 						END;
-						IF bits > 0 THEN  
+						IF bits > 0 THEN
 							l := len;
 							FOR i := 0 TO  l - 1 DO  a := d[i];
 								IF i < l - 1 THEN  b := d[i + 1]  ELSE  b := 0  END;
@@ -107,7 +107,7 @@ TYPE
 						END
 					END;
 				END Shift;
-				
+
 
 				PROCEDURE Dec*;
 				VAR i: LONGINT;
@@ -141,7 +141,7 @@ TYPE
 				BEGIN
 					IF ~IsZero( ) THEN  neg := ~neg  END
 				END Negate;
-	
+
 				PROCEDURE BitSize*( ): LONGINT;
 				VAR n: LONGINT; t: BNdigit;
 				BEGIN
@@ -150,7 +150,7 @@ TYPE
 					END;
 					t := d[len - 1];
 					WHILE t # 0 DO  INC( n );  t := LSH( t, -1 )  END;
-					RETURN n 
+					RETURN n
 				END BitSize;
 
 				PROCEDURE BitSet*( n: LONGINT ): BOOLEAN;
@@ -197,7 +197,7 @@ TYPE
 				PROCEDURE Convert( VAR val: BigNumber ); 	(* val := val ^ R mod n *)
 				VAR i: LONGINT;
 				BEGIN
-					FOR i := 0 TO bits - 1 DO  
+					FOR i := 0 TO bits - 1 DO
 						val.Shift( 1 );
 						IF ucmp( val, n ) >= 0 THEN  val := Sub( val, n )  END
 					END
@@ -841,9 +841,9 @@ VAR
 	BEGIN
 		REPEAT
 			REPEAT r.Char( c ) UNTIL (c > ' ') OR (r.Available() = 0);
-		UNTIL	(r.Available() = 0) OR 
-				(c >= '0') & (c <= '9') OR 
-				(c >= 'A') & (c <= 'F') OR 
+		UNTIL	(r.Available() = 0) OR
+				(c >= '0') & (c <= '9') OR
+				(c >= 'A') & (c <= 'F') OR
 				(c >= 'a') & (c <= 'f') OR (c = '.');
 		RETURN c
 	END nibble;

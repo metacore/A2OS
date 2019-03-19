@@ -92,13 +92,13 @@ TYPE GUID* = RECORD
 	Data4*: ARRAY 8 OF Int8;
 END;
 
-TYPE 
+TYPE
 	MemoryDescriptorPointer*= POINTER TO MemoryDescriptor;
 	MemoryDescriptor* = RECORD
 		Type- : Int32;
 		pad-: Int32;
 		PhysicalStart-: PhysicalAddress;
-		VirtualStart-: VirtualAddress; 
+		VirtualStart-: VirtualAddress;
 	(*	PhysicalStart-: Int64;
 		VirtualStart-: Int64;	*)
 		NumberOfPages-: Int64;
@@ -129,7 +129,7 @@ TYPE TableHeader* = RECORD
 END;
 
 (* main EFI tables *)
-TYPE 
+TYPE
 SystemTable* = RECORD
 	Hdr-: TableHeader;
 	FirmwareVendor-{UNTRACED}: POINTER TO ARRAY OF Char16;

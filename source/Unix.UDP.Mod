@@ -19,7 +19,7 @@ VAR
 TYPE
 	(** Socket. Stores the state of a UDP communication endpoint. *)
 	Socket* = OBJECT
-			VAR 
+			VAR
 				socket: LONGINT;
 				lport: LONGINT;   (* local port *)
 				open: BOOLEAN;
@@ -36,14 +36,14 @@ TYPE
 						IF lport # anyport THEN
 							(* server *)
 							laddr := Sockets.NewSocketAdr( anyIP, lport );
-							IF Sockets.Bind( socket, laddr ) THEN  
-								res := Ok;  open := TRUE  
-							ELSE  
-								Sockets.Close( socket )  
+							IF Sockets.Bind( socket, laddr ) THEN
+								res := Ok;  open := TRUE
+							ELSE
+								Sockets.Close( socket )
 							END
 						ELSE
 							(* client *)
-							res := Ok;  open := TRUE 
+							res := Ok;  open := TRUE
 						END
 					END
 				END Open;
@@ -52,13 +52,13 @@ TYPE
 				(** Send a UDP datagram to the foreign address specified by "fip" and "fport".
 					   The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized.
 					*)
-				PROCEDURE Send*( fip: IP.Adr;  
-								   fport: LONGINT;  
+				PROCEDURE Send*( fip: IP.Adr;
+								   fport: LONGINT;
 								   CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;
 								   VAR res: WORD );
 				VAR addr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
-					ASSERT( (fport >= 0) & (fport < 10000H) );  
+					ASSERT( (fport >= 0) & (fport < 10000H) );
 					ASSERT( (len >= 0) & (len <= MaxUDPDataLen) );
 					addr := Sockets.NewSocketAdr( fip, fport );
 					IF Sockets.SendTo( socket, addr, data, ofs, len ) THEN  res := Ok  ELSE  res := Error  END
@@ -68,7 +68,7 @@ TYPE
 				(** Send a broadcast UDP datagram via interface "int" to port "lport". Normally only used by DHCP.
 					   The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized.
 					*)
-				PROCEDURE SendBroadcast*( int: IP.Interface;  fport: LONGINT;  
+				PROCEDURE SendBroadcast*( int: IP.Interface;  fport: LONGINT;
 										      CONST data: ARRAY OF CHAR;  ofs, len: LONGINT );
 				BEGIN (*{EXCLUSIVE}*)
 					ASSERT( (fport >= 0) & (fport < 10000H) );  ASSERT( (len >= 0) & (len <= MaxUDPDataLen) );
@@ -84,9 +84,9 @@ TYPE
 					"res" returns "Timeout" in case of a timeout and "BufferOverflow" if the received datagram was
 					too big.
 				*)
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, ms: LONGINT;  
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, ms: LONGINT;
 									 VAR fip: IP.Adr;  VAR fport, len: LONGINT; VAR res: WORD );
-				VAR 
+				VAR
 					addr: Sockets.SocketAdr; i: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF ~open THEN  res := Closed;  RETURN   END;
@@ -100,12 +100,12 @@ TYPE
 							fip.ipv4Adr := addr(Sockets.SocketAdrV4).v4Adr;
 						ELSE
 							fip.usedProtocol := IP.IPv6;
-							FOR i := 0 TO 15 DO  
+							FOR i := 0 TO 15 DO
 								fip.ipv6Adr[i] := addr(Sockets.SocketAdrV6).v6Adr[i]
 							END
 						END;
 						res := Ok;
-					ELSE  
+					ELSE
 						res := Error
 					END
 				END Receive;
@@ -114,7 +114,7 @@ TYPE
 
 				(** Close the Socket, freeing its address for re-use. *)
 				PROCEDURE Close*;
-				BEGIN 
+				BEGIN
 					Sockets.Close( socket );  open := FALSE
 				END Close;
 

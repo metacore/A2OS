@@ -1155,7 +1155,7 @@ TYPE
 					port.Receive(buffer, 0, ReceiveBufferSize, MIN(len,ReceiveBufferSize), len, res);
 				END;
 				lock.Release;
-				IF running & (res = Streams.Ok) & (len = 0) THEN 
+				IF running & (res = Streams.Ok) & (len = 0) THEN
 					Objects.Yield;
 				END;
 			END;

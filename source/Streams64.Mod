@@ -187,13 +187,13 @@ TYPE
 		BEGIN
 			RawSet32( SET32( x ) );
 		END RawSet;
-		
-		PROCEDURE RawSet32* ( x: SET32 ); 
+
+		PROCEDURE RawSet32* ( x: SET32 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4 );
 		END RawSet32;
-		
-		PROCEDURE RawSet64* ( x: SET64 ); 
+
+		PROCEDURE RawSet64* ( x: SET64 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8 );
 		END RawSet64;
@@ -410,7 +410,7 @@ TYPE
 
 	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
 		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: WORD );
-		VAR 
+		VAR
 			buf: ARRAY 64 OF CHAR;
 		BEGIN
 			RC.RealToStringFix( x, n, f, D, buf );
@@ -646,13 +646,13 @@ TYPE
 		BEGIN
 			RawSet32( lx ); x := lx
 		END RawSet;
-		
+
 		PROCEDURE RawSet32* ( VAR x: SET32 );
 		VAR ignore: BufferOffset;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawSet32;
-		
+
 		PROCEDURE RawSet64* ( VAR x: SET64 );
 		VAR ignore: BufferOffset;
 		BEGIN

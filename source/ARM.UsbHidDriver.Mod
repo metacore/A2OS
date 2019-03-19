@@ -47,8 +47,8 @@ CONST
 	MouseSpeed = 50;
 	MouseWheelSpeed = 3;
 	MouseAcceleration = 0;
-	
-	
+
+
 
 TYPE
 
@@ -74,7 +74,7 @@ TYPE
 		prevx, prevy: LONGINT;
 		prevkeys: SET;
 		prevTip: BOOLEAN;
-		tipTime: LONGINT; 
+		tipTime: LONGINT;
 	END;
 
 	(*Handling keyboard devices*)
@@ -428,7 +428,7 @@ TYPE
 		consumerState			: ConsumerState;
 		joystickState			: JoystickState;
 		useReportIDMechanism	: BOOLEAN;
-		
+
 		recentStatus: Usbdi.Status;
 
 		(*
@@ -533,7 +533,7 @@ TYPE
 			RETURN TRUE;
 		END Connect;
 
-		
+
 
 		(*called when detaching a usb hid device*)
 		PROCEDURE Disconnect;
@@ -680,22 +680,22 @@ TYPE
 		BEGIN
 			RETURN touchscreenState # NIL
 		END IsTouchscreen;
-		
+
 		PROCEDURE GetPipeStatus*(): Usbdi.Status;
 		VAR len: LONGINT;
 		BEGIN
-			IF pipe # NIL THEN RETURN pipe.GetStatus(len) 
+			IF pipe # NIL THEN RETURN pipe.GetStatus(len)
 			ELSE RETURN Usbdi.Error
 			END;
 		END GetPipeStatus;
-		
-		
+
+
 		PROCEDURE GetRecentStatus*(): Usbdi.Status;
 		BEGIN
 			RETURN recentStatus;
 		END GetRecentStatus;
-		
-		
+
+
 		(**
 		 * Is called by handleHidEvent when mouse device is found
 		 *)
@@ -743,38 +743,38 @@ TYPE
 		PROCEDURE HandleTouchscreenDriver;
 		VAR
 			mm : 			Inputs.AbsMouseMsg;
-			x,y: LONGINT; 
+			x,y: LONGINT;
 			displayWidth, displayHeight: LONGINT;
 		BEGIN
-			getDisplayDimensions(displayWidth, displayHeight); 
+			getDisplayDimensions(displayWidth, displayHeight);
 			x := (touchscreenState.x.usageValue-touchscreenState.minX) * displayWidth DIV (touchscreenState.maxX-touchscreenState.minX +1);
 			y := (touchscreenState.y.usageValue-touchscreenState.minY) * displayHeight DIV  (touchscreenState.maxY -touchscreenState.minY + 1);
-			
+
 			(*
 			TRACE(touchscreenState.inRange.usageValue);
-			IF touchscreenState.confidence # NIL THEN 
+			IF touchscreenState.confidence # NIL THEN
 				TRACE(touchscreenState.confidence.usageValue);
 			END;
 			*)
-			
-			IF (touchscreenState.tipSwitch.usageValue#0) THEN 
+
+			IF (touchscreenState.tipSwitch.usageValue#0) THEN
 				IF (touchConfidenceDelay#0) & ~touchscreenState.prevTip THEN
 					touchscreenState.tipTime := Kernel.GetTicks();
 					touchscreenState.prevTip := TRUE
 				ELSIF (touchConfidenceDelay =0) OR (Kernel.GetTicks()-touchscreenState.tipTime > touchConfidenceDelay) THEN
-					mm.keys := mm.keys + {0}; 
+					mm.keys := mm.keys + {0};
 				END
 			ELSE
 				touchscreenState.prevTip := FALSE;
 			END;
-			
-			
+
+
 			mm.x := x; mm.y := y;
 
 			IF ~(0 IN mm.keys) THEN (* up event  *)
 				touchscreenState.prev := FALSE;
-				(* 
-					There are touchscreen devices that report a (0,0) coordinate with up-events. 
+				(*
+					There are touchscreen devices that report a (0,0) coordinate with up-events.
 					This does not work well together with an external mouse.
 					We keep the coordinate for the time being -- with the side effect that there may be a pointer-over status after a touchscreen click
 				*)
@@ -1222,13 +1222,13 @@ TYPE
 				touchscreenState.maxY := temp.logicalMaximum;
 				touchscreenState.tipSwitch := reportManager.GetUsage(0DH, 042H, mouseCollection,temp);
 				touchscreenState.inRange := reportManager.GetUsage(0DH, 032H, mouseCollection,temp);
-				touchscreenState.confidence := reportManager.GetUsage(0DH, 047H, mouseCollection, temp); 
+				touchscreenState.confidence := reportManager.GetUsage(0DH, 047H, mouseCollection, temp);
 				KernelLog.String("Touchscreen device registered with ");
-				KernelLog.String("minX = "); KernelLog.Int(touchscreenState.minX,1); 
-				KernelLog.String(", maxX = "); KernelLog.Int(touchscreenState.maxX,1); 
-				KernelLog.String(", minY = "); KernelLog.Int(touchscreenState.minY,1); 
-				KernelLog.String(", maxY = "); KernelLog.Int(touchscreenState.maxY,1); 
-				IF touchscreenState.confidence # NIL THEN KernelLog.String(", confidence"); END; 
+				KernelLog.String("minX = "); KernelLog.Int(touchscreenState.minX,1);
+				KernelLog.String(", maxX = "); KernelLog.Int(touchscreenState.maxX,1);
+				KernelLog.String(", minY = "); KernelLog.Int(touchscreenState.minY,1);
+				KernelLog.String(", maxY = "); KernelLog.Int(touchscreenState.maxY,1);
+				IF touchscreenState.confidence # NIL THEN KernelLog.String(", confidence"); END;
 				KernelLog.Ln;
 				RETURN TRUE;
 			ELSE
@@ -1570,7 +1570,7 @@ END Cleanup;
 PROCEDURE Install*;
 END Install;
 
-TYPE 
+TYPE
 	DimensionGetter= PROCEDURE {DELEGATE} (VAR w,h: LONGINT);
 VAR
 	getDisplayDimensions: DimensionGetter;
@@ -1585,7 +1585,7 @@ PROCEDURE InstallDisplayDimensions*(poller: DimensionGetter); (* for touchscreen
 BEGIN
 	IF poller # NIL THEN
 		getDisplayDimensions := poller;
-	ELSE 
+	ELSE
 		getDisplayDimensions := DefaultDisplayDimensions;
 	END;
 END InstallDisplayDimensions;
@@ -1599,7 +1599,7 @@ BEGIN
 	IF s[0] # 0X THEN
 		p := 0;  touchConfidenceDelay := Machine.StrToInt(p, s)
 	ELSE
-		touchConfidenceDelay := 0; 
+		touchConfidenceDelay := 0;
 	END;
 	Usbdi.drivers.Add(Probe, Name, Description, 10);
 END Setup;

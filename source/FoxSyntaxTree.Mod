@@ -55,11 +55,11 @@ CONST
 	ArrayIndex* = 0;
 	SetElement* = 1;
 	CaseGuard* = 2;
-	
+
 	(* reflection flags *)
 	FlagProcedureDelegate*=0;
 	FlagProcedureConstructor*=1;
-	
+
 	FlagParameterVar*=1;
 	FlagParameterConst*=2;
 
@@ -150,7 +150,7 @@ TYPE
 
 		PROCEDURE VisitProcedureType*(x: ProcedureType);
 		BEGIN HALT(100) (* abstract *) END VisitProcedureType;
-		
+
 		PROCEDURE VType*(x: Type);
 		BEGIN
 			WITH x: ProcedureType DO VisitProcedureType(x)
@@ -295,7 +295,7 @@ TYPE
 
 		PROCEDURE VExpression*(x: Expression);
 		BEGIN
-			WITH x: 
+			WITH x:
 			  ResultDesignator DO VisitResultDesignator(x)
 			| SelfDesignator DO VisitSelfDesignator(x)
 			| SupercallDesignator DO VisitSupercallDesignator(x)
@@ -333,13 +333,13 @@ TYPE
 			| Value DO VisitValue(x);
 			ELSE
 				VisitExpression(x)
-			END;		
+			END;
 		END VExpression;
 
 		(** symbols *)
 		PROCEDURE VisitSymbol*(x: Symbol);
 		BEGIN HALT(100) (* abstract *) END VisitSymbol;
-		
+
 		PROCEDURE VisitModule*(x: Module);
 		BEGIN HALT(100) (* abstract *) END VisitModule;
 
@@ -372,10 +372,10 @@ TYPE
 
 		PROCEDURE VisitImport*(x: Import);
 		BEGIN HALT(100) (* abstract *) END VisitImport;
-		
+
 		PROCEDURE VSymbol*(x: Symbol);
 		BEGIN
-			WITH 
+			WITH
 			  x: Module DO VisitModule(x)
 			| TypeDeclaration DO VisitTypeDeclaration(x)
 			| Constant DO VisitConstant(x)
@@ -387,11 +387,11 @@ TYPE
 			| Alias DO VisitAlias(x)
 			| Builtin DO VisitBuiltin(x)
 			| Import DO VisitImport(x)
-			ELSE 
+			ELSE
 				VisitSymbol(x)
 			END;
 		END VSymbol;
-	
+
 		(** statements *)
 		PROCEDURE VisitStatement*(x: Statement);
 		BEGIN HALT(100) (* abstract *) END VisitStatement;
@@ -443,10 +443,10 @@ TYPE
 
 		PROCEDURE VisitCode*(x: Code);
 		BEGIN HALT(100) (* abstract *) END VisitCode;
-		
+
 		PROCEDURE VStatement*(x: Statement);
 		BEGIN
-			WITH x: 
+			WITH x:
 			ProcedureCallStatement DO VisitProcedureCallStatement(x)
 			| Assignment DO VisitAssignment(x)
 			| CommunicationStatement DO VisitCommunicationStatement(x)
@@ -466,7 +466,7 @@ TYPE
 			ELSE VisitStatement(x)
 			END;
 		END VStatement;
-		
+
 	END Visitor;
 
 	ArrayAccessOperators* = RECORD
@@ -632,7 +632,7 @@ TYPE
 		PROCEDURE NeedsTrace*(): BOOLEAN;
 		BEGIN RETURN IsPointer ();
 		END NeedsTrace;
-				
+
 		PROCEDURE IsRecordType*(): BOOLEAN;
 		BEGIN
 			RETURN FALSE;
@@ -1019,12 +1019,12 @@ TYPE
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN (resolved # NIL) & (resolved.NeedsTrace());
 		END NeedsTrace;
-		
+
 		PROCEDURE IsRecordType*(): BOOLEAN;
 		BEGIN
 			RETURN (resolved # NIL) & (resolved.IsRecordType());
 		END IsRecordType;
-		
+
 
 	END QualifiedType;
 
@@ -1130,7 +1130,7 @@ TYPE
 		BEGIN
 			form := f;
 		END SetForm;
-		
+
 
 		PROCEDURE SetLength*(length: Expression);
 		BEGIN
@@ -1200,17 +1200,17 @@ TYPE
 		BEGIN
 			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; staticIncrementInBits := 0; SetForm(form); SELF.scope := scope; isUnsafe := FALSE; modifiers := NIL;
 		END InitMathArrayType;
-		
+
 		PROCEDURE SetModifiers*(m: Modifier);
 		BEGIN
 			modifiers := m;
 		END SetModifiers;
-		
+
 		PROCEDURE SetUnsafe*(unsafe: BOOLEAN);
 		BEGIN
 			isUnsafe := unsafe;
 		END SetUnsafe;
-		
+
 		PROCEDURE SetForm*(form: LONGINT);
 		BEGIN
 			SELF.form := form; IF form # Static THEN SetHasPointers(TRUE) END;
@@ -1325,7 +1325,7 @@ TYPE
 		PROCEDURE NeedsTrace*(): BOOLEAN;
 		BEGIN RETURN hasPointers OR (arrayBase # NIL) & (arrayBase.resolved.NeedsTrace());
 		END NeedsTrace;
-		
+
 		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsComposite;
@@ -1380,7 +1380,7 @@ TYPE
 		BEGIN
 			isUnsafe := unsafe;
 		END SetUnsafe;
-		
+
 		PROCEDURE SetUntraced*(untraced: BOOLEAN);
 		BEGIN
 			isUntraced := untraced;
@@ -1422,7 +1422,7 @@ TYPE
 		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN TRUE
 		END IsPointer;
-		
+
 		PROCEDURE NeedsTrace*(): BOOLEAN;
 		BEGIN RETURN  ~isUntraced;
 		END NeedsTrace;
@@ -1453,7 +1453,7 @@ TYPE
 		PROCEDURE SetSizeExpression*(sizeExpression: Expression);
 		BEGIN SELF.sizeExpression := sizeExpression
 		END SetSizeExpression;
-		
+
 		PROCEDURE SetCellsAreObjects*(b: BOOLEAN);
 		BEGIN
 			cellsAreObjects := b;
@@ -1467,7 +1467,7 @@ TYPE
 		PROCEDURE CompatibleTo*(to: Type): BOOLEAN;
 		BEGIN	RETURN SameType(to)
 		END CompatibleTo;
-		
+
 		PROCEDURE IsPointer*(): BOOLEAN;
 		BEGIN RETURN cellsAreObjects;
 		END IsPointer;
@@ -1501,7 +1501,7 @@ TYPE
 			modifiers := NIL;
 			isAbstract := FALSE;
 		END InitRecordType;
-		
+
 		PROCEDURE SetAbstract*(abstract: BOOLEAN);
 		BEGIN
 			isAbstract := abstract;
@@ -1510,7 +1510,7 @@ TYPE
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;
 		END SetModifiers;
-		
+
 		PROCEDURE SetBaseType*( type: Type );
 		BEGIN
 			baseType := type; IF (baseType # NIL) & (baseType.hasPointers) THEN hasPointers := TRUE END;
@@ -1604,7 +1604,7 @@ TYPE
 		PROCEDURE NeedsTrace*(): BOOLEAN;
 		BEGIN RETURN recordScope.NeedsTrace();
 		END NeedsTrace;
-		
+
 		PROCEDURE IsRecordType*(): BOOLEAN;
 		BEGIN
 			RETURN TRUE;
@@ -1636,18 +1636,18 @@ TYPE
 		BEGIN
 			baseType := base;
 		END SetBaseType;
-		
+
 		PROCEDURE GetBaseValueType*(): Type;
 		BEGIN
-			IF baseType = NIL THEN 
+			IF baseType = NIL THEN
 				RETURN NIL
 			ELSIF baseType.resolved IS PointerType THEN
 				RETURN baseType.resolved(PointerType).pointerBase.resolved
-			ELSE 
-				RETURN baseType.resolved; 
+			ELSE
+				RETURN baseType.resolved;
 			END;
 		END GetBaseValueType;
-		
+
 		PROCEDURE GetBaseRecord*():RecordType;
 		BEGIN
 			IF baseType = NIL THEN RETURN NIL; END;
@@ -1678,7 +1678,7 @@ TYPE
 			lastProperty := p;
 			INC(numberProperties);
 		END AddProperty;
-		
+
 		PROCEDURE FindParameter*(identifier: Identifier): Parameter;
 		VAR p: Parameter;
 		BEGIN
@@ -1686,7 +1686,7 @@ TYPE
 			IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
 				p := baseType.resolved(CellType).FindParameter(identifier);
 			END;
-			IF p = NIL THEN 
+			IF p = NIL THEN
 				p := firstParameter;
 				WHILE(p#NIL) & (p.name # identifier) DO p := p.nextParameter END;
 			END;
@@ -1698,7 +1698,7 @@ TYPE
 		BEGIN
 			p := firstProperty;
 			WHILE(p#NIL) & (p.name # identifier) DO p := p.nextProperty END;
-			IF p = NIL THEN 
+			IF p = NIL THEN
 				IF (baseType # NIL) & (baseType.resolved IS CellType) THEN
 					p := baseType.resolved(CellType).FindProperty(identifier);
 				END;
@@ -1792,7 +1792,7 @@ TYPE
 		PROCEDURE SetDelegate*(delegate: BOOLEAN);
 		BEGIN SELF.isDelegate := delegate; SELF.hasPointers := delegate;
 		END SetDelegate;
-		
+
 		PROCEDURE SetUntracedReturn*(untraced: BOOLEAN);
 		BEGIN
 			hasUntracedReturn := untraced;
@@ -1810,7 +1810,7 @@ TYPE
 		PROCEDURE SetReturnParameter*(parameter: Parameter);
 		BEGIN returnParameter := parameter
 		END SetReturnParameter;
-		
+
 		PROCEDURE SetSelfParameter*(parameter: Parameter);
 		BEGIN selfParameter := parameter
 		END SetSelfParameter;
@@ -1851,7 +1851,7 @@ TYPE
 		BEGIN
 			returnType := type;
 		END SetReturnType;
-		
+
 		PROCEDURE SameSignature*(this: Type): BOOLEAN;
 		VAR result: BOOLEAN; p1,p2: Parameter;
 		BEGIN
@@ -1868,12 +1868,12 @@ TYPE
 					result := result & (noReturn = this.noReturn);
 					result :=  result & (isInterrupt = this.isInterrupt);
 					IF result THEN
-						
+
 						p1 := selfParameter; p2 := this.selfParameter;
 						IF (p1 = NIL) # (p2=NIL) OR (p1 # NIL) & ((p1.kind # p2.kind)) THEN
 							RETURN FALSE
 						END;
-						
+
 						p1 := firstParameter; p2 := this.firstParameter;
 						WHILE (p1 # NIL) & (p2 # NIL) & (p1.access # Hidden) & (p2.access # Hidden) & (p1.kind = p2.kind) & (p1.type.SameType(p2.type) OR (p2.type.resolved # NIL) & p1.type.SameType(p2.type.resolved) OR (p1.type.resolved IS AddressType) & (p2.type.resolved IS PointerType) & p2.type.resolved(PointerType).isUnsafe) DO
 							p1 := p1.nextParameter; p2 := p2.nextParameter
@@ -1886,11 +1886,11 @@ TYPE
 			RETURN result
 
 		END SameSignature;
-		
+
 
 		PROCEDURE SameType*(this: Type): BOOLEAN;
 		BEGIN
-			RETURN SameSignature(this) 
+			RETURN SameSignature(this)
 				& (this(ProcedureType).isDelegate = isDelegate)
 				& (this(ProcedureType).isRealtime = isRealtime);
 		END SameType;
@@ -1904,7 +1904,7 @@ TYPE
 		PROCEDURE IsComposite*(): BOOLEAN;
 		BEGIN RETURN isDelegate
 		END IsComposite;
-		
+
 		(** Returns if the type needs to be traced for garbage collection *)
 		PROCEDURE NeedsTrace*(): BOOLEAN;
 		BEGIN RETURN isDelegate;
@@ -1939,7 +1939,7 @@ TYPE
 		PROCEDURE SetHidden*(hidden: BOOLEAN);
 		BEGIN isHidden := hidden
 		END SetHidden;
-		
+
 
 		PROCEDURE SetType*(type: Type);
 		BEGIN
@@ -2216,12 +2216,12 @@ TYPE
 		PROCEDURE SetModifiers*(flags: Modifier);
 		BEGIN modifiers := flags
 		END SetModifiers;
-		
+
 		PROCEDURE SetRelatedRhs*(expression: Expression);
 		BEGIN
 			relatedRhs := expression;
 		END SetRelatedRhs;
-		
+
 
 		PROCEDURE Clone(): Expression;
 		VAR clone: Designator;
@@ -2353,7 +2353,7 @@ TYPE
 		END SetSymbol;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
-		BEGIN 
+		BEGIN
 			RETURN symbol.NeedsTrace() & ((left = NIL) OR (left.NeedsTrace()));
 		END NeedsTrace;
 
@@ -2392,7 +2392,7 @@ TYPE
 			parameters.Clone(copy.parameters);
 			copy.hasRange := hasRange; copy.hasTensorRange := hasTensorRange ; RETURN copy
 		END Clone;
-		
+
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN type.NeedsTrace() & left.NeedsTrace(); (* for x[y]: if x is untraced, then also x[y] should be treated untraced *)
 		END NeedsTrace;
@@ -2441,20 +2441,20 @@ TYPE
 		END Clone;
 
 	END ProcedureCallDesignator;
-	
+
 	InlineCallDesignator*= OBJECT(Designator)
 	VAR
 		procedureCall-: ProcedureCallDesignator;
 		block-: StatementBlock; (* contains scope *)
 		result-: Expression;
-		
+
 		PROCEDURE & InitInlineCall*(position: Position; o: ProcedureCallDesignator; b: StatementBlock);
 		BEGIN
-			InitDesignator(position); 
+			InitDesignator(position);
 			procedureCall := o;
 			block := b;
 		END InitInlineCall;
-		
+
 		PROCEDURE SetResult*(e: Expression);
 		BEGIN
 			result := e;
@@ -2475,12 +2475,12 @@ TYPE
 		BEGIN
 			InitDesignator(position); SELF.parameters := parameters; SELF.id := id; SELF.left := left; returnType := NIL;
 		END InitBuiltinCallDesignator;
-		
+
 		PROCEDURE SetReturnType*(type: Type);
 		BEGIN
 			returnType := type (* used for NEW Type() expression *)
 		END SetReturnType;
-		
+
 		PROCEDURE Clone(): Expression;
 		VAR copy: BuiltinCallDesignator;
 		BEGIN
@@ -2509,7 +2509,7 @@ TYPE
 		BEGIN
 			NEW(copy, position, CloneDesignator(left), type); RETURN copy
 		END Clone;
-		
+
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x(Y): if x is untraced, then x as Y should also be treated untraced  *)
 		END NeedsTrace;
@@ -2530,8 +2530,8 @@ TYPE
 		END Clone;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
-		BEGIN 
-			(*! semantic of x.y.z := new : if x is untraced then the effect of y.z := new remains untraced! 
+		BEGIN
+			(*! semantic of x.y.z := new : if x is untraced then the effect of y.z := new remains untraced!
 				In other words: difference between y := x.y; y.z := new and x.y.z := new.
 			*)
 			RETURN left.NeedsTrace() & type.NeedsTrace(); (* for x^: if x is an untraced pointer, the content of x^ is also treated untraced *)
@@ -2979,7 +2979,7 @@ TYPE
 		PROCEDURE SetComment*(comment: Comment);
 		BEGIN SELF.comment := comment
 		END SetComment;
-		
+
 		PROCEDURE SetExternalName*(name: Scanner.StringType);
 		BEGIN externalName := name;
 		END SetExternalName;
@@ -2987,7 +2987,7 @@ TYPE
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN FALSE;
 		END NeedsTrace;
-		
+
 		(* If a symbol needs to be vieible in the object file
 			A symbol needs to be visible in an object file when it is require during linking
 			This is the case for exported symbols but also for methods in a method table, for instance.
@@ -3031,7 +3031,7 @@ TYPE
 		BEGIN
 			ASSERT(type = typeDeclarationType);
 		END SetType;
-		
+
 		(* type declarations should be generally included in object files *)
 		PROCEDURE NeedsSection*(): BOOLEAN;
 		BEGIN
@@ -3112,13 +3112,13 @@ TYPE
 		BEGIN
 			registerNumber := reg
 		END SetRegisterNumber;
-		
+
 		PROCEDURE SetFictive*(offset: LONGINT);
 		BEGIN
 			fictive := TRUE;
 			fictiveOffset := offset;
 		END SetFictive;
-		
+
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;
 		END SetModifiers;
@@ -3174,7 +3174,7 @@ TYPE
 		PROCEDURE SetMoveable*(movable: BOOLEAN);
 		BEGIN SELF.movable := movable
 		END SetMoveable;
-		
+
 		PROCEDURE SetSelfParameter*(b: BOOLEAN);
 		BEGIN
 			selfParameter := b;
@@ -3192,7 +3192,7 @@ TYPE
 		END NeedsTrace;
 
 	END Parameter;
-	
+
 	Property* = OBJECT (Variable)
 	VAR
 		nextProperty-, prevProperty-: Property;
@@ -3209,22 +3209,22 @@ TYPE
 		END SetValue;
 
 	END Property;
-	
+
 	Alias* = OBJECT (Symbol)
 	VAR
 		expression-: Expression;
-		
+
 		PROCEDURE & InitAlias*(position: Position; name: Identifier; e: Expression);
 		BEGIN
-			InitSymbol(position, name); 
+			InitSymbol(position, name);
 			expression := e;
 		END InitAlias;
-		
+
 		PROCEDURE SetExpression*(e: Expression);
 		BEGIN
 			expression := e;
 		END SetExpression;
-		
+
 	END Alias;
 
 
@@ -3510,7 +3510,7 @@ TYPE
 		BEGIN
 			end := pos;
 		END End;
-		
+
 
 	END Statement;
 
@@ -3568,7 +3568,7 @@ TYPE
 
 	(** << left ('!' | '?' | '<<' | '>>') right >> **)
 	CommunicationStatement* = OBJECT (Statement)
-	VAR 
+	VAR
 		left-: Designator; right-: Expression; op-: LONGINT;
 
 		PROCEDURE & InitAssignment*( position: Position; op: LONGINT; left: Designator;  right: Expression; outer: Statement );
@@ -3594,7 +3594,7 @@ TYPE
 		BEGIN
 			position := invalidPosition; end := invalidPosition;
 		END InitPart;
-		
+
 		PROCEDURE SetPosition*(pos: Position);
 		BEGIN
 			position := pos;
@@ -3604,9 +3604,9 @@ TYPE
 		BEGIN
 			end := pos;
 		END SetEnd;
-		
+
 	END Part;
-	
+
 
 	(** << ... condition THEN statements ... >> **)
 	IfPart*= OBJECT (Part)
@@ -3653,7 +3653,7 @@ TYPE
 
 		PROCEDURE & InitIfStatement( position: Position ; outer: Statement);
 		BEGIN
-			InitStatement( position,outer ); ifPart := NewIfPart(); 
+			InitStatement( position,outer ); ifPart := NewIfPart();
 			ifPart.SetPosition(position);
 			elsePart := NIL;  elsifParts := NIL;
 		END InitIfStatement;
@@ -4152,7 +4152,7 @@ TYPE
 			isRealtime := FALSE;
 			isUnchecked := FALSE;
 			isUncooperative := FALSE;
-			scope := s; 
+			scope := s;
 		END InitStatementBlock;
 
 		PROCEDURE SetRealtime*(b: BOOLEAN);
@@ -4260,7 +4260,7 @@ TYPE
 		END SetCode;
 
 	END Body;
-		
+
 	(** (* comment *)  *)
 	Comment*=OBJECT
 	VAR position-: Position;
@@ -4303,7 +4303,7 @@ TYPE
 		firstProcedure-,lastProcedure-: Procedure; numberProcedures-: LONGINT;  (* procedures *)
 
 		procedures-: ProcedureList;
-		
+
 		outerScope-: Scope; nextScope-: Scope;
 
 		ownerModule-: Module;
@@ -4325,7 +4325,7 @@ TYPE
 			nextScope := NIL;
 			NEW(symbolTable,11);
 		END InitScope;
-		
+
 		PROCEDURE Clear*;
 		BEGIN
 			firstConstant := NIL; lastConstant := NIL; numberConstants := 0;
@@ -4421,7 +4421,7 @@ TYPE
 			INC(numberVariables);
 			firstVariable := v;
 		END PushVariable;
-		
+
 		(* insert variable after variable in list -- can be important to keep variable offsets in order *)
 		(* pre: v # NIL, after # NIL *)
 		PROCEDURE InsertVariable*(v: Variable; after: Variable);
@@ -4430,7 +4430,7 @@ TYPE
 			ASSERT(after # NIL);
 			v.nextVariable := after.nextVariable;
 			after.nextVariable := v;
-			IF after = lastVariable THEN lastVariable := v END; 
+			IF after = lastVariable THEN lastVariable := v END;
 		END InsertVariable;
 
 		PROCEDURE FindVariable*(identifier: Identifier): Variable;
@@ -4448,13 +4448,13 @@ TYPE
 			INC(numberProcedures);
 			lastProcedure := p;
 		END AddProcedure;
-		
+
 		PROCEDURE AddProcedureDeclaration*(p: Procedure);
 		BEGIN
 			IF procedures = NIL THEN NEW(procedures) END;
 			procedures.AddProcedure(p);
 		END AddProcedureDeclaration;
-		
+
 		PROCEDURE FindProcedure*(identifier: Identifier): Procedure;
 		VAR p: Procedure;
 		BEGIN
@@ -4462,7 +4462,7 @@ TYPE
 			WHILE (p#NIL) & ((p.name # identifier) OR (p IS Operator)) DO p := p.nextProcedure END;
 			RETURN p;
 		END FindProcedure;
-		
+
 		PROCEDURE FindMethod*(number: LONGINT): Procedure;
 		VAR p: Procedure;
 		BEGIN
@@ -4527,9 +4527,9 @@ TYPE
 		END NeedsTrace;
 
 	END ProcedureScope;
-		
+
 	BlockScope* = OBJECT(Scope)
-	END BlockScope; 
+	END BlockScope;
 
 	EnumerationScope*= OBJECT(Scope)
 	VAR
@@ -4566,7 +4566,7 @@ TYPE
 			numberMethods-: LONGINT;
 			firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters for Active Cells programming*)
 			firstOperator-, lastOperator-: Operator; numberOperators: LONGINT; (* defined operators *)
-			
+
 		PROCEDURE & InitRecordScope(outer: Scope);
 		BEGIN
 			InitScope(outer);
@@ -4616,7 +4616,7 @@ TYPE
 			RETURN p;
 		END FindSymbol;
 
-		(* if there is an abstract procedure in the scope, return it. Otherwise return nil *)		
+		(* if there is an abstract procedure in the scope, return it. Otherwise return nil *)
 		PROCEDURE AbstractProcedure*(inScope: Scope): Procedure;
 		VAR p: Procedure; s: Symbol; base: RecordType;
 		BEGIN
@@ -4624,12 +4624,12 @@ TYPE
 			WHILE p # NIL DO
 				IF p.isAbstract THEN
 					IF inScope # SELF THEN  (* elevate to mother scope, if necesary *)
-						s := inScope.FindSymbol(p.name); 
+						s := inScope.FindSymbol(p.name);
 						IF s = p THEN (* procedure is not overwritten *)
 							RETURN p
 						ELSE
 							ASSERT(s # NIL);
-							ASSERT(s IS Procedure);							
+							ASSERT(s IS Procedure);
 						END;
 					ELSE
 						RETURN p
@@ -4732,17 +4732,17 @@ TYPE
 			ownerCell := NIL;
 			bodyProcedure := NIL;
 			constructor := NIL;
-			firstImport := NIL; lastImport := NIL; numberImports := 0; 
+			firstImport := NIL; lastImport := NIL; numberImports := 0;
 		END InitCellScope;
-		
+
 		PROCEDURE Clear*;
 		BEGIN
 			Clear^;
-			firstImport := NIL; lastImport := NIL; numberImports := 0; 
+			firstImport := NIL; lastImport := NIL; numberImports := 0;
 			constructor := NIL;
 			bodyProcedure := NIL;
 		END Clear;
-		
+
 
 		PROCEDURE SetOwnerCell*(owner: CellType);
 		BEGIN
@@ -4785,7 +4785,7 @@ TYPE
 			END;
 			RETURN import;
 		END GetImport;
-				
+
 		PROCEDURE FindSymbol*(identifier: Identifier): Symbol;
 		VAR p: Symbol; base: Type;
 		BEGIN
@@ -4799,15 +4799,15 @@ TYPE
 				base := ownerCell.baseType;
 				IF (base # NIL) THEN
 					base := base.resolved;
-					IF base IS PointerType THEN 
+					IF base IS PointerType THEN
 						base := base(PointerType).pointerBase.resolved;
 					END;
-					WITH base: 
+					WITH base:
 					CellType DO
 						p := base.cellScope.FindSymbol(identifier)
 					|RecordType DO
 						p := base.recordScope.FindSymbol(identifier)
-						
+
 					END;
 				END;
 			END;
@@ -5085,10 +5085,10 @@ TYPE
 		VAR p: ANY;
 		BEGIN
 			IF index >= list.Length() THEN RETURN NIL END;
-			p := list.Get(index); 
-			IF p = NIL THEN 
-				RETURN NIL 
-			ELSE 
+			p := list.Get(index);
+			IF p = NIL THEN
+				RETURN NIL
+			ELSE
 				RETURN p(Procedure);
 			END;
 		END GetProcedure;
@@ -5440,7 +5440,7 @@ VAR
 	BEGIN
 		NEW(procedureCallDesignator, position, left, parameters); RETURN procedureCallDesignator
 	END NewProcedureCallDesignator;
-	
+
 	PROCEDURE NewInlineCallDesignator*(position: Position; o: ProcedureCallDesignator; block: StatementBlock): InlineCallDesignator;
 	VAR inlineCall: InlineCallDesignator;
 	BEGIN

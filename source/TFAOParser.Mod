@@ -936,7 +936,7 @@ TYPE
 				IF (s.sym = S.const) OR (s.sym = S.var) OR (s.sym = S.type) OR (s.sym = S.procedure) THEN
 					DeclSeq(pd.scope)
 				END;
-				
+
 				pd.scope.ownerBody := Body();
 				Eat(S.end);
 				StorePos(pd.altPos);
@@ -983,9 +983,9 @@ TYPE
 					NEW(m);
 					(* attach pre-comments *)
 					IF comments # NIL THEN
-						m.preComment := comments; comments := NIL 
+						m.preComment := comments; comments := NIL
 					END;
-					
+
 					NEW(m.scope);
 					m.scope.parent := Universe;
 					m.scope.owner := m;
@@ -1007,13 +1007,13 @@ TYPE
 					END;
 					Eat(S.semicolon);
 
-					IF s.sym = S.import THEN 
+					IF s.sym = S.import THEN
 						(* attach pre-comments *)
-						IF comments # NIL THEN 
-							m.postComment := comments; comments := NIL 
+						IF comments # NIL THEN
+							m.postComment := comments; comments := NIL
 						END;
 
-						ImportList 
+						ImportList
 					END;
 
 					WHILE s.sym = S.definition DO Definition END;

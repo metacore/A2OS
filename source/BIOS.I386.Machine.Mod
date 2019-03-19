@@ -592,9 +592,9 @@ CONST
 	SSE2Flag = 26;
 	SSE3Flag = 0; (*IN features2 from ECX*) (*PH 04/11*)
 	SSSE3Flag =9;
-	SSE41Flag =19; 
+	SSE41Flag =19;
 	SSE42Flag =20;
-	SSE5Flag = 11; 
+	SSE5Flag = 11;
 	AVXFlag = 28;
 BEGIN
 	SSE2Support := FALSE;
@@ -2085,7 +2085,7 @@ END InModuleHeap;
 (* returns if an address is a currently allocated heap address *)
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 BEGIN
-	RETURN 
+	RETURN
 		(p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
 		OR InModuleHeap(p);
 END ValidHeapAddress;
@@ -3480,8 +3480,8 @@ VAR status: SHORTINT;
 	PROCEDURE Scroll;
 	VAR adr: ADDRESS; off: SIZE; i,j: LONGINT;
 	BEGIN
-		IF (traceDelay > 0) & (scrollLines MOD TraceHeight = 0) THEN 
-			FOR i := 0 TO traceDelay-1 DO 
+		IF (traceDelay > 0) & (scrollLines MOD TraceHeight = 0) THEN
+			FOR i := 0 TO traceDelay-1 DO
 				FOR j := 0 TO 1000000 DO END;
 			END;
 		END;
@@ -3525,7 +3525,7 @@ PROCEDURE TraceColor (c: SHORTINT);
 BEGIN traceColor := c;
 END TraceColor;
 
-VAR traceDelay: LONGINT; 
+VAR traceDelay: LONGINT;
 (* Initialise tracing. *)
 PROCEDURE InitTrace;
 CONST MaxPorts = 8;
@@ -3544,8 +3544,8 @@ BEGIN
 		Portout8(3D5H, CHR((TraceWidth*TraceHeight) DIV 100H));
 		Portout8(3D4H, 0FX);
 		Portout8(3D5H, CHR((TraceWidth*TraceHeight) MOD 100H));
-		GetConfig("TraceDelay", s); 
-		p := 0; traceDelay := StrToInt(p, s); 
+		GetConfig("TraceDelay", s);
+		p := 0; traceDelay := StrToInt(p, s);
 
 	END;
 	IF TraceV24 IN traceMode THEN
@@ -3594,7 +3594,7 @@ BEGIN (* no PAF --> no variables !! *)
 		MOV bootFlag, EAX
 		MOV initRegs0,ESI
 		MOV initRegs1, EDI
-	END; 
+	END;
 	Init; (* call initializer as first action of the kernel *)
 END FirstAddress;
 

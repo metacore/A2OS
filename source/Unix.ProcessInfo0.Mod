@@ -23,7 +23,7 @@ BEGIN
 END GetProcesses;
 
 PROCEDURE GetProcess*(id : LONGINT) : Objects.Process;
-VAR process, thread : Objects.Process; 
+VAR process, thread : Objects.Process;
 BEGIN
 	process := NIL;
 	thread := Objects.root;

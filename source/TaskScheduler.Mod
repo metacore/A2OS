@@ -172,15 +172,15 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			RETURN info.trigger;
 		END GetTrigger;
-		
+
 		PROCEDURE TriggerNow*;
 		VAR msg: ARRAY 256 OF CHAR; res:WORD;
 		BEGIN
-			IF Strings.Length(info.command)>0 THEN	
+			IF Strings.Length(info.command)>0 THEN
 				Commands.Call(info.command, {}, res, msg);
 			END;
 		END TriggerNow;
-		
+
 
 		PROCEDURE Check(time : Dates.DateTime; VAR left : LONGINT);
 		BEGIN

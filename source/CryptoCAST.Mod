@@ -196,7 +196,7 @@ TYPE
 		b := T1[t MOD 256];  t := t DIV 256;
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
-		c := T2[t MOD 256];  
+		c := T2[t MOD 256];
 		L := L / (S.VAL( SET32, a - b + c ) / S.VAL( SET32, d ) );
 	END CAST2;
 
@@ -207,7 +207,7 @@ TYPE
 		b := T1[t MOD 256];  t := t DIV 256;
 		a := T0[t MOD 256];  t := t DIV 256;
 		d := T3[t MOD 256];  t := t DIV 256;
-		c := T2[t MOD 256];  
+		c := T2[t MOD 256];
 		L := L / S.VAL( SET32, S.VAL( LI, S.VAL( SET32, a + b ) / S.VAL( SET32, c ) ) - d );
 	END CAST3;
 
@@ -244,7 +244,7 @@ TYPE
 	END decrypt;
 
 
-	
+
 	PROCEDURE Init;
 	VAR  buf: U.InitBuffer;  i: LONGINT;
 	BEGIN
@@ -282,7 +282,7 @@ TYPE
 		buf.Add( "BD91E046  9A56456E  DC39200C  20C8C571  962BDA1C  E1E696FF  B141AB08  7CCA89B9" );
 		buf.Add( "1A69E783  02CC4843  A2F7C579  429EF47D  427B169C  5AC9F049  DD8F0F00  5C8165BF" );
 		FOR i := 0 TO 255 DO  T0[i] := buf.GetInt()  END;
-		
+
 		buf.Init( 4096 );
 		buf.Add( "1F201094  EF0BA75B  69E3CF7E  393F4380  FE61CF7A  EEC5207A  55889C94  72FC0651" );
 		buf.Add( "ADA7EF79  4E1D7235  D55A63CE  DE0436BA  99C430EF  5F0C0794  18DCDB7D  A1D6EFF3" );
@@ -528,7 +528,7 @@ TYPE
 		buf.Add( "04F19130  BA6E4EC0  99265164  1EE7230D  50B2AD80  EAEE6801  8DB2A283  EA8BF59E" );
 		FOR i := 0 TO 255 DO  T7[i] := buf.GetSet()  END;
 	END Init;
-	
+
 
 
 BEGIN

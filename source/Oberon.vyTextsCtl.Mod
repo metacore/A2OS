@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 
@@ -34,22 +34,22 @@ CONST idversion* = "vyTextsCtl v0.0a2";
 PROCEDURE GetTextFrame(t: Objects.Object): Display.Frame;
 BEGIN
 	WHILE (t#NIL) DO
-		IF (t IS TextGadgets.Frame) OR  (t IS TextFrames.Frame) THEN RETURN t(Display.Frame) END; 
+		IF (t IS TextGadgets.Frame) OR  (t IS TextFrames.Frame) THEN RETURN t(Display.Frame) END;
 		Links.GetLink(t,"Model",t);
-	END; 
-	RETURN NIL; 
+	END;
+	RETURN NIL;
 END GetTextFrame;
 
 
 PROCEDURE NewOutput* ; 	(** vs 0.01d fof*)
 	VAR	S: Texts.Scanner;
-	v: Display.Frame;  F: Display.Frame;  i, j: INTEGER;  
+	v: Display.Frame;  F: Display.Frame;  i, j: INTEGER;
 BEGIN
 	v := Oberon.MarkedViewer(); F := GetTextFrame(v);
-		IF F#NIL THEN 
+		IF F#NIL THEN
 			vyHostTexts.SetStdOutput(F) ;
 			vyHostTexts.Msg("New TextFrame choosen");
-			RETURN; 
+			RETURN;
 		ELSE
 			Gadgets.ThisFrame(Oberon.Pointer.X, Oberon.Pointer.Y, F, i, j);
 			IF (F#NIL) & (F IS TextGadgets.Frame) OR (F IS TextFrames.Frame) THEN

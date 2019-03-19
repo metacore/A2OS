@@ -34,8 +34,8 @@ TYPE
 			SetTitle(Strings.NewString("Turing"));
 			SetIcon(WMGraphics.LoadImage("WMIcons.tar://TuringCoatWnd.png", TRUE));
 
-			NEW(random);  
-			
+			NEW(random);
+
 			NEW( timer );  t0 := Kernel.GetTicks( );
 
 			FOR i := 0 TO m - 1 DO
@@ -73,13 +73,13 @@ TYPE
 			Close^;
 			DecCount;
 		END Close;
-		
+
 		PROCEDURE Delay;
 		VAR t: LONGINT;
 		BEGIN
 			t := Kernel.GetTicks( ) - t0;
 			IF t < 8 THEN
-				IF t >= 0 THEN  timer.Sleep( 8 - t )  END;  
+				IF t >= 0 THEN  timer.Sleep( 8 - t )  END;
 			END;
 			t0 := Kernel.GetTicks( )
 		END Delay;
@@ -142,10 +142,10 @@ TYPE
 		END DrawIt;
 
 	BEGIN {ACTIVE}
-		alive := TRUE; 
+		alive := TRUE;
 		Objects.SetPriority(Objects.Low);
 		WHILE alive DO
-			Generation;	
+			Generation;
 			Delay;	(* GF, make animation speed independent of CPU speed *)
 			DrawIt;
 		END;

@@ -22,12 +22,12 @@ CONST
 
 	PROCEDURE Dec*( VAR a: Integer );
 	BEGIN
-		DEC(a); 
+		DEC(a);
 	END Dec;
 
 	PROCEDURE Inc*( VAR a: Integer );
 	BEGIN
-		INC(a); 
+		INC(a);
 	END Inc;
 
 	PROCEDURE Odd*( a: Integer ): BOOLEAN;
@@ -47,7 +47,7 @@ CONST
 
 	PROCEDURE Short*( h: Integer ): NbrInt32.Integer;
 	BEGIN
-		RETURN SHORT(h); 
+		RETURN SHORT(h);
 	END Short;
 
 	PROCEDURE Max*( x1, x2: Integer ): Integer;
@@ -134,14 +134,14 @@ CONST
 	PROCEDURE Store*( W: Streams.Writer;  x: Integer );
 	VAR low, hi: NbrInt32.Integer;
 	BEGIN
-		low := SHORT(x); 
-		hi := SHORT(x DIV 100000000H); 
+		low := SHORT(x);
+		hi := SHORT(x DIV 100000000H);
 		NbrInt32.Store( W, low );  NbrInt32.Store( W, hi )
 	END Store;
 
 BEGIN
-	MinNbr := MIN(Integer); 
-	MaxNbr := MAX(Integer); 
-	One := 1; 
-	Two := 2; 
+	MinNbr := MIN(Integer);
+	MaxNbr := MAX(Integer);
+	One := 1;
+	Two := 2;
 END NbrInt64.

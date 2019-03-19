@@ -8,10 +8,10 @@
 MODULE Clock;
 
 TYPE
-	
+
 	(*
 		Function for getting time from an RTC device
-		
+
 		second: seconds \in [0,59]
 		minute: minutes \in [0,59]
 		hour: hours \in [0,23]
@@ -20,10 +20,10 @@ TYPE
 		year: the actual year minus 1900
 	*)
 	GetRtcTimeFunc = PROCEDURE{DELEGATE}(VAR second, minute, hour, day, month: SHORTINT; VAR year: INTEGER): BOOLEAN;
-	
+
 	(*
 		Function for setting up time on an RTC device
-		
+
 		second: seconds \in [0,59]
 		minute: minutes \in [0,59]
 		hour: hours \in [0,23]

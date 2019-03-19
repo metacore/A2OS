@@ -12,12 +12,12 @@ TYPE
 		VAR
 			sponge: Sponge.Instance;
 			capacity: LONGINT;
-			
+
 		PROCEDURE &Init*;	(* sha3-256 (default) *)
 		BEGIN
 			NEW( sponge );
-			capacity := 2*256;   
-			Initialize	
+			capacity := 2*256;
+			Initialize
 		END Init;
 
 		PROCEDURE Initialize*;
@@ -36,22 +36,22 @@ TYPE
 			sponge.Initialize( Sponge.Width - capacity, capacity );
 			initialized := TRUE
 		END Initialize;
-		
+
 		PROCEDURE SetNameAndSize*( CONST name: ARRAY OF CHAR; bytesize: LONGINT );
 		(* valid bytesize values: 28, 32(default), 48, 64 *)
 		BEGIN
 			capacity := 2*8*bytesize;  Initialize;
 			IF name # "" THEN  SetNameAndSize^( name, bytesize )  END
 		END SetNameAndSize;
-		
+
 
 		(** data: value to be hashed *)
 		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: LONGINT );
 		BEGIN
-			ASSERT( initialized );	
+			ASSERT( initialized );
 			sponge.Absorb( data, pos, len )
 		END Update;
-		
+
 
 		(** get the hashvalue of length SELF.size *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
@@ -64,7 +64,7 @@ TYPE
 
 
 
-	
+
 	(** get an instance of SHA-3 *)
 	PROCEDURE NewHash*( ) : Hashes.Hash;
 		VAR h: Hash;

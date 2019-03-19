@@ -1,16 +1,16 @@
 MODULE OberonFonts; (** AUTHOR "GF"; PURPOSE "Create Oberon fonts out of TrueType fonts" *)
 
-IMPORT Strings, Files, S := SYSTEM, Log := KernelLog, Modules, TextUtilities, 
+IMPORT Strings, Files, S := SYSTEM, Log := KernelLog, Modules, TextUtilities,
 		OTInt := OpenTypeInt, OType := OpenType, OpenTypeScan;
 
 CONST
 	ScreenDPI = 71;
 	FontId = 0DBX;
 	FontFont = 0X;
-	
-TYPE 
+
+TYPE
 	Name = ARRAY 32 OF CHAR;
-	
+
 	RasterData* = RECORD (OType.RasterData)
 		adr*: ADDRESS;							(* base address of pattern *)
 		bpr*: LONGINT;							(* number of bytes per row *)
@@ -69,7 +69,7 @@ TYPE
 		VAR
 			file: Files.File;  font: OType.Font;  i, chars, ranges, xmin, ymin, xmax, ymax, j: INTEGER;
 			beg, end: ARRAY 64 OF INTEGER;  data: RasterData;  no, bytes, k: LONGINT;
- 			ras: OpenTypeScan.Rasterizer; 
+ 			ras: OpenTypeScan.Rasterizer;
  			w: Files.Writer;  ipos, apos: LONGINT;
  			pattern: ARRAY 360*360 DIV 8 OF CHAR;				(* enough for 36 point at 720 dpi *)
 	BEGIN
@@ -82,7 +82,7 @@ TYPE
 		w.Char( 0X );																		(* variant *)
 		i := inst.font.hhea.ascender + inst.font.hhea.descender + inst.font.hhea.lineGap;
 		w.RawInt( SHORT(OTInt.MulDiv( i, inst.yppm, 40H*LONG(inst.font.head.unitsPerEm) )) );	(* height *)
-		
+
 		w.RawInt( 0 ); w.RawInt( 0 ); w.RawInt( 0 ); w.RawInt( 0 );	(* fix later *) (* min/max X/Y *)
 
 		font := inst.font;
@@ -103,7 +103,7 @@ TYPE
 			w.RawInt( beg[i] ); w.RawInt( end[i] );										(* start/end of run *)
 			INC( i )
 		END;
-		
+
 		ipos := w.Pos( );										(* open rider for later writing metrics *)
 		i := 0;  WHILE i < chars DO
 			w.RawInt( 0 ); w.RawInt( 0 ); w.RawInt( 0 ); w.RawInt( 0 ); w.RawInt( 0 );
@@ -136,7 +136,7 @@ TYPE
 					IF glyph.hby < ymin THEN  ymin := glyph.hby  END;
 					IF glyph.hbx + glyph.rw > xmax THEN  xmax := glyph.hbx + glyph.rw  END;
 					IF glyph.hby + glyph.rh > ymax THEN  ymax := glyph.hby + glyph.rh  END;
-					data.rect := FillRect;  data.adr := ADDRESSOF(pattern); 
+					data.rect := FillRect;  data.adr := ADDRESSOF(pattern);
 					data.bpr := (glyph.rw+7) DIV 8;  data.len := LEN(pattern);
 					bytes := glyph.rh * data.bpr;
 					ASSERT( bytes < LEN(pattern) );
@@ -157,14 +157,14 @@ TYPE
 	END MakeFont;
 
 
-	
+
 	PROCEDURE IsDigit( c: CHAR ): BOOLEAN;
 	BEGIN
 		RETURN (c >= '0') & (c <= '9')
 	END IsDigit;
-	
+
 	PROCEDURE MakeTtfName( CONST oname: ARRAY OF CHAR; VAR ttfname: Name; VAR size, res: INTEGER );
-	VAR i: LONGINT; c: CHAR; 
+	VAR i: LONGINT; c: CHAR;
 	BEGIN
 		IF Strings.EndsWith( ".Scn.Fnt", oname ) THEN  res := ScreenDPI
 		ELSIF Strings.EndsWith( ".Pr6.Fnt", oname ) THEN  res := 600
@@ -172,13 +172,13 @@ TYPE
 		ELSIF Strings.EndsWith( ".Pr2.Fnt", oname ) THEN  res := 200
 		ELSE  size := 0;  res := 0;  ttfname := "";  RETURN
 		END;
-		i := 0; 
+		i := 0;
 		REPEAT
 			c := oname[i];  ttfname[i] := c;  INC( i )
 		UNTIL IsDigit( c );
 		ttfname[i-1] := 0X;
 		size := 0;
-		WHILE IsDigit( c ) DO  
+		WHILE IsDigit( c ) DO
 			size := 10*size + ORD( c ) - ORD( '0' );  c := oname[i];  INC( i )
 		END;
 		IF c = 'b' THEN  Strings.Append( ttfname, "_bd" )
@@ -186,15 +186,15 @@ TYPE
 		END;
 		Strings.Append( ttfname, ".ttf" );
 	END MakeTtfName;
-	
-	
+
+
 	PROCEDURE ProvideFont*( CONST oname: ARRAY OF CHAR );
-	VAR 
+	VAR
 		ttfname: Name;  size, res: INTEGER;  f: Files.File;
 		font: OType.Font;  inst: OType.Instance;  glyph: OType.Glyph;
 	BEGIN
 		f := Files.Old( oname );
-		IF f # NIL THEN 
+		IF f # NIL THEN
 			(* font already exists *) f.Close
 		ELSE
 			MakeTtfName( oname, ttfname, size, res );
@@ -211,8 +211,8 @@ TYPE
 			END
 		END
 	END ProvideFont;
-	
-	
+
+
 	PROCEDURE Allocatable*( CONST oname: ARRAY OF CHAR ): BOOLEAN;
 	VAR f: Files.File;  ttfname: Name;  size, res: INTEGER;
 	BEGIN
@@ -225,16 +225,16 @@ TYPE
 			RETURN FALSE
 		END
 	END Allocatable;
-	
+
 	PROCEDURE Install*;
 	END Install;
-	
+
 	PROCEDURE Finalize;
 	BEGIN
 		TextUtilities.oberonFontAllocatable := NIL
 	END Finalize;
-	
-	
+
+
 BEGIN
 	TextUtilities.oberonFontAllocatable := Allocatable;
 	Modules.InstallTermHandler( Finalize )

@@ -87,7 +87,7 @@ VAR
 
 
 	PROCEDURE RequestConnPW( ssh: Connection;  CONST user, host: ARRAY OF CHAR; try: LONGINT );
-	VAR p: T.Packet;  headline, pw: ARRAY 64 OF CHAR; 
+	VAR p: T.Packet;  headline, pw: ARRAY 64 OF CHAR;
 	BEGIN
 		headline := "SSH: Enter Password for ";
 		Strings.Append( headline, user );

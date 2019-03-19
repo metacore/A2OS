@@ -24,15 +24,15 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 
 
-IMPORT antsObjects, Files, vyBase, antsKernel, antsModels, vyRanBase, antsCommands, vyName, Objects, antsVectors, 
-	vyLongrealVec, vyRandom, vyHostStrings, aM := antsMessages;  
+IMPORT antsObjects, Files, vyBase, antsKernel, antsModels, vyRanBase, antsCommands, vyName, Objects, antsVectors,
+	vyLongrealVec, vyRandom, vyHostStrings, aM := antsMessages;
 
-TYPE 
-	
-	tModel* = POINTER TO tModelDesc;  
+TYPE
+
+	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc)
 		a: ARRAY 6 OF LONGREAL
-	END;  
+	END;
 	(*
 	a[0]: Fact1
 	a[1]: Fact2
@@ -41,149 +41,149 @@ TYPE
 	a[4]: add1
 	a[5]: add2
 	*)
-	
-	
-	PROCEDURE Open*( M: tModel;  a: ARRAY OF LONGREAL );  
-	VAR i: LONGINT;  
-	BEGIN 
-		FOR i := 0 TO 5 DO M.a[i] := a[i] END 
-	END Open;  
 
-	PROCEDURE StoreM( VAR R: Files.Rider;  s: tModel );  
-	VAR i: LONGINT;  
-	BEGIN 
-		Files.WriteInt( R, 0 );  
-		FOR i := 0 TO 5 DO Files.WriteLReal( R, s.a[i] ) END 
-	END StoreM;  
 
-	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );  
-	VAR version: INTEGER;  i: LONGINT;  
-	BEGIN 
-		Files.ReadInt( R, version );  
-		FOR i := 0 TO 5 DO Files.ReadLReal( R, s.a[i] ) END 
-	END LoadM;  
+	PROCEDURE Open*( M: tModel;  a: ARRAY OF LONGREAL );
+	VAR i: LONGINT;
+	BEGIN
+		FOR i := 0 TO 5 DO M.a[i] := a[i] END
+	END Open;
 
-	PROCEDURE OneSweep( s: antsKernel.Kernel );  
-	VAR model: tModel;  ran: LONGREAL;  v1, v2: vyBase.tVector;  x, y: LONGREAL;  
-	
-	BEGIN 
-		model := s.par( tModel );  v1 := antsVectors.GetVector( s.A( antsVectors.Container ), 0 );  
-		v2 := antsVectors.GetVector( s.A( antsVectors.Container ), 1 );  
-		WITH v1: vyLongrealVec.tVector DO 
-			WITH v2: vyLongrealVec.tVector DO 
-				x := vyLongrealVec.Get( v2, v2.nrData - 1 );  y := vyLongrealVec.Get( v1, v1.nrData - 1 );  
-				ran := model.a[0] * x + model.a[4] + vyRandom.GaussM( 0, model.a[2] / (model.coolingTemp + 1) );  
-				vyLongrealVec.Append( ran, v1 );  
-				ran := model.a[1] * ran + model.a[5] + vyRandom.GaussM( 0, model.a[3] / (model.coolingTemp + 1) );  
+	PROCEDURE StoreM( VAR R: Files.Rider;  s: tModel );
+	VAR i: LONGINT;
+	BEGIN
+		Files.WriteInt( R, 0 );
+		FOR i := 0 TO 5 DO Files.WriteLReal( R, s.a[i] ) END
+	END StoreM;
+
+	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
+	VAR version: INTEGER;  i: LONGINT;
+	BEGIN
+		Files.ReadInt( R, version );
+		FOR i := 0 TO 5 DO Files.ReadLReal( R, s.a[i] ) END
+	END LoadM;
+
+	PROCEDURE OneSweep( s: antsKernel.Kernel );
+	VAR model: tModel;  ran: LONGREAL;  v1, v2: vyBase.tVector;  x, y: LONGREAL;
+
+	BEGIN
+		model := s.par( tModel );  v1 := antsVectors.GetVector( s.A( antsVectors.Container ), 0 );
+		v2 := antsVectors.GetVector( s.A( antsVectors.Container ), 1 );
+		WITH v1: vyLongrealVec.tVector DO
+			WITH v2: vyLongrealVec.tVector DO
+				x := vyLongrealVec.Get( v2, v2.nrData - 1 );  y := vyLongrealVec.Get( v1, v1.nrData - 1 );
+				ran := model.a[0] * x + model.a[4] + vyRandom.GaussM( 0, model.a[2] / (model.coolingTemp + 1) );
+				vyLongrealVec.Append( ran, v1 );
+				ran := model.a[1] * ran + model.a[5] + vyRandom.GaussM( 0, model.a[3] / (model.coolingTemp + 1) );
 				vyLongrealVec.Append( ran, v2 )
-			END 
-		END 
-	END OneSweep;  
+			END
+		END
+	END OneSweep;
 
-	PROCEDURE Uniform( s: antsKernel.Kernel );  
-	VAR v1, v2: vyBase.tVector;  ran: LONGREAL;  
-	BEGIN 
-		v1 := antsVectors.GetVector( s.A( antsVectors.Container ), 0 );  
-		v2 := antsVectors.GetVector( s.A( antsVectors.Container ), 1 );  vyLongrealVec.SetLen( v1( vyLongrealVec.tVector ), 0 );  
-		vyLongrealVec.SetLen( v2( vyLongrealVec.tVector ), 0 );  
-		ran := 10 * vyRanBase.RandomGenerator.GetRandomU( vyRanBase.RandomGenerator );  
-		vyLongrealVec.Append( ran, v1( vyLongrealVec.tVector ) );  
-		ran := 10 * vyRanBase.RandomGenerator.GetRandomU( vyRanBase.RandomGenerator );  
+	PROCEDURE Uniform( s: antsKernel.Kernel );
+	VAR v1, v2: vyBase.tVector;  ran: LONGREAL;
+	BEGIN
+		v1 := antsVectors.GetVector( s.A( antsVectors.Container ), 0 );
+		v2 := antsVectors.GetVector( s.A( antsVectors.Container ), 1 );  vyLongrealVec.SetLen( v1( vyLongrealVec.tVector ), 0 );
+		vyLongrealVec.SetLen( v2( vyLongrealVec.tVector ), 0 );
+		ran := 10 * vyRanBase.RandomGenerator.GetRandomU( vyRanBase.RandomGenerator );
+		vyLongrealVec.Append( ran, v1( vyLongrealVec.tVector ) );
+		ran := 10 * vyRanBase.RandomGenerator.GetRandomU( vyRanBase.RandomGenerator );
 		vyLongrealVec.Append( ran, v2( vyLongrealVec.tVector ) )
-	END Uniform;  
+	END Uniform;
 
-	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF LONGREAL ): BOOLEAN;  
-	VAR cur: ARRAY 64 OF CHAR;  
-		i: LONGINT;  len: LONGINT;  
-	BEGIN 
-		len := LEN( array );  
-		IF M.id = Objects.enum THEN 
-			FOR i := 0 TO len - 1 DO 
-				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );  
+	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF LONGREAL ): BOOLEAN;
+	VAR cur: ARRAY 64 OF CHAR;
+		i: LONGINT;  len: LONGINT;
+	BEGIN
+		len := LEN( array );
+		IF M.id = Objects.enum THEN
+			FOR i := 0 TO len - 1 DO
+				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );
 				M.Enum( cur )
-			END;  
-			RETURN TRUE 
-		ELSIF M.id = Objects.get THEN 
-			FOR i := 0 TO len - 1 DO 
-				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );  
-				IF vyHostStrings.Equal( M.name, cur ) THEN M.y := array[i];  M.class := Objects.LongReal;  M.res := 0;  RETURN TRUE END 
-			END 
-		ELSIF M.id = Objects.set THEN 
-			FOR i := 0 TO len - 1 DO 
-				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );  
-				IF vyHostStrings.Equal( M.name, cur ) THEN 
-					IF M.class = Objects.LongReal THEN array[i] := M.y;  M.res := 0;  RETURN TRUE 
-					ELSIF M.class = Objects.Real THEN array[i] := M.x;  M.res := 0;  RETURN TRUE 
-					END 
-				END 
-			END 
-		
-		END;  
-		RETURN FALSE 
-	END ArrayHandleAttribute;  
+			END;
+			RETURN TRUE
+		ELSIF M.id = Objects.get THEN
+			FOR i := 0 TO len - 1 DO
+				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );
+				IF vyHostStrings.Equal( M.name, cur ) THEN M.y := array[i];  M.class := Objects.LongReal;  M.res := 0;  RETURN TRUE END
+			END
+		ELSIF M.id = Objects.set THEN
+			FOR i := 0 TO len - 1 DO
+				COPY( prefix, cur );  vyHostStrings.Append( cur, "[" );  vyHostStrings.AppendInt( i, 1, cur );  vyHostStrings.Append( cur, "]" );
+				IF vyHostStrings.Equal( M.name, cur ) THEN
+					IF M.class = Objects.LongReal THEN array[i] := M.y;  M.res := 0;  RETURN TRUE
+					ELSIF M.class = Objects.Real THEN array[i] := M.x;  M.res := 0;  RETURN TRUE
+					END
+				END
+			END
 
-	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );  
-	VAR i: LONGINT;  
-	BEGIN 
-		WITH o: tModel DO 
-			IF M IS antsKernel.samplingMsg THEN 
-				WITH M: antsKernel.samplingMsg DO 
-					antsModels.SetTemperature( o, M.temp );  OneSweep( M.dlink( antsKernel.Kernel ) );  
-				END;  
-			ELSIF M IS antsKernel.Init THEN 
-				WITH M: antsKernel.Init DO Uniform( M.dlink( antsKernel.Kernel ) );  o.synced := FALSE;  
-				END;  
-			ELSIF M IS Objects.AttrMsg THEN 
-				WITH M: Objects.AttrMsg DO 
-					
-					IF M.id = Objects.enum THEN 
-						IF ArrayHandleAttribute( M, "par", o.a ) THEN END;  
+		END;
+		RETURN FALSE
+	END ArrayHandleAttribute;
+
+	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
+	VAR i: LONGINT;
+	BEGIN
+		WITH o: tModel DO
+			IF M IS antsKernel.samplingMsg THEN
+				WITH M: antsKernel.samplingMsg DO
+					antsModels.SetTemperature( o, M.temp );  OneSweep( M.dlink( antsKernel.Kernel ) );
+				END;
+			ELSIF M IS antsKernel.Init THEN
+				WITH M: antsKernel.Init DO Uniform( M.dlink( antsKernel.Kernel ) );  o.synced := FALSE;
+				END;
+			ELSIF M IS Objects.AttrMsg THEN
+				WITH M: Objects.AttrMsg DO
+
+					IF M.id = Objects.enum THEN
+						IF ArrayHandleAttribute( M, "par", o.a ) THEN END;
 						antsModels.Handler( o, M )
-					ELSIF M.id = Objects.get THEN 
-						IF M.name = "Gen" THEN COPY( 'antsGauss1dModel.Gen', M.s );  M.class := Objects.String;  M.res := 0;  RETURN 
-						ELSIF ArrayHandleAttribute( M, "par", o.a ) THEN 
+					ELSIF M.id = Objects.get THEN
+						IF M.name = "Gen" THEN COPY( 'antsGauss1dModel.Gen', M.s );  M.class := Objects.String;  M.res := 0;  RETURN
+						ELSIF ArrayHandleAttribute( M, "par", o.a ) THEN
 						ELSE antsModels.Handler( o, M )
-						END 
-					ELSIF M.id = Objects.set THEN 
-						IF ArrayHandleAttribute( M, "par", o.a ) THEN 
-							FOR i := 0 TO 5 DO aM.SRSR( "", i, " - ", o.a[i] ) END 
+						END
+					ELSIF M.id = Objects.set THEN
+						IF ArrayHandleAttribute( M, "par", o.a ) THEN
+							FOR i := 0 TO 5 DO aM.SRSR( "", i, " - ", o.a[i] ) END
 						ELSE antsModels.Handler( o, M )
-						END 
+						END
 					ELSE antsModels.Handler( o, M )
-					END;  
-				END;  
-			ELSIF M IS Objects.FileMsg THEN 
-				WITH M: Objects.FileMsg DO 
+					END;
+				END;
+			ELSIF M IS Objects.FileMsg THEN
+				WITH M: Objects.FileMsg DO
 					IF M.id = Objects.load THEN antsModels.Handler( o, M );  LoadM( M.R, o )
 					ELSIF M.id = Objects.store THEN antsModels.Handler( o, M );  StoreM( M.R, o )
-					END 
-				END;  
+					END
+				END;
 			ELSE antsModels.Handler( o, M )
-			END 
+			END
 		END  (* tVector*)
-	END Handler;  
+	END Handler;
 
-	PROCEDURE Gen*;  
-	VAR m: tModel;  
-	BEGIN 
+	PROCEDURE Gen*;
+	VAR m: tModel;
+	BEGIN
 		aM.cmd;  NEW( m );  m.handle := Handler;  Objects.NewObj := m;  antsObjects.Register( m )
-	END Gen;  
+	END Gen;
 
-	PROCEDURE NewModel*;  
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  
-		a: ARRAY 6 OF LONGREAL;  
-	BEGIN 
-		l := antsCommands.ScanFromPar( "name=NAME f1=REAL f2=REAL v1=REAL v2=REAL add1=REAL add2=REAL" );  
-		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "f1", a[0] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "f2", a[1] ) & antsCommands.ExpectRealFromKeyword( l, "v1", a[2] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "v2", a[3] ) & antsCommands.ExpectRealFromKeyword( l, "add1", a[4] ) & 
-		    antsCommands.ExpectRealFromKeyword( l, "add2", a[5] ) THEN 
+	PROCEDURE NewModel*;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;
+		a: ARRAY 6 OF LONGREAL;
+	BEGIN
+		l := antsCommands.ScanFromPar( "name=NAME f1=REAL f2=REAL v1=REAL v2=REAL add1=REAL add2=REAL" );
+		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "f1", a[0] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "f2", a[1] ) & antsCommands.ExpectRealFromKeyword( l, "v1", a[2] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "v2", a[3] ) & antsCommands.ExpectRealFromKeyword( l, "add1", a[4] ) &
+		    antsCommands.ExpectRealFromKeyword( l, "add2", a[5] ) THEN
 			Gen;  M := Objects.NewObj( tModel );  antsModels.Open( M );  Open( M, a );  vyName.RegisterNamed( M, name )
-		END 
-	END NewModel;  
+		END
+	END NewModel;
 
-BEGIN 
-	aM.launch;  
+BEGIN
+	aM.launch;
 END antsGauss1dModel.
 
 System.Free antsGauss1dModel ~

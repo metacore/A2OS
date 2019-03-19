@@ -21,7 +21,7 @@ CONST
 	ModeHost = {0, 1};
 	ModeDevice = {1};
 	ModeIdle = {};
-	
+
 	(* HcOtgSc bits *)
 	OtgScId = 8;
 	OtgScIdPu = 5;
@@ -126,12 +126,12 @@ TYPE
 		VAR dword : SET;
 			res: BOOLEAN;
 		BEGIN
-			res := Start^();	
+			res := Start^();
 			IF ~res THEN RETURN FALSE END;
 
 			(* Clear interrupts *)
 			SYSTEM.PUT32(iobase + UsbEhci.HcUsbSts, 0);
-			
+
 			(* Enable all interrupts except the frame list rollover interrupt *)
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + UsbEhci.HcUsbIntr));
 			interruptsEnabled := dword + {0 .. 5} - UsbEhci.StsFrameListRollover + {19} (* UPI: triggered by iTD IOC *);

@@ -30,55 +30,55 @@ CONST
 	ClosedStates* = {Unused, Closed};
 	HalfClosedStates* = ClosedStates + {};
 	FinStates* = {Unused, Closed};
-		
+
 VAR
 	trace: BOOLEAN;
 
-TYPE 
+TYPE
 	Sender = OBJECT
-		VAR 
+		VAR
 			conn: Connection;
-		
+
 			PROCEDURE &New( c: Connection );
 			BEGIN
 				conn := c
 			END New;
-			
+
 			PROCEDURE SendPacket( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT ): BOOLEAN;
 			VAR n: LONGINT;
 			BEGIN {EXCLUSIVE}
 				WHILE len > 0 DO
 					n := len;
 					IF ~Sockets.Send( conn.socket, data, ofs, n ) THEN  RETURN FALSE  END;
-					DEC( len, n );  INC( ofs, n )						
+					DEC( len, n );  INC( ofs, n )
 				END;
 				RETURN TRUE
 			END SendPacket;
-			
+
 	END Sender;
-	
-	
+
+
 TYPE
 	(** Connection object.
 		NOTE: Only one process should access a Connection!  *)
 	Connection* = OBJECT (Streams.Connection)
 			VAR
 				int-	: IP.Interface;	(*! Unix port: dummy, only 'int.localAdr' contains valid data *)
-				
+
 				lport-	: LONGINT;
 				fip-	: IP.Adr;  (* foreign protocol address *)
 				fport-	: LONGINT;
 				state*	: SHORTINT;   (* TCP state *)
 
-				socket	: LONGINT;  
+				socket	: LONGINT;
 				sender: Sender;
-				
+
 				(* the next variables are for interface compatibility only *)
 				irs-		: LONGINT;	(* initial receive sequence number *)
 				rcvnxt-	: LONGINT;	(* receive next *)
 				iss-		: LONGINT;	(* initial send sequence number *)
 				sndnxt-	: LONGINT;	(* send next *)
-				
+
 
 				PROCEDURE & Init*;
 				BEGIN
@@ -86,7 +86,7 @@ TYPE
 					NEW( sender, SELF );
 					irs := 0; iss := 0;  rcvnxt := 0;  sndnxt := 0
 				END Init;
-				
+
 
 
 				(** Open a TCP connection (only use once per Connection instance).
@@ -108,9 +108,9 @@ TYPE
 								SELF.fip := fip;  SELF.fport := fport;
 								localAdr := Sockets.GetSockName( socket );
 								SELF.lport := Sockets.GetPortNumber( localAdr );
-								state := Established;  
+								state := Established;
 								res := Ok
-							ELSE  
+							ELSE
 								Out.String( "connect failed" ); Out.Ln;
 								Sockets.Close( socket );  res := ConnectionRefused
 							END
@@ -131,7 +131,7 @@ TYPE
 							ELSE  Sockets.Close( socket );  res := NotConnected
 							END
 						END
-					ELSE  
+					ELSE
 						Out.String( "open socket failed" );  Out.Ln;
 						res := NotConnected
 					END;
@@ -144,7 +144,7 @@ TYPE
 							Out.String( "socket=" );  Out.Int( socket, 0 );
 							Out.String( ", locport=" );  Out.Int( SELF.lport, 0 );
 							Out.String( " done." )
-						ELSE  
+						ELSE
 							Out.String( " failed." )
 						END;
 						Out.Ln
@@ -154,12 +154,12 @@ TYPE
 
 				(** Send data on a TCP connection. *)
 				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
-				BEGIN 
+				BEGIN
 					IF trace THEN  Out.String( "Send: socket=" );  Out.Int( socket, 0 )  END;
 					IF state = Established THEN
-						IF sender.SendPacket( data, ofs, len ) THEN  
+						IF sender.SendPacket( data, ofs, len ) THEN
 							res := Ok
-						ELSE  
+						ELSE
 							res := ConnectionReset
 						END
 					ELSE
@@ -175,7 +175,7 @@ TYPE
 					and must by <= size. The len parameter returns the number of bytes received, and the
 					res parameter returns 0 if ok, or a non-zero error code otherwise (e.g. if the connection is closed
 					by the communication partner, or by a call of the Close method). *)
-				
+
 				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
 				VAR p, x: LONGINT;
 				BEGIN {EXCLUSIVE}
@@ -193,9 +193,9 @@ TYPE
 							IF Sockets.Recv( socket, data, ofs, x, 0 ) THEN
 								IF x > 0 THEN
 									DEC( size, x );  INC( len, x );  INC( ofs, x );
-									IF len >= min THEN  
+									IF len >= min THEN
 										INC( rcvnxt );
-										RETURN  
+										RETURN
 									END
 								ELSE
 									(* x = 0: closed by peer *)
@@ -207,14 +207,14 @@ TYPE
 								res := NotConnected;  RETURN
 							END
 						END; (* loop *)
-					ELSE  
+					ELSE
 						res := NotConnected
 					END;
 					INC( rcvnxt )
 				END Receive;
-			
-				
-				
+
+
+
 				(** Enable or disable delayed send (Nagle algorithm).
 					If enabled, the sending of a segment is delayed if it is not filled by one call to Send, in order to be able
 					to be filled by further calls to Send. This is the default option.
@@ -237,15 +237,15 @@ TYPE
 
 				(** Return number of bytes that may be read without blocking. *)
 				PROCEDURE Available*( ): LONGINT;
-				VAR available: LONGINT; 
+				VAR available: LONGINT;
 				BEGIN {EXCLUSIVE}
 					IF state IN {Established, Listen} THEN
-						IF Sockets.Requested( socket ) THEN 
-							available := Sockets.Available( socket ); 
-							IF available >= 0 THEN  
-								RETURN available  
+						IF Sockets.Requested( socket ) THEN
+							available := Sockets.Available( socket );
+							IF available >= 0 THEN
+								RETURN available
 							END;
-						END	
+						END
 					END;
 					RETURN  0
 				END Available;
@@ -271,13 +271,13 @@ TYPE
 
 				(** Close a TCP connection (half-close). *)
 				PROCEDURE Close*;
-				BEGIN 
+				BEGIN
 					Sockets.Close( socket );  state := Closed;
 				END Close;
 
 				(** Discard a TCP connection (shutdown). *)
 				PROCEDURE Discard*;
-				BEGIN 
+				BEGIN
 					Sockets.Close( socket );  state := Closed;
 				END Discard;
 
@@ -316,7 +316,7 @@ TYPE
 				(** Return TRUE iff a listening connection has clients waiting to be accepted. *)
 				PROCEDURE Requested*( ): BOOLEAN;
 				BEGIN {EXCLUSIVE}
-					RETURN (state = Listen) & Sockets.Requested( socket ) 
+					RETURN (state = Listen) & Sockets.Requested( socket )
 				END Requested;
 
 

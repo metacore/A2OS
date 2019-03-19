@@ -915,7 +915,7 @@ Out.Ln;
 				Resized^();
 				resized();
 				IF chan # NIL THEN  chan.WindowChange( cols, rows )  END
-			END Resized;		
+			END Resized;
 
 			PROCEDURE Initialize*;
 			BEGIN

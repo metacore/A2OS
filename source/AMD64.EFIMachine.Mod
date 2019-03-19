@@ -18,7 +18,7 @@ CODE {SYSTEM.AMD64, SYSTEM.Privileged}
 	MOV RAX, [RBP+rax]; btAddr
 	MOV RCX, [RBP+rcx];
 	MOV RDX, [RBP+rdx];
-	
+
 	MOV RBX, [RBP+adr]
 	CALL RBX
 

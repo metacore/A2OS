@@ -397,7 +397,7 @@ TYPE
 			interpreter.Run;
 			RETURN NIL
 		END ProcessSyntaxTreeModule;
-		
+
 		PROCEDURE DefineOptions*(options: Options.Options);
 		BEGIN DefineOptions^(options);
 			options.Add("a","addressSize", Options.Integer);
@@ -711,7 +711,7 @@ TextCompiler.CompileSelection -b=Interpreter ~
 
 	MODULE Test;
 	VAR a: INTEGER;
-	BEGIN 
+	BEGIN
 		a := 0;
 		ASSERT(a = 0);
 	END Test.

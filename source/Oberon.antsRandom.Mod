@@ -20,9 +20,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 (* This is NOT the standard random number generator module for AntsInFields, this module is aimed as demonstration of simple random number
-generators und corresponds mainly to its Panel antsRandom.Panel *) 
+generators und corresponds mainly to its Panel antsRandom.Panel *)
 
 
 
@@ -190,7 +190,7 @@ BEGIN
 	(*
 	Attributes.GetInt(obj, "seedLow", es.low);
 	Attributes.GetInt(obj, "seedHi", es.hi);
-	*) 
+	*)
 	IF ~antsPortability.Equal(es, seed) THEN aM.vSR("antsRandom:Warning: Seed changed!",seedr);   END;
 
 
@@ -203,15 +203,15 @@ BEGIN
 	Attributes.SetInt(obj, "cHigh", c.hi);
 	Attributes.SetInt(obj, "seedLow", seed.low);
 	Attributes.SetInt(obj, "seedHigh", seed.hi);
-	*) 
+	*)
 
 	seed := LCG(a, b, c, seed) ;
-	
+
 	(*
 	Attributes.SetInt(obj, "seedLow", seed.low);
 	Attributes.SetInt(obj, "seedHigh", seed.hi);
-	*) 
-	
+	*)
+
 	(*
 	Attributes.SetInt(obj,"seedLow",seed.low);
 	Attributes.SetInt(obj,"seedHigh",seed.hi);
@@ -247,8 +247,8 @@ END ApplyRNG;
 
 PROCEDURE DoBoxMuller (obj: vyBase.Object;  VAR n1, n2: LONGREAL);
 VAR u1, u2: LONGREAL;  BEGIN
-	DoApplyRNG(obj, u1); Attributes.SetLongReal(obj,"lastu",u1); 
-	DoApplyRNG(obj, u2); 
+	DoApplyRNG(obj, u1); Attributes.SetLongReal(obj,"lastu",u1);
+	DoApplyRNG(obj, u2);
 	n1 := Math.sqrt( - 2 * Math.ln(u1)) * Math.cos(2 * Math.pi * u2);
 	n2 := Math.sqrt( - 2 * Math.ln(u1)) * Math.sin(2 * Math.pi * u2);
 	Attributes.SetLongReal(obj, "n1", n1);
@@ -282,7 +282,7 @@ PROCEDURE DoPolarMethod (obj: vyBase.Object;  VAR n1, n2: LONGREAL);
 	VAR u1, u2, v1, v2, w, d: LONGREAL;
 BEGIN
 	REPEAT
-		DoApplyRNG(obj, u1);Attributes.SetLongReal(obj,"lastu",u1); 
+		DoApplyRNG(obj, u1);Attributes.SetLongReal(obj,"lastu",u1);
 		DoApplyRNG(obj, u2);
 		v1 := 2 * u1 - 1;
 		v2 := 2 * u2 - 1;
@@ -352,8 +352,8 @@ BEGIN
 	Attributes.SetInt(obj, "cHigh", c.hi);
 	Attributes.SetInt(obj, "seedLow", seed.low);
 	Attributes.SetInt(obj, "seedHigh", seed.hi);
-	*) 
-	
+	*)
+
 	Attributes.SetLongReal(obj, "a", antsPortability.HIToLR(a));
 	Attributes.SetLongReal(obj, "b", antsPortability.HIToLR(b));
 	Attributes.SetLongReal(obj, "c", antsPortability.HIToLR(c));
@@ -363,7 +363,7 @@ END NewDynamicRNG;
 
 PROCEDURE Max(i1,i2: LONGINT): LONGINT;
 BEGIN
-	IF i1>i2 THEN RETURN i1 ELSE RETURN i2 END; 
+	IF i1>i2 THEN RETURN i1 ELSE RETURN i2 END;
 END Max;
 
 
@@ -407,7 +407,7 @@ PROCEDURE MakePaired*;
 BEGIN
 	antsCommands.InitScan("vec=OBJ vec1=OBJ vec2=OBJ");
 	IF antsCommands.ExpectObject("vec", o) &  antsCommands.ExpectObject("vec1", o1) & antsCommands.ExpectObject("vec2", o2) THEN
-		IF antsCommands.GetObject("vec3",o3) THEN v3 := o3(vyLongrealVec.tVector) ELSE v3 := NIL END; 
+		IF antsCommands.GetObject("vec3",o3) THEN v3 := o3(vyLongrealVec.tVector) ELSE v3 := NIL END;
 		v := o(vyLongrealVec.tVector);
 		v1 := o1(vyLongrealVec.tVector);
 		v2 := o2(vyLongrealVec.tVector);
@@ -416,14 +416,14 @@ BEGIN
 
 		vyLongrealVec.SetLen(v1, vyLongrealVec.Len(v) DIV 2);
 		vyLongrealVec.SetLen(v2, vyLongrealVec.Len(v) DIV 2);
-		IF v3 # NIL THEN vyLongrealVec.SetLen(v3, vyLongrealVec.Len(v) DIV 2);  vyLongrealVec.Set(0, v3, 0);END; 
+		IF v3 # NIL THEN vyLongrealVec.SetLen(v3, vyLongrealVec.Len(v) DIV 2);  vyLongrealVec.Set(0, v3, 0);END;
 
 		FOR i := 0 TO vyLongrealVec.Len(v) DIV 2 - 1  DO
 			vyLongrealVec.Set(vyLongrealVec.Get(v, i * 2), v1, i);
 			vyLongrealVec.Set(vyLongrealVec.Get(v, i * 2 + 1), v2, i);
-			IF (v3 # NIL) & (i>0) THEN 
+			IF (v3 # NIL) & (i>0) THEN
 				vyLongrealVec.Set(vyLongrealVec.Get(v, i * 2-1), v3, i);
-			END; 
+			END;
 		END;
 		vyBase.Update(v1);  vyBase.Update(v2);
 	END;

@@ -43,7 +43,7 @@ TYPE
 			w.Update;
 			Files.Register(f);
 
-			IF log = NIL THEN KernelLog.Char("."); INC(dots); IF dots MOD 256 = 0 THEN KernelLog.Ln END; END; 
+			IF log = NIL THEN KernelLog.Char("."); INC(dots); IF dots MOD 256 = 0 THEN KernelLog.Ln END; END;
 
 			res := Commands.Ok;
 			IF prolog # "" THEN

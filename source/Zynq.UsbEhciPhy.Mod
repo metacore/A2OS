@@ -29,7 +29,7 @@ CONST
 	XcvrHS = {};
 	XcvrFS = {0};
 	XcvrLS = {1};
-	
+
 
 	(* Register bits in OtgCtrl *)
 	IdPullUp = 0;

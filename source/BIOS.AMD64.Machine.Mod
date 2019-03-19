@@ -573,9 +573,9 @@ CONST
 	SSE2Flag = 26;
 	SSE3Flag = 0; (*IN features2 from ECX*) (*PH 04/11*)
 	SSSE3Flag =9;
-	SSE41Flag =19; 
+	SSE41Flag =19;
 	SSE42Flag =20;
-	SSE5Flag = 11; 
+	SSE5Flag = 11;
 	AVXFlag = 28;
 BEGIN
 	SSE2Support := FALSE;
@@ -2641,7 +2641,7 @@ entry:
 
 	LEA RBP, [RSP + 136]
 	MOV RBX, [RSP + 128]	; RBX = int number
-	
+
 	IMUL RBX, RBX, MaxNumHandlers
 	IMUL RBX, RBX, SizeOfHandlerRec
 	; todo: replace LEA by MOV when compiler supports this
@@ -3834,7 +3834,7 @@ CODE{SYSTEM.AMD64}
 	REP MOVSB
 	POP RDI
 	POP RSI
-	POP RAX	
+	POP RAX
 
 
 

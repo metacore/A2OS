@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 IMPORT antsCommands, vyLinks, vyBase, Modules, Strings, aM := antsMessages, antsArrayObjects, vyLongrealVec, Objects, Links, antsToolbox,
@@ -41,7 +41,7 @@ BEGIN
 		IF antsCommands.GetName("plot", plotname) THEN
 			IF plotname = "as"THEN b := antsCommands.GetName("plot", plotname) END;
 			COPY(plotname, temp);
-			plotmod := Modules.ThisMod(temp); 
+			plotmod := Modules.ThisMod(temp);
 			IF (plotmod = NIL) OR (SYSTEM.VAL(ANY,Modules.ThisCommand(plotmod, "ShowP")) = NIL) THEN (* try Voyager *)
 				temp := "vy";  Strings.Append(temp, plotname);  plotmod := Modules.ThisMod(temp)
 			END;
@@ -93,7 +93,7 @@ PROCEDURE GetRowCol*;
 	VAR   		row, col: vyBase.Object;        		r, c: vyBase.Object;
 BEGIN
 	antsCommands.InitScan("row=OBJ col=OBJ [r=OBJ c=OBJ]");
-	IF antsCommands.ExpectObject("row", row) & 
+	IF antsCommands.ExpectObject("row", row) &
 		antsCommands.ExpectObject("col",  col) THEN
 		IF antsCommands.GetObject("r",  r) & antsCommands.GetObject("c", c) THEN
 		ELSE
@@ -106,28 +106,28 @@ END GetRowCol;
 
 PROCEDURE NewVec*;
 BEGIN
-	antsFctVector.NewVec; 
+	antsFctVector.NewVec;
 END NewVec;
 
 PROCEDURE RCompileE*; (*replace part of file with text from gadget, compile and execute command*)
-VAR name,begPat,endPat,module,cmd: ARRAY 256 OF CHAR; obj: Objects.Object; 
+VAR name,begPat,endPat,module,cmd: ARRAY 256 OF CHAR; obj: Objects.Object;
 BEGIN
-	antsCommands.InitScan("replace=NAME begPat=STR endPat=STR module=STR [cmd=NAME]"); 
+	antsCommands.InitScan("replace=NAME begPat=STR endPat=STR module=STR [cmd=NAME]");
 	IF antsCommands.ExpectName("replace",name) & antsCommands.ExpectString("begPat",begPat)
-	& antsCommands.ExpectString("endPat",endPat) & antsCommands.ExpectString("module",module) THEN 
-		IF ~antsCommands.GetName("cmd",cmd) THEN cmd := "" END; 
+	& antsCommands.ExpectString("endPat",endPat) & antsCommands.ExpectString("module",module) THEN
+		IF ~antsCommands.GetName("cmd",cmd) THEN cmd := "" END;
 		obj := Gadgets.FindObj(Gadgets.context,name);
-		IF obj # NIL THEN Links.GetLink(obj,"Model",obj) END; 
-		IF (obj#NIL) & (obj IS Texts.Text) THEN 
-			IF antsOnTheFly.CompileText(obj(Texts.Text),module,cmd,begPat,endPat) THEN aM.dS("compiled ok");END; 
+		IF obj # NIL THEN Links.GetLink(obj,"Model",obj) END;
+		IF (obj#NIL) & (obj IS Texts.Text) THEN
+			IF antsOnTheFly.CompileText(obj(Texts.Text),module,cmd,begPat,endPat) THEN aM.dS("compiled ok");END;
 		ELSE
-			aM.eSS("Expected Texts.Text in context with name=",name); 
-		END; 
-	END; 
+			aM.eSS("Expected Texts.Text in context with name=",name);
+		END;
+	END;
 END RCompileE;
 
 
-BEGIN aM.launch; NEW(RR); 
+BEGIN aM.launch; NEW(RR);
 END ants.
 
 ants.Show obj as LinePlot ~

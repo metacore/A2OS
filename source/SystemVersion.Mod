@@ -5,7 +5,7 @@ IMPORT
 	Modules, CRC, KernelLog;
 
 	VAR	BootCRC-: LONGINT;
-	
+
 	(* combined CRC of those Kernel Modules that loaded at this point in time.	 *)
 	PROCEDURE GetKernelCRC*():LONGINT;
 	VAR m:Modules.Module; crc: CRC.CRC32;
@@ -27,20 +27,20 @@ IMPORT
 		m:=Modules.ModuleByName("BootConsole"); IF m#NIL THEN crc.Add(m.crc) END;
 		RETURN crc.Get()
 	END GetKernelCRC;
-	
-	
+
+
 	PROCEDURE GetKernelDate(CONST name: ARRAY OF CHAR; VAR d,t: LONGINT): BOOLEAN;
 	BEGIN
 		(*! TBD*)
 		d:=0; t:=0; RETURN FALSE;
 	END GetKernelDate;
-	
+
 	PROCEDURE Test*;
 	BEGIN
 		KernelLog.String("Kernel CRC at boot time: "); KernelLog.Hex(BootCRC,8); KernelLog.Ln;
 		KernelLog.String("Kernel CRC now: "); KernelLog.Hex(GetKernelCRC(),8); KernelLog.Ln;
 	END Test;
-	
+
 
 BEGIN
 	BootCRC:=GetKernelCRC();

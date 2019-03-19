@@ -3,28 +3,28 @@ MODULE CryptoUtils; (** AUTHOR "GF"; PURPOSE ""; *)
 IMPORT S := SYSTEM, Out := KernelLog, Random, Kernel, B := CryptoBigNumbers;
 
 
-TYPE 
+TYPE
 	InitBuffer* = OBJECT	(**   buffer supporting initialization of large tables with hex values  *)
-	VAR 
+	VAR
 		buf: POINTER TO ARRAY OF CHAR;
 		in, out: LONGINT;
-		
+
 		PROCEDURE & Init*( size: LONGINT );
 		BEGIN
 			NEW( buf, size );  in := 0;  out := 0;
 		END Init;
-		
+
 		PROCEDURE Add*( CONST x: ARRAY OF CHAR );
 		VAR  i: LONGINT;  c: CHAR;
 		BEGIN
 			c := x[0];  i := 1;
-			WHILE c # 0X DO 
+			WHILE c # 0X DO
 				buf[in] := c;  INC( in );  c := x[i];  INC( i )
 			END;
 			buf[in] := ' ';  INC( in );  buf[in] := 0X
 		END Add;
-		
-		
+
+
 		PROCEDURE GetInt*( ): LONGINT;
 		VAR x: LONGINT; c: CHAR;
 		BEGIN
@@ -40,12 +40,12 @@ TYPE
 			UNTIL c <= ' ';
 			RETURN x
 		END GetInt;
-		
+
 		PROCEDURE GetSet*(): SET32;
 		BEGIN
 			RETURN S.VAL( SET32, GetInt() )
 		END GetSet;
-		
+
 	END InitBuffer
 
 
@@ -272,8 +272,8 @@ VAR
 			INC( a, 4 );  INC( pos, 4 )
 		END
 	END BufferToBlockBE;
-	
-	
+
+
 	(* copy char buffer to 32-bit words in block. little endian format *)
 	PROCEDURE BufferToBlockLE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT;  VAR block: ARRAY OF S.BYTE );
 	VAR i: LONGINT;  a: ADDRESS;
@@ -318,7 +318,7 @@ VAR
 			INC( pos, 4 )
 		END
 	END BlockToBufferLE;
-	
+
 	PROCEDURE SetToBufferBE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		IntToBufferBE( S.VAL( LONGINT, val ), buf, pos );
@@ -331,12 +331,12 @@ VAR
 		buf[pos + 1] := CHR( val MOD 256 );  val := val DIV 256;
 		buf[pos + 0] := CHR( val MOD 256 );
 	END IntToBufferBE;
-	
+
 	PROCEDURE SetToBufferLE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		IntToBufferLE( S.VAL( LONGINT, val ), buf, pos );
 	END SetToBufferLE;
-	
+
 	PROCEDURE IntToBufferLE*( val: LONGINT;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		buf[pos + 0] := CHR( val MOD 256 );  val := val DIV 256;
@@ -344,13 +344,13 @@ VAR
 		buf[pos + 2] := CHR( val MOD 256 );  val := val DIV 256;
 		buf[pos + 3] := CHR( val MOD 256 );
 	END IntToBufferLE;
-	
-	
+
+
 	PROCEDURE SetFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): SET32;
 	BEGIN
 		RETURN  S.VAL( SET32, IntFromBufferBE( buf, pos ) )
 	END SetFromBufferBE;
-	
+
 	PROCEDURE IntFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): LONGINT;
 	BEGIN
 		RETURN	ASH( LONG( ORD( buf[pos + 0] ) ), 24 ) +
@@ -372,7 +372,7 @@ VAR
 					ASH( LONG( ORD( buf[pos + 1] ) ), 8 ) +
 					ORD( buf[pos] );
 	END IntFromBufferLE;
-	
+
 
 
 BEGIN

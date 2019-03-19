@@ -1,7 +1,7 @@
 MODULE SSHGlobals;
 
 IMPORT SYSTEM,
-		Texts, TextUtilities, UTF8Strings, Strings, Commands, 
+		Texts, TextUtilities, UTF8Strings, Strings, Commands,
 		Ciphers := CryptoCiphers, Out := KernelLog;
 
 CONST
@@ -113,7 +113,7 @@ VAR
 
 
 	PROCEDURE GetCipherParams*(	CONST name: ARRAY OF CHAR;
-											VAR modname: ARRAY OF CHAR;  
+											VAR modname: ARRAY OF CHAR;
 											VAR bits: LONGINT;
 											VAR mode: SHORTINT );
 	VAR x: ARRAY 128 OF CHAR;

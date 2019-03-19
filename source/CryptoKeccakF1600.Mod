@@ -10,19 +10,19 @@ IMPORT S := SYSTEM;
 CONST
 	Width* = 1600;			(* state size in bits *)
 	LaneSize* = 8;			(* lane size in bytes *)
-	
-CONST 
+
+CONST
 	nrRounds = 24;  nrLanes = 25;
-	
+
 TYPE
 	Lane = RECORD  low, high: SET32  END;
 	State = ARRAY nrLanes OF Lane;
 
-VAR 
+VAR
 	roundConstants: ARRAY nrRounds OF Lane;
 	rhoOffsets: ARRAY nrLanes OF LONGINT;
-	
-TYPE 
+
+TYPE
 	Instance* = OBJECT
 	VAR
 		state: State;
@@ -32,7 +32,7 @@ TYPE
 		BEGIN
 			Initialize
 		END Init;
-		
+
 		PROCEDURE Initialize*;
 		VAR i: LONGINT;
 		BEGIN
@@ -47,9 +47,9 @@ TYPE
 			ASSERT( (laneNo < nrLanes) & (laneOffset < LaneSize) & (laneOffset+length <= LaneSize) );
 			lane.low := {};  lane.high := {};
 			S.MOVE( ADDRESSOF( data[dataOffset] ), ADDRESSOF( lane ) + laneOffset, length );
-			
+
 			ToBitInterleaving( lane, lane );
-			
+
 			state[laneNo].low := state[laneNo].low / lane.low;
 			state[laneNo].high := state[laneNo].high / lane.high;
 		END XORBytesInLane;
@@ -62,9 +62,9 @@ TYPE
 			ASSERT( laneCount <= nrLanes );
 			FOR laneNo := 0 TO laneCount - 1 DO
 				S.MOVE( ADDRESSOF( data[offset + laneNo*LaneSize] ), ADDRESSOF( lane ), LaneSize );
-				
+
 				ToBitInterleaving( lane, lane );
-				
+
 				state[laneNo].low := state[laneNo].low / lane.low;
 				state[laneNo].high := state[laneNo].high / lane.high;
 			END
@@ -76,7 +76,7 @@ TYPE
 			laneNo, bit: LONGINT;
 		BEGIN
 			ASSERT( position < 1600 );
-			laneNo := position DIV 64;  bit := position MOD 64; 
+			laneNo := position DIV 64;  bit := position MOD 64;
 			IF bit < 32 THEN
 				state[laneNo].low := SET32( state[laneNo].low / {bit} )
 			ELSE
@@ -96,7 +96,7 @@ TYPE
 
 
 		PROCEDURE ExtractLanes*( VAR data: ARRAY OF CHAR; offset, laneCount: LONGINT );
-		VAR 
+		VAR
 			lane: Lane;  laneNo: LONGINT;
 		BEGIN
 			ASSERT( laneCount <= nrLanes );
@@ -111,9 +111,9 @@ TYPE
 			XORLanes( inData, offset, count );
 			Permute;
 		END XORPermute;
-		
-		
-		PROCEDURE XORPermuteExtract*(	CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: LONGINT; 
+
+
+		PROCEDURE XORPermuteExtract*(	CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: LONGINT;
 												VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: LONGINT );
 		BEGIN
 			XORLanes( inData, inOffset, inLaneCount );
@@ -145,7 +145,7 @@ TYPE
 	        temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
 	        temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
 	        temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
-	        
+
 	        temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET32, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
 	        temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
 	        temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
@@ -158,16 +158,16 @@ TYPE
 	PROCEDURE FromBitInterleaving( CONST in: Lane;  VAR out: Lane );
 	VAR temp, temp0, temp1: SET32;
 	BEGIN
-	        temp0 := in.low; 
-	        temp1 := in.high; 
-	        temp := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 ); 
-	        temp1 := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H )); 
-	        temp0 := temp; 
-	        temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 ); 
-	        temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 ); 
-	        temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 ); 
-	        temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 ); 
-	        
+	        temp0 := in.low;
+	        temp1 := in.high;
+	        temp := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 );
+	        temp1 := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H ));
+	        temp0 := temp;
+	        temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
+	        temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
+	        temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
+	        temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
+
 	        temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET32, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
 	        temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
 	        temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
@@ -190,7 +190,7 @@ TYPE
 			lane.high := ROT( lane.high, offset DIV 2 )
 		END;
 	END ROL64;
-	
+
 
 	PROCEDURE ROL64_1XOR( CONST in1, in2: Lane; VAR out: Lane );
 	BEGIN
@@ -202,15 +202,15 @@ TYPE
 	PROCEDURE Round( VAR a: State; r: LONGINT );
 	VAR
 		x, y, i, i1, i2: LONGINT;
-		c, d: ARRAY 5 OF Lane;  
-		a0: State;  
+		c, d: ARRAY 5 OF Lane;
+		a0: State;
 	BEGIN
 		(* theta *)
 		FOR x := 0 TO 4 DO
 			c[x].low := {};  c[x].high := {};
 			FOR y := 0 TO 20 BY 5 DO
-				c[x].low := c[x].low / a[x+y].low;  
-				c[x].high := c[x].high / a[x+y].high;	
+				c[x].low := c[x].low / a[x+y].low;
+				c[x].high := c[x].high / a[x+y].high;
 			END
 		END;
 		FOR x := 0 TO 4 DO
@@ -219,13 +219,13 @@ TYPE
 		FOR x := 0 TO 4 DO
 			FOR y := 0 TO 4 DO
 				i := x + 5*y;
-				a[i].low := a[i].low / d[x].low;  
-				a[i].high := a[i].high / d[x].high	
+				a[i].low := a[i].low / d[x].low;
+				a[i].high := a[i].high / d[x].high
 			END
 		END;
 		(* rho *)
 		FOR i := 0 TO 24 DO
-			ROL64( a[i], rhoOffsets[i] );	
+			ROL64( a[i], rhoOffsets[i] );
 		END;
 		(* pi *)
 		a0 := a;
@@ -247,7 +247,7 @@ TYPE
 			i := 4 + y;  i1 := 0 + y;  i2 := 1 + y;
 			c[4].low := a[i].low / ((-a[i1].low) * a[i2].low);
 			c[4].high := a[i].high / ((-a[i1].high) * a[i2].high);
-			FOR x := 0 TO 4 DO  
+			FOR x := 0 TO 4 DO
 				a[x+y].low := c[x].low;
 				a[x+y].high := c[x].high
 			END
@@ -256,8 +256,8 @@ TYPE
 		a[0].low := a[0].low / roundConstants[r].low;
 		a[0].high := a[0].high / roundConstants[r].high;
 	END Round;
-	
-	
+
+
 
 	(* ---------------------------------------------------------------- *)
 
@@ -272,7 +272,7 @@ TYPE
 		FOR i := 0 TO nrRounds - 1 DO
 			lane.low := {};  lane.high := {};
 			FOR j := 0 TO 6 DO
-	       		bit := ASH( 1, j ) - 1; 
+	       		bit := ASH( 1, j ) - 1;
 	 			IF LFSR86540( LFSRstate ) THEN
 	      			IF bit < 32 THEN  INCL( lane.low, bit )  ELSE  INCL( lane.high, bit - 32 )  END
 	   			END
@@ -317,4 +317,4 @@ BEGIN
 	InitializeRhoOffsets;
 END CryptoKeccakF1600.
 
-	
+

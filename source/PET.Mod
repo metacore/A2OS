@@ -1125,7 +1125,7 @@ TYPE
 				END;
 				vc.Invalidate;
 				WMRestorable.AddByContext(SELF, c); (* first load content, then display ...*)
-				
+
 			ELSE WMWindowManager.DefaultAddWindow(SELF);
 				(* NewTab; *)
 				codecFormat := "AUTO";
@@ -1286,8 +1286,8 @@ TYPE
 
 		BEGIN
 			(* -- Main Panel holding the tabs, toolbar and tabcontents (instance of PETPanel) *)
-			NEW(panel); panel.alignment.Set(WMComponents.AlignClient); 
-			panel.fillColor.Set(0FFFFFFFFH); 
+			NEW(panel); panel.alignment.Set(WMComponents.AlignClient);
+			panel.fillColor.Set(0FFFFFFFFH);
 			panel.takesFocus.Set(TRUE);
 
 			(* -- Tabs for the PETPanels *)
@@ -1901,7 +1901,7 @@ TYPE
 			syntaxHighlighterName : ARRAY 32 OF CHAR;
 			file : Files.File;
 			in: Streams.Reader;
-			
+
 		BEGIN
 			DisableUpdate;
 			res := -1;
@@ -2287,7 +2287,7 @@ TYPE
 					currentPage.editor.SetFocus;
 				ELSE
 					currentPage.splitPanel.visible.Set(TRUE);
-					currentPage.splitEditor.SetText(currentPage.editor.text);				
+					currentPage.splitEditor.SetText(currentPage.editor.text);
 				END;
 				currentPage.splitted := ~currentPage.splitted
 			END
@@ -2811,7 +2811,7 @@ PROCEDURE GetSyntaxHighlighterName*(fullname : ARRAY OF CHAR; VAR name : ARRAY O
 VAR filename, extension, config : Files.FileName; res : WORD; tries: LONGINT;
 BEGIN
 	name := "";
-	tries := 0; 
+	tries := 0;
 	REPEAT (* try with case as is first *)
 		Strings.GetExtension(fullname, filename, extension);
 		IF (extension # "") THEN
@@ -2822,8 +2822,8 @@ BEGIN
 		END;
 		Strings.UpperCase(fullname);
 		INC(tries);
-	UNTIL (res = Configuration.Ok) OR (tries >1); 
-	
+	UNTIL (res = Configuration.Ok) OR (tries >1);
+
 END GetSyntaxHighlighterName;
 
 PROCEDURE ControlKeyDown(flags : SET) : BOOLEAN;

@@ -150,7 +150,7 @@ TYPE
 						IF (request.method = WebHTTP.GetM) THEN
 							NEW(c, w, out, request, reply);
 							WebHTTP.SendResponseHeader(reply, out);
-							WebHTTP.WriteHTMLStatus(reply, w); 
+							WebHTTP.WriteHTMLStatus(reply, w);
 							w.Update;
 							c.Close
 						(* *) ELSE WebHTTP.SendResponseHeader(reply, out);
@@ -377,9 +377,9 @@ TYPE
 					reply.statuscode := LONGINT( res ); (*! result type *)
 					WebHTTP.WriteStatus(reply, out)
 				END;
-				
+
 				out.Update; (*PH*)(* ignore out.res *)
-				
+
 				IF logEnabled THEN W3CLog(request, reply) END;
 
 				IF WebHTTP.GetAdditionalFieldValue(request.additionalFields, "Connection", value) THEN
@@ -394,7 +394,7 @@ TYPE
 				ELSE
 					consecutiveErrors := 0
 				END;
-				
+
 			END
 		UNTIL closeRequested OR ((request.maj = 1) & (request.min = 0)) OR (client.state # TCP.Established);
 		Terminate

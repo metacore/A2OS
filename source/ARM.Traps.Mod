@@ -96,7 +96,7 @@ CONST
 	ExceptionRaisedDesc = "exception";
 	ProcessResurrectedDesc = "process resurrected";
 	RecursiveExclusiveDesc = "recursive entrance in EXCLUSIVE section";
-	AwaitOutsideExclusiveDesc = "AWAIT statement outside EXCLUSIVE section";	
+	AwaitOutsideExclusiveDesc = "AWAIT statement outside EXCLUSIVE section";
 
 TYPE
 	Variable* = RECORD	(** variable descriptor *)

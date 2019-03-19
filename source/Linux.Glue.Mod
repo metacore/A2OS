@@ -1,19 +1,19 @@
 (* Minimal ELF header for self contained linux Oberon programs *)
 (* Copyright (c) Felix Friedrich, ETH Zürich *)
 
-MODULE Glue; 
+MODULE Glue;
 
 IMPORT SYSTEM, Trace;
 
-CONST 
+CONST
 	base* = 08048000H;
 	debug* = {};
 VAR
 	last-: RECORD END; (* empty variable linked to end of kernel *)
-	
+
 	baseAdr*: ADDRESS;
 	endAdr*: ADDRESS;
-	
+
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS): ADDRESS;
 	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: LONGINT ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
@@ -22,7 +22,7 @@ VAR
 	stackBottom-	: ADDRESS;	(* of main thread *)
 
 
-	argc-: WORD; 
+	argc-: WORD;
 	argv-: ADDRESS;
 	environ-: ADDRESS;
 
@@ -50,17 +50,17 @@ VAR
 		; program header
 		DD 1
 		DD 0
-		DD base; 
-		DD base; 
+		DD base;
+		DD base;
 		DD @last - base; segment size (file)
 		DD @last - base; segment size (memory)
 		DD 07
 		DD 1000H; alignment
-		
+
 		; interpreter header
 		DD 3
 		DD interpretername; interpreter name offset
-		DD interpretername + base; interpreter name 
+		DD interpretername + base; interpreter name
 		DD interpretername + base; interpreter name
 		DD interpretername_end - interpretername ; interpreter name length
 		DD interpretername_end - interpretername ; interpreter name length
@@ -69,7 +69,7 @@ VAR
 
 		; dynamic header
 		DD 02H
-		DD dynamicsection 
+		DD dynamicsection
 		DD dynamicsection + base
 		DD dynamicsection + base
 		DD dynamicsection_end - dynamicsection ; size of dynamic section
@@ -85,11 +85,11 @@ VAR
 		DD 09H, 0CH
 		DD 0AH, stringtable_end - stringtable; size (stringtable)
 		DD 0BH, 10H
-		
+
 		DD 01H, libname - stringtable; position of libname
 		DD 0H, 0H ; sentinel
-		dynamicsection_end:		
-		
+		dynamicsection_end:
+
 	 	dlsymrelocation:
 		DD @dlsym
 		DB 01H
@@ -102,13 +102,13 @@ VAR
 
 		libname:
 		DB 'libdl.so.2', 0
-		
+
 		dlsymname:
 		DB 'dlsym', 0
-		
-		
+
+
 		stringtable_end:
-		
+
 		ALIGN 4
 		symboltablebegin:
 		DD	0;
@@ -117,7 +117,7 @@ VAR
 		DB	0
 		DB	0
 		DW 0
-		
+
 		; dlsym symbol
 		DD dlsymname - stringtable; position of dlsymname
 		DD	0
@@ -156,17 +156,17 @@ VAR
 		DD 1
 		DD 07
 		DQ 0
-		DQ base; 
-		DQ base; 
+		DQ base;
+		DQ base;
 		DQ @last - base; segment size (file)
 		DQ @last - base; segment size (memory)
 		DQ 1000H; alignment
-		
+
 		; interpreter header
 		DD 3
 		DD 4H
 		DQ interpretername; interpreter name offset
-		DQ interpretername + base; interpreter name 
+		DQ interpretername + base; interpreter name
 		DQ interpretername + base; interpreter name
 		DQ interpretername_end - interpretername ; interpreter name length
 		DQ interpretername_end - interpretername ; interpreter name length
@@ -175,7 +175,7 @@ VAR
 		; dynamic header
 		DD 02H
 		DD 06H
-		DQ dynamicsection 
+		DQ dynamicsection
 		DQ dynamicsection + base
 		DQ dynamicsection + base
 		DQ dynamicsection_end - dynamicsection ; size of dynamic section
@@ -190,11 +190,11 @@ VAR
 		DQ 09H, 18H
 		DQ 0AH, stringtable_end - stringtable; size (stringtable)
 		DQ 0BH, 18H
-		
+
 		DQ 01H, libname - stringtable; position of libname
 		DQ 0H, 0H ; sentinel
-		dynamicsection_end:		
-		
+		dynamicsection_end:
+
 	 	dlsymrelocation:
 		DQ @dlsym
 		DD 01H
@@ -207,13 +207,13 @@ VAR
 
 		libname:
 		DB 'libdl.so.2', 0
-		
+
 		dlsymname:
 		DB 'dlsym', 0
-		
-		
+
+
 		stringtable_end:
-		
+
 		ALIGN 8
 		symboltablebegin:
 		DD	0;
@@ -222,7 +222,7 @@ VAR
 		DW 0
 		DQ	0
 		DQ	0
-		
+
 		; dlsym symbol
 		DD dlsymname - stringtable; position of dlsymname
 		DB	12H ; info: global + function
@@ -281,26 +281,26 @@ VAR
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		putc(1, c);
 	END Char;
- 
+
 	PROCEDURE Init;
 	VAR i: ADDRESS;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		baseAdr := ADDRESS OF EntryPoint;
 		endAdr := ADDRESS OF last;
-		
+
 		Trace.Init;
 		Trace.Char := Char;
-		
+
 		stackBottom := ADDRESSOF( i ) + 2*SIZEOF(ADDRESS);
 		ASSERT(dlsym # NIL);
 		Dlsym(0,"dlopen", ADDRESS OF dlopen);
-		ASSERT(dlopen # NIL); 
+		ASSERT(dlopen # NIL);
 		Dlsym( 0, "dlclose", ADDRESS OF dlclose);
-		ASSERT(dlclose # NIL); 
+		ASSERT(dlclose # NIL);
 		Dlsym(0,"exit", ADDRESS OF exit);
 		ASSERT(exit # NIL);
 	END Init;
-	
+
 	PROCEDURE {INITIAL,NOPAF} Init0;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		CODE
@@ -347,27 +347,27 @@ System.FreeDownTo FoxIntermediateBackend ~
 
 System.DoCommands
 	Compiler.Compile -p=Unix32
-		I386.Builtins.Mod Trace.Mod Linux.Glue.Mod Linux.I386.Unix.Mod Unix.I386.Machine.Mod Heaps.Mod  Modules.Mod 
-		Unix.Objects.Mod 
-		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod 
-		Pipes.Mod Commands.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod 
-		Unix.StdIO.Mod Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod 
-		UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod 
-		DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod 
-		ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod 
-		ObjectFile.Mod GenericLinker.Mod Loader.Mod Unix.BootConsole.Mod 
+		I386.Builtins.Mod Trace.Mod Linux.Glue.Mod Linux.I386.Unix.Mod Unix.I386.Machine.Mod Heaps.Mod  Modules.Mod
+		Unix.Objects.Mod
+		Unix.Kernel.Mod KernelLog.Mod Plugins.Mod Streams.Mod
+		Pipes.Mod Commands.Mod I386.Reals.Mod Reflection.Mod TrapWriters.Mod CRC.Mod SystemVersion.Mod
+		Unix.StdIO.Mod Unix.Traps.Mod Locks.Mod Unix.Clock.Mod Disks.Mod Files.Mod Dates.Mod Strings.Mod
+		UTF8Strings.Mod FileTrapWriter.Mod Caches.Mod DiskVolumes.Mod OldDiskVolumes.Mod RAMVolumes.Mod
+		DiskFS.Mod OldDiskFS.Mod OberonFS.Mod FATVolumes.Mod FATFiles.Mod ISO9660Volumes.Mod
+		ISO9660Files.Mod Unix.UnixFiles.Mod RelativeFileSystem.Mod BitSets.Mod StringPool.Mod DIagnostics.Mod
+		ObjectFile.Mod GenericLinker.Mod Loader.Mod Unix.BootConsole.Mod
 	~
 
 	Linker.Link --fileFormat=Raw --fileName=simple_elf --extension=.GofU --displacement=08048000H
-		Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog 
-Streams Commands StdIO TrapWriters Traps 
-Files UnixFiles Clock Dates Reals Strings Diagnostics 
-BitSets StringPool ObjectFile GenericLinker Reflection  Loader  
-BootConsole 
+		Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog
+Streams Commands StdIO TrapWriters Traps
+Files UnixFiles Clock Dates Reals Strings Diagnostics
+BitSets StringPool ObjectFile GenericLinker Reflection  Loader
+BootConsole
  ~
 
 	FSTools.CloseFiles simple_elf ~
-~ 
+~
 
 MODULE Test;
 
@@ -377,7 +377,7 @@ PROCEDURE Execute(context: Commands.Context);
 VAR str, msg: ARRAY 256 OF CHAR;  res: WORD;
 BEGIN
 	IF ~context.arg.GetString(str) THEN RETURN END;
-	IF ~context.arg.GetString(str) THEN 
+	IF ~context.arg.GetString(str) THEN
 		context.out.String("no command"); context.out.Ln;
 		RETURN
 	END;

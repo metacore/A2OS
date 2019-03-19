@@ -90,7 +90,7 @@ TYPE
 			AWAIT(state >= this);
 			res := SELF.res; COPY(SELF.msg, msg);
 		END Join;
-		
+
 	BEGIN {ACTIVE, SAFE}
 		Objects.SetContext(context);
 		IF ~exception THEN

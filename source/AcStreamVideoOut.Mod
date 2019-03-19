@@ -21,7 +21,7 @@ type
 	Controller* = record
 		cfg-: port out; (** configuration port *)
 		enabled-: boolean; (** TRUE if the PWM output is enabled *)
-		
+
 		pixelClock-: real; (** pixel clock in Hz *)
 
 		horizActiveSize-: longint;

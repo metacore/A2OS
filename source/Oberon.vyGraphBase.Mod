@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 IMPORT Objects, Files, Display, vyBase, Pictures, Display3, Fonts, Oberon, vyHost, vyGraphBase0, Images, Strings;
@@ -47,7 +47,7 @@ CONST
 	NAN = MAX(INTEGER);
 
 TYPE
-	doubleBuffer *= vyGraphBase0.doubleBuffer; 
+	doubleBuffer *= vyGraphBase0.doubleBuffer;
 
 	tPatPrinter* = vyGraphBase0.tPatPrinter;
 	tSign* = vyGraphBase0.tSign;
@@ -267,7 +267,7 @@ BEGIN
 		ELSIF M.name = "alpha"THEN M.class := Objects.Int;     M.i := s.alpha;  M.res := 0
 		ELSIF M.name = "style"THEN M.class := Objects.String;  Strings.SetToStr(s.style, M.s);  M.res := 0
 		ELSIF M.name = "fnt"THEN M.class := Objects.String;  COPY(s.fnt, M.s);  M.res := 0
-		ELSIF M.name = "fillcol"THEN M.class := Objects.Int;     M.i := s.fillcol;     M.res := 0 
+		ELSIF M.name = "fillcol"THEN M.class := Objects.Int;     M.i := s.fillcol;     M.res := 0
 		ELSIF M.name = "selectcol"THEN M.class := Objects.Int;     M.i := s.selectcol;  M.res := 0
 		ELSIF M.name = "fillpat"THEN M.class := Objects.Int;     M.i := s.fillpat;     M.res := 0
 		ELSIF M.name = "selectpat"THEN M.class := Objects.Int;     M.i := s.selectpat;     M.res := 0
@@ -282,7 +282,7 @@ BEGIN
 		ELSIF (M.name = "alpha") & (M.class = Objects.Int) THEN s.alpha := SHORT( M.i);     M.res := 0
 		ELSIF (M.name = "style") & ( M.class = Objects.String) THEN  Strings.StrToSet(M.s, s.style);  M.res := 0
 		ELSIF (M.name = "fnt") & (  M.class = Objects.String) THEN COPY(M.s, s.fnt);  M.res := 0
-		ELSIF (M.name = "fillcol") &  ( M.class = Objects.Int) THEN    s.fillcol :=  M.i;     M.res := 0 
+		ELSIF (M.name = "fillcol") &  ( M.class = Objects.Int) THEN    s.fillcol :=  M.i;     M.res := 0
 		ELSIF (M.name = "selectcol") &  ( M.class = Objects.Int) THEN s.selectcol :=  M.i;  M.res := 0
 		ELSIF (M.name = "fillpat") & (M.class = Objects.Int) THEN     s.fillpat := M.i;     M.res := 0
 		ELSIF (M.name = "selectpat") & ( M.class = Objects.Int) THEN   s.selectpat := M.i;   M.res := 0
@@ -547,50 +547,50 @@ END Pict2d;
 
 PROCEDURE StretchedPict2d* (picture: Pictures.Picture;     x, y, w, h: INTEGER;  dx, dy, dw, dh: Real);
 	VAR dxi, dyi, dwi, dhi: Coordinate;
-	factx,facty,factw,facth: LONGREAL; 
-	nx,ny,nw,nh: INTEGER; 
-	ndx,ndy,ndw,ndh: LONGREAL; 
-BEGIN   
-	factx := (theCoordinate.x2d-dx) / dw; 
-	facty := (theCoordinate.y2d-dy) / dh; 
-	factw := (theCoordinate.x2d+theCoordinate.w2d-dx)/dw; 
-	facth := (theCoordinate.y2d+theCoordinate.h2d-dx)/dh; 
-	
+	factx,facty,factw,facth: LONGREAL;
+	nx,ny,nw,nh: INTEGER;
+	ndx,ndy,ndw,ndh: LONGREAL;
+BEGIN
+	factx := (theCoordinate.x2d-dx) / dw;
+	facty := (theCoordinate.y2d-dy) / dh;
+	factw := (theCoordinate.x2d+theCoordinate.w2d-dx)/dw;
+	facth := (theCoordinate.y2d+theCoordinate.h2d-dx)/dh;
+
 	IF (0<=factx) & (factx <=1) THEN (* *)
-		nx := x+SHORT(ENTIER(w*factx)); 
-		ndx := dx+ (nx-x)/w * dw; 
-	ELSE 
-		nx := x; ndx := dx; 
-	END; 
+		nx := x+SHORT(ENTIER(w*factx));
+		ndx := dx+ (nx-x)/w * dw;
+	ELSE
+		nx := x; ndx := dx;
+	END;
 	IF (0<=facty) & (facty <=1) THEN (* *)
 		ny := y+SHORT(ENTIER(h*facty));
 		ndy := dy+ (ny-y)/h * dh;
-	ELSE 
-	ny := y; ndy := dy; 
-	END; 
+	ELSE
+	ny := y; ndy := dy;
+	END;
 	IF (0<=factw) & (factw <=1) THEN (* *)
-		nw := SHORT(ENTIER((x+w)*factw+1))-x; 
+		nw := SHORT(ENTIER((x+w)*factw+1))-x;
 		ndw := nw/w*dw;
-	ELSE 
-		nw := w; ndw := dw; 
-	END; 
+	ELSE
+		nw := w; ndw := dw;
+	END;
 	IF (0<=facth) & (facth <=1) THEN (* *)
 		nh := y+SHORT(ENTIER((y+h)*facth+1))-y;
-		ndh := nh/h*dh; 
-	ELSE 
-		nh := h; ndh := dh; 
-	END; 
-	
+		ndh := nh/h*dh;
+	ELSE
+		nh := h; ndh := dh;
+	END;
+
 	(*
 	Rect2dToRect (dx, dy, dw, dh , dxi, dyi, dwi, dhi);
 	StretchedPict(picture, x, y, w, h, dxi, dyi, dwi, dhi)
-	*) 
+	*)
 	(*
-	Out.String("Rect2d, showing: "); 
-	Out.Int(nx,5); Out.String(","); Out.Int(ny,5); Out.String(","); Out.Int(nw,5); Out.String(","); Out.Int(nh,5); Out.Ln; 
-	Out.LongReal(ndx,10); Out.String(","); Out.LongReal(ndy,10); Out.String(","); Out.LongReal(ndw,10); Out.String(","); Out.LongReal(ndh,10); Out.Ln; 
-	*) 
-	
+	Out.String("Rect2d, showing: ");
+	Out.Int(nx,5); Out.String(","); Out.Int(ny,5); Out.String(","); Out.Int(nw,5); Out.String(","); Out.Int(nh,5); Out.Ln;
+	Out.LongReal(ndx,10); Out.String(","); Out.LongReal(ndy,10); Out.String(","); Out.LongReal(ndw,10); Out.String(","); Out.LongReal(ndh,10); Out.Ln;
+	*)
+
 	Rect2dToRect (ndx, ndy, ndw, ndh , dxi, dyi, dwi, dhi);
 	StretchedPict(picture, nx, ny, nw, nh, dxi, dyi, dwi, dhi)
 
@@ -857,19 +857,19 @@ END SetDB;
 
 PROCEDURE openDB* (VAR db: vyGraphBase0.doubleBuffer; x, y,w,h: INTEGER; translucent: BOOLEAN);
 BEGIN
-	IF (vyGraphBase0.db # NIL) THEN  RETURN END; 
+	IF (vyGraphBase0.db # NIL) THEN  RETURN END;
 	vyGraphBase0.OpenBuffer(db,x,y,w,h,translucent); dbx := x;  dby := y;ShiftCoordinate( - x, - y);
-	IF db.type = vyGraphBase0.cDisplayBuffer THEN 
+	IF db.type = vyGraphBase0.cDisplayBuffer THEN
 		SetClippingRoutines();
 		Display2Local := Global2Local0;
 		Local2Display := Local2Global0
-	ELSIF db.type = vyGraphBase0.cImageBuffer THEN 
+	ELSIF db.type = vyGraphBase0.cImageBuffer THEN
 		SetImageRoutines();
 		Display2Local := Global2Local1;
 		Local2Display := Local2Global1
-	ELSE HALT(101); 
+	ELSE HALT(101);
 	END;
-	
+
 (*	IF ~vyGraphBase0.db.active THEN
 		IF bmp # NIL THEN
 			vyGraphBase0.OpenBuffer(bmp , X, Y);  dbx := X;  dby := Y;
@@ -886,13 +886,13 @@ BEGIN
 		ELSE HALT(101)
 		END
 	END
-	*) 
+	*)
 END openDB;
 
 PROCEDURE closeDB*;
 	VAR X, Y: INTEGER;
 BEGIN
-	IF vyGraphBase0.db = NIL THEN RETURN END; 
+	IF vyGraphBase0.db = NIL THEN RETURN END;
 	IF vyGraphBase0.db.active THEN
 		vyGraphBase0.CloseBuffer(vyGraphBase0.db,X,Y);
 		ShiftCoordinate(X, Y);
@@ -1291,19 +1291,19 @@ BEGIN WITH theCoordinate: tCoordinate2d DO
 END Rect2dToRect;
 
 PROCEDURE ZoomIn* (x, y, w, h: Coordinate);
-	VAR x0, y0, x1, y1: Real;    cache: tRegion2d; a,b: INTEGER;  
-CONST fact=0.77; 
+	VAR x0, y0, x1, y1: Real;    cache: tRegion2d; a,b: INTEGER;
+CONST fact=0.77;
 BEGIN WITH theCoordinate: tCoordinate2d DO
-		IF w = 0 THEN 
-			a := x-theCoordinate.x; b := theCoordinate.x+theCoordinate.w -x; 
-			x := x- SHORT(ENTIER(a * fact)) ; w :=  SHORT(ENTIER(b*fact+a*fact)); 
-		END; 	
-		IF h = 0 THEN 
-			a := y-theCoordinate.y; b := theCoordinate.y+theCoordinate.h-y; 
-			y := y- SHORT(ENTIER(a * fact)); h := SHORT(ENTIER(b*fact+a*fact)); 
-		END; 	
+		IF w = 0 THEN
+			a := x-theCoordinate.x; b := theCoordinate.x+theCoordinate.w -x;
+			x := x- SHORT(ENTIER(a * fact)) ; w :=  SHORT(ENTIER(b*fact+a*fact));
+		END;
+		IF h = 0 THEN
+			a := y-theCoordinate.y; b := theCoordinate.y+theCoordinate.h-y;
+			y := y- SHORT(ENTIER(a * fact)); h := SHORT(ENTIER(b*fact+a*fact));
+		END;
 
-				
+
 		PointToPoint2d (x, y, x0, y0);   		PointToPoint2d (x + w, y + h, x1, y1);
 		NEW (cache);
 		cache.x := theCoordinate.x2d;

@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (*		(c) Project Voyager, StatLab Heidelberg
@@ -81,7 +81,7 @@ PROCEDURE SetColor*;
 BEGIN
 	NEW(s);  vyParser.OpenParScanner(s);
 	IF vyParser.ExpectName(s, name) & vyParser.ExpectNumber (s, i) THEN
-		layer := GetLayer(); IF layer = NIL THEN RETURN END; 
+		layer := GetLayer(); IF layer = NIL THEN RETURN END;
 		vyHostStrings.Cap(name);
 		IF vyHostStrings.Equal(name, "FORECOL") THEN		layer.style.fcol := SHORT(i)
 		ELSIF vyHostStrings.Equal(name, "SELECTCOL") THEN layer.style.selectcol := SHORT(i)
@@ -108,7 +108,7 @@ PROCEDURE SetWidth*;
 	VAR s: vyParser.Scanner;   layer: vyPort.tLayer;  i: LONGINT;
 BEGIN NEW(s);  vyParser.OpenParScanner(s);
 	IF vyParser.ExpectNumber (s, i) THEN
-		layer := GetLayer (); IF layer = NIL THEN RETURN END; 
+		layer := GetLayer (); IF layer = NIL THEN RETURN END;
 		layer.style.pensize := SHORT(i);
 		Update()
 	END
@@ -120,7 +120,7 @@ BEGIN
 	NEW(s);  vyParser.OpenParScanner(s);
 
 	IF vyParser.ExpectName(s, name) & vyParser.ExpectName (s, pattern) THEN
-		layer := GetLayer(); IF layer = NIL THEN RETURN END; 
+		layer := GetLayer(); IF layer = NIL THEN RETURN END;
 		vyHostStrings.Cap(name);
 		IF vyHostStrings.Equal(pattern, "solid") THEN pat := Display.solid
 		ELSIF vyHostStrings.Equal(pattern, "grey0") THEN pat := Display.grey0
@@ -145,7 +145,7 @@ END SetPattern;
 PROCEDURE SetFont*;
 	VAR sc: Texts.Scanner;  font: ARRAY 32 OF CHAR;  layer: vyPort.tLayer;
 BEGIN
-	layer := GetLayer();IF layer = NIL THEN RETURN END; 
+	layer := GetLayer();IF layer = NIL THEN RETURN END;
 	Texts.OpenScanner(sc, Oberon.Par.text, Oberon.Par.pos);  Texts.Scan(sc);  COPY(sc.s, font);
 	IF Fonts.This(font) = NIL THEN vyHostTexts.NoteSS(1, font, " : no valid font !") END;
 	COPY(font, layer.style.fnt);
@@ -168,7 +168,7 @@ PROCEDURE DefineUserPalette*;
 	VAR r1, g1, b1, r2, g2, b2, start, end: LONGINT;  sc: vyParser.Scanner;
 BEGIN
 	vyParser.OpenParScanner(sc);
-	IF ~(vyParser.Number(sc, r1) & vyParser.Number(sc, g1) & vyParser.Number(sc, b1)  & 
+	IF ~(vyParser.Number(sc, r1) & vyParser.Number(sc, g1) & vyParser.Number(sc, b1)  &
 		vyParser.Number(sc, r2) & vyParser.Number(sc, g2) & vyParser.Number(sc, b2)) THEN
 		vyHostTexts.Note (vyHostTexts.cAlert, "");  RETURN
 	END;

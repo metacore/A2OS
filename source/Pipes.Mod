@@ -94,14 +94,14 @@ TYPE ReadDecoupler*= OBJECT
 		NEW(pipe,128);
 		SELF.inputReceiver:=inputReceiver;
 	END InitReadDecoupler;
-	
+
 	PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 	BEGIN
 		pipe.Receive(buf,ofs,size,min,len,res);
 	END Receive;
-	
+
 BEGIN{ACTIVE}
-		
+
 		LOOP
 			(*todo: check res, if inputReceiver throws anything but 'OK' exit the loop*)
 			inputReceiver(smallbuf, 0, 128, 1, len, res); (*read at least 1 byte into the small buffer*)

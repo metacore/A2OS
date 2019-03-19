@@ -1460,7 +1460,7 @@ VAR
 		JMP	singlepieces	;
 		endL:
 	END AddARARLoopSSE;
-	
+
 (* *)
 	PROCEDURE SubAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	CODE {SYSTEM.AMD64, SYSTEM.FPU}
@@ -1798,7 +1798,7 @@ VAR
 		JMP	singlepieces	;
 		endL:
 	END SubARARLoopSSE;
-	
+
 	(* *)
 	PROCEDURE EMulAXAXLoopA( ladr, radr, dadr: ADDRESS; linc, rinc, dinc, len: SIZE );
 	CODE {SYSTEM.AMD64, SYSTEM.FPU}
@@ -6375,7 +6375,7 @@ VAR
 		END;
 	END MatMulR;
 
-	PROCEDURE MatMulX( matrixA, matrixB, matrixC: ADDRESS; 
+	PROCEDURE MatMulX( matrixA, matrixB, matrixC: ADDRESS;
 		IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	VAR M, N, K: SIZE;
 	BEGIN
@@ -6502,7 +6502,7 @@ VAR
 		END;
 	END MatMulIncX;
 
-	PROCEDURE MatMulARARBlocked( matrixA, matrixB, matrixC: ADDRESS; 
+	PROCEDURE MatMulARARBlocked( matrixA, matrixB, matrixC: ADDRESS;
 		IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE;
 															 add: BOOLEAN ): BOOLEAN;
 	VAR M, N, K, L2M, L2N, L2K: SIZE;
@@ -6616,7 +6616,7 @@ VAR
 															 ColsB, TRUE )
 	END MatMulIncRTransposed;
 
-	PROCEDURE MatMulXSSEStride( matrixA, matrixB, matrixC: ADDRESS; 
+	PROCEDURE MatMulXSSEStride( matrixA, matrixB, matrixC: ADDRESS;
 		IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE ): BOOLEAN;
 	BEGIN
 		RETURN MatMulAXAXSSEStride( matrixA, matrixB, matrixC,
@@ -7054,7 +7054,7 @@ VAR
 
 		MOVLPS [RCX], XMM0
 	END MatVecMulR2x2;
-	
+
 	(* PH *)
 	(* to do: use MOVAPS when Felix fixes issues with alignment *)
 	PROCEDURE MatVecMulR4x4(dadr, ladr, radr: ADDRESS);
@@ -7068,15 +7068,15 @@ VAR
 		MOVUPS XMM2, [RAX+16] ; XMM2 := [a10,a11,a12,a13]
 		MOVUPS XMM3, [RAX+32] ; XMM3 := [a20,a21,a22,a23]
 		MOVUPS XMM4, [RAX+48] ; XMM4 := [a30,a31,a32,a33]
-		MULPS XMM1, XMM0 
-		MULPS XMM2, XMM0 
-		HADDPS XMM1, XMM2	; adjacent pairs are horizontally  added  
-		
-		MULPS XMM3, XMM0 
-		MULPS XMM4, XMM0 
-		HADDPS XMM3, XMM4	; adjacent pairs are horizontally  added  
-		
-		HADDPS XMM1, XMM3	; adjacent pairs are horizontally  added 
+		MULPS XMM1, XMM0
+		MULPS XMM2, XMM0
+		HADDPS XMM1, XMM2	; adjacent pairs are horizontally  added
+
+		MULPS XMM3, XMM0
+		MULPS XMM4, XMM0
+		HADDPS XMM3, XMM4	; adjacent pairs are horizontally  added
+
+		HADDPS XMM1, XMM3	; adjacent pairs are horizontally  added
 		MOVUPS [RCX], XMM1
 	END MatVecMulR4x4;
 
@@ -7179,7 +7179,7 @@ VAR
 			ArrayBase.matVecMulR4x4 := MatVecMulR4x4;
 		END;
 	END InstallSSE3;
-	
+
 	PROCEDURE Install*;
 	BEGIN
 		KernelLog.String( "ArrayBaseOptimized: installing runtime library optimizations:" );

@@ -70,7 +70,7 @@ CONST
 	(* Exceptions *)
 	FIQDisabled* 	= 40H;   (* Fast interrupts disabled globally *)
 	IRQDisabled* 	= 80H;   (* Interrupts disabled globally *)
-	
+
 	(* ===== System Level Control register access ===== *)
 	SlcrBase* = 0xF8000000; (** Base address for System Level Control (SLCR) registers *)
 	SlcrLockKey* = 0x767B; (** SLCR lock key; write this value to SLCR_LOCK register to disable writing to SLCR registers *)
@@ -124,7 +124,7 @@ CONST
 	ModRoot * = 21318H;
 
 TYPE
-	
+
 	(** System Level Control (SLCR) registers definition *)
 	SlcrRegisters* = POINTER{UNSAFE,UNTRACED} TO RECORD
 		SCL*: LONGINT; (** 0x00000000 32 rw 0x00000000 Secure Configuration Lock *)

@@ -1,6 +1,6 @@
 MODULE FoxCSharpScanner;
 
-IMPORT Streams, Strings, Diagnostics, Commands, StringPool, 
+IMPORT Streams, Strings, Diagnostics, Commands, StringPool,
     D := Debugging, Basic := FoxBasic, FoxScanner;
 
 CONST
@@ -16,39 +16,39 @@ CONST
     MaxLongrealExponent* = FoxScanner.MaxLongrealExponent;
 
     (* scanner constants *)
-    EOT* = 0X; 
-    LF* = 0AX; 
-    CR* = 0DX; 
+    EOT* = 0X;
+    LF* = 0AX;
+    CR* = 0DX;
     TAB* = 09X;
 
 TYPE
     StringType* = FoxScanner.StringType;
     IdentifierType* = FoxScanner.IdentifierType;
-    IdentifierString* = FoxScanner.IdentifierString; 
+    IdentifierString* = FoxScanner.IdentifierString;
 
 CONST
     (* tokens *)
 
     None*= 0;
 
-    (* operators and punctuators *)    
-    Exclamation* = 1;         (* ! *)    
+    (* operators and punctuators *)
+    Exclamation* = 1;         (* ! *)
     ExclamationEqual* = 2;    (* != *)
-    Percent* = 3;             (* % *)   
+    Percent* = 3;             (* % *)
     PercentEqual* = 4;        (* %= *)
-    And* = 5;                 (* & *)   
-    AndEqual* = 6;            (* &= *)   
+    And* = 5;                 (* & *)
+    AndEqual* = 6;            (* &= *)
     AndAnd* = 7;              (* && *)
     LeftParenthesis* = 8;     (* ( *)
     RightParenthesis* = 9;    (* ) *)
-    Times* = 10;              (* * *)    
+    Times* = 10;              (* * *)
     TimesEqual* = 11;         (* *= *)
-    Plus* = 12;               (* + *)    
-    PlusEqual* = 13;          (* += *)    
+    Plus* = 12;               (* + *)
+    PlusEqual* = 13;          (* += *)
     PlusPlus* = 14;           (* ++ *)
     Comma* = 15;              (* , *)
-    Minus* = 16;              (* - *)   
-    MinusEqual* = 17;         (* -= *)   
+    Minus* = 16;              (* - *)
+    MinusEqual* = 17;         (* -= *)
     MinusMinus* = 18;         (* -- *)
     Period* = 19;             (* . *)
     Slash* = 20;              (* / *)
@@ -123,7 +123,7 @@ CONST
     CharacterLiteral* = 86;
     StringLiteral* = 87;
 
-    Comment*= 88; 
+    Comment*= 88;
 
     (* Active Cells *)
     Cell* = 89;
@@ -138,12 +138,12 @@ CONST
     EndOfText*= 96;
 
     (* number types *)
-    IntNumber*= 1; 
-    LongNumber*= 2; 
-    FloatNumber*= 3; 
-    DoubleNumber*= 4; 
+    IntNumber*= 1;
+    LongNumber*= 2;
+    FloatNumber*= 3;
+    DoubleNumber*= 4;
 
-    SingleQuote = 27X;  
+    SingleQuote = 27X;
     DoubleQuote* = 22X;
     Backslash = 5CX;
 
@@ -156,7 +156,7 @@ TYPE
     Token* = LONGINT;
 	Position* = Basic.Position;
     (**
-        symbol: data structure for the data transfer of 
+        symbol: data structure for the data transfer of
         the last read input from the scanner to the parser
     **)
     Symbol* = RECORD
@@ -193,9 +193,9 @@ TYPE
             diagnostics: error output object
         *)
         PROCEDURE & InitializeScanner*(
-                CONST source: ARRAY OF CHAR; 
-                reader: Streams.Reader; 
-                position: LONGINT; 
+                CONST source: ARRAY OF CHAR;
+                reader: Streams.Reader;
+                position: LONGINT;
                 diagnostics: Diagnostics.Diagnostics);
         BEGIN
             NEW(stringMaker,1024);
@@ -206,14 +206,14 @@ TYPE
             SELF.reader := reader;
             SELF.diagnostics := diagnostics;
             ch := " ";
-            IF reader = NIL THEN 
+            IF reader = NIL THEN
                 ch := EOT
             ELSE
-                GetNextCharacter 
+                GetNextCharacter
             END;
-            IF Trace THEN 
+            IF Trace THEN
                 D.Str("New scanner  ");
-                D.Ln;  
+                D.Ln;
             END;
             SELF.position.start := position;
             SELF.position.line := 0;
@@ -236,9 +236,9 @@ TYPE
         (** get next character, end of text results in ch = EOT **)
         PROCEDURE GetNextCharacter;
         BEGIN
-            reader.Char(ch); 
+            reader.Char(ch);
             INC(position.start);
-            IF ch = LF THEN 
+            IF ch = LF THEN
                 INC(position.line); position.linepos := position.start;
             END;
         END GetNextCharacter;
@@ -258,7 +258,7 @@ TYPE
             SingleCharacter =
                 any character except ' (27X), \ (5CX), and NewLineCharacter.
             SimpleEscapeSequence =
-                "\'" | '\"' | '\\' | '\0' | 
+                "\'" | '\"' | '\\' | '\0' |
                 '\a' | '\b' | '\f' | '\n' | '\r' | '\t' | '\v'.
             HexadecimalEscapeSequence =
                 '\x' HexDigit {HexDigit}.
@@ -409,21 +409,21 @@ TYPE
         END GetString;
 
         (**
-            Identifier = 
+            Identifier =
                 (Letter | '_') {Letter | Digit | '_'}.
-            Letter = 
+            Letter =
                 'A' | 'B' | .. |  'Z' | 'a' | 'b' |  .. | 'z' .
         **)
         PROCEDURE GetIdentifier(VAR symbol: Symbol);
             VAR i: LONGINT;
         BEGIN
             i := 0;
-            REPEAT 
-                symbol.identifierString[i] := ch; 
-                INC(i);  
-                GetNextCharacter 
+            REPEAT
+                symbol.identifierString[i] := ch;
+                INC(i);
+                GetNextCharacter
             UNTIL reservedCharacter[ORD(ch)] OR (i = MaxIdentifierLength);
-            IF i = MaxIdentifierLength THEN 
+            IF i = MaxIdentifierLength THEN
                 Error(Basic.IdentifierTooLong);
                 DEC(i)
             END;
@@ -433,7 +433,7 @@ TYPE
 
         (**
             Number =
-                IntegerLiteral | 
+                IntegerLiteral |
                 RealLiteral.
             IntegerLiteral =
                 DecimalIntegerLiteral |
@@ -453,9 +453,9 @@ TYPE
                 ('E' | 'e') ['+' | '-'] Digit {Digit}.
             RealTypeSuffix =
                 'F' | 'f' | 'D' | 'd'.
-            Digit = 
+            Digit =
                 '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
-            HexDigit = 
+            HexDigit =
                 '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' |
                 'A' | 'B' | 'C' | 'D' | 'E' | 'F' |
                 'a' | 'b' | 'c' | 'd' | 'e' | 'f'.
@@ -538,7 +538,7 @@ TYPE
             END;
             LOOP    (* read mantissa *)
                 IF ((ch >= '0') & (ch <= '9')) OR
-                        (hex & 
+                        (hex &
                             (((ch >= 'A') & (ch <= 'F')) OR
                                 ((ch >= 'a') & (ch <= 'f')))) THEN
                     IF (m > 0) OR (ch # '0') THEN    (* ignore leading zeros *)
@@ -563,8 +563,8 @@ TYPE
                 END
             END;
             IF d = 0 THEN
-                IF ((ch = 'F') OR (ch = 'f') OR 
-                        (ch = 'D') OR (ch = 'd') OR 
+                IF ((ch = 'F') OR (ch = 'f') OR
+                        (ch = 'D') OR (ch = 'd') OR
                         (ch = 'E') OR (ch = 'e')) THEN
                     d := i
                 END;
@@ -584,8 +584,8 @@ TYPE
                     symbol.hugeint := 0;
                     i := 0;
                     IF hex THEN
-                        IF ~long & 
-                                ((n < MaxHexDigits) OR 
+                        IF ~long &
+                                ((n < MaxHexDigits) OR
                                     ((n = MaxHexDigits) & (dig[0] <= '7'))) THEN
                             WHILE i < n DO
                                 symbol.integer := symbol.integer * 10H + HexDigit(dig[i]);
@@ -626,7 +626,7 @@ TYPE
                             (* restart computation *)
                             (*
                                 ACHTUNG: Reportedly, Fox has or had certain limitations
-                                    working with HUGEINT that affected the original code. 
+                                    working with HUGEINT that affected the original code.
                                     Furthermore, at present Ronin supports HUGEINT as
                                     a mere alias to LONGINT, therefore the following code
                                     is just reserved for the future and long integer
@@ -761,7 +761,7 @@ TYPE
             NotAsterisk =
                 any character except *.
             NotSlash =
-                any character except /.            
+                any character except /.
         **)
         PROCEDURE ReadSingleLineComment(VAR symbol: Symbol);
         BEGIN
@@ -808,15 +808,15 @@ TYPE
         BEGIN
             WHILE (ch = 20X) OR (ch = 09X) OR (ch = 0BX) OR (ch = 0CX) OR
                     (ch = 0DX) OR (ch = 0AX) DO
-                (* ignore  C# whitespace characters '\t' (09X), '\v' (0BX), '\f' (0CX) 
+                (* ignore  C# whitespace characters '\t' (09X), '\v' (0BX), '\f' (0CX)
                        and newlines '\r' (0DX), '\n' (0AX) *)
                 IF ch = EOT THEN
-                    IF Trace THEN 
-                        D.String("EOT"); 
-                        D.Ln; 
+                    IF Trace THEN
+                        D.String("EOT");
+                        D.Ln;
                     END;
                     RETURN
-                ELSE 
+                ELSE
                     GetNextCharacter
                 END
             END;
@@ -1030,8 +1030,8 @@ KernelLog.Ln();
                 s := Identifier;
                 GetIdentifier(symbol);
                 token := keywords.IndexByIdentifier(symbol.identifier);
-                IF  (token >= 0) THEN 
-                    s := token 
+                IF  (token >= 0) THEN
+                    s := token
                 END;
             ELSE
                 s := Identifier;
@@ -1041,29 +1041,29 @@ KernelLog.Ln();
             symbol.token := s;
             symbol.position.end := position.start;
 
-            IF Trace THEN 
-                OutSymbol(D.Log, symbol); 
-                D.Ln; 
+            IF Trace THEN
+                OutSymbol(D.Log, symbol);
+                D.Ln;
             END;
 
             RETURN ~error
         END GetNextSymbol;
 
         PROCEDURE ResetError*();
-        BEGIN 
+        BEGIN
             error := FALSE
         END ResetError;
 
-        (** set the diagnostics mode of the scanner 
+        (** set the diagnostics mode of the scanner
             (diagnostics = NIL ==> no report) and reset the error state
             intended for silent symbol peeeking after the end of a module *)
         PROCEDURE ResetErrorDiagnostics*(VAR diagnostics: Diagnostics.Diagnostics);
-        VAR 
+        VAR
                 d: Diagnostics.Diagnostics;
         BEGIN
             error := FALSE;
-            d := SELF.diagnostics; 
-            SELF.diagnostics := diagnostics; 
+            d := SELF.diagnostics;
+            SELF.diagnostics := diagnostics;
             diagnostics := d;
         END ResetErrorDiagnostics;
 
@@ -1071,13 +1071,13 @@ KernelLog.Ln();
 
     (** return a new scanner on a stream, error output via diagnostics  **)
     PROCEDURE NewScanner*(
-            CONST source: ARRAY OF CHAR; 
-            reader: Streams.Reader; 
-            position: LONGINT; 
+            CONST source: ARRAY OF CHAR;
+            reader: Streams.Reader;
+            position: LONGINT;
             diagnostics: Diagnostics.Diagnostics): Scanner;
         VAR s: Scanner;
     BEGIN
-        NEW( s, source, reader, position, diagnostics );  
+        NEW( s, source, reader, position, diagnostics );
         RETURN s;
     END NewScanner;
 
@@ -1090,16 +1090,16 @@ KernelLog.Ln();
         VAR id: StringPool.Index;
     BEGIN
         CASE symbol.token OF
-          Identifier, IntegerLiteral, RealLiteral: 
+          Identifier, IntegerLiteral, RealLiteral:
             COPY(symbol.identifierString, str)
-        | StringLiteral, Comment: 
-            ASSERT(LEN(str) >= LEN(symbol.string^)); 
+        | StringLiteral, Comment:
+            ASSERT(LEN(str) >= LEN(symbol.string^));
             COPY(symbol.string^, str);
         ELSE
             GetKeyword(symbol.token, id);
-            IF id < 0 THEN 
-                str[0] := 0X 
-            ELSE 
+            IF id < 0 THEN
+                str[0] := 0X
+            ELSE
                 StringPool.GetString(id, str) END;
         END;
     END SymbolToString;
@@ -1121,30 +1121,30 @@ KernelLog.Ln();
         END OutChar;
 
     BEGIN
-        w.Int(symbol.position.start, 1); 
+        w.Int(symbol.position.start, 1);
         w.String("-");
-        w.Int(symbol.position.end, 1); 
+        w.Int(symbol.position.end, 1);
         w.String(":");
         w.String(tokens[symbol.token]);
         IF (symbol.token = IntegerLiteral) OR (symbol.token = RealLiteral) THEN
             CASE symbol.numberType OF
-              IntNumber: 
+              IntNumber:
                 w.String("(int)")
-            | LongNumber: 
+            | LongNumber:
                 w.String("(long)")
-            | FloatNumber: 
+            | FloatNumber:
                 w.String("(float)")
-            | DoubleNumber: 
+            | DoubleNumber:
                 w.String("(double)")
             END;
         ELSIF symbol.token = CharacterLiteral THEN
-            w.String(":"); 
-            w.Char("'"); 
+            w.String(":");
+            w.Char("'");
             OutChar(symbol.character);
             w.Char("'");
         ELSIF symbol.token = StringLiteral THEN
-            w.String(":"); 
-            w.Char('"'); 
+            w.String(":");
+            w.Char('"');
             i := 0;
             WHILE symbol.string^[i] # 0X DO
                 OutChar(symbol.string^[i]);
@@ -1152,12 +1152,12 @@ KernelLog.Ln();
             END;
             w.Char('"');
         ELSIF symbol.token = Comment THEN
-            w.String("/*"); 
-            w.String(symbol.string^); 
+            w.String("/*");
+            w.String(symbol.string^);
             w.String("*/");
         ELSE
-            SymbolToString(symbol, str); 
-            w.String(": "); 
+            SymbolToString(symbol, str);
+            w.String(": ");
             w.String(str);
         END
     END OutSymbol;
@@ -1168,11 +1168,11 @@ KernelLog.Ln();
     BEGIN
         FOR i := 0 TO LEN(reservedCharacter) - 1 DO
             CASE CHR(i) OF
-            | 'a' .. 'z', 'A' .. 'Z': 
+            | 'a' .. 'z', 'A' .. 'Z':
                 reservedCharacter[i] := FALSE;
-            | '0'..'9': 
+            | '0'..'9':
                 reservedCharacter[i] := FALSE;
-            | '_': 
+            | '_':
                 reservedCharacter[i] := FALSE
             ELSE
                 reservedCharacter[i] := TRUE
@@ -1191,10 +1191,10 @@ KernelLog.Ln();
     BEGIN
         tokens[None] := "None";
 
-        (* operators and punctuators *)    
+        (* operators and punctuators *)
         tokens[Exclamation] := "Exclamation";
         tokens[ExclamationEqual] := "ExclamationEqual";
-        tokens[Percent] := "Percent";   
+        tokens[Percent] := "Percent";
         tokens[PercentEqual] := "PercentEqual";
         tokens[And] := "And";
         tokens[AndEqual] := "AndEqual";
@@ -1296,8 +1296,8 @@ KernelLog.Ln();
         tokens[Question] := "Question";
         tokens[QuestionQuestion] := "QuestionQuestion";
 
-        FOR i := 0 TO EndOfText DO 
-            ASSERT(tokens[i] # "") 
+        FOR i := 0 TO EndOfText DO
+            ASSERT(tokens[i] # "")
         END;
     END InitTokens;
 
@@ -1355,7 +1355,7 @@ KernelLog.Ln();
         Enter("while", While);
 
         (* operators and punctuators *)
-        Enter("!", Exclamation);   
+        Enter("!", Exclamation);
         Enter("!=", ExclamationEqual);
         Enter("%", Percent);
         Enter("%=", PercentEqual);
@@ -1418,11 +1418,11 @@ KernelLog.Ln();
 
     (** debugging / reporting **)
     PROCEDURE ReportKeywords*(context: Commands.Context);
-        VAR i: LONGINT; 
+        VAR i: LONGINT;
             name: Keyword;
     BEGIN
         FOR i := 0 TO EndOfText DO
-            context.out.Int(i, 1); 
+            context.out.Int(i, 1);
             context.out.String(": ");
             context.out.Char('"');
             keywords.StringByIndex(i, name);
@@ -1434,12 +1434,12 @@ KernelLog.Ln();
 
 (*
     PROCEDURE TestScanner*(context: Commands.Context);
-        VAR filename: ARRAY 256 OF CHAR; 
-            reader: Streams.Reader; 
+        VAR filename: ARRAY 256 OF CHAR;
+            reader: Streams.Reader;
             scanner: Scanner;
             sym: Symbol;
     BEGIN
-        context.arg.SkipWhitespace; 
+        context.arg.SkipWhitespace;
         context.arg.String(filename);
         reader := TextUtilities.GetTextReader(filename);
         scanner := NewScanner(filename, reader, 0, NIL);

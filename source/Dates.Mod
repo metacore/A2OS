@@ -10,7 +10,7 @@ MODULE Dates; (** AUTHOR "be, tf, staubesv"; PURPOSE "Date and time functions"; 
 					4-0: day of month
 *)
 
-(*	Problem of leap seconds is handled as in POSIX: 
+(*	Problem of leap seconds is handled as in POSIX:
 		http://www.eecis.udel.edu/~mills/leap.html
 		http://en.wikipedia.org/wiki/Leap_second
 *)
@@ -164,7 +164,7 @@ BEGIN
 	RETURN result;
 END CompareDateTime;
 
-(** Absolute time difference between t1 and t2. 
+(** Absolute time difference between t1 and t2.
 Note that leap seconds are not counted, see http://www.eecis.udel.edu/~mills/leap.html *)
 PROCEDURE TimeDifference*(t1, t2 : DateTime; VAR days, hours, minutes, seconds : LONGINT);
 CONST SecondsPerMinute = 60; SecondsPerHour = 3600; SecondsPerDay = 86400;

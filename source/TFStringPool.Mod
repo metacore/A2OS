@@ -2,27 +2,27 @@ MODULE TFStringPool;
 
 IMPORT
 	Trace, Strings;
-	
+
 CONST
-	BufSize = 1024;	
-	
-TYPE 
+	BufSize = 1024;
+
+TYPE
 	Buffer = POINTER TO ARRAY BufSize OF CHAR;
-	BufferList = POINTER TO ARRAY OF Buffer;	
-	
+	BufferList = POINTER TO ARRAY OF Buffer;
+
 	StringPool* = OBJECT
 	VAR bufList : BufferList;
 		end* : LONGINT;
 		nofBufs : LONGINT;
-		
-		
+
+
 		PROCEDURE &Init*;
 		BEGIN
 			end := 0;
 			NEW(bufList, 1);
 			nofBufs := LEN(bufList);
 		END Init;
-		
+
 		PROCEDURE GrowBufList;
 		VAR i : LONGINT;
 			t : BufferList;
@@ -32,9 +32,9 @@ TYPE
 			bufList := t;
 			nofBufs := LEN(bufList);
 		END GrowBufList;
-		
+
 		PROCEDURE AddString*(CONST str : ARRAY OF CHAR) : LONGINT;
-		VAR i, result, bufNr, bufPos : LONGINT; 
+		VAR i, result, bufNr, bufPos : LONGINT;
 		BEGIN {EXCLUSIVE}
 			result := end;
 			i := 0;
@@ -52,34 +52,34 @@ TYPE
 			INC(end);
 			RETURN result
 		END AddString;
-		
+
 		PROCEDURE GetString*(i : LONGINT; VAR str : ARRAY OF CHAR);
 		VAR ch : CHAR; j : LONGINT;
 		BEGIN {EXCLUSIVE}
 			j := 0;
-			REPEAT 
+			REPEAT
 				ch := bufList[i DIV BufSize][i MOD BufSize];
 				str[j] := ch;
 				INC(i); INC(j)
 			UNTIL ch = 0X
 		END GetString;
-		
+
 		PROCEDURE Equal*(a, b : LONGINT) : BOOLEAN;
 		VAR ca, cb : CHAR;
 		BEGIN {EXCLUSIVE}
-			REPEAT 
+			REPEAT
 				ca := bufList[a DIV BufSize][a MOD BufSize];
 				cb := bufList[b DIV BufSize][b MOD BufSize];
 				INC(a); INC(b)
 			UNTIL (ca # cb) OR (ca = 0X);
-			RETURN ca = cb 
+			RETURN ca = cb
 		END Equal;
-		
+
 	END StringPool;
 
 VAR
 	s : StringPool;
-	
+
 PROCEDURE Test*(par : ANY) : ANY;
 VAR x, y : ARRAY 128 OF CHAR;
 	i : LONGINT;
@@ -98,12 +98,12 @@ BEGIN
 		s.GetString(buf[i], y);
 		IF x # y THEN Trace.String("Failed"); Trace.Ln;  END;
 	END;
-	Trace.String("done"); Trace.Ln; 
+	Trace.String("done"); Trace.Ln;
 
 	RETURN NIL
 END Test;
-	
-	
+
+
 BEGIN
 	NEW(s);
 

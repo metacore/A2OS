@@ -171,4 +171,3 @@ WMUtilities.Call System.List plugins ~
 
 WMUtilities.TestWindow ~
 WMUtilities.TestWindowWriter ~
- 

@@ -78,7 +78,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END GetTable;
 
 PROCEDURE Initialize-;
-TYPE BiosEBDA = POINTER {UNSAFE} TO RECORD val: INTEGER END; 
+TYPE BiosEBDA = POINTER {UNSAFE} TO RECORD val: INTEGER END;
 VAR address := 0E0000H: ADDRESS; size := 020000H: SIZE; biosEBDA {UNTRACED}: BiosEBDA;
 
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -87,7 +87,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF (rdsp.signature = RDSPSignature) & (Checksum (address, 20) = 0) THEN RETURN END;
 		INC (address, 16); DEC (size, 16);
 	END;
-	
+
 	biosEBDA := 40EH;
 	(* try Extended Bios Data Area EBDA *)
 	address := ADDRESS(biosEBDA.val) MOD 10000H * 16;

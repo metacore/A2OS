@@ -69,7 +69,7 @@ CONST
 	fpStackOperand= InstructionSet.fpStackOperand; directMemoryOffset= InstructionSet.directMemoryOffset;
 	RXB = InstructionSet.RXB;
 	Src1Prefix = InstructionSet.Src1Prefix;
-	
+
 	(* limits *)
 	maxNumberOperands = InstructionSet.maxNumberOperands;
 
@@ -211,7 +211,7 @@ TYPE
 		error-: BOOLEAN;
 		diagnostics: Diagnostics.Diagnostics;
 		assembly: Assembly; (* for error position *)
-		
+
 		(* overal state *)
 		cpuBits: Size; (* supported bit width for this cpu / target *)
 		cpuOptions: InstructionSet.CPUOptions;
@@ -274,7 +274,7 @@ TYPE
 			s.Get(msg);
 			ErrorSS(msg1,msg);
 		END ErrorSI;
-		
+
 		PROCEDURE AddFixup (mode: SHORTINT; size: SHORTINT; pc: LONGINT; symbol: ObjectFile.Identifier; symbolOffset, displacement: LONGINT);
 		VAR fixup: BinaryCode.Fixup; format: BinaryCode.FixupPatterns; id: ObjectFile.Identifier;
 		BEGIN
@@ -313,7 +313,7 @@ TYPE
 					FOR i := 0 TO maxNumberOperands - 1 DO
 						IF (i>=LEN(operands)) OR (operands[i].type = none) THEN (* no operand -> check if instruction has no operand here *)
 							IF InstructionSet.instructions[instr].operands[i] # none THEN
-								RETURN FALSE 
+								RETURN FALSE
 							END;
 						ELSIF ~Matches(operands[i],InstructionSet.instructions[instr].operands[i]) THEN (* instruction operand type and this operand do not match *)
 							RETURN FALSE
@@ -325,8 +325,8 @@ TYPE
 				END MatchesInstruction;
 			BEGIN
 				instr := InstructionSet.mnemonics[mnem].firstInstruction;
-				WHILE (instr <= InstructionSet.mnemonics[mnem].lastInstruction) & (~MatchesInstruction ()) DO 
-					INC (instr); 
+				WHILE (instr <= InstructionSet.mnemonics[mnem].lastInstruction) & (~MatchesInstruction ()) DO
+					INC (instr);
 				END;
 
 				IF instr > InstructionSet.mnemonics[mnem].lastInstruction THEN
@@ -403,12 +403,12 @@ TYPE
 			BEGIN
 				RETURN {InstructionSet.cpuFPU} * InstructionSet.instructions[instr].cpuOptions # {}
 			END FPOperation;
-			
+
 			PROCEDURE IsPreREXPrefix(c1,c2: CHAR): BOOLEAN;
 			BEGIN
 				RETURN (c1 = CHR(opCode)) & ((c2 = 0F2X) OR (c2 = 0F3X) ) ;
 			END IsPreREXPrefix;
-			
+
 
 		BEGIN
 			IF (dump # NIL) & (lastPass) THEN
@@ -512,14 +512,14 @@ TYPE
 							END
 						END;
 						IF (operands[i].sizeInBytes = bits64) & ~(InstructionSet.optD64 IN bitwidthOptions) & ~FPOperation(instr) THEN
-							IF 
+							IF
 								(InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64)
 								OR
 								(InstructionSet.instructions[instr].operands[i] = InstructionSet.mem)
-							 THEN 
+							 THEN
 								IF Trace THEN KernelLog.String(" rex prefix bits64 "); KernelLog.Ln; END;
 								INCL(rexPrefix,rexW);
-							END; 
+							END;
 						END;
 						IF InstructionSet.instructions[instr].operands[i] = InstructionSet.moffset64 THEN
 							IF Trace THEN KernelLog.String(" moffset64 "); KernelLog.Ln; END;
@@ -572,8 +572,8 @@ TYPE
 				ASSERT(cpuBits = bits64);
 				byte := 40H;
 				WHILE (oppos < LEN(opcode)-1) & IsPreREXPrefix(opcode[oppos], opcode[oppos+1]) DO
-					code.PutByte(ORD(opcode[oppos+1])); 
-					INC(oppos,2); 
+					code.PutByte(ORD(opcode[oppos+1]));
+					INC(oppos,2);
 				END;
 				IF rexB IN rexPrefix THEN byte := byte + 1H END;
 				IF rexX IN rexPrefix THEN byte := byte + 2H END;
@@ -988,20 +988,20 @@ TYPE
 						END;
 					| mem64Operand, mem128Operand: (* ignored *)
 						IF Trace THEN KernelLog.String(" mem64/mem128 "); END;
-					| RXB: 
+					| RXB:
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
 						IF Trace THEN KernelLog.String(" RXB ");  TRACE(rexPrefix) END;
-						INC(oppos); 
+						INC(oppos);
 						byte := ORD(opcode[oppos]);
 						IF ~(rexB IN rexPrefix) THEN byte := byte + 80H END;
 						IF ~(rexX IN rexPrefix) THEN byte := byte + 40H END;
 						IF ~(rexR IN rexPrefix) THEN byte := byte + 20H END;
-						code.PutByte(byte); 
+						code.PutByte(byte);
 					| Src1Prefix:
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
 						IF Trace THEN KernelLog.String(" Src1Prefix "); END;
 						INC(oppos);
-						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm)); 
+						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm));
 						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[1].register))*0x08);
 					ELSE HALT(100) (* decoding error *)
 					END;
@@ -1513,11 +1513,11 @@ TYPE
 				IF size <= 0 THEN Error("invalid alignment size"); RETURN END;
 				pc := emitter.code.pc DIV 8; (* bytes *)
 				WHILE pc MOD size # 0 DO
-					emitter.code.PutByte(0); 
+					emitter.code.PutByte(0);
 					INC(pc);
 				END;
 			END Align;
-			
+
 
 			PROCEDURE PutData (size: Size): BOOLEAN;
 			VAR i: SIZE; x: HUGEINT; type:SHORTINT; ofs: Operand;

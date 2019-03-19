@@ -3,13 +3,13 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 
 	(*
 		Implementation of the Inflate algorithm, as described in RFC1951.
-	
+
 	Note that due to an assymetry with RFC1950, some Deflated streams have 2 header characters that need to be dropped before applying this reader
-	The zlib and deflate formats are related; the compressed data part of zlib-formatted data may be stored in the deflate format. 
-	In particular, if the compression method in the zlib header is set to 8, then the compressed data is stored in the deflate format. 
-	The DeflateStream implemented here represents the deflate specification (RFC 1951) but not RFC 1950. 
-	So a workaround of skipping past the first 2 bytes to get to the deflate data will work for certain deflated data, e.g. in pdf stream segments. 
-	
+	The zlib and deflate formats are related; the compressed data part of zlib-formatted data may be stored in the deflate format.
+	In particular, if the compression method in the zlib header is set to 8, then the compressed data is stored in the deflate format.
+	The DeflateStream implemented here represents the deflate specification (RFC 1951) but not RFC 1950.
+	So a workaround of skipping past the first 2 bytes to get to the deflate data will work for certain deflated data, e.g. in pdf stream segments.
+
 	see http://connect.microsoft.com/VisualStudio/feedback/details/97064/deflatestream-throws-exception-when-inflating-pdf-streams
 	*)
 

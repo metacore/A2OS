@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
@@ -156,7 +156,7 @@ PROCEDURE New*;
 BEGIN
 	l := antsCommands.ScanFromPar("name=NAME from=OBJ");
 	IF
-		antsCommands.ExpectNameFromKeyword(l, "name", name) & 
+		antsCommands.ExpectNameFromKeyword(l, "name", name) &
 		antsCommands.ExpectObjectFromKeyword(l, "from", obj) THEN
 		NEW(gen);   Open(gen, obj);
 		vyCG.RegisterNamed(gen, name);

@@ -112,7 +112,7 @@ TYPE
 				IF cont THEN fn := next ELSE fn := NIL END
 			END
 		END Enumerate;
-		
+
 		(** Enumerate all objects in the collection not being finalized (Enumerator may not call Remove, Add, Enumerate or Clear). *)
 		PROCEDURE EnumerateN*( enum: Enumerator );
 		VAR fn, next: FinalizerNode; cont: BOOLEAN; obj: ANY;
@@ -147,7 +147,7 @@ TYPE
 
 VAR
 	second*: LONGINT;	(** number of timer counts per second (Hz) *)
-	
+
 
 (** Activate the garbage collector immediately. *)
 PROCEDURE GC*;

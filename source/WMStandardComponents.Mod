@@ -267,7 +267,7 @@ TYPE
 			NEW(blinking, PrototypeBlinking, NIL, NIL); properties.Add(blinking);
 			blink := blinking.Get();
 		END Init;
-		
+
 		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
@@ -282,11 +282,11 @@ TYPE
 			END;
 			Invalidate;
 		END SetBlinker;
-		
-		(* currently, the Panel has no own Draw method. 
-		For this reason, blinking does not work in display of native Panels, but only on derived components 
+
+		(* currently, the Panel has no own Draw method.
+		For this reason, blinking does not work in display of native Panels, but only on derived components
 		which handle the "show" variable in their DrawBackground method.
-		could be done with the 'visible' property, too. 
+		could be done with the 'visible' property, too.
 		*)
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
@@ -395,14 +395,14 @@ TYPE
 			SetGenerator("WMStandardComponents.GenLabel");
 			SetNameAsString(StrLabel)
 		END Init;
-		
-	
+
+
 		PROCEDURE RecacheProperties*;
 		BEGIN
 			RecacheProperties^;
 			SetFont(font.Get());
 		END RecacheProperties;
-		
+
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 		VAR element : XML.Element;
@@ -410,7 +410,7 @@ TYPE
 			IF (property = caption) OR (property = textColor) OR (property = alignH) OR (property = alignV) THEN
 				Invalidate
 			ELSIF (property = font) THEN
-				RecacheProperties; 
+				RecacheProperties;
 				Invalidate
 			ELSIF property = model THEN Invalidate
 			ELSE
@@ -604,10 +604,10 @@ TYPE
 			height := height - 2*textBorder.Get();
 			IF height < 4 THEN height := 4 END;
 			IF percent <= 0 THEN RETURN END;
-			
+
 			Acquire;
-			oldFontSize := font.GetSize(); 
-			
+			oldFontSize := font.GetSize();
+
 			(* vertical scaling *)
 			f := GetFont();
 			hf := WMGraphics.GetFont(f.name, 100, f.style); (* expensive ? *)
@@ -618,40 +618,40 @@ TYPE
 			ELSIF fh > 64 THEN fh := fh - fh MOD 4
 			ELSIF fh > 32 THEN fh := fh - fh MOD 2
 			END;
-			
+
 			font.SetSize(fh);
 			f := GetFont();
-			
+
 			IF horizontalFit.Get()  THEN
 				width := bounds.GetWidth() - 2*textBorder.Get();
 				str := caption.Get();
 				IF str # NIL THEN
 					f.GetStringSize(str^, tw, th);
-					IF tw > width THEN 
+					IF tw > width THEN
 						fh :=fh * width DIV tw;
 						IF fh > 100 THEN fh := fh - fh MOD 8
 						ELSIF fh > 32 THEN fh := fh - fh MOD 4
 						ELSIF fh > 12 THEN fh := fh - fh MOD 2
 						END;
-						
+
 						(* correction loop if scaling does not fit correctly *)
-						REPEAT 
+						REPEAT
 						font.SetSize(fh);
 							f := GetFont();
 							f.GetStringSize(str^, tw, th);
 							DEC(fh);
 						UNTIL (fh <= 4) OR (tw <= width);
-							
-						
+
+
 
 					END;
 				END;
 			END;
-			
+
 			IF font.GetSize() # oldFontSize THEN
 				Invalidate;
 			END;
-				
+
 			Release;
 		END ScaleFont;
 
@@ -728,8 +728,8 @@ TYPE
 		PROCEDURE PropertyChanged*(sender, data : ANY);
 		VAR element : XML.Element;
 		BEGIN
-			IF (data = caption)  THEN 
-				IF horizontalFit.Get() THEN ScaleFont(bounds.GetHeight(), scaleFont.Get()) END; 
+			IF (data = caption)  THEN
+				IF horizontalFit.Get() THEN ScaleFont(bounds.GetHeight(), scaleFont.Get()) END;
 				Invalidate;
 			ELSIF (data = textAlignH) OR (data = textAlignV) THEN Invalidate;
 			ELSIF (data = onClickHandler) THEN CheckClickHandler
@@ -817,11 +817,11 @@ TYPE
 		PROCEDURE Up;
 		BEGIN
 			IF isToggle.Get() THEN
-				ChangeModel(pressed); Click(SELF, userData); 
-				RETURN 
+				ChangeModel(pressed); Click(SELF, userData);
+				RETURN
 			END;
 			IF pressed & (mouseOver OR keyboardPressed) THEN
-				CheckRepeating(FALSE);  
+				CheckRepeating(FALSE);
 				Click(SELF, userData);
 				pressed := FALSE;
 				Invalidate
@@ -1526,7 +1526,7 @@ TYPE
 				TrackerMove(x, y, keys);
 				pressed := Tracker;
 				down := pressed;
-				InvalidateRect(areas[pressed].rect); 
+				InvalidateRect(areas[pressed].rect);
 			END;
 		END PointerDown;
 
@@ -2671,7 +2671,7 @@ TYPE
 				END;
 				Click(SELF, NIL);
 			END;
-			Invalidate; 
+			Invalidate;
 			PointerDown^(x, y, keys)
 		END PointerDown;
 
@@ -2875,9 +2875,9 @@ TYPE
 			SetNameAsString(StrImagePanel);
 			dx := 0;  dy := 0
 		END Init;
-		
+
 		PROCEDURE Resized*;
-		BEGIN			
+		BEGIN
 			Resized^;
 			IF img=NIL THEN
 				RETURN;
@@ -2897,13 +2897,13 @@ TYPE
 				vScrollbar.visible.Set(FALSE)
 			END;
 		END Resized;
-		
+
 		PROCEDURE GetOffsets*(VAR x,y: LONGINT); (*returns offset caused by scrollbars*)
 		BEGIN
 			x :=-( dx * hScrollbar.pos.Get() DIV 100);
 			y :=-(dy * vScrollbar.pos.Get() DIV 100);
-		END GetOffsets;	
-		
+		END GetOffsets;
+
 		PROCEDURE PropertyChanged*(sender, property : ANY);
 		BEGIN
 			IF property = imgName THEN
@@ -3447,7 +3447,7 @@ BEGIN
 	NEW(ProtCBState, NIL, NewString("State"), NewString("current state")); plCheckbox.Add(ProtCBState);
 	ProtCBState.Set(Unchecked);
 	NEW(PrototypeCBonClickHandler, NIL, NewString("onClickHandler"), NewString("onClickHandler")); plCheckbox.Add(PrototypeCBonClickHandler);
-	
+
 			(* background color *)
 	NEW(ColorPrototype, NIL, NewString("ClBack"), NewString("Checkbox Background Color")); ColorPrototype.Set(LONGINT(0FFFFFF80H));
 	NEW(ProtCBclBack, ColorPrototype, NIL, NIL); plCheckbox.Add(ProtCBclBack);

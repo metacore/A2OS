@@ -78,7 +78,7 @@ CONST
 	rdonly* = SET32({});  rdwr* = SET32({1});  creat* = SET32({6});  trunc* = SET32({9});
 
 	(* access modes *)
-	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH; 
+	rwrwr* = 1B4H;  rwxrwxrwx* = 1FFH;
 
 	F_OK* = {};  X_Ok* = {0};  W_OK* = {1};  R_OK* = {2};
 
@@ -153,16 +153,16 @@ TYPE
 	Thread_t* = ADDRESS;
 	Mutex_t* = ADDRESS;
 	Condition_t* = ADDRESS;
-	
+
 	MutexType = ARRAY 10 OF WORD;
 	MutexAttributeType = ARRAY 1 OF WORD;
 	ConditionType = ARRAY 12 OF WORD;
-	
+
 	Key_t* = ADDRESS;
 
 	Sigset_t= ARRAY 32 OF WORD;
 	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
-	
+
 	path_t*	= ARRAY OF CHAR;
 	arg_t*		= ARRAY OF CHAR;
 	argv_t*	= ARRAY OF arg_t;
@@ -486,7 +486,7 @@ VAR
 	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
 	pthread_cancel: PROCEDURE {C} (thr: ADDRESS);
 	pthread_join-: PROCEDURE {C} (thread: Thread_t; return: ADDRESS): WORD;
-	
+
 	pthread_key_create	: PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): WORD;
 	pthread_setspecific	: PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
 	pthread_getspecific	: PROCEDURE {C} ( key: Key_t ): ADDRESS;
@@ -615,7 +615,7 @@ VAR
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN sysconf( 0x54 ); (*0x53 for number of processors configured, 0x54 for number of processors online *)
 	END getnprocs;
- 
+
 	PROCEDURE NewKey*( ): Key_t;
 	VAR
 		key: Key_t;
@@ -623,7 +623,7 @@ VAR
 		ASSERT(pthread_key_create(ADDRESSOF(key), NIL) = 0);
 		RETURN key;
 	END NewKey;
- 
+
 	PROCEDURE ReadKey* (key: Key_t): ADDRESS;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN pthread_getspecific(key);
@@ -838,7 +838,7 @@ VAR
 	VAR  res: WORD;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
-		resume_done := 0; 
+		resume_done := 0;
 		res := pthread_kill( thr, T_SIGRESUME );
 		ASSERT(res = 0);
 
@@ -865,8 +865,8 @@ VAR
 		res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
 		suspend_done := 0;
 		res := pthread_kill( thr, T_SIGSUSPEND );
-		ASSERT(res = 0); 
-		WHILE (CAS(suspend_done,0,0) # 1) DO ThrSleep( 1 ) END;  
+		ASSERT(res = 0);
+		WHILE (CAS(suspend_done,0,0) # 1) DO ThrSleep( 1 ) END;
 		res := pthread_mutex_unlock( ADDRESS OF suspend_mutex );
 	END ThrSuspend;
 
@@ -1061,7 +1061,7 @@ VAR
 	#END
 	END stat;
 
-	
+
 	PROCEDURE HandleSignal*( sig: LONGINT );
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		InstallHandler( sig )
@@ -1161,7 +1161,7 @@ VAR
 		Dlsym( libp, "pthread_cancel", ADDRESSOF(pthread_cancel) );
 		Dlsym( libp, "pthread_kill", ADDRESSOF(pthread_kill) );
 		Dlsym( libp, "pthread_join", ADDRESSOF(pthread_join) );
-		
+
 		Dlsym( libp, "pthread_key_create", ADDRESSOF( pthread_key_create ) );
 		Dlsym( libp, "pthread_getspecific", ADDRESSOF( pthread_getspecific ) );
 		Dlsym( libp, "pthread_setspecific", ADDRESSOF( pthread_setspecific ) );

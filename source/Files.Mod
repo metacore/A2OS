@@ -220,7 +220,7 @@ TYPE
 			FOR i := ofs TO ofs + len -1 DO
 				adr := a[i];
 				IF (adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
-				ELSE 
+				ELSE
 					IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
 					EXCL(map[adr DIV SetSize], adr MOD SetSize);
 					DEC(used);
@@ -235,7 +235,7 @@ TYPE
 			INCL(map[adr DIV SetSize], adr MOD SetSize);
 			INC(used)
 		END MarkBlock;
-		
+
 		PROCEDURE MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize);
 		VAR i: SIZE;  adr: Address;
 		BEGIN {EXCLUSIVE}
@@ -243,7 +243,7 @@ TYPE
 			FOR i := ofs TO ofs + len -1 DO
 				adr := a[i];
 				IF (adr = 0 ) THEN (* do nothing -- error should have been handled outside *)
-				ELSE 
+				ELSE
 					IF (adr < 1) OR (adr > size) THEN HALT(InvalidAdr) END;
 					INCL(map[adr DIV SetSize], adr MOD SetSize);
 					INC(used);

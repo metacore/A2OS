@@ -521,7 +521,7 @@ TYPE
 				INC(pipe.tdBase, sizeQh)
 			END;
 			*)
-			
+
 			(* Queue Head Horizontal Link Pointer is not set here *)
 			(* Queue Head Endpoint Capabilities 1 *)
 			nakRL := 3;
@@ -985,8 +985,8 @@ TYPE
 			(*Machine.FlushDCacheRange(ADDRESSOF(buffer[0]), bufferLen);*)
 			(* pipe.tdBase = pipe.qh + 32 in UsbHcdi *)
 (*			pipe.firstTD := pipe.tdBase;
-			ASSERT(pipe.firstTD = pipe.qh + alignQh); 
-*)			
+			ASSERT(pipe.firstTD = pipe.qh + alignQh);
+*)
 			pipe.firstTD := pipe.tdBase - 32 + alignQh;
 			AssertAlignment(pipe.firstTD, alignQtd);
 			ASSERT(SYSTEM.VAL(SET, pipe.firstTD) * {0..4} = {}); (* qTDs must be 32byte aligned *)
@@ -1099,10 +1099,10 @@ TYPE
 			Machine.FlushDCacheRange(ADDRESSOF(buffer[offset]), bufferLen);
 			SYSTEM.PUT32(pipe.qh + QhCurrentQtdPointer, 0);
 (*			pipe.firstTD := pipe.tdBase;
-			ASSERT(pipe.firstTD = pipe.qh + alignQh); 
+			ASSERT(pipe.firstTD = pipe.qh + alignQh);
 *)
 			pipe.firstTD :=  pipe.tdBase - 32 + alignQh;
-			
+
 			AssertAlignment(pipe.firstTD, alignQtd);
 			ASSERT(pipe.firstTD MOD alignQtd = 0);
 			ASSERT(SYSTEM.VAL(SET, pipe.firstTD) * {0..4} = {}); (* qTDs must be 32byte aligned *)
@@ -1141,7 +1141,7 @@ TYPE
 			restlen := len;	(* total amount of data to be transferred *)
 
 			WHILE restlen > 0 DO (* build qTD chain *)
-				
+
 				qtd := qtd + sizeQtd;
 				IF qtd + sizeQtd - 1 > ADDRESSOF(pipe.tdBuffer[pipe.tdBufferLen-1]) THEN
 					IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbEhci: TD buffer too small"); KernelLog.Ln; END;
@@ -1665,16 +1665,16 @@ TYPE
 	  	 *)
 		PROCEDURE Start * ():BOOLEAN;
 		VAR dword : SET;
-		TYPE 
+		TYPE
 			IRQPoller = OBJECT (* support polling i/o IRQ -- for testing *)
 				VAR handler: PROCEDURE {DELEGATE}; timer: Kernel.Timer;
-				
+
 				PROCEDURE & Init* (h: PROCEDURE {DELEGATE});
 				BEGIN
 					handler := h;
-					NEW(timer); 
+					NEW(timer);
 				END Init;
-				
+
 			BEGIN{ACTIVE}
 				LOOP
 					handler();
@@ -1686,7 +1686,7 @@ TYPE
 			IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbEhci: Starting host controller... "); KernelLog.Ln; END;
 			(* Enable Interrupts *)
 			SetState(UsbHcdi.Initialized);
-			
+
 			IF Polling THEN
 				NEW(is, InterruptHandler)
 			ELSE
@@ -1695,7 +1695,7 @@ TYPE
 
 			(* Clear interrupts *)
 			SYSTEM.PUT32(iobase + HcUsbSts, 0);
-			
+
 			(* Enable all interrupts except the frame list rollover interrupt *)
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcUsbIntr));
 			interruptsEnabled := dword + {0..5}  - StsFrameListRollover;

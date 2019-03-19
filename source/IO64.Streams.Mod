@@ -60,7 +60,7 @@ TYPE
 		sent*: UNSIGNED64; (** count of sent bytes *)
 
 	(** -- Initialization -- *)
-	
+
 		PROCEDURE & InitWriter* ( send: Sender; size: SIZE );
 		BEGIN
 			ASSERT( send # NIL );
@@ -75,7 +75,7 @@ TYPE
 		BEGIN
 			tail := 0; res := Ok; sent := 0;
 		END Reset;
-		
+
 	(* --  -- *)
 
 		PROCEDURE CanSetPos* ( ): BOOLEAN;
@@ -192,17 +192,17 @@ TYPE
 		BEGIN
 			RawSet32( SET32( x ) );
 		END RawSet;
-		
-		PROCEDURE RawSet32* ( x: SET32 ); 
+
+		PROCEDURE RawSet32* ( x: SET32 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4 );
 		END RawSet32;
-		
-		PROCEDURE RawSet64* ( x: SET64 ); 
+
+		PROCEDURE RawSet64* ( x: SET64 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8 );
 		END RawSet64;
-		
+
 	(** Write a BOOLEAN. *)
 		PROCEDURE RawBool* ( x: BOOLEAN );
 		BEGIN
@@ -632,13 +632,13 @@ TYPE
 		BEGIN
 			RawSet32( lx ); x := lx
 		END RawSet;
-		
+
 		PROCEDURE RawSet32* ( VAR x: SET32 );
 		VAR ignore: SIZE;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawSet32;
-		
+
 		PROCEDURE RawSet64* ( VAR x: SET64 );
 		VAR ignore: SIZE;
 		BEGIN
@@ -954,7 +954,7 @@ BEGIN
 END Streams.
 
 (**
-Notes: 
+Notes:
 o	Any single buffer instance must not be accessed by more than one process concurrently.
 o 	The interface is blocking ( synchronous ).  If an output buffer is full, it is written with a synchronous write, which returns
 	only when all the data has been written.   If an input buffer is empty, it is read with a synchronous read, which only returns
@@ -971,10 +971,10 @@ o 	Raw format is little-endian 2's complement integers, IEEE reals and 0X-termin
 o 	Syntax for ReadInt with hex = FALSE: num = [ "-" ] digit { digit }. digit = "0".."9".
 o 	Syntax for ReadInt with hex = TRUE: [ "-" ] hexdigit { hexdigit } [ "H"|"h" ]. hexdigit = digit | "A".."F" | "a".."f".
 o 	ReadInt with hex = TRUE allows "A".."F" as digits, and looks for a "H" character after the number.
-	If present, the number is interpreted as hexadecimal.  If hexadecimal digits are present, but no "H" flag, 
+	If present, the number is interpreted as hexadecimal.  If hexadecimal digits are present, but no "H" flag,
 	the resulting decimal value is undefined.
 o 	ReadInt ignores overflow.
-o 	A Sender sends len bytes from buf at ofs to output and returns res non-zero on error.  It waits until all the data is written, 
+o 	A Sender sends len bytes from buf at ofs to output and returns res non-zero on error.  It waits until all the data is written,
 	or an error occurs.
 o 	A Receiver receives up to size bytes from input into buf at ofs and returns the number of bytes read in len.
 	It returns res non-zero on error.  It waits until at least min bytes ( possibly zero ) are available, or an error occurs.
@@ -984,14 +984,14 @@ o 	To read a line structured file token-by-token: WHILE r.res = 0 DO SkipSpaces;
 o 	A string writer is not flushed when it becomes full, but res is set to a non-zero value.
 o 	Update has no effect on a string writer.
 o 	GetString can be called on a string writer to return the buffer contents and reset it to empty.
-o 	GetString always appends a 0X character to the buffer, but returns the true length ( excluding the added 0X ) in the len parameter, 
+o 	GetString always appends a 0X character to the buffer, but returns the true length ( excluding the added 0X ) in the len parameter,
 	so it can also be used for binary data that includes 0X characters.
 o 	Receive procedure should set res to EOF when attempting to read past the end of file.
 *)
 
 
 (*
-to do: 
+to do:
 o stream byte count
 o read formatted data
 o reads for all formatted writes

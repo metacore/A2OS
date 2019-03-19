@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to ants@AntsInFields.de
-*) 
+*)
 
 
 
@@ -160,9 +160,9 @@ BEGIN
 		beg := pos0;
 		ASSERT( FindPattern(T, endpat, Strings.Length(endpat), pos0), 104);
 		end := pos0 + Strings.Length(endpat);
-		Texts.OpenBuf(in); 
+		Texts.OpenBuf(in);
 		Texts.Save(T, beg+Strings.Length(begpat), end-Strings.Length(endpat),in);
-		(* Texts.Insert(T, beg, by);*) 
+		(* Texts.Insert(T, beg, by);*)
 		pos0 := end;
 		RETURN TRUE
 	ELSE

@@ -24,12 +24,12 @@ VAR
 
 	unix: Commands.Context;
 	trapMutex: Unix.Mutex_t;
-	
+
 	PROCEDURE LockTrap;
-	BEGIN 
+	BEGIN
 		Unix.MtxLock( trapMutex );
 	END LockTrap;
-	
+
 	PROCEDURE UnlockTrap;
 	BEGIN
 		trapHandlingLevel := 0;
@@ -70,9 +70,9 @@ VAR
 	BEGIN
 		w.Char( 2X );   (* end of trap text *)
 		w.Update;
-		
+
 		TrapWriters.Trapped;
-			
+
 		IF p.obj = NIL THEN	(* the main thread is not associated with any object *)
 			Unix.exit( -1 )
 		ELSE
@@ -83,13 +83,13 @@ VAR
 				IF name = "Oberon-System.OberonRunner" THEN  UnlockOberon  END
 			END
 		END;
-		
+
 
 	END FinishTrap;
 
 	PROCEDURE Registers( CONST mc: Unix.Mcontext; w: Streams.Writer );
 	BEGIN
-		w.String( "SP  = " );  w.Address( mc.r_sp );  
+		w.String( "SP  = " );  w.Address( mc.r_sp );
 		w.String( " FP  = " );  w.Address( mc.r_bp );
 		w.String( " PC  = " );  w.Address( mc.r_pc );  w.Ln;
 	END Registers;
@@ -106,15 +106,15 @@ VAR
 		IF sig IN {1, 2, 14, 15} (* SIGHUP, SIGINT, SIGALRM, SIGTERM *) THEN
 			(* ignore *) RETURN
 		END;
-		
+
 		LockTrap;
-		
+
 		INC( trapHandlingLevel );
-		IF trapHandlingLevel > MaxRecursion THEN  
+		IF trapHandlingLevel > MaxRecursion THEN
 			UnlockTrap;
 			Objects.Terminate
 		END;
-		
+
 		w := TrapWriters.GetWriter();
 		w.Char( 1X );   (* begin of trap text *)
 
@@ -156,9 +156,9 @@ VAR
 			w.String( "(Signal " );  w.Int( sig, 0 );  w.Char( ')' );
 		END;
 		w.Ln; w.Ln;
-		Registers( mc, w );	
+		Registers( mc, w );
 		w.Ln;
-		
+
 		process := Objects.CurrentProcess( );
 		sp := mc.r_sp;  pc := mc.r_pc;  bp := mc.r_bp;
 		IF pc = 0 THEN
@@ -167,10 +167,10 @@ VAR
 		END;
 
 		IF (sig = 5) & (trapno = 3) THEN DEC (pc) END;
-		
+
 		IF process # NIL THEN
 			Reflection.StackTraceBack( w, pc, bp, sp, Objects.GetStackBottom( process ), TRUE, FALSE );
-			SearchExceptionHandler( process, mc, handler ); 
+			SearchExceptionHandler( process, mc, handler );
 		ELSE
 			(* avoid recusive trap in case of faulty module Objects *)
 			Reflection.StackTraceBack( w, pc, bp, sp, sp+512, TRUE, FALSE );
@@ -179,7 +179,7 @@ VAR
 		w.String("----------------------------------------------------"); w.Ln;
 
 		FinishTrap( w, process);
-		
+
 		UnlockTrap;
 
 		IF handler.pc # 0 THEN
@@ -213,8 +213,8 @@ VAR
 		END;
 		RETURN fp;
 	END CheckBP;
-	
-	
+
+
 
 	PROCEDURE SearchExceptionHandler( process: Objects.Process;  mc: Unix.Mcontext;  VAR handler: ExceptionHandler );
 	VAR entry, fp, sp, pc: ADDRESS;
@@ -242,7 +242,7 @@ VAR
 
 BEGIN
 	trapMutex := Unix.NewRecursiveMtx( );
-	trace := FALSE;  
+	trace := FALSE;
 	Unix.InstallTrap( Trap );
 	Unix.HandleSignal( Unix.SIGILL ); (* illegal instruction *)
 	Unix.HandleSignal( Unix.SIGTRAP ); (* exception *)

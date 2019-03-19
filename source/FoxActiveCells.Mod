@@ -1673,13 +1673,13 @@ TYPE
 		END;
 		IF name[i] # 0X THEN RETURN NIL ELSE RETURN symbol END;
 	END GetSymbol;
-	
+
 	PROCEDURE Clone*(symbol: Symbol): Symbol;
 	BEGIN
 		RETURN symbol;
 		(* does nothing -- for compatibility with ActiveCells2 *)
 	END Clone;
-	
+
 
 	PROCEDURE FlattenNetwork*(scope: Scope);
 	VAR instance,subInstance,newInstance: Instance; oldChannel,channel: Channel;

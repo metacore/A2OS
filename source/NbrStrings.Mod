@@ -140,7 +140,7 @@ TYPE
 
 	(* nopov *)
 	(* the following procedures (operators) are not conforming to the new rules:
-	
+
 	OPERATOR "+"*( l, r: ARRAY OF CHAR ): String;
 	VAR res: String;
 	BEGIN

@@ -1,11 +1,11 @@
 (**
 	AUTHOR: Alexey Morozov;
 	PURPOSE: driver for the 8136 family of Realtek PCI Express Fast Ethernet (FE) controllers
-	
-	This driver implementation is based on the source code of the linux driver from Realtek (http://www.realtek.com.tw) r8101-1.025.00 
-	
+
+	This driver implementation is based on the source code of the linux driver from Realtek (http://www.realtek.com.tw) r8101-1.025.00
+
 	List of supported devices:
-	
+
 	RTL8100E/RTL8101E/RTL8102E-GR/RTL8103E(L)
 	RTL8102E(L)/RTL8101E/RTL8103T
 	RTL8401/RTL8401P/RTL8105E
@@ -315,7 +315,7 @@ CONST
 	CFG_METHOD_16 = 16;
 	CFG_METHOD_17 = 17;
 	CFG_METHOD_MAX = 18;
-	
+
 	HwCfgMethods = [CFG_METHOD_1,CFG_METHOD_2,CFG_METHOD_3,CFG_METHOD_4,CFG_METHOD_5,CFG_METHOD_6,CFG_METHOD_7,CFG_METHOD_8,CFG_METHOD_9,CFG_METHOD_10,CFG_METHOD_11,CFG_METHOD_12,CFG_METHOD_13,CFG_METHOD_14,CFG_METHOD_15,CFG_METHOD_16,CFG_METHOD_17];
 	RxConfigMask = [0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880,0xff7e1880];
 
@@ -325,8 +325,8 @@ CONST
 	Reserved1_data = S.VAL(SET,0x3F);
 	RxPacketMaxSize = 0x3FE8; (* 16K - 1 - ETH_HLEN - VLAN - CRC... *)
 	InterFrameGap = 0x03; (* 3 means InterFrameGap = the shortest one *)
-	
-	
+
+
 	DSM_MAC_INIT = 1;
 	DSM_NIC_GOTO_D3 = 2;
 	DSM_IF_DOWN = 3;
@@ -448,8 +448,8 @@ TYPE
 		counters(*{ALIGNED=64}*): TallyCounters;
 
 		PROCEDURE &InitController(
-												dev: LinkDevice; 
-												base: ADDRESS; 
+												dev: LinkDevice;
+												base: ADDRESS;
 												irq: LONGINT;
 												pciBus, pciDev, pciFct: LONGINT;
 												hwCfgMethod: LONGINT;
@@ -466,11 +466,11 @@ TYPE
 			SELF.base := base;
 			SELF.dev := dev;
 			SELF.irq := irq;
-			
+
 			SELF.pciDev := pciDev;
 			SELF.pciBus := pciBus;
 			SELF.pciFct := pciFct;
-			
+
 			SELF.hwCfgMethod := hwCfgMethod;
 			SELF.chipsetInd := chipsetInd;
 			SELF.hwIcVerUnknown := hwIcVerUnknown;
@@ -501,7 +501,7 @@ TYPE
 				KernelLog.String("MMIO is disabled!");
 				HALT(1000);
 			END;
-			
+
 			(* install interrupt handler *)
 			IF (irq >= 1) & (irq <= 15) THEN
 				Objects.InstallHandler(SELF.HandleInterrupt, Machine.IRQ0 + irq)
@@ -511,13 +511,13 @@ TYPE
 
 			init_one;
 			open;
-			
+
 			(* enable transmitter and receiver *)
 			Write8(ChipCmd, CmdTxEnb+CmdRxEnb);
 
 			(* Enable all known interrupts by setting the interrupt mask. *)
 			Write16(IntrMask, intr_mask);
-			
+
 			(* *)
 
 			UpdateLinkStatus;
@@ -624,7 +624,7 @@ TYPE
 			hw_init;
 
 			hw_reset;
-			
+
 			get_mac_address;
 
 			speed := SPEED_100;
@@ -694,7 +694,7 @@ TYPE
 				Delay(1);
 				INC(i);
 			END;
-			
+
 			ASSERT(i < 10);
 
 			Delay(1);
@@ -716,7 +716,7 @@ TYPE
 				Delay(1);
 				INC(i);
 			END;
-			
+
 			ASSERT(i < 10);
 
 			RETURN Read32(EPHYAR) * EPHYAR_Data_Mask;
@@ -864,7 +864,7 @@ TYPE
 			Write32(RxDescAddrLow, S.VAL(SET,rxDescStartAddr));
 			Write32(RxDescAddrHigh, {});
 		END desc_addr_fill;
-		
+
 		PROCEDURE disable_rxdvgate;
 		BEGIN
 			IF hwCfgMethod = CFG_METHOD_17 THEN
@@ -872,7 +872,7 @@ TYPE
         			Delay(2);
 			END;
 		END disable_rxdvgate;
-		
+
 		PROCEDURE dsm(dev_state: LONGINT);
 		BEGIN
 			CASE dev_state OF
@@ -907,16 +907,16 @@ TYPE
 			ELSE
 			END;
 		END dsm;
-		
+
 		PROCEDURE hw_set_rx_packet_filter;
 		VAR
 			s, rx_mode: SET;
 		BEGIN
 			rx_mode := AcceptBroadcast + AcceptMulticast + AcceptMyPhys;
-			
+
 			s := Read32(RxConfig) * S.VAL(SET,RxConfigMask[chipsetInd]);
 			s := s + rx_mode + S.VAL(SET,LSH(Reserved2_data,Reserved2_shift)) + S.VAL(SET,LSH(RX_DMA_BURST,RxCfgDMAShift));
-			
+
 			Write32(RxConfig, s);
 			Write32(MAR0 + 0, S.VAL(SET,0xFFFFFFFF));
 			Write32(MAR0 + 4, S.VAL(SET,0xFFFFFFFF));
@@ -1261,7 +1261,7 @@ TYPE
 			END;
 
 			IF 28 IN bios_setting THEN
-			
+
 				IF hwCfgMethod = CFG_METHOD_13 THEN
 					IF 2 IN Read8(0xEF) THEN
 						mdio_write1(0x1F, 0x0001);
@@ -1288,28 +1288,28 @@ TYPE
 					init_pci_offset_180(tp);
 				END;*)
 			END;
-			
+
 			cp_cmd := cp_cmd + RxChkSum;
 			TRACE(cp_cmd);
 			Write16(CPlusCmd, cp_cmd); (*! ??? *)
 			cp_cmd := Read16(CPlusCmd);
 			TRACE(cp_cmd);
-			
+
 			IF hwCfgMethod = CFG_METHOD_17 THEN
 				i := 0;
 				WHILE (i < 10) & (13 IN eri_read(0x1AE, 2, ERIAR_ExGMAC)) DO
 					INC(i);
 				END;
-				
+
 				ASSERT(i < 10);
 			END;
-			
+
 			Write16(RxMaxSize, S.VAL(SET,rx_buf_sz));
-			
+
 			disable_rxdvgate;
-			
+
 			dsm(DSM_MAC_INIT);
-			
+
 			options1 := Read8(Config3);
 			options2 := Read8(Config5);
 			IF (options1 * (LinkUp + MagicPacket) # {}) OR (options2 * (UWF + BWF + MWF) # {}) THEN
@@ -1317,9 +1317,9 @@ TYPE
 			ELSE
 				wol_enabled := FALSE;
 			END;
-			
+
 			hw_set_rx_packet_filter;
-			
+
 			CASE hwCfgMethod OF
 				|CFG_METHOD_10,CFG_METHOD_11,CFG_METHOD_12,CFG_METHOD_13,CFG_METHOD_14,CFG_METHOD_15,CFG_METHOD_16,CFG_METHOD_17:
 				IF ASPM THEN
@@ -1367,9 +1367,9 @@ TYPE
 			hw_phy_config;
 
 			hw_start;
-			
+
 			dsm(DSM_IF_UP);
-			
+
 			(*set_speed_xmii(autoneg, speed, duplexFull);*)
 		END open;
 
@@ -1458,7 +1458,7 @@ TYPE
 				Delay(delay);
 				DEC(nRetries);
 			END;
-			
+
 			ASSERT(nRetries > 0);
 		END mdio_wait_for;
 
@@ -1539,7 +1539,7 @@ TYPE
 		BEGIN
 			sw_ram_code_ver := S.VAL(SET,0xFFFF);
 			hw_ram_code_ver := {};
-			
+
 			IF hwCfgMethod = CFG_METHOD_17 THEN
 				sw_ram_code_ver := {0}; (*NIC_RAMCODE_VERSION_CFG_METHOD_17*)
 				mdio_write(0x1F,S.VAL(SET,0x0A43));
@@ -1655,7 +1655,7 @@ TYPE
 				mdio_write1(0x16, 0x2185);
 				mdio_write1(0x1f, 0x0000);
 			ELSIF (hwCfgMethod = CFG_METHOD_11) OR (hwCfgMethod = CFG_METHOD_12) OR (hwCfgMethod = CFG_METHOD_13) THEN
-				
+
 				mdio_write1(0x1F, 0x0000);
 				mdio_write1(0x18, 0x0310);
 				mdio_write1(0x1F, 0x0000);
@@ -1769,7 +1769,7 @@ TYPE
 					Delay(1);
 					INC(i);
 				END;
-				
+
 				ASSERT(i < 10);
 
 				IF len = 1 THEN mask := S.VAL(SET,LSH(HUGEINT(0xFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
@@ -1831,7 +1831,7 @@ TYPE
 					Delay(1);
 					INC(i);
 				END;
-				
+
 				ASSERT(i < 10);
 
 				IF len <= 4 - val_shift THEN
@@ -2370,7 +2370,7 @@ TYPE
 				Delay(1);
 				INC(i);
 			END;
-			
+
 			ASSERT(i < 100);
 		END nic_reset;
 
@@ -2394,12 +2394,12 @@ TYPE
 			TRACE(r);
 			INC(adr,r);
 			TRACE(adr);
-			
+
 			FOR r := 0 TO RxRingSize - 1 DO
 				rds[r] := adr;
 				INC(adr,SizeOfRxTxFDHdr);
 			END;
-			
+
 			firstRD := 0;
 
 			IF DebugRxRing IN Debug THEN
@@ -2460,7 +2460,7 @@ TYPE
 			TRACE(r);
 			INC(adr,r);
 			TRACE(adr);
-			
+
 			FOR r := 0 TO TxRingSize - 1 DO
 				tds[r] := adr;
 				INC(adr,SizeOfRxTxFDHdr);
@@ -2586,9 +2586,9 @@ TYPE
 			tds[curTD].flags := tds[curTD].flags * {30}; (* only keep EOR bit *)
 			tds[curTD].flags := tds[curTD].flags + {31, 29, 28} (*+ chksums*);
 			tds[curTD].flags := tds[curTD].flags + (S.VAL(SET, txLen) * {0..15});
-			
+
 			tds[curTD].vLanTag := S.VAL(LONGINT,chksums);
-			
+
 			(* move to next Tx Descriptor, Tx Buffer *)
 			INC(curTD);
 			IF curTD = TxRingSize THEN
@@ -2647,7 +2647,7 @@ TYPE
 			ELSE linkStatus := Network.LinkNotLinked;
 			END;
 		END UpdateLinkStatus;
-		
+
 		PROCEDURE CheckChecksumErrors(d: RxTxDescriptor): BOOLEAN;
 		VAR proto: SET;
 		BEGIN
@@ -2665,7 +2665,7 @@ TYPE
 				RETURN d.flags * {16} = {};
 			END;
 		END CheckChecksumErrors;
-		
+
 		PROCEDURE ReadFrames;
 		VAR
 			adr: ADDRESS; type, size: LONGINT;
@@ -2720,7 +2720,7 @@ TYPE
 					END;
 					END;
 				ELSE
-					IF DebugReceive IN Debug THEN 
+					IF DebugReceive IN Debug THEN
 						IF 16 IN rds[curRD].flags THEN
 							KernelLog.String("IP ");
 						ELSIF 15 IN rds[curRD].flags THEN
@@ -2747,7 +2747,7 @@ TYPE
 				END;
 			END;
 		END ReadFrames;
-		
+
 		PROCEDURE UpdateTxRing;
 		VAR i: LONGINT;
 		BEGIN { EXCLUSIVE }
@@ -2772,7 +2772,7 @@ TYPE
 		BEGIN
 			status := Read16(IntrStatus);
 			Write16(IntrMask,{});
-			
+
 			(* System Error *)
 			IF (SYSErr IN intr_mask) & (SYSErr IN status) THEN
 				IF DebugInterrupt IN Debug THEN
@@ -2862,7 +2862,7 @@ TYPE
 				END;
 				ReadFrames;
 			END;
-			
+
 			Write16(IntrStatus,status);
 			Write16(IntrMask,intr_mask);
 		END HandleInterrupt;
@@ -3160,14 +3160,14 @@ TYPE
 				hwIcVerUnknown := TRUE;
 			END;
 		END;
-		
+
 		chipsetInd := 0;
 		WHILE (chipsetInd < LEN(HwCfgMethods,0)) & (hwCfgMethod # HwCfgMethods[chipsetInd]) DO
 			INC(chipsetInd);
 		END;
-		
+
 		ASSERT(i < LEN(HwCfgMethods,0));
-		
+
 		GetDeviceName(hwCfgMethod,hwName);
 
 		IF DebugHWVer IN Debug THEN
@@ -3347,11 +3347,11 @@ TYPE
 
 VAR
 	buf: ARRAY TxRingSize*SIZEOF(RxTxDescriptor)+256 OF CHAR;
-	
+
 	PROCEDURE TestAlloc*;
 	VAR
 		addr, physAddr: ADDRESS;
-		dsc: ARRAY TxRingSize OF POINTER{UNSAFE,UNTRACED} TO RxTxDescriptor; 
+		dsc: ARRAY TxRingSize OF POINTER{UNSAFE,UNTRACED} TO RxTxDescriptor;
 		r: LONGINT;
 	BEGIN
 		addr := ADDRESSOF(buf[0]);
@@ -3360,19 +3360,19 @@ VAR
 		TRACE(physAddr);
 		r := physAddr MOD 256;
 		TRACE(r);
-		
+
 		IF r # 0 THEN r := 256 - r; END;
 		INC(addr,r);
 		TRACE(addr);
 		FOR r := 0 TO TxRingSize-1 DO
 			dsc[r] := addr; INC(addr,SIZEOF(RxTxDescriptor));
-			
+
 			dsc[r].flags := {31} + (S.VAL(SET, Network.MaxPacketSize) * {0..13});
 			dsc[r].vLanTag := 0;
 			dsc[r].bufAdrLo := Machine.Ensure32BitAddress (physAddr);
 			dsc[r].bufAdrHi := 0;
 		END;
-		
+
 		TRACE(dsc[0],ADDRESSOF(dsc[0]^));
 		TRACE(dsc[0].flags);
 	END TestAlloc;

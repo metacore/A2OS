@@ -4,20 +4,20 @@ MODULE FoxParser;   (**  AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Parser";  
 IMPORT Basic := FoxBasic, Scanner := FoxScanner, D := Debugging, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Diagnostics, Streams, Strings, StringPool;
 
 CONST
-	Trace = FALSE;	
+	Trace = FALSE;
 	CascadedWithSupport = TRUE;
 
 	(** the parser reflects the following EBNF:
 
-		Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';' 
-								{ImportList} DeclarationSequence [Body] 
+		Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';'
+								{ImportList} DeclarationSequence [Body]
 								'end' Identifier '.'.
-		   
+
 		ImportList = 'import' Import { ',' Import } ';'.
 
 		Import     = Identifier [':=' Identifier] ['in' Identifier].
-   
-		DeclarationSequence  =  { 
+
+		DeclarationSequence  =  {
 							 'const' [ConstDeclaration] {';' [ConstDeclaration]}
 							|'type'  [TypeDeclaration] {';' [TypeDeclaration]}
 						 	|'var'   [VariableDeclaration] {';' [VariableDeclaration]}
@@ -25,71 +25,71 @@ CONST
 						 	| OperatorDeclaration
 						 	| ';'
 							}
-   
-	Declaration = IdentifierDefinition '=' Expression.    
 
-	TypeDeclaration = IdentifierDefinition '=' Type.   
+	Declaration = IdentifierDefinition '=' Expression.
 
-	VariableDeclaration = VariableNameList ':' Type.    
+	TypeDeclaration = IdentifierDefinition '=' Type.
 
-	VariableNameList = IdentifierDefinition [Flags] [':=' Expression | 'extern' String] {',' IdentifierDefinition [Flags] [':=' Expression | 'extern' String] }.   
+	VariableDeclaration = VariableNameList ':' Type.
+
+	VariableNameList = IdentifierDefinition [Flags] [':=' Expression | 'extern' String] {',' IdentifierDefinition [Flags] [':=' Expression | 'extern' String] }.
 
 	OperatorDeclaration  = 'operator' [Flags] ['-'] String ['*'|'-'] FormalParameters ';'
 															DeclarationSequence [Body] 'end' String.
-		   
+
 	ProcedureDeclaration = 'procedure' ['^'|'&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
 															DeclarationSequence  [Body] 'end' Identifier.
-		   
-	Flags = '{' [Identifier ['(' Expression ')'|'=' Expression]  {',' Identifier ['(' Expression ')' | '=' Expression ] } ]  '}'.    
 
-	FormalParameters = '(' [ParameterDeclaration {';' ParameterDeclaration}] ')' [':' [Flags] Type].    
+	Flags = '{' [Identifier ['(' Expression ')'|'=' Expression]  {',' Identifier ['(' Expression ')' | '=' Expression ] } ]  '}'.
 
-	ParameterDeclaration = ['var'|'const'] Identifier [Flags] ['= Expression] {',' Identifier [Flags] ['= Expression]}':' Type.   
-	
-	PortList = '(' [PortDeclaration {';' PortDeclaration}] ')'.    
-	
-	PortDeclaration = Identifier [Flags] {',' Identifier [Flags]}':' Type.    
-	
-	Type = ArrayType | RecordType | PointerType | ObjectType | CellType | CellnetType | PortType 
-						| ProcedureType | EnumerationType | QualifiedIdentifier.   
-	
-	PortType = 'port' ('in'|'out') ['(' Expression ')']   
-	
-	EnumerationType = 'enum' ['('QualifiedIdentifier')'] IdentifierDefinition ['=' Expression] 
-													{',' IdentifierDefinition ['=' Expression]} 'end'.    
-	
-	ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression} 'of' Type 
+	FormalParameters = '(' [ParameterDeclaration {';' ParameterDeclaration}] ')' [':' [Flags] Type].
+
+	ParameterDeclaration = ['var'|'const'] Identifier [Flags] ['= Expression] {',' Identifier [Flags] ['= Expression]}':' Type.
+
+	PortList = '(' [PortDeclaration {';' PortDeclaration}] ')'.
+
+	PortDeclaration = Identifier [Flags] {',' Identifier [Flags]}':' Type.
+
+	Type = ArrayType | RecordType | PointerType | ObjectType | CellType | CellnetType | PortType
+						| ProcedureType | EnumerationType | QualifiedIdentifier.
+
+	PortType = 'port' ('in'|'out') ['(' Expression ')']
+
+	EnumerationType = 'enum' ['('QualifiedIdentifier')'] IdentifierDefinition ['=' Expression]
+													{',' IdentifierDefinition ['=' Expression]} 'end'.
+
+	ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression} 'of' Type
 										| 'array' '[' MathArraySize {',' MathArraySize} ']' ['of' Type].
-	
+
 	MathArraySize = Expression | '*' | '?'.
-		   
+
 	RecordType = 'record' [Flags] ['(' QualifiedIdentifier ')'] [VariableDeclaration {';' VariableDeclaration}] 'end'.
-		   
-	PointerType = 'pointer' [Flags] 'to' Type.    
-	
+
+	PointerType = 'pointer' [Flags] 'to' Type.
+
 	CellType = 'cell' [Flags] [PortList] [';'] DeclarationSequence [Body] 'end' [Identifier].
-	
-	ObjectType = 'object' | 'object' [Flags] ['(' (QualifiedIdentifier | ArrayType) ')'] DeclarationSequence [Body] 'end' [Identifier] .    
-	
-	ProcedureType = 'procedure' [Flags] [FormalParameters].   
-	
+
+	ObjectType = 'object' | 'object' [Flags] ['(' (QualifiedIdentifier | ArrayType) ')'] DeclarationSequence [Body] 'end' [Identifier] .
+
+	ProcedureType = 'procedure' [Flags] [FormalParameters].
+
 	Body = 'begin' [Flags] StatementSequence ['finally' StatementSequence]
-						| 'code' Code.    
-	
-	Code = {  any \ 'end' \ 'with' } ['with' {('in'|'out') StatementSequence}] .    
-	
-	StatementBlock = [Flags] StatementSequence.    
-	
-	StatementSequence = Statement {';' Statement}.    
-	
+						| 'code' Code.
+
+	Code = {  any \ 'end' \ 'with' } ['with' {('in'|'out') StatementSequence}] .
+
+	StatementBlock = [Flags] StatementSequence.
+
+	StatementSequence = Statement {';' Statement}.
+
 	Statement =
  				[
 					Designator [':=' Expression |'!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression]
 					| 'if' Expression 'then' StatementSequence
-						{'elsif' Expression 'then' StatementSequence} 
+						{'elsif' Expression 'then' StatementSequence}
 						['else' StatementSequence]
 						'end'
-					| 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence 
+					| 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence
 						{['|' Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
 						[else StatementSequence]
 						 'end'
@@ -105,22 +105,22 @@ CONST
 					| 'begin' StatementBlock 'end'
 					| 'code' {any} 'end'
 				].
-				
-	Case = RangeExpression {',' RangeExpression} ':' StatementSequence.    
-   
+
+	Case = RangeExpression {',' RangeExpression} ':' StatementSequence.
+
 	Expression	= RangeExpression [RelationOp RangeExpression].
-	
+
 	RelationOp	= '=' | '.=' | '#' | '.#'
 									| '<' | '.<' | '<=' | '.<=' | '>' | '.>' | '>=' | '.>='
 									| '??' | '!!' | '<<?' | '>>?'
 									| 'in' | 'is'
 
 	SimpleExpression     = ['+'|'-'] Term {AddOp Term}.
-	
+
 	AddOp    = '+' | '-' | 'or'.
-		   
+
 	Term = Factor {MulOp Factor}.
-	
+
 	MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
 
 	Factor = Number | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
@@ -128,21 +128,21 @@ CONST
 							| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator
 
 	MathArray = '[' Expression {',' Expression} ']'.
-	
-	Set = '{' [ RangeExpression {',' RangeExpression} ] '}'.    
-	
+
+	Set = '{' [ RangeExpression {',' RangeExpression} ] '}'.
+
 	Designator  = ('self' | 'result' | Identifier)
 		      						{'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
 
 	RangeExpression = SimpleExpression | [SimpleExpression] '..' [SimpleExpression] ['by' SimpleExpression] | '*'.
 
-	IndexList = '?' [',' ExpressionList ] | ExpressionList [',' '?'].    
-	
-	ExpressionList = Expression { ',' Expression }.     
-	
-	IdentifierDefinition = Identifier [ '*' | '-' ].     
-	
-	QualifiedIdentifier = Identifier ['.' Identifier].    
+	IndexList = '?' [',' ExpressionList ] | ExpressionList [',' '?'].
+
+	ExpressionList = Expression { ',' Expression }.
+
+	IdentifierDefinition = Identifier [ '*' | '-' ].
+
+	QualifiedIdentifier = Identifier ['.' Identifier].
 
 	Identifier           = Letter {Letter | Digit | '_'}.
 
@@ -248,18 +248,18 @@ TYPE
 			indent := 0;
 			Lax := FALSE;
 		END Init;
-		
+
 		PROCEDURE Reset*;
 		BEGIN
 			error := FALSE;
 		END Reset;
-		
-		
+
+
 		PROCEDURE SetLax*;
 		BEGIN
 			Lax := TRUE;
 		END SetLax;
-		
+
 
 		(** output error message and / or given code *)
 		PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
@@ -434,7 +434,7 @@ TYPE
 			IF ~hasToken OR (token.symbol = Scanner.Escape) THEN
 				prevPosition := token.position;
 				error := ~GetNextToken(token) OR error;
-				IF token.symbol = Scanner.Escape THEN 
+				IF token.symbol = Scanner.Escape THEN
 					error := ~GetNextToken(token) OR error;
 				END;
 				hasToken := TRUE;
@@ -586,7 +586,7 @@ TYPE
 				RETURN FALSE
 			END
 		END OptionalB;
-		
+
 		(* ignore one ore more tokens of type symbol *)
 		PROCEDURE Ignore(symbol: Scanner.Symbol);
 		BEGIN WHILE Optional(symbol) DO END;
@@ -802,12 +802,12 @@ TYPE
 					designator := SyntaxTree.NewBuiltinCallDesignator(position,Global.New, NIL, expressionList);
 					designator(SyntaxTree.BuiltinCallDesignator).SetReturnType(qualifiedType);
 					(* special case: NEW Type() *)
-				END;	
+				END;
 			ELSE
 				identifier := Identifier(position);
 				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
 			END;
-			designator.End(token.position); 
+			designator.End(token.position);
 			LOOP
 				position := token.position;
 				IF OptionalB( Scanner.LeftParenthesis ) THEN
@@ -823,7 +823,7 @@ TYPE
 					CASE token.identifierString[0] OF
 						"a".."z", "A" .. "Z":
 					(*IF Peek(Scanner.Size) (* special rule: support for SYSTEM.SIZE *) THEN*)
-						identifier := token.identifier; 
+						identifier := token.identifier;
 						NextToken;
 					ELSE
 						identifier := Identifier(position);
@@ -838,14 +838,14 @@ TYPE
 					designator:= SyntaxTree.NewArrowDesignator( position,designator );
 				ELSE EXIT
 				END;
-				designator.End(token.position); 
+				designator.End(token.position);
 			END;
 
 			IF OptionalB(Scanner.LeftBrace) THEN
 				designator.SetModifiers(Flags());
 			END;
-			designator.End(token.position); 
-			
+			designator.End(token.position);
+
 			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking signal *)*)
 
 			IF Trace THEN E( "Designator" ) END;
@@ -1055,7 +1055,7 @@ TYPE
 				NextToken;
 				rightExpression := RangeExpression();
 				expression := SyntaxTree.NewBinaryExpression(position, expression, rightExpression, operator );
-				expression.End(token.position); 
+				expression.End(token.position);
 			END;
 			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking escape *)*)
 			IF Trace THEN E( "Expression" ) END;
@@ -1090,10 +1090,10 @@ TYPE
                      [
                      Designator [':=' Expression |'!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression]
                      | 'if' Expression 'then' StatementSequence
-                        {'elsif' Expression 'then' StatementSequence} 
+                        {'elsif' Expression 'then' StatementSequence}
                         ['else' StatementSequence]
                         'end'
-                     | 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence 
+                     | 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence
                          {'|' [Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
                 				[else StatementSequence]
                          'end'
@@ -1129,7 +1129,7 @@ TYPE
 						statement := SyntaxTree.NewAssignment( position, designator, expression,outer );
 						CommentStatement(statement);
 					ELSIF PeekB(Scanner.ExclamationMark) OR PeekB(Scanner.Questionmark) OR PeekB(Scanner.LessLess) OR PeekB(Scanner.GreaterGreater) THEN
-						commToken := Symbol(); 
+						commToken := Symbol();
 						NextToken;
 						expression := Expression();
 						statement := SyntaxTree.NewCommunicationStatement(position, commToken, designator, expression, outer);
@@ -1152,7 +1152,7 @@ TYPE
 					Check( Scanner.Then );
 					statementSequence := StatementSequence(ifStatement);
 					ifStatement.ifPart.SetStatements( statementSequence );
-					ifStatement.ifPart.SetEnd(token.position); 
+					ifStatement.ifPart.SetEnd(token.position);
 					WHILE Optional( Scanner.Elsif ) DO
 						elsifPart := SyntaxTree.NewIfPart();
 						elsifPart.SetPosition(token.position);
@@ -1240,7 +1240,7 @@ TYPE
 					statementSequence := StatementSequence(whileStatement);
 					whileStatement.SetStatements( statementSequence );
 					Check( Scanner.End );
-					whileStatement.End(token.position);					
+					whileStatement.End(token.position);
 					statements.AddStatement( whileStatement );
 					result := TRUE
 			| Scanner.Repeat:
@@ -1345,7 +1345,7 @@ TYPE
 			| Scanner.Finally: result := FALSE  (* end block by finally statement *)
 			| Scanner.Semicolon: result := FALSE (* allow the empty statement *)
 			(* builtin pseudo procedures are resolved by checker *)
-			ELSE 
+			ELSE
 				result := FALSE;
 				(*
 				IF Lax THEN
@@ -1563,7 +1563,7 @@ TYPE
 			IF Trace THEN E( "ObjectType" ) END;
 			RETURN pointerType
 		END ObjectType;
-		
+
 		(** CellType = 'cell' [Flags] [PortList] [';'] {ImportList} DeclarationSequence [Body] 'end' [Identifier]
               | 'object'. **)
 		PROCEDURE CellType(position: Position;  name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type;
@@ -1581,7 +1581,7 @@ TYPE
 			cellType := SyntaxTree.NewCellType( position, parentScope,cellScope);
 			cellType.IsCellNet(isCellNet);
 			cellScope.SetOwnerCell(cellType);
-			
+
 			IF Optional(Scanner.Colon) THEN
 				qualifiedIdentifier := QualifiedIdentifier();
 				qualifiedType := SyntaxTree.NewQualifiedType(qualifiedIdentifier.position, parentScope, qualifiedIdentifier );
@@ -1600,7 +1600,7 @@ TYPE
 
 			IF Optional( Scanner.Semicolon ) THEN END;
 
-			
+
 			WHILE Optional(Scanner.Import) DO ImportList(cellScope) END;
 			DeclarationSequence( cellScope);
 			IF Peek(Scanner.Begin) OR Peek(Scanner.Code) THEN
@@ -1669,10 +1669,10 @@ TYPE
 					IF Peek(Scanner.Identifier) THEN VariableDeclaration( recordScope ) END;
 				UNTIL ~Optional( Scanner.Semicolon );
 			END;
-			LOOP 
+			LOOP
 				IF Optional(Scanner.Procedure) THEN ProcedureDeclaration(recordScope); Ignore(Scanner.Semicolon);
 				ELSIF Optional(Scanner.Operator) THEN OperatorDeclaration(recordScope); Ignore(Scanner.Semicolon);
-				ELSE EXIT 
+				ELSE EXIT
 				END;
 			END;
 			(*WHILE Optional(Scanner.Procedure) DO ProcedureDeclaration(recordScope); Ignore(Scanner.Semicolon) END; *)
@@ -1681,7 +1681,7 @@ TYPE
 			RETURN recordType
 		END RecordType;
 
-		(** ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression} 'of' Type 
+		(** ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression} 'of' Type
 													| 'array' '[' MathArraySize {',' MathArraySize} ']' ['of' Type].
 	  		 MathArraySize = Expression | '*' | '?'.
 		**)
@@ -1698,7 +1698,7 @@ TYPE
 			BEGIN
 				IF Optional(Scanner.Questionmark) THEN
 					mathType := SyntaxTree.NewMathArrayType(position,parentScope, SyntaxTree.Tensor);
-					
+
 				ELSIF Optional(Scanner.Times) THEN (* open array *)
 					mathType := SyntaxTree.NewMathArrayType(position,parentScope, SyntaxTree.Open);
 				ELSE (* size given *)
@@ -1714,15 +1714,15 @@ TYPE
 					END;
 				END;
 				mathType.SetModifiers(modifiers);
-				modifiers := NIL; 
+				modifiers := NIL;
 				mathType.SetArrayBase(base);
 				RETURN mathType;
 			END MathArray;
 
 		BEGIN
 			IF Trace THEN S( "ArrayType" ) END;
-			(* array token already consumed *)				
-			
+			(* array token already consumed *)
+
 			IF Optional(Scanner.LeftBrace) THEN
 				modifiers := Flags();
 			END;
@@ -1755,8 +1755,8 @@ TYPE
 			RETURN type
 		END ArrayType;
 
-		(** EnumerationType = 'enum' ['('QualifiedIdentifier')'] IdentifierDefinition ['=' Expression] 
-                                {',' IdentifierDefinition ['=' Expression]} 'end'. *) 
+		(** EnumerationType = 'enum' ['('QualifiedIdentifier')'] IdentifierDefinition ['=' Expression]
+                                {',' IdentifierDefinition ['=' Expression]} 'end'. *)
 		PROCEDURE EnumerationType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type;
 		VAR type: SyntaxTree.EnumerationType; scope: SyntaxTree.EnumerationScope; identifier: SyntaxTree.Identifier;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier; qualifiedType: SyntaxTree.QualifiedType; access: SET;
@@ -1808,7 +1808,7 @@ TYPE
 			RETURN type
 		END PortType;
 
-		(** Type = ArrayType | RecordType | PointerType | ObjectType | CellType | CellnetType | PortType 
+		(** Type = ArrayType | RecordType | PointerType | ObjectType | CellType | CellnetType | PortType
 							| ProcedureType | EnumerationType | QualifiedIdentifier. *)
 		PROCEDURE Type( name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope ): SyntaxTree.Type;
 		VAR type: SyntaxTree.Type;  qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;  position: Position;
@@ -2097,7 +2097,7 @@ TYPE
 				OperatorDeclaration( parentScope );
 				RETURN
 			END;
-			
+
 			procedureScope := SyntaxTree.NewProcedureScope(parentScope);
 
 			IF Optional(Scanner.LeftParenthesis) THEN (* type bound *)
@@ -2165,10 +2165,10 @@ TYPE
 			(* token operator already consumed *)
 			position := token.position;
 
-			forward := Optional(Scanner.Arrow);			
+			forward := Optional(Scanner.Arrow);
 
 			isInline := FALSE;
-			
+
 			IF Optional( Scanner.LeftBrace) THEN
 				modifiers := Flags();
 			END;
@@ -2188,7 +2188,7 @@ TYPE
 			ELSIF Optional( Scanner.Minus ) THEN access := SyntaxTree.ReadOnly;
 			ELSE access := SyntaxTree.Internal;
 			END;
-			
+
 
 			procedureScope := SyntaxTree.NewProcedureScope(parentScope);
 			operator := SyntaxTree.NewOperator( token.position, SyntaxTree.NewIdentifier(string^), procedureScope);
@@ -2378,7 +2378,7 @@ TYPE
 					ELSIF aliased & (name = alias) THEN
 						Basic.Warning(diagnostics, scanner.source^, position, "duplicated import alias");
 					END;
-					WITH scope: 
+					WITH scope:
 					SyntaxTree.ModuleScope DO
 						scope.AddImport( import );
 					| SyntaxTree.CellScope DO
@@ -2390,8 +2390,8 @@ TYPE
 			IF Trace THEN E( "ImportList" );  END;
 		END ImportList;
 
-		(** Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';' 
-										{ImportList} DeclarationSequence [Body] 
+		(** Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';'
+										{ImportList} DeclarationSequence [Body]
 										'end' Identifier '.'.
 		**)
 

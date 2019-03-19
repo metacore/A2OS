@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (* 	(c) Project Voyager, StatLab Heidelberg
@@ -93,8 +93,8 @@ END  ReportRegression;
 PROCEDURE FBand (x: Real;    para: vyLinePlot.tParameter): Real;
 	VAR p: tFBandParameter;
 BEGIN ASSERT (para IS tFBandParameter, vyBase.precc);    p := para(tFBandParameter);
-	RETURN SHORT (p.Regression.intercept + p.Regression.slope * x + 
-	p.UpBand * MathL.sqrt(2 * p.F * p.Regression.errvar * 
+	RETURN SHORT (p.Regression.intercept + p.Regression.slope * x +
+	p.UpBand * MathL.sqrt(2 * p.F * p.Regression.errvar *
 	(1 / p.Regression.count + (x - p.Regression.ymean) / p.Regression.yssq * (x - p.Regression.ymean)))
 	)
 END FBand;

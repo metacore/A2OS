@@ -332,7 +332,7 @@ VAR
 	CreatePixmap-:			PROCEDURE {C} ( d: DisplayPtr;  drawable: Drawable;
 													width, height, depth: WORD ): Pixmap;
 	FreePixmap-:			PROCEDURE {C} ( d: DisplayPtr;  pixmap: Pixmap );
-	CreateImage-:			PROCEDURE {C} ( d: DisplayPtr;  visual: VisualPtr;  depth, format, offset: WORD; 
+	CreateImage-:			PROCEDURE {C} ( d: DisplayPtr;  visual: VisualPtr;  depth, format, offset: WORD;
 													data: ADDRESS;  width, height, bitmapPad, bytesPerLine: WORD ): Image;
 	DestroyImage-:			PROCEDURE {C} ( image: Image );
 	SubImage-:				PROCEDURE {C} ( image: Image;  x, y, width, height: WORD ): Image;
@@ -512,7 +512,7 @@ VAR
 
 BEGIN
 	ioErrors := 0;  LinkToX;  ErrorFlag := FALSE;
-	
+
 	(*SetIOErrorHandler( MyIOErrorHandler );*)
 	(*SetErrorHandler( MyErrorHandler );*)
 			(* Oberon procedures cannot be used as callback procedures because of

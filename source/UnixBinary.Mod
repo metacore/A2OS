@@ -4,11 +4,11 @@ MODULE UnixBinary;  (** AUTHOR "GF"; PURPOSE "build Unix programs"; *)
 
 IMPORT Files, Commands, Streams, Strings;
 
-CONST 
+CONST
 	LoaderFilename = "OberonLoader";
 	StartPos = 16*1024;	(* cf. OberonLoader.c *)
 
-	
+
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR; log: Streams.Writer ): Files.File;
 	VAR
 		name2: ARRAY 128 OF CHAR;  res: WORD;
@@ -20,7 +20,7 @@ CONST
 		END;
 		RETURN Files.New( name )
 	END NewFile;
-	
+
 	PROCEDURE Open( CONST name: ARRAY OF CHAR; log: Streams.Writer ): Files.File;
 	VAR f: Files.File;
 	BEGIN
@@ -31,7 +31,7 @@ CONST
 		END;
 		RETURN f
 	END Open;
-	
+
 	PROCEDURE Build*( cc: Commands.Context );
 	VAR in1, in2, out: Files.File;  r: Files.Reader; w: Files.Writer;
 		inputname, token, outputname: ARRAY 64 OF CHAR;
@@ -40,21 +40,21 @@ CONST
 		IF 	cc.arg.GetString( inputname ) &
 			cc.arg.GetString( token ) & (token = "->") &
 			cc.arg.GetString( outputname ) THEN
-			
+
 				in1 := Open( LoaderFilename, cc.error );
 				in2 := Open( inputname, cc.error );
 				IF (in1 = NIL) OR (in2 = NIL) THEN  RETURN  END;
-			
+
 				size := in1.Length();  Files.OpenReader( r, in1, 0 );
 				out := NewFile( outputname, cc.out );  Files.OpenWriter( w, out, 0 );
-				
+
 				FOR i := 1 TO size DO  r.Char( c ); w.Char( c )  END;
-				
+
 				FOR i := 1 TO StartPos - size DO  w.Char( '#' )  END;
-				
+
 				size := in2.Length();  Files.OpenReader( r, in2, 0 );
 				FOR i := 1 TO size DO  r.Char( c ); w.Char( c )  END;
-				
+
 				w.Update;  Files.Register( out );
 				cc.out.String( outputname );  cc.out.String( " created" ); cc.out.Ln;
 		ELSE
@@ -67,6 +67,6 @@ CONST
 END UnixBinary.
 
    System.Free  UnixBinary ~
-   
+
    UnixBinary.Build  oberon.bin -> A2Core ~
-   
+

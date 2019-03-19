@@ -21,18 +21,18 @@ VAR
 		Log.Update;
 	END Memory;
 
-	
+
 	PROCEDURE CallerBP(bp: ADDRESS): ADDRESS;
 	VAR n: ADDRESS;
 	BEGIN
 		IF bp # NIL THEN
 			SYSTEM.GET(bp, n);
 			IF ODD(n) THEN INC(bp, SIZEOF(ADDRESS)) END;
-			SYSTEM.GET(bp, bp);			
+			SYSTEM.GET(bp, bp);
 		END;
 		RETURN bp;
 	END CallerBP;
-	
+
 	PROCEDURE ViewStack( ebp, esp: ADDRESS; CONST s: ARRAY OF CHAR);
 	VAR i: ADDRESS; val: LONGINT; prevBP:ADDRESS;
 	CONST adrSize= SIZEOF(ADDRESS);
@@ -206,13 +206,13 @@ VAR
 	PROCEDURE DisableGC*;
 	BEGIN
 		Heaps.GC := Nothing;
-		TRACE(Heaps.GC, "disabled"); 
+		TRACE(Heaps.GC, "disabled");
 	END DisableGC;
 
 	PROCEDURE EnableGC*;
 	BEGIN
 		Heaps.GC := Heaps.InvokeGC;
-		TRACE(Heaps.GC, "enabled"); 
+		TRACE(Heaps.GC, "enabled");
 	END EnableGC;
 
 	(* useful for debugging the GC / metadata *)
@@ -221,17 +221,17 @@ VAR
 	BEGIN
 		m := Modules.root;
 		WHILE (m # NIL) DO
-			TRACE(m.name); 
-			IF m.procTable # NIL THEN 
+			TRACE(m.name);
+			IF m.procTable # NIL THEN
 				FOR i := 0 TO LEN(m.procTable)-1 DO
 					(*TRACE(m.procTable[i]);*)
-					Log.Address(m.procTable[i]); 
-					Log.String(":"); 
-					Reflection.WriteProc(Log, m.procTable[i].pcFrom); 
+					Log.Address(m.procTable[i]);
+					Log.String(":");
+					Reflection.WriteProc(Log, m.procTable[i].pcFrom);
 					Log.String(" ptrs @ ");
 					FOR j := 0 TO LEN(m.procTable[i].offsets)-1 DO
-						Log.Int(m.procTable[i].offsets[j],1); 
-						Log.String(" "); 
+						Log.Int(m.procTable[i].offsets[j],1);
+						Log.String(" ");
 					END;
 					Log.Ln;
 				END;
@@ -258,12 +258,12 @@ VAR
 		END;
 		context.result := Commands.CommandError;
 	END ReportModule;
-	
+
 	PROCEDURE Test*;
 	BEGIN
 		Stack("Stack");
 	END Test;
-	
+
 
 BEGIN
 	Streams.OpenWriter( DefaultLog, KernelLog.Send );  Log := DefaultLog; NEW( lock );

@@ -11,7 +11,7 @@ TYPE
 	Item*= PersistentObjects.Object;
 	Object* = PersistentObjects.Object;
 	Content* = PersistentObjects.Content;
-	
+
 	Name*= ARRAY 128 OF CHAR;
 
 	Meta* = RECORD
@@ -62,18 +62,18 @@ TYPE
 		Reflection.SkipSize(meta.offset);
 		RETURN meta;
 	END VariableType;
-	
+
 	PROCEDURE SymbolAddress*(meta: Meta; base: ADDRESS): ADDRESS;
 	VAR kind, mode: CHAR;
 	BEGIN
 		kind := Reflection.GetChar(meta.refs, meta.offset);
 		Reflection.SkipSize(meta.offset);
 		Reflection.SkipString(meta.refs, meta.offset);
-		CASE kind OF 
+		CASE kind OF
 		Reflection.sfProcedure:
 			RETURN Reflection.GetAddress(meta.refs, meta.offset);
 		|Reflection.sfVariable:
-			mode := Reflection.GetChar(meta.refs, meta.offset); 
+			mode := Reflection.GetChar(meta.refs, meta.offset);
 			IF mode = Reflection.sfRelative THEN
 				RETURN base + Reflection.GetSize(meta.refs, meta.offset);
 			ELSIF mode = Reflection.sfIndirect THEN
@@ -84,7 +84,7 @@ TYPE
 		|Reflection.sfTypeDeclaration:
 			RETURN Reflection.GetAddress(meta.refs, meta.offset);
 		END;
-		RETURN 0; 
+		RETURN 0;
 	END SymbolAddress;
 
 
@@ -101,7 +101,7 @@ TYPE
 		BEGIN
 			RETURN FALSE;
 		END SetV;
-		
+
 		PROCEDURE Find*(CONST name: ARRAY OF CHAR): Result;
 		BEGIN
 			RETURN NIL;
@@ -111,33 +111,33 @@ TYPE
 		BEGIN
 			RETURN NIL;
 		END Address;
-		
+
 		PROCEDURE Trace*;
 		BEGIN
-			
+
 		END Trace;
-		
+
 	END Result;
-	
-		
+
+
 	SymbolResult*=OBJECT(Result)
 	VAR name: ARRAY 32 OF CHAR;
-	
+
 		PROCEDURE InitSymbol(CONST n: ARRAY OF CHAR);
 		BEGIN
 			COPY(n, name);
 		END InitSymbol;
-		
+
 	END SymbolResult;
 
 	TypeResult*= OBJECT(SymbolResult)
-	VAR 
+	VAR
 		type-: Meta;
 		address: ADDRESS;
-		
+
 		PROCEDURE & InitType(CONST name: ARRAY OF CHAR; t: Meta);
 		BEGIN
-			InitSymbol(name); 
+			InitSymbol(name);
 			type := t;
 			address := SymbolAddress(type, 0);
 		END InitType;
@@ -146,7 +146,7 @@ TYPE
 		BEGIN
 			RETURN address;
 		END Address;
-					
+
 		PROCEDURE Constructor*(): ProcedureResult;
 		BEGIN
 			RETURN FindConstructor(SELF, address);
@@ -155,31 +155,31 @@ TYPE
 	END TypeResult;
 
 	ModuleResult*= OBJECT(SymbolResult)
-	VAR 
+	VAR
 		self: Meta;
-		
+
 		PROCEDURE & InitModule(CONST name: ARRAY OF CHAR; m: Meta);
 		BEGIN
 			InitSymbol(name);
-			self := m; 
+			self := m;
 		END InitModule;
-		
+
 		PROCEDURE Find*(CONST name: ARRAY OF CHAR): Result;
 		VAR num: LONGINT;
 				proc: ProcedureResult;
 				field: FieldResult;
-				
+
 				type: Modules.TypeDesc;
 				typeResult: TypeResult;
-				kind: CHAR; 
+				kind: CHAR;
 				f: Meta;
 		BEGIN
 				f := FindSymbol(name, self);
 				IF f.offset >= 0 THEN
-					kind := SymbolKind(f); 
+					kind := SymbolKind(f);
 					CASE kind OF
 					Reflection.sfVariable: NEW(field, name, f, Address()); RETURN field;
-					| Reflection.sfProcedure: NEW(proc, SELF, name, f); RETURN proc; 
+					| Reflection.sfProcedure: NEW(proc, SELF, name, f); RETURN proc;
 					| Reflection.sfTypeDeclaration: NEW(typeResult, name, f); RETURN typeResult;
 					END;
 				END;
@@ -188,27 +188,27 @@ TYPE
 
 
 	END ModuleResult;
-	
+
 	Callstack = OBJECT
-	VAR 
+	VAR
 		data: ARRAY 1024 OF CHAR;
 		pos: SIZE;
 		size: SIZE;
 		H: HUGEINT; (* result in register *)
-		
+
 		pPos: LONGINT;
-		
+
 		PROCEDURE & Init;
 		BEGIN
 			pos := 1024; size := 0;
 		END Init;
-		
+
 		PROCEDURE Next(s: SIZE): ADDRESS;
 		BEGIN
 			DEC(pos, s); INC(size, s);
 			RETURN ADDRESSOF(data[pos]);
 		END Next;
-		
+
 		PROCEDURE PushH(h: HUGEINT);
 		VAR p: POINTER {UNSAFE,UNTRACED} TO RECORD h: HUGEINT END;
 		BEGIN
@@ -226,25 +226,25 @@ TYPE
 		PROCEDURE PushI(i: INTEGER);
 		BEGIN
 			PushL(i);
-		END PushI;		
+		END PushI;
 
 		PROCEDURE PushS(i: SHORTINT);
 		BEGIN
 			PushL(i);
-		END PushS;		
-		
+		END PushS;
+
 		PROCEDURE PushB(b: BOOLEAN);
 		VAR p: POINTER {UNSAFE,UNTRACED} TO RECORD b: BOOLEAN END;
 		BEGIN
 			p := Next(SIZEOF(LONGINT));
 			p.b := b;
 		END PushB;
-		
+
 		PROCEDURE PushC(c: CHAR);
 		BEGIN
 			PushL(ORD(c));
 		END PushC;
-		
+
 		PROCEDURE PushSet(set: SET);
 		VAR p: POINTER {UNSAFE,UNTRACED} TO RECORD s:SET END;
 		BEGIN
@@ -258,14 +258,14 @@ TYPE
 			p := Next(SIZEOF(REAL));
 			p.r := r;
 		END PushR;
-		
+
 		PROCEDURE PushX(x: LONGREAL);
 		VAR p: POINTER {UNSAFE,UNTRACED} TO RECORD x: LONGREAL END;
 		BEGIN
 			p := Next(SIZEOF(LONGREAL));
 			p.x := x;
 		END PushX;
-		
+
 		PROCEDURE PushA(a: ADDRESS);
 		VAR p: POINTER {UNSAFE,UNTRACED} TO RECORD a: ADDRESS END;
 		BEGIN
@@ -280,90 +280,90 @@ TYPE
 			p := Next(SIZEOF(SIZE));
 			p.s := s;
 		END PushSz;
-		
+
 		PROCEDURE Call(adr: ADDRESS);
 		TYPE
 			P = PROCEDURE();
 		VAR
 			esp: ADDRESS;
-			p: P; 
+			p: P;
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
 			esp := SYSTEM.GetStackPointer();
 			SYSTEM.SetStackPointer(esp-size);
-			IF size > 0 THEN 
+			IF size > 0 THEN
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			p();
 			SYSTEM.SetStackPointer(esp);
-		END Call; 
+		END Call;
 
 		PROCEDURE CallH(adr: ADDRESS): HUGEINT;
 		TYPE
 			P = PROCEDURE(): HUGEINT;
 		VAR
 			res: HUGEINT; esp: ADDRESS;
-			p: P; 
+			p: P;
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
 			esp := SYSTEM.GetStackPointer();
 			SYSTEM.SetStackPointer(esp-size);
-			IF size > 0 THEN 
+			IF size > 0 THEN
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			res := p();
 			SYSTEM.SetStackPointer(esp);
 			RETURN res;
-		END CallH; 
+		END CallH;
 
 		PROCEDURE CallR(adr: ADDRESS): REAL;
 		TYPE
 			P = PROCEDURE(): REAL;
 		VAR
 			res: REAL; esp: ADDRESS;
-			p: P; 
+			p: P;
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
 			esp := SYSTEM.GetStackPointer();
 			SYSTEM.SetStackPointer(esp-size);
-			IF size > 0 THEN 
+			IF size > 0 THEN
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			res := p();
 			SYSTEM.SetStackPointer(esp);
 			RETURN res;
-		END CallR; 
+		END CallR;
 
 		PROCEDURE CallX(adr: ADDRESS): LONGREAL;
 		TYPE
 			P = PROCEDURE(): LONGREAL;
 		VAR
 			res: LONGREAL; esp: ADDRESS;
-			p: P; 
+			p: P;
 		BEGIN
 			p := SYSTEM.VAL(P, adr);
 			esp := SYSTEM.GetStackPointer();
 			SYSTEM.SetStackPointer(esp-size);
-			IF size > 0 THEN 
+			IF size > 0 THEN
 				SYSTEM.MOVE(ADDRESS OF data[pos], esp-size, size);
 			END;
 			res := p();
 			SYSTEM.SetStackPointer(esp);
 			RETURN res;
-		END CallX; 
+		END CallX;
 	END Callstack;
 
 	ProcedureResult*= OBJECT(SymbolResult)
-	VAR 
+	VAR
 		meta: Meta;
-		
+
 		address: ADDRESS;
 		stack: Callstack;
 		index: LONGINT;
 		caller-: Result;
 		parameters: Meta;
-		flags: SET; 
-		
+		flags: SET;
+
 		PROCEDURE Parameters(): Meta;
 		VAR m: Meta;
 		BEGIN
@@ -376,17 +376,17 @@ TYPE
 			flags := Reflection.GetSet(m.refs, m.offset);
 			RETURN m;
 		END Parameters;
-		
+
 		PROCEDURE ReturnType(): Meta;
 		VAR m: Meta;
 		BEGIN
 			m := Parameters();
 			WHILE m.refs[m.offset] = Reflection.sfVariable DO
 				Reflection.SkipVariable(m.refs, m.offset);
-			END; 
+			END;
 			RETURN m;
 		END ReturnType;
-		
+
 		PROCEDURE ReturnsPointer*(): BOOLEAN;
 		VAR type: Meta; c: CHAR;
 		BEGIN
@@ -396,35 +396,35 @@ TYPE
 			ELSE RETURN FALSE
 			END;
 		END ReturnsPointer;
-		
+
 		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN address;
 		END Address;
-		
+
 		PROCEDURE & InitProcedure(c: Result; CONST name: ARRAY OF CHAR; m: Meta);
 		VAR offset: LONGINT;
 		BEGIN
 			meta := m;
 			InitSymbol(name); (*proc := p;*)
-			caller := c; 
+			caller := c;
 		END InitProcedure;
-		
+
 		PROCEDURE Pars*();
 		BEGIN
 			index := 0;
 			parameters := Parameters();
 			NEW(stack); (* can optimize this *)
 		END Pars;
-		
+
 		PROCEDURE PushAddress*(adr: ADDRESS); (* for self pointer *)
 		BEGIN
 			stack.PushA(adr);
 		END PushAddress;
-		
+
 		PROCEDURE PushTyped*(o: Result; mode: CHAR; refs: Modules.Bytes; VAR offset: SIZE): BOOLEAN;
-		VAR ofs: SIZE; 
-			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
+		VAR ofs: SIZE;
+			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT;
 			r: REAL; x: LONGREAL;
 			b: BOOLEAN;
 			set: SET;
@@ -435,17 +435,17 @@ TYPE
 			type := Reflection.GetChar(refs, offset);
 			IF type = Reflection.sfTypeIndirect THEN
 				ofs := Reflection.GetSize(refs, offset);
-				RETURN PushTyped(o, mode, refs, ofs); 
+				RETURN PushTyped(o, mode, refs, ofs);
 			ELSE
 				INC(index);
 				IF mode  = Reflection.sfIndirect THEN (* by reference *)
-					IF type = Reflection.sfTypeOpenArray THEN 
+					IF type = Reflection.sfTypeOpenArray THEN
 						type := Reflection.GetChar(refs, offset);
 						CASE type OF
 						Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
 							IF o IS StringValue THEN
 								stack.PushSz(LEN(o(StringValue).value));
-								stack.PushA(ADDRESSOF(o(StringValue).value[0])); 
+								stack.PushA(ADDRESSOF(o(StringValue).value[0]));
 								RETURN TRUE;
 							END;
 						END;
@@ -462,24 +462,24 @@ TYPE
 				ELSE (* by value *)
 					v := o.Evaluate();
 					IF v = NIL THEN RETURN FALSE END;
-					WITH v: Value DO 
+					WITH v: Value DO
 						CASE type OF
-						Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 : 
+						Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 :
 							IF v.GetInt(h) THEN
 								s:= SHORTINT(h); stack.PushS(s);
 								RETURN TRUE;
 							END;
-						| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 : 
+						| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 :
 							IF v.GetInt(h) THEN
 								i:= INTEGER(h); stack.PushI(i);
 								RETURN TRUE;
 							END;
-						| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32: 
+						| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32:
 							IF v.GetInt(h) THEN
 								l:= LONGINT(h); stack.PushL(l);
 								RETURN TRUE;
 							END;
-						| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64: 
+						| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64:
 							IF v.GetInt(h) THEN
 								stack.PushH(h);
 								RETURN TRUE;
@@ -515,7 +515,7 @@ TYPE
 							Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
 								IF v IS StringValue THEN
 									stack.PushSz(LEN(v(StringValue).value));
-									stack.PushA(ADDRESSOF(v(StringValue).value[0])); 
+									stack.PushA(ADDRESSOF(v(StringValue).value[0]));
 									RETURN TRUE;
 								END;
 							END;
@@ -525,11 +525,11 @@ TYPE
 			END;
 			RETURN FALSE;
 		END PushTyped;
-		
-		
+
+
 		PROCEDURE Push*(o: Result): BOOLEAN;
-		VAR 
-			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
+		VAR
+			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT;
 			r: REAL; x: LONGREAL;
 			b: BOOLEAN;
 			set: SET;
@@ -537,22 +537,22 @@ TYPE
 			a: ADDRESS;
 			type,mode: CHAR;
 		BEGIN
-			IF Reflection.GetChar(parameters.refs, parameters.offset) # Reflection.sfVariable THEN RETURN FALSE END;			
+			IF Reflection.GetChar(parameters.refs, parameters.offset) # Reflection.sfVariable THEN RETURN FALSE END;
 			Reflection.SkipSize(parameters.offset);
 			Reflection.SkipString(parameters.refs, parameters.offset);
 			mode := Reflection.GetChar(parameters.refs, parameters.offset);
 			Reflection.SkipSize(parameters.offset);
 			RETURN PushTyped(o, mode, parameters.refs, parameters.offset);
-				
+
 		END Push;
-		
+
 		PROCEDURE Check*(): BOOLEAN;
 		BEGIN
 			RETURN Reflection.GetChar(parameters.refs, parameters.offset) # Reflection.sfVariable;
 		END Check;
 
 		PROCEDURE Evaluate*(): Value;
-		VAR 
+		VAR
 			int: IntegerValue;
 			real: RealValue;
 			bool: BooleanValue;
@@ -562,34 +562,34 @@ TYPE
 		BEGIN
 			type := ReturnType();
 			CASE Reflection.GetChar(type.refs, type.offset) OF
-				Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 : 
-					NEW(int, SHORTINT(stack.CallH(address))); 
+				Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 :
+					NEW(int, SHORTINT(stack.CallH(address)));
 					RETURN int;
-			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 : 
-					NEW(int,  INTEGER(stack.CallH(address))); 
+			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 :
+					NEW(int,  INTEGER(stack.CallH(address)));
 					RETURN int;
-			| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32: 
-					NEW(int,  LONGINT(stack.CallH(address))); 
+			| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32:
+					NEW(int,  LONGINT(stack.CallH(address)));
 					RETURN int;
-			| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64: 
-					NEW(int, stack.CallH(address)); 
+			| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64:
+					NEW(int, stack.CallH(address));
 					RETURN int;
 			|Reflection.sfTypeREAL:
-				 NEW(real, stack.CallR(address)); 
+				 NEW(real, stack.CallR(address));
 				 RETURN real
 			|Reflection.sfTypeLONGREAL:
 				NEW(real, stack.CallX(address));
-				RETURN real; 
+				RETURN real;
 			|Reflection.sfTypeBOOLEAN:
-				NEW(bool, SYSTEM.VAL(BOOLEAN, stack.CallH(address))); 
-				RETURN bool; 
+				NEW(bool, SYSTEM.VAL(BOOLEAN, stack.CallH(address)));
+				RETURN bool;
 			|Reflection.sfTypeSET:
-				NEW(set,  SYSTEM.VAL(SET, stack.CallH(address))); 
+				NEW(set,  SYSTEM.VAL(SET, stack.CallH(address)));
 				RETURN set;
 			| Reflection.sfTypeANY, Reflection.sfTypeOBJECT, Reflection.sfTypePointerToRecord:  (* pointers are passed as varpars *)
 				stack.Call(address);
 				RETURN NIL;
-			| 0X: 
+			| 0X:
 				stack.Call(address);
 				RETURN NIL;
 			END;
@@ -602,62 +602,62 @@ TYPE
 	VAR
 		address: ADDRESS;
 		meta: Meta;
-			
+
 		PROCEDURE & InitField(CONST name: ARRAY OF CHAR; meta: Meta; base: ADDRESS);
 		BEGIN
-			InitSymbol(name); 
+			InitSymbol(name);
 			SELF.meta := meta;
 			SELF.address := SymbolAddress(meta, base);
 		END InitField;
-		
+
 		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN address;
 		END Address;
 
 		PROCEDURE Evaluate*(): Value;
-		VAR 
+		VAR
 			s: SHORTINT;
 			i: INTEGER;
 			l: LONGINT;
 			h: HUGEINT;
-			
+
 			int: IntegerValue;
-			a: ANY; 
-			any: AnyValue; 
-			
+			a: ANY;
+			any: AnyValue;
+
 			type: Meta;
 		BEGIN
 			type := VariableType(meta);
 			CASE Reflection.GetChar(type.refs, type.offset) OF
-				Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 : 
+				Reflection.sfTypeSHORTINT,Reflection.sfTypeSIGNED8 :
 					SYSTEM.GET(address, s);
-					NEW(int, s); 
+					NEW(int, s);
 					RETURN int;
-			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 : 
+			| Reflection.sfTypeINTEGER,Reflection.sfTypeSIGNED16 :
 					SYSTEM.GET(address, i);
-					NEW(int, i); 
+					NEW(int, i);
 					RETURN int;
-			| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32: 
+			| Reflection.sfTypeLONGINT,Reflection.sfTypeSIGNED32:
 					SYSTEM.GET(address, l);
-					NEW(int, l); 
+					NEW(int, l);
 					RETURN int;
-			| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64: 
+			| Reflection.sfTypeHUGEINT,Reflection.sfTypeSIGNED64:
 					SYSTEM.GET(address, h);
-					NEW(int,LONGINT(h)); 
+					NEW(int,LONGINT(h));
 					RETURN int;
 			| Reflection.sfTypePointerToRecord, Reflection.sfTypeANY, Reflection.sfTypeOBJECT, Reflection.sfTypePointerToArray:
-				SYSTEM.GET(address, a); 
+				SYSTEM.GET(address, a);
 					NEW(any, a);
 					RETURN any;
 			ELSE
 				HALT(100);
 			END;
 		END Evaluate;
-		
+
 		PROCEDURE SetV*(v: Value): BOOLEAN;
-		VAR 
-			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT; 
+		VAR
+			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT;
 			r: REAL; x: LONGREAL;
 			b: BOOLEAN;
 			set: SET;
@@ -684,7 +684,7 @@ TYPE
 				END;
 			|Reflection.sfTypeHUGEINT, Reflection.sfTypeSIGNED64:
 				IF v.GetInt(h) THEN
-					SYSTEM.PUT(address, h); 
+					SYSTEM.PUT(address, h);
 					RETURN TRUE
 				END;
 			|Reflection.sfTypeREAL:
@@ -694,17 +694,17 @@ TYPE
 				END;
 			|Reflection.sfTypeLONGREAL:
 				IF v.GetReal(x) THEN
-					SYSTEM.PUT(address,x); 
+					SYSTEM.PUT(address,x);
 					RETURN TRUE
 				END;
 			|Reflection.sfTypeBOOLEAN:
 				IF v.GetBoolean(b) THEN
-					SYSTEM.PUT(address,b); 
+					SYSTEM.PUT(address,b);
 					RETURN TRUE
 				END;
 			|Reflection.sfTypeSET:
 				IF v.GetSet(set) THEN
-					SYSTEM.PUT(address,set); 
+					SYSTEM.PUT(address,set);
 					RETURN TRUE
 				END;
 			END;
@@ -717,39 +717,39 @@ TYPE
 		type: Meta; base: CHAR;
 		BEGIN
 			type := VariableType(meta);
-			base := Reflection.GetChar(type.refs, type.offset); 
+			base := Reflection.GetChar(type.refs, type.offset);
 			CASE base OF
 				Reflection.sfTypePointerToRecord, Reflection.sfTypeANY, Reflection.sfTypeOBJECT:
 					SYSTEM.GET(address, value);
 					SYSTEM.GET(value-SIZEOF(ADDRESS), typeDesc); (*  type desc *)
 					RETURN FindInType(SELF, value, typeDesc, name);
 				|Reflection.sfTypeRecord:
-					typeDesc := Reflection.GetAddress(type.refs, type.offset); (* type desc *) 
+					typeDesc := Reflection.GetAddress(type.refs, type.offset); (* type desc *)
 					RETURN FindInType(SELF, address, typeDesc, name);
 			ELSE
 				RETURN NIL;
 			END;
 		END Find;
-		
+
 	END FieldResult;
 
-	
-	(* traverse types and supertypes for first occurence of symbol name *) 	
+
+	(* traverse types and supertypes for first occurence of symbol name *)
 	PROCEDURE FindInType(scope: Result; address: ADDRESS; type: ADDRESS; CONST name: ARRAY OF CHAR): Result;
-	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT; 
-			proc: ProcedureResult; f: FieldResult;	
+	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT;
+			proc: ProcedureResult; f: FieldResult;
 			meta: Meta; kind: CHAR;
 	BEGIN
 		FOR i := 15 TO 0 BY -1 DO
-			SYSTEM.GET(type-(2+i)*SIZEOF(ADDRESS), tag); 
+			SYSTEM.GET(type-(2+i)*SIZEOF(ADDRESS), tag);
 			IF tag # NIL THEN
-				SYSTEM.GET(tag-SIZEOF(ADDRESS), typeInfo); 
+				SYSTEM.GET(tag-SIZEOF(ADDRESS), typeInfo);
 				meta.module := typeInfo.mod;
 				meta.offset := typeInfo.refsOffset;
 				meta.refs := meta.module.refs;
 				(*Reflection.Report(Commands.GetContext().out, meta.refs, meta.offset); *)
 				meta := FindSymbol(name, meta);
-				IF meta.offset >= 0 THEN 
+				IF meta.offset >= 0 THEN
 					kind := SymbolKind(meta);
 					CASE kind OF
 					Reflection.sfProcedure:
@@ -761,55 +761,55 @@ TYPE
 				END;
 			END;
 		END;
-		RETURN NIL; 
+		RETURN NIL;
 	END FindInType;
-	
-		
+
+
 	PROCEDURE FindConstructor(scope: Result; type: ADDRESS): ProcedureResult;
-	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT; 
-			proc: ProcedureResult; f: FieldResult;	
-				meta: Meta; c: CHAR; pos: SIZE; flags: SET; 
+	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT;
+			proc: ProcedureResult; f: FieldResult;
+				meta: Meta; c: CHAR; pos: SIZE; flags: SET;
 				name: Name;
 	BEGIN
 		(* find constructor in a (base) type *)
 		FOR i := 15 TO 0 BY -1 DO
-			SYSTEM.GET(type-(2+i)*SIZEOF(ADDRESS), tag); 
+			SYSTEM.GET(type-(2+i)*SIZEOF(ADDRESS), tag);
 			IF tag # NIL THEN
-				SYSTEM.GET(tag-SIZEOF(ADDRESS), typeInfo); 
+				SYSTEM.GET(tag-SIZEOF(ADDRESS), typeInfo);
 				meta.module := typeInfo.mod;
 				meta.offset := typeInfo.refsOffset;
 				meta.refs := meta.module.refs;
-				
+
 				c := Reflection.GetChar(meta.refs, meta.offset);
-				ASSERT(c = Reflection.sfTypeDeclaration); 
-				Reflection.SkipSize(meta.offset); 
+				ASSERT(c = Reflection.sfTypeDeclaration);
+				Reflection.SkipSize(meta.offset);
 				Reflection.SkipString(meta.refs, meta.offset);
-				Reflection.SkipAddress(meta.offset); 
-				c := Reflection.GetChar(meta.refs, meta.offset); 
+				Reflection.SkipAddress(meta.offset);
+				c := Reflection.GetChar(meta.refs, meta.offset);
 				ASSERT(c= Reflection.sfScopeBegin);
 				WHILE meta.refs[meta.offset] = Reflection.sfVariable DO
-					Reflection.SkipVariable(meta.refs, meta.offset); 
+					Reflection.SkipVariable(meta.refs, meta.offset);
 				END;
 				WHILE meta.refs[meta.offset] = Reflection.sfProcedure DO
-					pos := meta.offset; 
+					pos := meta.offset;
 					Reflection.SkipChar(meta.offset);
-					Reflection.SkipSize(meta.offset); 
+					Reflection.SkipSize(meta.offset);
 					Reflection.GetString(meta.refs, meta.offset, name);
 					Reflection.SkipAddress(meta.offset);
 					Reflection.SkipAddress(meta.offset);
-					flags := Reflection.GetSet(meta.refs, meta.offset); 
+					flags := Reflection.GetSet(meta.refs, meta.offset);
 					meta.offset := pos;
-					IF Reflection.flagConstructor IN flags THEN 
-						NEW(proc, scope, name, meta); 
+					IF Reflection.flagConstructor IN flags THEN
+						NEW(proc, scope, name, meta);
 						RETURN proc;
 					END;
-					Reflection.SkipProcedure(meta.refs, meta.offset); 
+					Reflection.SkipProcedure(meta.refs, meta.offset);
 				END;
 			END;
 		END;
-		RETURN NIL; 
+		RETURN NIL;
 	END FindConstructor;
-	
+
 TYPE
 	Value*= OBJECT(Result)
 
@@ -821,7 +821,7 @@ TYPE
 		BEGIN
 			RETURN SELF;
 		END Evaluate;
-		
+
 		PROCEDURE GetInt*(VAR h: HUGEINT): BOOLEAN;
 		BEGIN
 			RETURN FALSE;
@@ -831,7 +831,7 @@ TYPE
 		BEGIN
 			RETURN FALSE;
 		END GetAddress;
-		
+
 		PROCEDURE GetReal*(VAR x: LONGREAL): BOOLEAN;
 		BEGIN
 			RETURN FALSE;
@@ -894,19 +894,19 @@ TYPE
 		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN w.Address(value);
 		END WriteValue;
-		
+
 		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
-		
+
 		PROCEDURE Find*(CONST name: ARRAY OF CHAR): Result;
 		VAR type, v, address: ADDRESS;
 		VAR typeInfo: Modules.TypeDesc; num: LONGINT;
 		proc: ProcedureResult; f: FieldResult;
 		BEGIN
-			IF value # NIL THEN 
-				address := value; 
+			IF value # NIL THEN
+				address := value;
 				SYSTEM.GET(address-SIZEOF(ADDRESS), type); (*  type desc *)
 				RETURN FindInType(SELF, address, type, name);
 				(*
@@ -963,12 +963,12 @@ TYPE
 		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN w.Address(value);
 		END WriteValue;
-		
+
 		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
-		
+
 
 	END AddressValue;
 
@@ -997,7 +997,7 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
-		
+
 		PROCEDURE GetInt*(VAR v: HUGEINT): BOOLEAN;
 		BEGIN
 			v := value; RETURN TRUE;
@@ -1043,12 +1043,12 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
-		
+
 		PROCEDURE GetReal*(VAR x: LONGREAL): BOOLEAN;
 		BEGIN
-			x := value; RETURN TRUE; 
+			x := value; RETURN TRUE;
 		END GetReal;
-		
+
 		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN w.Float(value,40);
 		END WriteValue;
@@ -1163,7 +1163,7 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
-		
+
 		PROCEDURE GetSet*(VAR x: SET): BOOLEAN;
 		BEGIN
 			x:= value; RETURN TRUE;
@@ -1173,7 +1173,7 @@ TYPE
 		BEGIN
 			w.Set(value)
 		END WriteValue;
-		
+
 		PROCEDURE Address*(): ADDRESS;
 		BEGIN
 			RETURN ADDRESSOF(value)
@@ -1204,11 +1204,11 @@ TYPE
 			IF name = StrValue THEN c.SetRange(value);
 			ELSE Get^(name, index, c);
 			END;
-		END Get;		
+		END Get;
 
 		PROCEDURE GetRange*(VAR x: RANGE): BOOLEAN;
 		BEGIN
-			x := value; RETURN TRUE; 
+			x := value; RETURN TRUE;
 		END GetRange;
 
 
@@ -1248,10 +1248,10 @@ TYPE
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
-		
+
 		PROCEDURE GetChar*(VAR c: CHAR): BOOLEAN;
 		BEGIN
-			c := value; RETURN TRUE; 
+			c := value; RETURN TRUE;
 		END GetChar;
 
 		PROCEDURE WriteValue*(w: Streams.Writer);
@@ -1670,25 +1670,25 @@ TYPE
 		END Filter;
 
 	END ObjectFilter;
-	
+
 	(*
 	PROCEDURE FindType(CONST types: POINTER TO ARRAY OF Modules.TypeDesc; CONST name: ARRAY OF CHAR): Modules.TypeDesc;
 	VAR i: LONGINT;
 	BEGIN
 		IF types = NIL THEN RETURN NIL END;
 		FOR i := 0 TO LEN(types)-1 DO
-			IF types[i].name = name THEN 
+			IF types[i].name = name THEN
 				RETURN types[i];
 			END;
 		END;
 		RETURN NIL;
 	END FindType;
-	
+
 	PROCEDURE FindField(CONST types: POINTER TO ARRAY OF Modules.FieldEntry; CONST name: ARRAY OF CHAR; VAR num: LONGINT): BOOLEAN;
 	BEGIN
 		IF types = NIL THEN RETURN FALSE END;
 		FOR num := 0 TO LEN(types)-1 DO
-			IF types[num].name^ = name THEN 
+			IF types[num].name^ = name THEN
 				RETURN TRUE;
 			END;
 		END;
@@ -1699,19 +1699,19 @@ TYPE
 	BEGIN
 		IF types = NIL THEN RETURN FALSE END;
 		FOR num := 0 TO LEN(types)-1 DO
-			IF types[num].name^ = name THEN 
+			IF types[num].name^ = name THEN
 				RETURN TRUE;
 			END;
 		END;
 		RETURN FALSE;
 	END FindProc;
 	*)
-	
+
 	PROCEDURE GetModule*(CONST name: ARRAY OF CHAR): ModuleResult;
 	VAR msg: ARRAY 128 OF CHAR; res: WORD; mod:ModuleResult; m: Modules.Module; meta: Meta;
 	BEGIN
 		m := Modules.ThisModule(name, res, msg);
-		IF m # NIL THEN 
+		IF m # NIL THEN
 			meta.module := m;
 			meta.refs := m.refs;
 			meta.offset := 0;

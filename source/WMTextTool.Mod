@@ -157,7 +157,7 @@ TYPE
 			panel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("Color:"); AL(toolbar, label);
 			NEW(colorCheck); AC(toolbar, colorCheck);
-			NEW(colB); colB.caption.SetAOC("+"); AD(toolbar, colB); 
+			NEW(colB); colB.caption.SetAOC("+"); AD(toolbar, colB);
 			NEW(colorEdit); colorEdit.SetAsString("000000FF"); colorEdit.onChanged.Add(UpdateColors);
 			AE(toolbar, colorEdit);
 
@@ -436,8 +436,8 @@ TYPE
 			bgColEdit.onChanged.Remove(UpdateColors);
 			DecCount;
 		END Close;
-		
-		PROCEDURE LoadData(elem: XML.Element);	
+
+		PROCEDURE LoadData(elem: XML.Element);
 		VAR i: LONGINT; str: ARRAY 128 OF CHAR;
 		BEGIN
 			WMRestorable.LoadLongint(elem, "famCheck", i); famCheck.state.Set(i);
@@ -445,14 +445,14 @@ TYPE
 			WMRestorable.LoadLongint(elem, "styleCheck", i); styleCheck.state.Set(i);
 			WMRestorable.LoadLongint(elem, "colorCheck", i); colorCheck.state.Set(i);
 			WMRestorable.LoadLongint(elem, "bgColCheck", i); bgColCheck.state.Set(i);
-			WMRestorable.LoadString(elem,"famEdit", str); famEdit.SetAsString(str); 
-			WMRestorable.LoadString(elem,"sizeEdit", str); sizeEdit.SetAsString(str); 
-			WMRestorable.LoadString(elem,"styleEdit", str); styleEdit.SetAsString(str); 
-			WMRestorable.LoadString(elem,"colorEdit", str); colorEdit.SetAsString(str); 
-			WMRestorable.LoadString(elem,"bgColEdit", str); bgColEdit.SetAsString(str); 
+			WMRestorable.LoadString(elem,"famEdit", str); famEdit.SetAsString(str);
+			WMRestorable.LoadString(elem,"sizeEdit", str); sizeEdit.SetAsString(str);
+			WMRestorable.LoadString(elem,"styleEdit", str); styleEdit.SetAsString(str);
+			WMRestorable.LoadString(elem,"colorEdit", str); colorEdit.SetAsString(str);
+			WMRestorable.LoadString(elem,"bgColEdit", str); bgColEdit.SetAsString(str);
 		END LoadData;
-		
-		
+
+
 		PROCEDURE StoreData(): XML.Element;
 		VAR elem: XML.Element; string: ARRAY 128 OF CHAR;
 		BEGIN
@@ -460,11 +460,11 @@ TYPE
 			WMRestorable.StoreLongint(elem, "famCheck", famCheck.state.Get());
 			famEdit.GetAsString(string);
 			WMRestorable.StoreString(elem, "famEdit", string);
-			
+
 			WMRestorable.StoreLongint(elem, "sizeCheck", sizeCheck.state.Get());
 			sizeEdit.GetAsString(string);
 			WMRestorable.StoreString(elem, "sizeEdit", string);
-			
+
 			WMRestorable.StoreLongint(elem, "styleCheck", styleCheck.state.Get());
 			styleEdit.GetAsString(string);
 			WMRestorable.StoreString(elem, "styleEdit", string);
@@ -472,13 +472,13 @@ TYPE
 			WMRestorable.StoreLongint(elem, "colorCheck", colorCheck.state.Get());
 			colorEdit.GetAsString(string);
 			WMRestorable.StoreString(elem, "colorEdit", string);
-			
+
 			WMRestorable.StoreLongint(elem, "bgColCheck", bgColCheck.state.Get());
 			bgColEdit.GetAsString(string);
 			WMRestorable.StoreString(elem, "bgColEdit", string);
 			RETURN elem;
 		END StoreData;
-		
+
 
 		PROCEDURE Handle*(VAR x: WMMessages.Message);
 		VAR data: XML.Element;

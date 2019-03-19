@@ -39,11 +39,11 @@ TYPE
 	(* definitions for object-model loader support *)
 	Name* = ARRAY 32 OF CHAR;
 
-	(* the correponding name array is protected from being GCed via module's internal pointer arrray 
+	(* the correponding name array is protected from being GCed via module's internal pointer arrray
 		compiler generated!
 	*)
 	DynamicName* = POINTER {UNSAFE,UNTRACED} TO ARRAY 256 OF CHAR;
-	
+
 	Command* = RECORD
 		(* Fields exported for initialization by loader/linker only! Consider read-only! *)
 		name*: Name; (* name of the procedure *)
@@ -68,7 +68,7 @@ TYPE
 	(* all implicit or explicit pointers in the subsequent data structures are protected with one pointer array
 	*)
 
-	TypeDesc* = POINTER  TO RECORD 
+	TypeDesc* = POINTER  TO RECORD
 		descSize-: SIZE;
 		sentinel-: LONGINT;	(* = MPO-4 *)
 		tag-: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
@@ -85,15 +85,15 @@ TYPE
 	END;
 
 	ExceptionTable* = POINTER TO ARRAY OF ExceptionTableEntry;
-	
+
 	ProcedureDescPointer* = POINTER TO ProcedureDesc;
 	ProcedureDesc*= RECORD
-		pcFrom-, pcLimit-: ADDRESS; 
-		offsets- {UNTRACED}: POINTER TO ARRAY OF ADDRESS; 
+		pcFrom-, pcLimit-: ADDRESS;
+		offsets- {UNTRACED}: POINTER TO ARRAY OF ADDRESS;
 	END;
-	
+
 	ProcedureDescs* = POINTER TO ARRAY OF ProcedureDescPointer;
-	
+
 	Module* = OBJECT (Heaps.RootObject)	(* cf. Linker0 & Heaps.WriteType *)
 		VAR
 			next*: Module;	(** once a module is published, all fields are read-only *)
@@ -104,7 +104,7 @@ TYPE
 			entry*: POINTER TO ARRAY OF ADDRESS;
 			command*: POINTER TO ARRAY OF Command;
 			ptrAdr*: POINTER TO ARRAY OF ADDRESS; (* traced explicitly in FindRoots *)
-			typeInfo*: POINTER TO ARRAY OF TypeDesc;	
+			typeInfo*: POINTER TO ARRAY OF TypeDesc;
 			module*: POINTER TO ARRAY OF Module; (* imported modules: for reference counting *)
 			procTable*: ProcedureDescs; (* information inserted by loader, sorted by pc after loading *)
 			data*, code*, staticTypeDescs* (* ug *), refs*: Bytes;
@@ -116,7 +116,7 @@ TYPE
 			crc*: LONGINT;
 			body*: PROCEDURE;
 			flags*: SET;	 (* e.g. compilation flags *)
-			
+
 		#IF ~COOP THEN
 			PROCEDURE FindRoots*;	(* override *)
 			VAR i: LONGINT; ptr {UNTRACED}: ANY; false: BOOLEAN;
@@ -124,7 +124,7 @@ TYPE
 			BEGIN
 				name := SELF.name;
 				false := FALSE; IF false THEN BEGIN{EXCLUSIVE} END END; (* trick to make a module a protected record ... *)
-				IF published THEN	(* mark global pointers *)				
+				IF published THEN	(* mark global pointers *)
 					FOR i := 0 TO LEN(ptrAdr) - 1 DO
 						SYSTEM.GET (ptrAdr[i], ptr);
 						IF ptr # NIL THEN Heaps.Mark(ptr) END
@@ -153,7 +153,7 @@ VAR
 	register: RECORD
 		first {UNTRACED}, last {UNTRACED}: Module;
 	END;
-	
+
 	(* global sorted table of all procedures , basically for GC *)
 	procedureDescriptors-: ProcedureDescs;
 
@@ -290,13 +290,13 @@ END Initialize;
 			TRACE(ADDRESS OF module.refcnt);
 			TRACE(ADDRESS OF module.sb);
 			TRACE(ADDRESS OF module.entry);
-			TRACE(ADDRESS OF module.command); 
+			TRACE(ADDRESS OF module.command);
 			TRACE(ADDRESS OF module.ptrAdr);
 			TRACE(ADDRESS OF module.typeInfo);
 			TRACE(ADDRESS OF module.module);
 			TRACE(ADDRESS OF module.procTable);
 			TRACE(ADDRESS OF module.ptrTable);
-			TRACE(ADDRESS OF module.data); 
+			TRACE(ADDRESS OF module.data);
 			TRACE(ADDRESS OF module.code);
 			TRACE(ADDRESS OF module.staticTypeDescs);
 			TRACE(ADDRESS OF module.refs);
@@ -309,7 +309,7 @@ END Initialize;
 			TRACE(ADDRESS OF module.crc);
 			TRACE(ADDRESS OF module.body);
 			*)
-						
+
 			IF module.body # NIL THEN module.body END;
 			IF callagain THEN
 				PublishRegisteredModules (* does not return on intel architecture. Returns on ARM but looses procedure stack frame: we are not allowed to refer to local variables after this *)
@@ -351,7 +351,7 @@ END Initialize;
 		j := 0; WHILE extension[j] # 0X DO fileName[i] := extension[j]; INC(i); INC(j) END;
 		fileName[i] := 0X
 	END GetFileName;
-		
+
 	(* sort procedure descriptors by firstPC in ascending order *)
 	PROCEDURE SortProcedureDescs(p: ProcedureDescs);
 
@@ -359,7 +359,7 @@ END Initialize;
 		BEGIN
 			RETURN p[i].pcFrom < p[j].pcFrom;
 		END Less;
-		
+
 		PROCEDURE Swap(i,j: LONGINT);
 		VAR tmp: ProcedureDescPointer;
 		BEGIN
@@ -367,8 +367,8 @@ END Initialize;
 			p[i] := p[j];
 			p[j] := tmp;
 		END Swap;
-		
-		
+
+
 		PROCEDURE Quick( lo, hi: LONGINT);
 		VAR i, j, m: LONGINT;
 		BEGIN
@@ -399,7 +399,7 @@ END Initialize;
 		BEGIN
 			RETURN p[i].pcFrom < p[j].pcFrom;
 		END Less;
-		
+
 		PROCEDURE Swap(i,j: LONGINT);
 		VAR tmp: ExceptionTableEntry;
 		BEGIN
@@ -407,7 +407,7 @@ END Initialize;
 			p[i] := p[j];
 			p[j] := tmp;
 		END Swap;
-		
+
 		PROCEDURE Quick( lo, hi: LONGINT);
 		VAR i, j, m: LONGINT;
 		BEGIN
@@ -430,7 +430,7 @@ END Initialize;
 	BEGIN
 		Quick(0, LEN(p)-1);
 	END SortExceptionTable;
-	
+
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR): Module;
 VAR m: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT; registered: BOOLEAN;
@@ -526,7 +526,7 @@ VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i: LONGINT; res : WORD; t: HU
 BEGIN
 	module := ThisModule(moduleName, res, ignoreMsg);
 	IF (res = Ok) THEN
-		(*! 
+		(*!
 			module body must have been called (see note at the end of this module);
 			return NIL if the module does not get initialized within the specified timeout
 		*)
@@ -798,7 +798,7 @@ BEGIN
 		WHILE (prev.next # NIL) & (prev.next # m) DO
 			prev := prev.next;
 		END;
-		IF prev.next = m THEN 
+		IF prev.next = m THEN
 			prev.next := prev.next.next;
 			IF prev.next = NIL THEN register.last := prev END;
 		 END;

@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Copy of the GNU Lesser General Public License can be found in the file COPYING.TXT
 Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
-*) 
+*)
 
 
 (*=
@@ -520,7 +520,7 @@ BEGIN IF item = NIL THEN RETURN END;
 		queue.last.link := item; queue.last := item
 	END;  	INC(queue.count);
 	WHILE queue.last.link # NIL DO
-		queue.last := 
+		queue.last :=
 		queue.last.link;   INC(queue.count)
 	END
 END EnqueueLast;

@@ -313,10 +313,10 @@ VAR
 	VAR str: ARRAY 64 OF CHAR;
 	BEGIN
 		r.SkipWhitespace; r.String( str );
-		ASSERT( str = "ssh-rsa" );	
+		ASSERT( str = "ssh-rsa" );
 		RETURN ExtractPublicKey( r )
 	END LoadPublicKey;
-	
+
 	PROCEDURE ExtractPublicKey*( r: Streams.Reader ): Key;
 	VAR buf: ARRAY 4096 OF CHAR; len, pos: LONGINT;
 		str: ARRAY 64 OF CHAR;
@@ -326,7 +326,7 @@ VAR
 		len := Base64.DecodeStream( r, buf );
 		pos := 0;
 		U.GetString( buf, pos, str );
-		ASSERT( str = "ssh-rsa" );	
+		ASSERT( str = "ssh-rsa" );
 		U.GetBigNumber( buf, pos, k.exponent );
 		U.GetBigNumber( buf, pos, k.modulus );
 		RETURN k

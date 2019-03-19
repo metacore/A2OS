@@ -186,13 +186,13 @@ TYPE
 		BEGIN
 			Prefix( name, fname );  fs.RemoveDirectory0( fname, force, key, res );
 		END RemoveDirectory0;
-		
+
 		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
 		VAR fname: FileName;
 		BEGIN
 			Prefix(name, fname );  RETURN fs.Has(fname, fullName, flags);
 		END Has;
-		
+
 
 	END AliasFileSystem;
 
@@ -380,8 +380,8 @@ TYPE
 		VAR ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  ret := Kernel32.CreateDirectory( name, NIL );
-			IF ret # 0 THEN 
-				res := 0 
+			IF ret # 0 THEN
+				res := 0
 			ELSIF Kernel32.GetLastError() = 183 (*ERROR_ALREADY_EXISTS*) THEN res := Files.FileAlreadyExists;
 			ELSE res := 1 END
 		END CreateDirectory0;
@@ -406,10 +406,10 @@ TYPE
 		VAR name: FileName;
 		BEGIN
 			COPY(fileName, name);
-			ConvertChar(name, Files.PathDelimiter, PathDelimiter );  
-			IF FindFile(fileName, fullName) THEN 
+			ConvertChar(name, Files.PathDelimiter, PathDelimiter );
+			IF FindFile(fileName, fullName) THEN
 				flags := FileFlags(Kernel32.GetFileAttributes(fullName));
-				ConvertChar(fullName, PathDelimiter,Files.PathDelimiter);  
+				ConvertChar(fullName, PathDelimiter,Files.PathDelimiter);
 				RETURN TRUE
 			ELSE
 				RETURN FALSE
@@ -433,7 +433,7 @@ TYPE
 		fileSystem: WinFileSystem;
 
 		PROCEDURE & Init*( VAR name: ARRAY OF CHAR;  hfile: Kernel32.HANDLE;  key: LONGINT ; fs: WinFileSystem);
-		VAR s: WORDSET;  res: Kernel32.BOOL; 
+		VAR s: WORDSET;  res: Kernel32.BOOL;
 		BEGIN
 			IF TraceFile IN Trace THEN KernelLog.String( "Init: " );  KernelLog.String( name );  KernelLog.String( " (" );  KernelLog.Int( key, 1 );  KernelLog.String( ")" );  KernelLog.Ln;  END;
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
@@ -964,10 +964,10 @@ VAR
 				i := 2;
 				REPEAT ch := dir[i]; dir[i-2] := ch; INC(i) UNTIL ch = 0X;
 			ELSE
-				IGNORE Kernel32.SetCurrentDirectory(workPath) 
+				IGNORE Kernel32.SetCurrentDirectory(workPath)
 			END;
 		END SetSysPath;
-		
+
 
 		PROCEDURE AddDir;
 		BEGIN
@@ -1018,7 +1018,7 @@ VAR
 
 		COPY( temp, tempPath );
 		IF tempPath # "" THEN
-			ConvertChar( tempPath, Files.PathDelimiter, PathDelimiter );  
+			ConvertChar( tempPath, Files.PathDelimiter, PathDelimiter );
 			SetSysPath(tempPath);
 			IF Kernel32.SetCurrentDirectory( tempPath ) # Kernel32.False THEN ret := Kernel32.GetCurrentDirectory( LEN( tempPath ), tempPath ) END
 		END;
@@ -1026,7 +1026,7 @@ VAR
 
 		COPY( work, dir );
 		IF dir # "" THEN
-			ConvertChar( dir, Files.PathDelimiter, PathDelimiter );  
+			ConvertChar( dir, Files.PathDelimiter, PathDelimiter );
 			SetSysPath(dir);
 			IF Kernel32.SetCurrentDirectory( dir ) # Kernel32.False THEN IGNORE Kernel32.GetCurrentDirectory( LEN( workPath ), workPath ) END
 		END;
@@ -1205,7 +1205,7 @@ VAR
 
 		notifications := NIL;
 	END Init;
-	
+
 	PROCEDURE AddSearchPath*(context: Commands.Context);
 	VAR name,fullName: FileName; i,j: LONGINT; ch : CHAR; ret: LONGINT; fileNamePart: Kernel32.LPSTR;
 	BEGIN
@@ -1213,11 +1213,11 @@ VAR
 			i := 0; j := 0;
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );
 			ret := Kernel32.GetFullPathName( name, Kernel32.MaxPath, fullName, fileNamePart );
-			
+
 			WHILE(searchPath[i] # 0X) DO
 				INC(i);
 			END;
-			
+
 			searchPath[i] := ";";INC(i);
 			REPEAT
 				ch := fullName[j];
@@ -1226,14 +1226,14 @@ VAR
 			UNTIL ch = 0X;
 		END;
 	END AddSearchPath;
-	
+
 	PROCEDURE SetWorkPath*(context: Commands.Context);
 	VAR name: FileName; done: BOOLEAN;
 	BEGIN
 		IF context.arg.GetString(name) THEN
-			ChangeDirectory(name, done); 
-			IF ~done THEN 
-				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln; 
+			ChangeDirectory(name, done);
+			IF ~done THEN
+				context.error.String("could not change directory to "); context.error.String(name); context.error.Ln;
 			END
 		END;
 	END SetWorkPath;

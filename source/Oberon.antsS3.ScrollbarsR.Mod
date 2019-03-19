@@ -16,8 +16,8 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 		(** frame states *)
 		hasarrows* = 0;
 		dodrag* = 1;
-		doverydrag*=2; 
-		exp*=3; 
+		doverydrag*=2;
+		exp*=3;
 
 	TYPE
 		Frame* = POINTER TO FrameDesc;
@@ -126,12 +126,12 @@ BEGIN
 		Attributes.GetString(F, "Field", name); IF name = "" THEN name := "Value" END;
 		Attributes.GetLongReal(F, "StepSize", stepsize);
 		IF stepsize > 0 THEN
-			val := ENTIER(val / stepsize + 0.5) * stepsize; 
+			val := ENTIER(val / stepsize + 0.5) * stepsize;
 			(*
-			IF (exp IN F.state0) THEN 
-				val := Math.exp(Math.ln(val)*10); 
-			END; 
-			*) 
+			IF (exp IN F.state0) THEN
+				val := Math.exp(Math.ln(val)*10);
+			END;
+			*)
 		END;
 		Attributes.SetLongReal(F.obj, name, val); Gadgets.Update(F.obj)
 	ELSE SendUpdate(F, px, py, dlink, FALSE)
@@ -392,10 +392,10 @@ BEGIN
 						Display3.Rect(Q, Display3.groupC, Display3.selectpat, n, y, F.knoblen, h, 2, Display3.invert)
 					END
 				ELSIF ((ABS(npos - dpos) > F.step) OR (npos = F.min) OR (npos = F.max)) THEN
-					dpos := npos; SetValueAndUpdate(F, npos, M.x, M.y, M.dlink); 
-					IF (doverydrag IN F.state0) THEN 
-						Gadgets.ExecuteAttr(F, "Cmd", M.dlink, F, NIL); 
-					END; 
+					dpos := npos; SetValueAndUpdate(F, npos, M.x, M.y, M.dlink);
+					IF (doverydrag IN F.state0) THEN
+						Gadgets.ExecuteAttr(F, "Cmd", M.dlink, F, NIL);
+					END;
 				END;
 				pos := npos
 			END;
@@ -455,11 +455,11 @@ END CopyFrame;
 
 PROCEDURE ToLongreal(VAR M: Objects.AttrMsg);
 BEGIN
-	IF M.class= Objects.Int THEN 
-		M.class := Objects.LongReal; M.y := M.i; 
-	ELSIF M.class = Objects.Real THEN 
-		M.class := Objects.LongReal; M.y := M.x; 
-	END; 
+	IF M.class= Objects.Int THEN
+		M.class := Objects.LongReal; M.y := M.i;
+	ELSIF M.class = Objects.Real THEN
+		M.class := Objects.LongReal; M.y := M.x;
+	END;
 END ToLongreal;
 
 
@@ -487,9 +487,9 @@ BEGIN
 			M.class := Objects.Bool; M.b := hasarrows IN F.state0; M.res := 0
 		ELSIF M.name = "HeavyDrag"THEN
 			M.class := Objects.Bool; M.b := dodrag IN F.state0; M.res := 0
-		ELSIF M.name="VeryHeavyDrag" THEN 
+		ELSIF M.name="VeryHeavyDrag" THEN
 			M.class := Objects.Bool; M.b := doverydrag IN F.state0; M.res := 0
-		ELSIF M.name="Exponential" THEN 
+		ELSIF M.name="Exponential" THEN
 			M.class := Objects.Bool; M.b := exp IN F.state0; M.res := 0
 		ELSIF M.name = "Cmd"THEN
 			Gadgets.framehandle(F, M);
@@ -507,7 +507,7 @@ BEGIN
 				F.backC := SHORT(M.i); M.res := 0
 			END
 		ELSIF M.name = "Min"THEN
-			ToLongreal(M); 
+			ToLongreal(M);
 			IF M.class = Objects.LongReal THEN
 				F.min := M.y;
 				IF F.minO # NIL THEN Attributes.SetLongReal(F.minO, "Value", F.min); Gadgets.Update(F.minO)
@@ -516,7 +516,7 @@ BEGIN
 				M.res := 0
 			END
 		ELSIF M.name = "Max"THEN
-			ToLongreal(M); 
+			ToLongreal(M);
 			IF M.class = Objects.LongReal THEN
 				F.max := M.y;
 				IF F.maxO # NIL THEN Attributes.SetLongReal(F.maxO, "Value", F.max); Gadgets.Update(F.maxO)
@@ -525,17 +525,17 @@ BEGIN
 				M.res := 0
 			END
 		ELSIF M.name = "StepSize"THEN
-			ToLongreal(M); 
+			ToLongreal(M);
 			IF M.class = Objects.LongReal THEN
 				F.step := M.y;
 				IF F.stepO # NIL THEN Attributes.SetLongReal(F.stepO, "Value", F.step); Gadgets.Update(F.stepO) END;
 				M.res := 0
 			END
 		ELSIF M.name = "Value"THEN
-			ToLongreal(M); 
+			ToLongreal(M);
 			IF M.class = Objects.LongReal THEN SetValue(F, M.y); M.res := 0 END
 		ELSIF M.name = "KnobSize" THEN
-			ToLongreal(M); 
+			ToLongreal(M);
 			IF M.class = Objects.LongReal THEN F.size := M.y;  M.res := 0 END
 		ELSIF M.name = "Vertical"THEN
 			IF M.class = Objects.Bool THEN
@@ -575,7 +575,7 @@ BEGIN
 		M.Enum("Min"); M.Enum("Max"); M.Enum("Value"); M.Enum("StepSize");M.Enum("KnobSize");
 		M.Enum("BackColor");
 		M.Enum("Field"); M.Enum("Cmd");
-		M.Enum("Vertical"); M.Enum("ArrowBoxes"); M.Enum("HeavyDrag");M.Enum("VeryHeavyDrag");M.Enum("Exponential"); 
+		M.Enum("Vertical"); M.Enum("ArrowBoxes"); M.Enum("HeavyDrag");M.Enum("VeryHeavyDrag");M.Enum("Exponential");
 
 		Gadgets.framehandle(F, M)
 	END
@@ -670,7 +670,7 @@ BEGIN
 						END
 					ELSIF M IS Oberon.InputMsg THEN
 						WITH M: Oberon.InputMsg DO
-							IF (M.id = Oberon.track) & Gadgets.InActiveArea(F, M) & 
+							IF (M.id = Oberon.track) & Gadgets.InActiveArea(F, M) &
 								((M.keys = {1}) OR (Oberon.New & (M.keys = {2}))) THEN
 								TrackFrame(F, x, y, w, h, M); M.res := 0
 							ELSE Gadgets.framehandle(F, M)

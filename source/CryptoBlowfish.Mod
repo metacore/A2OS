@@ -9,11 +9,11 @@ MODULE CryptoBlowfish;   (** AUTHOR "GF"; PURPOSE "Blowfish en/decryption"; *)
 IMPORT Ciphers := CryptoCiphers, S := SYSTEM, U := CryptoUtils;
 
 CONST
-	N = 16;  
+	N = 16;
 
 TYPE
 	TP = ARRAY N + 2 OF SET32;
-	TS = RECORD 
+	TS = RECORD
 			a	: ARRAY 256 OF LONGINT;
 			b	: ARRAY 256 OF LONGINT;
 			c	: ARRAY 256 OF SET32;
@@ -34,32 +34,32 @@ TYPE
 				VAR i, m: LONGINT;  xl, xr: SET32;
 				BEGIN
 					InitKey^( src, keybits );  m := keybits DIV 8;  s := s0;
-					FOR i := 0 TO N + 1 DO  
-						p[i] := p0[i] / U.SetFromBufferBE( src, (4*i) MOD m )  
+					FOR i := 0 TO N + 1 DO
+						p[i] := p0[i] / U.SetFromBufferBE( src, (4*i) MOD m )
 					END;
 					xl := {};  xr := {};
 					FOR i := 0 TO N BY 2 DO  encrypt0( xl, xr, xl, xr );  p[i] := xl;  p[i + 1] := xr  END;
 					FOR i := 0 TO 254 BY 2 DO
-						encrypt0( xl, xr, xl, xr );  
+						encrypt0( xl, xr, xl, xr );
 						s.a[i] := S.VAL( LONGINT, xl );  s.a[i + 1] := S.VAL( LONGINT, xr );
 					END;
 					FOR i := 0 TO 254 BY 2 DO
-						encrypt0( xl, xr, xl, xr );  
+						encrypt0( xl, xr, xl, xr );
 						s.b[i] := S.VAL( LONGINT, xl );  s.b[i + 1] := S.VAL( LONGINT, xr );
 					END;
 					FOR i := 0 TO 254 BY 2 DO
-						encrypt0( xl, xr, xl, xr );  
+						encrypt0( xl, xr, xl, xr );
 						s.c[i] := xl;  s.c[i + 1] := xr;
 					END;
 					FOR i := 0 TO 254 BY 2 DO
-						encrypt0( xl, xr, xl, xr );  
+						encrypt0( xl, xr, xl, xr );
 						s.d[i] := S.VAL( LONGINT, xl );  s.d[i + 1] := S.VAL( LONGINT, xr );
 					END
 				END InitKey;
 
 				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
 				BEGIN
-					SetIV^( src, mode );  
+					SetIV^( src, mode );
 					ivl := U.SetFromBufferBE( src, 0 );  ivr := U.SetFromBufferBE( src, 4 );
 				END SetIV;
 
@@ -99,11 +99,11 @@ TYPE
 					IF mode = Ciphers.CBC THEN  yl := yl/ivl;  yr := yr/ivr;  ivl := xl;  ivr := xr  END;
 					U.SetToBufferBE( yl, buf, pos );  U.SetToBufferBE( yr, buf, pos + 4 )
 				END DecryptBlock;
-				
-				
+
+
 				PROCEDURE F( x: LONGINT ): SET32;
-				VAR 
-					ab, c: SET32; d: LONGINT; 
+				VAR
+					ab, c: SET32; d: LONGINT;
 				BEGIN
 					ab := S.VAL( SET32, s.a[x DIV 1000000H MOD 100H] + s.b[x DIV 10000H MOD 100H] );
 					c := s.c[x DIV 100H MOD 100H];
@@ -160,7 +160,7 @@ TYPE
 		buf.Add( "452821E6 38D01377 BE5466CF 34E90C6C C0AC29B7 C97C50DD 3F84D5B5 B5470917" );
 		buf.Add( "9216D5D9 8979FB1B" );
 		FOR i := 0 TO N + 2 - 1 DO   p0[i] := buf.GetSet()  END;
-		
+
 		buf.Init( 4096 );
 		buf.Add( "D1310BA6 98DFB5AC 2FFD72DB D01ADFB7 B8E1AFED 6A267E96 BA7C9045 F12C7F99" );
 		buf.Add( "24A19947 B3916CF7 0801F2E2 858EFC16 636920D8 71574E69 A458FEA3 F4933D7E" );
@@ -195,7 +195,7 @@ TYPE
 		buf.Add( "D60F573F BC9BC6E4 2B60A476 81E67400 08BA6FB5 571BE91F F296EC6B 2A0DD915" );
 		buf.Add( "B6636521 E7B9F9B6 FF34052E C5855664 53B02D5D A99F8FA1 08BA4799 6E85076A" );
 		FOR i := 0 TO 255 DO  s0.a[i] :=  buf.GetInt()  END;
-		
+
 		buf.Init( 4096 );
 		buf.Add( "4B7A70E9 B5B32944 DB75092E C4192623 AD6EA6B0 49A7DF7D 9CEE60B8 8FEDB266" );
 		buf.Add( "ECAA8C71 699A17FF 5664526C C2B19EE1 193602A5 75094C29 A0591340 E4183A3E" );
@@ -230,7 +230,7 @@ TYPE
 		buf.Add( "9E447A2E C3453484 FDD56705 0E1E9EC9 DB73DBD3 105588CD 675FDA79 E3674340" );
 		buf.Add( "C5C43465 713E38D8 3D28F89E F16DFF20 153E21E7 8FB03D4A E6E39F2B DB83ADF7" );
 		FOR i := 0 TO 255 DO  s0.b[i] :=  buf.GetInt()  END;
-		
+
 		buf.Init( 4096 );
 		buf.Add( "E93D5A68 948140F7 F64C261C 94692934 411520F7 7602D4F7 BCF46B2E D4A20068" );
 		buf.Add( "D4082471 3320F46A 43B7D4B7 500061AF 1E39F62E 97244546 14214F74 BF8B8840" );
@@ -265,7 +265,7 @@ TYPE
 		buf.Add( "ED545578 08FCA5B5 D83D7CD3 4DAD0FC4 1E50EF5E B161E6F8 A28514D9 6C51133C" );
 		buf.Add( "6FD5C7E7 56E14EC4 362ABFCE DDC6C837 D79A3234 92638212 670EFA8E 406000E0" );
 		FOR i := 0 TO 255 DO  s0.c[i] :=  buf.GetSet()  END;
-		
+
 		buf.Init( 4096 );
 		buf.Add( "3A39CE37 D3FAF5CF ABC27737 5AC52D1B 5CB0679E 4FA33742 D3822740 99BC9BBE" );
 		buf.Add( "D5118E9D BF0F7315 D62D1C7E C700C47B B78C1B6B 21A19045 B26EB1BE 6A366EB4" );

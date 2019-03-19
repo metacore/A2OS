@@ -2,7 +2,6 @@ MODULE FoxDocumentationScanner; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Streams, Diagnostics, D := Debugging;
 
-
 CONST
 	(* scanner constants *)
 	EOT* = 0X; LF* = 0AX; CR* = 0DX;
@@ -194,7 +193,6 @@ TYPE
 				RETURN ~IsWhitespace(prev,TRUE) & IsWhitespace(Peek(),TRUE)
 			END IsRight;
 
-
 		BEGIN
 			symbol.stringLength := 0;
 			symbol.string := NIL;
@@ -211,7 +209,6 @@ TYPE
 				ReadCode;
 				RETURN
 			END;
-
 
 			CASE ch OF  (* ch > " " *)
 			EOT: symbol.token := Token.EndOfText

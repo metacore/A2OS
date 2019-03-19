@@ -18,12 +18,12 @@ CONST
 		Import     = Identifier [':=' Identifier] ['in' Identifier].
 
 		DeclarationSequence  =  {
-							 'const' [ConstDeclaration] {';' [ConstDeclaration]}
+							'const' [ConstDeclaration] {';' [ConstDeclaration]}
 							|'type'  [TypeDeclaration] {';' [TypeDeclaration]}
-						 	|'var'   [VariableDeclaration] {';' [VariableDeclaration]}
-						 	| ProcedureDeclaration
-						 	| OperatorDeclaration
-						 	| ';'
+							|'var'   [VariableDeclaration] {';' [VariableDeclaration]}
+							| ProcedureDeclaration
+							| OperatorDeclaration
+							| ';'
 							}
 
 	Declaration = IdentifierDefinition '=' Expression.
@@ -83,7 +83,7 @@ CONST
 	StatementSequence = Statement {';' Statement}.
 
 	Statement =
- 				[
+				[
 					Designator [':=' Expression |'!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression]
 					| 'if' Expression 'then' StatementSequence
 						{'elsif' Expression 'then' StatementSequence}
@@ -92,13 +92,13 @@ CONST
 					| 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence
 						{['|' Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
 						[else StatementSequence]
-						 'end'
+						'end'
 					| 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
 					| 'while' Expression 'do' StatementSequence 'end'
 					| 'repeat' StatementSequence 'until' Expression
 					| 'for' Identifier ':=' Expression 'to' Expression ['by' Expression] 'do'
 						StatementSequence 'end'
- 					| 'loop' StatementSequence 'end'
+					| 'loop' StatementSequence 'end'
 					| 'exit'
 					| 'return' [Expression]
 					| 'await' Expression
@@ -132,7 +132,7 @@ CONST
 	Set = '{' [ RangeExpression {',' RangeExpression} ] '}'.
 
 	Designator  = ('self' | 'result' | Identifier)
-		      						{'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
+							{'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
 
 	RangeExpression = SimpleExpression | [SimpleExpression] '..' [SimpleExpression] ['by' SimpleExpression] | '*'.
 
@@ -254,12 +254,10 @@ TYPE
 			error := FALSE;
 		END Reset;
 
-
 		PROCEDURE SetLax*;
 		BEGIN
 			Lax := TRUE;
 		END SetLax;
-
 
 		(** output error message and / or given code *)
 		PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
@@ -604,7 +602,7 @@ TYPE
 				IF ~Optional( Scanner.Period )THEN
 					suffix := prefix;  prefix := SyntaxTree.invalidIdentifier;   (* empty *)
 				ELSE
-					 suffix := Identifier(position1);
+					suffix := Identifier(position1);
 				END;
 				qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier( position0, prefix,suffix);
 			ELSE
@@ -765,7 +763,7 @@ TYPE
 		END RangeExpression;
 
 		(** Designator  = ('self' | 'result' | Identifier)
-		                  {'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
+			{'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
 		**)
 		PROCEDURE Designator( ): SyntaxTree.Designator;
 		VAR
@@ -890,9 +888,9 @@ TYPE
 		END MathArray;
 
 		(** Factor = Number | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
-			 			  | '(' Expression ')' | '~' Factor | Factor '`' | Designator | MathArray.
-			 			  | 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator | 'ALIAS' OF Expression
-			 			  **)
+						| '(' Expression ')' | '~' Factor | Factor '`' | Designator | MathArray.
+						| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator | 'ALIAS' OF Expression
+						**)
 		PROCEDURE Factor( ): SyntaxTree.Expression;
 		VAR factor: SyntaxTree.Expression; position: Position; operator: LONGINT;
 		BEGIN
@@ -993,7 +991,7 @@ TYPE
 		END Factor;
 
 		(** Term = Factor {MulOp Factor}.
-		   MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
+			MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
 		**)
 		PROCEDURE Term( ): SyntaxTree.Expression;
 		VAR term, factor: SyntaxTree.Expression;  operator: LONGINT; position: Position;
@@ -1040,9 +1038,9 @@ TYPE
 		(**
 			Expression           = RangeExpression [RelationOp RangeExpression].
 			RelationOp           = '=' | '.=' | '#' | '.#'
-			                     | '<' | '.<' | '<=' | '.<=' | '>' | '.>' | '>=' | '.>='
-			                     | '??' | '!!' | '<<?' | '>>?'
-			                     | 'in' | 'is'
+						| '<' | '.<' | '<=' | '.<=' | '>' | '.>' | '>=' | '.>='
+						| '??' | '!!' | '<<?' | '>>?'
+						| 'in' | 'is'
 		**)
 		PROCEDURE Expression*( ): SyntaxTree.Expression;
 		VAR expression, rightExpression: SyntaxTree.Expression;  operator: LONGINT;  position: Position;
@@ -1085,7 +1083,6 @@ TYPE
 			IF Trace THEN E( "Case" ) END;
 		END Case;
 
-
 		(**		Statement =
                      [
                      Designator [':=' Expression |'!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression]
@@ -1095,7 +1092,7 @@ TYPE
                         'end'
                      | 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence
                          {'|' [Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
-                				[else StatementSequence]
+                         [else StatementSequence]
                          'end'
                      | 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
                      | 'while' Expression 'do' StatementSequence 'end'
@@ -1433,7 +1430,7 @@ TYPE
 		END Code;
 
 		(** Body = 'begin' [Flags] StatementSequence ['finally' StatementSequence]
-		         			| 'code' Code. **)
+						| 'code' Code. **)
 		PROCEDURE Body( scope: SyntaxTree.ProcedureScope ): SyntaxTree.Body;
 		VAR body: SyntaxTree.Body; code: SyntaxTree.Code; position: Position;  previousScope: SyntaxTree.Scope;
 		BEGIN
@@ -1516,7 +1513,7 @@ TYPE
 			(* generic empty OBJECT type *)
 			IF Peek(Scanner.Semicolon) OR Peek(Scanner.RightParenthesis) THEN
 				Scanner.GetKeyword(scanner.case,Scanner.Object,identifier);
-	      		qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(position,SyntaxTree.invalidIdentifier,identifier);
+				qualifiedIdentifier := SyntaxTree.NewQualifiedIdentifier(position,SyntaxTree.invalidIdentifier,identifier);
 				type := SyntaxTree.NewQualifiedType( position, parentScope, qualifiedIdentifier );
 				RETURN type
 			END;
@@ -1593,13 +1590,11 @@ TYPE
 				cellType.SetModifiers(modifiers);
 			END;
 
-
 			IF Optional( Scanner.LeftParenthesis ) THEN
 				PortList(cellType,cellScope);
 			END;
 
 			IF Optional( Scanner.Semicolon ) THEN END;
-
 
 			WHILE Optional(Scanner.Import) DO ImportList(cellScope) END;
 			DeclarationSequence( cellScope);
@@ -1617,7 +1612,7 @@ TYPE
 
 		(** PointerType = 'pointer' [Flags] 'to' Type. **)
 		PROCEDURE PointerType( position: Position; parentScope: SyntaxTree.Scope ): SyntaxTree.PointerType;
-		VAR pointerType: SyntaxTree.PointerType;  base: SyntaxTree.Type; 	modifiers: SyntaxTree.Modifier;
+		VAR pointerType: SyntaxTree.PointerType; base: SyntaxTree.Type; modifiers: SyntaxTree.Modifier;
 		BEGIN
 			IF Trace THEN S( "PointerType" ) END;
 			(* pointer token already consumed *)
@@ -1683,7 +1678,7 @@ TYPE
 
 		(** ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression} 'of' Type
 													| 'array' '[' MathArraySize {',' MathArraySize} ']' ['of' Type].
-	  		 MathArraySize = Expression | '*' | '?'.
+			MathArraySize = Expression | '*' | '?'.
 		**)
 		PROCEDURE ArrayType(position: Position;   parentScope: SyntaxTree.Scope ): SyntaxTree.Type;
 		VAR
@@ -2044,7 +2039,7 @@ TYPE
 		END CommentWithPart;
 
 		(** ProcedureDeclaration = 'procedure' ['^'|'&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
-			                       DeclarationSequence  [Body] 'end' Identifier.
+					DeclarationSequence  [Body] 'end' Identifier.
 			Forward declarations ignored.
 		**)
 		PROCEDURE ProcedureDeclaration( parentScope: SyntaxTree.Scope);
@@ -2148,7 +2143,7 @@ TYPE
 		END ProcedureDeclaration;
 
 		(** OperatorDeclaration  = 'operator' [Flags] ['-'] String ['*'|'-'] FormalParameters ';'
-			                       DeclarationSequence [Body] 'end' String.
+					DeclarationSequence [Body] 'end' String.
 		**)
 		PROCEDURE OperatorDeclaration(parentScope: SyntaxTree.Scope );
 		VAR
@@ -2188,7 +2183,6 @@ TYPE
 			ELSIF Optional( Scanner.Minus ) THEN access := SyntaxTree.ReadOnly;
 			ELSE access := SyntaxTree.Internal;
 			END;
-
 
 			procedureScope := SyntaxTree.NewProcedureScope(parentScope);
 			operator := SyntaxTree.NewOperator( token.position, SyntaxTree.NewIdentifier(string^), procedureScope);
@@ -2297,12 +2291,12 @@ TYPE
 		END ConstDeclaration;
 
 		(** DeclarationSequence  =  { 'const' [ConstDeclaration] {';' [ConstDeclaration]}
-			                         |'type'  [TypeDeclaration] {';' [TypeDeclaration]}
-			                         |'var'   [VariableDeclaration] {';' [VariableDeclaration]}
-			                         | ProcedureDeclaration
-			                         | OperatorDeclaration
-			                         | ';'
-			                        }
+						|'type'  [TypeDeclaration] {';' [TypeDeclaration]}
+						|'var'   [VariableDeclaration] {';' [VariableDeclaration]}
+						| ProcedureDeclaration
+						| OperatorDeclaration
+						| ';'
+					}
 		**)
 		PROCEDURE DeclarationSequence( parentScope: SyntaxTree.Scope);
 		VAR previousScope: SyntaxTree.Scope;

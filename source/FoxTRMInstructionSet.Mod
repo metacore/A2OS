@@ -8,7 +8,7 @@ CONST
 	maxMnemonicNameLength=8;
 	maxNumberInstructions=100;
 
-	(* 	mnemonics , unsorted
+	(*	mnemonics , unsorted
 		FoxProgTools.Enum -e -l=8
 		opMOV opNOT
 		opADD opFADD
@@ -21,7 +21,6 @@ CONST
 		numberMnemonics
 		~
 	*)
-
 
 	(*Variable instruction width related. All other bitcaounts derived.*)
 	(*instructionW=24;*) (*Number of bits an instruction word holds. default 18*)
@@ -36,7 +35,7 @@ CONST
 	opBLT*= 32; opBGT*= 33; opBLE*= 34; opBT*= 35; opBF*= 36; opBZS*= 37; opBZC*= 38; opBCS*= 39;
 	opBCC*= 40; opBNS*= 41; opBNC*= 42; opBVS*= 43; opBVC*= 44; opHADD*= 45; opFHADD*= 46; numberMnemonics*= 47;
 
-	(* 	operand format types *)
+	(*	operand format types *)
 	None*=-1; (* no operand *)
 	Rd=0; (* destination register,  encoded at bits 11..13  *)
 	Rs=1; (* source register,  encoded at bits 0..2 *)
@@ -47,11 +46,6 @@ CONST
 	Imm14=6; (* 14 bit signed immediate, encoded at bits 0..13  *)
 	MemRegImm7=7; (* memory operand of the form  [reg +imm] with 7 bit immediate, encoded at reg = 0..2, imm= 3..9  *)
 	VRd0=8; (* vector register, being restricted to register number 0 *)
-
-
-
-
-
 
 	ZeroRegister* = 7;
 
@@ -107,7 +101,6 @@ TYPE
 		op1-, op2-: Operand;
 	END;
 
-
 	InstructionSet *=OBJECT
 		VAR mnemonics-: ARRAY numberMnemonics OF Mnemonic;
 		mnemonicsSorted-: ARRAY numberMnemonics OF NumberedName;
@@ -120,7 +113,6 @@ TYPE
 		BranchAndLinkFixupBits-: LONGINT;
 		ImmediateFixupBits-: LONGINT;
 		MemoryOffsetFixupBits-: LONGINT;
-
 
 		PROCEDURE & InitInstructionSet * (instructionWidth: LONGINT);
 		BEGIN
@@ -530,7 +522,6 @@ TYPE
 			mnemonics[alias].firstInstructionFormat := mnemonics[number].firstInstructionFormat;
 		END AddAlias;
 
-
 		PROCEDURE EndMnemonic;
 		BEGIN
 			mnemonics[curMnemonic].lastInstructionFormat := numberInstructionFormats-1;
@@ -593,7 +584,6 @@ TYPE
 			oooo ddd 1 xxxxxxxsss
 		*)
 
-
 		isimmP:=instructionW-1-opcodeW-regselW; (*18bit inW=> bit 10. If this bit is NOT set, there is an immediate.*)
 		isfloatP:=isimmP-2; (*18 bit insW => bit 8*)
 		isvecP:=isimmP-1; (*18 bit insW=> bit 9*)
@@ -625,8 +615,8 @@ TYPE
 		currOpCode:=makeOpcode(1);
 		AddMnemonic(opNOT, "NOT");
 		AddInstruction(currOpCode,						{isimmP}+opcodeP, Rd, Imm10,{});
-		AddInstruction({isimmP}+currOpCode, 			capabilityP+opcodeP, Rd, Rs,{});
-		AddInstruction({isimmP,isfloatP}+currOpCode, 	capabilityP+opcodeP, VRd, VRs,{Global.VectorCapability});
+		AddInstruction({isimmP}+currOpCode,			capabilityP+opcodeP, Rd, Rs,{});
+		AddInstruction({isimmP,isfloatP}+currOpCode,	capabilityP+opcodeP, VRd, VRs,{Global.VectorCapability});
 		EndMnemonic;
 
 		(* ADD: oooo = 0010 *)
@@ -733,7 +723,7 @@ TYPE
 		EndMnemonic;
 
 		(* BLR: oooo = 1011 *)
-		(* BLR Rd, Rs 	<--> 	Rd := PC+1; PC := Rs *)
+		(* BLR Rd, Rs <--> Rd := PC+1; PC := Rs *)
 		AddMnemonic(opBLR, "BLR");
 		AddInstruction(currOpCode+{isSpecialBR,isSpecialBR-1}, brModesP+opcodeP, Rd, Rs,{});
 		EndMnemonic;
@@ -779,29 +769,29 @@ TYPE
 			1111	FALSE	Never	BF
 		*)
 		currOpCode:=makeOpcode(14);
-		AddMnemonic(opBEQ, "BEQ"); 	AddInstruction(currOpCode+makeCondition(0), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBNE, "BNE"); 	AddInstruction(currOpCode+makeCondition(1), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBEQ, "BEQ");	AddInstruction(currOpCode+makeCondition(0), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBNE, "BNE");	AddInstruction(currOpCode+makeCondition(1), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBAE, "BAE");  	AddInstruction(currOpCode+makeCondition(2), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBB, "BB");      	AddInstruction(currOpCode+makeCondition(3), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBAE, "BAE");	AddInstruction(currOpCode+makeCondition(2), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBB, "BB");	AddInstruction(currOpCode+makeCondition(3), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBN, "BN");     	AddInstruction(currOpCode+makeCondition(4), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBNN, "BNN"); 	AddInstruction(currOpCode+makeCondition(5), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBN, "BN");	AddInstruction(currOpCode+makeCondition(4), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBNN, "BNN");	AddInstruction(currOpCode+makeCondition(5), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBO, "BO");     	AddInstruction(currOpCode+makeCondition(6), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBNO, "BNO"); 	AddInstruction(currOpCode+makeCondition(7), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBO, "BO");	AddInstruction(currOpCode+makeCondition(6), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBNO, "BNO");	AddInstruction(currOpCode+makeCondition(7), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBA, "BA"); 		AddInstruction(currOpCode+makeCondition(8), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBBE, "BBE"); 	AddInstruction(currOpCode+makeCondition(9), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBA, "BA");		AddInstruction(currOpCode+makeCondition(8), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBBE, "BBE");	AddInstruction(currOpCode+makeCondition(9), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBGE, "BGE"); 	AddInstruction(currOpCode+makeCondition(10), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBLT, "BLT"); 	AddInstruction(currOpCode+makeCondition(11), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBGE, "BGE");	AddInstruction(currOpCode+makeCondition(10), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBLT, "BLT");	AddInstruction(currOpCode+makeCondition(11), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBGT, "BGT"); 	AddInstruction(currOpCode+makeCondition(12), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBLE, "BLE"); 	AddInstruction(currOpCode+makeCondition(13), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBGT, "BGT");	AddInstruction(currOpCode+makeCondition(12), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBLE, "BLE");	AddInstruction(currOpCode+makeCondition(13), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
-		AddMnemonic(opBT, "BT"); 		AddInstruction(currOpCode+makeCondition(14), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
-		AddMnemonic(opBF, "BF"); 		AddInstruction(currOpCode+makeCondition(15), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBT, "BT");		AddInstruction(currOpCode+makeCondition(14), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
+		AddMnemonic(opBF, "BF");		AddInstruction(currOpCode+makeCondition(15), opcodeP+brCondP, SignedImm10, None,{}); EndMnemonic;
 
 		Inverse(opBEQ, opBNE);
 		Inverse(opBAE, opBB);
@@ -821,18 +811,13 @@ TYPE
 		AddAlias(opBVS,opBO,"BVS");
 		AddAlias(opBVC,opBNO,"BVC");
 
-
-
 		(* BL: 1111 nnnnnnnnnnnnnn *)
 		currOpCode:=makeOpcode(15);
 		AddMnemonic(opBL, "BL");
 		AddInstruction(currOpCode, opcodeP, Imm14, None,{});
 		EndMnemonic;
 
-
-
 		SortMnemonics(0, numberMnemonics-1);
-
 
 		IF checkMnemonic THEN CheckMnemonics END;
 	END InitInstructions;
@@ -933,7 +918,6 @@ TYPE
 			DumpOperand(w, op);
 		END DumpOp;
 
-
 	BEGIN
 		IF instruction.format = None THEN
 			w.String(" no format")
@@ -964,8 +948,8 @@ TYPE
 			CASE type OF
 				|Rd: context.out.String("Rd")
 				|Rs: context.out.String("Rs")
-			     |Imm10: context.out.String("imm10");
-			     |SignedImm10: context.out.String("SignedImm10");
+				|Imm10: context.out.String("imm10");
+				|SignedImm10: context.out.String("SignedImm10");
 				|Imm14: context.out.String("imm14");
 				|MemRegImm7: context.out.String("MemRegImm7");
 			ELSE
@@ -1003,10 +987,7 @@ TYPE
 		END;
 	END DumpInstructionFormats;
 
-
-
 	END InstructionSet;
-
 
 	PROCEDURE Hex(ch: CHAR): LONGINT;
 	BEGIN
@@ -1025,8 +1006,6 @@ TYPE
 		lineNr := 0;
 		NEW(r, file, 0);
 		NEW(bitSet,0);
-
-
 
 		WHILE r.Available()>0 DO
 			r.Ln(line);
@@ -1126,7 +1105,6 @@ TYPE
 		END;
 	END Disassemble;
 
-
 VAR
 	decodeInstance: InstructionSet;
 BEGIN
@@ -1137,13 +1115,6 @@ System.FreeDownTo FoxTRMInstructionSet ~
 FoxTRMInstructionSet.DumpInstructionFormats -s ~
 FoxTRMInstructionSet.Test ~
 
-
-
-
-
-
-
 FoxTRMInstructionSet.Disassemble disastest.mem ~
 
 FoxTRMInstructionSet.Disassemble ins.mem ~
-

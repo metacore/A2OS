@@ -189,8 +189,8 @@ TYPE
 				IF (ch = 0DX) OR (ch = 0AX) THEN newln := TRUE
 				ELSE
 					IF newln THEN w.Ln; w.String(LineCommentStart); newln := FALSE;  END;
-				 	w.Char(ch);
-				 END;
+					w.Char(ch);
+				END;
 				INC(i); ch := str[i];
 			END;
 			IF w IS Basic.Writer THEN w(Basic.Writer).EndComment; w(Basic.Writer).DecIndent;END;
@@ -360,10 +360,7 @@ TYPE
 			END;
 		END WriteRaw;
 
-
 	END SectionList;
-
-
 
 	NameEntry = POINTER TO RECORD
 		name: SyntaxTree.IdentifierString;

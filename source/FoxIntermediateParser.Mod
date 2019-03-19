@@ -426,7 +426,7 @@ TYPE
 				(* total size of the section in units *)
 				ELSIF ThisIdentifier("size") & ExpectSymbol(Scanner.Equal) THEN
 					IF ExpectIntegerWithSign(integer) THEN
-						 (* nothing to do (this property is ignored, since the size is calculated from the actual content) *)
+						(* nothing to do (this property is ignored, since the size is calculated from the actual content) *)
 					ELSE
 						Error(positionOfProperty, "invalid size")
 					END
@@ -619,6 +619,5 @@ TYPE
 			END;
 		END;
 	END ParseFile;
-
 
 END FoxIntermediateParser.

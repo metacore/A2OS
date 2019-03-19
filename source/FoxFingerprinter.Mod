@@ -15,7 +15,7 @@ IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, SYSTEM, Global := FoxGlob
 	Value(fp)                  = fp <*> fpTrue | fp <*> fpFalse | fp <*> integer  | fp <*> intlow <*> inthigh | fp -> Name
 	FP(Type)                   = FP(BasicType) | FP(RecordType) | FP(PointerType)
 
-                           	 	| FP(ArrayType) | FP(MathArrayType) | FP(ProcedurType)
+                           		| FP(ArrayType) | FP(MathArrayType) | FP(ProcedurType)
 
 	FP(BasicType)              = fpTypeChar8 | fpTypeChar16 | fpTypeChar32
 	                            | fpTypeShortint | fpTypeInteger | fpTypeLongint | fpTypeHugeint
@@ -58,7 +58,6 @@ IMPORT SyntaxTree := FoxSyntaxTree, Basic := FoxBasic, SYSTEM, Global := FoxGlob
 	                            { <*> (fpModeVarParameter | fpModeConstParameter | fpModePar)
 	                            <*> FP(parameterType) [-> Name(parameterName)]  }
 **)
-
 
 CONST
 	(*Fingerprints/Obj Modes*)
@@ -387,7 +386,6 @@ TYPE
 			deep := SELF.deep;
 			IF Trace THEN TraceEnter("MathArrayType") END;
 
-
 			IF ~fingerprint.shallowAvailable THEN
 				fingerprint.shallowAvailable := TRUE; (* the fingerprinting may return to itself => avoid circles *)
 				SELF.deep := FALSE;
@@ -431,16 +429,16 @@ TYPE
 		VAR  typeDeclaration: SyntaxTree.TypeDeclaration;
 		BEGIN
 			IF (x.scope # NIL) THEN
-				 (* only executed for imported types, reason:
-				 	modification of a type name would result in modified fingerprint leading to modified fingerprints of using structures such as
-				 	in the following example:
-				 	TYPE A=ARRAY 32 OF CHAR;
-				 	PROCEDURE P*(a:A);
-				 	...
-				 	END P;
-				 	IF name of A was changed, P would get a new fingerprint.
-				 	Better: fingerprint of P only depends in type of A but not on its declared name.
-				 *)
+				(* only executed for imported types, reason:
+					modification of a type name would result in modified fingerprint leading to modified fingerprints of using structures such as
+					in the following example:
+					TYPE A=ARRAY 32 OF CHAR;
+					PROCEDURE P*(a:A);
+					...
+					END P;
+					IF name of A was changed, P would get a new fingerprint.
+					Better: fingerprint of P only depends in type of A but not on its declared name.
+				*)
 				IF Trace THEN
 					TraceIndent;
 					D.Str("TypeName  ");
@@ -509,7 +507,6 @@ TYPE
 				x.SetFingerprint(fingerprint);
 				SELF.deep := deep;
 			END;
-
 
 			IF Trace THEN TraceExit("PointerType",fingerprint) END;
 
@@ -885,10 +882,10 @@ TYPE
 			DEC(level);
 		END FPType;
 
-		(* 	Signature(f)  = f <*> FP(returnType)
-	                      { <*> (fpModeVarParameter | fpModeConstParameter | fpModePar)
-	                      <*> FP(parameterType) [-> Name(parameterName)]  }
-		 *)
+		(*	Signature(f)  = f <*> FP(returnType)
+			{ <*> (fpModeVarParameter | fpModeConstParameter | fpModePar)
+			<*> FP(parameterType) [-> Name(parameterName)]  }
+		*)
 		PROCEDURE FPSignature(VAR fp: Basic.Fingerprint; t: SyntaxTree.ProcedureType; isOperator: BOOLEAN);
 		VAR par,self: SyntaxTree.Parameter; deep: BOOLEAN;
 
@@ -1082,7 +1079,6 @@ TYPE
 			VisitVariable(x);
 		END VisitProperty;
 
-
 		(*
 			FP(ParameterDeclaration)    = 0 <*> fpModePar -> Name -> Visibility <*> FP(Type).
 		*)
@@ -1113,7 +1109,7 @@ TYPE
 
 		(*
 		FP(ProcedureDeclaration)   = 0 <*> fpModeInlineProcedure -> Name -> Visibility <*> FP(Type) -> Code.
-		                            | 0 <*> fpModeExportedProcedure -> Name -> Visibility <*> FP(Type)
+						| 0 <*> fpModeExportedProcedure -> Name -> Visibility <*> FP(Type)
 		*)
 		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
 		VAR fp: Basic.Fingerprint; access: SET; fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; code: SyntaxTree.Code; i: LONGINT;
@@ -1267,7 +1263,6 @@ TYPE
 			D.Str(" "); D.Hex(fingerprint.public,0);
 		END TraceFP;
 
-
 		(* returns the finger print (object) of a type *)
 		PROCEDURE TypeFP*(this: SyntaxTree.Type): SyntaxTree.Fingerprint;
 		VAR deep: BOOLEAN;
@@ -1305,7 +1300,6 @@ TYPE
 		END SymbolFP;
 
 	END Fingerprinter;
-
 
 	(** ---------- Fingerprinting primitives -------------- *)
 	PROCEDURE IsOberonProcedure(type: SyntaxTree.ProcedureType): BOOLEAN;
@@ -1362,6 +1356,5 @@ TYPE
 		w.String(", public = "); w.Hex(fp.public,0);
 		w.Ln;
 	END DumpFingerprint;
-
 
 END FoxFingerprinter.

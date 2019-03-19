@@ -186,7 +186,6 @@ TYPE
 		prev-: LabelList;
 	END;
 
-
 	Section* = OBJECT
 	VAR
 		os*: ObjectFile.Section;
@@ -202,7 +201,6 @@ TYPE
 		BEGIN
 			RETURN pc
 		END GetPC;
-
 
 		PROCEDURE & InitBinarySection*(type: SHORTINT; unit: Bits; CONST name:Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN);
 		BEGIN
@@ -239,7 +237,6 @@ TYPE
 			pc := 0;
 		END Reset;
 
-
 		PROCEDURE AddLabel*(position: Basic.Position);
 		VAR new: LabelList;
 		BEGIN
@@ -263,7 +260,6 @@ TYPE
 		BEGIN
 			SetPC(pc + (-pc) MOD alignment)
 		END Align;
-
 
 		PROCEDURE SetFinally*(atPC: Unit);
 		BEGIN finally := atPC
@@ -369,7 +365,6 @@ TYPE
 			END;
 			INC(pc,(8*Byte) DIV os.unit);
 		END PutQWord;
-
 
 		PROCEDURE PutReal*(f: REAL);
 		BEGIN
@@ -547,7 +542,6 @@ TYPE
 				END;
 			END Hex;
 
-
 			PROCEDURE DumpUnit(at: Unit);
 			VAR val: WORD; a: ARRAY 9 OF CHAR; bits: Bits;
 			BEGIN
@@ -632,17 +626,17 @@ TYPE
 	VAR result: LONGINT; VAR exponent, i: INTEGER;
 	BEGIN
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
-	    IF value = 0 THEN RETURN 0 END;
-	    result := 0; exponent := 0;
-	    IF value < 0 THEN value := -value; result := ASH (1, Exponent) END;
-	    WHILE value < 1 DO value := value * 2; DEC (exponent) END;
-	    WHILE value >= 2 DO value := value / 2; INC (exponent) END;
-	    value := value - 1; INC (result, ASH (1, Exponent - 1) - 1 + exponent);
-	    FOR i := 0 TO Significant - 1 DO
-	        value := value * 2; INC (result, result);
-	        IF value >= 1 THEN value := value - 1; INC (result) END;
-	    END;
-	    RETURN result;
+		IF value = 0 THEN RETURN 0 END;
+		result := 0; exponent := 0;
+		IF value < 0 THEN value := -value; result := ASH (1, Exponent) END;
+		WHILE value < 1 DO value := value * 2; DEC (exponent) END;
+		WHILE value >= 2 DO value := value / 2; INC (exponent) END;
+		value := value - 1; INC (result, ASH (1, Exponent - 1) - 1 + exponent);
+		FOR i := 0 TO Significant - 1 DO
+			value := value * 2; INC (result, result);
+			IF value >= 1 THEN value := value - 1; INC (result) END;
+		END;
+		RETURN result;
 	END ConvertReal;
 
 	PROCEDURE ConvertLongreal*(value: LONGREAL): HUGEINT;
@@ -650,17 +644,17 @@ TYPE
 	VAR result: HUGEINT; VAR exponent, i: INTEGER;
 	BEGIN
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
-	    IF value = 0 THEN RETURN 0 END;
-	    result := 0; exponent := 0;
-	    IF value < 0 THEN value := -value; result := ASH (1, Exponent) END;
-	    WHILE value < 1 DO value := value * 2; DEC (exponent) END;
-	    WHILE value >= 2 DO value := value / 2; INC (exponent) END;
-	    value := value - 1; INC (result, ASH (1, Exponent - 1) - 1 + exponent);
-	    FOR i := 0 TO Significant - 1 DO
-	        value := value * 2; INC (result, result);
-	        IF value >= 1 THEN value := value - 1; INC (result) END;
-	    END;
-	    RETURN result;
+		IF value = 0 THEN RETURN 0 END;
+		result := 0; exponent := 0;
+		IF value < 0 THEN value := -value; result := ASH (1, Exponent) END;
+		WHILE value < 1 DO value := value * 2; DEC (exponent) END;
+		WHILE value >= 2 DO value := value / 2; INC (exponent) END;
+		value := value - 1; INC (result, ASH (1, Exponent - 1) - 1 + exponent);
+		FOR i := 0 TO Significant - 1 DO
+			value := value * 2; INC (result, result);
+			IF value >= 1 THEN value := value - 1; INC (result) END;
+		END;
+		RETURN result;
 	END ConvertLongreal;
 
 	PROCEDURE ConvertToReal*(x: LONGINT): REAL;
@@ -731,7 +725,6 @@ TYPE
 		NEW(binarySection,type,unit,name,dump,bigEndian); RETURN binarySection
 	END NewBinarySection;
 
-
 END FoxBinaryCode.
 
 FoxBinaryCode.TestFixup
@@ -779,4 +772,3 @@ FoxBinaryCode.TestFixup
 		data2.Dump(D.Log); D.Ln;
 	END TestFixup;
 	*)
-

@@ -3,13 +3,10 @@ MODULE FoxMinosObjectFile; (** AUTHOR "fof"; PURPOSE "Oberon Compiler Minos Obje
 IMPORT
 	Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Fingerprinter := FoxFingerprinter, Sections := FoxSections,
 	Streams, D := Debugging, Files, SYSTEM,Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Options,
-	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine
-	;
-
+	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine;
 
 CONST
 	Trace=FALSE;
-
 
 TYPE Name=ARRAY 256 OF CHAR;
 	ByteArray = POINTER TO ARRAY OF CHAR;
@@ -187,14 +184,11 @@ TYPE
 			END;
 		END FirstOffsets;
 
-
 		(* note: if 'caseSections' is TRUE, only case table sections are processed, otherwise only regular sections (imported symbol/system call sections are never processed) *)
 		PROCEDURE SetOffsets(sectionList: Sections.SectionList);
 		VAR
 			section: Sections.Section;
 			i: LONGINT;
-
-
 		BEGIN
 			FOR i := 0 TO sectionList.Length() - 1 DO
 				section := sectionList.GetSection(i);
@@ -209,12 +203,12 @@ TYPE
 				IF section.symbol = module.module.moduleScope.bodyProcedure THEN
 				ELSIF symbolName = "@moduleSelf" THEN
 				ELSIF section.type = Sections.ConstSection THEN
-					 IF binarySection.os.alignment # 0 THEN
-					 	INC(codeSize,(-codeSize) MOD binarySection.os.alignment);
-					 END;
-					  section.SetOffset(codeSize); INC(codeSize,binarySection.pc); (* global constants: in code *)
-					  Basic.Align(codeSize, 4); (* word alignment *)
-						(*ReportSection(section)*)
+					IF binarySection.os.alignment # 0 THEN
+						INC(codeSize,(-codeSize) MOD binarySection.os.alignment);
+					END;
+					section.SetOffset(codeSize); INC(codeSize,binarySection.pc); (* global constants: in code *)
+					Basic.Align(codeSize, 4); (* word alignment *)
+					(*ReportSection(section)*)
 				ELSIF (section.type = Sections.CodeSection) OR (section.type = Sections.BodyCodeSection) THEN
 					(*IF section.symbol = module.module.moduleScope.bodyProcedure THEN
 						bodyOffset := codeSize
@@ -223,10 +217,10 @@ TYPE
 					section.SetOffset(codeSize); INC(codeSize, binarySection.pc);
 					Basic.Align(codeSize, 4); (* word alignment *)
 					(*ReportSection(section)*)
- 				ELSIF section.type = Sections.VarSection THEN
+				ELSIF section.type = Sections.VarSection THEN
 					INC(varSize, binarySection.pc);
 					IF binarySection.os.alignment # 0 THEN
-					 	INC(varSize,(-varSize) MOD binarySection.os.alignment);
+						INC(varSize,(-varSize) MOD binarySection.os.alignment);
 					END;
 					section.SetOffset(-varSize); (* global variables: negative offset *)
 					(*ReportSection(section)*)
@@ -277,7 +271,6 @@ TYPE
 			BEGIN
 				RETURN (type.declaredType.resolved IS SyntaxTree.RecordType)
 			END TypeNeedsSection;
-
 
 		BEGIN
 			numberEntries := 0;
@@ -380,7 +373,7 @@ TYPE
 								patchOffset := (fixup.resolved.offset + fixup.displacement);
 								IF (patchOffset DIV 4 >= 8000H) OR (patchOffset DIV 4< -8000H)
 									OR (patchOffset MOD 4 # 0)
-								 THEN
+								THEN
 									msg := "fixup problem: ";
 									Basic.SegmentedNameToString(fixup.symbol.name, name);
 									Strings.Append(msg, name);

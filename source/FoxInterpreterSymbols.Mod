@@ -5,7 +5,6 @@ IMPORT Strings, Basic := FoxBasic, StringPool, Streams, Commands, PersistentObje
 CONST
 	TAB = 09X;
 
-
 TYPE
 
 	Item*= PersistentObjects.Object;
@@ -87,8 +86,7 @@ TYPE
 		RETURN 0;
 	END SymbolAddress;
 
-
-	TYPE
+TYPE
 
 	Result*= OBJECT (Item)
 
@@ -118,7 +116,6 @@ TYPE
 		END Trace;
 
 	END Result;
-
 
 	SymbolResult*=OBJECT(Result)
 	VAR name: ARRAY 32 OF CHAR;
@@ -185,7 +182,6 @@ TYPE
 				END;
 				RETURN NIL;
 		END Find;
-
 
 	END ModuleResult;
 
@@ -272,7 +268,6 @@ TYPE
 			p := Next(SIZEOF(ADDRESS));
 			p.a := a;
 		END PushA;
-
 
 		PROCEDURE PushSz(s: SIZE);
 		VAR p: POINTER {UNSAFE,UNTRACED} TO RECORD s: SIZE END;
@@ -453,8 +448,8 @@ TYPE
 						CASE type OF
 							Reflection.sfTypeCHAR .. Reflection.sfTypeSIZE, Reflection.sfTypePointerToRecord, Reflection.sfTypePointerToArray:
 							(*! check type ! *)
-							 stack.PushA(o.Address());
-							 RETURN TRUE;
+							stack.PushA(o.Address());
+							RETURN TRUE;
 						ELSE
 							RETURN FALSE
 						END;
@@ -526,7 +521,6 @@ TYPE
 			RETURN FALSE;
 		END PushTyped;
 
-
 		PROCEDURE Push*(o: Result): BOOLEAN;
 		VAR
 			s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT;
@@ -575,8 +569,8 @@ TYPE
 					NEW(int, stack.CallH(address));
 					RETURN int;
 			|Reflection.sfTypeREAL:
-				 NEW(real, stack.CallR(address));
-				 RETURN real
+				NEW(real, stack.CallR(address));
+				RETURN real
 			|Reflection.sfTypeLONGREAL:
 				NEW(real, stack.CallX(address));
 				RETURN real;
@@ -733,7 +727,6 @@ TYPE
 
 	END FieldResult;
 
-
 	(* traverse types and supertypes for first occurence of symbol name *)
 	PROCEDURE FindInType(scope: Result; address: ADDRESS; type: ADDRESS; CONST name: ARRAY OF CHAR): Result;
 	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT;
@@ -763,7 +756,6 @@ TYPE
 		END;
 		RETURN NIL;
 	END FindInType;
-
 
 	PROCEDURE FindConstructor(scope: Result; type: ADDRESS): ProcedureResult;
 	VAR tag: ADDRESS; typeInfo: Modules.TypeDesc; i, num: LONGINT;
@@ -871,7 +863,6 @@ TYPE
 
 	END Value;
 
-
 	CONST StrValue="value";
 	TYPE
 
@@ -968,7 +959,6 @@ TYPE
 		BEGIN
 			RETURN ADDRESSOF(value)
 		END Address;
-
 
 	END AddressValue;
 
@@ -1090,7 +1080,6 @@ TYPE
 			x := value; RETURN TRUE;
 		END GetBoolean;
 
-
 		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN IF value THEN w.String("TRUE") ELSE w.String("FALSE") END
 		END WriteValue;
@@ -1137,7 +1126,6 @@ TYPE
 		END Address;
 
 	END StringValue;
-
 
 	SetValue*=OBJECT(Value)
 	VAR value*: SET;
@@ -1210,7 +1198,6 @@ TYPE
 		BEGIN
 			x := value; RETURN TRUE;
 		END GetRange;
-
 
 		PROCEDURE WriteValue*(w: Streams.Writer);
 		BEGIN
@@ -1356,7 +1343,6 @@ TYPE
 			w.String("] ");
 		END WriteValue;
 
-
 	END MathArrayValue;
 
 	(* object value represented as ANY wrapped in Value ? *)
@@ -1421,7 +1407,6 @@ TYPE
 		BEGIN
 			RETURN symbols.Get(index)(Symbol).item
 		END GetItem;
-
 
 		(* Enter a symbol with its name *)
 		PROCEDURE Enter1*(item: Item; name: StringPool.Index);
@@ -1512,7 +1497,6 @@ TYPE
 
 	END Scope;
 
-
 	PROCEDURE Indent(w: Streams.Writer; level: LONGINT);
 	BEGIN
 		WHILE level> 0 DO w.Char(TAB); DEC(level) END;
@@ -1538,7 +1522,6 @@ TYPE
 	BEGIN
 		c.GetObject(o); IF o = NIL THEN RETURN NIL ELSE RETURN o(Value) END;
 	END ContentGetValue;
-
 
 	PROCEDURE NewIntegerValue(value: HUGEINT): IntegerValue;
 	VAR obj: IntegerValue;

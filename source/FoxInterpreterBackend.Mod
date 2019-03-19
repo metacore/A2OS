@@ -187,7 +187,6 @@ TYPE
 			END;
 		END Resolve;
 
-
 		PROCEDURE Designate (VAR operand: Intermediate.Operand): Address;
 		VAR address: Address;
 		BEGIN
@@ -259,7 +258,7 @@ TYPE
 				Execute (pc.section.instructions[pc.index], pc);
 				IF pc.index >= pc.section.pc THEN
 					IF sp # StackSize THEN Error ("missing return"); END;
-					 pc.section := NIL;
+					pc.section := NIL;
 				END;
 			END;
 		END Run;
@@ -385,7 +384,7 @@ TYPE
 
 		PROCEDURE ProcessSyntaxTreeModule *(x: SyntaxTree.Module): Formats.GeneratedModule;
 		VAR module: Sections.Module; section: Sections.Section; interpreter: Interpreter;
- 		BEGIN
+		BEGIN
 			module := GenerateIntermediate (x, SupportedInstruction, SupportedImmediate);
 			NEW (heap); NEW (interpreter, SELF, SHORT (SHORT (addressSize)),module);
 			Traverse (module.allSections, interpreter.AllocateSection);

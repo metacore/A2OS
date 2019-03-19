@@ -21,7 +21,6 @@ MODULE FoxDocumentationTree;
 		of the documentation rules and how they are parsed.
 **)
 
-
 IMPORT Basic := FoxBasic, Scanner := FoxDocumentationScanner, Strings;
 
 TYPE
@@ -58,7 +57,6 @@ TYPE
 		END SetType;
 
 	END TextElement;
-
 
 	(**
 		Comment of Text
@@ -104,7 +102,6 @@ TYPE
 		BEGIN
 			e := AppendNew(ElementType.Whitespace);
 		END WriteWhitespace;
-
 
 		PROCEDURE WriteLink*(CONST name, label: ARRAY OF CHAR);
 		VAR e: TextElement;
@@ -181,13 +178,11 @@ TYPE
 		BEGIN SELF.level := level
 		END SetLevel;
 
-
 	END Paragraph;
-
 
 	(**
 		@docuEBNF
-		 {{{ Paragraphs = {Paragraph}. }}}
+		{{{ Paragraphs = {Paragraph}. }}}
 	*)
 	Paragraphs*=OBJECT (Basic.List)
 
@@ -294,7 +289,6 @@ TYPE
 
 	END Sections;
 
-
 	(** a document provides the documentation of a module in a structured way *)
 	(**
 		@docuEBNF
@@ -348,7 +342,6 @@ TYPE
 		PROCEDURE &InitDocumentation*;
 		BEGIN NEW(documents,4)
 		END InitDocumentation;
-
 
 	END Documentation;
 

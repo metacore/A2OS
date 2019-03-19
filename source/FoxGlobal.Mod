@@ -215,7 +215,6 @@ TYPE
 		min, max: LONGINT; (* alignments in bits *)
 	END;
 
-
 	PassInRegisterProc = PROCEDURE {DELEGATE} (type: SyntaxTree.Type): BOOLEAN;
 
 	System*= OBJECT
@@ -248,7 +247,6 @@ TYPE
 		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-,byteType-,
 		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type;
 
-
 		CanPassInRegister-: PassInRegisterProc;
 		cellsAreObjects-: BOOLEAN;
 		platformCallingConvention-: SyntaxTree.CallingConvention;
@@ -280,7 +278,6 @@ TYPE
 			platformCallingConvention := SyntaxTree.UndefinedCallingConvention;
 		END InitSystem;
 
-
 		PROCEDURE SetPlatformCallingConvention*(callingConvention: SyntaxTree.CallingConvention);
 		BEGIN
 			platformCallingConvention := callingConvention;
@@ -290,12 +287,10 @@ TYPE
 			cellsAreObjects := c;
 		END SetCellsAreObjects;
 
-
 		PROCEDURE SetRegisterPassCallback*(canPassInRegister: PassInRegisterProc);
 		BEGIN
 			CanPassInRegister := canPassInRegister;
 		END SetRegisterPassCallback;
-
 
 		PROCEDURE AddCapability*(name: SyntaxTree.Identifier);
 		VAR symbol: SyntaxTree.Symbol;
@@ -437,7 +432,6 @@ TYPE
 
 		END GenerateCellOffsets;
 
-
 		PROCEDURE GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN;
 		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT;
 		BEGIN
@@ -528,7 +522,6 @@ TYPE
 			END;
 			RETURN TRUE
 		END GenerateParameterOffsets;
-
 
 		PROCEDURE SizeOf*(type: SyntaxTree.Type): LONGINT;
 		VAR size: LONGINT; base: SyntaxTree.Type;
@@ -934,7 +927,6 @@ TYPE
 		NewBuiltin(IncMul,"INCMUL",system.globalScope,TRUE);
 		NewBuiltin(DecMul,"DECMUL",system.globalScope,TRUE);
 
-
 		(*!
 
        (* Following is LYNX version: *)
@@ -942,7 +934,6 @@ TYPE
         IF minBits = 8 THEN
             system.characterType := Character16;
         END;
-
 
         (* LYNX builtin types *)
         DeclareLynxType(system.characterType, LynxChar, system.globalScope);
@@ -1053,7 +1044,6 @@ TYPE
 		INC(value, (-value) MOD system.AlignmentOf(alignment, type));
 		RETURN value;
 	END AlignedSizeOf;
-
 
 	(* returns if a module is the system module *)
 	PROCEDURE IsSystemModule*(module: SyntaxTree.Module): BOOLEAN;
@@ -1325,7 +1315,6 @@ TYPE
 		RETURN symbol;
 	END FindSymbol;
 
-
 	PROCEDURE GetSymbolNameInScope*(symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope; VAR name: ARRAY OF CHAR);
 	VAR n: SyntaxTree.IdentifierString; td: SyntaxTree.TypeDeclaration;
 		PROCEDURE Scope(scope: SyntaxTree.Scope);
@@ -1400,12 +1389,10 @@ TYPE
 		Basic.SuffixSegmentedName(pooledName, symbol.name);
 	END GetSymbolSegmentedNameInScope;
 
-
 	PROCEDURE GetSymbolSegmentedName*(symbol: SyntaxTree.Symbol; VAR pooledName: Basic.SegmentedName);
 	BEGIN
 		GetSymbolSegmentedNameInScope(symbol,NIL,pooledName);
 	END GetSymbolSegmentedName;
-
 
 	PROCEDURE Level*(t: SyntaxTree.Type): LONGINT;
 	VAR level: LONGINT;
@@ -1654,7 +1641,6 @@ TYPE
 		RETURN -1
 	END GetSymbol;
 
-
 	PROCEDURE InitIdentifiers;
 	VAR i: LONGINT;
 
@@ -1716,7 +1702,6 @@ TYPE
 		NewBuiltinIdentifier(Im,"IM");
 		NewBuiltinIdentifier(IncMul,"INCMUL");
 		NewBuiltinIdentifier(DecMul,"DECMUL");
-
 
 		(* TODO: check if ok. The operators defined in FoxArrayBase require the following identifiers *)
 		(* TODO: ".*+" should preferably be added as a new token in the scanner *)

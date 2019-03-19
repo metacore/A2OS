@@ -47,7 +47,6 @@ CONST
 	GeneralPurpose*=0;
 	Parameter*=1; (* *)
 
-
 	(* special registers *)
 	None*=-1; (* no register assigned *)
 	SP*=-2; (* stack pointer *)
@@ -88,9 +87,6 @@ TYPE
 
 	RegisterMap*= RECORD register*: LONGINT; name*: SyntaxTree.SourceCode END;
 	BackendRules*= POINTER TO ARRAY OF RegisterMap;
-
-
-
 
 	Operand* = RECORD
 		mode-: SHORTINT; (* Undefined, ModeRegister, ModeImmediate, ModeMemory, ModeNumber or ModeString *)
@@ -136,7 +132,6 @@ TYPE
 
 	Instructions*=POINTER TO ARRAY OF Instruction;
 
-
 	(** code object *)
 	Section*= OBJECT (Sections.Section)
 	VAR
@@ -168,7 +163,6 @@ TYPE
 			exported := e
 		END SetExported;
 
-
 		PROCEDURE EnableComments*(enabled: BOOLEAN);
 		BEGIN
 			IF enabled & (comments = NIL) THEN NEW(comments, GetPC)
@@ -188,7 +182,6 @@ TYPE
 		BEGIN
 			alias := section; aliasOffset := offset;
 		END SetAlias;
-
 
 		PROCEDURE SetFinally*(atPc: LONGINT);
 		BEGIN finally := atPc
@@ -379,7 +372,6 @@ TYPE
 			END;
 		END WriteRaw;
 
-
 	END Section;
 
 	IntermediateBackend*= OBJECT (Backend.Backend)
@@ -398,7 +390,6 @@ TYPE
 		END SetBuiltinsModuleName;
 
 	END IntermediateBackend;
-
 
 	VAR
 		instructionFormat-: ARRAY NofOpcodes OF InstructionFormat;
@@ -431,7 +422,6 @@ TYPE
 
 		IF result # NIL THEN
 			section := result(Section);
-
 
 			(*
 			t0 := result.type;
@@ -602,12 +592,12 @@ TYPE
 						newln := FALSE;
 					END;
 					IF (ch = '"') OR (ch = '\') THEN
-					 	w.Char( '\' );
-					 	w.Char(ch);
+						w.Char( '\' );
+						w.Char(ch);
 					ELSE
-					 	w.Char(ch);
-					 END
-				 END;
+						w.Char(ch);
+					END
+				END;
 				INC(i);
 				ch := str[i];
 			END;
@@ -758,7 +748,6 @@ TYPE
 		IF instr.opcode = special THEN w.RawLInt(instr.subtype) END;
 	END WriteRawInstruction;
 
-
 	PROCEDURE DumpInstruction*(w: Streams.Writer; CONST instr: Instruction);
 	BEGIN
 		w.String(instructionFormat[instr.opcode].name);
@@ -881,7 +870,6 @@ TYPE
 		Assert(op2.symbol.name[0] # 0, "not intialized operand 2");
 		Assert(op3.symbol.name[0] # 0, "not intialized operand 3");
 
-
 		instr.opcode := opcode;
 		instr.op1 := op1;
 		instr.op2 := op2;
@@ -908,7 +896,6 @@ TYPE
 	BEGIN
 		instr.subtype := subType
 	END SetSubType;
-
 
 	PROCEDURE InitOperand*(VAR op: Operand);
 	BEGIN
@@ -1020,7 +1007,6 @@ TYPE
 			RETURN FALSE
 		END;
 	END IsConstantInteger;
-
 
 	PROCEDURE InitImmediate*(VAR op: Operand; type: Type; value: HUGEINT);
 	BEGIN
@@ -1289,7 +1275,7 @@ TYPE
 		ELSIF type IS SyntaxTree.CellType THEN
 			RETURN GetType(system, system.addressType);
 		ELSE
- 			HALT(100);
+			HALT(100);
 		END;
 	END GetType;
 

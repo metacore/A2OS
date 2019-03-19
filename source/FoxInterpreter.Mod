@@ -7,7 +7,6 @@ CONST
 	EnableTrace = FALSE;
 	MaxIndex = 8;
 
-
 TYPE
 	Result*= InterpreterSymbols.Result;
 	Value*=InterpreterSymbols.Value;
@@ -96,7 +95,6 @@ TYPE
 			RETURN print;
 		END Print;
 
-
 	END Parser;
 
 	Interpreter* = OBJECT (SyntaxTree.Visitor)
@@ -110,7 +108,6 @@ TYPE
 		error-: BOOLEAN;
 		diagnostics: Diagnostics.Diagnostics;
 		context-: Commands.Context;
-
 
 		PROCEDURE & Init*(scope: Scope; diagnostics: Diagnostics.Diagnostics; context: Commands.Context);
 		BEGIN
@@ -400,9 +397,7 @@ TYPE
 				item.in := NIL;
 			END;
 
-
 		END VisitQualifiedType;
-
 
 		(*
 		PROCEDURE FindInScope(scope: Scope; symbol: StringPool.Index): Value;
@@ -460,7 +455,7 @@ TYPE
 
 		PROCEDURE VisitIdentifierDesignator*(x: SyntaxTree.IdentifierDesignator);
 		VAR moduleName: Modules.Name; msg: ARRAY 128 OF CHAR; res: WORD;
-			 builtin : Builtin; anyValue: Any;
+			builtin : Builtin; anyValue: Any;
 		BEGIN
 			ASSERT(x.left = NIL);
 			item.name := x.identifier;
@@ -503,7 +498,6 @@ TYPE
 				item.in := NIL;
 			END;
 		END VisitSelectorDesignator;
-
 
 		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
 		VAR e: SyntaxTree.Expression; proc: InterpreterSymbols.ProcedureResult; i: LONGINT;
@@ -649,7 +643,6 @@ TYPE
 			END;
 			RETURN NIL;
 		END FindType;
-
 
 		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		VAR p,p0,p1,p2: SyntaxTree.Expression;
@@ -901,7 +894,7 @@ TYPE
 			END CreateContext;
 
 			PROCEDURE IsDelimiter(ch : CHAR) : BOOLEAN;
-			CONST 	CR = 0DX;  LF = 0AX;  TAB = 9X;
+			CONST CR = 0DX;  LF = 0AX;  TAB = 9X;
 			BEGIN
 				RETURN (ch = " ") OR (ch = CR) OR (ch = LF) OR (ch = TAB) OR (ch = ";") OR (ch = 0X);
 			END IsDelimiter;
@@ -1012,9 +1005,8 @@ TYPE
 		PROCEDURE Evaluate(x: SyntaxTree.Expression): Value;
 		VAR w: Value;
 		BEGIN
-			 IF GetValue(x, w) THEN RETURN w ELSE RETURN NIL END;
+			IF GetValue(x, w) THEN RETURN w ELSE RETURN NIL END;
 		END Evaluate;
-
 
 		PROCEDURE GetInteger(x: SyntaxTree.Expression; VAR i: Integer): BOOLEAN;
 		VAR v: Value;
@@ -1347,7 +1339,6 @@ VAR d: RECORD e: LONGINT END;
 
 	END TestO;
 
-
 BEGIN
 	InitGlobalScope;
 	c := 10;
@@ -1421,8 +1412,6 @@ FoxInterpreter.Expression
 FoxInterpreter.Statements
 	o := Test.TestO();
 	~
-
-
 
 FoxInterpreter.Statements
 	s := {0..10, 15};

@@ -505,7 +505,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END;
 	END WriteHeader;
 
-
 	(* test code to display --not public *)
 	PROCEDURE Show*(context: Commands.Context);
 	VAR
@@ -548,4 +547,3 @@ FoxIntermediateObjectFile.Show Builtins  ~
 			writer.Update;
 			Files.Register(file);
 			*)
-

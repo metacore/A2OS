@@ -168,7 +168,7 @@ TYPE
 			|ElementType.Link:
 				writer.String('<a href="'); writer.String("#"); WriteString(writer,textElement.string);  writer.String('">');
 				IF textElement.text.Length()#0 THEN
-					 Text(textElement.text);
+					Text(textElement.text);
 				ELSE WriteString( writer, textElement.string);
 				END;
 				writer.String("</a>");
@@ -178,7 +178,6 @@ TYPE
 			|ElementType.LineBreak : writer.String("<br>");
 			END;
 		END TextElement;
-
 
 		PROCEDURE Text*(text: Tree.Text);
 		VAR element: Tree.TextElement; i: LONGINT;
@@ -201,25 +200,25 @@ TYPE
 				normal {
 				font-family: Helvetica, Sans-Serif;
 				}
-			  .bold {
+			.bold {
 				font-family: Helvetica, Sans-Serif;
 				}
-			  H1 {
+			H1 {
 				color: #550088
 				}
-			  H2 {
-				font-family: Helvetica, Sans-Serif;
-				color: #550088
-				}
-			  H3 {
+			H2 {
 				font-family: Helvetica, Sans-Serif;
 				color: #550088
 				}
-			  H4 {
+			H3 {
 				font-family: Helvetica, Sans-Serif;
 				color: #550088
 				}
-			  A {
+			H4 {
+				font-family: Helvetica, Sans-Serif;
+				color: #550088
+				}
+			A {
 				color: #550088
 				}
 				</style>
@@ -240,5 +239,3 @@ TYPE
 	END Printer;
 
 END FoxDocumentationHtml.
-
-

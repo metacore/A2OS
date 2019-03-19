@@ -2,7 +2,6 @@ MODULE FoxDisassembler; (** AUTHOR ""; PURPOSE ""; *)
 
 IMPORT Streams, ObjectFile, Scanner := FoxScanner, Basic := FoxBasic, BitSets, D := Debugging, Files, Commands;
 
-
 CONST Trace = FALSE;
 TYPE
 	Block*= POINTER TO RECORD (ObjectFile.Section)
@@ -228,7 +227,6 @@ TYPE
 			dataDisplacement := data;
 		END SetDisplacements;
 
-
 	END Disassembler;
 
 	PROCEDURE FindPC*(context: Commands.Context);
@@ -256,18 +254,14 @@ TYPE
 		END;
 	END FindPC;
 
-
-
-
-
 	(*
 	PROCEDURE Test*(context: Commands.Context);
 	VAR filename: Files.FileName; name: ObjectFile.SectionName; block: Block;
 	BEGIN
 		IF context.arg.GetString(filename) THEN
-		file := Files.Old(filename);
-		IF file = NIL THEN (* error *) HALT(100) END;
-		 block := ParseLogFile(filename);
+			file := Files.Old(filename);
+			IF file = NIL THEN (* error *) HALT(100) END;
+			block := ParseLogFile(filename);
 			WHILE block # NIL DO
 				Basic.SegmentedNameToString(block.identifier.name, name);
 				context.out.String(name); context.out.String(" at "); context.out.Int(block.alignment,1); context.out.Ln;
@@ -281,4 +275,3 @@ END FoxDisassembler.
 
 System.FreeDownTo FoxDisassembler ~
 FoxDisassembler.Test ins.log ~
-

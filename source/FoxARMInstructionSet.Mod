@@ -721,11 +721,10 @@ CONST
 			END;
 		END OperandMatches;
 
-
 		PROCEDURE Matches(CONST format: InstructionFormat): BOOLEAN;
 		VAR i: LONGINT;
 		BEGIN
-			IF mnemonic # format.mnemonic THEN 	RETURN FALSE END; (* different mnemonic *)
+			IF mnemonic # format.mnemonic THEN RETURN FALSE END; (* different mnemonic *)
 			IF (instruction.condition # conditionAL) & (instruction.condition # None) & ~(flagCondition IN format.flags) THEN (* not always case for encoding problems of BLX which comes in two forms *)
 				RETURN FALSE END; (* unpermitted condition *)
 			IF instruction.flags * format.flags # instruction.flags THEN
@@ -766,8 +765,6 @@ CONST
 				D.String("    "); DumpOperand(D.Log, instruction.operands[i]); D.Ln; D.Ln
 			END
 		END;
-
-
 
 		RETURN result
 	END MakeInstruction;
@@ -836,7 +833,6 @@ CONST
 
 		RETURN rot <16
 	END EncodeImmediate;
-
 
 	PROCEDURE Encode(CONST instruction: Instruction; VAR code: LONGINT): BOOLEAN;
 	VAR
@@ -963,7 +959,6 @@ CONST
 				HALT(100)
 			END
 		END CheckImmediateShifts;
-
 
 		PROCEDURE EncodeOperand(operandEncoding: LONGINT; CONST operand: Operand);
 		VAR
@@ -1223,24 +1218,24 @@ CONST
 					ELSIF (operand.register < QR0) OR (operand.register > QR15) THEN error := TRUE
 					END;
 					CASE operandEncoding OF
-						 encodingNEONQd:
-						 	NEONRegisterPos[0] := 13;
-						 	NEONRegisterPos[1] := 14;
-						 	NEONRegisterPos[2] := 15;
-						 	NEONRegisterPos[3] := 22;
+						|encodingNEONQd:
+							NEONRegisterPos[0] := 13;
+							NEONRegisterPos[1] := 14;
+							NEONRegisterPos[2] := 15;
+							NEONRegisterPos[3] := 22;
 						|encodingNEONQm:
-						 	NEONRegisterPos[0] := 1;
-						 	NEONRegisterPos[1] := 2;
-						 	NEONRegisterPos[2] := 3;
-						 	NEONRegisterPos[3] := 5;
+							NEONRegisterPos[0] := 1;
+							NEONRegisterPos[1] := 2;
+							NEONRegisterPos[2] := 3;
+							NEONRegisterPos[3] := 5;
 						|encodingNEONQn:
-						 	NEONRegisterPos[0] := 17;
-						 	NEONRegisterPos[1] := 18;
-						 	NEONRegisterPos[2] := 19;
-						 	NEONRegisterPos[3] := 7;
+							NEONRegisterPos[0] := 17;
+							NEONRegisterPos[1] := 18;
+							NEONRegisterPos[2] := 19;
+							NEONRegisterPos[3] := 7;
 					END;
-				 	NEONRegisterPos[4] := 32; (* end of encoding *)
-				 	SplittedUnsigned(operand.register - QR0, NEONRegisterPos)
+					NEONRegisterPos[4] := 32; (* end of encoding *)
+					SplittedUnsigned(operand.register - QR0, NEONRegisterPos)
 
 				|encodingNEONDd, encodingNEONDm, encodingNEONDn:
 					IF operand.mode # modeRegister THEN error := TRUE
@@ -1248,26 +1243,26 @@ CONST
 					ELSIF (operand.register < DR0) OR (operand.register > DR31) THEN error := TRUE
 					END;
 					CASE operandEncoding OF
-						 encodingNEONDd:
-						 	NEONRegisterPos[0] := 12;
-						 	NEONRegisterPos[1] := 13;
-						 	NEONRegisterPos[2] := 14;
-						 	NEONRegisterPos[3] := 15;
-						 	NEONRegisterPos[4] := 22;
+						|encodingNEONDd:
+							NEONRegisterPos[0] := 12;
+							NEONRegisterPos[1] := 13;
+							NEONRegisterPos[2] := 14;
+							NEONRegisterPos[3] := 15;
+							NEONRegisterPos[4] := 22;
 						|encodingNEONDm:
-						 	NEONRegisterPos[0] := 0;
-						 	NEONRegisterPos[1] := 1;
-						 	NEONRegisterPos[2] := 2;
-						 	NEONRegisterPos[3] := 3;
-						 	NEONRegisterPos[4] := 5;
+							NEONRegisterPos[0] := 0;
+							NEONRegisterPos[1] := 1;
+							NEONRegisterPos[2] := 2;
+							NEONRegisterPos[3] := 3;
+							NEONRegisterPos[4] := 5;
 						|encodingNEONDn:
-						 	NEONRegisterPos[0] := 16;
-						 	NEONRegisterPos[1] := 17;
-						 	NEONRegisterPos[2] := 18;
-						 	NEONRegisterPos[3] := 19;
-						 	NEONRegisterPos[4] := 7;
+							NEONRegisterPos[0] := 16;
+							NEONRegisterPos[1] := 17;
+							NEONRegisterPos[2] := 18;
+							NEONRegisterPos[3] := 19;
+							NEONRegisterPos[4] := 7;
 					END;
-				 	SplittedUnsigned(operand.register - DR0, NEONRegisterPos)
+					SplittedUnsigned(operand.register - DR0, NEONRegisterPos)
 
 				|encodingNEONSd, encodingNEONSm, encodingNEONSn:
 					IF operand.mode # modeRegister THEN error := TRUE
@@ -1275,69 +1270,69 @@ CONST
 					ELSIF (operand.register < SR0) OR (operand.register > SR31) THEN error := TRUE
 					END;
 					CASE operandEncoding OF
-						 encodingNEONSd:
-						 	NEONRegisterPos[0] := 22;
-						 	NEONRegisterPos[1] := 12;
-						 	NEONRegisterPos[2] := 13;
-						 	NEONRegisterPos[3] := 14;
-						 	NEONRegisterPos[4] := 15;
+						|encodingNEONSd:
+							NEONRegisterPos[0] := 22;
+							NEONRegisterPos[1] := 12;
+							NEONRegisterPos[2] := 13;
+							NEONRegisterPos[3] := 14;
+							NEONRegisterPos[4] := 15;
 						|encodingNEONSm:
-						 	NEONRegisterPos[0] := 5;
-						 	NEONRegisterPos[1] := 0;
-						 	NEONRegisterPos[2] := 1;
-						 	NEONRegisterPos[3] := 2;
-						 	NEONRegisterPos[4] := 3;
+							NEONRegisterPos[0] := 5;
+							NEONRegisterPos[1] := 0;
+							NEONRegisterPos[2] := 1;
+							NEONRegisterPos[3] := 2;
+							NEONRegisterPos[4] := 3;
 						|encodingNEONSn:
-						 	NEONRegisterPos[0] := 7;
-						 	NEONRegisterPos[1] := 16;
-						 	NEONRegisterPos[2] := 17;
-						 	NEONRegisterPos[3] := 18;
-						 	NEONRegisterPos[4] := 19;
+							NEONRegisterPos[0] := 7;
+							NEONRegisterPos[1] := 16;
+							NEONRegisterPos[2] := 17;
+							NEONRegisterPos[3] := 18;
+							NEONRegisterPos[4] := 19;
 					END;
-				 	SplittedUnsigned(operand.register - SR0, NEONRegisterPos)
+					SplittedUnsigned(operand.register - SR0, NEONRegisterPos)
 
 				|encodingNEONQorDd, encodingNEONQorDm, encodingNEONQorDn:
 					IF operand.mode # modeRegister THEN error := TRUE
 					ELSIF operand.shiftMode # None THEN error := TRUE
 					ELSIF (DR0 <= operand.register) & (operand.register <= DR31) THEN
 						CASE operandEncoding OF
-							 encodingNEONQorDd:
-							 	NEONRegisterPos[0] := 12;
-							 	NEONRegisterPos[1] := 13;
-							 	NEONRegisterPos[2] := 14;
-							 	NEONRegisterPos[3] := 15;
-							 	NEONRegisterPos[4] := 22;
+							|encodingNEONQorDd:
+								NEONRegisterPos[0] := 12;
+								NEONRegisterPos[1] := 13;
+								NEONRegisterPos[2] := 14;
+								NEONRegisterPos[3] := 15;
+								NEONRegisterPos[4] := 22;
 							|encodingNEONQorDm:
-							 	NEONRegisterPos[0] := 0;
-							 	NEONRegisterPos[1] := 1;
-							 	NEONRegisterPos[2] := 2;
-							 	NEONRegisterPos[3] := 3;
-							 	NEONRegisterPos[4] := 5;
+								NEONRegisterPos[0] := 0;
+								NEONRegisterPos[1] := 1;
+								NEONRegisterPos[2] := 2;
+								NEONRegisterPos[3] := 3;
+								NEONRegisterPos[4] := 5;
 							|encodingNEONQorDn:
-							 	NEONRegisterPos[0] := 16;
-							 	NEONRegisterPos[1] := 17;
-							 	NEONRegisterPos[2] := 18;
-							 	NEONRegisterPos[3] := 19;
-							 	NEONRegisterPos[4] := 7;
+								NEONRegisterPos[0] := 16;
+								NEONRegisterPos[1] := 17;
+								NEONRegisterPos[2] := 18;
+								NEONRegisterPos[3] := 19;
+								NEONRegisterPos[4] := 7;
 						END;
 						SplittedUnsigned(operand.register - DR0, NEONRegisterPos);
 					ELSIF (QR0 <= operand.register) & (operand.register <= QR15) THEN
 						CASE operandEncoding OF
-							 encodingNEONQorDd:
-							 	NEONRegisterPos[0] := 13;
-							 	NEONRegisterPos[1] := 14;
-							 	NEONRegisterPos[2] := 15;
-							 	NEONRegisterPos[3] := 22;
+							|encodingNEONQorDd:
+								NEONRegisterPos[0] := 13;
+								NEONRegisterPos[1] := 14;
+								NEONRegisterPos[2] := 15;
+								NEONRegisterPos[3] := 22;
 							|encodingNEONQorDm:
-							 	NEONRegisterPos[0] := 1;
-							 	NEONRegisterPos[1] := 2;
-							 	NEONRegisterPos[2] := 3;
-							 	NEONRegisterPos[3] := 5;
+								NEONRegisterPos[0] := 1;
+								NEONRegisterPos[1] := 2;
+								NEONRegisterPos[2] := 3;
+								NEONRegisterPos[3] := 5;
 							|encodingNEONQorDn:
-							 	NEONRegisterPos[0] := 17;
-							 	NEONRegisterPos[1] := 18;
-							 	NEONRegisterPos[2] := 19;
-							 	NEONRegisterPos[3] := 7;
+								NEONRegisterPos[0] := 17;
+								NEONRegisterPos[1] := 18;
+								NEONRegisterPos[2] := 19;
+								NEONRegisterPos[3] := 7;
 						END;
 						NEONRegisterPos[4] := 32;
 						SplittedUnsigned(operand.register - QR0, NEONRegisterPos);
@@ -1349,46 +1344,46 @@ CONST
 					ELSIF operand.shiftMode # None THEN error := TRUE
 					ELSIF (DR0 <= operand.register) & (operand.register <= DR15) THEN
 						CASE operandEncoding OF
-							 encodingNEONDorSd:
-							 	NEONRegisterPos[0] := 12;
-							 	NEONRegisterPos[1] := 13;
-							 	NEONRegisterPos[2] := 14;
-							 	NEONRegisterPos[3] := 15;
-							 	NEONRegisterPos[4] := 22;
+							|encodingNEONDorSd:
+								NEONRegisterPos[0] := 12;
+								NEONRegisterPos[1] := 13;
+								NEONRegisterPos[2] := 14;
+								NEONRegisterPos[3] := 15;
+								NEONRegisterPos[4] := 22;
 							|encodingNEONDorSm:
-							 	NEONRegisterPos[0] := 0;
-							 	NEONRegisterPos[1] := 1;
-							 	NEONRegisterPos[2] := 2;
-							 	NEONRegisterPos[3] := 3;
-							 	NEONRegisterPos[4] := 5;
+								NEONRegisterPos[0] := 0;
+								NEONRegisterPos[1] := 1;
+								NEONRegisterPos[2] := 2;
+								NEONRegisterPos[3] := 3;
+								NEONRegisterPos[4] := 5;
 							|encodingNEONDorSn:
-							 	NEONRegisterPos[0] := 16;
-							 	NEONRegisterPos[1] := 17;
-							 	NEONRegisterPos[2] := 18;
-							 	NEONRegisterPos[3] := 19;
-							 	NEONRegisterPos[4] := 7;
+								NEONRegisterPos[0] := 16;
+								NEONRegisterPos[1] := 17;
+								NEONRegisterPos[2] := 18;
+								NEONRegisterPos[3] := 19;
+								NEONRegisterPos[4] := 7;
 						END;
 						SplittedUnsigned(operand.register - DR0, NEONRegisterPos)
 					ELSIF (SR0 <= operand.register) & (operand.register <= SR31) THEN
 						CASE operandEncoding OF
-						 encodingNEONDorSd:
-						 	NEONRegisterPos[0] := 22;
-						 	NEONRegisterPos[1] := 12;
-						 	NEONRegisterPos[2] := 13;
-						 	NEONRegisterPos[3] := 14;
-						 	NEONRegisterPos[4] := 15;
+						|encodingNEONDorSd:
+							NEONRegisterPos[0] := 22;
+							NEONRegisterPos[1] := 12;
+							NEONRegisterPos[2] := 13;
+							NEONRegisterPos[3] := 14;
+							NEONRegisterPos[4] := 15;
 						|encodingNEONDorSm:
-						 	NEONRegisterPos[0] := 5;
-						 	NEONRegisterPos[1] := 0;
-						 	NEONRegisterPos[2] := 1;
-						 	NEONRegisterPos[3] := 2;
-						 	NEONRegisterPos[4] := 3;
+							NEONRegisterPos[0] := 5;
+							NEONRegisterPos[1] := 0;
+							NEONRegisterPos[2] := 1;
+							NEONRegisterPos[3] := 2;
+							NEONRegisterPos[4] := 3;
 						|encodingNEONDorSn:
-						 	NEONRegisterPos[0] := 7;
-						 	NEONRegisterPos[1] := 16;
-						 	NEONRegisterPos[2] := 17;
-						 	NEONRegisterPos[3] := 18;
-						 	NEONRegisterPos[4] := 19;
+							NEONRegisterPos[0] := 7;
+							NEONRegisterPos[1] := 16;
+							NEONRegisterPos[2] := 17;
+							NEONRegisterPos[3] := 18;
+							NEONRegisterPos[4] := 19;
 						END;
 						SplittedUnsigned(operand.register - SR0, NEONRegisterPos)
 					ELSE error := TRUE
@@ -1409,11 +1404,11 @@ CONST
 					NEONRegisterPos[2] := 14;
 					NEONRegisterPos[3] := 15;
 					NEONRegisterPos[4] := 22;
-				 	SplittedUnsigned(DR0 + firstRegister, NEONRegisterPos);
+					SplittedUnsigned(DR0 + firstRegister, NEONRegisterPos);
 					(* bits 8 to 11 specify the length of the list *)
 					CASE num OF
-						 1: 	Unsigned(7H, 8, 11)
-						|2: 	Unsigned(0AH, 8, 11)
+						|1: Unsigned(7H, 8, 11)
+						|2: Unsigned(0AH, 8, 11)
 						|3: Unsigned(6H, 8, 11)
 						|4: Unsigned(2H, 8, 11)
 					ELSE
@@ -1429,7 +1424,7 @@ CONST
 
 					CASE operand.register OF
 						(* FPSID - 0b0; FPSCR - 0b1; FPEXC - 0b1000 at bits 19:16 *)
-						 FPSCR: INCL(codeSet, 16)
+						|FPSCR: INCL(codeSet, 16)
 						|FPEXC: INCL(codeSet, 19)
 					END
 
@@ -1474,10 +1469,10 @@ CONST
 			(* Set the Q bit *)
 			FOR i := 0 TO MaxOperands - 1 DO
 				CASE format.operands[i] OF
-					 encodingNEONQorDd, encodingNEONQorDm, encodingNEONQorDn:
-					 	IF (QR0 <= instruction.operands[i].register) & (instruction.operands[i].register <= QR15) THEN
-					 		codeSet := codeSet + format.Quadword
-					 	END
+					|encodingNEONQorDd, encodingNEONQorDm, encodingNEONQorDn:
+						IF (QR0 <= instruction.operands[i].register) & (instruction.operands[i].register <= QR15) THEN
+							codeSet := codeSet + format.Quadword
+						END
 					|encodingNEONDorSd, encodingNEONDorSm, encodingNEONDorSn:
 						IF (DR0 <= instruction.operands[i].register) & (instruction.operands[i].register <= DR15) THEN
 							codeSet := codeSet + format.Quadword
@@ -1739,7 +1734,6 @@ CONST
 			RETURN TRUE
 		END DecodeOperand;
 
-
 	BEGIN
 		codeSet := NumberToSet(code);
 		IF TraceDecode THEN
@@ -1969,12 +1963,12 @@ CONST
 
 			FOR curr := len TO 0 BY -1 DO
 				ASSERT((format[curr] = " ") OR (format[curr] = "1")
-					 OR (format[curr] = "0") OR (format[curr] = "X")
-					 OR (format[curr] = "U") OR (format[curr] = "Q")
-					 OR (format[curr] = "F") OR (format[curr] = "L")
-					 OR (format[curr] = "S") OR (format[curr] = "o"));
+					OR (format[curr] = "0") OR (format[curr] = "X")
+					OR (format[curr] = "U") OR (format[curr] = "Q")
+					OR (format[curr] = "F") OR (format[curr] = "L")
+					OR (format[curr] = "S") OR (format[curr] = "o"));
 				CASE format[curr] OF
-					 " ":
+					|" ":
 					|"0": INCL(diffBits, count); INC(count)
 					|"1": INCL(setBits, count); INCL(diffBits, count); INC(count)
 					|"X": INC(count)
@@ -2209,7 +2203,6 @@ CONST
 		EnterRegister(FPEXC, "FPEXC");
 
 		FOR i := 0 TO NumberRegisterEntries-1 DO ASSERT(registerEntries[i].name # "") END;
-
 
 		(* enter condition names (note that the preferred name, i.e. alias, is entered after the other variants) *)
 		conditionEntryCount := 0;
@@ -2600,11 +2593,11 @@ CONST
 		EnterInstruction(opUMLAL, {4, 7, 21, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
 		EnterInstruction(opUMULL, {4, 7, 23}, {4..7, 21..27}, {flagCondition, flagS}, encodingR12, encodingR16, encodingR0, encodingR8, None, None);
 
-		EnterNEONInstruction(opMOVW,	"XXXX 0011 0000 XXXX XXXX XXXX XXXX XXXX",{flagCondition}, encodingR12, encodingImm12a0imm4a16, None, None, None, None);
-		EnterNEONInstruction(opLDM, 	"XXXX 100X X101 XXXX 0XXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
-		EnterNEONInstruction(opSTM, 	"XXXX 100X X100 XXXX XXXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
-		EnterNEONInstruction(opISB, 		"1111 0101 0111 1111 1111 0000 0110 1111", {}, None, None, None, None, None, None);
-		EnterNEONInstruction(opLSL, 		"XXXX 0001 1010 0000 XXXX XXXX X000 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingImm7to11, None, None, None);
+		EnterNEONInstruction(opMOVW, "XXXX 0011 0000 XXXX XXXX XXXX XXXX XXXX",{flagCondition}, encodingR12, encodingImm12a0imm4a16, None, None, None, None);
+		EnterNEONInstruction(opLDM, "XXXX 100X X101 XXXX 0XXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
+		EnterNEONInstruction(opSTM, "XXXX 100X X100 XXXX XXXX XXXX XXXX XXXX", {flagCondition, flagIA, flagDA, flagIB, flagDB, flagUserMode}, encodingR16, encodingRegisterList, None, None, None, None);
+		EnterNEONInstruction(opISB, "1111 0101 0111 1111 1111 0000 0110 1111", {}, None, None, None, None, None, None);
+		EnterNEONInstruction(opLSL, "XXXX 0001 1010 0000 XXXX XXXX X000 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingImm7to11, None, None, None);
 		EnterNEONInstruction(opLSL, "XXXX 0001 1010 0000 XXXX XXXX 0001 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingR8, None, None, None);
 		EnterNEONInstruction(opLSR, "XXXX 0001 1010 0000 XXXX XXXX X010 XXXX", {flagCondition, flagS}, encodingR12, encodingR0, encodingImm7to11, None, None, None);
 		EnterNEONInstruction(opSEV, "XXXX 0011 0010 0000 1111 0000 0000 0100", {flagCondition}, None, None, None, None, None, None);
@@ -2925,7 +2918,6 @@ CONST
 			END;
 		END;
 	END Disassemble;
-
 
 BEGIN Init;
 END FoxARMInstructionSet.

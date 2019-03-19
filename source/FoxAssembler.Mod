@@ -15,7 +15,6 @@ CONST
 			- expressions with labels would not work
 			- fixup mechanism complicated and not generic
 
-
 	*)
 	MaxPasses* = 2;
 
@@ -365,7 +364,6 @@ TYPE
 		BEGIN
 			IF (symbol # NIL) THEN RETURN symbol.fingerprint.shallow END;
 		END GetFingerprint;
-
 
 		PROCEDURE NonConstantSymbol(pos: Position; symbol: SyntaxTree.Symbol; VAR result: Result): BOOLEAN;
 		VAR
@@ -886,7 +884,6 @@ TYPE
 			AllSections;
 		END Text;
 
-
 	END Assembler;
 
 	PROCEDURE DumpResult*(w: Streams.Writer; result: Result);
@@ -926,7 +923,6 @@ END FoxAssembler.
 
 System.Free FoxAssembler ~
 
-
 FoxAssembler.Test
 ;---------------- intermediate code -----------------
 .module BitSets
@@ -934,34 +930,34 @@ FoxAssembler.Test
 .imports SYSTEM
 
 .const BitSets.@moduleSelf offset=0
-	 0: data u32 0
+	0: data u32 0
 
 .const BitSets.BitSet offset=0
-	 0: data u32 0
+	0: data u32 0
 
 .code BitSets.BitSet.InitBitSet offset=0
-	 0: enter  0,  0
-	 1: mov u32 r1, u32 [fp+8]
-	 2: mov s32 [r1], s32 [fp+12]
-	 3: push s32 [fp+12]
-	 4: mov u32 r2, u32 [fp+8]
-	 5: add u32 r3, u32 [r2-4], u32 -88
-	 6: push u32 r2
-	 7: call u32 [r3],  8
-	 8: leave  0
-	 9: exit  8
+	0: enter  0,  0
+	1: mov u32 r1, u32 [fp+8]
+	2: mov s32 [r1], s32 [fp+12]
+	3: push s32 [fp+12]
+	4: mov u32 r2, u32 [fp+8]
+	5: add u32 r3, u32 [r2-4], u32 -88
+	6: push u32 r2
+	7: call u32 [r3],  8
+	8: leave  0
+	9: exit  8
 
 .code BitSets.BitSet.Zero offset=0
-	 0: enter  0,  8
-	 1: mov s32 [fp-4], s32 0
-	 2: mov u32 r1, u32 [fp+8]
-	 3: mov u32 r2, u32 [r1+4]
-	 4: conv s32 r3, u32 [r2+12]
-	 5: sub s32 r3, s32 r3, s32 1
-	 6: mov s32 [fp-8], s32 r3
-	 7: brlt u32 BitSets.BitSet.Zero:21, s32 [fp-8], s32 [fp-4]
-	 8: br u32 BitSets.BitSet.Zero:9
-	 9: conv u32 r4, s32 [fp-4]
+	0: enter  0,  8
+	1: mov s32 [fp-4], s32 0
+	2: mov u32 r1, u32 [fp+8]
+	3: mov u32 r2, u32 [r1+4]
+	4: conv s32 r3, u32 [r2+12]
+	5: sub s32 r3, s32 r3, s32 1
+	6: mov s32 [fp-8], s32 r3
+	7: brlt u32 BitSets.BitSet.Zero:21, s32 [fp-8], s32 [fp-4]
+	8: br u32 BitSets.BitSet.Zero:9
+	9: conv u32 r4, s32 [fp-4]
 	10: mov u32 r5, u32 r4
 	11: mov u32 r6, u32 [fp+8]
 	12: mov u32 r7, u32 [r6+4]
@@ -977,16 +973,16 @@ FoxAssembler.Test
 	22: exit  4
 
 .code BitSets.BitSet.Resize offset=0
-	 0: enter  0,  12
-	 1: brlt u32 BitSets.BitSet.Resize:3, s32 [fp+12], s32 0
-	 2: br u32 BitSets.BitSet.Resize:4
-	 3: trap  8
-	 4: mov u32 r1, u32 [fp+8]
-	 5: mov s32 [r1], s32 [fp+12]
-	 6: sub s32 r2, s32 [fp+12], s32 1
-	 7: brlt u32 BitSets.BitSet.Resize:10, s32 r2, s32 0
-	 8: mov s32 r2, s32 r2
-	 9: br u32 BitSets.BitSet.Resize:11
+	0: enter  0,  12
+	1: brlt u32 BitSets.BitSet.Resize:3, s32 [fp+12], s32 0
+	2: br u32 BitSets.BitSet.Resize:4
+	3: trap  8
+	4: mov u32 r1, u32 [fp+8]
+	5: mov s32 [r1], s32 [fp+12]
+	6: sub s32 r2, s32 [fp+12], s32 1
+	7: brlt u32 BitSets.BitSet.Resize:10, s32 r2, s32 0
+	8: mov s32 r2, s32 r2
+	9: br u32 BitSets.BitSet.Resize:11
 	10: mov s32 r2, s32 0, s32 r2
 	11: shr s32 r2, s32 r2, s32 5
 	12: add s32 r2, s32 r2, s32 1
@@ -1068,9 +1064,9 @@ FoxAssembler.Test
 	88: exit  8
 
 .code BitSets.BitSet.GetSize offset=0
-	 0: enter  0,  0
-	 1: mov u32 r1, u32 [fp+8]
-	 2: return s32 [r1]
-	 3: leave  0
-	 4: exit  4
-	 5: trap  3
+	0: enter  0,  0
+	1: mov u32 r1, u32 [fp+8]
+	2: return s32 [r1]
+	3: leave  0
+	4: exit  4
+	5: trap  3

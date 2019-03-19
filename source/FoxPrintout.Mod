@@ -225,7 +225,6 @@ TYPE
 			VisitBasicType(x);
 		END VisitAnyType;
 
-
 		PROCEDURE VisitMathArrayType*(x: SyntaxTree.MathArrayType);
 		BEGIN
 			Keyword("ARRAY " );
@@ -278,7 +277,6 @@ TYPE
 			IF rec.IsProtected() THEN Flag(Global.NameExclusive, first) END;
 			FlagEnd(first);
 		END ObjectFlags;
-
 
 		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);
 		VAR pointerBase: SyntaxTree.Type;
@@ -398,13 +396,11 @@ TYPE
 			IF ~first THEN w.String("} ") END;
 		END FlagEnd;
 
-
 		PROCEDURE Value(identifier: SyntaxTree.Identifier; value: HUGEINT; VAR first: BOOLEAN);
 		BEGIN
 			Flag(identifier,first);
 			w.String("("); w.Int(value,1); w.String(")");
 		END Value;
-
 
 		PROCEDURE VisitProcedureType*(x: SyntaxTree.ProcedureType);
 		VAR first: BOOLEAN;
@@ -588,8 +584,8 @@ TYPE
 		PROCEDURE VisitBracketDesignator*(x: SyntaxTree.BracketDesignator);
 		BEGIN
 			Expression(x.left);
-		 	IF info THEN AlertString("(*<BracketDesignator>*)") END;
-		 	w.String("["); ExpressionList(x.parameters); w.String("]");
+			IF info THEN AlertString("(*<BracketDesignator>*)") END;
+			w.String("["); ExpressionList(x.parameters); w.String("]");
 		END VisitBracketDesignator;
 
 		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
@@ -738,7 +734,6 @@ TYPE
 			VisitStatementBlock(x.block);
 		END VisitInlineCallDesignator;
 
-
 		PROCEDURE VisitStatementDesignator*(x: SyntaxTree.StatementDesignator);
 		BEGIN
 			Indent; Keyword("STATEMENT-DESIGNATOR ");
@@ -748,7 +743,6 @@ TYPE
 			END;
 			Indent; Statement(x.statement);
 		END VisitStatementDesignator;
-
 
 		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		BEGIN
@@ -1178,7 +1172,6 @@ TYPE
 			w.String( ")" );
 		END ParameterList;
 
-
 		PROCEDURE Access(access: SET);
 		BEGIN
 			IF SyntaxTree.PublicWrite IN access THEN w.String(" PublicWrite") END;
@@ -1297,7 +1290,6 @@ TYPE
 				type := x.type(SyntaxTree.ProcedureType);
 				PrintSymbol(x);
 
-
 				ParameterList(type.firstParameter);
 				IF type.returnType # NIL THEN
 					w.String( ": " );
@@ -1322,7 +1314,7 @@ TYPE
 						IF mode >= SymbolFile THEN
 							ProcedureScope(x.procedureScope);
 						END;
-						Indent;  Keyword("END " );  	w.String( '"' );  Identifier(x.name);  w.String( '"' );
+						Indent; Keyword("END " ); w.String( '"' ); Identifier(x.name); w.String( '"' );
 					END;
 				END;
 			END
@@ -1522,14 +1514,14 @@ TYPE
 			Expression(x.left);
 			identifier := Global.GetIdentifier(x.op,case);
 			w.String(" "); Identifier(identifier); w.String(" ");
-			 Expression(x.right);
+			Expression(x.right);
 		END VisitCommunicationStatement;
 
 		PROCEDURE IfPart(x: SyntaxTree.IfPart);
 		BEGIN
 			IF DebugPosition THEN TRACE(x.position.start, x.position.end, x.end.start, x.end.end) END;
 			Comments(x.comment, x, FALSE);
-	 		Keyword("IF " );
+			Keyword("IF " );
 			Expression(x.condition);
 			Keyword(" THEN " );
 			Comments(x.comment,x,TRUE);
@@ -1683,7 +1675,9 @@ TYPE
 		END VisitExitableBlock;
 
 		PROCEDURE VisitExitStatement*(x: SyntaxTree.ExitStatement);
-		BEGIN 	Keyword("EXIT" ) END VisitExitStatement;
+		BEGIN
+			Keyword("EXIT" );
+		END VisitExitStatement;
 
 		PROCEDURE VisitReturnStatement*(x: SyntaxTree.ReturnStatement);
 		BEGIN
@@ -1892,7 +1886,6 @@ TYPE
 
 	END Printer;
 
-
 (* debugging helper *)
 VAR
 	debug: Printer;
@@ -1902,7 +1895,6 @@ VAR
 	BEGIN
 		NEW(p,w,mode,info); RETURN p
 	END NewPrinter;
-
 
 	PROCEDURE Info*(CONST info: ARRAY OF CHAR; a: ANY);
 	VAR symbol: SyntaxTree.Symbol; scope: SyntaxTree.Scope;
@@ -1934,7 +1926,7 @@ VAR
 		ELSIF a IS SyntaxTree.Scope THEN
 			scope := a(SyntaxTree.Scope);
 			WHILE(scope # NIL) DO
-				D.Ln; 		D.Str("      ");
+				D.Ln; D.Str("      ");
 				IF scope IS SyntaxTree.ModuleScope THEN D.Str("ModuleScope: ")
 				ELSIF scope IS SyntaxTree.ProcedureScope THEN D.Str("ProcedureScope: ");
 				ELSIF scope IS SyntaxTree.RecordScope THEN D.Str("RecordScope: ");

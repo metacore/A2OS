@@ -101,7 +101,6 @@ TYPE
 
 	END StreamDiagnostics;
 
-
 	PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR);
 	VAR attributes: Texts.Attributes;
 	BEGIN
@@ -160,5 +159,4 @@ TYPE
 
 END FoxA2Interface.
 
-FSTools.DeleteFiles FoxA2Interface.Obw ~~
-
+FSTools.DeleteFiles FoxA2Interface.Obw ~

@@ -477,7 +477,7 @@ TYPE
 
 			PrintIndent;
 			IF ~pragma THEN writer.String("/*") END;
- 			i := 0; len := LEN (comment);
+			i := 0; len := LEN (comment);
 			LOOP
 				ch := comment[i]; INC (i);
 				IF (i = len) OR (ch = 0X) THEN EXIT END;
@@ -629,21 +629,21 @@ TYPE
 				IF first THEN first := FALSE ELSE writer.Char (Comma); writer.Char (Space); END;
 				PrintArgument (arguments.GetExpression (index), parameter, FALSE);
 				INC (index); DEC (count); parameter := parameter.nextParameter;
- 			END;
+			END;
 			WHILE (outerScope # NIL) & (outerScope IS SyntaxTree.ProcedureScope) DO
- 				parameter := outerScope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
- 				WHILE parameter # NIL DO
+				parameter := outerScope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
+				WHILE parameter # NIL DO
 					IF first THEN first := FALSE ELSE writer.Char (Comma); writer.Char (Space); END;
 					PrintArgument (NIL, parameter, outerScope = currentProcedureScope);
 					parameter := parameter.nextParameter;
 				END;
-  				variable := outerScope.firstVariable;
- 				WHILE variable # NIL DO
+				variable := outerScope.firstVariable;
+				WHILE variable # NIL DO
 					IF first THEN first := FALSE ELSE writer.Char (Comma); writer.Char (Space); END;
 					PrintArgument (NIL, variable, outerScope = currentProcedureScope);
 					variable := variable.nextVariable;
 				END;
- 				outerScope := outerScope.outerScope;
+				outerScope := outerScope.outerScope;
 			END;
 			RETURN first;
 		END PrintArguments;
@@ -1278,7 +1278,7 @@ TYPE
 			| Scanner.Minus: IF expression.type.resolved IS SyntaxTree.SetType THEN writer.Char ('~') ELSE writer.Char ('-') END;
 			| Scanner.Not: writer.Char ('!');
 			END;
-			 PrintExpression (expression.left);
+			PrintExpression (expression.left);
 		END VisitUnaryExpression;
 
 		PROCEDURE VisitTypeGuardDesignator* (expression: SyntaxTree.TypeGuardDesignator);
@@ -1662,5 +1662,3 @@ TextCompiler.CompileSelection -b=Transpiler --defineMain  ~
 
 FoxTest.Compile --options="-PC -G=Transpiler" --command="WinApplications.Run --hide cl /c Test.c" Oberon.Temp.Test Oberon.Temp.TranspilerTestDiff ~
 FoxTest.Compile --options="--defineMain -PC -G=Transpiler" --command="WinApplications.Run --hide cl Test.c;WinApplications.Run --hide Test.exe" Oberon.Temp.Test Oberon.Temp.TranspilerTestDiff ~
-
-

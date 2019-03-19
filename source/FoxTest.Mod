@@ -213,7 +213,6 @@ TYPE
 		RETURN reader
 	END GetTextReader;
 
-
 PROCEDURE RunTests(
 	text : Texts.Text;
 	CONST source: ARRAY OF CHAR;
@@ -249,11 +248,11 @@ END FoxTest.
 
 System.Free FoxTest TestSuite Versioning ~
 
-	FoxTest.Compile 	Oberon.Execution.Test Oberon.Execution.AMD64TestDiff ~
+	FoxTest.Compile	Oberon.Execution.Test Oberon.Execution.AMD64TestDiff ~
 
 	FoxTest.Compile	Oberon.Compilation.Test Oberon.Compilation.AMD64TestDiff ~
 
-	FoxTest.Compile 	MathVectors.Test MathVectors.Test.Diff ~
+	FoxTest.Compile	MathVectors.Test MathVectors.Test.Diff ~
 
 	FoxTest.Compile
 		--verbose

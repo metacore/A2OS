@@ -51,7 +51,7 @@
 	Target        = word.
 
 	URL           = "[[" url "]]" |
-	                "[[" url "|" {TextElement} "]]".
+			"[[" url "|" {TextElement} "]]".
 
 	Label         = "<<" Target ">>".
 
@@ -308,6 +308,5 @@ CONST Trace = FALSE;
 			END ParseParagraphs;
 
 		END Parser;
-
 
 END FoxDocumentationParser.

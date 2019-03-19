@@ -313,8 +313,6 @@ TYPE
 
 		BEGIN
 
-
-
 			physicalRegisters(PhysicalRegisters).SupportFP(FPSupported);
 			supportFP := FPSupported;
 			tickets.Init;
@@ -432,7 +430,7 @@ TYPE
 					| IntermediateCode.mul:
 						IF (Global.NoMulCapability IN backend.capabilities) THEN  (*mul forbidden*)
 							IF IntermediateCode.IsConstantInteger(instr.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN RETURN TRUE
-							ELSE procedureName:="MulL"; RETURN FALSE	 END;
+							ELSE procedureName:="MulL"; RETURN FALSE END;
 						ELSE
 							RETURN TRUE;
 						END
@@ -722,7 +720,6 @@ TYPE
 			END;
 		END PostGenerate;
 
-
 		PROCEDURE TicketToOperand(ticket:Ticket; VAR op: InstructionSet.Operand);
 		BEGIN
 			ASSERT(ticket # NIL);
@@ -767,9 +764,9 @@ TYPE
 				stack layout:
 				p1
 				...
-				pm	 													(parameters pushed by caller)
-				LR   													(explicitly pushed by frontend because hasLinkRegister = TRUE)
-				prev FP <-- FP = logicalFP 	(explicitly pushed by frontend)
+				pm														(parameters pushed by caller)
+				LR													(explicitly pushed by frontend because hasLinkRegister = TRUE)
+				prev FP <-- FP = logicalFP	(explicitly pushed by frontend)
 				v1
 				...
 				vn
@@ -897,7 +894,6 @@ TYPE
 				op.resolved := module.allSections.FindByName(op.symbol.name)
 			END;
 		END Resolve;
-
 
 		PROCEDURE EmitCall(VAR instruction: IntermediateCode.Instruction);
 		VAR op: InstructionSet.Operand; section: IntermediateCode.Section; code: BinaryCode.Section; symbol: ObjectFile.Identifier;
@@ -1178,9 +1174,8 @@ TYPE
 			RETURN FALSE
 		END UnsignedImmediate;
 
-
 		PROCEDURE HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
-		BEGIN 	RETURN index
+		BEGIN RETURN index
 		END HardwareIntegerRegister;
 
 		PROCEDURE HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
@@ -1255,7 +1250,6 @@ TYPE
 				MovIfDifferent(tmp, physical);
 				physical := tmp;
 
-
 				IF (offset >= 0) & (offset < ASH(1,instructionSet.ImmediateFixupBits)) THEN
 					instructionSet.InitImmediate(imm, 0, offset);
 					Emit2(opADD,physical,imm);
@@ -1281,7 +1275,6 @@ TYPE
 		BEGIN
 			IF ~IsSameRegister(a,b) THEN Emit2(opMOV, a, b) END;
 		END MovIfDifferent;
-
 
 		PROCEDURE AcquireDestinationRegister(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Operand);
 		VAR  type: IntermediateCode.Type;
@@ -1326,7 +1319,6 @@ TYPE
 				END;
 			END;
 		END PrepareOp3;
-
 
 		PROCEDURE PrepareFOp3(CONST instruction: IntermediateCode.Instruction; VAR dest, left, right: Assembler.Operand);
 		VAR vop1,vop2, vop3: IntermediateCode.Operand; op2: InstructionSet.Operand;
@@ -1414,7 +1406,6 @@ TYPE
 			FinishOp(instruction.op1,Low,destLow, leftLow);
 		END EmitFAdd;
 
-
 		PROCEDURE EmitSub(VAR instruction: IntermediateCode.Instruction);
 		VAR destLow, destHigh, leftLow, rightLow, leftHigh, rightHigh: Operand; negateLow, negateHigh: BOOLEAN; fixup: BinaryCode.Fixup;
 		BEGIN
@@ -1449,7 +1440,6 @@ TYPE
 			Emit2(opFSUB,leftLow,rightLow);
 			FinishOp(instruction.op1,Low,destLow, leftLow);
 		END EmitFSub;
-
 
 		PROCEDURE EmitMul(VAR instruction: IntermediateCode.Instruction);
 		VAR negate: BOOLEAN;
@@ -1541,7 +1531,6 @@ TYPE
 					EmitAndPart(instruction,High);
 				END;
 		END EmitAnd;
-
 
 		PROCEDURE EmitOr(VAR instruction: IntermediateCode.Instruction; part: LONGINT);
 		VAR left, right, dest: Operand; negate: BOOLEAN;
@@ -1847,7 +1836,7 @@ TYPE
 								MOV LR, Rx ; restore LR
 								ADD Ry, offset
 								BR R2
-							 *)
+							*)
 							ticket1 := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32);
 							ticket2 := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32);
 							TicketToOperand(ticket1,oldLR);
@@ -2031,7 +2020,6 @@ TYPE
 						Emit1(hiFail, target);
 					END;
 
-
 					(*ReleaseHint(op2.register);
 					ReleaseHint(op3.register);*)
 				END;
@@ -2206,8 +2194,6 @@ TYPE
 
 	END System;
 
-
-
 	BackendTRM = OBJECT (IntermediateBackend.IntermediateBackend)
 	VAR
 		cg: CodeGeneratorTRM;
@@ -2229,7 +2215,6 @@ TYPE
 		VAR
 		BEGIN
 			Initialize^(diagnostics, log, flags, checker, system); (*goes up the inheritance hierarchy all the way to Backend.Mod*)
-
 
 			NEW(cg, builtinsModuleName, diagnostics, SELF,myInstructionSet);
 			cg.patchSpartan6 := patchSpartan6;
@@ -2289,9 +2274,8 @@ TYPE
 				END;
 			END Resolve;
 
-
-		 	(* recompute fixup positions and assign binary sections *)
-		 	PROCEDURE PatchFixups(section: BinaryCode.Section);
+			(* recompute fixup positions and assign binary sections *)
+			PROCEDURE PatchFixups(section: BinaryCode.Section);
 			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; symbolOffset: LONGINT; in: IntermediateCode.Section;
 			BEGIN
 				fixup := section.fixupList.firstFixup;
@@ -2311,59 +2295,57 @@ TYPE
 			END PatchFixups;
 
 		BEGIN
-		 	cg.SetModule(module);
-		 	cg.dump := dump;
+			cg.SetModule(module);
+			cg.dump := dump;
 
-		 	FOR i := 0 TO module.allSections.Length() - 1 DO
-			 	in := module.allSections.GetSection(i);
-			 	in(IntermediateCode.Section).EnableComments(trace);
-		 		IF in.type = Sections.InlineCodeSection THEN
-		 			Basic.SegmentedNameToString(in.name, name);
-			 		out := ResolvedSection(in(IntermediateCode.Section));
-			 		cg.dump := out.comments;
-		 			SetInstructionWidth(out.os.unit);
-			 		cg.Section(in(IntermediateCode.Section), out);  (*compilation*)
-			 		IF in.symbol # NIL THEN
-				 		procedure := in.symbol(SyntaxTree.Procedure);
-				 		procedure.procedureScope.body.code.SetBinaryCode(out.os.bits);
-				 	END;
-			 	END
-		 	END;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				in := module.allSections.GetSection(i);
+				in(IntermediateCode.Section).EnableComments(trace);
+				IF in.type = Sections.InlineCodeSection THEN
+					Basic.SegmentedNameToString(in.name, name);
+					out := ResolvedSection(in(IntermediateCode.Section));
+					cg.dump := out.comments;
+					SetInstructionWidth(out.os.unit);
+					cg.Section(in(IntermediateCode.Section), out);  (*compilation*)
+					IF in.symbol # NIL THEN
+						procedure := in.symbol(SyntaxTree.Procedure);
+						procedure.procedureScope.body.code.SetBinaryCode(out.os.bits);
+					END;
+				END
+			END;
 
 			initialSectionCount := 0;
-		 	REPEAT
-		 		j := initialSectionCount;
-		 	 	initialSectionCount := module.allSections.Length() ;
+			REPEAT
+				j := initialSectionCount;
+				initialSectionCount := module.allSections.Length() ;
 
-			 	FOR i := j TO initialSectionCount - 1 DO
-			 		in := module.allSections.GetSection(i);
-			 		IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
-				 		out := ResolvedSection(in(IntermediateCode.Section));
-			 			SetInstructionWidth(out.os.unit);
-				 		cg.Section(in(IntermediateCode.Section),out);
-			 		END
-			 	END
+				FOR i := j TO initialSectionCount - 1 DO
+					in := module.allSections.GetSection(i);
+					IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
+						out := ResolvedSection(in(IntermediateCode.Section));
+						SetInstructionWidth(out.os.unit);
+						cg.Section(in(IntermediateCode.Section),out);
+					END
+				END
 			UNTIL initialSectionCount = module.allSections.Length(); (* process remaining sections that have been added during traversal of sections *)
 
 			(*
-		 	FOR i := 0 TO module.allSections.Length() - 1 DO
-			 	in := module.allSections.GetSection(i);
-			 	IF ~in.IsExternal() THEN
-			 		IF in.type # Sections.InlineCodeSection THEN
-				 		Basic.SegmentedNameToString(in.name, name);
-				 		out := ResolvedSection(in(IntermediateCode.Section));
-				 		cg.Section(in(IntermediateCode.Section), out);
-			 		END
-			 	END;
-		 	END;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				in := module.allSections.GetSection(i);
+				IF ~in.IsExternal() THEN
+					IF in.type # Sections.InlineCodeSection THEN
+						Basic.SegmentedNameToString(in.name, name);
+						out := ResolvedSection(in(IntermediateCode.Section));
+						cg.Section(in(IntermediateCode.Section), out);
+					END
+				END;
+			END;
 			*)
 
-
-
-		 	FOR i := 0 TO module.allSections.Length() - 1 DO
-			 	in := module.allSections.GetSection(i);
-		 		PatchFixups(in(IntermediateCode.Section).resolved)
-		 	END;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				in := module.allSections.GetSection(i);
+				PatchFixups(in(IntermediateCode.Section).resolved)
+			END;
 
 			IF cg.error THEN Error("", Basic.invalidPosition, Streams.Invalid,  "") END;
 		END GenerateBinary;
@@ -2480,7 +2462,7 @@ TYPE
 		BEGIN
 
 			(*VAR and CONST sections go to the data memory, only code sections go to code memory
-			    Note that data memory has 32 bit words while code has standard 18.
+				Note that data memory has 32 bit words while code has standard 18.
 			*)
 			IF in.bitsPerUnit # Sections.UnknownSize THEN
 				unit :=  in.bitsPerUnit;
@@ -2525,9 +2507,6 @@ TYPE
 		HALT(100);
 	END Halt;
 
-
-
-
 	PROCEDURE Init;
 	BEGIN
 		NEW(defaultInstructionSet,18); (*TODO: maybe it's better to have all these init functions outside of instruction set object?*)
@@ -2543,6 +2522,5 @@ TYPE
 BEGIN
 	Init;
 END FoxTRMBackend.
-
 
 System.FreeDownTo FoxTRMBackend  ~

@@ -11,7 +11,7 @@ TYPE
 TYPE
 	Assembler*= OBJECT (FoxAssembler.Assembler)
 	VAR capabilities-: SET;
-		  instructionSet: InstructionSet.InstructionSet;
+		instructionSet: InstructionSet.InstructionSet;
 
 		PROCEDURE &Init2*(diagnostics: Diagnostics.Diagnostics; capabilities: SET; instructionSet: InstructionSet.InstructionSet);
 		BEGIN
@@ -111,14 +111,6 @@ TYPE
 		END GetRegister;
 	END Assembler;
 
-
-
-
 END FoxTRMAssembler.
 
 System.Free FoxTRMAssembler FoxTRMInstructionSet ~
-
-
-
-
-

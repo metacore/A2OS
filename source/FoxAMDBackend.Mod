@@ -14,21 +14,21 @@ CONST
 
 	RAX=InstructionSet.regRAX; RCX=InstructionSet.regRCX; RDX=InstructionSet.regRDX; RBX=InstructionSet.regRBX;
 	RSP=InstructionSet.regRSP; RBP=InstructionSet.regRBP; RSI=InstructionSet.regRSI; RDI=InstructionSet.regRDI;
-	R8=InstructionSet.regR8; 	R9=InstructionSet.regR9; 	R10=InstructionSet.regR10; 	R11=InstructionSet.regR11;
-	R12=InstructionSet.regR12; 	R13=InstructionSet.regR13; 	R14=InstructionSet.regR14; 	R15=InstructionSet.regR15;
+	R8=InstructionSet.regR8; R9=InstructionSet.regR9; R10=InstructionSet.regR10; R11=InstructionSet.regR11;
+	R12=InstructionSet.regR12; R13=InstructionSet.regR13; R14=InstructionSet.regR14; R15=InstructionSet.regR15;
 	EAX=InstructionSet.regEAX; ECX=InstructionSet.regECX; EDX=InstructionSet.regEDX; EBX=InstructionSet.regEBX;
 	ESP=InstructionSet.regESP; EBP=InstructionSet.regEBP; ESI=InstructionSet.regESI; EDI=InstructionSet.regEDI;
-	R8D=InstructionSet.regR8D; 	R9D=InstructionSet.regR9D; 	R10D=InstructionSet.regR10D; 	R11D=InstructionSet.regR11D;
-	R12D=InstructionSet.regR12D; 	R13D=InstructionSet.regR13D; 	R14D=InstructionSet.regR14D; 	R15D=InstructionSet.regR15D;
-	AX=InstructionSet.regAX;	CX=InstructionSet.regCX;	DX=InstructionSet.regDX;	BX=InstructionSet.regBX;
+	R8D=InstructionSet.regR8D; R9D=InstructionSet.regR9D; R10D=InstructionSet.regR10D; R11D=InstructionSet.regR11D;
+	R12D=InstructionSet.regR12D; R13D=InstructionSet.regR13D; R14D=InstructionSet.regR14D; R15D=InstructionSet.regR15D;
+	AX=InstructionSet.regAX; CX=InstructionSet.regCX; DX=InstructionSet.regDX; BX=InstructionSet.regBX;
 	SI=InstructionSet.regSI; DI=InstructionSet.regDI; BP=InstructionSet.regBP; SP=InstructionSet.regSP;
-	R8W=InstructionSet.regR8W; 	R9W=InstructionSet.regR9W; 	R10W=InstructionSet.regR10W; 	R11W=InstructionSet.regR11W;
-	R12W=InstructionSet.regR12W; 	R13W=InstructionSet.regR13W; 	R14W=InstructionSet.regR14W; 	R15W=InstructionSet.regR15W;
-	AL=InstructionSet.regAL;	CL=InstructionSet.regCL;	DL=InstructionSet.regDL;	BL=InstructionSet.regBL;	SIL=InstructionSet.regSIL;
+	R8W=InstructionSet.regR8W; R9W=InstructionSet.regR9W; R10W=InstructionSet.regR10W; R11W=InstructionSet.regR11W;
+	R12W=InstructionSet.regR12W; R13W=InstructionSet.regR13W; R14W=InstructionSet.regR14W; R15W=InstructionSet.regR15W;
+	AL=InstructionSet.regAL; CL=InstructionSet.regCL; DL=InstructionSet.regDL; BL=InstructionSet.regBL; SIL=InstructionSet.regSIL;
 	DIL=InstructionSet.regDIL; BPL=InstructionSet.regBPL; SPL=InstructionSet.regSPL;
-	R8B=InstructionSet.regR8B; 	R9B=InstructionSet.regR9B; 	R10B=InstructionSet.regR10B; 	R11B=InstructionSet.regR11B;
-	R12B=InstructionSet.regR12B; 	R13B=InstructionSet.regR13B; 	R14B=InstructionSet.regR14B; 	R15B=InstructionSet.regR15B;
-	AH=InstructionSet.regAH;	CH=InstructionSet.regCH;	DH=InstructionSet.regDH;	BH=InstructionSet.regBH;
+	R8B=InstructionSet.regR8B; R9B=InstructionSet.regR9B; R10B=InstructionSet.regR10B; R11B=InstructionSet.regR11B;
+	R12B=InstructionSet.regR12B; R13B=InstructionSet.regR13B; R14B=InstructionSet.regR14B; R15B=InstructionSet.regR15B;
+	AH=InstructionSet.regAH; CH=InstructionSet.regCH; DH=InstructionSet.regDH; BH=InstructionSet.regBH;
 	ST0=InstructionSet.regST0;
 	XMM0 = InstructionSet.regXMM0;
 	XMM7 = InstructionSet.regXMM7;
@@ -41,12 +41,12 @@ CONST
 
 VAR registerOperands: ARRAY InstructionSet.numberRegisters OF Assembler.Operand;
 	usePool: BOOLEAN;
-	 opEAX, opECX, opEDX, opEBX, opESP, opEBP,
-	 opESI, opEDI, opAX, opCX, opDX, opBX, opSI, opDI, opAL, opCL, opDL, opBL, opAH, opCH, opDH, opBH,opST0
-	 , opRSP, opRBP: Assembler.Operand;
+	opEAX, opECX, opEDX, opEBX, opESP, opEBP,
+	opESI, opEDI, opAX, opCX, opDX, opBX, opSI, opDI, opAL, opCL, opDL, opBL, opAH, opCH, opDH, opBH,opST0,
+	opRSP, opRBP: Assembler.Operand;
 
-	 unusable,split,blocked,free: CodeGenerators.Ticket;
-	 traceStackSize: LONGINT;
+	unusable,split,blocked,free: CodeGenerators.Ticket;
+	traceStackSize: LONGINT;
 
 TYPE
 
@@ -275,7 +275,7 @@ TYPE
 					(* ST7 unusable as it is overwritten during arithmetic instructions *)
 				ELSE
 					i := GetHint(XMM0, XMM7);
-					IF i = none THEN 	i := Get(XMM7, XMM0) END
+					IF i = none THEN i := Get(XMM7, XMM0) END
 				END;
 			END;
 			hint := none; (* reset *)
@@ -429,7 +429,6 @@ TYPE
 				RETURN res
 			END GetGPHint;
 
-
 			PROCEDURE Get(from,to: LONGINT): LONGINT;
 			VAR i: LONGINT;
 			BEGIN
@@ -531,7 +530,7 @@ TYPE
 		sp=0>	FP0 - reg0								FP1 - reg0						sp=0>	FP0 - reg0
 				FP1 - reg1								FP2 - reg1								FP1 - reg1
 				FP2 - reg2								FP3 - reg2								FP2 - reg2
-				FP3 - reg3	 = load op1 =>			FP4 - reg3		= op =>				FP3 - reg3
+				FP3 - reg3	= load op1 =>			FP4 - reg3		= op =>				FP3 - reg3
 				FP4 - reg4								FP5 - reg4								FP4 - reg4
 				FP5 - reg5								FP6 - reg5								FP5 - reg5
 				FP6 - reg6								FP7 - reg6								FP6 - reg6
@@ -896,7 +895,6 @@ TYPE
 				RETURN (value <= MAX(SIGNED32)) & (value >= MIN(SIGNED32));
 			END IsSignedImm32;
 
-
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeImmediate);
 			GetPartType(virtual.type,part,type);
@@ -1028,7 +1026,6 @@ TYPE
 				physical := tmp;
 			END;
 		END GetRegister;
-
 
 		(* make physical operand from virtual operand, if ticket given then write result into phyiscal register represented by ticket *)
 		PROCEDURE MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket);
@@ -1724,7 +1721,6 @@ TYPE
 					Assembler.InitImm(imm, 0 ,0);
 					emitter.Emit2(InstructionSet.opSBB, temp4, imm);
 
-
 					IF dtype.sizeInBits # destType.sizeInBits THEN
 						index := temp4.register;
 						CASE destType.sizeInBits OF (* choose low part accordingly *)
@@ -2318,24 +2314,24 @@ TYPE
 				11 mod 3 = 2 (=11-9)
 
 			for negative a there are two definitions for mod possible:
-				(i) 	mathematical definition with
+				(i) mathematical definition with
 					a mod b >= 0:
 					a mod b = min{ c >=0: c = a-i*b, integer i} >= 0
 					this corresponds with rounding down
 					a div b = Entier(a/b) <= a/b
-		 		(ii) symmetric definition with
-		 			(-a) mod' b = -(a mod' b) and
-		 			(-a) div' b = -(a div' b)
-		 			corresponding with rounding to zero
-		 			a div' b = RoundToZero(a/b)
+				(ii) symmetric definition with
+					(-a) mod' b = -(a mod' b) and
+					(-a) div' b = -(a div' b)
+					corresponding with rounding to zero
+					a div' b = RoundToZero(a/b)
 
-		 	Examples
-		 		(i) -11 div 3 = -4  (3*(-4) = -12)
-		 			-11 mod 3 = 1 (=-11-(-12))
-		 		(ii) -11 div' 3 = -(11 div 3) = -3 (3*(-3)= -9)
-		 			-11 mod' 3 = -2 (=-11-(-9))
+			Examples
+				(i) -11 div 3 = -4  (3*(-4) = -12)
+					-11 mod 3 = 1 (=-11-(-12))
+				(ii) -11 div' 3 = -(11 div 3) = -3 (3*(-3)= -9)
+					-11 mod' 3 = -2 (=-11-(-9))
 
-		 	The behaviour for negative b can, in the symmetrical case, be deduced as
+			The behaviour for negative b can, in the symmetrical case, be deduced as
 				(ii)	symmetric definition
 					a div' (-b) = (-a) div' b = -(a div' b)
 					a mod' (-b) = a- a div' (-b) * (-b) = a mod' b
@@ -2363,8 +2359,6 @@ TYPE
 			The behaviour for b < 0 is explicitely undefined.
 
 			*)
-
-
 
 			(*
 				AX / regMem8 = AL (remainder AH)
@@ -2514,7 +2508,6 @@ TYPE
 				shift := opCL;
 			END;
 
-
 			IF ~IsComplex(instruction.op1) THEN
 				Move(dest,op2,PhysicalOperandType(dest));
 				emitter.Emit2 (op, dest,shift);
@@ -2606,7 +2599,6 @@ TYPE
 				type := IntermediateCode.NewType(IntermediateCode.SignedInteger, SHORTINT(size*8));
 				rd := TemporaryTicket(IntermediateCode.GeneralPurposeRegister, type);
 				TicketToOperand(rd,op3);
-
 
 				Move(op3, op2, type);
 				Move(op1, op3, type);
@@ -2710,7 +2702,6 @@ TYPE
 				END;
 			END;
 		END EmitCopy;
-
 
 		PROCEDURE EmitFill(CONST instruction: IntermediateCode.Instruction; down: BOOLEAN);
 		VAR reg,sizeInBits,i: LONGINT;val, value, size, dest: Assembler.Operand;
@@ -2873,7 +2864,6 @@ TYPE
 				END;
 				emitter.Emit2(InstructionSet.opCMP,left,right);
 			END Cmp;
-
 
 		BEGIN
 			IF (instruction.op1.symbol.name = in.name) & (instruction.op1.symbolOffset = inPC +1) THEN (* jump to next instruction can be ignored *)
@@ -3105,7 +3095,6 @@ TYPE
 			END;
 			FinishOp(instruction.op1, Low, op, ticket);
 		END EmitNegXMM;
-
 
 		PROCEDURE EmitAbs(CONST instruction: IntermediateCode.Instruction);
 		VAR op1,op2: Assembler.Operand; source,imm: Assembler.Operand; eax: Ticket;
@@ -3421,8 +3410,8 @@ TYPE
 			procedure: SyntaxTree.Procedure;
 			i, j, initialSectionCount: LONGINT;
 
-		 	(* recompute fixup positions and assign binary sections *)
-		 	PROCEDURE PatchFixups(section: BinaryCode.Section);
+			(* recompute fixup positions and assign binary sections *)
+			PROCEDURE PatchFixups(section: BinaryCode.Section);
 			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; displacement,symbolOffset: LONGINT; in: IntermediateCode.Section;
 				symbol: Sections.Section;
 			BEGIN
@@ -3448,69 +3437,69 @@ TYPE
 			END PatchFixups;
 
 		BEGIN
-		 	cg.SetModule(module);
+			cg.SetModule(module);
 
-		 	FOR i := 0 TO module.allSections.Length() - 1 DO
-			 	in := module.allSections.GetSection(i);
-		 		IF in.type = Sections.InlineCodeSection THEN
-		 			name := in.name;
-			 		out := ResolvedSection(in(IntermediateCode.Section));
-			 		cg.Section(in(IntermediateCode.Section),out);
-			 		procedure := in.symbol(SyntaxTree.Procedure);
-			 		IF procedure.procedureScope.body.code # NIL THEN
-				 		procedure.procedureScope.body.code.SetBinaryCode(out.os.bits);
-				 	END;
-			 	END
-		 	END;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				in := module.allSections.GetSection(i);
+				IF in.type = Sections.InlineCodeSection THEN
+					name := in.name;
+					out := ResolvedSection(in(IntermediateCode.Section));
+					cg.Section(in(IntermediateCode.Section),out);
+					procedure := in.symbol(SyntaxTree.Procedure);
+					IF procedure.procedureScope.body.code # NIL THEN
+						procedure.procedureScope.body.code.SetBinaryCode(out.os.bits);
+					END;
+				END
+			END;
 
 			initialSectionCount := 0;
-		 	REPEAT
-		 		j := initialSectionCount;
-		 	 	initialSectionCount := module.allSections.Length() ;
+			REPEAT
+				j := initialSectionCount;
+				initialSectionCount := module.allSections.Length() ;
 
-			 	FOR i := j TO initialSectionCount - 1 DO
-			 		in := module.allSections.GetSection(i);
-			 		IF (in.type # Sections.InlineCodeSection) & (in(IntermediateCode.Section).resolved = NIL) THEN
-			 			name := in.name;
-				 		out := ResolvedSection(in(IntermediateCode.Section));
-				 		cg.Section(in(IntermediateCode.Section),out);
-				 		IF out.os.type = Sections.VarSection THEN
-				 			IF out.pc = 1 THEN out.SetAlignment(FALSE,1)
-				 			ELSIF out.pc = 2 THEN out.SetAlignment(FALSE,2)
-				 			ELSIF (out.pc > 4) & (bits > 32) THEN out.SetAlignment(FALSE,8)
-				 			ELSIF (out.pc > 2) THEN out.SetAlignment(FALSE,4)
-				 			END;
-				 		ELSIF out.os.type = Sections.ConstSection THEN
-				 			out.SetAlignment(FALSE,bits DIV 8);
-				 		END;
-			 		END
-			 	END
+				FOR i := j TO initialSectionCount - 1 DO
+					in := module.allSections.GetSection(i);
+					IF (in.type # Sections.InlineCodeSection) & (in(IntermediateCode.Section).resolved = NIL) THEN
+						name := in.name;
+						out := ResolvedSection(in(IntermediateCode.Section));
+						cg.Section(in(IntermediateCode.Section),out);
+						IF out.os.type = Sections.VarSection THEN
+							IF out.pc = 1 THEN out.SetAlignment(FALSE,1)
+							ELSIF out.pc = 2 THEN out.SetAlignment(FALSE,2)
+							ELSIF (out.pc > 4) & (bits > 32) THEN out.SetAlignment(FALSE,8)
+							ELSIF (out.pc > 2) THEN out.SetAlignment(FALSE,4)
+							END;
+						ELSIF out.os.type = Sections.ConstSection THEN
+							out.SetAlignment(FALSE,bits DIV 8);
+						END;
+					END
+				END
 			UNTIL initialSectionCount = module.allSections.Length(); (* process remaining sections that have been added during traversal of sections *)
 
 			(*
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				in := module.allSections.GetSection(i);
 				IF in.kind = Sections.CaseTableKind THEN
-			 		IF in(IntermediateCode.Section).resolved = NIL THEN
-				 		out := ResolvedSection(in(IntermediateCode.Section));
-				 		cg.Section(in(IntermediateCode.Section),out);
-				 	END
-				 END
-		 	END;
+					IF in(IntermediateCode.Section).resolved = NIL THEN
+						out := ResolvedSection(in(IntermediateCode.Section));
+						cg.Section(in(IntermediateCode.Section),out);
+					END
+				END
+			END;
 			*)
 
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				in := module.allSections.GetSection(i);
-		 		PatchFixups(in(IntermediateCode.Section).resolved)
-		 	END;
+				PatchFixups(in(IntermediateCode.Section).resolved)
+			END;
 
 			(*
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				in := module.allSections.GetSection(i);
 				IF in.kind = Sections.CaseTableKind THEN
-			 		PatchFixups(in(IntermediateCode.Section).resolved)
-			 	END
-		 	END;
+					PatchFixups(in(IntermediateCode.Section).resolved)
+				END
+			END;
 			*)
 
 			IF cg.error THEN Error("",Basic.invalidPosition, Streams.Invalid,"") END;
@@ -3597,7 +3586,6 @@ TYPE
 			(baseType.resolved.sizeInBits = 8) & (length = 4);
 			RETURN b
 		END CanPassInRegister;
-
 
 		PROCEDURE GetDescription*(VAR instructionSet: ARRAY OF CHAR);
 		BEGIN instructionSet := "AMD";
@@ -3723,6 +3711,5 @@ BEGIN
 	Init;
 	usePool := Machine.NumberOfProcessors()>1;
 END FoxAMDBackend.
-
 
 System.FreeDownTo FoxAMDBackend ~

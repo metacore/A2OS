@@ -99,13 +99,6 @@ TYPE
 
 	END Assembler;
 
-
-
 END FoxIntermediateAssembler.
 
 System.Free FoxInlineAssembler FoxInlineInstructionSet ~
-
-
-
-
-

@@ -92,41 +92,40 @@ CONST
 	optPREP* = 9;		(* a repeat prefix must preceed the instruction *)
 	optPREPN* = 10;	(* a repeat prefix must preceed the instruction *)
 
-
 	(*
 		FoxProgTools.Enum -l=1 -e
 		(** operand types, numbers assigned to the types do not have a special meaning **)
 		(* register classes first *)
-		 reg8 reg16 reg32 reg64 CRn DRn segReg mmx xmm ymm sti
-		 (* other classes *)
-		 mem imm ioffset pntr1616 pntr1632
+		reg8 reg16 reg32 reg64 CRn DRn segReg mmx xmm ymm sti
+		(* other classes *)
+		mem imm ioffset pntr1616 pntr1632
 		(* special registers *)
-		 AL  AX  CL  CR8   CS   DS  DX  EAX  ECX  ES  FS  GS  RAX  SS rAX st0
-		 (* immediates and memory locations *)
-		 imm16  imm32  imm64  imm8
-		 uimm16  uimm32  uimm8
-		 simm16  simm32  simm8
+		AL  AX  CL  CR8   CS   DS  DX  EAX  ECX  ES  FS  GS  RAX  SS rAX st0
+		(* immediates and memory locations *)
+		imm16  imm32  imm64  imm8
+		uimm16  uimm32  uimm8
+		simm16  simm32  simm8
 		mem256
- 		mem128  mem16  mem32  mem64  mem8
-		 moffset16  moffset32  moffset64  moffset8
-		 rel16off  rel32off  rel8off
+		mem128  mem16  mem32  mem64  mem8
+		moffset16  moffset32  moffset64  moffset8
+		rel16off  rel32off  rel8off
 		(* ambivalent operand types *)
-		 reg3264
-		 regmem16  regmem32  regmem64  regmem8 reg32mem16
-		 mmxmem32  mmxmem64
-		 xmmmem256 xmmmem128  xmmmem32  xmmmem64
+		reg3264
+		regmem16  regmem32  regmem64  regmem8 reg32mem16
+		mmxmem32  mmxmem64
+		xmmmem256 xmmmem128  xmmmem32  xmmmem64
 		xmmmem8
 		xmmmem16
 		ymmmem128
 		ymmmem256
 		(* miscellaneous *)
-		 one three
+		one three
 		vm32x
 		vm32y
 		vm64x
 		vm64y
 		m2z;
-		 ~
+		~
 	*)
 	(** operand types, numbers assigned to the types do not have a special meaning **)
 	(* register classes first *)
@@ -230,7 +229,6 @@ CONST
 	prfREPNE* = 0F2H;
 	prfREPNZ* = 0F2H;
 
-
 	(* registers
 		FoxProgTools.Enum -e -l=8 -s=0
 		(** 8 bit general purpose registers **)
@@ -296,7 +294,6 @@ CONST
 		17			CH
 		18			BH
 		19			DH
-
 
 		*)
 
@@ -1343,7 +1340,6 @@ VAR
 	opVZEROALL*,
 	opVZEROUPPER*
 
-
 	: LONGINT
 
 	(*
@@ -1412,7 +1408,6 @@ VAR
 
 	cpus-: ARRAY maxCPUs OF CPUType;
 	cpuCount: LONGINT;
-
 
 	(* perform a binary search for the index of the specified mnemonic *)
 	PROCEDURE FindMnemonic* (CONST mnem: ARRAY OF CHAR): LONGINT;
@@ -1919,11 +1914,8 @@ VAR
 			INC(numberInstructions);
 		END AddInstructionV;
 
-
 		PROCEDURE AddInstruction(mnemonic: LONGINT; CONST op,code: ARRAY OF CHAR; bitwidthOptions, cpuOptions: SET);
 		VAR i: SHORTINT; at: LONGINT;
-
-
 
 		BEGIN
 			i := 0; at := 0;
@@ -1947,13 +1939,11 @@ VAR
 			INC(numberInstructions);
 		END AddInstruction;
 
-
 	(* the following has partially been generated with
 		FoxProgTools.ParseAMDInstructionSet FoxInstructionSetAMD64TabSeperated.txt ~
 
 		Do not change or re-order. The alphabetical order is of importance
 	*)
-
 
 	BEGIN
 		numberMnemonics := 0;
@@ -2969,7 +2959,6 @@ VAR
 		AddMnemonic(opXOR, "XOR");
 		AddMnemonic(opXORPD, "XORPD");
 		AddMnemonic(opXORPS, "XORPS");
-
 
 		AddInstruction(opAAA, "", "37", {optNot64}, {cpu8086});
 		AddInstruction(opAAD, "", "D50A", {optNot64}, {cpu8086});
@@ -4346,7 +4335,6 @@ VAR
 		AddInstruction(opXORPD, "xmm1,xmm2/mem128", "0F57/r", {optPOP}, {cpuSSE2});
 		AddInstruction(opXORPS, "xmm1,xmm2/mem128", "0F57/r", {}, {cpuSSE});
 
-
 		AddInstructionV(opVAESKEYGENASSIST,"xmm1,xmm2/mem128,imm8","C4 RXB.00011 X.src.0.01 DF /r ib");
 		AddInstructionV(opVPMADCSWD,"xmm1,xmm2,xmm3/mem128,xmm4","8F RXB.08 0.src1.0.00 B6 /r ib");
 		AddInstructionV(opVADDPD,"xmm1,xmm2,xmm3/mem128","C4 RXB.00001 X.src.0.01 58 /r");
@@ -5414,7 +5402,6 @@ VAR
 		END;
 	END Trace;
 
-
 BEGIN
 	InitInstructions;
 	InitRegisters;
@@ -5474,4 +5461,3 @@ System.Free FoxAMD64InstructionSet ~
 	END;
 
 	**)
-

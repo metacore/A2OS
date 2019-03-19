@@ -170,7 +170,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		RETURN TRUE
 	END SplitColumns;
 
-
 	PROCEDURE DoSplitFiles*(CONST source, dest, extension: ARRAY OF CHAR; blocks, blockSize: LONGINT; verbose,strided,patchSpartan6: BOOLEAN; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 	VAR line: LONGINT; fileName: Files.FileName; oldFile: Files.File;
 		newFiles: POINTER TO ARRAY OF Files.File;
@@ -186,8 +185,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 			Basic.AppendNumber(fileName, index);
 			Files.JoinExtension(fileName,extension,fileName);
 		END GetFileName;
-
-
 
 	BEGIN
 
@@ -244,7 +241,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		END;
 		RETURN TRUE
 	END DoSplitFiles;
-
 
 	PROCEDURE SplitFiles* (context: Commands.Context);
 	VAR options: Options.Options;
@@ -305,7 +301,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		END;
 	END SplitColumnsCmd;
 
-
 	PROCEDURE CompareFiles*(context: Commands.Context);
 	VAR f1,f2,f3: Files.File; name1, name2, matrixname: Files.FileName; r1, r2: Files.Reader;  x,y: ARRAY 32 OF CHAR; i: LONGINT; line1: LONGINT;
 		matrix: ARRAY 16 OF ARRAY 16 OF LONGINT; j: LONGINT; p1, p2: LONGINT; writer: Files.Writer;
@@ -339,7 +334,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 					ASSERT(x = y);
 				END;
 				INC(line1);
-
 
 				(*
 				IF (line1 MOD 512 = 480)  THEN
@@ -384,7 +378,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 				END;
 				*)
 			END;
-
 
 			FOR i := 0 TO 15 DO
 			FOR j := 0 TO 15 DO
@@ -456,7 +449,6 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 	END DeleteFiles;
 	*)
 
-
 END FoxTRMTools.
 
 FoxTRMTools.Test ~
@@ -475,7 +467,6 @@ oc/TRM.Runtime.Mod
 oc/TRM.TestNet.Mdf
 ~
 
-
 FoxAVSP6LX75T.ReadSpecification TestNet ~
 
 FoxTRMTools.BuildHardware -p="AVSP6LX75T" -f="TestNet" ~
@@ -490,7 +481,6 @@ PET.Open data.mem ~
 PET.Open data0.mem ~
 PET.Open data1.mem ~
 
-
 FoxTRMTools.GenerateTestFile test.code ~
 FoxTRMTools.GenerateTestFile --value=010H test.code ~
 FoxTRMTools.GenerateTestFile --random test.code ~
@@ -501,8 +491,6 @@ FoxTRMTools.SplitFiles  --blockSize=1024 --blocks=5 test.code ~
 PET.Open -e test.code test2.code ~
 
 FoxTRMTools.CompareFiles test.code test2.code matrix.txt ~
-
-
 
 UARTPC.Open 6 ~
 
@@ -516,6 +504,13 @@ FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
 PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
+FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
+FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
+WinApplications.Run "testbram.bat" ~
+UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
+FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
+PET.Open -e TestBRAM0con0code.mem test.code ~
+FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
 FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
 FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
@@ -525,6 +520,13 @@ FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
 PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
+FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
+FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
+WinApplications.Run "testbram.bat" ~
+UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
+FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
+PET.Open -e TestBRAM0con0code.mem test.code ~
+FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
 FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
 FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
@@ -534,6 +536,13 @@ FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
 PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
+FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
+FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
+WinApplications.Run "testbram.bat" ~
+UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
+FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
+PET.Open -e TestBRAM0con0code.mem test.code ~
+FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
 FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
 FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
@@ -543,6 +552,13 @@ FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
 PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
+FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
+FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
+WinApplications.Run "testbram.bat" ~
+UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
+FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
+PET.Open -e TestBRAM0con0code.mem test.code ~
+FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
 FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
 FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
@@ -552,7 +568,6 @@ FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
 PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
-
 FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
 FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
 WinApplications.Run "testbram.bat" ~
@@ -560,49 +575,9 @@ UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
 FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
 PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
-
-
-FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
-FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
-WinApplications.Run "testbram.bat" ~
-UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
-FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
-PET.Open -e TestBRAM0con0code.mem test.code ~
-FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
-
-
-FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
-FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
-WinApplications.Run "testbram.bat" ~
-UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
-FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
-PET.Open -e TestBRAM0con0code.mem test.code ~
-FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
-
-
-FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
-FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
-WinApplications.Run "testbram.bat" ~
-UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
-FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
-PET.Open -e TestBRAM0con0code.mem test.code ~
-FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
-
-
-FoxTRMTools.GenerateTestFile --random --size=4096 TestBRAM0con0code.mem ~
-FoxTRMTools.SplitFiles  --blockSize=512 --blocks=8 --patchSpartan6 TestBRAM0con0code.mem ~
-WinApplications.Run "testbram.bat" ~
-UARTPC.DumpBRAM 6 0 8192 "bram.dat" ~
-FoxTRMTools.GenerateTestFile --sourceFile=bram.dat test.code ~
-PET.Open -e TestBRAM0con0code.mem test.code ~
-FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
-
 
 System.Show "DONE!" ~
 ~
-
-
-
 
 System.DoCommands
 
@@ -615,7 +590,6 @@ PET.Open -e TestBRAM0con0code.mem test.code ~
 FoxTRMTools.CompareFiles TestBRAM0con0code.mem test.code bram.mtx~
 
 ~
-
 
 M = {};
 

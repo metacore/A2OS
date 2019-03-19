@@ -238,7 +238,6 @@ TYPE
 			RETURN TRUE
 		END Same;
 
-
 	END PortList;
 
 	(* devices are additional components that can be attached to processors
@@ -259,7 +258,6 @@ TYPE
 			END;
 			RETURN Same^(as, flags)
 		END Same;
-
 
 		PROCEDURE &InitDevice*(CONST name: ARRAY OF CHAR; scope: Scope; adr: LONGINT);
 		BEGIN
@@ -321,7 +319,6 @@ TYPE
 			END;
 			RETURN TRUE
 		END Same;
-
 
 	END DeviceList;
 
@@ -406,7 +403,6 @@ TYPE
 			RETURN TRUE
 		END Same;
 
-
 	END ModuleList;
 
 	(*
@@ -455,7 +451,6 @@ TYPE
 		BEGIN
 			parameterType := String; string := Strings.NewString(s);
 		END SetString;
-
 
 		PROCEDURE Write(w: Streams.Writer; indent: LONGINT);
 		VAR typeName: SyntaxTree.String;
@@ -590,7 +585,6 @@ TYPE
 				capabilities := type.capabilities;
 			END;
 		END SetType;
-
 
 		PROCEDURE SetInstructionMemorySize*(value: LONGINT);
 		BEGIN instructionMemorySize := value
@@ -804,7 +798,7 @@ TYPE
 			NEW(type,name,SELF);
 			types.AddType(type);
 			symbols.AddSymbol(type);
-			 RETURN type
+			RETURN type
 		END NewType;
 
 		PROCEDURE ForEachInstanceDo*(method: InstanceMethod): BOOLEAN;
@@ -822,7 +816,6 @@ TYPE
 			*)
 			RETURN TRUE
 		END ForEachInstanceDo;
-
 
 		PROCEDURE ForEachTypeDo*(method: TypeMethod): BOOLEAN; (* used for linking *)
 		VAR type: Type; i: LONGINT;
@@ -880,7 +873,6 @@ TYPE
 			RETURN TRUE (*RETURN Same^(as, flags)*)
 		END Same;
 
-
 		PROCEDURE & InitType*(CONST name: ARRAY OF CHAR; scope: Scope);
 		BEGIN
 			InitScope(name,scope,scope.specification);
@@ -924,8 +916,6 @@ TYPE
 			symbols.AddSymbol(module);
 			RETURN module;
 		END NewModule;
-
-
 
 		(*
 		PROCEDURE ThisPort(CONST name: ARRAY OF CHAR): Port;
@@ -984,11 +974,11 @@ TYPE
 			ELSE
 				msg := "could not link ";
 				Strings.Append(msg,linkRoot);
-				 FOR i := 0 TO modules.Length()-1 DO
-				 	module := modules.GetModule(i);
-				 	Strings.Append(msg," "); Strings.Append(msg,module.name);
-				 END;
-				 diagnostics.Error("",Streams.Invalid, msg);
+				FOR i := 0 TO modules.Length()-1 DO
+					module := modules.GetModule(i);
+					Strings.Append(msg," "); Strings.Append(msg,module.name);
+				END;
+				diagnostics.Error("",Streams.Invalid, msg);
 			END;
 			RETURN ~linker.error
 		END LinkType;
@@ -1137,7 +1127,6 @@ TYPE
 		widthInBits-: LONGINT;
 		index-: LONGINT; (* useful for implementations that emulate channels (simulator) *)
 
-
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
 			IF TraceSame THEN TRACE("Channel",name) END;
@@ -1258,7 +1247,6 @@ TYPE
 			END;
 			RETURN TRUE
 		END Same;
-
 
 	END ChannelList;
 
@@ -1456,7 +1444,6 @@ TYPE
 
 	END Specification;
 
-
 	(*
 	PROCEDURE ReadHugeint(r: Streams.Reader; VAR x: HUGEINT): BOOLEAN;
 	VAR low, high: LONGINT;
@@ -1571,8 +1558,6 @@ TYPE
 		IF spec1.Same(spec2, {}) THEN context.out.String("Specifications are equal") ELSE context.out.String("specifications are not equal"); END;
 	END CompareSpecification;
 
-
-
 	(*
 	(**
 		Load an ActiveCells specification
@@ -1680,58 +1665,57 @@ TYPE
 		(* does nothing -- for compatibility with ActiveCells2 *)
 	END Clone;
 
-
 	PROCEDURE FlattenNetwork*(scope: Scope);
 	VAR instance,subInstance,newInstance: Instance; oldChannel,channel: Channel;
-		 instances: InstanceList; channels: ChannelList;
-		 i,j: LONGINT; name: SyntaxTree.String;
-		 port: Port;
+		instances: InstanceList; channels: ChannelList;
+		i, j: LONGINT; name: SyntaxTree.String;
+		port: Port;
 
-		 PROCEDURE FlattenPortInstance(VAR pi: PortInstance);
-		 VAR name: Name; port, prevPort: Port; instance: Instance;
-		 BEGIN
-		 	IF pi.port # NIL THEN
-			 	port := pi.port.delegate.port;
-			 	IF port # NIL THEN
-				 	instance := pi.port.delegate.instance;
-				 	ASSERT(instance # NIL);
-			 		COPY(pi.instance.name,name);
-			 		(* iteratively resolve port delegation and build local instance name *)
-			 		WHILE  port # NIL DO
-			 			prevPort := port;
-			 			ASSERT(instance # NIL);
-				 		Strings.Append(name,"."); Strings.Append(name,instance.name);
-				 		instance := port.delegate.instance;
-				 		port := port.delegate.port;
-				 	END;
-				 	port := prevPort;
-				 	instance := instances.ByName(name);
-				 	ASSERT(port # NIL);
-				 	ASSERT(instance # NIL);
-				 	pi.instance := instance;
-				 	pi.port := port;
-			 	END;
-			 END;
-		 END FlattenPortInstance;
+		PROCEDURE FlattenPortInstance(VAR pi: PortInstance);
+		VAR name: Name; port, prevPort: Port; instance: Instance;
+		BEGIN
+			IF pi.port # NIL THEN
+				port := pi.port.delegate.port;
+				IF port # NIL THEN
+					instance := pi.port.delegate.instance;
+					ASSERT(instance # NIL);
+					COPY(pi.instance.name,name);
+					(* iteratively resolve port delegation and build local instance name *)
+					WHILE  port # NIL DO
+						prevPort := port;
+						ASSERT(instance # NIL);
+						Strings.Append(name,"."); Strings.Append(name,instance.name);
+						instance := port.delegate.instance;
+						port := port.delegate.port;
+					END;
+					port := prevPort;
+					instance := instances.ByName(name);
+					ASSERT(port # NIL);
+					ASSERT(instance # NIL);
+					pi.instance := instance;
+					pi.port := port;
+				END;
+			END;
+		END FlattenPortInstance;
 
-		 PROCEDURE EmbedInstance(instance: Instance; VAR subInstance: Instance): Instance;
-		 VAR name: Name; newInstance: Instance; i: LONGINT; parameter,newParameter: Parameter;
-		 BEGIN
-		 	COPY(instance.name, name); Strings.Append(name,"."); Strings.Append(name,subInstance.name);
-		 	newInstance := instances.ByName(name);
-		 	IF newInstance = NIL THEN
-		 		NEW(newInstance, name, scope, subInstance.instanceType);
-		 		FOR i := 0 TO subInstance.parameters.Length()-1 DO
-		 			parameter := subInstance.parameters.GetParameter(i);
-		 			newParameter := newInstance.AddParameter(parameter.name);
-		 			newParameter.index := parameter.index;
-		 			newParameter.parameterType := parameter.parameterType;
-		 			newParameter.integer := parameter.integer;
-		 			newParameter.boolean := parameter.boolean;
-		 		END;
-		 	END;
-		 	RETURN newInstance
-		 END EmbedInstance;
+		PROCEDURE EmbedInstance(instance: Instance; VAR subInstance: Instance): Instance;
+		VAR name: Name; newInstance: Instance; i: LONGINT; parameter,newParameter: Parameter;
+		BEGIN
+			COPY(instance.name, name); Strings.Append(name,"."); Strings.Append(name,subInstance.name);
+			newInstance := instances.ByName(name);
+			IF newInstance = NIL THEN
+				NEW(newInstance, name, scope, subInstance.instanceType);
+				FOR i := 0 TO subInstance.parameters.Length()-1 DO
+					parameter := subInstance.parameters.GetParameter(i);
+					newParameter := newInstance.AddParameter(parameter.name);
+					newParameter.index := parameter.index;
+					newParameter.parameterType := parameter.parameterType;
+					newParameter.integer := parameter.integer;
+					newParameter.boolean := parameter.boolean;
+				END;
+			END;
+			RETURN newInstance
+		END EmbedInstance;
 
 	BEGIN
 		IF scope.instances.Length()=0 THEN RETURN END;
@@ -1821,7 +1805,6 @@ TYPE
 		platform.platformId := Strings.NewString("DEFAULT");
 		platform.specLoader := LoadSpecificationDefault;
 	END InitMod;
-
 
 BEGIN
 	InitMod;

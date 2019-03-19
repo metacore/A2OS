@@ -40,7 +40,7 @@ CONST
 
 	(** parameter forms *)
 	ValueParameter* = 0;  VarParameter* = 1;  ConstParameter* = 2;
-	InPort*=3; 	OutPort*=4;
+	InPort*=3; OutPort*=4;
 
 	(** array forms *)
 	Static*=1; (* ARRAY x OF .. / ARRAY [x] OF ... *)
@@ -237,7 +237,6 @@ TYPE
 		PROCEDURE VisitInlineCallDesignator*(x: InlineCallDesignator);
 		BEGIN HALT(100) (* abstract *) END VisitInlineCallDesignator;
 
-
 		PROCEDURE VisitStatementDesignator*(x: StatementDesignator);
 		BEGIN HALT(100) (* abstract *) END VisitStatementDesignator;
 
@@ -296,7 +295,7 @@ TYPE
 		PROCEDURE VExpression*(x: Expression);
 		BEGIN
 			WITH x:
-			  ResultDesignator DO VisitResultDesignator(x)
+			| ResultDesignator DO VisitResultDesignator(x)
 			| SelfDesignator DO VisitSelfDesignator(x)
 			| SupercallDesignator DO VisitSupercallDesignator(x)
 			| DereferenceDesignator DO VisitDereferenceDesignator(x)
@@ -375,8 +374,8 @@ TYPE
 
 		PROCEDURE VSymbol*(x: Symbol);
 		BEGIN
-			WITH
-			  x: Module DO VisitModule(x)
+			WITH x:
+			| Module DO VisitModule(x)
 			| TypeDeclaration DO VisitTypeDeclaration(x)
 			| Constant DO VisitConstant(x)
 			| Parameter DO VisitParameter(x)
@@ -502,7 +501,6 @@ TYPE
 			IF prefix # invalidIdentifier THEN Basic.SuffixSegmentedName(name, prefix) END;
 			Basic.SuffixSegmentedName(name, suffix)
 		END GetName;
-
 
 	END QualifiedIdentifier;
 
@@ -803,7 +801,6 @@ TYPE
 
 	END SizeType;
 
-
 	(** <<BOOLEAN>>
 		boolean type
 	**)
@@ -824,7 +821,6 @@ TYPE
 		END CompatibleTo;
 
 	END BooleanType;
-
 
 	(** <<SET>>
 		set type
@@ -1025,7 +1021,6 @@ TYPE
 			RETURN (resolved # NIL) & (resolved.IsRecordType());
 		END IsRecordType;
 
-
 	END QualifiedType;
 
 	(** string literal type **)
@@ -1130,7 +1125,6 @@ TYPE
 		BEGIN
 			form := f;
 		END SetForm;
-
 
 		PROCEDURE SetLength*(length: Expression);
 		BEGIN
@@ -1728,7 +1722,6 @@ TYPE
 
 	END CellType;
 
-
 	(** <<procedureType = PROCEDURE [{DELEGATE}] (firstParameter .. lastParameter): returnType>>
 		also used as type for procedures
 	**)
@@ -1887,7 +1880,6 @@ TYPE
 
 		END SameSignature;
 
-
 		PROCEDURE SameType*(this: Type): BOOLEAN;
 		BEGIN
 			RETURN SameSignature(this)
@@ -1923,7 +1915,6 @@ TYPE
 			resolved-: Value;
 			isHidden-: BOOLEAN;
 
-
 		PROCEDURE End*( position: Position);
 		BEGIN SELF.end := position;
 		END End;
@@ -1939,7 +1930,6 @@ TYPE
 		PROCEDURE SetHidden*(hidden: BOOLEAN);
 		BEGIN isHidden := hidden
 		END SetHidden;
-
 
 		PROCEDURE SetType*(type: Type);
 		BEGIN
@@ -2107,7 +2097,7 @@ TYPE
 	END BinaryExpression;
 
 	(** expression that denotes a range
-	    <<[first] '..' [last] ['by' step] | '*' >>
+		<<[first] '..' [last] ['by' step] | '*' >>
 	**)
 	RangeExpression* = OBJECT (Expression)
 	VAR
@@ -2222,7 +2212,6 @@ TYPE
 			relatedRhs := expression;
 		END SetRelatedRhs;
 
-
 		PROCEDURE Clone(): Expression;
 		VAR clone: Designator;
 		BEGIN
@@ -2230,9 +2219,7 @@ TYPE
 			NEW(clone, position); RETURN clone
 		END Clone;
 
-
 	END Designator;
-
 
 	(*** first phase (parse time) designators ***)
 
@@ -2272,7 +2259,6 @@ TYPE
 
 	END SelectorDesignator;
 
-
 	(** <<left(arg1, arg2, ...)>>
 		may designate a function call or a type guard
 	**)
@@ -2291,7 +2277,6 @@ TYPE
 		END Clone;
 
 	END ParameterDesignator;
-
 
 	(** <<left^>>
 		may designate a pointer dereference or a method supercall
@@ -2570,7 +2555,6 @@ TYPE
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN type.NeedsTrace();
 		END NeedsTrace;
-
 
 	END SelfDesignator;
 
@@ -2906,7 +2890,6 @@ TYPE
 
 		comment-: Comment;
 
-
 		PROCEDURE & InitSymbol(position: Position; name:Identifier);
 		BEGIN
 			SELF.position := position; state := Undefined;
@@ -2997,7 +2980,6 @@ TYPE
 			RETURN access * Public # {};
 		END NeedsSection;
 
-
 	END Symbol;
 
 	(**
@@ -3039,7 +3021,6 @@ TYPE
 		END NeedsSection;
 
 	END TypeDeclaration;
-
 
 	(** <<CONST name = value >>
 		Constant declaration symbol. Represents a constant being defined in the form CONST name  =  value
@@ -3198,7 +3179,6 @@ TYPE
 		nextProperty-, prevProperty-: Property;
 		value-: Expression;
 
-
 		PROCEDURE & InitProperty(position: Position;  name: Identifier);
 		BEGIN
 			InitSymbol( position, name );
@@ -3226,7 +3206,6 @@ TYPE
 		END SetExpression;
 
 	END Alias;
-
 
 	(** Procedure declaration symbol. Represents a procedure being defined in the form PROCEDURE name(parameters): returnType;
 		Note that the type of a procedure is a ProcedureType (and not the return type of the procedure).
@@ -3321,7 +3300,6 @@ TYPE
 		END NeedsSection;
 
 	END Procedure;
-
 
 	(** Builtin symbol stands for a builtin procedure. Is resolved by the semantic checker. **)
 	Builtin* = OBJECT (Symbol)
@@ -3511,7 +3489,6 @@ TYPE
 			end := pos;
 		END End;
 
-
 	END Statement;
 
 	(** << call(...) >> **)
@@ -3607,42 +3584,41 @@ TYPE
 
 	END Part;
 
-
 	(** << ... condition THEN statements ... >> **)
 	IfPart*= OBJECT (Part)
 	VAR
 		condition-: Expression;
-	 	statements-: StatementSequence;
+		statements-: StatementSequence;
 
-	 	comment-: Comment;
+		comment-: Comment;
 
-	 	PROCEDURE & InitIfPart;
-	 	BEGIN
-	 		InitPart;
-	 		statements := NIL; condition := NIL; comment := NIL;
-	 	END InitIfPart;
+		PROCEDURE & InitIfPart;
+		BEGIN
+			InitPart;
+			statements := NIL; condition := NIL; comment := NIL;
+		END InitIfPart;
 
-	 	PROCEDURE SetCondition*(condition: Expression);
-	 	BEGIN SELF.condition := condition
-	 	END SetCondition;
+		PROCEDURE SetCondition*(condition: Expression);
+		BEGIN SELF.condition := condition
+		END SetCondition;
 
-	 	PROCEDURE SetStatements*(statements: StatementSequence);
-	 	BEGIN SELF.statements := statements
-	 	END SetStatements;
+		PROCEDURE SetStatements*(statements: StatementSequence);
+		BEGIN SELF.statements := statements
+		END SetStatements;
 
-	 	PROCEDURE SetComment*(comment: Comment);
-	 	BEGIN SELF.comment := comment
-	 	END SetComment;
+		PROCEDURE SetComment*(comment: Comment);
+		BEGIN SELF.comment := comment
+		END SetComment;
 
-	 	PROCEDURE Clone(): IfPart;
-	 	VAR copy: IfPart;
-	 	BEGIN
-	 		NEW(copy); copy.condition := CloneExpression(condition);
-	 		copy.statements := CloneStatementSequence(statements);
+		PROCEDURE Clone(): IfPart;
+		VAR copy: IfPart;
+		BEGIN
+			NEW(copy); copy.condition := CloneExpression(condition);
+			copy.statements := CloneStatementSequence(statements);
 			RETURN copy
-	 	END Clone;
+		END Clone;
 
-	 END IfPart;
+	END IfPart;
 
 	(** << IF ifPart {ELSIF elsifParts} ELSE elseParts >> **)
 	IfStatement* = OBJECT (Statement)
@@ -3822,7 +3798,6 @@ TYPE
 			elements.Clone(copy.elements);
 			RETURN copy
 		END Clone;
-
 
 	END CasePart;
 
@@ -4103,7 +4078,6 @@ TYPE
 			RETURN copy
 		END Clone;
 
-
 	END AwaitStatement;
 
 	(* << Identifier ( Expression) >> *)
@@ -4289,7 +4263,6 @@ TYPE
 
 	END Comment;
 
-
 	(**** building blocks ****)
 
 	Scope*=OBJECT
@@ -4307,7 +4280,6 @@ TYPE
 		outerScope-: Scope; nextScope-: Scope;
 
 		ownerModule-: Module;
-
 
 		PROCEDURE & InitScope(outer: Scope);
 		BEGIN
@@ -4743,7 +4715,6 @@ TYPE
 			bodyProcedure := NIL;
 		END Clear;
 
-
 		PROCEDURE SetOwnerCell*(owner: CellType);
 		BEGIN
 			ownerCell := owner
@@ -4816,7 +4787,6 @@ TYPE
 		END FindSymbol;
 
 	END CellScope;
-
 
 	(**
 		<<
@@ -4955,9 +4925,7 @@ TYPE
 			END;
 		END RemoveImporters;
 
-
 	END ModuleScope;
-
 
 	(* << MODULE name ['in' context] moduleScope name '.' >>  *)
 	Module* = OBJECT (Symbol)
@@ -4992,7 +4960,6 @@ TYPE
 			SELF.case := case
 		END SetCase;
 
-
 		PROCEDURE SetCellNet*(isCellNet: BOOLEAN);
 		BEGIN SELF.isCellNet := isCellNet
 		END SetCellNet;
@@ -5012,7 +4979,6 @@ TYPE
 		PROCEDURE SetModifiers*(modifiers: Modifier);
 		BEGIN SELF.modifiers := modifiers
 		END SetModifiers;
-
 
 		PROCEDURE AddScope*(c: Scope);
 		BEGIN
@@ -5374,7 +5340,6 @@ VAR
 		NEW( property, position, name);  RETURN property;
 	END NewProperty;
 
-
 	PROCEDURE NewExpressionList*(): ExpressionList;
 	VAR expressionList: ExpressionList;
 	BEGIN
@@ -5661,7 +5626,6 @@ VAR
 		NEW( statementDesignator, position, s); RETURN statementDesignator
 	END NewStatementDesignator;
 
-
 	PROCEDURE NewBody*( position: Position ; scope: ProcedureScope): Body;
 	VAR body: Body;
 	BEGIN
@@ -5832,8 +5796,6 @@ VAR
 
 	END Init;
 
-
 BEGIN
 	Init;
 END FoxSyntaxTree.
-

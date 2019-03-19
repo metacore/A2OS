@@ -44,7 +44,7 @@ TYPE
 		PROCEDURE DumpNames(w: Streams.Writer);
 		VAR
 			i: LONGINT;
-			name: 	ARRAY 256 OF CHAR;
+			name: ARRAY 256 OF CHAR;
 		BEGIN
 			w.Int(Length(), 0); w.String(" names:"); w.Ln;
 			FOR i := 0 TO Length() - 1 DO
@@ -392,7 +392,6 @@ TYPE
 				END;
 			END Comment;
 
-
 		BEGIN
 			ch := context.arg.Get();
 			SkipBlanks;  i := 0;
@@ -415,7 +414,6 @@ TYPE
 			s[i] := 0X;
 			RETURN (i>0);
 		END GetNextSymbol;
-
 
 	BEGIN
 		NEW(options);
@@ -508,10 +506,6 @@ TYPE
 
 		END Replacer;
 
-
-
-
-
 	VAR fileName,instr: ARRAY 256 OF CHAR; w: Streams.Writer; reader: Files.Reader; file: Files.File; ch: CHAR;
 		line: ARRAY 1024 OF CHAR;
 
@@ -522,13 +516,10 @@ TYPE
 		cpuoptionReplacer: Replacer;
 		bitwidthReplacer: Replacer;
 
-
-
 		numberMnemonics: LONGINT;
 		numberInstructions : LONGINT;
 		maxMnemonicNameLength: LONGINT;
 		maxOpcodeLength: LONGINT;
-
 
 		PROCEDURE Priority(i: Instruction): LONGINT;
 		VAR prio: LONGINT;
@@ -587,7 +578,7 @@ TYPE
 		PROCEDURE GetLine(VAR line: ARRAY OF CHAR);
 		VAR i : LONGINT;
 		BEGIN
-			 i := 0;
+			i := 0;
 			WHILE(ch # CR) & (ch # LF) & (ch # 0X) DO
 				line[i] := ch; INC(i);
 				GetCh();
@@ -645,7 +636,6 @@ TYPE
 				END;
 			END Follows;
 
-
 			PROCEDURE OpCode(CONST code: ARRAY OF CHAR);
 			VAR ch: CHAR; i: LONGINT;
 				op: ARRAY 3 OF CHAR;
@@ -668,7 +658,6 @@ TYPE
 					ELSE error := TRUE; RETURN 0
 					END;
 				END Hex;
-
 
 			BEGIN
 				error := FALSE;
@@ -816,7 +805,6 @@ TYPE
 				w.String("}");
 			END Options;
 
-
 		PROCEDURE ParseLine(CONST  line: ARRAY OF CHAR);
 		VAR ch: CHAR; i : LONGINT;
 
@@ -826,15 +814,12 @@ TYPE
 				len := 0;
 				ch:= line[i]; INC(i);
 				WHILE(ch # TAB) & (ch # LF) & (ch # 0X) DO
-					WHILE(ch = " ") DO 	ch:= line[i]; INC(i); END;
+					WHILE (ch = " ") DO ch:= line[i]; INC(i); END;
 					sym[len] := ch; INC(len);
 					ch:= line[i]; INC(i);
 				END;
 				sym[len] := 0X;
 			END NextSym;
-
-
-
 
 		BEGIN
 			i := 0; ch := line[0];
@@ -879,7 +864,6 @@ TYPE
 
 				END;
 			END;
-
 
 		END ParseLine;
 
@@ -990,7 +974,6 @@ TYPE
 			mnemonic := firstMnemonic;
 			maxOpcodeLength:= 0;
 
-
 			WHILE(mnemonic # NIL) DO
 				(*
 				IF Strings.Length(mnemonic.name)+1 > maxMnemonicNameLength THEN maxMnemonicNameLength := Strings.Length(mnemonic.name)+1 END;
@@ -1080,7 +1063,6 @@ TYPE
 				mnemonic := mnemonic.next;
 			END;
 
-
 			w.Char(09X); w.String("numberMnemonics = "); w.Int(numberMnemonics,1); w.String(";"); w.Ln;
 			w.Char(09X); w.String("numberInstructions = "); w.Int(numberInstructions,1); w.String(";");w.Ln;
 			w.Char(09X); w.String("maxMnemonicNameLength ="); w.Int(maxMnemonicNameLength,1); w.String(";"); w.Ln;
@@ -1111,7 +1093,6 @@ FoxProgTools.Enum -l=2 a b c (* test (* test *) *)   d e  f g h i j k (* ddd *) 
 FoxProgTools.Enum --incremental a b c d e ~
 FoxProgTools.Enum --start=10 a b c  d e ~
 FoxProgTools.Enum --start=10 --hex  a b c  d e ~
-
 
 FoxProgTools.ParseAMDInstructionSet FoxInstructionSetAMD64TabSeperated.txt ~
 

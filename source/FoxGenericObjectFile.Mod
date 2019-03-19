@@ -38,7 +38,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			Init; SetExtension(ObjectFile.DefaultExtension);
 		END InitObjectFileFormat;
 
-
 		PROCEDURE Export* (module: Formats.GeneratedModule; symbolFileFormat: Formats.SymbolFileFormat): BOOLEAN;
 		VAR fileName: Files.FileName; file: Files.File; writer: Files.Writer; fingerprinter: Fingerprinter.Fingerprinter; poolMap: ObjectFile.PoolMap;
 
@@ -166,7 +165,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 						CopyFixups(sections, resolved, resolved,0);
 					END;
 				END;
-
 
 				IF codeSection # NIL THEN
 					UpdateAliases (codeSection, fingerprinter);
@@ -340,8 +338,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		BEGIN RETURN SymbolFileFormat.Get();
 		END DefaultSymbolFileFormat;
 
-
-
 	END ObjectFileFormat;
 
 	PROCEDURE GetFingerprint (section: Sections.Section; fingerprinter: Fingerprinter.Fingerprinter): ObjectFile.Fingerprint;
@@ -381,7 +377,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END;
 		END;
 	END CheckAlias;
-
 
 	PROCEDURE CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: LONGINT);
 	VAR fixup: BinaryCode.Fixup; i, index, fixups: SIZE; fixupList: ObjectFile.Fixups;
@@ -628,12 +623,12 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		is: IntermediateCode.Section;
 		sectionList: Sections.SectionList;
 		section: ObjectFile.Section;
-		 i: LONGINT;
-		 dest: Files.FileName;
-		 writer: Files.Writer;
-		 name: ObjectFile.SegmentedName;
-		 version: WORD;
-		 offers, requires: ObjectFile.NameList;
+		i: LONGINT;
+		dest: Files.FileName;
+		writer: Files.Writer;
+		name: ObjectFile.SegmentedName;
+		version: WORD;
+		offers, requires: ObjectFile.NameList;
 	BEGIN
 		NEW(sectionList);
 		IF context.arg.GetString(dest) THEN
@@ -671,7 +666,6 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			context.out.String("Created library "); context.out.String(dest); context.out.Ln;
 		END;
 	END MakeLibrary;
-
 
 	PROCEDURE Statistics*;
 	VAR iterator: Basic.IntIterator; stat: SectionStat; index: StringPool.Index; any: ANY;

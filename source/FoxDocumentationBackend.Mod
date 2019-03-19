@@ -131,8 +131,6 @@ The following describes how a documentation is generated from a module:
 
 **)
 
-
-
 IMPORT Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Scanner := FoxScanner, Backend := FoxBackend, Formats := FoxFormats,
 		Options, Streams, Strings, SymbolFileFormat := FoxTextualSymbolFile, Diagnostics,
 		DocumentationTree := FoxDocumentationTree, DocumentationPrinter := FoxDocumentationPrinter, DocumentationHtml := FoxDocumentationHtml, DocumentationParser := FoxDocumentationParser, DocumentationScanner := FoxDocumentationScanner,
@@ -778,7 +776,6 @@ TYPE
 			RETURN FALSE
 		END NeedsSection;
 
-
 		PROCEDURE ExtractParameters(x: SyntaxTree.ProcedureType; doc: DocumentationTree.Document; VAR parameters: DocumentationTree.Document);
 		VAR par: SyntaxTree.Parameter; paragraph,heading: DocumentationTree.Paragraph; i: LONGINT; element: DocumentationTree.TextElement;
 			string: DocumentationTree.String; id: SyntaxTree.Identifier; done: BOOLEAN;
@@ -818,7 +815,6 @@ TYPE
 			END;
 		END ExtractParameters;
 
-
 		PROCEDURE WriteSymbolSection(x: SyntaxTree.Symbol);
 		VAR section: DocumentationTree.Section; paragraph: DocumentationTree.Paragraph; commentDoc: DocumentationTree.Document;
 			parameters: DocumentationTree.Document;
@@ -827,7 +823,6 @@ TYPE
 				section := BeginSymbolSection("",x);
 
 				parameterDocument := NIL;
-
 
 				IF x.comment # NIL THEN
 					commentDoc := DocumentationTree.NewDocument();
@@ -1008,7 +1003,6 @@ TYPE
 			current.text.WriteWhitespace
 		END Whitespace;
 
-
 		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
 		BEGIN VisitProcedure(x);
 		END VisitOperator;
@@ -1088,7 +1082,6 @@ TYPE
 
 			paragraph: DocumentationTree.Paragraph;
 
-
 		BEGIN
 			prevScope := current.scope;
 			current.scope := x;
@@ -1097,7 +1090,6 @@ TYPE
 
 			paragraph := paragraphs.AppendNew(ParagraphType.Table);
 			current.text := paragraph.text;
-
 
 			short := TRUE;
 
@@ -1516,8 +1508,6 @@ TYPE
 		text.WriteLabel(label);
 	END WriteSymbolLabel;
 
-
-
 	PROCEDURE WriteReferenceInScope*(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope);
 	VAR n: SyntaxTree.IdentifierString; td: SyntaxTree.TypeDeclaration; name: Basic.SectionName; write: BOOLEAN;
 		PROCEDURE Scope(scope: SyntaxTree.Scope);
@@ -1589,7 +1579,7 @@ TYPE
 	BEGIN
 		description := document.description;
 		FOR i := document.sections.Length()-1 TO 0 BY -1 DO
-		 section := document.sections.GetSection(i);
+			section := document.sections.GetSection(i);
 			IF (section.label # NIL) THEN
 				IF section.label^= "author" THEN
 					par := description.AppendNew(ParagraphType.Heading);
@@ -1781,14 +1771,11 @@ TYPE
 
 	END MergeSectionDocument;
 
-
 	PROCEDURE Get*(): Backend.Backend;
 	VAR documentationBackend: DocumentationBackend;
 	BEGIN
 		NEW(documentationBackend); RETURN documentationBackend;
 	END Get;
-
-
 
 END FoxDocumentationBackend.
 
@@ -1816,11 +1803,9 @@ The following is a bulleted list
 	\* Bullet1
 	\* Bullet2
 
-
 	This is  a normal text with *
 
 There may be references like this: [[Get|FoxDocumentationBackend.Get]]
-
 
 *)
 

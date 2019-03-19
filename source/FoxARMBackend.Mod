@@ -136,7 +136,6 @@ TYPE
 			HALT(100);
 		END Emit;
 
-
 		PROCEDURE AddCitation(pc: LONGINT; bits: LONGINT; shift: LONGINT);
 		VAR
 			citation: Citation;
@@ -548,8 +547,6 @@ TYPE
 
 		inStackAllocation: BOOLEAN;
 
-
-
 		PROCEDURE & InitGeneratorARM(CONST builtinsModuleName: SyntaxTree.IdentifierString; diagnostics: Diagnostics.Diagnostics; backend: BackendARM);
 		VAR
 			physicalRegisters: PhysicalRegisters;
@@ -579,7 +576,6 @@ TYPE
 			dump := NIL;
 
 			NEW(listOfReferences);
-
 
 		END InitGeneratorARM;
 
@@ -747,7 +743,6 @@ TYPE
 
 			(* emit the instruction *)
 			InstructionSet.Emit(opCode, condition, flags, operands, out);
-
 
 		END Emit;
 
@@ -1398,7 +1393,6 @@ TYPE
 			RETURN irOperand.type.form = IntermediateCode.Float
 		END IsFloat;
 
-
 		(** whether an IR operand hold am integer value **)
 		PROCEDURE IsInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN;
 		BEGIN RETURN irOperand.type.form IN IntermediateCode.Integer
@@ -1580,8 +1574,8 @@ TYPE
 		END EmitFinalFixupBlock;
 
 		(* if needed, emit fixup block for all used symbol references
-		 - the fixup block is skipped by a branch instruction
-		 - afterwards, the list of references is cleared
+			- the fixup block is skipped by a branch instruction
+			- afterwards, the list of references is cleared
 		*)
 		PROCEDURE EmitFixupBlockIfNeeded;
 		BEGIN
@@ -1927,7 +1921,6 @@ TYPE
 			IF (op.symbol.name # "") & (op.resolved = NIL) THEN op.resolved := module.allSections.FindByName(op.symbol.name) END
 		END Resolve;
 
-
 		(* call <address>, <parSize> *)
 		PROCEDURE EmitCall(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
@@ -2217,7 +2210,6 @@ TYPE
 				RETURN;
 			END;
 
-
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
 				ASSERT(backend.useFPU32);
 				PrepareDoubleSourceOp(irInstruction, Low, destination[Low], left[Low], right[Low]);
@@ -2265,7 +2257,6 @@ TYPE
 				RETURN;
 			END;
 
-
 			IF IsSinglePrecisionFloat(irInstruction.op1) THEN
 				ASSERT(backend.useFPU32);
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
@@ -2281,16 +2272,16 @@ TYPE
 				PrepareDoubleSourceOp(irInstruction, Low, destination, left, right);
 				(* left and right operands to double *)
 				float := GetFreeRegister(IntermediateCode.FloatType(32));
-		 		Emit2(opFMSR, float, left);
+				Emit2(opFMSR, float, left);
 				leftd := GetFreeRegister(IntermediateCode.FloatType(64));
-	 			IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+				IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
 					Emit2(opFUITOD, leftd, float)
 				ELSE
 					Emit2(opFSITOD,leftd, float)
 				END;
-		 		Emit2(opFMSR, float,right);
+				Emit2(opFMSR, float,right);
 				rightd := GetFreeRegister(IntermediateCode.FloatType(64));
-	 			IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+				IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
 					Emit2(opFUITOD, rightd, float)
 				ELSE
 					Emit2(opFSITOD,rightd, float)
@@ -2299,13 +2290,13 @@ TYPE
 				Emit3(opFDIVD, leftd, leftd, rightd);
 				(* result to destination *)
 				RoundDown(fpstatus);
-	 			IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+				IF irInstruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
 					Emit2(opFTOUID, float, leftd)
 				ELSE
 					Emit2(opFTOSID, float, leftd)
 				END;
 				ResetRounding(fpstatus);
-		 		Emit2(opFMRS, destination, float);
+				Emit2(opFMRS, destination, float);
 				WriteBack(irInstruction.op1, Low, destination)
 			ELSE
 				HALT(200)
@@ -2985,7 +2976,6 @@ TYPE
 							right[Low] := RegisterFromIrOperand(irRight, Low, emptyOperand);
 							Cmp(left[Low], right[Low], FALSE);
 
-
 						ELSE
 							HALT(100)
 						END
@@ -3097,7 +3087,6 @@ TYPE
 				failFixup.resolved := in;
 			END;
 
-
 		END EmitBr;
 
 		PROCEDURE RoundDown(VAR fpstatus: Operand);
@@ -3116,14 +3105,12 @@ TYPE
 			Emit2(InstructionSet.opVMSR, fpscr, fpstatus);
 		END ResetRounding;
 
-
 		PROCEDURE EmitConv(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
 			irDestination, irSource: IntermediateCode.Operand;
 			destination, source: ARRAY 2 OF Operand;
 			temp, fpstatus: Operand;
 			partType: IntermediateCode.Type;
-
 
 		BEGIN
 			irDestination := irInstruction.op1; irSource := irInstruction.op2;
@@ -3207,52 +3194,52 @@ TYPE
 				END
 			ELSIF IsSinglePrecisionFloat(irDestination) THEN
 				(* to single precision float: *)
-			 	IF IsInteger(irSource) THEN
+				IF IsInteger(irSource) THEN
 					ASSERT(~IsComplex(irSource));
-			 		(* integer to single precision float: ignore high part of source *)
-			 		temp := GetFreeRegister(IntermediateCode.FloatType(32));
-			 		Emit2(opFMSR, temp, source[Low]);
-		 			IF irSource.type.form = IntermediateCode.UnsignedInteger THEN
+					(* integer to single precision float: ignore high part of source *)
+					temp := GetFreeRegister(IntermediateCode.FloatType(32));
+					Emit2(opFMSR, temp, source[Low]);
+					IF irSource.type.form = IntermediateCode.UnsignedInteger THEN
 						(* non-complex unsigned integer to single precision float: *)
 						Emit2(opFUITOS, destination[Low], temp)
 					ELSE
 						(* non-complex signed integer to single precision float: *)
 						Emit2(opFSITOS, destination[Low], temp)
 					END
-			 	ELSIF IsSinglePrecisionFloat(irSource) THEN
-			 		(* single precision float to single precision float: *)
-			 		MovIfDifferent(destination[Low], source[Low])
-			 	ELSIF IsDoublePrecisionFloat(irSource) THEN
-			 		(* LONGREAL --> REAL *)
-			 		Emit2(opFCVTSD, destination[Low], source[Low])
-			 	ELSE
-			 		(* anything else to single precision float: *)
-			 		HALT(200)
-			 	END
+				ELSIF IsSinglePrecisionFloat(irSource) THEN
+					(* single precision float to single precision float: *)
+					MovIfDifferent(destination[Low], source[Low])
+				ELSIF IsDoublePrecisionFloat(irSource) THEN
+					(* LONGREAL --> REAL *)
+					Emit2(opFCVTSD, destination[Low], source[Low])
+				ELSE
+					(* anything else to single precision float: *)
+					HALT(200)
+				END
 			ELSIF IsDoublePrecisionFloat(irDestination) THEN
 				(* to double precision float: *)
-			 	IF IsInteger(irSource) THEN
+				IF IsInteger(irSource) THEN
 					ASSERT(~IsComplex(irSource));
-			 		(* integer to double precision float: ignore high part of source *)
-			 		temp := GetFreeRegister(IntermediateCode.FloatType(32));
-			 		Emit2(opFMSR, temp, source[Low]);
-		 			IF irSource.type.form = IntermediateCode.UnsignedInteger THEN
+					(* integer to double precision float: ignore high part of source *)
+					temp := GetFreeRegister(IntermediateCode.FloatType(32));
+					Emit2(opFMSR, temp, source[Low]);
+					IF irSource.type.form = IntermediateCode.UnsignedInteger THEN
 						(* non-complex unsigned integer to double precision float: *)
 						Emit2(opFUITOD, destination[Low], temp)
 					ELSE
 						(* non-complex signed integer to double precision float: *)
 						Emit2(opFSITOD, destination[Low], temp)
 					END
-			 	ELSIF IsSinglePrecisionFloat(irSource) THEN
-			 		(* REAL --> LONGREAL *)
-			 		Emit2(opFCVTDS, destination[Low], source[Low])
-			 	ELSIF IsDoublePrecisionFloat(irSource) THEN
-			 		(* single precision float to single precision float: *)
-			 		MovIfDifferent(destination[Low], source[Low])
-			 	ELSE
-			 		(* anything else to single precision float: *)
-			 		HALT(200)
-			 	END
+				ELSIF IsSinglePrecisionFloat(irSource) THEN
+					(* REAL --> LONGREAL *)
+					Emit2(opFCVTDS, destination[Low], source[Low])
+				ELSIF IsDoublePrecisionFloat(irSource) THEN
+					(* single precision float to single precision float: *)
+					MovIfDifferent(destination[Low], source[Low])
+				ELSE
+					(* anything else to single precision float: *)
+					HALT(200)
+				END
 			ELSE
 				(* to anything else: *)
 				HALT(200)
@@ -3634,11 +3621,8 @@ TYPE
 			procedure: SyntaxTree.Procedure;
 			i, j, initialSectionCount: LONGINT;
 
-
-
-
-		 	(* recompute fixup positions and assign binary sections *)
-		 	PROCEDURE PatchFixups(section: BinaryCode.Section);
+			(* recompute fixup positions and assign binary sections *)
+			PROCEDURE PatchFixups(section: BinaryCode.Section);
 			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; displacement,symbolOffset: LONGINT; in: IntermediateCode.Section;
 				symbol: Sections.Section;
 			BEGIN
@@ -3669,8 +3653,8 @@ TYPE
 				IF (fixup.symbol.name # "") & (fixup.resolved = NIL) THEN fixup.resolved := module.allSections.FindByName(fixup.symbol.name) END;
 			END Resolve;
 
-		 	(* recompute fixup positions and assign binary sections *)
-		 	PROCEDURE PatchFixups(section: BinaryCode.Section);
+			(* recompute fixup positions and assign binary sections *)
+			PROCEDURE PatchFixups(section: BinaryCode.Section);
 			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; symbolOffset, offsetWithinSection: LONGINT; in: IntermediateCode.Section;
 			BEGIN
 				fixup := section.fixupList.firstFixup;
@@ -3706,45 +3690,45 @@ TYPE
 			*)
 
 		BEGIN
-		 	cg.SetModule(module);
-		 	cg.dump := dump;
+			cg.SetModule(module);
+			cg.dump := dump;
 
-		 	FOR i := 0 TO module.allSections.Length() - 1 DO
-			 	in := module.allSections.GetSection(i);
-		 		IF in.type = Sections.InlineCodeSection THEN
-		 			Basic.SegmentedNameToString(in.name, name);
-			 		out := ResolvedSection(in(IntermediateCode.Section));
-			 		cg.dump := out.comments;
-			 		cg.Section(in(IntermediateCode.Section), out);
-			 		IF in.symbol # NIL THEN
-				 		procedure := in.symbol(SyntaxTree.Procedure);
-				 		procedure.procedureScope.body.code.SetBinaryCode(out.os.bits);
-				 	END;
-			 	END
-		 	END;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				in := module.allSections.GetSection(i);
+				IF in.type = Sections.InlineCodeSection THEN
+					Basic.SegmentedNameToString(in.name, name);
+					out := ResolvedSection(in(IntermediateCode.Section));
+					cg.dump := out.comments;
+					cg.Section(in(IntermediateCode.Section), out);
+					IF in.symbol # NIL THEN
+						procedure := in.symbol(SyntaxTree.Procedure);
+						procedure.procedureScope.body.code.SetBinaryCode(out.os.bits);
+					END;
+				END
+			END;
 
 			initialSectionCount := 0;
-		 	REPEAT
-		 		j := initialSectionCount;
-		 	 	initialSectionCount := module.allSections.Length() ;
+			REPEAT
+				j := initialSectionCount;
+				initialSectionCount := module.allSections.Length() ;
 
-			 	FOR i := j TO initialSectionCount - 1 DO
-			 		in := module.allSections.GetSection(i);
-		 			Basic.SegmentedNameToString(in.name, name);
+				FOR i := j TO initialSectionCount - 1 DO
+					in := module.allSections.GetSection(i);
+					Basic.SegmentedNameToString(in.name, name);
 
-			 		IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
-				 		out := ResolvedSection(in(IntermediateCode.Section));
-				 		cg.Section(in(IntermediateCode.Section),out);
-			 		END
-			 	END
+					IF (in.type # Sections.InlineCodeSection) (*& (in(IntermediateCode.Section).resolved = NIL) *) THEN
+						out := ResolvedSection(in(IntermediateCode.Section));
+						cg.Section(in(IntermediateCode.Section),out);
+					END
+				END
 			UNTIL initialSectionCount = module.allSections.Length(); (* process remaining sections that have been added during traversal of sections *)
 
-		 	FOR i := 0 TO module.allSections.Length() - 1 DO
-			 	in := module.allSections.GetSection(i);
-	 			Basic.SegmentedNameToString(in.name, name);
-			 	in := module.allSections.GetSection(i);
-		 		PatchFixups(in(IntermediateCode.Section).resolved)
-		 	END;
+			FOR i := 0 TO module.allSections.Length() - 1 DO
+				in := module.allSections.GetSection(i);
+				Basic.SegmentedNameToString(in.name, name);
+				in := module.allSections.GetSection(i);
+				PatchFixups(in(IntermediateCode.Section).resolved)
+			END;
 
 			IF cg.error THEN Error("", Basic.invalidPosition, Streams.Invalid,  "") END
 		END GenerateBinary;

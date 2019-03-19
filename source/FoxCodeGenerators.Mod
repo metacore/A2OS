@@ -145,7 +145,6 @@ TYPE
 			error := TRUE;
 		END Error;
 
-
 		(* generic *)
 		PROCEDURE Section*(in: IntermediateCode.Section; out: BinaryCode.Section);
 		VAR pc: LONGINT; name: Basic.SectionName; instruction: IntermediateCode.Instruction;
@@ -302,7 +301,6 @@ TYPE
 
 			BEGIN
 
-
 				first := NIL;
 				FOR pc := 0 TO in.pc-1 DO
 					IF OptimizeRegisterTransfer IN optimize THEN
@@ -328,7 +326,6 @@ TYPE
 				Use(instruction.op2);
 				Use(instruction.op3);
 			END DumpInstruction;
-
 
 			PROCEDURE Emulate(VAR x: IntermediateCode.Instruction; CONST moduleName,procedureName: SyntaxTree.IdentifierString);
 			VAR
@@ -376,7 +373,7 @@ TYPE
 				hasDestination := (IntermediateCode.Op1IsDestination IN IntermediateCode.instructionFormat[x.opcode].flags);
 				ASSERT(x.op1.mode # IntermediateCode.Undefined);
 
-				(* 	add import to import list -- raw insert, no check.
+				(*	add import to import list -- raw insert, no check.
 					checks will be performed by loader or linker -- we assume that a low-level runtime system programmer knows what he is doing
 				*)
 				SaveRegisters;
@@ -445,7 +442,6 @@ TYPE
 				END;
 			END SetLiveness;
 
-
 		BEGIN
 			inEmulation := FALSE;
 			Basic.SegmentedNameToString(in.name, name);
@@ -512,7 +508,6 @@ TYPE
 
 		(* ---------------------- generically available code emission ------------------------- *)
 
-
 		PROCEDURE GetDataSection*(): IntermediateCode.Section;
 		VAR name: Basic.SegmentedName; section: IntermediateCode.Section;
 		BEGIN
@@ -570,15 +565,13 @@ TYPE
 
 	(* ----------------------- ticket based register allocation ------------------------------------- *)
 
-
 		(* register mapping scheme
-			virtual register number	--> register mapping   = 		part(0)		-->	ticket	<-->	physical register
+			virtual register number	--> register mapping   =		part(0)		-->	ticket	<-->	physical register
 																											spill offset
 
 																	part(n)		-->	ticket	<-->	physical register
 																											spill offset
 		*)
-
 
 	Ticket*=POINTER TO RECORD
 		next-: Ticket;
@@ -755,7 +748,6 @@ TYPE
 		PROCEDURE &InitPhysicalRegisters;
 		END InitPhysicalRegisters;
 
-
 		PROCEDURE Allocate*(index: LONGINT; virtualRegister: Ticket);
 		END Allocate;
 
@@ -788,10 +780,9 @@ TYPE
 		BEGIN
 		END NumberRegisters;
 
-
 	END PhysicalRegisters;
 
-	CONST 	MaxSpilledRegisters=64;
+	CONST MaxSpilledRegisters=64;
 
 	TYPE
 	SpillStack*=OBJECT

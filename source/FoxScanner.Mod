@@ -30,19 +30,19 @@ CONST
 	note: order of symbols is important for the parser, do not modify without looking it up
 
 	FoxProgTools.Enum --export --linefeed=6
-    	None
+	None
 	(* RelationOps: Equal ... Is *)
-    	Equal DotEqual Unequal DotUnequal
-    	Less DotLess  LessEqual DotLessEqual Greater DotGreater GreaterEqual DotGreaterEqual
-    	LessLessQ GreaterGreaterQ Questionmarks ExclamationMarks
-    	In Is
-    	(* MulOps: Times ... And *)
-    	Times TimesTimes DotTimes PlusTimes Slash Backslash DotSlash Div Mod And
-    	(* AddOps: Or ... Minus *)
-    	Or Plus Minus
-    	(* Prefix Unary Operators Plus ... Not *)
+	Equal DotEqual Unequal DotUnequal
+	Less DotLess  LessEqual DotLessEqual Greater DotGreater GreaterEqual DotGreaterEqual
+	LessLessQ GreaterGreaterQ Questionmarks ExclamationMarks
+	In Is
+	(* MulOps: Times ... And *)
+	Times TimesTimes DotTimes PlusTimes Slash Backslash DotSlash Div Mod And
+	(* AddOps: Or ... Minus *)
+	Or Plus Minus
+	(* Prefix Unary Operators Plus ... Not *)
 		Not
-    	(* expressions may start with Plus ... Identifier *)
+	(* expressions may start with Plus ... Identifier *)
 		LeftParenthesis LeftBracket LeftBrace Number Character String Nil Imag True False Self Result New Identifier
 		(* statementy may start with Self ... Begin *)
 		If Case While Repeat For Loop With Exit Await Return Ignore Begin
@@ -106,7 +106,6 @@ CONST
 	Uppercase*=0;
 	Lowercase*=1;
 	Unknown*=2;
-
 
 TYPE
 	(* keywords  book keeping *)
@@ -256,14 +255,13 @@ TYPE
 			RETURN new
 		END GetStringCopy;
 
-
 	END StringMaker;
 
 	(** scanner reflects the following EBNF
-		Token 				= String | Symbol | Number | Keyword | Identifier.
-		Symbol 				=  | '#' | '&' | '(' ['*' any '*' ')'] | ')' | '*'['*'] | '+'['*'] | ',' | '-' | '.' [ '.' | '*' | '/' | '=' | '#' | '>'['='] | '<' ['=']
-											  | '/' | ':' ['='] | ';'  | '<' ['=' | '<' ['?'] ] | '=' | '>' [ '=' | '>' ['?']]
-											  | '[' | ']' | '^' | '{' | '|' | '}' | '~' | '\' |  '`' |  '?' ['?'] | '!' ['!']
+		Token				= String | Symbol | Number | Keyword | Identifier.
+		Symbol				=  | '#' | '&' | '(' ['*' any '*' ')'] | ')' | '*'['*'] | '+'['*'] | ',' | '-' | '.' [ '.' | '*' | '/' | '=' | '#' | '>'['='] | '<' ['=']
+											| '/' | ':' ['='] | ';'  | '<' ['=' | '<' ['?'] ] | '=' | '>' [ '=' | '>' ['?']]
+											| '[' | ']' | '^' | '{' | '|' | '}' | '~' | '\' |  '`' |  '?' ['?'] | '!' ['!']
 		Identifier			= Letter {Letter | Digit | '_'}.
 		Letter					= 'A' | 'B' | .. | 'Z' | 'a' | 'b' | .. | 'z'.
 		Digit						= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
@@ -316,8 +314,8 @@ TYPE
 			firstIdentifier := TRUE;
 			SELF.position := pos;
 			DEC(position.start, 1); (* one token lookahead *)
-			IF reader = NIL THEN ch := EOT ELSE 	GetNextCharacter END;
-			IF Trace THEN D.Str( "New scanner  " );   D.Ln;  END;
+			IF reader = NIL THEN ch := EOT ELSE GetNextCharacter END;
+			IF Trace THEN D.Str( "New scanner  " ); D.Ln; END;
 			IF source = "" THEN SELF.position.reader := reader END;
 			useLineNumbers := FALSE;
 		END InitializeScanner;
@@ -516,7 +514,6 @@ TYPE
 			token.string := stringMaker.GetStringCopy(token.stringLength);
 		END GetEscapedString;
 
-
 		(** get a string starting at current position
 			string = {'"' {Character} '"'} | {"'" {Character} "'"}.
 		**)
@@ -642,7 +639,6 @@ TYPE
 			BEGIN
 				RETURN (ch >= "0") & (ch <= "1")
 			END IsBinaryDigit;
-
 
 		BEGIN  (* ("0" <= ch) & (ch <= "9") *)
 			result := Number;
@@ -913,9 +909,9 @@ TYPE
 			| ',':     s := Comma;  GetNextCharacter
 			| '-':    s := Minus;  GetNextCharacter
 			| '.':     GetNextCharacter;
-					IF ch = '.' THEN GetNextCharacter;  s := Upto;
-					ELSIF ch = '*' THEN GetNextCharacter;  s := DotTimes;
-					ELSIF ch = '/' THEN 	GetNextCharacter;  s := DotSlash;
+					IF ch = '.' THEN GetNextCharacter; s := Upto;
+					ELSIF ch = '*' THEN GetNextCharacter; s := DotTimes;
+					ELSIF ch = '/' THEN GetNextCharacter; s := DotSlash;
 					ELSIF ch='=' THEN GetNextCharacter; s := DotEqual;
 					ELSIF ch='#' THEN GetNextCharacter; s := DotUnequal;
 					ELSIF ch='>' THEN GetNextCharacter;
@@ -966,8 +962,8 @@ TYPE
 						s := String;
 						GetEscapedString(token);
 					END;
-			| '`':	s := Transpose; GetNextCharacter
-			| '?': 	s := Questionmark; GetNextCharacter; IF ch = '?' THEN s := Questionmarks; GetNextCharacter END;
+			| '`':     s := Transpose; GetNextCharacter
+			| '?':     s := Questionmark; GetNextCharacter; IF ch = '?' THEN s := Questionmarks; GetNextCharacter END;
 			| '!':     s := ExclamationMark; GetNextCharacter; IF ch = '!' THEN s := ExclamationMarks; GetNextCharacter END;
 			| Ellipsis:
 					s := Upto;  GetNextCharacter
@@ -1018,13 +1014,13 @@ TYPE
 	END;
 
 	(** assembler scanner reflects the following EBNF
-		Token 			= String | Symbol | Number | Identifier.
-		Symbol 			= '\' | '#' | '(' ['*' any '*' ')'] | ')' | CR [LF] | LF | '*' | '+' | ',' | '-' | '~' | '.' | '/' | '%' | ':' | ';' | '=' | '[' | ']' | '{' | '}' | '!' | '^' | '$'['$'].
+		Token			= String | Symbol | Number | Identifier.
+		Symbol			= '\' | '#' | '(' ['*' any '*' ')'] | ')' | CR [LF] | LF | '*' | '+' | ',' | '-' | '~' | '.' | '/' | '%' | ':' | ';' | '=' | '[' | ']' | '{' | '}' | '!' | '^' | '$'['$'].
 		String				= '"' {Character} '"' | "'" {Character} "'".
 		Identifier		= '@' | Letter {'@' | '.' | Letter | Digit | '_'} .
-		Letter 				= 'A' | 'B' | .. |  'Z' | 'a' | 'b' |  .. | 'z' .
-		Digit 				= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
-		BinaryDigit 	= '0' | '1' .
+		Letter				= 'A' | 'B' | .. |  'Z' | 'a' | 'b' |  .. | 'z' .
+		Digit				= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
+		BinaryDigit	= '0' | '1' .
 		Number			= Integer | Real.
 		Character		= Digit [HexDigit] 'X'.
 		Integer			=  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit} | '0b' {BinaryDigit}.
@@ -1056,7 +1052,6 @@ TYPE
 			ch := context.ch;
 			position := context.position;
 		END SetContext;
-
 
 		PROCEDURE SkipToEndOfLine*;
 		BEGIN
@@ -1111,7 +1106,7 @@ TYPE
 				SkipBlanks;
 				token.position := position;
 				CASE ch OF  (* ch > ' ' *)
-				| EOT: 	s := EndOfText;
+				| EOT:	s := EndOfText;
 				| DoubleQuote:
 						s := String; GetString(token, TRUE, FALSE, TRUE);
 				| SingleQuote:
@@ -1164,12 +1159,10 @@ TYPE
 
 	END AssemblerScanner;
 
-
 	VAR
 		reservedCharacter: ARRAY 256 OF BOOLEAN;
 		symbols-: ARRAY EndOfText+1 OF Keyword;
 		keywordsLower, keywordsUpper: KeywordTable;
-
 
 	(** return a new scanner on a stream, error output via diagnostics  **)
 	PROCEDURE NewScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics ): Scanner;
@@ -1527,7 +1520,7 @@ TYPE
 		Basic.SetErrorMessage(Character,"missing character");
 		Basic.SetErrorMessage(Identifier,"missing identifier");
 		Basic.SetErrorMessage(EndOfText,"unexpected token before end");
-	  END InitKeywords;
+	END InitKeywords;
 
 	(** debugging / reporting **)
 	PROCEDURE ReportKeywords*(context: Commands.Context);
@@ -1547,7 +1540,6 @@ TYPE
 			context.out.Ln;
 		END;
 	END ReportKeywords;
-
 
 	(*
 	PROCEDURE TestScanner*(context: Commands.Context);

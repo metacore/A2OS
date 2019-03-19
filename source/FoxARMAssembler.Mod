@@ -52,7 +52,6 @@ TYPE
 			RETURN FALSE;
 		END GetRegisterList;
 
-
 		(** parse a special register name, along with fields **)
 		PROCEDURE GetSpecialRegisterWithFields(VAR registerNumber: LONGINT; VAR fields: SET): BOOLEAN;
 		VAR
@@ -376,7 +375,6 @@ TYPE
 					D.String("    condition="); D.Int(condition, 0); D.Ln;
 					D.String("    flags="); D.Set(flags); D.Ln;
 				END;*)
-
 
 				FOR i := 0 TO InstructionSet.MaxOperands - 1 DO
 					InstructionSet.InitOperand(operands[i])

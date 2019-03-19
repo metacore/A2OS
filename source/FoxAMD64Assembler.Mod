@@ -48,7 +48,6 @@ CONST
 	segFS = 4;
 	segGS = 5;
 
-
 	(* sizes *)
 	bitsDefault* = 0;
 	bits8* = 1;
@@ -90,7 +89,6 @@ CONST
 	ioffset*=InstructionSet.ioffset;
 	pntr1616*= InstructionSet.pntr1616;
 	pntr1632*=InstructionSet.pntr1632;
-
 
 	(* scanner codes *)
 	TAB = 09X;
@@ -285,7 +283,6 @@ TYPE
 			code.fixupList.AddFixup(fixup);
 		END AddFixup;
 
-
 		PROCEDURE EmitInstruction (mnem: LONGINT; VAR operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN;
 		VAR instr, i, oppos, op: LONGINT;
 			val: LONGINT;
@@ -409,7 +406,6 @@ TYPE
 				RETURN (c1 = CHR(opCode)) & ((c2 = 0F2X) OR (c2 = 0F3X) ) ;
 			END IsPreREXPrefix;
 
-
 		BEGIN
 			IF (dump # NIL) & (lastPass) THEN
 				pc0 := code.pc;
@@ -516,7 +512,7 @@ TYPE
 								(InstructionSet.instructions[instr].operands[i] = InstructionSet.regmem64)
 								OR
 								(InstructionSet.instructions[instr].operands[i] = InstructionSet.mem)
-							 THEN
+							THEN
 								IF Trace THEN KernelLog.String(" rex prefix bits64 "); KernelLog.Ln; END;
 								INCL(rexPrefix,rexW);
 							END;
@@ -562,7 +558,6 @@ TYPE
 			IF InstructionSet.optPREP IN bitwidthOptions THEN code.PutByte (InstructionSet.prfREP) END;
 			IF InstructionSet.optPREPN IN bitwidthOptions THEN code.PutByte (InstructionSet.prfREPNE) END;
 
-
 			op := 0;
 
 			oppos := 0;
@@ -581,7 +576,6 @@ TYPE
 				IF rexW IN rexPrefix THEN byte := byte + 8H END;
 				code.PutByte (byte);
 			END;
-
 
 			WHILE (oppos < LEN(opcode)) & (opcode[oppos] # CHR(none)) DO
 
@@ -703,7 +697,7 @@ TYPE
 									END;
 								*)
 								IF lastPass & (operands[addressOperand].symbol.name # "") THEN
-									 AddFixup(BinaryCode.Absolute,4,code.pc,operands[addressOperand].symbol, operands[addressOperand].symbolOffset,operands[addressOperand].displacement)
+									AddFixup(BinaryCode.Absolute,4,code.pc,operands[addressOperand].symbol, operands[addressOperand].symbolOffset,operands[addressOperand].displacement)
 								END;
 								code.PutDWord (operands[addressOperand].displacement);
 							ELSE
@@ -949,7 +943,7 @@ TYPE
 							IF (free[i]) & InstructionSet.IsImmediate64(InstructionSet.instructions[instr].operands[i])  THEN
 								operands[i].pc := code.pc;
 								IF lastPass & (operands[i].symbol.name # "") THEN
-									 AddFixup(BinaryCode.Absolute,8,code.pc,operands[i].symbol,operands[i].symbolOffset,operands[i].displacement)
+									AddFixup(BinaryCode.Absolute,8,code.pc,operands[i].symbol,operands[i].symbolOffset,operands[i].displacement)
 								END;
 								code.PutQWord (operands[i].val);
 								free[i] := FALSE; i:= maxNumberOperands;
@@ -979,7 +973,7 @@ TYPE
 									code.PutWord (operands[i].displacement);
 								ELSE
 									IF lastPass & (operands[i].symbol.name # "") THEN
-										 AddFixup(BinaryCode.Absolute,4,code.pc,operands[i].symbol,operands[i].symbolOffset,operands[i].displacement)
+										AddFixup(BinaryCode.Absolute,4,code.pc,operands[i].symbol,operands[i].symbolOffset,operands[i].displacement)
 									END;
 									code.PutDWord (operands[i].displacement);
 								END;
@@ -1175,7 +1169,6 @@ TYPE
 			Error(message);
 		END ErrorSS;
 
-
 		PROCEDURE Assemble* (reader: Streams.Reader;  orgPos: Basic.Position; scope: SyntaxTree.Scope; in: IntermediateCode.Section; out: IntermediateCode.Section; module: Sections.Module; exported, inlined: BOOLEAN;
 			map: RegisterMap
 		);
@@ -1277,7 +1270,6 @@ TYPE
 				SkipBlanks;
 				errPos := position;
 
-
 				CASE char OF
 				'A' .. 'Z', 'a' .. 'z', '_' :
 					GetIdentifier;
@@ -1367,7 +1359,6 @@ TYPE
 				END;
 			END Ensure;
 
-
 			PROCEDURE GetCPU (cumulateOptions: BOOLEAN): BOOLEAN;
 			VAR i: LONGINT;
 			BEGIN
@@ -1390,7 +1381,6 @@ TYPE
 				END;
 
 			END GetCPU;
-
 
 			PROCEDURE Factor (VAR x: HUGEINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
 			VAR label: NamedLabel; l: LONGINT;
@@ -1517,7 +1507,6 @@ TYPE
 					INC(pc);
 				END;
 			END Align;
-
 
 			PROCEDURE PutData (size: Size): BOOLEAN;
 			VAR i: SIZE; x: HUGEINT; type:SHORTINT; ofs: Operand;
@@ -1665,7 +1654,6 @@ TYPE
 				END;
 			END GetValue;
 
-
 			PROCEDURE GetMemFixup (CONST ident: ARRAY OF CHAR; VAR operand: Operand);
 			VAR scopeSymbol:SyntaxTree.Symbol;
 			BEGIN
@@ -1727,7 +1715,6 @@ TYPE
 			(* the following procedure is used to adapt sizes for relative jumps *)
 			PROCEDURE AdaptOperandSizes(VAR operands: ARRAY OF Operand);
 			VAR i: LONGINT;
-
 
 				PROCEDURE OffsetSize(val: HUGEINT): SHORTINT;
 				BEGIN
@@ -1902,7 +1889,6 @@ TYPE
 							operands[opCount] := mem;
 							INC (opCount);
 
-
 							IF ~Ensure (symRBraket, 556) THEN
 								RETURN FALSE;
 							END;
@@ -1913,7 +1899,6 @@ TYPE
 							IF (scope # NIL) & (symbol = symIdent) THEN (* identifier: must be a symbol *)
 								GetOffsetFixup (idents, offset);
 							END;
-
 
 							IF offset.symbol.name = "" THEN (* nothing could be fixuped, must be a number / constant *)
 								type := offset.type; currentFixup := ""; currentLabel := NIL;
@@ -2243,11 +2228,11 @@ TYPE
 	END IsRegisterOperand;
 
 	PROCEDURE IsMemoryOperand*(CONST op: Operand): BOOLEAN;
-	BEGIN 	RETURN op.type = mem
+	BEGIN RETURN op.type = mem
 	END IsMemoryOperand;
 
 	PROCEDURE IsImmediateOperand*(CONST op: Operand): BOOLEAN;
-	BEGIN 	RETURN op.type = imm
+	BEGIN RETURN op.type = imm
 	END IsImmediateOperand;
 
 	PROCEDURE DumpType*(w: Streams.Writer; type: LONGINT);
@@ -2322,7 +2307,6 @@ TYPE
 		ELSE
 			HALT(100)
 		END;
-
 
 	END DumpOperand;
 
@@ -2542,7 +2526,6 @@ TYPE
 	BEGIN RETURN SYSTEM.VAL (INTEGER, value) = value
 	END ValueInWordRange;
 
-
 	PROCEDURE InitOperand*(VAR operand: Operand);
 	BEGIN
 		operand.type := none;
@@ -2559,7 +2542,6 @@ TYPE
 		operand.selector := none;
 		operand.offset := 0;
 	END InitOperand;
-
 
 	PROCEDURE InitRegister* (VAR operand: Operand; register: Register);
 	BEGIN
@@ -2758,7 +2740,6 @@ TYPE
 		RETURN FALSE
 	END SameOperand;
 
-
 	PROCEDURE Test*(context: Commands.Context);
 	VAR assembly: Emitter;
 		(*errorHandler: ErrorHandler; *)
@@ -2792,4 +2773,3 @@ TYPE
 	END FoxAMD64Assembler.
 
 OCAMD64Assembler.Test ~
-

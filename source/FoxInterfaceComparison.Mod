@@ -78,7 +78,6 @@ CONST
 		RETURN symbol
 	END NextSymbol;
 
-
 	PROCEDURE CompareScopes(new,old: SyntaxTree.Scope);
 	VAR newSymbol, oldSymbol: SyntaxTree.Symbol;
 		newName, oldName: SyntaxTree.IdentifierString;
@@ -156,7 +155,5 @@ CONST
 			(* ErrorSS(Streams.Invalid,fname," new module."); *)
 		END;
 	END CompareThis;
-
-
 
 END FoxInterfaceComparison.

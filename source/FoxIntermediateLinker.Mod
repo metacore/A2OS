@@ -42,7 +42,6 @@ TYPE
 			backend := defaultBackend;
 			defaultBackend.GetDescription(platformName);
 
-
 			NEW(allSections);
 			NEW(importList, 128);
 			NEW(loadedModules, 128);
@@ -82,7 +81,6 @@ TYPE
 				section.Emit(instruction);
 			END
 		END EmitAt;
-
 
 		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
@@ -141,7 +139,6 @@ TYPE
 			UNTIL char = 0X;
 			RETURN TRUE;
 		END PatchStringValue;
-
 
 		PROCEDURE LoadModule*(CONST moduleFileName: ARRAY OF CHAR; recursive: BOOLEAN): BOOLEAN;
 		VAR
@@ -659,7 +656,6 @@ TYPE
 			UNTIL ~Conflict(binaryModule(Sections.Module),sizes^) OR (count > 10) ;
 			ASSERT(count <=10);
 
-
 			IF binaryModule = NIL THEN
 				Basic.Error(diagnostics, desiredName,Basic.invalidPosition, "the specified backend cannot process intermediate code");
 				result := FALSE
@@ -750,7 +746,6 @@ TYPE
 				RETURN FALSE
 			END;
 		END Generate;
-
 
 		(*PROCEDURE LinkInstance(CONST typeName, instanceName: ARRAY OF CHAR): BOOLEAN;
 		VAR
@@ -895,7 +890,6 @@ TYPE
 					specification.log.String("generated code file: ");specification.log.String(codeFileName); specification.log.Ln;
 					specification.log.String("generated data file: ");specification.log.String(dataFileName); specification.log.Ln;
 
-
 				END;
 			ELSE
 				msg := "could not link ";
@@ -933,7 +927,6 @@ TYPE
 		BEGIN
 			objectFileFormat.GetOptions(options);
 		END GetOptions;
-
 
 	END SpecificationLinker;
 
@@ -992,8 +985,6 @@ TYPE
 			END;
 		END;
 	END CopySections;
-
-
 
 (*
 	PROCEDURE LinkActiveCells*(activeCellsSpecification: ActiveCells.Specification; backend: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat): BOOLEAN;
@@ -1149,7 +1140,6 @@ TYPE
 						specification.log.String("generated code file: ");specification.log.String(codeFileName); specification.log.Ln;
 						specification.log.String("generated data file: ");specification.log.String(dataFileName); specification.log.Ln;
 
-
 					END;
 				ELSE
 					msg := "could not link ";
@@ -1244,7 +1234,7 @@ TYPE
 			NEW(assemblinker, diagnostics, defaultBackend);
 		END;
 		WHILE Basic.GetStringParameter(input,filename) & ~error DO
-			IF targetFile = "" THEN NEW(assemblinker, diagnostics, defaultBackend) 	END;
+			IF targetFile = "" THEN NEW(assemblinker, diagnostics, defaultBackend) END;
 			IF assemblinker.LoadModule(filename, FALSE) THEN
 				assemblinker.MarkReachabilityOfAll(TRUE);
 				FileNameToModuleName(filename, moduleName);
@@ -1261,7 +1251,7 @@ TYPE
 		END;
 		IF ~error & (targetFile # "") THEN
 			assemblinker.PrearrangeReachableDataSections;
-			IF 	assemblinker.GenerateObjectFile(objectFileFormat, context.out, targetFile)
+			IF assemblinker.GenerateObjectFile(objectFileFormat, context.out, targetFile)
 			THEN
 				Basic.Information(diagnostics, targetFile, Basic.invalidPosition, "generated.")
 			ELSE error := FALSE
@@ -1292,7 +1282,6 @@ TYPE
 
 				system := backend.GetSystem();
 
-
 				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
 					Basic.Error(diagnostics, instanceName, Basic.invalidPosition, "specified instruction memory size too small");
 					error := TRUE;
@@ -1314,8 +1303,6 @@ TYPE
 					StaticLinker.WriteOutputFile (code, codeFileName, linker, StaticLinker.WriteTRMCodeFile);
 					StaticLinker.WriteOutputFile (data, dataFileName, linker, StaticLinker.WriteTRMDataFile);
 
-
-
 					IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
 					IF log # NIL THEN
 						log.String(instanceName);
@@ -1329,7 +1316,6 @@ TYPE
 						log.String("generated code file: ");log.String(codeFileName); log.Ln;
 						log.String("generated data file: ");log.String(dataFileName); log.Ln;
 
-
 					END;
 				ELSE
 					msg := "could not link ";
@@ -1339,9 +1325,6 @@ TYPE
 				RETURN ~linker.error & ~error
 
 	END WriteCodeAndDataFiles;
-
-
-
 
 	(* to link active cells
 		- load all intermediate code files and collect all sections in one object
@@ -1354,7 +1337,6 @@ TYPE
 
 		- ir code / data units depend on section type, do not necessarily have to be stored
 	*)
-
 
 	PROCEDURE Test*(context: Commands.Context);
 	VAR
@@ -1456,7 +1438,7 @@ TYPE
 		*)
 		(*
 		WHILE Basic.GetStringParameter(input,filename) & ~error DO
-			IF targetFile = "" THEN NEW(assemblinker, diagnostics, defaultBackend, "") 	END;
+			IF targetFile = "" THEN NEW(assemblinker, diagnostics, defaultBackend, "") END;
 			IF assemblinker.LoadModule(filename, FALSE) THEN
 				assemblinker.MarkReachabilityOfAll(TRUE);
 				FileNameToModuleName(filename, moduleName);
@@ -1475,8 +1457,7 @@ TYPE
 		(*
 		IF ~error & (targetFile # "") THEN
 			assemblinker.PrearrangeReachableDataSections;
-			IF 	assemblinker.GenerateObjectFile(objectFileFormat, context.out, targetFile)
-			THEN
+			IF assemblinker.GenerateObjectFile(objectFileFormat, context.out, targetFile) THEN
 				Basic.Information(diagnostics, targetFile, Streams.Invalid, "generated.")
 			ELSE error := FALSE
 			END;

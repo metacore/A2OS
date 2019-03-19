@@ -3,7 +3,6 @@ MODULE FoxBackend; (**  AUTHOR "kaeserm,fof"; PURPOSE "Oberon Compiler: Common b
 IMPORT
 	Streams, Diagnostics, Basic := FoxBasic, Global := FoxGlobal, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
 
-
 TYPE
 	SectionName = ARRAY 256 OF CHAR;
 
@@ -88,8 +87,6 @@ TYPE
 		BEGIN
 			RETURN Global.DefaultSystem();
 		END GetSystem;
-
-
 
 		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: LONGINT; CONST err: ARRAY OF CHAR);
 		BEGIN

@@ -89,7 +89,6 @@ TYPE
 	END;
 	HashIntArray = ARRAY 2*MaxProcesses OF HashEntryInt;
 
-
 VAR
 	(* modules *)
 	modules:Modules;
@@ -185,7 +184,7 @@ VAR
 	VAR time: HUGEINT; p: Process;
 	BEGIN
 		time:= GetTimer();
-		IF TraceEnter THEN log.String("Enter procedure: "); log.Int(moduleId,1); log.String(", "); log.Int(procedureId,1); log.Ln; log.Update 	END;
+		IF TraceEnter THEN log.String("Enter procedure: "); log.Int(moduleId,1); log.String(", "); log.Int(procedureId,1); log.Ln; log.Update END;
 		p := GetProcess();
 		p.Enter(moduleId,procedureId,time);
 	END EnterProcedure;
@@ -338,7 +337,6 @@ VAR
 		END;
 		log.Update;
 
-
 		FOR k := 0 TO numberProcesses-1 DO
 			IF processes[k].stackPosition # 0 THEN
 				log.String("warning: process "); log.Int(k,1); log.String(" still running with a stack of "); log.Int(processes[k].stackPosition,1); log.Ln;
@@ -364,7 +362,6 @@ VAR
 		EnterProcedure(0,0);
 		ExitProcedure(0,0);
 	END CalibrateProc;
-
 
 	PROCEDURE Calibrate;
 	VAR cal: LONGINT; i: SIZE; process: Process;

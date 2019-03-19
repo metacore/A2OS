@@ -97,8 +97,4 @@ TYPE
 		NEW(symbolFile); RETURN symbolFile
 	END Get;
 
-
-
 END FoxTextualSymbolFile.
-
-

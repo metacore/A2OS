@@ -160,7 +160,7 @@ TYPE
         the last read input from the scanner to the parser
     **)
     Symbol* = RECORD
-    	position*: Position;
+        position*: Position;
         token*: Token;
         identifier*: IdentifierType;
         identifierString*: IdentifierString;

@@ -1,7 +1,6 @@
 MODULE FoxBasic;   (**  AUTHOR "fof"; PURPOSE "Oberon Compiler: basic helpers: strings, lists, hash tables, graphs, indented writer";  **)
 (* (c) fof ETH Zürich, 2009 *)
 
-
 IMPORT KernelLog, StringPool, Strings, Streams, Diagnostics, Files, SYSTEM, ObjectFile, Modules, D:= Debugging;
 
 CONST
@@ -469,7 +468,6 @@ TYPE
 		value: ANY;
 	END;
 
-
 	HashAnyArray = POINTER TO ARRAY OF HashEntryAny;
 	HashIntArray = POINTER TO ARRAY OF HashEntryInt;
 
@@ -604,7 +602,6 @@ TYPE
 			value := table[count].value;
 			RETURN TRUE;
 		END GetNext;
-
 
 	END IntIterator;
 
@@ -818,7 +815,6 @@ TYPE
 		END Grow;
 
 	END HashTableSegmentedName;
-
 
 	(* Hash table supporting 2 keys *)
 	HashTable2D* = OBJECT(HashTable);
@@ -1183,7 +1179,7 @@ TYPE
 		END ReIndex;
 
 		(* Calculate dominance tree. Algorithm taken from:
-		    "A simple, fast dominance algorithm" (Cooper, Harvey, Kennedy) *)
+			"A simple, fast dominance algorithm" (Cooper, Harvey, Kennedy) *)
 		PROCEDURE CalculateDominance*;
 		VAR
 			doms: IndexList;
@@ -1751,21 +1747,22 @@ VAR
 	PROCEDURE ErrorC*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR);
 	VAR message: ARRAY 1024 OF CHAR; file: Files.File;
 
-	    PROCEDURE GetReader(): Streams.Reader;
-	    VAR reader := NIL: Streams.Reader; fileReader : Files.Reader;
-	    BEGIN
-            IF (pos.linepos >= 0) & ((source # "") OR (pos.reader # NIL)) THEN
-                reader := pos.reader;
-                IF reader = NIL THEN
-                    file := Files.Old(source);
-                    IF file # NIL THEN
-			NEW (fileReader, file, pos.linepos);
-                        reader := fileReader;
-                    END;
-                END;
-            END;
-            RETURN reader;
-	    END GetReader;
+		PROCEDURE GetReader(): Streams.Reader;
+		VAR reader := NIL: Streams.Reader; fileReader : Files.Reader;
+		BEGIN
+			IF (pos.linepos >= 0) & ((source # "") OR (pos.reader # NIL)) THEN
+				reader := pos.reader;
+				IF reader = NIL THEN
+					file := Files.Old(source);
+					IF file # NIL THEN
+						NEW (fileReader, file, pos.linepos);
+						reader := fileReader;
+					END;
+				END;
+			END;
+			RETURN reader;
+		END GetReader;
+
 	BEGIN
 		IF diagnostics # NIL THEN
 			MakeDetailedMessage(pos, code, msg, GetReader(), message);
@@ -1778,8 +1775,6 @@ VAR
 	BEGIN
 		ErrorC(diagnostics, source, pos, InvalidCode, msg);
 	END Error;
-
-
 
 	PROCEDURE Warning*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR);
 	VAR message: ARRAY 256 OF CHAR;
@@ -1957,7 +1952,6 @@ VAR
 		END;
 	END GetSuffix;
 
-
 	PROCEDURE IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN;
 	VAR prefixS, ofS: SectionName; i: LONGINT;
 	BEGIN
@@ -2134,7 +2128,6 @@ VAR
 		RETURN GetDiagnostics(w);
 	END GetDefaultDiagnostics;
 
-
 	PROCEDURE InitWindowWriter;
 	VAR install: PROCEDURE;
 	BEGIN
@@ -2147,9 +2140,9 @@ VAR
 
 	PROCEDURE InstallWriterFactory*(writer: WriterFactory; debug: DebugWriterFactory; diagnostics: DiagnosticsFactory);
 	BEGIN
-		 getWriter := writer;
-		 getDebugWriter := debug;
-		 getDiagnostics := diagnostics;
+		getWriter := writer;
+		getDebugWriter := debug;
+		getDiagnostics := diagnostics;
 	END InstallWriterFactory;
 
 	PROCEDURE Replace(VAR in: ARRAY OF CHAR; CONST this, by: ARRAY OF CHAR);
@@ -2292,6 +2285,5 @@ BEGIN
 END FoxBasic.
 
 FoxBasic.ActivateDebug ~
-
 
 FoxBasic.Test ~

@@ -28,7 +28,6 @@ TYPE
 			RETURN parser.error;
 		END Error;
 
-
 		PROCEDURE Done*(): BOOLEAN;
 		BEGIN
 			RETURN ~parser.NextModule()
@@ -42,6 +41,5 @@ TYPE
 		NEW(frontend);
 		RETURN frontend;
 	END Get;
-
 
 END FoxOberonFrontend.

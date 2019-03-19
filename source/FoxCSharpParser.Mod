@@ -14,8 +14,6 @@ CONST
 
     LynxCase = FoxScanner.Lowercase;
 
-
-
 TYPE
 	Position*= Scanner.Position;
 
@@ -1680,7 +1678,6 @@ KernelLog.Ln();
 
             switch-block:
                 '{' [switch-sections] '}'
-
 
             switch-sections:
                 switch-section

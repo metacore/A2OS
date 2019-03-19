@@ -369,13 +369,14 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
-
-		(* set without updates -- use only when you definitely want to avoid updates *)
-		PROCEDURE SetPassive*(value : BOOLEAN);
+		
+		PROCEDURE SetPassive*(value: BOOLEAN);
 		BEGIN
 			AcquireWrite;
-			SELF.value := value;
-			NotDefault;
+			IF value # SELF.value THEN
+				SELF.value := value;
+				NotDefault;
+			END;
 			ReleaseWrite
 		END SetPassive;
 
@@ -520,15 +521,18 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
-
+		
 		(* set without updates -- use only when you definitely want to avoid updates *)
-		PROCEDURE SetPassive*(value : SET);
+		PROCEDURE SetPassive*(value: SET);
 		BEGIN
 			AcquireWrite;
-			SELF.value := value;
-			NotDefault;
+			IF value # SELF.value THEN
+				SELF.value := value;
+				NotDefault;
+			END;
 			ReleaseWrite
 		END SetPassive;
+
 
 (*! to discuss: should a SET be written explicitely - readability at cost of overhead*)
 		PROCEDURE FromXML*(xml : XML.Element);
@@ -678,7 +682,8 @@ TYPE
 			ReleaseRead;
 			RETURN r
 		END Get;
-
+		
+		
 		PROCEDURE Set*(value : LONGINT);
 		VAR v: LONGINT;
 		BEGIN
@@ -695,16 +700,18 @@ TYPE
 			ReleaseWrite
 		END Set;
 
-		(* set without updates -- use only when you definitely want to avoid updates *)
 		PROCEDURE SetPassive*(value : LONGINT);
 		VAR v: LONGINT;
 		BEGIN
 			v := Validate(value);
 			AcquireWrite;
-			SELF.value := v;
-			NotDefault;
+			IF v # SELF.value THEN
+				SELF.value := v;
+				NotDefault;
+			END;
 			ReleaseWrite
 		END SetPassive;
+
 
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
@@ -876,18 +883,19 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
-
-		(* set without updates -- use only when you definitely want to avoid updates *)
-		PROCEDURE SetPassive*(value : LONGREAL);
+		
+		PROCEDURE SetPassive*(value: LONGREAL);
 		VAR v: LONGREAL;
 		BEGIN
 			v := Validate(value);
 			AcquireWrite;
-			SELF.value := v;
-			NotDefault;
+			IF v#SELF.value THEN
+				SELF.value := v;
+				NotDefault;
+			END;
 			ReleaseWrite
 		END SetPassive;
-
+		
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
 			en : XMLObjects.Enumerator;
@@ -1046,13 +1054,13 @@ TYPE
 		PROCEDURE Set*(value : String);
 		BEGIN
 			AcquireWrite;
-			IF (value = SELF.value) (* reset with self must lead to update *) OR (value = NIL) OR (SELF.value = NIL) OR (value^ # SELF.value^) THEN
-				SELF.value := value; Translate;Changed;
-				IF (object # NIL) THEN UpdateModel END;
-			ELSIF ~nonDefault THEN
-				Changed
-			END;
-			NotDefault;
+				IF (value = SELF.value) (* reset with self must lead to update *) OR (value = NIL) OR (SELF.value = NIL) OR (value^ # SELF.value^) THEN
+					SELF.value := value; Translate;Changed;
+					IF (object # NIL) THEN UpdateModel END;
+				ELSIF ~nonDefault THEN
+					Changed
+				END;
+				NotDefault;
 			ReleaseWrite
 		END Set;
 
@@ -1234,15 +1242,17 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
-
-		(* set without updates -- use only when you definitely want to avoid updates *)
-		PROCEDURE SetPassive*(value: HUGEINT);
+		
+		PROCEDURE SetPassive*(value : HUGEINT);
 		BEGIN
 			AcquireWrite;
-			SELF.value := SHORT(value);
-			NotDefault;
+			IF SHORT(value) # SELF.value THEN
+				SELF.value := SHORT(value); 
+				NotDefault;
+			END;
 			ReleaseWrite
 		END SetPassive;
+		
 
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
@@ -1359,15 +1369,16 @@ TYPE
 			ReleaseWrite;
 		END Set;
 
-		(* set without updates -- use only when you definitely want to avoid updates *)
-		PROCEDURE SetPassive*(font: WMGraphics.Font);
+		PROCEDURE SetPassive*(font : WMGraphics.Font);
 		BEGIN
 			IF (font = NIL) THEN font := WMGraphics.GetDefaultFont(); END;
 			ASSERT(font # NIL);
 			AcquireWrite;
-			SELF.font := font;
-			NotDefault;
-			ReleaseWrite
+			IF font # SELF.font THEN
+				SELF.font := font; 
+				NotDefault;
+			END;
+			ReleaseWrite;
 		END SetPassive;
 
 		PROCEDURE GetFont*(VAR name : ARRAY OF CHAR; VAR size : LONGINT; VAR style : SET);
@@ -1719,14 +1730,17 @@ TYPE
 			ReleaseWrite
 		END Set;
 
-		(* set without updates -- use only when you definitely want to avoid updates *)
 		PROCEDURE SetPassive*(value : WMRectangles.Rectangle);
 		BEGIN
 			AcquireWrite;
-			SELF.value := value;
-			NotDefault;
+			IF (SELF.value.l # value.l) OR (SELF.value.t # value.t) OR
+				(SELF.value.r # value.r) OR (SELF.value.b # value.b) THEN
+				SELF.value := value; 
+				NotDefault;
+			END;
 			ReleaseWrite
 		END SetPassive;
+
 
 		PROCEDURE SetWidth*(w : LONGINT);
 		BEGIN
@@ -2004,7 +2018,7 @@ TYPE
 			ReleaseWrite
 		END SetPassive;
 
-		PROCEDURE LinkChanged(sender, object: ANY);
+	PROCEDURE LinkChanged(sender, object: ANY);
 		BEGIN
 			IF (list # NIL) THEN list.onLinkChanged.CallWithSender(SELF,object) END;
 		END LinkChanged;

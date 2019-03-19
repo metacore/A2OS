@@ -65,10 +65,16 @@ BEGIN
 	IF ~context.arg.GetInteger (offset, TRUE) THEN offset := 0 END;
 	IF ~context.arg.GetInteger (maxlen, TRUE) THEN maxlen := 255 END;
 
-	src := Files.Old (source); dst := Files.New (dest);
+	src := Files.Old (source);
 	IF src = NIL THEN
 		context.error.String ("failed to open binary file '"); context.error.String (source); context.error.Char ("'"); context.error.Ln;
-		RETURN
+		context.result := Commands.CommandError; RETURN;
+	END;
+
+	dst := Files.New (dest);
+	IF src = NIL THEN
+		context.error.String ("failed to open hex file '"); context.error.String (dest); context.error.Char ("'"); context.error.Ln;
+		context.result := Commands.CommandError; RETURN;
 	END;
 
 	Files.OpenReader (r, src, 0); Files.OpenWriter (w, dst, 0);

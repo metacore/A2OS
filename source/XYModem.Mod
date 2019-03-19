@@ -678,7 +678,7 @@ BEGIN
 			parity := Serials.ParSpace
 		ELSIF name # "no" THEN
 			context.error.String("wrong parity"); context.error.Ln();
-			RETURN FALSE
+			context.result := Commands.CommandError; RETURN FALSE;
 		END;
 		context.arg.SkipWhitespace; context.arg.String(name);
 		IF name = "1.5" THEN
@@ -687,7 +687,7 @@ BEGIN
 			stop := Serials.Stop2
 		ELSIF name # "1" THEN
 			context.error.String("wrong stop bits"); context.error.Ln();
-			RETURN FALSE
+			context.result := Commands.CommandError; RETURN FALSE;
 		END;
 		context.arg.SkipWhitespace; context.arg.String(name);
 	END;
@@ -716,6 +716,7 @@ BEGIN
 
 		IF error # "" THEN
 			context.error.String("  "); context.error.String(error);
+			context.result := Commands.CommandError;
 		ELSE
 			context.out.String("  done");
 		END;
@@ -772,6 +773,7 @@ BEGIN
 
 		IF error # "" THEN
 			context.error.String("  "); context.error.String(error);
+			context.result := Commands.CommandError;
 		ELSE
 			Files.Register(F);
 			IF awaitF THEN

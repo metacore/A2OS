@@ -91,16 +91,16 @@ TYPE
 			END Swap;
 
 			PROCEDURE InsertSort( lo, hi: Index );
-			VAR x, i, l, h, m, ip, tmp: Index;
+			VAR x, i, l, m, ip, tmp: Index;
 			BEGIN
 				x := lo + 1;
 				WHILE x <= hi DO
 					IF Less( x, x - 1 )  THEN
 						(* find insert position ip *)
-						ip := x - 1;  l := lo;  h := ip - 1;
-						WHILE l <= h DO
-							m := (l + h) DIV 2;
-							IF Less( x, m ) THEN  ip := m;  h := m - 1  ELSE  l := m + 1  END
+						ip := x - 1;  l := lo; 
+						WHILE l < ip DO
+							m := (l + ip) DIV 2;
+							IF Less( x, m ) THEN  ip := m  ELSE  l := m + 1  END
 						END;
 						(* insert rotation[x] at position ip*)
 						tmp := rotation[x];  i := x;

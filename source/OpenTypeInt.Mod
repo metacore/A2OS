@@ -1994,7 +1994,7 @@ BEGIN
 END NewCVT;
 
 PROCEDURE NewZone* (VAR zone: Zone; contours, points: INTEGER);
-BEGIN
+BEGIN {EXCLUSIVE}
 	NEW(zone); zone.contours := contours;
 	NEW(zone.first, contours+1);
 	IF points > 0 THEN NEW(zone.pt, points) ELSE zone.pt := NIL END;

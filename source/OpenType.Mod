@@ -1216,7 +1216,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 		VAR
 			font: Font; aw, xmin, ymin, xmax, ymax: F26D6; n: INTEGER;
 			cur: OpenTypeInt.Coord; rules: SET;
-	BEGIN
+	BEGIN {EXCLUSIVE}
 		ASSERT(inst.font = glyph.font, 100);
 		ASSERT((0 <= num) & (num < glyph.font.maxp.numGlyphs), 101);
 		font := glyph.font;

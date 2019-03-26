@@ -624,7 +624,7 @@ END Finalize;
 
 (** Test whether the n bytes of buf1 and buf2 starting at ofs1 and ofs2 respectively are equal *)
 
-PROCEDURE Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: LONGINT): BOOLEAN;
+PROCEDURE Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: SIZE): BOOLEAN;
 BEGIN
 	WHILE (n > 0) & (buf1[ofs1] = buf2[ofs2]) DO INC(ofs1); INC(ofs2); DEC(n) END;
 	RETURN n <= 0
@@ -634,7 +634,7 @@ END Equal;
 
 (** Put a 32-bit host value into buf[ofs..ofs+3] *)
 
-PROCEDURE Put4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
+PROCEDURE Put4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -643,7 +643,7 @@ CODE
 	MOV [ECX+EBX], EAX
 #ELSIF AMD64 THEN
 	MOV EAX, [RBP+val]
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], EAX
 #ELSE
@@ -653,7 +653,7 @@ END Put4;
 
 (** Put a 16-bit host value into buf[ofs..ofs+1] *)
 
-PROCEDURE Put2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
+PROCEDURE Put2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -662,7 +662,7 @@ CODE
 	MOV [ECX+EBX], AX
 #ELSIF AMD64 THEN
 	MOV EAX, [RBP+val]
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], AX
 #ELSE
@@ -672,14 +672,14 @@ END Put2;
 
 (** Get a 32-bit host value from buf[ofs..ofs+3] *)
 
-PROCEDURE Get4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
+PROCEDURE Get4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
 	MOV ECX, [EBP+buf]
 	MOV EAX, [ECX+EBX]
 #ELSIF AMD64 THEN
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV EAX, [RCX+RBX]
 #ELSE
@@ -689,7 +689,7 @@ END Get4;
 
 (** Get a 16-bit host value from buf[ofs..ofs+1] *)
 
-PROCEDURE Get2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
+PROCEDURE Get2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
@@ -697,7 +697,7 @@ CODE
 	XOR EAX, EAX
 	MOV AX, [ECX+EBX]
 #ELSIF AMD64 THEN
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	XOR EAX, EAX
 	MOV AX, [RCX+RBX]
@@ -708,7 +708,7 @@ END Get2;
 
 (** Put a 32-bit host value into buf[ofs..ofs+3] in network byte order *)
 
-PROCEDURE PutNet4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
+PROCEDURE PutNet4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -723,7 +723,7 @@ CODE
 	XCHG AL, AH
 	ROL EAX, 16
 	XCHG AL, AH
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], EAX
 #ELSE
@@ -733,7 +733,7 @@ END PutNet4;
 
 (** Put a 16-bit host value into buf[ofs..ofs+1] in network byte order *)
 
-PROCEDURE PutNet2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT);
+PROCEDURE PutNet2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -744,7 +744,7 @@ CODE
 #ELSIF AMD64 THEN
 	MOV EAX, [RBP+val]
 	XCHG AL, AH
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], AX
 #ELSE
@@ -754,7 +754,7 @@ END PutNet2;
 
 (** Get a 32-bit network value from buf[ofs..ofs+3] in host byte order *)
 
-PROCEDURE GetNet4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
+PROCEDURE GetNet4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
@@ -764,9 +764,9 @@ CODE
 	ROL EAX, 16
 	XCHG AL, AH
 #ELSIF AMD64 THEN
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
-	MOV EAX, [RCX+EBX]
+	MOV EAX, [RCX+RBX]
 	XCHG AL, AH
 	ROL EAX, 16
 	XCHG AL, AH
@@ -777,7 +777,7 @@ END GetNet4;
 
 (** Get a 16-bit network value from buf[ofs..ofs+1] in host byte order *)
 
-PROCEDURE GetNet2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
+PROCEDURE GetNet2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
@@ -786,7 +786,7 @@ CODE
 	MOV AX, [ECX+EBX]
 	XCHG AL, AH
 #ELSIF AMD64 THEN
-	MOV EBX, [RBP+ofs]
+	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	XOR EAX, EAX
 	MOV AX, [RCX+RBX]
@@ -798,9 +798,9 @@ END GetNet2;
 
 (** Convert a LinkAdr to a printable string (up to size*3 characters) *)
 
-PROCEDURE LinkAdrToStr*(VAR adr: LinkAdr; size: LONGINT; VAR s: ARRAY OF CHAR);
+PROCEDURE LinkAdrToStr*(VAR adr: LinkAdr; size: SIZE; VAR s: ARRAY OF CHAR);
 VAR
-	i, j: LONGINT;
+	i, j: SIZE;
 	hex: ARRAY 17 OF CHAR;
 BEGIN
 	ASSERT(LEN(s) >= size*3); (* enough space for largest result *)
@@ -816,7 +816,7 @@ END LinkAdrToStr;
 
 (** Write a link address *)
 
-PROCEDURE OutLinkAdr*(VAR adr: LinkAdr; size: LONGINT);
+PROCEDURE OutLinkAdr*(VAR adr: LinkAdr; size: SIZE);
 VAR s: ARRAY MaxLinkAdrSize*3 OF CHAR;
 BEGIN
 	LinkAdrToStr(adr, size, s);
@@ -827,7 +827,7 @@ END OutLinkAdr;
 (** Are two link addresses equl *)
 PROCEDURE LinkAdrsEqual*(adr1: LinkAdr; adr2: LinkAdr): BOOLEAN;
 VAR
-	i: LONGINT;
+	i: SIZE;
 	adrsEqual: BOOLEAN;
 
 BEGIN
@@ -846,7 +846,7 @@ END LinkAdrsEqual;
 
 
 (** Copy data from array to array *)
-PROCEDURE Copy*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR; fofs, tofs, len: LONGINT);
+PROCEDURE Copy*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR; fofs, tofs, len: SIZE);
 BEGIN
 	IF len > 0 THEN
 		ASSERT((fofs+len <= LEN(from)) & (tofs+len <= LEN(to)));

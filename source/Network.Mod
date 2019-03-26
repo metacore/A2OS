@@ -45,14 +45,12 @@ TYPE
 		nextFragment*: Buffer; (** next buffer of a fragmented packet *)
 	END;
 
-
 	(* List of type i.e. 800X for IP *)
 	TypeList = POINTER TO RECORD
 		next: TypeList;
 		type: LONGINT;
 		recList: ReceiverList;
 	END;
-
 
 	ReceiverList = POINTER TO RECORD
 		next: ReceiverList;
@@ -110,7 +108,6 @@ TYPE
 
 			i: LONGINT;
 
-
 		(** Constructor - Initialize the driver and the device.
 			NOTE:
 			Is normally overridden by device driver. If so, this constructor has to be called at the beginning
@@ -161,7 +158,6 @@ TYPE
 		BEGIN
 			RETURN LinkUnknown;
 		END Linked;
-
 
 		(** Send a packet. Called by its user. Can be called concurrently. *)
 		PROCEDURE Send*(dst: LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT; loopback: BOOLEAN);
@@ -235,18 +231,17 @@ TYPE
 			END
 		END Loopback;
 
-
 		(** Install a receiver for the given type. *)
 		PROCEDURE InstallReceiver*(owner: ANY;
-									    type: LONGINT;
-									    receiver: Receiver;
-									    isPacketValid: IsPacketValid;
-									    isPacketForSingleRec: IsPacketForSingleRec;
-									    isPacketAccepted: IsPacketAccepted;
-									   isForwardingOn: BOOLEAN);
+									type: LONGINT;
+									receiver: Receiver;
+									isPacketValid: IsPacketValid;
+									isPacketForSingleRec: IsPacketForSingleRec;
+									isPacketAccepted: IsPacketAccepted;
+									isForwardingOn: BOOLEAN);
 		VAR
 			typeItem: TypeList;
-		 	recItem: ReceiverList;
+			recItem: ReceiverList;
 
 		BEGIN {EXCLUSIVE}	(* can run concurrently with active body *)
 			ASSERT(owner # NIL);
@@ -283,14 +278,12 @@ TYPE
 			typeItem^.recList := recItem;
 		END InstallReceiver;
 
-
 		(** Remove the currently installed receiver for the given type. *)
 		PROCEDURE RemoveReceiver*(owner: ANY; type: LONGINT);
 		VAR
 			typeItem: TypeList;
 			recItem: ReceiverList;
 			typeItemDel: TypeList;
-
 
 		BEGIN {EXCLUSIVE}		(* can run concurrently with active body *)
 			ASSERT(owner # NIL);
@@ -339,7 +332,6 @@ TYPE
 				END;
 			END;
 		END RemoveReceiver;
-
 
 		(** Install a sniffer for sent packets *)
 		PROCEDURE InstallSendSniffer*(s: SendSniffer);
@@ -491,7 +483,7 @@ TYPE
 									bufSec^.set := buf^.set;
 
 									(* deliver copied buffer to interface *)
- 									recItem^.receiver(SELF, typeItem^.type, bufSec);
+									recItem^.receiver(SELF, typeItem^.type, bufSec);
 									recItem := recItem^.next;
 								END;
 
@@ -576,7 +568,6 @@ VAR
 	nofFreeBuf: LONGINT; (* number of free buffers *)
 	freeBufList: Buffer; (* free buffer list *)
 
-
 (** Get a new buffer - return NIL if MaxNofBuffers is exceeded *)
 PROCEDURE GetNewBuffer*(): Buffer;
 VAR item: Buffer;
@@ -596,7 +587,6 @@ BEGIN {EXCLUSIVE}
 	END;
 	RETURN item;
 END GetNewBuffer;
-
 
 (** Return a buffer to be reused *)
 PROCEDURE ReturnBuffer*(buf: Buffer);
@@ -646,6 +636,22 @@ CODE
 	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], EAX
+#ELSIF ARM THEN
+	LDR R0, [FP, #val]
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		STR R0, [R2, #0]
+	#ELSE
+		STRB R0, [R2, #0]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #1]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #2]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #3]
+	#END
 #ELSE
 	unimplemented
 #END
@@ -665,6 +671,18 @@ CODE
 	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], AX
+#ELSIF ARM THEN
+	LDR R0, [FP, #val]
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		STRH R0, [R2, #0]
+	#ELSE
+		STRB R0, [R2, #0]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #1]
+	#END
 #ELSE
 	unimplemented
 #END
@@ -682,6 +700,21 @@ CODE
 	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV EAX, [RCX+RBX]
+#ELSIF ARM THEN
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		LDR R0, [R2, #0]
+	#ELSE
+		LDRB R0, [R2, #0]
+		LDRB R1, [R2, #1]
+		ORR R0, R0, R1, LSL #8
+		LDRB R1, [R2, #2]
+		ORR R0, R0, R1, LSL #16
+		LDRB R1, [R2, #3]
+		ORR R0, R0, R1, LSL #24
+	#END
 #ELSE
 	unimplemented
 #END
@@ -701,6 +734,17 @@ CODE
 	MOV RCX, [RBP+buf]
 	XOR EAX, EAX
 	MOV AX, [RCX+RBX]
+#ELSIF ARM THEN
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		LDRH R0, [R2, #0]
+	#ELSE
+		LDRB R0, [R2, #0]
+		LDRB R1, [R2, #1]
+		ORR R0, R0, R1, LSL #8
+	#END
 #ELSE
 	unimplemented
 #END
@@ -726,6 +770,23 @@ CODE
 	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], EAX
+#ELSIF ARM THEN
+	LDR R0, [FP, #val]
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		REV R0, R0
+		STR R0, [R2, #0]
+	#ELSE
+		STRB R0, [R2, #3]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #2]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #1]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #0]
+	#END
 #ELSE
 	unimplemented
 #END
@@ -747,6 +808,19 @@ CODE
 	MOV RBX, [RBP+ofs]
 	MOV RCX, [RBP+buf]
 	MOV [RCX+RBX], AX
+#ELSIF ARM THEN
+	LDR R0, [FP, #val]
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		REV16 R0, R0
+		STRH R0, [R2, #0]
+	#ELSE
+		STRB R0, [R2, #1]
+		MOV R0, R0, LSR #8
+		STRB R0, [R2, #0]
+	#END
 #ELSE
 	unimplemented
 #END
@@ -770,6 +844,22 @@ CODE
 	XCHG AL, AH
 	ROL EAX, 16
 	XCHG AL, AH
+#ELSIF ARM THEN
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		LDR R0, [R2, #0]
+		REV R0, R0
+	#ELSE
+		LDRB R0, [R2, #3]
+		LDRB R1, [R2, #2]
+		ORR R0, R0, R1, LSL #8
+		LDRB R1, [R2, #1]
+		ORR R0, R0, R1, LSL #16
+		LDRB R1, [R2, #0]
+		ORR R0, R0, R1, LSL #24
+	#END
 #ELSE
 	unimplemented
 #END
@@ -791,6 +881,18 @@ CODE
 	XOR EAX, EAX
 	MOV AX, [RCX+RBX]
 	XCHG AL, AH
+#ELSIF ARM THEN
+	LDR R1, [FP, #ofs]
+	LDR R2, [FP, #buf]
+	ADD R2, R2, R1
+	#IF ALIGNED THEN
+		LDRH R0, [R2, #0]
+		REV16 R0, R0
+	#ELSE
+		LDRB R0, [R2, #1]
+		LDRB R1, [R2, #0]
+		ORR R0, R0, R1, LSL #8
+	#END
 #ELSE
 	unimplemented
 #END
@@ -823,7 +925,6 @@ BEGIN
 	KernelLog.String(s);
 END OutLinkAdr;
 
-
 (** Are two link addresses equl *)
 PROCEDURE LinkAdrsEqual*(adr1: LinkAdr; adr2: LinkAdr): BOOLEAN;
 VAR
@@ -843,7 +944,6 @@ BEGIN
 
 	RETURN adrsEqual;
 END LinkAdrsEqual;
-
 
 (** Copy data from array to array *)
 PROCEDURE Copy*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR; fofs, tofs, len: SIZE);

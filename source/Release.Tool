@@ -435,8 +435,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 
 	BIOS { BIOS.BootShell.Mod }
 
-	BIOS, UNIX { Network.Mod }
-	ARM { ARM.Network.Mod }
+	BIOS, UNIX, ARM { Network.Mod }
 	NATIVE { NetworkMii.Mod }
 
 	ZYNQ { Zynq.XEmac.Mod }

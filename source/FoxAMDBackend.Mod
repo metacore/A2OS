@@ -1808,7 +1808,7 @@ TYPE
 						op1 := registerOperands[index];
 					ELSE
 						(* reserve register with a low part *)
-						IF destType.sizeInBits=8 THEN (* make sure that allocated temporary register has a low part with 8 bits, i.e.  exclude ESI or EDI *)
+						IF (destType.sizeInBits=8) & (cpuBits#64) THEN (* make sure that allocated temporary register has a low part with 8 bits, i.e.  exclude ESI or EDI *)
 							ediReserved := physicalRegisters.Reserved(EDI);
 							esiReserved := physicalRegisters.Reserved(ESI);
 							physicalRegisters.SetReserved(EDI,TRUE); physicalRegisters.SetReserved(ESI,TRUE);

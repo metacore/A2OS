@@ -21,6 +21,8 @@ TYPE
 	VAR
 		cw: ControlWindow;
 		white, grey, col1, yellow: Raster.Pixel;
+		
+		mode: Raster.Mode;
 
 		sortname: ARRAY 32 OF CHAR;
 		delay: LONGINT;
@@ -45,6 +47,8 @@ TYPE
 			Raster.SetRGB( yellow, 255, 255, 0 );
 			Raster.SetRGB( grey, 110, 110, 110 );
 			Raster.SetRGB( col1, 210, 140, 75 );
+			
+			Raster.InitMode( mode, Raster.srcCopy );
 
 			concSorters :=  0;  concurrent := FALSE;
 			delay := 16;  NEW( timer );
@@ -116,12 +120,11 @@ TYPE
 
 
 		PROCEDURE DrawElement( n: Index );
-		VAR mode: Raster.Mode;
+		VAR
 			x, y, len: LONGINT;
 		BEGIN
 			len := data[n];
 			x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
-			Raster.InitMode( mode, Raster.srcCopy );
 			IF len < N THEN  Raster.Fill( img, x, 0, x+ElemSize, y, white, mode )  END;
 			Raster.Fill( img, x, y+1, x+ElemSize, y+ElemSize+1, col1, mode );
 			IF len > 1 THEN
@@ -130,41 +133,40 @@ TYPE
 				Raster.Fill( img, x+ElemSize-1, y+ElemSize+1, x+ElemSize, WindowSize, white, mode );
 			END;
 			Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
+			highlighted[n] := FALSE;
 		END DrawElement;
-
-
-		PROCEDURE Highlight( n: Index );
-		VAR mode: Raster.Mode;
-			x, y, len: LONGINT;
-		BEGIN
-			IF ~highlighted[n] THEN
-				len := data[n];
-				x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
-				Raster.InitMode( mode, Raster.srcCopy );
-				IF len > 1 THEN
-					Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, yellow, mode )
-				END;
-				Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
-				highlighted[n] := TRUE
-			END
-		END Highlight;
+		
 
 		PROCEDURE UnHighlight( n: Index );
-		VAR mode: Raster.Mode;
+		VAR
 			x, y, len: LONGINT;
 		BEGIN
 			IF highlighted[n] THEN
 				len := data[n];
 				x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
-				Raster.InitMode( mode, Raster.srcCopy );
 				IF len > 1 THEN
 					Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, grey, mode );
 				END;
 				Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
-				highlighted[n] := FALSE
+				highlighted[n] := FALSE;
 			END
 		END UnHighlight;
 
+		PROCEDURE Highlight( n: Index );
+		VAR
+			x, y, len: LONGINT;
+		BEGIN
+			IF ~highlighted[n] THEN
+				len := data[n];
+				x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
+				IF len > 1 THEN
+					Raster.Fill( img, x+1, y+ElemSize+1, x+ElemSize-1, WindowSize, yellow, mode )
+				END;
+				Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
+				highlighted[n] := TRUE;
+			END
+		END Highlight;
+		
 		PROCEDURE Highlight2( a, b: Index );
 		BEGIN
 			IF ~concurrent THEN
@@ -175,7 +177,6 @@ TYPE
 			ha := a;  hb := b;
 			Pause
 		END Highlight2;
-
 
 
 		PROCEDURE Randomize( n: INTEGER );
@@ -239,7 +240,7 @@ TYPE
 		BEGIN
 			IF i # j THEN
 				tmp := data[i];  data[i] := data[j];  data[j] := tmp;
-				DrawElement( i );  DrawElement( j );  Pause;
+				DrawElement( i );  DrawElement( j );
 				Machine.AtomicInc( nofswaps )
 			END
 		END Swap;
@@ -248,7 +249,7 @@ TYPE
 		PROCEDURE Less( i, j: Index ): BOOLEAN;
 		BEGIN
 			IF delay > 0 THEN
-				Highlight2( i, j );  Pause;
+				Highlight2( i, j );
 			END;
 			Machine.AtomicInc( nofcomps );
 			RETURN data[i] < data[j];
@@ -275,12 +276,12 @@ TYPE
 			LOOP
 				swaps := 0;
 				FOR i := first TO last DO
-					IF Less( i + 1, i )  THEN  Swap( i, i + 1 );  INC( swaps );  last := i END
+					IF Less( i + 1, i )  THEN  Swap( i, i + 1 );  INC( swaps );  last := i  END
 				END;
 				IF swaps = 0 THEN  EXIT  END;
 				swaps := 0;
 				FOR i := last TO first + 1 BY -1 DO
-					IF Less( i, i - 1 )  THEN  Swap( i, i - 1 );  INC( swaps );  first := i - 1 END
+					IF Less( i, i - 1 )  THEN  Swap( i, i - 1 );  INC( swaps );  first := i  END
 				END;
 				IF swaps = 0 THEN  EXIT  END;
 			END

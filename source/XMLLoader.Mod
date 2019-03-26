@@ -67,7 +67,6 @@ BEGIN
 	DefaultStyleSheet := LoadCSS(cssName)
 END SetDefaultStyleSheet;
 
-
 BEGIN
 	DefaultXMLElementRegistry := XMLGeneratorSchema.OpenGeneratorSchema(DefaultXMLGeneratorFile);
 	DefaultStyleSheet := LoadCSS(DefaultCSS2File)

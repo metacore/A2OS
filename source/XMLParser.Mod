@@ -399,7 +399,7 @@ TYPE
 				IF scanner.sym =  Scanner.PoundName THEN
 					IF (s^ = '#REQUIRED') THEN
 						ad.SetRequired(TRUE)
-					 ELSIF (s^ = '#FIXED') THEN
+					ELSIF (s^ = '#FIXED') THEN
 						ad.SetRequired(TRUE);
 						scanner.ScanMarkup();
 						IF ~CheckSymbol({Scanner.Literal}, "AttValue expected") THEN RETURN END
@@ -422,12 +422,12 @@ TYPE
 		END ParseAttListDecl;
 
 		(*
-			Mixed 		::=	'(' S? '#PCDATA' (S? '|' S? Name)* S? ')*'
+			Mixed		::=	'(' S? '#PCDATA' (S? '|' S? Name)* S? ')*'
 							| '(' S? '#PCDATA' S? ')'
 
 			children		::=	(choise | seq) ('?' | '*' | '+')?
-			cp 			::=	(Name | choise | seq) ('?' | '*' | '+')?
-			choice 		::=	'(' S? cp (S? '|' S? cp)+ S? ')'
+			cp			::=	(Name | choise | seq) ('?' | '*' | '+')?
+			choice		::=	'(' S? cp (S? '|' S? cp)+ S? ')'
 			seq			::=	'(' S? cp (S? ',' S? cp)* S? ')'
 		*)
 		PROCEDURE ParseContentParticle(VAR contentType: SHORTINT): XML.CollectionCP;
@@ -948,8 +948,6 @@ TYPE
 			END;
 			RETURN ds1.ToArrOfChar()
 		END ParseEntityValue;
-
-
 
 		PROCEDURE ParseAttributeValue(): String;
 		VAR

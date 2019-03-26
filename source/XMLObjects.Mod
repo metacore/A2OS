@@ -3,7 +3,6 @@ MODULE XMLObjects; (** AUTHOR "swalthert"; PURPOSE "XML collections and enumerat
 IMPORT
 	Strings;
 
-
 TYPE
 	String = Strings.String;
 
@@ -165,52 +164,52 @@ TYPE
 		END GetElement;
 
 		PROCEDURE Invert*(ptr1, ptr2: ANY): BOOLEAN;
-           	VAR pos1, pos2, i: LONGINT; ptr: ANY;
-       	BEGIN {EXCLUSIVE}
-           		i := 0;  pos1 := -1;  pos2 := -1;
-          		 WHILE (i < nofElems) & ((pos1 < 0) OR (pos2 < 0)) DO
-              		 IF elems[i] = ptr1 THEN  pos1 := i  END;
-              		 IF elems[i] = ptr2 THEN  pos2 := i  END;
-              		 INC(i)
-          		 END;
-           		IF (pos1 >= 0) & (pos2 >= 0) & (pos1 # pos2)  THEN
-               		ptr := elems[pos1];  elems[pos1] := elems[pos2];  elems[pos2] := ptr;
-               		RETURN TRUE
-           		END;
-           		RETURN FALSE
-       	END Invert;
+		VAR pos1, pos2, i: LONGINT; ptr: ANY;
+		BEGIN {EXCLUSIVE}
+			i := 0;  pos1 := -1;  pos2 := -1;
+			WHILE (i < nofElems) & ((pos1 < 0) OR (pos2 < 0)) DO
+				IF elems[i] = ptr1 THEN  pos1 := i  END;
+				IF elems[i] = ptr2 THEN  pos2 := i  END;
+				INC(i)
+			END;
+			IF (pos1 >= 0) & (pos2 >= 0) & (pos1 # pos2)  THEN
+				ptr := elems[pos1];  elems[pos1] := elems[pos2];  elems[pos2] := ptr;
+				RETURN TRUE
+			END;
+			RETURN FALSE
+		END Invert;
 
 		PROCEDURE GetElementPos*(ptr: ANY): LONGINT;
-           	VAR i: LONGINT;
+		VAR i: LONGINT;
 		BEGIN
-          		 WHILE i < nofElems DO
-              		 IF elems[i] = ptr THEN  RETURN i END;
-              		 INC(i)
-          		 END;
-          		 RETURN -1
+			WHILE i < nofElems DO
+				IF elems[i] = ptr THEN  RETURN i END;
+				INC(i)
+			END;
+			RETURN -1
 		END GetElementPos;
 
 		PROCEDURE MoveUp*(ptr: ANY;  i: LONGINT): BOOLEAN;
-           	VAR p: ANY;
-       	BEGIN {EXCLUSIVE}
-           		IF ptr # NIL THEN  i := GetElementPos(ptr)  END;
-           		IF (i > 0) & (i < nofElems)  THEN
-               		p := elems[i];  elems[i] := elems[i-1];  elems[i-1] := p;
-               		RETURN TRUE
-           		END;
-           		RETURN FALSE
-       	END MoveUp;
+		VAR p: ANY;
+		BEGIN {EXCLUSIVE}
+			IF ptr # NIL THEN  i := GetElementPos(ptr)  END;
+			IF (i > 0) & (i < nofElems)  THEN
+				p := elems[i];  elems[i] := elems[i-1];  elems[i-1] := p;
+				RETURN TRUE
+			END;
+			RETURN FALSE
+		END MoveUp;
 
 		PROCEDURE MoveDown*(ptr: ANY;  i: LONGINT): BOOLEAN;
-           	VAR p: ANY;
-       	BEGIN {EXCLUSIVE}
-           		IF ptr # NIL THEN  i := GetElementPos(ptr)  END;
-           		IF (i >=0) & (i < nofElems-1)  THEN
-               		p := elems[i];  elems[i] := elems[i+1];  elems[i+1] := p;
-               		RETURN TRUE
-           		END;
-           		RETURN FALSE
-       	END MoveDown;
+		VAR p: ANY;
+		BEGIN {EXCLUSIVE}
+			IF ptr # NIL THEN  i := GetElementPos(ptr)  END;
+			IF (i >=0) & (i < nofElems-1)  THEN
+				p := elems[i];  elems[i] := elems[i+1];  elems[i+1] := p;
+				RETURN TRUE
+			END;
+			RETURN FALSE
+		END MoveDown;
 
 	END ArrayCollection;
 

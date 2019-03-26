@@ -92,12 +92,10 @@ BEGIN
 	newLine[0] := 0DX; newLine[1] := 0AX; newLine[2] := 0X;
 END TestXMLPlugins.
 
-
 XMLTransformer.Register A TestXMLPlugins.A ~
 XMLTransformer.Register AB TestXMLPlugins.AB ~
 XMLTransformer.Register B TestXMLPlugins.B ~
 XMLTransformer.Register PICT TestXMLPlugins.PICT ~
-
 
 Example-HTML-File:
 
@@ -130,5 +128,3 @@ Example-HTML-File:
 
 </body>
 </html>
-
-

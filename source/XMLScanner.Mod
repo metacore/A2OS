@@ -43,7 +43,7 @@ CONST
 	ParamEntityRef* = 18;	(** '%' name ';', name := GetStr() *)
 	CharData* = 19;	(** chars := GetStr() *)
 	Literal* = 20;	(** '"'chars'"' or "'"chars"'", chars := GetStr() *)
-	Name* = 21;	(** 	Name ::= (Letter | '_' | ':') {NameChar}
+	Name* = 21;	(**	Name ::= (Letter | '_' | ':') {NameChar}
 										NameChar ::= Letter | Digit | '.' | '-' | '_' | ':' | CombiningChar | Extender
 										chars := GetStr() *)
 	Nmtoken* = 22;	(**	Nmtoken ::= NameChar {NameChar}, chars := GetStr() *)

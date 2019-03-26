@@ -5,7 +5,6 @@ IMPORT
 	Files, DynamicStrings, XMLObjects, XML, CSS2, CSS2Properties, CSS2Scanner, CSS2Parser,
 	WMWindowManager, Gfx;
 
-
 TYPE
 	String* = XML.String;
 
@@ -1133,6 +1132,5 @@ TYPE
 		event[j] := 0X;
 		RETURN event
 	END ExtractEvent;
-
 
 END XMLComponents.

@@ -878,9 +878,7 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	AnimationCodec.Mod
 
 	# USB info tools & documentation
-	NATIVE & ~ARM { UsbInfo.Mod }
-	NATIVE & ARM { ARM.UsbInfo.Mod }
-	NATIVE { UsbSkeleton.Mod UsbTools.Mod Usb.Text }
+	NATIVE { UsbInfo.Mod UsbSkeleton.Mod UsbTools.Mod Usb.Text }
 
 	# Partitions Framework
 	PartitionsLib.Mod FATScavenger.Mod Partitions.Mod

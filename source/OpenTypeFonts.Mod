@@ -89,7 +89,7 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 		VAR
 			file: Files.File; r, m: Files.Rider; font: OType.Font; i, chars, ranges, xmin, ymin, xmax, ymax, j: INTEGER;
 			beg, end: ARRAY 64 OF INTEGER; data: RasterData; no, bytes, k: LONGINT;
- 			ras: OpenTypeScan.Rasterizer;
+			ras: OpenTypeScan.Rasterizer;
 	BEGIN
 		file := Files.New(name);
 		ASSERT(file # NIL);

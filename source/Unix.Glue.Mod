@@ -60,13 +60,13 @@ VAR
 	END Header;
 
 
- 	PROCEDURE Char ( c: CHAR );
+	PROCEDURE Char ( c: CHAR );
 	BEGIN
 		cout( c )
 	END Char;
 
 
- 	PROCEDURE Dlsym*( handle: ADDRESS; CONST name: ARRAY OF CHAR; adr: ADDRESS );
+	PROCEDURE Dlsym*( handle: ADDRESS; CONST name: ARRAY OF CHAR; adr: ADDRESS );
 	VAR val: ADDRESS;
 	BEGIN
 		val := dlsym( handle, ADDRESSOF( name[0] ) );

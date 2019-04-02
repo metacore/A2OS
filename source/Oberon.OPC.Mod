@@ -580,7 +580,7 @@ Intel i386 :
 				x.mode := RegRel; x.offs := x.adr; x.adr := sl.adr; x.inx := none
 			END
 		END
- 	END CompleteSL;
+	END CompleteSL;
 
 	PROCEDURE loadAdr (VAR x: Item);
 	(* load address into a register *)
@@ -1865,7 +1865,7 @@ Intel i386 :
 			END;
 			z.typ := type;
 			GenStore(store, z, x);
- 			IF z.mode IN {Var, Abs} THEN INC(z.adr, oldSize) ELSE INC(z.offs, oldSize) END
+			IF z.mode IN {Var, Abs} THEN INC(z.adr, oldSize) ELSE INC(z.offs, oldSize) END
 		ELSIF (size.mode = Con) & (size.adr = 3) & (moveSize = OPO.Bit8) THEN	(* special case, often used *)
 			IF x.mode # Reg THEN loadAdr(x) END;
 			IF z.mode # Reg THEN loadAdr(z) END;

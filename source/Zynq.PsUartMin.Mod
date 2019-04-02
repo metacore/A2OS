@@ -146,8 +146,8 @@ CONST
 	XUARTPS_MAX_BAUD_ERROR_RATE = 3;	(* max % error allowed *)
 
 TYPE
- 	(*
- 		(* Register offsets for the UART controller *)
+	(*
+		(* Register offsets for the UART controller *)
 		XUARTPS_CR_OFFSET = 0x0000;  (* Control Register [8:0] *)
 		XUARTPS_MR_OFFSET = 0x0004;  (* Mode Register [9:0] *)
 		XUARTPS_IER_OFFSET = 0x0008;  (* Interrupt Enable [12:0] *)

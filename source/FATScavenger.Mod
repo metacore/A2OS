@@ -37,7 +37,7 @@ MODULE FATScavenger; (** AUTHOR "staubesv"; PURPOSE "Scavenger and format for FA
 
 IMPORT
 	SYSTEM, KernelLog, Streams, Files, FATVolumes, Disks, FATFiles, UTF8Strings,
- 	Strings, PartitionsLib, Clock;
+	Strings, PartitionsLib, Clock;
 
 CONST
 

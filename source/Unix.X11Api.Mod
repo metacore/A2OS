@@ -190,7 +190,7 @@ CONST
 				   cmap entry
 				- attempt to store into a read-only
 				   color map entry.
- 				- attempt to modify the access control
+				- attempt to modify the access control
 				   list from other than the local host.
 				*)
 	BadAlloc* = 11; (* insufficient resources *)
@@ -323,7 +323,7 @@ CONST
  **************************************************************** *)
 
 	(* for ChangeHosts *)
- 	HostInsert* = 0; HostDelete* = 1;
+	HostInsert* = 0; HostDelete* = 1;
 
 	(* for ChangeAccessControl *)
 	EnableAccess* = 1; DisableAccess* = 0;
@@ -509,7 +509,7 @@ TYPE
 
 	(*!
 		 This union is defined so Xlib can always use the same sized
- 		event structure internally, to avoid memory fragmentation.
+		event structure internally, to avoid memory fragmentation.
 
 		In C,  XEvent type is union of all event types with size of 192 bytes ,
 		In Oberon, other event fields are padded with chars to prevent memory leaks.

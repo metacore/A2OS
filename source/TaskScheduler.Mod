@@ -36,7 +36,7 @@ TYPE
 	Task* = OBJECT
 	VAR
 		id- : LONGINT;
- 	 	timestamp- : LONGINT;
+	 	timestamp- : LONGINT;
 
 		info : TaskInfo;
 

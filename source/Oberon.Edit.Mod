@@ -481,7 +481,7 @@ MODULE Edit IN Oberon;	(** portable *) (*JG 4.4.95 / NW 24.1.91*)
 				IF (S.class = Texts.Char) & (S.c = "*") THEN
 					Option; V := Oberon.MarkedViewer();
 					IF (V.dsc IS TextFrames.Frame) & (V.dsc.next IS TextFrames.Frame) THEN
- 						Menu := V.dsc(TextFrames.Frame); Text := V.dsc.next(TextFrames.Frame);
+						Menu := V.dsc(TextFrames.Frame); Text := V.dsc.next(TextFrames.Frame);
 						Texts.OpenScanner(S, Menu.text, 0); Texts.Scan(S);
 						TextFrames.Mark(Text, -1); PrintUnit(Text.text, 0); TextFrames.Mark(Text, 1)
 					END

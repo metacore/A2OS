@@ -1163,11 +1163,11 @@ BEGIN
 		IF F # NIL THEN
 			Files.Set(R, F, 0); LoadFont(f, R);
 			Out.Int(f.pos, 0); Out.String(" Bytes loaded");Out.Ln;
- 		   obj := Gadgets.FindObj(Gadgets.context, "table");
+		   obj := Gadgets.FindObj(Gadgets.context, "table");
 			IF obj#NIL THEN
 				obj(Fonttable).f:= f;
 			END;
- 		   obj := Gadgets.FindObj(Gadgets.context, "preview");
+		   obj := Gadgets.FindObj(Gadgets.context, "preview");
 			IF obj#NIL THEN
 				obj(Preview).f:= f;
 				Gadgets.Update(obj)

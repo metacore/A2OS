@@ -461,7 +461,7 @@ MODULE WMVT100; (* ejz,  ph *)
 					EXCL(style, WMGraphics.FontBold);
 					attr.fnt := WMGraphics.GetFont(attr.fnt.name, attr.fnt.size, style)
 				ELSE KernelLog.String("Dim"); KernelLog.Ln()
- 				END
+				END
 			END Dim;
 
 			PROCEDURE SetAttributes(attrs: ARRAY OF LONGINT; n: LONGINT);

@@ -329,7 +329,7 @@ TYPE
 				SELF.currentDate := currentDate;
 				Release;
 				Invalidate;
- 			END;
+			END;
 		END UpdateCurrentDate;
 
 	BEGIN {ACTIVE}
@@ -710,7 +710,7 @@ BEGIN
 	nofWindows := 0;
 	InitStrings;
 	InitPrototypes;
- 	Modules.InstallTermHandler(Cleanup);
+	Modules.InstallTermHandler(Cleanup);
 	WeekDay[0] := "ERROR";
 	WeekDay[Monday] := "Mo";
 	WeekDay[Tuesday] := "Tu";

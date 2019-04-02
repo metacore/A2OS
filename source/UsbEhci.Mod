@@ -102,7 +102,7 @@ CONST
 	StsReclamation * = {13};
 	StsHcHalted * = {12};
 	(* HcUsbSts & HcUsbIntr common fields *)
- 	StsAsyncAdvance * = {5};
+	StsAsyncAdvance * = {5};
 	StsHostSystemError * = {4};
 	StsFrameListRollover * = {3};
 	StsPortChange * = {2};
@@ -2191,7 +2191,7 @@ END ShowItd;
 PROCEDURE ShowInterrupts * (s : SET);
 BEGIN
 	IF Debug.Trace THEN
- 	IF s * StsAsyncAdvance # {} THEN KernelLog.String("[AsyncAdvance]"); END;
+	IF s * StsAsyncAdvance # {} THEN KernelLog.String("[AsyncAdvance]"); END;
 	IF s * StsHostSystemError # {} THEN KernelLog.String("[HostSystemError]"); END;
 	IF s * StsFrameListRollover # {} THEN KernelLog.String("[FrameListRollover]"); END;
 	IF s * StsPortChange # {} THEN KernelLog.String("[PortChange]"); END;

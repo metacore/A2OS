@@ -142,7 +142,7 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
 	PROCEDURE ReadAll*;
       VAR freeEntries, freeSpace: INTEGER;
 	BEGIN
- 	   Texts.WriteString(W, "Backup.ReadAll"); Texts.WriteLn(W);
+	   Texts.WriteString(W, "Backup.ReadAll"); Texts.WriteLn(W);
 		Texts.Append(Oberon.Log, W.buf);
 		Diskette.OpenVol(freeEntries, freeSpace);
         Diskette.Enumerate(ReadEntry);

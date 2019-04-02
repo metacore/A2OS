@@ -1758,7 +1758,7 @@ VAR
 			dummyIRQHandler[int].h := h;
 		END;
 
- 		IF (int >= MinIRQ) & (int <= MaxIRQ) THEN InEnableIRQ(int) END;
+		IF (int >= MinIRQ) & (int <= MaxIRQ) THEN InEnableIRQ(int) END;
 
 		Release(Interrupts);
 

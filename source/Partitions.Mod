@@ -306,8 +306,8 @@ END SetConfig;
 (** Perform a read check on partition *)
 PROCEDURE Check*(context : Commands.Context); (** dev#part *)
 VAR
- 	selection : Lib.Selection;
- 	checkPartition : Lib.CheckPartition;
+	selection : Lib.Selection;
+	checkPartition : Lib.CheckPartition;
 BEGIN
 	IF GetSelection(context, FALSE, selection) THEN
 		NEW(checkPartition, selection.disk, selection.partition, context.out);

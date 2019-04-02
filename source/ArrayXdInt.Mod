@@ -158,8 +158,8 @@ TYPE
 		VAR v: Value;
 		BEGIN
 			IF ArrayXdBytes.InBounds( o0, l0, x ) & ArrayXdBytes.InBounds( o1, l1, y ) & ArrayXdBytes.InBounds( o2, l2, z ) &
-			    ArrayXdBytes.InBounds( o3, l3, t ) THEN
-				ArrayXdBytes.Get4( SELF, x, y, z, t, v );  RETURN v
+				ArrayXdBytes.InBounds( o3, l3, t ) THEN
+					ArrayXdBytes.Get4( SELF, x, y, z, t, v );  RETURN v
 			ELSE RETURN 0
 			END;
 		END Get4BAbsorbing;
@@ -194,7 +194,7 @@ TYPE
 		VAR v: Value;
 		BEGIN
 			ArrayXdBytes.Get3( SELF, ArrayXdBytes.PeriodicBounds( o0, l0, x ), ArrayXdBytes.PeriodicBounds( o1, l1, y ),
-											 ArrayXdBytes.PeriodicBounds( o2, l2, z ), v );
+											ArrayXdBytes.PeriodicBounds( o2, l2, z ), v );
 			RETURN v
 		END Get3BPeriodic;
 
@@ -202,7 +202,7 @@ TYPE
 		VAR v: Value;
 		BEGIN
 			ArrayXdBytes.Get4( SELF, ArrayXdBytes.PeriodicBounds( o0, l0, x ), ArrayXdBytes.PeriodicBounds( o1, l1, y ),
-											 ArrayXdBytes.PeriodicBounds( o2, l2, z ), ArrayXdBytes.PeriodicBounds( o3, l3, z ), v );
+											ArrayXdBytes.PeriodicBounds( o2, l2, z ), ArrayXdBytes.PeriodicBounds( o3, l3, z ), v );
 			RETURN v
 		END Get4BPeriodic;
 
@@ -231,7 +231,7 @@ TYPE
 		VAR v: Value;
 		BEGIN
 			ArrayXdBytes.Get3( SELF, ArrayXdBytes.MirrorOffB( o0, l0, x ), ArrayXdBytes.MirrorOffB( o1, l1, y ),
-											 ArrayXdBytes.MirrorOffB( o2, l2, z ), v );
+											ArrayXdBytes.MirrorOffB( o2, l2, z ), v );
 			RETURN v
 		END Get3BSymmetricOffB;
 
@@ -239,7 +239,7 @@ TYPE
 		VAR v: Value;
 		BEGIN
 			ArrayXdBytes.Get4( SELF, ArrayXdBytes.MirrorOffB( o0, l0, x ), ArrayXdBytes.MirrorOffB( o1, l1, y ),
-											 ArrayXdBytes.MirrorOffB( o2, l2, z ), ArrayXdBytes.MirrorOffB( o3, l3, z ), v );
+											ArrayXdBytes.MirrorOffB( o2, l2, z ), ArrayXdBytes.MirrorOffB( o3, l3, z ), v );
 			RETURN v
 		END Get4BSymmetricOffB;
 
@@ -314,7 +314,7 @@ TYPE
 				ArrayXdBytes.Get3( SELF, x, y, z, v );  RETURN v
 			ELSE
 				ArrayXdBytes.Get3( SELF, ArrayXdBytes.MirrorOffB( o0, l0, x ), ArrayXdBytes.MirrorOffB( o1, l1, y ),
-												 ArrayXdBytes.MirrorOffB( o2, l2, z ), v );
+												ArrayXdBytes.MirrorOffB( o2, l2, z ), v );
 				RETURN -v
 			END;
 		END Get3BAntisymmetricOffB;
@@ -323,11 +323,11 @@ TYPE
 		VAR v: Value;
 		BEGIN
 			IF ArrayXdBytes.InBounds( o0, l0, x ) & ArrayXdBytes.InBounds( o1, l1, y ) & ArrayXdBytes.InBounds( o2, l2, z ) &
-			    ArrayXdBytes.InBounds( o3, l3, t ) THEN
-				ArrayXdBytes.Get4( SELF, x, y, z, t, v );  RETURN v
+				ArrayXdBytes.InBounds( o3, l3, t ) THEN
+					ArrayXdBytes.Get4( SELF, x, y, z, t, v );  RETURN v
 			ELSE
 				ArrayXdBytes.Get4( SELF, ArrayXdBytes.MirrorOffB( o0, l0, x ), ArrayXdBytes.MirrorOffB( o1, l1, y ),
-												 ArrayXdBytes.MirrorOffB( o2, l2, z ), ArrayXdBytes.MirrorOffB( o3, l3, t ), v );
+												ArrayXdBytes.MirrorOffB( o2, l2, z ), ArrayXdBytes.MirrorOffB( o3, l3, t ), v );
 				RETURN -v
 			END;
 		END Get4BAntisymmetricOffB;
@@ -370,7 +370,7 @@ TYPE
 				ArrayXdBytes.Get3( SELF, x, y, z, v );  RETURN v
 			ELSE
 				ArrayXdBytes.Get3( SELF, ArrayXdBytes.MirrorOnB( o0, l0, x ), ArrayXdBytes.MirrorOnB( o1, l1, y ),
-												 ArrayXdBytes.MirrorOnB( o2, l2, z ), v );
+												ArrayXdBytes.MirrorOnB( o2, l2, z ), v );
 				RETURN -v
 			END;
 		END Get3BAntisymmetricOnB;
@@ -379,11 +379,11 @@ TYPE
 		VAR v: Value;
 		BEGIN
 			IF ArrayXdBytes.InBounds( o0, l0, x ) & ArrayXdBytes.InBounds( o1, l1, y ) & ArrayXdBytes.InBounds( o2, l2, z ) &
-			    ArrayXdBytes.InBounds( o3, l3, t ) THEN
-				ArrayXdBytes.Get4( SELF, x, y, z, t, v );  RETURN v
+				ArrayXdBytes.InBounds( o3, l3, t ) THEN
+					ArrayXdBytes.Get4( SELF, x, y, z, t, v );  RETURN v
 			ELSE
 				ArrayXdBytes.Get4( SELF, ArrayXdBytes.MirrorOnB( o0, l0, x ), ArrayXdBytes.MirrorOnB( o1, l1, y ),
-												 ArrayXdBytes.MirrorOnB( o2, l2, z ), ArrayXdBytes.MirrorOnB( o3, l3, t ), v );
+												ArrayXdBytes.MirrorOnB( o2, l2, z ), ArrayXdBytes.MirrorOnB( o3, l3, t ), v );
 				RETURN -v
 			END;
 		END Get4BAntisymmetricOnB;
@@ -539,7 +539,7 @@ TYPE
 	BEGIN
 		IF (src.dim # 1) OR (dest.dim # 1) THEN HALT( 1001 ) END;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index1( srcx ), ArrayXdBytes.Index1( len ),
-																		   ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
+																		ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
 	END CopyVecToVec;
 
 	PROCEDURE CopyMtxToVec*( src, dest: Array;  dim: Index;  srcx, srcy, destx, len: Index );
@@ -548,7 +548,7 @@ TYPE
 		IF (src.dim # 2) OR (dest.dim # 1) THEN HALT( 1002 ) END;
 		slen := ArrayXdBytes.Index2( 1, 1 );  slen[dim] := len;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index2( srcx, srcy ), slen,
-																		   ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
+																		ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
 	END CopyMtxToVec;
 
 	PROCEDURE CopyVecToMtx*( src, dest: Array;  dim: Index;  srcx, destx, desty, len: Index );
@@ -557,7 +557,7 @@ TYPE
 		IF (src.dim # 1) OR (dest.dim # 2) THEN HALT( 1002 ) END;
 		slen := ArrayXdBytes.Index2( 1, 1 );  slen[dim] := len;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index1( srcx ), ArrayXdBytes.Index1( len ),
-																		   ArrayXdBytes.Index2( destx, desty ), slen );
+																		ArrayXdBytes.Index2( destx, desty ), slen );
 	END CopyVecToMtx;
 
 	PROCEDURE CopyCubeToVec*( src, dest: Array;  dim: Index;  srcx, srcy, srcz, destx, len: Index );
@@ -566,7 +566,7 @@ TYPE
 		IF (src.dim # 3) OR (dest.dim # 1) THEN HALT( 1003 ) END;
 		slen := ArrayXdBytes.Index3( 1, 1, 1 );  slen[dim] := len;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index3( srcx, srcy, srcz ), slen,
-																		   ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
+																		ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
 	END CopyCubeToVec;
 
 	PROCEDURE CopyVecToCube*( src, dest: Array;  dim: Index;  srcx, destx, desty, destz, len: Index );
@@ -575,7 +575,7 @@ TYPE
 		IF (src.dim # 1) OR (dest.dim # 3) THEN HALT( 1002 ) END;
 		slen := ArrayXdBytes.Index3( 1, 1, 1 );  slen[dim] := len;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index1( srcx ), ArrayXdBytes.Index1( len ),
-																		   ArrayXdBytes.Index3( destx, desty, destz ), slen );
+																		ArrayXdBytes.Index3( destx, desty, destz ), slen );
 	END CopyVecToCube;
 
 	PROCEDURE CopyHCubeToVec*( src, dest: Array;  dim: Index;  srcx, srcy, srcz, srct, destx, len: Index );
@@ -584,7 +584,7 @@ TYPE
 		IF (src.dim # 4) OR (dest.dim # 1) THEN HALT( 1004 ) END;
 		slen := ArrayXdBytes.Index4( 1, 1, 1, 1 );  slen[dim] := len;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index4( srcx, srcy, srcz, srct ), slen,
-																		   ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
+																		ArrayXdBytes.Index1( destx ), ArrayXdBytes.Index1( len ) );
 	END CopyHCubeToVec;
 
 	PROCEDURE CopyVecToHCube*( src, dest: Array;  dim: Index;  srcx, destx, desty, destz, destt, len: Index );
@@ -593,7 +593,7 @@ TYPE
 		IF (src.dim # 1) OR (dest.dim # 4) THEN HALT( 1002 ) END;
 		slen := ArrayXdBytes.Index4( 1, 1, 1, 1 );  slen[dim] := len;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index1( srcx ), ArrayXdBytes.Index1( len ),
-																		   ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
+																		ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
 	END CopyVecToHCube;
 
 	PROCEDURE CopyMtxToMtx*( src, dest: Array;  srcx, srcy, destx, desty, lenx, leny: Index );
@@ -602,7 +602,7 @@ TYPE
 		IF (src.dim # 2) OR (dest.dim # 2) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index2( lenx, leny );
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index2( srcx, srcy ), slen,
-																		   ArrayXdBytes.Index2( destx, desty ), slen );
+																		ArrayXdBytes.Index2( destx, desty ), slen );
 	END CopyMtxToMtx;
 
 	PROCEDURE CopyCubeToMtx*( src, dest: Array;  dimx, dimy: Index;  srcx, srcy, srcz, destx, desty, lenx, leny: Index );
@@ -611,7 +611,7 @@ TYPE
 		IF (src.dim # 3) OR (dest.dim # 2) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index3( 1, 1, 1 );  slen[dimx] := lenx;  slen[dimy] := leny;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index3( srcx, srcy, srcz ), slen,
-																		   ArrayXdBytes.Index2( destx, desty ), ArrayXdBytes.Index2( lenx, leny ) );
+																		ArrayXdBytes.Index2( destx, desty ), ArrayXdBytes.Index2( lenx, leny ) );
 	END CopyCubeToMtx;
 
 	PROCEDURE CopyMtxToCube*( src, dest: Array;  dimx, dimy: Index;  srcx, srcy, destx, desty, destz, lenx, leny: Index );
@@ -620,7 +620,7 @@ TYPE
 		IF (src.dim # 2) OR (dest.dim # 3) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index3( 1, 1, 1 );  slen[dimx] := lenx;  slen[dimy] := leny;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index2( srcx, srcy ), ArrayXdBytes.Index2( lenx, leny ),
-																		   ArrayXdBytes.Index3( destx, desty, destz ), slen );
+																		ArrayXdBytes.Index3( destx, desty, destz ), slen );
 	END CopyMtxToCube;
 
 	PROCEDURE CopyHCubeToMtx*( src, dest: Array;  dimx, dimy: Index;  srcx, srcy, srcz, srct, destx, desty, lenx, leny: Index );
@@ -629,17 +629,17 @@ TYPE
 		IF (src.dim # 4) OR (dest.dim # 2) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index4( 1, 1, 1, 1 );  slen[dimx] := lenx;  slen[dimy] := leny;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index4( srcx, srcy, srcz, srct ), slen,
-																		   ArrayXdBytes.Index2( destx, desty ), ArrayXdBytes.Index2( lenx, leny ) );
+																		ArrayXdBytes.Index2( destx, desty ), ArrayXdBytes.Index2( lenx, leny ) );
 	END CopyHCubeToMtx;
 
 	PROCEDURE CopyMtxToHCube*( src, dest: Array;  dimx, dimy: Index;
-														 srcx, srcy, destx, desty, destz, destt, lenx, leny: Index );
+														srcx, srcy, destx, desty, destz, destt, lenx, leny: Index );
 	VAR slen: ArrayXdBytes.IndexArray;
 	BEGIN
 		IF (src.dim # 2) OR (dest.dim # 4) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index4( 1, 1, 1, 1 );  slen[dimx] := lenx;  slen[dimy] := leny;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index2( srcx, srcy ), ArrayXdBytes.Index2( lenx, leny ),
-																		   ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
+																		ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
 	END CopyMtxToHCube;
 
 	PROCEDURE CopyCubeToCube*( src, dest: Array;  srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index );
@@ -648,39 +648,39 @@ TYPE
 		IF (src.dim # 3) OR (dest.dim # 3) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index3( lenx, leny, lenz );
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index3( srcx, srcy, srcz ), slen,
-																		   ArrayXdBytes.Index3( destx, desty, destz ), slen );
+																		ArrayXdBytes.Index3( destx, desty, destz ), slen );
 	END CopyCubeToCube;
 
 	PROCEDURE CopyHCubeToCube*( src, dest: Array;  dimx, dimy, dimz: Index;
-														  srcx, srcy, srcz, srct, destx, desty, destz, lenx, leny, lenz: Index );
+														srcx, srcy, srcz, srct, destx, desty, destz, lenx, leny, lenz: Index );
 	VAR slen: ArrayXdBytes.IndexArray;
 	BEGIN
 		IF (src.dim # 4) OR (dest.dim # 3) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index4( 1, 1, 1, 1 );  slen[dimx] := lenx;  slen[dimy] := leny;  slen[dimz] := lenz;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index4( srcx, srcy, srcz, srct ), slen,
-																		   ArrayXdBytes.Index3( destx, desty, destz ),
-																		   ArrayXdBytes.Index3( lenx, leny, lenz ) );
+																		ArrayXdBytes.Index3( destx, desty, destz ),
+																		ArrayXdBytes.Index3( lenx, leny, lenz ) );
 	END CopyHCubeToCube;
 
 	PROCEDURE CopyCubeToHCube*( src, dest: Array;  dimx, dimy, dimz: Index;
-														  srcx, srcy, srcz, destx, desty, destz, destt, lenx, leny, lenz: Index );
+														srcx, srcy, srcz, destx, desty, destz, destt, lenx, leny, lenz: Index );
 	VAR slen: ArrayXdBytes.IndexArray;
 	BEGIN
 		IF (src.dim # 3) OR (dest.dim # 4) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index4( 1, 1, 1, 1 );  slen[dimx] := lenx;  slen[dimy] := leny;  slen[dimz] := lenz;
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index3( srcx, srcy, srcz ),
-																		   ArrayXdBytes.Index3( lenx, leny, lenz ),
-																		   ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
+																		ArrayXdBytes.Index3( lenx, leny, lenz ),
+																		ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
 	END CopyCubeToHCube;
 
 	PROCEDURE CopyHCubeToHCube*( src, dest: Array;
-															 srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index );
+															srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index );
 	VAR slen: ArrayXdBytes.IndexArray;
 	BEGIN
 		IF (src.dim # 4) OR (dest.dim # 4) THEN HALT( 1005 ) END;
 		slen := ArrayXdBytes.Index4( lenx, leny, lenz, lent );
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, dest, ArrayXdBytes.Index4( srcx, srcy, srcz, srct ), slen,
-																		   ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
+																		ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
 	END CopyHCubeToHCube;
 
 	PROCEDURE CopyArrayToVec*( VAR src: ARRAY OF Value;  dest: Array;  srcx, destx, len: Index );
@@ -688,7 +688,7 @@ TYPE
 		IF dest.dim # 1 THEN HALT( 1005 ) END;
 		ArrayXdBytes.CheckLEQ( 0, srcx );  ArrayXdBytes.CheckLE( srcx + len, LEN( src ) );
 		ArrayXdBytes.CopyMemoryToArrayPart( ADDRESSOF( src[srcx] ), dest, len, ArrayXdBytes.Index1( destx ),
-																		 ArrayXdBytes.Index1( len ) );
+																		ArrayXdBytes.Index1( len ) );
 	END CopyArrayToVec;
 
 	PROCEDURE CopyVecToArray*( src: Array;  VAR dest: ARRAY OF Value;  srcx, destx, len: Index );
@@ -696,7 +696,7 @@ TYPE
 		IF src.dim # 1 THEN HALT( 1005 ) END;
 		ArrayXdBytes.CheckLEQ( 0, destx );  ArrayXdBytes.CheckLE( destx + len, LEN( dest ) );
 		ArrayXdBytes.CopyArrayPartToMemory( src, ADDRESSOF( dest[destx] ), ArrayXdBytes.Index1( srcx ),
-																		 ArrayXdBytes.Index1( len ), len );
+																		ArrayXdBytes.Index1( len ), len );
 	END CopyVecToArray;
 
 	PROCEDURE CopyArrayToMtx*( VAR src: ARRAY OF ARRAY OF Value;  dest: Array;  srcx, srcy, destx, desty, lenx, leny: Index );
@@ -705,10 +705,10 @@ TYPE
 		IF dest.dim # 2 THEN HALT( 1005 ) END;
 		srcmem :=
 			ArrayXdBytes.MakeMemoryStructure( 2, ArrayXdBytes.Index2( 0, 0 ), ArrayXdBytes.Index2( LEN( src, 1 ), LEN( src, 0 ) ),
-																		  SIZEOF( Value ), ADDRESSOF( src[0, 0] ) );
+																		SIZEOF( Value ), ADDRESSOF( src[0, 0] ) );
 		ArrayXdBytes.CopyArrayPartToArrayPart( srcmem, dest, ArrayXdBytes.Index2( srcx, srcy ),
-																		   ArrayXdBytes.Index2( lenx, leny ), ArrayXdBytes.Index2( destx, desty ),
-																		   ArrayXdBytes.Index2( lenx, leny ) );
+																		ArrayXdBytes.Index2( lenx, leny ), ArrayXdBytes.Index2( destx, desty ),
+																		ArrayXdBytes.Index2( lenx, leny ) );
 	END CopyArrayToMtx;
 
 	PROCEDURE CopyMtxToArray*( src: Array;  VAR dest: ARRAY OF ARRAY OF Value;  srcx, srcy, destx, desty, lenx, leny: Index );
@@ -717,80 +717,80 @@ TYPE
 		IF src.dim # 2 THEN HALT( 1005 ) END;
 		destmem :=
 			ArrayXdBytes.MakeMemoryStructure( 2, ArrayXdBytes.Index2( 0, 0 ), ArrayXdBytes.Index2( LEN( dest, 1 ), LEN( dest, 0 ) ),
-																		  SIZEOF( Value ), ADDRESSOF( dest[0, 0] ) );
+																		SIZEOF( Value ), ADDRESSOF( dest[0, 0] ) );
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, destmem, ArrayXdBytes.Index2( srcx, srcy ),
-																		   ArrayXdBytes.Index2( lenx, leny ), ArrayXdBytes.Index2( destx, desty ),
-																		   ArrayXdBytes.Index2( lenx, leny ) );
+																		ArrayXdBytes.Index2( lenx, leny ), ArrayXdBytes.Index2( destx, desty ),
+																		ArrayXdBytes.Index2( lenx, leny ) );
 	END CopyMtxToArray;
 
 	PROCEDURE CopyArrayToCube*( VAR src: ARRAY OF ARRAY OF ARRAY OF Value;  dest: Array;
-													    srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index );
+													srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index );
 	VAR srcmem: ArrayXdBytes.ArrayMemoryStructure;
 	BEGIN
 		IF dest.dim # 3 THEN HALT( 1005 ) END;
 		srcmem :=
 			ArrayXdBytes.MakeMemoryStructure( 3, ArrayXdBytes.Index3( 0, 0, 0 ),
-																		  ArrayXdBytes.Index3( LEN( src, 2 ), LEN( src, 1 ), LEN( src, 0 ) ), SIZEOF( Value ),
-																		  ADDRESSOF( src[0, 0, 0] ) );
+																		ArrayXdBytes.Index3( LEN( src, 2 ), LEN( src, 1 ), LEN( src, 0 ) ), SIZEOF( Value ),
+																		ADDRESSOF( src[0, 0, 0] ) );
 		ArrayXdBytes.CopyArrayPartToArrayPart( srcmem, dest, ArrayXdBytes.Index3( srcx, srcy, srcz ),
-																		   ArrayXdBytes.Index3( lenx, leny, lenz ),
-																		   ArrayXdBytes.Index3( destx, desty, destz ),
-																		   ArrayXdBytes.Index3( lenx, leny, lenz ) );
+																		ArrayXdBytes.Index3( lenx, leny, lenz ),
+																		ArrayXdBytes.Index3( destx, desty, destz ),
+																		ArrayXdBytes.Index3( lenx, leny, lenz ) );
 	END CopyArrayToCube;
 
 	PROCEDURE CopyCubeToArray*( src: Array;  VAR dest: ARRAY OF ARRAY OF ARRAY OF Value;
-													    srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index );
+													srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index );
 	VAR destmem: ArrayXdBytes.ArrayMemoryStructure;
 	BEGIN
 		IF src.dim # 3 THEN HALT( 1005 ) END;
 		destmem :=
 			ArrayXdBytes.MakeMemoryStructure( 3, ArrayXdBytes.Index3( 0, 0, 0 ),
-																		  ArrayXdBytes.Index3( LEN( dest, 2 ), LEN( dest, 1 ), LEN( dest, 0 ) ), SIZEOF( Value ),
-																		  ADDRESSOF( dest[0, 0, 0] ) );
+																		ArrayXdBytes.Index3( LEN( dest, 2 ), LEN( dest, 1 ), LEN( dest, 0 ) ), SIZEOF( Value ),
+																		ADDRESSOF( dest[0, 0, 0] ) );
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, destmem, ArrayXdBytes.Index3( srcx, srcy, srcz ),
-																		   ArrayXdBytes.Index3( lenx, leny, lenz ),
-																		   ArrayXdBytes.Index3( destx, desty, destz ),
-																		   ArrayXdBytes.Index3( lenx, leny, lenz ) );
+																		ArrayXdBytes.Index3( lenx, leny, lenz ),
+																		ArrayXdBytes.Index3( destx, desty, destz ),
+																		ArrayXdBytes.Index3( lenx, leny, lenz ) );
 	END CopyCubeToArray;
 
 	PROCEDURE CopyArrayToHCube*( VAR src: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value;  dest: Array;
-														  srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index );
+														srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index );
 	VAR srcmem: ArrayXdBytes.ArrayMemoryStructure;
 	BEGIN
 		IF dest.dim # 4 THEN HALT( 1005 ) END;
 		srcmem :=
 			ArrayXdBytes.MakeMemoryStructure( 4, ArrayXdBytes.Index4( 0, 0, 0, 0 ),
-																		  ArrayXdBytes.Index4( LEN( src, 3 ), LEN( src, 2 ), LEN( src, 1 ), LEN( src, 0 ) ), SIZEOF( Value ),
-																		  ADDRESSOF( src[0, 0, 0] ) );
+																		ArrayXdBytes.Index4( LEN( src, 3 ), LEN( src, 2 ), LEN( src, 1 ), LEN( src, 0 ) ), SIZEOF( Value ),
+																		ADDRESSOF( src[0, 0, 0] ) );
 		ArrayXdBytes.CopyArrayPartToArrayPart( srcmem, dest, ArrayXdBytes.Index4( srcx, srcy, srcz, srct ),
-																		   ArrayXdBytes.Index4( lenx, leny, lenz, lent ),
-																		   ArrayXdBytes.Index4( destx, desty, destz, destt ),
-																		   ArrayXdBytes.Index4( lenx, leny, lenz, lent ) );
+																		ArrayXdBytes.Index4( lenx, leny, lenz, lent ),
+																		ArrayXdBytes.Index4( destx, desty, destz, destt ),
+																		ArrayXdBytes.Index4( lenx, leny, lenz, lent ) );
 	END CopyArrayToHCube;
 
 	PROCEDURE CopyHCubeToArray*( src: Array;  VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value;
-														  srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index );
+														srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index );
 	VAR destmem: ArrayXdBytes.ArrayMemoryStructure;
 	BEGIN
 		IF src.dim # 4 THEN HALT( 1005 ) END;
 		destmem :=
 			ArrayXdBytes.MakeMemoryStructure( 4, ArrayXdBytes.Index4( 0, 0, 0, 0 ),
-																		  ArrayXdBytes.Index4( LEN( dest, 3 ), LEN( dest, 2 ), LEN( dest, 1 ), LEN( dest, 0 ) ), SIZEOF( Value ),
-																		  ADDRESSOF( dest[0, 0, 0] ) );
+																		ArrayXdBytes.Index4( LEN( dest, 3 ), LEN( dest, 2 ), LEN( dest, 1 ), LEN( dest, 0 ) ), SIZEOF( Value ),
+																		ADDRESSOF( dest[0, 0, 0] ) );
 		ArrayXdBytes.CopyArrayPartToArrayPart( src, destmem, ArrayXdBytes.Index4( srcx, srcy, srcz, srct ),
-																		   ArrayXdBytes.Index4( lenx, leny, lenz, lent ),
-																		   ArrayXdBytes.Index4( destx, desty, destz, destt ),
-																		   ArrayXdBytes.Index4( lenx, leny, lenz, lent ) );
+																		ArrayXdBytes.Index4( lenx, leny, lenz, lent ),
+																		ArrayXdBytes.Index4( destx, desty, destz, destt ),
+																		ArrayXdBytes.Index4( lenx, leny, lenz, lent ) );
 	END CopyHCubeToArray;
 
 	PROCEDURE CopyArrayToArrayPartB*( src: Array;  dest: ArrayXdBytes.ArrayMemoryStructure;  boundaryCondition: SHORTINT;
-																 srcpos, srclen, destpos, destlen: ArrayXdBytes.IndexArray );
+																srcpos, srclen, destpos, destlen: ArrayXdBytes.IndexArray );
 
 	VAR temp: ArrayXdBytes.ArrayMemoryStructure;
 		spos, dpos, last, borigin, blen, srcposcut, srclencut, destoffset: ArrayXdBytes.IndexArray;  i, dim: LONGINT;
 		val: Value;  temp2: Array;  enumB: ArrayXdBytes.BoundaryEnum;
 		Get: PROCEDURE {DELEGATE} ( x: ARRAY OF Index;
-																																													 dim: Index ): Value;
+																																													dim: Index ): Value;
 		noinbound: BOOLEAN;  v: Value;
 
 		(* for debugging
@@ -1167,7 +1167,6 @@ BEGIN
 END ArrayXdInt.
 
 System.Free ArrayXdInt ArrayXdBytes Array2dInt Array1dInt Array1dBytes ~
-
 
 ArrayXdInt.dbgTest ~
 

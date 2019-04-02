@@ -920,7 +920,7 @@ TYPE
 					3rd dim: resolution level
 					4th dim: subband (NOTE: 0 = LL at lowest resolution level; 0=HL, 1=LH, 2=HH otherwise)
 					5th dim: precinct index in the subband (in raster order)
- 					6th dim : code-block index in the precinct (in raster order)
+					6th dim : code-block index in the precinct (in raster order)
 				*)
 				cblkInfo : POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF J2KU.CblkInfo;
 
@@ -1797,7 +1797,7 @@ TYPE
 													passtype := i MOD ENTROPY_NUM_PASSES;
 													(* passtype = 1 -> significance propagation pass -> skip *)
 													IF passtype # 1 THEN
- 														bitsUsed := lblock[curTile][comp][reslevel][subband][precno][cblkPrecIdx] + J2KU.Log2Floor(i - lastIdx);
+														bitsUsed := lblock[curTile][comp][reslevel][subband][precno][cblkPrecIdx] + J2KU.Log2Floor(i - lastIdx);
 
 														cblk[blocksInPacket].segLen[j] := NextBits(bitsUsed);
 
@@ -2894,7 +2894,7 @@ TYPE
 									PROG_LRCP:
 										ok := AdvanceLayResComPos ();
 								|	PROG_RLCP:
- 										ok := AdvanceResLayComPos ();
+										ok := AdvanceResLayComPos ();
 								|	PROG_RPCL:
 										ok := AdvanceResPosComLay ();
 								|	PROG_PCRL:
@@ -3316,7 +3316,7 @@ TYPE
 								PROG_LRCP:
 									ok := AdvanceLayResComPos ();
 							|	PROG_RLCP:
- 										ok := AdvanceResLayComPos ();
+										ok := AdvanceResLayComPos ();
 							|	PROG_RPCL:
 									ok := AdvanceResPosComLay ();
 							|	PROG_PCRL:
@@ -5502,7 +5502,7 @@ TYPE
 									PROG_LRCP:
 										ok := AdvanceLayResComPos();
 								|	PROG_RLCP:
- 										ok := AdvanceResLayComPos();
+										ok := AdvanceResLayComPos();
 								|	PROG_RPCL:
 										ok := AdvanceResPosComLay();
 								|	PROG_PCRL:

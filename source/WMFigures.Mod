@@ -821,9 +821,9 @@ PROCEDURE arctan2(x,y: REAL): REAL; (*arctan in range 0..2pi*)
 
 PROCEDURE MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: LONGINT; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: LONGINT);
  TYPE
- 	Polynom = RECORD A, B, C, D: REAL END;
+	Polynom = RECORD A, B, C, D: REAL END;
  VAR
- 	i, cs, smax, k1: LONGINT; px, py: Polynom;
+	i, cs, smax, k1: LONGINT; px, py: Polynom;
 	x, dx1, dx2, dx3, y, dy1, dy2, dy3: REAL; L, B, R, T,dW  : LONGINT;
 
 	PROCEDURE GetPolynom((* VAR *) y1, y2, y1s, y2s: REAL; VAR p: Polynom);

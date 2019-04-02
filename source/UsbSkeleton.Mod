@@ -51,8 +51,8 @@ TYPE
 	END YourDriver;
 
 (**	The Probe procedure uses the device descriptor and configuration descriptors provided by the device to
- 	see whether the device can be handled by the device driver. If not, the probe procedure returns NIL, otherwise
- 	it returns an instance of the device driver object. *)
+	see whether the device can be handled by the device driver. If not, the probe procedure returns NIL, otherwise
+	it returns an instance of the device driver object. *)
 PROCEDURE Probe(dev : Usbdi.UsbDevice; id : Usbdi.InterfaceDescriptor) : Usbdi.Driver;
 VAR driver : YourDriver;
 BEGIN

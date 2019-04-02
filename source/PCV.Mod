@@ -60,7 +60,7 @@ BEGIN
 			(* fof end *)
        	ELSE  size := PCLIR.CG.ParamAlign
        	END
- 		(** fof >> *)
+		(** fof >> *)
 		ELSIF   isRef & enhopen THEN  (* VAR A: ARRAY [..] OF ... *)
 			size := PCLIR.CG.ParamAlign
 		(** << fof  *)

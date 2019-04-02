@@ -608,8 +608,8 @@ BEGIN
 	| PCLIR.tae: cond := PCO.HI
 	| PCLIR.tne: cond := NE
 	END;
- 	PCO.SWI(cond, instr.val);
- 	IF (instr.op = PCLIR.trap) & (instr.val # MAX(INTEGER)) THEN pool.Flush(PCO.GetCodePos()) END
+	PCO.SWI(cond, instr.val);
+	IF (instr.op = PCLIR.trap) & (instr.val # MAX(INTEGER)) THEN pool.Flush(PCO.GetCodePos()) END
 END Trap;
 
 PROCEDURE SaveRegisters(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);

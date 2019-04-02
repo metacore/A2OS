@@ -36,7 +36,7 @@ VAR
 			INC( ox, 4 );
 		END;
 		b64[ox] := 0X;
- 	END Encode;
+	END Encode;
 
 
 	(* returns image length, negative value = error! *)
@@ -77,7 +77,7 @@ VAR
 
 
 
- 	PROCEDURE EncodeStream*( CONST image: ARRAY OF CHAR; len: LONGINT;
+	PROCEDURE EncodeStream*( CONST image: ARRAY OF CHAR; len: LONGINT;
 						   		  		w: Streams.Writer );
 	VAR
 		group, i, ix, ll: LONGINT;
@@ -105,7 +105,7 @@ VAR
 			w.Char( '=' );
 		END;
 		w.Update
- 	END EncodeStream;
+	END EncodeStream;
 
 
 	(* returns image length, negative value = error! *)

@@ -2563,14 +2563,14 @@ VAR ohci: FirewireLowUtil.OHCIDesc; generation: LONGINT; sid: FirewireLowUtil.Se
 BEGIN
  ohci:= c.OHCI; generation:= FirewireLowUtil.GetGeneration(); i:= 0;
  WHILE ohci.TopologyMap[i] # NIL DO
- 	IF ~(ohci.TopologyMap[i] IS FirewireLowUtil.ExtSelfID) &
- 		(SYSTEM.VAL(LONGINT,ohci.TopologyMap[i].physicalID) # c.OHCI.nodeID) THEN
- 		sid:= ohci.TopologyMap[i];
- 		IF c.ReadBusInfoBlock(ohci,sid.physicalID,generation,buffer,4) THEN
- 			KernelLog.String("There was a problem reading the bus info block::Test1394!"); KernelLog.Ln()
- 		END
- 	END;
- 	INC(i);
+	IF ~(ohci.TopologyMap[i] IS FirewireLowUtil.ExtSelfID) &
+		(SYSTEM.VAL(LONGINT,ohci.TopologyMap[i].physicalID) # c.OHCI.nodeID) THEN
+		sid:= ohci.TopologyMap[i];
+		IF c.ReadBusInfoBlock(ohci,sid.physicalID,generation,buffer,4) THEN
+			KernelLog.String("There was a problem reading the bus info block::Test1394!"); KernelLog.Ln()
+		END
+	END;
+	INC(i);
  END;
 END Test1394;
 

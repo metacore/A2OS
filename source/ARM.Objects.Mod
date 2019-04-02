@@ -140,33 +140,33 @@ TYPE
 					IF pc # 0 THEN 	(* process is running already *)
 						WHILE (bp # Heaps.NilVal) & (stack.adr <= bp) & (bp < stack.high) DO
 							FindPointers(bp, pc, d0, d1);
- 							IF first THEN
- 								IF (d0 = 0) OR (d0 = 1) OR (d1 = 3) THEN
- 									(* 	situation where pc and bp are not synchronized: *)
- 									(* 	entry protocol of a procedure:
- 										PUSH 	EBP			-- 1 byte instruction length, if pc points to this instruction at offset 0 from the codeoffset then bp still refers to caller frame -> critical
- 										MOV	EBP, ESP	-- 2 bytes instruction length, do. for offset 1 from the codeoffset
- 										(followed by initialization of local variables)
- 										exit protocol of a procedure:
- 										MOV	ESP, EBP	-- 2 bytes instruction length
- 										POP	EBP			-- 1 byte instruction length
- 										RET		n			-- 3 bytes instruction length, if pc points to this instruction at offset 3 from the last statement then bp already refers to caller's frame -> critical
- 									*)
- 									IF (d0 = 0) OR (d1 = 3) THEN
- 										SYSTEM.GET(state.SP, pc);		(* matching pc is at position of stack pointer *)
- 									ELSE
- 										SYSTEM.GET(state.SP+AddressSize, pc);		(* matching pc is at 4 bytes after stack pointer, pushed base pointer is at stack pointer position *)
+							IF first THEN
+								IF (d0 = 0) OR (d0 = 1) OR (d1 = 3) THEN
+									(* 	situation where pc and bp are not synchronized: *)
+									(* 	entry protocol of a procedure:
+										PUSH 	EBP			-- 1 byte instruction length, if pc points to this instruction at offset 0 from the codeoffset then bp still refers to caller frame -> critical
+										MOV	EBP, ESP	-- 2 bytes instruction length, do. for offset 1 from the codeoffset
+										(followed by initialization of local variables)
+										exit protocol of a procedure:
+										MOV	ESP, EBP	-- 2 bytes instruction length
+										POP	EBP			-- 1 byte instruction length
+										RET		n			-- 3 bytes instruction length, if pc points to this instruction at offset 3 from the last statement then bp already refers to caller's frame -> critical
+									*)
+									IF (d0 = 0) OR (d1 = 3) THEN
+										SYSTEM.GET(state.SP, pc);		(* matching pc is at position of stack pointer *)
+									ELSE
+										SYSTEM.GET(state.SP+AddressSize, pc);		(* matching pc is at 4 bytes after stack pointer, pushed base pointer is at stack pointer position *)
 									END;
- 								ELSE
- 									(* regular case: bp and pc were synchronized *)
- 									curbp := bp;
+								ELSE
+									(* regular case: bp and pc were synchronized *)
+									curbp := bp;
 									SYSTEM.GET(curbp, bp);
 									SYSTEM.GET(curbp+AddressSize, pc);
- 								END;
- 								first := FALSE;
- 							ELSE
- 								(* regular case: bp and pc were synchronized *)
- 								curbp := bp;
+								END;
+								first := FALSE;
+							ELSE
+								(* regular case: bp and pc were synchronized *)
+								curbp := bp;
 								SYSTEM.GET(curbp, bp);
 								SYSTEM.GET(curbp+AddressSize, pc);
 							END
@@ -1708,9 +1708,9 @@ BEGIN (* interrupts off *)
 	t := running[Machine.ID ()];
 	ASSERT(t # NIL);
 	IF t # NIL THEN
- 		t.state.PC := Machine.CurrentPC(); (* ug: required information for GC with meta data for stack inspection *)
- 		t.state.SP := SYSTEM.GetStackPointer(); (* ug: not necessarily needed for GC *)
- 		t.state.BP := SYSTEM.GetFramePointer(); (* ug: necessary information for GC with meta data for stack inspection *)
+		t.state.PC := Machine.CurrentPC(); (* ug: required information for GC with meta data for stack inspection *)
+		t.state.SP := SYSTEM.GetStackPointer(); (* ug: not necessarily needed for GC *)
+		t.state.BP := SYSTEM.GetFramePointer(); (* ug: necessary information for GC with meta data for stack inspection *)
 	END;
 	Machine.Release(Machine.Objects)
 END UpdateState;

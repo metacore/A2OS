@@ -116,7 +116,7 @@ BEGIN
 	WHILE cur # NIL DO
 		w.Char('"'); w.String(cur.name); w.Char('"'); w.Char(09X);
 		w.Char('"'); w.String(cur.procedure); w.Char('"'); w.Ln;
- 		cur := cur.next
+		cur := cur.next
 	END;
 	w.Update
 END StoreCGIs;

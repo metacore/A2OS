@@ -920,7 +920,7 @@ TYPE
 	 *	2. Pass parameters (child object will have parameters as fields)
 	 *	3. IF parameters are valid, set alive := TRUE, else, set alive := FALSE
 	 *	4. Add object to PartitionsLib.registry via Add
- 	 *	5. Call SetStart
+	 *	5. Call SetStart
 	 *	6. As long as StatusRunning IN state.status the object is active
 	 * 	7. Terminate object via Abort & AwaitDead
 	 *)

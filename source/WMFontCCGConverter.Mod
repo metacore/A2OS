@@ -193,7 +193,7 @@ TYPE
 						KernelLog.Ln
 					END
 				ELSIF glyph.strokes[i].cmd = CMDStrokeLine THEN
- 					IF TraceGlyphs IN Trace THEN
+					IF TraceGlyphs IN Trace THEN
 						KernelLog.String(" --> Execute"); KernelLog.Int(glyph.strokes[i].x, 5); KernelLog.String(", "); KernelLog.Int(glyph.strokes[i].y, 5);
 						KernelLog.Ln;
 						IF i = 0 THEN KernelLog.String("Strange... no move to"); KernelLog.Ln END;

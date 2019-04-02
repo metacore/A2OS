@@ -1041,7 +1041,7 @@ TYPE
 
 			lock.Acquire;
 			transfer.id := nextId; INC(nextId);
- 			IF transfers = NIL THEN
+			IF transfers = NIL THEN
 				transfers := transfer
 			ELSE
 				lastTransfer.next := transfer

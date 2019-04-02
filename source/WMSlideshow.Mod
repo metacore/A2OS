@@ -894,7 +894,7 @@ END SlideshowWindow;
 
 
  TYPE SlideshowData= OBJECT
- 	VAR
+	VAR
 		slides : List;
 		hasErrors : BOOLEAN; (* XML Parsing *)
 

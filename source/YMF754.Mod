@@ -849,7 +849,7 @@ TYPE
 				playRecBuff[i] := silentData;
 			END;
 			(* Init banks and start *)
- 			FOR i := 0 TO nofSubCh - 1 DO
+			FOR i := 0 TO nofSubCh - 1 DO
 				FOR j := 0 TO NofBanks - 1 DO
 					playSlot[i][j].pgStart := 0;
 					playSlot[i][j].pgStartFrac := 0;

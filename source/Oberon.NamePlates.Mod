@@ -18,10 +18,10 @@ IMPORT
 	Documents, Viewers, Desktops;
 
 CONST
- 	(* name plates *)
- 	VersionNo = 1; MaxLen = 128; CarHeight = 14; CarWidth = 2; Xoffset = 10;
- 	TranslatePlate = TRUE; (* fof *)
- 	PrefixBehind = FALSE;
+	(* name plates *)
+	VersionNo = 1; MaxLen = 128; CarHeight = 14; CarWidth = 2; Xoffset = 10;
+	TranslatePlate = TRUE; (* fof *)
+	PrefixBehind = FALSE;
 
 TYPE
 	NamePlate* = POINTER TO NamePlateDesc;

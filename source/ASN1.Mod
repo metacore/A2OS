@@ -199,7 +199,8 @@ BEGIN
 	IF Trace & (log#NIL) THEN log.Char("{");  log.Hex(ORD(c),0);log.Char("H"); log.Char("}"); END;
 	t.class:= ORD(c) DIV 64;
 	t.constructed:= ODD (ORD(c) DIV 32);
-	IF ORD(c) MOD 32#31 THEN 	t.tag:=ORD(c) MOD 64; (* 'constructed' bit included *)
+	IF ORD(c) MOD 32#31 THEN
+		t.tag:=ORD(c) MOD 64; (* 'constructed' bit included *)
 	ELSE
 		REPEAT
 			reader.Char(c); INC(len); INC(hdrlen);
@@ -222,8 +223,8 @@ BEGIN
 	| Boolean: reader.Char(c);INC(len); t.bvalue:=c#0X;
 	| Integer:
 		IF t.length<=4 THEN
-			 NEW(t.svalue,t.length);
-			 FOR i:=0 TO t.length-1 DO
+			NEW(t.svalue,t.length);
+			FOR i:=0 TO t.length-1 DO
 					t.ivalue:=256*t.ivalue;
 					reader.Char(c); INC(len);
 					t.svalue[i]:=c;

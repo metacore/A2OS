@@ -1109,11 +1109,11 @@ endofloop47:
 	; dred18f = dred18big && destMaskred128  because >> 11 and << 11 is && mask
 	PAND 		XMM7, XMM6 ; dred18f
 
- 	; dest18nr0 = dest18 && (~destMaskred128)
- 	PANDN 	XMM6, XMM3  				; dest18nr0
+	; dest18nr0 = dest18 && (~destMaskred128)
+	PANDN 	XMM6, XMM3  				; dest18nr0
 
- 	; dest18nrf = dest18nr0 || dred18f
- 	POR 		XMM6, XMM7
+	; dest18nrf = dest18nr0 || dred18f
+	POR 		XMM6, XMM7
 
 	MOVDQU 	XMM3, XMM6
 
@@ -1177,10 +1177,10 @@ endofloop47:
 	PSRLW 		XMM7, 10 					; dgreen18f
 	PSLLW 		XMM7, 5
 
- 	; dest18ng0 = dest18 && (~destMaskgreen128)
+	; dest18ng0 = dest18 && (~destMaskgreen128)
 
- 	; dest18ngf = dest18ng0 || dred18f
- 	POR 		XMM6, XMM7
+	; dest18ngf = dest18ng0 || dred18f
+	POR 		XMM6, XMM7
 	MOVDQU 	XMM3, XMM6
 	; green is calculated
 
@@ -1236,12 +1236,12 @@ endofloop47:
 	PADDUSW 	XMM7, XMM5 				; dblue18big
 	; dblue18f = (dblue18big >> 11)
 	PANDN 	XMM6, XMM3  				; dest18nr0
- 	PSRLW 		XMM7, 11 					; dblue18f
+	PSRLW 		XMM7, 11 					; dblue18f
 
   	; dest18nr0 = dest18 && (~destMaskblue128)
 
- 	; dest18nbf = dest18nb0 || dblue18f
- 	POR 		XMM6, XMM7
+	; dest18nbf = dest18nb0 || dblue18f
+	POR 		XMM6, XMM7
 	MOVDQU 	XMM3, XMM6
 
 	; blue is calculated

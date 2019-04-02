@@ -348,8 +348,8 @@ TYPE
 									 IF ch = "." THEN NextChar; s := upto ELSE s := period END
 					| "/"  : s :=  slash; NextChar
 					| "0".."9": isNummer := TRUE; numStartPos := pos-1;
- 						(*	WHILE (ch >="0") & (ch <= "9") OR (ch >= "A") & (ch <="F") OR (ch="H") OR (ch="X") OR (ch=".") DO NextChar END; *)
- 						Number;
+						(*	WHILE (ch >="0") & (ch <= "9") OR (ch >= "A") & (ch <="F") OR (ch="H") OR (ch="X") OR (ch=".") DO NextChar END; *)
+						Number;
 						numEndPos := pos-1; s := number
 					| ":"  : NextChar;
 									 IF ch = "=" THEN NextChar; s := becomes ELSE s := colon END

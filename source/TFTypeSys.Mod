@@ -1013,7 +1013,7 @@ VAR r : Streams.Reader;
 	receiver : Streams.Receiver;
 	fn, name, ofn : ARRAY 128 OF CHAR;
 	m : Module; version : LONGINT;
- 	f : Files.File;
+	f : Files.File;
 	fr : Files.Reader;
 BEGIN
 	IF TarBasedDB THEN

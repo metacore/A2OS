@@ -626,7 +626,7 @@ BEGIN
 END Repeat;
 
 (** Time interval measurement
- 	- start/starth [number]: Set timer <number> to current time (number = 0 if omitted)
+	- start/starth [number]: Set timer <number> to current time (number = 0 if omitted)
   	- elapsed/elapsedh [number]: Display time difference between timer <number> and the current time (number = 0 if omitted)
 	- diff/diffh number1 number2: Display time difference between the two timers
 	*)

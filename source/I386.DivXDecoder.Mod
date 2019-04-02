@@ -296,8 +296,8 @@ TYPE MacroBlock *= OBJECT
 			END;
 
 		 	IF DT.Debug THEN
- 				log.String( "TransferIDCTCopy: "); log.Int( offset - mp4State.frameRefBaseOffset[cc], 0 ); log.Char( ' ' );
- 				log.Int( iincr, 0 ); log.Ln()
+				log.String( "TransferIDCTCopy: "); log.Int( offset - mp4State.frameRefBaseOffset[cc], 0 ); log.Char( ' ' );
+				log.Int( iincr, 0 ); log.Ln()
 		 	END;
 
 			TransferIDCTCopy( ADDRESSOF(texture.dstBlock[4]), mp4State.frameRef, offset, iincr );
@@ -326,14 +326,14 @@ TYPE MacroBlock *= OBJECT
 
 				(* frame DCT coding *)
 				offset := mp4State.frameRefBaseOffset[cc] + mp4State.chromWidth * by + bx;
- 	   		iincr := mp4State.chromWidth
+	   		iincr := mp4State.chromWidth
 			END;
 
 		 	IF DT.Debug THEN
 		 		log.String( "TransferIDCTAdd: "); log.Int( offset - mp4State.frameRefBaseOffset[cc], 0 ); log.Char( ' ' );
 		 		log.Int( iincr, 0 ); log.Ln()
 		 	END;
- 			TransferIDCTAdd( ADDRESSOF(texture.dstBlock[4]), mp4State.frameRef, offset, iincr );
+			TransferIDCTAdd( ADDRESSOF(texture.dstBlock[4]), mp4State.frameRef, offset, iincr );
 		END AddBlockInter;
 
 		PROCEDURE TransferIDCTAdd( source: LONGINT; dest: DT.PointerToArrayOfCHAR; destOffset, stride: LONGINT );
@@ -743,7 +743,7 @@ TYPE MotionCompensation = OBJECT
 				END;
 			END;
 
- 		 	verMvData := GetMVData(s);
+		 	verMvData := GetMVData(s);
 
 			IF ( scaleFac = 1 ) OR ( verMvData = 0 ) THEN
 				mvdy := verMvData

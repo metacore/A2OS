@@ -1855,7 +1855,7 @@ TYPE
 				SelectAll
 			ELSIF keysym = 03H THEN (* Ctrl-C *)
 				CopySelection
- 			ELSIF (keysym = 0FF63H) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Insert *)
+			ELSIF (keysym = 0FF63H) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Insert *)
 				CopySelection
 			ELSIF keysym = 12H THEN (* Ctrl-R *)
 				layout.FullLayout(firstPos, firstLineI); Invalidate;CheckNumberOfLines;

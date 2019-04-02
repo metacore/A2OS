@@ -2138,7 +2138,7 @@ TYPE
 				compileBtn.caption.SetAOC(currentPage.compilerSettings.caption);
 				findPCBtn.visible.Set(currentPage.compilerSettings.findPC);
 
- 				optionsEdit.GetAsString(options); COPY(options, currentPage.options);
+				optionsEdit.GetAsString(options); COPY(options, currentPage.options);
 				currentPage.modified := FALSE;
 				SetModified(FALSE);
 

@@ -333,7 +333,7 @@ TYPE
 	END Window;
 
 	(* FTPPanel *)
- 	FTPPanel = OBJECT(WMComponents.VisualComponent)
+	FTPPanel = OBJECT(WMComponents.VisualComponent)
 	VAR
 		grid : WMStringGrids.StringGrid;
 		colWidths : WMGrids.Spacings;

@@ -800,7 +800,7 @@ TYPE
 		IF  LEN( strings^ ) # 2 THEN  Log.String( usage ); Log.Ln;  RETURN  END;
 		Strings.StrToInt( strings[0]^, locPort );
 		Strings.StrToInt( strings[1]^, destPort );
- 		f := forwarderList;
+		f := forwarderList;
 		WHILE f # NIL DO
 			IF f.localPort = locPort THEN
 				Log.String( "Error: port in use: " );  Log.Int( f.localPort, 1 );  Log.Ln;  RETURN

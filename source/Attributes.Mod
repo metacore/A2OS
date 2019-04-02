@@ -62,7 +62,7 @@ TYPE
 			INC(nofAttributes);
 		END AddObject;
 
-		(* 	Remove <object> from array. If hint is not <Invalid>, hint is the index of the object.
+		(*	Remove <object> from array. If hint is not <Invalid>, hint is the index of the object.
 			<object> must be contained in array! *)
 		PROCEDURE RemoveObject(object : ANY; hint : LONGINT); (* private *)
 		VAR index, i : LONGINT;

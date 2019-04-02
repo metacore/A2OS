@@ -609,7 +609,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 			SHORT(GetInt(MinColObj, MinColDef)), SHORT(GetInt(MaxColObj, MaxColDef)),
 			SHORT(GetInt(BAccObj, BAccDef)), SHORT(GetInt(BVelObj, BVelDef)),
 			SHORT(GetInt(WAccObj, WAccDef)), SHORT(GetInt(WVelObj, WVelDef)))
- 	END Screensaver;
+	END Screensaver;
 
 
 	(* Screensaver Task *)

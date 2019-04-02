@@ -344,9 +344,9 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 					IF bsym.mod # scope.owner THEN UseModule(bsym.mod.adr(PCBT.Module)) END
 				END;
 				rec := rec.link;
- 				ASSERT(rec # scope.records, MAX(INTEGER));
- 					(* Fix bug, sometimes this assertion fails. *)
- 					(* fof 070920: done, cf. PCC.MakeTD *)
+				ASSERT(rec # scope.records, MAX(INTEGER));
+					(* Fix bug, sometimes this assertion fails. *)
+					(* fof 070920: done, cf. PCC.MakeTD *)
 			END
 		END;
 (*
@@ -1167,7 +1167,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 						par := par.nextPar
 					END;
 					PCM.ObjWLIntAt(R, nofPtrPos, nofptrs);
- 					IF nofptrs > maxPtrs THEN maxPtrs := nofptrs END;
+					IF nofptrs > maxPtrs THEN maxPtrs := nofptrs END;
 					INC(nofProcs);
 				END;
 				p := s.firstProc;

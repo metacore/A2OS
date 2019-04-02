@@ -542,7 +542,7 @@ TYPE
 		PROCEDURE hw_init;
 		BEGIN
 			CASE hwCfgMethod OF
- 				|CFG_METHOD_10,CFG_METHOD_11,CFG_METHOD_12,CFG_METHOD_13,CFG_METHOD_14,CFG_METHOD_15,CFG_METHOD_16,CFG_METHOD_17:
+				|CFG_METHOD_10,CFG_METHOD_11,CFG_METHOD_12,CFG_METHOD_13,CFG_METHOD_14,CFG_METHOD_15,CFG_METHOD_16,CFG_METHOD_17:
 					Write8(Cfg9346, Cfg9346_Unlock);
 					Write8(Config5, Read8(Config5) - {0});
 					Write8(Config2, Read8(Config2) - {7});
@@ -1078,7 +1078,7 @@ TYPE
 
 				(* Write8(Config1, 0xDF);*)
 
- 				Write8(0xF4, 0x01);
+				Write8(0xF4, 0x01);
 
 				Write8(Config3, Read8(Config3) & ~Beacon_en);*)
 			ELSIF hwCfgMethod = CFG_METHOD_10 THEN

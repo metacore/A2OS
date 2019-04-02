@@ -274,7 +274,7 @@ IMPORT
 
 			IF in IS Codecs.FileInputStream	THEN
 				in(Codecs.FileInputStream).f.GetName(filename);
-				IF ReadHeader() THEN res := Codecs.ResOk 	END
+				IF ReadHeader() THEN res := Codecs.ResOk END
 			ELSE RETURN END;													(* bad bad bad *)
 
 		END Open;
@@ -410,19 +410,19 @@ IMPORT
 						END;
 					ELSIF CompareCharArrays(buf, "movi",4) THEN
 						(* movie data begin, including movi Tag *)
- 						movieBeginPos := r.Pos()-4;
+						movieBeginPos := r.Pos()-4;
 
- 						(* this could be improved... *)
- 						r.SetPos(headerLength+movieBeginPos);			(* headerLength); *)
+						(* this could be improved... *)
+						r.SetPos(headerLength+movieBeginPos);			(* headerLength); *)
 
 						r.Bytes(buf,0,4,len);
 
- 						IF CompareCharArrays(buf, "idx1",4) THEN
- 							(* There is an index *)
+						IF CompareCharArrays(buf, "idx1",4) THEN
+							(* There is an index *)
 
- 							(* Start of Index including idx1 Tag *)
- 							indexStart := r.Pos()-4;
- 							ReadIndex();
+							(* Start of Index including idx1 Tag *)
+							indexStart := r.Pos()-4;
+							ReadIndex();
 							IF Debug THEN
 								KernelLog.String("AVIDemux: Start of movie stream found " ); KernelLog.Ln()
 							END;
@@ -474,128 +474,128 @@ IMPORT
 			ioff: LONGINT;
 
 		BEGIN
- 			r.RawLInt(indexLength);
+			r.RawLInt(indexLength);
 
- 			nidx := indexLength DIV 16;
- 			idxType := 0;
- 			i := 0;
- 			LOOP
- 				r.Bytes(buf, 0, 4, len);
- 				IF CompareCharArrays(buf, videoStreamHeader.streamIdentifier, 3) THEN
- 					i := i+1;
- 					(* Not shure, wether this is necessary - but everything works fine with it *)
- 					indexStart := r.Pos()-4;
- 					EXIT;
- 				END;
- 				IF i >= nidx THEN
- 					KernelLog.String("No Index found"); KernelLog.Ln();
- 					EXIT;
- 				END;
- 			END;
+			nidx := indexLength DIV 16;
+			idxType := 0;
+			i := 0;
+			LOOP
+				r.Bytes(buf, 0, 4, len);
+				IF CompareCharArrays(buf, videoStreamHeader.streamIdentifier, 3) THEN
+					i := i+1;
+					(* Not shure, wether this is necessary - but everything works fine with it *)
+					indexStart := r.Pos()-4;
+					EXIT;
+				END;
+				IF i >= nidx THEN
+					KernelLog.String("No Index found"); KernelLog.Ln();
+					EXIT;
+				END;
+			END;
 
- 			r.SkipBytes(4);
- 			r.RawLInt(pos);
- 			r.RawLInt(length);
- 			r.SetPos(pos);
+			r.SkipBytes(4);
+			r.RawLInt(pos);
+			r.RawLInt(length);
+			r.SetPos(pos);
 
- 			(* Index from start of File*)
- 			IF CompareCharArrays(buf2, buf, 4) THEN
- 				r.RawLInt(temp);
+			(* Index from start of File*)
+			IF CompareCharArrays(buf2, buf, 4) THEN
+				r.RawLInt(temp);
 
- 				IF (temp = length) THEN
- 					idxType := 1;
- 				END;
- 			ELSE
- 				r.SetPos(pos + movieBeginPos);
+				IF (temp = length) THEN
+					idxType := 1;
+				END;
+			ELSE
+				r.SetPos(pos + movieBeginPos);
 
- 				r.Bytes(buf2, 0, 4, len);
- 				IF CompareCharArrays(buf2, buf, 4) THEN
- 					r.RawLInt(temp);
+				r.Bytes(buf2, 0, 4, len);
+				IF CompareCharArrays(buf2, buf, 4) THEN
+					r.RawLInt(temp);
 
- 					IF (temp = length) THEN
- 						idxType := 2;
- 					END;
- 				END;
- 			END;
+					IF (temp = length) THEN
+						idxType := 2;
+					END;
+				END;
+			END;
 
- 			(* now go on according to indexType *)
- 			IF idxType = 0 THEN
- 				KernelLog.String("File without index: Not supported yet");
- 				(* And trap here ... *)
- 			END;
+			(* now go on according to indexType *)
+			IF idxType = 0 THEN
+				KernelLog.String("File without index: Not supported yet");
+				(* And trap here ... *)
+			END;
 
- 			(* The 0 case: no index. It is possible to generate an index b y traversing the whole file 	*)
- 			(* For now we simply declare the file as not seekable										*)
+			(* The 0 case: no index. It is possible to generate an index b y traversing the whole file *)
+			(* For now we simply declare the file as not seekable *)
 
- 			IF idxType # 0 THEN
- 				nai := 0;
- 				nvi := 0;
+			IF idxType # 0 THEN
+				nai := 0;
+				nvi := 0;
 
- 				r.SetPos(indexStart);
+				r.SetPos(indexStart);
 
- 				i := 0;
- 				(* Count, how many entries there are (the number would also be in the header, 	*)
- 				(* but if there is no index, you have to do this anyway)							*)
- 				REPEAT
- 					r.Bytes(buf, 0, 4, len);
- 					IF CompareCharArrays(buf, videoStreamHeader.streamIdentifier, 3) THEN
- 						nvi := nvi+1;
- 					ELSE
- 						IF audioStreamHeader # NIL THEN
- 							IF CompareCharArrays(buf, audioStreamHeader.streamIdentifier, 4) THEN
- 								nai := nai+1;
- 							END;
- 						END;
- 					END;
- 					r.SkipBytes(12);
- 					i := i+1;
- 				UNTIL (i = nidx-1);
+				i := 0;
+				(* Count, how many entries there are (the number would also be in the header, *)
+				(* but if there is no index, you have to do this anyway) *)
+				REPEAT
+					r.Bytes(buf, 0, 4, len);
+					IF CompareCharArrays(buf, videoStreamHeader.streamIdentifier, 3) THEN
+						nvi := nvi+1;
+					ELSE
+						IF audioStreamHeader # NIL THEN
+							IF CompareCharArrays(buf, audioStreamHeader.streamIdentifier, 4) THEN
+								nai := nai+1;
+							END;
+						END;
+					END;
+					r.SkipBytes(12);
+					i := i+1;
+				UNTIL (i = nidx-1);
 
- 				videoFrames := nvi;
- 				audioChunks := nai;
+				videoFrames := nvi;
+				audioChunks := nai;
 				NEW(videoIndex, nvi);
 
- 				(* Vielleicht haben wir ja nur Bilder... *)
- 				IF (audioChunks > 0) THEN
- 					NEW(audioIndex, nai);
- 				END;
+				(* Vielleicht haben wir ja nur Bilder... *)
+				IF (audioChunks > 0) THEN
+					NEW(audioIndex, nai);
+				END;
 
- 				(* So, und jetzt die Arrays fuellen *)
- 				nvi := 0;
- 				nai := 0;
- 				tot := 0;
- 				r.SetPos(indexStart);
+				(* So, und jetzt die Arrays fuellen *)
+				nvi := 0;
+				nai := 0;
+				tot := 0;
+				r.SetPos(indexStart);
 
- 				IF (idxType = 1) THEN
- 					ioff := 8;
- 				ELSE
- 					ioff := movieBeginPos;
- 				END;
+				IF (idxType = 1) THEN
+					ioff := 8;
+				ELSE
+					ioff := movieBeginPos;
+				END;
 
- 				i := 0;
- 				REPEAT
- 					r.Bytes(buf, 0, 4, len);
- 					IF CompareCharArrays(buf, videoStreamHeader.streamIdentifier, 3) THEN
- 						r.RawLInt(videoIndex[nvi].flags);
- 						r.RawLInt(videoIndex[nvi].offset);
- 						videoIndex[nvi].offset := videoIndex[nvi].offset + ioff;
- 						r.RawLInt(videoIndex[nvi].length);
- 						nvi := nvi+1;
- 					ELSE
- 						IF CompareCharArrays(buf, audioStreamHeader.streamIdentifier, 4) THEN
- 							r.SkipBytes(4);
- 							r.RawLInt(audioIndex[nai].offset);
- 							audioIndex[nai].offset := audioIndex[nai].offset + ioff;
- 							r.RawLInt(audioIndex[nai].length);
- 							audioIndex[nai].tot := tot;
- 							tot := tot + audioIndex[nai].length;
- 							nai := nai+1;
- 						END;
- 					END;
- 					i := i+1;
- 				UNTIL (i = nidx-1);
- 				audioBytes := tot;
- 			END;
+				i := 0;
+				REPEAT
+					r.Bytes(buf, 0, 4, len);
+					IF CompareCharArrays(buf, videoStreamHeader.streamIdentifier, 3) THEN
+						r.RawLInt(videoIndex[nvi].flags);
+						r.RawLInt(videoIndex[nvi].offset);
+						videoIndex[nvi].offset := videoIndex[nvi].offset + ioff;
+						r.RawLInt(videoIndex[nvi].length);
+						nvi := nvi+1;
+					ELSE
+						IF CompareCharArrays(buf, audioStreamHeader.streamIdentifier, 4) THEN
+							r.SkipBytes(4);
+							r.RawLInt(audioIndex[nai].offset);
+							audioIndex[nai].offset := audioIndex[nai].offset + ioff;
+							r.RawLInt(audioIndex[nai].length);
+							audioIndex[nai].tot := tot;
+							tot := tot + audioIndex[nai].length;
+							nai := nai+1;
+						END;
+					END;
+					i := i+1;
+				UNTIL (i = nidx-1);
+				audioBytes := tot;
+			END;
 		END ReadIndex;
 
 		(* Skip chunk *)
@@ -936,7 +936,7 @@ IMPORT
 				IF (audioStreamHeader.waveFormatEx # NIL) THEN
 					CASE audioStreamHeader.waveFormatEx.formatTag OF
 						1 :	COPY("PCM", tag);
-					|	85: 	COPY("MP3", tag);
+					|	85:	COPY("MP3", tag);
 					ELSE
 					END;
 					FOR i := 0 TO 3 DO streamInfo.contentType[i] := tag[i]; END;
@@ -1009,7 +1009,7 @@ IMPORT
 			tag : ARRAY 4 OF CHAR;
 		BEGIN
 
- 			IF streamNr = 0 THEN							(* Video *)
+			IF streamNr = 0 THEN							(* Video *)
 				streamInfo.streamType := Codecs.STVideo;
 				FOR i := 0 TO 3 DO
 					streamInfo.contentType[i] := videoStreamHeader.fccHandler[i];
@@ -1029,7 +1029,7 @@ IMPORT
 				IF (audioStreamHeader.waveFormatEx # NIL) THEN
 					CASE audioStreamHeader.waveFormatEx.formatTag OF
 						1 :	COPY("PCM", tag);
-					|	85: 	COPY("MP3", tag);
+					|	85:	COPY("MP3", tag);
 					ELSE
 					END;
 					FOR i := 0 TO 3 DO
@@ -1332,7 +1332,7 @@ BEGIN
 		bufa := Machine.ChangeByteOrder( SYSTEM.GET32( temp ) );
 		bufb := Machine.ChangeByteOrder( SYSTEM.GET32( temp + 4 ) );
 
-		 temp := LSH( LSH( bufa, posInLONGINT ),  nbit - posInLONGINT );
+		temp := LSH( LSH( bufa, posInLONGINT ),  nbit - posInLONGINT );
 		RETURN SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, LSH( bufb, nbit - 32 ) ) + SYSTEM.VAL( SET, temp ) )
 	ELSE
 		(* Reading one 32 value is sufficient *)

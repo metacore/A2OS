@@ -128,8 +128,8 @@ VAR
 		nId : LONGINT): HWND;
 	CapGetDriverDescription- : PROCEDURE {WINAPI} (wDriverIndex : LONGINT;
 		VAR lpszName : ARRAY OF CHAR; cbName : LONGINT;
- 		VAR lpszVer : ARRAY OF CHAR; cbVar : LONGINT) : BOOLEAN;
- 	(* PeekMessage is missing in Win32.User32 *)
+		VAR lpszVer : ARRAY OF CHAR; cbVar : LONGINT) : BOOLEAN;
+	(* PeekMessage is missing in Win32.User32 *)
 	PeekMessage-: PROCEDURE {WINAPI} (VAR lpMsg: User32.Msg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax, wRemoveMsg: LONGINT): LONGINT;
 
 

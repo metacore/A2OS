@@ -2,8 +2,8 @@ MODULE WMCDRecorder;
 
 IMPORT
 	WMWindowManager, WMComponents, WMStandardComponents, WMGrids, WMStringGrids, WMMessages, WMDialogs,
- 	WMEvents, Objects, Kernel, WMProperties, WMGraphics, WMEditors, WMTrees, WMRectangles, WMPopups, WMDropTarget,
- 	Modules, Disks, XMLObjects, Files, Strings, CDRecord, Lib := CDRecordLib, MakeIsoImages, Utils := CDRecordUtils;
+	WMEvents, Objects, Kernel, WMProperties, WMGraphics, WMEditors, WMTrees, WMRectangles, WMPopups, WMDropTarget,
+	Modules, Disks, XMLObjects, Files, Strings, CDRecord, Lib := CDRecordLib, MakeIsoImages, Utils := CDRecordUtils;
 
 CONST
 	Title = "CD Recording Tool";

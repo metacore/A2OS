@@ -288,7 +288,7 @@ BEGIN
 				ELSE NEW(F0); F.stamp := M.stamp; F.dlink := F0; CopyColorPicker(M, F, F0); M.obj := F0
 				END
 			END
- 		ELSIF M IS Display.FrameMsg THEN
+		ELSIF M IS Display.FrameMsg THEN
 			WITH M: Display.FrameMsg DO
 				x := M.x + F.X; y := M.y + F.Y; w := F.W; h := F.H; (* calculate actual coordinates *)
 				u := M.x; v := M.y; (* store volatile info *)

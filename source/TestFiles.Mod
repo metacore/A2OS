@@ -122,7 +122,7 @@ TYPE
 				file.Set(rider, position);
 				log.String("Ok");
 			END;
- 		END FileSet;
+		END FileSet;
 
 		PROCEDURE GetInteger(r : Streams.Reader; VAR integer : LONGINT) : BOOLEAN;
 		BEGIN

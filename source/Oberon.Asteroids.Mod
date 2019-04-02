@@ -871,7 +871,7 @@ BEGIN
 		ship.x:= RandomNumbers.Uniform() * Display.Width;
 		ship.y:= RandomNumbers.Uniform() * Display.Height;
 		ship.xvel:= 0.0; ship.yvel:= 0.0; ship.rot:= 0.0; ship.rotvel:= 0.0;
- 		F.changed:= TRUE;
+		F.changed:= TRUE;
 	END;
 END SWarp;
 

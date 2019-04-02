@@ -1139,7 +1139,7 @@ VAR
 			IGNORE Kernel32.GetFullPathName( fileName, Kernel32.MaxPath, fullName, fileNamePart ); FixDriveLetter (fullName);
 		ELSE ConvertChar( fullName, Files.PathDelimiter, PathDelimiter )
 		END;   (* from here on all with PathDelimiter and drive letter *)
- 		IF CAP( workPath[0] ) # CAP( fullName[0] ) THEN  (* different drive letters -> nothing to be done *)
+		IF CAP( workPath[0] ) # CAP( fullName[0] ) THEN  (* different drive letters -> nothing to be done *)
 			COPY( fullName, relFileName )
 		ELSE
 			i := 0;  j := -1;  p := 0;

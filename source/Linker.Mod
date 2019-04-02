@@ -782,7 +782,7 @@ BEGIN
 	ASSERT (arrangement.displacement = BaseAddress);
 	WriteELFHeader;
 	WriteProgramHeader;
- 	WriteBinaryFile (linker, arrangement, writer);
+	WriteBinaryFile (linker, arrangement, writer);
 END WriteELFFile;
 
 PROCEDURE WriteMachOFile (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
@@ -872,7 +872,7 @@ BEGIN
 	WriteMachHeader;
 	WriteLoadCommand;
 	WriteThreadCommand;
- 	WriteBinaryFile (linker, arrangement, writer);
+	WriteBinaryFile (linker, arrangement, writer);
 END WriteMachOFile;
 
 PROCEDURE GetFileFormat (options: Options.Options; CONST name: Options.Name; default: FileFormat): FileFormat;

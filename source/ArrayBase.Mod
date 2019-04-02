@@ -78,7 +78,6 @@ MODULE ArrayBase;   (**  AUTHOR "fof"; PURPOSE "runtime array operators";  **)
 	END;
 *)
 
-
  (** frequent errors: wrong input type, wrong destination type, wrong loop called, wrong entry in PCArrays.Mod *)
 
 IMPORT KernelLog, SYSTEM, Heaps;
@@ -323,7 +322,7 @@ VAR
 
 	(*** helping procedures ********************************************************************)
 
-	 (** access to geometry , caution: reverse dimension ordering compared to SYSTEM.INCR(..)  and LEN(..) *)
+	(** access to geometry , caution: reverse dimension ordering compared to SYSTEM.INCR(..)  and LEN(..) *)
 
 	(*
 	A[x,y,z];
@@ -499,7 +498,6 @@ machine code equivalents:
 		SYSTEM.PUT( base + flagoffs, flags );
 	END PutFlags;
 
-
 (*
 (* report geometry of array passed via address s *)
 	PROCEDURE Report( name: ARRAY OF CHAR;  s: LONGINT );
@@ -518,7 +516,6 @@ machine code equivalents:
 		KernelLog.Ln;  KernelLog.String( "len:" );  KernelLog.Int( len, 10 );  KernelLog.Ln;
 	END Report;
 	*)
-
 
 	PROCEDURE Halt( code: LONGINT;  left, right, dest: LONGINT );
 	VAR reason: ARRAY 64 OF CHAR;
@@ -560,7 +557,7 @@ machine code equivalents:
 
 (* find the largest block with a regular pattern of the form offset+{i*linc: 0<=i<len} for two arrays simultaneously. d is dimension applying to the resulting loop *)
 	PROCEDURE FindPattern2( left, right: Address;  dim: LONGINT;
-												 VAR d, len, linc, ri: LONGINT );
+												VAR d, len, linc, ri: LONGINT );
 	(* geometric precondition: lengths must coincide *)
 	BEGIN
 		d := dim - 1;  len := GetLen( left, d );  ASSERT( len = GetLen( right, d ) );
@@ -578,7 +575,7 @@ machine code equivalents:
 
 (* find the largest block with a regular pattern of the form offset+{i*linc: 0<=i<len} for three arrays simultaneously. d is dimension applying to the resulting loop *)
 	PROCEDURE FindPattern3( left, right, dest: Address;  dim: LONGINT;
-												 VAR d, len, linc, ri, di: LONGINT );
+												VAR d, len, linc, ri, di: LONGINT );
 	(* geometric precondition: lengths must coincide *)
 	BEGIN
 		d := dim - 1;  len := GetLen( left, d );
@@ -588,7 +585,7 @@ machine code equivalents:
 		linc := GetInc( left, d );  ri := GetInc( right, d );  di := GetInc( dest, d );
 		DEC( d );
 		WHILE (d >= 0) & (GetInc( left, d ) = len * linc) &
-				    (GetInc( right, d ) = len * ri) & (GetInc( dest, d ) = len * di) DO
+				(GetInc( right, d ) = len * ri) & (GetInc( dest, d ) = len * di) DO
 			len := len * GetLen( left, d );  DEC( d );
 		END;
 		INC( d );
@@ -643,7 +640,7 @@ Sufficient (but not necessary) conditions:
 	END CopyUpCompatible;
 
 	PROCEDURE AllocateTemp( VAR dest: Address;  src: Address;
-												  Size: LONGINT ): ANY;
+												Size: LONGINT ): ANY;
 	(* allocate a temporary block containing both descriptor and data *)
 	VAR d, len, i: LONGINT;  p: ANY;  dim: LONGINT;
 	BEGIN
@@ -661,7 +658,6 @@ Sufficient (but not necessary) conditions:
 		(* Report("allocdest",dest,dim); *)
 		RETURN p;
 	END AllocateTemp;
-
 
 	(*** procedures to traverse arrays and apply operators *)
 
@@ -753,9 +749,8 @@ Sufficient (but not necessary) conditions:
 
 (** apply binary operator : array x array -> array *)
 
-
 	PROCEDURE ApplyBinaryAAAOp( d, l, r: Address;  elementSize: LONGINT;
-														    Loop: BinaryAAALoop );
+														Loop: BinaryAAALoop );
 	VAR loopd, looplen, loopli, loopri, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;  left, right, dest: Address;  dim: LONGINT;
 
@@ -813,8 +808,8 @@ Sufficient (but not necessary) conditions:
 (** apply binary operator: array x scalar -> array *)
 
 	PROCEDURE ApplyBinaryASAOp( d, l, right: Address;
-														   elementSize: LONGINT;
-														   Loop: BinaryASALoop );
+														elementSize: LONGINT;
+														Loop: BinaryASALoop );
 	VAR loopd, looplen, loopli, loopdi: LONGINT;  p: ANY;  glen: LONGINT;
 		origdest: LONGINT;  modes: SET;  dest, left, dim: LONGINT;
 
@@ -914,7 +909,7 @@ Sufficient (but not necessary) conditions:
 (** special binary operator: array x array -> boolean *)
 
 	PROCEDURE ApplyBinaryAABOp( l, r: Address;
-														    Loop: BinaryAABLoop ): BOOLEAN;
+														Loop: BinaryAABLoop ): BOOLEAN;
 	VAR loopd, looplen, loopli, loopri: LONGINT;  left, right, dim: LONGINT;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr, radr: Address ): BOOLEAN;
@@ -950,7 +945,7 @@ Sufficient (but not necessary) conditions:
 (** special binary operator: array x scalar -> boolean *)
 
 	PROCEDURE ApplyBinaryASBOp( l, right: Address;
-														   Loop: BinaryASBLoop ): BOOLEAN;
+														Loop: BinaryASBLoop ): BOOLEAN;
 	VAR loopd, looplen, loopli: LONGINT;  left, dim: LONGINT;
 
 		PROCEDURE Traverse( dim: LONGINT;  ladr: Address ): BOOLEAN;
@@ -975,8 +970,6 @@ Sufficient (but not necessary) conditions:
 		(*  run through dimensions  *)
 		RETURN Traverse( 0, GetAdr( left ) );
 	END ApplyBinaryASBOp;
-
-
 
 	(**** operators *)
 
@@ -1182,7 +1175,7 @@ Sufficient (but not necessary) conditions:
 	END CopyContent;
 
 	PROCEDURE AllocateSame( VAR dest: LONGINT;  src: LONGINT;
-												   elementsize: LONGINT ): ANY;
+												elementsize: LONGINT ): ANY;
 	VAR ptr, data: ANY;  Size: LONGINT;
 		(* allocate a structure in dest compatible with src, if necessary. returns if allocation has taken place *)
 
@@ -1250,7 +1243,7 @@ Sufficient (but not necessary) conditions:
 	END CopyArraySelf;
 
 	PROCEDURE CopyArray*( dest: Address;  src: Address;
-											  elementsize: LONGINT );
+											elementsize: LONGINT );
 	VAR p: ANY;
 	BEGIN
 		(* IF dest = 0 THEN Helper.ViewFrame END;  *)
@@ -1266,13 +1259,13 @@ Sufficient (but not necessary) conditions:
 	END CopyArray;
 
 	PROCEDURE CopyTensorSelf*( VAR dest: Address;  src: Address;
-													    elementsize: LONGINT );
+													elementsize: LONGINT );
 	BEGIN
 		dest := 0;  CopyTensor( dest, src, elementsize );
 	END CopyTensorSelf;
 
 	PROCEDURE CopyTensor*( VAR dest: Address;  src: Address;
-												 elementsize: LONGINT );
+												elementsize: LONGINT );
 	VAR p: ANY;
 	BEGIN
 		IF (dest = 0) OR ~(SameShape( dest, src )) OR (GetAdr( dest ) = 0) THEN
@@ -1333,7 +1326,6 @@ Sufficient (but not necessary) conditions:
 
 	END ShallowCopy;
 
-
 	PROCEDURE DescriptorCopy( src, dest: LONGINT );
 	BEGIN
 		IF debug THEN
@@ -1345,7 +1337,7 @@ Sufficient (but not necessary) conditions:
 	END DescriptorCopy;
 
 	PROCEDURE ZeroCopyArray*( dest: Address;  src: Address;
-													 elementsize: LONGINT );
+													elementsize: LONGINT );
 	(*
 		called as ZeroCopy(A,B,Size) with enhanced arrays A,B
 		check if deep copy can be avoided and if so then do a shallow copy
@@ -1412,7 +1404,6 @@ Sufficient (but not necessary) conditions:
 		RETURN TRUE;
 	END SameShape;
 
-
 (* report geometry of array passed via address s *)
 	PROCEDURE Report(CONST name: ARRAY OF CHAR;  s: LONGINT );
 	VAR i: LONGINT;  dim: LONGINT;
@@ -1453,13 +1444,12 @@ Sufficient (but not necessary) conditions:
 		END;
 	END Report;
 
-
 (*
 	PROCEDURE AddALAL*( VAR dest: ARRAY [?] OF LONGINT;  left, right: ARRAY [?] OF LONGINT );
 	VAR d: LONGINT;  i, j: LONGINT;  adrd, adrl: LONGINT;
 	BEGIN
 		ApplyBinaryAAAOpx( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( LONGINT ),
-										    AddALALLoop );
+										AddALALLoop );
 	END AddALAL;
 	*)
 
@@ -1493,10 +1483,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertASAILoop;
 
 	PROCEDURE ConvertASAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-												  CONST src: ARRAY [ ? ] OF SHORTINT );
+												CONST src: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( INTEGER ),
-									   ConvertASAILoop );
+									ConvertASAILoop );
 	END ConvertASAI;
 
 (** SHORTINT -> LONGINT *)
@@ -1509,10 +1499,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopSL;
 
 	PROCEDURE ConvertASAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												  CONST src: ARRAY [ ? ] OF SHORTINT );
+												CONST src: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGINT ),
-									   ConvertLoopSL );
+									ConvertLoopSL );
 	END ConvertASAL;
 
 (** SHORTINT -> REAL *)
@@ -1526,7 +1516,7 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopSR;
 
 	PROCEDURE ConvertASAR*( VAR dest: ARRAY [ ? ] OF REAL;
-												   CONST src: ARRAY [ ? ] OF SHORTINT );
+												CONST src: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( REAL ), ConvertLoopSR );
 	END ConvertASAR;
@@ -1542,10 +1532,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopSX;
 
 	PROCEDURE ConvertASAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  CONST src: ARRAY [ ? ] OF SHORTINT );
+												CONST src: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGREAL ),
-									   ConvertLoopSX );
+									ConvertLoopSX );
 	END ConvertASAX;
 
 (** INTEGER -> SHORTINT (SHORT) *)
@@ -1559,10 +1549,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopIS;
 
 	PROCEDURE ConvertAIAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-												  CONST src: ARRAY [ ? ] OF INTEGER );
+												CONST src: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( SHORTINT ),
-									   ConvertLoopIS );
+									ConvertLoopIS );
 	END ConvertAIAS;
 
 	(** INTEGER -> LONGINT *)
@@ -1574,7 +1564,6 @@ Sufficient (but not necessary) conditions:
 	END ItoL;
 *)
 
-
 	PROCEDURE ConvertLoopIL( ladr, dadr, linc, dinc, len: LONGINT );
 	BEGIN
 		WHILE (len > 0) DO  (* SYSTEM.GET( ladr, lval );  dval := lval;  SYSTEM.PUT( dadr, dval );  *)
@@ -1584,10 +1573,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopIL;
 
 	PROCEDURE ConvertAIAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												 CONST src: ARRAY [ ? ] OF INTEGER );
+												CONST src: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGINT ),
-									   ConvertLoopIL );
+									ConvertLoopIL );
 	END ConvertAIAL;
 
 (** INTEGER -> REAL *)
@@ -1601,7 +1590,7 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopIR;
 
 	PROCEDURE ConvertAIAR*( VAR dest: ARRAY [ ? ] OF REAL;
-												  CONST src: ARRAY [ ? ] OF INTEGER );
+												CONST src: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( REAL ), ConvertLoopIR );
 	END ConvertAIAR;
@@ -1617,10 +1606,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopIX;
 
 	PROCEDURE ConvertAIAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  CONST src: ARRAY [ ? ] OF INTEGER );
+												CONST src: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGREAL ),
-									   ConvertLoopIX );
+									ConvertLoopIX );
 	END ConvertAIAX;
 
 (** LONGINT -> INTEGER (SHORT) *)
@@ -1634,10 +1623,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopLI;
 
 	PROCEDURE ConvertALAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-												 CONST src: ARRAY [ ? ] OF LONGINT );
+												CONST src: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( INTEGER ),
-									   ConvertLoopLI );
+									ConvertLoopLI );
 	END ConvertALAI;
 
 (** LONGINT -> REAL *)
@@ -1651,7 +1640,7 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopLR;
 
 	PROCEDURE ConvertALAR*( VAR dest: ARRAY [ ? ] OF REAL;
-												  CONST src: ARRAY [ ? ] OF LONGINT );
+												CONST src: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( REAL ), ConvertLoopLR );
 	END ConvertALAR;
@@ -1667,10 +1656,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopLX;
 
 	PROCEDURE ConvertALAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  CONST src: ARRAY [ ? ] OF LONGINT );
+												CONST src: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGREAL ),
-									   ConvertLoopLX );
+									ConvertLoopLX );
 	END ConvertALAX;
 
 (** REAL -> LONGINT (ENTIER) *)
@@ -1684,10 +1673,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopRL;
 
 	PROCEDURE ConvertARAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												  CONST src: ARRAY [ ? ] OF REAL );
+												CONST src: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGINT ),
-									   ConvertLoopRL );
+									ConvertLoopRL );
 	END ConvertARAL;
 
 (** REAL -> LONGREAL *)
@@ -1701,10 +1690,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopRX;
 
 	PROCEDURE ConvertARAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												   CONST src: ARRAY [ ? ] OF REAL );
+												CONST src: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGREAL ),
-									   ConvertLoopRX );
+									ConvertLoopRX );
 	END ConvertARAX;
 
 (** LONGREAL -> REAL (SHORT) *)
@@ -1718,7 +1707,7 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopXR;
 
 	PROCEDURE ConvertAXAR*( VAR dest: ARRAY [ ? ] OF REAL;
-												   CONST src: ARRAY [ ? ] OF LONGREAL );
+												CONST src: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( REAL ), ConvertLoopXR );
 	END ConvertAXAR;
@@ -1734,10 +1723,10 @@ Sufficient (but not necessary) conditions:
 	END ConvertLoopXL;
 
 	PROCEDURE ConvertAXAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												  CONST src: ARRAY [ ? ] OF LONGREAL );
+												CONST src: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGINT ),
-									   ConvertLoopXL );
+									ConvertLoopXL );
 	END ConvertAXAL;
 
 	(*** monadic not A -> ~A ********************************************************************)
@@ -1753,11 +1742,10 @@ Sufficient (but not necessary) conditions:
 	END NotLoopAB;
 
 	PROCEDURE NotAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-										 CONST src: ARRAY [ ? ] OF BOOLEAN );
+										CONST src: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( BOOLEAN ), NotLoopAB );
 	END NotAB;
-
 
 	(*** monadic minus A -> -A  ********************************************************************)
 
@@ -1772,7 +1760,7 @@ Sufficient (but not necessary) conditions:
 	END MinusLoopS;
 
 	PROCEDURE MinusAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-											 CONST src: ARRAY [ ? ] OF SHORTINT );
+											CONST src: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( SHORTINT ), MinusLoopS );
 	END MinusAS;
@@ -1788,7 +1776,7 @@ Sufficient (but not necessary) conditions:
 	END MinusLoopI;
 
 	PROCEDURE MinusAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										    CONST src: ARRAY [ ? ] OF INTEGER );
+										CONST src: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( INTEGER ), MinusLoopI );
 	END MinusAI;
@@ -1820,7 +1808,7 @@ Sufficient (but not necessary) conditions:
 	END MinusLoopR;
 
 	PROCEDURE MinusAR*( VAR dest: ARRAY [ ? ] OF REAL;
-											 CONST src: ARRAY [ ? ] OF REAL );
+											CONST src: ARRAY [ ? ] OF REAL );
 	BEGIN
 		IF debug THEN KernelLog.String( "MinusAR" );  KernelLog.Ln;  END;
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( REAL ), MinusLoopR );
@@ -1837,10 +1825,10 @@ Sufficient (but not necessary) conditions:
 	END MinusLoopX;
 
 	PROCEDURE MinusAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-											 CONST src: ARRAY [ ? ] OF LONGREAL );
+											CONST src: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGREAL ),
-									   MinusLoopX );
+									MinusLoopX );
 	END MinusAX;
 
 	(*** add array + array -> array  ********************************************************************)
@@ -1859,7 +1847,7 @@ Sufficient (but not necessary) conditions:
 											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), AddASASLoop );
+										SIZEOF( SHORTINT ), AddASASLoop );
 	END AddASAS;
 
 (** INTEGER *)
@@ -1873,10 +1861,10 @@ Sufficient (but not necessary) conditions:
 	END AddAIAILoop;
 
 	PROCEDURE AddAIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										   CONST left, right: ARRAY [ ? ] OF INTEGER );
+										CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), AddAIAILoop );
+										SIZEOF( INTEGER ), AddAIAILoop );
 	END AddAIAI;
 
 (** LONGINT *)
@@ -1890,15 +1878,15 @@ Sufficient (but not necessary) conditions:
 	END AddALALLoop;
 
 	PROCEDURE AddALAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-										    CONST left, right: ARRAY [ ? ] OF LONGINT );
+										CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		(*
-		 Report("dest",SYSTEM.VAL(LONGINT,dest)); Report("left",SYSTEM.VAL(LONGINT,left));Report("right",SYSTEM.VAL(LONGINT,right));
+		Report("dest",SYSTEM.VAL(LONGINT,dest)); Report("left",SYSTEM.VAL(LONGINT,left));Report("right",SYSTEM.VAL(LONGINT,right));
 		KernelLog.Int(ADDRESSOF(dest),10); KernelLog.Int(ADDRESSOF(left),10); KernelLog.Int(ADDRESSOF(right),10); KernelLog.Ln;
 		*)
 
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), AddALALLoop );
+										SIZEOF( LONGINT ), AddALALLoop );
 	END AddALAL;
 
 (** REAL *)
@@ -1912,10 +1900,10 @@ Sufficient (but not necessary) conditions:
 	END AddARARLoop;
 
 	PROCEDURE AddARAR*( VAR dest: ARRAY [ ? ] OF REAL;
-											 CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  loopAddARAR );
+										loopAddARAR );
 	END AddARAR;
 
 	PROCEDURE AddAXAXLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
@@ -1931,7 +1919,7 @@ Sufficient (but not necessary) conditions:
 											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), loopAddAXAX );
+										SIZEOF( LONGREAL ), loopAddAXAX );
 	END AddAXAX;
 
 	(*** add array + scalar -> array and scalar + array -> array ********************************************************************)
@@ -1952,14 +1940,14 @@ Sufficient (but not necessary) conditions:
 											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), AddASSSLoop );
+										SIZEOF( SHORTINT ), AddASSSLoop );
 	END AddASSS;
 
 	PROCEDURE AddSSAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;  left: SHORTINT;
 											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( SHORTINT ), AddASSSLoop );
+										SIZEOF( SHORTINT ), AddASSSLoop );
 	END AddSSAS;
 
 (** INTEGER *)
@@ -1974,17 +1962,17 @@ Sufficient (but not necessary) conditions:
 	END AddAISILoop;
 
 	PROCEDURE AddAISI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										   CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+										CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), AddAISILoop );
+										SIZEOF( INTEGER ), AddAISILoop );
 	END AddAISI;
 
 	PROCEDURE AddSIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;  left: INTEGER;
-										   CONST right: ARRAY [ ? ] OF INTEGER );
+										CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( INTEGER ), AddAISILoop );
+										SIZEOF( INTEGER ), AddAISILoop );
 	END AddSIAI;
 
 (** LONGINT *)
@@ -1999,17 +1987,17 @@ Sufficient (but not necessary) conditions:
 	END AddALSLLoop;
 
 	PROCEDURE AddALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-										    CONST left: ARRAY [ ? ] OF LONGINT;  right: LONGINT );
+										CONST left: ARRAY [ ? ] OF LONGINT;  right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), AddALSLLoop );
+										SIZEOF( LONGINT ), AddALSLLoop );
 	END AddALSL;
 
 	PROCEDURE AddSLAL*( VAR dest: ARRAY [ ? ] OF LONGINT;  left: LONGINT;
-										    CONST right: ARRAY [ ? ] OF LONGINT );
+										CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGINT ), AddALSLLoop );
+										SIZEOF( LONGINT ), AddALSLLoop );
 	END AddSLAL;
 
 (** REAL *)
@@ -2024,17 +2012,17 @@ Sufficient (but not necessary) conditions:
 	END AddARSRLoop;
 
 	PROCEDURE AddARSR*( VAR dest: ARRAY [ ? ] OF REAL;
-											 CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  AddARSRLoop );
+										AddARSRLoop );
 	END AddARSR;
 
 	PROCEDURE AddSRAR*( VAR dest: ARRAY [ ? ] OF REAL;  left: REAL;
-											 CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  AddARSRLoop );
+										AddARSRLoop );
 	END AddSRAR;
 
 (** LONGREAL *)
@@ -2053,7 +2041,7 @@ Sufficient (but not necessary) conditions:
 											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), AddAXSXLoop );
+										SIZEOF( LONGREAL ), AddAXSXLoop );
 	END AddAXSX;
 
 	PROCEDURE AddSXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
@@ -2061,7 +2049,7 @@ Sufficient (but not necessary) conditions:
 											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGREAL ), AddAXSXLoop );
+										SIZEOF( LONGREAL ), AddAXSXLoop );
 	END AddSXAX;
 
 	(*** subtraction array - array -> array  ********************************************************************)
@@ -2080,7 +2068,7 @@ Sufficient (but not necessary) conditions:
 											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), SubASASLoop );
+										SIZEOF( SHORTINT ), SubASASLoop );
 	END SubASAS;
 
 (** INTEGER *)
@@ -2094,10 +2082,10 @@ Sufficient (but not necessary) conditions:
 	END SubAIAILoop;
 
 	PROCEDURE SubAIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										   CONST left, right: ARRAY [ ? ] OF INTEGER );
+										CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), SubAIAILoop );
+										SIZEOF( INTEGER ), SubAIAILoop );
 	END SubAIAI;
 
 (** LONGINT *)
@@ -2111,10 +2099,10 @@ Sufficient (but not necessary) conditions:
 	END SubALALLoop;
 
 	PROCEDURE SubALAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-										    CONST left, right: ARRAY [ ? ] OF LONGINT );
+										CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), SubALALLoop );
+										SIZEOF( LONGINT ), SubALALLoop );
 	END SubALAL;
 
 (** REAL *)
@@ -2128,10 +2116,10 @@ Sufficient (but not necessary) conditions:
 	END SubARARLoop;
 
 	PROCEDURE SubARAR*( VAR dest: ARRAY [ ? ] OF REAL;
-											 CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  SubARARLoop );
+										SubARARLoop );
 	END SubARAR;
 
 (** LONGREAL *)
@@ -2148,7 +2136,7 @@ Sufficient (but not necessary) conditions:
 											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), SubAXAXLoop );
+										SIZEOF( LONGREAL ), SubAXAXLoop );
 	END SubAXAX;
 
 	(*** subtraction array-scalar -> array  ********************************************************************)
@@ -2163,7 +2151,7 @@ Sufficient (but not necessary) conditions:
 
 (** INTEGER *)
 	PROCEDURE SubAISI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										   CONST left: ARRAY [ ? ] OF INTEGER;
+										CONST left: ARRAY [ ? ] OF INTEGER;
 	right: INTEGER );   (* a: left, b: right, c: dest *)
 	BEGIN
 		AddAISI( dest, left, -right );
@@ -2171,7 +2159,7 @@ Sufficient (but not necessary) conditions:
 
 (** LONGINT *)
 	PROCEDURE SubALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-										    CONST left: ARRAY [ ? ] OF LONGINT;
+										CONST left: ARRAY [ ? ] OF LONGINT;
 	right: LONGINT );   (* a: left, b: right, c: dest *)
 	BEGIN
 		AddALSL( dest, left, -right );
@@ -2179,7 +2167,7 @@ Sufficient (but not necessary) conditions:
 
 (** REAL *)
 	PROCEDURE SubARSR*( VAR dest: ARRAY [ ? ] OF REAL;
-											 CONST left: ARRAY [ ? ] OF REAL;
+											CONST left: ARRAY [ ? ] OF REAL;
 	right: REAL );   (* a: left, b: right, c: dest *)
 	BEGIN
 		AddARSR( dest, left, -right );
@@ -2210,7 +2198,7 @@ Sufficient (but not necessary) conditions:
 											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( SHORTINT ), SubSSASLoop );
+										SIZEOF( SHORTINT ), SubSSASLoop );
 	END SubSSAS;
 
 (** INTEGER *)
@@ -2225,10 +2213,10 @@ Sufficient (but not necessary) conditions:
 	END SubSIAILoop;
 
 	PROCEDURE SubSIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;  left: INTEGER;
-										   CONST right: ARRAY [ ? ] OF INTEGER );
+										CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( INTEGER ), SubSIAILoop );
+										SIZEOF( INTEGER ), SubSIAILoop );
 	END SubSIAI;
 
 (** LONGINT *)
@@ -2243,10 +2231,10 @@ Sufficient (but not necessary) conditions:
 	END SubSLALLoop;
 
 	PROCEDURE SubSLAL*( VAR dest: ARRAY [ ? ] OF LONGINT;  left: LONGINT;
-										    CONST right: ARRAY [ ? ] OF LONGINT );
+										CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGINT ), SubSLALLoop );
+										SIZEOF( LONGINT ), SubSLALLoop );
 	END SubSLAL;
 
 (** REAL *)
@@ -2261,10 +2249,10 @@ Sufficient (but not necessary) conditions:
 	END SubSRARLoop;
 
 	PROCEDURE SubSRAR*( VAR dest: ARRAY [ ? ] OF REAL;  left: REAL;
-											 CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  SubSRARLoop );
+										SubSRARLoop );
 	END SubSRAR;
 
 (** LONGREAL *)
@@ -2283,10 +2271,8 @@ Sufficient (but not necessary) conditions:
 											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGREAL ), SubSXAXLoop );
+										SIZEOF( LONGREAL ), SubSXAXLoop );
 	END SubSXAX;
-
-
 
 	(*** element-wise multiply array x array -> array  ********************************************************************)
 
@@ -2301,10 +2287,10 @@ Sufficient (but not necessary) conditions:
 	END EMulASASLoop;
 
 	PROCEDURE EMulASAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-											   CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), EMulASASLoop );
+										SIZEOF( SHORTINT ), EMulASASLoop );
 	END EMulASAS;
 
 (** INTEGER *)
@@ -2319,10 +2305,10 @@ Sufficient (but not necessary) conditions:
 	END EMulAIAILoop;
 
 	PROCEDURE EMulAIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-											 CONST left, right: ARRAY [ ? ] OF INTEGER );
+											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), EMulAIAILoop );
+										SIZEOF( INTEGER ), EMulAIAILoop );
 	END EMulAIAI;
 
 (** LONGINT *)
@@ -2336,10 +2322,10 @@ Sufficient (but not necessary) conditions:
 	END EMulALALLoop;
 
 	PROCEDURE EMulALAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-											  CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), EMulALALLoop );
+										SIZEOF( LONGINT ), EMulALALLoop );
 	END EMulALAL;
 
 (** REAL *)
@@ -2353,10 +2339,10 @@ Sufficient (but not necessary) conditions:
 	END EMulARARLoop;
 
 	PROCEDURE EMulARAR*( VAR dest: ARRAY [ ? ] OF REAL;
-											   CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  EMulARARLoop );
+										EMulARARLoop );
 	END EMulARAR;
 
 (** LONGREAL *)
@@ -2370,10 +2356,10 @@ Sufficient (but not necessary) conditions:
 	END EMulAXAXLoop;
 
 	PROCEDURE EMulAXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-											   CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), EMulAXAXLoop );
+										SIZEOF( LONGREAL ), EMulAXAXLoop );
 	END EMulAXAX;
 
 	(*** element-wise multiply and add array x array -> array  ********************************************************************)
@@ -2389,10 +2375,10 @@ Sufficient (but not necessary) conditions:
 	END EMulIncASASLoop;
 
 	PROCEDURE EMulIncASAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-											   CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), EMulIncASASLoop );
+										SIZEOF( SHORTINT ), EMulIncASASLoop );
 	END EMulIncASAS;
 
 (** INTEGER *)
@@ -2407,10 +2393,10 @@ Sufficient (but not necessary) conditions:
 	END EMulIncAIAILoop;
 
 	PROCEDURE EMulIncAIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-											 CONST left, right: ARRAY [ ? ] OF INTEGER );
+											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), EMulIncAIAILoop );
+										SIZEOF( INTEGER ), EMulIncAIAILoop );
 	END EMulIncAIAI;
 
 (** LONGINT *)
@@ -2424,10 +2410,10 @@ Sufficient (but not necessary) conditions:
 	END EMulIncALALLoop;
 
 	PROCEDURE EMulIncALAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-											  CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), EMulIncALALLoop );
+										SIZEOF( LONGINT ), EMulIncALALLoop );
 	END EMulIncALAL;
 
 (** REAL *)
@@ -2441,10 +2427,10 @@ Sufficient (but not necessary) conditions:
 	END EMulIncARARLoop;
 
 	PROCEDURE EMulIncARAR*( VAR dest: ARRAY [ ? ] OF REAL;
-											   CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  EMulIncARARLoop );
+										EMulIncARARLoop );
 	END EMulIncARAR;
 
 (** LONGREAL *)
@@ -2458,10 +2444,10 @@ Sufficient (but not necessary) conditions:
 	END EMulIncAXAXLoop;
 
 	PROCEDURE EMulIncAXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-											   CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), EMulIncAXAXLoop );
+										SIZEOF( LONGREAL ), EMulIncAXAXLoop );
 	END EMulIncAXAX;
 	(*** multiply array x scalar -> array and scalar + array -> array ********************************************************************)
 
@@ -2477,18 +2463,18 @@ Sufficient (but not necessary) conditions:
 	END MulASSSLoop;
 
 	PROCEDURE MulASSS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-											 CONST left: ARRAY [ ? ] OF SHORTINT;
-											 right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), MulASSSLoop );
+										SIZEOF( SHORTINT ), MulASSSLoop );
 	END MulASSS;
 
 	PROCEDURE MulSSAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;  left: SHORTINT;
-											 CONST right: ARRAY [ ? ] OF SHORTINT );
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( SHORTINT ), MulASSSLoop );
+										SIZEOF( SHORTINT ), MulASSSLoop );
 	END MulSSAS;
 
 (** INTEGER *)
@@ -2503,17 +2489,17 @@ Sufficient (but not necessary) conditions:
 	END MulAISILoop;
 
 	PROCEDURE MulAISI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										   CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+										CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), MulAISILoop );
+										SIZEOF( INTEGER ), MulAISILoop );
 	END MulAISI;
 
 	PROCEDURE MulSIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;  left: INTEGER;
-										   CONST right: ARRAY [ ? ] OF INTEGER );
+										CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( INTEGER ), MulAISILoop );
+										SIZEOF( INTEGER ), MulAISILoop );
 	END MulSIAI;
 
 (** LONGINT *)
@@ -2528,18 +2514,18 @@ Sufficient (but not necessary) conditions:
 	END MulALSLLoop;
 
 	PROCEDURE MulALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-										    CONST left: ARRAY [ ? ] OF LONGINT;
-										    right: LONGINT );
+										CONST left: ARRAY [ ? ] OF LONGINT;
+										right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), MulALSLLoop );
+										SIZEOF( LONGINT ), MulALSLLoop );
 	END MulALSL;
 
 	PROCEDURE MulSLAL*( VAR dest: ARRAY [ ? ] OF LONGINT;  left: LONGINT;
-										    CONST right: ARRAY [ ? ] OF LONGINT );
+										CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGINT ), MulALSLLoop );
+										SIZEOF( LONGINT ), MulALSLLoop );
 	END MulSLAL;
 
 (** REAL *)
@@ -2554,17 +2540,17 @@ Sufficient (but not necessary) conditions:
 	END MulARSRLoop;
 
 	PROCEDURE MulARSR*( VAR dest: ARRAY [ ? ] OF REAL;
-											 CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  loopMulARSR );
+										loopMulARSR );
 	END MulARSR;
 
 	PROCEDURE MulSRAR*( VAR dest: ARRAY [ ? ] OF REAL;  left: REAL;
-											 CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  loopMulARSR );
+										loopMulARSR );
 	END MulSRAR;
 
 (** LONGREAL *)
@@ -2585,19 +2571,19 @@ Sufficient (but not necessary) conditions:
 	END MulAXSXLoop;
 
 	PROCEDURE MulAXSX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-											 CONST left: ARRAY [ ? ] OF LONGREAL;
-											 right: LONGREAL );
+											CONST left: ARRAY [ ? ] OF LONGREAL;
+											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), loopMulAXSX );
+										SIZEOF( LONGREAL ), loopMulAXSX );
 	END MulAXSX;
 
 	PROCEDURE MulSXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-											 left: LONGREAL;
-											 CONST right: ARRAY [ ? ] OF LONGREAL );
+											left: LONGREAL;
+											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGREAL ), loopMulAXSX );
+										SIZEOF( LONGREAL ), loopMulAXSX );
 	END MulSXAX;
 
 	(*** multiply and add array * scalar -> array and scalar *  array -> array ********************************************************************)
@@ -2614,43 +2600,40 @@ Sufficient (but not necessary) conditions:
 	END IncMulASSSLoop;
 
 	PROCEDURE IncMulASSS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-												  CONST left: ARRAY [ ? ] OF SHORTINT;
-												  right: SHORTINT );
+												CONST left: ARRAY [ ? ] OF SHORTINT;
+												right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), IncMulASSSLoop );
+										SIZEOF( SHORTINT ), IncMulASSSLoop );
 	END IncMulASSS;
 
 	PROCEDURE IncMulSSAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-												  left: SHORTINT;
-												  CONST right: ARRAY [ ? ] OF SHORTINT );
+												left: SHORTINT;
+												CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( SHORTINT ), IncMulASSSLoop );
+										SIZEOF( SHORTINT ), IncMulASSSLoop );
 	END IncMulSSAS;
 
-
 	PROCEDURE DecMulASSS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-												  CONST left: ARRAY [ ? ] OF SHORTINT;
-												  right: SHORTINT );
+												CONST left: ARRAY [ ? ] OF SHORTINT;
+												right: SHORTINT );
 	BEGIN
 		MinusAS(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), IncMulASSSLoop );
+										SIZEOF( SHORTINT ), IncMulASSSLoop );
 		MinusAS(dest,dest);
 	END DecMulASSS;
 
 	PROCEDURE DecMulSSAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-												  left: SHORTINT;
-												  CONST right: ARRAY [ ? ] OF SHORTINT );
+												left: SHORTINT;
+												CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		MinusAS(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( SHORTINT ), IncMulASSSLoop );
+										SIZEOF( SHORTINT ), IncMulASSSLoop );
 		MinusAS(dest,dest);
 	END DecMulSSAS;
-
-
 
 (** INTEGER *)
 	PROCEDURE IncMulAISILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -2664,36 +2647,36 @@ Sufficient (but not necessary) conditions:
 	END IncMulAISILoop;
 
 	PROCEDURE IncMulAISI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-												 CONST left: ARRAY [ ? ] OF INTEGER;
-												 right: INTEGER );
+												CONST left: ARRAY [ ? ] OF INTEGER;
+												right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), IncMulAISILoop );
+										SIZEOF( INTEGER ), IncMulAISILoop );
 	END IncMulAISI;
 
 	PROCEDURE IncMulSIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;  left: INTEGER;
-												 CONST right: ARRAY [ ? ] OF INTEGER );
+												CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( INTEGER ), IncMulAISILoop );
+										SIZEOF( INTEGER ), IncMulAISILoop );
 	END IncMulSIAI;
 
 	PROCEDURE DecMulAISI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-												 CONST left: ARRAY [ ? ] OF INTEGER;
-												 right: INTEGER );
+												CONST left: ARRAY [ ? ] OF INTEGER;
+												right: INTEGER );
 	BEGIN
 		MinusAI(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), IncMulAISILoop );
+										SIZEOF( INTEGER ), IncMulAISILoop );
 		MinusAI(dest,dest);
 	END DecMulAISI;
 
 	PROCEDURE DecMulSIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;  left: INTEGER;
-												 CONST right: ARRAY [ ? ] OF INTEGER );
+												CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		MinusAI(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( INTEGER ), IncMulAISILoop );
+										SIZEOF( INTEGER ), IncMulAISILoop );
 		MinusAI(dest,dest);
 	END DecMulSIAI;
 
@@ -2709,39 +2692,38 @@ Sufficient (but not necessary) conditions:
 	END IncMulALSLLoop;
 
 	PROCEDURE IncMulALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												 CONST left: ARRAY [ ? ] OF LONGINT;
-												 right: LONGINT );
+												CONST left: ARRAY [ ? ] OF LONGINT;
+												right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), IncMulALSLLoop );
+										SIZEOF( LONGINT ), IncMulALSLLoop );
 	END IncMulALSL;
 
 	PROCEDURE IncMulSLAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												 left: LONGINT;
-												 CONST right: ARRAY [ ? ] OF LONGINT );
+												left: LONGINT;
+												CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGINT ), IncMulALSLLoop );
+										SIZEOF( LONGINT ), IncMulALSLLoop );
 	END IncMulSLAL;
 
-
 	PROCEDURE DecMulALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												 CONST left: ARRAY [ ? ] OF LONGINT;
-												 right: LONGINT );
+												CONST left: ARRAY [ ? ] OF LONGINT;
+												right: LONGINT );
 	BEGIN
 		MinusAL(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), IncMulALSLLoop );
+										SIZEOF( LONGINT ), IncMulALSLLoop );
 		MinusAL(dest,dest);
 	END DecMulALSL;
 
 	PROCEDURE DecMulSLAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												 left: LONGINT;
-												 CONST right: ARRAY [ ? ] OF LONGINT );
+												left: LONGINT;
+												CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		MinusAL(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGINT ), IncMulALSLLoop );
+										SIZEOF( LONGINT ), IncMulALSLLoop );
 		MinusAL(dest,dest);
 	END DecMulSLAL;
 
@@ -2757,34 +2739,34 @@ Sufficient (but not necessary) conditions:
 	END IncMulARSRLoop;
 
 	PROCEDURE IncMulARSR*( VAR dest: ARRAY [ ? ] OF REAL;
-												   CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+												CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  loopIncMulARSR );
+										loopIncMulARSR );
 	END IncMulARSR;
 
 	PROCEDURE IncMulSRAR*( VAR dest: ARRAY [ ? ] OF REAL;  left: REAL;
-												   CONST right: ARRAY [ ? ] OF REAL );
+												CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  loopIncMulARSR );
+										loopIncMulARSR );
 	END IncMulSRAR;
 
 	PROCEDURE DecMulARSR*( VAR dest: ARRAY [ ? ] OF REAL;
-												   CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+												CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		MinusAR(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  loopIncMulARSR );
+										loopIncMulARSR );
 		MinusAR(dest,dest);
 	END DecMulARSR;
 
 	PROCEDURE DecMulSRAR*( VAR dest: ARRAY [ ? ] OF REAL;  left: REAL;
-												   CONST right: ARRAY [ ? ] OF REAL );
+												CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		MinusAR(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  loopIncMulARSR );
+										loopIncMulARSR );
 		MinusAR(dest,dest);
 	END DecMulSRAR;
 
@@ -2806,38 +2788,38 @@ Sufficient (but not necessary) conditions:
 	END IncMulAXSXLoop;
 
 	PROCEDURE IncMulAXSX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  CONST left: ARRAY [ ? ] OF LONGREAL;
-												  right: LONGREAL );
+												CONST left: ARRAY [ ? ] OF LONGREAL;
+												right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), loopIncMulAXSX );
+										SIZEOF( LONGREAL ), loopIncMulAXSX );
 	END IncMulAXSX;
 
 	PROCEDURE IncMulSXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  left: LONGREAL;
-												  CONST right: ARRAY [ ? ] OF LONGREAL );
+												left: LONGREAL;
+												CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGREAL ), loopIncMulAXSX );
+										SIZEOF( LONGREAL ), loopIncMulAXSX );
 	END IncMulSXAX;
 
 	PROCEDURE DecMulAXSX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  CONST left: ARRAY [ ? ] OF LONGREAL;
-												  right: LONGREAL );
+												CONST left: ARRAY [ ? ] OF LONGREAL;
+												right: LONGREAL );
 	BEGIN
 		MinusAX(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), loopIncMulAXSX );
+										SIZEOF( LONGREAL ), loopIncMulAXSX );
 		MinusAX(dest,dest);
 	END DecMulAXSX;
 
 	PROCEDURE DecMulSXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  left: LONGREAL;
-												  CONST right: ARRAY [ ? ] OF LONGREAL );
+												left: LONGREAL;
+												CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		MinusAX(dest,dest);
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGREAL ), loopIncMulAXSX );
+										SIZEOF( LONGREAL ), loopIncMulAXSX );
 		MinusAX(dest,dest);
 	END DecMulSXAX;
 
@@ -2855,10 +2837,10 @@ Sufficient (but not necessary) conditions:
 	END EDivideASASLoop;
 
 	PROCEDURE EDivideASAS*( VAR dest: ARRAY [ ? ] OF REAL;
-												   CONST left, right: ARRAY [ ? ] OF SHORTINT );
+												CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  EDivideASASLoop );
+										EDivideASASLoop );
 	END EDivideASAS;
 
 (** INTEGER *)
@@ -2873,10 +2855,10 @@ Sufficient (but not necessary) conditions:
 	END EDivideAIAILoop;
 
 	PROCEDURE EDivideAIAI*( VAR dest: ARRAY [ ? ] OF REAL;
-												  CONST left, right: ARRAY [ ? ] OF INTEGER );
+												CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  EDivideAIAILoop );
+										EDivideAIAILoop );
 	END EDivideAIAI;
 
 (** LONGINT *)
@@ -2891,10 +2873,10 @@ Sufficient (but not necessary) conditions:
 	END EDivideALALLoop;
 
 	PROCEDURE EDivideALAL*( VAR dest: ARRAY [ ? ] OF REAL;
-												  CONST left, right: ARRAY [ ? ] OF LONGINT );
+												CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  EDivideALALLoop );
+										EDivideALALLoop );
 	END EDivideALAL;
 
 (** REAL *)
@@ -2909,10 +2891,10 @@ Sufficient (but not necessary) conditions:
 	END EDivideARARLoop;
 
 	PROCEDURE EDivideARAR*( VAR dest: ARRAY [ ? ] OF REAL;
-												    CONST left, right: ARRAY [ ? ] OF REAL );
+												CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  EDivideARARLoop );
+										EDivideARARLoop );
 	END EDivideARAR;
 
 (** LONGREAL *)
@@ -2927,10 +2909,10 @@ Sufficient (but not necessary) conditions:
 	END EDivideAXAXLoop;
 
 	PROCEDURE EDivideAXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												   CONST left, right: ARRAY [ ? ] OF LONGREAL );
+												CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), EDivideAXAXLoop );
+										SIZEOF( LONGREAL ), EDivideAXAXLoop );
 	END EDivideAXAX;
 
 	(*** division array / scalar -> array and scalar / array -> array ********************************************************************)
@@ -2947,11 +2929,11 @@ Sufficient (but not necessary) conditions:
 	END DivideASSSLoop;
 
 	PROCEDURE DivideASSS*( VAR dest: ARRAY [ ? ] OF REAL;
-												 CONST left: ARRAY [ ? ] OF SHORTINT;
-												 right: SHORTINT );
+												CONST left: ARRAY [ ? ] OF SHORTINT;
+												right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  DivideASSSLoop );
+										DivideASSSLoop );
 	END DivideASSS;
 
 	PROCEDURE DivideSSASLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -2965,10 +2947,10 @@ Sufficient (but not necessary) conditions:
 	END DivideSSASLoop;
 
 	PROCEDURE DivideSSAS*( VAR dest: ARRAY [ ? ] OF REAL;  left: SHORTINT;
-												 CONST right: ARRAY [ ? ] OF SHORTINT );
+												CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  DivideSSASLoop );
+										DivideSSASLoop );
 	END DivideSSAS;
 
 (** INTEGER *)
@@ -2983,11 +2965,11 @@ Sufficient (but not necessary) conditions:
 	END DivideAISILoop;
 
 	PROCEDURE DivideAISI*( VAR dest: ARRAY [ ? ] OF REAL;
-											    CONST left: ARRAY [ ? ] OF INTEGER;
-											    right: INTEGER );
+											CONST left: ARRAY [ ? ] OF INTEGER;
+											right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  DivideAISILoop );
+										DivideAISILoop );
 	END DivideAISI;
 
 	PROCEDURE DivideSIAILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3001,10 +2983,10 @@ Sufficient (but not necessary) conditions:
 	END DivideSIAILoop;
 
 	PROCEDURE DivideSIAI*( VAR dest: ARRAY [ ? ] OF REAL;  left: INTEGER;
-											    CONST right: ARRAY [ ? ] OF INTEGER );
+											CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  DivideSIAILoop );
+										DivideSIAILoop );
 	END DivideSIAI;
 
 (** LONGINT *)
@@ -3023,7 +3005,7 @@ Sufficient (but not necessary) conditions:
 												right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  DivideALSLLoop );
+										DivideALSLLoop );
 	END DivideALSL;
 
 	PROCEDURE DivideSLALLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3040,7 +3022,7 @@ Sufficient (but not necessary) conditions:
 												CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  DivideSLALLoop );
+										DivideSLALLoop );
 	END DivideSLAL;
 
 (** REAL *)
@@ -3055,10 +3037,10 @@ Sufficient (but not necessary) conditions:
 	END DivideARSRLoop;
 
 	PROCEDURE DivideARSR*( VAR dest: ARRAY [ ? ] OF REAL;
-												  CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+												CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  DivideARSRLoop );
+										DivideARSRLoop );
 	END DivideARSR;
 
 	PROCEDURE DivideSRARLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3072,10 +3054,10 @@ Sufficient (but not necessary) conditions:
 	END DivideSRARLoop;
 
 	PROCEDURE DivideSRAR*( VAR dest: ARRAY [ ? ] OF REAL;  left: REAL;
-												  CONST right: ARRAY [ ? ] OF REAL );
+												CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ), SIZEOF( REAL ),
-										  DivideSRARLoop );
+										DivideSRARLoop );
 	END DivideSRAR;
 
 (** LONGREAL *)
@@ -3090,11 +3072,11 @@ Sufficient (but not necessary) conditions:
 	END DivideAXSXLoop;
 
 	PROCEDURE DivideAXSX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												 CONST left: ARRAY [ ? ] OF LONGREAL;
-												 right: LONGREAL );
+												CONST left: ARRAY [ ? ] OF LONGREAL;
+												right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), DivideAXSXLoop );
+										SIZEOF( LONGREAL ), DivideAXSXLoop );
 	END DivideAXSX;
 
 	PROCEDURE DivideSXAXLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3108,13 +3090,12 @@ Sufficient (but not necessary) conditions:
 	END DivideSXAXLoop;
 
 	PROCEDURE DivideSXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												 left: LONGREAL;
-												 CONST right: ARRAY [ ? ] OF LONGREAL );
+												left: LONGREAL;
+												CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGREAL ), DivideSXAXLoop );
+										SIZEOF( LONGREAL ), DivideSXAXLoop );
 	END DivideSXAX;
-
 
 	(*** element-wise DIV array DIV array -> array  ********************************************************************)
 
@@ -3130,10 +3111,10 @@ Sufficient (but not necessary) conditions:
 	END EDivASASLoop;
 
 	PROCEDURE EDivASAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-											  CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), EDivASASLoop );
+										SIZEOF( SHORTINT ), EDivASASLoop );
 	END EDivASAS;
 
 (** INTEGER *)
@@ -3151,7 +3132,7 @@ Sufficient (but not necessary) conditions:
 											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), EDivAIAILoop );
+										SIZEOF( INTEGER ), EDivAIAILoop );
 	END EDivAIAI;
 
 (** LONGINT *)
@@ -3166,12 +3147,11 @@ Sufficient (but not necessary) conditions:
 	END EDivALALLoop;
 
 	PROCEDURE EDivALAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-											 CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), EDivALALLoop );
+										SIZEOF( LONGINT ), EDivALALLoop );
 	END EDivALAL;
-
 
 	(*** division array DIV scalar -> array and scalar DIV  array -> array ********************************************************************)
 
@@ -3187,11 +3167,11 @@ Sufficient (but not necessary) conditions:
 	END DivASSSLoop;
 
 	PROCEDURE DivASSS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-										    CONST left: ARRAY [ ? ] OF SHORTINT;
-										    right: SHORTINT );
+										CONST left: ARRAY [ ? ] OF SHORTINT;
+										right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), DivASSSLoop );
+										SIZEOF( SHORTINT ), DivASSSLoop );
 	END DivASSS;
 
 	PROCEDURE DivSSASLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3205,10 +3185,10 @@ Sufficient (but not necessary) conditions:
 	END DivSSASLoop;
 
 	PROCEDURE DivSSAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;  left: SHORTINT;
-										    CONST right: ARRAY [ ? ] OF SHORTINT );
+										CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( SHORTINT ), DivSSASLoop );
+										SIZEOF( SHORTINT ), DivSSASLoop );
 	END DivSSAS;
 
 (** INTEGER *)
@@ -3223,10 +3203,10 @@ Sufficient (but not necessary) conditions:
 	END DivAISILoop;
 
 	PROCEDURE DivAISI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										  CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+										CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), DivAISILoop );
+										SIZEOF( INTEGER ), DivAISILoop );
 	END DivAISI;
 
 	PROCEDURE DivSIAILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3240,10 +3220,10 @@ Sufficient (but not necessary) conditions:
 	END DivSIAILoop;
 
 	PROCEDURE DivSIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;  left: INTEGER;
-										  CONST right: ARRAY [ ? ] OF INTEGER );
+										CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( INTEGER ), DivSIAILoop );
+										SIZEOF( INTEGER ), DivSIAILoop );
 	END DivSIAI;
 
 (** LONGINT *)
@@ -3258,10 +3238,10 @@ Sufficient (but not necessary) conditions:
 	END DivALSLLoop;
 
 	PROCEDURE DivALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-										   CONST left: ARRAY [ ? ] OF LONGINT;  right: LONGINT );
+										CONST left: ARRAY [ ? ] OF LONGINT;  right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), DivALSLLoop );
+										SIZEOF( LONGINT ), DivALSLLoop );
 	END DivALSL;
 
 	PROCEDURE DivSLALLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3275,10 +3255,10 @@ Sufficient (but not necessary) conditions:
 	END DivSLALLoop;
 
 	PROCEDURE DivSLAL*( VAR dest: ARRAY [ ? ] OF LONGINT;  left: LONGINT;
-										   CONST right: ARRAY [ ? ] OF LONGINT );
+										CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGINT ), DivSLALLoop );
+										SIZEOF( LONGINT ), DivSLALLoop );
 	END DivSLAL;
 
 	(*** element-wise modulus array MOD array -> array  ********************************************************************)
@@ -3295,10 +3275,10 @@ Sufficient (but not necessary) conditions:
 	END EModASASLoop;
 
 	PROCEDURE EModASAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-											   CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), EModASASLoop );
+										SIZEOF( SHORTINT ), EModASASLoop );
 	END EModASAS;
 
 (** INTEGER *)
@@ -3313,10 +3293,10 @@ Sufficient (but not necessary) conditions:
 	END EModAIAILoop;
 
 	PROCEDURE EModAIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-											  CONST left, right: ARRAY [ ? ] OF INTEGER );
+											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), EModAIAILoop );
+										SIZEOF( INTEGER ), EModAIAILoop );
 	END EModAIAI;
 
 (** LONGINT *)
@@ -3331,12 +3311,11 @@ Sufficient (but not necessary) conditions:
 	END EModALALLoop;
 
 	PROCEDURE EModALAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-											   CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), EModALALLoop );
+										SIZEOF( LONGINT ), EModALALLoop );
 	END EModALAL;
-
 
 	(*** modulus array MOD scalar -> array and scalar MOD  array -> array ********************************************************************)
 
@@ -3352,11 +3331,11 @@ Sufficient (but not necessary) conditions:
 	END ModASSSLoop;
 
 	PROCEDURE ModASSS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-											 CONST left: ARRAY [ ? ] OF SHORTINT;
-											 right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), ModASSSLoop );
+										SIZEOF( SHORTINT ), ModASSSLoop );
 	END ModASSS;
 
 	PROCEDURE ModSSASLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3370,10 +3349,10 @@ Sufficient (but not necessary) conditions:
 	END ModSSASLoop;
 
 	PROCEDURE ModSSAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;  left: SHORTINT;
-											 CONST right: ARRAY [ ? ] OF SHORTINT );
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( SHORTINT ), ModSSASLoop );
+										SIZEOF( SHORTINT ), ModSSASLoop );
 	END ModSSAS;
 
 (** INTEGER *)
@@ -3388,10 +3367,10 @@ Sufficient (but not necessary) conditions:
 	END ModAISILoop;
 
 	PROCEDURE ModAISI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-										    CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+										CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), ModAISILoop );
+										SIZEOF( INTEGER ), ModAISILoop );
 	END ModAISI;
 
 	PROCEDURE ModSIAILoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3405,10 +3384,10 @@ Sufficient (but not necessary) conditions:
 	END ModSIAILoop;
 
 	PROCEDURE ModSIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;  left: INTEGER;
-										    CONST right: ARRAY [ ? ] OF INTEGER );
+										CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( INTEGER ), ModSIAILoop );
+										SIZEOF( INTEGER ), ModSIAILoop );
 	END ModSIAI;
 
 (** LONGINT *)
@@ -3423,11 +3402,11 @@ Sufficient (but not necessary) conditions:
 	END ModALSLLoop;
 
 	PROCEDURE ModALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-											 CONST left: ARRAY [ ? ] OF LONGINT;
-											 right: LONGINT );
+											CONST left: ARRAY [ ? ] OF LONGINT;
+											right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), ModALSLLoop );
+										SIZEOF( LONGINT ), ModALSLLoop );
 	END ModALSL;
 
 	PROCEDURE ModSLALLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -3441,10 +3420,10 @@ Sufficient (but not necessary) conditions:
 	END ModSLALLoop;
 
 	PROCEDURE ModSLAL*( VAR dest: ARRAY [ ? ] OF LONGINT;  left: LONGINT;
-											 CONST right: ARRAY [ ? ] OF LONGINT );
+											CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( LONGINT ), ModSLALLoop );
+										SIZEOF( LONGINT ), ModSLALLoop );
 	END ModSLAL;
 
 	(*** scalar product <array,array> -> scalar  ********************************************************************)
@@ -3568,10 +3547,10 @@ Sufficient (but not necessary) conditions:
 	END EEqlABABLoop;
 
 	PROCEDURE EEqlABAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF BOOLEAN );
+											CONST left, right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlABABLoop );
+										SIZEOF( BOOLEAN ), EEqlABABLoop );
 	END EEqlABAB;
 
 (** SHORTINT *)
@@ -3586,10 +3565,10 @@ Sufficient (but not necessary) conditions:
 	END EEqlASASLoop;
 
 	PROCEDURE EEqlASAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlASASLoop );
+										SIZEOF( BOOLEAN ), EEqlASASLoop );
 	END EEqlASAS;
 
 (** INTEGER *)
@@ -3607,7 +3586,7 @@ Sufficient (but not necessary) conditions:
 											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlAIAILoop );
+										SIZEOF( BOOLEAN ), EEqlAIAILoop );
 	END EEqlAIAI;
 
 (** LONGINT *)
@@ -3622,10 +3601,10 @@ Sufficient (but not necessary) conditions:
 	END EEqlALALLoop;
 
 	PROCEDURE EEqlALAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlALALLoop );
+										SIZEOF( BOOLEAN ), EEqlALALLoop );
 	END EEqlALAL;
 
 (** REAL *)
@@ -3639,10 +3618,10 @@ Sufficient (but not necessary) conditions:
 	END EEqlARARLoop;
 
 	PROCEDURE EEqlARAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlARARLoop );
+										SIZEOF( BOOLEAN ), EEqlARARLoop );
 	END EEqlARAR;
 
 (** LONGREAL *)
@@ -3656,10 +3635,10 @@ Sufficient (but not necessary) conditions:
 	END EEqlAXAXLoop;
 
 	PROCEDURE EEqlAXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlAXAXLoop );
+										SIZEOF( BOOLEAN ), EEqlAXAXLoop );
 	END EEqlAXAX;
 
 	(*** elementwise equal  array x scalar ->  array of boolean ********************************************************************)
@@ -3676,19 +3655,19 @@ Sufficient (but not necessary) conditions:
 	END EEqlABSBLoop;
 
 	PROCEDURE EEqlABSB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF BOOLEAN;
-											  right: BOOLEAN );
+											CONST left: ARRAY [ ? ] OF BOOLEAN;
+											right: BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlABSBLoop );
+										SIZEOF( BOOLEAN ), EEqlABSBLoop );
 	END EEqlABSB;
 
 	PROCEDURE EEqlSBAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: BOOLEAN;
-											  CONST right: ARRAY [ ? ] OF BOOLEAN );
+											left: BOOLEAN;
+											CONST right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EEqlABSBLoop );
+										SIZEOF( BOOLEAN ), EEqlABSBLoop );
 	END EEqlSBAB;
 
 (** SHORTINT *)
@@ -3703,19 +3682,19 @@ Sufficient (but not necessary) conditions:
 	END EEqlASSSLoop;
 
 	PROCEDURE EEqlASSS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF SHORTINT;
-											  right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlASSSLoop );
+										SIZEOF( BOOLEAN ), EEqlASSSLoop );
 	END EEqlASSS;
 
 	PROCEDURE EEqlSSAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: SHORTINT;
-											  CONST right: ARRAY [ ? ] OF SHORTINT );
+											left: SHORTINT;
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EEqlASSSLoop );
+										SIZEOF( BOOLEAN ), EEqlASSSLoop );
 	END EEqlSSAS;
 
 (** INTEGER *)
@@ -3733,14 +3712,14 @@ Sufficient (but not necessary) conditions:
 											CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlAISILoop );
+										SIZEOF( BOOLEAN ), EEqlAISILoop );
 	END EEqlAISI;
 
 	PROCEDURE EEqlSIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: INTEGER;
 											CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EEqlAISILoop );
+										SIZEOF( BOOLEAN ), EEqlAISILoop );
 	END EEqlSIAI;
 
 (** LONGINT *)
@@ -3755,18 +3734,18 @@ Sufficient (but not necessary) conditions:
 	END EEqlALSLLoop;
 
 	PROCEDURE EEqlALSL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF LONGINT;
-											 right: LONGINT );
+											CONST left: ARRAY [ ? ] OF LONGINT;
+											right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlALSLLoop );
+										SIZEOF( BOOLEAN ), EEqlALSLLoop );
 	END EEqlALSL;
 
 	PROCEDURE EEqlSLAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: LONGINT;
-											 CONST right: ARRAY [ ? ] OF LONGINT );
+											CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EEqlALSLLoop );
+										SIZEOF( BOOLEAN ), EEqlALSLLoop );
 	END EEqlSLAL;
 
 (** REAL *)
@@ -3781,17 +3760,17 @@ Sufficient (but not necessary) conditions:
 	END EEqlARSRLoop;
 
 	PROCEDURE EEqlARSR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlARSRLoop );
+										SIZEOF( BOOLEAN ), EEqlARSRLoop );
 	END EEqlARSR;
 
 	PROCEDURE EEqlSRAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: REAL;
-											  CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EEqlARSRLoop );
+										SIZEOF( BOOLEAN ), EEqlARSRLoop );
 	END EEqlSRAR;
 
 (** LONGREAL *)
@@ -3806,19 +3785,19 @@ Sufficient (but not necessary) conditions:
 	END EEqlAXSXLoop;
 
 	PROCEDURE EEqlAXSX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF LONGREAL;
-											  right: LONGREAL );
+											CONST left: ARRAY [ ? ] OF LONGREAL;
+											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EEqlAXSXLoop );
+										SIZEOF( BOOLEAN ), EEqlAXSXLoop );
 	END EEqlAXSX;
 
 	PROCEDURE EEqlSXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: LONGREAL;
-											  CONST right: ARRAY [ ? ] OF LONGREAL );
+											left: LONGREAL;
+											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EEqlAXSXLoop );
+										SIZEOF( BOOLEAN ), EEqlAXSXLoop );
 	END EEqlSXAX;
 
 	(*** elementwise nequal: array x array -> array of boolean  ********************************************************************)
@@ -3834,10 +3813,10 @@ Sufficient (but not necessary) conditions:
 	END ENeqABABLoop;
 
 	PROCEDURE ENeqABAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											    CONST left, right: ARRAY [ ? ] OF BOOLEAN );
+											CONST left, right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqABABLoop );
+										SIZEOF( BOOLEAN ), ENeqABABLoop );
 	END ENeqABAB;
 
 (** SHORTINT *)
@@ -3851,10 +3830,10 @@ Sufficient (but not necessary) conditions:
 	END ENeqASASLoop;
 
 	PROCEDURE ENeqASAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqASASLoop );
+										SIZEOF( BOOLEAN ), ENeqASASLoop );
 	END ENeqASAS;
 
 (** INTEGER*)
@@ -3868,10 +3847,10 @@ Sufficient (but not necessary) conditions:
 	END ENeqAIAILoop;
 
 	PROCEDURE ENeqAIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF INTEGER );
+											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqAIAILoop );
+										SIZEOF( BOOLEAN ), ENeqAIAILoop );
 	END ENeqAIAI;
 
 (** LONGINT*)
@@ -3885,10 +3864,10 @@ Sufficient (but not necessary) conditions:
 	END ENeqALALLoop;
 
 	PROCEDURE ENeqALAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqALALLoop );
+										SIZEOF( BOOLEAN ), ENeqALALLoop );
 	END ENeqALAL;
 
 (** REAL *)
@@ -3902,10 +3881,10 @@ Sufficient (but not necessary) conditions:
 	END ENeqARARLoop;
 
 	PROCEDURE ENeqARAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											    CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqARARLoop );
+										SIZEOF( BOOLEAN ), ENeqARARLoop );
 	END ENeqARAR;
 
 (** LONGREAL *)
@@ -3919,10 +3898,10 @@ Sufficient (but not necessary) conditions:
 	END ENeqAXAXLoop;
 
 	PROCEDURE ENeqAXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqAXAXLoop );
+										SIZEOF( BOOLEAN ), ENeqAXAXLoop );
 	END ENeqAXAX;
 
 	(*** elementwise nequal  array x scalar ->  array of boolean ********************************************************************)
@@ -3939,19 +3918,19 @@ Sufficient (but not necessary) conditions:
 	END ENeqABSBLoop;
 
 	PROCEDURE ENeqABSB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											    CONST left: ARRAY [ ? ] OF BOOLEAN;
-											    right: BOOLEAN );
+											CONST left: ARRAY [ ? ] OF BOOLEAN;
+											right: BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqABSBLoop );
+										SIZEOF( BOOLEAN ), ENeqABSBLoop );
 	END ENeqABSB;
 
 	PROCEDURE ENeqSBAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											    left: BOOLEAN;
-											    CONST right: ARRAY [ ? ] OF BOOLEAN );
+											left: BOOLEAN;
+											CONST right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ENeqABSBLoop );
+										SIZEOF( BOOLEAN ), ENeqABSBLoop );
 	END ENeqSBAB;
 
 (** SHORTINT *)
@@ -3966,19 +3945,19 @@ Sufficient (but not necessary) conditions:
 	END ENeqASSSLoop;
 
 	PROCEDURE ENeqASSS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left: ARRAY [ ? ] OF SHORTINT;
-											   right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqASSSLoop );
+										SIZEOF( BOOLEAN ), ENeqASSSLoop );
 	END ENeqASSS;
 
 	PROCEDURE ENeqSSAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   left: SHORTINT;
-											   CONST right: ARRAY [ ? ] OF SHORTINT );
+											left: SHORTINT;
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ENeqASSSLoop );
+										SIZEOF( BOOLEAN ), ENeqASSSLoop );
 	END ENeqSSAS;
 
 (** INTEGER *)
@@ -3993,17 +3972,17 @@ Sufficient (but not necessary) conditions:
 	END ENeqAISILoop;
 
 	PROCEDURE ENeqAISI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+											CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqAISILoop );
+										SIZEOF( BOOLEAN ), ENeqAISILoop );
 	END ENeqAISI;
 
 	PROCEDURE ENeqSIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: INTEGER;
-											  CONST right: ARRAY [ ? ] OF INTEGER );
+											CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ENeqAISILoop );
+										SIZEOF( BOOLEAN ), ENeqAISILoop );
 	END ENeqSIAI;
 
 (** LONGINT *)
@@ -4018,18 +3997,18 @@ Sufficient (but not necessary) conditions:
 	END ENeqALSLLoop;
 
 	PROCEDURE ENeqALSL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF LONGINT;
-											  right: LONGINT );
+											CONST left: ARRAY [ ? ] OF LONGINT;
+											right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqALSLLoop );
+										SIZEOF( BOOLEAN ), ENeqALSLLoop );
 	END ENeqALSL;
 
 	PROCEDURE ENeqSLAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: LONGINT;
-											  CONST right: ARRAY [ ? ] OF LONGINT );
+											CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ENeqALSLLoop );
+										SIZEOF( BOOLEAN ), ENeqALSLLoop );
 	END ENeqSLAL;
 
 (** REAL *)
@@ -4044,17 +4023,17 @@ Sufficient (but not necessary) conditions:
 	END ENeqARSRLoop;
 
 	PROCEDURE ENeqARSR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											    CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqARSRLoop );
+										SIZEOF( BOOLEAN ), ENeqARSRLoop );
 	END ENeqARSR;
 
 	PROCEDURE ENeqSRAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: REAL;
-											    CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ENeqARSRLoop );
+										SIZEOF( BOOLEAN ), ENeqARSRLoop );
 	END ENeqSRAR;
 
 (** LONGREAL *)
@@ -4069,21 +4048,20 @@ Sufficient (but not necessary) conditions:
 	END ENeqAXSXLoop;
 
 	PROCEDURE ENeqAXSX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left: ARRAY [ ? ] OF LONGREAL;
-											   right: LONGREAL );
+											CONST left: ARRAY [ ? ] OF LONGREAL;
+											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ENeqAXSXLoop );
+										SIZEOF( BOOLEAN ), ENeqAXSXLoop );
 	END ENeqAXSX;
 
 	PROCEDURE ENeqSXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   left: LONGREAL;
-											   CONST right: ARRAY [ ? ] OF LONGREAL );
+											left: LONGREAL;
+											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ENeqAXSXLoop );
+										SIZEOF( BOOLEAN ), ENeqAXSXLoop );
 	END ENeqSXAX;
-
 
 	(*** elementwise greater than: array x array -> array of boolean  ********************************************************************)
 
@@ -4098,10 +4076,10 @@ Sufficient (but not necessary) conditions:
 	END EGtrASASLoop;
 
 	PROCEDURE EGtrASAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrASASLoop );
+										SIZEOF( BOOLEAN ), EGtrASASLoop );
 	END EGtrASAS;
 
 (** INTEGER *)
@@ -4115,10 +4093,10 @@ Sufficient (but not necessary) conditions:
 	END EGtrAIAILoop;
 
 	PROCEDURE EGtrAIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-										    CONST left, right: ARRAY [ ? ] OF INTEGER );
+										CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrAIAILoop );
+										SIZEOF( BOOLEAN ), EGtrAIAILoop );
 	END EGtrAIAI;
 
 (** LONGINT *)
@@ -4132,10 +4110,10 @@ Sufficient (but not necessary) conditions:
 	END EGtrALALLoop;
 
 	PROCEDURE EGtrALAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrALALLoop );
+										SIZEOF( BOOLEAN ), EGtrALALLoop );
 	END EGtrALAL;
 
 (** REAL *)
@@ -4149,10 +4127,10 @@ Sufficient (but not necessary) conditions:
 	END EGtrARARLoop;
 
 	PROCEDURE EGtrARAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrARARLoop );
+										SIZEOF( BOOLEAN ), EGtrARARLoop );
 	END EGtrARAR;
 
 (** LONGREAL *)
@@ -4166,10 +4144,10 @@ Sufficient (but not necessary) conditions:
 	END EGtrAXAXLoop;
 
 	PROCEDURE EGtrAXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrAXAXLoop );
+										SIZEOF( BOOLEAN ), EGtrAXAXLoop );
 	END EGtrAXAX;
 
 	(*** elementwise greater  array x scalar ->  array of boolean ********************************************************************)
@@ -4186,19 +4164,19 @@ Sufficient (but not necessary) conditions:
 	END EGtrASSSLoop;
 
 	PROCEDURE EGtrASSS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF SHORTINT;
-											 right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrASSSLoop );
+										SIZEOF( BOOLEAN ), EGtrASSSLoop );
 	END EGtrASSS;
 
 	PROCEDURE ELssSSAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: SHORTINT;
-											  CONST right: ARRAY [ ? ] OF SHORTINT );
+											left: SHORTINT;
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGtrASSSLoop );
+										SIZEOF( BOOLEAN ), EGtrASSSLoop );
 	END ELssSSAS;
 
 (** INTEGER *)
@@ -4213,17 +4191,17 @@ Sufficient (but not necessary) conditions:
 	END EGtrAISILoop;
 
 	PROCEDURE EGtrAISI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-										    CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+										CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrAISILoop );
+										SIZEOF( BOOLEAN ), EGtrAISILoop );
 	END EGtrAISI;
 
 	PROCEDURE ELssSIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: INTEGER;
-											 CONST right: ARRAY [ ? ] OF INTEGER );
+											CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGtrAISILoop );
+										SIZEOF( BOOLEAN ), EGtrAISILoop );
 	END ELssSIAI;
 
 (** LONGINT *)
@@ -4238,18 +4216,18 @@ Sufficient (but not necessary) conditions:
 	END EGtrALSLLoop;
 
 	PROCEDURE EGtrALSL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF LONGINT;
-											 right: LONGINT );
+											CONST left: ARRAY [ ? ] OF LONGINT;
+											right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrALSLLoop );
+										SIZEOF( BOOLEAN ), EGtrALSLLoop );
 	END EGtrALSL;
 
 	PROCEDURE ELssSLAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: LONGINT;
-											 CONST right: ARRAY [ ? ] OF LONGINT );
+											CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGtrALSLLoop );
+										SIZEOF( BOOLEAN ), EGtrALSLLoop );
 	END ELssSLAL;
 
 (** REAL *)
@@ -4264,17 +4242,17 @@ Sufficient (but not necessary) conditions:
 	END EGtrARSRLoop;
 
 	PROCEDURE EGtrARSR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrARSRLoop );
+										SIZEOF( BOOLEAN ), EGtrARSRLoop );
 	END EGtrARSR;
 
 	PROCEDURE ELssSRAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: REAL;
-											   CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGtrARSRLoop );
+										SIZEOF( BOOLEAN ), EGtrARSRLoop );
 	END ELssSRAR;
 
 (** LONGREAL *)
@@ -4289,21 +4267,20 @@ Sufficient (but not necessary) conditions:
 	END EGtrAXSXLoop;
 
 	PROCEDURE EGtrAXSX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF LONGREAL;
-											 right: LONGREAL );
+											CONST left: ARRAY [ ? ] OF LONGREAL;
+											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGtrAXSXLoop );
+										SIZEOF( BOOLEAN ), EGtrAXSXLoop );
 	END EGtrAXSX;
 
 	PROCEDURE ELssSXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: LONGREAL;
-											  CONST right: ARRAY [ ? ] OF LONGREAL );
+											left: LONGREAL;
+											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGtrAXSXLoop );
+										SIZEOF( BOOLEAN ), EGtrAXSXLoop );
 	END ELssSXAX;
-
 
 	(*** elementwise greater or equal: array x array -> array of boolean  ********************************************************************)
 
@@ -4318,10 +4295,10 @@ Sufficient (but not necessary) conditions:
 	END EGeqASASLoop;
 
 	PROCEDURE EGeqASAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqASASLoop );
+										SIZEOF( BOOLEAN ), EGeqASASLoop );
 	END EGeqASAS;
 
 (** INTEGER *)
@@ -4335,10 +4312,10 @@ Sufficient (but not necessary) conditions:
 	END EGeqAIAILoop;
 
 	PROCEDURE EGeqAIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF INTEGER );
+											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqAIAILoop );
+										SIZEOF( BOOLEAN ), EGeqAIAILoop );
 	END EGeqAIAI;
 
 (** LONGINT *)
@@ -4352,10 +4329,10 @@ Sufficient (but not necessary) conditions:
 	END EGeqALALLoop;
 
 	PROCEDURE EGeqALAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqALALLoop );
+										SIZEOF( BOOLEAN ), EGeqALALLoop );
 	END EGeqALAL;
 
 (** REAL *)
@@ -4369,10 +4346,10 @@ Sufficient (but not necessary) conditions:
 	END EGeqARARLoop;
 
 	PROCEDURE EGeqARAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqARARLoop );
+										SIZEOF( BOOLEAN ), EGeqARARLoop );
 	END EGeqARAR;
 
 (** LONGREAL *)
@@ -4386,10 +4363,10 @@ Sufficient (but not necessary) conditions:
 	END EGeqAXAXLoop;
 
 	PROCEDURE EGeqAXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqAXAXLoop );
+										SIZEOF( BOOLEAN ), EGeqAXAXLoop );
 	END EGeqAXAX;
 
 	(*** elementwise geq  array x scalar ->  array of boolean ********************************************************************)
@@ -4406,19 +4383,19 @@ Sufficient (but not necessary) conditions:
 	END EGeqASSSLoop;
 
 	PROCEDURE EGeqASSS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left: ARRAY [ ? ] OF SHORTINT;
-											   right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqASSSLoop );
+										SIZEOF( BOOLEAN ), EGeqASSSLoop );
 	END EGeqASSS;
 
 	PROCEDURE ELeqSSAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: SHORTINT;
-											  CONST right: ARRAY [ ? ] OF SHORTINT );
+											left: SHORTINT;
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGeqASSSLoop );
+										SIZEOF( BOOLEAN ), EGeqASSSLoop );
 	END ELeqSSAS;
 
 (** INTEGER *)
@@ -4433,17 +4410,17 @@ Sufficient (but not necessary) conditions:
 	END EGeqAISILoop;
 
 	PROCEDURE EGeqAISI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+											CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqAISILoop );
+										SIZEOF( BOOLEAN ), EGeqAISILoop );
 	END EGeqAISI;
 
 	PROCEDURE ELeqSIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: INTEGER;
-											 CONST right: ARRAY [ ? ] OF INTEGER );
+											CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGeqAISILoop );
+										SIZEOF( BOOLEAN ), EGeqAISILoop );
 	END ELeqSIAI;
 
 (** LONGINT *)
@@ -4458,18 +4435,18 @@ Sufficient (but not necessary) conditions:
 	END EGeqALSLLoop;
 
 	PROCEDURE EGeqALSL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF LONGINT;
-											  right: LONGINT );
+											CONST left: ARRAY [ ? ] OF LONGINT;
+											right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqALSLLoop );
+										SIZEOF( BOOLEAN ), EGeqALSLLoop );
 	END EGeqALSL;
 
 	PROCEDURE ELeqSLAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: LONGINT;
-											 CONST right: ARRAY [ ? ] OF LONGINT );
+											CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGeqALSLLoop );
+										SIZEOF( BOOLEAN ), EGeqALSLLoop );
 	END ELeqSLAL;
 
 (** REAL *)
@@ -4484,17 +4461,17 @@ Sufficient (but not necessary) conditions:
 	END EGeqARSRLoop;
 
 	PROCEDURE EGeqARSR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqARSRLoop );
+										SIZEOF( BOOLEAN ), EGeqARSRLoop );
 	END EGeqARSR;
 
 	PROCEDURE ELeqSRAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: REAL;
-											   CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGeqARSRLoop );
+										SIZEOF( BOOLEAN ), EGeqARSRLoop );
 	END ELeqSRAR;
 
 (** LONGREAL *)
@@ -4509,19 +4486,19 @@ Sufficient (but not necessary) conditions:
 	END EGeqAXSXLoop;
 
 	PROCEDURE EGeqAXSX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left: ARRAY [ ? ] OF LONGREAL;
-											   right: LONGREAL );
+											CONST left: ARRAY [ ? ] OF LONGREAL;
+											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), EGeqAXSXLoop );
+										SIZEOF( BOOLEAN ), EGeqAXSXLoop );
 	END EGeqAXSX;
 
 	PROCEDURE ELeqSXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: LONGREAL;
-											  CONST right: ARRAY [ ? ] OF LONGREAL );
+											left: LONGREAL;
+											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), EGeqAXSXLoop );
+										SIZEOF( BOOLEAN ), EGeqAXSXLoop );
 	END ELeqSXAX;
 
 	(*** elementwise less than: array x array -> array of boolean  ********************************************************************)
@@ -4537,10 +4514,10 @@ Sufficient (but not necessary) conditions:
 	END ELssASASLoop;
 
 	PROCEDURE ELssASAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssASASLoop );
+										SIZEOF( BOOLEAN ), ELssASASLoop );
 	END ELssASAS;
 
 (** INTEGER *)
@@ -4554,10 +4531,10 @@ Sufficient (but not necessary) conditions:
 	END ELssAIAILoop;
 
 	PROCEDURE ELssAIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF INTEGER );
+											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssAIAILoop );
+										SIZEOF( BOOLEAN ), ELssAIAILoop );
 	END ELssAIAI;
 
 (** LONGINT*)
@@ -4571,10 +4548,10 @@ Sufficient (but not necessary) conditions:
 	END ELssALALLoop;
 
 	PROCEDURE ELssALAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssALALLoop );
+										SIZEOF( BOOLEAN ), ELssALALLoop );
 	END ELssALAL;
 
 (** REAL *)
@@ -4588,10 +4565,10 @@ Sufficient (but not necessary) conditions:
 	END ELssARARLoop;
 
 	PROCEDURE ELssARAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssARARLoop );
+										SIZEOF( BOOLEAN ), ELssARARLoop );
 	END ELssARAR;
 
 (** LONGREAL *)
@@ -4605,10 +4582,10 @@ Sufficient (but not necessary) conditions:
 	END ELssAXAXLoop;
 
 	PROCEDURE ELssAXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssAXAXLoop );
+										SIZEOF( BOOLEAN ), ELssAXAXLoop );
 	END ELssAXAX;
 
 	(*** elementwise less  array x scalar ->  array of boolean ********************************************************************)
@@ -4625,19 +4602,19 @@ Sufficient (but not necessary) conditions:
 	END ELssASSSLoop;
 
 	PROCEDURE ELssASSS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF SHORTINT;
-											  right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssASSSLoop );
+										SIZEOF( BOOLEAN ), ELssASSSLoop );
 	END ELssASSS;
 
 	PROCEDURE EGtrSSAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 left: SHORTINT;
-											 CONST right: ARRAY [ ? ] OF SHORTINT );
+											left: SHORTINT;
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELssASSSLoop );
+										SIZEOF( BOOLEAN ), ELssASSSLoop );
 	END EGtrSSAS;
 
 (** INTEGER *)
@@ -4652,17 +4629,17 @@ Sufficient (but not necessary) conditions:
 	END ELssAISILoop;
 
 	PROCEDURE ELssAISI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+											CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssAISILoop );
+										SIZEOF( BOOLEAN ), ELssAISILoop );
 	END ELssAISI;
 
 	PROCEDURE EGtrSIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: INTEGER;
-										    CONST right: ARRAY [ ? ] OF INTEGER );
+										CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELssAISILoop );
+										SIZEOF( BOOLEAN ), ELssAISILoop );
 	END EGtrSIAI;
 
 (** LONGINT *)
@@ -4677,18 +4654,18 @@ Sufficient (but not necessary) conditions:
 	END ELssALSLLoop;
 
 	PROCEDURE ELssALSL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF LONGINT;
-											 right: LONGINT );
+											CONST left: ARRAY [ ? ] OF LONGINT;
+											right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssALSLLoop );
+										SIZEOF( BOOLEAN ), ELssALSLLoop );
 	END ELssALSL;
 
 	PROCEDURE EGtrSLAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: LONGINT;
-											 CONST right: ARRAY [ ? ] OF LONGINT );
+											CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELssALSLLoop );
+										SIZEOF( BOOLEAN ), ELssALSLLoop );
 	END EGtrSLAL;
 
 (** REAL *)
@@ -4703,17 +4680,17 @@ Sufficient (but not necessary) conditions:
 	END ELssARSRLoop;
 
 	PROCEDURE ELssARSR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssARSRLoop );
+										SIZEOF( BOOLEAN ), ELssARSRLoop );
 	END ELssARSR;
 
 	PROCEDURE EGtrSRAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: REAL;
-											  CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELssARSRLoop );
+										SIZEOF( BOOLEAN ), ELssARSRLoop );
 	END EGtrSRAR;
 
 (** LONGREAL *)
@@ -4728,21 +4705,20 @@ Sufficient (but not necessary) conditions:
 	END ELssAXSXLoop;
 
 	PROCEDURE ELssAXSX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF LONGREAL;
-											  right: LONGREAL );
+											CONST left: ARRAY [ ? ] OF LONGREAL;
+											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELssAXSXLoop );
+										SIZEOF( BOOLEAN ), ELssAXSXLoop );
 	END ELssAXSX;
 
 	PROCEDURE EGtrSXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 left: LONGREAL;
-											 CONST right: ARRAY [ ? ] OF LONGREAL );
+											left: LONGREAL;
+											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELssAXSXLoop );
+										SIZEOF( BOOLEAN ), ELssAXSXLoop );
 	END EGtrSXAX;
-
 
 	(*** elementwise less or equal: array x array -> array of boolean ********************************************************************)
 
@@ -4757,10 +4733,10 @@ Sufficient (but not necessary) conditions:
 	END ELeqASASLoop;
 
 	PROCEDURE ELeqASAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF SHORTINT );
+											CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqASASLoop );
+										SIZEOF( BOOLEAN ), ELeqASASLoop );
 	END ELeqASAS;
 
 (** INTEGER *)
@@ -4774,10 +4750,10 @@ Sufficient (but not necessary) conditions:
 	END ELeqAIAILoop;
 
 	PROCEDURE ELeqAIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF INTEGER );
+											CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqAIAILoop );
+										SIZEOF( BOOLEAN ), ELeqAIAILoop );
 	END ELeqAIAI;
 
 (** LONGINT *)
@@ -4791,10 +4767,10 @@ Sufficient (but not necessary) conditions:
 	END ELeqALALLoop;
 
 	PROCEDURE ELeqALAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left, right: ARRAY [ ? ] OF LONGINT );
+											CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqALALLoop );
+										SIZEOF( BOOLEAN ), ELeqALALLoop );
 	END ELeqALAL;
 
 (** REAL  *)
@@ -4808,10 +4784,10 @@ Sufficient (but not necessary) conditions:
 	END ELeqARARLoop;
 
 	PROCEDURE ELeqARAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left, right: ARRAY [ ? ] OF REAL );
+											CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqARARLoop );
+										SIZEOF( BOOLEAN ), ELeqARARLoop );
 	END ELeqARAR;
 
 (** LONGREAL*)
@@ -4825,10 +4801,10 @@ Sufficient (but not necessary) conditions:
 	END ELeqAXAXLoop;
 
 	PROCEDURE ELeqAXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF LONGREAL );
+											CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqAXAXLoop );
+										SIZEOF( BOOLEAN ), ELeqAXAXLoop );
 	END ELeqAXAX;
 
 	(*** elementwise leq  array x scalar ->  array of boolean ********************************************************************)
@@ -4845,19 +4821,19 @@ Sufficient (but not necessary) conditions:
 	END ELeqASSSLoop;
 
 	PROCEDURE ELeqASSS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF SHORTINT;
-											  right: SHORTINT );
+											CONST left: ARRAY [ ? ] OF SHORTINT;
+											right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqASSSLoop );
+										SIZEOF( BOOLEAN ), ELeqASSSLoop );
 	END ELeqASSS;
 
 	PROCEDURE EGeqSSAS*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   left: SHORTINT;
-											   CONST right: ARRAY [ ? ] OF SHORTINT );
+											left: SHORTINT;
+											CONST right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELeqASSSLoop );
+										SIZEOF( BOOLEAN ), ELeqASSSLoop );
 	END EGeqSSAS;
 
 (** INTEGER *)
@@ -4872,17 +4848,17 @@ Sufficient (but not necessary) conditions:
 	END ELeqAISILoop;
 
 	PROCEDURE ELeqAISI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
+											CONST left: ARRAY [ ? ] OF INTEGER;  right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqAISILoop );
+										SIZEOF( BOOLEAN ), ELeqAISILoop );
 	END ELeqAISI;
 
 	PROCEDURE EGeqSIAI*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: INTEGER;
-											 CONST right: ARRAY [ ? ] OF INTEGER );
+											CONST right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELeqAISILoop );
+										SIZEOF( BOOLEAN ), ELeqAISILoop );
 	END EGeqSIAI;
 
 (** LONGINT *)
@@ -4897,18 +4873,18 @@ Sufficient (but not necessary) conditions:
 	END ELeqALSLLoop;
 
 	PROCEDURE ELeqALSL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											 CONST left: ARRAY [ ? ] OF LONGINT;
-											 right: LONGINT );
+											CONST left: ARRAY [ ? ] OF LONGINT;
+											right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqALSLLoop );
+										SIZEOF( BOOLEAN ), ELeqALSLLoop );
 	END ELeqALSL;
 
 	PROCEDURE EGeqSLAL*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: LONGINT;
-											  CONST right: ARRAY [ ? ] OF LONGINT );
+											CONST right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELeqALSLLoop );
+										SIZEOF( BOOLEAN ), ELeqALSLLoop );
 	END EGeqSLAL;
 
 (** REAL *)
@@ -4923,17 +4899,17 @@ Sufficient (but not necessary) conditions:
 	END ELeqARSRLoop;
 
 	PROCEDURE ELeqARSR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+											CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqARSRLoop );
+										SIZEOF( BOOLEAN ), ELeqARSRLoop );
 	END ELeqARSR;
 
 	PROCEDURE EGeqSRAR*( VAR dest: ARRAY [ ? ] OF BOOLEAN;  left: REAL;
-											   CONST right: ARRAY [ ? ] OF REAL );
+											CONST right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELeqARSRLoop );
+										SIZEOF( BOOLEAN ), ELeqARSRLoop );
 	END EGeqSRAR;
 
 (** LONGREAL *)
@@ -4948,21 +4924,20 @@ Sufficient (but not necessary) conditions:
 	END ELeqAXSXLoop;
 
 	PROCEDURE ELeqAXSX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF LONGREAL;
-											  right: LONGREAL );
+											CONST left: ARRAY [ ? ] OF LONGREAL;
+											right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ELeqAXSXLoop );
+										SIZEOF( BOOLEAN ), ELeqAXSXLoop );
 	END ELeqAXSX;
 
 	PROCEDURE EGeqSXAX*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											   left: LONGREAL;
-											   CONST right: ARRAY [ ? ] OF LONGREAL );
+											left: LONGREAL;
+											CONST right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ELeqAXSXLoop );
+										SIZEOF( BOOLEAN ), ELeqAXSXLoop );
 	END EGeqSXAX;
-
 
 	(*** elementwise or, elementwise and  ********************************************************************)
 
@@ -4977,10 +4952,10 @@ Sufficient (but not necessary) conditions:
 	END ElOrABABLoop;
 
 	PROCEDURE ElOrABAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left, right: ARRAY [ ? ] OF BOOLEAN );
+											CONST left, right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ElOrABABLoop );
+										SIZEOF( BOOLEAN ), ElOrABABLoop );
 	END ElOrABAB;
 
 	PROCEDURE ElAndABABLoop( ladr, radr, dadr, linc, rinc, dinc, len: LONGINT );
@@ -4996,7 +4971,7 @@ Sufficient (but not necessary) conditions:
 												CONST left, right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ElAndABABLoop );
+										SIZEOF( BOOLEAN ), ElAndABABLoop );
 	END ElAndABAB;
 
 (** array x boolean *)
@@ -5011,19 +4986,19 @@ Sufficient (but not necessary) conditions:
 	END ElOrABSBLoop;
 
 	PROCEDURE ElOrABSB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  CONST left: ARRAY [ ? ] OF BOOLEAN;
-											  right: BOOLEAN );
+											CONST left: ARRAY [ ? ] OF BOOLEAN;
+											right: BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ElOrABSBLoop );
+										SIZEOF( BOOLEAN ), ElOrABSBLoop );
 	END ElOrABSB;
 
 	PROCEDURE ElOrSBAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-											  left: BOOLEAN;
-											  CONST right: ARRAY [ ? ] OF BOOLEAN );
+											left: BOOLEAN;
+											CONST right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ElOrABSBLoop );
+										SIZEOF( BOOLEAN ), ElOrABSBLoop );
 	END ElOrSBAB;
 
 	PROCEDURE ElAndABSBLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -5041,7 +5016,7 @@ Sufficient (but not necessary) conditions:
 												right: BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( BOOLEAN ), ElAndABSBLoop );
+										SIZEOF( BOOLEAN ), ElAndABSBLoop );
 	END ElAndABSB;
 
 	PROCEDURE ElAndSBAB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
@@ -5049,9 +5024,8 @@ Sufficient (but not necessary) conditions:
 												CONST right: ARRAY [ ? ] OF BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( right ), ADDRESSOF( left ),
-										  SIZEOF( BOOLEAN ), ElAndABSBLoop );
+										SIZEOF( BOOLEAN ), ElAndABSBLoop );
 	END ElAndSBAB;
-
 
 	(*** less than, greater or equal: array x array -> boolean  ********************************************************************)
 
@@ -5387,7 +5361,6 @@ Sufficient (but not necessary) conditions:
 		RETURN ApplyBinaryAABOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqAXAXLoop );
 	END LeqAXAX;
 
-
 	(*** equals: array x array -> boolean  ********************************************************************)
 
 (** BOOLEAN *)
@@ -5550,13 +5523,13 @@ Sufficient (but not necessary) conditions:
 	END EqlSBAB;
 
 	PROCEDURE NeqABSB*( CONST left: ARRAY [ ? ] OF BOOLEAN;
-											  right: BOOLEAN ): BOOLEAN;
+											right: BOOLEAN ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlABSB( left, right );
 	END NeqABSB;
 
 	PROCEDURE NeqSBAB*( left: BOOLEAN;
-											  CONST right: ARRAY [ ? ] OF BOOLEAN ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF BOOLEAN ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlSBAB( left, right );
 	END NeqSBAB;
@@ -5575,25 +5548,25 @@ Sufficient (but not necessary) conditions:
 	END EqlASSSLoop;
 
 	PROCEDURE EqlASSS*( CONST left: ARRAY [ ? ] OF SHORTINT;
-										    right: SHORTINT ): BOOLEAN;
+										right: SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlASSSLoop );
 	END EqlASSS;
 
 	PROCEDURE EqlSSAS*( left: SHORTINT;
-										    CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), EqlASSSLoop );
 	END EqlSSAS;
 
 	PROCEDURE NeqASSS*( CONST left: ARRAY [ ? ] OF SHORTINT;
-											 right: SHORTINT ): BOOLEAN;
+											right: SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlASSS( left, right );
 	END NeqASSS;
 
 	PROCEDURE NeqSSAS*( left: SHORTINT;
-											 CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlSSAS( left, right );
 	END NeqSSAS;
@@ -5612,25 +5585,25 @@ Sufficient (but not necessary) conditions:
 	END EqlAISILoop;
 
 	PROCEDURE EqlAISI*( CONST left: ARRAY [ ? ] OF INTEGER;
-										  right: INTEGER ): BOOLEAN;
+										right: INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlAISILoop );
 	END EqlAISI;
 
 	PROCEDURE EqlSIAI*( left: INTEGER;
-										  CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), EqlAISILoop );
 	END EqlSIAI;
 
 	PROCEDURE NeqAISI*( CONST left: ARRAY [ ? ] OF INTEGER;
-										    right: INTEGER ): BOOLEAN;
+										right: INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlAISI( left, right );
 	END NeqAISI;
 
 	PROCEDURE NeqSIAI*( left: INTEGER;
-										    CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlSIAI( left, right );
 	END NeqSIAI;
@@ -5649,13 +5622,13 @@ Sufficient (but not necessary) conditions:
 	END EqlALSLLoop;
 
 	PROCEDURE EqlALSL*( CONST left: ARRAY [ ? ] OF LONGINT;
-										   right: LONGINT ): BOOLEAN;
+										right: LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlALSLLoop );
 	END EqlALSL;
 
 	PROCEDURE EqlSLAL*( left: LONGINT;
-										   CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), EqlALSLLoop );
 	END EqlSLAL;
@@ -5698,13 +5671,13 @@ Sufficient (but not necessary) conditions:
 	END EqlSRAR;
 
 	PROCEDURE NeqARSR*( CONST left: ARRAY [ ? ] OF REAL;
-											  right: REAL ): BOOLEAN;
+											right: REAL ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlARSR( left, right );
 	END NeqARSR;
 
 	PROCEDURE NeqSRAR*( left: REAL;
-											  CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlSRAR( left, right );
 	END NeqSRAR;
@@ -5723,32 +5696,30 @@ Sufficient (but not necessary) conditions:
 	END EqlAXSXLoop;
 
 	PROCEDURE EqlAXSX*( CONST left: ARRAY [ ? ] OF LONGREAL;
-										    right: LONGREAL ): BOOLEAN;
+										right: LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), EqlAXSXLoop );
 	END EqlAXSX;
 
 	PROCEDURE EqlSXAX*( left: LONGREAL;
-										    CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), EqlAXSXLoop );
 	END EqlSXAX;
 
 	PROCEDURE NeqAXSX*( CONST left: ARRAY [ ? ] OF LONGREAL;
-											 right: LONGREAL ): BOOLEAN;
+											right: LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlAXSX( left, right );
 	END NeqAXSX;
 
 	PROCEDURE NeqSXAX*( left: LONGREAL;
-											 CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ~EqlSXAX( left, right );
 	END NeqSXAX;
 
-
 	(*** gtr : array x scalar -> boolean  ********************************************************************)
-
 
 (** SHORTINT *)
 	PROCEDURE GtrASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
@@ -5764,13 +5735,13 @@ Sufficient (but not necessary) conditions:
 	END GtrASSSLoop;
 
 	PROCEDURE GtrASSS*( CONST left: ARRAY [ ? ] OF SHORTINT;
-										   right: SHORTINT ): BOOLEAN;
+										right: SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrASSSLoop );
 	END GtrASSS;
 
 	PROCEDURE LssSSAS*( left: SHORTINT;
-										    CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GtrASSSLoop );
 	END LssSSAS;
@@ -5789,13 +5760,13 @@ Sufficient (but not necessary) conditions:
 	END GtrAISILoop;
 
 	PROCEDURE GtrAISI*( CONST left: ARRAY [ ? ] OF INTEGER;
-										  right: INTEGER ): BOOLEAN;
+										right: INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrAISILoop );
 	END GtrAISI;
 
 	PROCEDURE LssSIAI*( left: INTEGER;
-										   CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GtrAISILoop );
 	END LssSIAI;
@@ -5814,13 +5785,13 @@ Sufficient (but not necessary) conditions:
 	END GtrALSLLoop;
 
 	PROCEDURE GtrALSL*( CONST left: ARRAY [ ? ] OF LONGINT;
-										   right: LONGINT ): BOOLEAN;
+										right: LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrALSLLoop );
 	END GtrALSL;
 
 	PROCEDURE LssSLAL*( left: LONGINT;
-										   CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GtrALSLLoop );
 	END LssSLAL;
@@ -5839,13 +5810,13 @@ Sufficient (but not necessary) conditions:
 	END GtrARSRLoop;
 
 	PROCEDURE GtrARSR*( CONST left: ARRAY [ ? ] OF REAL;
-										    right: REAL ): BOOLEAN;
+										right: REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrARSRLoop );
 	END GtrARSR;
 
 	PROCEDURE LssSRAR*( left: REAL;
-											 CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GtrARSRLoop );
 	END LssSRAR;
@@ -5864,19 +5835,18 @@ Sufficient (but not necessary) conditions:
 	END GtrAXSXLoop;
 
 	PROCEDURE GtrAXSX*( CONST left: ARRAY [ ? ] OF LONGREAL;
-										   right: LONGREAL ): BOOLEAN;
+										right: LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GtrAXSXLoop );
 	END GtrAXSX;
 
 	PROCEDURE LssSXAX*( left: LONGREAL;
-										    CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GtrAXSXLoop );
 	END LssSXAX;
 
 	(*** geq : array x scalar -> boolean  ********************************************************************)
-
 
 (** SHORTINT *)
 	PROCEDURE GeqASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
@@ -5892,13 +5862,13 @@ Sufficient (but not necessary) conditions:
 	END GeqASSSLoop;
 
 	PROCEDURE GeqASSS*( CONST left: ARRAY [ ? ] OF SHORTINT;
-											 right: SHORTINT ): BOOLEAN;
+											right: SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqASSSLoop );
 	END GeqASSS;
 
 	PROCEDURE LeqSSAS*( left: SHORTINT;
-										    CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GeqASSSLoop );
 	END LeqSSAS;
@@ -5917,13 +5887,13 @@ Sufficient (but not necessary) conditions:
 	END GeqAISILoop;
 
 	PROCEDURE GeqAISI*( CONST left: ARRAY [ ? ] OF INTEGER;
-										   right: INTEGER ): BOOLEAN;
+										right: INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqAISILoop );
 	END GeqAISI;
 
 	PROCEDURE LeqSIAI*( left: INTEGER;
-										   CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GeqAISILoop );
 	END LeqSIAI;
@@ -5942,13 +5912,13 @@ Sufficient (but not necessary) conditions:
 	END GeqALSLLoop;
 
 	PROCEDURE GeqALSL*( CONST left: ARRAY [ ? ] OF LONGINT;
-										    right: LONGINT ): BOOLEAN;
+										right: LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqALSLLoop );
 	END GeqALSL;
 
 	PROCEDURE LeqSLAL*( left: LONGINT;
-										   CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GeqALSLLoop );
 	END LeqSLAL;
@@ -5967,13 +5937,13 @@ Sufficient (but not necessary) conditions:
 	END GeqARSRLoop;
 
 	PROCEDURE GeqARSR*( CONST left: ARRAY [ ? ] OF REAL;
-											 right: REAL ): BOOLEAN;
+											right: REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqARSRLoop );
 	END GeqARSR;
 
 	PROCEDURE LeqSRAR*( left: REAL;
-											 CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GeqARSRLoop );
 	END LeqSRAR;
@@ -5992,19 +5962,18 @@ Sufficient (but not necessary) conditions:
 	END GeqAXSXLoop;
 
 	PROCEDURE GeqAXSX*( CONST left: ARRAY [ ? ] OF LONGREAL;
-											 right: LONGREAL ): BOOLEAN;
+											right: LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), GeqAXSXLoop );
 	END GeqAXSX;
 
 	PROCEDURE LeqSXAX*( left: LONGREAL;
-										    CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), GeqAXSXLoop );
 	END LeqSXAX;
 
 	(*** leq : array x scalar -> boolean  ********************************************************************)
-
 
 (** SHORTINT *)
 	PROCEDURE LeqASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
@@ -6020,13 +5989,13 @@ Sufficient (but not necessary) conditions:
 	END LeqASSSLoop;
 
 	PROCEDURE LeqASSS*( CONST left: ARRAY [ ? ] OF SHORTINT;
-										    right: SHORTINT ): BOOLEAN;
+										right: SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqASSSLoop );
 	END LeqASSS;
 
 	PROCEDURE GeqSSAS*( left: SHORTINT;
-											 CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LeqASSSLoop );
 	END GeqSSAS;
@@ -6045,13 +6014,13 @@ Sufficient (but not necessary) conditions:
 	END LeqAISILoop;
 
 	PROCEDURE LeqAISI*( CONST left: ARRAY [ ? ] OF INTEGER;
-										   right: INTEGER ): BOOLEAN;
+										right: INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqAISILoop );
 	END LeqAISI;
 
 	PROCEDURE GeqSIAI*( left: INTEGER;
-										   CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LeqAISILoop );
 	END GeqSIAI;
@@ -6070,13 +6039,13 @@ Sufficient (but not necessary) conditions:
 	END LeqALSLLoop;
 
 	PROCEDURE LeqALSL*( CONST left: ARRAY [ ? ] OF LONGINT;
-										   right: LONGINT ): BOOLEAN;
+										right: LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqALSLLoop );
 	END LeqALSL;
 
 	PROCEDURE GeqSLAL*( left: LONGINT;
-										    CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LeqALSLLoop );
 	END GeqSLAL;
@@ -6095,13 +6064,13 @@ Sufficient (but not necessary) conditions:
 	END LeqARSRLoop;
 
 	PROCEDURE LeqARSR*( CONST left: ARRAY [ ? ] OF REAL;
-											 right: REAL ): BOOLEAN;
+											right: REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqARSRLoop );
 	END LeqARSR;
 
 	PROCEDURE GeqSRAR*( left: REAL;
-											 CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LeqARSRLoop );
 	END GeqSRAR;
@@ -6120,21 +6089,18 @@ Sufficient (but not necessary) conditions:
 	END LeqAXSXLoop;
 
 	PROCEDURE LeqAXSX*( CONST left: ARRAY [ ? ] OF LONGREAL;
-										    right: LONGREAL ): BOOLEAN;
+										right: LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LeqAXSXLoop );
 	END LeqAXSX;
 
 	PROCEDURE GeqSXAX*( left: LONGREAL;
-											 CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
+											CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LeqAXSXLoop );
 	END GeqSXAX;
 
-
-
 	(*** lss: array x scalar -> boolean  ********************************************************************)
-
 
 (** SHORTINT *)
 	PROCEDURE LssASSSLoop( ladr, radr, linc, len: LONGINT ): BOOLEAN;
@@ -6150,13 +6116,13 @@ Sufficient (but not necessary) conditions:
 	END LssASSSLoop;
 
 	PROCEDURE LssASSS*( CONST left: ARRAY [ ? ] OF SHORTINT;
-										    right: SHORTINT ): BOOLEAN;
+										right: SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LssASSSLoop );
 	END LssASSS;
 
 	PROCEDURE GtrSSAS*( left: SHORTINT;
-										   CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF SHORTINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssASSSLoop );
 	END GtrSSAS;
@@ -6175,13 +6141,13 @@ Sufficient (but not necessary) conditions:
 	END LssAISILoop;
 
 	PROCEDURE LssAISI*( CONST left: ARRAY [ ? ] OF INTEGER;
-										   right: INTEGER ): BOOLEAN;
+										right: INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LssAISILoop );
 	END LssAISI;
 
 	PROCEDURE GtrSIAI*( left: INTEGER;
-										  CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF INTEGER ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssAISILoop );
 	END GtrSIAI;
@@ -6200,13 +6166,13 @@ Sufficient (but not necessary) conditions:
 	END LssALSLLoop;
 
 	PROCEDURE LssALSL*( CONST left: ARRAY [ ? ] OF LONGINT;
-										   right: LONGINT ): BOOLEAN;
+										right: LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LssALSLLoop );
 	END LssALSL;
 
 	PROCEDURE GtrSLAL*( left: LONGINT;
-										   CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGINT ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssALSLLoop );
 	END GtrSLAL;
@@ -6225,13 +6191,13 @@ Sufficient (but not necessary) conditions:
 	END LssARSRLoop;
 
 	PROCEDURE LssARSR*( CONST left: ARRAY [ ? ] OF REAL;
-											 right: REAL ): BOOLEAN;
+											right: REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LssARSRLoop );
 	END LssARSR;
 
 	PROCEDURE GtrSRAR*( left: REAL;
-										    CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF REAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssARSRLoop );
 	END GtrSRAR;
@@ -6250,13 +6216,13 @@ Sufficient (but not necessary) conditions:
 	END LssAXSXLoop;
 
 	PROCEDURE LssAXSX*( CONST left: ARRAY [ ? ] OF LONGREAL;
-										    right: LONGREAL ): BOOLEAN;
+										right: LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( left ), ADDRESSOF( right ), LssAXSXLoop );
 	END LssAXSX;
 
 	PROCEDURE GtrSXAX*( left: LONGREAL;
-										   CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
+										CONST right: ARRAY [ ? ] OF LONGREAL ): BOOLEAN;
 	BEGIN
 		RETURN ApplyBinaryASBOp( ADDRESSOF( right ), ADDRESSOF( left ), LssAXSXLoop );
 	END GtrSXAX;
@@ -6574,8 +6540,6 @@ Sufficient (but not necessary) conditions:
 		RETURN val;
 	END SumAX;
 
-
-
 	(*** monadic ABS array -> array  ********************************************************************)
 
 (** SHORTINT *)
@@ -6605,7 +6569,7 @@ Sufficient (but not necessary) conditions:
 	END AbsLoopI;
 
 	PROCEDURE AbsAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-									    CONST src: ARRAY [ ? ] OF INTEGER );
+									CONST src: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( INTEGER ), AbsLoopI );
 	END AbsAI;
@@ -6621,7 +6585,7 @@ Sufficient (but not necessary) conditions:
 	END AbsLoopL;
 
 	PROCEDURE AbsAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-									    CONST src: ARRAY [ ? ] OF LONGINT );
+									CONST src: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( LONGINT ), AbsLoopL );
 	END AbsAL;
@@ -6637,7 +6601,7 @@ Sufficient (but not necessary) conditions:
 	END AbsLoopR;
 
 	PROCEDURE AbsAR*( VAR dest: ARRAY [ ? ] OF REAL;
-										 CONST src: ARRAY [ ? ] OF REAL );
+										CONST src: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyUnaryAAOp( ADDRESSOF( dest ), ADDRESSOF( src ), SIZEOF( REAL ), AbsLoopR );
 	END AbsAR;
@@ -6669,13 +6633,12 @@ Sufficient (but not necessary) conditions:
 	END AssignABSBLoop;
 
 	PROCEDURE AssignABSB*( VAR dest: ARRAY [ ? ] OF BOOLEAN;
-												  CONST left: ARRAY [ ? ] OF BOOLEAN;
-												  right: BOOLEAN );
+												CONST left: ARRAY [ ? ] OF BOOLEAN;
+												right: BOOLEAN );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), AssignABSBLoop );
+										SIZEOF( SHORTINT ), AssignABSBLoop );
 	END AssignABSB;
-
 
 (** SHORTINT*)
 	PROCEDURE AssignASSSLoop( ladr, radr, dadr, linc, dinc, len: LONGINT );
@@ -6686,11 +6649,11 @@ Sufficient (but not necessary) conditions:
 	END AssignASSSLoop;
 
 	PROCEDURE AssignASSS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-												  CONST left: ARRAY [ ? ] OF SHORTINT;
-												  right: SHORTINT );
+												CONST left: ARRAY [ ? ] OF SHORTINT;
+												right: SHORTINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), AssignASSSLoop );
+										SIZEOF( SHORTINT ), AssignASSSLoop );
 	END AssignASSS;
 
 (**INTEGER *)
@@ -6706,7 +6669,7 @@ Sufficient (but not necessary) conditions:
 												right: INTEGER );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), AssignAISILoop );
+										SIZEOF( INTEGER ), AssignAISILoop );
 	END AssignAISI;
 
 (** LONGINT *)
@@ -6718,11 +6681,11 @@ Sufficient (but not necessary) conditions:
 	END AssignALSLLoop;
 
 	PROCEDURE AssignALSL*( VAR dest: ARRAY [ ? ] OF LONGINT;
-												 CONST left: ARRAY [ ? ] OF LONGINT;
-												 right: LONGINT );
+												CONST left: ARRAY [ ? ] OF LONGINT;
+												right: LONGINT );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), AssignALSLLoop );
+										SIZEOF( LONGINT ), AssignALSLLoop );
 	END AssignALSL;
 
 (** REAL *)
@@ -6734,10 +6697,10 @@ Sufficient (but not necessary) conditions:
 	END AssignARSRLoop;
 
 	PROCEDURE AssignARSR*( VAR dest: ARRAY [ ? ] OF REAL;
-												  CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
+												CONST left: ARRAY [ ? ] OF REAL;  right: REAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  AssignARSRLoop );
+										AssignARSRLoop );
 	END AssignARSR;
 
 (** LONGREAL *)
@@ -6749,11 +6712,11 @@ Sufficient (but not necessary) conditions:
 	END AssignAXSXLoop;
 
 	PROCEDURE AssignAXSX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-												  CONST left: ARRAY [ ? ] OF LONGREAL;
-												  right: LONGREAL );
+												CONST left: ARRAY [ ? ] OF LONGREAL;
+												right: LONGREAL );
 	BEGIN
 		ApplyBinaryASAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), AssignAXSXLoop );
+										SIZEOF( LONGREAL ), AssignAXSXLoop );
 	END AssignAXSX;
 
 (*** matrix multipliation ********************************************************************)
@@ -6780,7 +6743,7 @@ Sufficient (but not necessary) conditions:
 	END AllocateVector;
 
 	PROCEDURE ApplyMatMulLoop( dest, left, right: Address;  Size: LONGINT;
-														 loop: BinaryAASLoop;
+														loop: BinaryAASLoop;
 	fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, dadri, radri, rowsL, colsL, rowsR, colsR, incL, incR, incD, strideR, strideL, strideD, colsRi: LONGINT;
 		p: ANY;  overlap: BOOLEAN;  destOld, destNew: LONGINT;
@@ -6844,8 +6807,7 @@ Sufficient (but not necessary) conditions:
 		IF rowsL = 0 THEN RETURN
 		ELSIF colsL=0 THEN RETURN
 		ELSIF colsR=0 THEN RETURN
-		ELSIF (fast = NIL ) OR
-		    ~(fast( ladr, radr, dadr, incL, strideL, incR, strideR, incD, strideD, rowsL, colsL, rowsR, colsR )) THEN
+		ELSIF (fast = NIL ) OR ~(fast( ladr, radr, dadr, incL, strideL, incR, strideR, incD, strideD, rowsL, colsL, rowsR, colsR )) THEN
 			WHILE (rowsL > 0) DO  (* outer loop: traverse rows of left matrix *)
 				radri := radr;  dadri := dadr;  colsRi := colsR;
 				WHILE (colsRi > 0) DO  (* inner loop: traverse columns of right matrix *)
@@ -6861,8 +6823,8 @@ Sufficient (but not necessary) conditions:
 	END ApplyMatMulLoop;
 
 	PROCEDURE ApplyMatVecMulLoop( dest, left, right: Address;
-															   Size: LONGINT;  loop: BinaryAASLoop;
-															   fast: FastMatMul );   (* Size= element-size *)
+															Size: LONGINT;  loop: BinaryAASLoop;
+															fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, li1, li0, ri0, di0, l1, l2: LONGINT;  p: ANY;
 		overlap: BOOLEAN;  destOld, destNew: LONGINT;
 
@@ -6902,7 +6864,6 @@ Sufficient (but not necessary) conditions:
 			dest := destNew;
 		END;
 
-
 		(*
 		IF GetAdr( dest ) = -1 THEN p := AllocateVector( dest, l1, Size );  ELSE
 			IF (GetLen( dest, 0 ) # l1) THEN HALT( 102 ) END;
@@ -6914,8 +6875,7 @@ Sufficient (but not necessary) conditions:
 
 		IF l1=0 THEN RETURN
 		ELSIF l2=0 THEN RETURN
-		ELSIF (fast = NIL ) OR
-		    ~(fast( ladr, radr, dadr, li0, li1, ri0, ri0, di0, di0, l1, l2, l2, 1 )) THEN
+		ELSIF (fast = NIL ) OR ~(fast( ladr, radr, dadr, li0, li1, ri0, ri0, di0, di0, l1, l2, l2, 1 )) THEN
 			WHILE (l1 > 0) DO  (* inner loop: traverse columns of right matrix *)
 				loop( ladr, radr, dadr, li0, ri0, l2 );  INC( ladr, li1 );  INC( dadr, di0 );
 				DEC( l1 );
@@ -6928,8 +6888,8 @@ Sufficient (but not necessary) conditions:
 	END ApplyMatVecMulLoop;
 
 	PROCEDURE ApplyVecMatMulLoop( dest, left, right: Address;
-															   Size: LONGINT;  loop: BinaryAASLoop;
-															   fast: FastMatMul );   (* Size= element-size *)
+															Size: LONGINT;  loop: BinaryAASLoop;
+															fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr, li0, ri1, ri0, di0, l0, l2: LONGINT;  p: ANY;
 		overlap: BOOLEAN;  destOld, destNew: LONGINT;
 
@@ -6964,7 +6924,6 @@ Sufficient (but not necessary) conditions:
 			dest := destNew;
 		END;
 
-
 		(*
 			IF GetAdr( dest ) = -1 THEN p := AllocateVector( dest, l0, Size );  ELSE
 			IF (GetLen( dest, 0 ) # l0) THEN HALT( 102 ) END;
@@ -6988,7 +6947,6 @@ Sufficient (but not necessary) conditions:
 		END;
 	END ApplyVecMatMulLoop;
 
-
 (** SHORTINT *)
 	PROCEDURE MatMulASASLoop( ladr, radr, dadr, linc, rinc, len: Address );
 	VAR lval, rval, dval: SHORTINT;
@@ -7003,26 +6961,26 @@ Sufficient (but not necessary) conditions:
 	END MatMulASASLoop;
 
 	PROCEDURE MatMulASAS*( VAR dest: ARRAY [ * , * ] OF SHORTINT;
-												   CONST left, right: ARRAY [ * , * ] OF SHORTINT );
+												CONST left, right: ARRAY [ * , * ] OF SHORTINT );
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( SHORTINT ), MatMulASASLoop, NIL );
+									SIZEOF( SHORTINT ), MatMulASASLoop, NIL );
 	END MatMulASAS;
 
 	PROCEDURE MatVecMulASAS*( VAR dest: ARRAY [ * ] OF SHORTINT;
-														 CONST left: ARRAY [ * , * ] OF SHORTINT;
-														 CONST right: ARRAY [ * ] OF SHORTINT );
+														CONST left: ARRAY [ * , * ] OF SHORTINT;
+														CONST right: ARRAY [ * ] OF SHORTINT );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( SHORTINT ), MatMulASASLoop, NIL );
+											SIZEOF( SHORTINT ), MatMulASASLoop, NIL );
 	END MatVecMulASAS;
 
 	PROCEDURE VecMatMulASAS*( VAR dest: ARRAY [ * ] OF SHORTINT;
-														 CONST left: ARRAY [ * ] OF SHORTINT;
-														 CONST right: ARRAY [ * , * ] OF SHORTINT );
+														CONST left: ARRAY [ * ] OF SHORTINT;
+														CONST right: ARRAY [ * , * ] OF SHORTINT );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( SHORTINT ), MatMulASASLoop, NIL );
+											SIZEOF( SHORTINT ), MatMulASASLoop, NIL );
 	END VecMatMulASAS;
 
 (** INTEGER *)
@@ -7038,26 +6996,26 @@ Sufficient (but not necessary) conditions:
 	END MatMulAIAILoop;
 
 	PROCEDURE MatMulAIAI*( VAR dest: ARRAY [ * , * ] OF INTEGER;
-												  CONST left, right: ARRAY [ * , * ] OF INTEGER );
+												CONST left, right: ARRAY [ * , * ] OF INTEGER );
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( INTEGER ), MatMulAIAILoop, NIL );
+									SIZEOF( INTEGER ), MatMulAIAILoop, NIL );
 	END MatMulAIAI;
 
 	PROCEDURE MatVecMulAIAI*( VAR dest: ARRAY [ * ] OF INTEGER;
-													    CONST left: ARRAY [ * , * ] OF INTEGER;
-													    CONST right: ARRAY [ * ] OF INTEGER );
+													CONST left: ARRAY [ * , * ] OF INTEGER;
+													CONST right: ARRAY [ * ] OF INTEGER );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( INTEGER ), MatMulAIAILoop, NIL );
+											SIZEOF( INTEGER ), MatMulAIAILoop, NIL );
 	END MatVecMulAIAI;
 
 	PROCEDURE VecMatMulAIAI*( VAR dest: ARRAY [ * ] OF INTEGER;
-													    CONST left: ARRAY [ * ] OF INTEGER;
-													    CONST right: ARRAY [ * , * ] OF INTEGER );
+													CONST left: ARRAY [ * ] OF INTEGER;
+													CONST right: ARRAY [ * , * ] OF INTEGER );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( INTEGER ), MatMulAIAILoop, NIL );
+											SIZEOF( INTEGER ), MatMulAIAILoop, NIL );
 	END VecMatMulAIAI;
 
 (** LONGINT *)
@@ -7073,7 +7031,7 @@ Sufficient (but not necessary) conditions:
 	END MatMulALALLoop;
 
 	PROCEDURE MatMulALAL*( VAR dest: ARRAY [ * , * ] OF LONGINT;
-												  CONST left, right: ARRAY [ * , * ] OF LONGINT );
+												CONST left, right: ARRAY [ * , * ] OF LONGINT );
 	BEGIN
 		(*
 		KernelLog.String("MatMulALAL");
@@ -7084,7 +7042,7 @@ Sufficient (but not necessary) conditions:
 		*)
 
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( LONGINT ), MatMulALALLoop, NIL );
+									SIZEOF( LONGINT ), MatMulALALLoop, NIL );
 	END MatMulALAL;
 
 	PROCEDURE MatVecMulALAL*( VAR dest: ARRAY [ * ] OF LONGINT;
@@ -7092,7 +7050,7 @@ Sufficient (but not necessary) conditions:
 														CONST right: ARRAY [ * ] OF LONGINT );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGINT ), MatMulALALLoop, NIL );
+											SIZEOF( LONGINT ), MatMulALALLoop, NIL );
 	END MatVecMulALAL;
 
 	PROCEDURE VecMatMulALAL*( VAR dest: ARRAY [ * ] OF LONGINT;
@@ -7100,7 +7058,7 @@ Sufficient (but not necessary) conditions:
 														CONST right: ARRAY [ * , * ] OF LONGINT );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGINT ), MatMulALALLoop, NIL );
+											SIZEOF( LONGINT ), MatMulALALLoop, NIL );
 	END VecMatMulALAL;
 
 (** REAL *)
@@ -7121,7 +7079,7 @@ Sufficient (but not necessary) conditions:
 		use of CONST for left, right makes execution slower, it seems that a new descriptor is created in this case
 	*)
 	PROCEDURE MatMulARAR*( VAR dest: ARRAY [ * , * ] OF REAL;
-										   CONST left, right: ARRAY [ * , * ] OF REAL );
+										CONST left, right: ARRAY [ * , * ] OF REAL );
 	VAR flags: SET; dadr, ladr, radr: LONGINT;
 	BEGIN
 
@@ -7173,7 +7131,6 @@ Sufficient (but not necessary) conditions:
 						dest[2,2] := left[2,0]*right[0,2] + left[2,1]*right[1,2] + left[2,2]*right[2,2];
 					END;
 
-
 				|Mat4x4:
 					IF SYSTEM.GET32(ADDRESSOF(dest)+flagoffs) # Mat4x4 THEN
 						IF dadr = 0 THEN NEW(dest,4,4);
@@ -7205,11 +7162,11 @@ Sufficient (but not necessary) conditions:
 					END;
 			ELSE
 				ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-									    loopMatMulARAR, matMulR );
+									loopMatMulARAR, matMulR );
 			END;
 		ELSE
 			ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-									    loopMatMulARAR, matMulR );
+									loopMatMulARAR, matMulR );
 		END;
 	END MatMulARAR;
 
@@ -7284,16 +7241,16 @@ Sufficient (but not necessary) conditions:
 
 		ELSE
 			ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( REAL ), loopMatMulARAR, matMulR );
+											SIZEOF( REAL ), loopMatMulARAR, matMulR );
 		END;
 	END MatVecMulARAR;
 
 	PROCEDURE VecMatMulARAR*( VAR dest: ARRAY [ * ] OF REAL;
-														  CONST left: ARRAY [ * ] OF REAL;
-														  CONST right: ARRAY [ * , * ] OF REAL );
+														CONST left: ARRAY [ * ] OF REAL;
+														CONST right: ARRAY [ * , * ] OF REAL );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( REAL ), loopMatMulARAR, matMulR );
+											SIZEOF( REAL ), loopMatMulARAR, matMulR );
 	END VecMatMulARAR;
 
 (** LONGREAL *)
@@ -7315,7 +7272,7 @@ Sufficient (but not necessary) conditions:
 		use of CONST for left, right makes execution slower, it seems that a new descriptor is created in this case
 	*)
 	PROCEDURE MatMulAXAX*( VAR dest: ARRAY [ * , * ] OF LONGREAL;
-										   CONST left, right: ARRAY [ * , * ] OF LONGREAL );
+										CONST left, right: ARRAY [ * , * ] OF LONGREAL );
 	VAR
 		flags: SET; dadr, ladr, radr: LONGINT;
 	BEGIN
@@ -7366,7 +7323,6 @@ Sufficient (but not necessary) conditions:
 						dest[2,2] := left[2,0]*right[0,2] + left[2,1]*right[1,2] + left[2,2]*right[2,2];
 					END;
 
-
 				|Mat4x4:
 					IF SYSTEM.GET32(ADDRESSOF(dest)+flagoffs) # Mat4x4 THEN
 						IF dadr = 0 THEN NEW(dest,4,4);
@@ -7398,11 +7354,11 @@ Sufficient (but not necessary) conditions:
 					END;
 			ELSE
 				ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( LONGREAL ),
-									    loopMatMulAXAX, matMulX );
+									loopMatMulAXAX, matMulX );
 			END;
 		ELSE
 			ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( LONGREAL ),
-									    loopMatMulAXAX, matMulX );
+									loopMatMulAXAX, matMulX );
 		END;
 	END MatMulAXAX;
 
@@ -7477,18 +7433,17 @@ Sufficient (but not necessary) conditions:
 
 		ELSE
 			ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGREAL ), loopMatMulAXAX, matMulX );
+											SIZEOF( LONGREAL ), loopMatMulAXAX, matMulX );
 		END;
 	END MatVecMulAXAX;
 
 	PROCEDURE VecMatMulAXAX*( VAR dest: ARRAY [ * ] OF LONGREAL;
-														 CONST left: ARRAY [ * ] OF LONGREAL;
-														 CONST right: ARRAY [ * , * ] OF LONGREAL );
+														CONST left: ARRAY [ * ] OF LONGREAL;
+														CONST right: ARRAY [ * , * ] OF LONGREAL );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGREAL ), loopMatMulAXAX, matMulX );
+											SIZEOF( LONGREAL ), loopMatMulAXAX, matMulX );
 	END VecMatMulAXAX;
-
 
 (** SHORTINT *)
 	PROCEDURE MatMulIncASASLoop( ladr, radr, dadr, linc, rinc, len: Address );
@@ -7507,23 +7462,23 @@ Sufficient (but not necessary) conditions:
 														CONST left, right: ARRAY [ * , * ] OF SHORTINT );
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
+									SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 	END MatMulIncASAS;
 
 	PROCEDURE MatVecMulIncASAS*( VAR dest: ARRAY [ * ] OF SHORTINT;
-															  CONST left: ARRAY [ * , * ] OF SHORTINT;
-															  CONST right: ARRAY [ * ] OF SHORTINT );
+															CONST left: ARRAY [ * , * ] OF SHORTINT;
+															CONST right: ARRAY [ * ] OF SHORTINT );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
+											SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 	END MatVecMulIncASAS;
 
 	PROCEDURE VecMatMulIncASAS*( VAR dest: ARRAY [ * ] OF SHORTINT;
-															  CONST left: ARRAY [ * ] OF SHORTINT;
-															  CONST right: ARRAY [ * , * ] OF SHORTINT );
+															CONST left: ARRAY [ * ] OF SHORTINT;
+															CONST right: ARRAY [ * , * ] OF SHORTINT );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
+											SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 	END VecMatMulIncASAS;
 
 	PROCEDURE MatMulDecASAS*( VAR dest: ARRAY [ * , * ] OF SHORTINT;
@@ -7531,27 +7486,27 @@ Sufficient (but not necessary) conditions:
 	BEGIN
 		MinusAS(dest,dest);
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
+									SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		MinusAS(dest,dest);
 	END MatMulDecASAS;
 
 	PROCEDURE MatVecMulDecASAS*( VAR dest: ARRAY [ * ] OF SHORTINT;
-															  CONST left: ARRAY [ * , * ] OF SHORTINT;
-															  CONST right: ARRAY [ * ] OF SHORTINT );
+															CONST left: ARRAY [ * , * ] OF SHORTINT;
+															CONST right: ARRAY [ * ] OF SHORTINT );
 	BEGIN
 		MinusAS(dest,dest);
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
+											SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		MinusAS(dest,dest);
 	END MatVecMulDecASAS;
 
 	PROCEDURE VecMatMulDecASAS*( VAR dest: ARRAY [ * ] OF SHORTINT;
-															  CONST left: ARRAY [ * ] OF SHORTINT;
-															  CONST right: ARRAY [ * , * ] OF SHORTINT );
+															CONST left: ARRAY [ * ] OF SHORTINT;
+															CONST right: ARRAY [ * , * ] OF SHORTINT );
 	BEGIN
 		MinusAS(dest,dest);
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
+											SIZEOF( SHORTINT ), MatMulIncASASLoop, NIL );
 		MinusAS(dest,dest);
 	END VecMatMulDecASAS;
 
@@ -7568,54 +7523,54 @@ Sufficient (but not necessary) conditions:
 	END MatMulIncAIAILoop;
 
 	PROCEDURE MatMulIncAIAI*( VAR dest: ARRAY [ * , * ] OF INTEGER;
-													   CONST left, right: ARRAY [ * , * ] OF INTEGER );
+													CONST left, right: ARRAY [ * , * ] OF INTEGER );
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
+									SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 	END MatMulIncAIAI;
 
 	PROCEDURE MatVecMulIncAIAI*( VAR dest: ARRAY [ * ] OF INTEGER;
-															 CONST left: ARRAY [ * , * ] OF INTEGER;
-															 CONST right: ARRAY [ * ] OF INTEGER );
+															CONST left: ARRAY [ * , * ] OF INTEGER;
+															CONST right: ARRAY [ * ] OF INTEGER );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
+											SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 	END MatVecMulIncAIAI;
 
 	PROCEDURE VecMatMulIncAIAI*( VAR dest: ARRAY [ * ] OF INTEGER;
-															 CONST left: ARRAY [ * ] OF INTEGER;
-															 CONST right: ARRAY [ * , * ] OF INTEGER );
+															CONST left: ARRAY [ * ] OF INTEGER;
+															CONST right: ARRAY [ * , * ] OF INTEGER );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
+											SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 	END VecMatMulIncAIAI;
 
 	PROCEDURE MatMulDecAIAI*( VAR dest: ARRAY [ * , * ] OF INTEGER;
-													   CONST left, right: ARRAY [ * , * ] OF INTEGER );
+													CONST left, right: ARRAY [ * , * ] OF INTEGER );
 	BEGIN
 		MinusAI(dest,dest);
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
+									SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		MinusAI(dest,dest);
 	END MatMulDecAIAI;
 
 	PROCEDURE MatVecMulDecAIAI*( VAR dest: ARRAY [ * ] OF INTEGER;
-															 CONST left: ARRAY [ * , * ] OF INTEGER;
-															 CONST right: ARRAY [ * ] OF INTEGER );
+															CONST left: ARRAY [ * , * ] OF INTEGER;
+															CONST right: ARRAY [ * ] OF INTEGER );
 	BEGIN
 		MinusAI(dest,dest);
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
+											SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		MinusAI(dest,dest);
 	END MatVecMulDecAIAI;
 
 	PROCEDURE VecMatMulDecAIAI*( VAR dest: ARRAY [ * ] OF INTEGER;
-															 CONST left: ARRAY [ * ] OF INTEGER;
-															 CONST right: ARRAY [ * , * ] OF INTEGER );
+															CONST left: ARRAY [ * ] OF INTEGER;
+															CONST right: ARRAY [ * , * ] OF INTEGER );
 	BEGIN
 		MinusAI(dest,dest);
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
+											SIZEOF( INTEGER ), MatMulIncAIAILoop, NIL );
 		MinusAI(dest,dest);
 	END VecMatMulDecAIAI;
 
@@ -7632,54 +7587,54 @@ Sufficient (but not necessary) conditions:
 	END MatMulIncALALLoop;
 
 	PROCEDURE MatMulIncALAL*( VAR dest: ARRAY [ * , * ] OF LONGINT;
-													    CONST left, right: ARRAY [ * , * ] OF LONGINT );
+													CONST left, right: ARRAY [ * , * ] OF LONGINT );
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
+									SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 	END MatMulIncALAL;
 
 	PROCEDURE MatVecMulIncALAL*( VAR dest: ARRAY [ * ] OF LONGINT;
-															  CONST left: ARRAY [ * , * ] OF LONGINT;
-															  CONST right: ARRAY [ * ] OF LONGINT );
+															CONST left: ARRAY [ * , * ] OF LONGINT;
+															CONST right: ARRAY [ * ] OF LONGINT );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
+											SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 	END MatVecMulIncALAL;
 
 	PROCEDURE VecMatMulIncALAL*( VAR dest: ARRAY [ * ] OF LONGINT;
-															  CONST left: ARRAY [ * ] OF LONGINT;
-															  CONST right: ARRAY [ * , * ] OF LONGINT );
+															CONST left: ARRAY [ * ] OF LONGINT;
+															CONST right: ARRAY [ * , * ] OF LONGINT );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
+											SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 	END VecMatMulIncALAL;
 
 	PROCEDURE MatMulDecALAL*( VAR dest: ARRAY [ * , * ] OF LONGINT;
-													    CONST left, right: ARRAY [ * , * ] OF LONGINT );
+													CONST left, right: ARRAY [ * , * ] OF LONGINT );
 	BEGIN
 		MinusAL(dest,dest);
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
+									SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		MinusAL(dest,dest);
 	END MatMulDecALAL;
 
 	PROCEDURE MatVecMulDecALAL*( VAR dest: ARRAY [ * ] OF LONGINT;
-															  CONST left: ARRAY [ * , * ] OF LONGINT;
-															  CONST right: ARRAY [ * ] OF LONGINT );
+															CONST left: ARRAY [ * , * ] OF LONGINT;
+															CONST right: ARRAY [ * ] OF LONGINT );
 	BEGIN
 		MinusAL(dest,dest);
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
+											SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		MinusAL(dest,dest);
 	END MatVecMulDecALAL;
 
 	PROCEDURE VecMatMulDecALAL*( VAR dest: ARRAY [ * ] OF LONGINT;
-															  CONST left: ARRAY [ * ] OF LONGINT;
-															  CONST right: ARRAY [ * , * ] OF LONGINT );
+															CONST left: ARRAY [ * ] OF LONGINT;
+															CONST right: ARRAY [ * , * ] OF LONGINT );
 	BEGIN
 		MinusAL(dest,dest);
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
+											SIZEOF( LONGINT ), MatMulIncALALLoop, NIL );
 		MinusAL(dest,dest);
 	END VecMatMulDecALAL;
 
@@ -7696,54 +7651,54 @@ Sufficient (but not necessary) conditions:
 	END MatMulIncARARLoop;
 
 	PROCEDURE MatMulIncARAR*( VAR dest: ARRAY [ * , * ] OF REAL;
-														 CONST left, right: ARRAY [ * , * ] OF REAL );
+														CONST left, right: ARRAY [ * , * ] OF REAL );
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-									    loopMatMulIncARAR, matMulIncR );
+									loopMatMulIncARAR, matMulIncR );
 	END MatMulIncARAR;
 
 	PROCEDURE MatVecMulIncARAR*( VAR dest: ARRAY [ * ] OF REAL;
-															   CONST left: ARRAY [ * , * ] OF REAL;
-															   CONST right: ARRAY [ * ] OF REAL );
+															CONST left: ARRAY [ * , * ] OF REAL;
+															CONST right: ARRAY [ * ] OF REAL );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 	END MatVecMulIncARAR;
 
 	PROCEDURE VecMatMulIncARAR*( VAR dest: ARRAY [ * ] OF REAL;
-															   CONST left: ARRAY [ * ] OF REAL;
-															   CONST right: ARRAY [ * , * ] OF REAL );
+															CONST left: ARRAY [ * ] OF REAL;
+															CONST right: ARRAY [ * , * ] OF REAL );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 	END VecMatMulIncARAR;
 
 	PROCEDURE MatMulDecARAR*( VAR dest: ARRAY [ * , * ] OF REAL;
-														 CONST left, right: ARRAY [ * , * ] OF REAL );
+														CONST left, right: ARRAY [ * , * ] OF REAL );
 	BEGIN
 		MinusAR(dest,dest);
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-									    loopMatMulIncARAR, matMulIncR );
+									loopMatMulIncARAR, matMulIncR );
 		MinusAR(dest,dest);
 	END MatMulDecARAR;
 
 	PROCEDURE MatVecMulDecARAR*( VAR dest: ARRAY [ * ] OF REAL;
-															   CONST left: ARRAY [ * , * ] OF REAL;
-															   CONST right: ARRAY [ * ] OF REAL );
+															CONST left: ARRAY [ * , * ] OF REAL;
+															CONST right: ARRAY [ * ] OF REAL );
 	BEGIN
 		MinusAR(dest,dest);
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 		MinusAR(dest,dest);
 	END MatVecMulDecARAR;
 
 	PROCEDURE VecMatMulDecARAR*( VAR dest: ARRAY [ * ] OF REAL;
-															   CONST left: ARRAY [ * ] OF REAL;
-															   CONST right: ARRAY [ * , * ] OF REAL );
+															CONST left: ARRAY [ * ] OF REAL;
+															CONST right: ARRAY [ * , * ] OF REAL );
 	BEGIN
 		MinusAR(dest,dest);
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( REAL ), loopMatMulIncARAR, matMulIncR );
 		MinusAR(dest,dest);
 	END VecMatMulDecARAR;
 (** LONGREAL *)
@@ -7763,59 +7718,58 @@ Sufficient (but not necessary) conditions:
 														CONST left, right: ARRAY [ * , * ] OF LONGREAL );
 	BEGIN
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
+									SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 	END MatMulIncAXAX;
 
 	PROCEDURE MatVecMulIncAXAX*( VAR dest: ARRAY [ * ] OF LONGREAL;
-															  CONST left: ARRAY [ * , * ] OF LONGREAL;
-															  CONST right: ARRAY [ * ] OF LONGREAL );
+															CONST left: ARRAY [ * , * ] OF LONGREAL;
+															CONST right: ARRAY [ * ] OF LONGREAL );
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 	END MatVecMulIncAXAX;
 
 	PROCEDURE VecMatMulIncAXAX*( VAR dest: ARRAY [ * ] OF LONGREAL;
-															  CONST left: ARRAY [ * ] OF LONGREAL;
-															  CONST right: ARRAY [ * , * ] OF LONGREAL );
+															CONST left: ARRAY [ * ] OF LONGREAL;
+															CONST right: ARRAY [ * , * ] OF LONGREAL );
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 	END VecMatMulIncAXAX;
-
 
 	PROCEDURE MatMulDecAXAX*( VAR dest: ARRAY [ * , * ] OF LONGREAL;
 														CONST left, right: ARRAY [ * , * ] OF LONGREAL );
 	BEGIN
 		MinusAX(dest,dest);
 		ApplyMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-									    SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
+									SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		MinusAX(dest,dest);
 	END MatMulDecAXAX;
 
 	PROCEDURE MatVecMulDecAXAX*( VAR dest: ARRAY [ * ] OF LONGREAL;
-															  CONST left: ARRAY [ * , * ] OF LONGREAL;
-															  CONST right: ARRAY [ * ] OF LONGREAL );
+															CONST left: ARRAY [ * , * ] OF LONGREAL;
+															CONST right: ARRAY [ * ] OF LONGREAL );
 	BEGIN
 		MinusAX(dest,dest);
 		ApplyMatVecMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		MinusAX(dest,dest);
 	END MatVecMulDecAXAX;
 
 	PROCEDURE VecMatMulDecAXAX*( VAR dest: ARRAY [ * ] OF LONGREAL;
-															  CONST left: ARRAY [ * ] OF LONGREAL;
-															  CONST right: ARRAY [ * , * ] OF LONGREAL );
+															CONST left: ARRAY [ * ] OF LONGREAL;
+															CONST right: ARRAY [ * , * ] OF LONGREAL );
 	BEGIN
 		MinusAX(dest,dest);
 		ApplyVecMatMulLoop( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-											 SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( LONGREAL ), loopMatMulIncAXAX, matMulIncX );
 		MinusAX(dest,dest);
 	END VecMatMulDecAXAX;
 
 (*** Cross product ********************************************************************)
 
 	PROCEDURE CrossProductASAS*( VAR dest: ARRAY [ * ] OF SHORTINT;
-														    CONST left, right: ARRAY [ * ] OF SHORTINT );
+														CONST left, right: ARRAY [ * ] OF SHORTINT );
 	VAR vl1, vl2, vl3, vr1, vr2, vr3: SHORTINT;
 	BEGIN
 		IF (LEN( left,0 ) # 3) OR (LEN( right,0 ) # 3) THEN
@@ -7828,7 +7782,7 @@ Sufficient (but not necessary) conditions:
 	END CrossProductASAS;
 
 	PROCEDURE CrossProductAIAI*( VAR dest: ARRAY [ * ] OF INTEGER;
-														   CONST left, right: ARRAY [ * ] OF INTEGER );
+														CONST left, right: ARRAY [ * ] OF INTEGER );
 	VAR vl1, vl2, vl3, vr1, vr2, vr3: INTEGER;
 	BEGIN
 		IF (LEN( left,0 ) # 3) OR (LEN( right,0 ) # 3) THEN
@@ -7841,7 +7795,7 @@ Sufficient (but not necessary) conditions:
 	END CrossProductAIAI;
 
 	PROCEDURE CrossProductALAL*( VAR dest: ARRAY [ * ] OF LONGINT;
-														   CONST left, right: ARRAY [ * ] OF LONGINT );
+														CONST left, right: ARRAY [ * ] OF LONGINT );
 	VAR vl1, vl2, vl3, vr1, vr2, vr3: LONGINT;
 	BEGIN
 		IF (LEN( left,0 ) # 3) OR (LEN( right,0 ) # 3) THEN
@@ -7854,7 +7808,7 @@ Sufficient (but not necessary) conditions:
 	END CrossProductALAL;
 
 	PROCEDURE CrossProductARAR*( VAR dest: ARRAY [ * ] OF REAL;
-															 CONST left, right: ARRAY [ * ] OF REAL );
+															CONST left, right: ARRAY [ * ] OF REAL );
 	VAR vl1, vl2, vl3, vr1, vr2, vr3: REAL;
 	BEGIN
 		IF (LEN( left,0 ) # 3) OR (LEN( right,0 ) # 3) THEN
@@ -7867,7 +7821,7 @@ Sufficient (but not necessary) conditions:
 	END CrossProductARAR;
 
 	PROCEDURE CrossProductAXAX*( VAR dest: ARRAY [ * ] OF LONGREAL;
-														    CONST left, right: ARRAY [ * ] OF LONGREAL );
+														CONST left, right: ARRAY [ * ] OF LONGREAL );
 	VAR vl1, vl2, vl3, vr1, vr2, vr3: LONGREAL;
 	BEGIN
 		IF (LEN( left,0 ) # 3) OR (LEN( right,0 ) # 3) THEN
@@ -7880,8 +7834,6 @@ Sufficient (but not necessary) conditions:
 	END CrossProductAXAX;
 
 (** Transpose  ********************************************************************)
-
-
 
 	PROCEDURE Overlap( src1, src2: Address ): BOOLEAN;
 	VAR from1, from2, to1, to2: Address;  dim: LONGINT;
@@ -7900,7 +7852,6 @@ Sufficient (but not necessary) conditions:
 		ELSE RETURN TRUE;
 		END;
 	END Overlap;
-
 
 (*
 	PROCEDURE Overlap( src1, src2, dim: Address ): BOOLEAN;
@@ -7969,37 +7920,37 @@ Sufficient (but not necessary) conditions:
 	END Transpose;
 
 	PROCEDURE TransposeAS*( VAR dest: ARRAY [ * , * ] OF SHORTINT;
-												    CONST left: ARRAY [ * , * ] OF SHORTINT );
+												CONST left: ARRAY [ * , * ] OF SHORTINT );
 	BEGIN
 		Transpose( ADDRESSOF( dest ), ADDRESSOF( left ), SIZEOF( SHORTINT ) );
 	END TransposeAS;
 
 	PROCEDURE TransposeAI*( VAR dest: ARRAY [ * , * ] OF INTEGER;
-												   CONST left: ARRAY [ * , * ] OF INTEGER );
+												CONST left: ARRAY [ * , * ] OF INTEGER );
 	BEGIN
 		Transpose( ADDRESSOF( dest ), ADDRESSOF( left ), SIZEOF( INTEGER ) );
 	END TransposeAI;
 
 	PROCEDURE TransposeAL*( VAR dest: ARRAY [ * , * ] OF LONGINT;
-												   CONST left: ARRAY [ * , * ] OF LONGINT );
+												CONST left: ARRAY [ * , * ] OF LONGINT );
 	BEGIN
 		Transpose( ADDRESSOF( dest ), ADDRESSOF( left ), SIZEOF( LONGINT ) );
 	END TransposeAL;
 
 	PROCEDURE TransposeAR*( VAR dest: ARRAY [ * , * ] OF REAL;
-												    CONST left: ARRAY [ * , * ] OF REAL );
+												CONST left: ARRAY [ * , * ] OF REAL );
 	BEGIN
 		Transpose( ADDRESSOF( dest ), ADDRESSOF( left ), SIZEOF( REAL ) );
 	END TransposeAR;
 
 	PROCEDURE TransposeAX*( VAR dest: ARRAY [ * , * ] OF LONGREAL;
-												    CONST left: ARRAY [ * , * ] OF LONGREAL );
+												CONST left: ARRAY [ * , * ] OF LONGREAL );
 	BEGIN
 		Transpose( ADDRESSOF( dest ), ADDRESSOF( left ), SIZEOF( LONGREAL ) );
 	END TransposeAX;
 
 	PROCEDURE CheckTensorGeometry( left, right, dest: Address;
-															    ldim, rdim: LONGINT ): BOOLEAN;
+															ldim, rdim: LONGINT ): BOOLEAN;
 	VAR i: LONGINT;
 	BEGIN
 		FOR i := 0 TO rdim - 1 DO
@@ -8022,7 +7973,7 @@ Sufficient (but not necessary) conditions:
 	END Zero;
 *)
 	PROCEDURE Reshape*( VAR dest: LONGINT;  src: LONGINT;
-											 CONST shape: ARRAY [ * ] OF LONGINT );
+											CONST shape: ARRAY [ * ] OF LONGINT );
 	VAR i, Size: LONGINT;  ptr, data: ANY;  new: LONGINT;
 
 		oldSize, newSize: LONGINT;  oldDim, newDim: LONGINT;
@@ -8032,7 +7983,7 @@ Sufficient (but not necessary) conditions:
 			ptr := GetArrayDesc( newDim );  new := SYSTEM.VAL( LONGINT, ptr );
 		END NewDescriptor;
 
-		(* 	Added by Alexey
+		(*	Added by Alexey
 			Returns TRUE if the new shape is the result of squeezing (removing of singleton dimensions)
 		*)
 		PROCEDURE SqueezingReshape(): BOOLEAN;
@@ -8081,7 +8032,6 @@ Sufficient (but not necessary) conditions:
 			PutPtr( new, GetPtr(src) );  PutDim( new, newDim );
 			PutSize( new, Size );
 		END NewDescriptorForSameData;
-
 
 		PROCEDURE NewData;
 		VAR len, size, i: LONGINT;
@@ -8222,8 +8172,8 @@ Sufficient (but not necessary) conditions:
 	END Reshape;
 
 	PROCEDURE AllocateTensorX*( VAR dest: LONGINT;
-														  CONST a: ARRAY [ * ] OF LONGINT;
-														  Size: LONGINT );
+														CONST a: ARRAY [ * ] OF LONGINT;
+														Size: LONGINT );
 	VAR descr, data: ANY;  same: BOOLEAN;  i: LONGINT;  dim: LONGINT;
 
 		PROCEDURE NewData;
@@ -8279,7 +8229,6 @@ Sufficient (but not necessary) conditions:
 		FOR i := 0 TO dim - 1 DO dest[i] := GetLen( src, i );  END;
 	END LenA;
 
-
 	PROCEDURE IncrA*( VAR dest: ARRAY [ * ] OF LONGINT;  src: Address );
 	VAR dim, i, len: LONGINT;
 	BEGIN
@@ -8308,9 +8257,8 @@ Sufficient (but not necessary) conditions:
 		END;
 	END Incr;
 
-
 	PROCEDURE AllocateTensor( VAR dest: LONGINT;  left, right: Address;
-												    Size: LONGINT ): ANY;
+												Size: LONGINT ): ANY;
 	VAR ldim, rdim: LONGINT;  ptr, data: ANY;
 
 		PROCEDURE NewData;
@@ -8359,7 +8307,7 @@ Sufficient (but not necessary) conditions:
 
 (* find the largest block with a regular pattern of the form offset+{i*linc: 0<=i<len} for two arrays simultaneously. d is dimension applying to the resulting loop *)
 	PROCEDURE FindPatternTensor( left, right: Address;
-														 VAR rdim, len, linc, ri: LONGINT );
+														VAR rdim, len, linc, ri: LONGINT );
 	(* geometric precondition: lengths must coincide *)
 	VAR ldim: LONGINT;
 	BEGIN
@@ -8371,8 +8319,7 @@ Sufficient (but not necessary) conditions:
 		END;
 		linc := GetInc( left, ldim );  ri := GetInc( right, rdim );  DEC( rdim );
 		DEC( ldim );
-		WHILE (ldim >= 0) & (rdim >= 0) & (GetInc( left, ldim ) = len * linc) &
-				    (GetInc( right, rdim ) = len * ri) DO
+		WHILE (ldim >= 0) & (rdim >= 0) & (GetInc( left, ldim ) = len * linc) & (GetInc( right, rdim ) = len * ri) DO
 			len := len * GetLen( left, ldim );
 			ASSERT( GetLen( left, ldim ) = GetLen( right, rdim ) );  DEC( rdim );
 			DEC( ldim );
@@ -8385,7 +8332,7 @@ Sufficient (but not necessary) conditions:
 	END FindPatternTensor;
 
 	PROCEDURE ApplyTensorAAAOp( d, l, r: Address;  elementSize: LONGINT;
-														    Loop: BinaryASALoop );
+														Loop: BinaryASALoop );
 	VAR loopd, looplen, loopri, loopdi, lDim, rDim: LONGINT;  p: ANY;
 		origdest: LONGINT;  left, right, dest: Address;
 
@@ -8447,38 +8394,38 @@ Sufficient (but not necessary) conditions:
 	END ApplyTensorAAAOp;
 
 	PROCEDURE TensorProdASAS*( VAR dest: ARRAY [ ? ] OF SHORTINT;
-														 CONST left, right: ARRAY [ ? ] OF SHORTINT );
+														CONST left, right: ARRAY [ ? ] OF SHORTINT );
 	BEGIN
 		ApplyTensorAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( SHORTINT ), MulASSSLoop );
+										SIZEOF( SHORTINT ), MulASSSLoop );
 	END TensorProdASAS;
 
 	PROCEDURE TensorProdAIAI*( VAR dest: ARRAY [ ? ] OF INTEGER;
-													    CONST left, right: ARRAY [ ? ] OF INTEGER );
+													CONST left, right: ARRAY [ ? ] OF INTEGER );
 	BEGIN
 		ApplyTensorAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( INTEGER ), MulAISILoop );
+										SIZEOF( INTEGER ), MulAISILoop );
 	END TensorProdAIAI;
 
 	PROCEDURE TensorProdALAL*( VAR dest: ARRAY [ ? ] OF LONGINT;
 														CONST left, right: ARRAY [ ? ] OF LONGINT );
 	BEGIN
 		ApplyTensorAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGINT ), MulALSLLoop );
+										SIZEOF( LONGINT ), MulALSLLoop );
 	END TensorProdALAL;
 
 	PROCEDURE TensorProdARAR*( VAR dest: ARRAY [ ? ] OF REAL;
-														  CONST left, right: ARRAY [ ? ] OF REAL );
+														CONST left, right: ARRAY [ ? ] OF REAL );
 	BEGIN
 		ApplyTensorAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ), SIZEOF( REAL ),
-										  loopMulARSR );
+										loopMulARSR );
 	END TensorProdARAR;
 
 	PROCEDURE TensorProdAXAX*( VAR dest: ARRAY [ ? ] OF LONGREAL;
-														 CONST left, right: ARRAY [ ? ] OF LONGREAL );
+														CONST left, right: ARRAY [ ? ] OF LONGREAL );
 	BEGIN
 		ApplyTensorAAAOp( ADDRESSOF( dest ), ADDRESSOF( left ), ADDRESSOF( right ),
-										  SIZEOF( LONGREAL ), loopMulAXSX );
+										SIZEOF( LONGREAL ), loopMulAXSX );
 	END TensorProdAXAX;
 
 (** minimum and maximum of two numbers  ********************************************************************)
@@ -8517,8 +8464,6 @@ Sufficient (but not necessary) conditions:
 BEGIN
 	alloc := 0;  SetDefaults();  InitOptimization();  (* CreateTypePool;  *)
 END ArrayBase.
-
-
 
 (* old *)
 (*

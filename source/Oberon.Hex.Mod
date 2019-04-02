@@ -1130,7 +1130,7 @@ END Interpret;
 
 (** Searches for the given pattern in the current or marked document. The pattern is either a string,
 	a hex-stream or a bit-stream.
- 	Usage: HexDocs.Seach ['^' | string | #b{bitdigit} | #h{hexdigit}]
+	Usage: HexDocs.Seach ['^' | string | #b{bitdigit} | #h{hexdigit}]
  *)
 PROCEDURE Search*;
 VAR F: Frame; T: Texts.Text; val, pos, beg, end, time: LONGINT; S: Texts.Scanner;

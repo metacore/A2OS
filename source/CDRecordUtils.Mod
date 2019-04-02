@@ -3,7 +3,7 @@ MODULE CDRecordUtils;
 IMPORT
 	SYSTEM, Codecs, Strings, Streams, Files, SoundDevices, KernelLog, Disks, DiskVolumes, FATVolumes, ISO9660Volumes, ATADisks,
 	WMWindowManager, WMComponents, WMStandardComponents, WMFileManager, WMSystemComponents, WMGrids, WMStringGrids, WMDialogs,
- 	WMEvents, WMTabComponents, WMProperties, WMGraphics, WMRectangles;
+	WMEvents, WMTabComponents, WMProperties, WMGraphics, WMRectangles;
 
 CONST
 	MaxLen = 256;
@@ -190,43 +190,43 @@ TYPE
 				CASE tmp OF
 					  0: frame.samplerate := 44100;
 					| 1: frame.samplerate := 48000;
- 					| 2: frame.samplerate := 32000;
- 					ELSE RETURN ResErr;
- 				END;
- 			ELSIF frame.mpegver = MPEGVer2 THEN
- 				CASE tmp OF
+					| 2: frame.samplerate := 32000;
+					ELSE RETURN ResErr;
+				END;
+			ELSIF frame.mpegver = MPEGVer2 THEN
+				CASE tmp OF
 					  0: frame.samplerate := 22050;
 					| 1: frame.samplerate := 24000;
- 					| 2: frame.samplerate := 16000;
- 					ELSE RETURN ResErr;
- 				END;
- 			ELSIF frame.mpegver = MPEGVer25 THEN
- 				CASE tmp OF
+					| 2: frame.samplerate := 16000;
+					ELSE RETURN ResErr;
+				END;
+			ELSIF frame.mpegver = MPEGVer25 THEN
+				CASE tmp OF
 					  0: frame.samplerate := 11025;
 					| 1: frame.samplerate := 12000;
- 					| 2: frame.samplerate := 8000;
- 					ELSE RETURN ResErr;
- 				END;
- 			END;
+					| 2: frame.samplerate := 8000;
+					ELSE RETURN ResErr;
+				END;
+			END;
 
- 			frame.padding := ASH(ORD(buf[2]), -1) MOD 2;
+			frame.padding := ASH(ORD(buf[2]), -1) MOD 2;
 
- 			IF frame.mpegver = MPEGVer1 THEN
- 				IF frame.layer = 1 THEN
- 					tmp := 48000;
- 				ELSE
+			IF frame.mpegver = MPEGVer1 THEN
+				IF frame.layer = 1 THEN
+					tmp := 48000;
+				ELSE
 					tmp := 144000;
 				END;
- 			ELSE
- 				IF frame.layer = 1 THEN
- 					tmp := 24000
- 				ELSE
- 					tmp := 72000;
- 				END;
- 			END;
+			ELSE
+				IF frame.layer = 1 THEN
+					tmp := 24000
+				ELSE
+					tmp := 72000;
+				END;
+			END;
 
- 			frame.size := tmp*frame.bitrate DIV frame.samplerate + frame.padding;
- 			RETURN ResOk;
+			frame.size := tmp*frame.bitrate DIV frame.samplerate + frame.padding;
+			RETURN ResOk;
 		END GetNextFrame;
 
 		PROCEDURE Open*(filename: String): LONGINT;
@@ -243,19 +243,19 @@ TYPE
 			END;
 
 			Files.OpenReader(r, file, 0);
- 			WHILE GetNextFrame(r, frame) = ResOk DO
- 				INC(nofframes);
- 				r.SkipBytes(frame.size-4);
- 				INC(playtime, (8*frame.size) DIV frame.bitrate); (* in ms *)
- 			END;
+			WHILE GetNextFrame(r, frame) = ResOk DO
+				INC(nofframes);
+				r.SkipBytes(frame.size-4);
+				INC(playtime, (8*frame.size) DIV frame.bitrate); (* in ms *)
+			END;
 
- 			IF nofframes < 1 THEN RETURN ResErr END;
- 			playtime := (playtime+1000-1) DIV 1000;
+			IF nofframes < 1 THEN RETURN ResErr END;
+			playtime := (playtime+1000-1) DIV 1000;
 
- 			NEW(id3v1);
- 			IF ReadID3v1(filename, id3v1) # ResOk THEN
- 				id3v1 := NIL;
- 			END;
+			NEW(id3v1);
+			IF ReadID3v1(filename, id3v1) # ResOk THEN
+				id3v1 := NIL;
+			END;
 
 			RETURN ResOk;
 		END Open;

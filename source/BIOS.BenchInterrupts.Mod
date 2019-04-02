@@ -1,12 +1,12 @@
 MODULE BenchInterrupts; (** AUTHOR "staubesv"; PURPOSE "Interrupt latency benchmarks"; *)
 (**
 
- 	Non-comrehensive list of aspects to be considered:
- 	-	The garbage collector prohibits interrupts while running. Depending on the current state of the heap, this can
- 		introduce delays in the order of seconds
- 	- 	There can be multipe handlers per interrupt vector
- 	-	The Machine.SoftInt is a temporary interrupt vector that is potentially used by other applications
- 	-	Result is dependent on other interrupts that have a higher priority and can interrupt our handler
+	Non-comrehensive list of aspects to be considered:
+	-	The garbage collector prohibits interrupts while running. Depending on the current state of the heap, this can
+		introduce delays in the order of seconds
+	- 	There can be multipe handlers per interrupt vector
+	-	The Machine.SoftInt is a temporary interrupt vector that is potentially used by other applications
+	-	Result is dependent on other interrupts that have a higher priority and can interrupt our handler
 
 *)
 

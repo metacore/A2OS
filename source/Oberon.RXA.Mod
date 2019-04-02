@@ -110,71 +110,71 @@ VAR
 (* set operations for TYPE PosSet *)
 
  PROCEDURE PSEmpty( VAR set : PosSet );
- 	VAR i : INTEGER;
+	VAR i : INTEGER;
  BEGIN
- 	i := 0; WHILE i < mult DO set[i] := {}; INC(i) END
+	i := 0; WHILE i < mult DO set[i] := {}; INC(i) END
  END PSEmpty;
 
  PROCEDURE PSIsEmpty( set : PosSet ) : BOOLEAN;
  VAR i : INTEGER;
  BEGIN
- 	i := 0; WHILE i < mult DO IF set[i] # {} THEN RETURN FALSE END; INC(i) END;
- 	RETURN TRUE
+	i := 0; WHILE i < mult DO IF set[i] # {} THEN RETURN FALSE END; INC(i) END;
+	RETURN TRUE
  END PSIsEmpty;
 
  PROCEDURE PSIsEqual( set1, set2 : PosSet ) : BOOLEAN;
- 	VAR i : INTEGER;
+	VAR i : INTEGER;
  BEGIN
- 	i := 0; WHILE i < mult DO IF set1[i] # set2[i] THEN RETURN FALSE END; INC(i) END;
- 	RETURN TRUE
+	i := 0; WHILE i < mult DO IF set1[i] # set2[i] THEN RETURN FALSE END; INC(i) END;
+	RETURN TRUE
  END PSIsEqual;
 
  PROCEDURE PSIn( set : PosSet; v : INTEGER ) : BOOLEAN;
  BEGIN
- 	RETURN ( v MOD nofSET ) IN set[v DIV nofSET]
+	RETURN ( v MOD nofSET ) IN set[v DIV nofSET]
  END PSIn;
 
  PROCEDURE PSIncl( VAR set : PosSet; v : INTEGER );
  BEGIN
- 	INCL( set[v DIV nofSET], v MOD nofSET )
+	INCL( set[v DIV nofSET], v MOD nofSET )
  END PSIncl;
 
  PROCEDURE PSUnion( set1, set2 : PosSet; VAR resset : PosSet );
- 	VAR i : INTEGER;
+	VAR i : INTEGER;
  BEGIN
- 	i := 0; WHILE i < mult DO resset[i] := set1[i] + set2[i]; INC(i) END
+	i := 0; WHILE i < mult DO resset[i] := set1[i] + set2[i]; INC(i) END
  END PSUnion;
 
 
  PROCEDURE GetChar(): CHAR;
- 	VAR ch: CHAR;
+	VAR ch: CHAR;
  BEGIN
- 	ch := rxl[rxpos];
- 	CASE countflag OF
- 		0 : IF (ch = 0X) OR (rxpos >= LEN(rxl (* ^ *)) ) THEN INC( countflag ); RETURN ")"
- 			 ELSE INC(rxpos); RETURN ch
- 			 END |
- 		1 : INC( countflag ); RETURN ("#")
- 	ELSE
- 		IF errorvar = chrleft THEN errorvar := noerror END; RETURN("#")
- 	END
+	ch := rxl[rxpos];
+	CASE countflag OF
+		0 : IF (ch = 0X) OR (rxpos >= LEN(rxl (* ^ *)) ) THEN INC( countflag ); RETURN ")"
+			 ELSE INC(rxpos); RETURN ch
+			 END |
+		1 : INC( countflag ); RETURN ("#")
+	ELSE
+		IF errorvar = chrleft THEN errorvar := noerror END; RETURN("#")
+	END
  END GetChar;
 
  PROCEDURE SetPosition ( ptr : NodePtr; chr : CHAR );
  BEGIN
- 	IF treepos < nofpos THEN
- 		ptr.pos := treepos;
- 		PSIncl( ptr.first, treepos );
- 		PSIncl( ptr.last, treepos );
- 		ptr.nullable := FALSE;
- 		pd[treepos].ch := chr;
- 		pd[treepos].shorthand := tokenval = shorthand;
- 		pd[treepos].notoperator := notflag;
- 		PSEmpty(pd[treepos].follow);
- 		INC(treepos)
- 	ELSE
- 		errorvar := noposfree
- 	END
+	IF treepos < nofpos THEN
+		ptr.pos := treepos;
+		PSIncl( ptr.first, treepos );
+		PSIncl( ptr.last, treepos );
+		ptr.nullable := FALSE;
+		pd[treepos].ch := chr;
+		pd[treepos].shorthand := tokenval = shorthand;
+		pd[treepos].notoperator := notflag;
+		PSEmpty(pd[treepos].follow);
+		INC(treepos)
+	ELSE
+		errorvar := noposfree
+	END
 END SetPosition;
 
 PROCEDURE NewNode( VAR ptr : NodePtr );

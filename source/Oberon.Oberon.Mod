@@ -166,17 +166,17 @@ scheduling of tasks, cursor handling and command execution.
   	END FlipStar;
 
  (** Initialize a cursor, setting it to off, and at position 0, 0. *)
- 	PROCEDURE OpenCursor* (VAR c: Cursor);
+	PROCEDURE OpenCursor* (VAR c: Cursor);
   	BEGIN c.on := FALSE; c.X := 0; c.Y := 0
   	END OpenCursor;
 
  (** Fade cursor if visible. *)
- 	PROCEDURE FadeCursor* (VAR c: Cursor);
+	PROCEDURE FadeCursor* (VAR c: Cursor);
   	BEGIN IF c.on THEN c.marker.Fade(c.X, c.Y); c.on := FALSE END
   	END FadeCursor;
 
  (** Draw cursor c using marker m at position X, Y. *)
- 	PROCEDURE DrawCursor* (VAR c: Cursor; VAR m: Marker; X, Y: INTEGER);
+	PROCEDURE DrawCursor* (VAR c: Cursor; VAR m: Marker; X, Y: INTEGER);
   	BEGIN
 	  	IF c.on & ((X # c.X) OR (Y # c.Y) OR (m.Draw # c.marker.Draw)) THEN
             c.marker.Fade(c.X, c.Y); c.on := FALSE

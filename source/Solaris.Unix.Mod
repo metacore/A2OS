@@ -220,7 +220,7 @@ CONST
 
 
 	FIONREAD*	=  4004667FH;
- 	TIOCMGET*		=  0741DH;
+	TIOCMGET*		=  0741DH;
 	TIOCMSET*		=  0741AH;
 
 	(* Speeds *)

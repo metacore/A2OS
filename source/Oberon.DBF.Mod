@@ -116,11 +116,11 @@ MODULE DBF IN Oberon; (* ejz  *)
 	BEGIN
 		R.thisRecord := -1;
 		IF (record >= R.nRecords) OR (record < 0) THEN
- 			R.res := OutOfRange; RETURN
- 		END;
- 		Files.Set(R.R, Files.Base(R.R), R.firstRecord + record*R.sizeRecord);
- 		Files.Read(R.R, ch);
- 		IF ch = " " THEN
+			R.res := OutOfRange; RETURN
+		END;
+		Files.Set(R.R, Files.Base(R.R), R.firstRecord + record*R.sizeRecord);
+		Files.Read(R.R, ch);
+		IF ch = " " THEN
 	 		R.thisRecord := Files.Pos(R.R)-1; R.res := Done
 	 	ELSIF ch = CHR(27) THEN
 	 		R.res := RecordDeleted

@@ -264,8 +264,8 @@ TYPE
 (** Perform a benchmark on partition *)
 PROCEDURE Bench*(context : Commands.Context); (** dev#part *)
 VAR
- 	selection : Lib.Selection;
- 	bench : DiskBench;
+	selection : Lib.Selection;
+	bench : DiskBench;
 BEGIN
 	IF Partitions.GetSelection(context, FALSE, selection) THEN
 		NEW(bench, selection.disk, selection.partition, context.out);

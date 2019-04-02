@@ -537,7 +537,7 @@ TYPE
 						IF (typeDecl.type.procedure.delegate) THEN out.String("[DELEGATE] "); END;
 						FormalPars(typeDecl.type.procedure.formalPars);
 					END;
- 					out.String('}"'); out.Ln;
+					out.String('}"'); out.Ln;
 					Indent(indent + 4); out.String("]"); out.Ln;
 				END;
 			END;

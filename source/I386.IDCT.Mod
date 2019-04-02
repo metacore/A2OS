@@ -686,10 +686,10 @@ END Row;
 
 (* column (vertical) IDCT
 
- 	 7                         pi         1 dst[8*k] = sum c[l] * src[8*l] *
- 	 cos( -- * ( k + - ) * l ) l=0                        8          2
+	 7                         pi         1 dst[8*k] = sum c[l] * src[8*l] *
+	 cos( -- * ( k + - ) * l ) l=0                        8          2
 
- 	 where: c[0]    = 1/1024 c[1..7] = (1/1024)*sqrt(2)
+	 where: c[0]    = 1/1024 c[1..7] = (1/1024)*sqrt(2)
 *)
 PROCEDURE Col( src: LONGINT);
 VAR

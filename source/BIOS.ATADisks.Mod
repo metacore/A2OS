@@ -2321,8 +2321,8 @@ BEGIN
 		ScanPCI(1166H, 0211H);		(* Serverworks *)
 		ScanPCI(8086H, 27C0H); (* found on TL device *)
 
- 	ELSIF str = "legacy" THEN
- 		Show("Legacy mode..."); KernelLog.Ln;
+	ELSIF str = "legacy" THEN
+		Show("Legacy mode..."); KernelLog.Ln;
 		NEW(c, 1F0H, 3F0H, 0, 14);
 		AddController(c);
 		NEW(c, 170H, 370H, 0, 15);

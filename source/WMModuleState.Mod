@@ -519,11 +519,11 @@ BEGIN
 	IF interval < 1 THEN interval := 2000 END;	(* default interval *)
 
 	NEW(stateWin, "Module State", interval, name);
- 	INC(nrWins);
- 	BEGIN {EXCLUSIVE}
- 		IF stateWins = NIL THEN
- 			NEW(stateWins, 1);
- 			stateWins[0] := stateWin;
+	INC(nrWins);
+	BEGIN {EXCLUSIVE}
+		IF stateWins = NIL THEN
+			NEW(stateWins, 1);
+			stateWins[0] := stateWin;
 		ELSE
 	 	 	NEW(wins, LEN(stateWins) + 1);
 		 	FOR i := 0 TO LEN(stateWins) - 1 DO

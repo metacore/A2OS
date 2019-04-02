@@ -15,9 +15,9 @@ BEGIN
 	discard := FALSE;
 	IF msg.msgType = WMMessages.MsgKey THEN
 		meta := (msg.flags * Inputs.Meta # {}) OR ((msg.flags * Inputs.Alt # {}) & (msg.flags * Inputs.Shift # {}));
- 		IF ~meta & (msg.y =  0FFC6H) THEN
- 			manager.RefreshView(viewport);
- 		END;
+		IF ~meta & (msg.y =  0FFC6H) THEN
+			manager.RefreshView(viewport);
+		END;
 	END;
 END Handle;
 

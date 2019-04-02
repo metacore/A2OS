@@ -197,7 +197,7 @@ END RepeatImageVertical;
 PROCEDURE Circle*(CONST c: WMGraphics.Canvas; CX, CY, R : LONGINT);
 VAR
 	X, Y : LONGINT;
- 	XChange, YChange : LONGINT;
+	XChange, YChange : LONGINT;
 	RadiusError : LONGINT;
 BEGIN
 	X := R;

@@ -3418,7 +3418,6 @@ BEGIN
 	Mnem ("XORPS");	(* 585 *)
 	Instr (xmm, xmmmem128, none, "0F57/r", {}, {cpuKatmai, cpuSSE});	(* 1380 *)
 
-
 	Reg ("AL", reg8, 0);
 	Reg ("CL", reg8, 1);
 	Reg ("DL", reg8, 2);

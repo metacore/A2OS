@@ -422,7 +422,7 @@ TYPE
 
 				r_ax		: HUGEINT;
 				r_bx		: HUGEINT;
- 				r_cx		: HUGEINT;
+				r_cx		: HUGEINT;
 				r_dx		: HUGEINT;
 				r_di		: HUGEINT;
 				r_si		: HUGEINT;

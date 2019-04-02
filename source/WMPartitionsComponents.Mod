@@ -808,7 +808,7 @@ TYPE
 					END;
 					grid.model.Release;
 					grid.Release;
- 					model.disks[i].titlegrid := BuildTitleGrid(); model.disks[i].panel.AddInternalComponent(model.disks[i].titlegrid);
+					model.disks[i].titlegrid := BuildTitleGrid(); model.disks[i].panel.AddInternalComponent(model.disks[i].titlegrid);
 					NEW(model.disks[i].buttons, LEN(model.disks[i].table));
 					FOR j := 0 TO LEN(model.disks[i].table)-1 DO
 						NEW(model.disks[i].buttons[j]);
@@ -952,7 +952,7 @@ TYPE
 			END;
 		END CalcDiskPanelBounds;
 
- 		PROCEDURE BuildTitleGrid() : NoWheelGrid;
+		PROCEDURE BuildTitleGrid() : NoWheelGrid;
 		VAR grid : NoWheelGrid;
 		BEGIN
 			NEW(grid);

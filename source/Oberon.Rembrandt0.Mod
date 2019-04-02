@@ -354,13 +354,13 @@ BEGIN
 		END
 	ELSIF M IS Objects.AttrMsg THEN
 		WITH M: Objects.AttrMsg DO
- 		 IF M.id = Objects.get THEN
+		 IF M.id = Objects.get THEN
   		  IF M.name = "Gen" THEN
    		   M.class := Objects.String; COPY("Rembrandt0.NewColFrame", M.s); M.res := 0
   		  ELSIF M.name = "Color" THEN
   		    M.class := Objects.Int; M.i := F.col; M.res := 0
   		  ELSE Gadgets.framehandle(F, M)
- 		   END
+		   END
 		  ELSIF M.id = Objects.set THEN
   		  IF M.name = "Color" THEN
    		   IF M.class = Objects.Int THEN
@@ -369,7 +369,7 @@ BEGIN
   		  ELSE Gadgets.framehandle(F, M);
   		  END
 		  ELSIF M.id = Objects.enum THEN
- 		   M.Enum("Color"); M.Enum("Cmd"); Gadgets.framehandle(F, M)
+		   M.Enum("Color"); M.Enum("Cmd"); Gadgets.framehandle(F, M)
   		END
 		END
     ELSIF M IS Objects.CopyMsg THEN

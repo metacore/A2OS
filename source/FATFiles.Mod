@@ -735,7 +735,7 @@ TYPE
 				buffer.eoc := FALSE;
 				ASSERT(res = Ok)
 			END
- 		END ReadBuffer;
+		END ReadBuffer;
 
 		(* Write logical cluster. Depending on buf.cluster, a new physical cluster may be allocated. cf. ReadBuffer *)
 		PROCEDURE WriteBuffer(buffer: Buffer);

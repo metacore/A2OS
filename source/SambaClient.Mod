@@ -112,10 +112,10 @@ TYPE
 
 			IF ~check THEN
 				IF Trace THEN KernelLog.String(" -- ERROR on Delete"); KernelLog.Ln(); END;
- 				res := -1;
- 			ELSE
- 				res := 0;
- 			END;
+				res := -1;
+			ELSE
+				res := 0;
+			END;
 		END Delete0;
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
@@ -156,10 +156,10 @@ TYPE
 
 			IF ~check THEN
 				IF Trace THEN KernelLog.String(" -- ERROR on Rename"); KernelLog.Ln(); END;
- 				res := -1;
- 			ELSE
- 				res := 0;
- 			END;
+				res := -1;
+			ELSE
+				res := 0;
+			END;
 		END Rename0;
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
@@ -216,8 +216,8 @@ TYPE
 				IF ~check THEN
 					IF Trace THEN KernelLog.String(" -- ERROR on Enumerate"); KernelLog.Ln(); END;
 	 				lock.Release();
- 					RETURN;
- 				END;
+					RETURN;
+				END;
 
 				(* RECEIVE *)
 				c.in.SkipBytes(1);		(* wct *)
@@ -345,10 +345,10 @@ TYPE
 
 			IF ~check THEN
 				IF Trace THEN KernelLog.String(" -- ERROR on CreateDirectory"); KernelLog.Ln(); END;
- 				res := -1;
- 			ELSE
- 				res := 0;
- 			END;
+				res := -1;
+			ELSE
+				res := 0;
+			END;
 		END CreateDirectory0;
 
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
@@ -377,10 +377,10 @@ TYPE
 
 			IF ~check THEN
 				IF Trace THEN KernelLog.String(" -- ERROR on DeleteDirectory"); KernelLog.Ln(); END;
- 				res := -1;
- 			ELSE
- 				res := 0;
- 			END;
+				res := -1;
+			ELSE
+				res := 0;
+			END;
 		END RemoveDirectory0;
 
 		(** Finalize the file system. *)
@@ -437,9 +437,9 @@ TYPE
 		BEGIN
 			IF Trace THEN KernelLog.String("File.ReadBytes - Read AndX"); KernelLog.Ln(); END;
 
- 			fs(FileSystem).lock.Acquire();
+			fs(FileSystem).lock.Acquire();
 
- 			IF ~(openRead & (key # 0)) THEN
+			IF ~(openRead & (key # 0)) THEN
 				localKey := OpenAndX(c, filename, 40H, FALSE);
 
 				IF localKey # 0 THEN
@@ -450,7 +450,7 @@ TYPE
 					fs(FileSystem).lock.Release();
 					RETURN;
 				END;
- 			END;
+			END;
 
 		 	adjOff := 0;
 			r.res := 0;
@@ -479,12 +479,12 @@ TYPE
 			 	(* RECEIVE *)
 			 	check := RecieveResponse(2EX, c);
 
- 				IF ~check THEN
- 					IF Trace THEN KernelLog.String(" -- ERROR on Read AndX"); KernelLog.Ln(); END;
- 					r.res := r.res + len;
- 					fs(FileSystem).lock.Release();
- 					RETURN;
- 				END;
+				IF ~check THEN
+					IF Trace THEN KernelLog.String(" -- ERROR on Read AndX"); KernelLog.Ln(); END;
+					r.res := r.res + len;
+					fs(FileSystem).lock.Release();
+					RETURN;
+				END;
 
 				c.in.SkipBytes(13);
 				c.in.RawInt(dataOff);
@@ -547,7 +547,7 @@ TYPE
 					fs(FileSystem).lock.Release();
 					RETURN;
 				END;
- 			END;
+			END;
 
 			IF Trace THEN
 				KernelLog.String("FileSystem.WriteBytes - Write AndX");
@@ -591,19 +591,19 @@ TYPE
 			 	c.out.Update();
 
 				(* RECEIVE *)
- 				check := RecieveResponse(2FX, c);
+				check := RecieveResponse(2FX, c);
 
- 				IF ~check THEN
+				IF ~check THEN
 	 				IF Trace THEN KernelLog.String(" -- ERROR on Write AndX"); KernelLog.Ln(); END;
- 					fs(FileSystem).lock.Release();
- 					RETURN;
- 				END;
+					fs(FileSystem).lock.Release();
+					RETURN;
+				END;
 
- 				c.in.SkipBytes(5);
- 				c.in.RawInt(bytesWritten);
+				c.in.SkipBytes(5);
+				c.in.RawInt(bytesWritten);
 
- 				IF Trace THEN
- 					KernelLog.String(" -- Bytes written: "); KernelLog.Int(bytesWritten, 0); KernelLog.Ln();
+				IF Trace THEN
+					KernelLog.String(" -- Bytes written: "); KernelLog.Int(bytesWritten, 0); KernelLog.Ln();
 				END;
 
 				r.apos := r.apos + bytesWritten;
@@ -640,16 +640,16 @@ TYPE
 			(* RECEIVE *)
 		 	check := RecieveResponse(08X, c);
 
- 			IF ~check THEN
- 				IF Trace THEN
+			IF ~check THEN
+				IF Trace THEN
 	 				KernelLog.String(" -- ERROR on Query Information Request"); KernelLog.Ln();
 	 			END;
- 				fs(FileSystem).lock.Release();
- 				RETURN 0;
- 			END;
+				fs(FileSystem).lock.Release();
+				RETURN 0;
+			END;
 
- 			c.in.SkipBytes(7);
- 			c.in.RawLInt(filesize);
+			c.in.SkipBytes(7);
+			c.in.RawLInt(filesize);
 
 			fs(FileSystem).lock.Release();
 

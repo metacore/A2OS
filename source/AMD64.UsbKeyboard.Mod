@@ -173,7 +173,7 @@ TYPE
 	VAR
 		pipe : Usbdi.Pipe;
 
- 		(* buffer[0] : modifier byte					*)
+		(* buffer[0] : modifier byte					*)
 		(* buffer[1] : reserved						*)
 		(* buffer[2]-buffer[7] : 6 one byte key codes  	*)
 		buffer : Usbdi.BufferPtr;

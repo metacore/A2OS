@@ -199,8 +199,8 @@ END Pos;
 
 PROCEDURE SetRes(res: INTEGER);
 BEGIN
- 	Files.Write(r, ESC);  Files.Write(r, "*");  Files.Write(r, "t");  WriteInt(res);
- 	Files.Write(r, "R")
+	Files.Write(r, ESC);  Files.Write(r, "*");  Files.Write(r, "t");  WriteInt(res);
+	Files.Write(r, "R")
 END SetRes;
 
 PROCEDURE Block(w, h: INTEGER);

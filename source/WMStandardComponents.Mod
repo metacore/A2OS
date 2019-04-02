@@ -553,12 +553,12 @@ TYPE
 			NEW(imgPressedNameLeft, PrototypeImgPressedNameLeft, NIL, NIL); properties.Add(imgPressedNameLeft);
 		 	NEW(imgPressedNameRight, PrototypeImgPressedNameRight, NIL, NIL); properties.Add(imgPressedNameRight);
 		 	NEW(imgPressedNameMiddle, PrototypeImgPressedNameMiddle, NIL, NIL); properties.Add(imgPressedNameMiddle);
- 				(* --- *)
- 			NEW(useDeco, PrototypeUseDeco, NIL, NIL); properties.Add(useDeco);
+				(* --- *)
+			NEW(useDeco, PrototypeUseDeco, NIL, NIL); properties.Add(useDeco);
 			NEW(decoDefaultName, PrototypeDecoDefaultName, NIL, NIL); properties.Add(decoDefaultName);
 			NEW(decoHoverName, PrototypeDecoHoverName, NIL, NIL); properties.Add(decoHoverName);
 			NEW(decoPressedName, PrototypeDecoPressedName, NIL, NIL); properties.Add(decoPressedName);
- 				(* --- *)
+				(* --- *)
 			NEW(imgDefaultNameTop, PrototypeImgDefaultNameTop, NIL, NIL); properties.Add(imgDefaultNameTop);
 		 	NEW(imgDefaultNameBottom, PrototypeImgDefaultNameBottom, NIL, NIL); properties.Add(imgDefaultNameBottom);
 			NEW(imgHoverNameTop, PrototypeImgHoverNameTop, NIL, NIL); properties.Add(imgHoverNameTop);
@@ -882,9 +882,9 @@ TYPE
 			RETURN t
 		END IsHit;
 
- 		PROCEDURE IsHitHorizontal(x, y: LONGINT) : BOOLEAN;
- 		VAR a, b, c : WMGraphics.Image; aw, bw, cw : LONGINT;
- 		BEGIN
+		PROCEDURE IsHitHorizontal(x, y: LONGINT) : BOOLEAN;
+		VAR a, b, c : WMGraphics.Image; aw, bw, cw : LONGINT;
+		BEGIN
 			IF imgDefault # NIL THEN
 				RETURN WMGraphics.IsScaledBitmapHit (x,y,bounds.GetWidth(), bounds.GetHeight(), 64,imgDefault);
 			ELSE
@@ -908,21 +908,21 @@ TYPE
 		 			END
 				END
 			END
- 		END IsHitHorizontal;
+		END IsHitHorizontal;
 
- 		PROCEDURE IsHitVertical(x, y: LONGINT) : BOOLEAN;
- 		VAR a, b, c : WMGraphics.Image; ah, bh, ch : LONGINT;
- 		BEGIN
- 			GetVerticalImages(a, b, c);
+		PROCEDURE IsHitVertical(x, y: LONGINT) : BOOLEAN;
+		VAR a, b, c : WMGraphics.Image; ah, bh, ch : LONGINT;
+		BEGIN
+			GetVerticalImages(a, b, c);
 	 		IF a # NIL THEN ah := a.height ELSE ah := 0 END;
 	 		IF c # NIL THEN ch := c.height ELSE ch := 0 END;
 	 		bh := bounds.GetHeight() - ah - ch;
 	 		IF y < ah THEN
 	 			x := x * a.width DIV bounds.GetWidth();
- 				RETURN WMGraphics.IsBitmapHit(x, y, 64, a)
+				RETURN WMGraphics.IsBitmapHit(x, y, 64, a)
 	 		ELSIF y > bounds.GetHeight() - ch THEN
 	 			x := x * c.width DIV bounds.GetWidth();
- 				RETURN WMGraphics.IsBitmapHit(x, y-ah-bh, 64, c)
+				RETURN WMGraphics.IsBitmapHit(x, y-ah-bh, 64, c)
 	 		ELSE (* middle image *)
 	 			IF b = NIL THEN RETURN FALSE END; (* no image loaded, so the button cannot be hit *)
 	 			x := x * b.width DIV bounds.GetWidth();
@@ -932,13 +932,13 @@ TYPE
 		 			RETURN WMGraphics.IsBitmapHit(x, (y-ah) * b.height DIV bh, 64, b)
 	 			END
 			END
- 		END IsHitVertical;
+		END IsHitVertical;
 
- 		(* load images appropriate to the actual state of the button. a: left, b: middle, c: right *)
- 		PROCEDURE GetHorizontalImages(VAR a, b, c : WMGraphics.Image);
- 		VAR down : BOOLEAN;
- 		BEGIN
- 			down := pressed & (mouseOver OR isToggle.Get() OR keyboardPressed);
+		(* load images appropriate to the actual state of the button. a: left, b: middle, c: right *)
+		PROCEDURE GetHorizontalImages(VAR a, b, c : WMGraphics.Image);
+		VAR down : BOOLEAN;
+		BEGIN
+			down := pressed & (mouseOver OR isToggle.Get() OR keyboardPressed);
 			IF down THEN
 				IF imgPressedMiddle # NIL THEN
 					a := imgPressedLeft; b := imgPressedMiddle; c := imgPressedRight; RETURN
@@ -956,13 +956,13 @@ TYPE
 			ELSE
 				a := imgDefaultLeft; b := imgDefaultMiddle; c := imgDefaultRight; RETURN
 			END
- 		END GetHorizontalImages;
+		END GetHorizontalImages;
 
- 		(* load images appropriate to the actual state of the button. a: top, b: middle, c: bottom *)
- 		PROCEDURE GetVerticalImages(VAR a, b, c : WMGraphics.Image);
- 		VAR down : BOOLEAN;
- 		BEGIN
- 			down := pressed & (mouseOver OR isToggle.Get() OR keyboardPressed);
+		(* load images appropriate to the actual state of the button. a: top, b: middle, c: bottom *)
+		PROCEDURE GetVerticalImages(VAR a, b, c : WMGraphics.Image);
+		VAR down : BOOLEAN;
+		BEGIN
+			down := pressed & (mouseOver OR isToggle.Get() OR keyboardPressed);
 			IF down THEN
 				IF imgPressedMiddle # NIL THEN
 					a := imgPressedTop; b := imgPressedMiddle; c := imgPressedBottom; RETURN
@@ -980,9 +980,9 @@ TYPE
 			ELSE
 				a := imgDefaultTop; b := imgDefaultMiddle; c:= imgDefaultBottom; RETURN
 			END
- 		END GetVerticalImages;
+		END GetVerticalImages;
 
- 		PROCEDURE GetDecorationImage(name: String; CONST suffix: ARRAY OF CHAR; VAR image:WMGraphics.Image);
+		PROCEDURE GetDecorationImage(name: String; CONST suffix: ARRAY OF CHAR; VAR image:WMGraphics.Image);
 		VAR fileName, extension: Files.FileName;
 		BEGIN
 			IF (name = NIL) OR (name^="") THEN
@@ -1016,10 +1016,10 @@ TYPE
 		END GetDecoration;
 
 		 (* load images appropriate to the actual state of the button. a: left, b: middle, c: right *)
- 		PROCEDURE GetThisDecoration(VAR d : Decoration);
- 		VAR down : BOOLEAN;
- 		BEGIN
- 			down := pressed & (mouseOver OR isToggle.Get() OR keyboardPressed);
+		PROCEDURE GetThisDecoration(VAR d : Decoration);
+		VAR down : BOOLEAN;
+		BEGIN
+			down := pressed & (mouseOver OR isToggle.Get() OR keyboardPressed);
 			IF down THEN
 				IF decoPressed # NIL THEN d := decoPressed;
 				ELSIF decoHover # NIL THEN d := decoHover
@@ -1031,7 +1031,7 @@ TYPE
 				END
 			ELSE d := decoDefault
 			END
- 		END GetThisDecoration;
+		END GetThisDecoration;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR mode, borderWidth : LONGINT; mid: WMGraphics.Color;
@@ -2990,7 +2990,7 @@ VAR
 	 RectanglePrototype : WMProperties.RectangleProperty;
 	 PrototypeBlinking*: WMProperties.BooleanProperty;
 
- 	 (* Button prototypes *)
+	 (* Button prototypes *)
 	 PrototypeBBounds* : WMProperties.RectangleProperty;
 	 PrototypeBUseBgImages* : WMProperties.BooleanProperty;
 	 PrototypeBclDefault*, PrototypeBclHover*, PrototypeBclPressed*, PrototypeBclInactive*,
@@ -2998,12 +2998,12 @@ VAR
 	 PrototypeBRepeatMiddleImg*, PrototypeBisRepeating*, PrototypeBisToggle*, PrototypeBisInverse*, PrototypeBindicateToggle*, PrototypeBIsHorizontal* : WMProperties.BooleanProperty;
 	 PrototypeBcaption*, PrototypeBonClickHandler* : WMProperties.StringProperty;
 	 PrototypeBimgDefaultName*, PrototypeBimgInactiveName*, PrototypeBimgHoverName*, PrototypeBimgPressedName*, PrototypeBimageName* : WMProperties.StringProperty;
- 	 PrototypeImgDefaultNameLeft*, PrototypeImgDefaultNameRight*, PrototypeImgDefaultNameMiddle*,
- 	 PrototypeImgDefaultNameTop*, PrototypeImgDefaultNameBottom*,
- 	 PrototypeImgHoverNameLeft*, PrototypeImgHoverNameRight*, PrototypeImgHoverNameMiddle*,
- 	 PrototypeImgHoverNameTop*, PrototypeImgHoverNameBottom*,
- 	 PrototypeImgPressedNameLeft*, PrototypeImgPressedNameRight*, PrototypeImgPressedNameMiddle*,
- 	 PrototypeImgPressedNameTop*, PrototypeImgPressedNameBottom* : WMProperties.StringProperty;
+	 PrototypeImgDefaultNameLeft*, PrototypeImgDefaultNameRight*, PrototypeImgDefaultNameMiddle*,
+	 PrototypeImgDefaultNameTop*, PrototypeImgDefaultNameBottom*,
+	 PrototypeImgHoverNameLeft*, PrototypeImgHoverNameRight*, PrototypeImgHoverNameMiddle*,
+	 PrototypeImgHoverNameTop*, PrototypeImgHoverNameBottom*,
+	 PrototypeImgPressedNameLeft*, PrototypeImgPressedNameRight*, PrototypeImgPressedNameMiddle*,
+	 PrototypeImgPressedNameTop*, PrototypeImgPressedNameBottom* : WMProperties.StringProperty;
 	 PrototypeBEffect3D : WMProperties.Int32Property;
 
 	PrototypeUseDeco*: WMProperties.BooleanProperty;
@@ -3014,29 +3014,29 @@ VAR
 	 PrototypeSmin*, PrototypeSmax*, PrototypeSpos*, PrototypeSpageSize*, PrototypeTrackerSize*, PrototypeSWidth*,
 	 PrototypeSMinTrackerSize* : WMProperties.Int32Property;
 		 (* presentation : colors / images *)
- 	 PrototypeSUseArrowImages*, PrototypeSUseTrackerImages*, PrototypeSRepeatMiddleBitmap* : WMProperties.BooleanProperty;
+	 PrototypeSUseArrowImages*, PrototypeSUseTrackerImages*, PrototypeSRepeatMiddleBitmap* : WMProperties.BooleanProperty;
 	 	(* background *)
 	 PrototypeSUseBgBitmaps*, PrototypeSRepeateBgBitmap* : WMProperties.BooleanProperty;
- 	 PrototypeSClDefault*, PrototypeSClHover*, PrototypeSClPressed*,
- 	 PrototypeSClBtnDefault*, PrototypeSClBtnHover*, PrototypeSClBtnPressed* : WMProperties.ColorProperty;
- 	 PrototypeSEffect3D* : WMProperties.Int32Property;
- 	 PrototypeSvBgDefault*, PrototypeSvBgHover*, PrototypeSvBgPressed*,
- 	 PrototypeShBgDefault*, PrototypeShBgHover*, PrototypeShBgPressed* : WMProperties.StringProperty;
- 	 	(* arrow images *)
- 	 PrototypeSArrowLeftDefault*, PrototypeSArrowLeftHover*, PrototypeSArrowLeftPressed*,
- 	 PrototypeSArrowUpDefault*, PrototypeSArrowUpHover*, PrototypeSArrowUpPressed*,
- 	 PrototypeSArrowRightDefault*, PrototypeSArrowRightHover*, PrototypeSArrowRightPressed*,
- 	 PrototypeSArrowDownDefault*, PrototypeSArrowDownHover*, PrototypeSArrowDownPressed*  : WMProperties.StringProperty;
- 	 	(* horizontal tracker *)
- 	 PrototypeShTrackerDefaultLeft*, PrototypeShTrackerHoverLeft*, PrototypeShTrackerPressedLeft*,
- 	 PrototypeShTrackerDefaultMiddle*, PrototypeShTrackerHoverMiddle*, PrototypeShTrackerPressedMiddle*,
- 	 PrototypeShTrackerDefaultRight*, PrototypeShTrackerHoverRight*, PrototypeShTrackerPressedRight*,
- 	 	(* vertical tracker *)
- 	 PrototypeSvTrackerDefaultTop*, PrototypeSvTrackerHoverTop*, PrototypeSvTrackerPressedTop*,
- 	 PrototypeSvTrackerDefaultMiddle*, PrototypeSvTrackerHoverMiddle*, PrototypeSvTrackerPressedMiddle*,
- 	 PrototypeSvTrackerDefaultBottom*, PrototypeSvTrackerHoverBottom*, PrototypeSvTrackerPressedBottom* : WMProperties.StringProperty;
+	 PrototypeSClDefault*, PrototypeSClHover*, PrototypeSClPressed*,
+	 PrototypeSClBtnDefault*, PrototypeSClBtnHover*, PrototypeSClBtnPressed* : WMProperties.ColorProperty;
+	 PrototypeSEffect3D* : WMProperties.Int32Property;
+	 PrototypeSvBgDefault*, PrototypeSvBgHover*, PrototypeSvBgPressed*,
+	 PrototypeShBgDefault*, PrototypeShBgHover*, PrototypeShBgPressed* : WMProperties.StringProperty;
+	 	(* arrow images *)
+	 PrototypeSArrowLeftDefault*, PrototypeSArrowLeftHover*, PrototypeSArrowLeftPressed*,
+	 PrototypeSArrowUpDefault*, PrototypeSArrowUpHover*, PrototypeSArrowUpPressed*,
+	 PrototypeSArrowRightDefault*, PrototypeSArrowRightHover*, PrototypeSArrowRightPressed*,
+	 PrototypeSArrowDownDefault*, PrototypeSArrowDownHover*, PrototypeSArrowDownPressed*  : WMProperties.StringProperty;
+	 	(* horizontal tracker *)
+	 PrototypeShTrackerDefaultLeft*, PrototypeShTrackerHoverLeft*, PrototypeShTrackerPressedLeft*,
+	 PrototypeShTrackerDefaultMiddle*, PrototypeShTrackerHoverMiddle*, PrototypeShTrackerPressedMiddle*,
+	 PrototypeShTrackerDefaultRight*, PrototypeShTrackerHoverRight*, PrototypeShTrackerPressedRight*,
+	 	(* vertical tracker *)
+	 PrototypeSvTrackerDefaultTop*, PrototypeSvTrackerHoverTop*, PrototypeSvTrackerPressedTop*,
+	 PrototypeSvTrackerDefaultMiddle*, PrototypeSvTrackerHoverMiddle*, PrototypeSvTrackerPressedMiddle*,
+	 PrototypeSvTrackerDefaultBottom*, PrototypeSvTrackerHoverBottom*, PrototypeSvTrackerPressedBottom* : WMProperties.StringProperty;
 
- 	 (* Slider prototypes *)
+	 (* Slider prototypes *)
 	PrototypeSlhTrackerDefault*, PrototypeSlhTrackerHover*, PrototypeSlhTrackerPressed*,
 	PrototypeSlvTrackerDefault*, PrototypeSlvTrackerHover*, PrototypeSlvTrackerPressed*,
 	PrototypeSlhBgDefault*, PrototypelShBgHover*, PrototypeSlhBgPressed*,
@@ -3048,7 +3048,7 @@ VAR
 	 PrototypeSlmin*, PrototypeSlmax*, PrototypeSlpos*, PrototypeSlpageSize*,
 	 PrototypeSlMinTrackerSize* : WMProperties.Int32Property;
 
- 	 (* Resizer prototypes *)
+	 (* Resizer prototypes *)
 	 PrototypeRclDefault* : WMProperties.ColorProperty;
 	 PrototypeRisFlat* : WMProperties.BooleanProperty;
 	 PrototypeRBounds* : WMProperties.RectangleProperty;
@@ -3279,18 +3279,18 @@ BEGIN
 	NEW(PrototypeSMinTrackerSize, Int32Prototype, NIL, NIL); plScrollbar.Add(PrototypeSMinTrackerSize);
 			(* color *)
 	NEW(ColorPrototype, NIL, NewString("ClDefault"), NewString("Default background color")); ColorPrototype.Set(000000077H);
- 	NEW(PrototypeSClDefault, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClDefault);
+	NEW(PrototypeSClDefault, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClDefault);
 	NEW(ColorPrototype, NIL, NewString("ClHover"), NewString("Mouseover background color")); ColorPrototype.Set(WMGraphics.Yellow);
- 	NEW(PrototypeSClHover, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClHover);
+	NEW(PrototypeSClHover, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClHover);
 	NEW(ColorPrototype, NIL, NewString("ClPressed"), NewString("Pressed background color")); ColorPrototype.Set(WMGraphics.Yellow);
- 	NEW(PrototypeSClPressed, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClPressed);
+	NEW(PrototypeSClPressed, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClPressed);
 	NEW(ColorPrototype, NIL, NewString("ClBtnDefault"), NewString("Default background color")); ColorPrototype.Set(1010C080H);
- 	NEW(PrototypeSClBtnDefault, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnDefault);
+	NEW(PrototypeSClBtnDefault, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnDefault);
 	NEW(ColorPrototype, NIL, NewString("ClBtnHover"), NewString("Mouseover background color")); ColorPrototype.Set(LONGINT(0EEEE00FFH));
- 	NEW(PrototypeSClBtnHover, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnHover);
+	NEW(PrototypeSClBtnHover, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnHover);
 	NEW(ColorPrototype, NIL, NewString("ClBtnPressed"), NewString("Pressed background color")); ColorPrototype.Set(LONGINT(0EEEE00FFH));
- 	NEW(PrototypeSClBtnPressed, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnPressed);
- 	NEW(PrototypeSEffect3D, NIL, NewString("Effect3D"), NewString("Degree of 3d-effect. Zero for flat presentation")); PrototypeSEffect3D.Set(2);
+	NEW(PrototypeSClBtnPressed, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnPressed);
+	NEW(PrototypeSEffect3D, NIL, NewString("Effect3D"), NewString("Degree of 3d-effect. Zero for flat presentation")); PrototypeSEffect3D.Set(2);
 		(* background *)
 	NEW(BooleanPrototype, NIL, NewString("UseBackgroundBitmaps"), NewString("Should background be decorated by bitmaps or simple color?")); BooleanPrototype.Set(FALSE);
 	NEW(PrototypeSUseBgBitmaps, BooleanPrototype, NIL, NIL);  plScrollbar.Add(PrototypeSUseBgBitmaps);
@@ -3355,13 +3355,13 @@ BEGIN
 		(* arrows *)
 	NEW(BooleanPrototype, NIL, NewString("UseArrowBitmaps"), NewString("Have the arrow-buttons to be decorated by bitmaps or simple colors")); BooleanPrototype.Set(FALSE);
 	NEW(PrototypeSUseArrowImages, BooleanPrototype, NIL, NIL);  plScrollbar.Add(PrototypeSUseArrowImages);
- 			(* left *)
- 	NEW(StringPrototype, NIL, NewString("ArrowLeftDefault"), NewString("Default bitmap for the left-arrow")); StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowLeftDefault, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowLeftDefault);
- 	NEW(StringPrototype, NIL, NewString("ArrowLeftHover"), NewString("Mouseover bitmap for the left-arrow")); StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowLeftHover, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowLeftHover);
- 	NEW(StringPrototype, NIL, NewString("ArrowLeftPressed"), NewString("Pressed bitmap for the left-arrow")); StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowLeftPressed, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowLeftPressed);
+			(* left *)
+	NEW(StringPrototype, NIL, NewString("ArrowLeftDefault"), NewString("Default bitmap for the left-arrow")); StringPrototype.Set(NewString(""));
+	NEW(PrototypeSArrowLeftDefault, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowLeftDefault);
+	NEW(StringPrototype, NIL, NewString("ArrowLeftHover"), NewString("Mouseover bitmap for the left-arrow")); StringPrototype.Set(NewString(""));
+	NEW(PrototypeSArrowLeftHover, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowLeftHover);
+	NEW(StringPrototype, NIL, NewString("ArrowLeftPressed"), NewString("Pressed bitmap for the left-arrow")); StringPrototype.Set(NewString(""));
+	NEW(PrototypeSArrowLeftPressed, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowLeftPressed);
 			(* right *)
 	NEW(StringPrototype, NIL, NewString("ArrowRightDefault"), NewString("Default bitmap for the right-arrow")); StringPrototype.Set(NewString(""));
 	NEW(PrototypeSArrowRightDefault, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowRightDefault);
@@ -3370,19 +3370,19 @@ BEGIN
 	NEW(StringPrototype, NIL, NewString("ArrowRightPressed"), NewString("Pressed bitmap for the right-arrow")); StringPrototype.Set(NewString(""));
 	NEW(PrototypeSArrowRightPressed, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowRightPressed);
 			(* up *)
- 	NEW(StringPrototype, NIL, NewString("ArrowUpDefault"), NewString("Default bitmap for the up-arrow"));StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowUpDefault, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowUpDefault);
- 	NEW(StringPrototype, NIL, NewString("ArrowUpHover"), NewString("Mouseover bitmap for the up-arrow")); StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowUpHover, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowUpHover);
+	NEW(StringPrototype, NIL, NewString("ArrowUpDefault"), NewString("Default bitmap for the up-arrow"));StringPrototype.Set(NewString(""));
+	NEW(PrototypeSArrowUpDefault, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowUpDefault);
+	NEW(StringPrototype, NIL, NewString("ArrowUpHover"), NewString("Mouseover bitmap for the up-arrow")); StringPrototype.Set(NewString(""));
+	NEW(PrototypeSArrowUpHover, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowUpHover);
 	NEW(StringPrototype, NIL, NewString("ArrowUpPressed"), NewString("Pressed bitmap for the up-arrow")); StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowUpPressed, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowUpPressed);
+	NEW(PrototypeSArrowUpPressed, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowUpPressed);
 			(* down *)
 	NEW(StringPrototype, NIL, NewString("ArrowDownDefault"), NewString("Default bitmap for the down-arrow"));StringPrototype.Set(NewString(""));
 	NEW(PrototypeSArrowDownDefault, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowDownDefault);
 	NEW(StringPrototype, NIL, NewString("ArrowDownHover"), NewString("Mouseover bitmap for the down-arrow")); StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowDownHover, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowDownHover);
+	NEW(PrototypeSArrowDownHover, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowDownHover);
 	NEW(StringPrototype, NIL, NewString("ArrowDownPressed"), NewString("Pressed bitmap for the down-arrow")); StringPrototype.Set(NewString(""));
- 	NEW(PrototypeSArrowDownPressed, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowDownPressed);
+	NEW(PrototypeSArrowDownPressed, StringPrototype, NIL, NIL); plScrollbar.Add(PrototypeSArrowDownPressed);
 
 	 (* Slider prototypes *)
 	NEW(plSlider); WMComponents.propertyListList.Add("Slider", plSlider);
@@ -3423,15 +3423,15 @@ BEGIN
 	NEW(PrototypeSlpageSize, NIL, NewString("PageSize"),NewString("defines the slider page size"));
 	PrototypeSlpageSize.Set(20);
 
- 	(* Resizer *)
- 	NEW(plResizer);	WMComponents.propertyListList.Add("Resizer", plResizer);
- 	NEW(ColorPrototype, NIL, NewString("ClDefault"), NewString("Default Color")); ColorPrototype.Set(WMGraphics.White);
- 	NEW(PrototypeRclDefault, ColorPrototype, NIL, NIL); plResizer.Add(PrototypeRclDefault);
+	(* Resizer *)
+	NEW(plResizer);	WMComponents.propertyListList.Add("Resizer", plResizer);
+	NEW(ColorPrototype, NIL, NewString("ClDefault"), NewString("Default Color")); ColorPrototype.Set(WMGraphics.White);
+	NEW(PrototypeRclDefault, ColorPrototype, NIL, NIL); plResizer.Add(PrototypeRclDefault);
 	NEW(BooleanPrototype, NIL, NewString("IsFlat"), NewString("Is the resizer flat or 3d?")); BooleanPrototype.Set(FALSE);
- 	NEW(PrototypeRisFlat, BooleanPrototype, NIL, NIL); plResizer.Add(PrototypeRisFlat);
- 	NEW(RectanglePrototype, NIL, NewString("Bounds"), NewString("Default width and height")); RectanglePrototype.SetWidth(5); RectanglePrototype.SetHeight(5);
- 	NEW(PrototypeRBounds, RectanglePrototype, NIL, NIL); plResizer.Add(PrototypeRBounds);
- 	(* Checkbox *)
+	NEW(PrototypeRisFlat, BooleanPrototype, NIL, NIL); plResizer.Add(PrototypeRisFlat);
+	NEW(RectanglePrototype, NIL, NewString("Bounds"), NewString("Default width and height")); RectanglePrototype.SetWidth(5); RectanglePrototype.SetHeight(5);
+	NEW(PrototypeRBounds, RectanglePrototype, NIL, NIL); plResizer.Add(PrototypeRBounds);
+	(* Checkbox *)
 	NEW(plCheckbox); WMComponents.propertyListList.Add("Checkbox", plCheckbox);
 
 	NEW(ProtCBCaption, NIL, NewString("Caption"), NewString("caption text")); plCheckbox.Add(ProtCBCaption);

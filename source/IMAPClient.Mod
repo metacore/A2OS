@@ -851,7 +851,7 @@ TYPE
 			RETURN OK;
 		END FetchSomeMessages;
 
- 		PROCEDURE FetchMessage*(message: Message): LONGINT;
+		PROCEDURE FetchMessage*(message: Message): LONGINT;
 		VAR
 			i: LONGINT;
 			number: ARRAY 20 OF CHAR;

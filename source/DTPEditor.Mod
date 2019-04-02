@@ -1157,7 +1157,7 @@ TYPE
 			w.String('<?xml version="1.0" encoding="UTF-8"?>'); w.Ln;
 			w.String("<content>"); w.Ln;
 			(* processing character styles *)
- 			contents := currentDocument.contents; i := 0;
+			contents := currentDocument.contents; i := 0;
 			WHILE (i<currentDocument.nofContents) DO
 				content := contents[i];
 				w.String('<node name="'); w.String(content.contentName^); w.String('">'); w.Ln;
@@ -2122,7 +2122,7 @@ TYPE
 
 			NEW(spacer); spacer.alignment.Set(WMComponents.AlignTop);
 			spacer.bounds.SetHeight(40);
- 			panel.AddContent(spacer);
+			panel.AddContent(spacer);
 
 			NEW(label); label.alignment.Set(WMComponents.AlignTop);
 			label.bounds.SetHeight(20);
@@ -2148,7 +2148,7 @@ TYPE
 
 			NEW(spacer); spacer.alignment.Set(WMComponents.AlignBottom);
 			spacer.bounds.SetHeight(25);
- 			panel.AddContent(spacer);
+			panel.AddContent(spacer);
 
 			NEW(status); status.alignment.Set(WMComponents.AlignBottom);
 			status.bounds.SetHeight(20);

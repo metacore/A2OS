@@ -761,7 +761,7 @@ VAR
 BEGIN
 	IF context.arg.GetString(ident) & context.arg.GetInteger(handle, FALSE) & context.arg.GetInteger(cid, FALSE) THEN
 		context.arg.SkipWhitespace;
- 		d := Find(ident);
+		d := Find(ident);
 		IF (d # NIL) THEN
 			i := 4;
 			WHILE (context.arg.res = Streams.Ok) DO

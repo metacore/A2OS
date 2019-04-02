@@ -145,40 +145,40 @@ CONST
 (* Scratch RAM *)
 	(* 20H	1 byte per target starting at this address for configuration values*)	TARGSCSIRATE = 20H;
 	(* 30H	Bit vector of targets that have ULTRA enabled. *)	ULTRAENB = 30H;
- 	(* 32H 	Bit vector of targets that have disconnection disabled*)	DISCDSB = 32H;
- 	(* 34H	buffer to designate the type or message to send to a target*)	MSGOUT = 34H;
- 	(* 35H	Parameters for DMA Logic*)	DMAPARAMS = 35H;
- 	(* 36H	*)		SEQFLAGS = 36H;
- 	(* 37H	SAVED_TCL*)	SAVEDTCL = 37H;
- 	(* 38H	SG_COUNT*)
- 	(* 39H	SG_NEXT*)
- 	(* 3DH	LASTPHASE*)	LASTPHASE = 3DH;
- 		(* Signals are declared in SCSISIG *)		PHASEMASK = {CD, MSG, IO};
- 		(* Patterns*)
- 		PhaseStatus = {CD, IO};
- 		PhaseCommand = {CD};
- 		PhaseMsgOut = {CD, MSG};
- 		PhaseMsgIn = {CD, MSG, IO};
- 		PhaseDataIn = {IO};
- 		PhaseDataOut = {};
- 		PhaseBusFree = {0};
- 	(* 3EH	WAITINGSCBH*)	WAITINGSCBH = 3EH;
- 	(* 3FH	DISCONNECTEDSCBH*)	DISCONNECTEDSCBH = 3FH;
- 	(* 40H	head of list of SCBs that are not in use.  Used for SCB paging*)	FREESCBH = 40H;
- 	(* 41H	HSCB_ADDR*)	HSCBARRAY = 41H;
- 	(* 45H	SCBID_ADDR*)	SCBIDADDR = 45H;
- 	(* 49H	TMODE_CMDADDR*)	TMODECMDADDR = 49H;
- 	(* 4DH	KERNEL_QINPOS*)	KERNELQINPOS = 4DH;
- 	(* 4EH	QINPOS*)	QINPOS = 4EH;
- 	(* 4FH	QOUTPOS*)	QOUTPOS = 4FH;
- 	(* 50H	TMODE_CMDADDR_NEXT*)	TMODECMDADDRNEXT = 50H;
- 	(* 51H	ARG_1 / RETURN_1*)	RETURN1 = 51H;
- 		(*	Phase Mismatch *)		MSGOUTPHASEMIS = {4};
- 		(* 	Send Sense *)		SENDSENSE = {6};
- 		(* 	Send Msg *)		SENDMSG = {7};
- 	(* 52H	ARG_2 *)
- 	(* 53H	LAST_MSG*)	LASTMSG = 53H;
- 	(* 54H	PREFETCH_CNT*)
+	(* 32H 	Bit vector of targets that have disconnection disabled*)	DISCDSB = 32H;
+	(* 34H	buffer to designate the type or message to send to a target*)	MSGOUT = 34H;
+	(* 35H	Parameters for DMA Logic*)	DMAPARAMS = 35H;
+	(* 36H	*)		SEQFLAGS = 36H;
+	(* 37H	SAVED_TCL*)	SAVEDTCL = 37H;
+	(* 38H	SG_COUNT*)
+	(* 39H	SG_NEXT*)
+	(* 3DH	LASTPHASE*)	LASTPHASE = 3DH;
+		(* Signals are declared in SCSISIG *)		PHASEMASK = {CD, MSG, IO};
+		(* Patterns*)
+		PhaseStatus = {CD, IO};
+		PhaseCommand = {CD};
+		PhaseMsgOut = {CD, MSG};
+		PhaseMsgIn = {CD, MSG, IO};
+		PhaseDataIn = {IO};
+		PhaseDataOut = {};
+		PhaseBusFree = {0};
+	(* 3EH	WAITINGSCBH*)	WAITINGSCBH = 3EH;
+	(* 3FH	DISCONNECTEDSCBH*)	DISCONNECTEDSCBH = 3FH;
+	(* 40H	head of list of SCBs that are not in use.  Used for SCB paging*)	FREESCBH = 40H;
+	(* 41H	HSCB_ADDR*)	HSCBARRAY = 41H;
+	(* 45H	SCBID_ADDR*)	SCBIDADDR = 45H;
+	(* 49H	TMODE_CMDADDR*)	TMODECMDADDR = 49H;
+	(* 4DH	KERNEL_QINPOS*)	KERNELQINPOS = 4DH;
+	(* 4EH	QINPOS*)	QINPOS = 4EH;
+	(* 4FH	QOUTPOS*)	QOUTPOS = 4FH;
+	(* 50H	TMODE_CMDADDR_NEXT*)	TMODECMDADDRNEXT = 50H;
+	(* 51H	ARG_1 / RETURN_1*)	RETURN1 = 51H;
+		(*	Phase Mismatch *)		MSGOUTPHASEMIS = {4};
+		(* 	Send Sense *)		SENDSENSE = {6};
+		(* 	Send Msg *)		SENDMSG = {7};
+	(* 52H	ARG_2 *)
+	(* 53H	LAST_MSG*)	LASTMSG = 53H;
+	(* 54H	PREFETCH_CNT*)
 
 	(* 5AH	Scsi Configuration *)	SCSICONF = 5AH;
 		(* Bit 6	Reset SCSI-Bus at boot *)		RESETSCSI = 6;

@@ -197,7 +197,7 @@ END init;
 
 PROCEDURE size*(x: SREAL);
 BEGIN
- 	D:= x*x;
+	D:= x*x;
 END size;
 
 PROCEDURE tick*;
@@ -251,12 +251,12 @@ END init;
 
 PROCEDURE set*(v: Voxel);
 BEGIN
- 	V := v;
+	V := v;
 END set;
 
 PROCEDURE size*(x: SREAL);
 BEGIN
- 	D:= x*x;
+	D:= x*x;
 END size;
 
 PROCEDURE tick*;
@@ -343,17 +343,17 @@ BEGIN
 END init;
 PROCEDURE set*(v: Voxel);
 BEGIN
- 	V := v;
+	V := v;
 END set;
 
 PROCEDURE set2*(v: Voxel);
 BEGIN
- 	V2:= v;
+	V2:= v;
 END set2;
 
 PROCEDURE setSize*(x: SREAL);
 BEGIN
- 	D2 := x*x;
+	D2 := x*x;
 END setSize;
 
 PROCEDURE tick*;

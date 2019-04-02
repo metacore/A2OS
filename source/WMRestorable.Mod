@@ -332,8 +332,8 @@ BEGIN
 				END;
 			END;
 		END;
- 	END;
- 	RETURN NIL;
+	END;
+	RETURN NIL;
 END GetElementByName;
 
 PROCEDURE ShowLoadError(CONST procedureName : ARRAY OF CHAR; elem : XML.Element; CONST name : ARRAY OF CHAR);

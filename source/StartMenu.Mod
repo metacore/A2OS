@@ -195,7 +195,7 @@ TYPE
 					IF ptr IS WMStandardComponents.Button THEN
 						b := ptr(WMStandardComponents.Button);
 						s := b.caption.Get();
- 						IF (s # NIL) & (UTF8Strings.Compare(s^, "") # UTF8Strings.CmpEqual) THEN
+						IF (s # NIL) & (UTF8Strings.Compare(s^, "") # UTF8Strings.CmpEqual) THEN
 							menuButtons[i] := b; INC(i);
 							FindSMO(b, smo);
 							IF smo # NIL THEN smos[j] := smo; INC(j) END;

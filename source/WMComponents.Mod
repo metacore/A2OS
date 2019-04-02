@@ -3624,8 +3624,8 @@ BEGIN
 				END;
 			END;
 		END;
- 	END;
- 	RETURN NIL;
+	END;
+	RETURN NIL;
 END GetElementByName;
 
 PROCEDURE NewComponent*(): XML.Element;

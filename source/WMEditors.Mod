@@ -857,8 +857,8 @@ TYPE
 				SelectAll;
 			ELSIF keySym = 03H THEN (* Ctrl-C *)
 				CopySelection;
- 			ELSIF (keySym = 0FF63H) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Insert *)
- 				(* tv.CopySelection *)
+			ELSIF (keySym = 0FF63H) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Insert *)
+				(* tv.CopySelection *)
 			ELSIF keySym = 0FF51H THEN (* Cursor Left *)
 				CursorLeft;
 			ELSIF keySym = 0FF53H THEN (* Cursor Right *)
@@ -879,7 +879,7 @@ TYPE
 				DeleteSelection;
 			ELSIF keySym = 0FFFFH THEN (* Delete *)
 				Delete;
- 			ELSIF keySym = 0FF08H THEN (* Backspace *)
+			ELSIF keySym = 0FF08H THEN (* Backspace *)
 				Backspace;
 			ELSIF (keySym = 0FF63H) & (flags * Inputs.Shift # {}) THEN  (* Shift Insert *)
 				Paste;
@@ -1733,8 +1733,8 @@ TYPE
 				IF undoMgr # NIL THEN
 					undoMgr.Undo
 				END
- 			ELSIF (keySym = 0FF63H) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Insert *)
- 				tv.CopySelection
+			ELSIF (keySym = 0FF63H) & (flags * Inputs.Ctrl # {}) THEN  (*Ctrl Insert *)
+				tv.CopySelection
 			ELSIF keySym = 0FF51H THEN (* Cursor Left *)
 				IF flags * Inputs.Alt # {} THEN IndentLeft
 				ELSE tv.CursorLeft(flags * Inputs.Ctrl # {}, flags * Inputs.Shift # {})

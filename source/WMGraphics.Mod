@@ -999,6 +999,6 @@ END ClearCache;
 
 
 BEGIN
- 	nofFallbackFonts := 3;
+	nofFallbackFonts := 3;
 	NEW(imgCache)
 END WMGraphics.

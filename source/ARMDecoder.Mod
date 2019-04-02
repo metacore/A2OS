@@ -578,7 +578,7 @@ TYPE
 					RETURN
 				END
 			END;
- 			CASE category OF
+			CASE category OF
 				0 :
 					IF (opSet * {4, 7}) = {4, 7} THEN
 						MultipliesExtraLS(armOpcode)
@@ -947,7 +947,7 @@ BEGIN
 END SetLittleEndian;
 
 PROCEDURE Hex(n: LONGINT; w : Streams.Writer); (* procedure from PCARMDecoder.Mod *)
- 	VAR i, j: INTEGER; s, t : ARRAY 10 OF CHAR;
+	VAR i, j: INTEGER; s, t : ARRAY 10 OF CHAR;
 BEGIN
 	i := 0;
 	REPEAT

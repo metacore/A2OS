@@ -963,7 +963,7 @@ Statements
 						OPC.Mod (z, x, y)
 				  | and:
 						OPC.And (z, x, y)
- 				 | plus:
+				 | plus:
 						OPC.Add (z, x, y, f)
 				  | minus:
 						OPC.Sub (z, x, y, f)

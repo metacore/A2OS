@@ -323,7 +323,7 @@ TYPE
 			IF WMGraphics.FontBold IN style THEN s := 1;
 				IF WMGraphics.FontItalic IN style THEN s := 3 END;
 			ELSIF WMGraphics.FontItalic IN style THEN s := 2
- 			END;
+			END;
 			CASE type OF
 				|FontTimes :
 					CASE s OF

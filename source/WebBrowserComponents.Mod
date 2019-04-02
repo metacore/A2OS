@@ -430,7 +430,7 @@ log : Streams.Writer;*)
 
 		PROCEDURE GetServer(VAR url : ARRAY OF CHAR) : String;
 		VAR
-			end : LONGINT;
+			end : SIZE;
 		BEGIN
 			end := Strings.IndexOfByte('/', Strings.Pos("://", url) + 3, url);
 			IF end = -1 THEN end := Strings.Length(url) END;

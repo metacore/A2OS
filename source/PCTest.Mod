@@ -82,7 +82,7 @@ PROCEDURE ParseTests(
 	diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 VAR
 	buffer : POINTER TO ARRAY OF CHAR;
-	length, pos1, pos2: LONGINT;
+	length, pos1, pos2: SIZE;
 	regrbuf: ARRAY Files.PrefixLength+Files.NameLength+20 OF CHAR;
 	reader: Streams.StringReader;
 BEGIN
@@ -108,7 +108,7 @@ BEGIN
 	END;
 	NEW(reader, LEN(regrbuf));
 	WHILE (pos2 # -1) & (regrfile = "") DO
-		reader.SetRaw(buffer^, pos1, pos2-pos1);
+		reader.SetRaw(buffer^, LONGINT(pos1), LONGINT(pos2-pos1)); (* TODO *)
 		reader.SkipWhitespace; reader.String(regrbuf);
 		Strings.LowerCase(regrbuf);
 		IF Strings.StartsWith2("regression", regrbuf) THEN

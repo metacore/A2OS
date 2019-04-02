@@ -11,7 +11,7 @@ IMPORT
 	VAR
 		name, err, vcc, repoUUID, bln, bc, version, workUrl : ARRAY 256 OF CHAR;
 		props: WebHTTP.AdditionalField;
-		ver, pos : LONGINT;
+		ver : LONGINT; pos : SIZE;
 	BEGIN
 		svn.checkout := TRUE;
 		res := SVNOutput.ResOK;
@@ -63,7 +63,7 @@ IMPORT
 	VAR
 		name, err, vcc, repoUUID, bln, bc, version, workUrl : ARRAY 256 OF CHAR;
 		props: WebHTTP.AdditionalField;
-		ver, pos : LONGINT;
+		ver : LONGINT; pos : SIZE;
 	BEGIN
 		res := SVNOutput.ResOK;
 		Files.SplitPath ( pathName, workUrl, name );

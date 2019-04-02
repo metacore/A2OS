@@ -2636,7 +2636,7 @@ VAR
 (** Open document *)
 PROCEDURE Open*(context : Commands.Context); (** [Options] {filename['@'position]} ~ *)
 VAR
-	window : Window; count, index, temp, position : LONGINT;
+	window : Window; count, index, temp : SIZE; position : LONGINT;
 	filename : Filename; format : ARRAY 32 OF CHAR;
 	options: Options.Options;
 BEGIN

@@ -234,6 +234,7 @@ TYPE
 			enum: XMLObjects.Enumerator;
 			p : ANY;
 			i, j, res : LONGINT;
+			pos: SIZE;
 			exitLoop : BOOLEAN;
 			aoc : ARRAY 16 OF CHAR;
 			olulStackItem : OLULStackItem;
@@ -876,11 +877,11 @@ TYPE
 				ELSIF name^="META" THEN
 					s := GetElemAttributeValue(elem, "content", TRUE);
 					IF s#NIL THEN
-						i := Strings.Pos("charset", s^);
+						pos := Strings.Pos("charset", s^);
 						IF i # -1 THEN
-							i := Strings.IndexOfByte('=', i+7, s^) + 1;
-							IF i < Strings.Length(s^) THEN
-								s := Strings.Substring2(i, s^);
+							pos := Strings.IndexOfByte('=', pos+7, s^) + 1;
+							IF pos < Strings.Length(s^) THEN
+								s := Strings.Substring2(pos, s^);
 								charsetConv := GetCharsetConverter(s^);
 								charset := s;
 							END;
@@ -2828,7 +2829,7 @@ END TrimLineBreak;
 
 PROCEDURE ResolveAddress*(baseAddress : String; url : String) : String;
 VAR
-	slashPos, colonPos, upCnt : LONGINT;
+	slashPos, colonPos, upCnt : SIZE;
 BEGIN
 
 	(* if url is absolute address, return it *)

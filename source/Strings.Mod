@@ -143,7 +143,7 @@ BEGIN
 END Length;
 
 (** Find position of character, returns -1 if not found*)
-PROCEDURE Find* (CONST string: ARRAY OF CHAR; pos: LONGINT; ch: CHAR): LONGINT;
+PROCEDURE Find* (CONST string: ARRAY OF CHAR; pos: SIZE; ch: CHAR): SIZE;
 BEGIN
 	WHILE (string[pos] # 0X ) & (string[pos] # ch) DO INC(pos) END;
 	IF string[pos] = 0X THEN pos := -1 END;
@@ -151,8 +151,8 @@ BEGIN
 END Find;
 
 (** returns the number of occurences of ch within string *)
-PROCEDURE Count* (CONST string: ARRAY OF CHAR; ch: CHAR): LONGINT;
-VAR count, pos: LONGINT;
+PROCEDURE Count* (CONST string: ARRAY OF CHAR; ch: CHAR): SIZE;
+VAR count, pos: SIZE;
 BEGIN
 	count := 0; pos := Find (string, 0, ch);
 	WHILE pos # -1 DO INC (count); pos := Find (string, pos + 1, ch) END;
@@ -473,7 +473,7 @@ END Trim;
  *	StringArray[i] # NIL (0 <= i <= LEN(StringArray)-1)
  *)
 PROCEDURE Split*(CONST string : ARRAY OF CHAR; separator : CHAR) : StringArray;
-VAR count, index, pos, next: LONGINT; result : StringArray;
+VAR count, index, pos, next: SIZE; result : StringArray;
 BEGIN
 	count := Count (string, separator);
 	NEW (result, count + 1); pos := 0;
@@ -626,7 +626,7 @@ END StrToInt;
 (** Convert the substring beginning at position i in str into an integer. Leading whitespace is ignored.
 	After the conversion i points to the first character after the integer. *)
 (* adopted from Strings.Mod *)
-PROCEDURE StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val, i: LONGINT);
+PROCEDURE StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: LONGINT; VAR i: SIZE);
 VAR noStr: ARRAY 16 OF CHAR;
 BEGIN
 	WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
@@ -758,7 +758,7 @@ END TimeToStr;
 (** converts a string to a time *)
 (* adopted from Strings.Mod *)
 PROCEDURE StrToTime*(CONST str: ARRAY OF CHAR; VAR dt: Dates.DateTime);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
@@ -777,7 +777,7 @@ END DateToStr;
 
 (** Convert a string of the form 'day month year' into an date value. Leading whitespace is ignored. *)
 PROCEDURE StrToDate*(CONST str: ARRAY OF CHAR; VAR dt: Dates.DateTime);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 	WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
@@ -943,15 +943,15 @@ BEGIN
 END ContainsChar;
 
 (* Returns the index within string s of the first occurrence of the specified character *)
-PROCEDURE IndexOfByte2*(ch : CHAR; CONST s : ARRAY OF CHAR) : LONGINT;
+PROCEDURE IndexOfByte2*(ch : CHAR; CONST s : ARRAY OF CHAR) : SIZE;
 BEGIN
 	RETURN IndexOfByte(ch, 0, s);
 END IndexOfByte2;
 
 (* Returns the index within string s of the first occurrence of the specified character, starting the search at the specified index *)
-PROCEDURE IndexOfByte*(ch : CHAR; fromIndex : LONGINT; CONST s : ARRAY OF CHAR) : LONGINT;
+PROCEDURE IndexOfByte*(ch : CHAR; fromIndex : SIZE; CONST s : ARRAY OF CHAR) : SIZE;
 VAR
-	lenString, i : LONGINT;
+	lenString, i : SIZE;
 BEGIN
 	lenString := Length(s);
 	IF fromIndex < 0 THEN
@@ -1003,9 +1003,9 @@ BEGIN
 END StartsWith2;
 
 (* Tests if string s starts with the specified prefix beginning a specified index *)
-PROCEDURE StartsWith*(CONST prefix : ARRAY OF CHAR; toffset : LONGINT; CONST s : ARRAY OF CHAR) : BOOLEAN;
+PROCEDURE StartsWith*(CONST prefix : ARRAY OF CHAR; toffset : SIZE; CONST s : ARRAY OF CHAR) : BOOLEAN;
 VAR
-	lenString, lenPrefix, i : LONGINT;
+	lenString, lenPrefix, i : SIZE;
 BEGIN
 	lenString := Length(s);
 	lenPrefix := Length(prefix);
@@ -1019,16 +1019,16 @@ BEGIN
 END StartsWith;
 
 (* Returns a new string that is a substring of string s *)
-PROCEDURE Substring2*(beginIndex : LONGINT; CONST s : ARRAY OF CHAR) : String;
+PROCEDURE Substring2*(beginIndex : SIZE; CONST s : ARRAY OF CHAR) : String;
 BEGIN
 	RETURN Substring(beginIndex, Length(s), s);
 END Substring2;
 
 (* Returns a new string that is a substring of string s *)
 (* s[endIndex-1] is the last character of the new string *)
-PROCEDURE Substring*(beginIndex : LONGINT; endIndex : LONGINT; CONST s : ARRAY OF CHAR) : String;
+PROCEDURE Substring*(beginIndex : SIZE; endIndex : SIZE; CONST s : ARRAY OF CHAR) : String;
 VAR
-	lenString, lenNewString : LONGINT;
+	lenString, lenNewString : SIZE;
 	st : String;
 BEGIN
 	ASSERT(beginIndex >= 0);
@@ -1044,7 +1044,7 @@ END Substring;
 (* Omitts leading and trailing whitespace of string s *)
 PROCEDURE TrimWS*(VAR s : ARRAY OF CHAR);
 VAR
-	len, start, i : LONGINT;
+	len, start, i : SIZE;
 BEGIN
 	len := Length(s);
 	start := 0;

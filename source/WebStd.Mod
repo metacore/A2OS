@@ -2149,7 +2149,7 @@ TYPE
 
 	(** format 'day month year hour minute second" no check for validity *)
 	PROCEDURE StrToDateTime*(str: ARRAY OF CHAR; VAR dt: Dates.DateTime);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 		PROCEDURE GoToNextBlock;
 		BEGIN
 			WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END

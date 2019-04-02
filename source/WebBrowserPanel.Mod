@@ -692,7 +692,7 @@ VAR
 	textPanel : WebBrowserComponents.TextPanel;
 	s : String;
 	charset : String;
-	charsetPos : LONGINT;
+	charsetPos : SIZE;
 BEGIN
 
 	rc := WebBrowserComponents.GetResourceConnection(url);
@@ -827,8 +827,8 @@ END ParseFramesetAttr;
 
 PROCEDURE ParseFramesetRowsOrCols(attrValue : String; VAR firstSlot : FrameslotNode; VAR nodeCount : LONGINT; VAR fixSizes : LONGINT);
 VAR
-	start : LONGINT;
-	comma : LONGINT;
+	start : SIZE;
+	comma : SIZE;
 	s : String;
 	sizeStr : String;
 	size : LONGINT;

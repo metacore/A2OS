@@ -84,7 +84,7 @@ BEGIN
 END InitDefaultStyle;
 
 (* Parse a number at the specified position in the string *)
-PROCEDURE ParseNumber2(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length; VAR i: LONGINT; VAR unitStr: String);
+PROCEDURE ParseNumber2(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length; VAR i: SIZE; VAR unitStr: String);
 BEGIN
 	SVGUtilities.StrToFloatPos(value^, number, i);
 	unitStr := Strings.Substring2(i, value^);
@@ -100,7 +100,7 @@ END ParseNumber2;
 
 (* Parse a number *)
 PROCEDURE ParseNumber*(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length);
-VAR i: LONGINT;
+VAR i: SIZE;
 	unitStr: String;
 BEGIN
 	i := 0;
@@ -108,7 +108,7 @@ BEGIN
 END ParseNumber;
 
 (* Parse an attribute of type length at the specified position in the string *)
-PROCEDURE ParseLength2(value:String; ppi: LONGREAL;  percent100: Length; VAR length: Length; VAR i: LONGINT);
+PROCEDURE ParseLength2(value:String; ppi: LONGREAL;  percent100: Length; VAR length: Length; VAR i: SIZE);
 VAR
 	term: CSS2.Term;
 	unit: SHORTINT;
@@ -128,7 +128,7 @@ END ParseLength2;
 (* Parse an attribute of type length *)
 PROCEDURE ParseLength*(value:String; ppi: LONGREAL;  percent100: Length; VAR length: Length);
 VAR
-	i: LONGINT;
+	i: SIZE;
 BEGIN
 	i := 0;
 	ParseLength2(value,ppi,percent100,length,i)
@@ -137,7 +137,7 @@ END ParseLength;
 (* Parse one or optionally two attributes of type length *)
 PROCEDURE ParseLengthOptional2*(value:String; ppi: LONGREAL;  percent100: Length; VAR length, length2: Length);
 VAR
-	i: LONGINT;
+	i: SIZE;
 BEGIN
 	i := 0;
 	ParseLength2(value,ppi,percent100,length,i);
@@ -150,7 +150,7 @@ BEGIN
 END ParseLengthOptional2;
 
 (* Parse a coordinate pair *)
-PROCEDURE ParseCoordinate*(value: String; VAR i: LONGINT;  VAR current: Coordinate; relative: BOOLEAN);
+PROCEDURE ParseCoordinate*(value: String; VAR i: SIZE;  VAR current: Coordinate; relative: BOOLEAN);
 VAR x, y: Length;
 BEGIN
 	SVGUtilities.SkipCommaWhiteSpace(i, value);
@@ -167,7 +167,7 @@ BEGIN
 END ParseCoordinate;
 
 (* Parse a single coordinate value *)
-PROCEDURE ParseCoordinate1*(value: String; VAR i: LONGINT;  VAR current: Length; relative: BOOLEAN);
+PROCEDURE ParseCoordinate1*(value: String; VAR i: SIZE;  VAR current: Length; relative: BOOLEAN);
 VAR l: Length;
 BEGIN
 	SVGUtilities.SkipCommaWhiteSpace(i, value);
@@ -219,7 +219,7 @@ END ParseUnits;
 
 (* Parse the contents of the fill or stroke attributes *)
 PROCEDURE ParseStyle*(style: String; CONST name: ARRAY OF CHAR): String;
-VAR i, end: LONGINT;
+VAR i, end: SIZE;
 	id: String;
 BEGIN
 	i := 0;
@@ -250,7 +250,7 @@ END ParseStyle;
 (* Parse the contents of the transform and gradientTransform attributes *)
 PROCEDURE ParseTransformList*(value: String; VAR transform: Transform);
 VAR
-	i, len: LONGINT;
+	i, len: SIZE;
 	a, b, c, d, e, f: Length;
 BEGIN
 	i := 0;
@@ -317,7 +317,7 @@ END ParseTransformList;
 
 (* Parse the contents of the viewBoxattribute *)
 PROCEDURE ParseViewBox*(value: String; VAR minx, miny, width, height: Length);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 	SVGUtilities.SkipWhiteSpace(i, value);
@@ -332,7 +332,7 @@ END ParseViewBox;
 
 (* Parse the contents of the preserveAspectRatio attribute *)
 PROCEDURE ParsePreserveAspect*(value: String; VAR xAlign, yAlign: LONGINT; VAR meet: BOOLEAN);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 

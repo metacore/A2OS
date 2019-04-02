@@ -1379,7 +1379,7 @@ BEGIN (* must hold archive lock!! *)
 END GetWriter;
 
 PROCEDURE SplitName*(CONST name : ARRAY OF CHAR; VAR repositoryName, componentName : ARRAY OF CHAR; VAR id : LONGINT) : BOOLEAN;
-VAR count, pos, next : LONGINT; succeeded : BOOLEAN;
+VAR count, pos, next : SIZE; succeeded : BOOLEAN;
 BEGIN
 	succeeded := TRUE;
 	count := Strings.Count (name, Delimiter);

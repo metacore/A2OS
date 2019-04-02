@@ -360,7 +360,7 @@ TYPE
 
 		(* Render an open polyline or a closed polygon *)
 		PROCEDURE RenderPoly*(points: SVG.String; closed: BOOLEAN; state: SVG.State);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 			current: SVG.Coordinate;
 		BEGIN
 			RenderBegin(state, TRUE);
@@ -387,7 +387,7 @@ TYPE
 
 		(* Render a general path element *)
 		PROCEDURE RenderPath*(d: SVG.String; state: SVG.State);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 			subPathStart, current, last: SVG.Coordinate;
 			relative: BOOLEAN;
 			command, prevCommand: CHAR;

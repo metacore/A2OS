@@ -514,7 +514,7 @@ END ParseColorMatrixType;
 
 (* Parse some values attribute of some feColorMatrix element *)
 PROCEDURE ParseColorMatrixValues*(values: XML.String; type: SHORTINT; VAR matrix: ColorMatrix):BOOLEAN;
-VAR pos,i,j: LONGINT;
+VAR pos: SIZE; i,j: LONGINT;
 	angle, s,c: LONGREAL;
 BEGIN
 	(* Init to the zero matrix *)

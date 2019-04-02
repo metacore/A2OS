@@ -263,7 +263,7 @@ TYPE
 		END AddEntryToParent;
 
 		PROCEDURE FindElement*(CONST path : ARRAY OF CHAR) : XML.Element;
-		VAR i, j, l : LONGINT;
+		VAR i, j, l : SIZE;
 			id : ARRAY 32 OF CHAR;
 			s : String;
 			e, next : XML.Element;
@@ -1235,5 +1235,4 @@ WebHTTPServerTools.Start ~
 WebCGI.Install ~
 WebCGI.RegisterCGI Forum TFWebForum.Access~
 WebCGI.ListCGI ~
-
 

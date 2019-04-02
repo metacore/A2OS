@@ -686,7 +686,7 @@ TYPE
 		END Show;
 
 		PROCEDURE Find*(CONST option, value: ARRAY OF CHAR; VAR name: ARRAY OF CHAR);
-		VAR default: Default; pattern: Name; pos, i: LONGINT;
+		VAR default: Default; pattern: Name; pos, i: SIZE;
 		BEGIN
 			default := head; pattern := "--";
 			Strings.Concat(pattern, option, pattern);

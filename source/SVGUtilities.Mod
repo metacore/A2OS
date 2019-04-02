@@ -39,7 +39,7 @@ BEGIN
 END IsAlpha;
 
 (* Skip any whitespace characters *)
-PROCEDURE SkipWhiteSpace*(VAR i: LONGINT; s: Strings.String);
+PROCEDURE SkipWhiteSpace*(VAR i: SIZE; s: Strings.String);
 BEGIN
 	WHILE (s[i] = 20X) OR
 		(s[i] = 09X) OR
@@ -48,7 +48,7 @@ BEGIN
 END SkipWhiteSpace;
 
 (* Skip a specified character *)
-PROCEDURE SkipChar*(VAR i: LONGINT; s: Strings.String; c: CHAR);
+PROCEDURE SkipChar*(VAR i: SIZE; s: Strings.String; c: CHAR);
 BEGIN
 	IF s[i] # c THEN
 		Error("Expected a different character");
@@ -58,13 +58,13 @@ BEGIN
 END SkipChar;
 
 (* Optionally skip a specified character *)
-PROCEDURE SkipCharOptional*(VAR i: LONGINT; s: Strings.String; c: CHAR);
+PROCEDURE SkipCharOptional*(VAR i: SIZE; s: Strings.String; c: CHAR);
 BEGIN
 	IF s[i] = c THEN INC(i) END
 END SkipCharOptional;
 
 (* Skip a comma and/or any whitespace characters *)
-PROCEDURE SkipCommaWhiteSpace*(VAR i: LONGINT; s: Strings.String);
+PROCEDURE SkipCommaWhiteSpace*(VAR i: SIZE; s: Strings.String);
 BEGIN
 	SkipWhiteSpace(i, s);
 	SkipCharOptional(i, s, ',');
@@ -73,9 +73,9 @@ END SkipCommaWhiteSpace;
 
 (* Convert the substring beginning at position i in str into a real value. Leading whitespace is ignored.
 	After the conversion i points to the first character after the real value. *)
-PROCEDURE StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: LONGREAL; VAR i: LONGINT);
+PROCEDURE StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: LONGREAL; VAR i: SIZE);
 VAR noStr: ARRAY 16 OF CHAR;
-	count: LONGINT;
+	count: SIZE;
 BEGIN
 	WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
 

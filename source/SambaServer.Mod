@@ -838,7 +838,8 @@ END HandleSessionSetup;
 
 PROCEDURE HandleTreeConnect(c: Connection);
 VAR
-	i,offset: LONGINT;
+	i: LONGINT;
+	offset: SIZE;
 	pwLen: INTEGER;
 	byteCount: INTEGER;
 	password: ARRAY 256 OF CHAR;

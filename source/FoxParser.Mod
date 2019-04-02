@@ -218,7 +218,7 @@ TYPE
 
 		(** constructor, init parser with scanner providing input and with diagnostics for error output *)
 		PROCEDURE & Init*( scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics; CONST definitions: ARRAY OF CHAR );
-		VAR begin, end: LONGINT (* SIZE! *); definition: ARRAY 32 OF CHAR;
+		VAR begin, end: SIZE; definition: ARRAY 32 OF CHAR;
 		BEGIN
 			conditional := Processing;
 			conditionalCount := 0;

@@ -193,7 +193,8 @@ TYPE
 
 		wrk*, ver*, errorMsg, repositoryURL* : ARRAY 256 OF CHAR; (* wrk URL of PROPFIND/PATCH *)
 		pfStatus* : LONGINT;
-		countChanges*, repositoryPathLength* : LONGINT;
+		countChanges* : LONGINT;
+		repositoryPathLength* : SIZE;
 		removeDir*, svnUpdated* : BOOLEAN;
 		resultDoc* : XML.Document;
 		nextVersion* : ARRAY 10 OF CHAR;
@@ -591,7 +592,7 @@ TYPE
 	VAR
 		pathName, path, collUrl, name, workName, workUrl, vcc, ver, err: ARRAY 256 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader;
-		version,headVersion, pos: LONGINT; res: WORD;
+		version,headVersion: LONGINT; pos: SIZE; res: WORD;
 		props: WebHTTP.AdditionalField;
 		act: Activity;
 	BEGIN

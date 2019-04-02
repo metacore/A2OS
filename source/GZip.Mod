@@ -320,7 +320,7 @@ BEGIN
 END GZip;
 
 PROCEDURE UnGZip*(context:Commands.Context);
-VAR filename: Files.FileName; from,to: Files.File; pos:LONGINT;
+VAR filename: Files.FileName; from,to: Files.File; pos: SIZE;
 BEGIN
 	IF context.arg.GetString(filename) THEN
 		pos:=Strings.Pos(".gz", filename);
@@ -344,5 +344,4 @@ END GZip.
 
 GZip.GZip "../httproot/raphael-min.js" ~
 GZip.UnGZip "../httproot/raphael-min2.js.gz" ~
-
 

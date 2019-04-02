@@ -848,7 +848,7 @@ END Code;
 
 PROCEDURE ComposeDirectory(path, name: ARRAY OF CHAR; VAR res: ARRAY OF CHAR);
 VAR
-	prefix: Files.Prefix; tmp: ARRAY dirLen OF CHAR; p: LONGINT;
+	prefix: Files.Prefix; tmp: ARRAY dirLen OF CHAR; p: SIZE;
 	absolute : BOOLEAN;
 BEGIN
 	COPY(path, res); absolute :=  PathDelimiter = name[0];

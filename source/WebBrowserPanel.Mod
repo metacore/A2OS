@@ -735,7 +735,7 @@ END GetContent;
 PROCEDURE DecodeLinkData*(data : ANY; VAR link : String; VAR target : String);
 VAR
 	linkValue : String;
-	urlPos, len : LONGINT;
+	urlPos, len : SIZE;
 BEGIN
 	linkValue := data(WMTextView.LinkWrapper).link;
 	IF Strings.StartsWith2("#", linkValue^) THEN

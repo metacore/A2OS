@@ -102,7 +102,7 @@ END GetCompilerByName;
 	if the file extension the compiler requires is part of the filename, e.g. Module.Mod.Bak for the file extension .Mod
 	Returns NIL if no appropriate compiler found *)
 PROCEDURE GetCompilerByFilename*(filename : ARRAY OF CHAR) : Compiler;
-VAR c : Compiler; pos : LONGINT;
+VAR c : Compiler; pos : SIZE;
 BEGIN {EXCLUSIVE}
 	Strings.UpperCase(filename);
 	c := compilers;

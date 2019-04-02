@@ -2973,7 +2973,7 @@ END MapBaselineShift;
 PROCEDURE GetExistingFontName(f : String) : String;
 VAR
 	fonts, temp : String;
-	pos : LONGINT;
+	pos : SIZE;
 	font : ARRAY 32 OF CHAR;
 
 	PROCEDURE Get(f : ARRAY OF CHAR; alternatives : BOOLEAN) : String;

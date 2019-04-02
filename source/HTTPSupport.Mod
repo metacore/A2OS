@@ -20,7 +20,7 @@ TYPE
 			variables*: TFClasses.List; (** List of HTTPVariable *)
 
 		PROCEDURE &Init*(VAR requestHeader: WebHTTP.RequestHeader; bodyReader: Streams.Reader);
-			VAR pos: LONGINT; restLength: LONGINT; uriReader : Streams.StringReader; uriRest : Strings.String;
+			VAR pos, restLength: SIZE; uriReader : Streams.StringReader; uriRest : Strings.String;
 				contentType: ARRAY 40 OF CHAR;
 		BEGIN
 			NEW(variables);
@@ -154,7 +154,7 @@ TYPE
 	END HTTPRequest;
 
 	PROCEDURE RemoveVariablesFromURI*(olduri: ARRAY OF CHAR; VAR newuri: ARRAY OF CHAR);
-	VAR pos: LONGINT;
+	VAR pos: SIZE;
 	BEGIN
 		pos := Strings.Pos("?", olduri);
 		IF (pos > 0) THEN
@@ -260,5 +260,4 @@ gssapi-data-value   = quoted-string
 version             = "version" EQUAL version-value
 version-value       = 1*DIGIT
 sts-uri             = "sts-uri" EQUAL DQUOTE absoluteURI DQUOTE
-
 

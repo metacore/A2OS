@@ -368,7 +368,7 @@ END ApplyDelta;
 
 PROCEDURE NameToDelta(name: TFileName; VAR df: TFileName);
 VAR
-	i, ofs: LONGINT;
+	i, ofs: SIZE;
 BEGIN
 	i := Strings.Pos(":", name);
 	IF i = -1 THEN (* Add BaseDir *)

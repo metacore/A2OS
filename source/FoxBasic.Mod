@@ -2146,7 +2146,7 @@ VAR
 	END InstallWriterFactory;
 
 	PROCEDURE Replace(VAR in: ARRAY OF CHAR; CONST this, by: ARRAY OF CHAR);
-	VAR pos: LONGINT;
+	VAR pos: SIZE;
 	BEGIN
 		pos := Strings.Pos(this,in);
 		IF pos >= 0 THEN

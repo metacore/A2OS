@@ -432,7 +432,7 @@ TYPE
 
 		(* recursive method insert a new node at the right place *)
 		PROCEDURE InsertTreeNode(parent : WMTrees.TreeNode; name : Strings.String; data : EntryInfo);
-		VAR posOfSlash : LONGINT;
+		VAR posOfSlash : SIZE;
 			subnode : WMTrees.TreeNode;
 			dirName, tail : Strings.String;
 		BEGIN
@@ -1057,7 +1057,7 @@ VAR
 (* ----- helpers ------------------------------------------------------- *)
 
 (* copy the head of string to head and the tail of string to tail *)
-PROCEDURE SplitString(string : Strings.String;  VAR head, tail : Strings.String; index : LONGINT);
+PROCEDURE SplitString(string : Strings.String;  VAR head, tail : Strings.String; index : SIZE);
 VAR i : LONGINT;
 BEGIN
 	NEW(head, index+1);

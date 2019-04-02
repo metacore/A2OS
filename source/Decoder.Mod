@@ -1718,7 +1718,7 @@ TYPE
 			msg : ARRAY 256 OF CHAR;
 			module : Modules.Module;
 			header: ObjHeader;
-			res: WORD; extPos : LONGINT;
+			res: WORD; extPos : SIZE;
 		BEGIN
 			vc := CreateForm();
 			Init(vc.bounds.GetWidth(), vc.bounds.GetHeight(), FALSE);

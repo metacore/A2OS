@@ -338,7 +338,7 @@ TYPE
 		END SetEditor;
 
 		PROCEDURE BrowseToDefinition*(sender, data : ANY);
-		VAR pos : LONGINT;
+		VAR pos : SIZE;
 			no : TS.NamedObject;
 			scope : TS.Scope;
 			ident : ARRAY 64 OF CHAR;

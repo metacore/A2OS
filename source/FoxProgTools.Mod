@@ -491,7 +491,7 @@ TYPE
 			END Add;
 
 			PROCEDURE Do(VAR src: ARRAY OF CHAR);
-			VAR pos: LONGINT; r: Replacement;
+			VAR pos: SIZE; r: Replacement;
 			BEGIN
 				r := first;
 				WHILE r # NIL DO

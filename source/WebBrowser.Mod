@@ -156,7 +156,7 @@ TYPE
 		VAR
 			urlNode : URLNode;
 			urlAOC : ARRAY 1024 OF CHAR;
-			i: LONGINT;
+			i: SIZE;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.Go, sender, data)
 			ELSE

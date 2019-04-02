@@ -1513,7 +1513,7 @@ TYPE
 
 		PROCEDURE UpdateList(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList);
 		VAR tempStr, personOidStr, exerciseNoStr: Strings.String;
-			i, length, sepIdx, personOid, exerciseNo, newGrade: LONGINT; par: DynamicWebpage.Parameter;
+			i, length, sepIdx: SIZE; personOid, exerciseNo, newGrade: LONGINT; par: DynamicWebpage.Parameter;
 			(* params: the grades for all group members *)
 		BEGIN
 			(* if this event handler is manually invoked on this active element such that the active element was not previously

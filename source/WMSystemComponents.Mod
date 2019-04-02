@@ -443,7 +443,7 @@ TYPE
 			w : SelectionWrapper;
 			filename : Files.FileName;
 			command : ARRAY 1024 OF CHAR;
-			position: LONGINT; res: WORD;
+			position: SIZE; res: WORD;
 			msg : ARRAY 256 OF CHAR;
 		BEGIN
 			IF (data # NIL) & (data IS SelectionWrapper) THEN

@@ -19,8 +19,8 @@ TYPE
 		PROCEDURE &New*;
 		VAR res : WORD; temp : ARRAY 16 OF CHAR;
 			r : Streams.Reader; w : Files.Writer;
-			buf: ARRAY BufSize OF CHAR; len : LONGINT;
-			msg, s : ARRAY 256 OF CHAR; i, j : LONGINT;
+			buf: ARRAY BufSize OF CHAR; len, size : LONGINT;
+			msg, s : ARRAY 256 OF CHAR; i, j : SIZE;
 			ftpConnection : FTPClient.FTPClient;
 			errorStr : ARRAY 512 OF CHAR;
 			f : Files.File;
@@ -60,7 +60,7 @@ TYPE
 				INC(j)
 			END;
 			temp[j] := 0X;
-			Strings.StrToInt(temp, i);
+			Strings.StrToInt(temp, size);
 			(* open the local file *)
 			res := -1;
 			IF (Files.Old(file) = NIL) OR (WMDialogs.Confirmation("Confirm overwriting", file) = WMDialogs.ResYes) THEN
@@ -74,7 +74,7 @@ TYPE
 			END;
 			(* create the status window *)
 			NEW(status);
-			status.fileSize := i;
+			status.fileSize := size;
 			status.nofFiles := 1;
 			(* transfer the bytes and update the statuswindow *)
 			IF res = 0 THEN

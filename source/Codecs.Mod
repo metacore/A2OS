@@ -640,7 +640,7 @@ BEGIN
 END GetAnimationDecoder;
 
 PROCEDURE SplitName*(CONST  name : ARRAY OF CHAR; VAR protocol, filename : ARRAY OF CHAR);
-VAR pos, i : LONGINT;
+VAR pos, i : SIZE;
 BEGIN
 	pos := Strings.Pos("://", name);
 	IF pos >= 0 THEN

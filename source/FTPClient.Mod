@@ -612,7 +612,7 @@ TYPE
 		END AddFTPEntryToListing;
 
 		PROCEDURE GetCurrentDir*(VAR dir : ARRAY OF CHAR; VAR res : WORD);
-		VAR p : LONGINT;
+		VAR p : SIZE;
 		BEGIN
 			IF ~open OR busy THEN res := -2; RETURN END;
 			w.String("PWD"); w.Ln; w.Update;
@@ -672,5 +672,4 @@ Unsafe / Temporary / Stupid / requires attention
 Permanent Comment
 Assertion
 Debug
-
 

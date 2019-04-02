@@ -82,9 +82,6 @@ TYPE
 
 	END Buffer;
 
-
-
-
 	OPERATOR "+"*( a: String; CONST b: ARRAY OF CHAR ): String;
 	VAR str: String;
 	BEGIN
@@ -131,7 +128,6 @@ TYPE
 		RETURN str
 	END "+";
 
-
 (** string handling *)
 
 (** returns the length of a string *)
@@ -169,11 +165,11 @@ END Truncate;
  * Returns the position of the first occurrence of pattern in the string or -1 if no occurrence is found.
  * Rabin-Karp algorithm, adopted from Sedgewick.
  *)
-PROCEDURE Pos*(CONST pattern, string: ARRAY OF CHAR): LONGINT;
+PROCEDURE Pos*(CONST pattern, string: ARRAY OF CHAR): SIZE;
 CONST
 	q = 8204957;	(* prime number, {(d+1) * q <= MAX(LONGINT)} *)
 	d = 256;			(* number of different characters *)
-VAR h1, h2, dM, i, j, m, n: LONGINT; found : BOOLEAN;
+VAR h1, h2, dM: LONGINT; i, j, m, n: SIZE; found : BOOLEAN;
 BEGIN
 	m := Length(pattern); n := Length(string);
 	IF (m > n) THEN RETURN -1 END;
@@ -215,11 +211,11 @@ END Pos;
 (** More generic version of Pos. Basically the same search algorithm, but can also perform case-insensitive searching and/or
  * backwards directed searching.
  * Returns the position of the first character of the first occurence of 'pattern' in 'text'  in search direction or -1 if pattern not found *)
-PROCEDURE GenericPos*(CONST pattern: ARRAY OF CHAR; from : LONGINT; CONST string: ARRAY OF CHAR; ignoreCase, backwards : BOOLEAN): LONGINT;
+PROCEDURE GenericPos*(CONST pattern: ARRAY OF CHAR; from : SIZE; CONST string: ARRAY OF CHAR; ignoreCase, backwards : BOOLEAN): SIZE;
 CONST
 	q = 8204957;	(* prime number, {(d+1) * q <= MAX(LONGINT)} *)
 	d = 256;			(* number of different characters *)
-VAR ch, chp : CHAR; h1, h2, dM, i, j, patternLength, stringLength: LONGINT; found : BOOLEAN;
+VAR ch, chp : CHAR; h1, h2, dM: LONGINT; i, j, patternLength, stringLength: SIZE; found : BOOLEAN;
 BEGIN
 	patternLength := Length(pattern); stringLength := Length(string);
 
@@ -392,7 +388,6 @@ PROCEDURE Append* (VAR s: ARRAY OF CHAR; CONST appendix: ARRAY OF CHAR);
 BEGIN Concat (s, appendix, s)
 END Append;
 
-
 (** appends appendix to s: s := s || appendix. The resulting string is truncated to the length of s if necessary *)
 PROCEDURE AppendX* (VAR s: ARRAY OF CHAR; CONST appendix: ARRAY OF CHAR);
 BEGIN ConcatX (s, appendix, s)
@@ -405,14 +400,12 @@ BEGIN
 	IntToStr(num,number); Append(s,number);
 END AppendInt;
 
-
 (** appends a character to a string s := s || char *)
 PROCEDURE AppendChar*(VAR s: ARRAY OF CHAR; ch: CHAR);
 VAR cs: ARRAY 2 OF CHAR;
 BEGIN
 	cs[0] := ch; cs[1] := 0X; Append(s,cs);
 END AppendChar;
-
 
 (** copies src[index ... index + len-1] to dst *)
 PROCEDURE Copy* (CONST src: ARRAY OF CHAR; index, len: SIZE; VAR dst: ARRAY OF CHAR);
@@ -468,8 +461,8 @@ END Trim;
 (**
  * Splits 'string' into multiple strings separated by 'separator'.
  * Result properties:
- *	separator = 0X: 	LEN(StringArray) = 1
- *	separator # 0X: 	LEN(StringArray) = 1 + <Number of occurences of 'ch' in 'string'>
+ *	separator = 0X:	LEN(StringArray) = 1
+ *	separator # 0X:	LEN(StringArray) = 1 + <Number of occurences of 'ch' in 'string'>
  *	StringArray[i] # NIL (0 <= i <= LEN(StringArray)-1)
  *)
 PROCEDURE Split*(CONST string : ARRAY OF CHAR; separator : CHAR) : StringArray;
@@ -558,7 +551,6 @@ PROCEDURE IsPrintable*(ch:CHAR):BOOLEAN;
 BEGIN
 	RETURN (ch>=20X) & (ch<=7EX)
 END IsPrintable;
-
 
 (** conversion functions *)
 
@@ -803,7 +795,7 @@ END StrToDate;
 	www	->  clear-text week-day, e.g. Mon
 
 	hh		->	two-digit hour, e.g. 08
-	h		-> 	hour, e.g. 8
+	h		->	hour, e.g. 8
 	nn		-> two-digit minute, e.g. 03
 	n		-> minute, e.g. 3
 	ss		-> two-digit second, e.g. 00
@@ -890,7 +882,6 @@ BEGIN
 	END;
 	COPY(str, s^);
 END SetAOC;
-
 
 (* Gets extension of the given name, returns file (without extension) and ext *)
 PROCEDURE GetExtension* (CONST name : ARRAY OF CHAR; VAR file, ext: ARRAY OF CHAR);
@@ -1079,4 +1070,3 @@ BEGIN
 END Strings.
 
 System.Free Utilities ~
-

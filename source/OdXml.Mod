@@ -619,7 +619,7 @@ END AbsXmlName;
 
 (** Expand an xmlns. *)
 PROCEDURE AbsName * (CONST rawName: ARRAY OF CHAR):OdUtil.Line;
-VAR absName, absSpace, nameSpace, name: OdUtil.Line; colonPos: LONGINT;
+VAR absName, absSpace, nameSpace, name: OdUtil.Line; colonPos: SIZE;
 BEGIN
 	colonPos := Strings.Pos(":", rawName);
 	IF colonPos  > -1 THEN
@@ -761,7 +761,7 @@ END VersionTreeReq;
 PROCEDURE ProppatchReq*(CONST modeName: ARRAY OF CHAR; props: WebHTTP.AdditionalField): XML.Document;
 VAR doc: XML.Document; pu(*propertyupdate*), prop, mode, e : XML.Element;
 	ac: XML.ArrayChars; modePropName, key, attrKey, attrVal: ARRAY 128 OF CHAR;
-	pos: LONGINT; nameVal: StringSplitter;
+	pos: SIZE; nameVal: StringSplitter;
 BEGIN
 	NEW(doc); doc.AddContent(xmlDecl);
 	(* propertyupdate *)

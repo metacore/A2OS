@@ -223,7 +223,7 @@ TYPE
 
 			PROCEDURE Expand(path : ARRAY OF CHAR);
 			VAR node, tnode : WMTrees.TreeNode;
-				pos : LONGINT;
+				pos : SIZE;
 				found : BOOLEAN;
 				ident : ARRAY 64 OF CHAR;
 				string : Strings.String;

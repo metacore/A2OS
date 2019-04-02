@@ -475,7 +475,7 @@ VAR
 
 PROCEDURE GetResourceConnection*(url : String) : ResourceConnection;
 VAR
-	pos : LONGINT;
+	pos : SIZE;
 	protocol : String;
 	filename : String;
 	connection : ResourceConnection;

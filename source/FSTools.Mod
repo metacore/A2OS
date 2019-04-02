@@ -357,7 +357,7 @@ VAR
 
 	PROCEDURE PrepareContext(context : Commands.Context; CONST currentFile, arguments : ARRAY OF CHAR);
 	CONST PlaceHolder = "<#filename#>";
-	VAR thisArguments : Strings.String; position : LONGINT;
+	VAR thisArguments : Strings.String; position : SIZE;
 	BEGIN
 		NEW(thisArguments, Strings.Length(arguments) + 1024);
 		COPY(arguments, thisArguments^);

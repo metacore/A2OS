@@ -159,7 +159,7 @@ TYPE
 			message : Message;
 
 		PROCEDURE AddRecipient(VAR x : ARRAY OF CHAR);
-		VAR l, p : LONGINT; s : String; line : Line;
+		VAR l, p : SIZE; s : String; line : Line;
 		BEGIN
 			p := Strings.Pos("<", x); IF p >= 0 THEN Strings.Delete(x, 0, p + 1) END; Strings.TrimRight(x, ">");
 			l := Strings.Length(x) + 1 ; IF l = 1 THEN RETURN END;

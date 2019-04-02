@@ -521,10 +521,9 @@ TYPE
 		maxMnemonicNameLength: LONGINT;
 		maxOpcodeLength: LONGINT;
 
-		PROCEDURE Priority(i: Instruction): LONGINT;
-		VAR prio: LONGINT;
+		PROCEDURE Priority(i: Instruction): WORD;
 
-			PROCEDURE OP(CONST o: ARRAY OF CHAR): LONGINT;
+			PROCEDURE OP(CONST o: ARRAY OF CHAR): WORD;
 			BEGIN
 				IF o = "" THEN
 					RETURN 10
@@ -536,9 +535,7 @@ TYPE
 			END OP;
 
 		BEGIN
-			prio := 0;
-			prio := OP(i.op1) + OP(i.op2) + OP(i.op3);
-			RETURN prio
+			RETURN OP(i.op1) + OP(i.op2) + OP(i.op3);
 		END Priority;
 
 		PROCEDURE InsertSorted(VAR first: Instruction; this: Instruction);

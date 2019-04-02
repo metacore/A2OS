@@ -22,14 +22,14 @@ TYPE
 		data : String;
 		w : Streams.Writer;
 
-		PROCEDURE &Init*(initialSize : LONGINT);
+		PROCEDURE &Init*(initialSize : SIZE);
 		BEGIN
 			IF initialSize < 16 THEN initialSize := 256 END;
 			NEW(data, initialSize); length := 0;
 		END Init;
 
 		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR newSize, i : LONGINT; n : String;
+		VAR newSize, i : SIZE; n : String;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
 				newSize := MAX(LEN(data) * 2, length + len + 1);

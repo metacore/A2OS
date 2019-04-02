@@ -1567,13 +1567,9 @@ PACKAGE Contributions ARCHIVE "Contributions.zip" SOURCE "ContributionsSrc.zip" 
 	SVNArgument.Mod
 	SVNOutput.Mod
 	SVNUtil.Mod
-	NATIVE { SVNAdmin.Mod }
+	NATIVE, UNIX { SVNAdmin.Mod }
 	WIN { Windows.SVNAdmin.Mod }
-	NATIVE, WIN {
-		OdSvn.Mod
-		SVNWebDAV.Mod
-		SVN.Mod
-	}
+	OdSvn.Mod SVNWebDAV.Mod SVN.Mod
 
 	# GPL!
 	NATIVE { UsbRS232.Mod GPL.Text }

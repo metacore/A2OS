@@ -24,7 +24,6 @@ CONST
 	IdentifierTooLong* = 271;
 	StringTooLong* = 272;
 
-	InitListSize = 4;
 	InitErrMsgSize = 300;	(* initial size of array of error messages *)
 
 	invalidString* = -1;
@@ -43,7 +42,6 @@ TYPE
 	Set* = SET64;
 
 	ObjectArray = POINTER TO ARRAY OF ANY;
-	IntegerArray = POINTER TO ARRAY OF LONGINT;
 
 	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index;
 

@@ -14241,7 +14241,7 @@ TYPE
 		END PatchCRC;
 
 		PROCEDURE PointerArray(source: IntermediateCode.Section; scope: SyntaxTree.Scope; VAR numberPointers: LONGINT);
-		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter; parametersSize: LONGINT;
+		VAR variable: SyntaxTree.Variable; pc: LONGINT; symbol: Sections.Section; parameter: SyntaxTree.Parameter;
 		BEGIN
 			ArrayBlock(source,pc,"",FALSE);
 			Info(source, "pointer offsets array data");

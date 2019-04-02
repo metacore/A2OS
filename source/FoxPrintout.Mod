@@ -1267,10 +1267,7 @@ TYPE
 		END VisitProcedure;
 
 		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
-		VAR type: SyntaxTree.ProcedureType;
-			recordType: SyntaxTree.RecordType;
-			i: LONGINT;
-			valid, first: BOOLEAN;
+		VAR type: SyntaxTree.ProcedureType; first: BOOLEAN;
 		BEGIN
 			IF Visible(x) THEN
 				Indent;

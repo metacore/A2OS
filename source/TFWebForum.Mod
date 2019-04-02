@@ -613,7 +613,7 @@ BEGIN
 END DeletePostLink;
 
 PROCEDURE GetParentLink(VAR forumID, entryID, link : ARRAY OF CHAR) : BOOLEAN;
-VAR p : LONGINT;
+VAR p : SIZE;
 	parentID : ARRAY 512 OF CHAR;
 BEGIN
 	p := Strings.LastIndexOfByte2("/", entryID);

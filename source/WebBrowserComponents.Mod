@@ -530,7 +530,7 @@ END ClearFilename;
 
 PROCEDURE GetMimeType(VAR filename : ARRAY OF CHAR) : String;
 VAR
-	dotPos : LONGINT;
+	dotPos : SIZE;
 	appendix : String;
 BEGIN
 	Strings.TrimWS(filename);

@@ -487,8 +487,8 @@ BEGIN
 	RETURN result;
 END Split;
 
-PROCEDURE Join*(CONST strings : StringArray; startIndex, endIndex : LONGINT; separator : CHAR) : String;
-VAR string : String; length, pos, i : LONGINT;
+PROCEDURE Join*(CONST strings : StringArray; startIndex, endIndex : SIZE; separator : CHAR) : String;
+VAR string : String; length, pos, i : SIZE;
 BEGIN
 	ASSERT((strings # NIL) & (LEN(strings) >= 1));
 	ASSERT((0 <= startIndex) & (startIndex <= endIndex) & (endIndex < LEN(strings)));
@@ -657,7 +657,7 @@ END IntToHexStr;
 
 (** converts a hex string to an integer. Leading whitespace is ignored. res=Ok indicates success, val=0 on failure. *)
 PROCEDURE HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val: LONGINT; VAR res: WORD);
-VAR length, i : LONGINT; ch: CHAR; negative : BOOLEAN;
+VAR length, i : SIZE; ch: CHAR; negative : BOOLEAN;
 BEGIN
 	length := LEN(string); val := 0; res := -1;
 	(* skip whitespace *)
@@ -816,10 +816,10 @@ END StrToDate;
 	"wwww, mmmm d, yyyy"			-> "Tuesday, September 11, 2001"
 *)
 PROCEDURE FormatDateTime*(CONST format: ARRAY OF CHAR; dt: Dates.DateTime; VAR result: ARRAY OF CHAR);
-VAR i,k,l,len,n,m,y,w,dw: LONGINT;
+VAR i,k,l,len,n: SIZE; m,y,w,dw: LONGINT;
 
-	PROCEDURE IntToStr(v, len: LONGINT; VAR s: ARRAY OF CHAR; VAR pos: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE IntToStr(v: LONGINT; len: SIZE; VAR s: ARRAY OF CHAR; VAR pos: SIZE);
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 1 TO len DO s[pos+len-i] := CHR(ORD("0") + v MOD 10); v := v DIV 10 END;
 		INC(pos, len)
@@ -873,7 +873,7 @@ BEGIN
 END ShowTimeDifference;
 
 PROCEDURE NewString*(CONST str : ARRAY OF CHAR) : String;
-VAR l : LONGINT; s : String;
+VAR l : SIZE; s : String;
 BEGIN
 	l := Length(str) + 1;
 	NEW(s, l);
@@ -882,7 +882,7 @@ BEGIN
 END NewString;
 
 PROCEDURE SetAOC*(CONST str: ARRAY OF CHAR; VAR s: String);
-VAR l: LONGINT;
+VAR l: SIZE;
 BEGIN
 	l := Length(str) + 1;
 	IF (s = NIL) OR (LEN(s^) < l) THEN
@@ -894,7 +894,7 @@ END SetAOC;
 
 (* Gets extension of the given name, returns file (without extension) and ext *)
 PROCEDURE GetExtension* (CONST name : ARRAY OF CHAR; VAR file, ext: ARRAY OF CHAR);
-VAR len, index: LONGINT;
+VAR len, index: SIZE;
 BEGIN
 	len := Length (name); index := len;
 	WHILE (index # 0) & (name[index- 1] # '.') DO DEC (index) END;
@@ -966,15 +966,15 @@ BEGIN
 END IndexOfByte;
 
 (* Returns the index within string s of the last occurrence of the specified character *)
-PROCEDURE LastIndexOfByte2*(ch : CHAR; CONST s : ARRAY OF CHAR) : LONGINT;
+PROCEDURE LastIndexOfByte2*(ch : CHAR; CONST s : ARRAY OF CHAR) : SIZE;
 BEGIN
 	RETURN LastIndexOfByte(ch, Length(s)-1, s);
 END LastIndexOfByte2;
 
 (* Returns the index within string s of the last occurrence of the specified character, searching backward starting at the specified index *)
-PROCEDURE LastIndexOfByte*(ch : CHAR; fromIndex : LONGINT; CONST s : ARRAY OF CHAR) : LONGINT;
+PROCEDURE LastIndexOfByte*(ch : CHAR; fromIndex : SIZE; CONST s : ARRAY OF CHAR) : SIZE;
 VAR
-	lenString, i : LONGINT;
+	lenString, i : SIZE;
 BEGIN
 	lenString := Length(s);
 	IF fromIndex >= lenString THEN

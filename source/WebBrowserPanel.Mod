@@ -207,7 +207,7 @@ TYPE
 
 		PROCEDURE &New*(VAR title : String; rc :WebBrowserComponents.ResourceConnection; width : LONGINT; height : LONGINT; scrollbars : BOOLEAN; loadLink : WMEvents.EventListener; charset : String; frameName : String);
 		VAR
-			sharpPos : LONGINT;
+			sharpPos : SIZE;
 			wrp : WMTextView.LinkWrapper;
 			sequencer : Messages.MsgSequencer;
 		BEGIN

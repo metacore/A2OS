@@ -458,6 +458,7 @@ VAR
 	suspend_done: LONGINT;
 	resume_done: LONGINT;
 	sasuspend, saresume: Sigaction;
+	thread_exit: Key_t;
 
 	argc-: LONGINT;  argv-: ADDRESS;  environ-: ADDRESS;
 
@@ -481,7 +482,6 @@ VAR
 	pthread_cond_signal: PROCEDURE {C} (cond: ADDRESS): WORD;
 
 	pthread_create-: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: ADDRESS; arg: PROCEDURE): WORD;
-	pthread_exit-: PROCEDURE {C, NORETURN} (thr: ADDRESS);
 	pthread_detach: PROCEDURE {C} (thr: ADDRESS);
 	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
 	pthread_cancel: PROCEDURE {C} (thr: ADDRESS);
@@ -715,7 +715,7 @@ VAR
 
 	PROCEDURE ThrExit*( );
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
-		pthread_exit( 0 );
+		siglongjmp (pthread_getspecific (thread_exit), 1);
 	END ThrExit;
 
 	PROCEDURE ThrSetPriority*(thr: Thread_t; prio: LONGINT);
@@ -748,6 +748,7 @@ VAR
 		attr: PThreadAttr;
 		stack: Stack;
 		size: SIZE;
+		state: ARRAY 2048 OF CHAR;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		me := pthread_self();
 
@@ -779,9 +780,9 @@ VAR
 		res := pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NIL );
 		param.sched_priority := 0;
 		res := pthread_setschedparam( me, SCHED_OTHER, ADDRESS OF param );
-		proc();
 
-		pthread_exit( NIL );
+		ASSERT (pthread_setspecific (thread_exit, ADDRESS OF state) = 0);
+		IF sigsetjmp (ADDRESS OF state, 0) = 0 THEN proc END;
 		RETURN NIL;
 	END Starter;
 
@@ -823,7 +824,7 @@ VAR
 		IF (thr # mainthread) THEN
 	    		pthread_detach( thr );
     			IF (thr = pthread_self()) THEN
-				pthread_exit( 0 );
+				ThrExit;
 			ELSE
 				pthread_cancel( thr );
 			END
@@ -897,6 +898,8 @@ VAR
 		saresume.sa_flags := 0;
 		saresume.sa_handler := resume_handler;
 		ASSERT(sigaction( T_SIGRESUME, ADDRESS OF saresume, NIL ) = 0);
+
+		ASSERT (pthread_key_create (ADDRESS OF thread_exit, NIL) = 0);
 
 		RETURN TRUE;
 	END ThrInitialize;
@@ -1156,7 +1159,6 @@ VAR
 		Dlsym( libc, "pthread_cond_signal", ADDRESSOF(pthread_cond_signal) );
 
 		Dlsym( libp, "pthread_create", ADDRESSOF(pthread_create) );
-		Dlsym( libp, "pthread_exit", ADDRESSOF(pthread_exit) );
 		Dlsym( libp, "pthread_detach", ADDRESSOF(pthread_detach) );
 		Dlsym( libp, "pthread_cancel", ADDRESSOF(pthread_cancel) );
 		Dlsym( libp, "pthread_kill", ADDRESSOF(pthread_kill) );

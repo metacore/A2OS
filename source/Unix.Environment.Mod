@@ -68,10 +68,10 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 END Enqueue;
 
-PROCEDURE TimerThread;
+PROCEDURE {C} TimerThread (): ADDRESS;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Activities.CallVirtual (TickLoop, NIL, Activities.CreateVirtualProcessor ());
-	Unix.pthread_exit (0);
+	RETURN NIL;
 END TimerThread;
 
 PROCEDURE TickLoop (argument: ADDRESS);

@@ -53,10 +53,10 @@ END Args;
 	VAR reader: Unix.Thread_t;
 	VAR read : RECORD buffer: ADDRESS; size, result: SIZE; ready: BOOLEAN END;
 
-	PROCEDURE ReaderThread;
+	PROCEDURE {C} ReaderThread (): ADDRESS;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Activities.CallVirtual (ReadActivity, NIL, processor);
-		Unix.pthread_exit (0);
+		RETURN NIL;
 	END ReaderThread;
 
 	PROCEDURE ReadActivity (p: ADDRESS);

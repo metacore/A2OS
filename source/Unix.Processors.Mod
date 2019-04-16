@@ -42,13 +42,13 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END StartAll;
 
 (* Start routine for each Posix thread. *)
-PROCEDURE {NORETURN} Start (arg: ADDRESS);
+PROCEDURE {C} Start (arg: ADDRESS): ADDRESS;
 PROCEDURE Execute EXTERN "Activities.Execute" (procedure: PROCEDURE);
 PROCEDURE Idle EXTERN "Activities.Idle";
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	StartAll;
 	Execute (Idle);
-	Unix.pthread_exit (0);
+	RETURN NIL;
 END Start;
 
 (** Initializes the module by enumerating all available processors. *)

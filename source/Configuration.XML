@@ -78,27 +78,29 @@ To update: Configuration.Init ~
 				<Setting name="Name" value="Vera"/>
 				<Setting name="Size" value="14"/>
 			</Section>
-			<Section name="Fonts">
-				<Setting name="Benevento" value="benevento.ttf"/>
-				<Setting name="Bitstream Vera Sans" value="Vera.ttf"/>
-				<Setting name="Bitstream Vera Sans Bold" value="VeraBd.ttf"/>
-				<Setting name="Bitstream Vera Sans Bold Oblique" value="VeraBI.ttf"/>
-				<Setting name="Bitstream Vera Sans Oblique" value="VeraI.ttf"/>
-				<Setting name="Bitstream Vera Sans Mono" value="VeraMo.ttf"/>
-				<Setting name="Bitstream Vera Sans Mono Bold" value="VeraMoBd.ttf"/>
-				<Setting name="Bitstream Vera Sans Mono Bold Oblique" value="VeraMoBI.ttf"/>
-				<Setting name="Bitstream Vera Sans Mono Oblique" value="VeraMoI.ttf"/>
-				<Setting name="Bitstream Vera Serif" value="VeraSe.ttf"/>
-				<Setting name="Bitstream Vera Serif Bold" value="VeraSeBd.ttf"/>
-				<Setting name="Ethiopia Jiret" value="jiret.ttf"/>
-				<Setting name="PT Sans" value="PTSans.ttf"/>
-				<Setting name="PT Sans Bold" value="PTSansB.ttf"/>
-				<Setting name="PT Sans Bold Italic" value="PTSansBI.ttf"/>
-				<Setting name="PT Sans Italic" value="PTSansI.ttf"/>
-				<Setting name="PT Sans Caption" value="PTSansCaption.ttf"/>
-				<Setting name="PT Sans Caption Bold" value="PTSansCaptionB.ttf"/>
-				<Setting name="PT Sans Narrow" value="PTSansNarrow.ttf"/>
-				<Setting name="PT Sans Narrow Bold" value="PTSansNarrowB.ttf"/>
+			<Section name="DefaultBoldFont">
+				<Setting name="Name" value=""/>
+				<Setting name="Size" value=""/>
+			</Section>
+			<Section name="MonospaceFont">
+				<Setting name="Name" value=""/>
+				<Setting name="Size" value=""/>
+			</Section>
+			<Section name="SerifFont">
+				<Setting name="Name" value=""/>
+				<Setting name="Size" value=""/>
+			</Section>
+			<Section name="SansSerifFont">
+				<Setting name="Name" value=""/>
+				<Setting name="Size" value=""/>
+			</Section>
+			<Section name="CursiveFont">
+				<Setting name="Name" value=""/>
+				<Setting name="Size" value=""/>
+			</Section>
+			<Section name="CasualFont">
+				<Setting name="Name" value=""/>
+				<Setting name="Size" value=""/>
 			</Section>
 			<Section name="FontLoaders">
 				<Section name="OberonFonts">

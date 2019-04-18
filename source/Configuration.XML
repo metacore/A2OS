@@ -78,7 +78,7 @@ To update: Configuration.Init ~
 				<Setting name="Name" value="Vera"/>
 				<Setting name="Size" value="14"/>
 			</Section>
-			<Section name="DefaultBoldFont">
+			<Section name="BoldFont">
 				<Setting name="Name" value=""/>
 				<Setting name="Size" value=""/>
 			</Section>

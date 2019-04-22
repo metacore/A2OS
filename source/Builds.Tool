@@ -172,7 +172,7 @@ WIN64 -- 64-bit windows a2
 	
 	Release.Build --path=NewAos/ Win64 ~
 
-	Linker.Link --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H
+	Linker.Link --path=NewAos/ --fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H
 		Builtins Trace Kernel32 Heaps Modules Objects Kernel KernelLog Streams Commands Files WinFS Clock Dates Reals Strings Diagnostics BitSets
 		StringPool ObjectFile GenericLinker Reflection Loader Shell StdIOShell Traps System ~
 

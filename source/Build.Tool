@@ -159,58 +159,70 @@ FSTools.Unmount RAMDISK ~
 System.Show CD image build time:  ~ System.Timer elapsed ~
 ~~
 
-# Step 3c: Create image for bootable H.D.D.  (A2HDD.img), should work with bochs, at least.
+***********************************************************************
+# Step 1: Compile modules and generate ZIP packages
+Release.Build --path="../Test/" --build --zip --xml Bios32 ~
+
+# Step 3c: Create image for bootable HDD (A2HDD.img)
 
 System.DoCommands
 
-PCAAMD64.Assemble OBLUnreal.Asm ~
-PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
-
 System.Timer start ~
 
-FSTools.DeleteFiles ../Test/A2HDD.img ~
+PCAAMD64.Assemble OBLUnreal.Asm ~
+PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
+PCAAMD64.Assemble BootManager.Asm ~
+BootManager.Split BootManager.Bin ~
 
-VirtualDisks.Create ../Test/A2HDD.img 65520 512 ~
+FSTools.DeleteFiles -i ../Test/A2HDD.img ~
+
+VirtualDisks.Create ../Test/A2HDD.img 320000 512 ~
 VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
 
-Linker.Link \P../Test/ \.Obx ../Test/IDE.Bin 0100000H 100000H Kernel Traps
-	ATADisks DiskVolumes DiskFS Loader BootConsole ~
+Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/HDD.Bin
+	Kernel Traps
+	ATADisks
+	DiskVolumes DiskFS Loader BootConsole ~
 
 Partitions.WriteMBR VDISK0#0 OBEMBR.BIN ~
-Partitions.InstallBootManager VDISK0#0 ~
-Partitions.Create VDISK0#1 76 32 ~
+Partitions.InstallBootManager VDISK0#0 BootManagerMBR.Bin BootManagerTail.Bin ~
+Partitions.Create VDISK0#1 76 150 ~
 
-Partitions.Format VDISK0#1 AosFS 512 ../Test/IDE.Bin ~
+Partitions.Format VDISK0#1 AosFS -1 ../Test/HDD.Bin ~ (* -1 makes sure that actual boot file size is taken as offset for AosFS *)
 FSTools.Mount TEMP AosFS VDISK0#1 ~
 
 ZipTool.ExtractAll --prefix=TEMP: --sourcePath=../Test/ --overwrite --silent
-	System.zip Drivers.zip ApplicationsMini.zip ApplicationsMiniSrc.zip  Compiler.zip GuiApplicationsMini.zip
-	ScreenFonts.zip ~
+	Kernel.zip System.zip Drivers.zip ApplicationsMini.zip Applications.zip Compiler.zip CompilerSrc.zip
+	GuiApplicationsMini.zip GuiApplications.zip Fun.zip Contributions.zip Build.zip EFI.zip
+	Oberon.zip OberonGadgets.zip OberonApplications.zip OberonDocumentation.zip
+	KernelSrc.zip SystemSrc.zip DriversSrc.zip ApplicationsMiniSrc.zip ApplicationsSrc.zip GuiApplicationsMiniSrc.zip GuiApplicationsSrc.zip FunSrc.zip BuildSrc.zip
+	ScreenFonts.zip CjkFonts.zip TrueTypeFonts.zip ~
 
 FSTools.Watch TEMP ~
 FSTools.Unmount TEMP ~
 
 Partitions.SetConfig VDISK0#1
-	TraceMode="5" TracePort="1" TraceBPS="115200"
+	TraceMode="1" TracePort="1" TraceBPS="115200"
 	BootVol1="AOS AosFS IDE0#1"
-	Boot="DisplayLinear.Install"
 	AosFS="DiskVolumes.New DiskFS.NewFS"
+	CacheSize="1000"
+	ExtMemSize="512"
+	MaxProcs="-1"
+	ATADetect="legacy"
+	Init="117"
+	Boot="DisplayLinear.Install"
 	Boot1="Keyboard.Install;MousePS2.Install"
 	Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
 	Boot3="WindowManager.Install"
-	Boot5="Autostart.Run"
-	Init="144"
-	CacheSize="1000"
-	ExtMemSize="64"
-	MaxProcs="-1"
-	~
+	Boot4="Autostart.Run"
+~
 VirtualDisks.Uninstall VDISK0 ~
 
-System.Show HDD image build time:  ~ System.Timer elapsed ~
+System.Show HDD image build time: ~ System.Timer elapsed ~
 
 FSTools.CloseFiles ../Test/A2HDD.img ~
 
-~~
+~
 
 
 # Step 3d: Create image for bootable H.D.D.  (A2HDD.img) for VirtualBox
@@ -270,25 +282,24 @@ System.Show HDD image build time:  ~ System.Timer elapsed ~
 # Step 1: Compile modules and generate ZIP packages
 Release.Build --path="../Test/" --build --zip --xml Bios32 ~
 
-# Step 3e: Create image for bootable USB  (A2USB.img)
-
+# Step 3e: Create image for bootable USB (A2USB.img)
 
 System.DoCommands
 
-Compiler.Compile -p=Bios32 --destPath=../Test/ BIOS.PCI.Mod UsbEhci.Mod BIOS.UsbEhciPCI.Mod  ~
+System.Timer start ~
 
 PCAAMD64.Assemble OBLUnreal.Asm ~
 PartitionsLib.SetBootLoaderFile OBLUnreal.Bin ~
 PCAAMD64.Assemble BootManager.Asm ~
 BootManager.Split BootManager.Bin ~
-System.Timer start ~
 
-FSTools.DeleteFiles -i ../Test/A2HDD.img ~
+FSTools.DeleteFiles -i ../Test/A2USB.img ~
 
-VirtualDisks.Create ../Test/A2HDD.img 320000 512 ~
-VirtualDisks.Install -b=512 VDISK0 ../Test/A2HDD.img ~
+VirtualDisks.Create ../Test/A2USB.img 320000 512 ~
+VirtualDisks.Install -b=512 VDISK0 ../Test/A2USB.img ~
 
-Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin Kernel Traps
+Linker.Link --path=../Test/ --displacement=100000H --fileName=../Test/USB.Bin
+	Kernel Traps
 	UsbHubDriver UsbEhci UsbEhciPCI UsbStorageBoot
 	DiskVolumes DiskFS Loader BootConsole ~
 
@@ -310,27 +321,25 @@ FSTools.Watch TEMP ~
 FSTools.Unmount TEMP ~
 
 Partitions.SetConfig VDISK0#1
-	TraceMode="1" 
-	TracePort="1" 
-	TraceBPS="115200"
+	TraceMode="1" TracePort="1" TraceBPS="115200"
 	BootVol1="AOS AosFS USB0#1"
 	AosFS="DiskVolumes.New DiskFS.NewFS"
 	CacheSize="1000"
 	ExtMemSize="512"
 	MaxProcs="-1"
 	ATADetect="legacy"
-	Init="118"
+	Init="117"
 	Boot="DisplayLinear.Install"
 	Boot1="Keyboard.Install;MousePS2.Install"
 	Boot2="DriverDatabase.Enable;UsbHubDriver.Install;UsbEhciPCI.Install;UsbUhci.Install;UsbOhci.Install"
 	Boot3="WindowManager.Install"
 	Boot4="Autostart.Run"
-	~
+~
 VirtualDisks.Uninstall VDISK0 ~
 
-System.Show HDD image build time:  ~ System.Timer elapsed ~
+System.Show USB image build time: ~ System.Timer elapsed ~
 
-FSTools.CloseFiles ../Test/A2HDD.img ~
+FSTools.CloseFiles ../Test/A2USB.img ~
 
 ~
 use this to test machine with autoreboot

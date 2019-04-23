@@ -457,6 +457,7 @@ TYPE
 VAR
 	handler_done: BOOLEAN;
 	mainthread: Thread_t;
+	thread_exit: Key_t;
 
 	argc-: LONGINT;  argv-: ADDRESS;  environ: ADDRESS;
 
@@ -706,6 +707,8 @@ VAR
 		high := sched_get_priority_max( SCHED_OTHER );
 		low := sched_get_priority_min( SCHED_OTHER );
 
+		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);	
+		
 		RETURN TRUE;
 	END ThrInitialize;
 
@@ -750,7 +753,8 @@ VAR
 	VAR
 		me: Thread_t;
 		old, new: Sigset;
-
+		state: ARRAY 2048 OF CHAR;
+		
 		param: Sched_param;
 		r: LONGINT;
 	BEGIN
@@ -774,9 +778,9 @@ VAR
 		param.sched_priority := 0;
 		r := pthread_setschedparam( me, SCHED_OTHER, ADDRESSOF( param ) );
 
-		proc();
-
-		pthread_exit( NIL );
+		ASSERT( pthread_setspecific( thread_exit, ADDRESSOF( state ) ) = 0 );
+		IF sigsetjmp( ADDRESSOF( state ), 0 ) = 0 THEN proc() END;
+		
 		RETURN NIL;
 	END Starter;
 
@@ -814,7 +818,7 @@ VAR
 		IF (thr # mainthread) THEN
 		    	pthread_detach( thr );
 		    	IF (thr = pthread_self( )) THEN
-		    		pthread_exit( 0 );
+		    		ThrExit
 			ELSE
 		    		pthread_cancel( thr );
 		    	END
@@ -833,7 +837,7 @@ VAR
 
 	PROCEDURE ThrExit*( );
 	BEGIN
-		pthread_exit( 0 );
+		siglongjmp( pthread_getspecific( thread_exit ), 1 )
 	END ThrExit;
 
 	PROCEDURE ThrSetPriority*( thr: Thread_t; prio: LONGINT );

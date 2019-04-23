@@ -9,7 +9,7 @@ MODULE WMDropDownLists; (** AUTHOR "staubesv"; PURPOSE "DropDownList widget"; *)
 
 
 IMPORT
-	Objects, Inputs, Strings, XML,
+	Objects, Inputs, Strings, XML, Plugins,
 	WMRectangles, WMGraphics, WMGraphicUtilities, WMProperties, WMEvents, WMWindowManager, WMComponents, WMStandardComponents,
 	WMEditors, WMGrids, WMStringGrids;
 
@@ -40,6 +40,13 @@ TYPE
 		shadowRect, borderRect : WMRectangles.Rectangle;
 
 		PROCEDURE&New(x, y, width, height : LONGINT; grid : WMStringGrids.StringGrid; dropDownList : DropDownList);
+		VAR
+			bDownDirection: BOOLEAN;
+			manager: WMWindowManager.WindowManager;
+			view: WMWindowManager.ViewPort;
+			rWnd, rView: WMRectangles.Rectangle;
+			views: Plugins.Table;
+			i: LONGINT;
 		BEGIN
 			ASSERT((width > 0) & (height > 0) & (grid # NIL) & (dropDownList # NIL));
 			SELF.grid := grid;
@@ -48,17 +55,50 @@ TYPE
 
 			Init(width, height, TRUE);
 
-			grid.bearing.Set(WMRectangles.MakeRect(1, 1, ShadowWidth, ShadowWidth));
+			bDownDirection := TRUE;
+			rWnd := WMRectangles.MakeRect(x, y, x + width - 1, y + height - 1);
+
+			manager := WMWindowManager.GetDefaultManager();
+
+			manager.lock.AcquireRead;
+			manager.viewRegistry.GetAll(views);
+			manager.lock.ReleaseRead;
+			
+			i := 0;
+			WHILE bDownDirection & (i < LEN(views)) DO
+				IF views[i] IS WMWindowManager.ViewPort THEN
+					view := views[i](WMWindowManager.ViewPort);
+					rView := WMRectangles.MakeRect(
+						ENTIER(view.range.l + 0.5), ENTIER(view.range.t + 0.5),
+						ENTIER(view.range.r + 0.5), ENTIER(view.range.b + 0.5));
+					bDownDirection := WMRectangles.IsContained(rView, rWnd)
+				END;
+				INC(i)
+			END;
+			
+			IF bDownDirection THEN
+				grid.bearing.Set(WMRectangles.MakeRect(1, 1, ShadowWidth, ShadowWidth));
+			ELSE
+				grid.bearing.Set(WMRectangles.MakeRect(1, ShadowWidth, ShadowWidth, 1));
+			END;
+			
 			grid.alignment.Set(WMComponents.AlignClient);
 			grid.onClick.Add(Clicked);
 
 			SetContent(grid);
 
-			borderRect := WMRectangles.MakeRect(0, 0, width - ShadowWidth, height - ShadowWidth);
-			shadowRect := WMRectangles.MakeRect(ShadowWidth, ShadowWidth, width, height);
+			IF bDownDirection THEN
+				borderRect := WMRectangles.MakeRect(0, 0, width - ShadowWidth, height - ShadowWidth);
+				shadowRect := WMRectangles.MakeRect(ShadowWidth, ShadowWidth, width, height);
+				manager.Add(x, y,
+					SELF, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden})
+			ELSE
+				borderRect := WMRectangles.MakeRect(0, ShadowWidth, width - ShadowWidth, height);
+				shadowRect := WMRectangles.MakeRect(ShadowWidth, -ShadowWidth, width, height);
+				manager.Add(x, y - height - dropDownList.bounds.GetHeight(),
+					SELF, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden})
+			END;
 
-			manager := WMWindowManager.GetDefaultManager();
-			manager.Add(x, y, SELF, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden});
 			manager.SetFocus(SELF);
 			CSChanged;
 		END New;

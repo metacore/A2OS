@@ -506,7 +506,9 @@ BEGIN
 	END;
 
 	RemoveComments(temp^, available);
-	Strings.Truncate (temp^, available);
+	Strings.Truncate(temp^, available);
+	Strings.TrimWS(temp^);
+	RemoveFirstLineComment(temp);
 	commands := Strings.Split(temp^, "~");
 
 	NEW(command, LEN(temp)); NEW(parameters, LEN(temp));
@@ -599,6 +601,36 @@ BEGIN
 		END
 	END
 END RemoveComments;
+
+(** Remove first line comment (#<comment text>EOL) from command.
+This makes it possible for A2 Win/Linux executables compiled
+with command line shell to act as simple CGI script this way:
+
+	#!./oberon run
+	System.Show Content-type: text/html~ System.Ln~ System.Ln~
+	System.Show <HTML>~ System.Ln~
+
+	...
+
+	System.Show </HTML>~ System.Ln ~
+	System.PowerDown ~
+
+**)
+PROCEDURE RemoveFirstLineComment(string: Strings.String);
+VAR
+	i, j, len: LONGINT;
+BEGIN
+	IF string # NIL THEN
+		len := LEN(string^);
+		IF (len > 0) & (string^[0] = '#') THEN
+			i := 0;
+			WHILE (i < len) & ~((string^[i] = 0DX) OR (string^[i] = 0AX)) DO
+				string^[i] := 020X;
+				INC(i)
+			END
+		END
+	END
+END RemoveFirstLineComment;
 
 PROCEDURE Repeat*(context : Commands.Context); (* nofTimes command [command parameters] ~ *)
 VAR

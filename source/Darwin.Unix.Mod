@@ -461,7 +461,6 @@ TYPE
 VAR
 	mainthread: Thread_t;
 	handler_done: BOOLEAN;
-	thread_exit: Key_t;
 
 	argc-: LONGINT;  argv-: ADDRESS;  environ-: ADDRESS;
 
@@ -718,7 +717,7 @@ VAR
 
 	PROCEDURE ThrExit*( );
 	BEGIN
-		siglongjmp( pthread_getspecific( thread_exit ), 1 )
+		pthread_exit( 0 );
 	END ThrExit;
 
 	PROCEDURE ThrSetPriority*( thr: Thread_t; prio: LONGINT );
@@ -754,8 +753,6 @@ VAR
 	VAR
 		me: Thread_t;
 		old, new: Sigset;
-		state: ARRAY 2048 OF CHAR;
-		
 		param: Sched_param;
 		res: WORD;
 	BEGIN
@@ -779,9 +776,9 @@ VAR
 		param.sched_priority := 0;
 		res := pthread_setschedparam( me, SCHED_RR, ADDRESSOF( param ) );
 
-		ASSERT( pthread_setspecific( thread_exit, ADDRESSOF( state ) ) = 0 );
-		IF sigsetjmp( ADDRESSOF( state ), 0 ) = 0 THEN proc() END;
+		proc();
 
+		pthread_exit( NIL );
 		RETURN NIL;
 	END Starter;
 
@@ -820,7 +817,7 @@ VAR
 		IF (thr # mainthread) THEN
 	    		pthread_detach( thr );
     			IF (thr = pthread_self()) THEN
-				ThrExit
+				pthread_exit( 0 );
 			ELSE
 				pthread_cancel( thr );
 			END
@@ -837,11 +834,11 @@ VAR
 
 
 	PROCEDURE ThrSuspend*( thr: Thread_t; saveContext: BOOLEAN );
-	VAR r: LONGINT;  machthr: MachPort;
+	VAR machthr: MachPort;
 	BEGIN
 		IF saveContext THEN
 			handler_done := FALSE;
-			r := pthread_kill( thr, SIGUSR1 );
+			IGNORE pthread_kill( thr, SIGUSR1 );
 			(*	not working in Solaris when the thread is stalled in a mutex.
 				handler gets arrived but has bad side effects,
 				yields traps and locks the system *)
@@ -862,9 +859,7 @@ VAR
 		low := sched_get_priority_min(SCHED_OTHER);
 
 		param.sched_priority := high;
-		ASSERT( pthread_setschedparam( mainthread, SCHED_RR, ADDRESSOF( param ) ) = 0 );
-
-		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);
+		IGNORE pthread_setschedparam( mainthread, SCHED_RR, ADDRESSOF( param ) );
 
 		RETURN TRUE;
 	END ThrInitialize;

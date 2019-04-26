@@ -552,12 +552,7 @@ END GetNewSize;
 PROCEDURE EnsureAttribute(VAR attr : Texts.Attributes);
 BEGIN
 	IF (attr = NIL) THEN
-		NEW(attr); NEW(attr.fontInfo);
-		attr.fontInfo.name := "Oberon";
-		attr.fontInfo.size := 10;
-		attr.fontInfo.style := {};
-		attr.color := 0000000FFH;
-		attr.bgcolor := 000000000H;
+		attr := Texts.defaultAttributes;
 	END
 END EnsureAttribute;
 

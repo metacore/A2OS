@@ -1955,7 +1955,7 @@ BEGIN
 	IF (style # NIL) & (style.attributes # NIL) THEN
 		attributes := style.attributes;
 	ELSE
-		attributes := TextUtilities.GetDefaultAttributes();
+		attributes := Texts.defaultAttributes;
 	END;
 	text.SetAttributes(0, text.GetLength(), attributes);
 

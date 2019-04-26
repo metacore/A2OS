@@ -2,7 +2,7 @@ MODULE Texts;	(** AUTHOR "TF"; PURPOSE "Basic Unicode text system"; *)
 
 IMPORT
 	KernelLog, Streams, Kernel, WMEvents, Locks, Strings, FP1616, UTF8Strings,
-	XML, XMLParser, XMLScanner, XMLObjects, Files;
+	XML, XMLParser, XMLScanner, XMLObjects, Files, Configuration;
 
 CONST
 	OpInsert* = 0;
@@ -1229,6 +1229,7 @@ VAR
 	cStyles : CharacterStyleArray; nofCStyles : LONGINT;
 
 	forceUTF*, unforceUTF* : BOOLEAN;
+	defaultAttributes- : Attributes;
 
 (** Insert the given Paragraph Style into the Paragraph Style Array *)
 PROCEDURE AddParagraphStyle*(style: ParagraphStyle);
@@ -1487,15 +1488,26 @@ BEGIN {EXCLUSIVE}
 	RETURN lastText
 END GetLastText;
 
-(*! Moved to the TextUtilities
-PROCEDURE GetDefaultAttributes* () : Attributes;
-VAR defaultAttributes : Attributes;
+PROCEDURE GetDefaultAttributes ();
+VAR
+	res : WORD;
+	textColor := 0xFF, textBackColor := 0x00: LONGINT;
+	fontSize := 14: LONGINT;
+	fontName : ARRAY 256 OF CHAR;
 BEGIN
-	NEW(defaultAttributes);
-	defaultAttributes.Set(0FFH, 0H, 0, "Oberon", 10, {});
-	RETURN defaultAttributes
+	fontName := "Vera";
+	NEW( defaultAttributes );
+	Configuration.GetColor( "WindowManager.ColorScheme.Default.TextBackColor", textBackColor, res );
+(*	IF res # Configuration.Ok THEN textBackColor := 0H; END; (* transparent *)*)
+	Configuration.GetColor( "WindowManager.ColorScheme.Default.TextColor", textColor, res );
+(*	IF res # Configuration.Ok THEN textColor := 0FFH; END; (* black *) *)
+	Configuration.Get( "WindowManager.FontManager.DefaultFont.Name", fontName, res );
+(*	IF res # Configuration.Ok THEN fontName := "Vera"; END;*)
+	Configuration.GetInteger( "WindowManager.FontManager.DefaultFont.Size", fontSize, res );
+(*	IF res # Configuration.Ok THEN fontSize := 14; END;*)
+	defaultAttributes.Set( textColor, textBackColor, 0, fontName, fontSize, {} );
 END GetDefaultAttributes;
-*)
+
 BEGIN
 	NEW(pStyles, 4); nofPStyles := 0;
 	NEW(cStyles, 4); nofCStyles := 0;
@@ -1509,5 +1521,6 @@ BEGIN
 
 	forceUTF := FALSE;
 	unforceUTF := TRUE;
+	GetDefaultAttributes;
 END Texts.
 

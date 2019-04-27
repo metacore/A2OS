@@ -552,7 +552,7 @@ END GetNewSize;
 PROCEDURE EnsureAttribute(VAR attr : Texts.Attributes);
 BEGIN
 	IF (attr = NIL) THEN
-		attr := Texts.defaultAttributes;
+		attr := Texts.defaultAttributes.Clone();
 	END
 END EnsureAttribute;
 

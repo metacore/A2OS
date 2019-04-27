@@ -2565,7 +2565,7 @@ END GetTextReader;
 
 PROCEDURE GetDefaultAttributes* () : Texts.Attributes;
 BEGIN
-	RETURN Texts.defaultAttributes;
+	RETURN Texts.defaultAttributes.Clone();
 END GetDefaultAttributes;
 
 BEGIN

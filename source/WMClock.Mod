@@ -124,12 +124,12 @@ TYPE
 				resizing := TRUE;
 			ELSIF keys = {2} THEN
 				NEW(contextMenu);
-				contextMenu.Add("Close", HandleClose);
-				contextMenu.AddParButton("Time", HandleToggleView, contextMenuParStandard);
-				contextMenu.AddParButton("Date", HandleToggleView, contextMenuParDateTime);
-				contextMenu.AddParButton("Day of Week", HandleToggleView, contextMenuParDayOfWeek);
-				contextMenu.AddParButton("Analog", HandleToggleView, contextMenuParAnalog);
-				contextMenu.AddParButton("Toggle Color", HandleToggleColor, NIL);
+				contextMenu.Add("::WMClock:ClockMenu:SClose", HandleClose);
+				contextMenu.AddParButton("::WMClock:ClockMenu:STime", HandleToggleView, contextMenuParStandard);
+				contextMenu.AddParButton("::WMClock:ClockMenu:SDate", HandleToggleView, contextMenuParDateTime);
+				contextMenu.AddParButton("::WMClock:ClockMenu:SDayOfWeek", HandleToggleView, contextMenuParDayOfWeek);
+				contextMenu.AddParButton("::WMClock:ClockMenu:SAnalog", HandleToggleView, contextMenuParAnalog);
+				contextMenu.AddParButton("::WMClock:ClockMenu:SToggleColor", HandleToggleColor, NIL);
 				contextMenu.Popup(bounds.l + x, bounds.t + y)
 			END
 		END PointerDown;
@@ -429,7 +429,7 @@ BEGIN
 
 	(* AnalogClock *)
 	NEW(PrototypeImageName, NIL, Strings.NewString("ImageName"), Strings.NewString("Clock face image name"));
-	PrototypeImageName.SetAOC("WMClockImages.tar://roman_numeral_wall_clock.png");
+	PrototypeImageName.SetAOC("WMClock.rep://images/roman_numeral_wall_clock.png");
 	NEW(PrototypeTimeOffset, NIL, Strings.NewString("TimeOffset"), Strings.NewString("Time offset in hours"));
 	PrototypeTimeOffset.Set(0);
 	NEW(PrototypeSecondHandLength, NIL, Strings.NewString("SecondHandLength"), Strings.NewString("Length of second hand in percent of radius"));

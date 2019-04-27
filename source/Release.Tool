@@ -1180,7 +1180,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	WMPerfMon.Mod WMPerfMon.Text
 
 	WMClock.Mod
-	WMClockImages.tar
+	WMClock.rep
 	WMCalendar.Mod
 
 	WMV24Component.Mod

@@ -1,7 +1,8 @@
 MODULE WMPopups;	(** AUTHOR "BF"; PURPOSE "Popup Windows"; *)
 
 IMPORT
-	Strings, WMRectangles, WMGraphics, WMEvents, WMWindowManager, WMComponents, WMStandardComponents;
+	Strings, WMRectangles, WMGraphics, WMEvents, WMWindowManager, WMComponents, WMStandardComponents,
+	Localization, Repositories;
 
 CONST
 
@@ -32,6 +33,7 @@ TYPE
 	PopupWindow = OBJECT(WMComponents.FormWindow)
 	VAR
 		isClosed : BOOLEAN;
+		languages : Localization.Languages;
 
 		PROCEDURE &New(entries : Entry);
 		VAR vc : WMComponents.VisualComponent;
@@ -42,6 +44,26 @@ TYPE
 			SetContent(vc);
 			isClosed := FALSE;
 		END New;
+		
+		PROCEDURE Translate(value: Strings.String): Strings.String;
+		VAR
+			res : WORD;
+			temp, word : Strings.String;
+			dictionary : Repositories.Dictionary;
+		BEGIN
+			IF (value # NIL) & (LEN(value^) > 4) & (value^[0] = ':') & (value^[1] = ':') THEN
+				(** If string needs translation. E.g. has prefix that points to repository and dictionary	at least:
+					::<Repository name>:<Dictionary name>: **)
+				Repositories.GetTranslationInfo(value^, dictionary, word, res);
+				IF (dictionary # NIL) & (word # NIL) THEN
+					temp := dictionary.Translate(word, languages);
+					IF (temp # word) THEN
+						RETURN temp
+					END
+				END
+			END;
+			RETURN NIL
+		END Translate;
 
 		PROCEDURE CreateForm(entries : Entry) : WMComponents.VisualComponent;
 		VAR
@@ -50,9 +72,12 @@ TYPE
 			font : WMGraphics.Font;
 			entry : Entry;
 			width, height, w, h : LONGINT;
+			temp : Strings.String;
 		BEGIN
 			NEW(panel);
 			panel.fillColor.Set(WMGraphics.White);
+			
+			languages := Localization.GetLanguagePreferences();
 
 			width := 100; height := 0;
 
@@ -68,7 +93,14 @@ TYPE
 				panel.AddInternalComponent(button);
 
 				font := button.GetFont();
-				font.GetStringSize(entry.caption^, w, h);
+				
+				temp := Translate(entry.caption);
+				IF temp # NIL THEN
+					font.GetStringSize(temp^, w, h);
+				ELSE
+					font.GetStringSize(entry.caption^, w, h);
+				END;
+				
 				IF (w + 10 > width) THEN
 					width := w + 10;
 				END;

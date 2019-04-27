@@ -12,7 +12,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Configuration</Caption>
+				<Caption>::StartMenu:ButtonTitles:SConfiguration</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -27,7 +27,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Log</Caption>
+				<Caption>::StartMenu:ButtonTitles:SLog</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -51,7 +51,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Macros</Caption>
+				<Caption>::StartMenu:ButtonTitles:SMacros</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -66,7 +66,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>HotKeys</Caption>
+				<Caption>::StartMenu:ButtonTitles:SHotKeys</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -91,7 +91,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Clock</Caption>
+				<Caption>::StartMenu:ButtonTitles:SClock</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -106,7 +106,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Calendar</Caption>
+				<Caption>::StartMenu:ButtonTitles:SCalendar</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -130,7 +130,7 @@
 		</Properties>
 		<Standard:Button>
 			<Properties>
-				<Caption>Installer</Caption>
+				<Caption>::StartMenu:ButtonTitles:SInstaller</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -145,7 +145,7 @@
 
 				<Standard:Button>
 			<Properties>
-				<Caption>SaveDesktop</Caption>
+				<Caption>::StartMenu:ButtonTitles:SSaveDesktop</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -170,7 +170,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Reboot</Caption>
+				<Caption>::StartMenu:ButtonTitles:SReboot</Caption>
 				<Alignment>2</Alignment>
 				<ClDefault>0FF000080</ClDefault>
 				<ClHover>0FF0000FF</ClHover>
@@ -187,7 +187,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Shutdown</Caption>
+				<Caption>::StartMenu:ButtonTitles:SShutdown</Caption>
 				<Alignment>2</Alignment>
 				<ClDefault>0FF000080</ClDefault>
 				<ClHover>0FF0000FF</ClHover>

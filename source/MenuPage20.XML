@@ -8,7 +8,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Partitions</Caption>
+				<Caption>::StartMenu:ButtonTitles:SPartitions</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -22,7 +22,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Files</Caption>
+				<Caption>::StartMenu:ButtonTitles:SFiles</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -45,7 +45,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>CDRecorder</Caption>
+				<Caption>::StartMenu:ButtonTitles:SCDRecorder</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>

@@ -13,7 +13,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Tutorial</Caption>
+				<Caption>::StartMenu:ButtonTitles:STutorial</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -28,7 +28,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>ChineseTutorial</Caption>
+				<Caption>::StartMenu:ButtonTitles:SCNTutorial</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>

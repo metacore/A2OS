@@ -11,7 +11,7 @@
 		</Properties>
 		<Standard:Button>
 			<Properties>
-				<Caption>Text</Caption>
+				<Caption>::StartMenu:ButtonTitles:SText</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -24,7 +24,7 @@
 		</Standard:Button>
 		<Standard:Button>
 			<Properties>
-				<Caption>DTP</Caption>
+				<Caption>::StartMenu:ButtonTitles:SDTP</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -47,7 +47,7 @@
 		</Properties>
 		<Standard:Button>
 			<Properties>
-				<Caption>Styles</Caption>
+				<Caption>::StartMenu:ButtonTitles:SStyles</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -60,7 +60,7 @@
 		</Standard:Button>
 		<Standard:Button>
 			<Properties>
-				<Caption>Input Methods</Caption>
+				<Caption>::StartMenu:ButtonTitles:SInputMethods</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -83,7 +83,7 @@
 		</Properties>
 		<Standard:Button>
 			<Properties>
-				<Caption>Unicode Markers</Caption>
+				<Caption>::StartMenu:ButtonTitles:SUnicodeMarkers</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -96,7 +96,7 @@
 		</Standard:Button>
 		<Standard:Button>
 			<Properties>
-				<Caption>UnicodeMap</Caption>
+				<Caption>::StartMenu:ButtonTitles:SUnicodeMap</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>

@@ -8,7 +8,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>WebBrowser</Caption>
+				<Caption>::StartMenu:ButtonTitles:SWebBrowser</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -23,7 +23,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>MailClient</Caption>
+				<Caption>::StartMenu:ButtonTitles:SMailClient</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>

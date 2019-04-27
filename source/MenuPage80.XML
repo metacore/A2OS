@@ -8,7 +8,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Bones</Caption>
+				<Caption>::StartMenu:ButtonTitles:SBones</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -23,7 +23,7 @@
 		
 		<Standard:Button>
 			<Properties>
-				<Caption>Bunny</Caption>
+				<Caption>::StartMenu:ButtonTitles:SBunny</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -46,7 +46,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Tetris</Caption>
+				<Caption>::StartMenu:ButtonTitles:STetris</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -61,7 +61,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>3d.Menu</Caption>
+				<Caption>::StartMenu:ButtonTitles:S3DMenu</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -84,7 +84,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Turing</Caption>
+				<Caption>::StartMenu:ButtonTitles:STuring</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -99,7 +99,7 @@
 		
 		<Standard:Button>
 			<Properties>
-				<Caption>Fractal</Caption>
+				<Caption>::StartMenu:ButtonTitles:SFractal</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -124,7 +124,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>FlagMovie</Caption>
+				<Caption>::StartMenu:ButtonTitles:SFlagMovie</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -139,7 +139,7 @@
 		
 		<Standard:Button>
 			<Properties>
-				<Caption>SlideShow</Caption>
+				<Caption>::StartMenu:ButtonTitles:SSlideShow</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -164,7 +164,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Raytracer</Caption>
+				<Caption>::StartMenu:ButtonTitles:SRaytracer</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -179,7 +179,7 @@
 		
 		<Standard:Button>
 			<Properties>
-				<Caption>Overlay</Caption>
+				<Caption>::StartMenu:ButtonTitles:SOverlay</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>

@@ -8,7 +8,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Search</Caption>
+				<Caption>::StartMenu:ButtonTitles:SSearch</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -22,7 +22,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Oberon</Caption>
+				<Caption>::StartMenu:ButtonTitles:SOberon</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -45,7 +45,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Archiver</Caption>
+				<Caption>::StartMenu:ButtonTitles:SArchiver</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -60,7 +60,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Diff</Caption>
+				<Caption>::StartMenu:ButtonTitles:SDiff</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -83,7 +83,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>FTP</Caption>
+				<Caption>::StartMenu:ButtonTitles:SFTP</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -98,7 +98,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>VNC</Caption>
+				<Caption>::StartMenu:ButtonTitles:SVNC</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -123,7 +123,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Serial Terminal</Caption>
+				<Caption>::StartMenu:ButtonTitles:SSerialTerminal</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -138,7 +138,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>TCP Terminal</Caption>
+				<Caption>::StartMenu:ButtonTitles:STCPTerminal</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -165,7 +165,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Shell</Caption>
+				<Caption>::StartMenu:ButtonTitles:SShell</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -180,7 +180,7 @@
 
 		<Standard:Button>
 			<Properties>
-				<Caption>Secure Shell</Caption>
+				<Caption>::StartMenu:ButtonTitles:SSecureShell</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>

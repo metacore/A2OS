@@ -11,7 +11,7 @@
 		</Properties>
 		<Standard:Button>
 			<Properties>
-				<Caption>IDE</Caption>
+				<Caption>::StartMenu:ButtonTitles:SIDE</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -24,7 +24,7 @@
 		</Standard:Button>
 		<Standard:Button>
 			<Properties>
-				<Caption>Oberon FullScreen</Caption>
+				<Caption>::StartMenu:ButtonTitles:SOberonFullScr</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -47,7 +47,7 @@
 		</Properties>
 		<Standard:Button>
 			<Properties>
-				<Caption>GUIBuilder</Caption>
+				<Caption>::StartMenu:ButtonTitles:SGUIBuilder</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -60,7 +60,7 @@
 		</Standard:Button>
 		<Standard:Button>
 			<Properties>
-				<Caption>GUI Patterns</Caption>
+				<Caption>::StartMenu:ButtonTitles:SGUIPatterns</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>
@@ -132,7 +132,7 @@
 		</Standard:Button>
 		<Standard:Button>
 			<Properties>
-				<Caption>Reset(!)</Caption>
+				<Caption>::StartMenu:ButtonTitles:SReset</Caption>
 				<Alignment>2</Alignment>
 				<OnClickHandler>X Run</OnClickHandler>
 			</Properties>

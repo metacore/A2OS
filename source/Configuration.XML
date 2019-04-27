@@ -26,6 +26,8 @@ To update: Configuration.Init ~
 				<Setting name="GMTDiff" value="+1"/>
 			</Section>
 		</Section>
+		<!-- ISO 936-1 language code -->
+		<Setting name="Language" value="en"/>
 	</Section>
 
 <!-- File systems -->

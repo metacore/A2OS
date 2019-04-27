@@ -3,7 +3,7 @@
 	<Standard:Panel>
 		<Properties>
 			<Alignment>1</Alignment>
-			<Bounds> <Width>120</Width>	</Bounds>
+			<Bounds> <Width>180</Width>	</Bounds>
 		</Properties>
 
 		<Standard:Button>
@@ -41,7 +41,7 @@
 	<Standard:Panel>
 		<Properties>
 			<Alignment>1</Alignment>
-			<Bounds> <Width>120</Width> </Bounds>
+			<Bounds> <Width>180</Width> </Bounds>
 		</Properties>
 
 		<Standard:Button>
@@ -79,7 +79,7 @@
 	<Standard:Panel>
 		<Properties>
 			<Alignment>1</Alignment>
-			<Bounds> <Width>120</Width> </Bounds>
+			<Bounds> <Width>180</Width> </Bounds>
 		</Properties>
 
 		<Standard:Button>
@@ -118,7 +118,7 @@
 		<Properties>
 			<Alignment>1</Alignment>
 			<Bounds>
-				<Width>120</Width>
+				<Width>180</Width>
 			</Bounds>
 		</Properties>
 

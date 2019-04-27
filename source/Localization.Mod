@@ -1,5 +1,8 @@
 MODULE Localization; (** AUTHOR "staubesv"; PURPOSE "Localization interface"; *)
 
+IMPORT
+	Configuration;
+
 TYPE
 	Language* = RECORD
 		code* : ARRAY 3 OF CHAR; (* ISO 936-1 language code *)
@@ -27,8 +30,18 @@ BEGIN {EXCLUSIVE}
 	preferenceList[0] := currentLanguage;
 END SetLanguage;
 
+PROCEDURE GetDefaultLanguage;
+VAR
+	res: WORD;
 BEGIN
-	currentLanguage.code := "en";
+	Configuration.Get("Local.Language", currentLanguage.code, res);
+	IF res # Configuration.Ok THEN
+		currentLanguage.code := "en"
+	END
+END GetDefaultLanguage;
+
+BEGIN
+	GetDefaultLanguage;
 	NEW(preferenceList, 1);
 	preferenceList[0] := currentLanguage;
 END Localization.

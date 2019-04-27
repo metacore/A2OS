@@ -135,7 +135,7 @@ TYPE
 			panel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("Font:"); AL(toolbar, label);
 			NEW(famCheck); AC(toolbar, famCheck);
-			NEW(famEdit); famEdit.SetAsString("Oberon"); AE(toolbar, famEdit);
+			NEW(famEdit); famEdit.SetAsString(Texts.defaultAttributes.fontInfo.name); AE(toolbar, famEdit);
 
 			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			toolbar.fillColor.Set(windowStyle.bgColor);
@@ -660,11 +660,11 @@ BEGIN
 	ApplyChange(changeInfo);
 END SetFontColor;
 
-(** Set the font for the currently selected text. Default: Oberon *)
+(** Set the font for the currently selected text. Default: default font name *)
 PROCEDURE SetFontName*(context : Commands.Context); (** [fontname] ~ *)
 VAR name : ARRAY 128 OF CHAR; changeInfo : ChangeInfo;
 BEGIN
-	IF ~context.arg.GetString(name) THEN COPY("Oberon", name); END;
+	IF ~context.arg.GetString(name) THEN COPY(Texts.defaultAttributes.fontInfo.name, name ); END;
 	NEW(changeInfo);
 	COPY(name, changeInfo.name);
 	changeInfo.fields := ChangeFont;

@@ -314,38 +314,46 @@ BEGIN
 		COPY(fi.name^, exactName);
 
 		(* possible suffixes
-			bold:  b, B, bd, Bd, _bd
-			italic: i, I, _i
-			bold+italic: bi, BI, _bi
+			bold:  b, B, bd, Bd, _bd, -Bold
+			italic: i, I, _i, -Italic
+			bold+italic: bi, BI, _bi, -BoldItalic
 		*)
 		IF WMGraphics.FontBold IN fi.style THEN
 			IF WMGraphics.FontItalic IN fi.style THEN
 				CASE try OF
 				|0: Strings.Append(exactName, "bi");
-				|1: Strings.Append(exactName, "_bi");
-				|2: Strings.Append(exactName, "BI");
+				|1: Strings.Append(exactName, "-BoldItalic");
+				|2: Strings.Append(exactName, "_bi");
+				|3: Strings.Append(exactName, "BI");
 				ELSE EXIT
 				END
 			ELSE
 				CASE try OF
 				|0: Strings.Append(exactName, "b");
-				|1: Strings.Append(exactName, "bd");
-				|2: Strings.Append(exactName, "_bd");
-				|3: Strings.Append(exactName, "B");
-				|4: Strings.Append(exactName, "Bd");
+				|1: Strings.Append(exactName, "-Bold");
+				|2: Strings.Append(exactName, "bd");
+				|3: Strings.Append(exactName, "_bd");
+				|4: Strings.Append(exactName, "B");
+				|5: Strings.Append(exactName, "Bd");
 				ELSE EXIT
 				END
 			END;
 		ELSIF WMGraphics.FontItalic IN fi.style THEN
 				CASE try OF
 				|0: Strings.Append(exactName, "i");
-				|1: Strings.Append(exactName, "_i");
-				|2: Strings.Append(exactName, "I");
+				|1: Strings.Append(exactName, "-Italic");
+				|2: Strings.Append(exactName, "_i");
+				|3: Strings.Append(exactName, "I");
 				ELSE
 					EXIT
 				END;
-		ELSIF try > 0 THEN
-			EXIT
+		ELSE
+			CASE try OF
+				0:;
+				|1: Strings.Append(exactName, "-Regular");
+			ELSE
+				EXIT;
+			END;
 		END;
 
 		Strings.Append(exactName, ".ttf");

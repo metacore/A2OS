@@ -75,7 +75,7 @@ To update: Configuration.Init ~
 		</Section>
 		<Section name="FontManager">
 			<Section name="DefaultFont">
-				<Setting name="Name" value="DejaVu"/>
+				<Setting name="Name" value="Vera"/>
 				<Setting name="Size" value="14"/>
 			</Section>
 			<Section name="BoldFont">

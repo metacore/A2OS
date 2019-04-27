@@ -142,7 +142,7 @@ TYPE
 			panel.AddContent(toolbar);
 			NEW(label); label.caption.SetAOC("Size:"); AL(toolbar, label);
 			NEW(sizeCheck); AC(toolbar, sizeCheck);
-			NEW(sizeEdit); sizeEdit.SetAsString("10"); AE(toolbar, sizeEdit);
+			NEW(sizeEdit); sizeEdit.SetAsString("14"); AE(toolbar, sizeEdit);
 
 			NEW(toolbar); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			toolbar.fillColor.Set(windowStyle.bgColor);

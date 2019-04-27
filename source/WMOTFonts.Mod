@@ -325,6 +325,7 @@ BEGIN
 				|1: Strings.Append(exactName, "-BoldItalic");
 				|2: Strings.Append(exactName, "_bi");
 				|3: Strings.Append(exactName, "BI");
+				|4: Strings.Append(exactName, "-BoldOblique");
 				ELSE EXIT
 				END
 			ELSE
@@ -344,6 +345,7 @@ BEGIN
 				|1: Strings.Append(exactName, "-Italic");
 				|2: Strings.Append(exactName, "_i");
 				|3: Strings.Append(exactName, "I");
+				|4: Strings.Append(exactName, "-Oblique");				
 				ELSE
 					EXIT
 				END;

@@ -1492,19 +1492,17 @@ PROCEDURE GetDefaultAttributes ();
 VAR
 	res : WORD;
 	textColor := 0xFF, textBackColor := 0x00: LONGINT;
-	fontSize := 14: LONGINT;
+	fontSize : LONGINT;
 	fontName : ARRAY 256 OF CHAR;
 BEGIN
-	fontName := "Vera";
 	NEW( defaultAttributes );
 	Configuration.GetColor( "WindowManager.ColorScheme.Default.TextBackColor", textBackColor, res );
-(*	IF res # Configuration.Ok THEN textBackColor := 0H; END; (* transparent *)*)
 	Configuration.GetColor( "WindowManager.ColorScheme.Default.TextColor", textColor, res );
-(*	IF res # Configuration.Ok THEN textColor := 0FFH; END; (* black *) *)
+
 	Configuration.Get( "WindowManager.FontManager.DefaultFont.Name", fontName, res );
-(*	IF res # Configuration.Ok THEN fontName := "Vera"; END;*)
+	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := "Vera"; END;
 	Configuration.GetInteger( "WindowManager.FontManager.DefaultFont.Size", fontSize, res );
-(*	IF res # Configuration.Ok THEN fontSize := 14; END;*)
+	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := 14; END;
 	defaultAttributes.Set( textColor, textBackColor, 0, fontName, fontSize, {} );
 END GetDefaultAttributes;
 

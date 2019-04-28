@@ -1353,7 +1353,7 @@ PACKAGE Fun ARCHIVE "Fun.zip" SOURCE "FunSrc.zip" DESCRIPTION "Games, Demos and 
 	ComponentStyle.XML ElevatorStyle.XML # example component styles, load with WMComponents.LoadStyle
 
 	# DTP Editor examples
-	Demo.Style.XML Demo.Layout.XML Demo.Content.XML
+	Demo.Style.XML Demo.Layout.XML Demo.Content.XML Yellow_Duck.jpg Yellow_Duck_LICENSE.txt
 
 	# Xmas
 	xmas04.tar Snow.Mod SaasFee.jpg present.tar MenuEdit.Mod

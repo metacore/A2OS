@@ -114,6 +114,11 @@ TYPE
 			cframe: DTPData.FrameObject;
 			ccontent : DTPData.ContentObject;
 		BEGIN
+
+			IF document = NIL THEN
+				RETURN
+			END;
+
 			CASE zoomMode OF										(* zoom current view *)
 					0: ZoomFitDoc;
 				|	1: ZoomFitWidth;

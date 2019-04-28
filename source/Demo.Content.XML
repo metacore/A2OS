@@ -216,7 +216,7 @@
 </node>
 <node name="ImageFrame1">
   <node-attribute name="type" value="Image" />
-  <node-attribute name="file" value="tux.bmp" />
+  <node-attribute name="file" value="Yellow_Duck.jpg" />
 </node>
 <node name="TextFrame1">
   <node-attribute name="type" value="Text" />

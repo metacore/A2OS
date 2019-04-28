@@ -2055,6 +2055,16 @@ PACKAGE TrueTypeFonts ARCHIVE "TrueTypeFonts.zip" SOURCE "" DESCRIPTION "True-ty
 	VeraSe.ttf VeraSeBd.ttf
 END
 
+PACKAGE IBMPlexFonts ARCHIVE "IBMPlexFonts.zip" SOURCE "" DESCRIPTION "IBM Plex True-type fonts"
+	IBMPlexLicense.txt
+	IBMPlexSerif-Regular.ttf IBMPlexSerif-Italic.ttf
+	IBMPlexSerif-BoldItalic.ttf	IBMPlexSerif-Bold.ttf
+	IBMPlexSans-Regular.ttf	IBMPlexSans-Italic.ttf
+	IBMPlexSans-Bold.ttf IBMPlexSans-BoldItalic.ttf
+	IBMPlexMono-Regular.ttf IBMPlexMono-Bold.ttf
+	IBMPlexMono-BoldItalic.ttf IBMPlexMono-Italic.ttf
+END
+
 PACKAGE CjkFonts ARCHIVE "CjkFonts.zip" SOURCE "" DESCRIPTION "Chinese, Japanese and Korean Fonts"
 	Song.ccg Single.ccg
 END

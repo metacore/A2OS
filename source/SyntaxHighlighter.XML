@@ -36,29 +36,29 @@
 
 <SyntaxHighlighter>
 	<Styles>
-		<Style name="Default" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Bold" fontstyle="{0}" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Italic" fontstyle="{1}" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Red" color="FF0000FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Blue" color="FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Green" fontstyle="{0}" color="9000FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Comment" color="808080FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="ToDo" color = "FF0000FF" fontstyle="{0}" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="CommentItalic" fontstyle="{1}" color="808080FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Control" fontstyle="{0}" color="FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Modifiers" color="A000FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Locking" color="FF00FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Checks" fontstyle="{0}" color="FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Threads" color="FF00FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Structure" fontstyle="{0}" color="FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Operators" fontstyle="{0}" color="FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Values" color="30A0A0FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="BasicTypes" color="FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="ComplexTypes" fontstyle="{0}" color="FFFF"	fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Dangerous" fontstyle="{0}" color="FF0000FF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Debug" color="FFFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="String" color="BF003FFF" fontsize="14" fontname="IBMPlexMono"/>
-		<Style name="Error" bgcolor="FF0000FF" fontsize="14" fontname="IBMPlexMono"/>
+		<Style name="Default" fontname="IBMPlexMono"/>
+		<Style name="Bold" fontstyle="{0}" fontname="IBMPlexMono"/>
+		<Style name="Italic" fontstyle="{1}" fontname="IBMPlexMono"/>
+		<Style name="Red" color="FF0000FF" fontname="IBMPlexMono"/>
+		<Style name="Blue" color="FFFF" fontname="IBMPlexMono"/>
+		<Style name="Green" fontstyle="{0}" color="9000FF" fontname="IBMPlexMono"/>
+		<Style name="Comment" color="808080FF" fontname="IBMPlexMono"/>
+		<Style name="ToDo" color = "FF0000FF" fontstyle="{0}" fontname="IBMPlexMono"/>
+		<Style name="CommentItalic" fontstyle="{1}" color="808080FF" fontname="IBMPlexMono"/>
+		<Style name="Control" fontstyle="{0}" color="FFFF" fontname="IBMPlexMono"/>
+		<Style name="Modifiers" color="A000FF" fontname="IBMPlexMono"/>
+		<Style name="Locking" color="FF00FFFF" fontname="IBMPlexMono"/>
+		<Style name="Checks" fontstyle="{0}" color="FFFF" fontname="IBMPlexMono"/>
+		<Style name="Threads" color="FF00FFFF" fontname="IBMPlexMono"/>
+		<Style name="Structure" fontstyle="{0}" color="FF" fontname="IBMPlexMono"/>
+		<Style name="Operators" fontstyle="{0}" color="FFFF" fontname="IBMPlexMono"/>
+		<Style name="Values" color="30A0A0FF" fontname="IBMPlexMono"/>
+		<Style name="BasicTypes" color="FFFF" fontname="IBMPlexMono"/>
+		<Style name="ComplexTypes" fontstyle="{0}" color="FFFF"	fontname="IBMPlexMono"/>
+		<Style name="Dangerous" fontstyle="{0}" color="FF0000FF" fontname="IBMPlexMono"/>
+		<Style name="Debug" color="FFFF" fontname="IBMPlexMono"/>
+		<Style name="String" color="BF003FFF" fontname="IBMPlexMono"/>
+		<Style name="Error" bgcolor="FF0000FF" fontname="IBMPlexMono"/>
 	</Styles>
 
 	<Highlighters>

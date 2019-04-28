@@ -79,7 +79,7 @@ TYPE
 				| 7DH : InsertChar(00000407H) (*}*)
 				(* second row : ASDFGHJKL:"| *)
 				| 41H : InsertChar(00000424H) (*A*)
-				| 53H : InsertChar(0000042BH) (*S*)
+				| 53H : InsertChar(00000406H) (*S*)
 				| 44H : InsertChar(00000412H) (*D*)
 				| 46H : InsertChar(00000410H) (*F*)
 				| 47H : InsertChar(0000041FH) (*G*)

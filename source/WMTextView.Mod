@@ -165,11 +165,6 @@ TYPE
 			END
 		END GetLineLength;
 
-		PROCEDURE GetNofLines() : LONGINT;
-		BEGIN
-			RETURN nofLines
-		END GetNofLines;
-
 		PROCEDURE LayoutLine(VAR pos : LONGINT; VAR lineInfo : LineInfo);
 		VAR
 			dummyCh : Char32;
@@ -959,7 +954,7 @@ TYPE
 		PROCEDURE UpdateScrollbars;
 		BEGIN
 			IF vScrollbar # NIL THEN
-				vScrollbar.max.Set(layout.GetNofLines());
+				vScrollbar.max.Set(layout.nofLines);
 				vScrollbar.pos.Set(firstLineI);
 			END;
 			IF hScrollbar # NIL THEN
@@ -1363,7 +1358,7 @@ TYPE
 		PROCEDURE CheckNumberOfLines;
 		BEGIN
 			UpdateScrollbars;
-			firstLine.SetBounds(0, layout.GetNofLines() - 1)
+			firstLine.SetBounds(0, layout.nofLines - 1)
 		END CheckNumberOfLines;
 
 		PROCEDURE CheckCursor;
@@ -1395,7 +1390,7 @@ TYPE
 				(* move the cursor down by 3 lines to get more context *)
 				l := MAX(0, l - 3);
 				firstLine.Set(l);
-			ELSIF (l < layout.GetNofLines()) THEN
+			ELSIF (l < layout.nofLines) THEN
 				ty := bordersI.t; i := firstLineI;
 				WHILE i < l DO
 					ty := ty + layout.lines[i].height;
@@ -1805,7 +1800,7 @@ TYPE
 		PROCEDURE LineYPos(lineNr : LONGINT; VAR y0, y1 : LONGINT);
 		VAR i : LONGINT;
 		BEGIN
-			IF (lineNr >= firstLineI) & (lineNr < layout.GetNofLines()) THEN
+			IF (lineNr >= firstLineI) & (lineNr < layout.nofLines) THEN
 				y0 := bordersI.t; i := firstLineI;
 				WHILE i < lineNr DO
 					y0 := y0 + layout.lines[i].height;
@@ -1856,7 +1851,7 @@ TYPE
 				RETURN TRUE
 			ELSIF (pos = 0) & (firstLineI = 0) THEN
 				ty := bordersI.t;
-				IF layout.GetNofLines() > 0 THEN
+				IF layout.nofLines > 0 THEN
 					y := (ty + layout.lines[0].ascent);
 				ELSE
 					f := GetFont();
@@ -1868,7 +1863,7 @@ TYPE
 				RETURN TRUE
 			ELSE
 				l := layout.FindLineNrByPos(pos);
-				IF (l >= firstLineI) & (l < layout.GetNofLines()) THEN
+				IF (l >= firstLineI) & (l < layout.nofLines) THEN
 					ty := bordersI.t; i := firstLineI;
 					WHILE i < l DO
 						ty := ty + layout.lines[i].height;
@@ -2362,7 +2357,7 @@ TYPE
 			IF llen < 0 THEN
 				linelength := layout.GetLineLength(linenr);
 				(* hack for the bidi formatter *)
-				IF linenr = layout.GetNofLines() - 1 THEN
+				IF linenr = layout.nofLines - 1 THEN
 					DEC(linelength);
 				END;
 			ELSE
@@ -2385,7 +2380,7 @@ TYPE
 				localTextReader.SetPosition(0);
 			ELSE
 				(* revert the hack for the bidi formatter *)
-				IF (llen < 0) & (linenr = layout.GetNofLines() - 1) THEN
+				IF (llen < 0) & (linenr = layout.nofLines - 1) THEN
 					INC(linelength);
 				END;
 				localTextReader := utilreader;
@@ -2634,7 +2629,7 @@ TYPE
 				pos := positionMarkers[i].pos.GetPosition();
 				l := layout.FindLineNrByPos(pos);
 				IF FindScreenPos(pos, x, y) THEN
-					IF (l >= 0) & (l < layout.GetNofLines()) THEN
+					IF (l >= 0) & (l < layout.nofLines) THEN
 						ascent := layout.lines[l].ascent;
 					(*	IF ascent = 0 THEN ascent := layout.lines[l].height END;
 						IF ascent = 0 THEN ascent := 10 END; *)
@@ -3088,8 +3083,8 @@ TYPE
 			NEW(dragSelA, text);NEW(dragSelB, text);
 			dragSelA.SetPosition(selection.a); dragSelB.SetPosition(selection.b);
 
-			la := Limit(layout.FindLineNrByPos(selection.a), 0, layout.GetNofLines() - 1);
-			lb := Limit(layout.FindLineNrByPos(selection.b), 0, layout.GetNofLines() - 1);
+			la := Limit(layout.FindLineNrByPos(selection.a), 0, layout.nofLines - 1);
+			lb := Limit(layout.FindLineNrByPos(selection.b), 0, layout.nofLines - 1);
 			(* estimate the size of the selection *)
 			h := 0; w := 0;
 			FOR i := la TO lb DO
@@ -3375,7 +3370,7 @@ TYPE
 			END;
 
 			cl := layout.FindLineNrByPos(pos);
-			IF cl < layout.GetNofLines() - 1 THEN
+			IF cl < layout.nofLines - 1 THEN
 				INC(cl);
 				lineStart := layout.GetLineStartPos(cl);
 				cPos := lineStart + MIN(layout.GetLineLength(cl) - 1, lineEnter);
@@ -3469,13 +3464,13 @@ TYPE
 				cursor.SetVisible(TRUE);
 				Texts.ClearLastSelection
 			END;
-			IF firstLineI = layout.GetNofLines() - 1  THEN
+			IF firstLineI = layout.nofLines - 1  THEN
 				cursor.SetPosition(text.GetLength());
 			ELSE
 				(* save cursor screen pos for repositioning *)
 				IF ~FindScreenPos(cursor.GetPosition(), cx, cy) THEN cx := 0; cy := 0 END;
 				i := firstLineI; dy := 0;
-				WHILE (i < layout.GetNofLines() - 1) & (dy < bounds.GetHeight() - bordersI.t - bordersI.b) DO
+				WHILE (i < layout.nofLines - 1) & (dy < bounds.GetHeight() - bordersI.t - bordersI.b) DO
 					INC(i); dy := dy + (layout.lines[i].height)
 				END;
 				firstLine.Set(i);

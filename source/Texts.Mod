@@ -1229,7 +1229,15 @@ VAR
 	cStyles : CharacterStyleArray; nofCStyles : LONGINT;
 
 	forceUTF*, unforceUTF* : BOOLEAN;
-	defaultAttributes- : Attributes;
+
+(* predefined attributes ( fron Configuration.XML ) *)
+	defaultAttributes-,
+	boldAttributes-,
+	monospaceAttributes-,
+	serifAttributes-,
+	sansSerifAttributes-,
+	cursiveAttributes-,
+	casualAttributes- : Attributes;
 
 (** Insert the given Paragraph Style into the Paragraph Style Array *)
 PROCEDURE AddParagraphStyle*(style: ParagraphStyle);
@@ -1488,23 +1496,154 @@ BEGIN {EXCLUSIVE}
 	RETURN lastText
 END GetLastText;
 
-PROCEDURE GetDefaultAttributes ();
+PROCEDURE InitDefaultAttributes();
+CONST
+	(** FontStyles from WMGraphics *)
+	FontBold = 0; FontItalic = 1;
 VAR
 	res : WORD;
 	textColor := 0xFF, textBackColor := 0x00: LONGINT;
-	fontSize : LONGINT;
-	fontName : ARRAY 256 OF CHAR;
+	defaultFontSize, fontSize : LONGINT;
+	defaultFontStyle := {}, fontStyle := {}: SET;
+	defaultFontName, fontName : ARRAY 64 OF CHAR;
+	fontStyleName : ARRAY 16 OF CHAR;
 BEGIN
-	NEW( defaultAttributes );
-	Configuration.GetColor( "WindowManager.ColorScheme.Default.TextBackColor", textBackColor, res );
-	Configuration.GetColor( "WindowManager.ColorScheme.Default.TextColor", textColor, res );
+	Configuration.GetColor("WindowManager.ColorScheme.Default.TextBackColor", textBackColor, res);
+	Configuration.GetColor("WindowManager.ColorScheme.Default.TextColor", textColor, res);
 
-	Configuration.Get( "WindowManager.FontManager.DefaultFont.Name", fontName, res );
-	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := "Vera"; END;
-	Configuration.GetInteger( "WindowManager.FontManager.DefaultFont.Size", fontSize, res );
-	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := 14; END;
-	defaultAttributes.Set( textColor, textBackColor, 0, fontName, fontSize, {} );
-END GetDefaultAttributes;
+	NEW(defaultAttributes);
+	defaultFontName := "";	defaultFontSize := 0;
+	Configuration.Get("WindowManager.FontManager.DefaultFont.Name", defaultFontName, res);
+	IF (res # Configuration.Ok) OR  (defaultFontName = "") THEN defaultFontName := "Vera"; END;
+	Configuration.GetInteger("WindowManager.FontManager.DefaultFont.Size", defaultFontSize, res);
+	IF (res # Configuration.Ok) OR (defaultFontSize < 1) THEN defaultFontSize := 14; END;
+	Configuration.Get("WindowManager.FontManager.DefaultFont.Style", fontStyleName, res);
+	IF (res = Configuration.Ok) THEN
+		IF fontStyleName = "Bold" THEN
+			defaultFontStyle := {FontBold};
+		ELSIF fontStyleName = "Italic" THEN
+			defaultFontStyle := {FontItalic};
+		ELSIF fontStyleName = "BoldItalic" THEN
+			defaultFontStyle := {FontBold, FontItalic};
+		END;
+	END;
+	defaultAttributes.Set(textColor, textBackColor, 0, defaultFontName, defaultFontSize, defaultFontStyle);
+
+	NEW(boldAttributes);
+	fontName := "";	fontSize := 0;
+	Configuration.Get("WindowManager.FontManager.BoldFont.Name", fontName, res);
+	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := defaultFontName; END;
+	Configuration.GetInteger("WindowManager.FontManager.BoldFont.Size", fontSize, res);
+	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := defaultFontSize; END;
+	Configuration.Get("WindowManager.FontManager.BoldFont.Style", fontStyleName, res);
+	IF (res = Configuration.Ok) THEN
+		IF fontStyleName = "Bold" THEN
+			fontStyle := {FontBold};
+		ELSIF fontStyleName = "Italic" THEN
+			fontStyle := {FontItalic};
+		ELSIF fontStyleName = "BoldItalic" THEN
+			fontStyle := {FontBold, FontItalic};
+		END;
+	END;
+	boldAttributes.Set(textColor, textBackColor, 0, fontName, fontSize, fontStyle);
+
+	NEW(monospaceAttributes);
+	fontName := "";	fontSize := 0;
+	Configuration.Get("WindowManager.FontManager.MonospaceFont.Name", fontName, res);
+	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := defaultFontName; END;
+	Configuration.GetInteger("WindowManager.FontManager.MonospaceFont.Size", fontSize, res);
+	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := defaultFontSize; END;
+	Configuration.Get("WindowManager.FontManager.MonospaceFont.Style", fontStyleName, res);
+	fontStyle := {};
+	IF (res = Configuration.Ok) THEN
+		IF fontStyleName = "Bold" THEN
+			fontStyle := {FontBold};
+		ELSIF fontStyleName = "Italic" THEN
+			fontStyle := {FontItalic};
+		ELSIF fontStyleName = "BoldItalic" THEN
+			fontStyle := {FontBold, FontItalic};
+		END;
+	END;
+	monospaceAttributes.Set(textColor, textBackColor, 0, fontName, fontSize, fontStyle);
+
+	NEW(serifAttributes);
+	fontName := "";	fontSize := 0;
+	Configuration.Get("WindowManager.FontManager.SerifFont.Name", fontName, res);
+	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := defaultFontName; END;
+	Configuration.GetInteger("WindowManager.FontManager.SerifFont.Size", fontSize, res);
+	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := defaultFontSize; END;
+	Configuration.Get("WindowManager.FontManager.SerifFont.Style", fontStyleName, res);
+	fontStyle := {};
+	IF (res = Configuration.Ok) THEN
+		IF fontStyleName = "Bold" THEN
+			fontStyle := {FontBold};
+		ELSIF fontStyleName = "Italic" THEN
+			fontStyle := {FontItalic};
+		ELSIF fontStyleName = "BoldItalic" THEN
+			fontStyle := {FontBold, FontItalic};
+		END;
+	END;
+	serifAttributes.Set(textColor, textBackColor, 0, fontName, fontSize, fontStyle);
+
+	NEW(sansSerifAttributes);
+	fontName := "";	fontSize := 0;
+	Configuration.Get("WindowManager.FontManager.SansSerifFont.Name", fontName, res);
+	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := defaultFontName; END;
+	Configuration.GetInteger("WindowManager.FontManager.SansSerifFont.Size", fontSize, res);
+	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := defaultFontSize; END;
+	Configuration.Get("WindowManager.FontManager.SansSerifFont.Style", fontStyleName, res);
+	fontStyle := {};
+	IF (res = Configuration.Ok) THEN
+		IF fontStyleName = "Bold" THEN
+			fontStyle := {FontBold};
+		ELSIF fontStyleName = "Italic" THEN
+			fontStyle := {FontItalic};
+		ELSIF fontStyleName = "BoldItalic" THEN
+			fontStyle := {FontBold, FontItalic};
+		END;
+	END;
+	sansSerifAttributes.Set(textColor, textBackColor, 0, fontName, fontSize, fontStyle);
+
+	NEW(cursiveAttributes);
+	fontName := "";	fontSize := 0;
+	Configuration.Get("WindowManager.FontManager.CursiveFont.Name", fontName, res);
+	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := defaultFontName; END;
+	Configuration.GetInteger("WindowManager.FontManager.CursiveFont.Size", fontSize, res);
+	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := defaultFontSize; END;
+	Configuration.Get("WindowManager.FontManager.CursiveFont.Style", fontStyleName, res);
+	fontStyle := {};
+	IF (res = Configuration.Ok) THEN
+		IF fontStyleName = "Bold" THEN
+			fontStyle := {FontBold};
+		ELSIF fontStyleName = "Italic" THEN
+			fontStyle := {FontItalic};
+		ELSIF fontStyleName = "BoldItalic" THEN
+			fontStyle := {FontBold, FontItalic};
+		END;
+	END;
+	cursiveAttributes.Set(textColor, textBackColor, 0, fontName, fontSize, fontStyle);
+
+	NEW(casualAttributes);
+	fontName := "";	fontSize := 0;
+	Configuration.Get("WindowManager.FontManager.CasualFont.Name", fontName, res);
+	IF (res # Configuration.Ok) OR  (fontName = "") THEN fontName := defaultFontName; END;
+	Configuration.GetInteger("WindowManager.FontManager.CasualFont.Size", fontSize, res);
+	IF (res # Configuration.Ok) OR (fontSize < 1) THEN fontSize := defaultFontSize; END;
+	Configuration.Get("WindowManager.FontManager.CasualFont.Style", fontStyleName, res);
+	fontStyle := {};
+	IF (res = Configuration.Ok) THEN
+		IF fontStyleName = "Bold" THEN
+			fontStyle := {FontBold};
+		ELSIF fontStyleName = "Italic" THEN
+			fontStyle := {FontItalic};
+		ELSIF fontStyleName = "BoldItalic" THEN
+			fontStyle := {FontBold, FontItalic};
+		END;
+	END;
+	casualAttributes.Set(textColor, textBackColor, 0, fontName, fontSize, fontStyle);
+
+END InitDefaultAttributes;
+
 
 BEGIN
 	NEW(pStyles, 4); nofPStyles := 0;
@@ -1519,6 +1658,6 @@ BEGIN
 
 	forceUTF := FALSE;
 	unforceUTF := TRUE;
-	GetDefaultAttributes;
+	InitDefaultAttributes;
 END Texts.
 

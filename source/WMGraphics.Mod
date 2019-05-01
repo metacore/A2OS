@@ -922,6 +922,10 @@ BEGIN { EXCLUSIVE }
 	END
 END InstallFontManager;
 
+(*Workaround:
+	If the font with a weight other than Bold is required, use a full name of the file (for ttf-fonts) with empty style.
+	For example: GetFont( "IBMPlexSans-SemiBold", 24, {} );
+*)
 PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET) : Font;
 VAR f : Font;
 BEGIN { EXCLUSIVE }

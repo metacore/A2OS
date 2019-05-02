@@ -7,7 +7,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 	VAR relTo: PathName; fs: Files.FileSystem;
 
 		PROCEDURE &InitFileSystem*( relTo: ARRAY OF CHAR; fs: Files.FileSystem);
-		VAR ch: CHAR;i: SIZE;
+		VAR ch: CHAR;i: SIZE; full: Files.FileName; flags: SET;
 		BEGIN
 			SELF.fs := fs;
 			INCL(flags,Files.NeedsPrefix);
@@ -21,8 +21,12 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			IF fs.prefix # "" THEN
 				RemovePrefix(relTo);
 			END;
-
-			COPY(relTo,SELF.relTo);
+			
+			IF fs.Has(relTo,full,flags) THEN
+				COPY(full,SELF.relTo);
+			ELSE (* should never happen, but as a fallback: *)
+				COPY(relTo, SELF.relTo);
+			END;
 		END InitFileSystem;
 
 		PROCEDURE MakeRel(VAR name,new: ARRAY OF CHAR);
@@ -107,7 +111,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 
 	(** NewFS - Create a new filesystem relative to a Windows path. does not protect paths higher than relTo! (xyz:/../../.. could be used) *)
 	PROCEDURE NewFS*(context : Files.Parameters);
-	VAR str,prefix,name: ARRAY 256 OF CHAR; fs: FileSystem; rel: Files.FileSystem; ft: Files.FileSystemTable;
+	VAR str,prefix,name, full: ARRAY 256 OF CHAR; fs: FileSystem; rel: Files.FileSystem; ft: Files.FileSystemTable; flags:SET;
 	BEGIN
 		IF context.arg.GetString(str) THEN
 			Files.SplitName(str,prefix,name);
@@ -118,8 +122,12 @@ TYPE PathName=ARRAY 272 OF CHAR;
 				rel := ft[0];
 			END;
 			IF rel # NIL THEN
-				NEW(fs,str,rel);
-				Files.Add(fs, context.prefix);
+				IF rel.Has(str,full,flags) THEN
+					NEW(fs,str,rel);
+					Files.Add(fs, context.prefix);
+				ELSE
+					context.error.String("file system does not contain "); context.error.String(str); context.error.Ln;
+				END;
 			ELSE
 				context.out.String("file system could not be found: "); context.out.String(str); context.out.Ln;
 				context.result := Commands.CommandError;
@@ -136,6 +144,6 @@ FSTools.Mount Work RelativeFileSystem  ./ ~
 FSTools.Unmount Test ~
 
 
-
+FSTools.Mount Test RelativeFileSystem ../../../HighDim/Code ~
 
 System.Directory src:/*

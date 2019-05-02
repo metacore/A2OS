@@ -7,14 +7,14 @@ IMPORT SYSTEM, KernelLog, Heaps, MathL;
 
 TYPE
 
-	GenericUnaryAALoopS = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: SHORTINT): SHORTINT );
-	GenericUnaryAALoopI = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: INTEGER): INTEGER );
-	GenericUnaryAALoopL = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGINT): LONGINT );
-	GenericUnaryAALoopH = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: HUGEINT): HUGEINT );
-	GenericUnaryAALoopR = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: REAL): REAL );
-	GenericUnaryAALoopX = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGREAL): LONGREAL );
-	GenericUnaryAALoopZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: COMPLEX): COMPLEX );
-	GenericUnaryAALoopLZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	GenericUnaryAALoopS = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: SHORTINT): SHORTINT );
+	GenericUnaryAALoopI = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: INTEGER): INTEGER );
+	GenericUnaryAALoopL = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: LONGINT): LONGINT );
+	GenericUnaryAALoopH = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: HUGEINT): HUGEINT );
+	GenericUnaryAALoopR = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: REAL): REAL );
+	GenericUnaryAALoopX = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: LONGREAL): LONGREAL );
+	GenericUnaryAALoopZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: COMPLEX): COMPLEX );
+	GenericUnaryAALoopLZ = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: LONGCOMPLEX): LONGCOMPLEX );
 	UnaryAALoop = PROCEDURE ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE );
 	UnaryASLoop = PROCEDURE ( ladr, dadr: ADDRESS; linc, len: SIZE );
 	UnarySALoop = PROCEDURE ( ladr, dadr: ADDRESS; dinc, len: SIZE );
@@ -515,7 +515,7 @@ Sufficient (but not necessary) conditions:
 	(*** procedures to traverse arrays and apply operators *)
 
 	(** apply unary operator to array:  array SHORTINT -> array SHORTINT *)
-	PROCEDURE ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	PROCEDURE ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE {DELEGATE} (x: SHORTINT): SHORTINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -558,7 +558,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpS;
 
 	(** apply unary operator to array:  array INTEGER -> array INTEGER *)
-	PROCEDURE ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE(x: INTEGER): INTEGER );
+	PROCEDURE ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE {DELEGATE}(x: INTEGER): INTEGER );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -601,7 +601,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpI;
 
 	(** apply unary operator to array:  array SIZE -> array SIZE *)
-	PROCEDURE ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE(x: LONGINT): LONGINT );
+	PROCEDURE ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE {DELEGATE}(x: LONGINT): LONGINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -644,7 +644,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpL;
 
 	(** apply unary operator to array:  array HUGEINT -> array HUGEINT *)
-	PROCEDURE ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	PROCEDURE ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE {DELEGATE}(x: HUGEINT): HUGEINT );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -687,7 +687,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpH;
 
 	(** apply unary operator to array:  array REAL -> array REAL *)
-	PROCEDURE ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE(x: REAL): REAL );
+	PROCEDURE ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE{DELEGATE}(x: REAL): REAL );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -730,7 +730,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpR;
 
 	(** apply unary operator to array:  array LONGREAL -> array LONGREAL *)
-	PROCEDURE ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	PROCEDURE ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE {DELEGATE} (x: LONGREAL): LONGREAL );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -773,7 +773,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpX;
 
 	(** apply unary operator to array:  array COMPLEX -> array COMPLEX *)
-	PROCEDURE ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	PROCEDURE ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE{DELEGATE}(x: COMPLEX): COMPLEX );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -816,7 +816,7 @@ Sufficient (but not necessary) conditions:
 	END ApplyGenericUnaryAAOpZ;
 
 	(** apply unary operator to array:  array LONGCOMPLEX -> array LONGCOMPLEX *)
-	PROCEDURE ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	PROCEDURE ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT;  elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE{DELEGATE}(x: LONGCOMPLEX): LONGCOMPLEX );
 		VAR loopd, looplen, loopli, loopdi: SIZE;  p: ANY;  glen: SIZE;
 			origdest: ADDRESS;  modes: SET;
 			dim: SIZE;
@@ -2002,7 +2002,7 @@ Sufficient (but not necessary) conditions:
 	(*** monadic generic (A) -> -A  ********************************************************************)
 
 (** SHORTINT *)
-	PROCEDURE GenericLoopS( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: SHORTINT): SHORTINT );
+	PROCEDURE GenericLoopS( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SHORTINT): SHORTINT );
 	VAR lval: SHORTINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2012,7 +2012,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopS;
 
 (** INTEGER *)
-	PROCEDURE GenericLoopI( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: INTEGER): INTEGER );
+	PROCEDURE GenericLoopI( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: INTEGER): INTEGER );
 	VAR lval: INTEGER;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2022,7 +2022,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopI;
 
 (** LONGINT *)
-	PROCEDURE GenericLoopL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGINT): LONGINT );
+	PROCEDURE GenericLoopL( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: LONGINT): LONGINT );
 	VAR lval: LONGINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2032,7 +2032,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopL;
 
 (** HUGEINT *)
-	PROCEDURE GenericLoopH( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: HUGEINT): HUGEINT );
+	PROCEDURE GenericLoopH( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: HUGEINT): HUGEINT );
 	VAR lval: HUGEINT;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2042,7 +2042,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopH;
 
 (** REAL *)
-	PROCEDURE GenericLoopR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: REAL): REAL );
+	PROCEDURE GenericLoopR( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: REAL): REAL );
 	VAR lval: REAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2052,7 +2052,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopR;
 
 (** LONGREAL *)
-	PROCEDURE GenericLoopX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGREAL): LONGREAL );
+	PROCEDURE GenericLoopX( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: LONGREAL): LONGREAL );
 	VAR lval: LONGREAL;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2062,7 +2062,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopX;
 
 (** COMPLEX *)
-	PROCEDURE GenericLoopZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: COMPLEX): COMPLEX );
+	PROCEDURE GenericLoopZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX): COMPLEX );
 	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: COMPLEX END;
 	BEGIN
 		WHILE (len > 0) DO
@@ -2075,7 +2075,7 @@ Sufficient (but not necessary) conditions:
 	END GenericLoopZ;
 
 (** LONGCOMPLEX *)
-	PROCEDURE GenericLoopLZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX );
+	PROCEDURE GenericLoopLZ( ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE} (x: LONGCOMPLEX): LONGCOMPLEX );
 	VAR lval,dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: LONGCOMPLEX END;
 	BEGIN
 		WHILE (len > 0) DO
@@ -10552,49 +10552,49 @@ TYPE
 		RETURN result
 	END "LEN";
 
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF SHORTINT; op: PROCEDURE(x: SHORTINT): SHORTINT): ARRAY {UNSAFE} [?] OF SHORTINT;
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF SHORTINT; op: PROCEDURE {DELEGATE}(x: SHORTINT): SHORTINT): ARRAY {UNSAFE} [?] OF SHORTINT;
 	BEGIN
 		ApplyGenericUnaryAAOpS(RESULT, x, SIZEOF(SHORTINT),GenericLoopS,op);
 		RETURN RESULT;
 	END "ALL";
-
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF INTEGER; op: PROCEDURE(x: INTEGER): INTEGER): ARRAY {UNSAFE} [?] OF INTEGER;
+	
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF INTEGER; op: PROCEDURE {DELEGATE} (x: INTEGER): INTEGER): ARRAY {UNSAFE} [?] OF INTEGER;
 	BEGIN
 		ApplyGenericUnaryAAOpI(RESULT,x,SIZEOF(INTEGER),GenericLoopI,op);
 		RETURN RESULT;
 	END "ALL";
 
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF LONGINT; op: PROCEDURE(x: LONGINT): LONGINT): ARRAY {UNSAFE} [?] OF LONGINT;
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF LONGINT; op: PROCEDURE {DELEGATE}(x: LONGINT): LONGINT): ARRAY {UNSAFE} [?] OF LONGINT;
 	BEGIN
 		ApplyGenericUnaryAAOpL(RESULT,x,SIZEOF(LONGINT),GenericLoopL,op);
 		RETURN RESULT;
 	END "ALL";
 
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF HUGEINT; op: PROCEDURE(x: HUGEINT): HUGEINT): ARRAY {UNSAFE} [?] OF HUGEINT; (*should also accept operator ?*)
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF HUGEINT; op: PROCEDURE {DELEGATE}(x: HUGEINT): HUGEINT): ARRAY {UNSAFE} [?] OF HUGEINT; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpH(RESULT,x,SIZEOF(HUGEINT),GenericLoopH,op);
 		RETURN RESULT;
 	END "ALL";
 
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF REAL; op: PROCEDURE(x: REAL): REAL): ARRAY {UNSAFE} [?] OF REAL; (*should also accept operator ?*)
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF REAL; op: PROCEDURE {DELEGATE}(x: REAL): REAL): ARRAY {UNSAFE} [?] OF REAL; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpR(RESULT,x,SIZEOF(REAL),GenericLoopR,op);
 		RETURN RESULT;
 	END "ALL";
 
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF LONGREAL; op: PROCEDURE(x: LONGREAL): LONGREAL): ARRAY{UNSAFE} [?] OF LONGREAL; (*should also accept operator ?*)
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF LONGREAL; op: PROCEDURE {DELEGATE}(x: LONGREAL): LONGREAL): ARRAY{UNSAFE} [?] OF LONGREAL; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpX(RESULT,x,SIZEOF(LONGREAL),GenericLoopX,op);
 		RETURN RESULT;
 	END "ALL";
 
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF COMPLEX; op: PROCEDURE(x: COMPLEX): COMPLEX): ARRAY {UNSAFE} [?] OF COMPLEX; (*should also accept operator ?*)
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF COMPLEX; op: PROCEDURE {DELEGATE}(x: COMPLEX): COMPLEX): ARRAY {UNSAFE} [?] OF COMPLEX; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpZ(RESULT,x,SIZEOF(COMPLEX),GenericLoopZ,op);
 		RETURN RESULT;
 	END "ALL";
 
-	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF LONGCOMPLEX; op: PROCEDURE(x: LONGCOMPLEX): LONGCOMPLEX): ARRAY {UNSAFE} [?] OF LONGCOMPLEX; (*should also accept operator ?*)
+	OPERATOR "ALL"*(CONST x: ARRAY {UNSAFE} [?] OF LONGCOMPLEX; op: PROCEDURE {DELEGATE}(x: LONGCOMPLEX): LONGCOMPLEX): ARRAY {UNSAFE} [?] OF LONGCOMPLEX; (*should also accept operator ?*)
 	BEGIN
 		ApplyGenericUnaryAAOpLZ(RESULT,x,SIZEOF(LONGCOMPLEX),GenericLoopLZ,op);
 		RETURN RESULT;

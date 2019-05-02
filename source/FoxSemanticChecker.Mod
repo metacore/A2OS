@@ -8553,6 +8553,12 @@ TYPE
 			rightParameter := right.firstParameter;
 			i := 0;
 			result := 0;
+			IF right.isDelegate & ~procedureType.isDelegate THEN
+				result := Infinity;
+			ELSIF procedureType.isDelegate & ~right.isDelegate THEN
+				INC(result);
+			END; 
+			
 			(*! taken from paco, seems to not be 100% correct, check (in particular array part -> length of arrays??) *)
 			WHILE (formalParameter # NIL) & (result # Infinity) DO
 				distance := TypeDistance(system,rightParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);

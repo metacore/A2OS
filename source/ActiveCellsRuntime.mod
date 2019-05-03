@@ -401,7 +401,7 @@ type
 		moduleName, typeName, name: array 256 of char;
 		m: Modules.Module;
 		typeInfo: Modules.TypeDesc;
-		i, res: longint; 
+		i: size; res: longint; 
 		str: array 256 of char;
 		scope: Cell;
 		unloaded: longint;

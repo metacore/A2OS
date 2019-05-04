@@ -1686,8 +1686,8 @@ VAR
 		JE	aligned	;  already aligned
 		align:
 		;  one single element processing UNTIL 128 bt alignment achieved
-		MOVSS	XMM1, [RBX]	;
-		MOVSS	XMM0, [RCX]	;
+		MOVSS	XMM0, [RBX]	;
+		MOVSS	XMM1, [RCX]	;
 		SUBSS	XMM0, XMM1	;
 		MOVSS	[RDX], XMM0	;
 		ADD	RBX, 4	;

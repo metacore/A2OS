@@ -8554,9 +8554,9 @@ TYPE
 			i := 0;
 			result := 0;
 			IF right.isDelegate & ~procedureType.isDelegate THEN
-				result := Infinity;
-			ELSIF procedureType.isDelegate & ~right.isDelegate THEN
 				INC(result);
+			ELSIF procedureType.isDelegate & ~right.isDelegate THEN
+				result := Infinity;
 			END; 
 			
 			(*! taken from paco, seems to not be 100% correct, check (in particular array part -> length of arrays??) *)

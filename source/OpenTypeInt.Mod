@@ -11,8 +11,6 @@ TYPE
 	FUnit* = INTEGER;						(** unscaled point coordinates **)
 	Fixed* = LONGINT;						(** fixed point format 16.16 used for scalar fixed point numbers **)
 
-	INT64 = ARRAY 8 OF CHAR;				(* huge integers for extended precision arithmetic *)
-
 	(** program code **)
 	Code* = POINTER TO ARRAY OF CHAR;
 
@@ -134,162 +132,34 @@ TYPE
 VAR
 	EmptyZone*: Zone;					(** zone containing zero contours and zero points **)
 	Builtin: ARRAY 256 OF Primitive;		(* instruction for each opcode *)
-	Zero64: INT64;
 	Notify: Notifier;
 	NotifyData: NotifierData;
 
-
-(*--- 64bit Arithmetic ---*)
-
-PROCEDURE ToINT64 (x: LONGINT; VAR y: INT64);
-BEGIN
-	y[0] := CHR(x MOD 100H);
-	y[1] := CHR(ASH(x, -8) MOD 100H);
-	y[2] := CHR(ASH(x, -16) MOD 100H);
-	y[3] := CHR(ASH(x, -24) MOD 100H);
-	y[4] := CHR(ASH(x, -31) MOD 100H);
-	y[5] := y[4]; y[6] := y[4]; y[7] := y[4]
-END ToINT64;
-
-PROCEDURE FromINT64 (x: INT64; VAR y: LONGINT);
-BEGIN
-	y := ASH(ORD(x[3]), 24) + ASH(ORD(x[2]), 16) + ASH(ORD(x[1]), 8) + ORD(x[0])
-END FromINT64;
-
-PROCEDURE AddINT64 (a, b: INT64; VAR c: INT64);
-	VAR sum, i: LONGINT;
-BEGIN
-	sum := 0;
-	FOR i := 0 TO 7 DO
-		sum := ORD(a[i]) + ORD(b[i]) + ASH(sum, -8) MOD 100H;
-		c[i] := CHR(sum MOD 100H)
-	END
-END AddINT64;
-
-PROCEDURE SubINT64 (a, b: INT64; VAR c: INT64);
-	VAR sum, i: LONGINT;
-BEGIN
-	sum := 256;
-	FOR i := 0 TO 7 DO
-		sum := 255 + ORD(a[i]) - ORD(b[i]) + ASH(sum, -8) MOD 100H;
-		c[i] := CHR(sum MOD 100H)
-	END
-END SubINT64;
-
-PROCEDURE LeqINT64 (a, b: INT64): BOOLEAN;
-	VAR i: LONGINT;
-BEGIN
-	IF (a[7] >= 80X) & (b[7] < 80X) THEN
-		RETURN TRUE
-	ELSIF (a[7] < 80X) & (b[7] >= 80X) THEN
-		RETURN FALSE
-	ELSE
-		FOR i := 7 TO 0 BY -1 DO
-			IF a[i] < b[i] THEN RETURN TRUE
-			ELSIF a[i] > b[i] THEN RETURN FALSE
-			END
-		END;
-		RETURN TRUE	(* equal *)
-	END
-END LeqINT64;
-
-PROCEDURE ShiftINT64 (VAR a: INT64; n: LONGINT);
-	VAR c, i, j, b: LONGINT;
-BEGIN
-	c := 0;
-	IF n > 0 THEN
-		n := n MOD 64;
-		i := 7; j := 7 - n DIV 8; n := n MOD 8;
-		c := ASH(ORD(a[j]), n) MOD 100H;
-		WHILE j > 0 DO
-			DEC(j); b := ORD(a[j]);
-			a[i] := CHR(c + ASH(b, n-8)); DEC(i);
-			c := ASH(b, n) MOD 100H
-		END;
-		WHILE i >= 0 DO
-			a[i] := CHR(c); c := 0; DEC(i)
-		END
-	ELSIF n < 0 THEN
-		n := (-n) MOD 64;
-		i := 0; j := n DIV 8; n := n MOD 8;
-		c := ASH(ORD(a[j]), -n);
-		WHILE j < 7 DO
-			INC(j); b := ORD(a[j]);
-			a[i] := CHR(c + ASH(b, 8-n) MOD 100H); INC(i);
-			c := ASH(b, -n)
-		END;
-		WHILE i < 8 DO
-			a[i] := CHR(c); c := ASH(c, -8); INC(i)
-		END
-	END
-END ShiftINT64;
-
-PROCEDURE MulINT64 (a, b: INT64; VAR c: INT64);
-	VAR i, sum, j: LONGINT;
-BEGIN
-	FOR i := 0 TO 7 DO c[i] := 0X END;
-	FOR i := 0 TO 7 DO
-		sum := 0;
-		FOR j := 0 TO 7-i DO
-			sum := LONG(ORD(a[i])) * LONG(ORD(b[j])) + ASH(sum, -8) MOD 100H + ORD(c[i+j]);
-			c[i+j] := CHR(sum MOD 100H)
-		END
-	END
-END MulINT64;
-
-PROCEDURE DivINT64 (a, b: INT64; VAR q: INT64);
-	VAR positive: BOOLEAN; i: LONGINT; e: INT64;
-BEGIN
-	positive := TRUE;
-	IF ~LeqINT64(Zero64, a) THEN positive := ~positive; SubINT64(Zero64, a, a) END;
-	IF ~LeqINT64(Zero64, b) THEN positive := ~positive; SubINT64(Zero64, b, b) END;
-	FOR i := 0 TO 7 DO q[i] := 0X; e[i] := 0X END; e[0] := 1X;
-	ShiftINT64(b, 32);
-	i := 0;
-	REPEAT
-		ShiftINT64(q, 1); ShiftINT64(b, -1);
-		IF LeqINT64(b, a) THEN
-			SubINT64(a, b, a); AddINT64(q, e, q)
-		END;
-		INC(i)
-	UNTIL i = 32;
-	IF ~positive THEN SubINT64(Zero64, q, q) END
-END DivINT64;
 
 
 (**--- Arithmetic ---**)
 
 PROCEDURE ShiftDiv* (a, n, d: LONGINT): LONGINT;
-	VAR b, r: LONGINT; a64, d64, h64: INT64;
+	VAR b: LONGINT; 
 BEGIN
-	b := ASH(1, 31-n);
+	b := ASH( 1, 31-n );
 	IF (-b <= a) & (a < b) THEN
-		r := (ASH(a, n) + d DIV 2) DIV d
+		RETURN (ASH( a, n ) + d DIV 2) DIV d
 	ELSE
-		ToINT64(a, a64); ShiftINT64(a64, n);
-		ToINT64(d, d64); h64 := d64; ShiftINT64(h64, -1);
-		AddINT64(a64, h64, a64);
-		DivINT64(a64, d64, a64);
-		FromINT64(a64, r)
+		RETURN SHORT(  (ASH( LONG(a), n ) + d DIV 2) DIV d )
 	END;
-	RETURN r
 END ShiftDiv;
 
 PROCEDURE MulShift* (a, b, n: LONGINT): LONGINT;
-	VAR a64, b64, c64: INT64; c: LONGINT;
 BEGIN
 	IF (-10000H <= a) & (a < 10000H) & (-8000H <= b) & (b < 8000H) THEN
 		RETURN ASH(a * b, n)
 	ELSE
-		ToINT64(a, a64); ToINT64(b, b64);
-		MulINT64(a64, b64, c64); ShiftINT64(c64, n);
-		FromINT64(c64, c);
-		RETURN c
+		RETURN SHORT( ASH(LONG(a) * b, n) )
 	END
 END MulShift;
 
-PROCEDURE MulDiv* (a, b, c: LONGINT): LONGINT;
-VAR a64, b64, m64, c64, d64: INT64; d: LONGINT;
+PROCEDURE MulDiv*( a, b, c: LONGINT ): LONGINT;
 BEGIN
 	IF (-10000H <= a) & (a < 10000H) & (-8000H <= b) & (b < 8000H) THEN
 		IF c > 0 THEN
@@ -302,18 +172,23 @@ BEGIN
 			HALT(100);  (* a trap is an inacceptable behavior during system startup (e.g. if the font is too small ..) *)
 		END
 	ELSE
-		ToINT64(a, a64); ToINT64(b, b64);
-		MulINT64(a64, b64, m64);
-		ToINT64(c, c64); DivINT64(m64, c64, d64);
-		FromINT64(d64, d);
-		RETURN d
+		IF c > 0 THEN
+			RETURN SHORT( (LONG(a) * b + c DIV 2) DIV c )
+		ELSIF c < 0 THEN
+			c := -c;
+			RETURN SHORT( -((LONG(a) * b + c DIV 2) DIV c) )
+		ELSE
+			RETURN 0; (* division by zero -- gracefully ignored ... *)
+			HALT(100);  (* a trap is an inacceptable behavior during system startup (e.g. if the font is too small ..) *)
+		END
 	END
 END MulDiv;
 
-PROCEDURE Norm* (x, y: F26D6): F26D6;
-	VAR n, r, b, t, i: LONGINT; x64, y64, n64, r64, b64, t64: INT64;
+PROCEDURE Norm*( x, y: F26D6 ): F26D6;
+	VAR n, r, b, t: LONGINT; nh, rh, bh, th: HUGEINT;
 BEGIN
-	IF (-8000H <= x) & (x < 8000H) & (-8000H <= y) & (y < 8000H) THEN	(* x*x + y*y representable in 32 bits *)
+	IF (-8000H <= x) & (x < 8000H) & (-8000H <= y) & (y < 8000H) THEN	
+		(* x*x + y*y representable in 32 bits *)
 		n := x * x + y * y;
 		r := 0; b := 40000000H;
 		REPEAT
@@ -322,23 +197,20 @@ BEGIN
 				DEC(n, t);
 				r := t + b
 			END;
-			r := r DIV 2; b := b DIV 4
+			r := r DIV 2;  b := b DIV 4
 		UNTIL b = 0
 	ELSE
-		ToINT64(x, x64); ToINT64(y, y64);
-		MulINT64(x64, x64, x64); MulINT64(y64, y64, y64);
-		AddINT64(x64, y64, n64);
-		FOR i := 0 TO 7 DO r64[i] := 0X; b64[i] := 0X END; b64[7] := 40X;
+		nh := LONG(x)*LONG(x) + LONG(y)*LONG(y);
+		rh := 0;  bh := 4000000000000000H;
 		REPEAT
-			AddINT64(r64, b64, t64);
-			IF LeqINT64(t64, n64) THEN
-				SubINT64(n64, t64, n64);
-				AddINT64(t64, b64, r64)
+			th := rh + bh;
+			IF th <= nh THEN
+				nh := nh - th;
+				rh := th + bh
 			END;
-			ShiftINT64(r64, -1); ShiftINT64(b64, -2);
-			i := 0; WHILE (i < 8) & (b64[i] = 0X) DO INC(i) END
-		UNTIL i = 8;
-		FromINT64(r64, r)
+			rh := rh DIV 2;  bh := bh DIV 4
+		UNTIL bh = 0;
+		r := SHORT(rh)
 	END;
 	RETURN r
 END Norm;
@@ -380,8 +252,8 @@ BEGIN
 		RETURN 0	(* some fonts use CVT[-1]; FreeType and TTI return 0, too *)
 	ELSE
 		ratio := Ratio(c);
-		IF ratio = 10000H THEN RETURN c.cvt[n]
-		ELSE RETURN MulShift(c.cvt[n], ratio, -16)
+		IF ratio = 10000H THEN  RETURN c.cvt[n]
+		ELSE  RETURN MulShift(c.cvt[n], ratio, -16)
 		END
 	END
 END CVTValue;
@@ -392,8 +264,8 @@ BEGIN
 	sign := x; x := ABS(x);
 	x := x - phase + threshold;
 	x := x - x MOD period + phase;
-	IF x < 0 THEN INC(x, period) END;
-	IF sign < 0 THEN x := -x END;
+	IF x < 0 THEN  INC(x, period)  END;
+	IF sign < 0 THEN  x := -x  END;
 	RETURN x
 END Round;
 
@@ -426,8 +298,8 @@ BEGIN
 		END
 	ELSE
 		dot := LONG(proj.x) * LONG(free.x) + LONG(proj.y) * LONG(free.y);
-		INC(p.cur[X], MulDiv(4000H*LONG(free.x), dist, dot)); p.touched[X] := TRUE;
-		INC(p.cur[Y], MulDiv(4000H*LONG(free.y), dist, dot)); p.touched[Y] := TRUE
+		INC(p.cur[X], MulDiv(4000H*LONG(free.x), dist, dot));  p.touched[X] := TRUE;
+		INC(p.cur[Y], MulDiv(4000H*LONG(free.y), dist, dot));  p.touched[Y] := TRUE
 	END
 END Move;
 
@@ -562,7 +434,7 @@ BEGIN
 	ELSE	(* set to y-axis *)
 		c.proj.x := 0; c.proj.y := 4000H
 	END;
-	c.free := c.proj; c.proj2 := c.proj;
+	c.free := c.proj;  c.proj2 := c.proj;
 	c.ratio := 0;
 	INC(c.pc)
 END SVTCA;
@@ -782,7 +654,7 @@ PROCEDURE SROUND (VAR c: Context);
 	VAR gridPeriod: F26D6; code, cd: LONGINT;
 BEGIN
 	IF ODD(ORD(c.code[c.pc])) THEN								(* super round 45 degrees *)
-		gridPeriod := 45												(* funnily enough, this is really 64*(1/sqrt(2)) *)
+		gridPeriod := 45											(* funnily enough, this is really 64*(1/sqrt(2)) *)
 	ELSE
 		gridPeriod := 64
 	END;
@@ -808,7 +680,7 @@ END SROUND;
 PROCEDURE SLOOP (VAR c: Context);
 BEGIN
 	c.loop := SHORT(c.stack[c.tos]); DEC(c.tos); INC(c.pc);
-	IF c.loop = 0 THEN													(* ERROR, stop execution *)
+	IF c.loop = 0 THEN												(* ERROR, stop execution *)
 		c.pc := c.codeLen;
 	END;
 END SLOOP;
@@ -904,7 +776,7 @@ END FLIPOFF;
 (* set angle weight *)
 PROCEDURE SANGW (VAR c: Context);
 BEGIN
-	DEC(c.tos); INC(c.pc)											(* corresponding instruction AA is obsolete *)
+	DEC(c.tos); INC(c.pc)							(* corresponding instruction AA is obsolete *)
 END SANGW;
 
 (* set delta base *)
@@ -1261,36 +1133,47 @@ BEGIN
 	INC(c.pc)
 END ALIGNRP;
 
+PROCEDURE DivHL( a,  b: HUGEINT ): LONGINT;
+VAR q: HUGEINT; positive: BOOLEAN;
+BEGIN
+	positive := TRUE;
+	IF a < 0 THEN  positive := ~positive;  a := -a  END;
+	IF b < 0 THEN  positive := ~positive;  b := -b  END;	
+	q := a DIV b;
+	IF ~positive THEN  q := -q  END;	
+	RETURN SHORT( q )
+END DivHL;
+
 (* move point to intersection of two lines *)
 PROCEDURE ISECT (VAR c: Context);
 	VAR
-		b1, b0, a1, a0, p: LONGINT; pt: Points; ax0, ay0, ax1, ay1, bx0, by0, bx1, by1, d, rx, ry: F26D6;
-		dxa, dya, dxb, dyb, dx, dy, u, v, det: INT64;
+		b1, b0, a1, a0, p: LONGINT; pt: Points; 
+		ax0, ay0, ax1, ay1, bx0, by0, bx1, by1: F26D6;
+		dxa, dya, dxb, dyb, dx, dy, v, det: HUGEINT;
 BEGIN
-	b1 := c.stack[c.tos]; DEC(c.tos);
-	b0 := c.stack[c.tos]; DEC(c.tos);
-	a1 := c.stack[c.tos]; DEC(c.tos);
-	a0 := c.stack[c.tos]; DEC(c.tos);
-	p := c.stack[c.tos]; DEC(c.tos);
+	b1 := c.stack[c.tos];  DEC(c.tos);
+	b0 := c.stack[c.tos];  DEC(c.tos);
+	a1 := c.stack[c.tos];  DEC(c.tos);
+	a0 := c.stack[c.tos];  DEC(c.tos);
+	p := c.stack[c.tos];  DEC(c.tos);
 	pt := c.zp2.pt;
-	pt[p].touched[X] := TRUE; pt[p].touched[Y] := TRUE;
-	ax0 := c.zp1.pt[a0].cur[X]; ay0 := c.zp1.pt[a0].cur[Y];
-	ax1 := c.zp1.pt[a1].cur[X]; ay1 := c.zp1.pt[a1].cur[Y];
-	bx0 := c.zp0.pt[b0].cur[X]; by0 := c.zp0.pt[b0].cur[Y];
-	bx1 := c.zp0.pt[b1].cur[X]; by1 := c.zp0.pt[b1].cur[Y];
-	ToINT64(ax1 - ax0, dxa); ToINT64(ay1 - ay0, dya);
-	ToINT64(bx1 - bx0, dxb); ToINT64(by1 - by0, dyb);
-	MulINT64(dya, dxb, u); MulINT64(dyb, dxa, v);
-	SubINT64(u, v, det);
-	FromINT64(det, d);
-	IF ABS(d) >= 80H THEN
-		ToINT64(bx0 - ax0, dx); ToINT64(by0 - ay0, dy);
-		SubINT64(Zero64, dyb, dyb);
-		MulINT64(dx, dyb, u); MulINT64(dy, dxb, v); AddINT64(u, v, v);
-		MulINT64(v, dxa, u); DivINT64(u, det, u); FromINT64(u, rx);
-		MulINT64(v, dya, u); DivINT64(u, det, u); FromINT64(u, ry);
-		pt[p].cur[X] := ax0 + rx;
-		pt[p].cur[Y] := ay0 + ry
+	pt[p].touched[X] := TRUE;  pt[p].touched[Y] := TRUE;
+	ax0 := c.zp1.pt[a0].cur[X];  ay0 := c.zp1.pt[a0].cur[Y];
+	ax1 := c.zp1.pt[a1].cur[X];  ay1 := c.zp1.pt[a1].cur[Y];
+	bx0 := c.zp0.pt[b0].cur[X];  by0 := c.zp0.pt[b0].cur[Y];
+	bx1 := c.zp0.pt[b1].cur[X];  by1 := c.zp0.pt[b1].cur[Y];
+	
+	dxa := ax1 - ax0;  dya := ay1 - ay0;
+	dxb := bx1 - bx0;  dyb := by1 - by0;
+	det := dya*dxb - dyb*dxa;
+	
+	IF ABS(det) >= 80H THEN
+		dx := bx0 - ax0;  
+		dy := by0 - ay0;
+		dyb := -dyb;
+		v := dx*dyb + dy*dxb;  
+		pt[p].cur[X] := ax0 + DivHL( v*dxa, det ); 
+		pt[p].cur[Y] := ay0 + DivHL( v*dya, det );
 	ELSE	(* lines are (almost) parallel *)
 		pt[p].cur[X] := (ax0 + ax1 + bx0 + bx1) DIV 4;
 		pt[p].cur[Y] := (ay0 + ay1 + by0 + by1) DIV 4
@@ -2090,8 +1973,6 @@ END InstallNotifier;
 
 BEGIN
 	InitBuiltins;
-	Zero64[0] := 0X; Zero64[1] := 0X; Zero64[2] := 0X; Zero64[3] := 0X;
-	Zero64[4] := 0X; Zero64[5] := 0X; Zero64[6] := 0X; Zero64[7] := 0X;
 	NewZone(EmptyZone, 0, 0);
 	Notify := NIL; NotifyData := NIL
 END OpenTypeInt.

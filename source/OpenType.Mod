@@ -921,6 +921,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 		VAR
 			font: Font; zone: OpenTypeInt.Zone; pt: OpenTypeInt.Points; points, instrLen, xmin, ymin, xmax, ymax, i, j, val: INTEGER;
 			flag: SHORTINT; byte: CHAR; x, y, aw, lsb: FUnit; dx: F26D6; context: OpenTypeInt.Context;
+			flags: ARRAY 512 OF SHORTINT;
 	BEGIN
 		font := glyph.font; zone := glyph.simple; pt := zone.pt;
 		zone.contours := 0; points := 0; instrLen := 0;
@@ -949,15 +950,16 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 				ELSE font.file.Set(r,  r.file.Pos(r) + instrLen)
 				END
 			END;
-
-			(* load flags (small hack: store flags in pt[i].cur[0]) *)
+			
+			(* load flags *)
+			FOR i := 0 TO points-1 DO  flags[i] := 0  END;
 			i := 0;
 			WHILE i < points DO
-				Files.ReadSInt(r, flag); pt[i].cur[0] := flag;
+				Files.ReadSInt(r, flag); flags[i] := flag;
 				IF ODD(flag DIV 8) THEN	(* repeat flag set *)
 					r.file.Read(r, byte); j := ORD(byte);
 					WHILE j > 0 DO
-						INC(i); pt[i].cur[0] := flag; DEC(j)
+						INC(i); flags[i] := flag; DEC(j)
 					END
 				END;
 				INC(i)
@@ -966,7 +968,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 			(* load x-coordinates *)
 			x := 0;
 			FOR i := 0 TO points-1 DO
-				flag := SHORT(SHORT(pt[i].cur[0]));
+				flag := flags[i];
 				IF ODD(flag DIV 2) THEN							(* x is short *)
 					r.file.Read(r, byte);
 					IF ODD(flag DIV 10H) THEN INC(x, ORD(byte))	(* short x-value is positive *)
@@ -981,7 +983,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 			(* load y-coordinates *)
 			y := 0;
 			FOR i := 0 TO points-1 DO
-				flag := SHORT(SHORT(pt[i].cur[0]));
+				flag := flags[i];
 				IF ODD(flag DIV 4) THEN							(* y is short *)
 					r.file.Read(r, byte);
 					IF ODD(flag DIV 20H) THEN INC(y, ORD(byte))	(* short y-value is positive *)
@@ -994,7 +996,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 			END;
 
 			FOR i := 0 TO points-1 DO
-				pt[i].onCurve := ODD(pt[i].cur[0])
+				pt[i].onCurve := ODD(flags[i])
 			END
 		END;
 

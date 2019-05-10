@@ -273,6 +273,9 @@ VAR
 		WHILE cont < outline.contours DO
 			first := outline.first[cont]; points := outline.first[cont+1] - first;
 			i := 0; WHILE (i < points) & ~pt[first + i].onCurve DO INC(i) END;	(* find first point that is on contour *)
+			IF i = points THEN (* found no point on curve *)
+				i := 0  (* else in some fonts this character is left blank! *)
+			END;
 			IF i < points THEN
 				j := i; p := first + j;
 				hint := last; hint.link := last;

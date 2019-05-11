@@ -3039,16 +3039,21 @@ TYPE
 				END;
 			END;
 
-			assignable := (left = NIL) OR left.assignable OR (left IS SyntaxTree.DereferenceDesignator) OR (left IS SyntaxTree.SelfDesignator) OR (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Import);
+			assignable := (left = NIL) OR left.assignable OR (left IS SyntaxTree.DereferenceDesignator) 
+				OR (left IS SyntaxTree.SelfDesignator) 
+				OR (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Import);
 
 			IF (currentScope # NIL) & (symbol.scope.ownerModule # currentScope.ownerModule) THEN
 				assignable := assignable & (SyntaxTree.PublicWrite IN symbol.access);
 			ELSE
 				assignable := assignable & (SyntaxTree.InternalWrite IN symbol.access);
 			END;
-
+			
 			assignable := assignable & ((symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter)
-				& (symbol(SyntaxTree.Parameter).kind # SyntaxTree.ConstParameter) & ~(symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType));
+				& (symbol(SyntaxTree.Parameter).kind # SyntaxTree.ConstParameter) & ~(symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType)
+				)
+				OR (symbol IS SyntaxTree.Alias) & (symbol(SyntaxTree.Alias).expression.assignable)
+				;
 
 			result := SyntaxTree.NewSymbolDesignator(position,original,left,symbol);
 			result.SetType(symbol.type);

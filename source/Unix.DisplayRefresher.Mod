@@ -25,6 +25,12 @@ PROCEDURE Install*;
 BEGIN (* load module *)
 END Install;
 
+PROCEDURE Refresh*;
+BEGIN
+	manager.RefreshView(viewport);
+END Refresh;
+
+
 PROCEDURE Cleanup;
 BEGIN
 	IF (manager # NIL) THEN manager.RemoveMessagePreview(Handle); END;
@@ -36,6 +42,7 @@ BEGIN
 	viewport := WMWindowManager.GetDefaultView();
 	IF (manager # NIL) & (viewport # NIL) THEN
 		manager.InstallMessagePreview(Handle);
+		Refresh;
 		KernelLog.String("DisplayRefresher installed.");
 	ELSE
 		KernelLog.String("DisplayRefresher installation failed (could not find window manager or viewport) ");
@@ -44,5 +51,6 @@ BEGIN
 END DisplayRefresher.
 
 DisplayRefresher.Install ~
+DisplayRefresher.Refresh ~
 
 System.Free DisplayRefresher ~

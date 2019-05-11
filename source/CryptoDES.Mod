@@ -124,7 +124,8 @@ TYPE
 
 	END Cipher;
 
-	PROCEDURE -Split*( x: SET32; VAR i4: Ind4 );
+	(* temporarily disabled the inlining -- the compiler inliner still provides problems with the scope symbols *)
+	PROCEDURE Split*( x: SET32; VAR i4: Ind4 );
 	BEGIN
 		i4.a := S.VAL( LONGINT, x ) MOD 40H;
 		i4.b := S.VAL( LONGINT, x ) DIV 100H MOD 40H;

@@ -34,7 +34,7 @@ VAR
 	END CallerBP;
 
 	PROCEDURE ViewStack( ebp, esp: ADDRESS; CONST s: ARRAY OF CHAR);
-	VAR i: ADDRESS; val: LONGINT; prevBP:ADDRESS;
+	VAR i: ADDRESS; val: SIZE; prevBP:ADDRESS;
 	CONST adrSize= SIZEOF(ADDRESS);
 	BEGIN
 		Log.String( ">>>>> " );  Log.String(s); Log.String (" >>>>>> "); Log.Ln;

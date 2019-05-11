@@ -1326,6 +1326,7 @@ TYPE
 					NextChar;
 				| '@': symbol := symAt;
 					NextChar;
+									
 				| '$': NextChar;
 					IF char = '$' THEN
 						symbol := symPCOffset; NextChar;
@@ -1683,6 +1684,7 @@ TYPE
 
 			PROCEDURE GetOffsetFixup (CONST ident: ARRAY OF CHAR; VAR operand: Operand);
 			VAR scopeSymbol: SyntaxTree.Symbol;name: Basic.SegmentedName; symbol: IntermediateCode.Section;
+				type: IntermediateCode.Type;
 			BEGIN
 				IF labels.Find(ident) # NIL THEN RETURN END;
 				scopeSymbol := GetScopeSymbol (ident);
@@ -1707,9 +1709,17 @@ TYPE
 					END;
 					SetSymbol(operand,name,0,0,0);
 				ELSE
+					InitMem(operand,IntermediateCode.Bits32,InstructionSet.regRBP,(scopeSymbol.offsetInBits DIV 8)); (* or immediate ?? *)					
+					
+					(*SetSymbol(operand,name,0,0,0);*)
+				(*ELSE
 					Error("direct access to local variable offset forbidden");
+				*)
 				END;
+				operand.sizeInBytes := SHORTINT(scopeSymbol.type.resolved.sizeInBits DIV 8);
+				(*
 				operand.sizeInBytes := emitter.cpuBits;
+				*)
 			END GetOffsetFixup;
 
 			(* the following procedure is used to adapt sizes for relative jumps *)
@@ -1894,13 +1904,12 @@ TYPE
 							END;
 						ELSE
 							(* number or identifier (symbol) *)
-						InitImm(offset,size,0);
-
+							InitImm(offset,size,0);
 							IF (scope # NIL) & (symbol = symIdent) THEN (* identifier: must be a symbol *)
 								GetOffsetFixup (idents, offset);
 							END;
 
-							IF offset.symbol.name = "" THEN (* nothing could be fixuped, must be a number / constant *)
+							IF (offset.symbol.name = "") & (offset.register = none) THEN (* nothing could be fixuped, must be a number / constant *)
 								type := offset.type; currentFixup := ""; currentLabel := NIL;
 								IF ~Expression (offset.val, FALSE,type) THEN
 									RETURN FALSE;

@@ -433,37 +433,77 @@ TYPE
 		END GenerateCellOffsets;
 
 		PROCEDURE GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN;
-		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT;
+		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT; s: SyntaxTree.Scope;
+			bscope: SyntaxTree.Scope;
 		BEGIN
 			IF scope IS SyntaxTree.RecordScope THEN (* increasing indices *)
 				RETURN GenerateRecordOffsets(scope(SyntaxTree.RecordScope).ownerRecord)
 			ELSIF scope IS SyntaxTree.CellScope THEN
 				RETURN GenerateCellOffsets(scope(SyntaxTree.CellScope).ownerCell);
 			ELSE (* module scope or procedure scope: decreasing indices *)
-				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope));
-				offset := 0;
+				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope) OR (scope IS SyntaxTree.BlockScope));
+	
+				bscope := scope; 
+				WHILE (bscope IS SyntaxTree.BlockScope) DO 
+					bscope := bscope.outerScope;
+				END; 
+				(*
+				IF scope IS SyntaxTree.BlockScope THEN
+					offset := scope.outerScope.currentVariableOffset;
+				ELSE
+					offset := 0;
+				END;
+				*)
+				offset := bscope.currentVariableOffset;
 
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
-					IF (variable.externalName # NIL) THEN
-						variable.SetOffset(offset)
-					ELSIF ~variable.fictive THEN
-						size := SizeOf(variable.type.resolved);
-						IF size < 0 THEN RETURN FALSE END;
-						DEC(offset,size);
-
-						IF variable.alignment > 0 THEN
-							Basic.Align(offset, -variable.alignment*dataUnit);
-						ELSE
-							alignment := AlignmentOf(SELF.variableAlignment,variable.type.resolved);
-							Basic.Align(offset,-alignment);
+					IF variable.offsetInBits = MIN(LONGINT) THEN
+						IF (variable.externalName # NIL) THEN
+							variable.SetOffset(offset)
+						ELSIF ~variable.fictive & ~variable.preferRegister THEN
+							size := SizeOfVariable(variable);
+							IF size < 0 THEN RETURN FALSE END;
+							DEC(offset,size);
+							IF variable.alignment > 0 THEN
+								Basic.Align(offset, -variable.alignment*dataUnit);
+							ELSE
+								alignment := AlignmentOf(SELF.variableAlignment,variable.type.resolved);
+								Basic.Align(offset,-alignment);
+							END;
+							variable.SetOffset(offset);
 						END;
-
-						variable.SetOffset(offset);
 					END;
 					variable := variable.nextVariable;
 				END;
 			END;
+			bscope.SetCurrentVariableOffset(offset);
+			IF offset < bscope.minVariableOffset THEN
+				bscope.SetMinVariableOffset(offset);
+			END;
+			(*
+			WHILE (scope IS SyntaxTree.BlockScope) DO
+				TRACE(scope, scope.minVariableOffset); 
+				IF scope.minVariableOffset < scope.outerScope.minVariableOffset THEN
+					scope.outerScope.SetMinVariableOffset(scope.minVariableOffset);
+				END;
+				scope := scope.outerScope; 
+			END;
+			*)
+			(*
+			WITH scope: SyntaxTree.ProcedureScope DO
+				s := scope.firstScope;
+				WHILE (s # NIL) DO (* block scopes *)
+					IF ~GenerateVariableOffsets(s) THEN RETURN FALSE END;
+					s := s.nextScope;
+				END;
+			| SyntaxTree.BlockScope DO
+				IF offset < scope.outerScope.minVariableOffset THEN 
+					scope.outerScope.SetMinVariableOffset(offset);
+				END;
+			ELSE
+			END;
+			*)
 			RETURN TRUE
 		END GenerateVariableOffsets;
 
@@ -649,6 +689,36 @@ TYPE
 				RETURN SizeOf(par.type);
 			END;
 		END SizeOfParameter;
+
+		PROCEDURE SizeOfVariable*(var: SyntaxTree.Variable):LONGINT;
+		BEGIN
+			IF (var.type.resolved IS SyntaxTree.MathArrayType) OR (var.type.resolved IS SyntaxTree.ArrayType) THEN
+				IF (var.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
+					RETURN addressSize;
+				ELSE
+					RETURN SizeOf(var.type)
+				END;
+			ELSIF var.type.resolved IS SyntaxTree.RangeType THEN
+				IF var.kind = SyntaxTree.VarParameter THEN
+					RETURN addressSize
+				ELSE
+					RETURN SizeOf(rangeType) (* array range components are materialized on stack for both value and const parameters *)
+				END
+			ELSIF var.type.resolved IS SyntaxTree.RecordType THEN
+				IF (var.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
+					RETURN 2*addressSize
+				ELSE
+					RETURN SizeOf(var.type);
+				END;
+			ELSIF var.kind = SyntaxTree.VarParameter THEN
+				RETURN addressSize
+			ELSIF var.kind = SyntaxTree.ConstParameter THEN
+				RETURN SizeOf(var.type)
+			ELSE
+				RETURN SizeOf(var.type);
+			END;
+		END SizeOfVariable;
+
 
 		PROCEDURE AlignmentOf*(CONST alignment: Alignment;type: SyntaxTree.Type): LONGINT;
 		VAR result: LONGINT;

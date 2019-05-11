@@ -770,25 +770,33 @@ TYPE
 
 		PROCEDURE ResultRegister(CONST type: IntermediateCode.Type; part: LONGINT): LONGINT;
 		BEGIN
-			IF type.form IN IntermediateCode.Integer THEN
-				CASE type.sizeInBits OF
-					| 64:
-						IF cpuBits = 32 THEN
-							IF part = Low THEN RETURN EAX
-							ELSE RETURN EDX
-							END;
-						ELSE
-							ASSERT(part = Low);
-							RETURN RAX
-						END;
-					| 32: ASSERT(part=Low); RETURN EAX
-					| 16: ASSERT(part=Low); RETURN AX
-					| 8: ASSERT(part=Low); RETURN AL
+			IF type.length > 1 THEN
+				IF type.length = 4 THEN
+					RETURN XMM0;
+				ELSIF type.length = 8 THEN
+					RETURN YMM0;
 				END;
-			ELSIF ~backend.forceFPU THEN
-				RETURN XMM0
-			ELSE ASSERT(type.form = IntermediateCode.Float);ASSERT(part=Low);
-				RETURN ST0
+			ELSE
+				IF type.form IN IntermediateCode.Integer THEN
+					CASE type.sizeInBits OF
+						| 64:
+							IF cpuBits = 32 THEN
+								IF part = Low THEN RETURN EAX
+								ELSE RETURN EDX
+								END;
+							ELSE
+								ASSERT(part = Low);
+								RETURN RAX
+							END;
+						| 32: ASSERT(part=Low); RETURN EAX
+						| 16: ASSERT(part=Low); RETURN AX
+						| 8: ASSERT(part=Low); RETURN AL
+					END;
+				ELSIF ~backend.forceFPU THEN
+					RETURN XMM0
+				ELSE ASSERT(type.form = IntermediateCode.Float);ASSERT(part=Low);
+					RETURN ST0
+				END;
 			END;
 		END ResultRegister;
 
@@ -1100,6 +1108,10 @@ TYPE
 		BEGIN RETURN operand.type.form = IntermediateCode.Float
 		END IsFloat;
 
+		PROCEDURE IsVector(CONST operand: IntermediateCode.Operand): BOOLEAN;
+		BEGIN RETURN operand.type.length > 1
+		END IsVector;
+
 		PROCEDURE IsComplex(CONST operand: IntermediateCode.Operand): BOOLEAN;
 		BEGIN RETURN (operand.type.form IN IntermediateCode.Integer) & (operand.type.sizeInBits > cpuBits)
 		END IsComplex;
@@ -1158,7 +1170,7 @@ TYPE
 			|IntermediateCode.trap: EmitTrap(instruction);
 			|IntermediateCode.br .. IntermediateCode.brlt: EmitBr(instruction)
 			|IntermediateCode.pop:
-				IF IsFloat(instruction.op1) THEN
+				IF IsFloat(instruction.op1) OR IsVector(instruction.op1) THEN
 					EmitPopFloat(instruction.op1)
 				ELSE
 					EmitPop(instruction.op1,Low);
@@ -1167,7 +1179,7 @@ TYPE
 					END;
 				END;
 			|IntermediateCode.push:
-				IF IsFloat(instruction.op1) THEN
+				IF IsFloat(instruction.op1) OR IsVector(instruction.op1) THEN
 					EmitPushFloat(instruction.op1)
 				ELSE
 					IF IsComplex(instruction.op1) THEN
@@ -3155,22 +3167,73 @@ TYPE
 		END EmitTrap;
 
 		PROCEDURE EmitAsm(CONST instruction: IntermediateCode.Instruction);
-		VAR reader: Streams.StringReader;  procedure: SyntaxTree.Procedure; scope: SyntaxTree.Scope;
+		VAR reader: Streams.StringReader;  procedure: SyntaxTree.Procedure;
 				len: LONGINT; symbol: SyntaxTree.Symbol; assembler: Assembler.Assembly;
 
 			inr, outr: IntermediateCode.Rules;
 			string: SyntaxTree.SourceCode;
 			i: LONGINT;
 			reg, dest: Assembler.Operand;
-			map: Assembler.RegisterMap;
+			map: Mapper;
 			register: LONGINT;
 			ticket: Ticket;
+			
+	TYPE Mapper = OBJECT (Assembler.RegisterMap)
+		VAR cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope;
+		
+			PROCEDURE & InitMapper (cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope);
+			BEGIN
+				SELF.cg := cg; SELF.scope := scope;
+			END InitMapper;
+			
+			
+			PROCEDURE Find(CONST name: ARRAY OF CHAR): LONGINT;
+			VAR register: LONGINT; symbol: SyntaxTree.Symbol; ticket: Ticket; 
+			BEGIN
+				register := Find^(name);
+				IF (register = InstructionSet.none) & (scope # NIL) THEN
+					symbol := scope.FindSymbol(Basic.MakeString(name));
+					IF symbol # NIL THEN 
+						WITH symbol: SyntaxTree.Variable DO
+							(*
+							TRACE(name,"variable",symbol.useRegister,symbol.registerNumber);
+							*)
+							IF symbol.preferRegister THEN
+								ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+								IF ticket = NIL THEN 
+									cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
+									ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+								END;
+								register := ticket.register;
+								(*TRACE(register);*)
+							END;
+						| SyntaxTree.Parameter DO
+							(*
+							TRACE(name,"parameter",symbol.useRegister,symbol.registerNumber);
+							*)
+							IF symbol.preferRegister THEN
+								ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+								IF ticket = NIL THEN 
+									cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
+									ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+								END;
+								register := ticket.register;
+							END;
+							
+						ELSE
+						END;
+					END;
+				END;
+				RETURN register;
+			END Find;
+		END Mapper;
+
 		BEGIN
 			IF instruction.op2.mode = IntermediateCode.ModeRule THEN	inr := instruction.op2.rule ELSE inr := NIL END;
 			IF instruction.op3.mode = IntermediateCode.ModeRule THEN outr := instruction.op3.rule ELSE outr := NIL END;
 			string := instruction.op1.string;
 
-			NEW(map);
+			NEW(map,SELF,instruction.scope);
 
 			IF inr # NIL THEN
 				FOR i := 0 TO LEN(inr)-1 DO
@@ -3195,10 +3258,9 @@ TYPE
 
 			symbol := in.symbol;
 			procedure := symbol(SyntaxTree.Procedure);
-			scope := procedure.procedureScope;
 			NEW(assembler,diagnostics,emitter);
 			assembler.useLineNumbers := Compiler.UseLineNumbers IN backend.flags;
-			assembler.Assemble(reader,instruction.textPosition,scope,in,in,module,procedure.access * SyntaxTree.Public # {}, procedure.isInline, map)	;
+			assembler.Assemble(reader,instruction.textPosition,instruction.scope,in,in,module,procedure.access * SyntaxTree.Public # {}, procedure.isInline, map)	;
 			error := error OR assembler.error;
 
 			IF outr # NIL THEN
@@ -3213,12 +3275,10 @@ TYPE
 					END;
 				END;
 			END;
-
 			(*
 			IntermediateCode.SetString(instruction.op1, string);
 			*)
 		END EmitAsm;
-
 	END CodeGeneratorAMD64;
 
 	BackendAMD64= OBJECT (IntermediateBackend.IntermediateBackend)

@@ -121,6 +121,7 @@ TYPE
 		subtype-: SHORTINT; (* for special backend instruction *)
 		textPosition-: Basic.Position; (* for error handling and tracking (findPC) *)
 		pc-: LONGINT; (* backend program counter (in bits) for debugging and for label fixups in backend *)
+		scope-: SyntaxTree.Scope; (* will replace rules *)
 		op1*,op2*,op3*: Operand; (* first operand typically provides the result, if any *)
 	END;
 
@@ -770,7 +771,7 @@ TYPE
 
 	BEGIN
 		(* nop - no operation, may be used for optimisations *)
-		AddFormat(nop, "nop", Undef, Undef, Undef, {});
+		AddFormat(nop, "nop", UndefReg, Undef, Undef, {});
 		(* mov dest src - mov content of src to dest, if a third parameter is provided (set to a register),
 			it has no meaning for interpreters or execution but provides a "reuse" hint for register allocators *)
 		AddFormat(mov, "mov", RegMem, RegMemImm, UndefReg, {SameSize12,Op1IsDestination});
@@ -950,6 +951,12 @@ TYPE
 		op.symbol.name := symbol;
 		op.symbol.fingerprint := fp;
 	END SetSymbol;
+	
+	PROCEDURE SetScope*(VAR instr: Instruction; scope: SyntaxTree.Scope);
+	BEGIN
+		instr.scope := scope;
+	END SetScope;
+	
 
 	PROCEDURE SetIntValue*(VAR op: Operand; intValue: HUGEINT);
 	BEGIN op.intValue := intValue
@@ -1218,7 +1225,7 @@ TYPE
 	END DenotesType;
 
 	PROCEDURE GetType*(system: Global.System; type: SyntaxTree.Type): Type;
-	VAR t: Type;
+	VAR t: Type; length: WORD;
 	BEGIN
 		type := type.resolved;
 		IF type IS SyntaxTree.CharacterType THEN
@@ -1249,6 +1256,7 @@ TYPE
 			WITH type: SyntaxTree.MathArrayType DO
 				IF type.form = SyntaxTree.Static THEN
 					t := GetType(system, type.arrayBase);
+					length := t.length;
 					ASSERT(t.length = 1);
 					ToVectorType(t, type.staticLength);
 					RETURN t

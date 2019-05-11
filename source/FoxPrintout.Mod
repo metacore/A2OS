@@ -731,18 +731,9 @@ TYPE
 
 		PROCEDURE VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator);
 		BEGIN
+			Scope(x.block.scope); 
 			VisitStatementBlock(x.block);
 		END VisitInlineCallDesignator;
-
-		PROCEDURE VisitStatementDesignator*(x: SyntaxTree.StatementDesignator);
-		BEGIN
-			Indent; Keyword("STATEMENT-DESIGNATOR ");
-			IF x.result # NIL THEN
-				Keyword("RETURNS ");
-				Expression(x.result)
-			END;
-			Indent; Statement(x.statement);
-		END VisitStatementDesignator;
 
 		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		BEGIN
@@ -847,7 +838,7 @@ TYPE
 				END;
 				w.String(string);
 			ELSE
-				w.Float(value,64)
+				w.Float(value,31)
 			END;
 		END FormatedFloat;
 
@@ -945,12 +936,13 @@ TYPE
 				Access(x.access);
 				w.String("}");
 				IF x.offsetInBits # MIN(LONGINT) THEN
-					w.String("@"); w.Hex(x.offsetInBits,1);
-				END;
-				IF x.type # NIL THEN
-				IF x.type.resolved.alignmentInBits >=0 THEN
-					w.String("@@"); w.Hex(x.type.resolved.alignmentInBits,1);
-				END;
+					w.String("@ofs="); w.Int(x.offsetInBits DIV 8,1);
+				ELSE
+					IF x.type # NIL THEN
+						IF x.type.resolved.alignmentInBits #0 THEN
+							w.String("@align="); w.Int(x.type.resolved.alignmentInBits DIV 8,1);
+						END;
+					END;
 				END;
 				EndComment;
 			END;
@@ -1056,6 +1048,8 @@ TYPE
 					Value(Global.NameAligned,x.alignment,first)
 				ELSIF x.fictive THEN
 					Value(Global.NameFictive, x.fictiveOffset, first);
+				ELSIF x.preferRegister THEN
+					Flag(Global.NameRegister,first);
 				END;
 				IF x.untraced THEN
 					Flag(Global.NameUntraced,first)
@@ -1094,6 +1088,33 @@ TYPE
 			w.DecIndent
 		END VariableList;
 
+		PROCEDURE AliasList(x: SyntaxTree.Alias);
+		VAR next: SyntaxTree.Alias;
+		BEGIN
+			w.IncIndent;
+			WHILE(x # NIL) DO
+				next := x.nextAlias;
+				IF (x.access # SyntaxTree.Hidden) OR (mode > SourceCode) THEN
+					Indent;
+					Comments(x.comment, x, FALSE);
+					PrintSymbol(x); 
+					IF x.expression # NIL THEN
+						w.String( " := " ); Expression (x.expression);
+					END;
+					IF x.access # SyntaxTree.Hidden THEN
+						w.String(": ");
+						Type(x.type);
+					ELSE
+						w.String(": ");
+						ShortType(x.type);
+					END;
+					w.String("; ");
+				END;
+				x := next;
+			END;
+			w.DecIndent
+		END AliasList;
+		
 		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
 		BEGIN
 			IF (x.access # SyntaxTree.Hidden) THEN
@@ -1267,7 +1288,8 @@ TYPE
 		END VisitProcedure;
 
 		PROCEDURE VisitOperator*(x: SyntaxTree.Operator);
-		VAR type: SyntaxTree.ProcedureType; first: BOOLEAN;
+		VAR type: SyntaxTree.ProcedureType;
+			first: BOOLEAN;
 		BEGIN
 			IF Visible(x) THEN
 				Indent;
@@ -1447,6 +1469,7 @@ TYPE
 			IF x.firstConstant # NIL THEN ConstantList(x.firstConstant); END;
 			IF x.firstTypeDeclaration # NIL THEN TypeDeclarationList(x.firstTypeDeclaration); END;
 			IF x.firstVariable # NIL THEN Indent;  Keyword("VAR " );  VariableList(x.firstVariable);  END;
+			IF x.firstAlias # NIL THEN Indent; Keyword("ALIAS "); AliasList(x.firstAlias) END; 
 			IF x.procedures # NIL THEN w.Ln; ProcedureList(x.procedures) END;
 			currentScope := prevScope;
 		END Scope;
@@ -1781,21 +1804,9 @@ TYPE
 		END Code;
 
 		PROCEDURE VisitCode*(x: SyntaxTree.Code);
-		VAR in, out: BOOLEAN;
 		BEGIN
 			Indent; Keyword("CODE");
 			Code(x);
-			in := x.inRules.Length()>0;
-			out := x.outRules.Length() >0;
-			IF in OR out THEN
-				Indent; Keyword("WITH ");
-				IF in THEN
-					Indent; Keyword("IN "); StatementSequence(x.inRules)
-				END;
-				IF out THEN
-					Indent; Keyword("OUT "); StatementSequence(x.outRules)
-				END;
-			END;
 			Indent; Keyword("END");
 		END VisitCode;
 

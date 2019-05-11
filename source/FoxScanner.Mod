@@ -22,6 +22,7 @@ TYPE
 	StringType* = Strings.String;
 	IdentifierType* = StringPool.Index;
 	IdentifierString*= ARRAY MaxIdentifierLength+1 OF CHAR;
+	SubType*= SHORTINT;
 
 CONST
 
@@ -180,7 +181,7 @@ TYPE
 		identifierString*: IdentifierString; (* cache of identifier's string *)
 		string*: StringType;  (* string or identifier *)
 		stringLength*: LONGINT; (* length of string, if stringLength = 2 then this may be interpreted as character and integer = ORD(ch) *)
-		numberType*: LONGINT;  (* Integer, HugeInteger, Real or Longreal *)
+		numberType*: SubType;  (* Integer, HugeInteger, Real or Longreal *)
 		integer*: LONGINT;
 		hugeint*: HUGEINT;  (*! unify longint and hugeint *)
 		character*: CHAR;

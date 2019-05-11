@@ -81,13 +81,13 @@ TYPE
 			FOR i := 0 TO count - 1 DO list[i] := old[i] END
 		END Grow;
 
-		PROCEDURE Get*( i: LONGINT ): ANY;
+		PROCEDURE Get*( i: SIZE ): ANY;
 		BEGIN
 			IF (i < 0) OR (i >= count) THEN HALT( 101 ) END;
 			RETURN list[i]
 		END Get;
 
-		PROCEDURE Set*(i: LONGINT; x: ANY);
+		PROCEDURE Set*(i: SIZE; x: ANY);
 		BEGIN
 			IF (i < 0) OR (i >= count) THEN HALT( 101 ) END;
 			list[i] := x;
@@ -135,7 +135,7 @@ TYPE
 			END
 		END Remove;
 
-		PROCEDURE RemoveByIndex*( i: LONGINT );
+		PROCEDURE RemoveByIndex*( i: SIZE );
 		BEGIN
 			IF i < count THEN
 				WHILE (i < count - 1) DO list[i] := list[i + 1];  INC( i ) END;
@@ -143,7 +143,7 @@ TYPE
 			END
 		END RemoveByIndex;
 
-		PROCEDURE Insert*( i: LONGINT; x: ANY );
+		PROCEDURE Insert*( i: SIZE; x: ANY );
 		VAR j: LONGINT;
 		BEGIN
 			IF ~nilAllowed THEN ASSERT( x # NIL ) END;
@@ -164,7 +164,7 @@ TYPE
 			IF i >= 0 THEN list[i] := y END
 		END Replace;
 
-		PROCEDURE ReplaceByIndex*( i: LONGINT;  x: ANY );
+		PROCEDURE ReplaceByIndex*( i: SIZE;  x: ANY );
 		BEGIN
 			IF ~nilAllowed THEN ASSERT( x # NIL ) END;
 			IF (i >= 0) & (i < count) THEN list[i] := x

@@ -7,6 +7,7 @@ VAR
 
 	PROCEDURE ^ Handle(VAR msg: WMMessages.Message; VAR discard: BOOLEAN); 
 	PROCEDURE ^ Install*; 
+	PROCEDURE ^ Refresh*; 
 	PROCEDURE ^ Cleanup; 
 BEGIN
 END DisplayRefresher.

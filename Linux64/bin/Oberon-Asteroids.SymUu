@@ -17,8 +17,8 @@ CONST
 	ChShield = \"z"\; 
 	ChWarp = \"x"\; 
 	StartShips = 3; 
-	ShipRotvel =   5.0000000E-002; 
-	ShipThrust =   3.0000000E-001; 
+	ShipRotvel =   5.0000001E-002; 
+	ShipThrust =   3.0000001E-001; 
 	ShipShield = 100; 
 	ShipWarp = 10; 
 	SBulletMax = 5; 

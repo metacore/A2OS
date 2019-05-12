@@ -28,8 +28,6 @@ TYPE
 		PROCEDURE ^ Init*(w, h: LONGINT); 
 		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: LONGINT); 
 	END TransitionFade; 
-VAR 
-	MMXenabled: BOOLEAN; 
 
 	PROCEDURE ^ Calc565Opt(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
 	PROCEDURE ^ Calc565MMX(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 

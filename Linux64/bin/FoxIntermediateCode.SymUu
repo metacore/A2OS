@@ -124,6 +124,7 @@ TYPE
 		subtype-: SHORTINT; 
 		textPosition-: Basic.Position; 
 		pc-: LONGINT; 
+		scope-: SyntaxTree.Scope; 
 		op1*, op2*, op3*: Operand; 
 	END; 
 
@@ -206,6 +207,7 @@ VAR
 	PROCEDURE ^ AddOffset*(VAR op: Operand; offset: LONGINT); 
 	PROCEDURE ^ SetOffset*(VAR op: Operand; offset: LONGINT); 
 	PROCEDURE ^ SetSymbol*(VAR op: Operand; symbol: Sections.SectionName; fp: Basic.Fingerprint); 
+	PROCEDURE ^ SetScope*(VAR instr: Instruction; scope: SyntaxTree.Scope); 
 	PROCEDURE ^ SetIntValue*(VAR op: Operand; intValue: HUGEINT); 
 	PROCEDURE ^ MakeMemory*(VAR op: Operand; type: Type); 
 	PROCEDURE ^ MakeAddress*(VAR op: Operand; CONST type: Type); 

@@ -20,6 +20,14 @@ CONST
 	HalfClosedStates* = (ClosedStates + {}); 
 	FinStates* = {Unused, Closed}; 
 TYPE 
+	Sender = OBJECT {EXCLUSIVE} 
+	VAR 
+		conn: Connection; 
+
+		PROCEDURE ^  & New(c: Connection); 
+		PROCEDURE ^ SendPacket(CONST data: ARRAY OF CHAR; ofs, len: LONGINT): BOOLEAN; 
+	END Sender; 
+
 	Connection* = OBJECT {EXCLUSIVE} (Streams.Connection)
 	VAR 
 		int-: IP.Interface; 
@@ -28,7 +36,7 @@ TYPE
 		fport-: LONGINT; 
 		state*: SHORTINT; 
 		socket: LONGINT; 
-		localAdr, foreignAdr: Sockets.SocketAdr; 
+		sender: Sender; 
 		irs-: LONGINT; 
 		rcvnxt-: LONGINT; 
 		iss-: LONGINT; 

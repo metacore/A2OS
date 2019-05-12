@@ -16,6 +16,7 @@ TYPE
 	VAR 
 		cw: ControlWindow; 
 		white, grey, col1, yellow: Raster.Pixel; 
+		mode: Raster.Mode; 
 		sortname: ARRAY 32 OF CHAR; 
 		delay: LONGINT; 
 		ha, hb: Index; 
@@ -35,8 +36,8 @@ TYPE
 		PROCEDURE ^ InitSort; 
 		PROCEDURE ^ FinishSort; 
 		PROCEDURE ^ DrawElement(n: Index); 
-		PROCEDURE ^ Highlight(n: Index); 
 		PROCEDURE ^ UnHighlight(n: Index); 
+		PROCEDURE ^ Highlight(n: Index); 
 		PROCEDURE ^ Highlight2(a, b: Index); 
 		PROCEDURE ^ Randomize(n: INTEGER); 
 		PROCEDURE ^ OrderData; 

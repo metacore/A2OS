@@ -5,8 +5,8 @@ CONST
 	Tag = 2475; 
 	Version = 3; 
 	Dist =   1.0000000E+001; 
-	ScaleX =   8.0000000E-001; 
-	ScaleY =   9.0000000E-001; 
+	ScaleX =   8.0000001E-001; 
+	ScaleY =   8.9999998E-001; 
 	MinVar =  -(3 * M.pi); 
 	MaxVar = (3 * M.pi); 
 	MinPeak = ((  1.5000000E+000 * M.pi) /   1.8000000E+002); 

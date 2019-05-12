@@ -373,6 +373,7 @@ VAR
 	suspend_done: LONGINT; 
 	resume_done: LONGINT; 
 	sasuspend, saresume: Sigaction; 
+	thread_exit: Key_t; 
 	argc-: LONGINT; 
 	argv-: ADDRESS; 
 	environ-: ADDRESS; 
@@ -391,7 +392,6 @@ VAR
 	pthread_cond_wait: PROCEDURE {C}(cond: ADDRESS; mutex: ADDRESS):WORD; 
 	pthread_cond_signal: PROCEDURE {C}(cond: ADDRESS):WORD; 
 	pthread_create-: PROCEDURE {C}(newthread: ADDRESS; attr: ADDRESS; start_routine: ADDRESS; arg: PROCEDURE ):WORD; 
-	pthread_exit-: PROCEDURE {NORETURN, C}(thr: ADDRESS); 
 	pthread_detach: PROCEDURE {C}(thr: ADDRESS); 
 	pthread_kill: PROCEDURE {C}(thr: ADDRESS; sigid: LONGINT):LONGINT; 
 	pthread_cancel: PROCEDURE {C}(thr: ADDRESS); 

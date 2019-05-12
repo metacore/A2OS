@@ -5,9 +5,8 @@ CONST
 	Infinity = MAX(LONGINT); 
 	UndefinedPhase = 0; 
 	DeclarationPhase = 1; 
-	InlinePhase = 2; 
-	ImplementationPhase = 3; 
-	InliningSupport = FALSE; 
+	ImplementationPhase = 2; 
+	InliningSupport = TRUE; 
 TYPE 
 	Position = SyntaxTree.Position; 
 
@@ -63,6 +62,7 @@ TYPE
 		currentIsCellNet: BOOLEAN; 
 		currentIsBodyProcedure: BOOLEAN; 
 		currentIsExclusive: BOOLEAN; 
+		currentResultType: SyntaxTree.Type; 
 		global: SyntaxTree.ModuleScope; 
 		withEntries: WithEntry; 
 		activeCellsStatement: BOOLEAN; 
@@ -113,13 +113,13 @@ TYPE
 		PROCEDURE ^ ConvertOperands(VAR left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ FindOperator(system: Global.System; operator: LONGINT; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator; 
 		PROCEDURE ^ SetCurrentScope*(scope: SyntaxTree.Scope); 
-		PROCEDURE ^ NewOperatorCall*(position: Position; op: LONGINT; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewOperatorCall*(position: Position; original: SyntaxTree.Expression; op: LONGINT; leftExpression, rightExpression: SyntaxTree.Expression; resultType: SyntaxTree.Type): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveBinaryExpression(binaryExpression: SyntaxTree.BinaryExpression): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveRangeExpression(x: SyntaxTree.RangeExpression): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveDesignator(d: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ ResolveSelfDesignator(x: SyntaxTree.SelfDesignator): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveResultDesignator(x: SyntaxTree.ResultDesignator): SyntaxTree.Expression; 
-		PROCEDURE ^ NewSymbolDesignator*(position: Position; left: SyntaxTree.Designator; symbol: SyntaxTree.Symbol): SyntaxTree.Expression; 
+		PROCEDURE ^ NewSymbolDesignator*(position: Position; original: SyntaxTree.Designator; left: SyntaxTree.Designator; symbol: SyntaxTree.Symbol): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveIdentifierDesignator(identifierDesignator: SyntaxTree.IdentifierDesignator): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveSelectorDesignator(selectorDesignator: SyntaxTree.SelectorDesignator): SyntaxTree.Expression; 
 		PROCEDURE ^ IndexCheck(index, length: SyntaxTree.Expression); 
@@ -129,13 +129,7 @@ TYPE
 		PROCEDURE ^ NewObjectOperatorCall*(position: Position; left: SyntaxTree.Expression; oper: LONGINT; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ ResolveBracketDesignator(bracketDesignator: SyntaxTree.BracketDesignator): SyntaxTree.Expression; 
 		PROCEDURE ^ ExpressionList(expressionList: SyntaxTree.ExpressionList): BOOLEAN; 
-		PROCEDURE ^ CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN; 
-		PROCEDURE ^ ReplaceExpressions(x: SyntaxTree.ExpressionList; rScope: SyntaxTree.Scope); 
-		PROCEDURE ^ ReplaceExpression(x: SyntaxTree.Expression; rScope: SyntaxTree.Scope); 
-		PROCEDURE ^ ReplaceIfPart(x: SyntaxTree.IfPart; rScope: SyntaxTree.Scope); 
-		PROCEDURE ^ ReplaceStatement(x: SyntaxTree.Statement; rScope: SyntaxTree.Scope); 
-		PROCEDURE ^ ReplaceStatements(statements: SyntaxTree.StatementSequence; rScope: SyntaxTree.Scope); 
-		PROCEDURE ^ NewProcedureCallDesignator(position: Position; left: SyntaxTree.Designator; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Designator; 
+		PROCEDURE ^ NewProcedureCallDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Designator; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Designator; 
 		PROCEDURE ^ ResolveBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator): SyntaxTree.Expression; 
 		PROCEDURE ^ CheckVariable(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ CheckBasicType(x: SyntaxTree.Expression): BOOLEAN; 
@@ -162,11 +156,11 @@ TYPE
 		PROCEDURE ^ CheckCharacterValue(x: SyntaxTree.Expression; VAR value: CHAR): BOOLEAN; 
 		PROCEDURE ^ CheckPositiveIntegerValue(x: SyntaxTree.Expression; VAR value: Basic.Integer; includeZero: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ CheckPortType(x: SyntaxTree.Expression; VAR portType: SyntaxTree.PortType): BOOLEAN; 
-		PROCEDURE ^ NewBuiltinCallDesignator(position: Position; builtin: SyntaxTree.Builtin; actualParameters: SyntaxTree.ExpressionList; left: SyntaxTree.Designator; returnType: SyntaxTree.Type): SyntaxTree.Expression; 
-		PROCEDURE ^ NewTypeGuardDesignator(position: Position; left: SyntaxTree.Designator; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator; 
+		PROCEDURE ^ NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Designator; builtin: SyntaxTree.Builtin; actualParameters: SyntaxTree.ExpressionList; left: SyntaxTree.Designator; returnType: SyntaxTree.Type): SyntaxTree.Expression; 
+		PROCEDURE ^ NewTypeGuardDesignator(position: Position; original: SyntaxTree.Designator; left: SyntaxTree.Designator; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator; 
 		PROCEDURE ^ ResolveParameterDesignator(designator: SyntaxTree.ParameterDesignator): SyntaxTree.Expression; 
-		PROCEDURE ^ NewDereferenceDesignator(position: Position; left: SyntaxTree.Designator): SyntaxTree.Designator; 
-		PROCEDURE ^ NewSupercallDesignator(position: Position; left: SyntaxTree.Designator): SyntaxTree.Designator; 
+		PROCEDURE ^ NewDereferenceDesignator(position: Position; original: SyntaxTree.Designator; left: SyntaxTree.Designator): SyntaxTree.Designator; 
+		PROCEDURE ^ NewSupercallDesignator(position: Position; original: SyntaxTree.Designator; left: SyntaxTree.Designator): SyntaxTree.Designator; 
 		PROCEDURE ^ ResolveArrowDesignator(arrowDesignator: SyntaxTree.ArrowDesignator): SyntaxTree.Expression; 
 		PROCEDURE ^ ResolveExpression*(x: SyntaxTree.Expression): SyntaxTree.Expression; 
 		PROCEDURE ^ ConstantExpression(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
@@ -234,7 +228,7 @@ TYPE
 	END Warnings; 
 
 	PROCEDURE ^ IsOberonInline(procedure: SyntaxTree.Procedure): BOOLEAN; 
-	PROCEDURE ^ SimpleExpression(e: SyntaxTree.Expression): BOOLEAN; 
+	PROCEDURE ^ SideEffectFree(e: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ Resolved(x: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ PowerOf2(x: Basic.Integer): BOOLEAN; 
 	PROCEDURE ^ IsCellNetScope(scope: SyntaxTree.Scope): BOOLEAN; 
@@ -273,7 +267,8 @@ TYPE
 	PROCEDURE ^ IsDynamicArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ Dimension*(t: SyntaxTree.Type; form: SET): LONGINT; 
 	PROCEDURE ^ IsVariable(expression: SyntaxTree.Expression): BOOLEAN; 
-	PROCEDURE ^ IsVariableParameter*(symbol: SyntaxTree.Symbol): BOOLEAN; 
+	PROCEDURE ^ IsReferenceType*(kind: LONGINT; type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsReference*(symbol: SyntaxTree.Symbol): BOOLEAN; 
 	PROCEDURE ^ IsPointerType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsUnsafePointer*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsDisposable*(type: SyntaxTree.Type): BOOLEAN; 
@@ -312,7 +307,8 @@ TYPE
 	PROCEDURE ^ IsLocalVariable*(e: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsStaticProcedure*(procedure: SyntaxTree.Procedure): BOOLEAN; 
 	PROCEDURE ^ InMethodTable*(procedure: SyntaxTree.Procedure): BOOLEAN; 
-	PROCEDURE ^ ReturnedAsParameter*(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ StructuredReturnType*(procedureType: SyntaxTree.ProcedureType): BOOLEAN; 
+	PROCEDURE ^ CanPassInRegister*(system: Global.System; type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ ReturnedAsParameter*(system: Global.System; type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ StructuredReturnType*(system: Global.System; procedureType: SyntaxTree.ProcedureType): BOOLEAN; 
 BEGIN
 END FoxSemanticChecker.

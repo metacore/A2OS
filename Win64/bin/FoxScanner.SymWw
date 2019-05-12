@@ -144,6 +144,8 @@ TYPE
 
 	IdentifierString* = ARRAY (MaxIdentifierLength + 1) OF CHAR; 
 
+	SubType* = SHORTINT; 
+
 	Keyword* = ARRAY 32 OF CHAR; 
 
 	KeywordTable* = OBJECT (Basic.HashTableInt)
@@ -169,7 +171,7 @@ TYPE
 		identifierString*: IdentifierString; 
 		string*: StringType; 
 		stringLength*: LONGINT; 
-		numberType*: LONGINT; 
+		numberType*: SubType; 
 		integer*: LONGINT; 
 		hugeint*: HUGEINT; 
 		character*: CHAR; 

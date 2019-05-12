@@ -6,7 +6,7 @@ CONST
 	V = 10; 
 	A = 80; 
 	B = 20; 
-	C =   3.0000000E-002; 
+	C =   2.9999999E-002; 
 TYPE 
 	SREAL = srBase.SREAL; 
 

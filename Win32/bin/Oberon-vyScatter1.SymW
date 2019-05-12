@@ -5,7 +5,7 @@ CONST
 	cBottom =   2.5000000E-001; 
 	cTop =   7.5000000E-001; 
 	cSelBottom =   1.0000000E-001; 
-	cSelTop =   9.0000000E-001; 
+	cSelTop =   8.9999998E-001; 
 	cMin = 0; 
 	cMax = 1; 
 TYPE 

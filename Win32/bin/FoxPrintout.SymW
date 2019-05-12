@@ -84,7 +84,6 @@ TYPE
 		PROCEDURE ^ VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator); 
 		PROCEDURE ^ VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator); 
 		PROCEDURE ^ VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator); 
-		PROCEDURE ^ VisitStatementDesignator*(x: SyntaxTree.StatementDesignator); 
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
 		PROCEDURE ^ VisitValue*(x: SyntaxTree.Value); 
 		PROCEDURE ^ VisitBooleanValue*(x: SyntaxTree.BooleanValue); 
@@ -109,6 +108,7 @@ TYPE
 		PROCEDURE ^ ConstantList(x: SyntaxTree.Constant); 
 		PROCEDURE ^ VisitVariable*(x: SyntaxTree.Variable); 
 		PROCEDURE ^ VariableList(x: SyntaxTree.Variable); 
+		PROCEDURE ^ AliasList(x: SyntaxTree.Alias); 
 		PROCEDURE ^ VisitParameter*(x: SyntaxTree.Parameter); 
 		PROCEDURE ^ ParameterList*(x: SyntaxTree.Parameter); 
 		PROCEDURE ^ Access(access: SET); 

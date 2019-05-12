@@ -1,5 +1,5 @@
 MODULE WMPopups;
-	IMPORT Strings, WMRectangles, WMGraphics, WMEvents, WMWindowManager, WMComponents, WMStandardComponents;
+	IMPORT Strings, WMRectangles, WMGraphics, WMEvents, WMWindowManager, WMComponents, WMStandardComponents, Localization, Repositories;
 CONST 
 	LineHeight = 20; 
 TYPE 
@@ -16,8 +16,10 @@ TYPE
 	PopupWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		isClosed: BOOLEAN; 
+		languages: Localization.Languages; 
 
 		PROCEDURE ^  & New(entries: Entry); 
+		PROCEDURE ^ Translate(value: Strings.String): Strings.String; 
 		PROCEDURE ^ CreateForm(entries: Entry): WMComponents.VisualComponent; 
 		PROCEDURE ^ Clicked(sender, data: ANY); 
 		PROCEDURE ^ FocusLost*; 

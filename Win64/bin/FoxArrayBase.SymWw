@@ -54,21 +54,21 @@ CONST
 	MatVec8x8 = SYSTEM.VAL(LONGINT, {SmallMatrixFlag, SmallVectorFlag, Size8Flag}); 
 	SmallArrayMask = {SmallMatrixFlag, SmallVectorFlag, Size2Flag, Size3Flag, Size4Flag, Size5Flag, Size6Flag, Size7Flag, Size8Flag}; 
 TYPE 
-	GenericUnaryAALoopS = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: SHORTINT):SHORTINT); 
+	GenericUnaryAALoopS = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SHORTINT):SHORTINT); 
 
-	GenericUnaryAALoopI = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: INTEGER):INTEGER); 
+	GenericUnaryAALoopI = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: INTEGER):INTEGER); 
 
-	GenericUnaryAALoopL = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: LONGINT):LONGINT); 
+	GenericUnaryAALoopL = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: LONGINT):LONGINT); 
 
-	GenericUnaryAALoopH = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: HUGEINT):HUGEINT); 
+	GenericUnaryAALoopH = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: HUGEINT):HUGEINT); 
 
-	GenericUnaryAALoopR = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: REAL):REAL); 
+	GenericUnaryAALoopR = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: REAL):REAL); 
 
-	GenericUnaryAALoopX = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: LONGREAL):LONGREAL); 
+	GenericUnaryAALoopX = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: LONGREAL):LONGREAL); 
 
-	GenericUnaryAALoopZ = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: COMPLEX):COMPLEX); 
+	GenericUnaryAALoopZ = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX):COMPLEX); 
 
-	GenericUnaryAALoopLZ = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
+	GenericUnaryAALoopLZ = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: LONGCOMPLEX):LONGCOMPLEX); 
 
 	UnaryAALoop = PROCEDURE (ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 
@@ -235,14 +235,14 @@ VAR
 	PROCEDURE ^ Reverse(src: ADDRESS; dim: SIZE); 
 	PROCEDURE ^ CopyUpCompatible(dest, src: ADDRESS; VAR modes: SET); 
 	PROCEDURE ^ AllocateTemp(dest: ADDRESS; src: ADDRESS; Size: SIZE): ANY; 
-	PROCEDURE ^ ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE (x: SHORTINT):SHORTINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE (x: INTEGER):INTEGER); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE (x: LONGINT):LONGINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE (x: HUGEINT):HUGEINT); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE (x: REAL):REAL); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE (x: LONGREAL):LONGREAL); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE (x: COMPLEX):COMPLEX); 
-	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpS(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopS; op: PROCEDURE {DELEGATE}(x: SHORTINT):SHORTINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpI(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopI; op: PROCEDURE {DELEGATE}(x: INTEGER):INTEGER); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpL(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopL; op: PROCEDURE {DELEGATE}(x: LONGINT):LONGINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpH(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopH; op: PROCEDURE {DELEGATE}(x: HUGEINT):HUGEINT); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpR(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopR; op: PROCEDURE {DELEGATE}(x: REAL):REAL); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpX(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopX; op: PROCEDURE {DELEGATE}(x: LONGREAL):LONGREAL); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopZ; op: PROCEDURE {DELEGATE}(x: COMPLEX):COMPLEX); 
+	PROCEDURE ^ ApplyGenericUnaryAAOpLZ(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: GenericUnaryAALoopLZ; op: PROCEDURE {DELEGATE}(x: LONGCOMPLEX):LONGCOMPLEX); 
 	PROCEDURE ^ ApplyUnaryAAOp*(VAR dest: UnsafeArrayT; CONST left: UnsafeArrayT; elementSize: SIZE; Loop: UnaryAALoop); 
 	PROCEDURE ^ ApplyUnaryASOp*(dest: ADDRESS; CONST left: UnsafeArrayT; Loop: UnaryASLoop); 
 	PROCEDURE ^ ApplyUnarySAOp*(VAR dest: UnsafeArrayT; right: ADDRESS; Loop: UnarySALoop); 
@@ -314,14 +314,14 @@ VAR
 	OPERATOR ^ "@Convert"-(CONST src: ARRAY [?] OF SIZE): ARRAY [?] OF REAL; 
 	PROCEDURE ^ NotLoopAB(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "~"-(CONST src: ARRAY [?] OF BOOLEAN): ARRAY [?] OF BOOLEAN; 
-	PROCEDURE ^ GenericLoopS(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: SHORTINT):SHORTINT); 
-	PROCEDURE ^ GenericLoopI(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: INTEGER):INTEGER); 
-	PROCEDURE ^ GenericLoopL(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: LONGINT):LONGINT); 
-	PROCEDURE ^ GenericLoopH(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: HUGEINT):HUGEINT); 
-	PROCEDURE ^ GenericLoopR(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: REAL):REAL); 
-	PROCEDURE ^ GenericLoopX(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: LONGREAL):LONGREAL); 
-	PROCEDURE ^ GenericLoopZ(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: COMPLEX):COMPLEX); 
-	PROCEDURE ^ GenericLoopLZ(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX); 
+	PROCEDURE ^ GenericLoopS(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: SHORTINT):SHORTINT); 
+	PROCEDURE ^ GenericLoopI(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: INTEGER):INTEGER); 
+	PROCEDURE ^ GenericLoopL(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: LONGINT):LONGINT); 
+	PROCEDURE ^ GenericLoopH(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: HUGEINT):HUGEINT); 
+	PROCEDURE ^ GenericLoopR(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: REAL):REAL); 
+	PROCEDURE ^ GenericLoopX(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: LONGREAL):LONGREAL); 
+	PROCEDURE ^ GenericLoopZ(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: COMPLEX):COMPLEX); 
+	PROCEDURE ^ GenericLoopLZ(ladr, dadr: ADDRESS; linc, dinc, len: SIZE; op: PROCEDURE {DELEGATE}(x: LONGCOMPLEX):LONGCOMPLEX); 
 	PROCEDURE ^ MinusLoopS(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
 	OPERATOR ^ "-"-(CONST src: ARRAY [?] OF SHORTINT): ARRAY [?] OF SHORTINT; 
 	PROCEDURE ^ MinusLoopI(ladr, dadr: ADDRESS; linc, dinc, len: SIZE); 
@@ -1165,13 +1165,13 @@ VAR
 	PROCEDURE ^ RangeFromInteger*(CONST integer: SIZE): RANGE; 
 	PROCEDURE ^ ExpandDimensions*(CONST sourceArray: ARRAY [?] ; CONST keptDimensions: ARRAY [*] OF BOOLEAN): ARRAY [?] ; 
 	OPERATOR ^ "LEN"-(CONST range: RANGE): SIZE; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SHORTINT; op: PROCEDURE (x: SHORTINT):SHORTINT): ARRAY [?] OF SHORTINT; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF INTEGER; op: PROCEDURE (x: INTEGER):INTEGER): ARRAY [?] OF INTEGER; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGINT; op: PROCEDURE (x: LONGINT):LONGINT): ARRAY [?] OF LONGINT; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF HUGEINT; op: PROCEDURE (x: HUGEINT):HUGEINT): ARRAY [?] OF HUGEINT; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF REAL; op: PROCEDURE (x: REAL):REAL): ARRAY [?] OF REAL; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGREAL; op: PROCEDURE (x: LONGREAL):LONGREAL): ARRAY [?] OF LONGREAL; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX; op: PROCEDURE (x: COMPLEX):COMPLEX): ARRAY [?] OF COMPLEX; 
-	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGCOMPLEX; op: PROCEDURE (x: LONGCOMPLEX):LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF SHORTINT; op: PROCEDURE {DELEGATE}(x: SHORTINT):SHORTINT): ARRAY [?] OF SHORTINT; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF INTEGER; op: PROCEDURE {DELEGATE}(x: INTEGER):INTEGER): ARRAY [?] OF INTEGER; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGINT; op: PROCEDURE {DELEGATE}(x: LONGINT):LONGINT): ARRAY [?] OF LONGINT; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF HUGEINT; op: PROCEDURE {DELEGATE}(x: HUGEINT):HUGEINT): ARRAY [?] OF HUGEINT; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF REAL; op: PROCEDURE {DELEGATE}(x: REAL):REAL): ARRAY [?] OF REAL; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGREAL; op: PROCEDURE {DELEGATE}(x: LONGREAL):LONGREAL): ARRAY [?] OF LONGREAL; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF COMPLEX; op: PROCEDURE {DELEGATE}(x: COMPLEX):COMPLEX): ARRAY [?] OF COMPLEX; 
+	OPERATOR ^ "ALL"-(CONST x: ARRAY [?] OF LONGCOMPLEX; op: PROCEDURE {DELEGATE}(x: LONGCOMPLEX):LONGCOMPLEX): ARRAY [?] OF LONGCOMPLEX; 
 BEGIN
 END FoxArrayBase.

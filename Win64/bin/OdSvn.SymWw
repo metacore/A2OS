@@ -61,7 +61,8 @@ TYPE
 		xml: OdXml.OdXml; 
 		wrk*, ver*, errorMsg, repositoryURL*: ARRAY 256 OF CHAR; 
 		pfStatus*: LONGINT; 
-		countChanges*, repositoryPathLength*: LONGINT; 
+		countChanges*: LONGINT; 
+		repositoryPathLength*: SIZE; 
 		removeDir*, svnUpdated*: BOOLEAN; 
 		resultDoc*: XML.Document; 
 		nextVersion*: ARRAY 10 OF CHAR; 

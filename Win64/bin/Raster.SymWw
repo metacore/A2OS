@@ -146,6 +146,11 @@ VAR
 	PROCEDURE ^ ClearAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ Clear1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ ClearBytes(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Clear32(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ Fill8(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
+	PROCEDURE ^ Fill16(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
+	PROCEDURE ^ Fill24(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
+	PROCEDURE ^ Fill32(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
 	PROCEDURE ^ Set1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ ConstCopy8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ ConstCopy16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
@@ -213,7 +218,9 @@ VAR
 	PROCEDURE ^ A1OverConst32(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ AnyOverA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ A8OverAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ A8OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ A8OverA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
+	PROCEDURE ^ BGRA8888OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ BGRA8888OverAny(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ BGRA8888OverA8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ BGRA8888OverAny16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
@@ -222,8 +229,8 @@ VAR
 	PROCEDURE ^ SSE2BGRA8888Over565(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ Bind*(VAR mode: Mode; VAR src, dst: Format); 
 	PROCEDURE ^ Get*(img: Image; x, y: LONGINT; VAR pix: Pixel; VAR mode: Mode); 
-	PROCEDURE ^ Put*(img: Image; x, y: LONGINT; pix: Pixel; VAR mode: Mode); 
-	PROCEDURE ^ Fill*(img: Image; llx, lly, urx, ury: LONGINT; pix: Pixel; VAR mode: Mode); 
+	PROCEDURE ^ Put*(img: Image; x, y: LONGINT; CONST pix: Pixel; VAR mode: Mode); 
+	PROCEDURE ^ Fill*(img: Image; llx, lly, urx, ury: LONGINT; CONST pix: Pixel; VAR mode: Mode); 
 	PROCEDURE ^ Clear*(img: Image); 
 	PROCEDURE ^ GetPixels*(img: Image; x, y, w: LONGINT; VAR fmt: Format; VAR buf: ARRAY OF CHAR; ofs: LONGINT; VAR mode: Mode); 
 	PROCEDURE ^ PutPixels*(img: Image; x, y, w: LONGINT; VAR fmt: Format; VAR buf: ARRAY OF CHAR; ofs: LONGINT; VAR mode: Mode); 

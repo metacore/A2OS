@@ -1,7 +1,7 @@
 MODULE SVGMatrix;
 	IMPORT Math;
 CONST 
-	Eps =   1.0000000E-005; 
+	Eps =   9.9999997E-006; 
 TYPE 
 	Number* = LONGREAL; 
 

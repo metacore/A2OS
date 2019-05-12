@@ -234,6 +234,7 @@ TYPE
 		PROCEDURE ^ GenerateParameterOffsets*(procedure: SyntaxTree.Procedure; nestedProcedure: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ SizeOf*(type: SyntaxTree.Type): LONGINT; 
 		PROCEDURE ^ SizeOfParameter*(par: SyntaxTree.Parameter): LONGINT; 
+		PROCEDURE ^ SizeOfVariable*(var: SyntaxTree.Variable): LONGINT; 
 		PROCEDURE ^ AlignmentOf*(CONST alignment: Alignment; type: SyntaxTree.Type): LONGINT; 
 		PROCEDURE ^ AlignedSizeOf*(type: SyntaxTree.Type): LONGINT; 
 		PROCEDURE ^ IsLynx*(): BOOLEAN; 

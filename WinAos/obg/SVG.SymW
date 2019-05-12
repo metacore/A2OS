@@ -54,13 +54,13 @@ TYPE
 	END State; 
 
 	PROCEDURE ^ InitDefaultStyle*(VAR style: Style); 
-	PROCEDURE ^ ParseNumber2(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length; VAR i: LONGINT; VAR unitStr: String); 
+	PROCEDURE ^ ParseNumber2(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length; VAR i: SIZE; VAR unitStr: String); 
 	PROCEDURE ^ ParseNumber*(value: String; VAR number: Number; percentageAllowed: BOOLEAN; percent100: Length); 
-	PROCEDURE ^ ParseLength2(value: String; ppi: LONGREAL; percent100: Length; VAR length: Length; VAR i: LONGINT); 
+	PROCEDURE ^ ParseLength2(value: String; ppi: LONGREAL; percent100: Length; VAR length: Length; VAR i: SIZE); 
 	PROCEDURE ^ ParseLength*(value: String; ppi: LONGREAL; percent100: Length; VAR length: Length); 
 	PROCEDURE ^ ParseLengthOptional2*(value: String; ppi: LONGREAL; percent100: Length; VAR length, length2: Length); 
-	PROCEDURE ^ ParseCoordinate*(value: String; VAR i: LONGINT; VAR current: Coordinate; relative: BOOLEAN); 
-	PROCEDURE ^ ParseCoordinate1*(value: String; VAR i: LONGINT; VAR current: Length; relative: BOOLEAN); 
+	PROCEDURE ^ ParseCoordinate*(value: String; VAR i: SIZE; VAR current: Coordinate; relative: BOOLEAN); 
+	PROCEDURE ^ ParseCoordinate1*(value: String; VAR i: SIZE; VAR current: Length; relative: BOOLEAN); 
 	PROCEDURE ^ ParsePaint*(value: String; VAR paint: Paint); 
 	PROCEDURE ^ ParseURI*(value: String; VAR uri: String): BOOLEAN; 
 	PROCEDURE ^ ParseUnits*(value: String; VAR units: SHORTINT); 

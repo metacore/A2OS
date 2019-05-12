@@ -83,7 +83,6 @@ TYPE
 		PROCEDURE ^ FindLineNrByPos(pos: LONGINT): LONGINT; 
 		PROCEDURE ^ GetLineStartPos(lineNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetLineLength(lineNr: LONGINT): LONGINT; 
-		PROCEDURE ^ GetNofLines(): LONGINT; 
 		PROCEDURE ^ LayoutLine(VAR pos: LONGINT; VAR lineInfo: LineInfo); 
 		PROCEDURE ^ FullLayout(textChanged: BOOLEAN); 
 		PROCEDURE ^ FixLayoutFrom(pos, delta: LONGINT; VAR first, last: LONGINT; VAR linesChanged: BOOLEAN); 

@@ -1,5 +1,5 @@
 MODULE WMDropDownLists;
-	IMPORT Objects, Inputs, Strings, XML, WMRectangles, WMGraphics, WMGraphicUtilities, WMProperties, WMEvents, WMWindowManager, WMComponents, WMStandardComponents, WMEditors, WMGrids, WMStringGrids;
+	IMPORT Objects, Inputs, Strings, XML, Plugins, WMRectangles, WMGraphics, WMGraphicUtilities, WMProperties, WMEvents, WMWindowManager, WMComponents, WMStandardComponents, WMEditors, WMGrids, WMStringGrids;
 CONST 
 	Mode_SelectOnly* = 0; 
 	Mode_Editable* = 1; 

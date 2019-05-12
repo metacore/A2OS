@@ -1,5 +1,5 @@
 MODULE Texts;
-	IMPORT KernelLog, Streams, Kernel, WMEvents, Locks, Strings, FP1616, UTF8Strings, XML, XMLParser, XMLScanner, XMLObjects, Files;
+	IMPORT KernelLog, Streams, Kernel, WMEvents, Locks, Strings, FP1616, UTF8Strings, XML, XMLParser, XMLScanner, XMLObjects, Files, Configuration;
 CONST 
 	OpInsert* = 0; 
 	OpDelete* = 1; 
@@ -272,6 +272,7 @@ VAR
 	cStyles: CharacterStyleArray; 
 	nofCStyles: LONGINT; 
 	forceUTF*, unforceUTF*: BOOLEAN; 
+	defaultAttributes-, boldAttributes-, monospaceAttributes-, serifAttributes-, sansSerifAttributes-, cursiveAttributes-, casualAttributes-: Attributes; 
 
 	PROCEDURE ^ AddParagraphStyle*(style: ParagraphStyle); 
 	PROCEDURE ^ RemoveParagraphStyle*(style: ParagraphStyle); 
@@ -288,5 +289,6 @@ VAR
 	PROCEDURE ^ GetLastSelection*(VAR text: Text; VAR from, to: TextPosition): BOOLEAN; 
 	PROCEDURE ^ SetLastText*(text: Text); 
 	PROCEDURE ^ GetLastText*(): Text; 
+	PROCEDURE ^ InitDefaultAttributes; 
 BEGIN
 END Texts.

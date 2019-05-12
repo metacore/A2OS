@@ -205,22 +205,6 @@ TYPE
 		PROCEDURE ^ GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable; 
 	END Variables; 
 
-	SymbolMap = POINTER TO RECORD 
-		this: SyntaxTree.Symbol; 
-		to, tag: SyntaxTree.Expression; 
-		next: SymbolMap; 
-		isAddress: BOOLEAN; 
-	END; 
-
-	SymbolMapper = OBJECT 
-	VAR 
-		first: SymbolMap; 
-
-		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Add(this: SyntaxTree.Symbol; to, tag: SyntaxTree.Expression; isAddress: BOOLEAN); 
-		PROCEDURE ^ Get(this: SyntaxTree.Symbol): SymbolMap; 
-	END SymbolMapper; 
-
 	ImplementationVisitor = OBJECT (SyntaxTree.Visitor)
 	TYPE 
 		Context = RECORD 
@@ -245,7 +229,6 @@ TYPE
 		position: Position; 
 		moduleSelf: SyntaxTree.Variable; 
 		currentScope: SyntaxTree.Scope; 
-		constantDeclaration: SyntaxTree.Symbol; 
 		result: Operand; 
 		destination: IntermediateCode.Operand; 
 		arrayDestinationTag: IntermediateCode.Operand; 
@@ -276,7 +259,6 @@ TYPE
 		temporaries: Variables; 
 		canBeLoaded: BOOLEAN; 
 		currentIsInline: BOOLEAN; 
-		currentMapper: SymbolMapper; 
 		currentInlineExit: Label; 
 		moduleBodySection: IntermediateCode.Section; 
 		NeedDescriptor: BOOLEAN; 
@@ -401,8 +383,6 @@ TYPE
 		PROCEDURE ^ VisitIndexDesignator*(x: SyntaxTree.IndexDesignator); 
 		PROCEDURE ^ PrepareTensorDescriptor(expression: SyntaxTree.IndexDesignator): SyntaxTree.Variable; 
 		PROCEDURE ^ PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; register: WORD); 
-		PROCEDURE ^ VisitStatementDesignator*(x: SyntaxTree.StatementDesignator); 
-		PROCEDURE ^ InlineProcedureCall(x: SyntaxTree.ProcedureCallDesignator): BOOLEAN; 
 		PROCEDURE ^ VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator); 
 		PROCEDURE ^ VisitProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator); 
 		PROCEDURE ^ TypeDescriptorAdr(t: SyntaxTree.Type): IntermediateCode.Operand; 
@@ -462,7 +442,6 @@ TYPE
 		PROCEDURE ^ VisitCharacterValue*(x: SyntaxTree.CharacterValue); 
 		PROCEDURE ^ VisitSetValue*(x: SyntaxTree.SetValue); 
 		PROCEDURE ^ VisitMathArrayValue*(x: SyntaxTree.MathArrayValue); 
-		PROCEDURE ^ TryConstantDeclaration(): BOOLEAN; 
 		PROCEDURE ^ VisitConstant*(x: SyntaxTree.Constant); 
 		PROCEDURE ^ VisitRealValue*(x: SyntaxTree.RealValue); 
 		PROCEDURE ^ VisitComplexValue*(x: SyntaxTree.ComplexValue); 
@@ -484,6 +463,7 @@ TYPE
 		PROCEDURE ^ AssignMathArray(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ ModifyAssignments(CONST value: IntermediateCode.Operand); 
 		PROCEDURE ^ CopySize(left: SyntaxTree.Expression; tag: IntermediateCode.Operand): IntermediateCode.Operand; 
+		PROCEDURE ^ AssignReference(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ Assign(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ VisitAssignment*(x: SyntaxTree.Assignment); 
 		PROCEDURE ^ EmitCooperativeSwitch; 
@@ -636,6 +616,7 @@ VAR
 	statCoopTraceMethod: LONGINT; 
 	statCoopResetProcedure: LONGINT; 
 	statCoopTraceModule: LONGINT; 
+	ResultDesignatorName: SyntaxTree.Identifier; 
 
 	PROCEDURE ^ ResetStatistics*; 
 	PROCEDURE ^ Statistics*; 
@@ -652,6 +633,7 @@ VAR
 	PROCEDURE ^ GetSymbol*(scope: SyntaxTree.ModuleScope; CONST moduleName, symbolName: ARRAY OF CHAR): SyntaxTree.Symbol; 
 	PROCEDURE ^ InitOperand(VAR op: Operand; mode: SHORTINT); 
 	PROCEDURE ^ GetType*(system: Global.System; type: SyntaxTree.Type): IntermediateCode.Type; 
+	PROCEDURE ^ FindConstant(module: SyntaxTree.Module; value: SyntaxTree.Value): SyntaxTree.Constant; 
 	PROCEDURE ^ BuildConstant(module: SyntaxTree.Module; value: SyntaxTree.Value; VAR adr: LONGINT): SyntaxTree.Constant; 
 	PROCEDURE ^ HasPointers(scope: SyntaxTree.ProcedureScope): BOOLEAN; 
 	PROCEDURE ^ IsVariableParameter(parameter: SyntaxTree.Parameter): BOOLEAN; 
@@ -688,6 +670,7 @@ VAR
 	PROCEDURE ^ ToMemoryUnits*(system: Global.System; size: SIZE): LONGINT; 
 	PROCEDURE ^ Get*(): Backend.Backend; 
 	PROCEDURE ^ Nop(position: Basic.Position): IntermediateCode.Instruction; 
+	PROCEDURE ^ Use(position: Basic.Position; reg: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ Mov(position: Basic.Position; dest, src: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ MovReplace(position: Basic.Position; dest, src: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ Conv(position: Basic.Position; dest, src: IntermediateCode.Operand): IntermediateCode.Instruction; 
@@ -721,7 +704,7 @@ VAR
 	PROCEDURE ^ Cas(position: Basic.Position; dest, src, size: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ Copy(position: Basic.Position; dest, src, size: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ Fill(position: Basic.Position; dest, size, value: IntermediateCode.Operand): IntermediateCode.Instruction; 
-	PROCEDURE ^ Asm(position: Basic.Position; s: SyntaxTree.SourceCode; inRules, outRules: IntermediateCode.Rules): IntermediateCode.Instruction; 
+	PROCEDURE ^ Asm(position: Basic.Position; s: SyntaxTree.SourceCode; inRules, outRules: IntermediateCode.Rules; scope: SyntaxTree.Scope): IntermediateCode.Instruction; 
 	PROCEDURE ^ Data*(position: Basic.Position; op: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ SpecialInstruction(position: Basic.Position; subtype: SHORTINT; op1, op2, op3: IntermediateCode.Operand): IntermediateCode.Instruction; 
 	PROCEDURE ^ Reserve(position: Basic.Position; units: LONGINT): IntermediateCode.Instruction; 

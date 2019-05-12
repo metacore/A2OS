@@ -117,19 +117,19 @@ VAR
 	PROCEDURE ^ GetNewBuffer*(): Buffer; 
 	PROCEDURE ^ ReturnBuffer*(buf: Buffer); 
 	PROCEDURE ^ Finalize(p: Plugins.Plugin); 
-	PROCEDURE ^ Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Put4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
-	PROCEDURE ^ Put2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
-	PROCEDURE ^ Get4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
-	PROCEDURE ^ Get2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
-	PROCEDURE ^ PutNet4*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
-	PROCEDURE ^ PutNet2*(VAR buf: ARRAY OF CHAR; ofs, val: LONGINT); 
-	PROCEDURE ^ GetNet4*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
-	PROCEDURE ^ GetNet2*(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
-	PROCEDURE ^ LinkAdrToStr*(VAR adr: LinkAdr; size: LONGINT; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ OutLinkAdr*(VAR adr: LinkAdr; size: LONGINT); 
+	PROCEDURE ^ Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: SIZE): BOOLEAN; 
+	PROCEDURE ^ Put4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD); 
+	PROCEDURE ^ Put2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD); 
+	PROCEDURE ^ Get4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD; 
+	PROCEDURE ^ Get2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD; 
+	PROCEDURE ^ PutNet4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD); 
+	PROCEDURE ^ PutNet2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD); 
+	PROCEDURE ^ GetNet4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD; 
+	PROCEDURE ^ GetNet2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD; 
+	PROCEDURE ^ LinkAdrToStr*(VAR adr: LinkAdr; size: SIZE; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ OutLinkAdr*(VAR adr: LinkAdr; size: SIZE); 
 	PROCEDURE ^ LinkAdrsEqual*(adr1: LinkAdr; adr2: LinkAdr): BOOLEAN; 
-	PROCEDURE ^ Copy*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR; fofs, tofs, len: LONGINT); 
+	PROCEDURE ^ Copy*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR; fofs, tofs, len: SIZE); 
 	PROCEDURE ^ Cleanup; 
 BEGIN
 END Network.

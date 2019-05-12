@@ -21,7 +21,6 @@ CONST
 	X11* = 8; 
 	MaxLocks* = 9; 
 	MaxCPU* = 4; 
-	IsCooperative* = FALSE; 
 	StrongChecks = FALSE; 
 TYPE 
 	Vendor* = ARRAY 13 OF CHAR; 

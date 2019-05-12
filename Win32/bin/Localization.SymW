@@ -1,4 +1,5 @@
 MODULE Localization;
+	IMPORT Configuration;
 CONST 
 TYPE 
 	Language* = RECORD 
@@ -13,5 +14,6 @@ VAR
 	PROCEDURE ^ GetCurrentLanguage*(): Language; 
 	PROCEDURE ^ GetLanguagePreferences*(): Languages; 
 	PROCEDURE ^ SetLanguage*(CONST language: Language); 
+	PROCEDURE ^ GetDefaultLanguage; 
 BEGIN
 END Localization.

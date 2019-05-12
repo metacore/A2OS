@@ -18,7 +18,6 @@ CONST
 	NumberTooLarge* = 270; 
 	IdentifierTooLong* = 271; 
 	StringTooLong* = 272; 
-	InitListSize = 4; 
 	InitErrMsgSize = 300; 
 	invalidString* =  -1; 
 	InvalidCode* =  -1; 
@@ -38,8 +37,6 @@ TYPE
 	Set* = SET64; 
 
 	ObjectArray = POINTER TO ARRAY OF ANY; 
-
-	IntegerArray = POINTER TO ARRAY OF LONGINT; 
 
 	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index; 
 
@@ -64,16 +61,16 @@ TYPE
 		PROCEDURE ^  & InitList*(initialSize: LONGINT); 
 		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Get*(i: LONGINT): ANY; 
-		PROCEDURE ^ Set*(i: LONGINT; x: ANY); 
+		PROCEDURE ^ Get*(i: SIZE): ANY; 
+		PROCEDURE ^ Set*(i: SIZE; x: ANY); 
 		PROCEDURE ^ Add*(x: ANY); 
 		PROCEDURE ^ Prepend*(x: ANY); 
 		PROCEDURE ^ Append*(x: List); 
 		PROCEDURE ^ Remove*(x: ANY); 
-		PROCEDURE ^ RemoveByIndex*(i: LONGINT); 
-		PROCEDURE ^ Insert*(i: LONGINT; x: ANY); 
+		PROCEDURE ^ RemoveByIndex*(i: SIZE); 
+		PROCEDURE ^ Insert*(i: SIZE; x: ANY); 
 		PROCEDURE ^ Replace*(x, y: ANY); 
-		PROCEDURE ^ ReplaceByIndex*(i: LONGINT; x: ANY); 
+		PROCEDURE ^ ReplaceByIndex*(i: SIZE; x: ANY); 
 		PROCEDURE ^ IndexOf*(x: ANY): LONGINT; 
 		PROCEDURE ^ Contains*(x: ANY): BOOLEAN; 
 		PROCEDURE ^ Clear*; 
@@ -81,58 +78,6 @@ TYPE
 		PROCEDURE ^ Sort*(comparisonFunction: ComparisonFunction); 
 		PROCEDURE ^ QuickSort(comparisonFunction: ComparisonFunction; lo, hi: LONGINT); 
 	END List; 
-
-	IntegerList* = OBJECT 
-	VAR 
-		list: IntegerArray; 
-		count-: LONGINT; 
-
-		PROCEDURE ^  & InitList*(initialSize: LONGINT); 
-		PROCEDURE ^ Length*(): LONGINT; 
-		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Get*(i: LONGINT): LONGINT; 
-		PROCEDURE ^ Set*(i: LONGINT; x: LONGINT); 
-		PROCEDURE ^ Add*(x: LONGINT); 
-		PROCEDURE ^ Prepend*(x: LONGINT); 
-		PROCEDURE ^ Append*(x: IntegerList); 
-		PROCEDURE ^ Remove*(x: LONGINT); 
-		PROCEDURE ^ RemoveByIndex*(i: LONGINT); 
-		PROCEDURE ^ Insert*(i, x: LONGINT); 
-		PROCEDURE ^ Replace*(x, y: LONGINT); 
-		PROCEDURE ^ IndexOf*(x: LONGINT): LONGINT; 
-		PROCEDURE ^ Contains*(x: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Clear*; 
-	END IntegerList; 
-
-	Bag* = OBJECT 
-	VAR 
-		count-: LONGINT; 
-		list: List; 
-
-		PROCEDURE ^  & InitBag*; 
-		PROCEDURE ^ Length*(): LONGINT; 
-		PROCEDURE ^ Get*(i: LONGINT): ANY; 
-		PROCEDURE ^ Add*(x: ANY); 
-		PROCEDURE ^ Append*(x: Bag); 
-		PROCEDURE ^ Remove*(x: ANY); 
-		PROCEDURE ^ Contains*(x: ANY): BOOLEAN; 
-		PROCEDURE ^ Clear*; 
-	END Bag; 
-
-	IntegerBag* = OBJECT 
-	VAR 
-		count-: LONGINT; 
-		list: IntegerList; 
-
-		PROCEDURE ^  & InitBag*; 
-		PROCEDURE ^ Length*(): LONGINT; 
-		PROCEDURE ^ Get*(i: LONGINT): LONGINT; 
-		PROCEDURE ^ Add*(x: LONGINT); 
-		PROCEDURE ^ Append*(x: IntegerBag); 
-		PROCEDURE ^ Remove*(x: LONGINT); 
-		PROCEDURE ^ Contains*(x: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Clear*; 
-	END IntegerBag; 
 
 	HashEntryAny = RECORD 
 		key, value: ANY; 
@@ -220,150 +165,6 @@ TYPE
 		PROCEDURE ^ HashValue(CONST key: SegmentedName): LONGINT; 
 		PROCEDURE ^ Grow; 
 	END HashTableSegmentedName; 
-
-	HashTable2D* = OBJECT (HashTable)
-	VAR 
-		initialSize: LONGINT; 
-
-		PROCEDURE ^  & Init*(initialSize: LONGINT); 
-		PROCEDURE ^ Get2D*(key1, key2: ANY): ANY; 
-		PROCEDURE ^ Put2D*(key1, key2, value: ANY); 
-		PROCEDURE ^ Has2D*(key1, key2: ANY): BOOLEAN; 
-	END HashTable2D; 
-
-	Stack* = OBJECT 
-	VAR 
-		list: List; 
-
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Push*(x: ANY); 
-		PROCEDURE ^ Peek*(): ANY; 
-		PROCEDURE ^ Pop*(): ANY; 
-		PROCEDURE ^ RemoveTop*; 
-		PROCEDURE ^ Empty*(): BOOLEAN; 
-		PROCEDURE ^ Length*(): LONGINT; 
-	END Stack; 
-
-	IntegerStack* = OBJECT 
-	VAR 
-		list: IntegerList; 
-
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Push*(x: LONGINT); 
-		PROCEDURE ^ Peek*(): LONGINT; 
-		PROCEDURE ^ Pop*(): LONGINT; 
-		PROCEDURE ^ RemoveTop*; 
-		PROCEDURE ^ Empty*(): BOOLEAN; 
-		PROCEDURE ^ Length*(): LONGINT; 
-	END IntegerStack; 
-
-	QueueEntry = POINTER TO RECORD 
-		value: ANY; 
-		next: QueueEntry; 
-	END; 
-
-	Queue* = OBJECT 
-	VAR 
-		top, last: QueueEntry; 
-
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Append*(x: ANY); 
-		PROCEDURE ^ Peek*(): ANY; 
-		PROCEDURE ^ Pop*(): ANY; 
-		PROCEDURE ^ Empty*(): BOOLEAN; 
-	END Queue; 
-
-	PQItem = RECORD 
-		key: LONGINT; 
-		value: ANY; 
-	END; 
-
-	PQItemList = POINTER TO ARRAY OF PQItem; 
-
-	PriorityQueue* = OBJECT 
-	VAR 
-		heap: PQItemList; 
-		count-: LONGINT; 
-
-		PROCEDURE ^  & Init(size: LONGINT); 
-		PROCEDURE ^ Min*(): ANY; 
-		PROCEDURE ^ RemoveMin*(): ANY; 
-		PROCEDURE ^ Insert*(key: LONGINT; value: ANY); 
-		PROCEDURE ^ Empty*(): BOOLEAN; 
-		PROCEDURE ^ BubbleUp(VAR index: LONGINT); 
-		PROCEDURE ^ BubbleDown(index: LONGINT); 
-	END PriorityQueue; 
-
-	IndexList = POINTER TO ARRAY OF LONGINT; 
-
-	Edge* = OBJECT 
-	VAR 
-		from-, to-: Block; 
-
-		PROCEDURE ^ Accept(v: GraphVisitor); 
-	END Edge; 
-
-	Graph* = OBJECT 
-	VAR 
-		firstBlock*, lastBlock-: Block; 
-		blocks*: BlockList; 
-		edges-: EdgeList; 
-		edgesLookup: HashTable2D; 
-
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ AddBlock*(block: Block); 
-		PROCEDURE ^ Connect*(from, to: Block); 
-		PROCEDURE ^ Split*(from, to: Block); 
-		PROCEDURE ^ ReIndex*; 
-		PROCEDURE ^ CalculateDominance*; 
-	END Graph; 
-
-	BlockList* = OBJECT (List)
-
-		PROCEDURE ^ GetBlock*(i: LONGINT): Block; 
-		PROCEDURE ^ GetIndex*(i: LONGINT): LONGINT; 
-	END BlockList; 
-
-	EdgeList* = OBJECT (List)
-
-		PROCEDURE ^ GetEdge*(i: LONGINT): Edge; 
-	END EdgeList; 
-
-	Block* = OBJECT 
-	VAR 
-		predecessors-, successors-, dominanceFrontier-: BlockList; 
-		index*, immediateDominator*: LONGINT; 
-
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Accept(v: GraphVisitor); 
-		PROCEDURE ^ PredecessorIndex*(block: Block): LONGINT; 
-	END Block; 
-
-	ContentFunction = PROCEDURE {DELEGATE}(block: Block); 
-
-	GraphVisitor* = OBJECT 
-	VAR 
-		block-: Block; 
-		edge-: Edge; 
-		graph-: Graph; 
-
-		PROCEDURE ^ VisitEdge*(edge: Edge); 
-		PROCEDURE ^ VisitBlock*(block: Block); 
-		PROCEDURE ^ VisitGraph*(graph: Graph); 
-	END GraphVisitor; 
-
-	GraphPrinter* = OBJECT (GraphVisitor)
-	VAR 
-		active-: Block; 
-		writer-: Streams.Writer; 
-		content: ContentFunction; 
-
-		PROCEDURE ^ VisitEdge*(edge: Edge); 
-		PROCEDURE ^ VisitBlock*(block: Block); 
-		PROCEDURE ^ VisitGraph*(graph: Graph); 
-		PROCEDURE ^ SetWriter*(w: Streams.Writer); 
-		PROCEDURE ^  & Init*(c: ContentFunction); 
-	END GraphPrinter; 
 
 	IntegerObject = OBJECT 
 	END IntegerObject; 

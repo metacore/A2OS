@@ -8,10 +8,10 @@ CONST
 	PROCEDURE ^ IsLowercase*(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ IsUppercase*(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ IsAlpha*(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ SkipWhiteSpace*(VAR i: LONGINT; s: Strings.String); 
-	PROCEDURE ^ SkipChar*(VAR i: LONGINT; s: Strings.String; c: CHAR); 
-	PROCEDURE ^ SkipCharOptional*(VAR i: LONGINT; s: Strings.String; c: CHAR); 
-	PROCEDURE ^ SkipCommaWhiteSpace*(VAR i: LONGINT; s: Strings.String); 
-	PROCEDURE ^ StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: LONGREAL; VAR i: LONGINT); 
+	PROCEDURE ^ SkipWhiteSpace*(VAR i: SIZE; s: Strings.String); 
+	PROCEDURE ^ SkipChar*(VAR i: SIZE; s: Strings.String; c: CHAR); 
+	PROCEDURE ^ SkipCharOptional*(VAR i: SIZE; s: Strings.String; c: CHAR); 
+	PROCEDURE ^ SkipCommaWhiteSpace*(VAR i: SIZE; s: Strings.String); 
+	PROCEDURE ^ StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: LONGREAL; VAR i: SIZE); 
 BEGIN
 END SVGUtilities.

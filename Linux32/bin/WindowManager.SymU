@@ -4,7 +4,7 @@ CONST
 	DirtyBufSize = 128; 
 	CombineLookahead = 64; 
 	XYResizeHandleSize = 15; 
-	ZF =   9.0000000E-001; 
+	ZF =   8.9999998E-001; 
 	ZD =   1.0000000E-001; 
 TYPE 
 	Window = WM.Window; 

@@ -1,7 +1,7 @@
 MODULE Math;
 	IMPORT SYSTEM;
 CONST 
-	e* =   2.7182818E+000; 
+	e* =   2.7182817E+000; 
 	pi* =   3.1415927E+000; 
 
 	PROCEDURE {Fingerprint(-3182998201466600572)}  - Sin(x: REAL): REAL;

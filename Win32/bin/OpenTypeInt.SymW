@@ -12,8 +12,6 @@ TYPE
 
 	Fixed* = LONGINT; 
 
-	INT64 = ARRAY 8 OF CHAR; 
-
 	Code* = POINTER TO ARRAY OF CHAR; 
 
 	Stack* = ARRAY StackSize OF LONGINT; 
@@ -125,18 +123,9 @@ TYPE
 VAR 
 	EmptyZone*: Zone; 
 	Builtin: ARRAY 256 OF Primitive; 
-	Zero64: INT64; 
 	Notify: Notifier; 
 	NotifyData: NotifierData; 
 
-	PROCEDURE ^ ToINT64(x: LONGINT; VAR y: INT64); 
-	PROCEDURE ^ FromINT64(x: INT64; VAR y: LONGINT); 
-	PROCEDURE ^ AddINT64(a, b: INT64; VAR c: INT64); 
-	PROCEDURE ^ SubINT64(a, b: INT64; VAR c: INT64); 
-	PROCEDURE ^ LeqINT64(a, b: INT64): BOOLEAN; 
-	PROCEDURE ^ ShiftINT64(VAR a: INT64; n: LONGINT); 
-	PROCEDURE ^ MulINT64(a, b: INT64; VAR c: INT64); 
-	PROCEDURE ^ DivINT64(a, b: INT64; VAR q: INT64); 
 	PROCEDURE ^ ShiftDiv*(a, n, d: LONGINT): LONGINT; 
 	PROCEDURE ^ MulShift*(a, b, n: LONGINT): LONGINT; 
 	PROCEDURE ^ MulDiv*(a, b, c: LONGINT): LONGINT; 
@@ -209,6 +198,7 @@ VAR
 	PROCEDURE ^ MDRP(VAR c: Context); 
 	PROCEDURE ^ MIRP(VAR c: Context); 
 	PROCEDURE ^ ALIGNRP(VAR c: Context); 
+	PROCEDURE ^ DivHL(a, b: HUGEINT): LONGINT; 
 	PROCEDURE ^ ISECT(VAR c: Context); 
 	PROCEDURE ^ ALIGNPTS(VAR c: Context); 
 	PROCEDURE ^ IP(VAR c: Context); 

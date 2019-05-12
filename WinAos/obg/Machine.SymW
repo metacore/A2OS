@@ -27,7 +27,6 @@ CONST
 	Second* = 1000; 
 	Ok* = 0; 
 	NilAdr* =  -1; 
-	IsCooperative* = FALSE; 
 TYPE 
 	Vendor* = ARRAY 13 OF CHAR; 
 

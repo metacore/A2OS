@@ -151,7 +151,6 @@ VAR
 	PROCEDURE ^ Fill16(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
 	PROCEDURE ^ Fill24(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
 	PROCEDURE ^ Fill32(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
-	PROCEDURE ^ Fill32A(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ Set1(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ ConstCopy8(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 
 	PROCEDURE ^ ConstCopy16(VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT); 

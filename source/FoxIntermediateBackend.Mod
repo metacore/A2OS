@@ -10808,7 +10808,7 @@ TYPE
 				ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.sourceCode # NIL) THEN
 					source := NewSection(module.allSections, sectionType, name,x,commentPrintout # NIL);
 					IF source.pc = 0 THEN (* no code yet *)
-						source.Emit(Asm(position,x.procedureScope.body.code.sourceCode,NIL,NIL,currentScope));
+						source.Emit(Asm(position,x.procedureScope.body.code.sourceCode,NIL,NIL,x.procedureScope (*currentScope*)));
 					END;
 				ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.inlineCode # NIL) THEN
 					bits := x.procedureScope.body.code.inlineCode;

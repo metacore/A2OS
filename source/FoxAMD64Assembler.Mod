@@ -1531,6 +1531,7 @@ TYPE
 						NextSymbol;
 						IF symbol # symIdent THEN Error("identifier missing") END;
 						GetOffsetFixup (idents, ofs);
+						ofs.sizeInBytes := emitter.cpuBits; (* refer to address, not variable *) 
 						NextSymbol;
 						IF symbol = symPlus THEN
 							NextSymbol;
@@ -1710,16 +1711,8 @@ TYPE
 					SetSymbol(operand,name,0,0,0);
 				ELSE
 					InitMem(operand,IntermediateCode.Bits32,InstructionSet.regRBP,(scopeSymbol.offsetInBits DIV 8)); (* or immediate ?? *)					
-					
-					(*SetSymbol(operand,name,0,0,0);*)
-				(*ELSE
-					Error("direct access to local variable offset forbidden");
-				*)
 				END;
 				operand.sizeInBytes := SHORTINT(scopeSymbol.type.resolved.sizeInBits DIV 8);
-				(*
-				operand.sizeInBytes := emitter.cpuBits;
-				*)
 			END GetOffsetFixup;
 
 			(* the following procedure is used to adapt sizes for relative jumps *)
@@ -2781,4 +2774,4 @@ TYPE
 		END;
 	END FoxAMD64Assembler.
 
-OCAMD64Assembler.Test ~
+System.FreeDownTo FoxAMD64Assembler ~ 

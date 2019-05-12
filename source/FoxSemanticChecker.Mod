@@ -3900,16 +3900,11 @@ TYPE
 				actualParameters := SyntaxTree.CloneExpressionList(result(SyntaxTree.ProcedureCallDesignator).parameters);
 				
 				NEW(symbols); 
-				(*ASSERT(ExpressionList(actualParameters));*)
 				tooComplex := FALSE;
 				i := 0;
 				WHILE (i < actualParameters.Length()) & ~tooComplex DO
 					actualParameter := ResolveExpression(actualParameters.GetExpression(i));
 					formalParameter.GetName(name);
-					(*
-					Printout.Info("formal",formalParameter);
-					Printout.Info("actual",actualParameter);
-					*)
 					IF actualParameter.resolved # NIL THEN
 						actualParameter := actualParameter.resolved
 					END;
@@ -3935,10 +3930,6 @@ TYPE
 						(* copy expression to var *)
 						var.SetType(actualParameter.type);
 						var.SetInitializer(actualParameter); 
-						(*
-						NEW(init, var, actualParameter);
-						inits.AddInitializer(init);
-						*)
 						inlineScope.AddVariable(var); 
 						symbols.Add(var); 
 					END;
@@ -3968,22 +3959,6 @@ TYPE
  					inlineScope.EnterSymbol(cclone, duplicate);
  					const := const.nextConstant;
  				END;
- 				
- 				
-			(*IF ~tooComplex & (procedureType.returnType # NIL) THEN
-				IF resultDesignator # NIL THEN
-					returnDesignator := resultDesignator
-				ELSE
-					returnDesignator := GetTemp(procedureType.returnType, TRUE);
-				END;
-				currentMapper.Add(NIL, returnDesignator, NIL, resultDesignator # NIL);
-			END;
-			*)
-				(*
-				rning(result.position,"call to inline proc","");
-				*)
-				(* do this after passing passing variables in order to prevent false positives for calls like f(f(f()));
-				*)
 				IF procedure.Resolving(TRUE) THEN
 					Warning(position,"inline recursion");
 					RETURN result; (* normal procedure call *)
@@ -3994,15 +3969,8 @@ TYPE
  				ASSERT(system.GenerateVariableOffsets(inlineScope));
 
 				block := SyntaxTree.NewStatementBlock(result.position, NIL, inlineScope);
-(*				ResolveSymbol(procedure);*)
-(*				Printout.Info("before replacement", procedure.procedureScope.body.statements); *)
 				block.SetStatementSequence(SyntaxTree.CloneStatementSequence(procedure.procedureScope.body.statements));
-				(*Parameters(block, procedure.type(SyntaxTree.ProcedureType).firstParameter, call(SyntaxTree.ProcedureCallDesignator).parameters);*)
 				resolved := ResolveStatement(block); 
-				(*
-				ReplaceStatement(block, procedure.procedureScope, currentScope,block.scope); 
-				*)
-(*				Printout.Info("after replacement", block.statements); *)
 				returnType := result.type; 
 				result := SyntaxTree.NewInlineCallDesignator(result.position, original, block); 
 				result.SetType(returnType); 

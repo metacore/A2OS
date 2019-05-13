@@ -10,11 +10,11 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 
 	IMPORT
 		OpenTypeInt, OpenTypeScan,
-		KernelLog, Strings, Files;
+		KernelLog, Strings, Files, Configuration;
 
 
 	CONST
-		SharpenContours = TRUE; (* switching off sharpening can result in visually hard to see lines in small chinese fonts *)
+		DefaultSharpenContours = FALSE; (* switching off sharpening can result in visually hard to see lines in small chinese fonts *)
 
 	CONST
 		(** name ids **)
@@ -255,6 +255,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 		CacheStamp: LONGINT;									(* next object stamp *)
 		MacChar, UniChar: ARRAY 256 OF INTEGER;				(* corresponding Mac and Unicode characters in ascending Unicode order *)
 		Log : DebugLog;
+		SharpenContours: BOOLEAN;
 
 	(**--- Object Caches ---**)
 
@@ -1592,11 +1593,23 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 		CharToUnicode[171] := 0DFH;
 		FOR i := 172 TO 255 DO CharToUnicode[i] := 0 END;
 	END InitCharMaps;
+	
+PROCEDURE GetSharpenContours;
+VAR
+	res: WORD;
+BEGIN
+	Configuration.GetBoolean("WindowManager.FontManager.SharpenContours", SharpenContours, res);
+	IF res # Configuration.Ok THEN
+		SharpenContours := DefaultSharpenContours
+	END;
+	KernelLog.String("Sharpening font contours: "); KernelLog.Boolean(SharpenContours); KernelLog.Ln;
+END GetSharpenContours;
 
 BEGIN
 	KernelLog.String("OpenType 0.45 BBPort /3.12.2004  eos, pl"); KernelLog.Ln;
 	InitCharMaps;
 	InitCache(FontCache);
 	Identity[0] := 10000H; Identity[1] := 0;
-	Identity[2] := 0; Identity[3] := 10000H
+	Identity[2] := 0; Identity[3] := 10000H;
+	GetSharpenContours
 END OpenType.

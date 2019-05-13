@@ -76,6 +76,11 @@ To update: Configuration.Init ~
 			</Section>
 		</Section>
 		<Section name="FontManager">
+
+			<!-- switching off sharpening can result in visually
+				hard to see lines in small chinese fonts -->
+			<Setting name="SharpenContours" value="FALSE"/>
+
 			<Section name="DefaultFont">
 				<Setting name="Name" value="Vera"/>
 				<Setting name="Size" value="14"/>

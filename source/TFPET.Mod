@@ -310,11 +310,9 @@ TYPE
 			Configuration.GetBoolean("Applications.PET.General.EnableWhitespaceWarnings", enableWhitespaceWarnings, res);
 			Configuration.GetBoolean("Applications.PET.General.ShowLineNumbers", showLineNumbers, res);
 			Configuration.GetBoolean("Applications.PET.General.IndicateTabs", indicateTabs, res);
-			Configuration.Get("Applications.PET.General.CurrentLineColor", string, res);
+			Configuration.GetColor("Applications.PET.General.CurrentLineColor", temp, res);
 			IF (res = Configuration.Ok) THEN
-				Strings.TrimWS(string);
-				Strings.HexStrToInt(string, temp, res);
-				IF (res = Strings.Ok) THEN currentLineColor := temp; END;
+				currentLineColor := temp
 			END;
 
 			(* Compiler *)

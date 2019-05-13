@@ -42,7 +42,7 @@ MODULE PET; (** AUTHOR "TF, PL"; PURPOSE "Programmer's Editing Tool"; *)
  *)
 
 IMPORT
-	KernelLog, KernelLogger, Modules, Commands, Options, Streams, Inputs, Files, WMRestorable, XML, XMLScanner, XMLParser, XMLObjects,
+	KernelLog, Modules, Commands, Options, Streams, Inputs, Files, WMRestorable, XML, XMLScanner, XMLParser, XMLObjects,
 	WMStandardComponents, WMGraphics, CompilerInterface, WhitespaceRemover,
 	WMComponents, WMRectangles, WMMessages, WMDialogs, WMDiagnostics,
 	WMTextView, WMEditors, Strings, TextUtilities, Texts,
@@ -312,18 +312,13 @@ TYPE
 			Configuration.GetBoolean("Applications.PET.General.EnableWhitespaceWarnings", enableWhitespaceWarnings, res);
 			Configuration.GetBoolean("Applications.PET.General.ShowLineNumbers", showLineNumbers, res);
 			Configuration.GetBoolean("Applications.PET.General.IndicateTabs", indicateTabs, res);
-			Configuration.Get("Applications.PET.General.CurrentLineColor", string, res);
+			Configuration.GetColor("Applications.PET.General.CurrentLineColor", temp, res);
 			IF (res = Configuration.Ok) THEN
-				Strings.TrimWS(string);
-				Strings.HexStrToInt(string, temp, res);
-				IF (res = Strings.Ok) THEN currentLineColor := temp; END;
+				currentLineColor := temp
 			END;
-
-			Configuration.Get("Applications.PET.General.BackgroundColor", string, res);
+			Configuration.GetColor("Applications.PET.General.BackgroundColor", temp, res);
 			IF (res = Configuration.Ok) THEN
-				Strings.TrimWS(string);
-				Strings.HexStrToInt(string, temp, res);
-				IF (res = Strings.Ok) THEN backgroundColor := temp; END;
+				backgroundColor := temp
 			END;
 
 			(* Compiler *)

@@ -342,8 +342,8 @@ END Terminate;
 
 PROCEDURE {NOPAF, INITIAL, FIXED(100000H)} KernelBegin;
 CODE
-	MOV bootFlag, EAX
-	LEA EAX, initRegs
+	MOV [bootFlag], EAX
+	MOV EAX, initRegs
 	MOV [EAX + 0], ESI
 	MOV [EAX + 4], EDI
 END KernelBegin;

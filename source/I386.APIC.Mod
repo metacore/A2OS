@@ -12,7 +12,7 @@ CONST ReservedArea* = Processors * CPU.StackSize;
 CONST NMI* = {10}; INIT* = {8, 10}; STARTUP* = {9, 10};
 CONST Assert* = {14}; AllExcludingSelf* = {18, 19};
 
-CONST BootCodeSize = 119;
+CONST BootCodeSize = 118;
 
 VAR baseAddress: ADDRESS;
 
@@ -24,7 +24,7 @@ END AwaitInterrupt;
 PROCEDURE SendInterrupt- (low, high: SET);
 CONST ICRL = 300H; ICRH = 310H; Status = 12;
 CODE
-	MOV	EDX, baseAddress
+	MOV	EDX, [baseAddress]
 	MOV	EAX, [EBP + high]
 	MOV	[EDX + ICRH], EAX
 	MOV	EAX, [EBP + low]
@@ -90,7 +90,7 @@ protected:
 	BITS	32
 
 	; create unique stack pointer
-	MOV	EAX, baseAddress
+	MOV	EAX, [baseAddress]
 	MOV	EAX, [EAX + ID]
 	SHR	EAX, 24
 	INC	EAX
@@ -98,7 +98,7 @@ protected:
 	MUL	EBX
 	MOV	ESP, EAX
 	ADD	ESP, (bootcodeend - bootcodebegin) / 4 * 4
-	LEA	EAX, CPU.idt
+	MOV	EAX, CPU.idt
 	PUSH	EAX
 	MOV	AX, Interrupts * 8
 	PUSH	AX
@@ -130,7 +130,7 @@ CODE
 	RDMSR
 	AND	EAX, 0FFFFF000H
 	MOV	EDX, EAX
-	MOV	baseAddress, EDX
+	MOV	[baseAddress], EDX
 skip:
 	POP	ECX
 END Initialize;

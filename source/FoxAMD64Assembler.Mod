@@ -1529,6 +1529,7 @@ TYPE
 					ELSIF (scope # NIL) & (symbol = symAt) THEN
 						NextSymbol;
 						IF symbol # symIdent THEN Error("identifier missing") END;
+						InitOffset (ofs, size, 0);
 						GetOffsetFixup (idents, ofs);
 						NextSymbol;
 						IF symbol = symPlus THEN
@@ -1617,7 +1618,6 @@ TYPE
 					sym := localScope.FindSymbol(identifier);
 					localScope := localScope.outerScope
 				END;
-
 				IF (sym # NIL) & (sym IS SyntaxTree.Import)  THEN
 					NextSymbol;
 					IF Ensure(symPeriod,0) & (symbol = symIdent) THEN
@@ -1655,7 +1655,7 @@ TYPE
 			END GetValue;
 
 			PROCEDURE GetMemFixup (CONST ident: ARRAY OF CHAR; VAR operand: Operand);
-			VAR scopeSymbol:SyntaxTree.Symbol;
+			VAR scopeSymbol:SyntaxTree.Symbol; name: Basic.SegmentedName;
 			BEGIN
 				scopeSymbol := GetScopeSymbol (ident);
 				IF scopeSymbol = NIL THEN RETURN END;
@@ -1668,8 +1668,9 @@ TYPE
 					Error("no symbols may be accessed in exported and inlined procedures");
 				END;
 
-				IF  (scopeSymbol IS SyntaxTree.Variable) & (scopeSymbol.scope = module.module.moduleScope) THEN (* global variable. offset not supported *)
-					Error("global variables cannot be accessed as memory operands");
+				IF scopeSymbol.scope IS SyntaxTree.ModuleScope THEN
+					Global.GetSymbolSegmentedName(scopeSymbol,name);
+					SetSymbol(operand,name,0,0,0);
 				ELSIF (scopeSymbol IS SyntaxTree.Variable) THEN (* local variable *)
 					operand.displacement := (scopeSymbol.offsetInBits DIV 8)
 				ELSIF (scopeSymbol IS SyntaxTree.Parameter) THEN (* local parameter *)
@@ -1677,12 +1678,11 @@ TYPE
 				ELSE
 					RETURN (* ? *)
 				END;
-				(*! mem.fixup := scopeSymbol.adr; *)
 				NextSymbol;
 			END GetMemFixup;
 
 			PROCEDURE GetOffsetFixup (CONST ident: ARRAY OF CHAR; VAR operand: Operand);
-			VAR scopeSymbol: SyntaxTree.Symbol;name: Basic.SegmentedName; symbol: IntermediateCode.Section;
+			VAR scopeSymbol: SyntaxTree.Symbol; name: Basic.SegmentedName; size: Size;
 			BEGIN
 				IF labels.Find(ident) # NIL THEN RETURN END;
 				scopeSymbol := GetScopeSymbol (ident);
@@ -1692,24 +1692,13 @@ TYPE
 					Error("no symbols may be accessed in exported and inlined procedures");
 				END;
 
-				Global.GetSymbolSegmentedName(scopeSymbol,name);
 				IF scopeSymbol.scope IS SyntaxTree.ModuleScope THEN
-					IF (scopeSymbol IS SyntaxTree.Variable) THEN
-						InitMem(operand,IntermediateCode.Bits32,none,0); (* or immediate ?? *)
-					ELSIF (scopeSymbol IS SyntaxTree.Procedure) & (scopeSymbol.scope = module.module.moduleScope) THEN
-						IF scopeSymbol(SyntaxTree.Procedure).isInline THEN
-							Error("fobidden reference to inline call");
-						ELSE
-							InitOffset32(operand,0); (* or immediate ?? *)
-						END;
-					ELSIF (scopeSymbol IS SyntaxTree.Procedure) THEN
-						InitOffset32(operand,0); (* or immediate ?? *)
-					END;
+					Global.GetSymbolSegmentedName(scopeSymbol,name);
 					SetSymbol(operand,name,0,0,0);
 				ELSE
-					Error("direct access to local variable offset forbidden");
+					IF operand.sizeInBytes = bitsDefault THEN size := emitter.cpuBits ELSE size := operand.sizeInBytes END;
+					InitOffset (operand, size, scopeSymbol.offsetInBits DIV 8);
 				END;
-				operand.sizeInBytes := emitter.cpuBits;
 			END GetOffsetFixup;
 
 			(* the following procedure is used to adapt sizes for relative jumps *)
@@ -1881,7 +1870,7 @@ TYPE
 									RETURN FALSE;
 								END;
 								INC (mem.displacement, LONGINT (x));
-							ELSIF (mem.register = InstructionSet.none) & (mem.index = InstructionSet.none)  THEN
+							ELSIF (mem.register = InstructionSet.none) & (mem.index = InstructionSet.none) & (mem.symbol.name = "") THEN
 								Error("operand missing: no register provided");
 								RETURN FALSE;
 							END;
@@ -1894,7 +1883,7 @@ TYPE
 							END;
 						ELSE
 							(* number or identifier (symbol) *)
-						InitImm(offset,size,0);
+							InitImm(offset,size,0);
 
 							IF (scope # NIL) & (symbol = symIdent) THEN (* identifier: must be a symbol *)
 								GetOffsetFixup (idents, offset);

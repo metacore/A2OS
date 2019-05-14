@@ -431,8 +431,8 @@ VAR
 (** Return current processor ID (0 to MaxNum-1). *)
 PROCEDURE ID* (): LONGINT;
 CODE {SYSTEM.i386}
-	MOV EAX, idAdr
-	LEA EBX, map
+	MOV EAX, [idAdr]
+	MOV EBX, map
 	MOV EAX, [EAX]
 	SHR EAX, 24
 	AND EAX, 15
@@ -2492,15 +2492,15 @@ entry:
 	MOV EBX, [ESP+32]	; EBX = int number
 	IMUL EBX, EBX, MaxNumHandlers
 	IMUL EBX, EBX, 12
-	LEA EAX, intHandler
+	MOV EAX, intHandler
 	ADD EAX, EBX		; address of intHandler[int, 0]
 
 loop:					; call all handlers for the interrupt
 	MOV ECX, ESP
 	PUSH EAX			; save ptr for linked list
 	PUSH DWORD [EAX+8]	; delegate
-	PUSH stateTag		; TAG(state)
-	PUSH ECX			; ADR(state)
+	PUSH DWORD [stateTag]	; TAG(state)
+	PUSH ECX		; ADR(state)
 	CALL DWORD [EAX+4]	; call handler
 	ADD ESP, 12
 	CLI					; handler may have re-enabled interrupts
@@ -2547,15 +2547,15 @@ skip1:
 skip2:
 	IMUL EBX, EBX, MaxNumHandlers
 	IMUL EBX, EBX, 12
-	LEA EAX, intHandler
+	MOV EAX, intHandler
 	ADD EAX, EBX		; address of intHandler[int, 0]
 
 loop:					; call all handlers for the interrupt
 	MOV ECX, ESP
 	PUSH EAX			; save ptr for linked list
 	PUSH DWORD [EAX+8]	; delegate
-	PUSH stateTag		; TAG(state)
-	PUSH ECX			; ADR(state)
+	PUSH DWORD [stateTag]	; TAG(state)
+	PUSH ECX		; ADR(state)
 	CALL DWORD [EAX+4]	; call handler
 	ADD ESP, 12
 	CLI					; handler may have re-enabled interrupts
@@ -3591,9 +3591,9 @@ PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
 BEGIN (* no PAF --> no variables !! *)
 	CODE{SYSTEM.i386}
 		; save arguments passed by bootloader
-		MOV bootFlag, EAX
-		MOV initRegs0,ESI
-		MOV initRegs1, EDI
+		MOV [bootFlag], EAX
+		MOV [initRegs0], ESI
+		MOV [initRegs1], EDI
 	END;
 	Init; (* call initializer as first action of the kernel *)
 END FirstAddress;

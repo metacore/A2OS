@@ -426,12 +426,10 @@ VAR
 (** Return current processor ID (0 to MaxNum-1). *)
 PROCEDURE ID* (): LONGINT;
 CODE {SYSTEM.AMD64}
-	; todo: use MOV instead of LEA as soon as assembler returns address for global variables
-
-	LEA RAX, idAdr	; get address of idAdr
+	MOV RAX, idAdr	; get address of idAdr
 	MOV RAX, [RAX]	; get value of idAdr
 	MOV EAX, [RAX]	; dereference idAdr
-	LEA RBX, map	; address of map
+	MOV RBX, map	; address of map
 	SHR EAX, 24
 	AND EAX, 15
 	MOV AL, [RBX + RAX]
@@ -2645,11 +2643,11 @@ entry:
 	IMUL RBX, RBX, MaxNumHandlers
 	IMUL RBX, RBX, SizeOfHandlerRec
 	; todo: replace LEA by MOV when compiler supports this
-	LEA RAX, intHandler
+	MOV RAX, intHandler
 	ADD RAX, RBX		; address of intHandler[int, 0]
 
 	; todo: replace LEA by MOV when compiler supports this
-	LEA RDX, stateTag
+	MOV RDX, stateTag
 
 loop:	; call all handlers for the interrupt
 	MOV RCX, RSP
@@ -2724,11 +2722,11 @@ entry:
 	IMUL RBX, RBX, MaxNumHandlers
 	IMUL RBX, RBX, SizeOfHandlerRec
 	; todo: replace LEA by MOV when compiler supports this
-	LEA RAX, intHandler
+	MOV RAX, intHandler
 	ADD RAX, RBX		; address of intHandler[int, 0]
 
 	; todo: replace LEA by MOV when compiler supports this
-	LEA RDX, stateTag
+	MOV RDX, stateTag
 
 loop:	; call all handlers for the interrupt
 	MOV RCX, RSP
@@ -3844,9 +3842,9 @@ Skip:
 
 
 	; save arguments passed by bootloader
-	MOV bootFlag, RAX
-	MOV initRegs0,RSI
-	MOV initRegs1, RDI
+	MOV [bootFlag], RAX
+	MOV [initRegs0], RSI
+	MOV [initRegs1], RDI
 
 END FirstAddress;
 

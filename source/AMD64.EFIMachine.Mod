@@ -63,10 +63,9 @@ END JumpTo;
 
 PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint;
 CODE {SYSTEM.AMD64}
-	MOV QWORD EFI.imageHandle, RCX;
-	MOV QWORD EFI.table, RDX
+	MOV [EFI.imageHandle], RCX;
+	MOV [EFI.table], RDX
 END EntryPoint;
 
 END EFIMachine.
-
 

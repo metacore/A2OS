@@ -310,28 +310,28 @@ VAR
 			; 0 at esp+4+argc*4
 			; env at esp+4+argc*4+4 = (2+argc)<<2 + esp
 			MOV EAX, [ESP]
-			MOV argc, EAX
+			MOV [argc], EAX
 			LEA EAX, [ESP+4]
-			MOV argv, EAX
+			MOV [argv], EAX
 			MOV EAX, [ESP]
 			ADD EAX, 2
 			SHL EAX, 2
 			ADD EAX, ESP
-			MOV environ, EAX
+			MOV [environ], EAX
 		#ELSIF AMD64 THEN
 			; argc at rsp
 			; argv at rsp+8
 			; 0 at rsp+8+argc*8
 			; env at rsp+8+argc*8+8 = (2+argc)<<3 + rsp
-			MOV RAX, [RSP]
-			MOV argc, RAX
+			MOV EAX, [RSP]
+			MOV [argc], EAX
 			LEA RAX, [RSP+8]
-			MOV argv, RAX
+			MOV [argv], RAX
 			MOV RAX, [RSP]
 			ADD RAX, 2
 			SHL RAX, 3
 			ADD RAX, RSP
-			MOV environ, RAX
+			MOV [environ], RAX
 		#ELSE
 			unimplemented
 		#END

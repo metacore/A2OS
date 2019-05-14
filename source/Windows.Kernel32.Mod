@@ -1286,9 +1286,9 @@ VAR hout: HANDLE;
 
 		end:
 			MOV EAX,[401000H+adrLoadLibrary]
-			MOV LoadLibrary, EAX
+			MOV [LoadLibrary], EAX
 			MOV EAX,[401000H+adrGetProcAddress]
-			MOV getProcAddress, EAX
+			MOV [getProcAddress], EAX
 
 		END EntryPoint;
 	#END;
@@ -1337,9 +1337,9 @@ VAR hout: HANDLE;
 
 		end:
 			MOV RAX,[401000H+adrLoadLibrary]
-			MOV LoadLibrary, RAX
+			MOV [LoadLibrary], RAX
 			MOV RAX,[401000H+adrGetProcAddress]
-			MOV getProcAddress, RAX
+			MOV [getProcAddress], RAX
 	END EntryPoint;
 #ELSE
 	UNIMPLEMENTED

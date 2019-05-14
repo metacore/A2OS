@@ -22,7 +22,7 @@ PROCEDURE GetCR3(VAR state: Machine.State);
 CODE
 #IF I386 THEN
 	MOV EAX, CR3
-	MOV kernelPD, EAX
+	MOV [kernelPD], EAX
 #ELSIF AMD64 THEN
 	MOV RAX, CR3
 	MOV RBX, kernelPD

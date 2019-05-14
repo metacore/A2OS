@@ -356,7 +356,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 
 	CODE
-		LEA	EAX, idt
+		MOV	EAX, idt
 		PUSH	EAX
 		MOV	AX, Interrupts * 8
 		PUSH	AX
@@ -436,7 +436,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 
 	CODE
-		LEA	RAX, idt
+		LEA	RAX, [idt]
 		PUSH	RAX
 		MOV	AX, Interrupts * 8
 		PUSH	AX

@@ -1,7 +1,7 @@
 MODULE OpenType;
-	IMPORT OpenTypeInt, OpenTypeScan, KernelLog, Strings, Files;
+	IMPORT OpenTypeInt, OpenTypeScan, KernelLog, Strings, Files, Configuration;
 CONST 
-	SharpenContours = TRUE; 
+	DefaultSharpenContours = FALSE; 
 	Copyright* = 0; 
 	Family* = 1; 
 	Subfamily* = 2; 
@@ -197,6 +197,7 @@ VAR
 	CacheStamp: LONGINT; 
 	MacChar, UniChar: ARRAY 256 OF INTEGER; 
 	Log: DebugLog; 
+	SharpenContours: BOOLEAN; 
 
 	PROCEDURE ^ InitCache*(VAR cache: Cache); 
 	PROCEDURE ^ SetCacheSize*(VAR cache: Cache; max: INTEGER); 
@@ -229,5 +230,6 @@ VAR
 	PROCEDURE ^ EnumCol(col: INTEGER; beg, end: F26D6; VAR data: OpenTypeScan.EnumData); 
 	PROCEDURE ^ EnumRaster*(VAR ras: OpenTypeScan.Rasterizer; VAR data: RasterData); 
 	PROCEDURE ^ InitCharMaps; 
+	PROCEDURE ^ GetSharpenContours; 
 BEGIN
 END OpenType.

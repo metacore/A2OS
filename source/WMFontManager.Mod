@@ -48,6 +48,7 @@ TYPE
 			defaultFontName := "Oberon"; defaultFontSize := 14; defaultFontStyle := {};
 			GetConfig;
 			defaultFont := WMDefaultFont.LoadDefaultFont(); (* fallback case *)
+			defaultFont.size := defaultFontSize;
 			t := GetFont(defaultFontName, defaultFontSize, defaultFontStyle);
 			IF t = defaultFont THEN KernelLog.String("Using embedded font"); KernelLog.Ln ELSE defaultFont := t END;
 			WMGraphics.InstallDefaultFont(defaultFont);

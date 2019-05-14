@@ -324,7 +324,7 @@ VAR
 			; 0 at rsp+8+argc*8
 			; env at rsp+8+argc*8+8 = (2+argc)<<3 + rsp
 			MOV RAX, [RSP]
-			MOV argc, EAX
+			MOV argc, RAX
 			LEA RAX, [RSP+8]
 			MOV argv, RAX
 			MOV RAX, [RSP]

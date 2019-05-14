@@ -10,7 +10,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 		VAR ch: CHAR;i: SIZE; full: Files.FileName; flags: SET;
 		BEGIN
 			SELF.fs := fs;
-			INCL(flags,Files.NeedsPrefix);
+			INCL(SELF.flags,Files.NeedsPrefix);
 			i :=0; ch := 0X;
 			WHILE(relTo[i] # 0X) DO
 				ch := relTo[i];

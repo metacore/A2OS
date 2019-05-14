@@ -120,7 +120,7 @@ end
 
 def cgi.statuses(project = nil, target = nil)
 	statuses = Database.query('select status, count (*) from builds where (:project is null or project = :project) and (:target is null or target = :target) group by status order by status desc', project: project, target: target)
-	statuses.collect { |status| label { "#{status[0]}: #{status[1]}" } }.join
+	statuses.collect { |status| li { "#{status[0]}: #{span(class: "status #{status[0]}") { status[1] }}" } }.join
 end
 
 def cgi.detail(project, target = nil)

@@ -1146,10 +1146,8 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 
 	MultiLogger.Mod
 
-	BIOS, WIN {
-		MemoryReader.Mod Decoder.Mod I386Decoder.Mod	# GUI decoder
-		ARMDecoder.Mod AMD64Decoder.Mod DecoderRes.zip
-	}
+	MemoryReader.Mod Decoder.Mod I386Decoder.Mod	# GUI decoder
+	ARMDecoder.Mod AMD64Decoder.Mod DecoderRes.zip
 
 	Tutorial.Text Quickstart.Text cn.PrgInOberon.txt	# documentation
 	WMTextTool.Mod

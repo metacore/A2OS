@@ -564,7 +564,9 @@ TYPE
 			val := -1;
 
 			IF rexPrefix # {} THEN
-				ASSERT(cpuBits = bits64);
+				IF cpuBits # bits64 THEN 
+					ErrorSI("compiler encoding error ", mnem,operands);
+				END;
 				byte := 40H;
 				WHILE (oppos < LEN(opcode)-1) & IsPreREXPrefix(opcode[oppos], opcode[oppos+1]) DO
 					code.PutByte(ORD(opcode[oppos+1]));

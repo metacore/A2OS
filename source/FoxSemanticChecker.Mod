@@ -3096,9 +3096,9 @@ TYPE
 				ASSERT(symbol.type # NIL);
 				RETURN NewSymbolDesignator(identifierDesignator.position,identifierDesignator,NIL,symbol);
 			ELSE
-				Printout.Info("cannot find symbol in scope", currentScope); 
 				Error(identifierDesignator.position,"Undeclared Identifier");
 				IF VerboseErrorMessage THEN
+					Printout.Info("cannot find symbol in scope", currentScope); 
 					Printout.Info("undeclared identifier designator",identifierDesignator);
 				END;
 				RETURN SyntaxTree.invalidDesignator;

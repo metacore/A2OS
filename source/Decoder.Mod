@@ -521,7 +521,6 @@ TYPE
 			END;
 		END AddImport;
 
-
 		PROCEDURE IsExceptionHandled(pc: ADDRESS): BOOLEAN;
 		VAR
 			i: LONGINT;
@@ -651,7 +650,6 @@ TYPE
 				ELSE
 					COPY(name,procInfo.name);
 				END;
-
 
 				procInfo.retType := retType;
 				fldInfo := DecodeField(reader);
@@ -865,9 +863,9 @@ TYPE
 						pcPos := w.Pos() + LONGINT((markPC-opStart)*3); (* text position within opcode bytes *)
 					END
 				END;
-				opcodes.PrintOpcodeBytes(w); 	w.Char(9X);
+				opcodes.PrintOpcodeBytes(w); w.Char(9X);
 				textWriter.SetFontColor(0000099FFH);
-				opcodes.PrintInstruction(w);	w.Char(9X);
+				opcodes.PrintInstruction(w); w.Char(9X);
 				opcodes.PrintArguments(w); w.Char(9X);
 				textWriter.SetFontColor(LONGINT(0999999FFH));
 				opcodes.PrintVariables(w);
@@ -955,11 +953,9 @@ TYPE
 					ELSE
 						w.Char(".")
 					END;
-				 END;
+				END;
 				w.Ln;
 			END DataBlock;
-
-
 
 		BEGIN
 			w := InitializeOutline(panel);
@@ -1541,80 +1537,83 @@ TYPE
 			lastExt := ext;
 			codeScaleCallback := GetCodeScaleCallback(ext);
 			f := Files.Old(fileName);
-			IF f # NIL THEN
-				Files.OpenReader(r, f, 0);
-				IF r.Get() = 0BBX THEN
-					version := ORD(r.Get());
-					IF version = 0ADH THEN version := ORD(r.Get()) END;
-					IF version = 0B1H THEN (* PACO object file *)
-						r.RawNum(symSize);
-					ELSIF (version >= 0B2H) THEN (*fof: OC object file *)
-						r.RawLInt(symSize);
-					END;
-					r.SkipBytes(symSize); (* skip symbol file *)
-				ELSE
-					KernelLog.String("Decoder: ERROR: Tag not supported or wrong file type!"); KernelLog.Ln;
-					RETURN
-				END;
-				r.RawLInt(header.refSize);
-				r.RawLInt(header.entries);
-				r.RawLInt(header.commands);
-				r.RawLInt(header.pointers);
-				r.RawLInt(header.types);
-				r.RawLInt(header.modules);
-				r.RawLInt(nofVarConstLinks);
-				r.RawLInt(nofLinks);
-				r.RawLInt(header.dataSize);
-				r.RawLInt(header.constSize);
-				r.RawLInt(header.codeSize);
-
-				IF (codeScaleCallback # NIL) THEN codeScaleCallback(header.codeSize) END;
-
-				(* Sz: Exception handling *)
-				r.RawLInt(header.exTableLen);
-
-				(* ug: Pointers in procedures, maxPtrs, staticTdSize: *)
-				r.RawLInt(noProcs);
-				r.RawLInt(tmp); (* ug: skip maxPtrs *)
-				r.RawLInt(tmp); (* ug: skip staticTdSize *)
-				IF version > 0B3H THEN r.RawLInt(header.crc) END;
-				r.RawString(name);
-				(* skip to code block *)
-				DecodeEntries;
-				SkipCommands;
-				SkipPointers;
-				SkipImports;
-				SkipVarConstLinks;
-				SkipLinks;
-				SkipConsts;
-				SkipExports;
-				ch := r.Get();
-				pos := r.Pos();
-				ASSERT(ch = 89X);
-
-				(* code section *)
-				NEW(module.code, header.codeSize);
-				FOR j := 0 TO header.codeSize-1 DO
-					module.code[j] := r.Get()
-				END;
-				SkipUse;
-				DecodeTypes;
-
-				(* Sz: read exception handling table *)
-				ch := r.Get();
-				ASSERT(ch = 8EX);
-				DecodeExTable(r);
-
-				SkipPointerInProc; (* ug *)
-
-				(* read ref header *)
-				ch := r.Get();
-				ASSERT(ch = OFFHdrRef);
-				DecodeRefs(r);
-			ELSE
+			IF f = NIL THEN
 				msg := "Object file '"; Strings.Append(msg, fileName); Strings.Append(msg, "' could not be found.");
-				 WMDialogs.Error("Decoder", msg)
+				WMDialogs.Error("Decoder", msg);
+				RETURN;
 			END;
+
+			Files.OpenReader(r, f, 0);
+			IF r.Get() # 0BBX THEN
+				msg := "Invalid object file '"; Strings.Append(msg, fileName); Strings.Append(msg, "'. Tag not supported.");
+				WMDialogs.Error("Decoder", msg);
+				RETURN;
+			END;
+
+			version := ORD(r.Get());
+			IF version = 0ADH THEN version := ORD(r.Get()) END;
+			IF version = 0B1H THEN (* PACO object file *)
+				r.RawNum(symSize);
+			ELSIF (version >= 0B2H) THEN (*fof: OC object file *)
+				r.RawLInt(symSize);
+			END;
+			r.SkipBytes(symSize); (* skip symbol file *)
+
+			r.RawLInt(header.refSize);
+			r.RawLInt(header.entries);
+			r.RawLInt(header.commands);
+			r.RawLInt(header.pointers);
+			r.RawLInt(header.types);
+			r.RawLInt(header.modules);
+			r.RawLInt(nofVarConstLinks);
+			r.RawLInt(nofLinks);
+			r.RawLInt(header.dataSize);
+			r.RawLInt(header.constSize);
+			r.RawLInt(header.codeSize);
+
+			IF (codeScaleCallback # NIL) THEN codeScaleCallback(header.codeSize) END;
+
+			(* Sz: Exception handling *)
+			r.RawLInt(header.exTableLen);
+
+			(* ug: Pointers in procedures, maxPtrs, staticTdSize: *)
+			r.RawLInt(noProcs);
+			r.RawLInt(tmp); (* ug: skip maxPtrs *)
+			r.RawLInt(tmp); (* ug: skip staticTdSize *)
+			IF version > 0B3H THEN r.RawLInt(header.crc) END;
+			r.RawString(name);
+			(* skip to code block *)
+			DecodeEntries;
+			SkipCommands;
+			SkipPointers;
+			SkipImports;
+			SkipVarConstLinks;
+			SkipLinks;
+			SkipConsts;
+			SkipExports;
+			ch := r.Get();
+			pos := r.Pos();
+			ASSERT(ch = 89X);
+
+			(* code section *)
+			NEW(module.code, header.codeSize);
+			FOR j := 0 TO header.codeSize-1 DO
+				module.code[j] := r.Get()
+			END;
+			SkipUse;
+			DecodeTypes;
+
+			(* Sz: read exception handling table *)
+			ch := r.Get();
+			ASSERT(ch = 8EX);
+			DecodeExTable(r);
+
+			SkipPointerInProc; (* ug *)
+
+			(* read ref header *)
+			ch := r.Get();
+			ASSERT(ch = OFFHdrRef);
+			DecodeRefs(r);
 		END New;
 
 	END ModuleInfoObjectFile;
@@ -1847,7 +1846,7 @@ TYPE
 		END Close;
 	END DecoderWindow;
 
-	Extension = ARRAY 4 OF CHAR;
+	Extension = ARRAY 10 OF CHAR;
 
 	DecoderType = OBJECT
 		VAR
@@ -1870,12 +1869,12 @@ VAR
 
 	PROCEDURE OpenEmpty*;
 	BEGIN
-		NEW(win, "", NIL);
+		NEW(win, "", NIL);
 	END OpenEmpty;
 
 	PROCEDURE MakeHeader(module: Modules.Module; VAR header: ObjHeader);
 	BEGIN
-		header.entries := LEN(module.entry);
+		IF module.entry # NIL THEN header.entries := LEN(module.entry) ELSE header.entries := 0 END;
 		header.commands := LEN(module.command);
 		header.pointers := LEN(module.ptrAdr);
 		header.types := LEN(module.typeInfo);
@@ -1889,7 +1888,6 @@ VAR
 		header.crc := module.crc;
 		header.name := module.name;
 	END MakeHeader;
-
 
 	PROCEDURE RemoveTypeName (VAR procName : ARRAY OF CHAR; CONST typeName : ARRAY OF CHAR);
 	VAR

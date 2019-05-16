@@ -33,7 +33,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.StringLn ("system: shutting down...");
 	mod := Kernel32.LoadLibrary("User32.DLL");
 	Kernel32.GetProcAddress(mod, "PostMessageA", SYSTEM.VAL (ADDRESS,SendMessage));
-	SendMessage (0FFFFH, 0, 0, 0);
+	IGNORE SendMessage (0FFFFH, 0, 0, 0);
 END Shutdown;
 
 PROCEDURE Reboot*;
@@ -201,7 +201,7 @@ END RemoveTraceFile;
 PROCEDURE ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR);
 VAR i, j: LONGINT;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	Kernel32.GetModuleFileName (Kernel32.hInstance, fullName, LEN (fullName));
+	IGNORE Kernel32.GetModuleFileName (Kernel32.hInstance, fullName, LEN (fullName));
 	j := -1; i := 0;
 	WHILE fullName[i] # 0X DO
 		IF fullName[i] = '\' THEN j := i END;
@@ -220,7 +220,7 @@ END GetInit;
 
 PROCEDURE StoreActivity-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	Kernel32.TlsSetValue(activity, SYSTEM.VAL(ADDRESS, SYSTEM.GetActivity ()));
+	IGNORE Kernel32.TlsSetValue(activity, SYSTEM.VAL(ADDRESS, SYSTEM.GetActivity ()));
 END StoreActivity;
 
 PROCEDURE RestoreActivity-;
@@ -247,11 +247,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		SetupTraceName(traceName);
 		Trace.String("trace -> file "); Trace.String(traceName); Trace.Ln;
 		stdout := Kernel32.CreateFile(traceName, {Kernel32.GenericWrite}, {Kernel32.FileShareRead}, NIL, Kernel32.CreateAlways, {Kernel32.FileAttributeNormal}, Kernel32.NULL);
-		Kernel32.GetFullPathName(traceName, LEN(traceName), traceName, NIL);
+		IGNORE Kernel32.GetFullPathName(traceName, LEN(traceName), traceName, NIL);
 		Trace.Char := WriteChar;
 	ELSIF trace = "Console" THEN
 		Trace.String("trace -> console"); Trace.Ln;
-		Kernel32.AllocConsole ();
+		IGNORE Kernel32.AllocConsole ();
 		stdin:= Kernel32.GetStdHandle (Kernel32.STDInput);
 		stdout := Kernel32.GetStdHandle (Kernel32.STDOutput);
 		Trace.Char := WriteChar; Trace.Color := SetConsoleColor;
@@ -260,7 +260,7 @@ END Initialize;
 
 PROCEDURE Terminate-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
-	Kernel32.TlsFree(activity);
+	IGNORE Kernel32.TlsFree(activity);
 END Terminate;
 
 BEGIN

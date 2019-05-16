@@ -162,6 +162,7 @@ TYPE
 	HANDLE* = ADDRESS;  HMODULE* = ADDRESS;
 	HINSTANCE* = ADDRESS;  ATOM* = INTEGER;  HGLOBAL* = HANDLE;
 	LPSTR* = ADDRESS;
+	DWORD* = LONGINT;
 
 	(** The FILETIME structure is a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601. *)
 	FileTime* = RECORD
@@ -1036,9 +1037,9 @@ VAR
 
 		end:
 			MOV EAX,[401000H+adrLoadLibrary]
-			MOV LoadLibrary, EAX
+			MOV [LoadLibrary], EAX
 			MOV EAX,[401000H+adrGetProcAddress]
-			MOV getProcAddress, EAX
+			MOV [getProcAddress], EAX
 			CALL Init
 		END EntryPoint;
 

@@ -539,8 +539,6 @@ BEGIN
 	Machine.Release(Machine.Heaps)
 END FillStaticType;
 
-VAR File EXTERN "UnixFiles.File": RECORD END;
-
 PROCEDURE AddFinalizer*(obj: ANY; n: FinalizerNode);
 VAR pointer {UNTRACED}: BaseTypes.Pointer;
 BEGIN

@@ -600,7 +600,7 @@ TYPE
 			i: LONGINT;
 
 		BEGIN
-			ASSERT(header.codeSize > 0);
+			IF header.codeSize = 0 THEN RETURN END;
 			(* body ref *)
 			IF reader.Available() > 0 THEN
 				ch := reader.Get();
@@ -1879,8 +1879,8 @@ VAR
 		header.pointers := LEN(module.ptrAdr);
 		header.types := LEN(module.typeInfo);
 		header.modules := LEN(module.module);
-		header.codeSize := LEN(module.code);
-		header.dataSize := LEN(module.data);
+		IF module.code # NIL THEN header.codeSize := LEN(module.code) ELSE header.codeSize := 0 END;
+		IF module.data # NIL THEN header.dataSize := LEN(module.data) ELSE header.dataSize := 0 END;
 		header.refSize := LEN(module.refs);
 		header.constSize := 0;
 		header.exTableLen := LEN(module.exTable);

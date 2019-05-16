@@ -4,7 +4,7 @@ MODULE Decoder;
 
 IMPORT SYSTEM, Modules, Streams, MemoryReader, Strings, Files, KernelLog, TextUtilities, Commands, WMGraphics,
 	WMEditors, WMTextView, WMComponents, WMStandardComponents, WMDialogs, WMRestorable, WMTrees, WMMessages,
-	WM := WMWindowManager, D:= Debugging;
+	WM := WMWindowManager, D:= Debugging, Reflection;
 
 CONST
 	maxDecoders = 5;
@@ -598,7 +598,6 @@ TYPE
 			ofs, prevOfs, retType, entry : LONGINT;
 			name :ARRAY 256 OF CHAR;
 			i: LONGINT;
-
 		BEGIN
 			IF header.codeSize = 0 THEN RETURN END;
 			(* body ref *)
@@ -1632,9 +1631,55 @@ TYPE
 			SELF.module := module;
 			SELF.header := header;
 
-			DecodeRefs(reader);
-			DecodeTypes
+			(*
+				DecodeRefs(reader);
+				DecodeTypes
+			*)
+
+			DecodeThis (module);
+
 		END New;
+
+		PROCEDURE DecodeThis (module: Modules.Module);
+		VAR refs: Modules.Bytes; offset: SIZE;
+
+			PROCEDURE DecodeModule;
+			BEGIN
+			END DecodeModule;
+
+			PROCEDURE DecodeScope;
+			BEGIN
+				IF Reflection.GetChar (refs, offset) # Reflection.sfScopeBegin THEN RETURN END;
+				WHILE refs[offset] = Reflection.sfVariable DO Reflection.SkipVariable(refs, offset) END;
+				WHILE refs[offset] = Reflection.sfProcedure DO DecodeProcedure END;
+				WHILE refs[offset] = Reflection.sfTypeDeclaration DO Reflection.SkipTypeDeclaration(refs, offset) END;
+				IF Reflection.GetChar (refs, offset) # Reflection.sfScopeEnd THEN RETURN END;
+			END DecodeScope;
+
+			PROCEDURE DecodeProcedure;
+			VAR name: ARRAY 256 OF CHAR; start, end: ADDRESS; procInfo: ProcedureInfo;
+			BEGIN
+				IF Reflection.GetChar (refs, offset) # Reflection.sfProcedure THEN RETURN END;
+				Reflection.SkipSize(offset);
+				Reflection.GetString(refs, offset, name);
+				start := Reflection.GetAddress(refs, offset);
+				end := Reflection.GetAddress(refs, offset);
+				NEW(procInfo, name, start - ADDRESS OF module.code[0], 0);
+				procInfo.codeSize := LONGINT(end - start);
+				AddProcedure(procInfo);
+				Reflection.SkipSet(offset);
+				WHILE refs[offset] = Reflection.sfVariable DO Reflection.SkipVariable(refs, offset) END;
+				Reflection.SkipType(refs, offset);
+				DecodeScope;
+			END DecodeProcedure;
+
+		BEGIN
+			refs := module.refs; offset := 0;
+			IF Reflection.GetChar (refs, offset) # Reflection.sfModule THEN RETURN END;
+			Reflection.SkipSize (offset);
+			Reflection.SkipString (refs, offset);
+			IF refs[offset] = Reflection.sfScopeBegin THEN DecodeScope END;
+		END DecodeThis;
 
 		PROCEDURE DecodeTypes;
 		VAR

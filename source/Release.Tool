@@ -300,7 +300,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 	ARM & ~COOP { ARM.BootConfig.Mod }
 
-	WIN { Windows.Kernel32.Mod }
+	WIN & ~COOP { Windows.Kernel32.Mod }
 
 	LINUX { Linux.Glue.Mod Linux.Unix.Mod }
 	DARWIN { Unix.Glue.Mod Darwin.Unix.Mod }

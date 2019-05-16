@@ -936,9 +936,9 @@ VAR
 					(* Translate virtual key code  to character. This generates a WMChar message if translation succeeds. Since
 					AOS doesn't allow ALT-Printable-Keys combinations, we don't translate User32.WMSysKeyDown messages
 					that would generate WMSysChar messages *)
-					User32.TranslateMessage( msg );
+					IGNORE User32.TranslateMessage( msg );
 				END;
-				User32.DispatchMessage( msg )
+				IGNORE User32.DispatchMessage( msg )
 			END;
 		UNTIL (i = 0) OR (Environment.status # 0);
 		UnregisterClasses();
@@ -951,7 +951,7 @@ VAR
 		IF nWindows <= 0 THEN
 			Counters.Inc (Activities.awaiting);
 			create.win.processor := Activities.CreateVirtualProcessor ();
-			Kernel32.CreateThread (NIL, 0, WindowThread, create, {}, NIL);
+			IGNORE Kernel32.CreateThread (NIL, 0, WindowThread, create, {}, NIL);
 			root := create.win;
 		ELSE
 			theWin := FirstWindow();
@@ -1124,8 +1124,9 @@ VAR
 			Strings.Append( disp.desc, ts );  Strings.Append( disp.desc, "x" );  Strings.IntToStr( disp.format, ts );
 			Strings.Append( disp.desc, ts );  Strings.Append( disp.desc, ")" );  create.finished := FALSE;
 			CreateWin( create );
-			User32.SetWindowText(root.hWnd, windowTitle);
-			User32.BringWindowToTop( root.hWnd );  User32.SetForegroundWindow( root.hWnd );
+			IGNORE User32.SetWindowText(root.hWnd, windowTitle);
+			IGNORE User32.BringWindowToTop( root.hWnd );
+			IGNORE User32.SetForegroundWindow( root.hWnd );
 			Displays.registry.Add( disp, res );
 			ASSERT ( res = 0 );
 			IF fullscreen THEN
@@ -1148,20 +1149,21 @@ VAR
 			create.y := y;  create.w := w;  create.h := h + User32.GetSystemMetrics( User32.SMCYCaption );
 			create.finished := FALSE;
 			CreateWin( create );
-			User32.SetWindowText(root.hWnd, windowTitle);
-			User32.BringWindowToTop( root.hWnd );  disp.Update;
-			User32.SetForegroundWindow( root.hWnd );
+			IGNORE User32.SetWindowText(root.hWnd, windowTitle);
+			IGNORE User32.BringWindowToTop( root.hWnd );  disp.Update;
+			IGNORE User32.SetForegroundWindow( root.hWnd );
 		ELSE
 			KernelLog.Enter;  KernelLog.String( "Display: Display already open, window still open" );  KernelLog.Exit;
-			IF minimized IN root.state THEN User32.ShowWindow( root.hWnd, User32.SWRestore );  END;
+			IF minimized IN root.state THEN IGNORE User32.ShowWindow( root.hWnd, User32.SWRestore );  END;
 
-			User32.BringWindowToTop( root.hWnd );  User32.SetForegroundWindow( root.hWnd );
+			IGNORE User32.BringWindowToTop( root.hWnd );
+			IGNORE User32.SetForegroundWindow( root.hWnd );
 		END;
 
 		hDC := User32.GetDC(0);
 		disp.unit := GDI32.GetDeviceCaps(hDC,GDI32.LogPixelsX);
 		disp.unit := ENTIER((36000.0*disp.unit)/25.4);
-		User32.ReleaseDC(0,hDC);
+		IGNORE User32.ReleaseDC(0,hDC);
 	END DoInstall;
 
 	PROCEDURE Install*(context : Commands.Context); (** ["H"] [ width [height] ] ["FULLSCREEN"] [ x [y] ] *)

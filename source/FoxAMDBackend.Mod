@@ -3197,6 +3197,9 @@ TYPE
 											ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
 										END;
 										register := ticket.register;
+										IF register = InstructionSet.none THEN
+											register := InstructionSet.unassigned;
+										END; 
 									END;
 								| SyntaxTree.Parameter DO
 									IF symbol.preferRegister THEN
@@ -3206,12 +3209,12 @@ TYPE
 											ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
 										END;
 										register := ticket.register;
+										IF register = InstructionSet.none THEN
+											register := InstructionSet.unassigned;
+										END; 
 									END;									
 								ELSE
 								END;
-								IF register = InstructionSet.none THEN
-									register := InstructionSet.unassigned;
-								END; 
 							END;
 						END;
 						RETURN register;

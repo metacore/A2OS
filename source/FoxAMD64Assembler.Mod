@@ -1086,34 +1086,11 @@ TYPE
 
 	END Emitter;
 
-	RegisterMapEntry*= POINTER TO RECORD
-		name-: Strings.String;
-		register-: LONGINT;
-		next: RegisterMapEntry;
-	END;
-
 	RegisterMap*= OBJECT
-	VAR first: RegisterMapEntry;
 
-		PROCEDURE & Init *;
-		BEGIN
-			first := NIL
-		END Init;
-
-		PROCEDURE Find*(CONST name: ARRAY OF CHAR): LONGINT;
-		VAR map: RegisterMapEntry;
-		BEGIN
-			map := first;
-			WHILE (map # NIL) & (map.name^#name) DO map := map.next END;
-			IF map = NIL THEN RETURN InstructionSet.none ELSE RETURN map.register END;
+		PROCEDURE Find*(CONST name: ARRAY OF CHAR): LONGINT; (* abstract *)
+		BEGIN HALT(100);
 		END Find;
-
-		PROCEDURE Add*(name: Strings.String; register: LONGINT);
-		VAR map: RegisterMapEntry;
-		BEGIN
-			NEW(map); map.name := name; map.register := register;
-			map.next := first; first := map;
-		END Add;
 
 	END RegisterMap;
 
@@ -1789,7 +1766,13 @@ TYPE
 					IF symbol = symIdent THEN (* register ?, for example EAX *)
 						reg := InstructionSet.FindRegister (ident);
 						IF reg = InstructionSet.none THEN
-							reg := map.Find(ident)
+							IF map # NIL THEN
+								reg := map.Find(ident)
+							END;
+							IF reg = InstructionSet.unassigned THEN 
+								ErrorSS("register unavailable -- too many registers?",ident); 
+								reg := InstructionSet.none;
+							END; 
 						END;
 						IF reg # InstructionSet.none THEN
 							IF size # bitsDefault THEN
@@ -2763,4 +2746,4 @@ TYPE
 		END;
 	END FoxAMD64Assembler.
 
-OCAMD64Assembler.Test ~
+System.FreeDownTo FoxAMD64Assembler  ~ 

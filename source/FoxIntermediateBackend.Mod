@@ -1446,15 +1446,8 @@ TYPE
 		VAR moduleName, procedureName: SyntaxTree.IdentifierString;
 
 			PROCEDURE CheckRegister(VAR op: IntermediateCode.Operand);
-			VAR i: LONGINT;
 			BEGIN
 				IF op.register >0 THEN IntermediateCode.SetRegister(op,registerUsageCount.Map(op.register)) END;
-				IF op.rule # NIL THEN
-					FOR i := 0 TO LEN(op.rule)-1 DO
-						CheckRegister(op.rule[i])
-					END;
-				END;
-
 			END CheckRegister;
 
 		BEGIN
@@ -7466,7 +7459,7 @@ TYPE
 		**)
 		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable;
 		VAR name: SyntaxTree.Identifier;  variable, v: SyntaxTree.Variable;
-			scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset, index: LONGINT;
+			scope: SyntaxTree.Scope; duplicate: BOOLEAN; index: LONGINT;
 		BEGIN
 			IF ~register THEN
 				v := temporaries.GetFreeVariable(type, untraced, index);
@@ -10808,7 +10801,7 @@ TYPE
 				ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.sourceCode # NIL) THEN
 					source := NewSection(module.allSections, sectionType, name,x,commentPrintout # NIL);
 					IF source.pc = 0 THEN (* no code yet *)
-						source.Emit(Asm(position,x.procedureScope.body.code.sourceCode,NIL,NIL,x.procedureScope (*currentScope*)));
+						source.Emit(Asm(position,x.procedureScope.body.code.sourceCode,x.procedureScope (*currentScope*)));
 					END;
 				ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.inlineCode # NIL) THEN
 					bits := x.procedureScope.body.code.inlineCode;
@@ -12052,115 +12045,7 @@ TYPE
 
 		PROCEDURE VisitCode*(x: SyntaxTree.Code);
 		BEGIN
-			(*
-			scope := currentScope;
-			WHILE ~(scope IS SyntaxTree.ProcedureScope) DO scope := scope.outerScope END;
-			procedure :=  scope(SyntaxTree.ProcedureScope).ownerProcedure;
-			procedureType := procedure.type(SyntaxTree.ProcedureType);
-			return := emptyOperand;
-
-			IF Trace THEN TraceEnter("VisitCode") END;
-			IF (x.inRules # NIL) & (x.inRules.Length()>0) THEN
-				NEW(in, x.inRules.Length());
-				FOR i := 0 TO LEN(in)-1 DO
-					statement := x.inRules.GetStatement(i);
-					WITH statement: SyntaxTree.Assignment DO
-						Evaluate(statement.right, operand);
-						result := operand.op;
-						NEW(str, 64);
-						Basic.GetString(statement.left(SyntaxTree.IdentifierDesignator).identifier, str^);
-						in[i] := result; IntermediateCode.SetString(in[i], str);
-						ReleaseIntermediateOperand(operand.tag);
-					END;
-				END;
-			ELSE in := NIL
-			END;
-			IF (x.outRules # NIL) & (x.outRules.Length()>0) THEN
-				NEW(out, x.outRules.Length());
-				FOR i := 0 TO LEN(out)-1 DO
-					statement := x.outRules.GetStatement(i);
-					IF statement IS SyntaxTree.StatementBlock THEN statement := statement(SyntaxTree.StatementBlock).statements.GetStatement(0) END;
-					WITH statement:
-					SyntaxTree.Assignment DO
-						Designate(statement.left, operand);
-						MakeMemory(result, operand.op, IntermediateCode.GetType(system,statement.left.type) , 0);
-						NEW(str, 64);
-						Basic.GetString(statement.right(SyntaxTree.IdentifierDesignator).identifier, str^);
-						out[i] := result; IntermediateCode.SetString(out[i], str);
-						ReleaseOperand(operand); (* implicit increase of use of operand.op in MakeMemory *)
-					| SyntaxTree.ReturnStatement DO
-						NEW(str, 64);
-						Basic.GetString(statement.returnValue(SyntaxTree.IdentifierDesignator).identifier, str^);
-						IF currentIsInline THEN
-							map := currentMapper.Get(NIL);
-							Designate(map.to, operand);
-							IF map.isAddress THEN
-								MakeMemory(result, operand.op, IntermediateCode.GetType(system,map.to.type) , 0);
-							ELSE
-								result := operand.op;
-							END;
-							(*! only if it does not fit into register
-							MakeMemory(result, operand.op, IntermediateCode.GetType(system,map.to.type) , 0);
-							*)
-							(*Evaluate(map.to, operand);*)
-							out[i] := result;
-						ELSE
-							out[i] :=NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
-						END;
-						IntermediateCode.SetString(out[i], str);
-						ReleaseIntermediateOperand(operand.tag);
-						return := out[i];
-					ELSE
-					END;
-				END;
-			ELSE out := NIL
-			END;
-			*)
-			Emit(Asm(x.position,x.sourceCode, NIL, NIL, currentScope));
-			(*
-			IF in # NIL THEN
-				FOR i := 0 TO LEN(in)-1 DO
-					ReleaseIntermediateOperand(in[i]);
-				END;
-			END;
-			IF out # NIL THEN
-				FOR i := 0 TO LEN(out)-1 DO
-					WITH statement:
-					SyntaxTree.Assignment DO
-						ReleaseIntermediateOperand(out[i]);
-					|SyntaxTree.ReturnStatement DO
-						(* release happens below *)
-					ELSE
-					END;
-					statement := x.outRules.GetStatement(i);
-				END;
-			END;
-			IF return.mode # IntermediateCode.Undefined THEN
-
-				IF currentIsInline THEN
-				ELSIF SemanticChecker.ReturnedAsParameter(procedureType.returnType) THEN
-					Symbol(procedureType.returnParameter, par);
-					MakeMemory(mem, par.op, return.type, 0);
-					ReleaseOperand(par);
-					Emit(Mov(position, mem, return));
-					ReleaseIntermediateOperand(mem);
-				ELSE
-					Emit(Return(position,return));
-				END;
-				ReleaseIntermediateOperand(return);
-
-				IF currentIsInline THEN RETURN END;
-
-				callingConvention := procedureType(SyntaxTree.ProcedureType).callingConvention;
-				IF callingConvention = SyntaxTree.WinAPICallingConvention THEN
-					parametersSize := ProcedureParametersSize(backend.system,procedure);
-				ELSE
-					parametersSize := 0;
-				END;
-				EmitLeave(section, position,procedure, callingConvention);
-				Emit(Exit(position,procedureType(SyntaxTree.ProcedureType).pcOffset,callingConvention, parametersSize));
-			END;
-			*)
+			Emit(Asm(x.position,x.sourceCode, currentScope));
 			IF Trace THEN TraceExit("VisitCode") END;
 		END VisitCode;
 
@@ -15707,14 +15592,11 @@ TYPE
 		RETURN instruction
 	END Fill;
 
-	PROCEDURE Asm(position: Basic.Position;s: SyntaxTree.SourceCode; inRules, outRules: IntermediateCode.Rules; scope: SyntaxTree.Scope): IntermediateCode.Instruction;
-	VAR instruction: IntermediateCode.Instruction; string, o1, o2: IntermediateCode.Operand;
+	PROCEDURE Asm(position: Basic.Position;s: SyntaxTree.SourceCode; scope: SyntaxTree.Scope): IntermediateCode.Instruction;
+	VAR instruction: IntermediateCode.Instruction; string: IntermediateCode.Operand;
 	BEGIN
 		string := IntermediateCode.String(s);
-		(*IntermediateCode.SetIntValue(string,position); (* for error reporting *)*)
-		IF inRules # NIL THEN IntermediateCode.InitRule(o1, inRules) ELSE o1 := emptyOperand END;
-		IF outRules # NIL THEN IntermediateCode.InitRule(o2, outRules) ELSE o2 := emptyOperand END;
-		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.asm,string,o1,o2);
+		IntermediateCode.InitInstruction(instruction,position,IntermediateCode.asm,string,emptyOperand,emptyOperand);
 		IntermediateCode.SetScope(instruction, scope);
 		RETURN instruction
 	END Asm;

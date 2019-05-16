@@ -32,8 +32,10 @@ CONST
 	ST0=InstructionSet.regST0;
 	XMM0 = InstructionSet.regXMM0;
 	XMM7 = InstructionSet.regXMM7;
+	XMM15 = InstructionSet.regXMM15;
 	YMM0 = InstructionSet.regYMM0;
 	YMM7 = InstructionSet.regYMM7;
+	YMM15 = InstructionSet.regYMM15;
 
 	Low=0; High=1;
 
@@ -373,8 +375,8 @@ TYPE
 				toVirtual[index MOD 32 + RAX] := split;
 				toVirtual[index MOD 32 + EAX] := split;
 				toVirtual[index MOD 32 + AX] := split;
-			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
-			ELSIF (index >= YMM0) & (index <= YMM7) THEN (* vector register *)
+			ELSIF (index >= XMM0) & (index <= XMM15) THEN (* vector register *)
+			ELSIF (index >= YMM0) & (index <= YMM15) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Allocate;
@@ -412,8 +414,8 @@ TYPE
 				toVirtual[index MOD 32 + RAX] := free;
 				toVirtual[index MOD 32 + EAX] := free;
 				toVirtual[index MOD 32 + AX] := free;
-			ELSIF (index >= XMM0) & (index <= XMM7) THEN (* vector register *)
-			ELSIF (index >= YMM0) & (index <= YMM7) THEN (* vector register *)
+			ELSIF (index >= XMM0) & (index <= XMM15) THEN (* vector register *)
+			ELSIF (index >= YMM0) & (index <= YMM15) THEN (* vector register *)
 			ELSE Assert( (index >=InstructionSet.regST0) & (index <= InstructionSet.regST7 ),"not a float register"); (* floats *)
 			END;
 		END Free;
@@ -446,9 +448,9 @@ TYPE
 			BEGIN
 			IF (type.length > 1) THEN
 				IF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =4) THEN
-					i := Get(XMM7, XMM0);
+					i := Get(XMM15, XMM0);
 				ELSIF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =8) THEN
-					i := Get(YMM7, YMM0);
+					i := Get(YMM15, YMM0);
 				ELSE
 					HALT(100)
 				END
@@ -489,7 +491,7 @@ TYPE
 					i := Get(InstructionSet.regST0, InstructionSet.regST6);
 					(* ST7 unusable as it is overwritten during arithmetic instructions *)
 				ELSE
-					i := Get(XMM7, XMM0)
+					i := Get(XMM15, XMM0)
 				END;
 			END;
 			RETURN i;
@@ -3168,89 +3170,58 @@ TYPE
 
 		PROCEDURE EmitAsm(CONST instruction: IntermediateCode.Instruction);
 		VAR reader: Streams.StringReader;  procedure: SyntaxTree.Procedure;
-				len: LONGINT; symbol: SyntaxTree.Symbol; assembler: Assembler.Assembly;
+			len: SIZE; symbol: SyntaxTree.Symbol; assembler: Assembler.Assembly;
 
-			inr, outr: IntermediateCode.Rules;
 			string: SyntaxTree.SourceCode;
-			i: LONGINT;
-			reg, dest: Assembler.Operand;
-			map: Mapper;
-			register: LONGINT;
-			ticket: Ticket;
-			
-	TYPE Mapper = OBJECT (Assembler.RegisterMap)
-		VAR cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope;
-		
-			PROCEDURE & InitMapper (cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope);
-			BEGIN
-				SELF.cg := cg; SELF.scope := scope;
-			END InitMapper;
-			
-			
-			PROCEDURE Find(CONST name: ARRAY OF CHAR): LONGINT;
-			VAR register: LONGINT; symbol: SyntaxTree.Symbol; ticket: Ticket; 
-			BEGIN
-				register := Find^(name);
-				IF (register = InstructionSet.none) & (scope # NIL) THEN
-					symbol := scope.FindSymbol(Basic.MakeString(name));
-					IF symbol # NIL THEN 
-						WITH symbol: SyntaxTree.Variable DO
-							(*
-							TRACE(name,"variable",symbol.useRegister,symbol.registerNumber);
-							*)
-							IF symbol.preferRegister THEN
-								ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
-								IF ticket = NIL THEN 
-									cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
-									ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+					
+			TYPE Mapper = OBJECT (Assembler.RegisterMap)
+				VAR cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope;
+				
+					PROCEDURE & InitMapper (cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope);
+					BEGIN
+						SELF.cg := cg; SELF.scope := scope;
+					END InitMapper;
+					
+					PROCEDURE Find(CONST name: ARRAY OF CHAR): LONGINT;
+					VAR register: LONGINT; symbol: SyntaxTree.Symbol; ticket: Ticket; 
+					BEGIN
+						register := InstructionSet.none;
+						IF scope # NIL THEN
+							symbol := scope.FindSymbol(Basic.MakeString(name));
+							IF symbol # NIL THEN 
+								WITH symbol: SyntaxTree.Variable DO
+									IF symbol.preferRegister THEN
+										ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+										IF ticket = NIL THEN 
+											cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
+											ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+										END;
+										register := ticket.register;
+									END;
+								| SyntaxTree.Parameter DO
+									IF symbol.preferRegister THEN
+										ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+										IF ticket = NIL THEN 
+											cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
+											ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
+										END;
+										register := ticket.register;
+									END;									
+								ELSE
 								END;
-								register := ticket.register;
-								(*TRACE(register);*)
+								IF register = InstructionSet.none THEN
+									register := InstructionSet.unassigned;
+								END; 
 							END;
-						| SyntaxTree.Parameter DO
-							(*
-							TRACE(name,"parameter",symbol.useRegister,symbol.registerNumber);
-							*)
-							IF symbol.preferRegister THEN
-								ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
-								IF ticket = NIL THEN 
-									cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
-									ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
-								END;
-								register := ticket.register;
-							END;
-							
-						ELSE
 						END;
-					END;
-				END;
-				RETURN register;
-			END Find;
-		END Mapper;
+						RETURN register;
+					END Find;
+				END Mapper;
+		VAR map: Mapper;
 
 		BEGIN
-			IF instruction.op2.mode = IntermediateCode.ModeRule THEN	inr := instruction.op2.rule ELSE inr := NIL END;
-			IF instruction.op3.mode = IntermediateCode.ModeRule THEN outr := instruction.op3.rule ELSE outr := NIL END;
 			string := instruction.op1.string;
-
 			NEW(map,SELF,instruction.scope);
-
-			IF inr # NIL THEN
-				FOR i := 0 TO LEN(inr)-1 DO
-					MakeRegister(inr[i], 0, reg);
-					ASSERT(map.Find(inr[i].string^) < 0);
-					map.Add(inr[i].string, reg.register)
-				END;
-			END;
-
-			IF outr # NIL THEN
-				FOR i := 0 TO LEN(outr)-1 DO
-					IF (map.Find(outr[i].string^) < 0) THEN
-						GetTemporaryRegister(outr[i].type,reg);
-						map.Add(outr[i].string, reg.register)
-					END;
-				END;
-			END;
 
 			len := Strings.Length(string^);
 			NEW(reader,len);
@@ -3262,22 +3233,6 @@ TYPE
 			assembler.useLineNumbers := Compiler.UseLineNumbers IN backend.flags;
 			assembler.Assemble(reader,instruction.textPosition,instruction.scope,in,in,module,procedure.access * SyntaxTree.Public # {}, procedure.isInline, map)	;
 			error := error OR assembler.error;
-
-			IF outr # NIL THEN
-				FOR i := 0 TO LEN(outr)-1 DO
-					IF outr[i].mode # IntermediateCode.Undefined THEN
-						register := map.Find(outr[i].string^);
-						ticket := physicalRegisters.Mapped(register);
-						IF ticket.lastuse = inPC THEN UnmapTicket(ticket); physicalRegisters.AllocationHint(register) END; (* try to reuse register here *)
-						Assembler.InitRegister(reg, register);
-						MakeOperand(outr[i], Low, dest, NIL);
-						Move( dest, reg,outr[i].type)
-					END;
-				END;
-			END;
-			(*
-			IntermediateCode.SetString(instruction.op1, string);
-			*)
 		END EmitAsm;
 	END CodeGeneratorAMD64;
 

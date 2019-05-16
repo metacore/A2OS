@@ -210,11 +210,6 @@ TYPE
 								INC(parameterRegister);
 							END;
 						END;
-						IF operand.rule # NIL THEN
-							FOR i := 0 TO LEN(operand.rule)-1 DO
-								Use(operand.rule[i],FALSE);
-							END;
-						END;
 					END Use;
 				BEGIN
 					Use(instruction.op1,TRUE);
@@ -268,11 +263,6 @@ TYPE
 								IntermediateCode.SetRegister(res, entry.dest);
 							END;
 							entry := entry.next;
-						END;
-						IF op.rule # NIL THEN
-							FOR i := 0 TO LEN(op.rule)-1 DO
-								op.rule[i] := Map(op.rule[i]);
-							END;
 						END;
 						RETURN res
 					END Map;
@@ -425,19 +415,14 @@ TYPE
 							liveRegisters.RemoveRegisterEntry(operand.register);
 						END;
 					END;
-					IF operand.rule # NIL THEN
-						FOR i := 0 TO LEN(operand.rule)-1 DO
-							CheckOperand(operand.rule[i])
-						END;
-					END;
 				END CheckOperand;
 
 			BEGIN
 				CheckOperand(x.op1);
-				IF (x.op2.register # x.op1.register) OR (x.op2.rule # NIL) THEN
+				IF (x.op2.register # x.op1.register) THEN
 					CheckOperand(x.op2);
 				END;
-				IF (x.op3.register # x.op1.register) & (x.op3.register # x.op2.register) OR (x.op3.rule # NIL) THEN
+				IF (x.op3.register # x.op1.register) & (x.op3.register # x.op2.register) THEN
 					CheckOperand(x.op3);
 				END;
 			END SetLiveness;
@@ -1203,11 +1188,6 @@ TYPE
 					INC(part);
 				END;
 			END;
-			IF operand.rule # NIL THEN
-				FOR i := 0 TO LEN(operand.rule)-1 DO
-					TryUnmap(operand.rule[i]);
-				END
-			END
 		END TryUnmap;
 
 		PROCEDURE ReleaseHint*(register: LONGINT);

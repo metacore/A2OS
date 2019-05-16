@@ -12,7 +12,6 @@ CONST
 	ModeImmediate*=3; (* immediate number with type, may include section implying a fixup of the immediate *)
 	ModeNumber*=4; (* immediate integer number without any type, typically used as meta-information for instructions *)
 	ModeString*=5; (* for inline code *)
-	ModeRule*=6; (* for inline code with replacements *)
 
 	(* operand classes *)
 	Undef* = {Undefined};
@@ -22,7 +21,6 @@ CONST
 	RegMemImm* = {ModeRegister,ModeMemory,ModeImmediate};
 	UndefReg*={Undefined,ModeRegister};
 	UndefRegMem*={Undefined, ModeRegister, ModeMemory};
-	UndefRule*= {Undefined, ModeRule};
 	Num* = {ModeNumber};
 	Str*= {ModeString};
 	Any = {Undefined, ModeRegister, ModeMemory, ModeImmediate};
@@ -83,10 +81,6 @@ TYPE
 		number-: INTEGER;
 	END;
 
-	Rules*= POINTER TO ARRAY OF Operand;
-
-	RegisterMap*= RECORD register*: LONGINT; name*: SyntaxTree.SourceCode END;
-	BackendRules*= POINTER TO ARRAY OF RegisterMap;
 
 	Operand* = RECORD
 		mode-: SHORTINT; (* Undefined, ModeRegister, ModeImmediate, ModeMemory, ModeNumber or ModeString *)
@@ -102,8 +96,6 @@ TYPE
 		resolved*: Sections.Section; (** only cache ! *)
 
 		string-: SyntaxTree.SourceCode; (* string, if Mode = ModeString *)
-
-		rule-: Rules;
 	END;
 
 	(*
@@ -573,7 +565,6 @@ TYPE
 	END DumpType;
 
 	PROCEDURE DumpOperand*(w: Streams.Writer; CONST operand: Operand );
-	VAR i: LONGINT;
 
 		PROCEDURE DumpString(CONST str: ARRAY OF CHAR);
 		VAR
@@ -658,11 +649,6 @@ TYPE
 		|ModeString:
 			DumpString(operand.string^);
 		|ModeNumber: w.Int(SHORT(operand.intValue),1);
-		|ModeRule:
-			w.String("rules");
-			FOR i := 0 TO LEN(operand.rule)-1 DO
-				w.String(" "); DumpOperand(w,operand.rule[i]);  w.String(" = "); DumpString(operand.rule[i].string^);
-			END;
 		END;
 		(*
 		w.Update();
@@ -671,7 +657,6 @@ TYPE
 	END DumpOperand;
 
 	PROCEDURE WriteRawOperand*(w: Streams.Writer; CONST operand: Operand );
-	VAR i: LONGINT;
 	BEGIN
 		w.RawLInt(operand.type.form);
 		w.RawLInt(operand.type.sizeInBits);
@@ -712,10 +697,6 @@ TYPE
 		|ModeString:
 			w.RawString(operand.string^);
 		|ModeNumber: w.RawLInt(SHORT(operand.intValue));
-		|ModeRule:
-			FOR i := 0 TO LEN(operand.rule)-1 DO
-				WriteRawOperand(w,operand.rule[i]);  w.RawString(operand.rule[i].string^);
-			END;
 		END;
 	END WriteRawOperand;
 
@@ -842,7 +823,7 @@ TYPE
 		(* fill dest val size - fill a block of size op2 units of memory from [op1] with value in op3 *)
 		AddFormat(fill, "fill", RegMemImm, RegMemImm, RegMemImm,{SameType12});
 		(* asm attribute - asm code contained in attribute *)
-		AddFormat(asm, "asm", Str, UndefRule, UndefRule,{});
+		AddFormat(asm, "asm", Str, Undef, Undef,{});
 		(* data imm - instruction to build up constants or (global) variables *)
 		AddFormat(data, "data", Imm, Undef, Undef,{});
 		(* reserve number - instruction to build (global) variables *)
@@ -1045,11 +1026,6 @@ TYPE
 	VAR op: Operand;
 	BEGIN InitNumber(op,value); RETURN op
 	END Number;
-
-	PROCEDURE InitRule*(VAR op: Operand; rules: Rules);
-	BEGIN
-		InitOperand(op); op.mode := ModeRule; op.rule := rules
-	END InitRule;
 
 	PROCEDURE InitString*(VAR op: Operand; string: SyntaxTree.SourceCode);
 	BEGIN InitOperand(op); op.mode := ModeString; op.string := string;

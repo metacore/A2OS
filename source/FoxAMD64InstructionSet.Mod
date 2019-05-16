@@ -37,6 +37,7 @@ CONST
 	maxMnemonicNameLength =20;
 	maxCodeLength* =12;
 	none* = -1;
+	unassigned*= -2; 
 
 	bitsDefault*=0;
 	bits8*=1;

@@ -6,12 +6,11 @@ MODULE Processors;
 IMPORT Unix;
 
 (** Indicates the maximal number of logical processors that are supported by the system. *)
-CONST Maximum* = MAX (SET) - MIN (SET) + 1;
+CONST Maximum* = Unix.CPUSetSize;
 
 (** Holds the actual number of processors in the system. *)
 VAR count-: SIZE;
 
-VAR affinityMask: SET;
 VAR semaphore: Unix.Sem;
 VAR barrier: Unix.Barrier;
 VAR thread: ARRAY Maximum OF Unix.Thread_t;
@@ -52,19 +51,20 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Start;
 
 (** Initializes the module by enumerating all available processors. *)
-(** The number of concurrent threads corresponds to the number of slots in the affinity mask of the current process. *)
+(** The number of concurrent threads corresponds to the number of bits in the affinity mask of the current process. *)
 PROCEDURE Initialize-;
-VAR self: Unix.Thread_t; mask: SET; i: SIZE; length: WORD;
+CONST Set = MAX (SET) - MIN (SET) + 1;
+VAR self: Unix.Thread_t; affinityMask, mask: Unix.CPUSet; i, j: SIZE; length: WORD;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	self := Unix.pthread_self ();
 	ASSERT (Unix.sem_init (ADDRESS OF semaphore, 0, 0) = 0);
-	ASSERT (Unix.pthread_getaffinity_np (self, SIZE OF SET, ADDRESS OF affinityMask) = 0);
-	length := 0; FOR i := 0 TO Maximum - 1 DO IF i IN affinityMask THEN INC (length) END END;
+	ASSERT (Unix.pthread_getaffinity_np (self, SIZE OF Unix.CPUSet, ADDRESS OF affinityMask) = 0);
+	length := 0; FOR i := 0 TO LEN (affinityMask) - 1 DO FOR j := MIN (SET) TO MAX (SET) DO IF j IN affinityMask[i] THEN INC (length) END END END;
 	ASSERT (Unix.pthread_barrier_init (ADDRESS OF barrier, NIL, length) = 0);
 
 	count := 0;
 	FOR i := 0 TO Maximum - 1 DO
-		IF i IN affinityMask THEN
+		IF i MOD Set IN affinityMask[i DIV Set] THEN
 			INC (count);
 
 			IF count = 1 THEN
@@ -73,8 +73,8 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 				ASSERT (Unix.pthread_create (ADDRESS OF thread[i], NIL, Start, NIL) = 0);
 			END;
 
-			mask := {i};
-			ASSERT (Unix.pthread_setaffinity_np (thread[i], SIZE OF SET, ADDRESS OF mask) = 0);
+			FOR j := 0 TO LEN (mask) - 1 DO mask[j] := {} END; mask[i DIV Set] := {i MOD Set};
+			ASSERT (Unix.pthread_setaffinity_np (thread[i], SIZE OF Unix.CPUSet, ADDRESS OF mask) = 0);
 		ELSE
 			thread[i] := self;
 		END;

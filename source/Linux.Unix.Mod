@@ -147,6 +147,8 @@ CONST
 
 	PTHREAD_BARRIER_SERIAL_THREAD* = -1;
 
+	CPUSetSize* = 128;
+
 	(*--------------------------- Threads -------------------------------*)
 
 TYPE
@@ -169,6 +171,8 @@ TYPE
 
 	Sem* = RECORD reserved1-: ARRAY 4 OF ADDRESS END;
 	Barrier* = RECORD reserved1-: ARRAY 3 OF ADDRESS; reserved2-: ARRAY 2 OF WORD END;
+
+	CPUSet* = ARRAY CPUSetSize DIV (MAX (SET) - MIN (SET) + 1) OF SET;
 
 CONST
 	(* Thread priorities *)

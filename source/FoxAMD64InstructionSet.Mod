@@ -1362,6 +1362,7 @@ CONST
 	iw*= 8; id*= 9; iq*= 10; rb*= 11; rw*= 12; rd*= 13; rq*= 14; mem64Operand*= 15;
 	mem128Operand*= 16; fpStackOperand*= 17; directMemoryOffset*= 18;
 	Src1Prefix* = 19; Src2Prefix* = 20; CountPrefix*= 21; DestPrefix*=22; RXB*=23;
+	is4 = 24; is5 = 25;
 
 TYPE
 	Name = ARRAY 20 OF CHAR;
@@ -1828,9 +1829,9 @@ VAR
 							|'0'..'7': code[k] := CHR(modRMExtension); INC(k); code[k] := CHR(HexOrd(ch2)); INC(k);
 						ELSE
 							IF cdc = "/imm8" THEN
-								(*todo*)
+								code[k] := CHR(imm8); INC(k);
 							ELSIF cdc = "/is4" THEN
-								(*todo*)
+								code[k] := CHR(is4); INC(k);
 							ELSIF cdc = "/ib" THEN
 								code[k] := CHR(ib); INC(k);
 							ELSE
@@ -1853,8 +1854,10 @@ VAR
 							|'q': code[k] := CHR(iq); INC(k);
 						ELSE
 							IF cdc = "is4" THEN
+								code[k] := CHR(is4); INC(k);
 								(*todo*)
 							ELSIF cdc = "is5" THEN
+								code[k] := CHR(is5); INC(k);
 								(*todo*)
 							ELSE
 							HALT(100)

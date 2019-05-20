@@ -68,6 +68,7 @@ CONST
 	fpStackOperand= InstructionSet.fpStackOperand; directMemoryOffset= InstructionSet.directMemoryOffset;
 	RXB = InstructionSet.RXB;
 	Src1Prefix = InstructionSet.Src1Prefix;
+	Src2Prefix = InstructionSet.Src2Prefix;
 
 	(* limits *)
 	maxNumberOperands = InstructionSet.maxNumberOperands;
@@ -996,6 +997,12 @@ TYPE
 					| Src1Prefix:
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
 						IF Trace THEN KernelLog.String(" Src1Prefix "); END;
+						INC(oppos);
+						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm));
+						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[1].register))*0x08);
+					| Src2Prefix:
+						IF val # -1 THEN code.PutByte (val); val := -1 END;
+						IF Trace THEN KernelLog.String(" Src2Prefix "); END;
 						INC(oppos);
 						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm));
 						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[1].register))*0x08);

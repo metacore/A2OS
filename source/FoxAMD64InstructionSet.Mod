@@ -1828,9 +1828,7 @@ VAR
 							'r': code[k] := CHR(modRMBoth); INC(k);
 							|'0'..'7': code[k] := CHR(modRMExtension); INC(k); code[k] := CHR(HexOrd(ch2)); INC(k);
 						ELSE
-							IF cdc = "/imm8" THEN
-								code[k] := CHR(imm8); INC(k);
-							ELSIF cdc = "/is4" THEN
+							IF cdc = "/is4" THEN
 								code[k] := CHR(is4); INC(k);
 							ELSIF cdc = "/ib" THEN
 								code[k] := CHR(ib); INC(k);

@@ -8744,9 +8744,7 @@ TYPE
 								Emit(Mov(position,IntermediateCode.Memory(addressType,pointer,ToMemoryUnits(system,DescriptorOffset * system.addressSize)),nil));
 							END;
 
-							i := openDim;
-							WHILE i > 0 DO
-								DEC (i);
+							FOR i := 0 TO openDim - 1 DO
 								Emit(Pop(position,IntermediateCode.Memory(addressType,pointer,ToMemoryUnits(system,(BaseArrayTypeSize + i)* system.addressSize))));
 							END;
 

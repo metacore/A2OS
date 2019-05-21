@@ -69,6 +69,8 @@ CONST
 	RXB = InstructionSet.RXB;
 	Src1Prefix = InstructionSet.Src1Prefix;
 	Src2Prefix = InstructionSet.Src2Prefix;
+	is4 = InstructionSet.is4;
+	is5 = InstructionSet.is5;
 
 	(* limits *)
 	maxNumberOperands = InstructionSet.maxNumberOperands;
@@ -1006,6 +1008,22 @@ TYPE
 						INC(oppos);
 						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm));
 						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[1].register))*0x08);
+					| is4:
+						IF val # -1 THEN code.PutByte (val); val := -1 END;
+						IF Trace THEN KernelLog.String(" is4 "); END;
+						INC(oppos);
+						ASSERT((operands[3].type = xmm) OR (operands[3].type = ymm));
+						code.PutByte(InstructionSet.RegisterIndex(operands[3].register)*0x10);
+					| is5:
+						IF val # -1 THEN code.PutByte (val); val := -1 END;
+						IF Trace THEN KernelLog.String(" is4 "); END;
+						INC(oppos);
+						ASSERT((operands[3].type = xmm) OR (operands[3].type = ymm));
+						ASSERT(operands[4].type = imm); 
+						IF (operands[4].val > 3) OR (operands[4].val < 0) THEN
+							Error("operand exceeds bounds");
+						END;
+						code.PutByte(InstructionSet.RegisterIndex(operands[3].register)*0x10 + SHORTINT(operands[4].val));
 					ELSE HALT(100) (* decoding error *)
 					END;
 				END;

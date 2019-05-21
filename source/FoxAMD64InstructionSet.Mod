@@ -1362,7 +1362,7 @@ CONST
 	iw*= 8; id*= 9; iq*= 10; rb*= 11; rw*= 12; rd*= 13; rq*= 14; mem64Operand*= 15;
 	mem128Operand*= 16; fpStackOperand*= 17; directMemoryOffset*= 18;
 	Src1Prefix* = 19; Src2Prefix* = 20; CountPrefix*= 21; DestPrefix*=22; RXB*=23;
-	is4 = 24; is5 = 25;
+	is4* = 24; is5* = 25;
 
 TYPE
 	Name = ARRAY 20 OF CHAR;
@@ -5414,7 +5414,7 @@ END FoxAMD64InstructionSet.
 
 FoxAMD64InstructionSet.Trace
 
-System.Free FoxAMD64InstructionSet ~
+System.FreeDownTo FoxAMD64InstructionSet ~
 
 	(** Instruction Format, cf. [AMD:3], chapter 1
 		[LegacyPrefix] ; Operand-Size Override / modify opcode of media instructions

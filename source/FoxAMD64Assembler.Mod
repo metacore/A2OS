@@ -290,7 +290,7 @@ TYPE
 		PROCEDURE EmitInstruction (mnem: LONGINT; VAR operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN;
 		VAR instr, i, oppos, op: LONGINT;
 			val: LONGINT;
-			regOperand: LONGINT;
+			regOperand, regOperand2: LONGINT;
 			addressOperand: LONGINT;
 			regField, modField, rmField: LONGINT;
 			scaleField, indexField, baseField: LONGINT;
@@ -339,12 +339,13 @@ TYPE
 				RETURN instr
 			END FindInstruction;
 
-			PROCEDURE GetRegOperand (): LONGINT;
+			PROCEDURE GetRegOperand (startIndex: LONGINT): LONGINT;
 			VAR i: LONGINT;
 			BEGIN
-				FOR i := 0 TO maxNumberOperands -1 DO
+				FOR i := startIndex TO maxNumberOperands -1 DO
 					CASE InstructionSet.instructions[instr].operands[i] OF
-					InstructionSet.reg8, InstructionSet.reg16, InstructionSet.reg32, InstructionSet.reg64, InstructionSet.xmm, InstructionSet.mmx, InstructionSet.ymm: RETURN i;
+					InstructionSet.reg8, InstructionSet.reg16, InstructionSet.reg32, InstructionSet.reg64, InstructionSet.xmm, InstructionSet.mmx, InstructionSet.ymm: 
+							RETURN i;
 					ELSE
 					END;
 				END;
@@ -454,10 +455,10 @@ TYPE
 			regOperand := GetSpecialOperand ();
 			addressOperand := GetAddressOperand ();
 			IF regOperand = none THEN
-				regOperand := GetRegOperand ();
+				regOperand := GetRegOperand (0);
 			END;
 			IF addressOperand = none THEN
-				addressOperand := GetRegOperand ();
+				addressOperand := GetRegOperand (0);
 				IF regOperand # none THEN
 					temp := InstructionSet.instructions[instr].operands[regOperand];
 					IF (temp = xmm) OR (temp = mmx) THEN (* patch case such as PEXTRW EDX, XMM3, 0 *)
@@ -567,7 +568,7 @@ TYPE
 			oppos := 0;
 			val := -1;
 
-			IF rexPrefix # {} THEN
+			IF (rexPrefix # {}) & ~(InstructionSet.optNoREX IN InstructionSet.instructions[instr].bitwidthOptions) THEN
 				IF cpuBits # bits64 THEN
 					ErrorSI("compiler encoding error ", mnem,operands);
 				END;
@@ -957,7 +958,7 @@ TYPE
 						END;
 					| rb, rw, rd, rq:
 						IF Trace THEN KernelLog.String(" r* "); END;
-						regOperand := GetRegOperand ();
+						regOperand := GetRegOperand (0);
 						val := val + InstructionSet.RegisterIndex(operands[regOperand].register) MOD 8;
 						code.PutByte (val); val := -1;
 						free[regOperand] := FALSE;
@@ -1001,7 +1002,7 @@ TYPE
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
 						IF Trace THEN KernelLog.String(" Src1Prefix "); END;
 						INC(oppos);
-						i := 2 - ORD(opcode[oppos]) DIV 80H;
+						i := GetRegOperand(regOperand+1);
 						ASSERT((operands[i].type = xmm) OR (operands[i].type = ymm));
 						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[i].register))*0x08);
 					| is4:
@@ -1012,7 +1013,7 @@ TYPE
 						code.PutByte(InstructionSet.RegisterIndex(operands[3].register)*0x10);
 					| is5:
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
-						IF Trace THEN KernelLog.String(" is4 "); END;
+						IF Trace THEN KernelLog.String(" is5 "); END;
 						INC(oppos);
 						ASSERT((operands[3].type = xmm) OR (operands[3].type = ymm));
 						ASSERT(operands[4].type = imm);

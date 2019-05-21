@@ -93,6 +93,8 @@ CONST
 	optPREP* = 9;		(* a repeat prefix must preceed the instruction *)
 	optPREPN* = 10;	(* a repeat prefix must preceed the instruction *)
 
+	optNoREX* = 11; (* an instruction that does not require a REX prefix, such as AVX instructions *) 
+
 	(*
 		FoxProgTools.Enum -l=1 -e
 		(** operand types, numbers assigned to the types do not have a special meaning **)
@@ -1902,7 +1904,7 @@ VAR
 				INC(i);
 			END;
 			ASSERT(operands[at] = 0X); (* all operands parsed *)
-
+			INCL(instructions[numberInstructions].bitwidthOptions, optNoREX);
 			EncodeV(code,instructions[numberInstructions].code);
 
 			COPY(mnemonics[mnemonic].name,name);

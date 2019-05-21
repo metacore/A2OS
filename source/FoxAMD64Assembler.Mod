@@ -69,6 +69,7 @@ CONST
 	RXB = InstructionSet.RXB;
 	Src1Prefix = InstructionSet.Src1Prefix;
 	Src2Prefix = InstructionSet.Src2Prefix;
+	CountPrefix = InstructionSet.CountPrefix;
 	is4 = InstructionSet.is4;
 	is5 = InstructionSet.is5;
 
@@ -567,7 +568,7 @@ TYPE
 			val := -1;
 
 			IF rexPrefix # {} THEN
-				IF cpuBits # bits64 THEN 
+				IF cpuBits # bits64 THEN
 					ErrorSI("compiler encoding error ", mnem,operands);
 				END;
 				byte := 40H;
@@ -996,18 +997,13 @@ TYPE
 						IF ~(rexX IN rexPrefix) THEN byte := byte + 40H END;
 						IF ~(rexR IN rexPrefix) THEN byte := byte + 20H END;
 						code.PutByte(byte);
-					| Src1Prefix:
+					| Src1Prefix, Src2Prefix, CountPrefix:
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
 						IF Trace THEN KernelLog.String(" Src1Prefix "); END;
 						INC(oppos);
-						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm));
-						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[1].register))*0x08);
-					| Src2Prefix:
-						IF val # -1 THEN code.PutByte (val); val := -1 END;
-						IF Trace THEN KernelLog.String(" Src2Prefix "); END;
-						INC(oppos);
-						ASSERT((operands[1].type = xmm) OR (operands[1].type = ymm));
-						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[1].register))*0x08);
+						i := 2 - ORD(opcode[oppos]) DIV 80H;
+						ASSERT((operands[i].type = xmm) OR (operands[i].type = ymm));
+						code.PutByte(ORD(opcode[oppos])+(0FH -InstructionSet.RegisterIndex(operands[i].register))*0x08);
 					| is4:
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
 						IF Trace THEN KernelLog.String(" is4 "); END;
@@ -1019,7 +1015,7 @@ TYPE
 						IF Trace THEN KernelLog.String(" is4 "); END;
 						INC(oppos);
 						ASSERT((operands[3].type = xmm) OR (operands[3].type = ymm));
-						ASSERT(operands[4].type = imm); 
+						ASSERT(operands[4].type = imm);
 						IF (operands[4].val > 3) OR (operands[4].val < 0) THEN
 							Error("operand exceeds bounds");
 						END;
@@ -1794,10 +1790,10 @@ TYPE
 							IF map # NIL THEN
 								reg := map.Find(ident)
 							END;
-							IF reg = InstructionSet.unassigned THEN 
-								ErrorSS("register unavailable -- too many registers?",ident); 
+							IF reg = InstructionSet.unassigned THEN
+								ErrorSS("register unavailable -- too many registers?",ident);
 								reg := InstructionSet.none;
-							END; 
+							END;
 						END;
 						IF reg # InstructionSet.none THEN
 							IF size # bitsDefault THEN
@@ -2771,4 +2767,4 @@ TYPE
 		END;
 	END FoxAMD64Assembler.
 
-System.FreeDownTo FoxAMD64Assembler  ~ 
+System.FreeDownTo FoxAMD64Assembler  ~

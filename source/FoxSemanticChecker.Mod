@@ -100,7 +100,7 @@ TYPE
 		currentIsCellNet: BOOLEAN;
 		currentIsBodyProcedure: BOOLEAN;
 		currentIsExclusive: BOOLEAN;
-		currentResultType: SyntaxTree.Type; 
+		currentResultType: SyntaxTree.Type;
 		global: SyntaxTree.ModuleScope;
 		withEntries: WithEntry;
 		activeCellsStatement: BOOLEAN;
@@ -2963,7 +2963,7 @@ TYPE
 		END ResolveSelfDesignator;
 
 		PROCEDURE ResolveResultDesignator(x: SyntaxTree.ResultDesignator): SyntaxTree.Expression;
-		VAR scope: SyntaxTree.Scope; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; returnType: SyntaxTree.Type; symbol: SyntaxTree.Symbol; 
+		VAR scope: SyntaxTree.Scope; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; returnType: SyntaxTree.Type; symbol: SyntaxTree.Symbol;
 		BEGIN
 			scope := currentScope;
 			IF (scope # NIL) & ((scope IS SyntaxTree.ProcedureScope) OR (scope IS SyntaxTree.BlockScope)) THEN
@@ -2972,7 +2972,7 @@ TYPE
 					procedureType := procedure.type(SyntaxTree.ProcedureType);
 					returnType := procedureType.returnType;
 				ELSE
-					returnType := currentResultType; 
+					returnType := currentResultType;
 				END;
 				IF IsPointerType(returnType) OR IsArrayType(returnType) OR IsMathArrayType(returnType) & ReturnedAsParameter(system, returnType) OR ReturnedAsParameter(system,returnType)
 				THEN
@@ -3039,8 +3039,8 @@ TYPE
 				END;
 			END;
 
-			assignable := (left = NIL) OR left.assignable OR (left IS SyntaxTree.DereferenceDesignator) 
-				OR (left IS SyntaxTree.SelfDesignator) 
+			assignable := (left = NIL) OR left.assignable OR (left IS SyntaxTree.DereferenceDesignator)
+				OR (left IS SyntaxTree.SelfDesignator)
 				OR (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Import);
 
 			IF (currentScope # NIL) & (symbol.scope.ownerModule # currentScope.ownerModule) THEN
@@ -3048,7 +3048,7 @@ TYPE
 			ELSE
 				assignable := assignable & (SyntaxTree.InternalWrite IN symbol.access);
 			END;
-			
+
 			assignable := assignable & ((symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter)
 				& (symbol(SyntaxTree.Parameter).kind # SyntaxTree.ConstParameter) & ~(symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType)
 				)
@@ -3098,7 +3098,7 @@ TYPE
 			ELSE
 				Error(identifierDesignator.position,"Undeclared Identifier");
 				IF VerboseErrorMessage THEN
-					Printout.Info("cannot find symbol in scope", currentScope); 
+					Printout.Info("cannot find symbol in scope", currentScope);
 					Printout.Info("undeclared identifier designator",identifierDesignator);
 				END;
 				RETURN SyntaxTree.invalidDesignator;
@@ -3655,7 +3655,7 @@ TYPE
 				END;
 		END ReplaceExpressions;
 
-		
+
 		PROCEDURE ReplaceExpression(x: SyntaxTree.Expression; oScope, outer, rScope: SyntaxTree.Scope);
 		VAR find: SyntaxTree.Symbol; name: ARRAY 32 OF CHAR;
 		BEGIN
@@ -3713,7 +3713,7 @@ TYPE
 				ReplaceExpression(x.step,oScope,outer,rScope);
 			| SyntaxTree.BinaryExpression DO
 				ReplaceExpression(x.left,oScope,outer,rScope);
-				ReplaceExpression(x.right,oScope,outer,rScope);			
+				ReplaceExpression(x.right,oScope,outer,rScope);
 			| SyntaxTree.UnaryExpression DO
 				ReplaceExpression(x.left,oScope,outer,rScope);
 			| SyntaxTree.MathArrayExpression DO
@@ -3776,14 +3776,14 @@ TYPE
 				ReplaceExpression(x.from,oScope,outer,rScope);
 				ReplaceExpression(x.to,oScope,outer,rScope);
 				ReplaceExpression(x.by,oScope,outer,rScope);
-				ReplaceStatements(x.statements,oScope,outer,rScope);				
+				ReplaceStatements(x.statements,oScope,outer,rScope);
 			| SyntaxTree.LoopStatement DO
-				ReplaceStatements(x.statements,oScope,outer,rScope);				
-			| SyntaxTree.ExitStatement DO 
+				ReplaceStatements(x.statements,oScope,outer,rScope);
+			| SyntaxTree.ExitStatement DO
 			| SyntaxTree.ReturnStatement DO
 				ReplaceExpression(x.returnValue,oScope,outer,rScope);
 			| SyntaxTree.AwaitStatement DO
-				ReplaceExpression(x.condition,oScope,outer,rScope);				
+				ReplaceExpression(x.condition,oScope,outer,rScope);
 			| SyntaxTree.StatementBlock DO
 				x.scope.SetOuter(outer);
 				Printout.Info("outer",outer);
@@ -3799,7 +3799,7 @@ TYPE
 				ReplaceStatement(statements.GetStatement(i),oScope,outer,rScope);
 			END;
 		END ReplaceStatements;
-*)		
+*)
 
 		(** return procedure call designator left(actualParameters)
 			- check realtime procedure call in realtime procedure
@@ -3898,8 +3898,8 @@ TYPE
 				formalParameter := procedureType.firstParameter;
 				(* we need a copy of the original parsed expression list here -- may contain inline calls *)
 				actualParameters := SyntaxTree.CloneExpressionList(result(SyntaxTree.ProcedureCallDesignator).parameters);
-				
-				NEW(symbols); 
+
+				NEW(symbols);
 				tooComplex := FALSE;
 				i := 0;
 				WHILE (i < actualParameters.Length()) & ~tooComplex DO
@@ -3908,7 +3908,7 @@ TYPE
 					IF actualParameter.resolved # NIL THEN
 						actualParameter := actualParameter.resolved
 					END;
-					IF (formalParameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter}) 
+					IF (formalParameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter})
 						(* & (actualParameter.resolved # NIL)  & (actualParameter.resolved IS SyntaxTree.Value)  *)
 						& SideEffectFree(actualParameter)  THEN
 						IF (actualParameter.resolved # NIL) & (actualParameter.resolved IS SyntaxTree.Value) THEN
@@ -3916,7 +3916,7 @@ TYPE
 							const.SetValue(actualParameter);
 							const.SetType(actualParameter.type);
 							inlineScope.AddConstant(const);
-							symbols.Add(const); 
+							symbols.Add(const);
 						ELSE
 							alias := SyntaxTree.NewAlias(actualParameter.position, formalParameter.name, actualParameter);
 							alias.SetType(actualParameter.type);
@@ -3929,23 +3929,23 @@ TYPE
 						var.PreferRegister(formalParameter.preferRegister);
 						(* copy expression to var *)
 						var.SetType(actualParameter.type);
-						var.SetInitializer(actualParameter); 
-						inlineScope.AddVariable(var); 
-						symbols.Add(var); 
+						var.SetInitializer(actualParameter);
+						inlineScope.AddVariable(var);
+						symbols.Add(var);
 					END;
 					formalParameter := formalParameter.nextParameter;
 					INC(i);
 				END;
-				
+
 				(* in order to avoid name clashes with parameter names, we do this late *)
-				(* remark: setting currentScope := inlineScope here does not work because 
-				parameters may themselves be inline expressions *) 				
+				(* remark: setting currentScope := inlineScope here does not work because
+				parameters may themselves be inline expressions *)
 				FOR i := 0 TO symbols.Length()-1 DO
 					inlineScope.EnterSymbol(symbols.Get(i), duplicate);
 				END;
- 				
+
  				var := procedure.procedureScope.firstVariable;
- 				WHILE (var # NIL) DO 
+ 				WHILE (var # NIL) DO
  					clone := var.Clone();
  					inlineScope.AddVariable(clone);
  					inlineScope.EnterSymbol(clone, duplicate);
@@ -3953,7 +3953,7 @@ TYPE
  				END;
 
  				const := procedure.procedureScope.firstConstant;
- 				WHILE (const # NIL) DO 
+ 				WHILE (const # NIL) DO
  					cclone := const.Clone();
  					inlineScope.AddConstant(cclone);
  					inlineScope.EnterSymbol(cclone, duplicate);
@@ -3964,19 +3964,19 @@ TYPE
 					RETURN result; (* normal procedure call *)
 				END;
 
-				previousResultType := currentResultType; 
-				currentResultType := procedureType.returnType; 
+				previousResultType := currentResultType;
+				currentResultType := procedureType.returnType;
  				ASSERT(system.GenerateVariableOffsets(inlineScope));
 
 				block := SyntaxTree.NewStatementBlock(result.position, NIL, inlineScope);
 				block.SetStatementSequence(SyntaxTree.CloneStatementSequence(procedure.procedureScope.body.statements));
-				resolved := ResolveStatement(block); 
-				returnType := result.type; 
-				result := SyntaxTree.NewInlineCallDesignator(result.position, original, block); 
-				result.SetType(returnType); 
+				resolved := ResolveStatement(block);
+				returnType := result.type;
+				result := SyntaxTree.NewInlineCallDesignator(result.position, original, block);
+				result.SetType(returnType);
 				currentScope := inlineScope.outerScope;
  				currentScope.AddScope(inlineScope);
- 				currentResultType := previousResultType; 
+ 				currentResultType := previousResultType;
 				IF ~procedure.Resolving(FALSE) THEN (*HALT(100) *) END;
 			END;
 
@@ -5808,8 +5808,8 @@ TYPE
 				x.SetType(currentScope(SyntaxTree.EnumerationScope).ownerEnumeration);
 			| SyntaxTree.InlineCallDesignator DO
 				ResolveStatementBlock(x.block);
-			END;	(* no other case allowed *)	
-			
+			END;	(* no other case allowed *)
+
 			IF currentIsRealtime THEN
 				IF (result.type # NIL) & ~result.type.resolved.isRealtime THEN
 					Error(x.position,"forbidden non-realtime expression in realtime procedure");
@@ -6159,7 +6159,7 @@ TYPE
 						END;
 					END;
 				END;
-				IF (parameter.kind = SyntaxTree.ValueParameter) & IsMathArrayType(parameter.type) & (parameter.type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN 
+				IF (parameter.kind = SyntaxTree.ValueParameter) & IsMathArrayType(parameter.type) & (parameter.type.resolved(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
 					Error(parameter.position, "forbidden value parameter of math array type ");
 				END;
 
@@ -8570,8 +8570,8 @@ TYPE
 				INC(result);
 			ELSIF procedureType.isDelegate & ~right.isDelegate THEN
 				result := Infinity;
-			END; 
-			
+			END;
+
 			(*! taken from paco, seems to not be 100% correct, check (in particular array part -> length of arrays??) *)
 			WHILE (formalParameter # NIL) & (result # Infinity) DO
 				distance := TypeDistance(system,rightParameter.type.resolved,formalParameter.type.resolved,formalParameter.kind = SyntaxTree.VarParameter);
@@ -8872,17 +8872,17 @@ TYPE
 	PROCEDURE IsReferenceType*(kind: LONGINT; type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		type := type.resolved;
-		RETURN (kind = SyntaxTree.VarParameter) OR (kind = SyntaxTree.ConstParameter) & ((type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.ArrayType));		
+		RETURN (kind = SyntaxTree.VarParameter) OR (kind = SyntaxTree.ConstParameter) & ((type IS SyntaxTree.RecordType) OR (type IS SyntaxTree.ArrayType));
 	END IsReferenceType;
-	
+
 
 	PROCEDURE IsReference*(symbol: SyntaxTree.Symbol): BOOLEAN;
 	BEGIN
 		WITH symbol:
 			SyntaxTree.Parameter DO
-				RETURN IsReferenceType(symbol.kind, symbol.type); 
+				RETURN IsReferenceType(symbol.kind, symbol.type);
 		| SyntaxTree.Variable DO
-				RETURN IsReferenceType(symbol.kind, symbol.type); 
+				RETURN IsReferenceType(symbol.kind, symbol.type);
 		ELSE
 			RETURN FALSE
 		END;
@@ -9369,8 +9369,8 @@ TYPE
 			RETURN FALSE
 		END;
 	END CanPassInRegister;
-	
-		
+
+
 	PROCEDURE ReturnedAsParameter*(system: Global.System; type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
 		IF type = NIL THEN RETURN FALSE

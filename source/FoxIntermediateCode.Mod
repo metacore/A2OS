@@ -932,12 +932,12 @@ TYPE
 		op.symbol.name := symbol;
 		op.symbol.fingerprint := fp;
 	END SetSymbol;
-	
+
 	PROCEDURE SetScope*(VAR instr: Instruction; scope: SyntaxTree.Scope);
 	BEGIN
 		instr.scope := scope;
 	END SetScope;
-	
+
 
 	PROCEDURE SetIntValue*(VAR op: Operand; intValue: HUGEINT);
 	BEGIN op.intValue := intValue

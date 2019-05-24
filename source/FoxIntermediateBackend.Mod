@@ -1895,14 +1895,28 @@ TYPE
 						END;
 						RETURN;
 					|Scanner.Is:
-						(* get type desc tag *)
-						IF IsPointerToRecord(x.left.type,recordType) THEN
+						IF (leftType IS SyntaxTree.NumberType) OR (leftType IS SyntaxTree.AddressType) OR (leftType IS SyntaxTree.SizeType) THEN
 							EvaluateX(x.left, left);
-							Dereference(left,recordType,IsUnsafePointer(x.left.type))
+							TransferToRegister(left.op, left.op);
+							ReuseCopy(temp,left.op);
+							Convert(temp,IntermediateCode.GetType(system,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved));
+							Convert(temp,left.op.type);
+							IF reason THEN
+								BreqL(label,left.op,temp);
+							ELSE
+								BrneL(label,left.op,temp);
+							END;
+							ReleaseIntermediateOperand(temp);
 						ELSE
-							Designate(x.left,left);
+							(* get type desc tag *)
+							IF IsPointerToRecord(x.left.type,recordType) THEN
+								EvaluateX(x.left, left);
+								Dereference(left,recordType,IsUnsafePointer(x.left.type))
+							ELSE
+								Designate(x.left,left);
+							END;
+							TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,label,reason,FALSE);
 						END;
-						TypeTest(left.tag,x.right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved,label,reason,FALSE);
 						ReleaseOperand(left);
 						RETURN;
 					|Scanner.Equal:
@@ -10045,7 +10059,7 @@ TYPE
 		END EvaluateBuiltinCallDesignator;
 
 		PROCEDURE VisitTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator);
-		VAR trueL: Label; recordType: SyntaxTree.RecordType; dest,tag,ptr: IntermediateCode.Operand;
+		VAR trueL: Label; recordType: SyntaxTree.RecordType; dest,tag,ptr,original,converted: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitTypeGuardDesignator") END;
 			dest := destination; destination := emptyOperand;
@@ -10053,6 +10067,19 @@ TYPE
 			Expression(x.left);
 			IF x.left.type.resolved = x.type.resolved THEN (* always true: do nothing *)
 			ELSIF isUnchecked THEN (* no check *)
+			ELSIF (x.type.resolved IS SyntaxTree.NumberType) OR (x.type.resolved IS SyntaxTree.AddressType) OR (x.type.resolved IS SyntaxTree.SizeType) THEN
+				LoadValue(result,x.left.type.resolved);
+				trueL := NewLabel();
+				TransferToRegister(result.op, result.op);
+				ReuseCopy(original,result.op);
+				Convert(result.op,IntermediateCode.GetType(system,x.type.resolved));
+				ReuseCopy(converted,result.op);
+				Convert(converted,original.type);
+				BreqL(trueL,original,converted);
+				ReleaseIntermediateOperand(original);
+				ReleaseIntermediateOperand(converted);
+				EmitTrap(position,TypeCheckTrap);
+				SetLabel(trueL);
 			ELSE
 				trueL := NewLabel();
 				IF IsPointerToRecord(x.left.type,recordType) THEN

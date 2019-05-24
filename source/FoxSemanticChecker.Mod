@@ -2386,7 +2386,7 @@ TYPE
 				type := system.booleanType;
 				IF  ~(rightType = SyntaxTree.typeDeclarationType) THEN
 					Error(right.position,"is not a type ");
-				ELSIF ~IsTypeExtension(leftType, right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved) THEN
+				ELSIF ~IsValidTypeTest(leftType, right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved) THEN
 					Error(binaryExpression.position,"is not a type extension of ");
 					IF VerboseErrorMessage THEN
 						Printout.Info("left",left);
@@ -2400,6 +2400,10 @@ TYPE
 					NewBool(TRUE);
 				ELSIF IsUnextensibleRecord(left) THEN
 					NewBool(FALSE)
+				ELSIF left.type.resolved.CompatibleTo(right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType.resolved) THEN
+					NewBool(TRUE)
+				ELSIF left.resolved # NIL THEN
+					NewBool(FALSE);
 				END
 			ELSIF (right IS SyntaxTree.SymbolDesignator) & (right(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.TypeDeclaration) THEN
 				Error(right.position,"must not be a type");
@@ -5538,7 +5542,7 @@ TYPE
 		BEGIN
 			result := SyntaxTree.invalidDesignator;
 
-			IF ~IsTypeExtension(left.type.resolved,type.resolved) THEN
+			IF ~IsValidTypeTest(left.type.resolved,type.resolved) THEN
 				Error(position, "no type extension of type");
 				IF VerboseErrorMessage THEN
 					Printout.Info("left",left);
@@ -5553,6 +5557,14 @@ TYPE
 				result.SetType(type);
 				result.SetAssignable(left.assignable);
 				result(SyntaxTree.TypeGuardDesignator).SetTypeExpression(typeExpression);
+				IF left.resolved # NIL THEN
+					IF left.type.resolved.CompatibleTo(type.resolved) THEN
+						result.SetResolved (left.resolved)
+					ELSE
+						Error(position, "unsatisfied type guard");
+						result := SyntaxTree.invalidDesignator;
+					END;
+				END;
 			END;
 			RETURN result
 		END NewTypeGuardDesignator;
@@ -8975,6 +8987,17 @@ TYPE
 		RETURN (type IS SyntaxTree.EnumerationType)
 	END IsEnumerationType;
 
+	PROCEDURE IsValidTypeTest(base,extension: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		base := base.resolved; extension := extension.resolved;
+		IF ((base IS SyntaxTree.NumberType) OR (base IS SyntaxTree.AddressType) OR (base IS SyntaxTree.SizeType)) &
+			((extension IS SyntaxTree.NumberType) OR (extension IS SyntaxTree.AddressType) OR (extension IS SyntaxTree.SizeType)) THEN
+				RETURN TRUE;
+		ELSE
+			RETURN IsTypeExtension(base, extension);
+		END;
+	END IsValidTypeTest;
+
 	(** cf. section "Type extension (base type)" in the language report **)
 	PROCEDURE IsTypeExtension(base,extension: SyntaxTree.Type): BOOLEAN;
 	VAR result: BOOLEAN;
@@ -9096,6 +9119,8 @@ TYPE
 		IF type IS SyntaxTree.PointerType THEN
 			result := IsExtensibleType(type(SyntaxTree.PointerType).pointerBase.resolved);
 		ELSIF (type IS SyntaxTree.AnyType) OR (type IS SyntaxTree.ObjectType)  THEN
+			result := TRUE
+		ELSIF (type IS SyntaxTree.NumberType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType) THEN
 			result := TRUE
 		ELSE
 			result := type IS SyntaxTree.RecordType

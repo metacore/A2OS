@@ -4226,17 +4226,19 @@ negative: type test on constant integers
 	CONST Result = 4 IS 0
 	END Test.
 
-negative: type test on constant integer
+positive: type test on constant integer
 
 	MODULE Test;
 	CONST Result = 4 IS INTEGER
+	BEGIN ASSERT (Result = TRUE);
 	END Test.
 
-negative: type test on constant integer type
+positive: type test on constant integer type
 
 	MODULE Test;
 	TYPE Type = INTEGER;
 	CONST Result = 4 IS Type
+	BEGIN ASSERT (Result = TRUE);
 	END Test.
 
 negative: type guard on constant integers
@@ -4252,17 +4254,19 @@ negative: indirect type guard on constant integers
 	CONST Result = Constant(Constant)
 	END Test.
 
+# should be allowed but this needs a new arrangement of compiler data structures
 negative: type guard on constant integer
 
 	MODULE Test;
 	CONST Result = 5(INTEGER)
 	END Test.
 
-negative: indirect type guard on constant integer
+positive: indirect type guard on constant integer
 
 	MODULE Test;
 	CONST Constant = 5
 	CONST Result = Constant(INTEGER)
+	BEGIN ASSERT (Result = 5);
 	END Test.
 
 negative: type guard on constant integer type
@@ -4272,12 +4276,13 @@ negative: type guard on constant integer type
 	CONST Result = 5(Type)
 	END Test.
 
-negative: indirect guard test on constant integer type
+positive: indirect guard test on constant integer type
 
 	MODULE Test;
 	CONST Constant = 5
 	TYPE Type = INTEGER;
 	CONST Result = Constant(Type)
+	BEGIN ASSERT (Result = 5);
 	END Test.
 
 negative: logical and on constant integers
@@ -4701,11 +4706,12 @@ negative: type test on constant real
 	CONST Result = 4.E9 IS Real
 	END Test.
 
-negative: type test on constant real type
+positive: type test on constant real type
 
 	MODULE Test;
 	TYPE Type = REAL;
 	CONST Result = 4.E9 IS Type
+	BEGIN ASSERT (Result = TRUE);
 	END Test.
 
 negative: type guard on constant reals
@@ -4727,11 +4733,12 @@ negative: type guard on constant real
 	CONST Result = 5.0(REAL)
 	END Test.
 
-negative: indirect type guard on constant real
+positive: indirect type guard on constant real
 
 	MODULE Test;
 	CONST Constant = 5.0
 	CONST Result = Constant(REAL)
+	BEGIN ASSERT (Result = 5.0);
 	END Test.
 
 negative: type guard on constant real type
@@ -4741,12 +4748,13 @@ negative: type guard on constant real type
 	CONST Result = 5.0(Type)
 	END Test.
 
-negative: indirect type guard on constant real type
+positive: indirect type guard on constant real type
 
 	MODULE Test;
 	CONST Constant = 5.0
 	TYPE Type = REAL;
 	CONST Result = Constant(Type)
+	BEGIN ASSERT (Result = 5.0);
 	END Test.
 
 negative: logical and on constant reals
@@ -25104,14 +25112,14 @@ negative: type test on variable integers
 	BEGIN result := integer IS integer
 	END Test.
 
-negative: type test on variable integer
+positive: type test on variable integer
 
 	MODULE Test;
 	VAR integer: INTEGER; result: BOOLEAN;
 	BEGIN result := integer IS INTEGER
 	END Test.
 
-negative: type test on integer type
+positive: type test on integer type
 
 	MODULE Test;
 	TYPE Type = INTEGER;
@@ -25126,14 +25134,14 @@ negative: type guard on variable integers
 	BEGIN result := integer(integer)
 	END Test.
 
-negative: type guard on variable integer
+positive: type guard on variable integer
 
 	MODULE Test;
 	VAR integer, result: INTEGER;
 	BEGIN result := integer(INTEGER)
 	END Test.
 
-negative: type guard on integer type
+positive: type guard on integer type
 
 	MODULE Test;
 	TYPE Type = INTEGER;
@@ -25447,14 +25455,14 @@ negative: type test on variable reals
 	BEGIN result := real IS real
 	END Test.
 
-negative: type test on variable real
+positive: type test on variable real
 
 	MODULE Test;
 	VAR real: REAL; result: BOOLEAN;
 	BEGIN result := real IS REAL
 	END Test.
 
-negative: type test on real type
+positive: type test on real type
 
 	MODULE Test;
 	TYPE Type = REAL;
@@ -25469,18 +25477,18 @@ negative: type guard on variable reals
 	BEGIN result := real(real)
 	END Test.
 
-negative: type guard on variable real
+positive: type guard on variable real
 
 	MODULE Test;
 	VAR real, result: REAL;
 	BEGIN result := real(REAL)
 	END Test.
 
-negative: type guard on real type
+positive: type guard on real type
 
 	MODULE Test;
 	TYPE Type = REAL;
-	VAR real: Type; result: BOOLEAN;
+	VAR real, result: Type;
 	BEGIN result := real(Type)
 	END Test.
 

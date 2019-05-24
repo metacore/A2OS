@@ -1224,9 +1224,12 @@ TYPE
 	END ReportTypeDeclaration;
 
 	PROCEDURE ReportScope*(w:Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE);
+	VAR
+		offsetOld: SIZE;
 	BEGIN
+		offsetOld := offset;
 		IF ~Expect(offset, GetChar(refs, offset) = sfScopeBegin) THEN RETURN END;
-		w.Int(offset,1); w.String(": Scope"); w.Ln;
+		w.Int(offsetOld, 1); w.String(": Scope"); w.Ln;
 		WHILE (refs[offset] = sfVariable) DO (* Variable *)
 			ReportVariable(w, refs, offset);
 		END;
@@ -1248,6 +1251,7 @@ TYPE
 		SkipSize(offset);
 		GetString(refs, offset, name);
 		w.String(name);
+		w.Ln;
 		ReportScope(w, refs, offset);
 	END ReportModule;
 

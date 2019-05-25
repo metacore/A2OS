@@ -99,7 +99,11 @@ CONST
 
 	(* Load Oberon text files ignoring text format *)
 	OptimizedLoads = TRUE;
-
+	
+	(** Default compression level and strategy for Zip **)
+	DefaultCompression = Zip.BestCompression;
+	DefaultStrategy = Zip.HuffmanOnly;
+	
 	(* If set to TRUE, the file references are re-used for different steps of the build process *)
 	KeepFilesOpen = FALSE;
 
@@ -793,7 +797,7 @@ TYPE
 			END;
 		END GeneratePackageFile;
 
-		PROCEDURE GenerateZipFiles(out, error : Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR err : BOOLEAN);
+		PROCEDURE GenerateZipFiles(out, error : Streams.Writer; diagnostics : Diagnostics.Diagnostics; level, strategy: LONGINT; VAR err : BOOLEAN);
 		VAR packageArray : PackageArray; i : LONGINT; res: WORD;
 
 			PROCEDURE AddFile(archive: Zip.Archive; CONST srcname,  dstname: ARRAY OF CHAR; VAR res: WORD);
@@ -805,7 +809,7 @@ TYPE
 				ELSE
 					f.Set(r, 0);
 					Files.SplitPath(dstname, pathName, fileName);
-					Zip.AddEntry(archive, fileName, r, f.Length(), 9, 2, res);
+					Zip.AddEntry(archive, fileName, r, f.Length(), SHORTINT(level), SHORTINT(strategy), res);
 				END;
 			END AddFile;
 
@@ -3389,6 +3393,7 @@ VAR
 	buildname : ARRAY 32 OF CHAR;
 	start0 : Dates.DateTime;
 	error : BOOLEAN;
+	zipMethod, zipStrategy : LONGINT;
 	nofWorkers : LONGINT; res: WORD;
 BEGIN
 	NEW(options);
@@ -3410,6 +3415,7 @@ BEGIN
 	options.Add("x", "xml", Options.Flag);
 	options.Add("y", "", Options.Flag);
 	options.Add("z", "zip", Options.Flag);
+	options.Add("m", "zipMethod", Options.Integer);
 	options.Add("w","warnings",Options.Flag);
 
 	IF options.Parse(context.arg, context.error) THEN
@@ -3464,7 +3470,14 @@ BEGIN
 									CallCommand("PET.Open", fullname, context);
 								END;
 								IF ~error & options.GetFlag("zip") & CheckDiagnostics(diagnostics, options.GetFlag("warnings"), context.out) THEN
-									build.GenerateZipFiles(context.out, context.error, diagnostics, error);
+									zipStrategy := DefaultStrategy;
+									IF ~options.GetInteger("zipMethod", zipMethod) OR (zipMethod < Zip.NoCompression) OR (zipMethod > Zip.BestCompression) THEN
+										zipMethod := DefaultCompression
+									END;
+									IF zipMethod = Zip.NoCompression THEN
+										zipStrategy := Zip.DefaultStrategy
+									END;
+									build.GenerateZipFiles(context.out, context.error, diagnostics, zipMethod, zipStrategy, error);
 								END;
 								IF ~error & options.GetFlag("xml") THEN
 									IF ~options.GetString("path", fullname) THEN fullname := ""; END;

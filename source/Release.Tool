@@ -186,6 +186,8 @@ BUILDS
 		INCLUDE "WIN I386"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win32"
+		EXTENSION "GofW"
+		SYMBOLEXTENSION "SymW"
 		EXCLUDEPACKAGES ""
 		DISABLED "FALSE"
 	}
@@ -200,6 +202,8 @@ BUILDS
 		INCLUDE "WIN AMD64"
 		COMPILER "Compiler.Compile"
 		COMPILEOPTIONS "-p=Win64"
+		EXTENSION "GofWw"
+		SYMBOLEXTENSION "SymWw"
 		EXCLUDEPACKAGES "OberonVoyager OberonAnts"
 		DISABLED "FALSE"
 	}
@@ -403,7 +407,7 @@ PACKAGE System ARCHIVE "System.zip" SOURCE "SystemSrc.zip" DESCRIPTION "System"
 	UNIX { Unix.UnixFiles.Mod }
 
 	WIN {
-		Windows.User32.Mod Windows.WinTrace.Mod Windows.ODBC.Mod Windows.Shell32.Mod Windows.SQL.Mod
+		Windows.User32.Mod Windows.ODBC.Mod Windows.Shell32.Mod Windows.SQL.Mod
 		Windows.WinFS.Mod
 	}
 
@@ -1108,6 +1112,7 @@ PACKAGE GuiApplicationsMini ARCHIVE "GuiApplicationsMini.zip" SOURCE "GuiApplica
 	MainMenu.Mod	# menu system
 	StartMenu.rep
 	StartMenu.Mod
+	MenuPages.Mod # generate MenuPageXX.XML files
 	MenuPage00.XML MenuPage10.XML MenuPage20.XML MenuPage30.XML
 	MenuPage40.XML MenuPage50.XML MenuPage60.XML MenuPage70.XML
 	MenuPage80.XML MenuPage90.XML

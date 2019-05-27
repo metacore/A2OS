@@ -6020,8 +6020,6 @@ TYPE
 			END;
 
 
-			(* can the inline scope end here?  Or should the evaluation of the result be in the scope? *)
-			currentScope := recentScope;
 			IF (x.type # NIL)  & (x.result # NIL) THEN
 (*				IF structuredReturnType THEN
 					RestoreRegisters(saved);
@@ -6034,6 +6032,9 @@ TYPE
 				END;
 *)
 			END;
+			(* the inline scope must end here as the designation of the result may involve symbols in the inline scope *)
+			currentScope := recentScope;
+
 			currentInlineExit := prevInlineExit;
 			currentIsInline := wasInline;
 		END VisitInlineCallDesignator;

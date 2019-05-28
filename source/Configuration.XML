@@ -55,13 +55,13 @@ To update: Configuration.Init ~
 		<Setting name="Start the main menu" value="StartMenu.Open"/>
 		<Setting name="DefaultSkin" value="SkinEngine.Unload"/>
 		<Setting name="Restore the desktop" value="WMRestorable.Load Auto.dsk"/>
-			<Setting name="navigation manager" value="WMNavigate.Open -vs -n 1 0 0 Navigation:TaskList"/>
+		<Setting name="navigation manager" value="WMNavigate.Open -vs -n 1 0 0 Navigation:TaskList"/>
 
 		<!-- Pinyin Input Method Editor (remove comment to activate)
 			<Setting value="WMPinyinIME.Test"/>
 		-->
 
-		<Setting name="Tasklist" value="WMNavigate.Open -vs 1 0 0 Navigation:TaskList"/> 
+		<Setting name="Tasklist" value="WMNavigate.Open -vs 1 0 0 Navigation:TaskList"/>
 		<Setting name="Hotkey support" value="HotKeys.Open"/>
 		<!-- Setting name="Hardware Detection" value="PCITools.DetectHardware"/-->
 	</Section>
@@ -128,10 +128,6 @@ To update: Configuration.Init ~
 					<Setting name="Exact" value="WMOberonFonts.LoadExactFont"/>
 					<Setting name="Approximate" value="WMOberonFonts.LoadApproximateFont"/>
 				</Section>
-				<Section name="BitmapFonts">
-					<Setting name="Exact" value="WMBitmapFont.LoadExactFont"/>
-					<Setting name="Approximate" value="WMBitmapFont.LoadApproximateFont"/>
-				</Section>
 				<Section name="CCGFonts">
 					<Setting name="Exact" value="WMCCGFonts.LoadExactFont"/>
 					<Setting name="Approximate" value="WMCCGFonts.LoadApproximateFont"/>
@@ -139,6 +135,10 @@ To update: Configuration.Init ~
 				<Section name="OTFonts">
 					<Setting name="Exact" value="WMOTFonts.LoadExactFont"/>
 					<Setting name="Approximate" value="WMOTFonts.LoadApproximateFont"/>
+				</Section>
+				<Section name="BitmapFonts">
+					<Setting name="Exact" value="WMBitmapFont.LoadExactFont"/>
+					<Setting name="Approximate" value="WMBitmapFont.LoadApproximateFont"/>
 				</Section>
 			</Section>
 		</Section>
@@ -341,7 +341,7 @@ To update: Configuration.Init ~
 		</Section>
 			<Section name="sym">
 				<Setting name="Open" value="PET.Open"/>
-			</Section>	
+			</Section>
 			<Section name="gof">
 				<Setting name="Open" value="FoxGenericObjectFile.Show"/>
 			</Section>
@@ -471,7 +471,7 @@ To update: Configuration.Init ~
 				<Setting name="DNS" value="2001::1" />
 			</Section>
 		</Section>
-		
+
 		<Section name="NTP">
 			<Setting name="Server0" value="0.ch.pool.ntp.org" />
 			<Setting name="Server1" value="1.ch.pool.ntp.org" />

@@ -6977,7 +6977,7 @@ TYPE
 					Printout.Info("variable",variable)
 				END;
 			ELSIF ~IsTypeExtension(variableType, type.resolved) THEN
-				Error(variable.position,"withguarded symbol is no type extension of ");
+				Error(type.position,"type does not extend withguarded symbol");
 				IF VerboseErrorMessage THEN
 					Printout.Info("variable",variable);
 					Printout.Info("type",type);

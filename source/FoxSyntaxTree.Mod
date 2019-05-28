@@ -1921,7 +1921,7 @@ TYPE
 		END SetState;
 
 		PROCEDURE &InitExpression(position: Position);
-		BEGIN	
+		BEGIN
 			SELF.position := position; end :=  invalidPosition; state := Undefined; type := NIL; assignable := FALSE; resolved := NIL; isHidden := FALSE;
 		END InitExpression;
 
@@ -1940,11 +1940,11 @@ TYPE
 		PROCEDURE SetAssignable*(assignable: BOOLEAN);
 		BEGIN SELF.assignable := assignable
 		END SetAssignable;
-		
+
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN FALSE;
 		END NeedsTrace;
-		
+
 		PROCEDURE Equals*(other: Expression): BOOLEAN;
 		BEGIN
 			IF other = NIL THEN RETURN FALSE END;
@@ -1996,7 +1996,7 @@ TYPE
 				list.Set(j,ei);
 			END;
 		END Revert;
-		
+
 		PROCEDURE Equals(other: ExpressionList): BOOLEAN;
 		VAR i: SIZE;
 		BEGIN
@@ -2007,7 +2007,7 @@ TYPE
 			END;
 			RETURN TRUE;
 		END Equals;
-		
+
 
 
 	END ExpressionList;
@@ -2021,7 +2021,7 @@ TYPE
 			InitExpression( position );
 			elements := e;
 		END InitSet;
-		
+
 	END Set;
 
 	(** << [elements] >>  **)
@@ -2033,14 +2033,14 @@ TYPE
 			InitExpression( position );
 			elements := elems;
 		END InitMathArrayExpression;
-		
+
 		PROCEDURE Equals(e: Expression): BOOLEAN;
 		BEGIN
-			IF (e = NIL) OR ~(e IS MathArrayExpression) THEN RETURN FALSE 
+			IF (e = NIL) OR ~(e IS MathArrayExpression) THEN RETURN FALSE
 			ELSE RETURN elements.Equals(e(MathArrayExpression).elements)
 			END;
 		END Equals;
-		
+
 	END MathArrayExpression;
 
 	(** <<operator left>> **)
@@ -2117,7 +2117,7 @@ TYPE
 		BEGIN
 			SELF.context := context
 		END SetContext;
-		
+
 	END RangeExpression;
 
 	(** << ? >> **)
@@ -2152,7 +2152,7 @@ TYPE
 	(** abstract **)
 	Designator* = OBJECT(Expression)
 		VAR
-			left-: Designator; (* currently only designators are allowed but for later purposes ... (as for example (a+b).c) *)
+			left-: Expression;
 			modifiers-: Modifier;
 			relatedRhs-: Expression;
 			original-: Expression;
@@ -2201,7 +2201,7 @@ TYPE
 	SelectorDesignator* = OBJECT (Designator)
 		VAR identifier-: Identifier;
 
-		PROCEDURE & InitSelector(position: Position; left: Designator; identifier: Identifier);
+		PROCEDURE & InitSelector(position: Position; left: Expression; identifier: Identifier);
 		BEGIN   InitDesignator(position); SELF.left := left; SELF.identifier := identifier;
 		END InitSelector;
 
@@ -2214,7 +2214,7 @@ TYPE
 		VAR
 			parameters-: ExpressionList;
 
-		PROCEDURE &InitParameterDesignator(position: Position; left: Designator; parameters: ExpressionList);
+		PROCEDURE &InitParameterDesignator(position: Position; left: Expression; parameters: ExpressionList);
 		BEGIN InitDesignator(position); SELF.left := left; SELF.parameters := parameters
 		END InitParameterDesignator;
 
@@ -2225,7 +2225,7 @@ TYPE
 	**)
 	ArrowDesignator* = OBJECT (Designator)
 
-		PROCEDURE &InitArrowDesignator(position: Position; left: Designator);
+		PROCEDURE &InitArrowDesignator(position: Position; left: Expression);
 		BEGIN InitDesignator(position); SELF.left := left;
 		END InitArrowDesignator;
 
@@ -2237,7 +2237,7 @@ TYPE
 	BracketDesignator* = OBJECT(Designator)
 		VAR parameters-: ExpressionList;
 
-		PROCEDURE &InitBracketDesignator(position: Position; left: Designator; parameters: ExpressionList);
+		PROCEDURE &InitBracketDesignator(position: Position; left: Expression; parameters: ExpressionList);
 		BEGIN InitDesignator(position); SELF.left := left; SELF.parameters := parameters;
 		END InitBracketDesignator;
 
@@ -2250,7 +2250,7 @@ TYPE
 	VAR
 		symbol-: Symbol;
 
-		PROCEDURE &InitSymbolDesignator(position: Position; original: Expression; left: Designator; symbol: Symbol);
+		PROCEDURE &InitSymbolDesignator(position: Position; original: Expression; left: Expression; symbol: Symbol);
 		BEGIN
 			InitDesignator(position);
 			SELF.left := left;
@@ -2278,7 +2278,7 @@ TYPE
 			hasRange-: BOOLEAN;
 			hasTensorRange-: BOOLEAN;
 
-		PROCEDURE &InitIndexDesignator(position: Position; original: Expression; left: Designator; pars: ExpressionList);
+		PROCEDURE &InitIndexDesignator(position: Position; original: Expression; left: Expression; pars: ExpressionList);
 		BEGIN
 			InitDesignator(position);
 			SELF.left := left;
@@ -2309,9 +2309,9 @@ TYPE
 	ProcedureCallDesignator*= OBJECT (Designator)
 		VAR parameters-: ExpressionList;
 
-		PROCEDURE & InitProcedureCallDesignator(position: Position; original: Expression; left: Designator;  parameters: ExpressionList);
+		PROCEDURE & InitProcedureCallDesignator(position: Position; original: Expression; left: Expression;  parameters: ExpressionList);
 		BEGIN
-			InitDesignator(position); 
+			InitDesignator(position);
 			SELF.original := original; SELF.left := left; SELF.parameters := parameters;
 		END InitProcedureCallDesignator;
 
@@ -2345,9 +2345,9 @@ TYPE
 			builtin-: Builtin;
 			returnType-: Type;
 
-		PROCEDURE & InitBuiltinCallDesignator(position: Position; orig: Expression; id: LONGINT; left: Designator; parameters: ExpressionList);
+		PROCEDURE & InitBuiltinCallDesignator(position: Position; orig: Expression; id: LONGINT; left: Expression; parameters: ExpressionList);
 		BEGIN
-			InitDesignator(position); 
+			InitDesignator(position);
 			SELF.parameters := parameters; SELF.id := id; SELF.left := left; returnType := NIL; original := orig;
 		END InitBuiltinCallDesignator;
 
@@ -2365,7 +2365,7 @@ TYPE
 	VAR
 		typeExpression-: Expression; (* for printing only *)
 
-		PROCEDURE &InitTypeGuardDesignator(position: Position; orig: Expression; left: Designator; type: Type);
+		PROCEDURE &InitTypeGuardDesignator(position: Position; orig: Expression; left: Expression; type: Type);
 		BEGIN InitDesignator(position); SELF.left := left; SELF.type := type; typeExpression := NIL; original := orig;
 		END InitTypeGuardDesignator;
 
@@ -2382,7 +2382,7 @@ TYPE
 	(** <<left^>> resolved as dereference operation on pointer variable left **)
 	DereferenceDesignator*= OBJECT (Designator)
 
-		PROCEDURE &InitDereferenceDesignator(position: Position; orig: Expression; left: Designator);
+		PROCEDURE &InitDereferenceDesignator(position: Position; orig: Expression; left: Expression);
 		BEGIN InitDesignator(position); SELF.left := left; original := orig;
 		END InitDereferenceDesignator;
 
@@ -2399,7 +2399,7 @@ TYPE
 	(** <<left^>> resolved as supercall operation on method left **)
 	SupercallDesignator*= OBJECT (Designator)
 
-		PROCEDURE &InitSupercallDesignator(position: Position; orig: Expression; left: Designator);
+		PROCEDURE &InitSupercallDesignator(position: Position; orig: Expression; left: Expression);
 		BEGIN InitDesignator(position); SELF.left := left; original := orig;
 		END InitSupercallDesignator;
 
@@ -2498,7 +2498,7 @@ TYPE
 	END CharacterValue;
 
 	TYPE SetValueAlias = SetValue;
-	
+
 	(** <<value =  {1,2,3..5}>> **)
 	SetValue* = OBJECT (Value)
 		VAR
@@ -2699,7 +2699,7 @@ TYPE
 			used := FALSE; written := FALSE;
 			comment := NIL;
 		END InitSymbol;
-		
+
 		PROCEDURE Copy(target: Symbol);
 		BEGIN
 			target.type := type;
@@ -2869,7 +2869,7 @@ TYPE
 			value := NIL;
 			nextConstant := NIL;
 		END InitConstant;
-		
+
 		PROCEDURE Clone*(): Constant;
 		VAR new: Constant;
 		BEGIN
@@ -2896,11 +2896,11 @@ TYPE
 		untraced-: BOOLEAN;
 		fictive-: BOOLEAN; (* variable is not allocated but has a fixed offset *)
 		fictiveOffset-: LONGINT; (* offset of fictive as provided by the source code *)
-		
+
 		registerNumber-: LONGINT;
 		inRegister-: BOOLEAN;
 		preferRegister-: BOOLEAN;
-		
+
 		modifiers-: Modifier;
 		initializer-: Expression;
 
@@ -2910,7 +2910,7 @@ TYPE
 		PROCEDURE & InitVariable*( position: Position;  name: Identifier);
 		BEGIN
 			InitSymbol(position,name);
-			SELF.kind := ValueParameter; 
+			SELF.kind := ValueParameter;
 			nextVariable := NIL;
 			untraced := FALSE;
 			modifiers := NIL;
@@ -2921,12 +2921,12 @@ TYPE
 			initializer := NIL;
 			fictive := FALSE;
 		END InitVariable;
-		
+
 		PROCEDURE SetKind*(kind: LONGINT);
 		BEGIN
 			SELF.kind := kind;
 		END SetKind;
-				
+
 		PROCEDURE Clone*(): Variable;
 		VAR new: Variable;
 		BEGIN
@@ -2953,7 +2953,7 @@ TYPE
 		BEGIN
 			preferRegister := b
 		END PreferRegister;
-		
+
 		PROCEDURE InRegister*(b: BOOLEAN);
 		BEGIN
 			inRegister := b;
@@ -3025,7 +3025,7 @@ TYPE
 		BEGIN
 			preferRegister := b
 		END PreferRegister;
-		
+
 		PROCEDURE InRegister*(b: BOOLEAN);
 		BEGIN
 			inRegister := b;
@@ -3086,12 +3086,12 @@ TYPE
 	VAR
 		expression-: Expression;
 		nextAlias-: Alias;
-		
+
 		PROCEDURE & InitAlias*(position: Position; name: Identifier; e: Expression);
 		BEGIN
 			InitSymbol(position, name);
 			expression := e;
-			nextAlias := NIL; 
+			nextAlias := NIL;
 		END InitAlias;
 
 		PROCEDURE SetExpression*(e: Expression);
@@ -3136,7 +3136,7 @@ TYPE
 			isAbstract := FALSE;
 			isOverwritten := FALSE;
 		END InitProcedure;
-		
+
 		(* cycle detection during inlining *)
 		PROCEDURE Resolving*(r: BOOLEAN): BOOLEAN;
 		VAR b: BOOLEAN;
@@ -3145,7 +3145,7 @@ TYPE
 			IF r THEN INC(resolving) ELSE DEC(resolving) END;
 			RETURN b;
 		END Resolving;
-				
+
 		PROCEDURE SetSuper*(super: Procedure);
 		BEGIN
 			SELF.super := super
@@ -4069,7 +4069,7 @@ TYPE
 			copy.SetStatementSequence(CloneStatementSequence(statements));
 			RETURN copy;
 		END Clone;
-		
+
 	END StatementBlock;
 
 	(** << CODE {flags} {character}  END >> **)
@@ -4191,7 +4191,7 @@ TYPE
 		outerScope-: Scope; nextScope-: Scope;
 
 		ownerModule-: Module;
-		
+
 		currentVariableOffset-, minVariableOffset-, maxVariableOffset-: LONGINT;
 
 		PROCEDURE & InitScope(outer: Scope);
@@ -4222,8 +4222,8 @@ TYPE
 		BEGIN
 			currentVariableOffset := o;
 		END SetCurrentVariableOffset;
-		
-		
+
+
 		PROCEDURE Clear*;
 		BEGIN
 			firstConstant := NIL; lastConstant := NIL; numberConstants := 0;
@@ -4311,15 +4311,15 @@ TYPE
 			INC(numberVariables);
 			lastVariable := v;
 		END AddVariable;
-		
+
 		PROCEDURE AddAlias*(a: Alias);
 		BEGIN
-			ASSERT(a # NIL); 
+			ASSERT(a # NIL);
 			IF lastAlias = NIL THEN firstAlias := a; ELSE lastAlias.nextAlias := a END;
-			INC(numberAliases); 
+			INC(numberAliases);
 			lastAlias := a;
 		END AddAlias;
-		
+
 
 		PROCEDURE PushVariable*(v: Variable);
 		BEGIN
@@ -4402,19 +4402,19 @@ TYPE
 			END;
 			RETURN FALSE;
 		END NeedsTrace;
-		
+
 		PROCEDURE SetOuter*(outer: Scope);
 		BEGIN
 			outerScope := outer;
 		END SetOuter;
-		
+
 		PROCEDURE AddScope*(c: Scope);
 		BEGIN
 			IF lastScope= NIL THEN firstScope := c ELSE lastScope.nextScope := c END;
 			lastScope := c;
 			INC(numberScopes);
 		END AddScope;
-		
+
 
 	END Scope;
 
@@ -4429,7 +4429,7 @@ TYPE
 			ownerProcedure := NIL;
 			body := NIL;
 		END InitProcedureScope;
-		
+
 		PROCEDURE SetBody*(body: Body);
 		BEGIN
 			SELF.body := body;
@@ -4448,7 +4448,7 @@ TYPE
 
 	END ProcedureScope;
 
-	BlockScope* = OBJECT(Scope)		
+	BlockScope* = OBJECT(Scope)
 	END BlockScope;
 
 	EnumerationScope*= OBJECT(Scope)
@@ -5020,48 +5020,48 @@ VAR
 	BEGIN
 		IF x = NIL THEN RETURN NIL END;
 		IF x.original # NIL THEN RETURN CloneExpression(x.original)(Designator) END;
-		WITH x: 
-		  ResultDesignator DO 
+		WITH x:
+		  ResultDesignator DO
 				result := NewResultDesignator(x.position);
-		| SelfDesignator DO 
+		| SelfDesignator DO
 				result := NewSelfDesignator(x.position, x.original);
 		| SupercallDesignator DO
-				result := NewSupercallDesignator(x.position, x.original, CloneDesignator(x.left));
+				result := NewSupercallDesignator(x.position, x.original, CloneExpression(x.left));
 		| DereferenceDesignator DO
-				result := NewDereferenceDesignator(x.position, x.original, CloneDesignator(x.left));
+				result := NewDereferenceDesignator(x.position, x.original, CloneExpression(x.left));
 		| TypeGuardDesignator DO
-				result := NewTypeGuardDesignator(x.position, x.original, CloneDesignator(x.left), x.type);
+				result := NewTypeGuardDesignator(x.position, x.original, CloneExpression(x.left), x.type);
 		| BuiltinCallDesignator DO
-				result := NewBuiltinCallDesignator(x.position, NIL, x.id, CloneDesignator(x.left), CloneExpressionList(x.parameters));
+				result := NewBuiltinCallDesignator(x.position, NIL, x.id, CloneExpression(x.left), CloneExpressionList(x.parameters));
 		| ProcedureCallDesignator DO
-				result := NewProcedureCallDesignator(x.position, NIL, CloneDesignator(x.left), CloneExpressionList(x.parameters));
+				result := NewProcedureCallDesignator(x.position, NIL, CloneExpression(x.left), CloneExpressionList(x.parameters));
 		| InlineCallDesignator DO
 				result := NewInlineCallDesignator(x.position, NIL, x.block.Clone()(StatementBlock));
 		| IndexDesignator DO
-				result := NewIndexDesignator(x.position,NIL,CloneDesignator(x.left), CloneExpressionList(x.parameters));
+				result := NewIndexDesignator(x.position,NIL,CloneExpression(x.left), CloneExpressionList(x.parameters));
 		| SymbolDesignator DO
-				result := NewSymbolDesignator(x.position, NIL, CloneDesignator(x.left), x.symbol);
+				result := NewSymbolDesignator(x.position, NIL, CloneExpression(x.left), x.symbol);
 		| BracketDesignator DO
-				result := NewBracketDesignator(x.position, CloneDesignator(x.left), CloneExpressionList(x.parameters)); 
+				result := NewBracketDesignator(x.position, CloneExpression(x.left), CloneExpressionList(x.parameters));
 		| ArrowDesignator DO
-				result := NewArrowDesignator(x.position, CloneDesignator(x.left));
+				result := NewArrowDesignator(x.position, CloneExpression(x.left));
 		| ParameterDesignator DO
-				result := NewParameterDesignator(x.position, CloneDesignator(x.left), CloneExpressionList(x.parameters));
+				result := NewParameterDesignator(x.position, CloneExpression(x.left), CloneExpressionList(x.parameters));
 		| SelectorDesignator DO
-				result := NewSelectorDesignator(x.position, CloneDesignator(x.left), x.identifier); 
+				result := NewSelectorDesignator(x.position, CloneExpression(x.left), x.identifier);
 		| IdentifierDesignator DO
-				result := NewIdentifierDesignator(x.position, x.identifier); 
+				result := NewIdentifierDesignator(x.position, x.identifier);
 		| Designator DO
 		END;
 		result.modifiers := x.modifiers;
 		RETURN result;
-	END CloneDesignator;	
+	END CloneDesignator;
 
 	PROCEDURE CloneExpression*(x: Expression): Expression;
 	VAR result: Expression;
 	BEGIN
 		IF (x = NIL) OR (x= invalidExpression) THEN RETURN x END;
-		
+
 		WITH x: Designator DO
 			IF x.original # NIL THEN RETURN CloneExpression(x.original) END;
 			result := CloneDesignator(x);
@@ -5070,37 +5070,37 @@ VAR
 		| TensorRangeExpression DO
 			result := NewTensorRangeExpression(x.position);
 		| RangeExpression DO
-			result := NewRangeExpression(x.position, CloneExpression(x.first), CloneExpression(x.last), CloneExpression(x.step)); 
+			result := NewRangeExpression(x.position, CloneExpression(x.first), CloneExpression(x.last), CloneExpression(x.step));
 		| BinaryExpression DO
-			result := NewBinaryExpression(x.position, CloneExpression(x.left), CloneExpression(x.right), x.operator); 
+			result := NewBinaryExpression(x.position, CloneExpression(x.left), CloneExpression(x.right), x.operator);
 		| UnaryExpression DO
-			result := NewUnaryExpression(x.position, CloneExpression(x.left), x.operator); 
+			result := NewUnaryExpression(x.position, CloneExpression(x.left), x.operator);
 		| MathArrayExpression DO
-			result := NewMathArrayExpression(x.position, CloneExpressionList(x.elements)); 
+			result := NewMathArrayExpression(x.position, CloneExpressionList(x.elements));
 		| Set DO
-			result := NewSet(x.position, CloneExpressionList(x.elements)); 
+			result := NewSet(x.position, CloneExpressionList(x.elements));
 		| BooleanValue DO
 			result := NewBooleanValue(x.position, x.value);
 		| IntegerValue DO
 			result := NewIntegerValue(x.position, x.value);
 		| CharacterValue DO
-			result := NewCharacterValue(x.position, x.value); 
+			result := NewCharacterValue(x.position, x.value);
 		| SetValue DO
 			result := NewSetValue(x.position, x.value);
 		| MathArrayValue DO
-			result := NewMathArrayValue(x.position, CloneExpression(x.array)(MathArrayExpression)); 
+			result := NewMathArrayValue(x.position, CloneExpression(x.array)(MathArrayExpression));
 		| RealValue DO
-			result := NewRealValue(x.position, x.value, x.subtype); 
+			result := NewRealValue(x.position, x.value, x.subtype);
 		| ComplexValue DO
-			result := NewComplexValue(x.position, x.realValue, x.imagValue,x.subtype); 
+			result := NewComplexValue(x.position, x.realValue, x.imagValue,x.subtype);
 		| StringValue DO
-			result := NewStringValue(x.position, x.value); 
+			result := NewStringValue(x.position, x.value);
 		| NilValue DO
-			result := NewNilValue(x.position); 
+			result := NewNilValue(x.position);
 		| EnumerationValue DO
-			result := NewEnumerationValue(x.position, x.value); 
+			result := NewEnumerationValue(x.position, x.value);
 		ELSE
-			HALT(100); 
+			HALT(100);
 		END;
 		result.assignable := x.assignable;
 		IF x.resolved = x THEN result.resolved := result(Value) ELSE result.resolved := x.resolved END;
@@ -5359,15 +5359,15 @@ VAR
 	PROCEDURE CloneExpressionList*(l: ExpressionList): ExpressionList;
 	VAR copy: ExpressionList; i: WORD;
 	BEGIN
-		IF l = NIL THEN 
+		IF l = NIL THEN
 			copy := NIL;
-		ELSE 
+		ELSE
 			NEW(copy);
 			FOR i := 0 TO l.Length()-1 DO
 				copy.AddExpression(CloneExpression(l.GetExpression(i)));
 			END;
 		END;
-		RETURN copy 
+		RETURN copy
 	END CloneExpressionList;
 
 	PROCEDURE NewDesignator*(): Designator; (* for error handling: invalid Designator *)
@@ -5382,43 +5382,43 @@ VAR
 		NEW( identifierDesignator, position, identifier );  RETURN identifierDesignator
 	END NewIdentifierDesignator;
 
-	PROCEDURE NewSelectorDesignator*( position: Position;  left: Designator; name: Identifier ): SelectorDesignator;
+	PROCEDURE NewSelectorDesignator*( position: Position;  left: Expression; name: Identifier ): SelectorDesignator;
 	VAR selectorDesignator: SelectorDesignator;
 	BEGIN
 		NEW( selectorDesignator, position, left, name );  RETURN selectorDesignator
 	END NewSelectorDesignator;
 
-	PROCEDURE NewParameterDesignator*( position: Position; left: Designator; expressionList: ExpressionList ): ParameterDesignator;
+	PROCEDURE NewParameterDesignator*( position: Position; left: Expression; expressionList: ExpressionList ): ParameterDesignator;
 	VAR parameterDesignator: ParameterDesignator;
 	BEGIN
 		NEW( parameterDesignator,position, left, expressionList );  RETURN parameterDesignator
 	END NewParameterDesignator;
 
-	PROCEDURE NewArrowDesignator*( position: Position; left: Designator ): ArrowDesignator;
+	PROCEDURE NewArrowDesignator*( position: Position; left: Expression ): ArrowDesignator;
 	VAR dereferenceDesignator: ArrowDesignator;
 	BEGIN
 		NEW( dereferenceDesignator, position, left );  RETURN dereferenceDesignator;
 	END NewArrowDesignator;
 
-	PROCEDURE NewBracketDesignator*( position: Position; left: Designator; expressionList: ExpressionList ): BracketDesignator;
+	PROCEDURE NewBracketDesignator*( position: Position; left: Expression; expressionList: ExpressionList ): BracketDesignator;
 	VAR bracketDesignator: BracketDesignator;
 	BEGIN
 		NEW( bracketDesignator, position, left, expressionList );  RETURN bracketDesignator
 	END NewBracketDesignator;
 
-	PROCEDURE NewSymbolDesignator*( position: Position; original: Expression; left: Designator; symbol: Symbol ): SymbolDesignator;
+	PROCEDURE NewSymbolDesignator*( position: Position; original: Expression; left: Expression; symbol: Symbol ): SymbolDesignator;
 	VAR symbolDesignator: SymbolDesignator;
 	BEGIN
 		NEW( symbolDesignator, position, original, left, symbol); RETURN symbolDesignator
 	END NewSymbolDesignator;
 
-	PROCEDURE NewIndexDesignator*( position: Position; original: Expression; left: Designator; parameters: ExpressionList): IndexDesignator;
+	PROCEDURE NewIndexDesignator*( position: Position; original: Expression; left: Expression; parameters: ExpressionList): IndexDesignator;
 	VAR indexDesignator: IndexDesignator;
 	BEGIN
 		NEW( indexDesignator, position, original, left, parameters);  RETURN indexDesignator
 	END NewIndexDesignator;
 
-	PROCEDURE NewProcedureCallDesignator*(position: Position; original: Expression; left: Designator; parameters: ExpressionList): ProcedureCallDesignator;
+	PROCEDURE NewProcedureCallDesignator*(position: Position; original: Expression; left: Expression; parameters: ExpressionList): ProcedureCallDesignator;
 	VAR procedureCallDesignator: ProcedureCallDesignator;
 	BEGIN
 		NEW(procedureCallDesignator, position, original, left, parameters); RETURN procedureCallDesignator
@@ -5430,25 +5430,25 @@ VAR
 		NEW(inlineCall, position, o, block); RETURN inlineCall;
 	END NewInlineCallDesignator;
 
-	PROCEDURE NewBuiltinCallDesignator*(position: Position; original: Expression;  id: LONGINT;left: Designator; parameters: ExpressionList): BuiltinCallDesignator;
+	PROCEDURE NewBuiltinCallDesignator*(position: Position; original: Expression;  id: LONGINT;left: Expression; parameters: ExpressionList): BuiltinCallDesignator;
 	VAR builtinCallDesignator: BuiltinCallDesignator;
 	BEGIN
 		NEW(builtinCallDesignator, position, original, id, left,parameters); RETURN builtinCallDesignator
 	END NewBuiltinCallDesignator;
 
-	PROCEDURE NewTypeGuardDesignator*(position: Position; original: Expression; left: Designator; type: Type): TypeGuardDesignator;
+	PROCEDURE NewTypeGuardDesignator*(position: Position; original: Expression; left: Expression; type: Type): TypeGuardDesignator;
 	VAR guardDesignator: TypeGuardDesignator;
 	BEGIN
 		NEW(guardDesignator,position,original, left,type); RETURN guardDesignator;
 	END NewTypeGuardDesignator;
 
-	PROCEDURE NewDereferenceDesignator*( position: Position; original: Expression; left: Designator): DereferenceDesignator;
+	PROCEDURE NewDereferenceDesignator*( position: Position; original: Expression; left: Expression): DereferenceDesignator;
 	VAR dereferenceDesignator: DereferenceDesignator;
 	BEGIN
 		NEW( dereferenceDesignator, position, original, left);  RETURN dereferenceDesignator
 	END NewDereferenceDesignator;
 
-	PROCEDURE NewSupercallDesignator*( position: Position; original: Expression; left: Designator): SupercallDesignator;
+	PROCEDURE NewSupercallDesignator*( position: Position; original: Expression; left: Expression): SupercallDesignator;
 	VAR supercallDesignator: SupercallDesignator;
 	BEGIN
 		NEW( supercallDesignator, position, original, left);  RETURN supercallDesignator
@@ -5494,7 +5494,7 @@ VAR
 		IF e = NIL THEN RETURN NIL ELSE RETURN CloneExpression(e)(Designator) END;
 	END CloneDesignator;
 	*)
-	
+
 	PROCEDURE NewElement*( position: Position;  from,to: Expression ): Expression;
 	BEGIN
 			IF from = to THEN RETURN from
@@ -5627,8 +5627,8 @@ VAR
 	VAR copy: StatementSequence;
 	BEGIN IF statementSequence = NIL THEN RETURN NIL ELSE statementSequence.Clone(copy); RETURN copy END
 	END CloneStatementSequence;
-	
-	
+
+
 
 	PROCEDURE NewModifier*(position: Position; identifier: Identifier; expression: Expression): Modifier;
 	VAR blockModifier: Modifier;

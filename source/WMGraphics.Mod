@@ -945,7 +945,7 @@ BEGIN
 		IF (f # NIL) & f.HasChar(char) THEN found := TRUE END;
 		INC(i)
 	END;
-	IF f # NIL THEN f.RenderChar(canvas, x, y, char)
+	IF found THEN f.RenderChar(canvas, x, y, char)
 	ELSE
 		f := GetDefaultFont();
 		Strings.IntToStr(char,str); Strings.Concat("U", str, str);
@@ -966,7 +966,7 @@ BEGIN
 		IF (f # NIL) & f.HasChar(code) THEN found := TRUE END;
 		INC(i)
 	END;
-	IF f # NIL THEN f.GetGlyphSpacings(code, glyphSpacings)
+	IF found THEN f.GetGlyphSpacings(code, glyphSpacings)
 	ELSE
 		f := GetDefaultFont();
 		Strings.IntToStr(code, str); Strings.Concat("U", str, str);

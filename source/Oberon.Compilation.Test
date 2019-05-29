@@ -4254,8 +4254,7 @@ negative: indirect type guard on constant integers
 	CONST Result = Constant(Constant)
 	END Test.
 
-# should be allowed but this needs a new arrangement of compiler data structures
-negative: type guard on constant integer
+positive: type guard on constant integer
 
 	MODULE Test;
 	CONST Result = 5(INTEGER)
@@ -4269,7 +4268,7 @@ positive: indirect type guard on constant integer
 	BEGIN ASSERT (Result = 5);
 	END Test.
 
-negative: type guard on constant integer type
+positive: type guard on constant integer type
 
 	MODULE Test;
 	TYPE Type = INTEGER;
@@ -4727,7 +4726,7 @@ negative: indirect type guard on constant reals
 	CONST Result = Constant(Constant)
 	END Test.
 
-negative: type guard on constant real
+positive: type guard on constant real
 
 	MODULE Test;
 	CONST Result = 5.0(REAL)
@@ -4741,7 +4740,7 @@ positive: indirect type guard on constant real
 	BEGIN ASSERT (Result = 5.0);
 	END Test.
 
-negative: type guard on constant real type
+positive: type guard on constant real type
 
 	MODULE Test;
 	TYPE Type = REAL;

@@ -123,16 +123,17 @@ CONST
 
 	MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
 
-	Factor = Number | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
-							| '(' Expression ')' | '~' Factor | Factor '`' | Designator | MathArray.
+	Factor = Number [DesignatorOperations] | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
+							| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | MathArray.
 							| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator
 
 	MathArray = '[' Expression {',' Expression} ']'.
 
 	Set = '{' [ RangeExpression {',' RangeExpression} ] '}'.
 
-	Designator  = ('self' | 'result' | Identifier)
-							{'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
+	Designator  = ('self' | 'result' | Identifier) [DesignatorOperations].
+
+	DesignatorOperations = {'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
 
 	RangeExpression = SimpleExpression | [SimpleExpression] '..' [SimpleExpression] ['by' SimpleExpression] | '*'.
 
@@ -762,8 +763,8 @@ TYPE
 			RETURN expression
 		END RangeExpression;
 
-		(** Designator  = ('self' | 'result' | Identifier)
-			{'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
+		(** Designator  = ('self' | 'result' | Identifier) [DesignatorOperations].
+			DesignatorOperations = {'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'} [Flags].
 		**)
 		PROCEDURE Designator( ): SyntaxTree.Designator;
 		VAR
@@ -806,6 +807,14 @@ TYPE
 				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
 			END;
 			designator.End(token.position);
+			designator := DesignatorOperations (designator)(SyntaxTree.Designator);
+			IF Trace THEN E( "Designator" ) END;
+			RETURN designator
+		END Designator;
+
+		PROCEDURE DesignatorOperations (expression: SyntaxTree.Expression): SyntaxTree.Expression;
+		VAR position: Position; expressionList: SyntaxTree.ExpressionList; identifier: SyntaxTree.Identifier; designator: SyntaxTree.Designator;
+		BEGIN
 			LOOP
 				position := token.position;
 				IF OptionalB( Scanner.LeftParenthesis ) THEN
@@ -814,7 +823,7 @@ TYPE
 						ExpressionList( expressionList );
 						Check( Scanner.RightParenthesis )
 					END;
-					designator := SyntaxTree.NewParameterDesignator( position,designator,expressionList);
+					designator := SyntaxTree.NewParameterDesignator( position,expression,expressionList);
 				ELSIF OptionalB( Scanner.Period ) THEN
 					IF ~Optional(Scanner.Identifier) THEN (* make sure token is read *) END;
 					position := token.position;
@@ -826,29 +835,31 @@ TYPE
 					ELSE
 						identifier := Identifier(position);
 					END;
-					designator := SyntaxTree.NewSelectorDesignator(position,designator,identifier);
+					designator := SyntaxTree.NewSelectorDesignator(position,expression,identifier);
 				ELSIF OptionalB( Scanner.LeftBracket ) THEN
 					expressionList := SyntaxTree.NewExpressionList();
 					IndexList( expressionList );
 					Check( Scanner.RightBracket );
-					designator:= SyntaxTree.NewBracketDesignator( position,designator,expressionList );
+					designator:= SyntaxTree.NewBracketDesignator( position,expression,expressionList );
 				ELSIF OptionalB( Scanner.Arrow ) THEN
-					designator:= SyntaxTree.NewArrowDesignator( position,designator );
+					designator:= SyntaxTree.NewArrowDesignator( position,expression );
 				ELSE EXIT
+				END;
+				designator.End(token.position);
+				expression := designator;
+			END;
+
+			IF designator # NIL THEN
+				IF OptionalB(Scanner.LeftBrace) THEN
+					designator.SetModifiers(Flags());
 				END;
 				designator.End(token.position);
 			END;
 
-			IF OptionalB(Scanner.LeftBrace) THEN
-				designator.SetModifiers(Flags());
-			END;
-			designator.End(token.position);
-
 			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking signal *)*)
 
-			IF Trace THEN E( "Designator" ) END;
-			RETURN designator
-		END Designator;
+			RETURN expression;
+		END DesignatorOperations;
 
 		(** Set = '{' [ RangeExpression {',' RangeExpression} ] '}'. **)
 		PROCEDURE Set( ): SyntaxTree.Expression;
@@ -887,8 +898,8 @@ TYPE
 			RETURN array
 		END MathArray;
 
-		(** Factor = Number | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
-						| '(' Expression ')' | '~' Factor | Factor '`' | Designator | MathArray.
+		(** Factor = Number [DesignatorOperations] | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
+						| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | MathArray.
 						| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator | 'ALIAS' OF Expression
 						**)
 		PROCEDURE Factor( ): SyntaxTree.Expression;
@@ -907,6 +918,7 @@ TYPE
 					ELSE HALT( 100 )
 					END;
 					NextToken;
+					factor := DesignatorOperations (factor);
 			| Scanner.Character:
 					factor := SyntaxTree.NewCharacterValue(position,token.character);
 					NextToken;
@@ -941,6 +953,7 @@ TYPE
 					factor := Expression();
 					Check( Scanner.RightParenthesis );
 					factor.End( token.position);
+					factor := DesignatorOperations (factor);
 			| Scanner.Not:
 					NextToken;
 					factor := Factor();

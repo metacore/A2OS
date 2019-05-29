@@ -3811,7 +3811,7 @@ TYPE
 			- check parameter compatibility
 			return invalidDesignator if error
 		**)
-		PROCEDURE NewProcedureCallDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Designator; actualParameters:SyntaxTree.ExpressionList): SyntaxTree.Designator;
+		PROCEDURE NewProcedureCallDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression; actualParameters:SyntaxTree.ExpressionList): SyntaxTree.Designator;
 		VAR result: SyntaxTree.Designator;
 			numberFormalParameters, numberActualParameters: LONGINT;
 			formalType: SyntaxTree.ProcedureType;
@@ -3844,7 +3844,7 @@ TYPE
 			END;
 
 			IF (formalType.selfParameter # NIL) & (formalType.selfParameter.kind = SyntaxTree.VarParameter) THEN
-				self := left.left;
+				self := left(SyntaxTree.Designator).left;
 				IF (self # NIL) & ~IsVariable(self) THEN
 					Error(self.position, "Non-variable expression on variable receiver");
 				END;
@@ -4344,7 +4344,7 @@ TYPE
 				(* move to builtin procedure call statement ?
 			remove builtin procedure call designator ?
 		*)
-		PROCEDURE NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Designator; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Designator; returnType: SyntaxTree.Type): SyntaxTree.Expression;
+		PROCEDURE NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Designator; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type): SyntaxTree.Expression;
 		VAR
 			numberActualParameters,numberFormalParameters: LONGINT;
 			formalParameter: SyntaxTree.Parameter;
@@ -5580,7 +5580,7 @@ TYPE
 		PROCEDURE ResolveParameterDesignator(designator: SyntaxTree.ParameterDesignator): SyntaxTree.Expression;
 		VAR
 			parameters: SyntaxTree.ExpressionList;
-			left: SyntaxTree.Designator;
+			left: SyntaxTree.Expression;
 			result,expression: SyntaxTree.Expression;
 			typeDeclaration: SyntaxTree.TypeDeclaration;
 			type, expressionType: SyntaxTree.Type;
@@ -5597,7 +5597,7 @@ TYPE
 		BEGIN
 			IF Trace THEN D.Str("ResolveParameterDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
-			left := ResolveDesignator(designator.left);
+			left := ResolveExpression(designator.left);
 			IF left # SyntaxTree.invalidDesignator THEN
 				parameters := designator.parameters;
 				IF ExpressionList(parameters) THEN

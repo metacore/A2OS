@@ -2166,7 +2166,7 @@ TYPE
 			original := NIL;
 		END InitDesignator;
 
-		PROCEDURE SetLeft*(l: Designator);
+		PROCEDURE SetLeft*(l: Expression);
 		BEGIN left := l
 		END SetLeft;
 

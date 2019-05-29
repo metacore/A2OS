@@ -5922,7 +5922,7 @@ TYPE
 
 		PROCEDURE VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator);
 		VAR recentScope: SyntaxTree.Scope; duplicate: BOOLEAN;
-			wasInline: BOOLEAN; var: SyntaxTree.Variable; variableDesignator: SyntaxTree.Expression;
+			wasInline: BOOLEAN; var: SyntaxTree.Variable; variableDesignator, resultDesignator: SyntaxTree.Expression;
 			prevInlineExit: Label;
 
 			PROCEDURE GetTemp(type: SyntaxTree.Type; tryRegister: BOOLEAN): SyntaxTree.Expression;
@@ -5947,6 +5947,8 @@ TYPE
 			prevInlineExit := currentInlineExit;
 			currentInlineExit := NewLabel();
 			currentIsInline := TRUE;
+			resultDesignator := procedureResultDesignator;
+			procedureResultDesignator := NIL; 
 			ASSERT(module.system.GenerateVariableOffsets(currentScope));
 
 
@@ -5998,9 +6000,8 @@ TYPE
 			END;
 
 			IF x.type # NIL THEN
-				IF procedureResultDesignator # NIL THEN
-					x.block.scope.EnterSymbol(SyntaxTree.NewAlias(x.position, ResultDesignatorName, procedureResultDesignator), duplicate);
-					procedureResultDesignator := NIL;
+				IF resultDesignator # NIL THEN
+					x.block.scope.EnterSymbol(SyntaxTree.NewAlias(x.position, ResultDesignatorName, resultDesignator), duplicate);
 				ELSE
 					variableDesignator := GetTemp(x.type, TRUE (* try to allocate register *));
 					x.SetResult(variableDesignator);
@@ -11015,7 +11016,7 @@ TYPE
 			parameters: SyntaxTree.ExpressionList;
 			procedure: SyntaxTree.Procedure;
 			call: SyntaxTree.ProcedureCallDesignator;
-			designator: SyntaxTree.Designator;
+			designator, prevResult: SyntaxTree.Designator;
 			saved: RegisterEntry;
 
 			PROCEDURE CanPassAsResultParameter(right: SyntaxTree.Expression): BOOLEAN;
@@ -11154,9 +11155,10 @@ TYPE
 			END;
 
 			IF CanPassAsResultParameter(right) THEN
+				prevResult := procedureResultDesignator;
 				procedureResultDesignator := left(SyntaxTree.Designator);
 				Expression(right);
-				procedureResultDesignator := NIL;
+				procedureResultDesignator := prevResult;
 			ELSIF (right IS SyntaxTree.UnaryExpression) & (right(SyntaxTree.UnaryExpression).operator = Scanner.Alias) THEN
 				(* left <-- ALIAS OF right: zerocopy *)
 				IF GetRuntimeProcedure("FoxArrayBase","ZeroCopy",procedure,TRUE) THEN

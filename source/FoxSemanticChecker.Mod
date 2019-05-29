@@ -3001,7 +3001,7 @@ TYPE
 				- if symbol is a guarded variable then return a TypeGuardDesignator
 				- else return a symbol designator
 		**)
-		PROCEDURE NewSymbolDesignator*(position: Position; original: SyntaxTree.Designator; left: SyntaxTree.Designator; symbol: SyntaxTree.Symbol): SyntaxTree.Expression;
+		PROCEDURE NewSymbolDesignator*(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression; symbol: SyntaxTree.Symbol): SyntaxTree.Expression;
 		VAR result: SyntaxTree.Expression; assignable: BOOLEAN; scope: SyntaxTree.Scope;
 		guardType: SyntaxTree.Type;
 		BEGIN
@@ -3120,7 +3120,7 @@ TYPE
 		**)
 		PROCEDURE ResolveSelectorDesignator(selectorDesignator: SyntaxTree.SelectorDesignator): SyntaxTree.Expression;
 		VAR
-			symbol: SyntaxTree.Symbol; left: SyntaxTree.Designator; scope: SyntaxTree.Scope;
+			symbol: SyntaxTree.Symbol; left: SyntaxTree.Expression; scope: SyntaxTree.Scope;
 			module: SyntaxTree.Module; result: SyntaxTree.Expression; type: SyntaxTree.Type;
 		BEGIN
 			IF Trace THEN D.Str("ResolveSelectorDesignator"); D.Ln; END;
@@ -5537,7 +5537,7 @@ TYPE
 			- returns new type guard designator
 			returns invalidDesignator = invalidExpression if error
 		**)
-		PROCEDURE NewTypeGuardDesignator(position: Position; original: SyntaxTree.Designator; left: SyntaxTree.Designator; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator;
+		PROCEDURE NewTypeGuardDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression; type: SyntaxTree.Type; typeExpression: SyntaxTree.Expression): SyntaxTree.Designator;
 		VAR result: SyntaxTree.Designator;
 		BEGIN
 			result := SyntaxTree.invalidDesignator;
@@ -5647,7 +5647,7 @@ TYPE
 			with error handling
 			returns invalidDesignator = invalidExpression if error
 		**)
-		PROCEDURE NewDereferenceDesignator(position: Position; original: SyntaxTree.Designator; left: SyntaxTree.Designator): SyntaxTree.Designator;
+		PROCEDURE NewDereferenceDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression): SyntaxTree.Designator;
 		VAR type: SyntaxTree.Type; result: SyntaxTree.Designator;
 		BEGIN
 			result := SyntaxTree.invalidDesignator;

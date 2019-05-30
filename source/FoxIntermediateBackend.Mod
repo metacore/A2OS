@@ -13270,7 +13270,7 @@ TYPE
 						SyntaxTree.PointerType DO
 							IF type.pointerBase.resolved IS SyntaxTree.RecordType THEN
 								IF RefInfo THEN Info(section,"PointerToRecord") END;
-								IF type.pointerBase(SyntaxTree.RecordType).isObject THEN
+								IF type.pointerBase.resolved(SyntaxTree.RecordType).isObject THEN
 									Char(section, sfTypeOBJECT);
 								ELSE
 									Char(section, sfTypePointerToRecord);

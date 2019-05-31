@@ -5625,7 +5625,7 @@ TYPE
 								Error(left.position,"invalid unsigned type in explicit conversion");
 							ELSE
 								result := NewConversion(designator.position,expression,typeDeclaration.declaredType,left);
-								result(SyntaxTree.Conversion).SetOriginal(designator);
+								result.SetOriginal(designator);
 							END;
 						ELSE
 							Error(left.position,"invalid type in explicit conversion");

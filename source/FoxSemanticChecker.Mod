@@ -5624,7 +5624,8 @@ TYPE
 							IF ((type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.IntegerType) & (~type(SyntaxTree.IntegerType).signed)) & (expressionType IS SyntaxTree.FloatType) THEN
 								Error(left.position,"invalid unsigned type in explicit conversion");
 							ELSE
-								result := NewConversion(designator.position,expression,typeDeclaration.declaredType,left)
+								result := NewConversion(designator.position,expression,typeDeclaration.declaredType,left);
+								result(SyntaxTree.Conversion).SetOriginal(designator);
 							END;
 						ELSE
 							Error(left.position,"invalid type in explicit conversion");

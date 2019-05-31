@@ -2135,11 +2135,18 @@ TYPE
 		VAR
 			expression-: Expression;
 			typeExpression-: Expression; (* for printout *)
+			original-: Expression; (* for explicit conversions *)
 
-		PROCEDURE & InitConversion( position: Position;  expression: Expression; type: Type; typeExpression: Expression);
+		PROCEDURE & InitConversion( position: Position; expression: Expression; type: Type; typeExpression: Expression);
 		BEGIN
-			InitExpression( position );  SELF.expression := expression;  SELF.typeExpression := typeExpression; SELF.type := type;
+			InitExpression( position );  SELF.original := NIL; SELF.expression := expression;  SELF.typeExpression := typeExpression; SELF.type := type;
 		END InitConversion;
+		
+		PROCEDURE SetOriginal*(original: Expression);
+		BEGIN
+			SELF.original := original;
+		END SetOriginal;
+		
 
 		PROCEDURE SetExpression*(expression: Expression);
 		BEGIN SELF.expression := expression
@@ -5066,7 +5073,9 @@ VAR
 			IF x.original # NIL THEN RETURN CloneExpression(x.original) END;
 			result := CloneDesignator(x);
 		| Conversion DO
-			result := CloneExpression(x.expression);
+			IF x.original # NIL THEN result := CloneExpression(x.original)
+			ELSE result := CloneExpression(x.expression);
+			END;
 		| TensorRangeExpression DO
 			result := NewTensorRangeExpression(x.position);
 		| RangeExpression DO

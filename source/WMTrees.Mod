@@ -428,6 +428,7 @@ TYPE
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.TreeChanged, sender, data)
 			ELSE
+				(*SetIndent(ENTIER(font.GetSize()*30/14));*)(* keep original proportions*)
 				MeasureTree(lines, width);
 				vscrollbar.max.Set(lines - 1);
 				IF vscrollbar.pos.Get() >=  lines THEN vscrollbar.pos.Set(lines - 1) END;
@@ -477,7 +478,9 @@ TYPE
 			BEGIN
 				IF (x = NIL) OR (NodeHidden IN x.state) THEN RETURN END;
 				INC(lines);
-				h := DefaultHeight; w := bounds.GetWidth();
+				(*h := DefaultHeight;*)
+				h := ENTIER(DefaultHeight* (font.GetSize()/14)); (*ph: keep original proportions but adapt dynamically to font size*)
+				w := bounds.GetWidth();
 				IF measureNode # NIL THEN measureNode(x, w, h) END;
 				width := MAX(width, w + level * indent);
 				INC(cury, h);
@@ -523,7 +526,8 @@ TYPE
 		VAR dx, dy : LONGINT; f : WMGraphics.Font;
 		BEGIN
 			w := 0; h := 0;
-			f := WMGraphics.GetDefaultFont();
+			(*f := WMGraphics.GetDefaultFont();*)
+			f := font.Get();
 			IF node.img # NIL THEN w := node.img.width + 5; h := node.img.height END;
 			IF node.caption # NIL THEN
 				f.GetStringSize(node.caption^, dx, dy); dy := f.GetHeight() + 2;
@@ -618,7 +622,9 @@ TYPE
 				IF (x = NIL) OR (NodeHidden IN x.state) OR (y > height) THEN RETURN END;
 				INC(i);
 				IF i > firstLine THEN
-					h := DefaultHeight; w := bounds.GetWidth();
+					(*h := DefaultHeight; *)
+					h := ENTIER(DefaultHeight* (font.GetSize()/14));
+					w := bounds.GetWidth();
 					IF measureNode # NIL THEN measureNode(x, w, h) END;
 					t := Rect.MakeRect(0, y, w, y + h);
 					IF Rect.Intersect(clip, t) THEN
@@ -657,7 +663,9 @@ TYPE
 				IF (x = NIL) OR (NodeHidden IN x.state) OR (cury > height) THEN RETURN END;
 				INC(i);
 				IF i > firstLine THEN
-					h := DefaultHeight; w := bounds.GetWidth();
+					(*h := DefaultHeight; *)
+					h := ENTIER(DefaultHeight* (font.GetSize()/14));
+					w := bounds.GetWidth();
 					IF measureNode # NIL THEN measureNode(x, w, h) END;
 					INC(cury, h)
 				END;

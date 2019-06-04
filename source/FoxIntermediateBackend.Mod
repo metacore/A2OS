@@ -8198,7 +8198,13 @@ TYPE
 						CallThisChecked(position,"GarbageCollector","Watch",0,FALSE);
 						Emit(Pop(position, pointer));
 					END;
-					Designate(p0,l);
+
+					IF x.type # NIL THEN
+						temporaryVariable := GetTemporaryVariable(type, FALSE, FALSE (* untraced *));
+						Symbol(temporaryVariable,l); (*Designate(temporaryVariable,l)*)
+					ELSE
+						Designate(p0,l);
+					END;
 					IF needsTrace THEN
 						CallAssignPointer(l.op, pointer);
 					ELSE
@@ -8206,7 +8212,11 @@ TYPE
 						Emit(Mov(position,l.op,pointer));
 					END;
 					ReleaseIntermediateOperand(pointer);
-					ReleaseOperand(l);
+					IF (x.type # NIL) THEN
+						result := l; (* temporary variable is the result of NEW Type() *)
+					ELSE
+						ReleaseOperand(l);
+					END;
 					IF needsTrace THEN ModifyAssignments(false) END;
 				ELSE (* not cooperative backend *)
 					temporaryVariable := GetTemporaryVariable(type, FALSE, FALSE (* untraced *));

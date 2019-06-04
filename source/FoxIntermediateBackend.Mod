@@ -1609,7 +1609,8 @@ TYPE
 			op := result;
 		END Symbol;
 
-		PROCEDURE Expression(x: SyntaxTree.Expression);
+		(*
+		PROCEDURE ExpressionXX(x: SyntaxTree.Expression);
 		VAR pos: LONGINT;
 		BEGIN
 			position := x.position;
@@ -1623,8 +1624,9 @@ TYPE
 			IF (x IS SyntaxTree.Designator) & (x(SyntaxTree.Designator).modifiers # NIL) & ~backend.cellsAreObjects THEN
 				Error(x.position, "unsupported modifier");
 			END;
-		END Expression;
-
+		END ExpressionXX;
+		*)
+		
 		(*
 		PROCEDURE ResetUsedTemporaries(previous: VariableUse);
 		VAR current: VariableUse; set: SET; i,j: LONGINT; variable: SyntaxTree.Variable; op: Operand; tmp: IntermediateCode.Operand;
@@ -1745,35 +1747,19 @@ TYPE
 			ASSERT(operand.mode = ModeValue);
 		END LoadValue;
 
-		PROCEDURE Evaluate(x: SyntaxTree.Expression; VAR op: Operand);
-		BEGIN
-			EvaluateX(x,op);
-			(*
-			InitOperand(result, ModeUndefined);
-			Expression(x);
-			op := result;
-			LoadValue(op,x.type.resolved);
-			*)
-		END Evaluate;
-
-		PROCEDURE EvaluateX(CONST x: SyntaxTree.Expression; VAR result: Operand);
+		PROCEDURE Evaluate(CONST x: SyntaxTree.Expression; VAR result: Operand);
 		VAR operand: Operand; type: SyntaxTree.Type; symbol: SyntaxTree.Symbol;
 		BEGIN
-			(*
-			Evaluate(x, result); RETURN;
-			*)
-
+	
 			IF (x.resolved # NIL) & (x.resolved # x) THEN Evaluate(x.resolved, result); RETURN END;
+
 			WITH x:
 			SyntaxTree.UnaryExpression DO
 				EvaluateUnaryExpression(x, result);
-				RETURN;
 			|SyntaxTree.BinaryExpression DO
 				EvaluateBinaryExpression(x, result);
-				RETURN;
 			|SyntaxTree.Set DO
 				EvaluateSet(x, result);
-				RETURN;
 			|SyntaxTree.RangeExpression DO
 				InitOperand(result, ModeValue);
 				ASSERT(x.first # NIL);
@@ -1794,74 +1780,88 @@ TYPE
 					UseIntermediateOperand(result.extra);
 					ReleaseOperand(operand);
 				END;
-				RETURN;
 			|SyntaxTree.SymbolDesignator DO
 				symbol := x.symbol;
 				WITH symbol: SyntaxTree.Constant DO
 					Evaluate(symbol.value, result);
-					RETURN
 				ELSE (* designate and load --> below *)
+					DesignateAndLoad(x, result);
 				END;
 			|SyntaxTree.BuiltinCallDesignator DO
 				EvaluateBuiltinCallDesignator(x,result);
-				RETURN;
-
-			(*
-			|SyntaxTree.Conversion DO
-			|SyntaxTree.ProcedureCallDesignator
-			|SyntaxTree.TypeGuardDesignator
-			|SyntaxTree.DereferenceDesignator
-			|SyntaxTree.SupercallDesignator
-			|SyntaxTree.SelfDesignator
-			*)
 			|SyntaxTree.BooleanValue DO
 				InitOperand(result,ModeValue);
 				IF x.value THEN result.op := true ELSE result.op := false END;
-				RETURN;
 			|SyntaxTree.IntegerValue DO
 				InitOperand(result,ModeValue);
 				IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
 				IF ~supportedImmediate(result.op)  &~inData THEN
 					GetImmediateMem(result.op)
 				END;
-				RETURN;
 			|SyntaxTree.CharacterValue DO
 				InitOperand(result,ModeValue);
 				IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),SYSTEM.VAL(Basic.Integer,x.value));
-				RETURN;
 			|SyntaxTree.RealValue DO
 				InitOperand(result,ModeValue);
 				IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
-				RETURN;
 			|SyntaxTree.ComplexValue DO
-				ASSERT(x.type IS SyntaxTree.ComplexType);
 				type := x.type(SyntaxTree.ComplexType).componentType;
 				InitOperand(result,ModeValue);
 				IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,type),x.realValue); (* real part *)
 				IntermediateCode.InitFloatImmediate(result.tag,IntermediateCode.GetType(system,type),x.imagValue); (* imaginary part *)
-				RETURN;
 			|SyntaxTree.NilValue DO
 				InitOperand(result,ModeValue);
 				result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
 				result.tag := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
-				RETURN;
 			|SyntaxTree.EnumerationValue DO
 				InitOperand(result,ModeValue);
 				result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),x.value);
-				RETURN;
 			|SyntaxTree.SetValue DO
 				InitOperand(result,ModeValue);
 				result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),SYSTEM.VAL(Basic.Integer,x.value));
-				RETURN;
-			ELSE (* other designators -- go back to fallback case *)
+			ELSE (* other designators -- go back to fallback case: designate and load *)
+				DesignateAndLoad(x,result);
 			END;
-			DesignateAndLoad(x,result);
-		END EvaluateX;
+		END Evaluate;
 
 		PROCEDURE Designate(x: SyntaxTree.Expression; VAR op: Operand);
 		BEGIN
 			InitOperand(result,ModeUndefined);
-			Expression(x);
+			
+			IF (x.resolved # NIL) & (x.resolved # x) THEN 
+				(* value with address -- string or array value *)
+				Designate(x.resolved, op); 
+				RETURN;
+			END;
+			
+			WITH x:
+			| SyntaxTree.ResultDesignator DO VisitResultDesignator(x)
+			| SyntaxTree.SelfDesignator DO VisitSelfDesignator(x)
+			| SyntaxTree.SupercallDesignator DO VisitSupercallDesignator(x)
+			| SyntaxTree.DereferenceDesignator DO VisitDereferenceDesignator(x)
+			| SyntaxTree.TypeGuardDesignator DO VisitTypeGuardDesignator(x)
+			| SyntaxTree.BuiltinCallDesignator DO VisitBuiltinCallDesignator(x)
+			| SyntaxTree.ProcedureCallDesignator DO VisitProcedureCallDesignator(x)
+			| SyntaxTree.InlineCallDesignator DO VisitInlineCallDesignator(x)
+			| SyntaxTree.IndexDesignator DO VisitIndexDesignator(x)
+			| SyntaxTree.SymbolDesignator DO VisitSymbolDesignator(x)
+			| SyntaxTree.IdentifierDesignator DO VisitIdentifierDesignator(x)
+			| SyntaxTree.Conversion DO VisitConversion(x)
+			| SyntaxTree.TensorRangeExpression DO VisitTensorRangeExpression(x)
+			| SyntaxTree.RangeExpression DO VisitRangeExpression(x)
+			| SyntaxTree.MathArrayExpression DO VisitMathArrayExpression(x)
+			| SyntaxTree.StringValue DO VisitStringValue(x)
+			| SyntaxTree.NilValue DO Evaluate(x, result); (* NIL parameter passed in WINAPI cc *)
+			ELSE
+				D.TraceBack();
+				VExpression(x);
+			END;
+			
+			(* check this, was commented out in ActiveCells3 *)
+			IF (x IS SyntaxTree.Designator) & (x(SyntaxTree.Designator).modifiers # NIL) & ~backend.cellsAreObjects THEN
+				Error(x.position, "unsupported modifier");
+			END;
+
 			(* ASSERT(x.mode = ModeReference *)
 			op := result;
 		END Designate;
@@ -2927,7 +2927,7 @@ TYPE
 			i: LONGINT;
 
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitSet") END;
 
 			dest := destination;
@@ -3023,7 +3023,7 @@ TYPE
 			END;
 			index.SetType(SemanticChecker.ArrayBase(x.type,dim));
 			RecursiveAssignment(x,0);
-			Expression(designator);
+			Designate(designator, result);
 		END VisitMathArrayExpression;
 
 		PROCEDURE VisitUnaryExpression*(x: SyntaxTree.UnaryExpression);
@@ -4487,7 +4487,7 @@ TYPE
 		VAR ownerType, designatorType: SyntaxTree.RecordType;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitSymbolDesignator") END;
-			IF x.left # NIL THEN Expression(x.left) END;
+			IF x.left # NIL THEN Designate(x.left, result) END;
 			Symbol(x.symbol,result);
 			IF backend.cooperative & (x.symbol IS SyntaxTree.Variable) & (x.symbol.scope # NIL) & (x.symbol.scope IS SyntaxTree.RecordScope) THEN
 				ASSERT ((x.left # NIL) & (x.left.type.resolved IS SyntaxTree.RecordType));
@@ -9310,7 +9310,7 @@ TYPE
 				ReleaseOperand(s0);
 			(* ---- SYSTEM.VAL ----- *)
 			|Global.systemVal:
-				Expression(p1);
+				Designate(p1, result);
 				s1 := result;
 				type :=p0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
 				IF s1.mode = ModeReference THEN
@@ -9997,11 +9997,9 @@ TYPE
 			IF Trace THEN TraceEnter("VisitTypeGuardDesignator") END;
 			dest := destination; destination := emptyOperand;
 
-			Expression(x.left);
-			IF x.left.type.resolved = x.type.resolved THEN (* always true: do nothing *)
-			ELSIF isUnchecked THEN (* no check *)
-			ELSIF (x.type.resolved IS SyntaxTree.NumberType) OR (x.type.resolved IS SyntaxTree.AddressType) OR (x.type.resolved IS SyntaxTree.SizeType) THEN
-				LoadValue(result,x.left.type.resolved);
+			IF (x.type.resolved IS SyntaxTree.NumberType) OR (x.type.resolved IS SyntaxTree.AddressType) OR (x.type.resolved IS SyntaxTree.SizeType) THEN
+				Evaluate(x.left, result);
+				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END; 
 				trueL := NewLabel();
 				TransferToRegister(result.op, result.op);
 				ReuseCopy(original,result.op);
@@ -10014,6 +10012,8 @@ TYPE
 				EmitTrap(position,TypeCheckTrap);
 				SetLabel(trueL);
 			ELSE
+				Designate(x.left, result);
+				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END; 
 				trueL := NewLabel();
 				IF IsPointerToRecord(x.left.type,recordType) THEN
 					IntermediateCode.InitRegister(tag,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
@@ -10212,7 +10212,7 @@ TYPE
 		(** values *)
 		PROCEDURE VisitBooleanValue*(x: SyntaxTree.BooleanValue);
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitBooleanValue") END;
 			InitOperand(result,ModeValue);
 			IF x.value THEN result.op := true ELSE result.op := false END;
@@ -10239,7 +10239,7 @@ TYPE
 
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitIntegerValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
@@ -10250,7 +10250,7 @@ TYPE
 
 		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitCharacterValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),ORD(x.value));
@@ -10258,6 +10258,7 @@ TYPE
 
 		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitSetValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),SYSTEM.VAL(Basic.Integer,x.value));
@@ -10302,12 +10303,13 @@ TYPE
 
 		PROCEDURE VisitConstant*(x: SyntaxTree.Constant);
 		BEGIN
+			D.TraceBack();
 			VExpression(x.value.resolved);
 		END VisitConstant;
 
 		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitRealValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
@@ -10317,7 +10319,7 @@ TYPE
 		VAR
 			componentType: SyntaxTree.Type;
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitComplexValue") END;
 			ASSERT(x.type IS SyntaxTree.ComplexType);
 			componentType := x.type(SyntaxTree.ComplexType).componentType;
@@ -10352,7 +10354,7 @@ TYPE
 
 		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitNilValue") END;
 			InitOperand(result,ModeValue);
 			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
@@ -10361,7 +10363,7 @@ TYPE
 
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN
-			(*D.TraceBack();*)
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitEnumerationValue") END;
 			InitOperand(result,ModeValue);
 			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),x.value);
@@ -10815,7 +10817,7 @@ TYPE
 		PROCEDURE VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement);
 		BEGIN
 			IF Trace THEN TraceEnter("VisitProcedureCallStatement") END;
-			Expression(x.call);
+			Designate(x.call, result);
 			IF (x.call.type # NIL) THEN (* procedure returning ignored value *)
 				ReleaseOperand(result)
 			END;
@@ -11095,7 +11097,8 @@ TYPE
 			IF CanPassAsResultParameter(right) THEN
 				prevResult := procedureResultDesignator;
 				procedureResultDesignator := left(SyntaxTree.Designator);
-				Expression(right);
+				Designate(right, result);
+				(*Expression(right);*)
 				procedureResultDesignator := prevResult;
 			ELSIF (right IS SyntaxTree.UnaryExpression) & (right(SyntaxTree.UnaryExpression).operator = Scanner.Alias) THEN
 				(* left <-- ALIAS OF right: zerocopy *)

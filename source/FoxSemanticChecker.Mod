@@ -9336,19 +9336,32 @@ TYPE
 		END;
 	END IsStaticMathArray;
 
-	PROCEDURE SymbolHasAddress*(symbol: SyntaxTree.Symbol): BOOLEAN;
+	PROCEDURE SymbolHasAddress*(CONST symbol: SyntaxTree.Symbol): BOOLEAN;
 	BEGIN
-		RETURN (symbol IS SyntaxTree.Variable) OR (symbol IS SyntaxTree.Parameter) OR (symbol IS SyntaxTree.Procedure)
+		WITH symbol:
+		SyntaxTree.Variable DO RETURN TRUE
+		|SyntaxTree.Parameter DO RETURN TRUE
+		|SyntaxTree.Procedure DO RETURN TRUE
+		|SyntaxTree.Alias DO RETURN HasAddress(symbol.expression)
+		ELSE
+			RETURN FALSE
+		END;
 	END SymbolHasAddress;
 
-	PROCEDURE HasAddress*(expression: SyntaxTree.Expression): BOOLEAN;
+	PROCEDURE HasAddress*(CONST expression: SyntaxTree.Expression): BOOLEAN;
 	BEGIN
-		RETURN
-			(expression # NIL) & (expression IS SyntaxTree.SymbolDesignator) & SymbolHasAddress(expression(SyntaxTree.SymbolDesignator).symbol) OR (expression IS SyntaxTree.ResultDesignator)
-			OR (expression IS SyntaxTree.IndexDesignator) OR (expression IS SyntaxTree.DereferenceDesignator)
-			OR (expression IS SyntaxTree.TypeGuardDesignator) OR (expression IS SyntaxTree.StringValue)
-			OR (expression IS SyntaxTree.BuiltinCallDesignator) & (expression(SyntaxTree.BuiltinCallDesignator).id = Global.systemVal) & HasAddress(expression(SyntaxTree.BuiltinCallDesignator).parameters.GetExpression(1))
-			;
+		IF expression = NIL THEN RETURN FALSE END;
+		WITH expression:
+		SyntaxTree.SymbolDesignator DO RETURN SymbolHasAddress(expression.symbol)
+		|SyntaxTree.ResultDesignator DO RETURN TRUE;
+		|SyntaxTree.IndexDesignator DO RETURN TRUE;
+		|SyntaxTree.DereferenceDesignator DO RETURN TRUE;
+		|SyntaxTree.TypeGuardDesignator DO RETURN TRUE;
+		|SyntaxTree.StringValue DO RETURN TRUE;
+		|SyntaxTree.BuiltinCallDesignator DO RETURN (expression.id = Global.systemVal) & HasAddress(expression.parameters.GetExpression(1))
+		ELSE
+			RETURN FALSE
+		END;
 	END HasAddress;
 
 	PROCEDURE IsLocalVariable*(e: SyntaxTree.Expression): BOOLEAN;

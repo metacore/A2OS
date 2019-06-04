@@ -2927,7 +2927,7 @@ TYPE
 			i: LONGINT;
 
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitSet") END;
 
 			dest := destination;
@@ -9800,6 +9800,7 @@ TYPE
 			(* ----- NEW ----- *)
 			|Global.New:
 				Allocate(x, result);
+				LoadValue(result, x.type.resolved);
 			(* ---- ADDRESSOF----- *)
 			|Global.systemAdr:
 				Designate(p0,s0);
@@ -10201,7 +10202,7 @@ TYPE
 		(** values *)
 		PROCEDURE VisitBooleanValue*(x: SyntaxTree.BooleanValue);
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitBooleanValue") END;
 			InitOperand(result,ModeValue);
 			IF x.value THEN result.op := true ELSE result.op := false END;
@@ -10228,7 +10229,7 @@ TYPE
 
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitIntegerValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
@@ -10239,7 +10240,7 @@ TYPE
 
 		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitCharacterValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),ORD(x.value));
@@ -10296,7 +10297,7 @@ TYPE
 
 		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitRealValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
@@ -10306,7 +10307,7 @@ TYPE
 		VAR
 			componentType: SyntaxTree.Type;
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitComplexValue") END;
 			ASSERT(x.type IS SyntaxTree.ComplexType);
 			componentType := x.type(SyntaxTree.ComplexType).componentType;
@@ -10341,7 +10342,7 @@ TYPE
 
 		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitNilValue") END;
 			InitOperand(result,ModeValue);
 			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
@@ -10350,7 +10351,7 @@ TYPE
 
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN
-			D.TraceBack();
+			(*D.TraceBack();*)
 			IF Trace THEN TraceEnter("VisitEnumerationValue") END;
 			InitOperand(result,ModeValue);
 			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),x.value);

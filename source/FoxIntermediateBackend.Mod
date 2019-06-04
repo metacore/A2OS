@@ -1851,6 +1851,7 @@ TYPE
 			| SyntaxTree.RangeExpression DO VisitRangeExpression(x)
 			| SyntaxTree.MathArrayExpression DO VisitMathArrayExpression(x)
 			| SyntaxTree.StringValue DO VisitStringValue(x)
+			| SyntaxTree.MathArrayValue DO VisitMathArrayValue(x)
 			| SyntaxTree.NilValue DO Evaluate(x, result); (* NIL parameter passed in WINAPI cc *)
 			ELSE
 				D.TraceBack();

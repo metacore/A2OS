@@ -445,9 +445,12 @@ TYPE
 
 		PROCEDURE Constant(x: SyntaxTree.Constant);
 		BEGIN
+			(* not required *)
+			(*
 			IF (SyntaxTree.Public * x.access # {}) THEN
 				implementationVisitor.VisitConstant(x);
 			END;
+			*)
 		END Constant;
 
 		PROCEDURE Scope(x: SyntaxTree.Scope);
@@ -1759,7 +1762,7 @@ TYPE
 			(*
 			Evaluate(x, result); RETURN;
 			*)
-			
+
 			IF (x.resolved # NIL) & (x.resolved # x) THEN Evaluate(x.resolved, result); RETURN END;
 			WITH x:
 			SyntaxTree.UnaryExpression DO
@@ -1768,7 +1771,6 @@ TYPE
 			|SyntaxTree.BinaryExpression DO
 				EvaluateBinaryExpression(x, result);
 				RETURN;
-			(*
 			|SyntaxTree.Set DO
 				EvaluateSet(x, result);
 				RETURN;
@@ -1792,6 +1794,7 @@ TYPE
 					UseIntermediateOperand(result.extra);
 					ReleaseOperand(operand);
 				END;
+				RETURN;
 			|SyntaxTree.SymbolDesignator DO
 				symbol := x.symbol;
 				WITH symbol: SyntaxTree.Constant DO
@@ -1799,11 +1802,10 @@ TYPE
 					RETURN
 				ELSE (* designate and load --> below *)
 				END;
-			*)
 			|SyntaxTree.BuiltinCallDesignator DO
 				EvaluateBuiltinCallDesignator(x,result);
 				RETURN;
-			(*
+
 			(*
 			|SyntaxTree.Conversion DO
 			|SyntaxTree.ProcedureCallDesignator
@@ -1847,10 +1849,13 @@ TYPE
 				InitOperand(result,ModeValue);
 				result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),x.value);
 				RETURN;
-			*)
+			|SyntaxTree.SetValue DO
+				InitOperand(result,ModeValue);
+				result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),SYSTEM.VAL(Basic.Integer,x.value));
+				RETURN;
 			ELSE (* other designators -- go back to fallback case *)
 			END;
-			DesignateAndLoad(x,result); 
+			DesignateAndLoad(x,result);
 		END EvaluateX;
 
 		PROCEDURE Designate(x: SyntaxTree.Expression; VAR op: Operand);
@@ -1860,10 +1865,10 @@ TYPE
 			(* ASSERT(x.mode = ModeReference *)
 			op := result;
 		END Designate;
-		
+
 		PROCEDURE DesignateAndLoad(x: SyntaxTree.Expression; VAR result: Operand);
 		BEGIN
-			Designate(x, result); 
+			Designate(x, result);
 			LoadValue(result, x.type.resolved);
 		END DesignateAndLoad;
 
@@ -2440,7 +2445,7 @@ TYPE
 			i: LONGINT;
 
 		BEGIN
-			IF Trace THEN TraceEnter("VisitSet") END;
+			IF Trace THEN TraceEnter("EvaluateSet") END;
 
 			dest := destination;
 			destination := emptyOperand;
@@ -2479,7 +2484,7 @@ TYPE
 			END;
 
 			destination := dest;
-			IF Trace THEN TraceExit("VisitSet") END;
+			IF Trace THEN TraceExit("EvaluateSet") END;
 		END EvaluateSet;
 
 		PROCEDURE NewRegisterOperand(type: IntermediateCode.Type): IntermediateCode.Operand;
@@ -2752,7 +2757,7 @@ TYPE
 					availableSymbols[i].inRegister := FALSE;
 				END;
 				availableSymbols[i].symbol := NIL;
-				
+
 				INC(i);
 			END;
 		END EndBasicBlock;
@@ -2922,6 +2927,7 @@ TYPE
 			i: LONGINT;
 
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitSet") END;
 
 			dest := destination;
@@ -3023,7 +3029,7 @@ TYPE
 		PROCEDURE VisitUnaryExpression*(x: SyntaxTree.UnaryExpression);
 		VAR type,t0: SyntaxTree.Type; operand: Operand; dest: IntermediateCode.Operand;
 		BEGIN
-			D.TraceBack(); 
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitUnaryExpression") END;
 			dest := destination; destination := emptyOperand;
 			IF x.operator = Scanner.Not THEN
@@ -4394,6 +4400,7 @@ TYPE
 		PROCEDURE VisitRangeExpression*(x: SyntaxTree.RangeExpression);
 		VAR localResult, operand: Operand;
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitRangeExpression") END;
 
 			InitOperand(localResult, ModeValue);
@@ -5973,7 +5980,7 @@ TYPE
 			currentInlineExit := NewLabel();
 			currentIsInline := TRUE;
 			resultDesignator := procedureResultDesignator;
-			procedureResultDesignator := NIL; 
+			procedureResultDesignator := NIL;
 			ASSERT(module.system.GenerateVariableOffsets(currentScope));
 
 
@@ -8017,19 +8024,19 @@ TYPE
 			RETURN x # NIL;
 			*)
 		END OnHeap;
-		
+
 		PROCEDURE Allocate*(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
 			p0, p1: SyntaxTree.Expression;
 			recordType: SyntaxTree.RecordType; parameter: SyntaxTree.Expression;
 			l,r: Operand; res,adr,reg: IntermediateCode.Operand; type: SyntaxTree.Type;
-			constructor: SyntaxTree.Procedure; s0,s1: Operand; 
+			constructor: SyntaxTree.Procedure; s0,s1: Operand;
 			i: LONGINT; formalParameter: SyntaxTree.Parameter;
 			tmp:IntermediateCode.Operand;
-			size: LONGINT; dim,openDim,len: LONGINT; pointer: IntermediateCode.Operand; t0,t1: SyntaxTree.Type; 
+			size: LONGINT; dim,openDim,len: LONGINT; pointer: IntermediateCode.Operand; t0,t1: SyntaxTree.Type;
 			exit,else,end: Label; procedureType: SyntaxTree.ProcedureType;
-			name: Basic.SegmentedName; symbol: Sections.Section; 
-			staticLength: LONGINT; 
+			name: Basic.SegmentedName; symbol: Sections.Section;
+			staticLength: LONGINT;
 			isTensor: BOOLEAN;
 			baseType: SyntaxTree.Type;
 			left: SyntaxTree.Expression;
@@ -9753,7 +9760,7 @@ TYPE
 				IF p0 IS SyntaxTree.RangeExpression THEN (* optimization, could also work with designate *)
 					Evaluate(p0(SyntaxTree.RangeExpression).first, result)
 				ELSE
-					DesignateAndLoad(x, result); 
+					DesignateAndLoad(x, result);
 				END
 
 			(* ---- LAST ---- *)
@@ -9761,7 +9768,7 @@ TYPE
 				IF p0 IS SyntaxTree.RangeExpression THEN (* optimization, could also work with designate *)
 					Evaluate(p0(SyntaxTree.RangeExpression).last, result)
 				ELSE
-					DesignateAndLoad(x, result); 
+					DesignateAndLoad(x, result);
 				END
 
 			(* ---- STEP ---- *)
@@ -9849,15 +9856,16 @@ TYPE
 				result.op := ap;
 			(* ---- SYSTEM.VAL ----- *)
 			|Global.systemVal:
-				IF SemanticChecker.HasAddress(p1) THEN
-					DesignateAndLoad(x, result); 
+				(*! MUST RESOLVE THIS *)
+				IF SemanticChecker.HasAddress(p1)  THEN
+					DesignateAndLoad(x, result);
 				ELSE
-					Evaluate(p1, s1); 
+					Evaluate(p1, s1);
 					type :=p0(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.TypeDeclaration).declaredType;
-					ASSERT(s1.mode # ModeReference); 
+					ASSERT(s1.mode # ModeReference);
 					(* copy over result to different type, may not use convert *)
 					itype := IntermediateCode.GetType(system,type);
-					IF itype.sizeInBits = s1.op.type.sizeInBits THEN
+					IF itype.sizeInBits * itype.length = s1.op.type.sizeInBits * s1.op.type.length THEN
 						IntermediateCode.InitRegister(s0.op,itype,IntermediateCode.GeneralPurposeRegister,AcquireRegister(itype,IntermediateCode.GeneralPurposeRegister));
 						Emit(Mov(position,s0.op,s1.op));
 						ReleaseOperand(s1);
@@ -10193,6 +10201,7 @@ TYPE
 		(** values *)
 		PROCEDURE VisitBooleanValue*(x: SyntaxTree.BooleanValue);
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitBooleanValue") END;
 			InitOperand(result,ModeValue);
 			IF x.value THEN result.op := true ELSE result.op := false END;
@@ -10219,6 +10228,7 @@ TYPE
 
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitIntegerValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
@@ -10229,6 +10239,7 @@ TYPE
 
 		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitCharacterValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),ORD(x.value));
@@ -10285,6 +10296,7 @@ TYPE
 
 		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitRealValue") END;
 			InitOperand(result,ModeValue);
 			IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
@@ -10294,6 +10306,7 @@ TYPE
 		VAR
 			componentType: SyntaxTree.Type;
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitComplexValue") END;
 			ASSERT(x.type IS SyntaxTree.ComplexType);
 			componentType := x.type(SyntaxTree.ComplexType).componentType;
@@ -10328,6 +10341,7 @@ TYPE
 
 		PROCEDURE VisitNilValue*(x: SyntaxTree.NilValue);
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitNilValue") END;
 			InitOperand(result,ModeValue);
 			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),0);
@@ -10336,6 +10350,7 @@ TYPE
 
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN
+			D.TraceBack();
 			IF Trace THEN TraceEnter("VisitEnumerationValue") END;
 			InitOperand(result,ModeValue);
 			result.op := IntermediateCode.Immediate(IntermediateCode.GetType(system,x.type),x.value);

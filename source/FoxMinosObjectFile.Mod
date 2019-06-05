@@ -513,14 +513,12 @@ TYPE
 		PROCEDURE Entries(bodyOffset: LONGINT);
 		VAR
 			i,numberEntries: LONGINT; entry: ARRAY 256 OF IntermediateCode.Section; (* more is not allowed anyway in the runtime system *)
-			name: ARRAY 256 OF CHAR;
 		BEGIN
 			GetEntries(moduleScope, numberEntries, entry);
 			w.RawLInt(numberEntries);
 			w.RawLInt(0); (* body entry: body is fixed at position 0, cf. MakeSectionOffsets *)
 			FOR i := 1 TO numberEntries DO
 				ASSERT(entry[i].offset MOD 4 = 0);
-				name := entry[i].name; 
 				w.RawLInt(entry[i].offset DIV 4); (* entries here must be byte wise because jumps take place with absolute fixup - I cannot distinguish here *)
 			END;
 		END Entries;

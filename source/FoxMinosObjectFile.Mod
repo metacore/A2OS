@@ -286,15 +286,18 @@ TYPE
 						IF p = NIL THEN
 							p := module.importedSections.FindBySymbol(symbol);
 						END;
+						INC(numberEntries); (* start at 1 !! *)
 						IF p # NIL THEN
-							INC(numberEntries); (* start at 1 !! *)
 							entries[numberEntries] := p(IntermediateCode.Section);
 							IF Trace THEN
 								IF moduleScope = module.module.moduleScope (* self *) THEN
 									D.String("Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;
+								ELSE
+									D.String("Imported Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;								
 								END;
 							END;
 						ELSE
+							entries[numberEntries] := NIL;
 							IF Trace THEN
 								IF moduleScope = module.module.moduleScope (* self *) THEN
 									D.String("did not find entry for "); D.Str0(symbol.name); D.Ln;
@@ -435,22 +438,24 @@ TYPE
 				prev := 0;
 				FOR i := 1 TO numberEntries DO
 					section := entries[i];
-					numberFixups := GetFixups(diagnostics, module, section, first);
-					IF Trace THEN
-						D.Int(numberFixups,1); D.String(" fixups "); Basic.WriteSegmentedName(D.Log, section.name); D.Ln;
-					END;
-					WHILE first # NIL DO
-						this := first.fixupSection.offset  + first.fixup.offset;
-						instr := Get32(this);
-						ASSERT(prev < 10000H); ASSERT(i < 100H);
-						(*
-							31 ... 24 | 23 .. 16 | 15 .. 0
-							opCode | pno | next
-						*)
-						instr := instr MOD 1000000H + i * 10000H + prev DIV 4;
-						Put32(this, instr);
-						prev := this;
-						first := first.nextFixup;
+					IF section # NIL THEN (* used imported symbol *)
+						numberFixups := GetFixups(diagnostics, module, section, first);
+						IF Trace THEN
+							D.Int(numberFixups,1); D.String(" fixups "); Basic.WriteSegmentedName(D.Log, section.name); D.Ln;
+						END;
+						WHILE first # NIL DO
+							this := first.fixupSection.offset  + first.fixup.offset;
+							instr := Get32(this);
+							ASSERT(prev < 10000H); ASSERT(i < 100H);
+							(*
+								31 ... 24 | 23 .. 16 | 15 .. 0
+								opCode | pno | next
+							*)
+							instr := instr MOD 1000000H + i * 10000H + prev DIV 4;
+							Put32(this, instr);
+							prev := this;
+							first := first.nextFixup;
+						END;
 					END;
 				END;
 				IF Trace THEN D.String(" fixup chain starting at "); D.Int(prev,1); D.Ln END;

@@ -166,10 +166,10 @@ TYPE
 
 	ConditionalBranch = PROCEDURE {DELEGATE}(label: Label; op1,op2: IntermediateCode.Operand);
 
-	DeclarationVisitor =OBJECT
+	DeclarationEmitter =OBJECT
 	VAR
 		backend: IntermediateBackend;
-		implementationVisitor: ImplementationVisitor;
+		implementationEmitter: ImplementationEmitter;
 		meta: MetaDataGenerator;
 		system: Global.System;
 		currentScope: SyntaxTree.Scope;
@@ -179,10 +179,10 @@ TYPE
 		forceModuleBody: BOOLEAN;
 		addressType: IntermediateCode.Type;
 
-		PROCEDURE & Init(system: Global.System; implementationVisitor: ImplementationVisitor; backend: IntermediateBackend; forceModuleBody, dump: BOOLEAN);
+		PROCEDURE & Init(system: Global.System; implementationEmitter: ImplementationEmitter; backend: IntermediateBackend; forceModuleBody, dump: BOOLEAN);
 		BEGIN
 			currentScope := NIL; module := NIL; moduleSelf := NIL;
-			SELF.system := system; SELF.implementationVisitor := implementationVisitor;
+			SELF.system := system; SELF.implementationEmitter := implementationEmitter;
 			SELF.dump := dump;
 			SELF.backend := backend;
 			SELF.forceModuleBody := forceModuleBody;
@@ -253,7 +253,7 @@ TYPE
 			IF HasFlag(x.modifiers, Global.StringVector) THEN INCL(capabilities, Global.VectorCapability) END;
 			backend.SetCapabilities(capabilities);
 
-			IF ~implementationVisitor.checker.SkipImplementation(x) THEN
+			IF ~implementationEmitter.checker.SkipImplementation(x) THEN
 				Scope(x.cellScope);
 			END;
 		END CellType;
@@ -359,7 +359,7 @@ TYPE
 						END;
 				ELSE
 					IF initializer # NIL THEN
-						implementationVisitor.Evaluate(initializer, op);
+						implementationEmitter.Evaluate(initializer, op);
 						SingleInitialize(op.op, offset);
 					END;
 				END;
@@ -370,13 +370,13 @@ TYPE
 			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
 				(* code section for variable *)
 				Global.GetSymbolSegmentedName(x,name);
-				irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
+				irv := implementationEmitter.NewSection(module.allSections, Sections.VarSection, name,x,dump);
 				irv.SetExported(IsExported(x));
 				irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
 				IF (currentScope IS SyntaxTree.CellScope) & IsSemiDynamicArray(x.type) THEN
 					irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
-					irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
+					irv := implementationEmitter.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
 					FOR i := 0 TO DynamicDim(x.type)-1 DO
 						irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
 					END;
@@ -409,13 +409,13 @@ TYPE
 		BEGIN
 			ASSERT(currentScope IS SyntaxTree.CellScope);
 			Global.GetSymbolSegmentedName(x,name);
-			irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,x,dump);
+			irv := implementationEmitter.NewSection(module.allSections, Sections.VarSection, name,x,dump);
 			irv.SetExported(IsExported(x));
 			irv.SetOffset(ToMemoryUnits(system,x.offsetInBits));
 			IF (currentScope IS SyntaxTree.CellScope) & IsSemiDynamicArray(x.type) THEN
 				irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
 				Basic.SuffixSegmentedName (name, Basic.MakeString ("@len"));
-				irv := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
+				irv := implementationEmitter.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
 				FOR i := 0 TO DynamicDim(x.type)-1 DO
 					irv.Emit(Reserve(x.position, ToMemoryUnits(system, system.addressSize)));
 				END;
@@ -448,7 +448,7 @@ TYPE
 			(* not required *)
 			(*
 			IF (SyntaxTree.Public * x.access # {}) THEN
-				implementationVisitor.VisitConstant(x);
+				implementationEmitter.VisitConstant(x);
 			END;
 			*)
 		END Constant;
@@ -589,7 +589,7 @@ TYPE
 		BEGIN
 			IF x.externalName # NIL THEN RETURN END;
 			(*
-			IF Trace & (dump # NIL) THEN dump.String("DeclarationVisitor:Procedure"); dump.Ln END;
+			IF Trace & (dump # NIL) THEN dump.String("DeclarationEmitter:Procedure"); dump.Ln END;
 			*)
 			(* code section for this procedure *)
 			position := x.position.start;
@@ -598,19 +598,19 @@ TYPE
 			currentScope := scope;
 			procedureType := x.type(SyntaxTree.ProcedureType);
 			isModuleBody := x = module.module.moduleScope.bodyProcedure;
-			implementationVisitor.temporaries.Clear;
-			implementationVisitor.usedRegisters := NIL;
-			implementationVisitor.registerUsageCount.Init;
+			implementationEmitter.temporaries.Clear;
+			implementationEmitter.usedRegisters := NIL;
+			implementationEmitter.registerUsageCount.Init;
 
-			implementationVisitor.GetCodeSectionNameForSymbol(x, name);
+			implementationEmitter.GetCodeSectionNameForSymbol(x, name);
 			IF (scope.body # NIL) & (x.isInline)  THEN
 				inline := TRUE;
-				ir := implementationVisitor.NewSection(module.allSections, Sections.InlineCodeSection, name,x,dump);
+				ir := implementationEmitter.NewSection(module.allSections, Sections.InlineCodeSection, name,x,dump);
 				ir.SetExported(IsExported(x));
 			ELSIF (x.scope # NIL) & (x.scope IS SyntaxTree.CellScope) & (x.scope(SyntaxTree.CellScope).ownerCell.isCellNet)
 				OR (x.scope # NIL) & (x.scope IS SyntaxTree.ModuleScope) & (x.scope(SyntaxTree.ModuleScope).ownerModule.isCellNet) THEN
 				IF backend.cellsAreObjects THEN
-					ir := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name, x, dump);
+					ir := implementationEmitter.NewSection(module.allSections, Sections.CodeSection, name, x, dump);
 					ir.SetExported(IsExported(x));
 				ELSE
 					RETURN; (* cellnet cannot be compiled for final static hardware *)
@@ -618,7 +618,7 @@ TYPE
 			ELSIF x = module.module.moduleScope.bodyProcedure THEN
 				inline := FALSE;
 				AddBodyCallStub(x);
-				ir := implementationVisitor.NewSection(module.allSections, Sections.BodyCodeSection, name,x,dump);
+				ir := implementationEmitter.NewSection(module.allSections, Sections.BodyCodeSection, name,x,dump);
 				ir.SetExported(IsExported(x));
 			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & (x = scope.outerScope(SyntaxTree.CellScope).bodyProcedure) THEN
 				inline := FALSE;
@@ -626,24 +626,24 @@ TYPE
 				IF ~HasValue(cellType.modifiers,Global.StringDataMemorySize,memorySize) THEN memorySize := DefaultDataMemorySize END;
 				AddBodyCallStub(x);
 				AddStackAllocation(x,memorySize);
-				ir := implementationVisitor.NewSection(module.allSections,Sections.BodyCodeSection, name,x,dump);
+				ir := implementationEmitter.NewSection(module.allSections,Sections.BodyCodeSection, name,x,dump);
 				ir.SetExported(IsExported(x));
 			ELSIF (scope.outerScope IS SyntaxTree.CellScope) & (x.isConstructor) THEN
 				inline := FALSE;
 				Parameters(procedureType.firstParameter);
-				ir := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,x,dump);
+				ir := implementationEmitter.NewSection(module.allSections, Sections.CodeSection, name,x,dump);
 				ir.SetExported(IsExported(x));
 			ELSE
 				inline := FALSE;
 				IF x.isEntry OR x.isExit THEN
 					IF x.isEntry THEN
-						ir := implementationVisitor.NewSection(module.allSections, Sections.EntryCodeSection, name,x,dump);
+						ir := implementationEmitter.NewSection(module.allSections, Sections.EntryCodeSection, name,x,dump);
 					ELSE
-						ir := implementationVisitor.NewSection(module.allSections, Sections.ExitCodeSection, name,x,dump);
+						ir := implementationEmitter.NewSection(module.allSections, Sections.ExitCodeSection, name,x,dump);
 					END;
 					ir.SetExported(TRUE);
 				ELSE
-					ir := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,x,dump);
+					ir := implementationEmitter.NewSection(module.allSections, Sections.CodeSection, name,x,dump);
 					ir.SetExported(IsExported(x) OR SemanticChecker.InMethodTable(x));
 				END;
 			END;
@@ -657,7 +657,7 @@ TYPE
 
 			IF scope.body # NIL THEN
 
-				IF implementationVisitor.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
+				IF implementationEmitter.emitLabels THEN ir.Emit(LabelInstruction(scope.body.position)) END;
 
 				IF ~inline THEN
 					IF scope.lastVariable = NIL THEN
@@ -692,10 +692,10 @@ TYPE
 								END;
 								IF backend.GetParameterRegister(callingConvention, type, register) THEN
 									IntermediateCode.InitParameterRegisterClass(registerClass, register);
-									src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
-									IntermediateCode.InitMemory(dest,type,implementationVisitor.sp,ToMemoryUnits(system,formalParameter.offsetInBits - system.addressSize));
+									src := IntermediateCode.Register(type, registerClass, implementationEmitter.AcquireRegister(type, registerClass));
+									IntermediateCode.InitMemory(dest,type,implementationEmitter.sp,ToMemoryUnits(system,formalParameter.offsetInBits - system.addressSize));
 									ir.Emit(Mov(Basic.invalidPosition,dest, src));
-									implementationVisitor.ReleaseIntermediateOperand(src);
+									implementationEmitter.ReleaseIntermediateOperand(src);
 								END;
 							END;
 							formalParameter := formalParameter.nextParameter;
@@ -703,7 +703,7 @@ TYPE
 					END;
 
 					IF ~procedureType.noPAF THEN (* no procedure activation frame ! *)
-						implementationVisitor.EmitEnter(ir,x.position,x,callingConvention,ToMemoryUnits(system,stackSize));
+						implementationEmitter.EmitEnter(ir,x.position,x,callingConvention,ToMemoryUnits(system,stackSize));
 					END;
 					pc := ir.pc-1;
 
@@ -722,13 +722,13 @@ TYPE
 								END;
 								IF backend.GetParameterRegister(callingConvention, type, register) THEN
 									IntermediateCode.InitParameterRegisterClass(registerClass, register);
-									src := IntermediateCode.Register(type, registerClass, implementationVisitor.AcquireRegister(type, registerClass));
-									implementationVisitor.currentScope := currentScope;
-									variable := implementationVisitor.GetTemporaryVariable(formalParameter.type,FALSE,FALSE);
+									src := IntermediateCode.Register(type, registerClass, implementationEmitter.AcquireRegister(type, registerClass));
+									implementationEmitter.currentScope := currentScope;
+									variable := implementationEmitter.GetTemporaryVariable(formalParameter.type,FALSE,FALSE);
 									formalParameter.SetOffset(variable.offsetInBits);
-									IntermediateCode.InitMemory(dest,type,implementationVisitor.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
+									IntermediateCode.InitMemory(dest,type,implementationEmitter.fp,ToMemoryUnits(system,formalParameter.offsetInBits));
 									ir.Emit(Mov(Basic.invalidPosition,dest, src));
-									implementationVisitor.ReleaseIntermediateOperand(src);
+									implementationEmitter.ReleaseIntermediateOperand(src);
 								ELSE
 									INC(nonParameterRegisters);
 									formalParameter.SetOffset(nonParameterRegisters * addressType.sizeInBits);
@@ -740,9 +740,9 @@ TYPE
 
 				END;
 
-				implementationVisitor.tagsAvailable := callingConvention = SyntaxTree.OberonCallingConvention;
+				implementationEmitter.tagsAvailable := callingConvention = SyntaxTree.OberonCallingConvention;
 
-				implementationVisitor.Body(scope.body,currentScope,ir,isModuleBody);
+				implementationEmitter.Body(scope.body,currentScope,ir,isModuleBody);
 
 				IF ~inline & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
 					IF scope.lastVariable # NIL THEN
@@ -760,17 +760,17 @@ TYPE
 					(*
 					IF ToMemoryUnits(system,stackSize) > 4*1024-256 THEN (* stack frame potentially larger than page size *) (*! get page size from backend *)
 						(*! unnecessary with new implementation of ENTER -- should potentially be called by backend
-						IF implementationVisitor.GetRuntimeProcedure(implementationVisitor.builtinsModuleName,"EnsureAllocatedStack",procedure,TRUE) THEN
+						IF implementationEmitter.GetRuntimeProcedure(implementationEmitter.builtinsModuleName,"EnsureAllocatedStack",procedure,TRUE) THEN
 							size := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,stackSize+256));
 							ir.EmitAt(pc,Push(size));
-							implementationVisitor.StaticCallOperand(result,procedure);
+							implementationEmitter.StaticCallOperand(result,procedure);
 							ir.EmitAt(pc+1,Call(result.op,ProcedureParametersSize(system,procedure)));
 						END;
 						*)
 					END;
 					*)
 
-					ir.EmitAt(pc(*+2*),implementationVisitor.Enter(x.position,callingConvention,ToMemoryUnits(system,stackSize))); (*!!*)
+					ir.EmitAt(pc(*+2*),implementationEmitter.Enter(x.position,callingConvention,ToMemoryUnits(system,stackSize))); (*!!*)
 
 					IF stackSize > 0 THEN
 						IF (stackSize MOD system.addressSize = 0) THEN
@@ -803,19 +803,19 @@ TYPE
 							GetRecordTypeName(recordType,name);
 							finalizer := (name # baseObject) & (recordType.baseType = NIL);
 						END;
-						implementationVisitor.SetLabel(implementationVisitor.exitLabel);
+						implementationEmitter.SetLabel(implementationEmitter.exitLabel);
 						IF backend.cooperative THEN
-							IF HasPointers (scope) THEN  implementationVisitor.ResetVariables(scope); END;
-							IF implementationVisitor.profile  & ~isModuleBody THEN
-								implementationVisitor.ProfilerEnterExit(implementationVisitor.numberProcedures-1, FALSE)
+							IF HasPointers (scope) THEN  implementationEmitter.ResetVariables(scope); END;
+							IF implementationEmitter.profile  & ~isModuleBody THEN
+								implementationEmitter.ProfilerEnterExit(implementationEmitter.numberProcedures-1, FALSE)
 							END;
 						ELSE
-							IF backend.writeBarriers & HasPointers(scope) THEN implementationVisitor.ResetVariables2(scope,FALSE) END;
+							IF backend.writeBarriers & HasPointers(scope) THEN implementationEmitter.ResetVariables2(scope,FALSE) END;
 						END;
-						implementationVisitor.EmitLeave(ir, x.position,x,callingConvention);
+						implementationEmitter.EmitLeave(ir, x.position,x,callingConvention);
 						IF finalizer THEN
 							IF backend.hasLinkRegister THEN
-								ir.Emit(Pop(Basic.invalidPosition, implementationVisitor.lr));
+								ir.Emit(Pop(Basic.invalidPosition, implementationEmitter.lr));
 							END;
 							Basic.ToSegmentedName("BaseTypes.Object.Finalize", name);
 							IntermediateCode.InitAddress(dest, addressType, name , 0, 0);
@@ -825,43 +825,43 @@ TYPE
 						END;
 					ELSE
 						IF ~scope.body.isUnchecked & ~backend.noRuntimeChecks THEN
-							implementationVisitor.EmitTrap(x.position,ReturnTrap);
+							implementationEmitter.EmitTrap(x.position,ReturnTrap);
 						END;
-						implementationVisitor.SetLabel(implementationVisitor.exitLabel);
+						implementationEmitter.SetLabel(implementationEmitter.exitLabel);
 						IF backend.cooperative THEN
 							IF HasPointers (scope) THEN
 								IF ~SemanticChecker.ReturnedAsParameter(system,procedureType.returnType) THEN
-									res := implementationVisitor.NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
+									res := implementationEmitter.NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
 									ir.Emit(Result(x.position, res));
 									ir.Emit(Push(x.position, res));
-									implementationVisitor.ResetVariables(scope);
-									IF implementationVisitor.profile  & ~isModuleBody THEN implementationVisitor.ProfilerEnterExit(implementationVisitor.numberProcedures-1, FALSE) END;
+									implementationEmitter.ResetVariables(scope);
+									IF implementationEmitter.profile  & ~isModuleBody THEN implementationEmitter.ProfilerEnterExit(implementationEmitter.numberProcedures-1, FALSE) END;
 									ir.Emit(Pop(x.position, res));
 									ir.Emit(Return(x.position, res));
 								ELSE
-									implementationVisitor.ResetVariables(scope);
-									IF implementationVisitor.profile & ~isModuleBody THEN implementationVisitor.ProfilerEnterExit(implementationVisitor.numberProcedures-1, FALSE) END;
+									implementationEmitter.ResetVariables(scope);
+									IF implementationEmitter.profile & ~isModuleBody THEN implementationEmitter.ProfilerEnterExit(implementationEmitter.numberProcedures-1, FALSE) END;
 								END;
-							ELSIF  implementationVisitor.profile & ~isModuleBody THEN
+							ELSIF  implementationEmitter.profile & ~isModuleBody THEN
 								IF ~SemanticChecker.ReturnedAsParameter(system,procedureType.returnType) THEN
-									res := implementationVisitor.NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
+									res := implementationEmitter.NewRegisterOperand(IntermediateCode.GetType(system, procedureType.returnType));
 									ir.Emit(Result(x.position, res));
 									ir.Emit(Push(x.position, res));
-									implementationVisitor.ProfilerEnterExit(implementationVisitor.numberProcedures-1, FALSE);
+									implementationEmitter.ProfilerEnterExit(implementationEmitter.numberProcedures-1, FALSE);
 									ir.Emit(Pop(x.position, res));
 									ir.Emit(Return(x.position, res));
 								ELSE
-									implementationVisitor.ProfilerEnterExit(implementationVisitor.numberProcedures-1, FALSE);
+									implementationEmitter.ProfilerEnterExit(implementationEmitter.numberProcedures-1, FALSE);
 								END;
 							END;
 
-							implementationVisitor.EmitLeave(ir,x.position,x,callingConvention);
+							implementationEmitter.EmitLeave(ir,x.position,x,callingConvention);
 							ir.Emit(Exit(x.position,procedureType.pcOffset,callingConvention, parametersSize));
 						ELSE
-							IF backend.writeBarriers & HasPointers(scope) THEN implementationVisitor.ResetVariables2(scope,FALSE) END;
+							IF backend.writeBarriers & HasPointers(scope) THEN implementationEmitter.ResetVariables2(scope,FALSE) END;
 							ir.Emit(Nop(x.position));
 							IF scope.body.isUnchecked OR backend.noRuntimeChecks THEN (* return from procedure in any case *)
-								implementationVisitor.EmitLeave(ir,x.position,x,callingConvention);
+								implementationEmitter.EmitLeave(ir,x.position,x,callingConvention);
 								ir.Emit(Exit(x.position,procedureType.pcOffset,callingConvention, parametersSize));
 							END;
 						END;
@@ -870,15 +870,15 @@ TYPE
 					ir.Emit(Nop(x.position)); (* jump label *)
 				END;
 			ELSE (* force body for procedures *)
-				implementationVisitor.EmitEnter(ir, x.position,x,callingConvention,0);
-				implementationVisitor.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
-				(*IF implementationVisitor.usedRegisters # NIL THEN D.TraceBack END;*)
-				implementationVisitor.EmitLeave(ir,x.position,x,callingConvention);
+				implementationEmitter.EmitEnter(ir, x.position,x,callingConvention,0);
+				implementationEmitter.Body(scope.body,currentScope,ir,x = module.module.moduleScope.bodyProcedure);
+				(*IF implementationEmitter.usedRegisters # NIL THEN D.TraceBack END;*)
+				implementationEmitter.EmitLeave(ir,x.position,x,callingConvention);
 				ir.Emit(Exit(x.position,procedureType.pcOffset,callingConvention, parametersSize));
 			END;
 			Scope(scope);
 			Signature;
-			IF (x IS SyntaxTree.Operator) & x(SyntaxTree.Operator).isDynamic THEN implementationVisitor.RegisterDynamicOperator(x(SyntaxTree.Operator)) END;
+			IF (x IS SyntaxTree.Operator) & x(SyntaxTree.Operator).isDynamic THEN implementationEmitter.RegisterDynamicOperator(x(SyntaxTree.Operator)) END;
 
 			currentScope := prevScope;
 		END Procedure;
@@ -894,21 +894,21 @@ TYPE
 			procedure.SetType(SyntaxTree.NewProcedureType(Basic.invalidPosition,bodyProcedure.scope));
 			procedure.SetAccess(SyntaxTree.Hidden);
 			Global.GetSymbolSegmentedName (procedure,name);
-			ir := implementationVisitor.NewSection(module.allSections, Sections.InitCodeSection, name,procedure,dump);
+			ir := implementationEmitter.NewSection(module.allSections, Sections.InitCodeSection, name,procedure,dump);
 			ir.SetExported(TRUE);
 			Global.GetSymbolSegmentedName (bodyProcedure,name);
 			IF ~meta.simple THEN
-				implementationVisitor.currentScope := module.module.moduleScope;
-				implementationVisitor.section := ir;
-				implementationVisitor.PushSelfPointer();
-				implementationVisitor.CallThis(bodyProcedure.position,"Modules","Register",1);
+				implementationEmitter.currentScope := module.module.moduleScope;
+				implementationEmitter.section := ir;
+				implementationEmitter.PushSelfPointer();
+				implementationEmitter.CallThis(bodyProcedure.position,"Modules","Register",1);
 			ELSIF backend.preregisterStatic THEN
-				implementationVisitor.currentScope := module.module.moduleScope;
-				implementationVisitor.section := ir;
-				implementationVisitor.PushSelfPointer();
-				implementationVisitor.CallThis(bodyProcedure.position,"Modules","Preregister",1);
+				implementationEmitter.currentScope := module.module.moduleScope;
+				implementationEmitter.section := ir;
+				implementationEmitter.PushSelfPointer();
+				implementationEmitter.CallThis(bodyProcedure.position,"Modules","Preregister",1);
 			ELSE
-				IntermediateCode.InitAddress(op, addressType, name, implementationVisitor.GetFingerprint(bodyProcedure), 0);
+				IntermediateCode.InitAddress(op, addressType, name, implementationEmitter.GetFingerprint(bodyProcedure), 0);
 				ir.Emit(Call(bodyProcedure.position,op, 0));
 			END;
 		END AddBodyCallStub;
@@ -920,10 +920,10 @@ TYPE
 			Global.GetSymbolSegmentedName (symbol,name);
 			Basic.RemoveSuffix(name);
 			Basic.SuffixSegmentedName(name, Basic.MakeString("@StackAllocation"));
-			ir := implementationVisitor.NewSection(module.allSections,Sections.EntryCodeSection,name,NIL,dump);
+			ir := implementationEmitter.NewSection(module.allSections,Sections.EntryCodeSection,name,NIL,dump);
 			ir.SetExported(TRUE);
 			IntermediateCode.InitImmediate(op,addressType,initStack);
-			ir.Emit(Mov(Basic.invalidPosition,implementationVisitor.sp,op));
+			ir.Emit(Mov(Basic.invalidPosition,implementationEmitter.sp,op));
 		END AddStackAllocation;
 
 		(** entry function to visit a complete module *)
@@ -979,10 +979,10 @@ TYPE
 				import := import.nextImport
 			END;
 
-			implementationVisitor.module := module;
-			implementationVisitor.moduleScope := x.moduleScope;
-			implementationVisitor.moduleSelf := moduleSelf;
-			implementationVisitor.canBeLoaded := TRUE;
+			implementationEmitter.module := module;
+			implementationEmitter.moduleScope := x.moduleScope;
+			implementationEmitter.moduleSelf := moduleSelf;
+			implementationEmitter.canBeLoaded := TRUE;
 			meta.SetModule(module);
 
 			IF (forceModuleBody OR ~meta.simple  OR ScopeNeedsInitialization(x.moduleScope)) THEN
@@ -992,17 +992,17 @@ TYPE
 			IF backend.profile THEN
 				EnsureBodyProcedure(x.moduleScope);
 				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@ModuleId"));
-				implementationVisitor.profileId := implementationVisitor.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
-				implementationVisitor.profileId.Emit(Reserve(Basic.invalidPosition,ToMemoryUnits(system,system.SizeOf(system.longintType))));
+				implementationEmitter.profileId := implementationEmitter.NewSection(module.allSections, Sections.VarSection, name,NIL,dump);
+				implementationEmitter.profileId.Emit(Reserve(Basic.invalidPosition,ToMemoryUnits(system,system.SizeOf(system.longintType))));
 				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@InitProfiler"));
-				implementationVisitor.profileInit := implementationVisitor.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump);
-				implementationVisitor.EmitEnter(implementationVisitor.profileInit,Basic.invalidPosition,NIL,0,0);
+				implementationEmitter.profileInit := implementationEmitter.NewSection(module.allSections, Sections.CodeSection, name,NIL,dump);
+				implementationEmitter.EmitEnter(implementationEmitter.profileInit,Basic.invalidPosition,NIL,0,0);
 
 				Global.GetModuleName(module.module,idstr);
-				implementationVisitor.ProfilerAddModule(idstr);
-				implementationVisitor.numberProcedures := 0;
+				implementationEmitter.ProfilerAddModule(idstr);
+				implementationEmitter.numberProcedures := 0;
 			END;
-			implementationVisitor.profile := backend.profile;
+			implementationEmitter.profile := backend.profile;
 
 			(* check if there is at least one dynamic operator locally defined *)
 			hasDynamicOperatorDeclarations := FALSE;
@@ -1016,28 +1016,28 @@ TYPE
 			IF hasDynamicOperatorDeclarations THEN
 				EnsureBodyProcedure(x.moduleScope);
 				Global.GetModuleSegmentedName(module.module,name); Basic.SuffixSegmentedName(name, Basic.MakeString("@OperatorInitialization"));
-				implementationVisitor.operatorInitializationCodeSection := implementationVisitor.NewSection(module.allSections, Sections.CodeSection,name, NIL, dump);
-				implementationVisitor.EmitEnter(implementationVisitor.operatorInitializationCodeSection,Basic.invalidPosition,NIL,0,0);
+				implementationEmitter.operatorInitializationCodeSection := implementationEmitter.NewSection(module.allSections, Sections.CodeSection,name, NIL, dump);
+				implementationEmitter.EmitEnter(implementationEmitter.operatorInitializationCodeSection,Basic.invalidPosition,NIL,0,0);
 			END;
 
 			Scope(x.moduleScope);
 
 			IF hasDynamicOperatorDeclarations THEN
-				implementationVisitor.EmitLeave(implementationVisitor.operatorInitializationCodeSection,Basic.invalidPosition,NIL,0);
-				implementationVisitor.operatorInitializationCodeSection.Emit(Exit(Basic.invalidPosition,0,0,0));
+				implementationEmitter.EmitLeave(implementationEmitter.operatorInitializationCodeSection,Basic.invalidPosition,NIL,0);
+				implementationEmitter.operatorInitializationCodeSection.Emit(Exit(Basic.invalidPosition,0,0,0));
 			END;
 
 			IF backend.profile THEN
-				implementationVisitor.ProfilerPatchInit;
+				implementationEmitter.ProfilerPatchInit;
 			END;
 
 		END Module;
 
-	END DeclarationVisitor;
+	END DeclarationEmitter;
 
-	UsedArray*=POINTER TO ARRAY OF RECORD count: LONGINT; map: LONGINT; type: IntermediateCode.Type; class: IntermediateCode.RegisterClass END;
+	UsedArray=POINTER TO ARRAY OF RECORD count: LONGINT; map: LONGINT; type: IntermediateCode.Type; class: IntermediateCode.RegisterClass END;
 
-	RegisterUsageCount*=OBJECT
+	RegisterUsageCount=OBJECT
 	VAR used: UsedArray; count: LONGINT;
 
 		PROCEDURE &Init;
@@ -1227,7 +1227,7 @@ TYPE
 
 	END Variables;
 
-	ImplementationVisitor =OBJECT(SyntaxTree.Visitor)
+	ImplementationEmitter =OBJECT
 	VAR
 		system: Global.System;
 		section: IntermediateCode.Section;
@@ -1407,7 +1407,7 @@ TYPE
 		PROCEDURE GetFingerprintString(symbol: SyntaxTree.Symbol; VAR string: ARRAY OF CHAR);
 		VAR
 			fingerprint: SyntaxTree.Fingerprint;
-			fingerprintString: ARRAY SIZE OF Basic.Fingerprint * 2 + 1 OF CHAR;
+			fingerprintString: ARRAY SIZEOF(Basic.Fingerprint) * 2 + 1 OF CHAR;
 		BEGIN
 			fingerprint := fingerprinter.SymbolFP(symbol);
 			string := "[";
@@ -1599,20 +1599,11 @@ TYPE
 			END;
 			SELF.section := prevSection;
 		END EmitLeave;
-
-
-		(*
-		PROCEDURE Symbol(x: SyntaxTree.Symbol; VAR op: Operand);
-		BEGIN
-			position := x.position;
-			VSymbol(x);
-			op := globalResult;
-		END Symbol;
-		*)
 		
 		PROCEDURE Statement(x: SyntaxTree.Statement);
-		VAR use: VariableUse;
+		VAR use: VariableUse; result: Operand; pos: WORD;
 		BEGIN
+			pos := x.position.start;
 			temporaries.GetUsage(use);
 			position := x.position;
 			IF emitLabels THEN Emit(LabelInstruction(x.position)) END;
@@ -1621,7 +1612,29 @@ TYPE
 				dump.Ln;
 				(*dump.Update;*)
 			END;
-			VStatement(x);
+			
+			WITH x:
+			SyntaxTree.ProcedureCallStatement DO 
+				Designate(x.call, result);
+				IF (x.call.type # NIL) THEN (* procedure returning ignored value *)
+					ReleaseOperand(result)
+				END;
+			| SyntaxTree.Assignment DO Assign(x.left, x.right ); 
+			| SyntaxTree.CommunicationStatement DO CommunicationStatement(x)
+			| SyntaxTree.IfStatement DO IfStatement(x)
+			| SyntaxTree.WithStatement DO WithStatement(x)
+			| SyntaxTree.CaseStatement DO CaseStatement(x)
+			| SyntaxTree.WhileStatement DO WhileStatement(x)
+			| SyntaxTree.RepeatStatement DO RepeatStatement(x)
+			| SyntaxTree.ForStatement DO ForStatement(x)
+			| SyntaxTree.LoopStatement DO LoopStatement(x)
+			| SyntaxTree.ExitableBlock DO ExitableBlock(x)
+			| SyntaxTree.ExitStatement DO ExitStatement(x)
+			| SyntaxTree.ReturnStatement DO ReturnStatement(x)
+			| SyntaxTree.AwaitStatement DO AwaitStatement(x)
+			| SyntaxTree.StatementBlock DO StatementBlock(x)
+			| SyntaxTree.Code DO Code(x)
+			END;
 			(*
 			CheckRegistersFree();
 			*)
@@ -1813,9 +1826,6 @@ TYPE
 			| SyntaxTree.StringValue DO DesignateStringValue(x, result)
 			| SyntaxTree.MathArrayValue DO DesignateMathArrayValue(x, result)
 			| SyntaxTree.NilValue DO Evaluate(x, result); (* NIL parameter passed in WINAPI cc *)
-			ELSE
-				D.TraceBack();
-				VExpression(x);
 			END;
 
 			
@@ -2881,7 +2891,7 @@ TYPE
 		(* math arrays of the form [a,b,c]
 			x is a static array and thus does not provide any pointers
 		*)
-		PROCEDURE DesignateMathArrayExpression*(x: SyntaxTree.MathArrayExpression; VAR result: Operand);
+		PROCEDURE DesignateMathArrayExpression(x: SyntaxTree.MathArrayExpression; VAR result: Operand);
 		VAR variable: SyntaxTree.Variable; index: SyntaxTree.IndexDesignator; dim: LONGINT;
 			designator: SyntaxTree.Designator; i: LONGINT; element: SyntaxTree.IntegerValue;
 
@@ -4009,7 +4019,7 @@ TYPE
 			RestoreRegisters(saved);
 		END CopyString;
 
-		PROCEDURE DesignateConversion*(x: SyntaxTree.Conversion; VAR result: Operand);
+		PROCEDURE DesignateConversion(x: SyntaxTree.Conversion; VAR result: Operand);
 		VAR old: Operand; dest: IntermediateCode.Operand; componentType: SyntaxTree.Type;
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateConversion") END;
@@ -4050,7 +4060,7 @@ TYPE
 
 		(** designators (expressions) *)
 
-		PROCEDURE DesignateSymbolDesignator*(x: SyntaxTree.SymbolDesignator; VAR result: Operand);
+		PROCEDURE DesignateSymbolDesignator(x: SyntaxTree.SymbolDesignator; VAR result: Operand);
 		VAR ownerType, designatorType: SyntaxTree.RecordType;
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateSymbolDesignator") END;
@@ -4674,7 +4684,7 @@ TYPE
 			ReleaseOperand(array);
 		END IndexDesignator;
 
-		PROCEDURE DesignateIndexDesignator*(x: SyntaxTree.IndexDesignator; VAR result: Operand);
+		PROCEDURE DesignateIndexDesignator(x: SyntaxTree.IndexDesignator; VAR result: Operand);
 		VAR type: SyntaxTree.Type; dest: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateIndexDesignator") END;
@@ -5519,7 +5529,7 @@ TYPE
 			IF Trace THEN TraceExit("PushParameter") END;
 		END PushParameter;
 
-		PROCEDURE DesignateInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator; VAR result: Operand);
+		PROCEDURE DesignateInlineCallDesignator(x: SyntaxTree.InlineCallDesignator; VAR result: Operand);
 		VAR recentScope: SyntaxTree.Scope; duplicate: BOOLEAN;
 			wasInline: BOOLEAN; var: SyntaxTree.Variable; variableDesignator, resultDesignator: SyntaxTree.Expression;
 			prevInlineExit: Label;
@@ -5608,7 +5618,7 @@ TYPE
 				END;
 			END;
 
-			VisitStatementBlock(x.block);
+			StatementBlock(x.block);
 			SetLabel(currentInlineExit);
 			var := currentScope.firstVariable;
 			WHILE var # NIL DO
@@ -5639,7 +5649,7 @@ TYPE
 			currentIsInline := wasInline;
 		END DesignateInlineCallDesignator;
 
-		PROCEDURE DesignateProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator; VAR result: Operand);
+		PROCEDURE DesignateProcedureCallDesignator(x: SyntaxTree.ProcedureCallDesignator; VAR result: Operand);
 		VAR
 			parameters: SyntaxTree.ExpressionList;
 			d, resultDesignator, actualParameter: SyntaxTree.Expression;
@@ -7591,7 +7601,7 @@ TYPE
 			*)
 		END OnHeap;
 
-		PROCEDURE Allocate*(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
+		PROCEDURE Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
 			p0, p1: SyntaxTree.Expression;
 			recordType: SyntaxTree.RecordType; parameter: SyntaxTree.Expression;
@@ -8427,7 +8437,7 @@ TYPE
 			END;
 		END Allocate;
 
-		PROCEDURE DesignateBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
+		PROCEDURE DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
 			p0,p1,p2: SyntaxTree.Expression; len,val: LONGINT; l,r: Operand; res,adr,reg: IntermediateCode.Operand; type, componentType: SyntaxTree.Type;
 			s0,s1,s2: Operand; hint: HUGEINT;
@@ -9547,7 +9557,7 @@ TYPE
 			IF Trace THEN TraceExit("EvaluateBuiltinCallDesignator") END;
 		END EvaluateBuiltinCallDesignator;
 
-		PROCEDURE DesignateTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator; VAR result: Operand);
+		PROCEDURE DesignateTypeGuardDesignator(x: SyntaxTree.TypeGuardDesignator; VAR result: Operand);
 		VAR trueL: Label; recordType: SyntaxTree.RecordType; dest,tag,ptr,original,converted: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateTypeGuardDesignator") END;
@@ -9660,7 +9670,7 @@ TYPE
 			END;
 		END Dereference;
 
-		PROCEDURE DesignateDereferenceDesignator*(x: SyntaxTree.DereferenceDesignator; VAR result: Operand);
+		PROCEDURE DesignateDereferenceDesignator(x: SyntaxTree.DereferenceDesignator; VAR result: Operand);
 		VAR  type: SyntaxTree.Type; d: Operand; dest: IntermediateCode.Operand;prevIsUnchecked: BOOLEAN;
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateDereferenceDesignator") END;
@@ -9683,7 +9693,7 @@ TYPE
 			IF Trace THEN TraceExit("DesignateDereferenceDesignator") END;
 		END DesignateDereferenceDesignator;
 
-		PROCEDURE DesignateSupercallDesignator*(x: SyntaxTree.SupercallDesignator; VAR result: Operand);
+		PROCEDURE DesignateSupercallDesignator(x: SyntaxTree.SupercallDesignator; VAR result: Operand);
 		VAR procedure: SyntaxTree.Procedure; tag: IntermediateCode.Operand; dest: IntermediateCode.Operand;
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateSupercallDesignator") END;
@@ -9702,7 +9712,7 @@ TYPE
 			IF Trace THEN TraceExit("DesignateSupercallDesignator") END;
 		END DesignateSupercallDesignator;
 
-		PROCEDURE DesignateSelfDesignator*(x: SyntaxTree.SelfDesignator; VAR result: Operand);
+		PROCEDURE DesignateSelfDesignator(x: SyntaxTree.SelfDesignator; VAR result: Operand);
 		VAR basereg: IntermediateCode.Operand; scope: SyntaxTree.Scope; dest: IntermediateCode.Operand;
 			moduleSection: IntermediateCode.Section; moduleOffset, parametersSize: LONGINT;
 			name: Basic.SegmentedName;
@@ -9748,7 +9758,7 @@ TYPE
 			IF Trace THEN TraceExit("DesignateSelfDesignator") END;
 		END DesignateSelfDesignator;
 
-		PROCEDURE DesignateResultDesignator*(x: SyntaxTree.ResultDesignator; VAR result: Operand);
+		PROCEDURE DesignateResultDesignator(x: SyntaxTree.ResultDesignator; VAR result: Operand);
 		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter;
 			symbol: SyntaxTree.Symbol;
 		BEGIN
@@ -9765,7 +9775,7 @@ TYPE
 			IF Trace THEN TraceExit("DesignateResultDesignator") END;
 		END DesignateResultDesignator;
 
-		PROCEDURE GetDataSection*(): IntermediateCode.Section;
+		PROCEDURE GetDataSection(): IntermediateCode.Section;
 		VAR name: Basic.SegmentedName; section: IntermediateCode.Section;
 		BEGIN
 			Global.GetModuleSegmentedName(module.module, name);
@@ -9784,7 +9794,7 @@ TYPE
 			IntermediateCode.MakeMemory(vop, type);
 		END GetImmediateMem;
 
-		PROCEDURE DesignateMathArrayValue*(x: SyntaxTree.MathArrayValue; VAR result: Operand);
+		PROCEDURE DesignateMathArrayValue(x: SyntaxTree.MathArrayValue; VAR result: Operand);
 		VAR  irv: IntermediateCode.Section; name:Basic.SegmentedName; const: SyntaxTree.Constant;
 
 			PROCEDURE RecursiveData(x: SyntaxTree.MathArrayExpression);
@@ -9821,7 +9831,7 @@ TYPE
 			IntermediateCode.InitAddress(result.op, addressType, irv.name, GetFingerprint(irv.symbol), 0);
 		END DesignateMathArrayValue;
 
-		PROCEDURE DesignateStringValue*(x: SyntaxTree.StringValue; VAR result: Operand);
+		PROCEDURE DesignateStringValue(x: SyntaxTree.StringValue; VAR result: Operand);
 		VAR  i: LONGINT; name: Basic.SegmentedName;
 			irv: IntermediateCode.Section; op: IntermediateCode.Operand;
 			const: SyntaxTree.Constant;
@@ -9927,7 +9937,7 @@ TYPE
 			RETURN i;
 		END GetAvailability;
 
-		PROCEDURE DesignateVariable*(x: SyntaxTree.Variable; VAR result (* in / out *): Operand);
+		PROCEDURE DesignateVariable(x: SyntaxTree.Variable; VAR result (* in / out *): Operand);
 		VAR symbol: Sections.Section;  type: SyntaxTree.Type; recordType: SyntaxTree.RecordType;
 			name: Basic.SegmentedName; temp, basereg: IntermediateCode.Operand; reg: LONGINT;
 			nm: ARRAY 256 OF CHAR;
@@ -10039,7 +10049,7 @@ TYPE
 		END DesignateVariable;
 
 
-		PROCEDURE DesignateParameter*(x: SyntaxTree.Parameter; VAR result: Operand);
+		PROCEDURE DesignateParameter(x: SyntaxTree.Parameter; VAR result: Operand);
 		VAR type: SyntaxTree.Type; basereg, mem: IntermediateCode.Operand; symbol: Sections.Section;
 			name: Basic.SegmentedName; ptype: SyntaxTree.Type; temp: IntermediateCode.Operand; reg: LONGINT;
 		BEGIN
@@ -10255,7 +10265,7 @@ TYPE
 			IF Trace THEN TraceExit("StaticCallOperand") END;
 		END StaticCallOperand;
 
-		PROCEDURE DesignateProcedure*(x: SyntaxTree.Procedure; VAR result: Operand);
+		PROCEDURE DesignateProcedure(x: SyntaxTree.Procedure; VAR result: Operand);
 		(* handle expressions of the form designator.procedure or procedure *)
 		BEGIN
 			IF Trace THEN TraceEnter("DesignateProcedure") END;
@@ -10285,17 +10295,6 @@ TYPE
 		
 
 		(** statements *)
-
-		PROCEDURE VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement);
-		VAR result: Operand;
-		BEGIN
-			IF Trace THEN TraceEnter("VisitProcedureCallStatement") END;
-			Designate(x.call, result);
-			IF (x.call.type # NIL) THEN (* procedure returning ignored value *)
-				ReleaseOperand(result)
-			END;
-			IF Trace THEN TraceExit("VisitProcedureCallStatement") END;
-		END VisitProcedureCallStatement;
 
 		PROCEDURE AssignMathArray(left,right: SyntaxTree.Expression);
 		VAR leftType, rightType: SyntaxTree.MathArrayType;
@@ -10421,12 +10420,12 @@ TYPE
 			END;
 			ReleaseOperand(leftO);
 			ReleaseOperand(rightO);
-		END AssignReference
+		END AssignReference;
 
 		PROCEDURE Assign(left,right: SyntaxTree.Expression);
 		VAR
 			leftO, rightO: Operand;
-			arg,mem, sizeOp: IntermediateCode.Operand;
+			arg, mem, sizeOp: IntermediateCode.Operand;
 			leftType, rightType, componentType, base: SyntaxTree.Type;
 			size: LONGINT;
 			parameters: SyntaxTree.ExpressionList;
@@ -10731,13 +10730,6 @@ TYPE
 			END;
 		END Assign;
 
-		PROCEDURE VisitAssignment*(x: SyntaxTree.Assignment);
-		BEGIN
-			IF Trace THEN TraceEnter("VisitAssignment") END;
-			Assign(x.left,x.right);
-			IF Trace THEN TraceExit("VisitAssignment") END;
-		END VisitAssignment;
-
 		PROCEDURE EmitCooperativeSwitch;
 		VAR quantum, offset, zero: IntermediateCode.Operand; skip: Label; pc: LONGINT;
 		BEGIN
@@ -10751,7 +10743,7 @@ TYPE
 			INC(statCoopSwitch, section.pc - pc);
 		END EmitCooperativeSwitch;
 
-		PROCEDURE VisitCommunicationStatement*(communication: SyntaxTree.CommunicationStatement);
+		PROCEDURE CommunicationStatement(communication: SyntaxTree.CommunicationStatement);
 		VAR p0,p1,tmp: SyntaxTree.Expression; s0,s1: Operand; size: LONGINT;
 		BEGIN
 			p0 := communication.left; p1 := communication.right;
@@ -10798,9 +10790,9 @@ TYPE
 					CallThis(position,ChannelModuleName,"Receive",2)
 				END;
 			END;
-		END VisitCommunicationStatement;
+		END CommunicationStatement;
 
-		PROCEDURE VisitIfStatement*(x: SyntaxTree.IfStatement);
+		PROCEDURE IfStatement(x: SyntaxTree.IfStatement);
 		VAR end: Label; i,elsifs: LONGINT; elsif: SyntaxTree.IfPart; escape: BOOLEAN;
 
 			PROCEDURE IfPart(if: SyntaxTree.IfPart; last: BOOLEAN);
@@ -10838,7 +10830,7 @@ TYPE
 			END;
 			SetLabel(end);
 			IF Trace THEN TraceExit("VisitIfStatement") END;
-		END VisitIfStatement;
+		END IfStatement;
 
 		PROCEDURE BrWithPart(CONST tag: IntermediateCode.Operand; x: SyntaxTree.WithPart; VAR trueL: Label);
 		VAR reg: IntermediateCode.Operand;
@@ -10859,7 +10851,7 @@ TYPE
 			StatementSequence(x.statements);
 		END EmitWithPart;
 
-		PROCEDURE VisitWithStatement*(x: SyntaxTree.WithStatement);
+		PROCEDURE WithStatement(x: SyntaxTree.WithStatement);
 		VAR endL,elseL: Label;i: LONGINT; trueL: POINTER TO ARRAY OF Label; res: Operand; recordType: SyntaxTree.RecordType;
 			tag: IntermediateCode.Operand;
 		BEGIN
@@ -10895,9 +10887,9 @@ TYPE
 			END;
 			SetLabel(endL);
 			IF Trace THEN TraceExit("VisitWithStatement") END;
-		END VisitWithStatement;
+		END WithStatement;
 
-		PROCEDURE VisitCaseStatement*(x: SyntaxTree.CaseStatement);
+		PROCEDURE CaseStatement(x: SyntaxTree.CaseStatement);
 		VAR var: Operand; jmp,res,op,tmp: IntermediateCode.Operand; range, j: Basic.Integer; i,size: LONGINT; part: SyntaxTree.CasePart; constant: SyntaxTree.CaseConstant;
 			out,else: Label; label: Label;
 			fixups: POINTER TO ARRAY OF Label; section: IntermediateCode.Section; name: Basic.SegmentedName; string: ARRAY 32 OF CHAR;
@@ -11005,9 +10997,9 @@ TYPE
 				END;
 			END;
 			IF Trace THEN TraceExit("VisitCaseStatement") END;
-		END VisitCaseStatement;
+		END CaseStatement;
 
-		PROCEDURE VisitWhileStatement*(x: SyntaxTree.WhileStatement);
+		PROCEDURE WhileStatement(x: SyntaxTree.WhileStatement);
 		VAR startL,falseL: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitWhileStatement") END;
@@ -11021,9 +11013,9 @@ TYPE
 			BrL(startL);
 			SetLabel(falseL);
 			IF Trace THEN TraceExit("VisitWhileStatement") END;
-		END VisitWhileStatement;
+		END WhileStatement;
 
-		PROCEDURE VisitRepeatStatement*(x: SyntaxTree.RepeatStatement);
+		PROCEDURE RepeatStatement(x: SyntaxTree.RepeatStatement);
 		VAR falseL: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitRepeatStatement") END;
@@ -11034,9 +11026,9 @@ TYPE
 			IF cooperativeSwitches THEN EmitCooperativeSwitch END;
 			Condition(x.condition,falseL,FALSE);
 			IF Trace THEN TraceExit("VisitRepeatStatement") END;
-		END VisitRepeatStatement;
+		END RepeatStatement;
 
-		PROCEDURE VisitForStatement*(x: SyntaxTree.ForStatement);
+		PROCEDURE ForStatement(x: SyntaxTree.ForStatement);
 		VAR
 			binary: SyntaxTree.BinaryExpression; startL,falseL : Label; cmp: LONGINT; by: HUGEINT;
 			temporaryVariable: SyntaxTree.Variable;
@@ -11077,9 +11069,9 @@ TYPE
 			SetLabel(falseL);
 
 			IF Trace THEN TraceExit("VisitForStatement") END;
-		END VisitForStatement;
+		END ForStatement;
 
-		PROCEDURE VisitExitableBlock*(x: SyntaxTree.ExitableBlock);
+		PROCEDURE ExitableBlock(x: SyntaxTree.ExitableBlock);
 		VAR prevLoop: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitExitableBlock") END;
@@ -11089,9 +11081,9 @@ TYPE
 			SetLabel(currentLoop);
 			currentLoop := prevLoop;
 			IF Trace THEN TraceExit("VisitExitableBlock") END;
-		END VisitExitableBlock;
+		END ExitableBlock;
 
-		PROCEDURE VisitLoopStatement*(x: SyntaxTree.LoopStatement);
+		PROCEDURE LoopStatement(x: SyntaxTree.LoopStatement);
 		VAR prevLoop,start: Label;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitLoopStatement") END;
@@ -11106,9 +11098,9 @@ TYPE
 			SetLabel(currentLoop);
 			currentLoop := prevLoop;
 			IF Trace THEN TraceExit("VisitLoopStatement") END;
-		END VisitLoopStatement;
+		END LoopStatement;
 
-		PROCEDURE VisitExitStatement*(x: SyntaxTree.ExitStatement);
+		PROCEDURE ExitStatement(x: SyntaxTree.ExitStatement);
 		VAR outer: SyntaxTree.Statement;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitExitStatement") END;
@@ -11123,9 +11115,9 @@ TYPE
 			END;
 			BrL(currentLoop);
 			IF Trace THEN TraceExit("VisitExitStatement") END;
-		END VisitExitStatement;
+		END ExitStatement;
 
-		PROCEDURE VisitReturnStatement*(x: SyntaxTree.ReturnStatement);
+		PROCEDURE ReturnStatement(x: SyntaxTree.ReturnStatement);
 		VAR
 			expression, parameterDesignator: SyntaxTree.Expression;
 			type, componentType: SyntaxTree.Type;
@@ -11298,7 +11290,7 @@ TYPE
 				Emit(Exit(position,procedure.type(SyntaxTree.ProcedureType).pcOffset,callingConvention, parametersSize));
 			END;
 			IF Trace THEN TraceExit("VisitReturnStatement") END;
-		END VisitReturnStatement;
+		END ReturnStatement;
 
 		PROCEDURE MakeAwaitProcedure(x: SyntaxTree.AwaitStatement): SyntaxTree.Procedure;
 		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; procedureScope: SyntaxTree.ProcedureScope;
@@ -11330,7 +11322,7 @@ TYPE
 			RETURN procedure
 		END MakeAwaitProcedure;
 
-		PROCEDURE VisitAwaitStatement*(x: SyntaxTree.AwaitStatement);
+		PROCEDURE AwaitStatement(x: SyntaxTree.AwaitStatement);
 		VAR proc: SyntaxTree.Procedure; res: IntermediateCode.Operand; symbol: Sections.Section;
 			call: IntermediateCode.Operand; label, startL, trueL: Label; name: Basic.SegmentedName;
 			result: Operand;
@@ -11380,7 +11372,7 @@ TYPE
 			IF profile THEN ProfilerEnterExit(numberProcedures, TRUE) END;
 
 			IF Trace THEN TraceExit("VisitAwaitStatement") END;
-		END VisitAwaitStatement;
+		END AwaitStatement;
 
 		PROCEDURE StatementSequence(x: SyntaxTree.StatementSequence);
 		VAR statement: SyntaxTree.Statement;  i: LONGINT; (* pos: LONGINT; *)
@@ -11449,7 +11441,7 @@ TYPE
 			IF Trace THEN TraceExit("Lock") END;
 		END Lock;
 
-		PROCEDURE VisitStatementBlock*(x: SyntaxTree.StatementBlock);
+		PROCEDURE StatementBlock(x: SyntaxTree.StatementBlock);
 		VAR previouslyUnchecked, previouslyCooperativeSwitches: BOOLEAN; end: Label;
 			prevScope: SyntaxTree.Scope;
 		BEGIN
@@ -11487,13 +11479,13 @@ TYPE
 			cooperativeSwitches := previouslyCooperativeSwitches;
 			currentScope := prevScope;
 			IF Trace THEN TraceExit("VisitStatementBlock") END;
-		END VisitStatementBlock;
+		END StatementBlock;
 
-		PROCEDURE VisitCode*(x: SyntaxTree.Code);
+		PROCEDURE Code(x: SyntaxTree.Code);
 		BEGIN
 			Emit(Asm(x.position,x.sourceCode, currentScope));
 			IF Trace THEN TraceExit("VisitCode") END;
-		END VisitCode;
+		END Code;
 
 		PROCEDURE ProcParametersSize(procedure: SyntaxTree.Procedure): LONGINT;
 		BEGIN
@@ -11724,9 +11716,9 @@ TYPE
 				ParameterCopies(procedureType);
 
 				IF x.code = NIL THEN
-					VisitStatementBlock(x);
+					StatementBlock(x);
 				ELSE
-					VisitCode(x.code)
+					Code(x.code)
 				END;
 				IF profile & (x.code = NIL) & ~moduleBody THEN (* do not profile assembler code sections *)
 					IF ~backend.cooperative THEN
@@ -11794,12 +11786,12 @@ TYPE
 			IF Trace THEN TraceExit("Body") END;
 		END Body;
 
-	END ImplementationVisitor;
+	END ImplementationEmitter;
 
 	MetaDataGenerator=OBJECT
 	VAR
-		implementationVisitor: ImplementationVisitor;
-		declarationVisitor: DeclarationVisitor;
+		implementationEmitter: ImplementationEmitter;
+		declarationEmitter: DeclarationEmitter;
 		module: Sections.Module;
 		moduleName: ARRAY 128 OF CHAR;
 		moduleNamePool: Basic.HashTableInt;
@@ -11822,9 +11814,9 @@ TYPE
 	CONST
 		EmptyBlockOffset = 2;
 
-		PROCEDURE &InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN);
+		PROCEDURE &InitMetaDataGenerator(implementationEmitter: ImplementationEmitter; declarationEmitter: DeclarationEmitter; simple: BOOLEAN);
 		BEGIN
-			IF implementationVisitor.backend.cooperative THEN
+			IF implementationEmitter.backend.cooperative THEN
 				TypeTags := MAX(LONGINT);
 				BaseTypesTableOffset := 0;
 				MethodTableOffset := 2;
@@ -11842,17 +11834,17 @@ TYPE
 				MethodTableOffset := -TypeTags+BaseTypesTableOffset;
 				TypeRecordBaseOffset := TypeTags + 2; (* MPO, typeInfo *)
 				(* change this when Heaps.HeapBlock is modified *)
-				IF implementationVisitor.system.addressType.sizeInBits = 64 THEN
+				IF implementationEmitter.system.addressType.sizeInBits = 64 THEN
 					RecordBaseOffset := 8; (* addresses *)
 				ELSE
 					RecordBaseOffset := 9; (* addresses *)
 				END;
 			END;
 			SELF.simple := simple;
-			SELF.implementationVisitor := implementationVisitor;
-			SELF.declarationVisitor := declarationVisitor;
-			implementationVisitor.meta := SELF;
-			declarationVisitor.meta := SELF;
+			SELF.implementationEmitter := implementationEmitter;
+			SELF.declarationEmitter := declarationEmitter;
+			implementationEmitter.meta := SELF;
+			declarationEmitter.meta := SELF;
 		END InitMetaDataGenerator;
 
 		PROCEDURE SetModule(module: Sections.Module);
@@ -11861,7 +11853,7 @@ TYPE
 			SELF.module := module;
 			Global.GetModuleName(module.module,moduleName);
 			Global.GetSymbolSegmentedName(module.module, name);
-			IF ReflectionSupport & ~simple & ~implementationVisitor.backend.cooperative THEN
+			IF ReflectionSupport & ~simple & ~implementationEmitter.backend.cooperative THEN
 				NEW(moduleNamePool, 32);
 				(*! require GC protection *)
 				modulePointerSection := Block("Heaps","ArrayBlockDesc",".@ModulePointerArray", modulePointerSectionOffset);
@@ -11881,7 +11873,7 @@ TYPE
 
 		PROCEDURE AddPointer(section: IntermediateCode.Section; offset: LONGINT);
 		BEGIN
-			IF ~implementationVisitor.backend.cooperative THEN
+			IF ~implementationEmitter.backend.cooperative THEN
 				NamedSymbol(modulePointerSection, section.name, NIL, offset, 0);
 				INC(modulePointers);
 				(* optimization hint: this can be done once at the end but for consistency of the first tests we keep it like this *)
@@ -11891,7 +11883,7 @@ TYPE
 
 		PROCEDURE GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT;
 		BEGIN
-			IF implementationVisitor.backend.cooperative OR simple THEN RETURN 0 ELSE RETURN TypeRecordBaseOffset + numberMethods END;
+			IF implementationEmitter.backend.cooperative OR simple THEN RETURN 0 ELSE RETURN TypeRecordBaseOffset + numberMethods END;
 		END GetTypeRecordBaseOffset;
 
 		PROCEDURE HeapBlock(CONST moduleName, typeName: ARRAY OF CHAR; section: IntermediateCode.Section; dataAdrOffset: LONGINT);
@@ -11904,7 +11896,7 @@ TYPE
 			Address(section,0);
 
 			Info(section,"typeDesc");
-			symbol := implementationVisitor.GetTypeDescriptor(moduleName,typeName, name);
+			symbol := implementationEmitter.GetTypeDescriptor(moduleName,typeName, name);
 			offset := ToMemoryUnits(module.system,TypeRecordBaseOffset*module.system.addressSize);
 			NamedSymbol(section, name, symbol, 0, offset);
 
@@ -12012,7 +12004,7 @@ TYPE
 		VAR op, noOperand: IntermediateCode.Operand;
 		BEGIN
 			IntermediateCode.InitOperand(noOperand);
-			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationVisitor.GetFingerprint(symbol), virtualOffset);
+			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationEmitter.GetFingerprint(symbol), virtualOffset);
 			section.PatchOperands(pc,op,noOperand,noOperand);
 		END PatchSymbol;
 
@@ -12053,7 +12045,7 @@ TYPE
 		PROCEDURE NamedSymbol(section: IntermediateCode.Section; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT);
 		VAR op: IntermediateCode.Operand;
 		BEGIN
-			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationVisitor.GetFingerprint(symbol), virtualOffset);
+			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationEmitter.GetFingerprint(symbol), virtualOffset);
 			IntermediateCode.SetOffset(op,realOffset);
 			section.Emit(Data(Basic.invalidPosition,op));
 		END NamedSymbol;
@@ -12061,7 +12053,7 @@ TYPE
 		PROCEDURE NamedSymbolAt(section: IntermediateCode.Section; pc: LONGINT; name: Basic.SegmentedName; symbol: SyntaxTree.Symbol; virtualOffset, realOffset: LONGINT);
 		VAR op: IntermediateCode.Operand;
 		BEGIN
-			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationVisitor.GetFingerprint(symbol), virtualOffset);
+			IntermediateCode.InitAddress(op, IntermediateCode.GetType(module.system, module.system.addressType), name,implementationEmitter.GetFingerprint(symbol), virtualOffset);
 			IntermediateCode.SetOffset(op,realOffset);
 			section.EmitAt(pc, Data(Basic.invalidPosition,op));
 		END NamedSymbolAt;
@@ -12086,7 +12078,7 @@ TYPE
 			IF (type IS SyntaxTree.AnyType) OR (type IS SyntaxTree.ObjectType) THEN
 				Symbol(section, symbol, 0, (offset )); INC(numberPointers);
 				IF Trace THEN D.Str("ptr at offset="); D.Int(offset,1); D.Ln; END;
-			ELSIF (type IS SyntaxTree.PortType) & implementationVisitor.backend.cellsAreObjects THEN
+			ELSIF (type IS SyntaxTree.PortType) & implementationEmitter.backend.cellsAreObjects THEN
 				Symbol(section, symbol, 0, offset); INC(numberPointers);
 			ELSIF (type IS SyntaxTree.PointerType) & type.NeedsTrace() THEN
 				Symbol(section, symbol, 0, (offset )); INC(numberPointers);
@@ -12218,8 +12210,8 @@ TYPE
 		PROCEDURE NamedBlock(CONST mName, typeName: ARRAY OF CHAR; name: Basic.SegmentedName; VAR offset: LONGINT): IntermediateCode.Section;
 		VAR section: IntermediateCode.Section;
 		BEGIN
-			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
-			IF implementationVisitor.backend.cooperative THEN
+			section := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationEmitter.dump);
+			IF implementationEmitter.backend.cooperative THEN
 				Info(section, "TypeDescriptor");
 				Basic.ToSegmentedName("BaseTypes.Array", name);
 				NamedSymbol(section, name,NIL, 0, 0);
@@ -12258,10 +12250,10 @@ TYPE
 		VAR name: Basic.SegmentedName;
 		BEGIN
 			Info(source,"ArrayHeader");
-			IF implementationVisitor.backend.cooperative THEN
+			IF implementationEmitter.backend.cooperative THEN
 				sizePC := source.pc;
 				Address(source,0);
-				NamedSymbol(source,source.name,NIL,0,ToMemoryUnits(implementationVisitor.system,(BaseArrayTypeSize + 1)*implementationVisitor.addressType.sizeInBits));
+				NamedSymbol(source,source.name,NIL,0,ToMemoryUnits(implementationEmitter.system,(BaseArrayTypeSize + 1)*implementationEmitter.addressType.sizeInBits));
 				IF baseType # "" THEN
 					Basic.ToSegmentedName(baseType, name);
 					NamedSymbol(source, name,NIL, 0, 0);
@@ -12287,7 +12279,7 @@ TYPE
 
 		PROCEDURE PatchArray(section: IntermediateCode.Section; pc: LONGINT; size: LONGINT);
 		BEGIN
-			IF implementationVisitor.backend.cooperative THEN
+			IF implementationEmitter.backend.cooperative THEN
 				PatchSize(section, pc, size);
 				PatchSize(section, pc + 3, size);
 			ELSE
@@ -12364,11 +12356,11 @@ TYPE
 				): BOOLEAN;
 			VAR fingerprint: SyntaxTree.Fingerprint;
 			BEGIN
-				(*IF  (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection)
+				(*IF  (implementationEmitter.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection)
 					& (symbol.type # Sections.InlineCodeSection)
 				THEN
 				*)
-				IF (symbol = NIL) OR ( (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection)
+				IF (symbol = NIL) OR ( (implementationEmitter.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection)
 					& (symbol.type # Sections.ExitCodeSection)
 					& (symbol.type # Sections.InlineCodeSection))
 				THEN
@@ -12416,7 +12408,7 @@ TYPE
 
 				FOR s := 0 TO LEN(sections)-1 DO
 					symbol := sections[s];
-					IF (symbol # NIL) & (implementationVisitor.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection) & (symbol.type # Sections.ExitCodeSection) & (symbol.type # Sections.InlineCodeSection) THEN
+					IF (symbol # NIL) & (implementationEmitter.backend.cooperative) & (symbol.symbol = NIL) OR (symbol.symbol # NIL) & (symbol.type # Sections.InitCodeSection) & (symbol.type # Sections.EntryCodeSection) & (symbol.type # Sections.ExitCodeSection) & (symbol.type # Sections.InlineCodeSection) THEN
 						this := sections[s].name;
 						level := 0;
 						WHILE (level < LEN(this)) & (this[level] > 0) DO
@@ -12745,9 +12737,9 @@ TYPE
 									IF (td # NIL) THEN
 										Global.GetSymbolSegmentedName(td,segmentedName);
 										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-											tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
 										ELSE
-											tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
 										END;
 										offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(type(SyntaxTree.RecordType).recordScope.numberMethods)*module.system.addressSize);
 										Symbol(section, tir,  0, offset);
@@ -12765,9 +12757,9 @@ TYPE
 									IF (td # NIL) THEN
 										Global.GetSymbolSegmentedName(td,segmentedName);
 										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
-											tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
 										ELSE
-											tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationVisitor.dump);
+											tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
 										END;
 										offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(0)*module.system.addressSize);
 										Symbol(section, tir,  0, offset);
@@ -13010,7 +13002,7 @@ TYPE
 							sn := variable.externalName^;
 							NamedSymbol(section, sn,NIL, 0,0);
 						ELSE
-							implementationVisitor.GetCodeSectionNameForSymbol(variable, sn);
+							implementationEmitter.GetCodeSectionNameForSymbol(variable, sn);
 							NamedSymbol(section, sn,variable, 0,0);
 						END;
 					ELSE
@@ -13179,9 +13171,9 @@ TYPE
 						ELSE
 							Global.GetSymbolSegmentedName(typeDeclaration,name);
 							(* TODO *)
-							section := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,typeDeclaration, source.comments # NIL);
+							section := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,typeDeclaration, source.comments # NIL);
 						END;
-						IF implementationVisitor.backend.cooperative THEN
+						IF implementationEmitter.backend.cooperative THEN
 							offset := 0;
 						ELSE
 							offset := 1 + type(SyntaxTree.RecordType).recordScope.numberMethods+16+1;
@@ -13241,7 +13233,7 @@ TYPE
 			(* strictly speaking this needs to be a pointer array but by the construction of module loading, this references are not required *)
 			ArrayBlock(source,pc,"", FALSE);
 			Info(source, "import module array data");
-			IF implementationVisitor.backend.cooperative THEN
+			IF implementationEmitter.backend.cooperative THEN
 				offset := 0;
 			ELSE
 				IF module.system.addressType.sizeInBits = 64 THEN
@@ -13319,7 +13311,7 @@ TYPE
 			(* mini pseudo type tag that only refers to the information data for debugging purposes -- then the descriptor in the GC can be identified *)
 			name := procedureSection.name;
 			Basic.AppendToSegmentedName(name,".@Info");
-			section := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+			section := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationEmitter.dump);
 			Address(section,0);
 			Symbol(section,section,2,0);
 			(*
@@ -13353,15 +13345,15 @@ TYPE
 		BEGIN
 			name := procedureSection.name;
 			Basic.SuffixSegmentedName(name, Basic.MakeString("@Descriptor"));
-			IF implementationVisitor.backend.cooperative THEN
-				dest := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+			IF implementationEmitter.backend.cooperative THEN
+				dest := IntermediateCode.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationEmitter.dump);
 				Info(section, "TypeDescriptor");
 				Basic.ToSegmentedName("BaseTypes.Pointer", name);
 				NamedSymbol(dest, name,NIL, 0, 0);
 				BaseRecord(dest);
 				offset := 0;
 			ELSIF CreateProcedureDescInfo THEN
-				dest := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationVisitor.dump);
+				dest := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name, NIL, declarationEmitter.dump);
 				Address(dest,0);
 				Symbol(dest, MakeProcedureDescriptorTag(procedureSection),2,0);
 				offset := dest.pc;
@@ -13451,11 +13443,11 @@ TYPE
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module.@Descriptor");
 			Basic.ToSegmentedName(name, pooledName);
-			descriptorSection := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
+			descriptorSection := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationEmitter.dump);
 			Symbol(section,descriptorSection,0,0);
 
 			Info(descriptorSection, "descriptor");
-			symbol := implementationVisitor.GetTypeDescriptor("Modules","Module", pooledName);
+			symbol := implementationEmitter.GetTypeDescriptor("Modules","Module", pooledName);
 			NamedSymbol(descriptorSection, pooledName,symbol, 0, 0);
 			Address(descriptorSection,0);
 
@@ -13476,20 +13468,20 @@ TYPE
 			Global.GetModuleName(module.module,name);
 			Strings.Append(name,".@Module");
 			Basic.ToSegmentedName(name, pooledName);
-			moduleSection := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationVisitor.dump);
+			moduleSection := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, pooledName,NIL,declarationEmitter.dump);
 			moduleSection.SetExported(TRUE);
 			IF moduleSection.pc = 0 THEN
-				IF implementationVisitor.backend.cooperative THEN
+				IF implementationEmitter.backend.cooperative THEN
 					Info(moduleSection, "descriptor");
 					ModuleDescriptor(moduleSection);
 					BaseObject(moduleSection);
-					implementationVisitor.CreateTraceModuleMethod(module.module);
+					implementationEmitter.CreateTraceModuleMethod(module.module);
 				ELSE
 					ProtectedHeapBlock("Heaps","ProtRecBlockDesc",moduleSection,2);
 					Info(moduleSection, "HeapBlock");
 					Symbol(moduleSection,moduleSection,2,0);
 					Info(moduleSection, "TypeDescriptor");
-					symbol := implementationVisitor.GetTypeDescriptor("Modules","Module", pooledName);
+					symbol := implementationEmitter.GetTypeDescriptor("Modules","Module", pooledName);
 					offset := ToMemoryUnits(module.system,(TypeRecordBaseOffset + 1 (*= numberMethods*))*module.system.addressSize);
 					NamedSymbol(moduleSection, pooledName,symbol, 0, offset);
 				END;
@@ -13518,9 +13510,9 @@ TYPE
 					(*name is missing prefixes sometimes*)
 					Global.GetModuleSegmentedName(module.module,name);
 					Basic.AppendToSegmentedName(name,".@Info");
-					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+					source := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationEmitter.dump);
 
-					IF ~implementationVisitor.backend.cooperative  THEN
+					IF ~implementationEmitter.backend.cooperative  THEN
 						Info(source, "HeapBlock");
 						Address(source,0); (* an empty heap block prevents GC marking *)
 						Info(source, "TypeDescriptor");
@@ -13638,10 +13630,10 @@ TYPE
 			Symbol(moduleSection, bodyProc, 0,0);
 			Info(moduleSection, "module flags");
 			flags := {};
-			IF  implementationVisitor.backend.preciseGC THEN INCL(flags,0) END;
+			IF  implementationEmitter.backend.preciseGC THEN INCL(flags,0) END;
 			Set( moduleSection, flags);
 
-			IF implementationVisitor.backend.cooperative THEN
+			IF implementationEmitter.backend.cooperative THEN
 				PatchSymbol(moduleSection,MonitorOffset,moduleSection.name,NIL,moduleSection.pc,0);
 				Info(moduleSection, "monitor.owner");
 				Address(moduleSection,0);
@@ -13728,7 +13720,7 @@ TYPE
 					(* source := module.sections.FindByName(...) *)
 					Global.GetSymbolSegmentedName(td,name);
 					Basic.AppendToSegmentedName(name,".@Info");
-					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+					source := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationEmitter.dump);
 					Info(source, "HeapBlock"); (* an empty heap block prevents GC marking *)
 					Address(source,0);
 					Info(source, "TypeDescriptor");
@@ -13778,9 +13770,9 @@ TYPE
 							baseTD := record.typeDeclaration;
 							Global.GetSymbolSegmentedName(baseTD,name);
 							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-								tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+								tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
 							ELSE
-								tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+								tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
 							END;
 							offset := ToMemoryUnits(module.system,GetTypeRecordBaseOffset(record.recordScope.numberMethods)*module.system.addressSize);
 							Symbol(source, tir,  0, offset);
@@ -13796,7 +13788,7 @@ TYPE
 						INC(i);
 						baseRecord := baseRecord.GetBaseRecord();
 					END;
-					IF i > size THEN implementationVisitor.Error(x.position,"maximal extension level exceeded") END;
+					IF i > size THEN implementationEmitter.Error(x.position,"maximal extension level exceeded") END;
 					IF ~reverse THEN Td(recordType) END;
 					WHILE i < size DO
 						Address(source,0);
@@ -13814,13 +13806,13 @@ TYPE
 						IF reverse THEN
 							FOR i := methods-1 TO 0 BY -1 DO
 								procedure := recordType.recordScope.FindMethod(i);
-								implementationVisitor.GetCodeSectionNameForSymbol(procedure, name);
+								implementationEmitter.GetCodeSectionNameForSymbol(procedure, name);
 								NamedSymbol(source, name,procedure, 0,0);
 							END;
 						ELSE
 							FOR i := 0 TO methods-1 DO
 								procedure := recordType.recordScope.FindMethod(i);
-								implementationVisitor.GetCodeSectionNameForSymbol(procedure, name);
+								implementationEmitter.GetCodeSectionNameForSymbol(procedure, name);
 								NamedSymbol(source, name,procedure, 0,0);
 							END;
 						END;
@@ -13857,7 +13849,7 @@ TYPE
 						ELSE
 							Basic.ToSegmentedName ("BaseTypes.Record.@Trace",name);
 						END;
-						tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+						tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationEmitter.dump);
 						Symbol(source, tir,  0, 0);
 						start := 0;
 
@@ -13887,7 +13879,7 @@ TYPE
 						ELSE
 							Global.GetSymbolSegmentedName(baseRecord.recordScope.finalizer, name);
 						END;
-						tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+						tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationEmitter.dump);
 						Symbol(source, tir,  0, 0);
 					END;
 					methods := recordType.recordScope.numberMethods;
@@ -13902,12 +13894,12 @@ TYPE
 
 			BEGIN
 					Global.GetSymbolSegmentedName(td,name);
-					source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,td,declarationVisitor.dump);
+					source := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,td,declarationEmitter.dump);
 					source.SetExported(IsExported(td));
 
 					IF (cellType # NIL) THEN recordType := cellType.GetBaseRecord() END;
 
-					IF implementationVisitor.backend.cooperative THEN
+					IF implementationEmitter.backend.cooperative THEN
 
 						base := NIL;
 						baseRecord := recordType.GetBaseRecord();
@@ -13920,9 +13912,9 @@ TYPE
 							IF baseRecord # NIL THEN
 								Global.GetSymbolSegmentedName(baseTD,name);
 								IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-									tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+									tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
 								ELSE
-									tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationVisitor.dump);
+									tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
 								END;
 								Symbol(source, tir,  0, 0);
 							ELSE
@@ -13936,7 +13928,7 @@ TYPE
 							base := source;
 							Global.GetSymbolSegmentedName(td,name);
 							Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
-							source := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+							source := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,NIL,declarationEmitter.dump);
 							source.SetExported(IsExported(td));
 						END;
 
@@ -13949,10 +13941,10 @@ TYPE
 								sym := NIL;
 							END;
 							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
-								tir := implementationVisitor.NewSection(module.allSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
+								tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,sym,declarationEmitter.dump);
 								tir.SetExported(IsExported(td));
 							ELSE
-								tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,sym,declarationVisitor.dump);
+								tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,sym,declarationEmitter.dump);
 							END;
 							Symbol(source, tir,  0, 0);
 						ELSIF (recordType.pointerType # NIL) & recordType.pointerType.isPlain THEN
@@ -13963,7 +13955,7 @@ TYPE
 							ELSE
 								Basic.ToSegmentedName ("BaseTypes.Record",name);
 							END;
-							tir := implementationVisitor.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationVisitor.dump);
+							tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,NIL,declarationEmitter.dump);
 							Symbol(source, tir,  0, 0);
 						END;
 
@@ -13973,10 +13965,10 @@ TYPE
 
 						IF recordType.hasPointers THEN
 							IF ~HasExplicitTraceMethod (recordType) THEN
-								implementationVisitor.CreateTraceMethod(recordType);
+								implementationEmitter.CreateTraceMethod(recordType);
 							END;
-							implementationVisitor.CreateResetProcedure(recordType);
-							implementationVisitor.CreateAssignProcedure(recordType);
+							implementationEmitter.CreateResetProcedure(recordType);
+							implementationEmitter.CreateAssignProcedure(recordType);
 						END;
 					ELSIF ~simple THEN
 						(*
@@ -14069,7 +14061,7 @@ TYPE
 						NewTypeDescriptor
 					END;
 				END;
-			ELSIF (x IS SyntaxTree.CellType) & implementationVisitor.backend.cellsAreObjects THEN
+			ELSIF (x IS SyntaxTree.CellType) & implementationEmitter.backend.cellsAreObjects THEN
 				cellType := x(SyntaxTree.CellType);
 				td := x.typeDeclaration;
 				section := module.allSections.FindBySymbol(td); (* TODO *)
@@ -14121,8 +14113,8 @@ TYPE
 
 		PROCEDURE GenerateIntermediate*(x: SyntaxTree.Module; supportedInstruction: SupportedInstructionProcedure; supportedImmediate: SupportedImmediateProcedure): Sections.Module;
 		VAR
-			declarationVisitor: DeclarationVisitor;
-			implementationVisitor: ImplementationVisitor;
+			declarationEmitter: DeclarationEmitter;
+			implementationEmitter: ImplementationEmitter;
 			module: Sections.Module;
 			name, platformName: SyntaxTree.IdentifierString;
 			meta: MetaDataGenerator;
@@ -14136,14 +14128,14 @@ TYPE
 			Global.GetModuleName(x, name);
 			module.SetModuleName(name);
 
-			NEW(implementationVisitor,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
-			NEW(declarationVisitor,system,implementationVisitor,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
+			NEW(implementationEmitter,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
+			NEW(declarationEmitter,system,implementationEmitter,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
 
-			NEW(meta, implementationVisitor, declarationVisitor,simpleMetaData);
-			declarationVisitor.Module(x,module);
+			NEW(meta, implementationEmitter, declarationEmitter,simpleMetaData);
+			declarationEmitter.Module(x,module);
 
 			IF ~meta.simple THEN
-				meta.Module(implementationVisitor.moduleBodySection);
+				meta.Module(implementationEmitter.moduleBodySection);
 			END;
 
 			GetDescription(platformName);

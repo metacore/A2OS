@@ -264,7 +264,8 @@ TYPE
 
 			PROCEDURE ConstantNeedsSection(constant: SyntaxTree.Constant): BOOLEAN;
 			BEGIN
-				RETURN (constant.type.resolved IS SyntaxTree.StringType) OR (constant.type.resolved IS SyntaxTree.MathArrayType)
+				RETURN FALSE; 
+				(* constant sections are not used any more in importing modules, they are copied instead *)
 			END ConstantNeedsSection;
 
 			PROCEDURE TypeNeedsSection(type: SyntaxTree.TypeDeclaration): BOOLEAN;
@@ -443,7 +444,7 @@ TYPE
 						instr := Get32(this);
 						ASSERT(prev < 10000H); ASSERT(i < 100H);
 						(*
-							31 ... 24 | 23 .. 16 | 16 .. 0
+							31 ... 24 | 23 .. 16 | 15 .. 0
 							opCode | pno | next
 						*)
 						instr := instr MOD 1000000H + i * 10000H + prev DIV 4;
@@ -507,12 +508,14 @@ TYPE
 		PROCEDURE Entries(bodyOffset: LONGINT);
 		VAR
 			i,numberEntries: LONGINT; entry: ARRAY 256 OF IntermediateCode.Section; (* more is not allowed anyway in the runtime system *)
+			name: ARRAY 256 OF CHAR;
 		BEGIN
 			GetEntries(moduleScope, numberEntries, entry);
 			w.RawLInt(numberEntries);
 			w.RawLInt(0); (* body entry: body is fixed at position 0, cf. MakeSectionOffsets *)
 			FOR i := 1 TO numberEntries DO
 				ASSERT(entry[i].offset MOD 4 = 0);
+				name := entry[i].name; 
 				w.RawLInt(entry[i].offset DIV 4); (* entries here must be byte wise because jumps take place with absolute fixup - I cannot distinguish here *)
 			END;
 		END Entries;

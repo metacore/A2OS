@@ -272,7 +272,7 @@ VAR
 	cStyles: CharacterStyleArray; 
 	nofCStyles: LONGINT; 
 	forceUTF*, unforceUTF*: BOOLEAN; 
-	defaultAttributes-, boldAttributes-, monospaceAttributes-, serifAttributes-, sansSerifAttributes-, cursiveAttributes-, casualAttributes-: Attributes; 
+	defaultAttributes-: Attributes; 
 
 	PROCEDURE ^ AddParagraphStyle*(style: ParagraphStyle); 
 	PROCEDURE ^ RemoveParagraphStyle*(style: ParagraphStyle); 

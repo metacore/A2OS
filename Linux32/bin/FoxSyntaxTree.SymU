@@ -546,6 +546,7 @@ TYPE
 		position-, end-: Position; 
 		state-: SET; 
 		resolved-: Value; 
+		original-: Expression; 
 		isHidden-: BOOLEAN; 
 
 		PROCEDURE ^ End*(position: Position); 
@@ -555,6 +556,7 @@ TYPE
 		PROCEDURE ^ SetType*(type: Type); 
 		PROCEDURE ^ SetResolved*(value: Value); 
 		PROCEDURE ^ SetAssignable*(assignable: BOOLEAN); 
+		PROCEDURE ^ SetOriginal*(original: Expression); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ Equals*(other: Expression): BOOLEAN; 
 	END Expression; 
@@ -636,13 +638,12 @@ TYPE
 
 	Designator* = OBJECT (Expression)
 	VAR 
-		left-: Designator; 
+		left-: Expression; 
 		modifiers-: Modifier; 
 		relatedRhs-: Expression; 
-		original-: Expression; 
 
 		PROCEDURE ^  & InitDesignator*(position: Position); 
-		PROCEDURE ^ SetLeft*(l: Designator); 
+		PROCEDURE ^ SetLeft*(l: Expression); 
 		PROCEDURE ^ SetModifiers*(flags: Modifier); 
 		PROCEDURE ^ SetRelatedRhs*(expression: Expression); 
 	END Designator; 
@@ -658,33 +659,33 @@ TYPE
 	VAR 
 		identifier-: Identifier; 
 
-		PROCEDURE ^  & InitSelector(position: Position; left: Designator; identifier: Identifier); 
+		PROCEDURE ^  & InitSelector(position: Position; left: Expression; identifier: Identifier); 
 	END SelectorDesignator; 
 
 	ParameterDesignator* = OBJECT (Designator)
 	VAR 
 		parameters-: ExpressionList; 
 
-		PROCEDURE ^  & InitParameterDesignator(position: Position; left: Designator; parameters: ExpressionList); 
+		PROCEDURE ^  & InitParameterDesignator(position: Position; left: Expression; parameters: ExpressionList); 
 	END ParameterDesignator; 
 
 	ArrowDesignator* = OBJECT (Designator)
 
-		PROCEDURE ^  & InitArrowDesignator(position: Position; left: Designator); 
+		PROCEDURE ^  & InitArrowDesignator(position: Position; left: Expression); 
 	END ArrowDesignator; 
 
 	BracketDesignator* = OBJECT (Designator)
 	VAR 
 		parameters-: ExpressionList; 
 
-		PROCEDURE ^  & InitBracketDesignator(position: Position; left: Designator; parameters: ExpressionList); 
+		PROCEDURE ^  & InitBracketDesignator(position: Position; left: Expression; parameters: ExpressionList); 
 	END BracketDesignator; 
 
 	SymbolDesignator* = OBJECT (Designator)
 	VAR 
 		symbol-: Symbol; 
 
-		PROCEDURE ^  & InitSymbolDesignator(position: Position; original: Expression; left: Designator; symbol: Symbol); 
+		PROCEDURE ^  & InitSymbolDesignator(position: Position; original: Expression; left: Expression; symbol: Symbol); 
 		PROCEDURE ^ SetSymbol*(s: Symbol); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 	END SymbolDesignator; 
@@ -695,7 +696,7 @@ TYPE
 		hasRange-: BOOLEAN; 
 		hasTensorRange-: BOOLEAN; 
 
-		PROCEDURE ^  & InitIndexDesignator(position: Position; original: Expression; left: Designator; pars: ExpressionList); 
+		PROCEDURE ^  & InitIndexDesignator(position: Position; original: Expression; left: Expression; pars: ExpressionList); 
 		PROCEDURE ^ HasRange*; 
 		PROCEDURE ^ HasTensorRange*; 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
@@ -705,7 +706,7 @@ TYPE
 	VAR 
 		parameters-: ExpressionList; 
 
-		PROCEDURE ^  & InitProcedureCallDesignator(position: Position; original: Expression; left: Designator; parameters: ExpressionList); 
+		PROCEDURE ^  & InitProcedureCallDesignator(position: Position; original: Expression; left: Expression; parameters: ExpressionList); 
 	END ProcedureCallDesignator; 
 
 	InlineCallDesignator* = OBJECT (Designator)
@@ -724,7 +725,7 @@ TYPE
 		builtin-: Builtin; 
 		returnType-: Type; 
 
-		PROCEDURE ^  & InitBuiltinCallDesignator(position: Position; orig: Expression; id: LONGINT; left: Designator; parameters: ExpressionList); 
+		PROCEDURE ^  & InitBuiltinCallDesignator(position: Position; orig: Expression; id: LONGINT; left: Expression; parameters: ExpressionList); 
 		PROCEDURE ^ SetReturnType*(type: Type); 
 	END BuiltinCallDesignator; 
 
@@ -732,20 +733,20 @@ TYPE
 	VAR 
 		typeExpression-: Expression; 
 
-		PROCEDURE ^  & InitTypeGuardDesignator(position: Position; orig: Expression; left: Designator; type: Type); 
+		PROCEDURE ^  & InitTypeGuardDesignator(position: Position; orig: Expression; left: Expression; type: Type); 
 		PROCEDURE ^ SetTypeExpression*(typeExpression: Expression); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 	END TypeGuardDesignator; 
 
 	DereferenceDesignator* = OBJECT (Designator)
 
-		PROCEDURE ^  & InitDereferenceDesignator(position: Position; orig: Expression; left: Designator); 
+		PROCEDURE ^  & InitDereferenceDesignator(position: Position; orig: Expression; left: Expression); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 	END DereferenceDesignator; 
 
 	SupercallDesignator* = OBJECT (Designator)
 
-		PROCEDURE ^  & InitSupercallDesignator(position: Position; orig: Expression; left: Designator); 
+		PROCEDURE ^  & InitSupercallDesignator(position: Position; orig: Expression; left: Expression); 
 	END SupercallDesignator; 
 
 	SelfDesignator* = OBJECT (Designator)
@@ -1629,18 +1630,18 @@ VAR
 	PROCEDURE ^ CloneExpressionList*(l: ExpressionList): ExpressionList; 
 	PROCEDURE ^ NewDesignator*(): Designator; 
 	PROCEDURE ^ NewIdentifierDesignator*(position: Position; identifier: Identifier): IdentifierDesignator; 
-	PROCEDURE ^ NewSelectorDesignator*(position: Position; left: Designator; name: Identifier): SelectorDesignator; 
-	PROCEDURE ^ NewParameterDesignator*(position: Position; left: Designator; expressionList: ExpressionList): ParameterDesignator; 
-	PROCEDURE ^ NewArrowDesignator*(position: Position; left: Designator): ArrowDesignator; 
-	PROCEDURE ^ NewBracketDesignator*(position: Position; left: Designator; expressionList: ExpressionList): BracketDesignator; 
-	PROCEDURE ^ NewSymbolDesignator*(position: Position; original: Expression; left: Designator; symbol: Symbol): SymbolDesignator; 
-	PROCEDURE ^ NewIndexDesignator*(position: Position; original: Expression; left: Designator; parameters: ExpressionList): IndexDesignator; 
-	PROCEDURE ^ NewProcedureCallDesignator*(position: Position; original: Expression; left: Designator; parameters: ExpressionList): ProcedureCallDesignator; 
+	PROCEDURE ^ NewSelectorDesignator*(position: Position; left: Expression; name: Identifier): SelectorDesignator; 
+	PROCEDURE ^ NewParameterDesignator*(position: Position; left: Expression; expressionList: ExpressionList): ParameterDesignator; 
+	PROCEDURE ^ NewArrowDesignator*(position: Position; left: Expression): ArrowDesignator; 
+	PROCEDURE ^ NewBracketDesignator*(position: Position; left: Expression; expressionList: ExpressionList): BracketDesignator; 
+	PROCEDURE ^ NewSymbolDesignator*(position: Position; original: Expression; left: Expression; symbol: Symbol): SymbolDesignator; 
+	PROCEDURE ^ NewIndexDesignator*(position: Position; original: Expression; left: Expression; parameters: ExpressionList): IndexDesignator; 
+	PROCEDURE ^ NewProcedureCallDesignator*(position: Position; original: Expression; left: Expression; parameters: ExpressionList): ProcedureCallDesignator; 
 	PROCEDURE ^ NewInlineCallDesignator*(position: Position; o: Expression; block: StatementBlock): InlineCallDesignator; 
-	PROCEDURE ^ NewBuiltinCallDesignator*(position: Position; original: Expression; id: LONGINT; left: Designator; parameters: ExpressionList): BuiltinCallDesignator; 
-	PROCEDURE ^ NewTypeGuardDesignator*(position: Position; original: Expression; left: Designator; type: Type): TypeGuardDesignator; 
-	PROCEDURE ^ NewDereferenceDesignator*(position: Position; original: Expression; left: Designator): DereferenceDesignator; 
-	PROCEDURE ^ NewSupercallDesignator*(position: Position; original: Expression; left: Designator): SupercallDesignator; 
+	PROCEDURE ^ NewBuiltinCallDesignator*(position: Position; original: Expression; id: LONGINT; left: Expression; parameters: ExpressionList): BuiltinCallDesignator; 
+	PROCEDURE ^ NewTypeGuardDesignator*(position: Position; original: Expression; left: Expression; type: Type): TypeGuardDesignator; 
+	PROCEDURE ^ NewDereferenceDesignator*(position: Position; original: Expression; left: Expression): DereferenceDesignator; 
+	PROCEDURE ^ NewSupercallDesignator*(position: Position; original: Expression; left: Expression): SupercallDesignator; 
 	PROCEDURE ^ NewSelfDesignator*(position: Position; original: Expression): SelfDesignator; 
 	PROCEDURE ^ NewResultDesignator*(position: Position): ResultDesignator; 
 	PROCEDURE ^ NewExpression*(): Expression; 

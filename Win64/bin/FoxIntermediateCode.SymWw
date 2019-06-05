@@ -7,7 +7,6 @@ CONST
 	ModeImmediate* = 3; 
 	ModeNumber* = 4; 
 	ModeString* = 5; 
-	ModeRule* = 6; 
 	Undef* = {Undefined}; 
 	Imm* = {ModeImmediate}; 
 	Reg* = {ModeRegister}; 
@@ -15,7 +14,6 @@ CONST
 	RegMemImm* = {ModeRegister, ModeMemory, ModeImmediate}; 
 	UndefReg* = {Undefined, ModeRegister}; 
 	UndefRegMem* = {Undefined, ModeRegister, ModeMemory}; 
-	UndefRule* = {Undefined, ModeRule}; 
 	Num* = {ModeNumber}; 
 	Str* = {ModeString}; 
 	Any = {Undefined, ModeRegister, ModeMemory, ModeImmediate}; 
@@ -95,15 +93,6 @@ TYPE
 		number-: INTEGER; 
 	END; 
 
-	Rules* = POINTER TO ARRAY OF Operand; 
-
-	RegisterMap* = RECORD 
-		register*: LONGINT; 
-		name*: SyntaxTree.SourceCode; 
-	END; 
-
-	BackendRules* = POINTER TO ARRAY OF RegisterMap; 
-
 	Operand* = RECORD 
 		mode-: SHORTINT; 
 		type-: Type; 
@@ -116,7 +105,6 @@ TYPE
 		symbolOffset-: LONGINT; 
 		resolved*: Sections.Section; 
 		string-: SyntaxTree.SourceCode; 
-		rule-: Rules; 
 	END; 
 
 	Instruction* = POINTER TO RECORD 
@@ -222,7 +210,6 @@ VAR
 	PROCEDURE ^ FloatImmediate*(type: Type; value: LONGREAL): Operand; 
 	PROCEDURE ^ InitNumber*(VAR op: Operand; value: HUGEINT); 
 	PROCEDURE ^ Number*(value: HUGEINT): Operand; 
-	PROCEDURE ^ InitRule*(VAR op: Operand; rules: Rules); 
 	PROCEDURE ^ InitString*(VAR op: Operand; string: SyntaxTree.SourceCode); 
 	PROCEDURE ^ SetString*(VAR op: Operand; string: POINTER TO ARRAY OF CHAR); 
 	PROCEDURE ^ String*(string: SyntaxTree.SourceCode): Operand; 

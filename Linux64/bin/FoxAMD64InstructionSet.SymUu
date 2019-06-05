@@ -8,6 +8,7 @@ CONST
 	maxMnemonicNameLength = 20; 
 	maxCodeLength* = 12; 
 	none* =  -1; 
+	unassigned* =  -2; 
 	bitsDefault* = 0; 
 	bits8* = 1; 
 	bits16* = 2; 
@@ -45,6 +46,7 @@ CONST
 	optPLOCK* = 8; 
 	optPREP* = 9; 
 	optPREPN* = 10; 
+	optNoREX* = 11; 
 	reg8* = 0; 
 	reg16* = 1; 
 	reg32* = 2; 
@@ -317,6 +319,8 @@ CONST
 	CountPrefix* = 21; 
 	DestPrefix* = 22; 
 	RXB* = 23; 
+	is4* = 24; 
+	is5* = 25; 
 TYPE 
 	Name = ARRAY 20 OF CHAR; 
 

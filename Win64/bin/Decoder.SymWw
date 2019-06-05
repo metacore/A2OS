@@ -1,5 +1,5 @@
 MODULE Decoder;
-	IMPORT SYSTEM, Modules, Streams, MemoryReader, Strings, Files, KernelLog, TextUtilities, Commands, WMGraphics, WMEditors, WMTextView, WMComponents, WMStandardComponents, WMDialogs, WMRestorable, WMTrees, WMMessages, WM := WMWindowManager, D := Debugging;
+	IMPORT SYSTEM, Modules, Streams, MemoryReader, Strings, Files, KernelLog, TextUtilities, Commands, WMGraphics, WMEditors, WMTextView, WMComponents, WMStandardComponents, WMDialogs, WMRestorable, WMTrees, WMMessages, WM := WMWindowManager, D := Debugging, Reflection;
 CONST 
 	maxDecoders = 5; 
 	MaxOpcodeSize = 20; 
@@ -254,6 +254,7 @@ TYPE
 		reader: MemoryReader.Reader; 
 
 		PROCEDURE ^  & New(module: Modules.Module; header: ObjHeader); 
+		PROCEDURE ^ DecodeThis(module: Modules.Module); 
 		PROCEDURE ^ DecodeTypes; 
 	END ModuleInfoMemory; 
 
@@ -280,7 +281,7 @@ TYPE
 		PROCEDURE ^ Close*; 
 	END DecoderWindow; 
 
-	Extension = ARRAY 4 OF CHAR; 
+	Extension = ARRAY 10 OF CHAR; 
 
 	DecoderType = OBJECT 
 	VAR 

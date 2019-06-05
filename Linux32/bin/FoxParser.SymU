@@ -63,6 +63,7 @@ TYPE
 		PROCEDURE ^ IndexList(expressionList: SyntaxTree.ExpressionList); 
 		PROCEDURE ^ RangeExpression(): SyntaxTree.Expression; 
 		PROCEDURE ^ Designator(): SyntaxTree.Designator; 
+		PROCEDURE ^ DesignatorOperations(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
 		PROCEDURE ^ Set(): SyntaxTree.Expression; 
 		PROCEDURE ^ MathArray(): SyntaxTree.Expression; 
 		PROCEDURE ^ Factor(): SyntaxTree.Expression; 

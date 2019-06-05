@@ -124,6 +124,7 @@ CONST
 	PTHREAD_CANCEL_ASYNCHRONOUS = 0; 
 	PTHREAD_CANCEL_DEFERRED = 1; 
 	PTHREAD_BARRIER_SERIAL_THREAD* =  -1; 
+	CPUSetSize* = 128; 
 	ThreadLow* = 1; 
 	ThreadNormal* = 20; 
 	ThreadHigh* = 99; 
@@ -215,6 +216,8 @@ TYPE
 		reserved1-: ARRAY 3 OF ADDRESS; 
 		reserved2-: ARRAY 2 OF WORD; 
 	END; 
+
+	CPUSet* = ARRAY (CPUSetSize DIV ((MAX(SET) - MIN(SET)) + 1)) OF SET; 
 
 	Termios* = RECORD 
 		iflags*, oflags*, cflags*, lflags*: SET32; 

@@ -18,6 +18,8 @@ CONST
 	NoFile =  -1; 
 	NoPackages =  -2; 
 	OptimizedLoads = TRUE; 
+	DefaultCompression = Zip.BestCompression; 
+	DefaultStrategy = Zip.HuffmanOnly; 
 	KeepFilesOpen = FALSE; 
 	ImportsSystem = 0; 
 	SourceCode = 1; 
@@ -204,7 +206,7 @@ TYPE
 		PROCEDURE ^ ToStream*(w: Streams.Writer; charactersPerLine: LONGINT); 
 		PROCEDURE ^ GenerateToolFile*(CONST filename: Files.FileName; VAR res: WORD); 
 		PROCEDURE ^ GeneratePackageFile(CONST filename: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ GenerateZipFiles(out, error: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR err: BOOLEAN); 
+		PROCEDURE ^ GenerateZipFiles(out, error: Streams.Writer; diagnostics: Diagnostics.Diagnostics; level, strategy: LONGINT; VAR err: BOOLEAN); 
 		PROCEDURE ^ FindPosition*(CONST filename: ARRAY OF CHAR; diagnostics: Diagnostics.DiagnosticsList): LONGINT; 
 		PROCEDURE ^ FindModule(CONST moduleName: Modules.Name): File; 
 		PROCEDURE ^ FindFile(CONST filename: Files.FileName): File; 

@@ -111,6 +111,10 @@ CONST
 	directMemoryOffset = InstructionSet.directMemoryOffset; 
 	RXB = InstructionSet.RXB; 
 	Src1Prefix = InstructionSet.Src1Prefix; 
+	Src2Prefix = InstructionSet.Src2Prefix; 
+	CountPrefix = InstructionSet.CountPrefix; 
+	is4 = InstructionSet.is4; 
+	is5 = InstructionSet.is5; 
 	maxNumberOperands = InstructionSet.maxNumberOperands; 
 	reg8* = InstructionSet.reg8; 
 	reg16* = InstructionSet.reg16; 
@@ -230,19 +234,9 @@ TYPE
 		PROCEDURE ^ Emit3*(mnem: LONGINT; VAR op1, op2, op3: Operand); 
 	END Emitter; 
 
-	RegisterMapEntry* = POINTER TO RECORD 
-		name-: Strings.String; 
-		register-: LONGINT; 
-		next: RegisterMapEntry; 
-	END; 
-
 	RegisterMap* = OBJECT 
-	VAR 
-		first: RegisterMapEntry; 
 
-		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ Add*(name: Strings.String; register: LONGINT); 
 	END RegisterMap; 
 
 	Assembly* = OBJECT 

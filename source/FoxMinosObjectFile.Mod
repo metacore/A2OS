@@ -298,10 +298,8 @@ TYPE
 							END;
 						ELSE
 							entries[numberEntries] := NIL;
-							IF Trace THEN
-								IF moduleScope = module.module.moduleScope (* self *) THEN
-									D.String("did not find entry for "); D.Str0(symbol.name); D.Ln;
-								END
+							IF moduleScope = module.module.moduleScope (* self *) THEN
+								HALT(100); (* must not happen: all symbols that need a section in this module must have a section *)
 							END;
 						END;
 					END;

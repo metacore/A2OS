@@ -598,7 +598,8 @@ TYPE
 
 			NEW(editor); editor.alignment.Set(WMComponents.AlignLeft);
 			editor.type.Set(WMEditors.Ascii);
-			editor.bounds.SetWidth(80);
+			editor.font.SetSize(12);
+			editor.bounds.SetWidth(200);
 			editor.onEnter.Add(EnterPressed);
 			editor.onChanged.Add(EditorContentChanged);
 			AddContent(editor);
@@ -1459,7 +1460,7 @@ TYPE
 			END;
 			IF (object # NIL) & (object IS WMComponents.Component) THEN
 				NEW(propertyPanel);
-				propertyPanel.bounds.SetExtents(300,300);
+				propertyPanel.bounds.SetExtents(500,200);
 				propertyPanel.fillColor.Set(WMGraphics.Yellow);
 				NEW(window, propertyPanel);
 				propertyPanel.SetComponent(SELF,object);

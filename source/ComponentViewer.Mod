@@ -186,7 +186,7 @@ END DoLoad;
 PROCEDURE DoOpen*(CONST filename: ARRAY OF CHAR; error: Streams.Writer; x,y,width, height: LONGINT; client, alpha, fullscreen: BOOLEAN; flags:SET): WMComponents.VisualComponent;
 VAR
 	window : Window;
-	c : WMComponents.VisualComponent
+	c : WMComponents.VisualComponent;
 BEGIN
 	c := DoLoad(filename, error);
 

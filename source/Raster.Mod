@@ -4157,13 +4157,6 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 				Fill16(adr, t, c);
 				INC(lly); INC(adr, img.bpr)
 			END
-		ELSIF (mode.op = srcCopy) & (img.fmt.code = bgra8888) THEN (*!to do: move Fill32 with standardized parameters in to Bind() instead*)
-			c := SYSTEM.VAL(LONGINT, pix);
-			t := urx - llx;
-			WHILE lly < ury DO
-				Fill32(adr, t, c);
-				INC(lly); INC(adr, img.bpr)
-			END
 		ELSE
 			Bind(mode, PixelFormat, img.fmt);
 			IF (mode.op IN {clear, srcCopy}) OR (pix[a] = 0FFX) & (mode.op IN {srcOverDst, dstWithoutSrc}) THEN	(* dst is replaced *)

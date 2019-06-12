@@ -809,8 +809,6 @@ TYPE
 							IF implementationEmitter.profile  & ~isModuleBody THEN
 								implementationEmitter.ProfilerEnterExit(implementationEmitter.numberProcedures-1, FALSE)
 							END;
-						ELSE
-							IF backend.writeBarriers & HasPointers(scope) THEN implementationEmitter.ResetVariables2(scope,FALSE) END;
 						END;
 						implementationEmitter.EmitLeave(ir, x.position,x,callingConvention);
 						IF finalizer THEN
@@ -858,7 +856,6 @@ TYPE
 							implementationEmitter.EmitLeave(ir,x.position,x,callingConvention);
 							ir.Emit(Exit(x.position,procedureType.pcOffset,callingConvention, parametersSize));
 						ELSE
-							IF backend.writeBarriers & HasPointers(scope) THEN implementationEmitter.ResetVariables2(scope,FALSE) END;
 							ir.Emit(Nop(x.position));
 							IF scope.body.isUnchecked OR backend.noRuntimeChecks THEN (* return from procedure in any case *)
 								implementationEmitter.EmitLeave(ir,x.position,x,callingConvention);
@@ -3551,120 +3548,7 @@ TYPE
 				INC(statCoopResetVariables, section.pc - pc);
 				currentScope := previousScope;
 		END ResetVariables;
-
-					PROCEDURE Reset (symbol: SyntaxTree.Symbol; refer: BOOLEAN);
-			VAR operand: Operand; type: SyntaxTree.Type; saved: RegisterEntry; size: SIZE; base: SyntaxTree.Type;  arg: IntermediateCode.Operand;
-			BEGIN
-				type := symbol.type.resolved;
-
-				SaveRegisters();ReleaseUsedRegisters(saved);
-				IF SemanticChecker.IsPointerType(type) OR (type IS SyntaxTree.PortType) THEN
-					Symbol(symbol, operand);
-					ToMemory(operand.op,addressType,0);
-					Emit(Push(position,operand.op));
-					IF refer THEN
-					CallThis(position,"Heaps","Refer",1);
-					ELSE
-					CallThis(position,"Heaps","Reset",1);
-					END;
-
-				ELSIF type.IsRecordType() THEN
-					Symbol(symbol, operand);
-					Emit(Push(position,operand.op));
-					Emit(Push(position,operand.tag)); (* type desc *)
-					IF refer THEN
-					CallThis(position,"Heaps","ReferRecord",2);
-					ELSE
-					CallThis(position,"Heaps","ResetRecord",2);
-					END;
-				ELSIF IsStaticArray(type) THEN
-					size := StaticArrayNumElements(type);
-					base := StaticArrayBaseType(type);
-					Symbol(symbol, operand);
-					arg := TypeDescriptorAdr(base);
-					Emit(Push(position,operand.op));
-					Emit(Push(position,arg));
-					Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
-					ReleaseIntermediateOperand(arg);
-					IF refer THEN
-						CallThis(position,"Heaps","ReferArray",3);
-					ELSE
-						CallThis(position,"Heaps","ResetArray",3);
-					END;
-				ELSIF  IsStaticMathArray(type) THEN (* the representation of a static math array coincides with static array *)
-					size := StaticMathArrayNumElements(type);
-					base := StaticMathArrayBaseType(type);
-					Symbol(symbol, operand);
-
-					arg := TypeDescriptorAdr(base);
-
-					Emit(Push(position,operand.op));
-					Emit(Push(position,arg));
-					Emit(Push(position,IntermediateCode.Immediate(addressType,size)));
-					ReleaseIntermediateOperand(arg);
-					IF refer THEN
-						CallThis(position,"Heaps","ReferArray",3);
-					ELSE
-						CallThis(position,"Heaps","ResetArray",3);
-					END;
-				ELSIF type IS SyntaxTree.MathArrayType THEN
-					Symbol(symbol, operand);
-					IF type(SyntaxTree.MathArrayType).form = SyntaxTree.Tensor THEN
-						Emit (Push(position, operand.op));
-					ELSE
-						Emit (Push(position, operand.tag));
-					END;
-					IF refer THEN
-						CallThis(position,"Heaps","ReferMathArray", 1);
-					ELSE
-						CallThis(position,"Heaps","ResetMathArray", 1);
-					END;
-				ELSIF type IS SyntaxTree.ProcedureType THEN
-					ASSERT(type(SyntaxTree.ProcedureType).isDelegate);
-					Symbol(symbol, operand);
-					Emit (Push(position, operand.tag));
-					IF refer THEN
-						CallThis(position,"Heaps","Refer", 1);
-					ELSE
-						CallThis(position,"Heaps","Reset", 1);
-					END;
-				ELSE HALT(100); (* missing ? *)
-				END;
-				ReleaseOperand(operand);
-
-				RestoreRegisters(saved);
-
-			END Reset;
-
-		PROCEDURE ResetVariables2 (scope: SyntaxTree.ProcedureScope; refer: BOOLEAN);
-		VAR variable: SyntaxTree.Variable; parameter: SyntaxTree.Parameter; previousScope: SyntaxTree.Scope;   pc: LONGINT; prevOffset: SIZE;
-
-		BEGIN
-			previousScope := currentScope;
-			currentScope := scope;
-			pc := section.pc;
-			IF ~ refer THEN
-				variable := scope.firstVariable;
-				prevOffset := MAX(SIZE);
-				WHILE variable # NIL DO
-					IF variable.NeedsTrace() & (variable.offsetInBits # prevOffset) (* multiple temporaries *) THEN
-						Reset (variable,refer);
-						prevOffset := variable.offsetInBits;
-					END;
-					variable := variable.nextVariable;
-				END;
-			END;
-			parameter := scope.ownerProcedure.type(SyntaxTree.ProcedureType).firstParameter;
-			WHILE parameter # NIL DO
-				IF parameter.NeedsTrace() & ~IsVariableParameter(parameter) & (parameter.kind # SyntaxTree.ConstParameter) & ~IsOpenArray(parameter.type) THEN
-					Reset (parameter,refer);
-				END;
-				parameter := parameter.nextParameter;
-			END;
-				INC(statCoopResetVariables, section.pc - pc);
-				currentScope := previousScope;
-		END ResetVariables2;
-
+		
 		PROCEDURE CreateProcedureDescriptor (procedure: SyntaxTree.Procedure);
 		VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; context: Context;
 		BEGIN
@@ -11170,7 +11054,6 @@ TYPE
 				type := expression.type.resolved;
 				IF (expression IS SyntaxTree.ResultDesignator) THEN
 					IF locked THEN Lock(FALSE) END;
-					IF backend.writeBarriers & HasPointers(procedure.procedureScope) THEN ResetVariables2(procedure.procedureScope,FALSE) END;
 
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 					(* "RETURN RESULT" -> no assignment, it is assumed that result has been written to return parameter via structured return type *)
@@ -11184,7 +11067,6 @@ TYPE
 						IF delegate THEN HALT(200) END;
 						ReleaseOperand(res);
 						IF locked THEN Lock(FALSE) END;
-						IF backend.writeBarriers & HasPointers(procedure.procedureScope) THEN ResetVariables2(procedure.procedureScope,FALSE) END;
 						IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 
 						reg := NewRegisterOperand(res.op.type);
@@ -11192,7 +11074,6 @@ TYPE
 						Emit(Return(position,reg));
 						ReleaseIntermediateOperand(reg);
 					ELSE
-						IF backend.writeBarriers & HasPointers(procedure.procedureScope) THEN ResetVariables2(procedure.procedureScope,FALSE) END;
 						Emit(Return(position,res.op));
 						ReleaseOperand(res);
 					END;
@@ -11255,7 +11136,6 @@ TYPE
 					END;
 					ReleaseIntermediateOperand(left);
 					IF locked THEN Lock(FALSE) END;
-					IF backend.writeBarriers & HasPointers(procedure.procedureScope) THEN ResetVariables2(procedure.procedureScope,FALSE) END;
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 				ELSIF (type IS SyntaxTree.MathArrayType) OR (type IS SyntaxTree.ProcedureType) THEN
 					parameter := procedureType.returnParameter;
@@ -11268,7 +11148,6 @@ TYPE
 						Assign(parameterDesignator,expression);
 					END;
 					IF locked THEN Lock(FALSE) END;
-					IF backend.writeBarriers & HasPointers(procedure.procedureScope) THEN ResetVariables2(procedure.procedureScope,FALSE) END;
 
 					IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 				ELSE
@@ -11276,7 +11155,6 @@ TYPE
 				END;
 			ELSE
 				IF locked THEN Lock(FALSE) END;
-				IF backend.writeBarriers & HasPointers(procedure.procedureScope) THEN ResetVariables2(procedure.procedureScope,FALSE) END;
 				IF ~backend.cooperative & profile THEN ProfilerEnterExit(numberProcedures,FALSE) END;
 			END;
 
@@ -11718,7 +11596,6 @@ TYPE
 					Emit(Mov(position, left, right));
 				END;
 
-				IF HasPointers (procedure.procedureScope) & backend.writeBarriers THEN ResetVariables2(procedure.procedureScope,TRUE) END;
 				(* must be done after the descriptor is there, otherwise copied parameters are forgotten to be traced *)
 				ParameterCopies(procedureType);
 

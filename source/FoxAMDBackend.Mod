@@ -881,7 +881,7 @@ TYPE
 			END;
 		END GetImmediateMem;
 
-		PROCEDURE GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit,push: BOOLEAN);
+		PROCEDURE GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit,push: BOOLEAN; VAR ticket: Ticket);
 		VAR type: IntermediateCode.Type; temp: Assembler.Operand; size: SHORTINT; value: HUGEINT;
 
 			PROCEDURE IsImm8(value: HUGEINT): BOOLEAN;
@@ -926,7 +926,12 @@ TYPE
 				IF virtual.symbol.name # "" THEN Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+part*Assembler.bits32) END;
 				IF (cpuBits=64) & ((physical.sizeInBytes=8) OR ~IsImm32(value) OR push & ~IsSignedImm32(value)) THEN
 					ASSERT(cpuBits=64);
-					GetTemporaryRegister(IntermediateCode.int64,temp);
+					IF ticket # NIL THEN 
+						TicketToOperand(ticket, temp);
+						ticket := NIL;
+					ELSE
+						GetTemporaryRegister(IntermediateCode.int64,temp);
+					END;
 					emitter.Emit2(InstructionSet.opMOV,temp,physical);
 					physical := temp;
 				END;
@@ -935,8 +940,8 @@ TYPE
 			END;
 		END GetImmediate;
 
-		PROCEDURE GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand);
-		VAR type: IntermediateCode.Type; virtualRegister, physicalRegister,offset: LONGINT; ticket,orig: Ticket; dest, source: Assembler.Operand;
+		PROCEDURE GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; VAR pticket: Ticket);
+		VAR type: IntermediateCode.Type; virtualRegister, physicalRegister,offset: LONGINT; orig, ticket: Ticket; dest, source: Assembler.Operand;
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeMemory);
 			GetPartType(virtual.type,part,type);
@@ -976,7 +981,12 @@ TYPE
 			ELSIF cpuBits = 64 THEN
 				Assembler.InitImm(source,8,0);
 				Assembler.SetSymbol(source,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset);
-				ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateBackend.GetType(module.system,module.system.addressType));
+				IF pticket # NIL THEN 
+					ticket := pticket;
+					pticket := NIL;
+				ELSE
+					ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateBackend.GetType(module.system,module.system.addressType));
+				END;
 				TicketToOperand(ticket,dest);
 				emitter.Emit2(InstructionSet.opMOV,dest,source);
 				physicalRegister := ticket.register;
@@ -1043,9 +1053,9 @@ TYPE
 		BEGIN
 			TryAllocate(vop,part);
 			CASE vop.mode OF
-				IntermediateCode.ModeMemory: GetMemory(vop,part,op);
+				IntermediateCode.ModeMemory: GetMemory(vop,part,op,ticket);
 				|IntermediateCode.ModeRegister:	GetRegister(vop,part,op,ticket);
-				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE,FALSE);
+				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE,FALSE, ticket);
 			END;
 			IF ticket # NIL THEN
 				TicketToOperand(ticket, tmp);
@@ -1964,6 +1974,7 @@ TYPE
 		PROCEDURE EmitCall(CONST instruction: IntermediateCode.Instruction);
 		VAR fixup: Sections.Section;  target, op: Assembler.Operand;
 			code: SyntaxTree.Code; emitterFixup,newFixup: BinaryCode.Fixup; resolved: BinaryCode.Section; pc: LONGINT;
+			reg: Ticket; 		
 		BEGIN
 			IF fpStackPointer # 0 THEN Error(instruction.textPosition,"compiler implementation error: fp stack not cleared before call") END;
 			IF instruction.op1.mode = IntermediateCode.ModeImmediate THEN
@@ -1981,9 +1992,11 @@ TYPE
 							emitterFixup := emitterFixup.nextFixup;
 						END;
 					END;
-				ELSIF cpuBits = 64 THEN
-					MakeOperand(instruction.op1,Low,op,NIL);
+				ELSIF cpuBits = 64 THEN					
+					reg := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RAX,inPC);
+					MakeOperand(instruction.op1,Low,op,reg);
 					emitter.Emit1(InstructionSet.opCALL,op);
+					UnmapTicket(reg);
 					ModifyStackPointer (-instruction.op2.intValue);
 				ELSE
 					Assembler.InitOffset32(target,instruction.op1.intValue);
@@ -1992,8 +2005,14 @@ TYPE
 					ModifyStackPointer (-instruction.op2.intValue);
 				END;
 			ELSE
-				MakeOperand(instruction.op1,Low,op,NIL);
+				IF cpuBits = 64 THEN
+					reg := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RAX,inPC);
+				ELSE
+					reg := NIL
+				END;
+				MakeOperand(instruction.op1,Low,op,reg);
 				emitter.Emit1(InstructionSet.opCALL,op);
+				IF cpuBits = 64 THEN UnmapTicket(reg) END;
 				ModifyStackPointer (-instruction.op2.intValue);
 			END;
 		END EmitCall;
@@ -2956,13 +2975,13 @@ TYPE
 		END EmitBr;
 
 		PROCEDURE EmitPush(CONST vop: IntermediateCode.Operand; part: LONGINT);
-		VAR  index: LONGINT; type,cpuType: IntermediateCode.Type; op1: Assembler.Operand; ra: Ticket;
+		VAR  index: LONGINT; type,cpuType: IntermediateCode.Type; op1: Assembler.Operand; ra, ticket: Ticket;
 		BEGIN
 			GetPartType(vop.type,part,type);
 			ASSERT(type.form IN IntermediateCode.Integer);
 
 			IF	vop.mode = IntermediateCode.ModeImmediate THEN (* may not push 16 bit immediate: strange instruction in 32 / 64 bit mode *)
-				GetImmediate(vop,part,op1,TRUE,TRUE);
+				GetImmediate(vop,part,op1,TRUE,TRUE, ticket);
 				emitter.Emit1(InstructionSet.opPUSH,op1);
 			ELSIF (type.sizeInBits = cpuBits) THEN
 				MakeOperand(vop,part,op1,NIL);

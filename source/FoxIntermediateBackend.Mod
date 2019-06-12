@@ -6025,13 +6025,15 @@ TYPE
 				END
 			END;
 
-			ReleaseParameterRegisters();
 
 			IF ~(symbol IS SyntaxTree.Procedure) & backend.trackLeave & ~isUntracked & (callingConvention IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved2);
 				CallThis(position,"Objects","LeaveA2",0);
 				RestoreRegisters(saved2);
 			END;
+
+			ReleaseParameterRegisters();
+
 			IF (callingConvention = SyntaxTree.WinAPICallingConvention) OR (callingConvention IN SysvABI) THEN
 				Emit(Call(position,operand.op,0));
 			ELSE

@@ -11,6 +11,7 @@ CONST
 	StringPlatformCC* = "PlatformCC";
 	StringMovable*="MOVABLE";
 	StringUntraced* = "UNTRACED";
+	StringUntracked*= "UNTRACKED";
 	StringDelegate* = "DELEGATE";
 	StringInterrupt*= "INTERRUPT";
 	StringPcOffset* = "PCOFFSET";
@@ -190,7 +191,7 @@ VAR
 	(* names *)
 	SelfParameterName-,ReturnParameterName-,SystemName-,systemName-,PointerReturnName-, ResultName-,
 	A2Name-,ArrayBaseName-, ComplexNumbersName-, RecordBodyName-,ModuleBodyName-,
-	NameWinAPI-,NameC-,NamePlatformCC-,NameMovable-,NameUntraced-,NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameFictive-, NameAligned-,NameStackAligned-,
+	NameWinAPI-,NameC-,NamePlatformCC-,NameMovable-,NameUntraced-, NameUntracked-, NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameFictive-, NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
 	NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
@@ -1813,6 +1814,7 @@ TYPE
 		NamePlatformCC := SyntaxTree.NewIdentifier(StringPlatformCC);
 		NameMovable := SyntaxTree.NewIdentifier(StringMovable);
 		NameUntraced := SyntaxTree.NewIdentifier(StringUntraced);
+		NameUntracked := SyntaxTree.NewIdentifier(StringUntracked);
 		NameDelegate := SyntaxTree.NewIdentifier(StringDelegate);
 		NameInterrupt := SyntaxTree.NewIdentifier(StringInterrupt);
 		NamePcOffset := SyntaxTree.NewIdentifier(StringPcOffset);

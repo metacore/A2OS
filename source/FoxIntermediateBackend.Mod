@@ -1294,6 +1294,7 @@ TYPE
 		lastSwitchPC: LONGINT;
 
 		isUnchecked: BOOLEAN;
+		isUntracked: BOOLEAN;
 
 		(* EXPERIMENTAL *)
 		availableSymbols: ARRAY 1024 OF
@@ -1354,6 +1355,7 @@ TYPE
 			currentIsInline := FALSE;
 			NeedDescriptor := FALSE;
 			isUnchecked := backend.noRuntimeChecks;
+			isUntracked := FALSE;
 		END Init;
 
 		TYPE Context = RECORD
@@ -6025,7 +6027,7 @@ TYPE
 
 			ReleaseParameterRegisters();
 
-			IF ~(symbol IS SyntaxTree.Procedure) & backend.trackLeave & ~isUnchecked & (callingConvention IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
+			IF ~(symbol IS SyntaxTree.Procedure) & backend.trackLeave & ~isUntracked & (callingConvention IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved2);
 				CallThis(position,"Objects","LeaveA2",0);
 				RestoreRegisters(saved2);
@@ -6046,7 +6048,7 @@ TYPE
 				Emit(Result(position,return));
 			END;
 
-			IF  ~(symbol IS SyntaxTree.Procedure) & backend.trackLeave & ~isUnchecked & (callingConvention  IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
+			IF  ~(symbol IS SyntaxTree.Procedure) & backend.trackLeave & ~isUntracked & (callingConvention  IN {SyntaxTree.WinAPICallingConvention, SyntaxTree.CCallingConvention}) THEN
 				IF  (procedureType.returnType # NIL) & ~structuredReturnType  THEN
 					Emit(Push(position, return));
 					CallThis(position,"Objects","ReenterA2",0);
@@ -9677,7 +9679,7 @@ TYPE
 			dest := destination; destination := emptyOperand;
 			Evaluate(x.left,d);
 			type := x.type.resolved;
-			prevIsUnchecked := isUnchecked;
+			prevIsUnchecked := isUnchecked;	
 			IF (x.left # NIL) & (x.left IS SyntaxTree.SelfDesignator) THEN
 				isUnchecked := TRUE; (* avoid NIL-pointer-check for SELF pointer *)
 			END;
@@ -11442,14 +11444,16 @@ TYPE
 		END Lock;
 
 		PROCEDURE StatementBlock(x: SyntaxTree.StatementBlock);
-		VAR previouslyUnchecked, previouslyCooperativeSwitches: BOOLEAN; end: Label;
+		VAR previouslyUnchecked, previouslyUntracked, previouslyCooperativeSwitches: BOOLEAN; end: Label;
 			prevScope: SyntaxTree.Scope;
 		BEGIN
 			IF Trace THEN TraceEnter("VisitStatementBlock") END;
 			IF emitLabels THEN Emit(LabelInstruction(x.position)) END;
 
 			previouslyUnchecked := isUnchecked;
+			previouslyUntracked := isUntracked;
 			isUnchecked := isUnchecked OR x.isUnchecked;
+			isUntracked := isUntracked OR x.isUntracked;
 			previouslyCooperativeSwitches := cooperativeSwitches;
 			cooperativeSwitches := cooperativeSwitches & ~x.isUncooperative;
 			prevScope := currentScope;
@@ -11476,6 +11480,7 @@ TYPE
 
 			IF x.isExclusive THEN Lock(FALSE); ASSERT(locked); locked := FALSE; END;
 			isUnchecked := previouslyUnchecked;
+			isUntracked := previouslyUntracked;
 			cooperativeSwitches := previouslyCooperativeSwitches;
 			currentScope := prevScope;
 			IF Trace THEN TraceExit("VisitStatementBlock") END;

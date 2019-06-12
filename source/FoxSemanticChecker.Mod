@@ -7488,6 +7488,12 @@ TYPE
 					ELSE
 						block.SetUnchecked(TRUE);
 					END;
+				ELSIF name=Global.NameUntracked THEN
+					IF block.isUntracked THEN
+						Error(position, "duplicate untracked flag")
+					ELSE
+						block.SetUntracked(TRUE);
+					END;
 				ELSIF (name=Global.NameUncooperative) THEN
 					IF block.isUncooperative THEN
 						Error(position, "duplicate uncooperative flag")

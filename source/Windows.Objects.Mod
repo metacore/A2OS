@@ -457,7 +457,7 @@ END Yield;
 
 (** Return current process. (DEPRECATED, use ActiveObject) *)
 PROCEDURE CurrentProcess*( ): Process;
-BEGIN{UNCHECKED} (* makes sure that Enter and Leave are not emitted *)
+BEGIN{UNTRACKED} (* makes sure that Enter and Leave are not emitted *)
 	RETURN SYSTEM.VAL(Process, Kernel32.TlsGetValue(tlsIndex));
 END CurrentProcess;
 

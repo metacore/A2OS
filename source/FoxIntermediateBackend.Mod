@@ -5916,13 +5916,14 @@ TYPE
 				RestoreRegisters(saved2);
 			END;
 
-			ReleaseParameterRegisters();
 
 			IF (callingConvention = SyntaxTree.WinAPICallingConvention) OR (callingConvention IN SysvABI) THEN
 				Emit(Call(position,operand.op,0));
 			ELSE
 				Emit(Call(position,operand.op,parametersSize));
 			END;
+
+			ReleaseParameterRegisters();
 			ReleaseOperand(operand);
 
 			IF procedureType.noReturn THEN

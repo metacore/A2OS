@@ -1974,7 +1974,6 @@ TYPE
 		PROCEDURE EmitCall(CONST instruction: IntermediateCode.Instruction);
 		VAR fixup: Sections.Section;  target, op: Assembler.Operand;
 			code: SyntaxTree.Code; emitterFixup,newFixup: BinaryCode.Fixup; resolved: BinaryCode.Section; pc: LONGINT;
-			reg: Ticket; 		
 		BEGIN
 			IF fpStackPointer # 0 THEN Error(instruction.textPosition,"compiler implementation error: fp stack not cleared before call") END;
 			IF instruction.op1.mode = IntermediateCode.ModeImmediate THEN
@@ -1993,10 +1992,8 @@ TYPE
 						END;
 					END;
 				ELSIF cpuBits = 64 THEN					
-					reg := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RAX,inPC);
-					MakeOperand(instruction.op1,Low,op,reg);
+					MakeOperand(instruction.op1,Low,op,NIL);
 					emitter.Emit1(InstructionSet.opCALL,op);
-					UnmapTicket(reg);
 					ModifyStackPointer (-instruction.op2.intValue);
 				ELSE
 					Assembler.InitOffset32(target,instruction.op1.intValue);
@@ -2005,14 +2002,8 @@ TYPE
 					ModifyStackPointer (-instruction.op2.intValue);
 				END;
 			ELSE
-				IF cpuBits = 64 THEN
-					reg := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,instruction.op1.type,RAX,inPC);
-				ELSE
-					reg := NIL
-				END;
-				MakeOperand(instruction.op1,Low,op,reg);
+				MakeOperand(instruction.op1,Low,op,NIL);
 				emitter.Emit1(InstructionSet.opCALL,op);
-				IF cpuBits = 64 THEN UnmapTicket(reg) END;
 				ModifyStackPointer (-instruction.op2.intValue);
 			END;
 		END EmitCall;

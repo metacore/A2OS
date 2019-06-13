@@ -155,7 +155,7 @@ VAR
 		END;
 		IF cur = memBlock THEN
 			IF traceHeap THEN
-				Trace.String( "Release memory block " );  Trace.Hex( memBlock.startAdr, -8 );  Trace.Ln
+				Trace.String( "Release memory block " );  Trace.Address( memBlock.startAdr );  Trace.Ln
 			END;
 			IF prev = NIL THEN
 				memBlockHead := cur.next
@@ -223,12 +223,12 @@ VAR
 	BEGIN
 		Trace.Ln;
 		Trace.String( "Heap expanded" );  Trace.Ln;
-		Trace.String("Static Heap: "); Trace.Hex(Glue.baseAdr, -8); Trace.String(" - "); Trace.Hex(Glue.endAdr, -8);
+		Trace.Address(Glue.baseAdr); Trace.String(" - "); Trace.Address(Glue.endAdr); Trace.String(" (Initial Heap)"); 
 		Trace.Ln;
 		cur := memBlockHead;
 		WHILE cur # NIL DO
-			Trace.Hex( cur.startAdr, -8 );  Trace.String( "   " );  Trace.Hex( cur.startAdr + cur.size, -8 );
-			IF cur = new THEN  Trace.String( "  (new)" )  END;
+			Trace.Address( cur.startAdr );  Trace.String( " - " );  Trace.Address( cur.startAdr + cur.size );
+			IF cur = new THEN  Trace.String( " (new)" )  END;
 			Trace.Ln;
 			cur := cur.next
 		END

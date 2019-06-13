@@ -262,7 +262,7 @@ TYPE
 				END; (* gc type *)
 			END; (* contextpos *)
 
-			IF SELF # CurrentProcess() THEN
+			IF ConcurrentGC & (SELF # CurrentProcess()) THEN
 				res := Kernel32.ResumeThread(handle);
 				ASSERT(res >= 0);
 				mode := prevMode;

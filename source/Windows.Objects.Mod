@@ -283,40 +283,19 @@ TYPE
 		    the set of variables here must not be interrupted, i.e. atomic writing of the set of variables is absolutely necessary.  They system may hang
 		    if the lock is not taken. *)
 		PROCEDURE SetgcOngoing(value: BOOLEAN);
-		VAR p: Heaps.ProcessLink; cur, r: Process; res: Kernel32.BOOL; num: LONGINT; time: LONGINT;
+		VAR time: LONGINT;
 		BEGIN {UNTRACKED}
 			IF value THEN
-				(* Low, Medium or High priority process calls this *)
 				time := Kernel32.GetTickCount();
 				Machine.Acquire(Machine.Objects);
-				Machine.Acquire(Machine.Heaps); (* to protect agains concurrent LazySweep *)
-				r := CurrentProcess();
-				num := 0;
-				p := ready.head;
-				WHILE p # NIL DO
-					cur := p(Process);
-					IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) & (cur.gcContext.nextPos >= 0) THEN
-						res := Kernel32.SuspendThread(cur.handle);
-						ASSERT(res >= 0);
-						cur.mode := Suspended
-					ELSE INC(num);
-					END;
-					p := p.next
-				END;
-
-				Heaps.CollectGarbage(Modules.root);
-				p := ready.head;
-				WHILE (p # NIL) DO
-					cur := p(Process);
-					(* only suspended and awaiting processes of ready queue are resumed *)
-					IF cur.mode = Suspended THEN
-						res := Kernel32.ResumeThread(cur.handle);
-						ASSERT(res >= 0);
-						cur.mode := Running
-					END;
-					p := p.next
-				END;
-
+				Machine.Acquire(Machine.Heaps); (* to protect agains concurrent LazySweep *)				
+				IF ConcurrentGC THEN
+					Heaps.CollectGarbage( Modules.root );
+				ELSE
+					SuspendActivities;
+					Heaps.CollectGarbage(Modules.root);
+					ResumeActivities;
+				END;				
 				Machine.Release(Machine.Heaps);
 				Machine.Release(Machine.Objects);
 				time := Kernel32.GetTickCount()-time;
@@ -1250,6 +1229,40 @@ BEGIN
 		cpuCycles[0] := cpuCycles[0] - temp;
 	END;
 END GetCpuCycles;
+
+PROCEDURE SuspendActivities;
+VAR r,cur: Process; p: Heaps.ProcessLink; res: LONGINT;
+BEGIN{UNTRACKED}
+	r := CurrentProcess();
+	p := ready.head;
+	WHILE p # NIL DO
+		cur := p(Process);
+		IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) & (cur.gcContext.nextPos >= 0) THEN
+			res := Kernel32.SuspendThread(cur.handle);
+			ASSERT(res >= 0);
+			cur.mode := Suspended
+		END;
+		p := p.next
+	END;
+END SuspendActivities;
+
+PROCEDURE ResumeActivities;
+VAR r,cur: Process; p: Heaps.ProcessLink; res: LONGINT;
+BEGIN{UNTRACKED}
+	r := CurrentProcess();
+	p := ready.head;
+	WHILE (p # NIL) DO
+		cur := p(Process);
+		(* only suspended and awaiting processes of ready queue are resumed *)
+		IF cur.mode = Suspended THEN
+			res := Kernel32.ResumeThread(cur.handle);
+			ASSERT(res >= 0);
+			cur.mode := Running
+		END;
+		p := p.next
+	END;
+END ResumeActivities;
+
 
 PROCEDURE CurrentProcessTime*(): HUGEINT;
 VAR res: WORD; result: HUGEINT;

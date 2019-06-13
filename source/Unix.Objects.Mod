@@ -357,15 +357,10 @@ TYPE
 			lock here since writing the set of variables here must not be interrupted, i.e. atomic writing of the set of variables
 			is absolutely necessary.  They system may hang if the lock is not taken. *)
 		PROCEDURE SetgcOngoing( value: BOOLEAN );
-		VAR cur: Process;
-		BEGIN (* serialize writers *)
-			cur := CurrentProcess();
+		BEGIN
 			IF value THEN
 				Machine.Acquire( Machine.Objects );
 				Machine.Acquire( Machine.Heaps );
-				cur.state.SP := S.GetStackPointer();
-				cur.state.BP := S.GetFramePointer();
-				cur.state.PC := ADDRESSOF( GCLoop );
 				IF ConcurrentGC THEN
 					Heaps.CollectGarbage( Modules.root );
 				ELSE

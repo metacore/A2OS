@@ -523,6 +523,7 @@ VAR
 	PROCEDURE ^ {C} Starter(proc: PROCEDURE ): ADDRESS; 
 	PROCEDURE ^ ThrStart*(p: PROCEDURE ; stackSize: SIZE): Thread_t; 
 	PROCEDURE ^ ThrSleep*(ms: LONGINT); 
+	PROCEDURE ^ NanoSleep(ns: LONGWORD); 
 	PROCEDURE ^ ThrKill*(thr: Thread_t); 
 	PROCEDURE ^ {C} resume_handler(sig: LONGINT); 
 	PROCEDURE ^ ThrResume*(thr: Thread_t); 

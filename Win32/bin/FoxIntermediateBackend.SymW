@@ -123,10 +123,10 @@ TYPE
 
 	ConditionalBranch = PROCEDURE {DELEGATE}(label: Label; op1, op2: IntermediateCode.Operand); 
 
-	DeclarationVisitor = OBJECT 
+	DeclarationEmitter = OBJECT 
 	VAR 
 		backend: IntermediateBackend; 
-		implementationVisitor: ImplementationVisitor; 
+		implementationEmitter: ImplementationEmitter; 
 		meta: MetaDataGenerator; 
 		system: Global.System; 
 		currentScope: SyntaxTree.Scope; 
@@ -136,7 +136,7 @@ TYPE
 		forceModuleBody: BOOLEAN; 
 		addressType: IntermediateCode.Type; 
 
-		PROCEDURE ^  & Init(system: Global.System; implementationVisitor: ImplementationVisitor; backend: IntermediateBackend; forceModuleBody, dump: BOOLEAN); 
+		PROCEDURE ^  & Init(system: Global.System; implementationEmitter: ImplementationEmitter; backend: IntermediateBackend; forceModuleBody, dump: BOOLEAN); 
 		PROCEDURE ^ Error(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Type(x: SyntaxTree.Type); 
 		PROCEDURE ^ QualifiedType(x: SyntaxTree.QualifiedType); 
@@ -153,16 +153,16 @@ TYPE
 		PROCEDURE ^ AddBodyCallStub(bodyProcedure: SyntaxTree.Procedure); 
 		PROCEDURE ^ AddStackAllocation(symbol: SyntaxTree.Symbol; initStack: Basic.Integer); 
 		PROCEDURE ^ Module(x: SyntaxTree.Module; module: Sections.Module); 
-	END DeclarationVisitor; 
+	END DeclarationEmitter; 
 
-	UsedArray* = POINTER TO ARRAY OF RECORD 
+	UsedArray = POINTER TO ARRAY OF RECORD 
 		count: LONGINT; 
 		map: LONGINT; 
 		type: IntermediateCode.Type; 
 		class: IntermediateCode.RegisterClass; 
 	END; 
 
-	RegisterUsageCount* = OBJECT 
+	RegisterUsageCount = OBJECT 
 	VAR 
 		used: UsedArray; 
 		count: LONGINT; 
@@ -205,7 +205,7 @@ TYPE
 		PROCEDURE ^ GetFreeVariable(type: SyntaxTree.Type; untraced: BOOLEAN; VAR pos: LONGINT): SyntaxTree.Variable; 
 	END Variables; 
 
-	ImplementationVisitor = OBJECT (SyntaxTree.Visitor)
+	ImplementationEmitter = OBJECT 
 	TYPE 
 		Context = RECORD 
 			section: IntermediateCode.Section; 
@@ -264,6 +264,7 @@ TYPE
 		cooperativeSwitches: BOOLEAN; 
 		lastSwitchPC: LONGINT; 
 		isUnchecked: BOOLEAN; 
+		isUntracked: BOOLEAN; 
 		availableSymbols: ARRAY 1024 OF RECORD 
 			symbol: SyntaxTree.Symbol; 
 			inMemory, inRegister: BOOLEAN; 
@@ -330,7 +331,7 @@ TYPE
 		PROCEDURE ^ TrapC(br: ConditionalBranch; left, right: IntermediateCode.Operand; trapNo: LONGINT); 
 		PROCEDURE ^ CheckSetElement(o: IntermediateCode.Operand); 
 		PROCEDURE ^ SetFromRange(x: SyntaxTree.RangeExpression): IntermediateCode.Operand; 
-		PROCEDURE ^ DesignateMathArrayExpression*(x: SyntaxTree.MathArrayExpression; VAR result: Operand); 
+		PROCEDURE ^ DesignateMathArrayExpression(x: SyntaxTree.MathArrayExpression; VAR result: Operand); 
 		PROCEDURE ^ TypeTest(tag: IntermediateCode.Operand; type: SyntaxTree.Type; label: Label; reason: BOOLEAN; withPart: BOOLEAN); 
 		PROCEDURE ^ Error(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning(position: Position; CONST s: ARRAY OF CHAR); 
@@ -344,8 +345,6 @@ TYPE
 		PROCEDURE ^ CreateResetMethod(scope: SyntaxTree.ProcedureScope); 
 		PROCEDURE ^ CallResetProcedure(dest, tag: IntermediateCode.Operand; type: SyntaxTree.Type); 
 		PROCEDURE ^ ResetVariables(scope: SyntaxTree.ProcedureScope); 
-		PROCEDURE ^ Reset(symbol: SyntaxTree.Symbol; refer: BOOLEAN); 
-		PROCEDURE ^ ResetVariables2(scope: SyntaxTree.ProcedureScope; refer: BOOLEAN); 
 		PROCEDURE ^ CreateProcedureDescriptor(procedure: SyntaxTree.Procedure); 
 		PROCEDURE ^ AddImport(CONST moduleName: ARRAY OF CHAR; VAR module: SyntaxTree.Module; force: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ EnsureSymbol(CONST moduleName, procedureName: SyntaxTree.IdentifierString); 
@@ -360,8 +359,8 @@ TYPE
 		PROCEDURE ^ CallThis(position: Position; CONST moduleName, procedureName: ARRAY OF CHAR; numberParameters: LONGINT); 
 		PROCEDURE ^ CompareString(br: ConditionalBranch; label: Label; leftExpression, rightExpression: SyntaxTree.Expression); 
 		PROCEDURE ^ CopyString(leftExpression, rightExpression: SyntaxTree.Expression); 
-		PROCEDURE ^ DesignateConversion*(x: SyntaxTree.Conversion; VAR result: Operand); 
-		PROCEDURE ^ DesignateSymbolDesignator*(x: SyntaxTree.SymbolDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateConversion(x: SyntaxTree.Conversion; VAR result: Operand); 
+		PROCEDURE ^ DesignateSymbolDesignator(x: SyntaxTree.SymbolDesignator; VAR result: Operand); 
 		PROCEDURE ^ BoundCheck(index, length: IntermediateCode.Operand); 
 		PROCEDURE ^ DimensionCheck(base, dim: IntermediateCode.Operand; op: ConditionalBranch); 
 		PROCEDURE ^ MathIndexDesignator(x: SyntaxTree.IndexDesignator; VAR result: Operand); 
@@ -371,11 +370,11 @@ TYPE
 		PROCEDURE ^ MulInt(VAR res: IntermediateCode.Operand; x, y: IntermediateCode.Operand); 
 		PROCEDURE ^ DivInt(VAR res: IntermediateCode.Operand; x, y: IntermediateCode.Operand); 
 		PROCEDURE ^ IndexDesignator(x: SyntaxTree.IndexDesignator; VAR result: Operand); 
-		PROCEDURE ^ DesignateIndexDesignator*(x: SyntaxTree.IndexDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateIndexDesignator(x: SyntaxTree.IndexDesignator; VAR result: Operand); 
 		PROCEDURE ^ PrepareTensorDescriptor(expression: SyntaxTree.IndexDesignator): SyntaxTree.Variable; 
 		PROCEDURE ^ PushParameter(expression: SyntaxTree.Expression; parameter: SyntaxTree.Parameter; callingConvention: LONGINT; needsParameterBackup: BOOLEAN; VAR parameterBackup: IntermediateCode.Operand; register: WORD); 
-		PROCEDURE ^ DesignateInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator; VAR result: Operand); 
-		PROCEDURE ^ DesignateProcedureCallDesignator*(x: SyntaxTree.ProcedureCallDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateInlineCallDesignator(x: SyntaxTree.InlineCallDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateProcedureCallDesignator(x: SyntaxTree.ProcedureCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ TypeDescriptorAdr(t: SyntaxTree.Type): IntermediateCode.Operand; 
 		PROCEDURE ^ ProfilerInit; 
 		PROCEDURE ^ ProfilerEnterExit(procedureNumber: LONGINT; enter: BOOLEAN); 
@@ -418,68 +417,66 @@ TYPE
 		PROCEDURE ^ PushPort(p: SyntaxTree.Expression); 
 		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
 		PROCEDURE ^ OnHeap(x: SyntaxTree.Expression): BOOLEAN; 
-		PROCEDURE ^ Allocate*(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
-		PROCEDURE ^ DesignateBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
+		PROCEDURE ^ Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ EvaluateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
-		PROCEDURE ^ DesignateTypeGuardDesignator*(x: SyntaxTree.TypeGuardDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateTypeGuardDesignator(x: SyntaxTree.TypeGuardDesignator; VAR result: Operand); 
 		PROCEDURE ^ Dereference(VAR operand: Operand; type: SyntaxTree.Type; isUnsafe: BOOLEAN); 
-		PROCEDURE ^ DesignateDereferenceDesignator*(x: SyntaxTree.DereferenceDesignator; VAR result: Operand); 
-		PROCEDURE ^ DesignateSupercallDesignator*(x: SyntaxTree.SupercallDesignator; VAR result: Operand); 
-		PROCEDURE ^ DesignateSelfDesignator*(x: SyntaxTree.SelfDesignator; VAR result: Operand); 
-		PROCEDURE ^ DesignateResultDesignator*(x: SyntaxTree.ResultDesignator; VAR result: Operand); 
-		PROCEDURE ^ GetDataSection*(): IntermediateCode.Section; 
+		PROCEDURE ^ DesignateDereferenceDesignator(x: SyntaxTree.DereferenceDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateSupercallDesignator(x: SyntaxTree.SupercallDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateSelfDesignator(x: SyntaxTree.SelfDesignator; VAR result: Operand); 
+		PROCEDURE ^ DesignateResultDesignator(x: SyntaxTree.ResultDesignator; VAR result: Operand); 
+		PROCEDURE ^ GetDataSection(): IntermediateCode.Section; 
 		PROCEDURE ^ GetImmediateMem(VAR vop: IntermediateCode.Operand); 
-		PROCEDURE ^ DesignateMathArrayValue*(x: SyntaxTree.MathArrayValue; VAR result: Operand); 
-		PROCEDURE ^ DesignateStringValue*(x: SyntaxTree.StringValue; VAR result: Operand); 
+		PROCEDURE ^ DesignateMathArrayValue(x: SyntaxTree.MathArrayValue; VAR result: Operand); 
+		PROCEDURE ^ DesignateStringValue(x: SyntaxTree.StringValue; VAR result: Operand); 
 		PROCEDURE ^ GetBaseRegister(VAR result: IntermediateCode.Operand; scope, baseScope: SyntaxTree.Scope); 
 		PROCEDURE ^ GetAvailability(x: SyntaxTree.Variable): WORD; 
-		PROCEDURE ^ DesignateVariable*(x: SyntaxTree.Variable; VAR result: Operand); 
-		PROCEDURE ^ DesignateParameter*(x: SyntaxTree.Parameter; VAR result: Operand); 
+		PROCEDURE ^ DesignateVariable(x: SyntaxTree.Variable; VAR result: Operand); 
+		PROCEDURE ^ DesignateParameter(x: SyntaxTree.Parameter; VAR result: Operand); 
 		PROCEDURE ^ DynamicCallOperand(x: SyntaxTree.Procedure; VAR operand: Operand); 
 		PROCEDURE ^ StaticCallOperand(x: SyntaxTree.Procedure; VAR operand: Operand); 
-		PROCEDURE ^ DesignateProcedure*(x: SyntaxTree.Procedure; VAR result: Operand); 
+		PROCEDURE ^ DesignateProcedure(x: SyntaxTree.Procedure; VAR result: Operand); 
 		PROCEDURE ^ Symbol(x: SyntaxTree.Symbol; VAR result: Operand); 
-		PROCEDURE ^ VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement); 
 		PROCEDURE ^ AssignMathArray(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ ModifyAssignments(CONST value: IntermediateCode.Operand); 
 		PROCEDURE ^ CopySize(left: SyntaxTree.Expression; tag: IntermediateCode.Operand): IntermediateCode.Operand; 
 		PROCEDURE ^ AssignReference(left, right: SyntaxTree.Expression); 
 		PROCEDURE ^ Assign(left, right: SyntaxTree.Expression); 
-		PROCEDURE ^ VisitAssignment*(x: SyntaxTree.Assignment); 
 		PROCEDURE ^ EmitCooperativeSwitch; 
-		PROCEDURE ^ VisitCommunicationStatement*(communication: SyntaxTree.CommunicationStatement); 
-		PROCEDURE ^ VisitIfStatement*(x: SyntaxTree.IfStatement); 
+		PROCEDURE ^ CommunicationStatement(communication: SyntaxTree.CommunicationStatement); 
+		PROCEDURE ^ IfStatement(x: SyntaxTree.IfStatement); 
 		PROCEDURE ^ BrWithPart(CONST tag: IntermediateCode.Operand; x: SyntaxTree.WithPart; VAR trueL: Label); 
 		PROCEDURE ^ EmitWithPart(x: SyntaxTree.WithPart); 
-		PROCEDURE ^ VisitWithStatement*(x: SyntaxTree.WithStatement); 
-		PROCEDURE ^ VisitCaseStatement*(x: SyntaxTree.CaseStatement); 
-		PROCEDURE ^ VisitWhileStatement*(x: SyntaxTree.WhileStatement); 
-		PROCEDURE ^ VisitRepeatStatement*(x: SyntaxTree.RepeatStatement); 
-		PROCEDURE ^ VisitForStatement*(x: SyntaxTree.ForStatement); 
-		PROCEDURE ^ VisitExitableBlock*(x: SyntaxTree.ExitableBlock); 
-		PROCEDURE ^ VisitLoopStatement*(x: SyntaxTree.LoopStatement); 
-		PROCEDURE ^ VisitExitStatement*(x: SyntaxTree.ExitStatement); 
-		PROCEDURE ^ VisitReturnStatement*(x: SyntaxTree.ReturnStatement); 
+		PROCEDURE ^ WithStatement(x: SyntaxTree.WithStatement); 
+		PROCEDURE ^ CaseStatement(x: SyntaxTree.CaseStatement); 
+		PROCEDURE ^ WhileStatement(x: SyntaxTree.WhileStatement); 
+		PROCEDURE ^ RepeatStatement(x: SyntaxTree.RepeatStatement); 
+		PROCEDURE ^ ForStatement(x: SyntaxTree.ForStatement); 
+		PROCEDURE ^ ExitableBlock(x: SyntaxTree.ExitableBlock); 
+		PROCEDURE ^ LoopStatement(x: SyntaxTree.LoopStatement); 
+		PROCEDURE ^ ExitStatement(x: SyntaxTree.ExitStatement); 
+		PROCEDURE ^ ReturnStatement(x: SyntaxTree.ReturnStatement); 
 		PROCEDURE ^ MakeAwaitProcedure(x: SyntaxTree.AwaitStatement): SyntaxTree.Procedure; 
-		PROCEDURE ^ VisitAwaitStatement*(x: SyntaxTree.AwaitStatement); 
+		PROCEDURE ^ AwaitStatement(x: SyntaxTree.AwaitStatement); 
 		PROCEDURE ^ StatementSequence(x: SyntaxTree.StatementSequence); 
 		PROCEDURE ^ PushSelfPointer; 
 		PROCEDURE ^ Lock(lock: BOOLEAN); 
-		PROCEDURE ^ VisitStatementBlock*(x: SyntaxTree.StatementBlock); 
-		PROCEDURE ^ VisitCode*(x: SyntaxTree.Code); 
+		PROCEDURE ^ StatementBlock(x: SyntaxTree.StatementBlock); 
+		PROCEDURE ^ Code(x: SyntaxTree.Code); 
 		PROCEDURE ^ ProcParametersSize(procedure: SyntaxTree.Procedure): LONGINT; 
 		PROCEDURE ^ ParameterCopies(x: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ InitVariables(scope: SyntaxTree.Scope); 
 		PROCEDURE ^ GetFingerprint(symbol: SyntaxTree.Symbol): Basic.Fingerprint; 
 		PROCEDURE ^ Body(x: SyntaxTree.Body; scope: SyntaxTree.Scope; ir: IntermediateCode.Section; moduleBody: BOOLEAN); 
-	END ImplementationVisitor; 
+	END ImplementationEmitter; 
 
 	MetaDataGenerator = OBJECT 
 	CONST 
 		EmptyBlockOffset = 2; 
 	VAR 
-		implementationVisitor: ImplementationVisitor; 
-		declarationVisitor: DeclarationVisitor; 
+		implementationEmitter: ImplementationEmitter; 
+		declarationEmitter: DeclarationEmitter; 
 		module: Sections.Module; 
 		moduleName: ARRAY 128 OF CHAR; 
 		moduleNamePool: Basic.HashTableInt; 
@@ -497,7 +494,7 @@ TYPE
 		patchInfoPC: LONGINT; 
 		patchCRC: LONGINT; 
 
-		PROCEDURE ^  & InitMetaDataGenerator(implementationVisitor: ImplementationVisitor; declarationVisitor: DeclarationVisitor; simple: BOOLEAN); 
+		PROCEDURE ^  & InitMetaDataGenerator(implementationEmitter: ImplementationEmitter; declarationEmitter: DeclarationEmitter; simple: BOOLEAN); 
 		PROCEDURE ^ SetModule(module: Sections.Module); 
 		PROCEDURE ^ AddPointer(section: IntermediateCode.Section; offset: LONGINT); 
 		PROCEDURE ^ GetTypeRecordBaseOffset(numberMethods: LONGINT): LONGINT; 

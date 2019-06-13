@@ -6,6 +6,7 @@ CONST
 	StrongChecks = FALSE; 
 	defaultStackSize = 0; 
 	TraceOpenClose = FALSE; 
+	ConcurrentGC = FALSE; 
 	Restart* = 0; 
 	PleaseHalt* = 10; 
 	Unbreakable* = 11; 
@@ -51,12 +52,6 @@ TYPE
 		next, prev: Timer; 
 		trigger: LONGINT; 
 		handler: EventHandler; 
-	END; 
-
-	RealtimeTimer* = POINTER TO RECORD 
-		next, prev: RealtimeTimer; 
-		trigger: LONGINT; 
-		handler: RealtimeEventHandler; 
 	END; 
 
 	Clock = OBJECT {EXCLUSIVE} 
@@ -126,7 +121,6 @@ TYPE
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Wait(): BOOLEAN; 
 		PROCEDURE ^ Activate; 
-		PROCEDURE ^ Exit; 
 	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
 	END FinalizerCaller; 
 VAR 
@@ -158,8 +152,6 @@ VAR
 	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ {WINAPI} ExcpFrmHandler(CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD; 
-	PROCEDURE ^ RemoveExcpFrm(VAR excpfrm: Kernel32.ExcpFrm); 
-	PROCEDURE ^ InstallExcpFrm(VAR excpfrm: Kernel32.ExcpFrm); 
 	PROCEDURE ^ InQueue(queue: ProcessQueue; t: Process): BOOLEAN; 
 	PROCEDURE ^ Remove(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ WriteType(obj: ANY); 
@@ -187,6 +179,8 @@ VAR
 	PROCEDURE ^ UpdateProcessState*(p: Process); 
 	PROCEDURE ^ NumReady*(): LONGINT; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
+	PROCEDURE ^ SuspendActivities; 
+	PROCEDURE ^ ResumeActivities; 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
 	PROCEDURE ^ LeaveA2*; 

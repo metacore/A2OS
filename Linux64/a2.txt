@@ -1,3 +1,4 @@
+Heaps.SetMetaData ~
 Files.AddSearchPath ../Linux64/work ~
 Files.AddSearchPath ../Linux64/bin~ (* ../Linux64 is a trick to get absolute path names *)
 Files.AddSearchPath ../source ~

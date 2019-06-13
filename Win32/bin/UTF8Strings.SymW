@@ -1,4 +1,5 @@
 MODULE UTF8Strings;
+	IMPORT Strings;
 CONST 
 	CmpLess* =  -1; 
 	CmpEqual* = 0; 
@@ -19,6 +20,7 @@ VAR
 	PROCEDURE ^ Extract*(CONST src: ARRAY OF CHAR; idx, num: LONGINT; VAR dst: ARRAY OF CHAR); 
 	PROCEDURE ^ Delete*(VAR str: ARRAY OF CHAR; idx, num: LONGINT); 
 	PROCEDURE ^ Append*(CONST src: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR); 
+	PROCEDURE ^ ValidSize(CONST str: ARRAY OF CHAR): LONGINT; 
 	PROCEDURE ^ Concat*(CONST src1, src2: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR); 
 	PROCEDURE ^ Insert*(CONST src: ARRAY OF CHAR; idx: LONGINT; VAR dst: ARRAY OF CHAR); 
 	PROCEDURE ^ UTF8toASCII*(CONST src: ARRAY OF CHAR; substitute: CHAR; VAR dst: ARRAY OF CHAR): LONGINT; 

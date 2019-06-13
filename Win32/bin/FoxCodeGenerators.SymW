@@ -153,7 +153,6 @@ TYPE
 		PROCEDURE ^ MapVirtualRegister*(virtualRegister: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT); 
 		PROCEDURE ^ ResetTicket(ticket: Ticket); 
 		PROCEDURE ^ FreeTicket(ticket: Ticket); 
-		PROCEDURE ^ RemapTicket(ticket: Ticket); 
 		PROCEDURE ^ UnmapTicket*(ticket: Ticket); 
 		PROCEDURE ^ TryAllocate*(CONST operand: IntermediateCode.Operand; part: LONGINT); 
 		PROCEDURE ^ TryUnmap*(CONST operand: IntermediateCode.Operand); 

@@ -1,6 +1,7 @@
 MODULE Objects;
 	IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 CONST 
+	ConcurrentGC = FALSE; 
 	PleaseHalt* = 10; 
 	Unbreakable* = 11; 
 	SelfTermination* = 12; 
@@ -19,7 +20,8 @@ CONST
 	AwaitingLock* = 3; 
 	AwaitingCond* = 4; 
 	AwaitingEvent* = 5; 
-	Terminated* = 6; 
+	Suspended* = 6; 
+	Terminated* = 7; 
 	Second* = 1000; 
 	DefaultStacksize = (128 * 1024); 
 TYPE 
@@ -74,6 +76,11 @@ TYPE
 
 	Condition = PROCEDURE (slink: ADDRESS):BOOLEAN; 
 
+	GCContext = RECORD 
+		nextPos: SIZE; 
+		last: ARRAY 256 OF ADDRESS; 
+	END; 
+
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR 
 		threadId-: Unix.Thread_t; 
@@ -95,6 +102,7 @@ TYPE
 		state0: ARRAY 2048 OF CHAR; 
 		context: ANY; 
 		lastThreadTimes: HUGEINT; 
+		gcContext: GCContext; 
 
 		PROCEDURE ^ FindRoots*; 
 		PROCEDURE ^ Cancel; 
@@ -176,8 +184,8 @@ VAR
 	PROCEDURE ^ GCLoop*; 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
-	PROCEDURE ^ LeaveA2-; 
-	PROCEDURE ^ ReenterA2-; 
+	PROCEDURE ^ LeaveA2*; 
+	PROCEDURE ^ ReenterA2*; 
 	PROCEDURE ^ StartTimerActivity; 
 	PROCEDURE ^ GetStacksize; 
 	PROCEDURE ^ Convert; 

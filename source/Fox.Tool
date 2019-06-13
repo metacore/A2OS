@@ -3,8 +3,9 @@ Build and Test Tool
 (c) Felix Friedrich (fof), ETH Zürich, 2008-2018
 Conceptual design of the compiler has been worked out together with Florian Negele.
 
-Heaps.SetYoung
-Heaps.SetOld
+Heaps.SetMetaData 
+Heaps.SetHeuristic
+Kernel.GC 
 
 Compiler.Compile --noInterfaceCheck
 (*

@@ -1331,12 +1331,14 @@ TYPE
 		isExclusive-: BOOLEAN; 
 		isRealtime-: BOOLEAN; 
 		isUnchecked-: BOOLEAN; 
+		isUntracked-: BOOLEAN; 
 		isUncooperative-: BOOLEAN; 
 		scope-: Scope; 
 
 		PROCEDURE ^  & InitStatementBlock(position: Position; outer: Statement; s: Scope); 
 		PROCEDURE ^ SetRealtime*(b: BOOLEAN); 
 		PROCEDURE ^ SetUnchecked*(unchecked: BOOLEAN); 
+		PROCEDURE ^ SetUntracked*(untracked: BOOLEAN); 
 		PROCEDURE ^ SetUncooperative*(uncooperative: BOOLEAN); 
 		PROCEDURE ^ SetModifier*(modifier: Modifier); 
 		PROCEDURE ^ SetExclusive*(excl: BOOLEAN); 

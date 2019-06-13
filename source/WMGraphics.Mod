@@ -946,7 +946,7 @@ BEGIN
 		INC(i)
 	END;
 	IF found THEN f.RenderChar(canvas, x, y, char)
-	ELSE
+	ELSIF (char > ORD(' ')) THEN
 		f := GetDefaultFont();
 		Strings.IntToStr(char,str); Strings.Concat("U", str, str);
 		f.GetStringSize(str, w, h);
@@ -967,7 +967,7 @@ BEGIN
 		INC(i)
 	END;
 	IF found THEN f.GetGlyphSpacings(code, glyphSpacings)
-	ELSE
+	ELSIF (code > ORD(' ')) THEN
 		f := GetDefaultFont();
 		Strings.IntToStr(code, str); Strings.Concat("U", str, str);
 		glyphSpacings.bearing := Rectangles.MakeRect(0, 0, 0, 0);

@@ -193,42 +193,24 @@ TYPE
 			END ResolveLocalFixups;
 
 			PROCEDURE GetRegisterAllocation;
-			CONST MaxParameterRegisters=32;
-			VAR pc,i: LONGINT; parameterRegisters: ARRAY MaxParameterRegisters OF IntermediateCode.Operand;
-				parameterRegister: LONGINT;
+			VAR pc: LONGINT;
+
+				PROCEDURE Use(CONST operand: IntermediateCode.Operand);
+				BEGIN
+					IF operand.register > 0 THEN
+						allocation.Use(operand.register,inPC);
+					END;
+				END Use;
 
 				PROCEDURE RegisterUsage(CONST instruction: IntermediateCode.Instruction);
-				VAR i: LONGINT;
-
-					PROCEDURE Use(CONST operand: IntermediateCode.Operand; registerParameter: BOOLEAN);
-					VAR i: LONGINT;
-					BEGIN
-						IF operand.register > 0 THEN
-							allocation.Use(operand.register,inPC);
-							IF registerParameter & (operand.registerClass.class = IntermediateCode.Parameter) THEN (* store recent parameter registers *)
-								parameterRegisters[parameterRegister] := operand;
-								INC(parameterRegister);
-							END;
-						END;
-					END Use;
 				BEGIN
-					Use(instruction.op1,TRUE);
-					Use(instruction.op2,TRUE);
-					Use(instruction.op3,TRUE);
-					IF instruction.opcode = IntermediateCode.call THEN (* mark all currently used parameter registers used in this instruction *)
-						FOR i := 0 TO parameterRegister-1 DO
-							Use(parameterRegisters[i],FALSE);
-							IntermediateCode.InitOperand(parameterRegisters[i]);
-						END;
-						parameterRegister := 0;
-					END;
+					Use(instruction.op1);
+					Use(instruction.op2);
+					Use(instruction.op3);
 				END RegisterUsage;
+
 			BEGIN
 				allocation.Init;
-				FOR i := 0 TO MaxParameterRegisters-1 DO
-					IntermediateCode.InitOperand(parameterRegisters[i]);
-				END;
-				parameterRegister := 0;
 				FOR pc := 0 TO in.pc-1 DO
 					inPC := pc;
 					RegisterUsage(in.instructions[pc]);
@@ -254,7 +236,7 @@ TYPE
 				VAR op1, op2, op3: IntermediateCode.Operand;
 
 					PROCEDURE Map(CONST op: IntermediateCode.Operand): IntermediateCode.Operand;
-					VAR entry: Entry; res: IntermediateCode.Operand; i: LONGINT;
+					VAR entry: Entry; res: IntermediateCode.Operand;
 					BEGIN
 						res := op;
 						entry := first;
@@ -275,7 +257,7 @@ TYPE
 				END CheckMapped;
 
 				PROCEDURE CheckMov(VAR instruction: IntermediateCode.Instruction);
-				VAR i: LONGINT; srcReg, destReg: LONGINT;
+				VAR srcReg, destReg: LONGINT;
 				BEGIN
 					IF (instruction.opcode = IntermediateCode.mov) & (instruction.op1.mode = IntermediateCode.ModeRegister)
 						& (instruction.op2.mode = IntermediateCode.ModeRegister) & IntermediateCode.TypeEquals(instruction.op1.type, instruction.op2.type) THEN
@@ -319,8 +301,7 @@ TYPE
 
 			PROCEDURE Emulate(VAR x: IntermediateCode.Instruction; CONST moduleName,procedureName: SyntaxTree.IdentifierString);
 			VAR
-				parSize: LONGINT; sectionName: Basic.SegmentedName; source: Sections.Section; op: IntermediateCode.Operand;
-				instruction: IntermediateCode.Instruction;
+				parSize: LONGINT; sectionName: Basic.SegmentedName; op: IntermediateCode.Operand;
 				symbol: SyntaxTree.Symbol; fp: Basic.Fingerprint;
 				hasDestination: BOOLEAN;
 
@@ -346,7 +327,7 @@ TYPE
 				END SaveRegisters;
 
 				PROCEDURE RestoreRegisters;
-				VAR op: IntermediateCode.Operand; entry: RegisterEntry; instruction: IntermediateCode.Instruction;
+				VAR op: IntermediateCode.Operand; entry: RegisterEntry;
 				BEGIN
 					entry := liveRegisters.last;
 					WHILE  entry # NIL DO
@@ -405,7 +386,6 @@ TYPE
 			PROCEDURE SetLiveness(CONST x: IntermediateCode.Instruction);
 			(* currently only used to save registers in instruction emulation *)
 				PROCEDURE CheckOperand(CONST operand: IntermediateCode.Operand);
-				VAR i: LONGINT;
 				BEGIN
 					IF (operand.register >= 0) THEN
 						IF FirstUse(operand.register) = pc THEN
@@ -853,7 +833,6 @@ TYPE
 		END InitTicketGenerator;
 
 		PROCEDURE Section*(in: IntermediateCode.Section; out: BinaryCode.Section);
-		VAR ticket: Ticket;
 		BEGIN
 			virtualRegisters.Init(virtualRegisters.parts);
 			Section^(in,out);
@@ -1135,25 +1114,6 @@ TYPE
 			END;
 		END FreeTicket;
 
-		PROCEDURE RemapTicket(ticket: Ticket);
-		VAR size: LONGINT;
-		BEGIN
-			IF ~ticket.spilled THEN
-				IF dump # NIL THEN
-					dump.String(" remap register : index="); dump.Int(ticket.register,1); dump.Ln;
-				END;
-				physicalRegisters.Allocate(ticket.register,ticket);
-				physicalRegisters.SetReserved(ticket.register,TRUE);
-			ELSE (* spill new ticket rightaway, no phyiscal register assigned yet *)
-				size := spillStack.Size();
-				IF dump# NIL THEN dump.String("spillstack allocate (4)"); dump.Int(ticket.offset,1); dump.Ln; END;
-				spillStack.Allocate(ticket.offset,ticket);
-				size := spillStack.Size()-size;
-				ASSERT(size>=0);
-				IF size>0 THEN AllocateSpillStack(size) END;
-			END;
-		END RemapTicket;
-
 		(* unmap ticket: free  register or spill stack position and remove ticket from list of live tickets *)
 		PROCEDURE UnmapTicket*(ticket: Ticket);
 		BEGIN
@@ -1176,7 +1136,7 @@ TYPE
 		END TryAllocate;
 
 		PROCEDURE TryUnmap*(CONST operand: IntermediateCode.Operand);
-		VAR ticket: Ticket; part,i: LONGINT;
+		VAR ticket: Ticket; part: LONGINT;
 		BEGIN
 			IF (operand.register >=0) & (LastUse(operand.register) = inPC) THEN
 				part := 0;
@@ -1247,3 +1207,5 @@ TYPE
 	END DumpTicket;
 
 END FoxCodeGenerators.
+
+System.FreeDownTo FoxCodeGenerators ~

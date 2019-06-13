@@ -2553,6 +2553,7 @@ TYPE
 				IF entry.registerClass.class = IntermediateCode.Parameter THEN
 					registerUsageCount.DecUse(entry.register);
 					ASSERT(registerUsageCount.Use(entry.register)=0);
+					Emit(Use(Basic.invalidPosition, IntermediateCode.Register(entry.type, entry.registerClass, entry.register))); (* for the backend *)
 					IF TraceRegisterUsageCount & (dump# NIL) THEN
 						dump.String("unuse register "); dump.Int(entry.register,1); dump.Ln; dump.Update;
 					END;

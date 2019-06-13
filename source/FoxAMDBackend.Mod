@@ -1121,17 +1121,6 @@ TYPE
 		PROCEDURE Generate*(VAR instruction: IntermediateCode.Instruction);
 		VAR opcode: SHORTINT; ticket: Ticket; hwreg, lastUse, i, part: LONGINT;
 		BEGIN
-			(*!IF ((instruction.opcode = IntermediateCode.mov) OR (instruction.opcode = IntermediateCode.pop)) & (instruction.op1.register <= IntermediateCode.ParameterRegister) THEN
-				hwreg := ParameterRegister(IntermediateCode.ParameterRegister-instruction.op1.register, instruction.op1.type);
-				Spill(physicalRegisters.Mapped(hwreg));
-				lastUse := inPC+1;
-				WHILE (lastUse < in.pc) &
-					((in.instructions[lastUse].opcode # IntermediateCode.push) OR (in.instructions[lastUse].op1.register # instruction.op1.register)) & (in.instructions[lastUse].opcode # IntermediateCode.call) DO
-					INC(lastUse)
-				END;
-				ticket := ReservePhysicalRegister(instruction.op1.type,hwreg,lastUse);
-			END;
-			*)
 			ReserveOperandRegisters(instruction.op1,TRUE); ReserveOperandRegisters(instruction.op2,TRUE);ReserveOperandRegisters(instruction.op3,TRUE);
 			(*TryAllocate(instruction.op1,Low);
 			IF IsComplex(instruction.op1) THEN TryAllocate(instruction.op1,High) END;

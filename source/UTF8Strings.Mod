@@ -4,6 +4,8 @@ MODULE UTF8Strings;	(** pjm *)
 
 (* Based on UTFStrings.Mod of TF and ISOStrings.Mod of jaco *)
 
+IMPORT Strings;
+
 CONST
 	CmpLess* = -1; CmpEqual* = 0; CmpGreater* = 1;	 CmpError* = 2; (** results for Compare. *)
 
@@ -214,11 +216,32 @@ BEGIN
 	SetSize(dst, j)
 END Append;
 
+(* Computes the string size with making sure that the last character is valid *)
+
+PROCEDURE ValidSize(CONST str: ARRAY OF CHAR): LONGINT;
+VAR i, size: LONGINT;
+BEGIN
+	size := Size(str);
+	IF size > 0 THEN	(* make sure last character is valid *)
+		i := size-1;	(* last byte of last character *)
+		IF str[i] >= 80X THEN	(* starting or middle byte *)
+			WHILE ASH(LONG(ORD(str[i])), -6) = 2 DO DEC(i) END;	(* find starting byte *)
+			IF i + ORD(CodeLength[ORD(str[i])]) > size THEN size := i END	(* if not complete, truncate *)
+		END
+	END;
+	RETURN size;
+END ValidSize;
+
 (** Concatenate src2 onto src1 and copy the result to dst. *)
 
 PROCEDURE Concat*(CONST src1, src2: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR);
+VAR n1, n2: LONGINT;
 BEGIN
-	Assign(src1, dst); Append(src2, dst)
+	n1 := ValidSize(src1);
+	n2 := ValidSize(src2);
+	Strings.Move(src2, 0, n2, dst, n1);
+	Strings.Move(src1, 0, n1, dst, 0);
+	SetSize(dst,n1+n2);
 END Concat;
 
 (** Insert src into dst at UTF-8 index idx.  The characters from idx onwards are shifted up to make space for the inserted characters. *)

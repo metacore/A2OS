@@ -28,7 +28,7 @@ CONST
 
 	(* Process modes (in UnixAos Running means Running or Ready!) *)
 	Unknown* = 0;  Ready* = 1;  Running* = 2;  AwaitingLock* = 3;
-	AwaitingCond* = 4;  AwaitingEvent* = 5;  Terminated* = 6;
+	AwaitingCond* = 4;  AwaitingEvent* = 5;  Suspended*= 6; Terminated* = 7;
 
 	Second* = 1000;	(* frequency of ticks increments in Hz *)
 
@@ -195,84 +195,86 @@ TYPE
 
 		PROCEDURE FindRoots;
 		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
-			contextPos: SIZE;
-	BEGIN
-			IF mode # Terminated THEN
+			contextPos: SIZE; prevMode: LONGINT;
+		BEGIN{UNTRACKED}
+			IF mode = Terminated THEN RETURN END;
 
-				IF SELF = CurrentProcess() THEN
-					state.SP := S.GetStackPointer( );
-					state.BP := S.GetFramePointer( );
-					state.PC := Machine.CurrentPC();
-				ELSIF ConcurrentGC THEN
-					Unix.ThrSuspend( threadId, mode = Running );						
-				END;
+			IF SELF = CurrentProcess() THEN
+				state.SP := S.GetStackPointer( );
+				state.BP := S.GetFramePointer( );
+				state.PC := Machine.CurrentPC();
+			ELSIF ConcurrentGC THEN
+				Unix.ThrSuspend( threadId, mode = Running );
+				prevMode := mode;
+				mode := Suspended;
+			END;
 				
-				sp := state.SP; bp := state.BP; sb := stackBottom; pc := state.PC;
+			sp := state.SP; bp := state.BP; sb := stackBottom; pc := state.PC;
 
-				contextPos := gcContext.nextPos;
-				IF contextPos >= 0 THEN (* this thread is currently active in A2 *)			
-					IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
-						IF  (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
+			contextPos := gcContext.nextPos;
+			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)			
+				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
+					(* debugging info*)
+					IF (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
+						S.GET( bp, n );
+						IF ODD( n ) THEN (* procedure descriptor at bp *)
+							IF n > 1024 THEN
+							desc := S.VAL( Modules.ProcedureDescPointer, n-1 ); (* tracing !*)
+							END;
+						END;
+					END;
+					IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
+						Heaps.RegisterCandidates( sp, stackBottom - sp );
+					END;
+				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
+					IF bp < stackBottom THEN
+						LOOP
+							IF Machine.ValidHeapAddress(pc) THEN
+								(* ok, valid stack frame from A2, we can trace this *)
+							ELSE
+								(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
+								bp := NIL;
+								WHILE (contextPos > 0) & (bp = NIL) DO
+									DEC(contextPos);
+									bp := gcContext.last[contextPos];
+								END;
+								IF bp = NIL THEN
+									EXIT;
+								END;
+							END;
 							S.GET( bp, n );
 							IF ODD( n ) THEN (* procedure descriptor at bp *)
 								IF n > 1024 THEN
-								desc := S.VAL( Modules.ProcedureDescPointer, n-1 ); (* tracing !*)
-								END;
-							END;
-						END;
-						IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
-							Heaps.RegisterCandidates( sp, stackBottom - sp );
-						END;
-					ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-						IF bp < stackBottom THEN
-							LOOP
-								IF Machine.ValidHeapAddress(pc) THEN
-									(* ok, valid stack frame from A2, we can trace this *)
-								ELSE
-									(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
-									bp := NIL;
-									WHILE (contextPos > 0) & (bp = NIL) DO
-										DEC(contextPos);
-										bp := gcContext.last[contextPos];
-									END;
-									IF bp = NIL THEN
-										EXIT;
-									END;
-								END;
-								S.GET( bp, n );
-								IF ODD( n ) THEN (* procedure descriptor at bp *)
-									IF n > 1024 THEN
-										desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
-										IF desc # NIL THEN
-											a0 := ADDRESSOF( desc.offsets );
-											a1 :=  S.VAL( ADDRESS, desc.offsets );
-											ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
-											FOR i := 0 TO LEN( desc.offsets ) - 1 DO
-												adr := bp + desc.offsets[i]; (* pointer at offset *)
-												S.GET( adr, p ); (* load pointer *)
-												IF p # NIL THEN
-													Heaps.Inspect( p );
-												END
+									desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
+									IF desc # NIL THEN
+										a0 := ADDRESSOF( desc.offsets );
+										a1 :=  S.VAL( ADDRESS, desc.offsets );
+										ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+										FOR i := 0 TO LEN( desc.offsets ) - 1 DO
+											adr := bp + desc.offsets[i]; (* pointer at offset *)
+											S.GET( adr, p ); (* load pointer *)
+											IF p # NIL THEN
+												Heaps.Inspect( p );
 											END
 										END
-									END;
-									S.GET( bp + SIZEOF( ADDRESS ), bp );
-									S.GET(bp + 2*SIZEOF(ADDRESS), pc);
-								ELSE (* classical stack frame *)
-									S.GET(bp + SIZEOF(ADDRESS), pc);
-									bp := n;
+									END
 								END;
-							END; (* LOOP *)
-						END; (* stackbottom *)
-					END; (* gctype *)
-				END; (* contextpos *)
-				IF ConcurrentGC THEN
-					IF SELF # CurrentProcess() THEN
-						Unix.ThrResume( threadId);						
-					END;
+								S.GET( bp + SIZEOF( ADDRESS ), bp );
+								S.GET(bp + 2*SIZEOF(ADDRESS), pc);
+							ELSE (* classical stack frame *)
+								S.GET(bp + SIZEOF(ADDRESS), pc);
+								bp := n;
+							END;
+						END; (* LOOP *)
+					END; (* stackbottom *)
+				END; (* gctype *)
+			END; (* contextpos *)
+			IF ConcurrentGC THEN
+				IF SELF # CurrentProcess() THEN
+					Unix.ThrResume( threadId);
+					mode := prevMode;		
 				END;
-			END; (* mode terminated *)
-			Heaps.Mark( nextProcess )					
+			END;
 		END FindRoots;
 
 		PROCEDURE Cancel;

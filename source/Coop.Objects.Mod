@@ -47,12 +47,6 @@ TYPE
 		handler: EventHandler
 	END;
 
-	RealtimeTimer* = POINTER TO RECORD
-		next, prev: RealtimeTimer;
-		trigger: LONGINT;
-		handler: RealtimeEventHandler
-	END;
-
 	Clock = OBJECT
 	VAR h: Timer;
 	BEGIN {ACTIVE, SAFE, PRIORITY(High)}

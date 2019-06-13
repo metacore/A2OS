@@ -9,6 +9,7 @@ CONST
 	TraceVerbose = FALSE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
+	ConcurrentGC=FALSE; (* if TRUE then release needs to be compiled with --writeBarriers *)	
 
 CONST
 	(* Process flags *)
@@ -57,12 +58,6 @@ TYPE
 		next, prev : Timer;
 		trigger: LONGINT;
 		handler: EventHandler
-	END;
-
-	RealtimeTimer* = POINTER TO RECORD
-		next, prev: RealtimeTimer;
-		trigger: LONGINT;
-		handler: RealtimeEventHandler
 	END;
 
 	Clock = OBJECT
@@ -135,7 +130,7 @@ TYPE
 
 	GCContext = RECORD
 		nextPos: SIZE; (* 0 to start with *)
-		(*first,*)  last: ARRAY 256 OF ADDRESS; (* first might be not required *)
+		last: ARRAY 256 OF ADDRESS;
 	END;
 
 	Process* = OBJECT(Heaps.ProcessLink)
@@ -166,39 +161,40 @@ TYPE
 		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
 		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
 			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; p {UNTRACED}: ANY; i: SIZE;
-			a0,a1, obp, osb, osbp, opc, gbp: ADDRESS;
+			a0,a1: ADDRESS;
 			O: ANY; ID: LONGINT;
 			mod {UNTRACED}: Modules.Module;
 			proc {UNTRACED}: Modules.ProcedureDescPointer;
 			modName: ARRAY 128 OF CHAR;
 			contextPos: SIZE;
-		BEGIN{UNCHECKED} (* avoid winapi call indirection *)
+			prevMode: LONGINT;
+		BEGIN{UNTRACKED} (* avoid winapi call indirection *)
 			O := obj; ID := id;
-			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *)
-			OR (priority > High) (* stack of GC and realtime processes not traced *) THEN
+			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *) THEN
 				RETURN
 			END;
 
 			IF CurrentProcess() = SELF THEN
-				sp := SYSTEM.GetStackPointer();  bp :=SYSTEM.GetFramePointer(); pc := Machine.CurrentPC();
+				state.SP := SYSTEM.GetStackPointer();  state.BP :=SYSTEM.GetFramePointer(); state.PC := Machine.CurrentPC();
 			ELSE
-				(*! this should never happen or must be changed with mode change eetc.
-					res := Kernel32.SuspendThread(handle); (* can suspend a suspended thread -- no problem at all *)
-				*)
+				IF ConcurrentGC THEN
+						prevMode := mode;
+						res := Kernel32.SuspendThread(handle);
+						ASSERT(res >= 0);
+						mode := Suspended
+				END;
 				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 				res := Kernel32.GetThreadContext( handle, state );
 				IF res = 0 THEN Trace.String("could not get thread context:"); Trace.Int(Kernel32.GetLastError(),1) END;
+			END; 
+			
+			sp :=  state.SP; bp := state.BP; pc := state.PC;
 
-				sp :=  state.SP; bp := state.BP; pc := state.PC;
-
-				mod := Modules.ThisModuleByAdr0(pc);
-				IF mod # NIL THEN
-					COPY(mod.name, modName);
-					proc := Modules.FindProc(pc,mod.procTable);
-				END;
-
-				obp := bp; osb := stackBottom; opc := pc;
-				osbp := state.BP;
+			(* debugging info *)
+			mod := Modules.ThisModuleByAdr0(pc);
+			IF mod # NIL THEN
+				COPY(mod.name, modName);
+				proc := Modules.FindProc(pc,mod.procTable);
 			END;
 
 			IF TraceProcessHook # NIL THEN
@@ -206,82 +202,71 @@ TYPE
 			END;
 
 			contextPos := gcContext.nextPos;
-			IF contextPos < 0 THEN RETURN END; (* this thread is currently not active in A2 *)
-			(* stack garbage collection *)
+			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)			
 
-			IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
-			#IF I386 THEN
-				Heaps.Candidate( state.RDI );  Heaps.Candidate( state.RSI );
-				Heaps.Candidate( state.RB ); Heaps.Candidate( state.RD );
-				Heaps.Candidate( state.RC ); Heaps.Candidate( state.RA );
-			#ELSIF AMD64 THEN
-				Heaps.Candidate( state.RDI );  Heaps.Candidate( state.RSI );
-				Heaps.Candidate( state.RB ); Heaps.Candidate( state.RD );
-				Heaps.Candidate( state.RC ); Heaps.Candidate( state.RA );
-				Heaps.Candidate( state.R9 );  Heaps.Candidate( state.R10 );
-				Heaps.Candidate( state.R11 ); Heaps.Candidate( state.R12 );
-				Heaps.Candidate( state.R13 ); Heaps.Candidate( state.R14 );
-				Heaps.Candidate( state.R15 );
-			#ELSE
-				ASSERT(FALSE);
-			#END
-
-				IF (stackBottom # 0) & (sp # 0) THEN
-					Heaps.RegisterCandidates( sp, stackBottom - sp );
-				END;
-			ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-				IF TraceVerbose THEN
-					Trace.String("GC, process id = "); Trace.Int(id,1); Trace.Ln;
-				END;
-				LOOP
-					IF (bp = NIL) OR (bp >= stackBottom) THEN EXIT END;
-					IF Machine.ValidHeapAddress(pc) THEN
-						(* ok, valid stack frame from A2, we can trace this *)
-					ELSE
-						(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
-						bp := NIL;
-						WHILE (contextPos > 0) & (bp = NIL) DO
-							DEC(contextPos);
-							bp := gcContext.last[contextPos];
-						END;
-						IF bp = NIL THEN
-							EXIT;
+				IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
+					(* debugging info*)
+					IF (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
+						SYSTEM.GET( bp, n );
+						IF ODD( n ) THEN (* procedure descriptor at bp *)
+							IF n > 1024 THEN
+							desc := SYSTEM.VAL( Modules.ProcedureDescPointer, n-1 ); (* tracing !*)
+							END;
 						END;
 					END;
-
-					SYSTEM.GET(bp, n);
-					IF ODD(n) THEN (* procedure descriptor at bp *)
-						desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
-						IF desc # NIL THEN
-							IF TraceVerbose THEN
-								WriteType(desc); Trace.Ln;
+					IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
+						Heaps.RegisterCandidates( sp, stackBottom - sp );
+					END;
+				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
+					LOOP
+						IF (bp = NIL) OR (bp >= stackBottom) THEN EXIT END;
+						IF Machine.ValidHeapAddress(pc) THEN
+							(* ok, valid stack frame from A2, we can trace this *)
+						ELSE
+							(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
+							bp := NIL;
+							WHILE (contextPos > 0) & (bp = NIL) DO
+								DEC(contextPos);
+								bp := gcContext.last[contextPos];
 							END;
-							a0 := ADDRESSOF(desc.offsets);
-							a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
-							ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
-							FOR i := 0 TO LEN(desc.offsets)-1 DO
-								adr := bp + desc.offsets[i]; (* pointer at offset *)
-								SYSTEM.GET(adr, p); (* load pointer *)
-								IF p # NIL THEN
-									Heaps.Mark(p);
+							IF bp = NIL THEN
+								EXIT;
+							END;
+						END;
+
+						SYSTEM.GET(bp, n);
+						IF ODD(n) THEN (* procedure descriptor at bp *)
+							desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
+							IF desc # NIL THEN
+								IF TraceVerbose THEN
+									WriteType(desc); Trace.Ln;
+								END;
+								a0 := ADDRESSOF(desc.offsets);
+								a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
+								ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
+								FOR i := 0 TO LEN(desc.offsets)-1 DO
+									adr := bp + desc.offsets[i]; (* pointer at offset *)
+									SYSTEM.GET(adr, p); (* load pointer *)
+									IF p # NIL THEN
+										Heaps.Mark(p);
+									END;
 								END;
 							END;
+							SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
+							SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
+						ELSE (* classical stack frame without procedure descriptor *)
+							SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
+							bp := n;
 						END;
-						SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
-						SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
-					ELSE (* classical stack frame without procedure descriptor *)
-						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
-						bp := n;
-					END;
-				END;
-				(* ASSERT((bp = stackBottom) OR (bp=0) ,12345); can be violated when coming from windows *)
-			END;
+					END; (* loop *)
+				END; (* gc type *)
+			END; (* contextpos *)
 
-			IF (CurrentProcess() # SELF) (* & (mode # Suspended) *) THEN
+			IF SELF # CurrentProcess() THEN
 				res := Kernel32.ResumeThread(handle);
-				ASSERT(res # -1);
+				ASSERT(res >= 0);
+				mode := prevMode;
 			END;
-
 		END FindRoots;
 
 	END Process;
@@ -299,7 +284,7 @@ TYPE
 		    if the lock is not taken. *)
 		PROCEDURE SetgcOngoing(value: BOOLEAN);
 		VAR p: Heaps.ProcessLink; cur, r: Process; res: Kernel32.BOOL; num: LONGINT; time: LONGINT;
-		BEGIN (* serialize writers *)
+		BEGIN {UNTRACKED}
 			IF value THEN
 				(* Low, Medium or High priority process calls this *)
 				time := Kernel32.GetTickCount();
@@ -374,12 +359,6 @@ TYPE
 		BEGIN
 			res := Kernel32.SetEvent(event);
 		END Activate;
-
-		PROCEDURE Exit;
-		BEGIN
-			exiting := TRUE;
-			Activate;
-		END Exit;
 
 	BEGIN {ACTIVE, SAFE, PRIORITY(High)}
 		process := CurrentProcess();
@@ -658,17 +637,6 @@ BEGIN
 	RETURN Kernel32.ExceptionContinueExecution; (* sets thread context and continues where specified in context *)
 END ExcpFrmHandler;
 
-PROCEDURE RemoveExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
-VAR this: Kernel32.ExcpFrmPtr;
-BEGIN
-	IGNORE Kernel32.RemoveVectoredContinueHandler(ExcpFrmHandler);
-END RemoveExcpFrm;
-
-PROCEDURE InstallExcpFrm( VAR excpfrm: Kernel32.ExcpFrm );
-BEGIN
-	Kernel32.AddVectoredContinueHandler(1, ExcpFrmHandler);
-END InstallExcpFrm;
-
 PROCEDURE InQueue( queue: ProcessQueue;  t: Process ): BOOLEAN;
 VAR p: Heaps.ProcessLink;
 BEGIN
@@ -746,7 +714,6 @@ END terminate;
 
 PROCEDURE {WINAPI} Wrapper( lpParameter: ANY ): LONGINT;
 VAR t: Process;  obj: ProtectedObject; res: Kernel32.BOOL; bp,sp: ADDRESS;
-	excpfrm: Kernel32.ExcpFrm;
 BEGIN
 	(* it may happen that the garbage collector runs right here and ignores this procedure.
 	    This is not a problem since lpParameter (being a reference to a process) is protected by the process lists *)
@@ -777,12 +744,8 @@ BEGIN
 	Machine.Release(Machine.Objects);
 	(* loop all processes that the GC did not see during process suspending because they were in the very moment being generated (just before the locked section) *)
 
-	(*! should not be necessary any more as GC runs immediately and without scheduling decisions
-	WHILE (gcActivity # NIL) & (gcActivity.process # NIL) & (gcActivity.process.mode = Running) DO END;
-	*)
 	t.body(obj);
 	terminate(t);
-	RemoveExcpFrm(excpfrm);
 	RETURN 0
 END Wrapper;
 

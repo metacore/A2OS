@@ -89,19 +89,19 @@ TYPE
 		bitmap: BlockBitmap; 
 
 		PROCEDURE ^  & Init*(volume: Volume; VAR res: WORD); 
-		PROCEDURE ^ New0*(name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ UpdateInode(inode: Inode; inodeAdr: LONGINT); 
 		PROCEDURE ^ GetFilename(name: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ FindEntry(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT); 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key, res: LONGINT); 
 		PROCEDURE ^ DeleteFile(inode: Inode; inodeAdr: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ DeleteDnodes(inode: Inode; VAR res: WORD); 
-		PROCEDURE ^ Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
-		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
+		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
 		PROCEDURE ^ Format(VAR res: WORD); 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 

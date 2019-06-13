@@ -7,9 +7,9 @@ TYPE
 		zip: Unzip.ZipFile; 
 
 		PROCEDURE ^  & Init*(zip: Unzip.ZipFile); 
-		PROCEDURE ^ Old0*(name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
+		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
 

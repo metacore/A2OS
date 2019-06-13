@@ -13,9 +13,9 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Exists*(): BOOLEAN; 
 		PROCEDURE ^ FileExists*(): BOOLEAN; 
-		PROCEDURE ^ Open*(m: ARRAY OF CHAR; flags: SET); 
+		PROCEDURE ^ Open*(CONST m: ARRAY OF CHAR; flags: SET); 
 		PROCEDURE ^ GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date, size: LONGINT): BOOLEAN; 
-		PROCEDURE ^ PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT); 
+		PROCEDURE ^ PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT); 
 	END FSItemSearch; 
 
 	PROCEDURE ^ GetChecksum*(CONST file: ARRAY OF CHAR): Strings.String; 

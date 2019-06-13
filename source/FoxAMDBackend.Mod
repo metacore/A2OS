@@ -881,7 +881,7 @@ TYPE
 			END;
 		END GetImmediateMem;
 
-		PROCEDURE GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit,push: BOOLEAN; VAR ticket: Ticket);
+		PROCEDURE GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit,push: BOOLEAN);
 		VAR type: IntermediateCode.Type; temp: Assembler.Operand; size: SHORTINT; value: HUGEINT;
 
 			PROCEDURE IsImm8(value: HUGEINT): BOOLEAN;
@@ -926,12 +926,7 @@ TYPE
 				IF virtual.symbol.name # "" THEN Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+part*Assembler.bits32) END;
 				IF (cpuBits=64) & ((physical.sizeInBytes=8) OR ~IsImm32(value) OR push & ~IsSignedImm32(value)) THEN
 					ASSERT(cpuBits=64);
-					IF ticket # NIL THEN 
-						TicketToOperand(ticket, temp);
-						ticket := NIL;
-					ELSE
-						GetTemporaryRegister(IntermediateCode.int64,temp);
-					END;
+					GetTemporaryRegister(IntermediateCode.int64,temp);
 					emitter.Emit2(InstructionSet.opMOV,temp,physical);
 					physical := temp;
 				END;
@@ -940,8 +935,8 @@ TYPE
 			END;
 		END GetImmediate;
 
-		PROCEDURE GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; VAR pticket: Ticket);
-		VAR type: IntermediateCode.Type; virtualRegister, physicalRegister,offset: LONGINT; orig, ticket: Ticket; dest, source: Assembler.Operand;
+		PROCEDURE GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand);
+		VAR type: IntermediateCode.Type; virtualRegister, physicalRegister,offset: LONGINT; ticket,orig: Ticket; dest, source: Assembler.Operand;
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeMemory);
 			GetPartType(virtual.type,part,type);
@@ -981,12 +976,7 @@ TYPE
 			ELSIF cpuBits = 64 THEN
 				Assembler.InitImm(source,8,0);
 				Assembler.SetSymbol(source,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset);
-				IF pticket # NIL THEN 
-					ticket := pticket;
-					pticket := NIL;
-				ELSE
-					ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateBackend.GetType(module.system,module.system.addressType));
-				END;
+				ticket := TemporaryTicket(IntermediateCode.GeneralPurposeRegister,IntermediateBackend.GetType(module.system,module.system.addressType));
 				TicketToOperand(ticket,dest);
 				emitter.Emit2(InstructionSet.opMOV,dest,source);
 				physicalRegister := ticket.register;
@@ -1053,9 +1043,9 @@ TYPE
 		BEGIN
 			TryAllocate(vop,part);
 			CASE vop.mode OF
-				IntermediateCode.ModeMemory: GetMemory(vop,part,op,ticket);
+				IntermediateCode.ModeMemory: GetMemory(vop,part,op);
 				|IntermediateCode.ModeRegister:	GetRegister(vop,part,op,ticket);
-				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE,FALSE, ticket);
+				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE,FALSE);
 			END;
 			IF ticket # NIL THEN
 				TicketToOperand(ticket, tmp);
@@ -1991,7 +1981,7 @@ TYPE
 							emitterFixup := emitterFixup.nextFixup;
 						END;
 					END;
-				ELSIF cpuBits = 64 THEN					
+				ELSIF cpuBits = 64 THEN
 					MakeOperand(instruction.op1,Low,op,NIL);
 					emitter.Emit1(InstructionSet.opCALL,op);
 					ModifyStackPointer (-instruction.op2.intValue);
@@ -2966,13 +2956,13 @@ TYPE
 		END EmitBr;
 
 		PROCEDURE EmitPush(CONST vop: IntermediateCode.Operand; part: LONGINT);
-		VAR  index: LONGINT; type,cpuType: IntermediateCode.Type; op1: Assembler.Operand; ra, ticket: Ticket;
+		VAR  index: LONGINT; type,cpuType: IntermediateCode.Type; op1: Assembler.Operand; ra: Ticket;
 		BEGIN
 			GetPartType(vop.type,part,type);
 			ASSERT(type.form IN IntermediateCode.Integer);
 
 			IF	vop.mode = IntermediateCode.ModeImmediate THEN (* may not push 16 bit immediate: strange instruction in 32 / 64 bit mode *)
-				GetImmediate(vop,part,op1,TRUE,TRUE, ticket);
+				GetImmediate(vop,part,op1,TRUE,TRUE);
 				emitter.Emit1(InstructionSet.opPUSH,op1);
 			ELSIF (type.sizeInBits = cpuBits) THEN
 				MakeOperand(vop,part,op1,NIL);

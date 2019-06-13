@@ -2,7 +2,7 @@ MODULE TuringCoatWnd;	(* Soren Renner / TF *)
 
 IMPORT
 	Raster, Random, Objects, Kernel, WMRectangles, WMGraphics, Modules, Strings,
-	WM := WMWindowManager, WMMessages;
+	WM := WMWindowManager, WMMessages, Commands, Options;
 
 CONST
 	m = 50;
@@ -19,15 +19,16 @@ TYPE
 	VAR
 		mesh1, mesh2, n1 : ARRAY m, m OF REAL;
 		random : Random.Generator;
-		alive, dead, alpha : BOOLEAN;
+		alive, dead, alpha, delay : BOOLEAN;
 		t0 : LONGINT;
 		timer : Kernel.Timer;
 
-		PROCEDURE &New*(alpha : BOOLEAN);
+		PROCEDURE &New*(alpha, delay : BOOLEAN);
 		VAR i, j : LONGINT;
 		BEGIN
 			Init(WindowWidth, WindowHeight, alpha);
 			SELF.alpha :=alpha;
+			SELF.delay := delay;
 			manager := WM.GetDefaultManager();
 			manager.Add(100, 100, SELF, {WM.FlagFrame, WM.FlagClose, WM.FlagNoResizing});
 
@@ -146,7 +147,7 @@ TYPE
 		Objects.SetPriority(Objects.Low);
 		WHILE alive DO
 			Generation;
-			Delay;	(* GF, make animation speed independent of CPU speed *)
+			IF delay THEN Delay END;	(* GF, make animation speed independent of CPU speed *)
 			DrawIt;
 		END;
 		BEGIN {EXCLUSIVE} dead := TRUE; END;
@@ -155,16 +156,15 @@ TYPE
 VAR
 	nofWindows : LONGINT;
 
-PROCEDURE OpenAlpha*;
-VAR window : TCW;
+PROCEDURE Open*(context: Commands.Context);
+VAR window : TCW; options: Options.Options;
 BEGIN
-	NEW(window, TRUE);
-END OpenAlpha;
-
-PROCEDURE Open*;
-VAR window : TCW;
-BEGIN
-	NEW(window, FALSE);
+	NEW(options);
+	options.Add("d", "delay", Options.Flag);
+	options.Add("a", "alpha", Options.Flag);
+	IF options.Parse(context.arg, context.error) THEN
+		NEW(window, options.GetFlag("alpha"), options.GetFlag("delay"));
+	END;
 END Open;
 
 PROCEDURE IncCount;
@@ -193,5 +193,7 @@ BEGIN
 END TuringCoatWnd.
 
 System.Free TuringCoatWnd ~
-TuringCoatWnd.OpenAlpha ~
 TuringCoatWnd.Open ~
+TuringCoatWnd.Open --alpha~
+TuringCoatWnd.Open --delay ~
+

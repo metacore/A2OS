@@ -34,7 +34,7 @@ TYPE
 		VAR stubs: RfsClientProxy.Proxy;
 
 		(** Creates a new file with the specified name **)
-		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			res: WORD;
 			f: File;
@@ -81,7 +81,7 @@ TYPE
 		END New0;
 
 		(** opens an existing File **)
-		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			res: WORD;
 			f: File;
@@ -135,7 +135,7 @@ TYPE
 		END Old0;
 
 		(** deletes a file, res = 0 indicates succsess **)
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		VAR namebuf: FileName; errorcode: LONGINT;
 		BEGIN {EXCLUSIVE}
 			Check(name, namebuf, res);
@@ -164,7 +164,7 @@ TYPE
 		END Delete0;
 
 		(** renames a file. res = 0 indicates success **)
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR oldbuf, newbuf: FileName; errorcode: LONGINT;
 		BEGIN {EXCLUSIVE}
 			Check(old, oldbuf, res);
@@ -195,7 +195,7 @@ TYPE
 		END Rename0;
 
 		(** enumerates the contents of a directory **)
-		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 		VAR fnTmp, fn: ARRAY Files.PrefixLength+FnLength OF CHAR; dir: RfsClientProxy.Dir;
 				errorcode, cookie, endOfDir, helper, time, date, size, detail: LONGINT;
 		BEGIN {EXCLUSIVE}
@@ -233,7 +233,7 @@ TYPE
 		END Enumerate0;
 
 		(** return an unique id for a file registered in the filesystem **)
-		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 			VAR
 				res: WORD;
 				namebuf: FileName;
@@ -684,7 +684,7 @@ TYPE
 VAR newfs*: FileSystem;
 
 
-PROCEDURE Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
+PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
 	VAR i: LONGINT; ch: CHAR;
 BEGIN
 	ch := s[0]; i := 0;

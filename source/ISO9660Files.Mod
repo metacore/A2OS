@@ -38,7 +38,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 				jolietLevel: LONGINT;
 
 			(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
-			PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
+			PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 			VAR f: File; namebuf: Filename; dircl, dirpos, time, date, filecl, len: LONGINT; attr: SET; res: INTEGER;
 			BEGIN {EXCLUSIVE}
 				res := 0; f := NIL;
@@ -57,7 +57,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 			END Old0;
 
 			(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
-			PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+			PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 			VAR
 				fname, name, mmask, pname, fullname: Filename;
 				f: Files.File; R: Files.Rider;
@@ -100,7 +100,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 			END Enumerate0;
 
 			(** Return the unique non-zero key of the named file, if it exists. *)
-			PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+			PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 			VAR res: INTEGER; namebuf: Filename; t, key, filecl: LONGINT; attr: SET;
 			BEGIN {EXCLUSIVE}
 				IF nameDebug THEN LogString("OFSFATFiles.FileKey: "); LogString(name); LogLn END;

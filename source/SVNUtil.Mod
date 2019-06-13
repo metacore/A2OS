@@ -33,14 +33,14 @@ TYPE
 			RETURN found & (Files.Old ( mask^ ) # NIL);
 		END FileExists;
 
-		PROCEDURE Open*(m: ARRAY OF CHAR; flags: SET);
+		PROCEDURE Open*(CONST m: ARRAY OF CHAR; flags: SET);
 		BEGIN
+			COPY ( m, mask^ );
 			(* remove path delimiter at the end *)
-			IF Strings.EndsWith ( Files.PathDelimiter, m ) THEN
-				m[Strings.Length(m)-1] := 0X;
+			IF Strings.EndsWith ( Files.PathDelimiter, mask^ ) THEN
+				mask[Strings.Length(m)-1] := 0X;
 			END;
 
-			COPY ( m, mask^ );
 			Files.SplitPath ( mask^, path^, name0 );
 			Strings.Append ( path^, "/*" );
 			found := FALSE;
@@ -65,12 +65,12 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
+		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
 		BEGIN
 			ASSERT(adding);
 
 			IF ~found & (name = mask^) THEN
-				name[0] := name[0];
+				(*!name[0] := name[0];*)
 				found := TRUE;
 				flags := flags0;
 				time := time0;

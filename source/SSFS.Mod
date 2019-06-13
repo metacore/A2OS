@@ -346,7 +346,7 @@ TYPE
 		END Init;
 
 		(** Create a new file with the specified name.  End users use Files.New instead. *)
-		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			file : File; filename : Files.FileName; fileExists : BOOLEAN;
 			inodeAdr, index, i, res : LONGINT; dateTime : Dates.DateTime;
@@ -406,7 +406,7 @@ TYPE
 		END New0;
 
 		(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
-		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR file : File; filename : Files.FileName; block : Block; inode : Inode;  index, res : LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("Old: "); KernelLog.String(name); KernelLog.Ln; END;
@@ -471,7 +471,7 @@ TYPE
 		END FindEntry;
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key, res: LONGINT);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key, res: LONGINT);
 		VAR filename : Files.FileName; index : LONGINT; block : Block;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("Delete: "); KernelLog.String(name); KernelLog.Ln; END;
@@ -523,13 +523,13 @@ TYPE
 		END DeleteDnodes;
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		BEGIN  {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END Rename0;
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
-		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 		VAR i : LONGINT; block : Block; inode : Inode; name : Files.FileName; attributes : SET; time, date, size, res : LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF( mask # "") THEN
@@ -560,7 +560,7 @@ TYPE
 		END Enumerate0;
 
 		(** Return the unique non-zero key of the named file, if it exists. *)
-		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 		VAR key, index : LONGINT;
 		BEGIN {EXCLUSIVE}
 			key := 0;
@@ -575,14 +575,14 @@ TYPE
 
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
-		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD);
 		BEGIN {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END CreateDirectory0;
 
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
-		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT);
+		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT);
 		BEGIN {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END RemoveDirectory0;

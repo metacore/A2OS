@@ -10,7 +10,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				SELF.zip := zip
 			END Init;
 
-			PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
+			PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 				VAR E: Unzip.Entry; key: LONGINT; res: WORD; F: File; F0: Files.File; W: Files.Writer;
 			BEGIN {EXCLUSIVE}
 				key := 0;
@@ -31,7 +31,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				RETURN NIL
 			END Old0;
 
-			PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+			PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 				VAR E: Unzip.Entry; name: Files.FileName; d, t: LONGINT;
 			BEGIN {EXCLUSIVE}
 				E := zip.GetFirst();
@@ -47,7 +47,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				END
 			END Enumerate0;
 
-			PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+			PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 				VAR E: Unzip.Entry; key: LONGINT;
 			BEGIN {EXCLUSIVE}
 				key := 0;

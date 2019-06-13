@@ -497,7 +497,7 @@ TYPE
 		(** Retrieves a variable number of entries with names matching the mask string from a directory identified by filename.
 			  the detail is set to 1 if time, data and size information is also to be retrieved. the offset value tells how many entries
 			  should be skip first **)
-		PROCEDURE ReadDir*(VAR filename, mask : ARRAY OF CHAR; detail, cookie: LONGINT; dir: Dir; VAR endOfDir, errorcode: LONGINT);
+		PROCEDURE ReadDir*(CONST filename, mask : ARRAY OF CHAR; detail, cookie: LONGINT; dir: Dir; VAR endOfDir, errorcode: LONGINT);
 			VAR filenameLen, procID, testID, received, dataBytes, msgBytes, currentIndex, maskLen, time, date, size: LONGINT; res: WORD;
 		BEGIN
 			(*prepare params and send*)
@@ -906,7 +906,7 @@ BEGIN
 END Len;
 
 (** Fast Buffer Copying. copy from offset offFrom len Bytes of Buffer bufFrom into bufTo at offset offTo **)
-PROCEDURE CopyBuffer*(VAR bufFrom: ARRAY OF CHAR; offFrom: LONGINT; VAR bufTo: ARRAY OF CHAR; offTo, len: LONGINT);
+PROCEDURE CopyBuffer*(CONST bufFrom: ARRAY OF CHAR; offFrom: LONGINT; VAR bufTo: ARRAY OF CHAR; offTo, len: LONGINT);
 BEGIN
 	ASSERT(offTo + len <= LEN(bufTo));
 	SYSTEM.MOVE(ADDRESSOF(bufFrom[offFrom]), ADDRESSOF(bufTo[offTo]), len);

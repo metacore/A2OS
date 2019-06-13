@@ -305,45 +305,45 @@ TYPE
 
 		(** Create a new file with the specified name.  End users use Files.New instead. *)
 
-		PROCEDURE New0*(name: ARRAY OF CHAR): File;
+		PROCEDURE New0*(CONST name: ARRAY OF CHAR): File;
 		BEGIN HALT(301) END New0;	(* abstract *)
 
 		(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
 
-		PROCEDURE Old0*(name: ARRAY OF CHAR): File;
+		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): File;
 		BEGIN HALT(301) END Old0;	(* abstract *)
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
 
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		BEGIN HALT(301) END Delete0;	(* abstract *)
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
 
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: File; VAR res: WORD);
 		BEGIN HALT(301) END Rename0;	(* abstract *)
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
 
-		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
+		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
 		BEGIN HALT(301) END Enumerate0;	(* abstract *)
 
 		(** Return the unique non-zero key of the named file, if it exists. *)
 
-		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 		BEGIN HALT(301) END FileKey;	(* abstract *)
 
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
 
-		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD);
 		BEGIN res := -1	(* not supported *)
 		END CreateDirectory0;
 
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
 
-		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
 		BEGIN res := -1	(* not supported *)
 		END RemoveDirectory0;
 
@@ -472,7 +472,7 @@ TYPE
 
 		(** Open an enumerator and enumerate the files that match mask. *)
 
-		PROCEDURE Open*(mask: ARRAY OF CHAR; flags: SET);
+		PROCEDURE Open*(CONST mask: ARRAY OF CHAR; flags: SET);
 		BEGIN
 			r.file := New("");
 			r.file.Set(r, 0);
@@ -522,7 +522,7 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
+		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
 		VAR len: LONGINT;
 		BEGIN
 			ASSERT(adding);
@@ -590,7 +590,7 @@ END OpenWriter;
 
 (** Split fullname = ( prefix ":" name ) into prefix and name *)
 
-PROCEDURE SplitName*(fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
+PROCEDURE SplitName*(CONST fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
 VAR i, j, len: LONGINT;
 BEGIN
 	i := 0; WHILE (fullname[i] # ":") & (fullname[i] # 0X) DO INC(i) END;
@@ -607,7 +607,7 @@ END SplitName;
 
 (** Join prefix and name to fullname = ( prefix ":" name ) *)
 
-PROCEDURE JoinName*(prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
+PROCEDURE JoinName*(CONST prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
 VAR i, j, len: LONGINT;
 BEGIN
 	len := LEN(fullname)-1;
@@ -619,7 +619,7 @@ END JoinName;
 
 (** Split a pathname at the last PathDelimiter or ":" into path and filename = ( {path (PathDelimiter|":")} filename ) *)
 
-PROCEDURE SplitPath*(pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR);
+PROCEDURE SplitPath*(CONST pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR);
 VAR i,j,len: LONGINT;
 BEGIN
 	i := 0; j := -1;
@@ -639,7 +639,7 @@ END SplitPath;
 
 (** Join path and file name = ( path PathDelimiter name ) *)
 
-PROCEDURE JoinPath*(path, name: ARRAY OF CHAR; VAR pathname: ARRAY OF CHAR);
+PROCEDURE JoinPath*(CONST path, name: ARRAY OF CHAR; VAR pathname: ARRAY OF CHAR);
 VAR i,j,len: LONGINT;
 BEGIN
 	len := LEN(pathname)-1;
@@ -651,7 +651,7 @@ END JoinPath;
 
 (** Split a filename at the last '.' into name and extension = ( name "." extension ) *)
 
-PROCEDURE SplitExtension*(filename: ARRAY OF CHAR; VAR name, extension: ARRAY OF CHAR);
+PROCEDURE SplitExtension*(CONST filename: ARRAY OF CHAR; VAR name, extension: ARRAY OF CHAR);
 VAR i,j,len: LONGINT;
 BEGIN
 	i := 0; j := -1;
@@ -672,7 +672,7 @@ END SplitExtension;
 
 (** Join name and extension = ( name "." extension ) *)
 
-PROCEDURE JoinExtension*(name, extension: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR);
+PROCEDURE JoinExtension*(CONST name, extension: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR);
 VAR i,j,len: LONGINT;
 BEGIN
 	len := LEN(filename)-1;
@@ -707,7 +707,7 @@ END WriteFS;
 
 (** Add file system at end of list, with specified prefix, which must be unique. *)
 
-PROCEDURE Add*(fs: FileSystem; prefix: ARRAY OF CHAR);
+PROCEDURE Add*(fs: FileSystem; CONST prefix: ARRAY OF CHAR);
 VAR p, c: FileSystem;
 BEGIN {EXCLUSIVE}
 	IF Trace THEN
@@ -777,7 +777,7 @@ END Remove;
 
 (* Find the file system with specified prefix. *)
 
-PROCEDURE FindFS(prefix: ARRAY OF CHAR): FileSystem;
+PROCEDURE FindFS(CONST prefix: ARRAY OF CHAR): FileSystem;
 VAR fs: FileSystem;
 BEGIN
 	fs := fsroot; WHILE (fs # NIL) & (fs.prefix # prefix) DO fs := fs.next END;
@@ -786,7 +786,7 @@ END FindFS;
 
 (** Find file system with specified prefix. *)
 
-PROCEDURE This*(prefix: ARRAY OF CHAR): FileSystem;
+PROCEDURE This*(CONST prefix: ARRAY OF CHAR): FileSystem;
 BEGIN {EXCLUSIVE}
 	RETURN FindFS(prefix)
 END This;
@@ -822,7 +822,7 @@ END Collect;
 
 (* Find file in open file list, or open and add it. *)
 
-PROCEDURE OpenOld(enum: FileSearcher; fs: FileSystem; VAR fname: ARRAY OF CHAR): File;
+PROCEDURE OpenOld(enum: FileSearcher; fs: FileSystem; CONST fname: ARRAY OF CHAR): File;
 VAR f: File; key: LONGINT;
 BEGIN
 	f := NIL;
@@ -845,7 +845,7 @@ END OpenOld;
 
 (** Open an existing file, searching through the mounted file system list if no prefix is specified. *)
 
-PROCEDURE Old*(name: ARRAY OF CHAR): File;
+PROCEDURE Old*(CONST name: ARRAY OF CHAR): File;
 VAR fs: FileSystem; f: File; prefix: Prefix; fname: FileName;
 BEGIN {EXCLUSIVE}
 	f := NIL;
@@ -866,7 +866,7 @@ END Old;
 
 (** Create a new file.  If no prefix is specified, create the file on the first file system in the mounted list. *)
 
-PROCEDURE New*(name: ARRAY OF CHAR): File;
+PROCEDURE New*(CONST name: ARRAY OF CHAR): File;
 VAR fs: FileSystem; f: File; prefix: Prefix; fname: FileName;
 BEGIN {EXCLUSIVE}
 	f := NIL; SplitName(name, prefix, fname);
@@ -896,7 +896,7 @@ END New;
 
 (** Delete a file. res = 0 indicates success. *)
 
-PROCEDURE Delete*(VAR name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Delete*(CONST name: ARRAY OF CHAR; VAR res: WORD);
 VAR fs: FileSystem; f: File; key: LONGINT; prefix: Prefix; fname: FileName;
 BEGIN {EXCLUSIVE}
 	SplitName(name, prefix, fname);
@@ -921,7 +921,7 @@ BEGIN {EXCLUSIVE}
 END Delete;
 
 (* copies the file with the given name to the fileClipboard *)
-PROCEDURE Copy*(name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Copy*(CONST name: ARRAY OF CHAR; VAR res: WORD);
 VAR file: File;
 BEGIN
 	res := -1;
@@ -932,7 +932,7 @@ BEGIN
 END Copy;
 
 (* pastes the fileClipboard into the file with the given name if it doesn't exist already *)
-PROCEDURE Paste*(name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Paste*(CONST name: ARRAY OF CHAR; VAR res: WORD);
 VAR writer : Writer;
 	reader : Reader;
 	file : File;
@@ -963,7 +963,7 @@ END Paste;
  * @param overwrite: @in: Overwrite existing files? @out: Has an existing file been overwritten?
  * @param res: @out: Result code
  *)
-PROCEDURE CopyFile*(source, destination : ARRAY OF CHAR; VAR overwrite : BOOLEAN; VAR res : WORD);
+PROCEDURE CopyFile*(CONST source, destination : ARRAY OF CHAR; VAR overwrite : BOOLEAN; VAR res : WORD);
 VAR
 	sprefix, dprefix : Prefix;
 	sname, dname, dpath, dfilename: FileName;
@@ -1065,7 +1065,7 @@ END Register;
 
 (** Create a directory structure. Directories are automatically registered. res=0 indicates success.
 	Use Files.RemoveDirectory to delete a directory *)
-PROCEDURE CreateDirectory*(path: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE CreateDirectory*(CONST path: ARRAY OF CHAR; VAR res: WORD);
 VAR prefix: Prefix; fs: FileSystem; fpath: FileName;
 BEGIN {EXCLUSIVE}
 	SplitName(path, prefix, fpath);
@@ -1078,7 +1078,7 @@ BEGIN {EXCLUSIVE}
 END CreateDirectory;
 
 (** Remove a directory. res=0 indicates success. If force=TRUE, any files and subdirectories are automatically deleted. *)
-PROCEDURE RemoveDirectory*(path: ARRAY OF CHAR; force: BOOLEAN; VAR res: WORD);
+PROCEDURE RemoveDirectory*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR res: WORD);
 VAR prefix: Prefix; fs: FileSystem; f: File; key: LONGINT; fpath: FileName;
 BEGIN {EXCLUSIVE}
 	SplitName(path, prefix, fpath);
@@ -1103,7 +1103,7 @@ END RemoveDirectory;
 
 (* Enumerates files matching mask *)
 
-PROCEDURE Enumerate(VAR mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
+PROCEDURE Enumerate(CONST mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
 VAR
 	fs: FileSystem; ft: FileSystemTable; i: LONGINT;
 	prefix: Prefix; fmask: FileName;
@@ -1306,7 +1306,7 @@ BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END WriteLReal;
 
-PROCEDURE WriteString*(VAR r: Rider; x: ARRAY OF CHAR);
+PROCEDURE WriteString*(VAR r: Rider; CONST x: ARRAY OF CHAR);
 VAR i: LONGINT;
 BEGIN
 	i := 0; WHILE x[i] # 0X DO INC(i) END;
@@ -1329,7 +1329,7 @@ END WriteNum;
 
 (** Append first string to second string, truncating on overflow. *)
 
-PROCEDURE AppendStr*(from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR);
+PROCEDURE AppendStr*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR);
 VAR i, j, m: LONGINT;
 BEGIN
 	j := 0; WHILE to[j] # 0X DO INC(j) END;

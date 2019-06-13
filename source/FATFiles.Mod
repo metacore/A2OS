@@ -196,7 +196,7 @@ TYPE
 		END SetRootDirectoryX;
 
 		(* Create a new file with the specified name.  End users use Files.New instead. *)
-		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR path, filename: Filename; dir: Directory; f: File;
 		BEGIN {EXCLUSIVE}
 			IF UTF8Strings.Valid(name) THEN
@@ -225,7 +225,7 @@ TYPE
 		END New0;
 
 		(* Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
-		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		BEGIN {EXCLUSIVE} RETURN OldX(name)
 		END Old0;
 
@@ -262,7 +262,7 @@ TYPE
 		END OldX;
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		BEGIN {EXCLUSIVE} Delete0X(name, key, res)
 		END Delete0;
 
@@ -310,7 +310,7 @@ TYPE
 		END Delete0X;
 
 		(* Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR oldpath, oldname, newpath, newname: Filename; r: File; dir: Directory; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			res := ErrInvalidFilename;
@@ -363,16 +363,16 @@ TYPE
 			END
 		END Enumerate;
 
-		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
-		VAR d: Directory; path: Filename; par: EnumParam;
+		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+		VAR d: Directory; maskUp, path: Filename; par: EnumParam;
 		BEGIN {EXCLUSIVE}
 			IF UTF8Strings.Valid(mask) THEN
 				NEW(par); par.flags := flags; par.enum := enum; par.mask := "";
 
-				UTF8Strings.UpperCase(mask, mask);
-				d := FindDirectory(mask);
+				UTF8Strings.UpperCase(mask, maskUp);
+				d := FindDirectory(maskUp);
 				IF (d = NIL) THEN
-					Files.SplitPath(mask, path, par.mask);
+					Files.SplitPath(maskUp, path, par.mask);
 					IF (path # "") THEN d := FindDirectory(path)
 					ELSE d := rootDir
 					END
@@ -386,12 +386,12 @@ TYPE
 		END Enumerate0;
 
 		(* Return the unique non-zero key of the named file, if it exists. *)
-		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 		VAR s: SearchByName; path, filename: Filename; dir: Directory; f: File; key: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF UTF8Strings.Valid(name) THEN
-				UTF8Strings.UpperCase(name, name);
-				Files.SplitPath(name, path, filename);
+				UTF8Strings.UpperCase(name, filename);
+				Files.SplitPath(filename, path, filename);
 				IF ValidateName(filename) THEN
 					IF (path # "") THEN dir := FindDirectory(path)
 					ELSE dir := rootDir
@@ -412,7 +412,7 @@ TYPE
 			RETURN key
 		END FileKey;
 
-		PROCEDURE CreateDirectory0*(path: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0*(CONST path: ARRAY OF CHAR; VAR res: WORD);
 		VAR f: File; d: Directory; i,j: LONGINT; name: Filename; lookup: BOOLEAN; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			IF (Files.ReadOnly IN vol.flags) THEN res := ErrReadOnly; RETURN END;
@@ -461,7 +461,7 @@ TYPE
 		BEGIN INC(par(CountFiles).count); RETURN TRUE
 		END RmDirCallback;
 
-		PROCEDURE RemoveDirectory0*(path: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
 		VAR f: File; par: CountFiles; s: SearchByName; parent: Directory;
 		BEGIN {EXCLUSIVE}
 			IF (Files.ReadOnly IN vol.flags) THEN res := ErrReadOnly; RETURN END;

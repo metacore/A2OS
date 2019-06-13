@@ -31,7 +31,7 @@ TYPE
 
 		(** Create a new file with the specified name.  End users use Files.New instead. *)
 
-		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			key: LONGINT;
 			f: File;
@@ -56,7 +56,7 @@ TYPE
 
 		(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
 
-		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			f: File;
 			key: LONGINT;
@@ -80,10 +80,11 @@ TYPE
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
 
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		VAR
 			check : BOOLEAN;
 			closekey : LONGINT;
+			nameTrimmed: Files.FileName;
 		BEGIN
 			IF Trace THEN
 				KernelLog.String("FileSystem.Delete"); KernelLog.Ln();
@@ -94,16 +95,18 @@ TYPE
 			closekey := OpenAndX(c, name, 40H, FALSE);
 			CloseFile(c, closekey);
 			lock.Release();
-			Strings.TrimLeft(name, CHR(2FH));
+			ASSERT(LEN(nameTrimmed) > Strings.Length(name));
+			COPY(name,nameTrimmed);
+			Strings.TrimLeft(nameTrimmed, CHR(2FH));
 
 			lock.Acquire();
 			(* SEND *)
-			SendSMBHeader(SHORT(39 + Strings.Length(name)), 06X, c);
+			SendSMBHeader(SHORT(39 + Strings.Length(nameTrimmed)), 06X, c);
 			c.out.Net8(1);								(* Word count *)
 			c.out.RawInt(22);							(* search attributes *)
-			c.out.RawInt(SHORT(2 + Strings.Length(name)));
+			c.out.RawInt(SHORT(2 + Strings.Length(nameTrimmed)));
 			c.out.Net8(4);								(* ascii *)
-			c.out.RawString(name);						(* name *)
+			c.out.RawString(nameTrimmed);						(* name *)
 			c.out.Update();
 
 			(* RECEIVE *)
@@ -120,10 +123,11 @@ TYPE
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
 
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR
 			check : BOOLEAN;
 			closekey : LONGINT;
+			old1, new1: Files.FileName;
 		BEGIN
 			IF Trace THEN
 				KernelLog.String("FileSystem.Rename"); KernelLog.Ln();
@@ -135,19 +139,21 @@ TYPE
 			closekey := OpenAndX(c, old, 40H, FALSE);
 			CloseFile(c, closekey);
 			lock.Release();
-			ReplaceSlash(old);
-			ReplaceSlash(new);
+			COPY(old,old1);
+			COPY(new,new1);
+			ReplaceSlash(old1);
+			ReplaceSlash(new1);
 
 			lock.Acquire();
 			(* SEND *)
-			SendSMBHeader(SHORT(41 + Strings.Length(new) + Strings.Length(old)), 07X, c);
+			SendSMBHeader(SHORT(41 + Strings.Length(new1) + Strings.Length(old1)), 07X, c);
 			c.out.Net8(1);			(* Word count *)
 			c.out.RawInt(22);		(* search attributes *)
-			c.out.RawInt(SHORT(4 + Strings.Length(new) + Strings.Length(old)));
+			c.out.RawInt(SHORT(4 + Strings.Length(new1) + Strings.Length(old1)));
 			c.out.Net8(4);			(* ascii *)
-			c.out.RawString(old);	(* old name *)
+			c.out.RawString(old1);	(* old name *)
 			c.out.Net8(4);			(* ascii *)
-			c.out.RawString(new);	(* new name *)
+			c.out.RawString(new1);	(* new name *)
 			c.out.Update();
 
 			(* RECEIVE *)
@@ -164,7 +170,7 @@ TYPE
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
 
-		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 		VAR
 			check, endOfSearch, findFirst: BOOLEAN;
 			byteCount, dataOff, paraOff, eos: INTEGER;
@@ -174,31 +180,32 @@ TYPE
 			ch: ARRAY 2 OF CHAR;
 			dt: Dates.DateTime;
 			date, time, size: LONGINT;
-			dirMask, filename: ARRAY 256 OF CHAR;
+			maskModified, dirMask, filename: Files.FileName;
 		BEGIN
 			endOfSearch := FALSE;
 			findFirst := TRUE;
 			maskLen := Strings.Length(mask);
 			COPY(mask, dirMask);
-			ReplaceSlash(mask);
+			COPY(mask, maskModified);
+			ReplaceSlash(maskModified);
 
 			IF Trace THEN
 				KernelLog.String("FileSystem.Enumerate"); KernelLog.Ln();
-				KernelLog.String(" -- Mask: "); KernelLog.String(mask); KernelLog.Ln();
+				KernelLog.String(" -- Mask: "); KernelLog.String(maskModified); KernelLog.Ln();
 			END;
 
-			IF mask = "*" THEN
+			IF maskModified = "*" THEN
 				ch[0] := CHR(92); ch[1] := 0X;
 				Strings.Concat(ch, "*", c.mask);
 				dirMask := "/";
-			ELSIF Strings.EndsWith("\\*", mask) THEN
-				Strings.Truncate(mask, maskLen - 2);
+			ELSIF Strings.EndsWith("\\*", maskModified) THEN
+				Strings.Truncate(maskModified, maskLen - 2);
 				Strings.Truncate(dirMask, maskLen - 2);
-				Strings.Concat(mask, "*", c.mask);
-			ELSIF Strings.EndsWith("\*", mask) THEN
-				Strings.Truncate(mask, maskLen - 1);
+				Strings.Concat(maskModified, "*", c.mask);
+			ELSIF Strings.EndsWith("\*", maskModified) THEN
+				Strings.Truncate(maskModified, maskLen - 1);
 				Strings.Truncate(dirMask, maskLen - 1);
-				Strings.Concat(mask, "*", c.mask);
+				Strings.Concat(maskModified, "*", c.mask);
 			ELSE
 				RETURN;
 			END;
@@ -310,7 +317,7 @@ TYPE
 
 		(** Return the unique non-zero key of the named file, if it exists. *)
 
-		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 		VAR key: LONGINT;
 		BEGIN
 			lock.Acquire();
@@ -322,7 +329,7 @@ TYPE
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
 
-		PROCEDURE CreateDirectory0*(name: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD);
 		VAR check: BOOLEAN;
 		BEGIN
 			IF Trace THEN
@@ -354,7 +361,7 @@ TYPE
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
 
-		PROCEDURE RemoveDirectory0*(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
 		VAR check: BOOLEAN;
 		BEGIN
 			IF Trace THEN

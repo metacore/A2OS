@@ -139,49 +139,49 @@ TYPE
 			SELF.fs := winFS;  useprefix := TRUE;  INCL( flags, Files.NeedsPrefix );
 		END Init;
 
-		PROCEDURE New0*( name: ARRAY OF CHAR ): Files.File;
+		PROCEDURE New0*(CONST name: ARRAY OF CHAR ): Files.File;
 		VAR fname: FileName;  f: Files.File;
 		BEGIN
 			Prefix( name, fname ); f := fs.New0( fname ); IF f # NIL THEN  f.fs := SELF; END;  RETURN f;
 		END New0;
 
-		PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
+		PROCEDURE Old0*(CONST name: ARRAY OF CHAR ): Files.File;
 		VAR fname: FileName;   f: Files.File;
 		BEGIN
 			Prefix( name, fname );  f :=  fs.Old0( fname ); IF f # NIL THEN  f.fs := SELF; END; RETURN f;
 		END Old0;
 
-		PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD);
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.Delete0( fname, key, res );
 		END Delete0;
 
-		PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
 		VAR old0, new0: FileName;
 		BEGIN
 			Prefix( old, old0 );  Prefix( new, new0 );  fs.Rename0( old0, new0, fold, res );
 		END Rename0;
 
-		PROCEDURE Enumerate0*( mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
+		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
 		VAR fmask: FileName;
 		BEGIN
 			Prefix( mask, fmask );  fs.Enumerate1( fmask, flags, enum, useprefix );
 		END Enumerate0;
 
-		PROCEDURE FileKey*( name: ARRAY OF CHAR ): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR ): LONGINT;
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  RETURN fs.FileKey( fname );
 		END FileKey;
 
-		PROCEDURE CreateDirectory0*( name: ARRAY OF CHAR;  VAR res: WORD );
+		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR;  VAR res: WORD );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.CreateDirectory0( fname, res );
 		END CreateDirectory0;
 
-		PROCEDURE RemoveDirectory0*( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
+		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.RemoveDirectory0( fname, force, key, res );

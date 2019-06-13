@@ -517,7 +517,7 @@ TYPE
 	FileSystem = OBJECT (Files.FileSystem)	(* our file system type *)
 		VAR dir: Directory;
 
-		PROCEDURE New0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR i: LONGINT; res: WORD; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
 		BEGIN {EXCLUSIVE}
 			f := NIL; Check(name, namebuf, res);
@@ -537,7 +537,7 @@ TYPE
 			RETURN f
 		END New0;
 
-		PROCEDURE Old0*(name: ARRAY OF CHAR): Files.File;
+		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			i, k: LONGINT; res: WORD; f: File; header: DiskAdr; buf: Buffer; head: FileHd;
 			namebuf: FileName; inxpg: Index;
@@ -570,7 +570,7 @@ TYPE
 			RETURN f
 		END Old0;
 
-		PROCEDURE Delete0*(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
 		VAR adr: DiskAdr; namebuf: FileName; head: FileHeader;
 		BEGIN {EXCLUSIVE}
 			Check(name, namebuf, res);
@@ -589,7 +589,7 @@ TYPE
 			END
 		END Delete0;
 
-		PROCEDURE Rename0*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
 		VAR adr: DiskAdr; oldbuf, newbuf: FileName;  head: FileHeader;
 		BEGIN {EXCLUSIVE}
 			Check(old, oldbuf, res);
@@ -612,13 +612,13 @@ TYPE
 			END
 		END Rename0;
 
-		PROCEDURE Enumerate0*(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
+		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 		VAR b: BOOLEAN; fh: FileHeader; fn: ARRAY Files.PrefixLength+FnLength OF CHAR;
 		BEGIN {EXCLUSIVE}
 			b := TRUE; enumerate(SELF, mask, DirRootAdr, flags, enum, b, fh, fn)
 		END Enumerate0;
 
-		PROCEDURE FileKey*(name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
 			VAR res: WORD; namebuf: FileName; header: DiskAdr;
 		BEGIN {EXCLUSIVE}
 			header := 0;
@@ -868,7 +868,7 @@ BEGIN
 	RETURN vol.Marked(sec DIV SF)
 END Marked;
 
-PROCEDURE MatchPrefix(VAR mask, name: ARRAY OF CHAR; VAR pos, diff: LONGINT);
+PROCEDURE MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: LONGINT);
 BEGIN
 	pos := 0;
 	LOOP
@@ -884,7 +884,7 @@ BEGIN
 	END
 END MatchPrefix;
 
-PROCEDURE Match(pos: LONGINT; VAR pat, name: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE Match(pos: LONGINT; CONST pat, name: ARRAY OF CHAR): BOOLEAN;
 VAR i0, i1, j0, j1: LONGINT; f: BOOLEAN;
 BEGIN
 	f := TRUE;
@@ -916,7 +916,7 @@ BEGIN
 	RETURN f & (name[0] # 0X)
 END Match;
 
-PROCEDURE enumerate(fs: Files.FileSystem; VAR mask: ARRAY OF CHAR; dpg: DiskAdr; flags: SET; enum: Files.Enumerator; VAR continue: BOOLEAN; VAR fh: FileHeader; VAR fn: ARRAY OF CHAR);
+PROCEDURE enumerate(fs: Files.FileSystem; CONST mask: ARRAY OF CHAR; dpg: DiskAdr; flags: SET; enum: Files.Enumerator; VAR continue: BOOLEAN; VAR fh: FileHeader; VAR fn: ARRAY OF CHAR);
 VAR i, pos, diff: LONGINT; dpg1: DiskAdr; a: DirPage; time, date, size: LONGINT;
 BEGIN
 	GetSector(fs.vol, dpg, a); i := 0;
@@ -952,7 +952,7 @@ END enumerate;
 
 (* Check a file name. *)
 
-PROCEDURE Check(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
+PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
 	VAR i: LONGINT; ch: CHAR;
 BEGIN
 	ch := s[0]; i := 0;

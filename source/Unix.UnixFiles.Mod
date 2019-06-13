@@ -68,7 +68,7 @@ TYPE
 				SELF.fs := realFS;
 			END Init;
 
-			PROCEDURE New0( name: ARRAY OF CHAR ): Files.File;
+			PROCEDURE New0(CONST name: ARRAY OF CHAR ): Files.File;
 			VAR f: Files.File;
 			BEGIN
 				f := fs.New0( name );
@@ -76,7 +76,7 @@ TYPE
 				RETURN f;
 			END New0;
 
-			PROCEDURE Old0( name: ARRAY OF CHAR ): Files.File;
+			PROCEDURE Old0(CONST name: ARRAY OF CHAR ): Files.File;
 			VAR f: Files.File;
 			BEGIN
 				f :=  fs.Old0( name );
@@ -84,33 +84,33 @@ TYPE
 				RETURN f;
 			END Old0;
 
-			PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
+			PROCEDURE Delete0(CONST name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
 			BEGIN
 				fs.Delete0( name, key, res );
 			END Delete0;
 
-			PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
+			PROCEDURE Rename0(CONST old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
 			BEGIN
 				fs.Rename0( old, new, fold, res );
 			END Rename0;
 
-			PROCEDURE Enumerate0( mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
+			PROCEDURE Enumerate0(CONST mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
 			BEGIN
 				fs.Enumerate0( mask, flags, enum );
 			END Enumerate0;
 
-			PROCEDURE FileKey( name: ARRAY OF CHAR ): LONGINT;
+			PROCEDURE FileKey(CONST name: ARRAY OF CHAR ): LONGINT;
 			VAR
 			BEGIN
 				RETURN fs.FileKey( name );
 			END FileKey;
 
-			PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: WORD );
+			PROCEDURE CreateDirectory0(CONST name: ARRAY OF CHAR;  VAR res: WORD );
 			BEGIN
 				fs.CreateDirectory0( name, res );
 			END CreateDirectory0;
 
-			PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
+			PROCEDURE RemoveDirectory0(CONST name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 			BEGIN
 				fs.RemoveDirectory0( name, force, key, res );
 			END RemoveDirectory0;
@@ -212,7 +212,7 @@ TYPE
 				END Init;
 
 
-				PROCEDURE New0*( name: ARRAY OF CHAR ): Files.File;
+				PROCEDURE New0*(CONST name: ARRAY OF CHAR ): Files.File;
 				VAR f: File; stat: Unix.Status;
 					  res, err: LONGINT;
 					  path, nameonly: ARRAY 512 OF CHAR;
@@ -244,7 +244,7 @@ TYPE
 				END IsDirectory;
 
 
-				PROCEDURE Old0*( name: ARRAY OF CHAR ): Files.File;
+				PROCEDURE Old0*(CONST name: ARRAY OF CHAR ): Files.File;
 				VAR f: File;  stat: Unix.Status;  fd, r, pos: LONGINT;
 					oflags: SET32;  nextdir, path: Filename;
 				BEGIN  {EXCLUSIVE}
@@ -300,7 +300,7 @@ TYPE
 				END Old0;
 
 				(** Return the unique non-zero key of the named file, if it exists. *)
-				PROCEDURE FileKey*( name: ARRAY OF CHAR ): LONGINT;
+				PROCEDURE FileKey*(CONST name: ARRAY OF CHAR ): LONGINT;
 				(* 	Can not be used for Unix files as LONGINT is too small.
 					In the Unix filesystem a file is identified by
 					- dev	(64 bit (Linux), 32 bit (Solaris, Darwin))	+
@@ -310,7 +310,7 @@ TYPE
 					RETURN 0
 				END FileKey;
 
-				PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
+				PROCEDURE Delete0*(CONST name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
 				VAR r: LONGINT;
 				BEGIN  {EXCLUSIVE}
 					r := Unix.unlink( ADDRESSOF( name ) );
@@ -376,14 +376,14 @@ TYPE
 					RETURN fo;
 				END TryRename;
 
-				PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: WORD );
+				PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR;  f: Files.File;  VAR res: WORD );
 				VAR of: LONGINT;
 				BEGIN
 					of := TryRename(old, new, f, res);
 				END Rename0;
 
 
-				PROCEDURE CreateDirectory0*( path: ARRAY OF CHAR;  VAR res: WORD );
+				PROCEDURE CreateDirectory0*(CONST path: ARRAY OF CHAR;  VAR res: WORD );
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					r := Unix.mkdir( ADDRESSOF( path ), Unix.rwxrwxrwx );
@@ -393,7 +393,7 @@ TYPE
 				END CreateDirectory0;
 
 
-				PROCEDURE RemoveDirectory0*( path: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
+				PROCEDURE RemoveDirectory0*(CONST path: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
 				VAR r: LONGINT;
 				BEGIN {EXCLUSIVE}
 					r := Unix.rmdir( ADDRESSOF( path ) );
@@ -403,7 +403,7 @@ TYPE
 				END RemoveDirectory0;
 
 
-				PROCEDURE Enumerate0*( mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
+				PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR;  flags: SET;  enum: Files.Enumerator );
 				VAR
 					path, filemask: Filename;
 					isPath: BOOLEAN;

@@ -5539,7 +5539,7 @@ TYPE
 		PROCEDURE DesignateProcedureCallDesignator(x: SyntaxTree.ProcedureCallDesignator; VAR result: Operand);
 		VAR
 			parameters: SyntaxTree.ExpressionList;
-			d, resultDesignator, actualParameter: SyntaxTree.Expression;
+			d, resultDesignator, actualParameter, left: SyntaxTree.Expression;
 			procedureType: SyntaxTree.ProcedureType;
 			formalParameter: SyntaxTree.Parameter;
 			operand: Operand;
@@ -5690,13 +5690,18 @@ TYPE
 					Emit(Sub(position,sp,sp,size))
 				END;
 			END;
-
-			IF x.left IS SyntaxTree.SupercallDesignator THEN
-				symbol := x.left(SyntaxTree.SupercallDesignator).left(SyntaxTree.SymbolDesignator).symbol;
+			
+			left := x.left;
+			IF (left IS SyntaxTree.BuiltinCallDesignator) & (left(SyntaxTree.BuiltinCallDesignator).id = Global.systemVal) THEN
+				left := left(SyntaxTree.BuiltinCallDesignator).parameters.GetExpression(1);
+			END; 
+			
+			IF left IS SyntaxTree.SupercallDesignator THEN
+				symbol := left(SyntaxTree.SupercallDesignator).left(SyntaxTree.SymbolDesignator).symbol;
 			ELSIF x.left IS SyntaxTree.IndexDesignator THEN
-				symbol := x.left(SyntaxTree.IndexDesignator).left(SyntaxTree.SymbolDesignator).symbol;
+				symbol := left(SyntaxTree.IndexDesignator).left(SyntaxTree.SymbolDesignator).symbol;
 			ELSE
-				symbol := x.left(SyntaxTree.SymbolDesignator).symbol;
+				symbol := left(SyntaxTree.SymbolDesignator).symbol;
 			END;
 
 			IF procedureType.selfParameter # NIL THEN (* type bound procedure in a record *)
@@ -8782,9 +8787,10 @@ TYPE
 					IF itype.sizeInBits = s1.op.type.sizeInBits THEN
 						IntermediateCode.InitRegister(s0.op,itype,IntermediateCode.GeneralPurposeRegister,AcquireRegister(itype,IntermediateCode.GeneralPurposeRegister));
 						Emit(Mov(position,s0.op,s1.op));
-						ReleaseOperand(s1);
+						ReleaseIntermediateOperand(s1.op);
 						InitOperand(result,ModeValue);
 						result.op := s0.op;
+						result.tag := s1.tag;
 					ELSE (* different size, must convert *)
 						(*! this is not very clean, should we forbid conversions between operands with different sizes or should we implement a cutting move ??? *)
 						Convert(s1.op, IntermediateCode.GetType(system,type));

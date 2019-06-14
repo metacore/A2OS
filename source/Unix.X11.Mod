@@ -506,7 +506,6 @@ VAR
 		ErrorFlag := TRUE;  ErrorText := "X11 I/O Error";
 		Trace.StringLn( ErrorText );
 		INC( ioErrors );
-		IF ioErrors > 100 THEN  Modules.Shutdown( 0 )  END  ;
 		RETURN 0
 	END MyIOErrorHandler;
 

@@ -1,7 +1,7 @@
 MODULE X11Api; (** AUTHOR "fnecati"; PURPOSE "some missing types, const and functions in Unix.X11.Mod"; *)
 
 IMPORT
-	X11, Unix, Modules, SYSTEM;
+	X11, Unix, Modules;
 
 TYPE
 	PChar* = POINTER TO ARRAY OF CHAR;
@@ -1054,54 +1054,6 @@ VAR
 	KeysymToKeycode-: PROCEDURE {C} (disp: DisplayPtr; keysym: KeySym): WORD;
 
 	XKeysymToString-  : PROCEDURE {C} (keysym: KeySym): ADDRESS;
-
-	(* helper procedure *)
-	PROCEDURE GetStringFromAddress*(adr: ADDRESS): PChar;
-	VAR
-		adr1: ADDRESS;
-		name: PChar;
-		i, cnt: LONGINT;
-		ch: CHAR;
-	BEGIN
-		cnt := 0;
-		adr1 := adr;
-		(* count # of characters *)
-		SYSTEM.GET(adr1, ch);
-		WHILE ch # 0X DO
-			INC(cnt); INC(adr1);
-			SYSTEM.GET(adr1, ch);
-		END;
-		IF cnt > 0 THEN
-			(* copy characters to name *)
-			adr1 := adr;
-			NEW(name, cnt+1);
-			FOR i :=0 TO cnt-1 DO
-				SYSTEM.GET(adr1, ch); name[i] := ch; INC(adr1);
-			END;
-		END;
-		RETURN name;
-	END GetStringFromAddress;
-
-	(* wrapper procedure for XKeysymToString *)
-	PROCEDURE KeysymToString*(keysym: KeySym): PChar;
-	VAR adr: ADDRESS;
-		name: PChar;
-	BEGIN
-		adr := XKeysymToString(keysym);
-		name := GetStringFromAddress(adr);
-		RETURN name;
-	END KeysymToString;
-
-	(* wrapper procedure for XGetAtomName  *)
-	PROCEDURE GetAtomName*(display: DisplayPtr; atom: Atom): PChar;
-	VAR adr: ADDRESS;
-		name: PChar;
-	BEGIN
-		adr := XGetAtomName(display, atom);
-		name := GetStringFromAddress(adr);
-		X11.Free(adr); (* free resulting string *)
-		RETURN name;
-	END GetAtomName;
 
 
 PROCEDURE LoadX11Functions;

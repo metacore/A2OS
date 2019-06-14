@@ -212,8 +212,6 @@ VAR
 	sweepMemBlock {UNTRACED}: Machine.MemoryBlock; (* where to resume sweeping *)
 	candidates: ARRAY MaxCandidates OF ADDRESS; (* procedure stack pointer candidates *)
 	numCandidates: LONGINT;
-	rootList {UNTRACED}: RootObject;	(* list of root objects during GC - tracing does not harm but is unnecessary *)
-	realtimeList {UNTRACED}: HeapBlock; (* list of realtime objects - tracing does not harm but is unnecessary *)
 	newSum: SIZE;
 	checkRoot: FinalizerNode;	(* list of checked objects (contains weak references to the checked objects) *)
 	finalizeRoot: FinalizerNode;	(* objects scheduled for finalization (contains references to scheduled objects) *)
@@ -289,16 +287,18 @@ BEGIN
 END AppendToMarkStackC;
 
 PROCEDURE ExtractFromMarkStack(): HeapBlockU;
-VAR heapBlock: HeapBlockU;
+VAR head, next: HeapBlockU;
 BEGIN
-		heapBlock := markStack.first;
-		IF (heapBlock # endMark) THEN
-			markStack.first := heapBlock.nextMark;
-			heapBlock.nextMark := NIL;
-		ELSE
-			heapBlock := NIL; 
+	LOOP
+		head := CAS(markStack.first, NIL, NIL); 
+		IF (head = NIL) OR (head = endMark) THEN
+			RETURN NIL
 		END;
-		RETURN heapBlock;
+		next := head.nextMark;
+		IF CAS(markStack.first, head, next) = head THEN
+			RETURN head;
+		END;
+	END;
 END ExtractFromMarkStack;
 
 VAR
@@ -318,11 +318,7 @@ BEGIN
 	heapBlock.mark := currentMarkValue;
 	IF Stats THEN INC(Nmarked) END;
 	IF (heapBlock IS RecordBlock) OR (heapBlock IS ProtRecBlock) OR (heapBlock IS ArrayBlock) THEN
-		IF block IS RootObject THEN
-			rootObj := block(RootObject);
-			rootObj.nextRoot := rootList; rootList := rootObj;	(* link root list *)
-		END;
-		IF (LEN(blockMeta.typeBlock.pointerOffsets) > 0) OR (heapBlock IS ProtRecBlock) THEN (* not atomic or heapBlock is ProtRecBlock containing awaiting queues *)
+		IF (LEN(blockMeta.typeBlock.pointerOffsets) > 0) OR (heapBlock IS ProtRecBlock) OR (block IS RootObject)  THEN (* not atomic or heapBlock is ProtRecBlock containing awaiting queues *)
 			AppendToMarkStackC(heapBlock);
 		END
 	END
@@ -330,18 +326,20 @@ END Inspect;
 
 (** Mark - Mark an object and its decendents. Used by findRoots. *)
 PROCEDURE Mark*(p {UNTRACED}: ANY);
-VAR orgBlock: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock;
+VAR orgBlock: ADDRESS;(*: ADDRESS*); staticTypeBlock {UNTRACED}: StaticTypeBlock;
 	orgHeapBlock {UNTRACED}: HeapBlock;
 	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: LONGINT;
 	protected {UNTRACED}: ProtRecBlock;
 	b {UNTRACED}: POINTER {UNSAFE} TO RECORD p: ANY END;
 	meta {UNTRACED }: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; last, current, first: ADDRESS END;
+	block {UNTRACED}: ANY;
 BEGIN{UNCHECKED} (* omit any range checks etc.*)
 	IF Stats THEN INC(Nmark) END;
 	Inspect(p);
 	orgHeapBlock := ExtractFromMarkStack();
 	WHILE orgHeapBlock # NIL DO
 		orgBlock := orgHeapBlock.dataAdr;
+		block := SYSTEM.VAL(ANY,orgBlock);
 		meta := orgBlock;
 		staticTypeBlock := meta.staticTypeBlock;
 
@@ -369,6 +367,10 @@ BEGIN{UNCHECKED} (* omit any range checks etc.*)
 			Inspect(protected.lockedBy);
 			Inspect(protected.lock);
 		END;
+		IF block IS RootObject THEN
+			block(RootObject).FindRoots;
+		END;
+		ASSERT(CAS(orgHeapBlock.nextMark, orgHeapBlock.nextMark, NIL) # NIL); 
 		orgHeapBlock := ExtractFromMarkStack();
 	END;
 END Mark;
@@ -919,19 +921,6 @@ BEGIN
 	END
 END CleanupModuleFinalizers;
 
-(* Add a root object to the set of traversable objects. If in allocated heap then mark and traverse, if in Module Heap (Bootfile) then only traverse. *)
-PROCEDURE AddRootObject*(rootObject: RootObject);
-BEGIN
-	IF rootObject = NIL THEN (* nothing *)
-	ELSIF CheckPointer(rootObject) THEN
-		(* object in heap, must be fully marked and traversed *)
-		Mark(rootObject)
-	ELSE
-		(* object in bootfile, traverse as root object only *)
-		rootObject.nextRoot := rootList; rootList := rootObject;	(* link root list *)
-	END;
-END AddRootObject;
-
 (* interruptible garbage collector for native A2 *)
 PROCEDURE CollectGarbage*(root : RootObject);
 VAR
@@ -953,22 +942,12 @@ BEGIN
 		END;
 		INC(currentMarkValue);
 
-		AddRootObject(root);
-
+		Mark(root); 
 		REPEAT
-			REPEAT
-				IF rootList # NIL THEN	(* check root objects *)
-					REPEAT
-						obj := rootList;					(* get head object *)
-						rootList := rootList.nextRoot;		(* link to next *)
-						obj.FindRoots; (* Inspect called via AddRootObject, but not for objects in static heap *)
-					UNTIL rootList = NIL
-				END;
-				IF numCandidates # 0 THEN CheckCandidates; END; (* check for heuristics GC *)
-				Mark(NIL); (* required because candidates are put into mark stack, potentially not marked yet *)
-			UNTIL (numCandidates = 0) & (rootList = NIL); (* check for heuristics GC *)
-			CheckFinalizedObjects;
-		UNTIL rootList = NIL;
+			IF numCandidates # 0 THEN CheckCandidates; END; (* check for heuristics GC *)
+			Mark(NIL); (* required because candidates are put into mark stack, potentially not marked yet *)
+		UNTIL (numCandidates = 0); (* check for heuristics GC *)
+		CheckFinalizedObjects;
 
 		IF Stats THEN
 			time2 := Machine.GetTimer ();
@@ -1068,7 +1047,7 @@ BEGIN
 	CheckPostGC;
 	try := 1;
 	p := NIL;
-	IF  (GC = NilGC) OR (throughput < 32*1024*1024) OR TRUE THEN
+	IF  (GC = NilGC) OR (throughput < 128*1024*1024) OR TRUE THEN
 		GetFreeBlock(size, p);
 		IF  (p=NIL) THEN (* try restart sweep for once *)
 			GetFreeBlock(size, p);
@@ -1509,7 +1488,7 @@ BEGIN
 
 	GC := NilGC;
 	newSum := 0;
-	checkRoot := NIL; finalizeRoot := NIL; rootList := NIL; realtimeList := NIL;
+	checkRoot := NIL; finalizeRoot := NIL;
 	gcStatus := NIL;
 
 	Machine.SetGCParams;

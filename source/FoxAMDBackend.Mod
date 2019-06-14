@@ -926,7 +926,7 @@ TYPE
 				IF virtual.symbol.name # "" THEN Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+part*Assembler.bits32) END;
 				IF (cpuBits=64) & ((physical.sizeInBytes=8) OR ~IsImm32(value) OR push & ~IsSignedImm32(value)) THEN
 					ASSERT(cpuBits=64);
-					GetTemporaryRegister(IntermediateCode.int64,temp);
+					GetTemporaryRegister(type,temp);
 					emitter.Emit2(InstructionSet.opMOV,temp,physical);
 					physical := temp;
 				END;

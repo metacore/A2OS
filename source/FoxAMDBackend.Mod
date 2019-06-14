@@ -1038,14 +1038,14 @@ TYPE
 		END GetRegister;
 
 		(* make physical operand from virtual operand, if ticket given then write result into phyiscal register represented by ticket *)
-		PROCEDURE MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket);
+		PROCEDURE MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket; pushOrCmp = FALSE: BOOLEAN);
 		VAR tmp: Assembler.Operand;
 		BEGIN
 			TryAllocate(vop,part);
 			CASE vop.mode OF
 				IntermediateCode.ModeMemory: GetMemory(vop,part,op);
 				|IntermediateCode.ModeRegister:	GetRegister(vop,part,op,ticket);
-				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE,FALSE);
+				|IntermediateCode.ModeImmediate: GetImmediate(vop,part,op,FALSE,pushOrCmp);
 			END;
 			IF ticket # NIL THEN
 				TicketToOperand(ticket, tmp);
@@ -2844,26 +2844,26 @@ TYPE
 					reverse := FALSE;
 					GetPartType(instruction.op2.type,part,type);
 					GetTemporaryRegister(type,temp);
-					MakeOperand(instruction.op2,part,left,NIL);
-					MakeOperand(instruction.op3,part,right,NIL);
+					MakeOperand(instruction.op2,part,left,NIL,TRUE);
+					MakeOperand(instruction.op3,part,right,NIL,TRUE);
 					Move(temp,left, type);
 					left := temp;
 				ELSIF instruction.op2.mode = IntermediateCode.ModeImmediate THEN
 					reverse := TRUE;
-					MakeOperand(instruction.op2,part,right,NIL);
-					MakeOperand(instruction.op3,part,left,NIL);
+					MakeOperand(instruction.op2,part,right,NIL,TRUE);
+					MakeOperand(instruction.op3,part,left,NIL,TRUE);
 				ELSIF IsMemoryOperand(instruction.op2,part) & IsMemoryOperand(instruction.op3,part) THEN
 					reverse := FALSE;
 					GetPartType(instruction.op2.type,part,type);
 					GetTemporaryRegister(type,temp);
-					MakeOperand(instruction.op2,part,left,NIL);
-					MakeOperand(instruction.op3,part,right,NIL);
+					MakeOperand(instruction.op2,part,left,NIL,TRUE);
+					MakeOperand(instruction.op3,part,right,NIL,TRUE);
 					Move(temp,right,type);
 					right := temp;
 				ELSE
 					reverse := FALSE;
-					MakeOperand(instruction.op2,part,left,NIL);
-					MakeOperand(instruction.op3,part,right,NIL);
+					MakeOperand(instruction.op2,part,left,NIL,TRUE);
+					MakeOperand(instruction.op3,part,right,NIL,TRUE);
 				END;
 				emitter.Emit2(InstructionSet.opCMP,left,right);
 			END Cmp;

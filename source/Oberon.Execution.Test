@@ -7882,3 +7882,12 @@ positive: return string as static array of char
 		ASSERT(Test() = "Hello"); 
 	END Test.
 
+positive: hugeint comparison with positive 32-bit value out of signed 32-bit integer range
+	MODULE Test;
+	VAR x: HUGEINT;
+	BEGIN
+		x := 0; 
+		ASSERT(~(x > 0C0000000H));
+		ASSERT(~(x > MAX(SIGNED32)));
+		ASSERT(0C0000000H > MAX(SIGNED32)); 
+	END Test.

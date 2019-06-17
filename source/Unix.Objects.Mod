@@ -28,7 +28,7 @@ CONST
 
 	(* Process modes (in UnixAos Running means Running or Ready!) *)
 	Unknown* = 0;  Ready* = 1;  Running* = 2;  AwaitingLock* = 3;
-	AwaitingCond* = 4;  AwaitingEvent* = 5;  Suspended*= 6; Terminated* = 7;
+	AwaitingCond* = 4;  AwaitingEvent* = 5;  Terminated* = 6;
 
 	Second* = 1000;	(* frequency of ticks increments in Hz *)
 
@@ -193,11 +193,16 @@ TYPE
 		lastThreadTimes: HUGEINT;
 		gcContext: GCContext;
 
+		PROCEDURE SetMode (mode: WORD);
+		BEGIN {EXCLUSIVE}
+			SELF.mode := mode;
+		END SetMode;
+
 		PROCEDURE FindRoots;
 		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
-			contextPos: SIZE; prevMode: LONGINT;
-		BEGIN{UNTRACKED}
-			IF mode = Terminated THEN RETURN END;
+			contextPos: SIZE;
+		BEGIN{UNTRACKED, EXCLUSIVE}
+			IF (mode < Running) OR (mode = Terminated) THEN RETURN END;
 
 			IF SELF = CurrentProcess() THEN
 				state.SP := S.GetStackPointer( );
@@ -205,8 +210,6 @@ TYPE
 				state.PC := Machine.CurrentPC();
 			ELSIF ConcurrentGC THEN
 				Unix.ThrSuspend( threadId, mode = Running );
-				prevMode := mode;
-				mode := Suspended;
 			END;
 
 			sp := state.SP; bp := state.BP; sb := stackBottom; pc := state.PC;
@@ -273,7 +276,6 @@ TYPE
 			IF ConcurrentGC THEN
 				IF SELF # CurrentProcess() THEN
 					Unix.ThrResume( threadId);
-					mode := prevMode;
 				END;
 			END;
 		END FindRoots;
@@ -404,9 +406,8 @@ TYPE
 			S.SetStackPointer (sp);
 		END;
 
-		p.mode := Running;
+		p.SetMode(Running);
 		p.body( p.obj );
-		p.mode := Terminated;
 		Exit
 	END BodyStarter;
 
@@ -538,7 +539,7 @@ TYPE
 
 	PROCEDURE TerminateThis*( p: Process; unbreakable: BOOLEAN );
 	BEGIN
-		p.mode := Terminated;
+		p.SetMode(Terminated);
 		p.Cancel
 	END TerminateThis;
 
@@ -678,7 +679,7 @@ TYPE
 			WHILE (p # NIL) & (p.obj # obj) DO p := p.nextProcess  END;
 		Unix.MtxUnlock( processList );
 		IF (p # NIL) & (p.obj = obj) THEN
-			p.mode := Terminated;
+			p.SetMode(Terminated);
 			Unix.CondDestroy( p.continue );  p.continue := 0;
 			FinalizeProtObject( obj );
 			p.Cancel
@@ -710,7 +711,7 @@ TYPE
 	VAR prev, p, me: Process;
 	BEGIN
 		me := CurrentProcess();
-		me.mode := Terminated;
+		me.SetMode(Terminated);
 		Unix.MtxLock( processList );
 		prev := NIL;  p := root;
 		WHILE (p # NIL ) & (p # me) DO  prev := p;  p := p.nextProcess  END;

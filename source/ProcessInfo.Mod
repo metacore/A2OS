@@ -163,6 +163,7 @@ BEGIN
 END WriteFlags;
 
 PROCEDURE ShowStack*(p : Objects.Process; out : Streams.Writer);
+VAR pc, bp, sp, sb: ADDRESS; contextPos: SIZE;
 BEGIN
 	ASSERT((p # NIL) & (out # NIL));
 	out.String("Active Object: "); WriteActiveObject(p, out); out.Ln;
@@ -177,7 +178,12 @@ BEGIN
 	out.String("Flags: "); WriteFlags(p.flags, out); out.Ln;
 
 	out.String("Stack Trace Back:"); out.Ln; out.Update;
-	Reflection.StackTraceBack(out, p.state.PC, p.state.BP, p.state.SP, Objects.GetStackBottom(p), TRUE, FALSE);
+	Objects.GetStack(p, pc, bp, sp, sb, contextPos);
+	Reflection.StackTraceBack(out, pc, bp, sp, sb, TRUE, FALSE);
+	WHILE Objects.NextValidStackSegment(p, bp, pc, contextPos) DO
+		out.String("---- next A2 stack segment ----"); out.Ln; out.Update;
+		Reflection.StackTraceBack(out, pc, bp, sp, sb, TRUE, FALSE);
+	END;
 	out.Ln; out.Update;
 END ShowStack;
 

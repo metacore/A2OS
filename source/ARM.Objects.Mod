@@ -714,6 +714,21 @@ BEGIN
 	RETURN p.stack.high
 END GetStackBottom;
 
+PROCEDURE GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE);
+BEGIN
+	sb := p·stack.high;
+	bp := p.state.BP;
+	pc := p.state.PC;
+	sp := p.state.SP;
+	contextPos := 0; 
+END GetStack;
+
+PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
+BEGIN
+	RETURN FALSE;
+END NextValidStackSegment;
+
+
 (** Return the active object currently executing. *)
 PROCEDURE ActiveObject* (): ANY;
 VAR r: Process;

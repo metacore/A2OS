@@ -591,11 +591,11 @@ END OpenWriter;
 (** Split fullname = ( prefix ":" name ) into prefix and name *)
 
 PROCEDURE SplitName*(CONST fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
-VAR i, j, len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
 	i := 0; WHILE (fullname[i] # ":") & (fullname[i] # 0X) DO INC(i) END;
 	IF (fullname[i] # ":") OR (i >= LEN(prefix)) THEN
-		COPY("", prefix); COPY(fullname, name);
+		COPY(fullname, name); COPY("", prefix);
 	ELSE
 		j := 0; WHILE j # i DO prefix[j] := fullname[j]; INC(j) END;
 		prefix[j] := 0X;
@@ -608,19 +608,24 @@ END SplitName;
 (** Join prefix and name to fullname = ( prefix ":" name ) *)
 
 PROCEDURE JoinName*(CONST prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
-VAR i, j, len: LONGINT;
+VAR i, j, len, n1, n2: SIZE;
 BEGIN
 	len := LEN(fullname)-1;
-	i := 0; WHILE (i < len) & (prefix[i] # 0X) DO fullname[i] := prefix[i]; INC(i) END;
-	IF (i < len) THEN fullname[i] := ":"; INC(i) END;
-	j := 0; WHILE (i < len) & (name[j] # 0X) DO fullname[i] := name[j]; INC(i); INC(j) END;
-	fullname[i] := 0X
+	n1 := 0; WHILE prefix[n1] # 0X DO INC(n1); END;
+	n2 := 0; WHILE name[n2] # 0X DO INC(n2); END;
+	i := MIN(len,n2-1);
+	j := MIN(len,n1+n2+1);
+	fullname[j] := 0X;
+	DEC(j);
+	WHILE i >= 0 DO fullname[j] := name[i]; DEC(i); DEC(j); END;
+	IF j >= 0 THEN fullname[j] := ":"; DEC(j); END;
+	FOR i := 0 TO j DO fullname[i] := prefix[i]; END;
 END JoinName;
 
 (** Split a pathname at the last PathDelimiter or ":" into path and filename = ( {path (PathDelimiter|":")} filename ) *)
 
 PROCEDURE SplitPath*(CONST pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
 	i := 0; j := -1;
 	WHILE pathname[i] # 0X DO
@@ -640,19 +645,25 @@ END SplitPath;
 (** Join path and file name = ( path PathDelimiter name ) *)
 
 PROCEDURE JoinPath*(CONST path, name: ARRAY OF CHAR; VAR pathname: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i, j, len, n1, n2: SIZE;
 BEGIN
 	len := LEN(pathname)-1;
-	i := 0; WHILE (i < len) & (path[i] # 0X) DO pathname[i] := path[i]; INC(i) END;
-	IF ((i = 0) OR (pathname[i-1] # PathDelimiter)) & (i < len) THEN pathname[i] := PathDelimiter; INC(i) END;
-	j := 0; WHILE (i < len) & (name[j] # 0X) DO pathname[i] := name[j]; INC(i); INC(j) END;
-	pathname[i] := 0X
+	n1 := 0; WHILE path[n1] # 0X DO INC(n1); END;
+	n2 := 0; WHILE name[n2] # 0X DO INC(n2); END;
+	i := MIN(len,n2-1);
+	IF (n1 > 0) & (path[n1-1] # PathDelimiter) THEN INC(n1); END;
+	j := MIN(len,n1+n2);
+	pathname[j] := 0X;
+	DEC(j);
+	WHILE i >= 0 DO pathname[j] := name[i]; DEC(i); DEC(j); END;
+	IF j >= 0 THEN pathname[j] := PathDelimiter; DEC(j); END;
+	FOR i := 0 TO j DO pathname[i] := path[i]; END;
 END JoinPath;
 
 (** Split a filename at the last '.' into name and extension = ( name "." extension ) *)
 
 PROCEDURE SplitExtension*(CONST filename: ARRAY OF CHAR; VAR name, extension: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i, j, len: SIZE;
 BEGIN
 	i := 0; j := -1;
 	WHILE filename[i] # 0X DO
@@ -673,14 +684,23 @@ END SplitExtension;
 (** Join name and extension = ( name "." extension ) *)
 
 PROCEDURE JoinExtension*(CONST name, extension: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR);
-VAR i,j,len: LONGINT;
+VAR i, j, len, n1, n2: SIZE;
 BEGIN
 	len := LEN(filename)-1;
-	i := 0; WHILE (i < len) & (name[i] # 0X) DO filename[i] := name[i]; INC(i) END;
-	IF ((i = 0) OR (filename[i-1] # ".")) & (i < len) THEN filename[i] := "."; INC(i) END;
-	j := 0; IF extension[0] = "." THEN INC(j) END;
-	WHILE (i < len) & (extension[j] # 0X) DO filename[i] := extension[j]; INC(i); INC(j) END;
-	filename[i] := 0X
+	n1 := 0; WHILE name[n1] # 0X DO INC(n1); END;
+	n2 := 0; WHILE extension[n2] # 0X DO INC(n2); END;
+	i := MIN(len,n2-1);
+	IF (n2 > 0) & (extension[0] # ".") THEN
+		INC(n1);
+	END;
+	j := MIN(len,n1+n2);
+	filename[j] := 0X;
+	DEC(j);
+	WHILE i >= 0 DO filename[j] := extension[i]; DEC(i); DEC(j); END;
+	IF (n2 > 0) & (extension[0] # ".") THEN
+		filename[j] := "."; DEC(j);
+	END;
+	FOR i := 0 TO j DO filename[i] := name[i]; END;
 END JoinExtension;
 
 (** Append the path delimiter to path if path does not contain one *)

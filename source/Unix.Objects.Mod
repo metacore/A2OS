@@ -6,7 +6,7 @@ MODULE Objects;   (** AUTHOR "pjm, G.F."; PURPOSE "Active object runtime support
 IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 
 CONST
-	ConcurrentGC=FALSE; (* if TRUE then release needs to be compiled with --writeBarriers *)	
+	ConcurrentGC=FALSE; (* if TRUE then release needs to be compiled with --writeBarriers *)
 
 	(*! Process flags, meaningless in Unix ports !!! *)
 	PleaseHalt* = 10;		(* Process requested to Halt itself soon *)
@@ -169,7 +169,7 @@ TYPE
 		nextPos: SIZE; (* 0 to start with *)
 		last: ARRAY 256 OF ADDRESS;
 	END;
-	
+
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR
 		threadId-			: Unix.Thread_t;
@@ -208,11 +208,11 @@ TYPE
 				prevMode := mode;
 				mode := Suspended;
 			END;
-				
+
 			sp := state.SP; bp := state.BP; sb := stackBottom; pc := state.PC;
 
 			contextPos := gcContext.nextPos;
-			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)			
+			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
 					(* debugging info*)
 					IF (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
@@ -255,7 +255,7 @@ TYPE
 											adr := bp + desc.offsets[i]; (* pointer at offset *)
 											S.GET( adr, p ); (* load pointer *)
 											IF p # NIL THEN
-												Heaps.Inspecz( p );
+												Heaps.Inspect( p );
 											END
 										END
 									END
@@ -273,7 +273,7 @@ TYPE
 			IF ConcurrentGC THEN
 				IF SELF # CurrentProcess() THEN
 					Unix.ThrResume( threadId);
-					mode := prevMode;		
+					mode := prevMode;
 				END;
 			END;
 		END FindRoots;
@@ -368,7 +368,7 @@ TYPE
 					SuspendActivities;
 					Heaps.CollectGarbage( Modules.root );
 					ResumeActivities;
-				END; 
+				END;
 				Machine.Release( Machine.Heaps );
 				Machine.Release( Machine.Objects );
 				finalizerCaller.Activate;
@@ -604,7 +604,7 @@ TYPE
 		IF ODD(n) THEN  bp := bp + SIZEOF(ADDRESS) END;
 		RETURN bp;
 	END CheckBP;
-	
+
 	PROCEDURE GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE);
 	BEGIN
 		UpdateProcessState(p);
@@ -620,9 +620,9 @@ TYPE
 			S.GET(bp, bp);
 			bp := CheckBP(bp);
 			S.GET(bp+SIZEOF(ADDRESS), pc);
-		END; 
+		END;
 	END GetStack;
-	
+
 	PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
 	BEGIN
 		IF contextPos > p.gcContext.nextPos THEN
@@ -886,11 +886,11 @@ TYPE
 			cur := CurrentProcess();
 			IF cur # NIL THEN
 				ebp := CheckBP(S.GetFramePointer());
-				S.GET(ebp+SIZEOF(ADDRESS), pc); 
+				S.GET(ebp+SIZEOF(ADDRESS), pc);
 				S.GET(ebp, ebp);
 				cur.gcContext.last[cur.gcContext.nextPos*2] := ebp;
 				cur.gcContext.last[cur.gcContext.nextPos*2+1] := pc;
-				INC(cur.gcContext.nextPos);				
+				INC(cur.gcContext.nextPos);
 				ASSERT(cur.gcContext.nextPos < 255);
 			END;
 		END;
@@ -900,7 +900,7 @@ TYPE
 	PROCEDURE ReenterA2*;
 	VAR cur: Process;
 	BEGIN{UNTRACKED}
-		IF clock # NIL THEN 
+		IF clock # NIL THEN
 		cur := CurrentProcess();
 		IF cur # NIL THEN
 			IF (cur.gcContext.nextPos > 0) THEN

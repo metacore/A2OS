@@ -250,7 +250,7 @@ TYPE
 							END;
 							S.GET( bp, n );
 							IF ODD( n ) THEN (* procedure descriptor at bp *)
-								IF n > 1024 THEN
+								IF (n > 1024) & (bp >= sp) THEN
 									desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
 									IF desc # NIL THEN
 										a0 := ADDRESSOF( desc.offsets );

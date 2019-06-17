@@ -6,7 +6,7 @@ MODULE Objects;   (** AUTHOR "pjm, G.F."; PURPOSE "Active object runtime support
 IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 
 CONST
-	ConcurrentGC=FALSE; (* if TRUE then release needs to be compiled with --writeBarriers *)
+	ConcurrentGC=TRUE; (* if TRUE then release needs to be compiled with --writeBarriers *)
 
 	(*! Process flags, meaningless in Unix ports !!! *)
 	PleaseHalt* = 10;		(* Process requested to Halt itself soon *)
@@ -194,14 +194,16 @@ TYPE
 		gcContext: GCContext;
 
 		PROCEDURE SetMode (mode: WORD);
-		BEGIN {EXCLUSIVE}
-			SELF.mode := mode;
+		BEGIN
+				Machine.Acquire(Machine.Objects);
+				SELF.mode := mode;
+				Machine.Release(Machine.Objects); 	
 		END SetMode;
 
 		PROCEDURE FindRoots;
 		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
 			contextPos: SIZE;
-		BEGIN{UNTRACKED, EXCLUSIVE}
+		BEGIN{UNTRACKED}
 			IF (mode < Running) OR (mode = Terminated) THEN RETURN END;
 
 			IF SELF = CurrentProcess() THEN
@@ -405,7 +407,6 @@ TYPE
 			res := Unix.sigsetjmp( ADDRESSOF( p.state0[0] ), 1 );
 			S.SetStackPointer (sp);
 		END;
-
 		p.SetMode(Running);
 		p.body( p.obj );
 		Exit

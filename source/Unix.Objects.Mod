@@ -236,7 +236,8 @@ TYPE
 								bp := NIL;
 								WHILE (contextPos > 0) & (bp = NIL) DO
 									DEC(contextPos);
-									bp := gcContext.last[contextPos];
+									bp := gcContext.last[2*contextPos];
+									pc := gcContext.last[2*contextPos+1];
 								END;
 								IF bp = NIL THEN
 									EXIT;
@@ -254,7 +255,7 @@ TYPE
 											adr := bp + desc.offsets[i]; (* pointer at offset *)
 											S.GET( adr, p ); (* load pointer *)
 											IF p # NIL THEN
-												Heaps.Inspect( p );
+												Heaps.Inspecz( p );
 											END
 										END
 									END
@@ -448,9 +449,6 @@ TYPE
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		S.GET( S.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
-		p.state.SP := S.GetStackPointer( );
-		p.state.BP := S.GetFramePointer( );
-		p.state.PC := Machine.CurrentPC( );
 		p.mode := AwaitingLock;
 
 		(*! we might want to replace the lock mutex by a lock free construct *)
@@ -484,9 +482,6 @@ TYPE
 		hdr.lockedBy := c;
 		IF c # NIL THEN  Unix.CondSignal( c.continue )  ELSE  Unix.CondSignal( lock.enter )  END;
 
-		p.state.SP := S.GetStackPointer( );
-		p.state.BP := S.GetFramePointer( );
-		p.state.PC := Machine.CurrentPC( );
 		Unix.CondWait( p.continue, lock.mtx );
 
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
@@ -602,6 +597,45 @@ TYPE
 		RETURN p.stackBottom
 	END GetStackBottom;
 
+	PROCEDURE CheckBP(bp: ADDRESS): ADDRESS;
+	VAR n: ADDRESS;
+	BEGIN
+		S.GET(bp,n);
+		IF ODD(n) THEN  bp := bp + SIZEOF(ADDRESS) END;
+		RETURN bp;
+	END CheckBP;
+	
+	PROCEDURE GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE);
+	BEGIN
+		UpdateProcessState(p);
+		bp := p.state.BP;
+		pc := p.state.PC;
+		sp := p.state.SP;
+		sb := p.stackBottom;
+		contextPos := p.gcContext.nextPos;
+
+		IF p.threadId = Unix.ThrThis( ) THEN
+			sp := S.GetStackPointer();
+			bp := CheckBP(S.GetFramePointer());
+			S.GET(bp, bp);
+			bp := CheckBP(bp);
+			S.GET(bp+SIZEOF(ADDRESS), pc);
+		END; 
+	END GetStack;
+	
+	PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
+	BEGIN
+		IF contextPos > p.gcContext.nextPos THEN
+			contextPos := p.gcContext.nextPos;
+		END;
+		bp := NIL;
+		WHILE (contextPos > 0) & (bp = NIL) DO
+			DEC(contextPos);
+			bp := p.gcContext.last[contextPos*2];
+			pc := p.gcContext.last[contextPos*2+1];
+		END;
+		RETURN bp  # NIL;
+	END NextValidStackSegment;
 
 	PROCEDURE GetProcessID*( ): LONGINT;
 	VAR p: Process;
@@ -846,15 +880,16 @@ TYPE
 
 	(* Leave A2 is called when a process leaves A2 by a call to the Unix API *)
 	PROCEDURE LeaveA2*;
-	VAR cur: Process; ebp,n: ADDRESS;
+	VAR cur: Process; ebp,pc: ADDRESS;
 	BEGIN{UNTRACKED}
 		IF clock # NIL THEN
 			cur := CurrentProcess();
 			IF cur # NIL THEN
-				ebp := S.GetFramePointer();
-				S.GET(ebp, n);
-				IF ODD(n) THEN S.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
-				cur.gcContext.last[cur.gcContext.nextPos] := ebp;
+				ebp := CheckBP(S.GetFramePointer());
+				S.GET(ebp+SIZEOF(ADDRESS), pc); 
+				S.GET(ebp, ebp);
+				cur.gcContext.last[cur.gcContext.nextPos*2] := ebp;
+				cur.gcContext.last[cur.gcContext.nextPos*2+1] := pc;
 				INC(cur.gcContext.nextPos);				
 				ASSERT(cur.gcContext.nextPos < 255);
 			END;
@@ -871,7 +906,8 @@ TYPE
 			IF (cur.gcContext.nextPos > 0) THEN
 				DEC(cur.gcContext.nextPos);
 			END;
-			cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* returned *)
+			cur.gcContext.last[2*cur.gcContext.nextPos] := NIL; (* returned *)
+			cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL; (* returned *)
 		END;
 		END;
 	END ReenterA2;

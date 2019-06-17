@@ -255,7 +255,7 @@ TYPE
 											adr := bp + desc.offsets[i]; (* pointer at offset *)
 											S.GET( adr, p ); (* load pointer *)
 											IF p # NIL THEN
-												Heaps.Inspect( p );
+												Heaps.Mark( p );
 											END
 										END
 									END

@@ -282,29 +282,28 @@ BEGIN
 		temp := CAS(markStack.first, first, heapBlock);
 		IF temp = first THEN RETURN END;
 		ASSERT(CAS(heapBlock.nextMark, first, temp) = first);
-		first := temp; 
-	END; 
+		first := temp;
+	END;
 END AppendToMarkStackC;
 
-PROCEDURE ExtractFromMarkStack(): HeapBlockU;
+PROCEDURE ExtractMarkStack(): HeapBlockU;
 VAR head, next: HeapBlockU;
 BEGIN
 	LOOP
-		head := CAS(markStack.first, NIL, NIL); 
-		IF (head = NIL) OR (head = endMark) THEN
-			RETURN NIL
+		head := CAS(markStack.first, NIL, NIL);
+		IF head = endMark THEN
+			RETURN head;
 		END;
-		next := head.nextMark;
-		IF CAS(markStack.first, head, next) = head THEN
+		IF CAS(markStack.first, head, endMark) = head THEN
 			RETURN head;
 		END;
 	END;
-END ExtractFromMarkStack;
+END ExtractMarkStack;
 
 VAR
-	endMark: HeapBlockU; 
+	endMark: HeapBlockU;
 
-PROCEDURE Inspect*(block {UNTRACED}: ANY);
+PROCEDURE Mark*(block {UNTRACED}: ANY);
 VAR
 	heapBlock {UNTRACED}: HeapBlock;
 	rootObj{UNTRACED}: RootObject;
@@ -322,12 +321,12 @@ BEGIN
 			AppendToMarkStackC(heapBlock);
 		END
 	END
-END Inspect;
+END Mark;
 
 (** Mark - Mark an object and its decendents. Used by findRoots. *)
-PROCEDURE Mark*(p {UNTRACED}: ANY);
+PROCEDURE TraverseMarkStack();
 VAR orgBlock: ADDRESS;(*: ADDRESS*); staticTypeBlock {UNTRACED}: StaticTypeBlock;
-	orgHeapBlock {UNTRACED}: HeapBlock;
+	orgHeapBlock {UNTRACED}, next{UNTRACED}: HeapBlock;
 	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: LONGINT;
 	protected {UNTRACED}: ProtRecBlock;
 	b {UNTRACED}: POINTER {UNSAFE} TO RECORD p: ANY END;
@@ -335,45 +334,48 @@ VAR orgBlock: ADDRESS;(*: ADDRESS*); staticTypeBlock {UNTRACED}: StaticTypeBlock
 	block {UNTRACED}: ANY;
 BEGIN{UNCHECKED} (* omit any range checks etc.*)
 	IF Stats THEN INC(Nmark) END;
-	Inspect(p);
-	orgHeapBlock := ExtractFromMarkStack();
-	WHILE orgHeapBlock # NIL DO
-		orgBlock := orgHeapBlock.dataAdr;
-		block := SYSTEM.VAL(ANY,orgBlock);
-		meta := orgBlock;
-		staticTypeBlock := meta.staticTypeBlock;
+	LOOP
+		orgHeapBlock := ExtractMarkStack();
+		IF orgHeapBlock = endMark THEN EXIT END;
+		REPEAT
+			orgBlock := orgHeapBlock.dataAdr;
+			block := SYSTEM.VAL(ANY,orgBlock);
+			meta := orgBlock;
+			staticTypeBlock := meta.staticTypeBlock;
 
-		IF ~(orgHeapBlock IS ArrayBlock) THEN
-			FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
-				b := orgBlock + staticTypeBlock.pointerOffsets[i];
-				Inspect(b.p)
-			END
-		ELSE
-			currentArrayElemAdr := meta.first;
-
-			lastArrayElemAdr := meta.first + meta.last * staticTypeBlock.recSize;
-			WHILE currentArrayElemAdr < lastArrayElemAdr DO
+			IF ~(orgHeapBlock IS ArrayBlock) THEN
 				FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
-					b := currentArrayElemAdr + staticTypeBlock.pointerOffsets[i];
-					Inspect(b.p)
-				END;
-				INC(currentArrayElemAdr, staticTypeBlock.recSize);
-			END
-		END;
-		IF orgHeapBlock IS ProtRecBlock THEN
-			protected := orgHeapBlock(ProtRecBlock);
-			Inspect(protected.awaitingLock.head);
-			Inspect(protected.awaitingCond.head);
-			Inspect(protected.lockedBy);
-			Inspect(protected.lock);
-		END;
-		IF block IS RootObject THEN
-			block(RootObject).FindRoots;
-		END;
-		ASSERT(CAS(orgHeapBlock.nextMark, orgHeapBlock.nextMark, NIL) # NIL); 
-		orgHeapBlock := ExtractFromMarkStack();
+					b := orgBlock + staticTypeBlock.pointerOffsets[i];
+					Mark(b.p)
+				END
+			ELSE
+				currentArrayElemAdr := meta.first;
+
+				lastArrayElemAdr := meta.first + meta.last * staticTypeBlock.recSize;
+				WHILE currentArrayElemAdr < lastArrayElemAdr DO
+					FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
+						b := currentArrayElemAdr + staticTypeBlock.pointerOffsets[i];
+						Mark(b.p)
+					END;
+					INC(currentArrayElemAdr, staticTypeBlock.recSize);
+				END
+			END;
+			IF orgHeapBlock IS ProtRecBlock THEN
+				protected := orgHeapBlock(ProtRecBlock);
+				Mark(protected.awaitingLock.head);
+				Mark(protected.awaitingCond.head);
+				Mark(protected.lockedBy);
+				Mark(protected.lock);
+			END;
+			IF block IS RootObject THEN
+				block(RootObject).FindRoots;
+			END;
+			next := orgHeapBlock.nextMark;
+			ASSERT(CAS(orgHeapBlock.nextMark, next, NIL) = next);
+			orgHeapBlock := next;
+		UNTIL orgHeapBlock = endMark;
 	END;
-END Mark;
+END TraverseMarkStack;
 
 (** WriteType - Write a type name (for tracing only). *)
 PROCEDURE WriteType*(t: ADDRESS);	(* t is static type descriptor *)
@@ -759,7 +761,7 @@ BEGIN
 			ELSE
 				heapBlock := SYSTEM.VAL(HeapBlock, blockStart + BlockHeaderSize);
 				IF (p = heapBlock.dataAdr) & ~(heapBlock IS FreeBlock) THEN (* heap block must not be a free block but any other heap block type *)
-					Inspect(SYSTEM.VAL(ANY,p)); 
+					Mark(SYSTEM.VAL(ANY,p));
 				END;
 				blockStart := blockStart + heapBlock.size;
 			END
@@ -934,6 +936,7 @@ BEGIN
 	*)
 	(* GC may run only if and only if sweep phase has been completed *)
 	IF ~EnableFreeLists OR (sweepMemBlock = NIL) & (sweepMarkValue = currentMarkValue) THEN
+
 		ASSERT(CAS(marking, FALSE, TRUE) = FALSE);
 		IF Stats THEN
 			Nmark := 0; Nmarked := 0;
@@ -942,12 +945,13 @@ BEGIN
 		END;
 		INC(currentMarkValue);
 
-		Mark(root); 
+		Mark(root);
 		REPEAT
 			IF numCandidates # 0 THEN CheckCandidates; END; (* check for heuristics GC *)
-			Mark(NIL); (* required because candidates are put into mark stack, potentially not marked yet *)
+			TraverseMarkStack; (* required because candidates are put into mark stack, potentially not marked yet *)
 		UNTIL (numCandidates = 0); (* check for heuristics GC *)
 		CheckFinalizedObjects;
+		TraverseMarkStack; (* required because candidates are put into mark stack, potentially not marked yet *)
 
 		IF Stats THEN
 			time2 := Machine.GetTimer ();
@@ -957,10 +961,8 @@ BEGIN
 			NgcCyclesMark := NgcCyclesLastRun
 		END;
 	END;
-
 	IF EnableFreeLists THEN GetFreeBlock(MAX(SIZE), f) END;
 	ASSERT(CAS(marking, TRUE, FALSE) = TRUE);
-
 END CollectGarbage;
 
 PROCEDURE InvokeGC*;
@@ -1134,7 +1136,7 @@ BEGIN
 		systemBlock.refCount := 0;
 		systemBlock.dataAdr := dataBlockAdr;
 		systemBlock.size := blockSize;
-		systemBlock.nextMark := NIL; 
+		systemBlock.nextMark := NIL;
 
 		SetPC(dataBlock);
 		(*CheckAssignment(ADDRESS OF p, dataBlock);*)
@@ -1181,7 +1183,7 @@ BEGIN
 			recordBlock.refCount := 0;
 			recordBlock.dataAdr := dataBlockAdr;
 			recordBlock.size := blockSize;
-			recordBlock.nextMark := NIL; 
+			recordBlock.nextMark := NIL;
 
 			SetPC(dataBlock);
 			p := dataBlock;
@@ -1237,7 +1239,7 @@ BEGIN
 			protRecBlock.waitingPriorities[i] := 0
 		END;
 		INC(protRecBlock.waitingPriorities[0]);	(* set sentinel value: assume that idle process with priority 0 waits on this resource *)
-		protRecBlock.nextMark := NIL; 
+		protRecBlock.nextMark := NIL;
 
 		SetPC(dataBlock);
 		p := dataBlock;
@@ -1294,7 +1296,7 @@ BEGIN
 				arrayBlock.refCount := 0;
 				arrayBlock.dataAdr := dataBlockAdr;
 				arrayBlock.size := blockSize;
-				arrayBlock.nextMark := NIL; 
+				arrayBlock.nextMark := NIL;
 
 				(* clear data part of array here, since size parameter of Machine.Fill32 must be a multiple of 4. Some fields of the data part are filled below for GC. , *)
 				fillSize := blockSize - arrayBlockSize - BlockHeaderSize;
@@ -1425,9 +1427,9 @@ END GetHeapInfo;
 PROCEDURE Assign*(VAR dest: ADDRESS; src: ADDRESS);
 VAR any: Block;
 BEGIN
-	IF CAS(marking,FALSE,FALSE) = TRUE THEN
+	IF CAS(marking,FALSE,FALSE) THEN
 		any := src;
-		Inspect(any); 
+		Mark(any);
 	END;
 	dest := src;
 END Assign;
@@ -1435,10 +1437,10 @@ END Assign;
 PROCEDURE AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS);
 VAR i: SIZE; sval {UNTRACED}: ANY;
 BEGIN
-	IF CAS(marking,FALSE,FALSE) = TRUE THEN
+	IF CAS(marking,FALSE,FALSE) THEN
 		FOR i := 0 TO LEN(tag.pointerOffsets)-1 DO
 			SYSTEM.GET(src+tag.pointerOffsets[i], sval);
-			Inspect(sval); 
+			Mark(sval);
 		END;
 	END;
 	SYSTEM.MOVE(src,dest,tag.recSize);
@@ -1447,12 +1449,12 @@ END AssignRecord;
 PROCEDURE AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU;  numElems: SIZE; src: ADDRESS);
 VAR i, j: SIZE; offset: ADDRESS; sval {UNTRACED}: ANY;
 BEGIN
-	IF CAS(marking,FALSE,FALSE) = TRUE THEN
+	IF CAS(marking,FALSE,FALSE) THEN
 		FOR j := 0 TO LEN(tag.pointerOffsets)-1 DO
 			FOR i := 0 TO numElems-1 DO
 				offset := i * tag.recSize + tag.pointerOffsets[j];
 				SYSTEM.GET(src+offset, sval);
-				Inspect(sval);
+				Mark(sval);
 			END;
 		END;
 	END;
@@ -1549,13 +1551,17 @@ BEGIN
 END SetMetaData;
 
 BEGIN
-	(* The meta data stack inspection is more efficient than the heuristics *)	
+	(* The meta data stack inspection is more efficient than the heuristics *)
 	GCType := HeuristicStackInspectionGC;
 	endMark := 1;
 	markStack.first := endMark;
 	Init;
 END Heaps.
 
-Heaps.SetMetaData ~ 
-Heaps.SetHeuristics ~ 
-	
+Heaps.SetMetaData ~
+Heaps.SetHeuristics ~
+
+Linker.Link -p=Linux64
+	Builtins Trace Glue Unix Machine Heaps Modules Objects Kernel KernelLog Streams Commands Pipes StdIO
+	TrapWriters Reflection Traps Files UnixFiles Clock Dates Reals Strings Diagnostics BitSets StringPool ObjectFile GenericLinker Loader System StdIOShell
+	Shell ~

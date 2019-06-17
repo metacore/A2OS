@@ -9,7 +9,7 @@ CONST
 	TraceVerbose = FALSE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
-	ConcurrentGC=FALSE; (* if TRUE then release needs to be compiled with --writeBarriers *)	
+	ConcurrentGC=FALSE; (* if TRUE then release needs to be compiled with --writeBarriers *)
 
 CONST
 	(* Process flags *)
@@ -135,7 +135,6 @@ TYPE
 
 	Process* = OBJECT(Heaps.ProcessLink)
 	VAR
-		rootedNext : Process; (*  to prevent process to be GCed in WinAos *)
 		obj-: ProtectedObject;   (* associated active object *)
 		state- {ALIGNED=16}: Kernel32.Context;
 		condition-: Condition;   (* awaited process' condition *)
@@ -186,8 +185,8 @@ TYPE
 				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
 				res := Kernel32.GetThreadContext( handle, state );
 				IF res = 0 THEN Trace.String("could not get thread context:"); Trace.Int(Kernel32.GetLastError(),1) END;
-			END; 
-			
+			END;
+
 			sp :=  state.SP; bp := state.BP; pc := state.PC;
 
 			(* debugging info *)
@@ -202,7 +201,7 @@ TYPE
 			END;
 
 			contextPos := gcContext.nextPos;
-			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)			
+			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 
 				IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
 					(* debugging info*)
@@ -227,7 +226,8 @@ TYPE
 							bp := NIL;
 							WHILE (contextPos > 0) & (bp = NIL) DO
 								DEC(contextPos);
-								bp := gcContext.last[contextPos];
+								bp := gcContext.last[2*contextPos];
+								pc := gcContext.last[2*contextPos+1];
 							END;
 							IF bp = NIL THEN
 								EXIT;
@@ -288,14 +288,14 @@ TYPE
 			IF value THEN
 				time := Kernel32.GetTickCount();
 				Machine.Acquire(Machine.Objects);
-				Machine.Acquire(Machine.Heaps); (* to protect agains concurrent LazySweep *)				
+				Machine.Acquire(Machine.Heaps); (* to protect agains concurrent LazySweep *)
 				IF ConcurrentGC THEN
 					Heaps.CollectGarbage( Modules.root );
 				ELSE
 					SuspendActivities;
 					Heaps.CollectGarbage(Modules.root);
 					ResumeActivities;
-				END;				
+				END;
 				Machine.Release(Machine.Heaps);
 				Machine.Release(Machine.Objects);
 				time := Kernel32.GetTickCount()-time;
@@ -440,6 +440,46 @@ PROCEDURE GetStackBottom*(p: Process): ADDRESS;
 BEGIN
 	RETURN p.stackBottom
 END GetStackBottom;
+
+PROCEDURE CheckBP(bp: ADDRESS): ADDRESS;
+VAR n: ADDRESS;
+BEGIN
+	SYSTEM.GET(bp,n);
+	IF ODD(n) THEN  bp := bp + SIZEOF(ADDRESS) END;
+	RETURN bp;
+END CheckBP;
+
+PROCEDURE GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE);
+BEGIN
+	UpdateProcessState(p);
+	bp := p.state.BP;
+	pc := p.state.PC;
+	sp := p.state.SP;
+	sb := p.stackBottom;
+	contextPos := p.gcContext.nextPos;
+
+	IF p = CurrentProcess() THEN
+		sp := SYSTEM.GetStackPointer();
+		bp := CheckBP(SYSTEM.GetFramePointer());
+		SYSTEM.GET(bp, bp);
+		bp := CheckBP(bp);
+		SYSTEM.GET(bp+SIZEOF(ADDRESS), pc);
+	END;
+END GetStack;
+
+PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
+BEGIN
+	IF contextPos > p.gcContext.nextPos THEN
+		contextPos := p.gcContext.nextPos;
+	END;
+	bp := NIL;
+	WHILE (contextPos > 0) & (bp = NIL) DO
+		DEC(contextPos);
+		bp := p.gcContext.last[contextPos*2];
+		pc := p.gcContext.last[contextPos*2+1];
+	END;
+	RETURN bp  # NIL;
+END NextValidStackSegment;
 
 (** Return the active object currently executing. *)
 PROCEDURE ActiveObject* (): ANY;
@@ -789,7 +829,7 @@ BEGIN
 	NEW(fn);   (* implicit call Heaps.NewRec -> might invoke GC *)
 
 	Machine.Acquire(Machine.Objects);
-	t.next := NIL; t.prev := NIL; t.rootedNext := NIL;
+	t.next := NIL; t.prev := NIL;
 	t.waitingOn := NIL; t.flags := flags; t.obj := obj; t.mode := Unknown;
 	t.body := body; t.event := 0; fn.finalizer := FinalizeProcess;
 	Heaps.AddFinalizer(t, fn);
@@ -1284,7 +1324,7 @@ VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: AD
 
 (* Leave A2 is called when a process leaves A2 by a call to the windows API *)
 PROCEDURE LeaveA2*;
-VAR cur: Process; ebp,n: ADDRESS;
+VAR cur: Process; ebp,pc: ADDRESS;
 BEGIN
 	#IF AMD64 THEN
 	CODE
@@ -1300,10 +1340,11 @@ BEGIN
 
 	cur := CurrentProcess();
 	IF cur # NIL THEN
-		ebp := SYSTEM.GetFramePointer();
-		SYSTEM.GET(ebp, n);
-		IF ODD(n) THEN SYSTEM.GET(ebp + SIZEOF(ADDRESS), ebp) ELSE ebp := n END;
-		cur.gcContext.last[cur.gcContext.nextPos] := ebp;
+		ebp := CheckBP(SYSTEM.GetFramePointer());
+		SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
+		SYSTEM.GET(ebp, ebp);
+		cur.gcContext.last[cur.gcContext.nextPos*2] := ebp;
+		cur.gcContext.last[cur.gcContext.nextPos*2+1] := pc;
 		INC(cur.gcContext.nextPos);
 		ASSERT(cur.gcContext.nextPos < 255);
 	END;
@@ -1327,8 +1368,8 @@ BEGIN
 		IF (cur.gcContext.nextPos > 0) THEN
 			DEC(cur.gcContext.nextPos);
 		END;
-		cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* returned *)
-		(*cur.gcContext.first[cur.gcContext.nextPos] := NIL; (* returned *)*)
+		cur.gcContext.last[2*cur.gcContext.nextPos] := NIL; (* returned *)
+		cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL; (* returned *)
 	END;
 END ReenterA2;
 
@@ -1438,7 +1479,8 @@ VAR
 				END;
 			ELSE
 				INC(cur.gcContext.nextPos);
-				cur.gcContext.last[cur.gcContext.nextPos] := NIL;
+				cur.gcContext.last[2*cur.gcContext.nextPos] := NIL;
+				cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL;
 			END;
 		END;
 
@@ -1456,7 +1498,8 @@ VAR
 		ASSERT(cur # NIL);
 		IF cur.gcContext.nextPos > 0 THEN
 			DEC(cur.gcContext.nextPos);
-			cur.gcContext.last[cur.gcContext.nextPos] := NIL;
+			cur.gcContext.last[2*cur.gcContext.nextPos] := NIL;
+			cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL;
 		ELSE
 			IF TraceVerbose THEN
 				Machine.Acquire(Machine.TraceOutput);

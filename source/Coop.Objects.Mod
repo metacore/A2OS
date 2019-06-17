@@ -225,7 +225,7 @@ END GetStackBottom;
 
 PROCEDURE GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE);
 BEGIN
-	sb := p·stack.high;
+	sb := p·stackBottom;
 	bp := p.state.BP;
 	pc := p.state.PC;
 	sp := p.state.SP;

@@ -643,7 +643,7 @@ VAR
 	END NewKey;
 
 	PROCEDURE ReadKey* (key: Key_t): ADDRESS;
-	BEGIN
+	BEGIN {UNTRACKED}
 		RETURN pthread_getspecific(key);
 	END ReadKey;
 

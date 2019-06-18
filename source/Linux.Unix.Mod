@@ -1054,11 +1054,7 @@ VAR
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		sigemptyset(ADDRESS OF mask);
 		act.sa_mask := mask;
-		IF sig = SIGSEGV THEN (* segmentation violation *)
-			act.sa_flags :=  SA_SIGINFO +  SA_ONSTACK +  SA_NODEFER;
-		ELSE
-			act.sa_flags :=  SA_SIGINFO + SA_NODEFER;
-		END;
+		act.sa_flags :=  SA_SIGINFO +  SA_ONSTACK (* run on separate sig stack *) +  SA_NODEFER; 
 		act.sa_handler := ADDRESS OF SigHandler;
 		IF sigaction( sig, ADDRESS OF act, 0 ) # 0 THEN
 			Perror("sigaction");

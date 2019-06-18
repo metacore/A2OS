@@ -235,9 +235,9 @@ TYPE
 						END;
 
 						SYSTEM.GET(bp, n);
-						IF ODD(n) THEN (* procedure descriptor at bp *)
+						IF ODD(n)  THEN (* procedure descriptor at bp *)
 							desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
-							IF desc # NIL THEN
+							IF (desc # NIL) & (bp >= sp) THEN
 								IF TraceVerbose THEN
 									WriteType(desc); Trace.Ln;
 								END;

@@ -2,14 +2,16 @@
 
 MODULE Beep; (** AUTHOR "pjm"; PURPOSE "PC speaker driver"; *)
 
-IMPORT X11, Displays, XDisplay, Plugins;
+IMPORT X11, Displays, XDisplay, Plugins, Machine;
 
 VAR
 	disp: XDisplay.Display;
 
 	PROCEDURE Beep*( hz: WORD );
 	BEGIN
-		X11.Bell( disp.xdisp, 100 )
+		Machine.Acquire(Machine.X11);
+		X11.Bell( disp.xdisp, 100 );
+		Machine.Release(Machine.X11);
 	END Beep;
 
 	PROCEDURE GetDisplay;

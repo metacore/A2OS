@@ -856,7 +856,7 @@ VAR
 
 	PROCEDURE ThrResume*( thr: Thread_t );
 	VAR  res: WORD;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
+	BEGIN {UNCOOPERATIVE, UNCHECKED, UNTRACKED}
 		res := pthread_mutex_lock(ADDRESS OF suspend_mutex );
 		resume_done := 0;
 		res := pthread_kill( thr, T_SIGRESUME );

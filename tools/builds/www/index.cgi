@@ -41,7 +41,7 @@ version = cgi['version']; if version.empty? then version = nil end
 # update database
 
 def cgi.href(project = nil, target = nil, version = nil, suffix = nil)
-	"#{request_method == 'POST' || has_key?('format') ? 'http://cas.inf.ethz.ch/' : '/'}#{project && "#{CGI.escape(project)}/"}#{target && "#{CGI.escape(target)}/"}#{version && "#{CGI.escape(version)}/"}#{suffix}"
+	"#{request_method == 'POST' || has_key?('format') ? 'http://builds.cas.inf.ethz.ch/' : '/'}#{project && "#{CGI.escape(project)}/"}#{target && "#{CGI.escape(target)}/"}#{version && "#{CGI.escape(version)}/"}#{suffix}"
 end
 
 def cgi.notify(project, target, version, status, output)
@@ -96,7 +96,7 @@ end
 case cgi['format']
 when 'rss'
 	cgi.out('type' => 'application/rss+xml', 'charset' => 'UTF-8') { '<?xml version="1.0"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>' <<
-	"<title>CAS Builds#{project && " - #{CGI.escapeHTML(project)}"}#{target && " - #{CGI.escapeHTML(target)}"}</title><link>http://cas.inf.ethz.ch</link><description>CAS Build System</description>" <<
+	"<title>CAS Builds#{project && " - #{CGI.escapeHTML(project)}"}#{target && " - #{CGI.escapeHTML(target)}"}</title><link>http://builds.cas.inf.ethz.ch</link><description>CAS Build System</description>" <<
 	"<atom:link href=\"#{cgi.href(project && cgi['project'], target, nil, 'feed')}\" rel=\"self\" type=\"application/rss+xml\"/>#{timestamp && "<lastBuildDate>#{DateTime.parse(timestamp).rfc822}</lastBuildDate>"}" <<
 	Database.query('select project, target, version, status, datetime (updated), time (case status when "Building" then julianday ("now") else updated end - started + 0.5), output from builds where (:project is null or project = :project) and (:target is null or target = :target) and updated >= julianday (:latest, "localtime", "start of day", "-7 days", "utc") order by updated desc, started desc, project, target', project: project, target: target, latest: timestamp).collect { |build|
 		"<item><title>#{project ? '' : "#{CGI.escapeHTML(build[0])} - "}#{target ? '' : "#{CGI.escapeHTML(build[1])} "}Version #{CGI.escapeHTML(build[2])}: #{build[3]}</title>" <<

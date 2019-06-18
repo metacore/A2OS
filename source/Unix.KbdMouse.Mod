@@ -6,7 +6,7 @@ MODULE KbdMouse;   (* g.f.	9.7.07 *)
 
 (* replacement for the keyboard and mouse drivers in the Unix ports *)
 
-IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands, Api:=X11Api, Objects;
+IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands, Objects;
 
 #IF COOP THEN
 	IMPORT Environment;
@@ -17,12 +17,12 @@ CONST
 
 	ModeSwitch = 13;
 
-	MetaMask = { Api.Mod4Mask, ModeSwitch };
+	MetaMask = { X11.Mod4Mask, ModeSwitch };
 
 
 VAR
-	event: Api.XEvent;  xbuttons: SET32;
-	compstatus: Api.ComposeStatus;
+	event: X11.Event;  xbuttons: SET32;
+	compstatus: X11.ComposeStatus;
 
 	disp: XDisplay.Display;
 
@@ -50,11 +50,10 @@ VAR
 		Commands.Call( "WMTerminator.Shutdown", {}, res, s );
 	END TerminateA2;
 
-
 	PROCEDURE CheckAlternateKeys( VAR mb: SET );
 	BEGIN
-		IF ~MMseen & (Api.ControlMask IN xbuttons) THEN INCL( mb, MM ) END;
-		IF ~MRseen & (Api.Mod1Mask IN xbuttons) THEN INCL( mb, MR ) END
+		IF ~MMseen & (X11.ControlMask IN xbuttons) THEN INCL( mb, MM ) END;
+		IF ~MRseen & (X11.Mod1Mask IN xbuttons) THEN INCL( mb, MR ) END
 	END CheckAlternateKeys;
 
 
@@ -64,20 +63,19 @@ VAR
 		Machine.Release( Machine.X11 );
 		mm.keys := {};
 		mm.x := x;  mm.y := y;  mm.dz := dz;
-		IF Api.Button1Mask IN xbuttons THEN  INCL( mm.keys, ML )  END;
-		IF Api.Button2Mask IN xbuttons THEN  INCL( mm.keys, MM );  MMseen := TRUE  END;
-		IF Api.Button3Mask IN xbuttons THEN  INCL( mm.keys, MR );  MRseen := TRUE  END;
+		IF X11.Button1Mask IN xbuttons THEN  INCL( mm.keys, ML )  END;
+		IF X11.Button2Mask IN xbuttons THEN  INCL( mm.keys, MM );  MMseen := TRUE  END;
+		IF X11.Button3Mask IN xbuttons THEN  INCL( mm.keys, MR );  MRseen := TRUE  END;
 		IF ~(MMseen & MRseen) THEN  CheckAlternateKeys( mm.keys )  END;
 		Inputs.mouse.Handle( mm );
-		Machine.Acquire( Machine.X11 )
+		Machine.Acquire( Machine.X11 ); 
 	END SendMouseMsg;
-
 
 	PROCEDURE SendKeyboardMsg( km: Inputs.KeyboardMsg );
 	BEGIN
 		Machine.Release( Machine.X11 );
 		Inputs.keyboard.Handle( km );
-		Machine.Acquire( Machine.X11 )
+		Machine.Acquire( Machine.X11 ); 
 	END SendKeyboardMsg;
 
 	PROCEDURE PollXQueue;
@@ -87,37 +85,40 @@ VAR
 		keysym: X11.KeySym;  xd: X11.DisplayPtr;
 		newxbuttons, bdiff: SET32;
 		km: Inputs.KeyboardMsg;
-		kp : Api.XKeyEvent;
-		be : Api.XButtonPressedEvent;
-		em: Api.XExposeEvent;
-		cm : Api.XClientMessageEvent;
-		cn: Api.XConfigureEvent;
+		kp : X11.KeyEvent;
+		be : X11.ButtonEvent;
+		em: X11.ExposeEvent;
+		cm : X11.ClientMessageEvent;
+		cn: X11.ConfigureEvent;
 		events: LONGINT;
 		buffer: ARRAY bufsize OF CHAR;
 	BEGIN
 		xd := disp.xdisp;
 		Machine.Acquire( Machine.X11 );
-		events := Api.Pending( xd );
+		X11.Synchronize(xd, X11.True);
+		events := X11.Pending( xd );
+		Machine.Release( Machine.X11 ); 
 		WHILE events > 0 DO
-			Api.NextEvent( xd, event );
+			Machine.Acquire( Machine.X11 );
+			X11.NextEvent( xd, event );
 			CASE event.typ OF
-			| Api.KeyPress: kp := S.VAL( Api.XKeyEvent, event );
+			| X11.KeyPress: kp := S.VAL( X11.KeyEvent, event );
 					X11.lastEventTime := kp.time;
-					keycount := Api.LookupString( kp, buffer, bufsize, keysym, compstatus );
+					keycount := X11.LookupString( kp, buffer, bufsize, keysym, compstatus );
 					X11.QueryPointer( xd, event.window, rw, cw, xr, yr, x, y, newxbuttons );
 
 					IF keycount = 0 THEN
 						bdiff := newxbuttons / xbuttons;  xbuttons := newxbuttons;
 						km.ch := 0X;
-						IF Api.ShiftMask IN bdiff THEN km.keysym := Inputs.KsShiftL
-						ELSIF Api.ControlMask IN bdiff THEN
+						IF X11.ShiftMask IN bdiff THEN km.keysym := Inputs.KsShiftL
+						ELSIF X11.ControlMask IN bdiff THEN
 							km.keysym := Inputs.KsControlL;
 							IF ~MMseen THEN  SendMouseMsg( x, y, 0, xbuttons )  END
-						ELSIF Api.Mod1Mask IN bdiff THEN
+						ELSIF X11.Mod1Mask IN bdiff THEN
 							km.keysym := Inputs.KsAltL;
 							IF ~MRseen THEN SendMouseMsg( x, y, 0, xbuttons )  END
 						ELSIF MetaMask*bdiff # {} THEN km.keysym := Inputs.KsMetaL
-						ELSIF Api.Mod5Mask IN bdiff THEN km.keysym := Inputs.KsAltR
+						ELSIF X11.Mod5Mask IN bdiff THEN km.keysym := Inputs.KsAltR
 						ELSIF keysym = 0FE20H THEN  (* handle Shift-Tab key *)
 							km.keysym := Inputs.KsTab; km.ch :=09X
 						ELSE
@@ -126,7 +127,7 @@ VAR
 						km.flags := KeyState( );
 						SendKeyboardMsg( km )
 					ELSE
-						IF (Api.ControlMask IN kp.state) & (keysym = 32) THEN (* check Ctrl-space *)
+						IF (X11.ControlMask IN kp.state) & (keysym = 32) THEN (* check Ctrl-space *)
 							km.ch := CHR( keysym );  km.flags := KeyState( );
 							km.keysym := LONGINT(keysym);
 							SendKeyboardMsg( km ); (* IME keys *)
@@ -144,61 +145,61 @@ VAR
 							END
 						END;
 					END;
-			| Api.KeyRelease: kp := S.VAL(Api.XKeyEvent, event);
+			| X11.KeyRelease: kp := S.VAL(X11.KeyEvent, event);
 					X11.lastEventTime := kp.time;
 					X11.QueryPointer( xd, event.window, rw, cw, xr, yr, x, y, newxbuttons );
 					bdiff := newxbuttons / xbuttons;  xbuttons := newxbuttons;
 					IF bdiff # {} THEN
 						km.ch := 0X;
-						IF Api.ShiftMask IN bdiff THEN km.keysym := Inputs.KsShiftL
-						ELSIF Api.ControlMask IN bdiff THEN
+						IF X11.ShiftMask IN bdiff THEN km.keysym := Inputs.KsShiftL
+						ELSIF X11.ControlMask IN bdiff THEN
 							km.keysym := Inputs.KsControlL;
 							IF ~MMseen THEN  SendMouseMsg( x, y, 0, xbuttons )  END
-						ELSIF Api.Mod1Mask IN bdiff THEN
+						ELSIF X11.Mod1Mask IN bdiff THEN
 							km.keysym := Inputs.KsAltL;
 							IF ~MRseen THEN SendMouseMsg( x, y, 0, xbuttons )  END
 						ELSIF MetaMask*bdiff # {} THEN km.keysym := Inputs.KsMetaL
-						ELSIF Api.Mod5Mask IN bdiff THEN km.keysym := Inputs.KsAltR
+						ELSIF X11.Mod5Mask IN bdiff THEN km.keysym := Inputs.KsAltR
 						END;
 						km.flags := KeyState( ) + {Inputs.Release};
 						SendKeyboardMsg( km )
 					END
-			| Api.ButtonPress: be := S.VAL(Api.XButtonPressedEvent, event);
+			| X11.ButtonPress: be := S.VAL(X11.ButtonEvent, event);
 					X11.lastEventTime := be.time;
 					dz := 0;
 					CASE be.button OF
-					| Api.Button1:  INCL( xbuttons, Api.Button1Mask )
-					| Api.Button2:  INCL( xbuttons, Api.Button2Mask )
-					| Api.Button3:  INCL( xbuttons, Api.Button3Mask )
-					| Api.Button4: dz := -1
-					| Api.Button5: dz := +1
+					| X11.Button1:  INCL( xbuttons, X11.Button1Mask )
+					| X11.Button2:  INCL( xbuttons, X11.Button2Mask )
+					| X11.Button3:  INCL( xbuttons, X11.Button3Mask )
+					| X11.Button4: dz := -1
+					| X11.Button5: dz := +1
 					ELSE  (* ignore *)
 					END;
 					SendMouseMsg( be.x, be.y, dz, xbuttons )
-			| Api.ButtonRelease: be := S.VAL(Api.XButtonReleasedEvent, event);
+			| X11.ButtonRelease: be := S.VAL(X11.ButtonEvent, event);
 					X11.lastEventTime := be.time;
 					CASE be.button OF
-					| Api.Button1:  EXCL( xbuttons, Api.Button1Mask )
-					| Api.Button2:  EXCL( xbuttons, Api.Button2Mask )
-					| Api.Button3:  EXCL( xbuttons, Api.Button3Mask )
+					| X11.Button1:  EXCL( xbuttons, X11.Button1Mask )
+					| X11.Button2:  EXCL( xbuttons, X11.Button2Mask )
+					| X11.Button3:  EXCL( xbuttons, X11.Button3Mask )
 					ELSE  (* ignore *)
 					END;
 					SendMouseMsg( be.x, be.y, 0, xbuttons )
-			| Api.MotionNotify:
+			| X11.MotionNotify:
 					X11.QueryPointer( xd, event.window, rw, cw, xr, yr, x, y, xbuttons );
 					SendMouseMsg( x, y, 0, xbuttons )
-			| Api.Expose, Api.GraphicsExpose:
-					em := S.VAL( Api.XExposeEvent, event );
+			| X11.Expose, X11.GraphicsExpose:
+					em := S.VAL( X11.ExposeEvent, event );
 					IF em.count = 0 THEN  (* wait until last message*)
 						(* Let DisplayRefresher handle this *)
 						km.keysym := 0FFC6H;
 						SendKeyboardMsg( km );
 					END;
-			| Api.NoExpose:
-			| Api.MappingNotify:
+			| X11.NoExpose:
+			| X11.MappingNotify:
 					X11.RefreshKeyboardMapping( ADDRESSOF( event ) )
-			| Api.ClientMessage:
-					cm := S.VAL( Api.XClientMessageEvent, event );
+			| X11.ClientMessage:
+					cm := S.VAL( X11.ClientMessageEvent, event );
 					IF  cm.data[0] = disp.wmDelete THEN
 						(* shutdown *)
 						Machine.Release( Machine.X11 );
@@ -206,43 +207,41 @@ VAR
 						RETURN;
 					(*	Modules.Shutdown( Modules.Reboot ); *)
 					END;
-			| Api.UnmapNotify:
-			| Api.MapNotify:
-			| Api.SelectionClear:
-					IF Api.ClearSelection # NIL THEN Api.ClearSelection(); END
-			| Api.SelectionNotify:
-					IF Api.ReceiveSelection # NIL THEN
+			| X11.UnmapNotify:
+			| X11.MapNotify:
+			| X11.SelectionClear:
+					IF X11.ClearSelection # NIL THEN X11.ClearSelection(); END
+			| X11.SelectionNotify:
+					IF X11.ReceiveSelection # NIL THEN
 						Machine.Release( Machine.X11 );
-							Api.ReceiveSelection( S.VAL( Api.XSelectionEvent, event ) );
+						X11.ReceiveSelection( S.VAL( X11.SelectionEvent, event ) );
+						Machine.Acquire( Machine.X11 );
+					END
+			| X11.SelectionRequest:
+					IF X11.SendSelection # NIL THEN
+						Machine.Release( Machine.X11 );
+						X11.SendSelection( S.VAL( X11.SelectionRequestEvent, event ) );
 						Machine.Acquire( Machine.X11 )
 					END
-			| Api.SelectionRequest:
-					IF Api.SendSelection # NIL THEN
-						Machine.Release( Machine.X11 );
-							Api.SendSelection( S.VAL( Api.XSelectionRequestEvent, event ) );
-						Machine.Acquire( Machine.X11 )
-					END
-			| Api.ConfigureNotify:  cn := S.VAL(Api.XConfigureEvent, event);
+			| X11.ConfigureNotify:  cn := S.VAL(X11.ConfigureEvent, event);
 			ELSE
 				(* ignore *)
 			END;
-			events := Api.Pending( xd );
+			events := X11.Pending( xd );
+			Machine.Release( Machine.X11 );
 		END;
-		Machine.Release( Machine.X11 );
 	END PollXQueue;
-
-
 
 	(* Returns wether key (SHIFT, CTRL or ALT) is pressed *)
 	PROCEDURE KeyState( ): SET;
 	VAR keys: SET;
 	BEGIN
 		keys := {};
-		IF Api.ShiftMask IN xbuttons THEN  INCL( keys, Inputs.LeftShift )  END;
-		IF Api.ControlMask IN xbuttons THEN  INCL( keys, Inputs.LeftCtrl )  END;
-		IF Api.Mod1Mask IN xbuttons THEN  INCL( keys, Inputs.LeftAlt )  END;
+		IF X11.ShiftMask IN xbuttons THEN  INCL( keys, Inputs.LeftShift )  END;
+		IF X11.ControlMask IN xbuttons THEN  INCL( keys, Inputs.LeftCtrl )  END;
+		IF X11.Mod1Mask IN xbuttons THEN  INCL( keys, Inputs.LeftAlt )  END;
 		IF MetaMask*xbuttons # {} THEN  INCL( keys, Inputs.LeftMeta )  END;
-		IF Api.Mod5Mask IN xbuttons THEN  INCL( keys, Inputs.RightAlt )  END;
+		IF X11.Mod5Mask IN xbuttons THEN  INCL( keys, Inputs.RightAlt )  END;
 		RETURN keys
 	END KeyState;
 
@@ -292,11 +291,10 @@ VAR
 						  X11.ExposureMask + X11.ButtonPressMask + X11.OwnerGrabButtonMask +
 						  X11.ButtonReleaseMask + X11.PointerMotionHintMask + X11.PointerMotionMask +
 						  X11.KeyPressMask + X11.KeyReleaseMask + X11.StructureNotifyMask );
-		Machine.Release( Machine.X11 );
-
 	 	shift := Keysym( "Shift_L" );  control := Keysym( "Control_L" );
 		meta := Keysym( "Meta-L" );  alt := Keysym( "Alt_L" );
 		capslock := Keysym( "Caps_Lock" );  numlock := Keysym( "Num_Lock" );
+		Machine.Release( Machine.X11 );
 
 		modifiers[0] := shift;
 		Rebind( "Pause", 1, 0ADX );   (* SHIFT-BREAK *)
@@ -407,7 +405,7 @@ VAR
 	BEGIN
 		p := Displays.registry.Await( "XDisplay" );  disp := p( XDisplay.Display )
 	END GetXDisplay;
-
+	
 BEGIN
 	ASSERT( S.VAL( LONGINT, {0} ) = 1 );
 	GetXDisplay;

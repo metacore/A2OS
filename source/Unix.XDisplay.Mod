@@ -4,7 +4,7 @@ Refer to the general ETH Oberon System license contract available at: http://www
 MODULE XDisplay;   (** AUTHOR "gf"; PURPOSE  "display driver plugin for X Windows *)
 
 
-IMPORT S := SYSTEM, Trace, Unix, Machine, Files, UnixFiles, X11, Api := X11Api, Displays, Strings;
+IMPORT S := SYSTEM, Trace, Unix, Machine, Files, UnixFiles, X11, Displays, Strings;
 
 CONST
 	BG = 0;  FG = 15;   (* Background, foreground colors.*)
@@ -377,11 +377,11 @@ TYPE
 
 				PROCEDURE  & Initialize( disp: X11.DisplayPtr; absWidth, absHeight, relWidth, relHeight: LONGINT );
 				VAR
-					event: Api.XEvent;  root: X11.Window;
+					event: X11.Event;  root: X11.Window;
 					gRoot, gX, gY, gW, gH, gBW, gD, res: LONGINT;  screenw, screenh	: LONGINT;
 				BEGIN
-
 					xdisp := disp;
+					Machine.Acquire( Machine.X11 );
 					screen := X11.DefaultScreen( xdisp );
 					screenw := X11.DisplayWidth( xdisp, screen );
 					screenh := X11.DisplayHeight( xdisp, screen );
@@ -389,7 +389,6 @@ TYPE
 					cmap := X11.DefaultColormap( xdisp, screen );
 					foreground := X11.BlackPixel( xdisp, screen );
 					background := X11.WhitePixel( xdisp, screen );
-					Machine.Acquire( Machine.X11 );
 					root := X11.DefaultRootWindow( xdisp );
 					primary := X11.CreateSimpleWindow( xdisp, root, 0, 0,
 											     			screenw - 16, screenh - 32, 0,
@@ -401,12 +400,12 @@ TYPE
 
 
 					(* set wm_delete_events if in windowed mode *)
-					wmDelete := Api.InternAtom(xdisp, "WM_DELETE_WINDOW", Api.True);
-					res := Api.SetWMProtocols(xdisp, primary, ADDRESSOF(wmDelete), 1);
+					wmDelete := X11.InternAtom(xdisp, "WM_DELETE_WINDOW", X11.True);
+					res := X11.SetWMProtocols(xdisp, primary, ADDRESSOF(wmDelete), 1);
 
 					X11.MapRaised( xdisp, primary );
-					REPEAT  Api.NextEvent( xdisp, event )
-					UNTIL (event.typ = Api.Expose) & (event.window = primary);
+					REPEAT  X11.NextEvent( xdisp, event )
+					UNTIL (event.typ = X11.Expose) & (event.window = primary);
 					(* adjust to physical window size *)
 					X11.GetGeometry( xdisp, primary, gRoot, gX, gY, gW, gH, gBW, gD );
 					IF relWidth # -1 THEN
@@ -664,12 +663,15 @@ VAR
 	VAR xdisp: X11.DisplayPtr;  screen, depth: LONGINT;
 	BEGIN
 		getDisplayName;
-		xdisp := Api.OpenDisplay( dispname );
+		Machine.Acquire(Machine.X11);
+		xdisp := X11.OpenDisplay( dispname );
 		IF xdisp = 0 THEN
+			Machine.Release(Machine.X11);
 			Trace.String( "Cannot open X11 display " );  Trace.StringLn( dispname );  Unix.exit( 1 )
 		END;
 		screen := X11.DefaultScreen( xdisp );
 		depth := X11.DefaultDepth( xdisp, screen );
+		Machine.Release(Machine.X11);
 		IF depth < 8 THEN
 			Trace.StringLn( "UnixAos needs a color display. sorry." );  Unix.exit( 1 )
 		END;

@@ -29,7 +29,7 @@ TYPE
 	MetricDesc* = RECORD
 				dx*, x*, y*, filler: INTEGER;
 				p*: PatternDesc
-			END;
+	END;
 
 	Font* = POINTER TO Bytes;
 	Bytes* = RECORD
@@ -37,14 +37,16 @@ TYPE
 				xid*: LONGINT
 			END;
 
+	XID* = ADDRESS;
+
 CONST
 	BufferSize* = 512;
 
 TYPE
 	Buffer* = ARRAY BufferSize OF CHAR;
 	ComposeStatus* = RECORD
-					 	opaque: ARRAY 6 OF LONGINT
-					   END;
+		opaque: ARRAY 6 OF LONGINT
+	END;
 	Modifiers* = ARRAY 8 OF KeySym;
 
 	DisplayPtr* = ADDRESS;
@@ -135,7 +137,7 @@ TYPE
 				display*: DisplayPtr;
 				window*, root*, subwindow*: Window;
 				time*: Time;
-				x*, y*, xRoot*, yRoot*, state*, button: WORD;
+				x*, y*, xRoot*, yRoot*, state*, button*: WORD;
 				sameScreen: Bool
 			END;
 	KeyEvent* = RECORD
@@ -145,7 +147,9 @@ TYPE
 				display*: DisplayPtr;
 				window*, root*, subwindow*: Window;
 				time*: Time;
-				x*, y*, xRoot*, yRoot*, state*, keycode*: WORD;
+				x*, y*, xRoot*, yRoot*: WORD; 
+				state*: WORDSET; 
+				keycode*: WORD;
 				sameScreen: Bool
 			END;
 
@@ -165,10 +169,622 @@ TYPE
 				resourceid*: ADDRESS;
 				serial*: LONGWORD;
 				errorCode*, requestCode*, minorCode*: CHAR
-			END;
+	END;
+
+	Data40 * = ARRAY 5 OF LONGWORD; (* max of these is 40 bytes*)
+	Data40b* = ARRAY 20 OF CHAR; (* 20x 8 bits *)
+	Data40s* = ARRAY 10 OF INTEGER; (* 10x 16 bits *)
+	Data40l* = ARRAY 5 OF LONGINT; (* 5x 32 bits *)
+
+	ClientMessageEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;
+		messageType* : Atom;
+		format* : WORD;
+		data*: Data40;
+			(* any of these, union
+			b* : ARRAY 20 OF CHAR;
+			s* : ARRAY 10 OF INTEGER;
+			l* : ARRAY 5 OF LONGINT;
+			*)
+	END;
+	
+	ConfigureEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		event* : Window;
+		window* : Window;
+		x*, y* : WORD;
+		width*, height* : WORD;
+		borderWidth* : WORD;
+		above* : Window;
+		overrideRedirect* : BOOLEAN;
+	END;
+
+
+
 	ErrorEventPtr* = POINTER {UNSAFE,UNTRACED} TO ErrorEvent;
 	ErrorHandler* = PROCEDURE ( d: DisplayPtr;  err: ErrorEventPtr; p3, p4: LONGINT ): LONGINT;
 	IOErrorHandler = PROCEDURE ( d: DisplayPtr; p2, p3, p4: LONGINT ): LONGINT;
+
+	PChar* = POINTER TO ARRAY OF CHAR;
+
+	VisualInfoPtr*  = POINTER {UNSAFE, UNTRACED} TO VisualInfo;
+
+TYPE
+	XSetWindowAttributes* = RECORD
+		backgroundPixmap*: Pixmap; (* background, None, or ParentRelative *)
+		backgroundPixel*: LONGWORD;(* background pixel *)
+		borderPixmap*: Pixmap;    (* border of the window or CopyFromParent *)
+		borderPixel*: LONGWORD;(* border pixel value *)
+		bitGravity*: WORD;         (* one of bit gravity values *)
+		winGravity*: WORD;         (* one of the window gravity values *)
+		backingStore*: WORD;       (* NotUseful, WhenMapped, Always *)
+		backingPlanes*: LONGWORD;(* planes to be preserved if possible *)
+		backingPixel*: LONGWORD;(* value to use in restoring planes *)
+		saveUnder*: BOOLEAN;         (* should bits under be saved? (popups) *)
+		eventMask*:  LONGWORD;         (* set of events that should be saved *)
+		doNotPropagateMask*: LONGWORD;(* set of events that should not propagate *)
+		overrideRedirect*: BOOLEAN;  (* boolean value for override_redirect *)
+		colormap*: Colormap;       (* color map to be associated with window *)
+		cursor*: Cursor ;           (* cursor to be displayed (or None) *)
+	END ;
+
+	XWindowAttributes* = RECORD
+		x*, y*: WORD;			(* location of window *)
+		width*, height*: WORD;		(* width and height of window *)
+		borderWidth*: WORD;			(* border width of window *)
+		depth*: WORD;			(* depth of window *)
+		visual* : VisualPtr;			(* the associated visual structure *)
+		root* : Window;				(* root of screen containing window *)
+		class*: WORD;			(* InputOutput, InputOnly*)
+		bitGravity*: WORD;			(* one of the bit gravity values *)
+		winGravity*: WORD;			(* one of the window gravity values *)
+		backingStore*: WORD;		(* NotUseful, WhenMapped, Always *)
+		backingPlanes*: LONGWORD;		(* planes to be preserved if possible *)
+		backingPixel*: LONGWORD;		(* value to be used when restoring planes *)
+		saveUnder*: BOOLEAN;			(* boolean, should bits under be saved? *)
+		colormap*: Colormap;			(* color map to be associated with window *)
+		mapInstalled*: BOOLEAN;		(* boolean, is color map currently installed*)
+		mapState*: WORD;		(* IsUnmapped, IsUnviewable, IsViewable *)
+		allEventMasks*: LONGWORD;		(* set of events all people have interest in*)
+		yourEventMask*: LONGWORD;		(* my event mask *)
+		doNotPropagateMask*: LONGWORD;	(* set of events that should not propagate *)
+		overrideRedirect*: BOOLEAN;		(* boolean value for override-redirect *)
+		screen*: ADDRESS; (*X11.Screen;*)			(* back pointer to correct screen *)
+	END;
+
+	(* Data structure for host setting; getting routines. *)
+	TYPE XHostAddress* = RECORD
+			family* : WORD;		(* for example FamilyInternet *)
+			length* : WORD;		(* length of address, in bytes *)
+			address*: ADDRESS;		(* pointer to where to find the bytes *)
+		END;
+
+	(* Data structure for ServerFamilyInterpreted addresses in host routines *)
+	TYPE XServerInterpretedAddress* = RECORD
+			typelength*: WORD;		(* length of type string, in bytes *)
+			valuelength*: WORD;	(* length of value string, in bytes *)
+			type*: ADDRESS;		(* pointer to where to find the type string *)
+			value*: ADDRESS;		(* pointer to where to find the address *)
+		END;
+
+
+	(* Data structure for XReconfigureWindow *)
+	TYPE XWindowChanges * = RECORD
+			x*, y*: WORD;
+			width*, height* : WORD;
+	 	   	borderWidth*: WORD;
+			sibling* : Window;
+	 	   	stackMode*: WORD;
+		END;
+
+
+	(* new version containing base_width, base_height, and win_gravity fields;
+	  used with WM_NORMAL_HINTS.
+	 *)
+	TYPE DataAspect*=RECORD
+			x*: WORD;	(* numerator *)
+			y*: WORD;	(* denominator *)
+		END;
+
+	TYPE XSizeHints* = RECORD
+			flags*: LONGWORD;	(* marks which fields in this structure are defined *) (* HUGEINT ?*)
+			x*, y*: WORD;		(* obsolete for new window mgrs, but clients *)
+			width*, height*: WORD;	(* should set so old wm's don't mess up *)
+			minWidth*, minHeight*: WORD;
+			maxWidth*, maxHeight*: WORD;
+			widthInc*, heightInc*: WORD;
+			maxAspect*, minAspect*: DataAspect;
+			baseWidth*, baseHeight*: WORD;		(* added by ICCCM version 1 *)
+			winGravity*: WORD;			(* added by ICCCM version 1 *)
+		END;
+
+	(*  The next block of definitions are for window manager properties that
+	  clients and applications use for communication. *)
+
+	(* flags argument in size hints *)
+	CONST
+		USPosition * =  1H; (* user specified x, y *)
+		USSize * =   2H; (* user specified width, height *)
+		PPosition * =  4H; (* program specified position *)
+		PSize * =   8H; (* program specified size *)
+		PMinSize * =   10H; (* program specified minimum size *)
+		PMaxSize * =   20H; (* program specified maximum size *)
+		PResizeInc * =   40H; (* program specified resize increments *)
+		PAspect * =   80H; (* program specified min and max aspect ratios *)
+		PBaseSize * =   100H; (* program specified base for incrementing *)
+		PWinGravity * =  200H; (* program specified window gravity *)
+
+	(*
+	(* ******************************************** *)
+	(* ******************************************** *)
+	 (* Definitions of specific events. from  X11lib.h *)
+
+	(*!
+		 This union is defined so Xlib can always use the same sized
+		event structure internally, to avoid memory fragmentation.
+
+		In C,  XEvent type is union of all event types with size of 192 bytes ,
+		In Oberon, other event fields are padded with chars to prevent memory leaks.
+		Use type casting to obtain real event type.
+ *)
+
+	TYPE XEvent* = RECORD
+			typ* : WORD;		(* of event, must bot be changed; first element *)
+			serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+			sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+			display* : DisplayPtr;	(* Display the event was read from *)
+			window* : Window;	        (* "event" window it is reported relative to *)
+			pad*: ARRAY 192 - SIZE OF XAnyEvent OF CHAR;
+	END;
+
+	TYPE XAnyEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;(* Display the event was read from *)
+		window* : Window;	(* window on which event was requested in event mask *)
+	END;
+
+	TYPE XKeyEvent * = RECORD
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;	        (* "event" window it is reported relative to *)
+		root* : Window;	        (* root window that the event occurred on *)
+		subwindow* : Window;	(* child window *)
+		time* : Time;		(* milliseconds *)
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		state* : WORDSET;	(* key or button mask *)
+		keycode* : WORD;	(* detail *)
+		sameScreen* : BOOLEAN;	(* same screen flag *)
+	END;
+	TYPE XKeyPressedEvent* = XKeyEvent;
+	TYPE XKeyReleasedEvent* = XKeyEvent;
+
+	TYPE XButtonEvent * = RECORD
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;	        (* "event" window it is reported relative to *)
+		root* : Window;	        (* root window that the event occurred on *)
+		subwindow* : Window;	(* child window *)
+		time* : Time;		(* milliseconds *)
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		state* : WORDSET;	(* key or button mask *)
+		button* : WORD;	(* detail *)
+		sameScreen* : BOOLEAN;	(* same screen flag *)
+	END;
+	TYPE XButtonPressedEvent* = XButtonEvent;
+	TYPE XButtonReleasedEvent* = XButtonEvent;
+
+	TYPE XMotionEvent * = RECORD
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;	        (* "event" window reported relative to *)
+		root* : Window;	        (* root window that the event occurred on *)
+		subwindow* : Window;	(* child window *)
+		time* : Time;		(* milliseconds *)
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		state* : WORDSET;	(* key or button mask *)
+		isHint* : CHAR;		(* detail *)
+		sameScreen* : Bool;	(* same screen flag *)
+	END;
+	TYPE PointerMovedEvent* = XMotionEvent;
+
+	TYPE  XCrossingEvent * = RECORD
+		typ* : WORD;		(* of event *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;	        (* "event" window reported relative to *)
+		root* : Window;	        (* root window that the event occurred on *)
+		subwindow* : Window;	(* child window *)
+		time* : Time;		(* milliseconds *)
+		x*, y* : WORD;		(* pointer x, y coordinates in event window *)
+		xRoot*, yRoot* : WORD;	(* coordinates relative to root *)
+		mode* : WORD;		(* NotifyNormal, NotifyGrab, NotifyUngrab *)
+		detail* : WORD;
+		(*
+		* NotifyAncestor, NotifyVirtual, NotifyInferior,
+		* NotifyNonlinear,NotifyNonlinearVirtual
+		*)
+		sameScreen* : Bool;	(* same screen flag *)
+		focus* : Bool;		(* boolean focus *)
+		state* : WORDSET;	(* key or button mask *)
+	END;
+	TYPE XEnterWindowEvent* = XCrossingEvent;
+	TYPE XLeaveWindowEvent* = XCrossingEvent;
+
+	TYPE XFocusChangeEvent * = RECORD
+		typ* : WORD;		(* FocusIn or FocusOut *)
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;		(* window of event *)
+		mode* : LONGINT;		(* NotifyNormal, NotifyWhileGrabbed, NotifyGrab, NotifyUngrab *)
+		detail* : LONGINT;
+		(*
+		* NotifyAncestor, NotifyVirtual, NotifyInferior,
+		* NotifyNonlinear,NotifyNonlinearVirtual, NotifyPointer,
+		* NotifyPointerRoot, NotifyDetailNone
+		*)
+	END;
+	TYPE XFocusInEvent* = XFocusChangeEvent;
+	TYPE XFocusOutEvent* = XFocusChangeEvent;
+
+	(* generated on EnterWindow and FocusIn  when KeyMapState selected *)
+	TYPE XKeymapEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;
+		keyVector* : ARRAY 32 OF CHAR;
+	END;
+
+	TYPE XExposeEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;
+		x*, y* : WORD;
+		width*, height* : WORD;
+		count* : WORD;		(* if non-zero, at least this many more *)
+	END;
+
+	TYPE XGraphicsExposeEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		drawable* : Drawable;
+		x*, y* : WORD;
+		width*, height* : WORD;
+		count* : WORD;		(* if non-zero, at least this many more *)
+		majorCode* : WORD;		(* core is CopyArea or CopyPlane *)
+		minorCode* : WORD;		(* not defined in the core *)
+	END;
+
+	TYPE XNoExposeEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		drawable* : Drawable;
+		majorCode* : WORD;		(* core is CopyArea or CopyPlane *)
+		minorCode* : WORD;		(* not defined in the core *)
+	END;
+
+	TYPE XVisibilityEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;
+		state* : WORD;		(* Visibility state *)
+	END;
+
+	TYPE XCreateWindowEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		parent* : Window;		(* parent of the window *)
+		window* : Window;		(* window id of window created *)
+		x*, y* : WORD;		(* window location *)
+		width*, height* : WORD;	(* size of window *)
+		borderWidth* : WORD;	(* border width *)
+		overrideRedirect* : BOOLEAN;	(* creation should be overridden *)
+	END;
+
+	TYPE XDestroyWindowEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		event* : Window;
+		window* : Window;
+	END;
+
+	TYPE XUnmapEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		event* : Window;
+		window* : Window;
+		fromConfigure* : BOOLEAN;
+	END;
+
+	TYPE XMapEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		event* : Window;
+		window* : Window;
+		overrideRedirect* : BOOLEAN;	(* boolean, is override set... *)
+	END;
+
+	TYPE XMapRequestEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		parent* : Window;
+		window* : Window;
+	END;
+
+	TYPE XReparentEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		event* : Window;
+		window* : Window;
+		parent* : Window;
+		x*, y* : WORD;
+		overrideRedirect* : BOOLEAN;
+	END;
+
+	TYPE XGravityEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		event* : Window;
+		window* : Window;
+		x*, y* : WORD;
+	END;
+
+	TYPE XResizeRequestEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;
+		width*, height* : LONGWORD;
+	END;
+
+	TYPE XConfigureRequestEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		parent* : Window;
+		window* : Window;
+		x*, y* : WORD;
+		width*, height* : WORD;
+		borderWidth* : WORD;
+		above* : Window;
+		detail* : WORD;		(* Above, Below, TopIf, BottomIf, Opposite *)
+		valueMask* : LONGWORD(*unsigned*);
+	END;
+
+	TYPE XCirculateEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		event* : Window;
+		window* : Window;
+		place* : WORD;		(* PlaceOnTop, PlaceOnBottom *)
+	END;
+
+	TYPE XCirculateRequestEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		parent* : Window;
+		window* : Window;
+		place* : WORD;		(* PlaceOnTop, PlaceOnBottom *)
+	END;
+
+	TYPE XPropertyEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;
+		atom* : Atom;
+		time* : Time;
+		state* : WORD;		(* NewValue, Deleted *)
+	END;
+
+	TYPE XSelectionClearEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;
+		selection* : Atom;
+		time* : Time;
+	END;
+
+	TYPE XSelectionRequestEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		owner* : Window;
+		requestor* : Window;
+		selection* : Atom;
+		target* : Atom;
+		property* : Atom;
+		time* : Time;
+	END;
+
+	TYPE XSelectionEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		requestor* : Window;
+		selection* : Atom;
+		target* : Atom;
+		property* : Atom;		(* ATOM or None *)
+		time* : Time;
+	END;
+
+
+	TYPE
+		Data40 * = ARRAY 5 OF LONGWORD; (* max of these is 40 bytes*)
+		Data40b* = ARRAY 20 OF CHAR; (* 20x 8 bits *)
+		Data40s* = ARRAY 10 OF INTEGER; (* 10x 16 bits *)
+		Data40l* = ARRAY 5 OF LONGINT; (* 5x 32 bits *)
+
+	TYPE XMappingEvent * = RECORD
+		typ* : WORD;
+		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
+		sendEvent* : BOOLEAN;	(* true if this came from a SendEvent request *)
+		display* : DisplayPtr;	(* Display the event was read from *)
+		window* : Window;		(* unused *)
+		request* : WORD;		(* one of MappingModifier, MappingKeyboard, MappingPointer *)
+		firstKeycode* : WORD;	(* first keycode *)
+		count* : WORD;		(* defines range of change w. firstKeycode*)
+	END;
+
+	TYPE XErrorEvent * = RECORD
+		typ* : WORD;
+		display* : DisplayPtr;	(* Display the event was read from *)
+		resourceid* : XID;		(* resource id *)
+		serial* : LONGWORD(*unsigned*);	(* serial number of failed request *)
+		errorCode* : CHAR(*unsigned*);	(* error code of failed request *)
+		requestCode* : CHAR(*unsigned*);	(* Major op-code of failed request *)
+		minorCode* : CHAR(*unsigned*);	(* Minor op-code of failed request *)
+	END;
+
+
+	(* ************************************************************** *)
+	(*  GenericEvent.  This event is the standard event for all newer extensions. *)
+
+	TYPE XGenericEvent * = RECORD
+		typ* : WORD;         (* of event. Always GenericEvent *)
+		serial* : LONGWORD(*unsigned*);       (* # of last request processed *)
+		sendEvent* : BOOLEAN;   (* true if from SendEvent request *)
+		display* : DisplayPtr;     (* Display the event was read from *)
+		extension* : WORD;    (* major opcode of extension that caused the event *)
+		evtype* : WORD;       (* actual event type. *)
+	END;
+
+	TYPE XGenericEventCookie * = RECORD
+		typ* : WORD;         (* of event. Always GenericEvent *)
+		serial* : LONGWORD(*unsigned*);       (* # of last request processed *)
+		sendEvent* : BOOLEAN;   (* true if from SendEvent request *)
+		display* : DisplayPtr;     (* Display the event was read from *)
+		extension* : WORD;    (* major opcode of extension that caused the event *)
+		evtype* : WORD;       (* actual event type. *)
+		cookie* : WORD;
+		data* : ADDRESS;
+	END;
+*)
+
+CONST
+(* Action for EWMH client messages *)
+	NET_WM_STATE_REMOVE* = 0;
+	NET_WM_STATE_ADD* =1;
+	NET_WM_STATE_TOGGLE* = 2;
+
+	(*! ----------FONTS, from Xutil.h ------------------ *)
+
+TYPE
+
+	(* Extensions need a way to hang private data on some structures.
+	called to free private storage
+		free_private_proc* = PROCEDURE (extension: ExtData): LONGINT;*)
+
+	ExtData* = POINTER {UNTRACED, UNSAFE} TO ExtDataDesc;
+	ExtDataDesc* = RECORD
+		number*: WORD;		(* number returned by XRegisterExtension *)
+		next*: ExtData;	(* next item on list of data for structure *)
+		free_private*: ADDRESS;	(* called to free private storage *)
+		extension* : ExtData;
+		private_data*: ADDRESS;	(* data private to this extension. *)
+	END;
+
+	(* per character font metric information. *)
+	CharStruct* = RECORD
+		lbearing*: INTEGER;	(* origin to left edge of raster *)
+		rbearing*: INTEGER;	(* origin to right edge of raster *)
+		width*: INTEGER;		(* advance to next char's origin *)
+		ascent*: INTEGER;		(* baseline to top edge of raster *)
+		descent*: INTEGER;	(* baseline to bottom edge of raster *)
+		attributes*: INTEGER;	(* per char flags (not predefined) *)
+	END;
+
+	(* To allow arbitrary information with fonts, there are additional properties returned. *)
+	FontProp* = RECORD
+		name*: Atom;
+		card32*: LONGWORD;
+	END;
+
+	FontStruct* = POINTER  {UNTRACED, UNSAFE} TO FontStructDesc;
+	FontStructDesc* = RECORD
+		ext_data*: ExtData;	(* hook for extension to hang data *)
+		fid*: Font;            (* Font id for this font *)
+		direction*: WORD;	(* hint about direction the font is painted *)
+		min_char_or_byte2*: WORD;(* first character *)
+		max_char_or_byte2*: WORD;(* last character *)
+		min_byte1*: WORD;	(* first row that exists *)
+		max_byte1*: WORD;	(* last row that exists *)
+		all_chars_exist*: Bool;(* flag if all characters have non-zero size*)
+		default_char*: WORD;	(* char to print for undefined character *)
+		n_properties*: WORD;   (* how many properties there are *)
+		properties*: ADDRESS; (*POINTER TO ARRAY OF FontProp; *)	(* pointer to array of additional properties*)
+		min_bounds*: CharStruct;	(* minimum bounds over all existing char*)
+		max_bounds*: CharStruct;	(* maximum bounds over all existing char*)
+		per_char*: ADDRESS; (*POINTER TO ARRAY OF CharStruct;*)	(* first_char to last_char information *)
+		ascent*: WORD;		(* log. extent above baseline for spacing *)
+		descent*: WORD;	(* log. descent below baseline for spacing *)
+	END;
+
+
+	(* new structure for manipulating TEXT properties; used with WM_NAME,
+		WM_ICON_NAME, WM_CLIENT_MACHINE, and WM_COMMAND. *)
+	XTextProperty* = RECORD
+		value*: ADDRESS;		(* same as Property routines *)
+		encoding*: Atom;		(* prop type *)
+		format*: WORD;	(* prop data format: 8, 16, or 32 *)
+		nitems*: LONGWORD;	(* number of data items in value *)
+	END;
+
+(*! ------------------- ends  Xutil.h ----------- *)
 
 CONST
 	(* X constants: <X11/X.h> *)
@@ -207,17 +823,23 @@ CONST
 	MapNotify* = 19;  PropertyNotify* = 28;  SelectionClear* = 29;  SelectionRequest* = 30;
 	SelectionNotify* = 31;  ClientMessage* = 33;  MappingNotify* = 34;
 	(* event masks: *)
-	KeyPressMask* = 1H;  KeyReleaseMask* = 2H;  ButtonPressMask* = 4H;  ButtonReleaseMask* = 8H;
-	PointerMotionMask* = 40H;  PointerMotionHintMask* = 80H;  ButtonMotionMask* = 2000H;
-	ExposureMask* = 8000H;  StructureNotifyMask* = 20000H;  FocusChangeMask* = 200000H;
-	PropertyChangeMask* = 400000H;  OwnerGrabButtonMask* = 1000000H;
+	NoEventMask* = 0H;  KeyPressMask* = 1H; KeyReleaseMask* = 2H;
+	ButtonPressMask* = 4H;  ButtonReleaseMask* = 8H;  EnterWindowMask* = 10H;
+	LeaveWindowMask* = 20H;  PointerMotionMask* = 40H;  PointerMotionHintMask* = 80H;
+	Button1MotionMask* = 100H; Button2MotionMask* = 200H; Button3MotionMask* = 400H;
+	Button4MotionMask* = 800H;  Button5MotionMask* = 1000H;  ButtonMotionMask* = 2000H;
+	KeymapStateMask* = 4000H; ExposureMask* = 8000H; VisibilityChangeMask* = 10000H;
+	StructureNotifyMask* = 20000H; ResizeRedirectMask* = 40000H; SubstructureNotifyMask* = 80000H;
+	SubstructureRedirectMask* = 100000H; FocusChangeMask * = 200000H; PropertyChangeMask* = 400000H;
+	ColormapChangeMask* = 800000H; OwnerGrabButtonMask* = 1000000H;
 	(* event modes:  <X11/Xlib.h> *)
 	QueuedAlready* = 0;  QueuedAfterReading* = 1;  QueuedAfterFlush* = 2;
 	(* focus revert modes: <X11/X.h> *)
 	RevertToParent* = 2;
 	(* buttons: *)
-	Button1* = 1;  Button2* = 2;  Button3* = 3;
-	Button1Mask* = 100H;  Button2Mask* = 200H;  Button3Mask* = 400H;
+	Button1* = 1;  Button2* = 2;  Button3* = 3; Button4* = 4; Button5* = 5;
+
+	Button1Mask* = 8; Button2Mask* = 9; Button3Mask* = 10; Button4Mask* = 11; Button5Mask* = 12;
 	(* image format: *)
 	XYBitmap* = 0;  XYPixmap* = 1;  ZPixmap* = 2;
 	(* special keys: <X11/keysymdef.h> *)
@@ -225,19 +847,327 @@ CONST
 	XCleftptr* = 132;
 	(* atoms: <X11/Xatom.h> *)
 	XAPRIMARY* = 1;  XASTRING* = 31;
+	(* Cursor control & motion *)
+	(* X11/keysymdef.h *)
+CONST
+
+	XK_Home* = 	0FF50H;
+	XK_Left* = 	0FF51H;  (* Move left, left arrow *)
+	XK_Up* = 	0FF52H;  (* Move up, up arrow *)
+	XK_Right* = 	0FF53H;  (* Move right, right arrow *)
+	XK_Down* = 	0FF54H;  (* Move down, down arrow *)
+	XK_Prior* = 	0FF55H;  (* Prior, previous *)
+	XK_Page_Up* = 	0FF55H;
+	XK_Next* = 	0FF56H;  (* Next *)
+	XK_Page_Down* = 0FF56H;
+	XK_End* = 	0FF57H;  (* EOL *)
+	XK_Begin* = 	0FF58H;  (* BOL *)
+
+	XK_Escape* = 0FF1BH;
+	XK_F1* =0FFBEH;
+
+	(*  X11/X.h *)
+(* ****************************************************************
+                       RESERVED RESOURCE AND CONSTANT DEFINITIONS
+**************************************************************** *)
+
+	ParentRelative* = 1;	(* background pixmap in CreateWindow
+					    and ChangeWindowAttributes *)
+	CopyFromParent* = 0;	(* border pixmap in CreateWindow
+					       and ChangeWindowAttributes
+					   special VisualID and special window
+					       class passed to CreateWindow *)
+	PointerWindow* = 0;	(* destination window in SendEvent *)
+	InputFocus* = 1;	(* destination window in SendEvent *)
+	PointerRoot* = 1;	(* focus window in SetInputFocus *)
+	AnyPropertyType* = 0;	(* special Atom, passed to GetProperty *)
+	AnyKey* = 0;	(* special Key Code, passed to GrabKey *)
+	AnyButton* = 0;	(* special Button Code, passed to GrabButton *)
+	AllTemporary* = 0;	(* special Resource ID passed to KillClient *)
+	CurrentTime* = 0;	(* special Time *)
+	NoSymbol* = 0;	(* special KeySym *)
+
+
+	(* EVENT DEFINITIONS
+	  Input Event Masks. Used as event-mask window attribute and as arguments
+	   to Grab requests.  Not to be confused with event names. *)
+
+CONST
+
+	(* Event names.  Used in "type" field in XEvent structures.  Not to be
+	confused with event masks above.  They start from 2 because 0 and 1
+	are reserved in the protocol for errors and replies. *)
+
+CONST
+
+	EnterNotify* = 7; LeaveNotify* =8;  KeymapNotify* = 11;VisibilityNotify* = 15;
+	CreateNotify* = 16; DestroyNotify* = 17; 
+	MapRequest* = 20;  ReparentNotify* = 21; ConfigureNotify* = 22; ConfigureRequest* = 23;
+	GravityNotify* = 24; ResizeRequest* =	25; CirculateNotify* = 26; CirculateRequest* = 27;
+	LASTEvent* =		36;	 (* must be bigger than any event # *)
+
+
+	(* Key masks. Used as modifiers to GrabButton and GrabKey, results of QueryPointer,
+	state in various key-, mouse-, and button-related events. *)
+
+	ShiftMask* = 0;  LockMask* = 1;  ControlMask* = 2;
+	Mod1Mask* = 3;  Mod2Mask* = 4;  Mod3Mask* = 5;
+	Mod4Mask* = 6;   Mod5Mask* = 7;
+
+	(* modifier names.  Used to build a SetModifierMapping request or
+	to read a GetModifierMapping request.  These correspond to the
+	masks defined above. *)
+	ShiftMapIndex* =	0;  LockMapIndex* = 1; ControlMapIndex* = 2;
+	Mod1MapIndex* =	3; Mod2MapIndex* = 4; Mod3MapIndex* = 5;
+	Mod4MapIndex* =	6; Mod5MapIndex* = 7;
+
+	AnyModifier* = 15;  (* used in GrabButton, GrabKey *)
+
+	(* button names. Used as arguments to GrabButton and as detail in ButtonPress
+	and ButtonRelease events.  Not to be confused with button masks above.
+	Note that 0 is already defined above as "AnyButton".  *)
+
+
+	(* Notify modes *)
+	NotifyNormal* = 0; NotifyGrab* = 1; NotifyUngrab* = 2; NotifyWhileGrabbed* =	3;
+
+	NotifyHint* = 1; (* for MotionNotify events *)
+
+	(* Notify detail *)
+	NotifyAncestor* = 0; NotifyVirtual* = 1; NotifyInferior* = 2; NotifyNonlinear* = 3;
+	NotifyNonlinearVirtual* = 4; NotifyPointer* = 5; NotifyPointerRoot* = 6;
+	NotifyDetailNone* = 7;
+
+	(* Visibility notify *)
+	VisibilityUnobscured* =  0; VisibilityPartiallyObscured* = 1; VisibilityFullyObscured* = 2;
+
+	(* Circulation request *)
+	PlaceOnTop* = 0; PlaceOnBottom* = 1;
+
+	(* protocol families *)
+	FamilyInternet* = 0; (* IPv4 *)  FamilyDECnet* = 1;  FamilyChaos* = 2; FamilyInternet6* = 6; (* IPv6 *)
+
+	(* authentication families not tied to a specific protocol *)
+	FamilyServerInterpreted* = 5;
+
+	(* Property notification *)
+	PropertyNewValue* = 0;  PropertyDelete* = 1;
+
+	(* Color Map notification *)
+	ColormapUninstalled* = 0; ColormapInstalled* = 1;
+
+	(* GrabPointer, GrabButton, GrabKeyboard, GrabKey Modes *)
+	GrabModeSync* = 0;  GrabModeAsync* = 1;
+
+	(* GrabPointer, GrabKeyboard reply status *)
+	GrabSuccess* = 0; AlreadyGrabbed* = 1; GrabInvalidTime* = 2; GrabNotViewable* = 3; GrabFrozen* = 4;
+
+	(* AllowEvents modes *)
+	AsyncPointer* = 0; SyncPointer* = 1; ReplayPointer* = 2; AsyncKeyboard* = 3;
+	SyncKeyboard* = 4; ReplayKeyboard* = 5; AsyncBoth* = 6; SyncBoth* = 7;
+
+	(* Used in SetInputFocus, GetInputFocus *)
+	RevertToNone* = None;  RevertToPointerRoot* = PointerRoot; 
+
+
+
+(* ****************************************************************
+						 ERROR CODES
+ **************************************************************** *)
+
+CONST
+	Success* =	 0; (* everything's okay *)
+	BadRequest* = 1; (* bad request code *)
+	BadValue* =	   2;	(* int parameter out of range *)
+	BadWindow* = 3; (* parameter not a Window *)
+	BadPixmap* =	4; (* parameter not a Pixmap *)
+	BadAtom* = 5; (* parameter not an Atom *)
+	BadCursor* = 6; (* parameter not a Cursor *)
+	BadFont* = 7; (* parameter not a Font *)
+	BadMatch* = 8; (* parameter mismatch *)
+	BadDrawable* = 9; (* parameter not a Pixmap or Window *)
+	BadAccess* = 10; (* depending on context:
+				 - key/button already grabbed
+				 - attempt to free an illegal
+				   cmap entry
+				- attempt to store into a read-only
+				   color map entry.
+				- attempt to modify the access control
+				   list from other than the local host.
+				*)
+	BadAlloc* = 11; (* insufficient resources *)
+	BadColor* = 12; (* no such colormap *)
+	BadGC* = 13; (* parameter not a GC *)
+	BadIDChoice* = 14; (* choice not in range or already used *)
+	BadName* = 15; (* font or color name doesn't exist *)
+	BadLength* = 16;	(* Request length incorrect *)
+	BadImplementation* = 17;	(* server is defective *)
+
+	FirstExtensionError* = 128;
+	LastExtensionError* = 255;
+
+
+(* ****************************************************************
+						 WINDOW DEFINITIONS
+ **************************************************************** *)
+
+	(*  Window classes used by CreateWindow *)
+	(* Note that CopyFromParent is already defined as 0 above *)
+	InputOutput* = 1; InputOnly* = 2;
+
+	(* Window attributes for CreateWindow and ChangeWindowAttributes *)
+	CWBackPixmap* = 1H; CWBackPixel* = 2H; CWBorderPixmap* = 4H; CWBorderPixel* = 8H;
+	CWBitGravity* = 10H; CWWinGravity* = 20H; CWBackingStore* = 40H;  CWBackingPlanes* = 80;
+	CWBackingPixel* = 100H; CWOverrideRedirect* = 200H; CWSaveUnder* =400H; CWEventMask* =800H;
+	CWDontPropagate* =1000H; CWColormap* = 2000H; CWCursor* =4000H;
+
+	(* ConfigureWindow structure *)
+	CWX* = 1H;  CWY* = 2H; CWWidth* = 4H; CWHeight* = 8H; CWBorderWidth* = 10H;
+	CWSibling* = 20H; CWStackMode* = 40H;
+
+	(* Bit Gravity *)
+	ForgetGravity* = 0; NorthWestGravity* = 1; NorthGravity* = 2; NorthEastGravity* = 3;
+	WestGravity* = 4; CenterGravity *= 5; EastGravity* = 6; SouthWestGravity* = 7;
+	SouthGravity* = 8; SouthEastGravity* = 9; StaticGravity* = 10;
+
+	(* Window gravity + bit gravity above *)
+	UnmapGravity* = 0;
+
+	(* Used in CreateWindow for backing-store hint *)
+	NotUseful* = 0; WhenMapped* = 1; Always*= 2;
+
+	(* Used in GetWindowAttributes reply *)
+	IsUnmapped* = 0; IsUnviewable* = 1; IsViewable*= 2;
+
+	(* Used in ChangeSaveSet *)
+	SetModeInsert* = 0; SetModeDelete* = 1;
+
+	(* Used in ChangeCloseDownMode *)
+	DestroyAll* = 0; RetainPermanent* = 1; RetainTemporary* = 2;
+
+	(* Window stacking method (in configureWindow) *)
+	Above* =  0; Below* =1; TopIf* = 2; BottomIf* = 3; Opposite* = 4;
+
+	(* Circulation direction *)
+	RaiseLowest* = 0; LowerHighest* = 1;
+
+	(* Property modes *)
+	PropModePrepend* = 1; PropModeAppend * = 2;
+
+
+
+(* ****************************************************************
+                                             FONTS
+************************************************************* *)
+(* used in QueryFont -- draw direction *)
+	FontLeftToRight* = 0;
+	FontRightToLeft* = 1;
+	FontChange* = 255;
+
+
+(* ****************************************************************
+                                      KEYBOARD/POINTER STUFF
+ **************************************************************** *)
+
+	AutoRepeatModeOff*= 0; AutoRepeatModeOn* = 1; AutoRepeatModeDefault* = 2;
+
+	LedModeOff* = 0; LedModeOn* = 1;
+
+	(* masks for ChangeKeyboardControl *)
+	KBKeyClickPercent* =  1H;  KBBellPercent* =  2H; KBBellPitch* =  4H; 	KBBellDuration* =  8H;
+	KBLed* =  10H; KBLedMode* =  20H; KBKey* =  40H; KBAutoRepeatMode* =  80;
+
+	MappingSuccess* = 0; MappingBusy* = 1; MappingFailed* = 2;
+	MappingModifier* = 0; MappingKeyboard* = 1; MappingPointer* = 2;
+
+(* ****************************************************************
+                                              SCREEN SAVER STUFF
+ **************************************************************** *)
+  DontPreferBlanking* = 0; PreferBlanking* = 1; DefaultBlanking* = 2;
+  DisableScreenSaver* = 0; DisableScreenInterval* = 0;
+  DontAllowExposures* = 0; AllowExposures* = 1; DefaultExposures* =2;
+
+(* for ForceScreenSaver *)
+  ScreenSaverReset* = 0; ScreenSaverActive* = 1;
+
+(* ****************************************************************
+                             HOSTS AND CONNECTIONS
+ **************************************************************** *)
+
+	(* for ChangeHosts *)
+	HostInsert* = 0; HostDelete* = 1;
+
+	(* for ChangeAccessControl *)
+	EnableAccess* = 1; DisableAccess* = 0;
+
+
+	(* Byte order  used in imageByteOrder and bitmapBitOrder *)
+	LSBFirst* = 0; MSBFirst* = 1;
+
+
+(* ****************************************************************
+						ATOMS  <X11/Xatom.h>
+ **************************************************************** *)
+
+	(* Do not change!  Changing this file implies a protocol change! *)
+	XA_PRIMARY * = 1;  XA_SECONDARY * = 2;  XA_ARC * = 3;  XA_ATOM * = 4;  XA_BITMAP * = 5;
+	XA_CARDINAL * = 6;  XA_COLORMAP * = 7;  XA_CURSOR * = 8;  XA_CUT_BUFFER0 * = 9;
+	XA_CUT_BUFFER1 * = 10;  XA_CUT_BUFFER2 * = 11;  XA_CUT_BUFFER3 * = 12;  XA_CUT_BUFFER4 * = 13;
+	XA_CUT_BUFFER5 * = 14;  XA_CUT_BUFFER6 * = 15;  XA_CUT_BUFFER7 * = 16;  XA_DRAWABLE * = 17;
+	XA_FONT * = 18;  XA_INTEGER * = 19;  XA_PIXMAP * = 20;  XA_POINT * = 21;  XA_RECTANGLE * = 22;
+	XA_RESOURCE_MANAGER * = 23;  XA_RGB_COLOR_MAP * = 24;  XA_RGB_BEST_MAP * = 25;
+	XA_RGB_BLUE_MAP * = 26;  XA_RGB_DEFAULT_MAP * = 27;  XA_RGB_GRAY_MAP * = 28;
+	XA_RGB_GREEN_MAP * = 29;  XA_RGB_RED_MAP * = 30;  XA_STRING * = 31;  XA_VISUALID * = 32;
+	XA_WINDOW * = 33;  XA_WM_COMMAND * = 34;  XA_WM_HINTS * = 35;  XA_WM_CLIENT_MACHINE * = 36;
+	XA_WM_ICON_NAME * = 37;  XA_WM_ICON_SIZE * = 38;  XA_WM_NAME * = 39;  XA_WM_NORMAL_HINTS * = 40;
+	XA_WM_SIZE_HINTS * = 41;  XA_WM_ZOOM_HINTS * = 42;  XA_MIN_SPACE * = 43;  XA_NORM_SPACE * = 44;
+	XA_MAX_SPACE * = 45;  XA_END_SPACE * = 46;  XA_SUPERSCRIPT_X * = 47;  XA_SUPERSCRIPT_Y * = 48;
+	XA_SUBSCRIPT_X * = 49;  XA_SUBSCRIPT_Y * = 50;  XA_UNDERLINE_POSITION * = 51;  XA_UNDERLINE_THICKNESS * = 52;
+	XA_STRIKEOUT_ASCENT * = 53;  XA_STRIKEOUT_DESCENT * = 54;  XA_ITALIC_ANGLE * = 55;
+	XA_X_HEIGHT * = 56;  XA_QUAD_WIDTH * = 57;  XA_WEIGHT * = 58;  XA_POINT_SIZE * = 59;
+	XA_RESOLUTION * = 60;  XA_COPYRIGHT * = 61;  XA_NOTICE * = 62;  XA_FONT_NAME * = 63;
+	XA_FAMILY_NAME * = 64;  XA_FULL_NAME * = 65;  XA_CAP_HEIGHT * = 66;  XA_WM_CLASS * = 67;
+	XA_WM_TRANSIENT_FOR * = 68;  XA_LAST_PREDEFINED * = 68;
+
+(* ****************************************************************
+			CURSORS  <X11/Xcursorfont.h>
+ **************************************************************** *)
+CONST
+	 XC_num_glyphs* = 154;
+	 XC_X_cursor* = 0;  XC_arrow* = 2;  XC_based_arrow_down* = 4; XC_based_arrow_up* = 6;
+	 XC_boat* = 8; XC_bogosity* = 10; XC_bottom_left_corner* = 12; XC_bottom_right_corner* = 14;
+	 XC_bottom_side* = 16; XC_bottom_tee* = 18; XC_box_spiral* = 20; XC_center_ptr* = 22;
+	 XC_circle* = 24; XC_clock* = 26; XC_coffee_mug* = 28; XC_cross* = 30; XC_cross_reverse* = 32;
+	 XC_crosshair* = 34; XC_diamond_cross* = 36; XC_dot* = 38; XC_dotbox* = 40; XC_double_arrow* = 42;
+	 XC_draft_large* = 44; XC_draft_small* = 46; XC_draped_box* = 48; XC_exchange* = 50;
+	 XC_fleur* = 52; XC_gobbler* = 54; XC_gumby* = 56; XC_hand1* = 58; XC_hand2* = 60;
+	 XC_heart* = 62; XC_icon* = 64; XC_iron_cross* = 66; XC_left_ptr* = 68; XC_left_side* = 70;
+	 XC_left_tee* = 72; XC_leftbutton* = 74; XC_ll_angle* = 76; XC_lr_angle* = 78; XC_man* = 80;
+	 XC_middlebutton* = 82; XC_mouse* = 84; XC_pencil* = 86; XC_pirate* = 88; XC_plus* = 90;
+	 XC_question_arrow* = 92; XC_right_ptr* = 94; XC_right_side* = 96; XC_right_tee* = 98;
+	 XC_rightbutton* = 100; XC_rtl_logo* = 102; XC_sailboat* = 104; XC_sb_down_arrow* = 106;
+	 XC_sb_h_double_arrow* = 108; XC_sb_left_arrow* = 110; XC_sb_right_arrow* = 112;
+	 XC_sb_up_arrow* = 114; XC_sb_v_double_arrow* = 116; XC_shuttle* = 118; XC_sizing* = 120;
+	 XC_spider* = 122; XC_spraycan* = 124; XC_star* = 126; XC_target* = 128; XC_tcross* = 130;
+	 XC_top_left_arrow* = 132; XC_top_left_corner* = 134; XC_top_right_corner* = 136;
+	 XC_top_side* = 138; XC_top_tee* = 140; XC_trek* = 142; XC_ul_angle* = 144;
+	 XC_umbrella* = 146; XC_ur_angle* = 148; XC_watch* = 150; XC_xterm* = 152;
+
+(* *********************************************** *)
+	(* X11/Xlib.h*)
+(* *********************************************** *)
+TYPE
+	Status* = WORD;
+
 
 VAR
 	ErrorText*: Buffer;
 	ErrorFlag*: BOOLEAN;  lastEventTime*: Time;  ioErrors: INTEGER;
 
-	(* cut and paste *)
-	SendSelection*:			 PROCEDURE ( VAR event: SelectionRequestEvent );
-	ReceiveSelection*:		 PROCEDURE ( VAR event: SelectionEvent );
-	ClearSelection*:			 PROCEDURE;
 
 VAR
 	(* Xlib calls: *)
-	OpenDisplay-:			PROCEDURE {C} ( name: ADDRESS ): DisplayPtr;
+	OpenDisplay-:			PROCEDURE {C} ( CONST name: ARRAY OF CHAR ): DisplayPtr;
 	DefaultScreen-:			PROCEDURE {C} ( d: DisplayPtr ): WORD;
 	DisplayWidth-:			PROCEDURE {C} ( d: DisplayPtr;  screen: WORD ): WORD;
 	DisplayHeight-:			PROCEDURE {C} ( d: DisplayPtr;  screen: WORD ): WORD;
@@ -311,7 +1241,7 @@ VAR
 	NextEvent-:				PROCEDURE {C} ( d: DisplayPtr;  VAR event: Event );
 	EventsQueued-:			PROCEDURE {C} ( d: DisplayPtr;  mode: WORD ): WORD;
 	SetInputFocus-:			PROCEDURE {C} ( d: DisplayPtr;  focus: Window;  revertTo: WORD;  time: Time );
-	LookupString-:			PROCEDURE {C} ( VAR event: Event;  VAR buf: Buffer;  bufsize: WORD;
+	LookupString-:			PROCEDURE {C} ( VAR event: KeyEvent;  VAR buf: ARRAY OF CHAR;  bufsize: WORD;
 													VAR keysym: KeySym;  VAR cstat: ComposeStatus ): WORD;
 	QueryPointer-:			PROCEDURE {C} ( d: DisplayPtr;  w: Window;  VAR rw, cw: Window;
 													VAR xr, yr, xw, yw: WORD; VAR keysButtons: WORDSET );
@@ -348,12 +1278,12 @@ VAR
 	AddPixel-:				PROCEDURE {C} ( image: Image;  value: LONGWORD );
 	Free-:						PROCEDURE {C} ( data: ADDRESS );
 (*	SetErrorHandler-:		PROCEDURE {C} ( handler: ErrorHandler );	*)
-	GetErrorText-:			PROCEDURE {C} ( d: DisplayPtr;  errcode: WORD; VAR buf: Buffer; length: WORD );
+	GetErrorText-:			PROCEDURE {C} ( d: DisplayPtr;  errcode: WORD; VAR buf: ARRAY OF CHAR; length: WORD );
 	StoreBytes-:				PROCEDURE {C} ( d: DisplayPtr;  bytes: ADDRESS; nbytes: WORD );
 	FetchBytes-:			PROCEDURE {C} ( d: DisplayPtr;  VAR nbytes: WORD ): ADDRESS;
 	SetSelectionOwner-:	PROCEDURE {C} ( d: DisplayPtr;  selection: Atom;  owner: Window;  time: Time );
 	GetSelectionOwner-:	PROCEDURE {C} ( d: DisplayPtr;  selection: Atom ): Window;
-	InternAtom-:				PROCEDURE {C} ( d: DisplayPtr;  name: ADDRESS;  onlyifexists: Bool ): Atom;
+	InternAtom-:				PROCEDURE {C} ( d: DisplayPtr;  CONST name: ARRAY OF CHAR;  onlyifexists: Bool ): Atom;
 	SendEvent-:				PROCEDURE {C} ( d: DisplayPtr;  w: Window;  propagate: Bool;  eventmask: LONGWORD;  event: ADDRESS );
 	ConvertSelection-:		PROCEDURE {C} ( d: DisplayPtr;  selection, target, property: Atom;
 													requestor: Window;  timestamp: Time );
@@ -373,7 +1303,52 @@ VAR
 (*	SetIOErrorHandler-:		PROCEDURE {C} ( handler: IOErrorHandler );	*)
 	InitXErrorHandlers-:		PROCEDURE {C} ( eh: ErrorHandler; ioeh: IOErrorHandler );
 
+	CloseDisplay- : PROCEDURE {C} (display:DisplayPtr): WORD;
+	CreateWindow- : PROCEDURE {C} (display: DisplayPtr; parent: Window; x, y: WORD; width, height, borderWidth, depth, class: WORD; visual: VisualPtr; valuemask: LONGWORD;  VAR attributes: XSetWindowAttributes ): Window;
+	DestroyWindow-: PROCEDURE {C}(display:DisplayPtr; win: Window): WORD;
+	DisplayWidthMM-: PROCEDURE {C} (d: DisplayPtr; screen: WORD ): WORD;
+	FreeColormap- : PROCEDURE {C} (display: DisplayPtr; colormap: Colormap);
+	FreeCursor- : PROCEDURE {C} (display: DisplayPtr;  cursor: Cursor);
+	XGetAtomName- : PROCEDURE {C} (display: DisplayPtr; atom: Atom): ADDRESS;
+	GetWindowAttributes- : PROCEDURE {C} (display: DisplayPtr; win: Window; VAR attr: XWindowAttributes): Status;
 
+
+	GrabKeyboard-: PROCEDURE {C} (display: DisplayPtr; grabwindow: Window; ownerevents: Bool; pointermode, keyboardmode: WORD; time: Time): WORD;
+	GrabPointer-: PROCEDURE {C} (display:DisplayPtr; grabwindow: Window; ownerevents: Bool; eventmask: WORD; pointermode, keyboardmode: WORD; confineto: Window; cursor: Cursor; time: Time): WORD;
+	LookupKeysym- : PROCEDURE {C} (CONST event: KeyEvent; index: WORD): KeySym;
+	MapWindow- : PROCEDURE {C} (display: DisplayPtr; win: Window);
+	Pending- : PROCEDURE {C} (display: DisplayPtr): WORD;
+	RaiseWindow-: PROCEDURE {C}(display: DisplayPtr; win: Window);
+	RootWindow-: PROCEDURE {C}(display: DisplayPtr; screen: WORD): Window;
+
+	SetNormalHints-: PROCEDURE {C} (d: DisplayPtr; w: Window; VAR hints: XSizeHints);
+	GetNormalHints-: PROCEDURE {C} (d: DisplayPtr; w: Window; VAR hints: XSizeHints): Status;
+
+	SetStandardProperties-: PROCEDURE {C} (display: DisplayPtr; w: Window; CONST winName: ARRAY OF CHAR;
+							CONST iconName: ARRAY OF CHAR; iconpixmap: Pixmap;  argv: ADDRESS; argc: WORD; VAR hints: XSizeHints);
+	SetWMProtocols-: PROCEDURE {C} (display: DisplayPtr; win: Window; protocols: ADDRESS (* ARRAY OF Atoms *); count: WORD): Status;
+	UnmapWindow- : PROCEDURE {C} (display: DisplayPtr; win: Window);
+
+
+	(* cut and paste delegates *)
+	SendSelection*:	 PROCEDURE {DELEGATE} (VAR event: SelectionRequestEvent );
+	ReceiveSelection*:  PROCEDURE {DELEGATE} (VAR event: SelectionEvent );
+	ClearSelection*: PROCEDURE {DELEGATE} ;
+
+	CheckTypedEvent-: PROCEDURE {C} (display: DisplayPtr; eventType: WORD; VAR event: Event): Bool;
+	CheckMaskEvent-: PROCEDURE {C} (display: DisplayPtr; eventMask: LONGWORD; VAR event: Event): Bool;
+
+	CheckTypedWindowEvent-: PROCEDURE {C} (display: DisplayPtr; window: Window; eventType: WORD; VAR event: Event): Bool;
+	CheckWindowEvent-: PROCEDURE {C} (display: DisplayPtr; window: Window; eventMask: LONGWORD; VAR event: Event): Bool;
+
+	(* Font *)
+	LoadQueryFont-: PROCEDURE {C} (display: DisplayPtr; name: ADDRESS): FontStruct;
+	QueryFont- : PROCEDURE {C} (display: DisplayPtr; name: XID): FontStruct;
+
+	KeycodeToKeysym-: PROCEDURE {C} (disp: DisplayPtr; keycode: WORD; index: WORD): KeySym;
+	KeysymToKeycode-: PROCEDURE {C} (disp: DisplayPtr; keysym: KeySym): WORD;
+
+	XKeysymToString-  : PROCEDURE {C} (keysym: KeySym): ADDRESS;
 
 	PROCEDURE LinkToX;
 	VAR xlib: ADDRESS;
@@ -491,6 +1466,41 @@ VAR
 		Unix.Dlsym( xlib, "XResizeWindow", ADDRESSOF( ResizeWindow ) );
 		Unix.Dlsym( xlib, "XSynchronize", ADDRESSOF( Synchronize ) );
 		Unix.Dlsym( xlib, "XAllocColor", ADDRESSOF( AllocColor ) );
+		Unix.Dlsym( xlib, "XCloseDisplay", ADDRESSOF( CloseDisplay));
+		Unix.Dlsym( xlib, "XCreateWindow", ADDRESSOF( CreateWindow));
+		Unix.Dlsym( xlib, "XDestroyWindow", ADDRESSOF( DestroyWindow));
+		Unix.Dlsym( xlib, "XDisplayWidthMM", ADDRESSOF( DisplayWidthMM));
+		Unix.Dlsym( xlib, "XFreeColormap", ADDRESSOF( FreeColormap));
+		Unix.Dlsym( xlib, "XFreeCursor", ADDRESSOF( FreeCursor));
+		Unix.Dlsym( xlib, "XGetAtomName", ADDRESSOF( XGetAtomName));
+		Unix.Dlsym( xlib, "XGetNormalHints", ADDRESSOF( GetNormalHints));
+		Unix.Dlsym( xlib, "XGetWindowAttributes", ADDRESSOF( GetWindowAttributes));
+		Unix.Dlsym( xlib, "XGetWindowProperty", ADDRESSOF( GetWindowProperty));
+		Unix.Dlsym( xlib, "XGrabKeyboard", ADDRESSOF( GrabKeyboard));
+		Unix.Dlsym( xlib, "XGrabPointer", ADDRESSOF( GrabPointer));
+		Unix.Dlsym( xlib, "XLookupKeysym", ADDRESSOF( LookupKeysym));
+		Unix.Dlsym( xlib, "XLookupString", ADDRESSOF( LookupString));
+		Unix.Dlsym( xlib, "XMapWindow", ADDRESSOF( MapWindow));
+		Unix.Dlsym( xlib, "XUnmapWindow", ADDRESSOF( UnmapWindow));
+		Unix.Dlsym( xlib, "XPending", ADDRESSOF( Pending));
+		Unix.Dlsym( xlib, "XRaiseWindow", ADDRESSOF( RaiseWindow));
+		Unix.Dlsym( xlib, "XRootWindow", ADDRESSOF( RootWindow));
+		Unix.Dlsym( xlib, "XSendEvent", ADDRESSOF( SendEvent));
+		Unix.Dlsym( xlib, "XSetNormalHints", ADDRESSOF( SetNormalHints));
+		Unix.Dlsym( xlib, "XSetStandardProperties", ADDRESSOF( SetStandardProperties));
+		Unix.Dlsym( xlib, "XSetWMProtocols", ADDRESSOF( SetWMProtocols));
+		Unix.Dlsym( xlib, "XStoreName", ADDRESSOF( StoreName));
+		Unix.Dlsym( xlib, "XWarpPointer", ADDRESSOF( WarpPointer));
+		Unix.Dlsym( xlib, "XCheckTypedEvent", ADDRESSOF( CheckTypedEvent));
+		Unix.Dlsym( xlib, "XCheckMaskEvent", ADDRESSOF( CheckMaskEvent));
+		Unix.Dlsym( xlib, "XCheckTypedWindowEvent", ADDRESSOF( CheckTypedWindowEvent));
+		Unix.Dlsym( xlib, "XCheckWindowEvent", ADDRESSOF( CheckWindowEvent));
+		Unix.Dlsym(xlib, 'XLoadQueryFont', ADDRESSOF( LoadQueryFont));
+		Unix.Dlsym(xlib, 'XQueryFont', ADDRESSOF( QueryFont));
+		Unix.Dlsym(xlib, "XKeycodeToKeysym", ADDRESSOF(KeycodeToKeysym));
+		Unix.Dlsym(xlib, "XKeysymToKeycode", ADDRESSOF(KeysymToKeycode));
+		Unix.Dlsym(xlib, "XKeysymToString", ADDRESSOF(XKeysymToString));
+
 	END LinkToX;
 
 	PROCEDURE MyErrorHandler( d: DisplayPtr;  err {UNTRACED}: ErrorEventPtr ): LONGINT;
@@ -506,16 +1516,15 @@ VAR
 		ErrorFlag := TRUE;  ErrorText := "X11 I/O Error";
 		Trace.StringLn( ErrorText );
 		INC( ioErrors );
+		LOOP END; 
 		RETURN 0
 	END MyIOErrorHandler;
 
 BEGIN
 	ioErrors := 0;  LinkToX;  ErrorFlag := FALSE;
 
-	(*SetIOErrorHandler( MyIOErrorHandler );*)
-	(*SetErrorHandler( MyErrorHandler );*)
-			(* Oberon procedures cannot be used as callback procedures because of
-				incompatibilities between the PPC Oberon ABI and the PPC SYSV ABI.
-				PPC Oberon follows the old MAC and IBM AIX ABI *)
+	(* Oberon procedures cannot be used as callback procedures because of
+		incompatibilities between the PPC Oberon ABI and the PPC SYSV ABI.
+		PPC Oberon follows the old MAC and IBM AIX ABI *)
 	Unix.InitXErrorHandlers( MyErrorHandler, MyIOErrorHandler );
 END X11.

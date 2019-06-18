@@ -1,7 +1,7 @@
 
 MODULE Clipboard;	(** AUTHOR "G.F."; PUROSE "X11 clipboard interface";  *)
 
-IMPORT	SYSTEM, Unix, Machine, X11, X11Api, Displays, XDisplay, Plugins, Log := KernelLog,
+IMPORT	SYSTEM, Unix, Machine, X11, Displays, XDisplay, Plugins, Log := KernelLog,
 		Modules, Texts, TextUtilities, Strings, HostClipboard, Objects, Commands, Options;
 
 CONST
@@ -173,7 +173,7 @@ VAR
 		Machine.Release( Machine.X11 );
 	END PutToClipboard;
 
-	PROCEDURE SendSelection( VAR event: X11Api.XSelectionRequestEvent );
+	PROCEDURE SendSelection( VAR event: X11.SelectionRequestEvent );
 	VAR ev: X11.SelectionEvent;
 	BEGIN
 		ev.typ := X11.SelectionNotify;
@@ -216,7 +216,7 @@ VAR
 		AWAIT( received );
 	END GetX11Selection;
 
-	PROCEDURE ReceiveSelection( VAR event: X11Api.XSelectionEvent );
+	PROCEDURE ReceiveSelection( VAR event: X11.SelectionEvent );
 	VAR type: X11.Atom;  format: WORD; len, after: LONGWORD;  prop, adr: ADDRESS; ch: CHAR;
 	BEGIN {EXCLUSIVE}
 		rlen := 0; recBuffer[0] := 0X;
@@ -257,9 +257,9 @@ VAR
 		grabber.terminate := TRUE;
 		Objects.Sleep( 1000 );
 
-		X11Api.SendSelection := NIL;
-		X11Api.ReceiveSelection := NIL;
-		X11Api.ClearSelection := NIL;
+		X11.SendSelection := NIL;
+		X11.ReceiveSelection := NIL;
+		X11.ClearSelection := NIL;
 
 		Texts.clipboard.onTextChanged.Remove( ClipboardChanged );
 		HostClipboard.SetHandlers( NIL, NIL );
@@ -278,13 +278,13 @@ VAR
 		ELSE
 			IF options.Parse(context.arg, context.error) THEN
 				GetXDisplay;
-				X11Api.SendSelection := SendSelection;
-				X11Api.ReceiveSelection := ReceiveSelection;
-				X11Api.ClearSelection := ClearSelection;
+				X11.SendSelection := SendSelection;
+				X11.ReceiveSelection := ReceiveSelection;
+				X11.ClearSelection := ClearSelection;
 
 				Machine.Acquire( Machine.X11 );
-				myProperty := X11.InternAtom( xdisp, ADDRESSOF("UNICODE"), X11.False );
-				clipboard := X11.InternAtom(xdisp,ADDRESSOF("CLIPBOARD"),1);
+				myProperty := X11.InternAtom( xdisp, "UNICODE", X11.False );
+				clipboard := X11.InternAtom(xdisp,"CLIPBOARD",1);
 				Machine.Release( Machine.X11 );
 
 				IF options.GetFlag("primary") THEN clipboard := X11.XAPRIMARY END;

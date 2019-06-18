@@ -981,7 +981,6 @@ CONST
 								WriteVariables(w,refs,offset, base, low, high);
 							END;
 						END;
-						IF (m # NIL) & (base # m.sb) & (count = 0) THEN ModuleState(w, m) END
 					END;
 				ELSE
 					w.String( "Unknown external procedure, pc = " );  w.Address( pc );  w.Ln; Wait(w);

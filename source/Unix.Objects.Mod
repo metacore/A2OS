@@ -622,14 +622,16 @@ TYPE
 			S.GET(bp, bp);
 			bp := CheckBP(bp);
 			S.GET(bp+SIZEOF(ADDRESS), pc);
+		ELSE
+			IF Machine.ValidHeapAddress(pc) THEN
+			ELSE 
+				IGNORE NextValidStackSegment(p, bp, pc, contextPos);
+			END;		
 		END;
 	END GetStack;
 
 	PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
 	BEGIN
-		IF contextPos > p.gcContext.nextPos THEN
-			contextPos := p.gcContext.nextPos;
-		END;
 		bp := NIL;
 		WHILE (contextPos > 0) & (bp = NIL) DO
 			DEC(contextPos);
@@ -811,6 +813,7 @@ TYPE
 	(* called by WMProcessInfo to obtain the current state of a running process *)
 	PROCEDURE UpdateProcessState*( p: Process );
 	BEGIN
+		Machine.Acquire(Machine.Objects);  (* must not run concurrently with GC *)
 		IF p.threadId = Unix.ThrThis( ) THEN
 			p.state.PC := Machine.CurrentPC( );
 			p.state.BP := S.GetFramePointer( );
@@ -825,7 +828,8 @@ TYPE
 				END;
 				timerStopped := FALSE
 			END
-		END
+		END;
+		Machine.Release(Machine.Objects); 
 	END UpdateProcessState;
 
 	PROCEDURE SuspendActivities;

@@ -6652,31 +6652,21 @@ TYPE
 							PutMathArrayField(operand.tag, IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StackFlag})),MathFlagsOffset);
 						END;
 					ELSIF type.form = SyntaxTree.Tensor THEN
-						IF temporary & backend.writeBarriers THEN
-							SaveRegisters();ReleaseUsedRegisters(saved);
-							Symbol(variable, operand);
-							Emit(Push(position,operand.op));
-							ReleaseOperand(operand);
-							Emit(Push(position,nil));
-							CallThis(position,"FoxArrayBase","Assign",2);
-							RestoreRegisters(saved);
+						Symbol(variable, operand);
+						MakeMemory(tmp,operand.op,addressType,0);
+						ReleaseOperand(operand);
+						IF FALSE & temporary THEN
+								(* trick -- temporary object from array base *)
+								symbol := GetSymbol(moduleScope,"FoxArrayBase","temporary");
+								Symbol(symbol,operand);
+								MakeMemory(mem,operand.op,addressType,0);
+								ReleaseOperand(operand);
+								Emit(Mov(position,tmp, mem) );
+								ReleaseOperand(operand);
 						ELSE
-							Symbol(variable, operand);
-							MakeMemory(tmp,operand.op,addressType,0);
-							ReleaseOperand(operand);
-							IF FALSE & temporary THEN
-									(* trick -- temporary object from array base *)
-									symbol := GetSymbol(moduleScope,"FoxArrayBase","temporary");
-									Symbol(symbol,operand);
-									MakeMemory(mem,operand.op,addressType,0);
-									ReleaseOperand(operand);
-									Emit(Mov(position,tmp, mem) );
-									ReleaseOperand(operand);
-							ELSE
-								Emit(Mov(position,tmp, nil ) );
-							END;
-							ReleaseIntermediateOperand(tmp)
+							Emit(Mov(position,tmp, nil ) );
 						END;
+						ReleaseIntermediateOperand(tmp)
 					END;
 				END;
 			ELSE
@@ -6693,14 +6683,6 @@ TYPE
 							Symbol(variable, operand);
 							CallAssignPointer(operand.op, nil);
 							ReleaseOperand(operand);
-							RestoreRegisters(saved);
-						ELSIF backend.writeBarriers THEN
-							SaveRegisters();ReleaseUsedRegisters(saved);
-							Symbol(variable, operand);
-							Emit(Push(position,operand.op));
-							ReleaseOperand(operand);
-							Emit(Push(position,nil));
-							CallThis(position,"Heaps","Assign",2);
 							RestoreRegisters(saved);
 						ELSE
 							Symbol(variable, operand);
@@ -7480,22 +7462,6 @@ TYPE
 			Emit(Push(position,op.op))
 		END PushString;
 
-		(* conservative check if x is potentially on the heap, excluding the module heap
-			required for generational garbage collector
-		*)
-		PROCEDURE OnHeap(x: SyntaxTree.Expression): BOOLEAN;
-		BEGIN
-			RETURN TRUE;
-			(*! find a conservative and simple algorithm. The following does, for example, not work for records on the stack
-				passed by reference.
-			pos := x.position.start;
-			WHILE (x # NIL) & ~(x IS SyntaxTree.DereferenceDesignator) & ~(x IS SyntaxTree.SelfDesignator) DO
-				x := x(SyntaxTree.Designator).left;
-			END;
-			RETURN x # NIL;
-			*)
-		END OnHeap;
-
 		PROCEDURE Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
 			p0, p1: SyntaxTree.Expression;
@@ -7754,7 +7720,7 @@ TYPE
 
 					IF (temporaryVariable # NIL) & (x.type = NIL) THEN
 						Designate(p0,l);
-						IF backend.writeBarriers & OnHeap(p0) THEN
+						IF backend.writeBarriers THEN
 							SaveRegisters();ReleaseUsedRegisters(saved);
 							Emit(Push(position,l.op));
 							Emit(Push(position,pointer));
@@ -10397,7 +10363,7 @@ TYPE
 				END;
 				ModifyAssignments(false);
 				RETURN;
-			ELSIF backend.writeBarriers &  left.NeedsTrace() & OnHeap(left) & ~((leftType IS SyntaxTree.MathArrayType) & ~IsStaticMathArray(leftType)) THEN
+			ELSIF backend.writeBarriers &  left.NeedsTrace() & ~((leftType IS SyntaxTree.MathArrayType) & ~IsStaticMathArray(leftType)) THEN
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				IF SemanticChecker.IsPointerType(leftType) THEN
 					Evaluate(right,rightO);

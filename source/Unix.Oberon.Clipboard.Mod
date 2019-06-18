@@ -17,7 +17,7 @@ of the source code to another platform with the name OBERON. *)
 MODULE Clipboard IN Oberon;	(* mad 4.9.1997 *)
 
 IMPORT	SYSTEM, Files, Texts, Oberon, Displays IN A2, XDisplay IN A2, Plugins IN A2, Display,
-		X11 IN A2, X11Api IN A2, Strings, Modules IN A2, Machine IN A2 ;
+		X11 IN A2, Strings, Modules IN A2, Machine IN A2 ;
 
 CONST  CR = 0DX; LF = 0AX;
 
@@ -64,7 +64,7 @@ BEGIN
 	Machine.Release(Machine.X11);
 END RequestSelection;
 
-PROCEDURE SendSelection(VAR event: X11Api.XSelectionRequestEvent);
+PROCEDURE SendSelection(VAR event: X11.SelectionRequestEvent);
 	VAR ev: X11.SelectionEvent; R: Texts.Reader; i, size: LONGINT; ch: CHAR; f: Files.File; r: Files.Rider;
 BEGIN
 	ev.typ := X11.SelectionNotify;
@@ -110,7 +110,7 @@ BEGIN
 	Machine.Release(Machine.X11);
 END SendSelection;
 
-PROCEDURE ReceiveSelection(VAR event: X11Api.XSelectionEvent);
+PROCEDURE ReceiveSelection(VAR event: X11.SelectionEvent);
 	VAR type: X11.Atom; format: WORD; len, after: LONGWORD;  prop, adr: ADDRESS; ch: CHAR; f: Files.File; r: Files.Rider; i: LONGINT;
 BEGIN
 	IF (event.property = X11.None) & (retries = 0) THEN
@@ -184,9 +184,9 @@ END InitKeys;
 (* set Selection handlers to NIL *)
 PROCEDURE OnClose;
 BEGIN
-	X11Api.SendSelection := NIL;
-	X11Api.ReceiveSelection := NIL;
-	X11Api.ClearSelection := NIL;
+	X11.SendSelection := NIL;
+	X11.ReceiveSelection := NIL;
+	X11.ClearSelection := NIL;
 END OnClose;
 
 
@@ -194,12 +194,12 @@ BEGIN
 	Texts.OpenWriter(W); NEW(B); Texts.OpenBuf(B);
 	GetXDisplay;
 	NEW(scrap); Texts.Open(scrap, "");
-	X11Api.SendSelection := SendSelection;
-	X11Api.ReceiveSelection := ReceiveSelection;
-	X11Api.ClearSelection := ClearSelection;
+	X11.SendSelection := SendSelection;
+	X11.ReceiveSelection := ReceiveSelection;
+	X11.ClearSelection := ClearSelection;
 	ClearSelection;
-	myProperty := X11.InternAtom(disp.xdisp, ADDRESSOF("OberonProperty"), X11.False);
-	oberonType := X11.InternAtom(disp.xdisp, ADDRESSOF("Oberon System 3 Data"), X11.False);
+	myProperty := X11.InternAtom(disp.xdisp, "OberonProperty", X11.False);
+	oberonType := X11.InternAtom(disp.xdisp, "Oberon System 3 Data", X11.False);
 	retries := 0; InitKeys;
 	Modules.InstallTermHandler(OnClose);
 END Clipboard.

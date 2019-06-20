@@ -516,7 +516,7 @@ VAR
 	sigsuspend: PROCEDURE {C} (set: ADDRESS): LONGINT;
 	sigaddset: PROCEDURE {C} (set: ADDRESS; signo: LONGINT);
 	sigdelset: PROCEDURE {C} (set: ADDRESS; signo: LONGINT);
-	nanosleep: PROCEDURE {C} (req, rem: ADDRESS): LONGINT;
+	nanosleep-: PROCEDURE {C} (req, rem: ADDRESS): LONGINT;
 	sigaltstack: PROCEDURE {C} (ss, oss: ADDRESS): LONGINT;
 	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS): LONGINT;
 
@@ -708,7 +708,7 @@ VAR
 	END CondSignal;
 
 	PROCEDURE ThrThis*(): Thread_t;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
+	BEGIN {UNCOOPERATIVE, UNCHECKED, UNTRACKED}
 		RETURN pthread_self( );
 	END ThrThis;
 
@@ -823,13 +823,13 @@ VAR
 		END;
 	END ThrSleep;
 
-	PROCEDURE NanoSleep(ns: LONGWORD);
+	PROCEDURE NanoSleep*(ns: LONGWORD);
 	VAR
 		sltime,rem: RECORD
 			tv_sec: LONGWORD;        (* seconds *)
 			tv_nsec: LONGWORD;       (* nanoseconds *)
      	END;
-	BEGIN {UNCOOPERATIVE, UNCHECKED}
+	BEGIN {UNCOOPERATIVE, UNCHECKED, UNTRACKED}
 		sltime.tv_sec := ns DIV 1000000000;
 		sltime.tv_nsec := ns MOD 1000000000;
 		WHILE (nanosleep(ADDRESS OF sltime, ADDRESS OF rem) < 0) DO

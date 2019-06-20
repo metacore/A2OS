@@ -26,17 +26,17 @@ CONST
 
 	TraceOutput* = 0;	(* Trace output *)
 	Memory* = 1;		(*!  Virtual memory management, stack and page allocation,  not used in UnixAos *)
-	Heaps* = 2;   		(* Storage allocation and Garbage collection *)
-	Interrupts* = 3;		(*!  Interrupt handling,  not used in UnixAos *)
-	Modules* = 4;		(* Module list *)
-	Objects* = 5;		(*!  Ready queue,  not used in UnixAos *)
-	Processors* = 6;	(*!  Interprocessor interrupts,  not used in UnixAos *)
-	KernelLog* = 7;		(* Atomic output *)
-	X11* = 8;				(* XWindows I/O *)
+	X11* = 2;				(* XWindows I/O *)
+	Heaps* = 3;   		(* Storage allocation and Garbage collection *)
+	Interrupts* = 4;		(*!  Interrupt handling,  not used in UnixAos *)
+	Modules* = 5;		(* Module list *)
+	Objects* = 6;		(*!  Ready queue,  not used in UnixAos *)
+	Processors* = 7;	(*!  Interprocessor interrupts,  not used in UnixAos *)
+	KernelLog* = 8;		(* Atomic output *)
 	MaxLocks* = 9;   (* { <= 32 } *)
 
 	MaxCPU* = 4;
-	StrongChecks = FALSE;
+	StrongChecks = TRUE;
 
 TYPE
 	Vendor* = ARRAY 13 OF CHAR;

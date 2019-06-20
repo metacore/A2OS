@@ -197,7 +197,7 @@ TYPE
 		BEGIN
 				Machine.Acquire(Machine.Objects);
 				SELF.mode := mode;
-				Machine.Release(Machine.Objects); 	
+				Machine.Release(Machine.Objects);
 		END SetMode;
 
 		PROCEDURE FindRoots;
@@ -624,9 +624,9 @@ TYPE
 			S.GET(bp+SIZEOF(ADDRESS), pc);
 		ELSE
 			IF Machine.ValidHeapAddress(pc) THEN
-			ELSE 
+			ELSE
 				IGNORE NextValidStackSegment(p, bp, pc, contextPos);
-			END;		
+			END;
 		END;
 	END GetStack;
 
@@ -829,7 +829,7 @@ TYPE
 				timerStopped := FALSE
 			END
 		END;
-		Machine.Release(Machine.Objects); 
+		Machine.Release(Machine.Objects);
 	END UpdateProcessState;
 
 	PROCEDURE SuspendActivities;

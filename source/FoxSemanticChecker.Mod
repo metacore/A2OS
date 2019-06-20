@@ -1686,7 +1686,7 @@ TYPE
 					END;
 				(* ADDRESS OF *)
 				|Scanner.Address:
-					IF HasAddress(left) THEN
+					IF HasAddress(system,left) THEN
 						type := system.addressType;
 					ELSE
 						type := SyntaxTree.invalidType;
@@ -5119,7 +5119,7 @@ TYPE
 					(* remaining issues can only be tested in backend *)
 				(* ---- ADDRESSOF----- *)
 				ELSIF (id = Global.systemAdr) & CheckArity(1,1) THEN
-					IF HasAddress(parameter0) THEN
+					IF HasAddress(system,parameter0) THEN
 						type := system.addressType;
 					ELSE
 						type := SyntaxTree.invalidType;
@@ -9342,29 +9342,30 @@ TYPE
 		END;
 	END IsStaticMathArray;
 
-	PROCEDURE SymbolHasAddress*(CONST symbol: SyntaxTree.Symbol): BOOLEAN;
+	PROCEDURE SymbolHasAddress*(system: Global.System; CONST symbol: SyntaxTree.Symbol): BOOLEAN;
 	BEGIN
 		WITH symbol:
 		SyntaxTree.Variable DO RETURN TRUE
 		|SyntaxTree.Parameter DO RETURN TRUE
 		|SyntaxTree.Procedure DO RETURN TRUE
-		|SyntaxTree.Alias DO RETURN HasAddress(symbol.expression)
+		|SyntaxTree.Alias DO RETURN HasAddress(system, symbol.expression)
 		ELSE
 			RETURN FALSE
 		END;
 	END SymbolHasAddress;
 
-	PROCEDURE HasAddress*(CONST expression: SyntaxTree.Expression): BOOLEAN;
+	PROCEDURE HasAddress*(system: Global.System; CONST expression: SyntaxTree.Expression): BOOLEAN;
 	BEGIN
 		IF expression = NIL THEN RETURN FALSE END;
 		WITH expression:
-		SyntaxTree.SymbolDesignator DO RETURN SymbolHasAddress(expression.symbol)
+		SyntaxTree.SymbolDesignator DO RETURN SymbolHasAddress(system, expression.symbol)
 		|SyntaxTree.ResultDesignator DO RETURN TRUE;
 		|SyntaxTree.IndexDesignator DO RETURN TRUE;
 		|SyntaxTree.DereferenceDesignator DO RETURN TRUE;
 		|SyntaxTree.TypeGuardDesignator DO RETURN TRUE;
 		|SyntaxTree.StringValue DO RETURN TRUE;
-		|SyntaxTree.BuiltinCallDesignator DO RETURN (expression.id = Global.systemVal) & HasAddress(expression.parameters.GetExpression(1))
+		|SyntaxTree.BuiltinCallDesignator DO RETURN (expression.id = Global.systemVal) & HasAddress(system,expression.parameters.GetExpression(1))
+		|SyntaxTree.ProcedureCallDesignator DO RETURN ReturnedAsParameter(system,expression.type);
 		ELSE
 			RETURN FALSE
 		END;

@@ -1615,7 +1615,11 @@ TYPE
 			WITH x:
 			SyntaxTree.ProcedureCallStatement DO
 				IF x.ignore THEN (* procedure returning ignored value *)
-					Evaluate(x.call, result);
+					IF SemanticChecker.HasAddress(system,x.call) THEN
+						Designate(x.call, result); 
+					ELSE
+						Evaluate(x.call, result);
+					END;
 					ReleaseOperand(result)
 				ELSE
 					Designate(x.call, result)
@@ -4747,7 +4751,7 @@ TYPE
 			oldArrayDestinationDimension := arrayDestinationDimension;
 
 			IF IsArrayOfSystemByte(parameter.type) THEN
-				IF SemanticChecker.HasAddress(expression) OR (callingConvention = SyntaxTree.WinAPICallingConvention) & (expression IS SyntaxTree.NilValue) THEN
+				IF SemanticChecker.HasAddress(system,expression) OR (callingConvention = SyntaxTree.WinAPICallingConvention) & (expression IS SyntaxTree.NilValue) THEN
 					Designate(expression,operand);
 				ELSE
 					Evaluate(expression, tmpOperand);
@@ -9285,7 +9289,7 @@ TYPE
 			(* ---- SYSTEM.VAL ----- *)
 			|Global.systemVal:
 				(*! MUST RESOLVE THIS *)
-				IF SemanticChecker.HasAddress(p1)  THEN
+				IF SemanticChecker.HasAddress(system,p1)  THEN
 					DesignateAndLoad(x, result);
 				ELSE
 					Evaluate(p1, s1);

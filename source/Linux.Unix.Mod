@@ -417,13 +417,13 @@ TYPE
   				r_15		: HUGEINT;
   				r_di		: HUGEINT;
   				r_si		: HUGEINT;
-  				r_bp-		: HUGEINT;
+  				r_bp-		: ADDRESS;
   				r_bx-		: HUGEINT;
   				r_dx		: HUGEINT;
   				r_ax		: HUGEINT;
   				r_cx		: HUGEINT;
-  				r_sp-		: HUGEINT;
-  				r_pc-		: HUGEINT;
+  				r_sp-		: ADDRESS;
+  				r_pc-		: ADDRESS;
   				r_efl		: HUGEINT;
   				r_csgsfs	: HUGEINT;           (* Actually short cs, gs, fs, pad0.  *)
   				err-		: HUGEINT;

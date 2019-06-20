@@ -1614,9 +1614,11 @@ TYPE
 			
 			WITH x:
 			SyntaxTree.ProcedureCallStatement DO 
-				Designate(x.call, result);
-				IF (x.call.type # NIL) THEN (* procedure returning ignored value *)
+				IF x.ignore THEN (* procedure returning ignored value *)
+					Evaluate(x.call, result);
 					ReleaseOperand(result)
+				ELSE
+					Designate(x.call, result)
 				END;
 			| SyntaxTree.Assignment DO Assign(x.left, x.right ); 
 			| SyntaxTree.CommunicationStatement DO CommunicationStatement(x)
@@ -1837,7 +1839,9 @@ TYPE
 		PROCEDURE DesignateAndLoad(x: SyntaxTree.Expression; VAR result: Operand);
 		BEGIN
 			Designate(x, result);
-			LoadValue(result, x.type.resolved);
+			IF x.type # NIL THEN
+				LoadValue(result, x.type.resolved);
+			END;
 		END DesignateAndLoad;
 
 		PROCEDURE Condition(CONST x: SyntaxTree.Expression; label: Label; reason: BOOLEAN);
@@ -8297,6 +8301,17 @@ TYPE
 				END;
 			END;
 		END Allocate;
+		
+		PROCEDURE MarkPointer(CONST op: Operand);
+		VAR saved: RegisterEntry;
+		BEGIN
+			IF (op.op.mode # IntermediateCode.ModeImmediate) OR (op.op.intValue # 0) THEN (* no NIL pointer *)
+				SaveRegisters();ReleaseUsedRegisters(saved);
+				Emit(Push(position, op.op));
+				CallThis(position,"Heaps","Mark",1); 
+				RestoreRegisters(saved); 
+			END;
+		END MarkPointer; 
 
 		PROCEDURE DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
@@ -8840,33 +8855,7 @@ TYPE
 			(* ---- ALL ----- *)
 			|Global.All: HALT(200);
 			(* ---- CAS ----- *)
-			|Global.Cas:
-				needsTrace := backend.cooperative & p0.NeedsTrace();
-				IF needsTrace THEN ModifyAssignments(true) END;
-				Designate(p0,s0);
-				Evaluate(p1,s1);
-				Evaluate(p2,s2);
-				IF needsTrace THEN
-					Emit(Push(position, s0.op));
-					Emit(Push(position, s1.op));
-					Emit(Push(position, s2.op));
-					CallThis(position,"GarbageCollector","CompareAndSwap",3);
-				ELSE
-					Emit(Cas(position,s0.op,s1.op,s2.op));
-				END;
-				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
-				IF needsTrace THEN ModifyAssignments(false) END;
-				res := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
-				Emit(Result(position, res));
-				result.op := res;
-				result.mode := ModeValue;
-				(*
-				IF conditional THEN
-					BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
-					BrL(falseLabel);
-					ReleaseIntermediateOperand(res);
-				END;
-				*)
+			|Global.Cas: HALT(100); 
 			(* ---- DIM ----- *)
 			|Global.Dim:
 				Designate(p0,s0);
@@ -9342,11 +9331,11 @@ TYPE
 			(* ---- CAS ----- *)
 			|Global.Cas:
 				needsTrace := p0.NeedsTrace();
-				IF needsTrace THEN ModifyAssignments(true) END;
+				IF needsTrace & backend.cooperative THEN ModifyAssignments(true) END;
 				Designate(p0,s0);
 				Evaluate(p1,s1);
 				Evaluate(p2,s2);
-				IF needsTrace THEN
+				IF needsTrace & backend.cooperative THEN
 					Emit(Push(position, s0.op));
 					Emit(Push(position, s1.op));
 					Emit(Push(position, s2.op));
@@ -9354,12 +9343,16 @@ TYPE
 				ELSE
 					Emit(Cas(position,s0.op,s1.op,s2.op));
 				END;
-				ReleaseOperand(s0); ReleaseOperand(s1); ReleaseOperand(s2);
-				IF needsTrace THEN ModifyAssignments(false) END;
+				ReleaseOperand(s0); ReleaseOperand(s1); 
+				IF needsTrace & backend.cooperative THEN ModifyAssignments(false) END;
 				res := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
 				Emit(Result(position, res));
 				result.op := res;
 				result.mode := ModeValue;
+				IF needsTrace & ~backend.cooperative & backend.writeBarriers THEN
+					MarkPointer(s2); 
+				END; 
+				ReleaseOperand(s2);
 				(*
 				IF conditional THEN
 					BreqL(trueLabel,IntermediateCode.Immediate(res.type,1),res);
@@ -9367,6 +9360,7 @@ TYPE
 					ReleaseIntermediateOperand(res);
 				END;
 				*)
+
 			(* ---- DIM ----- *)
 			|Global.Dim:
 				Designate(p0,s0);

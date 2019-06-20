@@ -1268,13 +1268,95 @@ TYPE
 
 VAR trace: Streams.Writer;
 
-	PROCEDURE TraceH(process: Objects.Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
+	PROCEDURE WriteMode*(mode : LONGINT; out : Streams.Writer);
 	BEGIN
-		trace.String("----------- Process = ");
-		trace.Address(process);
-		trace.String(", Object = "); trace.Address(process.obj);
+		CASE mode OF
+			|Objects.Ready : out.String("rdy");
+			|Objects.Running : out.String("run");
+			|Objects.AwaitingLock : out.String("awl");
+			|Objects.AwaitingCond : out.String("awc");
+			|Objects.AwaitingEvent : out.String("awe");
+			|Objects.Terminated : out.String("rip");
+		ELSE
+			out.String("???");
+		END;
+		out.Update;
+	END WriteMode;
+
+	PROCEDURE WriteWaitingOn*(t : Objects.Process; out : Streams.Writer);
+	VAR adr : ADDRESS; mod : Modules.Module;
+	BEGIN
+		IF t.mode = Objects.AwaitingLock THEN
+			adr := SYSTEM.VAL(ADDRESS, t.waitingOn);
+			IF adr # 0 THEN	(* can be 0 when snapshot is taken *)
+				SYSTEM.GET(adr-SIZEOF(ADDRESS), adr); DEC(adr, adr MOD 8);
+				IF adr = SYSTEM.TYPECODE(Modules.Module) THEN
+					mod := SYSTEM.VAL(Modules.Module, adr);
+					out.String(mod.name)
+				ELSE
+					WriteType(out, adr)
+				END;
+			END
+		ELSIF t.mode = Objects.AwaitingCond THEN
+			WriteProc(out, SYSTEM.VAL(ADDRESS, t.condition));
+		END;
+		out.Update;
+	END WriteWaitingOn;
+
+	PROCEDURE WriteFlags*(flags : SET; out : Streams.Writer);
+	VAR comma : BOOLEAN;
+	BEGIN
+		comma := FALSE;
+		IF Objects.Restart IN flags THEN
+			out.String("restart"); comma := TRUE;
+		END;
+		IF Objects.Resistant IN flags THEN
+			IF comma THEN out.String(", "); END;
+			out.String("resistant"); comma := TRUE;
+		END;
+		IF Objects.Preempted IN flags THEN
+			IF comma THEN out.String(", "); END;
+			out.String("preempted"); comma := TRUE;
+		END;
+		IF Objects.PleaseHalt IN flags THEN
+			IF comma THEN out.String(", "); END;
+			out.String("pleaseHalt"); comma := TRUE;
+		END;
+		IF Objects.Unbreakable IN flags THEN
+			IF comma THEN out.String(", "); END;
+			out.String("unbreakable"); comma := TRUE;
+		END;
+		IF Objects.SelfTermination IN flags THEN
+			IF comma THEN out.String(", "); END;
+			out.String("selftermination");
+		END;
+		out.Update;
+	END WriteFlags;
+
+	PROCEDURE TraceH(process: Objects.Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
+	VAR adr: ADDRESS;
+	BEGIN
+		trace.String("---------------------------------"); trace.Ln;
+		trace.String("Active Object: "); 
+		IF process.obj # NIL THEN
+			SYSTEM.GET(SYSTEM.VAL(ADDRESS, process.obj)-SIZEOF(ADDRESS), adr);
+			WriteType(trace, adr);
+		END;
 		trace.Ln;
+		trace.String("Current Procedure: ");
+		WriteProc(trace, pc); trace.Ln;
+
+		(* mode *)
+		trace.String("Mode: "); WriteMode(process.mode, trace); trace.Ln;
+		trace.String("Waiting On: "); WriteWaitingOn(process, trace); trace.Ln;
+
+		(* Flags *)
+		trace.String("Flags: "); WriteFlags(process.flags, trace); trace.Ln;
+
+		trace.String("Stack Trace Back:"); trace.Ln; trace.Update;
+
 		StackTraceBack(trace, pc, bp, stacklow ,stackhigh, TRUE, FALSE);
+		trace.String("---------------------------------"); trace.Ln;
 		trace.Update;
 	END TraceH;
 

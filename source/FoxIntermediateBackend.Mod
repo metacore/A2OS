@@ -1616,7 +1616,7 @@ TYPE
 			SyntaxTree.ProcedureCallStatement DO
 				IF x.ignore THEN (* procedure returning ignored value *)
 					IF SemanticChecker.HasAddress(system,x.call) THEN
-						Designate(x.call, result); 
+						Designate(x.call, result);
 					ELSE
 						Evaluate(x.call, result);
 					END;

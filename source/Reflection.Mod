@@ -1337,7 +1337,7 @@ VAR trace: Streams.Writer;
 	VAR adr: ADDRESS;
 	BEGIN
 		trace.String("---------------------------------"); trace.Ln;
-		trace.String("Active Object: "); 
+		trace.String("Active Object: ");
 		IF process.obj # NIL THEN
 			SYSTEM.GET(SYSTEM.VAL(ADDRESS, process.obj)-SIZEOF(ADDRESS), adr);
 			WriteType(trace, adr);

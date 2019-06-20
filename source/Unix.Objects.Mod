@@ -62,7 +62,7 @@ VAR
 
 	finalizerCaller	: FinalizerCaller;
 	mainthread: Unix.Thread_t;
-	
+
 	startedMainProcess := FALSE: BOOLEAN;
 
 TYPE
@@ -169,14 +169,14 @@ TYPE
 	GCContext = RECORD
 		nextPos: SIZE; (* 0 to start with *)
 		last: ARRAY 256 OF ADDRESS;
-		
+
 		PROCEDURE AddContext(bp, pc: ADDRESS);
 		BEGIN
 				last[nextPos*2] := bp;
 				last[nextPos*2+1] := pc;
-				INC(nextPos); 
+				INC(nextPos);
 		END AddContext;
-		
+
 		PROCEDURE GetNextContext(VAR pos: SIZE; VAR bp, pc: ADDRESS): BOOLEAN;
 		BEGIN
 			IF pos < 1 THEN RETURN FALSE END;
@@ -185,7 +185,7 @@ TYPE
 			pc := last[pos*2+1];
 			RETURN TRUE;
 		END GetNextContext;
-		
+
 		PROCEDURE RemoveContext();
 		BEGIN
 			IF nextPos > 0 THEN
@@ -239,19 +239,19 @@ TYPE
 				state.PC := Machine.CurrentPC();
 			ELSIF ConcurrentGC THEN
 				suspended := TRUE;
-				Machine.Acquire(Machine.X11); 
+				Machine.Acquire(Machine.X11);
 				Unix.ThrSuspend( threadId, mode = Running );
-				Machine.Release(Machine.X11); 
+				Machine.Release(Machine.X11);
 			END;
-			ASSERT(CurrentProcess() = gcProcess); 
-			sb := stackBottom; 
+			ASSERT(CurrentProcess() = gcProcess);
+			sb := stackBottom;
 			contextPos := CAS(gcContext.nextPos,0,0);
-			sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- might all be invalid, when A2 was left ! *)			
+			sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- might all be invalid, when A2 was left ! *)
 
 			IF TraceProcessHook # NIL THEN (* stack trace *)
-				TraceProcessHook(SELF, pc, bp, sp, sb); 
+				TraceProcessHook(SELF, pc, bp, sp, sb);
 			END;
-			
+
 			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
 					(* debugging info*)
@@ -270,7 +270,7 @@ TYPE
 					IF bp < stackBottom THEN
 						LOOP
 							IF (bp >= stackBottom) THEN EXIT END;
-							IF Machine.ValidHeapAddress(pc) THEN 
+							IF Machine.ValidHeapAddress(pc) THEN
 								(* ok, valid stack frame from A2, we can trace this *)
 							ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN
 									sp := bp;
@@ -382,7 +382,7 @@ TYPE
 
 	END Process;
 
-	VAR gcProcess{UNTRACED}: Process; 
+	VAR gcProcess{UNTRACED}: Process;
 
 TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
@@ -394,7 +394,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 			IF value THEN
 				Machine.Acquire( Machine.Objects );
 				Machine.Acquire( Machine.Heaps );
-				gcProcess := CurrentProcess(); 
+				gcProcess := CurrentProcess();
 				IF ConcurrentGC THEN
 					Heaps.CollectGarbage( Modules.root );
 				ELSE
@@ -416,7 +416,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	VAR p: Process;  res: WORD; prevBP, sp: ADDRESS;
 	BEGIN
 		(* make sure the process cannot be GCed in an intermediate unsafe state *)
-		Machine.Acquire(Machine.Objects); 
+		Machine.Acquire(Machine.Objects);
 		Unix.MtxLock( startEventLock );
 		p := newProcess;  newProcess := NIL;
 		Unix.WriteKey( processPointer, p );
@@ -424,7 +424,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		p.stackBottom := S.GetFramePointer( );
 		S.GET( p.stackBottom, prevBP );
 		S.PUT( prevBP, S.VAL( ADDRESS, 0 ) );	(* for terminating Reflection.StackTraceBack *)
-		Machine.Release(Machine.Objects); 
+		Machine.Release(Machine.Objects);
 
 		Unix.MtxLock( processList );
 		p.nextProcess := root;  root := p;
@@ -915,7 +915,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	BEGIN
 		RETURN Machine.mhz * 1000000
 	END TimerFrequency;
-	
+
 	(* Leave A2 is called when a process leaves A2 by a call to the Unix API *)
 	PROCEDURE LeaveA2*;
 	VAR cur {UNTRACED}: Process; ebp,pc: ADDRESS;
@@ -926,7 +926,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 				ebp := CheckBP(S.GetFramePointer());
 				S.GET(ebp+SIZEOF(ADDRESS), pc);
 				S.GET(ebp, ebp);
-				cur.gcContext.AddContext(ebp, pc); 
+				cur.gcContext.AddContext(ebp, pc);
 			END;
 		END;
 	END LeaveA2;

@@ -1924,7 +1924,7 @@ TYPE
 		PROCEDURE &InitExpression(position: Position);
 		BEGIN
 			SELF.position := position; end :=  invalidPosition; state := Undefined; type := NIL; assignable := FALSE; resolved := NIL; isHidden := FALSE;
-			original := NIL; 
+			original := NIL;
 		END InitExpression;
 
 		PROCEDURE SetHidden*(hidden: BOOLEAN);
@@ -1942,7 +1942,7 @@ TYPE
 		PROCEDURE SetAssignable*(assignable: BOOLEAN);
 		BEGIN SELF.assignable := assignable
 		END SetAssignable;
-		
+
 		PROCEDURE SetOriginal*(original: Expression);
 		BEGIN
 			SELF.original := original;
@@ -2142,12 +2142,12 @@ TYPE
 		VAR
 			expression-: Expression;
 			typeExpression-: Expression; (* for printout *)
-			
+
 		PROCEDURE & InitConversion( position: Position; expression: Expression; type: Type; typeExpression: Expression);
 		BEGIN
 			InitExpression( position );  SELF.expression := expression;  SELF.typeExpression := typeExpression; SELF.type := type;
 		END InitConversion;
-	
+
 
 		PROCEDURE SetExpression*(expression: Expression);
 		BEGIN SELF.expression := expression

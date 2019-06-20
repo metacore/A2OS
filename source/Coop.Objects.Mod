@@ -229,7 +229,7 @@ BEGIN
 	bp := p.state.BP;
 	pc := p.state.PC;
 	sp := p.state.SP;
-	contextPos := 0; 
+	contextPos := 0;
 END GetStack;
 
 PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;

@@ -951,7 +951,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 				ELSE font.file.Set(r,  r.file.Pos(r) + instrLen)
 				END
 			END;
-			
+
 			(* load flags *)
 			FOR i := 0 TO points-1 DO  flags[i] := 0  END;
 			i := 0;
@@ -1593,7 +1593,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 		CharToUnicode[171] := 0DFH;
 		FOR i := 172 TO 255 DO CharToUnicode[i] := 0 END;
 	END InitCharMaps;
-	
+
 PROCEDURE GetSharpenContours;
 VAR
 	res: WORD;

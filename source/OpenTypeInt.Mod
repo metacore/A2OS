@@ -140,7 +140,7 @@ VAR
 (**--- Arithmetic ---**)
 
 PROCEDURE ShiftDiv* (a, n, d: LONGINT): LONGINT;
-	VAR b: LONGINT; 
+	VAR b: LONGINT;
 BEGIN
 	b := ASH( 1, 31-n );
 	IF (-b <= a) & (a < b) THEN
@@ -187,7 +187,7 @@ END MulDiv;
 PROCEDURE Norm*( x, y: F26D6 ): F26D6;
 	VAR n, r, b, t: LONGINT; nh, rh, bh, th: HUGEINT;
 BEGIN
-	IF (-8000H <= x) & (x < 8000H) & (-8000H <= y) & (y < 8000H) THEN	
+	IF (-8000H <= x) & (x < 8000H) & (-8000H <= y) & (y < 8000H) THEN
 		(* x*x + y*y representable in 32 bits *)
 		n := x * x + y * y;
 		r := 0; b := 40000000H;
@@ -1138,16 +1138,16 @@ VAR q: HUGEINT; positive: BOOLEAN;
 BEGIN
 	positive := TRUE;
 	IF a < 0 THEN  positive := ~positive;  a := -a  END;
-	IF b < 0 THEN  positive := ~positive;  b := -b  END;	
+	IF b < 0 THEN  positive := ~positive;  b := -b  END;
 	q := a DIV b;
-	IF ~positive THEN  q := -q  END;	
+	IF ~positive THEN  q := -q  END;
 	RETURN SHORT( q )
 END DivHL;
 
 (* move point to intersection of two lines *)
 PROCEDURE ISECT (VAR c: Context);
 	VAR
-		b1, b0, a1, a0, p: LONGINT; pt: Points; 
+		b1, b0, a1, a0, p: LONGINT; pt: Points;
 		ax0, ay0, ax1, ay1, bx0, by0, bx1, by1: F26D6;
 		dxa, dya, dxb, dyb, dx, dy, v, det: HUGEINT;
 BEGIN
@@ -1162,17 +1162,17 @@ BEGIN
 	ax1 := c.zp1.pt[a1].cur[X];  ay1 := c.zp1.pt[a1].cur[Y];
 	bx0 := c.zp0.pt[b0].cur[X];  by0 := c.zp0.pt[b0].cur[Y];
 	bx1 := c.zp0.pt[b1].cur[X];  by1 := c.zp0.pt[b1].cur[Y];
-	
+
 	dxa := ax1 - ax0;  dya := ay1 - ay0;
 	dxb := bx1 - bx0;  dyb := by1 - by0;
 	det := dya*dxb - dyb*dxa;
-	
+
 	IF ABS(det) >= 80H THEN
-		dx := bx0 - ax0;  
+		dx := bx0 - ax0;
 		dy := by0 - ay0;
 		dyb := -dyb;
-		v := dx*dyb + dy*dxb;  
-		pt[p].cur[X] := ax0 + DivHL( v*dxa, det ); 
+		v := dx*dyb + dy*dxb;
+		pt[p].cur[X] := ax0 + DivHL( v*dxa, det );
 		pt[p].cur[Y] := ay0 + DivHL( v*dya, det );
 	ELSE	(* lines are (almost) parallel *)
 		pt[p].cur[X] := (ax0 + ax1 + bx0 + bx1) DIV 4;

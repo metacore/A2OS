@@ -731,7 +731,7 @@ TYPE
 
 		PROCEDURE VisitInlineCallDesignator*(x: SyntaxTree.InlineCallDesignator);
 		BEGIN
-			Scope(x.block.scope); 
+			Scope(x.block.scope);
 			VisitStatementBlock(x.block);
 		END VisitInlineCallDesignator;
 
@@ -1097,7 +1097,7 @@ TYPE
 				IF (x.access # SyntaxTree.Hidden) OR (mode > SourceCode) THEN
 					Indent;
 					Comments(x.comment, x, FALSE);
-					PrintSymbol(x); 
+					PrintSymbol(x);
 					IF x.expression # NIL THEN
 						w.String( " := " ); Expression (x.expression);
 					END;
@@ -1114,7 +1114,7 @@ TYPE
 			END;
 			w.DecIndent
 		END AliasList;
-		
+
 		PROCEDURE VisitParameter*(x: SyntaxTree.Parameter);
 		BEGIN
 			IF (x.access # SyntaxTree.Hidden) THEN
@@ -1469,7 +1469,7 @@ TYPE
 			IF x.firstConstant # NIL THEN ConstantList(x.firstConstant); END;
 			IF x.firstTypeDeclaration # NIL THEN TypeDeclarationList(x.firstTypeDeclaration); END;
 			IF x.firstVariable # NIL THEN Indent;  Keyword("VAR " );  VariableList(x.firstVariable);  END;
-			IF x.firstAlias # NIL THEN Indent; Keyword("ALIAS "); AliasList(x.firstAlias) END; 
+			IF x.firstAlias # NIL THEN Indent; Keyword("ALIAS "); AliasList(x.firstAlias) END;
 			IF x.procedures # NIL THEN w.Ln; ProcedureList(x.procedures) END;
 			currentScope := prevScope;
 		END Scope;

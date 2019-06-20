@@ -99,11 +99,11 @@ CONST
 
 	(* Load Oberon text files ignoring text format *)
 	OptimizedLoads = TRUE;
-	
+
 	(** Default compression level and strategy for Zip **)
 	DefaultCompression = Zip.BestCompression;
 	DefaultStrategy = Zip.HuffmanOnly;
-	
+
 	(* If set to TRUE, the file references are re-used for different steps of the build process *)
 	KeepFilesOpen = FALSE;
 

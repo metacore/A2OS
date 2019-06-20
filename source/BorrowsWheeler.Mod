@@ -97,7 +97,7 @@ TYPE
 				WHILE x <= hi DO
 					IF Less( x, x - 1 )  THEN
 						(* find insert position ip *)
-						ip := x - 1;  l := lo; 
+						ip := x - 1;  l := lo;
 						WHILE l < ip DO
 							m := (l + ip) DIV 2;
 							IF Less( x, m ) THEN  ip := m  ELSE  l := m + 1  END

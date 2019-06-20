@@ -68,14 +68,14 @@ VAR
 		IF X11.Button3Mask IN xbuttons THEN  INCL( mm.keys, MR );  MRseen := TRUE  END;
 		IF ~(MMseen & MRseen) THEN  CheckAlternateKeys( mm.keys )  END;
 		Inputs.mouse.Handle( mm );
-		Machine.Acquire( Machine.X11 ); 
+		Machine.Acquire( Machine.X11 );
 	END SendMouseMsg;
 
 	PROCEDURE SendKeyboardMsg( km: Inputs.KeyboardMsg );
 	BEGIN
 		Machine.Release( Machine.X11 );
 		Inputs.keyboard.Handle( km );
-		Machine.Acquire( Machine.X11 ); 
+		Machine.Acquire( Machine.X11 );
 	END SendKeyboardMsg;
 
 	PROCEDURE PollXQueue;
@@ -97,7 +97,7 @@ VAR
 		Machine.Acquire( Machine.X11 );
 		X11.Synchronize(xd, X11.True);
 		events := X11.Pending( xd );
-		Machine.Release( Machine.X11 ); 
+		Machine.Release( Machine.X11 );
 		WHILE events > 0 DO
 			Machine.Acquire( Machine.X11 );
 			X11.NextEvent( xd, event );
@@ -405,7 +405,7 @@ VAR
 	BEGIN
 		p := Displays.registry.Await( "XDisplay" );  disp := p( XDisplay.Display )
 	END GetXDisplay;
-	
+
 BEGIN
 	ASSERT( S.VAL( LONGINT, {0} ) = 1 );
 	GetXDisplay;

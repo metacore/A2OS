@@ -63,7 +63,7 @@ TYPE
 			manager.lock.AcquireRead;
 			manager.viewRegistry.GetAll(views);
 			manager.lock.ReleaseRead;
-			
+
 			i := 0;
 			WHILE bDownDirection & (i < LEN(views)) DO
 				IF views[i] IS WMWindowManager.ViewPort THEN
@@ -75,13 +75,13 @@ TYPE
 				END;
 				INC(i)
 			END;
-			
+
 			IF bDownDirection THEN
 				grid.bearing.Set(WMRectangles.MakeRect(1, 1, ShadowWidth, ShadowWidth));
 			ELSE
 				grid.bearing.Set(WMRectangles.MakeRect(1, ShadowWidth, ShadowWidth, 1));
 			END;
-			
+
 			grid.alignment.Set(WMComponents.AlignClient);
 			grid.onClick.Add(Clicked);
 

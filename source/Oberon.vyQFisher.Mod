@@ -51,7 +51,7 @@ TYPE
 	**********************************************************)
 
 	PROCEDURE Qfisher* (N, M: INTEGER;
-Percentage: LONGREAL; VAR ErrCode: INTEGER): LONGREAL; 
+Percentage: LONGREAL; VAR ErrCode: INTEGER): LONGREAL;
 CONST
 	Accuracy = 1.0E-6;
 	K1 = 2.30753;

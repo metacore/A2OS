@@ -44,7 +44,7 @@ TYPE
 			SetContent(vc);
 			isClosed := FALSE;
 		END New;
-		
+
 		PROCEDURE Translate(value: Strings.String): Strings.String;
 		VAR
 			res : WORD;
@@ -76,7 +76,7 @@ TYPE
 		BEGIN
 			NEW(panel);
 			panel.fillColor.Set(WMGraphics.White);
-			
+
 			languages := Localization.GetLanguagePreferences();
 
 			width := 100; height := 0;
@@ -93,14 +93,14 @@ TYPE
 				panel.AddInternalComponent(button);
 
 				font := button.GetFont();
-				
+
 				temp := Translate(entry.caption);
 				IF temp # NIL THEN
 					font.GetStringSize(temp^, w, h);
 				ELSE
 					font.GetStringSize(entry.caption^, w, h);
 				END;
-				
+
 				IF (w + 10 > width) THEN
 					width := w + 10;
 				END;

@@ -707,8 +707,8 @@ VAR
 		high := sched_get_priority_max( SCHED_OTHER );
 		low := sched_get_priority_min( SCHED_OTHER );
 
-		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);	
-		
+		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);
+
 		RETURN TRUE;
 	END ThrInitialize;
 
@@ -754,7 +754,7 @@ VAR
 		me: Thread_t;
 		old, new: Sigset;
 		state: ARRAY 2048 OF CHAR;
-		
+
 		param: Sched_param;
 		r: LONGINT;
 	BEGIN
@@ -780,7 +780,7 @@ VAR
 
 		ASSERT( pthread_setspecific( thread_exit, ADDRESSOF( state ) ) = 0 );
 		IF sigsetjmp( ADDRESSOF( state ), 0 ) = 0 THEN proc() END;
-		
+
 		RETURN NIL;
 	END Starter;
 

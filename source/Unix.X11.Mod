@@ -147,8 +147,8 @@ TYPE
 				display*: DisplayPtr;
 				window*, root*, subwindow*: Window;
 				time*: Time;
-				x*, y*, xRoot*, yRoot*: WORD; 
-				state*: WORDSET; 
+				x*, y*, xRoot*, yRoot*: WORD;
+				state*: WORDSET;
 				keycode*: WORD;
 				sameScreen: Bool
 			END;
@@ -191,7 +191,7 @@ TYPE
 			l* : ARRAY 5 OF LONGINT;
 			*)
 	END;
-	
+
 	ConfigureEvent * = RECORD
 		typ* : WORD;
 		serial* : LONGWORD(*unsigned*);	(* # of last request processed by server *)
@@ -507,7 +507,7 @@ CONST
 CONST
 
 	EnterNotify* = 7; LeaveNotify* =8;  KeymapNotify* = 11;VisibilityNotify* = 15;
-	CreateNotify* = 16; DestroyNotify* = 17; 
+	CreateNotify* = 16; DestroyNotify* = 17;
 	MapRequest* = 20;  ReparentNotify* = 21; ConfigureNotify* = 22; ConfigureRequest* = 23;
 	GravityNotify* = 24; ResizeRequest* =	25; CirculateNotify* = 26; CirculateRequest* = 27;
 	LASTEvent* =		36;	 (* must be bigger than any event # *)
@@ -573,7 +573,7 @@ CONST
 	SyncKeyboard* = 4; ReplayKeyboard* = 5; AsyncBoth* = 6; SyncBoth* = 7;
 
 	(* Used in SetInputFocus, GetInputFocus *)
-	RevertToNone* = None;  RevertToPointerRoot* = PointerRoot; 
+	RevertToNone* = None;  RevertToPointerRoot* = PointerRoot;
 
 
 
@@ -1122,7 +1122,7 @@ VAR
 		ErrorFlag := TRUE;  ErrorText := "X11 I/O Error";
 		Trace.StringLn( ErrorText );
 		INC( ioErrors );
-		LOOP END; 
+		LOOP END;
 		RETURN 0
 	END MyIOErrorHandler;
 

@@ -1598,7 +1598,7 @@ TYPE
 			END;
 			SELF.section := prevSection;
 		END EmitLeave;
-		
+
 		PROCEDURE Statement(x: SyntaxTree.Statement);
 		VAR use: VariableUse; result: Operand; pos: WORD;
 		BEGIN
@@ -1611,16 +1611,16 @@ TYPE
 				dump.Ln;
 				(*dump.Update;*)
 			END;
-			
+
 			WITH x:
-			SyntaxTree.ProcedureCallStatement DO 
+			SyntaxTree.ProcedureCallStatement DO
 				IF x.ignore THEN (* procedure returning ignored value *)
 					Evaluate(x.call, result);
 					ReleaseOperand(result)
 				ELSE
 					Designate(x.call, result)
 				END;
-			| SyntaxTree.Assignment DO Assign(x.left, x.right ); 
+			| SyntaxTree.Assignment DO Assign(x.left, x.right );
 			| SyntaxTree.CommunicationStatement DO CommunicationStatement(x)
 			| SyntaxTree.IfStatement DO IfStatement(x)
 			| SyntaxTree.WithStatement DO WithStatement(x)
@@ -1722,8 +1722,8 @@ TYPE
 		VAR operand: Operand; type: SyntaxTree.Type; symbol: SyntaxTree.Symbol;
 		VAR pos: WORD;
 		BEGIN
-			pos := x.position.start; 
-			
+			pos := x.position.start;
+
 			IF (x.resolved # NIL) & (x.resolved # x) THEN Evaluate(x.resolved, result); RETURN END;
 
 			WITH x:
@@ -1802,15 +1802,15 @@ TYPE
 		PROCEDURE Designate(x: SyntaxTree.Expression; VAR result: Operand);
 		VAR pos: WORD;
 		BEGIN
-			pos := x.position.start; 
+			pos := x.position.start;
 			InitOperand(result,ModeUndefined);
-			
-			IF (x.resolved # NIL) & (x.resolved # x) THEN 
+
+			IF (x.resolved # NIL) & (x.resolved # x) THEN
 				(* value with address -- string or array value *)
-				Designate(x.resolved, result); 
+				Designate(x.resolved, result);
 				RETURN;
 			END;
-			
+
 			WITH x:
 			| SyntaxTree.ResultDesignator DO DesignateResultDesignator(x, result)
 			| SyntaxTree.SelfDesignator DO DesignateSelfDesignator(x, result)
@@ -1829,7 +1829,7 @@ TYPE
 			| SyntaxTree.NilValue DO Evaluate(x, result); (* NIL parameter passed in WINAPI cc *)
 			END;
 
-			
+
 			(* check this, was commented out in ActiveCells3 *)
 			IF (x IS SyntaxTree.Designator) & (x(SyntaxTree.Designator).modifiers # NIL) & ~backend.cellsAreObjects THEN
 				Error(x.position, "unsupported modifier");
@@ -3553,7 +3553,7 @@ TYPE
 				INC(statCoopResetVariables, section.pc - pc);
 				currentScope := previousScope;
 		END ResetVariables;
-		
+
 		PROCEDURE CreateProcedureDescriptor (procedure: SyntaxTree.Procedure);
 		VAR name: Basic.SegmentedName; op: IntermediateCode.Operand; context: Context;
 		BEGIN
@@ -5694,12 +5694,12 @@ TYPE
 					Emit(Sub(position,sp,sp,size))
 				END;
 			END;
-			
+
 			left := x.left;
 			IF (left IS SyntaxTree.BuiltinCallDesignator) & (left(SyntaxTree.BuiltinCallDesignator).id = Global.systemVal) THEN
 				left := left(SyntaxTree.BuiltinCallDesignator).parameters.GetExpression(1);
-			END; 
-			
+			END;
+
 			IF left IS SyntaxTree.SupercallDesignator THEN
 				symbol := left(SyntaxTree.SupercallDesignator).left(SyntaxTree.SymbolDesignator).symbol;
 			ELSIF x.left IS SyntaxTree.IndexDesignator THEN
@@ -8301,17 +8301,17 @@ TYPE
 				END;
 			END;
 		END Allocate;
-		
+
 		PROCEDURE MarkPointer(CONST op: Operand);
 		VAR saved: RegisterEntry;
 		BEGIN
 			IF (op.op.mode # IntermediateCode.ModeImmediate) OR (op.op.intValue # 0) THEN (* no NIL pointer *)
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				Emit(Push(position, op.op));
-				CallThis(position,"Heaps","Mark",1); 
-				RestoreRegisters(saved); 
+				CallThis(position,"Heaps","Mark",1);
+				RestoreRegisters(saved);
 			END;
-		END MarkPointer; 
+		END MarkPointer;
 
 		PROCEDURE DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);
 		VAR
@@ -8855,7 +8855,7 @@ TYPE
 			(* ---- ALL ----- *)
 			|Global.All: HALT(200);
 			(* ---- CAS ----- *)
-			|Global.Cas: HALT(100); 
+			|Global.Cas: HALT(100);
 			(* ---- DIM ----- *)
 			|Global.Dim:
 				Designate(p0,s0);
@@ -9343,15 +9343,15 @@ TYPE
 				ELSE
 					Emit(Cas(position,s0.op,s1.op,s2.op));
 				END;
-				ReleaseOperand(s0); ReleaseOperand(s1); 
+				ReleaseOperand(s0); ReleaseOperand(s1);
 				IF needsTrace & backend.cooperative THEN ModifyAssignments(false) END;
 				res := NewRegisterOperand(IntermediateCode.GetType(system, p0.type));
 				Emit(Result(position, res));
 				result.op := res;
 				result.mode := ModeValue;
 				IF needsTrace & ~backend.cooperative & backend.writeBarriers THEN
-					MarkPointer(s2); 
-				END; 
+					MarkPointer(s2);
+				END;
 				ReleaseOperand(s2);
 				(*
 				IF conditional THEN
@@ -9421,7 +9421,7 @@ TYPE
 
 			IF (x.type.resolved IS SyntaxTree.NumberType) OR (x.type.resolved IS SyntaxTree.AddressType) OR (x.type.resolved IS SyntaxTree.SizeType) THEN
 				Evaluate(x.left, result);
-				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END; 
+				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END;
 				trueL := NewLabel();
 				TransferToRegister(result.op, result.op);
 				ReuseCopy(original,result.op);
@@ -9435,7 +9435,7 @@ TYPE
 				SetLabel(trueL);
 			ELSE
 				Designate(x.left, result);
-				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END; 
+				IF isUnchecked OR (x.left.type.resolved = x.type.resolved) THEN RETURN END;
 				trueL := NewLabel();
 				IF IsPointerToRecord(x.left.type,recordType) THEN
 					IntermediateCode.InitRegister(tag,addressType,IntermediateCode.GeneralPurposeRegister,AcquireRegister(addressType,IntermediateCode.GeneralPurposeRegister));
@@ -9533,7 +9533,7 @@ TYPE
 			dest := destination; destination := emptyOperand;
 			Evaluate(x.left,d);
 			type := x.type.resolved;
-			prevIsUnchecked := isUnchecked;	
+			prevIsUnchecked := isUnchecked;
 			IF (x.left # NIL) & (x.left IS SyntaxTree.SelfDesignator) THEN
 				isUnchecked := TRUE; (* avoid NIL-pointer-check for SELF pointer *)
 			END;
@@ -10139,16 +10139,16 @@ TYPE
 		PROCEDURE Symbol(x: SyntaxTree.Symbol; VAR result: Operand);
 		BEGIN
 			WITH x:
-			| SyntaxTree.TypeDeclaration DO 
+			| SyntaxTree.TypeDeclaration DO
 						ASSERT((x.declaredType.resolved IS SyntaxTree.EnumerationType) OR (x.declaredType.resolved IS SyntaxTree.RecordType) OR (x.declaredType.resolved IS SyntaxTree.PointerType) & (x.declaredType.resolved(SyntaxTree.PointerType).pointerBase.resolved IS SyntaxTree.RecordType));
-			| SyntaxTree.Parameter DO DesignateParameter(x, result); 
-			| SyntaxTree.Variable DO DesignateVariable(x, result); 
+			| SyntaxTree.Parameter DO DesignateParameter(x, result);
+			| SyntaxTree.Variable DO DesignateVariable(x, result);
 			| SyntaxTree.Procedure DO DesignateProcedure(x, result);
 			| SyntaxTree.Alias DO Designate(x.expression, result);
 			| SyntaxTree.Import DO (* nothing *)
 			END;
 		END Symbol;
-		
+
 
 		(** statements *)
 
@@ -10156,8 +10156,8 @@ TYPE
 		VAR leftType, rightType: SyntaxTree.MathArrayType;
 			leftBase, rightBase: SyntaxTree.Type;
 			procedureName,s: SyntaxTree.IdentifierString;
-			arrayBase: SyntaxTree.Module; saved: RegisterEntry;  
-			procedure: SyntaxTree.Procedure; 
+			arrayBase: SyntaxTree.Module; saved: RegisterEntry;
+			procedure: SyntaxTree.Procedure;
 			parameter: SyntaxTree.Parameter;
 			size: LONGINT; rightKind: LONGINT;
 			dummy: IntermediateCode.Operand;
@@ -11359,7 +11359,7 @@ TYPE
 				IF parameter.kind = SyntaxTree.ValueParameter THEN
 					type := parameter.type.resolved;
 					IF IsOpenArray(type) THEN
-						DesignateParameter(parameter, op); 
+						DesignateParameter(parameter, op);
 						IF backend.cooperative & parameter.NeedsTrace() THEN
 							length := GetArrayLength(type, op.tag);
 							size := NewRegisterOperand(addressType);

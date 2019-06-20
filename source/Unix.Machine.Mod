@@ -223,7 +223,7 @@ VAR
 	BEGIN
 		Trace.Ln;
 		Trace.String( "Heap expanded" );  Trace.Ln;
-		Trace.Address(Glue.baseAdr); Trace.String(" - "); Trace.Address(Glue.endAdr); Trace.String(" (Initial Heap)"); 
+		Trace.Address(Glue.baseAdr); Trace.String(" - "); Trace.Address(Glue.endAdr); Trace.String(" (Initial Heap)");
 		Trace.Ln;
 		cur := memBlockHead;
 		WHILE cur # NIL DO

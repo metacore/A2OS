@@ -21,7 +21,7 @@ TYPE PathName=ARRAY 272 OF CHAR;
 			IF fs.prefix # "" THEN
 				RemovePrefix(relTo);
 			END;
-			
+
 			IF fs.Has(relTo,full,flags) THEN
 				COPY(full,SELF.relTo);
 			ELSE (* should never happen, but as a fallback: *)

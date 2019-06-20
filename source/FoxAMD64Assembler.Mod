@@ -344,7 +344,7 @@ TYPE
 			BEGIN
 				FOR i := startIndex TO maxNumberOperands -1 DO
 					CASE InstructionSet.instructions[instr].operands[i] OF
-					InstructionSet.reg8, InstructionSet.reg16, InstructionSet.reg32, InstructionSet.reg64, InstructionSet.xmm, InstructionSet.mmx, InstructionSet.ymm: 
+					InstructionSet.reg8, InstructionSet.reg16, InstructionSet.reg32, InstructionSet.reg64, InstructionSet.xmm, InstructionSet.mmx, InstructionSet.ymm:
 							RETURN i;
 					ELSE
 					END;

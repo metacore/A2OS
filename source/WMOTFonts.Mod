@@ -345,7 +345,7 @@ BEGIN
 				|1: Strings.Append(exactName, "-Italic");
 				|2: Strings.Append(exactName, "_i");
 				|3: Strings.Append(exactName, "I");
-				|4: Strings.Append(exactName, "-Oblique");				
+				|4: Strings.Append(exactName, "-Oblique");
 				ELSE
 					EXIT
 				END;

@@ -369,7 +369,7 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
-		
+
 		PROCEDURE SetPassive*(value: BOOLEAN);
 		BEGIN
 			AcquireWrite;
@@ -521,7 +521,7 @@ TYPE
 			NotDefault;
 			ReleaseWrite;
 		END Set;
-		
+
 		(* set without updates -- use only when you definitely want to avoid updates *)
 		PROCEDURE SetPassive*(value: SET);
 		BEGIN
@@ -682,8 +682,8 @@ TYPE
 			ReleaseRead;
 			RETURN r
 		END Get;
-		
-		
+
+
 		PROCEDURE Set*(value : LONGINT);
 		VAR v: LONGINT;
 		BEGIN
@@ -883,7 +883,7 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
-		
+
 		PROCEDURE SetPassive*(value: LONGREAL);
 		VAR v: LONGREAL;
 		BEGIN
@@ -895,7 +895,7 @@ TYPE
 			END;
 			ReleaseWrite
 		END SetPassive;
-		
+
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
 			en : XMLObjects.Enumerator;
@@ -1242,17 +1242,17 @@ TYPE
 			NotDefault;
 			ReleaseWrite
 		END Set;
-		
+
 		PROCEDURE SetPassive*(value : HUGEINT);
 		BEGIN
 			AcquireWrite;
 			IF SHORT(value) # SELF.value THEN
-				SELF.value := SHORT(value); 
+				SELF.value := SHORT(value);
 				NotDefault;
 			END;
 			ReleaseWrite
 		END SetPassive;
-		
+
 
 		PROCEDURE FromXML*(xml : XML.Element);
 		VAR
@@ -1375,7 +1375,7 @@ TYPE
 			ASSERT(font # NIL);
 			AcquireWrite;
 			IF font # SELF.font THEN
-				SELF.font := font; 
+				SELF.font := font;
 				NotDefault;
 			END;
 			ReleaseWrite;
@@ -1735,7 +1735,7 @@ TYPE
 			AcquireWrite;
 			IF (SELF.value.l # value.l) OR (SELF.value.t # value.t) OR
 				(SELF.value.r # value.r) OR (SELF.value.b # value.b) THEN
-				SELF.value := value; 
+				SELF.value := value;
 				NotDefault;
 			END;
 			ReleaseWrite

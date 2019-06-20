@@ -264,7 +264,7 @@ TYPE
 
 			PROCEDURE ConstantNeedsSection(constant: SyntaxTree.Constant): BOOLEAN;
 			BEGIN
-				RETURN FALSE; 
+				RETURN FALSE;
 				(* constant sections are not used any more in importing modules, they are copied instead *)
 			END ConstantNeedsSection;
 
@@ -293,7 +293,7 @@ TYPE
 								IF moduleScope = module.module.moduleScope (* self *) THEN
 									D.String("Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;
 								ELSE
-									D.String("Imported Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;								
+									D.String("Imported Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;
 								END;
 							END;
 						ELSE

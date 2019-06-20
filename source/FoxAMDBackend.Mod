@@ -3162,46 +3162,46 @@ TYPE
 			len: SIZE; symbol: SyntaxTree.Symbol; assembler: Assembler.Assembly;
 
 			string: SyntaxTree.SourceCode;
-					
+
 			TYPE Mapper = OBJECT (Assembler.RegisterMap)
 				VAR cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope;
-				
+
 					PROCEDURE & InitMapper (cg: CodeGeneratorAMD64; scope: SyntaxTree.Scope);
 					BEGIN
 						SELF.cg := cg; SELF.scope := scope;
 					END InitMapper;
-					
+
 					PROCEDURE Find(CONST name: ARRAY OF CHAR): LONGINT;
-					VAR register: LONGINT; symbol: SyntaxTree.Symbol; ticket: Ticket; 
+					VAR register: LONGINT; symbol: SyntaxTree.Symbol; ticket: Ticket;
 					BEGIN
 						register := InstructionSet.none;
 						IF scope # NIL THEN
 							symbol := scope.FindSymbol(Basic.MakeString(name));
-							IF symbol # NIL THEN 
+							IF symbol # NIL THEN
 								WITH symbol: SyntaxTree.Variable DO
 									IF symbol.preferRegister THEN
 										ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
-										IF ticket = NIL THEN 
+										IF ticket = NIL THEN
 											cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
 											ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
 										END;
 										register := ticket.register;
 										IF register = InstructionSet.none THEN
 											register := InstructionSet.unassigned;
-										END; 
+										END;
 									END;
 								| SyntaxTree.Parameter DO
 									IF symbol.preferRegister THEN
 										ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
-										IF ticket = NIL THEN 
+										IF ticket = NIL THEN
 											cg.MapVirtualRegister(symbol.registerNumber, IntermediateCode.GeneralPurposeRegister, IntermediateBackend.GetType(cg.module.system, symbol.type),Low);
 											ticket := cg.virtualRegisters.Mapped(symbol.registerNumber,Low);
 										END;
 										register := ticket.register;
 										IF register = InstructionSet.none THEN
 											register := InstructionSet.unassigned;
-										END; 
-									END;									
+										END;
+									END;
 								ELSE
 								END;
 							END;

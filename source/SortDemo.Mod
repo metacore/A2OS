@@ -21,7 +21,7 @@ TYPE
 	VAR
 		cw: ControlWindow;
 		white, grey, col1, yellow: Raster.Pixel;
-		
+
 		mode: Raster.Mode;
 
 		sortname: ARRAY 32 OF CHAR;
@@ -47,7 +47,7 @@ TYPE
 			Raster.SetRGB( yellow, 255, 255, 0 );
 			Raster.SetRGB( grey, 110, 110, 110 );
 			Raster.SetRGB( col1, 210, 140, 75 );
-			
+
 			Raster.InitMode( mode, Raster.srcCopy );
 
 			concSorters :=  0;  concurrent := FALSE;
@@ -135,7 +135,7 @@ TYPE
 			Invalidate( WMRectangles.MakeRect( x, 0, x+ElemSize, WindowSize ) );
 			highlighted[n] := FALSE;
 		END DrawElement;
-		
+
 
 		PROCEDURE UnHighlight( n: Index );
 		VAR
@@ -166,7 +166,7 @@ TYPE
 				highlighted[n] := TRUE;
 			END
 		END Highlight;
-		
+
 		PROCEDURE Highlight2( a, b: Index );
 		BEGIN
 			IF ~concurrent THEN
@@ -327,7 +327,7 @@ TYPE
 			WHILE x <= hi DO
 				IF Less( x, x - 1 )THEN
 					(* find insert position ip, binary search *)
-					ip := x - 1;  l := lo; 
+					ip := x - 1;  l := lo;
 					WHILE l < ip DO
 						m := (l + ip) DIV 2;
 						IF Less( x, m ) THEN  ip := m  ELSE  l := m + 1  END

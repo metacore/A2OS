@@ -37,7 +37,7 @@ CONST
 	maxMnemonicNameLength =20;
 	maxCodeLength* =12;
 	none* = -1;
-	unassigned*= -2; 
+	unassigned*= -2;
 
 	bitsDefault*=0;
 	bits8*=1;
@@ -93,7 +93,7 @@ CONST
 	optPREP* = 9;		(* a repeat prefix must preceed the instruction *)
 	optPREPN* = 10;	(* a repeat prefix must preceed the instruction *)
 
-	optNoREX* = 11; (* an instruction that does not require a REX prefix, such as AVX instructions *) 
+	optNoREX* = 11; (* an instruction that does not require a REX prefix, such as AVX instructions *)
 
 	(*
 		FoxProgTools.Enum -l=1 -e

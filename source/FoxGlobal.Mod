@@ -443,11 +443,11 @@ TYPE
 				RETURN GenerateCellOffsets(scope(SyntaxTree.CellScope).ownerCell);
 			ELSE (* module scope or procedure scope: decreasing indices *)
 				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope) OR (scope IS SyntaxTree.BlockScope));
-	
-				bscope := scope; 
-				WHILE (bscope IS SyntaxTree.BlockScope) DO 
+
+				bscope := scope;
+				WHILE (bscope IS SyntaxTree.BlockScope) DO
 					bscope := bscope.outerScope;
-				END; 
+				END;
 				(*
 				IF scope IS SyntaxTree.BlockScope THEN
 					offset := scope.outerScope.currentVariableOffset;
@@ -484,11 +484,11 @@ TYPE
 			END;
 			(*
 			WHILE (scope IS SyntaxTree.BlockScope) DO
-				TRACE(scope, scope.minVariableOffset); 
+				TRACE(scope, scope.minVariableOffset);
 				IF scope.minVariableOffset < scope.outerScope.minVariableOffset THEN
 					scope.outerScope.SetMinVariableOffset(scope.minVariableOffset);
 				END;
-				scope := scope.outerScope; 
+				scope := scope.outerScope;
 			END;
 			*)
 			(*
@@ -499,7 +499,7 @@ TYPE
 					s := s.nextScope;
 				END;
 			| SyntaxTree.BlockScope DO
-				IF offset < scope.outerScope.minVariableOffset THEN 
+				IF offset < scope.outerScope.minVariableOffset THEN
 					scope.outerScope.SetMinVariableOffset(offset);
 				END;
 			ELSE

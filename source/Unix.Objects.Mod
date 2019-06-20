@@ -168,31 +168,32 @@ TYPE
 
 	GCContext = RECORD
 		nextPos: SIZE; (* 0 to start with *)
-		last: ARRAY 255 OF ADDRESS;
-		marking: BOOLEAN;
-		lefta2: BOOLEAN;
+		last: ARRAY 256 OF ADDRESS;
 		
-		PROCEDURE SetMarking(m: BOOLEAN);
+		PROCEDURE AddContext(bp, pc: ADDRESS);
 		BEGIN
-			ASSERT(CAS(marking, ~m, m) = ~m);
-		END SetMarking;
+				last[nextPos*2] := bp;
+				last[nextPos*2+1] := pc;
+				INC(nextPos); 
+		END AddContext;
 		
-		PROCEDURE Marking(): BOOLEAN;
+		PROCEDURE GetNextContext(VAR pos: SIZE; VAR bp, pc: ADDRESS): BOOLEAN;
 		BEGIN
-			RETURN CAS(marking, FALSE, FALSE);
-		END Marking;
-
-		PROCEDURE SetLeftA2(m: BOOLEAN);
-		BEGIN
-			IGNORE CAS(lefta2, ~m, m);
-		END SetLeftA2;
+			IF pos < 1 THEN RETURN FALSE END;
+			DEC(pos);
+			bp := last[pos*2];
+			pc := last[pos*2+1];
+			RETURN TRUE;
+		END GetNextContext;
 		
-		PROCEDURE LeftA2(): BOOLEAN;
+		PROCEDURE RemoveContext();
 		BEGIN
-			RETURN CAS(lefta2, FALSE, FALSE);
-		END LeftA2;
-		
-			
+			IF nextPos > 0 THEN
+				DEC(nextPos);
+				last[nextPos*2] := NIL;
+				last[nextPos*2+1] := NIL;
+			END;
+		END RemoveContext;
 	END;
 
 	Process* = OBJECT (Heaps.ProcessLink)
@@ -226,42 +227,28 @@ TYPE
 		END SetMode;
 
 		PROCEDURE FindRoots;
-		VAR osp, obp, opc, sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
-			contextPos: SIZE; leftA2: BOOLEAN; suspended: BOOLEAN;
+		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: LONGINT; p {UNTRACED}: ANY;
+			contextPos: SIZE; suspended: BOOLEAN;
 		BEGIN{UNTRACKED}
 			IF (mode < Running) OR (mode = Terminated) THEN RETURN END;
 
 			suspended := FALSE;
-			leftA2 := FALSE;
-			gcContext.SetMarking(TRUE);
 			IF SELF = CurrentProcess() THEN
 				state.SP := S.GetStackPointer( );
 				state.BP := S.GetFramePointer( );
 				state.PC := Machine.CurrentPC();
 			ELSIF ConcurrentGC THEN
-				leftA2 := gcContext.LeftA2();
-				IF ~leftA2 THEN (* in A2 *)
-					suspended := TRUE;
-					Unix.ThrSuspend( threadId, mode = Running );
-				END;
+				suspended := TRUE;
+				Machine.Acquire(Machine.X11); 
+				Unix.ThrSuspend( threadId, mode = Running );
+				Machine.Release(Machine.X11); 
 			END;
 			ASSERT(CurrentProcess() = gcProcess); 
-			(* even when the process has been suspended, it might have left A2 while spinning with nanosleep *)
 			sb := stackBottom; 
-			contextPos := gcContext.nextPos;
-			(* ==> contexPos = 0 ==> suspended in A2 OR selfprocess *)			
-			ASSERT(~leftA2 OR (contextPos > 0));
+			contextPos := CAS(gcContext.nextPos,0,0);
+			sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- might all be invalid, when A2 was left ! *)			
 
-			IF leftA2 THEN 
-				ASSERT(NextValidStackSegment(SELF, bp, pc, contextPos));
-				sp := bp;
-			ELSE
-				sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- these are invalid, when A2 was left ! *)			
-			END;
-			(* invariant: leftA2 => contextPos > 0 *)
-
-			IF TraceProcessHook # NIL THEN
-				TRACE(id, pc, bp, opc, obp, leftA2);
+			IF TraceProcessHook # NIL THEN (* stack trace *)
 				TraceProcessHook(SELF, pc, bp, sp, sb); 
 			END;
 			
@@ -283,14 +270,12 @@ TYPE
 					IF bp < stackBottom THEN
 						LOOP
 							IF (bp >= stackBottom) THEN EXIT END;
-							IF (bp < 1024) THEN TRACE(id, threadId, pc, bp, opc, obp, leftA2);
-							EXIT END;
 							IF Machine.ValidHeapAddress(pc) THEN 
 								(* ok, valid stack frame from A2, we can trace this *)
-							ELSIF leftA2 THEN
-								IF ~NextValidStackSegment(SELF, bp, pc, contextPos) THEN
+							ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN
+									sp := bp;
+							ELSE
 									EXIT
-								END;
 							END;
 							S.GET( bp, n );
 							IF ODD( n ) THEN (* procedure descriptor at bp *)
@@ -324,7 +309,6 @@ TYPE
 					Unix.ThrResume( threadId);
 				END;
 			END;
-			gcContext.SetMarking(FALSE);
 		END FindRoots;
 
 		PROCEDURE Cancel;
@@ -374,8 +358,6 @@ TYPE
 			context := CurrentContext();
 			(* must happen here before body is created! *)
 			gcContext.nextPos := 0;
-			gcContext.marking := FALSE;
-			gcContext.lefta2 := FALSE;
 			IF CAS(root,NIL,SELF) = NIL THEN
 				(* first process *)
 				stackBottom := Glue.stackBottom;
@@ -684,10 +666,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
 	BEGIN
 		bp := NIL;
-		WHILE (contextPos > 0) & (bp = NIL) DO
-			DEC(contextPos);
-			bp := p.gcContext.last[contextPos*2];
-			pc := p.gcContext.last[contextPos*2+1];
+		WHILE p.gcContext.GetNextContext(contextPos, bp, pc) & (bp = NIL) DO
 		END;
 		RETURN bp  # NIL;
 	END NextValidStackSegment;
@@ -886,6 +865,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	PROCEDURE SuspendActivities*;
 	VAR t, me: Process;
 	BEGIN
+		Machine.Acquire(Machine.X11); (* X11 threads may not be interrupted *)
 		Unix.MtxLock( processList ); (* no process should silently quit during global thread suspension *)
 		me := CurrentProcess();
 		t := root;
@@ -896,6 +876,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 			t := t.nextProcess
 		END;
 		Unix.MtxUnlock( processList );
+		Machine.Release(Machine.X11);
 	END SuspendActivities;
 
 	PROCEDURE ResumeActivities*;
@@ -934,29 +915,6 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	BEGIN
 		RETURN Machine.mhz * 1000000
 	END TimerFrequency;
-
-	PROCEDURE Backoff;
-	VAR	
-		sltime,rem: RECORD
-			tv_sec: LONGWORD;        (* seconds *)
-			tv_nsec: LONGWORD;       (* nanoseconds *)
-     	END;
-	BEGIN{UNCHECKED, UNTRACKED}
-		sltime.tv_sec := 0;
-		sltime.tv_nsec := 1000;
-		WHILE (Unix.nanosleep(ADDRESS OF sltime, ADDRESS OF rem) < 0) DO
-			(* check error ! *)
-			sltime := rem;
-		END;
-	END Backoff;
-	
-	VAR break : BOOLEAN;
-	
-	PROCEDURE Break*;
-	BEGIN
-		break := TRUE;
-	END Break;
-	
 	
 	(* Leave A2 is called when a process leaves A2 by a call to the Unix API *)
 	PROCEDURE LeaveA2*;
@@ -968,16 +926,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 				ebp := CheckBP(S.GetFramePointer());
 				S.GET(ebp+SIZEOF(ADDRESS), pc);
 				S.GET(ebp, ebp);
-				cur.gcContext.last[cur.gcContext.nextPos*2] := ebp;
-				cur.gcContext.last[cur.gcContext.nextPos*2+1] := pc;
-				INC(cur.gcContext.nextPos);
-				cur.gcContext.SetLeftA2(TRUE);
-				ASSERT(cur.gcContext.nextPos <= 1); 
-				WHILE cur.gcContext.Marking() DO 
-					(* if GC missed the previous statement then it needs to suspend here, with proper context stored *)
-					(* GC may not interrupt processes when in Unix API call (XIO problem) *)
-				END;
-				ASSERT(cur.gcContext.nextPos < 255);
+				cur.gcContext.AddContext(ebp, pc); 
 			END;
 		END;
 	END LeaveA2;
@@ -989,20 +938,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		IF CAS(startedMainProcess,FALSE,FALSE) THEN
 			cur := CurrentProcess();
 			IF cur # NIL THEN
-				WHILE cur.gcContext.Marking() DO (* still in left A2 and GC has seen this, we wait with backoff *)
-					Backoff; (* another Unix syscall, but that is no problem here *)
-				END;
-				cur.gcContext.SetLeftA2(FALSE); (* the GC may have missed this statement *)
-				WHILE cur.gcContext.Marking() DO 
-					(* must not nanosleep in Unix but need to wait if GC did not suspend this process *)
-				END;
-
-				(* invariant: lefta2 => gcContext.nextPos > 0 *)			
-				IF (cur.gcContext.nextPos > 0) THEN
-					DEC(cur.gcContext.nextPos);
-				END;
-				cur.gcContext.last[2*cur.gcContext.nextPos] := NIL; (* returned *)
-				cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL; (* returned *)
+				cur.gcContext.RemoveContext();
 			END;
 		END;
 	END ReenterA2;

@@ -269,7 +269,6 @@ TYPE
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 					IF bp < stackBottom THEN
 						LOOP
-							IF (bp >= stackBottom) THEN EXIT END;
 							IF Machine.ValidHeapAddress(pc) THEN
 								(* ok, valid stack frame from A2, we can trace this *)
 							ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN

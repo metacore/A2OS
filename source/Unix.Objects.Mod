@@ -970,11 +970,12 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE Convert;
-	VAR p: Process;
+	VAR p: Process; o: ProtectedObject; 
 	BEGIN
 		(* make current thread the first active object  *)
 		mainthread := Unix.ThrThis();
-		NEW( p, NIL, NIL, 0, {}, 0 );
+		NEW(o); (* alibi object, e.g. for Locks *)
+		NEW( p, o, NIL, 0, {}, 0 );
 	END Convert;
 
 	PROCEDURE Init;

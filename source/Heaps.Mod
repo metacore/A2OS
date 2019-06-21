@@ -192,18 +192,11 @@ TYPE
 
 	END GCStatus;
 
-CONST
-	MaxFreeLists = 20;
-	FreeListBarrier = 7;
-TYPE
-	FreeList= RECORD minSize: SIZE; first {UNTRACED}, last{UNTRACED}: FreeBlock END;
-	FreeLists = ARRAY MaxFreeLists+1 OF FreeList;
-
 	MarkStack = RECORD first{UNTRACED}: HeapBlock END;
+	
 VAR
 	marking: BOOLEAN;
 	markStack: MarkStack;
-	freeLists: FreeLists;
 	GC*: PROCEDURE;	(** activate the garbage collector *)
 	initBlock {UNTRACED}: ANY;	(* anchor for init calls *)
 	currentMarkValue: LONGINT; (* all objects that have this value in their mark field are still used - initial value filled in by linker *)
@@ -236,7 +229,7 @@ VAR
 
 	GCType*: LONGINT;
 	freeBlockFound-, freeBlockNotFound-: LONGINT;
-	EnableFreeLists, EnableReturnBlocks, trace-: BOOLEAN;
+	trace-: BOOLEAN;
 
 	allocationLogger-: PROCEDURE(p: ANY);
 
@@ -287,7 +280,7 @@ BEGIN
 END AppendToMarkStackC;
 
 PROCEDURE ExtractMarkStack(): HeapBlockU;
-VAR head, next: HeapBlockU;
+VAR head: HeapBlockU;
 BEGIN
 	LOOP
 		head := CAS(markStack.first, NIL, NIL);
@@ -306,7 +299,6 @@ VAR
 PROCEDURE Mark*(block {UNTRACED}: ANY);
 VAR
 	heapBlock {UNTRACED}: HeapBlock;
-	rootObj{UNTRACED}: RootObject;
 	blockMeta : Block;
 BEGIN
 	(* ug: check for validity of block is necessary since users may assign values to pointer variables that are not real heap blocks, e.g. by using SYSTEM.VAL or ADDRESSOF *)
@@ -402,153 +394,10 @@ BEGIN
 END WriteType;
 
 (** free list handling **)
-PROCEDURE ClearFreeLists;
-VAR i: LONGINT;
-BEGIN
-	FOR i := 0 TO MaxFreeLists DO
-		freeLists[i].first := NIL;
-		freeLists[i].last := NIL
-	END;
-END ClearFreeLists;
-
-(* insert element in fifo, first = freeList.first; last = freeList.last *)
-PROCEDURE AppendFree(VAR freeList: FreeList; block: FreeBlock);
-BEGIN
-	ASSERT(block.size >= freeList.minSize);
-	IF freeList.first = NIL THEN
-		freeList.first := block; freeList.last := block
-	ELSE
-		freeList.last.next := block;
-		freeList.last := block;
-	END;
-	block.next := NIL
-END AppendFree;
-
-(* get last element from fifo *)
-PROCEDURE GetFree(VAR freeList: FreeList): FreeBlockU;
-VAR block: FreeBlockU;
-BEGIN
-	IF freeList.first = NIL THEN block := NIL;
-	ELSIF freeList.first = freeList.last THEN block := freeList.first; freeList.first := NIL; freeList.last := NIL
-	ELSE block := freeList.first; freeList.first := block.next; block.next := NIL
-	END;
-	RETURN block
-END GetFree;
-
-(** insert sorted into queue, no handling of last queue element *)
-PROCEDURE InsertSorted(VAR freeList: FreeList; block: FreeBlock);
-VAR x: FreeBlock;
-BEGIN
-	(* keep them ordered to avoid unnecessary splits *)
-	x := freeList.first;
-	WHILE x # NIL DO
-		ASSERT(x # block);
-		x := x.next;
-	END;
-
-	x := freeList.first;
-
-	IF (x = NIL) OR (block.size <= x.size) THEN
-		block.next := x;
-		freeList.first := block;
-	ELSE
-		WHILE (x.next # NIL) & (block.size > x.next.size) DO  x := x.next  END;
-		block.next := x.next;
-		x.next := block;
-	END;
-END InsertSorted;
-
-PROCEDURE AppendFreeBlock(block: FreeBlock);
-VAR i: LONGINT;
-BEGIN
-	i := MaxFreeLists;
-	WHILE (i > 0) & (freeLists[i].minSize > block.size)  DO  DEC( i )  END;
-
-	IF i < FreeListBarrier THEN
-		AppendFree(freeLists[i], block);
-	ELSE
-		AppendFree(freeLists[i], block);
-		(*
-		keeping lists sorted has some positive impact on heap utilization
-	    but it slows down heap allocation speed:
-
-		InsertSorted(freeLists[i], block);
-		*)
-
-	END;
-END AppendFreeBlock;
-
-PROCEDURE FindFreeBlock( size: SIZE ): FreeBlock;
-VAR prev, block: FreeBlock;  i: LONGINT;
-BEGIN
-	i := MaxFreeLists;
-	WHILE (i > 0) & (freeLists[i].minSize > size)  DO  DEC( i )  END;
-
-	REPEAT
-		IF i < FreeListBarrier THEN
-			block := GetFree(freeLists[i]);
-		ELSE
-			block := freeLists[i].first;
-			prev := NIL;
-			WHILE (block # NIL) & (block.size < size) DO
-				prev := block;
-				block := block.next;
-			END;
-
-			IF block # NIL THEN (* blockize >= size *)
-				IF prev = NIL THEN
-					freeLists[i].first := block.next;
-				ELSE prev.next := block.next
-				END;
-				IF block = freeLists[i].last THEN
-					freeLists[i].last := prev
-				END;
-				block.next := NIL;
-			END;
-
-			(*
-			prev := freeLists[i].first;
-			WHILE prev # NIL DO
-				ASSERT(prev # block);
-				prev := prev.next;
-			END;
-			*)
-
-		END;
-		INC( i )
-	UNTIL (block # NIL) OR (i > MaxFreeLists);
-	RETURN block
-END FindFreeBlock;
-
-PROCEDURE GetFreeBlockAndSplit(size: SIZE): FreeBlock;
-VAR p,remainder: FreeBlockU; adr: ADDRESS;
-BEGIN
-	p := FindFreeBlock(size);
-	IF (p # NIL) & (ADDRESS(p.size) > ADDRESS (size)) THEN (* block too big - divide block into two parts: block with required size and remaining free block *)
-		ASSERT(ADDRESS(p.size - size) >= BlockHeaderSize + SIZEOF(FreeBlockDesc));
-		adr := p;
-		remainder := adr + size;
-		InitFreeBlock(remainder, Unmarked, NilVal, p.size - size);
-
-		AppendFreeBlock(remainder);
-		p.size := size;
-	END;
-	IF p # NIL THEN INC(freeBlockFound) ELSE INC(freeBlockNotFound) END;
-	RETURN p
-END GetFreeBlockAndSplit;
 
 PROCEDURE GetFreeBlock(size: SIZE; VAR p: FreeBlock);
 BEGIN
-	IF EnableFreeLists THEN
-		IF sweepMarkValue < currentMarkValue THEN
-			(*Trace.String("clear free lists and lazy sweep"); Trace.Ln;*)
-			ClearFreeLists;
-			LazySweep(MAX(SIZE), p)
-		END;
-		p := GetFreeBlockAndSplit(size)
-	ELSE
-		LazySweep(size, p)
-	END;
+	LazySweep(size, p);
 	IF size # MAX(SIZE) THEN
 	INC(throughput, size);
 	END;
@@ -567,7 +416,6 @@ CONST StrongChecks = FALSE;
 BEGIN{UNCHECKED}
 	INC(NgcSweeps);
 	time1 := Machine.GetTimer();
-	ASSERT(~EnableFreeLists OR (size = MAX(SIZE)));
 	lastFreeBlockAdr := NilVal;
 	lastFreeBlock := NIL;
 	IF (sweepMemBlock = NIL) (* OR (sweepMarkValue < currentMarkValue)*) THEN (* restart lazy sweep including clearance of lists *)
@@ -622,9 +470,6 @@ BEGIN{UNCHECKED}
 					RETURN;
 				ELSE
 					InitFreeBlock(lastFreeBlock, Unmarked, NilVal, lastFreeBlockSize); (* convert this block into a free heap block and clear its data *)
-					IF EnableFreeLists THEN
-						AppendFreeBlock(lastFreeBlock);
-					END;
 				END;
 				lastFreeBlockAdr := NilVal;
 				lastFreeBlock := NIL;
@@ -926,42 +771,34 @@ END CleanupModuleFinalizers;
 (* interruptible garbage collector for native A2 *)
 PROCEDURE CollectGarbage*(root : RootObject);
 VAR
-	obj: RootObject;
 	time1, time2: HUGEINT;
-	f: FreeBlock;
 BEGIN
-	 (* do never use any low level locks as the garbage collector process has a very high priority and may thus be blocked by lower level processes -> potential deadlock *)
-	(*!
-	Do not use windows functionality such as  trace here in general -- can lead to deadlock when stopped processes are in writing to a file
-	*)
+	(* do never use any low level locks as the garbage collector process has a very high priority and may thus be blocked by lower level processes -> potential deadlock *)
+	(*! Do not use windows functionality such as  trace here in general -- can lead to deadlock when stopped processes are in writing to a file *)
 	(* GC may run only if and only if sweep phase has been completed *)
-	IF ~EnableFreeLists OR (sweepMemBlock = NIL) & (sweepMarkValue = currentMarkValue) THEN
-
-		ASSERT(CAS(marking, FALSE, TRUE) = FALSE);
-		IF Stats THEN
-			Nmark := 0; Nmarked := 0;
-			INC(Ngc);
-			time1 := Machine.GetTimer ();
-		END;
-		INC(currentMarkValue);
-
-		Mark(root);
-		REPEAT
-			IF numCandidates # 0 THEN CheckCandidates; END; (* check for heuristics GC *)
-			TraverseMarkStack; (* required because candidates are put into mark stack, potentially not marked yet *)
-		UNTIL (numCandidates = 0); (* check for heuristics GC *)
-		CheckFinalizedObjects;
-		TraverseMarkStack; (* required because candidates are put into mark stack, potentially not marked yet *)
-
-		IF Stats THEN
-			time2 := Machine.GetTimer ();
-			NgcCyclesLastRun := time2 - time1;
-			IF NgcCyclesLastRun > NgcCyclesMax THEN NgcCyclesMax := NgcCyclesLastRun; END;
-			INC(NgcCyclesAllRuns, NgcCyclesLastRun);
-			NgcCyclesMark := NgcCyclesLastRun
-		END;
+	ASSERT(CAS(marking, FALSE, TRUE) = FALSE);
+	IF Stats THEN
+		Nmark := 0; Nmarked := 0;
+		INC(Ngc);
+		time1 := Machine.GetTimer ();
 	END;
-	IF EnableFreeLists THEN GetFreeBlock(MAX(SIZE), f) END;
+	INC(currentMarkValue);
+
+	Mark(root);
+	REPEAT
+		IF numCandidates # 0 THEN CheckCandidates; END; (* check for heuristics GC *)
+		TraverseMarkStack; (* required because candidates are put into mark stack, potentially not marked yet *)
+	UNTIL (numCandidates = 0); (* check for heuristics GC *)
+	CheckFinalizedObjects;
+	TraverseMarkStack; (* required because candidates are put into mark stack, potentially not marked yet *)
+
+	IF Stats THEN
+		time2 := Machine.GetTimer ();
+		NgcCyclesLastRun := time2 - time1;
+		IF NgcCyclesLastRun > NgcCyclesMax THEN NgcCyclesMax := NgcCyclesLastRun; END;
+		INC(NgcCyclesAllRuns, NgcCyclesLastRun);
+		NgcCyclesMark := NgcCyclesLastRun
+	END;
 	ASSERT(CAS(marking, TRUE, FALSE) = TRUE);
 END CollectGarbage;
 
@@ -970,27 +807,6 @@ BEGIN
 	ASSERT(gcStatus # NIL);
 	gcStatus.SetgcOngoing(TRUE);
 END InvokeGC;
-
-PROCEDURE ReturnBlocks;
-VAR memBlock {UNTRACED}, free{UNTRACED}: Machine.MemoryBlock; p: ADDRESS; heapBlock {UNTRACED}: HeapBlock; f: FreeBlock;
-BEGIN
-	GetFreeBlock(MAX(SIZE), f);
-	memBlock := Machine.memBlockHead;
-	WHILE memBlock # NIL DO
-		free := NIL;
-		p := memBlock.beginBlockAdr;
-		heapBlock := SYSTEM.VAL(HeapBlock, p + BlockHeaderSize);
-		IF (heapBlock IS FreeBlock)  & (p + heapBlock.size = memBlock.endBlockAdr)  THEN
-			free := memBlock;
-		END;
-		memBlock := memBlock.next;
-		IF free # NIL THEN
-			Machine.FreeMemBlock(free)
-		END;
-	END;
-	sweepMemBlock := NIL; (* restart LazySweep  *)
-	ClearFreeLists;
-END ReturnBlocks;
 
 (*
 	caller must hold the Heaps lock
@@ -1011,13 +827,11 @@ BEGIN
 	Machine.Acquire(Machine.Heaps);
 	(* trying to satisfy a request of MAX(SIZE) bytes will never succeed - lazy sweep runs until end of heap *)
 	GetFreeBlock(MAX(SIZE), p);
-	IF EnableReturnBlocks THEN ReturnBlocks END;
 	Machine.Release(Machine.Heaps);
 END LazySweepGC;
 
 (* initialize a free heap block *)
 PROCEDURE InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE);
-CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 BEGIN
 	(* initialize heap block header *)
 	freeBlock.typeDesc := freeBlockTag;
@@ -1037,16 +851,7 @@ VAR throughput* := 0 : SIZE;
 PROCEDURE NewBlock(size: SIZE): ADDRESS;
 VAR try: LONGINT; p: FreeBlock; freeBlock : FreeBlockU; memBlock {UNTRACED}: Machine.MemoryBlock;
 	beginHeapBlockAdr, endHeapBlockAdr: ADDRESS;
-
-	PROCEDURE CheckPostGC;
-	BEGIN
-		IF (sweepMarkValue < currentMarkValue) & EnableReturnBlocks THEN (* GC has run but no Sweep yet -- time to do post-gc cleanup *)
-			ReturnBlocks
-		END;
-	END CheckPostGC;
-
 BEGIN
-	CheckPostGC;
 	try := 1;
 	p := NIL;
 	IF  (GC = NilGC) OR (throughput < 128*1024*1024) OR TRUE THEN
@@ -1058,12 +863,10 @@ BEGIN
 		throughput := 0;
 	END;
 
-
 	WHILE (p = NIL) & (try <= MaxTries) DO
 		Machine.Release(Machine.Heaps);	(* give up control *)
 		GC;	(* try to free memory (other processes may also steal memory now) *)
 		Machine.Acquire(Machine.Heaps);
-		CheckPostGC;
 		sweepMemBlock := NIL;
 		GetFreeBlock(size, p);
 		IF p = NIL THEN
@@ -1072,11 +875,8 @@ BEGIN
 				freeBlock := beginHeapBlockAdr + BlockHeaderSize;
 				InitFreeBlock(freeBlock, Unmarked, NilVal, endHeapBlockAdr - beginHeapBlockAdr);
 				Machine.SetMemoryBlockEndAddress(memBlock, endHeapBlockAdr); (* end address of expanded block must set after free block is fit in memory block *)
-				IF EnableFreeLists THEN AppendFreeBlock(freeBlock)
-				ELSE
 				sweepMemBlock := memBlock;
 				sweepBlockAdr := beginHeapBlockAdr;
-				END;
 				GetFreeBlock(size, p);
 				sweepMemBlock := NIL; (* restart sweep from beginning after having taken big block in order to avoid fragmentation *)
 			END;
@@ -1471,22 +1271,10 @@ END NilGC;
 PROCEDURE Init;
 VAR beginBlockAdr, endBlockAdr, freeBlockAdr, p: ADDRESS;
 	heapBlock: HeapBlockU; freeBlock: FreeBlockU; memBlock {UNTRACED}: Machine.MemoryBlock;
-	s: ARRAY 32 OF CHAR; minSize,i: LONGINT;
+	s: ARRAY 32 OF CHAR;
 BEGIN
-	Machine.GetConfig("EnableFreeLists", s);
-	EnableFreeLists := (s[0] = "1");
-	Machine.GetConfig("EnableReturnBlocks", s);
-	EnableReturnBlocks := (s[0] = "1");
-	IF EnableReturnBlocks THEN Trace.String("Heaps:ReturnBlocks enabled"); Trace.Ln END;
 	Machine.GetConfig("TraceHeaps",s);
 	trace := (s[0] = "1");
-
-	minSize := 32;
-	FOR i := 0 TO MaxFreeLists DO
-		freeLists[i].minSize := minSize;
-		freeLists[i].first := NIL; freeLists[i].last := NIL;
-		IF i < FreeListBarrier THEN  INC( minSize, BlockSize )  ELSE  minSize := 2 * minSize  END
-	END;
 
 	GC := NilGC;
 	newSum := 0;
@@ -1518,7 +1306,6 @@ BEGIN
 		(* initialization of free heap block done here since boot file is only written up to freeBlockAdr *)
 		freeBlock := freeBlockAdr + BlockHeaderSize;
 		InitFreeBlock(freeBlock, Unmarked, NilVal, endBlockAdr - freeBlockAdr);
-		IF EnableFreeLists THEN AppendFreeBlock(freeBlock) END;
 		ASSERT(freeBlock.size MOD BlockSize  =  0)
 	END;
 
@@ -1530,7 +1317,6 @@ BEGIN
 		freeBlock := beginBlockAdr + BlockHeaderSize;
 		InitFreeBlock(freeBlock, Unmarked, NilVal, endBlockAdr - beginBlockAdr);
 		Machine.SetMemoryBlockEndAddress(memBlock, endBlockAdr);
-		IF EnableFreeLists THEN AppendFreeBlock(freeBlock) END;
 		sweepMarkValue := currentMarkValue;
 		sweepMemBlock := memBlock;
 		sweepBlockAdr := beginBlockAdr

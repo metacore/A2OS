@@ -267,40 +267,38 @@ TYPE
 						Heaps.RegisterCandidates( sp, stackBottom - sp );
 					END;
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
-					IF bp < stackBottom THEN
-						LOOP
-							IF Machine.ValidHeapAddress(pc) THEN
-								(* ok, valid stack frame from A2, we can trace this *)
-							ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN
-									sp := bp;
-							ELSE
-									EXIT
-							END;
-							S.GET( bp, n );
-							IF ODD( n ) THEN (* procedure descriptor at bp *)
-								IF (n > 1024) & (bp >= sp) THEN
-									desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
-									IF desc # NIL THEN
-										a0 := ADDRESSOF( desc.offsets );
-										a1 :=  S.VAL( ADDRESS, desc.offsets );
-										ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
-										FOR i := 0 TO LEN( desc.offsets ) - 1 DO
-											adr := bp + desc.offsets[i]; (* pointer at offset *)
-											S.GET( adr, p ); (* load pointer *)
-											IF p # NIL THEN
-												Heaps.Mark( p );
-											END
+					LOOP
+						IF Machine.ValidHeapAddress(pc) THEN
+							(* ok, valid stack frame from A2, we can trace this *)
+						ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN
+								sp := bp;
+						ELSE
+								EXIT
+						END;
+						S.GET( bp, n );
+						IF ODD( n ) THEN (* procedure descriptor at bp *)
+							IF (n > 1024) & (bp >= sp) THEN
+								desc := S.VAL( Modules.ProcedureDescPointer, n-1 );
+								IF desc # NIL THEN
+									a0 := ADDRESSOF( desc.offsets );
+									a1 :=  S.VAL( ADDRESS, desc.offsets );
+									ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+									FOR i := 0 TO LEN( desc.offsets ) - 1 DO
+										adr := bp + desc.offsets[i]; (* pointer at offset *)
+										S.GET( adr, p ); (* load pointer *)
+										IF p # NIL THEN
+											Heaps.Mark( p );
 										END
 									END
-								END;
-								S.GET( bp + SIZEOF( ADDRESS ), bp );
-								S.GET(bp + 2*SIZEOF(ADDRESS), pc);
-							ELSE (* classical stack frame *)
-								S.GET(bp + SIZEOF(ADDRESS), pc);
-								bp := n;
+								END
 							END;
-						END; (* LOOP *)
-					END; (* stackbottom *)
+							S.GET( bp + SIZEOF( ADDRESS ), bp );
+							S.GET(bp + 2*SIZEOF(ADDRESS), pc);
+						ELSE (* classical stack frame *)
+							S.GET(bp + SIZEOF(ADDRESS), pc);
+							bp := n;
+						END;
+					END; (* LOOP *)
 				END; (* gctype *)
 			END; (* contextpos *)
 			IF ConcurrentGC THEN

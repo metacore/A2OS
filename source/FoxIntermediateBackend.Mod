@@ -8300,36 +8300,65 @@ TYPE
 			END;
 		END Allocate;
 
+		PROCEDURE IfMarking(): Label;
+		VAR
+			pooledName: Basic.SegmentedName;
+			source: IntermediateCode.Section;
+			mark,res: IntermediateCode.Operand;
+			label: Label;
+		BEGIN
+				Basic.InitSegmentedName(pooledName);
+				pooledName[0] := Basic.MakeString("Heaps");
+				pooledName[1] := Basic.MakeString("marking");
+				pooledName[2] := -1;
+				source := NewSection(module.importedSections, Sections.VarSection, pooledName, NIL,commentPrintout # NIL);
+				IntermediateCode.InitAddress(mark, addressType, pooledName , 0, 0);
+				res := NewRegisterOperand(IntermediateCode.GetType(system, system.booleanType));
+				Emit(Cas(position, mark, false, false)); 
+				ReleaseIntermediateOperand(mark);
+				Emit(Result(position, res));
+				label := NewLabel();
+				BreqL(label,res,false);
+				ReleaseIntermediateOperand(res);
+				RETURN label;
+		END IfMarking;
+		
 		PROCEDURE MarkPointer(CONST op: IntermediateCode.Operand);
-		VAR saved: RegisterEntry;
+		VAR saved: RegisterEntry; label: Label;
 		BEGIN
 			IF (op.mode # IntermediateCode.ModeImmediate) OR (op.intValue # 0) THEN (* no NIL pointer *)
+				label := IfMarking();
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				Emit(Push(position, op));
 				CallThis(position,"Heaps","MarkPointer",1);
 				RestoreRegisters(saved);
+				SetLabel(label);
 			END;
 		END MarkPointer;	
 
 		PROCEDURE MarkRecord(CONST op, tag: IntermediateCode.Operand);
-		VAR saved: RegisterEntry;
+		VAR saved: RegisterEntry; label: Label;
 		BEGIN
+				label := IfMarking();
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				Emit(Push(position, op));
 				Emit(Push(position, tag)); 
 				CallThis(position,"Heaps","MarkRecord",2);
 				RestoreRegisters(saved);
+				SetLabel(label);
 		END MarkRecord;
 		
 		PROCEDURE MarkArray(CONST adr, tag, size: IntermediateCode.Operand);
-		VAR saved: RegisterEntry;
+		VAR saved: RegisterEntry; label: Label;
 		BEGIN
+				label := IfMarking();
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				Emit(Push(position,adr));		
 				Emit(Push(position,tag));
 				Emit(Push(position,size));
 				CallThis(position,"Heaps","MarkArray",3);
 				RestoreRegisters(saved); 
+				SetLabel(label);
 		END MarkArray;
 
 		PROCEDURE DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand);

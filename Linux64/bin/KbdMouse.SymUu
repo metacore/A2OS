@@ -1,20 +1,20 @@
 MODULE KbdMouse;
-	IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands, Api := X11Api, Objects;
+	IMPORT Machine, S := SYSTEM, Inputs, Plugins, X11, Displays, XDisplay, Commands, Objects;
 CONST 
 	ML = 0; 
 	MM = 1; 
 	MR = 2; 
 	ModeSwitch = 13; 
-	MetaMask = {Api.Mod4Mask, ModeSwitch}; 
+	MetaMask = {X11.Mod4Mask, ModeSwitch}; 
 TYPE 
 	Poll = OBJECT {EXCLUSIVE} 
 
 	BEGIN{ACTIVE, SAFE, PRIORITY((Objects.High - 1))} 
 	END Poll; 
 VAR 
-	event: Api.XEvent; 
+	event: X11.Event; 
 	xbuttons: SET32; 
-	compstatus: Api.ComposeStatus; 
+	compstatus: X11.ComposeStatus; 
 	disp: XDisplay.Display; 
 	MMseen, MRseen: BOOLEAN; 
 	poll: Poll; 

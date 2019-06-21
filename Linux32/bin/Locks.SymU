@@ -1,5 +1,5 @@
 MODULE Locks;
-	IMPORT SYSTEM, KernelLog, Objects, Streams, Reflection, Kernel;
+	IMPORT KernelLog, Objects, Kernel;
 CONST 
 	Statistics = TRUE; 
 TYPE 

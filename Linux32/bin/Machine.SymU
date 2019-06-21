@@ -12,16 +12,16 @@ CONST
 	MemBlockSize* = ((64 * 1024) * 1024); 
 	TraceOutput* = 0; 
 	Memory* = 1; 
-	Heaps* = 2; 
-	Interrupts* = 3; 
-	Modules* = 4; 
-	Objects* = 5; 
-	Processors* = 6; 
-	KernelLog* = 7; 
-	X11* = 8; 
+	X11* = 2; 
+	Heaps* = 3; 
+	Interrupts* = 4; 
+	Modules* = 5; 
+	Objects* = 6; 
+	Processors* = 7; 
+	KernelLog* = 8; 
 	MaxLocks* = 9; 
 	MaxCPU* = 4; 
-	StrongChecks = FALSE; 
+	StrongChecks = TRUE; 
 TYPE 
 	Vendor* = ARRAY 13 OF CHAR; 
 

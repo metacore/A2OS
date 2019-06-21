@@ -152,7 +152,7 @@ TYPE
 		PROCEDURE ^ GetImmediate(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; forbidden16Bit, push: BOOLEAN); 
 		PROCEDURE ^ GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand); 
 		PROCEDURE ^ GetRegister(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand; VAR ticket: Ticket); 
-		PROCEDURE ^ MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket); 
+		PROCEDURE ^ MakeOperand(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand; ticket: Ticket; pushOrCmp= FALSE: BOOLEAN); 
 		PROCEDURE ^ MakeRegister(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Assembler.Operand); 
 		PROCEDURE ^ SpecialMove(op, back: LONGINT; canStoreToMemory: BOOLEAN; VAR dest, src: Assembler.Operand; type: IntermediateCode.Type); 
 		PROCEDURE ^ ModifyStackPointer(sizeInBytes: HUGEINT); 

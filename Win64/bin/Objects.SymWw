@@ -80,7 +80,6 @@ TYPE
 
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR 
-		rootedNext: Process; 
 		obj-: ProtectedObject; 
 		state-{ALIGNED(16)} : Kernel32.Context; 
 		condition-: Condition; 
@@ -147,6 +146,9 @@ VAR
 	PROCEDURE ^ CurrentContext*(): ANY; 
 	PROCEDURE ^ SetContext*(context: ANY); 
 	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
+	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
+	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
+	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
 	PROCEDURE ^ ActiveObject*(): ANY; 
 	PROCEDURE ^ GetProcessID*(): LONGINT; 
 	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 

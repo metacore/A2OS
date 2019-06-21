@@ -1,5 +1,5 @@
 MODULE XDisplay;
-	IMPORT S := SYSTEM, Trace, Unix, Machine, Files, UnixFiles, X11, Api := X11Api, Displays, Strings;
+	IMPORT S := SYSTEM, Trace, Unix, Machine, Files, UnixFiles, X11, Displays, Strings;
 CONST 
 	BG = 0; 
 	FG = 15; 

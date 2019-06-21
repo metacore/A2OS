@@ -333,13 +333,13 @@ TYPE
 		r_15: HUGEINT; 
 		r_di: HUGEINT; 
 		r_si: HUGEINT; 
-		r_bp-: HUGEINT; 
+		r_bp-: ADDRESS; 
 		r_bx-: HUGEINT; 
 		r_dx: HUGEINT; 
 		r_ax: HUGEINT; 
 		r_cx: HUGEINT; 
-		r_sp-: HUGEINT; 
-		r_pc-: HUGEINT; 
+		r_sp-: ADDRESS; 
+		r_pc-: ADDRESS; 
 		r_efl: HUGEINT; 
 		r_csgsfs: HUGEINT; 
 		err-: HUGEINT; 
@@ -422,7 +422,7 @@ VAR
 	sigsuspend: PROCEDURE {C}(set: ADDRESS):LONGINT; 
 	sigaddset: PROCEDURE {C}(set: ADDRESS; signo: LONGINT); 
 	sigdelset: PROCEDURE {C}(set: ADDRESS; signo: LONGINT); 
-	nanosleep: PROCEDURE {C}(req, rem: ADDRESS):LONGINT; 
+	nanosleep-: PROCEDURE {C}(req, rem: ADDRESS):LONGINT; 
 	sigaltstack: PROCEDURE {C}(ss, oss: ADDRESS):LONGINT; 
 	pthread_sigmask: PROCEDURE {C}(how: LONGINT; set: ADDRESS; oldset: ADDRESS):LONGINT; 
 	sem_init-: PROCEDURE {C}(sem: ADDRESS; pshared: WORD; value: WORD):WORD; 
@@ -523,7 +523,7 @@ VAR
 	PROCEDURE ^ {C} Starter(proc: PROCEDURE ): ADDRESS; 
 	PROCEDURE ^ ThrStart*(p: PROCEDURE ; stackSize: SIZE): Thread_t; 
 	PROCEDURE ^ ThrSleep*(ms: LONGINT); 
-	PROCEDURE ^ NanoSleep(ns: LONGWORD); 
+	PROCEDURE ^ NanoSleep*(ns: LONGWORD); 
 	PROCEDURE ^ ThrKill*(thr: Thread_t); 
 	PROCEDURE ^ {C} resume_handler(sig: LONGINT); 
 	PROCEDURE ^ ThrResume*(thr: Thread_t); 

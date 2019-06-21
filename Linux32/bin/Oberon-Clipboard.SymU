@@ -1,5 +1,5 @@
 MODULE Clipboard IN Oberon;
-	IMPORT SYSTEM, Files, Texts, Oberon, Displays IN A2, XDisplay IN A2, Plugins IN A2, Display, X11 IN A2, X11Api IN A2, Strings, Modules IN A2, Machine IN A2;
+	IMPORT SYSTEM, Files, Texts, Oberon, Displays IN A2, XDisplay IN A2, Plugins IN A2, Display, X11 IN A2, Strings, Modules IN A2, Machine IN A2;
 CONST 
 	CR = 0DX; 
 	LF = 0AX; 
@@ -17,8 +17,8 @@ VAR
 	PROCEDURE ^ CopyOverSelection; 
 	PROCEDURE ^ TakeSelection; 
 	PROCEDURE ^ RequestSelection; 
-	PROCEDURE ^ SendSelection(VAR event: X11Api.XSelectionRequestEvent); 
-	PROCEDURE ^ ReceiveSelection(VAR event: X11Api.XSelectionEvent); 
+	PROCEDURE ^ SendSelection(VAR event: X11.SelectionRequestEvent); 
+	PROCEDURE ^ ReceiveSelection(VAR event: X11.SelectionEvent); 
 	PROCEDURE ^ Cut*; 
 	PROCEDURE ^ Copy*; 
 	PROCEDURE ^ Paste*; 

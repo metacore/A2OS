@@ -147,6 +147,9 @@ VAR
 	PROCEDURE ^ ReportScope*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE); 
 	PROCEDURE ^ ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: SIZE); 
 	PROCEDURE ^ Report*(w: Streams.Writer; refs: Modules.Bytes; offset: SIZE); 
+	PROCEDURE ^ WriteMode*(mode: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ WriteWaitingOn*(t: Objects.Process; out: Streams.Writer); 
+	PROCEDURE ^ WriteFlags*(flags: SET; out: Streams.Writer); 
 	PROCEDURE ^ TraceH(process: Objects.Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 	PROCEDURE ^ TraceProcesses*; 
 	PROCEDURE ^ Test*; 

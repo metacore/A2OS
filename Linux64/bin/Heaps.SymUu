@@ -195,8 +195,6 @@ VAR
 	sweepMemBlock{UNTRACED} : Machine.MemoryBlock; 
 	candidates: ARRAY MaxCandidates OF ADDRESS; 
 	numCandidates: LONGINT; 
-	rootList{UNTRACED} : RootObject; 
-	realtimeList{UNTRACED} : HeapBlock; 
 	newSum: SIZE; 
 	checkRoot: FinalizerNode; 
 	finalizeRoot: FinalizerNode; 
@@ -218,9 +216,9 @@ VAR
 	PROCEDURE ^ SetAllocationLogger*(a: PROCEDURE (p: ANY)); 
 	PROCEDURE ^ CheckPointer(p: ADDRESS): BOOLEAN; 
 	PROCEDURE ^ AppendToMarkStackC(heapBlock: HeapBlockU); 
-	PROCEDURE ^ ExtractFromMarkStack(): HeapBlockU; 
-	PROCEDURE ^ Inspect*(block{UNTRACED} : ANY); 
-	PROCEDURE ^ Mark*(p{UNTRACED} : ANY); 
+	PROCEDURE ^ ExtractMarkStack(): HeapBlockU; 
+	PROCEDURE ^ Mark*(block{UNTRACED} : ANY); 
+	PROCEDURE ^ TraverseMarkStack; 
 	PROCEDURE ^ WriteType*(t: ADDRESS); 
 	PROCEDURE ^ ClearFreeLists; 
 	PROCEDURE ^ AppendFree(VAR freeList: FreeList; block: FreeBlock); 
@@ -237,7 +235,6 @@ VAR
 	PROCEDURE ^ CheckFinalizedObjects; 
 	PROCEDURE ^ GetFinalizer*(): FinalizerNode; 
 	PROCEDURE ^ CleanupModuleFinalizers*(codeAdr: ADDRESS; codeLen: SIZE; CONST name: ARRAY OF CHAR); 
-	PROCEDURE ^ AddRootObject*(rootObject: RootObject); 
 	PROCEDURE ^ CollectGarbage*(root: RootObject); 
 	PROCEDURE ^ InvokeGC*; 
 	PROCEDURE ^ ReturnBlocks; 

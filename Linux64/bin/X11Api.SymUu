@@ -1,5 +1,5 @@
 MODULE X11Api;
-	IMPORT X11, Unix, Modules, SYSTEM;
+	IMPORT X11, Unix, Modules;
 CONST 
 	XK_Home* = 65360; 
 	XK_Left* = 65361; 
@@ -1066,9 +1066,6 @@ VAR
 	KeysymToKeycode-: PROCEDURE {C}(disp: DisplayPtr; keysym: KeySym):WORD; 
 	XKeysymToString-: PROCEDURE {C}(keysym: KeySym):ADDRESS; 
 
-	PROCEDURE ^ GetStringFromAddress*(adr: ADDRESS): PChar; 
-	PROCEDURE ^ KeysymToString*(keysym: KeySym): PChar; 
-	PROCEDURE ^ GetAtomName*(display: DisplayPtr; atom: Atom): PChar; 
 	PROCEDURE ^ LoadX11Functions; 
 	PROCEDURE ^ OnClose; 
 BEGIN

@@ -416,8 +416,8 @@ TYPE
 		PROCEDURE ^ AddPortProperties(modifier: SyntaxTree.Modifier); 
 		PROCEDURE ^ PushPort(p: SyntaxTree.Expression); 
 		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
-		PROCEDURE ^ OnHeap(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
+		PROCEDURE ^ MarkPointer(CONST op: Operand); 
 		PROCEDURE ^ DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ EvaluateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ DesignateTypeGuardDesignator(x: SyntaxTree.TypeGuardDesignator; VAR result: Operand); 

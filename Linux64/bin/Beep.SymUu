@@ -1,5 +1,5 @@
 MODULE Beep;
-	IMPORT X11, Displays, XDisplay, Plugins;
+	IMPORT X11, Displays, XDisplay, Plugins, Machine;
 CONST 
 VAR 
 	disp: XDisplay.Display; 

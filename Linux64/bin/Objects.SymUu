@@ -1,7 +1,7 @@
 MODULE Objects;
 	IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 CONST 
-	ConcurrentGC = FALSE; 
+	ConcurrentGC = TRUE; 
 	PleaseHalt* = 10; 
 	Unbreakable* = 11; 
 	SelfTermination* = 12; 
@@ -20,8 +20,7 @@ CONST
 	AwaitingLock* = 3; 
 	AwaitingCond* = 4; 
 	AwaitingEvent* = 5; 
-	Suspended* = 6; 
-	Terminated* = 7; 
+	Terminated* = 6; 
 	Second* = 1000; 
 	DefaultStacksize = (128 * 1024); 
 TYPE 
@@ -79,7 +78,12 @@ TYPE
 	GCContext = RECORD 
 		nextPos: SIZE; 
 		last: ARRAY 256 OF ADDRESS; 
-	END; 
+
+		PROCEDURE ^ AddContext(bp, pc: ADDRESS); 
+		PROCEDURE ^ GetNextContext(VAR pos: SIZE; VAR bp, pc: ADDRESS): BOOLEAN; 
+		PROCEDURE ^ RemoveContext; 
+	END
+	; 
 
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR 
@@ -104,6 +108,7 @@ TYPE
 		lastThreadTimes: HUGEINT; 
 		gcContext: GCContext; 
 
+		PROCEDURE ^ SetMode(mode: WORD); 
 		PROCEDURE ^ FindRoots*; 
 		PROCEDURE ^ Cancel; 
 		PROCEDURE ^ GetPriority(): LONGINT; 
@@ -142,6 +147,8 @@ VAR
 	nextPID: LONGINT; 
 	finalizerCaller: FinalizerCaller; 
 	mainthread: Unix.Thread_t; 
+	startedMainProcess := FALSE: BOOLEAN; 
+	gcProcess{UNTRACED} : Process; 
 	main: MainThread; 
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 
@@ -159,11 +166,14 @@ VAR
 	PROCEDURE ^ SetPriority*(pri: LONGINT); 
 	PROCEDURE ^ Sleep*(ms: LONGINT); 
 	PROCEDURE ^ Yield*; 
-	PROCEDURE ^ CurrentProcess*(): Process; 
+	PROCEDURE ^ CurrentProcess*(): {UNTRACED} Process; 
 	PROCEDURE ^ CurrentContext*(): ANY; 
 	PROCEDURE ^ SetContext*(context: ANY); 
 	PROCEDURE ^ ActiveObject*(): ANY; 
 	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
+	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
+	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
+	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
 	PROCEDURE ^ GetProcessID*(): LONGINT; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ RegisterFinalizer(obj: ANY; fin: Heaps.Finalizer); 
@@ -179,8 +189,8 @@ VAR
 	PROCEDURE ^ CancelTimeout*(t: Timer); 
 	PROCEDURE ^ GetContext(ctxt: Unix.Ucontext); 
 	PROCEDURE ^ UpdateProcessState*(p: Process); 
-	PROCEDURE ^ SuspendActivities; 
-	PROCEDURE ^ ResumeActivities; 
+	PROCEDURE ^ SuspendActivities*; 
+	PROCEDURE ^ ResumeActivities*; 
 	PROCEDURE ^ GCLoop*; 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 

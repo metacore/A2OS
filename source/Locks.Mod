@@ -1,7 +1,7 @@
 MODULE Locks;	(** AUTHOR "TF"; PURPOSE "Highlevel locks (recursive, reader writer)"; *)
 
 IMPORT
-	SYSTEM, KernelLog, Objects, Streams, Reflection, Kernel;
+	KernelLog, Objects, Kernel;
 
 CONST
 	Statistics = TRUE;
@@ -149,6 +149,7 @@ TYPE
 		PROCEDURE ReleaseWrite*;
 		VAR inform : BOOLEAN;
 		BEGIN
+			
 			inform := FALSE;
 			BEGIN {EXCLUSIVE}
 				ASSERT(HasWriteLock(), 3010);
@@ -270,23 +271,12 @@ TYPE
 		END SetDeadLock;
 
 		PROCEDURE WriteLock*;
-		VAR w : Streams.Writer; tag: ADDRESS;
 		BEGIN
 			KernelLog.String("Lock held by : ");
 			IF lockedBy = NIL THEN KernelLog.String("nobody")
 			ELSE
 				KernelLog.String("locked by = "); KernelLog.Address(lockedBy); KernelLog.Ln;
 				KernelLog.String("me = "); KernelLog.Address(Objects.ActiveObject()); KernelLog.Ln;
-				(*
-
-				Streams.OpenWriter(w, KernelLog.Send);
-				SYSTEM.GET (SYSTEM.VAL (ADDRESS, lockedBy) - SIZEOF (ADDRESS), tag);
-				Reflection.WriteType(w, tag);
-				w.String(" New Acquire by : ");
-				SYSTEM.GET (SYSTEM.VAL (ADDRESS, Objects.ActiveObject()) - SIZEOF (ADDRESS), tag);
-				Reflection.WriteType(w, tag);
-				w.Update
-				*)
 			END;
 			KernelLog.Ln;
 		END WriteLock;
@@ -303,7 +293,7 @@ TYPE
 
 VAR
 	locks : Kernel.FinalizedCollection;
-
+	
 PROCEDURE RegisterLock(x : ANY);
 BEGIN
 	locks.Add(x, NIL);

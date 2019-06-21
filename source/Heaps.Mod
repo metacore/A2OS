@@ -195,7 +195,7 @@ TYPE
 	MarkStack = RECORD first{UNTRACED}: HeapBlock END;
 	
 VAR
-	marking: BOOLEAN;
+	marking-: BOOLEAN; (* do not rename: used by compiler for the write barriers *)
 	markStack: MarkStack;
 	GC*: PROCEDURE;	(** activate the garbage collector *)
 	initBlock {UNTRACED}: ANY;	(* anchor for init calls *)

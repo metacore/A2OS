@@ -24,8 +24,6 @@ CONST
 	NumPriorities* = 6; 
 	HeuristicStackInspectionGC* = 0; 
 	MetaDataForStackGC* = 1; 
-	MaxFreeLists = 20; 
-	FreeListBarrier = 7; 
 TYPE 
 	RootObject* = OBJECT 
 	VAR 
@@ -167,13 +165,6 @@ TYPE
 		PROCEDURE ^ WaitForGCEnd*; 
 	END GCStatus; 
 
-	FreeList = RECORD 
-		minSize: SIZE; 
-		first{UNTRACED} , last{UNTRACED} : FreeBlock; 
-	END; 
-
-	FreeLists = ARRAY (MaxFreeLists + 1) OF FreeList; 
-
 	MarkStack = RECORD 
 		first{UNTRACED} : HeapBlock; 
 	END; 
@@ -186,7 +177,6 @@ TYPE
 VAR 
 	marking: BOOLEAN; 
 	markStack: MarkStack; 
-	freeLists: FreeLists; 
 	GC*: PROCEDURE ; 
 	initBlock{UNTRACED} : ANY; 
 	currentMarkValue: LONGINT; 
@@ -208,7 +198,7 @@ VAR
 	gcStatus*: GCStatus; 
 	GCType*: LONGINT; 
 	freeBlockFound-, freeBlockNotFound-: LONGINT; 
-	EnableFreeLists, EnableReturnBlocks, trace-: BOOLEAN; 
+	trace-: BOOLEAN; 
 	allocationLogger-: PROCEDURE (p: ANY); 
 	endMark: HeapBlockU; 
 	throughput* := 0: SIZE; 
@@ -220,13 +210,6 @@ VAR
 	PROCEDURE ^ Mark*(block{UNTRACED} : ANY); 
 	PROCEDURE ^ TraverseMarkStack; 
 	PROCEDURE ^ WriteType*(t: ADDRESS); 
-	PROCEDURE ^ ClearFreeLists; 
-	PROCEDURE ^ AppendFree(VAR freeList: FreeList; block: FreeBlock); 
-	PROCEDURE ^ GetFree(VAR freeList: FreeList): FreeBlockU; 
-	PROCEDURE ^ InsertSorted(VAR freeList: FreeList; block: FreeBlock); 
-	PROCEDURE ^ AppendFreeBlock(block: FreeBlock); 
-	PROCEDURE ^ FindFreeBlock(size: SIZE): FreeBlock; 
-	PROCEDURE ^ GetFreeBlockAndSplit(size: SIZE): FreeBlock; 
 	PROCEDURE ^ GetFreeBlock(size: SIZE; VAR p: FreeBlock); 
 	PROCEDURE ^ LazySweep(size: ADDRESS; VAR p{UNTRACED} : FreeBlock); 
 	PROCEDURE ^ CheckCandidates*; 
@@ -237,7 +220,6 @@ VAR
 	PROCEDURE ^ CleanupModuleFinalizers*(codeAdr: ADDRESS; codeLen: SIZE; CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ CollectGarbage*(root: RootObject); 
 	PROCEDURE ^ InvokeGC*; 
-	PROCEDURE ^ ReturnBlocks; 
 	PROCEDURE ^ FullSweep*; 
 	PROCEDURE ^ LazySweepGC*; 
 	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
@@ -255,6 +237,9 @@ VAR
 	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
 	PROCEDURE ^ AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS); 
 	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 
+	PROCEDURE ^ MarkPointer*(adr: ADDRESS); 
+	PROCEDURE ^ MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU); 
+	PROCEDURE ^ MarkArray*(adr: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 
 	PROCEDURE ^ NilGC; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ SetHeuristic*; 

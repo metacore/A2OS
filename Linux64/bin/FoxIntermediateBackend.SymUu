@@ -417,7 +417,9 @@ TYPE
 		PROCEDURE ^ PushPort(p: SyntaxTree.Expression); 
 		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
 		PROCEDURE ^ Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
-		PROCEDURE ^ MarkPointer(CONST op: Operand); 
+		PROCEDURE ^ MarkPointer(CONST op: IntermediateCode.Operand); 
+		PROCEDURE ^ MarkRecord(CONST op, tag: IntermediateCode.Operand); 
+		PROCEDURE ^ MarkArray(CONST adr, tag, size: IntermediateCode.Operand); 
 		PROCEDURE ^ DesignateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ EvaluateBuiltinCallDesignator(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
 		PROCEDURE ^ DesignateTypeGuardDesignator(x: SyntaxTree.TypeGuardDesignator; VAR result: Operand); 

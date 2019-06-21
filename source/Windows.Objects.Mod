@@ -218,7 +218,6 @@ TYPE
 					END;
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 					LOOP
-						IF (bp = NIL) OR (bp >= stackBottom) THEN EXIT END;
 						IF Machine.ValidHeapAddress(pc) THEN
 							(* ok, valid stack frame from A2, we can trace this *)
 						ELSE
@@ -232,6 +231,7 @@ TYPE
 							IF bp = NIL THEN
 								EXIT;
 							END;
+							sp := bp;
 						END;
 
 						SYSTEM.GET(bp, n);

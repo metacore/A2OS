@@ -175,7 +175,7 @@ TYPE
 		len: ARRAY 8 OF SIZE; 
 	END; 
 VAR 
-	marking: BOOLEAN; 
+	marking-: BOOLEAN; 
 	markStack: MarkStack; 
 	GC*: PROCEDURE ; 
 	initBlock{UNTRACED} : ANY; 

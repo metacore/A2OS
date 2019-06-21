@@ -417,6 +417,7 @@ TYPE
 		PROCEDURE ^ PushPort(p: SyntaxTree.Expression); 
 		PROCEDURE ^ PushString(op: Operand; actualType: SyntaxTree.Type); 
 		PROCEDURE ^ Allocate(x: SyntaxTree.BuiltinCallDesignator; VAR result: Operand); 
+		PROCEDURE ^ IfMarking(): Label; 
 		PROCEDURE ^ MarkPointer(CONST op: IntermediateCode.Operand); 
 		PROCEDURE ^ MarkRecord(CONST op, tag: IntermediateCode.Operand); 
 		PROCEDURE ^ MarkArray(CONST adr, tag, size: IntermediateCode.Operand); 

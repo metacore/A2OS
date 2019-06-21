@@ -1261,6 +1261,40 @@ BEGIN
 	SYSTEM.MOVE(src,dest,tag.recSize * numElems);
 END AssignArray;
 
+(* write barriers -- used by compile *)
+PROCEDURE MarkPointer*(adr: ADDRESS);
+VAR any: Block;
+BEGIN
+	IF (adr # NIL) & CAS(marking, FALSE, FALSE) THEN
+		Mark(any);
+	END; 
+END MarkPointer;
+
+PROCEDURE MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU);
+VAR i: SIZE; sval {UNTRACED}: ANY;
+BEGIN
+	IF CAS(marking,FALSE,FALSE) THEN
+		FOR i := 0 TO LEN(tag.pointerOffsets)-1 DO
+			SYSTEM.GET(adr+tag.pointerOffsets[i], sval);
+			Mark(sval);
+		END;
+	END;
+END MarkRecord;
+
+PROCEDURE MarkArray*(adr: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE);
+VAR i, j: SIZE; offset: ADDRESS; sval {UNTRACED}: ANY;
+BEGIN
+	IF CAS(marking,FALSE,FALSE) THEN
+		FOR j := 0 TO LEN(tag.pointerOffsets)-1 DO
+			FOR i := 0 TO numElems-1 DO
+				offset := i * tag.recSize + tag.pointerOffsets[j];
+				SYSTEM.GET(adr+offset, sval);
+				Mark(sval);
+			END;
+		END;
+	END;
+END MarkArray;
+
 (* NilGC - Default garbage collector. *)
 PROCEDURE NilGC;
 BEGIN

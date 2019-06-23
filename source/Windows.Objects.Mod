@@ -131,6 +131,31 @@ TYPE
 	GCContext = RECORD
 		nextPos: SIZE; (* 0 to start with *)
 		last: ARRAY 256 OF ADDRESS;
+
+		PROCEDURE AddContext(bp, pc: ADDRESS);
+		BEGIN
+				last[nextPos*2] := bp;
+				last[nextPos*2+1] := pc;
+				INC(nextPos);
+		END AddContext;
+
+		PROCEDURE GetNextContext(VAR pos: SIZE; VAR bp, pc: ADDRESS): BOOLEAN;
+		BEGIN
+			IF pos < 1 THEN RETURN FALSE END;
+			DEC(pos);
+			bp := last[pos*2];
+			pc := last[pos*2+1];
+			RETURN TRUE;
+		END GetNextContext;
+
+		PROCEDURE RemoveContext();
+		BEGIN
+			IF nextPos > 0 THEN
+				DEC(nextPos);
+				last[nextPos*2] := NIL;
+				last[nextPos*2+1] := NIL;
+			END;
+		END RemoveContext;
 	END;
 
 	Process* = OBJECT(Heaps.ProcessLink)
@@ -157,53 +182,31 @@ TYPE
 		gcContext: GCContext;
 		context: ANY; (* commands contect *)
 
-		PROCEDURE FindRoots;   (* override, called while GC, replaces Threads.CheckStacks *)
-		VAR sp: ADDRESS; res: Kernel32.BOOL; pc, bp: ADDRESS;
-			n,adr: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; p {UNTRACED}: ANY; i: SIZE;
-			a0,a1: ADDRESS;
-			O: ANY; ID: LONGINT;
-			mod {UNTRACED}: Modules.Module;
-			proc {UNTRACED}: Modules.ProcedureDescPointer;
-			modName: ARRAY 128 OF CHAR;
-			contextPos: SIZE;
-			prevMode: LONGINT;
-		BEGIN{UNTRACKED} (* avoid winapi call indirection *)
-			O := obj; ID := id;
-			IF (handle = 0) OR (mode = Terminated) OR (mode < Ready) (* procedure Wrapper not yet started *) THEN
-				RETURN
+		PROCEDURE FindRoots;
+		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: WORD; p {UNTRACED}: ANY;
+			contextPos: SIZE; suspended: BOOLEAN;
+		BEGIN{UNTRACKED}
+			IF (mode < Running) OR (mode = Terminated) THEN RETURN END;
+
+			suspended := FALSE;
+			IF SELF = CurrentProcess() THEN
+				state.SP := SYSTEM.GetStackPointer( );
+				state.BP := SYSTEM.GetFramePointer( );
+				state.PC := Machine.CurrentPC();
+			ELSIF ConcurrentGC THEN
+				suspended := TRUE;
+				Suspend(SELF);
+			END;
+			sb := stackBottom;
+			contextPos := CAS(gcContext.nextPos,0,0);
+			sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- might all be invalid, when A2 was left ! *)
+
+			IF TraceProcessHook # NIL THEN (* stack trace *)
+				TraceProcessHook(SELF, pc, bp, sp, sb);
 			END;
 
-			IF CurrentProcess() = SELF THEN
-				state.SP := SYSTEM.GetStackPointer();  state.BP :=SYSTEM.GetFramePointer(); state.PC := Machine.CurrentPC();
-			ELSE
-				IF ConcurrentGC THEN
-						prevMode := mode;
-						res := Kernel32.SuspendThread(handle);
-						ASSERT(res >= 0);
-						mode := Suspended
-				END;
-				state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
-				res := Kernel32.GetThreadContext( handle, state );
-				IF res = 0 THEN Trace.String("could not get thread context:"); Trace.Int(Kernel32.GetLastError(),1) END;
-			END;
-
-			sp :=  state.SP; bp := state.BP; pc := state.PC;
-
-			(* debugging info *)
-			mod := Modules.ThisModuleByAdr0(pc);
-			IF mod # NIL THEN
-				COPY(mod.name, modName);
-				proc := Modules.FindProc(pc,mod.procTable);
-			END;
-
-			IF TraceProcessHook # NIL THEN
-				TraceProcessHook(SELF,pc,bp,sp,stackBottom);
-			END;
-
-			contextPos := gcContext.nextPos;
 			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
-
-				IF Heaps.GCType= Heaps.HeuristicStackInspectionGC THEN
+				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
 					(* debugging info*)
 					IF (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
 						SYSTEM.GET( bp, n );
@@ -220,52 +223,41 @@ TYPE
 					LOOP
 						IF Machine.ValidHeapAddress(pc) THEN
 							(* ok, valid stack frame from A2, we can trace this *)
+						ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN
+								sp := bp;
 						ELSE
-							(* no, cannot trace this Windows stack frame, we have to check if we recorded when we exited A2 previously *)
-							bp := NIL;
-							WHILE (contextPos > 0) & (bp = NIL) DO
-								DEC(contextPos);
-								bp := gcContext.last[2*contextPos];
-								pc := gcContext.last[2*contextPos+1];
-							END;
-							IF bp = NIL THEN
-								EXIT;
-							END;
-							sp := bp;
+								EXIT
 						END;
-
-						SYSTEM.GET(bp, n);
-						IF ODD(n)  THEN (* procedure descriptor at bp *)
-							desc := SYSTEM.VAL(Modules.ProcedureDescPointer, n-1);
-							IF (desc # NIL) & (bp >= sp) THEN
-								IF TraceVerbose THEN
-									WriteType(desc); Trace.Ln;
-								END;
-								a0 := ADDRESSOF(desc.offsets);
-								a1 :=  SYSTEM.VAL(ADDRESS, desc.offsets);
-								ASSERT(a0+SIZEOF(ADDRESS)=a1,54321);
-								FOR i := 0 TO LEN(desc.offsets)-1 DO
-									adr := bp + desc.offsets[i]; (* pointer at offset *)
-									SYSTEM.GET(adr, p); (* load pointer *)
-									IF p # NIL THEN
-										Heaps.Mark(p);
-									END;
-								END;
+						SYSTEM.GET( bp, n );
+						IF ODD( n ) THEN (* procedure descriptor at bp *)
+							IF (n > 1024) & (bp >= sp) THEN
+								desc := SYSTEM.VAL( Modules.ProcedureDescPointer, n-1 );
+								IF desc # NIL THEN
+									a0 := ADDRESSOF( desc.offsets );
+									a1 :=  SYSTEM.VAL( ADDRESS, desc.offsets );
+									ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+									FOR i := 0 TO LEN( desc.offsets ) - 1 DO
+										adr := bp + desc.offsets[i]; (* pointer at offset *)
+										SYSTEM.GET( adr, p ); (* load pointer *)
+										IF p # NIL THEN
+											Heaps.Mark( p );
+										END
+									END
+								END
 							END;
+							SYSTEM.GET( bp + SIZEOF( ADDRESS ), bp );
 							SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
-							SYSTEM.GET(bp + SIZEOF(ADDRESS), bp);
-						ELSE (* classical stack frame without procedure descriptor *)
+						ELSE (* classical stack frame *)
 							SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
 							bp := n;
 						END;
-					END; (* loop *)
-				END; (* gc type *)
+					END; (* LOOP *)
+				END; (* gctype *)
 			END; (* contextpos *)
-
-			IF ConcurrentGC & (SELF # CurrentProcess()) THEN
-				res := Kernel32.ResumeThread(handle);
-				ASSERT(res >= 0);
-				mode := prevMode;
+			IF ConcurrentGC THEN
+				IF suspended THEN
+					Resume(SELF);
+				END;
 			END;
 		END FindRoots;
 
@@ -362,6 +354,7 @@ VAR
 	break: ARRAY 16 OF CHAR;
 	terminateProc: PROCEDURE;
 	ready: ProcessQueue;	(* contains running processes in this implementation *)
+	startedMainProcess := FALSE: BOOLEAN;
 
 	numberOfProcessors: LONGINT; (* cached value of Machine.NumberOfProcessors() *)
 	finalizerCaller: FinalizerCaller; (* active object for finalizer process, regarded as aprt of GC *)
@@ -866,7 +859,6 @@ BEGIN
 	ASSERT(heapBlock IS Heaps.ProtRecBlock); (* protected object *)
 	IF Restart IN flags THEN INCL(flags, Resistant) END;   (* SAFE => Restart & Resistant *)
 	NewProcess(body, priority, flags, obj, t);  INC(nProcs);  (* acquires Machine.Objects lock *)
-	t.mode := Ready;
 	Machine.Release(Machine.Objects);
 END CreateProcess;
 
@@ -1147,6 +1139,7 @@ BEGIN
 	ASSERT(t.handle # 0);
 	Machine.Release(Machine.Objects);
 #END;
+	ASSERT(~CAS(startedMainProcess, FALSE, TRUE));
 
 	InitEventHandling; (* implicit call of NewProcess! *)
 	InitGCHandling; (* do. *)
@@ -1270,16 +1263,32 @@ BEGIN
 	END;
 END GetCpuCycles;
 
+(* suspend and store state *)
+PROCEDURE Suspend(p: Process);
+VAR res: WORD;
+BEGIN
+	res := Kernel32.SuspendThread(p.handle);
+	ASSERT(res >= 0);
+	p.state.ContextFlags := Kernel32.ContextControl + Kernel32.ContextInteger;
+	res := Kernel32.GetThreadContext( p.handle, p.state );
+END Suspend;
+
+PROCEDURE Resume(p: Process);
+VAR res: WORD;
+BEGIN
+	res := Kernel32.ResumeThread(p.handle);
+	ASSERT(res >= 0);
+END Resume;
+
 PROCEDURE SuspendActivities;
-VAR r,cur: Process; p: Heaps.ProcessLink; res: LONGINT;
+VAR r,cur: Process; p: Heaps.ProcessLink;
 BEGIN{UNTRACKED}
 	r := CurrentProcess();
 	p := ready.head;
 	WHILE p # NIL DO
 		cur := p(Process);
-		IF ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.priority <= High) & (cur # r) & (cur.gcContext.nextPos >= 0) THEN
-			res := Kernel32.SuspendThread(cur.handle);
-			ASSERT(res >= 0);
+		IF (cur # r) & ((cur.mode = Ready) OR (cur.mode = Running)) & (cur.gcContext.nextPos >= 0) THEN
+			Suspend(cur);
 			cur.mode := Suspended
 		END;
 		p := p.next
@@ -1295,8 +1304,7 @@ BEGIN{UNTRACKED}
 		cur := p(Process);
 		(* only suspended and awaiting processes of ready queue are resumed *)
 		IF cur.mode = Suspended THEN
-			res := Kernel32.ResumeThread(cur.handle);
-			ASSERT(res >= 0);
+			Resume(cur);
 			cur.mode := Running
 		END;
 		p := p.next
@@ -1322,56 +1330,32 @@ END TimerFrequency;
 
 VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS);
 
-(* Leave A2 is called when a process leaves A2 by a call to the windows API *)
-PROCEDURE LeaveA2*;
-VAR cur: Process; ebp,pc: ADDRESS;
-BEGIN
-	#IF AMD64 THEN
-	CODE
-		PUSH RCX
-		PUSH RDX
-		PUSH R8
-		PUSH R9
-	END;
-	#END
-	IF clock = NIL THEN
-		RETURN
-	END;
-
-	cur := CurrentProcess();
-	IF cur # NIL THEN
-		ebp := CheckBP(SYSTEM.GetFramePointer());
-		SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
-		SYSTEM.GET(ebp, ebp);
-		cur.gcContext.last[cur.gcContext.nextPos*2] := ebp;
-		cur.gcContext.last[cur.gcContext.nextPos*2+1] := pc;
-		INC(cur.gcContext.nextPos);
-		ASSERT(cur.gcContext.nextPos < 255);
-	END;
-	#IF AMD64 THEN
-	CODE
-		POP R9
-		POP R8
-		POP RDX
-		POP RCX
-	END;
-	#END
-END LeaveA2;
-
-(* reenter is called when a process returns from a call to the windows API *)
-PROCEDURE ReenterA2*;
-VAR cur: Process;
-BEGIN
-	IF clock = NIL THEN RETURN END;
-	cur := CurrentProcess();
-	IF cur # NIL THEN
-		IF (cur.gcContext.nextPos > 0) THEN
-			DEC(cur.gcContext.nextPos);
+	(* Leave A2 is called when a process leaves A2 by a call to the underlying OS API *)
+	PROCEDURE LeaveA2*;
+	VAR cur {UNTRACED}: Process; ebp,pc: ADDRESS;
+	BEGIN{UNTRACKED}
+		IF CAS(startedMainProcess,FALSE,FALSE) THEN
+			cur := CurrentProcess();
+			IF cur # NIL THEN
+				ebp := CheckBP(SYSTEM.GetFramePointer());
+				SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
+				SYSTEM.GET(ebp, ebp);
+				cur.gcContext.AddContext(ebp, pc);
+			END;
 		END;
-		cur.gcContext.last[2*cur.gcContext.nextPos] := NIL; (* returned *)
-		cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL; (* returned *)
-	END;
-END ReenterA2;
+	END LeaveA2;
+
+	(* reenter is called when a process returns from a call to the underlying OS API *)
+	PROCEDURE ReenterA2*;
+	VAR cur{UNTRACED}: Process;
+	BEGIN{UNTRACKED}
+		IF CAS(startedMainProcess,FALSE,FALSE) THEN
+			cur := CurrentProcess();
+			IF cur # NIL THEN
+				cur.gcContext.RemoveContext();
+			END;
+		END;
+	END ReenterA2;
 
 #IF SHAREDLIB THEN
 

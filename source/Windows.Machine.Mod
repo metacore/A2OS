@@ -819,11 +819,17 @@ END GetStaticHeap;
 
 (* returns if an address is a currently allocated heap address *)
 PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
+VAR mb: MemoryBlock;
 BEGIN
-	RETURN (p >= memBlockHead.beginBlockAdr) & (p <= memBlockTail.endBlockAdr)
-		OR (p>=ADDRESS OF Kernel32.EntryPoint) & (p<=ADDRESSOF(LastAddress))
+	IF (p>=ADDRESS OF Kernel32.EntryPoint) & (p<=ADDRESSOF(LastAddress)) THEN RETURN TRUE END;
+	IF (p < memBlockHead.beginBlockAdr) OR (p>memBlockTail.endBlockAdr) THEN RETURN FALSE END; 
+	mb := memBlockHead;
+	WHILE mb # NIL DO
+		IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;
+		mb := mb.next;
+	END;
+	RETURN FALSE;
 END ValidHeapAddress;
-
 
 PROCEDURE GetFreeK* (VAR total, lowFree, highFree: SIZE);
 VAR

@@ -1,5 +1,5 @@
 MODULE Objects;
-	IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
+	IMPORT SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 CONST 
 	ConcurrentGC = TRUE; 
 	PleaseHalt* = 10; 
@@ -148,7 +148,6 @@ VAR
 	finalizerCaller: FinalizerCaller; 
 	mainthread: Unix.Thread_t; 
 	startedMainProcess := FALSE: BOOLEAN; 
-	gcProcess{UNTRACED} : Process; 
 	main: MainThread; 
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 
@@ -189,8 +188,10 @@ VAR
 	PROCEDURE ^ CancelTimeout*(t: Timer); 
 	PROCEDURE ^ GetContext(ctxt: Unix.Ucontext); 
 	PROCEDURE ^ UpdateProcessState*(p: Process); 
-	PROCEDURE ^ SuspendActivities*; 
-	PROCEDURE ^ ResumeActivities*; 
+	PROCEDURE ^ Suspend(p: Process); 
+	PROCEDURE ^ Resume(p: Process); 
+	PROCEDURE ^ SuspendActivities; 
+	PROCEDURE ^ ResumeActivities; 
 	PROCEDURE ^ GCLoop*; 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
 	PROCEDURE ^ TimerFrequency*(): HUGEINT; 

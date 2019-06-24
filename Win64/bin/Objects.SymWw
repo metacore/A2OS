@@ -6,7 +6,7 @@ CONST
 	StrongChecks = FALSE; 
 	defaultStackSize = 0; 
 	TraceOpenClose = FALSE; 
-	ConcurrentGC = FALSE; 
+	ConcurrentGC = TRUE; 
 	Restart* = 0; 
 	PleaseHalt* = 10; 
 	Unbreakable* = 11; 
@@ -76,7 +76,12 @@ TYPE
 	GCContext = RECORD 
 		nextPos: SIZE; 
 		last: ARRAY 256 OF ADDRESS; 
-	END; 
+
+		PROCEDURE ^ AddContext(bp, pc: ADDRESS); 
+		PROCEDURE ^ GetNextContext(VAR pos: SIZE; VAR bp, pc: ADDRESS): BOOLEAN; 
+		PROCEDURE ^ RemoveContext; 
+	END
+	; 
 
 	Process* = OBJECT (Heaps.ProcessLink)
 	VAR 
@@ -128,6 +133,7 @@ VAR
 	break: ARRAY 16 OF CHAR; 
 	terminateProc: PROCEDURE ; 
 	ready: ProcessQueue; 
+	startedMainProcess := FALSE: BOOLEAN; 
 	numberOfProcessors: LONGINT; 
 	finalizerCaller: FinalizerCaller; 
 	event: Timer; 
@@ -181,6 +187,8 @@ VAR
 	PROCEDURE ^ UpdateProcessState*(p: Process); 
 	PROCEDURE ^ NumReady*(): LONGINT; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
+	PROCEDURE ^ Suspend(p: Process); 
+	PROCEDURE ^ Resume(p: Process); 
 	PROCEDURE ^ SuspendActivities; 
 	PROCEDURE ^ ResumeActivities; 
 	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 

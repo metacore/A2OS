@@ -579,8 +579,8 @@ BEGIN
 	(* platform definitions hard coded for the common cases -- maybe (parts of it) should be outsourced to a file ?*)
 	DoAddPlatform("Bios32","-b=AMD --bits=32 --mergeSections --objectFileExtension=.Gof --symbolFileExtension=.Sym --define=BIOS,NATIVE,I386");
 	DoAddPlatform("Bios64","-b=AMD --bits=64 --mergeSections --objectFileExtension=.Goff --symbolFileExtension=.Symm --define=BIOS,NATIVE,AMD64");
-	DoAddPlatform("Win32","-b=AMD --bits=32 --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI --define=WIN,I386");
-	DoAddPlatform("Win64","-b=AMD --bits=64 --mergeSections --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --trackLeave --cellsAreObjects --platformCC=WINAPI --define=WIN,AMD64");
+	DoAddPlatform("Win32","-b=AMD --bits=32 --mergeSections --objectFileExtension=.GofW --symbolFileExtension=.SymW --preciseGC --writeBarriers --trackLeave --cellsAreObjects --platformCC=WINAPI --define=WIN,I386");
+	DoAddPlatform("Win64","-b=AMD --bits=64 --mergeSections --objectFileExtension=.GofWw --symbolFileExtension=.SymWw --preciseGC --writeBarriers --trackLeave --cellsAreObjects --platformCC=WINAPI --define=WIN,AMD64");
 	DoAddPlatform("ARM","-b=ARM --metaData=simple --objectFileExtension=.Goa --symbolFileExtension=.Sya --define=ARM");
 	DoAddPlatform("Minos","-b=ARM --objectFile=Minos --define=ARM");
 	DoAddPlatform("TRM","-b=TRM --objectFile=Generic --metaData=simple --objectFileExtension=.GofT --symbolFileExtension=.SymT --define=TRM");

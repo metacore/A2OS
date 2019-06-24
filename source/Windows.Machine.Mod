@@ -771,14 +771,8 @@ END Init;
 			FOR i := 0 TO level-1 DO
 				ASSERT(taken[i] # taken[level]); 
 			END
-
 		ELSIF lock[level] # "N" THEN
 			Trace.String("warning: reentered non-reentrant lock"); Trace.Ln;
-			FOR i := 0 TO level-1 DO
-				IF taken[i] = taken[level] THEN 
-					TRACE(i, level); 
-				END;
-			END
 		END;
 		lock[level] := "Y";
 	END Acquire;
@@ -786,11 +780,9 @@ END Init;
 (** Release a spin-lock. *)
 	PROCEDURE Release*( level: LONGINT );   (* release lock *)
 	BEGIN
-		IF taken[level] # Kernel32.GetCurrentThreadId() THEN 
-			TRACE(level, taken[level], Kernel32.GetCurrentThreadId()); 
-		END;
 		IF StrongChecks THEN
 			ASSERT ( lock[level] ="Y", 1002 );
+			ASSERT( taken[level] = Kernel32.GetCurrentThreadId());
 		ELSIF lock[level] # "Y" THEN
 			Trace.String("warning: reentered non-reentrant lock"); Trace.Ln;
 		END;

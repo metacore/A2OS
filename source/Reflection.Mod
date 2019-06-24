@@ -970,7 +970,7 @@ CONST
 		count := 0;	(* frame count *)
 		REPEAT
 			m := Modules.ThisModuleByAdr0(pc);
-			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= low) & (bp < high) & (bp MOD SIZEOF(ADDRESS)=0) THEN
+			IF (ShowAllProcs OR (m # NIL) OR (count = 0)) & (bp # 0) & (bp >= low) & (bp <= high) & (bp MOD SIZEOF(ADDRESS)=0) THEN
 				IF CheckHeapAddress( pc ) THEN
 					WriteProc0(w, m, pc, bp, refs, offset, base); w.Ln;Wait(w); w.Update;
 					IF long & (~overflow OR (count > 0)) THEN	(* show variables *)

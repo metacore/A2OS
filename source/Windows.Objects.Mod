@@ -9,7 +9,7 @@ CONST
 	TraceVerbose = FALSE;
 	StrongChecks = FALSE;  defaultStackSize = 0;
 	TraceOpenClose = FALSE;
-	ConcurrentGC=FALSE; (* if TRUE then release needs to be compiled with --writeBarriers *)
+	ConcurrentGC=TRUE; (* if TRUE then release needs to be compiled with --writeBarriers *)
 
 CONST
 	(* Process flags *)
@@ -221,7 +221,7 @@ TYPE
 					END;
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 					LOOP
-						IF Machine.ValidHeapAddress(pc) THEN
+						IF Machine.ValidHeapAddress(pc) & (bp # NIL) THEN (* bp = NIL can happen when code has no procedure activation frame *)
 							(* ok, valid stack frame from A2, we can trace this *)
 						ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN
 								sp := bp;
@@ -245,8 +245,8 @@ TYPE
 									END
 								END
 							END;
-							SYSTEM.GET( bp + SIZEOF( ADDRESS ), bp );
 							SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
+							SYSTEM.GET(bp + SIZEOF( ADDRESS ), bp );
 						ELSE (* classical stack frame *)
 							SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
 							bp := n;

@@ -675,7 +675,7 @@ END RegisterCandidates;
 
 (* Check reachability of finalized objects. *)
 PROCEDURE CheckFinalizedObjects;
-VAR n, p, t: FinalizerNode; heapBlock {UNTRACED}: HeapBlock;
+VAR n {UNTRACED}, p{UNTRACED}, t{UNTRACED}: FinalizerNode; heapBlock {UNTRACED}: HeapBlock;
 
 	PROCEDURE MarkDelegate(p: Finalizer);
 	VAR pointer {UNTRACED}: ANY;

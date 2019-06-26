@@ -1266,6 +1266,7 @@ PROCEDURE MarkPointer*(adr: ADDRESS);
 VAR any: Block;
 BEGIN
 	IF (adr # NIL) & CAS(marking, FALSE, FALSE) THEN
+		any := adr;
 		Mark(any);
 	END; 
 END MarkPointer;

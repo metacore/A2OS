@@ -408,8 +408,23 @@ END Yield;
 
 (** Return current process. (DEPRECATED, use ActiveObject) *)
 PROCEDURE CurrentProcess*( ): Process;
-BEGIN{UNTRACKED} (* makes sure that Enter and Leave are not emitted *)
-	RETURN SYSTEM.VAL(Process, Kernel32.TlsGetValue(tlsIndex));
+(* The following code replaces RETURN Kernel32.TlsGetValue(tlsIndex) and does not need to leave A2 *)
+CODE
+#IF I386 THEN
+	MOV EAX, [tlsIndex]
+	MOV EDX, [FS:18H]
+	MOV EAX, [EDX + EAX * 4 + 0E10H]
+	MOV EDX, [EBP + RESULT]
+	MOV [EDX], EAX
+#ELSIF AMD64 THEN
+	MOV EAX, [tlsIndex]
+	MOV RDX, [GS:30H]
+	MOV RAX, [RDX + EAX * 8 + 1480H]
+	MOV RDX, [RBP + RESULT]
+	MOV [RDX], RAX
+#ELSE
+	unimlemented
+#END
 END CurrentProcess;
 
 PROCEDURE CurrentContext*(): ANY;

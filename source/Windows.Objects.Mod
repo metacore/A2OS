@@ -1521,16 +1521,9 @@ VAR
 					Machine.Release(Machine.TraceOutput);
 				END;
 			ELSE
-				INC(cur.gcContext.nextPos);
-				cur.gcContext.last[2*cur.gcContext.nextPos] := NIL;
-				cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL;
+				cur.gcContext.AddContext(NIL, NIL, NIL);
 			END;
 		END;
-
-		(*
-		cur.gcContext.first[cur.gcContext.nextPos] := ebp; (* here our responsibility starts -- currently this field is not strictly required to be set valid *)
-		cur.gcContext.last[cur.gcContext.nextPos] := NIL; (* we do not know where it ends yet *)
-		*)
 	END EnterA2;
 
 	(* exit A2 should be called when a process exits a WINAPI procedure *)
@@ -1540,9 +1533,7 @@ VAR
 		cur := CurrentProcess();
 		ASSERT(cur # NIL);
 		IF cur.gcContext.nextPos > 0 THEN
-			DEC(cur.gcContext.nextPos);
-			cur.gcContext.last[2*cur.gcContext.nextPos] := NIL;
-			cur.gcContext.last[2*cur.gcContext.nextPos+1] := NIL;
+			cur.gcContext.RemoveContext();
 		ELSE
 			IF TraceVerbose THEN
 				Machine.Acquire(Machine.TraceOutput);

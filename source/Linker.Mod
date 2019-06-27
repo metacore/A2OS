@@ -1092,6 +1092,7 @@ BEGIN
 	defaults.Add("Bios32","--fileName=kernel.img --extension=.Gof --displacement=0100000H");
 	defaults.Add("Bios64","--fileName=kernel.img --extension=.Goff --displacement=0100000H");
 	defaults.Add("Win32CUI","--fileFormat=PE32CUI --fileName=oberon.exe --extension=GofW --displacement=401000H");
+	defaults.Add("Win64CUI","--fileFormat=PE64CUI --fileName=oberon.exe --extension=GofWw --displacement=401000H");
 	defaults.Add("Linux32","--fileFormat=Raw --fileName=oberon --extension=.GofU --displacement=08048000H");
 	defaults.Add("Linux64","--fileFormat=Raw --fileName=oberon --extension=.GofUu --displacement=08048000H");
 	defaults.Add("RPI","--fileName=kernel.img --extension=.Goa --displacement=8000H -sa ");
@@ -1106,7 +1107,4 @@ Linker.Link --fileName=a.out --fileFormat=ELF --displacement=08048000H Test ~
 Linker.Link --fileName=a.out --fileFormat=MACHO --displacement=000010E8H Test ~
 
 System.Free Linker ~
-
-
-
 

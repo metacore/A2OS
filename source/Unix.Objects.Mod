@@ -168,21 +168,23 @@ TYPE
 
 	GCContext = RECORD
 		nextPos: SIZE; (* 0 to start with *)
-		last: ARRAY 256 OF ADDRESS;
+		last: ARRAY 32 OF RECORD bp, pc, sp: ADDRESS END;
 
-		PROCEDURE AddContext(bp, pc: ADDRESS);
+		PROCEDURE AddContext(bp, pc, sp: ADDRESS);
 		BEGIN
-				last[nextPos*2] := bp;
-				last[nextPos*2+1] := pc;
-				INC(nextPos);
+			last[nextPos].bp := bp;
+			last[nextPos].pc := pc;
+			last[nextPos].sp := sp;
+			INC(nextPos);
 		END AddContext;
 
-		PROCEDURE GetNextContext(VAR pos: SIZE; VAR bp, pc: ADDRESS): BOOLEAN;
+		PROCEDURE GetNextContext(VAR pos: SIZE; VAR bp, pc, sp: ADDRESS): BOOLEAN;
 		BEGIN
 			IF pos < 1 THEN RETURN FALSE END;
 			DEC(pos);
-			bp := last[pos*2];
-			pc := last[pos*2+1];
+			bp := last[pos].bp;
+			pc := last[pos].pc;
+			sp := last[pos].sp;
 			RETURN TRUE;
 		END GetNextContext;
 
@@ -190,8 +192,9 @@ TYPE
 		BEGIN
 			IF nextPos > 0 THEN
 				DEC(nextPos);
-				last[nextPos*2] := NIL;
-				last[nextPos*2+1] := NIL;
+				last[nextPos].bp := NIL;
+				last[nextPos].pc := NIL;
+				last[nextPos].sp := NIL;
 			END;
 		END RemoveContext;
 	END;
@@ -221,11 +224,10 @@ TYPE
 
 		PROCEDURE SetMode (mode: WORD);
 		BEGIN
-				Machine.Acquire(Machine.Objects);(* process does not silently stop or run when GC is active *)
+				Machine.Acquire(Machine.Heaps);(* process does not silently stop or run when GC is active *)
 				SELF.mode := mode;
-				Machine.Release(Machine.Objects);
+				Machine.Release(Machine.Heaps);
 		END SetMode;
-
 		PROCEDURE FindRoots;
 		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: WORD; p {UNTRACED}: ANY;
 			contextPos: SIZE; suspended: BOOLEAN;
@@ -244,7 +246,7 @@ TYPE
 			sb := stackBottom;
 			contextPos := CAS(gcContext.nextPos,0,0);
 			sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- might all be invalid, when A2 was left ! *)
-
+		
 			IF TraceProcessHook # NIL THEN (* stack trace *)
 				TraceProcessHook(SELF, pc, bp, sp, sb);
 			END;
@@ -252,7 +254,7 @@ TYPE
 			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
 					(* debugging info*)
-					IF (stackBottom # 0) & (bp < stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
+					IF (stackBottom # 0) & (bp <= stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
 						SYSTEM.GET( bp, n );
 						IF ODD( n ) THEN (* procedure descriptor at bp *)
 							IF n > 1024 THEN
@@ -265,16 +267,19 @@ TYPE
 					END;
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 					LOOP
-						IF Machine.ValidHeapAddress(pc) & (bp # NIL) THEN (* bp = NIL can happen when code has no procedure activation frame *)
+						IF (bp <= stackBottom) & (bp >= sp) THEN 
+						ELSIF Machine.ValidHeapAddress(pc) & (bp # NIL) THEN (* bp = NIL can happen when code has no procedure activation frame *)
 							(* ok, valid stack frame from A2, we can trace this *)
-						ELSIF gcContext.GetNextContext(contextPos, bp, pc) THEN
-								sp := bp;
+						ELSIF gcContext.GetNextContext(contextPos, bp, pc, sp) THEN
+								IF TraceProcessHook # NIL THEN (* stack trace *)
+									TraceProcessHook(SELF, pc, bp, sp-128, sb);
+								END;
 						ELSE
 								EXIT
 						END;
 						SYSTEM.GET( bp, n );
 						IF ODD( n ) THEN (* procedure descriptor at bp *)
-							IF (n > 1024) & (bp >= sp) THEN
+							IF (bp >= sp) THEN
 								desc := SYSTEM.VAL( Modules.ProcedureDescPointer, n-1 );
 								IF desc # NIL THEN
 									a0 := ADDRESSOF( desc.offsets );
@@ -384,7 +389,6 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		PROCEDURE SetgcOngoing( value: BOOLEAN );
 		BEGIN
 			IF value THEN
-				Machine.Acquire( Machine.Objects );
 				Machine.Acquire( Machine.Heaps );
 				IF ConcurrentGC THEN
 					Heaps.CollectGarbage( Modules.root );
@@ -394,7 +398,6 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 					ResumeActivities;
 				END;
 				Machine.Release( Machine.Heaps );
-				Machine.Release( Machine.Objects );
 				finalizerCaller.Activate;
 			END;
 		END SetgcOngoing;
@@ -407,7 +410,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	VAR p: Process;  res: WORD; prevBP, sp: ADDRESS;
 	BEGIN
 		(* make sure the process cannot be GCed in an intermediate unsafe state *)
-		Machine.Acquire(Machine.Objects);
+		Machine.Acquire(Machine.Heaps);
 		Unix.MtxLock( startEventLock );
 		p := newProcess;  newProcess := NIL;
 		Unix.WriteKey( processPointer, p );
@@ -415,7 +418,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		p.stackBottom := SYSTEM.GetFramePointer( );
 		SYSTEM.GET( p.stackBottom, prevBP );
 		SYSTEM.PUT( prevBP, SYSTEM.VAL( ADDRESS, 0 ) );	(* for terminating Reflection.StackTraceBack *)
-		Machine.Release(Machine.Objects);
+		Machine.Release(Machine.Heaps);
 
 		Unix.MtxLock( processList );
 		p.nextProcess := root;  root := p;
@@ -649,15 +652,15 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		ELSE
 			IF Machine.ValidHeapAddress(pc) THEN
 			ELSE
-				IGNORE NextValidStackSegment(p, bp, pc, contextPos);
+				IGNORE NextValidStackSegment(p, bp, pc, sp, contextPos);
 			END;
 		END;
 	END GetStack;
 
-	PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
+	PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
 	BEGIN
 		bp := NIL;
-		WHILE p.gcContext.GetNextContext(contextPos, bp, pc) & (bp = NIL) DO
+		WHILE p.gcContext.GetNextContext(contextPos, bp, pc, sp) & (bp = NIL) DO
 		END;
 		RETURN bp  # NIL;
 	END NextValidStackSegment;
@@ -830,7 +833,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	(* called by WMProcessInfo to obtain the current state of a running process *)
 	PROCEDURE UpdateProcessState*( p: Process );
 	BEGIN
-		Machine.Acquire(Machine.Objects);  (* must not run concurrently with GC *)
+		Machine.Acquire(Machine.Heaps);  (* must not run concurrently with GC *)
 		IF p = CurrentProcess() THEN
 			p.state.PC := Machine.CurrentPC( );
 			p.state.BP := SYSTEM.GetFramePointer( );
@@ -845,7 +848,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 				timerStopped := FALSE
 			END
 		END;
-		Machine.Release(Machine.Objects);
+		Machine.Release(Machine.Heaps);
 	END UpdateProcessState;
 	
 	(* suspend and store state *)
@@ -923,7 +926,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 				ebp := CheckBP(SYSTEM.GetFramePointer());
 				SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
 				SYSTEM.GET(ebp, ebp);
-				cur.gcContext.AddContext(ebp, pc);
+				cur.gcContext.AddContext(ebp, pc, SYSTEM.GetStackPointer());
 			END;
 		END;
 	END LeaveA2;
@@ -939,7 +942,6 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 			END;
 		END;
 	END ReenterA2;
-
 
 	(*----------------------------- initialization ----------------------------------*)
 

@@ -180,7 +180,7 @@ BEGIN
 	out.String("Stack Trace Back:"); out.Ln; out.Update;
 	Objects.GetStack(p, pc, bp, sp, sb, contextPos);
 	Reflection.StackTraceBack(out, pc, bp, sp, sb, TRUE, FALSE);
-	WHILE Objects.NextValidStackSegment(p, bp, pc, contextPos) DO
+	WHILE Objects.NextValidStackSegment(p, bp, pc, sp, contextPos) DO
 		out.String("---- next A2 stack segment ----"); out.Ln; out.Update;
 		Reflection.StackTraceBack(out, pc, bp, sp, sb, TRUE, FALSE);
 	END;

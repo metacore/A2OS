@@ -722,7 +722,7 @@ BEGIN
 	contextPos := 0;
 END GetStack;
 
-PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
+PROCEDURE NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN;
 BEGIN
 	RETURN FALSE;
 END NextValidStackSegment;

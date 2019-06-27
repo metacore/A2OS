@@ -1371,6 +1371,14 @@ BEGIN
 	Trace.String("GC mode : metadata"); Trace.Ln;
 END SetMetaData;
 
+
+PROCEDURE StopMarking-;
+(* helper function when GC traps --> switch off write barriers *)
+BEGIN
+	marking := FALSE;
+END StopMarking;
+
+
 BEGIN
 	(* The meta data stack inspection is more efficient than the heuristics *)
 	GCType := HeuristicStackInspectionGC;

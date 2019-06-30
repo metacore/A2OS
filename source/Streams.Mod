@@ -391,7 +391,7 @@ TYPE
 	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
 		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: WORD );
 		VAR
-			buf: ARRAY 64 OF CHAR;
+			buf: ARRAY 512 OF CHAR;
 		BEGIN
 			RC.RealToStringFix( x, n, f, D, buf );
 			String( buf )

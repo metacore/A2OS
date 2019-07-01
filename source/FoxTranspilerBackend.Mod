@@ -1451,7 +1451,7 @@ TYPE
 		PROCEDURE GetSystem*(): Global.System;
 		VAR system: Global.System;
 		BEGIN
-			NEW(system, 8, 8, addressSize, 8, 32, 32, 32, 64, FALSE);
+			NEW(system, 8, 8, addressSize, 8, 32, 32, 32, 64, 0, FALSE);
 			Global.SetDefaultDeclarations(system,8);
 			Global.SetDefaultOperators(system);
 			RETURN system;

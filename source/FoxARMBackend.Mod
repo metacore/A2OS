@@ -3535,6 +3535,7 @@ TYPE
 		END EnterCustomBuiltins;
 
 		PROCEDURE GetSystem*(): Global.System;
+		VAR variableOffset: WORD;
 		BEGIN
 			(* create system object if not yet existing *)
 			IF system = NIL THEN
@@ -3564,8 +3565,8 @@ TYPE
 				offsetFirstPar = 32 * 2
 				registerParameters = 0
 				*)
-
-				NEW(system, 8, 8, 32, (*32*) 8, 32, 8, 32, 32 * 2, cooperative);
+				IF preciseGC THEN variableOffset := -32 ELSE variableOffset := 0 END;
+				NEW(system, 8, 8, 32, (*32*) 8, 32, 8, 32, 32 * 2, variableOffset,cooperative);
 
 				IF oberon07 THEN
 					IF Trace THEN D.String("Oberon07"); D.Ln END;

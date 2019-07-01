@@ -1542,12 +1542,11 @@ TYPE
 						nocall.Resolve(section.pc);
 					END;
 				ELSE
+					Emit(Mov(Basic.invalidPosition, fp, sp));
 					IF backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
-						Emit(Push(Basic.invalidPosition, one)) ;
-						procedureType.SetParametersOffset(1);
+						Emit(Push(Basic.invalidPosition, nil)) ;
 						ASSERT(system.GenerateParameterOffsets(procedure, procedure.level > 0));
 					END;
-					Emit(Mov(Basic.invalidPosition, fp, sp));
 				END;
 			END;
 			Emit(Enter(Basic.invalidPosition, callconv, varSize));
@@ -1588,7 +1587,7 @@ TYPE
 				body := NIL;
 			END;
 			IF callconv # SyntaxTree.InterruptCallingConvention THEN
-				IF backend.cooperative OR  backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
+				IF backend.cooperative THEN
 					IntermediateCode.InitImmediate(op2,addressType, ToMemoryUnits(system, system.addressSize));
 					Emit(Add(position, sp, fp, op2));
 				ELSE
@@ -9783,14 +9782,14 @@ TYPE
 			IF level > 0 THEN
 				(* left := [fp+8] *)
 				IntermediateCode.InitMemory(right,addressType,fp,ToMemoryUnits(system,2*addressType.sizeInBits));
-				IF backend.cooperative OR backend.preciseGC THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
+				IF backend.cooperative  THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
 				ReuseCopy(left,right);
 				ReleaseIntermediateOperand(right);
 				scope := scope.outerScope;
 				DEC(level);
 				(* { left := [left+8] } *)
 				IntermediateCode.InitMemory(right,addressType,left,ToMemoryUnits(system,2*addressType.sizeInBits));
-				IF backend.cooperative  OR backend.preciseGC THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
+				IF backend.cooperative  THEN IntermediateCode.AddOffset (right, ToMemoryUnits(system,addressType.sizeInBits)) END;
 				WHILE (level > 0) DO
 					Emit(Mov(position,left,right));
 					DEC(level);
@@ -11553,13 +11552,13 @@ TYPE
 					IntermediateCode.InitAddress(right, addressType, name, 0, 0);
 
 					IF ProtectModulesPointers THEN
-						offset := ToMemoryUnits(module.system,meta.RecordBaseOffset*module.system.addressSize)+1;
+						offset := ToMemoryUnits(module.system,meta.RecordBaseOffset*module.system.addressSize);
 					ELSE
-						offset := ToMemoryUnits(module.system, 2 * module.system.addressSize)+1;
+						offset := ToMemoryUnits(module.system, 2 * module.system.addressSize);
 					END;
 
 					IntermediateCode.SetOffset(right,offset); (* tag *)
-					IntermediateCode.InitMemory(left,addressType,fp,0);
+					IntermediateCode.InitMemory(left,addressType,fp,-ToMemoryUnits(module.system, module.system.addressSize));
 					Emit(Mov(position, left, right));
 				END;
 
@@ -13940,7 +13939,7 @@ TYPE
 		preregisterStatic-: BOOLEAN;
 		dump-: Basic.Writer;
 		cellsAreObjects: BOOLEAN;
-		preciseGC, trackLeave, writeBarriers: BOOLEAN;
+		preciseGC-, trackLeave, writeBarriers: BOOLEAN;
 		experiment: BOOLEAN;
 
 		PROCEDURE &InitIntermediateBackend*;

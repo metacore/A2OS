@@ -376,7 +376,7 @@ TYPE
 		PROCEDURE GetSystem*(): Global.System;
 		VAR system: Global.System;
 		BEGIN
-			NEW (system, 8, 8, 32, 1, 1, 1, 1, addressSize * 2,cooperative);
+			NEW (system, 8, 8, 32, 1, 1, 1, 1, addressSize * 2,0,cooperative);
 			Global.SetDefaultDeclarations(system,8);
 			Global.SetDefaultOperators(system);
 			RETURN system;

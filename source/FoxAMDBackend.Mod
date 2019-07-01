@@ -3266,7 +3266,7 @@ TYPE
 		END Initialize;
 
 		PROCEDURE GetSystem*(): Global.System;
-		VAR system: Global.System;
+		VAR system: Global.System; variableOffset: WORD;
 
 			PROCEDURE AddRegister(CONST name: Scanner.IdentifierString; val: LONGINT);
 			BEGIN
@@ -3317,11 +3317,13 @@ TYPE
 		BEGIN
 			IF system = NIL THEN
 				IF bits=32 THEN
-					NEW(system,8,8,32, 8,32,32,32,64,cooperative);
+					IF preciseGC THEN variableOffset := -32 ELSE variableOffset := 0 END;
+					NEW(system,8,8,32, 8,32,32,32,64,variableOffset, cooperative);
 					Global.SetDefaultDeclarations(system,8);
 					Global.SetDefaultOperators(system);
 				ELSE
-					NEW(system,8,8,64,8,64,64,64,128,cooperative);
+					IF preciseGC THEN variableOffset := -64 ELSE variableOffset := 0 END;
+					NEW(system,8,8,64,8,64,64,64,128,variableOffset,cooperative);
 					Global.SetDefaultDeclarations(system,8);
 					Global.SetDefaultOperators(system);
 				END;

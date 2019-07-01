@@ -233,6 +233,7 @@ TYPE
 		variableAlignment-, parameterAlignment-: Alignment;
 		(* offset of first parameter *)
 		offsetFirstParameter-: LONGINT;
+		offsetFirstVariable-: LONGINT;
 		(* to determine if a builtin-procedure can be operator-overloaded *)
 		operatorDefined-: ARRAY end OF BOOLEAN;
 
@@ -252,7 +253,7 @@ TYPE
 		cellsAreObjects-: BOOLEAN;
 		platformCallingConvention-: SyntaxTree.CallingConvention;
 
-		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar: LONGINT; cooperative: BOOLEAN);
+		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, offsetFirstVar: LONGINT; cooperative: BOOLEAN);
 		VAR i: LONGINT;
 		BEGIN
 			ASSERT(dataUnit > 0);
@@ -268,6 +269,7 @@ TYPE
 			SELF.parameterAlignment.min := minParAlign;
 			SELF.parameterAlignment.max := maxParAlign;
 			SELF.offsetFirstParameter := offsetFirstPar;
+			SELF.offsetFirstVariable := offsetFirstVar;
 			IF cooperative THEN INC(SELF.offsetFirstParameter,addressSize) END;
 			activeCellsCapabilities := NIL;
 			BuildScopes(SELF);
@@ -434,7 +436,7 @@ TYPE
 		END GenerateCellOffsets;
 
 		PROCEDURE GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN;
-		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT; s: SyntaxTree.Scope;
+		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT;
 			bscope: SyntaxTree.Scope;
 		BEGIN
 			IF scope IS SyntaxTree.RecordScope THEN (* increasing indices *)
@@ -443,20 +445,19 @@ TYPE
 				RETURN GenerateCellOffsets(scope(SyntaxTree.CellScope).ownerCell);
 			ELSE (* module scope or procedure scope: decreasing indices *)
 				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope) OR (scope IS SyntaxTree.BlockScope));
-
+								
 				bscope := scope;
 				WHILE (bscope IS SyntaxTree.BlockScope) DO
 					bscope := bscope.outerScope;
 				END;
-				(*
-				IF scope IS SyntaxTree.BlockScope THEN
-					offset := scope.outerScope.currentVariableOffset;
-				ELSE
-					offset := 0;
-				END;
-				*)
+				
 				offset := bscope.currentVariableOffset;
-
+				IF scope IS SyntaxTree.ProcedureScope THEN
+					IF offset > offsetFirstVariable THEN
+						offset := offsetFirstVariable;
+					END;
+				END;
+				
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
 					IF variable.offsetInBits = MIN(LONGINT) THEN
@@ -1097,7 +1098,7 @@ TYPE
 	PROCEDURE DefaultSystem*(): System;
 	VAR system: System;
 	BEGIN
-		NEW(system,8,8,32, 8,32,32,32,64,FALSE);
+		NEW(system,8,8,32, 8,32,32,32,64,0,FALSE);
 		SetDefaultDeclarations(system,8);
 		SetDefaultOperators(system);
 		RETURN system

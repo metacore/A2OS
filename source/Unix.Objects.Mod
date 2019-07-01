@@ -35,7 +35,7 @@ CONST
 	DefaultStacksize = 128*1024;
 
 
-VAR
+VAR	
 	(* timer *)
 	timerActivity		: TimerActivity;
 	clock				: Clock;
@@ -51,7 +51,7 @@ VAR
 	processList		: Unix.Mutex_t;
 	createProcess	: Unix.Mutex_t;
 	startProcess		: Unix.Mutex_t;
-	startEventLock		: Unix.Mutex_t;
+	startEventLock	: Unix.Mutex_t;
 	lockMutex		: Unix.Mutex_t;
 	childrunning		: Unix.Condition_t;
 
@@ -228,11 +228,12 @@ TYPE
 				SELF.mode := mode;
 				Machine.Release(Machine.Heaps);
 		END SetMode;
+		
 		PROCEDURE FindRoots;
 		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: WORD; p {UNTRACED}: ANY;
 			contextPos: SIZE; suspended: BOOLEAN;
-		BEGIN{UNTRACKED}
-			IF (mode < Running) OR (mode = Terminated) THEN RETURN END;
+		BEGIN {UNTRACKED}
+			IF (mode < Running) OR (mode = Terminated) THEN  RETURN  END;
 
 			suspended := FALSE;
 			IF SELF = CurrentProcess() THEN
@@ -254,6 +255,12 @@ TYPE
 			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
 					(* debugging info*)
+					IF (mode # Running) & (contextPos > 0) & (Unix.Version # "Linux") THEN
+						(* in the none Linux ports Suspend updates state only for running threads *)
+						bp := gcContext.last[contextPos-1].bp;
+						sp := gcContext.last[contextPos-1].sp;
+						pc := gcContext.last[contextPos-1].pc;
+					END;
 					IF (stackBottom # 0) & (bp <= stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
 						SYSTEM.GET( bp, n );
 						IF ODD( n ) THEN (* procedure descriptor at bp *)
@@ -271,11 +278,11 @@ TYPE
 						ELSIF Machine.ValidHeapAddress(pc) & (bp # NIL) THEN (* bp = NIL can happen when code has no procedure activation frame *)
 							(* ok, valid stack frame from A2, we can trace this *)
 						ELSIF gcContext.GetNextContext(contextPos, bp, pc, sp) THEN
-								IF TraceProcessHook # NIL THEN (* stack trace *)
-									TraceProcessHook(SELF, pc, bp, sp-128, sb);
-								END;
+							IF TraceProcessHook # NIL THEN (* stack trace *)
+								TraceProcessHook(SELF, pc, bp, sp-128, sb);
+							END;
 						ELSE
-								EXIT
+							EXIT
 						END;
 						SYSTEM.GET( bp, n );
 						IF ODD( n ) THEN (* procedure descriptor at bp *)
@@ -478,11 +485,11 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		SYSTEM.GET( SYSTEM.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
-		p.mode := AwaitingLock;
-
+		
 		(*! we might want to replace the lock mutex by a lock free construct *)
 		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;
 		lock := SYSTEM.VAL(LockT, hdr.lock);
+		
 		p.mode := AwaitingLock;
 		Unix.MtxLock( lock.mtx );
 		WHILE hdr.lockedBy # NIL DO
@@ -504,15 +511,14 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 		p := CurrentProcess();
 		ASSERT( hdr.lockedBy = p, 2204 );
-		p.succ := NIL;  p.condition := cond;  p.condFP := slink;
-		p.waitingOn := obj;  p.mode := AwaitingCond;
+		p.succ := NIL;  p.condition := cond;  p.condFP := slink;  p.waitingOn := obj;  
 
 		Put( hdr.awaitingCond, p );
 		hdr.lockedBy := c;
 		IF c # NIL THEN  Unix.CondSignal( c.continue )  ELSE  Unix.CondSignal( lock.enter )  END;
-
+		
+		p.mode := AwaitingCond;
 		Unix.CondWait( p.continue, lock.mtx );
-
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
 	END Await;
 
@@ -855,7 +861,8 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	PROCEDURE Suspend(p: Process);
 	BEGIN
 		Machine.Acquire(Machine.X11);
-		Unix.ThrSuspend( p.threadId, TRUE);
+		Unix.ThrSuspend( p.threadId, p.mode = Running ); (*	the second parameter is ignored in the Linux port
+																		but important for the other Unix ports. cf. Solaris.Unix.ThrSuspend *)
 		Machine.Release(Machine.X11);
 	END Suspend;
 	
@@ -978,7 +985,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	END Convert;
 
 	PROCEDURE Init;
-	BEGIN
+	BEGIN		
 		Unix.suspendHandler := GetContext;
 
 		createProcess := Unix.NewMtx( );  processList := Unix.NewMtx( );

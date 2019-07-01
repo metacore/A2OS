@@ -655,12 +655,13 @@ VAR
 	(*------------------------------------------------------------------------------------------------------*)
 
 	VAR suspendHandler*: PROCEDURE( c: Ucontext );
+	
 
 	PROCEDURE {C} SigHandler( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
 	BEGIN
 		IF sig = SIGUSR1 THEN
 			suspendHandler( ucp );
-			handler_done := TRUE;
+			handler_done := TRUE;	
 		ELSIF trap # NIL THEN
 			trap( sig, S.VAL( Mcontext, ADDRESSOF( ucp.mc ) ) );
 		ELSE
@@ -707,32 +708,30 @@ VAR
 		high := sched_get_priority_max( SCHED_OTHER );
 		low := sched_get_priority_min( SCHED_OTHER );
 
-		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);
-
+		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);	
+		
 		RETURN TRUE;
 	END ThrInitialize;
 
 
 
 	PROCEDURE ThrResume*( thr: Thread_t );
-	VAR r: LONGINT;
-	BEGIN
-		r := thr_continue( thr )
+	BEGIN {UNTRACKED}
+		IGNORE thr_continue( thr );
 	END ThrResume;
 
 
 	PROCEDURE ThrSuspend*( thr: Thread_t; saveContext: BOOLEAN );
-	VAR r: LONGINT;
-	BEGIN
+	BEGIN {UNTRACKED}
 		IF saveContext THEN
-			handler_done := FALSE;
-			r := pthread_kill( thr, SIGUSR1 );
 			(*	not working in Solaris when the thread is stalled in a mutex.
 				handler gets arrived but has bad side effects,
 				yields traps and locks the system *)
-			WHILE ~handler_done DO  ThrSleep( 1 )  END;
+			handler_done := FALSE;
+			IGNORE pthread_kill( thr, SIGUSR1 );
+			WHILE CAS( handler_done, FALSE, FALSE ) # TRUE DO  NanoSleep( 1000 )  END
 		END;
-		r := thr_suspend( thr )
+		IGNORE thr_suspend( thr );
 	END ThrSuspend;
 
 
@@ -754,7 +753,7 @@ VAR
 		me: Thread_t;
 		old, new: Sigset;
 		state: ARRAY 2048 OF CHAR;
-
+		
 		param: Sched_param;
 		r: LONGINT;
 	BEGIN
@@ -780,7 +779,7 @@ VAR
 
 		ASSERT( pthread_setspecific( thread_exit, ADDRESSOF( state ) ) = 0 );
 		IF sigsetjmp( ADDRESSOF( state ), 0 ) = 0 THEN proc() END;
-
+		
 		RETURN NIL;
 	END Starter;
 
@@ -804,14 +803,31 @@ VAR
 			tv_sec: LONGWORD;        (* seconds *)
          		tv_nsec: LONGWORD;       (* nanoseconds *)
      	END;
-	BEGIN
+	BEGIN 
 		sltime.tv_sec := ms DIV 1000;
 		sltime.tv_nsec := 1000000*(ms MOD 1000);
-		WHILE (nanosleep( ADDRESSOF( sltime ), ADDRESSOF( rem ) ) < 0) DO
+		WHILE nanosleep( ADDRESSOF( sltime ), ADDRESSOF( rem ) ) < 0 DO
 			(* check error ! *)
 			sltime := rem;
 		END;
 	END ThrSleep;
+	
+	
+	PROCEDURE NanoSleep*( ns: LONGWORD );
+	VAR
+		sltime, rem: RECORD
+			tv_sec: LONGWORD;        (* seconds *)
+			tv_nsec: LONGWORD;       (* nanoseconds *)
+     	END;
+	BEGIN {UNTRACKED}
+		sltime.tv_sec := ns DIV 1000000000;
+		sltime.tv_nsec := ns MOD 1000000000;
+		WHILE nanosleep( ADDRESSOF( sltime ), ADDRESSOF( rem ) ) < 0 DO
+			(* check error ! *)
+			sltime := rem;
+		END;
+	END NanoSleep;	
+
 
 	PROCEDURE ThrKill*( thr: Thread_t );
 	BEGIN

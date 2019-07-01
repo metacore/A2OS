@@ -811,6 +811,22 @@ VAR
 			sltime := rem;
 		END;
 	END ThrSleep;
+	
+	PROCEDURE NanoSleep*( ns: LONGWORD );
+	VAR
+		sltime, rem: RECORD
+			tv_sec: LONGWORD;        (* seconds *)
+			tv_nsec: LONGWORD;       (* nanoseconds *)
+     	END;
+	BEGIN {UNTRACKED}
+		sltime.tv_sec := ns DIV 1000000000;
+		sltime.tv_nsec := ns MOD 1000000000;
+		WHILE nanosleep( ADDRESSOF( sltime ), ADDRESSOF( rem ) ) < 0 DO
+			(* check error ! *)
+			sltime := rem;
+		END;
+	END NanoSleep;	
+	
 
 	PROCEDURE ThrKill*(thr: Thread_t);
 	BEGIN
@@ -827,7 +843,7 @@ VAR
 
 	PROCEDURE ThrResume*( thr: Thread_t );
 	VAR machthr: MachPort;
-	BEGIN
+	BEGIN {UNTRACKED}
 		machthr := pthread_mach_thread_np( thr );
 		thread_resume( machthr );
 	END ThrResume;
@@ -835,14 +851,14 @@ VAR
 
 	PROCEDURE ThrSuspend*( thr: Thread_t; saveContext: BOOLEAN );
 	VAR machthr: MachPort;
-	BEGIN
+	BEGIN {UNTRACKED}
 		IF saveContext THEN
-			handler_done := FALSE;
-			IGNORE pthread_kill( thr, SIGUSR1 );
 			(*	not working in Solaris when the thread is stalled in a mutex.
 				handler gets arrived but has bad side effects,
 				yields traps and locks the system *)
-			WHILE ~handler_done DO  ThrSleep( 1 )  END;
+			handler_done := FALSE;
+			IGNORE pthread_kill( thr, SIGUSR1 );
+			WHILE CAS( handler_done, FALSE, FALSE ) # TRUE DO  NanoSleep( 1000 )  END
 		END;
 		machthr := pthread_mach_thread_np( thr );
 		thread_suspend( machthr )

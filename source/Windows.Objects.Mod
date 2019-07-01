@@ -214,15 +214,6 @@ TYPE
 			END;
 			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
-					(* debugging info*)
-					IF (stackBottom # 0) & (bp <= stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
-						SYSTEM.GET( bp, n );
-						IF ODD( n ) THEN (* procedure descriptor at bp *)
-							IF n > 1024 THEN
-							desc := SYSTEM.VAL( Modules.ProcedureDescPointer, n-1 ); (* tracing !*)
-							END;
-						END;
-					END;
 					IF (stackBottom # 0) & (sp # 0) & (sp <= stackBottom) THEN
 						Heaps.RegisterCandidates( sp, stackBottom - sp );
 					END;
@@ -237,30 +228,23 @@ TYPE
 						ELSE
 								EXIT
 						END;
-						SYSTEM.GET( bp, n );
-						IF ODD( n ) THEN (* procedure descriptor at bp *)
-							IF (bp >= sp) THEN
-								desc := SYSTEM.VAL( Modules.ProcedureDescPointer, n-1 );
-								IF (desc # NIL) THEN
-									a0 := ADDRESSOF( desc.offsets );
-									a1 :=  SYSTEM.VAL( ADDRESS, desc.offsets );
-									ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
-									FOR i := 0 TO LEN( desc.offsets ) - 1 DO
-										adr := bp + desc.offsets[i]; (* pointer at offset *)
-										SYSTEM.GET( adr, p ); (* load pointer *)
-										IF p # NIL THEN
-											Heaps.Mark( p );
-										END
-									END;
-									pdesc := desc;
+						IF bp > sp THEN
+							SYSTEM.GET( bp-SIZEOF(ADDRESS), desc );
+							IF desc # NIL THEN
+								a0 := ADDRESSOF( desc.offsets );
+								a1 :=  SYSTEM.VAL( ADDRESS, desc.offsets );
+								ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+								FOR i := 0 TO LEN( desc.offsets ) - 1 DO
+									adr := bp + desc.offsets[i]; (* pointer at offset *)
+									SYSTEM.GET( adr, p ); (* load pointer *)
+									IF p # NIL THEN
+										Heaps.Mark( p );
+									END
 								END
 							END;
-							SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
-							SYSTEM.GET(bp + SIZEOF( ADDRESS ), bp );
-						ELSE (* classical stack frame *)
-							SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
-							bp := n;
 						END;
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
+						SYSTEM.GET(bp, bp);
 					END; (* LOOP *)
 				END; (* gctype *)
 			END; (* contextpos *)
@@ -470,14 +454,6 @@ BEGIN
 	RETURN p.stackBottom
 END GetStackBottom;
 
-PROCEDURE CheckBP(bp: ADDRESS): ADDRESS;
-VAR n: ADDRESS;
-BEGIN
-	SYSTEM.GET(bp,n);
-	IF ODD(n) THEN  bp := bp + SIZEOF(ADDRESS) END;
-	RETURN bp;
-END CheckBP;
-
 PROCEDURE GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE);
 BEGIN
 	UpdateProcessState(p);
@@ -489,9 +465,8 @@ BEGIN
 
 	IF p = CurrentProcess() THEN
 		sp := SYSTEM.GetStackPointer();
-		bp := CheckBP(SYSTEM.GetFramePointer());
+		bp := SYSTEM.GetFramePointer();
 		SYSTEM.GET(bp, bp);
-		bp := CheckBP(bp);
 		SYSTEM.GET(bp+SIZEOF(ADDRESS), pc);
 	END;
 END GetStack;
@@ -1396,7 +1371,7 @@ VAR GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: AD
 		IF CAS(startedMainProcess,FALSE,FALSE) THEN
 			cur := CurrentProcess();
 			IF cur # NIL THEN
-				ebp := CheckBP(SYSTEM.GetFramePointer());
+				ebp := SYSTEM.GetFramePointer();
 				SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
 				SYSTEM.GET(ebp, ebp);
 				cur.gcContext.AddContext(ebp, pc, SYSTEM.GetStackPointer());

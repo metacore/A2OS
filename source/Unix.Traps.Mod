@@ -204,18 +204,6 @@ VAR
 		END;
 	END UnlockOberon;
 
-	PROCEDURE CheckBP( fp: ADDRESS ): ADDRESS;
-	VAR n: ADDRESS;
-	BEGIN
-		IF (fp # NIL) THEN
-			S.GET(fp, n);
-			IF ODD(n) THEN RETURN fp + SIZEOF(ADDRESS) END;
-		END;
-		RETURN fp;
-	END CheckBP;
-
-
-
 	PROCEDURE SearchExceptionHandler( process: Objects.Process;  mc: Unix.Mcontext;  VAR handler: ExceptionHandler );
 	VAR entry, fp, sp, pc: ADDRESS;
 	BEGIN
@@ -227,7 +215,6 @@ VAR
 		END;
 		entry := Modules.GetExceptionHandler( pc );
 		WHILE (entry = -1) & (fp <= process.stackBottom) & (fp#0) & (fp MOD SIZEOF(ADDRESS)=0) DO
-			fp := CheckBP(fp);
 			S.GET( fp + AddrSize, pc );
 			pc := pc - 1;   (*  CALL instruction, machine dependent!!! *)
 			entry := Modules.GetExceptionHandler( pc );

@@ -284,29 +284,23 @@ TYPE
 						ELSE
 							EXIT
 						END;
-						SYSTEM.GET( bp, n );
-						IF ODD( n ) THEN (* procedure descriptor at bp *)
-							IF (bp >= sp) THEN
-								desc := SYSTEM.VAL( Modules.ProcedureDescPointer, n-1 );
-								IF desc # NIL THEN
-									a0 := ADDRESSOF( desc.offsets );
-									a1 :=  SYSTEM.VAL( ADDRESS, desc.offsets );
-									ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
-									FOR i := 0 TO LEN( desc.offsets ) - 1 DO
-										adr := bp + desc.offsets[i]; (* pointer at offset *)
-										SYSTEM.GET( adr, p ); (* load pointer *)
-										IF p # NIL THEN
-											Heaps.Mark( p );
-										END
+						IF Machine.ValidHeapAddress(pc) & (bp > sp) THEN (* in A2 *)
+							SYSTEM.GET( bp-SIZEOF(ADDRESS), desc );
+							IF desc # NIL THEN
+								a0 := ADDRESSOF( desc.offsets );
+								a1 :=  SYSTEM.VAL( ADDRESS, desc.offsets );
+								ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+								FOR i := 0 TO LEN( desc.offsets ) - 1 DO
+									adr := bp + desc.offsets[i]; (* pointer at offset *)
+									SYSTEM.GET( adr, p ); (* load pointer *)
+									IF p # NIL THEN
+										Heaps.Mark( p );
 									END
 								END
 							END;
-							SYSTEM.GET(bp + 2*SIZEOF(ADDRESS), pc);
-							SYSTEM.GET(bp + SIZEOF( ADDRESS ), bp );
-						ELSE (* classical stack frame *)
-							SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
-							bp := n;
 						END;
+						SYSTEM.GET(bp + SIZEOF(ADDRESS), pc);
+						SYSTEM.GET(bp, bp);
 					END; (* LOOP *)
 				END; (* gctype *)
 			END; (* contextpos *)
@@ -632,14 +626,6 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		RETURN p.stackBottom
 	END GetStackBottom;
 
-	PROCEDURE CheckBP(bp: ADDRESS): ADDRESS;
-	VAR n: ADDRESS;
-	BEGIN
-		SYSTEM.GET(bp,n);
-		IF ODD(n) THEN  bp := bp + SIZEOF(ADDRESS) END;
-		RETURN bp;
-	END CheckBP;
-
 	PROCEDURE GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE);
 	BEGIN
 		UpdateProcessState(p);
@@ -651,9 +637,8 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 		IF CurrentProcess() = p THEN
 			sp := SYSTEM.GetStackPointer();
-			bp := CheckBP(SYSTEM.GetFramePointer());
+			bp := SYSTEM.GetFramePointer();
 			SYSTEM.GET(bp, bp);
-			bp := CheckBP(bp);
 			SYSTEM.GET(bp+SIZEOF(ADDRESS), pc);
 		ELSE
 			IF Machine.ValidHeapAddress(pc) THEN
@@ -930,7 +915,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		IF CAS(startedMainProcess,FALSE,FALSE) THEN
 			cur := CurrentProcess();
 			IF cur # NIL THEN
-				ebp := CheckBP(SYSTEM.GetFramePointer());
+				ebp := SYSTEM.GetFramePointer();
 				SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
 				SYSTEM.GET(ebp, ebp);
 				cur.gcContext.AddContext(ebp, pc, SYSTEM.GetStackPointer());

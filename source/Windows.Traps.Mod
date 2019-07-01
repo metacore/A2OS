@@ -182,17 +182,6 @@ VAR
 	PROCEDURE SetLastExceptionState( ex: Kernel32.Context );
 	END SetLastExceptionState;
 
-	PROCEDURE CheckBP(fp: ADDRESS): ADDRESS;
-	VAR n: ADDRESS;
-	BEGIN
-		IF (fp # NIL) THEN
-			SYSTEM.GET(fp, n);
-			IF ODD(n) THEN RETURN fp + SIZEOF(ADDRESS) END;
-		END;
-		RETURN fp;
-	END CheckBP;
-
-
 	(**  Handles an exception. Interrupts are on during this procedure. *)
 	PROCEDURE HandleException( VAR int: Kernel32.Context;  VAR exc: Kernel32.ExceptionRecord;  VAR handled: BOOLEAN );
 	VAR fp, newFP, sp, pc, handler: ADDRESS;
@@ -202,7 +191,6 @@ VAR
 			int.PC := handler;  handled := TRUE;  SetTrapVariable( pc, fp );  SetLastExceptionState( int )
 		ELSE
 			WHILE (fp # 0) & (handler = -1) DO
-				fp := CheckBP(fp);
 				SYSTEM.GET( fp + SIZEOF(ADDRESS), pc );
 				pc := pc - 1;   (*  CALL instruction, machine dependant!!! *)
 				handler := Modules.GetExceptionHandler( pc );
@@ -237,11 +225,11 @@ VAR
 		IF handler # -1 THEN int.PC := handler;  hasFinally := TRUE;  SetTrapVariable( pc, ebp );  END;
 
 		(* The first waypoint is the ebp of the top PAF *)
-		ebpSave := CheckBP(ebp);
+		ebpSave := ebp;
 
 		WHILE (ebp # 0) DO
 			(* Did we reach the last PAF? *)
-			checkedBP := CheckBP(ebp);
+			checkedBP := ebp;
 			SYSTEM.GET( checkedBP, pc );
 			IF (pc = 0) THEN
 				ebpBottom := ebp;   (* Save the FP of the last PAF *)

@@ -892,21 +892,12 @@ BEGIN
 	END;
 END NewBlock;
 
-PROCEDURE CheckBP(bp: ADDRESS): ADDRESS;
-VAR n: ADDRESS;
-BEGIN
-	SYSTEM.GET(bp,n);
-	IF ODD(n) THEN  bp := bp + SIZEOF(ADDRESS) END;
-	RETURN bp;
-END CheckBP;
-
 PROCEDURE SetPC*(p: DataBlockU);
 VAR bp: ADDRESS;
 BEGIN
 	IF p # NIL THEN
-		bp := CheckBP(SYSTEM.GetFramePointer());
+		bp := SYSTEM.GetFramePointer();
 		SYSTEM.GET(bp, bp);
-		bp := CheckBP(bp);
 		SYSTEM.GET(bp+SIZEOF(ADDRESS), p.heapBlock.heapBlock);
 	END;
 END SetPC;

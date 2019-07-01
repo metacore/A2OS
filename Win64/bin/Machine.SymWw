@@ -21,7 +21,7 @@ CONST
 	KernelLog* = 7; 
 	GC* = 8; 
 	MaxLocks = 9; 
-	StrongChecks = FALSE; 
+	StrongChecks = TRUE; 
 	MemBlockSize = ((32 * 1024) * 1024); 
 	NilVal = 0; 
 	Second* = 1000; 
@@ -74,6 +74,7 @@ VAR
 	hin, hout: Kernel32.HANDLE; 
 	lock-: ARRAY MaxLocks OF CHAR; 
 	cs: ARRAY MaxLocks OF Kernel32.CriticalSection; 
+	taken: ARRAY MaxLocks OF LONGINT; 
 	defaultConfigFile, userConfigFile, traceName: ARRAY Kernel32.MaxPath OF CHAR; 
 	gcThreshold-: SIZE; 
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 

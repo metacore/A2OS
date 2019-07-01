@@ -59,6 +59,7 @@ TYPE
 		PROCEDURE ^ AddOld(F: File); 
 		PROCEDURE ^ ByStat(CONST stat: Unix.Status): File; 
 		PROCEDURE ^ Finalize; 
+		PROCEDURE ^ Collect; 
 		PROCEDURE ^ FinalizeFile(obj: ANY); 
 	END Collection; 
 

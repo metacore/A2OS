@@ -217,6 +217,7 @@ TYPE
 		dataUnit-: LONGINT; 
 		variableAlignment-, parameterAlignment-: Alignment; 
 		offsetFirstParameter-: LONGINT; 
+		offsetFirstVariable-: LONGINT; 
 		operatorDefined-: ARRAY end OF BOOLEAN; 
 		addressSize-: LONGINT; 
 		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-, byteType-, realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type; 
@@ -224,7 +225,7 @@ TYPE
 		cellsAreObjects-: BOOLEAN; 
 		platformCallingConvention-: SyntaxTree.CallingConvention; 
 
-		PROCEDURE ^  & InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar: LONGINT; cooperative: BOOLEAN); 
+		PROCEDURE ^  & InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, offsetFirstVar: LONGINT; cooperative: BOOLEAN); 
 		PROCEDURE ^ SetPlatformCallingConvention*(callingConvention: SyntaxTree.CallingConvention); 
 		PROCEDURE ^ SetCellsAreObjects*(c: BOOLEAN); 
 		PROCEDURE ^ SetRegisterPassCallback*(canPassInRegister: PassInRegisterProc); 

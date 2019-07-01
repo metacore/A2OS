@@ -77,10 +77,12 @@ TYPE
 
 	GCContext = RECORD 
 		nextPos: SIZE; 
-		last: ARRAY 256 OF ADDRESS; 
+		last: ARRAY 32 OF RECORD 
+			bp, pc, sp: ADDRESS; 
+		END; 
 
-		PROCEDURE ^ AddContext(bp, pc: ADDRESS); 
-		PROCEDURE ^ GetNextContext(VAR pos: SIZE; VAR bp, pc: ADDRESS): BOOLEAN; 
+		PROCEDURE ^ AddContext(bp, pc, sp: ADDRESS); 
+		PROCEDURE ^ GetNextContext(VAR pos: SIZE; VAR bp, pc, sp: ADDRESS): BOOLEAN; 
 		PROCEDURE ^ RemoveContext; 
 	END
 	; 
@@ -170,9 +172,8 @@ VAR
 	PROCEDURE ^ SetContext*(context: ANY); 
 	PROCEDURE ^ ActiveObject*(): ANY; 
 	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
-	PROCEDURE ^ CheckBP(bp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
-	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
+	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
 	PROCEDURE ^ GetProcessID*(): LONGINT; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ RegisterFinalizer(obj: ANY; fin: Heaps.Finalizer); 

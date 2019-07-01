@@ -21,7 +21,6 @@ VAR
 	PROCEDURE ^ Registers(CONST mc: Unix.Mcontext; w: Streams.Writer); 
 	PROCEDURE ^ Trap(sig: LONGINT; mc: Unix.Mcontext); 
 	PROCEDURE ^ UnlockOberon; 
-	PROCEDURE ^ CheckBP(fp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ SearchExceptionHandler(process: Objects.Process; mc: Unix.Mcontext; VAR handler: ExceptionHandler); 
 BEGIN
 END Traps.

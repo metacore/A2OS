@@ -1423,7 +1423,11 @@ Sufficient (but not necessary) conditions:
 		IF (dest  # NIL) THEN
 			IF (TensorFlag IN GetFlags( dest )) THEN (* old heap pointer overwritten *)
 				oldDest := dest;
-				Heaps.MarkPointer(src);
+				#IF COOP THEN
+					Heaps.Assign(dest, src);
+				#ELSE
+					Heaps.MarkPointer(src);
+				#END
 			ELSE
 				(*
 				Heaps.ResetMathArray(dest);

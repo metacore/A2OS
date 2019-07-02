@@ -141,10 +141,7 @@ VAR
 
 	allocationLogger-: PROCEDURE(p: ANY);
 
-PROCEDURE Assign*(VAR dest: ADDRESS; src: ADDRESS);
-BEGIN
-	dest := src;
-END Assign;
+PROCEDURE Assign* EXTERN "GarbageCollector.Assign" (VAR dest: ADDRESS; src: ADDRESS);
 
 (* for low level debugging of allocation -- beware: errors or traps in allocation logger can produce catastrophy - loggers may not allocate memory  *)
 PROCEDURE SetAllocationLogger*(a: PROCEDURE (p:ANY));

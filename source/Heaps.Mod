@@ -36,10 +36,6 @@ CONST
 
 	ProtTypeBit* = 31;			(** flags in TypeDesc, RoundUp(log2(MaxTags)) low bits reserved for extLevel *)
 
-
-	FlagsOfs = AddressSize * 3;			(* flags offset in TypeDesc *)
-	ModOfs* = AddressSize * 4;			(* moduleAdr offset in TypeDesc *)
-	TypeNameOfs = AddressSize * 5;		(* type name offset in TypeDesc *)
 	ModNameOfs = AddressSize * 2;		(* module name offset in ModuleDesc *)
 
 	MinPtrOfs = -40000000H;	(* sentinel offset for ptrOfs *)
@@ -1214,43 +1210,6 @@ BEGIN
 	END;
 	Machine.Release(Machine.Heaps)
 END GetHeapInfo;
-
-PROCEDURE Assign*(VAR dest: ADDRESS; src: ADDRESS);
-VAR any: Block;
-BEGIN
-	IF CAS(marking,FALSE,FALSE) THEN
-		any := src;
-		Mark(any);
-	END;
-	dest := src;
-END Assign;
-
-PROCEDURE AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS);
-VAR i: SIZE; sval {UNTRACED}: ANY;
-BEGIN
-	IF CAS(marking,FALSE,FALSE) THEN
-		FOR i := 0 TO LEN(tag.pointerOffsets)-1 DO
-			SYSTEM.GET(src+tag.pointerOffsets[i], sval);
-			Mark(sval);
-		END;
-	END;
-	SYSTEM.MOVE(src,dest,tag.recSize);
-END AssignRecord;
-
-PROCEDURE AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU;  numElems: SIZE; src: ADDRESS);
-VAR i, j: SIZE; offset: ADDRESS; sval {UNTRACED}: ANY;
-BEGIN
-	IF CAS(marking,FALSE,FALSE) THEN
-		FOR j := 0 TO LEN(tag.pointerOffsets)-1 DO
-			FOR i := 0 TO numElems-1 DO
-				offset := i * tag.recSize + tag.pointerOffsets[j];
-				SYSTEM.GET(src+offset, sval);
-				Mark(sval);
-			END;
-		END;
-	END;
-	SYSTEM.MOVE(src,dest,tag.recSize * numElems);
-END AssignArray;
 
 (* write barriers -- used by compile *)
 PROCEDURE MarkPointer*(adr: ADDRESS);

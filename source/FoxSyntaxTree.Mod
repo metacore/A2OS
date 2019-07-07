@@ -4941,38 +4941,6 @@ TYPE
 
 	END Module;
 
-	(** <<expression, expression, ...>> **)
-	SymbolList* = OBJECT
-		VAR list: Basic.List;
-
-		PROCEDURE & InitList*;
-		BEGIN NEW( list,8 );
-		END InitList;
-
-		PROCEDURE Length*( ): LONGINT;
-		BEGIN RETURN list.Length();
-		END Length;
-
-		PROCEDURE AddSymbol*( d: Symbol );
-		BEGIN list.Add(d)
-		END AddSymbol;
-
-		PROCEDURE GetSymbol*( index: LONGINT ): Symbol;
-		VAR p: ANY;
-		BEGIN
-			p := list.Get(index); RETURN p(Symbol);
-		END GetSymbol;
-
-		PROCEDURE SetSymbol*(index: LONGINT; expression: Symbol);
-		BEGIN list.Set(index,expression)
-		END SetSymbol;
-
-		PROCEDURE RemoveSymbol*(i: LONGINT);
-		BEGIN list.RemoveByIndex(i);
-		END RemoveSymbol;
-
-	END SymbolList;
-
 	ProcedureList* = OBJECT
 		VAR list: Basic.List;
 

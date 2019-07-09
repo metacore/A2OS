@@ -816,7 +816,11 @@ TYPE
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN FPNumber(SELF.fp,x.value)
 		END VisitEnumerationValue;
-
+		
+		PROCEDURE VisitProcedureValue*(x: SyntaxTree.ProcedureValue);
+		BEGIN VisitProcedure(x.value);
+		END VisitProcedureValue;
+		
 		(* fp = fp & ORD(char) *)
 		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
 		BEGIN FPNumber(SELF.fp,ORD(x.value))

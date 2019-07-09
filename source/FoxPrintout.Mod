@@ -888,6 +888,11 @@ TYPE
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN w.Int(x.value,1);
 		END VisitEnumerationValue;
+		
+		PROCEDURE VisitProcedureValue*(x: SyntaxTree.ProcedureValue);
+		BEGIN
+			Symbol(x.value);
+		END VisitProcedureValue;
 
 		(**** symbols ****)
 

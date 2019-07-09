@@ -1830,6 +1830,7 @@ TYPE
 			| SyntaxTree.StringValue DO DesignateStringValue(x, result)
 			| SyntaxTree.MathArrayValue DO DesignateMathArrayValue(x, result)
 			| SyntaxTree.NilValue DO Evaluate(x, result); (* NIL parameter passed in WINAPI cc *)
+			| SyntaxTree.ProcedureValue DO Symbol(x.value, result)
 			END;
 
 
@@ -5725,7 +5726,7 @@ TYPE
 
 				Evaluate(x.left, operand);
 
-				IF symbol IS SyntaxTree.Procedure THEN
+				IF (symbol IS SyntaxTree.Procedure) OR (symbol IS SyntaxTree.Constant) THEN
 					IF (procedureType.selfParameter # NIL) THEN
 						Emit(Push(position,operand.tag));
 					ELSIF x.left IS SyntaxTree.SupercallDesignator THEN

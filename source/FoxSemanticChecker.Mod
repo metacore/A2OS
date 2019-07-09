@@ -1959,6 +1959,8 @@ TYPE
 					result := expression;
 				END;
 				(* nothing to be done *)
+			ELSIF expression IS SyntaxTree.ProcedureValue THEN
+				result := expression; 
 			ELSE
 				Error(position, "expression cannot be converted");
 				IF VerboseErrorMessage THEN
@@ -3063,12 +3065,18 @@ TYPE
 			result.SetType(symbol.type);
 			result.SetAssignable(assignable);
 			symbol.MarkUsed;
-			IF symbol IS SyntaxTree.Constant THEN
-				result.SetResolved(symbol(SyntaxTree.Constant).value.resolved);
-			END;
-
-			IF (symbol IS SyntaxTree.Variable) & ~(symbol IS SyntaxTree.Property) THEN
-				variableAccessed := TRUE
+			WITH symbol: SyntaxTree.Constant DO				
+				result.SetResolved(symbol.value.resolved);
+			| SyntaxTree.Procedure DO
+				IF ~symbol.type(SyntaxTree.ProcedureType).isDelegate THEN
+					result.SetResolved(SyntaxTree.NewProcedureValue(result.position, symbol));
+					result.resolved.SetType(symbol.type);
+				END;		
+			| SyntaxTree.Variable DO
+				IF ~(symbol IS SyntaxTree.Property) THEN
+					variableAccessed := TRUE;
+				END; 
+			ELSE
 			END;
 
 			IF (left = NIL) OR (left IS SyntaxTree.SelfDesignator) OR (left IS SyntaxTree.DereferenceDesignator) & (left(SyntaxTree.DereferenceDesignator).left IS SyntaxTree.SelfDesignator) THEN
@@ -5819,6 +5827,8 @@ TYPE
 				x.SetType(system.nilType);
 			| SyntaxTree.EnumerationValue DO
 				x.SetType(currentScope(SyntaxTree.EnumerationScope).ownerEnumeration);
+			| SyntaxTree.ProcedureValue DO
+				x.SetType(x.value.type);
 			| SyntaxTree.InlineCallDesignator DO
 				ResolveStatementBlock(x.block);
 			END;	(* no other case allowed *)

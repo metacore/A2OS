@@ -290,6 +290,9 @@ TYPE
 		PROCEDURE VisitEnumerationValue*(x: EnumerationValue);
 		BEGIN HALT(100) (* abstract *) END VisitEnumerationValue;
 
+		PROCEDURE VisitProcedureValue*(x: ProcedureValue);
+		BEGIN HALT(100) (* abstract *) END VisitProcedureValue;
+
 		PROCEDURE VExpression*(x: Expression);
 		BEGIN
 			WITH x:
@@ -326,6 +329,7 @@ TYPE
 			| StringValue DO VisitStringValue(x)
 			| NilValue DO VisitNilValue(x)
 			| EnumerationValue DO VisitEnumerationValue(x);
+			| ProcedureValue DO VisitProcedureValue(x);
 			| Value DO VisitValue(x);
 			ELSE
 				VisitExpression(x)
@@ -2666,6 +2670,24 @@ TYPE
 		BEGIN RETURN (v# NIL) & (v IS EnumerationValue) & (v(EnumerationValue).value = value); END Equals;
 
 	END EnumerationValue;
+	
+	ProcedureValue* = OBJECT (Value)
+	VAR
+		value-: Procedure;
+
+		PROCEDURE & InitProcedureValue(position: Position; value: Procedure);
+		BEGIN
+			InitValue(position);  SELF.value := value;
+		END InitProcedureValue;
+
+		PROCEDURE SetValue*(value: Procedure);
+		BEGIN SELF.value := value
+		END SetValue;
+
+		PROCEDURE Equals*(v: Expression):BOOLEAN;
+		BEGIN RETURN (v# NIL) & (v IS ProcedureValue) & (v(ProcedureValue).value = value); END Equals;
+		
+	END ProcedureValue;
 
 	(**** symbols ****)
 
@@ -2786,6 +2808,7 @@ TYPE
 		END NeedsSection;
 
 	END Symbol;
+
 
 	(** <<expression, expression, ...>> **)
 	Symbols* = OBJECT
@@ -3278,7 +3301,7 @@ TYPE
 			SELF.moduleName := moduleName;
 			type := importType;
 		END InitImport;
-
+		
 		PROCEDURE SetType*(type: Type);
 		BEGIN
 			ASSERT(type = importType);
@@ -5080,6 +5103,8 @@ VAR
 			result := NewNilValue(x.position);
 		| EnumerationValue DO
 			result := NewEnumerationValue(x.position, x.value);
+		| ProcedureValue DO
+			result := NewProcedureValue(x.position, x.value);
 		ELSE
 			HALT(100);
 		END;
@@ -5588,6 +5613,12 @@ VAR
 	BEGIN
 		NEW( enumeratorValue, position, value );  RETURN enumeratorValue
 	END NewEnumerationValue;
+
+	PROCEDURE NewProcedureValue*( position: Position; value: Procedure ): ProcedureValue;
+	VAR procedureValue: ProcedureValue;
+	BEGIN
+		NEW( procedureValue, position, value );  RETURN procedureValue
+	END NewProcedureValue;
 
 	PROCEDURE NewStatement*(outer: Statement): Statement; (* for error handling: invalid Statement *)
 	VAR statement: Statement;

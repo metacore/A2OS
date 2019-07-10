@@ -6,8 +6,9 @@ MODULE Objects;   (** AUTHOR "pjm, G.F."; PURPOSE "Active object runtime support
 IMPORT SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 
 CONST
-	ConcurrentGC=TRUE; (* if TRUE then release needs to be compiled with --writeBarriers *)
-
+	ConcurrentGC = TRUE; (* if TRUE then release needs to be compiled with --writeBarriers *)
+	LinuxHost = Unix.Version = "Linux";
+	
 	(*! Process flags, meaningless in Unix ports !!! *)
 	PleaseHalt* = 10;		(* Process requested to Halt itself soon *)
 	Unbreakable*= 11;		(* FINALLY shall not catch HALT exception (PleaseHalt is also set) *)
@@ -255,12 +256,6 @@ TYPE
 			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
 					(* debugging info*)
-					IF (mode # Running) & (contextPos > 0) & (Unix.Version # "Linux") THEN
-						(* in the none Linux ports Suspend updates state only for running threads *)
-						bp := gcContext.last[contextPos-1].bp;
-						sp := gcContext.last[contextPos-1].sp;
-						pc := gcContext.last[contextPos-1].pc;
-					END;
 					IF (stackBottom # 0) & (bp <= stackBottom) & (bp >= sp - SIZE OF ADDRESS) THEN
 						SYSTEM.GET( bp, n );
 						IF ODD( n ) THEN (* procedure descriptor at bp *)
@@ -408,7 +403,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE BodyStarter;
-	VAR p: Process;  res: WORD; prevBP, sp: ADDRESS;
+	VAR p: Process;  res: WORD; sp: ADDRESS;
 	BEGIN
 		(* make sure the process cannot be GCed in an intermediate unsafe state *)
 		Machine.Acquire(Machine.Heaps);
@@ -417,8 +412,6 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		Unix.WriteKey( processPointer, p );
 		p.id := nextPID;  INC( nextPID );
 		p.stackBottom := SYSTEM.GetFramePointer( );
-		SYSTEM.GET( p.stackBottom, prevBP );
-		SYSTEM.PUT( prevBP, SYSTEM.VAL( ADDRESS, 0 ) );	(* for terminating Reflection.StackTraceBack *)
 		Machine.Release(Machine.Heaps);
 
 		Unix.MtxLock( processList );
@@ -919,6 +912,11 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 				SYSTEM.GET(ebp+SIZEOF(ADDRESS), pc);
 				SYSTEM.GET(ebp, ebp);
 				cur.gcContext.AddContext(ebp, pc, SYSTEM.GetStackPointer());
+				IF ~LinuxHost THEN
+					cur.state.PC := pc;
+					cur.state.BP := ebp;
+					cur.state.SP := SYSTEM.GetStackPointer();
+				END
 			END;
 		END;
 	END LeaveA2;

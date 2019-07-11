@@ -6028,7 +6028,7 @@ TYPE
 			IF SymbolNeedsResolution(constant) THEN
 				expression := constant.value;
 				IF replacements # NIL THEN
-					Global.GetSymbolSegmentedName(constant, name);
+					Global.GetSymbolSegmentedNameInScope(constant, module.moduleScope.outerScope, name);
 					replacement := replacements;
 					WHILE (replacement # NIL) & (replacement.name # name) DO
 						replacement := replacement.next;
@@ -6625,6 +6625,69 @@ TYPE
 			IF error THEN error := FALSE; RETURN FALSE ELSE RETURN TRUE END;
 		END AddImport;
 
+
+		PROCEDURE ResolveTemplateImport(x: SyntaxTree.Import);
+		VAR
+			checker: Checker;
+			ident: SyntaxTree.Identifier;
+			expression: SyntaxTree.Expression;
+			i: SIZE;
+			symbol: SyntaxTree.Symbol;
+			typeDeclaration: SyntaxTree.TypeDeclaration;
+			constDeclaration: SyntaxTree.Constant;
+			filename: FileName;
+			module: SyntaxTree.Module;
+		BEGIN
+			IF ExpressionList(x.parameters) THEN END;
+			Global.ModuleFileName(x.moduleName,x.context,filename);
+			IF symbolFileFormat # NIL THEN
+				module := symbolFileFormat.Import(filename,importCache); (* includes module parsing *)
+				IF module = NIL THEN
+					Error(x.position, "module could not be imported: parser errors");
+				ELSIF module.parameters = NIL THEN
+					Error(x.position,"imported module is no template");
+				ELSIF module.parameters.Length() # x.parameters.Length() THEN
+					Error(x.position,"numbers of template parameters do not match"); 
+				ELSE
+					FOR i := 0 TO module.parameters.Length()-1 DO
+						ident := module.parameters.Get(i);
+						expression := x.parameters.GetExpression(i);
+						WITH expression: SyntaxTree.SymbolDesignator DO
+							symbol := expression.symbol;
+							WITH symbol: SyntaxTree.TypeDeclaration DO 
+								TRACE(symbol.declaredType,symbol.declaredType.typeDeclaration);
+								typeDeclaration := SyntaxTree.NewTypeDeclaration(expression.position,ident);
+								typeDeclaration.SetDeclaredType(symbol.declaredType);
+								module.moduleScope.AddTypeDeclaration(typeDeclaration);
+							| SyntaxTree.Constant DO TRACE("const");
+							| SyntaxTree.Procedure DO 
+								constDeclaration := SyntaxTree.NewConstant(expression.position, ident); 
+								constDeclaration.SetValue(SyntaxTree.NewProcedureValue(expression.position,symbol)); 
+								module.moduleScope.AddConstant(constDeclaration);
+							ELSE
+								Printout.Info("expression", expression);
+							END;
+						ELSE
+							Printout.Info("expression", expression);
+							Error(expression.position,"only symbols allowed for now");
+						END;
+					END;
+					checker := NewChecker(diagnostics,VerboseErrorMessage,cooperative,system,symbolFileFormat,importCache,"");
+					ASSERT(SELF.module.moduleScope # NIL);
+					module.SetScope(SELF.module.moduleScope);
+					module.moduleScope.SetOuter(SELF.module.moduleScope);
+					checker.Module(module);
+					IF checker.error THEN
+						Error(x.position,"semantic errors when importing module");
+					ELSE
+						x.SetModule(module);
+					END;
+					Printout.Info("symbol file imported",module);
+				END;
+			END
+		END ResolveTemplateImport;
+		
+
 		(** check and resolve import
 			- check for name = SYSTEM
 			- check for forbidden self import
@@ -6652,87 +6715,78 @@ TYPE
 				ELSIF (x.moduleName=currentScope.ownerModule.name) & (x.context=currentScope.ownerModule.context) THEN
 					Error(x.position,"forbidden self import");
 				ELSE
-
-					(* search through global import list: already imported ? *)
-					IF (x.module = NIL) & (importCache # NIL)  THEN
-						import := importCache.ImportByModuleName(x.moduleName,x.context);
-					ELSE import := NIL
-					END;
-
-					IF x.module # NIL THEN (* already imported indirectly *)
-						module := x.module;
-					ELSIF import # NIL THEN (* already in module list *)
-						module := import.module;
-						ASSERT(module # NIL);
-						x.SetModule(module);
-					ELSE (* must be imported *)
-						Global.ModuleFileName(x.moduleName,x.context,filename);
-						IF symbolFileFormat # NIL THEN
-							module := symbolFileFormat.Import(filename,importCache); (* includes module parsing *)
-							IF module = NIL THEN
-								ErrorSS(x.position,"could not import",filename);
-								IF VerboseErrorMessage THEN
-									Printout.Info("import",x)
-								END
-							ELSE
-								(*
-								IF ~(SyntaxTree.Resolved IN module.state) THEN
-									(*! should rather be done by importer *)
-									checker := NewChecker(diagnostics,VerboseErrorMessage,system,symbolFileFormat,importCache);
-									checker.importCache := importCache;
-									checker.arrayBaseImported := arrayBaseImported;
-									checker.global := global;
-									checker.Module(module); (* semantic check *)
-									error := error OR checker.error;
-								END;
-								*)
-								(*
-								ASSERT(SyntaxTree.Resolved IN module.state);
-								*)
-								x.SetModule(module);
-								IF importCache # NIL THEN
-									import := SyntaxTree.NewImport(Basic.invalidPosition,x.moduleName,x.moduleName,FALSE);
-									import.SetContext(x.context);
-									import.SetModule(module);
-									importCache.AddImport(import);
-								END;
-							END;
-						ELSE
-							ErrorSS(x.position,"no symbol file specified: cannot import",filename);
+					IF x.parameters = NIL THEN
+						(* search through global import list: already imported ? *)
+						IF (x.module = NIL) & (importCache # NIL)  THEN
+							import := importCache.ImportByModuleName(x.moduleName,x.context);
+						ELSE import := NIL
 						END;
-					END;
-					IF module # NIL THEN (* enter reimports into list of imported modules *)
-						IF SELF.module = NIL THEN (* happens in recursive imports *)
-						END;
-						import := module.moduleScope.firstImport;
-						WHILE(import # NIL) DO
-							ASSERT(import.moduleName # SyntaxTree.invalidIdentifier);
-							ASSERT(currentScope # NIL);
-							ASSERT(currentScope.ownerModule # NIL);
-							ASSERT(import.context # SyntaxTree.invalidIdentifier);
 
-							IF (import.moduleName=currentScope.ownerModule.name) & (import.context=currentScope.ownerModule.context) THEN
-								Error(x.position,"recursive import");
-							ELSE
-								IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(x.context) END;
-								reimport := moduleScope.ImportByModuleName(import.moduleName,import.context);
-								IF reimport = NIL THEN  (* indirect import *)
-									reimport := SyntaxTree.NewImport(Basic.invalidPosition,import.moduleName,import.moduleName,FALSE);
-									reimport.SetContext(import.context);
-									reimport.SetModule(import.module);
-									moduleScope.AddImport(reimport);
-									reimport.SetScope(moduleScope);
+						IF x.module # NIL THEN (* already imported indirectly *)
+							module := x.module;
+						ELSIF import # NIL THEN (* already in module list *)
+							module := import.module;
+							ASSERT(module # NIL);
+							x.SetModule(module);
+						ELSE (* must be imported *)
+							Global.ModuleFileName(x.moduleName,x.context,filename);
+							IF symbolFileFormat # NIL THEN
+								module := symbolFileFormat.Import(filename,importCache); (* includes module parsing *)
+								IF module = NIL THEN
+									ErrorSS(x.position,"could not import",filename);
+									IF VerboseErrorMessage THEN
+										Printout.Info("imported module",x)
+									END
+								ELSIF module.parameters # NIL THEN
+									Error(x.position,"no parameters specified with template module");
 								ELSE
-									ASSERT(import.module # NIL);
-									reimport.SetModule(import.module); (* direct or indirect import *)
+									x.SetModule(module);
+									IF importCache # NIL THEN
+										import := SyntaxTree.NewImport(Basic.invalidPosition,x.moduleName,x.moduleName,FALSE);
+										import.SetContext(x.context);
+										import.SetModule(module);
+										importCache.AddImport(import);
+									END;
 								END;
+							ELSE
+								ErrorSS(x.position,"no symbol file specified: cannot import",filename);
 							END;
-							import := import.nextImport;
+						END;
+						IF module # NIL THEN (* enter reimports into list of imported modules *)
+							IF SELF.module = NIL THEN (* happens in recursive imports *)
+							END;
+							import := module.moduleScope.firstImport;
+							WHILE(import # NIL) DO
+								ASSERT(import.moduleName # SyntaxTree.invalidIdentifier);
+								ASSERT(currentScope # NIL);
+								ASSERT(currentScope.ownerModule # NIL);
+								ASSERT(import.context # SyntaxTree.invalidIdentifier);
+
+								IF (import.moduleName=currentScope.ownerModule.name) & (import.context=currentScope.ownerModule.context) THEN
+									Error(x.position,"recursive import");
+								ELSE
+									IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(x.context) END;
+									reimport := moduleScope.ImportByModuleName(import.moduleName,import.context);
+									IF reimport = NIL THEN  (* indirect import *)
+										reimport := SyntaxTree.NewImport(Basic.invalidPosition,import.moduleName,import.moduleName,FALSE);
+										reimport.SetContext(import.context);
+										reimport.SetModule(import.module);
+										moduleScope.AddImport(reimport);
+										reimport.SetScope(moduleScope);
+									ELSE
+										ASSERT(import.module # NIL);
+										reimport.SetModule(import.module); (* direct or indirect import *)
+									END;
+								END;
+								import := import.nextImport;
+							END;
 						END;
 					END;
 				END;
 				currentScope := prevScope;
-				(* ELSE nothing to be done *)
+				IF x.parameters # NIL THEN
+					ResolveTemplateImport(x);
+				END;
 				x.SetState(SyntaxTree.Resolved);
 			END;
 		END ResolveImport;
@@ -7751,11 +7805,6 @@ TYPE
 						Register(import, currentScope, FALSE);
 						import := import.nextImport;
 					END;
-					import := scope(SyntaxTree.ModuleScope).firstImport;
-					WHILE(import # NIL) DO (* 2nd stage to avoid duplicate symbol *)
-						ResolveSymbol(import);
-						import := import.nextImport;
-					END;
 				ELSIF scope IS SyntaxTree.ProcedureScope THEN
 					(* enter parameters for a procedure scope *)
 					procedureType := scope(SyntaxTree.ProcedureScope).ownerProcedure.type.resolved(SyntaxTree.ProcedureType);
@@ -7839,6 +7888,15 @@ TYPE
 			END;
 
 			(* now process all symbols without any presumption on the order *)
+			IF scope IS SyntaxTree.ModuleScope THEN
+				import := scope(SyntaxTree.ModuleScope).firstImport;
+				WHILE(import # NIL) DO (* 2nd stage to avoid duplicate symbol *)
+					ResolveSymbol(import);
+					import := import.nextImport;
+				END;
+			END;
+
+			
 			symbol := scope.firstSymbol;
 			WHILE(symbol # NIL) DO
 				IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
@@ -7982,8 +8040,10 @@ TYPE
 			module := x;
 			ASSERT(x # NIL);
 			global := system.globalScope[x.case];
-			x.moduleScope.SetGlobalScope(global);
-			currentScope := global;
+			IF x.moduleScope.outerScope = NIL THEN
+				x.moduleScope.SetGlobalScope(global);
+			END;
+			currentScope := x.moduleScope.outerScope;
 			IF (x.name = Global.SystemName) OR (x.name = Global.systemName) THEN Error(x.position,"name reserved") END;
 			IF x.context = SyntaxTree.invalidIdentifier THEN x.SetContext(Global.A2Name) END;
 			RemoveModuleFromCache(importCache,x);

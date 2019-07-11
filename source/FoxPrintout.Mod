@@ -1366,11 +1366,21 @@ TYPE
 		END ProcedureList;
 
 		PROCEDURE VisitImport*(x: SyntaxTree.Import);
-		VAR context: SyntaxTree.Identifier;
+		VAR context: SyntaxTree.Identifier; i: SIZE;
 		BEGIN
 			IF x.moduleName # x.name THEN Identifier(x.name);  w.String( " := " );  END;
 			IF (x.scope = NIL) OR (x.scope.ownerModule = NIL) THEN context := SyntaxTree.invalidIdentifier ELSE context := x.scope.ownerModule.context END;
 			Identifier(x.moduleName);
+			IF x.parameters # NIL THEN
+				w.String("<");
+				FOR i := 0 TO x.parameters.Length()-1 DO
+					Expression(x.parameters.GetExpression(i));
+					IF i < x.parameters.Length()-1 THEN
+						w.String(",");
+					END;
+				END;
+				w.String(">");
+			END; 
 			IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#context) THEN
 				Keyword(" IN ");
 				Identifier(x.context)
@@ -1843,7 +1853,12 @@ TYPE
 			(* "END" written by caller *)
 		END Body;
 
+		PROCEDURE VisitModule*(x: SyntaxTree.Module);
+		BEGIN Module(x)
+		END VisitModule;
+
 		PROCEDURE Module*(x: SyntaxTree.Module);
+		VAR i: SIZE;
 		BEGIN
 			IF x = NIL THEN
 				AlertString("(* no module *)");
@@ -1853,6 +1868,16 @@ TYPE
 				Comments(x.comment,x,FALSE);
 				Keyword("MODULE ");
 				Identifier(x.name);
+				IF x.parameters # NIL THEN
+					w.String("<");
+					FOR i := 0 TO x.parameters.Length()-1 DO
+						Identifier(x.parameters.Get(i));
+						IF i < x.parameters.Length()-1 THEN
+							w.String(", ");
+						END;
+					END; 
+					w.String(">");
+				END;
 				IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#Global.A2Name) THEN
 					Keyword(" IN ");
 					Identifier(x.context)

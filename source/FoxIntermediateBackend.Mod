@@ -930,6 +930,7 @@ TYPE
 			hasDynamicOperatorDeclarations: BOOLEAN;
 			operator: SyntaxTree.Operator;
 			import: SyntaxTree.Import;
+			simple: BOOLEAN;
 
 			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
 			BEGIN
@@ -968,19 +969,27 @@ TYPE
 			ASSERT(x # NIL); ASSERT(module # NIL);
 			SELF.module := module;
 
-			(* add import names to the generated Sections.Module *)
-			import := x.moduleScope.firstImport;
-			WHILE import # NIL DO
-				import.module.GetName(idstr);
-				module.imports.AddName(idstr);
-				import := import.nextImport
-			END;
-
 			implementationEmitter.module := module;
 			implementationEmitter.moduleScope := x.moduleScope;
 			implementationEmitter.moduleSelf := moduleSelf;
 			implementationEmitter.canBeLoaded := TRUE;
 			meta.SetModule(module);
+
+			(* add import names to the generated Sections.Module *)
+			import := x.moduleScope.firstImport;
+			WHILE import # NIL DO
+				IF import.parameters = NIL THEN 
+					import.module.GetName(idstr);
+					module.imports.AddName(idstr);
+				ELSE
+					(*simple := meta.simple;
+					meta.simple := TRUE;*)
+					Scope(import.module.moduleScope);
+					(*meta.simple := simple;*)
+				END;
+				import := import.nextImport
+			END;
+
 
 			IF (forceModuleBody OR ~meta.simple  OR ScopeNeedsInitialization(x.moduleScope)) THEN
 				EnsureBodyProcedure(x.moduleScope); (* currently needed in Oberon, remove ? *)
@@ -12223,7 +12232,6 @@ TYPE
 						ELSE
 							Hugeint(source, 0);
 						END;
-
 						Symbol(source, namePool, DynamicName(namePool, name, poolMap), 0); (* reference to dynamic name *)
 						Symbol(source, symbol,0,0);
 						patchAdr := source.pc;
@@ -12298,6 +12306,7 @@ TYPE
 								ELSE
 									sym := NIL;
 								END;
+								(*IF level = 0 THEN D.TraceBack END;*)
 								IF ExportDesc2(scopes[level].section, namePool, fingerprinter, sym, this[level], scopes[level].patchAdr)
 								THEN
 									INC(scopes[olevel].elements);
@@ -13098,7 +13107,7 @@ TYPE
 			import :=  module.module.moduleScope.firstImport;
 			numberImports := 0;
 			WHILE import # NIL DO
-				IF import.direct & ~Global.IsSystemModule(import.module) & IsFirstDirectOccurence(import) THEN
+				IF import.direct & (import.parameters = NIL) & ~Global.IsSystemModule(import.module) & IsFirstDirectOccurence(import) THEN
 					Global.GetModuleSegmentedName(import.module,name);
 					Basic.SuffixSegmentedName(name, StringPool.GetIndex1("@Module"));
 					NamedSymbol(source, name, NIL, 0, offset);

@@ -17,17 +17,19 @@ TYPE
 		BEGIN
 			Basic.Concat(fileName,path,moduleFileName,extension);
 			IF Trace THEN D.Ln; D.Str("importing "); D.Str(fileName); D.Ln; D.Update;  END;
+			module := NIL;
 			reader := Basic.GetFileReader(fileName);
-			scanner := Scanner.NewScanner(moduleFileName, reader, 0, diagnostics);
-			IF ~scanner.error THEN
-				parser := Parser.NewParser(scanner,NIL, "");
-				module := parser.Module();
-				IF parser.error THEN module := NIL END;
+			IF reader # NIL THEN
+				scanner := Scanner.NewScanner(fileName, reader, reader.Pos(), diagnostics);
+				IF ~scanner.error THEN
+					parser := Parser.NewParser(scanner,diagnostics, "");
+					module := parser.Module();
+					IF parser.error THEN module := NIL END;
+				END;
 			END;
-
-			IF (module # NIL) & ~(SyntaxTree.Resolved IN module.state) THEN
+			IF (module # NIL) & ~(SyntaxTree.Resolved IN module.state) & (module.parameters = NIL) THEN
 				(*! should rather be done by importer *)
-				checker := SemanticChecker.NewChecker(NIL,FALSE,TRUE,system,SELF,importCache,"");
+				checker := SemanticChecker.NewChecker(diagnostics,FALSE,TRUE,system,SELF,importCache,"");
 				checker.Module(module); (* semantic check *)
 				IF checker.error THEN module := NIL END;
 			END;
@@ -49,9 +51,11 @@ TYPE
 			ELSE
 
 				flags := {};
-
-				InterfaceComparison.CompareThis(module,SELF,diagnostics,importCache,flags);
-
+				
+				IF module.parameters = NIL THEN
+					InterfaceComparison.CompareThis(module,SELF,diagnostics,importCache,flags);
+				END;
+				
 				IF noRedefinition OR noModification THEN
 					IF (InterfaceComparison.Redefined IN flags) THEN
 						Basic.Error(diagnostics, module.sourceName, Basic.invalidPosition, " no redefinition of symbol file allowed");
@@ -66,7 +70,11 @@ TYPE
 				END;
 
 				NEW(writer,file,0);
-				printer := Printout.NewPrinter(writer, Printout.SymbolFile,FALSE);
+				IF module.parameters = NIL THEN
+					printer := Printout.NewPrinter(writer, Printout.SymbolFile,FALSE);
+				ELSE
+					printer := Printout.NewPrinter(writer, Printout.SourceCode, FALSE);
+				END;
 				printer.Module(module);
 				writer.Update();
 				Files.Register(file);

@@ -176,17 +176,19 @@ TYPE
 				ELSE
 					backendName := "";
 				END;
-				checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,Cooperative IN flags,system,options.symbolFile,importCache,backendName);
-				checker.replacements := options.replacements;
-				checker.Module(module);
-				IF checker.error THEN
-					FinalMessage(TRUE," could not be compiled (checker errors).");
-					RETURN FALSE
-				ELSIF Warnings IN flags THEN
-					warnings := SemanticChecker.NewWarnings(diagnostics);
-					warnings.Module(module);
+				IF module.parameters = NIL THEN
+					checker := SemanticChecker.NewChecker(diagnostics,Info IN flags,Cooperative IN flags,system,options.symbolFile,importCache,backendName);
+					checker.replacements := options.replacements;
+					checker.Module(module);
+					IF checker.error THEN
+						FinalMessage(TRUE," could not be compiled (checker errors).");
+						RETURN FALSE
+					ELSIF Warnings IN flags THEN
+						warnings := SemanticChecker.NewWarnings(diagnostics);
+						warnings.Module(module);
+					END;
 				END;
-
+				
 				IF Print IN flags THEN
 					IF ChangeCase IN flags THEN module.SetCase(1-module.case) END;
 					PrintModule;
@@ -194,7 +196,7 @@ TYPE
 				END;
 
 				(** third phase: generate code, can consist of sub-phases (such as intermediate backend / hardware backend) **)
-				IF options.backend # NIL THEN
+				IF (options.backend # NIL) & (module.parameters = NIL) THEN
 					options.backend.Initialize(diagnostics, log, flags, checker, system);
 					IF options.findPC # "" THEN
 						split := Strings.Split(options.findPC,":");
@@ -224,7 +226,7 @@ TYPE
 				END;
 
 				(** generate object file **)
-				IF options.objectFile # NIL THEN
+				IF (options.objectFile # NIL) & (module.parameters = NIL) THEN
 					options.objectFile.Initialize(diagnostics);
 					options.objectFile.SetPath(options.destPath);
 

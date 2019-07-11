@@ -2865,7 +2865,7 @@ TYPE
 		PROCEDURE SetDeclaredType*(type: Type);
 		BEGIN
 			declaredType := type;
-			IF ~(type IS BasicType) THEN
+			IF ~(type IS BasicType) & (type.typeDeclaration = NIL)  THEN
 				type.typeDeclaration := SELF;
 			END;
 		END SetDeclaredType;
@@ -3291,6 +3291,7 @@ TYPE
 			moduleName-: Identifier;
 			context-: Identifier;
 			direct-: BOOLEAN; (* direct import *)
+			parameters-: ExpressionList;
 
 		PROCEDURE & InitImport( position: Position;  name, moduleName: Identifier; direct: BOOLEAN );
 		BEGIN
@@ -3300,6 +3301,7 @@ TYPE
 			context := invalidIdentifier;
 			SELF.moduleName := moduleName;
 			type := importType;
+			parameters := NIL;
 		END InitImport;
 		
 		PROCEDURE SetType*(type: Type);
@@ -3325,6 +3327,12 @@ TYPE
 		BEGIN
 			SELF.context := context
 		END SetContext;
+
+		PROCEDURE SetParameters*(p: ExpressionList);
+		BEGIN
+			parameters := p;
+		END SetParameters;
+		
 
 	END Import;
 
@@ -4911,6 +4919,46 @@ TYPE
 
 	END ModuleScope;
 
+	(** <<expression, expression, ...>> **)
+	Identifiers* = OBJECT
+	TYPE
+		IdentifierArray = POINTER TO ARRAY OF Identifier;	
+		VAR 
+			list: IdentifierArray;
+			len: SIZE;
+	
+		PROCEDURE & InitList*;
+		BEGIN NEW( list,8 ); len := 0;
+		END InitList;
+
+		PROCEDURE Length*( ): SIZE;
+		BEGIN RETURN len;
+		END Length;
+
+		PROCEDURE Add*( d: Identifier );
+		VAR l: IdentifierArray; i: SIZE;
+		BEGIN
+			IF len = LEN(list) THEN
+				NEW(l, 2*len);
+				FOR i := 0 TO len-1 DO
+					l[i] := list[i];
+				END;
+			END;
+			list[len] := d;
+			INC(len);
+		END Add;
+
+		PROCEDURE Get*( index: SIZE ): Identifier;
+		BEGIN
+			RETURN list[index];
+		END Get;
+
+		PROCEDURE Set*(index: SIZE; symbol: Identifier);
+		BEGIN list[index] := symbol;
+		END Set;
+
+	END Identifiers;
+
 	(* << MODULE name ['in' context] moduleScope name '.' >>  *)
 	Module* = OBJECT (Symbol)
 		VAR
@@ -4921,6 +4969,7 @@ TYPE
 			isCellNet-: BOOLEAN;
 			closingComment-: Comment;
 			modifiers-: Modifier;
+			parameters-: Identifiers;
 
 		PROCEDURE & InitModule( CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT);
 		BEGIN
@@ -4935,6 +4984,7 @@ TYPE
 			closingComment := NIL;
 			isCellNet := FALSE;
 			modifiers := NIL;
+			parameters := NIL;
 		END InitModule;
 
 		PROCEDURE SetCase*(case: LONGINT);
@@ -4961,6 +5011,10 @@ TYPE
 		PROCEDURE SetModifiers*(modifiers: Modifier);
 		BEGIN SELF.modifiers := modifiers
 		END SetModifiers;
+
+		PROCEDURE SetParameters*(parameters: Identifiers);
+		BEGIN SELF.parameters := parameters;
+		END SetParameters;
 
 	END Module;
 

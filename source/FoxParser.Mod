@@ -2363,6 +2363,7 @@ TYPE
 		**)
 		PROCEDURE ImportList( scope: SyntaxTree.Scope );
 		VAR alias, name, context: SyntaxTree.Identifier; import: SyntaxTree.Import; position, idPosition: Position; aliased: BOOLEAN;
+			expressions: SyntaxTree.ExpressionList;
 		BEGIN
 			IF Trace THEN S( "ImportList" ) END;
 			(* import token already consumed *)
@@ -2373,6 +2374,15 @@ TYPE
 					aliased := Optional( Scanner.Becomes );
 					IF aliased THEN name := Identifier(idPosition) ELSE name := alias END;
 					import := SyntaxTree.NewImport( position, alias, name, TRUE );
+					IF Optional(Scanner.Less) THEN
+						expressions := SyntaxTree.NewExpressionList();
+						expressions.AddExpression(Factor());
+						WHILE Optional(Scanner.Comma) DO
+							expressions.AddExpression(Factor());
+						END;
+						import.SetParameters(expressions);
+						Check(Scanner.Greater);
+					END;
 					CommentSymbol(import);
 					IF Optional(Scanner.In) THEN
 						position := token.position;
@@ -2400,7 +2410,7 @@ TYPE
 
 		PROCEDURE Module*(): SyntaxTree.Module;
 		VAR moduleName, context: SyntaxTree.Identifier;  module: SyntaxTree.Module;  position: Position; isCellNet: BOOLEAN;
-			scannerDiagnostics: Diagnostics.Diagnostics; modifiers: SyntaxTree.Modifier; (* c: SyntaxTree.Comment; *)
+			scannerDiagnostics: Diagnostics.Diagnostics; modifiers: SyntaxTree.Modifier; parameters: SyntaxTree.Identifiers; (* c: SyntaxTree.Comment; *)
 		BEGIN
 			IF Trace THEN S( "Module" ) END;
 			position := token.position;
@@ -2422,6 +2432,17 @@ TYPE
 				IF isCellNet THEN module.SetCellNet(TRUE); module.SetModifiers(modifiers); END;
 
 				module.SetType(SyntaxTree.moduleType);
+				
+				IF Optional(Scanner.Less) THEN
+					NEW(parameters);
+					module.SetParameters(parameters);
+					parameters.Add(Identifier(position));
+					WHILE Optional(Scanner.Comma) DO
+						parameters.Add(Identifier(position));
+					END;
+					Check(Scanner.Greater); 
+				END; 
+				
 				IF Optional(Scanner.In) THEN
 					position := token.position;
 					context := Identifier(position);

@@ -212,7 +212,7 @@ TYPE
 		VAR type: SyntaxTree.Type;
 		BEGIN (* no further traversal to x.resolved necessary since type descriptor and code will be inserted at "original" position ? *)
 			type := x.resolved;
-			IF (type.typeDeclaration # NIL) & (type.typeDeclaration.scope.ownerModule # module.module) THEN
+			IF (type.typeDeclaration # NIL) & ~InThisModule(type.typeDeclaration.scope, module.module) THEN
 				meta.CheckTypeDeclaration(type);
 			END;
 		END QualifiedType;
@@ -231,7 +231,7 @@ TYPE
 		VAR name: ARRAY 256 OF CHAR; td: SyntaxTree.TypeDeclaration;
 		BEGIN (* no code emission *)
 			meta.CheckTypeDeclaration(x);
-			IF (x.recordScope.ownerModule = module.module) & (x.isObject) THEN
+			IF InThisModule(x.recordScope,module.module) & (x.isObject) THEN
 				IF x.pointerType.typeDeclaration # NIL THEN
 					td := x.pointerType.typeDeclaration
 				ELSE
@@ -6041,7 +6041,7 @@ TYPE
 			PROCEDURE GetHiddenPointerType(): SyntaxTree.Type;
 			VAR scope: SyntaxTree.RecordScope; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration;
 			BEGIN
-				IF (hiddenPointerType = NIL) OR (hiddenPointerType.typeDeclaration.scope.ownerModule # module.module) THEN
+				IF (hiddenPointerType = NIL) OR ~InThisModule(hiddenPointerType.typeDeclaration.scope,module.module) THEN
 					scope := SyntaxTree.NewRecordScope(module.module.moduleScope);
 					variable := SyntaxTree.NewVariable(Basic.invalidPosition,SyntaxTree.NewIdentifier("@Any"));
 					variable.SetType(system.anyType);
@@ -6059,7 +6059,7 @@ TYPE
 			PROCEDURE GetDelegateType(): SyntaxTree.Type;
 			VAR scope: SyntaxTree.RecordScope; variable: SyntaxTree.Variable; typeDeclaration: SyntaxTree.TypeDeclaration;
 			BEGIN
-				IF (delegatePointerType = NIL) OR (delegatePointerType.typeDeclaration.scope.ownerModule # module.module) THEN
+				IF (delegatePointerType = NIL) OR ~InThisModule(delegatePointerType.typeDeclaration.scope,module.module) THEN
 					scope := SyntaxTree.NewRecordScope(module.module.moduleScope);
 					variable := SyntaxTree.NewVariable(Basic.invalidPosition,SyntaxTree.NewIdentifier("@Procedure"));
 					variable.SetType(SyntaxTree.NewProcedureType(Basic.invalidPosition,NIL));
@@ -6104,7 +6104,8 @@ TYPE
 				END;
 
 				GetCodeSectionNameForSymbol(td,name);
-				IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+				IF (td.scope = NIL) OR InThisModule(td.scope, module.module)
+				THEN
 					meta.CheckTypeDeclaration(x);
 					source := NewSection(module.allSections, Sections.ConstSection, name,td,commentPrintout # NIL);
 				ELSE
@@ -7630,7 +7631,7 @@ TYPE
 						(* static call of the constructor *)
 						GetCodeSectionNameForSymbol(constructor,name);
 						ASSERT(~constructor.isInline);
-						IF constructor.scope.ownerModule # module.module THEN
+						IF ~InThisModule(constructor.scope,module.module) THEN
 							symbol := NewSection(module.importedSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
 						ELSE
 							symbol := NewSection(module.allSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
@@ -7721,7 +7722,7 @@ TYPE
 						(* static call of the constructor *)
 						GetCodeSectionNameForSymbol(constructor,name);
 						ASSERT(~constructor.isInline);
-						IF constructor.scope.ownerModule # module.module THEN
+						IF ~InThisModule(constructor.scope,module.module) THEN
 							symbol := NewSection(module.importedSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
 						ELSE
 							symbol := NewSection(module.allSections, Sections.CodeSection, name,constructor,commentPrintout # NIL);
@@ -8250,7 +8251,7 @@ TYPE
 					(* static call of the constructor *)
 					Global.GetSymbolSegmentedName(constructor,name);
 					ASSERT(~constructor.isInline);
-					IF constructor.scope.ownerModule # module.module THEN
+					IF ~InThisModule(constructor.scope,module.module) THEN
 						symbol := NewSection(module.importedSections, Sections.CodeSection, name, constructor, commentPrintout # NIL);
 					ELSE
 						symbol := NewSection(module.allSections, Sections.CodeSection, name, constructor, commentPrintout # NIL);
@@ -9731,7 +9732,7 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateMathArrayValue") END;
 			const := BuildConstant(module.module,x,constId);
 			GetCodeSectionNameForSymbol(const,name);
-			IF (const.scope = NIL) OR (const.scope.ownerModule = module.module) THEN
+			IF (const.scope = NIL) OR InThisModule(const.scope,module.module) THEN
 				irv := NewSection(module.allSections,Sections.ConstSection,name,const,commentPrintout # NIL);
 			ELSE
 				irv := NewSection(module.importedSections, Sections.ConstSection, name,const,commentPrintout # NIL);
@@ -9751,7 +9752,7 @@ TYPE
 			IF Trace THEN TraceEnter("DesignateStringValue") END;
 			const := BuildConstant(module.module,x,constId);
 			GetCodeSectionNameForSymbol(const,name);
-			IF (const.scope = NIL) OR (const.scope.ownerModule = module.module) THEN
+			IF (const.scope = NIL) OR InThisModule(const.scope,module.module) THEN
 				irv := NewSection(module.allSections, Sections.ConstSection, name,const,commentPrintout # NIL);
 			ELSE
 				irv := NewSection(module.importedSections, Sections.ConstSection, name,const,commentPrintout # NIL);
@@ -10153,7 +10154,7 @@ TYPE
 				IntermediateCode.InitAddress(reg, addressType, name, 0, 0);
 			ELSE
 				GetCodeSectionNameForSymbol(x, name);
-				IF (x.scope.ownerModule = module.module) THEN
+				IF InThisModule(x.scope,module.module) THEN
 					source := NewSection(module.allSections, sectionType, name,x,commentPrintout # NIL);
 				ELSIF (sectionType = Sections.InlineCodeSection) & (x.procedureScope.body.code.sourceCode # NIL) THEN
 					source := NewSection(module.allSections, sectionType, name,x,commentPrintout # NIL);
@@ -12596,7 +12597,7 @@ TYPE
 									IF RefInfo THEN Info(section,"TD") END;
 									IF (td # NIL) THEN
 										Global.GetSymbolSegmentedName(td,segmentedName);
-										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+										IF (td.scope = NIL) OR InThisModule(td.scope,module.module) THEN
 											tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
 										ELSE
 											tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
@@ -12616,7 +12617,7 @@ TYPE
 									IF RefInfo THEN Info(section,"TD") END;
 									IF (td # NIL) THEN
 										Global.GetSymbolSegmentedName(td,segmentedName);
-										IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+										IF (td.scope = NIL) OR InThisModule(td.scope,module.module) THEN
 											tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
 										ELSE
 											tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, segmentedName,td,declarationEmitter.dump);
@@ -13024,7 +13025,7 @@ TYPE
 							type := type(SyntaxTree.PointerType).pointerBase.resolved;
 						END;
 						typeDeclaration := type.typeDeclaration; (* must be non-nil *)
-						IF (typeDeclaration.scope = NIL) OR (typeDeclaration.scope.ownerModule = module.module) THEN
+						IF (typeDeclaration.scope = NIL) OR InThisModule(typeDeclaration.scope,module.module) THEN
 							name[0] := typeDeclaration.name; name[1] := -1;
 							section := module.allSections.FindBySymbol(type.typeDeclaration); (*TODO*)
 							ASSERT(section # NIL);
@@ -13629,7 +13630,7 @@ TYPE
 							IF ~reverse THEN Td(record.GetBaseRecord()) END;
 							baseTD := record.typeDeclaration;
 							Global.GetSymbolSegmentedName(baseTD,name);
-							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
+							IF (baseTD.scope = NIL) OR InThisModule(baseTD.scope,module.module) THEN
 								tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
 							ELSE
 								tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
@@ -13771,7 +13772,7 @@ TYPE
 							Info(source, "parent");
 							IF baseRecord # NIL THEN
 								Global.GetSymbolSegmentedName(baseTD,name);
-								IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
+								IF (baseTD.scope = NIL) OR InThisModule(baseTD.scope,module.module) THEN
 									tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
 								ELSE
 									tir := implementationEmitter.NewSection(module.importedSections, Sections.ConstSection, name,baseTD,declarationEmitter.dump);
@@ -13800,7 +13801,7 @@ TYPE
 								Basic.SuffixSegmentedName (name, Basic.MakeString ("@Pointer"));
 								sym := NIL;
 							END;
-							IF (baseTD.scope = NIL) OR (baseTD.scope.ownerModule = module.module) THEN
+							IF (baseTD.scope = NIL) OR InThisModule(baseTD.scope,module.module) THEN
 								tir := implementationEmitter.NewSection(module.allSections, Sections.ConstSection, name,sym,declarationEmitter.dump);
 								tir.SetExported(IsExported(td));
 							ELSE
@@ -13917,7 +13918,7 @@ TYPE
 
 				section := module.allSections.FindBySymbol(td); (* TODO *)
 				IF (section = NIL) OR (section(IntermediateCode.Section).pc = 0) THEN
-					IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+					IF (td.scope = NIL) OR InThisModule(td.scope,module.module) THEN
 						NewTypeDescriptor
 					END;
 				END;
@@ -13926,12 +13927,13 @@ TYPE
 				td := x.typeDeclaration;
 				section := module.allSections.FindBySymbol(td); (* TODO *)
 				IF (section = NIL) OR (section(IntermediateCode.Section).pc = 0) THEN
-					IF (td.scope = NIL) OR (td.scope.ownerModule = module.module) THEN
+					IF (td.scope = NIL) OR InThisModule(td.scope,module.module) THEN
 						NewTypeDescriptor
 					END;
 				END;
 			END
 		END CheckTypeDeclaration
+		
 
 	END MetaDataGenerator;
 
@@ -14996,6 +14998,12 @@ TYPE
 	BEGIN
 		RETURN (symbol # NIL) & symbol.NeedsSection();
 	END IsExported;
+
+	PROCEDURE InThisModule(scope: SyntaxTree.Scope; module: SyntaxTree.Module): BOOLEAN;
+	BEGIN
+		RETURN (scope.ownerModule = module) OR (scope.ownerModule.moduleScope.outerScope = module.moduleScope);
+	END InThisModule;
+	
 
 BEGIN
 	Init;

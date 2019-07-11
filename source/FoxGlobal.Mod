@@ -65,7 +65,7 @@ CONST
 	StringTRMS*="TRMS";
 	StringBackend*="Backend";
 	StringRuntime*="Runtime";
-
+	
 	(* traps *)
 	WithTrap* = 1;
 	CaseTrap* = 2;
@@ -195,7 +195,7 @@ VAR
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
 	NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
-
+	NameGlobal-, Nameglobal: SyntaxTree.Identifier;
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier;
 
 	(* some handy type variables for backend / checker implementers *)
@@ -783,8 +783,8 @@ TYPE
 		END;
 		system.globalScope[Scanner.Uppercase] := SyntaxTree.NewModuleScope();
 		system.globalScope[Scanner.Lowercase] := SyntaxTree.NewModuleScope();
-		system.globalModule[Scanner.Uppercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier("@GLOBAL"),system.globalScope[Scanner.Uppercase],Scanner.Uppercase);
-		system.globalModule[Scanner.Lowercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier("@global"),system.globalScope[Scanner.Lowercase],Scanner.Lowercase);
+		system.globalModule[Scanner.Uppercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,NameGlobal,system.globalScope[Scanner.Uppercase],Scanner.Uppercase);
+		system.globalModule[Scanner.Lowercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,Nameglobal,system.globalScope[Scanner.Lowercase],Scanner.Lowercase);
 		system.systemScope[Scanner.Uppercase] := SyntaxTree.NewModuleScope();
 		system.systemScope[Scanner.Lowercase] := SyntaxTree.NewModuleScope();
 		system.systemModule[Scanner.Uppercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,SystemName,system.systemScope[Scanner.Uppercase],Scanner.Uppercase);
@@ -1394,9 +1394,11 @@ TYPE
 			IF scope = NIL THEN (* do nothing, locally declared temporary symbol *)
 			ELSIF scope = inScope THEN (* do not traverse further *)
 			ELSIF scope IS SyntaxTree.ModuleScope THEN
-
-				GetModuleName(scope.ownerModule, name);
-				Strings.Append(name,".");
+				Scope(scope.outerScope);
+				IF (scope.ownerModule.name # NameGlobal) & (scope.ownerModule.name # Nameglobal) THEN
+					GetModuleName(scope.ownerModule, n);
+					Strings.Append(name, n); Strings.Append(name,".");
+				END;
 			ELSIF scope IS SyntaxTree.RecordScope THEN
 				Scope(scope.outerScope);
 				td := scope(SyntaxTree.RecordScope).ownerRecord.typeDeclaration;
@@ -1432,12 +1434,16 @@ TYPE
 
 	PROCEDURE GetSymbolSegmentedNameInScope*(symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope; VAR pooledName: Basic.SegmentedName);
 	VAR td: SyntaxTree.TypeDeclaration; i: LONGINT;
+
 		PROCEDURE Scope(scope: SyntaxTree.Scope);
 		BEGIN
 			IF scope = NIL THEN (* do nothing, locally declared temporary symbol *)
 			ELSIF scope = inScope THEN (* do not traverse further *)
 			ELSIF scope IS SyntaxTree.ModuleScope THEN
-				Basic.SuffixSegmentedName(pooledName,ModuleSectionIdentifier(scope.ownerModule.name, scope.ownerModule.context));
+				Scope(scope.outerScope);
+				IF (scope.ownerModule.name # NameGlobal) & (scope.ownerModule.name # Nameglobal) THEN
+					Basic.SuffixSegmentedName(pooledName,ModuleSectionIdentifier(scope.ownerModule.name, scope.ownerModule.context));
+				END;
 			ELSIF scope IS SyntaxTree.RecordScope THEN
 				Scope(scope.outerScope);
 				td := scope(SyntaxTree.RecordScope).ownerRecord.typeDeclaration;
@@ -1857,6 +1863,10 @@ TYPE
 		NameUnchecked := SyntaxTree.NewIdentifier(StringUnchecked);
 		NameUncooperative := SyntaxTree.NewIdentifier(StringUncooperative);
 		NameFingerprint := SyntaxTree.NewIdentifier(StringFingerprint);
+
+		NameGlobal := SyntaxTree.NewIdentifier("@GLOBAL"); 
+		Nameglobal := SyntaxTree.NewIdentifier("@global"); 
+		
 
 		(* types *)
 		Boolean8 := SyntaxTree.NewBooleanType(8);

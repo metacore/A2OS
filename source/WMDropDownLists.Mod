@@ -351,7 +351,7 @@ TYPE
 		END FindByKey;
 
 		PROCEDURE ResizeEntryArray; (* private *)
-		VAR newEntries : EntryArray; i : SIZE;
+		VAR newEntries : EntryArray; i : LONGINT;
 		BEGIN
 			NEW(newEntries, 2 * LEN(entries));
 			FOR i := 0 TO LEN(entries)-1 DO newEntries[i] := entries[i]; END;

@@ -333,8 +333,7 @@ TYPE
 		VAR
 			enumerator: Files.Enumerator;
 			name, filename, path, mask: ARRAY MaxLen OF CHAR;
-			time, date: LONGINT;
-			size: Files.Size;
+			time, date, size: LONGINT;
 			flags: SET;
 			newDir: Directory;
 			newFile : File;
@@ -353,7 +352,7 @@ TYPE
 						BuildTree(newDir);
 						tmp := newDir;
 					ELSE
-						NEW(newFile, Strings.NewString(filename), NIL, size(LONGINT));
+						NEW(newFile, Strings.NewString(filename), NIL, size);
 						tmp := newFile;
 					END;
 					IF dir.content = NIL THEN
@@ -453,7 +452,7 @@ TYPE
 		PROCEDURE BuildRootName;
 		VAR
 			name, shortname: ARRAY MaxLen OF CHAR;
-			len, count: SIZE;
+			len, count: LONGINT;
 		BEGIN
 			IF type = Joliet THEN
 				COPY(root.name^, name);
@@ -475,7 +474,7 @@ TYPE
 			node: Node;
 			map: NameMap;
 			shortname, val: ARRAY MaxLen OF CHAR;
-			count, len: SIZE;
+			count, len: LONGINT;
 		BEGIN
 			NEW(map);
 			node := dir.content;
@@ -502,10 +501,10 @@ TYPE
 		END BuildShortNames;
 
 		(* builds the iso level1 name and returns the length without extension *)
-		PROCEDURE BuildIsoLevel1Name(node: Node; VAR shortname: ARRAY OF CHAR): SIZE;
+		PROCEDURE BuildIsoLevel1Name(node: Node; VAR shortname: ARRAY OF CHAR): LONGINT;
 		VAR
 			name, file, ext: ARRAY MaxLen OF CHAR;
-			len, count: SIZE;
+			len, count: LONGINT;
 		BEGIN
 			count := UTF8Strings.UTF8toASCII(node.name^, CHR(95), name);
 			Strings.UpperCase(name);
@@ -526,10 +525,10 @@ TYPE
 		END BuildIsoLevel1Name;
 
 		(* builds the iso level2 name and returns the length without extension *)
-		PROCEDURE BuildIsoLevel2Name(node: Node; VAR shortname: ARRAY OF CHAR): SIZE;
+		PROCEDURE BuildIsoLevel2Name(node: Node; VAR shortname: ARRAY OF CHAR): LONGINT;
 		VAR
 			name, file, ext: ARRAY MaxLen OF CHAR;
-			len, count: SIZE;
+			len, count: LONGINT;
 		BEGIN
 			count := UTF8Strings.UTF8toASCII(node.name^, CHR(95), name);
 			Strings.UpperCase(name);
@@ -559,10 +558,10 @@ TYPE
 		(* builds the joliet name and returns the length without extension *)
 		(* we do not convert to UCS-2 here but only check name length and replace some chars *)
 
-		PROCEDURE BuildJolietName(node: Node; VAR shortname: ARRAY OF CHAR): SIZE;
+		PROCEDURE BuildJolietName(node: Node; VAR shortname: ARRAY OF CHAR): LONGINT;
 		VAR
 			name, file, ext: ARRAY MaxLen OF CHAR;
-			len: SIZE;
+			len: LONGINT;
 		BEGIN
 			COPY(node.name^, name);
 			ReplaceNonJolietChars(name);
@@ -580,7 +579,7 @@ TYPE
 
 		PROCEDURE ReplaceNonJolietChars(VAR str: ARRAY OF CHAR);
 		VAR
-			len, i: SIZE;
+			len, i: LONGINT;
 		BEGIN
 			len := UTF8Strings.Length(str);
 			FOR i := 0 TO len -1 DO
@@ -593,9 +592,9 @@ TYPE
 
 		(* splits name in file and extension *)
 		(* returns FALSE in case there is no extension *)
-		PROCEDURE Replace(VAR src: ARRAY OF CHAR; pos: SIZE; CONST new: ARRAY OF CHAR);
+		PROCEDURE Replace(VAR src: ARRAY OF CHAR; pos: LONGINT; CONST new: ARRAY OF CHAR);
 		VAR
-			len: SIZE;
+			len: LONGINT;
 		BEGIN
 			len := UTF8Strings.Length(new);
 			UTF8Strings.Delete(src, pos, len);
@@ -604,7 +603,7 @@ TYPE
 
 		PROCEDURE ReplaceNonDChars(VAR str: ARRAY OF CHAR);
 		VAR
-			i: SIZE; num: WORD;
+			i, num: LONGINT;
 		BEGIN
 			WHILE str[i] # 0X DO
 				num := ORD(str[i]);
@@ -615,16 +614,16 @@ TYPE
 			END;
 		END ReplaceNonDChars;
 
-		PROCEDURE GetMaxPathLength(): SIZE;
+		PROCEDURE GetMaxPathLength(): LONGINT;
 		BEGIN
 			RETURN GetMaxPathLengthDir(root);
 		END GetMaxPathLength;
 
-		PROCEDURE GetMaxPathLengthDir(dir : Directory): SIZE;
+		PROCEDURE GetMaxPathLengthDir(dir : Directory): LONGINT;
 		VAR
 			node: Node;
 			cur: Directory;
-			max, len: SIZE;
+			max, len: LONGINT;
 		BEGIN
 			max := 0;
 			node := dir.content;
@@ -667,7 +666,7 @@ TYPE
 		PROCEDURE CalcDirLength(dir: Directory): LONGINT;
 		VAR
 			node: Node;
-			secs: LONGINT; ofs, len: SIZE;
+			secs, ofs, len: LONGINT;
 		BEGIN
 			secs := 0;
 			node := dir.content;
@@ -735,11 +734,11 @@ TYPE
 		VAR
 			rec: DirectoryRecordPtr;
 			cur: Node;
-			ofs: SIZE;
+			ofs: LONGINT;
 			bufAdr, recAdr: ADDRESS;
 			buf: POINTER TO ARRAY OF CHAR;
 			time: Dates.DateTime;
-			len: SIZE;
+			len: LONGINT;
 			name: ARRAY MaxLen OF CHAR;
 		BEGIN
 			time := Dates.Now();
@@ -808,9 +807,9 @@ TYPE
 			w.Bytes(buf^, 0, dir.size);
 		END WriteDirectory;
 
-		PROCEDURE GetIdentLen(CONST name: ARRAY OF CHAR): SIZE;
+		PROCEDURE GetIdentLen(CONST name: ARRAY OF CHAR): LONGINT;
 		VAR
-			len: SIZE;
+			len: LONGINT;
 		BEGIN
 			len := UTF8Strings.Length(name);
 			IF type = Joliet THEN len := 2*len; END;
@@ -915,7 +914,7 @@ TYPE
 
 		PROCEDURE RemoveVersion(VAR str: ARRAY OF CHAR);
 		VAR
-			len: SIZE;
+			len: LONGINT;
 		BEGIN
 			len := Strings.Length(str);
 			IF str[len-2] = ';' THEN
@@ -932,8 +931,7 @@ TYPE
 
 		PROCEDURE Open*(filename: Strings.String): LONGINT;
 		VAR
-			ofs, total: LONGINT;
-			bytesRead: SIZE;
+			ofs, bytesRead, total: LONGINT;
 			file: Files.File;
 			r: Files.Reader;
 			buf: ARRAY SectorSize OF CHAR;
@@ -1028,7 +1026,7 @@ TYPE
 				cur := ptr(Directory);
 				table[no] := cur;
 				INC(no); cur.no := no;
-				INC(size, CalcRecordLength(cur)(LONGINT));
+				INC(size, CalcRecordLength(cur));
 				cur := cur.subdir;
 				WHILE cur # NIL DO
 					queue.Put(cur);
@@ -1037,9 +1035,9 @@ TYPE
 			END;
 		END Build;
 
-		PROCEDURE CalcRecordLength(dir: Directory): SIZE;
+		PROCEDURE CalcRecordLength(dir: Directory): LONGINT;
 		VAR
-			len: SIZE;
+			len: LONGINT;
 		BEGIN
 			IF dir.parent = dir THEN (* root directory *)
 				len := 10;
@@ -1057,7 +1055,7 @@ TYPE
 			dir: Directory;
 			buf: POINTER TO ARRAY OF CHAR;
 			rec: PathTableRecordPtr;
-			i, len, bytesWritten : SIZE;
+			i, len, bytesWritten : LONGINT;
 		BEGIN
 			NEW(buf, MaxLen); (* max record length *)
 			rec := SYSTEM.VAL(PathTableRecordPtr, ADDRESSOF(buf^));
@@ -1137,7 +1135,7 @@ TYPE
 				IF file # NIL THEN
 					INC(size, 32);
 					NEW(root);
-					root.size := file.Length()(LONGINT);
+					root.size := file.Length();
 					root.image := image;
 					root.id := id;
 					root.bootable := bootable;
@@ -1201,7 +1199,7 @@ TYPE
 			VAR
 				file: Files.File;
 				r: Files.Reader;
-				bytesRead: SIZE; i: LONGINT;
+				bytesRead, i: LONGINT;
 				buf: POINTER TO ARRAY OF CHAR;
 				table: PartitionTable;
 			BEGIN
@@ -1241,7 +1239,7 @@ TYPE
 
 			PROCEDURE CalcChecksum16(CONST buf: ARRAY OF CHAR): INTEGER;
 			VAR
-				checksum: LONGINT; i, numWords: SIZE;
+				checksum, i, numWords: LONGINT;
 			BEGIN
 				checksum := 0;
 				numWords := LEN(buf) DIV 2;
@@ -1320,7 +1318,7 @@ TYPE
 	WritingStatus* = OBJECT(Utils.Status);
 	VAR
 		fileName*: String;
-		bytesWritten*: SIZE;
+		bytesWritten*: LONGINT;
 	END WritingStatus;
 
 VAR
@@ -1333,10 +1331,10 @@ BEGIN
 	RETURN ext[0] # 0X
 END GetExtension;
 
-PROCEDURE Pad(w: Streams.Writer; len: SIZE);
+PROCEDURE Pad(w: Streams.Writer; len: LONGINT);
 VAR
 	buf: POINTER TO ARRAY SectorSize OF CHAR;
-	i: SIZE;
+	i: LONGINT;
 BEGIN
 	IF len >= SectorSize THEN
 		NEW(buf);
@@ -1390,7 +1388,7 @@ VAR
 	file: Files.File;
 	r: Files.Reader;
 	buf: ARRAY 1024 OF CHAR;
-	bytesRead: SIZE; res: WORD;
+	bytesRead, res: LONGINT;
 BEGIN
 	res := ErrFileNotFound;
 	status.fileName := Strings.NewString(pathname);
@@ -1535,7 +1533,7 @@ END SetTime;
 
 PROCEDURE SetStringWithPadding(CONST id: ARRAY OF CHAR; VAR dst : ARRAY OF CHAR; chr : CHAR; ucs2: BOOLEAN);
 VAR
-	i, len: SIZE;
+	i, len: LONGINT;
 BEGIN
 	i := 0;	len := LEN(dst);
 	WHILE (id[i] # 0X) & (i < len) DO
@@ -1555,7 +1553,7 @@ END SetStringWithPadding;
 PROCEDURE ConvertUTF8ToUCS2(VAR src, dst: ARRAY OF CHAR);
 VAR
 	ucs4: ARRAY MaxLen OF LONGINT;
-	i, len: SIZE;
+	i, len: LONGINT;
 BEGIN
 	UTF8Strings.UTF8toUnicode(src, ucs4, len);
 	DEC(len);
@@ -1567,9 +1565,9 @@ BEGIN
 END ConvertUTF8ToUCS2;
 
 (* converts an identifier to a zero terminated utf8 string *)
-PROCEDURE ConvertIdentToUTF8*(CONST id: ARRAY OF CHAR; len: SIZE; ucs2: BOOLEAN; VAR str: ARRAY OF CHAR);
+PROCEDURE ConvertIdentToUTF8*(CONST id: ARRAY OF CHAR; len: LONGINT; ucs2: BOOLEAN; VAR str: ARRAY OF CHAR);
 VAR
-	i, p: SIZE; val: LONGINT;
+	i, p, val: LONGINT;
 	b: BOOLEAN;
 BEGIN
 	ASSERT(len <= LEN(id));

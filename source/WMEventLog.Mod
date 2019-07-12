@@ -46,7 +46,7 @@ TYPE
 		spacings : WMGrids.Spacings;
 
 		events : EventsUtils.EventContainer;
-		eventsInGrid : SIZE;
+		eventsInGrid : LONGINT;
 
 		(* Filter panel *)
 		timeEdit, originatorEdit, typeEdit, classEdit, subclassEdit, codeEdit, messageEdit : WMEditors.Editor;
@@ -55,9 +55,9 @@ TYPE
 		updateBtn, clearBtn : WMStandardComponents.Button;
 		statusLabel : WMStandardComponents.Label;
 
-		nofEventsInGrid, nofEventsTot, containerSize : SIZE;
+		nofEventsInGrid, nofEventsTot, containerSize : LONGINT;
 
-		lastCleared, stamp, lastStamp : SIZE;
+		lastCleared, stamp, lastStamp : LONGINT;
 
 		update, fullUpdate : BOOLEAN;
 
@@ -193,8 +193,8 @@ TYPE
 			END;
 		END UpdateRow;
 
-		PROCEDURE FullUpdate(wrapper : EventsUtils.EventWrapper; nofEvents : SIZE);
-		VAR i, idx : SIZE; discard : BOOLEAN;
+		PROCEDURE FullUpdate(wrapper : EventsUtils.EventWrapper; nofEvents : LONGINT);
+		VAR i, idx : LONGINT; discard : BOOLEAN;
 		BEGIN (* has lock on grid and grid.model *)
 			nofEventsInGrid := 0; nofEventsTot := nofEvents;
 			grid.model.SetNofRows(1);
@@ -213,8 +213,8 @@ TYPE
 			grid.SetTopPosition(0, 0, TRUE);
 		END FullUpdate;
 
-		PROCEDURE IncrementalUpdate(wrapper : EventsUtils.EventWrapper; nofEvents : SIZE) : SIZE;
-		VAR i, idx, nofNewEvents : SIZE; discard : BOOLEAN;
+		PROCEDURE IncrementalUpdate(wrapper : EventsUtils.EventWrapper; nofEvents : LONGINT) : LONGINT;
+		VAR i, idx, nofNewEvents : LONGINT; discard : BOOLEAN;
 		BEGIN (* has lock on grid and grid.model *)
 			nofNewEvents := nofEvents - eventsInGrid;
 			IF nofNewEvents > 0 THEN
@@ -254,9 +254,9 @@ TYPE
 		PROCEDURE Update;
 		VAR
 			wrapper : EventsUtils.EventWrapper;
-			nofEvents : SIZE; full : BOOLEAN;
-			lastCleared : SIZE;
-			oldNofEventsInGrid, oldNofEventsTot : SIZE;
+			nofEvents : LONGINT; full : BOOLEAN;
+			lastCleared : LONGINT;
+			oldNofEventsInGrid, oldNofEventsTot : LONGINT;
 		BEGIN
 			oldNofEventsInGrid := nofEventsInGrid;
 			oldNofEventsTot := nofEventsTot;

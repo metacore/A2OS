@@ -30,6 +30,7 @@ CONST
 
 	MouseWheelMultiplier = 3;
 
+
 	NonDefaultFont = FALSE;
 
 	(* Font to be used when NonDefaultFont = TRUE *)
@@ -50,6 +51,7 @@ TYPE
 		END Init;
 
 	END NoWheelGrid;
+
 
 	DiffState= OBJECT
 	VAR state:LONGINT;
@@ -155,12 +157,12 @@ TYPE
 			Invalidate;
 		END ToggleLineNumbers;
 
-		PROCEDURE SetNofLines(nofLines: SIZE);
+		PROCEDURE SetNofLines(nofLines: LONGINT);
 		BEGIN
 			lineNbr.model.Acquire;
 			grid.model.Acquire;
-			lineNbr.model.SetNofRows(nofLines(LONGINT));
-			grid.model.SetNofRows(nofLines(LONGINT));
+			lineNbr.model.SetNofRows(nofLines);
+			grid.model.SetNofRows(nofLines);
 			grid.model.Release;
 			lineNbr.model.Release;
 		END SetNofLines;
@@ -197,7 +199,7 @@ TYPE
 			grid.model.Release;
 		END FillLines;
 
-		PROCEDURE InsertLine (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
+		PROCEDURE InsertLine (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
 		VAR intStr: ARRAY 32 OF CHAR; nofRows: LONGINT; diffState : DiffState; lineWidth, dy: LONGINT;
 		BEGIN
 			font.GetStringSize(string^, lineWidth, dy); INC(lineWidth,4);
@@ -243,7 +245,7 @@ TYPE
 			INC(curLine);
 		END InsertEmptyLine;
 
-		PROCEDURE InsertCommonLine (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
+		PROCEDURE InsertCommonLine (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
 		VAR intStr: ARRAY 32 OF CHAR; nofRows, lineWidth, dy: LONGINT;
 		BEGIN
 			font.GetStringSize(string^, lineWidth, dy); INC(lineWidth, 4);
@@ -273,7 +275,7 @@ TYPE
 		END SetFileName;
 
 		PROCEDURE GetFileName(): Strings.String;
-		VAR string, fileName: Files.FileName; count: SIZE; sr: Streams.StringReader;
+		VAR string, fileName: Files.FileName; count: LONGINT; sr: Streams.StringReader;
 		BEGIN
 			filenameEdit.GetAsString(string);
 			count := UTF8Strings.UTF8toASCII(string, " ", fileName);
@@ -570,7 +572,7 @@ TYPE
 			Scrolled(NIL, NIL)
 		END OnViewResized;
 
-		PROCEDURE Setup(nofLines: SIZE);
+		PROCEDURE Setup(nofLines: LONGINT);
 		BEGIN
 			leftView.SetNofLines(nofLines + 1);
 			rightView.SetNofLines(nofLines + 1);
@@ -731,8 +733,8 @@ END DecCount;
 
 PROCEDURE Cleanup;
 VAR die : KillerMsg;
-	msg : WMMessages.Message;
-	m : WM.WindowManager;
+	 msg : WMMessages.Message;
+	 m : WM.WindowManager;
 BEGIN {EXCLUSIVE}
 	NEW(die); msg.ext := die; msg.msgType := WMMessages.MsgExt;
 	m := WM.GetDefaultManager();

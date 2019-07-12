@@ -60,7 +60,7 @@ TYPE
 					ELSIF register1 # -1 THEN
 						instructionSet.InitRegister(operand,register1);
 					ELSE
-						instructionSet.InitImmediate(operand,result.sizeInBits(LONGINT),LONGINT(result.value));
+						instructionSet.InitImmediate(operand,result.sizeInBits,LONGINT(result.value));
 					END;
 					IF result.fixup # NIL THEN
 						instructionSet.AddFixup(operand,result.fixup);

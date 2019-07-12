@@ -200,14 +200,14 @@ TYPE
 
 VAR
 	registry*: Plugins.Registry;
-	buf: POINTER TO ARRAY BufSize OF CHAR;
+	buf: POINTER TO ARRAY OF CHAR;
 
 PROCEDURE Fill0(d: Display; col, x, y, w, h: LONGINT);
 VAR j, w0, h0, s: LONGINT; p: ADDRESS; t, c: SET; invert: BOOLEAN;
 BEGIN {EXCLUSIVE}
 	IF (w > 0) & (h > 0) & (col >= 0) THEN	(* opaque or invert *)
 		invert := ASH(col, 1) < 0;
-		IF buf = NIL THEN NEW(buf) END;
+		IF buf = NIL THEN NEW(buf, BufSize) END;
 		CASE d.format OF
 			index8:
 				s := 4; col := d.ColorToIndex(col);
@@ -254,7 +254,7 @@ PROCEDURE Copy0(d: Display; sx, sy, w, h, dx, dy: LONGINT);
 VAR w0, h0, s: LONGINT;
 BEGIN {EXCLUSIVE}
 	IF (w > 0) & (h > 0) THEN
-		IF buf = NIL THEN NEW(buf) END;
+		IF buf = NIL THEN NEW(buf, BufSize) END;
 		w0 := w*d.format; h0 := LEN(buf^) DIV w0;
 		ASSERT(h0 > 0);
 		IF (sy >= dy) OR (h <= h0) THEN

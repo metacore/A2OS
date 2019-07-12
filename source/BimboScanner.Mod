@@ -37,17 +37,17 @@ VAR
 
 TYPE
 	StringMaker = OBJECT
-	VAR length : SIZE;
+	VAR length : LONGINT;
 		data : Strings.String;
 
-		PROCEDURE &Init(initialSize : SIZE);
+		PROCEDURE &Init(initialSize : LONGINT);
 		BEGIN
 			IF initialSize < 256 THEN initialSize := 256 END;
 			NEW(data, initialSize); length := 0;
 		END Init;
 
-		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
-		VAR i : SIZE; n : Strings.String;
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		VAR i : LONGINT; n : Strings.String;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
 				NEW(n, LEN(data) * 2 + len + 1); FOR i := 0 TO length - 1 DO n[i] := data[i] END;
@@ -61,7 +61,7 @@ TYPE
 		END Add;
 
 		(* remove last n characters *)
-		PROCEDURE Shorten(n : SIZE);
+		PROCEDURE Shorten(n : LONGINT);
 		BEGIN
 			DEC(length, n);
 			IF length < 0 THEN length := 0 END;
@@ -81,7 +81,7 @@ TYPE
 			RETURN w
 		END GetWriter;
 
-		PROCEDURE GetLength*() : SIZE;
+		PROCEDURE GetLength*() : LONGINT;
 		BEGIN
 			RETURN length
 		END GetLength;
@@ -288,7 +288,7 @@ TYPE
 
 
 		PROCEDURE GetNumAsString*(VAR val: ARRAY OF CHAR);
-		VAR i, l: SIZE;
+		VAR i, l: LONGINT;
 		BEGIN
 			(*Strings.Copy(buffer^, numStartPos, numEndPos-numStartPos, val);*)
 			IF isNummer THEN
@@ -457,7 +457,7 @@ TYPE
 	END Scanner;
 
 PROCEDURE InitWithText*(t: Texts.Text; pos: LONGINT): Scanner;
-	VAR buffer: Strings.String; len, i, j: SIZE; ch: WORD; r: Texts.TextReader;
+	VAR buffer: Strings.String; len, i, j, ch: LONGINT; r: Texts.TextReader;
 	bytesPerChar: LONGINT;
 	s : Scanner;
 BEGIN
@@ -483,8 +483,8 @@ BEGIN
 	RETURN s;
 END InitWithText;
 
-PROCEDURE ExpandBuf(VAR oldBuf: Strings.String; newSize: SIZE);
-VAR newBuf: Strings.String; i: SIZE;
+PROCEDURE ExpandBuf(VAR oldBuf: Strings.String; newSize: LONGINT);
+VAR newBuf: Strings.String; i: LONGINT;
 BEGIN
 	IF LEN(oldBuf^) >= newSize THEN RETURN END;
 	NEW(newBuf, newSize);
@@ -496,7 +496,7 @@ END ExpandBuf;
 
 PROCEDURE InitReservedChars;
 VAR
-	i: SIZE;
+	i: LONGINT;
 BEGIN
 	FOR i := 0 TO LEN(reservedChar)-1 DO
 		IF CHR(i) <= 20X THEN	(* TAB, CR, ESC ... *)

@@ -100,7 +100,7 @@ TYPE
 		END AdjustRows;
 
 		PROCEDURE AdjustRow(row : Row);
-		VAR i : SIZE; newCells : CellArray;
+		VAR i : LONGINT; newCells : CellArray;
 		BEGIN
 			IF row.cells = NIL THEN NEW(row.cells, nofCols) END;
 			IF LEN(row.cells) # nofCols THEN
@@ -165,7 +165,7 @@ TYPE
 		END GetCellText;
 
 		PROCEDURE SetCellTextAOC*(col, row, minBufferSize : LONGINT; CONST caption : ARRAY OF CHAR);
-		VAR cell : Cell; length : SIZE;
+		VAR cell : Cell; length : LONGINT;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -518,4 +518,5 @@ BEGIN
 END WMStringGrids.
 
 System.Free WMStringGrids ~
+
 

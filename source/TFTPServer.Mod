@@ -38,29 +38,29 @@ TYPE
 			timer: Kernel.Timer;
 
 		(* Log functions *)
-		PROCEDURE LogEnter(level: WORD);
+		PROCEDURE LogEnter(level: LONGINT);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Enter END
 		END LogEnter;
 
-		PROCEDURE LogExit(level: WORD);
+		PROCEDURE LogExit(level: LONGINT);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Exit END
 		END LogExit;
 
-		PROCEDURE Log(level: WORD; CONST s: ARRAY OF CHAR);
+		PROCEDURE Log(level: LONGINT; CONST s: ARRAY OF CHAR);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.String(s) END
 		END Log;
 
-		PROCEDURE LogInt(level: WORD; i: SIZE);
+		PROCEDURE LogInt(level, i: LONGINT);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Int(i, 0) END
 		END LogInt;
 
 		(* Get2 - reads a (big endian) 16bit value from 'buf' at position 'ofs'..'ofs'+1 *)
-		PROCEDURE Get2(CONST buf: ARRAY OF CHAR; ofs: SIZE): LONGINT;
+		PROCEDURE Get2(CONST buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
 		BEGIN RETURN ORD(buf[ofs])*100H + ORD(buf[ofs+1])
 		END Get2;
 
 		(* Put2 - writes a (big endian) 16bit value to 'buf' at position 'ofs'..'ofs'+1 *)
-		PROCEDURE Put2(VAR buf: ARRAY OF CHAR; ofs: SIZE; value: LONGINT);
+		PROCEDURE Put2(VAR buf: ARRAY OF CHAR; ofs, value: LONGINT);
 		BEGIN buf[ofs] := CHR(value DIV 100H MOD 100H); buf[ofs+1] := CHR(value MOD 100H)
 		END Put2;
 
@@ -70,7 +70,7 @@ TYPE
 		END PacketType;
 
 		(* ExtractString - extracts a 0X terminated 8bit string from a buffer *)
-		PROCEDURE ExtractString(CONST buf: ARRAY OF CHAR; VAR ofs: SIZE; VAR s: ARRAY OF CHAR);
+		PROCEDURE ExtractString(CONST buf: ARRAY OF CHAR; VAR ofs: LONGINT; VAR s: ARRAY OF CHAR);
 		VAR pos: LONGINT;
 		BEGIN
 			WHILE (ofs < LEN(buf)) & (buf[ofs] # 0X) DO
@@ -120,8 +120,7 @@ TYPE
 		VAR
 			ip: IP.Adr;
 			ack: ARRAY 4 OF CHAR;
-			port, wait, retries, blockNr: LONGINT;
-			len: SIZE;
+			port, len, wait, retries, blockNr: LONGINT;
 			acked: BOOLEAN;
 			file: Files.File;
 			r: Files.Rider;
@@ -194,8 +193,7 @@ TYPE
 	TFTPWRQ = OBJECT(TFTP)
 		VAR
 			ip: IP.Adr;
-			port, waitPacket, retries, blockNr: LONGINT;
-			len: SIZE;
+			port, len, waitPacket, retries, blockNr: LONGINT;
 			Abort: BOOLEAN;
 			file: Files.File;
 			r: Files.Rider;
@@ -293,7 +291,7 @@ TYPE
 
 	TFTPServer = OBJECT(TFTP)
 		VAR
-			ofs,len: SIZE;
+			ofs,len: LONGINT;
 			ipstr, mode: ARRAY 16 OF CHAR;
 			filename: Files.FileName;
 			Stop, allowWrite: BOOLEAN;
@@ -375,7 +373,7 @@ TYPE
 
 VAR
 	tftpserver: TFTPServer;
-	TraceLevel: WORD;
+	TraceLevel: LONGINT;
 	errorMsg: ARRAY 8 OF ErrorMsg;
 	generator: Random.Generator;
 

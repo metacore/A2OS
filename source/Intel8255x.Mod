@@ -171,7 +171,7 @@ TYPE
 			state := ctrl.GetCUState();
 			IF state = CUIdle THEN
 				actAdr := Machine.PhysicalAdr(actAdr, ctrl.actTxCmd.size);
-				ctrl.WriteSCBGenPtr(actAdr(Machine.Address32));
+				ctrl.WriteSCBGenPtr(Machine.Ensure32BitAddress (actAdr));
 				ctrl.ExecCmd(CUStart, keepMasks);
 			ELSIF state = CUSuspended THEN
 				ctrl.ExecCmd(CUResume, keepMasks);
@@ -347,7 +347,7 @@ TYPE
 			physAdr := Machine.PhysicalAdr(ADDRESSOF(actTxCmd.data[0]), actTxCmd.size);
 			ASSERT(physAdr # Machine.NilAdr);
 			adr := ADDRESSOF(txCmd.data[0]);
-			SYSTEM.PUT32(adr + 04H, physAdr(Machine.Address32));
+			SYSTEM.PUT32(adr + 04H, Machine.Ensure32BitAddress (physAdr));
 		END SetupTxRing;
 
 		PROCEDURE SetupRxRing;
@@ -377,7 +377,7 @@ TYPE
 			lastRFD.next := actRFD;
 			physAdr := Machine.PhysicalAdr(ADDRESSOF(actRFD.data[0]), actRFD.size); ASSERT(physAdr # Machine.NilAdr);
 			adr := ADDRESSOF(lastRFD.data[0]);
-			SYSTEM.PUT32(adr + 4H, physAdr(Machine.Address32));
+			SYSTEM.PUT32(adr + 4H, Machine.Ensure32BitAddress (physAdr));
 			SYSTEM.PUT32(adr, Suspend);	(* after having received the last block, suspend reception of further frames *)
 		END SetupRxRing;
 
@@ -386,7 +386,7 @@ TYPE
 			adr: ADDRESS;
 		BEGIN
 			adr := Machine.PhysicalAdr(ADDRESSOF(actRFD.data[0]), actRFD.size); ASSERT(adr # Machine.NilAdr);
-			WriteSCBGenPtr(adr(Machine.Address32));
+			WriteSCBGenPtr(Machine.Ensure32BitAddress (adr));
 			ASSERT(GetRUState() # RUReady);
 			ExecCmd(RUStart, keepMasks);
 		END StartRxUnit;
@@ -490,7 +490,7 @@ TYPE
 			adr: ADDRESS;
 		BEGIN
 			adr := Machine.PhysicalAdr(ADDRESSOF(cmd.data[0]), cmd.size); ASSERT(adr # Machine.NilAdr);
-			WriteSCBGenPtr(adr(Machine.Address32));
+			WriteSCBGenPtr(Machine.Ensure32BitAddress (adr));
 			ASSERT(~(ActiveState IN GetStatus()));	(* CU must not be in active state *)
 			ExecCmd(CUStart, keepMasks);
 			WaitForActionCmd(cmd);	(* todo: if we know the last cmd, then check for cmd done BEFORE execCmd *)
@@ -803,7 +803,7 @@ BEGIN {EXCLUSIVE}
 END Install;
 
 PROCEDURE Remove*;
-VAR table: Plugins.Table; i: SIZE;
+VAR table: Plugins.Table; i: LONGINT;
 BEGIN {EXCLUSIVE}
 	Network.registry.GetAll(table);
 	IF table # NIL THEN

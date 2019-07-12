@@ -3,7 +3,7 @@ MODULE FoxCSharpParser;
 
 IMPORT Strings, StringPool, Diagnostics, D := Debugging, Basic := FoxBasic, FoxScanner,
     Scanner := FoxCSharpScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal,
-    Streams, KernelLog (* DEBUG *);
+    KernelLog (* DEBUG *);
 
 CONST
     Trace = FALSE;
@@ -109,11 +109,11 @@ TYPE
     Parser* = OBJECT
     VAR
         scanner: Scanner.Scanner;
-        token-: Scanner.Token;
+        symbol-: Scanner.Symbol;
         diagnostics: Diagnostics.Diagnostics;
         currentScope: SyntaxTree.Scope;
         recentCommentItem: ANY;
-        recentLine: Streams.Position;
+        recentLine: LONGINT;
         recentComment: SyntaxTree.Comment;
         moduleScope: SyntaxTree.ModuleScope;
         error-: BOOLEAN;
@@ -162,7 +162,7 @@ TYPE
         BEGIN
             SELF.scanner := scanner;
             SELF.diagnostics := diagnostics;
-            error := ~scanner.GetNextToken(token);
+            error := ~scanner.GetNextSymbol(symbol);
             recentCommentItem := NIL;
             recentComment := NIL;
             initStatements := NIL;
@@ -228,7 +228,7 @@ TYPE
             D.Str("start: ");
             D.Str(s);
             D.Str(" at pos ");
-            D.Int(token.position.start, 1);
+            D.Int(symbol.position.start, 1);
         END S;
 
         PROCEDURE E(CONST s: ARRAY OF CHAR);    (* for debugging purposes only *)
@@ -242,7 +242,7 @@ TYPE
             D.Str("end : ");
             D.Str(s);
             D.Str(" at pos ");
-            D.Int(token.position.start, 1);
+            D.Int(symbol.position.start, 1);
         END E;
 
         PROCEDURE EE(CONST s, t: ARRAY OF CHAR);    (* for debugging purposes only *)
@@ -272,17 +272,17 @@ HALT(100);
 
         (** helper procedures interfacing to the scanner **)
 
-        (** Get next token from scanner and store it in object-local variable 'token' *)
-        PROCEDURE NextToken;
+        (** Get next symbol from scanner and store it in object-local variable 'symbol' *)
+        PROCEDURE NextSymbol;
             VAR comment: SyntaxTree.Comment;
         BEGIN
-            error := ~scanner.GetNextToken(token) OR error;
-            WHILE ~error & (token.symbol = Scanner.Comment) DO
-                comment := SyntaxTree.NewComment(token.position, currentScope, token.string^, token.stringLength);
+            error := ~scanner.GetNextSymbol(symbol) OR error;
+            WHILE ~error & (symbol.token = Scanner.Comment) DO
+                comment := SyntaxTree.NewComment(symbol.position, currentScope, symbol.string^, symbol.stringLength);
                 moduleScope.AddComment(comment);
                 IF recentComment = NIL THEN
                     recentComment := comment;
-                    IF token.position.line = recentLine THEN
+                    IF symbol.position.line = recentLine THEN
                         IF recentCommentItem # NIL THEN
                             IF (recentCommentItem IS SyntaxTree.Symbol) THEN
                                 IF recentCommentItem(SyntaxTree.Symbol).comment = NIL THEN
@@ -313,68 +313,68 @@ HALT(100);
                         END;
                     END;
                 END;
-                error := ~scanner.GetNextToken(token);
+                error := ~scanner.GetNextSymbol(symbol);
             END;
-        END NextToken;
+        END NextSymbol;
 
-        (** Check if current token equals sym. If yes then return true, return false otherwise *)
-        PROCEDURE Peek(symbol: Scanner.Symbol): BOOLEAN;
+        (** Check if current symbol equals sym. If yes then return true, return false otherwise *)
+        PROCEDURE Peek(token: Scanner.Token): BOOLEAN;
             VAR comment: SyntaxTree.Comment;
         BEGIN
-            WHILE ~error & (token.symbol = Scanner.Comment) DO
-                comment := SyntaxTree.NewComment(token.position, currentScope, token.string^, token.stringLength);
+            WHILE ~error & (symbol.token = Scanner.Comment) DO
+                comment := SyntaxTree.NewComment(symbol.position, currentScope, symbol.string^, symbol.stringLength);
                 moduleScope.AddComment(comment);
                 IF recentComment = NIL THEN
                     recentComment := comment;
                 END;
-                error := ~scanner.GetNextToken(token);
+                error := ~scanner.GetNextSymbol(symbol);
             END;
-            RETURN token.symbol = symbol
+            RETURN symbol.token = token
         END Peek;
 
-        (** Check if the current token equals sym. If yes then read next token, report error otherwise. Returns success value *)
-        PROCEDURE Mandatory(symbol: Scanner.Symbol): BOOLEAN;
+        (** Check if the current symbol equals sym. If yes then read next symbol, report error otherwise. Returns success value *)
+        PROCEDURE Mandatory(token: Scanner.Token): BOOLEAN;
         BEGIN
 (* @@@ *)
 (*
 KernelLog.String("Mandatory: want ");
-KernelLog.Int(symbol, 1);
+KernelLog.Int(token, 1);
 KernelLog.String(" have ");
-KernelLog.Int(token.symbol, 1);
+KernelLog.Int(symbol.token, 1);
 KernelLog.Ln();
 *)
-            (* because of NextToken! *)
-            ASSERT(symbol # Scanner.Identifier);
-            ASSERT(symbol # Scanner.IntegerLiteral);
-            ASSERT(symbol # Scanner.RealLiteral);
-            ASSERT(symbol # Scanner.CharacterLiteral);
-            ASSERT(symbol # Scanner.StringLiteral);
-            IF ~Peek(symbol) THEN
-                Error(token.position, symbol, "");
+            (* because of NextSymbol! *)
+            ASSERT(token # Scanner.Identifier);
+            ASSERT(token # Scanner.IntegerLiteral);
+            ASSERT(token # Scanner.RealLiteral);
+            ASSERT(token # Scanner.CharacterLiteral);
+            ASSERT(token # Scanner.StringLiteral);
+            IF ~Peek(token) THEN
+                Error(symbol.position, token, "");
                 RETURN FALSE
             ELSE
-                NextToken;
+                NextSymbol;
                 RETURN TRUE
             END
         END Mandatory;
 
-        (** Check if the current token equals sym. If yes then read next token, report error otherwise *)
-        PROCEDURE Check(symbol: Scanner.Symbol);
+        (** Check if the current symbol equals sym. If yes then read next symbol, report error otherwise *)
+        PROCEDURE Check(token: Scanner.Token);
             VAR b: BOOLEAN;
         BEGIN
-            b := Mandatory(symbol);
+            b := Mandatory(token);
         END Check;
 
-        (** Check if current token is an identifier. If yes then copy identifier to name and get next token,
+        (** Check if current symbol is an identifier. If yes then copy identifier to name and get next symbol,
             report error otherwise and set name to empty name. Returns success value *)
         PROCEDURE MandatoryIdentifier(VAR name: SyntaxTree.Identifier): BOOLEAN;
         BEGIN
             IF Peek(Scanner.Identifier) THEN
-                name := token.identifier;
-                NextToken;
+                name := symbol.identifier;
+                NextSymbol;
                 RETURN TRUE
             ELSE
-                Error(token.position, Scanner.Identifier, "");
+                Error(symbol.position, Scanner.Identifier, "");
                 name := SyntaxTree.invalidIdentifier;
                 RETURN FALSE
             END
@@ -385,7 +385,7 @@ KernelLog.Ln();
             VAR name: SyntaxTree.Identifier;
                 identifier: SyntaxTree.Identifier;
         BEGIN
-            position := token.position;
+            position := symbol.position;
             IF MandatoryIdentifier(name) THEN
                 identifier := name;
             ELSE
@@ -394,22 +394,22 @@ KernelLog.Ln();
             RETURN identifier
         END Identifier;
 
-        (** Check if current token equals sym. If yes then get next token, return false otherwise *)
-        PROCEDURE Optional(symbol: Scanner.Symbol): BOOLEAN;
+        (** Check if current symbol equals sym. If yes then get next symbol, return false otherwise *)
+        PROCEDURE Optional(token: Scanner.Token): BOOLEAN;
         BEGIN
             (* do not use for Identifier or literal if the result is needed ! *)
-            IF Peek(symbol) THEN
-                NextToken;
+            IF Peek(token) THEN
+                NextSymbol;
                 RETURN TRUE
             ELSE
                 RETURN FALSE
             END
         END Optional;
 
-        (* ignore one ore more tokens of type symbol *)
-        PROCEDURE Ignore(symbol: Scanner.Symbol);
+        (* ignore one ore more symbols of type token *)
+        PROCEDURE Ignore(token: Scanner.Token);
         BEGIN
-            WHILE Optional(symbol) DO
+            WHILE Optional(token) DO
                 (* void *)
             END;
         END Ignore;
@@ -435,10 +435,10 @@ KernelLog.Ln();
             recentCommentItem := symbol;
         END CommentSymbol;
 
-        (** Mapping symbols to AST operators **)
+        (** Mapping tokens to AST operators **)
 
 (*
-    Mapping table for all punctuation symbols
+    Mapping table for all punctuation tokens
 
     Lynx                                     Fox
     ------------------------------------------------------------
@@ -488,10 +488,10 @@ KernelLog.Ln();
     Tilde* = 43;              (* ~ *)        lynx@unop     (not)
 *)
 
-        PROCEDURE MapOperator(symbol: Scanner.Symbol): LONGINT;
+        PROCEDURE MapOperator(token: Scanner.Token): LONGINT;
             VAR operator: LONGINT;
         BEGIN
-            CASE symbol OF
+            CASE token OF
               Scanner.Exclamation:
                 operator := FoxScanner.Not;
             | Scanner.ExclamationEqual:
@@ -803,7 +803,7 @@ KernelLog.Ln();
                 position: Position;
         BEGIN
             LOOP
-                position := token.position;
+                position := symbol.position;
                 IF Optional(Scanner.Period) THEN
                     identifier := Identifier(position);
                     expression := SyntaxTree.NewSelectorDesignator(position, expression(SyntaxTree.Designator), identifier);
@@ -842,45 +842,51 @@ KernelLog.Ln();
                 arrayType: SyntaxTree.ArrayType;
                 pointerType: SyntaxTree.PointerType;
                 rightExpression: SyntaxTree.Expression;
-                i, n: SIZE;
+                i, n: LONGINT;
         BEGIN
             IF Trace THEN
                 S("PrimaryExpression")
             END;
 
-            position := token.position;
+            position := symbol.position;
             arrayCreation := FALSE;
 
             IF Peek(Scanner.True) THEN
                 expression := SyntaxTree.NewBooleanValue(position, TRUE);
-                NextToken;
+                NextSymbol;
             ELSIF Peek(Scanner.False) THEN
                 expression := SyntaxTree.NewBooleanValue(position, FALSE);
-                NextToken;
+                NextSymbol;
             ELSIF Peek(Scanner.IntegerLiteral) THEN
-                expression := SyntaxTree.NewIntegerValue(position, token.integer);
-                NextToken;
+                IF symbol.numberType = Scanner.IntNumber THEN
+                    expression := SyntaxTree.NewIntegerValue(position, symbol.integer);
+                ELSIF symbol.numberType = Scanner.LongNumber THEN
+                    expression := SyntaxTree.NewIntegerValue(position, symbol.hugeint);
+                ELSE
+                    HALT(100);
+                END;
+                NextSymbol;
             ELSIF Peek(Scanner.RealLiteral) THEN
-                realValue := SyntaxTree.NewRealValue(position, token.real, token.numberType);
+                realValue := SyntaxTree.NewRealValue(position, symbol.real, symbol.numberType);
                 expression := realValue;
-                NextToken;
+                NextSymbol;
             ELSIF Peek(Scanner.CharacterLiteral) THEN
-                expression := SyntaxTree.NewCharacterValue(position, token.character);
-                NextToken;
+                expression := SyntaxTree.NewCharacterValue(position, symbol.character);
+                NextSymbol;
             ELSIF Peek(Scanner.StringLiteral) THEN
                 (*
                     TODO: Revise this: may need a string constructor wrapper ...
-                          ... and token.stringLength may be important too
+                          ... and symbol.stringLength may be important too
                 *)
-                expression := SyntaxTree.NewStringValue(position, token.string);
-                NextToken;
+                expression := SyntaxTree.NewStringValue(position, symbol.string);
+                NextSymbol;
             ELSIF Peek(Scanner.Identifier) THEN
                 identifier := Identifier(position);
                 identifier := localIdentTable.Find(identifier);
                 expression := SyntaxTree.NewIdentifierDesignator(position, identifier);
             ELSIF Peek(Scanner.Null) THEN
                 expression := SyntaxTree.NewNilValue(position);
-                NextToken;
+                NextSymbol;
             ELSIF Optional(Scanner.LeftParenthesis) THEN
                 expression := Expression();
                 Check(Scanner.RightParenthesis);
@@ -888,7 +894,7 @@ KernelLog.Ln();
                 expression := SyntaxTree.NewSelfDesignator(position,NIL);
             ELSIF Optional(Scanner.Base) THEN
                 Check(Scanner.Period);
-                position := token.position;
+                position := symbol.position;
                 identifier := Identifier(position);
                 expression := SyntaxTree.NewIdentifierDesignator(position, identifier);
                 expression := SyntaxTree.NewArrowDesignator(position, expression(SyntaxTree.Designator));
@@ -929,14 +935,14 @@ KernelLog.Ln();
                     expression := SyntaxTree.NewParameterDesignator(position, designator, expressionList);
                 END;
              ELSE
-                Error(token.position, Basic.InvalidCode, "Invalid primary expression");
-                NextToken;
+                Error(symbol.position, Basic.InvalidCode, "Invalid primary expression");
+                NextSymbol;
                 expression := SyntaxTree.invalidExpression;
             END;
 
             expression := Accessors(expression, arrayCreation);
 
-            position := token.position;
+            position := symbol.position;
             IF Optional(Scanner.QuestionQuestion) THEN
                 rightExpression := PrimaryExpression();
                 expression := NewReceiveExpression(position, expression, rightExpression);
@@ -965,11 +971,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("UnaryExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             IF Peek(Scanner.Plus) OR Peek(Scanner.Minus) OR
                     Peek(Scanner.Exclamation) OR Peek(Scanner.Tilde) THEN
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 expression := UnaryExpression();
                 expression := NewUnaryExpression(position, expression, operator);
             ELSE
@@ -997,11 +1003,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("MultiplicativeExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := UnaryExpression();
             WHILE Peek(Scanner.Times) OR Peek(Scanner.Slash) OR Peek(Scanner.Percent) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := UnaryExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1025,11 +1031,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("AdditiveExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := MultiplicativeExpression();
             WHILE Peek(Scanner.Plus) OR Peek(Scanner.Minus) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := MultiplicativeExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1053,11 +1059,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("ShiftExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := AdditiveExpression();
             WHILE Peek(Scanner.LeftShift) OR Peek(Scanner.RightShift) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := AdditiveExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1085,13 +1091,13 @@ KernelLog.Ln();
             IF Trace THEN
                 S("RelationalExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := ShiftExpression();
             WHILE Peek(Scanner.Less) OR Peek(Scanner.Greater) OR
                     Peek(Scanner.LessEqual) OR Peek(Scanner.GreaterEqual) OR
                     Peek(Scanner.Is) OR Peek(Scanner.As) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := ShiftExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1115,11 +1121,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("EqualityExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := RelationalExpression();
             WHILE Peek(Scanner.EqualEqual) OR Peek(Scanner.ExclamationEqual) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := RelationalExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1142,11 +1148,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("AndExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := EqualityExpression();
             WHILE Peek(Scanner.And) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := EqualityExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1169,11 +1175,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("ExclusiveOrExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := AndExpression();
             WHILE Peek(Scanner.Arrow) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := AndExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1196,11 +1202,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("InclusiveOrExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := ExclusiveOrExpression();
             WHILE Peek(Scanner.Bar) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := ExclusiveOrExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1223,11 +1229,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("ConditionalAndExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := InclusiveOrExpression();
             WHILE Peek(Scanner.AndAnd) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := InclusiveOrExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1250,11 +1256,11 @@ KernelLog.Ln();
             IF Trace THEN
                 S("ConditionalOrExpression")
             END;
-            position := token.position;
+            position := symbol.position;
             expression := ConditionalAndExpression();
             WHILE Peek(Scanner.BarBar) DO
-                operator := token.symbol;
-                NextToken;
+                operator := symbol.token;
+                NextSymbol;
                 rightExpression := ConditionalAndExpression();
                 expression := NewBinaryExpression(position, expression, rightExpression, operator);
             END;
@@ -1345,7 +1351,7 @@ KernelLog.Ln();
                 S("Block")
             END;
             Check(Scanner.LeftBrace);
-            position := token.position; position.start := position.end;
+            position := symbol.position; position.start := position.end;
             block := SyntaxTree.NewStatementBlock(position, outer, NIL);
             (* CommentStatement(block); *)
             IF ~Optional(Scanner.RightBrace) THEN
@@ -1498,7 +1504,7 @@ KernelLog.Ln();
                 statement: SyntaxTree.Statement;
                 operator: LONGINT;
                 position: Position;
-                length, i: SIZE;
+                length, i: LONGINT;
                 temp: SyntaxTree.Expression;
         BEGIN
             IF Trace THEN
@@ -1508,7 +1514,7 @@ KernelLog.Ln();
                    in place of primary-expression in the above productions. This is
                    required for compatibility with Fox back-end *)
             statement := NIL;
-            position := token.position;
+            position := symbol.position;
             IF expression = NIL THEN
                 expression := PrimaryExpression();
             END;
@@ -1516,7 +1522,7 @@ KernelLog.Ln();
                 Error(position, Basic.InvalidCode, "Invalid expression statement");
             ELSE
                 designator := expression(SyntaxTree.Designator);
-                position := token.position;
+                position := symbol.position;
                 IF Optional(Scanner.Equal) THEN
                     expression := Expression();
                     statement := SyntaxTree.NewAssignment(position, designator, expression, outer);
@@ -1525,8 +1531,8 @@ KernelLog.Ln();
                         Peek(Scanner.PercentEqual) OR Peek(Scanner.AndEqual) OR
                         Peek(Scanner.BarEqual) OR Peek(Scanner.ArrowEqual) OR
                         Peek(Scanner.LeftShiftEqual) OR Peek(Scanner.RightShiftEqual) THEN
-                    operator := token.symbol;
-                    NextToken;
+                    operator := symbol.token;
+                    NextSymbol;
                     (* lynx@asop(operator, designator, expression) *)
                     expression := Expression();
                     statement := NewAsopStatement(position, operator, designator, expression, outer);
@@ -1645,7 +1651,7 @@ KernelLog.Ln();
                 S("IfStatement")
             END;
             Check(Scanner.If);
-            ifStatement := SyntaxTree.NewIfStatement(token.position, outer);
+            ifStatement := SyntaxTree.NewIfStatement(symbol.position, outer);
             (* CommentStatement(ifStatement); *)
             Check(Scanner.LeftParenthesis);
             expression := Expression();
@@ -1693,7 +1699,7 @@ KernelLog.Ln();
                 last: SyntaxTree.Statement;
                 element: SyntaxTree.Expression;
                 defaultSection: BOOLEAN;
-                length: SIZE; position: Position;
+                length: LONGINT; position: Position;
         BEGIN
             IF Trace THEN
                 S("SwitchSection")
@@ -1707,7 +1713,7 @@ KernelLog.Ln();
                     Check(Scanner.Colon);
                     casePart.elements.AddExpression(element);
                 ELSE
-                    position := token.position;
+                    position := symbol.position;
                     Check(Scanner.Default);
                     Check(Scanner.Colon);
                     IF haveDefault THEN
@@ -1721,13 +1727,13 @@ KernelLog.Ln();
             statements := StatementList(caseStatement);
             length := statements.Length();
             IF length = 0 THEN
-                Error(token.position, Basic.InvalidCode, "Fall through in switch section");
+                Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
             ELSE
                 last := statements.GetStatement(length-1);
                 IF last IS SyntaxTree.ExitStatement THEN
                     statements.RemoveStatement(last);
                 ELSIF ~(last IS SyntaxTree.ReturnStatement) THEN
-                    Error(token.position, Basic.InvalidCode, "Fall through in switch section");
+                    Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
                 END;
             END;
             IF ~defaultSection THEN
@@ -1752,7 +1758,7 @@ KernelLog.Ln();
                 S("SwitchStatement")
             END;
             Check(Scanner.Switch);
-            caseStatement := SyntaxTree.NewCaseStatement(token.position, outer);
+            caseStatement := SyntaxTree.NewCaseStatement(symbol.position, outer);
             (* CommentStatement(caseStatement); *)
             Check(Scanner.LeftParenthesis);
             expression := Expression();
@@ -1896,13 +1902,13 @@ KernelLog.Ln();
                 designator: SyntaxTree.Designator;
                 casePart: SyntaxTree.CasePart;
                 caseBody: SyntaxTree.StatementSequence;
-                length: SIZE;
+                length: LONGINT;
                 last: SyntaxTree.Statement;
         BEGIN
             IF Trace THEN
                 S("SelectSection")
             END;
-            position := token.position;
+            position := symbol.position;
             Check(Scanner.Case);
             localIdentTable.OpenScope;
             IF Optional(Scanner.LeftParenthesis) THEN
@@ -1948,7 +1954,7 @@ KernelLog.Ln();
                 statement := NewLynxAddsel(position, index, varname, channel, outer);
                 statements.AddStatement(statement);
             ELSE
-                forStatement := SyntaxTree.NewForStatement(token.position, outer);
+                forStatement := SyntaxTree.NewForStatement(symbol.position, outer);
                 designator := SyntaxTree.NewIdentifierDesignator(position, varname);
                 forStatement.SetVariable(designator);
                 forStatement.SetFrom(from);
@@ -1969,13 +1975,13 @@ KernelLog.Ln();
             caseBody := StatementList(caseStatement);
             length := caseBody.Length();
             IF length = 0 THEN
-                Error(token.position, Basic.InvalidCode, "Fall through in switch section");
+                Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
             ELSE
                 last := caseBody.GetStatement(length-1);
                 IF last IS SyntaxTree.ExitStatement THEN
                     caseBody.RemoveStatement(last);
                 ELSIF ~(last IS SyntaxTree.ReturnStatement) THEN
-                    Error(token.position, Basic.InvalidCode, "Fall through in switch section");
+                    Error(symbol.position, Basic.InvalidCode, "Fall through in switch section");
                 END;
             END;
 
@@ -2006,7 +2012,7 @@ KernelLog.Ln();
             IF Trace THEN
                 S("SelectStatement")
             END;
-            position := token.position;
+            position := symbol.position;
             Check(Scanner.Select);
             statement := NewLynxNewsel(position, outer);
             statements.AddStatement(statement);
@@ -2019,7 +2025,7 @@ KernelLog.Ln();
                 SelectSection(statements, caseStatement, index, outer);
                 INC(index);
             END;
-            position := token.position;
+            position := symbol.position;
             Check(Scanner.RightBrace);
             IF index = 0 THEN
                 Error(position, Basic.InvalidCode, "Empty select statement");
@@ -2044,7 +2050,7 @@ KernelLog.Ln();
                 S("WhileStatement")
             END;
             Check(Scanner.While);
-            whileStatement := SyntaxTree.NewWhileStatement(token.position, outer);
+            whileStatement := SyntaxTree.NewWhileStatement(symbol.position, outer);
             (* CommentStatement(whileStatement); *)
             Check(Scanner.LeftParenthesis);
             expression := Expression();
@@ -2074,14 +2080,14 @@ KernelLog.Ln();
                 S("DoStatement")
             END;
             Check(Scanner.Do);
-            repeatStatement := SyntaxTree.NewRepeatStatement(token.position, outer);
+            repeatStatement := SyntaxTree.NewRepeatStatement(symbol.position, outer);
             (* CommentStatement(repeatStatement); *)
             statementSequence := SyntaxTree.NewStatementSequence();
             b := EmbeddedStatement(statementSequence, repeatStatement);
             repeatStatement.SetStatements(statementSequence);
             Check(Scanner.While);
             Check(Scanner.LeftParenthesis);
-            position := token.position;
+            position := symbol.position;
             expression := Expression();
             Check(Scanner.RightParenthesis);
             expression := NewUnaryExpression(position, expression, Scanner.Exclamation);
@@ -2173,7 +2179,7 @@ KernelLog.Ln();
                 statementSequence: SyntaxTree.StatementSequence;
                 iterator: SyntaxTree.StatementSequence;
                 position: Position;
-                i: SIZE;
+                i: LONGINT;
                 b: BOOLEAN;
         BEGIN
             IF Trace THEN
@@ -2181,14 +2187,14 @@ KernelLog.Ln();
             END;
             Check(Scanner.For);
             localIdentTable.OpenScope;
-            whileStatement := SyntaxTree.NewWhileStatement(token.position, outer);
+            whileStatement := SyntaxTree.NewWhileStatement(symbol.position, outer);
             (* CommentStatement(whileStatement); *)
             Check(Scanner.LeftParenthesis);
             IF ~Optional(Scanner.Semicolon) THEN
                 ForInitializer(statements, outer);
                 Check(Scanner.Semicolon);
             END;
-            position := token.position;
+            position := symbol.position;
             IF ~Optional(Scanner.Semicolon) THEN
                 expression := Expression();
                 Check(Scanner.Semicolon);
@@ -2230,7 +2236,7 @@ KernelLog.Ln();
                 S("ReturnStatement")
             END;
             Check(Scanner.Return);
-            returnStatement := SyntaxTree.NewReturnStatement(token.position, outer);
+            returnStatement := SyntaxTree.NewReturnStatement(symbol.position, outer);
             (* CommentStatement(returnStatement); *)
             IF ~Optional(Scanner.Semicolon) THEN
                 expression := Expression();
@@ -2254,7 +2260,7 @@ KernelLog.Ln();
                 S("BreakStatement")
             END;
             Check(Scanner.Break);
-            statement := SyntaxTree.NewExitStatement(token.position, outer);
+            statement := SyntaxTree.NewExitStatement(symbol.position, outer);
             (* CommentStatement(statement); *)
             statements.AddStatement(statement);
             Check(Scanner.Semicolon);
@@ -2363,7 +2369,7 @@ KernelLog.Ln();
             END;
             isDeclaration := FALSE;
             leftBracket := FALSE;
-            position2 := token.position;
+            position2 := symbol.position;
             IF Peek(Scanner.Identifier) THEN
                 isDeclaration := TRUE;
             ELSIF Optional(Scanner.LeftBracket) THEN
@@ -2477,7 +2483,7 @@ KernelLog.Ln();
             previousScope := currentScope;
             currentScope := scope;
             Check(Scanner.LeftBrace);
-            body := SyntaxTree.NewBody(token.position, scope);
+            body := SyntaxTree.NewBody(symbol.position, scope);
             IF ~Optional(Scanner.RightBrace) THEN
                 body.SetStatementSequence(StatementList(body));
                 Check(Scanner.RightBrace);
@@ -2561,7 +2567,7 @@ KernelLog.Ln();
             IF Trace THEN
                 S("RankSpecifier")
             END;
-            position := token.position;
+            position := symbol.position;
             REPEAT
                 arrayType := SyntaxTree.NewArrayType(position, currentScope, SyntaxTree.Open);
                 arrayType.SetArrayBase(type);
@@ -2586,7 +2592,7 @@ KernelLog.Ln();
             IF Trace THEN
                 S("NonArrayType")
             END;
-            position := token.position;
+            position := symbol.position;
             name := SyntaxTree.invalidIdentifier;
             direction := -1;
             IF Optional(Scanner.Bool) THEN
@@ -2698,7 +2704,7 @@ KernelLog.Ln();
             (* left bracket already consumed *)
             list := NIL;
             REPEAT
-                position := token.position;
+                position := symbol.position;
                 identifier := Identifier(position);
                 IF Optional(Scanner.LeftParenthesis) THEN
                     expression := Expression();
@@ -2785,13 +2791,13 @@ KernelLog.Ln();
             VAR access: SET;
         BEGIN
             IF modifiers * {Public, Internal} = {Public, Internal} THEN
-                Error(token.position, Basic.InvalidCode, "conflicting modifiers");
+                Error(symbol.position, Basic.InvalidCode, "conflicting modifiers");
             END;
             IF Public IN modifiers THEN
                 access := SyntaxTree.Public + SyntaxTree.Protected + SyntaxTree.Internal;
             ELSIF Internal IN modifiers THEN
                 IF ~allowedReadOnly THEN
-                    Error(token.position, Basic.InvalidCode, "may not be defined internal")
+                    Error(symbol.position, Basic.InvalidCode, "may not be defined internal")
                 ELSE
                     access :=  SyntaxTree.ReadOnly + {SyntaxTree.InternalWrite};
                 END;
@@ -2904,7 +2910,7 @@ KernelLog.Ln();
             variable.SetAccess(access);
             variable.SetType(type);
             parentScope.AddVariable(variable);
-            start := token.position;
+            start := symbol.position;
             (* 'initOuter' is set to NIL in contexts where initialization is not yet implemented *)
             IF (initOuter # NIL) & Optional(Scanner.Equal) THEN
                 (* ACHTUNG: array-initializer form is not supported *)
@@ -3212,7 +3218,7 @@ KernelLog.Ln();
                 CellDeclaration(parentScope, modifiers, attributes, FALSE);
             ELSIF Optional(Scanner.Cellnet) THEN
                 CellDeclaration(parentScope, modifiers, attributes, TRUE);
-            ELSIF Peek(Scanner.Identifier) & (token.identifier = parentName) THEN
+            ELSIF Peek(Scanner.Identifier) & (symbol.identifier = parentName) THEN
                 name := Identifier(position);
                 ConstructorDeclaration(parentScope, modifiers, name, position);
             ELSIF Optional(Scanner.Void) THEN
@@ -3283,7 +3289,7 @@ KernelLog.Ln();
 
             EnterInit;
 
-            (* token 'class' already consumed *)
+            (* symbol 'class' already consumed *)
             name := Identifier(position);
             access := IdentifierAccess(modifiers, FALSE);
             typeDeclaration := SyntaxTree.NewTypeDeclaration(position, name);
@@ -3386,7 +3392,7 @@ KernelLog.Ln();
             initStatements := NIL;
             initOuter := NIL;
 
-            (* token 'struct' already consumed *)
+            (* symbol 'struct' already consumed *)
             name := Identifier(position);
             access := IdentifierAccess(modifiers, FALSE);
             typeDeclaration := SyntaxTree.NewTypeDeclaration(position, name);
@@ -3429,7 +3435,7 @@ KernelLog.Ln();
                 S("DelegateDeclaration")
             END;
 
-            (* token 'delegate' already consumed *)
+            (* symbol 'delegate' already consumed *)
             IF Optional(Scanner.Void) THEN
                 returnType := NIL;
             ELSE
@@ -3479,7 +3485,7 @@ KernelLog.Ln();
             IF Trace THEN
                 S("PortDeclaration")
             END;
-            position := token.position;
+            position := symbol.position;
             IF Optional(Scanner.In) THEN
                 direction := SyntaxTree.InPort;
             ELSIF Optional(Scanner.Out) THEN
@@ -3596,7 +3602,7 @@ KernelLog.Ln();
             initStatements := NIL;
             initOuter := NIL;
 
-            (* token 'cell' already consumed *)
+            (* symbol 'cell' already consumed *)
             name := Identifier(position);
             access := IdentifierAccess(modifiers, FALSE);
             typeDeclaration := SyntaxTree.NewTypeDeclaration(position, name);
@@ -3661,8 +3667,8 @@ KernelLog.Ln();
             IF Trace THEN
                 S("ImportDirective")
             END;
-            (* import token already consumed *)
-            position := token.position;
+            (* import symbol already consumed *)
+            position := symbol.position;
             alias := Identifier(idPosition);
             IF alias # SyntaxTree.invalidIdentifier THEN
                 IF Optional(Scanner.Equal) THEN
@@ -3709,7 +3715,7 @@ KernelLog.Ln();
             IF Trace THEN
                 S("Module")
             END;
-            position := token.position;
+            position := symbol.position;
             (* needed to feed in comment already before module starts: *)
             moduleScope := SyntaxTree.NewModuleScope();
             currentScope := moduleScope;
@@ -3734,7 +3740,7 @@ KernelLog.Ln();
                     (* read ahead to read comments *)
                     scannerDiagnostics := NIL;
                     scanner.ResetErrorDiagnostics(scannerDiagnostics);
-                    NextToken;
+                    NextSymbol;
                     scanner.ResetErrorDiagnostics(scannerDiagnostics);
                     (* do not use Check for not reading after end of module *)
                     SetNextInComment(recentComment, module);

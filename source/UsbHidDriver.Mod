@@ -113,7 +113,7 @@ TYPE
 		 * Sets the maximum possible amount of keys, the device is sending at one time
 		 * @param nofkeys: the number of keys maximumely sent by the device
 		 *)
-		PROCEDURE SetMaxKeycodes(nofKeys: SIZE);
+		PROCEDURE SetMaxKeycodes(nofKeys: LONGINT);
 		BEGIN
 			ASSERT(pressed=NIL);
 			ASSERT(tempPressed=NIL);
@@ -550,7 +550,7 @@ TYPE
 		END Disconnect;
 
 		(*is always called, when new report arrived*)
-		PROCEDURE HandleHidEvent(status : Usbdi.Status; actLen : SIZE);
+		PROCEDURE HandleHidEvent(status : Usbdi.Status; actLen : LONGINT);
 		VAR
 			ri			: UsbHidReport.ReportItem;
 			i, bitIndex	: LONGINT;
@@ -682,7 +682,7 @@ TYPE
 		END IsTouchscreen;
 
 		PROCEDURE GetPipeStatus*(): Usbdi.Status;
-		VAR len: SIZE;
+		VAR len: LONGINT;
 		BEGIN
 			IF pipe # NIL THEN RETURN pipe.GetStatus(len)
 			ELSE RETURN Usbdi.Error
@@ -1580,8 +1580,8 @@ TYPE
 
 (*used for debug output. lists the report descriptor as described in Device Class Definition for Human Interface Devices,
 	f.e. page 61 Appendix A, B.2 Protocol 2 (Mouse)*)
-PROCEDURE LayoutBuffer*(CONST buf : Usbdi.Buffer;  len : SIZE);
-VAR temp : SIZE;
+PROCEDURE LayoutBuffer*(CONST buf : Usbdi.Buffer;  len : LONGINT);
+VAR temp : LONGINT;
 BEGIN
 	KernelLog.String("Buffer Outline:"); KernelLog.Ln;
 	FOR temp := 0 TO len-1 DO
@@ -1640,7 +1640,7 @@ END InstallDisplayDimensions;
 
 
 PROCEDURE Setup;
-VAR s: ARRAY 32 OF CHAR; p: SIZE;
+VAR s: ARRAY 32 OF CHAR; p: LONGINT;
 BEGIN
 	getDisplayDimensions := DefaultDisplayDimensions;
 	Machine.GetConfig("TouchDelay", s);

@@ -12,9 +12,9 @@ TYPE
 	Hash* = OBJECT (Hashes.Hash)
 		VAR
 			hash: State;
-			Nl, Nh: SIZE;
+			Nl, Nh: LONGINT;
 			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
-			cn: SIZE	(* number of chars in data *)
+			cn: LONGINT	(* number of chars in data *)
 
 
 		PROCEDURE &Init*;
@@ -43,8 +43,8 @@ TYPE
 		END HashContextBlock;
 
 		(** data: value to be hashed *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-			VAR n, i, l: SIZE;
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: LONGINT );
+			VAR n, i, l: LONGINT;
 		BEGIN
 			ASSERT( initialized );
 			l := Nl + len *8;
@@ -73,7 +73,7 @@ TYPE
 		END Update;
 
 		(** get the hashvalue of length SELF.size *)
-		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 			VAR p: LONGINT;
 		BEGIN
 			cdata[cn] := 80X;  INC( cn );
@@ -83,7 +83,7 @@ TYPE
 			END;
 			p := BlockSize - 8;
 			WHILE cn < p  DO  cdata[cn] := 0X;  INC( cn )  END;
-			U.IntToBufferBE( Nh(LONGINT), cdata, p );  U.IntToBufferBE( Nl(LONGINT), cdata, p + 4 );
+			U.IntToBufferBE( Nh, cdata, p );  U.IntToBufferBE( Nl, cdata, p + 4 );
 
 			HashContextBlock;
 			U.BlockToBufferBE( hash, buf, pos )
@@ -152,7 +152,7 @@ TYPE
 		b := ROT( b, 30 );
 	END tr6079;
 
-	PROCEDURE HashBlock( VAR state: State;  CONST buf: ARRAY OF CHAR;  pos: SIZE );
+	PROCEDURE HashBlock( VAR state: State;  CONST buf: ARRAY OF CHAR;  pos: LONGINT );
 	VAR
 		A, B, C, D, E, T: LONGINT;
 		x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, xa, xb, xc, xd, xe, xf: SET32;

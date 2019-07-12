@@ -491,7 +491,7 @@ VAR
 		kernelStat, btStat, fbStat, status, memmapStat : EFI.Status;
 		kernelFileName, configFileName, arg : ARRAY 128 OF EFI.Char16;
 		val : ARRAY 100 OF CHAR;
-		i: SIZE; dWidth, dHeight, dDepth, dFormat : LONGINT;
+		i, dWidth, dHeight, dDepth, dFormat : LONGINT;
 		size: EFI.Int64;
 		buf : ARRAY 100 OF EFI.Char16;
 		fbInfo: EFIGraphicsOutput.GraphicsModeInfo;

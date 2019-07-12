@@ -130,7 +130,7 @@ TYPE
 		next: Alias;
 	END;
 
-	NotifyProcedure* = PROCEDURE {DELEGATE} (command : WORD);
+	NotifyProcedure* = PROCEDURE {DELEGATE} (command : LONGINT);
 
 TYPE
 
@@ -140,7 +140,7 @@ TYPE
 		context: Commands.Context;
 		command: ARRAY MaxLen OF CHAR;
 		res: WORD;
-		nestingLevel : SIZE; (* how many shells run in this shell? *)
+		nestingLevel : LONGINT; (* how many shells run in this shell? *)
 		aliases: Alias;
 		prompt: ARRAY 32 OF CHAR;
 
@@ -166,7 +166,7 @@ TYPE
 		END Exit;
 
 		PROCEDURE DeleteStringFromDisplay(CONST x : ARRAY OF CHAR);
-		VAR i, len : SIZE;
+		VAR i, len : LONGINT;
 		BEGIN
 			len := Strings.Length(x);
 			FOR i :=	 0 TO len-1 DO context.out.Char(Backspace); END;
@@ -177,7 +177,7 @@ TYPE
 		PROCEDURE ReadCommand(VAR command : ARRAY OF CHAR): CHAR;
 		VAR
 			ch: CHAR;
-			currentIndex : SIZE;
+			currentIndex : LONGINT;
 
 			PROCEDURE IsAsciiCharacter(ch : CHAR) : BOOLEAN;
 			BEGIN
@@ -279,7 +279,7 @@ TYPE
 		END ReadCommand;
 
 		PROCEDURE Parse(VAR cmd: Command; VAR wait: BOOLEAN): WORD;
-		VAR sym: SET; pos: SIZE; c, next: CHAR;
+		VAR sym: SET; pos: LONGINT; c, next: CHAR;
 
 			PROCEDURE Init;
 			BEGIN
@@ -312,7 +312,7 @@ TYPE
 			END Skip;
 
 			PROCEDURE Token(VAR s: ARRAY OF CHAR; cond: SET): BOOLEAN;
-			VAR i: SIZE; quote: BOOLEAN;
+			VAR i: LONGINT; quote: BOOLEAN;
 			BEGIN
 				quote := FALSE;
 				WHILE (sym * cond = {}) OR (quote & (sym # eoln)) DO
@@ -323,7 +323,7 @@ TYPE
 			END Token;
 
 			PROCEDURE Cmd(): Command;
-			VAR i: SIZE; cmd: Command; arg : Streams.StringReader;
+			VAR i: LONGINT; cmd: Command; arg : Streams.StringReader;
 			BEGIN Skip;
 				IF (sym = char) THEN
 					NEW(cmd);
@@ -438,7 +438,7 @@ TYPE
 		END Parse;
 
 		PROCEDURE ReadAlias(cmd : Command; verbose : BOOLEAN);
-		VAR s: ARRAY MaxLen OF CHAR; alias, p, q: Alias; i, k: SIZE; c: CHAR;
+		VAR s: ARRAY MaxLen OF CHAR; alias, p, q: Alias; i, k: LONGINT; c: CHAR;
 		BEGIN
 			IF (cmd.parameters # "") THEN
 				COPY(cmd.parameters, s);
@@ -487,7 +487,7 @@ TYPE
 		END ReadAlias;
 
 		PROCEDURE ReplaceAlias(cmd: Command): BOOLEAN;
-		VAR a: Alias; d, i: SIZE;
+		VAR a: Alias; d, i: LONGINT;
 		BEGIN
 			a := aliases;
 			WHILE (a # NIL) & (a.alias < cmd.command) DO a := a.next END;
@@ -586,7 +586,7 @@ TYPE
 		END Execute;
 
 		PROCEDURE Run;
-		VAR cmdList: Command; wait, exit: BOOLEAN; i : SIZE; ch: CHAR;
+		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT; ch: CHAR;
 		BEGIN
 			exit := FALSE;
 			WHILE ~close & ~exit & (context.in.res = Streams.Ok) DO

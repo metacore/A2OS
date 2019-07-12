@@ -51,7 +51,7 @@ TYPE
 	END;
 
 PROCEDURE WriteImage(w: Streams.Writer; r: Streams.Reader; imageSize: LONGINT);
-VAR read, padLen: SIZE; buf: ARRAY CDSectorSize OF CHAR;
+VAR read, padLen: LONGINT; buf: ARRAY CDSectorSize OF CHAR;
 BEGIN
 	padLen := CDSectorSize - (imageSize MOD CDSectorSize);
 
@@ -270,8 +270,8 @@ BEGIN
 	w.Net16(x);
 END WriteBothByteOrder16;
 
-PROCEDURE WriteByteRep(w: Streams.Writer; b: CHAR; n: SIZE);
-VAR i: SIZE;
+PROCEDURE WriteByteRep(w: Streams.Writer; b: CHAR; n: LONGINT);
+VAR i: LONGINT;
 BEGIN
 	FOR i := 1 TO n DO
 		w.Char(b);
@@ -279,7 +279,7 @@ BEGIN
 END WriteByteRep;
 
 PROCEDURE WriteStringWithPadding(w: Streams.Writer; CONST str: ARRAY OF CHAR; padChar: CHAR; len: LONGINT);
-VAR strLen: SIZE;
+VAR strLen: LONGINT;
 BEGIN
 	strLen := LEN(str) - 1; (* we don't write the terminating 0X *)
 	w.String(str);
@@ -299,8 +299,8 @@ END WriteEmptySectors;
 
 (*
 PROCEDURE WriteStringWithPaddingToBuffer(buf: ARRAY OF CHAR; offset: LONGINT; str: ARRAY OF CHAR;
-	padChar: CHAR; len: SIZE);
-VAR i, strLen: SIZE;
+	padChar: CHAR; len: LONGINT);
+VAR i, strLen: LONGINT;
 BEGIN
 	strLen := LEN(str) - 1; (* we don't write the terminating 0X *)
 	SYSTEM.MOVE(ADDRESSOF(str), ADDRESSOF(buf) + offset, strLen);
@@ -311,7 +311,7 @@ END WriteStringWithPaddingToBuffer;
 *)
 
 PROCEDURE CalcChecksum16(CONST buf: ARRAY OF CHAR): INTEGER;
-VAR checksum: LONGINT; i, numWords: SIZE;
+VAR checksum, i, numWords: LONGINT;
 BEGIN
 	checksum := 0;
 	numWords := LEN(buf) DIV 2;
@@ -338,7 +338,7 @@ BEGIN
 		RETURN;
 	END;
 
-	numSectors := CalcIsoImageSectorCount(fIn.Length()(LONGINT));
+	numSectors := CalcIsoImageSectorCount(fIn.Length());
 
 	Files.Register(fOut);
 	Files.OpenWriter(out, fOut, 0);
@@ -350,11 +350,11 @@ BEGIN
 	WriteBootCatalog(out);
 	WriteIsoFSData(out);
 	Files.OpenReader(in, fIn, 0); (* open a reader on the raw input image *)
-	WriteImage(out, in, fIn.Length()(LONGINT)); (* write the raw image *)
+	WriteImage(out, in, fIn.Length()); (* write the raw image *)
 
 	out.Update;
 	fOut.Update;
-	imageSize := fOut.Length()(LONGINT);
+	imageSize := fOut.Length();
 END MakeImage;
 
 PROCEDURE Make*(context : Commands.Context);

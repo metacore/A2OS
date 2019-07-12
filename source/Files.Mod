@@ -29,8 +29,8 @@ CONST
 	InvalidAdr= 2903;			(* Block address outside of volume. Causes HALT *)
 
 	(* File level errors *)
-	VolumeReadOnly* = 2905;	(** Cannot modify read-only volume *)
-	FsNotFound* = 2906;		(** File system not found *)
+	VolumeReadOnly* = 2905; 	(** Cannot modify read-only volume *)
+	FsNotFound* = 2906; 		(** File system not found *)
 	FileAlreadyExists* = 2908;	(** File already exists *)
 	BadFileName* = 2909;		(** Bad file name *)
 	FileNotFound* = 2910;		(** File not found *)
@@ -49,7 +49,7 @@ CONST
 
 	PathDelimiter* = "/";	(** Path delimiter *)
 
-	BufferSize = 32*1024;	(* Buffersize for file copy operation *)
+	BufferSize = 32*1024; 	(* Buffersize for file copy operation *)
 
 	SetSize = MAX (SET) + 1;
 
@@ -58,7 +58,7 @@ CONST
 
 TYPE
 	Position* = Streams.Position;
-	Size* = Streams.Position;
+	TSize* = LONGINT;
 
 TYPE
 (** All record fields are read-only for users, and read-write for extenders. *)
@@ -69,10 +69,9 @@ TYPE
 	Rider* = RECORD	(** not shareable between multiple processes *)
 		(* the rider must be a record, otherwise the Oberon text system will not work *)
 		eof*: BOOLEAN;	(** has end of file been passed *)
-		res*: SIZE;	(** leftover byte count for ReadBytes/WriteBytes *)
+		res*: LONGINT;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
-		apos*: Position;
-		bpos*: SIZE;
+		apos*, bpos*: LONGINT;
 		hint*: Hint;
 		file*: File;
 		fs*: FileSystem;
@@ -86,7 +85,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			file.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -105,7 +104,7 @@ TYPE
 			received := pos; (* this effects that Streams.Reader.Pos() returns the correct location in the file *)
 		END SetPos;
 
-		PROCEDURE &InitFileReader*(file : File; pos: Position);
+		PROCEDURE &InitFileReader*(file : File; pos: LONGINT);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -124,7 +123,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			r.file.WriteBytes(r, buf, ofs, len);
 			IF propagate THEN r.file.Update END;
@@ -149,7 +148,7 @@ TYPE
 			RETURN file.Pos(r)
 		END Pos;
 
-		PROCEDURE &InitFileWriter*(file: File; pos: Position);
+		PROCEDURE &InitFileWriter*(file: File; pos: LONGINT);
 		BEGIN
 			ASSERT(file # NIL);
 			SELF.file := file;
@@ -214,7 +213,7 @@ TYPE
 			DEC(used)
 		END FreeBlock;
 
-		PROCEDURE FreeBlocks*(CONST a: ARRAY OF Address; ofs, len: SIZE);
+		PROCEDURE FreeBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize);
 		VAR i: SIZE;  adr: Address;
 		BEGIN {EXCLUSIVE}
 			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
@@ -237,7 +236,7 @@ TYPE
 			INC(used)
 		END MarkBlock;
 
-		PROCEDURE MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: SIZE);
+		PROCEDURE MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize);
 		VAR i: SIZE;  adr: Address;
 		BEGIN {EXCLUSIVE}
 			IF ReadOnly IN flags THEN HALT(ReadOnlyError) END;
@@ -357,7 +356,7 @@ TYPE
 
 		(* default implementation using an enumerator *)
 		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-		VAR enum: Enumerator; time, date: LONGINT; size: Size;
+		VAR enum: Enumerator; time, date, size: LONGINT;
 		BEGIN
 			NEW(enum);
 			enum.Open(name,{});
@@ -387,12 +386,12 @@ TYPE
 
 		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
 
-		PROCEDURE Set*(VAR r: Rider; pos: Position);
+		PROCEDURE Set*(VAR r: Rider; pos: LONGINT);
 		BEGIN HALT(301) END Set;	(* abstract *)
 
 		(** Return the offset of a Rider positioned on a file. *)
 
-		PROCEDURE Pos*(VAR r: Rider): Position;
+		PROCEDURE Pos*(VAR r: Rider): LONGINT;
 		BEGIN HALT(301) END Pos;	(* abstract *)
 
 		(** Read a byte from a file, advancing the Rider one byte further.  R.eof indicates if the end of the file has been passed. *)
@@ -402,7 +401,7 @@ TYPE
 
 		(** Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 
-		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
 		BEGIN HALT(301) END ReadBytes;	(* abstract *)
 
 		(** Write a byte into the file at the Rider position, advancing the Rider by one. *)
@@ -412,12 +411,12 @@ TYPE
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
 
-		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
 		BEGIN HALT(301) END WriteBytes;	(* abstract *)
 
 		(** Return the current length of a file. *)
 
-		PROCEDURE Length*(): Size;
+		PROCEDURE Length*(): LONGINT;
 		BEGIN HALT(301) END Length;	(* abstract *)
 
 		(** Return the time (t) and date (d) when a file was last modified. *)
@@ -469,7 +468,7 @@ TYPE
 		VAR
 			r: Rider;	(* data is stored in an anonymous file, because it is potentially very long *)
 			adding: BOOLEAN;	(* prevent user calls of PutEntry *)
-			size-: SIZE;	(** total number of entries *)
+			size-: LONGINT;	(** total number of entries *)
 
 		(** Open an enumerator and enumerate the files that match mask. *)
 
@@ -500,14 +499,14 @@ TYPE
 
 		(** Get one entry from the enumerator. *)
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Size): BOOLEAN;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date, size: LONGINT): BOOLEAN;
 		VAR len: LONGINT;
 		BEGIN
 			ReadNum(r, len);
 			IF ~r.eof THEN
 				name[len] := 0X;	(* index check *)
 				r.file.ReadBytes(r, name, 0, len);
-				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadSize(r, size);
+				ReadSet(r, flags); ReadNum(r, time); ReadNum(r, date); ReadNum(r, size);
 				ASSERT(~r.eof)
 			END;
 			RETURN ~r.eof
@@ -523,7 +522,7 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size: Size);
+		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
 		VAR len: LONGINT;
 		BEGIN
 			ASSERT(adding);
@@ -571,7 +570,7 @@ VAR
 
 (** Open a reader on a file at the specified position. *)
 
-PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: Position);
+PROCEDURE OpenReader*(VAR b: Reader; f: File; pos: LONGINT);
 BEGIN
 	IF b = NIL THEN
 		NEW(b, f, pos)
@@ -582,7 +581,7 @@ END OpenReader;
 
 (** Open a writer on a file at the specified position.  Remember to call Streams.Update before registering or closing the file! *)
 
-PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: Position);
+PROCEDURE OpenWriter*(VAR b: Writer; f: File; pos: LONGINT);
 BEGIN
 	NEW(b, f, pos)
 END OpenWriter;
@@ -707,7 +706,7 @@ END JoinExtension;
 (** Append the path delimiter to path if path does not contain one *)
 
 PROCEDURE ForceTrailingDelimiter*(VAR path: ARRAY OF CHAR);
-VAR i: SIZE;
+VAR i: LONGINT;
 BEGIN
 	i := 0; WHILE path[i] # 0X DO INC(i) END;
 	IF (i = 0) OR (path[i-1] # PathDelimiter) THEN
@@ -766,7 +765,7 @@ END Promote;
 PROCEDURE Remove*(fs: FileSystem);
 VAR
 	enum: OBJECT
-		VAR count: SIZE; fs: FileSystem;
+		VAR count: LONGINT; fs: FileSystem;
 
 		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
 		BEGIN
@@ -815,7 +814,7 @@ END This;
 (** Get a list of file systems. *)
 
 PROCEDURE GetList*(VAR list: FileSystemTable);
-VAR fs: FileSystem; n, i: SIZE;
+VAR fs: FileSystem; n, i: LONGINT;
 BEGIN {EXCLUSIVE}
 	fs := fsroot; n := 0;
 	WHILE (fs # NIL) DO fs := fs.next; INC(n) END;
@@ -958,7 +957,7 @@ VAR writer : Writer;
 	reader : Reader;
 	file : File;
 	chunk : ARRAY 4096 OF CHAR;
-	len : SIZE;
+	len : LONGINT;
 BEGIN
 	IF fileClipboard = NIL THEN RETURN END;
 	IF Old(name) # NIL THEN res := FileAlreadyExists;			(* File already exists *)
@@ -992,7 +991,7 @@ VAR
 	sfs, dfs : FileSystem;
 	sfile, dfile : File;
 	buffer : ARRAY BufferSize OF CHAR;
-	i : Size;
+	i : LONGINT;
 BEGIN
 	SplitName(source, sprefix, sname);
 	SplitName(destination, dprefix, dname);
@@ -1040,8 +1039,8 @@ BEGIN
 		dfile.WriteBytes(dPos, buffer, 0, BufferSize);
 		INC(i);
 	END;
-	sfile.ReadBytes(sPos, buffer, 0, SIZE(sfile.Length() MOD BufferSize));
-	dfile.WriteBytes(dPos, buffer, 0, SIZE(sfile.Length() MOD BufferSize));
+	sfile.ReadBytes(sPos, buffer, 0, sfile.Length() MOD BufferSize);
+	dfile.WriteBytes(dPos, buffer, 0, sfile.Length() MOD BufferSize);
 	dfile.Update;
 	Register(dfile); (* Will enter exclusive region *)
 END CopyFile;
@@ -1126,7 +1125,7 @@ END RemoveDirectory;
 
 PROCEDURE Enumerate(CONST mask: ARRAY OF CHAR; flags: SET; enum: Enumerator);
 VAR
-	fs: FileSystem; ft: FileSystemTable; i: SIZE;
+	fs: FileSystem; ft: FileSystemTable; i: LONGINT;
 	prefix: Prefix; fmask: FileName;
 BEGIN
 	SplitName(mask, prefix, fmask);
@@ -1148,7 +1147,7 @@ END Enumerate;
 
 PROCEDURE Exists*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
 VAR
-	fs: FileSystem; ft: FileSystemTable; i: SIZE;
+	fs: FileSystem; ft: FileSystemTable; i: LONGINT;
 	prefix: Prefix;
 BEGIN
 	IF prefix = "" THEN
@@ -1255,7 +1254,7 @@ BEGIN
 END ReadLReal;
 
 PROCEDURE ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR);
-VAR i: SIZE; ch: CHAR; f: File;
+VAR i: LONGINT; ch: CHAR; f: File;
 BEGIN
 	i := 0; f := r.file;
 	LOOP
@@ -1277,23 +1276,11 @@ BEGIN
 	n := 0; y := 0; f := r.file;
 	f.Read(r, ch);
 	WHILE ch >= 80X DO
-		INC(y, LSH(LONGINT(ORD(ch)) - 128, n)); INC(n, 7);
+		INC(y, LSH(LONG(ORD(ch)) - 128, n)); INC(n, 7);
 		f.Read(r, ch)
 	END;
 	x := ASH(LSH(LONG(ORD(ch)), 25), n-25) + y
 END ReadNum;
-
-PROCEDURE ReadSize*(VAR r: Rider; VAR x: Size);
-VAR ch: CHAR; n, y: SIZE; f: File;
-BEGIN
-	n := 0; y := 0; f := r.file;
-	f.Read(r, ch);
-	WHILE ch >= 80X DO
-		INC(y, LSH(SIZE(ORD(ch)) - 128, n)); INC(n, 7);
-		f.Read(r, ch)
-	END;
-	x := ASH(LSH(LONG(ORD(ch)), 25), n-25) + y
-END ReadSize;
 
 (** Portable routines to write the standard Oberon types. DEPRECATED, used Streams instead. *)
 
@@ -1340,7 +1327,7 @@ BEGIN
 END WriteLReal;
 
 PROCEDURE WriteString*(VAR r: Rider; CONST x: ARRAY OF CHAR);
-VAR i: SIZE;
+VAR i: LONGINT;
 BEGIN
 	i := 0; WHILE x[i] # 0X DO INC(i) END;
 	r.file.WriteBytes(r, x, 0, i+1)
@@ -1348,7 +1335,7 @@ END WriteString;
 
 (* Writes a number in a compressed format. *)
 
-PROCEDURE WriteNum*(VAR r: Rider; x: HUGEINT);
+PROCEDURE WriteNum*(VAR r: Rider; x: LONGINT);
 VAR f: File;
 BEGIN
 	f := r.file;
@@ -1363,7 +1350,7 @@ END WriteNum;
 (** Append first string to second string, truncating on overflow. *)
 
 PROCEDURE AppendStr*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR);
-VAR i, j, m: SIZE;
+VAR i, j, m: LONGINT;
 BEGIN
 	j := 0; WHILE to[j] # 0X DO INC(j) END;
 	m := LEN(to)-1;
@@ -1374,7 +1361,7 @@ END AppendStr;
 (** Append unsigned integer to string in ASCII format. *)
 
 PROCEDURE AppendInt*(x: LONGINT; VAR to: ARRAY OF CHAR);
-VAR i: SIZE; m: LONGINT;
+VAR i, m: LONGINT;
 BEGIN
 	ASSERT(x >= 0);
 	i := 0; WHILE to[i] # 0X DO INC(i) END;
@@ -1393,7 +1380,7 @@ END AppendInt;
 
 (** Get the dev#part string from the stream *)
 PROCEDURE GetDevPart*(arg : Streams.Reader; VAR deviceName : ARRAY OF CHAR; VAR partition : LONGINT);
-VAR i : SIZE; ch : CHAR;
+VAR i : LONGINT; ch : CHAR;
 BEGIN
 	arg.SkipWhitespace;
 	deviceName := ""; partition := 0;
@@ -1418,7 +1405,7 @@ END GetDevPart;
 (* Clean up file systems when shutting down or unloading module. *)
 
 PROCEDURE FSCleanup;
-VAR ft: FileSystemTable; i: SIZE;
+VAR ft: FileSystemTable; i: LONGINT;
 BEGIN
 	GetList(ft);
 	IF ft # NIL THEN
@@ -1432,7 +1419,7 @@ END FSCleanup;
 PROCEDURE ShowList*;
 VAR
 	enum: OBJECT
-		VAR i: SIZE;
+		VAR i: LONGINT;
 
 		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
 		VAR name: FileName;

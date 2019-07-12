@@ -37,7 +37,7 @@ TYPE
 		 * @param timeout in milliseconds
 		 * @return transport status of command block
 		 *)
-		PROCEDURE  AcceptCommand(cmd : Usbdi.Buffer; cmdlen: SIZE; timeout : LONGINT) : Usbdi.Status;
+		PROCEDURE  AcceptCommand(cmd : Usbdi.Buffer; cmdlen, timeout : LONGINT) : Usbdi.Status;
 		BEGIN
 			ASSERT(LEN(cmd) >= cmdlen);
 			defaultPipe.SetTimeout(timeout);
@@ -88,8 +88,8 @@ TYPE
 			RETURN Base.ResOk;
 		END Reset;
 
-		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : SIZE; dir : SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIZE; VAR tlen : SIZE; timeout : LONGINT) : WORD;
+		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : LONGINT; dir : SET;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : WORD;
 		VAR status : Usbdi.Status;	 interruptData : Usbdi.BufferPtr; blockStatus : LONGINT;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN KernelLog.String("UsbStorageCbi: Sending TransportCB/I Control"); KernelLog.Ln; END;

@@ -9,21 +9,23 @@ IMPORT
 	String with index 0 is guaranteed to be the empty string.
 *)
 
+
 CONST
 	(* Module Configuration *)
 	StringPoolSize0 = 1024*256;	(* initial string pool size *)
 	HashTableSize0 = 1024;	(* initial hash table size *)
 
+
 TYPE
 	(* Helper Structures *)
-	Index* = SIZE;
+	Index* = LONGINT;
 	StringPool = POINTER TO ARRAY OF CHAR;
 
 VAR
 	pool: StringPool;
-	poolLen: SIZE;
+	poolLen: LONGINT;
 	poolIndex: POINTER TO ARRAY OF Index;
-	poolIndexSize: SIZE;	(* LEN(poolIndex)-1 *)
+	poolIndexSize: LONGINT;	(* LEN(poolIndex)-1 *)
 
 	ALastGet,
 	AStrings, AGetString, ACompareString, ACompareString0, AStringCmpHit, ASearchHits, ASearchMisses: SIZE;
@@ -34,12 +36,12 @@ VAR
 
 	(* Hash - Return an Hash value in [0, poolIndexSize[ *)
 
-	PROCEDURE Hash(CONST str: ARRAY OF CHAR): SIZE;
-		VAR i, h: SIZE;  ch: CHAR;
+	PROCEDURE Hash(CONST str: ARRAY OF CHAR): LONGINT;
+		VAR i, h: LONGINT;  ch: CHAR;
 	BEGIN
 		i := 0; ch := str[0]; h := 0;
 		WHILE ch # 0X DO
-			h :=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(h, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
+			h :=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(h, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
 			INC(i); ch := str[i]
 		END;
 		h := h MOD poolIndexSize;
@@ -59,7 +61,7 @@ VAR
 	(* GrowHashTable - Increase Hash table size and recompute all entries *)
 
 	PROCEDURE GrowHashTable;
-		VAR i, t, h: SIZE; idx, idx0: Index; ch: CHAR;
+		VAR i, t, h: LONGINT; idx, idx0: Index; ch: CHAR;
 	BEGIN
 		t := (poolIndexSize+1)*2;
 		NEW(poolIndex, t);
@@ -74,7 +76,7 @@ VAR
 			idx0 := idx; h := 0;
 			ch := pool[idx];
 			WHILE ch # 0X DO
-				h :=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(h, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
+				h :=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(h, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
 				INC(idx); ch := pool[idx]
 			END;
 			h := h MOD poolIndexSize;
@@ -96,7 +98,7 @@ VAR
 	(** GetString - Get a string from the string pool *)
 
 	PROCEDURE GetString*(index: Index; VAR str: ARRAY OF CHAR);
-		VAR i: SIZE; ch: CHAR;
+		VAR i: LONGINT; ch: CHAR;
 	BEGIN
 		ALastGet := index;
 		INC(AGetString);
@@ -109,7 +111,7 @@ VAR
 	(* AddToPool - Add a string to the pool *)
 
 	PROCEDURE AddToPool(VAR index: Index; CONST str: ARRAY OF CHAR);
-	VAR i: SIZE; ch: CHAR;
+	VAR i: LONGINT; ch: CHAR;
 	BEGIN
 		INC(AStrings);
 		IF LEN(str) > LEN(pool) - poolLen THEN GrowPool END;
@@ -123,7 +125,7 @@ VAR
 	(** GetIndex - Retrieve a string from the pool, add if not present *)
 
 	PROCEDURE GetIndex*(CONST str: ARRAY OF CHAR;  VAR index: Index);
-		VAR i, h: SIZE; idx: Index;
+		VAR i, h: LONGINT; idx: Index;
 	BEGIN {EXCLUSIVE}
 		IF AStrings > poolIndexSize DIV 4 THEN GrowHashTable END;
 		h := Hash(str);
@@ -180,7 +182,8 @@ VAR
 	END CompareString;
 
 	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): WORD;
-		VAR  ch1, ch2: CHAR; i: SIZE;
+		(* using VAR str makes the _whole_ compiler 10% faster!!! *)
+		VAR  ch1, ch2: CHAR; i: LONGINT;
 	BEGIN
 		INC(ACompareString0); i := 0;
 		REPEAT
@@ -194,8 +197,9 @@ VAR
 (*
 	optimized version (no index checks)
 
-	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): WORD;
-		VAR  ch1, ch2: CHAR; adr1, adr2: ADDRESS; i: SIZE;
+	PROCEDURE CompareString0*(index: Index;  VAR str: ARRAY OF CHAR): WORD;
+		(* using VAR str makes the _whole_ compiler 10% faster!!! *)
+		VAR  ch1, ch2: CHAR; adr1, adr2: ADDRESS; i: LONGINT;
 	BEGIN
 		INC(ACompareString0);
 		adr1 := ADDRESSOF(pool[index]);
@@ -211,7 +215,7 @@ VAR
 *)
 
 	PROCEDURE DumpPool*;
-		VAR i: SIZE; ch: CHAR;
+		VAR i: LONGINT; ch: CHAR;
 	BEGIN
 		KernelLog.String("StringPool.Dump:");
 		KernelLog.String("size = "); KernelLog.Int(poolLen,1);
@@ -229,7 +233,7 @@ VAR
 	END DumpPool;
 
 	PROCEDURE Init;
-		VAR i: SIZE; str: ARRAY 2 OF CHAR;
+		VAR i: LONGINT; str: ARRAY 2 OF CHAR;
 	BEGIN
 		NEW(pool, StringPoolSize0);
 		NEW(poolIndex, HashTableSize0);

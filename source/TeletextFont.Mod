@@ -287,7 +287,7 @@ TYPE
 
 		PROCEDURE Save(filename : ARRAY OF CHAR);
 		VAR w : Files.Rider; i, j, c: LONGINT; f : Files.File;
-				buf : ARRAY 2024 OF CHAR; fixup: Files.Position; pos : LONGINT;
+				buf : ARRAY 2024 OF CHAR; fixup, pos : LONGINT;
 		BEGIN
 			f := Files.New(filename);f.Set(w, 0);
 			(* write number of ranges *)
@@ -313,7 +313,7 @@ TYPE
 					KernelLog.String("Calling Raster... ");
 					IF c < 319 THEN
 						RasterToBWRLBytes(glyphRanges[i].glyphs[j].img, buf, pos);
-						glyphRanges[i].glyphs[j].fpos := f.Pos(w)(LONGINT);
+						glyphRanges[i].glyphs[j].fpos := f.Pos(w);
 						KernelLog.Int(pos, 5); KernelLog.Ln;
 						f.WriteBytes(w, buf, 0, pos)
 					END

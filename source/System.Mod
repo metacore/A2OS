@@ -48,7 +48,7 @@ BEGIN
 END CopyModules;
 
 PROCEDURE Imports(root, m: Module; CONST name: ARRAY OF CHAR): BOOLEAN;
-VAR i: SIZE;
+VAR i: LONGINT;
 BEGIN
 	IF ~m.checked THEN
 		IF m.m.name # name THEN
@@ -118,7 +118,7 @@ END ListModules;
 
 (** List all loaded plugins. *)
 PROCEDURE ListPlugins*(context : Commands.Context);
-VAR r, p : Plugins.Table; i, j : SIZE;
+VAR r, p : Plugins.Table; i, j : LONGINT;
 BEGIN
 	Plugins.main.GetAll(r);
 	IF r # NIL THEN
@@ -141,7 +141,7 @@ END ListPlugins;
 
 (** List all  commands of the specified module. *)
 PROCEDURE ListCommands*(context : Commands.Context); (** module *)
-VAR m : Modules.Module; moduleName : Modules.Name; i : SIZE;
+VAR m : Modules.Module; moduleName : Modules.Name; i : LONGINT;
 BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.String(moduleName);
@@ -270,7 +270,7 @@ VAR
 	modulename : ARRAY 128 OF CHAR;
 	root, m: Module; res: WORD;
 	timer: Kernel.Timer; msg: ARRAY 64 OF CHAR;
-	nbrOfUnloadedModules : SIZE;
+	nbrOfUnloadedModules : LONGINT;
 BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.String(modulename);
@@ -315,7 +315,7 @@ BEGIN
 END Free;
 
 PROCEDURE Kill*(context : Commands.Context); (** pid { pid } ~ *)
-VAR process : Objects.Process; pid : WORD;
+VAR process : Objects.Process; pid : LONGINT;
 BEGIN {EXCLUSIVE}
 	WHILE context.arg.GetInteger(pid, FALSE) DO
 		context.out.Int(pid, 0);
@@ -334,9 +334,9 @@ PROCEDURE ShowProcesses*(context : Commands.Context); (** [options] ~ *)
 VAR
 	options : Options.Options;
 	processes : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
-	nofProcesses : SIZE;
+	nofProcesses : LONGINT;
 	string : ARRAY 16 OF CHAR;
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	NEW(options);
 	options.Add("s", "sort", Options.String);
@@ -361,7 +361,7 @@ BEGIN
 END ShowProcesses;
 
 PROCEDURE ShowStacks*(context : Commands.Context);
-VAR processes : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process; nofProcesses, i : SIZE;
+VAR processes : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process; nofProcesses, i : LONGINT;
 BEGIN
 	ProcessInfo.GetProcesses(processes, nofProcesses);
 	FOR i := 0 TO nofProcesses - 1 DO ProcessInfo.ShowStack(processes[i], context.out); END;
@@ -369,7 +369,7 @@ BEGIN
 END ShowStacks;
 
 PROCEDURE ShowStack*(context : Commands.Context); (** pid ~ *)
-VAR process : Objects.Process; pid : WORD;
+VAR process : Objects.Process; pid : LONGINT;
 BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.Int(pid, FALSE);
@@ -399,7 +399,7 @@ PROCEDURE RenameExtension*(context : Commands.Context);
 VAR
 	enumerator : Files.Enumerator;
 	oe, ne, temp: ARRAY 16 OF CHAR;
-	name, file, ext : Files.FileName; flags : SET; time, date: LONGINT; size: Files.Size; res : WORD;
+	name, file, ext : Files.FileName; flags : SET; time, date, size: LONGINT; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(oe);
 	context.arg.SkipWhitespace; context.arg.String(ne);
@@ -468,7 +468,7 @@ VAR
 	command, parameters, paramString : Strings.String;
 	temp : Strings.String;
 	msg : ARRAY 128 OF CHAR;
-	cur, available, i, j, k, length: SIZE; res: WORD;
+	cur, available, i, j, k: LONGINT; res: WORD;
 
 	PROCEDURE CreateContext(paramString : Strings.String) : Commands.Context;
 	VAR c : Commands.Context; arg : Streams.StringReader; dummy : ARRAY 1 OF CHAR;
@@ -482,8 +482,8 @@ VAR
 		RETURN c;
 	END CreateContext;
 
-	PROCEDURE Resize(VAR t: Strings.String; len: SIZE);
-	VAR new: Strings.String; i: SIZE;
+	PROCEDURE Resize(VAR t: Strings.String; len: LONGINT);
+	VAR new: Strings.String; i: LONGINT;
 	BEGIN
 		NEW(new, len);
 		IF t # NIL THEN
@@ -500,7 +500,7 @@ BEGIN
 	available := 0;
 	WHILE cur > 0 DO
 		Resize(temp, available+cur+1);
-		context.arg.Bytes(temp^, available, cur, length); (* ignore length *)
+		context.arg.Bytes(temp^, available, cur, i); (* ignore i *)
 		INC(available, cur);
 		cur := context.arg.Available();
 	END;
@@ -577,9 +577,9 @@ END DoCommands;
 - comments may be nested arbitrarily
 - the operation is performed in situ: comments are replaced with whitespace characters
 **)
-PROCEDURE RemoveComments(VAR string: ARRAY OF CHAR; length: SIZE);
+PROCEDURE RemoveComments(VAR string: ARRAY OF CHAR; length: LONGINT);
 VAR
-	pos, level: SIZE;
+	pos, level: LONGINT;
 BEGIN
 	level := 0;
 	pos := 0;
@@ -618,7 +618,7 @@ with command line shell to act as simple CGI script this way:
 **)
 PROCEDURE RemoveFirstLineComment(string: Strings.String);
 VAR
-	i, j, len: SIZE;
+	i, j, len: LONGINT;
 BEGIN
 	IF string # NIL THEN
 		len := LEN(string^);
@@ -635,8 +635,8 @@ END RemoveFirstLineComment;
 PROCEDURE Repeat*(context : Commands.Context); (* nofTimes command [command parameters] ~ *)
 VAR
 	command, msg : ARRAY 128 OF CHAR;
-	parameterPosition : Streams.Position;
-	nofTimes: WORD; res : WORD;
+	parameterPosition : LONGINT;
+	nofTimes: LONGINT; res : WORD;
 BEGIN
 	nofTimes := 0; command := "";
 	context.arg.SkipWhitespace;	context.arg.Int(nofTimes, FALSE);
@@ -664,7 +664,7 @@ END Repeat;
 	*)
 PROCEDURE Timer*(context : Commands.Context); (** [  ["start"["h"] [number]] | ["elapsed"["h"] [number]] | ["diff"["h"] number1 number2]  ] ~ *)
 VAR
-	string : ARRAY 128 OF CHAR; nbr1, nbr2 : WORD;
+	string : ARRAY 128 OF CHAR; nbr1, nbr2 : LONGINT;
 
 	PROCEDURE ShowUsage;
 	BEGIN
@@ -672,7 +672,7 @@ VAR
 		context.out.Ln;
 	END ShowUsage;
 
-	PROCEDURE Valid(number : WORD) : BOOLEAN;
+	PROCEDURE Valid(number : LONGINT) : BOOLEAN;
 	BEGIN
 		RETURN (0 <= number) & (number < MaxTimers);
 	END Valid;

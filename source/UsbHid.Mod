@@ -226,7 +226,7 @@ BEGIN
 END ParseHidDescriptor;
 
 PROCEDURE ShowHidDescriptor*(hd : HidDescriptor);
-VAR i : SIZE;
+VAR i : LONGINT;
 BEGIN
 	KernelLog.String("HID Descriptor: ");
 	IF hd = NIL THEN KernelLog.String("NIL"); END; KernelLog.Ln;

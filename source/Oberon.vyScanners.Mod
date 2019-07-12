@@ -177,7 +177,7 @@ PROCEDURE getName (VAR sc: Scanner; pos: LONGINT;  len: INTEGER;  VAR s: ARRAY O
 	VAR i: INTEGER;  r: Texts.Reader; temp: BOOLEAN;
 BEGIN
 	Texts.OpenReader(r, sc.text, pos);
-	IF len >= LEN(s) THEN len := INTEGER(LEN(s)) - 1;  temp := FALSE
+	IF len >= LEN(s) THEN len := SHORT(LEN(s)) - 1;  temp := FALSE
 	ELSE temp := TRUE END;
 	i := 0;  WHILE i < len DO Texts.Read(r, s[i]);  INC(i) END;
 	s[i] := 0X;

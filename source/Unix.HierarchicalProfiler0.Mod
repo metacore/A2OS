@@ -20,10 +20,10 @@ TYPE
 	Poller = OBJECT
 	VAR
 		processes, oldProcesses : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
-		nofProcesses, oldNofProcesses : SIZE;
+		nofProcesses, oldNofProcesses : LONGINT;
 		times, oldTimes : ProcessTimeArray;
 		me : Objects.Process;
-		state : WORD;
+		state : LONGINT;
 		timer: Kernel.Timer;
 		NormalGC: PROCEDURE; (*gc that is currently used*)
 
@@ -44,13 +44,13 @@ TYPE
 		END Terminate;
 
 		PROCEDURE Clear(array : ProcessTimeArray);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(array)-1 DO array[i] := 0; END;
 		END Clear;
 
 		PROCEDURE RanMeanwhile(process : Objects.Process; currentCycles : HUGEINT) : BOOLEAN;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 
 			IF ~(process.mode IN {Objects.Running,Objects.Ready}) THEN RETURN FALSE END;
@@ -60,7 +60,7 @@ TYPE
 		END RanMeanwhile;
 
 		PROCEDURE Process;
-		VAR process : Objects.Process; cycles : Objects.CpuCyclesArray; temp : ProcessTimeArray; i : SIZE;
+		VAR process : Objects.Process; cycles : Objects.CpuCyclesArray; temp : ProcessTimeArray; i : LONGINT;
 		BEGIN
 			NormalGC := Heaps.GC;
 			Heaps.GC := Nothing; (*disable gc*)
@@ -105,7 +105,7 @@ TYPE
 VAR
 	poller : Poller;
 	callback : Callback;
-	state : WORD;
+	state : LONGINT;
 
 PROCEDURE Nothing; (*no-op garbage collector*)
 BEGIN

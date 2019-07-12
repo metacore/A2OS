@@ -25,8 +25,8 @@ CONST
 	StailaStyle = 1;
 
 TYPE
-	TYPE Style = WORD;
-	TYPE Indent = WORD;
+	TYPE Style = INTEGER;
+	TYPE Indent = INTEGER;
 	Identifier = ARRAY Scanner.MaxIdentifierLength OF CHAR;
 
 	TYPE Transpiler* = OBJECT (SyntaxTree.Visitor)
@@ -116,7 +116,7 @@ TYPE
 		END DeclareObjects;
 
 		PROCEDURE DeclareDescriptor (record: SyntaxTree.RecordType);
-		VAR name: Identifier; method: SIZE; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
+		VAR name: Identifier; method: LONGINT; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
 		BEGIN
 			GetSymbolName (record.typeDeclaration, name, backend.style);
 			writer.Ln; writer.String ("typedef struct "); writer.String (name); writer.String (TypeTag); writer.String (StructTag);
@@ -184,7 +184,7 @@ TYPE
 
 		PROCEDURE DefineTypes (scope: SyntaxTree.Scope);
 		TYPE Types = POINTER TO ARRAY OF SyntaxTree.Type;
-		VAR typeDeclaration: SyntaxTree.TypeDeclaration; types: Types; count: SIZE;
+		VAR typeDeclaration: SyntaxTree.TypeDeclaration; types: Types; count: LONGINT;
 
 			PROCEDURE DeclareType (type: SyntaxTree.Type);
 			VAR name: Identifier;
@@ -207,7 +207,7 @@ TYPE
 			END DeclareType;
 
 			PROCEDURE DefineType (type: SyntaxTree.Type; reference: BOOLEAN);
-			VAR i: SIZE; variable: SyntaxTree.Variable; new: Types; name: Identifier;
+			VAR i: LONGINT; variable: SyntaxTree.Variable; new: Types; name: Identifier;
 			BEGIN
 				IF (type IS SyntaxTree.PointerType) & ~reference THEN RETURN END;
 				FOR i := 0 TO count - 1 DO IF types[i] = type THEN RETURN END END;
@@ -319,7 +319,7 @@ TYPE
 		END DefineObjects;
 
 		PROCEDURE DefineDescriptor (record: SyntaxTree.RecordType);
-		VAR name: Identifier; method: SIZE; procedure: SyntaxTree.Procedure;
+		VAR name: Identifier; method: LONGINT; procedure: SyntaxTree.Procedure;
 		BEGIN
 			GetSymbolName (record.typeDeclaration, name, backend.style);
 			writer.Ln; writer.String (name); writer.String (TypeTag); writer.Char (Space); writer.String (name);
@@ -366,7 +366,7 @@ TYPE
 		END EndRuntimeCall;
 
 		PROCEDURE Trace (expression: SyntaxTree.Expression);
-		VAR name: Identifier; printer: Printout.Printer; pos: Streams.Position;
+		VAR name: Identifier; printer: Printout.Printer; pos: LONGINT;
 		BEGIN
 			BeginRuntimeCall (backend.traceModule, "String"); writer.Char ('"'); pos := writer.Pos ();
 			currentProcedureScope.ownerModule.GetName (name); writer.String (name); writer.Char ('@');
@@ -468,7 +468,7 @@ TYPE
 		END PrintInclude;
 
 		PROCEDURE PrintComment (CONST comment: ARRAY OF CHAR);
-		VAR i, len: SIZE; ch: CHAR; pragma: BOOLEAN;
+		VAR i, len: LONGINT; ch: CHAR; pragma: BOOLEAN;
 		BEGIN
 			IF Strings.StartsWith2("#pragma", comment) THEN
 				pragma := TRUE
@@ -506,7 +506,7 @@ TYPE
 		END PrintProcedure;
 
 		PROCEDURE PrintParameter (symbol: SyntaxTree.Symbol; nested: BOOLEAN);
-		VAR name: Identifier; type: SyntaxTree.Type; index: SIZE;
+		VAR name: Identifier; type: SyntaxTree.Type; index: LONGINT;
 		BEGIN
 			GetSymbolName (symbol, name, backend.style); type := symbol.type;
 			PrintVariable (IsVarParameter (symbol) & ~IsOpenArray (type) OR nested, name, type);
@@ -568,7 +568,7 @@ TYPE
 		END PrintParameters;
 
 		PROCEDURE PrintArgument (argument: SyntaxTree.Expression; parameter: SyntaxTree.Symbol; nested: BOOLEAN);
-		VAR argumentType, parameterType: SyntaxTree.Type; index: SIZE; name: Identifier; isEmptyRecord: BOOLEAN;
+		VAR argumentType, parameterType: SyntaxTree.Type; index: LONGINT; name: Identifier; isEmptyRecord: BOOLEAN;
 		BEGIN
 			parameterType := parameter.type; index := 0;
 			IF argument = NIL THEN argumentType := parameterType.resolved ELSE argumentType := argument.type.resolved END;
@@ -621,7 +621,7 @@ TYPE
 			END;
 		END PrintArgument;
 
-		PROCEDURE PrintArguments (arguments: SyntaxTree.ExpressionList; index, count: SIZE; parameter: SyntaxTree.Parameter; outerScope: SyntaxTree.Scope): BOOLEAN;
+		PROCEDURE PrintArguments (arguments: SyntaxTree.ExpressionList; index, count: LONGINT; parameter: SyntaxTree.Parameter; outerScope: SyntaxTree.Scope): BOOLEAN;
 		VAR first: BOOLEAN; variable: SyntaxTree.Variable;
 		BEGIN
 			first := TRUE;
@@ -763,6 +763,7 @@ TYPE
 		END PrintType;
 
 		PROCEDURE PrintBasicType (type: SyntaxTree.BasicType);
+		VAR i: LONGINT;
 		BEGIN
 			IF type IS SyntaxTree.AddressType THEN
 				writer.String ("size_t");
@@ -885,14 +886,14 @@ TYPE
 		END PrintNew;
 
 		PROCEDURE PrintStatements (statements: SyntaxTree.StatementSequence);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			ASSERT (statements # NIL);
 			FOR i := 0 TO statements.Length () - 1 DO PrintStatement (statements.GetStatement (i)); END;
 		END PrintStatements;
 
 		PROCEDURE PrintCode (code: SyntaxTree.Code);
-		VAR text: Scanner.StringType; i: SIZE;
+		VAR text: Scanner.StringType; i: LONGINT;
 		BEGIN
 			PrintIndent; writer.String ("__asm ("); writer.Char ('"');
 			text := code.sourceCode; i := 0;
@@ -960,7 +961,7 @@ TYPE
 		END VisitAssignment;
 
 		PROCEDURE VisitIfStatement* (statement: SyntaxTree.IfStatement);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			PrintIndent; PrintIfPart (statement.ifPart);
 			FOR i := 0 TO statement.ElsifParts () - 1 DO
@@ -973,7 +974,7 @@ TYPE
 		END VisitIfStatement;
 
 		PROCEDURE VisitWithStatement* (statement: SyntaxTree.WithStatement);
-		VAR withPart: SyntaxTree.WithPart; i: SIZE;
+		VAR withPart: SyntaxTree.WithPart; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO statement.WithParts () - 1 DO
 				withPart := statement.GetWithPart (i); PrintIndent;
@@ -1062,7 +1063,7 @@ TYPE
 		END VisitAwaitStatement;
 
 		PROCEDURE VisitCaseStatement* (statement: SyntaxTree.CaseStatement);
-		VAR i: SIZE; value: Basic.Integer; casePart: SyntaxTree.CasePart; caseConstant: SyntaxTree.CaseConstant;
+		VAR i: LONGINT; value: Basic.Integer; casePart: SyntaxTree.CasePart; caseConstant: SyntaxTree.CaseConstant;
 		BEGIN
 			PrintIndent; writer.String ("switch ("); PrintExpression (statement.variable); writer.Char (')'); writer.Ln;
 			BeginBlock;
@@ -1137,8 +1138,8 @@ TYPE
 		END VisitSymbolDesignator;
 
 		PROCEDURE VisitBuiltinCallDesignator* (expression: SyntaxTree.BuiltinCallDesignator);
-		VAR argument: ARRAY 3 OF SyntaxTree.Expression; i: SIZE; name: Identifier;
-			position: Streams.Position; typeDeclaration: SyntaxTree.TypeDeclaration;
+		VAR argument: ARRAY 3 OF SyntaxTree.Expression; i: LONGINT; name: Identifier;
+			position: LONGINT; typeDeclaration: SyntaxTree.TypeDeclaration;
 		BEGIN
 			FOR i := 0 TO LEN (argument) - 1 DO
 				IF i < expression.parameters.Length () THEN argument[i] := expression.parameters.GetExpression (i); ELSE argument[i] := NIL; END;
@@ -1250,7 +1251,7 @@ TYPE
 		END VisitRealValue;
 
 		PROCEDURE VisitStringValue* (expression: SyntaxTree.StringValue);
-		VAR char: CHAR; i: SIZE;
+		VAR char: CHAR; i: LONGINT;
 		BEGIN
 			writer.Char ('"'); i := 0;
 			LOOP
@@ -1339,7 +1340,7 @@ TYPE
 		END VisitSelfDesignator;
 
 		PROCEDURE VisitIndexDesignator* (expression: SyntaxTree.IndexDesignator);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			PrintExpression (expression.left);
 			FOR i := 0 TO expression.parameters.Length () - 1 DO
@@ -1370,7 +1371,7 @@ TYPE
 		END VisitDereferenceDesignator;
 
 		PROCEDURE VisitSet* (expression: SyntaxTree.Set);
-		VAR i: SIZE; element: SyntaxTree.Expression;
+		VAR i: LONGINT; element: SyntaxTree.Expression;
 		BEGIN
 			IF expression.elements.Length () = 0 THEN
 				writer.Char ('0');
@@ -1587,7 +1588,7 @@ TYPE
 		RETURN (procedure.isInline) & (type.firstParameter = NIL) & (type.returnType = NIL) & (body # NIL) & (body.code # NIL);
 	END IsInlineAssemblyCode;
 
-	PROCEDURE GetRecordMethod (record: SyntaxTree.RecordType; method: SIZE): SyntaxTree.Procedure;
+	PROCEDURE GetRecordMethod (record: SyntaxTree.RecordType; method: LONGINT): SyntaxTree.Procedure;
 	VAR base: SyntaxTree.RecordType; scope: SyntaxTree.RecordScope; procedure: SyntaxTree.Procedure;
 	BEGIN
 		scope := record.recordScope;
@@ -1611,14 +1612,14 @@ TYPE
 	END GetRecord;
 
 	PROCEDURE Replace (VAR string: ARRAY OF CHAR; replace, by: CHAR);
-	VAR i: SIZE; char: CHAR;
+	VAR i: LONGINT; char: CHAR;
 	BEGIN
 		i := 0; char := string[0];
 		WHILE char # 0X DO IF char = replace THEN string[i] := by; END; INC (i); char := string[i]; END;
 	END Replace;
 
 	PROCEDURE FixStailaIdentifier (VAR identifier: ARRAY OF CHAR);
-	VAR i: SIZE; previousLower: BOOLEAN;
+	VAR i: LONGINT; previousLower: BOOLEAN;
 	BEGIN
 		i := 0; previousLower := FALSE;
 		WHILE identifier[i] # 0X DO

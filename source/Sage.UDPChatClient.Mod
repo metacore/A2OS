@@ -57,8 +57,7 @@ TYPE
 		str1, str2: ARRAY 256 OF CHAR;
 
 		branch, command, seqNum, messageType, inSeqNum, outSeqNum: INTEGER;
-		senderUin, receiverUin, port, receiveBufOffset: LONGINT;
-		len: SIZE;
+		senderUin, receiverUin, port, len, receiveBufOffset: LONGINT;
 		sendBuf-: Base.Buffer;
 
 		receiveBuf, message, string: String;
@@ -110,7 +109,7 @@ TYPE
 		VAR seqNum: INTEGER; sendBuf: Base.Buffer;
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
-		len: SIZE; res: WORD;
+		len: LONGINT; res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.NEW_USER_REG, seqNum, 0, sendBuf);
@@ -145,7 +144,7 @@ TYPE
 		VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer;
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
-		len: SIZE; res: WORD;
+		len: LONGINT; res: WORD;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.LOGIN, seqNum, uin, sendBuf);
@@ -191,7 +190,7 @@ TYPE
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
 		string: String;
-		len: SIZE; res: WORD;
+		len: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.SEND_MESSAGE, seqNum, uin, sendBuf);
 
@@ -222,7 +221,7 @@ TYPE
 		s: UDP.Socket; ip: IP.Adr);
 	VAR
 		string: String;
-		len: SIZE; res: WORD;
+		len: LONGINT; res: WORD;
 	BEGIN {EXCLUSIVE}
 		Base.ClientPacketInit (Base.SEND_TEXT_CODE, seqNum, uin, sendBuf);
 
@@ -233,7 +232,7 @@ TYPE
 		INC (seqNum);
 
 		len := Strings.Length (code^) + 1;
-		sendBuf.AddInt (len(LONGINT), 2);
+		sendBuf.AddInt (len, 2);
 		sendBuf.Add (code^, 0, len, TRUE, res);
 
 		string := sendBuf.GetString ();
@@ -688,7 +687,7 @@ TYPE
 
 		PROCEDURE Append (message: String; cs: Texts.CharacterStyle; ps: Texts.ParagraphStyle);
 		VAR
-			len, idx: SIZE;
+			len, idx: LONGINT;
 			ucs32: Texts.PUCS32String;
 		BEGIN
 

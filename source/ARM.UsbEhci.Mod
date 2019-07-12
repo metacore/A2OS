@@ -2279,7 +2279,7 @@ TYPE
 
 			(* Addresses of queue heads *)
 			NEW(interruptQh);
-			FOR i := 0 TO 10 DO interruptQh[i] := (ADDRESSOF(qhlist.data[qhlist.base]) + i*sizeQh)(Machine.Address32); END;
+			FOR i := 0 TO 10 DO interruptQh[i] := Machine.Ensure32BitAddress (ADDRESSOF(qhlist.data[qhlist.base]) + i*sizeQh); END;
 			fstn := interruptQh[10] + sizeQh; (* Actually 8 bytes *)
 			isochronousQh := fstn + sizeQh;
 

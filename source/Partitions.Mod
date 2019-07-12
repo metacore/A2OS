@@ -661,7 +661,7 @@ VAR
 	diskTable : Lib.Disks; disk : Lib.Disk;
 	par : ARRAY 10 OF CHAR;
 	verbose : BOOLEAN;
-	i : SIZE;
+	i : LONGINT;
 	temp : ARRAY 256 OF CHAR;
 BEGIN
 	par := ""; context.arg.SkipWhitespace; context.arg.String(par);
@@ -721,7 +721,7 @@ BEGIN
 END ShowDevice;
 
 PROCEDURE ShowTable( context : Commands.Context; disk: Lib.Disk; table: Disks.PartitionTable; verbose: BOOLEAN);
-VAR j: SIZE; r: LONGREAL; ugly : ARRAY 10 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : LONGINT;
+VAR j: LONGINT; r: LONGREAL; ugly : ARRAY 10 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : LONGINT;
 BEGIN
 	FOR j := 0 TO LEN(table)-1 DO
 		r := (table[j].size * 1.0D0 * disk.device.blockSize) / (1024*1024); (* M *)

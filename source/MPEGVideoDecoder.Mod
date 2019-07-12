@@ -67,8 +67,8 @@ TYPE
 	StreamType = RECORD
 		stream*: Codec.DemuxStream;
 		idByte*: CHAR;
-		pos: SIZE;
-		bytesLeftInPacket: SIZE;
+		pos: LONGINT;
+		bytesLeftInPacket: LONGINT;
 		eos: BOOLEAN;			(* end of stream *)
 	END;
 
@@ -471,8 +471,7 @@ TYPE
 		VAR
 			i: LONGINT;
 			code: CHAR;
-			lastIntraPosOld, lastIntraPos, lastFramePos: Streams.Position;
-			lastIntraNrOld, lastIntraNr: LONGINT;
+			lastIntraPosOld, lastIntraNrOld, lastIntraPos, lastIntraNr, lastFramePos: LONGINT;
 			nrB, nrBOld: LONGINT;
 			countB: BOOLEAN;
 			type: LONGINT;
@@ -517,7 +516,7 @@ TYPE
 
 			(* jump to the second last I-frame *)
 			stream.SetPos(lastIntraPosOld);
-			realFrameNr := lastIntraNrOld(LONGINT);
+			realFrameNr := lastIntraNrOld;
 			frameNr := 10000;					(* expected frameNr > tempRef => frameNr gets adjusted *)
 
 			Next();
@@ -1922,7 +1921,7 @@ TYPE
 	MPEGDemultiplexer* = OBJECT(Codec.AVDemultiplexer);
 	VAR
 		input: Streams.Reader;
-		bytesRead: SIZE;
+		bytesRead: LONGINT;
 		streams: ARRAY 64 OF POINTER TO StreamType;
 		nextStreamNr: LONGINT;
 		singleStream: BOOLEAN;	(* TRUE if there is just one unpacked (video) stream -> no need  to demux *)
@@ -1935,8 +1934,7 @@ TYPE
 		(** open the demultiplexer on an input stream *)
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
 		VAR
-			oldPos: Streams.Position;
-			i: LONGINT;
+			oldPos, i: LONGINT;
 			startCode: CHAR;
 
 		BEGIN
@@ -2153,11 +2151,11 @@ TYPE
 		END GetStreamInfo;
 
 		(* read data from streamNr, store it into buffer buf starting at offset ofs, store size bytes if possible, block if not read min bytes at least. Return number of read bytes in len and return code res *)
-		PROCEDURE GetData*(streamNr : LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE GetData*(streamNr : LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			cur: POINTER TO StreamType;
-			length: SIZE;
-			offset: SIZE;
+			length: LONGINT;
+			offset: LONGINT;
 
 		BEGIN
 			IF singleStream THEN
@@ -2216,12 +2214,12 @@ TYPE
 			ELSE
 				(* copy required bytes *)
 				input.Bytes(buf, offset, size, length);
-				cur.pos := input.Pos()(LONGINT);
+				cur.pos := input.Pos();
 				DEC(cur.bytesLeftInPacket, length);
 			END;
 		END GetData;
 
-		PROCEDURE SkipData(streamNr : LONGINT; size: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE SkipData(streamNr : LONGINT; size: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			cur: POINTER TO StreamType;
 
@@ -2260,13 +2258,13 @@ TYPE
 
 			(* skip required bytes *)
 			input.SkipBytes(size);
-			cur.pos := input.Pos()(SIZE);
+			cur.pos := input.Pos();
 			DEC(cur.bytesLeftInPacket, size);
 
 		END SkipData;
 
 
-		PROCEDURE GetPosInMuxedStream*(streamNr: LONGINT): SIZE;
+		PROCEDURE GetPosInMuxedStream*(streamNr: LONGINT): LONGINT;
 		BEGIN
 			RETURN streams[streamNr].pos;
 		END GetPosInMuxedStream;
@@ -2349,7 +2347,7 @@ TYPE
 			END;
 
 			(* finally we reached the next data bytes of the requested stream *)
-			stream.pos := (input.Pos() + 1)(SIZE);		(* next byte is first byte of the stream *)
+			stream.pos := input.Pos() + 1;		(* next byte is first byte of the stream *)
 			stream.bytesLeftInPacket := length;
 			RETURN TRUE;
 		END GotoNextPacket;
@@ -2359,7 +2357,7 @@ TYPE
 		PROCEDURE SetStreamPos*(streamNr :  LONGINT; seekType : LONGINT; pos : LONGINT; VAR itemSize : LONGINT;  VAR res : WORD);
 		VAR
 			cur: POINTER TO StreamType;
-			len: SIZE;
+			len: LONGINT;
 		BEGIN
 			res := Codec.ResFailed;
 
@@ -2393,7 +2391,7 @@ TYPE
 				SkipData(streamNr, pos, len, res);
 			ELSE
 				(* skip some data *)
-				SkipData(streamNr, (pos - cur.stream.Pos())(SIZE)+cur.stream.Available(), len, res);
+				SkipData(streamNr, pos - (cur.stream.Pos()+cur.stream.Available()), len, res);
 			END;
 		END SetStreamPos;
 

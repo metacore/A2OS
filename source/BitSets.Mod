@@ -4,25 +4,23 @@ IMPORT SYSTEM;
 
 CONST Elements = MAX (SET) - MIN (SET) + 1;
 
-TYPE Bits = SIZE;
 TYPE Data = POINTER TO ARRAY OF SET;
 
 TYPE BitSet* = OBJECT
-
-	VAR size: Bits;
+	VAR size: LONGINT;
 	VAR data: Data;
 
-	PROCEDURE & InitBitSet* (size: Bits);
+	PROCEDURE & InitBitSet* (size: LONGINT);
 	BEGIN SELF.size := size; Resize (size);
 	END InitBitSet;
 
 	PROCEDURE Zero*;
-	VAR i: Bits;
+	VAR i: SIZE;
 	BEGIN FOR i := 0 TO LEN(data)-1 DO data[i] := {} END;
 	END Zero;
 
-	PROCEDURE Resize* (size: Bits);
-	VAR newData: Data; i: Bits;
+	PROCEDURE Resize* (size: LONGINT);
+	VAR newData: Data; i: SIZE;
 	BEGIN
 		ASSERT (size >= 0);
 		SELF.size := size;
@@ -38,11 +36,11 @@ TYPE BitSet* = OBJECT
 		data := newData;
 	END Resize;
 
-	PROCEDURE GetSize* (): SIZE;
+	PROCEDURE GetSize* (): LONGINT;
 	BEGIN RETURN size;
 	END GetSize;
 
-	PROCEDURE SetBit* (pos: Bits; value: BOOLEAN);
+	PROCEDURE SetBit* (pos: SIZE; value: BOOLEAN);
 	BEGIN
 		ASSERT (pos >= 0); ASSERT (pos < size);
 		IF value THEN
@@ -52,13 +50,13 @@ TYPE BitSet* = OBJECT
 		END;
 	END SetBit;
 
-	PROCEDURE GetBit* (pos: Bits): BOOLEAN;
+	PROCEDURE GetBit* (pos: SIZE): BOOLEAN;
 	BEGIN
 		ASSERT (pos >= 0); ASSERT (pos < size);
 		RETURN pos MOD Elements IN data[pos DIV Elements];
 	END GetBit;
 
-	PROCEDURE SetBits* (startPos, bits: Bits; value: HUGEINT);
+	PROCEDURE SetBits* (startPos, bits: SIZE; value: HUGEINT);
 	VAR adr: ADDRESS;
 	BEGIN
 		ASSERT (startPos >= 0); ASSERT (startPos+bits <= size);
@@ -85,7 +83,7 @@ TYPE BitSet* = OBJECT
 		SYSTEM.MOVE(ADDRESS OF values[0], adr, bytes);
 	END SetBytes;
 
-	PROCEDURE GetBits* (startPos, bits: Bits): WORD;
+	PROCEDURE GetBits* (startPos, bits: SIZE): WORD;
 	VAR value: WORD; adr: ADDRESS;
 	BEGIN
 		ASSERT (startPos >= 0); ASSERT (startPos+bits <= size);
@@ -106,7 +104,7 @@ TYPE BitSet* = OBJECT
 		RETURN value;
 	END GetBits;
 
-	PROCEDURE CopyTo*(address: ADDRESS; bits: Bits);
+	PROCEDURE CopyTo*(address: ADDRESS; bits: SIZE);
 	BEGIN
 		ASSERT(bits MOD 8 = 0);
 		SYSTEM.MOVE(ADDRESS OF data[0], address, bits DIV 8);
@@ -114,17 +112,18 @@ TYPE BitSet* = OBJECT
 
 END BitSet;
 
-PROCEDURE CopyBits* (source: BitSet; sourcePos: Bits; dest: BitSet; destPos, count: Bits);
+PROCEDURE CopyBits* (source: BitSet; sourcePos: SIZE; dest: BitSet; destPos, count: SIZE);
+CONST setSize= MAX(SET)+1;
 BEGIN
 	ASSERT (count >= 0);
-	IF sourcePos MOD Elements = destPos MOD Elements THEN
-		WHILE (count # 0) & (sourcePos MOD Elements # 0) DO
+	IF sourcePos MOD setSize = destPos MOD setSize THEN
+		WHILE (count # 0) & (sourcePos MOD setSize # 0) DO
 			dest.SetBit (destPos, source.GetBit (sourcePos));
 			INC (sourcePos); INC (destPos); DEC (count);
 		END;
-		WHILE (count >= Elements) DO
-			dest.data[destPos DIV Elements] := source.data[sourcePos DIV Elements];
-			INC(sourcePos,Elements); INC(destPos,Elements); DEC(count,Elements);
+		WHILE (count >= setSize) DO
+			dest.data[destPos DIV setSize] := source.data[sourcePos DIV setSize];
+			INC(sourcePos,setSize); INC(destPos,setSize); DEC(count,setSize);
 		END;
 		WHILE count # 0 DO
 			dest.SetBit (destPos, source.GetBit (sourcePos));
@@ -138,4 +137,7 @@ BEGIN
 	END;
 END CopyBits;
 
+
+
 END BitSets.
+

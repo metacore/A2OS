@@ -35,7 +35,7 @@ CONST
 	PROCEDURE Build*( cc: Commands.Context );
 	VAR in1, in2, out: Files.File;  r: Files.Reader; w: Files.Writer;
 		inputname, token, outputname: ARRAY 64 OF CHAR;
-		size, i: Files.Size; c: CHAR;
+		size, i: SIZE; c: CHAR;
 	BEGIN
 		IF 	cc.arg.GetString( inputname ) &
 			cc.arg.GetString( token ) & (token = "->") &

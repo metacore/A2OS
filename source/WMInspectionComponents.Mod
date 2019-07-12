@@ -2062,7 +2062,7 @@ TYPE
 	ComponentElement* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		component : WMComponents.Component;
-		nofElements : SIZE;
+		nofElements : LONGINT;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -2075,7 +2075,7 @@ TYPE
 		PROCEDURE CountNofElements(component : WMComponents.Component);
 		END CountNofElements;
 
-		PROCEDURE GetNofElements*() : SIZE;
+		PROCEDURE GetNofElements*() : LONGINT;
 		BEGIN
 			RETURN nofElements;
 		END GetNofElements;
@@ -2121,7 +2121,7 @@ TYPE
 		END Init;
 
 		PROCEDURE CountNofElements(component : WMComponents.Component);
-		VAR propertyArray : WMProperties.PropertyArray;  i : SIZE;
+		VAR propertyArray : WMProperties.PropertyArray;  i : LONGINT;
 		BEGIN
 			nofElements := 0;
 			IF (component # NIL) THEN
@@ -2137,7 +2137,7 @@ TYPE
 		END CountNofElements;
 
 		PROCEDURE SetProperties(component : WMComponents.Component);
-		VAR propertyArray : WMProperties.PropertyArray; res: WORD; i : SIZE;
+		VAR propertyArray : WMProperties.PropertyArray; res: WORD; i : LONGINT;
 			init:WMProperties.BooleanProperty;
 		BEGIN
 			ASSERT(component # NIL);
@@ -2487,7 +2487,7 @@ TYPE
 			stringView : StringPropertyView;
 			colorView : ColorPropertyView;
 			unknownView : UnknownPropertyView;
-			height : LONGINT; i : SIZE;
+			height, i : LONGINT;
 		BEGIN
 			ASSERT(component # NIL);
 			list.RemoveAll;
@@ -2657,7 +2657,7 @@ TYPE
 		END CountNofElements;
 
 		PROCEDURE SetComponent*(component : WMComponents.Component);
-		VAR eventsArray : WMEvents.EventSourceArray; source : EventSourceView;  height : LONGINT; i : SIZE;
+		VAR eventsArray : WMEvents.EventSourceArray; source : EventSourceView;  height, i : LONGINT;
 		BEGIN
 			IF (component # SELF.component) THEN
 				height := 0; nofElements := 0;
@@ -2721,7 +2721,7 @@ TYPE
 		END CountNofElements;
 
 		PROCEDURE SetComponent*(component : WMComponents.Component);
-		VAR eventsArray : WMEvents.EventListenerArray; listener : EventListenerView; height : LONGINT; i : SIZE;
+		VAR eventsArray : WMEvents.EventListenerArray; listener : EventListenerView; height, i : LONGINT;
 		BEGIN
 			IF (component # SELF.component) THEN
 				height := 0; nofElements := 0;
@@ -3061,7 +3061,7 @@ TYPE
 		tabs : WMTabComponents.Tabs;
 		tabList : ARRAY NofTabs OF WMTabComponents.Tab;
 		tabPanels : ARRAY NofTabs OF ComponentElement;
-		tabNofElements : ARRAY NofTabs OF SIZE;
+		tabNofElements : ARRAY NofTabs OF LONGINT;
 		tabCaptions : ARRAY NofTabs OF ARRAY 128 OF CHAR;
 
 		tabPanel : WMScrollableComponents.ScrollableContainer;
@@ -3146,7 +3146,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateTabCaptions;
-		VAR caption : ARRAY 128 OF CHAR; nbr : ARRAY 8 OF CHAR; nofElements, i : SIZE;
+		VAR caption : ARRAY 128 OF CHAR; nbr : ARRAY 8 OF CHAR; nofElements, i : LONGINT;
 		BEGIN
 			FOR i := 0 TO NofTabs - 1 DO
 				CASE i OF
@@ -3404,7 +3404,7 @@ TYPE
 		PROCEDURE HandleStoreButton(sender, data : ANY);
 		VAR
 			component : Repositories.Component; repository : Repositories.Repository;
-			name, repositoryName, componentName : ARRAY 256 OF CHAR; id: SIZE; res: WORD;
+			name, repositoryName, componentName : ARRAY 256 OF CHAR; id: LONGINT; res: WORD;
 			filename : Files.FileName;
 		BEGIN
 			component := SELF.component;
@@ -3440,7 +3440,7 @@ TYPE
 		END HandleStoreButton;
 
 		PROCEDURE HandleRemoveButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name; repository : Repositories.Repository; refNum: SIZE;
+		VAR component : Repositories.Component; ignore : Repositories.Name; repository : Repositories.Repository; refNum: LONGINT;
 			res: WORD;
 		BEGIN
 			component := SELF.component;
@@ -3458,7 +3458,7 @@ TYPE
 		END HandleRemoveButton;
 
 		PROCEDURE HandleUpdateButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum: SIZE;
+		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum: LONGINT;
 			res: WORD;
 		BEGIN
 			component := SELF.component;
@@ -3476,7 +3476,7 @@ TYPE
 		END HandleUpdateButton;
 
 		PROCEDURE HandleUnbindButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum : SIZE;
+		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum : LONGINT;
 		BEGIN
 			component := SELF.component;
 			IF (component # NIL) THEN
@@ -3507,7 +3507,7 @@ TYPE
 		PROCEDURE Update;
 		VAR
 			component : Repositories.Component; repository : Repositories.Repository; cname : Repositories.Name;
-			caption : Strings.String; refNum : SIZE;
+			caption : Strings.String; refNum : LONGINT;
 		BEGIN
 			component := SELF.component;
 			IF (component # NIL) THEN
@@ -3650,7 +3650,7 @@ TYPE
 		END EditorKeyEvent;
 
 		PROCEDURE HandleShiftReturn;
-		VAR model : Models.Model; string : Types.DynamicString; length : SIZE; res: WORD;
+		VAR model : Models.Model; string : Types.DynamicString; length : LONGINT; res: WORD;
 		BEGIN
 			model := SELF.model;
 			IF (model # NIL) THEN
@@ -3816,8 +3816,8 @@ BEGIN
 	);
 END IsVisualComponentProperty;
 
-PROCEDURE CountExtendedProperties(component : WMComponents.Component) : SIZE;
-VAR propertyArray : WMProperties.PropertyArray; nofElements, i : SIZE;
+PROCEDURE CountExtendedProperties(component : WMComponents.Component) : LONGINT;
+VAR propertyArray : WMProperties.PropertyArray; nofElements, i : LONGINT;
 BEGIN
 	nofElements := 0;
 	IF (component # NIL) THEN
@@ -3944,4 +3944,5 @@ BEGIN
 END WMInspectionComponents.
 
 System.FreeDownTo WMInspectionComponents ~
+
 

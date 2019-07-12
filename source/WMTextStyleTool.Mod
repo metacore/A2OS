@@ -241,7 +241,7 @@ TYPE
 		PROCEDURE SetStyleFromList(sender, data: ANY);
 		VAR text : Texts.Text;
 			from, to : Texts.TextPosition;
-			a, b: SIZE;
+			a, b: LONGINT;
 			cStyle : Texts.CharacterStyle;
 		BEGIN
 			IF (data # NIL ) THEN
@@ -259,7 +259,7 @@ TYPE
 		PROCEDURE SetStyle(sender, data : ANY);
 		VAR text : Texts.Text;
 			from, to : Texts.TextPosition;
-			a, b: SIZE;
+			a, b: LONGINT;
 			cStyle : Texts.CharacterStyle;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
@@ -294,7 +294,7 @@ TYPE
 		PROCEDURE AddLink(sender, data: ANY);
 		VAR text : Texts.Text;
 			from, to : Texts.TextPosition;
-			a, b: SIZE;
+			a, b: LONGINT;
 			tempLink: ARRAY 2083 OF CHAR;
 			link : Texts.Link;
 		BEGIN
@@ -313,7 +313,7 @@ TYPE
 		PROCEDURE AddLabel(sender, data: ANY);
 		VAR text : Texts.Text;
 			from, to : Texts.TextPosition;
-			a: SIZE;
+			a: LONGINT;
 			label : ARRAY 256 OF CHAR;
 			lp : Texts.LabelPiece;
 		BEGIN
@@ -456,7 +456,7 @@ TYPE
 		PROCEDURE GetStyle(sender, data : ANY);
 		VAR text : Texts.Text; from, to : Texts.TextPosition;
 			utilreader : Texts.TextReader; tempString : ARRAY 256 OF CHAR;
-			a, b: SIZE; ch, temp : LONGINT;
+			a, b, ch, temp : LONGINT;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
@@ -520,7 +520,7 @@ TYPE
 		VAR text : Texts.Text;
 			from, to : Texts.TextPosition;
 			cStyle : Texts.CharacterStyle;
-			a, b: SIZE;
+			a, b: LONGINT;
 			style : SET;
 			fgColor, bgColor : LONGINT;
 			name, tempString: ARRAY 256 OF CHAR;
@@ -1917,7 +1917,7 @@ VAR
 	text : Texts.Text;
 	from, to : Texts.TextPosition;
 	utilreader : Texts.TextReader;
-	a, b : SIZE;
+	a, b : LONGINT;
 	ch : Texts.Char32;
 	newCstyle : Texts.CharacterStyle;
 BEGIN
@@ -2026,7 +2026,7 @@ PROCEDURE SetStyleByName*(context : Commands.Context); (* stylename ~ *)
 VAR
 	text : Texts.Text;
 	from, to : Texts.TextPosition;
-	a, b : SIZE;
+	a, b : LONGINT;
 	cStyle : Texts.CharacterStyle;
 	cStyleStr : ARRAY 32 OF CHAR;
 BEGIN

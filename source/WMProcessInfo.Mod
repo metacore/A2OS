@@ -73,7 +73,7 @@ TYPE
 		PROCEDURE GetSelection*() : Selection;
 		VAR
 			processes : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
-			nofProcesses : SIZE;
+			nofProcesses : LONGINT;
 			scol, srow, ecol, erow, id, i : LONGINT;
 			selection : Selection;
 			str : Strings.String;
@@ -185,7 +185,7 @@ TYPE
 		END Pause;
 
 		PROCEDURE Resized*;
-		VAR width, height, w, add : LONGINT; i : SIZE; newColWidth : WMGrids.Spacings;
+		VAR width, height, w, add, i : LONGINT; newColWidth : WMGrids.Spacings;
 		BEGIN
 			width := bounds.GetWidth(); height := bounds.GetHeight();
 			NEW(newColWidth, LEN(colWidth));
@@ -314,11 +314,10 @@ TYPE
 		END Update;
 
 		PROCEDURE Refresh;
-		VAR proc : ProcessInfo.IsGreaterThanProc; nofProcesses : SIZE;
+		VAR proc : ProcessInfo.IsGreaterThanProc;
 		BEGIN
 			Acquire;
 			ProcessInfo.GetProcesses(processes, nofProcesses);
-			SELF.nofProcesses := LONGINT (nofProcesses);
 			CASE sortI OF
 			| ID: proc := ProcessInfo.SortByID;
 			| Priority : proc := ProcessInfo.SortByPriority;
@@ -466,7 +465,7 @@ TYPE
 		END Decision;
 
 		PROCEDURE HaltThread(unbreakable : BOOLEAN);
-		VAR selection : Selection; i : SIZE;
+		VAR selection : Selection; i : LONGINT;
 		BEGIN
 			selection := processSelector.GetSelection();
 			IF (selection # NIL) THEN
@@ -514,7 +513,7 @@ TYPE
 		END HandleSortPopup;
 
 		PROCEDURE HandleShowStack(sender, data : ANY);
-		VAR selection : Selection; w: Streams.Writer; i : SIZE;
+		VAR selection : Selection; w: Streams.Writer; i : LONGINT;
 		BEGIN
 			selection := processSelector.GetSelection();
 			IF (selection # NIL) THEN
@@ -529,7 +528,7 @@ TYPE
 		END HandleShowStack;
 
 		PROCEDURE HandleCpuLoad(sender, data : ANY);
-		VAR selection : Selection; i : SIZE;
+		VAR selection : Selection; i : LONGINT;
 		BEGIN
 			selection := processSelector.GetSelection();
 			IF (selection # NIL) THEN

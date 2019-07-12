@@ -204,7 +204,7 @@ TYPE
 		(** returns a spacings array filled with the column width. The array contains only so many elements
 		as the one set with SetColSpacings. The result is NIL, if not set with SetColSpacings *)
 		PROCEDURE GetColSpacings*() : Spacings;
-		VAR t : Spacings; i : SIZE;
+		VAR t : Spacings; i : LONGINT;
 		BEGIN
 			Acquire;
 			IF colWidths # NIL THEN NEW(t, LEN(colWidths)); FOR i := 0 TO LEN(colWidths) - 1 DO t[i] := colWidths[i] END END;
@@ -225,7 +225,7 @@ TYPE
 		(** returns a spacings array filled with the row heights. The array contains only so many elements
 		as the one set with SetRowSpacings. The result is NIL, if not set with SetRowSpacings *)
 		PROCEDURE GetRowSpacings*() : Spacings;
-		VAR t : Spacings; i : SIZE;
+		VAR t : Spacings; i : LONGINT;
 		BEGIN
 			Acquire;
 			IF rowHeights # NIL THEN NEW(t, LEN(rowHeights)); FOR i := 0 TO LEN(rowHeights) - 1 DO t[i] := rowHeights[i] END END;

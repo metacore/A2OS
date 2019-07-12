@@ -97,9 +97,9 @@ IMPORT
 	(* Stream for reading a Stream of an .avi file *)
 	TYPE AVIStream* = OBJECT(Codecs.DemuxStream)
 		VAR
-			bufAdr: ADDRESS;
+			bufAdr: LONGINT;
 			r : Streams.Reader;
-			chunkSize*: SIZE;	(* Bytes in actual AVI Chunk *)
+			chunkSize*: LONGINT;	(* Bytes in actual AVI Chunk *)
 			streamHeader: AVIStreamHeader;
 			stuffByte*: LONGINT;
 			eof*: BOOLEAN;	(* End of File *)
@@ -143,7 +143,6 @@ IMPORT
 		PROCEDURE  ReadNextChunk(VAR buf:  ARRAY OF CHAR);
 		VAR
 			tempBuf: ARRAY 4 OF CHAR;
-			length: SIZE;
 			len: LONGINT;
 			done: BOOLEAN;
 		BEGIN
@@ -158,7 +157,7 @@ IMPORT
 			END;
 
 			REPEAT
-				r.Bytes(tempBuf, 0, 4, length );
+				r.Bytes(tempBuf, 0, 4, len );
 				IF r.res = Streams.Ok THEN
 					r.RawLInt(len);
 					stuffByte := len MOD 2;
@@ -215,11 +214,11 @@ IMPORT
 			IF Debug THEN KernelLog.String("DemuxStream.SetAVIPos"); KernelLog.Ln; END;
 			r.SetPos(pos);
 			stuffByte := 0;
-			retPos := r.Pos()(LONGINT);
+			retPos := r.Pos();
 			Reset;
 		END SetAVIPos;
 
-		PROCEDURE Bytes*(VAR x: ARRAY OF CHAR; ofs, size: SIZE; VAR len: SIZE);
+		PROCEDURE Bytes*(VAR x: ARRAY OF CHAR; ofs, size: LONGINT; VAR len: LONGINT);
 		VAR
 			min: LONGINT; res: WORD;
 		BEGIN
@@ -233,7 +232,7 @@ IMPORT
 		BEGIN
 			IF Debug THEN KernelLog.String("DemuxStream.SetPos"); KernelLog.Ln; END;
 			seekType := Codecs.SeekByte;
-			demultiplexer.SetStreamPos(streamNr, seekType, pos(LONGINT), itemSize, res);
+			demultiplexer.SetStreamPos(streamNr, seekType, pos, itemSize, res);
 			Reset;
 		END SetPos;
 
@@ -251,8 +250,8 @@ IMPORT
 		videoStreamHeader: AVIStreamHeader;
 		riffLength: LONGINT;
 
-		movieBeginPos: Streams.Position;
-		indexStart: Streams.Position;
+		movieBeginPos: LONGINT;
+		indexStart: LONGINT;
 		videoFrames: LONGINT;
 		audioChunks: LONGINT;
 		videoIndex: IndexArrayPointer;
@@ -306,10 +305,10 @@ IMPORT
 		PROCEDURE ReadHeader*(): BOOLEAN;
 		VAR
 			buf : ARRAY 8 OF CHAR;
-			len: SIZE;
+			len: LONGINT;
 			done: BOOLEAN;
 			headerLength: LONGINT;
-			headerBeginPos: Streams.Position;
+			headerBeginPos: LONGINT;
 
 			tempHeader: AVIStreamHeader;
 			streamNumber: SHORTINT;
@@ -467,7 +466,7 @@ IMPORT
 			i: LONGINT;
 			pos: LONGINT;
 			length: LONGINT;
-			len: SIZE;
+			len: LONGINT;
 			temp: LONGINT;
 			nai: LONGINT;
 			nvi: LONGINT;
@@ -570,7 +569,7 @@ IMPORT
 				IF (idxType = 1) THEN
 					ioff := 8;
 				ELSE
-					ioff := movieBeginPos(LONGINT);
+					ioff := movieBeginPos;
 				END;
 
 				i := 0;
@@ -613,7 +612,7 @@ IMPORT
 		VAR
 			aviHeader: MainAVIHeaderDesc;
 			headerLength: LONGINT;
-			startPos: Streams.Position;
+			startPos: LONGINT;
 		BEGIN
 			NEW( aviHeader );
 
@@ -648,8 +647,8 @@ IMPORT
 		VAR
 			header: AVIStreamHeader;
 			headerLength: LONGINT;
-			startPos: Streams.Position;
-			len: SIZE;
+			startPos: LONGINT;
+			len: LONGINT;
 			temp: INTEGER;
 		BEGIN
 			NEW(header);
@@ -687,7 +686,7 @@ IMPORT
 		VAR
 			header: BitMapInfo;
 			headerLength: LONGINT;
-			startPos: Streams.Position;
+			startPos: LONGINT;
 			temp: INTEGER;
 		BEGIN
 			NEW(header);
@@ -719,7 +718,7 @@ IMPORT
 		VAR
 			header: WAVEFormatEx;
 			headerLength: LONGINT;
-			startPos: Streams.Position;
+			startPos: LONGINT;
 			temp: INTEGER;
 		BEGIN
 			NEW(header);
@@ -1076,7 +1075,7 @@ IMPORT
 
 		END GetInfo;
 
-		PROCEDURE GetData*(streamNr: LONGINT;  VAR buf:  ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE GetData*(streamNr: LONGINT;  VAR buf:  ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			rres: BOOLEAN;
 		BEGIN
@@ -1320,8 +1319,8 @@ VAR
 	nbit: LONGINT;
 	posInLONGINT: LONGINT;
 	bufa, bufb: LONGINT;
-	temp: ADDRESS;
-	bufAdr: ADDRESS;
+	temp: LONGINT;
+	bufAdr: LONGINT;
 BEGIN
 	bufAdr := ADDRESSOF( buf[0] );
 	posInLONGINT := index MOD 32;

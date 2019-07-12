@@ -14,9 +14,9 @@ TYPE
 	Hash* = OBJECT (Hashes.Hash)
 		VAR
 			hash: ARRAY 8 OF LONGINT;		(* state *)
-			Nl, Nh: SIZE;
+			Nl, Nh: LONGINT;
 			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
-			cn: SIZE	(* number of chars in cdata *)
+			cn: LONGINT	(* number of chars in cdata *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -36,7 +36,7 @@ TYPE
 			initialized := TRUE
 		END Initialize;
 
-		PROCEDURE HashBlock( CONST buf: ARRAY OF CHAR;  pos: SIZE );
+		PROCEDURE HashBlock( CONST buf: ARRAY OF CHAR;  pos: LONGINT );
 		VAR a, b, c, d, e, f, g, h, s0, s1, s, T1, T2, i: LONGINT;
 			X: ARRAY 16 OF LONGINT
 		BEGIN
@@ -70,8 +70,8 @@ TYPE
 
 
 		(** data: value to be hashed *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-			VAR n, i, l: SIZE;
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: LONGINT );
+			VAR n, i, l: LONGINT;
 		BEGIN
 			ASSERT( initialized );
 			l := Nl + len*8;
@@ -98,7 +98,7 @@ TYPE
 		END Update;
 
 		(** get the hashvalue of length SELF.size *)
-		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 			VAR p, i: LONGINT;
 		BEGIN
 			cdata[cn] := 80X;  INC( cn );
@@ -108,7 +108,7 @@ TYPE
 			END;
 			p := BlockSize - 8;
 			WHILE cn < p  DO  cdata[cn] := 0X;  INC( cn )  END;
-			U.IntToBufferBE( Nh(LONGINT), cdata, p );  U.IntToBufferBE( Nl(LONGINT), cdata, p + 4 );
+			U.IntToBufferBE( Nh, cdata, p );  U.IntToBufferBE( Nl, cdata, p + 4 );
 			HashContextBlock;
 
 			FOR i := 0 TO 7 DO  U.IntToBufferBE( hash[i], buf, pos );  INC( pos, 4 )  END;

@@ -19,7 +19,7 @@ VAR
 	d: Displays.Display;
 
 PROCEDURE GetVal(name: ARRAY OF CHAR;  default: LONGINT): LONGINT;
-VAR v: LONGINT;  s: ARRAY 10 OF CHAR;  p: SIZE;
+VAR v: LONGINT;  s: ARRAY 10 OF CHAR;  p: LONGINT;
 BEGIN
 	Machine.GetConfig(name, s);
 	IF s[0] = 0X THEN

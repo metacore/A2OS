@@ -7,15 +7,15 @@ TYPE
 	InitBuffer* = OBJECT	(**   buffer supporting initialization of large tables with hex values  *)
 	VAR
 		buf: POINTER TO ARRAY OF CHAR;
-		in, out: SIZE;
+		in, out: LONGINT;
 
-		PROCEDURE & Init*( size: SIZE );
+		PROCEDURE & Init*( size: LONGINT );
 		BEGIN
 			NEW( buf, size );  in := 0;  out := 0;
 		END Init;
 
 		PROCEDURE Add*( CONST x: ARRAY OF CHAR );
-		VAR  i: SIZE;  c: CHAR;
+		VAR  i: LONGINT;  c: CHAR;
 		BEGIN
 			c := x[0];  i := 1;
 			WHILE c # 0X DO
@@ -55,8 +55,8 @@ VAR
 
 
 
-	PROCEDURE PrintHex*( CONST buf: ARRAY OF CHAR;  p, n: SIZE );
-	VAR ch: WORD; i: SIZE;
+	PROCEDURE PrintHex*( CONST buf: ARRAY OF CHAR;  p, n: LONGINT );
+	VAR ch, i: LONGINT;
 	BEGIN
 		FOR i := 0 TO n - 1 DO
 			IF i MOD 4 = 0 THEN
@@ -70,15 +70,15 @@ VAR
 	END PrintHex;
 
 	PROCEDURE PrintBufferString*( CONST buf: ARRAY OF CHAR;  pos: LONGINT );
-	VAR i, p: SIZE; len: LONGINT;
+	VAR i, p, len: LONGINT;
 	BEGIN
 		p := pos;
 		GetLength( buf, p, len );
 		FOR i := 0 TO len - 1 DO Out.Char( buf[p + i] )  END
 	END PrintBufferString;
 
-	PROCEDURE PrintPackage*( CONST buf: ARRAY OF CHAR;  len: SIZE );
-	VAR i: SIZE;  c: CHAR;
+	PROCEDURE PrintPackage*( CONST buf: ARRAY OF CHAR;  len: LONGINT );
+	VAR i: LONGINT;  c: CHAR;
 	BEGIN
 		FOR i := 0 TO len - 1 DO
 			IF i MOD 24 = 0 THEN Out.Ln END;
@@ -95,8 +95,8 @@ VAR
 	(*==========  packet buffer <---> program data  ===========*)
 
 
-	PROCEDURE PutLength*( VAR buf: ARRAY OF CHAR;  VAR pos: SIZE;  len: LONGINT );
-	VAR i: SIZE;
+	PROCEDURE PutLength*( VAR buf: ARRAY OF CHAR;  VAR pos: LONGINT;  len: LONGINT );
+	VAR i: INTEGER;
 	BEGIN
 		FOR i := 3 TO 0 BY -1 DO
 			buf[pos + i] := CHR( len MOD 256 );  len := len DIV 256
@@ -105,7 +105,7 @@ VAR
 	END PutLength;
 
 
-	PROCEDURE GetLength*( CONST buf: ARRAY OF CHAR;  VAR pos: SIZE; VAR len: LONGINT );
+	PROCEDURE GetLength*( CONST buf: ARRAY OF CHAR;  VAR pos, len: LONGINT );
 	BEGIN
 		len :=	ASH( LONG( ORD( buf[pos] ) ), 24 ) +
 				ASH( LONG( ORD( buf[pos + 1] ) ), 16 ) +
@@ -115,7 +115,7 @@ VAR
 	END GetLength;
 
 
-	PROCEDURE GetInt*( CONST buf: ARRAY OF CHAR;  pos: SIZE ): LONGINT;
+	PROCEDURE GetInt*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): LONGINT;
 	BEGIN
 		RETURN	ASH( LONG( ORD( buf[pos] ) ), 24 ) +
 				ASH( LONG( ORD( buf[pos + 1] ) ), 16 ) +
@@ -124,17 +124,17 @@ VAR
 	END GetInt;
 
 
-	PROCEDURE PutChar*( VAR buf: ARRAY OF CHAR;  VAR pos: SIZE;  ch: CHAR );
+	PROCEDURE PutChar*( VAR buf: ARRAY OF CHAR;  VAR pos: LONGINT;  ch: CHAR );
 	BEGIN
 		buf[pos] := ch;  INC( pos )
 	END PutChar;
 
-	PROCEDURE GetChar*( CONST buf: ARRAY OF CHAR;  VAR pos: SIZE;  VAR ch: CHAR );
+	PROCEDURE GetChar*( CONST buf: ARRAY OF CHAR;  VAR pos: LONGINT;  VAR ch: CHAR );
 	BEGIN
 		ch := buf[pos];  INC( pos )
 	END GetChar;
 
-	PROCEDURE PutString*( VAR buf: ARRAY OF CHAR;  VAR pos: SIZE;  CONST str: ARRAY OF CHAR );
+	PROCEDURE PutString*( VAR buf: ARRAY OF CHAR;  VAR pos: LONGINT;  CONST str: ARRAY OF CHAR );
 	VAR i, len: LONGINT;
 	BEGIN
 		len := 0;
@@ -143,7 +143,7 @@ VAR
 		FOR i := 0 TO len -1 DO buf[pos] := str[i];  INC( pos )  END ;
 	END PutString;
 
-	PROCEDURE GetString*( CONST buf: ARRAY OF CHAR;  VAR pos: SIZE;  VAR str: ARRAY OF CHAR );
+	PROCEDURE GetString*( CONST buf: ARRAY OF CHAR;  VAR pos: LONGINT;  VAR str: ARRAY OF CHAR );
 	VAR i, len: LONGINT;
 	BEGIN
 		GetLength( buf, pos, len );
@@ -152,17 +152,17 @@ VAR
 	END GetString;
 
 
-	PROCEDURE PutArray*(	VAR buf: ARRAY OF CHAR;  VAR pos: SIZE;
-							CONST arr: ARRAY OF CHAR;  apos, len: SIZE  );
-	VAR i: SIZE
+	PROCEDURE PutArray*(	VAR buf: ARRAY OF CHAR;  VAR pos: LONGINT;
+							CONST arr: ARRAY OF CHAR;  apos, len: LONGINT  );
+	VAR i: LONGINT;
 	BEGIN
-		PutLength( buf, pos, len(LONGINT) );
+		PutLength( buf, pos, len );
 		FOR i := 0 TO len -1 DO buf[pos] := arr[apos + i];  INC( pos )  END
 	END PutArray;
 
 
-	PROCEDURE PutBigNumber*( VAR buf: ARRAY OF CHAR;  VAR pos: SIZE;  b: B.BigNumber );
-	VAR i, j: SIZE; len: LONGINT;  x: UNSIGNED32;  tmp: ARRAY 2048 OF CHAR;
+	PROCEDURE PutBigNumber*( VAR buf: ARRAY OF CHAR;  VAR pos: LONGINT;  b: B.BigNumber );
+	VAR i, j, len: LONGINT;  x: UNSIGNED32;  tmp: ARRAY 2048 OF CHAR;
 	BEGIN
 		len := 0;
 		FOR i := b.len - 1 TO 0 BY -1 DO
@@ -181,7 +181,7 @@ VAR
 		FOR i := 0 TO len - 1 DO  buf[pos] := tmp[j + i];  INC( pos )  END;
 	END PutBigNumber;
 
-	PROCEDURE GetBigNumber*( CONST buf: ARRAY OF CHAR;  VAR pos: SIZE;  VAR b: B.BigNumber );
+	PROCEDURE GetBigNumber*( CONST buf: ARRAY OF CHAR;  VAR pos: LONGINT;  VAR b: B.BigNumber );
 	VAR
 		len: LONGINT;
 	BEGIN
@@ -194,11 +194,11 @@ VAR
 	(*----------------   misc   -------------------------------*)
 
 	(** convert 2*len hex nibbles into len bytes *)
-	PROCEDURE Hex2Bin*(	CONST hex: ARRAY OF CHAR;  hp: SIZE;
-							VAR bin: ARRAY OF CHAR;  bp: SIZE;
-							len: SIZE );
+	PROCEDURE Hex2Bin*(	CONST hex: ARRAY OF CHAR;  hp: LONGINT;
+							VAR bin: ARRAY OF CHAR;  bp: LONGINT;
+							len: LONGINT );
 	VAR
-		i: SIZE; h, b: WORD; c: CHAR;
+		i: INTEGER;  h, b: LONGINT; c: CHAR;
 	BEGIN
 		i := 0;
 		WHILE i < 2*len DO 		(* parse one nibble at a time *)
@@ -222,10 +222,10 @@ VAR
 
 
 	(** convert len bytes  into 2*len hex nibbles *)
-	PROCEDURE Bin2Hex*(	CONST bin: ARRAY OF CHAR;  bp: SIZE;
-							VAR hex: ARRAY OF CHAR;  hp: SIZE;
-							len: SIZE );
-	VAR i: SIZE; c: WORD;
+	PROCEDURE Bin2Hex*(	CONST bin: ARRAY OF CHAR;  bp: LONGINT;
+							VAR hex: ARRAY OF CHAR;  hp: LONGINT;
+							len: LONGINT );
+	VAR i, c: LONGINT;
 	BEGIN
 		FOR i := 0 TO len - 1 DO
 			c := ORD( bin[ bp + i] );
@@ -236,9 +236,9 @@ VAR
 
 
 	(** fill len pseudo-random bytes into buf, starting at posistion ofs *)
-	PROCEDURE RandomBytes*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
+	PROCEDURE RandomBytes*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
 	VAR
-		i: SIZE;
+		i: LONGINT;
 		rg: Random.Generator;
 	BEGIN
 		NEW( rg );
@@ -248,7 +248,7 @@ VAR
 
 
 	PROCEDURE XORBlock*( VAR block, iv: ARRAY OF S.BYTE );
-	VAR a1, a2: ADDRESS; s1, s2: SET32; i: SIZE;
+	VAR a1, a2: ADDRESS; s1, s2: SET32; i: LONGINT;
 	BEGIN
 		a1 := ADDRESSOF( block );  a2 := ADDRESSOF( iv );
 		FOR i := 1 TO LEN( block ) DIV 4 DO
@@ -259,8 +259,8 @@ VAR
 
 
 	(* copy char buffer to 32-bit words in block. big endian format *)
-	PROCEDURE BufferToBlockBE*( CONST buf: ARRAY OF CHAR; pos: SIZE; VAR block: ARRAY OF S.BYTE );
-	VAR i: SIZE; a: ADDRESS;
+	PROCEDURE BufferToBlockBE*( CONST buf: ARRAY OF CHAR; pos: LONGINT; VAR block: ARRAY OF S.BYTE );
+	VAR i: LONGINT; a: ADDRESS;
 	BEGIN
 		a := ADDRESSOF( block );
 		FOR i := 1 TO LEN( block ) DIV 4 DO
@@ -275,8 +275,8 @@ VAR
 
 
 	(* copy char buffer to 32-bit words in block. little endian format *)
-	PROCEDURE BufferToBlockLE*( CONST buf: ARRAY OF CHAR;  pos: SIZE;  VAR block: ARRAY OF S.BYTE );
-	VAR i: SIZE;  a: ADDRESS;
+	PROCEDURE BufferToBlockLE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT;  VAR block: ARRAY OF S.BYTE );
+	VAR i: LONGINT;  a: ADDRESS;
 	BEGIN
 		a := ADDRESSOF( block );
 		FOR i := 1 TO LEN( block ) DIV 4 DO
@@ -290,8 +290,8 @@ VAR
 	END BufferToBlockLE;
 
 	(* copy 32bit words in block to char buffer. big endian format *)
-	PROCEDURE BlockToBufferBE*( CONST block: ARRAY OF S.BYTE;  VAR buf: ARRAY OF CHAR; pos: SIZE );
-	VAR a: ADDRESS; i: SIZE; w: LONGINT;
+	PROCEDURE BlockToBufferBE*( CONST block: ARRAY OF S.BYTE;  VAR buf: ARRAY OF CHAR; pos: LONGINT );
+	VAR a: ADDRESS; i, w: LONGINT;
 	BEGIN
 		a := ADDRESSOF( block );
 		FOR i := 1 TO LEN( block ) DIV 4 DO
@@ -305,8 +305,8 @@ VAR
 	END BlockToBufferBE;
 
 	(* copy 32bit words in block to char buffer. little endian format *)
-	PROCEDURE BlockToBufferLE*( CONST block: ARRAY OF S.BYTE;  VAR buf: ARRAY OF CHAR;  pos: SIZE );
-	VAR a: ADDRESS;  i: SIZE; w: LONGINT;
+	PROCEDURE BlockToBufferLE*( CONST block: ARRAY OF S.BYTE;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
+	VAR a: ADDRESS;  i, w: LONGINT;
 	BEGIN
 		a := ADDRESSOF( block );
 		FOR i := 1 TO LEN( block ) DIV 4 DO
@@ -319,12 +319,12 @@ VAR
 		END
 	END BlockToBufferLE;
 
-	PROCEDURE SetToBufferBE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: SIZE );
+	PROCEDURE SetToBufferBE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		IntToBufferBE( S.VAL( LONGINT, val ), buf, pos );
 	END SetToBufferBE;
 
-	PROCEDURE IntToBufferBE*( val: LONGINT;  VAR buf: ARRAY OF CHAR;  pos: SIZE );
+	PROCEDURE IntToBufferBE*( val: LONGINT;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		buf[pos + 3] := CHR( val MOD 256 );  val := val DIV 256;
 		buf[pos + 2] := CHR( val MOD 256 );  val := val DIV 256;
@@ -332,12 +332,12 @@ VAR
 		buf[pos + 0] := CHR( val MOD 256 );
 	END IntToBufferBE;
 
-	PROCEDURE SetToBufferLE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: SIZE );
+	PROCEDURE SetToBufferLE*( val: SET32;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		IntToBufferLE( S.VAL( LONGINT, val ), buf, pos );
 	END SetToBufferLE;
 
-	PROCEDURE IntToBufferLE*( val: LONGINT;  VAR buf: ARRAY OF CHAR;  pos: SIZE );
+	PROCEDURE IntToBufferLE*( val: LONGINT;  VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 	BEGIN
 		buf[pos + 0] := CHR( val MOD 256 );  val := val DIV 256;
 		buf[pos + 1] := CHR( val MOD 256 );  val := val DIV 256;
@@ -346,12 +346,12 @@ VAR
 	END IntToBufferLE;
 
 
-	PROCEDURE SetFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: SIZE ): SET32;
+	PROCEDURE SetFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): SET32;
 	BEGIN
 		RETURN  S.VAL( SET32, IntFromBufferBE( buf, pos ) )
 	END SetFromBufferBE;
 
-	PROCEDURE IntFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: SIZE ): LONGINT;
+	PROCEDURE IntFromBufferBE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): LONGINT;
 	BEGIN
 		RETURN	ASH( LONG( ORD( buf[pos + 0] ) ), 24 ) +
 					ASH( LONG( ORD( buf[pos + 1] ) ), 16 ) +
@@ -360,12 +360,12 @@ VAR
 	END IntFromBufferBE;
 
 
-	PROCEDURE SetFromBufferLE*( CONST buf: ARRAY OF CHAR;  pos: SIZE ): SET32;
+	PROCEDURE SetFromBufferLE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): SET32;
 	BEGIN
 		RETURN  S.VAL( SET32, IntFromBufferLE( buf, pos ) )
 	END SetFromBufferLE;
 
-	PROCEDURE IntFromBufferLE*( CONST buf: ARRAY OF CHAR;  pos: SIZE ): LONGINT;
+	PROCEDURE IntFromBufferLE*( CONST buf: ARRAY OF CHAR;  pos: LONGINT ): LONGINT;
 	BEGIN
 		RETURN	ASH( LONG( ORD( buf[pos + 3] ) ), 24 ) +
 					ASH( LONG( ORD( buf[pos + 2] ) ), 16 ) +
@@ -378,4 +378,6 @@ VAR
 BEGIN
 	hexd := "0123456789ABCDEF";
 END CryptoUtils.
+
+
 

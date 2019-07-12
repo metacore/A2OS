@@ -48,7 +48,7 @@ TYPE
 
 		(** returns NIL if the session variable is not present *)
 		PROCEDURE GetVariableByName*(name: ARRAY OF CHAR) : SessionVariable;
-			VAR p: ANY; i : SIZE; var: SessionVariable;
+			VAR p: ANY; i : LONGINT; var: SessionVariable;
 		BEGIN
 			sessionVariables.Lock;
 			FOR i := 0 TO sessionVariables.GetCount()-1 DO
@@ -95,7 +95,7 @@ TYPE
 
 	(* checks whether certain session have to be freed *)
 	LeaseManager = OBJECT
-		VAR timer: Kernel.Timer; i, j: SIZE; pSession, pHandler: ANY; s: Session;
+		VAR timer: Kernel.Timer; i, j: LONGINT; pSession, pHandler: ANY; s: Session;
 			expiredSessions: TFClasses.List; alive, dead: BOOLEAN; expObj: ExpirationHandlerObject;
 
 		PROCEDURE Kill*;
@@ -217,7 +217,7 @@ VAR
 	END GetSession;
 
 	PROCEDURE FindSessionBySessionId(sessionId: SessionId) : Session;
-	VAR i: SIZE; p: ANY; sess: Session;
+	VAR i: LONGINT; p: ANY; sess: Session;
 	BEGIN
 		sessions.Lock;
 		FOR i := 0 TO sessions.GetCount()-1 DO
@@ -235,7 +235,7 @@ VAR
 		the date and time and a random component. by "cs" *)
 	PROCEDURE NewSessionId(header: WebHTTP.RequestHeader; VAR sessionId: SessionId);
 	VAR
-		i: SIZE;
+		i: LONGINT;
 		buffer1,buffer2: POINTER TO ARRAY OF CHAR;
 		context: MD5.Context;
 		digest: MD5.Digest;
@@ -266,7 +266,7 @@ VAR
 	END AddExpirationHandler;
 
 	PROCEDURE RemoveExpirationHandler*(handler: SessionExpirationHandler);
-	VAR expObj, delObj: ExpirationHandlerObject; p: ANY; i : SIZE;
+	VAR expObj, delObj: ExpirationHandlerObject; p: ANY; i : LONGINT;
 	BEGIN {EXCLUSIVE}
 		delObj := NIL;
 		expirationHandlers.Lock;

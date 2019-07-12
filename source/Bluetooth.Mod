@@ -333,7 +333,7 @@ END StringToParam;
 
 
 PROCEDURE CharArrayToString*(buf: ARRAY OF CHAR; ofs, len: LONGINT; VAR string: ARRAY OF CHAR);
-VAR i, pos, maxLen: SIZE; c: CHAR;
+VAR i, pos, maxLen: LONGINT; c: CHAR;
 
 	PROCEDURE Char(v: LONGINT): CHAR;
 	BEGIN

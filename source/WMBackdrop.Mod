@@ -150,7 +150,7 @@ TYPE
 		END Handle;
 
 		PROCEDURE Change(sender, data: ANY);
-		VAR index: SIZE; img : WMGraphics.Image;
+		VAR index: LONGINT; img : WMGraphics.Image;
 		BEGIN
 			IF imgList # NIL THEN
 
@@ -217,7 +217,7 @@ VAR
 
 PROCEDURE GetImage(CONST name : ARRAY OF CHAR; w, h : LONGINT) : WMGraphics.Image;
 VAR img, t : WMGraphics.Image;
-	i, count : SIZE; ptr : ANY;
+	i, count : LONGINT; ptr : ANY;
 
 BEGIN
 	img := NIL;
@@ -287,7 +287,7 @@ BEGIN
 END DefaultPos;
 
 PROCEDURE Rearrange;
-VAR ptr : ANY; i : SIZE; manager : WMWindowManager.WindowManager;
+VAR ptr : ANY; i : LONGINT; manager : WMWindowManager.WindowManager;
 BEGIN
 	(* rearrange backrops so the latest added is on top to avoid confusion in the user *)
 	manager := WMWindowManager.GetDefaultManager();
@@ -446,7 +446,7 @@ PROCEDURE Cleanup;
 VAR manager : WMWindowManager.WindowManager;
 	ptr : ANY;
 	w: Window;
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	manager := WMWindowManager.GetDefaultManager();
 	windowList.Lock;

@@ -86,10 +86,10 @@ TYPE
 		PROCEDURE SetLinkAddress*(linkAddress : Network.LinkAdr; VAR res : WORD); (* abstract *)
 		BEGIN HALT(301); END SetLinkAddress;
 
-		PROCEDURE HandleInterrupt*(status : Usbdi.Status; actLen : SIZE); (* abstract *)
+		PROCEDURE HandleInterrupt*(status : Usbdi.Status; actLen : LONGINT); (* abstract *)
 		BEGIN HALT(301); END HandleInterrupt;
 
-		PROCEDURE HandleBulkIn*(status : Usbdi.Status; actLen : SIZE); (* abstract *)
+		PROCEDURE HandleBulkIn*(status : Usbdi.Status; actLen : LONGINT); (* abstract *)
 		BEGIN HALT(301); END HandleBulkIn;
 
 		PROCEDURE InitController*(VAR rxBuffer : Usbdi.BufferPtr) : BOOLEAN; (* abstract *)
@@ -142,7 +142,7 @@ TYPE
 		END InitLinkDevice;
 
 		PROCEDURE GetPipes(VAR bulkInPipe, bulkOutPipe, interruptInPipe : Usbdi.Pipe);
-		VAR i : SIZE; bulkInEndpoint, bulkOutEndpoint, interruptInEndpoint : LONGINT;
+		VAR i : LONGINT; bulkInEndpoint, bulkOutEndpoint, interruptInEndpoint : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(interface.endpoints)-1 DO
 				IF interface.endpoints[i].type = Usbdi.BulkIn THEN

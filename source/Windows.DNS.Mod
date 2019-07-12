@@ -48,12 +48,12 @@ VAR
 
 (* Find the host name of the specified IP address. *)
 	PROCEDURE HostByNumber*( adr: IP.Adr;  VAR hostname: ARRAY OF CHAR;  VAR res: WORD );
-	VAR len: WORD;
+	VAR len: LONGINT;
 	BEGIN
 		COPY( "", hostname );
 		IF (adr.usedProtocol = IP.IPv4) THEN
 			adr.ipv4Adr := WSock32.htonl(adr.ipv4Adr);   (*  host byte order to TCP/IP network order*)
-			len := LEN(hostname)(WORD);
+			len := LEN(hostname);
 			len := WSock32.getpeername(adr.ipv4Adr, hostname,len);(* Dan 10.11.05 *)
 		END;
 		IF hostname # "" THEN res := Ok ELSE res := NotFound END;

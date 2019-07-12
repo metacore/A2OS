@@ -348,7 +348,7 @@ TYPE
 
 		(* Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
 		PROCEDURE Enumerate(file: File; par: Parameter): BOOLEAN;
-		VAR name: Filename; len: Files.Size; flags: SET;
+		VAR name: Filename; len: LONGINT; flags: SET;
 		BEGIN
 			WITH par: EnumParam DO
 				UTF8Strings.UpperCase(file.long, name);
@@ -639,18 +639,18 @@ TYPE
 
 		(* Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file.
 			A Rider cannot be positioned beyond the end of a file. *)
-		PROCEDURE Set*(VAR r: Files.Rider; pos: Files.Position);
+		PROCEDURE Set*(VAR r: Files.Rider; pos: LONGINT);
 		BEGIN {EXCLUSIVE} SetX(r, pos)
 		END Set;
 
-		PROCEDURE SetX(VAR r: Files.Rider; pos: Files.Position);
+		PROCEDURE SetX(VAR r: Files.Rider; pos: LONGINT);
 		BEGIN
 			r.eof := FALSE; r.res := 0; r.file := SELF; r.fs := fs;
 			IF (pos < 0) THEN pos := 0
 			ELSIF (pos > size) THEN pos := size
 			END;
-			r.apos := LONGINT(pos) DIV clusterSize;
-			r.bpos := LONGINT(pos) MOD clusterSize;
+			r.apos := pos DIV clusterSize;
+			r.bpos := pos MOD clusterSize;
 			IF (buffer = NIL) THEN
 				NEW(buffer); NEW(buffer.data, clusterSize);
 				buffer.pos := NotAssigned;
@@ -659,8 +659,8 @@ TYPE
 		END SetX;
 
 		(* Return the offset of a Rider positioned on a file. *)
-		PROCEDURE Pos*(VAR r: Files.Rider): Files.Position;
-		BEGIN RETURN r.apos*clusterSize + r.bpos;
+		PROCEDURE Pos*(VAR r: Files.Rider): LONGINT;
+		BEGIN RETURN r.apos*clusterSize + r.bpos
 		END Pos;
 
 		(* Read logical cluster 'pos', pos=0 is the first cluster. 'pos' must be <= # of clusters in file.
@@ -771,7 +771,7 @@ TYPE
 		PROCEDURE ReadX(VAR r: Files.Rider; VAR x: CHAR);
 		BEGIN
 			IF (r.apos*clusterSize + r.bpos < size) THEN
-				IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+				IF (buffer.pos # r.apos) THEN ReadBuffer(buffer, r.apos) END;
 				x := buffer.data[r.bpos];
 				INC(r.bpos);
 				IF (r.bpos = clusterSize) THEN INC(r.apos); r.bpos := 0 END
@@ -782,19 +782,19 @@ TYPE
 
 		(* Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider. Less bytes will be read when
 			reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
-		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
 		BEGIN {EXCLUSIVE} ReadBytesX(r, x, ofs, len)
 		END ReadBytes;
 
-		PROCEDURE ReadBytesX(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
-		VAR src: ADDRESS; m: SIZE;
+		PROCEDURE ReadBytesX(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
+		VAR src: ADDRESS; m: LONGINT;
 		BEGIN
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
 				WHILE (len > 0) & (Pos(r) < size) DO
-					IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+					IF (buffer.pos # r.apos) THEN ReadBuffer(buffer, r.apos) END;
 					src := ADDRESSOF(buffer.data[r.bpos]);
-					m := MIN(MIN(size - LONGINT(Pos(r)), clusterSize - r.bpos), len);
+					m := MIN(MIN(size - Pos(r), clusterSize - r.bpos), len);
 					SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), m);
 					INC(ofs, m); DEC(len, m);
 					INC(r.bpos, m); ASSERT(r.bpos <= clusterSize);
@@ -814,30 +814,30 @@ TYPE
 		PROCEDURE WriteX(VAR r: Files.Rider; x: CHAR);
 		BEGIN
 			IF (attr * WriteProtected # {}) THEN HALT(ErrFileReadOnly) END;
-			IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+			IF (buffer.pos # r.apos) THEN ReadBuffer(buffer, r.apos) END;
 			buffer.data[r.bpos] := x;
 			INC(r.bpos);
 			IF (r.bpos = clusterSize) THEN INC(r.apos); r.bpos := 0 END;
 			IF (Pos(r) > size) THEN
-				ASSERT(LONGINT(Pos(r)) = size+1); size := LONGINT(Pos(r));
+				ASSERT(Pos(r) = size+1); size := Pos(r);
 				IF ~(SELF IS Directory) THEN modH := TRUE END
 			END;
 			WriteBuffer(buffer)
 		END WriteX;
 
 		(* Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
-		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
 		BEGIN {EXCLUSIVE} WriteBytesX(r, x, ofs, len)
 		END WriteBytes;
 
-		PROCEDURE WriteBytesX(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
-		VAR dst: ADDRESS; m: SIZE;
+		PROCEDURE WriteBytesX(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
+		VAR dst: ADDRESS; m: LONGINT;
 		BEGIN
 			IF (attr * WriteProtected # {}) THEN HALT(ErrFileReadOnly) END;
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
 				WHILE (len > 0) DO
-					IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+					IF (buffer.pos # r.apos) THEN ReadBuffer(buffer, r.apos) END;
 					dst := ADDRESSOF(buffer.data[r.bpos]);
 					m := MIN(clusterSize-r.bpos, len);
 					SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, m);
@@ -846,15 +846,15 @@ TYPE
 					INC(r.bpos, m); ASSERT(r.bpos <= clusterSize);
 					IF (r.bpos = clusterSize) THEN INC(r.apos); r.bpos := 0 END;
 				END;
-				IF (LONGINT(Pos(r)) > size) THEN
-					size := LONGINT(Pos(r));
+				IF (Pos(r) > size) THEN
+					size := Pos(r);
 					IF ~(SELF IS Directory) THEN modH := TRUE END
 				END
 			END
 		END WriteBytesX;
 
 		(* Return the current length of a file. *)
-		PROCEDURE Length*(): Files.Size;
+		PROCEDURE Length*(): LONGINT;
 		BEGIN
 			(* Length() should in principle be exlusive, however it won't do any harm if it is not, it just reflects the
 				current size if called from outside. Internal methods that call Length() are exclusive whenever needed *)
@@ -1103,14 +1103,14 @@ TYPE
 
 		(* Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file.
 			A Rider cannot be positioned beyond the end of a file. *)
-		PROCEDURE SetX(VAR r: Files.Rider; pos: Files.Position);
+		PROCEDURE SetX(VAR r: Files.Rider; pos: LONGINT);
 		BEGIN
 			IF (size = 0) THEN InitSize END;
 			SetX^(r, pos)
 		END SetX;
 
 		(* Return the current length of a file. *)
-		PROCEDURE Length*(): Files.Size;
+		PROCEDURE Length*(): LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF (size = 0) THEN InitSize END;
 			RETURN Length^()
@@ -1133,11 +1133,11 @@ TYPE
 			REPEAT
 				ReadBytesX(r, data, 0, 32);
 				IF (data[0] = deFree) THEN (* free entry *)
-					IF (Pos(r) < firstFreePos) THEN firstFreePos := LONGINT(Pos(r))-32 END
+					IF (Pos(r) < firstFreePos) THEN firstFreePos := Pos(r)-32 END
 				ELSIF (data[0] # deLast) THEN (* long/short directory entry *)
 					type := FATVolumes.AND(3FH, ORD(data[11]));
 					longname := "";
-					entry.ofs := LONGINT(Pos(r)) - 32; entry.len := 1;
+					entry.ofs := Pos(r) - 32; entry.len := 1;
 					IF (type = faLongName) THEN
 						k := -1;
 						IF parseLong & (FATVolumes.AND(40H, ORD(data[0])) = 40H) THEN
@@ -1201,7 +1201,7 @@ TYPE
 
 								IF (longname # "") & (chksumI # chksumII) THEN (* chksum mismatch, ignore long name *)
 									IF (entry.ofs < firstFreePos) THEN firstFreePos := entry.ofs END;
-									longname := ""; f.entry.ofs := LONGINT(Pos(r)) - 32; f.entry.len := 1
+									longname := ""; f.entry.ofs := Pos(r) - 32; f.entry.len := 1
 								ELSE f.long := longname; f.entry := entry
 								END;
 								IF (f.long = "") THEN
@@ -1225,7 +1225,7 @@ TYPE
 					END
 				END
 			UNTIL (data[0] = deLast) OR r.eof OR ~cont;
-			IF (firstFreePos = MAX(LONGINT)) THEN firstFreePos := MAX(LONGINT(Pos(r))-32, 0) END;
+			IF (firstFreePos = MAX(LONGINT)) THEN firstFreePos := MAX(Pos(r)-32, 0) END;
 			ASSERT(firstFreePos MOD 32 = 0)
 		END EnumerateX;
 
@@ -1263,8 +1263,8 @@ TYPE
 			RETURN TRUE
 		END TailGenHandler;
 
-		PROCEDURE TailFinder(p: TailGenParam; VAR tail: SIZE): BOOLEAN;
-		VAR delta,max: LONGINT; i, l: SIZE;
+		PROCEDURE TailFinder(p: TailGenParam; VAR tail: LONGINT): BOOLEAN;
+		VAR delta,i,l,max: LONGINT;
 		BEGIN
 			(* calculate size of bit-array and initialize it *)
 			max := 0; delta := 10;
@@ -1298,7 +1298,7 @@ TYPE
 		END TailFinder;
 
 		PROCEDURE TailGeneration(VAR shortname: Shortname; TailNeeded: BOOLEAN);
-		VAR tp: TailGenParam; len, max, pos: LONGINT; tail: SIZE; dummy: BOOLEAN;
+		VAR tp: TailGenParam; len, max, pos, tail: LONGINT; dummy: BOOLEAN;
 		BEGIN
 			NEW(tp);
 			tp.short := shortname;
@@ -1419,11 +1419,11 @@ TYPE
 		PROCEDURE WriteFileHeaderX(f: File);
 		VAR data: ARRAY 32 OF CHAR; b, ro, writeLast: BOOLEAN;
 			ofs, i, k, len, numFree, s, ucs: LONGINT; unicode: ARRAY 256 OF INTEGER;
-			r: Files.Rider; c, chksum: CHAR; p: SIZE;
+			r: Files.Rider; c, chksum: CHAR;
 		BEGIN
 			IF (faReadOnly IN attr) THEN EXCL(attr, faReadOnly); ro := TRUE END;
 			IF f.modName THEN
-				len := NameLength(f.long)(LONGINT);
+				len := NameLength(f.long);
 
 				(* delete old name *)
 				IF (len > f.entry.len) THEN ofs := NotAssigned	(* new name is longer, find new position *)
@@ -1473,9 +1473,9 @@ TYPE
 					GetShortName(f.long, f.short, chksum);
 
 					FOR i := 0 TO 255 DO unicode[i] := -1 END; (* = 0FFFFH *)
-					p := 0; i := 0;
+					k := 0; i := 0;
 					REPEAT
-						b := UTF8Strings.DecodeChar(f.long, p, ucs);
+						b := UTF8Strings.DecodeChar(f.long, k, ucs);
 						IF ~b OR (ucs < 0) OR (ucs > MAX(INTEGER)) THEN HALT(ErrInvalidFilename) END;
 						unicode[i] := SHORT(ucs); INC(i)
 					UNTIL (ucs = 0);
@@ -1501,7 +1501,7 @@ TYPE
 			END;
 
 			(* create short entry *)
-			IF (faDirectory IN f.attr) THEN s := 0 ELSE s := f.Length()(LONGINT) END;
+			IF (faDirectory IN f.attr) THEN s := 0 ELSE s := f.Length() END;
 			GetShortEntry(data, f.short, f.attr, f.NTres, f.cluster, s, f.time, f.date, f.writeTime, f.writeDate, f.accessDate);
 
 			(* wp: Pos(r) = position of short entry *)
@@ -1552,7 +1552,7 @@ TYPE
 						FOR i := 2 TO (dir.clusterSize DIV 32)-1 DO dir.WriteBytes(r, entry, 0, 32) END;
 
 						dir.Update;
-						res := r.res(WORD);
+						res := r.res
 					ELSE dir := NIL	(* res is already set *)
 					END
 				ELSE
@@ -1734,7 +1734,7 @@ END PurgeFile;
 
 (* ValidateName - checks if 'name' is a valid long name and removes leading spaces and trailing spaces and periods *)
 PROCEDURE ValidateName(VAR name: ARRAY OF CHAR): BOOLEAN;
-VAR s: POINTER TO ARRAY OF CHAR; np, sp: SIZE;
+VAR s: POINTER TO ARRAY OF CHAR; np, sp: LONGINT;
 BEGIN
 	NEW(s, LEN(name));
 	COPY(name, s^);
@@ -1765,7 +1765,7 @@ END ValidShortChar;
 
 (* IsShortName - checks if a long name 'fn' can be stored in one "short" directory entry *)
 PROCEDURE IsShortName(CONST fn: Filename): BOOLEAN;
-VAR s: ARRAY 12 OF CHAR; i, k: SIZE;
+VAR s: ARRAY 12 OF CHAR; i, k: INTEGER;
 BEGIN
 	IF (fn = ".") OR (fn = "..") THEN RETURN TRUE
 	ELSIF (UTF8Strings.UTF8toASCII(fn, 0X, s) =  0) THEN
@@ -1782,7 +1782,7 @@ BEGIN
 END IsShortName;
 
 PROCEDURE CheckSum*(short: Shortname): CHAR;
-VAR chksum: WORD; i: SIZE;
+VAR chksum, i: LONGINT;
 BEGIN
 	chksum := 0;
 	FOR i := 0 TO 10 DO
@@ -1793,8 +1793,8 @@ BEGIN
 END CheckSum;
 
 (* NameLength - returns the number of directory entries needed to store a file with filename 'fn' *)
-PROCEDURE NameLength(CONST fn: Filename): SIZE;
-VAR pos, i: SIZE; ucs: LONGINT;
+PROCEDURE NameLength(CONST fn: Filename): LONGINT;
+VAR pos, ucs, i: LONGINT;
 BEGIN
 	IF IsShortName(fn) THEN RETURN 1
 	ELSE
@@ -1879,7 +1879,7 @@ END TimeOberon2FAT;
 (* Clean up when module unloaded. *)
 
 PROCEDURE Finalization;
-VAR ft: Files.FileSystemTable; i: SIZE;
+VAR ft: Files.FileSystemTable; i: LONGINT;
 BEGIN
 	IF Modules.shutdown = Modules.None THEN
 		Files.GetList(ft);

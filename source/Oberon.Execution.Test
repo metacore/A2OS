@@ -456,7 +456,7 @@ positive: procedure type with value parameter INTEGER
 	VAR a: ARRAY 5 OF INTEGER; i: INTEGER; r: INTEGER;
 
 	PROCEDURE Iterate (VAR a: ARRAY OF INTEGER; p : PROCEDURE (r: INTEGER));
-	VAR i: SIZE;
+	VAR i: LONGINT;
 	BEGIN FOR i := 0 TO LEN (a) - 1 DO p (a[i]) END;
 	END Iterate;
 
@@ -473,7 +473,7 @@ positive: procedure type with value parameter REAL
 	VAR a: ARRAY 5 OF REAL; i: INTEGER; r: REAL;
 
 	PROCEDURE Iterate (VAR a: ARRAY OF REAL; p : PROCEDURE (r: REAL));
-	VAR i: SIZE;
+	VAR i: LONGINT;
 	BEGIN FOR i := 0 TO LEN (a) - 1 DO p (a[i]) END;
 	END Iterate;
 
@@ -2751,7 +2751,7 @@ negative: negative dynamic dimension of one-dimensional open array
 	MODULE Test;
 	VAR a: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, -1);
@@ -2762,7 +2762,7 @@ negative: invalid dynamic dimension of one-dimensional open array
 	MODULE Test;
 	VAR a: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, 1);
@@ -2813,7 +2813,7 @@ negative: negative dynamic dimension of two-dimensional open array
 	MODULE Test;
 	VAR a: ARRAY 10, 20 OF INTEGER;
 	PROCEDURE Procedure (p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, -1);
@@ -2824,7 +2824,7 @@ negative: invalid dynamic dimension of two-dimensional open array
 	MODULE Test;
 	VAR a: ARRAY 10, 20 OF INTEGER;
 	PROCEDURE Procedure (p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, 2);
@@ -2865,7 +2865,7 @@ negative: negative dynamic dimension of one-dimensional variable open array
 	MODULE Test;
 	VAR a: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (VAR p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, -1);
@@ -2876,7 +2876,7 @@ negative: invalid dynamic dimension of one-dimensional variable open array
 	MODULE Test;
 	VAR a: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (VAR p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, 1);
@@ -2927,7 +2927,7 @@ negative: negative dynamic dimension of two-dimensional variable open array
 	MODULE Test;
 	VAR a: ARRAY 10, 20 OF INTEGER;
 	PROCEDURE Procedure (VAR p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, -1);
@@ -2938,7 +2938,7 @@ negative: invalid dynamic dimension of two-dimensional variable open array
 	MODULE Test;
 	VAR a: ARRAY 10, 20 OF INTEGER;
 	PROCEDURE Procedure (VAR p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, 2);
@@ -2979,7 +2979,7 @@ negative: negative dynamic dimension of one-dimensional constant open array
 	MODULE Test;
 	VAR a: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, -1);
@@ -2990,7 +2990,7 @@ negative: invalid dynamic dimension of one-dimensional constant open array
 	MODULE Test;
 	VAR a: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, 1);
@@ -3041,7 +3041,7 @@ negative: negative dynamic dimension of two-dimensional constant open array
 	MODULE Test;
 	VAR a: ARRAY 10, 20 OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, -1);
@@ -3052,7 +3052,7 @@ negative: invalid dynamic dimension of two-dimensional constant open array
 	MODULE Test;
 	VAR a: ARRAY 10, 20 OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN Procedure (a, 2);
@@ -3062,7 +3062,7 @@ positive: length of pointer to one-dimensional open array
 
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF INTEGER;
-	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; len: SIZE);
+	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; len: LONGINT);
 	BEGIN ASSERT (LEN (p) = len);
 	END Procedure;
 	BEGIN NEW (a, 10); ASSERT (LEN (a) = 10); Procedure (a^, 10); Procedure (a^, LEN (a));
@@ -3072,7 +3072,7 @@ positive: first dimension of pointer to one-dimensional open array
 
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF INTEGER;
-	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; len: SIZE);
+	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; len: LONGINT);
 	BEGIN ASSERT (LEN (p, 0) = len);
 	END Procedure;
 	BEGIN NEW (a, 10); ASSERT (LEN (a, 0) = 10); Procedure (a^, 10); Procedure (a^, LEN (a, 0));
@@ -3082,7 +3082,7 @@ positive: dynamic dimension of pointer to one-dimensional open array
 
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF INTEGER;
-	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; dim, len: SIZE);
+	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; dim, len: LONGINT);
 	BEGIN ASSERT (LEN (p, dim) = len);
 	END Procedure;
 	BEGIN NEW (a, 10); Procedure (a^, 0, 10); Procedure (a^, 0, LEN (a, 0));
@@ -3093,7 +3093,7 @@ negative: negative dynamic dimension of pointer to one-dimensional open array
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN NEW (a, 10); Procedure (a^, -1);
@@ -3104,7 +3104,7 @@ negative: invalid dynamic dimension of pointer to one-dimensional open array
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN NEW (a, 10); Procedure (a^, 1);
@@ -3114,7 +3114,7 @@ positive: length of pointer to two-dimensional open array
 
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF ARRAY OF INTEGER;
-	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; len: SIZE);
+	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; len: LONGINT);
 	BEGIN ASSERT (LEN (p) = len);
 	END Procedure;
 	BEGIN NEW (a, 10, 20); Procedure (a^, 10); Procedure (a^, LEN (a));
@@ -3124,7 +3124,7 @@ positive: first dimension of pointer to two-dimensional open array
 
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF ARRAY OF INTEGER;
-	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; len: SIZE);
+	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; len: LONGINT);
 	BEGIN ASSERT (LEN (p, 0) = len);
 	END Procedure;
 	BEGIN NEW (a, 10, 20); Procedure (a^, 10); Procedure (a^, LEN (a, 0));
@@ -3134,7 +3134,7 @@ positive: second dimension of pointer to two-dimensional open array
 
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF ARRAY OF INTEGER;
-	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; len: SIZE);
+	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; len: LONGINT);
 	BEGIN ASSERT (LEN (p, 1) = len);
 	END Procedure;
 	BEGIN NEW (a, 10, 20); Procedure (a^, 20); Procedure (a^, LEN (a, 1));
@@ -3144,7 +3144,7 @@ positive: dynamic dimension of pointer to two-dimensional open array
 
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF ARRAY OF INTEGER;
-	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; dim, len: SIZE);
+	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; dim, len: LONGINT);
 	BEGIN ASSERT (LEN (p, dim) = len);
 	END Procedure;
 	BEGIN NEW (a, 10, 20); Procedure (a^, 0, 10); Procedure (a^, 0, LEN (a, 0)); Procedure (a^, 1, 20); Procedure (a^, 1, LEN (a, 1));
@@ -3155,7 +3155,7 @@ negative: negative dynamic dimension of pointer to two-dimensional open array
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF ARRAY OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN NEW (a, 10, 20); Procedure (a^, -1);
@@ -3166,7 +3166,7 @@ negative: invalid dynamic dimension of pointer to two-dimensional open array
 	MODULE Test;
 	VAR a: POINTER TO ARRAY OF ARRAY OF INTEGER;
 	PROCEDURE Procedure (CONST p: ARRAY OF ARRAY OF INTEGER; dim: INTEGER);
-	VAR len: SIZE;
+	VAR len: LONGINT;
 	BEGIN len := LEN (p, dim);
 	END Procedure;
 	BEGIN NEW (a, 10, 20); Procedure (a^, 2);
@@ -3185,14 +3185,14 @@ positive: indexing global array
 negative: negative index into global array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	BEGIN index := -1; g[index] := 0;
 	END Test.
 
 negative: too large index into global array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	BEGIN index := LEN (g); g[index] := 0;
 	END Test.
 
@@ -3250,7 +3250,7 @@ negative: negative index into local array
 
 	MODULE Test;
 	PROCEDURE Procedure;
-	VAR l: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR l: ARRAY 10 OF INTEGER; index: LONGINT;
 	BEGIN index := -1; l[index] := 0;
 	END Procedure;
 	BEGIN Procedure;
@@ -3260,7 +3260,7 @@ negative: too large index into local array
 
 	MODULE Test;
 	PROCEDURE Procedure;
-	VAR l: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR l: ARRAY 10 OF INTEGER; index: LONGINT;
 	BEGIN index := LEN (l); l[index] := 0;
 	END Procedure;
 	BEGIN Procedure;
@@ -3331,7 +3331,7 @@ positive: indexing parameter array
 negative: negative index into parameter array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (p: ARRAY 10 OF INTEGER);
 	BEGIN index := -1; p[index] := 0;
 	END Procedure;
@@ -3341,7 +3341,7 @@ negative: negative index into parameter array
 negative: too large index into parameter array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (p: ARRAY 10 OF INTEGER);
 	BEGIN index := LEN (p); p[index] := 0;
 	END Procedure;
@@ -3413,7 +3413,7 @@ positive: indexing variable parameter array
 negative: negative index into variable parameter array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (VAR p: ARRAY 10 OF INTEGER);
 	BEGIN index := -1; p[index] := 0;
 	END Procedure;
@@ -3423,7 +3423,7 @@ negative: negative index into variable parameter array
 negative: too large index into variable parameter array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (VAR p: ARRAY 10 OF INTEGER);
 	BEGIN index := LEN (p); p[index] := 0;
 	END Procedure;
@@ -3495,7 +3495,7 @@ positive: indexing constant parameter array
 negative: negative index into constant parameter array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (CONST p: ARRAY 10 OF INTEGER);
 	BEGIN index := -1; index := p[index];
 	END Procedure;
@@ -3505,7 +3505,7 @@ negative: negative index into constant parameter array
 negative: too large index into constant parameter array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (CONST p: ARRAY 10 OF INTEGER);
 	BEGIN index := LEN (p); index := p[index];
 	END Procedure;
@@ -3517,7 +3517,7 @@ positive: indexing open array
 	MODULE Test;
 	VAR g: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (p: ARRAY OF INTEGER);
-	BEGIN p[1] := 2; p[2] := INTEGER (LEN (p)); ASSERT (p[0] = 1); ASSERT (p[1] = 2); ASSERT (p[p[0]] = 2); ASSERT (p[p[p[0]]] = 10);
+	BEGIN p[1] := 2; p[2] := SHORT (LEN (p)); ASSERT (p[0] = 1); ASSERT (p[1] = 2); ASSERT (p[p[0]] = 2); ASSERT (p[p[p[0]]] = 10);
 	END Procedure;
 	BEGIN g[0] := 1; Procedure (g);
 	END Test.
@@ -3525,7 +3525,7 @@ positive: indexing open array
 negative: negative index into open array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (p: ARRAY OF INTEGER);
 	BEGIN index := -1; p[index] := 0;
 	END Procedure;
@@ -3535,7 +3535,7 @@ negative: negative index into open array
 negative: too large index into open array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (p: ARRAY OF INTEGER);
 	BEGIN index := LEN (p); p[index] := 0;
 	END Procedure;
@@ -3599,7 +3599,7 @@ positive: indexing variable open array
 	MODULE Test;
 	VAR g: ARRAY 10 OF INTEGER;
 	PROCEDURE Procedure (VAR p: ARRAY OF INTEGER);
-	BEGIN p[1] := 2; p[2] := INTEGER (LEN (p)); ASSERT (p[0] = 1); ASSERT (p[1] = 2); ASSERT (p[p[0]] = 2); ASSERT (p[p[p[0]]] = 10);
+	BEGIN p[1] := 2; p[2] := SHORT (LEN (p)); ASSERT (p[0] = 1); ASSERT (p[1] = 2); ASSERT (p[p[0]] = 2); ASSERT (p[p[p[0]]] = 10);
 	END Procedure;
 	BEGIN g[0] := 1; Procedure (g); ASSERT (g[0] = 1); ASSERT (g[1] = 2); ASSERT (g[g[0]] = 2); ASSERT (g[g[g[0]]] = 10);
 	END Test.
@@ -3607,7 +3607,7 @@ positive: indexing variable open array
 negative: negative index into variable open array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (VAR p: ARRAY OF INTEGER);
 	BEGIN index := -1; p[index] := 0;
 	END Procedure;
@@ -3617,7 +3617,7 @@ negative: negative index into variable open array
 negative: too large index into variable open array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (VAR p: ARRAY OF INTEGER);
 	BEGIN index := LEN (p); p[index] := 0;
 	END Procedure;
@@ -3689,7 +3689,7 @@ positive: indexing constant open array
 negative: negative index into constant open array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (p: ARRAY OF INTEGER);
 	BEGIN index := -1; p[index] := 0;
 	END Procedure;
@@ -3699,7 +3699,7 @@ negative: negative index into constant open array
 negative: too large index into constant open array
 
 	MODULE Test;
-	VAR g: ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: ARRAY 10 OF INTEGER; index: LONGINT;
 	PROCEDURE Procedure (p: ARRAY OF INTEGER);
 	BEGIN index := LEN (p); p[index] := 0;
 	END Procedure;
@@ -3716,14 +3716,14 @@ positive: indexing pointer to array
 negative: negative index into pointer to array
 
 	MODULE Test;
-	VAR g: POINTER TO ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: POINTER TO ARRAY 10 OF INTEGER; index: LONGINT;
 	BEGIN NEW (g); index := -1; g[index] := 0;
 	END Test.
 
 negative: too large index into pointer to array
 
 	MODULE Test;
-	VAR g: POINTER TO ARRAY 10 OF INTEGER; index: SIZE;
+	VAR g: POINTER TO ARRAY 10 OF INTEGER; index: LONGINT;
 	BEGIN NEW (g); index := LEN (g^); g[index] := 0;
 	END Test.
 
@@ -3771,20 +3771,20 @@ positive: indexing pointer to open array
 
 	MODULE Test;
 	VAR g: POINTER TO ARRAY OF INTEGER;
-	BEGIN NEW (g, 10); g[0] := 1; g[1] := 2; g[2] := INTEGER (LEN (g^)); ASSERT (g[0] = 1); ASSERT (g[1] = 2); ASSERT (g[g[0]] = 2); ASSERT (g[g[g[0]]] = 10);
+	BEGIN NEW (g, 10); g[0] := 1; g[1] := 2; g[2] := SHORT (LEN (g^)); ASSERT (g[0] = 1); ASSERT (g[1] = 2); ASSERT (g[g[0]] = 2); ASSERT (g[g[g[0]]] = 10);
 	END Test.
 
 negative: negative index into pointer to open array
 
 	MODULE Test;
-	VAR g: POINTER TO ARRAY OF INTEGER; index: SIZE;
+	VAR g: POINTER TO ARRAY OF INTEGER; index: LONGINT;
 	BEGIN NEW (g, 10); index := -1; g[index] := 0;
 	END Test.
 
 negative: too large index into pointer to open array
 
 	MODULE Test;
-	VAR g: POINTER TO ARRAY OF INTEGER; index: SIZE;
+	VAR g: POINTER TO ARRAY OF INTEGER; index: LONGINT;
 	BEGIN NEW (g, 10); index := LEN (g^); g[index] := 0;
 	END Test.
 
@@ -5080,7 +5080,7 @@ positive: copy statement with too long open array of character parameter as sour
 	VAR dest: ARRAY 2 OF CHAR;
 	BEGIN COPY (source, dest); ASSERT(dest="s");
 	END Procedure;
-	BEGIN Procedure ("source");
+	BEGIN Procedure ("source"); 
 	END Test.
 
 positive: copy statement with open variable array of character parameter as source
@@ -5102,7 +5102,7 @@ positive: copy statement with too long open variable array of character paramete
 	VAR dest: ARRAY 2 OF CHAR;
 	BEGIN COPY (source, dest);ASSERT(dest="s");
 	END Procedure;
-	BEGIN source := "source"; Procedure (source);
+	BEGIN source := "source"; Procedure (source); 
 	END Test.
 
 positive: copy statement with open constant array of character parameter as source
@@ -5122,7 +5122,7 @@ positive: copy statement with too long open constant array of character paramete
 	VAR dest: ARRAY 2 OF CHAR;
 	BEGIN COPY (source, dest); ASSERT(dest="s");
 	END Procedure;
-	BEGIN Procedure ("source");
+	BEGIN Procedure ("source"); 
 	END Test.
 
 positive: copy statement with array of character parameter as destination
@@ -6022,9 +6022,9 @@ positive: bounded buffer
 
 	MODULE Test;
 	TYPE Buffer = OBJECT
-		VAR in, out, size: SIZE;
+		VAR in, out, size: LONGINT;
 		VAR data: POINTER TO ARRAY OF INTEGER;
-		PROCEDURE &Init (len: SIZE); BEGIN in := 0; out := 0; size := 0; NEW (data, len); END Init;
+		PROCEDURE &Init (len: LONGINT); BEGIN in := 0; out := 0; size := 0; NEW (data, len); END Init;
 		PROCEDURE Put (item: INTEGER); BEGIN {EXCLUSIVE} AWAIT (size # LEN (data)); data[in] := item; in := (in + 1) MOD LEN (data); INC (size) END Put;
 		PROCEDURE Get (VAR item: INTEGER); BEGIN {EXCLUSIVE} AWAIT (size # 0); item := data[out]; out := (out + 1) MOD LEN (data); DEC (size) END Get;
 	END Buffer;
@@ -6874,11 +6874,11 @@ positive: pass delegate as variable or value parameter
 
 	TYPE
 		Array = POINTER TO ARRAY OF CHAR;
-		Delegate = PROCEDURE{DELEGATE}(): SIZE;
+		Delegate = PROCEDURE{DELEGATE}(): LONGINT;
 		O= OBJECT
 		VAR a: Array;
 
-			PROCEDURE P(): SIZE;
+			PROCEDURE P(): LONGINT;
 			BEGIN
 				ASSERT(a # NIL);
 				RETURN LEN(a);
@@ -7203,23 +7203,23 @@ positive: allocation of a partially exported record type in a multiply imported 
 
 positive: pass sub-array (computation of address needs multiplication with base size)
 	MODULE Test;
-	VAR a: ARRAY 10 OF ARRAY 10 OF SIZE;
-	PROCEDURE Q(VAR a: ARRAY OF SIZE; i: SIZE);
-	VAR j: SIZE;
+	VAR a: ARRAY 10 OF ARRAY 10 OF INTEGER;
+	PROCEDURE Q(VAR a: ARRAY OF INTEGER; i: INTEGER);
+	VAR j: INTEGER;
 	BEGIN
-		FOR j := 0 TO LEN(a)-1 DO
+		FOR j := 0 TO SHORT(LEN(a)-1 ) DO
 			ASSERT(a[j] = i*10+j);
 		END;
 	END Q;
-	PROCEDURE P(VAR a: ARRAY OF ARRAY OF SIZE);
-	VAR i,j: SIZE;
+	PROCEDURE P(VAR a: ARRAY OF ARRAY OF INTEGER);
+	VAR i,j: INTEGER;
 	BEGIN
-		FOR i := 0 TO LEN(a,0)-1 DO
-		FOR j := 0 TO LEN(a,1)-1 DO
+		FOR i := 0 TO SHORT(LEN(a,0)-1) DO
+		FOR j := 0 TO SHORT(LEN(a,1)-1) DO
 			a[i,j] := i*10+j;
 		END;
 		END;
-		FOR i := 0 TO LEN(a,0)-1 DO
+		FOR i := 0 TO SHORT(LEN(a,0)-1) DO
 			Q(a[i],i);
 		END;
 	END P;
@@ -7233,7 +7233,7 @@ positive: array length operator for static and dynamic arrays with static and dy
 	VAR a: ARRAY 1,2,3,4 OF LONGINT;
 		b: POINTER TO ARRAY OF ARRAY OF ARRAY 3,4 OF LONGINT;
 		c: POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT;
-		l0,l1,l2,l3,lv,v: SIZE;
+		l0,l1,l2,l3,lv,v: LONGINT;
 	BEGIN
 		v := 2;
 		NEW(b,1,2);
@@ -7708,7 +7708,7 @@ positive: use local variable as value and as reference (optimizer test)
 
 positive: pass record size to array of system.byte with dynamic dize for varpars and dereferences
 
-	MODULE Test;
+	MODULE Test; 
 
 	IMPORT SYSTEM;
 
@@ -7737,7 +7737,7 @@ positive: pass variables and values to array of byte
 
 	MODULE Test;
 
-	IMPORT SYSTEM;
+	IMPORT SYSTEM; 
 
 	PROCEDURE Pass(CONST a: ARRAY OF SYSTEM.BYTE; len: LONGINT);
 	VAR i: LONGINT;
@@ -7751,18 +7751,18 @@ positive: pass variables and values to array of byte
 		Pass(3,1);
 		Pass(i,4);
 		Pass(3+i,4);
-		Pass(65000, 2);
+		Pass(65000, 2); 
 	END Test;
-
+	
 	BEGIN
 		Test;
 	END Test.
-
+	
 positive: pass three-dimensional arrays A[x,y,z] with missing dimensions, e.g. A[x]
-
+	
 	MODULE Test;
 
-	IMPORT SYSTEM;
+	IMPORT SYSTEM; 
 
 	PROCEDURE Pass(CONST a: ARRAY OF SYSTEM.BYTE; adr, len: ADDRESS);
 	VAR i: LONGINT;
@@ -7775,7 +7775,7 @@ positive: pass three-dimensional arrays A[x,y,z] with missing dimensions, e.g. A
 	TYPE
 		R= RECORD a,b,c: LONGINT END;
 		S= ARRAY 3 OF LONGINT;
-	VAR
+	VAR 
 		b: POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT;
 		c: POINTER TO ARRAY OF ARRAY OF ARRAY OF R;
 		d: POINTER TO ARRAY OF ARRAY OF ARRAY OF S;
@@ -7808,9 +7808,9 @@ positive: check push of UNSIGNED constants
 		BEGIN
 			ASSERT(value>0);
 		END Check;
-
+		
 	BEGIN
-		Check(MAX(UNSIGNED16));
+		Check(MAX(UNSIGNED16)); 
 		Check(MAX(UNSIGNED32));
 	END Test.
 
@@ -7820,35 +7820,35 @@ positive: index operators on objects
 	TYPE O* = OBJECT
 	VAR a: ARRAY 100 OF LONGINT;
 
-		OPERATOR "[]"* (index: SIZE): LONGINT;
+		OPERATOR "[]"* (index: LONGINT): LONGINT;
 		BEGIN
 			RETURN a[index]
 		END "[]";
 
-		OPERATOR "[]"* (index: SIZE; value: LONGINT);
+		OPERATOR "[]"* (index: LONGINT; value: LONGINT);
 		BEGIN
 			a[index] := value;
 		END "[]";
 
-	END O;
+	END O; 
 
 	TYPE Q = OBJECT
 	VAR a: ARRAY 100 OF LONGINT;
 
-		OPERATOR "[]" (index: SIZE): LONGINT;
+		OPERATOR "[]" (index: LONGINT): LONGINT;
 		BEGIN
 			RETURN a[index]
 		END "[]";
 
-		OPERATOR "[]" (index: SIZE; value: LONGINT);
+		OPERATOR "[]" (index: LONGINT; value: LONGINT);
 		BEGIN
 			a[index] := value;
 		END "[]";
 
-	END Q;
+	END Q; 
 
 	PROCEDURE VarTest(VAR a: LONGINT): LONGINT;
-	BEGIN
+	BEGIN 
 		a := 1000;
 		RETURN 123;
 	END VarTest;
@@ -7856,12 +7856,12 @@ positive: index operators on objects
 	PROCEDURE Test*;
 	VAR o: O; q: Q;
 	BEGIN
-		NEW(o);
+		NEW(o); 
 		ASSERT(VarTest(o[10])=123);
 		ASSERT(o[10]=1000);
 		o[5] := 555;
 		ASSERT (o[5] = 555);
-		NEW(q);
+		NEW(q); 
 		ASSERT(VarTest(q[10])=123);
 		ASSERT(q[10]=1000);
 		q[5] := 555;
@@ -7879,15 +7879,15 @@ positive: return string as static array of char
 		RETURN "Hello";
 	END Test;
 	BEGIN
-		ASSERT(Test() = "Hello");
+		ASSERT(Test() = "Hello"); 
 	END Test.
 
 positive: hugeint comparison with positive 32-bit value out of signed 32-bit integer range
 	MODULE Test;
 	VAR x: HUGEINT;
 	BEGIN
-		x := 0;
+		x := 0; 
 		ASSERT(~(x > 0C0000000H));
 		ASSERT(~(x > MAX(SIGNED32)));
-		ASSERT(0C0000000H > MAX(SIGNED32));
+		ASSERT(0C0000000H > MAX(SIGNED32)); 
 	END Test.

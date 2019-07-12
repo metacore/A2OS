@@ -11,7 +11,7 @@ CONST
 TYPE
 	PC = RECORD
 		section: Intermediate.Section;
-		index: SIZE;
+		index: LONGINT;
 	END;
 
 	Int1 = SHORTINT;
@@ -30,8 +30,8 @@ TYPE
 		float8: Float8;
 	END;
 
-	Address = SIZE;
-	Size = SIZE;
+	Address = LONGINT;
+	Size = LONGINT;
 	Memory = POINTER TO ARRAY OF SYSTEM.BYTE;
 
 	Heap = OBJECT
@@ -150,7 +150,7 @@ TYPE
 		END Dump;
 
 		PROCEDURE AllocateSection (s: Sections.Section);
-		VAR i: SIZE; size: Size; section: Intermediate.Section;
+		VAR i: LONGINT; size: Size; section: Intermediate.Section;
 		BEGIN
 			size := 0; section := s(Intermediate.Section);
 			FOR i := 0 TO section.pc - 1 DO INC (size, GetSizeOf (section.instructions[i])); END;
@@ -159,7 +159,7 @@ TYPE
 		END AllocateSection;
 
 		PROCEDURE InitializeSection (s: Sections.Section);
-		VAR i: SIZE; address: Address; section: Intermediate.Section;
+		VAR i: LONGINT; address: Address; section: Intermediate.Section;
 		BEGIN
 			section := s(Intermediate.Section);
 			address := section.offset;
@@ -689,7 +689,7 @@ TYPE
 	PROCEDURE Traverse (list: Sections.SectionList; handle: PROCEDURE {DELEGATE} (section: Sections.Section));
 	VAR
 		section: Sections.Section;
-		i: SIZE;
+		i: LONGINT;
 	BEGIN
 		FOR i := 0 TO list.Length() - 1 DO
 			section := list.GetSection(i);

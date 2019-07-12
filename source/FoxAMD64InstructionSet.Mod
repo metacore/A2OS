@@ -3,7 +3,7 @@ MODULE FoxAMD64InstructionSet; (**  AUTHOR "fof & fn"; PURPOSE "Oberon Compiler:
 
 (** This module has been written with inspiration from
 	-module CCIx86A.Mod : Component Compiler, Intel x86 Backend Assembler, 2005-2007, by Luc Bläser and
-	-module ASMAMD64.Mod: AMD64 instruction set repository, 2006,  by Florian Negele
+	-module AsmAMD64.Mod: AMD64 instruction set repository, 2006,  by Florian Negele
 	The instruction set reference generator  is built by parsing the file InstructionSetAMD64.txt  also written by Florian Negele
 	Parser for parsing the file is contained in FoxProgTools.Mod
 **)
@@ -1368,7 +1368,7 @@ CONST
 
 TYPE
 	Name = ARRAY 20 OF CHAR;
-	OperandType* = WORD;
+	OperandType* = SHORTINT;
 	CPUOptions*= SET;
 	Code*=CHAR; (* should be unsigned -- for emitter *)
 
@@ -1624,7 +1624,7 @@ VAR
 			INC(numberMnemonics);
 		END AddMnemonic;
 
-		PROCEDURE HexOrd (ch: CHAR): WORD;
+		PROCEDURE HexOrd (ch: CHAR): INTEGER;
 		BEGIN
 			IF ("0" <= ch) & (ch <= "9") THEN RETURN ORD (ch) - ORD ("0")
 			ELSIF ("A" <= ch) & (ch <= "F") THEN RETURN ORD (CAP (ch)) - ORD ("A") + 10

@@ -466,7 +466,7 @@ BEGIN
 	(* KernelLog.Int(SELF.blockSize,2); *)
 END Handle;
 
-PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR diskres: WORD);
+PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: WORD);
 VAR i, payloadNotCoded: LONGINT; command: Command; numOfBlocks,tries: LONGINT;
 BEGIN
 
@@ -1242,7 +1242,7 @@ BEGIN
 END TestHandle; *)
 
 (*
-PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR diskres: LONGINT);
+PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: LONGINT);
 VAR i,addr: LONGINT; command: Command; dev: Sbp2Dev; grp: SbpDevGrp; statusHi: SET;
 BEGIN
 	grp:= sbpDevGrps[0];

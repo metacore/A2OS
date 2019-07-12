@@ -161,7 +161,7 @@ END InitOperand;
 PROCEDURE OperandToDisplay(O: Operand; w: INTEGER; VAR s: ARRAY OF CHAR);
 	(* transform an Operand to ARRAY OF CHAR depending on it's base *)
 VAR
-	len,max,ndx: SIZE;
+	len,max,ndx: LONGINT;
 BEGIN
 	IF (O.base = 10) THEN
 		Conversions.RealToStr(O.value,s,O.base);
@@ -365,7 +365,7 @@ BEGIN
 END AddOperator;
 
 PROCEDURE GetSuffix(VAR str(* in *), suf(* out *): ARRAY OF CHAR);
-	VAR i, j, l, dot: SIZE;
+	VAR i, j, l, dot: LONGINT;
 BEGIN
 	dot := -1; i := 0;
 	WHILE str[i] # 0X DO

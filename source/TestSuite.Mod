@@ -11,7 +11,7 @@ CONST
 	Failure* = 2;
 
 TYPE
-	TestType* = WORD;
+	TestType* = INTEGER;
 	TestName = ARRAY 100 OF CHAR;
 
 	TestResult* = POINTER TO RECORD
@@ -27,7 +27,7 @@ TYPE
 
 	Report* = OBJECT
 
-	VAR tests-, succeeded-, succeededThisTime-, failed-, failedThisTime-: SIZE;
+	VAR tests-, succeeded-, succeededThisTime-, failed-, failedThisTime-: INTEGER;
 
 	PROCEDURE Open*;
 	END Open;
@@ -74,7 +74,7 @@ TYPE
 		RETURN TRUE;
 	END Process;
 
-	PROCEDURE Handle* (r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestType): WORD;
+	PROCEDURE Handle* (r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestType): INTEGER;
 	END Handle;
 
 	PROCEDURE Print* (report: Report);
@@ -170,7 +170,7 @@ BEGIN WHILE (r.Peek () = 0AX) OR (r.Peek () = 0DX) DO r.SkipBytes (1) END; RETUR
 END SkipLn;
 
 PROCEDURE ReadType (r: Streams.Reader; VAR type: TestType): BOOLEAN;
-VAR c: CHAR; string: ARRAY 10 OF CHAR; i: SIZE;
+VAR c: CHAR; string: ARRAY 10 OF CHAR; i: INTEGER;
 BEGIN
 	i := 0; r.Char (c);
 	WHILE (c # ':') & (i # LEN (string)) DO string[i] := c; INC (i); r.Char (c) END;
@@ -190,7 +190,7 @@ BEGIN RETURN (r.Peek () = 09X) & (r.Get () = 09X)
 END Tabulator;
 
 PROCEDURE ReadBoolean (r: Streams.Reader; VAR boolean: BOOLEAN): BOOLEAN;
-VAR value: WORD;
+VAR value: LONGINT;
 BEGIN r.Int (value, FALSE); boolean := value = 1; RETURN r.res = Streams.Ok
 END ReadBoolean;
 
@@ -225,6 +225,7 @@ PROCEDURE FindResult (CONST list: TestResultList; CONST name: ARRAY OF CHAR): Te
 VAR result: TestResult;
 BEGIN result := list.first; WHILE (result # NIL) & (result.name # name) DO result := result.next END; RETURN result
 END FindResult;
+
 
 (* public interface helper *)
 PROCEDURE DriveByReader* (reader: Streams.Reader; error: Streams.Writer; CONST resultname: ARRAY OF CHAR; tester: Tester): BOOLEAN;
@@ -275,5 +276,6 @@ BEGIN
 		context.result := Commands.CommandError;
 	END;
 END Drive;
+
 
 END TestSuite.

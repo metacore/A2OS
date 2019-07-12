@@ -23,7 +23,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		VAR
 			section: Sections.Section;
 			intermediateCodeSection: IntermediateCode.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			(* prepare sections for output *)
 			FOR i := 0 TO module.allSections.Length() - 1 DO
@@ -42,7 +42,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			intermediateCodeSection: IntermediateCode.Section;
 
 			PROCEDURE SectionName(sectionName: ObjectFile.SegmentedName);
-			VAR name: ObjectFile.SectionName; i,num: SIZE;
+			VAR name: ObjectFile.SectionName; i,num: LONGINT;
 			BEGIN
 				i := 0;
 				REPEAT
@@ -122,7 +122,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END WriteInstruction;
 
 			PROCEDURE WriteSection(section: IntermediateCode.Section);
-			VAR i: SIZE;
+			VAR i: LONGINT;
 			BEGIN
 				w.RawLInt(section.type);
 				SectionName(section.name);
@@ -138,7 +138,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END WriteSection;
 
 			PROCEDURE SectionList(list: Sections.SectionList);
-			VAR section: Sections.Section; i: SIZE;
+			VAR section: Sections.Section;i: LONGINT;
 			BEGIN
 				w.RawNum(list.Length());
 				FOR i := 0 TO list.Length() - 1 DO
@@ -148,7 +148,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			END SectionList;
 
 			PROCEDURE Imports(imports: Sections.NameList);
-			VAR name: SyntaxTree.IdentifierString; i: SIZE;
+			VAR name: SyntaxTree.IdentifierString;i: LONGINT;
 			BEGIN
 				w.RawNum(imports.Length());
 				FOR i := 0 TO imports.Length()-1 DO
@@ -460,7 +460,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	END ReadHeader;
 
 	PROCEDURE WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap);
-	VAR i: SIZE; section: Sections.Section; fixups: LONGINT; fixupList: ObjectFile.Fixups;
+	VAR p1,p2, size,i: LONGINT; section: Sections.Section; fixups: LONGINT; fixupList: ObjectFile.Fixups;
 
 		PROCEDURE ProcessOperand(CONST operand: IntermediateCode.Operand);
 		BEGIN
@@ -477,7 +477,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END ProcessInstruction;
 
 		PROCEDURE ProcessSection(section: IntermediateCode.Section);
-		VAR i: SIZE;
+		VAR i: LONGINT; index: LONGINT;
 		BEGIN
 			IF section.resolved # NIL THEN
 				poolMap.PutSegmentedName(section.name);

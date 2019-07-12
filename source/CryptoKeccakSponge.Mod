@@ -17,12 +17,12 @@ TYPE
 	Instance* = OBJECT
 	VAR
 		state: Keccak.Instance;	(* The state processed by the permutation. *)
-		chunk: SIZE;		(* The value of the rate in bytes *)
-		index: SIZE;			(* The position in the state of the next byte to be
+		chunk: LONGINT;		(* The value of the rate in bytes *)
+		index: LONGINT;			(* The position in the state of the next byte to be
 									input (when absorbing) or output (when squeezing). *)
 		squeezing: BOOLEAN	;	(* false: in the absorbing phase; otherwise, in the squeezing phase. *)
-		cmodl: SIZE;		(* chunk MOD LaneSize *)
-		cdivl: SIZE;		(* chunk DIV LaneSize *)
+		cmodl: LONGINT;		(* chunk MOD LaneSize *)
+		cdivl: LONGINT;			(* chunk DIV LaneSize *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -31,7 +31,7 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Initialize*( rate, capacity: SIZE );
+		PROCEDURE Initialize*( rate, capacity: LONGINT );
 		BEGIN
 			ASSERT( rate + capacity = Width );
 			ASSERT( (rate > 0) & (rate <= Width) & (rate MOD 8 = 0) );
@@ -44,9 +44,9 @@ TYPE
 		END Initialize;
 
 
-		PROCEDURE Absorb*( CONST data: ARRAY OF CHAR; offset, len: SIZE );
+		PROCEDURE Absorb*( CONST data: ARRAY OF CHAR; offset, len: LONGINT );
 		VAR
-			piece, lanes, laneNo, laneOffset, bytes: SIZE;
+			piece, lanes, laneNo, laneOffset, bytes: LONGINT;
 		BEGIN
 			ASSERT( squeezing = FALSE );
 			WHILE len > 0 DO
@@ -82,8 +82,8 @@ TYPE
 
 
 
-		PROCEDURE Squeeze*( VAR data: ARRAY OF CHAR;  offset, len: SIZE );
-		VAR piece, lanes, laneNo, laneOffset, bytes: SIZE;
+		PROCEDURE Squeeze*( VAR data: ARRAY OF CHAR;  offset, len: LONGINT );
+		VAR piece, lanes, laneNo, laneOffset, bytes: LONGINT;
 		BEGIN
 			IF ~squeezing THEN  AbsorbLastFewBits( 01X )  END;
 			WHILE len > 0 DO

@@ -230,7 +230,7 @@ TYPE
 			b : BOOLEAN;
 			i : INTEGER;
 			res : WORD;
-			cnt, j : SIZE;
+			cnt, j : LONGINT;
 			args : SVNArgument.Argument;
 			adminEntry : SVNAdmin.Entry;
 			m : SVNOutput.Message;

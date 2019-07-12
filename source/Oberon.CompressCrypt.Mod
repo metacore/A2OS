@@ -6,7 +6,7 @@ MODULE CompressCrypt IN Oberon; (** portable *)	(* ejz  *)
 
 	PROCEDURE Decrypt(VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER);
 		VAR
-			i, n: SIZE;
+			i, n: LONGINT;
 			ch: CHAR;
 	BEGIN
 		n := Strings.Length(key); i := 0;
@@ -20,7 +20,7 @@ MODULE CompressCrypt IN Oberon; (** portable *)	(* ejz  *)
 
 	PROCEDURE Encrypt(VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER);
 		VAR
-			i, n: SIZE;
+			i, n: LONGINT;
 			ch: CHAR;
 	BEGIN
 		n := Strings.Length(key); i := 0;

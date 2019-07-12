@@ -159,7 +159,7 @@ TYPE
 		calibrationLabel : WMStandardComponents.Label;
 
 		PROCEDURE HandleJoystickMessage(VAR msg : Joysticks.JoystickMessage);
-		VAR dataMsg : Joysticks.JoystickDataMessage; i, j : SIZE;
+		VAR dataMsg : Joysticks.JoystickDataMessage; i, j : LONGINT;
 		BEGIN
 			IF msg IS Joysticks.JoystickDataMessage THEN
 				dataMsg := msg(Joysticks.JoystickDataMessage);

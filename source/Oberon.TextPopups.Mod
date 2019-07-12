@@ -158,7 +158,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 	PROCEDURE ExtractProcTypeNames(T: Texts.Text; VAR lastProc, lastType: MenuItem);
 		CONST	rec = 0; proc = 1; mod = 2;
 		VAR R: Texts.Reader; isType, init: BOOLEAN; sym, prevsym: SHORTINT;
-			Stack: ARRAY 16 OF SHORTINT; ST, i: LONGINT; j: SIZE;
+			Stack: ARRAY 16 OF SHORTINT; ST, i: LONGINT;
 			Context, name: ARRAY 128 OF CHAR;startP, startT, q: MenuItem; p: PMarkerMenuItem;
 	BEGIN
 		Texts.OpenReader(R, T, 0);
@@ -223,9 +223,9 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 			ELSIF (Stack[ST] = rec)&(sym = end) OR (Stack[ST] = proc)&(prevsym=end)&(sym=ident) THEN
 				isType := (Stack[ST] = rec)OR(Stack[ST-1] = rec);
 				DEC(ST);
-				j := Strings.Length(Context)-2;
-				WHILE (j>0) & (Context[j]#".") DO DEC(j) END;
-				IF j <= 0 THEN Context[0] := 0X ELSE Context[j+1] := 0X END;
+				i := Strings.Length(Context)-2;
+				WHILE (i>0) & (Context[i]#".") DO DEC(i) END;
+				IF i <= 0 THEN Context[0] := 0X ELSE Context[i+1] := 0X END;
 				OPS.Get(sym)
 			ELSIF (sym = ident) THEN
 				REPEAT OPS.Get(sym) UNTIL (sym = semicolon) OR (sym = end) OR (sym = eof);

@@ -28,7 +28,7 @@ TYPE
 			IF log = NIL THEN INCL(commandFlags, Commands.Silent) END;
 		END InitTester;
 
-		PROCEDURE Handle* (r: Streams.Reader; position: Streams.Position; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): WORD;
+		PROCEDURE Handle* (r: Streams.Reader; position: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER;
 		VAR result: INTEGER; msg: ARRAY 128 OF CHAR; res: WORD; f: Files.File; w: Files.Writer; ch: CHAR;
 		BEGIN
 			result := TestSuite.Failure;
@@ -199,7 +199,7 @@ TYPE
 	PROCEDURE GetTextReader(text: Texts.Text): Streams.Reader;
 	VAR
 		buffer : POINTER TO ARRAY OF CHAR;
-		length: SIZE; reader: Streams.StringReader;
+		length: LONGINT; reader: Streams.StringReader;
 	BEGIN
 		ASSERT((text # NIL));
 		text.AcquireRead;

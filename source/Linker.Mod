@@ -7,7 +7,7 @@ TYPE
 
 	PatchBlock*= POINTER TO RECORD
 		baseAdr: LONGINT;
-		addresses: SIZE;
+		addresses: LONGINT;
 		address: ARRAY 1024 OF LONGINT;
 		next: PatchBlock;
 	END;
@@ -114,7 +114,8 @@ TYPE
 
 	PROCEDURE & InitArrangement* (displacement: GenericLinker.Address);
 	BEGIN
-		SELF.displacement := displacement; maxUnitSize := 1; NEW (bits, 0); exportInfo := NIL; NEW(relocInfo);
+
+	 SELF.displacement := displacement; maxUnitSize := 1; NEW (bits, 0); exportInfo := NIL; NEW(relocInfo);
 	END InitArrangement;
 
 	PROCEDURE Allocate* (CONST section: ObjectFile.Section): GenericLinker.Address;
@@ -152,7 +153,7 @@ TYPE
 		RETURN address DIV section.unit + displacement;
 	END Allocate;
 
-	PROCEDURE SizeInBits*(): ObjectFile.Bits;
+	PROCEDURE SizeInBits*(): LONGINT;
 	BEGIN RETURN bits.GetSize()
 	END SizeInBits;
 
@@ -167,6 +168,7 @@ TYPE
 		END;
 	END CheckReloc;
 
+
 END Arrangement;
 
 TYPE FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
@@ -174,14 +176,14 @@ TYPE FileFormat = PROCEDURE (linker: GenericLinker.Linker; arrangement: Arrangem
 VAR defaults: Options.Defaults;
 	processing, finished: GenericLinker.Block;
 
-PROCEDURE Align(this, to: SIZE): SIZE;
+PROCEDURE Align(this, to: LONGINT): LONGINT;
 BEGIN
 	this := this + (-this) MOD to;
 	RETURN this;
 END Align;
 
 PROCEDURE ReadObjectFile*(CONST moduleName, path, extension: ARRAY OF CHAR; linker: GenericLinker.Linker; moduleList: GenericLinker.HashTableSegmentedName);
-VAR fileName: Files.FileName; file: Files.File; reader: Files.Reader; i: SIZE;
+VAR fileName: Files.FileName; file: Files.File; reader: Files.Reader; i: LONGINT;
 offers, requires: ObjectFile.NameList;name: ARRAY 256 OF CHAR; sn: ObjectFile.SegmentedName;
 BEGIN
 	sn := moduleName;
@@ -240,7 +242,7 @@ BEGIN
 END ReadObjectFile;
 
 PROCEDURE WriteRelocations( arr: Arrangement; w: Files.Writer );
-VAR pb: PatchBlock; i, relocations: SIZE; binsize: Files.Position;
+VAR pb: PatchBlock; i, relocations, binsize: LONGINT;
 BEGIN
 	binsize := w.Pos();
 	pb := arr.relocInfo.patchBlock; relocations := 0;
@@ -252,8 +254,8 @@ BEGIN
 	END;
 	(* now patch header (cf  Unix.Glue.Mod)  *)
 	w.SetPos( 24 );
-	w.RawLInt( binsize(LONGINT) );
-	w.RawLInt( relocations(LONGINT) );
+	w.RawLInt( binsize );
+	w.RawLInt( relocations );
 END WriteRelocations;
 
 PROCEDURE WriteOutputFile* (arrangement: Arrangement; CONST fileName: Files.FileName; linker: GenericLinker.Linker; fileFormat: FileFormat);
@@ -274,7 +276,7 @@ BEGIN
 END WriteOutputFile;
 
 PROCEDURE WriteBinaryFile (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
-VAR i: ObjectFile.Bits;
+VAR i: LONGINT;
 BEGIN
 	FOR i := 0 TO arrangement.bits.GetSize () - 1 BY 8 DO
 		writer.Char (CHR (arrangement.bits.GetBits (i, 8)));
@@ -282,7 +284,7 @@ BEGIN
 END WriteBinaryFile;
 
 PROCEDURE WriteUnixBinaryFile (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
-VAR i: ObjectFile.Bits;
+VAR i: LONGINT;
 BEGIN
 	FOR i := 0 TO arrangement.bits.GetSize () - 1 BY 8 DO
 		writer.Char (CHR (arrangement.bits.GetBits (i, 8)));
@@ -290,24 +292,21 @@ BEGIN
 	WriteRelocations( arrangement, writer )
 END WriteUnixBinaryFile;
 
-PROCEDURE WriteTRMFile (arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines: SIZE);
-VAR i, j, size, end, nonZeroInLeadingNibble: SIZE;
-
-	PROCEDURE GetBits(pos: SIZE): WORD;
+PROCEDURE WriteTRMFile (arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines:LONGINT);
+VAR i,j,size,end,nonZeroInLeadingNibble: LONGINT;
+	PROCEDURE GetBits(pos: LONGINT): WORD;
 	BEGIN
 		IF pos >= size THEN RETURN 0
 		ELSIF pos+4 > size THEN RETURN arrangement.bits.GetBits(pos,size-pos)
 		ELSE RETURN arrangement.bits.GetBits(pos,4)
 		END;
 	END GetBits;
-
-	PROCEDURE GetFirstNibble(pos: SIZE): WORD;
+	PROCEDURE GetFirstNibble(pos: LONGINT): WORD;
 	BEGIN
 		RETURN arrangement.bits.GetBits(pos,nonZeroInLeadingNibble);
 	END GetFirstNibble;
-
 BEGIN
-	(*allow line size not divisible by 4 by padding the line to a multiple of 4 bits with leading zeros*)
+(*allow line size not divisible by 4 by padding the line to a multiple of 4 bits with leading zeros*)
 	size := arrangement.bits.GetSize();
 
 	end := (size-1) DIV bitsPerLine + 1;
@@ -345,7 +344,7 @@ END WriteTRMFile;
 
 PROCEDURE WriteTRMCodeFile* (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
 BEGIN
-	WriteTRMFile (arrangement, writer, arrangement.maxUnitSize, 1024);
+	WriteTRMFile (arrangement, writer, arrangement.maxUnitSize,1024);
 END WriteTRMCodeFile;
 
 PROCEDURE WriteTRMDataFile* (linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer);
@@ -356,22 +355,22 @@ PROCEDURE WritePEFile (linker: GenericLinker.Linker; arrangement: Arrangement; w
 CONST DOSText = "This program cannot be run in DOS mode.$";
 CONST DOSHeaderSize = 64; DOSCodeSize = 14; DOSTextSize = 40; DOSStubSize = ((DOSHeaderSize + DOSCodeSize + DOSTextSize + 15) DIV 16) * 16;
 CONST FileAlignment = 200H; SectionAlignment = 1000H; HeaderSize = 24; SectionHeaderSize = 40; DirectoryEntries = 16;
-VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress: SIZE; BaseAddress: LONGINT; exportInfo: ExportInfo; relocInfo: RelocationInfo;
-	pos: SIZE;
+VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize: LONGINT;  BaseCodeAddress, BaseAddress: LONGINT; exportInfo: ExportInfo; relocInfo: RelocationInfo;
+	pos: LONGINT;
 
-	PROCEDURE Reserve (size: SIZE);
+	PROCEDURE Reserve (size: LONGINT);
 	BEGIN INC(pos, size); WHILE size # 0 DO writer.Char (0X); DEC (size); END;
 	END Reserve;
 
-	PROCEDURE WriteBYTE (value: SIZE);
+	PROCEDURE WriteBYTE (value: LONGINT);
 	BEGIN writer.Char (CHR (value)); INC(pos);
 	END WriteBYTE;
 
-	PROCEDURE WriteWORD (value: SIZE);
+	PROCEDURE WriteWORD (value: LONGINT);
 	BEGIN WriteBYTE (value MOD 100H); WriteBYTE (value DIV 100H);
 	END WriteWORD;
 
-	PROCEDURE WriteDWORD (value: SIZE);
+	PROCEDURE WriteDWORD (value: LONGINT);
 	BEGIN WriteWORD (value MOD 10000H); WriteWORD (value DIV 10000H);
 	END WriteDWORD;
 
@@ -389,11 +388,11 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 		WriteString(s); WriteBYTE(0);
 	END WriteString0;
 
-	PROCEDURE AlignTo(alignment: SIZE);
+	PROCEDURE AlignTo(alignment: LONGINT);
 	BEGIN alignment := Align(pos, alignment); Reserve(alignment - pos);
 	END AlignTo;
 
-	PROCEDURE ReserveTo(p: SIZE);
+	PROCEDURE ReserveTo(p: LONGINT);
 	BEGIN ASSERT(p >= pos); Reserve(p-pos);
 	END ReserveTo;
 
@@ -402,8 +401,8 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 		RETURN (exportInfo # NIL) & (exportInfo.exports # 0)
 	END HasExports;
 
-	PROCEDURE ExportTableSize(): SIZE;
-	VAR i,offset: SIZE;
+	PROCEDURE ExportTableSize(): LONGINT;
+	VAR i,offset: LONGINT;
 	BEGIN
 		IF ~HasExports() THEN RETURN 0 END;
 
@@ -415,7 +414,7 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 		RETURN offset
 	END ExportTableSize;
 
-	PROCEDURE AlignedExportTableSize(): SIZE;
+	PROCEDURE AlignedExportTableSize(): LONGINT;
 	BEGIN
 		RETURN Align(ExportTableSize(), SectionAlignment);
 	END AlignedExportTableSize;
@@ -425,8 +424,8 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 		RETURN (relocInfo # NIL) & (relocInfo.patchBlock # NIL)
 	END HasRelocs;
 
-	PROCEDURE RelocTableSize(): SIZE;
-	VAR p: PatchBlock; size: SIZE;
+	PROCEDURE RelocTableSize(): LONGINT;
+	VAR p: PatchBlock; size: LONGINT;
 	BEGIN
 		IF ~HasRelocs() THEN RETURN 0 END;
 		size := 0;
@@ -439,11 +438,11 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 		RETURN size
 	END RelocTableSize;
 
-	PROCEDURE AlignedRelocTableSize(): SIZE;
+	PROCEDURE AlignedRelocTableSize(): LONGINT;
 	BEGIN RETURN Align(RelocTableSize(), SectionAlignment);
 	END AlignedRelocTableSize;
 
-	(*PROCEDURE SectionHeaderOffset(): SIZE;
+	(*PROCEDURE SectionHeaderOffset(): LONGINT;
 	BEGIN RETURN DOSStubSize + HeaderSize + OptionalHeaderSize
 	END SectionHeaderOffset;*)
 
@@ -500,7 +499,7 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 	END WriteHeader;
 
 	PROCEDURE WriteOptionalHeader;
-	VAR ImageSize: SIZE;
+	VAR ImageSize: LONGINT;
 	BEGIN
 		ImageSize := Align(BaseCodeAddress+AlignedCodeSize+AlignedExportTableSize()+AlignedRelocTableSize(), SectionAlignment);
 
@@ -557,7 +556,7 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 	END WriteOptionalHeader;
 
 	PROCEDURE WriteSections;
-	VAR ExportNameTableAddress, i, offset: SIZE; p: PatchBlock;
+	VAR ExportNameTableAddress, i, offset: LONGINT; p: PatchBlock;
 	BEGIN
 
 		(* code section header *)
@@ -602,10 +601,10 @@ VAR OptionalHeaderSize, CodeSize, AlignedCodeSize, HeadersSize, BaseCodeAddress:
 
 		(* 40 / 80 / 120 *) ReserveTo(BaseCodeAddress);
 
-		(**** code section *****)
-		(* BaseCodeAddress *)
-		WriteBinaryFile (linker, arrangement, writer); INC(pos, arrangement.bits.GetSize () DIV 8);
-		(* BaseCodeAddress +CodeSize *)
+	 	(**** code section *****)
+	 	(* BaseCodeAddress *)
+	 	WriteBinaryFile (linker, arrangement, writer); INC(pos, arrangement.bits.GetSize () DIV 8);
+	 	(* BaseCodeAddress +CodeSize *)
 		Reserve (AlignedCodeSize-CodeSize);
 		(* BaseCodeAddress + AlignedCodeSize *)
 
@@ -767,7 +766,7 @@ CONST BaseAddress = 08048000H; EntryAddress = BaseAddress + HeadersSize;
 	PROCEDURE WriteProgramHeader;
 	VAR FileSize: LONGINT;
 	BEGIN
-		FileSize := (HeadersSize + arrangement.bits.GetSize () DIV 8)(LONGINT);
+		FileSize := HeadersSize + arrangement.bits.GetSize () DIV 8;
 
 		WriteWord (1);		(* p_type *)
 		WriteWord (0);		(* p_offset *)
@@ -813,10 +812,10 @@ CONST BaseAddress = 000010E8H;
 		Write (0);	(* flags *)
 	END WriteMachHeader;
 
-	PROCEDURE WriteLoadCommand;
-	VAR FileSize: LONGINT;
-	BEGIN
-		FileSize := (MachHeaderSize + CommandsSize + arrangement.bits.GetSize () DIV 8)(LONGINT);
+	 PROCEDURE WriteLoadCommand;
+	 VAR FileSize: LONGINT;
+	 BEGIN
+		FileSize := MachHeaderSize + CommandsSize + arrangement.bits.GetSize () DIV 8;
 
 		Write (1);	(* cmd *)
 		Write (LoadCommandSize);	(* cmdsize *)
@@ -833,7 +832,7 @@ CONST BaseAddress = 000010E8H;
 		WriteName (SectionName);	(* sectname *)
 		WriteName (SegmentName);	(* segname *)
 		Write (BaseAddress);	(* addr *)
-		Write ((arrangement.bits.GetSize () DIV 8)(LONGINT));	(* size *)
+		Write (arrangement.bits.GetSize () DIV 8);	(* size *)
 		Write (Start);	(* offset *)
 		Write (2);	(* align *)
 		Write (0);	(* reloff *)
@@ -962,6 +961,7 @@ BEGIN
 	RETURN success
 END CheckExports;
 
+
 PROCEDURE Link* (context: Commands.Context);
 VAR options: Options.Options;
 	silent, useAll, strict: BOOLEAN;
@@ -973,7 +973,7 @@ VAR options: Options.Options;
 	use: SET;
 	exportString: ARRAY 1024*2 OF CHAR;
 	parsed: BOOLEAN;
-	position: Streams.Position;
+	position: LONGINT;
 	name: ARRAY 32 OF CHAR;
 	reader: Streams.Reader;
 	moduleList: GenericLinker.HashTableSegmentedName;

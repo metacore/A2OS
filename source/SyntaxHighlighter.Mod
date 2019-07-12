@@ -154,7 +154,7 @@ TYPE
 	END;
 
 	DataEntry = RECORD
-		open, close  : SIZE; (* region *)
+		open, close  : LONGINT; (* region *)
 		region : RegionMatcher; (* { region # NIL } *)
 		eol : BOOLEAN;
 	END;
@@ -166,7 +166,7 @@ TYPE
 		matchers : RegionMatcher;
 
 		data : DataArray; (* {data # NIL} *)
-		nofData : SIZE;
+		nofData : LONGINT;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -198,8 +198,8 @@ TYPE
 			END;
 		END ResetMatchers;
 
-		PROCEDURE GetStyle(position : SIZE; VAR start, end : SIZE) : Style;
-		VAR style : Style; entry : DataEntry; location : WORD;
+		PROCEDURE GetStyle(position : LONGINT; VAR start, end : LONGINT) : Style;
+		VAR style : Style; entry : DataEntry; location : LONGINT;
 		BEGIN
 			style := NIL;
 			IF Find(position, entry) THEN
@@ -220,8 +220,8 @@ TYPE
 			RETURN style;
 		END GetStyle;
 
-		PROCEDURE Find(position : SIZE; VAR entry : DataEntry) : BOOLEAN;
-		VAR l, r, m : SIZE;
+		PROCEDURE Find(CONST position : LONGINT; VAR entry : DataEntry) : BOOLEAN;
+		VAR l, r, m : LONGINT;
 		BEGIN
 			(* binary search *)
 			l := 0; r := nofData;
@@ -239,8 +239,8 @@ TYPE
 			END;
 		END Find;
 
-		PROCEDURE FindTriple(position : SIZE; VAR hasLeft, hasMiddle, hasRight : BOOLEAN; VAR left, middle, right : DataEntry);
-		VAR i : SIZE;
+		PROCEDURE FindTriple(position : LONGINT; VAR hasLeft, hasMiddle, hasRight : BOOLEAN; VAR left, middle, right : DataEntry);
+		VAR i : LONGINT;
 		BEGIN
 			hasLeft := FALSE; hasMiddle := FALSE; hasRight := FALSE;
 			IF (nofData > 0) THEN
@@ -258,8 +258,8 @@ TYPE
 			END;
 		END FindTriple;
 
-		PROCEDURE Patch(fromPosition : SIZE; length : SIZE);
-		VAR i : SIZE;
+		PROCEDURE Patch(fromPosition : LONGINT; length : LONGINT);
+		VAR i : LONGINT;
 		BEGIN
 			IF (nofData > 0) THEN
 				i := 0;
@@ -275,7 +275,7 @@ TYPE
 		END Patch;
 
 		PROCEDURE Add(CONST entry : DataEntry);
-		VAR insertAt, i : SIZE;
+		VAR insertAt, i : LONGINT;
 		BEGIN
 			ASSERT(entry.region # NIL);
 			insertAt := 0;
@@ -289,7 +289,7 @@ TYPE
 		END Add;
 
 		PROCEDURE Remove(CONST entry : DataEntry);
-		VAR removeIdx, i : SIZE;
+		VAR removeIdx, i : LONGINT;
 		BEGIN
 			IF (nofData > 0) THEN
 				removeIdx := 0;
@@ -303,8 +303,8 @@ TYPE
 			END;
 		END Remove;
 
-		PROCEDURE RemoveFrom(position : SIZE);
-		VAR i : SIZE;
+		PROCEDURE RemoveFrom(position : LONGINT);
+		VAR i : LONGINT;
 		BEGIN
 			IF (nofData > 0) THEN
 				i := 0;
@@ -313,8 +313,8 @@ TYPE
 			END;
 		END RemoveFrom;
 
-		PROCEDURE RemoveFromTo(position, length : SIZE) : BOOLEAN;
-		VAR removedEntries : BOOLEAN; i : SIZE;
+		PROCEDURE RemoveFromTo(position, length : LONGINT) : BOOLEAN;
+		VAR removedEntries : BOOLEAN; i : LONGINT;
 		BEGIN
 			removedEntries := FALSE;
 			IF (nofData > 0) THEN
@@ -334,7 +334,7 @@ TYPE
 		END Clear;
 
 		PROCEDURE EnlargeDataArray;
-		VAR newData : DataArray; i : SIZE;
+		VAR newData : DataArray; i : LONGINT;
 		BEGIN
 			NEW(newData, 2 * LEN(data));
 			FOR i := 0 TO LEN(data)-1 DO
@@ -351,7 +351,7 @@ TYPE
 		END ShowEntry;
 
 		PROCEDURE Dump(out : Streams.Writer);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			ASSERT(out # NIL);
 			out.String("Region dump : "); out.Int(nofData, 0); out.String(" entries"); out.Ln;
@@ -371,7 +371,7 @@ TYPE
 		open, close : Identifier;
 		nesting, multiline : BOOLEAN;
 		styleOpen, styleClose, styleContent : Style;
-		openLength, closeLength : SIZE;
+		openLength, closeLength : LONGINT;
 
 		next : RegionDescriptor;
 
@@ -396,11 +396,11 @@ TYPE
 		open, close : Identifier;
 		nesting, multiline : BOOLEAN;
 		styleOpen, styleClose, styleContent : Style;
-		openLength, closeLength : SIZE;
+		openLength, closeLength : LONGINT;
 
 		openChars : ARRAY MaxOpenLength OF CHAR;
 		closeChars : ARRAY MaxCloseLength OF CHAR;
-		firstOpenChar, nofOpenChars, firstCloseChar, nofCloseChars : SIZE;
+		firstOpenChar, nofOpenChars, firstCloseChar, nofCloseChars : LONGINT;
 		lastChar : CHAR;
 
 		entry : DataEntry;
@@ -408,7 +408,7 @@ TYPE
 		level : LONGINT;
 
 		state : LONGINT;
-		firstPosition : SIZE;
+		firstPosition : LONGINT;
 
 		next : RegionMatcher;
 
@@ -437,11 +437,11 @@ TYPE
 			lastChar := 0X;
 			level := 0;
 			state := NoMatch;
-			firstPosition := MAX(SIZE);
+			firstPosition := MAX(LONGINT);
 		END ResetMatching;
 
-		PROCEDURE CheckOpen(reader : Texts.TextReader; position : SIZE; VAR length : SIZE) : BOOLEAN;
-		VAR char32 : Texts.Char32; oldPosition : SIZE;
+		PROCEDURE CheckOpen(reader : Texts.TextReader; position : LONGINT; VAR length : LONGINT) : BOOLEAN;
+		VAR char32 : Texts.Char32; oldPosition : LONGINT;
 		BEGIN
 			ASSERT(reader # NIL);
 			length := 0;
@@ -462,10 +462,10 @@ TYPE
 			RETURN length = openLength;
 		END CheckOpen;
 
-		PROCEDURE FeedChar(char32 : Texts.Char32; position : SIZE; VAR newState : LONGINT);
+		PROCEDURE FeedChar(char32 : Texts.Char32; position : LONGINT; VAR newState : LONGINT);
 		VAR char : CHAR; openMatch, closeMatch : BOOLEAN;
 
-			PROCEDURE AddToCircularBuffer(char : CHAR; VAR buffer : ARRAY OF CHAR; VAR first, length, maxLength : SIZE);
+			PROCEDURE AddToCircularBuffer(char : CHAR; VAR buffer : ARRAY OF CHAR; VAR first, length, maxLength : LONGINT);
 			BEGIN
 				buffer[(first + length) MOD LEN(buffer)] := char;
 				IF (length = maxLength) THEN
@@ -476,8 +476,8 @@ TYPE
 				END;
 			END AddToCircularBuffer;
 
-			PROCEDURE CheckBuffer(CONST buffer, compareTo : ARRAY OF CHAR; VAR first, length, maxLength : SIZE) : BOOLEAN;
-			VAR i : SIZE;
+			PROCEDURE CheckBuffer(CONST buffer, compareTo : ARRAY OF CHAR; VAR first, length, maxLength : LONGINT) : BOOLEAN;
+			VAR i : LONGINT;
 			BEGIN
 				ASSERT(length = maxLength);
 				i := 0;
@@ -578,9 +578,9 @@ TYPE
 
 	Token* = RECORD
 		type-, subtype- : SHORTINT;
-		startPosition-, endPosition- : SIZE;
+		startPosition-, endPosition- : LONGINT;
 		value- : ARRAY MaxTokenLength OF CHAR;
-		length : SIZE; (* if type = Type_Identifier: of string value *)
+		length : LONGINT; (* if type = Type_Identifier: of string value *)
 		style- : Style;
 	END;
 
@@ -597,18 +597,18 @@ TYPE
 
 		tokens : ARRAY Dim1Length OF RECORD
 			length : ARRAY MaxWordLength OF  Word;
-			maxLength : SIZE;
+			maxLength : LONGINT;
 		END;
 
 		regions : RegionDescriptor;
-		longestOpen, longestClose : SIZE;
+		longestOpen, longestClose : LONGINT;
 
 		regionChars, wordChars, isAllowedCharacter : ARRAY 256 OF BOOLEAN;
 
 		next : Highlighter;
 
 		PROCEDURE &Init(CONST name : ARRAY OF CHAR);
-		VAR i, j : SIZE;
+		VAR i, j : LONGINT;
 		BEGIN
 			ASSERT(name # "");
 			Copy(name, SELF.name);
@@ -644,13 +644,13 @@ TYPE
 			isAllowedCharacter[ORD(character)] := TRUE;
 		END AllowCharacter;
 
-		PROCEDURE Scan(reader : Texts.TextReader; from, to : SIZE; CONST state : State; VAR match : BOOLEAN);
+		PROCEDURE Scan(reader : Texts.TextReader; from, to : LONGINT; CONST state : State; VAR match : BOOLEAN);
 		VAR
-			matcher, owner, oldOwner : RegionMatcher; char32 : Texts.Char32; continue : BOOLEAN; entry : DataEntry; oldPosition, position : SIZE;
-			mstate, tempState: LONGINT; nofMatching : SIZE;
+			matcher, owner, oldOwner : RegionMatcher; char32 : Texts.Char32; continue : BOOLEAN; entry : DataEntry; oldPosition, position : LONGINT;
+			mstate, tempState, nofMatching : LONGINT;
 
 			PROCEDURE CheckLongestMatch(VAR owner : RegionMatcher);
-			VAR matcher : RegionMatcher; length, maxLength : SIZE;
+			VAR matcher : RegionMatcher; length, maxLength : LONGINT;
 			BEGIN
 				ASSERT(owner # NIL);
 				maxLength := owner.openLength;
@@ -735,15 +735,15 @@ TYPE
 			IF Statistics THEN INC(NnofRebuildRegions); END;
 			state.Clear;
 			state.ResetMatchers;
-			Scan(reader, 0, MAX(SIZE), state, ignore);
+			Scan(reader, 0, MAX(LONGINT), state, ignore);
 		END RebuildRegions;
 
 		PROCEDURE PatchRegions*(info : Texts.TextChangeInfo;  reader : Texts.TextReader; state : State; VAR fullLayout : BOOLEAN);
 		VAR
 			char32 : Texts.Char32;
 
-			PROCEDURE NeedRescan(position, length : SIZE) : BOOLEAN;
-			VAR rescan : BOOLEAN; i : SIZE;
+			PROCEDURE NeedRescan(position, length : LONGINT) : BOOLEAN;
+			VAR rescan : BOOLEAN; i : LONGINT;
 			BEGIN
 				rescan := FALSE;
 				reader.SetPosition(position);
@@ -756,14 +756,14 @@ TYPE
 				RETURN rescan;
 			END NeedRescan;
 
-			PROCEDURE PatchInsert(position, length : SIZE; VAR fullLayout : BOOLEAN);
+			PROCEDURE PatchInsert(position, length : LONGINT; VAR fullLayout : BOOLEAN);
 			VAR
 				hasLeft, hasMiddle, hasRight : BOOLEAN;
 				left, middle, right : DataEntry;
 				res : BOOLEAN;
-				start, end, oldStart, oldEnd : SIZE;
+				start, end, oldStart, oldEnd : LONGINT;
 				ignore, match : BOOLEAN;
-				location : WORD;
+				location : LONGINT;
 			BEGIN
 				IF Statistics THEN INC(NnofPatchInsert); END;
 				fullLayout := FALSE;
@@ -774,7 +774,7 @@ TYPE
 					IF (location = OpenString) OR ((location = CloseString) & (position > middle.close - middle.region.closeLength + 1)) THEN
 						IF Statistics THEN INC(NnofPiOpenClose); END;
 						state.RemoveFrom(position);
-						Scan(reader, middle.open, MAX(SIZE), state, ignore);
+						Scan(reader, middle.open, MAX(LONGINT), state, ignore);
 						fullLayout := TRUE;
 					ELSIF middle.region.nesting THEN
 						oldStart := middle.open;
@@ -788,7 +788,7 @@ TYPE
 								((oldEnd = NOTCLOSED) & (middle.close # NOTCLOSED)) THEN
 							IF Statistics THEN INC(NnofPiNestedFull); END;
 							state.RemoveFrom(position);
-							Scan(reader, oldStart, MAX(SIZE), state, ignore);
+							Scan(reader, oldStart, MAX(LONGINT), state, ignore);
 							fullLayout := TRUE;
 						ELSE
 							IF Statistics THEN INC(NnofPiNestedSimple); END;
@@ -797,7 +797,7 @@ TYPE
 					ELSIF NeedRescan(position, length) THEN
 						IF Statistics THEN INC(NnofPiRescan); END;
 						state.RemoveFrom(position); (* TBD optimize *)
-						Scan(reader, middle.open, MAX(SIZE), state, ignore);
+						Scan(reader, middle.open, MAX(LONGINT), state, ignore);
 						fullLayout := TRUE;
 					ELSE
 						IF Statistics THEN INC(NnofPiSimple); END;
@@ -820,20 +820,20 @@ TYPE
 						IF match THEN
 							IF Statistics THEN INC(NnofPiNoHitFull); END;
 							state.RemoveFrom(start);
-							Scan(reader, start, MAX(SIZE), state, match);
+							Scan(reader, start, MAX(LONGINT), state, match);
 							fullLayout := TRUE;
 						END;
 					END;
 				END;
 			END PatchInsert;
 
-			PROCEDURE PatchDelete(position, length : SIZE; VAR fullLayout : BOOLEAN);
+			PROCEDURE PatchDelete(position, length : LONGINT; VAR fullLayout : BOOLEAN);
 			VAR
 				hasLeft, hasMiddle, hasRight : BOOLEAN;
 				left, middle, right : DataEntry;
-				start, end, oldStart, oldEnd : SIZE;
+				start, end, oldStart, oldEnd : LONGINT;
 				match, ignore, res : BOOLEAN;
-				location : WORD;
+				location : LONGINT;
 			BEGIN
 				fullLayout := FALSE;
 				state.FindTriple(position, hasLeft, hasMiddle, hasRight, left, middle, right);
@@ -851,21 +851,21 @@ TYPE
 								((oldEnd # NOTCLOSED) & (middle.close # oldEnd - length)) OR
 								((oldEnd = NOTCLOSED) & (middle.close # NOTCLOSED)) THEN
 							state.RemoveFrom(position);
-							Scan(reader, oldStart, MAX(SIZE), state, ignore);
+							Scan(reader, oldStart, MAX(LONGINT), state, ignore);
 							fullLayout := TRUE;
 						ELSE
 							state.Patch(middle.close + 1, -length);
 						END;
 					ELSE
 						state.RemoveFrom(position);
-						Scan(reader, middle.open, MAX(SIZE), state, ignore);
+						Scan(reader, middle.open, MAX(LONGINT), state, ignore);
 						fullLayout := TRUE;
 					END;
 				ELSE
 					start := position - longestOpen + 1;
 					IF hasLeft & (left.close >= start) THEN start := left.close + 1; END;
 					IF state.RemoveFromTo(position, length) THEN
-						Scan(reader, start, MAX(SIZE), state, ignore);
+						Scan(reader, start, MAX(LONGINT), state, ignore);
 						fullLayout := TRUE;
 					ELSE
 						end := position - 1;
@@ -873,7 +873,7 @@ TYPE
 						Scan(reader, start, end, state, match);
 						IF match THEN
 							state.RemoveFrom(start);
-							Scan(reader, start, MAX(SIZE), state, ignore);
+							Scan(reader, start, MAX(LONGINT), state, ignore);
 							fullLayout := TRUE;
 						END;
 					END;
@@ -915,8 +915,8 @@ TYPE
 			RETURN state;
 		END GetState;
 
-		PROCEDURE MatchToken(char32 : Texts.Char32; reader : Texts.TextReader; VAR lookaheadIdx : SIZE; VAR token : Token) : BOOLEAN;
-		VAR tokensIdx, maxLength, i : SIZE; t : Word;
+		PROCEDURE MatchToken(char32 : Texts.Char32; reader : Texts.TextReader; VAR lookaheadIdx : LONGINT; VAR token : Token) : BOOLEAN;
+		VAR tokensIdx, maxLength, i : LONGINT; t : Word;
 		BEGIN
 			ASSERT(reader # NIL);
 			tokensIdx := char32 MOD Dim1Length;
@@ -950,8 +950,8 @@ TYPE
 		END MatchToken;
 
 		(* Scan reader at its current position *)
-		PROCEDURE GetToken*(reader : Texts.TextReader; position : SIZE; VAR token : Token);
-		VAR char32 : Texts.Char32; idx, i : SIZE;
+		PROCEDURE GetToken*(reader : Texts.TextReader; position : LONGINT; VAR token : Token);
+		VAR char32 : Texts.Char32; idx, i : LONGINT;
 		BEGIN
 			ASSERT(reader # NIL);
 			token.type := Type_Invalid;
@@ -1004,7 +1004,7 @@ TYPE
 			END;
 		END GetToken;
 
-		PROCEDURE GetWordStyle*(reader : Texts.TextReader; position : SIZE; VAR end : SIZE) : Style;
+		PROCEDURE GetWordStyle*(reader : Texts.TextReader; position : LONGINT; VAR end : LONGINT) : Style;
 		VAR style : Style; token : Token;
 		BEGIN
 			ASSERT(reader # NIL);
@@ -1027,14 +1027,14 @@ TYPE
 			RETURN style;
 		END GetWordStyle;
 
-		PROCEDURE GetRegionStyle*(position : SIZE; state : State; VAR start, end : SIZE) : Style;
+		PROCEDURE GetRegionStyle*(position : LONGINT; state : State; VAR start, end : LONGINT) : Style;
 		BEGIN
 			ASSERT(state # NIL);
 			RETURN state.GetStyle(position, start, end);
 		END GetRegionStyle;
 
-		PROCEDURE GetStyle*(CONST keyword : ARRAY OF CHAR; length : SIZE) : Style;
-		VAR style : Style; word : Word; i : SIZE;
+		PROCEDURE GetStyle*(CONST keyword : ARRAY OF CHAR; length : LONGINT) : Style;
+		VAR style : Style; word : Word; i : LONGINT;
 		BEGIN
 			ASSERT(length > 0);
 			style := NIL;
@@ -1062,7 +1062,7 @@ TYPE
 		END GetStyle;
 
 		PROCEDURE AddToken(CONST tokenname : ARRAY OF CHAR; style : Style; VAR res : WORD);
-		VAR token, t : Word; length, index1, index2 : SIZE;
+		VAR token, t : Word; length, index1, index2 : LONGINT;
 		BEGIN
 			ASSERT((Strings.Length(tokenname) > 0) & (style # NIL) & (style.name # ""));
 			length := Strings.Length(tokenname);
@@ -1089,7 +1089,7 @@ TYPE
 		END AddToken;
 
 		PROCEDURE AddWord(CONST keyword : ARRAY OF CHAR; style : Style; VAR res : WORD);
-		VAR word, w : Word; nofWildcards, index1, index2, length : SIZE;
+		VAR word, w : Word; nofWildcards, index1, index2, length : LONGINT;
 		BEGIN
 			ASSERT((Strings.Length(keyword) > 0) & (style # NIL) & (style.name # ""));
 			length := Strings.Length(keyword);
@@ -1124,7 +1124,7 @@ TYPE
 		END AddWord;
 
 		PROCEDURE AddRegion(CONST open, close : ARRAY OF CHAR; nesting, multiline : BOOLEAN; styleOpen, styleClose, styleContent : Style);
-		VAR region, r : RegionDescriptor; length, i : SIZE;
+		VAR region, r : RegionDescriptor; length, i : LONGINT;
 		BEGIN
 			ASSERT((Strings.Length(open) > 0));
 			NEW(region, open, close, nesting, multiline, styleOpen, styleClose, styleContent);
@@ -1147,7 +1147,7 @@ TYPE
 			END;
 		END AddRegion;
 
-		PROCEDURE DebugInterface*(code : WORD; state : State);
+		PROCEDURE DebugInterface*(code : LONGINT; state : State);
 		VAR out : Streams.Writer;
 		BEGIN
 			ASSERT(state # NIL);
@@ -1171,7 +1171,7 @@ TYPE
 			END DumpWordList;
 
 			PROCEDURE DumpTokens(out : Streams.Writer; level : LONGINT);
-			VAR i, j : SIZE;
+			VAR i, j : LONGINT;
 			BEGIN
 				ASSERT(out # NIL);
 				FOR i := 0 TO LEN(tokens)-1 DO
@@ -1244,7 +1244,7 @@ VAR
 	NnofRebuildRegions, NnofPatchRegions,
 	NnofPatchInsert, NnofPatchInsertHit, NnofPiOpenClose, NnofPiNestedFull, NnofPiNestedSimple,
 	NnofPiRescan, NnofPiSimple, NnofPiNoHit, NnofPiNoHitRescan, NnofPiNoHitFull
-	: SIZE;
+	: LONGINT;
 
 PROCEDURE GetHighlighter*(CONST name : ARRAY OF CHAR) : Highlighter;
 VAR highlighter : Highlighter; diagnostics : Diagnostics.Diagnostics;
@@ -1272,7 +1272,7 @@ BEGIN {EXCLUSIVE}
 END GetHighlighter;
 
 PROCEDURE GetTokenType(VAR token : Token);
-VAR i : SIZE; tokenDone : BOOLEAN;
+VAR i : LONGINT; tokenDone : BOOLEAN;
 BEGIN
 	token.type := Type_Identifier;
 	IF ('0' <= token.value[0]) & (token.value[0] <= '9') THEN
@@ -1315,7 +1315,7 @@ END GetTokenType;
 
 (*? Actually, the XML framework should take care of unescaping characters *)
 PROCEDURE Unescape(string : Strings.String);
-VAR insertAt, i : SIZE; ch : CHAR;
+VAR insertAt, i : LONGINT; ch : CHAR;
 BEGIN
 	ASSERT(string # NIL);
 	i := 0; insertAt := 0;
@@ -1346,8 +1346,8 @@ BEGIN
 	IF (insertAt < LEN(string)) THEN string[insertAt] := 0X; END;
 END Unescape;
 
-PROCEDURE NofWildcards(CONST string : ARRAY OF CHAR) : SIZE;
-VAR nofWildcards, i : SIZE;
+PROCEDURE NofWildcards(CONST string : ARRAY OF CHAR) : LONGINT;
+VAR nofWildcards, i : LONGINT;
 BEGIN
 	nofWildcards := 0;
 	i := 0;
@@ -1358,8 +1358,8 @@ BEGIN
 	RETURN nofWildcards;
 END NofWildcards;
 
-PROCEDURE Equal(CONST s1, s2 : ARRAY OF CHAR; length : SIZE) : BOOLEAN;
-VAR i : SIZE;
+PROCEDURE Equal(CONST s1, s2 : ARRAY OF CHAR; length : LONGINT) : BOOLEAN;
+VAR i : LONGINT;
 BEGIN
 	i := 0;
 	WHILE (i < length) & (s1[i] = s2[i]) DO INC(i); END;
@@ -1386,8 +1386,8 @@ END Indent;
 	Content: 		[4, 7]
 	CloseString:		[8, 10]
 *)
-PROCEDURE GetLocation(position : SIZE; CONST entry : DataEntry) : WORD;
-VAR location: WORD; closeLength : SIZE;
+PROCEDURE GetLocation(position : LONGINT; CONST entry : DataEntry) : LONGINT;
+VAR location, closeLength : LONGINT;
 BEGIN
 	IF entry.eol THEN closeLength := 0; ELSE closeLength := entry.region.closeLength; END;
 	IF (position >= entry.open) THEN
@@ -1620,7 +1620,7 @@ PROCEDURE ParseWords(
 	CONST source : ARRAY OF CHAR; CONST diagnostics : Diagnostics.Diagnostics; VAR error : BOOLEAN);
 VAR
 	string : Strings.String; enum : XMLObjects.Enumerator; ptr : ANY;
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	ASSERT((element # NIL) & (highlighter # NIL) & (styles # NIL) & (diagnostics # NIL));
 	string := element.GetName();
@@ -1904,7 +1904,7 @@ BEGIN
 	RETURN child;
 END FindChild;
 
-PROCEDURE TrapHandler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+PROCEDURE TrapHandler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 BEGIN
 	error := TRUE;
 	diagnostics.Error(source, pos, msg);
@@ -1947,7 +1947,7 @@ PROCEDURE HighlightText*(text : Texts.Text; highlighter : Highlighter);
 VAR
 	state : State; style : Style;
 	reader : Texts.TextReader; char32 : Texts.Char32; attributes : Texts.Attributes;
-	readerPosition, lastEnd, regionStart, regionEnd : SIZE;
+	readerPosition, lastEnd, regionStart, regionEnd : LONGINT;
 BEGIN
 	ASSERT((text # NIL) & (highlighter # NIL));
 	text.AcquireWrite;

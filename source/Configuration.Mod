@@ -2,7 +2,7 @@
 
 MODULE Configuration; (** AUTHOR "pjm"; PURPOSE "XML-based configuration"; *)
 
-IMPORT KernelLog, Strings, Files, XMLObjects, XML, XMLScanner, XMLParser, Streams;
+IMPORT KernelLog, Strings, Files, XMLObjects, XML, XMLScanner, XMLParser;
 
 CONST
 	Ok* = 0;
@@ -206,7 +206,7 @@ BEGIN
 	END
 END WriteConfig;
 
-PROCEDURE TrapHandler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+PROCEDURE TrapHandler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 BEGIN
 	IF ~error THEN
 		KernelLog.String("Error in ");

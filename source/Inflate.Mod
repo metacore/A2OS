@@ -26,7 +26,7 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 
 		Window = RECORD
 			data: ARRAY WindowSize OF CHAR;
-			in, out, size: SIZE
+			in, out, size: LONGINT
 		END;
 
 		Reader* = OBJECT (Streams.Reader)
@@ -35,12 +35,12 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 				bits, nbits: LONGINT;
 				buffer: RECORD
 					data: ARRAY DefaultReaderSize OF CHAR;
-					size: SIZE
+					size: LONGINT
 				END;
 				eof: BOOLEAN;
 
-			PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
-				VAR n: SIZE;
+			PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+				VAR n: LONGINT;
 			BEGIN
 				len := 0;
 				WHILE len < min DO
@@ -244,7 +244,7 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 			END FixedHuffman;
 
 			PROCEDURE CopyData(VAR win: Window);
-				VAR n, m: SIZE;
+				VAR n, m: LONGINT;
 			BEGIN {EXCLUSIVE}
 				AWAIT(buffer.size = 0);
 				n := win.size; IF n > DefaultReaderSize THEN n := DefaultReaderSize END;
@@ -263,7 +263,7 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 			END CopyData;
 
 			PROCEDURE Inflate;
-				VAR win: POINTER TO Window; litT, distT,temp: Tree; bits, d, l: LONGINT; i, length: SIZE; final: BOOLEAN;
+				VAR win: POINTER TO Window; litT, distT,temp: Tree; bits, i, d, l: LONGINT; final: BOOLEAN;
 			BEGIN
 				NEW(win);
 				win.in := 0; win.out := 0; win.size := 0;
@@ -281,16 +281,16 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 						ASSERT((nbits = 0) & (i = (-l-1) MOD ASH(1, 16)));
 						WHILE l > 0 DO
 							IF (win.in+l) > WindowSize THEN
-								i := WindowSize-win.in;
+								i := WindowSize-win.in
 							ELSE
 								i := l
 							END;
 							WHILE win.size > (WindowSize-i) DO
 								CopyData(win^)
 							END;
-							input.Bytes(win.data, win.in, i, length);
-							DEC(l, length(LONGINT)); INC(win.size, length(LONGINT));
-							win.in := (win.in + length(LONGINT)) MOD WindowSize
+							input.Bytes(win.data, win.in, i, i);
+							DEC(l, i); INC(win.size, i);
+							win.in := (win.in + i) MOD WindowSize
 						END
 					ELSIF bits < 3 THEN (* compressed *)
 						IF bits = 2 THEN
@@ -310,12 +310,12 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 								DEC(l, 257);
 								i := lenTab[l].extra; l := lenTab[l].base;
 								IF i > 0 THEN
-									ReadBits(i(LONGINT), bits); INC(l, bits MOD ASH(1, i))
+									ReadBits(i, bits); INC(l, bits MOD ASH(1, i))
 								END;
 								ReadCode(distT, d);
 								i := distTab[d].extra; d := distTab[d].base;
 								IF i > 0 THEN
-									ReadBits(i(LONGINT), bits); INC(d, bits MOD ASH(1, i))
+									ReadBits(i, bits); INC(d, bits MOD ASH(1, i))
 								END;
 								WHILE win.size > (WindowSize-l) DO
 									CopyData(win^)

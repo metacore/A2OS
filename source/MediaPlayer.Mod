@@ -89,10 +89,10 @@ TYPE
 	(* buffer pool for the video frames *)
 	VideoBufferPool = OBJECT
 	VAR
-		head, num: SIZE;
+		head, num: LONGINT;
 		buffer: POINTER TO ARRAY OF VideoBuffer;
 
-		PROCEDURE &Init*(n: SIZE);
+		PROCEDURE &Init*(n: LONGINT);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;
@@ -114,7 +114,7 @@ TYPE
 			RETURN x
 		END Remove;
 
-		PROCEDURE NofBuffers(): SIZE;
+		PROCEDURE NofBuffers(): LONGINT;
 		BEGIN {EXCLUSIVE}
 			RETURN num
 		END NofBuffers;
@@ -393,7 +393,7 @@ TYPE
 		END SeekFrame;
 
 		(* Returns the number of decoded frames available *)
-		PROCEDURE NofFullBuffers() : SIZE;
+		PROCEDURE NofFullBuffers() : LONGINT;
 		BEGIN
 			RETURN readyBufferPool.NofBuffers()
 		END NofFullBuffers;
@@ -881,7 +881,7 @@ TYPE
 					hasAudio := TRUE;
 					audioCanSeek := audioDecoder.CanSeek();
 					IF in IS Codecs.FileInputStream THEN (* Set the Stream Length in Bytes, needed for some Functions in some Decoders *)
-						audioDecoder.SetStreamLength(in(Codecs.FileInputStream).f.Length()(LONGINT));
+						audioDecoder.SetStreamLength(in(Codecs.FileInputStream).f.Length());
 					END;
 				ELSE
 					videoDecoder := Codecs.GetVideoDecoder(ext);
@@ -1209,7 +1209,7 @@ TYPE
 		BEGIN
 			IF (current # NIL) THEN
 				IF current.hasVideo THEN
-					res := (current.video.GetCurrentFrame()-current.filler.NofFullBuffers()(LONGINT));
+					res := (current.video.GetCurrentFrame()-current.filler.NofFullBuffers());
 					IF current.hasAudio THEN
 						audioPos := ENTIER(current.maxTime/10*current.posRate*(res/current.maxFrames) -
 							ENTIER(current.maxTime/10*current.posRate*(res/current.maxFrames)) MOD 12);
@@ -1221,7 +1221,7 @@ TYPE
 			END;
 			IF (next # NIL) THEN
 				IF next.hasVideo THEN
-					res := (next.video.GetCurrentFrame()-next.filler.NofFullBuffers()(LONGINT));
+					res := (next.video.GetCurrentFrame()-next.filler.NofFullBuffers());
 					IF next.hasAudio THEN
 						audioPos := ENTIER(next.maxTime/10*next.posRate*(res/next.maxFrames) -
 							ENTIER(next.maxTime/10*next.posRate*(res/next.maxFrames)) MOD 12);

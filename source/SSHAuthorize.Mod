@@ -61,7 +61,7 @@ VAR
 
 
 	PROCEDURE RequestService( VAR ssh: Connection;  CONST service: ARRAY OF CHAR ): BOOLEAN;
-	VAR p: T.Packet;  d: SIZE;  buf: ARRAY 256 OF CHAR;
+	VAR p: T.Packet;  d: LONGINT;  buf: ARRAY 256 OF CHAR;
 	BEGIN
 		NEW( p, ServiceRequest, 256 );
 		p.AppString( service );
@@ -74,7 +74,7 @@ VAR
 
 
 	PROCEDURE RequestAuthorizeNone( ssh: Connection;  CONST user: ARRAY OF CHAR ): BOOLEAN;
-	VAR p: T.Packet;  msg: ARRAY 512 OF CHAR;  len: SIZE;
+	VAR p: T.Packet;  msg: ARRAY 512 OF CHAR;  len: LONGINT;
 	BEGIN
 		NEW( p, UserauthRequest, 256 );
 		p.AppString( user );
@@ -114,7 +114,7 @@ VAR
 	PROCEDURE AuthorizePasswd( ssh: Connection; CONST host, user: ARRAY OF CHAR ): BOOLEAN;
 	VAR
 		msg: ARRAY 2048 OF CHAR;
-		len: SIZE;  try: INTEGER;
+		len: LONGINT;  try: INTEGER;
 	BEGIN
 		try := 1;
 		RequestConnPW( ssh, user, host, try );
@@ -141,7 +141,7 @@ VAR
 	END AuthorizePasswd;
 
 
-	PROCEDURE MakePubKeyBlob( VAR buf: ARRAY OF CHAR;  VAR len: SIZE );
+	PROCEDURE MakePubKeyBlob( VAR buf: ARRAY OF CHAR;  VAR len: LONGINT );
 	BEGIN
 		len := 0;
 		U.PutString( buf, len, "ssh-rsa" );
@@ -152,7 +152,7 @@ VAR
 
 
 	PROCEDURE CheckAuthorizeKey( ssh: Connection;  CONST user: ARRAY OF CHAR ): BOOLEAN;
-	VAR p: T.Packet;  buf: ARRAY 512 OF CHAR; len :SIZE;
+	VAR p: T.Packet;  buf: ARRAY 512 OF CHAR; len :LONGINT;
 	BEGIN
 		MakePubKeyBlob( buf, len );
 
@@ -182,7 +182,7 @@ VAR
 		PadLen = EmSize - MsgLen;
 	VAR
 		p: T.Packet;
-		blob, sig, buf: ARRAY 512 OF CHAR; pos, blen, len: SIZE;
+		blob, sig, buf: ARRAY 512 OF CHAR; pos, blen, len :LONGINT;
 		signature: B.BigNumber;
 		sha1: SHA1.Hash;
 		em: ARRAY EmSize OF CHAR;
@@ -302,4 +302,6 @@ VAR
 	END OpenConnection;
 
 END SSHAuthorize.
+
+
 

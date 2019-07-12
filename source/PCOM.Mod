@@ -293,10 +293,10 @@ BEGIN
 END FPrintMeth;
 
 PROCEDURE FPrintRecord(typ: PCT.Record;  current: PCT.Module);
-	VAR p: PCT.Symbol; fld: PCT.Variable; adr, flags, fp, pbfp, pvfp: LONGINT; tAttr: Struct;  oAttr: Symbol;
+	VAR p: PCT.Symbol; fld: PCT.Variable; adr, i, flags, fp, pbfp, pvfp: LONGINT; tAttr: Struct;  oAttr: Symbol;
 			scope: PCT.RecScope; intf: PCT.Interface;
 			name: ARRAY 32 OF CHAR; dump: BOOLEAN;
-			str: StringBuf; i: SIZE;
+			str: StringBuf;
 BEGIN
 	IF TraceFP THEN
 		PCT.GetTypeName(typ, name); dump := name = TraceFPName
@@ -386,8 +386,8 @@ END FPrintRecord;
 
 PROCEDURE FPrintTyp0(typ: PCT.Struct;  current: PCT.Module);
 (* calculate fingerprint without looking at record fields, private and public fingerprints *)
-	VAR fp: LONGINT; mode: SHORTINT; rec: PCT.Record; intf: PCT.Interface; tAttr: Struct;  base: PCT.Struct;
-		name: ARRAY 32 OF CHAR; dump: BOOLEAN; str: StringBuf; i: SIZE;
+	VAR fp, i: LONGINT; mode: SHORTINT; rec: PCT.Record; intf: PCT.Interface; tAttr: Struct;  base: PCT.Struct;
+		name: ARRAY 32 OF CHAR; dump: BOOLEAN; str: StringBuf;
 
 	PROCEDURE Name;	(*has side effects on the local variables!!!*)
 		(* VAR str: StringBuf; *)
@@ -767,7 +767,7 @@ PROCEDURE Export*(VAR r: PCM.Rider; M: PCT.Module; new, extend, skipImport: BOOL
 
 	PROCEDURE OutStruct(typ: PCT.Struct);
 		VAR  tAttr: Struct;  mAttr: Module;  name: StringBuf;  ptyp: PCT.Delegate;
-			i: SIZE; mname, tname: ARRAY 64 OF CHAR;
+			i: LONGINT; mname, tname: ARRAY 64 OF CHAR;
 	BEGIN
 		IF  typ.sym=NIL  THEN  NEW(tAttr, M);  typ.sym:=tAttr
 (*
@@ -906,7 +906,7 @@ PROCEDURE Export*(VAR r: PCM.Rider; M: PCT.Module; new, extend, skipImport: BOOL
 	END OutInline;
 
 	PROCEDURE OutModule(m: PCT.Module);
-		VAR first: BOOLEAN; i, j: SIZE; str: StringBuf;
+		VAR first: BOOLEAN; i, j: LONGINT; str: StringBuf;
 			mm: Module; scope: PCT.ProcScope;
 			v: PCT.Variable; p: PCT.Proc; t: PCT.Type; c: PCT.Value; p1, p2, pTmp, t1: PCT.Symbol;
 	BEGIN
@@ -1090,7 +1090,7 @@ END Export;
 (** Double structure size, copy elements into new structure *)
 
 PROCEDURE ExtendStructArray*(VAR a: StructArray);
-	VAR b: StructArray; i: SIZE;
+	VAR b: StructArray; i: LONGINT;
 BEGIN
 	IF a=NIL THEN  NEW(a, 16)
 	ELSE
@@ -1102,7 +1102,7 @@ END ExtendStructArray;
 
 PROCEDURE AddImport(VAR list: ImportList; idx: StringPool.Index);
 VAR
-	i: SIZE;
+	i: LONGINT;
 	newList: ImportList;
 BEGIN
 	IF list = NIL THEN

@@ -835,7 +835,7 @@ TYPE
 
 		PROCEDURE PrintOpcodeBytes*(w : Streams.Writer);
 		VAR
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN (code) - 1 DO
 				WriteHex8 (ORD (code[i]), w);
@@ -1371,7 +1371,7 @@ TYPE
 			FOR i := 0 TO maxArgs - 1 DO
 				IF arg[i] # NIL THEN
 					IF i > 0 THEN w.String (", ") END;
-					arg[i].Print (w);
+				 	arg[i].Print (w);
 				END
 			END
 		END PrintArguments;
@@ -1733,11 +1733,11 @@ TYPE
 
 			PROCEDURE Iv;
 			BEGIN
-				CASE GetOperandSize () OF
-				| 16: AddImm (ReadImm16 ());
-				| 32: AddImm (ReadImm32 ());
-				| 64: AddImm (ReadImm64 ());
-				END;
+				 CASE GetOperandSize () OF
+				 | 16: AddImm (ReadImm16 ());
+				 | 32: AddImm (ReadImm32 ());
+				 | 64: AddImm (ReadImm64 ());
+				 END;
 			END Iv;
 
 			PROCEDURE Iw; BEGIN AddImm (ReadInt ()) END Iw;
@@ -1756,11 +1756,11 @@ TYPE
 
 			PROCEDURE Ov;
 			BEGIN
-				CASE GetOperandSize () OF
-				| 16: AddMem (regNONE, regNONE, 1, regNONE, ReadOffset16 ());
-				| 32: AddMem (regNONE, regNONE, 1, regNONE, ReadOffset32 ());
-				| 64: AddMem (regNONE, regNONE, 1, regNONE, ReadOffset64 ());
-				END;
+				 CASE GetOperandSize () OF
+				 | 16: AddMem (regNONE, regNONE, 1, regNONE, ReadOffset16 ());
+				 | 32: AddMem (regNONE, regNONE, 1, regNONE, ReadOffset32 ());
+				 | 64: AddMem (regNONE, regNONE, 1, regNONE, ReadOffset64 ());
+				 END;
 			END Ov;
 
 			PROCEDURE Pq; BEGIN AddRMReg (regMMX0) END Pq;
@@ -2222,7 +2222,7 @@ TYPE
 					Reserved; RETURN;
 				END;
 
-				Pq; Qq;
+				 Pq; Qq;
 			END Group3DNow;
 
 			PROCEDURE Groupx87;
@@ -3247,5 +3247,7 @@ System.Free AMD64Decoder~
 AMD64Decoder.Init~
 Decoder.Open Test.Abx~
 
+
 System.Free Decoder~
 Decoder.Open Test.Bbx~
+

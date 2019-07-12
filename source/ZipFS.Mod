@@ -70,12 +70,12 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 		File = OBJECT (Files.File)
 			VAR F: Files.File; E: Unzip.Entry;
 
-			PROCEDURE Set*(VAR r: Files.Rider; pos: Files.Position);
+			PROCEDURE Set*(VAR r: Files.Rider; pos: LONGINT);
 			BEGIN
 				F.Set(r, pos); r.file := SELF
 			END Set;
 
-			PROCEDURE Pos*(VAR r: Files.Rider): Files.Position;
+			PROCEDURE Pos*(VAR r: Files.Rider): LONGINT;
 			BEGIN
 				RETURN F.Pos(r)
 			END Pos;
@@ -85,12 +85,12 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				F.Read(r, x)
 			END Read;
 
-			PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
+			PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
 			BEGIN
 				F.ReadBytes(r, x, ofs, len)
 			END ReadBytes;
 
-			PROCEDURE Length*(): Files.Size;
+			PROCEDURE Length*(): LONGINT;
 			BEGIN
 				RETURN F.Length()
 			END Length;
@@ -187,7 +187,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 	END NewFS;
 
 	PROCEDURE Finalization;
-		VAR ft: Files.FileSystemTable; i: SIZE;
+		VAR ft: Files.FileSystemTable; i: LONGINT;
 	BEGIN
 		IF Modules.shutdown = Modules.None THEN
 			Files.GetList(ft);
@@ -200,7 +200,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 	END Finalization;
 
 	PROCEDURE Init;
-		VAR fs: Files.FileSystemTable; i: SIZE;
+		VAR fs: Files.FileSystemTable; i: LONGINT;
 	BEGIN
 		i := 0;
 		Files.GetList(fs);

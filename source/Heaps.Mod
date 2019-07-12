@@ -189,7 +189,7 @@ TYPE
 	END GCStatus;
 
 	MarkStack = RECORD first{UNTRACED}: HeapBlock END;
-
+	
 VAR
 	marking-: BOOLEAN; (* do not rename: used by compiler for the write barriers *)
 	markStack: MarkStack;
@@ -315,7 +315,7 @@ END Mark;
 PROCEDURE TraverseMarkStack();
 VAR orgBlock: ADDRESS;(*: ADDRESS*); staticTypeBlock {UNTRACED}: StaticTypeBlock;
 	orgHeapBlock {UNTRACED}, next{UNTRACED}: HeapBlock;
-	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: SIZE;
+	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: LONGINT;
 	protected {UNTRACED}: ProtRecBlock;
 	b {UNTRACED}: POINTER {UNSAFE} TO RECORD p: ANY END;
 	meta {UNTRACED }: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; last, current, first: ADDRESS END;
@@ -367,7 +367,7 @@ END TraverseMarkStack;
 
 (** WriteType - Write a type name (for tracing only). *)
 PROCEDURE WriteType*(t: ADDRESS);	(* t is static type descriptor *)
-VAR m: ADDRESS; i: SIZE; ch: CHAR;
+VAR m: ADDRESS; i: LONGINT; ch: CHAR;
 	typeDesc: StaticTypeBlockU;
 BEGIN
 	typeDesc := t;
@@ -487,7 +487,7 @@ END LazySweep;
 (* -- useful for debugging --
 PROCEDURE CheckHeap;
 VAR memBlock {UNTRACED}: Machine.MemoryBlock; p, refBlock, currentArrayElemAdr, lastArrayElemAdr: ADDRESS;
-	heapBlock {UNTRACED}: HeapBlock; staticTypeBlock {UNTRACED}: StaticTypeBlock; i: SIZE;
+	heapBlock {UNTRACED}: HeapBlock; staticTypeBlock {UNTRACED}: StaticTypeBlock; i: LONGINT;
 
 	PROCEDURE CheckBlock(block: ADDRESS): BOOLEAN;
 	VAR heapBlockAdr: ADDRESS;
@@ -570,7 +570,7 @@ END CheckHeap;
 (* CheckCandidates - Check which candidates could be pointers, and mark them. (exported for debugging only) *)
 PROCEDURE CheckCandidates*;
 CONST MinDataOffset = BlockHeaderSize + SIZEOF(HeapBlockDesc) + BlockHeaderSize; (* minimal offset of data address with respect to block start address *)
-VAR i, j, h: SIZE; p, blockStart: ADDRESS; memBlock {UNTRACED}: Machine.MemoryBlock;
+VAR i, j, h: LONGINT; p, blockStart: ADDRESS; memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock {UNTRACED}: HeapBlock;
 BEGIN
 	(* {numCandidates > 0} *)
@@ -990,7 +990,7 @@ PROCEDURE NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN);
 VAR size, blockSize: SIZE; protRecBlockAdr, dataBlockAdr: ADDRESS;
 	protRecBlock: ProtRecBlockU;
 	dataBlock: DataBlockU;
-	i: SIZE;
+	i: LONGINT;
 	typeDesc: StaticTypeBlockU;
 BEGIN
 	typeDesc := tag;
@@ -1218,7 +1218,7 @@ BEGIN
 	IF (adr # NIL) & CAS(marking, FALSE, FALSE) THEN
 		any := adr;
 		Mark(any);
-	END;
+	END; 
 END MarkPointer;
 
 PROCEDURE MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU);

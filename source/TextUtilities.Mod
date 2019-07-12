@@ -35,7 +35,7 @@ TYPE
 
 	AttributesBuf*=RECORD
 	 	attributes: POINTER TO ARRAY OF Texts.Attributes;
-		positions: POINTER TO ARRAY OF SIZE;
+		positions: POINTER TO ARRAY OF LONGINT;
 		length: LONGINT;
 	END;
 
@@ -47,7 +47,7 @@ TYPE
 		fontStyle : SET;
 		currentAttributes- : Texts.Attributes;
 		oldBytes : ARRAY 7 OF CHAR;
-		nofOldBytes : SIZE;
+		nofOldBytes : LONGINT;
 		attributesBuf: AttributesBuf;
 
 		PROCEDURE &Init*(text : Texts.Text);
@@ -67,11 +67,11 @@ TYPE
 			InitWriter (Add, 128 * 1024);
 		END Init;
 
-		PROCEDURE Add(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR
-			p, i, idx, pos : SIZE;
-			nextAttribute: SIZE;
-			pieceOffset, pieceLength: SIZE;
+			p, i, idx, pos : LONGINT;
+			nextAttribute: LONGINT;
+			pieceOffset, pieceLength: LONGINT;
 			nextAttributes: Texts.Attributes;
 		BEGIN
 			pieceOffset := ofs; pieceLength := len;
@@ -127,7 +127,7 @@ TYPE
 			IF attributesBuf.length = LEN(attributesBuf.attributes) THEN Update(); END;
 			i := attributesBuf.length;
 			attributesBuf.attributes[i] := attributes;
-			attributesBuf.positions[i] := (Pos()-sent)(SIZE);
+			attributesBuf.positions[i] := Pos()-sent;
 			INC(i);
 			attributesBuf.length := i;
 		END SetAttributes;
@@ -199,8 +199,8 @@ TYPE
 			InitReader (Receive, Streams.DefaultReaderSize);
 		END Init;
 
-		PROCEDURE Receive (VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
-		VAR ucs32: LONGINT; prevofs, offs: SIZE;
+		PROCEDURE Receive (VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD);
+		VAR ucs32, prevofs: LONGINT;
 		BEGIN
 			reader.text.AcquireRead;
 			len := 0; res := Streams.Ok;
@@ -211,13 +211,12 @@ TYPE
 					reader.ReadCh (ucs32);
 				END;
 				prevofs := ofs;
-				IF (ucs32 = 0) OR ~UTF8Strings.EncodeChar (ucs32, buf, offs) THEN
+				IF (ucs32 = 0) OR ~UTF8Strings.EncodeChar (ucs32, buf, ofs) THEN
 					remainder := ucs32;
 					IF len < min THEN res := Streams.EOF END;
 					reader.text.ReleaseRead;
 					RETURN
 				END;
-				ofs := offs;
 				INC (len, ofs - prevofs);
 			END;
 			reader.text.ReleaseRead;
@@ -231,7 +230,7 @@ TYPE
 		PROCEDURE SetPos*(pos: Streams.Position);
 		BEGIN
 			reader.text.AcquireRead;
-			reader.SetPosition(pos(SIZE)); (* pos is clipped *)
+			reader.SetPosition(pos); (* pos is clipped *)
 			received := reader.GetPosition(); (* this effects that Streams.Reader.Pos() returns the correct location in the text *)
 			Reset;
 			remainder := 0;
@@ -241,8 +240,8 @@ TYPE
 	END TextReader;
 
 TYPE
-	Positions = POINTER TO ARRAY OF SIZE;
-	Operation = RECORD op : WORD; pos, len : SIZE END;
+	LongintArray = POINTER TO ARRAY OF LONGINT;
+	Operation = RECORD op, pos, len : LONGINT END;
 	Operations  = POINTER TO ARRAY OF Operation;
 
 	TextSelection*=OBJECT
@@ -251,10 +250,10 @@ TYPE
 	END TextSelection;
 
 	TextPositionKeeper* = OBJECT(Texts.TextPosition);
-	VAR positions : Positions;
-		nofPositions : SIZE;
+	VAR positions : LongintArray;
+		nofPositions : LONGINT;
 		operations : Operations;
-		nofOperations, nofDeleted : SIZE;
+		nofOperations, nofDeleted : LONGINT;
 
 		PROCEDURE &New*(t : Texts.Text);
 		BEGIN
@@ -264,7 +263,7 @@ TYPE
 		END New;
 
 		PROCEDURE GrowOperations;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 			t : Operations;
 		BEGIN
 			NEW(t, nofOperations * 2);
@@ -273,7 +272,7 @@ TYPE
 		END GrowOperations;
 
 		PROCEDURE Cleanup;
-		VAR i, j, p, pos : SIZE; op: WORD;
+		VAR i, j, p, op, pos : LONGINT;
 		BEGIN
 			IF nofOperations = 0 THEN RETURN END;
 			FOR i := 0 TO nofPositions - 1 DO
@@ -294,7 +293,7 @@ TYPE
 		END Cleanup;
 
 		(** Listens for text changes *)
-		PROCEDURE Changed*(op : WORD; pos, len : SIZE);
+		PROCEDURE Changed*(op, pos, len :  LONGINT);
 		CONST MaxOperations = 4096;
 		BEGIN
 			IF nofOperations > MaxOperations THEN Cleanup END;
@@ -306,22 +305,22 @@ TYPE
 		END Changed;
 
 		PROCEDURE GrowPositions;
-		VAR i : SIZE;
-			t : Positions;
+		VAR i : LONGINT;
+			t : LongintArray;
 		BEGIN
 			NEW(t, nofPositions * 2);
 			FOR i := 0 TO nofPositions - 1 DO t[i] := positions[i] END;
 			positions := t
 		END GrowPositions;
 
-		PROCEDURE DeletePos*(index : SIZE);
+		PROCEDURE DeletePos*(index : LONGINT);
 		BEGIN
 			positions[index] := -1;
 			INC(nofDeleted)
 		END DeletePos;
 
-		PROCEDURE AddPos*(pos : SIZE) : SIZE;
-		VAR i : SIZE;
+		PROCEDURE AddPos*(pos : LONGINT) : LONGINT;
+		VAR i  : LONGINT;
 		BEGIN
 			ASSERT(pos >= 0);
 			Cleanup;
@@ -346,14 +345,14 @@ TYPE
 		END Clear;
 
 		(** Returns position in elements from the text start *)
-		PROCEDURE GetPos*(index : SIZE): SIZE;
+		PROCEDURE GetPos*(index : LONGINT):LONGINT;
 		BEGIN
 			Cleanup;
 			RETURN positions[index]
 		END GetPos;
 
 		(** Change the position associated with index*)
-		PROCEDURE SetPos*(index, pos : SIZE);
+		PROCEDURE SetPos*(index, pos : LONGINT);
 		BEGIN
 			Cleanup;
 			positions[index] := pos
@@ -375,7 +374,7 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE LoadLibrary(buf: Strings.Buffer; pos: SIZE; VARflen:LONGINT);
+		PROCEDURE LoadLibrary(buf: Strings.Buffer; pos:LONGINT; VARflen:LONGINT);
 		END LoadLibrary;
 
 		PROCEDURE IndexToColor(index: LONGINT): LONGINT;
@@ -386,9 +385,9 @@ TYPE
 					ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {0..1}), 7-1)
 		END IndexToColor;
 
-		PROCEDURE InsertPiece(ofs, len : SIZE; attr : Texts.Attributes);
-		VAR i, j, m : SIZE; ch, last : CHAR; tempUCS32 : ARRAY 1024 OF Char32;
-			oldpos : SIZE;
+		PROCEDURE InsertPiece(ofs, len : LONGINT; attr : Texts.Attributes);
+		VAR i, j, m : LONGINT; ch, last : CHAR; tempUCS32 : ARRAY 1024 OF Char32;
+			oldpos : LONGINT;
 		BEGIN
 			m := LEN(tempUCS32) - 1;
 			sreader.SetPos(ofs);
@@ -412,7 +411,8 @@ TYPE
 		CONST DocBlockId = 0F7X; OldTextBlockId = 1X; TextBlockId = 0F0X; OldTextSpex = 0F0X; TextSpex = 1X; LibBlockId = 0DBX;
 		VAR
 			ch: CHAR;
-			buflen: SIZE;
+			tempInt : LONGINT;
+			buflen: LONGINT;
 
 			attr : Texts.Attributes;
 			tattr : Texts.FontInfo;
@@ -421,9 +421,7 @@ TYPE
 			voff: SHORTINT;
 			lib :SHORTINT;
 			type, tag: CHAR;
-			len, hlen, tlen, flen: LONGINT;
-			n, off: SIZE;
-			tempInt, pos: Streams.Position;
+			len, flen, n, off, hlen, tlen, pos, templen: LONGINT;
 			x, y, w, h: INTEGER;
 			temp: ARRAY 4096 OF CHAR;
 			name, lName: ARRAY 32 OF CHAR;
@@ -459,7 +457,7 @@ TYPE
 				reader.RawString(name); reader.RawInt(x); reader.RawInt(y); reader.RawInt(w); reader.RawInt(h);
 				ch := reader.Get();
 				IF ch = 0F7X THEN	(* skip meta info *)
-					ch := reader.Get(); IF ch = 08X THEN reader.RawLInt(len); reader.Bytes(temp, 0, len, buflen); ch := reader.Get(); END;
+					ch := reader.Get(); IF ch = 08X THEN reader.RawLInt(len); reader.Bytes(temp, 0, len, templen); ch := reader.Get(); END;
 				END
 			END;
 			pos := reader.Pos();
@@ -479,11 +477,11 @@ TYPE
 					sreader.SetPos(tempInt);
 					tag := sreader.Get();
 
-					IF tag = LibBlockId THEN LoadLibrary(buffer, pos(SIZE) - 1 + hlen + tlen + 1, flen) END;
+					IF tag = LibBlockId THEN LoadLibrary(buffer, pos - 1 + hlen + tlen + 1, flen) END;
 					INC(flen)
 				END;
 				n := 1;
-				off := pos(SIZE) - 1 + hlen;
+				off := pos - 1 + hlen;
 				WHILE reader.Pos() < pos - 1 + hlen - 5 DO
 					reader.RawSInt(lib);
 					IF lib = n THEN
@@ -608,14 +606,14 @@ TYPE
 			RETURN ColorToIndex(color DIV 100H)
 		END GetOberonColor;
 
-		PROCEDURE WritePiece(len: SIZE);
-		VAR i: SIZE; oname : ARRAY 32 OF CHAR;
+		PROCEDURE WritePiece(len: LONGINT);
+		VAR i :LONGINT; oname : ARRAY 32 OF CHAR;
 		BEGIN
 			IF (font # NIL) THEN
 				i := 0; WHILE (i < nofFonts)  &  (~fonts[i].IsEqual(font)) DO INC(i) END;
 				IF (i = nofFonts) THEN
 					IF ToOberonFont(font.name, font.size, font.style, oname) THEN
-						w.RawSInt(SHORTINT(i+1));
+						w.RawSInt(SHORT(SHORT(i+1)));
 						IF i = nofFonts THEN w.RawString(oname); fonts[nofFonts] := font; INC(nofFonts) END
 					ELSE
 						w.RawSInt(1);
@@ -626,7 +624,7 @@ TYPE
 							INC(nofFonts)
 						END;
 					END
-				ELSE w.RawSInt(SHORTINT(i+1));
+				ELSE w.RawSInt(SHORT(SHORT(i+1)));
 				END
 			ELSE
 				w.RawSInt(1);
@@ -640,15 +638,14 @@ TYPE
 			firstPiece := FALSE;
 			w.RawSInt(SHORT(SHORT(GetOberonColor(color))));
 			w.RawSInt(SHORT(SHORT(-voff)));
-			w.RawLInt(len(LONGINT));
+			w.RawLInt(len);
 		END WritePiece;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		CONST TextBlockId = 0F0X;
 		VAR r: Texts.TextReader;
 			ch :Char32;
-			startPos, i, len : SIZE;
-			tempInt: Streams.Position;
+			startPos, i, len, tempInt : LONGINT;
 		BEGIN
 			(* define Oberon colors *)
 			oberonColors[0] := LONGINT(0FFFFFFFFH); oberonColors[1] := LONGINT(0FF0000FFH); oberonColors[2] := 000FF00FFH; oberonColors[3] := 00000FFFFH;
@@ -682,9 +679,9 @@ TYPE
 			UNTIL r.eot;
 			WritePiece(len + 1 - startPos);
 			w.Char(0X); (* ??? *)
-			w.RawLInt(len(LONGINT)); (* tLen ? *)
+			w.RawLInt(len); (* tLen ? *)
 			w.Update;
-			hLen := w.Pos()(LONGINT);
+			hLen := w.Pos();
 
 			(* pure text ... *)
 			r.SetPosition(0);
@@ -770,8 +767,8 @@ TYPE
 			errors := TRUE
 		END Error;
 
-		PROCEDURE GetUTF8Char(r : Streams.Reader; VAR u : Texts.Char32; VAR pos : SIZE) : BOOLEAN;
-		VAR ch : ARRAY 8 OF CHAR; i : SIZE;
+		PROCEDURE GetUTF8Char(r : Streams.Reader; VAR u : Texts.Char32; VAR pos : LONGINT) : BOOLEAN;
+		VAR ch : ARRAY 8 OF CHAR; i : LONGINT;
 		BEGIN
 			ch[0] := r.Get(); INC(pos);
 			FOR i := 1 TO ORD(UTF8Strings.CodeLength[ORD(ch[0])]) - 1 DO ch[i] := r.Get(); INC(pos) END;
@@ -780,8 +777,8 @@ TYPE
 		END GetUTF8Char;
 
 		PROCEDURE InsertPiece(charContent : XML.CDataSect);
-		VAR i, m: SIZE; tpos: SIZE; res : WORD; ch, last : Texts.Char32; tempUCS32 : ARRAY 1024 OF Texts.Char32;
-			oldpos, len : SIZE;
+		VAR i, m, tpos: LONGINT; res : WORD; ch, last : Texts.Char32; tempUCS32 : ARRAY 1024 OF Texts.Char32;
+			oldpos, len : LONGINT;
 			r, sr : Streams.StringReader; token : ARRAY 256 OF CHAR;
 			tempInt: LONGINT;
 			buffer : Strings.String;
@@ -887,9 +884,9 @@ TYPE
 			text.SetLink(oldpos, text.GetLength()-oldpos, link);
 		END InsertPiece;
 
-		PROCEDURE InsertChar(pos : SIZE; ch : Texts.Char32);
+		PROCEDURE InsertChar(pos : LONGINT; ch : Texts.Char32);
 		VAR bufUCS32 : ARRAY 2 OF Texts.Char32;
-			oldpos : SIZE;
+			oldpos : LONGINT;
 			cStyle : Texts.CharacterStyle;
 			pStyle : Texts.ParagraphStyle;
 		BEGIN
@@ -908,7 +905,7 @@ TYPE
 			IF (link # NIL) THEN text.SetLink(oldpos, text.GetLength()-oldpos, link); KernelLog.String("bonk"); END;
 		END InsertChar;
 
-		PROCEDURE MalformedXML(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+		PROCEDURE MalformedXML(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			Error(msg);
 		END MalformedXML;
@@ -1208,10 +1205,10 @@ TYPE
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
 		VAR
 			buf : Strings.String; rbuf : ARRAY 4 OF CHAR;
-			bytesPerChar, length, counter : SIZE;
+			bytesPerChar, length, counter : LONGINT;
 
-			PROCEDURE ExpandBuf(VAR oldBuf: Strings.String; newSize: SIZE);
-			VAR newBuf: Strings.String; i: SIZE;
+			PROCEDURE ExpandBuf(VAR oldBuf: Strings.String; newSize: LONGINT);
+			VAR newBuf: Strings.String; i: LONGINT;
 			BEGIN
 				IF LEN(oldBuf^) >= newSize THEN RETURN END;
 				NEW(newBuf, newSize);
@@ -1377,7 +1374,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i, p : LONGINT; resstr : ARRAY 7 OF CHAR;
 		BEGIN
 			res := -1;
 			text.AcquireRead;
@@ -1455,7 +1452,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
 		BEGIN
 			res :=  -1;
 			text.AcquireRead;
@@ -1484,7 +1481,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR i, j, m : SIZE;
+		VAR i, j, m : LONGINT;
 			tempUCS32 : ARRAY 1057 OF Char32; (* 1025 *)
 			ch : CHAR;
 			byte : ARRAY 3 OF CHAR;
@@ -1540,7 +1537,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i, j: SIZE; k : WORD;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i, j: LONGINT; k : WORD;
 			byte : ARRAY 2 OF CHAR;
 		BEGIN
 			res :=  -1;
@@ -1596,9 +1593,9 @@ BEGIN
 END IsAlphaNum;
 
 (** Find the position of the next word start to the left *)
-PROCEDURE FindPosWordLeft*(utilreader: Texts.TextReader; pos : SIZE) : SIZE;
+PROCEDURE FindPosWordLeft*(utilreader: Texts.TextReader; pos : LONGINT) : LONGINT;
 VAR ch : Texts.Char32;
-	new : SIZE;
+	new : LONGINT;
 BEGIN
 	utilreader.SetPosition(pos); utilreader.SetDirection(-1);
 	utilreader.ReadCh(ch);
@@ -1631,9 +1628,9 @@ BEGIN
 END FindPosWordLeft;
 
 (** Find the position of the next word start to the right *)
-PROCEDURE FindPosWordRight*(utilreader: Texts.TextReader; pos : SIZE) : SIZE;
+PROCEDURE FindPosWordRight*(utilreader: Texts.TextReader; pos : LONGINT) : LONGINT;
 VAR ch : Texts.Char32;
-	new : SIZE;
+	new : LONGINT;
 BEGIN
 	utilreader.SetPosition(pos); utilreader.SetDirection(1);
 	utilreader.ReadCh(ch);
@@ -1666,7 +1663,7 @@ BEGIN
 END FindPosWordRight;
 
 (* rearch left until the first NewLineChar is encountered. Return the position of the following character *)
-PROCEDURE FindPosLineStart* (utilreader: Texts.TextReader; pos: SIZE): SIZE;
+PROCEDURE FindPosLineStart* (utilreader: Texts.TextReader; pos: LONGINT): LONGINT;
 VAR ch : Texts.Char32;
 BEGIN
 	utilreader.SetPosition(pos - 1);
@@ -1679,9 +1676,9 @@ BEGIN
 END FindPosLineStart;
 
 (** Search right in the text until the first non whitespace is encountered. Return the number of whitespace characters *)
-PROCEDURE CountWhitespace* (utilreader: Texts.TextReader; pos: SIZE): SIZE;
+PROCEDURE CountWhitespace* (utilreader: Texts.TextReader; pos: LONGINT): LONGINT;
 VAR ch : Texts.Char32;
-	count : SIZE;
+	count : LONGINT;
 BEGIN
 	utilreader.SetPosition(pos);
 	utilreader.SetDirection(1);
@@ -1903,7 +1900,7 @@ END StoreText;
 
 (** Text to UTF8 string. Objects and attributes are lost. The String is truncated if buffer is too small *)
 PROCEDURE TextToStr*(text : Text; VAR string : ARRAY OF CHAR);
-VAR i, l, pos : SIZE; r : Texts.TextReader; ch : Texts.Char32; ok : BOOLEAN;
+VAR i, l, pos : LONGINT; r : Texts.TextReader; ch : Texts.Char32; ok : BOOLEAN;
 BEGIN
 	text.AcquireRead;
 	COPY("", string);
@@ -1919,8 +1916,8 @@ END TextToStr;
 
 (** 	Write <length> characters starting at <start> to stream <w>. Objects and attributes are lost
 	Caller MUST HOLD lock!!! *)
-PROCEDURE SubTextToStream*(text : Text; start, length : SIZE; w : Streams.Writer);
-VAR r : Texts.TextReader; ok : BOOLEAN; ch : Texts.Char32; buffer : ARRAY 6 OF CHAR; i : SIZE;
+PROCEDURE SubTextToStream*(text : Text; start, length : LONGINT; w : Streams.Writer);
+VAR r : Texts.TextReader; ok : BOOLEAN; ch : Texts.Char32; buffer : ARRAY 6 OF CHAR; i : LONGINT;
 BEGIN
 	ASSERT((text # NIL) & (text.HasReadLock()));
 	ASSERT((0 <= start) & (length >= 0) & (start + length <= text.GetLength()));
@@ -1945,7 +1942,7 @@ END SubTextToStream;
 
 (** Text to stream as UTF-8. Objects and attributes are lost. *)
 PROCEDURE TextToStream*(text : Text; w : Streams.Writer);
-VAR length : SIZE;
+VAR length : LONGINT;
 BEGIN
 	ASSERT((text # NIL) & (w # NIL));
 	text.AcquireRead;
@@ -1957,8 +1954,8 @@ BEGIN
 END TextToStream;
 
 (** Text to UTF8 string. Objects and attributes are lost. The String is truncated if buffer is too small *)
-PROCEDURE SubTextToStrAt*(text : Text; startPos, len : SIZE; VAR index : SIZE; VAR string : ARRAY OF CHAR);
-VAR i, length, pos : SIZE; r : Texts.TextReader; ch : Texts.Char32; ok : BOOLEAN;
+PROCEDURE SubTextToStrAt*(text : Text; startPos, len : LONGINT; VAR index : LONGINT; VAR string : ARRAY OF CHAR);
+VAR i, length, pos : LONGINT; r : Texts.TextReader; ch : Texts.Char32; ok : BOOLEAN;
 BEGIN
 	ASSERT((0 <= index) & (index < LEN(string)));
 	text.AcquireRead;
@@ -1982,15 +1979,15 @@ BEGIN
 END SubTextToStrAt;
 
 (** Text to UTF8 string. Objects and attributes are lost. The String is truncated if buffer is too small *)
-PROCEDURE SubTextToStr*(text : Text; startPos, len : SIZE; VAR string : ARRAY OF CHAR);
-VAR index : SIZE;
+PROCEDURE SubTextToStr*(text : Text; startPos, len : LONGINT; VAR string : ARRAY OF CHAR);
+VAR index : LONGINT;
 BEGIN
 	index := 0;
 	SubTextToStrAt(text, startPos, len, index, string);
 END SubTextToStr;
 
 (** insert utf8 string into text *)
-PROCEDURE StrToText*(text : Text; pos : SIZE; CONST string : ARRAY OF CHAR);
+PROCEDURE StrToText*(text : Text; pos : LONGINT; CONST string : ARRAY OF CHAR);
 VAR r : Streams.StringReader;
 	i, m: LONGINT;
 	tempUCS32 : ARRAY 1024 OF Char32;
@@ -2058,7 +2055,7 @@ BEGIN
 END ToOberonFont;
 
 PROCEDURE GetUTF8Char*(r : Streams.Reader; VAR u : Texts.Char32) : BOOLEAN;
-VAR ch : ARRAY 8 OF CHAR; i : SIZE;
+VAR ch : ARRAY 8 OF CHAR; i : LONGINT;
 BEGIN
 	ch[0] := r.Get();
 	FOR i := 1 TO ORD(UTF8Strings.CodeLength[ORD(ch[0])]) - 1 DO ch[i] := r.Get() END;
@@ -2067,7 +2064,7 @@ BEGIN
 END GetUTF8Char;
 
 PROCEDURE WriteUTF8Char*(w : Streams.Writer; ch : Char32);
-VAR str : ARRAY 8 OF CHAR; i : SIZE;
+VAR str : ARRAY 8 OF CHAR; i : LONGINT;
 BEGIN
 	i := 0; IF UTF8Strings.EncodeChar(ch, str, i) THEN w.Bytes(str, 0, i) END
 END WriteUTF8Char;
@@ -2126,7 +2123,7 @@ END Convert;
 
 PROCEDURE ConvertAll*(context : Commands.Context);
 VAR enumerator : Files.Enumerator;
-	filename : Files.FileName; flags : SET; time, date : LONGINT; size: Files.Size;
+	filename : Files.FileName; flags : SET; time, date, size : LONGINT;
 BEGIN
 	NEW(enumerator);
 	enumerator.Open("", {});
@@ -2178,7 +2175,7 @@ END ConvertFile;
 
 (* ------------------------------------------------------------------------- *)
 
-PROCEDURE SkipLine(utilreader: Texts.TextReader; pos: SIZE): SIZE;
+PROCEDURE SkipLine(utilreader: Texts.TextReader; pos: LONGINT): LONGINT;
 VAR ch : Texts.Char32;
 BEGIN
 	utilreader.SetPosition(pos );
@@ -2188,7 +2185,7 @@ BEGIN
 	RETURN utilreader.GetPosition()
 END SkipLine;
 
-PROCEDURE IndentText*(text : Texts.Text; from, to : SIZE; minus : BOOLEAN);
+PROCEDURE IndentText*(text : Texts.Text; from, to : LONGINT; minus : BOOLEAN);
 VAR r : Texts.TextReader;
 	p, pto : Texts.TextPosition;
 	tab : ARRAY 2 OF Texts.Char32;
@@ -2215,8 +2212,8 @@ BEGIN
 	text.ReleaseWrite
 END IndentText;
 
-PROCEDURE UCS32StrLength*(CONST string: ARRAY OF Char32): SIZE;
-VAR len: SIZE;
+PROCEDURE UCS32StrLength*(CONST string: ARRAY OF Char32): LONGINT;
+VAR len: LONGINT;
 BEGIN
 	len := 0; WHILE (string[len] # 0) DO INC(len) END;
 	RETURN len
@@ -2225,11 +2222,11 @@ END UCS32StrLength;
 (** returns the position of the first occurrence of pattern (ucs32) in the text or -1 if no occurrence is found *)
 (* Rabin-Karp algorithm, adopted from Sedgewick *)
 (* efficiency could be improved by not seeking so much *)
-PROCEDURE Pos*(CONST pattern: ARRAY OF Char32; from : SIZE; text : Text): SIZE;
+PROCEDURE Pos*(CONST pattern: ARRAY OF Char32; from : LONGINT; text : Text): LONGINT;
 CONST
 	q = 8204957;	(* prime number, {(d+1) * q <= MAX(LONGINT)} *)
 	d = 256;			(* number of different characters *)
-VAR h1, h2, dM: LONGINT; i, j, m, n: SIZE; ch : Char32; found : BOOLEAN; r : Texts.TextReader;
+VAR h1, h2, dM, i, j, m, n: LONGINT; ch : Char32; found : BOOLEAN; r : Texts.TextReader;
 BEGIN (* caller must hold read lock on text *)
 	m := UCS32StrLength(pattern); n := text.GetLength();
 	IF (from + m > n) THEN RETURN -1 END;
@@ -2277,8 +2274,8 @@ BEGIN
 END UpperCaseChar32;
 
 (* Compare the pattern string of length 'length' with the string at the current position/direction of the text reader 'r' *)
-PROCEDURE Equals(CONST pattern : ARRAY OF Char32; r : Texts.TextReader; length : SIZE; ignoreCase : BOOLEAN) : BOOLEAN;
-VAR ch, chp : Texts.Char32; equals : BOOLEAN; i : SIZE;
+PROCEDURE Equals(CONST pattern : ARRAY OF Char32; r : Texts.TextReader; length : LONGINT; ignoreCase : BOOLEAN) : BOOLEAN;
+VAR ch, chp : Texts.Char32; equals : BOOLEAN; i : LONGINT;
 BEGIN
 	i := 0; equals := TRUE;
 	WHILE (i < length) DO
@@ -2294,11 +2291,11 @@ END Equals;
  * backwards directed searching.
  * Returns the position of the first character of the first occurence of 'pattern' in 'text'  in search direction or -1 if pattern not found
  *)
-PROCEDURE GenericPos*(CONST pattern: ARRAY OF Char32; from : SIZE; text : Text; ignoreCase, backwards : BOOLEAN): SIZE;
+PROCEDURE GenericPos*(CONST pattern: ARRAY OF Char32; from : LONGINT; text : Text; ignoreCase, backwards : BOOLEAN): LONGINT;
 CONST
 	q = 8204957;	(* prime number, {(d+1) * q <= MAX(LONGINT)} *)
 	d = 256;			(* number of different characters *)
-VAR h1, h2, dM: LONGINT; i, patternLength, stringLength: SIZE; ch : Char32; found : BOOLEAN; r : Texts.TextReader;
+VAR h1, h2, dM, i, patternLength, stringLength: LONGINT; ch : Char32; found : BOOLEAN; r : Texts.TextReader;
 BEGIN (* caller must hold read lock on text *)
 	patternLength := UCS32StrLength(pattern); stringLength := text.GetLength();
 
@@ -2398,8 +2395,8 @@ BEGIN (* caller must hold read lock on text *)
 	END;
 END GenericPos;
 
-PROCEDURE Replace*(CONST string, by :Texts.UCS32String; text : Texts.Text; VAR nofReplacements : SIZE);
-VAR pos, stringLen, byLen : SIZE;
+PROCEDURE Replace*(CONST string, by :Texts.UCS32String; text : Texts.Text; VAR nofReplacements : LONGINT);
+VAR pos, stringLen, byLen : LONGINT;
 BEGIN
 	ASSERT(text # NIL);
 	nofReplacements := 0;

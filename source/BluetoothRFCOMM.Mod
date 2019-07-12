@@ -444,12 +444,12 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE Sender(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 
 		VAR
 			info : ARRAY 127 OF CHAR;
 			infoLength : LONGINT;
-			i : SIZE;
+			i : LONGINT;
 
 		BEGIN
 
@@ -480,7 +480,7 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 
 		BEGIN
 
@@ -693,14 +693,14 @@ TYPE
 			END;
 		END ReleaseChannel;
 
-		PROCEDURE SendInformation*(serverChannel : LONGINT; info : ARRAY OF CHAR; infoLength : SIZE);
+		PROCEDURE SendInformation*(serverChannel : LONGINT; info : ARRAY OF CHAR; infoLength : LONGINT);
 		VAR
 			result : WORD;
 		BEGIN
 			channelList[serverChannel * 2].Sender(info,0,infoLength,TRUE,result);
 		END SendInformation;
 
-		PROCEDURE ReceiveInformation*(serverChannel : LONGINT; VAR info : ARRAY OF CHAR; VAR infoLength : SIZE);
+		PROCEDURE ReceiveInformation*(serverChannel : LONGINT; VAR info : ARRAY OF CHAR; VAR infoLength : LONGINT);
 		VAR
 			result : WORD;
 		BEGIN

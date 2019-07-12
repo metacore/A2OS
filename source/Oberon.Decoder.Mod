@@ -156,7 +156,7 @@ MODULE Decoder IN Oberon;	(** non-portable *) (* NM 2.3.93 / 26.10.93 *)
 
 	PROCEDURE WriteString (str: ARRAY OF CHAR);
 	BEGIN
-		IF ~suppressOut THEN	Texts.WriteString(W, str); column:= column + INTEGER(LEN(str))	END
+		IF ~suppressOut THEN	Texts.WriteString(W, str); column:= column + SHORT(LEN(str))	END
 	END WriteString;
 
 	PROCEDURE Write (ch: CHAR);
@@ -1988,7 +1988,7 @@ MODULE Decoder IN Oberon;	(** non-portable *) (* NM 2.3.93 / 26.10.93 *)
 			END
 	END IA32Decoder;
 
-	PROCEDURE Dump (size: SIZE);
+	PROCEDURE Dump (size: LONGINT);
 		VAR op, pe: INTEGER;
 	BEGIN
 		pc:= 0; pe := 0; target := {};  OpPos := OpPosC; RMPos := RMPosC;
@@ -2027,11 +2027,10 @@ MODULE Decoder IN Oberon;	(** non-portable *) (* NM 2.3.93 / 26.10.93 *)
 
 	PROCEDURE Reference (size: LONGINT);
 		VAR
-			offs, dim: LONGINT;
+			offs, dim, i: LONGINT;
 			name: ARRAY 64 OF CHAR;
 			b, par, sl, lev: CHAR;
 			old: ProcArray;
-			i: SIZE;
 
 			PROCEDURE GetName(VAR name: ARRAY OF CHAR);
 				VAR i: LONGINT;

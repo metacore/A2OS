@@ -57,7 +57,7 @@ TYPE
 			IGNORE Kernel32.CloseHandle( handle );  KernelLog.String("Disk closed"); KernelLog.Ln;
 		END Finish;
 
-		PROCEDURE Transfer*( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD );
+		PROCEDURE Transfer*( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD );
 		VAR bool, n,err: LONGINT;  pos: HUGEINT;  poslow, poshigh: LONGINT;  large: Kernel32.LargeInteger;
 		BEGIN {EXCLUSIVE}
 			IF (block < 0) OR (num < 1) OR (block + num > size) THEN res := BlockNumberInvalid;  RETURN;  END;
@@ -155,7 +155,7 @@ VAR
 	END RemoveDisk;
 
 	PROCEDURE IsMounted( dev: Disks.Device ): BOOLEAN;
-	VAR i: SIZE;
+	VAR i: LONGINT;
 	BEGIN
 		IF dev.table # NIL THEN
 			FOR i := 0 TO LEN( dev.table ) - 1 DO

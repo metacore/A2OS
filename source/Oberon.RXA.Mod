@@ -555,7 +555,7 @@ PROCEDURE Search*( dfa : DFA; line : ARRAY OF CHAR; VAR beg, end : INTEGER );
 *)
 
 	VAR state, i, pos, ch : INTEGER;
-		len : SIZE;
+		len : LONGINT;
 		block : ARRAY( nofsubexpr ) OF BOOLEAN;
 
 	PROCEDURE SavePos( subset : SET; state : INTEGER );

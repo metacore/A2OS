@@ -165,7 +165,7 @@ MODULE FTPDocs IN Oberon; (** portable *)	(* ejz, , some tips by bh & pm *)
 	END Close2;
 
 	PROCEDURE QuerySystem(S: Session);
-		VAR pos: SIZE;
+		VAR pos: LONGINT;
 	BEGIN
 		S.system := UNIX;
 		SendCmd(S, "SYST"); ReadResponse(S, line);
@@ -810,8 +810,7 @@ MODULE FTPDocs IN Oberon; (** portable *)	(* ejz, , some tips by bh & pm *)
 (** Parsing of an ftp url. *)
 	PROCEDURE SplitFTPAdr*(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): LONGINT;
 		VAR
-			key: LONGINT;
-			i, j, l: SIZE;
+			key, i, j, l: LONGINT;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
 		BEGIN
@@ -1125,7 +1124,7 @@ MODULE FTPDocs IN Oberon; (** portable *)	(* ejz, , some tips by bh & pm *)
 	PROCEDURE ShowEntry(entry: ARRAY OF CHAR);
 		VAR
 			link: Objects.Object;
-			i, j, beg0, beg1, beg2: SIZE; begL, key: LONGINT;
+			i, j, beg0, beg1, beg2, begL, key: LONGINT;
 			name: ARRAY 64 OF CHAR;
 	BEGIN
 		begL := -1;

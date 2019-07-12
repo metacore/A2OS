@@ -50,7 +50,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Reset;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			nofElements := 0;
 			IF (types # NIL) THEN
@@ -359,7 +359,7 @@ END WriteB;
 
 PROCEDURE ModuleDetails*(context : Commands.Context); (** [Options] module ~ *)
 VAR
-	m : Modules.Module; i: SIZE; j, k: LONGINT;
+	m : Modules.Module; i, j, k: LONGINT;
 	p, procAdr: ADDRESS;
 	adr : ADDRESS;
 	modn : ARRAY 33 OF CHAR;
@@ -885,4 +885,6 @@ Info.RecentAllocators --clear   --scale=2400000 ~
 Info.RecentAllocators    --scale=2400000 ~
 Info.RecentAllocators --clear ~
 Info.ClearRecentAllocators  ~
+
+
 

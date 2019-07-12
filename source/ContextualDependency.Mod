@@ -2,7 +2,7 @@ MODULE ContextualDependency; (** AUTHOR "gubsermi"; PURPOSE "Resolve context dep
 
 IMPORT
 	Files, KernelLog, Configuration, Texts, Strings,
-	XML, XMLObjects, XMLParser, XMLScanner, Streams;
+	XML, XMLObjects, XMLParser, XMLScanner;
 
 CONST
 	RangeDebug = FALSE;
@@ -589,7 +589,7 @@ TYPE
 		END AnalyzeWideContext;
 
 		(* Analyzes the whole context for the character at a certain position and - if a certain rule applies - returns the result of that rule. *)
-		PROCEDURE AnalyzeWholeContext(thisPos : SIZE; line : String) : Texts.Char32;
+		PROCEDURE AnalyzeWholeContext(thisPos : LONGINT; line : String) : Texts.Char32;
 		VAR
 			thisChar : Texts.Char32;
 			done,contextFound,validContextFound : BOOLEAN;
@@ -654,9 +654,9 @@ TYPE
 		END CheckWideContext;
 
 		(* Checks if for a given context if - for each position one or more ranges are defined - any of these ranges fit the specific character *)
-		PROCEDURE CheckWholeContext(thisPos : SIZE; line : String; context : GenericContext) : BOOLEAN;
+		PROCEDURE CheckWholeContext(thisPos : LONGINT; line : String; context : GenericContext) : BOOLEAN;
 		VAR
-			i,j : SIZE;
+			i,j : LONGINT;
 		BEGIN
 			(* If there is no actual context, the (non-present) context rules are defined to apply *)
 			IF context = NIL THEN RETURN TRUE END;
@@ -999,7 +999,7 @@ TYPE
 		(* Parses a range string and puts the ranges into a range array *)
 		PROCEDURE ParseRangeString(rangeString : XML.String; base16, neg : BOOLEAN; VAR ranges : Ranges);
 		VAR
-			numberOfRanges, i, j, k: SIZE; res : WORD;
+			numberOfRanges, i, j, k: LONGINT; res : WORD;
 			tempString : XML.String;
 			range : Range;
 			theseRanges, oldRanges : RangeArray;
@@ -1171,11 +1171,11 @@ TYPE
 
 
 		(* Parses a given line and analyzes it character-wise for defined context rules *)
-		PROCEDURE AnalyzeLine(line : Texts.TextReader; start, end : SIZE) : Texts.TextReader;
+		PROCEDURE AnalyzeLine(line : Texts.TextReader; start, end : LONGINT) : Texts.TextReader;
 		VAR
 			lineCache, newLine : String;
 			ch,ch1,ch2,ch3,ch4 : Texts.Char32;
-			i : SIZE;
+			i : LONGINT;
 			analyzer : RangedContextAnalyzer;
 			newText : Texts.Text;
 			oneCharString : Texts.PUCS32String;
@@ -1367,7 +1367,7 @@ TYPE
 		BEGIN COPY (filename, SELF.filename); xmlError := FALSE;
 		END InitTrap;
 
-		PROCEDURE Handler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Handler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			KernelLog.String("Error in ");
 			KernelLog.String(filename);

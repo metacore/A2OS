@@ -285,7 +285,7 @@ TYPE
 		BEGIN
 			IF pipe.firstTD = 0 THEN RETURN END; (* pipe has not yet been used *)
 			(* deactivate all TDs in list *)
-			td := pipe.firstTD(Machine.Address32);
+			td := Machine.Ensure32BitAddress (pipe.firstTD);
 			ASSERT(SYSTEM.VAL(SET, td) * {0..3} = {}); (* 16byte alignment *)
 			WHILE td < pipe.lastTD DO
 				dword := SYSTEM.VAL(SET, SYSTEM.GET32(td + TDControlStatus));
@@ -346,7 +346,7 @@ TYPE
 			UnlinkTDsInternal(pipe);
 
 			delthis := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, pipe.qh) + {1});
-			queue := pipe.queue(Machine.Address32);
+			queue := Machine.Ensure32BitAddress (pipe.queue);
 
 			LOOP (* traverse list of queue heads *)
 				qhtmp := SYSTEM.GET32(queue);
@@ -374,10 +374,10 @@ TYPE
 		PROCEDURE LinkTDs*(pipe : UsbHcdi.Pipe; td : Machine.Address32);
 		BEGIN {EXCLUSIVE}
 			ASSERT(SYSTEM.VAL(SET, td) * {0..3} = {}); (* 16byte alignment of TDs *)
-			SYSTEM.PUT32(pipe.qh + QhElementLinkPointer, td(Machine.Address32)); (* queue element link pointer ::= pointer to td *)
+			SYSTEM.PUT32(pipe.qh + QhElementLinkPointer, Machine.Ensure32BitAddress (td)); (* queue element link pointer ::= pointer to td *)
 		END LinkTDs;
 
-		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : SIZE;  VAR buffer : Usbdi.Buffer);
+		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : LONGINT;  VAR buffer : Usbdi.Buffer);
 		VAR td : Machine.Address32; pid, restlen, databufferAdr, curlen : LONGINT; tdStatus : SET;
 		BEGIN
 		 	(* Control transfers use a three stage protocol:	*)
@@ -406,9 +406,9 @@ TYPE
 
 				IF direction = UsbHcdi.In THEN pid := PidIn; ELSE pid := PidOut; END;
 
-				databufferAdr := pipe.physBufferAdr(Machine.Address32); (* offset included *)
+				databufferAdr := Machine.Ensure32BitAddress (pipe.physBufferAdr); (* offset included *)
 
-				restlen := bufferLen(LONGINT);
+				restlen := bufferLen;
 
 				WHILE restlen > 0 DO (* build TD chain *)
 
@@ -451,7 +451,7 @@ TYPE
 			pipe.lastTD := td;
 		END ScheduleControl;
 
-		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: SIZE; VAR buffer: Usbdi.Buffer);
+		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: LONGINT; VAR buffer: Usbdi.Buffer);
 		VAR td : Machine.Address32; pid, restlen, curlen, databuffer : LONGINT; tdStatus : SET;
 		BEGIN
 			pipe.firstTD :=  pipe.tdBase;
@@ -473,8 +473,8 @@ TYPE
 				pid := PidOut;
 			END;
 
-			restlen := bufferLen(LONGINT);
-			databuffer := pipe.physBufferAdr(Machine.Address32); (* offset already added *)
+			restlen := bufferLen;
+			databuffer := Machine.Ensure32BitAddress (pipe.physBufferAdr); (* offset already added *)
 
 			td := pipe.firstTD - 16;
 
@@ -714,14 +714,14 @@ TYPE
 			NEW(framelist);
 			(* Calculate the address of the 4K boundary contained in the 8K buffe (framelist base address has to be 4KB aligned) *)
 			framelist.framelistbase := SYSTEM.VAL(Machine.Address32, SYSTEM.VAL(SET, ADDRESSOF(framelist.field[0]) + 1024*4 - 1) * {12..31});
-			ASSERT (framelist.framelistbase IS Machine.Address32);
+			ASSERT (Machine.Is32BitAddress (framelist.framelistbase));
 			(* Calculate the index which points to the element positioned at the 4K boundary *)
 			framelist.index := ( framelist.framelistbase - ADDRESSOF(framelist.field[0]) ) DIV 4;
 
 			(* Okay... now allocate the 16byte aligned Queue Heads ... *)
 			NEW(tdlist, 16*TdListSize);
 			tdlistbase := SYSTEM.VAL(Machine.Address32, SYSTEM.VAL(SET, ADDRESSOF(tdlist[0])+15) * {4..31});
-			ASSERT (tdlistbase IS Machine.Address32);
+			ASSERT (Machine.Is32BitAddress (tdlistbase));
 			ASSERT(SYSTEM.VAL(SET, tdlistbase) * {0..3} = {});
 			ASSERT((tdlistbase >= ADDRESSOF(tdlist[0])) & (tdlistbase < ADDRESSOF(tdlist[16*TdListSize-1])));
 
@@ -827,7 +827,7 @@ TYPE
 			END;
 		END ShowSchedule;
 
-		PROCEDURE DoStrongChecks(pipe : UsbHcdi.Pipe; len, ofs : SIZE; VAR buffer : Usbdi.Buffer);
+		PROCEDURE DoStrongChecks(pipe : UsbHcdi.Pipe; len, ofs : LONGINT; VAR buffer : Usbdi.Buffer);
 		VAR i : ADDRESS;
 		BEGIN
 			IF len > 0 THEN
@@ -1103,4 +1103,5 @@ BEGIN
 END UsbUhci.
 
 UsbUhci.Install ~  System.Free UsbUhci ~
+
 

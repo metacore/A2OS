@@ -2691,7 +2691,7 @@ ASSERT(~loaded(instr.dest));
 (* object file *)
 
 	PROCEDURE NewVarCons* (mod: LONGINT; entry: INTEGER; VAR index: LONGINT);
-	VAR i: SIZE;  var: VarConsTable;
+	VAR i: LONGINT;  var: VarConsTable;
 	BEGIN
 		IF nofVarCons >= LEN(varConsLink) THEN
 			NEW(var, LEN(varConsLink)*2);
@@ -2705,7 +2705,7 @@ ASSERT(~loaded(instr.dest));
 	END NewVarCons;
 
 	PROCEDURE VarConsLink (index, offset: LONGINT);
-	VAR i: SIZE;  var: VarConsLinkTable;
+	VAR i: LONGINT;  var: VarConsLinkTable;
 	BEGIN
 		IF nofVarConsLinks >= LEN(varConsTab) THEN
 			NEW(var, LEN(varConsTab)*2);
@@ -2743,7 +2743,7 @@ ASSERT(~loaded(instr.dest));
 	END AbsAccess;
 
 	PROCEDURE NewEntry* (VAR entryNr: LONGINT);
-		VAR table: EntryTable; i: SIZE;
+		VAR table: EntryTable; i: LONGINT;
 	BEGIN
 		IF nofEntries >= LEN(entry) THEN
 			NEW(table, LEN(entry)*2);
@@ -2836,7 +2836,7 @@ ASSERT(~loaded(instr.dest));
 
 	PROCEDURE AllocTypDesc* (typ: OPT.Struct);
 	(* typ.tdadr = entryNr adr *)
-		VAR nil: LONGINT; table: RecTable; i: SIZE;
+		VAR nil: LONGINT; table: RecTable; i: LONGINT;
 	BEGIN
 		IF typ.comp = Record THEN
 			nil := 0; AllocConst (nil, 4, 4, typ.tdadr);
@@ -3125,7 +3125,6 @@ ASSERT(~loaded(instr.dest));
 			VAR
 				fld: OPT.Object;
 				i, n, s: LONGINT;
-				j: SIZE;
 				btyp: OPT.Struct;
 
 				PROCEDURE Add(adr: LONGINT);
@@ -3133,7 +3132,7 @@ ASSERT(~loaded(instr.dest));
 				BEGIN
 					IF nofptrs >= LEN(ptrTab) THEN
 						NEW(table, LEN(ptrTab)*2);
-						FOR j:=0 TO LEN(ptrTab)-1 DO  table[j]:=ptrTab[j]  END;
+						FOR i:=0 TO LEN(ptrTab)-1 DO  table[i]:=ptrTab[i]  END;
 						ptrTab:=table
 					END;
 					ptrTab[nofptrs] := adr; INC (nofptrs)
@@ -3379,7 +3378,7 @@ ASSERT(~loaded(instr.dest));
 	END OutCode;
 
 	PROCEDURE Close*;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		FOR i := 0 TO LEN(Instr)-1 DO Instr[i].node := NIL END;	(* GC can now collect the nodes *)
 		i := 0; WHILE i < LEN(recTab) DO recTab[i] := NIL; INC(i) END

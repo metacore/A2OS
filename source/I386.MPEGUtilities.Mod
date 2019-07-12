@@ -311,7 +311,7 @@ TYPE
 		PROCEDURE IDCTRow( blk: PointerToArrayOfLONGINT; baseIndex: LONGINT);
 		VAR
 			x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
-			adr, tempAdr: ADDRESS;
+			adr, tempAdr: LONGINT;
 
 		BEGIN
 			adr := ADDRESSOF( blk[baseIndex] );
@@ -394,7 +394,7 @@ TYPE
 		PROCEDURE IDCTCol( blk: PointerToArrayOfLONGINT; baseIndex: LONGINT );
 		VAR
 			x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
-			adr, tempAdr, sourceAdr: ADDRESS;
+			adr, tempAdr, sourceAdr: LONGINT;
 
 		BEGIN
 			adr := ADDRESSOF( blk[baseIndex] );
@@ -486,10 +486,10 @@ TYPE
 			last: LONGINT;						(* Last element in the ringbuffer (only used until input reports EOF) *)
 			bitIndex: LONGINT;					(* Position (Bit) in the current LONGINT (buffer[0..3] or [4..7]) *)
 			buffer: ARRAY 8 OF CHAR;			(* Local buffer (two LONGINTs) *)
-			bufAdr: ADDRESS;					(* Address of buffer[0] *)
+			bufAdr: LONGINT;					(* Address of buffer[0] *)
 			input: Codecs.DemuxStream;		(* The underlying Reader *)
 			eof: BOOLEAN;						(* End of File *)
-			bitsLeft: SIZE;					(* only used when eof is TRUE *)
+			bitsLeft: LONGINT;					(* only used when eof is TRUE *)
 
 			len: LONGINT;
 			i: LONGINT;
@@ -531,7 +531,7 @@ TYPE
 		(* Read four bytes from the stream and write it to the buffer *)
 		PROCEDURE ReadLongintFromStream;
 		VAR
-			read: SIZE;
+			read: LONGINT;
 
 		BEGIN
 			IF eof THEN RETURN END;
@@ -644,7 +644,7 @@ TYPE
 			dummy: LONGINT; result: WORD;
 
 		BEGIN
-			input.SetPosX(Codecs.SeekByte, pos(LONGINT), dummy, result);
+			input.SetPosX(Codecs.SeekByte, pos, dummy, result);
 			first := 0;
 			last := -1;
 			bitIndex := 0;
@@ -1788,13 +1788,14 @@ TYPE
 		(* Convert picture from YUV -> RGB 565, mmx version *)
 		PROCEDURE ConvertYUVToRGB565MMX(
 			puc: PointerToArrayOfCHAR;
-			pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS;
-			strideY, strideUV: SIZE;
+			pucYBaseOffset: LONGINT;
+			strideY: LONGINT;
+			pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT;
 			pucOut: Raster.Image;
 			widthY, heightY, strideOut: LONGINT );
 		VAR
 			y, horizCount: LONGINT;
-			pusOut: ADDRESS;
+			pusOut: LONGINT;
 
 		BEGIN
 			 strideOut := widthY*2;
@@ -1829,7 +1830,7 @@ TYPE
 			END;
 		END ConvertYUVToRGB565MMX;
 
-		PROCEDURE ScanLine565MMX(horizCount: SIZE; pucV, pucU, pucY, pucOut, mmxConsts: ADDRESS);
+		PROCEDURE ScanLine565MMX(horizCount, pucV, pucU, pucY, pucOut: LONGINT; mmxConsts: LONGINT);
 		CODE { SYSTEM.MMX, SYSTEM.PentiumPro }
 
 			PUSH ECX
@@ -1956,14 +1957,14 @@ TYPE
 		(* Convert picture from YUV -> RGB 565 *)
 		PROCEDURE ConvertYUVToRGB565(
 			puc: PointerToArrayOfCHAR;
-			pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS;
-			strideY: SIZE;
-			strideUV: SIZE;
+			pucYBaseOffset: LONGINT;
+			strideY: LONGINT;
+			pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT;
 			pucOut: Raster.Image;
 			widthY, heightY, strideOut: LONGINT );
 		VAR
 			xCount, yCount, strideDiff: LONGINT;
-			pusOut: ADDRESS;
+			pusOut: LONGINT;
 			r, g, b: LONGINT;
 			y, u, v: LONGINT;
 
@@ -2019,13 +2020,14 @@ TYPE
 		(* Convert YUV -> RGB 888 *)
 		PROCEDURE ConvertYUVToRGB888(
 			puc: PointerToArrayOfCHAR;
-			pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS;
-			strideY, strideUV: SIZE;
+			pucYBaseOffset: LONGINT;
+			strideY: LONGINT;
+			pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT;
 			pucOut: Raster.Image;
 			widthY, heightY, strideOut: LONGINT );
 		VAR
 			xCount, yCount, strideDiff: LONGINT;
-			pusOut: ADDRESS;
+			pusOut: LONGINT;
 			r, g, b: LONGINT;
 			y, u, v: LONGINT;
 		BEGIN
@@ -2084,10 +2086,10 @@ TYPE
 	(* TransferIDCT* is copied from the DivXPlayer *)
 	BlockActions* = OBJECT
 		(* clear an 8x8 CHAR block *)
-		PROCEDURE ClearBlock*(dest: PointerToArrayOfCHAR; destOffs, incr: SIZE);
+		PROCEDURE ClearBlock*(dest: PointerToArrayOfCHAR; destOffs, incr: LONGINT);
 		VAR
-			d: ADDRESS;		(* current address *)
-			i: SIZE;			(* loop var *)
+			d: LONGINT;		(* current address *)
+			i: LONGINT;			(* loop var *)
 
 		BEGIN
 			d := ADDRESSOF(dest[destOffs]);
@@ -2112,8 +2114,8 @@ TYPE
 		(* Reset block to 0 *)
 		PROCEDURE ClearBlockGeneric(block: PointerToArrayOfLONGINT );
 		VAR
-			i: SIZE;
-			adr: ADDRESS;
+			i: LONGINT;
+			adr: LONGINT;
 		BEGIN
 			adr := ADDRESSOF( block[0] );
 
@@ -2123,7 +2125,7 @@ TYPE
 			END;
 		END ClearBlockGeneric;
 
-		PROCEDURE ClearBlockMMX(dst: ADDRESS);
+		PROCEDURE ClearBlockMMX(dst: LONGINT);
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV		EDX, -32			; clear loop counter
 			MOV		ESI, [EBP+dst]		; capture block address
@@ -2137,10 +2139,10 @@ TYPE
 			EMMS
 		END ClearBlockMMX;
 
-		PROCEDURE CopyBlock*(src, dest: PointerToArrayOfCHAR; srcOffs, destOffs, srcIncr, destIncr, lines: SIZE);
+		PROCEDURE CopyBlock*(src, dest: PointerToArrayOfCHAR; srcOffs, destOffs, srcIncr, destIncr, lines: LONGINT);
 		VAR
-			s, d: ADDRESS;		(* current addresses *)
-			i: SIZE;			(* loop var *)
+			s, d: LONGINT;		(* current addresses *)
+			i: LONGINT;			(* loop var *)
 
 		BEGIN
 			s := ADDRESSOF(src[srcOffs]);
@@ -2157,10 +2159,10 @@ TYPE
 		PROCEDURE MoveBlockOverwrite*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: LONGINT);
 		VAR
 			buffer: ARRAY 16 OF CHAR;		(* temporary buffer *)
-			bufadr: SIZE;				(* address of buffer *)
+			bufadr: LONGINT;				(* address of buffer *)
 			index: LONGINT;				(* position in buffer *)
 			i, j: LONGINT;					(* loop vars *)
-			s, d: ADDRESS;				(* addresses of src and dest *)
+			s, d: LONGINT;					(* addresses of src and dest *)
 			tmp1, tmp2: LONGINT;			(* temporary var *)
 
 		BEGIN
@@ -2250,10 +2252,10 @@ TYPE
 		PROCEDURE MoveBlockInterp*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: LONGINT);
 		VAR
 			buffer: ARRAY 16 OF CHAR;		(* temporary buffer *)
-			bufadr: ADDRESS;			(* address of buffer *)
+			bufadr: LONGINT;				(* address of buffer *)
 			index: LONGINT;				(* position in buffer *)
 			i, j: LONGINT;					(* loop vars *)
-			s, d: ADDRESS;					(* addresses of src and dest *)
+			s, d: LONGINT;					(* addresses of src and dest *)
 			tmp1, tmp2: LONGINT;			(* temporary var *)
 
 		BEGIN
@@ -2352,7 +2354,7 @@ TYPE
 			END;
 		END MoveBlockInterp;
 
-		PROCEDURE TransferIDCTAdd*( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
+		PROCEDURE TransferIDCTAdd*( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT );
 		BEGIN
 			IF EnableMMX THEN
 				TransferIDCTAddMMX( ADDRESSOF( source[0] ), ADDRESSOF( dest[destOffset] ), stride );
@@ -2361,7 +2363,7 @@ TYPE
 			END;
 		END TransferIDCTAdd;
 
-		PROCEDURE TransferIDCTCopy*( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
+		PROCEDURE TransferIDCTCopy*( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT );
 		BEGIN
 			IF EnableMMX THEN
 				TransferIDCTCopyMMX( ADDRESSOF( source[0] ), ADDRESSOF( dest[destOffset] ), stride );
@@ -2371,9 +2373,9 @@ TYPE
 		END TransferIDCTCopy;
 
 		(* Add macroblock to a block in the actual picture *)
-		PROCEDURE TransferIDCTAddGeneric( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
+		PROCEDURE TransferIDCTAddGeneric( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT );
 		VAR
-			x, y: SIZE; s, d: ADDRESS; sum: LONGINT;
+			x, y, s, d, sum: LONGINT;
 		BEGIN
 			stride := stride -  8;
 			s := ADDRESSOF( source[0] );
@@ -2398,7 +2400,7 @@ TYPE
 			END;
 		END TransferIDCTAddGeneric;
 
-		PROCEDURE TransferIDCTAddMMX( source, dest: ADDRESS; stride: SIZE );
+		PROCEDURE TransferIDCTAddMMX( source, dest, stride: LONGINT );
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV EAX, [EBP+source]			;  PARAMETER 1, *SOURCES32
 			MOV EBX, [EBP+dest]			;  PARAMETER 2, *DESTU8
@@ -2427,9 +2429,9 @@ TYPE
 		END TransferIDCTAddMMX;
 
 		(* Copy a macroblock to the actual picture *)
-		PROCEDURE TransferIDCTCopyGeneric( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
+		PROCEDURE TransferIDCTCopyGeneric( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT );
 		VAR
-			x, y: SIZE; s, d: ADDRESS; val: LONGINT;
+			x, y, s, d, val: LONGINT;
 		BEGIN
 			stride := stride - 8;
 			s := ADDRESSOF( source[0] );
@@ -2452,7 +2454,7 @@ TYPE
 			END;
 		END TransferIDCTCopyGeneric;
 
-		PROCEDURE TransferIDCTCopyMMX( source, dest: ADDRESS; stride: SIZE );
+		PROCEDURE TransferIDCTCopyMMX( source, dest, stride: LONGINT );
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV EAX, [EBP+source]			;  PARAMETER 1, *SOURCES32
 			MOV EBX, [EBP+dest]			;  PARAMETER 2, *DESTU8

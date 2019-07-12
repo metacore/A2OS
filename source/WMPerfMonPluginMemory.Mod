@@ -84,7 +84,7 @@ TYPE
 		BEGIN
 			p.name := "MemoryUsage"; p.description := "Stack & Heap memory usage"; p.modulename := ModuleName;
 			Machine.GetFreeK(total, lowFree, highFree);
-			p.max := total(Machine.Address32) DIV 1024; p.autoMax := FALSE; p.unit := "MB"; p.showPercent := TRUE;
+			p.max := Machine.Ensure32BitAddress (total) DIV 1024; p.autoMax := FALSE; p.unit := "MB"; p.showPercent := TRUE;
 			p.scale := 1024; p.minDigits := 7; p.fraction := 0; p.statsUnit := "KB";
 			p.helper := heapHelper; h := heapHelper;
 		END Init;

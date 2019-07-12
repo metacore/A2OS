@@ -100,7 +100,7 @@ TYPE
 		 * diskValid: disk parameter valid?
 		 *)
 		PROCEDURE Synchronize;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN (* diskModel must be locked *)
 			diskmodel.Acquire;
 			IF (diskmodel.disks # NIL) THEN
@@ -235,7 +235,7 @@ TYPE
 		END Resized;
 
 		PROCEDURE CreateContent() : WMComponents.VisualComponent;
-		VAR noDisksLabel : WMStandardComponents.Label; i : SIZE;
+		VAR noDisksLabel : WMStandardComponents.Label; i : LONGINT;
 		BEGIN
 			titleGrid := BuildTitleGrid();
 
@@ -425,13 +425,13 @@ TYPE
 
 		(* changes the order of the partition of disk.table so that it's sequential *)
 		PROCEDURE BuildVTable(VAR disk : Disk);
-		VAR part: LONGINT; i : SIZE; isIncluded : POINTER TO ARRAY OF BOOLEAN;
+		VAR part, i : LONGINT; isIncluded : POINTER TO ARRAY OF BOOLEAN;
 
 			PROCEDURE GetNext(lastStart : LONGINT) : LONGINT;
 			VAR i, min, next : LONGINT;
 			BEGIN
 				min := MAX(LONGINT);
-				FOR i := 1 TO LEN(disk.table)(LONGINT)-1 DO
+				FOR i := 1 TO LEN(disk.table)-1 DO
 					(* Note: Extended partitions that do not contain logical drives will be found twice: The extended partition and a pseudo *)
 					(* partition (free) with the same boundaries -> Therefor, isIncluded is used *)
 					IF ~isIncluded[i] & (disk.table[i].start >= lastStart) & (disk.table[i].start < min) THEN min := disk.table[i].start; next := i; END;
@@ -546,7 +546,7 @@ TYPE
 			fillColor : LONGINT;
 			text : ARRAY 32 OF CHAR;
 			primary, logical : LONGINT; (* nbr of primary/logical partitions on disk *)
-			i, k : SIZE;
+			i, k : LONGINT;
 		BEGIN
 			ASSERT(model.IsLocked());
 			disk.buttons[0].bounds.SetExtents(diskOverviewPanel.bounds.GetWidth() - 2*MainPanelMarginH - 2*DiskOverviewPanelMarginH, DiskPanelHeight);
@@ -700,7 +700,7 @@ TYPE
 		VAR
 			panel : WMStandardComponents.Panel;
 			label : WMStandardComponents.Label;
-			top: LONGINT; i : SIZE;
+			top, i : LONGINT;
 			minHeight, minWidth, min : LONGINT;
 			width, height : LONGINT;
 		BEGIN
@@ -778,7 +778,7 @@ TYPE
 		BEGIN
 			ASSERT(model.IsLocked());
 			ASSERT(model.disks # NIL);
-			FOR i := 0 TO LEN(model.disks)(LONGINT)-1 DO
+			FOR i := 0 TO LEN(model.disks)-1 DO
 				(* build skeleton for graphical representation of the disk models data *)
 				NEW(model.disks[i].label);
 				model.disks[i].label.fillColor.Set(clBackground.Get()); model.disks[i].label.textColor.Set(LabelTxtColor);
@@ -796,9 +796,9 @@ TYPE
 					grid.Acquire;
 					grid.model.Acquire;
 					grid.model.SetNofCols(DiskOverviewTableColumns);
-					grid.model.SetNofRows(LEN(model.disks[i].table)(LONGINT));
+					grid.model.SetNofRows(LEN(model.disks[i].table));
 					grid.allowColResize.Set(FALSE); grid.allowRowResize.Set(FALSE);
-					FOR j := 0 TO LEN(model.disks[i].table)(LONGINT) -1 DO
+					FOR j := 0 TO LEN(model.disks[i].table) -1 DO
 						grid.model.SetTextAlign(0, j, WMGraphics.AlignLeft);
 						grid.model.SetTextAlign(1, j, WMGraphics.AlignRight);
 						grid.model.SetTextAlign(2, j,  WMGraphics.AlignRight);
@@ -809,8 +809,8 @@ TYPE
 					grid.model.Release;
 					grid.Release;
 					model.disks[i].titlegrid := BuildTitleGrid(); model.disks[i].panel.AddInternalComponent(model.disks[i].titlegrid);
-					NEW(model.disks[i].buttons, LEN(model.disks[i].table)(LONGINT));
-					FOR j := 0 TO LEN(model.disks[i].table)(LONGINT)-1 DO
+					NEW(model.disks[i].buttons, LEN(model.disks[i].table));
+					FOR j := 0 TO LEN(model.disks[i].table)-1 DO
 						NEW(model.disks[i].buttons[j]);
 						model.disks[i].buttons[j].isToggle.Set(TRUE);
 						model.disks[i].buttons[j].indicateToggle.Set(FALSE);
@@ -843,7 +843,7 @@ TYPE
 			caption, temp : ARRAY 128 OF CHAR;
 			fillColor : LONGINT;
 			grid : NoWheelGrid;
-			disk: SIZE; partition : LONGINT;
+			disk, partition : LONGINT;
 			width, height : LONGINT;
 			minHeights : POINTER TO ARRAY OF LONGINT; (* minimum heights of each grid *)
 			col, row : LONGINT;
@@ -855,7 +855,7 @@ TYPE
 			FOR disk := 0 TO LEN(model.disks)-1 DO
 				table := model.disks[disk].table;	grid := model.disks[disk].grid;
 				IF (table # NIL) & (grid # NIL) THEN
-					FOR partition := 0 TO LEN(table)(LONGINT)-1 DO
+					FOR partition := 0 TO LEN(table)-1 DO
 						grid.Acquire;
 						grid.model.Acquire;
 						(* Column 1: Partition : dev#part *)
@@ -930,7 +930,7 @@ TYPE
 
 		(* calculates the minimum width/height which is needed to display the disk panels correctly *)
 		PROCEDURE CalcDiskPanelBounds(VAR minWidth, minHeight : LONGINT);
-		VAR i, j : SIZE;
+		VAR i, j : LONGINT;
 		BEGIN
 			ASSERT(model.IsLocked());
 			ASSERT(model.disks # NIL);
@@ -1018,7 +1018,7 @@ TYPE
 			panel : WMStandardComponents.Panel;
 			min, top : LONGINT;
 			width, height : LONGINT;
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			ASSERT(model.IsLocked());
 			IF model.disks # NIL THEN
@@ -1102,7 +1102,7 @@ TYPE
 			caption, temp : ARRAY 128 OF CHAR;
 			selectionNone : LONGINT;
 			wrapper : SelectionWrapper;
-			i, j : SIZE;
+			i, j : LONGINT;
 		BEGIN
 			ASSERT(model.IsLocked());
 			selection.partition := partition;
@@ -1127,7 +1127,7 @@ TYPE
 						IF i = disk THEN
 							model.disks[i].grid.SetSelection(disk,partition,disk,partition);
 						ELSE
-							selectionNone := LEN(model.disks[i].table)(LONGINT); (* not visible *)
+							selectionNone := LEN(model.disks[i].table); (* not visible *)
 							model.disks[i].grid.SetSelection(selectionNone,selectionNone,selectionNone,selectionNone);
 						END;
 					END;
@@ -1332,11 +1332,11 @@ TYPE
 					grid.Acquire;
 					grid.model.Acquire;
 					grid.SetSelectionMode(WMGrids.GridSelectSingleRow);
-					grid.model.SetNofCols(noOfCols); grid.model.SetNofRows(LEN(operations)(LONGINT));
+					grid.model.SetNofCols(noOfCols); grid.model.SetNofRows(LEN(operations));
 
-					FOR row := 0 TO LEN(operations)(LONGINT)-1 DO
+					FOR row := 0 TO LEN(operations)-1 DO
 						operation := operations[row];
-						FOR i := 0 TO LEN(operations)(LONGINT) -1 DO
+						FOR i := 0 TO LEN(operations) -1 DO
 							grid.model.SetTextAlign(0, i, WMGraphics.AlignCenter); (* uid *)
 							grid.model.SetTextAlign(1, i, WMGraphics.AlignLeft); (* operation *)
 							grid.model.SetTextAlign(2, i,  WMGraphics.AlignCenter); (* device *)
@@ -1485,7 +1485,7 @@ TYPE
 			IF operations # NIL THEN
 				grid.Acquire;
 				grid.model.Acquire;
-				FOR i := 0 TO LEN(operations)(LONGINT)-1 DO
+				FOR i := 0 TO LEN(operations)-1 DO
 					operation := operations[i];
 					state := operation.GetState();
 					(* Column 4: Status *)

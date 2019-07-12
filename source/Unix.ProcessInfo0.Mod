@@ -7,8 +7,8 @@ TYPE
 
 	ProcessArray* = ARRAY OF Objects.Process;
 
-PROCEDURE GetProcesses*(VAR array : ProcessArray; VAR nofProcesses : SIZE);
-VAR thread : Objects.Process; length : SIZE;
+PROCEDURE GetProcesses*(VAR array : ProcessArray; VAR nofProcesses : LONGINT);
+VAR thread : Objects.Process; length : LONGINT;
 BEGIN
 	nofProcesses := 0;
 	length := LEN(array);
@@ -22,7 +22,7 @@ BEGIN
 	END;
 END GetProcesses;
 
-PROCEDURE GetProcess*(id : WORD) : Objects.Process;
+PROCEDURE GetProcess*(id : LONGINT) : Objects.Process;
 VAR process, thread : Objects.Process;
 BEGIN
 	process := NIL;

@@ -82,7 +82,7 @@ TYPE
 		mode-: LONGINT;	(** process state *)	(* only changed inside Objects lock ??? *)
 		procID-: LONGINT;	(** processor ID where running *)
 		waitingOn-: ProtectedObject;	(** obj this process is waiting on (for lock or condition) *)
-		id-: WORD;	(** unique process ID for tracing *)
+		id-: LONGINT;	(** unique process ID for tracing *)
 		flags*: SET;	(** process flags *)
 		priority-, staticPriority*: LONGINT;	(** process dynamic priority (can change during priority inversion handling) and static priority *)	(* exported for AosExceptions *)
 		stack*: Machine.Stack;	(** user-level stack of process *)
@@ -368,7 +368,7 @@ VAR
 	                                                            scheduled depending on the GC status, minPriority = Low if GC is not running,
 	                                                            minPrioriy = GCPriority otherwise *)
 	running-{UNTRACED}: ARRAY Machine.MaxCPU OF Process;	(** processes currently running, exported for Traps, not traced by the GC since it may change during collection *)
-	nextProcessID: WORD;
+	nextProcessID: LONGINT;
 
 	gcBarrier: SET; 			(* barrier that must be passed by all processors before actual collection starts *)
 	gcActivity: GCActivity;	(* active object for GC handling *)
@@ -740,7 +740,7 @@ BEGIN
 END ActiveObject;
 
 (** Return the ID of the active currently executing process. *)
-PROCEDURE GetProcessID* (): WORD;
+PROCEDURE GetProcessID* (): LONGINT;
 VAR r: Process;
 BEGIN
 	r := GetProcessPtr ();
@@ -1432,7 +1432,7 @@ BEGIN
 END FindCondition;
 
 (* Find highest priority in array of priority counts *)
-PROCEDURE MaxPrio(CONST priorityCounts: ARRAY Heaps.NumPriorities OF WORD): WORD;
+PROCEDURE MaxPrio(CONST priorityCounts: ARRAY OF LONGINT): LONGINT;
 VAR i: LONGINT;
 BEGIN
 	i := LEN(priorityCounts) - 1;

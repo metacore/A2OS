@@ -391,7 +391,7 @@ END WritePart;
 PROCEDURE WriteTable(VAR w: Texts.Writer; d: Disks.Device; table: Disks.PartitionTable; verbose: BOOLEAN; VAR dosnum: LONGINT);
 VAR j: LONGINT; r: LONGREAL;
 BEGIN
-	FOR j := 0 TO LEN(table)(LONGINT)-1 DO
+	FOR j := 0 TO LEN(table)-1 DO
 		r := (table[j].size * 1.0D0 * d.blockSize) / (1024*1024);	(* M *)
 		WritePart(w, d, j);
 		Texts.SetFont(w, Fonts.This("Courier10.Scn.Fnt"));
@@ -531,14 +531,14 @@ VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT;
 BEGIN
 	start := spt; g := hds * spt;	(* skip first track *)
 	max := table[0].size - g;	(* reserve one cylinder at end of disk *)
-	FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find overlapping partition, if any *)
+	FOR i := 1 TO LEN(table)-1 DO	(* find overlapping partition, if any *)
 		IF (Disks.Primary IN table[i].flags) & (table[i].start <= start) & (start < table[i].start+table[i].size) THEN
 			start := table[i].start	(* start search at this partition instead *)
 		END
 	END;
 	LOOP
 		prevstart := start; end := MAX(LONGINT);
-		FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition start after or on start *)
+		FOR i := 1 TO LEN(table)-1 DO	(* find first partition start after or on start *)
 			IF (Disks.Primary IN table[i].flags) & (table[i].start >= start) & (table[i].start < end) THEN
 				end := table[i].start	(* free space ends at this start position *)
 			END
@@ -550,7 +550,7 @@ BEGIN
 			(* {start..end-1 is free and aligned} *)
 		IF end-start > 0 THEN NewFree(FreeSpace, table, start, end-start, 0, {Disks.Primary}) END;
 		nextstart := MAX(LONGINT);
-		FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition end after prevstart *)
+		FOR i := 1 TO LEN(table)-1 DO	(* find first partition end after prevstart *)
 			IF Disks.Primary IN table[i].flags THEN
 				t := table[i].start+table[i].size-1;
 				IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
@@ -568,7 +568,7 @@ PROCEDURE FindFreeExtended(VAR table: Disks.PartitionTable; spt, hds: LONGINT);
 VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT;
 BEGIN
 	t := -1; i := 1;
-	WHILE i < LEN(table)(LONGINT) DO
+	WHILE i < LEN(table) DO
 		IF Extended(table[i].type) THEN
 			ASSERT(t = -1); t := i	(* at most one extended partition allowed *)
 		END;
@@ -578,7 +578,7 @@ BEGIN
 		start := table[t].start; g := hds * spt; max := start + table[t].size;
 		LOOP
 			prevstart := start; end := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition start after or on start *)
+			FOR i := 1 TO LEN(table)-1 DO	(* find first partition start after or on start *)
 				IF ~(Disks.Primary IN table[i].flags) & (table[i].start >= start) & (table[i].start < end) THEN
 					end := table[i].start
 				END
@@ -592,7 +592,7 @@ BEGIN
 				(* {start..end-1 is free and aligned} *)
 			IF end-start > 0 THEN NewFree(FreeSpace, table, start, end-start, start-spt, {}) END;
 			nextstart := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition end after prevstart *)
+			FOR i := 1 TO LEN(table)-1 DO	(* find first partition end after prevstart *)
 				IF ~(Disks.Primary IN table[i].flags) THEN
 					t := table[i].start+table[i].size-1;
 					IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
@@ -614,7 +614,7 @@ BEGIN
 		start := 0; max := table[0].size;
 		LOOP
 			prevstart := start; end := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition start after or on start *)
+			FOR i := 1 TO LEN(table)-1 DO	(* find first partition start after or on start *)
 				IF (table[i].start >= start) & (table[i].start < end) THEN
 					end := table[i].start	(* free space ends at this start position *)
 				END
@@ -623,7 +623,7 @@ BEGIN
 				(* {start..end-1 is free} *)
 			IF end-start > 0 THEN NewFree(ReservedSpace, table, start, end-start, 0, {Disks.Primary}) END;
 			nextstart := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition end after prevstart *)
+			FOR i := 1 TO LEN(table)-1 DO	(* find first partition end after prevstart *)
 				t := table[i].start+table[i].size-1;
 				IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 			END;
@@ -654,7 +654,7 @@ VAR i, j, ext: LONGINT;
 BEGIN
 	ext := -1;
 		(* check all partitions for size, and presence of at most one extended partition *)
-	FOR i := 0 TO LEN(table)(LONGINT)-1 DO
+	FOR i := 0 TO LEN(table)-1 DO
 		IF (table[i].start < 0) OR (table[i].size < 0) OR (table[i].start+table[i].size < 0) THEN
 			Texts.WriteString(w, "Warning: "); WritePart(w, dev, i);
 			Texts.WriteString(w, "too large"); Texts.WriteLn(w);
@@ -671,9 +671,9 @@ BEGIN
 		END
 	END;
 		(* check all primary partitions and logical drives for overlap *)
-	FOR i := 1 TO LEN(table)(LONGINT)-1 DO
+	FOR i := 1 TO LEN(table)-1 DO
 		IF Disks.Primary IN table[i].flags THEN	(* primary partition *)
-			FOR j := 1 TO LEN(table)(LONGINT)-1 DO
+			FOR j := 1 TO LEN(table)-1 DO
 				IF (i # j) & (Disks.Primary IN table[j].flags) & PartitionsOverlap(table, i, j) THEN
 					Texts.WriteString(w, "Error: "); WritePart(w, dev, i);
 					Texts.WriteString(w, "and "); WritePart(w, dev, j);
@@ -682,7 +682,7 @@ BEGIN
 				END
 			END
 		ELSE	(* logical drive in extended partition *)
-			FOR j := 1 TO LEN(table)(LONGINT)-1 DO
+			FOR j := 1 TO LEN(table)-1 DO
 				IF (i # j) & (j # ext) & PartitionsOverlap(table, i, j) THEN
 					Texts.WriteString(w, "Error: "); WritePart(w, dev, i);
 					Texts.WriteString(w, "and "); WritePart(w, dev, j);
@@ -709,7 +709,7 @@ END FindFreeSpace;
 
 PROCEDURE Show*;	(** ["detail"] ~ *)
 VAR
-	dev: Disks.DeviceTable; table: Disks.PartitionTable; i: SIZE; res, dosnum: LONGINT; t: Texts.Text;
+	dev: Disks.DeviceTable; table: Disks.PartitionTable; i, res, dosnum: LONGINT; t: Texts.Text;
 	d: Disks.Device; verbose: BOOLEAN; par: ARRAY 32 OF CHAR; geo: Disks.GetGeometryMsg;
 BEGIN
 	In.Open; In.String(par);
@@ -1141,7 +1141,7 @@ END AddEntry;
 (* Delete the specified entry. *)
 
 PROCEDURE DeleteEntry(table: ConfigTable; i: LONGINT);
-VAR j: SIZE; s: LONGINT;
+VAR j, s: LONGINT;
 BEGIN
 	ASSERT(Get4(table^, i) # -1);	(* can not delete end marker *)
 	s := Get4(table^, i+4);

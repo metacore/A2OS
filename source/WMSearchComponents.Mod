@@ -13,12 +13,12 @@ TYPE
 	SearchString* = ARRAY SearchStringMaxLen OF CHAR;
 	UcsSearchString* = ARRAY SearchStringMaxLen OF Texts.Char32;
 
-	StackData = POINTER TO ARRAY OF SIZE;
+	StackData = POINTER TO ARRAY OF LONGINT;
 
 	PositionStack = OBJECT
 	VAR
 		data: StackData;
-		size, top: SIZE;
+		size, top: LONGINT;
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -26,15 +26,15 @@ TYPE
 			NEW(data, 32);
 		END Init;
 
-		PROCEDURE Push(l: SIZE);
+		PROCEDURE Push(l: LONGINT);
 		BEGIN
 			IF top = size THEN Expand END;
 			data[top] := l;
 			INC(top);
 		END Push;
 
-		PROCEDURE Pop(): SIZE;
-		VAR val: SIZE;
+		PROCEDURE Pop(): LONGINT;
+		VAR val: LONGINT;
 		BEGIN
 			IF top > 0 THEN
 				DEC(top);
@@ -47,7 +47,7 @@ TYPE
 
 		PROCEDURE Expand;
 		VAR
-			newSize, i: SIZE;
+			newSize, i: LONGINT;
 			newData: StackData;
 		BEGIN
 			newSize := 2*size;
@@ -79,7 +79,7 @@ TYPE
 		textView : WMTextView.TextView;
 		highlights : Highlight;
 
-		PROCEDURE Add(from, to : SIZE);
+		PROCEDURE Add(from, to : LONGINT);
 		VAR h : Highlight;
 		BEGIN {EXCLUSIVE}
 			NEW(h); h.next := highlights; highlights := h;
@@ -122,13 +122,13 @@ TYPE
 		textView: WMTextView.TextView;
 		text: Texts.Text;
 
-		pos, len: SIZE;
-		hitCount : SIZE;
+		pos, len: LONGINT;
+		hitCount : LONGINT;
 		posValid : BOOLEAN;
 		positionStack: PositionStack;
 		highlights : Highlights;
 
-		lastPos : SIZE;
+		lastPos : LONGINT;
 		lastBackwards : BOOLEAN;
 
 		PROCEDURE & Init*;
@@ -261,7 +261,7 @@ TYPE
 		VAR
 			currentSearchString, searchString : SearchString;
 			selectionText : Texts.Text; from, to : Texts.TextPosition;
-			a, b : SIZE;
+			a, b : LONGINT;
 		BEGIN
 			searchString := "";
 			IF Texts.GetLastSelection(selectionText, from, to) THEN
@@ -411,7 +411,7 @@ TYPE
 		PROCEDURE TextChanged(sender, data: ANY);
 		VAR
 			changeInfo: Texts.TextChangeInfo;
-			from : SIZE;
+			from : LONGINT;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN
 				(* 	We need to use DisableUpdate/EnableUpdate in order to get reasonable performance... This requires
@@ -445,7 +445,7 @@ TYPE
 		END SearchHandler;
 
 		PROCEDURE ReplaceHandler(sender, data: ANY);
-		VAR replStr : SearchString; ucsStr: UcsSearchString; idx: SIZE;
+		VAR replStr : SearchString; ucsStr: UcsSearchString; idx: LONGINT;
 		BEGIN
 			IF text = NIL THEN RETURN END;
 			IF posValid THEN
@@ -465,7 +465,7 @@ TYPE
 			searchStr, replStr : SearchString;
 			ucsSearchStr, ucsReplStr : UcsSearchString;
 			oldBackwards : BOOLEAN;
-			idx: SIZE;
+			idx: LONGINT;
 		BEGIN
 			IF text = NIL THEN RETURN END;
 			replEdit.GetAsString(replStr);
@@ -496,7 +496,7 @@ TYPE
 			posValid := FALSE;
 		END Replace;
 
-		PROCEDURE Search(CONST ucsStr: ARRAY OF Texts.Char32; from: SIZE);
+		PROCEDURE Search(CONST ucsStr: ARRAY OF Texts.Char32; from: LONGINT);
 		BEGIN
 			IF ucsStr[0] = 0 THEN posValid := FALSE; RETURN; END;
 			IF caseSensitive & ~backwards THEN
@@ -514,8 +514,8 @@ TYPE
 			END;
 		END Search;
 
-		PROCEDURE SearchAndHighlight(from: SIZE);
-		VAR searchStr : SearchString; ucsStr: UcsSearchString; length, idx : SIZE;
+		PROCEDURE SearchAndHighlight(from: LONGINT);
+		VAR searchStr : SearchString; ucsStr: UcsSearchString; length, idx : LONGINT;
 		BEGIN
 			IF text = NIL THEN RETURN END;
 			searchEdit.GetAsString(searchStr);
@@ -555,7 +555,7 @@ TYPE
 			searchString : SearchString;
 			ucsStr : UcsSearchString;
 			caption : ARRAY 32 OF CHAR; nbr : ARRAY 12 OF CHAR;
-			length, pos, from, idx: SIZE;
+			length, idx, pos : LONGINT; from : LONGINT;
 		BEGIN
 			IF (text = NIL) OR (highlights = NIL) THEN RETURN; END;
 			hitCount := 0;

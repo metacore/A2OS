@@ -1,10 +1,10 @@
-MODULE MailStorage; (** AUTHOR "TF"; PURPOSE "Simple mail storage"; *)
+MODULE MailStorage; (** AUTHOR "TF"; PURPOSE "Simple mail storeage"; *)
 
 IMPORT
 	Streams, Files, KernelLog, Strings;
 
 TYPE IndexEntry* = RECORD
-		from, to : Streams.Position;
+		from, to : LONGINT;
 		hFrom, hTo, hSubject, hDate : ARRAY 64 OF CHAR;
 	END;
 
@@ -53,7 +53,7 @@ TYPE Storage* = OBJECT
 			RETURN with[j] = 0X
 		END Match;
 
-		PROCEDURE ScanMessage(r : Streams.Reader; VAR from, to : Streams.Position);
+		PROCEDURE ScanMessage(r : Streams.Reader; VAR from, to : LONGINT);
 		VAR line : ARRAY 1001 OF CHAR; i : LONGINT;
 		BEGIN
 			hFrom := ""; hTo := ""; hSubject := ""; hDate := "";
@@ -75,7 +75,7 @@ TYPE Storage* = OBJECT
 		END ScanMessage;
 
 		PROCEDURE ScanStorage(r : Streams.Reader);
-		VAR from, to : Streams.Position;
+		VAR from, to : LONGINT;
 		BEGIN
 			nofItems := 0;
 			REPEAT
@@ -92,7 +92,7 @@ TYPE Storage* = OBJECT
 			index := new
 		END GrowIndex;
 
-		PROCEDURE AddIndex(from, to : Streams.Position; hFrom, hTo, hSubject, hDate : ARRAY OF CHAR);
+		PROCEDURE AddIndex(from, to : LONGINT; hFrom, hTo, hSubject, hDate : ARRAY OF CHAR);
 		BEGIN
 			IF nofItems = LEN(index) THEN GrowIndex END;
 			index[nofItems].from := from;

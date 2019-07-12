@@ -75,13 +75,13 @@ TYPE
 		BEGIN  Add(x)
 		END AddElement;
 
-		PROCEDURE GetElement*(index: SIZE): TextElement;
+		PROCEDURE GetElement*(index: LONGINT): TextElement;
 		VAR x: ANY;
 		BEGIN x := Get(index); IF x = NIL THEN RETURN NIL ELSE RETURN x(TextElement) END;
 		END GetElement;
 
 		PROCEDURE FindByString*(CONST string: ARRAY OF CHAR): TextElement;
-		VAR i: SIZE; element: TextElement;
+		VAR i: LONGINT; element: TextElement;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				element := GetElement(i);
@@ -120,7 +120,7 @@ TYPE
 		END WriteWeakLink;
 
 		PROCEDURE WriteText*(t: Text);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO t.Length()-1 DO
 				AddElement(t.GetElement(i));
@@ -139,7 +139,7 @@ TYPE
 		END Last;
 
 		PROCEDURE ForAllElementsDo*(this: PROCEDURE {DELEGATE} (x: TextElement));
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				this(GetElement(i))
@@ -196,7 +196,7 @@ TYPE
 		BEGIN  Add(x)
 		END AddParagraph;
 
-		PROCEDURE GetParagraph*(index: SIZE): Paragraph;
+		PROCEDURE GetParagraph*(index: LONGINT): Paragraph;
 		VAR x: ANY;
 		BEGIN x := Get(index); IF x = NIL THEN RETURN NIL ELSE RETURN x(Paragraph) END;
 		END GetParagraph;
@@ -206,7 +206,7 @@ TYPE
 		END Last;
 
 		PROCEDURE ForAllParagraphsDo*(this: PROCEDURE {DELEGATE} (x: Paragraph));
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				this(GetParagraph(i))
@@ -270,7 +270,7 @@ TYPE
 		BEGIN  Add(x)
 		END AddSection;
 
-		PROCEDURE GetSection*(index: SIZE): Section;
+		PROCEDURE GetSection*(index: LONGINT): Section;
 		VAR x: ANY;
 		BEGIN x := Get(index); IF x = NIL THEN RETURN NIL ELSE RETURN x(Section) END;
 		END GetSection;
@@ -280,7 +280,7 @@ TYPE
 		END Last;
 
 		PROCEDURE ForAllSectionsDo*(this: PROCEDURE {DELEGATE} (x: Section));
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				this(GetSection(i))
@@ -315,13 +315,13 @@ TYPE
 		BEGIN  Add(x)
 		END AddDocument;
 
-		PROCEDURE GetDocument*(index: SIZE): Document;
+		PROCEDURE GetDocument*(index: LONGINT): Document;
 		VAR x: ANY;
 		BEGIN x := Get(index); IF x = NIL THEN RETURN NIL ELSE RETURN x(Document) END;
 		END GetDocument;
 
 		PROCEDURE ForAllDocumentsDo*(this: PROCEDURE {DELEGATE} (x: Document));
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				this(GetDocument(i))

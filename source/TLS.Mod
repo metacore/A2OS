@@ -133,7 +133,7 @@ TYPE
 		END Inc;
 
 		(* write the current value of num in big-endian to data starting at ofs *)
-		PROCEDURE GetBytes( VAR data: ARRAY OF CHAR; ofs: SIZE );
+		PROCEDURE GetBytes( VAR data: ARRAY OF CHAR; ofs: LONGINT );
 		BEGIN
 			ASSERT( ofs < LEN( data ) - 7 );
 			data[ ofs ] := CHR( num[ 0 ] DIV ( 256*256*256 ) );
@@ -167,8 +167,8 @@ TYPE
 		END Inc;
 
 		(* write the current value of num in big-endian to buf starting at ofs *)
-		PROCEDURE GetBytes( VAR buf: ARRAY OF CHAR;  ofs: SIZE );
-		VAR p: SIZE; val: LONGINT;
+		PROCEDURE GetBytes( VAR buf: ARRAY OF CHAR;  ofs: LONGINT );
+		VAR p, val: LONGINT;
 		BEGIN
 			p := ofs + 7;  val := numL;
 			REPEAT
@@ -191,10 +191,10 @@ TYPE
 			NEW( hMac, hashname );
 		END Init;
 
-		PROCEDURE Expand( VAR secret, seed, outbuf: ARRAY OF CHAR; secretLen, seedLen, outLen: SIZE );
+		PROCEDURE Expand( VAR secret, seed, outbuf: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT );
 			VAR
 				a: ARRAY 2 * MaxPHashSeed OF CHAR;
-				i, iterations: SIZE;
+				i, iterations: LONGINT;
 		BEGIN
 			ASSERT( seedLen <= ( MaxPHashSeed  ) );
 			ASSERT( outLen <= ( MaxPHashKernelLogput ) );
@@ -231,11 +231,11 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE GetBytes( VAR secret, seed, outbuf: ARRAY OF CHAR; CONST label: ARRAY OF CHAR; secretLen, seedLen, outLen: SIZE );
+		PROCEDURE GetBytes( VAR secret, seed, outbuf: ARRAY OF CHAR; CONST label: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT );
 			VAR
 				md5Result, shaResult: ARRAY MaxKeyBlock OF CHAR;
 				pSeed, s1, s2: ARRAY 140 OF CHAR;
-				i, j, l: SIZE;
+				i, j, l: LONGINT;
 		BEGIN
 			IF pHash = NIL THEN (* Use SHA1 XOR MD5 algo *)
 				(* pseed := label::seed *)
@@ -262,7 +262,7 @@ TYPE
 	Policy* = OBJECT
 		VAR
 			cipherSuites -: ARRAY Suites OF LONGINT;
-			nofCipherSuites -: SIZE;	(** number of enabled cipher-suites *)
+			nofCipherSuites -: LONGINT;	(** number of enabled cipher-suites *)
 			sessionResumptionEnabled -: BOOLEAN;
 			sessionLifetime -: LONGINT; (** seconds *)
 			version-: ARRAY 2 OF CHAR;
@@ -275,8 +275,8 @@ TYPE
 		END Init;
 
 		(** set n negotiable cipher suites in order of preference*)
-		PROCEDURE SetCipherSuites*( VAR s: ARRAY OF LONGINT; n: SIZE );
-			VAR i: SIZE;
+		PROCEDURE SetCipherSuites*( VAR s: ARRAY OF LONGINT; n: LONGINT );
+			VAR i: LONGINT;
 		BEGIN
 			ASSERT( n <= Suites );
 			FOR i := 0 TO n-1 DO cipherSuites[ i ] := s[ i ] END;
@@ -285,7 +285,7 @@ TYPE
 
 		(** Returns TRUE if the cipher-suite s is supported by this policy *)
 		PROCEDURE IsSupported*( s: LONGINT ): BOOLEAN;
-			VAR i: SIZE;
+			VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO nofCipherSuites - 1 DO
 				IF cipherSuites[ i ] = s THEN RETURN TRUE END
@@ -320,7 +320,7 @@ TYPE
 	Session = OBJECT
 		VAR
 			id : ARRAY 32 OF CHAR;
-			idLength : SIZE;
+			idLength : LONGINT;
 			resumable : BOOLEAN;
 			cipherSuite : LONGINT;
 			preMasterSecret, masterSecret -: ARRAY 48 OF CHAR;
@@ -332,8 +332,8 @@ TYPE
 			If caching is FALSE, no session-id will associated with the new session.
 			if cache is TRUE and len is zero, a session id will be randomly generated.
 			if cache is TRUE and len is non-zero, a session-id will be read from data *)
-		PROCEDURE & Init*( caching: BOOLEAN; VAR data: ARRAY OF CHAR; ofs, len: SIZE; lifetime: LONGINT );
-			VAR i: SIZE;
+		PROCEDURE & Init*( caching: BOOLEAN; VAR data: ARRAY OF CHAR; ofs, len, lifetime: LONGINT );
+			VAR i: LONGINT;
 		BEGIN
 			ASSERT( ofs > -1 );	ASSERT( len > -1 );	ASSERT( ofs + len <= LEN( data ) );	ASSERT( lifetime > 0 );
 			resumable := caching;
@@ -358,8 +358,8 @@ TYPE
 		END Invalidate;
 
 		(** Sets the PreMasterSecret contained in data, starting at ofs. The lenght of the PreMasterSecret is always 48 bytes *)
-		PROCEDURE SetPreMasterSecret( data: ARRAY OF CHAR; ofs: SIZE );
-			VAR i: SIZE;
+		PROCEDURE SetPreMasterSecret( data: ARRAY OF CHAR; ofs: LONGINT );
+			VAR i: LONGINT;
 		BEGIN
 			ASSERT( LEN(data) >= ofs + 48 );
 			FOR i := 0 TO 47 DO		preMasterSecret[ i ] := data[ ofs + i ]		END
@@ -377,7 +377,7 @@ TYPE
 			policy-: Policy;
 			rsaCertificate: ARRAY 10000 OF CHAR;
 			rsaPrivateKey, rsaPublicKey: CryptoRSA.Key;
-			lengthOfRsaCertificate: SIZE;
+			lengthOfRsaCertificate: LONGINT;
 			sessionCache: ARRAY SessionHashtableSize OF Session;
 			timer: Kernel.Timer;
 			active: BOOLEAN;
@@ -399,7 +399,7 @@ TYPE
 			VAR
 				f: Files.File;
 				r: Files.Reader;
-				i: SIZE;
+				i: LONGINT;
 		BEGIN
 			f := Files.Old(filename);	(* open an old file *)
 			IF f # NIL THEN
@@ -491,9 +491,9 @@ TYPE
 
 		(** look up the session cache for a stored cache associated with the session-id of length len,
 			starting at ofs in data. If no session is found, NIL is returned. This method is invoked by a TLS-server. *)
-		PROCEDURE FindSessionByID*( VAR data: ARRAY OF CHAR; ofs, idLen: SIZE ): Session;
+		PROCEDURE FindSessionByID*( VAR data: ARRAY OF CHAR; ofs, idLen: LONGINT ): Session;
 			VAR
-				i: SIZE;
+				i: LONGINT;
 				current, previous: Session;	(* fork search *)
 		BEGIN
 			ASSERT( idLen = SessionIdLength );
@@ -534,8 +534,8 @@ TYPE
 		END StoreSession;
 
 		(* returns TRUE iff data1 and data2 contain the same string of length len starting at different offsets *)
-		PROCEDURE EqualSessionID( VAR data1, data2: ARRAY OF CHAR; ofs1, ofs2, len: SIZE ): BOOLEAN;
-			VAR i: SIZE;
+		PROCEDURE EqualSessionID( VAR data1, data2: ARRAY OF CHAR; ofs1, ofs2, len: LONGINT ): BOOLEAN;
+			VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO len - 1 DO
 				IF data1[ ofs1 + i ] # data2[ ofs2 + i ] THEN RETURN FALSE END;
@@ -732,8 +732,8 @@ TYPE
 		END Close;
 
 		(** Send secured data *)
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD );
-			VAR i, size: SIZE;
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD );
+			VAR i, size: LONGINT;
 		BEGIN {EXCLUSIVE}
 			AWAIT((state = TCP.Established) OR (state = TCP.Closed));
 			IF state = TCP.Established THEN
@@ -754,7 +754,7 @@ TYPE
 		END Send;
 
 		(** Receive secured data *)
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			applicationDataPipe.Receive(data, ofs, size, min, len ,res);
 		END Receive;
@@ -764,7 +764,7 @@ TYPE
 			VAR
 				prf: PRF;
 				seed: ARRAY 64 OF CHAR;
-				i: SIZE;
+				i: LONGINT;
 		BEGIN
 			FOR i := 0 TO 31 DO
 				seed[ i ] := SELF.pendingSecurityParameters.clientRandom[ i ];
@@ -782,7 +782,7 @@ TYPE
 				prf: PRF;
 				keyBlock: ARRAY 136 OF CHAR;
 				seed: ARRAY 64 OF CHAR;
-				i, keyBlockLen, ofs, macSecretSize, cipherKeySize, cipherBlockSize: SIZE;
+				i, keyBlockLen, ofs, macSecretSize, cipherKeySize, cipherBlockSize: LONGINT;
 		BEGIN
 			(* calculate the needed amount of key-material *)
 			macSecretSize := SELF.pendingWriteState.mac.size;
@@ -923,11 +923,11 @@ TYPE
 		RECORD LAYER
 		********************************************************************************** *)
 
-		PROCEDURE SendRecord( VAR data: ARRAY OF CHAR; contentType, ofs, len: SIZE );
+		PROCEDURE SendRecord( VAR data: ARRAY OF CHAR; contentType, ofs, len: LONGINT );
 			VAR
 				macInput: ARRAY 13 OF CHAR;
 				iv: ARRAY 16 OF CHAR; (* used in TLSv1.1 *)
-				i, length, padLen, blocksize: SIZE;
+				i, length, padLen, blocksize: LONGINT;
 				sendIV: BOOLEAN; (* Send an IV before data *)
 		BEGIN
 			ASSERT( len <= MaxPlaintextLength );
@@ -986,7 +986,7 @@ TYPE
 			VAR
 				macInput: ARRAY 13 OF CHAR;
 				verify: ARRAY 20 OF CHAR;
-				i, padd, len, type, macSize, res, major, minor, ofs, length: SIZE;
+				i, padd, length, len, type, macSize, res, major, minor, ofs: LONGINT;
 				badRecordMac: BOOLEAN; (* Send a bad_record_mac error *)
 		BEGIN
 			(* increment the number of received records *)
@@ -1116,7 +1116,7 @@ TYPE
 			ChangeWriteState( )
 		END SendChangeCipherSpec;
 
-		PROCEDURE ReceiveChangeCipherSpec( VAR data: ARRAY OF CHAR; ofs: SIZE );
+		PROCEDURE ReceiveChangeCipherSpec( VAR data: ARRAY OF CHAR; ofs: LONGINT );
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ChangeCipherSpec");KernelLog.Ln END;
 			IF ORD( data[ ofs ] ) # 1 THEN (* wrong content of ChangeCipherSpec *)
@@ -1130,8 +1130,8 @@ TYPE
 		HANDSHAKE PROTOCOL
 		********************************************************************************** *)
 
-		PROCEDURE SendHandshake( VAR data: ARRAY OF CHAR; hsType: LONGINT; ofs, len: SIZE );
-			VAR l: SIZE;
+		PROCEDURE SendHandshake( VAR data: ARRAY OF CHAR; hsType, ofs, len: LONGINT );
+			VAR l: LONGINT;
 		BEGIN
 			ASSERT( len < 256 * 256 * 256 );
 			l := len;
@@ -1152,8 +1152,8 @@ TYPE
 		END SendHandshake;
 
 		(* receives one or more handshake messages *)
-		PROCEDURE ReceiveHandshake( VAR data: ARRAY OF CHAR; ofs, len: SIZE );
-			VAR msgLen, hsType: LONGINT; ptr: SIZE;
+		PROCEDURE ReceiveHandshake( VAR data: ARRAY OF CHAR; ofs, len: LONGINT );
+			VAR msgLen, hsType, ptr: LONGINT;
 		BEGIN
 			ASSERT( LEN( data ) >= ofs + len );
 			ptr := ofs;
@@ -1172,7 +1172,7 @@ TYPE
 			END
 		END ReceiveHandshake;
 
-		PROCEDURE ReceiveV2Handshake( VAR data: ARRAY OF CHAR; ofs, len: SIZE );
+		PROCEDURE ReceiveV2Handshake( VAR data: ARRAY OF CHAR; ofs, len: LONGINT );
 		BEGIN
 			ASSERT( data[ofs] = CHR( 1 ) );	(* v2ClientHello *)
 			(* re-initialize hashes *)
@@ -1195,9 +1195,9 @@ TYPE
 			Transition(outbuf, Handshake, 0, 0, 0)
 		END StartHandshake;
 
-		PROCEDURE ReceiveClientHello( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): LONGINT;
+		PROCEDURE ReceiveClientHello( VAR data: ARRAY OF CHAR; ofs, len: LONGINT ): LONGINT;
 			VAR
-				nofSuites, i, idLen, cipherSuite, major, minor: LONGINT; idPos, pos: SIZE; res: WORD;
+				nofSuites, i, idLen, idPos, pos, cipherSuite, major, minor: LONGINT; res: WORD;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ClientHello");KernelLog.Ln END;
 			pos := ofs;
@@ -1278,7 +1278,7 @@ TYPE
 
 		PROCEDURE SendClientHello(VAR data: ARRAY OF CHAR; ofs: LONGINT);
 		VAR
-			pos, i: SIZE;
+			pos, i: LONGINT;
 		BEGIN
 			IF Trace THEN PrintDirection(TRUE); KernelLog.String("ClientHello");KernelLog.Ln END;
 			ASSERT( ofs > 3 );
@@ -1325,7 +1325,7 @@ TYPE
 			SendHandshake( data, ClientHello, ofs - 4, pos - ofs)
 		END SendClientHello;
 
-		PROCEDURE ReceiveV2ClientHello( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): LONGINT;
+		PROCEDURE ReceiveV2ClientHello( VAR data: ARRAY OF CHAR; ofs, len: LONGINT ): LONGINT;
 			VAR nofSuites, idLen, challengeLen, i, cipherSuite: LONGINT; res: WORD;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("SSLv2.0 ClientHello");KernelLog.Ln END;
@@ -1380,9 +1380,9 @@ TYPE
 			RETURN GenerateServerHello
 		END ReceiveV2ClientHello;
 
-		PROCEDURE ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT;
+		PROCEDURE ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
 		VAR
-			major, minor, i, idLen, cipherSuite: LONGINT; idPos, pos: SIZE; res: WORD;
+			pos, major, minor, i, idLen, idPos, cipherSuite: LONGINT; res: WORD;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ServerHello");KernelLog.Ln END;
 			pos := ofs;
@@ -1436,8 +1436,8 @@ TYPE
 			RETURN AwaitCertificate
 		END ReceiveServerHello;
 
-		PROCEDURE SendServerHello( VAR data: ARRAY OF CHAR; ofs: SIZE );
-			VAR i, pos: SIZE;
+		PROCEDURE SendServerHello( VAR data: ARRAY OF CHAR; ofs: LONGINT );
+			VAR i, pos: LONGINT;
 		BEGIN
 			IF Trace THEN PrintDirection(TRUE); KernelLog.String("ServerHello");KernelLog.Ln END;
 			ASSERT( ofs > 3 );
@@ -1464,9 +1464,9 @@ TYPE
 			SendHandshake( data, ServerHello, ofs-4, pos-ofs )
 		END SendServerHello;
 
-		PROCEDURE SendClientKeyExchange(VAR data: ARRAY OF CHAR; ofs: SIZE): LONGINT;
+		PROCEDURE SendClientKeyExchange(VAR data: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
 		VAR
-			length: SIZE;
+			length: LONGINT;
 		BEGIN
 			IF Trace THEN
 				PrintDirection(TRUE);
@@ -1495,12 +1495,12 @@ TYPE
 			RETURN GenerateChangeCipherSpec
 		END SendClientKeyExchange;
 
-		PROCEDURE ReceiveClientKeyExchange(CONST data: ARRAY OF CHAR; ofs, len: SIZE );
+		PROCEDURE ReceiveClientKeyExchange(CONST data: ARRAY OF CHAR; ofs, len: LONGINT );
 			VAR
 				encryptedPremasterSecret, premasterSecret: CryptoBigNumbers.BigNumber;
 				tmp: ARRAY 512 OF CHAR;
 				rnd: ARRAY 48 OF CHAR;
-				i: SIZE;
+				i: LONGINT;
 				error: BOOLEAN;
 		BEGIN
 			INC( ofs, 2 ); DEC( len, 2 );	(* the two first bytes have to be ignored *)
@@ -1537,7 +1537,7 @@ TYPE
 			InitializeConnectionState( SELF.pendingReadState, SELF.pendingSecurityParameters )
 		END ReceiveClientKeyExchange;
 
-		PROCEDURE ReceiveCertificate( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): LONGINT;
+		PROCEDURE ReceiveCertificate( VAR data: ARRAY OF CHAR; ofs, len: LONGINT ): LONGINT;
 		VAR
 			pos, length, lengthP3: LONGINT;
 		BEGIN
@@ -1561,8 +1561,8 @@ TYPE
 			RETURN AwaitServerHelloDone
 		END ReceiveCertificate;
 
-		PROCEDURE SendCertificate( VAR data: ARRAY OF CHAR; ofs: SIZE );
-			VAR i: SIZE;
+		PROCEDURE SendCertificate( VAR data: ARRAY OF CHAR; ofs: LONGINT );
+			VAR i: LONGINT;
 		BEGIN
 			ASSERT( ofs > 3 );
 			IF Trace THEN PrintDirection(TRUE); KernelLog.String("Certificate");KernelLog.Ln END;
@@ -1572,24 +1572,24 @@ TYPE
 			SendHandshake( data, Certificate, ofs-4, context.lengthOfRsaCertificate );
 		END SendCertificate;
 
-		PROCEDURE SendServerHelloDone( VAR data: ARRAY OF CHAR; ofs: SIZE );
+		PROCEDURE SendServerHelloDone( VAR data: ARRAY OF CHAR; ofs: LONGINT );
 		BEGIN
 			ASSERT( ofs > 3 );
 			IF Trace THEN PrintDirection(TRUE); KernelLog.String("ServerHelloDone");KernelLog.Ln END;
 			SendHandshake( data, ServerHelloDone, ofs-4, 0 )
 		END SendServerHelloDone;
 
-		PROCEDURE ReceiveServerHelloDone(CONST data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT;
+		PROCEDURE ReceiveServerHelloDone(CONST data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ServerHelloDone"); KernelLog.Ln END;
 			RETURN GenerateClientKeyExchange
 		END ReceiveServerHelloDone;
 
-		PROCEDURE SendFinished( VAR data: ARRAY OF CHAR; ofs: SIZE );
+		PROCEDURE SendFinished( VAR data: ARRAY OF CHAR; ofs: LONGINT );
 			VAR
 				seed: ARRAY 36 OF CHAR;
 				verifyData: ARRAY 12 OF CHAR;
-				i: SIZE;
+				i: LONGINT;
 				prf: PRF;
 		BEGIN
 			IF Trace THEN PrintDirection(TRUE); KernelLog.String("Finished");KernelLog.Ln END;
@@ -1608,12 +1608,12 @@ TYPE
 			SendHandshake( data, Finished, ofs-4, 12 )
 		END SendFinished;
 
-		PROCEDURE ReceiveFinished(CONST data: ARRAY OF CHAR; ofs, len: SIZE );
+		PROCEDURE ReceiveFinished(CONST data: ARRAY OF CHAR; ofs, len: LONGINT );
 			VAR
 				seed: ARRAY 36 OF CHAR;
 				verifyData: ARRAY 12 OF CHAR;
 				prf: PRF;
-				i: SIZE;
+				i: LONGINT;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("Finished"); KernelLog.Ln END;
 			ASSERT( len = 12 );
@@ -1636,8 +1636,8 @@ TYPE
 		ALERT PROTOCOL
 		********************************************************************************** *)
 
-		PROCEDURE ReceiveAlert( VAR data: ARRAY OF CHAR; ofs, len: SIZE );
-			VAR level, description: LONGINT; ptr: SIZE;
+		PROCEDURE ReceiveAlert( VAR data: ARRAY OF CHAR; ofs, len: LONGINT );
+			VAR level, description, ptr: LONGINT;
 		BEGIN
 			ptr := ofs;
 			WHILE ptr < ofs + len DO	(* for each Alert-message *)
@@ -1706,7 +1706,7 @@ TYPE
 		FINITE STATE MACHINE
 		********************************************************************************** *)
 
-		PROCEDURE Transition( VAR data: ARRAY OF CHAR; action, subAction: LONGINT; ofs, len: SIZE );
+		PROCEDURE Transition( VAR data: ARRAY OF CHAR; action, subAction, ofs, len: LONGINT );
 			VAR dummy: ARRAY 1 OF CHAR;
 				res : WORD;
 		BEGIN

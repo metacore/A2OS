@@ -369,7 +369,7 @@ TYPE
 			match : BOOLEAN;
 			temp : ARRAY 32 OF CHAR;
 			default, prefix : Strings.String;
-			i, j: SIZE; result : LONGINT;
+			i, j, result : LONGINT;
 		BEGIN
 			prefix := Strings.NewString(iprefix);
 			default := Strings.NewString(DefaultPrefix);
@@ -481,20 +481,20 @@ TYPE
 							fs := ft[i];
 							IF fs.vol # NIL THEN
 								IF fs.vol IS DiskVolumes.Volume THEN
-									vol := fs.vol (DiskVolumes.Volume);
-									dev := vol.dev; fsStart := vol.startfs;
-								ELSIF fs.vol IS OldDiskVolumes.Volume THEN
-									volOld := fs.vol (OldDiskVolumes.Volume);
-									dev := volOld.dev; fsStart := volOld.startfs;
-								ELSIF fs.vol IS FATVolumes.Volume THEN
-									volFAT := fs.vol (FATVolumes.Volume);
-									dev := volFAT.dev; fsStart := volFAT.start;
-								ELSIF fs.vol IS ISO9660Volumes.Volume THEN
-									volISO := fs.vol (ISO9660Volumes.Volume);
-									dev := volISO.dev; fsStart := 512; (* dummy value *)
-								ELSE
-									dev := NIL;
-								END;
+									vol := fs.vol (DiskVolumes.Volume);
+									dev := vol.dev; fsStart := vol.startfs;
+								ELSIF fs.vol IS OldDiskVolumes.Volume THEN
+									volOld := fs.vol (OldDiskVolumes.Volume);
+									dev := volOld.dev; fsStart := volOld.startfs;
+								ELSIF fs.vol IS FATVolumes.Volume THEN
+									volFAT := fs.vol (FATVolumes.Volume);
+									dev := volFAT.dev; fsStart := volFAT.start;
+								ELSIF fs.vol IS ISO9660Volumes.Volume THEN
+									volISO := fs.vol (ISO9660Volumes.Volume);
+									dev := volISO.dev; fsStart := 512; (* dummy value *)
+								ELSE
+									dev := NIL;
+								END;
 								IF (dev#NIL) & (dev = selection.disk.device) &
 							           ((selection.disk.isDiskette) OR
 								    (fsStart >= dev.table[selection.partition].start) &
@@ -823,14 +823,14 @@ TYPE
 			IF table # NIL THEN
 				grid.Acquire;
 				grid.model.Acquire;
-				grid.model.SetNofRows(LEN(table)(LONGINT));
-				FOR row := 0 TO LEN(table)(LONGINT)-1 DO
+				grid.model.SetNofRows(LEN(table));
+				FOR row := 0 TO LEN(table)-1 DO
 					grid.model.SetCellText(0, row, table[row].key);
 					grid.model.SetCellText(1, row, table[row].value);
 					height := height + cellHeight + CeCellHeightMinSpacer + 1;
 				END;
-				NEW(spacings, LEN(table)(LONGINT));
-				FOR row := 0 TO LEN(table)(LONGINT)-1 DO spacings[row] := cellHeight + CeCellHeightMinSpacer; END;
+				NEW(spacings, LEN(table));
+				FOR row := 0 TO LEN(table)-1 DO spacings[row] := cellHeight + CeCellHeightMinSpacer; END;
 				grid.SetRowSpacings(spacings);
 				grid.model.Release;
 				grid.Release;
@@ -859,7 +859,7 @@ TYPE
 			gridContainer.bounds.SetExtents(gridPanel.bounds.GetWidth() - 2*MarginH, gridPanel.bounds.GetHeight() - 2*MarginV);
 			table := configTable.GetEntries();
 			IF table # NIL THEN
-				gridHeight := LEN(table)(LONGINT)*(cellHeight + CeCellHeightMinSpacer + 1);
+				gridHeight := LEN(table)*(cellHeight + CeCellHeightMinSpacer + 1);
 			END;
 			scrollbarY.bounds.SetLeft(gridContainer.bounds.GetWidth() - scrollbarY.bounds.GetWidth());
 			scrollbarY.bounds.SetHeight(gridContainer.bounds.GetHeight());
@@ -2297,12 +2297,12 @@ TYPE
 			maxWidth, ignore : LONGINT;
 			font : WMGraphics.Font;
 			caption : ARRAY 128 OF CHAR;
-			i : SIZE;
+			i : LONGINT;
 
 			PROCEDURE SetFocusChain;
-			VAR ref, lastRef, uid : Strings.String; nbr : ARRAY 16 OF CHAR; i : SIZE;
+			VAR ref, lastRef, uid : Strings.String; nbr : ARRAY 16 OF CHAR; i : LONGINT;
 
-				PROCEDURE GenRef(number : SIZE) : Strings.String;
+				PROCEDURE GenRef(number : LONGINT) : Strings.String;
 				VAR string : Strings.String; temp, nbr : ARRAY 16 OF CHAR;
 				BEGIN
 					temp := "&";
@@ -2432,7 +2432,7 @@ TYPE
 		END BuildLayout;
 
 		PROCEDURE EvalParameters() : BOOLEAN;
-		VAR  result : BOOLEAN; string : ARRAY 32 OF CHAR; temp : Strings.String; i : SIZE;
+		VAR  result : BOOLEAN; string : ARRAY 32 OF CHAR; temp : Strings.String; i : LONGINT;
 		BEGIN
 			IF parameters=NIL THEN result := TRUE;
 			ELSE
@@ -2466,7 +2466,7 @@ TYPE
 		VAR
 			checkbox : WMStandardComponents.Button;
 			string : Strings.String;
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			checkbox := sender (WMStandardComponents.Button);
 			FOR i := 0 TO LEN(boxes)-1 DO

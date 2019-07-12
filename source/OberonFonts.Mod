@@ -70,7 +70,7 @@ TYPE
 			file: Files.File;  font: OType.Font;  i, chars, ranges, xmin, ymin, xmax, ymax, j: INTEGER;
 			beg, end: ARRAY 64 OF INTEGER;  data: RasterData;  no, bytes, k: LONGINT;
 			ras: OpenTypeScan.Rasterizer;
-			w: Files.Writer;  ipos, apos: Files.Position;
+			w: Files.Writer;  ipos, apos: LONGINT;
 			pattern: ARRAY 360*360 DIV 8 OF CHAR;				(* enough for 36 point at 720 dpi *)
 	BEGIN
 		file := Files.New( name );

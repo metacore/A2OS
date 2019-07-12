@@ -12,8 +12,8 @@ TYPE
 
 	StringPool* = OBJECT
 	VAR bufList : BufferList;
-		end* : SIZE;
-		nofBufs : SIZE;
+		end* : LONGINT;
+		nofBufs : LONGINT;
 
 
 		PROCEDURE &Init*;
@@ -24,7 +24,7 @@ TYPE
 		END Init;
 
 		PROCEDURE GrowBufList;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 			t : BufferList;
 		BEGIN
 			NEW(t, nofBufs * 2);
@@ -33,8 +33,8 @@ TYPE
 			nofBufs := LEN(bufList);
 		END GrowBufList;
 
-		PROCEDURE AddString*(CONST str : ARRAY OF CHAR) : SIZE;
-		VAR i, result, bufNr, bufPos : SIZE;
+		PROCEDURE AddString*(CONST str : ARRAY OF CHAR) : LONGINT;
+		VAR i, result, bufNr, bufPos : LONGINT;
 		BEGIN {EXCLUSIVE}
 			result := end;
 			i := 0;
@@ -53,8 +53,8 @@ TYPE
 			RETURN result
 		END AddString;
 
-		PROCEDURE GetString*(i : SIZE; VAR str : ARRAY OF CHAR);
-		VAR ch : CHAR; j : SIZE;
+		PROCEDURE GetString*(i : LONGINT; VAR str : ARRAY OF CHAR);
+		VAR ch : CHAR; j : LONGINT;
 		BEGIN {EXCLUSIVE}
 			j := 0;
 			REPEAT
@@ -64,7 +64,7 @@ TYPE
 			UNTIL ch = 0X
 		END GetString;
 
-		PROCEDURE Equal*(a, b : SIZE) : BOOLEAN;
+		PROCEDURE Equal*(a, b : LONGINT) : BOOLEAN;
 		VAR ca, cb : CHAR;
 		BEGIN {EXCLUSIVE}
 			REPEAT
@@ -82,8 +82,8 @@ VAR
 
 PROCEDURE Test*(par : ANY) : ANY;
 VAR x, y : ARRAY 128 OF CHAR;
-	i : SIZE;
-	buf : POINTER TO ARRAY OF SIZE;
+	i : LONGINT;
+	buf : POINTER TO ARRAY OF LONGINT;
 BEGIN
 	NEW(buf, 1000000);
 	FOR i := 0 TO 1000000 - 1  DO

@@ -899,7 +899,7 @@ END GetDevStringFromAddr;
 (** go through device list,  (each device terminated with a single NULL, list terminated with double NULL *)
 PROCEDURE ALCGetDeviceList*(device: ALCdevice; name: ALCenum): PString256;
 VAR  sadr, sadr0: ADDRESS;
-	slen, index: SIZE;
+	slen, index: LONGINT;
 	str: Strings.String;
 	dynstr: PString256;
 BEGIN

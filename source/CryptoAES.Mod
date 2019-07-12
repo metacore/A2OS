@@ -56,8 +56,8 @@ TYPE
 					UNTIL (x # 0) OR (i = 0)
 				END IncIV;
 
-				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR i, j: SIZE;  x, y: Block;
+				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR i, j: LONGINT;  x, y: Block;
 				BEGIN
 					ASSERT( isKeyInitialized );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -83,8 +83,8 @@ TYPE
 					END
 				END Encrypt;
 
-				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR x0, x, y: Block;  i, j: SIZE;
+				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR x0, x, y: Block;  i, j: LONGINT;
 				BEGIN
 					ASSERT( isKeyInitialized );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)

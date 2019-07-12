@@ -312,7 +312,7 @@ VAR
 PROCEDURE Open*(context : Commands.Context);
 VAR
 	fullName, repositoryName, applicationName : ARRAY 128 OF CHAR;
-	refNum: SIZE; res: WORD;
+	refNum: LONGINT; res: WORD;
 	info : ApplicationInfo;
 	window : Window;
 	gadgetWindow : GadgetWindow;

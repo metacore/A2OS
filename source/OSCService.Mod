@@ -109,7 +109,7 @@ TYPE
 		(* Every OSCBundle is processed with this function. This ensures the atomicity of an OSCBundle *)
 		PROCEDURE processBundle(b: OSC.OSCBundle);
 		VAR
-			i: SIZE;
+			i: INTEGER;
 		BEGIN
 			FOR i:=0 TO b.messagescount-1 DO
 				processPacket(b.messages[i]);

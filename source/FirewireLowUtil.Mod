@@ -698,7 +698,7 @@ TYPE
 		 END GetBufferAddr;
 
 		 (* Block buffer holds free blocks, if there is no block left then one has to wait *)
-		 PROCEDURE GetFreeBlocks*():SIZE;
+		 PROCEDURE GetFreeBlocks*():LONGINT;
 		 BEGIN
 		 	RETURN blockBuffer.GetFreeBlocks()
 		 END GetFreeBlocks;
@@ -830,7 +830,7 @@ TYPE
 
 	(** This is a ring buffer for generic buffers *)
 	BufferBuffer* = OBJECT
-		VAR head, num: SIZE; buffer: POINTER TO ARRAY OF SET;
+		VAR head, num: LONGINT; buffer: POINTER TO ARRAY OF SET;
 		ptrToBuf: POINTER TO ARRAY OF CharBuffer;
 
 		PROCEDURE FreeBuffer*(x: SET);
@@ -850,7 +850,7 @@ TYPE
 			RETURN x
 		END GetBuffer;
 
-		PROCEDURE &Init*(n: SIZE);
+		PROCEDURE &Init*(n: LONGINT);
 		BEGIN
 			head := 0; num := n; NEW(buffer, n); NEW(ptrToBuf, n);
 			AllocPcktBuf(n,buffer^,ptrToBuf^);
@@ -860,7 +860,7 @@ TYPE
 
 	(** This is a ring buffer for packet buffers *)
 	PacketBuffer* = OBJECT
-		VAR head, num: SIZE; buffer: POINTER TO ARRAY OF Packet;
+		VAR head, num: LONGINT; buffer: POINTER TO ARRAY OF Packet;
 
 		PROCEDURE Append*(x: Packet);
 		BEGIN {EXCLUSIVE}
@@ -887,7 +887,7 @@ TYPE
 			RETURN x
 		END GetPckt;
 
-		PROCEDURE &Init*(n: SIZE);
+		PROCEDURE &Init*(n: LONGINT);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;
@@ -896,7 +896,7 @@ TYPE
 
 	(** This is a ring buffer for block buffers *)
 	BlockBuffer* = OBJECT
-		VAR head, (* free places in the fifo *) num*: SIZE; buffer: POINTER TO ARRAY OF Block;
+		VAR head, (* free places in the fifo *) num*: LONGINT; buffer: POINTER TO ARRAY OF Block;
 
 		PROCEDURE Append*(x: Block);
 		BEGIN {EXCLUSIVE}
@@ -923,12 +923,12 @@ TYPE
 			RETURN x;
 		END GetBlock;
 
-		PROCEDURE GetFreeBlocks*():SIZE;
+		PROCEDURE GetFreeBlocks*():LONGINT;
 		BEGIN {EXCLUSIVE}
 			RETURN num
 		END GetFreeBlocks;
 
-		PROCEDURE &Init*(n: SIZE);
+		PROCEDURE &Init*(n: LONGINT);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;
@@ -1545,11 +1545,11 @@ BEGIN
 END AllocPacket;
 
 (** Allocates a 4KB buffer for an OHCI packet *)
-PROCEDURE  AllocPcktBuf*(num: SIZE; VAR bufs: ARRAY OF SET;VAR ptrBufs: ARRAY OF CharBuffer);
-VAR i: SIZE; buffer: CharBuffer; adr: ADDRESS; s: SET;
+PROCEDURE  AllocPcktBuf*(num: LONGINT; VAR bufs: ARRAY OF SET;VAR ptrBufs: ARRAY OF CharBuffer);
+VAR i: LONGINT; buffer: CharBuffer; adr: ADDRESS; s: SET;
 BEGIN
 	FOR i:= 0 TO num-1 DO
-		(* Allocating a 4096 byte buffer + 4 byte for the alignment *)
+		(* Allocating a 4096 byte buffer + 4 byte for the alignement *)
 		NEW(buffer, BufSize + 4);
 		adr:= ADDRESSOF(buffer[0]);
 		(* Find a 4 byte aligned address *)

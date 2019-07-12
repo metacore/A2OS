@@ -162,12 +162,12 @@ VAR
 	(** Computes a Riemann-Liouville fractional-order integral.
 		Iaf(x) = (1/G(a)) x0x (x-y)a-1 f(y) dy,  where  0 < a.  *)
 	PROCEDURE SolveI*( f: CalcFn.ReArg;  x, order: NbrRe.Real;  VAR tol: NbrRe.Real ): NbrRe.Real;
-	VAR i, n: SIZE;  firstWeight, gamma, h, solution: NbrRe.Real;
+	VAR i, n: LONGINT;  firstWeight, gamma, h, solution: NbrRe.Real;
 		cWeights, fn, save: POINTER TO ARRAY OF NbrRe.Real;  pWeights: ARRAY 3 OF NbrRe.Real;
 		romberg: Romberg;
 
 		PROCEDURE UpdateCWeights;
-		VAR len, newLen: SIZE;  m: NbrRe.Real;
+		VAR len, newLen: LONGINT;  m: NbrRe.Real;
 		BEGIN
 			m := 1 + order;
 			IF cWeights = NIL THEN
@@ -232,12 +232,12 @@ VAR
 	(** Computes a Caputo fractional-order derivative.
 		D*af(x) = IaDnf(x) = (1/G(n-a)) x0x (x-y)n-1-a [dnf(y)/dyn] dy,  f(k)(0+) = f0[k],  where  0 < a < 2, a # 1. *)
 	PROCEDURE SolveD*( f: CalcFn.ReArg;  x, order: NbrRe.Real;  VAR tol: NbrRe.Real ): NbrRe.Real;
-	VAR i, n: SIZE;  df0, f0, gamma, h, lastWeight, solution: NbrRe.Real;
+	VAR i, n: LONGINT;  df0, f0, gamma, h, lastWeight, solution: NbrRe.Real;
 		aWeights, fn, save: POINTER TO ARRAY OF NbrRe.Real;  mWeights: ARRAY 3 OF NbrRe.Real;
 		romberg: Romberg;
 
 		PROCEDURE UpdateAWeights;
-		VAR len, newLen: SIZE;  m: NbrRe.Real;
+		VAR len, newLen: LONGINT;  m: NbrRe.Real;
 		BEGIN
 			m := 1 - order;
 			IF aWeights = NIL THEN
@@ -308,14 +308,14 @@ VAR
 		D*ay(x) = f(x,y(x)),  y(k)(0+) = y0[k],  where  0  < a < 2. *)
 	PROCEDURE SolveFODE*( f: CalcFn.Re2Arg;  y0: ARRAY OF NbrRe.Real;  x, order: NbrRe.Real;
 							VAR tol: NbrRe.Real ): NbrRe.Real;
-	VAR i, k, n: SIZE;  cCoef, pCoef, cSum, pSum, firstWeight, fn, gamma1, gamma2, h,
+	VAR i, k, n: LONGINT;  cCoef, pCoef, cSum, pSum, firstWeight, fn, gamma1, gamma2, h,
 		h2alpha, initialCondition, p, predictor, solution: NbrRe.Real;
 		bWeights, cWeights, save, y: POINTER TO ARRAY OF NbrRe.Real;
 		weights: ARRAY 2 OF NbrRe.Real;  pWeights: ARRAY 3 OF NbrRe.Real;
 		romberg: Romberg;
 
 		PROCEDURE UpdateBWeights;
-		VAR len, newLen: SIZE;  m: NbrRe.Real;
+		VAR len, newLen: LONGINT;  m: NbrRe.Real;
 		BEGIN
 			m := order;
 			IF bWeights = NIL THEN
@@ -342,7 +342,7 @@ VAR
 		END UpdateBWeights;
 
 		PROCEDURE UpdateCWeights;
-		VAR len, newLen: SIZE;  m: NbrRe.Real;
+		VAR len, newLen: LONGINT;  m: NbrRe.Real;
 		BEGIN
 			m := 1 + order;
 			IF cWeights = NIL THEN

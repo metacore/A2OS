@@ -579,7 +579,7 @@ TYPE
 
 		(* parse string-property *)
 		PROCEDURE ParseStringProperty() : XML.Element;
-		VAR prop : XML.Element; ac : XML.ArrayChars; s, t : String; i : SIZE;
+		VAR prop : XML.Element; ac : XML.ArrayChars; s, t : String; i : LONGINT;
 		BEGIN
 			NEW(prop);
 			IF FailToParse(":") THEN RETURN NIL END;
@@ -597,7 +597,7 @@ TYPE
 
 		(* parse name of a resource. check availability of resource if check is TRUE. return NIL if fail *)
 		PROCEDURE ParseResourceProperty(check : BOOLEAN) : XML.Element;
-		VAR prop : XML.Element; ac : XML.ArrayChars; s, t : String; i : SIZE;
+		VAR prop : XML.Element; ac : XML.ArrayChars; s, t : String; i : LONGINT;
 		BEGIN
 			NEW(prop);
 			IF FailToParse(":") THEN RETURN NIL END;
@@ -744,7 +744,7 @@ END NewString;
 (* result := a || b *)
 PROCEDURE Append(a : String; CONST b : ARRAY OF CHAR) : String;
 VAR s : String;
-	i, al, bl : SIZE;
+	i, al, bl : LONGINT;
 BEGIN
 	al := LEN(a^); bl := LEN(b);
 	NEW(s, al+bl-1);
@@ -754,7 +754,7 @@ BEGIN
 END Append;
 
 PROCEDURE LowerCase(s : String);
-VAR i : SIZE;
+VAR i : LONGINT;
 BEGIN
 	FOR i := 0 TO LEN(s^)-1 DO s^[i] := Strings.LOW(s^[i]) END
 END LowerCase;

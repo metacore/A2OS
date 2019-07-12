@@ -8,7 +8,7 @@ IMPORT SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 CONST
 	ConcurrentGC = TRUE; (* if TRUE then release needs to be compiled with --writeBarriers *)
 	LinuxHost = Unix.Version = "Linux";
-
+	
 	(*! Process flags, meaningless in Unix ports !!! *)
 	PleaseHalt* = 10;		(* Process requested to Halt itself soon *)
 	Unbreakable*= 11;		(* FINALLY shall not catch HALT exception (PleaseHalt is also set) *)
@@ -36,7 +36,7 @@ CONST
 	DefaultStacksize = 128*1024;
 
 
-VAR
+VAR	
 	(* timer *)
 	timerActivity		: TimerActivity;
 	clock				: Clock;
@@ -47,7 +47,7 @@ VAR
 
 	(* processes *)
 	root-	: Process;	(*!  Anchor of all instantiated threads in system *)
-	stacksize: SIZE;		(* stack size of active objects, adjustable via boot parameter *)
+	stacksize: LONGINT;		(* stack size of active objects, adjustable via boot parameter *)
 
 	processList		: Unix.Mutex_t;
 	createProcess	: Unix.Mutex_t;
@@ -59,7 +59,7 @@ VAR
 	processPointer	: Unix.Key_t;
 
 	newProcess: Process;
-	nextPID: WORD;
+	nextPID: LONGINT;
 
 	finalizerCaller	: FinalizerCaller;
 	mainthread: Unix.Thread_t;
@@ -205,11 +205,11 @@ TYPE
 		threadId-			: Unix.Thread_t;
 		nextProcess-	: Process;	(* next in list of all processes *)
 		stackBottom	-	: ADDRESS;
-		id-				: WORD;
+		id-				: LONGINT;
 		body			: Body;
-		mode-		: WORD;
+		mode-		: LONGINT;
 		flags-			: SET;
-		priority-		: WORD;	(* only effective if Aos is running SUID root *)
+		priority-		: LONGINT;	(* only effective if Aos is running SUID root *)
 		succ			: Process;   		  	(* in ProcessQueue *)
 		obj-			: ProtectedObject;	(* associated active object *)
 		condition-	: Condition;   			(* awaited process' condition *)
@@ -229,9 +229,9 @@ TYPE
 				SELF.mode := mode;
 				Machine.Release(Machine.Heaps);
 		END SetMode;
-
+		
 		PROCEDURE FindRoots;
-		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: SIZE; p {UNTRACED}: ANY;
+		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: WORD; p {UNTRACED}: ANY;
 			contextPos: SIZE; suspended: BOOLEAN;
 		BEGIN {UNTRACKED}
 			IF (mode < Running) OR (mode = Terminated) THEN  RETURN  END;
@@ -248,7 +248,7 @@ TYPE
 			sb := stackBottom;
 			contextPos := CAS(gcContext.nextPos,0,0);
 			sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- might all be invalid, when A2 was left ! *)
-
+		
 			IF TraceProcessHook # NIL THEN (* stack trace *)
 				TraceProcessHook(SELF, pc, bp, sp, sb);
 			END;
@@ -269,7 +269,7 @@ TYPE
 					END;
 				ELSIF Heaps.GCType = Heaps.MetaDataForStackGC THEN
 					LOOP
-						IF (bp <= stackBottom) & (bp >= sp) THEN
+						IF (bp <= stackBottom) & (bp >= sp) THEN 
 						ELSIF Machine.ValidHeapAddress(pc) & (bp # NIL) THEN (* bp = NIL can happen when code has no procedure activation frame *)
 							(* ok, valid stack frame from A2, we can trace this *)
 						ELSIF gcContext.GetNextContext(contextPos, bp, pc, sp) THEN
@@ -325,13 +325,13 @@ TYPE
 			END
 		END Cancel;
 
-		PROCEDURE GetPriority( ): WORD;
+		PROCEDURE GetPriority( ): LONGINT;
 		BEGIN
 			RETURN Unix.ThrGetPriority( threadId )
 		END GetPriority;
 
-		PROCEDURE SetPriority( prio: WORD );
-		VAR pr: WORD;
+		PROCEDURE SetPriority( prio: LONGINT );
+		VAR pr: LONGINT;
 		BEGIN
 		(*
 			Linux/Solaris11: works only with SUID root and FIFO threads
@@ -344,7 +344,7 @@ TYPE
 		END SetPriority;
 
 
-		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: WORD; fl: SET; stacksize: SIZE);
+		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: LONGINT; fl: SET; stacksize: LONGINT);
 		BEGIN
 			SELF.obj := obj;  condition := NIL;  continue := Unix.NewCond( );
 			flags := fl;
@@ -454,7 +454,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	END InitProtHeader;
 
 
-	PROCEDURE CreateProcess*( body: Body;  priority: WORD;  flags: SET;  obj: ProtectedObject );
+	PROCEDURE CreateProcess*( body: Body;  priority: LONGINT;  flags: SET;  obj: ProtectedObject );
 	VAR p: Process;  hdr{UNTRACED}: ObjectHeader;
 	BEGIN
 		Unix.MtxLock( createProcess );
@@ -472,11 +472,11 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		ASSERT( exclusive );   (* shared not implemented yet *)
 		SYSTEM.GET( SYSTEM.VAL( ADDRESS, obj ) + Heaps.HeapBlockOffset, hdr );
 		p := CurrentProcess();
-
+		
 		(*! we might want to replace the lock mutex by a lock free construct *)
 		IF hdr.lock = NIL THEN  InitProtHeader( hdr )  END;
 		lock := SYSTEM.VAL(LockT, hdr.lock);
-
+		
 		p.mode := AwaitingLock;
 		Unix.MtxLock( lock.mtx );
 		WHILE hdr.lockedBy # NIL DO
@@ -498,12 +498,12 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 		p := CurrentProcess();
 		ASSERT( hdr.lockedBy = p, 2204 );
-		p.succ := NIL;  p.condition := cond;  p.condFP := slink;  p.waitingOn := obj;
+		p.succ := NIL;  p.condition := cond;  p.condFP := slink;  p.waitingOn := obj;  
 
 		Put( hdr.awaitingCond, p );
 		hdr.lockedBy := c;
 		IF c # NIL THEN  Unix.CondSignal( c.continue )  ELSE  Unix.CondSignal( lock.enter )  END;
-
+		
 		p.mode := AwaitingCond;
 		Unix.CondWait( p.continue, lock.mtx );
 		p.mode := Running;  hdr.lockedBy := p;  p.waitingOn := NIL
@@ -564,7 +564,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		p.Cancel
 	END TerminateThis;
 
-	PROCEDURE SetPriority*( pri: WORD );		(* Set the current process' priority. *)
+	PROCEDURE SetPriority*( pri: LONGINT );		(* Set the current process' priority. *)
 	VAR me: Process;
 	BEGIN
 		me := CurrentProcess();
@@ -649,7 +649,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		RETURN bp  # NIL;
 	END NextValidStackSegment;
 
-	PROCEDURE GetProcessID*( ): WORD;
+	PROCEDURE GetProcessID*( ): LONGINT;
 	VAR p: Process;
 	BEGIN
 		p := CurrentProcess();
@@ -834,7 +834,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		END;
 		Machine.Release(Machine.Heaps);
 	END UpdateProcessState;
-
+	
 	(* suspend and store state *)
 	PROCEDURE Suspend(p: Process);
 	BEGIN
@@ -843,12 +843,12 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 																		but important for the other Unix ports. cf. Solaris.Unix.ThrSuspend *)
 		Machine.Release(Machine.X11);
 	END Suspend;
-
+	
 	PROCEDURE Resume(p: Process);
 	BEGIN
 		Unix.ThrResume( p.threadId );
 	END Resume;
-
+	
 	PROCEDURE SuspendActivities;
 	VAR t, me: Process;
 	BEGIN
@@ -943,7 +943,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE GetStacksize;
-	VAR str: ARRAY  32 OF  CHAR;  i: SIZE;
+	VAR str: ARRAY  32 OF  CHAR;  i: LONGINT;
 	BEGIN
 		Machine.GetConfig( "StackSize", str );
 		IF str = "" THEN  stacksize := DefaultStacksize
@@ -959,7 +959,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE Convert;
-	VAR p: Process; o: ProtectedObject;
+	VAR p: Process; o: ProtectedObject; 
 	BEGIN
 		(* make current thread the first active object  *)
 		mainthread := Unix.ThrThis();
@@ -968,7 +968,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	END Convert;
 
 	PROCEDURE Init;
-	BEGIN
+	BEGIN		
 		Unix.suspendHandler := GetContext;
 
 		createProcess := Unix.NewMtx( );  processList := Unix.NewMtx( );

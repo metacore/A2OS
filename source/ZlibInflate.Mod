@@ -97,7 +97,7 @@ MODULE ZlibInflate;	(** eos  **)
 		Window = ARRAY WindowSize OF CHAR;
 
 		(* check function *)
-		CheckFunc = PROCEDURE (old: LONGINT; CONST buf: ARRAY OF CHAR; idx, len: SIZE): LONGINT;
+		CheckFunc = PROCEDURE (old: LONGINT; CONST buf: ARRAY OF CHAR; idx, len: LONGINT): LONGINT;
 
 		(** inflate stream **)
 		Stream* = RECORD
@@ -109,11 +109,11 @@ MODULE ZlibInflate;	(** eos  **)
 
 			(* window and lookahead buffer *)
 			window: POINTER TO Window;	(* memory for the decompression window *)
-			read, write: SIZE;	(* window read and write index *)
+			read, write: LONGINT;	(* window read and write index *)
 			checkFn: CheckFunc;	(* function calculating checksum over output bytes *)
 			check: LONGINT;	(* current output checksum *)
 			buf: LONGINT;	(* bit buffer containing up to 32 lookup bits *)
-			bits: SIZE;	(* number of bits in lookup buffer = position of next bit *)
+			bits: LONGINT;	(* number of bits in lookup buffer = position of next bit *)
 
 			(* inflate state machine *)
 			inf: RECORD
@@ -130,7 +130,7 @@ MODULE ZlibInflate;	(** eos  **)
 			block: RECORD
 				state: SHORTINT;	(* current block state *)
 				last: BOOLEAN;	(* set for last block *)
-				left: SIZE;	(* bytes left to copy for non-compressed blocks *)
+				left: LONGINT;	(* bytes left to copy for non-compressed blocks *)
 				nlit: INTEGER;	(* number of literal/length codes *)
 				ndist: SHORTINT;	(* number of distance codes *)
 				nclen: SHORTINT;	(* number of code lengths *)
@@ -397,7 +397,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	(* copy as much as possible from sliding window to output buffer *)
 	PROCEDURE Flush (VAR s: Stream);
-		VAR n: SIZE;
+		VAR n: LONGINT;
 	BEGIN
 		(* get number of bytes to copy *)
 		IF s.read <= s.write THEN n := s.write - s.read
@@ -450,12 +450,12 @@ MODULE ZlibInflate;	(** eos  **)
 		RETURN TRUE
 	END Need;
 
-	PROCEDURE Dump (VAR s: Stream; bits: SIZE);
+	PROCEDURE Dump (VAR s: Stream; bits: LONGINT);
 	BEGIN
 		s.buf := LSH(s.buf, -bits); DEC(s.bits, bits)
 	END Dump;
 
-	PROCEDURE NeedOut (VAR s: Stream; VAR wavail: SIZE): BOOLEAN;
+	PROCEDURE NeedOut (VAR s: Stream; VAR wavail: LONGINT): BOOLEAN;
 	BEGIN
 		IF wavail = 0 THEN
 			IF (s.write = WindowSize) & (s.read # 0) THEN
@@ -494,8 +494,8 @@ MODULE ZlibInflate;	(** eos  **)
 	(* Called with number of bytes left to write in window (wavail) at least 258 (the maximum
 		string length) and number of input bytes available (s.in.avail) at least ten.  The ten bytes
 		are six bytes for the longest length/distance pair plus four bytes for overloading the bit buffer. *)
-	PROCEDURE InflateFast (VAR s: Stream; VAR wavail: SIZE);
-		VAR inavail, index, len: SIZE; base, dist: LONGINT; byte: CHAR; node: Node; exop: INTEGER;
+	PROCEDURE InflateFast (VAR s: Stream; VAR wavail: LONGINT);
+		VAR inavail, base, len, dist, index: LONGINT; byte: CHAR; node: Node; exop: INTEGER;
 	BEGIN
 		inavail := s.in.avail;
 		REPEAT
@@ -591,7 +591,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END InflateFast;
 
 	PROCEDURE InflateCodes (VAR s: Stream);
-		VAR wavail: SIZE; base: LONGINT; index: SIZE; node: Node; exop: INTEGER;
+		VAR wavail, base, index: LONGINT; node: Node; exop: INTEGER;
 	BEGIN
 		IF s.write < s.read THEN wavail := s.read - s.write - 1
 		ELSE wavail := WindowSize - s.write
@@ -746,7 +746,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	PROCEDURE InflateBlocks (VAR s: Stream);
 		VAR
-			wavail, t: SIZE; cnt, len: LONGINT; tn: TreeNodes; clen: ARRAY MaxLitLenCodes OF SHORTINT; code: Code; res: WORD;
+			wavail, t, cnt, len: LONGINT; tn: TreeNodes; clen: ARRAY MaxLitLenCodes OF SHORTINT; code: Code; res: WORD;
 			node: Node; lltree, dtree: Tree;
 	BEGIN
 		IF s.write < s.read THEN wavail := s.read - s.write - 1
@@ -826,9 +826,9 @@ MODULE ZlibInflate;	(** eos  **)
 			| BlkTable:	(* get number of code lengths for each tree *)
 				IF ~Need(s, 14) THEN EXIT END;	(* 5 (#lit/len-257) + 5 (#dist-1) + 4 (#codelen-4) *)
 				t := s.buf MOD 4000H;
-				s.block.nlit := INTEGER(257 + t MOD 20H); t := t DIV 20H;
-				s.block.ndist := SHORTINT(1 + t MOD 20H); t := t DIV 20H;
-				s.block.nclen := SHORTINT(4 + t);
+				s.block.nlit := SHORT(257 + t MOD 20H); t := t DIV 20H;
+				s.block.ndist := SHORT(SHORT(1 + t MOD 20H)); t := t DIV 20H;
+				s.block.nclen := SHORT(SHORT(4 + t));
 				IF (s.block.nlit > 286) OR (s.block.ndist > 30) THEN
 					SetMsg(s.res, "too many length or distance symbols");
 					s.block.state := BlkBad; s.res.code := DataError;
@@ -1204,7 +1204,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END SyncPoint;
 
 	(** uncompress complete stream and return output length in len **)
-	PROCEDURE Uncompress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; VAR len: SIZE; VAR res: Result);
+	PROCEDURE Uncompress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; VAR len: LONGINT; VAR res: Result);
 		VAR s: Stream;
 	BEGIN
 		ZlibBuffers.Init(s.in, src, srcoffset, srclen, srclen);

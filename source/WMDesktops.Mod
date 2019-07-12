@@ -21,7 +21,7 @@ PROCEDURE CloseAllWindows;
 VAR
 	window : WMWindowManager.Window;
 	windows : POINTER TO ARRAY OF WMWindowManager.Window;
-	nofWindows, i : SIZE;
+	nofWindows, i : LONGINT;
 BEGIN
 	ASSERT(manager # NIL);
 	manager.lock.AcquireWrite;

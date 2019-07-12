@@ -45,7 +45,7 @@ TYPE
 	TestDataWriter* = OBJECT(TestDataBase);
 
 		PROCEDURE FillWithTestData*(VAR buffer : ARRAY OF CHAR);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(buffer) - 1 DO buffer[i] := CHR(i MOD 256); END;
 		END FillWithTestData;
@@ -129,7 +129,7 @@ TYPE
 	ZeroWriter* = OBJECT(TestDataWriter);
 
 		PROCEDURE FillWithTestData*(VAR buffer : ARRAY OF CHAR);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(buffer) - 1 DO buffer[i] := 0X; END;
 		END FillWithTestData;
@@ -192,7 +192,7 @@ TYPE
 		END WriteTestSettings;
 
 		PROCEDURE WriteSummary;
-		VAR i, val : SIZE;
+		VAR i, val : LONGINT;
 
 			PROCEDURE WriteB(b: HUGEINT; w : Streams.Writer);
 			VAR suffix: ARRAY 3 OF CHAR;

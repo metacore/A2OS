@@ -125,7 +125,7 @@ TYPE
 			FolderComplete: BOOLEAN; (* is set to FALSE by SelectFolder an means that Synchronize has not yet been executed completly *)
 			Task*: LONGINT;
 
-			searchResult-: POINTER TO ARRAY OF SIZE;
+			searchResult-: POINTER TO ARRAY OF LONGINT;
 			timer*: Kernel.Timer;
 
 			observer: EventListener;
@@ -133,7 +133,7 @@ TYPE
 			applySearchFilter*: BOOLEAN;
 
 			ret: Classes.List;
-			numberOfMessages: SIZE;
+			numberOfMessages: LONGINT;
 			preferences*: AccountPreferences;
 
 		PROCEDURE &Init*(obs: EventListener; error: ErrorListener);
@@ -359,8 +359,7 @@ TYPE
 		PROCEDURE CheckSearch(answer: IMAP.Entry);
 		VAR
 			list: Classes.List;
-			number: LONGINT;
-			j, count: SIZE;
+			j, count, number: LONGINT;
 			entP: ANY;
 			ent: IMAP.Entry;
 		BEGIN
@@ -381,7 +380,7 @@ TYPE
 		PROCEDURE CheckStatus(answer: IMAP.Entry);
 		VAR
 			list: Classes.List;
-			j: SIZE;
+			j: LONGINT;
 			entP: ANY;
 			ent: IMAP.Entry;
 		BEGIN
@@ -392,7 +391,7 @@ TYPE
 				IF ent.data^ = "MESSAGES" THEN
 					entP := list.GetItem(j+1);
 					ent := entP(IMAP.Entry);
-					Strings.StrToSize(ent.data^, numberOfMessages);
+					Strings.StrToInt(ent.data^, numberOfMessages);
 				END;
 			END;
 		END CheckStatus;
@@ -465,7 +464,7 @@ TYPE
 			list, envList, structureList, subStructureList: Classes.List;
 			entP, envEntP, structureP: ANY;
 			ent, envEnt, structure: IMAP.Entry;
-			j, l: SIZE;
+			j, l: LONGINT;
 			message: Message;
 			header: HeaderElement;
 			bodystructure: Bodystructure;
@@ -474,7 +473,7 @@ TYPE
 			(* translate the internal IMAP representation [Realname] [namePart] [domainPart] to a list of Address objects *)
 			PROCEDURE Imap2AdrList(entry:IMAP.Entry):Classes.List;
 			VAR
-				k: SIZE;
+				k: LONGINT;
 				ent,temp: IMAP.Entry;
 				entP, tempP:ANY;
 				inlist, outlist: Classes.List;
@@ -598,8 +597,8 @@ TYPE
 		PROCEDURE Synchronize(): LONGINT;
 		VAR
 			path, items: String;
-			r: WORD;
-			i, count, step, start, stop, single, fetchStart, fetchStop: SIZE;
+			r, i: LONGINT;
+			count, step, start, stop, single, fetchStart, fetchStop: LONGINT;
 			oldMessages, newMessages: Classes.List;
 			p, pOld: ANY;
 			message, oldMsg: Message;
@@ -743,8 +742,8 @@ TYPE
 
 		PROCEDURE DownloadAllMessages(): LONGINT;
 		VAR
-			r: LONGINT;
-			count, step, start, end: SIZE;
+			r, count, step: LONGINT;
+			start, end: LONGINT;
 			message: Message;
 			p: ANY;
 		BEGIN
@@ -791,7 +790,7 @@ TYPE
 		END DownloadAllMessages;
 
 		(* fetches starting from idx the following len Messages *)
-		PROCEDURE FetchSomeHeaders(idx, len: SIZE): LONGINT;
+		PROCEDURE FetchSomeHeaders(idx, len: LONGINT): LONGINT;
 		VAR
 			ret: Classes.List;
 			r: LONGINT;
@@ -812,7 +811,7 @@ TYPE
 		END FetchSomeHeaders;
 
 		(* fetches starting from idx the following len Messages *)
-		PROCEDURE FetchSomeUIDs(idx, len: SIZE): LONGINT;
+		PROCEDURE FetchSomeUIDs(idx, len: LONGINT): LONGINT;
 		VAR
 			ret: Classes.List;
 			r: LONGINT;
@@ -832,7 +831,7 @@ TYPE
 			RETURN OK;
 		END FetchSomeUIDs;
 
-		PROCEDURE FetchSomeMessages(idx, len: SIZE): LONGINT;
+		PROCEDURE FetchSomeMessages(idx, len: LONGINT): LONGINT;
 		VAR
 			ret: Classes.List;
 			r: LONGINT;
@@ -1195,7 +1194,7 @@ TYPE
 			temp: Folder;
 			path: String;
 			ret: Classes.List;
-			nameLen, pathLen: SIZE;
+			nameLen, pathLen: LONGINT;
 		BEGIN
 			(* set the alive flag of all the current subfolders to FALSE to elimitate dead subfolders later *)
 			i := 0;
@@ -1316,7 +1315,7 @@ TYPE
 			newName: String;
 			oldName: String;
 			r: LONGINT;
-			pathLen: SIZE;
+			pathLen: LONGINT;
 			ret: Classes.List;
 			parent: Folder;
 		BEGIN {EXCLUSIVE}
@@ -1399,7 +1398,7 @@ TYPE
 			r: LONGINT;
 			string: String;
 			newName: String;
-			len, pos: SIZE;
+			len, pos: LONGINT;
 			ret: Classes.List;
 		BEGIN {EXCLUSIVE}
 			IF status # ONLINE THEN
@@ -1431,7 +1430,7 @@ TYPE
 			RETURN r;
 		END Create;
 
-		PROCEDURE Search*(CONST string: ARRAY OF CHAR): SIZE;
+		PROCEDURE Search*(string: ARRAY OF CHAR): LONGINT;
 		VAR
 			r: LONGINT;
 			ret: Classes.List;
@@ -1458,9 +1457,9 @@ TYPE
 			RETURN LEN(searchResult);
 		END Search;
 
-		PROCEDURE OfflineSearch(CONST string: ARRAY OF CHAR): SIZE;
+		PROCEDURE OfflineSearch(string: ARRAY OF CHAR): LONGINT;
 		VAR
-			i, count: SIZE;
+			i, count: LONGINT;
 			reader: Streams.StringReader;
 			command: String;
 			Result: POINTER TO ARRAY OF BOOLEAN;
@@ -1967,8 +1966,7 @@ TYPE
 			buffer: Strings.Buffer;
 			writer: Streams.Writer;
 			string: String;
-			i: SIZE;
-			r: LONGINT;
+			i, r: LONGINT;
 			element, subElement: XML.Element;
 			subElements, subSubElements, data: XMLObjects.Enumerator;
 			cdata: XML.CDataSect;
@@ -2360,7 +2358,7 @@ TYPE
 		PROCEDURE GetPath*(): String;
 		VAR
 			path: String;
-			pathLen, nameLen: SIZE;
+			pathLen, nameLen: LONGINT;
 		BEGIN
 			pathLen := IMAPUtilities.StringLength(SELF.path^);
 			nameLen := IMAPUtilities.StringLength(SELF.name^);
@@ -2416,7 +2414,7 @@ TYPE
 		(* import list of flags *)
 		PROCEDURE ParseList*(list: Classes.List);
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			ent: IMAP.Entry;
 			entP: ANY;
 		BEGIN

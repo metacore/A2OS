@@ -339,10 +339,8 @@ TYPE
 		dl,   (* Data length.           *)
 		(* Support variables. *)
 		co, cl, (* Copy offset, length. *)
-		n: LONGINT;
 		tvo, (* Target view offset. *)
-		istart: Files.Position;
-		read: SIZE;
+		istart, n, read: LONGINT;
 		iord, op: INTEGER; ch: CHAR;
 		sourceF, targetF: Files.File;
 	BEGIN
@@ -1419,8 +1417,7 @@ TYPE
 	PROCEDURE SvnWritePROPS ( CONST path, filename : ARRAY OF CHAR; props : SvnProps );
 	VAR
 		tmp,fstr,fstr2 : ARRAY 256 OF CHAR;
-		i: LONGINT; res: WORD;
-		len: SIZE;
+		len, i: LONGINT; res: WORD;
 		fr, fw : Files.File;
 		r : Files.Reader;
 		w : Files.Writer;

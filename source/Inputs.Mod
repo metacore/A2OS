@@ -307,7 +307,7 @@ BEGIN
 END NewBroadcaster;
 
 PROCEDURE Init;
-VAR s: ARRAY 16 OF CHAR; i: SIZE; threshold, speedup: LONGINT;
+VAR s: ARRAY 16 OF CHAR; i, threshold, speedup: LONGINT;
 BEGIN
 	Machine.GetConfig("Threshold", s);
 	i := 0; threshold := Machine.StrToInt(i, s);

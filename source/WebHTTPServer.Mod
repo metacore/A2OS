@@ -47,7 +47,7 @@ TYPE
 			path : ARRAY 1024 OF CHAR;
 
 			PROCEDURE Add(CONST s: ARRAY OF CHAR);
-			VAR j, k: SIZE; ch: CHAR;
+			VAR j, k: LONGINT; ch: CHAR;
 			BEGIN
 				j := 0; k := 0;
 				LOOP
@@ -137,7 +137,7 @@ TYPE
 
 				IF (reply.statuscode = WebHTTP.OK) OR (reply.statuscode = WebHTTP.NotFound) THEN
 					IF (f # NIL) THEN
-						reply.contentlength := f.Length()(LONGINT);
+						reply.contentlength := f.Length();
 						WebHTTP.SendResponseHeader(reply, out);
 						IF (request.method = WebHTTP.GetM) THEN
 							Files.OpenReader(fr, f, 0);
@@ -275,7 +275,7 @@ TYPE
 			VAR request: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR out: Streams.Writer; secure : BOOLEAN
 		);
-		VAR i: SIZE; pi: HTTPPlugin; p: ANY; exit: BOOLEAN;
+		VAR i: LONGINT; pi: HTTPPlugin; p: ANY; exit: BOOLEAN;
 		BEGIN
 			BEGIN {EXCLUSIVE}
 				exit := FALSE;
@@ -301,18 +301,18 @@ TYPE
 	HTTPAgent = OBJECT (TCPServices.Agent)
 	VAR
 		res: WORD;
-		len : SIZE;
+		len : LONGINT;
 		body, closeRequested: BOOLEAN;
 		out: Streams.Writer; in, inR: Streams.Reader;
 		o : ANY;
 		h, th : Host;
-		i : SIZE;
+		i : LONGINT;
 		request : WebHTTP.RequestHeader;
 		reply: WebHTTP.ResponseHeader;
 		value: ARRAY 128 OF CHAR;
 		timeout: Objects.Timer;
 		dechunk: WebHTTP.ChunkedInStream;
-		consecutiveErrors: SIZE;
+		consecutiveErrors: LONGINT;
 		secure : BOOLEAN;
 		listenerProc : ListenerProc;
 
@@ -498,7 +498,7 @@ END GetDefaultResponseHeader;
 
 (** Sends all availabe data from src to dst *)
 PROCEDURE SendData*(src: Streams.Reader; dst: Streams.Writer);
-VAR len: SIZE; buf: ARRAY FileBufSize OF CHAR;
+VAR len: LONGINT; buf: ARRAY FileBufSize OF CHAR;
 BEGIN
 	WHILE (src.res = Streams.Ok) DO
 		src.Bytes(buf, 0, FileBufSize, len);
@@ -514,7 +514,7 @@ END AddHost;
 
 (** get a list of matching hosts (wildcards permitted, "*" returns all hosts) *)
 PROCEDURE FindHosts*(CONST host: ARRAY OF CHAR): HostList;
-VAR i: SIZE; o: ANY; l, p, old: HostList;
+VAR i: LONGINT; o: ANY; l, p, old: HostList;
 BEGIN {EXCLUSIVE}
 	NEW(l);
 	IF (host = "") THEN l.host := defaultHost;
@@ -534,7 +534,7 @@ END FindHosts;
 
 (** remove the virtual host given by name *)
 PROCEDURE RemoveHost*(CONST host : ARRAY OF CHAR; VAR res : WORD);
-VAR i : SIZE; o, h : ANY;
+VAR i : LONGINT; o, h : ANY;
 BEGIN {EXCLUSIVE}
 	hosts.Lock;
 	FOR i := 0 TO hosts.GetCount() - 1 DO
@@ -615,10 +615,10 @@ END StopHTTPS;
 (** enumerate all installed hosts *)
 PROCEDURE ShowHosts*(out : Streams.Writer);
 VAR
-	i : SIZE; o : ANY;
+	i : LONGINT; o : ANY;
 
 	PROCEDURE PrintHost(h: Host);
-	VAR p: ANY; i: SIZE;
+	VAR p: ANY; i: LONGINT;
 	BEGIN
 		out.String("Host: ");
 		IF (h.name = "") THEN out.String("default host")

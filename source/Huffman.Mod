@@ -107,7 +107,7 @@ TYPE
 
 
 			PROCEDURE WriteFrequencies( pw: PatternWeights );
-			VAR i, n: SIZE;
+			VAR i, n: LONGINT;
 				pc: PatternCounts;
 			BEGIN
 				n := LEN( pw^ );
@@ -123,15 +123,15 @@ TYPE
 			END WriteFrequencies;
 
 
-			PROCEDURE CountPatterns( CONST source: ARRAY OF CHAR; len: SIZE ): PatternWeights;
+			PROCEDURE CountPatterns( CONST source: ARRAY OF CHAR; len: LONGINT ): PatternWeights;
 			VAR
-				i: SIZE;  pc: PatternCounts;
+				i: LONGINT;  pc: PatternCounts;
 			BEGIN
 				FOR i := 0 TO 255 DO  pc[i] := 0  END;
 				FOR i := 0 TO len - 1 DO  INC( pc[ORD( source[i] )] )  END;
 				FOR i := 0 TO 255 DO
 					IF pc[i] > 0 THEN (* scale => [1..101H] *)
-						pc[i] := 100H * pc[i] DIV len(LONGINT) + 1;
+						pc[i] := 100H * pc[i] DIV len + 1;
 					END;
 				END;
 				RETURN ContainedPatterns( pc )
@@ -171,9 +171,9 @@ TYPE
 			END PutCode;
 
 
-			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: SIZE );
+			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: LONGINT );
 			VAR
-				i: SIZE;
+				i: LONGINT;
 				pw: PatternWeights;
 			BEGIN
 				pw := CountPatterns( source, len );
@@ -280,7 +280,7 @@ TYPE
 
 	PROCEDURE BuildTree( pw: PatternWeights ): Node;
 	VAR
-		i, start, top: SIZE;  node, n2: Node;
+		i, start, top: LONGINT;  node, n2: Node;
 		a: POINTER TO ARRAY OF Node;
 		patt: LONGINT;
 	BEGIN

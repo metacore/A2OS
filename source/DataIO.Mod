@@ -259,7 +259,7 @@ TYPE
 			NEW( lib );  initialwpos := 0
 		END Initialize;
 
-		PROCEDURE Length*( ): Files.Size;
+		PROCEDURE Length*( ): LONGINT;
 		BEGIN
 			RETURN F.Length()
 		END Length;
@@ -356,7 +356,7 @@ VAR
 	BEGIN
 		f.W.Update;  NEW( libPosW, f.F, 0 );   (* writing library position to very first position *)
 
-		libPosW.RawLInt( f.W.Pos()(LONGINT) + f.initialwpos );  libPosW.Update;  f.lib.Write( f.W );
+		libPosW.RawLInt( f.W.Pos() + f.initialwpos );  libPosW.Update;  f.lib.Write( f.W );
 
 		f.W.Update;  Files.Register( f.F );  f.F := NIL;  f.lib := NIL;  f.R := NIL;  f.W := NIL
 	END Close;

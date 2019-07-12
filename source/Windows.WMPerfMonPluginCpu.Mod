@@ -11,7 +11,7 @@ TYPE
 
 	(* Dummy parameter for compatiblity only *)
 	CpuParameter* = POINTER TO RECORD (WMPerfMonPlugins.Parameter)
-		processorID* : SIZE;
+		processorID* : LONGINT;
 	END;
 
 	CpuLoad* = OBJECT(WMPerfMonPlugins.Plugin);

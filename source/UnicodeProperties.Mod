@@ -47,10 +47,10 @@ TYPE
 	CharacterPropertyCache = OBJECT
 	VAR
 		internalCache : POINTER TO ARRAY OF CacheElement;
-		cacheSize : SIZE;
+		cacheSize : LONGINT;
 
 		(* Initializes the hashmap with a specific size *)
-		PROCEDURE &Init*(size : SIZE);
+		PROCEDURE &Init*(size : LONGINT);
 		BEGIN
 			cacheSize := size;
 			NEW(internalCache,cacheSize);
@@ -59,7 +59,7 @@ TYPE
 		(* Searches the cache for a specific key and returns the corresponding string entry *)
 		PROCEDURE SLookup(char : Texts.Char32; VAR res : ARRAY OF CHAR);
 		VAR
-			bucket : SIZE;
+			bucket : LONGINT;
 			currentElement : CacheElement;
 		BEGIN
 			(* get the bucket where the element resides if available *)
@@ -88,7 +88,7 @@ TYPE
 		(* Searches the cache for a specific key and returns the corresponding character entry *)
 		PROCEDURE CLookup(char : Texts.Char32) : Texts.Char32;
 		VAR
-			bucket : SIZE;
+			bucket : LONGINT;
 			currentElement : CacheElement;
 		BEGIN
 			(* get the bucket where the element resides if available *)
@@ -118,7 +118,7 @@ TYPE
 		PROCEDURE SInsert(char : Texts.Char32; CONST value : ARRAY OF CHAR);
 		VAR
 			newElement : CacheElement;
-			bucket : SIZE;
+			bucket : LONGINT;
 		BEGIN
 			NEW(newElement,char,value,-1);
 
@@ -139,7 +139,7 @@ TYPE
 		PROCEDURE CInsert(char : Texts.Char32; value : Texts.Char32);
 		VAR
 			newElement: CacheElement;
-			bucket : SIZE;
+			bucket : LONGINT;
 			dummy : ARRAY 1 OF CHAR;
 		BEGIN
 			dummy[0] := CHR(0H);
@@ -160,7 +160,7 @@ TYPE
 		(* Prints the whole cache to the console *)
 		PROCEDURE Print;
 		VAR
-			i : SIZE;
+			i : LONGINT;
 			thisElement : CacheElement;
 		BEGIN
 			FOR i := 0 TO cacheSize - 1 DO
@@ -185,7 +185,7 @@ TYPE
 		filename : ARRAY 256 OF CHAR;
 		text : Texts.Text;
 		textReader : Texts.TextReader;
-		startPos : SIZE;
+		startPos : LONGINT;
 		decoder : Codecs.TextDecoder;
 		msg : ARRAY 512 OF CHAR;
 		fullname : ARRAY 256 OF CHAR;
@@ -348,7 +348,7 @@ TYPE
 		END IsWhiteSpaceChar;
 
 		(* Gets the character's property at a certain position (0 being the character itself). *)
-		PROCEDURE GetProperty*(char : Texts.Char32; pos : SIZE; VAR res : ARRAY OF CHAR);
+		PROCEDURE GetProperty*(char : Texts.Char32; pos : LONGINT; VAR res : ARRAY OF CHAR);
 		VAR
 			thisChar, thisInt : Texts.Char32;
 			i,j : INTEGER;

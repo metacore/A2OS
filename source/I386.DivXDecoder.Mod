@@ -1670,7 +1670,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 			done: BOOLEAN;
 			temp: LONGINT;
 			ofs, size: LONGINT;
-			len: SIZE;
+			len: LONGINT;
 			i: LONGINT;
 			tmp: LONGINT;
 			tmpPtr: DT.PointerToArrayOfCHAR;

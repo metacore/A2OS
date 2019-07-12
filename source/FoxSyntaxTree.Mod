@@ -549,8 +549,8 @@ TYPE
 			isRealtime-: BOOLEAN;
 			recursion: BOOLEAN;
 
-			sizeInBits-: SIZE; (* allocation size of this type in bits *)
-			alignmentInBits-: SIZE;
+			sizeInBits-: LONGINT; (* allocation size of this type in bits *)
+			alignmentInBits-: LONGINT;
 
 		PROCEDURE & InitType*( position: Position);
 		BEGIN
@@ -559,18 +559,18 @@ TYPE
 			typeDeclaration := NIL;
 			scope := NIL;
 			resolved := SELF;
-			sizeInBits := MIN(SIZE);
+			sizeInBits := MIN(LONGINT);
 			alignmentInBits := 0;
 			isRealtime := FALSE;
 			recursion := FALSE;
 			hasPointers := FALSE;
 		END InitType;
 
-		PROCEDURE SetSize*(sizeInBits: SIZE);
+		PROCEDURE SetSize*(sizeInBits: LONGINT);
 		BEGIN SELF.sizeInBits := sizeInBits
 		END SetSize;
 
-		PROCEDURE SetAlignmentInBits*(alignmentInBits: SIZE);
+		PROCEDURE SetAlignmentInBits*(alignmentInBits: LONGINT);
 		BEGIN SELF.alignmentInBits := alignmentInBits
 		END SetAlignmentInBits;
 
@@ -643,7 +643,7 @@ TYPE
 	BasicType*= OBJECT(Type)
 	VAR name-: Identifier;
 
-		PROCEDURE & InitBasicType(CONST id: ARRAY OF CHAR; sizeInBits: SIZE);
+		PROCEDURE & InitBasicType(CONST id: ARRAY OF CHAR; sizeInBits: LONGINT);
 		VAR str: IdentifierString;
 		BEGIN
 			COPY(id, str);Basic.AppendNumber(str,sizeInBits); name := NewIdentifier(str);
@@ -668,7 +668,7 @@ TYPE
 	**)
 	ObjectType*=OBJECT(BasicType)
 
-		PROCEDURE & InitObjectType(sizeInBits: SIZE);
+		PROCEDURE & InitObjectType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Object",sizeInBits);
 			hasPointers := TRUE;
@@ -693,7 +693,7 @@ TYPE
 	**)
 	NilType*=OBJECT(BasicType)
 
-		PROCEDURE & InitNilType(sizeInBits: SIZE);
+		PROCEDURE & InitNilType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Nil",sizeInBits);
 			SetRealtime(TRUE);
@@ -719,7 +719,7 @@ TYPE
 	**)
 	AnyType*=OBJECT(BasicType)
 
-		PROCEDURE & InitAnyType(sizeInBits: SIZE);
+		PROCEDURE & InitAnyType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Any",sizeInBits);
 			hasPointers := TRUE;
@@ -744,7 +744,7 @@ TYPE
 	**)
 	ByteType*=OBJECT(BasicType)
 
-		PROCEDURE & InitByteType(sizeInBits: SIZE);
+		PROCEDURE & InitByteType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Byte",sizeInBits);
 			SetRealtime(TRUE);
@@ -765,7 +765,7 @@ TYPE
 	**)
 	AddressType*=OBJECT(BasicType)
 
-		PROCEDURE & InitAddressType(sizeInBits: SIZE);
+		PROCEDURE & InitAddressType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Address",sizeInBits);
 			SetRealtime(TRUE);
@@ -786,7 +786,7 @@ TYPE
 	**)
 	SizeType*=OBJECT(BasicType)
 
-		PROCEDURE & InitSizeType(sizeInBits: SIZE);
+		PROCEDURE & InitSizeType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Size",sizeInBits);
 			SetRealtime(TRUE);
@@ -807,7 +807,7 @@ TYPE
 	**)
 	BooleanType*=OBJECT(BasicType)
 
-		PROCEDURE & InitBooleanType(sizeInBits: SIZE);
+		PROCEDURE & InitBooleanType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Boolean",sizeInBits);
 			SetRealtime(TRUE);
@@ -828,7 +828,7 @@ TYPE
 	**)
 	SetType*=OBJECT(BasicType)
 
-		PROCEDURE & InitSetType(sizeInBits: SIZE);
+		PROCEDURE & InitSetType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Set",sizeInBits);
 			SetRealtime(TRUE);
@@ -849,7 +849,7 @@ TYPE
 	**)
 	CharacterType*=OBJECT(BasicType)
 
-		PROCEDURE & InitCharacterType(sizeInBits: SIZE);
+		PROCEDURE & InitCharacterType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@Character", sizeInBits);
 			SetRealtime(TRUE);
@@ -869,7 +869,7 @@ TYPE
 		represented by basic type <<RANGE>>
 	**)
 	RangeType* = OBJECT(BasicType)
-		PROCEDURE & InitRangeType(sizeInBits: SIZE);
+		PROCEDURE & InitRangeType(sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType("@RangeType",sizeInBits);
 			SetRealtime(TRUE);
@@ -892,7 +892,7 @@ TYPE
 	(* number types: IntegerType or FloatType *)
 	NumberType*=OBJECT(BasicType)
 
-		PROCEDURE & InitNumberType( CONST name: ARRAY OF CHAR; sizeInBits: SIZE);
+		PROCEDURE & InitNumberType( CONST name: ARRAY OF CHAR; sizeInBits: LONGINT);
 		BEGIN
 			InitBasicType(name, sizeInBits);
 			SetRealtime(TRUE);
@@ -906,7 +906,7 @@ TYPE
 	IntegerType*= OBJECT (NumberType)
 	VAR signed-: BOOLEAN;
 
-		PROCEDURE & InitIntegerType(sizeInBits: SIZE; signed: BOOLEAN);
+		PROCEDURE & InitIntegerType(sizeInBits: LONGINT; signed: BOOLEAN);
 		BEGIN
 			IF signed THEN
 				InitNumberType("@Integer",sizeInBits);
@@ -932,7 +932,7 @@ TYPE
 	**)
 	FloatType*= OBJECT (NumberType)
 
-		PROCEDURE & InitFloatType(sizeInBits: SIZE);
+		PROCEDURE & InitFloatType(sizeInBits: LONGINT);
 		BEGIN
 			InitNumberType("@Float",sizeInBits);
 		END InitFloatType;
@@ -1027,10 +1027,10 @@ TYPE
 	(** string literal type **)
 	StringType*= OBJECT(Type)
 	VAR
-		length-: SIZE;
+		length-: LONGINT;
 		baseType-: Type;
 
-		PROCEDURE & InitStringType(position: Position; baseType: Type; length: SIZE);
+		PROCEDURE & InitStringType(position: Position; baseType: Type; length: LONGINT);
 		BEGIN
 			InitType(position);
 			SetRealtime(TRUE);
@@ -1038,7 +1038,7 @@ TYPE
 			SELF.baseType := baseType;
 		END InitStringType;
 
-		PROCEDURE SetLength*(length: SIZE);
+		PROCEDURE SetLength*(length: LONGINT);
 		BEGIN SELF.length := length
 		END SetLength;
 
@@ -1187,7 +1187,7 @@ TYPE
 			arrayBase-: Type;
 			length-: Expression;
 			staticLength-: LONGINT;
-			staticIncrementInBits-: SIZE;
+			staticIncrementInBits-: LONGINT;
 			form-: LONGINT;
 			isUnsafe-: BOOLEAN;
 
@@ -1232,7 +1232,7 @@ TYPE
 			END;
 		END SetLength;
 
-		PROCEDURE SetIncrement*(increment: SIZE);
+		PROCEDURE SetIncrement*(increment: LONGINT);
 		BEGIN staticIncrementInBits := increment
 		END SetIncrement;
 
@@ -1429,7 +1429,7 @@ TYPE
 		VAR
 			direction-: LONGINT;
 			sizeExpression-: Expression; (* generated by parser *)
-			sizeInBits-: SIZE; (* computed by checker *)
+			sizeInBits-: LONGINT; (* computed by checker *)
 			cellsAreObjects-: BOOLEAN;
 
 		PROCEDURE & InitPortType(position: Position; direction: LONGINT; sizeExpression: Expression; scope: Scope);
@@ -1441,7 +1441,7 @@ TYPE
 			cellsAreObjects := FALSE;
 		END InitPortType;
 
-		PROCEDURE SetSize*(size: SIZE);
+		PROCEDURE SetSize*(size: LONGINT);
 		BEGIN sizeInBits := size
 		END SetSize;
 
@@ -1609,8 +1609,8 @@ TYPE
 
 	CellType*=OBJECT (Type)
 	VAR
-		firstParameter-,lastParameter-: Parameter; numberParameters-: SIZE;  (* parameters *)
-		firstProperty-, lastProperty-: Property; numberProperties: SIZE; (* capabilities *)
+		firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters *)
+		firstProperty-, lastProperty-: Property; numberProperties: LONGINT; (* capabilities *)
 		cellScope-: CellScope;
 		isCellNet-: BOOLEAN;
 		modifiers-: Modifier;
@@ -1737,10 +1737,10 @@ TYPE
 			selfParameter-: Parameter;
 
 			isDelegate-,isInterrupt-,noPAF-,noReturn-: BOOLEAN;
-			pcOffset-: SIZE; (* PC offset: used for ARM interrupt procedures *)
+			pcOffset-: LONGINT; (* PC offset: used for ARM interrupt procedures *)
 			callingConvention-: CallingConvention;
-			stackAlignment-: SIZE;
-			parametersOffset-: SIZE; (* stack parameter offset -- in units of addresses: one pointer = 1 *)
+			stackAlignment-: LONGINT;
+			parametersOffset-: LONGINT; (* stack parameter offset -- in units of addresses: one pointer = 1 *)
 
 		PROCEDURE & InitProcedureType( position: Position; scope: Scope);
 		BEGIN
@@ -1767,7 +1767,7 @@ TYPE
 		BEGIN SELF.noReturn := noReturn
 		END SetNoReturn;
 
-		PROCEDURE SetPcOffset*(pcOffset: SIZE);
+		PROCEDURE SetPcOffset*(pcOffset: LONGINT);
 		BEGIN SELF.pcOffset := pcOffset
 		END SetPcOffset;
 
@@ -1792,7 +1792,7 @@ TYPE
 			hasUntracedReturn := untraced;
 		END SetUntracedReturn;
 
-		PROCEDURE SetStackAlignment*(alignment: SIZE);
+		PROCEDURE SetStackAlignment*(alignment: LONGINT);
 		BEGIN
 			stackAlignment := alignment;
 		END SetStackAlignment;
@@ -1973,7 +1973,7 @@ TYPE
 		BEGIN NEW( list,8 );
 		END InitList;
 
-		PROCEDURE Length*( ): SIZE;
+		PROCEDURE Length*( ): LONGINT;
 		BEGIN RETURN list.Length();
 		END Length;
 
@@ -1996,7 +1996,7 @@ TYPE
 		END RemoveExpression;
 
 		PROCEDURE Revert*;
-		VAR i,j,last: SIZE; ei,ej: ANY;
+		VAR i,j,last: LONGINT; ei,ej: ANY;
 		BEGIN
 			last := Length()-1;
 			FOR i := 0 TO last DO
@@ -2603,7 +2603,7 @@ TYPE
 	StringValue* = OBJECT (Value)
 		VAR
 			value-: String;
-			length-: SIZE;
+			length-: LONGINT;
 
 		PROCEDURE & InitStringValue(position: Position; value: String);
 		BEGIN
@@ -2620,7 +2620,7 @@ TYPE
 		END SetValue;
 
 		PROCEDURE Append*(CONST value: String);
-		VAR new: String; len: SIZE;
+		VAR new: String; len: LONGINT;
 		BEGIN
 			len := Strings.Length(SELF.value^) + Strings.Length(value^) + 1;
 			IF LEN(SELF.value) < len THEN
@@ -2629,7 +2629,7 @@ TYPE
 				SELF.value := new
 			END;
 			Strings.Append(SELF.value^, value^);
-			length := len;
+			length := len
 		END Append;
 
 		PROCEDURE AppendChar*(CONST ch: CHAR);
@@ -2670,7 +2670,7 @@ TYPE
 		BEGIN RETURN (v# NIL) & (v IS EnumerationValue) & (v(EnumerationValue).value = value); END Equals;
 
 	END EnumerationValue;
-
+	
 	ProcedureValue* = OBJECT (Value)
 	VAR
 		value-: Procedure;
@@ -2686,7 +2686,7 @@ TYPE
 
 		PROCEDURE Equals*(v: Expression):BOOLEAN;
 		BEGIN RETURN (v# NIL) & (v IS ProcedureValue) & (v(ProcedureValue).value = value); END Equals;
-
+		
 	END ProcedureValue;
 
 	(**** symbols ****)
@@ -2700,10 +2700,10 @@ TYPE
 		access-: SET; (* access flags (exported, readonly etc.) *)
 		type-: Type; (* type of constant / variable / parameter / procedure return type *)
 		scope-:Scope; (* container of symbol *)
-		offsetInBits-: SIZE; (* offset in stack or heap, in bits *)
+		offsetInBits-: LONGINT; (* offset in stack or heap, in bits *)
 		used-, written-: BOOLEAN;
 		fixed-: BOOLEAN;
-		alignment-: SIZE;
+		alignment-: LONGINT;
 
 		position-, end-: Position; state-: SET;
 		fingerprint-: Fingerprint;
@@ -2721,7 +2721,7 @@ TYPE
 			type := NIL;
 			access := Internal;
 			state := Undefined;
-			offsetInBits := MIN(SIZE);
+			offsetInBits := MIN(LONGINT);
 			alignment := 0; (* take default *)
 			fixed := FALSE;
 			used := FALSE; written := FALSE;
@@ -2735,7 +2735,7 @@ TYPE
 			target.name := name;
 		END Copy;
 
-		PROCEDURE SetAlignment*(fix: BOOLEAN; align: SIZE);
+		PROCEDURE SetAlignment*(fix: BOOLEAN; align: LONGINT);
 		BEGIN SELF.alignment := align; fixed := fix;
 		END SetAlignment;
 
@@ -2770,7 +2770,7 @@ TYPE
 			SELF.access := access;
 		END SetAccess;
 
-		PROCEDURE SetOffset*(ofs: SIZE);
+		PROCEDURE SetOffset*(ofs: LONGINT);
 		BEGIN offsetInBits := ofs
 		END SetOffset;
 
@@ -2818,7 +2818,7 @@ TYPE
 		BEGIN NEW( list,8 );
 		END InitList;
 
-		PROCEDURE Length*( ): SIZE;
+		PROCEDURE Length*( ): LONGINT;
 		BEGIN RETURN list.Length();
 		END Length;
 
@@ -2826,17 +2826,17 @@ TYPE
 		BEGIN list.Add(d)
 		END Add;
 
-		PROCEDURE Get*( index: SIZE ): Symbol;
+		PROCEDURE Get*( index: LONGINT ): Symbol;
 		VAR p: ANY;
 		BEGIN
 			p := list.Get(index); RETURN p(Symbol);
 		END Get;
 
-		PROCEDURE Set*(index: SIZE; symbol: Symbol);
+		PROCEDURE Set*(index: LONGINT; symbol: Symbol);
 		BEGIN list.Set(index,symbol)
 		END Set;
 
-		PROCEDURE Remove*(i: SIZE);
+		PROCEDURE Remove*(i: LONGINT);
 		BEGIN list.RemoveByIndex(i);
 		END Remove;
 
@@ -2924,9 +2924,9 @@ TYPE
 		nextVariable-: Variable;
 		untraced-: BOOLEAN;
 		fictive-: BOOLEAN; (* variable is not allocated but has a fixed offset *)
-		fictiveOffset-: SIZE; (* offset of fictive as provided by the source code *)
+		fictiveOffset-: LONGINT; (* offset of fictive as provided by the source code *)
 
-		registerNumber-: SIZE;
+		registerNumber-: LONGINT;
 		inRegister-: BOOLEAN;
 		preferRegister-: BOOLEAN;
 
@@ -2988,12 +2988,12 @@ TYPE
 			inRegister := b;
 		END InRegister
 
-		PROCEDURE RegisterNumber*(reg: SIZE);
+		PROCEDURE RegisterNumber*(reg: LONGINT);
 		BEGIN
 			registerNumber := reg
 		END RegisterNumber;
 
-		PROCEDURE SetFictive*(offset: SIZE);
+		PROCEDURE SetFictive*(offset: LONGINT);
 		BEGIN
 			fictive := TRUE;
 			fictiveOffset := offset;
@@ -3029,7 +3029,7 @@ TYPE
 		movable-: BOOLEAN;
 		selfParameter-: BOOLEAN;
 
-		registerNumber-: SIZE;
+		registerNumber-: LONGINT;
 		inRegister-: BOOLEAN;
 		preferRegister-: BOOLEAN;
 
@@ -3060,7 +3060,7 @@ TYPE
 			inRegister := b;
 		END InRegister
 
-		PROCEDURE RegisterNumber*(reg: SIZE);
+		PROCEDURE RegisterNumber*(reg: LONGINT);
 		BEGIN
 			registerNumber := reg
 		END RegisterNumber;
@@ -3139,8 +3139,7 @@ TYPE
 			nextProcedure-: Procedure;
 			procedureScope- : ProcedureScope;
 			super-: Procedure;
-			level-: LONGINT;
-			methodNumber-: SIZE;
+			level-, methodNumber-: LONGINT;
 			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isEntry-, isExit-,isFinal-,isAbstract-,isOverwritten-: BOOLEAN;
 			resolving-: LONGINT; (* for recursion detection during inlining *)
 
@@ -3225,7 +3224,7 @@ TYPE
 		BEGIN SELF.level := level
 		END SetLevel;
 
-		PROCEDURE SetMethodNumber*(methodNumber: SIZE);
+		PROCEDURE SetMethodNumber*(methodNumber: LONGINT);
 		BEGIN SELF.methodNumber := methodNumber
 		END SetMethodNumber;
 
@@ -3304,7 +3303,7 @@ TYPE
 			type := importType;
 			parameters := NIL;
 		END InitImport;
-
+		
 		PROCEDURE SetType*(type: Type);
 		BEGIN
 			ASSERT(type = importType);
@@ -3333,7 +3332,7 @@ TYPE
 		BEGIN
 			parameters := p;
 		END SetParameters;
-
+		
 
 	END Import;
 
@@ -3345,7 +3344,7 @@ TYPE
 		BEGIN NEW( list,32 );
 		END InitList;
 
-		PROCEDURE Length*( ): SIZE;
+		PROCEDURE Length*( ): LONGINT;
 		BEGIN RETURN list.Length();
 		END Length;
 
@@ -3361,12 +3360,12 @@ TYPE
 		BEGIN RETURN list.Contains(statement);
 		END HasStatement;
 
-		PROCEDURE GetStatement*( index: SIZE ): Statement;
+		PROCEDURE GetStatement*( index: LONGINT ): Statement;
 		VAR p: ANY;
 		BEGIN p := list.Get( index );  RETURN p( Statement );
 		END GetStatement;
 
-		PROCEDURE SetStatement*(index: SIZE; statement: Statement);
+		PROCEDURE SetStatement*(index: LONGINT; statement: Statement);
 		BEGIN
 			list.Set(index,statement);
 		END SetStatement;
@@ -3382,7 +3381,7 @@ TYPE
 		END InsertBefore;
 
 		PROCEDURE Clone(VAR copy: StatementSequence);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			IF copy = NIL THEN NEW(copy) END;
 			FOR i := 0 TO Length()-1 DO
@@ -3587,18 +3586,18 @@ TYPE
 			elsifParts.Add( elsifPart );
 		END AddElsifPart;
 
-		PROCEDURE GetElsifPart*( i: SIZE ): IfPart;
+		PROCEDURE GetElsifPart*( i: LONGINT ): IfPart;
 		VAR a: ANY;
 		BEGIN a := elsifParts.Get( i );  RETURN a( IfPart )
 		END GetElsifPart;
 
-		PROCEDURE ElsifParts*( ): SIZE;
+		PROCEDURE ElsifParts*( ): LONGINT;
 		BEGIN
 			IF elsifParts = NIL THEN RETURN 0 ELSE RETURN elsifParts.Length();  END;
 		END ElsifParts;
 
 		PROCEDURE Clone(): Statement;
-		VAR copy: IfStatement; i: SIZE;
+		VAR copy: IfStatement; i: LONGINT;
 		BEGIN
 			NEW(copy, position, outer);
 			copy.ifPart := ifPart.Clone();
@@ -3672,12 +3671,12 @@ TYPE
 		BEGIN withParts.Add( withPart );
 		END AddWithPart;
 
-		PROCEDURE GetWithPart*( i: SIZE ): WithPart;
+		PROCEDURE GetWithPart*( i: LONGINT ): WithPart;
 		VAR a: ANY;
 		BEGIN a := withParts.Get( i );  RETURN a( WithPart )
 		END GetWithPart;
 
-		PROCEDURE WithParts*( ): SIZE;
+		PROCEDURE WithParts*( ): LONGINT;
 		BEGIN
 			IF withParts = NIL THEN RETURN 0 ELSE RETURN withParts.Length();  END;
 		END WithParts;
@@ -3688,7 +3687,7 @@ TYPE
 		END SetElsePart;
 
 		PROCEDURE Clone(): Statement;
-		VAR copy: WithStatement; i: SIZE;
+		VAR copy: WithStatement; i: LONGINT;
 		BEGIN
 			NEW(copy, position, outer);
 			FOR i := 0 TO WithParts()-1 DO
@@ -3771,18 +3770,18 @@ TYPE
 			caseParts.Add( casePart );
 		END AddCasePart;
 
-		PROCEDURE GetCasePart*( i: SIZE ): CasePart;
+		PROCEDURE GetCasePart*( i: LONGINT ): CasePart;
 		VAR a: ANY;
 		BEGIN a := caseParts.Get( i );  RETURN a( CasePart )
 		END GetCasePart;
 
-		PROCEDURE CaseParts*( ): SIZE;
+		PROCEDURE CaseParts*( ): LONGINT;
 		BEGIN
 			IF caseParts = NIL THEN RETURN 0 ELSE RETURN caseParts.Length();  END;
 		END CaseParts;
 
 		PROCEDURE Clone(): Statement;
-		VAR copy: CaseStatement; i: SIZE;
+		VAR copy: CaseStatement; i: LONGINT;
 		BEGIN
 			NEW(copy, position, outer);
 			copy.SetVariable(CloneExpression(variable));
@@ -3795,7 +3794,7 @@ TYPE
 		END Clone;
 
 		PROCEDURE MaxConstant*(): Basic.Integer;
-		VAR val: Basic.Integer; i: SIZE; part: CasePart; const: CaseConstant;
+		VAR val: Basic.Integer; i: LONGINT; part: CasePart; const: CaseConstant;
 		BEGIN
 			val := -1;
 			FOR i := 0 TO CaseParts() - 1 DO
@@ -4120,7 +4119,7 @@ TYPE
 	(** << CODE {flags} {character}  END >> **)
 	Code*= OBJECT(Statement)
 	VAR
-		sourceCode-: SourceCode; sourceCodeLength-: SIZE;
+		sourceCode-: SourceCode; sourceCodeLength-: LONGINT;
 		inlineCode-: BinaryCode;
 
 		PROCEDURE & InitCode(position: Position; outer: Statement);
@@ -4130,7 +4129,7 @@ TYPE
 			sourceCode := NIL; sourceCodeLength := 0;
 		END InitCode;
 
-		PROCEDURE SetSourceCode*(source: SourceCode; length: SIZE);
+		PROCEDURE SetSourceCode*(source: SourceCode; length: LONGINT);
 		BEGIN sourceCode := source; sourceCodeLength := length;
 			ASSERT(sourceCodeLength <= LEN(source));
 		END SetSourceCode;
@@ -4197,8 +4196,8 @@ TYPE
 		item-: ANY; sameLine-: BOOLEAN;
 		nextComment-: Comment;
 
-		PROCEDURE & InitComment(pos: Position; scope: Scope; CONST s: ARRAY OF CHAR; length: SIZE);
-		VAR i: SIZE;
+		PROCEDURE & InitComment(pos: Position; scope: Scope; CONST s: ARRAY OF CHAR; length: LONGINT);
+		VAR i: LONGINT;
 		BEGIN
 			SELF.scope := scope;
 			NEW(source,length);
@@ -4221,13 +4220,13 @@ TYPE
 
 	Scope*=OBJECT
 		VAR
-		firstSymbol-: Symbol; numberSymbols-: SIZE; (* all symbols in scope (sorted) *)
+		firstSymbol-: Symbol; numberSymbols-: LONGINT; (* all symbols in scope (sorted) *)
 		symbolTable: Basic.HashTableInt;
 
-		firstConstant-,lastConstant-: Constant;  numberConstants-: SIZE; (* constants *)
-		firstTypeDeclaration-,lastTypeDeclaration-: TypeDeclaration; numberTypeDeclarations-: SIZE; (* type declarations *)
-		firstVariable-,lastVariable-: Variable; numberVariables-: SIZE;  (* variables *)
-		firstProcedure-,lastProcedure-: Procedure; numberProcedures-: SIZE;  (* procedures *)
+		firstConstant-,lastConstant-: Constant;  numberConstants-: LONGINT; (* constants *)
+		firstTypeDeclaration-,lastTypeDeclaration-: TypeDeclaration; numberTypeDeclarations-: LONGINT; (* type declarations *)
+		firstVariable-,lastVariable-: Variable; numberVariables-: LONGINT;  (* variables *)
+		firstProcedure-,lastProcedure-: Procedure; numberProcedures-: LONGINT;  (* procedures *)
 		firstAlias-, lastAlias-: Alias; numberAliases-: LONGINT; (* aliases *)
 		firstScope-,lastScope-: Scope; numberScopes-: LONGINT; (* scopes *)
 
@@ -4237,7 +4236,7 @@ TYPE
 
 		ownerModule-: Module;
 
-		currentVariableOffset-, minVariableOffset-, maxVariableOffset-: SIZE;
+		currentVariableOffset-, minVariableOffset-, maxVariableOffset-: LONGINT;
 
 		PROCEDURE & InitScope(outer: Scope);
 		BEGIN
@@ -4258,12 +4257,12 @@ TYPE
 			NEW(symbolTable,11);
 		END InitScope;
 
-		PROCEDURE SetMinVariableOffset*(o: SIZE);
+		PROCEDURE SetMinVariableOffset*(o: LONGINT);
 		BEGIN
 			minVariableOffset := o;
 		END SetMinVariableOffset;
 
-		PROCEDURE SetCurrentVariableOffset*(o: SIZE);
+		PROCEDURE SetCurrentVariableOffset*(o: LONGINT);
 		BEGIN
 			currentVariableOffset := o;
 		END SetCurrentVariableOffset;
@@ -4415,7 +4414,7 @@ TYPE
 			RETURN p;
 		END FindProcedure;
 
-		PROCEDURE FindMethod*(number: SIZE): Procedure;
+		PROCEDURE FindMethod*(number: LONGINT): Procedure;
 		VAR p: Procedure;
 		BEGIN
 			p := firstProcedure;
@@ -4528,9 +4527,9 @@ TYPE
 			bodyProcedure-: Procedure;
 			constructor-: Procedure;
 			finalizer-: Procedure;
-			numberMethods-: SIZE;
-			firstParameter-,lastParameter-: Parameter; numberParameters-: SIZE;  (* parameters for Active Cells programming*)
-			firstOperator-, lastOperator-: Operator; numberOperators: SIZE; (* defined operators *)
+			numberMethods-: LONGINT;
+			firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters for Active Cells programming*)
+			firstOperator-, lastOperator-: Operator; numberOperators: LONGINT; (* defined operators *)
 
 		PROCEDURE & InitRecordScope(outer: Scope);
 		BEGIN
@@ -4555,7 +4554,7 @@ TYPE
 		BEGIN SELF.finalizer := body
 		END SetFinalizer;
 
-		PROCEDURE SetNumberMethods*(numberMethods: SIZE);
+		PROCEDURE SetNumberMethods*(numberMethods: LONGINT);
 		BEGIN SELF.numberMethods := numberMethods;
 		END SetNumberMethods;
 
@@ -4661,7 +4660,7 @@ TYPE
 			RETURN p;
 		END FindProcedure;
 
-		PROCEDURE FindMethod*(number: SIZE): Procedure;
+		PROCEDURE FindMethod*(number: LONGINT): Procedure;
 		VAR p: Procedure; base: RecordType;
 		BEGIN
 			p := FindMethod^(number);
@@ -4689,7 +4688,7 @@ TYPE
 		ownerCell-: CellType;
 		bodyProcedure-: Procedure;
 		constructor-: Procedure;
-		firstImport-,lastImport-: Import; numberImports: SIZE; (* imported modules *)
+		firstImport-,lastImport-: Import; numberImports: LONGINT; (* imported modules *)
 
 		PROCEDURE & InitCellScope(outer: Scope);
 		BEGIN
@@ -4792,11 +4791,11 @@ TYPE
 
 	ModuleScope*= OBJECT(Scope)
 		VAR
-		firstImport-,lastImport-: Import; numberImports: SIZE; (* imported modules *)
-		firstOperator-,lastOperator-: Operator; numberOperators: SIZE; (* defined operators *)
-		firstBuiltin-,lastBuiltin-: Builtin; numberBuiltins: SIZE; (* defined builtins, only for global and system module *)
+		firstImport-,lastImport-: Import; numberImports: LONGINT; (* imported modules *)
+		firstOperator-,lastOperator-: Operator; numberOperators: LONGINT; (* defined operators *)
+		firstBuiltin-,lastBuiltin-: Builtin; numberBuiltins: LONGINT; (* defined builtins, only for global and system module *)
 
-		firstComment-,lastComment-: Comment; numberComments-: SIZE; (* comments *)
+		firstComment-,lastComment-: Comment; numberComments-: LONGINT; (* comments *)
 		bodyProcedure-: Procedure;
 
 		PROCEDURE & InitModuleScope;
@@ -4923,11 +4922,11 @@ TYPE
 	(** <<expression, expression, ...>> **)
 	Identifiers* = OBJECT
 	TYPE
-		IdentifierArray = POINTER TO ARRAY OF Identifier;
-		VAR
+		IdentifierArray = POINTER TO ARRAY OF Identifier;	
+		VAR 
 			list: IdentifierArray;
 			len: SIZE;
-
+	
 		PROCEDURE & InitList*;
 		BEGIN NEW( list,8 ); len := 0;
 		END InitList;
@@ -5026,7 +5025,7 @@ TYPE
 		BEGIN NEW( list,8 );
 		END InitList;
 
-		PROCEDURE Length*( ): SIZE;
+		PROCEDURE Length*( ): LONGINT;
 		BEGIN RETURN list.Length();
 		END Length;
 
@@ -5034,7 +5033,7 @@ TYPE
 		BEGIN list.Add(d)
 		END AddProcedure;
 
-		PROCEDURE GetProcedure*( index: SIZE ): Procedure;
+		PROCEDURE GetProcedure*( index: LONGINT ): Procedure;
 		VAR p: ANY;
 		BEGIN
 			IF index >= list.Length() THEN RETURN NIL END;
@@ -5046,11 +5045,11 @@ TYPE
 			END;
 		END GetProcedure;
 
-		PROCEDURE SetProcedure*(index: SIZE; expression: Procedure);
+		PROCEDURE SetProcedure*(index: LONGINT; expression: Procedure);
 		BEGIN list.GrowAndSet(index,expression)
 		END SetProcedure;
 
-		PROCEDURE RemoveProcedure*(i: SIZE);
+		PROCEDURE RemoveProcedure*(i: LONGINT);
 		BEGIN list.RemoveByIndex(i);
 		END RemoveProcedure;
 
@@ -5175,7 +5174,7 @@ VAR
 		NEW( module, sourceName, position, name, scope, case);  RETURN module;
 	END NewModule;
 
-	PROCEDURE NewComment*(position: Position; scope: Scope; CONST source: ARRAY OF CHAR; length: SIZE): Comment;
+	PROCEDURE NewComment*(position: Position; scope: Scope; CONST source: ARRAY OF CHAR; length: LONGINT): Comment;
 	VAR comment: Comment;
 	BEGIN
 		NEW(comment,position,scope,source,length); RETURN comment;
@@ -5231,61 +5230,61 @@ VAR
 		RETURN type
 	END NewType;
 
-	PROCEDURE NewByteType*(sizeInBits: SIZE): ByteType;
+	PROCEDURE NewByteType*(sizeInBits: LONGINT): ByteType;
 	VAR basicType: ByteType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewByteType;
 
-	PROCEDURE NewAnyType*(sizeInBits: SIZE): AnyType;
+	PROCEDURE NewAnyType*(sizeInBits: LONGINT): AnyType;
 	VAR basicType: AnyType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewAnyType;
 
-	PROCEDURE NewObjectType*(sizeInBits: SIZE): ObjectType;
+	PROCEDURE NewObjectType*(sizeInBits: LONGINT): ObjectType;
 	VAR basicType: ObjectType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewObjectType;
 
-	PROCEDURE NewNilType*(sizeInBits: SIZE): NilType;
+	PROCEDURE NewNilType*(sizeInBits: LONGINT): NilType;
 	VAR basicType: NilType;
 	BEGIN
 		NEW(basicType,  sizeInBits); RETURN basicType;
 	END NewNilType;
 
-	PROCEDURE NewAddressType*(sizeInBits: SIZE): AddressType;
+	PROCEDURE NewAddressType*(sizeInBits: LONGINT): AddressType;
 	VAR basicType: AddressType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewAddressType;
 
-	PROCEDURE NewSizeType*(sizeInBits: SIZE): SizeType;
+	PROCEDURE NewSizeType*(sizeInBits: LONGINT): SizeType;
 	VAR basicType: SizeType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewSizeType;
 
-	PROCEDURE NewBooleanType*(sizeInBits: SIZE): BooleanType;
+	PROCEDURE NewBooleanType*(sizeInBits: LONGINT): BooleanType;
 	VAR basicType: BooleanType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewBooleanType;
 
-	PROCEDURE NewSetType*(sizeInBits: SIZE): SetType;
+	PROCEDURE NewSetType*(sizeInBits: LONGINT): SetType;
 	VAR basicType: SetType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewSetType;
 
-	PROCEDURE NewCharacterType*(sizeInBits: SIZE): CharacterType;
+	PROCEDURE NewCharacterType*(sizeInBits: LONGINT): CharacterType;
 	VAR basicType: CharacterType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
 	END NewCharacterType;
 
-	PROCEDURE NewRangeType*(sizeInBits: SIZE): RangeType;
+	PROCEDURE NewRangeType*(sizeInBits: LONGINT): RangeType;
 	VAR basicType: RangeType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
@@ -5303,7 +5302,7 @@ VAR
 		NEW(basicType, size, signed); RETURN basicType;
 	END NewIntegerType;
 
-	PROCEDURE NewFloatType*(sizeInBits: SIZE): FloatType;
+	PROCEDURE NewFloatType*(sizeInBits: LONGINT): FloatType;
 	VAR basicType: FloatType;
 	BEGIN
 		NEW(basicType, sizeInBits); RETURN basicType;
@@ -5316,7 +5315,7 @@ VAR
 		NEW(typeDeclaration,position,name); RETURN typeDeclaration
 	END NewTypeDeclaration;
 
-	PROCEDURE NewStringType*( position: Position; baseType: Type; length: SIZE): StringType;
+	PROCEDURE NewStringType*( position: Position; baseType: Type; length: LONGINT): StringType;
 	VAR stringType: StringType;
 	BEGIN
 		NEW( stringType, position, baseType, length);  RETURN stringType;
@@ -5418,7 +5417,7 @@ VAR
 	END NewExpressionList;
 
 	PROCEDURE CloneExpressionList*(l: ExpressionList): ExpressionList;
-	VAR copy: ExpressionList; i: SIZE;
+	VAR copy: ExpressionList; i: WORD;
 	BEGIN
 		IF l = NIL THEN
 			copy := NIL;

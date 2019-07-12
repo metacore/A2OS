@@ -130,7 +130,7 @@ TYPE
 	BEGIN
 		fcache := M.fcache;  pars := M.n.cpar;
 
-		len := LONGINT( LEN( o[0] ) - 1 );  id := INTEGER( LEN( fcache ) - 1 );  clen := M.n.clen - 1;
+		len := LEN( o[0] ) - 1;  id := SHORT( LEN( fcache ) - 1 );  clen := M.n.clen - 1;
 		ASSERT ( len - 1 = clen );
 
 		sum := 0;

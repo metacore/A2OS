@@ -18,7 +18,7 @@ VAR
 	If sepchar does not occur in str, str is returned *)
 PROCEDURE GetSuffix(VAR str(* in *), suf(* out *): ARRAY OF CHAR; sepchar: CHAR);
 VAR
-	i, j, len, sep: SIZE;
+	i, j, len, sep: LONGINT;
 BEGIN
 	i := 0; sep := -1;
 	WHILE str[i] # 0X DO
@@ -37,7 +37,7 @@ END GetSuffix;
 
 (* Append this to to *)
 PROCEDURE Append(VAR to: ARRAY OF CHAR; this: ARRAY OF CHAR);
-	VAR i, j, l: SIZE;
+	VAR i, j, l: LONGINT;
 BEGIN
 	i := 0;
 	WHILE to[i] # 0X DO

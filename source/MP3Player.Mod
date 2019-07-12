@@ -141,7 +141,7 @@ BEGIN
 	END;
 
 	file := Files.Old(filename);
-	NEW(player, in, file.Length()(LONGINT));
+	NEW(player, in, file.Length());
 	player.Play;
 END Open;
 

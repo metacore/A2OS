@@ -124,9 +124,9 @@ TYPE
 			END
 		END Close;
 
-		PROCEDURE Available*(): SIZE;
+		PROCEDURE Available*(): LONGINT;
 		VAR
-			num, err: WORD;
+			 num, err: LONGINT;
 		BEGIN
 		 	err := Unix.ioctl( fd, Unix.FIONREAD, ADDRESSOF(num) );
 			RETURN num;
@@ -157,21 +157,21 @@ TYPE
 			END;
 		END SendChar;
 
-		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD );
-		VAR r: SIZE;
+		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD );
+		VAR r: SIZE; writeRes: LONGINT;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)
-			r := Unix.write( fd, ADDRESSOF(buf[ofs]), len );
-			IF r < 0 THEN
+			r := Unix.write( fd, ADDRESSOF(buf[ofs]), len );  writeRes := LONGINT( r );
+			IF writeRes < 0 THEN
 				res := Serials.TransportError;
 			ELSE
-				INC( charactersSent, r );
+				INC( charactersSent, writeRes );
 				res := Serials.Ok;
 			END;
 		END Send;
 
-		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
-		VAR i, l: SIZE;  read: SIZE;
+		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
+		VAR i, l: LONGINT;  read: SIZE;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + size );
 			ASSERT ( LEN( buf ) >= ofs + min );   (* array bound check not implemented in Kernel32.ReadFile *)
@@ -384,4 +384,7 @@ System.Free V24~
 
 	---------------------
 	------------------------------------------
+
+
+
 

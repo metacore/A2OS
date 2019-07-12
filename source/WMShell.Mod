@@ -150,8 +150,8 @@ TYPE
 			END;
 		END Finalize;
 
-		PROCEDURE DeleteNCharacters(nbrOfCharacters : SIZE);
-		VAR pos : SIZE;
+		PROCEDURE DeleteNCharacters(nbrOfCharacters : LONGINT);
+		VAR pos : LONGINT;
 		BEGIN
 			text.AcquireWrite;
 			pos := editor.editor.tv.cursor.GetPosition();
@@ -160,7 +160,7 @@ TYPE
 		END DeleteNCharacters;
 
 		PROCEDURE ReceiveCharacters;
-		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; i, size, backspaces, len: SIZE;
+		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, size, len : LONGINT;
 		BEGIN
 			(* Receive at least one character *)
 			size := in.Available();
@@ -221,7 +221,7 @@ TYPE
 	VAR
 		shell : ShellComponent;
 
-		PROCEDURE HandleUpcall(command : WORD);
+		PROCEDURE HandleUpcall(command : LONGINT);
 		BEGIN
 			IF command = Shell.Clear THEN
 				shell.Clear;
@@ -275,7 +275,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : SIZE;
+	nofWindows : LONGINT;
 
 	StrShellComponent : Strings.String;
 

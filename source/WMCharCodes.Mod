@@ -12,7 +12,7 @@ PROCEDURE GB2312ToUTF8*(from : Strings.String) : Strings.String;
 VAR buf : Strings.Buffer;
 	w : Streams.Writer;
 	temp : ARRAY 8 OF CHAR;
-	i, len : SIZE; code: WORD;
+	i, code, len : LONGINT;
 BEGIN
 	NEW(buf, LEN(from) * 2);
 	w := buf.GetWriter();

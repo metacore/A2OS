@@ -27,7 +27,7 @@ TYPE
 				f: Forwarder; (* this client belogs to *)
 				p: T.Packet;
 				buf: ARRAY 64 OF CHAR;
-				len: SIZE; res: WORD;
+				len: LONGINT; res: WORD;
 
 
 
@@ -72,7 +72,7 @@ TYPE
 
 				buf: ARRAY 4096 OF CHAR;
 				type: CHAR;
-				len: SIZE;
+				len: LONGINT;
 				res: WORD;
 
 				clientHandlerRunning: BOOLEAN;
@@ -83,7 +83,7 @@ TYPE
 				CONST DestHost = "localhost";
 				VAR
 					buf: ARRAY 3000 OF CHAR;
-					len: SIZE;  p: T.Packet;
+					len: LONGINT;  p: T.Packet;
 					clientAddress: ARRAY 64 OF CHAR;
 					clientPort: LONGINT;
 					chanNo: LONGINT;
@@ -200,7 +200,7 @@ TYPE
 				state-: SHORTINT;
 				conn-: T.Connection;
 				rchan: LONGINT;
-				wsize-: SIZE;
+				wsize-: LONGINT;
 				clchan: LONGINT;
 				clwsize: LONGINT;
 				pmax: LONGINT;   (* max packet size accepted by remote *)
@@ -209,8 +209,8 @@ TYPE
 				rbstart, rbend: LONGINT;
 				interactive: BOOLEAN;
 
-				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
-				VAR p: T.Packet; l: SIZE; t: CHAR;
+				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
+				VAR p: T.Packet; l: LONGINT; t: CHAR;
 					buf: ARRAY 512 OF CHAR;
 				BEGIN
 					NEW( p, Data, len + 32 );
@@ -227,9 +227,10 @@ TYPE
 					conn.SendPacket( p );  DEC( wsize, len );  res := Streams.Ok
 				END Send;
 
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
 				VAR
-					plen: SIZE; dlen: LONGINT; pType, ch: CHAR;
+					plen, dlen: LONGINT; pType, ch: CHAR;
 				BEGIN
 					len := 0;
 					LOOP
@@ -256,7 +257,7 @@ TYPE
 				END Receive;
 
 
-				PROCEDURE NewDataPacket( size: SIZE ): T.Packet;
+				PROCEDURE NewDataPacket( size: LONGINT ): T.Packet;
 				VAR p: T.Packet;
 				BEGIN
 					NEW( p, Data, size );  p.AppInteger( rchan );
@@ -267,7 +268,7 @@ TYPE
 
 				PROCEDURE SendPacket*( p: T.Packet );
 				VAR buf: ARRAY 4096 OF CHAR;
-					len, dsize: SIZE;  t: CHAR;
+					len, dsize: LONGINT;  t: CHAR;
 				BEGIN
 					IF state = ChanOpen THEN
 						IF p.buf[0] = Data THEN  dsize := p.len - 9
@@ -287,7 +288,7 @@ TYPE
 					END
 				END SendPacket;
 
-				PROCEDURE SendBuffer*( CONST buf: ARRAY OF CHAR;  len: SIZE );
+				PROCEDURE SendBuffer*( CONST buf: ARRAY OF CHAR;  len: LONGINT );
 				VAR p: T.Packet;
 				BEGIN
 					p := NewDataPacket( len + 32 );
@@ -302,10 +303,10 @@ TYPE
 					SendPacket( p );
 				END SendChar;
 
-				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR len: SIZE ): CHAR;
+				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR len: LONGINT ): CHAR;
 				VAR i, l, chan, newspace: LONGINT;  ptype: CHAR;
 					p: T.Packet;  done: BOOLEAN;
-					pos: SIZE;  req: ARRAY 64 OF CHAR;  wantreply: BOOLEAN;
+					pos: LONGINT;  req: ARRAY 64 OF CHAR;  wantreply: BOOLEAN;
 				BEGIN
 					IF state = ChanClosed THEN  RETURN 0X  END;
 					done := FALSE;
@@ -373,7 +374,7 @@ TYPE
 
 
 				PROCEDURE ReceiveLine*( VAR line: ARRAY OF CHAR;  VAR len: LONGINT );
-				VAR bl: SIZE; i, e: LONGINT;  t, c, c2: CHAR;
+				VAR bl, i, e: LONGINT;  t, c, c2: CHAR;
 					buf: ARRAY 256 OF CHAR;
 				BEGIN
 					len := 0;
@@ -442,7 +443,7 @@ TYPE
 
 				PROCEDURE SkipInput;  (* consume any incoming packets until connection is quiet *)
 				VAR buf: POINTER TO  ARRAY OF CHAR;
-					len: SIZE;  t: CHAR;
+					len: LONGINT;  t: CHAR;
 				BEGIN
 					NEW( buf, MaxPacketSize );
 					REPEAT
@@ -477,7 +478,7 @@ TYPE
 
 
 	PROCEDURE OpenSession*( conn: T.Connection;  interactive: BOOLEAN ): Channel;
-	VAR len: SIZE;
+	VAR len: LONGINT;
 		buf: ARRAY 3000 OF CHAR;
 		p: T.Packet;  chan: Channel;  ptype: CHAR;
 	BEGIN
@@ -548,9 +549,9 @@ TYPE
 		Log.String( "### Error: " ); Log.String( msg );  Log.Ln
 	END Error;
 
-	PROCEDURE ErrorResponse( CONST msg, buf: ARRAY OF CHAR; len: SIZE );
+	PROCEDURE ErrorResponse( CONST msg, buf: ARRAY OF CHAR; len: LONGINT );
 	VAR errmsg: ARRAY 1024 OF CHAR;
-		p: SIZE;
+		p: LONGINT;
 	BEGIN
 		Log.Ln;  Log.String( msg );
 		IF buf[0] = OpenFailure THEN
@@ -581,8 +582,8 @@ TYPE
 	END ShowChar;
 
 
-	PROCEDURE ShowPacket( CONST buf: ARRAY OF CHAR; len: SIZE );
-	VAR i: SIZE;
+	PROCEDURE ShowPacket( CONST buf: ARRAY OF CHAR; len: LONGINT );
+	VAR i: LONGINT;
 	BEGIN
 		Log.Ln;  Log.Hex( ORD( buf[0] ), -2 ); Log.Ln;
 		i := 1;
@@ -634,7 +635,7 @@ TYPE
 		strings: Strings.StringArray;
 		chan: Channel;
 		conn: A.Connection;
-		t: CHAR;  len: SIZE; buf: ARRAY 1024 OF CHAR;
+		t: CHAR;  len: LONGINT; buf: ARRAY 1024 OF CHAR;
 	BEGIN
 		in := context.arg;
 		conn := Connect( in, host );
@@ -671,9 +672,9 @@ TYPE
 	PROCEDURE SendFile( f: Files.File;  chan: Channel;  CONST name: ARRAY OF CHAR );
 	VAR
 		buf: ARRAY 10000 OF CHAR;
-		flen: Files.Size;
+		flen, sent: LONGINT;
 		lbuf: ARRAY 16 OF CHAR;
-		r: Files.Reader; i, j, sent: SIZE;
+		r: Files.Reader;  i, j: LONGINT;
 	BEGIN
 		flen := f.Length( );  Strings.IntToStr( flen, lbuf );
 		buf := "C0644 "; Strings.Append( buf, lbuf );  Strings.Append( buf, " " );  Strings.Append( buf, name );
@@ -740,7 +741,7 @@ TYPE
 
 	PROCEDURE ReceiveFile( chan: Channel; CONST name: ARRAY OF CHAR );
 	VAR buf: ARRAY 10000 OF CHAR;  type: CHAR;
-		plen: SIZE; dlen, p, i, flen, received: LONGINT;
+		plen, dlen, p, i, flen, received: LONGINT;
 		pr: ARRAY 256 OF CHAR;
 		f: Files.File;  w: Files.Writer;  error: BOOLEAN;
 	BEGIN
@@ -875,4 +876,5 @@ SSH.Receive fld@erwin.math.uni-bremen.de
 	~
 
 System.Free SSHClient SSH SSHAuthorize SSHTransport SSHKeys  ~
+
 

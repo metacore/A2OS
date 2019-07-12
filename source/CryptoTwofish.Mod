@@ -58,8 +58,8 @@ TYPE
 					FOR i := 0 TO 3 DO  iv[i] := U.SetFromBufferLE( src, 4*i )  END;
 				END SetIV;
 
-				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR i: SIZE;
+				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR i: LONGINT;
 				BEGIN
 					ASSERT( isKeyInitialized & (mode IN {Ciphers.ECB, Ciphers.CBC}) );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -67,8 +67,8 @@ TYPE
 					WHILE i < len DO  EncryptBlock( buf, ofs + i );  INC( i, blockSize );   END
 				END Encrypt;
 
-				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR i: SIZE;
+				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR i: LONGINT;
 				BEGIN
 					ASSERT( isKeyInitialized );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -76,7 +76,7 @@ TYPE
 					WHILE i < len DO  DecryptBlock( buf, ofs + i );  INC( i, blockSize );   END
 				END Decrypt;
 
-				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 				VAR x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET32;
 				BEGIN
 					(* copy in the block, add whitening *)
@@ -101,7 +101,7 @@ TYPE
 					END;
 				END EncryptBlock;
 
-				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 				VAR x0, x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET32;
 				BEGIN
 					(* copy in the block, add whitening *)

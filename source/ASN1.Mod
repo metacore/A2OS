@@ -160,7 +160,7 @@ VAR log*: Streams.Writer;
 
 PROCEDURE PrintHexString*(w:Streams.Writer; CONST s: ARRAY OF CHAR);
 CONST hex="0123456789ABCDEF";
-VAR i:SIZE; c:CHAR;
+VAR i:LONGINT; c:CHAR;
 BEGIN
 	FOR i:=0 TO LEN(s)-1 DO
 		c:=s[i];
@@ -171,7 +171,7 @@ BEGIN
 END PrintHexString;
 
 PROCEDURE PrintNumericString*(w:Streams.Writer; CONST s: ARRAY OF CHAR);
-VAR i:SIZE; c:CHAR;
+VAR i:LONGINT; c:CHAR;
 BEGIN
 	w.String("  ");
 	FOR i:=0 TO LEN(s)-1 DO
@@ -182,7 +182,7 @@ BEGIN
 END PrintNumericString;
 
 PROCEDURE PrintString*(w:Streams.Writer; CONST s: ARRAY OF CHAR);
-VAR i:SIZE; c:CHAR;
+VAR i:LONGINT; c:CHAR;
 BEGIN
 	FOR i:=0 TO LEN(s)-1 DO
 		c:=s[i];
@@ -190,8 +190,8 @@ BEGIN
 	END;
 END PrintString;
 
-PROCEDURE Decode*(reader:Streams.Reader; level:LONGINT; VAR len:SIZE): Triplet;
-VAR t,t1:Triplet; lengthbytes,len0,hdrlen,i:SIZE; c:CHAR;
+PROCEDURE Decode*(reader:Streams.Reader; level:LONGINT; VAR len:LONGINT): Triplet;
+VAR t,t1:Triplet; lengthbytes,len0,hdrlen:LONGINT; i:LONGINT; c:CHAR;
 BEGIN
 	NEW(t); t.level:=level;
 	len:=0; hdrlen:=0;

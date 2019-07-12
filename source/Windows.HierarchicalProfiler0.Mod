@@ -20,10 +20,10 @@ TYPE
 	Poller = OBJECT
 	VAR
 		processes, oldProcesses : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
-		nofProcesses, oldNofProcesses : SIZE;
+		nofProcesses, oldNofProcesses : LONGINT;
 		times, oldTimes : ProcessTimeArray;
 		me : Objects.Process;
-		state : WORD;
+		state : LONGINT;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -41,13 +41,13 @@ TYPE
 		END Terminate;
 
 		PROCEDURE Clear(array : ProcessTimeArray);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(array)-1 DO array[i] := 0; END;
 		END Clear;
 
 		PROCEDURE RanMeanwhile(process : Objects.Process; currentCycles : HUGEINT) : BOOLEAN;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 
 			IF ~(process.mode IN {Objects.Running,Objects.Ready}) THEN RETURN FALSE END;
@@ -57,7 +57,7 @@ TYPE
 		END RanMeanwhile;
 
 		PROCEDURE Process;
-		VAR process : Objects.Process; cycles : Objects.CpuCyclesArray; temp : ProcessTimeArray; i : SIZE;
+		VAR process : Objects.Process; cycles : Objects.CpuCyclesArray; temp : ProcessTimeArray; i : LONGINT;
 			t0,t1,t2,t3: Kernel32.FileTime;
 		BEGIN
 			ProcessInfo.GetProcesses(processes, nofProcesses);
@@ -98,7 +98,7 @@ TYPE
 VAR
 	poller : Poller;
 	callback : Callback;
-	state : WORD;
+	state : LONGINT;
 
 PROCEDURE HandleProcess(process : Objects.Process);
 VAR context : Kernel32.Context; handle : Kernel32.HANDLE; res : Kernel32.BOOL; stackBottom, sp, bp: ADDRESS;
@@ -116,7 +116,7 @@ BEGIN
 					bp := context.BP;
 					sp := context.SP;
 					ASSERT(context.BP <= stackBottom);
-					callback(1, process, context.PC, context.BP, context.SP,  stackBottom );
+					callback(1, process, context.PC, context.BP, context.SP,  stackBottom(*  LONGINT(0FFFFFFFFH)*)  );
 				END;
 			END;
 			res := Kernel32.ResumeThread(handle);

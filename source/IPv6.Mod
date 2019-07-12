@@ -575,7 +575,7 @@ TYPE
 		packetQueue: PacketQueue;
 		packetQueueItem: PacketQueue;
 		linkDst: Network.LinkAdr;
-		i: SIZE;
+		i: LONGINT;
 
 	BEGIN
 		(* create a new neighbor cache entry *)

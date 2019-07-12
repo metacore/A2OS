@@ -85,7 +85,7 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : SIZE; res: WORD;
+VAR table : Plugins.Table; i : LONGINT; res: WORD;
 BEGIN
 	IF UsbDebug.PerformanceMonitoring THEN
 		UsbHcdi.controllers.AddEventHandler(EventHandler, res);

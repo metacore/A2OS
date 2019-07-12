@@ -36,7 +36,7 @@ TYPE
 
 		PROCEDURE &Init*;
 		VAR
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			FOR i := 0 TO 799 DO
 				NEW(pages[i]);
@@ -1152,7 +1152,7 @@ VAR
 
 	PROCEDURE BuildTeletextSuites;
 	VAR
-		i: SIZE;
+		i: LONGINT;
 		suite: TeletextSuite;
 	BEGIN
 		teletextSuites := NIL;

@@ -181,7 +181,7 @@ TYPE
 		END Init;
 
 		PROCEDURE SendVersion() : BOOLEAN;
-		VAR clientVersion : ARRAY 12 OF CHAR; len : SIZE;
+		VAR clientVersion : ARRAY 12 OF CHAR; len : LONGINT;
 		BEGIN
 			out.String(Version); out.Char(0AX); out.Update();
 			IF out.res # Streams.Ok THEN RETURN FALSE END;
@@ -193,7 +193,7 @@ TYPE
 		PROCEDURE Authenticate() : BOOLEAN;
 		VAR challenge, response, clear : ARRAY 16 OF CHAR;
 			des : DES.DES; seq : Random.Sequence;
-			i : LONGINT; len: SIZE; ok : BOOLEAN;
+			i, len : LONGINT; ok : BOOLEAN;
 		BEGIN
 			Machine.AtomicInc(NnofAuthenticate);
 			IF vncInfo.password = "" THEN
@@ -475,7 +475,7 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			out.Char(3X); (* message type *)
 			out.Char(0X); out.Char(0X); out.Char(0X); (* padding *)
-			len := Strings.Length(text^)(LONGINT);
+			len := Strings.Length(text^);
 			out.Net32(len);
 			out.String(text^);
 		END SendClipboard;

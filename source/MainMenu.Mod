@@ -15,7 +15,7 @@ TYPE
 		pages : ARRAY 100 OF WMComponents.VisualComponent;
 		tabList : ARRAY 100 OF WMTabComponents.Tab;
 		currentPage : WMComponents.VisualComponent;
-		currentPageNr : SIZE;
+		currentPageNr : LONGINT;
 		page : WMStandardComponents.Panel;
 		moveToFront : BOOLEAN;
 
@@ -84,7 +84,7 @@ TYPE
 		END SetOriginator;
 
 		PROCEDURE UpdatePages;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 			tab : WMTabComponents.Tab;
 			s : Strings.String;
 		BEGIN
@@ -141,9 +141,8 @@ TYPE
 		PROCEDURE LoadPages*;
 		VAR mask : ARRAY 64 OF CHAR;
 			name : ARRAY 256 OF CHAR; flags : SET;
-			time, date : LONGINT;
-			size : Files.Size;
-			i: SIZE;
+			time, date, size : LONGINT;
+			i: LONGINT;
 			enumerator : Files.Enumerator;
 			number: LONGINT;
 

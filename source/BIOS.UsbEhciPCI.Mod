@@ -174,7 +174,7 @@ TYPE
 	     					Machine.MapPhysical(iobasePhys, 4096, iobaseVirt);
 						IF GetHcOwnerShip(bus, device, function, iobaseVirt) THEN
 							NEW(hostController, bus, device, function);
-							IF hostController.Init(iobaseVirt(Machine.Address32), irq) THEN
+							IF hostController.Init(Machine.Ensure32BitAddress (iobaseVirt), irq) THEN
 								(* Host controller has been initialized and started successfully *)
 								IF Debug.Verbose THEN
 									KernelLog.Enter;

@@ -42,8 +42,8 @@ TYPE
 		END Write;
 
 		(** data: value to be hashed *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
-		VAR i: SIZE;
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: LONGINT );
+		VAR i: LONGINT;
 		BEGIN
 			ASSERT( initialized );
 			FOR i := pos TO pos + len - 1 DO
@@ -58,7 +58,7 @@ TYPE
 		END Update;
 
 		(** get the hashvalue of length SELF.size *)
-		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 		VAR n: LONGINT;
 		BEGIN
 			(* Append padding *)

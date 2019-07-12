@@ -151,7 +151,7 @@ BEGIN
 END Unmount;
 
 PROCEDURE SetDefault*;	(** prefix *)
-VAR prefix: AosFS.Prefix; fs: AosFS.FileSystem; i: SIZE; ft: AosFS.FileSystemTable;
+VAR prefix: AosFS.Prefix; fs: AosFS.FileSystem; i: LONGINT; ft: AosFS.FileSystemTable;
 BEGIN
 	In.Open;  In.Name(prefix);
 	IF In.Done THEN
@@ -191,7 +191,7 @@ END ModifyName;
 
 PROCEDURE GenCopyFiles*;	(** remprefix addprefix ( "mask" | &file | { file [=> file] } ) ~ *)
 VAR
-	s: Texts.Scanner; t: Texts.Text; time, date: LONGINT; size: AosFS.Size; enum: AosFS.Enumerator;
+	s: Texts.Scanner; t: Texts.Text; time, date, size: LONGINT; enum: AosFS.Enumerator;
 	prefix1, prefix2: AosFS.Prefix; name: AosFS.FileName; flags: SET;
 BEGIN
 	StartScan(s);
@@ -342,7 +342,7 @@ BEGIN
 END WriteK;
 
 PROCEDURE Watch*;
-VAR free, total: LONGINT; i: SIZE; fs: AosFS.FileSystem; ft: AosFS.FileSystemTable;
+VAR free, total, i: LONGINT; fs: AosFS.FileSystem; ft: AosFS.FileSystemTable;
 BEGIN
 	Texts.WriteString(W, "OFSTools.Watch");  Texts.WriteLn(W);
 	AosFS.GetList(ft);

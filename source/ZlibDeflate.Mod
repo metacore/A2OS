@@ -88,8 +88,8 @@ TYPE
 
 	PendingBuffer = RECORD
 		buf: POINTER TO ARRAY PendingBufSize OF CHAR;		(* memory for pending buffer *)
-		beg: SIZE;		(* next pending byte to write to output buffer *)
-		end: SIZE;		(* next pending byte in pending buffer *)
+		beg: LONGINT;		(* next pending byte to write to output buffer *)
+		end: LONGINT		(* next pending byte in pending buffer *)
 	END;
 
 	(** deflate stream **)
@@ -107,16 +107,16 @@ TYPE
 		adler: LONGINT;		(* Adler32 checksum *)
 
 		window: POINTER TO Window;	(* memory for sliding window *)
-		block: SIZE;	(* position in window where current block starts (negative if window moved) *)
+		block: LONGINT;	(* position in window where current block starts (negative if window moved) *)
 		hash: LONGINT;	(* hash index of string to insert *)
-		prev: POINTER TO ARRAY WindowSize OF SIZE;	(* link to older string with same hash code (for last 32k strings) *)
-		head: POINTER TO ARRAY HashSize OF SIZE;	(* heads of hash chains for every window position *)
-		string: SIZE;	(* start of string to insert *)
-		lookAhead: SIZE;	(* number of valid bytes ahead in window *)
-		match: SIZE;	(* start of match string *)
-		matchLen: SIZE;	(* length of best match *)
-		prevMatch: SIZE;	(* start of previous match *)
-		prevLen: SIZE;	(* length of best match at previous step *)
+		prev: POINTER TO ARRAY WindowSize OF LONGINT;	(* link to older string with same hash code (for last 32k strings) *)
+		head: POINTER TO ARRAY HashSize OF LONGINT;	(* heads of hash chains for every window position *)
+		string: LONGINT;	(* start of string to insert *)
+		lookAhead: LONGINT;	(* number of valid bytes ahead in window *)
+		match: LONGINT;	(* start of match string *)
+		matchLen: LONGINT;	(* length of best match *)
+		prevMatch: LONGINT;	(* start of previous match *)
+		prevLen: LONGINT;	(* length of best match at previous step *)
 		prevAvail: BOOLEAN;	(* set if previous match exists *)
 		pend: PendingBuffer;
 
@@ -165,21 +165,21 @@ BEGIN
 END PutChar;
 
 (* Put the 16 LSB of b in LSB order in the pending buffer *)
-PROCEDURE Put16BitsLSB(VAR pend: PendingBuffer; b: SIZE);
+PROCEDURE Put16BitsLSB(VAR pend: PendingBuffer; b: LONGINT);
 BEGIN
 	PutChar(pend, CHR(b MOD 100H));
 	PutChar(pend, CHR((b DIV 100H) MOD 100H))
 END Put16BitsLSB;
 
 (* Put the 16 LSB of b in MSB order in the pending buffer *)
-PROCEDURE Put16BitsMSB(VAR pend: PendingBuffer; b: SIZE);
+PROCEDURE Put16BitsMSB(VAR pend: PendingBuffer; b: LONGINT);
 BEGIN
 	PutChar(pend, CHR((b DIV 100H) MOD 100H));
 	PutChar(pend, CHR(b MOD 100H))
 END Put16BitsMSB;
 
 (* Put the 32 LSB of b in MSB order in the pending buffer *)
-PROCEDURE Put32BitsMSB(VAR pend: PendingBuffer; b: SIZE);
+PROCEDURE Put32BitsMSB(VAR pend: PendingBuffer; b: LONGINT);
 BEGIN
 	Put16BitsMSB(pend, (b DIV 10000H) MOD 10000H);
 	Put16BitsMSB(pend, b MOD 10000H)
@@ -229,7 +229,7 @@ END FlushBits;
 (* Flush as much pending output as possible. *)
 PROCEDURE FlushPending(VAR pend: PendingBuffer; VAR out: ZlibBuffers.Buffer);
 VAR
-	len: SIZE;
+	len: LONGINT;
 BEGIN
 	len := pend.end - pend.beg;
 	IF len > out.avail THEN len := out.avail END;
@@ -676,7 +676,7 @@ BEGIN
 END AlignTrees;
 
 (* Copy a stored block, storing first the length and its one's complement if requested *)
-PROCEDURE CopyBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: SIZE; header: BOOLEAN);
+PROCEDURE CopyBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; header: BOOLEAN);
 VAR
 BEGIN
 	WindupBits(stream);	(* align on byte boundary *)
@@ -692,7 +692,7 @@ BEGIN
 END CopyBlock;
 
 (* Send a stored block *)
-PROCEDURE StoreBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: SIZE; eof: BOOLEAN);
+PROCEDURE StoreBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; eof: BOOLEAN);
 VAR
 	value: LONGINT;
 BEGIN
@@ -752,10 +752,10 @@ END CompressBlock;
 	pos, len: position in and length of input block;
 	eof: true if this is the last block for a file;
 	IN assertion: stream.string is set to the end of the current match *)
-PROCEDURE FlushBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; pos, len: SIZE; eof: BOOLEAN);
+PROCEDURE FlushBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; pos, len: LONGINT; eof: BOOLEAN);
 VAR
 	max: INTEGER;	(* index of last bit length code of non zero freqency *)
-	optLen, staticLen: SIZE;	(* optLen and staticLen in bytes *)
+	optLen, staticLen: LONGINT;	(* optLen and staticLen in bytes *)
 	value: LONGINT;
 BEGIN
 	IF stream.level > 0 THEN	(* build a Huffman tree unless a stored block is forced *)
@@ -843,7 +843,7 @@ END UpdateHash;
 	(the most recent string with the same hash key). Return the previous length of the hash chain.
 	IN assertion: all calls are made with consecutive input characters and the first MinMatch bytes at pos are valid
 	(except for the last MinMatch - 1 bytes of the input file *)
-PROCEDURE InsertString(VAR stream: Stream; pos: SIZE; VAR head: SIZE);
+PROCEDURE InsertString(VAR stream: Stream; pos: LONGINT; VAR head: LONGINT);
 BEGIN
 	UpdateHash(stream.hash, stream.window[pos + MinMatch - 1]);
 	head := stream.head[stream.hash];
@@ -866,16 +866,16 @@ END InitMatches;
 	IN assertion: cur is the head of the hash chain for the current string (stream.string) and its distance is <= MaxDist,
 		and stream.prevLen >= 1.
 	OUT assertion: the match length is not greater than stream.lookAhead. *)
-PROCEDURE LongestMatch(VAR stream: Stream; cur: SIZE): SIZE;
+PROCEDURE LongestMatch(VAR stream: Stream; cur: LONGINT): LONGINT;
 VAR
 	chainLen: LONGINT;	(* max hash chain length *)
-	scan: SIZE;	(* current string *)
-	match: SIZE;	(* matched string *)
-	len: SIZE;	(* length of current match *)
-	bestLen: SIZE;	(* best match so far *)
-	niceLen: SIZE;	(* stop if match long enough *)
-	limit: SIZE;	(* stop when cur becomes <= limit *)
-	strend: SIZE;
+	scan: LONGINT;	(* current string *)
+	match: LONGINT;	(* matched string *)
+	len: LONGINT;	(* length of current match *)
+	bestLen: LONGINT;	(* best match so far *)
+	niceLen: LONGINT;	(* stop if match long enough *)
+	limit: LONGINT;	(* stop when cur becomes <= limit *)
+	strend: LONGINT;
 	scanEnd1, scanEnd: CHAR;
 BEGIN
 	bestLen := stream.prevLen;
@@ -934,7 +934,7 @@ BEGIN
 END LongestMatch;
 
 (* Check that the match at stream.match is indeed a match *)
-PROCEDURE CheckMatch(VAR stream: Stream; start, match, len: SIZE);
+PROCEDURE CheckMatch(VAR stream: Stream; start, match, len: LONGINT);
 BEGIN
 	WHILE len # 0 DO
 		ASSERT(stream.window[match] = stream.window[start]);
@@ -946,8 +946,8 @@ END CheckMatch;
 	Updates stream.string and stream.lookAhead *)
 PROCEDURE FillWindow(VAR stream: Stream);
 VAR
-	n: LONGINT; len: SIZE;
-	more: SIZE;	(* amount of free space at the end of the window *)
+	n, len: LONGINT;
+	more: LONGINT;	(* amount of free space at the end of the window *)
 BEGIN
 	more := 2 * WindowSize - (stream.lookAhead + stream.string);
 	REPEAT
@@ -1048,7 +1048,7 @@ END CompressStored;
 	This function inserts new strings in the dictionary only for unmatched strings or for short matches. *)
 PROCEDURE CompressFast(VAR stream: Stream; flush: SHORTINT): SHORTINT;
 VAR
-	head: SIZE; (* head of the hash chain *)
+	head: LONGINT; (* head of the hash chain *)
 	mustFlush: BOOLEAN; (* set if current block must be flushed *)
 BEGIN
 	head := 0;
@@ -1074,7 +1074,7 @@ BEGIN
 		END;
 		IF stream.matchLen >= MinMatch THEN
 			CheckMatch(stream, stream.string, stream.match, stream.matchLen);
-			mustFlush := TallyDistLen(stream, INTEGER(stream.string - stream.match), INTEGER(stream.matchLen - MinMatch));
+			mustFlush := TallyDistLen(stream, SHORT(stream.string - stream.match), SHORT(stream.matchLen - MinMatch));
 			DEC(stream.lookAhead, stream.matchLen);
 			(* Insert new strings in the hash table only if the match length is not too large.
 				This saves time but degrades compression *)
@@ -1122,8 +1122,8 @@ END CompressFast;
 	a match is finally adopted only if there is no better match at the next window position *)
 PROCEDURE CompressSlow(VAR stream: Stream; flush: SHORTINT): SHORTINT;
 VAR
-	head: SIZE; (* head of the hash chain *)
-	maxIns: SIZE;
+	head: LONGINT; (* head of the hash chain *)
+	maxIns: LONGINT;
 	mustFlush: BOOLEAN; (* set if current block must be flushed *)
 BEGIN
 	head := 0;
@@ -1161,7 +1161,7 @@ BEGIN
 		IF (stream.prevLen >= MinMatch) & (stream.matchLen <= stream.prevLen) THEN
 			maxIns := stream.string + stream.lookAhead - MinMatch;	(* do not insert strings in hash table beyond this *)
 			CheckMatch(stream, stream.string - 1, stream.prevMatch, stream.prevLen);
-			mustFlush := TallyDistLen(stream, INTEGER(stream.string - 1 - stream.prevMatch), INTEGER(stream.prevLen - MinMatch));
+			mustFlush := TallyDistLen(stream, SHORT(stream.string - 1 - stream.prevMatch), SHORT(stream.prevLen - MinMatch));
 
 			(* Insert in hash table all strings up to the end of the match. stream.string - 1 and stream.string are already inserted.
 				If there is not enough stream.lookAhead, the last two strings are not inserted in the hash table. *)
@@ -1283,9 +1283,9 @@ END Open;
 
 (** initializes the compression dictionary from the given byte sequence without producing any compressed output.
 	Must be called immediately after Open or Reset before any call of Deflate **)
-PROCEDURE SetDictionary*(VAR stream: Stream; VAR dict: ARRAY OF CHAR; len: SIZE);
+PROCEDURE SetDictionary*(VAR stream: Stream; VAR dict: ARRAY OF CHAR; len: LONGINT);
 VAR
-	offset, i, head: SIZE;
+	offset, i, head: LONGINT;
 BEGIN
 	IF ~stream.open OR (stream.status # InitState) THEN
 		stream.res := StreamError;
@@ -1446,7 +1446,7 @@ BEGIN
 END SetParams;
 
 (** compress complete stream and return output length in len **)
-PROCEDURE Compress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: SIZE; VAR res: WORD);
+PROCEDURE Compress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: LONGINT; VAR res: WORD);
 	VAR s: Stream;
 BEGIN
 	ZlibBuffers.Init(s.in, src, srcoffset, srclen, srclen);

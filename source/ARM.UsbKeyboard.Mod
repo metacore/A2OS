@@ -136,12 +136,12 @@ TYPE
 		END HandleModifiers;
 
 		PROCEDURE TableFromFile*(CONST name: ARRAY OF CHAR): ADDRESS;
-		VAR f: Files.File; r: Files.Rider; len: SIZE;
+		VAR f: Files.File; r: Files.Rider; len: LONGINT;
 		BEGIN
 			KernelLog.String("UsbKeyboard: "); KernelLog.String(" Loading layout "); KernelLog.String(name); KernelLog.Ln;
 			f := Files.Old(name);
 			IF f # NIL THEN
-				len := f.Length()(SIZE);
+				len := f.Length();
 				IF len MOD 4 = 0 THEN
 					NEW(keyboardFileTable, len+1);
 					f.Set(r, 0); f.ReadBytes(r, keyboardFileTable^, 0, len);
@@ -181,7 +181,7 @@ TYPE
 
 		base : KeyboardBase;
 
-		(*for keeping the pressed keys in mind*)
+		(*for keeing the pressed keys in mind*)
 		pressed* : ARRAY 6 OF Key;
 
 		PROCEDURE &Init*;

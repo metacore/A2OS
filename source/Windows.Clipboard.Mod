@@ -40,8 +40,8 @@ VAR
 	hMem: Kernel32.HGLOBAL; adr: ADDRESS;
 	hBool: Kernel32.BOOL;
 	chBuff: POINTER TO ARRAY OF CHAR;
-	size,requiredSize: SIZE;
-	ind: SIZE;
+	size,requiredSize: LONGINT;
+	ind: LONGINT;
 BEGIN
 	ASSERT((text # NIL) & (text.HasReadLock()));
 	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN

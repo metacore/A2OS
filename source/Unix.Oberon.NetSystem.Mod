@@ -381,25 +381,25 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	(*----- Read -----*)
 
 	PROCEDURE Read* (conn: Connection; VAR ch: CHAR);
-	VAR l: SIZE; r: WORD;
+	VAR l, r: LONGINT;
 	BEGIN
 		conn.Receive( S.VAL( Bytes, ch ), 0, 1, 1, l, r );
 	END Read;
 
 	PROCEDURE ReadBytes* ( conn: Connection; pos, len: LONGINT; VAR buf: ARRAY OF S.BYTE );
-	VAR l: SIZE; r: WORD;
+	VAR r, l: LONGINT;
 	BEGIN
 		conn.Receive( S.VAL( Bytes, buf ), pos, len, len, l, r );
 	END ReadBytes;
 
 	PROCEDURE ReadBool* (conn: Connection; VAR b: BOOLEAN);
-	VAR l: SIZE; r: WORD;
+	VAR r, l: LONGINT;
 	BEGIN
 		conn.Receive( S.VAL( Bytes, b ), 0, 1, 1, l, r );
 	END ReadBool;
 
 	PROCEDURE ReadInt* ( conn: Connection; VAR x: INTEGER );
-	VAR buf: ARRAY 4 OF CHAR; len: SIZE; res: WORD;
+	VAR buf: ARRAY 4 OF CHAR; len, res: LONGINT;
 	BEGIN
 		conn.Receive( buf, 0, 2, 2, len, res );
 		IF (res = 0) & (len = 2) THEN
@@ -410,7 +410,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	END ReadInt;
 
 	PROCEDURE ReadLInt* (conn: Connection; VAR x: LONGINT);
-	VAR buf: ARRAY 4 OF CHAR; len: SIZE; res: WORD;
+	VAR buf: ARRAY 4 OF CHAR; len, res: LONGINT;
 	BEGIN
 		conn.Receive( buf, 0, 4, 4, len, res );
 		IF (res = 0) & (len = 4) THEN
@@ -424,7 +424,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	PROCEDURE ReadString* (conn: Connection; VAR s: ARRAY OF CHAR);
 	VAR
 		ch, ch0: CHAR;
-		i, l: SIZE; r: WORD;
+		i, l, r: LONGINT;
 	BEGIN
 		i := -1; ch := 0X;
 		REPEAT
@@ -517,10 +517,9 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 	PROCEDURE ReceiveDG* ( soc: Socket; VAR remIP: IPAdr; VAR remport: INTEGER;
 							pos: LONGINT; VAR len: LONGINT; VAR buf: ARRAY OF S.BYTE );
-	VAR res, port: LONGINT; length: SIZE;
+	VAR res, port: LONGINT;
 	BEGIN
-		soc.Receive( S.VAL( Bytes, buf ), pos, len, 0, remIP, port, length, res );
-		len := length(LONGINT);
+		soc.Receive( S.VAL( Bytes, buf ), pos, len, 0, remIP, port, len, res );
 		remport := SHORT( port)
 	END ReceiveDG;
 

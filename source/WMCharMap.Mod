@@ -104,7 +104,7 @@ TYPE
 		END CreateForm;
 
 		PROCEDURE DrawAll(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
-		VAR pos, dx, dy : LONGINT; i: SIZE; charString : ARRAY 16 OF CHAR;
+		VAR pos, i, dx, dy : LONGINT; charString : ARRAY 16 OF CHAR;
 		BEGIN
 			IF WMGrids.CellSelected IN state THEN
 				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(08888FFFFH), WMGraphics.ModeCopy)
@@ -125,7 +125,7 @@ TYPE
 		END DrawAll;
 
 		PROCEDURE SelectChar(sender, data : ANY);
-		VAR l, t, r, b, pos : LONGINT; i: SIZE; charString, tempString : ARRAY 16 OF CHAR;
+		VAR l, t, r, b, i, pos : LONGINT; charString, tempString : ARRAY 16 OF CHAR;
 		BEGIN
 			characters.GetSelection(l, t, r, b);
 			pos := t * NofCols + l;
@@ -165,7 +165,7 @@ TYPE
 		END FindChar;
 
 		PROCEDURE CopyChar(sender, data : ANY);
-		VAR charString : ARRAY 16 OF CHAR; i : SIZE; buf : Texts.PUCS32String;
+		VAR charString : ARRAY 16 OF CHAR; i : LONGINT; buf : Texts.PUCS32String;
 		BEGIN
 			Texts.clipboard.AcquireWrite; i := 0;
 			IF UTF8Strings.EncodeChar(curChar, charString, i) THEN

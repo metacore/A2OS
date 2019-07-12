@@ -26,13 +26,13 @@ TYPE
 
 		(** data: value to be hashed; when Update is invoked several times before GetHash or Initialize
 			is invoked, the concatenation of all data-parameters is hashed *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR; ofs, len: SIZE );
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR; ofs, len: LONGINT );
 		BEGIN
 			HALT(301) (* force overwriting *)
 		END Update;
 
 		(** get the hashvalue of length SELF.size *)
-		PROCEDURE GetHash*( VAR buffer: ARRAY OF CHAR; position: SIZE );
+		PROCEDURE GetHash*( VAR buffer: ARRAY OF CHAR; position: LONGINT );
 		BEGIN
 			HALT(301) (* force overwriting *)
 		END GetHash;

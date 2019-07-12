@@ -82,7 +82,7 @@ VAR
 	devicename, msg : ARRAY 128 OF CHAR;
 	commandList : POINTER TO ARRAY OF CHAR;
 	plugin : Plugins.Plugin;
-	i, size, len : SIZE; res : WORD;
+	i, size, len : LONGINT; res : WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(devicename);
 
@@ -111,7 +111,7 @@ BEGIN
 END AwaitAndExecute0;
 
 PROCEDURE ExtractDevicename(CONST devpart : ARRAY OF CHAR; VAR devicename : ARRAY OF CHAR) : BOOLEAN;
-VAR i : SIZE;
+VAR i : LONGINT;
 BEGIN
 	WHILE (i < LEN(devpart)) & (devpart[i] # "#") & (i < LEN(devicename)) DO
 		devicename[i] := devpart[i];

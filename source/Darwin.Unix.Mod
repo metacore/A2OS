@@ -811,7 +811,7 @@ VAR
 			sltime := rem;
 		END;
 	END ThrSleep;
-
+	
 	PROCEDURE NanoSleep*( ns: LONGWORD );
 	VAR
 		sltime, rem: RECORD
@@ -825,8 +825,8 @@ VAR
 			(* check error ! *)
 			sltime := rem;
 		END;
-	END NanoSleep;
-
+	END NanoSleep;	
+	
 
 	PROCEDURE ThrKill*(thr: Thread_t);
 	BEGIN

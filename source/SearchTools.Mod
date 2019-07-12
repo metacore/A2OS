@@ -20,8 +20,8 @@ TYPE
 
 	Statistics = OBJECT
 	VAR
-		nofFiles : SIZE;
-		nofMatches, nofConflicts, nofErrors : SIZE;
+		nofFiles : LONGINT;
+		nofMatches, nofConflicts, nofErrors : LONGINT;
 
 		verbose : BOOLEAN;
 		abort : BOOLEAN;
@@ -47,7 +47,7 @@ TYPE
 
 
 PROCEDURE FindString(CONST filename : Files.FileName; param : Parameters; stats : Statistics; context : Commands.Context);
-VAR text : Texts.Text; pos: SIZE; format, res : WORD; searchString : SearchStringUCS; idx, nbrOfHits : SIZE;
+VAR text : Texts.Text; pos, format: LONGINT; res : WORD; searchString : SearchStringUCS; idx : LONGINT; nbrOfHits : LONGINT;
 BEGIN
 	ASSERT(param IS PatternParameters);
 	nbrOfHits := 0;
@@ -81,14 +81,14 @@ END FindString;
 
 PROCEDURE ReplaceString(CONST filename : Files.FileName; param : Parameters; stats : Statistics; context : Commands.Context);
 VAR
-	text : Texts.Text; pos: SIZE; format, res: WORD;
-	searchString, replaceString : SearchStringUCS; idx : SIZE;
-	searchStringLen, replaceStringLen : SIZE;
-	replaceCount : SIZE;
+	text : Texts.Text; pos, format: LONGINT; res: WORD;
+	searchString, replaceString : SearchStringUCS; idx : LONGINT;
+	searchStringLen, replaceStringLen : LONGINT;
+	replaceCount : LONGINT;
 	conflict : BOOLEAN;
 
 	(* Replace string at position <pos> of length <len> with <replString> *)
-	PROCEDURE Replace(pos, len : SIZE; CONST replString : SearchStringUCS);
+	PROCEDURE Replace(pos, len : LONGINT; CONST replString : SearchStringUCS);
 	BEGIN
 		text.Delete(pos, len);
 		text.InsertUCS32(pos, replString);
@@ -152,7 +152,7 @@ PROCEDURE FindStringRaw(CONST filename : Files.FileName; param : Parameters; sta
 VAR
 	r : Files.Reader;
 	f : Files.File;
-	m: SIZE;
+	m: LONGINT;
 	p : PatternParameters;
 BEGIN
 	ASSERT(param IS PatternParameters);
@@ -181,9 +181,9 @@ END FindStringRaw;
 
 PROCEDURE SearchPatternRaw*(r : Streams.Reader; w: Streams.Writer; CONST pattern: ARRAY OF CHAR);
 VAR
-	d : ARRAY 256 OF SIZE;
+	d : ARRAY 256 OF LONGINT;
 	cb : Strings.String;
-	pos, cpos, i, j, k, m, shift : SIZE;
+	pos, cpos, i, j, k, m, shift : LONGINT;
 BEGIN
 	m := Strings.Length(pattern);
 	NEW(cb, m);
@@ -219,8 +219,7 @@ VAR
 	enum : Files.Enumerator;
 	filename : Files.FileName;
 	fileflags : SET;
-	time, date : LONGINT; nofMatches : SIZE;
-	size : Files.Size;
+	time, date, size, nofMatches : LONGINT;
 BEGIN
 	ASSERT(proc # NIL);
 	IF path # "" THEN Files.JoinPath(path, pattern, filename) END;
@@ -248,7 +247,7 @@ BEGIN
 END Enumerate;
 
 PROCEDURE Unescape (CONST source: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR);
-VAR si, di: SIZE;
+VAR si, di: LONGINT;
 BEGIN
 	si := 0; di := 0;
 	WHILE source[si] # 0X DO

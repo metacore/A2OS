@@ -40,7 +40,7 @@ VAR W: Texts.Writer;
 (** Parsing of a finger url. *)
 	PROCEDURE Split*(VAR url, host, request: ARRAY OF CHAR; VAR port: INTEGER): LONGINT;
 		VAR
-			key: LONGINT; i, j, l: SIZE;
+			key, i, j, l: LONGINT;
 			iskey: BOOLEAN;
 			portS: ARRAY 8 OF CHAR;
 		PROCEDURE Blanks;

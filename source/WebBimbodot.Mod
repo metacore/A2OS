@@ -194,7 +194,7 @@ TYPE
 			w.Update;
 		END Store;
 
-		PROCEDURE Fail(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Fail(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			errors := TRUE;
 			KernelLog.String("Version load failed : "); KernelLog.String("pos= "); KernelLog.Int(pos, 0); KernelLog.String("msg= "); KernelLog.String(msg); KernelLog.Ln;
@@ -294,7 +294,7 @@ TYPE
 		(* count the number of article versions in the archive file *)
 		PROCEDURE CountVersions;
 		VAR index : Archives.Index;
-			i: SIZE; count : LONGINT;
+			i, count : LONGINT;
 			n : String;
 		BEGIN
 			archive.Acquire;

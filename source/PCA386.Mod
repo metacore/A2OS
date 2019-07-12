@@ -573,7 +573,7 @@ VAR
 	END ConvertObj;
 
 	PROCEDURE find(name: Name; VAR obj: Symbol);
-		VAR ob0: Symbol; ob : PCT.Symbol; idx: StringPool.Index;
+		VAR ob0: Symbol; ob : PCT.Symbol; idx: LONGINT;
 	BEGIN ob0 := root.right;
 		WHILE (ob0 # NIL) & (ob0.name # name) DO
 			IF ob0.name > name THEN ob0 := ob0.left ELSE ob0 := ob0.right END

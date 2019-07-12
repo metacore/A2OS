@@ -1480,7 +1480,7 @@ END
 
 	PROCEDURE NextAttr*(VAR S: Scanner; VAR name: ARRAY OF CHAR): BOOLEAN;
 		VAR
-			i, l: SIZE;
+			i, l: LONGINT;
 			charRef: ARRAY 16 OF CHAR;
 			quoted: BOOLEAN;
 	BEGIN

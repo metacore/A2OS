@@ -127,7 +127,7 @@ TYPE
 		END StartData;
 
 		PROCEDURE PrepareToSend*(m: Mail.Message; VAR result : LONGINT);
-		VAR name, address : Mail.MailAddress; i: SIZE;
+		VAR name, address : Mail.MailAddress; i: LONGINT;
 		BEGIN
 			result := SendFailed;
 			ASSERT(m # NIL);
@@ -164,7 +164,7 @@ TYPE
 		END FinishSendRaw;
 
 		PROCEDURE SendComplete*(m: Mail.Message; VAR result : LONGINT);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 			name, address : Mail.MailAddress;
 			date, id : ARRAY 64 OF CHAR;
 			subject, content : ARRAY 256 OF CHAR;

@@ -107,7 +107,7 @@ TYPE
 			manager.Add(200, 200, SELF, {WM.FlagFrame, WM.FlagClose, WM.FlagMinimize});
 			SetContent(mainPanel);
 			LoadAllCharacters;
-			filterComponents.nofCols.Set(LEN(relevantSubcomponents)(LONGINT));
+			filterComponents.nofCols.Set(LEN(relevantSubcomponents));
 			characters.nofRows.Set(nofCharacters DIV NofCols + 1);
 			useFilter := TRUE; nofFilters := 0;
 			Filter(nofFilters, filterArray);
@@ -176,7 +176,7 @@ TYPE
 		END LoadAllCharacters;
 
 		PROCEDURE Update;
-		VAR codeStr, charString : ARRAY 16 OF CHAR; i : SIZE;
+		VAR codeStr, charString : ARRAY 16 OF CHAR; i : LONGINT;
 		BEGIN
 			paintBox.Invalidate;
 			IF UnihanParser.HasCode(curChar) THEN
@@ -236,7 +236,7 @@ TYPE
 		END ToggleFilter;
 
 		PROCEDURE NewCharacter(sender, data :ANY);
-		VAR code : ARRAY 16 OF CHAR; i : SIZE;
+		VAR code : ARRAY 16 OF CHAR; i : LONGINT;
 		BEGIN
 			characterEdit.GetAsString(code);
 			i := 0;

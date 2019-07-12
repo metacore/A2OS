@@ -7,9 +7,9 @@ TYPE
 
 	ProgressBar* = OBJECT(WMComponents.VisualComponent)
 	VAR
-		min-, max- : WMProperties.IntegerProperty;
+		min-, max- : WMProperties.Int32Property;
 
-		current : HUGEINT;
+		current : LONGINT;
 
 		model- : WMProperties.ReferenceProperty;
 		modelI : Models.Model;
@@ -39,7 +39,7 @@ TYPE
 			SetGenerator("WMProgressComponents.GenProgressBar");
 		END Init;
 
-		PROCEDURE SetRange*(min, max : HUGEINT);
+		PROCEDURE SetRange*(min, max : LONGINT);
 		BEGIN
 			Acquire;
 			SELF.min.Set(min);
@@ -48,13 +48,13 @@ TYPE
 			Invalidate;
 		END SetRange;
 
-		PROCEDURE SetCurrent*(current : HUGEINT);
+		PROCEDURE SetCurrent*(current : LONGINT);
 		BEGIN
 			SetInternal(current, TRUE);
 		END SetCurrent;
 
-		PROCEDURE SetInternal(current : HUGEINT; updateModel : BOOLEAN);
-		VAR changed : BOOLEAN; min, max : HUGEINT;
+		PROCEDURE SetInternal(current : LONGINT; updateModel : BOOLEAN);
+		VAR changed : BOOLEAN; min, max : LONGINT;
 		BEGIN
 			min := SELF.min.Get(); max := SELF.max.Get();
 			IF (current < min) THEN current := min; ELSIF (current > max) THEN current := max; END;
@@ -70,7 +70,7 @@ TYPE
 		END SetInternal;
 
 		PROCEDURE IncPos*;
-		VAR max : HUGEINT;
+		VAR max : LONGINT;
 		BEGIN
 			max := SELF.max.Get();
 			Acquire;
@@ -94,8 +94,8 @@ TYPE
 			END;
 		END RecacheProperties;
 
-		PROCEDURE UpdateModel(value : HUGEINT);
-		VAR integer : Types.Hugeint; res : WORD; model : Models.Model;
+		PROCEDURE UpdateModel(value : LONGINT);
+		VAR integer : Types.Integer; res : WORD; model : Models.Model;
 		BEGIN
 			model := modelI;
 			IF (model # NIL) THEN
@@ -105,7 +105,7 @@ TYPE
 		END UpdateModel;
 
 		PROCEDURE ModelChanged(sender, data : ANY);
-		VAR integer : Types.Hugeint; res : WORD;
+		VAR integer : Types.Integer; res : WORD;
 		BEGIN
 			Acquire;
 			modelI.GetGeneric(integer, res);
@@ -135,7 +135,7 @@ TYPE
 			rect: WMRectangles.Rectangle;
 			width: LONGINT;
 			string : ARRAY 32 OF CHAR;
-			min, max, cur: HUGEINT; percent : WORD; color: WMGraphics.Color;
+			min, max, cur, percent : LONGINT; color: WMGraphics.Color;
 			isVertical : BOOLEAN;
 		BEGIN
 			min := SELF.min.Get();

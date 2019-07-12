@@ -19,7 +19,7 @@ TYPE
 		path : ARRAY 512 OF CHAR;
 		lastCommandWasComment : BOOLEAN;
 
-		readerBytesLength : SIZE; (* last results from Reader.Bytes(... VAR len) *)
+		readerBytesLength : LONGINT; (* last results from Reader.Bytes(... VAR len) *)
 		byte : CHAR; (* last byte read *)
 		buffer : Strings.String; (* last bytes read *)
 
@@ -191,7 +191,7 @@ TYPE
 		PROCEDURE Assert(r : Streams.Reader; VAR error, parseError : BOOLEAN);
 		VAR variable : ARRAY 32 OF CHAR; index : LONGINT;
 
-			PROCEDURE CheckInteger(CONST name : ARRAY OF CHAR;  variable : HUGEINT; r : Streams.Reader; VAR error, parseError : BOOLEAN);
+			PROCEDURE CheckInteger(CONST name : ARRAY OF CHAR;  variable : LONGINT; r : Streams.Reader; VAR error, parseError : BOOLEAN);
 			VAR operator : ARRAY 4 OF CHAR; value : LONGINT;
 			BEGIN
 				r.SkipWhitespace; r.String(operator);
@@ -336,7 +336,7 @@ TYPE
 		VAR
 			variable, to : ARRAY 32 OF CHAR;
 			charValue : CHAR; integerValue : LONGINT;  booleanValue : BOOLEAN; stringValue : Strings.String;
-			set, index : LONGINT; i: SIZE;
+			set, i : LONGINT; index : LONGINT;
 
 		BEGIN
 			r.SkipWhitespace; r.String(variable);
@@ -487,7 +487,7 @@ TYPE
 		PROCEDURE InitBuffer(length : LONGINT);
 
 			PROCEDURE Clear;
-			VAR i : SIZE;
+			VAR i : LONGINT;
 			BEGIN
 				FOR i := 0 TO LEN(buffer)-1 DO
 					buffer[i] := 0X;
@@ -598,7 +598,7 @@ TYPE
 			IF ~parseError & (string[0] # "#") THEN log.Ln; log.Update; END;
 		END ProcessCommand;
 
-		PROCEDURE Handle*(r: Streams.Reader; pos : Streams.Position; CONST name: ARRAY OF CHAR; testType: TestSuite.TestType): WORD;
+		PROCEDURE Handle*(r: Streams.Reader; pos : LONGINT; CONST name: ARRAY OF CHAR; testType: TestSuite.TestType): INTEGER;
 		VAR result: INTEGER; error, parseError, finished, trapped: BOOLEAN;
 		BEGIN
 			trapped := TRUE;
@@ -637,7 +637,7 @@ BEGIN
 END StringsAreEqual;
 
 PROCEDURE IsNumber(CONST string : ARRAY OF CHAR) : BOOLEAN;
-VAR i : SIZE;
+VAR i : LONGINT;
 BEGIN
 	IF ("0" <= string[0]) & (string[0] <= "9") THEN
 		FOR i := 1 TO Strings.Length(string)-1 DO
@@ -667,8 +667,7 @@ END Test;
 PROCEDURE RandomReadWrite*(context : Commands.Context); (** path filename seed nofRuns ~ *)
 VAR
 	path, filename, fullname : Files.FileName;
-	seed, run, nofRuns, position, lastPosition, temp, lastPercent : LONGINT;
-	length0: Files.Size;
+	seed, run, nofRuns, position, lastPosition, length0, temp, lastPercent : LONGINT;
 	char, lastChar, ch : CHAR;
 	file : Files.File; rider : Files.Rider;
 	random : Random.Generator;
@@ -694,7 +693,7 @@ BEGIN
 				lastPercent := lastPercent + 10;
 				context.out.Int(lastPercent, 0); context.out.String("% "); context.out.Update;
 			END;
-			position := random.Dice(LONGINT(length0));
+			position := random.Dice(length0);
 			temp := random.Dice(255) + 1;
 			char := CHR(temp);
 			file.Set(rider, position);

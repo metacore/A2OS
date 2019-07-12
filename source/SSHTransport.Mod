@@ -60,7 +60,7 @@ TYPE
 
 				PROCEDURE & Open*( CONST hostname: ARRAY OF CHAR );
 				VAR
-					res: WORD;  adr: IP.Adr;  p: SIZE;
+					res: WORD;  adr: IP.Adr;  p: LONGINT;
 				BEGIN
 					state := Closed;
 					Out.String( "connecting to " );  Out.String( hostname );  Out.String( " ... " );
@@ -97,7 +97,7 @@ TYPE
 
 
 				PROCEDURE ReceiveServerVersion( ): BOOLEAN;
-				VAR receivebuf: ARRAY 2048 OF CHAR;  len, p1, p2: SIZE;
+				VAR receivebuf: ARRAY 2048 OF CHAR;  len, p1, p2: LONGINT;
 				BEGIN
 					REPEAT
 						len := ReceiveLine( tcp, receivebuf )
@@ -120,7 +120,7 @@ TYPE
 
 				PROCEDURE SendClientVersion;
 				VAR
-					len: LONGINT; pos: SIZE; res: WORD;
+					len, pos: LONGINT; res: WORD;
 					nl: ARRAY 4 OF CHAR;
 				BEGIN
 					pos := 0;
@@ -133,7 +133,7 @@ TYPE
 				(** Send packet p *)
 				PROCEDURE SendPacket*( p: Packet );
 				VAR
-					i, trlen, payload, pad, cbs: SIZE; res: WORD;
+					i, trlen, payload, pad, cbs: LONGINT; res: WORD;
 					seqno: ARRAY 4 OF CHAR;
 					trbuf: ARRAY 8196 OF CHAR;
 					packType: LONGINT;
@@ -144,7 +144,7 @@ TYPE
 					pad := cbs - (p.len + 5) MOD cbs;
 					IF pad < 4 THEN INC( pad, cbs ) END;
 					payload := 1 + p.len + pad;
-					Int2Chars( payload(LONGINT), trbuf );  trbuf[4] := CHR( pad );
+					Int2Chars( payload, trbuf );  trbuf[4] := CHR( pad );
 					trlen := 4 + payload;
 					FOR i := 0 TO p.len - 1 DO trbuf[i+5] := p.buf[i]  END;
 					U.RandomBytes( trbuf, p.len + 5, pad  );
@@ -169,8 +169,8 @@ TYPE
 				END SendPacket;
 
 				(** Receive SSH Packet into buf,  return packet type *)
-				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR size: SIZE ): CHAR;
-				VAR i, l: SIZE; pos: SIZE; l2, pad, trlen, cbs: LONGINT; res: WORD;
+				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR size: LONGINT ): CHAR;
+				VAR i, l, pad, trlen, cbs, pos: LONGINT; res: WORD;
 					seqno: ARRAY 4 OF CHAR; rmac, cmac: ARRAY 20 OF CHAR;
 					trbuf: ARRAY 8196 OF CHAR;
 					packType: LONGINT;
@@ -219,8 +219,8 @@ TYPE
 						IF trbuf[5] = Disconn THEN
 							Out.String( "remote host closed connection: " );
 							pos := 10;
-							U.GetLength( trbuf, pos, l2 );
-							FOR i := 0 TO l2 - 1 DO Out.Char( trbuf[14 + i] ) END;  Out.Ln;
+							U.GetLength( trbuf, pos, l );
+							FOR i := 0 TO l - 1 DO Out.Char( trbuf[14 + i] ) END;  Out.Ln;
 							state := Closed
 						END;
 						FOR i := 0 TO size - 1 DO buf[i] := trbuf[i+5] END
@@ -272,8 +272,7 @@ TYPE
 
 				PROCEDURE NegotiateAlgorythms;
 				VAR
-					p, len: SIZE;
-					l, n: LONGINT;  kex: SHORTINT;
+					l, p, len, n: LONGINT;  kex: SHORTINT;
 					buf: ARRAY 4096 OF CHAR;
 					x, m: ARRAY 512 OF CHAR;  lbuf: ARRAY 4 OF CHAR;
 					cipher: Ciphers.Cipher; keybits, maclen: LONGINT;
@@ -291,12 +290,12 @@ TYPE
 
 					packet := ClientAlgorythms( );
 
-					Int2Chars( packet.len(LONGINT), lbuf );
+					Int2Chars( packet.len, lbuf );
 					sha1.Update( lbuf, 0, 4 );  sha1.Update( packet.buf^, 0, packet.len );	(* IC *)
 					SendPacket( packet );
 
 					IF ReceivePacket( buf, len ) = KEXInit THEN
-						Int2Chars( len(LONGINT), lbuf );
+						Int2Chars( len, lbuf );
 						sha1.Update( lbuf, 0, 4 );  sha1.Update( buf, 0, len );				(* IS *)
 
 						p := 17;
@@ -400,7 +399,7 @@ TYPE
 				PROCEDURE Group1( sha1: SHA1.Hash );
 				CONST DHInit = 1EX;  DHReply = 1FX;
 				VAR
-					buf: ARRAY 1024 OF CHAR; lshkb, lf: LONGINT; len, p, pos: SIZE;
+					buf: ARRAY 1024 OF CHAR; p, pos, len, lshkb, lf: LONGINT;
 					pub, serverpub, sec: B.BigNumber;  dh: DH.DH;  packet: Packet;
 				BEGIN
 					IF 1 IN G.debug THEN
@@ -437,7 +436,7 @@ TYPE
 				PROCEDURE Group14( sha1: SHA1.Hash );
 				CONST DHInit = 1EX;  DHReply = 1FX;
 				VAR
-					buf: ARRAY 2048 OF CHAR; p, pos, len: SIZE; lshkb, lf: LONGINT;
+					buf: ARRAY 2048 OF CHAR; p, pos, len, lshkb, lf: LONGINT;
 					pub, serverpub, sec: B.BigNumber;  dh: DH.DH;  packet: Packet;
 				BEGIN
 					IF 1 IN G.debug THEN
@@ -471,7 +470,7 @@ TYPE
 					END
 				END Group14;
 
-				PROCEDURE CheckSHK( CONST buf: ARRAY OF CHAR; shk, sig: SIZE );
+				PROCEDURE CheckSHK( CONST buf: ARRAY OF CHAR; shk, sig: LONGINT );
 				VAR keyblob, signature: ARRAY 2048 OF CHAR;
 				BEGIN
 					Out.String( "checking server hostkey" ); Out.Ln;
@@ -486,7 +485,7 @@ TYPE
 				PROCEDURE GroupExchange( sha1: SHA1.Hash );
 				CONST GEXRequest = 22X;  GEXGroup = 1FX;  GEXInit = 20X;  GEXReply = 21X;
 				VAR
-					buf1,buf2: ARRAY 4096 OF CHAR; pos, b1len, b2len: SIZE; l, lshkb, lf: LONGINT;
+					buf1,buf2: ARRAY 4096 OF CHAR; pos, b1len, b2len, l, lshkb, lf: LONGINT;
 					pub, serverpub, sec, prim, gen: B.BigNumber;  dh: DH.DH;
 					pack1, pack2: Packet;
 				BEGIN
@@ -541,7 +540,7 @@ TYPE
 
 
 				PROCEDURE ActivateNewKeys;
-				VAR len: SIZE;  buf: ARRAY 512 OF CHAR; packet: Packet;
+				VAR len: LONGINT;  buf: ARRAY 512 OF CHAR; packet: Packet;
 				BEGIN
 					DeriveKey( 'C', new.outkeybits DIV 8, buf );
 					new.outcipher.InitKey( buf, new.outkeybits );
@@ -578,9 +577,8 @@ TYPE
 				PROCEDURE DeriveKey( keykind: CHAR;  keylen: LONGINT;  VAR key: ARRAY OF CHAR );
 				VAR
 					buf: ARRAY 512 OF CHAR;
-					i, top, slen: LONGINT;
+					i, p, top, slen: LONGINT;
 					h: SHA1.Hash;
-					p: SIZE;
 				BEGIN
 					NEW( h );  h.Initialize;
 					p := 0;  U.GetLength( secret, p, slen );
@@ -608,9 +606,9 @@ TYPE
 	Packet* = OBJECT (** SSH Packet for sending *)
 			VAR
 				buf-: POINTER TO ARRAY OF CHAR;
-				len-: SIZE;
+				len-: LONGINT;
 
-				PROCEDURE & Init*( type: CHAR; size: SIZE );
+				PROCEDURE & Init*( type: CHAR; size: LONGINT );
 				BEGIN
 					NEW( buf, size );  buf[0] := type;  len := 1;
 				END Init;
@@ -621,25 +619,25 @@ TYPE
 				END AppChar;
 
 				PROCEDURE AppInteger* ( v: LONGINT );
-				VAR i: SIZE;
+				VAR i: INTEGER;
 				BEGIN
 					FOR i := 3 TO 0 BY -1 DO buf[len + i] := CHR( v MOD 256 );  v := v DIV 256 END;
 					INC( len, 4 )
 				END AppInteger;
 
 				PROCEDURE AppString*( CONST str: ARRAY OF CHAR );
-				VAR l, p: SIZE;  c: CHAR;
+				VAR l, p: LONGINT;  c: CHAR;
 				BEGIN
 					l := 0;  c := str[0];  p := len + 4;
 					WHILE (l < LEN( str )) & (c # 0X) DO buf[p + l] := c;  INC( l );  c := str[l]  END;
-					AppInteger( l(LONGINT) );
+					AppInteger( l );
 					INC( len, l )
 				END AppString;
 
-				PROCEDURE AppArray*( CONST arr: ARRAY OF CHAR;  pos, arrlen: SIZE );
-				VAR i: SIZE;
+				PROCEDURE AppArray*( CONST arr: ARRAY OF CHAR;  pos, arrlen: LONGINT );
+				VAR i: LONGINT;
 				BEGIN
-					AppInteger( arrlen(LONGINT) );
+					AppInteger( arrlen );
 					FOR i := 0 TO arrlen -1 DO buf[len] := arr[pos + i];  INC( len )  END
 				END AppArray;
 
@@ -650,13 +648,13 @@ VAR hexd: ARRAY 17 OF CHAR;
 
 
 	PROCEDURE Int2Chars( v: LONGINT;  VAR buf: ARRAY OF CHAR );
-	VAR i: SIZE;
+	VAR i: INTEGER;
 	BEGIN
 		FOR i := 3 TO 0 BY -1 DO buf[i] := CHR( v MOD 256 );  v := v DIV 256 END;
 	END Int2Chars;
 
 	PROCEDURE Head( CONST buf, s: ARRAY OF CHAR ): BOOLEAN;
-	VAR i: SIZE;
+	VAR i: LONGINT;
 	BEGIN
 		FOR i := 0 TO LEN( s ) - 1 DO
 			IF (buf[i] # s[i]) & (s[i] # 0X) THEN  RETURN FALSE  END
@@ -664,15 +662,15 @@ VAR hexd: ARRAY 17 OF CHAR;
 		RETURN TRUE
 	END Head;
 
-	PROCEDURE ReceiveLine( tcp: TCP.Connection;  VAR buf: ARRAY OF CHAR ): SIZE;
-	VAR i, l: SIZE; res: WORD;
+	PROCEDURE ReceiveLine( tcp: TCP.Connection;  VAR buf: ARRAY OF CHAR ): LONGINT;
+	VAR i, l: LONGINT; res: WORD;
 	BEGIN
 		i := 0;
 		REPEAT tcp.Receive( buf, i, 1, 1, l, res );  INC( i );
 		UNTIL buf[i - 1] = NL;
 		IF buf[i - 2] = CR THEN i := i - 2 ELSE i := i - 1 END;
 		buf[i] := 0X;
-		RETURN i;
+		RETURN i
 	END ReceiveLine;
 
 

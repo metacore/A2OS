@@ -11,7 +11,7 @@ TYPE
 	(* ----------------------------------- register allocation ------------------------------------- *)
 
 	AllocationArray=POINTER TO ARRAY OF RECORD
-		first, last: SIZE;
+		first, last: LONGINT;
 	END;
 
 	RegisterAllocation*=OBJECT
@@ -19,7 +19,7 @@ TYPE
 		table: AllocationArray;
 
 		PROCEDURE &Init;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			IF table = NIL THEN NEW(table,64) END;
 			FOR i := 0 TO LEN(table)-1 DO
@@ -29,7 +29,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Grow;
-		VAR new: AllocationArray; i: SIZE;
+		VAR new: AllocationArray; i: LONGINT;
 		BEGIN
 			NEW(new,LEN(table)*2);
 			FOR i := 0 TO LEN(table)-1 DO
@@ -42,7 +42,7 @@ TYPE
 			table := new;
 		END Grow;
 
-		PROCEDURE Use(register: SIZE; pc: SIZE);
+		PROCEDURE Use(register, pc: LONGINT);
 		BEGIN
 			IF LEN(table) <= register THEN Grow END;
 			IF table[register].first >pc THEN table[register].first := pc END;
@@ -53,7 +53,7 @@ TYPE
 
 	RegisterEntry* = POINTER TO RECORD
 		prev,next: RegisterEntry;
-		register: SIZE;
+		register: LONGINT;
 		registerClass: IntermediateCode.RegisterClass;
 		type: IntermediateCode.Type;
 	END;
@@ -65,7 +65,7 @@ TYPE
 		BEGIN first := NIL; last := NIL; cache := NIL;
 		END Init;
 
-		PROCEDURE AddRegisterEntry(register: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type);
+		PROCEDURE AddRegisterEntry(register: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type);
 		VAR new: RegisterEntry;
 		BEGIN
 			(* allocate *)
@@ -83,7 +83,7 @@ TYPE
 			END;
 		END AddRegisterEntry;
 
-		PROCEDURE RemoveRegisterEntry(register: SIZE);
+		PROCEDURE RemoveRegisterEntry(register: LONGINT);
 		VAR this: RegisterEntry;
 		BEGIN
 			(* search *)
@@ -109,7 +109,7 @@ TYPE
 		module-: Sections.Module;
 		dump*: Streams.Writer;
 		in-: IntermediateCode.Section; out-: BinaryCode.Section;
-		inPC-, outPC-: SIZE;
+		inPC-, outPC-: LONGINT;
 
 		error* : BOOLEAN;
 		allocation: RegisterAllocation;
@@ -147,11 +147,11 @@ TYPE
 
 		(* generic *)
 		PROCEDURE Section*(in: IntermediateCode.Section; out: BinaryCode.Section);
-		VAR pc: SIZE; name: Basic.SectionName; instruction: IntermediateCode.Instruction;
+		VAR pc: LONGINT; name: Basic.SectionName; instruction: IntermediateCode.Instruction;
 			moduleName, procedureName: SyntaxTree.IdentifierString;
 
 			PROCEDURE ResolveLocalFixups;
-			VAR fixup, next: BinaryCode.Fixup; dest: SIZE; msg,string: Basic.MessageString; number: ARRAY 32 OF CHAR;
+			VAR fixup, next: BinaryCode.Fixup; dest: LONGINT; msg,string: Basic.MessageString; number: ARRAY 32 OF CHAR;
 			BEGIN
 				fixup := out.fixupList.firstFixup;
 				out.fixupList.InitFixupList;
@@ -193,7 +193,7 @@ TYPE
 			END ResolveLocalFixups;
 
 			PROCEDURE GetRegisterAllocation;
-			VAR pc: SIZE;
+			VAR pc: LONGINT;
 
 				PROCEDURE Use(CONST operand: IntermediateCode.Operand);
 				BEGIN
@@ -219,12 +219,12 @@ TYPE
 
 			PROCEDURE Optimize;
 			TYPE
-				Entry= POINTER TO RECORD src, dest: SIZE; next: Entry END;
+				Entry= POINTER TO RECORD src, dest: LONGINT; next: Entry END;
 			VAR
-				pc: SIZE;
+				pc: LONGINT;
 				first: Entry;
 
-				PROCEDURE AddMap(src, dest: SIZE);
+				PROCEDURE AddMap(src, dest: LONGINT);
 				VAR entry: Entry;
 				BEGIN
 					NEW(entry); entry.src := src; entry.dest := dest;
@@ -257,7 +257,7 @@ TYPE
 				END CheckMapped;
 
 				PROCEDURE CheckMov(VAR instruction: IntermediateCode.Instruction);
-				VAR srcReg, destReg: SIZE;
+				VAR srcReg, destReg: LONGINT;
 				BEGIN
 					IF (instruction.opcode = IntermediateCode.mov) & (instruction.op1.mode = IntermediateCode.ModeRegister)
 						& (instruction.op2.mode = IntermediateCode.ModeRegister) & IntermediateCode.TypeEquals(instruction.op1.type, instruction.op2.type) THEN
@@ -301,7 +301,7 @@ TYPE
 
 			PROCEDURE Emulate(VAR x: IntermediateCode.Instruction; CONST moduleName,procedureName: SyntaxTree.IdentifierString);
 			VAR
-				parSize: SIZE; sectionName: Basic.SegmentedName; op: IntermediateCode.Operand;
+				parSize: LONGINT; sectionName: Basic.SegmentedName; op: IntermediateCode.Operand;
 				symbol: SyntaxTree.Symbol; fp: Basic.Fingerprint;
 				hasDestination: BOOLEAN;
 
@@ -443,12 +443,12 @@ TYPE
 			ResolveLocalFixups;
 		END Section;
 
-		PROCEDURE FirstUse*(virtualRegister: SIZE): SIZE;
+		PROCEDURE FirstUse*(virtualRegister: LONGINT): LONGINT;
 		BEGIN
 			IF (virtualRegister > 0)  THEN RETURN allocation.table[virtualRegister].first ELSE RETURN None END;
 		END FirstUse;
 
-		PROCEDURE LastUse*(virtualRegister: SIZE): SIZE;
+		PROCEDURE LastUse*(virtualRegister: LONGINT): LONGINT;
 		BEGIN
 			IF (virtualRegister > 0)  THEN RETURN allocation.table[virtualRegister].last ELSE RETURN None END;
 		END LastUse;
@@ -483,7 +483,7 @@ TYPE
 		END GetDataSection;
 
 		PROCEDURE EmitData(CONST instruction: IntermediateCode.Instruction);
-			VAR type: IntermediateCode.Type; fixup: BinaryCode.Fixup; pc: SIZE;fixupFormat: BinaryCode.FixupPatterns;
+			VAR type: IntermediateCode.Type; fixup: BinaryCode.Fixup; pc: LONGINT;fixupFormat: BinaryCode.FixupPatterns;
 		BEGIN
 			type := instruction.op1.type;
 			pc := out.pc;
@@ -510,7 +510,7 @@ TYPE
 		VAR sizeInUnits,i: LONGINT;
 		BEGIN
 			sizeInUnits := SHORT(instruction.op1.intValue);
-			ASSERT(sizeInUnits >= 0); (* size is initialized to MIN(SIZE), this checks if size field has been visited *)
+			ASSERT(sizeInUnits >= 0); (* size is initialized to MIN(LONGINT), this checks if size field has been visited *)
 			FOR i := 0 TO sizeInUnits-1 DO
 				out.PutBits(0,out.os.unit);
 			END;
@@ -542,10 +542,10 @@ TYPE
 		next-: Ticket;
 		type-: IntermediateCode.Type;
 		class-: IntermediateCode.RegisterClass;
-		lastuse-: SIZE;
+		lastuse-: LONGINT;
 		spilled*, spillable*: BOOLEAN;
 		register*, offset*: LONGINT;
-		parts-: SIZE;
+		parts-: LONGINT;
 	END;
 
 	Tickets*=OBJECT
@@ -559,7 +559,7 @@ TYPE
 		END Init;
 
 		(* enter a new ticket into the list of live tickets, sorted by lastuse *)
-		PROCEDURE Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; spillable, spilled: BOOLEAN; offset: LONGINT; lastuse: SIZE): Ticket;
+		PROCEDURE Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; spillable, spilled: BOOLEAN; offset: LONGINT; lastuse: LONGINT): Ticket;
 		VAR ticket,link: Ticket;
 		BEGIN
 			ASSERT(~spilled & (register # None) OR spilled & (offset # None));
@@ -619,23 +619,23 @@ TYPE
 	VirtualRegisters*=OBJECT
 	VAR
 		tickets: VirtualRegisterMappings;
-		parts: SIZE;
+		parts: LONGINT;
 
-		firstMapped-, lastMapped-: SIZE;
+		firstMapped-, lastMapped-: LONGINT;
 
-		PROCEDURE &Init*(parts: SIZE);
-		VAR i: SIZE;
+		PROCEDURE &Init*(parts: LONGINT);
+		VAR i: LONGINT;
 		BEGIN
 			SELF.parts := parts;
 			IF tickets = NIL THEN NEW(tickets,64*parts) END;
 			FOR i := 0 TO LEN(tickets)-1 DO
 				tickets[i]:=NIL;
 			END;
-			firstMapped := MAX(SIZE); lastMapped := -1;
+			firstMapped := MAX(LONGINT); lastMapped := -1;
 		END Init;
 
 		PROCEDURE Grow;
-		VAR new: VirtualRegisterMappings; i: SIZE;
+		VAR new: VirtualRegisterMappings; i: LONGINT;
 		BEGIN
 			NEW(new,LEN(tickets)*2);
 			FOR i := 0 TO LEN(tickets)-1 DO
@@ -647,13 +647,13 @@ TYPE
 			tickets := new;
 		END Grow;
 
-		PROCEDURE Mapped*(register: SIZE; part: SIZE): Ticket;
+		PROCEDURE Mapped*(register: LONGINT; part: LONGINT): Ticket;
 		BEGIN
 			ASSERT((part >=0) & (part < parts));
 			IF (register > 0 ) & (register*parts < LEN(tickets)) THEN RETURN tickets[register * parts + part] ELSE RETURN NIL END;
 		END Mapped;
 
-		PROCEDURE SetMapped*(register: SIZE; part: SIZE; ticket: Ticket);
+		PROCEDURE SetMapped*(register: LONGINT; part: LONGINT; ticket: Ticket);
 		BEGIN
 			IF lastMapped < register THEN lastMapped := register END;
 			IF firstMapped > register THEN firstMapped := register END;
@@ -664,8 +664,8 @@ TYPE
 			INC(ticket.parts);
 		END SetMapped;
 
-		PROCEDURE Unmap*(register: SIZE);
-		VAR i: SIZE;
+		PROCEDURE Unmap*(register: LONGINT);
+		VAR i: LONGINT;
 		BEGIN
 			IF (register > 0) & (register*parts < LEN(tickets)) THEN
 				FOR i := 0 TO parts-1 DO
@@ -685,12 +685,12 @@ TYPE
 			END;
 		END Unmap;
 
-		PROCEDURE Parts*(): SIZE;
+		PROCEDURE Parts*(): LONGINT;
 		BEGIN RETURN parts
 		END Parts;
 
 		PROCEDURE Dump*(w: Streams.Writer);
-		VAR register,part: SIZE; ticket: Ticket;
+		VAR register,part: LONGINT; ticket: Ticket;
 		BEGIN
 			w.String("---- virtual register mapping ----- "); w.Ln;
 			register := 0;
@@ -1002,7 +1002,7 @@ TYPE
 			RETURN tempReg
 		END ForceFreeRegister;
 
-		PROCEDURE ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; lastUse: SIZE): Ticket;
+		PROCEDURE ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; lastUse: LONGINT): Ticket;
 		VAR ticket: Ticket;
 		BEGIN
 			ticket := tickets.Enter(class, type,register,TRUE, FALSE,None,lastUse);
@@ -1028,10 +1028,10 @@ TYPE
 
 		(*-------------------  register mapping  ----------------------*)
 
-		PROCEDURE MapVirtualRegister*(virtualRegister: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT);
-		VAR partType: IntermediateCode.Type; lastuse:SIZE;
+		PROCEDURE MapVirtualRegister*(virtualRegister: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT);
+		VAR partType: IntermediateCode.Type; lastuse:LONGINT;
 
-			PROCEDURE MapTicket(CONST type: IntermediateCode.Type; lastuse:SIZE);
+			PROCEDURE MapTicket(CONST type: IntermediateCode.Type; lastuse:LONGINT);
 			VAR index,offset,size: LONGINT; ticket: Ticket;
 			BEGIN
 				index := physicalRegisters.NextFree(type);
@@ -1175,7 +1175,7 @@ TYPE
 		END ReserveTicketRegister;
 
 		PROCEDURE ReserveOperandRegisters*(CONST operand: IntermediateCode.Operand; reserved: BOOLEAN);
-		VAR i: SIZE; ticket: Ticket;
+		VAR i: LONGINT; ticket: Ticket;
 		BEGIN
 			FOR i := 0 TO virtualRegisters.Parts()-1 DO
 				ticket := virtualRegisters.Mapped(operand.register,i);

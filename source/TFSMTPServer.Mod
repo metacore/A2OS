@@ -23,7 +23,7 @@ TYPE
 		END Init;
 
 		PROCEDURE AddLine(CONST x : ARRAY OF CHAR);
-		VAR l : SIZE; s : String; line : Line;
+		VAR l : LONGINT; s : String; line : Line;
 		BEGIN
 			l := Strings.Length(x) + 1; NEW(s, l); COPY(x, s^); NEW(line); line.s := s; data.Add(line);
 		END AddLine;
@@ -47,7 +47,7 @@ TYPE
 		END AddAlias;
 
 		PROCEDURE IsAlias(CONST s : ARRAY OF CHAR) : BOOLEAN;
-		VAR i : SIZE; p : ANY;
+		VAR i : LONGINT; p : ANY;
 			isAlias : BOOLEAN;
 		BEGIN
 			mailAliases.Lock;
@@ -61,7 +61,7 @@ TYPE
 		END IsAlias;
 
 		PROCEDURE DumpAccount;
-		VAR i : SIZE; p : ANY;
+		VAR i : LONGINT; p : ANY;
 		BEGIN
 			KernelLog.String("Account : "); KernelLog.String(userName^); KernelLog.Ln;
 			KernelLog.String("Aliases :");
@@ -83,7 +83,7 @@ TYPE
 		PROCEDURE SaveMessage(m : Message) : BOOLEAN;
 		VAR path, filePath : ARRAY 256 OF CHAR;
 			f : Files.File; w : Files.Writer;
-			i : SIZE; res: WORD; p : ANY;
+			i : LONGINT; res: WORD; p : ANY;
 		BEGIN
 			COPY(mailPath^, path);
 			Strings.Append(path, "/"); Strings.Append(path, userName^);
@@ -112,7 +112,7 @@ TYPE
 
 		PROCEDURE Forward(m : Message; CONST sender : ARRAY OF CHAR) : BOOLEAN;
 		VAR smtpSession : SMTPClient.SMTPSession; p : ANY;
-			res: WORD; i : SIZE;
+			res: WORD; i : LONGINT;
 		BEGIN
 			NEW(smtpSession);
 			smtpSession.Open(mailRelay, mailHost, 25, res);
@@ -236,7 +236,7 @@ TYPE
 		PROCEDURE SaveLostMessage(m : Message) : BOOLEAN;
 		VAR path, filePath : ARRAY 256 OF CHAR;
 			f : Files.File; w : Files.Writer;
-			i : SIZE; res: WORD; p : ANY;
+			i : LONGINT; res: WORD; p : ANY;
 		BEGIN
 			COPY(mailPath^, path);
 			Strings.Append(path, "/"); Strings.Append(path, "lost");
@@ -264,7 +264,7 @@ TYPE
 		END SaveLostMessage;
 
 		PROCEDURE DeliverMessage() : BOOLEAN;
-		VAR i, j : SIZE; ap, sp : ANY;
+		VAR i, j : LONGINT; ap, sp : ANY;
 			isReceiver : BOOLEAN;
 			ok : BOOLEAN;
 			lost : BOOLEAN;
@@ -349,7 +349,7 @@ BEGIN
 	NEW(a, c, s); RETURN a
 END NewSMTPAgent;
 
-PROCEDURE TrapHandler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+PROCEDURE TrapHandler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 BEGIN
 	KernelLog.String("Mail config error at pos "); KernelLog.Int(pos, 0); KernelLog.Ln;
 	errors := TRUE

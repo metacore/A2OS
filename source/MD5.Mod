@@ -19,7 +19,7 @@ under a public-key cryptosystem such as RSA. *)
 		Context*  = POINTER TO ContextDesc;
 		ContextDesc = RECORD
 			buf: ARRAY 4 OF LONGINT;
-			bits: SIZE;
+			bits: LONGINT;
 			in: ARRAY 64 OF CHAR
 		END;
 		Digest* = ARRAY 16 OF CHAR;
@@ -189,7 +189,7 @@ under a public-key cryptosystem such as RSA. *)
 	PROCEDURE Write*(context: Context; ch: CHAR);
 		VAR
 			in: ARRAY 16 OF LONGINT;
-			t, len: SIZE;
+			t, len: LONGINT;
 	BEGIN
 		t := context.bits; len := 1;
 		context.bits := t + 8;
@@ -213,10 +213,10 @@ under a public-key cryptosystem such as RSA. *)
 
 (** Continues an MD5 message-digest operation, processing another
 	message block, and updating the context. *)
-	PROCEDURE WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: SIZE);
+	PROCEDURE WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: LONGINT);
 		VAR
 			in: ARRAY 16 OF LONGINT;
-			beg, t: SIZE;
+			beg, t: LONGINT;
 	BEGIN
 		beg := 0; t := context.bits;
 		context.bits := t + len*8;
@@ -247,7 +247,7 @@ under a public-key cryptosystem such as RSA. *)
 	PROCEDURE Close*(context: Context; VAR digest: Digest);
 		VAR
 			in: ARRAY 16 OF LONGINT;
-			beg, i, count: SIZE;
+			beg, i, count: LONGINT;
 	BEGIN
 		count := (context.bits DIV 8) MOD 64;
 		beg := count;
@@ -271,7 +271,7 @@ under a public-key cryptosystem such as RSA. *)
 			END
 		END;
 		ByteReverse(context.in, in, 14);
-		in[14] := context.bits(LONGINT); in[15] := 0;
+		in[14] := context.bits; in[15] := 0;
 		Transform(context.buf, in);
 		ByteReverse(context.buf, in, 4);
 		SYSTEM.MOVE(ADDRESSOF(in[0]), ADDRESSOF(digest[0]), 16)

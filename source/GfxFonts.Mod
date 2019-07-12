@@ -122,7 +122,7 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 	(*--- File Directory ---*)
 
 	PROCEDURE Append(VAR to(** in/out *): ARRAY OF CHAR; this: ARRAY OF CHAR);
-		VAR i, j, l: SIZE;
+		VAR i, j, l: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE to[i] # 0X DO
@@ -174,7 +174,7 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 
 	PROCEDURE Find (VAR family, style: ARRAY OF CHAR; sppm: INTEGER; VAR fname: ARRAY OF CHAR; VAR fppm: INTEGER);
 		VAR
-			enum: Files.Enumerator; i, time, date: LONGINT; size: Files.Size; error, ppm: INTEGER;
+			enum: Files.Enumerator; i, time, date, size: LONGINT; error, ppm: INTEGER;
 			s: ARRAY 4 OF CHAR; pattern: ARRAY 64 OF CHAR; name: Files.FileName; flags: SET;
 	BEGIN
 		fname[0] := 0X; fppm := 0;
@@ -685,7 +685,7 @@ MODULE GfxFonts; (** non-portable *)	(* eos  *)
 	PROCEDURE OpenExtension (VAR family, style: ARRAY OF CHAR; ptsize: INTEGER; VAR m: GfxMatrix.Matrix): Font;
 		VAR
 			i, j, n: LONGINT; res: WORD;
-			enum: Files.Enumerator; time, date: LONGINT; size: Files.Size; continue: BOOLEAN;
+			enum: Files.Enumerator; time, date, size: LONGINT;  continue: BOOLEAN;
 			name: Files.FileName; msg, cmd: ARRAY 64 OF CHAR; flags: SET;
 	BEGIN
 		cmd := "";

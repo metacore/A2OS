@@ -234,7 +234,7 @@ TYPE
 			enum: XMLObjects.Enumerator;
 			p : ANY;
 			i, j, res : LONGINT;
-			pos, k: SIZE;
+			pos: SIZE;
 			exitLoop : BOOLEAN;
 			aoc : ARRAY 16 OF CHAR;
 			olulStackItem : OLULStackItem;
@@ -829,9 +829,9 @@ TYPE
 					| 2 : s := Strings.NewString("&#9675; "); (* circle *)
 					| 3 : IF olulStackTop#NIL THEN  (* 1, 2, 3... *)
 							Strings.IntToStr(olulStackTop.value, aoc);
-							k := Strings.Length(aoc);
-							IF (k+2) <= (LEN(aoc)-1) THEN
-								aoc[k]:='.'; aoc[k+1]:=' '; aoc[k+2]:=0X;
+							j :=Strings.Length(aoc);
+							IF (j+2) <= (LEN(aoc)-1) THEN
+								aoc[j]:='.'; aoc[j+1]:=' '; aoc[j+2]:=0X;
 							END;
 						ELSE
 							aoc := "0. ";
@@ -2587,7 +2587,7 @@ PROCEDURE EncodeLinkData(link, target, url : String) : String;
 VAR
 	s : String;
 	inlineLink : BOOLEAN;
-	urlLen : SIZE;
+	urlLen : LONGINT;
 BEGIN
 	ASSERT(link # NIL);
 	inlineLink := FALSE;
@@ -2609,9 +2609,9 @@ BEGIN
 	END;
 END EncodeLinkData;
 
-PROCEDURE Utf82UrlEncodedUtf8*(CONST in : ARRAY OF CHAR) : String;
+PROCEDURE Utf82UrlEncodedUtf8*(VAR in : ARRAY OF CHAR) : String;
 VAR
-	i, cnt : SIZE;
+	i, cnt : LONGINT;
 	output : String;
 	aoc : ARRAY 3 OF CHAR;
 BEGIN
@@ -2644,7 +2644,7 @@ VAR
 	enum, enum2 : XMLObjects.Enumerator;
 	p, p2 : ANY;
 	name : String;
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	NEW(col);
 	name := root.GetName();
@@ -2690,7 +2690,7 @@ VAR
 	dyn : DynamicStrings.DynamicString;
 	dynPos : LONGINT;
 	temp : ARRAY 5 OF CHAR;
-	i, j, len : SIZE;
+	i, j, len : LONGINT;
 BEGIN
 	NEW(dyn);
 	dynPos := 0;
@@ -2762,7 +2762,7 @@ END GetColor;
 
 PROCEDURE StringIsWhiteSpace(VAR txt : ARRAY OF CHAR) : BOOLEAN;
 VAR
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	FOR i := 0 TO Strings.Length(txt)-1 DO
 		IF ORD(txt[i]) > 32 THEN RETURN FALSE END;
@@ -2772,7 +2772,7 @@ END StringIsWhiteSpace;
 
 PROCEDURE StringHasNewLine(VAR txt : ARRAY OF CHAR) : BOOLEAN;
 VAR
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	FOR i := 0 TO Strings.Length(txt)-1 DO
 		IF (ORD(txt[i]) = 10) OR (ORD(txt[i]) = 13) THEN RETURN TRUE END;
@@ -2784,7 +2784,7 @@ PROCEDURE ReplaceWhiteSpaces(VAR txt : String) : String;
 VAR
 	dyn : DynamicStrings.DynamicString;
 	dynPos : LONGINT;
-	i : SIZE;
+	i : LONGINT;
 	ch : CHAR;
 	putYet : BOOLEAN;
 BEGIN
@@ -2810,7 +2810,7 @@ BEGIN
 END ReplaceWhiteSpaces;
 
 PROCEDURE TrimLineBreak(VAR string : ARRAY OF CHAR);
-VAR i,j: SIZE;
+VAR i,j: LONGINT;
 BEGIN
 	j := 0;
 	WHILE (ORD(string[j]) = 10) OR (ORD(string[j]) = 13) DO INC(j) END;
@@ -2978,7 +2978,7 @@ VAR
 
 	PROCEDURE Get(f : ARRAY OF CHAR; alternatives : BOOLEAN) : String;
 	VAR
-		i, j, last : SIZE;
+		i, j, last : LONGINT;
 	BEGIN
 		Strings.Trim(f, ' ');
 		Strings.Trim(f, '"');
@@ -3108,7 +3108,7 @@ END IntToRomanString;
 PROCEDURE TransformCharEnt*(in : String) : String;
 VAR
 	ent : ARRAY 32 OF CHAR;
-	i, j : SIZE;
+	i, j : LONGINT;
 	rep, s1, s2 : String;
 	ds: DynamicStrings.DynamicString;
 BEGIN
@@ -3148,7 +3148,7 @@ PROCEDURE GetCharEnt(VAR ent : ARRAY OF CHAR) : String;
 VAR
 	temp : String;
 	aoc : ARRAY 5 OF CHAR;
-	len : SIZE; res, suc: WORD;
+	res, len : LONGINT; suc: WORD;
 BEGIN
 	res := 0;
 	IF ent[0] = '#' THEN

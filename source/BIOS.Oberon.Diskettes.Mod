@@ -27,7 +27,7 @@ TYPE
 			size, sectors, heads, tracks: LONGINT;
 			gap, rate, spec1, spec2, fgap: CHAR;
 
-		PROCEDURE Transfer*(op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD);
+		PROCEDURE Transfer*(op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD);
 		BEGIN
 			Transfer1(SELF, op, start, num, buf, ofs, res)
 		END Transfer;
@@ -373,8 +373,8 @@ BEGIN
 	IF dev.media = media THEN RETURN Ok ELSE RETURN Disks.MediaChanged END
 END Do;
 
-PROCEDURE Transfer0(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD);
-VAR dev: Device; sector, head, track, s, n, max, start0, num0: LONGINT; ofs0: SIZE;
+PROCEDURE Transfer0(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD);
+VAR dev: Device; sector, head, track, s, ofs0, n, max, start0, num0: LONGINT;
 BEGIN
 	dev := d(Device);
 	IF dev.locked THEN
@@ -406,7 +406,7 @@ BEGIN
 	END
 END Transfer0;
 
-PROCEDURE Transfer1(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD);
+PROCEDURE Transfer1(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: LONGINT;  VAR res: WORD);
 BEGIN {EXCLUSIVE}
 	Transfer0(d, op, start, num, buf, ofs, res)
 END Transfer1;

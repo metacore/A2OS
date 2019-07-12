@@ -39,7 +39,7 @@ TYPE
 
 		PROCEDURE ScmSendControl(dir : SET; req, reqtyp, value, index : LONGINT; VAR buffer : Usbdi.Buffer;
 			ofs, bufferlen, timeout : LONGINT) : WORD;
-		VAR status : Usbdi.Status; ignore : SIZE;
+		VAR status : Usbdi.Status; 	ignore : LONGINT;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN
 				KernelLog.String("UsbStorage: Sending SCM Control:"); KernelLog.String(" Direction: ");
@@ -78,8 +78,8 @@ TYPE
 			RETURN Base.ResOk;
 		END ScmSendControl;
 
-		PROCEDURE ScmBulkTransport(dir : SET; VAR buffer : Usbdi.Buffer; ofs, bufferlen : SIZE;
-			VAR tlen : SIZE; timeout : LONGINT) : LONGINT;
+		PROCEDURE ScmBulkTransport(dir : SET; VAR buffer : Usbdi.Buffer; ofs, bufferlen : LONGINT;
+			VAR tlen : LONGINT; timeout : LONGINT) : LONGINT;
 		VAR status : Usbdi.Status;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN
@@ -198,7 +198,7 @@ TYPE
 		END ScmWrite;
 
 		PROCEDURE ScmMultipleWrite(access : CHAR; VAR registers, dataout: ARRAY OF CHAR; numregs,  timeout : LONGINT) : WORD;
-		VAR res: WORD; i, tlen : SIZE;
+		VAR res: WORD; i, tlen : LONGINT;
 		BEGIN
 			IF numregs > 7 THEN
 				IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbStorage: ScmMultipleWrite: Numregs > 7."); KernelLog.Ln;END;
@@ -227,7 +227,7 @@ TYPE
 			RETURN ScmWaitNotBusy(timeout);
 		END ScmMultipleWrite;
 
-		PROCEDURE ScmReadBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len: SIZE; VAR tlen : SIZE; timeout : LONGINT): WORD;
+		PROCEDURE ScmReadBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len: LONGINT; VAR tlen : LONGINT; timeout : LONGINT): WORD;
 		VAR res : WORD;
 		BEGIN
 			command[0] := 0C0X;
@@ -246,7 +246,7 @@ TYPE
 			RETURN res;
 		END ScmReadBlock;
 
-		PROCEDURE ScmWriteBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len : SIZE; VAR tlen : SIZE; timeout : LONGINT): WORD;
+		PROCEDURE ScmWriteBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len : LONGINT; VAR tlen : LONGINT; timeout : LONGINT): WORD;
 		VAR res : WORD;
 		BEGIN
 			command[0] := 40X;
@@ -269,12 +269,12 @@ TYPE
 
 		PROCEDURE ScmRWBlockTest(access : CHAR; VAR registers, dataout : ARRAY OF CHAR;
 			numregs :INTEGER; datareg, statusreg, atapitimeout, qualifier : CHAR; dir : SET; VAR content : Usbdi.Buffer;
-			ofs, contentlen: SIZE; VAR tlen : SIZE; timeout : LONGINT): WORD;
+			ofs, contentlen: LONGINT; VAR tlen : LONGINT; timeout : LONGINT): WORD;
 		VAR
 			tmpreg : CHAR;
 			status : CHAR;
 			i, msgindex, msglen : INTEGER;
-			tmplen : SIZE;
+			tmplen : LONGINT;
 			res : WORD;
 		BEGIN
 			IF numregs > 19 THEN
@@ -491,14 +491,14 @@ TYPE
 			RETURN TRUE;
 		END Initialization;
 
-		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : SIZE; dir : SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIZE; VAR tlen : SIZE; timeout : LONGINT) : WORD;
+		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : LONGINT; dir : SET;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : WORD;
 		VAR
 			registers, data : ARRAY 32 OF CHAR;
 			i : LONGINT; res : WORD;
 			status : CHAR;
-			atapilen, tmplen, sector, transfered : SIZE;
-			j : SIZE;
+			atapilen, tmplen, sector, transfered : LONGINT;
+			j : LONGINT;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN
 				KernelLog.String("UsbStorage: Transport:");

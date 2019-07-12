@@ -46,8 +46,8 @@ TYPE
 	ChannelList* = OBJECT
 		VAR
 			list : ChannelArray;
-			count : SIZE;
-			readLock : SIZE;
+			count : LONGINT;
+			readLock : LONGINT;
 
 		PROCEDURE &New*;
 		BEGIN NEW(list, 8); readLock := 0
@@ -56,14 +56,14 @@ TYPE
 		(** return the number of objects in the list. If count is used for indexing elements (e.g. FOR - Loop) in a multi-process
 			situation, the process calling the GetCount method should call Lock before GetCount and Unlock after the
 			last use of an index based on GetCount *)
-		PROCEDURE GetCount*():SIZE;
+		PROCEDURE GetCount*():LONGINT;
 		BEGIN
 			RETURN count
 		END GetCount;
 
 		PROCEDURE Grow;
 		VAR old: ChannelArray;
-				i : SIZE;
+				i : LONGINT;
 		BEGIN
 			old := list;
 			NEW(list, LEN(list)*2);
@@ -82,8 +82,8 @@ TYPE
 		(** return the index of an object. In a multi-process situation, the process calling the IndexOf method should
 			call Lock before IndexOf and Unlock after the last use of an index based on IndexOf.
 			If the object is not found, -1 is returned *)
-		PROCEDURE IndexOf *(x: TVChannel) : SIZE;
-		VAR i : SIZE;
+		PROCEDURE IndexOf *(x: TVChannel) : LONGINT;
+		VAR i : LONGINT;
 		BEGIN
 			i := 0 ; WHILE i < count DO IF list[i] = x THEN RETURN i END; INC(i) END;
 			RETURN -1
@@ -91,7 +91,7 @@ TYPE
 
 		(** Remove an object from the list. Remove may block if number of calls to Lock is bigger than the number of calls to Unlock *)
 		PROCEDURE Remove*(x : TVChannel);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN {EXCLUSIVE}
 			AWAIT(readLock = 0);
 			i:=0; WHILE (i<count) & (list[i]#x) DO INC(i) END;
@@ -104,7 +104,7 @@ TYPE
 
 		(** Removes all objects from the list. Clear may block if number of calls to Lock is bigger than the number of calls to Unlock *)
 		PROCEDURE Clear*;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN {EXCLUSIVE}
 			AWAIT(readLock = 0);
 			FOR i := 0 TO count - 1 DO list[i] := NIL END;
@@ -112,7 +112,7 @@ TYPE
 		END Clear;
 
 		(** return an object based on an index. In a multi-process situation, GetItem is only safe in a locked region Lock / Unlock *)
-		PROCEDURE GetItem*(i: SIZE) : TVChannel;
+		PROCEDURE GetItem*(i:LONGINT) : TVChannel;
 		BEGIN
 			ASSERT((i >= 0) & (i < count), 101);
 			RETURN list[i]

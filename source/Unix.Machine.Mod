@@ -74,7 +74,7 @@ VAR
 
 	ticks-: LONGINT;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
 
-	prioLow-, prioHigh-: WORD;	(* permitted thread priorities *)
+	prioLow-, prioHigh-: LONGINT;	(* permitted thread priorities *)
 
 	fcr-: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
 	mhz-: HUGEINT;	(** clock rate of GetTimer in MHz, or 0 if not known *)
@@ -85,7 +85,7 @@ VAR
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 
 	logname: ARRAY 32 OF CHAR;
-	logfile: WORD;
+	logfile: LONGINT;
 	traceHeap: BOOLEAN;
 
 	timer0	: HUGEINT;
@@ -101,7 +101,7 @@ VAR
 	 * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
 	 * left empty on Intel architecture.
 	 *)
-	PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: SIZE);
+	PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: LONGINT);
 	END FlushDCacheRange;
 
 	(**
@@ -109,7 +109,7 @@ VAR
 	 * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
 	 * left empty on Intel architecture.
 	 *)
-	PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: SIZE);
+	PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: LONGINT);
 	END InvalidateDCacheRange;
 
 	(**
@@ -117,7 +117,7 @@ VAR
 	 * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
 	 * left empty on Intel architecture.
 	 *)
-	PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: SIZE);
+	PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
 	END InvalidateICacheRange;
 
 	(* insert given memory block in sorted list of memory blocks, sort key is startAdr field - called during GC *)
@@ -507,7 +507,7 @@ END GetTimer;
 
 
 	(** Convert a string to an integer. Parameter i specifies where in the string scanning should begin (usually 0 in the first call). Scanning stops at the first non-valid character, and i returns the updated position. Parameter s is the string to be scanned. The value is returned as result, or 0 if not valid. Syntax: number = ["-"] digit {digit} ["H" | "h"] . digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" . If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
-	PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT;
+	PROCEDURE StrToInt* (VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT;
 	VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
 	BEGIN
 		vd := 0; vh := 0; hex := FALSE;
@@ -527,9 +527,11 @@ END GetTimer;
 
 
 	(* function returning the number of processors that are available to Aos *)
-	PROCEDURE NumberOfProcessors*( ): SIZE;
+	PROCEDURE NumberOfProcessors*( ): LONGINT;
+	VAR res: LONGINT;
 	BEGIN
-		RETURN Unix.getnprocs();
+		res := Unix.getnprocs();
+		RETURN res;
 	END NumberOfProcessors;
 
 	(*! non portable code, for native Aos only *)

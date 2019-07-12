@@ -1372,7 +1372,7 @@ BEGIN
 		UNTIL num = 1;
 		SYSTEM.MOVE(ADDRESSOF(c.cmd[0]), ADDRESSOF(cmd[cmdBlock, 0]), c.clen);
 	END;
-	HSSet4(d, index, HScmdPtr, range[0, 0].adr(Machine.Address32));
+	HSSet4(d, index, HScmdPtr, Machine.Ensure32BitAddress(range[0, 0].adr));
 	HSSet(d, index, HScmdLen, CHR(c.clen));
 
 	IF c.dlen = 0 THEN
@@ -1404,8 +1404,8 @@ BEGIN
 			IF num > 1 THEN KernelLog.Char("%") ELSE KernelLog.Char("$") END
 		END;
 		HSSet(d, index, HSSGcount, CHR(num));
-		HSSet4(d, index, HSSGptr, (sgaddr+SIZEOF(Machine.Range))(Machine.Address32));	(*pass address to 2nd block*)
-		HSSet4(d, index, HSdataPtr, range[useRange, 0].adr(Machine.Address32));
+		HSSet4(d, index, HSSGptr, Machine.Ensure32BitAddress(sgaddr+SIZEOF(Machine.Range)));	(*pass address to 2nd block*)
+		HSSet4(d, index, HSdataPtr, Machine.Ensure32BitAddress(range[useRange, 0].adr));
 		HSSet4(d, index, HSdataCnt, LONGINT (range[useRange, 0].size));
 		IF traceCmds IN trace THEN
 			KernelLog.String("  Data = "); KernelLog.Int(c.dlen, 0);

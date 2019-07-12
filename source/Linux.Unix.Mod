@@ -470,7 +470,7 @@ VAR
 		sysname-, nodename-, release-, version-, machine-: ARRAY 65 OF CHAR;
 	END;
 
-	sysconf: PROCEDURE {C} (name: WORD):LONGWORD;
+	sysconf: PROCEDURE {C} (name: LONGINT):WORD;
 
 	pthread_mutex_init: PROCEDURE {C} (mutex: ADDRESS; mutexattr: ADDRESS): WORD;
 	pthread_mutex_destroy: PROCEDURE {C} (mutex: ADDRESS): WORD;
@@ -487,7 +487,7 @@ VAR
 
 	pthread_create-: PROCEDURE {C} (newthread: ADDRESS; attr: ADDRESS; start_routine: ADDRESS; arg: PROCEDURE): WORD;
 	pthread_detach: PROCEDURE {C} (thr: ADDRESS);
-	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: WORD): WORD;
+	pthread_kill: PROCEDURE {C} (thr: ADDRESS; sigid: LONGINT): LONGINT;
 	pthread_cancel: PROCEDURE {C} (thr: ADDRESS);
 	pthread_join-: PROCEDURE {C} (thread: Thread_t; return: ADDRESS): WORD;
 
@@ -504,13 +504,13 @@ VAR
 	pthread_getattr_np: PROCEDURE {C} (thr: ADDRESS; attr: ADDRESS);
 	pthread_self-: PROCEDURE {C} (): Thread_t;
 
-	sched_get_priority_max: PROCEDURE {C} (policy: WORD): WORD;
-	sched_get_priority_min: PROCEDURE {C} (policy: WORD): WORD;
-	pthread_setschedparam: PROCEDURE {C} (thread: Thread_t; policy: WORD; param: ADDRESS): WORD;
+	sched_get_priority_max: PROCEDURE {C} (policy: LONGINT): LONGINT;
+	sched_get_priority_min: PROCEDURE {C} (policy: LONGINT): LONGINT;
+	pthread_setschedparam: PROCEDURE {C} (thread: Thread_t; policy: LONGINT; param: ADDRESS): WORD;
 	pthread_getschedparam: PROCEDURE {C} (thread: Thread_t; policy: ADDRESS; param: ADDRESS): WORD;
-	pthread_setcancelstate: PROCEDURE {C} (state: WORD; oldstate: ADDRESS): WORD;
-	pthread_setcanceltype: PROCEDURE {C} (type: WORD; oldtype: ADDRESS): WORD;
-	sigaction: PROCEDURE {C} (signum: WORD; CONST act, oldact: ADDRESS): WORD;
+	pthread_setcancelstate: PROCEDURE {C} (state: LONGINT; oldstate: ADDRESS): LONGINT;
+	pthread_setcanceltype: PROCEDURE {C} (type: LONGINT; oldtype: ADDRESS): LONGINT;
+	sigaction: PROCEDURE {C} (signum: LONGINT; CONST act, oldact: ADDRESS): LONGINT;
 	sigemptyset: PROCEDURE {C} (set: ADDRESS);
 	sigfillset: PROCEDURE {C} (set: ADDRESS): LONGINT;
 	sigsuspend: PROCEDURE {C} (set: ADDRESS): LONGINT;
@@ -611,11 +611,11 @@ VAR
 	libx-: ADDRESS;
 
 	libraryPaths: ARRAY 8 OF ARRAY 32 OF CHAR;
-	noPaths: SIZE;
+	noPaths: LONGINT;
 
 
 
-	PROCEDURE getnprocs* (): LONGWORD;
+	PROCEDURE getnprocs* (): LONGINT;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RETURN sysconf( 0x54 ); (*0x53 for number of processors configured, 0x54 for number of processors online *)
 	END getnprocs;

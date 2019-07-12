@@ -24,8 +24,8 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 		dateform, timeform: ARRAY 32 OF CHAR;
 
 (** Length of str. *)
-	PROCEDURE Length*(CONST str(** in *): ARRAY OF CHAR): SIZE;
-		VAR i, l: SIZE;
+	PROCEDURE Length*(CONST str(** in *): ARRAY OF CHAR): LONGINT;
+		VAR i, l: LONGINT;
 	BEGIN
 		l := LEN(str); i := 0;
 		WHILE (i < l) & (str[i] # 0X) DO
@@ -36,7 +36,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Append this to to. *)
 	PROCEDURE Append*(VAR to(** in/out *): ARRAY OF CHAR; CONST this: ARRAY OF CHAR);
-		VAR i, j, l: SIZE;
+		VAR i, j, l: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE to[i] # 0X DO
@@ -51,7 +51,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Append this to to. *)
 	PROCEDURE AppendCh*(VAR to(** in/out *): ARRAY OF CHAR; this: CHAR);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE to[i] # 0X DO
@@ -125,7 +125,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Convert str to all lower-case letters. *)
 	PROCEDURE Lower*(CONST str(** in *): ARRAY OF CHAR; VAR lstr(** out *): ARRAY OF CHAR);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -136,7 +136,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Convert str to all upper-case letters. *)
 	PROCEDURE Upper*(CONST str(** in *): ARRAY OF CHAR; VAR ustr(** out *): ARRAY OF CHAR);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -147,7 +147,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Is str prefixed by pre? *)
 	PROCEDURE Prefix*(CONST pre, str(** in *): ARRAY OF CHAR): BOOLEAN;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE (pre[i] # 0X) & (pre[i] = str[i]) DO
@@ -158,7 +158,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Checks if str is prefixed by pre. The case is ignored. *)
 	PROCEDURE CAPPrefix*(CONST pre, str(** in *): ARRAY OF CHAR): BOOLEAN;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE (pre[i] # 0X) & (CAP(pre[i]) = CAP(str[i])) DO
@@ -169,7 +169,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Compare str1 to str2. The case is ignored. *)
 	PROCEDURE CAPCompare*(CONST str1(** in *), str2(** in *): ARRAY OF CHAR): BOOLEAN;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE (str1[i] # 0X) & (str2[i] # 0X) & (CAP(str1[i]) = CAP(str2[i])) DO
@@ -180,7 +180,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Get the parameter-value on line. The parameter value is started behind the first colon character. *)
 	PROCEDURE GetPar*(CONST line(** in *): ARRAY OF CHAR; VAR par(** out *): ARRAY OF CHAR);
-		VAR i, j, l: SIZE;
+		VAR i, j, l: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE (line[i] # 0X) & (line[i] # ":") DO
@@ -201,7 +201,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Get the suffix of str. The suffix is started by the last dot in str. *)
 	PROCEDURE GetSuffix*(CONST str(** in *): ARRAY OF CHAR; VAR suf(** out *): ARRAY OF CHAR);
-		VAR i, j, l, dot: SIZE;
+		VAR i, j, l, dot: LONGINT;
 	BEGIN
 		dot := -1; i := 0;
 		WHILE str[i] # 0X DO
@@ -224,7 +224,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Change the suffix of str to suf. *)
 	PROCEDURE ChangeSuffix*(VAR str(** in/out *): ARRAY OF CHAR; CONST suf: ARRAY OF CHAR);
-		VAR i, j, l, dot: SIZE;
+		VAR i, j, l, dot: LONGINT;
 	BEGIN
 		dot := -1; i := 0;
 		WHILE str[i] # 0X DO
@@ -245,14 +245,14 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 	END ChangeSuffix;
 
 (** Search in src starting at pos for the next occurrence of pat.  Returns pos=-1 if not found. *)
-	PROCEDURE Search*(CONST pat, src(** in *): ARRAY OF CHAR; VAR pos(** in/out *): SIZE);
+	PROCEDURE Search*(CONST pat, src(** in *): ARRAY OF CHAR; VAR pos(** in/out *): LONGINT);
 		CONST MaxPat = 128;
 		VAR
 			buf: ARRAY MaxPat OF CHAR;
-			len, i, srclen: SIZE;
-		PROCEDURE Find(beg: SIZE);
+			len, i, srclen: LONGINT;
+		PROCEDURE Find(beg: LONGINT);
 			VAR
-				i, j, b, e: SIZE;
+				i, j, b, e: LONGINT;
 				ch: CHAR;
 				ref: ARRAY MaxPat OF CHAR;
 		BEGIN
@@ -306,14 +306,14 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 	END Search;
 
 (** Search in src starting at pos for the next occurrence of pat. *)
-	PROCEDURE CAPSearch*(CONST pat, src(** in *): ARRAY OF CHAR; VAR pos(** in/out *): SIZE);
+	PROCEDURE CAPSearch*(CONST pat, src(** in *): ARRAY OF CHAR; VAR pos(** in/out *): LONGINT);
 		CONST MaxPat = 128;
 		VAR
 			buf: ARRAY MaxPat OF CHAR;
-			len, i, srclen: SIZE;
-		PROCEDURE Find(beg: SIZE);
+			len, i, srclen: LONGINT;
+		PROCEDURE Find(beg: LONGINT);
 			VAR
-				i, j, b, e: SIZE;
+				i, j, b, e: LONGINT;
 				ch: CHAR;
 				ref: ARRAY MaxPat OF CHAR;
 		BEGIN
@@ -368,7 +368,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Convert a string into an integer. Leading white space characters are ignored. *)
 	PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT);
-		VAR i: SIZE; d: LONGINT; ch: CHAR; neg: BOOLEAN;
+		VAR i, d: LONGINT; ch: CHAR; neg: BOOLEAN;
 	BEGIN
 		i := 0; ch := str[0];
 		WHILE (ch # 0X) & (ch <= " ") DO
@@ -419,7 +419,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 (** Convert an integer into a string. *)
 	PROCEDURE IntToStr*(val: LONGINT; VAR str: ARRAY OF CHAR);
 		VAR
-			i, j: SIZE;
+			i, j: LONGINT;
 			digits: ARRAY 16 OF LONGINT;
 	BEGIN
 		IF val = MIN(LONGINT) THEN
@@ -444,7 +444,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Converts a real to a string. *)
 PROCEDURE RealToStr*(x: LONGREAL; VAR s: ARRAY OF CHAR);
-VAR i, j, pos, len: SIZE; e, h, l, n: LONGINT; z: LONGREAL; d: ARRAY 16 OF CHAR;
+VAR e, h, l, n, len: LONGINT; i, j, pos: INTEGER; z: LONGREAL; d: ARRAY 16 OF CHAR;
 
 	PROCEDURE Wr(ch: CHAR);
 	BEGIN
@@ -499,7 +499,7 @@ BEGIN
 END RealToStr;
 
 PROCEDURE RealToFixStr*(x: LONGREAL; VAR str: ARRAY OF CHAR; n, f, D: LONGINT);
-	VAR pos, len: SIZE; e, i, h, l: LONGINT; r, z: LONGREAL; d: ARRAY 16 OF CHAR; s: CHAR;
+	VAR pos, len, e, i, h, l: LONGINT; r, z: LONGREAL; d: ARRAY 16 OF CHAR; s: CHAR;
 	PROCEDURE Wr(ch: CHAR);
 	BEGIN
 		IF ch = 0X THEN HALT(42) END;
@@ -567,7 +567,7 @@ END RealToFixStr;
 
 (** Convert a string into a real. Precondition: s has a well defined real syntax. Scientific notation with D and E to indicate exponents is allowed. *)
 PROCEDURE StrToReal*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
-VAR p: SIZE; e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN;
+VAR p, e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN;
 BEGIN
 	p := 0;
 	WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
@@ -604,7 +604,7 @@ END StrToReal;
 (** Convert a string into a boolean. "Yes", "True" and "On" are TRUE all other strings are FALSE.
 	Leading white space characters are ignored. *)
 	PROCEDURE StrToBool*(CONST str: ARRAY OF CHAR; VAR b: BOOLEAN);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE (str[i] # 0X) & (str[i] <= " ") DO
@@ -630,7 +630,7 @@ END StrToReal;
 
 (** Convert a string to a set *)
     PROCEDURE StrToSet*(CONST str: ARRAY OF CHAR; VAR set: SET);
-      VAR i: SIZE; d, d1: LONGINT; ch: CHAR; dot: BOOLEAN;
+      VAR i, d, d1: LONGINT; ch: CHAR; dot: BOOLEAN;
     BEGIN
       set := {}; dot := FALSE;
       i := 0; ch := str[i];
@@ -675,7 +675,7 @@ END StrToReal;
 
 (** Convert date (Oberon.GetClock) into specified format. *)
 	PROCEDURE DateToStr*(date: LONGINT; VAR str: ARRAY OF CHAR);
-		VAR i, j, k: SIZE; x: LONGINT; form, name: ARRAY 32 OF CHAR;
+		VAR i, j, k, x: LONGINT; form, name: ARRAY 32 OF CHAR;
 	BEGIN
 		COPY(dateform, form);
 		IF form = "" THEN form := "DD.MM.YY" END;
@@ -751,7 +751,7 @@ END StrToReal;
 
 (** Convert time (Oberon.GetClock) into specified format. *)
 	PROCEDURE TimeToStr*(time: LONGINT; VAR str: ARRAY OF CHAR);
-		VAR i, j, hPos: SIZE; x, h: LONGINT; form: ARRAY 32 OF CHAR; shortH, leadingH: BOOLEAN;
+		VAR i, j, x, h, hPos: LONGINT; form: ARRAY 32 OF CHAR; shortH, leadingH: BOOLEAN;
 	BEGIN
 		COPY(timeform, form);
 		IF form = "" THEN form := "HH:MM:SS" END;

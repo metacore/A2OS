@@ -152,7 +152,7 @@ MODULE HyperDocs IN Oberon;	(** portable *) (* ejz,  *)
 		Special characters are: 1X .. 20X, "+", "&", "=", "?", "%", "$", ";". "#", ":" & special. *)
 	PROCEDURE ESC*(VAR str: ARRAY OF CHAR; special: CHAR);
 		VAR
-			i, j, l: SIZE;
+			i, j, l: LONGINT;
 			ch: CHAR;
 	BEGIN
 		l := LEN(str)-1; i := 0;
@@ -246,7 +246,7 @@ MODULE HyperDocs IN Oberon;	(** portable *) (* ejz,  *)
 		BTrees.SearchStr(linksIndex, link, porg, res);
 		IF res = BTrees.Done THEN
 			org := Files.Length(linksFile);
-			l := Strings.Length(link)(LONGINT);
+			l := Strings.Length(link);
 			Files.Set(R, linksFile, porg);
 			Files.ReadLInt(R, key); (* key *)
 			IF l < (BTrees.StrKeySize-1) THEN
@@ -329,7 +329,7 @@ MODULE HyperDocs IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE RetrieveLink*(key: LONGINT; VAR link: ARRAY OF CHAR);
 		VAR
 			R: Files.Rider;
-			org: LONGINT; i, l: SIZE;
+			org, i, l: LONGINT;
 			res: INTEGER;
 			ch: CHAR;
 	BEGIN
@@ -935,7 +935,7 @@ MODULE HyperDocs IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE SplitFileAdr*(VAR url, path, label: ARRAY OF CHAR): LONGINT;
 		VAR
 			prefix: ARRAY 8 OF CHAR;
-			key: LONGINT; i, j, l: SIZE;
+			key, i, j, l: LONGINT;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
 		BEGIN

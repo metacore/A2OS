@@ -50,11 +50,11 @@ TYPE
 		END Init;
 
 		PROCEDURE ParseVariables(r: Streams.Reader; isUrlEncoded : BOOLEAN);
-			VAR var: HTTPVariable; ch: CHAR; pos, i, size: SIZE; close: BOOLEAN; s: ARRAY 32 OF CHAR;
+			VAR var: HTTPVariable; ch: CHAR; pos, i, size: LONGINT; close: BOOLEAN; s: ARRAY 32 OF CHAR;
 				enc: BOOLEAN; (* true iff encoded *)
 
 			PROCEDURE Next;
-					VAR c0, c1: CHAR; val : WORD;
+					VAR c0, c1: CHAR; val : LONGINT;
 			BEGIN
 				ch := r.Get(); INC(pos); enc := FALSE;
 				IF ch = "%" THEN (* next byte is encoded *)
@@ -80,7 +80,7 @@ TYPE
 			pos := 0;
 			IF (~isUrlEncoded & WebHTTP.HasAdditionalField(header.additionalFields, "Content-Length")
 				& WebHTTP.GetAdditionalFieldValue(header.additionalFields, "Content-Length", s))THEN
-				Strings.StrToSize(s, size); close := FALSE;
+				Strings.StrToInt(s, size); close := FALSE;
 			ELSE
 				close := TRUE;
 			END;
@@ -115,7 +115,7 @@ TYPE
 
 		(** returns NIL if variable is not present *)
 		PROCEDURE GetVariableByName*(name: ARRAY OF CHAR) : HTTPVariable;
-		VAR p: ANY; var: HTTPVariable; i: SIZE;
+		VAR p: ANY; var: HTTPVariable; i: LONGINT;
 		BEGIN
 			variables.Lock;
 			FOR i := 0 TO variables.GetCount()-1 DO
@@ -130,7 +130,7 @@ TYPE
 		END GetVariableByName;
 
 		PROCEDURE WriteEncodedUri*(encUri: ARRAY OF CHAR);
-		VAR encStr: ARRAY 1024 OF CHAR; p: ANY; var: HTTPVariable; i : SIZE;
+		VAR encStr: ARRAY 1024 OF CHAR; p: ANY; var: HTTPVariable; i : LONGINT;
 		BEGIN
 			COPY(shortUri, encUri);
 			variables.Lock;
@@ -166,8 +166,8 @@ TYPE
 
 	(** HTTPEncode in by escaping illegal chars , author: "cs" *)
 	PROCEDURE HTTPEncode*(in: ARRAY OF CHAR; VAR enc: ARRAY OF CHAR);
-	VAR i,o: SIZE;
-		ch: WORD;
+	VAR i,o: LONGINT;
+		ch: LONGINT;
 
 		PROCEDURE ToHex(in: CHAR;VAR c1: CHAR; VAR c2: CHAR);
 			VAR i: INTEGER;

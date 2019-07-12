@@ -62,7 +62,7 @@ VAR
 	manager : WMWindowManager.WindowManager;
 
 PROCEDURE ParseKeyString(keyString : XML.String; VAR ch : CHAR; VAR flags : SET; VAR keysym : LONGINT) : BOOLEAN;
-VAR keys : Strings.StringArray; i : SIZE;
+VAR keys : Strings.StringArray; i : LONGINT;
 BEGIN
 	ASSERT(keyString # NIL);
 	ch := 0X; flags := {}; keysym := NoKeysym;
@@ -302,7 +302,7 @@ BEGIN
 END ExecuteCommandFor;
 
 (* Report errors while parsing *)
-PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 BEGIN
 	KernelLog.String("HotKeys: Parse error at pos "); KernelLog.Int(pos, 5); KernelLog.String(" in line "); KernelLog.Int(line, 5);
 	KernelLog.String(" row "); KernelLog.Int(row, 5); KernelLog.String(" - "); KernelLog.String(msg); KernelLog.Ln;

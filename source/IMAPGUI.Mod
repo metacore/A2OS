@@ -629,7 +629,7 @@ TYPE
 		VAR
 			string, string2: String;
 			header: IMAPClient.HeaderElement;
-			i: SIZE;
+			i: LONGINT;
 			text: Texts.Text;
 		BEGIN
 			SELF.message := message;
@@ -1063,7 +1063,6 @@ TYPE
 			string, dateString: String;
 			writer, dateWriter: Streams.Writer;
 			i, dateCount: LONGINT;
-			r: SIZE;
 			monthString: ARRAY 37 OF CHAR;
 			valid: BOOLEAN;
 			errorString: ARRAY 65 OF CHAR;
@@ -1218,20 +1217,20 @@ TYPE
 				Strings.TrimRight(string^, " ");
 				IF DEBUG THEN KernelLog.String("Performing search..."); END;
 				status.caption.SetAOC("Status: Performing search...");
-				r := w.client.Search(string^);
-				IF r < 0 THEN
+				i := w.client.Search(string^);
+				IF i < 0 THEN
 					status.caption.SetAOC("Status: Searching Not Successful");
 				ELSE
 					NEW(buffer,16);
 					writer := buffer.GetWriter();
 					writer.String("Status: Finished. ");
 					NEW(string, 20);
-					Strings.IntToStr(r, string^);
+					Strings.IntToStr(i, string^);
 					writer.String(string^);
 					writer.String(" messages found.");
 					string := buffer.GetString();
 					status.caption.SetAOC(string^);
-					IF DEBUG THEN KernelLog.String("Search finished. "); KernelLog.Int(r,0); KernelLog.String(" messages found"); KernelLog.Ln(); END;
+					IF DEBUG THEN KernelLog.String("Search finished. "); KernelLog.Int(i,0); KernelLog.String(" messages found"); KernelLog.Ln(); END;
 					w.messageGrid.SetTopPosition(0,0,TRUE);
 					w.timer.Wakeup();
 				END;
@@ -2049,8 +2048,7 @@ TYPE
 			list: Classes.List;
 			img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top: LONGINT;
-			i: SIZE;
+			top, i: LONGINT;
 			p: ANY;
 			message: IMAPClient.Message;
 		BEGIN
@@ -2638,7 +2636,7 @@ TYPE
 
 		PROCEDURE UpdateMessages;
 		VAR
-			i: SIZE; count: LONGINT;
+			i, count: LONGINT;
 			message: IMAPClient.Message;
 			messageP: ANY;
 			header: IMAPClient.HeaderElement;

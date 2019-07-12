@@ -19,12 +19,12 @@ TYPE
 		PROCEDURE &New*;
 		VAR res : WORD; temp : ARRAY 16 OF CHAR;
 			r : Streams.Reader; w : Files.Writer;
-			buf: ARRAY BufSize OF CHAR; size : LONGINT;
-			msg, s : ARRAY 256 OF CHAR; len, i, j : SIZE;
+			buf: ARRAY BufSize OF CHAR; len, size : LONGINT;
+			msg, s : ARRAY 256 OF CHAR; i, j : SIZE;
 			ftpConnection : FTPClient.FTPClient;
 			errorStr : ARRAY 512 OF CHAR;
 			f : Files.File;
-			status : StatusWindow; transCount : SIZE;
+			status : StatusWindow; transCount : LONGINT;
 		BEGIN
 			NEW(ftpConnection);
 			(* open connection to the ftp *)
@@ -186,7 +186,7 @@ TYPE
 			shown := FALSE
 		END Hide;
 
-		PROCEDURE UpdateStatus*(file, size : SIZE);
+		PROCEDURE UpdateStatus*(file, size : LONGINT);
 		BEGIN
 			bar.bounds.SetWidth(ENTIER((windowWidth-20)/fileSize*size));
 		END UpdateStatus;

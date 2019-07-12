@@ -266,7 +266,7 @@ TYPE
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
 			path, string: String;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF (state # AUTH) & (state # SELECT) THEN RETURN BAD END;
 			NEW(buffer, 16);
@@ -336,7 +336,7 @@ TYPE
 		END Status;
 
 		(* Search after criteria, see RFC 2060 *)
-		PROCEDURE Search*(CONST criteria: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
+		PROCEDURE Search*(VAR criteria: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
 		VAR
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -901,7 +901,7 @@ TYPE
 		PROCEDURE ReadLiteral(VAR buffer:String): BOOLEAN;
 		VAR
 			data: ARRAY 80 OF CHAR;
-			i,size: LONGINT; len: SIZE;
+			i,size,len: LONGINT;
 		BEGIN
 			i := 0;
 			ASSERT(in.Peek() = "{",1013);
@@ -1066,7 +1066,7 @@ TYPE
 			ent: Entry;
 			entP: ANY;
 			text: String;
-			i: SIZE;
+			i: LONGINT;
 			list: Classes.List;
 		BEGIN
 			ASSERT(listP # NIL,1024);
@@ -1100,7 +1100,7 @@ TYPE
 
 		PROCEDURE DBGLiteral(VAR text:String);
 		VAR
-			i,j: SIZE;
+			i,j: LONGINT;
 		BEGIN
 			KernelLog.String("processing Literal:");KernelLog.Ln;
 			j := IMAPUtilities.StringLength(text^);

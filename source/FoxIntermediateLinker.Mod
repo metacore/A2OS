@@ -20,7 +20,7 @@ TYPE
 	TYPE
 		ArrangementRestriction = RECORD
 			fixed: BOOLEAN;
-			positionOrAlignment: SIZE;
+			positionOrAlignment: LONGINT;
 		END;
 	VAR
 		backend-: Backend.Backend;
@@ -49,7 +49,7 @@ TYPE
 			isSorted := FALSE
 		END Init;
 
-		PROCEDURE PatchStackSize*(CONST typeName: SectionName; size: SIZE);
+		PROCEDURE PatchStackSize*(CONST typeName: SectionName; size: LONGINT);
 		VAR sectionName: SectionName; section: Sections.Section; pooledName: Basic.SegmentedName; op1, op2, op3: IntermediateCode.Operand; instruction: IntermediateCode.Instruction;
 		BEGIN
 			TRACE(size);
@@ -65,7 +65,7 @@ TYPE
 			section(IntermediateCode.Section).PatchOperands(0, op1, op2, op3);
 		END PatchStackSize;
 
-		PROCEDURE EmitAt(section: IntermediateCode.Section; index: SIZE; CONST instruction: IntermediateCode.Instruction);
+		PROCEDURE EmitAt(section: IntermediateCode.Section; index: LONGINT; CONST instruction: IntermediateCode.Instruction);
 		VAR reserve: IntermediateCode.Instruction; op: IntermediateCode.Operand;
 		BEGIN
 			IF index = section.pc THEN
@@ -82,7 +82,7 @@ TYPE
 			END
 		END EmitAt;
 
-		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN;
+		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
 			pooledName: Basic.SegmentedName; itype: IntermediateCode.Type;
 		BEGIN
@@ -99,7 +99,7 @@ TYPE
 			RETURN TRUE;
 		END PatchIntegerValue;
 
-		PROCEDURE PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR;index: SIZE; value: BOOLEAN): BOOLEAN;
+		PROCEDURE PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR;index: LONGINT; value: BOOLEAN): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
 			pooledName: Basic.SegmentedName; type: IntermediateCode.Type;
 		BEGIN
@@ -122,7 +122,7 @@ TYPE
 		PROCEDURE PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
 			pooledName: Basic.SegmentedName; type: IntermediateCode.Type;
-			char: CHAR; i: SIZE;
+			char: CHAR; i: LONGINT;
 		BEGIN
 			Basic.ToSegmentedName(sectionName, pooledName);
 			section := allSections.FindByName(pooledName);
@@ -144,7 +144,7 @@ TYPE
 		VAR
 			filename, moduleName: SyntaxTree.IdentifierString;
 			msg: ARRAY 128 OF CHAR;
-			i: SIZE;
+			i: LONGINT;
 			module: Sections.Module;
 			name: SyntaxTree.IdentifierString;
 		BEGIN
@@ -223,7 +223,7 @@ TYPE
 		PROCEDURE MarkAsReachableStartingWith*(CONST prefix: Basic.SegmentedName; allowedSections: SET);
 		VAR
 			section: Sections.Section; name: Basic.SegmentedName;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			(* TODO: could or should one make this faster using a hash table? *)
 			(* go through all sections *)
@@ -243,7 +243,7 @@ TYPE
 
 	(*
 		PROCEDURE ModuleIsReachable(CONST name: Basic.String): BOOLEAN;
-		VAR i: SIZE; section: Sections.Section;
+		VAR i: LONGINT; section: Sections.Section;
 		BEGIN
 			FOR i := 0 TO allSections.Length()-1 DO
 				section := allSections.GetSection(i);
@@ -267,7 +267,7 @@ TYPE
 		PROCEDURE MarkAsReachable*(section: Sections.Section);
 		VAR
 			intermediateCodeSection: IntermediateCode.Section;
-			i: SIZE;
+			i: LONGINT;
 			procedureName, moduleName: SyntaxTree.IdentifierString;
 			prefix: Basic.SegmentedName;
 		BEGIN
@@ -296,7 +296,7 @@ TYPE
 		PROCEDURE MarkReachabilityOfAll*(isReachable: BOOLEAN);
 		VAR
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			IF Trace THEN D.String(">>> MarkReachabilityOfAll "); IF isReachable THEN D.String("TRUE") ELSE D.String("FALSE") END; D.Ln END;
 			FOR i := 0 TO allSections.Length() - 1 DO
@@ -309,7 +309,7 @@ TYPE
 		PROCEDURE DumpSections*(writer: Streams.Writer; sections: Sections.SectionList);
 		VAR
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			FOR i := 0 TO sections.Length() - 1 DO
 				section := sections.GetSection(i);
@@ -327,7 +327,7 @@ TYPE
 		PROCEDURE StoreOriginalRestrictions;
 		VAR
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			NEW(originalRestrictions, allSections.Length());
 			FOR i := 0 TO allSections.Length() - 1 DO
@@ -341,7 +341,7 @@ TYPE
 		PROCEDURE RestoreOriginalRestrictions;
 		VAR
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			ASSERT(LEN(originalRestrictions) = allSections.Length());
 			FOR i := 0 TO allSections.Length() - 1 DO
@@ -354,7 +354,7 @@ TYPE
 		VAR
 			fixedDataSections, flexibleDataSections: Sections.SectionList;
 			section, fixedDataSection, flexibleDataSection: Sections.Section;
-			i, fixedDataSectionIndex, nextOccupiedAddress, currentAddress, flexibleDataSectionIndex, startAddress, endAddress: SIZE;
+			i, currentAddress, nextOccupiedAddress, flexibleDataSectionIndex, fixedDataSectionIndex, startAddress, endAddress: LONGINT;
 			done: BOOLEAN;
 		BEGIN
 			(* sort sections if necessary *)
@@ -405,7 +405,7 @@ TYPE
 					nextOccupiedAddress := fixedDataSection.positionOrAlignment
 				ELSE
 					(* there is no more fixed data section *)
-					nextOccupiedAddress := MAX(SIZE)
+					nextOccupiedAddress := MAX(LONGINT)
 				END;
 
 				done := FALSE;
@@ -482,7 +482,7 @@ TYPE
 		VAR
 			result: Sections.Module;
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			NEW(result, NIL, backend.GetSystem()); (* note: there is no syntax tree *)
 			result.SetModuleName(desiredName);
@@ -510,7 +510,7 @@ TYPE
 		PROCEDURE SectionPositionComparison(leftObject, rightObject: ANY): BOOLEAN;
 		VAR
 			leftSection, rightSection: Sections.Section;
-			leftPosition, rightPosition: SIZE;
+			leftPosition, rightPosition: LONGINT;
 		BEGIN
 			ASSERT((leftObject IS Sections.Section) & (rightObject IS Sections.Section));
 			leftSection := leftObject(Sections.Section);
@@ -519,12 +519,12 @@ TYPE
 			IF leftSection.fixed THEN
 				leftPosition := leftSection.positionOrAlignment
 			ELSE
-				leftPosition := MAX(SIZE)
+				leftPosition := MAX(LONGINT)
 			END;
 			IF rightSection.fixed THEN
 				rightPosition := rightSection.positionOrAlignment
 			ELSE
-				rightPosition := MAX(SIZE)
+				rightPosition := MAX(LONGINT)
 			END;
 			IF leftSection.IsCode() & rightSection.IsCode() THEN RETURN FALSE END;
 			RETURN leftPosition < rightPosition
@@ -537,7 +537,7 @@ TYPE
 		PROCEDURE SectionPositionAndSizeComparison(leftObject, rightObject: ANY): BOOLEAN;
 		VAR
 			leftSection, rightSection: Sections.Section;
-			leftPosition, rightPosition, leftSize, rightSize: SIZE;
+			leftPosition, rightPosition, leftSize, rightSize: LONGINT;
 		BEGIN
 			ASSERT((leftObject IS Sections.Section) & (rightObject IS Sections.Section));
 			leftSection := leftObject(Sections.Section);
@@ -546,12 +546,12 @@ TYPE
 			IF leftSection.fixed THEN
 				leftPosition := leftSection.positionOrAlignment
 			ELSE
-				leftPosition := MAX(SIZE)
+				leftPosition := MAX(LONGINT)
 			END;
 			IF rightSection.fixed THEN
 				rightPosition := rightSection.positionOrAlignment
 			ELSE
-				rightPosition := MAX(SIZE)
+				rightPosition := MAX(LONGINT)
 			END;
 
 			IF ~leftSection.IsCode() & rightSection.IsCode() THEN (* data sections first *)
@@ -574,8 +574,8 @@ TYPE
 				ASSERT(leftPosition = rightPosition); (* note: this is the case for sections without fixed positions *)
 				leftSize := leftSection.GetSize();
 				rightSize := rightSection.GetSize();
-				IF (leftSize = Sections.UnknownSize) OR (leftSize = 0) THEN leftSize := MAX(SIZE) END;
-				IF (rightSize = Sections.UnknownSize) OR (rightSize = 0) THEN rightSize := MAX(SIZE) END;
+				IF (leftSize = Sections.UnknownSize) OR (leftSize = 0) THEN leftSize := MAX(LONGINT) END;
+				IF (rightSize = Sections.UnknownSize) OR (rightSize = 0) THEN rightSize := MAX(LONGINT) END;
 				IF leftSize = rightSize THEN
 					RETURN leftSection.offset < rightSection.offset (* keeping order as provided by loader, cosmetic *)
 				ELSE
@@ -585,8 +585,8 @@ TYPE
 		END SectionPositionAndSizeComparison;
 
 		(* set address of sections to a fixed position after compilation *)
-		PROCEDURE FixSections(binaryModule: Sections.Module; VAR sizes: ARRAY OF BinaryCode.Unit);
-		VAR adr: BinaryCode.Unit; i: SIZE; section: Sections.Section; is: BinaryCode.Section;
+		PROCEDURE FixSections(binaryModule: Sections.Module; VAR sizes: ARRAY OF LONGINT);
+		VAR adr,i: LONGINT; section: Sections.Section; is: BinaryCode.Section;
 		BEGIN
 			adr := 0;
 			FOR i := 0 TO binaryModule.allSections.Length()-1 DO
@@ -607,9 +607,10 @@ TYPE
 		END FixSections;
 
 		(* check if any of the addresses of sections have changed during last compilation *)
-		PROCEDURE Conflict(binaryModule: Sections.Module; VAR sizes: ARRAY OF BinaryCode.Unit): BOOLEAN;
-		VAR i: SIZE; section: Sections.Section;is: BinaryCode.Section;
+		PROCEDURE Conflict(binaryModule: Sections.Module; VAR sizes: ARRAY OF LONGINT): BOOLEAN;
+		VAR adr,i: LONGINT; section: Sections.Section;is: BinaryCode.Section;
 		BEGIN
+			adr := 0;
 			FOR i := 0 TO binaryModule.allSections.Length()-1 DO
 				section := binaryModule.allSections.GetSection(i);
 				is := section(IntermediateCode.Section).resolved;
@@ -628,11 +629,11 @@ TYPE
 		(* generate binary code and write an object file with a desired module name *)
 		PROCEDURE GenerateObjectFile*(objectFileFormat: Formats.ObjectFileFormat; log: Streams.Writer; CONST desiredName: ARRAY OF CHAR): BOOLEAN;
 		VAR
-			count: SIZE;
+			count: LONGINT;
 			intermediateCodeModule: Sections.Module;
 			binaryModule: Formats.GeneratedModule;
 			result: BOOLEAN;
-			sizes: POINTER TO ARRAY OF BinaryCode.Unit; i: SIZE;
+			sizes: POINTER TO ARRAY OF LONGINT; i: LONGINT;
 			objectFileExtension: ARRAY 32 OF CHAR; objectFileName: Files.FileName;
 		BEGIN
 			intermediateCodeModule := ExtractModuleWithName(desiredName);
@@ -751,12 +752,12 @@ TYPE
 			codeFileName, dataFileName: Files.FileName;
 			typeName, instanceName, linkRoot: SectionName;
 			code, data: Linker.Arrangement; linker: GenericLinker.Linker;
-			i: SIZE;
+			i: LONGINT;
 			logFile: Files.File; linkerLog: Files.Writer;
 			type: ActiveCells.Type;
 			msg: MessageString;
 			objectFileExtension: ARRAY 32 OF CHAR;
-			instructionMemorySize, dataMemorySize: SIZE;
+			instructionMemorySize, dataMemorySize: LONGINT;
 			parameter: ActiveCells.Parameter;
 			value: SyntaxTree.Value;
 			pooledName: Basic.SegmentedName;
@@ -943,7 +944,7 @@ TYPE
 	END FileNameToModuleName;
 
 	PROCEDURE SectionNameToFileName(CONST sectionName: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR);
-	VAR i: SIZE;
+	VAR i: LONGINT;
 	BEGIN
 		i := 0;
 		WHILE (sectionName[i] # 0X) & (sectionName[i] # ".") DO
@@ -953,7 +954,7 @@ TYPE
 		fileName[i] := 0X;
 	END SectionNameToFileName;
 
-	PROCEDURE GetPriority*(block: Sections.Section): WORD;
+	PROCEDURE GetPriority*(block: Sections.Section): LONGINT;
 	CONST Fixed=0; EntryCode=1;InitCode=2; ExitCode=3; BodyCode=4;Code=5; Data=6; Const=7; Empty =8;
 	BEGIN
 		IF block.fixed THEN RETURN Fixed END;
@@ -969,7 +970,7 @@ TYPE
 	END GetPriority;
 
 	PROCEDURE CopySections*(from, to: Sections.SectionList);
-	VAR section, copy: IntermediateCode.Section; i, j: SIZE; s: Sections.Section; instruction: IntermediateCode.Instruction;
+	VAR section, copy: IntermediateCode.Section; i,j: LONGINT; s: Sections.Section; instruction: IntermediateCode.Instruction;
 	BEGIN
 		FOR i := 0 TO from.Length()-1 DO
 			s := from.GetSection(i);
@@ -1024,12 +1025,12 @@ TYPE
 				codeFileName, dataFileName: Files.FileName;
 				typeName, instanceName, linkRoot: SectionName;
 				code, data: Linker.Arrangement; linker: GenericLinker.Linker;
-				i: SIZE;
+				i: LONGINT;
 				logFile: Files.File; linkerLog: Files.Writer;
 				type: ActiveCells.Type;
 				msg: MessageString;
 				objectFileExtension: ARRAY 32 OF CHAR;
-				instructionMemorySize, dataMemorySize: SIZE;
+				instructionMemorySize, dataMemorySize: LONGINT;
 				parameter: ActiveCells.Parameter;
 				value: SyntaxTree.Value;
 				pooledName: Basic.SegmentedName;
@@ -1170,7 +1171,7 @@ TYPE
 		assemblinker: Linker;
 		error, result, parsed: BOOLEAN;
 		options:Options.Options;
-		position: Streams.Position;
+		position: LONGINT;
 		moduleName: SyntaxTree.IdentifierString;
 
 		PROCEDURE Error(CONST error: ARRAY OF CHAR);
@@ -1258,7 +1259,7 @@ TYPE
 		END;
 	END Link;
 
-	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: BinaryCode.Unit; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
+	PROCEDURE WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend;  diagnostics: Diagnostics.Diagnostics; log:Streams.Writer): BOOLEAN;
 	VAR code, data: StaticLinker.Arrangement; linker: GenericLinker.Linker; linkerLog: Files.Writer;
 			logFile: Files.File;
 			objectFileExtension: ARRAY 32 OF CHAR;
@@ -1346,7 +1347,7 @@ TYPE
 		name, typeName, instanceName: Files.FileName;
 		result, parsed: BOOLEAN;
 		options:Options.Options;
-		position: Streams.Position;
+		position: LONGINT;
 		extension: SyntaxTree.IdentifierString;
 		linker: Linker;
 

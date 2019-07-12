@@ -4418,7 +4418,7 @@ MODULE JPEG2000Decoder;
 			*)
 			PROCEDURE SetLayerRange (startLayer, endLayer : LONGINT);
 				VAR
-					i : SIZE;
+					i : LONGINT;
 				BEGIN
 					IF (startLayer # SELF.startLayer) OR (endLayer # SELF.endLayer) THEN
 						FOR i := 0 TO LEN(transformRequired^) - 1 DO
@@ -4465,7 +4465,7 @@ MODULE JPEG2000Decoder;
 			*)
 			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : LONGINT);
 				VAR
-					i : SIZE;
+					i : LONGINT;
 				BEGIN
 					IF (startDecLvl # SELF.startDecLvl) OR (endDecLvl # SELF.endDecLvl) THEN
 						FOR i := 0 TO LEN(transformRequired^) - 1 DO

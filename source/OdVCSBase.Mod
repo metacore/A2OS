@@ -134,7 +134,7 @@ VAR
 	filename = [ filesystem ":" ] ["/"] [ dir "/" ] base. *)
 PROCEDURE splitDirBase(fileName: ARRAY OF CHAR; VAR dir, base: ARRAY OF CHAR);
 CONST CollCh = "/"; FileSystemCh = ":";
-VAR collPos, len, i: SIZE;
+VAR collPos, len, i: LONGINT;
 BEGIN
 	len := Strings.Length(fileName);
 	(* Get last collection delimiter. *)
@@ -428,10 +428,9 @@ BEGIN
 END GetNewestVersion;
 
 (* get position of diff from version n to n-1 *)
-PROCEDURE GetDiffPos(fr: Files.Rider; f: Files.File; n: LONGINT): Files.Position;
+PROCEDURE GetDiffPos(fr: Files.Rider; f: Files.File; n: LONGINT): LONGINT;
 VAR
-	diffPos, nextDiffPos: Files.Position;
-	len, diffLen, version: LONGINT;
+	diffPos,  nextDiffPos, len, diffLen, version: LONGINT;
 	tag: CHAR;
 	df: Files.File;
 	dfr: Files.Rider;
@@ -482,8 +481,7 @@ END Init;
 PROCEDURE GetLog*(name: TFileName; n: LONGINT; VAR log: TLog);
 
 VAR
-	diffLen, num: LONGINT;
-	diffStart: Files.Position;
+	diffLen, diffStart, num: LONGINT;
 	textLen: LONGINT;
 	dFileName: TFileName;
 	df: Files.File;
@@ -567,8 +565,7 @@ END GetLog;
 PROCEDURE GetDelta*(name: TFileName; n: LONGINT; VAR df: Files.File;
 	VAR dr: Files.Rider);
 VAR
-	diffStart: Files.Position;
-	diffLen, version: LONGINT;
+	diffStart, diffLen, version: LONGINT;
 	dFileName: TFileName;
 	log: TLog;
 	tag: CHAR; num: LONGINT;
@@ -675,7 +672,7 @@ END GetDeltaList;
 
 (* write: tag, its data length, its data *)
 PROCEDURE WriteTag(VAR rdr: Files.Rider;
-	tag: CHAR; len: SIZE; VAR data: ARRAY OF CHAR);
+	tag: CHAR; len: LONGINT; VAR data: ARRAY OF CHAR);
 BEGIN
 	rdr.file.Write(rdr, tag);
 	Files.WriteNum(rdr, len);
@@ -697,8 +694,8 @@ END NewVersion;
 
 PROCEDURE newVersion(historyName, name: TFileName; log: TLog; flags: SET): LONGINT;
 VAR
+	i: LONGINT;
 	ch: CHAR;
-	i: Files.Position;
 	tmpDFileName, dFileName, dFileNameBak: TFileName;
 	old, new: TData;
 	lenNew, oldDiffStart: LONGINT;
@@ -713,7 +710,7 @@ BEGIN
 	f := Files.Old(name);
 	IF f # NIL THEN
 	f.Set(fRdr, 0);
-		lenNew := f.Length()(LONGINT);
+		lenNew := f.Length();
 		NEW(new, lenNew);
 		(* read new file version in buffer new *)
 		fRdr.file.ReadBytes(fRdr, new^, 0, lenNew);
@@ -741,7 +738,7 @@ BEGIN
 		log.versionID :=  GetNewestVersion(odfRdr, odf);
 		INC(log.versionID);
 		log.lenOfOld := GetTextLen(odfRdr, odf);
-		oldDiffStart := odfRdr.file.Pos(odfRdr)(LONGINT) + log.lenOfOld;
+		oldDiffStart := odfRdr.file.Pos(odfRdr) + log.lenOfOld;
 	ELSE (* first version *)
 		log.versionID := 1;
 		log.lenOfOld := 0;

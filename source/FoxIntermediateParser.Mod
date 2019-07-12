@@ -88,9 +88,9 @@ TYPE
 			isNegated := ThisSymbol(Scanner.Minus);
 			IF ExpectSymbol(Scanner.Number) & (token.numberType = Scanner.Integer) THEN
 				IF isNegated THEN
-					integer := -token.integer(LONGINT)
+					integer := -token.integer
 				ELSE
-					integer := token.integer(LONGINT)
+					integer := token.integer
 				END;
 				result := TRUE
 			ELSE
@@ -104,7 +104,7 @@ TYPE
 			result: BOOLEAN;
 		BEGIN
 			IF ExpectSymbol(Scanner.Number) & (token.numberType = Scanner.Integer) THEN
-				integer := token.integer(LONGINT);
+				integer := token.integer;
 				result := TRUE
 			ELSE
 				result := FALSE
@@ -130,10 +130,10 @@ TYPE
 		END ExpectLineDelimiter;
 
 		(** parse an optional line number **)
-		PROCEDURE ParseLineNumber(expectedLineNumber: Streams.Position);
+		PROCEDURE ParseLineNumber(expectedLineNumber: LONGINT);
 		VAR
 			positionOfLine: Position;
-			specifiedLineNumber: Streams.Position;
+			specifiedLineNumber: LONGINT;
 			message, tempString: MessageString;
 		BEGIN
 			IF Trace THEN D.String(">>> ParseLineNumber"); D.Ln END;
@@ -157,7 +157,7 @@ TYPE
 		(** parse an intermediate code operand **)
 		PROCEDURE ParseOperand(VAR operand: IntermediateCode.Operand; sectionList: Sections.SectionList);
 		VAR
-			positionOfOperand, pos: Position; registerNumber, symbolOffset, integer: LONGINT;
+			positionOfOperand, pos: Position;  registerNumber, symbolOffset, someLongint, integer: LONGINT;
 			someHugeint: HUGEINT;
 			hasTypeDescriptor, isMemoryOperand, lastWasIdentifier, isNegated: BOOLEAN;
 			someLongreal: LONGREAL;
@@ -223,11 +223,23 @@ TYPE
 				isNegated := ThisSymbol(Scanner.Minus);
 				IF ThisSymbol(Scanner.Number) THEN
 					CASE token.numberType OF
-					| Scanner.Integer, Scanner.Hugeint:
-						IF isNegated THEN someHugeint := -token.integer ELSE someHugeint := token.integer END;
+					| Scanner.Integer:
+						IF isNegated THEN someLongint := -token.integer ELSE someLongint := token.integer END;
 						IF ~hasTypeDescriptor THEN
 							(* if no type description was included: use number type *)
-							IntermediateCode.InitNumber(operand, someHugeint);
+							IntermediateCode.InitNumber(operand, someLongint);
+						ELSIF type.form = IntermediateCode.Float THEN
+							ASSERT(hasTypeDescriptor);
+							IntermediateCode.InitFloatImmediate(operand, type, REAL(someLongint))
+						ELSE
+							ASSERT(hasTypeDescriptor & (type.form IN IntermediateCode.Integer));
+							IntermediateCode.InitImmediate(operand, type, someLongint)
+						END
+					| Scanner.Hugeint:
+						IF isNegated THEN someHugeint := - token.hugeint ELSE someHugeint := token.hugeint END;
+						IF ~hasTypeDescriptor THEN
+							(* if no type description was included: use number type *)
+							IntermediateCode.InitNumber(operand, someHugeint)
 						ELSIF type.form = IntermediateCode.Float THEN
 							ASSERT(hasTypeDescriptor);
 							IntermediateCode.InitFloatImmediate(operand, type, REAL(someHugeint))
@@ -344,7 +356,7 @@ TYPE
 		PROCEDURE ParseSectionContent*(scanner: Scanner.AssemblerScanner; section: IntermediateCode.Section; sectionList: Sections.SectionList);
 		VAR
 			instruction: IntermediateCode.Instruction;
-			lineNumber: Streams.Position;
+			lineNumber: LONGINT;
 		BEGIN
 			IF Trace THEN D.Ln; D.String(">>> ParseSectionContent"); D.Ln END;
 			SELF.scanner := scanner;

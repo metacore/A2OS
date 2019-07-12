@@ -511,7 +511,7 @@ BEGIN
 END GetAxisName;
 
 PROCEDURE Show*(context : Commands.Context);
-VAR table : Plugins.Table; i : SIZE;
+VAR table : Plugins.Table; i : LONGINT;
 BEGIN
 	context.out.String("Joysticks: "); context.out.Ln;
 	registry.GetAll(table);

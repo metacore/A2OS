@@ -10,11 +10,11 @@ TYPE
 	SelectorRuleSet = RECORD
 		selector: CSS2.Selector;
 		ruleSet: CSS2.RuleSet;
-		order: SIZE
+		order: LONGINT
 	END;
 
 PROCEDURE AttachStyle*(root: XML.Element; css: CSS2.StyleSheet);
-VAR selRS: POINTER TO ARRAY OF SelectorRuleSet; noSel: SIZE;
+VAR selRS: POINTER TO ARRAY OF SelectorRuleSet; noSel: LONGINT;
 	ruleSets, selectors, simpleSelectors: XMLObjects.Enumerator; ruleSet, selector, simpleSelector: ANY;
 	propChanger: XMLComponents.PropertyChanger; hasDynamic: BOOLEAN;
 BEGIN
@@ -72,10 +72,10 @@ BEGIN
 END AttachStyle;
 
 PROCEDURE HeapSort(VAR selRS: ARRAY OF SelectorRuleSet);
-VAR left, right: SIZE; elem: SelectorRuleSet;
+VAR left, right: LONGINT; elem: SelectorRuleSet;
 
-	PROCEDURE Sift(left, right: SIZE);
-	VAR i, j: SIZE; elem: SelectorRuleSet;
+	PROCEDURE Sift(left, right: LONGINT);
+	VAR i, j: LONGINT; elem: SelectorRuleSet;
 
 		PROCEDURE Less(VAR elem1, elem2: SelectorRuleSet): BOOLEAN;
 		VAR a1, a2, b1, b2, c1, c2: LONGINT;

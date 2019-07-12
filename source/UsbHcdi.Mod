@@ -164,7 +164,7 @@ TYPE
 	HubDescriptor* = POINTER TO ARRAY OF CHAR;
 
 	(* Used for reporting root hub status and root hub port status changes *)
-	StatusChangeHandler* = PROCEDURE {DELEGATE} (status : Usbdi.Status; actLen : SIZE);
+	StatusChangeHandler* = PROCEDURE {DELEGATE} (status : Usbdi.Status; actLen : LONGINT);
 
 	(* Packet for message pipe transfers *)
 	ControlMessage* = POINTER TO ARRAY 8 OF CHAR;
@@ -252,10 +252,10 @@ TYPE
 
 		(** USB transfer scheduling *)
 
-		PROCEDURE Schedule*(pipe : Pipe; bufferLen, offset: SIZE; VAR buffer : Usbdi.Buffer);
+		PROCEDURE Schedule*(pipe : Pipe; bufferLen, offset: LONGINT; VAR buffer : Usbdi.Buffer);
 		BEGIN HALT(301); END Schedule; (* abstract *)
 
-		PROCEDURE ScheduleControl*(pipe : Pipe; direction: LONGINT; msg: ControlMessage;  bufferLen : SIZE; VAR buffer : Usbdi.Buffer);
+		PROCEDURE ScheduleControl*(pipe : Pipe; direction: LONGINT; msg: ControlMessage;  bufferLen : LONGINT; VAR buffer : Usbdi.Buffer);
 		BEGIN HALT(301); END ScheduleControl; (* abstract *)
 
 		(** Inserts a QH for the specified USB pipe into the host controller's schedule data structure. *)
@@ -535,7 +535,7 @@ TYPE
 			END;
 			(* TD's must be 32byte aligned for EHCI, 16byte aligned for UHCI & OHCI data structures*)
 			(* currently max qh size is below 128 bytes for EHCI, so a queue head will not cross page boundaries *)
-			pipe.qh := Align(ADDRESS OF pipe.tdBuffer[0], 128)(Machine.Address32);
+			pipe.qh := Machine.Ensure32BitAddress(Align(ADDRESS OF pipe.tdBuffer[0], 128));
 			pipe.tdBase := pipe.qh + 32;
 			ASSERT((pipe.qh >= ADDRESSOF(pipe.tdBuffer[0])) & (pipe.tdBase <= ADDRESSOF(pipe.tdBuffer[pipe.tdBufferLen-1])));
 			IF ~InsertQH(pipe) THEN
@@ -659,7 +659,7 @@ TYPE
 			NEW(pipe.tdBuffer, pipe.tdBufferLen);
 			(* TD's must be 32byte aligned for EHCI data structures, 16byte for UHCI & OHCI data structures *)
 			(* currently max qh size is below 128 bytes for EHCI, so a queue head will not cross page boundaries *)
-			pipe.qh := Align(ADDRESS OF pipe.tdBuffer[0], 128)(Machine.Address32);
+			pipe.qh := Machine.Ensure32BitAddress(Align(ADDRESS OF pipe.tdBuffer[0], 128));
 			pipe.tdBase := pipe.qh + 32;
 			IF Debug.StrongChecks THEN
 				ASSERT(pipe.tdBase >= ADDRESSOF(pipe.tdBuffer[0]));
@@ -823,8 +823,8 @@ TYPE
 		(* Transfer status information *)
 		status* : Usbdi.Status	;	(* Status of the last tranfer from/to this endpoint *)
 		errors* : SET;
-		transferLen* : SIZE;		(* Length of the transfer in bytes *)
-		actLen* : SIZE; 			(* how many bytes did the controller send/receive *)
+		transferLen* : LONGINT;		(* Length of the transfer in bytes *)
+		actLen* : LONGINT; 			(* how many bytes did the controller send/receive *)
 
 		(* Buffer for S/W scatter/gather support *)
 		sgBuffer : Usbdi.BufferPtr;
@@ -875,7 +875,7 @@ TYPE
 		(* 	- 	Returns TRUE and as a side effect copies the client buffer into the scatter/gather buffer for OUT transfers if the specified buffer	*)
 		(*		cannot directly be used by the host controller																					*)
 		(*	-	Returns FALSE when the client buffer meets the requirement of the host controller hardware									*)
-		PROCEDURE NeedSWScatterGather(direction: WORD; bufferLen, offset : SIZE; VAR buffer : Usbdi.Buffer; VAR doCopy : BOOLEAN) : BOOLEAN;
+		PROCEDURE NeedSWScatterGather(direction, bufferLen, offset : LONGINT; VAR buffer : Usbdi.Buffer; VAR doCopy : BOOLEAN) : BOOLEAN;
 		VAR adr : ADDRESS;
 		BEGIN
 			doCopy := FALSE;
@@ -898,7 +898,7 @@ TYPE
 		END NeedSWScatterGather;
 
 		(* Make TDs accessible to the host controller and wait for transfer completion if transfer is blocking *)
-		PROCEDURE ExecuteTransfer(bufferLen, offset : SIZE; VAR buffer : Usbdi.Buffer; copy : BOOLEAN) : Usbdi.Status;
+		PROCEDURE ExecuteTransfer(bufferLen, offset : LONGINT; VAR buffer : Usbdi.Buffer; copy : BOOLEAN) : Usbdi.Status;
 		VAR mtimer : Kernel.MilliTimer;
 		BEGIN
 			IF (controller.state # Operational) OR (device.state = StateDisconnected) THEN
@@ -961,7 +961,7 @@ TYPE
 			RETURN status;
 		END ExecuteTransfer;
 
-		PROCEDURE Transfer*(bufferLen, offset : SIZE; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
+		PROCEDURE Transfer*(bufferLen, offset : LONGINT; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
 		VAR copy : BOOLEAN;
 		BEGIN
 			ASSERT(type # PipeControl);
@@ -987,7 +987,7 @@ TYPE
 		END Transfer;
 
 		(* Data structure consistency check *)
-		PROCEDURE CheckBuffer(length, ofs : SIZE; VAR buffer : Usbdi.Buffer);
+		PROCEDURE CheckBuffer(length, ofs : LONGINT; VAR buffer : Usbdi.Buffer);
 		VAR i : ADDRESS;
 		BEGIN
 			IF Debug.StrongChecks THEN
@@ -1002,7 +1002,7 @@ TYPE
 		END CheckBuffer;
 
 		(** For control transfers (only for Control Pipes) *)
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex : LONGINT; wLength : SIZE; VAR buffer : Usbdi.Buffer) : Usbdi. Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Usbdi.Buffer) : Usbdi. Status;
 		VAR dir : LONGINT; copy : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			ASSERT(type = PipeControl);
@@ -1069,7 +1069,7 @@ TYPE
 			RETURN FALSE;
 		END IsHalted;
 
-		PROCEDURE GetActLen*() : SIZE;
+		PROCEDURE GetActLen*() : LONGINT;
 		BEGIN
 			RETURN actLen;
 		END GetActLen;
@@ -1079,7 +1079,7 @@ TYPE
 			SELF.timeout := timeout;
 		END SetTimeout;
 
-		PROCEDURE GetStatus*(VAR len : SIZE) : Usbdi.Status;
+		PROCEDURE GetStatus*(VAR len : LONGINT) : Usbdi.Status;
 		BEGIN
 			controller.UpdatePipeStatus(SELF); len := actLen;
 			RETURN status;
@@ -1141,7 +1141,7 @@ TYPE
 		END GetBusTime;
 *)
 		(* Display textual representation of the transfer that will be executed. *)
-		PROCEDURE ShowTransfer(bufferLen, offset : SIZE);
+		PROCEDURE ShowTransfer(bufferLen, offset : LONGINT);
 		BEGIN
 			IF Debug.Trace THEN
 			KernelLog.String("UsbHcdi: ");
@@ -1158,8 +1158,8 @@ TYPE
 			END;
 		END ShowTransfer;
 
-		PROCEDURE ShowMessage(bufferLen: SIZE; direction : LONGINT; msg : ControlMessage);
-		VAR i : SIZE;
+		PROCEDURE ShowMessage(bufferLen, direction : LONGINT; msg : ControlMessage);
+		VAR i : LONGINT;
 		BEGIN
 			IF Debug.Trace THEN
 			KernelLog.String("UsbHcdi: Control Transfer: ");
@@ -1175,7 +1175,7 @@ TYPE
 		END ShowMessage;
 
 		PROCEDURE ShowData(CONST buffer : Usbdi.Buffer);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			IF Debug.Trace THEN
 			KernelLog.String("[DATA: ");
@@ -1273,7 +1273,7 @@ END RegisterHostController;
 
 (** Remove all controllers with the specified description from the controllers registry *)
 PROCEDURE UnRegisterHostControllers*(CONST description : Plugins.Description);
-VAR table : Plugins.Table; hcd : Hcd; i : SIZE;
+VAR table : Plugins.Table; hcd : Hcd; i : LONGINT;
 BEGIN {EXCLUSIVE}
 	controllers.GetAll(table);
 	IF table # NIL THEN
@@ -1288,7 +1288,7 @@ BEGIN {EXCLUSIVE}
 END UnRegisterHostControllers;
 
 (** Copy data from array to array *)
-PROCEDURE Copy(VAR from, to: ARRAY OF CHAR; fofs, tofs, len: SIZE);
+PROCEDURE Copy(VAR from, to: ARRAY OF CHAR; fofs, tofs, len: LONGINT);
 BEGIN
 	IF Debug.Trace & Debug.traceCopying THEN KernelLog.String("UsbHcdi: SG: Copying "); KernelLog.Int(len, 0); KernelLog.String(" Bytes."); KernelLog.Ln; END;
 	IF len > 0 THEN

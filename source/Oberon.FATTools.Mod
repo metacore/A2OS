@@ -53,7 +53,7 @@ BEGIN
 END GetOption;
 
 PROCEDURE Split(p: ARRAY OF CHAR; VAR path: Path): BOOLEAN;
-VAR len, pos, i, k: SIZE; directory, last: DirList;
+VAR len, pos, i, k: LONGINT; directory, last: DirList;
 BEGIN
 	len := LEN(p);
 	pos := 0;

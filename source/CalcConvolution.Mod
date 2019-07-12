@@ -181,7 +181,7 @@ IMPORT NbrInt, NbrRe, DataErrors, MathInt, MathRe, CalcFn;
 								END
 							ELSE DataErrors.Error( "The second dimension of the solution array must be at least 2." )
 							END
-						ELSE DataErrors.IntError( LEN( soln, 0 )(NbrInt.Integer), "The solution array is too short." )
+						ELSE DataErrors.IntError( LEN( soln, 0 ), "The solution array is too short." )
 						END
 					ELSE DataErrors.ReError( t, "The characteristic time is required to be positive." )
 					END

@@ -81,7 +81,7 @@ TYPE
 
 	SymbolList*= OBJECT(Basic.List)
 
-		PROCEDURE GetSymbol*(i: SIZE): Symbol;
+		PROCEDURE GetSymbol*(i: LONGINT): Symbol;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Symbol) END
@@ -92,7 +92,7 @@ TYPE
 		END AddSymbol;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Symbol;
-		VAR a: Symbol; i: SIZE;
+		VAR a: Symbol; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetSymbol(i);
@@ -102,7 +102,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE Same(as: SymbolList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Symbol;
+		VAR i: LONGINT; left, right: Symbol;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -125,7 +125,7 @@ TYPE
 		adr-: LONGINT;
 		width-: LONGINT;
 		delegate-: PortInstance;
-		index-: SIZE;
+		index-: LONGINT;
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
@@ -206,7 +206,7 @@ TYPE
 
 	PortList*= OBJECT(Basic.List)
 
-		PROCEDURE GetPort*(i: SIZE): Port;
+		PROCEDURE GetPort*(i: LONGINT): Port;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Port) END
@@ -217,7 +217,7 @@ TYPE
 		END AddPort;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Port;
-		VAR a: Port; i: SIZE;
+		VAR a: Port; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetPort(i);
@@ -227,7 +227,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE Same(as: PortList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Port;
+		VAR i: LONGINT; left, right: Port;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -247,7 +247,7 @@ TYPE
 	Device*= OBJECT (Symbol)
 	VAR
 		adr-: LONGINT;
-		index-: SIZE;
+		index-: LONGINT;
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
@@ -286,7 +286,7 @@ TYPE
 
 	DeviceList*= OBJECT(Basic.List)
 
-		PROCEDURE GetDevice*(i: SIZE): Device;
+		PROCEDURE GetDevice*(i: LONGINT): Device;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Device) END
@@ -299,7 +299,7 @@ TYPE
 		END AddDevice;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Device;
-		VAR a: Device; i: SIZE;
+		VAR a: Device; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetDevice(i);
@@ -309,7 +309,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE Same(as: DeviceList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Device;
+		VAR i: LONGINT; left, right: Device;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -330,7 +330,7 @@ TYPE
 	Module*=OBJECT (Symbol)
 	VAR
 		fileName*: Files.FileName; (* preparation for separate compilation (optimization) *)
-		index-: SIZE;
+		index-: LONGINT;
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
@@ -371,7 +371,7 @@ TYPE
 
 	ModuleList*= OBJECT(Basic.List)
 
-		PROCEDURE GetModule*(i: SIZE): Module;
+		PROCEDURE GetModule*(i: LONGINT): Module;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Module) END
@@ -382,7 +382,7 @@ TYPE
 		END AddModule;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Module;
-		VAR a: Module; i: SIZE;
+		VAR a: Module; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetModule(i);
@@ -392,7 +392,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE Same(as: ModuleList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Module;
+		VAR i: LONGINT; left, right: Module;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -412,7 +412,7 @@ TYPE
 	CONST
 		Boolean=0;Integer=1;String=2;
 	VAR
-		index-: SIZE;
+		index-: LONGINT;
 		parameterType-: SHORTINT; (* Integer or Boolean, for the time being *)
 		integer-: LONGINT;
 		boolean-: BOOLEAN;
@@ -499,7 +499,7 @@ TYPE
 
 	ParameterList*= OBJECT(Basic.List)
 
-		PROCEDURE GetParameter*(i: SIZE): Parameter;
+		PROCEDURE GetParameter*(i: LONGINT): Parameter;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Parameter) END
@@ -510,7 +510,7 @@ TYPE
 		END AddParameter;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Parameter;
-		VAR a: Parameter; i: SIZE;
+		VAR a: Parameter; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetParameter(i);
@@ -520,7 +520,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE Same(as: ParameterList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Parameter;
+		VAR i: LONGINT; left, right: Parameter;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -543,7 +543,7 @@ TYPE
 		instanceType-: Type; (* instance type *)
 		parameters-: ParameterList;
 		capabilityParameters-: ParameterList;
-		index-: SIZE;
+		index-: LONGINT;
 		(* caches: *)
 		instructionMemorySize-, dataMemorySize-: LONGINT;
 		capabilities-: SET;
@@ -609,7 +609,7 @@ TYPE
 		END AddCapabilityParameter;
 
 		PROCEDURE Write(w: Streams.Writer; indent: LONGINT);
-		VAR typeName: Name; parameter: Parameter; i: SIZE;
+		VAR typeName: Name; parameter: Parameter; i: LONGINT;
 		BEGIN
 			Indent(w,indent); INC(indent);
 			w.Int(index,1);
@@ -682,7 +682,7 @@ TYPE
 
 	InstanceList*= OBJECT(Basic.List)
 
-		PROCEDURE GetInstance*(i: SIZE): Instance;
+		PROCEDURE GetInstance*(i: LONGINT): Instance;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Instance) END
@@ -693,7 +693,7 @@ TYPE
 		END AddInstance;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Instance;
-		VAR a: Instance; i: SIZE;
+		VAR a: Instance; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetInstance(i);
@@ -703,7 +703,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE Same(as: InstanceList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Symbol;
+		VAR i: LONGINT; left, right: Symbol;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -726,7 +726,7 @@ TYPE
 		channels-: ChannelList;
 		types-: TypeList;
 		ports-: PortList;
-		index-: SIZE;
+		index-: LONGINT;
 		specification-: Specification;
 
 		PROCEDURE &InitScope(CONST name: ARRAY OF CHAR; scope: Scope; specification: Specification);
@@ -802,7 +802,7 @@ TYPE
 		END NewType;
 
 		PROCEDURE ForEachInstanceDo*(method: InstanceMethod): BOOLEAN;
-		VAR i: SIZE; instance: Instance; type: Type;
+		VAR i: LONGINT; instance: Instance; type: Type;
 		BEGIN
 			FOR i := 0 TO instances.Length()-1 DO
 				instance := instances.GetInstance(i);
@@ -818,7 +818,7 @@ TYPE
 		END ForEachInstanceDo;
 
 		PROCEDURE ForEachTypeDo*(method: TypeMethod): BOOLEAN; (* used for linking *)
-		VAR type: Type; i: SIZE;
+		VAR type: Type; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO types.Length()-1 DO
 				type := types.GetType(i);
@@ -830,7 +830,7 @@ TYPE
 
 		(*
 		PROCEDURE Link*(diagnostics: Diagnostics.Diagnostics; codeUnit, dataUnit: LONGINT): BOOLEAN;
-		VAR type: Type; i: SIZE;
+		VAR type: Type; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO types.Length()-1 DO
 				type := types.GetType(i);
@@ -1029,7 +1029,7 @@ TYPE
 		END Read;
 
 		PROCEDURE Write*(w: Streams.Writer; indent: LONGINT);
-		VAR port: Port; device: Device; module: Module; instance: Instance; channel: Channel; type: Type; i: SIZE;
+		VAR port: Port; device: Device; module: Module; instance: Instance; channel: Channel; type: Type; i: LONGINT;
 		BEGIN
 			Indent(w,indent); INC(indent);
 			w.Int(index,1);
@@ -1081,7 +1081,7 @@ TYPE
 
 	TypeList*= OBJECT(Basic.List)
 
-		PROCEDURE GetType*(i: SIZE): Type;
+		PROCEDURE GetType*(i: LONGINT): Type;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Type) END
@@ -1092,7 +1092,7 @@ TYPE
 		END AddType;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Type;
-		VAR a: Type; i: SIZE;
+		VAR a: Type; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetType(i);
@@ -1102,7 +1102,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE Same(as: TypeList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Type;
+		VAR i: LONGINT; left, right: Type;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -1125,7 +1125,7 @@ TYPE
 		in-, out-: PortInstance;
 		fifoSize-: LONGINT;
 		widthInBits-: LONGINT;
-		index-: SIZE; (* useful for implementations that emulate channels (simulator) *)
+		index-: LONGINT; (* useful for implementations that emulate channels (simulator) *)
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
 		BEGIN
@@ -1206,7 +1206,7 @@ TYPE
 
 	ChannelList*= OBJECT(Basic.List)
 
-		PROCEDURE GetChannel*(i: SIZE): Channel;
+		PROCEDURE GetChannel*(i: LONGINT): Channel;
 		VAR a: ANY;
 		BEGIN
 			a := Get(i); IF a = NIL THEN RETURN NIL ELSE RETURN a(Channel) END
@@ -1217,7 +1217,7 @@ TYPE
 		END AddChannel;
 
 		PROCEDURE ByName*(CONST name: ARRAY OF CHAR): Channel;
-		VAR a: Channel; i: SIZE;
+		VAR a: Channel; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetChannel(i);
@@ -1227,7 +1227,7 @@ TYPE
 		END ByName;
 
 		PROCEDURE ByPort*(port: Port): Channel;
-		VAR a: Channel; i: SIZE;
+		VAR a: Channel; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				a := GetChannel(i);
@@ -1237,7 +1237,7 @@ TYPE
 		END ByPort;
 
 		PROCEDURE Same(as: ChannelList; flags: SET): BOOLEAN;
-		VAR i: SIZE; left, right: Channel;
+		VAR i: LONGINT; left, right: Channel;
 		BEGIN
 			IF as.Length() # Length() THEN RETURN FALSE END;
 			FOR i := 0 TO Length()-1 DO
@@ -1285,7 +1285,7 @@ TYPE
 		END Same;
 
 		PROCEDURE DefineDevices*(system: Global.System);
-		VAR i: SIZE; device: Device;
+		VAR i: LONGINT; device: Device;
 		BEGIN
 			FOR i := 0 TO supportedDevices.Length()-1 DO
 				device := supportedDevices.GetDevice(i);
@@ -1346,7 +1346,7 @@ TYPE
 		END SetInstructionSet;
 
 		PROCEDURE Write*(w: Streams.Writer; indent: LONGINT);
-		VAR type: Type; channel: Channel; i: SIZE; instance: Instance;port: Port; import: Symbol;
+		VAR type: Type; channel: Channel; i: LONGINT; instance: Instance;port: Port; import: Symbol;
 		BEGIN
 			Indent(w,indent);w.String("name="); w.String(name); w.Ln;
 			INC(indent);
@@ -1668,7 +1668,7 @@ TYPE
 	PROCEDURE FlattenNetwork*(scope: Scope);
 	VAR instance,subInstance,newInstance: Instance; oldChannel,channel: Channel;
 		instances: InstanceList; channels: ChannelList;
-		i, j: SIZE; name: SyntaxTree.String;
+		i, j: LONGINT; name: SyntaxTree.String;
 		port: Port;
 
 		PROCEDURE FlattenPortInstance(VAR pi: PortInstance);
@@ -1699,7 +1699,7 @@ TYPE
 		END FlattenPortInstance;
 
 		PROCEDURE EmbedInstance(instance: Instance; VAR subInstance: Instance): Instance;
-		VAR name: Name; newInstance: Instance; i: SIZE; parameter,newParameter: Parameter;
+		VAR name: Name; newInstance: Instance; i: LONGINT; parameter,newParameter: Parameter;
 		BEGIN
 			COPY(instance.name, name); Strings.Append(name,"."); Strings.Append(name,subInstance.name);
 			newInstance := instances.ByName(name);

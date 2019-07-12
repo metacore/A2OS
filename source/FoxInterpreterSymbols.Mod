@@ -931,7 +931,7 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR int: HUGEINT;
 		BEGIN
 			IF name = StrValue THEN c.GetInteger(int); value := ADDRESS(int);
@@ -939,7 +939,7 @@ TYPE
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetInteger(value);
 			ELSE Get^(name, index, c);
@@ -973,7 +973,7 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR val: HUGEINT;
 		BEGIN
 			IF name = StrValue THEN c.GetInteger(val); value := val;
@@ -981,7 +981,7 @@ TYPE
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetInteger(LONGINT(value));
 			ELSE Get^(name, index, c);
@@ -1020,14 +1020,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetFloat(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetFloat(value);
 			ELSE Get^(name, index, c);
@@ -1061,14 +1061,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetBoolean(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetBoolean(value);
 			ELSE Get^(name, index, c);
@@ -1102,14 +1102,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetString(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetString(value);
 			ELSE Get^(name, index, c);
@@ -1138,14 +1138,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetSet(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetSet(value);
 			ELSE Get^(name, index, c);
@@ -1180,14 +1180,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetRange(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetRange(value);
 			ELSE Get^(name, index, c);
@@ -1222,14 +1222,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetChar(value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetChar(value);
 			ELSE Get^(name, index, c);
@@ -1264,14 +1264,14 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.GetEnum(translation, value);
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetEnum(translation, value);
 			ELSE Get^(name, index, c);
@@ -1294,7 +1294,7 @@ TYPE
 	MathArrayValue*=OBJECT(Value)
 	VAR values: ARRAY [*] OF Value;
 
-		PROCEDURE &InitMathArrayValue*(len: SIZE);
+		PROCEDURE &InitMathArrayValue*(len: LONGINT);
 		BEGIN
 			InitValue;
 			NEW(values, len);
@@ -1305,32 +1305,32 @@ TYPE
 		BEGIN Enumerate^(enum); enum(StrValue,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN values[index] := ContentGetValue(c)
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrValue THEN c.SetObject(values[index],"Value");
 			ELSE Get^(name, index, c);
 			END;
 		END Get;
 
-		PROCEDURE SetValue*(at: SIZE; value: Value);
+		PROCEDURE SetValue*(at: LONGINT; value: Value);
 		BEGIN
 			values[at] := value;
 		END SetValue;
 
-		PROCEDURE GetValue*(at: SIZE): Value;
+		PROCEDURE GetValue*(at: LONGINT): Value;
 		BEGIN
 			RETURN values[at]
 		END GetValue;
 
 		PROCEDURE WriteValue*(w: Streams.Writer);
-		VAR i, max: SIZE;
+		VAR i: LONGINT; max: LONGINT;
 		BEGIN
 			w.String("[ ");
 			max := LEN(values,0)-1;
@@ -1351,7 +1351,7 @@ TYPE
 		name: StringPool.Index;
 		item-: Item;
 
-		PROCEDURE & InitSymbol(name: StringPool.Index; index: SIZE);
+		PROCEDURE & InitSymbol(name: StringPool.Index; index: LONGINT);
 		BEGIN
 			SELF.name := name; SELF.item := item;
 		END InitSymbol;
@@ -1377,7 +1377,7 @@ TYPE
 		END InitContainer;
 
 		PROCEDURE Enumerate*(enum: PersistentObjects.Enumerator);
-		VAR i: SIZE; symbol: Symbol; o: ANY; name: ARRAY 256 OF CHAR;
+		VAR i: LONGINT; symbol: Symbol; o: ANY; name: ARRAY 256 OF CHAR;
 		BEGIN Enumerate^(enum);
 			FOR i := 0 TO symbols.Length()-1 DO
 				o := symbols.Get(i);
@@ -1387,14 +1387,14 @@ TYPE
 			END;
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF FALSE THEN
 			ELSE Set^(name, index, c);
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR item: Item;
 		BEGIN
 			item := Find(name);
@@ -1403,7 +1403,7 @@ TYPE
 			END;
 		END Get;
 
-		PROCEDURE GetItem*(index: SIZE): Item;
+		PROCEDURE GetItem*(index: LONGINT): Item;
 		BEGIN
 			RETURN symbols.Get(index)(Symbol).item
 		END GetItem;
@@ -1429,7 +1429,7 @@ TYPE
 			Enter1(item, StringPool.GetIndex1(name))
 		END Enter;
 
-		PROCEDURE Find1*(id: StringPool.Index): Item;
+		PROCEDURE Find1*(id: LONGINT): Item;
 		VAR any: ANY;
 		BEGIN
 			any := lookup.Get(id);
@@ -1465,7 +1465,7 @@ TYPE
 			RETURN scope
 		END Enter;
 
-		PROCEDURE FindObject*(CONST name: ARRAY OF CHAR; index: SIZE; VAR in: Object): Object;
+		PROCEDURE FindObject*(CONST name: ARRAY OF CHAR; index: LONGINT; VAR in: Object): Object;
 		VAR object: Object;
 		BEGIN
 			in := SELF.object;
@@ -1476,7 +1476,7 @@ TYPE
 			RETURN object
 		END FindObject;
 
-		PROCEDURE FindObject1*(name: StringPool.Index; index: SIZE; VAR in: Object): Object;
+		PROCEDURE FindObject1*(name: StringPool.Index; index: LONGINT; VAR in: Object): Object;
 		VAR str: ARRAY 256 OF CHAR;
 		BEGIN
 			StringPool.GetString(name, str);
@@ -1577,7 +1577,7 @@ TYPE
 		NEW(obj, translation, value);
 	END NewEnumValue;
 
-	PROCEDURE FindInObject*(in: Object; CONST name: ARRAY OF CHAR; index: SIZE): Object;
+	PROCEDURE FindInObject*(in: Object; CONST name: ARRAY OF CHAR; index: LONGINT): Object;
 	VAR content: Content;
 	TYPE Class=PersistentObjects.Class;
 	BEGIN

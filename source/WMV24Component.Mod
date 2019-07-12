@@ -243,12 +243,12 @@ TYPE
 		progressBar : WMProgressComponents.ProgressBar;
 		filenameLabel : WMStandardComponents.Label;
 		progressLabel : WMStandardComponents.Label;
-		currentBytes, maxBytes : Streams.Position;
+		currentBytes, maxBytes : LONGINT;
 
 		w : Streams.StringWriter;
 		string : ARRAY 128 OF CHAR;
 
-		PROCEDURE SetProgress(progress : Streams.Position);
+		PROCEDURE SetProgress(progress : LONGINT);
 		BEGIN
 			w.Reset;
 			w.String("Received "); w.Int(progress, 0);
@@ -262,7 +262,7 @@ TYPE
 			progressLabel.caption.SetAOC(string);
 		END SetProgress;
 
-		PROCEDURE &New*(CONST filename : ARRAY OF CHAR; length : Streams.Position);
+		PROCEDURE &New*(CONST filename : ARRAY OF CHAR; length : LONGINT);
 		VAR panel : WMStandardComponents.Panel;
 		BEGIN
 			Init;
@@ -298,7 +298,7 @@ TYPE
 	CustomTextView = OBJECT(WMTextView.TextView)
 	VAR
 		selecting, selectWords, dragPossible  : BOOLEAN;
-		lastPos : SIZE;
+		lastPos : LONGINT;
 		downX, downY : LONGINT;
 
 		utilreader : Texts.TextReader;
@@ -313,7 +313,7 @@ TYPE
 		END SetText;
 
 		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR pos : SIZE;
+		VAR pos : LONGINT;
 		BEGIN
 			IF keys * {0, 1, 2} = {2} THEN
 				ShowContextMenu(x, y) END;
@@ -344,7 +344,7 @@ TYPE
 
 		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
 		CONST DragDist = 5;
-		VAR pos : SIZE;
+		VAR pos : LONGINT;
 		BEGIN
 			IF dragPossible THEN
 				IF (ABS(x - downX) > DragDist) OR (ABS(y - downY) > DragDist) THEN dragPossible := FALSE; AutoStartDrag END
@@ -526,9 +526,8 @@ TYPE
 			command : Strings.String;
 			filename, msg : ARRAY 512 OF CHAR;
 			filenames : Strings.StringArray;
-			mode : LONGINT;
+			mode, i : LONGINT;
 			send : BOOLEAN;
-			i : SIZE;
 		BEGIN
 			IF sender IS WMStandardComponents.Button THEN
 				button := sender (WMStandardComponents.Button);
@@ -1103,8 +1102,8 @@ TYPE
 			END;
 		END Finalize;
 
-		PROCEDURE DeleteNCharacters(nbrOfCharacters : SIZE);
-		VAR pos : SIZE;
+		PROCEDURE DeleteNCharacters(nbrOfCharacters : LONGINT);
+		VAR pos : LONGINT;
 		BEGIN
 			text.AcquireWrite;
 			pos := textView.cursor.GetPosition();
@@ -1145,7 +1144,7 @@ TYPE
 		END EvaluateError;
 
 		PROCEDURE ReceiveCharacters;
-		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, len : SIZE; res: WORD;
+		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, len : LONGINT; res: WORD;
 		BEGIN
 			len := 0;
 			res := Streams.Ok;
@@ -1336,7 +1335,7 @@ TYPE
 			vc : WMComponents.VisualComponent;
 			configuration : WMRestorable.XmlElement; string : ARRAY 64 OF CHAR;
 			s: POINTER TO ARRAY OF CHAR;
-			len: SIZE;
+			len: LONGINT;
 		BEGIN
 			IncCount;
 

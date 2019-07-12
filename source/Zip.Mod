@@ -113,8 +113,8 @@ BEGIN
 END ShowError;
 
 (* length of str *)
-PROCEDURE StringLength(CONST str: ARRAY OF CHAR): SIZE;
-	VAR i, l: SIZE;
+PROCEDURE StringLength(CONST str: ARRAY OF CHAR): LONGINT;
+	VAR i, l: LONGINT;
 BEGIN
 	l := LEN(str); i := 0;
 	WHILE (i < l) & (str[i] # 0X) DO
@@ -172,12 +172,12 @@ PROCEDURE ReadEntry(VAR r: Files.Rider): Entry;
 VAR
 	ent: Entry;
 	intDummy, nameLen, extraLen, commentLen: INTEGER;
-	longDummy: LONGINT; position: Streams.Position;
+	longDummy: LONGINT;
 BEGIN
 	Files.ReadLInt(r, longDummy);
 	IF longDummy = CentralFileHeaderSignature THEN
 		NEW(ent);
-		ent.offsetCentralDir := r.file.Pos(r)(LONGINT) - 4;
+		ent.offsetCentralDir := r.file.Pos(r) - 4;
 		ent.support := 0;
 		Files.ReadInt(r, intDummy);	(* version made by *)
 		Files.ReadInt(r, intDummy);	(* version needed to extract *)
@@ -215,11 +215,11 @@ BEGIN
 			r.file.ReadBytes(r, ent.comment^, 0, commentLen)	(* file comment *)
 		END;
 		(* read extra field length in the local file header (can be different from extra field length stored in the file header...) *)
-		position := r.file.Pos(r);	(* store actual position of file reader *)
+		longDummy := r.file.Pos(r);	(* store actual position of file reader *)
 		r.file.Set(r, ent.offsetLocal + 28);	(* set r to position of extra field length in local file header *)
 		Files.ReadInt(r, extraLen);	(* extra field length *)
 		ent.offsetFileData := ent.offsetLocal + 30 + nameLen + extraLen;	(* compute offset of file data *)
-		r.file.Set(r, position);	(* set position of file reader to previous position *)
+		r.file.Set(r, longDummy);	(* set position of file reader to previous position *)
 		IF r.eof THEN	(* if file is a zip-archive, r is not at end of file *)
 			ent := NIL
 		END
@@ -239,9 +239,9 @@ BEGIN
 	Files.WriteLInt(r, ent.crc32);	(* crc-32 *)
 	Files.WriteLInt(r, ent.compSize);	(* compressed size *)
 	Files.WriteLInt(r, ent.uncompSize);	(* uncompressed size *)
-	Files.WriteInt(r, INTEGER(StringLength(ent.name)));	(* filename length *)
+	Files.WriteInt(r, SHORT(StringLength(ent.name)));	(* filename length *)
 	IF ent.extraField # NIL THEN
-		Files.WriteInt(r, INTEGER(LEN(ent.extraField^)))	(* extra field length *)
+		Files.WriteInt(r, SHORT(LEN(ent.extraField^)))	(* extra field length *)
 	ELSE
 		Files.WriteInt(r, 0)
 	END;
@@ -254,7 +254,7 @@ END WriteLocalFileHeader;
 (* Writes file header in central directory, updates ent.offsetCentralDir *)
 PROCEDURE WriteFileHeader(ent: Entry; VAR r: Files.Rider);
 BEGIN
-	ent.offsetCentralDir := r.file.Pos(r)(LONGINT);
+	ent.offsetCentralDir := r.file.Pos(r);
 	Files.WriteLInt(r, CentralFileHeaderSignature);	(* central file header signature *)
 	Files.WriteInt(r, CompatibleVersions * 10);	(* version made by *)
 	Files.WriteInt(r, CompatibleVersions * 10);	(* version needed to extract *)
@@ -265,16 +265,16 @@ BEGIN
 	Files.WriteLInt(r, ent.crc32);	(* crc-32 *)
 	Files.WriteLInt(r, ent.compSize);	(* compressed size *)
 	Files.WriteLInt(r, ent.uncompSize);	(* uncompressed size *)
-	Files.WriteInt(r, INTEGER(StringLength(ent.name)));	(* filename length *)
+	Files.WriteInt(r, SHORT(StringLength(ent.name)));	(* filename length *)
 	IF ent.extraField = NIL THEN
 		Files.WriteInt(r, 0)
 	ELSE
-		Files.WriteInt(r, INTEGER(LEN(ent.extraField^)));	(* extra field length *)
+		Files.WriteInt(r, SHORT(LEN(ent.extraField^)));	(* extra field length *)
 	END;
 	IF ent.comment = NIL THEN
 		Files.WriteInt(r, 0)
 	ELSE
-		Files.WriteInt(r, INTEGER(LEN(ent.comment^)));	(* file comment length *)
+		Files.WriteInt(r, SHORT(LEN(ent.comment^)));	(* file comment length *)
 	END;
 	Files.WriteInt(r, 0);	(* disk number start *)
 	Files.WriteInt(r, ent.intFileAttr);	(* internal file attributes *)
@@ -310,7 +310,7 @@ BEGIN
 	IF arc.comment = NIL THEN
 		Files.WriteInt(r, 0)	(* zipfile comment length *)
 	ELSE
-		Files.WriteInt(r, INTEGER(LEN(arc.comment^)));	(* zipfile comment length *)
+		Files.WriteInt(r, SHORT(LEN(arc.comment^)));	(* zipfile comment length *)
 		r.file.WriteBytes(r, arc.comment^, 0, LEN(arc.comment^))	(* zipfile comment *)
 	END
 END WriteEndOfCentDir;
@@ -325,7 +325,7 @@ BEGIN
 		WriteFileHeader(ent, r);
 		ent := ent.next
 	END;
-	arc.offset := r.file.Pos(r)(LONGINT);
+	arc.offset := r.file.Pos(r);
 	WriteEndOfCentDir(arc, r)
 END WriteCentralDirectory;
 
@@ -361,7 +361,7 @@ BEGIN
 		ELSE
 			NEW(arc);
 			arc.file := f;
-			arc.offset := f.Pos(r)(LONGINT) - 4;
+			arc.offset := f.Pos(r) - 4;
 			Files.ReadInt(r, intDummy);	(* number of this disk *)
 			Files.ReadInt(r, intDummy);	(* number of the disk with the start of the central directory *)
 			Files.ReadInt(r, intDummy);	(* total number of entries in the central dir on this disk *)
@@ -549,9 +549,9 @@ BEGIN
 		END;
 		arc.file.Set(dst, ent.offsetLocal);
 		WriteLocalFileHeader(ent, dst);
-		ent.offsetFileData := dst.file.Pos(dst)(LONGINT);
+		ent.offsetFileData := dst.file.Pos(dst);
 		arc.file.Update();
-		start := src.file.Pos(src)(LONGINT);
+		start := src.file.Pos(src);
 		IF level = 0 THEN
 			Copy(src, dst, len, TRUE, ent.crc32);
 			ent.compSize := len;
@@ -565,7 +565,7 @@ BEGIN
 			END
 		END;
 		IF res = Ok THEN
-			ent.uncompSize := src.file.Pos(src)(LONGINT) - start;
+			ent.uncompSize := src.file.Pos(src) - start;
 			arc.file.Update();
 			arc.file.Set(dst, ent.offsetLocal + 14);
 			Files.WriteLInt(dst, ent.crc32);
@@ -693,9 +693,9 @@ BEGIN
 END OpenReader;
 
 (** read len bytes of uncompressed data into buf[offset] and return number of bytes actually read; Reader must be opened **)
-PROCEDURE ReadBytes*(r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR read: SIZE);
+PROCEDURE ReadBytes*(r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT);
 VAR
-	bufp: POINTER TO ARRAY OF CHAR; i: SIZE;
+	bufp: POINTER TO ARRAY OF CHAR; i: LONGINT;
 BEGIN
 	IF r.open THEN
 		IF r IS UncompReader THEN
@@ -722,7 +722,7 @@ END ReadBytes;
 (** read decompressed byte **)
 PROCEDURE Read*(r: Reader; VAR ch: CHAR);
 VAR
-	buf: ARRAY 1 OF CHAR; read: SIZE;
+	buf: ARRAY 1 OF CHAR; read: LONGINT;
 BEGIN
 	ReadBytes(r, buf, 0, 1, read);
 	ch := buf[0];

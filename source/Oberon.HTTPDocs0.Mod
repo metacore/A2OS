@@ -93,8 +93,7 @@ MODULE HTTPDocs0 IN Oberon;	(** portable *)
 (** Parsing of an http url. *)
 	PROCEDURE SplitHTTPAdr*(VAR url, host, path, label: ARRAY OF CHAR; VAR port: INTEGER): LONGINT;
 		VAR
-			i, j, l: SIZE;
-			key: LONGINT;
+			i, j, l, key: LONGINT;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
 		BEGIN

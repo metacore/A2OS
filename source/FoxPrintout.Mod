@@ -453,7 +453,7 @@ TYPE
 		(*** expressions ****)
 
 		PROCEDURE ExpressionList(x: SyntaxTree.ExpressionList);
-		VAR i: SIZE;  expression: SyntaxTree.Expression;
+		VAR i: LONGINT;  expression: SyntaxTree.Expression;
 		BEGIN
 			FOR i := 0 TO x.Length() - 1 DO
 				expression := x.GetExpression( i );  Expression(expression);
@@ -888,7 +888,7 @@ TYPE
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN w.Int(x.value,1);
 		END VisitEnumerationValue;
-
+		
 		PROCEDURE VisitProcedureValue*(x: SyntaxTree.ProcedureValue);
 		BEGIN
 			Symbol(x.value);
@@ -937,7 +937,10 @@ TYPE
 
 			IF info THEN
 				BeginComment;
-				IF x.offsetInBits # MIN(SIZE) THEN
+				w.String("access= {");
+				Access(x.access);
+				w.String("}");
+				IF x.offsetInBits # MIN(LONGINT) THEN
 					w.String("@ofs="); w.Int(x.offsetInBits DIV 8,1);
 				ELSE
 					IF x.type # NIL THEN
@@ -1342,7 +1345,7 @@ TYPE
 		END VisitOperator;
 
 		PROCEDURE ProcedureList(list: SyntaxTree.ProcedureList);
-		VAR x: SyntaxTree.Procedure; i: SIZE; type: SyntaxTree.ProcedureType;
+		VAR x: SyntaxTree.Procedure; i: LONGINT; type: SyntaxTree.ProcedureType;
 		BEGIN
 			w.IncIndent;
 			FOR i := 0 TO list.Length()-1 DO
@@ -1377,7 +1380,7 @@ TYPE
 					END;
 				END;
 				w.String(">");
-			END;
+			END; 
 			IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#context) THEN
 				Keyword(" IN ");
 				Identifier(x.context)
@@ -1511,7 +1514,7 @@ TYPE
 		END Statement;
 
 		PROCEDURE StatementSequence*(x: SyntaxTree.StatementSequence);
-		VAR statement: SyntaxTree.Statement;  i: SIZE;
+		VAR statement: SyntaxTree.Statement;  i: LONGINT;
 		BEGIN
 			IF singleStatement THEN
 				w.String("...")
@@ -1563,7 +1566,7 @@ TYPE
 		END IfPart;
 
 		PROCEDURE VisitIfStatement*(x: SyntaxTree.IfStatement);
-		VAR i: SIZE;  elsif: SyntaxTree.IfPart;
+		VAR i: LONGINT;  elsif: SyntaxTree.IfPart;
 		BEGIN
 			IfPart(x.ifPart);
 			FOR i := 0 TO x.ElsifParts() - 1 DO
@@ -1590,7 +1593,7 @@ TYPE
 		END WithPart;
 
 		PROCEDURE VisitWithStatement*(x: SyntaxTree.WithStatement);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			Indent; Keyword("WITH " );
 			Expression(x.variable);
@@ -1628,7 +1631,7 @@ TYPE
 		END CasePart;
 
 		PROCEDURE VisitCaseStatement*(x: SyntaxTree.CaseStatement);
-		VAR i: SIZE;  case: SyntaxTree.CasePart;
+		VAR i: LONGINT;  case: SyntaxTree.CasePart;
 		BEGIN
 			Keyword("CASE " );
 			Expression(x.variable);
@@ -1872,7 +1875,7 @@ TYPE
 						IF i < x.parameters.Length()-1 THEN
 							w.String(", ");
 						END;
-					END;
+					END; 
 					w.String(">");
 				END;
 				IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#Global.A2Name) THEN

@@ -6,7 +6,7 @@ IMPORT
 
 PROCEDURE AppendData(filename : ARRAY OF CHAR; r : HTTPSupport.HTTPRequest);
 VAR
-	i : SIZE; p : ANY;
+	i : LONGINT; p : ANY;
 	var: HTTPSupport.HTTPVariable;
 	f : Files.File;
 	w : Files.Writer;
@@ -32,7 +32,7 @@ END AppendData;
 PROCEDURE RegisterRFW4*(context : WebCGI.CGIContext);
 VAR
 	r : HTTPSupport.HTTPRequest;
-	i : SIZE; p : ANY;
+	i : LONGINT; p : ANY;
 	var: HTTPSupport.HTTPVariable;
 	w : Streams.Writer;
 	chunker : WebHTTP.ChunkedOutStream;
@@ -99,7 +99,7 @@ END RegisterRFW4;
 PROCEDURE RegisterRFW3*(context : WebCGI.CGIContext);
 VAR
 	r : HTTPSupport.HTTPRequest;
-	i : SIZE; p : ANY;
+	i : LONGINT; p : ANY;
 	var: HTTPSupport.HTTPVariable;
 	w : Streams.Writer;
 	chunker : WebHTTP.ChunkedOutStream;

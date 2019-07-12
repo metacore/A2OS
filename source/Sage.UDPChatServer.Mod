@@ -30,8 +30,7 @@ TYPE
 		running, terminated: BOOLEAN;
 		ip: IP.Adr;
 		branch, command, seqNum, messageType: INTEGER;
-		uin, receiverUin, port, receiveBufOffset: LONGINT;
-		len: SIZE; res: WORD;
+		uin, receiverUin, port, len, receiveBufOffset: LONGINT; res: WORD;
 		user: Base.User;
 		users: Base.Users;
 		clients: Base.List;
@@ -146,7 +145,7 @@ TYPE
 
 		sendBuf.AddInt (user.uin, 4);
 
-		len := (Strings.Length (user.shortName) + 1)(LONGINT);
+		len := Strings.Length (user.shortName) + 1;
 		sendBuf.AddInt (len, 2);
 		sendBuf.Add (user.shortName, 0, len, TRUE, res);
 
@@ -190,7 +189,7 @@ TYPE
 		messageType: INTEGER; message: String; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
 		string: String;
-		res: WORD; len: SIZE;
+		res: WORD; len: LONGINT;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.RECEIVE_MESSAGE, receiver.outSeqNum, sendBuf);
 

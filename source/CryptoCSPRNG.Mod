@@ -4,9 +4,9 @@ MODULE CryptoCSPRNG;	(** AUTHOR "GF"; PURPOSE "Cryptographically Secure Pseudo-R
 IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 
 
-	PROCEDURE CSRand*( VAR rand: ARRAY OF CHAR; bits: SIZE );
+	PROCEDURE CSRand*( VAR rand: ARRAY OF CHAR; bits: LONGINT );
 	VAR
-		seed: HUGEINT; i, j, len: SIZE;
+		seed: HUGEINT; i, j, len: LONGINT;
 		h: SHA3.Hash;
 		buf: ARRAY 64 OF CHAR;
 	BEGIN
@@ -43,7 +43,7 @@ IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 	(*
 	PROCEDURE Test*;
 	CONST HT = 09X;
-	VAR rand: ARRAY 512 OF CHAR; i: SIZE;
+	VAR rand: ARRAY 512 OF CHAR; i: LONGINT;
 	BEGIN
 		CSRand( rand, 2048 );
 		Out.Ln;

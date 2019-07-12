@@ -27,7 +27,7 @@ TYPE
     IdentifierString* = FoxScanner.IdentifierString;
 
 CONST
-    (* symbols *)
+    (* tokens *)
 
     None*= 0;
 
@@ -153,21 +153,22 @@ TYPE
     KeywordTable* = FoxScanner.KeywordTable;
 
 TYPE
-    Symbol* = LONGINT;
+    Token* = LONGINT;
 	Position* = Basic.Position;
     (**
-        token: data structure for the data transfer of
+        symbol: data structure for the data transfer of
         the last read input from the scanner to the parser
     **)
-    Token* = RECORD
+    Symbol* = RECORD
         position*: Position;
-        symbol*: Symbol;
+        token*: Token;
         identifier*: IdentifierType;
         identifierString*: IdentifierString;
         string*: StringType;
-        stringLength*: SIZE;
+        stringLength*: LONGINT;
         numberType*: FoxScanner.SubType;
-        integer*: HUGEINT;
+        integer*: LONGINT;
+        hugeint*: HUGEINT;
         character*: CHAR;
         real*: LONGREAL;
     END;
@@ -330,13 +331,13 @@ TYPE
             END;
         END GetEscapeSequence;
 
-        PROCEDURE GetCharacter(VAR token: Token);
+        PROCEDURE GetCharacter(VAR symbol: Symbol);
             VAR vch: CHAR;
         BEGIN
             GetNextCharacter;
             IF ch = EOT THEN
                 ErrorS("Unexpected end of character literal");
-                token.character := 0X;
+                symbol.character := 0X;
                 RETURN;
             END;
             IF ch = Backslash THEN
@@ -354,8 +355,8 @@ TYPE
             ELSE
                 ErrorS("Illegal character literal")
             END;
-            token.character := vch;
-            token.integer := ORD(vch);
+            symbol.character := vch;
+            symbol.integer := ORD(vch);
         END GetCharacter;
 
         (**
@@ -369,7 +370,7 @@ TYPE
                 any character except " (22X), \ (5CX), and NewLineCharacter.
 
         **)
-        PROCEDURE GetString(VAR token: Token);
+        PROCEDURE GetString(VAR symbol: Symbol);
             VAR vch: CHAR;
         BEGIN
             stringMaker.Clear;
@@ -404,7 +405,7 @@ TYPE
                     with its contents if the string contains 0X.
                     This must be fixed in the future.
             *)
-            token.string := stringMaker.GetStringCopy(token.stringLength);
+            symbol.string := stringMaker.GetStringCopy(symbol.stringLength);
         END GetString;
 
         (**
@@ -413,12 +414,12 @@ TYPE
             Letter =
                 'A' | 'B' | .. |  'Z' | 'a' | 'b' |  .. | 'z' .
         **)
-        PROCEDURE GetIdentifier(VAR token: Token);
+        PROCEDURE GetIdentifier(VAR symbol: Symbol);
             VAR i: LONGINT;
         BEGIN
             i := 0;
             REPEAT
-                token.identifierString[i] := ch;
+                symbol.identifierString[i] := ch;
                 INC(i);
                 GetNextCharacter
             UNTIL reservedCharacter[ORD(ch)] OR (i = MaxIdentifierLength);
@@ -426,8 +427,8 @@ TYPE
                 Error(Basic.IdentifierTooLong);
                 DEC(i)
             END;
-            token.identifierString[i] := 0X;
-            StringPool.GetIndex(token.identifierString, token.identifier);
+            symbol.identifierString[i] := 0X;
+            StringPool.GetIndex(symbol.identifierString, symbol.identifier);
         END GetIdentifier;
 
         (**
@@ -459,17 +460,17 @@ TYPE
                 'A' | 'B' | 'C' | 'D' | 'E' | 'F' |
                 'a' | 'b' | 'c' | 'd' | 'e' | 'f'.
         **)
-        PROCEDURE GetNumber(VAR token: Token; frac: BOOLEAN): Symbol;
-            VAR i, m, n, d, e, si: LONGINT;
+        PROCEDURE GetNumber(VAR symbol: Symbol; frac: BOOLEAN): Token;
+            VAR i, nextInt, m, n, d, e, si: LONGINT;
                 dig: ARRAY 24 OF CHAR;
                 f: LONGREAL;
                 hex, neg, long: BOOLEAN;
-                hugeint, tenh, nextInt: HUGEINT;
-                result: Symbol;
+                hugeint, tenh: HUGEINT;
+                result: LONGINT;
 
             PROCEDURE Append(ch: CHAR);
             BEGIN
-                token.identifierString[si] := ch;
+                symbol.identifierString[si] := ch;
                 INC(si);
             END Append;
 
@@ -579,17 +580,19 @@ TYPE
                     long := TRUE
                 END;
                 IF n = m THEN
-                    token.integer := 0;
+                    symbol.integer := 0;
+                    symbol.hugeint := 0;
                     i := 0;
                     IF hex THEN
                         IF ~long &
                                 ((n < MaxHexDigits) OR
                                     ((n = MaxHexDigits) & (dig[0] <= '7'))) THEN
                             WHILE i < n DO
-                                token.integer := token.integer * 10H + HexDigit(dig[i]);
+                                symbol.integer := symbol.integer * 10H + HexDigit(dig[i]);
                                 INC(i)
                             END;
-                            token.numberType := IntNumber;
+                            symbol.numberType := IntNumber;
+                            symbol.hugeint := symbol.integer;
                         ELSIF n <= MaxHugeHexDigits THEN
                             hugeint := 0;
                             IF (n = MaxHugeHexDigits) & (dig[0] > '7') THEN
@@ -600,19 +603,21 @@ TYPE
                                 hugeint := hugeint * 10H + HexDigit(dig[i]);
                                 INC(i)
                             END;
-                            token.numberType := LongNumber;
-                            token.integer := hugeint;
+                            symbol.numberType := LongNumber;
+                            symbol.hugeint := hugeint;
+                            symbol.integer := SHORT(symbol.hugeint);
+
                         ELSE
-                            token.numberType := LongNumber;
+                            symbol.numberType := LongNumber;
                             Error(Basic.NumberTooLarge)
                         END
                     ELSE    (* decimal *)
                         WHILE (i < n) & ~long DO
                             d := Digit(dig[i]);
                             INC(i);
-                            nextInt := token.integer * 10 + d;
+                            nextInt := symbol.integer * 10 + d;
                             IF nextInt >= 0 THEN
-                                token.integer := nextInt
+                                symbol.integer := nextInt
                             ELSE    (* overflow *)
                                 long := TRUE
                             END;
@@ -638,14 +643,16 @@ TYPE
                                     Error(Basic.NumberTooLarge)
                                 END
                             END;
-                            token.numberType := LongNumber;
-                            token.integer := hugeint;
+                            symbol.numberType := LongNumber;
+                            symbol.hugeint := hugeint;
+                            symbol.integer := SHORT(symbol.hugeint);
                         ELSE
-                            token.numberType := IntNumber;
+                            symbol.numberType := IntNumber;
+                            symbol.hugeint := symbol.integer;
                         END
                     END
                 ELSE
-                    token.numberType := LongNumber;
+                    symbol.numberType := LongNumber;
                     Error(Basic.NumberTooLarge)
                 END;
                 result := IntegerLiteral;
@@ -701,23 +708,23 @@ TYPE
                 (* decimal point shift *)
                 DEC(e, i-d-m);
                 IF long THEN
-                    token.numberType := DoubleNumber;
+                    symbol.numberType := DoubleNumber;
                     IF (1 - MaxLongrealExponent < e) & (e <= MaxLongrealExponent) THEN
                         IF e < 0 THEN
-                            token.real := f / Ten(-e)
+                            symbol.real := f / Ten(-e)
                         ELSE
-                            token.real := f * Ten(e)
+                            symbol.real := f * Ten(e)
                         END
                     ELSE
                         Error(Basic.NumberTooLarge)
                     END
                 ELSE
-                    token.numberType := FloatNumber;
+                    symbol.numberType := FloatNumber;
                     IF (1- MaxRealExponent < e) & (e <= MaxRealExponent) THEN
                         IF e < 0 THEN
-                            token.real := f / Ten(-e)
+                            symbol.real := f / Ten(-e)
                         ELSE
-                            token.real := f * Ten(e)
+                            symbol.real := f * Ten(e)
                         END
                     ELSE
                         Error(Basic.NumberTooLarge)
@@ -725,7 +732,7 @@ TYPE
                 END;
                 result := RealLiteral;
             END;
-            token.identifierString[si] := 0X;
+            symbol.identifierString[si] := 0X;
             RETURN result;
         END GetNumber;
 
@@ -756,7 +763,7 @@ TYPE
             NotSlash =
                 any character except /.
         **)
-        PROCEDURE ReadSingleLineComment(VAR token: Token);
+        PROCEDURE ReadSingleLineComment(VAR symbol: Symbol);
         BEGIN
             stringMaker.Clear;
             WHILE (ch # 0DX) & (ch # 0AX) & (ch # EOT) DO
@@ -765,11 +772,11 @@ TYPE
             END;
             stringWriter.Char(0X);
             stringWriter.Update;
-            token.symbol := Comment;
-            token.string := stringMaker.GetString(token.stringLength);
+            symbol.token := Comment;
+            symbol.string := stringMaker.GetString(symbol.stringLength);
         END ReadSingleLineComment;
 
-        PROCEDURE ReadDelimitedComment(VAR token: Token);
+        PROCEDURE ReadDelimitedComment(VAR symbol: Symbol);
             VAR done: BOOLEAN;
         BEGIN
             stringMaker.Clear;
@@ -793,8 +800,8 @@ TYPE
             END;
             stringWriter.Char(0X);
             stringWriter.Update;
-            token.symbol := Comment;
-            token.string := stringMaker.GetString(token.stringLength);
+            symbol.token := Comment;
+            symbol.string := stringMaker.GetString(symbol.stringLength);
         END ReadDelimitedComment;
 
         PROCEDURE SkipBlanks;
@@ -815,16 +822,16 @@ TYPE
             END;
         END SkipBlanks;
 
-        (** get next token **)
-        PROCEDURE GetNextToken*(VAR token: Token): BOOLEAN;
-            VAR s, symbol: LONGINT;
+        (** get next symbol **)
+        PROCEDURE GetNextSymbol*(VAR symbol: Symbol): BOOLEAN;
+            VAR s, token: LONGINT;
         BEGIN
             SkipBlanks;
-            token.position := position;
+            symbol.position := position;
             stringMaker.Clear;
 (* @@@ *)
 (*
-KernelLog.String("GetNextToken ");
+KernelLog.String("GetNextSymbol ");
 KernelLog.Char(ch);
 KernelLog.Ln();
 *)
@@ -833,10 +840,10 @@ KernelLog.Ln();
                 s := EndOfText
             | DoubleQuote:
                 s := StringLiteral;
-                GetString(token)
+                GetString(symbol)
             | SingleQuote:
                 s := CharacterLiteral;
-                GetCharacter(token)
+                GetCharacter(symbol)
             | '!':
                 GetNextCharacter;
                 IF ch = '=' THEN
@@ -906,7 +913,7 @@ KernelLog.Ln();
             | '.':
                 GetNextCharacter;
                 IF (ch >= '0') & (ch <= '9') THEN
-                    s := GetNumber(token, TRUE)
+                    s := GetNumber(symbol, TRUE)
                 ELSE
                     s := Period
                 END
@@ -917,17 +924,17 @@ KernelLog.Ln();
                     s := SlashEqual
                 ELSIF ch = '/' THEN
                     GetNextCharacter;
-                    ReadSingleLineComment(token);
+                    ReadSingleLineComment(symbol);
                     s := Comment
                 ELSIF ch = '*' THEN
                     GetNextCharacter;
-                    ReadDelimitedComment(token);
+                    ReadDelimitedComment(symbol);
                     s := Comment
                 ELSE
                     s := Slash
                 END
             | '0' .. '9':
-                s := GetNumber(token, FALSE)
+                s := GetNumber(symbol, FALSE)
             | ':':
                 s := Colon;
                 GetNextCharacter
@@ -1018,29 +1025,29 @@ KernelLog.Ln();
                 GetNextCharacter
             | 'A' .. 'Z':
                 s := Identifier;
-                GetIdentifier(token)
+                GetIdentifier(symbol)
             | 'a' .. 'z':
                 s := Identifier;
-                GetIdentifier(token);
-                symbol := keywords.SymbolByIdentifier(token.identifier);
-                IF  (symbol >= 0) THEN
-                    s := symbol
+                GetIdentifier(symbol);
+                token := keywords.IndexByIdentifier(symbol.identifier);
+                IF  (token >= 0) THEN
+                    s := token
                 END;
             ELSE
                 s := Identifier;
-                GetIdentifier(token)
+                GetIdentifier(symbol)
             END;
 
-            token.symbol := s;
-            token.position.end := position.start;
+            symbol.token := s;
+            symbol.position.end := position.start;
 
             IF Trace THEN
-                OutToken(D.Log, token);
+                OutSymbol(D.Log, symbol);
                 D.Ln;
             END;
 
             RETURN ~error
-        END GetNextToken;
+        END GetNextSymbol;
 
         PROCEDURE ResetError*();
         BEGIN
@@ -1049,7 +1056,7 @@ KernelLog.Ln();
 
         (** set the diagnostics mode of the scanner
             (diagnostics = NIL ==> no report) and reset the error state
-            intended for silent token peeeking after the end of a module *)
+            intended for silent symbol peeeking after the end of a module *)
         PROCEDURE ResetErrorDiagnostics*(VAR diagnostics: Diagnostics.Diagnostics);
         VAR
                 d: Diagnostics.Diagnostics;
@@ -1076,29 +1083,29 @@ KernelLog.Ln();
 
     VAR
         reservedCharacter: ARRAY 256 OF BOOLEAN;
-        symbols-: ARRAY EndOfText+1 OF Keyword;
+        tokens-: ARRAY EndOfText+1 OF Keyword;
         keywords: KeywordTable;
 
-    PROCEDURE TokenToString*(CONST token: Token; VAR str: ARRAY OF CHAR);
+    PROCEDURE SymbolToString*(CONST symbol: Symbol; VAR str: ARRAY OF CHAR);
         VAR id: StringPool.Index;
     BEGIN
-        CASE token.symbol OF
+        CASE symbol.token OF
           Identifier, IntegerLiteral, RealLiteral:
-            COPY(token.identifierString, str)
+            COPY(symbol.identifierString, str)
         | StringLiteral, Comment:
-            ASSERT(LEN(str) >= LEN(token.string^));
-            COPY(token.string^, str);
+            ASSERT(LEN(str) >= LEN(symbol.string^));
+            COPY(symbol.string^, str);
         ELSE
-            GetKeyword(token.symbol, id);
+            GetKeyword(symbol.token, id);
             IF id < 0 THEN
                 str[0] := 0X
             ELSE
                 StringPool.GetString(id, str) END;
         END;
-    END TokenToString;
+    END SymbolToString;
 
     (** debugging output **)
-    PROCEDURE OutToken*(w: Streams.Writer; CONST token: Token);
+    PROCEDURE OutSymbol*(w: Streams.Writer; CONST symbol: Symbol);
         VAR str: ARRAY 256 OF CHAR;
             i: LONGINT;
 
@@ -1114,13 +1121,13 @@ KernelLog.Ln();
         END OutChar;
 
     BEGIN
-        w.Int(token.position.start, 1);
+        w.Int(symbol.position.start, 1);
         w.String("-");
-        w.Int(token.position.end, 1);
+        w.Int(symbol.position.end, 1);
         w.String(":");
-        w.String(symbols[token.symbol]);
-        IF (token.symbol = IntegerLiteral) OR (token.symbol = RealLiteral) THEN
-            CASE token.numberType OF
+        w.String(tokens[symbol.token]);
+        IF (symbol.token = IntegerLiteral) OR (symbol.token = RealLiteral) THEN
+            CASE symbol.numberType OF
               IntNumber:
                 w.String("(int)")
             | LongNumber:
@@ -1130,30 +1137,30 @@ KernelLog.Ln();
             | DoubleNumber:
                 w.String("(double)")
             END;
-        ELSIF token.symbol = CharacterLiteral THEN
+        ELSIF symbol.token = CharacterLiteral THEN
             w.String(":");
             w.Char("'");
-            OutChar(token.character);
+            OutChar(symbol.character);
             w.Char("'");
-        ELSIF token.symbol = StringLiteral THEN
+        ELSIF symbol.token = StringLiteral THEN
             w.String(":");
             w.Char('"');
             i := 0;
-            WHILE token.string^[i] # 0X DO
-                OutChar(token.string^[i]);
+            WHILE symbol.string^[i] # 0X DO
+                OutChar(symbol.string^[i]);
                 INC(i);
             END;
             w.Char('"');
-        ELSIF token.symbol = Comment THEN
+        ELSIF symbol.token = Comment THEN
             w.String("/*");
-            w.String(token.string^);
+            w.String(symbol.string^);
             w.String("*/");
         ELSE
-            TokenToString(token, str);
+            SymbolToString(symbol, str);
             w.String(": ");
             w.String(str);
         END
-    END OutToken;
+    END OutSymbol;
 
     (** reserved characters are the characters that may not occur within an identifier **)
     PROCEDURE InitReservedCharacters;
@@ -1173,134 +1180,134 @@ KernelLog.Ln();
         END;
     END InitReservedCharacters;
 
-    (* get keyword by symbol *)
-    PROCEDURE GetKeyword*(symbol: LONGINT; VAR identifier: IdentifierType);
+    (* get keyword by token *)
+    PROCEDURE GetKeyword*(token: LONGINT; VAR identifier: IdentifierType);
     BEGIN
-        keywords.IdentifierBySymbol(symbol, identifier);
+        keywords.IdentifierByIndex(token, identifier);
     END GetKeyword;
 
-    PROCEDURE InitSymbols;
+    PROCEDURE InitTokens;
     VAR i: LONGINT;
     BEGIN
-        symbols[None] := "None";
+        tokens[None] := "None";
 
         (* operators and punctuators *)
-        symbols[Exclamation] := "Exclamation";
-        symbols[ExclamationEqual] := "ExclamationEqual";
-        symbols[Percent] := "Percent";
-        symbols[PercentEqual] := "PercentEqual";
-        symbols[And] := "And";
-        symbols[AndEqual] := "AndEqual";
-        symbols[AndAnd] := "AndAnd";
-        symbols[LeftParenthesis] := "LeftParenthesis";
-        symbols[RightParenthesis] := "RightParenthesis";
-        symbols[Times] := "Times";
-        symbols[TimesEqual] := "TimesEqual";
-        symbols[Plus] := "Plus";
-        symbols[PlusEqual] := "PlusEqual";
-        symbols[PlusPlus] := "PlusPlus";
-        symbols[Comma] := "Comma";
-        symbols[Minus] := "Minus";
-        symbols[MinusEqual] := "MinusEqual";
-        symbols[MinusMinus] := "MinusMinus";
-        symbols[Period] := "Period";
-        symbols[Slash] := "Slash";
-        symbols[SlashEqual] := "SlashEqual";
-        symbols[Colon] := "Colon";
-        symbols[Semicolon] := "Semicolon";
-        symbols[Less] := "Less";
-        symbols[LessEqual] := "LessEqual";
-        symbols[LeftShift] := "LeftShift";
-        symbols[LeftShiftEqual] := "LeftShiftEqual";
-        symbols[Equal] := "Equal";
-        symbols[EqualEqual] := "EqualEqual";
-        symbols[Greater] := "Greater";
-        symbols[GreaterEqual] := "GreaterEqual";
-        symbols[RightShift] := "RightShift";
-        symbols[RightShiftEqual] := "RightShiftEqual";
-        symbols[LeftBracket] := "LeftBracket";
-        symbols[RightBracket] := "RightBracket";
-        symbols[Arrow] := "Arrow";
-        symbols[ArrowEqual] := "ArrowEqual";
-        symbols[LeftBrace] := "LeftBrace";
-        symbols[Bar] := "Bar";
-        symbols[BarEqual] := "BarEqual";
-        symbols[BarBar] := "BarBar";
-        symbols[RightBrace] := "RightBrace";
-        symbols[Tilde] := "Tilde";
+        tokens[Exclamation] := "Exclamation";
+        tokens[ExclamationEqual] := "ExclamationEqual";
+        tokens[Percent] := "Percent";
+        tokens[PercentEqual] := "PercentEqual";
+        tokens[And] := "And";
+        tokens[AndEqual] := "AndEqual";
+        tokens[AndAnd] := "AndAnd";
+        tokens[LeftParenthesis] := "LeftParenthesis";
+        tokens[RightParenthesis] := "RightParenthesis";
+        tokens[Times] := "Times";
+        tokens[TimesEqual] := "TimesEqual";
+        tokens[Plus] := "Plus";
+        tokens[PlusEqual] := "PlusEqual";
+        tokens[PlusPlus] := "PlusPlus";
+        tokens[Comma] := "Comma";
+        tokens[Minus] := "Minus";
+        tokens[MinusEqual] := "MinusEqual";
+        tokens[MinusMinus] := "MinusMinus";
+        tokens[Period] := "Period";
+        tokens[Slash] := "Slash";
+        tokens[SlashEqual] := "SlashEqual";
+        tokens[Colon] := "Colon";
+        tokens[Semicolon] := "Semicolon";
+        tokens[Less] := "Less";
+        tokens[LessEqual] := "LessEqual";
+        tokens[LeftShift] := "LeftShift";
+        tokens[LeftShiftEqual] := "LeftShiftEqual";
+        tokens[Equal] := "Equal";
+        tokens[EqualEqual] := "EqualEqual";
+        tokens[Greater] := "Greater";
+        tokens[GreaterEqual] := "GreaterEqual";
+        tokens[RightShift] := "RightShift";
+        tokens[RightShiftEqual] := "RightShiftEqual";
+        tokens[LeftBracket] := "LeftBracket";
+        tokens[RightBracket] := "RightBracket";
+        tokens[Arrow] := "Arrow";
+        tokens[ArrowEqual] := "ArrowEqual";
+        tokens[LeftBrace] := "LeftBrace";
+        tokens[Bar] := "Bar";
+        tokens[BarEqual] := "BarEqual";
+        tokens[BarBar] := "BarBar";
+        tokens[RightBrace] := "RightBrace";
+        tokens[Tilde] := "Tilde";
 
         (* keywords *)
-        symbols[As] := "As";
-        symbols[Base] := "Base";
-        symbols[Bool] := "Bool";
-        symbols[Break] := "Break";
-        symbols[Case] := "Case";
-        symbols[Char] := "Char";
-        symbols[Class] := "Class";
-        symbols[Const] := "Const";
-        symbols[Default] := "Default";
-        symbols[Delegate] := "Delegate";
-        symbols[Do] := "Do";
-        symbols[Double] := "Double";
-        symbols[Else] := "Else";
-        symbols[False] := "False";
-        symbols[Float] := "Float";
-        symbols[For] := "For";
-        symbols[If] := "If";
-        symbols[Import] := "Import";
-        symbols[Int] := "Int";
-        symbols[Internal] := "Internal";
-        symbols[Is] := "Is";
-        symbols[Long] := "Long";
-        symbols[Module] := "Module";
-        symbols[New] := "New";
-        symbols[Null] := "Null";
-        symbols[Object] := "Object";
-        symbols[Public] := "Public";
-        symbols[Readonly] := "Readonly";
-        symbols[Ref] := "Ref";
-        symbols[Return] := "Return";
-        symbols[Sbyte] := "Sbyte";
-        symbols[Short] := "Short";
-        symbols[String] := "String";
-        symbols[Struct] := "Struct";
-        symbols[Switch] := "Switch";
-        symbols[This] := "This";
-        symbols[True] := "True";
-        symbols[Void] := "Void";
-        symbols[While] := "While";
+        tokens[As] := "As";
+        tokens[Base] := "Base";
+        tokens[Bool] := "Bool";
+        tokens[Break] := "Break";
+        tokens[Case] := "Case";
+        tokens[Char] := "Char";
+        tokens[Class] := "Class";
+        tokens[Const] := "Const";
+        tokens[Default] := "Default";
+        tokens[Delegate] := "Delegate";
+        tokens[Do] := "Do";
+        tokens[Double] := "Double";
+        tokens[Else] := "Else";
+        tokens[False] := "False";
+        tokens[Float] := "Float";
+        tokens[For] := "For";
+        tokens[If] := "If";
+        tokens[Import] := "Import";
+        tokens[Int] := "Int";
+        tokens[Internal] := "Internal";
+        tokens[Is] := "Is";
+        tokens[Long] := "Long";
+        tokens[Module] := "Module";
+        tokens[New] := "New";
+        tokens[Null] := "Null";
+        tokens[Object] := "Object";
+        tokens[Public] := "Public";
+        tokens[Readonly] := "Readonly";
+        tokens[Ref] := "Ref";
+        tokens[Return] := "Return";
+        tokens[Sbyte] := "Sbyte";
+        tokens[Short] := "Short";
+        tokens[String] := "String";
+        tokens[Struct] := "Struct";
+        tokens[Switch] := "Switch";
+        tokens[This] := "This";
+        tokens[True] := "True";
+        tokens[Void] := "Void";
+        tokens[While] := "While";
 
-        symbols[Identifier] := "Identifier";
-        symbols[IntegerLiteral] := "IntegerLiteral";
-        symbols[RealLiteral] := "RealLiteral";
-        symbols[CharacterLiteral] := "CharacterLiteral";
-        symbols[StringLiteral] := "StringLiteral";
+        tokens[Identifier] := "Identifier";
+        tokens[IntegerLiteral] := "IntegerLiteral";
+        tokens[RealLiteral] := "RealLiteral";
+        tokens[CharacterLiteral] := "CharacterLiteral";
+        tokens[StringLiteral] := "StringLiteral";
 
-        symbols[Comment] := "Comment";
-        symbols[EndOfText] := "EndOfText";
+        tokens[Comment] := "Comment";
+        tokens[EndOfText] := "EndOfText";
 
         (* Active Cells *)
-        symbols[Cell] := "Cell";
-        symbols[Cellnet] := "Cellnet";
-        symbols[In] := "In";
-        symbols[Out] := "Out";
-        symbols[Select] := "Select";
+        tokens[Cell] := "Cell";
+        tokens[Cellnet] := "Cellnet";
+        tokens[In] := "In";
+        tokens[Out] := "Out";
+        tokens[Select] := "Select";
 
-        symbols[Question] := "Question";
-        symbols[QuestionQuestion] := "QuestionQuestion";
+        tokens[Question] := "Question";
+        tokens[QuestionQuestion] := "QuestionQuestion";
 
         FOR i := 0 TO EndOfText DO
-            ASSERT(symbols[i] # "")
+            ASSERT(tokens[i] # "")
         END;
-    END InitSymbols;
+    END InitTokens;
 
     (** enter keywords in the list of keywords **)
     PROCEDURE InitKeywords;
 
-        PROCEDURE Enter(CONST name: ARRAY OF CHAR; symbol: LONGINT);
+        PROCEDURE Enter(CONST name: ARRAY OF CHAR; token: LONGINT);
         BEGIN
-            keywords.PutString(name, symbol);
-            Basic.SetErrorExpected(symbol, name);
+            keywords.PutString(name, token);
+            Basic.SetErrorExpected(token, name);
         END Enter;
 
     BEGIN
@@ -1411,14 +1418,14 @@ KernelLog.Ln();
 
     (** debugging / reporting **)
     PROCEDURE ReportKeywords*(context: Commands.Context);
-        VAR s: Symbol;
+        VAR i: LONGINT;
             name: Keyword;
     BEGIN
-        FOR s := 0 TO EndOfText DO
-            context.out.Int(s, 1);
+        FOR i := 0 TO EndOfText DO
+            context.out.Int(i, 1);
             context.out.String(": ");
             context.out.Char('"');
-            keywords.StringBySymbol(s, name);
+            keywords.StringByIndex(i, name);
             context.out.String(name);
             context.out.Char('"');
             context.out.Ln;
@@ -1430,23 +1437,23 @@ KernelLog.Ln();
         VAR filename: ARRAY 256 OF CHAR;
             reader: Streams.Reader;
             scanner: Scanner;
-            sym: Token;
+            sym: Symbol;
     BEGIN
         context.arg.SkipWhitespace;
         context.arg.String(filename);
         reader := TextUtilities.GetTextReader(filename);
         scanner := NewScanner(filename, reader, 0, NIL);
         REPEAT
-            IF scanner.GetNextToken(sym) THEN
-                OutToken(context.out, sym);
+            IF scanner.GetNextSymbol(sym) THEN
+                OutSymbol(context.out, sym);
                 context.out.Ln;
             END;
-        UNTIL scanner.error OR (sym.symbol = EndOfText)
+        UNTIL scanner.error OR (sym.token = EndOfText)
     END TestScanner;
 *)
 
 BEGIN
     InitReservedCharacters;
-    InitSymbols;
+    InitTokens;
     InitKeywords
 END FoxCSharpScanner.

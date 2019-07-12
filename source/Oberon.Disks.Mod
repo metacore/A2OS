@@ -100,7 +100,7 @@ END Handle;
 (** Get a table of currently registered devices. *)
 
 PROCEDURE GetRegistered*(VAR table: DeviceTable);
-VAR i: SIZE; t: Plugins.Table; d: Device;
+VAR i: LONGINT; t: Plugins.Table; d: Device;
 BEGIN
 	Disks.registry.GetAll(t);
 	IF t # NIL THEN

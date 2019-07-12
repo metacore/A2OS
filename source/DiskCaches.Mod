@@ -1,7 +1,7 @@
 MODULE DiskCaches; (* Simple (disk) cache, fof 2018 *)
 IMPORT SYSTEM, Disks;
 
-	TYPE TransferProcedure = PROCEDURE {DELEGATE} (op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+	TYPE TransferProcedure = PROCEDURE {DELEGATE} (op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 
 	CONST BlockSize = 512;
 	CONST NumberCacheLines = 128;
@@ -37,7 +37,7 @@ IMPORT SYSTEM, Disks;
 		END Init;
 
 		(* LONGINTs for compatibility -- should be largely replaced by SIZEs ! *)
-		PROCEDURE Transfer* (op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer* (op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR globalIndex, lineIndex, lineOfs, lineFirstBlock, lineBlocks: LONGINT;
 		BEGIN
 			WHILE num > 0 DO

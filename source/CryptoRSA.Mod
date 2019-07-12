@@ -25,7 +25,7 @@ TYPE
 		VAR
 			name-: ARRAY 128 OF CHAR;   (** Owner of this key. *)
 			private-: BOOLEAN;   (** Is this a private key? then the exponent is encrypted *)
-			size-: SIZE;
+			size-: LONGINT;
 			exponent-, modulus-: Number;
 			p, q, u: Number;   (* for chinese remainder theorem *)
 			time-, date-: LONGINT;
@@ -48,7 +48,7 @@ TYPE
 			PROCEDURE Verify*( CONST digest: ARRAY OF CHAR;  dlen: LONGINT;  signature: Number ): BOOLEAN;
 			VAR
 				msg: Number;
-				i, l: SIZE;
+				i, l: LONGINT;
 				buf: Buffer;
 			BEGIN
 				ASSERT(  ~private & (dlen >= 16) );
@@ -85,8 +85,8 @@ VAR
 
 
 	(* converts LONGINT to ARRAY OF CHAR; big endian order *)
-	PROCEDURE l2n( l: UNSIGNED32;  VAR buf: Buffer;  pos: SIZE );
-	VAR i: SIZE;
+	PROCEDURE l2n( l: UNSIGNED32;  VAR buf: Buffer;  pos: LONGINT );
+	VAR i: LONGINT;
 	BEGIN
 		i := pos + 3;
 		WHILE i >= pos DO
@@ -199,19 +199,18 @@ VAR
 		cipher: Ciphers.Cipher;
 		md5: MD5.Hash;
 		digest: ARRAY 16 OF CHAR; pl: LONGINT;
-		buf: ARRAY 4096 OF CHAR; magic: LONGINT;
-		n, bl: SIZE; size: LONGINT;
+		buf: ARRAY 4096 OF CHAR; bl, n, magic: LONGINT;
 
 	BEGIN
 		NEW( k );
 		r.String( k.name );
 		r.RawBool( k.private );
 		ASSERT( k.private );
-		r.RawLInt( size ); k.size := size;
+		r.RawLInt( k.size );
 		r.RawLInt( k.time );
 		r.RawLInt( k.date );
 
-		r.RawLInt( size ); bl := size;
+		r.RawLInt( bl );
 		r.Bytes( buf, 0, bl, n );
 		ASSERT( n = bl );
 
@@ -255,13 +254,13 @@ VAR
 		cipher: Ciphers.Cipher;
 		md5: MD5.Hash;
 		digest: ARRAY 16 OF CHAR; pl: LONGINT;
-		buf: ARRAY 4096 OF CHAR; bl: SIZE;
+		buf: ARRAY 4096 OF CHAR; bl: LONGINT;
 
 	BEGIN
 		ASSERT( k.private );
 		w.Char( '"' ); w.String( k.name ); w.Char( '"' );
 		w.RawBool( k.private );
-		w.RawLInt( k.size(LONGINT) );
+		w.RawLInt( k.size );
 		w.RawLInt( k.time );
 		w.RawLInt( k.date );
 
@@ -283,7 +282,7 @@ VAR
 		U.PutBigNumber( buf, bl, k.u );
 		INC( bl, (-bl) MOD 16 );
 		cipher.Encrypt( buf, 0, bl );
-		w.RawLInt( bl(LONGINT) );
+		w.RawLInt( bl );
 		w.Bytes( buf, 0, bl );
 
 		c := k.certificates;
@@ -296,7 +295,7 @@ VAR
 	END StorePrivateKey;
 
 	PROCEDURE StorePublicKey*( w: Streams.Writer; k: Key );	(* openssh format *)
-	VAR buf, encoded: ARRAY 4096 OF CHAR; pos: SIZE;
+	VAR buf, encoded: ARRAY 4096 OF CHAR; pos: LONGINT;
 	BEGIN
 		ASSERT( ~k.private );
 		w.String( "ssh-rsa " );
@@ -319,7 +318,7 @@ VAR
 	END LoadPublicKey;
 
 	PROCEDURE ExtractPublicKey*( r: Streams.Reader ): Key;
-	VAR buf: ARRAY 4096 OF CHAR; len: LONGINT; pos: SIZE;
+	VAR buf: ARRAY 4096 OF CHAR; len, pos: LONGINT;
 		str: ARRAY 64 OF CHAR;
 		k: Key;
 	BEGIN

@@ -96,7 +96,7 @@ VAR
 
 	(** Convert a string to an integer.  Parameter i specifies where in the string scanning should begin (usually 0 in the first call).  Scanning stops at the first non-valid character, and i returns the updated position.  Parameter s is the string to be scanned.  The value is returned as result, or 0 if not valid.  Syntax: number = ["-"] digit {digit} ["H" | "h"] .  digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" .  If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
 
-	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE StrToInt*( VAR i: LONGINT;  CONST s: ARRAY OF CHAR ): LONGINT;
 	VAR vd, vh, sgn, d: LONGINT;  hex: BOOLEAN;
 	BEGIN
 		vd := 0;  vh := 0;  hex := FALSE;
@@ -167,6 +167,16 @@ BEGIN
 	END;
 	IF num = 0 THEN physAdr[0].adr := NilAdr; physAdr[0].size := 0 END;
 END TranslateVirtual;
+
+PROCEDURE Ensure32BitAddress*(adr: ADDRESS): Address32;
+BEGIN
+	ASSERT (Address32 (adr) = adr);
+	RETURN Address32 (adr);
+END Ensure32BitAddress;
+
+PROCEDURE Is32BitAddress*(adr: ADDRESS): BOOLEAN;
+BEGIN RETURN Address32 (adr) = adr;
+END Is32BitAddress;
 
 (** Get parameter values from Init string. If n = 0, return val = ASH(bx, 16) + ax, and if n = 1, return val = ASH(dx, 16) + cx, where ax, bx, cx, dx are the register values after the OBL boot loader or noboot.exe have executed the 16-bit x86 code in the Init string. *)
 PROCEDURE GetInit* (n: LONGINT; VAR val: LONGINT);

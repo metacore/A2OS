@@ -56,7 +56,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR module : Modules.Module; variable : Reflection.Variable; i : SIZE; value : LONGREAL;
+		VAR module : Modules.Module; variable : Reflection.Variable; i : LONGINT; value : LONGREAL;
 		BEGIN
 			FOR i := 0 TO LEN(vd)-1 DO
 				module := Modules.ModuleByName(vd[i].moduleName);
@@ -100,7 +100,7 @@ BEGIN
 END GetValueOf;
 
 PROCEDURE GetDatasetDescriptor(vd : VariableDescriptors) : WMPerfMonPlugins.DatasetDescriptor;
-VAR ds : WMPerfMonPlugins.DatasetDescriptor; i : SIZE;
+VAR ds : WMPerfMonPlugins.DatasetDescriptor; i : LONGINT;
 BEGIN
 	ASSERT(vd # NIL);
 	NEW(ds, LEN(vd));
@@ -119,7 +119,7 @@ BEGIN
 END InstallPlugin;
 
 PROCEDURE Add(VAR vd : VariableDescriptors; CONST moduleName, variableName : ARRAY OF CHAR);
-VAR new : VariableDescriptors; i : SIZE;
+VAR new : VariableDescriptors; i : LONGINT;
 BEGIN
 	IF vd = NIL THEN
 		NEW(vd, 1);

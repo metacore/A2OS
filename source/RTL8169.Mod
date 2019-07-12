@@ -279,7 +279,7 @@ TYPE
 				KernelLog.String("Sending frame of length ");
 				KernelLog.Int(txLen, 0);
 				KernelLog.Ln;
-				(*KernelLog.Memory(bufBase, txLen);*)
+				(*KernelLog.Memory(bufBase, txLen);*)
 			END;
 
 			(* find out which protocols are used;
@@ -576,7 +576,7 @@ TYPE
 				rds[r].flags := {31};
 				rds[r].flags := rds[r].flags + (SYSTEM.VAL(SET, Network.MaxPacketSize) * {0..13});
 				rds[r].vLanTag := 0;
-				rds[r].bufAdrLo := physAdr(Machine.Address32);
+				rds[r].bufAdrLo := Machine.Ensure32BitAddress (physAdr);
 				rds[r].bufAdrHi := 0;
 
 				IF prev # NIL THEN
@@ -596,7 +596,7 @@ TYPE
 			curRD := firstRD;
 			adr := ADDRESSOF(rds[firstRD]);
 			(* return physical address of first rx descriptor *)
-			RETURN Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr)(Machine.Address32);
+			RETURN Machine.Ensure32BitAddress (Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr));
 		END SetupRxRing;
 
 		PROCEDURE SetupTxRing(): Machine.Address32;
@@ -638,7 +638,7 @@ TYPE
 
 				tds[r].flags := {};
 				tds[r].vLanTag := 0;
-				tds[r].bufAdrLo := physAdr(Machine.Address32);
+				tds[r].bufAdrLo := Machine.Ensure32BitAddress (physAdr);
 				tds[r].bufAdrHi := 0;
 
 				IF prev # NIL THEN
@@ -658,7 +658,7 @@ TYPE
 			curTD := firstTD;
 			adr := ADDRESSOF(tds[firstTD]);
 			(* return physical address of first tx descriptor *)
-			RETURN Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr)(Machine.Address32);
+			RETURN Machine.Ensure32BitAddress (Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr));
 		END SetupTxRing;
 
 		PROCEDURE ReadFrames;
@@ -711,7 +711,7 @@ TYPE
 					buf := rxBuffer.buf;
 					ASSERT(rxBuffer.buf # NIL);
 					IF buf # NIL THEN
-						rds[curRD].bufAdrLo := Machine.PhysicalAdr(ADDRESSOF(rxBuffer.buf.data[0]), Network.MaxPacketSize)(Machine.Address32);
+						rds[curRD].bufAdrLo := Machine.Ensure32BitAddress (Machine.PhysicalAdr(ADDRESSOF(rxBuffer.buf.data[0]), Network.MaxPacketSize));
 					END;
 					END;
 				ELSE

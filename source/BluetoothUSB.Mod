@@ -59,9 +59,9 @@ TYPE
 		END Close;
 
 		(** receives HCI event packet fragments (each fragment 16 bytes)  and enters them into the event queue *)
-		PROCEDURE EventHandler(packet : Usbdi.Buffer; actLen : SIZE);
+		PROCEDURE EventHandler(packet : Usbdi.Buffer; actLen : LONGINT);
 		VAR
-			i : SIZE;
+			i : LONGINT;
 			eventQueue : Bluetooth.Queue;
 
 			PROCEDURE DeliverPacket;
@@ -129,10 +129,10 @@ TYPE
 			END;
 		END EventHandler;
 
-		PROCEDURE ReadACL(packet : Usbdi.Buffer; actLen : SIZE);
+		PROCEDURE ReadACL(packet : Usbdi.Buffer; actLen : LONGINT);
 		VAR
 			queue: Bluetooth.Queue;
-			i: SIZE; len: LONGINT;
+			i: LONGINT;
 
 			PROCEDURE DeliverPacket;
 			BEGIN
@@ -148,10 +148,10 @@ TYPE
 			IF acl=NIL THEN (* should be the beginning of a new acl packet *)
 
 				NEW(acl);
-				len := ORD(packet[0]) + ORD(packet[1])*100H;
-				acl.handle := len MOD 1000H;
-				acl.PB := (len DIV 1000H) MOD 4;
-				acl.BC := (len DIV 4000H) MOD 4;
+				i := ORD(packet[0]) + ORD(packet[1])*100H;
+				acl.handle := i MOD 1000H;
+				acl.PB := (i DIV 1000H) MOD 4;
+				acl.BC := (i DIV 4000H) MOD 4;
 				acl.len := ORD(packet[2]) + ORD(packet[3])*100H;
 				ASSERT(acl.len <= Bluetooth.MaxACLDataLen);
 				IF TraceReceive THEN
@@ -318,7 +318,7 @@ BEGIN
 	END;
 END ShowEvent;
 
-PROCEDURE ShowErrorCode(errorcode : WORD);
+PROCEDURE ShowErrorCode(errorcode : LONGINT);
 BEGIN
 	CASE errorcode OF
 		00H: KernelLog.String("OK");

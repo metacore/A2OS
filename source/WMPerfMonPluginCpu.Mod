@@ -70,12 +70,12 @@ TYPE
 TYPE
 
 	CpuParameter* = POINTER TO RECORD (WMPerfMonPlugins.Parameter);
-		processorID* : SIZE;
+		processorID* : LONGINT;
 	END;
 
 	CpuLoad* = OBJECT(WMPerfMonPlugins.Plugin)
 	VAR
-		processorID : SIZE;
+		processorID : LONGINT;
 		h : CpuLoadHelper;
 
 		PROCEDURE Init*(p : WMPerfMonPlugins.Parameter);

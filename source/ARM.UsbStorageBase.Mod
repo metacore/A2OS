@@ -166,8 +166,8 @@ TYPE
 		number : LONGINT; (* Suffix appended to name to get unique device name *)
 		next : UsbStorageDevice;
 
-		PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR diskres: WORD);
-		VAR direction : SET; cmd : ARRAY 12 OF CHAR; i, tlen, trans, num0 : LONGINT; offset: SIZE;
+		PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: WORD);
+		VAR direction : SET; cmd : ARRAY 12 OF CHAR; i, tlen, trans, offset, num0 : LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF (op = Disks.Read) OR (op = Disks.Write) THEN
 				FOR i := 0 TO 11 DO cmd[i] := 0X; END;

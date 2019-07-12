@@ -60,7 +60,7 @@ TYPE
 			NnofReads*, NnofWrites*, NnofOthers*, (** operation count *)
 			NnofErrors* : HUGEINT; (** read/write errors *)
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		BEGIN
 			res := Unsupported
 		END Transfer;
@@ -157,8 +157,8 @@ References:
 	MSKB Q93373 Default Drive Letters and Partitions in Windows NT
 *)
 
-PROCEDURE Resize(VAR p: PartitionTable;  n: SIZE);
-VAR old: PartitionTable;  i, len: SIZE;
+PROCEDURE Resize(VAR p: PartitionTable;  n: LONGINT);
+VAR old: PartitionTable;  i, len: LONGINT;
 BEGIN
 	len := LEN(p);  WHILE len < n DO len := 2*len END;
 	old := p;  NEW(p, len);
@@ -291,7 +291,7 @@ END UpdatePartitionTable;
 
 (* Clean up the installed devices. *)
 PROCEDURE Cleanup;
-VAR dev: Plugins.Table; i: SIZE; res: WORD; msg: ShutdownMsg;
+VAR dev: Plugins.Table; i: LONGINT; res: WORD; msg: ShutdownMsg;
 BEGIN
 	registry.GetAll(dev);
 	IF dev # NIL THEN

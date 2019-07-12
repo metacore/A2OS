@@ -73,7 +73,7 @@ TYPE
 	Entry = OBJECT
 	VAR
 		next : Entry;
-		pos : Files.Position; (* pointer to beginning of entry header in tar file *)
+		pos : LONGINT; (* pointer to beginning of entry header in tar file *)
 		header : Header;
 
 		PROCEDURE & Init*;
@@ -82,7 +82,7 @@ TYPE
 		END Init;
 
 		PROCEDURE SetName(CONST name : ARRAY OF CHAR);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			ASSERT(LEN(name) <= NamSiz);
 			FOR i := 0 TO LEN(name)-1 DO header.name[i] := name[i] END
@@ -109,7 +109,7 @@ TYPE
 	(* for internal use only. lets read a specified amount of data *)
 	SizeReader = OBJECT
 	VAR input : Streams.Reader;
-		max : SIZE;
+		max : LONGINT;
 		archive : Archive;
 
 		PROCEDURE &Init*(input: Streams.Reader; size: LONGINT; archive : Archive);
@@ -117,7 +117,7 @@ TYPE
 			SELF.input := input; SELF.max := size; SELF.archive := archive
 		END Init;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			IF max = 0 THEN
 				res := -1;
@@ -136,7 +136,7 @@ TYPE
 	(* for internal use only. abstract buffer class *)
 	Buffer = OBJECT
 
-		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : WORD);
+		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : LONGINT; propagate : BOOLEAN; VAR res : WORD);
 		BEGIN HALT(301)
 		END Send;
 
@@ -170,8 +170,8 @@ TYPE
 		END Init;
 
 		(* buffer any data until propagate is TRUE *)
-		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : WORD);
-		VAR i : SIZE;
+		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : LONGINT; propagate : BOOLEAN; VAR res : WORD);
+		VAR i : LONGINT;
 		BEGIN
 			IF closed THEN res := StreamClosed; RETURN END;
 			res := Streams.Ok;
@@ -438,7 +438,7 @@ TYPE
 	END ReadHeaderBytes;
 
 	PROCEDURE ReadHeader(R: Streams.Reader; VAR hdr: Header): BOOLEAN;
-	VAR chksum, chksum2: LONGINT; len: SIZE;
+	VAR chksum, chksum2, len: LONGINT;
 	BEGIN
 		ASSERT(hdr # NIL);
 		chksum := 0;
@@ -554,8 +554,8 @@ TYPE
 		END
 	END OctStrToInt;
 
-	PROCEDURE IntToOctStr(val: HUGEINT; VAR str: ARRAY OF CHAR);
-		VAR i: SIZE;
+	PROCEDURE IntToOctStr(val: LONGINT; VAR str: ARRAY OF CHAR);
+		VAR i: LONGINT;
 	BEGIN
 		i := LEN(str)-1; str[i] := 0X;
 		WHILE i > 0 DO
@@ -566,7 +566,7 @@ TYPE
 	END IntToOctStr;
 
 	PROCEDURE CopyArchiveName(CONST from : ARRAY OF CHAR; VAR to : ARRAY OF CHAR);
-	VAR i : SIZE;
+	VAR i : LONGINT;
 	BEGIN
 		IF LEN(from) < NamSiz THEN i := LEN(from)-1 ELSE i := NamSiz-1 END;
 		WHILE i > -1 DO to[i] := from[i]; DEC(i) END
@@ -592,17 +592,17 @@ TYPE
 		out.Update
 	END CopyFiles;
 
-	PROCEDURE TransferBytes(from : Files.Reader; to : Files.Writer; n : Files.Size);
+	PROCEDURE TransferBytes(from : Streams.Reader; to : Streams.Writer; n : LONGINT);
 	VAR buf : ARRAY 1024 OF CHAR;
-		len : SIZE;
+		len : LONGINT;
 	BEGIN
 		WHILE n > 1024 DO
 			from.Bytes(buf, 0, 1024, len);
 			to.Bytes(buf, 0, 1024);
 			DEC(n, 1024)
 		END;
-		from.Bytes(buf, 0, SIZE(n), len);
-		to.Bytes(buf, 0, SIZE(n));
+		from.Bytes(buf, 0, n, len);
+		to.Bytes(buf, 0, n);
 		to.Update()
 	END TransferBytes;
 
@@ -689,7 +689,7 @@ TYPE
 	PROCEDURE Create*(context : Commands.Context);
 	VAR
 		fn, archivename: Files.FileName; F, f: Files.File; W: Files.Writer; r: Files.Reader;
-		hdr: Header; size, i: Files.Position; ch: CHAR;
+		hdr: Header; size, i: LONGINT; ch: CHAR;
 		nofAdded, nofErrors : LONGINT;
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String(archivename);

@@ -20,7 +20,7 @@ TYPE
 			Add(entry)
 		END AddName;
 
-		PROCEDURE GetName(index: SIZE; VAR name: ARRAY OF CHAR);
+		PROCEDURE GetName(index: LONGINT; VAR name: ARRAY OF CHAR);
 		VAR
 			any: ANY;
 		BEGIN
@@ -31,7 +31,7 @@ TYPE
 
 		PROCEDURE ContainsName(CONST otherName: ARRAY OF CHAR): BOOLEAN;
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			name: ARRAY 256 OF CHAR;
 		BEGIN
 			FOR i := 0 TO Length() - 1 DO
@@ -43,7 +43,7 @@ TYPE
 
 		PROCEDURE DumpNames(w: Streams.Writer);
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			name: ARRAY 256 OF CHAR;
 		BEGIN
 			w.Int(Length(), 0); w.String(" names:"); w.Ln;
@@ -63,7 +63,7 @@ TYPE
 	PROCEDURE NameComparator(left, right: ANY): BOOLEAN;
 	VAR
 		result: SHORTINT;
-		i: SIZE;
+		i: LONGINT;
 		leftChar, rightChar: CHAR;
 	BEGIN
 		result := 0; i := 0;

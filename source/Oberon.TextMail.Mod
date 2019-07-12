@@ -79,8 +79,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 		RETURN (t[i] = 0X)
 	END Prefix;
 
-	PROCEDURE Copy(i: SIZE; VAR s, t: ARRAY OF CHAR);	(*chop off first i characters*)
-	VAR j, li, lj: SIZE;
+	PROCEDURE Copy(i: LONGINT; VAR s, t: ARRAY OF CHAR);	(*chop off first i characters*)
+	VAR j, li, lj: LONGINT;
 	BEGIN j := 0; li := LEN(s); lj := LEN(t)-1;
 		WHILE (i < li) & (s[i] = " ") DO INC(i) END;	(*skip leading blanks*)
 		WHILE (i < li) & (j < lj) & (s[i] # 0X) DO t[j] := s[i]; INC(j); INC(i) END;

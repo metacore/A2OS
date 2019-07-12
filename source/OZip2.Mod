@@ -20,7 +20,7 @@ CONST
 	VAR
 		huff: AH.Encoder;
 		bw: BW.Encoder;
-		buffer: ARRAY BlockSize OF CHAR;  len: SIZE;
+		buffer: ARRAY BlockSize OF CHAR;  len: LONGINT;
 	BEGIN
 		NEW( huff, w );  NEW( bw );
 		w.RawLInt( ComprTag );

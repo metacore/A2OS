@@ -180,7 +180,7 @@ TYPE
 
 		(** Direct access to the Default Control Pipe (endpoint zero). Concurrent access is allowed here. *)
 
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex : LONGINT; wLength : SIZE; VAR buffer : Buffer) : Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Buffer) : Status;
 		BEGIN HALT(301); RETURN Error; END Request; (* abstract *)
 
 		(** Allocate a pipe for the specified USB device endpoint *)
@@ -199,7 +199,7 @@ TYPE
 TYPE
 
 	(** Handler that can be installed for a pipe and will be called when the USB transfer has been processed. *)
-	CompletionHandler* = PROCEDURE {DELEGATE} (status : Status; actLen : SIZE);
+	CompletionHandler* = PROCEDURE {DELEGATE} (status : Status; actLen : LONGINT);
 
 	(**	USB Communication Pipe
 	 	USB communication happens between buffers provided by client software and USB device endpoints. The association between
@@ -217,12 +217,12 @@ TYPE
 
 		(** Transfer 'bufferLen' bytes from/to the specified buffer, starting at 'offset' *)
 
-		PROCEDURE Transfer*(bufferLen, offset : SIZE; VAR buffer : Buffer) : Status;
+		PROCEDURE Transfer*(bufferLen, offset : LONGINT; VAR buffer : Buffer) : Status;
 		BEGIN HALT(301); RETURN Error; END Transfer; (* abstract *)
 
 		(** For control transfers (only for Control Pipes) *)
 
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex : LONGINT; wLength : SIZE; VAR buffer : Buffer) : Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Buffer) : Status;
 		BEGIN HALT(301); RETURN Error; END Request; (* abstract *)
 
 		(** Is the halt feature of the endpoint associated with this pipe set? *)
@@ -249,12 +249,12 @@ TYPE
 		 	@param actLen: Number of bytes that have been sent/receive (only valid if status * ResInProgress = {})
 		 	@return: Status of the USB transfer *)
 
-		PROCEDURE GetStatus*(VAR actLen : SIZE) : Status;
+		PROCEDURE GetStatus*(VAR actLen : LONGINT) : Status;
 		BEGIN HALT(301); RETURN Error; END GetStatus; (* abstract *)
 
 		(** Return the actual number of bytes transfered. *)
 
-		PROCEDURE GetActLen*() : SIZE;
+		PROCEDURE GetActLen*() : LONGINT;
 		BEGIN HALT(301); RETURN 0; END GetActLen; (* abstract *)
 
 		(** Show debug information for this pipe. In detailed mode, the scheduling data structures related to

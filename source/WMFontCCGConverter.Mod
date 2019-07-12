@@ -43,7 +43,7 @@ TYPE
 			grid.SetColSpacings(colWidths);
 			grid.nofCols.Set(3);
 			grid.SetDrawCellProc(DrawCell);
-			grid.nofRows.Set(font.glyphList.GetCount()(LONGINT));
+			grid.nofRows.Set(font.glyphList.GetCount());
 			grid.defaultRowHeight.Set(50);
 			grid.defaultColWidth.Set(50);
 			grid.onSelect.Add(GlyphSelected);
@@ -335,8 +335,8 @@ TYPE
 
 (* BEGIN optimized routines for native font *)
 		(* find the range where a glyph is inside *)
-		PROCEDURE FindGlyphRange(code : LONGINT; VAR glyphRangeIndex : SIZE) : BOOLEAN;
-		VAR a, b, m : SIZE;
+		PROCEDURE FindGlyphRange(code : LONGINT; VAR glyphRangeIndex : LONGINT) : BOOLEAN;
+		VAR a, b, m : LONGINT;
 		BEGIN
 			glyphRangeIndex := 0;
 			a := 0; b := LEN(glyphRanges) - 1;
@@ -435,7 +435,7 @@ TYPE
 			FOR i := 0 TO range.lastCode - range.firstCode DO WritePackedGlyph(w, range.glyphs[i]) END;
 		END StoreRange;
 
-		PROCEDURE LoadRange(f : Files.File; rangeIndex : SIZE);
+		PROCEDURE LoadRange(f : Files.File; rangeIndex : LONGINT);
 		VAR r : Files.Reader;
 			size, i : LONGINT;
 			range : GlyphRange; (* because of too complex expression otherwise ;-) *)
@@ -454,7 +454,7 @@ TYPE
 		END LoadRange;
 
 		PROCEDURE GetGlyph(ucs, variant : LONGINT) : Glyph;
-		VAR rangeIndex : SIZE; glyph : Glyph;
+		VAR rangeIndex : LONGINT; glyph : Glyph;
 		BEGIN
 			IF FindGlyphRange(ucs, rangeIndex) THEN
 				IF glyphRanges[rangeIndex].glyphs = NIL THEN LoadRange(fontFile, rangeIndex) END;
@@ -477,13 +477,13 @@ TYPE
 		PROCEDURE Save(CONST fileName : ARRAY OF CHAR);
 		VAR f : Files.File;
 			w : Files.Writer;
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			f := Files.New(fileName);
 			Files.Register(f);
 			Files.OpenWriter(w, f, 0);
 			(* number of ranges *)
-			w.Net32(LEN(glyphRanges)(LONGINT));
+			w.Net32(LEN(glyphRanges));
 			(* reserve space for ranges *)
 			FOR i := 0 TO LEN(glyphRanges) - 1 DO
 				w.Net32(0); w.Net32(0); w.Net32(0)
@@ -493,7 +493,7 @@ TYPE
 				KernelLog.String("Writing range "); KernelLog.Int(i, 4); KernelLog.String(" of "); KernelLog.Int(LEN(glyphRanges), 4);
 				KernelLog.Ln;
 				w.Update();
-				glyphRanges[i].filePos := w.sent(LONGINT);
+				glyphRanges[i].filePos := w.sent;
 				StoreRange(w, glyphRanges[i]);
 			END;
 			w.Update();
@@ -508,7 +508,7 @@ TYPE
 		PROCEDURE Load(CONST fileName : ARRAY OF CHAR);
 		VAR
 			r : Files.Reader;
-			i, nofRanges : SIZE;
+			i, nofRanges : LONGINT;
 			ptr :ANY; glyph, tg : Glyph;
 		BEGIN
 			fontFile := Files.Old(fileName);
@@ -551,13 +551,13 @@ TYPE
 		END DumpRange;
 
 		PROCEDURE CreateRanges;
-		VAR i, j, firstIndex: SIZE;
-			nofRanges, code, lastCode, rangeStart, range, rangeSize : LONGINT;
+		VAR i, j: LONGINT;
+			nofRanges, code, lastCode, rangeStart, range, firstIndex, rangeSize : LONGINT;
 			glyph, tg : Glyph; ptr : ANY;
 			bimboSortArray : GlyphArray;
 
-			PROCEDURE FillRange(VAR range : GlyphRange; startIndex, endIndex : SIZE);
-			VAR glyph, tg : Glyph; i : SIZE;
+			PROCEDURE FillRange(VAR range : GlyphRange; startIndex, endIndex : LONGINT);
+			VAR glyph, tg : Glyph; i : LONGINT;
 			BEGIN
 				range.firstCode := bimboSortArray[startIndex].ucs;
 				range.lastCode := bimboSortArray[endIndex].ucs;
@@ -577,7 +577,7 @@ TYPE
 
 (*
 			PROCEDURE CheckAllSorted;
-			VAR ptr : ANY; glyph : Glyph; i : SIZE;
+			VAR ptr : ANY; glyph : Glyph; i : LONGINT;
 			BEGIN
 				KernelLog.String("Searching all glyphs in the sorted array...");
 				FOR i := 0 TO glyphList.GetCount() - 1 DO
@@ -598,7 +598,7 @@ TYPE
 *)
 
 			PROCEDURE CheckAllInRanges;
-			VAR ptr : ANY; glyph, tg : Glyph; i : SIZE;
+			VAR ptr : ANY; glyph, tg : Glyph; i : LONGINT;
 			BEGIN
 				KernelLog.String("Searching all glyphs...");
 				FOR i := 0 TO glyphList.GetCount() - 1 DO
@@ -696,7 +696,7 @@ TYPE
 (* END optimized routines for native font *)
 
 		PROCEDURE FindGlyph(ucs, variant : LONGINT) : Glyph;
-		VAR g, tg : Glyph; i : SIZE; ptr : ANY;
+		VAR g, tg : Glyph; i : LONGINT; ptr : ANY;
 		BEGIN
 			g := NIL;
 			glyphList.Lock;
@@ -866,7 +866,7 @@ END Export;
 
 (* read a UTF8 character form a stream *)
 PROCEDURE GetUTF8Char(r : Streams.Reader; VAR u : LONGINT) : BOOLEAN;
-VAR ch : ARRAY 8 OF CHAR; i : SIZE;
+VAR ch : ARRAY 8 OF CHAR; i : LONGINT;
 BEGIN
 	ch[0] := r.Get();
 	FOR i := 1 TO ORD(UTF8Strings.CodeLength[ORD(ch[0])]) - 1 DO ch[i] := r.Get() END;

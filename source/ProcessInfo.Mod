@@ -12,13 +12,13 @@ TYPE
 	IsGreaterThanProc* = PROCEDURE {DELEGATE} (p1, p2 : Objects.Process) : BOOLEAN; (* { p1, p2 # NIL } *)
 
 PROCEDURE Clear*(VAR array : ProcessArray);
-VAR i : SIZE;
+VAR i : LONGINT;
 BEGIN
 	FOR i := 0 TO LEN(array)-1 DO array[i] := NIL; END;
 END Clear;
 
 PROCEDURE Copy*(CONST from : ProcessArray; VAR to : ProcessArray);
-VAR length, fromLength, toLength, i : SIZE;
+VAR length, fromLength, toLength, i : LONGINT;
 BEGIN
 	fromLength := LEN(from);
 	toLength := LEN(to);
@@ -31,8 +31,8 @@ BEGIN
 	END;
 END Copy;
 
-PROCEDURE Sort*(VAR processes : ProcessArray; nofProcesses : SIZE; isGreaterThan : IsGreaterThanProc);
-VAR i, j : SIZE; temp : Objects.Process;
+PROCEDURE Sort*(VAR processes : ProcessArray; nofProcesses : LONGINT; isGreaterThan : IsGreaterThanProc);
+VAR i, j : LONGINT; temp : Objects.Process;
 BEGIN
 	ASSERT(isGreaterThan # NIL);
 	(* bubble sort, descending *)
@@ -47,8 +47,8 @@ BEGIN
 	END;
 END Sort;
 
-PROCEDURE Find*(CONST processes : ProcessArray; id : WORD) : Objects.Process;
-VAR process : Objects.Process; i : SIZE;
+PROCEDURE Find*(CONST processes : ProcessArray; id : LONGINT) : Objects.Process;
+VAR process : Objects.Process; i : LONGINT;
 BEGIN
 	i := 0;
 	WHILE (i < LEN(processes)-1) & (processes[i] # NIL) & (processes[i].id # id) DO INC(i); END;
@@ -78,17 +78,17 @@ BEGIN
 	RETURN p1.mode > p2.mode;
 END SortByMode;
 
-PROCEDURE GetProcesses*(VAR processes : ProcessArray; VAR nofProcesses : SIZE);
+PROCEDURE GetProcesses*(VAR processes : ProcessArray; VAR nofProcesses : LONGINT);
 BEGIN
 	ProcessInfo0.GetProcesses(processes, nofProcesses);
 END GetProcesses;
 
-PROCEDURE GetProcess*(pid : WORD) : Objects.Process;
+PROCEDURE GetProcess*(pid : LONGINT) : Objects.Process;
 BEGIN
 	RETURN ProcessInfo0.GetProcess(pid);
 END GetProcess;
 
-PROCEDURE WriteMode*(mode : WORD; out : Streams.Writer);
+PROCEDURE WriteMode*(mode : LONGINT; out : Streams.Writer);
 BEGIN
 	CASE mode OF
 		|Objects.Ready : out.String("rdy");

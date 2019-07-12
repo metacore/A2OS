@@ -1,7 +1,7 @@
 MODULE WMPerfMonPluginSerials; (** AUTHOR "staubesv"; PURPOSE "Performance Monitor Serial Port transfer rate plugin"; *)
 
 IMPORT
-	WMPerfMonPlugins, Strings, Modules, Serials, Streams;
+	WMPerfMonPlugins, Strings, Modules, Serials;
 
 CONST
 	PluginName = "Serials";
@@ -35,7 +35,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR sent, received : Streams.Position;
+		VAR sent, received : LONGINT;
 		BEGIN
 			sent := port.charactersSent; received := port.charactersReceived;
 			dataset[0] := sent + received / 1024;

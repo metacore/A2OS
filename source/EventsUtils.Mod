@@ -22,7 +22,7 @@ CONST
 TYPE
 
 	EventWrapper* = POINTER TO RECORD
-		nextIndex- : SIZE; (* index of next free place in events array *)
+		nextIndex- : LONGINT; (* index of next free place in events array *)
 		events- : POINTER TO ARRAY OF Events.Event;
 		next- : EventWrapper;
 	END;
@@ -31,21 +31,21 @@ TYPE
 
 	EventContainer* = OBJECT(Events.Sink)
 	VAR
-		nofWrappers, nofEvents : SIZE;
+		nofWrappers, nofEvents : LONGINT;
 
 		(* stamps *)
-		lastCleared, lastAdded : SIZE;
+		lastCleared, lastAdded : LONGINT;
 
 		events, current : EventWrapper;
-		maxNofWrappers, eventsPerWrapper : SIZE;
+		maxNofWrappers, eventsPerWrapper : LONGINT;
 
 		(* for polling *)
-		PROCEDURE GetStamp*() : SIZE;
+		PROCEDURE GetStamp*() : LONGINT;
 		BEGIN
 			RETURN lastAdded;
 		END GetStamp;
 
-		PROCEDURE GetEvents*(VAR nofEvents : SIZE; VAR full : BOOLEAN; VAR lastCleared : SIZE) : EventWrapper;
+		PROCEDURE GetEvents*(VAR nofEvents : LONGINT; VAR full : BOOLEAN; VAR lastCleared : LONGINT) : EventWrapper;
 		BEGIN {EXCLUSIVE}
 			nofEvents := SELF.nofEvents;
 			full := nofEvents = maxNofWrappers * eventsPerWrapper;
@@ -67,7 +67,7 @@ TYPE
 		END Clear;
 
 		(** Returns the maximum number of event records this container can hold *)
-		PROCEDURE GetSize*() : SIZE;
+		PROCEDURE GetSize*() : LONGINT;
 		BEGIN
 			RETURN maxNofWrappers * eventsPerWrapper;
 		END GetSize;
@@ -90,7 +90,7 @@ TYPE
 			INC(lastAdded);
 		END Handle;
 
-		PROCEDURE &Init*(maxNofWrappers, eventsPerWrapper : SIZE);
+		PROCEDURE &Init*(maxNofWrappers, eventsPerWrapper : LONGINT);
 		BEGIN
 			SELF.maxNofWrappers := maxNofWrappers;
 			SELF.eventsPerWrapper:= eventsPerWrapper;
@@ -102,7 +102,7 @@ TYPE
 	END EventContainer;
 
 PROCEDURE LoadFromFile*(CONST filename : ARRAY OF CHAR; VAR events : EventContainer; VAR msg : ARRAY OF CHAR; VAR res : WORD);
-VAR file : Files.File; r : Files.Reader; event : Events.Event; nofEvents : SIZE;
+VAR file : Files.File; r : Files.Reader; event : Events.Event; nofEvents : LONGINT;
 BEGIN
 	file := Files.Old(filename);
 	IF file # NIL THEN
@@ -134,7 +134,7 @@ END LoadFromFile;
 PROCEDURE StoreToFile*(CONST filename : ARRAY OF CHAR; events : EventContainer; VAR msg : ARRAY OF CHAR; VAR res : WORD);
 VAR
 	file : Files.File; w : Files.Writer; wrapper : EventWrapper;
-	nofEvents, lastCleared, i, idx : SIZE; full : BOOLEAN;
+	nofEvents, lastCleared, i, idx : LONGINT; full : BOOLEAN;
 BEGIN
 	file := Files.New(filename);
 	IF file # NIL THEN

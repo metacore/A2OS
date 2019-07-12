@@ -93,7 +93,7 @@ TYPE
 
 		(** Render an UTF8 string to a canvas *)
 		PROCEDURE RenderString*(canvas : Canvas ; x, y : Real; CONST text : ARRAY OF CHAR);
-		VAR i, len: SIZE; code : LONGINT; g : GlyphSpacings;
+		VAR i, len, code : LONGINT; g : GlyphSpacings;
 		BEGIN
 			len := LEN(text); i := 0;
 			WHILE (i < len) & (text[i] # 0X) DO
@@ -113,7 +113,7 @@ TYPE
 
 		(** Render an UTF8 string to a canvas *)
 		PROCEDURE GetStringSize*(CONST text : ARRAY OF CHAR; VAR dx, dy : LONGINT);
-		VAR i, len: SIZE; code : LONGINT; g : GlyphSpacings;
+		VAR i, len, code : LONGINT; g : GlyphSpacings;
 		BEGIN
 			len := LEN(text); i := 0; dx := 0; dy := GetHeight();
 			WHILE (i < len) & (text[i] # 0X) DO

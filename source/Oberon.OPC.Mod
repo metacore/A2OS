@@ -202,7 +202,7 @@ Intel i386 :
 
 	PROCEDURE InitInstr (op: INTEGER; mode, form: SHORTINT; node: OPT.Node);
 	(* initialize the pseudo instruction at position pc *)
-	VAR i: SIZE;  instr: OPL.InstructionTable;
+	VAR i: LONGINT;  instr: OPL.InstructionTable;
 	BEGIN
 		IF pc >= LEN(OPL.Instr) THEN
 			NEW(instr, LEN(OPL.Instr)*2);

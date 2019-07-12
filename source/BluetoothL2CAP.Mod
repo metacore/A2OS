@@ -152,7 +152,7 @@ TYPE
 	PacketBuffer = OBJECT
 
 		VAR
-			head, num: SIZE;
+			head, num: LONGINT;
 			closed: BOOLEAN;
 			buffer: POINTER TO ARRAY OF Packet;
 
@@ -174,7 +174,7 @@ TYPE
 			RETURN x
 		END Remove;
 
-		PROCEDURE &Init*(n: SIZE);
+		PROCEDURE &Init*(n: LONGINT);
 		BEGIN
 			head := 0; num := 0; closed := FALSE; NEW(buffer, n)
 		END Init;

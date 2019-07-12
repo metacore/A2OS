@@ -231,7 +231,7 @@ END ComparePinyinFreq;
 
 
 PROCEDURE BuildBasicPinyinIMETable*;
-VAR i: LONGINT; p, words : SIZE;
+VAR i, words : LONGINT;
 	list : ListElement; (* first element is dummy for sort *)
 	cur : ListElement;
 	str : ARRAY 16 OF CHAR;
@@ -249,7 +249,7 @@ VAR i: LONGINT; p, words : SIZE;
 
 
 	PROCEDURE FixBugs(pinyin : ARRAY OF CHAR; code, freq : LONGINT);
-	VAR i, l : SIZE; t : ARRAY 100 OF CHAR;
+	VAR i, l : LONGINT; t : ARRAY 100 OF CHAR;
 	BEGIN
 		Strings.Trim(pinyin, " ");
 
@@ -316,7 +316,7 @@ BEGIN
 	cur := list.next;
 	WHILE cur # NIL DO
 		w.String(cur(PIMEEntry).pinyin); w.Char(09X);
-		p := 0; IF UTF8Strings.EncodeChar(cur(PIMEEntry).ucs, str, p) THEN END;
+		i := 0; IF UTF8Strings.EncodeChar(cur(PIMEEntry).ucs, str, i) THEN END;
 		w.String(str); w.Char(09X);
 		w.Int(cur(PIMEEntry).freq, 0);
 		w.Ln;

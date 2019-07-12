@@ -54,7 +54,7 @@ TYPE
 		END AddBuilds;
 
 		PROCEDURE AddBuild(parent : WMTrees.TreeNode; build : Build.BuildObj);
-		VAR buildNode, node : PETTrees.TreeNode; nofSources, nofFiles : SIZE;
+		VAR buildNode, node : PETTrees.TreeNode; nofSources, nofFiles : LONGINT;
 		BEGIN
 			ASSERT(build # NIL);
 			buildNode := NewNode(parent, build.name);
@@ -65,7 +65,7 @@ TYPE
 		END AddBuild;
 
 		PROCEDURE AddPackages(parent : WMTrees.TreeNode; packages : Build.PackageArray);
-		VAR node : PETTrees.TreeNode; nofPackages, i : SIZE;
+		VAR node : PETTrees.TreeNode; nofPackages, i : LONGINT;
 		BEGIN
 			nofPackages := 0;
 			node := NewNode(parent, "PACKAGES");
@@ -97,12 +97,12 @@ TYPE
 			node := NewNode(packageNode, GetCaption("ArchiveSrc: ", package.source));
 		END AddPackage;
 
-		PROCEDURE SetNodeInfo(node : PETTrees.TreeNode; position : Streams.Position);
+		PROCEDURE SetNodeInfo(node : PETTrees.TreeNode; position : LONGINT);
 		BEGIN
 			ASSERT(node # NIL);
 			IF (position >= 0) THEN
 				NEW(node.pos, editor.text);
-				node.pos.SetPosition(position(SIZE));
+				node.pos.SetPosition(position);
 			ELSE
 				node.pos := NIL;
 			END;
@@ -121,7 +121,7 @@ TYPE
 
 	END Tree;
 
-PROCEDURE GetNumberCaption(CONST string : ARRAY OF CHAR; number : SIZE) : String;
+PROCEDURE GetNumberCaption(CONST string : ARRAY OF CHAR; number : LONGINT) : String;
 VAR caption : String; nbr : ARRAY 16 OF CHAR;
 BEGIN
 	COPY(string, caption); Strings.IntToStr(number, nbr); Strings.Append(caption, nbr);

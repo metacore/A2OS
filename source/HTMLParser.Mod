@@ -469,8 +469,8 @@ TYPE
 	END Parser;
 
 
-	PROCEDURE IsPubidLiteral(CONST str: ARRAY OF CHAR): BOOLEAN;
-	VAR i, len: SIZE; ch: CHAR;
+	PROCEDURE IsPubidLiteral(VAR str: ARRAY OF CHAR): BOOLEAN;
+	VAR i, len: LONGINT; ch: CHAR;
 	BEGIN
 		i := 0; len := LEN(str); ch := str[0];
 		REPEAT

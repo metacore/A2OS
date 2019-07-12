@@ -51,7 +51,7 @@ TYPE
 			END;
 		END InitSdDevice;
 
-		PROCEDURE Transfer0 * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer0 * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR ok: BOOLEAN;
 		BEGIN
 			CASE op OF
@@ -62,7 +62,7 @@ TYPE
 			END
 		END Transfer0;
 
-		PROCEDURE Transfer * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; offs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; offs: LONGINT; VAR res: WORD);
 		VAR
 			t: SdEnvironment.Time;
 		BEGIN{EXCLUSIVE}

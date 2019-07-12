@@ -419,7 +419,7 @@ BEGIN
 END GenTexture;
 
 PROCEDURE TextureByName(name: ARRAY OF CHAR; obj : AbstractWorld.Object): AbstractWorld.Texture;
-VAR i : SIZE;
+VAR i : LONGINT;
 	dummy : ANY;
 	ti : TextureInfo; mode: Raster.Mode;
 	timg: Raster.Image;

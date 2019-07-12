@@ -18,7 +18,7 @@ MODULE V24Log IN Oberon;	(** portable *) (* ejz,  *)
 
 	PROCEDURE Poller(me: Oberon.Task);
 		VAR
-			avail: SIZE; unit : LONGINT;
+			avail, unit : LONGINT;
 			ch: CHAR;
 	BEGIN
 		avail := V24.Available(Port);

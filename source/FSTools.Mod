@@ -211,7 +211,7 @@ BEGIN
 END Unmount;
 
 PROCEDURE SetDefault*(context : Commands.Context); (** prefix *)
-VAR prefix: Files.Prefix; fs: Files.FileSystem; i: SIZE; ft: Files.FileSystemTable;
+VAR prefix: Files.Prefix; fs: Files.FileSystem; i: LONGINT; ft: Files.FileSystemTable;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(prefix);
 	fs := Files.This(prefix);
@@ -231,7 +231,7 @@ BEGIN
 END SetDefault;
 
 (* using the NIST standard for Kibi, Mebi & Gibi: http://physics.nist.gov/cuu/Units/binary.html *)
-PROCEDURE WriteK( k: Files.Size; out : Streams.Writer);
+PROCEDURE WriteK( k: LONGINT; out : Streams.Writer);
 VAR suffix: ARRAY 3 OF CHAR;
 BEGIN
 	IF k < 10*1024 THEN COPY("Ki", suffix)
@@ -242,7 +242,7 @@ BEGIN
 END WriteK;
 
 PROCEDURE Watch*(context : Commands.Context); (** ~ *)
-VAR prefix : Files.Prefix; free, total: LONGINT; i: SIZE; fs: Files.FileSystem; ft: Files.FileSystemTable; found : BOOLEAN;
+VAR prefix : Files.Prefix; free, total, i: LONGINT; fs: Files.FileSystem; ft: Files.FileSystemTable; found : BOOLEAN;
 BEGIN
 	prefix := "";
 	context.arg.SkipWhitespace; context.arg.String(prefix);
@@ -283,7 +283,7 @@ END Watch;
 
 (* Simple text formatting (assuming the use of fixed fonts) *)
 PROCEDURE Align(out : Streams.Writer; CONST string : ARRAY OF CHAR);
-VAR spaces, i : SIZE;
+VAR spaces, i : LONGINT;
 BEGIN
 	spaces := Column1 - Strings.Length(string); IF spaces < 0 THEN spaces := 0; END;
 	FOR i := 0 TO spaces-1 DO out.Char(" "); END;
@@ -295,9 +295,8 @@ VAR
 	string, pattern : ARRAY 256 OF CHAR;
 	enum : Files.Enumerator;
 	flags, fileflags : SET;
-	count : SIZE;
-	time, date : LONGINT;
-	total, size : Files.Size;
+	count, total : LONGINT;
+	time, date, size : LONGINT;
 	name : ARRAY MaxNameLen OF CHAR;
 	dt : Dates.DateTime;
 BEGIN
@@ -353,8 +352,8 @@ PROCEDURE EnumerateDirectory(
 	CONST arguments : ARRAY OF CHAR);
 VAR
 	name : Files.FileName;
-	flags : SET; time, date : LONGINT;
-	size: Files.Size; subDirEnum : Files.Enumerator;
+	flags : SET; time, date, size : LONGINT;
+	subDirEnum : Files.Enumerator;
 
 	PROCEDURE PrepareContext(context : Commands.Context; CONST currentFile, arguments : ARRAY OF CHAR);
 	CONST PlaceHolder = "<#filename#>";
@@ -409,7 +408,7 @@ VAR
 	enumContext : Commands.Context;
 	arg : Streams.StringReader;
 	res : WORD;
-	ignore: SIZE;
+	ignore: LONGINT;
 BEGIN
 	NEW(options);
 	options.Add("s", "subdirectories", Options.Flag);
@@ -456,7 +455,7 @@ END Enumerate;
 PROCEDURE CreateFile*(context : Commands.Context); (** [Options] filename [content] ~ *)
 VAR
 	options : Options.Options; cr, removeWhitespace : BOOLEAN;
-	file : Files.File; filename : Files.FileName; writer : Files.Writer; ch : CHAR; pos: Files.Position;
+	file : Files.File; filename : Files.FileName; writer : Files.Writer; ch : CHAR; pos: LONGINT;
 BEGIN
 	NEW(options);
 	options.Add("c", "cr", Options.Flag);
@@ -870,7 +869,7 @@ BEGIN
 END SortFileList;
 
 PROCEDURE ResizeFilelist(VAR filelist : FileList);
-VAR temp : FileList; i : SIZE;
+VAR temp : FileList; i : LONGINT;
 BEGIN
 	NEW(temp, 2 * LEN(filelist));
 	FOR i := 0 TO LEN(filelist)-1 DO
@@ -884,8 +883,7 @@ PROCEDURE InsertFiles(CONST mask : ARRAY OF CHAR; VAR filelist : FileList; VAR i
 VAR
 	enum : Files.Enumerator;
 	fileflags : SET;
-	time, date : LONGINT;
-	size: Files.Size;
+	time, date, size : LONGINT;
 	name : ARRAY MaxNameLen OF CHAR;
 BEGIN
 	NEW(enum); enum.Open(mask, {});
@@ -900,8 +898,8 @@ BEGIN
 END InsertFiles;
 
 (* Count the number of occurences of the character 'ch' in the string 'string'. Case-Sensitive! *)
-PROCEDURE CountCharacters(CONST string : ARRAY OF CHAR; ch : CHAR) : SIZE;
-VAR count, i : SIZE;
+PROCEDURE CountCharacters(CONST string : ARRAY OF CHAR; ch : CHAR) : LONGINT;
+VAR count, i : LONGINT;
 BEGIN
 	count := 0;
 	FOR i := 0 TO LEN(string)-1 DO
@@ -958,7 +956,7 @@ VAR
 	targetName : ARRAY 1024 OF CHAR;
 	srcPrefix, srcPath, srcFilename, srcExtension : ARRAY 512 OF CHAR;
 	isExtension : BOOLEAN;
-	i, j, index : SIZE;
+	i, j, index : LONGINT;
 BEGIN
 	SplitFullName(sourceName, srcPrefix, srcPath, srcFilename, srcExtension);
 	index := 0;
@@ -986,8 +984,7 @@ PROCEDURE InsertFilesAndFixDestination(context : Commands.Context; CONST sourceM
 VAR
 	enum : Files.Enumerator;
 	fileflags : SET;
-	time, date : LONGINT;
-	size : Files.Size;
+	time, date, size : LONGINT;
 	name : ARRAY MaxNameLen OF CHAR;
 BEGIN
 	IF ~IsValidTargetMask(context, targetMask) THEN RETURN FALSE; END;

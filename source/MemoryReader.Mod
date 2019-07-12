@@ -11,9 +11,9 @@ TYPE
 	Reader* = OBJECT (Streams.Reader)
 		VAR
 			memoryAdr: ADDRESS;
-			available : SIZE;
+			available : LONGINT;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min : SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min : LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			ASSERT(ofs+size <= LEN(buf));
 			IF available # 0 THEN
@@ -29,7 +29,7 @@ TYPE
 			END
 		END Receive;
 
-		PROCEDURE &InitMemoryReader*(memoryAdr: ADDRESS; length : SIZE);
+		PROCEDURE &InitMemoryReader*(memoryAdr: ADDRESS; length : LONGINT);
 		BEGIN
 			SELF.memoryAdr := memoryAdr;
 			available := length;

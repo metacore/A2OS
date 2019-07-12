@@ -219,7 +219,7 @@ TYPE
 		VAR
 			text : Texts.Text; from, to : Texts.TextPosition;
 			utilreader : Texts.TextReader; tempString : ARRAY 256 OF CHAR;
-			a, b: SIZE; ch : LONGINT;
+			a, b, ch : LONGINT;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
@@ -588,7 +588,7 @@ VAR
 	text : Texts.Text;
 	from, to : Texts.TextPosition;
 	utilreader : Texts.TextReader;
-	a, b : SIZE;
+	a, b : LONGINT;
 	ch : Texts.Char32;
 BEGIN
 	ASSERT(changeInfo # NIL);

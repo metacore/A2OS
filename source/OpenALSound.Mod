@@ -246,7 +246,7 @@ TYPE
 			BEGIN {EXCLUSIVE}
 				AWAIT( state = StatePlaying );
 				IF count < NumBuffers THEN
-					AL.alBufferData( buffers[count], format, ADDRESSOF( x.data[0] ),  AL.ALsizei(x.len), frequency );
+					AL.alBufferData( buffers[count], format, ADDRESSOF( x.data[0] ),  x.len, frequency );
 					bufferListener( x );
 					INC( count );
 					IF count = NumBuffers THEN
@@ -265,7 +265,7 @@ TYPE
 					UNTIL freeBuffers > 0;
 					AL.alSourceUnqueueBuffers( source, 1, ADDRESSOF( buffer ) );
 					DEC( freeBuffers );
-					AL.alBufferData( buffer, format, ADDRESSOF( x.data[0] ),  AL.ALsizei(x.len), frequency );
+					AL.alBufferData( buffer, format, ADDRESSOF( x.data[0] ),  x.len, frequency );
 					bufferListener( x );
 					INC( count );
 					AL.alSourceQueueBuffers( source, 1, ADDRESSOF( buffer ) );

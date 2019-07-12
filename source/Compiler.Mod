@@ -188,7 +188,7 @@ TYPE
 						warnings.Module(module);
 					END;
 				END;
-
+				
 				IF Print IN flags THEN
 					IF ChangeCase IN flags THEN module.SetCase(1-module.case) END;
 					PrintModule;
@@ -267,7 +267,7 @@ TYPE
 
 	PROCEDURE GetOptions*(input: Streams.Reader; error:Streams.Writer; diagnostics: Diagnostics.Diagnostics;
 		VAR compilerOptions: CompilerOptions): BOOLEAN;
-	VAR options: Options.Options;  name: ARRAY 256 OF CHAR; result: BOOLEAN; position: Streams.Position;
+	VAR options: Options.Options;  name: ARRAY 256 OF CHAR; result: BOOLEAN; position: LONGINT;
 	defaults: Streams.Reader;
 		parsed: BOOLEAN;
 

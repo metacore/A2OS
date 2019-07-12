@@ -116,9 +116,9 @@ TYPE
 		PROCEDURE Recieve*(VAR p: OSC.OSCPacket; timeout (* in ms *): LONGINT): WORD;
 		VAR
 			fip2: IP.Adr; fport2: LONGINT;
-			size: SIZE;
+			size: LONGINT;
 			buffer: Strings.String;
-			got: SIZE;
+			got: LONGINT;
 			res: WORD;
 			endticks: LONGINT;
 			istimeout: BOOLEAN;
@@ -163,7 +163,7 @@ TYPE
 			newUDPData: OSCUDPData;
 			buffer: OSC.String; (* ARRAY MaxUDPPacketLength OF CHAR; *)
 			receivefip: IP.Adr; receivefport: LONGINT;
-			got: SIZE;
+			got: LONGINT;
 			res: WORD;
 
 		(* Sets the signal to stop the service *)
@@ -351,7 +351,7 @@ TYPE
 		buffer := p.GetBytes();
 		ASSERT(buffer # NIL);
 		(* TCP: <size || packet> *)
-		Network.PutNet4(size, 0, p.GetSize()(LONGINT));
+		Network.PutNet4(size, 0, p.GetSize());
 		client.Send(size, 0, 4, FALSE, res);
 		IF(res # TCP.Ok) THEN RETURN res; END;
 		client.Send(buffer^, 0, LEN(buffer^), FALSE, res);
@@ -360,7 +360,7 @@ TYPE
 
 	PROCEDURE ReceiveTCP(client: TCP.Connection; VAR p: OSC.OSCPacket): WORD;
 	VAR
-		res: WORD; len: SIZE;
+		res: WORD; len: LONGINT;
 		buffer: POINTER TO ARRAY OF CHAR;
 		sizebuf: ARRAY 4 OF CHAR;
 		packetsize: LONGINT;

@@ -183,7 +183,7 @@ PROCEDURE GetName*(pos: LONGINT; len: INTEGER; VAR s: ARRAY OF CHAR);
 	VAR i: INTEGER; r: Texts.Reader;
 BEGIN
 	Texts.OpenReader(r, src, pos);
-	IF len >= LEN(s) THEN len := INTEGER(LEN(s)) - 1 END;
+	IF len >= LEN(s) THEN len := SHORT(LEN(s)) - 1 END;
 	i := 0; WHILE i < len DO Texts.Read(r, s[i]); INC(i) END;
 	s[i] := 0X
 END GetName;

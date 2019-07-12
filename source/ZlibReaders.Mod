@@ -43,7 +43,7 @@ BEGIN
 END Open;
 
 (** read specified number of bytes into buffer and return number of bytes actually read **)
-PROCEDURE ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR read: SIZE);
+PROCEDURE ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT);
 BEGIN
 	ASSERT((0 <= offset) & (0 <= len) & (offset + len <= LEN(buf)), 100);
 	IF ~r.s.open THEN
@@ -69,14 +69,14 @@ BEGIN
 			END
 		END;
 		r.crc32 := Zlib.CRC32(r.crc32, buf, offset, len - r.s.out.avail);
-		read := len - r.s.out.avail;
+		read := len - r.s.out.avail
 	END
 END ReadBytes;
 
 (** read decompressed byte **)
 PROCEDURE Read*(VAR r: Reader; VAR ch: CHAR);
 VAR
-	buf: ARRAY 1 OF CHAR; read: SIZE;
+	buf: ARRAY 1 OF CHAR; read: LONGINT;
 BEGIN
 	ReadBytes(r, buf, 0, 1, read);
 	ch := buf[0]
@@ -95,7 +95,7 @@ END Close;
 (** uncompress deflated data from scr and write them to dst **)
 PROCEDURE Uncompress*(VAR src, dst: Files.Rider; VAR crc32: LONGINT; VAR res: WORD);
 VAR
-	r: Reader; buf: ARRAY BufSize OF CHAR; read: SIZE;
+	r: Reader; buf: ARRAY BufSize OF CHAR; read: LONGINT;
 BEGIN
 	Open(r, FALSE, src);
 	IF r.res = Ok THEN

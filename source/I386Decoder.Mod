@@ -641,7 +641,7 @@ TYPE
 		VAR
 			string : ARRAY 100 OF CHAR;
 			hexStr : ARRAY 3 OF CHAR;
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			string := "";
 			FOR i := 0 TO prefixes-1 DO

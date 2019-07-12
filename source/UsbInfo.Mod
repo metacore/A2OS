@@ -297,7 +297,7 @@ END ShowDeviceChain;
 
 PROCEDURE DoShow*(out : Streams.Writer; details: BOOLEAN);
 VAR
-	i : SIZE;
+	i : LONGINT;
 	rootHubs : Usb.RootHubArray;
 BEGIN
 	out.String("Usb: Topology and device information: "); out.Ln;
@@ -327,7 +327,7 @@ END Show;
 
 (** Shows all registered drivers and their instances *)
 PROCEDURE ShowDrivers*(context : Commands.Context);
-VAR instances : Plugins.Table; i : SIZE;
+VAR instances : Plugins.Table; i : LONGINT;
 BEGIN
 	Usb.drivers.Show;
 	context.out.Ln; context.out.String("Usb: Instances of registered device drivers: "); context.out.Ln;
@@ -349,10 +349,10 @@ PROCEDURE ShowHc*(context : Commands.Context); (* ["details"|"schedule"|"all"] ~
 VAR
 	table : Plugins.Table; hcd : UsbHcdi.Hcd;
 	pstr : ARRAY 10 OF CHAR;
-	i : SIZE;
+	i : LONGINT;
 
 	PROCEDURE ShowPipes(hcd : UsbHcdi.Hcd; details : BOOLEAN; tds: BOOLEAN);
-	VAR i, j, k : SIZE; pipe : UsbHcdi.Pipe;
+	VAR i, j, k : LONGINT; pipe : UsbHcdi.Pipe;
 	BEGIN
 		FOR i := 0 TO 127 DO (* search all addresses ... *)
 			FOR j := 0 TO 15 DO (* ... and all endpoints for presence of a pipe *)

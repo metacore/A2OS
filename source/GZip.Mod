@@ -42,7 +42,7 @@ TYPE
 			crc32-: LONGINT; (*crc32 of uncompressed data*)
 			out : POINTER TO ARRAY BufSize OF CHAR;
 			flush: SHORTINT;
-			inputsize : SIZE;
+			inputsize : LONGINT;
 
 		PROCEDURE WriteHeader(w: Streams.Writer);
 		VAR
@@ -77,7 +77,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		VAR
 			done : BOOLEAN;
 		BEGIN
@@ -124,7 +124,7 @@ TYPE
 				ZlibDeflate.Close(SELF.s);
 				SELF.res := SELF.s.res;
 				writer.RawLInt(crc32);
-				writer.RawLInt(inputsize(LONGINT));
+				writer.RawLInt(inputsize);
 				writer.Update();
 			END;
 		END Send;
@@ -160,7 +160,7 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		VAR
 			intlen : LONGINT;
 		BEGIN
@@ -175,8 +175,8 @@ TYPE
 					ZlibBuffers.Init(s.out, buf, ofs, size, size);
 					WHILE (s.out.avail # 0) & (s.res.code # Zlib.StreamEnd) DO
 						IF s.in.avail = 0 THEN
-							reader.Bytes(in^, 0, BufSize, len);
-							ZlibBuffers.Rewind(s.in, len);
+							reader.Bytes(in^, 0, BufSize, intlen);
+							ZlibBuffers.Rewind(s.in, intlen);
 							IF s.in.avail = 0 THEN
 								IF reader.res < 0 THEN
 									res := FileError
@@ -188,7 +188,7 @@ TYPE
 						END
 					END;
 					crc32 := Zlib.CRC32(crc32, buf, ofs, size - s.out.avail);
-					len := size - s.out.avail;
+					len := size - s.out.avail
 				END;
 
 			END;
@@ -250,7 +250,7 @@ VAR
 	W2 : Streams.Writer;
 	W1 : Files.Writer;
 	buf : ARRAY  16384 OF CHAR;
-	read : SIZE;
+	read : LONGINT;
 BEGIN
 	ASSERT((in # NIL) & (out # NIL));
 	Files.OpenReader(R, in, 0);
@@ -276,7 +276,7 @@ VAR
 	R2 : Streams.Reader;
 	W : Files.Writer;
 	buf : ARRAY  16384 OF CHAR;
-	read : SIZE;
+	read : LONGINT;
 BEGIN
 	ASSERT((in # NIL) & (out # NIL));
 	Files.OpenReader(R1, in, 0);

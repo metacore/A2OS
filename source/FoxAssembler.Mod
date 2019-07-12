@@ -35,7 +35,7 @@ TYPE
 	NamedLabel*= OBJECT
 	VAR
 		section: IntermediateCode.Section;
-		offset, displacement: BinaryCode.Unit; (* in contrast to offset, displacement will be reset each round of assembling. This is to make sure that GetFixup generates the right displacement in the fixup *)
+		offset, displacement: LONGINT; (* in contrast to offset, displacement will be reset each round of assembling. This is to make sure that GetFixup generates the right displacement in the fixup *)
 		name-: Scanner.IdentifierString;
 		nextNamedLabel-: NamedLabel;
 		fixupList: FixupElement;
@@ -69,7 +69,7 @@ TYPE
 			END;
 		END ResetDisplacements;
 
-		PROCEDURE SetOffset*(ofs: BinaryCode.Unit);
+		PROCEDURE SetOffset*(ofs: LONGINT);
 		VAR element: FixupElement;
 		BEGIN
 			SELF.offset := ofs;
@@ -116,7 +116,7 @@ TYPE
 
 	Result*= RECORD
 		type*: INTEGER; (* ConstantInteger, ConstantFloat, Fixup, Offset *)
-		sizeInBits*: SIZE;
+		sizeInBits*: INTEGER;
 		value*: HUGEINT;
 		valueR*: LONGREAL;
 		fixup*: BinaryCode.Fixup;
@@ -356,7 +356,7 @@ TYPE
 				Error(pos,"incompatible constant");
 				RETURN FALSE;
 			END;
-			result.sizeInBits := module.system.SizeOf(constant.type);
+			result.sizeInBits := SHORT(module.system.SizeOf(constant.type));
 			RETURN TRUE
 		END ConstantSymbol;
 
@@ -379,7 +379,7 @@ TYPE
 			IF symbol.scope IS SyntaxTree.ModuleScope THEN (* symbol in module scope *)
 				IF symbol IS SyntaxTree.Variable THEN (* global variable *)
 					result.type := Fixup;
-					result.sizeInBits := module.system.SizeOf(symbol.type);
+					result.sizeInBits := SHORT(module.system.SizeOf(symbol.type));
 
 					(* generic fixup pattern list for generic implementation of data instruction etc. -- otherwise replaced during encoding *)
 					NEW(fixupPatternList, 1);
@@ -392,7 +392,7 @@ TYPE
 						Error(pos,"forbidden reference to inline procedure"); RETURN FALSE
 					ELSE
 						result.type := Fixup;
-						result.sizeInBits := module.system.SizeOf(symbol.type);
+						result.sizeInBits := SHORT(module.system.SizeOf(symbol.type));
 						(* generic fixup pattern list for generic implementation of data instruction etc. -- otherwise replaced during encoding *)
 						NEW(fixupPatternList, 1);
 						fixupPatternList[0].bits := result.sizeInBits;
@@ -410,7 +410,7 @@ TYPE
 						result.type := Offset;
 						result.value := symbol.offsetInBits DIV module.system.dataUnit;
 						ASSERT(symbol.offsetInBits MOD module.system.dataUnit = 0);
-						result.sizeInBits := module.system.SizeOf(symbol.type);
+						result.sizeInBits := SHORT(module.system.SizeOf(symbol.type));
 					ELSE Error(pos,"forbidden symbol in local scope");
 					END;
 				END
@@ -461,7 +461,7 @@ TYPE
 						result.type := ConstantInteger;
 						result.value := symbol.offsetInBits DIV module.system.dataUnit;
 						ASSERT(symbol.offsetInBits MOD module.system.dataUnit = 0);
-						result.sizeInBits := module.system.SizeOf(symbol.type);
+						result.sizeInBits := SHORT(module.system.SizeOf(symbol.type));
 						RETURN TRUE
 					END;
 				END;
@@ -487,7 +487,12 @@ TYPE
 		BEGIN
 			IF ThisSymbol(Scanner.Number) THEN
 				(* ASSERT(symbol.numberType = Scanner.Integer); *)
-				x.value := token.integer;
+				IF token.numberType = Scanner.Integer THEN
+					x.value := token.integer
+				ELSIF token.numberType = Scanner.Hugeint THEN
+					x.value := token.hugeint;
+					(* ASSERT(x.value < 0); (* the resulting 32 bit integer must be negative when interpreted as a signed value *)*)
+				END;
 				x.type := ConstantInteger;
 				RETURN TRUE;
 			ELSIF ThisSymbol(Scanner.PC) THEN (* pc IN units ! *)
@@ -702,7 +707,7 @@ TYPE
 		(** if the assembler is at the last pass: put bits into the binary code section, otherwise only increment the PC **)
 		PROCEDURE PutBitsIfLastPass(data: HUGEINT; size: BinaryCode.Bits);
 		VAR
-			oldPC: BinaryCode.Unit;
+			oldPC: LONGINT;
 		BEGIN
 			IF pass = MaxPasses THEN
 				code.PutBits(data, size)
@@ -763,7 +768,7 @@ TYPE
 		END IgnoreNewLines;
 
 		PROCEDURE DoAssemble();
-		VAR result: Result; pos: Position; line: Streams.Position; orgCodePos: SIZE; identifier: Scanner.IdentifierString; context: Scanner.Context;
+		VAR result: Result; pos: Position; line,orgCodePos: LONGINT; identifier: Scanner.IdentifierString; context: Scanner.Context;
 		BEGIN
 			IF Trace THEN
 				D.Str("DoAssemble: ");

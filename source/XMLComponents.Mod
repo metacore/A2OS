@@ -279,7 +279,7 @@ TYPE
 			END;
 		END ConnectAttribute;
 
-		PROCEDURE RegisterListener(listener: Listener; VAR event, path: ARRAY OF CHAR; offset, len: SIZE);
+		PROCEDURE RegisterListener(listener: Listener; VAR event, path: ARRAY OF CHAR; offset, len: LONGINT);
 		VAR elem: XML.Element; retComp: Component; s1, s2: String; i: LONGINT;
 			contents: XMLObjects.Enumerator; content: ANY; quoteChar: CHAR; attr: XML.Attribute;
 
@@ -1116,8 +1116,8 @@ TYPE
 		END
 	END DrawClipRect;*)
 
-	PROCEDURE ExtractEvent(CONST string: ARRAY OF CHAR): String;
-	VAR i, j, len: SIZE; event: String;
+	PROCEDURE ExtractEvent(VAR string: ARRAY OF CHAR): String;
+	VAR i, j, len: LONGINT; event: String;
 	BEGIN
 		len := DynamicStrings.StringLength(string);
 		i := len - 1;

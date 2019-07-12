@@ -684,7 +684,7 @@ END InitAPICIDAdr;
 
 PROCEDURE InitBoot;
 VAR
-	largestFunction, i: SIZE;
+	largestFunction, i: LONGINT;
 	eax, ebx, ecx, edx : SET;
 	logicalProcessorCount : LONGINT;
 	u: ARRAY 8 OF CHAR; vendor : Vendor;
@@ -821,7 +821,7 @@ BEGIN
 END GetInit;
 
 (** Convert a string to an integer. Parameter i specifies where in the string scanning should begin (usually 0 in the first call). Scanning stops at the first non-valid character, and i returns the updated position. Parameter s is the string to be scanned. The value is returned as result, or 0 if not valid. Syntax: number = ["-"] digit {digit} ["H" | "h"] . digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" . If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
-PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT;
+PROCEDURE StrToInt* (VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT;
 VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
 BEGIN
 	vd := 0; vh := 0; hex := FALSE;
@@ -1051,7 +1051,7 @@ END INVLPG;
 PROCEDURE CheckMemory;
 CONST K = 1024; M = K * K; PS = 2 * M; ExtMemAdr = M;
 	TPS = 4 * K; UserPage = 7; PageNotPresent = 0;
-VAR s: ARRAY 16 OF CHAR; i: SIZE;
+VAR s: ARRAY 16 OF CHAR; i: LONGINT;
 
 	physicalAddress, pml4Base, pdpBase, pdBase: ADDRESS;
 	pml4e, pdpe, pde, lastTable: ADDRESS;
@@ -1113,7 +1113,7 @@ END CheckMemory;
 
 (* Initialize locks. *)
 PROCEDURE InitLocks;
-VAR i: SIZE; s: ARRAY 12 OF CHAR;
+VAR i: LONGINT; s: ARRAY 12 OF CHAR;
 BEGIN
 	IF TimeCount # 0 THEN
 		GetConfig("LockTimeout", s);
@@ -2270,12 +2270,27 @@ L2:
 	RET	; jump to body of first active object; cf. Objects.NewProcess
 END JumpToUserLevel;
 
+(* should ensure that a given address can be represented in the legacy 4GB address space
+	replacement for unsafe: x := SYSTEM.VAL (LONGINT, y) with y of type ADDRESS
+	-> better rewrite client code! this procedure should be redundant and removable in the end! *)
+
+PROCEDURE Ensure32BitAddress*(adr: ADDRESS): Address32;
+BEGIN
+	(* TODO *)
+	ASSERT (Is32BitAddress (adr), 9876);
+	RETURN SYSTEM.VAL (Address32, adr)
+END Ensure32BitAddress;
+
+PROCEDURE Is32BitAddress*(adr: ADDRESS): BOOLEAN;
+BEGIN RETURN SYSTEM.VAL (Address32, adr) = adr;
+END Is32BitAddress;
+
 (**
  * Flush Data Cache for the specified virtual address range. If len is negative, flushes the whole cache.
  * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
  * left empty on Intel architecture.
  *)
-PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: SIZE);
+PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: LONGINT);
 END FlushDCacheRange;
 
 (**
@@ -2283,7 +2298,7 @@ END FlushDCacheRange;
  * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
  * left empty on Intel architecture.
  *)
-PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: SIZE);
+PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: LONGINT);
 END InvalidateDCacheRange;
 
 (**
@@ -2291,7 +2306,7 @@ END InvalidateDCacheRange;
  * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
  * left empty on Intel architecture.
  *)
-PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: SIZE);
+PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
 END InvalidateICacheRange;
 
 PROCEDURE -SetRA(n: SIZE);
@@ -3374,7 +3389,7 @@ END ParseProcessor;
 
 (* Parse MP configuration table. *)
 PROCEDURE ParseMPConfig;
-VAR adr, x: ADDRESS; i: SIZE; entries: INTEGER; ch: CHAR; s: SET; str: ARRAY 8 OF CHAR;
+VAR adr, x: ADDRESS; i: LONGINT; entries: INTEGER; ch: CHAR; s: SET; str: ARRAY 8 OF CHAR;
 BEGIN
 	localAPIC := 0; numProcessors := 1; allProcessors := {0};
 	FOR i := 0 TO LEN(idMap)-1 DO idMap[i] := -1 END;	(* all unassigned *)
@@ -3456,7 +3471,7 @@ BEGIN
 		x := idMap[i];
 		IF x # -1 THEN
 			ASSERT(revIDmap[x] = -1);	(* no duplicate APIC ids *)
-			revIDmap[x] := SHORTINT(i)
+			revIDmap[x] := SHORT(SHORT(i))
 		END
 	END;
 	(* timer configuration *)
@@ -3759,7 +3774,7 @@ END TraceColor;
 (* Initialise tracing. *)
 PROCEDURE InitTrace;
 CONST MaxPorts = 8;
-VAR i, p: SIZE; bps: LONGINT; off: SIZE; s, name: ARRAY 32 OF CHAR;
+VAR i, p, bps: LONGINT; off: SIZE; s, name: ARRAY 32 OF CHAR;
 	baselist: ARRAY MaxPorts OF LONGINT;
 BEGIN
 	GetConfig ("TraceMode", s);

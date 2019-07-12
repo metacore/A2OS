@@ -165,7 +165,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(* append point to region data *)
 	PROCEDURE Append (reg: Region; u, v, dir: INTEGER);
-		VAR size: SIZE; data: RegionData;
+		VAR size: LONGINT; data: RegionData;
 	BEGIN
 		IF reg.data = NIL THEN
 			NEW(reg.data, BlockSize)

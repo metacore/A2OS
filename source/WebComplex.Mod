@@ -165,7 +165,7 @@ TYPE
 
 		PROCEDURE RecursiveToXML(depth: LONGINT; request: HTTPSupport.HTTPRequest;
 			container: XML.Container; entry: WebForumEntry);
-		VAR indent: Strings.String; row: TableRow; td, tr: XML.Element; i: SIZE; content: XML.Content;
+		VAR indent: Strings.String; row: TableRow; td, tr: XML.Element; i: LONGINT; content: XML.Content;
 			list: WebStd.PersistentDataObjectList; subEntry: WebForumEntry;
 		BEGIN
 			row := entry.TableView(NIL, request);
@@ -316,7 +316,7 @@ TYPE
 				request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR table, tr, td, paging, eventButton, eventLink, eventParam, label, pTag, searching: XML.Element;
 			content: XML.Content; pagingSizeStr, labelName, buttonLabelName, moduleName, objectName: Strings.String;
-			pagingSize: LONGINT; index, listPos, columns, k, l: SIZE; persObjList: WebStd.PersistentDataObjectList;
+			pagingSize, index, listPos, columns, k, l: LONGINT; persObjList: WebStd.PersistentDataObjectList;
 			persObj: WebStd.PersistentDataObject; entryObj: WebForumEntry;  colString, posString, tableNoStr: ARRAY 14 OF CHAR;
 			headerRow: HeaderRow; headerCell: HeaderCell; container: XML.Container;
 		BEGIN (* persCont # NIL & objectId # NIL *)
@@ -556,8 +556,8 @@ TYPE
 		(* displays 'entryObj' in table under depth 'depth' in the hierarchical view.
 		 * returns the number of columns in the entry *)
 		PROCEDURE RecursiveEntryOverview(depth: LONGINT; table: XML.Element; entryObj: WebForumEntry;
-			request: HTTPSupport.HTTPRequest; moduleName, objectName: Strings.String) : SIZE;
-		VAR row: TableRow; cell: TableCell; columns, k, l, i: SIZE; tr, td, eventLink, eventParam, label: XML.Element;
+			request: HTTPSupport.HTTPRequest; moduleName, objectName: Strings.String) : LONGINT;
+		VAR row: TableRow; cell: TableCell; columns, k, l, i: LONGINT; tr, td, eventLink, eventParam, label: XML.Element;
 			oidString: ARRAY 14 OF CHAR; list: WebStd.PersistentDataObjectList; subEntry: WebForumEntry;
 		BEGIN
 			row := entryObj.TableView(SELF, request);
@@ -694,7 +694,7 @@ TYPE
 				request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR persObj: WebStd.PersistentDataObject; container: XML.Container; list: WebStd.PersistentDataObjectList;
 			moduleName, objectName: Strings.String; entryObj, subEntry: WebForumEntry; content: XML.Content;
-			eventButton, table, tr, td: XML.Element; l, i: SIZE; row: HeaderRow; cell: HeaderCell;
+			eventButton, table, tr, td: XML.Element; l, i: LONGINT; row: HeaderRow; cell: HeaderCell;
 		BEGIN (* persCont # NIL & objectId # NIL *)
 			persObj := persCont.GetObjectByOid(entryOid);
 			moduleName := ThisModuleName();
@@ -1028,7 +1028,7 @@ TYPE
 		END DeleteEntry;
 
 		PROCEDURE DeleteRecursiveEntry(persCont: WebStd.PersistentDataContainer; entry: WebForumEntry);
-		VAR list: WebStd.PersistentDataObjectList; i: SIZE; subEntry: WebForumEntry;
+		VAR list: WebStd.PersistentDataObjectList; i: LONGINT; subEntry: WebForumEntry;
 		BEGIN (* persCont # NIL & entry # NIL *)
 			persCont.RemovePersistentDataObject(entry);
 			(* object will be freed by garbage collecting mechanism of the prevalence system *)
@@ -1133,7 +1133,7 @@ TYPE
 		END InsertEditEntry;
 
 		PROCEDURE GetEventHandlers*() : DynamicWebpage.EventHandlerList;
-		VAR list, addList: DynamicWebpage.EventHandlerList; listLength, addListCount, i: SIZE
+		VAR list, addList: DynamicWebpage.EventHandlerList; listLength, addListCount: LONGINT; i: LONGINT;
 		BEGIN
 			addList := GetAdditionalEventHandlers();
 			IF (addList # NIL) THEN

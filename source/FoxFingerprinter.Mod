@@ -709,10 +709,10 @@ TYPE
 						FPNumber(fp,variableTypeFingerprint.shallow);
 						variableFingerprint.shallow := fp;
 						FPNumber(fingerprint.private,variableTypeFingerprint.private);
-						FPNumber(fingerprint.private,variable.offsetInBits DIV 8);
+						FPNumber(fingerprint.private,SHORT(variable.offsetInBits DIV 8));
 						FPNumber(fingerprint.private,fp);
 						FPNumber(fingerprint.public,variableTypeFingerprint.public);
-						FPNumber(fingerprint.public,variable.offsetInBits DIV 8);
+						FPNumber(fingerprint.public,SHORT(variable.offsetInBits DIV 8));
 						FPNumber(fingerprint.public,fp);
 						IF Trace THEN TraceIndent; D.Str("RecordType Field "); D.Str0(variable.name); D.Str(" "); TraceFP(fingerprint); D.Ln; END;
 					ELSE
@@ -723,8 +723,8 @@ TYPE
 					END;
 					variable := variable.nextVariable;
 				END;
-				FPNumber(fingerprint.private, x.sizeInBits DIV 8);
-				FPNumber(fingerprint.public, x.sizeInBits DIV 8);
+				FPNumber(fingerprint.private, SHORT(x.sizeInBits DIV 8));
+				FPNumber(fingerprint.public, SHORT(x.sizeInBits DIV 8));
 
 				flags := {};
 				IF x.recordScope.bodyProcedure # NIL THEN
@@ -816,11 +816,11 @@ TYPE
 		PROCEDURE VisitEnumerationValue*(x: SyntaxTree.EnumerationValue);
 		BEGIN FPNumber(SELF.fp,x.value)
 		END VisitEnumerationValue;
-
+		
 		PROCEDURE VisitProcedureValue*(x: SyntaxTree.ProcedureValue);
 		BEGIN VisitProcedure(x.value);
 		END VisitProcedureValue;
-
+		
 		(* fp = fp & ORD(char) *)
 		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);
 		BEGIN FPNumber(SELF.fp,ORD(x.value))
@@ -832,7 +832,7 @@ TYPE
 		END VisitSetValue;
 
 		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
-		VAR element: SyntaxTree.Expression; i: SIZE;
+		VAR element: SyntaxTree.Expression; i: LONGINT;
 		BEGIN
 			FOR i := 0 TO x.elements.Length()-1 DO
 				element := x.elements.GetExpression(i);
@@ -1116,8 +1116,8 @@ TYPE
 						| 0 <*> fpModeExportedProcedure -> Name -> Visibility <*> FP(Type)
 		*)
 		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
-		VAR fp: Basic.Fingerprint; access: SET; fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; code: SyntaxTree.Code;
-			i, size: SIZE; value: WORD; name: ARRAY 256 OF CHAR;
+		VAR fp: Basic.Fingerprint; access: SET; fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; code: SyntaxTree.Code; i: LONGINT;
+			size: LONGINT; value: WORD; name: ARRAY 256 OF CHAR;
 		BEGIN
 			IF x.scope IS SyntaxTree.RecordScope THEN (* method *)
 				FPrintMethod(fp,fp,x,NIL);

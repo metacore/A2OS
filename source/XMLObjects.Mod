@@ -395,8 +395,8 @@ TYPE
 
 	END ArrayDict;
 
-PROCEDURE StringLength(CONST string: ARRAY OF CHAR): SIZE;
-VAR i, l: SIZE;
+PROCEDURE StringLength(CONST string: ARRAY OF CHAR): LONGINT;
+VAR i, l: LONGINT;
 BEGIN
 	i := 0; l := LEN(string);
 	WHILE (i < l) & (string[i] # 0X) DO

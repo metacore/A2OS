@@ -44,7 +44,7 @@ MODULE DynamicWebpage; (** AUTHOR "Luc Blaeser"; PURPOSE "Basetypes for Dynamic 
 			END GetParameterValueByName;
 
 			PROCEDURE  GetParameterByName*(CONST name: ARRAY OF CHAR): Parameter;
-			VAR i: SIZE;
+			VAR i: LONGINT;
 			BEGIN
 				IF parameters # NIL THEN
 					FOR i := 0 TO LEN(parameters)-1 DO
@@ -56,7 +56,7 @@ MODULE DynamicWebpage; (** AUTHOR "Luc Blaeser"; PURPOSE "Basetypes for Dynamic 
 				RETURN NIL
 			END GetParameterByName;
 
-			PROCEDURE GetCount*() : SIZE;
+			PROCEDURE GetCount*() : LONGINT;
 			BEGIN
 				RETURN LEN(parameters)
 			END GetCount;
@@ -120,7 +120,7 @@ MODULE DynamicWebpage; (** AUTHOR "Luc Blaeser"; PURPOSE "Basetypes for Dynamic 
 				descriptors*: POINTER TO ARRAY OF ActiveElementDescriptor;
 
 			PROCEDURE &Init*(CONST descs: ARRAY OF ActiveElementDescriptor);
-			VAR i: SIZE;
+			VAR i: LONGINT;
 			BEGIN
 				NEW(descriptors, LEN(descs));
 				FOR i := 0 TO LEN(descs)-1 DO
@@ -128,12 +128,12 @@ MODULE DynamicWebpage; (** AUTHOR "Luc Blaeser"; PURPOSE "Basetypes for Dynamic 
 				END
 			END Init;
 
-			PROCEDURE GetCount*() : SIZE;
+			PROCEDURE GetCount*() : LONGINT;
 			BEGIN
 				RETURN LEN(descriptors^)
 			END GetCount;
 
-			PROCEDURE GetItem*(i: SIZE) : ActiveElementDescriptor;
+			PROCEDURE GetItem*(i: LONGINT) : ActiveElementDescriptor;
 			BEGIN
 				RETURN descriptors[i]
 			END GetItem;

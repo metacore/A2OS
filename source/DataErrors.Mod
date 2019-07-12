@@ -33,7 +33,7 @@ CONST
 	PROCEDURE FindProc( refs: Modules.Bytes;  modpc: LONGINT ): LONGINT;
 	VAR i, m, t, proc: LONGINT;  ch: CHAR;
 	BEGIN
-		proc := -1;  i := 0;  m := LEN( refs^ )(LONGINT);  ch := refs[i];  INC( i );
+		proc := -1;  i := 0;  m := LEN( refs^ );  ch := refs[i];  INC( i );
 		WHILE (i < m) & ((ch = 0F8X) OR (ch = 0F9X)) DO  (* proc *)
 			GetNum( refs, i, t );   (* pofs *)
 			IF t > modpc THEN  (* previous procedure was the one *)

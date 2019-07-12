@@ -49,7 +49,7 @@ VAR
 	C: ARRAY 50 OF LONGINT;	(* DOS Stub and New Executable Header *)
 
 PROCEDURE Append (VAR s: ARRAY OF CHAR; suff: ARRAY OF CHAR);
-	VAR i, j, max: SIZE;
+	VAR i, j, max: LONGINT;
 BEGIN
 	i := 0; j := 0; max := LEN(s)-1;
 	WHILE s[i] # 0X DO INC(i) END;

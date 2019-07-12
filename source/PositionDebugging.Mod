@@ -68,7 +68,7 @@ TYPE
 		END Handle;
 
 		(* Adjusts the view to the new positions *)
-		PROCEDURE ChangePos(realPos, bidiPos : SIZE);
+		PROCEDURE ChangePos(realPos, bidiPos : LONGINT);
 		VAR
 			realString, bidiString : ARRAY 8 OF CHAR;
 		BEGIN
@@ -170,7 +170,7 @@ BEGIN
 	Objects.SetPriority(Objects.Normal)
 END CloseAll;
 
-PROCEDURE SetPos*(realPos, bidiPos : SIZE);
+PROCEDURE SetPos*(realPos, bidiPos : LONGINT);
 VAR
 	current : DebugWindowNode;
 BEGIN

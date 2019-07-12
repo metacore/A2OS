@@ -55,7 +55,7 @@ TYPE
 		pos: LONGINT;
 
 		PROCEDURE Append( CONST val: ARRAY OF CHAR );
-		VAR i: SIZE;  c: CHAR;
+		VAR i: LONGINT;  c: CHAR;
 		BEGIN
 			FOR i := 0 TO LEN( val ) - 1 DO
 				c := val[i];

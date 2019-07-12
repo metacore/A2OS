@@ -61,8 +61,8 @@ TYPE
 
 			(* Receive queue (ring buffer) *)
 			queue: ARRAY QueueSize OF Network.Buffer;
-			queueFirst: SIZE; (* index where the new items are queued *)
-			queueLast: SIZE; (* index where the items are removed from the queued *)
+			queueFirst: LONGINT; (* index where the new items are queued *)
+			queueLast: LONGINT; (* index where the items are removed from the queued *)
 
 			(* Variables for handling timeout *)
 			timer: Objects.Timer;
@@ -91,7 +91,7 @@ TYPE
 
 		(** Send a UDP datagram to the foreign address specified by "fip" and "fport".
 			The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized. *)
-		PROCEDURE Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: SIZE; VAR res: WORD);
+		PROCEDURE Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
 		VAR
 			int: IP.Interface;
 
@@ -112,7 +112,7 @@ TYPE
 
 		(** Send a broadcast UDP datagram via interface "int" to port "lport". Normally only used by DHCP.
 			The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized. *)
-		PROCEDURE SendBroadcast*(int: IP.Interface; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE SendBroadcast*(int: IP.Interface; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT);
 		BEGIN {EXCLUSIVE}
 			ASSERT((fport >= 0) & (fport < 10000H));
 			ASSERT((len >= 0) & (len <= MaxUDPDataLen));
@@ -127,11 +127,11 @@ TYPE
 		"len" returns the actual datagram size and "data[ofs..ofs+len-1]" returns the data.
 		"res" returns "Timeout" in case of a timeout and "BufferOverflow" if the received datagram was too big.
 		*)
-		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size: SIZE; ms: LONGINT; VAR fip: IP.Adr; VAR fport: LONGINT; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, ms: LONGINT; VAR fip: IP.Adr; VAR fport, len: LONGINT; VAR res: WORD);
 		VAR
 			buffer: Network.Buffer;
 			fragmentBuffer: Network.Buffer;
-			fragmentOffset: SIZE;
+			fragmentOffset: LONGINT;
 
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Closed; RETURN END;
@@ -193,18 +193,18 @@ TYPE
 
 
 		(* Internal send operation. Called from "Send" and "SendBroadcast". *)
-		PROCEDURE DoSend(int: IP.Interface; fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE DoSend(int: IP.Interface; fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT);
 		VAR
 			sum: LONGINT;
 			pseudoHdrLen: LONGINT;
 		BEGIN
 			(* set UDP header *)
 			Network.PutNet2(hdr, 2, fport); (* foreign port *)
-			Network.PutNet2(hdr, 4, (len+UDPHdrLen)(LONGINT)); (* UPD length *)
+			Network.PutNet2(hdr, 4, len+UDPHdrLen); (* UPD length *)
 			Network.Put2(hdr, 6, 0); (* checksum := 0 *)
 			IF ~(Network.ChecksumUDP IN int.dev.calcChecksum) THEN
 				(* set pseudo header *)
-				pseudoHdrLen := int.WritePseudoHeader(pseudoHdr, int.localAdr, fip, IPTypeUDP, (len+UDPHdrLen)(LONGINT));
+				pseudoHdrLen := int.WritePseudoHeader(pseudoHdr, int.localAdr, fip, IPTypeUDP, len+UDPHdrLen);
 
 				sum := IP.Checksum1(pseudoHdr, 0, pseudoHdrLen, 0);
 				sum := IP.Checksum1(hdr, 0, UDPHdrLen, sum);
@@ -212,7 +212,7 @@ TYPE
 
 				Network.Put2(hdr, 6, sum); (* checksum := sum *)
 			END;
-			int.Send(IPTypeUDP, fip, hdr, data, UDPHdrLen, ofs(LONGINT), len(LONGINT), IP.MaxTTL);
+			int.Send(IPTypeUDP, fip, hdr, data, UDPHdrLen, ofs, len, IP.MaxTTL);
 		END DoSend;
 
 
@@ -264,7 +264,7 @@ TYPE
 
 		(* Initialize the pool. *)
 		PROCEDURE &Init*;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO HashTableSize-1 DO
 				table[i] := NIL;
@@ -289,8 +289,7 @@ TYPE
 		PROCEDURE AddSocket(p: Socket): BOOLEAN;
 		VAR
 			ok: BOOLEAN;
-			i: SIZE;
-			sport: LONGINT;
+			i, sport: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF p.lport = NilPort THEN
 				(* find an unused ephemeral port *)
@@ -321,7 +320,7 @@ TYPE
 		(* Remove the Socket from the pool, making its address re-usable. *)
 		PROCEDURE RemoveSocket(p: Socket);
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			item: Socket;
 		BEGIN {EXCLUSIVE}
 			i := p.lport MOD HashTableSize;
@@ -344,7 +343,7 @@ TYPE
 
 		(* Close all sockets that are registered in pool *)
 		PROCEDURE CloseAll;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO HashTableSize-1 DO
 				WHILE table[i] # NIL DO

@@ -59,7 +59,7 @@ TYPE
 		END SendChar;
 
 		(*! This method must not be used for trace output - danger of a dead lock! *)
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			Machine.AcquireObject(sendLocked);
 			PsUart.Send(uart, buf, ofs, len, propagate, BusyLoopCallback, res);
@@ -75,7 +75,7 @@ TYPE
 			Machine.ReleaseObject(recvLocked);
 		END ReceiveChar;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
 		BEGIN
 			Machine.AcquireObject(recvLocked);
 			PsUart.Receive(uart, buf, ofs, size, min, len, BusyLoopCallback, res);
@@ -83,7 +83,7 @@ TYPE
 			Machine.ReleaseObject(recvLocked);
 		END Receive;
 
-		PROCEDURE Available(): SIZE;
+		PROCEDURE Available(): LONGINT;
 		BEGIN
 			RETURN PsUart.Available(uart);
 		END Available;

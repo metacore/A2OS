@@ -23,12 +23,12 @@ MODULE SymbiosDisks;	(** non-portable *)
 				writePreComp: LONGINT;
 				capacity: LONGINT;
 
-			PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+			PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 			VAR
 				srb: ASPI.ExecIOCmdSRB; size, n, i, copyAdr, orgadr, orgsize: LONGINT; phys: ARRAY MaxRanges OF Machine.Range;
 			BEGIN
 				orgsize := num*BS;
-				orgadr := ADDRESSOF(data[ofs])(Machine.Address32);
+				orgadr := Machine.Ensure32BitAddress (ADDRESSOF(data[ofs]));
 				IF TraceVerbose THEN
 					KernelLog.Enter;
 					KernelLog.String("NCR: Transfer "); KernelLog.Int(op, 1); KernelLog.Char(" ");
@@ -53,10 +53,10 @@ MODULE SymbiosDisks;	(** non-portable *)
 							Machine.TranslateVirtual(ADDRESSOF(data[ofs]), size, n, phys);
 							i := 0; size := 0;
 							WHILE (i < n) & (phys[0].adr + size = phys[i].adr) DO	(* find contiguous memory range *)
-								INC(size, phys[i].size(Machine.Address32)); INC(i)
+								INC(size, Machine.Ensure32BitAddress (phys[i].size)); INC(i)
 							END;
 							IF size MOD BS = 0 THEN
-								srb.BufPointer := ADDRESSOF(data[ofs])(Machine.Address32)	(* the virtual address *)
+								srb.BufPointer := Machine.Ensure32BitAddress (ADDRESSOF(data[ofs]))	(* the virtual address *)
 							ELSE
 								AcquireBuffer(copyAdr);
 								size := BS; srb.BufPointer := copyAdr;
@@ -175,7 +175,7 @@ VAR
 		NEW(srb);
 		srb.HaId := ha; srb.Flags := {ASPI.FlagsDirIn}; srb.Target := target; srb.Lun := lun;
 		srb.BufLen := 8;
-		srb.BufPointer := ADDRESSOF(buf[0])(Machine.Address32);
+		srb.BufPointer := Machine.Ensure32BitAddress (ADDRESSOF(buf[0]));
 		srb.SenseLen := 0X;
 		srb.CDBLen := 0AX;
 		srb.CDB[0] := 25X; srb.CDB[1] := LSH(lun, 5); srb.CDB[2] := 0X; srb.CDB[3] := 0X;
@@ -196,7 +196,7 @@ VAR
 	BEGIN
 		freeSRB := NIL;
 		NEW(fallbackBuf, 2*BS);
-		fallbackBufAdr := ADDRESSOF(fallbackBuf[0])(Machine.Address32);
+		fallbackBufAdr := Machine.Ensure32BitAddress (ADDRESSOF(fallbackBuf[0]));
 		res := PageSize - fallbackBufAdr MOD PageSize;
 		IF res < BS THEN INC(fallbackBufAdr, res) END;
 		num := 0;

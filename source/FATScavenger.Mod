@@ -1731,7 +1731,7 @@ TYPE
 			rootDirSectors, firstDataSector : LONGINT;
 			freeCount, firstFree, media: LONGINT;
 			spc, type : LONGINT; (* sectors per cluster *)
-			i : SIZE; res : WORD;
+			i : LONGINT; res : WORD;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			type := disk.table[partition].type;

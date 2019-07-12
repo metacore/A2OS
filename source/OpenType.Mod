@@ -430,7 +430,7 @@ MODULE OpenType;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"; *)
 						END;
 						INC(n)
 					END;
-					len := SHORT(offset + len - r.file.Pos(r)(LONGINT)) DIV 2;
+					len := SHORT(offset + len - r.file.Pos(r)) DIV 2;
 					IF len > 0 THEN
 						NEW(font.cmap.glyph, len);
 						n := 0; WHILE n < len DO ReadInt(r, font.cmap.glyph[n]); INC(n) END;

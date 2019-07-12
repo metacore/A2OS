@@ -22,8 +22,8 @@ TYPE
 				END
 			END Initialize;
 
-			PROCEDURE Encode( VAR buf: ARRAY OF CHAR; len: SIZE );
-			VAR l, m: Node;  i: SIZE;  k: LONGINT; ch: CHAR;
+			PROCEDURE Encode( VAR buf: ARRAY OF CHAR; len: LONGINT );
+			VAR l, m: Node;  i, k: LONGINT; ch: CHAR;
 			BEGIN
 				Initialize;
 				FOR i := 0 TO len - 1 DO
@@ -40,8 +40,8 @@ TYPE
 				END
 			END Encode;
 
-			PROCEDURE Decode( VAR buf: ARRAY OF CHAR; len: SIZE );
-			VAR l, m: Node;  i: SIZE;  c: LONGINT;  ch: CHAR;
+			PROCEDURE Decode( VAR buf: ARRAY OF CHAR; len: LONGINT );
+			VAR l, m: Node;  i, c: LONGINT;  ch: CHAR;
 			BEGIN
 				Initialize;
 				FOR i := 0 TO len - 1 DO
@@ -61,9 +61,9 @@ TYPE
 TYPE
 	Encoder* = OBJECT
 		TYPE
-			Index = SIZE;
+			Index = LONGINT;
 		VAR
-			mtf: MTF;  length: SIZE;
+			mtf: MTF;  length: LONGINT;
 			sbuf: ARRAY 2*BlockSize OF CHAR;
 			rotation: ARRAY BlockSize OF Index;
 
@@ -111,8 +111,8 @@ TYPE
 				END
 			END InsertSort;
 
-			PROCEDURE SortR( lo, hi: SIZE );
-			VAR i, j, m, n: SIZE;
+			PROCEDURE SortR( lo, hi: LONGINT );
+			VAR i, j, m, n: LONGINT;
 			BEGIN
 				IF lo < hi THEN
 					n := hi - lo + 1;
@@ -136,8 +136,8 @@ TYPE
 				END
 			END SortR;
 
-			PROCEDURE EncodeBlock*( VAR buf: ARRAY OF CHAR; len: SIZE ): LONGINT;
-			VAR  i: SIZE;  index: LONGINT;
+			PROCEDURE EncodeBlock*( VAR buf: ARRAY OF CHAR; len: LONGINT ): LONGINT;
+			VAR  i, index: LONGINT;
 			BEGIN
 				ASSERT( len <= BlockSize );  length := len;
 				FOR i := 0 TO length - 1 DO  sbuf[i] := buf[i];  sbuf[i+length] := buf[i]  END;
@@ -157,7 +157,7 @@ TYPE
 TYPE
 	Decoder* = OBJECT
 		TYPE
-			Index = SIZE;
+			Index = LONGINT;
 		VAR
 			mtf: MTF;
 			f, l: ARRAY BlockSize OF CHAR;
@@ -199,9 +199,9 @@ TYPE
 			END SortF;
 
 
-			PROCEDURE DecodeBlock*( VAR buf: ARRAY OF CHAR; len, index: SIZE );
+			PROCEDURE DecodeBlock*( VAR buf: ARRAY OF CHAR; len, index: LONGINT );
 			VAR
-				i, j: SIZE; n: LONGINT;  ch: CHAR;
+				i, j, n: LONGINT;  ch: CHAR;
 				xn: ARRAY 256 OF INTEGER;
 			BEGIN
 				ASSERT( len <= BlockSize );

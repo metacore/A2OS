@@ -204,7 +204,7 @@ TYPE
 	BEGIN
 		IF x = NIL THEN W.RawNum( -1 )
 		ELSE
-			len := LEN( x^ )(LONGINT);  W.RawNum( len );
+			len := LEN( x^ );  W.RawNum( len );
 			IF len > 0 THEN W.RawString( x^ ) END
 		END
 	END Store;

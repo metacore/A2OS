@@ -116,13 +116,13 @@ TYPE
 		END Open;
 
 	(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
 		VAR written: LONGINT;  ret: Kernel32.BOOL;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)
 			IF (handle # Kernel32.InvalidHandleValue) THEN
 				written := 0;
-				ret := Kernel32.WriteFile( handle, buf[ofs], len(Kernel32.DWORD), written, wOverlapped );
+				ret := Kernel32.WriteFile( handle, buf[ofs], len, written, wOverlapped );
 				IF ret = Kernel32.False THEN
 					ret := Kernel32.GetOverlappedResult(handle,wOverlapped,written,Kernel32.True);
 				END;
@@ -162,8 +162,8 @@ TYPE
 		Wait until at least min bytes (possibly zero) are available.
 			res is non-zero on error. *)
 
-		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
-		VAR l, read, ret: Kernel32.DWORD;
+		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD);
+		VAR i, l, read, ret: LONGINT;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + size );
 			ASSERT ( LEN( buf ) >= ofs + min );   (* array bound check not implemented in Kernel32.ReadFile *)
@@ -174,7 +174,7 @@ TYPE
 				(* blocking read of the minimally required amount of data *)
 				IF min > 0 THEN
 					read := 0;
-					ret := Kernel32.ReadFile( handle, buf[ofs], min(Kernel32.DWORD), read, rOverlapped );
+					ret := Kernel32.ReadFile( handle, buf[ofs], min, read, rOverlapped );
 					IF ret = Kernel32.False THEN
 						ret := Kernel32.GetOverlappedResult(handle,rOverlapped,read,Kernel32.True);
 					END;
@@ -185,7 +185,7 @@ TYPE
 				END;
 
 				(* Non-blocking read of available data *)
-				l := MIN(size,Available()(SIZE))(Kernel32.DWORD);
+				l := MIN(size,Available());
 				IF l > 0 THEN
 					read := 0;
 					ret := Kernel32.ReadFile( handle, buf[ofs], l, read, rOverlapped );
@@ -223,7 +223,7 @@ TYPE
 			END
 		END ReceiveChar;
 
-		PROCEDURE Available*( ): SIZE;
+		PROCEDURE Available*( ): LONGINT;
 		VAR errors: Kernel32.DWORD;  stat: Kernel32.ComStat;  res: Kernel32.BOOL;
 		BEGIN
 			IF handle # Kernel32.InvalidHandleValue THEN

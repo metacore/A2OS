@@ -90,7 +90,7 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : SIZE; res: WORD;
+VAR table : Plugins.Table; i : LONGINT; res: WORD;
 BEGIN
 	IF Disks.Stats THEN
 		Disks.registry.AddEventHandler(EventHandler, res); (* ignore res *)

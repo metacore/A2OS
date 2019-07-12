@@ -2944,7 +2944,7 @@ BEGIN
 END DoOptimize;
 
 PROCEDURE IncSaveLevel;
-VAR s: SavedRegistersType; i: SIZE;
+VAR s: SavedRegistersType; i: LONGINT;
 BEGIN
 	INC(SaveLevel);
 	IF SaveLevel >= LEN(SavedRegisters) THEN

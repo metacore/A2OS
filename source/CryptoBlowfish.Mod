@@ -63,8 +63,8 @@ TYPE
 					ivl := U.SetFromBufferBE( src, 0 );  ivr := U.SetFromBufferBE( src, 4 );
 				END SetIV;
 
-				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR i: SIZE;
+				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR i: LONGINT;
 				BEGIN
 					ASSERT( isKeyInitialized & (mode IN {Ciphers.ECB, Ciphers.CBC}) );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -72,8 +72,8 @@ TYPE
 					WHILE i < len DO  EncryptBlock( buf, ofs + i );  INC( i, blockSize );   END
 				END Encrypt;
 
-				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR i: SIZE;
+				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR i: LONGINT;
 				BEGIN
 					ASSERT( isKeyInitialized );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -81,7 +81,7 @@ TYPE
 					WHILE i < len DO  DecryptBlock( buf, ofs + i );  INC( i, blockSize );   END
 				END Decrypt;
 
-				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 				VAR xl, xr, yl, yr: SET32;
 				BEGIN
 					xl := U.SetFromBufferBE( buf, pos );  xr := U.SetFromBufferBE( buf, pos + 4 );
@@ -91,7 +91,7 @@ TYPE
 					IF mode = Ciphers.CBC THEN  ivl := yl;  ivr := yr  END
 				END EncryptBlock;
 
-				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 				VAR xl, xr, yl, yr: SET32;
 				BEGIN
 					xl := U.SetFromBufferBE( buf, pos );  xr := U.SetFromBufferBE( buf, pos + 4 );

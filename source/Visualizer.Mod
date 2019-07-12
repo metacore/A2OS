@@ -203,7 +203,7 @@ TYPE
 		END GetAll;
 
 		PROCEDURE Enumerate(proc : EnumeratorProc; indent : LONGINT);
-		VAR array : ModuleArray; i : SIZE;
+		VAR array : ModuleArray; i : LONGINT;
 		BEGIN
 			array := GetAll();
 			IF (array # NIL) THEN
@@ -1134,7 +1134,7 @@ TYPE
 		END AddTypes;
 
 		PROCEDURE ProcessOptions(options : Options.Options);
-		VAR string : ARRAY 512 OF CHAR; integer : LONGINT; sizeString : SizeString; i : SIZE;
+		VAR string : ARRAY 512 OF CHAR; integer : LONGINT; sizeString : SizeString; i : LONGINT;
 		BEGIN
 			sizeString := "";
 			IF options.GetString("size", string) THEN
@@ -1191,7 +1191,7 @@ TYPE
 		END ProcessOptions;
 
 		PROCEDURE IsExcluded(CONST moduleName : ARRAY OF CHAR) : BOOLEAN;
-		VAR i  : SIZE;
+		VAR i  : LONGINT;
 		BEGIN
 			IF (excludedModules # NIL) THEN
 				FOR i := 0 TO LEN(excludedModules)-1 DO
@@ -1248,7 +1248,7 @@ TYPE
 		END WriteDependsOnEdge;
 
 		PROCEDURE Close;
-		VAR array : ModuleArray; i : SIZE;
+		VAR array : ModuleArray; i : LONGINT;
 		BEGIN
 			ASSERT(state = Running);
 

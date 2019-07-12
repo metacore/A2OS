@@ -149,7 +149,7 @@ TYPE
 		PROCEDURE ReleaseWrite*;
 		VAR inform : BOOLEAN;
 		BEGIN
-
+			
 			inform := FALSE;
 			BEGIN {EXCLUSIVE}
 				ASSERT(HasWriteLock(), 3010);
@@ -293,7 +293,7 @@ TYPE
 
 VAR
 	locks : Kernel.FinalizedCollection;
-
+	
 PROCEDURE RegisterLock(x : ANY);
 BEGIN
 	locks.Add(x, NIL);

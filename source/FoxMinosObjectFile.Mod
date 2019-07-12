@@ -25,7 +25,7 @@ TYPE
 
 		PROCEDURE Export*(module: Formats.GeneratedModule; symbolFileFormat: Formats.SymbolFileFormat): BOOLEAN;
 		VAR symbolFile: Files.File; moduleName: SyntaxTree.IdentifierString; fileName: Files.FileName; f: Files.File; w: Files.Writer;
-		VAR varSize, codeSize, bodyOffset: SIZE; VAR code: ByteArray; error: BOOLEAN;
+		VAR varSize, codeSize: LONGINT; VAR code: ByteArray; bodyOffset: LONGINT; error: BOOLEAN;
 		BEGIN
 			Global.ModuleFileName(module.module.name,module.module.context,moduleName);
 			Basic.Concat(fileName,prefix,moduleName,extension);
@@ -83,7 +83,7 @@ TYPE
 		this procedure converts the section-based representation of fixups into a symbol based representation
 	*)
 	PROCEDURE GetFixups(diagnostics: Diagnostics.Diagnostics; module: Sections.Module; symbol: Sections.Section; VAR first: Fixup): LONGINT;
-	VAR temp: Fixup; fixup: BinaryCode.Fixup; nr :LONGINT; i: SIZE; section: Sections.Section; sectionList: Sections.SectionList;
+	VAR temp: Fixup; fixup: BinaryCode.Fixup; nr :LONGINT; i: LONGINT; section: Sections.Section; sectionList: Sections.SectionList;
 
 		PROCEDURE Do;
 		BEGIN
@@ -121,7 +121,7 @@ TYPE
 	PROCEDURE FindPC(pc: LONGINT; module: Sections.Module; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 	VAR
 		section:Sections.Section; binarySection: BinaryCode.Section; label: BinaryCode.LabelList;
-		i: SIZE;
+		i: LONGINT;
 	BEGIN
 		FOR i := 0 TO module.allSections.Length() - 1 DO
 			section := module.allSections.GetSection(i);
@@ -141,11 +141,11 @@ TYPE
 		RETURN FALSE
 	END FindPC;
 
-	PROCEDURE MakeSectionOffsets(module: Sections.Module; VAR varSize, codeSize, bodyOffset: SIZE; VAR code: ByteArray);
+	PROCEDURE MakeSectionOffsets(module: Sections.Module; VAR varSize, codeSize, bodyOffset: LONGINT; VAR code: ByteArray);
 	VAR symbolName: SyntaxTree.IdentifierString; symbol: SyntaxTree.Symbol; binarySection: BinaryCode.Section;
 
-		PROCEDURE Copy(section: BinaryCode.Section; to: ByteArray; offset: SIZE);
-		VAR i: BinaryCode.Unit; ofs: SIZE;
+		PROCEDURE Copy(section: BinaryCode.Section; to: ByteArray; offset: LONGINT);
+		VAR i,ofs: LONGINT;
 		BEGIN
 			ofs := (offset );
 			FOR i := 0 TO ((section.pc-1) ) DO
@@ -168,7 +168,7 @@ TYPE
 		PROCEDURE FirstOffsets(sectionList: Sections.SectionList);
 		VAR
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			FOR i := 0 TO sectionList.Length() - 1 DO
 				section := sectionList.GetSection(i);
@@ -188,7 +188,7 @@ TYPE
 		PROCEDURE SetOffsets(sectionList: Sections.SectionList);
 		VAR
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			FOR i := 0 TO sectionList.Length() - 1 DO
 				section := sectionList.GetSection(i);
@@ -232,7 +232,7 @@ TYPE
 		PROCEDURE CopySections(sectionList: Sections.SectionList);
 		VAR
 			section: Sections.Section;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			FOR i := 0 TO sectionList.Length() - 1 DO
 				section := sectionList.GetSection(i);
@@ -253,7 +253,7 @@ TYPE
 	END MakeSectionOffsets;
 
 	PROCEDURE WriteObjectFile*(w:Streams.Writer; module: Sections.Module; symbolFile: Files.File; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
-	VAR codeSize, dataSize, bodyOffset: SIZE;
+	VAR codeSize, dataSize, bodyOffset: LONGINT;
 		moduleScope: SyntaxTree.ModuleScope; fingerprinter: Fingerprinter.Fingerprinter;
 		code: ByteArray;
 		fp: SyntaxTree.Fingerprint;
@@ -308,7 +308,7 @@ TYPE
 			END;
 		END GetEntries;
 
-		PROCEDURE Put32(offset: SIZE; number: LONGINT);
+		PROCEDURE Put32(offset: LONGINT; number: LONGINT);
 		BEGIN
 			IF Trace THEN
 				D.String("put32 at offset "); D.Int(offset,1);D.String(" : "); D.Hex(number,-8); D.Ln;
@@ -322,13 +322,13 @@ TYPE
 			code[offset] := CHR(number MOD 100H);
 		END Put32;
 
-		PROCEDURE Get32(offset: SIZE): LONGINT;
+		PROCEDURE Get32(offset: LONGINT): LONGINT;
 		BEGIN
 			RETURN ORD(code[offset]) + 100H*ORD(code[offset+1]) + 10000H * ORD(code[offset+2]) + 1000000H*ORD(code[offset+3]);
 		END Get32;
 
 		(* ObjectFile = name:String key:Int fixSelf:Int Imports Commands Entries Data Code *)
-		PROCEDURE ObjectFile(bodyOffset: SIZE);
+		PROCEDURE ObjectFile(bodyOffset: LONGINT);
 		VAR moduleName: Name;
 
 			PROCEDURE Resolve(fixup: BinaryCode.Fixup);
@@ -340,7 +340,7 @@ TYPE
 			PROCEDURE InModule(s: Basic.SegmentedName):BOOLEAN;
 			VAR
 				section: Sections.Section;
-				i: SIZE;
+				i: LONGINT;
 			BEGIN
 				FOR i := 0 TO module.allSections.Length() - 1 DO
 					section := module.allSections.GetSection(i);
@@ -350,9 +350,9 @@ TYPE
 			END InModule;
 
 			(* go through list of all sections and all fixups in sections and if it is a self fixup, chain it *)
-			PROCEDURE FixSelf(): SIZE;
-			VAR prev,this,patch: SIZE; section: Sections.Section;
-				binarySection: BinaryCode.Section; fixup: BinaryCode.Fixup; i, patchOffset: SIZE;
+			PROCEDURE FixSelf(): LONGINT;
+			VAR prev,this,patch: LONGINT; section: Sections.Section;
+				binarySection: BinaryCode.Section; fixup: BinaryCode.Fixup; i,patchOffset: LONGINT;
 				msg, name: ARRAY  256 OF CHAR;
 			BEGIN
 				prev := 0;
@@ -371,7 +371,7 @@ TYPE
 								ASSERT(this >= -8000H);
 								*)
 								Resolve(fixup);
-								patchOffset := fixup.resolved.offset + fixup.displacement;
+								patchOffset := (fixup.resolved.offset + fixup.displacement);
 								IF (patchOffset DIV 4 >= 8000H) OR (patchOffset DIV 4< -8000H)
 									OR (patchOffset MOD 4 # 0)
 								THEN
@@ -392,7 +392,7 @@ TYPE
 									Basic.WriteSegmentedName(D.Log, fixup.symbol.name); D.String("+"); D.Int(fixup.displacement,1) ;
 									D.Ln;
 								END;
-								Put32(this, patch(LONGINT));
+								Put32(this, patch);
 								prev := this;
 							ELSE (* external fixup, handled in imports *)
 							END;
@@ -408,7 +408,7 @@ TYPE
 			Global.ModuleFileName(module.module.name,module.module.context,moduleName);
 			fp := fingerprinter.SymbolFP(module.module);
 			w.RawString(moduleName); w.RawLInt(LONGINT(fp.public));
-			w.RawLInt(FixSelf()(LONGINT));
+			w.RawLInt(FixSelf());
 			Imports;
 			Commands;
 			Entries(bodyOffset);
@@ -430,8 +430,8 @@ TYPE
 				RETURN i = import
 			END IsFirstOccurence;
 
-			PROCEDURE MakeFixups(): SIZE;
-			VAR prev,this,i,instr: SIZE; section: Sections.Section; first: Fixup; numberFixups: LONGINT;
+			PROCEDURE MakeFixups(): LONGINT;
+			VAR prev,this,instr,i: LONGINT; section: Sections.Section; first: Fixup; numberFixups: LONGINT;
 			BEGIN
 				prev := 0;
 				FOR i := 1 TO numberEntries DO
@@ -450,7 +450,7 @@ TYPE
 								opCode | pno | next
 							*)
 							instr := instr MOD 1000000H + i * 10000H + prev DIV 4;
-							Put32(this, instr(LONGINT));
+							Put32(this, instr);
 							prev := this;
 							first := first.nextFixup;
 						END;
@@ -475,7 +475,7 @@ TYPE
 					(* get all imported entries of imported module *)
 					GetEntries(import.module.moduleScope, numberEntries, entries);
 					(* generate fixups to all non-zero entries *)
-					w.RawLInt(MakeFixups()(LONGINT));
+					w.RawLInt(MakeFixups());
 				END;
 				import := import.nextImport;
 			END;
@@ -486,7 +486,7 @@ TYPE
 		PROCEDURE Commands;
 		VAR
 			procedure : SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
-			p: Sections.Section; name: Name; i: SIZE;
+			p: Sections.Section; name: Name; numberParameters, i: LONGINT;
 		BEGIN
 			FOR i := 0 TO module.allSections.Length() - 1 DO
 				p := module.allSections.GetSection(i);
@@ -499,7 +499,7 @@ TYPE
 							D.Str("Command : "); D.Str(name); D.Str(" @ "); D.Int(p.offset ,1);
 						END;
 						w.RawString(name);
-						w.RawLInt((p.offset DIV 4)(LONGINT));
+						w.RawLInt(p.offset DIV 4);
 						IF Trace THEN D.Ln END
 					END
 				END
@@ -508,7 +508,7 @@ TYPE
 		END Commands;
 
 		(* noEntries:Int BodyEntry {entry:Int32}:noEntries *)
-		PROCEDURE Entries(bodyOffset: SIZE);
+		PROCEDURE Entries(bodyOffset: LONGINT);
 		VAR
 			i,numberEntries: LONGINT; entry: ARRAY 256 OF IntermediateCode.Section; (* more is not allowed anyway in the runtime system *)
 		BEGIN
@@ -517,22 +517,22 @@ TYPE
 			w.RawLInt(0); (* body entry: body is fixed at position 0, cf. MakeSectionOffsets *)
 			FOR i := 1 TO numberEntries DO
 				ASSERT(entry[i].offset MOD 4 = 0);
-				w.RawLInt((entry[i].offset)(LONGINT) DIV 4); (* entries here must be byte wise because jumps take place with absolute fixup - I cannot distinguish here *)
+				w.RawLInt(entry[i].offset DIV 4); (* entries here must be byte wise because jumps take place with absolute fixup - I cannot distinguish here *)
 			END;
 		END Entries;
 
 		(* dataSize:Int32 *)
 		PROCEDURE Data;
 		BEGIN
-			w.RawLInt(dataSize(LONGINT));
+			w.RawLInt(dataSize);
 		END Data;
 
 		(* codeLen:Int32 {code:Int32}:codeLen *)
 		PROCEDURE Code;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			ASSERT(codeSize MOD 4 = 0);
-			w.RawLInt((codeSize DIV 4)(LONGINT));
+			w.RawLInt(codeSize DIV 4);
 			FOR i := 0 TO codeSize-1 DO
 				w.Char(code[i]);
 			END;

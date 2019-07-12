@@ -5,12 +5,12 @@ IMPORT Hashes := CryptoHashes, BIT;
 TYPE
 	HMac* = OBJECT
 		VAR
-			size-: SIZE;		(** mac size in bytes *)
+			size-: LONGINT;		(** mac size in bytes *)
 			name-: ARRAY 64 OF CHAR;
 			ih, oh: Hashes.Hash;
 
 		PROCEDURE & Init*( CONST hashmod: ARRAY OF CHAR );
-		VAR i, l: SIZE; c: CHAR;
+		VAR i, l: LONGINT; c: CHAR;
 		BEGIN
 			ih := Hashes.NewHash( hashmod );
 			oh := Hashes.NewHash( hashmod );
@@ -25,10 +25,10 @@ TYPE
 
 		(** Set a key, recommended key-length is the hash-size of the underlying hash-function.
 			This method has to be invoked for EACH mac to be calculated *)
-		PROCEDURE Initialize*( CONST key: ARRAY OF CHAR; keyLen: SIZE );
+		PROCEDURE Initialize*( CONST key: ARRAY OF CHAR; keyLen: LONGINT );
 		VAR
 			buf, buf2: ARRAY 64 OF CHAR;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			FOR i := 0 TO keyLen-1 DO  buf[i] := key[i]  END;
 			FOR i := keyLen TO 63 DO  buf[i] := 0X  END;
@@ -44,16 +44,16 @@ TYPE
 
 		(** set string from which a mac will be calculated. strings can be concatenated by
 			invoking Update several times without invoking Initialize *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: LONGINT );
 		BEGIN
 			ih.Update( data, pos, len )
 		END Update;
 
 		(** Load the generated mac of size SELF.size into buf, starting at position pos *)
-		PROCEDURE GetMac*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
+		PROCEDURE GetMac*( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
 		VAR
 			tmp: ARRAY 64 OF CHAR;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			ih.GetHash( tmp, 0 );
 			oh.Update( tmp, 0, ih.size );

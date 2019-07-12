@@ -108,7 +108,7 @@ TYPE
 		nodes- : Node;
 
 		nofSamples- : LONGINT;
-		nofProcessors- : SIZE;
+		nofProcessors- : LONGINT;
 		nofRunsTooDeep- : LONGINT;
 		nofUnwindingFaults- : LONGINT;
 		nofSamplesNotStored- : LONGINT;
@@ -240,7 +240,7 @@ VAR
 	samples : Samples;
 	sampleInfos : SampleInfos;
 
-	maxNofSamples : SIZE;
+	maxNofSamples : LONGINT;
 
 	(* statistics *)
 	nofRunsTooDeep : LONGINT;
@@ -511,7 +511,7 @@ BEGIN (* {Caller holds module lock} *)
 END CreateProfile;
 
 (** Returns the size of the sampling buffer in bytes for a given maximum sampling time in seconds *)
-PROCEDURE GetBufferSize*(time : LONGINT) : SIZE;
+PROCEDURE GetBufferSize*(time : LONGINT) : LONGINT;
 BEGIN
 	RETURN time * Kernel.Second * Machine.NumberOfProcessors() * MaxUnwindingDepth * SIZEOF(ADDRESS);
 END GetBufferSize;
@@ -534,7 +534,7 @@ END GetProfile;
 
 (** Start profiling. If the profiler is already running, it is stopped and the sample data is discarded before re-starting it *)
 PROCEDURE Start*(context : Commands.Context); (** [options] ~ *)
-VAR options : Options.Options; unit : ARRAY 4 OF CHAR; maxTime: LONGINT; bufferSize: SIZE; res: WORD;
+VAR options : Options.Options; unit : ARRAY 4 OF CHAR; maxTime, bufferSize: LONGINT; res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("t", "time", Options.Integer); (* in seconds *)
@@ -639,7 +639,7 @@ BEGIN {EXCLUSIVE}
 END ContinueProfiling;
 
 (** Returns TRUE if the profiler is currently running, FALSE otherwise *)
-PROCEDURE GetState*(VAR currentSamples, maxSamples : SIZE) : WORD;
+PROCEDURE GetState*(VAR currentSamples, maxSamples : LONGINT) : LONGINT;
 BEGIN {EXCLUSIVE}
 	IF (state = Running) THEN
 		currentSamples := currentIndex;

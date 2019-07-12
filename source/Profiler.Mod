@@ -23,12 +23,12 @@ TYPE
 	Bytes = Modules.Bytes;
 
 VAR
-	size: SIZE; outside, total: LONGINT;
+	size, outside, total: LONGINT;
 	range: ARRAY MaxRanges OF Range;
 	running: BOOLEAN;
 
 PROCEDURE HandleTimer(id: LONGINT; CONST state: Machine.State);
-VAR low, high, i: SIZE;
+VAR low, high, i: LONGINT;
 BEGIN
 	Machine.AtomicInc(total);
 	low := 0; high := size;
@@ -48,8 +48,8 @@ BEGIN
 	END
 END HandleTimer;
 
-PROCEDURE GetRanges(VAR n: SIZE; VAR range: ARRAY OF Range);
-VAR m: Modules.Module; i, j: SIZE; lowAdr, highAdr: ADDRESS; a: ARRAY MaxModules OF Range;
+PROCEDURE GetRanges(VAR n: LONGINT; VAR range: ARRAY OF Range);
+VAR m: Modules.Module; i, j: LONGINT; lowAdr, highAdr: ADDRESS; a: ARRAY MaxModules OF Range;
 BEGIN
 		(* get & sort - assume module list does not change during this loop *)
 	m := Modules.root; n := 0;
@@ -125,7 +125,7 @@ BEGIN
 	END;
 END Continue;
 
-PROCEDURE GetNum(refs: Bytes;  VAR i: SIZE; VAR num: LONGINT);
+PROCEDURE GetNum(refs: Bytes;  VAR i, num: LONGINT);
 VAR n, s: LONGINT;  x: CHAR;
 BEGIN
 	s := 0;  n := 0;  x := refs[i];  INC(i);
@@ -151,8 +151,8 @@ END GetNum;
 
 (* FindProc - Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
 
-PROCEDURE FindProc(refs: Bytes;  ofs: LONGINT): SIZE;
-VAR i, m, proc: SIZE; t: LONGINT;  ch: CHAR;
+PROCEDURE FindProc(refs: Bytes;  ofs: LONGINT): LONGINT;
+VAR i, m, t, proc: LONGINT;  ch: CHAR;
 BEGIN
 	proc := -1;  i := 0;  m := LEN(refs^);
 	ch := refs[i];  INC(i);
@@ -186,7 +186,7 @@ BEGIN
 END FindProc;
 
 PROCEDURE GetProc(mod: Modules.Module;  VAR pc: ADDRESS;  VAR procname: ARRAY OF CHAR);
-VAR refpos, i: SIZE; refs: Bytes; ch: CHAR;
+VAR refpos, i: LONGINT; refs: Bytes; ch: CHAR;
 BEGIN
 	refpos := -1;
 	DEC(pc, ADDRESSOF(mod.code[0]));
@@ -204,7 +204,7 @@ BEGIN
 END GetProc;
 
 PROCEDURE ShowStats(out : Streams.Writer);
-VAR sum, i: SIZE;
+VAR sum, i: LONGINT;
 BEGIN
 	sum := 0;
 	FOR i := 0 TO size-1 DO
@@ -220,7 +220,7 @@ BEGIN
 END ShowStats;
 
 PROCEDURE ShowDetail*(context : Commands.Context);
-VAR i, j: SIZE; per: LONGINT; pc: ADDRESS; m: Modules.Module; procname: ARRAY 64 OF CHAR;
+VAR i, j, per: LONGINT; pc: ADDRESS; m: Modules.Module; procname: ARRAY 64 OF CHAR;
 BEGIN
 	ShowStats(context.out);
 	FOR i := 0 TO size-1 DO
@@ -249,7 +249,7 @@ BEGIN
 END ShowDetail;
 
 PROCEDURE Hex(x: ADDRESS; VAR buf: ARRAY OF CHAR);
-VAR i, j: SIZE;
+VAR i, j: LONGINT;
 BEGIN
 	j := SIZEOF(ADDRESS) * 2;
 	FOR i := j-1 TO 0 BY -1 DO
@@ -272,7 +272,7 @@ TYPE
 	END;
 
 VAR
-	i, j: SIZE; sum, per: LONGINT; pc: ADDRESS; m, prev: Modules.Module; root: List;
+	i, j, sum, per: LONGINT; pc: ADDRESS; m, prev: Modules.Module; root: List;
 	procname, prevname: ARRAY 64 OF CHAR;
 
 	PROCEDURE Output;

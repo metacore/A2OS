@@ -107,7 +107,7 @@ TYPE
 	END Command;
 
 PROCEDURE GetPar(par: ANY; VAR p: CmdParameters; VAR w: Streams.Writer);
-VAR arg : Streams.StringReader; len, length : SIZE;
+VAR arg : Streams.StringReader; len : LONGINT;
 BEGIN
 	p := NIL; w := NIL;
 	IF (par # NIL) & (par IS Commands.Context) & (par(Commands.Context).arg IS Streams.StringReader) THEN
@@ -115,7 +115,7 @@ BEGIN
 		len := arg.Available();
 		IF (len > 0) THEN
 			NEW(p, len);
-			arg.Bytes(p^, 0, len, length);
+			arg.Bytes(p^, 0, len, len);
 			w := par(Commands.Context).out;
 		END;
 	END
@@ -176,7 +176,7 @@ END Delete;
 PROCEDURE Directory*(context : Commands.Context);
 VAR
 	enum: Files.Enumerator;
-	name: Files.FileName; flags: SET; time, date: LONGINT; size: Files.Size; tdrec: Dates.DateTime; str: ARRAY 32 OF CHAR;
+	name: Files.FileName; flags: SET; time, date, size: LONGINT; tdrec: Dates.DateTime; str: ARRAY 32 OF CHAR;
 BEGIN
 	IF ~context.arg.GetString(str) THEN str := "*"; END;
 	NEW(enum);
@@ -264,7 +264,7 @@ END Modules;
 *)
 PROCEDURE execute(context : Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR);
 VAR
-	ctx: Context; R: Streams.StringReader; cmd, prev, cmds: Command; i, j, p, ofs, len: SIZE; ch, filter: CHAR;
+	ctx: Context; R: Streams.StringReader; cmd, prev, cmds: Command; i, j, p, ofs, len: LONGINT; ch, filter: CHAR;
 	in, pR: Streams.Reader; out, err, pW: Streams.Writer; file: Files.FileName; F, newF: Files.File; fR: Files.Reader;
 	fW: Files.Writer; pipe: Pipes.Pipe; a: CmdAlias; cmdString : POINTER TO ARRAY OF CHAR;
 BEGIN
@@ -282,7 +282,7 @@ BEGIN
 			cmds := cmd; pR := in
 		END;
 		prev := cmd;
-		R.SkipWhitespace(); p := ofs + SIZE(R.Pos());
+		R.SkipWhitespace(); p := ofs + R.Pos();
 		IF p < len THEN
 			i := p; ch := cmdline[i];
 			WHILE (ch # 0X) & (ch # "|") & (ch # "<") & (ch # ">") DO
@@ -397,7 +397,7 @@ BEGIN
 END execute;
 
 PROCEDURE Start*(context : Commands.Context);
-VAR msg: String; len: SIZE; res: WORD; string : POINTER TO ARRAY OF CHAR;
+VAR msg: String; len: LONGINT; res: WORD; string : POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF (context.arg IS Streams.StringReader) & (context.arg.Available() > 0) THEN
 		NEW(string, context.arg.Available() +1);

@@ -67,12 +67,12 @@ VAR
 	CRCTable: ARRAY 256 OF LONGINT;
 
 
-PROCEDURE Adler32*(adler: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: SIZE): LONGINT;
+PROCEDURE Adler32*(adler: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: LONGINT): LONGINT;
 CONST
 	base = 65521;	(* largest prim smaller than 65536 *)
 	nmax = 5552;	(* largest n such that 255n(n + 1) / 2 + (n + 1)(base - 1) <= 2^32 - 1 *)
 VAR
-	s1, s2: LONGINT; k, offset0, len0: SIZE;
+	s1, s2, k, offset0, len0: LONGINT;
 BEGIN
 	offset0 := offset; len0 := len;
 	IF len < 0 THEN
@@ -138,7 +138,7 @@ BEGIN
 END InitCRCTable;
 
 
-PROCEDURE CRC32*(crc: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: SIZE): LONGINT;
+PROCEDURE CRC32*(crc: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: LONGINT): LONGINT;
 VAR idx: LONGINT;
 BEGIN
 	IF offset < 0 THEN

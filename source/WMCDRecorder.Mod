@@ -1959,7 +1959,7 @@ TYPE
 
 		PROCEDURE ListSpeeds(sender, data: ANY);
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			recorder: CDRecord.CDRecorder;
 			tmp, entry: ARRAY MaxLen OF CHAR;
 			speed, max : LONGINT;
@@ -2997,7 +2997,7 @@ TYPE
 					Insert(parent, newDir);
 					list.Refresh();
 				ELSE
-					NEW(newFile, Strings.NewString(filename), Strings.NewString(name), file.Length()(LONGINT));
+					NEW(newFile, Strings.NewString(filename), Strings.NewString(name), file.Length());
 					INC(project.totalSize, newFile.size);
 					owner.UpdateSize(project.totalSize, project(DataProject).overhead);
 					Insert(parent, newFile);
@@ -3056,8 +3056,7 @@ TYPE
 		VAR
 			enumerator: Files.Enumerator;
 			name, filename, path, mask: ARRAY MaxLen OF CHAR;
-			time, date: LONGINT;
-			size: Files.Size;
+			time, date, size: LONGINT;
 			flags: SET;
 			newDir, curDir : Directory;
 			newFile : MakeIsoImages.File;
@@ -3082,8 +3081,8 @@ TYPE
 						curDir := newDir;
 						tmp := newDir;
 					ELSE
-						NEW(newFile, Strings.NewString(filename), Strings.NewString(name), size(LONGINT));
-						INC(project.totalSize, size(LONGINT));
+						NEW(newFile, Strings.NewString(filename), Strings.NewString(name), size);
+						INC(project.totalSize, size);
 						owner.UpdateSize(project.totalSize, project(DataProject).overhead);
 						tmp := newFile;
 					END;
@@ -3206,12 +3205,12 @@ VAR
 	file: Files.File;
 BEGIN
 	file := Files.Old(filename);
-	RETURN file.Length()(LONGINT);
+	RETURN file.Length();
 END GetFileSize;
 
 PROCEDURE RemoveSpecialChars(VAR str: ARRAY OF CHAR);
 VAR
-	i, j: SIZE;
+	i, j: LONGINT;
 BEGIN
 	j := 0;
 	FOR i := 0 TO LEN(str) - 1 DO

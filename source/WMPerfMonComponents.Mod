@@ -124,7 +124,7 @@ TYPE
 		alive, dead, update : BOOLEAN;
 
 		PROCEDURE Resized*;
-		VAR sum, w : LONGINT; i : SIZE; rect : WMRectangles.Rectangle;
+		VAR sum, w, i : LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			rect := bounds.Get(); w := rect.r - rect.l;
 			FOR i := 0 TO LEN(spacings)-1 DO sum := sum + spacings[i]; END;
@@ -221,8 +221,8 @@ TYPE
 			IF ca # NIL THEN
 				grid.Acquire;
 				grid.model.Acquire;
-				grid.model.SetNofRows(LEN(ca)(LONGINT)+1);
-				FOR row := 0 TO LEN(ca)(LONGINT)-1 DO
+				grid.model.SetNofRows(LEN(ca)+1);
+				FOR row := 0 TO LEN(ca)-1 DO
 					grid.model.SetCellTextAOC(0, row+1, 0, ca[row].p.name);
 					grid.model.SetCellTextAOC(1, row+1, 0, ca[row].p.description);
 					grid.model.SetCellTextAOC(2, row+1, 0, ca[row].p.devicename);
@@ -461,14 +461,14 @@ TYPE
 		END Finalize;
 
 		PROCEDURE ScaleDataset(scale : REAL; VAR dataset : WMDiagramComponents.Dataset);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(dataset)-1 DO
 				dataset[i] := dataset[i] * scale;
 			END;
 		END ScaleDataset;
 
-		PROCEDURE InitStats(dimensions : SIZE);
+		PROCEDURE InitStats(dimensions : LONGINT);
 		BEGIN
 			NEW(statistics.cur, dimensions);
 			NEW(statistics.min, dimensions); NEW(statistics.max, dimensions);
@@ -669,7 +669,7 @@ TYPE
 		BEGIN
 			ds := plugin.p.datasetDescriptor;
 			IF ds # NIL THEN
-				nofRows := LEN(ds)(LONGINT) + 1;
+				nofRows := LEN(ds) + 1;
 			ELSE
 				nofRows := 2;
 			END;
@@ -681,7 +681,7 @@ TYPE
 		END InitView;
 
 		PROCEDURE Resized*;
-		VAR sum, w : LONGINT; i: SIZE; rect : WMRectangles.Rectangle;
+		VAR sum, w, i : LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			rect := bounds.Get(); w := rect.r - rect.l - 20 (*scrollbar width*);
 			FOR i := 0 TO LEN(spacings)-1 DO
@@ -731,7 +731,7 @@ TYPE
 		VAR
 			labels : POINTER TO ARRAY OF Strings.String;
 			colors : POINTER TO ARRAY OF WMGraphics.Color;
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			ds := plugin.p.datasetDescriptor;
 			NEW(heights, LEN(ds));
@@ -745,7 +745,7 @@ TYPE
 			NEW(barChart); barChart.alignment.Set(WMComponents.AlignClient);
 			barChart.backgroundColor.Set(WMGraphics.White);
 			barChart.textColor.Set(WMGraphics.Black);
-			barChart.SetData(heights^, LEN(heights)(LONGINT));
+			barChart.SetData(heights^, LEN(heights));
 			barChart.SetLabels(labels^);
 			barChart.SetColors(colors^);
 			AddInternalComponent(barChart);
@@ -755,10 +755,10 @@ TYPE
 		END InitView;
 
 		PROCEDURE UpdateChart(sender, data : ANY);
-		VAR max : REAL;  i : SIZE;
+		VAR max : REAL;  i : LONGINT;
 
 			PROCEDURE FindMax() : REAL;
-			VAR i : SIZE; max : REAL;
+			VAR i : LONGINT; max : REAL;
 			BEGIN
 				max := 0.0;
 				FOR i := 0 TO LEN(statistics.cur)-1 DO
@@ -779,7 +779,7 @@ TYPE
 						heights[i] := 0.0;
 					END;
 				END;
-				barChart.SetData(heights^, LEN(heights)(LONGINT));
+				barChart.SetData(heights^, LEN(heights));
 			END;
 		END UpdateChart;
 
@@ -1142,7 +1142,7 @@ TYPE
 		allBtn, noneBtn, toggleBtn, graphBtn : WMStandardComponents.Button;
 
 		PROCEDURE SetHide(hide : BOOLEAN);
-		VAR i : SIZE; ds : Plugins.DatasetDescriptor;
+		VAR i : LONGINT; ds : Plugins.DatasetDescriptor;
 		BEGIN
 			ds := gridView.plugin.p.datasetDescriptor;
 			FOR i := 0 TO LEN(ds)-1 DO
@@ -1158,7 +1158,7 @@ TYPE
 		VAR
 			ds : Plugins.DatasetDescriptor; scol, srow, ecol, erow, row : LONGINT;
 			graphWindow : PluginGraphWindow;
-			nofHidden : SIZE;
+			nofHidden : LONGINT;
 			hide : BOOLEAN;
 		BEGIN
 			IF sender = allBtn THEN

@@ -32,7 +32,7 @@ TYPE
 			instr* : LONGINT; (* instruction code *)
 			offset* : ADDRESS;
 			code* : Modules.Bytes;
-			length- : SIZE;
+			length- : LONGINT;
 			decoder* : Decoder;
 			next*: Opcode;
 			stream : Streams.Writer;
@@ -95,8 +95,7 @@ TYPE
 			outputStreamWriter* : Streams.Writer;
 			firstOpcode, lastOpcode, currentOpcode: Opcode;
 			completed : BOOLEAN;
-			currentBufferPos, currentCodePos, opcodes: SIZE;
-			mode : LONGINT;
+			currentBufferPos, currentCodePos, opcodes, mode : LONGINT;
 			currentProc* : ProcedureInfo;
 
 		PROCEDURE &New* (reader : Streams.Reader);
@@ -167,7 +166,7 @@ TYPE
 		END Decode;
 
 		PROCEDURE CopyBufferToOpcode(opcode : Opcode);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			NEW(opcode.code, currentBufferPos);
 			FOR i := 0 TO currentBufferPos-1 DO
@@ -178,7 +177,7 @@ TYPE
 		END CopyBufferToOpcode;
 
 		PROCEDURE InsertBytesAtBufferHead* (bytes : Modules.Bytes);
-		VAR i, n : SIZE;
+		VAR i, n : LONGINT;
 		BEGIN
 			n := LEN(bytes);
 			FOR i := currentBufferPos-1 TO 0 BY -1 DO
@@ -244,7 +243,7 @@ TYPE
 		VAR
 			offset, mode, kind, type, dim, tdadr : LONGINT;
 			markerPositions, temp : POINTER TO ARRAY OF RECORD
-								pos : Streams.Position;
+								pos : LONGINT;
 								marker : WMTextView.PositionMarker
 								END;
 			nextMarker, markerSize : LONGINT;
@@ -288,7 +287,7 @@ TYPE
 			w.String("]")
 		END ToString;
 
-		PROCEDURE AddMarkerPosition* (pos : Streams.Position);
+		PROCEDURE AddMarkerPosition* (pos : LONGINT);
 		VAR i : LONGINT;
 		BEGIN
 			markersCreated := FALSE;
@@ -310,7 +309,7 @@ TYPE
 		BEGIN
 			FOR i := 0 TO nextMarker-1 DO
 				markerPositions[i].marker := tv.CreatePositionMarker();
-				markerPositions[i].marker.SetPosition(markerPositions[i].pos(SIZE));
+				markerPositions[i].marker.SetPosition(markerPositions[i].pos);
 				markerPositions[i].marker.SetVisible(FALSE);
 				markerPositions[i].marker.Load("DecoderRes.zip://VariablePositionIcon.png")
 			END;
@@ -332,17 +331,15 @@ TYPE
 
 	ProcedureInfo* = OBJECT (Info)
 		VAR
-			codeOffset: ADDRESS;
-			codeSize: SIZE;
-			retType: LONGINT;
-			index : SIZE;
+			codeOffset: ADDRESS; codeSize: LONGINT;
+			retType, index : LONGINT;
 			fields : FieldArray;
 			fieldCount : LONGINT;
 			method : BOOLEAN;
 
 			gcInfo: GCInfo;
 
-		PROCEDURE &New (CONST n : ARRAY OF CHAR; ofs: ADDRESS; idx : SIZE);
+		PROCEDURE &New (CONST n : ARRAY OF CHAR; ofs: ADDRESS; idx : LONGINT);
 		BEGIN
 			COPY (n, name);
 			codeOffset := ofs;
@@ -355,7 +352,7 @@ TYPE
 		PROCEDURE AddField (fldInfo : FieldInfo);
 		VAR
 			oldFlds : FieldArray;
-			i, len : SIZE;
+			i, len : LONGINT;
 		BEGIN
 			IF fieldCount = LEN(fields) THEN
 				oldFlds := fields;
@@ -400,7 +397,7 @@ TYPE
 		PROCEDURE AddProcedure (procInfo : ProcedureInfo);
 		VAR
 			oldProcs : ProcedureArray;
-			i, len : SIZE;
+			i, len : LONGINT;
 		BEGIN
 			IF procedureCount = LEN(procedures) THEN
 				oldProcs := procedures;
@@ -450,7 +447,7 @@ TYPE
 	END Import;
 
 	VarConstLink=RECORD
-		num: SIZE;
+		num: LONGINT;
 		ch: CHAR;
 		links: POINTER TO ARRAY OF LONGINT;
 	END;
@@ -469,10 +466,9 @@ TYPE
 	END;
 
 	ObjHeader = RECORD (* data from object file header *)
-		entries, commands, pointers, types, modules, links, dataLinks: SIZE;
-		codeSize, dataSize, refSize, constSize, exTableLen, procs, maxPtrs: SIZE;
-		crc: LONGINT;
-		staticTdSize: SIZE; (* ug *)
+		entries, commands, pointers, types, modules, links, dataLinks: LONGINT;
+		codeSize, dataSize, refSize, constSize, exTableLen, procs, maxPtrs, crc: LONGINT;
+		staticTdSize: LONGINT; (* ug *)
 		name: Modules.Name
 	END;
 
@@ -482,9 +478,9 @@ TYPE
 			header: ObjHeader;
 			representationMode : LONGINT;
 			procedures : ProcedureArray; (* references to all procedures, including methods *)
-			procedureCount : SIZE;
+			procedureCount : LONGINT;
 			types : TypeArray;
-			typeCount : SIZE;
+			typeCount : LONGINT;
 			treeView : WMTrees.TreeView;
 			tree : WMTrees.Tree;
 			treePanel, lastDAssPanel : WMStandardComponents.Panel;
@@ -527,7 +523,7 @@ TYPE
 
 		PROCEDURE IsExceptionHandled(pc: ADDRESS): BOOLEAN;
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			entry: Modules.ExceptionTableEntry;
 		BEGIN
 			IF (module # NIL) & (module.exTable # NIL) THEN
@@ -556,7 +552,7 @@ TYPE
 		PROCEDURE AddProcedure (procInfo : ProcedureInfo);
 		VAR
 			oldProcs : ProcedureArray;
-			i, len : SIZE;
+			i, len : LONGINT;
 		BEGIN
 			IF procedureCount = LEN(procedures) THEN
 				oldProcs := procedures;
@@ -568,9 +564,9 @@ TYPE
 			INC(procedureCount)
 		END AddProcedure;
 
-		PROCEDURE FindEntryByOffset (ofs : ADDRESS) : SIZE;
+		PROCEDURE FindEntryByOffset (ofs : ADDRESS) : LONGINT;
 		VAR
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			i := 0;
 			WHILE i < header.entries DO
@@ -580,9 +576,9 @@ TYPE
 			RETURN -1
 		END FindEntryByOffset;
 
-		PROCEDURE GetProcedureByIndex (idx : SIZE) : ProcedureInfo;
+		PROCEDURE GetProcedureByIndex (idx : LONGINT) : ProcedureInfo;
 		VAR
-			i : SIZE;
+			i : LONGINT;
 		BEGIN
 			i := 0;
 			WHILE i < procedureCount DO
@@ -595,20 +591,20 @@ TYPE
 		END GetProcedureByIndex;
 
 		PROCEDURE DecodeRefs(reader : Streams.Reader);
-		VAR idx, thisIdx, entry : SIZE;
+		VAR idx, thisIdx : LONGINT;
 			procInfo : ProcedureInfo;
 			fldInfo : FieldInfo;
 			ch : CHAR;
-			retType, tmp : LONGINT;
+			ofs, prevOfs, retType, entry : LONGINT;
 			name :ARRAY 256 OF CHAR;
-			ofs, prevOfs, i: SIZE;
+			i: LONGINT;
 		BEGIN
 			IF header.codeSize = 0 THEN RETURN END;
 			(* body ref *)
 			IF reader.Available() > 0 THEN
 				ch := reader.Get();
 				ASSERT(ch = OFFHdrBodyRef);
-				reader.RawNum(tmp); ofs := tmp;
+				reader.RawNum(ofs);
 				reader.RawString(name);
 				ASSERT(name = "$$");
 				name := "@Body";
@@ -625,7 +621,7 @@ TYPE
 			WHILE (reader.Available() > 0) & (reader.Peek() = OFFHdrProcRef) DO
 				ch := reader.Get();
 				prevOfs := ofs;
-				reader.RawNum(tmp); ofs := tmp;
+				reader.RawNum(ofs);
 				IF (codeScaleCallback # NIL) THEN codeScaleCallback(ofs) END;
 				ASSERT(procInfo # NIL);
 				procInfo.codeSize := ofs - prevOfs; (* set size of previous procedure *)
@@ -828,7 +824,7 @@ TYPE
 				s : Strings.String;
 				opcodes : Opcode;
 				w : Streams.Writer;
-				i: SIZE;
+				i: LONGINT;
 				opStart, opEnd: ADDRESS; pcPos : LONGINT;
 				pcMarker : WMTextView.PositionMarker;
 (* ug *)			s2: Strings.String;
@@ -863,7 +859,7 @@ TYPE
 					opStart := opcodes.offset;
 					opEnd := opStart + opcodes.length - 1;
 					IF (markPC >= opStart) &	(markPC <= opEnd) THEN
-						pcPos := (w.Pos()+ (markPC-opStart)*3)(LONGINT); (* text position within opcode bytes *)
+						pcPos := w.Pos() + LONGINT((markPC-opStart)*3); (* text position within opcode bytes *)
 					END
 				END;
 				opcodes.PrintOpcodeBytes(w); w.Char(9X);
@@ -934,15 +930,15 @@ TYPE
 		PROCEDURE OutlineModule  (moduleInfo: ModuleInfo; panel : WMStandardComponents.Panel);
 		VAR
 			w : Streams.Writer;
-			i,j : SIZE;
+			i,j : LONGINT;
 			ch: CHAR;
 			proc : ProcedureInfo;
 			e: Export;
 			import: Import;
 			u: Use;
 
-			PROCEDURE DataBlock(from,to: SIZE);
-			VAR i: SIZE; ch: CHAR;
+			PROCEDURE DataBlock(from,to: LONGINT);
+			VAR i: LONGINT; ch: CHAR;
 			BEGIN
 				IF to >= LEN(module.data) THEN to := LEN(module.data)-1 END;
 				FOR i := from TO to DO
@@ -1200,20 +1196,20 @@ TYPE
 
 	END ModuleInfoBytes;
 
-	CodeScaleCallback* = PROCEDURE(VAR size : SIZE);
+	CodeScaleCallback* = PROCEDURE(VAR size : LONGINT);
 
 	ModuleInfoObjectFile = OBJECT (ModuleInfo)
 	VAR
 		f: Files.File;
 		r : Files.Reader;
 		version : LONGINT;
-		nofLinks, nofVarConstLinks : SIZE;
+		nofLinks, nofVarConstLinks : LONGINT;
 		symSize : LONGINT;
 		noProcs : LONGINT; (* ug: temporary *)
 
 		PROCEDURE DecodeEntries;
 		VAR
-			ch : CHAR; i : SIZE; e : LONGINT;
+			ch : CHAR; i, e : LONGINT;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 82X);
@@ -1227,7 +1223,7 @@ TYPE
 		PROCEDURE SkipCommands;
 		VAR
 			ch : CHAR;
-			i: SIZE; num : LONGINT;
+			i, num : LONGINT;
 			n : Modules.Name;
 		BEGIN
 			ch := r.Get();
@@ -1240,7 +1236,7 @@ TYPE
 		PROCEDURE SkipPointers;
 		VAR
 			ch : CHAR;
-			i: SIZE; num : LONGINT;
+			i, num : LONGINT;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 84X);
@@ -1252,7 +1248,7 @@ TYPE
 		PROCEDURE SkipImports;
 		VAR
 			ch : CHAR;
-			i : SIZE;
+			i : LONGINT;
 			n : Modules.Name;
 		BEGIN
 			ch := r.Get();
@@ -1265,7 +1261,7 @@ TYPE
 		PROCEDURE SkipVarConstLinks;
 		VAR
 			ch : CHAR;
-			i, j: SIZE; num, count : LONGINT;
+			i, j, num, count : LONGINT;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 8DX);
@@ -1287,7 +1283,7 @@ TYPE
 		PROCEDURE SkipLinks;
 		VAR
 			ch : CHAR;
-			i: SIZE; num : LONGINT;
+			i, num : LONGINT;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 86X);
@@ -1307,7 +1303,7 @@ TYPE
 
 		PROCEDURE SkipConsts;
 		VAR
-			ch : CHAR; i: SIZE;
+			ch : CHAR; i: LONGINT;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 87X);
@@ -1434,7 +1430,7 @@ TYPE
 
 		PROCEDURE DecodeTypes;
 		VAR
-			i: SIZE; j, size, entry, ptrOfs, tdaddr, moduleBase, nofMethods, nofInhMethods, nofNewMethods, nofPointers, tdSize (* ug *), methNr, entryNr : LONGINT;
+			i, j, size, entry, ptrOfs, tdaddr, moduleBase, nofMethods, nofInhMethods, nofNewMethods, nofPointers, tdSize (* ug *), methNr, entryNr : LONGINT;
 			name : ARRAY 256 OF CHAR; ch : CHAR;
 			type : TypeInfo;
 			procInfo : ProcedureInfo;
@@ -1493,7 +1489,7 @@ TYPE
 
 		PROCEDURE DecodeExTable(r: Streams.Reader);
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			tag: CHAR;
 			a: LONGINT;
 		BEGIN
@@ -1533,7 +1529,7 @@ TYPE
 		END SkipPointerInProc;
 
 		PROCEDURE &New (CONST fileName : ARRAY OF CHAR);
-		VAR ch : CHAR; tmp, res : LONGINT; j: SIZE; msg : ARRAY 255 OF CHAR; pos: Streams.Position;
+		VAR ch : CHAR; tmp : LONGINT; j, res : LONGINT; msg : ARRAY 255 OF CHAR; pos: LONGINT;
 		BEGIN
 			Init;
 			Strings.GetExtension (fileName, msg, ext);
@@ -1562,22 +1558,22 @@ TYPE
 			END;
 			r.SkipBytes(symSize); (* skip symbol file *)
 
-			r.RawLInt(tmp); header.refSize := tmp;
-			r.RawLInt(tmp); header.entries := tmp;
-			r.RawLInt(tmp); header.commands := tmp;
-			r.RawLInt(tmp); header.pointers := tmp;
-			r.RawLInt(tmp); header.types := tmp;
-			r.RawLInt(tmp); header.modules := tmp;
-			r.RawLInt(tmp); nofVarConstLinks := tmp;
-			r.RawLInt(tmp); nofLinks := tmp;
-			r.RawLInt(tmp); header.dataSize := tmp;
-			r.RawLInt(tmp); header.constSize := tmp;
-			r.RawLInt(tmp); header.codeSize := tmp;
+			r.RawLInt(header.refSize);
+			r.RawLInt(header.entries);
+			r.RawLInt(header.commands);
+			r.RawLInt(header.pointers);
+			r.RawLInt(header.types);
+			r.RawLInt(header.modules);
+			r.RawLInt(nofVarConstLinks);
+			r.RawLInt(nofLinks);
+			r.RawLInt(header.dataSize);
+			r.RawLInt(header.constSize);
+			r.RawLInt(header.codeSize);
 
 			IF (codeScaleCallback # NIL) THEN codeScaleCallback(header.codeSize) END;
 
 			(* Sz: Exception handling *)
-			r.RawLInt(tmp); header.exTableLen := tmp;
+			r.RawLInt(header.exTableLen);
 
 			(* ug: Pointers in procedures, maxPtrs, staticTdSize: *)
 			r.RawLInt(noProcs);
@@ -1669,7 +1665,7 @@ TYPE
 				start := Reflection.GetAddress(refs, offset);
 				end := Reflection.GetAddress(refs, offset);
 				NEW(procInfo, name, start - ADDRESS OF module.code[0], 0);
-				procInfo.codeSize := end - start;
+				procInfo.codeSize := LONGINT(end - start);
 				AddProcedure(procInfo);
 				Reflection.SkipSet(offset);
 				WHILE refs[offset] = Reflection.sfVariable DO Reflection.SkipVariable(refs, offset) END;
@@ -1687,7 +1683,7 @@ TYPE
 
 		PROCEDURE DecodeTypes;
 		VAR
-			i, j : SIZE;
+			i, j : LONGINT;
 			type : TypeInfo;
 			typeDesc : Modules.TypeDesc;
 			adr : ADDRESS;

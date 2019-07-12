@@ -57,7 +57,7 @@ BEGIN
 END WriteLn;
 
 PROCEDURE Receiver(me: Oberon.Task);
-	VAR ch: CHAR;  port, t: LONGINT; l: SIZE;
+	VAR ch: CHAR;  port, l, t: LONGINT;
 BEGIN
 	WITH me: Task DO
 		IF me.T.stop THEN

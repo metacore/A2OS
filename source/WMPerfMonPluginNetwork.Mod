@@ -69,7 +69,7 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : SIZE; res: WORD;
+VAR table : Plugins.Table; i : LONGINT; res: WORD;
 BEGIN
 	Network.registry.AddEventHandler(EventHandler, res);
 	Network.registry.GetAll(table);

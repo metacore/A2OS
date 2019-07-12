@@ -799,7 +799,7 @@ BEGIN
 	RETURN listHead;
 END ParseXmlDocument;
 
-PROCEDURE ReportError(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+PROCEDURE ReportError(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 BEGIN
 	xmlHasErrors := TRUE;
 END ReportError;

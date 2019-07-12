@@ -119,7 +119,7 @@ TYPE
 
 		#IF ~COOP THEN
 			PROCEDURE FindRoots*;	(* override *)
-			VAR i: SIZE; ptr {UNTRACED}: ANY; false: BOOLEAN;
+			VAR i: LONGINT; ptr {UNTRACED}: ANY; false: BOOLEAN;
 			VAR name: Name;
 			BEGIN
 				name := SELF.name;
@@ -142,12 +142,12 @@ TYPE
 VAR
 	extension-: ARRAY MaxObjFormats, 8 OF CHAR;
 	loader: ARRAY MaxObjFormats OF LoaderProc;
-	numLoaders: SIZE;
+	numLoaders: LONGINT;
 
 	freeRoot*: Module;	(** list of freed modules (temporary) *)
 
 	root-: Module;	(** list of modules (read-only) *)
-	shutdown*: WORD;	(** None, Reboot, PowerDown *)
+	shutdown*: LONGINT;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
 	register: RECORD
 		first {UNTRACED}, last {UNTRACED}: Module;
@@ -177,7 +177,7 @@ END AddLoader;
 
 (** Remove a module loader. *)
 PROCEDURE RemoveLoader*(CONST ext: ARRAY OF CHAR; proc: LoaderProc);
-VAR i, j: SIZE;
+VAR i, j: LONGINT;
 BEGIN
 	Machine.Acquire(Machine.Modules);
 	i := 0;
@@ -194,7 +194,7 @@ END RemoveLoader;
 
 (** Append string from to to, truncating on overflow. *)
 PROCEDURE Append*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR);
-VAR i, j, m: SIZE;
+VAR i, j, m: LONGINT;
 BEGIN
 	j := 0; WHILE to[j] # 0X DO INC(j) END;
 	m := LEN(to)-1;
@@ -205,7 +205,7 @@ END Append;
 
 (** Add a module to the pool of accessible modules, or return named module. *)
 PROCEDURE Publish*(VAR m: Module; VAR new: BOOLEAN);
-VAR n: Module; i: SIZE; name: Name;
+VAR n: Module; i: LONGINT; name: Name;
 BEGIN
 	Machine.Acquire(Machine.Modules);
 	n := root; WHILE (n # NIL) & (n.name # m.name) DO n := n.next END;
@@ -241,7 +241,7 @@ BEGIN
 END Publish;
 
 PROCEDURE Initialize*(VAR module: Module);
-VAR new: BOOLEAN; import: SIZE;
+VAR new: BOOLEAN; import: LONGINT;
 BEGIN
 	IF (module = NIL) THEN RETURN END;
 	Publish (module, new);
@@ -344,7 +344,7 @@ END Initialize;
 
 	(* Generate a module file name. *)
 	PROCEDURE GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR);
-	VAR i, j: SIZE;
+	VAR i, j: LONGINT;
 	BEGIN
 		i := 0; WHILE name[i] # 0X DO fileName[i] := name[i]; INC(i) END;
 		j := 0; WHILE extension[j] # 0X DO fileName[i] := extension[j]; INC(i); INC(j) END;
@@ -354,12 +354,12 @@ END Initialize;
 	(* sort procedure descriptors by firstPC in ascending order *)
 	PROCEDURE SortProcedureDescs(p: ProcedureDescs);
 
-		PROCEDURE Less(i,j: SIZE): BOOLEAN;
+		PROCEDURE Less(i,j: LONGINT): BOOLEAN;
 		BEGIN
 			RETURN p[i].pcFrom < p[j].pcFrom;
 		END Less;
 
-		PROCEDURE Swap(i,j: SIZE);
+		PROCEDURE Swap(i,j: LONGINT);
 		VAR tmp: ProcedureDescPointer;
 		BEGIN
 			tmp := p[i];
@@ -368,8 +368,8 @@ END Initialize;
 		END Swap;
 
 
-		PROCEDURE Quick( lo, hi: SIZE);
-		VAR i, j, m: SIZE;
+		PROCEDURE Quick( lo, hi: LONGINT);
+		VAR i, j, m: LONGINT;
 		BEGIN
 			IF lo < hi THEN
 				i := lo;  j := hi;  m := (lo + hi) DIV 2;
@@ -394,12 +394,12 @@ END Initialize;
 	(* sort procedure descriptors by firstPC in ascending order *)
 	PROCEDURE SortExceptionTable(p: ExceptionTable);
 
-		PROCEDURE Less(i,j: SIZE): BOOLEAN;
+		PROCEDURE Less(i,j: LONGINT): BOOLEAN;
 		BEGIN
 			RETURN p[i].pcFrom < p[j].pcFrom;
 		END Less;
 
-		PROCEDURE Swap(i,j: SIZE);
+		PROCEDURE Swap(i,j: LONGINT);
 		VAR tmp: ExceptionTableEntry;
 		BEGIN
 			tmp := p[i];
@@ -407,8 +407,8 @@ END Initialize;
 			p[j] := tmp;
 		END Swap;
 
-		PROCEDURE Quick( lo, hi: SIZE);
-		VAR i, j, m: SIZE;
+		PROCEDURE Quick( lo, hi: LONGINT);
+		VAR i, j, m: LONGINT;
 		BEGIN
 			IF lo < hi THEN
 				i := lo;  j := hi;  m := (lo + hi) DIV 2;
@@ -432,7 +432,7 @@ END Initialize;
 
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
 PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR): Module;
-VAR m: Module; fileName: ARRAY 64 OF CHAR; i: SIZE; registered: BOOLEAN;
+VAR m: Module; fileName: ARRAY 64 OF CHAR; i: LONGINT; registered: BOOLEAN;
 BEGIN
 	res := Ok; msg[0] := 0X; m := ByName(name, registered);
 	IF (m#NIL) & (registered) THEN
@@ -490,7 +490,7 @@ END ThisModule;
 
 (** Return the module that contains code address pc or NIL if not found. Can also return freed modules. Non-blocking version for reflection *)
 PROCEDURE ThisModuleByAdr0*(pc: ADDRESS): Module;
-VAR m: Module; found: BOOLEAN; list: SIZE;
+VAR m: Module; found: BOOLEAN; list: LONGINT;
 BEGIN
 	list := 0; found := FALSE;
 	REPEAT
@@ -521,7 +521,7 @@ CONST ModuleInitTimeout = HUGEINT(3000000000); (* Timeout for waiting until a mo
 
 (*	Retrieve a procedure given a module name, the procedure name and some type information (kernel call) *)
 PROCEDURE GetProcedure*(CONST moduleName, procedureName : ARRAY OF CHAR; argTdAdr, retTdAdr : ADDRESS; VAR entryAdr : ADDRESS);
-VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i: SIZE; res : WORD; t: HUGEINT;
+VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i: LONGINT; res : WORD; t: HUGEINT;
 BEGIN
 	module := ThisModule(moduleName, res, ignoreMsg);
 	IF (res = Ok) THEN
@@ -551,7 +551,7 @@ END GetProcedure;
 
 (** Return the named type *)
 PROCEDURE ThisType*(m: Module; CONST name: ARRAY OF CHAR): TypeDesc;
-VAR i: SIZE; type: TypeDesc;
+VAR i: LONGINT; type: TypeDesc;
 BEGIN
 	Machine.Acquire(Machine.Modules);
 	i := 0;
@@ -601,7 +601,7 @@ END TypeOf;
 
 (** searches for the given pc in the global ProcKeyTable, if found it returns the corresponding data element *)
 PROCEDURE FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer;
-VAR l,r,x: SIZE; isHit: BOOLEAN;
+VAR l,r,x: LONGINT; isHit: BOOLEAN;
 BEGIN
 	IF p # NIL THEN
 		l := 0; r := LEN(p)-1;
@@ -629,7 +629,7 @@ END InstallTermHandler;
 
 (** Free a module. The module's termination handler, if any, is called first. Then all objects that have finalizers in this module are finalized (even if they are still reachable). Then the module's data and code are invalidated. *)
 PROCEDURE FreeModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR);
-VAR p, m: Module; term: TerminationHandler; i: SIZE;
+VAR p, m: Module; term: TerminationHandler; i: LONGINT;
 BEGIN
 	m := ModuleByName(name);
 	IF (m # NIL) & (m.refcnt = 0) THEN	(* will be freed below *)
@@ -678,7 +678,7 @@ BEGIN
 END FreeModule;
 
 (** Shut down all modules by calling their termination handlers and then call Machine.Shutdown. *)
-PROCEDURE Shutdown*(code: WORD);
+PROCEDURE Shutdown*(code: LONGINT);
 VAR m: Module; term: TerminationHandler;
 BEGIN
 	IF code # None THEN
@@ -744,7 +744,7 @@ VAR
 
 	PROCEDURE BinSearch(exTable: ExceptionTable; key: ADDRESS): ADDRESS;
 	VAR
-		x, l, r: SIZE;
+		x, l, r: LONGINT;
 	BEGIN
 		l := 0; r:=LEN(exTable) - 1;
 		REPEAT

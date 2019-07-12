@@ -270,7 +270,7 @@ TYPE
 		END ClipDrawTriangle;
 
 		PROCEDURE RenderInternal*(img : Raster.Image; animatedOnly:BOOLEAN);
-		VAR i, j : SIZE; obj : Object; huga : ANY; srcCopy:Raster.Mode;
+		VAR i, j : LONGINT; obj : Object; huga : ANY; srcCopy:Raster.Mode;
 		BEGIN
 			Raster.InitMode(srcCopy, Raster.srcCopy);
 

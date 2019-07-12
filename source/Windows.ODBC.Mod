@@ -230,7 +230,7 @@ VAR
 	SQLPutData: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		dataAdr: ADDRESS;
-		dataSize: SIZE): INTEGER;
+		dataSize: LONGINT): INTEGER;
 
 	SQLSetConnectOption: PROCEDURE {WINAPI} (
 		hdbc: Kernel32.HANDLE;
@@ -464,7 +464,7 @@ END AllocStmt;
 PROCEDURE BindCol*(hstmt: HSTMT; col, retType: INTEGER; VAR buf: ARRAY OF S.BYTE; VAR resSize: LONGINT;
 VAR res: INTEGER);
 BEGIN
-	res:= SQLBindCol(hstmt.hstmt, col, retType, ADDRESSOF(buf), LEN(buf)(LONGINT), ADDRESSOF(resSize));
+	res:= SQLBindCol(hstmt.hstmt, col, retType, ADDRESSOF(buf), LEN(buf), ADDRESSOF(resSize));
 END BindCol;
 
 PROCEDURE Cancel*(hstmt: HSTMT; VAR res: INTEGER);
@@ -476,7 +476,7 @@ PROCEDURE ColAttributes*(hstmt: HSTMT; col, fDescType: INTEGER; VAR rgbDesc: ARR
 VAR res: INTEGER);
 	VAR DescLen: INTEGER;
 BEGIN
-	res:= SQLColAttributes(hstmt.hstmt, col, fDescType, ADDRESSOF(rgbDesc), INTEGER(LEN(rgbDesc)),
+	res:= SQLColAttributes(hstmt.hstmt, col, fDescType, ADDRESSOF(rgbDesc), SHORT(LEN(rgbDesc)),
 		ADDRESSOF(DescLen), ADDRESSOF(pfDesc));
 END ColAttributes;
 
@@ -489,7 +489,7 @@ PROCEDURE DescribeCol*(hstmt: HSTMT; icol: INTEGER; VAR ColName: ARRAY OF CHAR;V
 VAR ColDef: LONGINT; VAR Scale: INTEGER; VAR Nullable: BOOLEAN; VAR res: INTEGER);
 	VAR colLen, null: INTEGER;
 BEGIN
-	res:= SQLDescribeCol(hstmt.hstmt, icol, ADDRESSOF(ColName), INTEGER(LEN(ColName)), ADDRESSOF(colLen),
+	res:= SQLDescribeCol(hstmt.hstmt, icol, ADDRESSOF(ColName), SHORT(LEN(ColName)), ADDRESSOF(colLen),
 				ADDRESSOF(SqlType), ADDRESSOF(ColDef), ADDRESSOF(Scale), ADDRESSOF(null));
 	Nullable:= (null # 0);
 END DescribeCol;
@@ -503,7 +503,7 @@ PROCEDURE StatementError*(hstmt: HSTMT; VAR SqlState: ARRAY OF CHAR; VAR NativeE
 VAR ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR state: ARRAY 6 OF CHAR; len, msgSize: INTEGER;
 BEGIN
-	len:= INTEGER(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
+	len:= SHORT(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
 	res:= SQLError(0, 0, hstmt.hstmt, ADDRESSOF(state), ADDRESSOF(NativeError), ADDRESSOF(ErrorMsg), len,
 		ADDRESSOF(msgSize));
 	COPY (state, SqlState);
@@ -513,7 +513,7 @@ PROCEDURE ConnectionError*(hdbc: HDBC; VAR SqlState: ARRAY OF CHAR; VAR NativeEr
 ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR state: ARRAY 6 OF CHAR; len, msgSize: INTEGER;
 BEGIN
-	len:= INTEGER(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
+	len:= SHORT(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
 	IF hdbc # NIL THEN
 		res:= SQLError(0, hdbc.hdbc, 0, ADDRESSOF(state), ADDRESSOF(NativeError), ADDRESSOF(ErrorMsg), len, ADDRESSOF(msgSize))
 	ELSE
@@ -556,7 +556,7 @@ END FreeStmt;
 PROCEDURE GetCursorName*(hstmt: HSTMT; VAR Cursor: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR size: INTEGER;
 BEGIN
-	res:= SQLGetCursorName(hstmt.hstmt, ADDRESSOF(Cursor), INTEGER(LEN(Cursor)), ADDRESSOF(size))
+	res:= SQLGetCursorName(hstmt.hstmt, ADDRESSOF(Cursor), SHORT(LEN(Cursor)), ADDRESSOF(size))
 END GetCursorName;
 
 PROCEDURE NumResultCols*(hstmt: HSTMT; VAR cols: INTEGER; VAR res: INTEGER);
@@ -610,7 +610,7 @@ END Columns;
 PROCEDURE DriverConnect*(hdbc: HDBC; VAR connStrIn, connStrOut: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR connOutSize: INTEGER;
 BEGIN
-	res:= SQLDriverConnect(hdbc.hdbc, 0, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), INTEGER(LEN(connStrOut)),
+	res:= SQLDriverConnect(hdbc.hdbc, 0, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), SHORT(LEN(connStrOut)),
 		ADDRESSOF(connOutSize), 0)	(* don't show a dialog box *)
 END DriverConnect;
 
@@ -622,7 +622,7 @@ END GetConnectOption;
 PROCEDURE GetData*(hstmt: HSTMT; col, resType: INTEGER; VAR resValue: ARRAY OF S.BYTE; VAR resSize: LONGINT;
 VAR res: INTEGER);
 BEGIN
-	res:= SQLGetData(hstmt.hstmt, col, resType, ADDRESSOF(resValue), LEN(resValue)(LONGINT), ADDRESSOF(resSize))
+	res:= SQLGetData(hstmt.hstmt, col, resType, ADDRESSOF(resValue), LEN(resValue), ADDRESSOF(resSize))
 END GetData;
 
 PROCEDURE GetFunctions*(hdbc: HDBC; whichFunct: INTEGER; VAR exists: BOOLEAN; VAR res: INTEGER);
@@ -635,7 +635,7 @@ PROCEDURE GetInfo*(hdbc: HDBC; infoType: INTEGER; VAR info: ARRAY OF S.BYTE; VAR
 	VAR actSize: INTEGER;
 BEGIN
 	(* should check that the size of info is at least 4 bytes if infoType not of character type *)
-	res:= SQLGetInfo(hdbc.hdbc, infoType, ADDRESSOF(info), INTEGER(LEN(info)), ADDRESSOF(actSize))
+	res:= SQLGetInfo(hdbc.hdbc, infoType, ADDRESSOF(info), SHORT(LEN(info)), ADDRESSOF(actSize))
 END GetInfo;
 
 PROCEDURE GetStmtOption*(hstmt: HSTMT; whichOption: INTEGER; VAR optValue: ARRAY OF S.BYTE; VAR res: INTEGER);
@@ -654,7 +654,7 @@ BEGIN
 	res:= SQLParamData(hstmt.hstmt, ADDRESSOF(data))
 END ParamData;
 
-PROCEDURE PutData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; len: SIZE; VAR res: INTEGER);
+PROCEDURE PutData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; len: LONGINT; VAR res: INTEGER);
 BEGIN
 	res:= SQLPutData(hstmt.hstmt, ADDRESSOF(data), len)
 END PutData;
@@ -722,7 +722,7 @@ END Tables;
 PROCEDURE BrowseConnect*(hdbc: HDBC; connStrIn: ARRAY OF CHAR; VAR connStrOut: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR outLen: INTEGER;
 BEGIN
-	res:= SQLBrowseConnect(hdbc.hdbc, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), INTEGER(LEN(connStrOut)),
+	res:= SQLBrowseConnect(hdbc.hdbc, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), SHORT(LEN(connStrOut)),
 		ADDRESSOF(outLen))
 END BrowseConnect;
 
@@ -746,8 +746,8 @@ PROCEDURE DataSources*(direction: INTEGER; VAR dataSourceName, dataSourceDesc: A
 	VAR nameLen, descLen: INTEGER;
 BEGIN
 	(* could implement it with enumerate procedure *)
-	res:= SQLDataSources(env.henv, direction, ADDRESSOF(dataSourceName), INTEGER(LEN(dataSourceName)),
-		ADDRESSOF(nameLen), ADDRESSOF(dataSourceDesc), INTEGER(LEN(dataSourceDesc)), ADDRESSOF(descLen))
+	res:= SQLDataSources(env.henv, direction, ADDRESSOF(dataSourceName), SHORT(LEN(dataSourceName)),
+		ADDRESSOF(nameLen), ADDRESSOF(dataSourceDesc), SHORT(LEN(dataSourceDesc)), ADDRESSOF(descLen))
 END DataSources;
 
 PROCEDURE DescribeParam*(hstmt: HSTMT; par: INTEGER; VAR sqlType: INTEGER; VAR prec: LONGINT; VAR scale,
@@ -804,7 +804,7 @@ END MoreResults;
 PROCEDURE NativeSql*(hdbc: HDBC; origSql: ARRAY OF CHAR; VAR nativeSql: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR len: LONGINT;
 BEGIN
-	res:= SQLNativeSql(hdbc.hdbc, ADDRESSOF(origSql), NTS, ADDRESSOF(nativeSql), LEN(nativeSql)(LONGINT), ADDRESSOF(len))
+	res:= SQLNativeSql(hdbc.hdbc, ADDRESSOF(origSql), NTS, ADDRESSOF(nativeSql), LEN(nativeSql), ADDRESSOF(len))
 END NativeSql;
 
 PROCEDURE NumParams*(hstmt: HSTMT; VAR res: INTEGER): INTEGER;
@@ -885,14 +885,14 @@ END TablePrivileges;
 PROCEDURE Drivers*(dir: INTEGER; VAR driverDesc, driverAttr: ARRAY OF CHAR; VAR res: INTEGER);
 	VAR descLen, attrLen: INTEGER;
 BEGIN
-	res:= SQLDrivers(env.henv, dir, ADDRESSOF(driverDesc), INTEGER(LEN(driverDesc)), ADDRESSOF(descLen),
-		ADDRESSOF(driverAttr), INTEGER(LEN(driverAttr)), ADDRESSOF(attrLen))
+	res:= SQLDrivers(env.henv, dir, ADDRESSOF(driverDesc), SHORT(LEN(driverDesc)), ADDRESSOF(descLen),
+		ADDRESSOF(driverAttr), SHORT(LEN(driverAttr)), ADDRESSOF(attrLen))
 END Drivers;
 
 PROCEDURE BindParameter*(hstmt: HSTMT; par, parType, cType, sqlType: INTEGER; prec: LONGINT; scale: INTEGER;
 VAR parBuff: ARRAY OF S.BYTE; VAR parBuffActLen: LONGINT; VAR res: INTEGER);
 BEGIN
-	res:= SQLBindParameter(hstmt.hstmt, par, parType, cType, sqlType, prec, scale, ADDRESSOF(parBuff), LEN(parBuff)(LONGINT),
+	res:= SQLBindParameter(hstmt.hstmt, par, parType, cType, sqlType, prec, scale, ADDRESSOF(parBuff), LEN(parBuff),
 		ADDRESSOF(parBuffActLen))
 END BindParameter;
 

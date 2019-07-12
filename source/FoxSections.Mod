@@ -30,12 +30,12 @@ TYPE
 		type-: SHORTINT; (* CodeSection, InlineCodeSection, ...  *)
 
 		fixed-: BOOLEAN; (* whether the position of the section is fixed, as opposed to being restricted by an alignment *)
-		positionOrAlignment-: SIZE; (* the alignment OR the position *)
+		positionOrAlignment-: LONGINT; (* the alignment OR the position *)
 		fingerprint-: Basic.Fingerprint; (* fingerprint of the corresponding syntax tree node *)
 		bitsPerUnit-: LONGINT; (* the unit size given in bits *)
 
 		symbol-: SyntaxTree.Symbol; (* corresponding symbol in AST *)
-		offset-: SIZE;
+		offset-: LONGINT;
 
 		(* for linking *)
 		isReachable-: BOOLEAN;
@@ -57,7 +57,7 @@ TYPE
 			RETURN type IN {EntryCodeSection .. CodeSection};
 		END IsCode;
 
-		PROCEDURE SetOffset*(offset: SIZE);
+		PROCEDURE SetOffset*(offset: LONGINT);
 		BEGIN SELF.offset := offset;
 		END SetOffset;
 
@@ -73,7 +73,7 @@ TYPE
 		BEGIN RETURN ~fixed & (positionOrAlignment > 1)
 		END IsAligned;
 
-		PROCEDURE SetPositionOrAlignment*(isFixed: BOOLEAN; positionOrAlignment: SIZE);
+		PROCEDURE SetPositionOrAlignment*(isFixed: BOOLEAN; positionOrAlignment: LONGINT);
 		BEGIN
 			SELF.fixed := isFixed;
 			SELF.positionOrAlignment := positionOrAlignment
@@ -132,7 +132,7 @@ TYPE
 			w.RawInt(type);
 			Basic.WriteSegmentedName(w,name);
 			w.RawBool(fixed);
-			w.RawLInt(positionOrAlignment(LONGINT));
+			w.RawLInt(positionOrAlignment);
 			w.RawHInt(fingerprint);
 			w.RawLInt(bitsPerUnit);
 		END WriteRaw;
@@ -146,19 +146,19 @@ TYPE
 
 	CommentStr* = POINTER TO ARRAY OF CHAR;
 	Comment* = OBJECT
-		VAR str-: CommentStr; strLen: SIZE; pos-: SIZE; nextComment-: Comment;
+		VAR str-: CommentStr; strLen: LONGINT; pos-: LONGINT; nextComment-: Comment;
 
-		PROCEDURE &Init*(pos: SIZE);
+		PROCEDURE &Init*(pos: LONGINT);
 		BEGIN
 			SELF.pos := pos;
 			NEW(str,32); strLen := 0;
 			str[0] := 0X;
 		END Init;
 
-		PROCEDURE Append(CONST buf: ARRAY OF CHAR;  ofs, len: SIZE);
+		PROCEDURE Append(CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT);
 
-			PROCEDURE Resize(newLen: SIZE);
-			VAR new: CommentStr; i: SIZE;
+			PROCEDURE Resize(newLen: LONGINT);
+			VAR new: CommentStr; i: LONGINT;
 			BEGIN
 				NEW(new,newLen);
 				FOR i := 0 TO strLen-1 DO
@@ -180,7 +180,7 @@ TYPE
 		END Append;
 
 		PROCEDURE Dump*(w: Streams.Writer);
-		VAR i: SIZE; ch: CHAR; newln: BOOLEAN;
+		VAR i: LONGINT;ch: CHAR; newln: BOOLEAN;
 		BEGIN
 			IF w IS Basic.Writer THEN w(Basic.Writer).BeginComment; w(Basic.Writer).IncIndent; END;
 			w.String("; ");
@@ -199,15 +199,15 @@ TYPE
 
 	END Comment;
 
-	GetPCProcedure=PROCEDURE{DELEGATE}(): SIZE;
+	GetPCProcedure=PROCEDURE{DELEGATE}(): LONGINT;
 
 	CommentWriter*= OBJECT (Streams.Writer)
 	VAR
 		firstComment-,lastComment-: Comment; comments-: LONGINT;
 		getPC: GetPCProcedure;
 
-		PROCEDURE AppendToLine*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE; propagate: BOOLEAN;  VAR res: WORD );
-		VAR pos: SIZE;
+		PROCEDURE AppendToLine*( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT; propagate: BOOLEAN;  VAR res: WORD );
+		VAR pos: LONGINT;
 		BEGIN
 			IF len = 0 THEN RETURN END;
 			pos := getPC();
@@ -294,7 +294,7 @@ TYPE
 			InitList(128) (* initializer of general list *)
 		END InitListOfSections;
 
-		PROCEDURE GetSection*(index: SIZE): Section;
+		PROCEDURE GetSection*(index: LONGINT): Section;
 		VAR
 			any: ANY;
 		BEGIN
@@ -302,7 +302,7 @@ TYPE
 			RETURN any(Section)
 		END GetSection;
 
-		PROCEDURE SetSection*(index: SIZE; section: Section);
+		PROCEDURE SetSection*(index: LONGINT; section: Section);
 		BEGIN
 			Set(index, section)
 		END SetSection;
@@ -340,7 +340,7 @@ TYPE
 
 		PROCEDURE Dump*(w: Streams.Writer);
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			section: Section;
 		BEGIN
 			FOR i := 0 TO Length() - 1 DO
@@ -351,7 +351,7 @@ TYPE
 
 		PROCEDURE WriteRaw*(w: Streams.Writer);
 		VAR
-			i: SIZE;
+			i: LONGINT;
 			section: Section;
 		BEGIN
 			FOR i := 0 TO Length() - 1 DO
@@ -376,7 +376,7 @@ TYPE
 			Add(entry)
 		END AddName;
 
-		PROCEDURE GetName*(index: SIZE): SyntaxTree.IdentifierString;
+		PROCEDURE GetName*(index: LONGINT): SyntaxTree.IdentifierString;
 		VAR any: ANY;
 		BEGIN
 			any := Get(index);
@@ -385,7 +385,7 @@ TYPE
 		END GetName;
 
 		PROCEDURE ContainsName*(name: SyntaxTree.IdentifierString): BOOLEAN;
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length() - 1 DO
 				IF name = GetName(i) THEN RETURN TRUE END
@@ -429,7 +429,7 @@ TYPE
 		VAR
 			dump: Basic.Writer;
 			name: SyntaxTree.IdentifierString;
-			i: SIZE;
+			i: LONGINT;
 		BEGIN
 			dump := Basic.GetWriter(w);
 
@@ -468,7 +468,7 @@ TYPE
 
 	PROCEDURE DumpFiltered*(w: Streams.Writer; module: Module; CONST filter: ARRAY OF CHAR);
 	VAR
-		i: SIZE;
+		i: LONGINT;
 		section: Section;
 		name: ObjectFile.SectionName;
 	BEGIN

@@ -17,7 +17,7 @@ TYPE
 			size, cyls, hds, spt: LONGINT;
 			new: BOOLEAN;
 
-		PROCEDURE Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
 		VAR pos, n: LONGINT; r: Files.Rider;
 		BEGIN
 			ASSERT(ofs = 0);	(* implementation restriction *)
@@ -34,7 +34,7 @@ TYPE
 								r.res := num*SELF.blockSize
 							END;
 							IF r.res # 0 THEN	(* fill rest of block with 0 *)
-								pos := num*SELF.blockSize - r.res + LONGINT(ofs); n := r.res;
+								pos := num*SELF.blockSize - r.res + ofs; n := r.res;
 								WHILE n # 0 DO data[pos] := 0X; INC(pos); DEC(n) END
 							END;
 							res := Disks.Ok
@@ -126,7 +126,7 @@ BEGIN
 END Unregister;
 
 PROCEDURE Mounted(dev: Disks.Device): BOOLEAN;
-VAR i: SIZE;
+VAR i: LONGINT;
 BEGIN
 	IF dev.table # NIL THEN
 		FOR i := 0 TO LEN(dev.table)-1 DO
@@ -138,7 +138,7 @@ END Mounted;
 
 (** Close the specified virtual disk device.  Be sure to first unmount any file system that has been mounted on the device, otherwise a trap will appear when the file system is accessed again. *)
 PROCEDURE Close*;	(** name *)
-VAR name: ARRAY 64 OF CHAR; dev: Plugins.Table; i: SIZE; found: BOOLEAN;
+VAR name: ARRAY 64 OF CHAR; dev: Plugins.Table; i: LONGINT; found: BOOLEAN;
 BEGIN
 	In.Open; In.Name(name);
 	IF In.Done THEN
@@ -161,7 +161,7 @@ BEGIN
 END Close;
 
 PROCEDURE Cleanup;
-VAR dev: Plugins.Table; i: SIZE;
+VAR dev: Plugins.Table; i: LONGINT;
 BEGIN
 	Disks.registry.GetAll(dev);
 	IF dev # NIL THEN

@@ -1,8 +1,7 @@
 MODULE FoxBackend; (**  AUTHOR "kaeserm,fof"; PURPOSE "Oberon Compiler: Common backend module";  **)
 
 IMPORT
-	Streams, Diagnostics, Basic := FoxBasic, Global := FoxGlobal, BinaryCode := FoxBinaryCode,
-	Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
+	Streams, Diagnostics, Basic := FoxBasic, Global := FoxGlobal, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
 
 TYPE
 	SectionName = ARRAY 256 OF CHAR;
@@ -20,7 +19,7 @@ TYPE
 		findSectionOffset-: LONGINT;
 		capabilities-: SET;
 		oberon07-: BOOLEAN;
-		instructionWidth -: SIZE;
+		instructionWidth -: LONGINT;
 		hasLinkRegister-: BOOLEAN;
 		name-: ARRAY 32 OF CHAR;
 
@@ -57,7 +56,7 @@ TYPE
 			hasLinkRegister := TRUE;
 		END SetHasLinkRegister;
 
-		PROCEDURE SetInstructionWidth* (instructionWidth: SIZE);
+		PROCEDURE SetInstructionWidth* (instructionWidth: LONGINT);
 		BEGIN
 			SELF.instructionWidth := instructionWidth;
 			(*TRACE(instructionWidth);*)
@@ -115,7 +114,7 @@ TYPE
 		END FindPC;
 
 		(* code address check method to patch code addresses if in forbidden range (Spartan6!) *)
-		PROCEDURE CheckCodeAddress*(VAR adr: BinaryCode.Unit) ;
+		PROCEDURE CheckCodeAddress*(VAR adr: LONGINT) ;
 		BEGIN
 		END CheckCodeAddress;
 

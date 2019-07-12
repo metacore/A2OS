@@ -34,7 +34,7 @@ TYPE
 	VAR
 		moduleName, typeName : Modules.Name;
 		identifiers : IdentifierArray;
-		nofIdentifiers : SIZE;
+		nofIdentifiers : LONGINT;
 
 		next : VariableDeclaration;
 
@@ -55,7 +55,7 @@ TYPE
 		END AddIdentifier;
 
 		PROCEDURE ToStream(w : Streams.Writer);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			Indent(w, VariableDeclarationIndent);
 			FOR i := 0 TO nofIdentifiers - 1 DO
@@ -67,7 +67,7 @@ TYPE
 		END ToStream;
 
 		PROCEDURE Resize;
-		VAR newArray : IdentifierArray; i : SIZE;
+		VAR newArray : IdentifierArray; i : LONGINT;
 		BEGIN
 			NEW(newArray, 2 * LEN(identifiers));
 			FOR i := 0 TO LEN(identifiers)-1 DO
@@ -128,17 +128,17 @@ TYPE
 	ImportList = OBJECT
 	VAR
 		imports : ARRAY 128 OF Modules.Name;
-		nofImports : SIZE;
+		nofImports : LONGINT;
 
 		PROCEDURE &Init;
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(imports)-1 DO imports[i] := ""; END;
 			nofImports := 0;
 		END Init;
 
-		PROCEDURE IndexOf(CONST import : Modules.Name) : SIZE;
-		VAR i : SIZE;
+		PROCEDURE IndexOf(CONST import : Modules.Name) : LONGINT;
+		VAR i : LONGINT;
 		BEGIN
 			i := 0;
 			WHILE (i < nofImports) & (imports[i] # import) DO INC(i); END;
@@ -155,7 +155,7 @@ TYPE
 		END Add;
 
 		PROCEDURE ToStream(w : Streams.Writer);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			ASSERT(w # NIL);
 			FOR i := 0 TO nofImports - 1 DO
@@ -169,7 +169,7 @@ TYPE
 	Names = OBJECT
 	VAR
 		names : IdentifierArray;
-		nofNames : SIZE;
+		nofNames : LONGINT;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -185,8 +185,8 @@ TYPE
 			INC(nofNames);
 		END Add;
 
-		PROCEDURE IndexOf(CONST identifier : ARRAY OF CHAR) : SIZE;
-		VAR index : SIZE;
+		PROCEDURE IndexOf(CONST identifier : ARRAY OF CHAR) : LONGINT;
+		VAR index : LONGINT;
 		BEGIN
 			index := 0;
 			WHILE (index < nofNames) & (names[index].name # identifier) DO INC(index); END;
@@ -197,7 +197,7 @@ TYPE
 		END IndexOf;
 
 		PROCEDURE GetNameOf(component : ANY; VAR name : ARRAY OF CHAR);
-		VAR index : SIZE;
+		VAR index : LONGINT;
 		BEGIN
 			IF (component # NIL) THEN
 				index := 0;
@@ -214,9 +214,9 @@ TYPE
 
 		PROCEDURE GenerateIdentifier(caption : ARRAY OF CHAR; CONST moduleName,  typeName : ARRAY OF CHAR; component : ANY) : Identifier;
 		VAR
-			temp, suffixStr, identifier : Identifier; suffix : SIZE;
+			temp, suffixStr, identifier : Identifier; suffix : LONGINT;
 
-			PROCEDURE AppendInteger(VAR string : ARRAY OF CHAR; integer : SIZE);
+			PROCEDURE AppendInteger(VAR string : ARRAY OF CHAR; integer : LONGINT);
 			VAR nbr : ARRAY 8 OF CHAR;
 			BEGIN
 				Strings.IntToStr(integer, nbr);
@@ -234,7 +234,7 @@ TYPE
 			END IsNum;
 
 			PROCEDURE RemoveReservedCharacters(VAR string : ARRAY OF CHAR);
-			VAR i, j: SIZE;
+			VAR i, j: LONGINT;
 			BEGIN
 				i := 0; j := 0;
 				WHILE (i < LEN(string)) & (string[i] # 0X) DO
@@ -272,7 +272,7 @@ TYPE
 		END GenerateIdentifier;
 
 		PROCEDURE Resize;
-		VAR newArray : IdentifierArray; i : SIZE;
+		VAR newArray : IdentifierArray; i : LONGINT;
 		BEGIN
 			NEW(newArray, 2 * LEN(names));
 			FOR i := 0 TO LEN(names)-1 DO
@@ -363,7 +363,7 @@ TYPE
 
 			PROCEDURE WriteProperties(w : Streams.Writer; CONST identifier : Identifier; component : WMComponents.Component);
 			VAR
-				pa : WMProperties.PropertyArray; name : Strings.String;  i : SIZE;
+				pa : WMProperties.PropertyArray; name : Strings.String;  i : LONGINT;
 				pname : ARRAY 64 OF CHAR;
 				helper : Streams.StringWriter;
 
@@ -589,7 +589,7 @@ TYPE
 	END Transformer;
 
 PROCEDURE GetUCS32String(string : Strings.String) : Texts.PUCS32String;
-VAR ucsString : Texts.PUCS32String; idx : SIZE;
+VAR ucsString : Texts.PUCS32String; idx : LONGINT;
 BEGIN
 	ucsString := NIL;
 	IF (string # NIL) & (Strings.Length(string^) > 0) THEN
@@ -600,7 +600,7 @@ BEGIN
 END GetUCS32String;
 
 PROCEDURE Replace(CONST pattern : ARRAY OF CHAR; by : Strings.Buffer; text : Texts.Text; VAR error : BOOLEAN);
-VAR string : Strings.String; ucsPattern, ucsString : Texts.PUCS32String; nofReplacements, idx : SIZE;
+VAR string : Strings.String; ucsPattern, ucsString : Texts.PUCS32String; nofReplacements, idx : LONGINT;
 BEGIN
 	ASSERT(Strings.Length(pattern) > 2); (* [...] *)
 	ASSERT(by # NIL);
@@ -616,7 +616,7 @@ BEGIN
 END Replace;
 
 PROCEDURE ReplaceString(CONST string, by : ARRAY OF CHAR; text : Texts.Text; VAR error : BOOLEAN);
-VAR nofReplacements: SIZE; idx : SIZE; ucsString, ucsBy : Texts.PUCS32String;
+VAR nofReplacements, idx : LONGINT; ucsString, ucsBy : Texts.PUCS32String;
 BEGIN
 	ASSERT(Strings.Length(string) > 2);
 	ASSERT(Strings.Length(by) > 0);

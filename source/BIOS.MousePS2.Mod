@@ -148,7 +148,7 @@ BEGIN
 END WriteCmd;
 
 PROCEDURE ConfigMouse;
-VAR i: SIZE; rate: LONGINT; s: ARRAY 16 OF CHAR;
+VAR i, rate: LONGINT; s: ARRAY 16 OF CHAR;
 BEGIN
 	errors := 0; ignored := 0;
 	Machine.GetConfig("MouseRate", s);

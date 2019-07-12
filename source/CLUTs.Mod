@@ -214,7 +214,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 
 	(** copy color lookup table **)
 	PROCEDURE Copy* (from, to: CLUT);
-		VAR n: SIZE;
+		VAR n: LONGINT;
 	BEGIN
 		to.col := from.col; to.size := from.size; to.bits := from.bits;
 		IF from.cube = NIL THEN

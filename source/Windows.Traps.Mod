@@ -46,7 +46,7 @@ VAR
 
 		(** Append this to to. *)
 		PROCEDURE StrAppend( VAR to (** in/out *) : ARRAY OF CHAR;  CONST this: ARRAY OF CHAR );
-		VAR i, j, l: SIZE;
+		VAR i, j, l: LONGINT;
 		BEGIN
 			i := 0;
 			WHILE to[i] # 0X DO INC( i ) END;
@@ -57,7 +57,7 @@ VAR
 
 		(** Convert an integer into a string. *)
 		PROCEDURE StrIntToStr( val: LONGINT;  VAR str: ARRAY OF CHAR );
-		VAR i, j: SIZE;
+		VAR i, j: LONGINT;
 			digits: ARRAY 16 OF LONGINT;
 		BEGIN
 			IF val = MIN( LONGINT ) THEN COPY( "-2147483648", str );  RETURN END;

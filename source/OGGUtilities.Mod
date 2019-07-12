@@ -415,7 +415,7 @@ TYPE
 	END IntElement;
 
 	BufferPool* = OBJECT
-		VAR head, num: SIZE; buffer: POINTER TO ARRAY OF SoundDevices.Buffer;
+		VAR head, num: LONGINT; buffer: POINTER TO ARRAY OF SoundDevices.Buffer;
 
 		PROCEDURE Append*(x: SoundDevices.Buffer);
 		BEGIN {EXCLUSIVE}
@@ -434,7 +434,7 @@ TYPE
 			RETURN x
 		END Remove;
 
-		PROCEDURE &Init*(n: SIZE);
+		PROCEDURE &Init*(n: LONGINT);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;
@@ -812,7 +812,7 @@ TYPE
 	END GetFilename;
 
 	PROCEDURE Array2D*(name: ARRAY OF CHAR; VAR a: ARRAY OF ARRAY OF LONGINT);
-	VAR i: SIZE;
+	VAR i: LONGINT;
 	BEGIN
 		w.String("[ "); w.String(name); w.String(" ]"); w.Ln;
 		FOR i := 0 TO LEN(a) - 1 DO
@@ -824,7 +824,7 @@ TYPE
 	END Array2D;
 
 	PROCEDURE ArrayBool*(name: ARRAY OF CHAR; VAR a: ARRAY OF BOOLEAN);
-	VAR i: SIZE;
+	VAR i: LONGINT;
 	BEGIN
 		w.String("[ "); w.String(name); w.String(" ]"); w.Ln;
 		FOR i := 0 TO LEN(a) - 1 DO
@@ -853,8 +853,8 @@ TYPE
 		ArrayHugeLen(name, a, LEN(a))
 	END ArrayHuge;
 
-	PROCEDURE ArrayHugeLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF HUGEINT; n: SIZE);
-	VAR i: SIZE;
+	PROCEDURE ArrayHugeLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF HUGEINT; n: LONGINT);
+	VAR i: LONGINT;
 	BEGIN
 		IF (n > LEN(a)) THEN
 			KernelLog.String("ASSERTION failed - array too short")
@@ -871,8 +871,8 @@ TYPE
 	END ArrayHugeLen;
 
 	(** print an array of longint of a given length *)
-	PROCEDURE ArrayLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF LONGINT; n: SIZE);
-	VAR i: SIZE;
+	PROCEDURE ArrayLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF LONGINT; n: LONGINT);
+	VAR i: LONGINT;
 	BEGIN
 		IF (n > LEN(a)) THEN
 			KernelLog.String("ASSERTION failed - array too short")

@@ -93,7 +93,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 
 	PROCEDURE ReadLine(VAR R: Texts.Reader; VAR line: ARRAY OF CHAR);
 		VAR
-			i, l: SIZE;
+			i, l: LONGINT;
 			ch: CHAR;
 	BEGIN
 		l := LEN(line)-1;
@@ -591,8 +591,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 
 	PROCEDURE SplitGopherAdr(VAR url, host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): LONGINT;
 		VAR
-			key: LONGINT;
-			i, j, l: SIZE;
+			key, i, j, l: LONGINT;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
 		BEGIN

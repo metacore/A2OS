@@ -138,7 +138,7 @@ TYPE
 		END GetLastLoginTime;
 
 		PROCEDURE IsInterestedOnContainer*(containerName: ARRAY OF CHAR) : BOOLEAN;
-		VAR dynStr: DynamicStrings.DynamicString; i: SIZE; p: ANY; str: Strings.String;
+		VAR dynStr: DynamicStrings.DynamicString; i: LONGINT; p: ANY; str: Strings.String;
 		BEGIN
 			IF (interestedContainers # NIL) THEN
 				interestedContainers.Lock;
@@ -166,7 +166,7 @@ TYPE
 		END AddInterestedContainer;
 
 		PROCEDURE RemoveInterestedContainer*(containerName: ARRAY OF CHAR);
-		VAR dynStr, delEntry: DynamicStrings.DynamicString; i: SIZE; p: ANY; str: Strings.String;
+		VAR dynStr, delEntry: DynamicStrings.DynamicString; i: LONGINT; p: ANY; str: Strings.String;
 		BEGIN
 			IF (interestedContainers # NIL) THEN
 				delEntry := NIL;
@@ -229,7 +229,7 @@ TYPE
 		END Internalize;
 
 		PROCEDURE Externalize*() : XML.Content;
-		VAR container: XML.Container; elem, subElem: XML.Element; i: SIZE; p: ANY;
+		VAR container: XML.Container; elem, subElem: XML.Element; i: LONGINT; p: ANY;
 			dynStr: DynamicStrings.DynamicString; str: Strings.String;
 		BEGIN
 			NEW(container);
@@ -271,7 +271,7 @@ TYPE
 		END TableView;
 
 		PROCEDURE DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR container: XML.Container; pTag: XML.Element; ul, li: XML.Element; i: SIZE; p: ANY;
+		VAR container: XML.Container; pTag: XML.Element; ul, li: XML.Element; i: LONGINT; p: ANY;
 			dynStr: DynamicStrings.DynamicString; str, lastLoginTimeStr: Strings.String;
 		BEGIN
 			NEW(container);
@@ -1220,7 +1220,7 @@ TYPE
 		END GetNewEntriesForContainer;
 
 		PROCEDURE Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR session: HTTPSession.Session; webAccount: WebAccount; interestedList: TFClasses.List; i: SIZE;
+		VAR session: HTTPSession.Session; webAccount: WebAccount; interestedList: TFClasses.List; i: LONGINT;
 			p: ANY; dynStr: DynamicStrings.DynamicString; contName: Strings.String; container: XML.Container;
 		BEGIN
 			session := HTTPSession.GetSession(request);
@@ -1426,7 +1426,7 @@ TYPE
 
 	(** returns true iff the 'username' / 'pwd' pair is an authorized administrator *)
 	PROCEDURE IsAuthorizedAsAdmin*(username, password: ARRAY OF CHAR) : BOOLEAN;
-	VAR i: SIZE; p: ANY; adminInfo: AdministratorInfo;
+	VAR i: LONGINT; p: ANY; adminInfo: AdministratorInfo;
 	BEGIN (* administrators # NIL *)
 		administrators.Lock;
 		FOR i := 0 TO administrators.GetCount()-1 DO
@@ -1477,7 +1477,7 @@ TYPE
 
 	(** get the webaccount for a specific 'username'. If no such web account is present then NIL is returned. *)
 	PROCEDURE GetWebAccount*(username: ARRAY OF CHAR) : WebAccount;
-	VAR persCont: WebStd.PersistentDataContainer; list: WebStd.PersistentDataObjectList; i: SIZE;
+	VAR persCont: WebStd.PersistentDataContainer; list: WebStd.PersistentDataObjectList; i: LONGINT;
 		webAccount: WebAccount;
 	BEGIN
 		LoadPrevalenceSystem;
@@ -1499,7 +1499,7 @@ TYPE
 
 	(** get the authorization domain specified with 'name'. if not present then NIL is returned. *)
 	PROCEDURE GetAuthorizationDomain*(name: ARRAY OF CHAR) : AuthorizationDomain;
-	VAR persCont: WebStd.PersistentDataContainer; list: WebStd.PersistentDataObjectList; i: SIZE;
+	VAR persCont: WebStd.PersistentDataContainer; list: WebStd.PersistentDataObjectList; i: LONGINT;
 		domain: AuthorizationDomain;
 	BEGIN
 		LoadPrevalenceSystem;
@@ -1536,7 +1536,7 @@ TYPE
 
 	PROCEDURE GetWebAccountInsertView(accountContainerName: Strings.String;
 		superEntry: WebComplex.WebForumEntry; allowActivation: BOOLEAN; request: HTTPSupport.HTTPRequest): XML.Content;
-	VAR table, tr, td, select, option: XML.Element; list: WebStd.PersistentDataObjectList; i: SIZE;
+	VAR table, tr, td, select, option: XML.Element; list: WebStd.PersistentDataObjectList; i: LONGINT;
 		webAccount: WebAccount; oidStr: ARRAY 14 OF CHAR; accountCont: WebStd.PersistentDataContainer;
 	BEGIN
 		NEW(table); table.SetName("table");
@@ -1723,7 +1723,7 @@ TYPE
 
 	(* deletes a web account in all authorization domains *)
 	PROCEDURE DeleteFromAllDomains(account: WebAccount);
-	VAR persCont: WebStd.PersistentDataContainer; list: WebStd.PersistentDataObjectList; i: SIZE;
+	VAR persCont: WebStd.PersistentDataContainer; list: WebStd.PersistentDataObjectList; i: LONGINT;
 		domain: AuthorizationDomain;
 	BEGIN (* account # NIL *)
 		LoadPrevalenceSystem;

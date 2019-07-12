@@ -2,13 +2,13 @@ MODULE WMMacros;	(** AUTHOR "TF"; PURPOSE "Text macros"; *)
 
 IMPORT
 	Texts, KernelLog, Strings, TextUtilities, WMTextView, WMEditors,
-	Commands, Files, XML, XMLScanner, XMLParser, XMLObjects, Streams;
+	Commands, Files, XML, XMLScanner, XMLParser, XMLObjects;
 
 TYPE
 	String = Strings.String;
 	Char32 = Texts.Char32;
 	ParameterEntry = RECORD
-		a, b : SIZE;
+		a, b : LONGINT;
 	END;
 	ParameterList = POINTER TO ARRAY OF ParameterEntry;
 
@@ -46,7 +46,7 @@ BEGIN
 	RETURN TRUE
 END LeftSkipIdent;
 
-PROCEDURE ParseLeft(r : Texts.TextReader; VAR nof : SIZE) : BOOLEAN;
+PROCEDURE ParseLeft(r : Texts.TextReader; VAR nof : LONGINT) : BOOLEAN;
 VAR ch : Char32;
 BEGIN
 	nof := 0;
@@ -62,8 +62,8 @@ BEGIN
 	RETURN TRUE
 END ParseLeft;
 
-PROCEDURE ParseToRight(r : Texts.TextReader; end, nof : SIZE; par : ParameterList; VAR startPos : SIZE) : BOOLEAN;
-VAR ch : Char32; i : SIZE;
+PROCEDURE ParseToRight(r : Texts.TextReader; end, nof : LONGINT; par : ParameterList; VAR startPos : LONGINT) : BOOLEAN;
+VAR ch : Char32; i : LONGINT;
 BEGIN
 	i := 0;
 	startPos := -2;
@@ -93,7 +93,7 @@ BEGIN
 	RETURN TRUE
 END ParseToRight;
 
-PROCEDURE InsertParameter(text : Texts.Text; parameter: ParameterEntry; pos : SIZE);
+PROCEDURE InsertParameter(text : Texts.Text; parameter: ParameterEntry; pos : LONGINT);
 BEGIN
 	text.CopyFromText(text, parameter.a, parameter.b - parameter.a, pos)
 END InsertParameter;
@@ -119,7 +119,7 @@ END FindMacro;
 PROCEDURE ExecuteMacro(text : Texts.Text; r : Texts.TextReader; cursor : WMTextView.PositionMarker; parameters : ParameterList; macro : XML.Element);
 VAR
 	en : XMLObjects.Enumerator;
-	p : ANY; s: String; cp, nofWhitespace, lineStart : SIZE;
+	p : ANY; s: String; cp, nofWhitespace, lineStart : LONGINT;
 
 		PROCEDURE HandleString(xml : XML.Element);
 			VAR en : XMLObjects.Enumerator;
@@ -182,8 +182,8 @@ END ExecuteMacro;
 PROCEDURE Insert(text : Texts.Text; cursor : WMTextView.PositionMarker);
 VAR buf : ARRAY 3 OF Texts.Char32;
 	 r : Texts.TextReader;
-	 nof : SIZE;
-	 a, b, i : SIZE;
+	 nof : LONGINT;
+	 a, b, i : LONGINT;
 	 parameters : ParameterList;
 	 key : ARRAY 128 OF CHAR;
 	 macro : XML.Element;
@@ -261,7 +261,7 @@ BEGIN
 END GetMacroKeySym;
 
 (* Report errors while parsing *)
-PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
+PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
 BEGIN
 	KernelLog.String("WMMacros: Parse error at pos "); KernelLog.Int(pos, 5); KernelLog.String(" in line "); KernelLog.Int(line, 5);
 	KernelLog.String(" row "); KernelLog.Int(row, 5); KernelLog.String(" - "); KernelLog.String(msg); KernelLog.Ln;

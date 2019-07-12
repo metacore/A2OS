@@ -50,7 +50,7 @@ TYPE
 			adding := FALSE;
 		END Open;
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Files.Size): BOOLEAN;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date, size: LONGINT): BOOLEAN;
 		BEGIN
 			IF found THEN
 				COPY ( name0, name );
@@ -65,7 +65,7 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size: Files.Size);
+		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
 		BEGIN
 			ASSERT(adding);
 
@@ -88,7 +88,7 @@ PROCEDURE GetChecksum* ( CONST file : ARRAY OF CHAR ) : Strings.String;
 CONST
 	bufSize = 512;
 VAR
-	len: SIZE;
+	read, len : LONGINT;
 	tmp, res : Strings.String;
 	md5context : MD5.Context;
 	md5digest : MD5.Digest;
@@ -105,8 +105,9 @@ BEGIN
 	Files.OpenReader ( r, f, 0 );
 
 	md5context := MD5.New();
+	read := 0;
 	LOOP
-		r.Bytes ( tmp^, 0, bufSize, len );
+		r.Bytes ( tmp^, read, bufSize, len );
 		MD5.WriteBytes ( md5context, tmp^, len );
 		IF len < bufSize THEN EXIT END;
 	END;

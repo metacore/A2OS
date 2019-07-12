@@ -22,7 +22,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Grow;
-		VAR i: SIZE; new: Table;
+		VAR i: LONGINT; new: Table;
 		BEGIN
 			NEW(new, 2*LEN(table));
 			FOR i := 0 TO LEN(table)-1 DO new[i] := table[i] END;
@@ -321,7 +321,7 @@ TYPE
 		BEGIN enum(StrType,FALSE);
 		END Enumerate;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrType THEN c.GetName(type);
 			ELSIF c.class = Class.Object THEN reader.Error("can not set attribute ", name);
@@ -329,7 +329,7 @@ TYPE
 			END;
 		END Set;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF name = StrType THEN c.SetName(type);
 			ELSIF reader # NIL THEN reader.Error("unsupported attribute (Get)", name);
@@ -373,6 +373,7 @@ TYPE
 			END;
 			RETURN translation # NIL;
 		END RemoveTranslation;
+
 
 		PROCEDURE ReadContent*(CONST name: ARRAY OF CHAR; array: BOOLEAN);
 		VAR index: LONGINT; str: Strings.String;
@@ -471,6 +472,7 @@ TYPE
 			writer.Close;
 		END Dump;
 
+
 	END Object;
 
 	(** Object list *)
@@ -479,7 +481,7 @@ TYPE
 		list*: FoxBasic.List;
 		baseType*: Name;
 
-		PROCEDURE &InitList*(initialSize: SIZE; CONST baseType: ARRAY OF CHAR);
+		PROCEDURE &InitList*(initialSize: LONGINT; CONST baseType: ARRAY OF CHAR);
 		BEGIN
 			InitObject;
 			NEW(list, initialSize);
@@ -487,11 +489,11 @@ TYPE
 			type := "ObjectList";
 		END InitList;
 
-		PROCEDURE Length*(): SIZE;
+		PROCEDURE Length*(): LONGINT;
 		BEGIN RETURN list.Length()
 		END Length;
 
-		PROCEDURE GetElement*(i: SIZE): Object;
+		PROCEDURE GetElement*(i: LONGINT): Object;
 		VAR obj: ANY;
 		BEGIN
 			IF (i >= 0) & (i < list.Length()) THEN
@@ -501,7 +503,7 @@ TYPE
 			END;
 		END GetElement;
 
-		PROCEDURE SetElement*(i: SIZE; o: Object);
+		PROCEDURE SetElement*(i: LONGINT; o: Object);
 		BEGIN
 			(*WHILE list.Length() <= i DO list.Add(NIL) END;*)
 			IF list.Length() = i THEN list.Add(o) ELSE list.Set(i,o) END;
@@ -513,7 +515,7 @@ TYPE
 			enum("element", TRUE);
 		END Enumerate;
 
-		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		BEGIN
 			IF (name = "element") OR (name="") THEN
 				c.SetObject(GetElement(index), baseType);
@@ -522,7 +524,7 @@ TYPE
 			END;
 		END Get;
 
-		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content);
+		PROCEDURE Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content);
 		VAR object: Object;
 		BEGIN
 			IF (name = "element") OR (name="") THEN
@@ -543,19 +545,20 @@ TYPE
 		END Contains;
 
 		PROCEDURE Traverse*(action: Action);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO Length()-1 DO
 				action(GetElement(i));
 			END;
 		END Traverse;
 
-		PROCEDURE IndexOf*(o: Object): SIZE;
+		PROCEDURE IndexOf*(o: Object): LONGINT;
 		BEGIN
 			RETURN list.IndexOf(o)
 		END IndexOf;
 
 	END ObjectList;
+
 
 	Generator = PROCEDURE {DELEGATE} (CONST type: ARRAY OF CHAR): Object;
 
@@ -586,7 +589,7 @@ TYPE
 		END ReadObject;
 
 		PROCEDURE NeedsTranslation(CONST s: ARRAY OF CHAR): BOOLEAN;
-		VAR i: SIZE; start: BOOLEAN;
+		VAR i: LONGINT; start: BOOLEAN;
 		BEGIN
 			i := 0; start := FALSE;
 			WHILE s[i] # 0X DO
@@ -752,6 +755,7 @@ TYPE
 			NameAttribute(name, str);
 		END SetAttribute;
 
+
 	END Writer;
 
 	WrittenTable = OBJECT (Basic.HashTable)
@@ -827,11 +831,12 @@ TYPE
 	ReadTable = OBJECT (Basic.List)
 
 		PROCEDURE Enter(o: Object);
-		BEGIN Add(o);
+		BEGIN	 Add(o);
 		END Enter;
 
 		PROCEDURE GetObject(index: HUGEINT): Object;
-		BEGIN RETURN Get(LONGINT(index))(Object)
+		BEGIN
+			RETURN Get(LONGINT(index))(Object)
 		END GetObject;
 
 	END ReadTable;
@@ -843,7 +848,7 @@ TYPE
 	END;
 
 	Symbol = POINTER TO RECORD
-		name: StringPool.Index;
+		name: LONGINT;
 		first, last: Element;
 		numberElements: LONGINT;
 		next: Symbol;
@@ -906,7 +911,7 @@ TYPE
 		END Used;
 
 		PROCEDURE AddSymbol(CONST name: ARRAY OF CHAR): Symbol;
-		VAR id: StringPool.Index; any: ANY; symbol: Symbol;
+		VAR id: LONGINT; any: ANY; symbol: Symbol;
 		BEGIN
 			id := StringPool.GetIndex1(name);
 			any := stack.symbols.Get(id);
@@ -924,7 +929,7 @@ TYPE
 		END AddSymbol;
 
 		PROCEDURE FindElement(CONST name: ARRAY OF CHAR; index: LONGINT): XML.Element;
-		VAR id: StringPool.Index; any: ANY; symbol: Symbol; element: Element;
+		VAR id: LONGINT; any: ANY; symbol: Symbol; element: Element;
 		BEGIN
 			IF name = "" THEN
 				symbol := stack.firstSymbol;
@@ -999,7 +1004,7 @@ TYPE
 		scope: Scope;
 		read: ReadTable;
 
-		PROCEDURE ReportXMLError(pos, line,col: Streams.Position; CONST msg: ARRAY OF CHAR);
+		PROCEDURE ReportXMLError(pos, line,col: LONGINT; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			IF ~err THEN
 				error.Char(CHR(9H)); error.Char(CHR(9H)); error.String("pos "); error.Int(pos, 6);
@@ -1131,6 +1136,7 @@ TYPE
 
 	END XMLReader;
 
+
 PROCEDURE NewXMLWriter*(w: Streams.Writer): Writer;
 VAR writer: XMLWriter;
 BEGIN
@@ -1167,5 +1173,7 @@ BEGIN
 	writer.Close;
 	D.Ln;
 END Trace;
+
+
 
 END PersistentObjects.

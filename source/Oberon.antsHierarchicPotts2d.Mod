@@ -240,7 +240,7 @@ BEGIN
 	globaly1 := from;            		globaly2 := to;
 	antsSecurity.SetProgress(SHORT(ENTIER(to / globalStat.N * 100)));
 
-	antsBellman.Bellman(globalRstern, globalBellman, LONGINT(LEN(globalStat.m[0])) - 1, 0, MAX(LONGINT), CumFunction, - globalGamma);                (*  frage: setzen wir hier nicht lieber auch minweite und maxweite ein ? *)
+	antsBellman.Bellman(globalRstern, globalBellman, SHORT(LEN(globalStat.m[0])) - 1, 0, MAX(LONGINT), CumFunction, - globalGamma);                (*  frage: setzen wir hier nicht lieber auch minweite und maxweite ein ? *)
 	RETURN globalBellman[LEN(globalStat.m[0]) - 1] (* fof 020709, -1 -> -2 *)
 END MatrixFunction;
 
@@ -254,7 +254,7 @@ BEGIN
 	globaly1 := from;            		globaly2 := to;
 	antsSecurity.SetProgress(SHORT(ENTIER(to / LEN(globalStat.m) * 100)));
 
-	antsBellman.Bellman(globalRstern, globalBellman, LONGINT(LEN(globalStat.m[0])) - 1, 0, MAX(LONGINT), CumFunction2, - globalGamma);                (*  frage: setzen wir hier nicht lieber auch minweite und maxweite ein ? *)
+	antsBellman.Bellman(globalRstern, globalBellman, SHORT(LEN(globalStat.m[0])) - 1, 0, MAX(LONGINT), CumFunction2, - globalGamma);                (*  frage: setzen wir hier nicht lieber auch minweite und maxweite ein ? *)
 	RETURN globalBellman[LEN(globalStat.m[0]) - 1] + globalGamma * LEN(globalStat.m[0])
 END MatrixFunction2;
 

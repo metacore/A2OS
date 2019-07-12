@@ -131,7 +131,7 @@ END RefToStr;
 
 (* Appends <this> to <to>. *)
 PROCEDURE Append(CONST this: ARRAY OF CHAR; VAR to: ARRAY OF CHAR);
-	VAR i, j, l: SIZE;
+	VAR i, j, l: LONGINT;
 BEGIN
 	i := 0; WHILE to[i] # 0X DO INC(i) END;
 	l := LEN(to)-1; j := 0;

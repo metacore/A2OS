@@ -52,12 +52,12 @@ TYPE
 		BEGIN NEW(list); locked := FALSE
 		END Init;
 
-		PROCEDURE GetCount() : SIZE;
+		PROCEDURE GetCount() : LONGINT;
 		BEGIN RETURN list.GetCount()
 		END GetCount;
 
 		(* returns 0 if item is not in the list *)
-		PROCEDURE GetItem(pos: SIZE) : LONGINT;
+		PROCEDURE GetItem(pos: LONGINT) : LONGINT;
 		VAR intObj: IntObj;
 		BEGIN
 			intObj := GetIntObj(pos);
@@ -69,7 +69,7 @@ TYPE
 		END GetItem;
 
 		(* returns NIL if not in the list *)
-		PROCEDURE GetIntObj(pos: SIZE) : IntObj;
+		PROCEDURE GetIntObj(pos: LONGINT) : IntObj;
 		VAR p: ANY; intObj: IntObj;
 		BEGIN
 			list.Lock;
@@ -86,7 +86,7 @@ TYPE
 			RETURN NIL
 		END GetIntObj;
 
-		PROCEDURE Exchange(pos: SIZE; newNumber: LONGINT);
+		PROCEDURE Exchange(pos, newNumber: LONGINT);
 		VAR intObj: IntObj;
 		BEGIN
 			intObj := GetIntObj(pos);
@@ -104,7 +104,7 @@ TYPE
 			Unlock
 		END Add;
 
-		PROCEDURE Remove(pos: SIZE);
+		PROCEDURE Remove(pos: LONGINT);
 		VAR intObj: IntObj;
 		BEGIN
 			Lock;
@@ -163,7 +163,7 @@ TYPE
 		END Internalize;
 
 		PROCEDURE Externalize*() : XML.Content;
-		VAR container: XML.Container; elem, subElem: XML.Element; str: ARRAY 14 OF CHAR; i: SIZE; number: LONGINT;
+		VAR container: XML.Container; elem, subElem: XML.Element; str: ARRAY 14 OF CHAR; i, number: LONGINT;
 		BEGIN
 			NEW(container);
 			WebStd.ExternalizeString(firstname, container, "FirstName");
@@ -236,7 +236,7 @@ TYPE
 		END DetailView;
 
 		PROCEDURE GetGradesDetailView() : XML.Content;
-		VAR table, tr, td: XML.Element; i: SIZE; number: LONGINT; str: ARRAY 14 OF CHAR;
+		VAR table, tr, td: XML.Element; i, number: LONGINT; str: ARRAY 14 OF CHAR;
 		BEGIN
 			table := NIL;
 			IF (grades # NIL) THEN
@@ -269,8 +269,8 @@ TYPE
 		END EditView;
 
 		(* get XHTML table header row for the exercise grade list.  *)
-		PROCEDURE GetExerciseListHeaderRow(nofCols: SIZE) : XML.Element;
-		VAR tr, td: XML.Element; i: SIZE; iStr: ARRAY 14 OF CHAR; str: Strings.String;
+		PROCEDURE GetExerciseListHeaderRow(nofCols: LONGINT) : XML.Element;
+		VAR tr, td: XML.Element; i: LONGINT; iStr: ARRAY 14 OF CHAR; str: Strings.String;
 		BEGIN
 			IF (nofCols > 0) THEN
 				NEW(tr); tr.SetName("tr");
@@ -300,17 +300,17 @@ TYPE
 	SingleGroupDatagrid* = OBJECT(WebComplex.WebForum);
 		VAR
 			searchText: Strings.String;
-			maxEntries: SIZE;
+			maxEntries: LONGINT;
 
 		PROCEDURE Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR maxEntriesStr: Strings.String; elem: XML.Element;
 		BEGIN
 			elem := WebStd.GetXMLSubElement(input, "MaxEntries");
-			maxEntries := MAX(SIZE);
+			maxEntries := MAX(LONGINT);
 			IF (elem # NIL) THEN
 				maxEntriesStr := WebStd.GetXMLCharContent(elem);
 				IF (maxEntriesStr # NIL) THEN
-					Strings.StrToSize(maxEntriesStr^, maxEntries)
+					Strings.StrToInt(maxEntriesStr^, maxEntries)
 				END
 			END;
 			RETURN Transform^(input, request);
@@ -318,7 +318,7 @@ TYPE
 
 		PROCEDURE GetHeaderXMLContent*(persContainer: WebStd.PersistentDataContainer; input: XML.Element;
 			request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR dynStr: DynamicStrings.DynamicString; list: WebStd.PersistentDataObjectList; i: SIZE;
+		VAR dynStr: DynamicStrings.DynamicString; list: WebStd.PersistentDataObjectList; i: LONGINT;
 			str, encStr: Strings.String; person: Person; pTag, aTag: XML.Element; tempStr: ARRAY 10 OF CHAR;
 		BEGIN  (* email to the whole group *)
 			IF ((IsAuthorizedUser(request)) & (persContainer # NIL)) THEN
@@ -590,7 +590,7 @@ TYPE
 			place: Strings.String;
 			info: Strings.String;
 			openToJoin: BOOLEAN; (* true if public insertion to the group is possible *)
-			maxPeople: SIZE; (* maximum number of group members *)
+			maxPeople: LONGINT; (* maximum number of group members *)
 			members: WebStd.PersistentDataContainer; (* PersistentDataContainer of Person *)
 			membersDgId: Strings.String; (* id of the members single group web datagrid *)
 			gradesEditListId: Strings.String; (* id of the grades edit list for the members exercises *)
@@ -667,7 +667,7 @@ TYPE
 		END GetReferrencedObjects;
 
 		PROCEDURE UpdateGrade(personOid, exerciseNo, newGrade: LONGINT);
-		VAR list: WebStd.PersistentDataObjectList; person: Person; i: SIZE; oldGrade: LONGINT;
+		VAR list: WebStd.PersistentDataObjectList; person: Person; i, oldGrade: LONGINT;
 		BEGIN
 			IF (members # NIL) THEN
 				list := members.GetElementList(WebStd.DefaultPersistentDataFilter, NIL);
@@ -691,7 +691,7 @@ TYPE
 
 		(* returns the number of free places as string # NIL *)
 		PROCEDURE GetFreePlaces() : Strings.String;
-		VAR free: SIZE; maxPeopleStr: Strings.String;
+		VAR free: LONGINT; maxPeopleStr: Strings.String;
 		BEGIN
 			IF (members # NIL) THEN
 				free := maxPeople-members.GetCount()
@@ -888,7 +888,7 @@ TYPE
 
 		(* add a new exercise for all group members and initialize their grade for this new exercise with 0 *)
 		PROCEDURE AddNewExercise;
-		VAR list: WebStd.PersistentDataObjectList; i: SIZE; person: Person;
+		VAR list: WebStd.PersistentDataObjectList; i: LONGINT; person: Person;
 		BEGIN
 			IF (members # NIL) THEN
 				list := members.GetElementList(WebStd.DefaultPersistentDataFilter, NIL);
@@ -905,8 +905,8 @@ TYPE
 		END AddNewExercise;
 
 		(* delete the exercise number 'pos' for all group members *)
-		PROCEDURE DeleteExercise(pos: SIZE);
-		VAR list: WebStd.PersistentDataObjectList; i: SIZE; person: Person;
+		PROCEDURE DeleteExercise(pos: LONGINT);
+		VAR list: WebStd.PersistentDataObjectList; i: LONGINT; person: Person;
 		BEGIN
 			IF (members # NIL) THEN
 				list := members.GetElementList(WebStd.DefaultPersistentDataFilter, NIL);
@@ -967,7 +967,7 @@ TYPE
 
 				NEW(obj); obj.name := name; obj.info := info; obj.assistant := assistant; obj.date := date; obj.place := place;
 				IF (maxpeople # NIL) THEN
-					Strings.StrToSize(maxpeople^, obj.maxPeople)
+					Strings.StrToInt(maxpeople^, obj.maxPeople)
 				ELSE
 					obj.maxPeople := 0
 				END;
@@ -1009,7 +1009,7 @@ TYPE
 					group.BeginModification;
 					group.name := name; group.info := info; group.assistant := assistant; group.date := date; group.place := place;
 					IF (maxpeople # NIL) THEN
-						Strings.StrToSize(maxpeople^, group.maxPeople)
+						Strings.StrToInt(maxpeople^, group.maxPeople)
 					ELSE
 						group.maxPeople := 0
 					END;
@@ -1324,7 +1324,7 @@ TYPE
 
 		(* get the edit view for all grades of all exercise group members *)
 		PROCEDURE GetGradesEditView(objectId: Strings.String; activeOrdering: WebStd.PersistentDataCompare) : XML.Content;
-		VAR table: XML.Element; list: WebStd.PersistentDataObjectList; i, k, nofCols: SIZE; person: Person;
+		VAR table: XML.Element; list: WebStd.PersistentDataObjectList; i, k, nofCols: LONGINT; person: Person;
 		BEGIN (* group # NIL *)
 			IF (group.members # NIL) THEN
 				nofCols := 0;
@@ -1358,8 +1358,8 @@ TYPE
 
 		(* get XHTML table header row for the exercise grade list. If 'allowDelete' is true then the exercise can be deleted *)
 		PROCEDURE GetExerciseListHeaderRow(objectId: Strings.String; allowDelete: BOOLEAN;
-			nofCols: SIZE) : XML.Element;
-		VAR tr, td, eventLink, eventParam, label, br: XML.Element; i: SIZE; iStr: ARRAY 14 OF CHAR;
+			nofCols: LONGINT) : XML.Element;
+		VAR tr, td, eventLink, eventParam, label, br: XML.Element; i: LONGINT; iStr: ARRAY 14 OF CHAR;
 			str: Strings.String;
 		BEGIN
 			IF(nofCols > 0) THEN
@@ -1405,9 +1405,9 @@ TYPE
 		END GetExerciseListHeaderRow;
 
 		(* get a edit view row for a persons exercise grades, if the person has not nofCols exercise grades then insert new ones *)
-		PROCEDURE GetPersonGradesEditRow(nofCols: SIZE; person: Person) : XML.Element;
-		VAR tr, td: XML.Element; number: LONGINT; i: SIZE;
-			PROCEDURE GetInputName(oid: LONGINT; exerciseNo: SIZE) : Strings.String;
+		PROCEDURE GetPersonGradesEditRow(nofCols: LONGINT; person: Person) : XML.Element;
+		VAR tr, td: XML.Element; number, i: LONGINT;
+			PROCEDURE GetInputName(oid, exerciseNo: LONGINT) : Strings.String;
 			VAR nameStr: Strings.String; oidStr, exerciseNoStr: ARRAY 14 OF CHAR;
 			BEGIN
 				Strings.IntToStr(oid, oidStr); Strings.IntToStr(exerciseNo, exerciseNoStr);
@@ -1417,7 +1417,7 @@ TYPE
 				RETURN nameStr
 			END GetInputName;
 
-			PROCEDURE GetInputField(exerciseNo: SIZE; grade: LONGINT) : XML.Element;
+			PROCEDURE GetInputField(exerciseNo, grade: LONGINT) : XML.Element;
 			VAR td, input: XML.Element; numberStr: ARRAY 14 OF CHAR; name: Strings.String;
 			BEGIN
 				Strings.IntToStr(grade, numberStr);
@@ -1467,7 +1467,7 @@ TYPE
 		END GetPersonGradesEditRow;
 
 		PROCEDURE GetNotification(person: Person) : XML.Content;
-		VAR aTag: XML.Element; dynStr: DynamicStrings.DynamicString; i: SIZE; number: LONGINT;
+		VAR aTag: XML.Element; dynStr: DynamicStrings.DynamicString; i, number: LONGINT;
 			numberStr, iStr: ARRAY 14 OF CHAR; str: Strings.String;
 			PROCEDURE Append(text: ARRAY OF CHAR);
 			VAR str: Strings.String;
@@ -1580,7 +1580,7 @@ TYPE
 	SummaryList* = OBJECT(DynamicWebpage.StateLessActiveElement);
 		PROCEDURE Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR containerName, prevSysName: Strings.String; persCont: WebStd.PersistentDataContainer;
-			persList: WebStd.PersistentDataObjectList; i: SIZE; outputCont: XML.Container;
+			persList: WebStd.PersistentDataObjectList; i: LONGINT; outputCont: XML.Container;
 			entry: WebComplex.WebForumEntry; prevSys: PrevalenceSystem.PrevalenceSystem;
 		BEGIN
 			containerName := input.GetAttributeValue("containername");

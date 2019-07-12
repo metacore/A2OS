@@ -14,13 +14,24 @@ CONST
 	(* optimizations *)
 	PatchFixups = TRUE; (* patch all fixups that can be processed during object file generation *)
 	AliasOnlyExported = TRUE;  (* create an alias only for exported sections *)
+	DetailedStatistics = FALSE;
 
+VAR
+	statModules, statModulesSize: LONGINT;
+	statHeaders, statHeadersSize: LONGINT;
 TYPE
-	Unit = BinaryCode.Unit;
 
-	ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
+	SectionStat = POINTER TO RECORD
+		name: ARRAY 64 OF CHAR;
+		entries: LONGINT;
+		size: LONGINT;
+	END;
 
-		VAR binary: BOOLEAN; mergeSections: BOOLEAN;
+VAR
+	statPool : Basic.HashTableInt;
+
+TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
+	VAR binary: BOOLEAN; mergeSections: BOOLEAN;
 
 		PROCEDURE & InitObjectFileFormat;
 		BEGIN
@@ -55,10 +66,10 @@ TYPE
 			PROCEDURE MergeSections (sections: Sections.SectionList): BOOLEAN;
 			VAR
 				section: Sections.Section;
-				i: SIZE;
+				i: LONGINT;
 				sname: Basic.SegmentedName;
-				codeAlign, dataAlign, constAlign: Unit;
-				codeUnit, dataUnit, constUnit: BinaryCode.Bits;
+				codeAlign, dataAlign, constAlign: LONGINT;
+				codeUnit, dataUnit, constUnit: LONGINT;
 				resolved, codeSection, dataSection, constSection: BinaryCode.Section;
 				alias: BinaryCode.Alias;
 				irSection: IntermediateCode.Section;
@@ -176,7 +187,7 @@ TYPE
 			PROCEDURE ExportSections (sections: Sections.SectionList): BOOLEAN;
 			VAR
 				section, test: Sections.Section;
-				i, j: SIZE;
+				i, j: LONGINT;
 				name: ObjectFile.SectionName;
 				msg: ARRAY 256 OF CHAR;
 			BEGIN
@@ -205,13 +216,48 @@ TYPE
 				RETURN TRUE
 			END ExportSections;
 
+			PROCEDURE MakeStatistics(sections: Sections.SectionList);
+			VAR i: LONGINT;
+				section: Sections.Section;
+				resolved: BinaryCode.Section;
+				suffix: ARRAY 128 OF CHAR;
+				index: StringPool.Index;
+				any: ANY;
+				sectionStat : SectionStat;
+			BEGIN
+				FOR i := 0 TO sections.Length()-1 DO
+					section := sections.GetSection(i);
+					resolved := section(IntermediateCode.Section).resolved;
+					Basic.GetSuffix(section.name, suffix);
+					IF (suffix[0] = "@")  & ((suffix[1] # "c") OR (suffix[2] # "o")) THEN
+						StringPool.GetIndex(suffix, index);
+						any := statPool.Get(index);
+						IF any = NIL THEN
+							NEW(sectionStat);
+							COPY(suffix, sectionStat.name);
+							sectionStat.entries := 0;
+							sectionStat.size := 0;
+							statPool.Put(index, sectionStat);
+						ELSE
+							sectionStat := any(SectionStat);
+						END;
+						INC(sectionStat.entries);
+						INC(sectionStat.size, resolved.pc);
+					END;
+				END;
+			END MakeStatistics;
+
 			PROCEDURE ExportModule (module: Sections.Module): BOOLEAN;
-			VAR result: BOOLEAN;
+			VAR result: BOOLEAN; pos: LONGINT;
 				offers, requires: ObjectFile.NameList;
 				numImports: LONGINT;
 				name: ObjectFile.SectionName;
 				import: SyntaxTree.Import;
 			BEGIN
+				pos := writer.Pos();
+				IF DetailedStatistics THEN
+					MakeStatistics(module.allSections);
+				END;
 				IF mergeSections & ~MergeSections(module.allSections) THEN RETURN FALSE END;
 				NEW (offers, 1); offers[0] := module.moduleName;
 
@@ -235,7 +281,9 @@ TYPE
 					END;
 				END;
 				WriteHeader(writer,binary,module.allSections, poolMap, offers, requires, fingerprinter);
+				INC(statHeaders); INC(statHeadersSize, writer.Pos()-pos);
 				result := ExportSections (module.allSections);
+				INC(statModules); INC(statModulesSize, writer.Pos()-pos);
 				RETURN result
 			END ExportModule;
 
@@ -310,7 +358,7 @@ TYPE
 		RETURN fp
 	END GetFingerprint;
 
-	PROCEDURE CheckAlias(sections: Sections.SectionList; VAR identifier: ObjectFile.Identifier; VAR offset: SIZE);
+	PROCEDURE CheckAlias(sections: Sections.SectionList; VAR identifier: ObjectFile.Identifier; VAR offset: LONGINT);
 	VAR section: Sections.Section; alias: BinaryCode.Section;
 	BEGIN
 		offset := 0;
@@ -330,20 +378,20 @@ TYPE
 		END;
 	END CheckAlias;
 
-	PROCEDURE CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: Unit);
+	PROCEDURE CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: LONGINT);
 	VAR fixup: BinaryCode.Fixup; i, index, fixups: SIZE; fixupList: ObjectFile.Fixups;
-		aliasSymbol: ObjectFile.Identifier; aliasOffset: SIZE;
+		aliasSymbol: ObjectFile.Identifier; aliasOffset: LONGINT;
 
-		PROCEDURE PatchFixup (fixup: BinaryCode.Fixup; fixupOffset, targetOffset: Unit);
-		VAR target, address: Unit; j: SIZE;
+		PROCEDURE PatchFixup (fixup: BinaryCode.Fixup; fixupOffset, targetOffset: LONGINT);
+		VAR target, address: ObjectFile.Unit; j: SIZE;
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
 				to.os.bits.SetBits (target * to.os.unit + pattern.offset, pattern.bits, address); address := ASH (address, -pattern.bits);
 			END PatchPattern;
 
-			PROCEDURE CheckBits(value, offset: Unit);
-			VAR i: SIZE; nobits,remainder: ObjectFile.Bits; minval, maxval: Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
+			PROCEDURE CheckBits(value: LONGINT; offset: LONGINT);
+			VAR i: SIZE; nobits,remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
 			BEGIN
 				nobits := 0;
 				FOR i := 0 TO fixup.patterns-1 DO
@@ -448,7 +496,7 @@ TYPE
 	END ReadHeader;
 
 	PROCEDURE WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; fingerprinter:Fingerprinter.Fingerprinter);
-	VAR i: SIZE; section: Sections.Section;
+	VAR i: LONGINT; section: Sections.Section;
 
 		PROCEDURE ProcessSection(section: IntermediateCode.Section);
 		VAR i: SIZE; fixup: BinaryCode.Fixup; alias: BinaryCode.Alias;
@@ -514,8 +562,8 @@ TYPE
 		END;
 	END WriteHeader;
 
-	PROCEDURE GCD(a,b: Unit): Unit;
-	VAR h: Unit;
+	PROCEDURE GCD(a,b: LONGINT): LONGINT;
+	VAR h: LONGINT;
 	BEGIN
 		WHILE b # 0 DO
 			h := a MOD b;
@@ -525,12 +573,12 @@ TYPE
 		RETURN a
 	END GCD;
 
-	PROCEDURE SCM(a,b: Unit): Unit;
+	PROCEDURE SCM(a,b: LONGINT): LONGINT;
 	BEGIN
 		RETURN a*b DIV GCD(a,b)
 	END SCM;
 
-	PROCEDURE CommonAlignment(a,b: Unit): Unit;
+	PROCEDURE CommonAlignment(a,b: LONGINT): LONGINT;
 	BEGIN
 		(*TRACE(a,b);*)
 		IF a = 0 THEN RETURN b
@@ -575,7 +623,7 @@ TYPE
 		is: IntermediateCode.Section;
 		sectionList: Sections.SectionList;
 		section: ObjectFile.Section;
-		i: SIZE;
+		i: LONGINT;
 		dest: Files.FileName;
 		writer: Files.Writer;
 		name: ObjectFile.SegmentedName;
@@ -619,4 +667,31 @@ TYPE
 		END;
 	END MakeLibrary;
 
+	PROCEDURE Statistics*;
+	VAR iterator: Basic.IntIterator; stat: SectionStat; index: StringPool.Index; any: ANY;
+	BEGIN
+		IF DetailedStatistics THEN
+			iterator := statPool.GetIterator();
+			WHILE iterator.GetNext(index, any) DO
+				stat := any(SectionStat);
+				TRACE(stat.name, stat.entries, stat.size);
+			END;
+		END;
+		TRACE(statModules, statModulesSize);
+		TRACE(statHeaders, statHeadersSize);
+		ObjectFile.Statistics;
+	END Statistics;
+
+	PROCEDURE ResetStatistics*;
+	BEGIN
+		ObjectFile.ResetStatistics;
+		statModules := 0; statModulesSize := 0;
+		statHeaders := 0; statHeadersSize := 0;
+		IF DetailedStatistics THEN
+			NEW(statPool,64);
+		END;
+	END ResetStatistics;
+
+BEGIN
+	ResetStatistics
 END FoxGenericObjectFile.

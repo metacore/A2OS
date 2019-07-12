@@ -106,7 +106,7 @@ CONST
 	RealtimeScope* = 27;		(** direct or indirect owner of scope is a realtime procedure, i.e. within scope no memory allocation, no locking and no await are allowed *)
 
 VAR
-	BodyName-, SelfName-, Anonymous-, PtrReturnType-: StringIndex;
+	BodyName-, SelfName-, Anonymous-, PtrReturnType- (* ug *) : LONGINT;	(** indexes to stringpool *)
 
 	(*debug/trace counters*)
 	AWait, ANoWait: LONGINT;
@@ -239,7 +239,7 @@ TYPE
 		END CreateProc;
 
 		(* ug *)
-		PROCEDURE CreateHiddenVarName*(VAR name: StringIndex);
+		PROCEDURE CreateHiddenVarName*(VAR name: StringPool.Index);
 			VAR s1, s: ARRAY 256 OF CHAR;
 		BEGIN
 			Strings.IntToStr(tmpCount, s1);
@@ -249,7 +249,7 @@ TYPE
 		END CreateHiddenVarName;
 
 		(* ug *)
-		PROCEDURE CreateAwaitProcName*(VAR name: StringIndex; count: LONGINT);
+		PROCEDURE CreateAwaitProcName*(VAR name: StringPool.Index; count: LONGINT);
 			VAR s1, s: ARRAY 256 OF CHAR;
 		BEGIN
 			Strings.IntToStr(count, s1);
@@ -732,7 +732,7 @@ VAR
 	(** ExtendModArray - Double structure size, copy elements into new structure *)
 
 	PROCEDURE ExtendModArray*(VAR a: ModuleArray);
-		VAR b: ModuleArray; i: SIZE;
+		VAR b: ModuleArray; i: LONGINT;
 	BEGIN
 		IF a = NIL THEN  NEW(a, 16)
 		ELSE
@@ -1311,7 +1311,7 @@ VAR
 	END FindIndexer;
 
 
-	PROCEDURE FindOperator*(current, search: Scope; parents: BOOLEAN; name: StringIndex; CONST pars: ARRAY OF Struct; parCount: SIZE; pos: LONGINT): Proc;
+	PROCEDURE FindOperator*(current, search: Scope; parents: BOOLEAN; name: StringIndex; CONST pars: ARRAY OF Struct; parCount (*ug*), pos: LONGINT): Proc;
 	VAR
 		p: Symbol;
 		hitProc: Proc;
@@ -1402,15 +1402,15 @@ VAR
 		RETURN hitProc;
 	END FindOperator;
 
-	PROCEDURE PrintString*(s: StringIndex);
+	PROCEDURE PrintString*(s: StringPool.Index);
 	VAR str: PCS.String;
 	BEGIN
 		StringPool.GetString(s, str);
 		KernelLog.String(str);
 	END PrintString;
 
-	PROCEDURE Distance(CONST pars: ARRAY OF Struct; param: Parameter; parCount: SIZE (* ug *)): LONGINT;
-	VAR dist, res: LONGINT; i: SIZE;
+	PROCEDURE Distance(CONST pars: ARRAY OF Struct; param: Parameter; parCount: LONGINT (* ug *)): LONGINT;
+	VAR dist, res, i: LONGINT;
 		baseA, baseF: Struct;
 	BEGIN
 		dist := 0;
@@ -1534,7 +1534,7 @@ VAR
 
 
 	PROCEDURE ChangeState*(scope: Scope;  state: SHORTINT;  pos: LONGINT);
-	VAR  rec, r, int: Record; rscope: RecScope; mth: Method; i: SIZE; res: WORD;
+	VAR  rec, r, int: Record; rscope: RecScope; mth: Method; i: LONGINT; res: WORD;
 	BEGIN
 		WHILE scope.state < state DO
 			CASE scope.state+1 OF
@@ -2125,7 +2125,7 @@ VAR
 		END;
 	END CheckVar;
 
-	PROCEDURE NewGlobalVar*(vis: SET;  name: StringIndex;  flags: SET;  type: Struct; VAR res: WORD): GlobalVar;	(** for PCOM object comparison - don't insert in scope *)
+	PROCEDURE NewGlobalVar*(vis: SET;  name: LONGINT;  flags: SET;  type: Struct; VAR res: WORD): GlobalVar;	(** for PCOM object comparison - don't insert in scope *)
 	VAR  v: GlobalVar;
 	BEGIN
 		res := Ok;
@@ -2170,7 +2170,7 @@ VAR
 		RETURN p
 	END NewProc;
 
-	PROCEDURE FindOverwrittenMethod(owner: Record; name: StringIndex; mscope: ProcScope; VAR res: WORD): Method;
+	PROCEDURE FindOverwrittenMethod(owner: Record; name: StringPool.Index; mscope: ProcScope; VAR res: WORD): Method;
 		VAR pars: ARRAY 32 OF Struct; i, parCount: LONGINT; obj: Symbol; super: Method; par: Parameter;
 	BEGIN
 		IF owner.brec # NIL THEN
@@ -2404,7 +2404,7 @@ VAR
 
 	(* Unregister - remove a module from the database *)
 
-	PROCEDURE Unregister*(root: ModuleDB; name: StringIndex);
+	PROCEDURE Unregister*(root: ModuleDB; name: StringPool.Index);
 		VAR p: Module;
 	BEGIN {EXCLUSIVE}
 		p := root;
@@ -2416,7 +2416,7 @@ VAR
 
 	(* Retrieve - find a module in the database *)
 
-	PROCEDURE Retrieve*(root: ModuleDB; name: StringIndex): Module;
+	PROCEDURE Retrieve*(root: ModuleDB; name: StringPool.Index): Module;
 		VAR p: Module;
 	BEGIN
 		p := root.next;

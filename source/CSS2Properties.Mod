@@ -1830,7 +1830,7 @@ TYPE
 		VAR fontName: ARRAY GfxFonts.FontNameLen OF CHAR; fnt: GfxFonts.Font; s: String;
 
 			PROCEDURE ExtractPattern(VAR from: ARRAY OF CHAR; pat: ARRAY OF CHAR);
-			VAR i, patLen: SIZE;
+			VAR i: LONGINT; patLen: LONGINT;
 			BEGIN
 				DynamicStrings.Search(pat, from, i);
 				IF i # -1 THEN

@@ -153,7 +153,7 @@ TYPE
 		(** expressions *)
 
 		PROCEDURE VisitSet*(x: SyntaxTree.Set);
-		VAR s: SET; i: SIZE; value: Value;
+		VAR s: SET; i: LONGINT; value: Value;
 		BEGIN
 			FOR i := 0 TO x.elements.Length()-1 DO
 				IF GetValue(x.elements.GetExpression(i), value) THEN
@@ -167,7 +167,7 @@ TYPE
 		END VisitSet;
 
 		PROCEDURE VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression);
-		VAR numberElements, i: SIZE; a: MathArrayValue;
+		VAR numberElements, i: LONGINT; a: MathArrayValue;
 		BEGIN
 			numberElements := x.elements.Length();
 			NEW(a, numberElements);
@@ -500,7 +500,7 @@ TYPE
 		END VisitSelectorDesignator;
 
 		PROCEDURE VisitParameterDesignator*(x: SyntaxTree.ParameterDesignator);
-		VAR e: SyntaxTree.Expression; proc: InterpreterSymbols.ProcedureResult; i: SIZE;
+		VAR e: SyntaxTree.Expression; proc: InterpreterSymbols.ProcedureResult; i: LONGINT;
 			adr: ADDRESS; adrValue: Value; any: InterpreterSymbols.AnyValue;
 		BEGIN
 			e := x.left;
@@ -546,7 +546,7 @@ TYPE
 		BEGIN HALT(100) (* abstract *) END VisitArrowDesignator;
 
 		PROCEDURE VisitBracketDesignator*(x: SyntaxTree.BracketDesignator);
-		VAR array: MathArrayValue; i: SIZE; element: Value; index: Integer; obj: PersistentObjects.Object;
+		VAR array: MathArrayValue; i: LONGINT; element: Value; index: Integer; obj: PersistentObjects.Object;
 			leftValue, rightValue: Value; filter: InterpreterSymbols.ObjectFilter; expression: SyntaxTree.Expression;
 			attribute, value: ARRAY 128 OF CHAR; val: LONGINT;
 		BEGIN
@@ -612,7 +612,7 @@ TYPE
 			printout: Printout.Printer;
 			value: Value;
 			expression: SyntaxTree.Expression;
-			i: SIZE;
+			i: LONGINT;
 			out: Streams.Writer;
 		BEGIN
 			out := context.out;
@@ -647,8 +647,8 @@ TYPE
 		PROCEDURE VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator);
 		VAR p,p0,p1,p2: SyntaxTree.Expression;
 			type,t0,t1,t2: SyntaxTree.Type;
-			len: SIZE;
-			i: SIZE;
+			len: LONGINT;
+			i: LONGINT;
 			parameter: SyntaxTree.Parameter;
 			name: Basic.SectionName;
 			modifier: SyntaxTree.Modifier;
@@ -796,7 +796,7 @@ TYPE
 		VAR
 			position : LONGINT; ch: CHAR;
 			destination, expMaker: Scanner.StringMaker; destinationWriter, expressionWriter: Streams.Writer; scanner: Scanner.Scanner; parser: Parser;
-			expression: SyntaxTree.Expression; value: Value; len: SIZE;
+			expression: SyntaxTree.Expression; value: Value; len: LONGINT;
 			comment: LONGINT;
 
 			PROCEDURE Next(VAR ch: CHAR);
@@ -877,11 +877,11 @@ TYPE
 		END TranslateString;
 
 		PROCEDURE VisitCommandStatement(x: CommandStatement);
-		VAR t: Strings.String; res: WORD; msg: ARRAY 128 OF CHAR; i: SIZE; array: Strings.StringArray; pos: LONGINT;
+		VAR t: Strings.String; res: WORD; msg: ARRAY 128 OF CHAR; i: LONGINT; array: Strings.StringArray; pos: LONGINT;
 			command: ARRAY 256 OF CHAR; context: Commands.Context;
 
 			PROCEDURE CreateContext(paramString : Strings.String; pos: LONGINT) : Commands.Context;
-			VAR c : Commands.Context; arg : Streams.StringReader; dummy : ARRAY 1 OF CHAR; len: SIZE;
+			VAR c : Commands.Context; arg : Streams.StringReader; dummy : ARRAY 1 OF CHAR; len: LONGINT;
 			BEGIN
 				IF (paramString = NIL) THEN
 					NEW(arg, 1); dummy := ""; arg.SetRaw(dummy, 0, 1);
@@ -1060,7 +1060,7 @@ TYPE
 		END IfPart;
 
 		PROCEDURE VisitIfStatement*(x: SyntaxTree.IfStatement);
-		VAR i: SIZE; elsif: SyntaxTree.IfPart;
+		VAR i: LONGINT; elsif: SyntaxTree.IfPart;
 		BEGIN
 			IF IfPart(x.ifPart) THEN RETURN END;
 			FOR i := 0 TO x.ElsifParts()-1 DO
@@ -1076,7 +1076,7 @@ TYPE
 		BEGIN HALT(100) (* abstract *) END VisitWithStatement;
 
 		PROCEDURE CasePart(x: SyntaxTree.CasePart; b: SyntaxTree.BinaryExpression): BOOLEAN;
-		VAR i: SIZE; value: Value;
+		VAR i: LONGINT; value: Value;
 		BEGIN
 			FOR i := 0 TO x.elements.Length()-1 DO
 				b.SetRight(x.elements.GetExpression(i));
@@ -1089,7 +1089,7 @@ TYPE
 		END CasePart;
 
 		PROCEDURE VisitCaseStatement*(x: SyntaxTree.CaseStatement);
-		VAR binary: SyntaxTree.BinaryExpression; i: SIZE;
+		VAR binary: SyntaxTree.BinaryExpression; i: LONGINT;
 		BEGIN
 			binary := SyntaxTree.NewBinaryExpression(Basic.invalidPosition, x.variable, x.variable, Scanner.Equal);
 			FOR i := 0 TO x.CaseParts()-1 DO
@@ -1178,7 +1178,7 @@ TYPE
 		END Statement;
 
 		PROCEDURE StatementSequence*(x: SyntaxTree.StatementSequence);
-		VAR i: SIZE;
+		VAR i: LONGINT;
 		BEGIN
 			FOR i := 0 TO x.Length()-1 DO
 				Statement(x.GetStatement(i));

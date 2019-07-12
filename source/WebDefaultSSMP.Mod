@@ -137,7 +137,7 @@ BEGIN
 END SystemVersion;
 
 PROCEDURE ReadName(VAR b: Streams.Reader; VAR s: ARRAY OF CHAR);
-VAR j, max: SIZE; ch: CHAR;
+VAR j, max: LONGINT; ch: CHAR;
 BEGIN
 	j := 0; max := LEN(s)-1;
 	LOOP

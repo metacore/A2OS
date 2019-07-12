@@ -109,60 +109,60 @@ CONST
 	Unknown*=2;
 
 TYPE
-	(* keywords book keeping *)
+	(* keywords  book keeping *)
 	Keyword* = ARRAY 32 OF CHAR;
 
-	KeywordTable* = OBJECT(Basic.HashTableInt); (* string -> symbol *)
-	VAR table: POINTER TO ARRAY OF IdentifierType;
+	KeywordTable* = OBJECT(Basic.HashTableInt); (* string -> index *)
+	VAR table: POINTER TO ARRAY OF LONGINT;
 
-		PROCEDURE &InitTable*(size: SIZE);
-		VAR i: SIZE;
+		PROCEDURE &InitTable*(size: LONGINT);
+		VAR i: LONGINT;
 		BEGIN
 			Init(size); NEW(table,size); FOR i := 0 TO size-1 DO table[i] := -1; END;
 		END InitTable;
 
-		PROCEDURE SymbolByIdentifier*(identifier: IdentifierType): Symbol;
+		PROCEDURE IndexByIdentifier*(identifier: IdentifierType): LONGINT;
 		BEGIN
 			IF Has(identifier) THEN
-				RETURN Symbol(GetInt(identifier))
+				RETURN GetInt(identifier)
 			ELSE (* do not modify index *)
 				RETURN -1
 			END;
-		END SymbolByIdentifier;
+		END IndexByIdentifier;
 
-		PROCEDURE SymbolByString*(CONST name: ARRAY OF CHAR): Symbol;
-		VAR stringPoolIndex: StringPool.Index;
+		PROCEDURE IndexByString*(CONST name: ARRAY OF CHAR): LONGINT;
+		VAR stringPoolIndex: LONGINT;
 		BEGIN
 			StringPool.GetIndex(name,stringPoolIndex);
 			IF Has(stringPoolIndex) THEN
-				RETURN Symbol(GetInt(stringPoolIndex))
+				RETURN GetInt(stringPoolIndex)
 			ELSE (* do not modify index *)
 				RETURN -1
 			END;
-		END SymbolByString;
+		END IndexByString;
 
-		PROCEDURE IdentifierBySymbol*(symbol: Symbol; VAR identifier: IdentifierType);
+		PROCEDURE IdentifierByIndex*(index: LONGINT; VAR identifier: IdentifierType);
 		BEGIN
-			identifier := table[symbol]
-		END IdentifierBySymbol;
+			identifier := table[index]
+		END IdentifierByIndex;
 
-		PROCEDURE StringBySymbol*(symbol: Symbol; VAR name: ARRAY OF CHAR);
-		VAR stringPoolIndex: StringPool.Index;
+		PROCEDURE StringByIndex*(index: LONGINT; VAR name: ARRAY OF CHAR);
+		VAR stringPoolIndex: LONGINT;
 		BEGIN
-			stringPoolIndex := table[symbol];
+			stringPoolIndex := table[index];
 			IF stringPoolIndex < 0 THEN
 				name := ""
 			ELSE
 				StringPool.GetString(stringPoolIndex,name);
 			END;
-		END StringBySymbol;
+		END StringByIndex;
 
-		PROCEDURE PutString*(CONST name: ARRAY OF CHAR; symbol: Symbol);
-		VAR stringPoolIndex: StringPool.Index;
+		PROCEDURE PutString*(CONST name: ARRAY OF CHAR; index: LONGINT);
+		VAR stringPoolIndex: LONGINT;
 		BEGIN
 			StringPool.GetIndex(name,stringPoolIndex);
-			table[symbol] := stringPoolIndex;
-			PutInt(stringPoolIndex,symbol);
+			table[index] := stringPoolIndex;
+			PutInt(stringPoolIndex,index);
 		END PutString;
 
 	END KeywordTable;
@@ -180,25 +180,26 @@ TYPE
 		identifier*: IdentifierType; (* identifier *)
 		identifierString*: IdentifierString; (* cache of identifier's string *)
 		string*: StringType;  (* string or identifier *)
-		stringLength*: SIZE; (* length of string, if stringLength = 2 then this may be interpreted as character and integer = ORD(ch) *)
+		stringLength*: LONGINT; (* length of string, if stringLength = 2 then this may be interpreted as character and integer = ORD(ch) *)
 		numberType*: SubType;  (* Integer, HugeInteger, Real or Longreal *)
-		integer*: HUGEINT;
+		integer*: LONGINT;
+		hugeint*: HUGEINT;  (*! unify longint and hugeint *)
 		character*: CHAR;
 		real*: LONGREAL;
 	END;
 
 	StringMaker* = OBJECT (* taken from TF's scanner *)
-	VAR length : SIZE;
+	VAR length : LONGINT;
 		data : StringType;
 
-		PROCEDURE &Init*(initialSize : SIZE);
+		PROCEDURE &Init*(initialSize : LONGINT);
 		BEGIN
 			IF initialSize < 256 THEN initialSize := 256 END;
 			NEW(data, initialSize); length := 0;
 		END Init;
 
-		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
-		VAR i : SIZE; n: StringType;
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		VAR i : LONGINT; n: StringType;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
 				NEW(n, LEN(data) + len + 1); FOR i := 0 TO length - 1 DO n[i] := data[i] END;
@@ -212,7 +213,7 @@ TYPE
 		END Add;
 
 		(* remove last n characters *)
-		PROCEDURE Shorten*(n : SIZE);
+		PROCEDURE Shorten*(n : LONGINT);
 		BEGIN
 			DEC(length, n);
 			IF length < 0 THEN length := 0 END;
@@ -240,13 +241,13 @@ TYPE
 			RETURN r
 		END GetReader;
 
-		PROCEDURE GetString*(VAR len: SIZE) : StringType;
+		PROCEDURE GetString*(VAR len: LONGINT) : StringType;
 		BEGIN
 			len := length;
 			RETURN data
 		END GetString;
 
-		PROCEDURE GetStringCopy*(VAR len: SIZE): StringType;
+		PROCEDURE GetStringCopy*(VAR len: LONGINT): StringType;
 		VAR new: StringType;
 		BEGIN
 			len := length;
@@ -437,7 +438,7 @@ TYPE
 
 		(* simple case can be utilized when endString does not contain first character, which is the case for our string convention *)
 		PROCEDURE ConsumeStringUntil(CONST endString: ARRAY OF CHAR; useControl: BOOLEAN);
-		VAR escapePos: LONGINT; ech: CHAR; i: LONGINT; startPosition: Streams.Position;
+		VAR escapePos: LONGINT; ech: CHAR; i: LONGINT; startPosition: LONGINT;
 		CONST
 			Control = '\';
 			Delimiter = '"';
@@ -594,11 +595,11 @@ TYPE
 		Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
 		**)
 		PROCEDURE GetNumber(VAR token: Token): Symbol;
-		VAR i, m, n, d, e, si: LONGINT;
+		VAR i, nextInt, m, n, d, e, si: LONGINT;
 			dig: ARRAY 24 OF CHAR;
 			f: LONGREAL;  expCh: CHAR;  neg, long: BOOLEAN;
 			result: Symbol;
-			hugeint, tenh, number, nextInt: HUGEINT;
+			hugeint, tenh, number: HUGEINT;
 			digits: LONGINT;
 
 			(** 10^e **)
@@ -655,7 +656,8 @@ TYPE
 						GetNextCharacter;
 						IF (ch = "'") & IsHexDigit(reader.Peek()) THEN GetNextCharacter END;
 					END;
-					token.integer := number;
+					token.hugeint := number;
+					token.integer := SHORT(number);
 					IF (digits > MaxHexDigits) OR (digits = MaxHexDigits) & (number > MAX(LONGINT)) THEN
 						token.numberType := Hugeint
 					ELSE
@@ -673,7 +675,8 @@ TYPE
 						GetNextCharacter;
 						IF (ch = "'") & IsBinaryDigit(reader.Peek()) THEN GetNextCharacter END;
 					END;
-					token.integer := number;
+					token.hugeint := number;
+					token.integer := SHORT(number);
 					IF digits > 32 THEN
 						token.numberType := Hugeint
 					ELSE
@@ -702,7 +705,7 @@ TYPE
 			END;   (* 0 <= n <= m <= i, 0 <= d <= i *)
 			IF d = 0 THEN  (* integer *)
 				IF n = m THEN
-					token.integer := 0;  i := 0;
+					token.integer := 0;  i := 0;  token.hugeint := 0;
 					IF ch = "X" THEN  (* character *)
 						token.identifierString[si] := ch;  INC( si );  GetNextCharacter;  result := Character;
 						IF  (n <= 2) THEN
@@ -716,10 +719,12 @@ TYPE
 							token.numberType := Integer;
 							(* IF (n = MaxHexDigits) & (dig[0] > "7") THEN  (* prevent overflow *) token.integer := -1 END;  *)
 							WHILE i < n DO token.integer := token.integer * 10H + Hexadecimal( dig[i] );  INC( i ) END;
+							token.hugeint := token.integer;
 						ELSIF n <= MaxHugeHexDigits THEN
 							token.numberType := Hugeint;
-							IF (n = MaxHugeHexDigits) & (dig[0] > "7") THEN  (* prevent overflow *) token.integer := -1 END;
-							WHILE i < n DO token.integer := Hexadecimal( dig[i] ) + token.integer * 10H; INC( i ) END;
+							IF (n = MaxHugeHexDigits) & (dig[0] > "7") THEN  (* prevent overflow *) token.hugeint := -1 END;
+							WHILE i < n DO token.hugeint := Hexadecimal( dig[i] ) + token.hugeint * 10H; INC( i ) END;
+							token.integer :=SHORT(token.hugeint);
 						ELSE
 							token.numberType := Hugeint; (* to make parser able to go on *)
 							Error( Basic.NumberTooLarge )
@@ -743,7 +748,10 @@ TYPE
 								hugeint := hugeint * tenh + d;
 								IF hugeint < 0 THEN Error( Basic.NumberTooLarge ) END
 							END;
-							token.integer := hugeint;
+							token.hugeint := hugeint;
+							token.integer := SHORT(token.hugeint);
+						ELSE
+							token.hugeint := token.integer;
 						END
 					END
 				ELSE
@@ -819,7 +827,7 @@ TYPE
 			token.string := stringMaker.GetString(token.stringLength);
 		END ReadComment;
 
-		PROCEDURE SkipToEndOfCode*(VAR startPos,endPos: Streams.Position; VAR token: Token): Symbol;
+		PROCEDURE SkipToEndOfCode*(VAR startPos,endPos: LONGINT; VAR token: Token): Symbol;
 		VAR s: LONGINT; newline: BOOLEAN;
 		BEGIN
 			ASSERT(case # Unknown);
@@ -875,7 +883,7 @@ TYPE
 
 		(** get next token **)
 		PROCEDURE GetNextToken*(VAR token: Token ): BOOLEAN;
-		VAR s,symbol: Symbol;
+		VAR s,symbol: LONGINT;
 		BEGIN
 			SkipBlanks;
 			token.position := position;
@@ -963,13 +971,13 @@ TYPE
 					s := Upto;  GetNextCharacter
 			| 'A'..'Z': s := Identifier; GetIdentifier( token );
 					IF (case=Uppercase) OR (case=Unknown) THEN
-						symbol := keywordsUpper.SymbolByIdentifier(token.identifier);
+						symbol := keywordsUpper.IndexByIdentifier(token.identifier);
 						IF  (symbol >= 0) THEN s := symbol END;
 						IF (s = Module) OR (s=CellNet) THEN case := Uppercase END;
 					END;
 			| 'a'..'z': s := Identifier; GetIdentifier( token);
 					IF (case = Lowercase) OR (case=Unknown) THEN
-						symbol := keywordsLower.SymbolByIdentifier(token.identifier);
+						symbol := keywordsLower.IndexByIdentifier(token.identifier);
 						IF  (symbol >= 0) THEN s := symbol END;
 						IF (s = Module) OR (s=CellNet) THEN case := Lowercase END;
 					END;
@@ -1003,7 +1011,7 @@ TYPE
 
 	Context*=RECORD
 		position: Position;
-		readerPosition : Streams.Position;
+		readerPosition : LONGINT;
 		ch: CHAR;
 	END;
 
@@ -1159,7 +1167,7 @@ TYPE
 		keywordsLower, keywordsUpper: KeywordTable;
 
 	(** return a new scanner on a stream, error output via diagnostics  **)
-	PROCEDURE NewScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics ): Scanner;
+	PROCEDURE NewScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics ): Scanner;
 	VAR s: Scanner; pos: Position;
 	BEGIN
 		pos.start := position;
@@ -1169,7 +1177,7 @@ TYPE
 		NEW( s, source, reader, pos, diagnostics );  RETURN s;
 	END NewScanner;
 
-	PROCEDURE NewAssemblerScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics ): AssemblerScanner;
+	PROCEDURE NewAssemblerScanner*( CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics ): AssemblerScanner;
 	VAR s: AssemblerScanner;pos: Position;
 	BEGIN
 		pos.start := position;
@@ -1230,12 +1238,12 @@ TYPE
 	END InitReservedCharacters;
 
 	(* get keyword by symbol *)
-	PROCEDURE GetKeyword*(case:WORD; symbol: Symbol; VAR identifier: IdentifierType);
+	PROCEDURE GetKeyword*(case:LONGINT; symbol: LONGINT; VAR identifier: IdentifierType);
 	BEGIN
 		IF case = Uppercase THEN
-			keywordsUpper.IdentifierBySymbol(symbol,identifier);
+			keywordsUpper.IdentifierByIndex(symbol,identifier);
 		ELSE ASSERT(case=Lowercase);
-			keywordsLower.IdentifierBySymbol(symbol,identifier);
+			keywordsLower.IdentifierByIndex(symbol,identifier);
 		END;
 	END GetKeyword;
 
@@ -1518,17 +1526,17 @@ TYPE
 
 	(** debugging / reporting **)
 	PROCEDURE ReportKeywords*(context: Commands.Context);
-	VAR s: Symbol; name: Keyword;
+	VAR i: LONGINT; name: Keyword;
 	BEGIN
-		FOR s := 0 TO EndOfText DO
-			context.out.Int(s,1); context.out.String(": ");
+		FOR i := 0 TO EndOfText DO
+			context.out.Int(i,1); context.out.String(": ");
 			context.out.Char('"');
-			keywordsLower.StringBySymbol(s,name);
+			keywordsLower.StringByIndex(i,name);
 			context.out.String(name);
 			context.out.Char('"');
 			context.out.String(", ");
 			context.out.Char('"');
-			keywordsUpper.StringBySymbol(s,name);
+			keywordsUpper.StringByIndex(i,name);
 			context.out.String(name);
 			context.out.Char('"');
 			context.out.Ln;

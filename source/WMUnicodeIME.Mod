@@ -142,7 +142,7 @@ TYPE
 		END Ok;
 
 		PROCEDURE TextChanged*(sender, data:ANY);
-		VAR ch : LONGINT; no : SIZE; charString : ARRAY 16 OF CHAR;
+		VAR ch, no : LONGINT; charString : ARRAY 16 OF CHAR;
 
 		BEGIN
 			(* avoid recursion *)
@@ -208,7 +208,7 @@ TYPE
 		END GetName;
 
 		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
-		VAR x, y: LONGINT; pos : SIZE; str : ARRAY 8 OF CHAR;
+		VAR x, y, pos : LONGINT; str : ARRAY 8 OF CHAR;
 		BEGIN
 			IF (ucs >= 48) & (ucs <= 57) THEN
 				GetCursorScreenPosition(x, y);

@@ -163,7 +163,7 @@ VAR
 	w: Streams.Writer;
 	c: CHAR;
 	headerDone : BOOLEAN;
-	pos: Streams.Position;
+	pos: LONGINT;
 	addresses: Classes.List;
 	header: IMAPClient.HeaderElement;
 BEGIN

@@ -104,11 +104,11 @@ TYPE Link = OBJECT
 	BEGIN HALT (1001);
 	END Listen;
 
-	PROCEDURE SendBytes (): SIZE;
+	PROCEDURE SendBytes (): Streams.StreamSize;
 	BEGIN HALT (1001);
 	END SendBytes;
 
-	PROCEDURE ReceiveBytes (): SIZE;
+	PROCEDURE ReceiveBytes (): Streams.StreamSize;
 	BEGIN HALT (1001);
 	END ReceiveBytes;
 
@@ -138,14 +138,14 @@ TYPE TCPLink = OBJECT (Link)
 		END;
 	END Listen;
 
-	PROCEDURE SendBytes (): SIZE;
+	PROCEDURE SendBytes (): Streams.StreamSize;
 	BEGIN
 		connection.Send (buffer, 0, LEN (buffer), FALSE, result);
 		RETURN LEN (buffer);
 	END SendBytes;
 
-	PROCEDURE ReceiveBytes (): SIZE;
-	VAR received: SIZE;
+	PROCEDURE ReceiveBytes (): Streams.StreamSize;
+	VAR received: WORD;
 	BEGIN
 		IF connection.Available () # 0 THEN
 			connection.Receive (buffer, 0, LEN (buffer), 1, received, result);
@@ -176,14 +176,14 @@ TYPE UDPLink = OBJECT (Link)
 		NEW (socket, port, result);
 	END Listen;
 
-	PROCEDURE SendBytes (): SIZE;
+	PROCEDURE SendBytes (): Streams.StreamSize;
 	BEGIN
 		socket.Send (address, port, buffer, 0, LEN (buffer), result);
 		RETURN LEN (buffer);
 	END SendBytes;
 
-	PROCEDURE ReceiveBytes (): SIZE;
-	VAR address: IP.Adr; port: WORD; received: SIZE;
+	PROCEDURE ReceiveBytes (): Streams.StreamSize;
+	VAR address: IP.Adr; port, received: WORD;
 	BEGIN
 		socket.Receive (buffer, 0, LEN (buffer), 0, address, port, received, result);
 		IF result = UDP.Ok THEN RETURN received END;

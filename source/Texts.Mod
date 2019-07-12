@@ -192,7 +192,7 @@ TYPE
 
 	HighlightStyle* = OBJECT
 	VAR
-		kind*: WORD;
+		kind*: LONGINT;
 
 		PROCEDURE IsEqual*(hstyle: HighlightStyle) : BOOLEAN;
 		BEGIN
@@ -206,7 +206,7 @@ TYPE
 	Piece* = OBJECT
 	VAR
 		next*, prev* : Piece;
-		len*, startpos* : SIZE;
+		len*, startpos* : LONGINT;
 		attributes* : Attributes;
 		pstyle* : ParagraphStyle;
 		cstyle* : CharacterStyle;
@@ -220,7 +220,7 @@ TYPE
 		END Clone;
 
 		(** Split the UnicodePiece at pos in text position and return right piece *)
-		PROCEDURE Split*(pos : SIZE; VAR right : Piece);
+		PROCEDURE Split*(pos : LONGINT; VAR right : Piece);
 		BEGIN
 			HALT(301); (* Abstract *)
 		END Split;
@@ -236,11 +236,11 @@ TYPE
 
 	UnicodePiece* = OBJECT(Piece)
 		(** index in text position; index and (index + length) must be in the piece *)
-		PROCEDURE GetUCS32Buf*(index : SIZE; length : SIZE; VAR ucs : UCS32String; VAR res : WORD);
+		PROCEDURE GetUCS32Buf*(index : LONGINT; length : LONGINT; VAR ucs : UCS32String; VAR res : WORD);
 		END GetUCS32Buf;
 
 		(** index in text position; index and (index + length) must be in the piece *)
-		PROCEDURE GetUCS32*(index : SIZE;  VAR ucs : Char32);
+		PROCEDURE GetUCS32*(index : LONGINT;  VAR ucs : Char32);
 		END GetUCS32;
 	END UnicodePiece;
 
@@ -249,7 +249,7 @@ TYPE
 		buffer : PUCS32String;
 
 		PROCEDURE SetBuf(CONST buffer : UCS32String);
-		VAR i : SIZE;
+		VAR i : LONGINT;
 		BEGIN
 			WHILE buffer[i] # 0 DO INC(i) END; len := i;
 			NEW(SELF.buffer, len);
@@ -257,7 +257,7 @@ TYPE
 		END SetBuf;
 
 		PROCEDURE SetBufAsUTF8(CONST buffer : ARRAY OF CHAR);
-		VAR length, i, idx : SIZE;
+		VAR length, i, idx : LONGINT;
 		BEGIN
 			length := UTF8Strings.Length(buffer);
 			NEW(SELF.buffer, length);
@@ -267,7 +267,7 @@ TYPE
 
 		(** Return a copy of the piece, prev/next pointers nil and pos 0 *)
 		PROCEDURE Clone*() : Piece;
-		VAR m : MemUnicodePiece; i : SIZE;
+		VAR m : MemUnicodePiece; i : LONGINT;
 		BEGIN
 			NEW(m);
 			m.len := len;
@@ -281,8 +281,8 @@ TYPE
 		END Clone;
 
 		(** index in text position; index and (index + length) must be in the piece *)
-		PROCEDURE GetUCS32Buf*(index : SIZE; length : SIZE; VAR ucs : UCS32String; VAR res : WORD);
-		VAR i, j : SIZE;
+		PROCEDURE GetUCS32Buf*(index : LONGINT; length : LONGINT; VAR ucs : UCS32String; VAR res : WORD);
+		VAR i, j : LONGINT;
 		BEGIN
 			i := index - startpos; IF (i < 0) OR (i >= len) THEN ucs[0] := 0; res := -1; RETURN END;
 			j := 0;
@@ -292,15 +292,15 @@ TYPE
 			ucs[j] := 0
 		END GetUCS32Buf;
 
-		PROCEDURE GetUCS32*(index : SIZE; VAR ucs : Char32);
-		VAR i: SIZE;
+		PROCEDURE GetUCS32*(index : LONGINT; VAR ucs : Char32);
+		VAR i: LONGINT;
 		BEGIN
 			i := index - startpos; IF (i < 0) OR (i >= len) THEN ucs := 0 ELSE ucs := buffer[i] END;
 		END GetUCS32;
 
 		(** Split the UnicodePiece at pos in text position and return right piece *)
-		PROCEDURE Split*(pos : SIZE; VAR right : Piece);
-		VAR mp : MemUnicodePiece; i, j : SIZE;
+		PROCEDURE Split*(pos : LONGINT; VAR right : Piece);
+		VAR mp : MemUnicodePiece; i, j : LONGINT;
 		BEGIN
 			IF pos - startpos < len THEN
 				(* create right part *)
@@ -326,7 +326,7 @@ TYPE
 
 		(** Merge right to self; return true if ok *)
 		PROCEDURE Merge*(right : Piece) : BOOLEAN;
-		VAR temp : PUCS32String; i, j : SIZE;
+		VAR temp : PUCS32String; i, j : LONGINT;
 		BEGIN
 			IF right = NIL THEN RETURN FALSE END;
 			IF right = SELF THEN KernelLog.String("Consistency Check in Texts Failed"); KernelLog.Ln END;
@@ -375,7 +375,7 @@ TYPE
 			RETURN p
 		END Clone;
 
-		PROCEDURE Split*(pos : SIZE; VAR right : Piece);
+		PROCEDURE Split*(pos : LONGINT; VAR right : Piece);
 		BEGIN
 			IF pos - startpos < len THEN
 				KernelLog.String("Should never happen"); KernelLog.Ln;
@@ -410,7 +410,7 @@ TYPE
 			RETURN p
 		END Clone;
 
-		PROCEDURE Split*(pos : SIZE; VAR right : Piece);
+		PROCEDURE Split*(pos : LONGINT; VAR right : Piece);
 		BEGIN
 			IF pos - startpos < len THEN
 				KernelLog.String("Should never happen"); KernelLog.Ln;
@@ -426,17 +426,17 @@ TYPE
 	END LabelPiece;
 
 	(* Used to translate an internal position into a display position and vice versa *)
-	PositionTranslator* = PROCEDURE {DELEGATE} (pos : SIZE) : SIZE;
+	PositionTranslator* = PROCEDURE {DELEGATE} (pos : LONGINT) : LONGINT;
 
 	(** a TextPosition is assigned to a text and positioned with SetPosition. If
 		the text is changed after the position was set, the position is updated *)
 	TextPosition* = OBJECT
 	VAR
-		position : SIZE;
+		position : LONGINT;
 		data* : ANY;
 		text- : UnicodeText;
 		GetInternalPos, GetDisplayPos : PositionTranslator;
-		nextInternalPos* : SIZE;
+		nextInternalPos* : LONGINT;
 
 		PROCEDURE &New*(t : UnicodeText);
 		BEGIN
@@ -444,7 +444,7 @@ TYPE
 		END New;
 
 		(** Listens for text changes *)
-		PROCEDURE Changed*(op: WORD; pos, len : SIZE);
+		PROCEDURE Changed*(op, pos, len :  LONGINT);
 		BEGIN
 			IF TraceHard THEN
 				KernelLog.String("TextPosition : ChangeRequest"); KernelLog.Int(op, 5); KernelLog.Int(pos, 5); KernelLog.Int(len, 5);KernelLog.Ln;
@@ -468,14 +468,14 @@ TYPE
 		END Changed;
 
 		(** Position in elements from text start.  *)
-		PROCEDURE SetPosition*(pos : SIZE);
+		PROCEDURE SetPosition*(pos : LONGINT);
 		BEGIN
 			IF pos < 0 THEN pos := 0 ELSIF pos > text.GetLength() THEN pos := text.GetLength() END;
 			position := pos
 		END SetPosition;
 
 		(** Returns position in elements from the text start *)
-		PROCEDURE GetPosition*(): SIZE;
+		PROCEDURE GetPosition*():LONGINT;
 		BEGIN
 			RETURN position
 		END GetPosition;
@@ -527,7 +527,7 @@ TYPE
 		END CloneProperties;
 
 		(** Listens for text changes *)
-		PROCEDURE Changed*(op : WORD; pos, len : SIZE);
+		PROCEDURE Changed*(op, pos, len :  LONGINT);
 		BEGIN
 			Changed^(op, pos, len); piece := NIL
 		END Changed;
@@ -577,8 +577,8 @@ TYPE
 		END ReadCh;
 
 		(** Position in elements from text start.  *)
-		PROCEDURE SetPosition*(pos : SIZE);
-		VAR length : SIZE;
+		PROCEDURE SetPosition*(pos : LONGINT);
+		VAR length : LONGINT;
 		BEGIN
 			length := text.GetLength();
 			IF pos < 0 THEN
@@ -592,7 +592,7 @@ TYPE
 
 		(** Direction the text is read. dir >= 0 --> forward; dir < 0 --> backwards
 		      Backwards can be very slow depending on the text *)
-		PROCEDURE SetDirection*(dir : WORD);
+		PROCEDURE SetDirection*(dir : LONGINT);
 		BEGIN
 			backwards := dir < 0;
 			eot := (backwards & (position = 0)) OR (~backwards & (position = text.GetLength()));
@@ -602,26 +602,24 @@ TYPE
 
 	TextChangeInfo* = OBJECT
 	VAR
-		timestamp* : LONGINT;
-		op* : WORD;
-		pos*, len* : SIZE;
+		timestamp*, op*, pos*, len* : LONGINT;
 	END TextChangeInfo;
 
 	UndoManager*= OBJECT
 
-		PROCEDURE InsertText*(pos: SIZE; text: Text);
+		PROCEDURE InsertText*(pos: LONGINT; text: Text);
 		END InsertText;
 
-		PROCEDURE DeleteText*(pos: SIZE; text: Text);
+		PROCEDURE DeleteText*(pos: LONGINT; text: Text);
 		END DeleteText;
 
-		PROCEDURE BeginObjectChange*(pos: SIZE);
+		PROCEDURE BeginObjectChange*(pos: LONGINT);
 		END BeginObjectChange;
 
-		PROCEDURE ObjectChanged*(pos, len: SIZE; type: WORD; obj: ANY);
+		PROCEDURE ObjectChanged*(pos, len, type: LONGINT; obj: ANY);
 		END ObjectChanged;
 
-		PROCEDURE EndObjectChange*(len: SIZE; type: WORD; to: ANY);
+		PROCEDURE EndObjectChange*(len, type: LONGINT; to: ANY);
 		END EndObjectChange;
 
 		PROCEDURE SetText*(text: Text);
@@ -645,13 +643,13 @@ TYPE
 	UnicodeText* = OBJECT
 	VAR
 		first : Piece;
-		length : SIZE;
-		nofPieces : SIZE;
+		length : LONGINT;
+		nofPieces : LONGINT;
 
 		posObjects : Kernel.FinalizedCollection;
-		pop: WORD; ppos, plen : SIZE;
+		pop, ppos, plen : LONGINT;
 		timestamp : LONGINT;
-		upOp: WORD; upPos, upLen : SIZE;
+		upOp, upPos, upLen : LONGINT;
 		onTextChanged* : WMEvents.EventSource;
 		lock : Locks.RWLock;
 		pieceTableOk : BOOLEAN;
@@ -701,7 +699,7 @@ TYPE
 		(** release the write lock on the object *)
 		PROCEDURE ReleaseWrite*;
 		VAR removeLock : BOOLEAN;
-			op : WORD; pos, len : SIZE; localtimestamp : LONGINT;
+			op, pos, len, localtimestamp : LONGINT;
 		BEGIN
 			removeLock := lock.GetWLockLevel() = 1;
 			IF removeLock THEN op := upOp; pos := upPos; len := upLen; localtimestamp := GetTimestamp(); upOp := -1 END;
@@ -733,7 +731,7 @@ TYPE
 			RETURN lock.HasReadLock();
 		END HasReadLock;
 
-		PROCEDURE InformListeners(timestamp : LONGINT; op : WORD; pos, len : SIZE);
+		PROCEDURE InformListeners(timestamp, op, pos, len : LONGINT);
 		VAR updateInfo : TextChangeInfo; um : UndoManager;
 		BEGIN
 			NEW(updateInfo);
@@ -744,7 +742,7 @@ TYPE
 		END InformListeners;
 
 		PROCEDURE UpdatePieceTable;
-		VAR cur : Piece; len, i : SIZE;
+		VAR cur : Piece; len, i : LONGINT;
 		BEGIN
 			IF LEN(pieceTable^) < nofPieces THEN NEW(pieceTable, nofPieces * 2) END;
 			len := LEN(pieceTable^);
@@ -755,8 +753,8 @@ TYPE
 		END UpdatePieceTable;
 
 		(* Return the piece that contains pos or the last piece if pos is not found *)
-		PROCEDURE FindPiece(pos : SIZE; VAR piece : Piece);
-		VAR a, b, m : SIZE;
+		PROCEDURE FindPiece(pos : LONGINT; VAR piece : Piece);
+		VAR a, b, m : LONGINT;
 		BEGIN
 			IF UsePieceTable THEN
 				IF ~pieceTableOk THEN UpdatePieceTable END
@@ -796,13 +794,13 @@ TYPE
 			END
 		END SendPositionUpdate;
 
-		PROCEDURE UpdatePositionObjects(op : WORD; pos, len : SIZE);
+		PROCEDURE UpdatePositionObjects(op, pos, len : LONGINT);
 		BEGIN
 			SELF.pop := op; SELF.ppos := pos; SELF.plen := len;
 			posObjects.Enumerate(SendPositionUpdate)
 		END UpdatePositionObjects;
 
-		PROCEDURE AccumulateChanges(op : WORD; pos, len : SIZE);
+		PROCEDURE AccumulateChanges(op, pos, len : LONGINT);
 		BEGIN
 			IF upOp >= 0 THEN
 				IF (upOp = OpInsert) & (op = OpAttributes) & (pos = upPos) & (len = upLen) THEN (* ignore *)
@@ -820,7 +818,7 @@ TYPE
 		END RegisterPositionObject;
 
 		(** Split the piece list at pos and return left and right. left or right can be NIL if at end/begin *)
-		PROCEDURE GetSplittedPos(pos : SIZE; VAR left, right: Piece);
+		PROCEDURE GetSplittedPos(pos : LONGINT; VAR left, right: Piece);
 		VAR p, t : Piece;
 		BEGIN
 			FindPiece(pos, p);
@@ -834,9 +832,9 @@ TYPE
 		END GetSplittedPos;
 
 		(** Insert a piece at position pos into the text. Index in characters/objects *)
-		PROCEDURE InsertPiece*(pos : SIZE; n : Piece);
+		PROCEDURE InsertPiece*(pos : LONGINT; n : Piece);
 		VAR l, r, cur : Piece;
-			chpos, chlen : SIZE;
+			chpos, chlen : LONGINT;
 		BEGIN
 			ASSERT(lock.HasWriteLock(), 3000);
 			INC(timestamp);
@@ -871,7 +869,7 @@ TYPE
 		END InsertObject;
 
 		(** Insert a UCS32 buffer at position pos into the text. Index in characters/objects *)
-		PROCEDURE InsertUCS32* (pos : SIZE; CONST buf : UCS32String);
+		PROCEDURE InsertUCS32* (pos : LONGINT; CONST buf : UCS32String);
 		VAR n : MemUnicodePiece; p : Piece; t: Text;
 		BEGIN
 			ASSERT(lock.HasWriteLock(), 3000);
@@ -895,7 +893,7 @@ TYPE
 			InsertPiece(pos, n);
 		END InsertUCS32;
 
-		PROCEDURE InsertUTF8*(pos : SIZE; CONST buf : ARRAY OF CHAR);
+		PROCEDURE InsertUTF8*(pos : LONGINT; CONST buf : ARRAY OF CHAR);
 		VAR n : MemUnicodePiece; p : Piece; text : Text;
 		BEGIN
 			ASSERT(lock.HasWriteLock(), 3000);
@@ -921,8 +919,8 @@ TYPE
 		END InsertUTF8;
 
 		(** Delete len characters from position pos  *)
-		PROCEDURE Delete* (pos, len : SIZE);
-		VAR al, ar, bl, br, cur: Piece; p : SIZE; t: Text;
+		PROCEDURE Delete* (pos, len : LONGINT);
+		VAR al, ar, bl, br, cur: Piece; p : LONGINT; t: Text;
 		BEGIN
 			ASSERT(lock.HasWriteLock(), 3000);
 			INC(timestamp);
@@ -962,8 +960,8 @@ TYPE
 			UpdatePositionObjects(OpDelete, pos, len)
 		END Delete;
 
-		PROCEDURE CopyFromText*(fromText: UnicodeText; fromPos, len, destPos : SIZE);
-		VAR fromP, toP, curP : Piece; pos : SIZE; t: Text;
+		PROCEDURE CopyFromText*(fromText: UnicodeText; fromPos, len, destPos : LONGINT);
+		VAR fromP, toP, curP : Piece; pos : LONGINT; t: Text;
 		BEGIN
 			ASSERT(lock.HasWriteLock(), 3000);
 			ASSERT(fromText.lock.HasReadLock(), 3000);
@@ -1000,7 +998,7 @@ TYPE
 		END AttributeChanger;
 
 		(** Set piece attributes for charater at position pos to pos + len. [Must hold write lock] *)
-		PROCEDURE SetAttributes*(pos, len : SIZE; attr : Attributes);
+		PROCEDURE SetAttributes*(pos, len : LONGINT; attr : Attributes);
 		BEGIN
 			UpdateAttributes(pos, len, AttributeChanger, attr)
 		END SetAttributes;
@@ -1008,7 +1006,7 @@ TYPE
 		(** Calls the attributeChanger procedure for all pieces so the attributes can be changed. userData
 			is forwarded to the attributeChanger as context.
 		 [Must hold write lock] *)
-		PROCEDURE UpdateAttributes*(pos, len : SIZE; attributeChanger : AttributeChangerProc; userData : ANY);
+		PROCEDURE UpdateAttributes*(pos, len : LONGINT; attributeChanger : AttributeChangerProc; userData : ANY);
 		VAR al, ar, bl, br, cur : Piece; attributes: Attributes;
 		BEGIN
 			IF len = 0 THEN RETURN END;
@@ -1054,7 +1052,7 @@ TYPE
 		END UpdateAttributes;
 
 		(** Set piece character style for character at position pos to pos + len. [Must hold lock] *)
-		PROCEDURE SetCharacterStyle*(pos, len : SIZE; cstyle : CharacterStyle);
+		PROCEDURE SetCharacterStyle*(pos, len : LONGINT; cstyle : CharacterStyle);
 		VAR al, ar, bl, br, cur : Piece;
 		BEGIN
 			IF len = 0 THEN RETURN END;
@@ -1084,7 +1082,7 @@ TYPE
 		END SetCharacterStyle;
 
 		(** Set piece paragraph style for charater at position pos to pos + len. [Must hold lock] *)
-		PROCEDURE SetParagraphStyle*(pos, len : SIZE; pstyle : ParagraphStyle);
+		PROCEDURE SetParagraphStyle*(pos, len : LONGINT; pstyle : ParagraphStyle);
 		VAR al, ar, bl, br, cur : Piece;
 		BEGIN
 			IF len = 0 THEN RETURN END;
@@ -1114,7 +1112,7 @@ TYPE
 		END SetParagraphStyle;
 
 		(** Set piece link for charater at position pos to pos + len. [Must hold lock] *)
-		PROCEDURE SetLink*(pos, len : SIZE; link :Link);
+		PROCEDURE SetLink*(pos, len : LONGINT; link :Link);
 		VAR al, ar, bl, br, cur : Piece;
 		BEGIN
 			IF TraceHard THEN
@@ -1142,7 +1140,7 @@ TYPE
 		END SetLink;
 
 		(** Return length in characters [Must hold lock]*)
-		PROCEDURE GetLength* () : SIZE;
+		PROCEDURE GetLength* () : LONGINT;
 		BEGIN
 			ASSERT(lock.HasReadLock(), 3000);
 			RETURN length
@@ -1160,7 +1158,7 @@ TYPE
 
 		PROCEDURE CheckHealth*;
 		VAR cur : Piece;
-			pos, i, nof : SIZE; errors : BOOLEAN;
+			pos, i, nof : LONGINT; errors : BOOLEAN;
 		BEGIN
 			ASSERT(lock.HasReadLock(), 3000);
 			nof := 0; pos := 0; cur := first; i := 0; errors := FALSE;
@@ -1227,8 +1225,8 @@ VAR
 	onLastSelectionChanged-,
 	onLastTextChanged- : WMEvents.EventSource;
 
-	pStyles : ParagraphStyleArray; nofPStyles : SIZE;
-	cStyles : CharacterStyleArray; nofCStyles : SIZE;
+	pStyles : ParagraphStyleArray; nofPStyles : LONGINT;
+	cStyles : CharacterStyleArray; nofCStyles : LONGINT;
 
 	forceUTF*, unforceUTF* : BOOLEAN;
 
@@ -1241,7 +1239,7 @@ VAR
 	newStyles: ParagraphStyleArray;
 	oldStyle: ParagraphStyle;
 	cStyle: CharacterStyle;
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	oldStyle := GetParagraphStyleByName(style.name);
 	IF (oldStyle = NIL) THEN								(* style does not exist yet - create one *)
@@ -1267,7 +1265,7 @@ END AddParagraphStyle;
 
 (** Remove the given Paragraph Style from the Paragraph Style Array *)
 PROCEDURE RemoveParagraphStyle*(style: ParagraphStyle);
-VAR i : SIZE;
+VAR i : LONGINT;
 BEGIN
 	i := 0; WHILE (i < nofPStyles) & (pStyles[i] # style) DO INC(i) END;
 	IF i < nofPStyles THEN
@@ -1281,7 +1279,7 @@ END RemoveParagraphStyle;
 PROCEDURE GetParagraphStyleByName*(CONST name: ARRAY OF CHAR): ParagraphStyle;
 VAR
 	styleObject: ParagraphStyle;
-	i : SIZE;
+	i : LONGINT;
 	found : BOOLEAN;
 	match: Strings.String;
 BEGIN
@@ -1302,7 +1300,7 @@ PROCEDURE AddCharacterStyle*(style: CharacterStyle);
 VAR
 	newStyles: CharacterStyleArray;
 	oldStyle: CharacterStyle;
-	i : SIZE;
+	i : LONGINT;
 BEGIN
 	oldStyle := GetCharacterStyleByName(style.name);
 	IF (oldStyle = NIL) THEN								(* style does not exist yet - create one *)
@@ -1332,7 +1330,7 @@ END AddCharacterStyle;
 
 (** Remove the given Character Style from  the Character Style Array *)
 PROCEDURE RemoveCharacterStyle*(style: CharacterStyle);
-VAR i : SIZE;
+VAR i : LONGINT;
 BEGIN
 	i := 0; WHILE (i < nofCStyles) & (cStyles[i] # style) DO INC(i) END;
 	IF i < nofCStyles THEN
@@ -1346,7 +1344,7 @@ END RemoveCharacterStyle;
 PROCEDURE GetCharacterStyleByName*(CONST name: ARRAY OF CHAR): CharacterStyle;
 VAR
 	styleObject: CharacterStyle;
-	i : SIZE;
+	i : LONGINT;
 	found : BOOLEAN;
 	match: Strings.String;
 BEGIN

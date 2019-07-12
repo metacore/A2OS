@@ -192,11 +192,11 @@ TYPE
 			newFiles.Enumerate( EnumFinalize );  newFiles.Clear();
 			oldFiles.Enumerate( EnumFinalize );  oldFiles.Clear();
 		END Finalize;
-
+		
 		PROCEDURE Collect;
 		BEGIN{EXCLUSIVE}
 			Kernel.GC; Kernel.GC; (* make sure that no file enumeration takes place during GC --> limit the chance to revive files with concurrent GC *)
-		END Collect;
+		END Collect; 
 
 		PROCEDURE FinalizeFile( obj: ANY );
 		VAR F: File;
@@ -527,7 +527,7 @@ TYPE
 				mtime: HUGEINT;
 				fsize, fpos: SIZE;
 				bufs: ARRAY NBufs OF Buffer;
-				swapper: SIZE; state: LONGINT;
+				swapper, state: LONGINT;
 
 
 				PROCEDURE & Init( fs: Files.FileSystem );
@@ -583,19 +583,19 @@ TYPE
 				END Flush;
 
 
-				PROCEDURE Set*( VAR r: Files.Rider;  pos: Files.Position );
+				PROCEDURE Set*( VAR r: Files.Rider;  pos: LONGINT );
 				BEGIN {EXCLUSIVE}
 					SetX( r, pos )
 				END Set;
 
-				PROCEDURE SetX( VAR r: Files.Rider;  p: Files.Position );
-				VAR  org, offset, i, n: SIZE;  buf: Buffer;
+				PROCEDURE SetX( VAR r: Files.Rider;  p: LONGINT );
+				VAR  org, offset, i: LONGINT;  n: SIZE;  buf: Buffer;
 				BEGIN
 					r.file := SELF;  r.fs := fs;
 					IF p > fsize THEN  p := LONGINT(fsize)
 					ELSIF p < 0 THEN  p := 0
 					END;
-					offset := SIZE(p) MOD Bufsize;  org := SIZE(p) - offset;
+					offset := p MOD Bufsize;  org := p - offset;
 					i := 0;
 					WHILE (i < NBufs) & (bufs[i] # NIL) & (org # bufs[i].org) DO  INC( i )  END;
 					IF i < NBufs THEN
@@ -638,14 +638,14 @@ TYPE
 				END SetX;
 
 
-				PROCEDURE Pos*( VAR r: Files.Rider ): Files.Position;
+				PROCEDURE Pos*( VAR r: Files.Rider ): LONGINT;
 				BEGIN
 					RETURN r.apos + r.bpos
 				END Pos;
 
 
 				PROCEDURE Read*( VAR r: Files.Rider;  VAR x: CHAR );
-				VAR offset: SIZE;  buf: Buffer;
+				VAR offset: LONGINT;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
 					buf := r.hint(Buffer);  offset := r.bpos;
 					IF r.apos # buf.org THEN
@@ -662,8 +662,8 @@ TYPE
 					END
 				END Read;
 
-				PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR xpos, offset, restInBuf, min: SIZE;  buf: Buffer;
+				PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR xpos, offset, restInBuf: SIZE;  min: LONGINT;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
 					x[ofs] := 0X;  xpos := ofs;
 					buf := r.hint(Buffer);  offset := r.bpos;
@@ -686,7 +686,7 @@ TYPE
 
 
 				PROCEDURE Write*( VAR r: Files.Rider;  x: CHAR );
-				VAR buf: Buffer;  offset: SIZE;
+				VAR buf: Buffer;  offset: LONGINT;
 				BEGIN  {EXCLUSIVE}
 					buf := r.hint(Buffer);  offset := r.bpos;
 					IF (r.apos # buf.org) OR (offset >= Bufsize) THEN
@@ -698,8 +698,8 @@ TYPE
 					r.bpos := offset + 1;  r.res := Files.Ok
 				END Write;
 
-				PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR xpos, min, restInBuf, offset: SIZE;  buf: Buffer;
+				PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
+				VAR xpos, min, restInBuf, offset: LONGINT;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
 					xpos := ofs;  buf := r.hint(Buffer);  offset := r.bpos;
 					WHILE len > 0 DO
@@ -720,9 +720,9 @@ TYPE
 				END WriteBytes;
 
 
-				PROCEDURE Length*( ): Files.Size;
+				PROCEDURE Length*( ): LONGINT;
 				BEGIN
-					RETURN fsize
+					RETURN LONGINT(fsize)
 				END Length;
 
 
@@ -1119,12 +1119,12 @@ TYPE
 			IF fd < 0 THEN
 				errno := Unix.errno();
 				IF errno IN  {Unix.ENFILE, Unix.EMFILE} THEN
-					fo := openfiles;
+					fo := openfiles;  
 					collection.Collect;
 					WaitClose( fo )
 				ELSIF (errno = Unix.EINVAL) & (openfiles > 1000) THEN
 					(* in Solaris open fails with EINVAL ??? *)
-					fo := openfiles;
+					fo := openfiles;  
 					collection.Collect;
 					WaitClose( fo )
 				ELSIF errno # Unix.EINTR THEN
@@ -1181,7 +1181,7 @@ TYPE
 	END SetWorkPath;
 
 	PROCEDURE Finalization;
-	VAR ft: Files.FileSystemTable;  i: SIZE;
+	VAR ft: Files.FileSystemTable;  i: LONGINT;
 	BEGIN
 		Files.GetList( ft );
 		IF ft # NIL THEN

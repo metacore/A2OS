@@ -99,7 +99,7 @@ TYPE
 		hasMoreBytes : BOOLEAN;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR len: LONGINT; inLen: SIZE; c: CHAR;
+		VAR len, inLen: LONGINT; c: CHAR;
 		BEGIN
 			res := -1; inLen := 0;
 			IF in = NIL THEN

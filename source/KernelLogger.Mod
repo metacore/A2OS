@@ -4,9 +4,10 @@ IMPORT
 	SYSTEM, KernelLog, Texts, TextUtilities, Kernel, Modules;
 
 CONST
-	BufSize = 8192 * 16; (* Kernel buffer size *)
+	BufSize = LONGINT(8192) * 8; (* Kernel buffer size *)
+	DeleteSize= BufSize DIV 8; 
 	UpdateInterval = 200;	(* ms *)
-	LocalBuf = 4096 * 2;
+	LocalBuf = LONGINT(4096) * 2;
 
 	MaxLogSize = 4*BufSize;
 
@@ -68,7 +69,7 @@ TYPE
 
 				INC(limitCounter);
 
-				IF limitCounter >= 1024 THEN
+				IF limitCounter >= DeleteSize THEN
 					kernelLog.AcquireWrite;
 					n := kernelLog.GetLength();
 					IF n > MaxLogSize THEN
@@ -83,7 +84,7 @@ TYPE
 
 				kernelLog.AcquireWrite;
 				n := kernelLog.GetLength();
-				IF n > MaxLogSize+1024 THEN
+				IF n > MaxLogSize+DeleteSize THEN
 					kernelLog.Delete(0,n-MaxLogSize);
 				END;
 				kernelLog.ReleaseWrite;

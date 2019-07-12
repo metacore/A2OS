@@ -1,5 +1,5 @@
 MODULE WMGraphics;
-	IMPORT Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale, Codecs, Files, Streams;
+	IMPORT Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale, Codecs, Files, Streams, Reals;
 CONST 
 	ModeCopy* = RasterScale.ModeCopy; 
 	ModeSrcOverDst* = RasterScale.ModeSrcOverDst; 

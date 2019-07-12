@@ -20,7 +20,7 @@ TYPE
 		r: Texts.Reader;
 		pos: LONGINT;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		VAR ch: CHAR;
 		BEGIN
 			len := 0;
@@ -252,8 +252,8 @@ BEGIN
 	PCT.InitDB(PCT.database);
 END Compile;
 
-PROCEDURE SenderToLog(CONST  buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-VAR i: LONGINT; ch: CHAR;
+PROCEDURE SenderToLog(CONST  buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+VAR i: SIZE; ch: CHAR;
 BEGIN
 	FOR i := 0 TO len-1 DO
 		ch := buf[ofs+i];

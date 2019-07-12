@@ -182,7 +182,7 @@ TYPE
 			forum.SetAttributeValue("password", password);
 		END SetEditor;
 
-		PROCEDURE Fail(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Fail(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			errors := TRUE;
 			KernelLog.String("Version load failed : "); KernelLog.String("pos= "); KernelLog.Int(pos, 0); KernelLog.String("msg= "); KernelLog.String(msg); KernelLog.Ln;

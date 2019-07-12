@@ -27,8 +27,8 @@ TYPE
 					FOR i := 0 TO 3 DO  iv[i] := ORD( src[2*i + 1] )*256 + ORD( src[2*i] )  END
 				END SetIV;
 
-				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR i: LONGINT;
+				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
+				VAR i: SIZE;
 				BEGIN
 					ASSERT( isKeyInitialized & (mode IN {Ciphers.ECB, Ciphers.CBC}) );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -36,8 +36,8 @@ TYPE
 					WHILE i < len DO  EncryptBlock( buf, ofs + i );  INC( i, blockSize );   END
 				END Encrypt;
 
-				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR i: LONGINT;
+				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
+				VAR i: SIZE;
 				BEGIN
 					ASSERT( isKeyInitialized );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -45,8 +45,8 @@ TYPE
 					WHILE i < len DO  DecryptBlock( buf, ofs + i );  INC( i, blockSize );   END
 				END Decrypt;
 
-				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  p: LONGINT );
-				VAR b: Block;  i, j: LONGINT;
+				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  p: SIZE );
+				VAR b: Block;  i, j: SIZE;
 				BEGIN
 					j := p;
 					FOR i := 0 TO 3 DO  (* big endian !! *)
@@ -61,8 +61,8 @@ TYPE
 					IF mode = Ciphers.CBC THEN  iv := b  END
 				END EncryptBlock;
 
-				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  p: LONGINT );
-				VAR b0, b: Block;  i, j: LONGINT;
+				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  p: SIZE );
+				VAR b0, b: Block;  i, j: SIZE;
 				BEGIN
 					j := p;
 					FOR i := 0 TO 3 DO  (* big endian !! *)

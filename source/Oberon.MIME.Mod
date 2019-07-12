@@ -137,7 +137,7 @@ MODULE MIME IN Oberon; (** portable *)
 	END ReadHeader;
 
 	PROCEDURE FindFieldPos*(h: Header; field: ARRAY OF CHAR; VAR pos: LONGINT);
-		VAR len, i: LONGINT;
+		VAR len, i: SIZE;
 	BEGIN
 		len := LEN(h.fields^);
 		WHILE pos < len DO
@@ -174,7 +174,7 @@ MODULE MIME IN Oberon; (** portable *)
 	END FindField;
 
 	PROCEDURE NextValue*(h: Header; VAR pos: LONGINT);
-		VAR len: LONGINT;
+		VAR len: SIZE;
 	BEGIN
 		len := LEN(h.fields^);
 		IF (pos < 0) OR (pos >= len) THEN
@@ -204,7 +204,7 @@ MODULE MIME IN Oberon; (** portable *)
 
 	PROCEDURE DecodeValue(VAR value: ARRAY OF CHAR);
 		VAR
-			i, j, l: LONGINT;
+			i, j, l: SIZE;
 			quoted: BOOLEAN;
 			ch: CHAR;
 	BEGIN
@@ -233,7 +233,7 @@ MODULE MIME IN Oberon; (** portable *)
 	END DecodeValue;
 
 	PROCEDURE ExtractValue*(h: Header; pos: LONGINT; VAR val: ARRAY OF CHAR);
-		VAR len, i, vlen: LONGINT;
+		VAR len, i, vlen: SIZE;
 	BEGIN
 		COPY("", val);
 		len := LEN(h.fields^);
@@ -255,7 +255,7 @@ MODULE MIME IN Oberon; (** portable *)
 	END ExtractValue;
 
 	PROCEDURE FindParam*(h: Header; pos: LONGINT; param: ARRAY OF CHAR; VAR val: ARRAY OF CHAR);
-		VAR len, i, vlen: LONGINT;
+		VAR len, i, vlen: SIZE;
 	BEGIN
 		COPY("", val);
 		len := LEN(h.fields^);
@@ -300,7 +300,7 @@ MODULE MIME IN Oberon; (** portable *)
 
 	PROCEDURE ExtractEMail*(h: Header; pos: LONGINT; VAR email: ARRAY OF CHAR);
 		VAR
-			len, i, len2: LONGINT;
+			len, i, len2: SIZE;
 			end: CHAR;
 	BEGIN
 		COPY("", email);
@@ -437,7 +437,7 @@ MODULE MIME IN Oberon; (** portable *)
 
 	PROCEDURE ExtractGMTDate*(h: Header; pos: LONGINT; VAR time, date: LONGINT);
 		VAR
-			len, i, day, year, month, hour, min, sec: LONGINT;
+			len: SIZE; i, day, year, month, hour, min, sec: LONGINT;
 			mo, zone: ARRAY 16 OF CHAR;
 			j: INTEGER;
 	BEGIN
@@ -614,7 +614,7 @@ MODULE MIME IN Oberon; (** portable *)
 
 	PROCEDURE ExtractContentType*(h: Header; pos: LONGINT; VAR cont: Content);
 		VAR
-			len, i: LONGINT;
+			len, i: SIZE;
 			fullTyp: ARRAY 32+64 OF CHAR;
 	BEGIN
 		NEW(cont); cont.typ := GetContentType(TextMime); cont.encoding := EncBin;
@@ -724,7 +724,7 @@ MODULE MIME IN Oberon; (** portable *)
 		VAR
 			sPat: ARRAY MaxPatLen OF CHAR;
 			sDv: ARRAY MaxPatLen + 1 OF LONGINT;
-			i, l, sPatLen: LONGINT;
+			i, l, sPatLen: SIZE;
 			R: Files.Rider;
 			prev, ch: CHAR;
 		PROCEDURE CalcDispVec;
@@ -774,7 +774,7 @@ MODULE MIME IN Oberon; (** portable *)
 	PROCEDURE TextEncoding*(h: Header; pos: LONGINT; cont: Content);
 		VAR
 			val: ARRAY 64 OF CHAR;
-			i: LONGINT;
+			i: SIZE;
 	BEGIN
 		ExtractValue(h, pos, val);
 		i := 0; Strings.CAPSearch("quoted", val, i);
@@ -894,11 +894,11 @@ MODULE MIME IN Oberon; (** portable *)
 		NEW(T); Texts.Open(T, ""); Texts.OpenWriter(W);
 		pos := 0; end := 0; len := Files.Length(F); parts := NIL;
 		IF SearchBoundary(F, boundary, pos) THEN
-			DecodePart(F, 0, pos-Strings.Length(boundary)-2, T, W, parts, mail);
+			DecodePart(F, 0, pos-Strings.Length(boundary)(LONGINT)-2, T, W, parts, mail);
 			WHILE end < len DO
 				beg := pos;
 				IF SearchBoundary(F, boundary, pos) THEN
-					end := pos-Strings.Length(boundary)-2
+					end := pos-Strings.Length(boundary)(LONGINT)-2
 				ELSE
 					end := len+1
 				END;

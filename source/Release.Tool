@@ -717,10 +717,10 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxBasic.Mod FoxProgTools.Mod FoxScanner.Mod FoxCSharpScanner.Mod FoxSyntaxTree.Mod FoxGlobal.Mod
 	FoxActiveCells.Mod FoxHardware.Mod FoxFormats.Mod FoxFingerprinter.Mod FoxPrintout.Mod
 	FoxParser.Mod FoxCSharpParser.Mod FoxSemanticChecker.Mod
-	FoxBackend.Mod FoxSections.Mod FoxFrontend.Mod
+	FoxSections.Mod FoxBinaryCode.Mod FoxBackend.Mod FoxFrontend.Mod
 	Compiler.Mod FoxOberonFrontend.Mod FoxCSharpFrontend.Mod
 	FoxInterfaceComparison.Mod FoxTextualSymbolFile.Mod
-	FoxBinaryCode.Mod FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
+	FoxIntermediateCode.Mod FoxIntermediateBackend.Mod FoxCodeGenerators.Mod
 	FoxGenericObjectFile.Mod
 	FoxAMD64InstructionSet.Mod FoxAMD64Assembler.Mod FoxAMDBackend.Mod
 	FoxAssembler.Mod FoxIntermediateAssembler.Mod FoxDisassembler.Mod
@@ -751,6 +751,8 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 END
 
 PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMiniSrc.zip" DESCRIPTION "Minimal applications set"
+
+	StreamUtilities.Mod
 
 	# Error API and error codes definition
 	Errors.Mod errors.txt
@@ -972,13 +974,11 @@ PACKAGE Applications ARCHIVE "Applications.zip" SOURCE "ApplicationsSrc.zip" DES
 	RFC865Client.Mod
 	QuoteServer.Mod Quotes.txt	# quote server (be)
 
-	NATIVE {
-		RfsConnection.Mod RfsClientProxy.Mod RfsFS.Mod	# Rfs (pstuedi)
-		TFTP.Mod TFTPServer.Mod TFTPFS.Mod				# TFTP (be)
-	}
+	RfsConnection.Mod RfsClientProxy.Mod RfsFS.Mod	# Rfs (pstuedi)
+	TFTP.Mod TFTPServer.Mod TFTPFS.Mod		# TFTP (be)
 
 	FTPFS.Mod
-	NATIVE, WIN { WebFTPServer.Mod }	# FTP server (be)
+	WebFTPServer.Mod	# FTP server (be)
 
 	XModem.Mod
 
@@ -1661,7 +1661,7 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	WIN & I386 { Windows.Oberon.Registry.Mod }
 	NATIVE, WIN { Oberon.Configuration.Mod }
 
-# Basic Tools. NetSystem, Telnet, TextMail, ET, developer's tools, OpenType.
+	# Basic Tools. NetSystem, Telnet, TextMail, ET, developer's tools, OpenType.
 	Tools.Tool
 
 	# NetSystem TCP/IP
@@ -1694,9 +1694,10 @@ PACKAGE Oberon ARCHIVE "Oberon.zip" SOURCE "OberonSrc.zip" DESCRIPTION "Oberon f
 	Oberon.TGZ.Mod	# .tgz unpacker
 	NATIVE { Oberon.PCITools.Mod }	# PCI scanner
 
-# ARM decoder
+	# ARM decoder
 	Oberon.PCARMDecoder.Mod
-# Additional things
+
+	# Additional things
 	Oberon.Aos.Mod Oberon.OFSTools.Mod Oberon.CleanupFiles.Mod	# Aos-specific tools
 	NATIVE { Oberon.TestNet.Mod }
 	AosTools.Tool

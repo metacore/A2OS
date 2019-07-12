@@ -170,7 +170,7 @@ TYPE
 			started: BOOLEAN;
 			next*: Disk;
 
-		PROCEDURE Transfer*(op, start, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
+		PROCEDURE Transfer*(op, start, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
 		VAR  requ: Command;  str: ARRAY 32 OF CHAR;
 		BEGIN
 			IF (op = Disks.Read) OR (op = Disks.Write) THEN
@@ -611,7 +611,7 @@ PROCEDURE Install*;
 END Install;
 
 PROCEDURE Init;
-VAR  str: ARRAY 32 OF CHAR;  i: LONGINT;
+VAR  str: ARRAY 32 OF CHAR;  i: SIZE;
 BEGIN
 	Machine.GetConfig("SCSIDebug", str);
 	i := 0;

@@ -118,7 +118,7 @@ TYPE
 
 		(** Return point Nr 'index' .  Negative numbers are counted top-down.  *)
 		PROCEDURE IndexedPoint*(index : LONGINT): WMProperties.Property;
-		VAR  i,j:LONGINT;
+		VAR  i,j:SIZE;
 		BEGIN
 			i:=0; j:=0;
 			IF index >=0 THEN
@@ -145,7 +145,7 @@ TYPE
 		END IndexedPoint;
 
 		PROCEDURE MoveFigure*(dx,dy:LONGINT);
-		VAR i,x,y:LONGINT;
+		VAR i: SIZE; x,y:LONGINT;
 		BEGIN
 			Acquire;
 			IF PArray=NIL THEN PArray:=properties.Enumerate(); END; (*?redundant*)
@@ -304,7 +304,7 @@ TYPE
 		END Scale;
 
 		PROCEDURE GetBoundingBox() : WMRectangles.Rectangle; (*! will be eliminated*)
-		VAR rect : WMRectangles.Rectangle; i:LONGINT;
+		VAR rect : WMRectangles.Rectangle; i:SIZE;
 		BEGIN
 			rect.l := MAX(LONGINT); rect.t := MAX(LONGINT);
 			rect.r := MIN(LONGINT); rect.b := MIN(LONGINT);
@@ -334,7 +334,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE RecachePoints; (*build point list in parent coordinates*)
-		VAR p:Point;	i,x,y:LONGINT;
+		VAR p:Point;	i:SIZE; x,y:LONGINT;
 		BEGIN
 			Acquire;
 			PArray:=properties.Enumerate();
@@ -366,7 +366,7 @@ TYPE
 		END DrawDisplayPoint;
 
 		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
-		VAR a: BOOLEAN; i:LONGINT;
+		VAR a: BOOLEAN; i:SIZE;
 		BEGIN
 			DrawForeground^(canvas);
 			a:=arrow.Get();

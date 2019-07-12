@@ -10,7 +10,7 @@ TYPE
 	Path* = OBJECT
 	VAR
 		points : VectorArray;
-		nofPoints : LONGINT;
+		nofPoints : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -19,7 +19,7 @@ TYPE
 		END Init;
 
 		PROCEDURE AddPoint*(p : Vectors.TVector3d);
-		VAR tempPoints : VectorArray; i :LONGINT;
+		VAR tempPoints : VectorArray; i :SIZE;
 		BEGIN
 			IF nofPoints = LEN(points) THEN
 				NEW(tempPoints, LEN(points) * 2);
@@ -30,12 +30,12 @@ TYPE
 			INC(nofPoints)
 		END AddPoint;
 
-		PROCEDURE GetNofPoints*(): LONGINT;
+		PROCEDURE GetNofPoints*(): SIZE;
 		BEGIN
 			RETURN nofPoints
 		END GetNofPoints;
 
-		PROCEDURE GetPoint*(i : LONGINT): Vectors.TVector3d;
+		PROCEDURE GetPoint*(i : SIZE): Vectors.TVector3d;
 		BEGIN
 			RETURN points[i]
 		END GetPoint;
@@ -45,7 +45,7 @@ PROCEDURE RotationObject*(mat : Matrix.Matrix4x4; path : Path; axis: Vectors.TVe
 				obj : AbstractWorld.Object; color : LONGINT);
 VAR first, last, current : VertexArray;
 	m : Matrix.Matrix4x4;
-	i, j : LONGINT;
+	i, j : SIZE;
 BEGIN
 	NEW(first, path.GetNofPoints()); NEW(last, path.GetNofPoints()); NEW(current, path.GetNofPoints());
 	FOR i := 0 TO path.GetNofPoints() - 1 DO first[i] := obj.AddVertex(Matrix.Mul(mat, path.GetPoint(i))) END;
@@ -61,7 +61,7 @@ BEGIN
 END RotationObject;
 
 PROCEDURE ConnectVLists(a, b: VertexArray; obj : AbstractWorld.Object; color : LONGINT);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	(* top can be only one triangle*)
 	IF a[0] = b[0] THEN

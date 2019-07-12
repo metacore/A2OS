@@ -19,7 +19,7 @@ TYPE	WriterMonitor* = OBJECT (Streams.Writer);
 			Reset;
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			out.Bytes(outBuf, ofs, len);
 			monitor.Bytes(outBuf, ofs, len);
@@ -42,11 +42,11 @@ TYPE	WriterMonitor* = OBJECT (Streams.Writer);
 
 	END WriterMonitor;
 
-TYPE  Encryptor*=PROCEDURE{DELEGATE}( VAR buf: ARRAY OF CHAR;  pos, len: LONGINT );
+TYPE  Encryptor*=PROCEDURE{DELEGATE}( VAR buf: ARRAY OF CHAR;  pos, len: SIZE );
 
 (* encrypting writer that can daisychained with another writer *)
 TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
-		VAR out : Streams.Writer; encrypt: Encryptor; buf: POINTER TO ARRAY OF CHAR;
+		VAR out: Streams.Writer; encrypt: Encryptor; buf: POINTER TO ARRAY OF CHAR;
 
 		PROCEDURE &Init*(out:Streams.Writer; encrypt:Encryptor);
 		BEGIN
@@ -57,8 +57,8 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 			Reset;
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR i:LONGINT;
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		VAR i: SIZE;
 		BEGIN
 			FOR i:=0 TO len-1 DO buf[i]:=outBuf[ofs+i] END;
 			IF encrypt#NIL THEN encrypt(buf^,0,len); END;
@@ -74,7 +74,7 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 
 	END EncryptingWriter;
 
-	TYPE  Decryptor*=PROCEDURE{DELEGATE}( VAR buf: ARRAY OF CHAR;  pos, len: LONGINT );
+	TYPE  Decryptor*=PROCEDURE{DELEGATE}( VAR buf: ARRAY OF CHAR;  pos, len: SIZE );
 
 	(* reader that can daisychained with another reader that reads and decrypts a stream*)
 	DecryptingReader* = OBJECT(Streams.Reader)
@@ -88,7 +88,7 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 			SELF.decrypt:=decrypt;
 		END Init;
 
-		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		BEGIN
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
 			in.Bytes(inBuf, ofs, size, len);
@@ -106,7 +106,7 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 
 TYPE
 
-	WriteEntry = POINTER TO RECORD buf: POINTER TO ARRAY OF CHAR; len: LONGINT; propagate: BOOLEAN; next: WriteEntry END;
+	WriteEntry = POINTER TO RECORD buf: POINTER TO ARRAY OF CHAR; len: SIZE; propagate: BOOLEAN; next: WriteEntry END;
 
 (* writer that writes asynchronously - updates are delayed until the thread is ready for it
 	useful to avoid file writing delay problems.
@@ -117,10 +117,10 @@ TYPE
 	VAR
 		first, last: WriteEntry;
 		free: WriteEntry;
-		size: LONGINT;
+		size: SIZE;
 		sender: Streams.Sender;
 
-		PROCEDURE & InitWriter(sender: Streams.Sender; size: LONGINT);
+		PROCEDURE & InitWriter(sender: Streams.Sender; size: SIZE);
 		BEGIN
 			first := NIL; last := NIL; free := NIL;
 			SELF.size := size;
@@ -129,7 +129,7 @@ TYPE
 			Reset;
 		END InitWriter;
 
-		PROCEDURE Add(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Add(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 		VAR entry: WriteEntry;
 		BEGIN
 			IF ~ToLastEntry(outBuf, ofs, len, propagate, res) THEN
@@ -142,7 +142,7 @@ TYPE
 		END Add;
 
 		(* check last entry for enough space to host data. If available, remove from list and return *)
-		PROCEDURE ToLastEntry(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD): BOOLEAN;
+		PROCEDURE ToLastEntry(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD): BOOLEAN;
 		BEGIN{EXCLUSIVE}
 			IF last = NIL THEN RETURN FALSE
 			ELSIF last.propagate # propagate THEN RETURN FALSE
@@ -155,7 +155,7 @@ TYPE
 			END;
 		END ToLastEntry;
 
-		PROCEDURE GetFreeEntry(len: LONGINT): WriteEntry;
+		PROCEDURE GetFreeEntry(len: SIZE): WriteEntry;
 		VAR entry: WriteEntry;
 		BEGIN{EXCLUSIVE}
 			IF free = NIL THEN NEW(entry) ELSE entry := free; free := free.next END;
@@ -229,7 +229,7 @@ TYPE
 			RETURN out.Pos()
 		END Pos;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 		BEGIN
 			out.Bytes(outBuf, ofs, len);
 			IF propagate THEN out.Update END;
@@ -251,7 +251,7 @@ TYPE
 			SELF.monitor:=monitor;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		BEGIN
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
 			size := MAX(min,MIN(in.Available(),size));
@@ -278,17 +278,17 @@ TYPE
 
 	LimitedWriter* = OBJECT (Streams.Writer);
 		VAR out : Streams.Writer;
-			size, remain-: LONGINT;
+			size, remain-: SIZE;
 
-		PROCEDURE &Init*(out:Streams.Writer; size: LONGINT);
+		PROCEDURE &Init*(out:Streams.Writer; size: SIZE);
 		BEGIN
 			InitWriter(Sender, MIN(size, WriterBufSize));
 			SELF.out := out;
 			SELF.size:=size; remain:=size;
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR num:LONGINT;
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		VAR num:SIZE;
 		BEGIN
 			num:=MIN(remain,len);
 			out.Bytes(outBuf, ofs, num);
@@ -306,21 +306,22 @@ TYPE
 
 	LimitedReader* = OBJECT (Streams.Reader);
 		VAR in : Streams.Reader;
-			total, remain-: LONGINT;
+			total, remain-: SIZE;
 
-		PROCEDURE &Init*(in:Streams.Reader; size: LONGINT);
+		PROCEDURE &Init*(in:Streams.Reader; size: SIZE);
 		BEGIN
 			InitReader(Receiver, MIN(size, ReaderBufSize));
 			SELF.in := in;
 			total:=size; remain:=size;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
-		VAR num:LONGINT;
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		VAR num, length: SIZE;
 		BEGIN
 			ASSERT(size >= 0);
 			IF (remain=0) THEN len:=0; res:=Streams.EOF; RETURN END;
-			in.Bytes(buf, ofs, MIN(remain,size), len);
+			in.Bytes(buf, ofs, MIN(remain,size), length);
+			len := length;
 			DEC(remain,len); INC(received,len);
 			res:=in.res;
 		END Receiver;
@@ -334,7 +335,7 @@ TYPE
 	(* convert stream to Base64 encoding on-the-fly *)
 TYPE	Base64Writer* = OBJECT (Streams.Writer);
 		VAR out : Streams.Writer;  buf: POINTER TO ARRAY OF CHAR;
-			group, i, ll: LONGINT; done:BOOLEAN;
+			group, i, ll: SIZE; done:BOOLEAN;
 
 		PROCEDURE &Init*(out:Streams.Writer);
 		BEGIN
@@ -351,8 +352,8 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 			group := 0;  i := 0;  ll := 0; done:=FALSE;
 		END Reset;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR ix:LONGINT;
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		VAR ix: SIZE;
 		BEGIN
 			IF done THEN res:=Streams.EOF; RETURN END;
 			ix := ofs; (* encoding snipped from CryptoBase64 *)
@@ -398,7 +399,8 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 		(* decode Base64 stream to cleartext on-the-fly *)
 	Base64Reader* = OBJECT(Streams.Reader)
 		VAR in: Streams.Reader;
-			i, rest, code, group: LONGINT;
+			i, rest, group: SIZE;
+			code: INTEGER;
 			done:BOOLEAN;
 
 		PROCEDURE &Init*(in: Streams.Reader);
@@ -416,8 +418,8 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 			group := 0;  i := 0; code:=0; done:=FALSE;
 		END Reset;
 
-		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
-		VAR c:CHAR; size4: LONGINT;
+		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		VAR c:CHAR; size4: SIZE;
 		BEGIN
 			size4:=size DIV 4 * 4; (* a multiple of 4*)
 			ASSERT((size > 0) & (min <= size4) & (min >= 0));
@@ -466,8 +468,8 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 
 	END Base64Reader;
 
-TYPE TYPE DumpWriter*= OBJECT(Streams.Writer);
-		PROCEDURE Send* ( CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
+TYPE DumpWriter*= OBJECT(Streams.Writer);
+		PROCEDURE Send* ( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
 		BEGIN
 			res:=Streams.Ok;
 		END Send;
@@ -526,14 +528,14 @@ TYPE TYPE DumpWriter*= OBJECT(Streams.Writer);
 		END OpenReaderMonitor;
 
 	(*open a size limited writer r on the out stream*)
-	PROCEDURE OpenLimitedWriter*(VAR w: Streams.Writer; out: Streams.Writer; size:LONGINT);
+	PROCEDURE OpenLimitedWriter*(VAR w: Streams.Writer; out: Streams.Writer; size:SIZE);
 	VAR lw: LimitedWriter;
 		BEGIN
 			NEW(lw, out, size); w:=lw;
 		END OpenLimitedWriter;
 
 	(*open a size limited reader r on the in stream*)
-	PROCEDURE OpenLimitedReader*(VAR r: Streams.Reader; in: Streams.Reader; size:LONGINT);
+	PROCEDURE OpenLimitedReader*(VAR r: Streams.Reader; in: Streams.Reader; size:SIZE);
 	VAR lr: LimitedReader;
 		BEGIN
 			NEW(lr, in, size); r:=lr;
@@ -578,7 +580,7 @@ END Test2;
 *)
 (*
 PROCEDURE TestAsync*;
-VAR log: Streams.Writer; i: LONGINT;
+VAR log: Streams.Writer; i: SIZE;
 BEGIN
 	NEW(log, KernelLog.Send,128);
 	log := OpenAsynchronousForwarder(log);
@@ -590,7 +592,7 @@ END TestAsync;
 
 
 PROCEDURE TestAsync2*;
-VAR log: AsynchronousWriter; i: LONGINT;
+VAR log: AsynchronousWriter; i: SIZE;
 BEGIN
 	NEW(log, KernelLog.Send,128);
 	FOR i := 0 TO 200 DO
@@ -599,16 +601,16 @@ BEGIN
 	KernelLog.String(" D O N E "); KernelLog.Ln;
 END TestAsync2;
 
-PROCEDURE TestEncode(VAR buf: ARRAY OF CHAR; pos,len:LONGINT);
-VAR i:LONGINT;
+PROCEDURE TestEncode(VAR buf: ARRAY OF CHAR; pos,len:SIZE);
+VAR i:SIZE;
 BEGIN
 	FOR i:=pos TO pos+len-1 DO
 		IF (buf[i]>="!") & (buf[i]<"~") THEN buf[i]:=CHR(ORD(buf[i])+1) END;
 	END;
 END TestEncode;
 
-PROCEDURE TestDecode(VAR buf: ARRAY OF CHAR; pos,len:LONGINT);
-VAR i:LONGINT;
+PROCEDURE TestDecode(VAR buf: ARRAY OF CHAR; pos,len:SIZE);
+VAR i:SIZE;
 BEGIN
 	FOR i:=pos TO pos+len-1 DO
 		IF (buf[i]>"!") & (buf[i]<="~") THEN buf[i]:=CHR(ORD(buf[i])-1) END;
@@ -617,7 +619,6 @@ END TestDecode;
 
 PROCEDURE TestCrypt*(context:Commands.Context);
 VAR log: Streams.Writer; secretwriter: EncryptingWriter; secretreader:DecryptingReader;
-	i: LONGINT;
 	string:ARRAY 64 OF CHAR; res:BOOLEAN;
 BEGIN
 	NEW(log, KernelLog.Send,128);

@@ -7,8 +7,8 @@ CONST
 	LineFeed = 0AH;
 
 (** Removed all end-of-line whitespace from 'text' *)
-PROCEDURE RemoveFromText*(text : Texts.Text; VAR nofRemoved : LONGINT);
-VAR reader : Texts.TextReader; char : Texts.Char32; lastWhitespacePosition, nofWhitespaces : LONGINT;
+PROCEDURE RemoveFromText*(text : Texts.Text; VAR nofRemoved : SIZE);
+VAR reader : Texts.TextReader; char : Texts.Char32; lastWhitespacePosition, nofWhitespaces : SIZE;
 BEGIN
 	ASSERT(text # NIL);
 	nofRemoved := 0;
@@ -41,7 +41,7 @@ PROCEDURE CheckWhitespace*(text : Texts.Text; diagnostics : Diagnostics.Diagnost
 VAR
 	reader : Texts.TextReader; char : Texts.Char32;
 	lastCharWasWhitespace : BOOLEAN;
-	lastWhitespacePosition : LONGINT;
+	lastWhitespacePosition : SIZE;
 BEGIN
 	ASSERT((text # NIL) & (diagnostics # NIL));
 	text.AcquireRead;
@@ -70,8 +70,8 @@ BEGIN
 END CheckWhitespace;
 
 (** Removed all end-of-line whitespace from file named 'filename' *)
-PROCEDURE RemoveFromFile*(VAR filename : Files.FileName; VAR nofRemoved: LONGINT; VAR res : WORD);
-VAR file : Files.File; text : Texts.Text; format : LONGINT;
+PROCEDURE RemoveFromFile*(VAR filename : Files.FileName; VAR nofRemoved: SIZE; VAR res : WORD);
+VAR file : Files.File; text : Texts.Text; format : WORD;
 BEGIN
 	file := Files.Old(filename);
 	IF (file # NIL) THEN
@@ -101,12 +101,13 @@ VAR
 	enum : Files.Enumerator;
 	filename : Files.FileName;
 	fileflags : SET;
-	time, date, size : LONGINT;
-	nofRemovedTotal: LONGINT; res : WORD;
-	nofFiles, nofErrors : LONGINT;
+	time, date : LONGINT;
+	size : Files.Size;
+	nofRemovedTotal: SIZE; res : WORD;
+	nofFiles, nofErrors : SIZE;
 
 	PROCEDURE RemoveFromThisFile(VAR filename : Files.FileName);
-	VAR oldFilename : Files.FileName; nofRemoved : LONGINT;
+	VAR oldFilename : Files.FileName; nofRemoved : SIZE;
 	BEGIN
 		nofRemoved := 0;
 		IF options.GetFlag("verbose") THEN

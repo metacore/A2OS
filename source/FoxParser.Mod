@@ -173,7 +173,8 @@ TYPE
 		token-: Scanner.Token;
 		diagnostics: Diagnostics.Diagnostics;
 		currentScope: SyntaxTree.Scope;
-		recentCommentItem: ANY; recentLine: LONGINT;
+		recentCommentItem: ANY;
+		recentLine: Streams.Position;
 		recentComment: SyntaxTree.Comment;
 		moduleScope: SyntaxTree.ModuleScope;
 		error-: BOOLEAN;
@@ -270,7 +271,7 @@ TYPE
 		(* conditional compilation according to the following syntax *)
 		(* Block = '#' 'if' Condition 'then' Block { '#' 'elsif' Condition 'then' Block } ['#' 'else' Block] '#' 'end' | any symbol until next new line. *)
 		PROCEDURE GetNextToken(VAR token: Scanner.Token): BOOLEAN;
-		VAR line: Streams.Position; end: Scanner.Symbol; startPos, endPos: LONGINT;
+		VAR line, startPos, endPos: Streams.Position; end: Scanner.Symbol;
 		BEGIN
 			LOOP
 				line := token.position.line;
@@ -905,10 +906,8 @@ TYPE
 			position := token.position;
 			CASE Symbol() OF
 			| Scanner.Number:
-					IF (token.numberType = Scanner.Integer) THEN
+					IF (token.numberType = Scanner.Integer) OR (token.numberType = Scanner.Hugeint) THEN
 						factor := SyntaxTree.NewIntegerValue( position, token.integer);
-					ELSIF (token.numberType = Scanner.Hugeint) THEN
-						factor := SyntaxTree.NewIntegerValue(position, token.hugeint);
 					ELSIF (token.numberType = Scanner.Real) OR (token.numberType = Scanner.Longreal) THEN
 						factor := SyntaxTree.NewRealValue( position, token.real, token.numberType);
 					ELSE HALT( 100 )
@@ -1403,7 +1402,7 @@ TYPE
 
 		(** Code = {  any \ 'end' \ 'with' } ['with' {('in'|'out') StatementSequence}] . **)
 		PROCEDURE Code(outer: SyntaxTree.Statement): SyntaxTree.Code;
-		VAR startPos: Position; endPos, i ,len: LONGINT; codeString: Scanner.StringType; code: SyntaxTree.Code;
+		VAR startPos: Position; endPos: Streams.Position; i, len: SIZE; codeString: Scanner.StringType; code: SyntaxTree.Code;
 			end: Scanner.Symbol; (*in, out: BOOLEAN; statements, rules: SyntaxTree.StatementSequence;*)
 		BEGIN
 			startPos := token.position;
@@ -2432,7 +2431,7 @@ TYPE
 				IF isCellNet THEN module.SetCellNet(TRUE); module.SetModifiers(modifiers); END;
 
 				module.SetType(SyntaxTree.moduleType);
-				
+
 				IF Optional(Scanner.Less) THEN
 					NEW(parameters);
 					module.SetParameters(parameters);
@@ -2440,9 +2439,9 @@ TYPE
 					WHILE Optional(Scanner.Comma) DO
 						parameters.Add(Identifier(position));
 					END;
-					Check(Scanner.Greater); 
-				END; 
-				
+					Check(Scanner.Greater);
+				END;
+
 				IF Optional(Scanner.In) THEN
 					position := token.position;
 					context := Identifier(position);

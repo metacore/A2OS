@@ -35,7 +35,7 @@ TYPE
 
 	ConvertingStatus* = OBJECT(Status)
 	VAR
-		bytesEncoded*: LONGINT;
+		bytesEncoded*: SIZE;
 	END ConvertingStatus;
 
 	StatusProc* = PROCEDURE {DELEGATE} (status: Status);
@@ -46,7 +46,7 @@ TYPE
 
 		PROCEDURE Open*(filename : Strings.String): LONGINT;
 		VAR
-			bytesRead: LONGINT;
+			bytesRead: SIZE;
 			file: Files.File;
 			r: Files.Reader;
 			buf: ARRAY 8 OF CHAR;
@@ -69,7 +69,7 @@ TYPE
 				RETURN ResErr;
 			END;
 			*)
-			IF size < 1024 THEN size := file.Length() - 8; END;
+			IF size < 1024 THEN size := (file.Length() - 8)(LONGINT); END;
 
 			r.Bytes(buf, 0, 4, bytesRead);
 			IF buf # "WAVE" THEN
@@ -125,7 +125,8 @@ TYPE
 
 		PROCEDURE GetNextFrame(r: Files.Reader; VAR frame: Frame): LONGINT;
 		VAR
-			n, start, bytesRead, tmp: LONGINT;
+			n, start, tmp: LONGINT;
+			bytesRead: SIZE;
 			chr: CHAR;
 			buf : ARRAY 4 OF CHAR;
 
@@ -472,7 +473,7 @@ TYPE
 
 	ProgressBar* = OBJECT(WMComponents.VisualComponent)
 	VAR
-		start*, end*, cur*: WMProperties.Int32Property;
+		start*, end*, cur*: WMProperties.IntegerProperty;
 		color*: WMProperties.ColorProperty;
 		borderColor*: WMProperties.ColorProperty;
 
@@ -487,7 +488,7 @@ TYPE
 			NEW(cur, NIL, NIL, NIL);
 		END Init;
 
-		PROCEDURE SetPos*(pos: Streams.Position);
+		PROCEDURE SetPos*(pos: HUGEINT);
 		BEGIN
 			IF pos < start.Get() THEN
 				pos := start.Get();
@@ -498,12 +499,12 @@ TYPE
 			Invalidate();
 		END SetPos;
 
-		PROCEDURE GetPos*(): Streams.Position;
+		PROCEDURE GetPos*(): HUGEINT;
 		BEGIN
 			RETURN cur.Get();
 		END GetPos;
 
-		PROCEDURE SetRange*(start, end: LONGINT);
+		PROCEDURE SetRange*(start, end: HUGEINT);
 		BEGIN
 			SELF.start.Set(start);
 			SELF.end.Set(end);
@@ -525,7 +526,7 @@ TYPE
 			pt: ARRAY 4 OF WMGraphics.Point2d;
 		BEGIN
 			IF end.Get() > start.Get() THEN
-				width := (cur.Get()-start.Get()) * bounds.GetWidth() DIV (end.Get()-start.Get());
+				width := LONGINT((cur.Get()-start.Get()) * bounds.GetWidth() DIV (end.Get()-start.Get()));
 			END;
 			rect := WMRectangles.MakeRect(0, 0, width, bounds.GetHeight());
 
@@ -682,7 +683,7 @@ VAR
 	file: Files.File;
 	r: Files.Reader;
 	id, buf: ARRAY 128 OF CHAR;
-	len, bytesRead: LONGINT;
+	len: Files.Size; bytesRead: SIZE;
 BEGIN
 	file := Files.Old(filename^);
 	IF file = NIL THEN
@@ -761,7 +762,7 @@ VAR
 	out : Files.Writer;
 	buffer : SoundDevices.Buffer;
 	convertStatus: ConvertingStatus;
-	bytesEncoded: LONGINT;
+	bytesEncoded: SIZE;
 BEGIN
 	NEW(convertStatus);
 	decoder := Codecs.GetAudioDecoder("MP3");
@@ -789,7 +790,7 @@ BEGIN
 	END;
 
 	decoder.Open(in, res);
-	decoder.SetStreamLength(srcFile.Length());
+	decoder.SetStreamLength(srcFile.Length()(LONGINT));
 	NEW(buffer);
 	buffer.len := 4096;
 	NEW(buffer.data, 4096);
@@ -871,7 +872,7 @@ BEGIN
 	RETURN FALSE;
 END IsOnSameController;
 
-PROCEDURE ClearBuffer*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT);
+PROCEDURE ClearBuffer*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE);
 VAR
 	adr: ADDRESS;
 	rem: SIZE;

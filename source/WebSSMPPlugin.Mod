@@ -65,7 +65,7 @@ TYPE
 VAR services : Classes.List;
 
 PROCEDURE ExecuteService(CONST name : ARRAY OF CHAR; VAR request : WebHTTP.RequestHeader; in : Streams.Reader; out : Streams.Writer);
-VAR i : LONGINT;
+VAR i : SIZE;
 	o : ANY; info : ServiceInfo;
 BEGIN
 	services.Lock;
@@ -104,7 +104,7 @@ BEGIN {EXCLUSIVE}
 END RegisterMethod;
 
 PROCEDURE UnregisterMethod*(CONST name: ARRAY OF CHAR);
-VAR i : LONGINT; o, h : ANY;
+VAR i : SIZE; o, h : ANY;
 BEGIN {EXCLUSIVE}
 	services.Lock;
 	FOR i := 0 TO services.GetCount() - 1 DO

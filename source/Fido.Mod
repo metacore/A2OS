@@ -52,7 +52,7 @@ VAR
 PROCEDURE Action*;
 VAR
 	processes : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
-	nofProcesses, i : LONGINT;
+	nofProcesses, i : SIZE;
 	writer: Streams.Writer;
 BEGIN
 	Streams.OpenWriter(writer, KernelLog.Send);

@@ -9,8 +9,8 @@ TYPE
 	List* = OBJECT
 		VAR
 			list : ObjectArray;
-			count : LONGINT;
-			readLock : LONGINT;
+			count : SIZE;
+			readLock : SIZE;
 
 		PROCEDURE &New*;
 		BEGIN NEW(list, 8); readLock := 0
@@ -19,14 +19,14 @@ TYPE
 		(** return the number of objects in the list. If count is used for indexing elements (e.g. FOR - Loop) in a multi-process
 			situation, the process calling the GetCount method should call Lock before GetCount and Unlock after the
 			last use of an index based on GetCount *)
-		PROCEDURE GetCount*():LONGINT;
+		PROCEDURE GetCount*():SIZE;
 		BEGIN
 			RETURN count
 		END GetCount;
 
 		PROCEDURE Grow;
 		VAR old: ObjectArray;
-				i : LONGINT;
+				i : SIZE;
 		BEGIN
 			old := list;
 			NEW(list, LEN(list)*2);
@@ -44,7 +44,7 @@ TYPE
 
 		(** atomic replace x by y *)
 		PROCEDURE Replace*(x, y : ANY);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN {EXCLUSIVE}
 			AWAIT(readLock = 0);
 			i := IndexOf(x);
@@ -54,8 +54,8 @@ TYPE
 		(** return the index of an object. In a multi-process situation, the process calling the IndexOf method should
 			call Lock before IndexOf and Unlock after the last use of an index based on IndexOf.
 			If the object is not found, -1 is returned *)
-		PROCEDURE IndexOf *(x:ANY) : LONGINT;
-		VAR i : LONGINT;
+		PROCEDURE IndexOf *(x:ANY) : SIZE;
+		VAR i : SIZE;
 		BEGIN
 			i := 0 ; WHILE i < count DO IF list[i] = x THEN RETURN i END; INC(i) END;
 			RETURN -1
@@ -63,7 +63,7 @@ TYPE
 
 		(** Remove an object from the list. Remove may block if number of calls to Lock is bigger than the number of calls to Unlock *)
 		PROCEDURE Remove*(x : ANY);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN {EXCLUSIVE}
 			AWAIT(readLock = 0);
 			i:=0; WHILE (i<count) & (list[i]#x) DO INC(i) END;
@@ -76,7 +76,7 @@ TYPE
 
 		(** Removes all objects from the list. Clear may block if number of calls to Lock is bigger than the number of calls to Unlock *)
 		PROCEDURE Clear*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN {EXCLUSIVE}
 			AWAIT(readLock = 0);
 			FOR i := 0 TO count - 1 DO list[i] := NIL END;
@@ -84,7 +84,7 @@ TYPE
 		END Clear;
 
 		(** return an object based on an index. In a multi-process situation, GetItem is only safe in a locked region Lock / Unlock *)
-		PROCEDURE GetItem*(i:LONGINT) : ANY;
+		PROCEDURE GetItem*(i:SIZE) : ANY;
 		BEGIN
 			ASSERT((i >= 0) & (i < count), 101);
 			RETURN list[i]
@@ -109,7 +109,7 @@ TYPE
 		-1 if the first Object is "smaller" then the second Object
 		0 if both Objects are "equal"
 		1 if the first Object is "greater" then the second Object *)
-	CompareMethod* = PROCEDURE {DELEGATE} (first, second: ANY): LONGINT;
+	CompareMethod* = PROCEDURE {DELEGATE} (first, second: ANY): WORD;
 
 	SortedList* = OBJECT(List);
 	VAR
@@ -135,7 +135,7 @@ TYPE
 
 		(* Does the actual Adding without locking (should already have been done by the caller) *)
 		PROCEDURE AddUnlocked(x: ANY);
-		VAR i, pos: LONGINT;
+		VAR i, pos: SIZE;
 		BEGIN
 			IF count = LEN(list) THEN Grow END;
 
@@ -149,11 +149,11 @@ TYPE
 			INC(count)
 		END AddUnlocked;
 
-		PROCEDURE FindPosition(x: ANY): LONGINT;
+		PROCEDURE FindPosition(x: ANY): SIZE;
 		VAR
-			lowerBound, upperBound: LONGINT;
-			middle: LONGINT;
-			value: LONGINT;
+			lowerBound, upperBound: SIZE;
+			middle: SIZE;
+			value: WORD;
 		BEGIN
 			IF count = 0 THEN RETURN 0; END;
 			IF compare(list[0], x) >= 1 THEN RETURN 0; END;
@@ -188,7 +188,7 @@ TYPE
 
 		(* Does the actual Removing without locking (should already have been done by the caller) *)
 		PROCEDURE RemoveUnlocked(x: ANY);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			i:=0; WHILE (i<count) & (list[i]#x) DO INC(i) END;
 			IF i<count THEN
@@ -208,7 +208,7 @@ TYPE
 
 		(* searches and returns the PTR to an Object with the same key *)
 		PROCEDURE SearchByKey*(x: ANY): ANY;
-		VAR pos : LONGINT;
+		VAR pos : SIZE;
 		BEGIN {EXCLUSIVE}
 			pos := FindPosition(x);
 			IF (x=NIL) OR (list[pos]=NIL) THEN RETURN NIL 	(* PH 2012 *)
@@ -223,7 +223,7 @@ TYPE
 		key : Strings.String;
 		value : ANY;
 		next : StringMapEntry;
-		hash : LONGINT;
+		hash : SIZE;
 	END;
 
 	StringMapEntryArray = POINTER TO ARRAY OF StringMapEntry;
@@ -237,20 +237,20 @@ TYPE
 			NEW(hashtable, 256);
 		END Init;
 
-		PROCEDURE CalcHash(CONST buffer : ARRAY OF CHAR) : LONGINT;
-		VAR hash, i : LONGINT; ch : CHAR;
+		PROCEDURE CalcHash(CONST buffer : ARRAY OF CHAR) : SIZE;
+		VAR hash, i : SIZE; ch : CHAR;
 		BEGIN
 			hash := 0;
 			i := 0; ch := buffer[0]; hash := 0;
 			WHILE ch # 0X DO
-				hash :=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(hash, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
+				hash :=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(hash, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
 				INC(i); ch := buffer[i]
 			END;
 			RETURN hash
 		END CalcHash;
 
 		PROCEDURE Find*(CONST key : ARRAY OF CHAR) : ANY;
-		VAR hash : LONGINT;
+		VAR hash : SIZE;
 			e : StringMapEntry;
 		BEGIN
 			hash := CalcHash(key);
@@ -262,7 +262,7 @@ TYPE
 		END Find;
 
 		PROCEDURE Add*(CONST key : ARRAY OF CHAR; value : ANY);
-		VAR hash : LONGINT;
+		VAR hash : SIZE;
 			e : StringMapEntry;
 		BEGIN
 			IF Find(key) # NIL THEN HALT(123) END;

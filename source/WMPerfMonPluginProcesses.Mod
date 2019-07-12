@@ -76,7 +76,7 @@ TYPE
 
 		PROCEDURE UpdateDataset*;
 		VAR
-			i : LONGINT; timer : HUGEINT;
+			i : SIZE; timer : HUGEINT;
 			pAll, timeDiff, cyclesDiff : LONGREAL;
 		BEGIN
 			Objects.GetCpuCycles(process, currentCycles, TRUE);

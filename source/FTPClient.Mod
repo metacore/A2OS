@@ -50,7 +50,7 @@ TYPE
 		actvTimeout : Objects.Timer;
 
 		listing- : FTPListing;
-		nofEntries- : LONGINT;
+		nofEntries- : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -148,7 +148,7 @@ TYPE
 		END IsNum;
 
 		PROCEDURE GetDataConnection( VAR res : WORD);
-		VAR ch : CHAR; i, j : LONGINT; ipstr : ARRAY 16 OF CHAR; p0, p1, port : LONGINT;
+		VAR ch : CHAR; i, j : SIZE; ipstr : ARRAY 16 OF CHAR; p0, p1, port : LONGINT;
 			str : ARRAY 32 OF CHAR;
 
 			PROCEDURE Fail;
@@ -485,8 +485,8 @@ TYPE
 			ch : CHAR;
 
 (*
-			PROCEDURE FixLengthStr(r : Streams.Reader; len : LONGINT; VAR s : ARRAY OF CHAR);
-			VAR i : LONGINT;
+			PROCEDURE FixLengthStr(r : Streams.Reader; len : SIZE; VAR s : ARRAY OF CHAR);
+			VAR i : SIZE;
 			BEGIN
 				WHILE (len > 0) & (r.res = 0) DO
 					s[i] := r.Get();
@@ -600,7 +600,7 @@ TYPE
 
 		PROCEDURE AddFTPEntryToListing(entry : FTPEntry);
 		VAR newList : FTPListing;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			INC(nofEntries);
 			IF (nofEntries > LEN(listing)) THEN

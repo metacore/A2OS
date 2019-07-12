@@ -143,7 +143,7 @@ TYPE
 		END PathChanged;
 
 		PROCEDURE UpdateStatus(alias : Strings.String);
-		VAR sfree, total, nfiles, i: LONGINT; fs: Files.FileSystem; ft: Files.FileSystemTable;
+		VAR sfree, total: LONGINT; nfiles: SIZE; i: SIZE; fs: Files.FileSystem; ft: Files.FileSystemTable;
 			temp : ARRAY 32 OF CHAR;
 		BEGIN
 			Files.GetList(ft);

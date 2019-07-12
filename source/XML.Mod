@@ -19,7 +19,7 @@ TYPE
 
 	Content* = OBJECT
 	VAR
-		pos: LONGINT;
+		pos: Streams.Position;
 		previous, next : Content;
 
 		PROCEDURE &Init*;
@@ -28,12 +28,12 @@ TYPE
 			previous := NIL; next := NIL;
 		END Init;
 
-		PROCEDURE GetPos*(): LONGINT;
+		PROCEDURE GetPos*(): Streams.Position;
 		BEGIN
 			RETURN pos
 		END GetPos;
 
-		PROCEDURE SetPos*(pos : LONGINT);
+		PROCEDURE SetPos*(pos : Streams.Position);
 		BEGIN
 			SELF.pos := pos
 		END SetPos;
@@ -1051,7 +1051,7 @@ TYPE
 			RETURN NIL
 		END GetStr;
 
-		PROCEDURE GetLength*(): LONGINT;
+		PROCEDURE GetLength*(): SIZE;
 		BEGIN
 			RETURN 0
 		END GetLength;
@@ -1068,7 +1068,7 @@ TYPE
 	ArrayChars* = OBJECT (Chars)
 	VAR
 		str: String;
-		len: LONGINT;
+		len: SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -1081,7 +1081,7 @@ TYPE
 			RETURN str
 		END GetStr;
 
-		PROCEDURE GetLength*(): LONGINT;
+		PROCEDURE GetLength*(): SIZE;
 		BEGIN
 			RETURN len
 		END GetLength;
@@ -1729,7 +1729,7 @@ VAR
 (**	Write an 0X-terminated UTF8 string to a stream (excl. 0X). XML special characters are escaped.
 	Also works for ASCII strings. *)
 PROCEDURE UTF8ToStream*(CONST string : ARRAY OF CHAR; w : Streams.Writer; VAR res : WORD);
-VAR codeLength, stringLength, i : LONGINT; ch : CHAR;
+VAR codeLength, stringLength, i : SIZE; ch : CHAR;
 BEGIN
 	ASSERT(w # NIL);
 	res := Ok;
@@ -1764,7 +1764,7 @@ END UTF8ToStream;
 	will be truncated and an error will be reported. <string> is always a valid 0X-terminated string.
 	Also works for ASCII strings. *)
 PROCEDURE UTF8FromStream*(VAR string : ARRAY OF CHAR; r : Streams.Reader; VAR res : WORD);
-VAR ch : CHAR;  escapeBuffer : ARRAY 8 OF CHAR; escaping : BOOLEAN; escapeIdx, codeLength, stringLength, i, len, actLen : LONGINT;
+VAR ch : CHAR;  escapeBuffer : ARRAY 8 OF CHAR; escaping : BOOLEAN; escapeIdx, codeLength, stringLength, i, len, actLen : SIZE;
 
 	PROCEDURE FlushEscapeBuffer;
 	VAR j : LONGINT;

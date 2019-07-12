@@ -17,7 +17,6 @@ TYPE
 		terminate: BOOLEAN;
 		lastSelectionHead: ARRAY HSize OF CHAR;
 
-
 		PROCEDURE &Init;
 		BEGIN
 			terminate := FALSE;
@@ -25,7 +24,7 @@ TYPE
 		END Init;
 
 		PROCEDURE SelectionIsNew(): BOOLEAN;
-		VAR i: LONGINT;  rc, lc: CHAR;
+		VAR i: SIZE;  rc, lc: CHAR;
 		BEGIN
 			rc := recBuffer[0];  lc := lastSelectionHead[0];  i := 0;
 			WHILE (rc = lc) & (rc # 0X) & (lc # 0X) & (i < HSize-1) DO
@@ -35,7 +34,7 @@ TYPE
 		END SelectionIsNew;
 
 		PROCEDURE SaveSelection;
-		VAR i: LONGINT;  c: CHAR;
+		VAR i: SIZE;  c: CHAR;
 		BEGIN
 			i := 0;
 			REPEAT  c := recBuffer[i];  lastSelectionHead[i] := c;  INC( i )
@@ -59,10 +58,9 @@ TYPE
 		END;
 	END Grabber;
 
-
 VAR
 	sendBuffer, recBuffer, utf8Buffer: Buffer;
-	slen, rlen, ulen	: LONGINT;
+	slen, rlen, ulen	: SIZE;
 	received	: BOOLEAN;
 
 	grabber		: Grabber;
@@ -73,10 +71,8 @@ VAR
 	secondary	: X11.Window;
 	clipboard: X11.Atom;
 
-
-
 	PROCEDURE A2ToUnix;	(* UTF-8 to XA_STRING *)
-	VAR i, newlen, unicode: LONGINT;
+	VAR i, newlen: SIZE; unicode: UNSIGNED32;
 	BEGIN
 		i := 0;  newlen := 0;
 		WHILE i < slen  DO
@@ -88,10 +84,8 @@ VAR
 		slen := newlen
 	END A2ToUnix;
 
-
-
 	PROCEDURE UnixToA2;
-	VAR i, d, tag: LONGINT;  unicode, utflen: LONGINT;
+	VAR i, d, utflen: SIZE; tag: WORD; unicode: UNSIGNED32;
 	BEGIN
 		i := 0;  ulen := 0;
 		WHILE (i < rlen) & (ulen < BufferSize - 5) DO
@@ -115,9 +109,8 @@ VAR
 		utf8Buffer[ulen] := 0X;  INC( ulen )
 	END UnixToA2;
 
-
-	PROCEDURE ScanHexDigits( CONST buf: ARRAY OF CHAR;  VAR pos: LONGINT ): LONGINT;
-	VAR e, unicode: LONGINT;  c: CHAR;
+	PROCEDURE ScanHexDigits( CONST buf: ARRAY OF CHAR;  VAR pos: SIZE ): UNSIGNED32;
+	VAR e: SIZE; unicode: UNSIGNED32; c: CHAR;
 	BEGIN
 		e := pos + 4;  unicode := 0;
 		REPEAT
@@ -130,8 +123,8 @@ VAR
 		RETURN unicode
 	END ScanHexDigits;
 
-	PROCEDURE Utf8ToUnicode( CONST buf: ARRAY OF CHAR;  VAR pos: LONGINT ): LONGINT;
-	VAR unicode, tag, next, ch: LONGINT;  ;
+	PROCEDURE Utf8ToUnicode( CONST buf: ARRAY OF CHAR;  VAR pos: SIZE ): UNSIGNED32;
+	VAR unicode: UNSIGNED32; next: SIZE; tag, ch: WORD;
 	BEGIN
 		ch := ORD( buf[pos] );  INC( pos );
 		IF ch < 128 THEN  unicode := ch
@@ -152,15 +145,12 @@ VAR
 	(*	Texts.ClearLastSelection	*)
 	END ClearSelection;
 
-
 	PROCEDURE ClipboardChanged( sender, data : ANY );
 	BEGIN
 		Texts.clipboard.AcquireRead;
 		PutToClipboard( Texts.clipboard );
 		Texts.clipboard.ReleaseRead;
 	END ClipboardChanged;
-
-
 
 	(** Copy text to X11 clipboard *)
 	PROCEDURE PutToClipboard( text : Texts.Text );
@@ -185,7 +175,7 @@ VAR
 			ev.property := event.property;
 			Machine.Acquire( Machine.X11 );
 			X11.ChangeProperty( xdisp, ev.requestor, ev.property, ev.target, 8, X11.PropModeReplace,
-								  ADDRESSOF( sendBuffer[0] ), slen );
+								ADDRESSOF( sendBuffer[0] ), WORD (slen) );
 			Machine.Release( Machine.X11 );
 		ELSE
 			ev.property := X11.None
@@ -195,8 +185,6 @@ VAR
 		Machine.Release( Machine.X11 );
 	END SendSelection;
 
-
-
 	(** Copy text of X11 clipboard to text *)
 	PROCEDURE GetFromClipboard( text : Texts.Text );
 	BEGIN
@@ -205,7 +193,6 @@ VAR
 		UnixToA2;
 		TextUtilities.StrToText( text, 0, utf8Buffer^ );
 	END GetFromClipboard;
-
 
 	PROCEDURE GetX11Selection;
 	BEGIN{EXCLUSIVE}
@@ -223,7 +210,7 @@ VAR
 		IF (event.selection = X11.XAPRIMARY) & (event.property = myProperty) THEN
 			Machine.Acquire( Machine.X11 );
 			X11.GetWindowProperty( xdisp, event.requestor, event.property, 0, BufferSize, X11.False,
-									  event.target, type, format, len, after, prop );
+									event.target, type, format, len, after, prop );
 			Machine.Release( Machine.X11 );
 			adr := prop;
 			IF len >= BufferSize THEN len := BufferSize - 2  END;
@@ -238,8 +225,6 @@ VAR
 		END;
 		received := TRUE;
 	END ReceiveSelection;
-
-
 
 	PROCEDURE GetXDisplay;
 	VAR p: Plugins.Plugin;  disp: XDisplay.Display; name: ARRAY 16 OF CHAR;
@@ -266,7 +251,6 @@ VAR
 
 		Log.Enter; Log.String( "X11 clipboard unregistered at host clipboard interface." );  Log.Exit;
 	END Cleanup;
-
 
 	PROCEDURE Install*(context: Commands.Context);
 	VAR options: Options.Options;
@@ -304,25 +288,23 @@ VAR
 		END
 	END Install;
 
-
 BEGIN
 END Clipboard.
 
  System.Free Clipboard ~
  Clipboard.Install ~
 
-	  ---------------------------------------------
-	   Cut & paste between X11 applications and UnixAos.
+	---------------------------------------------
+	Cut & paste between X11 applications and UnixAos.
 
-	   After performing 'Clipboard.Install ~' the X11 clipboard and the
-	   Aos clipboard get synchronized. Every new X11 selection modifies
-	   the Aos clipboard and the copy operation with the pie menu in
-	   Aos alters the primary X11 selection. The selection can then be
-	   inserted into an X11 application (e.g. the mail tool Thunderbird)
-	   by clicking the MM button.
+	After performing 'Clipboard.Install ~' the X11 clipboard and the
+	Aos clipboard get synchronized. Every new X11 selection modifies
+	the Aos clipboard and the copy operation with the pie menu in
+	Aos alters the primary X11 selection. The selection can then be
+	inserted into an X11 application (e.g. the mail tool Thunderbird)
+	by clicking the MM button.
 
-	   To stop the clipboard synchronization perform:
-	        'System.Free Clipboard ~'.
+	To stop the clipboard synchronization perform:
+		'System.Free Clipboard ~'.
 
-
-	   ---------------------------------------------
+	---------------------------------------------

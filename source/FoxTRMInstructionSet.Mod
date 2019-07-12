@@ -252,10 +252,10 @@ TYPE
 				patterns[0].offset := from; patterns[0].bits := to-from+1;
 				IF (opBL <= instructionFormat.mnemonic) & (instructionFormat.mnemonic <= opBF) THEN
 					mode := BinaryCode.Relative;
-					displacement := op.fixup.displacement-1;
+					displacement := (op.fixup.displacement-1)(LONGINT);
 				ELSE
 					mode := BinaryCode.Absolute;
-					displacement := op.fixup.displacement;
+					displacement := (op.fixup.displacement)(LONGINT);
 				END;
 				op.fixup.InitFixup(mode, 0, op.fixup.symbol, op.fixup.symbolOffset, displacement, 0, patterns);
 			END Fixup;
@@ -1049,8 +1049,8 @@ TYPE
 	TYPE
 		Disasm = OBJECT (Disassembler.Disassembler)
 
-			PROCEDURE DisassembleInstruction(bitSet: BitSets.BitSet; VAR adr: LONGINT; maxInstructionSize: LONGINT; w:Streams.Writer);
-			VAR instruction: Instruction; value: WORD; mnemonic: LONGINT;
+			PROCEDURE DisassembleInstruction(bitSet: BitSets.BitSet; VAR adr: Disassembler.Unit; maxInstructionSize: Disassembler.Unit; w:Streams.Writer);
+			VAR instruction: Instruction; value: WORD; mnemonic: WORD;
 			BEGIN
 				(* maxInstructionSize can be ignored here *)
 				value := bitSet.GetBits(adr*36,decodeInstance.instructionW);    (*bitset treated as series of 36 bit slots, individual words left aligned.*)
@@ -1072,8 +1072,8 @@ TYPE
 		END Disasm;
 
 	VAR disassembler: Disasm; codeFileName, dataFileName, logFileName: Files.FileName; codeFile, dataFile, logFile: Files.File;code, data: BitSets.BitSet; options: Options.Options;
-		address: LONGINT;
-		instructionWidth: LONGINT;
+		address: WORD;
+		instructionWidth: WORD;
 	BEGIN
 		IF context.arg.GetString(codeFileName) THEN
 			codeFile := Files.Old(codeFileName);

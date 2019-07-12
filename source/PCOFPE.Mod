@@ -118,9 +118,9 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 		ExportFPList = POINTER TO ARRAY OF LONGINT;
 
 		SectionReader = OBJECT (Streams.Reader)
-			VAR sect: Section; org, ofs: LONGINT;
+			VAR sect: Section; org, ofs: SIZE;
 
-			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 			BEGIN
 				len := sect.used - SELF.ofs;
 				IF len > 0 THEN
@@ -143,7 +143,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			PROCEDURE SetPos*(ofs: Streams.Position);
 			BEGIN
 				Reset();
-				SELF.org := ofs; SELF.ofs := ofs
+				SELF.org := SIZE(ofs); SELF.ofs := SIZE(ofs)
 			END SetPos;
 
 			PROCEDURE &Open*(sect: Section; ofs: LONGINT);
@@ -156,12 +156,12 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 		SectionWriter = OBJECT (Streams.Writer)
 			VAR sect: Section; org, ofs: LONGINT;
 
-			PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+			PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 			BEGIN
 				res := Streams.Ok; IF len <= 0 THEN RETURN END;
-				IF (SELF.ofs + len) > sect.len THEN sect.Resize(SELF.ofs + len) END;
+				IF (SELF.ofs + len) > sect.len THEN sect.Resize(SELF.ofs + len(LONGINT)) END;
 				SYSTEM.MOVE(ADDRESSOF(buf[ofs]), ADDRESSOF(sect.data[SELF.ofs]), len);
-				INC(SELF.ofs, len);
+				INC(SELF.ofs, len(LONGINT));
 				IF SELF.ofs > sect.used THEN sect.used := SELF.ofs END
 			END Send;
 
@@ -173,7 +173,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			PROCEDURE SetPos*(ofs: Streams.Position);
 			BEGIN
 				Update(); Reset();
-				SELF.org := ofs; SELF.ofs := ofs
+				SELF.org := ofs(LONGINT); SELF.ofs := ofs(LONGINT);
 			END SetPos;
 
 			PROCEDURE &Open*(sect: Section; ofs: LONGINT);
@@ -243,7 +243,8 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 		END Section;
 
 		BaseReloc = POINTER TO RECORD
-			ofs: LONGINT; base: Section;
+			ofs: Streams.Position;
+			base: Section;
 			next: BaseReloc
 		END;
 
@@ -259,7 +260,8 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 		END;
 
 		ImportReloc = POINTER TO RECORD
-			ofs: LONGINT; obj: ImportObj;
+			ofs: Streams.Position;
+			obj: ImportObj;
 			next: ImportReloc;
 			iat, abs, uofs: BOOLEAN
 		END;
@@ -622,7 +624,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END AddExport;
 
 			PROCEDURE ExportType(W: SectionWriter; t: PCT.Struct);
-				VAR sym: PCOM.Struct; p: PCT.Proc; v: PCT.Variable; count, pos, bak: LONGINT;
+				VAR sym: PCOM.Struct; p: PCT.Proc; v: PCT.Variable; count: LONGINT; pos, bak: Streams.Position;
 			BEGIN
 				WHILE (t IS PCT.Pointer) OR (t IS PCT.Array) DO
 					IF t IS PCT.Pointer THEN t := t(PCT.Pointer).base ELSE t := t(PCT.Array).base END
@@ -756,7 +758,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END CheckExport;
 
 			PROCEDURE Exports;
-				VAR W: SectionWriter; i, pos: LONGINT;
+				VAR W: SectionWriter; i: Streams.Position; pos: LONGINT;
 			BEGIN
 				TypeAlign4(); desc.exports := type.used;
 				NEW(explist, 256); exppos := 0; explen := 256;
@@ -955,7 +957,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 
 			PROCEDURE WriteType(W: SectionWriter; rec: PCT.Record);
 				VAR
-					size: PCBT.RecSize; pos, i, oldmth: LONGINT; base: PCT.Record; m: PCT.Method;
+					size: PCBT.RecSize; pos, i: Streams.Position; oldmth: LONGINT; base: PCT.Record; m: PCT.Method;
 					adr: PCBT.Method; bsym: PCOM.Struct; name, name2: Name;
 					basenr: INTEGER; baseid, nofptrs: LONGINT;
 			BEGIN
@@ -1008,7 +1010,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				(* Ptrs in Record *)
 				i := W.Pos();
 				PtrAdr(W, 0, rec, FALSE);
-				nofptrs := (W.Pos() - i) DIV 4;
+				nofptrs := (W.Pos() - i)(LONGINT) DIV 4;
 				IF nofptrs > MAX(INTEGER) THEN PCM.Error(221, PCM.InvalidPosition, "") END;
 				IF nofptrs # 0 THEN
 					i := W.Pos(); W.SetPos(pos);
@@ -1085,7 +1087,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				W.RawLInt(0);
 				AddOfsReloc(type, W.Pos(), edata);
 				W.RawLInt(0);
-				desc.iatfix := W.Pos();
+				desc.iatfix := W.Pos()(LONGINT);
 				sect := sects;
 				WHILE sect # NIL DO
 					r := sect.imports;
@@ -1132,7 +1134,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 									W.RawInt(0)
 								END;
 								AddOfsReloc(type, W.Pos(), code);
-								W.RawLInt(r.ofs);
+								W.RawLInt(r.ofs(LONGINT));
 								AddOfsReloc(type, W.Pos(), idata);
 								W.RawLInt(r.obj.iat - idata.head.VirtualAddress)
 							ELSE
@@ -1181,14 +1183,14 @@ ASSERT(code.data[offset-1] # 0E8X);
 					END;
 					ASSERT(p # NIL);
 					W.Char(0E9X); (* JMP Main *)
-					W.RawLInt(p.adr(PCBT.Procedure).codeoffset-(W.Pos()+4))
+					W.RawLInt(p.adr(PCBT.Procedure).codeoffset-(W.Pos()(LONGINT)+4))
 				END;
 				W.Update();
 				ModDesc()
 			END GenStub;
 
 			PROCEDURE GenIData(base: LONGINT);
-				VAR W: SectionWriter; p, mod: ImportMod; obj: ImportObj; sect: Section; r: ImportReloc; i, j, ofs: LONGINT;
+				VAR W: SectionWriter; p, mod: ImportMod; obj: ImportObj; sect: Section; r: ImportReloc; i, j: LONGINT; ofs: Streams.Position;
 			BEGIN
 				IF name # Loader THEN
 					p := NIL; mod := imports;
@@ -1214,10 +1216,10 @@ ASSERT(code.data[offset-1] # 0E8X);
 				WHILE i < SIZEOF(ImageImportDescriptor) DO
 					W.Char(0X); INC(i)
 				END;
-				optHdr.DataDirectory[ImageDirectoryEntryImport].Size := W.Pos();
+				optHdr.DataDirectory[ImageDirectoryEntryImport].Size := W.Pos()(LONGINT);
 				mod := imports;
 				WHILE mod # NIL DO
-					mod.desc.Characteristics := W.Pos();
+					mod.desc.Characteristics := W.Pos()(LONGINT);
 					obj := mod.objs;
 					WHILE obj # NIL DO
 						W.RawLInt(0); obj := obj.next
@@ -1226,10 +1228,10 @@ ASSERT(code.data[offset-1] # 0E8X);
 					mod := mod.next
 				END;
 				ofs := W.Pos();
-				optHdr.DataDirectory[ImageDirectoryEntryIAT].VirtualAddress := base + ofs;
+				optHdr.DataDirectory[ImageDirectoryEntryIAT].VirtualAddress := base + ofs(LONGINT);
 				mod := imports;
 				WHILE mod # NIL DO
-					mod.desc.FirstThunk := W.Pos();
+					mod.desc.FirstThunk := W.Pos()(LONGINT);
 					obj := mod.objs;
 					WHILE obj # NIL DO
 						W.RawLInt(0); obj := obj.next
@@ -1238,7 +1240,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 					mod := mod.next
 				END;
 				W.Update();
-				optHdr.DataDirectory[ImageDirectoryEntryIAT].Size := W.Pos() - ofs;
+				optHdr.DataDirectory[ImageDirectoryEntryIAT].Size := (W.Pos() - ofs)(LONGINT);
 				mod := imports; i := 0;
 				WHILE mod # NIL DO
 					obj := mod.objs; j := 0;
@@ -1282,7 +1284,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END GenIData;
 
 			PROCEDURE GenEData(base: LONGINT);
-				VAR W: SectionWriter; dir: ImageExportDirectory; e: ExportObj; fix, i, n: LONGINT;
+				VAR W: SectionWriter; dir: ImageExportDirectory; e: ExportObj; fix: Streams.Position; i, n: LONGINT;
 			BEGIN
 				edata.head.VirtualAddress := base;
 				optHdr.DataDirectory[ImageDirectoryEntryExport].VirtualAddress := base;
@@ -1303,23 +1305,23 @@ ASSERT(code.data[offset-1] # 0E8X);
 				dir.AddressOfNameOrdinals := 0;
 				W := edata.W; W.SetPos(0);
 				WriteImageExportDirectory(W, dir);
-				dir.AddressOfFunctions := base + W.Pos();
+				dir.AddressOfFunctions := base + W.Pos()(LONGINT);
 				e := exports;
 				WHILE e # NIL DO
 					W.RawLInt(e.sect.head.VirtualAddress + e.ofs);
 					e := e.next
 				END;
-				dir.AddressOfNames := base + W.Pos();
+				dir.AddressOfNames := base + W.Pos()(LONGINT);
 				fix := W.Pos(); i := 0;
 				WHILE i < n DO
 					W.RawLInt(0); INC(i)
 				END;
-				dir.AddressOfNameOrdinals := base + W.Pos();
+				dir.AddressOfNameOrdinals := base + W.Pos()(LONGINT);
 				i := 0;
 				WHILE i < n DO
 					W.RawInt(SHORT(i)); INC(i)
 				END;
-				dir.Name := base + W.Pos();
+				dir.Name := base + W.Pos()(LONGINT);
 				PutName(W, name);
 				e := exports;
 				WHILE e # NIL DO
@@ -1336,7 +1338,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				optHdr.DataDirectory[ImageDirectoryEntryExport].Size := edata.used
 			END GenEData;
 
-			PROCEDURE BeginBlock(W: SectionWriter; adr: LONGINT; VAR blockva, blocksize, blockfix: LONGINT);
+			PROCEDURE BeginBlock(W: SectionWriter; adr: LONGINT; VAR blockva, blocksize: LONGINT; VAR blockfix: Streams.Position);
 			BEGIN
 				blockva := adr - (adr MOD PageSize); blocksize := 8;
 				W.RawLInt(blockva);
@@ -1344,8 +1346,8 @@ ASSERT(code.data[offset-1] # 0E8X);
 				W.RawLInt(blocksize)
 			END BeginBlock;
 
-			PROCEDURE EndBlock(W: SectionWriter; blockfix: LONGINT; VAR blocksize: LONGINT);
-				VAR ofs: LONGINT;
+			PROCEDURE EndBlock(W: SectionWriter; blockfix: Streams.Position; VAR blocksize: LONGINT);
+				VAR ofs: Streams.Position;
 			BEGIN
 				W.RawInt(0); INC(blocksize, 2);
 				IF (blocksize MOD 4) # 0 THEN
@@ -1378,7 +1380,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			PROCEDURE GenReloc(base: LONGINT);
 				VAR
 					W: SectionWriter; sect: Section; r: BaseReloc;
-					blockva, blocksize, blockfix, bak, x: LONGINT;
+					blockva, blocksize, bak, x: LONGINT; blockfix: Streams.Position;
 			BEGIN
 				reloc.head.VirtualAddress := base;
 				optHdr.DataDirectory[ImageDirectoryEntryBasereloc].VirtualAddress := base;
@@ -1389,7 +1391,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				WHILE sect # NIL DO
 					r := sect.relocs;
 					WHILE r # NIL DO
-						x := sect.head.VirtualAddress + r.ofs;
+						x := sect.head.VirtualAddress + r.ofs(LONGINT);
 						ASSERT(x > bak);
 						IF x >= (blockva+PageSize) THEN
 							IF blockfix >= 0 THEN EndBlock(W, blockfix, blocksize) END;
@@ -1428,9 +1430,9 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 				F := Files.New(file);
 				Files.OpenWriter(W, F, 0);
 				W.RawInt(ImageDosSignature);
-				i := W.Pos(); WHILE i < 60 DO W.Char(0X); INC(i) END;
+				i := W.Pos()(LONGINT); WHILE i < 60 DO W.Char(0X); INC(i) END;
 				W.RawLInt(128);
-				i := W.Pos(); WHILE i < 128 DO W.Char(0X); INC(i) END;
+				i := W.Pos()(LONGINT); WHILE i < 128 DO W.Char(0X); INC(i) END;
 				size := 128 + 4 + SIZEOF(ImageFileHeader) + SIZEOF(ImageOptionalHeader) + SELF.fileHdr.NumberOfSections*SIZEOF(ImageSectionHeader);
 				size := Align(size, DefaultFileAlign);
 				SELF.optHdr.SizeOfHeaders := size;
@@ -1465,7 +1467,7 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 					WriteImageSectionHeader(W, sect.head);
 					sect := sect.next
 				END;
-				i := W.Pos(); WHILE i < SELF.optHdr.SizeOfHeaders DO W.Char(0X); INC(i) END;
+				i := W.Pos()(LONGINT); WHILE i < SELF.optHdr.SizeOfHeaders DO W.Char(0X); INC(i) END;
 				sect := SELF.sects;
 				WHILE sect # NIL DO
 					IF sect.head.SizeOfRawData > 0 THEN
@@ -1675,7 +1677,7 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 		RETURN now.second + 60*(now.minute - Clock.tz + 60*(now.hour + 24*days))
 	END TimeDateStamp;
 
-	PROCEDURE AddOfsReloc(sect: Section; ofs: LONGINT; base: Section);
+	PROCEDURE AddOfsReloc(sect: Section; ofs: Streams.Position; base: Section);
 		(* value at sect:ofs must be relocated to base + value *)
 		VAR p, r, n: BaseReloc;
 	BEGIN
@@ -1705,7 +1707,7 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 		END
 	END AddImportObj;
 
-	PROCEDURE AddImportReloc(sect: Section; offset: LONGINT; obj: ImportObj; iat, abs, ofs: BOOLEAN);
+	PROCEDURE AddImportReloc(sect: Section; offset: Streams.Position; obj: ImportObj; iat, abs, ofs: BOOLEAN);
 		(*
 			value at sect:ofs must be fixed up to iat[obj]
 			iat = TRUE	iat relative

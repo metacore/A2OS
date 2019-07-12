@@ -32,7 +32,7 @@ MODULE RAWPrinter; (** AUTHOR "dk"; PURPOSE "Printing Raw to Port 9100"; *)
 			buf : ARRAY 10000 OF CHAR;
 			conn : TCP.Connection;
 			fadr: IP.Adr;
-			connres: WORD; len : LONGINT;
+			connres: WORD; len : SIZE;
 	BEGIN
 		 DNS.HostByName(printer, fadr, connres);
 		IF res = DNS.Ok THEN

@@ -753,14 +753,14 @@ TYPE
 			END GetCPU;
 
 			PROCEDURE GetScopeSymbol (ident: ARRAY OF CHAR): PCT.Symbol;
-			VAR idx: LONGINT;
+			VAR idx: StringPool.Index;
 			BEGIN
 				StringPool.GetIndex(ident, idx);
 				RETURN PCT.Find (scope, scope, idx, PCT.procdeclared, TRUE);
 			END GetScopeSymbol;
 
 			PROCEDURE Factor (VAR x: LONGINT; critical: BOOLEAN): BOOLEAN;
-			VAR label: Label; scopeSymbol: PCT.Symbol; l: LONGINT;
+			VAR label: Label; scopeSymbol: PCT.Symbol; l: SIZE;
 			BEGIN
 				IF symbol = symNumber THEN
 					x := val; NextSymbol; RETURN TRUE;

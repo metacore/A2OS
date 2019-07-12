@@ -3544,7 +3544,7 @@ KernelLog.String("  MCUColNum"); KernelLog.Int(lastMCUCol - cInfo.coef.MCUColNum
 	END colorQuantize3;
 
 	PROCEDURE Copy(VAR src,dest: ARRAY OF CHAR);
-	VAR l1,l2: LONGINT;
+	VAR l1,l2: SIZE;
 	BEGIN
 		l1 := LEN(src);
 		l2 := LEN(dest);

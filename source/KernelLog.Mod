@@ -16,7 +16,7 @@ VAR
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
 
-PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 VAR next: ADDRESS; c: CHAR;
 BEGIN
 	INC(len, ofs);	(* len is now end position *)
@@ -41,7 +41,7 @@ END Send;
 (** Write a string to the trace output. *)
 
 PROCEDURE String*(CONST s: ARRAY OF CHAR);
-VAR len, n: LONGINT; res: WORD;
+VAR len, n: SIZE; res: WORD;
 BEGIN
 	len := 0; n := LEN(s);
 	WHILE (len # n) & (s[len] # 0X) DO INC(len) END;

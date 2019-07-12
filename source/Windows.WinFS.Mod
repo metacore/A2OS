@@ -448,7 +448,7 @@ TYPE
 			fileSystem := fs
 		END Init;
 
-		PROCEDURE Set*( VAR r: Files.Rider;  pos: LONGINT );
+		PROCEDURE Set*( VAR r: Files.Rider;  pos: Files.Position );
 		VAR size: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF hfile # Kernel32.InvalidHandleValue THEN
@@ -459,10 +459,10 @@ TYPE
 			IF pos < 0 THEN pos := 0
 			ELSIF pos > fsize THEN pos := fsize
 			END;
-			r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize
+			r.apos := pos DIV BufferSize;  r.bpos := SIZE(pos MOD BufferSize);
 		END Set;
 
-		PROCEDURE Pos*( VAR r: Files.Rider ): LONGINT;
+		PROCEDURE Pos*( VAR r: Files.Rider ): Files.Position;
 		BEGIN
 			RETURN r.apos * BufferSize + r.bpos
 		END Pos;
@@ -506,24 +506,24 @@ TYPE
 		END ReadBuffer;
 
 		PROCEDURE Read*( VAR r: Files.Rider;  VAR x: CHAR );
-		VAR pos: LONGINT;
+		VAR pos: SIZE;
 		BEGIN {EXCLUSIVE}
-			pos := r.apos * BufferSize + r.bpos;
+			pos := LONGINT(r.apos * BufferSize) + r.bpos;
 			IF pos < fsize THEN
-				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
+				IF buffer.apos # LONGINT(r.apos) THEN ReadBuffer( LONGINT(r.apos) ) END;
 				x := buffer.data[r.bpos];  INC( pos );  r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize
 			ELSE
 				x := 0X; r.eof := TRUE
 			END
 		END Read;
 
-		PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
-		VAR pos, n: LONGINT;
+		PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: SIZE );
+		VAR pos, n: SIZE;
 		BEGIN {EXCLUSIVE}
 			ASSERT( (ofs + len) <= LEN( x ) );
-			pos := r.apos * BufferSize + r.bpos;
+			pos := LONGINT(r.apos * BufferSize) + r.bpos;
 			WHILE (len > 0) & (pos < fsize) DO
-				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
+				IF buffer.apos # LONGINT(r.apos) THEN ReadBuffer( LONGINT(r.apos) ) END;
 				n := buffer.len - r.bpos;
 				IF (n > 0) THEN
 					IF n > len THEN n := len END;
@@ -538,35 +538,35 @@ TYPE
 		END ReadBytes;
 
 		PROCEDURE Write*( VAR r: Files.Rider;  x: CHAR );
-		VAR pos: LONGINT;
+		VAR pos: SIZE;
 		BEGIN {EXCLUSIVE}
-			pos := r.apos * BufferSize + r.bpos;
-			IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
+			pos := LONGINT(r.apos * BufferSize) + r.bpos;
+			IF LONGINT(r.apos) # r.apos THEN ReadBuffer( LONGINT(r.apos) ) END;
 			buffer.data[r.bpos] := x;  INC( pos );
-			IF (r.bpos + 1) > buffer.len THEN buffer.len := r.bpos + 1 END;
+			IF (r.bpos + 1) > buffer.len THEN buffer.len := LONGINT(r.bpos + 1) END;
 			r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;
-			IF pos > fsize THEN fsize := pos END;
+			IF pos > fsize THEN fsize := LONGINT(pos) END;
 			buffer.dirty := TRUE;
 		END Write;
 
-		PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
-		VAR pos, n: LONGINT;
+		PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: SIZE );
+		VAR pos, n: SIZE;
 		BEGIN {EXCLUSIVE}
 			IF len = 0 THEN RETURN END;
-			ASSERT( (len > 0) & ((ofs + len) <= LEN( x )) );  pos := r.apos * BufferSize + r.bpos;
+			ASSERT( (len > 0) & ((ofs + len) <= LEN( x )) );  pos := LONGINT(r.apos * BufferSize) + r.bpos;
 			WHILE len > 0 DO
-				IF buffer.apos # r.apos THEN ReadBuffer( r.apos ) END;
+				IF buffer.apos # LONGINT(r.apos) THEN ReadBuffer( LONGINT(r.apos) ) END;
 				n := BufferSize - r.bpos;
 				IF n > len THEN n := len END;
 				SYSTEM.MOVE( ADDRESSOF( x[ofs] ), ADDRESSOF( buffer.data[r.bpos] ), n );
-				IF (r.bpos + n) > buffer.len THEN buffer.len := r.bpos + n END;
+				IF (r.bpos + n) > buffer.len THEN buffer.len := LONGINT(r.bpos + n) END;
 				INC( pos, n );  INC( ofs, n );  DEC( len, n );  r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;
-				IF pos > fsize THEN fsize := pos END;
+				IF pos > fsize THEN fsize := LONGINT(pos) END;
 				buffer.dirty := TRUE
 			END
 		END WriteBytes;
 
-		PROCEDURE Length*( ): LONGINT;
+		PROCEDURE Length*( ): Files.Size;
 		BEGIN {EXCLUSIVE}
 			RETURN fsize
 		END Length;
@@ -920,7 +920,7 @@ VAR
 	END AutoUnmountLogicalDrives;
 
 	PROCEDURE Finalization;
-	VAR ft: Files.FileSystemTable;  i: LONGINT;
+	VAR ft: Files.FileSystemTable;  i: SIZE;
 	BEGIN
 		Files.GetList( ft );
 		IF ft # NIL THEN
@@ -934,8 +934,8 @@ VAR
 	PROCEDURE FindFile*( name: ARRAY OF CHAR;  VAR fullname: ARRAY OF CHAR ): BOOLEAN;
 	VAR ret: LONGINT;  fileName: Kernel32.LPSTR;
 	BEGIN
-		ret := Kernel32.SearchPath( workPath, name, NIL , LEN( fullname ), fullname, fileName );
-		IF (ret <= 0) THEN ret := Kernel32.SearchPath( searchPath, name, NIL , LEN( fullname ), fullname, fileName ) END;
+		ret := Kernel32.SearchPath( workPath, name, NIL , LEN( fullname )(Kernel32.DWORD), fullname, fileName );
+		IF (ret <= 0) THEN ret := Kernel32.SearchPath( searchPath, name, NIL , LEN( fullname )(Kernel32.DWORD), fullname, fileName ) END;
 		FixDriveLetter (fullname);
 		RETURN ret > 0;
 	END FindFile;

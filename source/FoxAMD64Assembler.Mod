@@ -131,6 +131,8 @@ CONST
 TYPE
 	Name = Scanner.IdentifierString;
 
+	OperandType = InstructionSet.OperandType;
+
 	Size = SHORTINT;
 	Register* = LONGINT; (* index for InstructionSet.registers *)
 	(*
@@ -138,7 +140,7 @@ TYPE
 	*)
 
 	Operand* = RECORD
-		type-: SHORTINT; (* reg8..reg64, CRn,DRn, segReg, sti, mmx, xmm, mem, imm, moffset, pntr1616, pntr1632 *)
+		type-: OperandType; (* reg8..reg64, CRn,DRn, segReg, sti, mmx, xmm, mem, imm, moffset, pntr1616, pntr1632 *)
 		(* assembler examples:
 			reg8: AL => register = InstructionSet.regAL
 			reg16: CX => register = InstructionSet.regCX
@@ -152,10 +154,10 @@ TYPE
 		segment-,index-: Register; (* registers for mem *)
 		scale-, displacement-: LONGINT;  (* for mem *)
 		symbol- : ObjectFile.Identifier; (* for imm and mem *)
-		symbolOffset-: LONGINT; (* offset in immediate code (source) for a fixup *)
+		symbolOffset-: SIZE; (* offset in immediate code (source) for a fixup *)
 
 		val-: HUGEINT; (* for imm and moffset  *)
-		pc-: LONGINT;
+		pc-: SIZE;
 
 		selector-, offset-: LONGINT; (* for pntr1616 / pntr1632 *)
 	END;
@@ -164,19 +166,19 @@ TYPE
 
 	NamedLabel*= OBJECT
 	VAR
-		offset: LONGINT;
+		offset: SIZE;
 		name-: SyntaxTree.IdentifierString;
 		nextNamedLabel-: NamedLabel;
 		index-: LONGINT;
 
-		PROCEDURE &InitNamedLabel(offset: LONGINT; CONST name: ARRAY OF CHAR);
+		PROCEDURE &InitNamedLabel(offset: SIZE; CONST name: ARRAY OF CHAR);
 		BEGIN
 			SELF.offset := offset;
 			COPY(name,SELF.name);
 			nextNamedLabel := NIL;
 		END InitNamedLabel;
 
-		PROCEDURE SetOffset*(ofs: LONGINT);
+		PROCEDURE SetOffset*(ofs: SIZE);
 		BEGIN SELF.offset := ofs;
 		END SetOffset;
 
@@ -277,7 +279,7 @@ TYPE
 			ErrorSS(msg1,msg);
 		END ErrorSI;
 
-		PROCEDURE AddFixup (mode: SHORTINT; size: SHORTINT; pc: LONGINT; symbol: ObjectFile.Identifier; symbolOffset, displacement: LONGINT);
+		PROCEDURE AddFixup (mode: SHORTINT; size: SHORTINT; pc: SIZE; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: LONGINT);
 		VAR fixup: BinaryCode.Fixup; format: BinaryCode.FixupPatterns; id: ObjectFile.Identifier;
 		BEGIN
 			NEW(format,1);
@@ -302,7 +304,7 @@ TYPE
 
 			bitwidthOptions: SET;
 			opcode: ARRAY InstructionSet.maxCodeLength OF InstructionSet.Code;
-			pc0: LONGINT;
+			pc0: SIZE;
 
 			debug,temp: LONGINT;
 
@@ -824,7 +826,7 @@ TYPE
 						FOR i := 0 TO maxNumberOperands - 1 DO
 							IF (free[i]) & (operands[i].type = ioffset) THEN
 								IF Trace THEN KernelLog.String(" ioffset "); END;
-								offset := SHORT(operands[i].val - code.pc  - 1);
+								offset := LONGINT(operands[i].val - code.pc  - 1);
 								IF lastPass & ~ValueInByteRange (offset) THEN
 									Error( "value exceeds bounds");
 									RETURN FALSE;
@@ -849,7 +851,7 @@ TYPE
 						IF val # -1 THEN code.PutByte (val); val := -1 END;
 						FOR i := 0 TO maxNumberOperands - 1 DO
 							IF (free[i]) & (InstructionSet.instructions[instr].operands[i] = InstructionSet.rel16off) THEN
-								offset := SHORT(operands[i].val - code.pc  - 2);
+								offset := LONGINT(operands[i].val - code.pc - 2);
 								IF lastPass & ~ValueInWordRange (offset) THEN
 									Error( "value exceeds bounds");
 								END;
@@ -878,7 +880,7 @@ TYPE
 									AddFixup(BinaryCode.Relative,4,code.pc,operands[i].symbol,operands[i].symbolOffset,operands[i].displacement-4);
 									code.PutDWord(SHORT(operands[i].val));
 								ELSE
-									code.PutDWord (SHORT (operands[i].val - code.pc  - 4));
+									code.PutDWord (LONGINT(operands[i].val - code.pc - 4));
 								END;
 
 								free[i] := FALSE; i:= maxNumberOperands;
@@ -933,7 +935,7 @@ TYPE
 
 								IF lastPass & (operands[i].symbol.name # "") THEN AddFixup(BinaryCode.Relative,4,code.pc,operands[i].symbol,operands[i].symbolOffset,operands[i].displacement-4)  END;
 
-								code.PutDWord (SHORT (operands[i].val - code.pc - 4));
+								code.PutDWord (LONGINT(operands[i].val - code.pc - 4));
 								free[i] := FALSE; i:= maxNumberOperands;
 							ELSIF (free[i]) & InstructionSet.IsImmediate32(InstructionSet.instructions[instr].operands[i])  THEN
 								operands[i].pc := code.pc;
@@ -1053,8 +1055,8 @@ TYPE
 			op3 := operands[2];
 		END Emit;
 
-		PROCEDURE EmitAt*(pc: LONGINT;mnem: LONGINT; VAR op1,op2,op3: Operand);
-		VAR prevPC: LONGINT; prevDump: Streams.Writer;
+		PROCEDURE EmitAt*(pc: SIZE;mnem: LONGINT; VAR op1,op2,op3: Operand);
+		VAR prevPC: SIZE; prevDump: Streams.Writer;
 		BEGIN
 			prevDump := dump;
 			dump := NIL;
@@ -1065,8 +1067,8 @@ TYPE
 			dump := prevDump;
 		END EmitAt;
 
-		PROCEDURE StartEmitAt*(VAR pc: LONGINT): LONGINT;
-		VAR prevPC: LONGINT;
+		PROCEDURE StartEmitAt*(VAR pc: SIZE): SIZE;
+		VAR prevPC: SIZE;
 		BEGIN
 			prevPC := code.pc;
 			dump := NIL;
@@ -1074,7 +1076,7 @@ TYPE
 			RETURN prevPC;
 		END StartEmitAt;
 
-		PROCEDURE EndEmitAt*(pc: LONGINT);
+		PROCEDURE EndEmitAt*(pc: SIZE);
 		BEGIN
 			code.SetPC(pc);
 			SELF.dump := code.comments;
@@ -1130,7 +1132,7 @@ TYPE
 
 		(* temporaries *)
 		fixup: BinaryCode.Fixup;
-		type: SHORTINT;
+		type: OperandType;
 		currentFixup: Sections.SectionName;
 		currentLabel: NamedLabel;
 		sourceName: Basic.FileName;
@@ -1182,14 +1184,14 @@ TYPE
 			currentLabel: NamedLabel;
 			labels: NamedLabelList;
 
-			prevPC: LONGINT;
+			prevPC: SIZE;
 			pass: LONGINT;
 			absoluteMode: BOOLEAN;
 			absoluteOffset: HUGEINT;
 			orgOffset: HUGEINT;
 			char: CHAR;
-			orgReaderPos: LONGINT;
-			orgCodePos: LONGINT;
+			orgReaderPos: Streams.Position;
+			orgCodePos: SIZE;
 			prevSourceName: Basic.FileName;
 			position: Basic.Position;
 			prevCpuBits: Size;
@@ -1383,8 +1385,8 @@ TYPE
 
 			END GetCPU;
 
-			PROCEDURE Factor (VAR x: HUGEINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
-			VAR label: NamedLabel; l: LONGINT;
+			PROCEDURE Factor (VAR x: HUGEINT; critical: BOOLEAN; VAR type: OperandType): BOOLEAN;
+			VAR label: NamedLabel; l: SIZE;
 			BEGIN
 				IF symbol = symNumber THEN
 					x := val; NextSymbol; RETURN TRUE;
@@ -1441,7 +1443,7 @@ TYPE
 				RETURN FALSE
 			END Factor;
 
-			PROCEDURE Term (VAR x: HUGEINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
+			PROCEDURE Term (VAR x: HUGEINT; critical: BOOLEAN; VAR type: OperandType): BOOLEAN;
 			VAR y: HUGEINT; op : WORD;
 			BEGIN
 				IF Factor (x, critical,type) THEN
@@ -1462,7 +1464,7 @@ TYPE
 				END;
 			END Term;
 
-			PROCEDURE Expression (VAR x: HUGEINT; critical: BOOLEAN; VAR type: SHORTINT): BOOLEAN;
+			PROCEDURE Expression (VAR x: HUGEINT; critical: BOOLEAN; VAR type: OperandType): BOOLEAN;
 			VAR y: HUGEINT; op : WORD;
 			BEGIN
 				IF symbol = symMinus THEN
@@ -1499,7 +1501,7 @@ TYPE
 			END Expression;
 
 			PROCEDURE Align(size: LONGINT);
-			VAR pc: LONGINT;
+			VAR pc: SIZE;
 			BEGIN
 				IF size <= 0 THEN Error("invalid alignment size"); RETURN END;
 				pc := emitter.code.pc DIV 8; (* bytes *)
@@ -1510,7 +1512,7 @@ TYPE
 			END Align;
 
 			PROCEDURE PutData (size: Size): BOOLEAN;
-			VAR i: SIZE; x: HUGEINT; type:SHORTINT; ofs: Operand;
+			VAR i: SIZE; x: HUGEINT; type: OperandType; ofs: Operand;
 			BEGIN
 				NextSymbol;
 
@@ -1563,8 +1565,8 @@ TYPE
 				RETURN TRUE;
 			END PutData;
 
-			PROCEDURE Duplicate (size: LONGINT; fixup: BinaryCode.Fixup);
-			VAR i: LONGINT; buffer: ARRAY 100 OF CHAR; pc: LONGINT;
+			PROCEDURE Duplicate (size: SIZE; fixup: BinaryCode.Fixup);
+			VAR i: SIZE; buffer: ARRAY 100 OF CHAR; pc: SIZE;
 			BEGIN
 				IF times = 1 THEN RETURN END;
 
@@ -1599,7 +1601,7 @@ TYPE
 			END Duplicate;
 
 			PROCEDURE Reserve (size: Size) : BOOLEAN;
-			VAR type : SHORTINT; x: HUGEINT;
+			VAR type : OperandType; x: HUGEINT;
 			BEGIN
 				IF Expression (x, TRUE, type) THEN
 					absoluteOffset := absoluteOffset + x * size;
@@ -1673,9 +1675,9 @@ TYPE
 					Global.GetSymbolSegmentedName(scopeSymbol,name);
 					SetSymbol(operand,name,0,0,0);
 				ELSIF (scopeSymbol IS SyntaxTree.Variable) THEN (* local variable *)
-					operand.displacement := (scopeSymbol.offsetInBits DIV 8)
+					operand.displacement := (scopeSymbol.offsetInBits DIV 8)(LONGINT);
 				ELSIF (scopeSymbol IS SyntaxTree.Parameter) THEN (* local parameter *)
-					operand.displacement := (scopeSymbol.offsetInBits DIV 8)
+					operand.displacement := (scopeSymbol.offsetInBits DIV 8)(LONGINT);
 				ELSE
 					RETURN (* ? *)
 				END;
@@ -1749,7 +1751,7 @@ TYPE
 				offset: Operand;
 				i: LONGINT;
 				x: HUGEINT;
-				type: SHORTINT;
+				type: OperandType;
 			BEGIN
 				position := errPos;
 				mnem := InstructionSet.FindMnemonic (ident);
@@ -2326,7 +2328,7 @@ TYPE
 
 	END DumpInstruction;
 
-	PROCEDURE Matches(CONST operand: Operand; type: InstructionSet.OperandType): BOOLEAN;
+	PROCEDURE Matches(CONST operand: Operand; type: OperandType): BOOLEAN;
 		PROCEDURE IsMemReg(regIndex: LONGINT): BOOLEAN;
 		BEGIN
 			RETURN InstructionSet.RegisterType(regIndex) IN {reg16, reg32, reg64}
@@ -2625,11 +2627,11 @@ TYPE
 	BEGIN  InitMem128 (operand,reg, displacement); RETURN operand
 	END NewMem128;
 
-	PROCEDURE SetSymbol*(VAR operand: Operand; symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset, displacement: LONGINT);
+	PROCEDURE SetSymbol*(VAR operand: Operand; symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; displacement: SIZE);
 	BEGIN
 		operand.symbol.name := symbol;
 		operand.symbol.fingerprint := fingerprint;
-		operand.symbolOffset := symbolOffset; operand.displacement := displacement;
+		operand.symbolOffset := symbolOffset; operand.displacement := displacement(LONGINT);
 	END SetSymbol;
 
 	PROCEDURE InitImm* (VAR operand: Operand; size: SHORTINT; val: HUGEINT);

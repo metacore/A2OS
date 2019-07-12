@@ -69,7 +69,7 @@ BEGIN
 			END
 		END;
 		r.crc32 := Zlib.CRC32(r.crc32, buf, offset, len - r.s.out.avail);
-		read := len - r.s.out.avail
+		read := (len - r.s.out.avail)(LONGINT);
 	END
 END ReadBytes;
 

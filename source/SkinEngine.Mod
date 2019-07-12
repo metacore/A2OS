@@ -492,7 +492,7 @@ END Load;
 
 (* convert s to lower case *)
 PROCEDURE LowerCase(s : String);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	FOR i := 0 TO LEN(s^)-1 DO s^[i] := Strings.LOW(s^[i]) END
 END LowerCase;
@@ -512,5 +512,4 @@ BEGIN
 END SkinEngine.
 
 System.Free SkinEngine ~
-
 

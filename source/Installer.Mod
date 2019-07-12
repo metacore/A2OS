@@ -456,7 +456,7 @@ TYPE
 		END PackagesProgress;
 
 		PROCEDURE DoOperation*;
-		VAR i : LONGINT; res : WORD;
+		VAR i : SIZE; res : WORD;
 		BEGIN
 			ASSERT((config.disk.device = disk.device) & (config.partition = partition));
 			installLog.String("Starting installation on partition "); installLog.String(diskpartString); installLog.String("..."); installLog.Ln; installLog.Update;
@@ -1066,7 +1066,7 @@ TYPE
 		END SetAbortedProc;
 
 		(* Report errors while parsing *)
-		PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 		VAR string : ARRAY 256 OF CHAR; nbr : ARRAY 16 OF CHAR;
 		BEGIN
 			string := "Parse error at pos "; Strings.IntToStr(pos, nbr); Strings.Append(string, nbr);

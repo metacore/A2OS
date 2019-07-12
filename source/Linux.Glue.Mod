@@ -15,9 +15,9 @@ VAR
 	endAdr*: ADDRESS;
 
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS): ADDRESS;
-	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: LONGINT ): ADDRESS;
+	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: WORD ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
-	exit-		: PROCEDURE {C} (status: LONGINT);
+	exit-		: PROCEDURE {C} (status: WORD);
 
 	stackBottom-	: ADDRESS;	(* of main thread *)
 

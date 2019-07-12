@@ -8,7 +8,7 @@ VAR
 	dtab: ARRAY 128 OF INTEGER;
 
 
-	PROCEDURE Encode*( CONST image: ARRAY OF CHAR; len: LONGINT;
+	PROCEDURE Encode*( CONST image: ARRAY OF CHAR; len: SIZE;
 						  		VAR b64: ARRAY OF CHAR );
 	VAR
 		group, i, ix, ox: LONGINT;

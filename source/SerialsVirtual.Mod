@@ -134,7 +134,7 @@ TYPE
 			END
 		END ReceiveChar;
 
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available*(): SIZE;
 		BEGIN {EXCLUSIVE}
 			RETURN (tail - head) MOD BufferSize
 		END Available;
@@ -237,7 +237,7 @@ TYPE
 			END;
 		END ReceiveChar;
 
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available*(): SIZE;
 		BEGIN {EXCLUSIVE}
 			RETURN port.Available();
 		END Available;
@@ -315,7 +315,7 @@ PROCEDURE SendFileIntern(portNbr : LONGINT; CONST filename : ARRAY OF CHAR; loop
 VAR
 	port : Serials.Port;
 	file : Files.File;
-	len: LONGINT; res : WORD;
+	len: SIZE; res : WORD;
 	in : Files.Reader; out : Streams.Writer;
 	buffer : ARRAY BufferSize OF CHAR;
 BEGIN

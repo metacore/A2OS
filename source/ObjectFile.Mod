@@ -7,7 +7,6 @@ CONST
 	Absolute* = 0;
 	Relative* = 1;
 
-
 	(* Section categories *)
 	(* code section categories, ordered by decreasing linking preference *)
 	EntryCode*= 0; (* entry code sections provide the entry point for static linking, enry code runs before module initializer callers *)
@@ -25,17 +24,13 @@ CONST
 
 	DefaultExtension* = ".Gof";
 
-	SegmentedNameLength=8;
 TYPE
-
-	Unit* = LONGINT;
-	Bits* = LONGINT;
+	Unit* = SIZE;
+	Bits* = SIZE;
 
 	Fingerprint* = HUGEINT;
 
-	SectionType = WORD;
-
-	SegmentedName*= ARRAY SegmentedNameLength OF StringPool.Index;
+	SegmentedName*= ARRAY 8 OF StringPool.Index;
 	SectionName* = ARRAY 128 OF CHAR;
 
 	(* FixupPattern = size (+|-) bits {size (+|-) bits}
@@ -91,7 +86,7 @@ TYPE
 	Aliases*= POINTER TO ARRAY OF Alias;
 
 	Section* = RECORD
-		type*: SectionType;
+		type*: WORD;
 		identifier*: Identifier;
 		unit*: Bits;
 		fixed*: BOOLEAN;
@@ -103,19 +98,19 @@ TYPE
 		bits*: BitSets.BitSet;
 	END;
 
-	PoolMapItem= RECORD key, value: LONGINT END;
-	PoolMapArray*=POINTER TO ARRAY OF PoolMapItem;
+	PoolMap* = OBJECT
+	TYPE
+		Table = POINTER TO ARRAY OF RECORD key, value: SIZE END;
 
-	PoolMap*=OBJECT
 	VAR
-		table: PoolMapArray;
-		size: LONGINT;
-		used: LONGINT;
+		table: Table;
+		size: SIZE;
+		used: SIZE;
 		maxLoadFactor: REAL;
 		writer: Streams.Writer;
 		(* Interface *)
 
-		PROCEDURE & Init* (initialSize: LONGINT);
+		PROCEDURE & Init* (initialSize: SIZE);
 		BEGIN
 			ASSERT(initialSize > 2);
 			NEW(table, initialSize);
@@ -126,8 +121,8 @@ TYPE
 			Put(0,0); (* empty string mapped one-to-one *)
 		END Init;
 
-		PROCEDURE Put(key, value: LONGINT);
-		VAR hash: LONGINT;
+		PROCEDURE Put(key, value: SIZE);
+		VAR hash: SIZE;
 		BEGIN
 			ASSERT(used < size);
 			ASSERT(key >= 0);
@@ -143,7 +138,7 @@ TYPE
 			IF (used / size) > maxLoadFactor THEN Grow END;
 		END Put;
 
-		PROCEDURE Get*(key: LONGINT):LONGINT;
+		PROCEDURE Get*(key: SIZE):SIZE;
 		BEGIN
 			IF key = -1 THEN
 				RETURN -1
@@ -152,18 +147,20 @@ TYPE
 			END
 		END Get;
 
-		PROCEDURE Has*(key: LONGINT):BOOLEAN;
+		PROCEDURE Has*(key: SIZE):BOOLEAN;
 		BEGIN
 			RETURN table[HashValue(key)].key = key;
 		END Has;
 
 		PROCEDURE Clear*;
-		VAR i: LONGINT;
-		BEGIN FOR i := 0 TO size - 1 DO table[i].key := -1; END; END Clear;
+		VAR i: SIZE;
+		BEGIN
+			FOR i := 0 TO size - 1 DO table[i].key := -1; END;
+		END Clear;
 
 		(* only correctly working, if NIL key cannot be entered *)
-		PROCEDURE HashValue(key: LONGINT):LONGINT;
-		VAR value, h, i: LONGINT;
+		PROCEDURE HashValue(key: SIZE): SIZE;
+		VAR value, h, i: SIZE;
 		BEGIN
 			value := key;
 			i := 0;
@@ -177,7 +174,7 @@ TYPE
 		END HashValue;
 
 		PROCEDURE Grow;
-		VAR oldTable: PoolMapArray; oldSize, i: LONGINT; key: LONGINT;
+		VAR oldTable: Table; oldSize, i, key: SIZE;
 		BEGIN
 			oldSize := size;
 			oldTable := table;
@@ -192,7 +189,7 @@ TYPE
 
 		(** read map and produce Local --> Global **)
 		PROCEDURE Read*(reader: Streams.Reader);
-		VAR value,pos: LONGINT; name: SectionName;
+		VAR value, pos: SIZE; name: SectionName;
 		BEGIN
 			pos := 1;
 			reader.RawString(name);
@@ -205,7 +202,7 @@ TYPE
 		END Read;
 
 		(** write global --> local map **)
-		PROCEDURE PutGlobal*(key: LONGINT);
+		PROCEDURE PutGlobal*(key: SIZE);
 		VAR name: SectionName;
 		BEGIN
 			IF ~Has(key) THEN
@@ -216,7 +213,7 @@ TYPE
 		END PutGlobal;
 
 		PROCEDURE PutSegmentedName*(CONST name: SegmentedName);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(name)-1 DO
 				IF name[i] < 0 THEN RETURN END;
@@ -244,8 +241,6 @@ VAR
 	modes: ARRAY 2 OF ARRAY 4 OF CHAR;
 	relocatabilities: ARRAY 2 OF ARRAY 8 OF CHAR;
 
-
-
 	statHeaders, statHeadersSize: SIZE;
 	statFixups, statFixupsSize, statFixupPatterns, statFixupPatches: SIZE;
 	statAliases, statAliasesSize: SIZE;
@@ -259,8 +254,7 @@ VAR
 
 	statSections, statSectionsTotalSize: SIZE;
 
-
-	PROCEDURE IsCode* (type: SectionType): BOOLEAN;
+	PROCEDURE IsCode* (type: WORD): BOOLEAN;
 	BEGIN RETURN (type IN {EntryCode .. Code})
 	END IsCode;
 
@@ -311,7 +305,6 @@ VAR
 		CopyIdentifier(source.identifier, dest.identifier);
 		dest.offset := source.offset;
 	END CopyAlias;
-
 
 	PROCEDURE CopySection* (CONST source: Section; VAR dest: Section);
 	VAR i: SIZE;
@@ -372,7 +365,7 @@ VAR
 
 	PROCEDURE WriteSectionTextual (writer: Streams.Writer; CONST section: Section);
 	CONST Separator = ' '; Tab = 09X;
-	VAR i: SIZE; offset,start, len: LONGINT; size: Bits;
+	VAR i: SIZE; offset,start, len, size: Bits;
 
 		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
@@ -439,8 +432,8 @@ VAR
 			writer.Int (alias.offset, 0);
 		END WriteAlias;
 
-		PROCEDURE Zeros(offset: LONGINT): LONGINT;
-		VAR zeros: LONGINT;
+		PROCEDURE Zeros(offset: Bits): Bits;
+		VAR zeros: Bits;
 		BEGIN
 			zeros := 0;
 			WHILE (offset < size) & (section.bits.GetBits(offset, MIN(4, size-offset)) = 0) DO
@@ -450,8 +443,8 @@ VAR
 			RETURN zeros
 		END Zeros;
 
-		PROCEDURE GetSegment(VAR offset, start, len: LONGINT): BOOLEAN;
-		VAR zeros: LONGINT;
+		PROCEDURE GetSegment(VAR offset, start, len: Bits): BOOLEAN;
+		VAR zeros: Bits;
 		BEGIN
 			INC(offset, Zeros(offset)*4);
 			start := offset;
@@ -469,7 +462,7 @@ VAR
 			RETURN len > 0;
 		END GetSegment;
 
-		PROCEDURE WriteSegment(offset,len: LONGINT); (* offset in bits *)
+		PROCEDURE WriteSegment(offset, len: Bits);
 		VAR value: WORD;
 		BEGIN
 			ASSERT(len MOD 4 = 0); ASSERT(offset MOD 4 = 0);
@@ -520,7 +513,7 @@ VAR
 	END WriteSectionTextual;
 
 	PROCEDURE ReadSectionTextual (reader: Streams.Reader; version: WORD; VAR section: Section);
-	VAR i: SIZE; size: LONGINT; char: CHAR; relocatibility, priority: WORD;
+	VAR i: SIZE; size: SIZE; char: CHAR; relocatibility, priority: WORD;
 
 		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		VAR identifier: ARRAY 10 OF CHAR;
@@ -533,8 +526,8 @@ VAR
 
 		PROCEDURE ReadFixupPattern (VAR pattern: FixupPattern);
 		BEGIN
-			reader.SkipWhitespace; reader.Int (pattern.offset, FALSE);
-			reader.SkipWhitespace; reader.Int (pattern.bits, FALSE);
+			reader.SkipWhitespace; reader.Size (pattern.offset, FALSE);
+			reader.SkipWhitespace; reader.Size (pattern.bits, FALSE);
 		END ReadFixupPattern;
 
 		PROCEDURE ReadIdentifier(VAR identifier: Identifier);
@@ -551,7 +544,7 @@ VAR
 		BEGIN
 			reader.SkipWhitespace;
 			ReadValueIdentifier (pattern.mode, modes);
-			reader.SkipWhitespace; reader.Int (pattern.scale, FALSE);
+			reader.SkipWhitespace; reader.Size (pattern.scale, FALSE);
 			reader.SkipWhitespace; reader.Size (pattern.patterns, FALSE);
 
 			IF (pattern.pattern = NIL) OR (LEN (pattern.pattern) < pattern.patterns) THEN
@@ -564,8 +557,8 @@ VAR
 
 		PROCEDURE ReadPatch (VAR patch: Patch);
 		BEGIN
-			reader.SkipWhitespace; reader.Int (patch.displacement, FALSE);
-			reader.SkipWhitespace; reader.Int (patch.offset, FALSE);
+			reader.SkipWhitespace; reader.Size (patch.displacement, FALSE);
+			reader.SkipWhitespace; reader.Size (patch.offset, FALSE);
 		END ReadPatch;
 
 		PROCEDURE ReadFixup (VAR fixup: Fixup);
@@ -586,16 +579,16 @@ VAR
 		PROCEDURE ReadAlias (VAR alias: Alias);
 		BEGIN
 			reader.SkipWhitespace; ReadIdentifier (alias.identifier);
-			reader.SkipWhitespace; reader.Int(alias.offset,FALSE);
+			reader.SkipWhitespace; reader.Size(alias.offset,FALSE);
 		END ReadAlias;
 
 		PROCEDURE ReadSegment(): BOOLEAN;
-		VAR len,offset: LONGINT;
+		VAR len, offset: Bits;
 		BEGIN
-			reader.Int(len,FALSE);
+			reader.Size(len,FALSE);
 			reader.SkipWhitespace;
 			IF len = 0 THEN RETURN FALSE END;
-			reader.Int(offset,FALSE); offset := offset * 4;
+			reader.Size(offset,FALSE); offset := offset * 4;
 			reader.SkipWhitespace;
 			WHILE len > 0 DO
 				reader.Char (char);
@@ -605,14 +598,13 @@ VAR
 			RETURN TRUE
 		END ReadSegment;
 
-
 	BEGIN
 		ReadValueIdentifier (section.type, categories);
 		ReadIdentifier (section.identifier);
-		reader.SkipWhitespace; reader.Int (section.unit, FALSE);
+		reader.SkipWhitespace; reader.Size (section.unit, FALSE);
 		ReadValueIdentifier(relocatibility, relocatabilities);
 		section.fixed := relocatibility = Fixed;
-		reader.SkipWhitespace; reader.Int (section.alignment, FALSE);
+		reader.SkipWhitespace; reader.Size (section.alignment, FALSE);
 		IF version < 5 THEN
 			reader.SkipWhitespace; reader.Int (priority, FALSE);
 			IF section.type = InitCode THEN
@@ -623,7 +615,7 @@ VAR
 		END;
 		reader.SkipWhitespace; reader.Size (section.aliases, FALSE);
 		reader.SkipWhitespace; reader.Size (section.fixups, FALSE);
-		reader.SkipWhitespace; reader.Int (size, FALSE); size := size * section.unit;
+		reader.SkipWhitespace; reader.Size (size, FALSE); size := size * section.unit;
 		IF (section.aliases > 0) & ((section.alias = NIL) OR (LEN (section.alias) < section.aliases)) THEN
 			NEW (section.alias, section.aliases);
 		END;
@@ -649,15 +641,14 @@ VAR
 	END ReadSectionTextual;
 
 	PROCEDURE ReadNameList*(reader: Streams.Reader; VAR nameList: NameList; binary: BOOLEAN; poolMap: PoolMap);
-	VAR i,len: LONGINT; name: ARRAY 256 OF CHAR;
+	VAR i, len: SIZE; name: ARRAY 256 OF CHAR;
 
 		PROCEDURE ReadIdentifier(VAR name: SegmentedName);
-		(*VAR name: SectionName;*)
-		VAR i,num: LONGINT;
+		VAR i: SIZE; num: SIZE;
 		BEGIN
 			i := 0;
 			REPEAT
-				reader.RawNum(num);
+				reader.RawSize(num);
 				name[i] := poolMap.Get(num);
 				INC(i);
 			UNTIL (i = LEN(name)) OR (num < 0);
@@ -668,14 +659,14 @@ VAR
 
 	BEGIN
 		IF binary THEN
-			reader.RawNum(len);
+			reader.RawSize(len);
 			NEW(nameList, len);
 			FOR i := 0 TO len-1 DO
 				ReadIdentifier(nameList[i]);
 			END;
 		ELSE
 			reader.SkipWhitespace;
-			reader.Int(len,FALSE);
+			reader.Size(len,FALSE);
 			NEW(nameList, len);
 			FOR i := 0 TO len-1 DO
 				reader.SkipWhitespace;
@@ -686,11 +677,11 @@ VAR
 	END ReadNameList;
 
 	PROCEDURE WriteNameList*(writer: Streams.Writer; nameList: NameList; binary: BOOLEAN; poolMap: PoolMap);
-	VAR i,len: LONGINT; name: ARRAY 256 OF CHAR;
+	VAR i, len: SIZE; name: ARRAY 256 OF CHAR;
 	CONST Separator = ' ';
 
 		PROCEDURE WriteIdentifier(CONST name: SegmentedName);
-		VAR i,num: LONGINT;
+		VAR i: SIZE; num: SIZE;
 		BEGIN
 			i := 0;
 			REPEAT
@@ -720,9 +711,8 @@ VAR
 		END;
 	END WriteNameList;
 
-
 	PROCEDURE WriteSectionBinary (writer: Streams.Writer; CONST section: Section; poolMap: PoolMap);
-	VAR i: SIZE; pos: Streams.Position; offset, start, len: LONGINT; size: Bits;
+	VAR i: SIZE; pos: Streams.Position; offset, start, len, size: Bits;
 	CONST ByteSize=8;
 
 		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -741,7 +731,7 @@ VAR
 		END WriteFixupPattern;
 
 		PROCEDURE WriteIdentifier(CONST identifier: Identifier);
-		VAR i,num: LONGINT;
+		VAR i: SIZE; num: StringPool.Index;
 		BEGIN
 			i := 0;
 			REPEAT
@@ -789,8 +779,8 @@ VAR
 			writer.RawNum(alias.offset);
 		END WriteAlias;
 
-		PROCEDURE Zeros(offset: LONGINT): LONGINT;
-		VAR zeros: LONGINT;
+		PROCEDURE Zeros(offset: Bits): Bits;
+		VAR zeros: Bits;
 		BEGIN
 			WHILE (offset < size) & (section.bits.GetBits(offset, MIN(ByteSize, size-offset)) = 0) DO
 				INC(zeros);
@@ -799,8 +789,8 @@ VAR
 			RETURN zeros
 		END Zeros;
 
-		PROCEDURE GetSegment(VAR offset, start, len: LONGINT): BOOLEAN;
-		VAR zeros: LONGINT;
+		PROCEDURE GetSegment(VAR offset, start, len: Bits): BOOLEAN;
+		VAR zeros: Bits;
 		BEGIN
 			INC(offset, Zeros(offset)*ByteSize);
 			start := offset;
@@ -808,7 +798,7 @@ VAR
 			WHILE (offset < size) DO
 				zeros := Zeros(offset);
 				INC(offset, zeros*ByteSize);
-				IF (zeros > 2) (* best value evaluated with statisitc over whole release *) OR (offset >= size) THEN
+				IF (zeros > 2) (* best value evaluated with statistic over whole release *) OR (offset >= size) THEN
 					RETURN TRUE;
 				ELSE
 					ASSERT(offset < size);
@@ -819,7 +809,7 @@ VAR
 			RETURN len > 0;
 		END GetSegment;
 
-		PROCEDURE WriteSegment(offset,len: LONGINT); (* offset in bits *)
+		PROCEDURE WriteSegment(offset, len: Bits);
 		VAR value: WORD; pos: Streams.Position;
 		BEGIN
 			pos := writer.Pos();
@@ -833,9 +823,8 @@ VAR
 				DEC(len);
 				writer.Char(CHR(value));
 			END;
-			INC(statSegments); INC(statSegmentsSize, writer.Pos()-pos);
+			INC(statSegments); INC(statSegmentsSize, SIZE(writer.Pos()-pos));
 		END WriteSegment;
-
 
 	BEGIN
 		(* header *)
@@ -853,7 +842,7 @@ VAR
 		size := section.bits.GetSize ();
 		writer.RawNum (size DIV section.unit);
 		INC(statHeaders);
-		INC(statHeadersSize, writer.Pos()-pos);
+		INC(statHeadersSize, SIZE(writer.Pos()-pos));
 
 		(* aliases *)
 		pos := writer.Pos();
@@ -862,7 +851,7 @@ VAR
 			WriteAlias (section.alias[i]);
 		END;
 		INC(statAliases, section.aliases);
-		INC(statAliasesSize, writer.Pos()-pos);
+		INC(statAliasesSize, SIZE(writer.Pos()-pos));
 
 		(* fixups *)
 		pos := writer.Pos();
@@ -870,7 +859,7 @@ VAR
 			WriteFixup (section.fixup[i]);
 		END;
 		INC(statFixups, section.fixups);
-		INC(statFixupsSize, writer.Pos()-pos);
+		INC(statFixupsSize, SIZE(writer.Pos()-pos));
 
 		(* code / data *)
 		pos := writer.Pos();
@@ -880,17 +869,17 @@ VAR
 		END;
 		writer.RawNum(0);
 		CASE section.type OF
-			InitCode:  INC(statInitSections); INC(statInitSectionsSize, writer.Pos()-pos);
-			|BodyCode: INC(statBodySections); INC(statBodySectionsSize, writer.Pos()-pos);
-			|Code: INC(statCodeSections); INC(statCodeSectionsSize, writer.Pos()-pos);
-			|Data: INC(statDataSections); INC(statDataSectionsSize, writer.Pos()-pos);
-			|Const: INC(statConstSections); INC(statConstSectionsSize, writer.Pos()-pos);
+			InitCode:  INC(statInitSections); INC(statInitSectionsSize, SIZE(writer.Pos()-pos));
+			|BodyCode: INC(statBodySections); INC(statBodySectionsSize, SIZE(writer.Pos()-pos));
+			|Code: INC(statCodeSections); INC(statCodeSectionsSize, SIZE(writer.Pos()-pos));
+			|Data: INC(statDataSections); INC(statDataSectionsSize, SIZE(writer.Pos()-pos));
+			|Const: INC(statConstSections); INC(statConstSectionsSize, SIZE(writer.Pos()-pos));
 		ELSE (* ignored *)
 		END;
 	END WriteSectionBinary;
 
 	PROCEDURE ReadSectionBinary (reader: Streams.Reader; version: WORD; VAR section: Section; poolMap: PoolMap);
-	VAR i: SIZE; size: LONGINT; relocatibility, priority: WORD; ch: CHAR;;
+	VAR i, size: SIZE; relocatibility, priority: WORD; ch: CHAR;;
 	CONST ByteSize=8;
 
 		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
@@ -906,32 +895,31 @@ VAR
 		END ReadValueIdentifier;
 
 		PROCEDURE ReadIdentifier(VAR identifier: Identifier);
-		(*VAR name: SectionName;*)
-		VAR i,num: LONGINT;
+		VAR i: SIZE; num: SIZE;
 		BEGIN
 			i := 0;
 			REPEAT
-				reader.RawNum(num);
+				reader.RawSize(num);
 				identifier.name[i] := poolMap.Get(num);
 				INC(i);
 			UNTIL (i = LEN(identifier.name)) OR (num < 0);
 			WHILE i < LEN(identifier.name) DO
 				identifier.name[i] := -1; INC(i);
 			END;
-			 reader.RawHNum (identifier.fingerprint);
+			reader.RawHNum (identifier.fingerprint);
 		END ReadIdentifier;
 
 		PROCEDURE ReadFixupPattern (VAR pattern: FixupPattern);
 		BEGIN
-			reader.RawNum (pattern.offset);
-			reader.RawNum (pattern.bits);
+			reader.RawSize (pattern.offset);
+			reader.RawSize (pattern.bits);
 		END ReadFixupPattern;
 
 		PROCEDURE ReadPattern(VAR pattern: Pattern);
 		VAR i: SIZE;
 		BEGIN
 			ReadValueIdentifier (pattern.mode, modes);
-			reader.RawNum (pattern.scale);
+			reader.RawSize (pattern.scale);
 			reader.RawSize (pattern.patterns);
 			IF (pattern.pattern = NIL) OR (LEN (pattern.pattern) < pattern.patterns) THEN
 				NEW (pattern.pattern, pattern.patterns);
@@ -943,8 +931,8 @@ VAR
 
 		PROCEDURE ReadPatch(VAR patch: Patch);
 		BEGIN
-			reader.RawNum(patch.displacement);
-			reader.RawNum(patch.offset);
+			reader.RawSize(patch.displacement);
+			reader.RawSize(patch.offset);
 		END ReadPatch;
 
 		PROCEDURE ReadFixup (VAR fixup: Fixup);
@@ -967,17 +955,17 @@ VAR
 		PROCEDURE ReadAlias (VAR alias: Alias);
 		BEGIN
 			ReadIdentifier (alias.identifier);
-			reader.RawNum (alias.offset);
+			reader.RawSize (alias.offset);
 		END ReadAlias;
 
 		PROCEDURE ReadSegment(): BOOLEAN;
-		VAR len,offset: LONGINT; c: CHAR;
+		VAR len, offset: Bits; c: CHAR;
 			segment: ARRAY 128 OF CHAR;
-			received: LONGINT;
+			received: SIZE;
 		BEGIN
-			reader.RawNum(len);
+			reader.RawSize(len);
 			IF len = 0 THEN RETURN FALSE END;
-			reader.RawNum(offset); offset := offset * ByteSize;
+			reader.RawSize(offset); offset := offset * ByteSize;
 			WHILE len > LEN(segment) DO
 				reader.Bytes(segment, 0, LEN(segment), received);
 				ASSERT(received = LEN(segment));
@@ -1006,10 +994,10 @@ VAR
 		reader.Char(ch); ASSERT(ch = 1X);
 		ReadValueIdentifier (section.type, categories);
 		ReadIdentifier (section.identifier);
-		reader.RawNum (section.unit);
+		reader.RawSize (section.unit);
 		ReadValueIdentifier(relocatibility, relocatabilities);
 		section.fixed := relocatibility = Fixed;
-		reader.RawNum (section.alignment);
+		reader.RawSize (section.alignment);
 		IF version < 5 THEN
 			reader.RawNum (priority);
 			CASE section.type OF
@@ -1028,7 +1016,7 @@ VAR
 		END;
 		reader.RawSize (section.aliases);
 		reader.RawSize (section.fixups);
-		reader.RawNum (size); size := size * section.unit;
+		reader.RawSize (size); size := size * section.unit;
 		IF (section.aliases > 0) &((section.alias = NIL) OR (LEN (section.alias) < section.aliases)) THEN
 			NEW (section.alias, section.aliases);
 		END;
@@ -1070,7 +1058,7 @@ VAR
 		ELSE
 			WriteSectionTextual(writer,section)
 		END;
-		INC(statSections); INC(statSectionsTotalSize, writer.Pos()-pos);
+		INC(statSections); INC(statSectionsTotalSize, SIZE(writer.Pos()-pos));
 	END WriteSection;
 
 	PROCEDURE SetFixups*(VAR section: Section; fixups: SIZE; fixup: Fixups);
@@ -1085,7 +1073,7 @@ VAR
 		section.alias := alias;
 	END SetAliases;
 
-	PROCEDURE AddPatch*(VAR patches: SIZE; VAR patch: Patches; disp, ofs: LONGINT);
+	PROCEDURE AddPatch*(VAR patches: SIZE; VAR patch: Patches; disp, ofs: Unit);
 	VAR newPatch: Patches; newPatches, i: SIZE;
 	BEGIN
 		FOR i := 0 TO patches-1 DO
@@ -1114,14 +1102,13 @@ VAR
 		RETURN TRUE
 	END SameFixupPattern;
 
-	PROCEDURE HasPattern(pat: Pattern; mode, scale: LONGINT; patterns: SIZE; pattern: FixupPatterns): BOOLEAN;
+	PROCEDURE HasPattern(pat: Pattern; mode: WORD; scale: Bits; patterns: SIZE; pattern: FixupPatterns): BOOLEAN;
 	BEGIN
 		RETURN (pat.mode = mode) & (pat.scale = scale) & (pat.patterns = patterns) & SameFixupPattern(patterns, pat.pattern, pattern);
 	END HasPattern;
 
-
 	(*
-	PROCEDURE AddPatch(VAR patches: SIZE; VAR patch: Patches; mode: WORD; displacement, scale: LONGINT; patterns: SIZE; pattern: FixupPatterns; offset: LONGINT);
+	PROCEDURE AddPatch(VAR patches: SIZE; VAR patch: Patches; mode: WORD; displacement: Unit; scale: Bits; patterns: SIZE; pattern: FixupPatterns; offset: Unit);
 	VAR i, newPatches, len: SIZE; newPatch: Patches;
 	BEGIN
 		FOR i := 0 TO patches-1 DO
@@ -1158,7 +1145,7 @@ VAR
 	END AddPatch;
 	*)
 
-	PROCEDURE AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: LONGINT; patterns: SIZE; pattern: FixupPatterns): SIZE;
+	PROCEDURE AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: Bits; patterns: SIZE; pattern: FixupPatterns): SIZE;
 	VAR i, newFixups, index: SIZE; newFixup: Fixups;
 	BEGIN
 		FOR i := 0 TO fixups-1 DO
@@ -1188,7 +1175,7 @@ VAR
 		RETURN index;
 	END AddFixup;
 
-	PROCEDURE AddAlias*(VAR aliases: SIZE; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: LONGINT): SIZE;
+	PROCEDURE AddAlias*(VAR aliases: SIZE; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: Unit): SIZE;
 	VAR i, newAliases, index: SIZE; newAlias: Aliases;
 	BEGIN
 		newAliases := aliases+1;
@@ -1368,7 +1355,6 @@ VAR
 		statSections := 0; statSectionsTotalSize := 0;
 	END ResetStatistics;
 
-
 BEGIN
 	categories[Code] := "code";
 	categories[EntryCode] := "entrycode";
@@ -1383,6 +1369,5 @@ BEGIN
 	relocatabilities[Aligned] := "aligned";
 	ResetStatistics;
 END ObjectFile.
-
 
 ObjectFile.Test

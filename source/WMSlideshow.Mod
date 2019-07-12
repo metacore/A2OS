@@ -659,7 +659,7 @@ TYPE DropURL* = OBJECT(WMDropTarget.DropURLs)
 			app.data.AddSlide(url);
 			IF (app.data.CountSlides() = 1) THEN
 				(* Load first slide *)
-				app.win.Update();
+				app.win.Update();
 			ELSE
 				app.nav.UpdatePreview();
 			END;
@@ -747,7 +747,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 		w, h : LONGINT;
 	BEGIN
 		(*  Load image *)
-		s := data.GetSlide(slideNr);
+		s := data.GetSlide(slideNr);
 		img := LoadImage(s.img^, Raster.BGR565);
 		manager := WMWindowManager.GetDefaultManager();
 		w := img.width;  h := img.height;
@@ -860,17 +860,17 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	BEGIN
 		(* Load current slide *)
 		IF (app.slideNr > data.CountSlides()-1) THEN RETURN; END;
-		s := data.GetSlide(app.slideNr);
+		s := data.GetSlide(app.slideNr);
 		img := LoadImage(s.img^, Raster.BGR565);
 		WHILE (img = NIL) DO
 			IF (DEBUG) THEN KernelLog.String("Error: Invalid image - no decoder found for "); KernelLog.String(s.img^); KernelLog.Ln; END;
 			data.RemoveSlide(app.slideNr);
 			IF (app.slideNr < data.CountSlides()-1) THEN
-				s := data.GetSlide(app.slideNr);
+				s := data.GetSlide(app.slideNr);
 				img := LoadImage(s.img^, Raster.BGR565);
 			ELSIF ( (data.CountSlides() > 0) & (app.slideNr > 0) ) THEN
 				DEC(app.slideNr);
-				s := data.GetSlide(app.slideNr);
+				s := data.GetSlide(app.slideNr);
 				img := LoadImage(s.img^, Raster.BGR565);
 			ELSE
 				(* no more slides -> can't display one :-) *)
@@ -908,7 +908,7 @@ END SlideshowWindow;
 	VAR
 		p : ANY; 	s : Slide;
 	BEGIN
-		p := slides.GetItem(i);
+		p := slides.GetItem(i);
 		IF (p = NIL) THEN
 			IF (DEBUG) THEN KernelLog.String("Slide nr. "); KernelLog.Int(i, 0); KernelLog.String(" doesn't exist!");  KernelLog.Ln; END;
 			RETURN NIL;
@@ -1063,7 +1063,7 @@ END SlideshowWindow;
 	 *  XML slideshow file reading stuff
 	 *
 	 *****)
-	PROCEDURE ErrorReport(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+	PROCEDURE ErrorReport(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 	BEGIN
 		KernelLog.String("Parse error at pos "); KernelLog.Int(pos, 5); KernelLog.String(" in line "); KernelLog.Int(line, 5);
 		KernelLog.String(" row "); KernelLog.Int(row, 5); KernelLog.String(" - "); KernelLog.String(msg); KernelLog.Ln;

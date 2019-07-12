@@ -42,7 +42,7 @@ TYPE
 		f* : Files.File;
 		streamInfo*: AVStreamInfo;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		BEGIN
 			f.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -95,7 +95,7 @@ TYPE
 
 		(* read data from streamNr, store it into buffer buf starting at offset ofs, store size bytes if possible, block if not read min bytes at least. Return number of read bytes in len and return code res *)
 		(* this procedure should not be directly called - it is called by the DemuxStream object! *)
-		PROCEDURE GetData*(streamNr : LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+		PROCEDURE GetData*(streamNr : LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		END GetData;
 
 		(* seek the streamNr to position pos (defined bz seekType), res = 0 if Ok, otherwise an error number *)
@@ -118,7 +118,7 @@ TYPE
 			InitReader(Receive, 4096)
 		END Open;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		BEGIN
 			demultiplexer.GetData(streamNr, buf, ofs, size, min, len, res)
 		END Receive;
@@ -127,7 +127,7 @@ TYPE
 		VAR  seekType, itemSize: LONGINT; res: WORD;
 		BEGIN
 			seekType := SeekByte;
-			demultiplexer.SetStreamPos(streamNr, seekType, pos, itemSize, res);
+			demultiplexer.SetStreamPos(streamNr, seekType, pos(LONGINT), itemSize, res);
 			Reset
 		END SetPos;
 

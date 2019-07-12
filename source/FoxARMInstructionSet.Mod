@@ -342,7 +342,7 @@ CONST
 		END;
 
 		Instruction*= RECORD
-			format: LONGINT;
+			format: SIZE;
 			condition: LONGINT;
 			flags: SET;
 			operands: ARRAY  MaxOperands OF Operand;
@@ -660,7 +660,7 @@ CONST
 	PROCEDURE MakeInstruction*(VAR instruction: Instruction; mnemonic, condition: LONGINT; flags: SET; CONST operands: ARRAY OF Operand): BOOLEAN;
 	VAR
 		format: InstructionFormat;
-		i, dummyEncoding: LONGINT;
+		i: SIZE; dummyEncoding: LONGINT;
 		result: BOOLEAN;
 
 		PROCEDURE OperandMatches(encoding: LONGINT; CONST operand: Operand): BOOLEAN;
@@ -862,7 +862,7 @@ CONST
 		*)
 		PROCEDURE SplittedUnsigned(val: LONGINT; positions: ARRAY OF INTEGER);
 		VAR
-			i, len: LONGINT;
+			i, len: SIZE;
 		BEGIN
 			ASSERT(LEN(positions) <= 32);
 			FOR i := 0 TO LEN(positions) - 1 DO ASSERT(positions[i] <= 32); ASSERT(positions[i] >= 0) END;
@@ -977,10 +977,10 @@ CONST
 				*)
 				IF (format.mnemonic = opB) OR (format.mnemonic = opBL) THEN
 					mode := BinaryCode.Relative;
-					displacement := operand.fixup.displacement - 8;
+					displacement := operand.fixup.displacement(LONGINT) - 8;
 				ELSE
 					mode := BinaryCode.Relative;
-					displacement := operand.fixup.displacement;
+					displacement := operand.fixup.displacement(LONGINT);
 				END;
 
 				(*
@@ -1953,7 +1953,7 @@ CONST
 		*)
 		PROCEDURE ParseInstructionFormat(CONST format: ARRAY OF CHAR; VAR setBits, diffBits, U, Q, S, L, F, o: SET);
 		VAR
-			curr, len, count: LONGINT;
+			curr, len, count: SIZE;
 		BEGIN
 			len := Strings.Length(format) - 1;
 			count := 0;
@@ -2858,8 +2858,8 @@ CONST
 	TYPE
 		Disasm = OBJECT (Disassembler.Disassembler)
 
-			PROCEDURE DisassembleInstruction(bitSet: BitSets.BitSet; VAR adr: LONGINT; maxInstructionSize: LONGINT; w:Streams.Writer);
-			VAR instruction: Instruction; value: WORD; mnemonic: LONGINT;
+			PROCEDURE DisassembleInstruction(bitSet: BitSets.BitSet; VAR adr: Disassembler.Unit; maxInstructionSize: Disassembler.Unit; w:Streams.Writer);
+			VAR instruction: Instruction; value: WORD; mnemonic: WORD;
 			BEGIN
 				(* maxInstructionSize can be ignored here *)
 				value := bitSet.GetBits(adr*8,32);
@@ -2874,9 +2874,9 @@ CONST
 						ASSERT(instruction.operands[1].mode = modeMemory);
 						IF (instruction.operands[1].register = PC) & (instruction.operands[1].offsetRegister = None) THEN
 							IF Decrement IN instruction.operands[1].indexing THEN
-								value := -instruction.operands[1].offsetImmediate + adr + 8;
+								value := -instruction.operands[1].offsetImmediate + adr(WORD) + 8;
 							ELSE
-								value := instruction.operands[1].offsetImmediate + adr + 8;
+								value := instruction.operands[1].offsetImmediate + adr(WORD) + 8;
 							END;
 							WriteReference(value, TRUE, w);
 							IF (value>=0) & (value * 8 + 32 < bitSet.GetSize()) THEN
@@ -2893,7 +2893,7 @@ CONST
 		END Disasm;
 
 	VAR disassembler: Disasm; codeFileName, dataFileName, logFileName: Files.FileName; codeFile, logFile: Files.File;code: BitSets.BitSet; options: Options.Options;
-		address, offset: LONGINT;
+		address, offset: WORD;
 	BEGIN
 		IF context.arg.GetString(codeFileName) THEN
 			codeFile := Files.Old(codeFileName);

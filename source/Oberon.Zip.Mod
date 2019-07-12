@@ -95,8 +95,8 @@ TYPE
 	END;
 
 (* length of str *)
-PROCEDURE StringLength(VAR str(* in *): ARRAY OF CHAR): LONGINT;
-	VAR i, l: LONGINT;
+PROCEDURE StringLength(VAR str(* in *): ARRAY OF CHAR): SIZE;
+	VAR i, l: SIZE;
 BEGIN
 	l := LEN(str); i := 0;
 	WHILE (i < l) & (str[i] # 0X) DO
@@ -221,15 +221,15 @@ BEGIN
 	Files.WriteLInt(r, ent.crc32);	(* crc-32 *)
 	Files.WriteLInt(r, ent.compSize);	(* compressed size *)
 	Files.WriteLInt(r, ent.uncompSize);	(* uncompressed size *)
-	Files.WriteInt(r, SHORT(StringLength(ent.name)));	(* filename length *)
+	Files.WriteInt(r, INTEGER(StringLength(ent.name)));	(* filename length *)
 	IF ent.extraField # NIL THEN
-		Files.WriteInt(r, SHORT(LEN(ent.extraField^)))	(* extra field length *)
+		Files.WriteInt(r, INTEGER(LEN(ent.extraField^)))	(* extra field length *)
 	ELSE
 		Files.WriteInt(r, 0)
 	END;
-	Files.WriteBytes(r, ent.name, StringLength(ent.name));	(* filename *)
+	Files.WriteBytes(r, ent.name, StringLength(ent.name)(LONGINT));	(* filename *)
 	IF ent.extraField # NIL THEN
-		Files.WriteBytes(r, ent.extraField^, LEN(ent.extraField^))	(* extra field *)
+		Files.WriteBytes(r, ent.extraField^, LEN(ent.extraField^)(LONGINT))	(* extra field *)
 	END
 END WriteLocalFileHeader;
 
@@ -247,27 +247,27 @@ BEGIN
 	Files.WriteLInt(r, ent.crc32);	(* crc-32 *)
 	Files.WriteLInt(r, ent.compSize);	(* compressed size *)
 	Files.WriteLInt(r, ent.uncompSize);	(* uncompressed size *)
-	Files.WriteInt(r, SHORT(StringLength(ent.name)));	(* filename length *)
+	Files.WriteInt(r, INTEGER(StringLength(ent.name)));	(* filename length *)
 	IF ent.extraField = NIL THEN
 		Files.WriteInt(r, 0)
 	ELSE
-		Files.WriteInt(r, SHORT(LEN(ent.extraField^)));	(* extra field length *)
+		Files.WriteInt(r, INTEGER(LEN(ent.extraField^)));	(* extra field length *)
 	END;
 	IF ent.comment = NIL THEN
 		Files.WriteInt(r, 0)
 	ELSE
-		Files.WriteInt(r, SHORT(LEN(ent.comment^)));	(* file comment length *)
+		Files.WriteInt(r, INTEGER(LEN(ent.comment^)));	(* file comment length *)
 	END;
 	Files.WriteInt(r, 0);	(* disk number start *)
 	Files.WriteInt(r, ent.intFileAttr);	(* internal file attributes *)
 	Files.WriteLInt(r, ent.extFileAttr);	(* external file attributes *)
 	Files.WriteLInt(r, ent.offsetLocal);	(* relative offset of local header *)
-	Files.WriteBytes(r, ent.name, StringLength(ent.name));	(* filename *)
+	Files.WriteBytes(r, ent.name, StringLength(ent.name)(LONGINT));	(* filename *)
 	IF ent.extraField # NIL THEN
-		Files.WriteBytes(r, ent.extraField^, LEN(ent.extraField^))	(* extra field *)
+		Files.WriteBytes(r, ent.extraField^, LEN(ent.extraField^)(LONGINT))	(* extra field *)
 	END;
 	IF ent.comment # NIL THEN
-		Files.WriteBytes(r, ent.comment^, LEN(ent.comment^))	(* file comment *)
+		Files.WriteBytes(r, ent.comment^, LEN(ent.comment^)(LONGINT))	(* file comment *)
 	END
 END WriteFileHeader;
 
@@ -292,8 +292,8 @@ BEGIN
 	IF arc.comment = NIL THEN
 		Files.WriteInt(r, 0)	(* zipfile comment length *)
 	ELSE
-		Files.WriteInt(r, SHORT(LEN(arc.comment^)));	(* zipfile comment length *)
-		Files.WriteBytes(r, arc.comment^, LEN(arc.comment^))	(* zipfile comment *)
+		Files.WriteInt(r, INTEGER(LEN(arc.comment^)));	(* zipfile comment length *)
+		Files.WriteBytes(r, arc.comment^, LEN(arc.comment^)(LONGINT))	(* zipfile comment *)
 	END
 END WriteEndOfCentDir;
 

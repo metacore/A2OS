@@ -29,7 +29,7 @@ TYPE
 		VAR
 			par : WMPerfMonPlugins.Parameter;
 			cpar : WMPerfMonPluginCpu.CpuParameter;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			NEW(cpu, WMPerfMonPluginCpu.nbrOfCpus);
 			FOR i := 0 TO LEN(cpu)-1 DO
@@ -41,7 +41,7 @@ TYPE
 		END LocatePlugins;
 
 		PROCEDURE Finalize*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Finalize^;
 			FOR i := 0 TO LEN(cpu)-1 DO WMPerfMonPlugins.updater.RemovePlugin(cpu[i]); END;
@@ -59,7 +59,7 @@ TYPE
 		VAR
 			npar : WMPerfMonPluginNetwork.NetParameter;
 			table : Plugins.Table; dev : Network.LinkDevice;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			Network.registry.GetAll(table);
 			IF table # NIL THEN
@@ -76,7 +76,7 @@ TYPE
 		END LocatePlugins;
 
 		PROCEDURE Finalize*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Finalize^;
 			IF (netspeed # NIL) THEN

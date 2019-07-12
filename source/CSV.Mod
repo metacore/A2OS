@@ -73,7 +73,7 @@ TYPE
 
 		(** *)
 		PROCEDURE ScanField*;
-		VAR ch, quote, usedQuote: CHAR; fieldLength: LONGINT; str: Strings.String;
+		VAR ch, quote, usedQuote: CHAR; fieldLength: SIZE; str: Strings.String;
 		BEGIN
 			IF buf = NIL THEN NEW(buf, 128); END;
 			IF bufw = NIL THEN bufw := buf.GetWriter(); END;
@@ -129,7 +129,7 @@ TYPE
 
 		(** separator and escaper are not allowed to be the same. This holds also for quoting characters. *)
 		PROCEDURE &Init*(CONST separator, escaper: CHAR; CONST quotes: ARRAY OF CHAR);
-		VAR quotesEmpty: BOOLEAN; i, j: LONGINT;
+		VAR quotesEmpty: BOOLEAN; i, j: SIZE;
 		BEGIN
 			ASSERT(separator # escaper);
 			SELF.separator := separator;
@@ -180,7 +180,7 @@ TYPE
 				- it contains white space (as white space is otherwise skipped)
 		*)
 		PROCEDURE NeedsQuotes*(CONST str:  ARRAY OF CHAR): BOOLEAN;
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			IF str = "" THEN RETURN TRUE; END;
 			FOR i := 0 TO LEN(str) - 1 DO
@@ -201,7 +201,7 @@ TYPE
 					-> TODO: resort to use escape character, but requires also escape character to be escaped!
 		*)
 		PROCEDURE GetUnusedQuote*(CONST str: ARRAY OF CHAR): CHAR;
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(SELF.quoteChars) - 1 DO
 				IF ~Strings.ContainsChar(str, SELF.quoteChars[i], TRUE) THEN
@@ -250,7 +250,7 @@ TYPE
 
 	(** *)
 	PROCEDURE ContainsWhitespace*(CONST str: ARRAY OF CHAR): BOOLEAN;
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO LEN(str) - 1 DO
 			IF IsWhiteSpace(str[i]) THEN RETURN TRUE; END;
@@ -323,8 +323,4 @@ TYPE
 	END CompareCSVs;
 
 END CSV.
-
-
-
-
 

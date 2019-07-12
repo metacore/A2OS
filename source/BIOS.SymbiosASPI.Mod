@@ -222,7 +222,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 			INC(size0, phys[i].size); INC(i)
 		END;
 		ASSERT(i = n, 101);	(* range contiguous *)
-		RETURN Machine.Ensure32BitAddress (phys[0].adr);
+		RETURN phys[0].adr(Machine.Address32);
 	END PhysAdr;
 
 	PROCEDURE SetTableEntry(VAR t: NCRScript.TableEntry; adr: ADDRESS; count: LONGINT);
@@ -892,7 +892,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 	BEGIN
 		NEW(srb);
 		srb.HaId := CHR(Dev.devIdx); srb.Flags := {};
-		srb.BufLen := LEN(data); srb.BufPointer := Machine.Ensure32BitAddress (ADDRESSOF(data)); srb.SenseLen := 0X;
+		srb.BufLen := LEN(data); srb.BufPointer := ADDRESSOF(data)(Machine.Address32); srb.SenseLen := 0X;
 		srb.CDBLen := 6X;
 		srb.CDB[0] := 12X; srb.CDB[1] := 0X; srb.CDB[2] := 0X; srb.CDB[3] := 0X; srb.CDB[4] := 0FFX; srb.CDB[5] := 0X;
 		srb.meas := NIL;

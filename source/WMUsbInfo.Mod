@@ -60,7 +60,7 @@ TYPE
 
 	Driver = POINTER TO RECORD;
 		driver : Usbdi.Driver;
-		interface : LONGINT;
+		interface : SIZE;
 		next : Driver;
 	END;
 
@@ -142,7 +142,7 @@ TYPE
 		END AddDeviceDescriptor;
 
 		PROCEDURE AddIad(iads : Usbdi.Iads; parent : WMTrees.TreeNode);
-		VAR dn, tn, in : WMTrees.TreeNode; w : Streams.StringWriter; c, s, p : Strings.String; j, k : LONGINT; i : Usb.InterfaceAssociationDescriptor;
+		VAR dn, tn, in : WMTrees.TreeNode; w : Streams.StringWriter; c, s, p : Strings.String; j, k : SIZE; i : Usb.InterfaceAssociationDescriptor;
 		BEGIN
 			NEW(dn); NEW(w, WriterSize);
 			AddUsbNode(dn, parent, "Interface Association Descriptors");
@@ -203,7 +203,7 @@ TYPE
 		END AddNonStandard;
 
 		PROCEDURE AddDescriptorData(CONST data: ARRAY OF CHAR; parent : WMTrees.TreeNode);
-		VAR n : WMTrees.TreeNode; i : LONGINT; w : Streams.StringWriter;
+		VAR n : WMTrees.TreeNode; i : SIZE; w : Streams.StringWriter;
 		BEGIN
 			NEW(n); NEW(w, WriterSize);
 			w.String("Data: ");
@@ -215,7 +215,7 @@ TYPE
 
 		(* Add HID class-specific descriptor *)
 		PROCEDURE AddHidClass(u : Usbdi.UnknownDescriptor; intf : Usbdi.InterfaceDescriptor; parent : WMTrees.TreeNode);
-		VAR w : Streams.StringWriter;  cl, n, dn : WMTrees.TreeNode; i : LONGINT;
+		VAR w : Streams.StringWriter;  cl, n, dn : WMTrees.TreeNode; i : SIZE;
 
 			PROCEDURE AddDescriptorType(type : LONGINT; w : Streams.StringWriter);
 			BEGIN
@@ -228,7 +228,7 @@ TYPE
 				END;
 			END AddDescriptorType;
 
-			PROCEDURE AddClassDescriptor(offset : LONGINT);
+			PROCEDURE AddClassDescriptor(offset : SIZE);
 			BEGIN
 				NEW(n); w.Reset;
 				w.String("bDescriptorType: "); w.Hex(ORD(u.descriptor[offset]), -2); w.String("H ");
@@ -275,7 +275,7 @@ TYPE
 		VAR subtype : LONGINT; v, w : Streams.StringWriter; tn, n : WMTrees.TreeNode;
 
 			PROCEDURE AddVCHeader(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR n : WMTrees.TreeNode; i : LONGINT; w : Streams.StringWriter;
+			VAR n : WMTrees.TreeNode; i : SIZE; w : Streams.StringWriter;
 			BEGIN
 				ASSERT(LEN(u.descriptor) >= 12);
 				NEW(w, WriterSize);
@@ -346,7 +346,7 @@ TYPE
 
 			(* Common fields of unit descriptors *)
 			PROCEDURE AddUnit(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR n : WMTrees.TreeNode; i, j, subtype : LONGINT; w : Streams.StringWriter;
+			VAR n : WMTrees.TreeNode; i, j: SIZE; subtype : LONGINT; w : Streams.StringWriter;
 			BEGIN
 				NEW(n); NEW(w, WriterSize);
 				w.String("bUnitID: "); w.Int(ORD(u.descriptor[3]), 0);
@@ -408,7 +408,7 @@ TYPE
 			END AddOutputHeader;
 
 			PROCEDURE AddInputHeader(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR n : WMTrees.TreeNode; i, temp  : LONGINT; w : Streams.StringWriter;
+			VAR n : WMTrees.TreeNode; i: SIZE; temp : LONGINT; w : Streams.StringWriter;
 			BEGIN
 				NEW(w, WriterSize);
 				FOR i := 1 TO 9 DO
@@ -547,7 +547,7 @@ TYPE
 		END AddVideoClass;
 
 		PROCEDURE AddConfiguration(c :  Usb.ConfigurationDescriptor; nbr: ADDRESS; parent : WMTrees.TreeNode);
-		VAR dn, tn  : WMTrees.TreeNode; w : Streams.StringWriter; i : LONGINT;
+		VAR dn, tn  : WMTrees.TreeNode; w : Streams.StringWriter; i : SIZE;
 		BEGIN
 			NEW(dn); NEW(w, WriterSize);
 			w.String("Configuration "); w.Address(nbr); w.Get(string);
@@ -585,8 +585,8 @@ TYPE
 			END;
 		END AddConfiguration;
 
-		PROCEDURE AddInterface(i : Usb.InterfaceDescriptor; nbr : LONGINT; parent : WMTrees.TreeNode);
-		VAR dn, tn, en : WMTrees.TreeNode; w : Streams.StringWriter; j : LONGINT; class, subclass, protocol : Strings.String;
+		PROCEDURE AddInterface(i : Usb.InterfaceDescriptor; nbr : SIZE; parent : WMTrees.TreeNode);
+		VAR dn, tn, en : WMTrees.TreeNode; w : Streams.StringWriter; j : SIZE; class, subclass, protocol : Strings.String;
 		BEGIN
 			NEW(dn);
 			NEW(w, WriterSize);
@@ -639,7 +639,7 @@ TYPE
 			END;
 		END AddInterface;
 
-		PROCEDURE AddEndpoint(e : Usb.EndpointDescriptor;intf : Usbdi.InterfaceDescriptor;  nbr : LONGINT; parent : WMTrees.TreeNode);
+		PROCEDURE AddEndpoint(e : Usb.EndpointDescriptor;intf : Usbdi.InterfaceDescriptor;  nbr : SIZE; parent : WMTrees.TreeNode);
 		VAR dn  : WMTrees.TreeNode; w : Streams.StringWriter; i : LONGINT;
 		BEGIN
 			NEW(dn); NEW(w, WriterSize);
@@ -727,8 +727,8 @@ TYPE
 			END;
 		END ViewModeDetailed;
 
-		PROCEDURE Dev2Node(dev : Usb.UsbDevice; port : LONGINT; parent : WMTrees.TreeNode);
-		VAR tn, pn : WMTrees.TreeNode; w : Streams.StringWriter; i : LONGINT; deviceAttached : BOOLEAN;
+		PROCEDURE Dev2Node(dev : Usb.UsbDevice; port : SIZE; parent : WMTrees.TreeNode);
+		VAR tn, pn : WMTrees.TreeNode; w : Streams.StringWriter; i : SIZE; deviceAttached : BOOLEAN;
 			image : WMGraphics.Image;
 		BEGIN
 			ASSERT(dev # NIL);
@@ -778,7 +778,7 @@ TYPE
 		END Dev2Node;
 
 		PROCEDURE BuildTree;
-		VAR i : LONGINT; tn, node : WMTrees.TreeNode; rootHubs : Usb.RootHubArray;
+		VAR i : SIZE; tn, node : WMTrees.TreeNode; rootHubs : Usb.RootHubArray;
 		BEGIN
 			usbTreeView.visible.Set(FALSE);
 			usbTree.Acquire;
@@ -802,7 +802,7 @@ TYPE
 		END BuildTree;
 
 		PROCEDURE BuildDrivers;
-		VAR i, j : LONGINT; tn, node, n : WMTrees.TreeNode;
+		VAR i, j : SIZE; tn, node, n : WMTrees.TreeNode;
 			drivers : POINTER TO ARRAY OF Usb.RegisteredDriver; driverFound : BOOLEAN;
 			drv : Usb.RegisteredDriver; plugin : Plugins.Plugin;
 			w : Streams.StringWriter; dev : Usb.UsbDevice;
@@ -872,7 +872,7 @@ TYPE
 		(* Search all interfaces of the USB device dev active configuration for installed
 		device drivers. Returns NIL, if no drivers found. *)
 		PROCEDURE GetDriversOf(dev : Usb.UsbDevice) : Driver;
-		VAR drivers, d, temp : Driver; con : Usb.ConfigurationDescriptor; i : LONGINT;
+		VAR drivers, d, temp : Driver; con : Usb.ConfigurationDescriptor; i : SIZE;
 		BEGIN
 			IF dev # NIL THEN
 				con := dev.actConfiguration (Usb.ConfigurationDescriptor);
@@ -894,11 +894,11 @@ TYPE
 			RETURN drivers;
 		END GetDriversOf;
 
-		PROCEDURE GetUsbInfo(VAR nbrOfRootHubs,  nbrOfPorts, nbrOfDevices : LONGINT);
-		VAR i : LONGINT; rootHubs : Usb.RootHubArray;
+		PROCEDURE GetUsbInfo(VAR nbrOfRootHubs,  nbrOfPorts, nbrOfDevices : SIZE);
+		VAR i : SIZE; rootHubs : Usb.RootHubArray;
 
-			PROCEDURE ProcessHub(hub : Usb.UsbDevice; VAR nbrOfPorts, nbrOfDevices : LONGINT);
-			VAR i : LONGINT; dev : Usb.UsbDevice;
+			PROCEDURE ProcessHub(hub : Usb.UsbDevice; VAR nbrOfPorts, nbrOfDevices : SIZE);
+			VAR i : SIZE; dev : Usb.UsbDevice;
 			BEGIN
 				ASSERT((hub # NIL) & (hub.hubFlag = TRUE) & (hub.deviceAtPort # NIL));
 				INC(nbrOfPorts, LEN(hub.deviceAtPort));
@@ -925,7 +925,7 @@ TYPE
 		END GetUsbInfo;
 
 		PROCEDURE BuildInfoLine;
-		VAR w : Streams.StringWriter; nbrOfRootHubs, nbrOfPorts, nbrOfDevices : LONGINT;
+		VAR w : Streams.StringWriter; nbrOfRootHubs, nbrOfPorts, nbrOfDevices : SIZE;
 		BEGIN
 			NEW(w, WriterSize);
 			GetUsbInfo(nbrOfRootHubs, nbrOfPorts, nbrOfDevices);

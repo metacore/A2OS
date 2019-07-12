@@ -79,7 +79,7 @@ TYPE
 
 		PROCEDURE &InitClock*;
 		CONST Delay = 3;
-		VAR p: LONGINT;  timer: Kernel.MilliTimer;  s: ARRAY 8 OF CHAR;
+		VAR p: SIZE;  timer: Kernel.MilliTimer;  s: ARRAY 8 OF CHAR;
 		BEGIN
 			second := -1;  p := 0;
 			Machine.GetConfig("ClockMode", s);

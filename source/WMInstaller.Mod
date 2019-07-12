@@ -129,7 +129,7 @@ TYPE
 		allBtn, noneBtn : WMStandardComponents.Button;
 
 		PROCEDURE ClickHandler(sender, data : ANY);
-		VAR checkbox : WMStandardComponents.Checkbox; msg : ARRAY 512 OF CHAR;i : LONGINT; install : BOOLEAN;
+		VAR checkbox : WMStandardComponents.Checkbox; msg : ARRAY 512 OF CHAR; i : SIZE; install : BOOLEAN;
 		BEGIN
 			FOR i := 0 TO LEN(packageList)-1 DO
 				checkbox := packageList[i].user (WMStandardComponents.Checkbox);
@@ -149,7 +149,7 @@ TYPE
 		END ClickHandler;
 
 		PROCEDURE GetTotalSize(VAR size, sizeOnDisk : LONGINT);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			size := 0; sizeOnDisk := 0;
 			IF (packageList = NIL) THEN RETURN; END;
@@ -221,7 +221,7 @@ TYPE
 		END CreatePackagePanel;
 
 		PROCEDURE SetPackages(packages : Installer.Packages);
-		VAR packagePanel : WMStandardComponents.Panel; panel : WMStandardComponents.Panel; height, i : LONGINT;
+		VAR packagePanel : WMStandardComponents.Panel; panel : WMStandardComponents.Panel; height : LONGINT; i : SIZE;
 		BEGIN
 			ASSERT(packages # NIL);
 			height := 0;
@@ -245,7 +245,7 @@ TYPE
 		END SetPackages;
 
 		PROCEDURE HandleButtons(sender, data : ANY);
-		VAR newState, i : LONGINT; checkbox : WMStandardComponents.Checkbox; ignore : ARRAY 512 OF CHAR; install : BOOLEAN;
+		VAR newState : LONGINT; i : SIZE; checkbox : WMStandardComponents.Checkbox; ignore : ARRAY 512 OF CHAR; install : BOOLEAN;
 		BEGIN
 			IF (sender = allBtn) THEN
 				newState := WMStandardComponents.Checked;

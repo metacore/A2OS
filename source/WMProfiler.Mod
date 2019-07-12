@@ -92,7 +92,7 @@ TYPE
 
 		PROCEDURE UpdateStatusBar(forceUpdate : BOOLEAN);
 		VAR
-			state, currentNofSamples, maxNofSamples : LONGINT;
+			state: WORD; currentNofSamples, maxNofSamples : SIZE;
 			caption : ARRAY 256 OF CHAR; number : ARRAY 16 OF CHAR;
 		BEGIN
 			state := HierarchicalProfiler.GetState(currentNofSamples, maxNofSamples);

@@ -9,8 +9,8 @@ BEGIN
 	QuickSortRec(genArray, compFunc, 0, LEN(genArray)-1)
 END QuickSort;
 
-PROCEDURE QuickSortRec(VAR genArray: GenericArray; comp: GenericCompareFunct; lo, hi: LONGINT);
-VAR i, j: LONGINT; x, t: ANY;
+PROCEDURE QuickSortRec(VAR genArray: GenericArray; comp: GenericCompareFunct; lo, hi: SIZE);
+VAR i, j: SIZE; x, t: ANY;
 BEGIN
 	i := lo; j := hi;
 	x := genArray[(lo+hi) DIV 2];

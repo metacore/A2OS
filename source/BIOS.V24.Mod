@@ -147,7 +147,7 @@ TYPE
 			END;
 		END HandleInterrupt;
 
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available*(): SIZE;
 		BEGIN {EXCLUSIVE}
 			RETURN (tail - head) MOD BufSize
 		END Available;
@@ -420,7 +420,7 @@ END Scan;
 (** Set the essential port operating parameters as specified in Aos.Par
 		If omitted, default standard values are assigned to COM1 and COM2 *)
 PROCEDURE Install*(context : Commands.Context);
-VAR i, p : LONGINT; name, s: ARRAY 16 OF CHAR; BASE, IRQ: LONGINT; port : RS232Port;
+VAR i: LONGINT; p : SIZE; name, s: ARRAY 16 OF CHAR; BASE, IRQ: LONGINT; port : RS232Port;
 BEGIN
 	FOR i := 0 TO MaxPortNo-1 DO
 		COPY("COM ", name);

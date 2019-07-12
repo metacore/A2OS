@@ -83,7 +83,7 @@ TYPE
 		END MapCode;
 
 		PROCEDURE GetGlyphMap*(code : LONGINT; VAR map : WMGraphics.Image);
-		VAR g : Glyph; range : LONGINT;
+		VAR g : Glyph; range : SIZE;
 		BEGIN
 			IF FindGlyphRange(code, range) THEN
 				IF FindGlyph(code, g) THEN
@@ -95,13 +95,13 @@ TYPE
 		END GetGlyphMap;
 
 		PROCEDURE HasChar*(code : LONGINT) : BOOLEAN;
-		VAR dummy : LONGINT;
+		VAR dummy : SIZE;
 		BEGIN
 			RETURN FindGlyphRange(code, dummy)
 		END HasChar;
 
 		PROCEDURE GetGlyphSpacings*(code : LONGINT; VAR glyphSpacings : WMGraphics.GlyphSpacings);
-		VAR g : Glyph; range : LONGINT;
+		VAR g : Glyph; range : SIZE;
 		BEGIN
 			IF FindGlyphRange(code, range) THEN
 				IF FindGlyph(code, g) THEN
@@ -121,7 +121,7 @@ TYPE
 		END GetGlyphSpacings;
 
 
-		PROCEDURE LoadGlyphRange(gri : LONGINT);
+		PROCEDURE LoadGlyphRange(gri : SIZE);
 		VAR i: LONGINT;
 		BEGIN
 			IF glyphRanges[gri].glyphs = NIL THEN
@@ -142,8 +142,8 @@ TYPE
 				glyphRanges[gri].loaded := TRUE;
 		END LoadGlyphRange;
 
-		PROCEDURE FindGlyphRange(code : LONGINT; VAR gri : LONGINT) : BOOLEAN;
-		VAR a, b, m : LONGINT;
+		PROCEDURE FindGlyphRange(code : LONGINT; VAR gri : SIZE) : BOOLEAN;
+		VAR a, b, m : SIZE;
 		BEGIN
 			gri := 0;
 			a := 0; b := LEN(glyphRanges)- 1;
@@ -160,7 +160,7 @@ TYPE
 		END FindGlyphRange;
 
 		PROCEDURE FindGlyph(code : LONGINT; VAR glyph : Glyph) : BOOLEAN;
-		VAR gri : LONGINT;
+		VAR gri : SIZE;
 		BEGIN
 			IF FindGlyphRange(code, gri) THEN
 				IF glyphRanges[gri].glyphs[code - glyphRanges[gri].firstCode].code # code THEN
@@ -388,7 +388,8 @@ BEGIN
 END LoadApproximateFont;
 
 PROCEDURE MultiTest*;
-VAR name : ARRAY 256 OF CHAR; flags : SET; time, date, size : LONGINT;
+VAR name : ARRAY 256 OF CHAR; flags : SET; time, date : LONGINT;
+	size: Files.Size;
 	enumerator : Files.Enumerator;
 	f : WMGraphics.Font;
 BEGIN

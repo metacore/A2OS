@@ -48,34 +48,34 @@ TYPE
 	ComparisonFunction = PROCEDURE {DELEGATE} (object1, object2: ANY): BOOLEAN;
 
 	Position*= RECORD
-		start*, end*, line*, linepos*: LONGINT;
+		start*, end*, line*, linepos*: Streams.Position;
 		reader*: Streams.Reader;
 	END;
 
-	ErrorCode*=LONGINT;
+	ErrorCode* = WORD;
 
 	Fingerprint* = ObjectFile.Fingerprint;
 
 	List* = OBJECT  (* by Luc Bläser *)
 	VAR
 		list: ObjectArray;
-		count-: LONGINT;
+		count-: SIZE;
 		multipleAllowed*: BOOLEAN;
 		nilAllowed*: BOOLEAN;
 
-		PROCEDURE & InitList*(initialSize: LONGINT) ;
+		PROCEDURE & InitList*(initialSize: SIZE) ;
 		BEGIN
 			IF initialSize <= 0 THEN initialSize := 8 END;
 			INC( lists );  NEW( list, initialSize );  count := 0;  multipleAllowed := FALSE;  nilAllowed := FALSE
 		END InitList;
 
-		PROCEDURE Length*( ): LONGINT;
+		PROCEDURE Length*( ): SIZE;
 		BEGIN
 			RETURN count
 		END Length;
 
 		PROCEDURE Grow;
-		VAR old: ObjectArray;  i: LONGINT;
+		VAR old: ObjectArray;  i: SIZE;
 		BEGIN
 			INC( enlarged );  old := list;  NEW( list, (LEN( list ) * 3+1) DIV 2 (* more optimal for first-fit memory allocators *) ) ;
 			FOR i := 0 TO count - 1 DO list[i] := old[i] END
@@ -102,7 +102,7 @@ TYPE
 		END Add;
 
 		PROCEDURE Prepend*(x: ANY);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			IF ~nilAllowed THEN ASSERT( x # NIL ) END;
 			IF ~multipleAllowed THEN ASSERT( debug OR ~Contains( x ) ) END;   (* already contained *)
@@ -115,7 +115,7 @@ TYPE
 		END Prepend;
 
 		PROCEDURE Append*(x: List);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO x.Length() - 1 DO
 				IF multipleAllowed OR (~debug OR ~Contains(x.Get(i))) THEN
@@ -125,7 +125,7 @@ TYPE
 		END Append;
 
 		PROCEDURE Remove*( x: ANY );
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			i := 0;
 			WHILE (i < count) & (list[i] # x) DO INC( i ) END;
@@ -144,7 +144,7 @@ TYPE
 		END RemoveByIndex;
 
 		PROCEDURE Insert*( i: SIZE; x: ANY );
-		VAR j: LONGINT;
+		VAR j: SIZE;
 		BEGIN
 			IF ~nilAllowed THEN ASSERT( x # NIL ) END;
 			IF ~multipleAllowed THEN ASSERT( ~debug OR ~Contains( x ) ) END;   (* already contained *)
@@ -157,7 +157,7 @@ TYPE
 		END Insert;
 
 		PROCEDURE Replace*( x, y: ANY );
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			IF ~nilAllowed THEN ASSERT( x # NIL );  ASSERT( y # NIL ) END;
 			i := IndexOf( x );
@@ -173,8 +173,8 @@ TYPE
 		END ReplaceByIndex;
 
 		(** If the object is not present, -1 is returned *)
-		PROCEDURE IndexOf*( x: ANY ): LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE IndexOf*( x: ANY ): SIZE;
+		VAR i: SIZE;
 		BEGIN
 			i := 0;
 			WHILE i < count DO
@@ -190,13 +190,13 @@ TYPE
 		END Contains;
 
 		PROCEDURE Clear*;
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO count - 1 DO list[i] := NIL END;
 			count := 0
 		END Clear;
 
-		PROCEDURE GrowAndSet*(i: LONGINT; x: ANY);
+		PROCEDURE GrowAndSet*(i: SIZE; x: ANY);
 		BEGIN
 			IF (i<0) THEN HALT(101) END;
 			WHILE i>=LEN(list) DO Grow END;
@@ -211,9 +211,9 @@ TYPE
 			END
 		END Sort;
 
-		PROCEDURE QuickSort(comparisonFunction: ComparisonFunction; lo, hi: LONGINT);
+		PROCEDURE QuickSort(comparisonFunction: ComparisonFunction; lo, hi: SIZE);
 		VAR
-			i, j: LONGINT;
+			i, j: SIZE;
 			x, t: ANY;
 		BEGIN
 			i := lo; j := hi;
@@ -239,11 +239,11 @@ TYPE
 
 	HashEntryAny = RECORD
 		key, value: ANY;
-		valueInt: LONGINT;
+		valueInt: SIZE;
 	END;
 
 	HashEntryInt = RECORD
-		key, valueInt: LONGINT;
+		key, valueInt: SIZE;
 		value: ANY;
 	END;
 
@@ -253,13 +253,13 @@ TYPE
 	HashTable* = OBJECT
 	VAR
 		table: HashAnyArray;
-		size: LONGINT;
-		used-: LONGINT;
+		size: SIZE;
+		used-: SIZE;
 		maxLoadFactor: REAL;
 
 		(* Interface *)
 
-		PROCEDURE & Init* (initialSize: LONGINT);
+		PROCEDURE & Init* (initialSize: SIZE);
 		BEGIN
 			ASSERT(initialSize > 2);
 			NEW(table, initialSize);
@@ -269,7 +269,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Put*(key, value: ANY);
-		VAR hash: LONGINT;
+		VAR hash: SIZE;
 		BEGIN
 			ASSERT(used < size);
 			ASSERT(key # NIL);
@@ -295,17 +295,21 @@ TYPE
 			RETURN table[HashValue(key)].key = key;
 		END Has;
 
-		PROCEDURE Length*():LONGINT;
-		BEGIN RETURN used; END Length;
+		PROCEDURE Length*(): SIZE;
+		BEGIN
+			RETURN used;
+		END Length;
 
 		PROCEDURE Clear*;
-		VAR i: LONGINT;
-		BEGIN FOR i := 0 TO size - 1 DO table[i].key := NIL; table[i].value := NIL; table[i].valueInt := 0 END; END Clear;
+		VAR i: SIZE;
+		BEGIN
+			FOR i := 0 TO size - 1 DO table[i].key := NIL; table[i].value := NIL; table[i].valueInt := 0 END;
+		END Clear;
 
 		(* Interface for integer values *)
 
-		PROCEDURE PutInt*(key: ANY; value: LONGINT);
-		VAR hash: LONGINT;
+		PROCEDURE PutInt*(key: ANY; value: SIZE);
+		VAR hash: SIZE;
 		BEGIN
 			ASSERT(used < size);
 			hash := HashValue(key);
@@ -317,16 +321,18 @@ TYPE
 			IF (used / size) > maxLoadFactor THEN Grow END;
 		END PutInt;
 
-		PROCEDURE GetInt*(key: ANY):LONGINT;
-		BEGIN RETURN table[HashValue(key)].valueInt; END GetInt;
+		PROCEDURE GetInt*(key: ANY):SIZE;
+		BEGIN
+			RETURN table[HashValue(key)].valueInt;
+		END GetInt;
 
 		(* Internals *)
 
 		(* only correctly working, if NIL key cannot be entered *)
-		PROCEDURE HashValue(key: ANY):LONGINT;
-		VAR value, h1, h2, i: LONGINT;
+		PROCEDURE HashValue(key: ANY): SIZE;
+		VAR value, h1, h2, i: SIZE;
 		BEGIN
-			value := SYSTEM.VAL(LONGINT, key) DIV SIZEOF(ADDRESS);
+			value := SYSTEM.VAL(SIZE, key) DIV SIZEOF(ADDRESS);
 			i := 0;
 			h1 := value MOD size;
 			h2 := 1; (* Linear probing *)
@@ -339,7 +345,7 @@ TYPE
 		END HashValue;
 
 		PROCEDURE Grow;
-		VAR oldTable: HashAnyArray; oldSize, i: LONGINT; key: ANY;
+		VAR oldTable: HashAnyArray; oldSize, i: SIZE; key: ANY;
 		BEGIN
 			oldSize := size;
 			oldTable := table;
@@ -361,7 +367,7 @@ TYPE
 	IntIterator*= OBJECT
 	VAR
 		table: HashIntArray;
-		count : LONGINT;
+		count : SIZE;
 
 		PROCEDURE & Init(t: HashIntArray);
 		BEGIN
@@ -369,7 +375,7 @@ TYPE
 			count := -1;
 		END Init;
 
-		PROCEDURE GetNext*(VAR key: LONGINT; VAR value: ANY): BOOLEAN;
+		PROCEDURE GetNext*(VAR key: SIZE; VAR value: ANY): BOOLEAN;
 		BEGIN
 			REPEAT
 				INC(count);
@@ -387,13 +393,13 @@ TYPE
 	HashTableInt* = OBJECT
 	VAR
 		table: HashIntArray;
-		size: LONGINT;
-		used-: LONGINT;
+		size: SIZE;
+		used-: SIZE;
 		maxLoadFactor: REAL;
 
 		(* Interface *)
 
-		PROCEDURE & Init* (initialSize: LONGINT);
+		PROCEDURE & Init* (initialSize: SIZE);
 		BEGIN
 			ASSERT(initialSize > 2);
 			NEW(table, initialSize);
@@ -402,8 +408,8 @@ TYPE
 			maxLoadFactor := 0.75;
 		END Init;
 
-		PROCEDURE Put*(key: LONGINT; value: ANY);
-		VAR hash: LONGINT;
+		PROCEDURE Put*(key: SIZE; value: ANY);
+		VAR hash: SIZE;
 		BEGIN
 			ASSERT(key # 0);
 			ASSERT(used < size);
@@ -416,27 +422,31 @@ TYPE
 			IF (used / size) > maxLoadFactor THEN Grow END;
 		END Put;
 
-		PROCEDURE Get*(key: LONGINT):ANY;
+		PROCEDURE Get*(key: SIZE):ANY;
 		BEGIN
 			RETURN table[HashValue(key)].value;
 		END Get;
 
-		PROCEDURE Has*(key: LONGINT):BOOLEAN;
+		PROCEDURE Has*(key: SIZE):BOOLEAN;
 		BEGIN
 			RETURN table[HashValue(key)].key = key;
 		END Has;
 
-		PROCEDURE Length*():LONGINT;
-		BEGIN RETURN used; END Length;
+		PROCEDURE Length*(): SIZE;
+		BEGIN
+			RETURN used;
+		END Length;
 
 		PROCEDURE Clear*;
-		VAR i: LONGINT;
-		BEGIN FOR i := 0 TO size - 1 DO table[i].key := 0; END; END Clear;
+		VAR i: SIZE;
+		BEGIN
+			FOR i := 0 TO size - 1 DO table[i].key := 0; END;
+		END Clear;
 
 		(* Interface for integer values *)
 
-		PROCEDURE PutInt*(key, value: LONGINT);
-		VAR hash: LONGINT;
+		PROCEDURE PutInt*(key, value: SIZE);
+		VAR hash: SIZE;
 		BEGIN
 			(*ASSERT(key # 0);*)
 			ASSERT(used < size);
@@ -449,13 +459,15 @@ TYPE
 			IF (used / size) > maxLoadFactor THEN Grow END;
 		END PutInt;
 
-		PROCEDURE GetInt*(key: LONGINT):LONGINT;
-		BEGIN RETURN table[HashValue(key)].valueInt; END GetInt;
+		PROCEDURE GetInt*(key: SIZE): SIZE;
+		BEGIN
+			RETURN table[HashValue(key)].valueInt;
+		END GetInt;
 
 		(* Internals *)
 
-		PROCEDURE HashValue(key: LONGINT):LONGINT;
-		VAR value, h1, h2, i: LONGINT;
+		PROCEDURE HashValue(key: SIZE): SIZE;
+		VAR value, h1, h2, i: SIZE;
 		BEGIN
 			i := 0;
 			value := key;
@@ -470,7 +482,7 @@ TYPE
 		END HashValue;
 
 		PROCEDURE Grow;
-		VAR oldTable: HashIntArray; oldSize, i, key: LONGINT;
+		VAR oldTable: HashIntArray; oldSize, i, key: SIZE;
 		BEGIN
 			oldSize := size;
 			oldTable := table;
@@ -505,13 +517,13 @@ TYPE
 	HashTableSegmentedName* = OBJECT
 	VAR
 		table: HashSegmentedNameArray;
-		size: LONGINT;
-		used-: LONGINT;
+		size: SIZE;
+		used-: SIZE;
 		maxLoadFactor: REAL;
 
 		(* Interface *)
 
-		PROCEDURE & Init* (initialSize: LONGINT);
+		PROCEDURE & Init* (initialSize: SIZE);
 		BEGIN
 			ASSERT(initialSize > 2);
 			NEW(table, initialSize);
@@ -522,7 +534,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Put*(CONST key: SegmentedName; value: ANY);
-		VAR hash: LONGINT;
+		VAR hash: SIZE;
 		BEGIN
 			ASSERT(used < size);
 			hash := HashValue(key);
@@ -544,27 +556,31 @@ TYPE
 			RETURN table[HashValue(key)].key = key;
 		END Has;
 
-		PROCEDURE Length*():LONGINT;
-		BEGIN RETURN used; END Length;
+		PROCEDURE Length*(): SIZE;
+		BEGIN
+			RETURN used;
+		END Length;
 
 		PROCEDURE Clear*;
-		VAR i: LONGINT;
-		BEGIN FOR i := 0 TO size - 1 DO table[i].key[0] := -1; END; END Clear;
+		VAR i: SIZE;
+		BEGIN
+			FOR i := 0 TO size - 1 DO table[i].key[0] := -1; END;
+		END Clear;
 
 		(* Internals *)
-		PROCEDURE Hash*(CONST name: SegmentedName): LONGINT;
-		VAR fp,i: LONGINT;
+		PROCEDURE Hash*(CONST name: SegmentedName): SIZE;
+		VAR fp, i: SIZE;
 		BEGIN
 			fp := name[0]; i := 1;
 			WHILE (i<LEN(name)) & (name[i] >= 0) DO
-				fp:=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(fp, 7)) / SYSTEM.VAL(SET, name[i]));
+				fp:=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(fp, 7)) / SYSTEM.VAL(SET, name[i]));
 				INC(i);
 			END;
 			RETURN fp
 		END Hash;
 
-		PROCEDURE HashValue(CONST key: SegmentedName):LONGINT;
-		VAR value, h,i: LONGINT;
+		PROCEDURE HashValue(CONST key: SegmentedName): SIZE;
+		VAR value, h, i: SIZE;
 		BEGIN
 			ASSERT(key[0] >= 0);
 			h := Hash(key);
@@ -578,7 +594,7 @@ TYPE
 		END HashValue;
 
 		PROCEDURE Grow;
-		VAR oldTable: HashSegmentedNameArray; oldSize, i: LONGINT; key: SegmentedName;
+		VAR oldTable: HashSegmentedNameArray; oldSize, i: SIZE; key: SegmentedName;
 		BEGIN
 			oldSize := size;
 			oldTable := table;
@@ -648,7 +664,7 @@ TYPE
 		BEGIN Indent; w.Char(x);
 		END Char;
 
-		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
+		PROCEDURE Bytes*(CONST x: ARRAY OF CHAR;  ofs, len: SIZE );
 		BEGIN  w.Bytes(x,ofs,len);
 		END Bytes;
 
@@ -827,7 +843,7 @@ TYPE
 	DiagnosticsFactory*=PROCEDURE{DELEGATE} (w: Streams.Writer): Diagnostics.Diagnostics;
 
 VAR
-	lists-: LONGINT;  enlarged-: LONGINT;  strings-: LONGINT; integerObjects: HashTableInt;
+	lists-: SIZE;  enlarged-: SIZE;  strings-: SIZE; integerObjects: HashTableInt;
 	errMsg: ErrorMsgs;	(*error messages*)
 	emptyString-: String;
 	debug: BOOLEAN;
@@ -862,7 +878,7 @@ VAR
 		*)
 	END StringEqual;
 
-	PROCEDURE GetErrorMessage*(err: LONGINT; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR);
+	PROCEDURE GetErrorMessage*(err: ErrorCode; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR);
 	VAR str: ARRAY 128 OF CHAR;
 	BEGIN
 		res := "";
@@ -876,7 +892,7 @@ VAR
 	END GetErrorMessage;
 
 	PROCEDURE AppendDetailedErrorMessage*(VAR message: ARRAY OF CHAR; pos: Position; reader: Streams.Reader);
-    VAR err: ARRAY 512 OF CHAR; ch: CHAR; oldpos: LONGINT;
+    VAR err: ARRAY 512 OF CHAR; ch: CHAR; oldpos: Streams.Position;
     BEGIN
         IF (reader # NIL) & (reader.CanSetPos()) THEN
             oldpos := reader.Pos();
@@ -972,14 +988,14 @@ VAR
 
 	(** SetErrorMsg - Set message for error n *)
 
-	PROCEDURE SetErrorMessage*(n: LONGINT; CONST  msg: ARRAY OF CHAR);
+	PROCEDURE SetErrorMessage*(n: ErrorCode; CONST  msg: ARRAY OF CHAR);
 	BEGIN
 		IF errMsg = NIL THEN NEW(errMsg, InitErrMsgSize) END;
 		WHILE LEN(errMsg^) < n DO Expand(errMsg) END;
 		StringPool.GetIndex(msg, errMsg[n])
 	END SetErrorMessage;
 
-	PROCEDURE SetErrorExpected*(n: LONGINT; CONST msg: ARRAY OF CHAR);
+	PROCEDURE SetErrorExpected*(n: ErrorCode; CONST msg: ARRAY OF CHAR);
 	VAR err: ARRAY 256 OF CHAR;
 	BEGIN
 		err := "missing '";
@@ -988,7 +1004,7 @@ VAR
 		SetErrorMessage(n,err);
 	END SetErrorExpected;
 
-	PROCEDURE AppendNumber*(VAR s: ARRAY OF CHAR; num: LONGINT);
+	PROCEDURE AppendNumber*(VAR s: ARRAY OF CHAR; num: HUGEINT);
 	VAR nums: ARRAY 32 OF CHAR;
 	BEGIN
 		Strings.IntToStr(num,nums);
@@ -996,7 +1012,7 @@ VAR
 	END AppendNumber;
 
 	PROCEDURE InitSegmentedName*(VAR name: SegmentedName);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN FOR i := 0 TO LEN(name)-1 DO name[i] := -1 END;
 	END InitSegmentedName;
 
@@ -1018,7 +1034,7 @@ VAR
 	END WriteSegmentedName;
 
 	PROCEDURE AppendToSegmentedName*(VAR name: SegmentedName; CONST this: ARRAY OF CHAR);
-	VAR i,j: LONGINT; string: ObjectFile.SectionName;
+	VAR i,j: SIZE; string: ObjectFile.SectionName;
 	BEGIN
 		i := 0;
 		WHILE (i<LEN(name)) & (name[i] >= 0)  DO
@@ -1042,7 +1058,7 @@ VAR
 
 	(* suffix using separation character "." *)
 	PROCEDURE SuffixSegmentedName*(VAR name: SegmentedName; this: StringPool.Index);
-	VAR string, suffix: ObjectFile.SectionName; i: LONGINT;
+	VAR string, suffix: ObjectFile.SectionName; i: SIZE;
 	BEGIN
 		i := 0;
 		WHILE (i < LEN(name)) & (name[i] >= 0) DO
@@ -1061,7 +1077,7 @@ VAR
 	END SuffixSegmentedName;
 
 	PROCEDURE SegmentedNameEndsWith*(CONST name: SegmentedName; CONST this: ARRAY OF CHAR): BOOLEAN;
-	VAR string: ObjectFile.SectionName; i: LONGINT;
+	VAR string: ObjectFile.SectionName; i: SIZE;
 	BEGIN
 		i := 0;
 		WHILE (i< LEN(name)) & (name[i] >= 0) DO
@@ -1077,7 +1093,7 @@ VAR
 	END SegmentedNameEndsWith;
 
 	PROCEDURE RemoveSuffix*(VAR name: SegmentedName);
-	VAR i,pos,pos0: LONGINT;string: ObjectFile.SectionName;
+	VAR i,pos,pos0: SIZE; string: ObjectFile.SectionName;
 	BEGIN
 		i := 0;
 		WHILE  (i< LEN(name)) & (name[i] >= 0) DO
@@ -1103,7 +1119,7 @@ VAR
 	END RemoveSuffix;
 
 	PROCEDURE GetSuffix*(CONST name: SegmentedName; VAR string: ARRAY OF CHAR);
-	VAR i,pos,pos0: LONGINT;
+	VAR i,pos,pos0: SIZE;
 	BEGIN
 		i := 0;
 		WHILE  (i< LEN(name)) & (name[i] >= 0) DO
@@ -1129,7 +1145,7 @@ VAR
 	END GetSuffix;
 
 	PROCEDURE IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN;
-	VAR prefixS, ofS: SectionName; i: LONGINT;
+	VAR prefixS, ofS: SectionName; i: SIZE;
 	BEGIN
 		i := 0;
 		WHILE (i< LEN(prefix)) & (prefix[i] = of[i]) DO INC(i) END;
@@ -1149,7 +1165,7 @@ VAR
 
 	PROCEDURE Expand(VAR oldAry: ErrorMsgs);
 	VAR
-		len, i: LONGINT;
+		len, i: SIZE;
 		newAry: ErrorMsgs;
 	BEGIN
 		IF oldAry = NIL THEN RETURN END;
@@ -1162,7 +1178,7 @@ VAR
 	END Expand;
 
 	PROCEDURE Concat*(VAR result: ARRAY OF CHAR; CONST prefix, name, suffix: ARRAY OF CHAR);
-	VAR i, j: LONGINT;
+	VAR i, j: SIZE;
 	BEGIN
 		i := 0; WHILE prefix[i] # 0X DO  result[i] := prefix[i];  INC(i)  END;
 		j := 0; WHILE name[j] # 0X DO  result[i+j] := name[j];  INC(j)  END;
@@ -1172,7 +1188,7 @@ VAR
 	END Concat;
 
 	PROCEDURE Lowercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-	VAR ch: CHAR; i: LONGINT;
+	VAR ch: CHAR; i: SIZE;
 	BEGIN
 		i := 0;
 		REPEAT
@@ -1185,7 +1201,7 @@ VAR
 	END Lowercase;
 
 	PROCEDURE Uppercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-	VAR ch: CHAR; i: LONGINT;
+	VAR ch: CHAR; i: SIZE;
 	BEGIN
 		i := 0;
 		REPEAT
@@ -1208,7 +1224,7 @@ VAR
 		RETURN obj;
 	END GetIntegerObj;
 
-	PROCEDURE Align*(VAR offset: LONGINT; alignment: LONGINT);
+	PROCEDURE Align*(VAR offset: SIZE; alignment: SIZE);
 	BEGIN
 		IF alignment >0  THEN
 			INC(offset,(-offset) MOD alignment);
@@ -1242,15 +1258,6 @@ VAR
 	BEGIN
 		debug := TRUE;
 	END ActivateDebug;
-
-	PROCEDURE Test*;
-	VAR table: HashTableInt; dump: LONGINT;
-	BEGIN
-		NEW(table, 32);
-		table.PutInt(32, -4);
-		dump := table.GetInt(32);
-		HALT(100);
-	END Test;
 
 	PROCEDURE GetFileReader*(CONST filename: ARRAY OF CHAR): Streams.Reader;
 	VAR
@@ -1381,7 +1388,7 @@ VAR
 		Scanner based on Peek() feature of stream. Necessary to make it restartable.
 	*)
 	PROCEDURE GetStringParameter*(r: Streams.Reader; VAR string: ARRAY OF CHAR): BOOLEAN;
-	VAR ch: CHAR; i: LONGINT; done,error: BOOLEAN;
+	VAR ch: CHAR; i: SIZE; done,error: BOOLEAN;
 
 		PROCEDURE Next;
 		BEGIN r.Char(ch); ch := r.Peek();

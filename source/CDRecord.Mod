@@ -152,10 +152,10 @@ TYPE
 		PROCEDURE InitTrack;
 		BEGIN
 			padding := 0;
-			nofsecs := file.Length() DIV secsize;
+			nofsecs := file.Length()(LONGINT) DIV secsize;
 			IF file.Length() MOD secsize # 0 THEN
 				INC(nofsecs);
-				padding := secsize - (file.Length() MOD secsize);
+				padding := secsize - (file.Length()(LONGINT) MOD secsize);
 			END;
 			IF nofsecs < MinTrackSize THEN
 				INC(padding, (MinTrackSize - nofsecs) * secsize);
@@ -577,9 +577,10 @@ TYPE
 
 		PROCEDURE VerifyTrack(track: InformationTrack): WORD;
 		VAR
-			lba, secs, count, nofBlocks, timestamp, ofs: LONGINT;
+			lba, secs, nofBlocks, timestamp, ofs: LONGINT;
 			discBuf: POINTER TO ARRAY OF LONGINT;
 			fileBuf: POINTER TO ARRAY OF CHAR;
+			count: SIZE;
 			r: Files.Reader;
 		BEGIN
 			(*
@@ -706,7 +707,7 @@ TYPE
 			timestamp := Kernel.GetTicks ();
 
 			REPEAT
-				count := reader.GetBuffer(buf);
+				count := reader.GetBuffer(buf)(LONGINT);
 				nofBlocks := count DIV track.secsize;
 
 				res := Write(op, startSec, nofBlocks, ADDRESSOF(buf^));
@@ -792,7 +793,7 @@ TYPE
 			NEW(buf, SIZEOF(Lib.ATIPHeader) + SIZEOF(Lib.ATIPDescriptor));
 
 			adr := ADDRESSOF(buf[0]);
-			IF Lib.ReadToc(dev, FALSE, Lib.TCFormatATIP, 0, adr, LEN(buf^)) # ResOk THEN RETURN ResErr END;
+			IF Lib.ReadToc(dev, FALSE, Lib.TCFormatATIP, 0, adr, LEN(buf^)(LONGINT)) # ResOk THEN RETURN ResErr END;
 
 			descr := SYSTEM.VAL(Lib.ATIPDescriptorPtr, adr + SIZEOF(Lib.ATIPHeader));
 			ASSERT(ADDRESSOF(descr^) = SYSTEM.VAL(ADDRESS, descr));
@@ -967,7 +968,7 @@ TYPE
 		VAR
 			compilation: Compilation;
 
-		PROCEDURE GetBuffer(VAR buf: Buffer): LONGINT;
+		PROCEDURE GetBuffer(VAR buf: Buffer): SIZE;
 			(* abstract *)
 		END GetBuffer;
 
@@ -980,10 +981,11 @@ TYPE
 		VAR
 			r: Files.Reader;
 			buffer: Buffer;
-			trackno, bytesRead: LONGINT;
+			trackno: LONGINT;
+			bytesRead: SIZE;
 			track: InformationTrack;
 
-		PROCEDURE &New*(compilation: Compilation; bufSize: LONGINT);
+		PROCEDURE &New*(compilation: Compilation; bufSize: SIZE);
 		BEGIN
 			SELF.compilation := compilation;
 			r := NIL; track := NIL;
@@ -991,9 +993,9 @@ TYPE
 			NEW(buffer, bufSize);
 		END New;
 
-		PROCEDURE GetBuffer(VAR buf: Buffer): LONGINT;
+		PROCEDURE GetBuffer(VAR buf: Buffer): SIZE;
 		VAR
-			amount, rem: LONGINT;
+			amount, rem: SIZE;
 		BEGIN
 			IF  (r = NIL) & (track = NIL) THEN
 				INC(trackno);
@@ -1033,9 +1035,9 @@ TYPE
 	ReadBuffer = OBJECT
 		VAR
 			buf: Buffer;
-			len: LONGINT;
+			len: SIZE;
 
-		PROCEDURE &New*(bufSize: LONGINT);
+		PROCEDURE &New*(bufSize: SIZE);
 		BEGIN
 			len := 0;
 			NEW(buf, bufSize);
@@ -1073,7 +1075,7 @@ TYPE
 			aborted := TRUE;
 		END Abort;
 
-		PROCEDURE GetBuffer(VAR buf: Buffer): LONGINT;
+		PROCEDURE GetBuffer(VAR buf: Buffer): SIZE;
 		VAR
 			rBuffer: ReadBuffer;
 		BEGIN
@@ -1097,7 +1099,7 @@ TYPE
 
 		PROCEDURE ReadTrack(track: InformationTrack);
 		VAR
-			bytesRead, amount, rem: LONGINT;
+			bytesRead, amount, rem: SIZE;
 			r: Files.Reader;
 			rBuffer: ReadBuffer;
 		BEGIN
@@ -1168,7 +1170,7 @@ PROCEDURE IdentifyRecorders*(VAR recorders: ARRAY OF CDRecorder): WORD;
 VAR
 	devTable: Plugins.Table;
 	device : ATADisks.DeviceATAPI;
-	i, cur: LONGINT;
+	i, cur: SIZE;
 	cap: Capabilities;
 	res : WORD;
 BEGIN
@@ -1299,9 +1301,9 @@ BEGIN
 	RETURN ResOk;
 END GetCapabilities;
 
-PROCEDURE InsertionSort(VAR arr: ARRAY OF LONGINT; size: LONGINT);
+PROCEDURE InsertionSort(VAR arr: ARRAY OF LONGINT; size: SIZE);
 VAR
-	i, j, index: LONGINT;
+	i, j: SIZE; index: LONGINT;
 BEGIN
 	FOR i := 1 TO size - 1 DO
 		index := arr[i]; j := i;
@@ -1417,5 +1419,4 @@ END CDRecord.
 
 
 CDRecord.Test~
-
 

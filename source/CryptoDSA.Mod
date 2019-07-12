@@ -210,7 +210,7 @@ VAR
 
 
 	PROCEDURE StorePublicKey*( w: Streams.Writer; k: Key );	(* openssh format *)
-	VAR buf, encoded: ARRAY 4096 OF CHAR; pos: LONGINT;
+	VAR buf, encoded: ARRAY 4096 OF CHAR; pos: SIZE;
 	BEGIN
 		ASSERT( ~k.private );
 		w.String( "ssh-dss " );
@@ -227,7 +227,7 @@ VAR
 
 
 	PROCEDURE LoadPublicKey*( r: Streams.Reader ): Key;
-	VAR buf: ARRAY 4096 OF CHAR; len, pos: LONGINT;
+	VAR buf: ARRAY 4096 OF CHAR; len: LONGINT; pos: SIZE;
 		str: ARRAY 64 OF CHAR;
 		k: Key;
 	BEGIN

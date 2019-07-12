@@ -11,14 +11,14 @@ CONST
 
 VAR
 	CodeLength-: ARRAY 256 OF CHAR;	(** UTF-8 encoding length table. *)
-	init: LONGINT;
+	init: SIZE;
 
 (** -- Help procedures -- *)
 
 (** Encode one UCS-32 value in ucs into one well-formed UTF-8 character at str[p..]. The parameter p is incremented by the number of
 	characters needed to encode the UCS-32 value. *)
-PROCEDURE EncodeChar*(ucs: LONGINT; VAR str: ARRAY OF CHAR; VAR i: LONGINT): BOOLEAN;
-VAR len, j: LONGINT; byte, mask, max: INTEGER;
+PROCEDURE EncodeChar*(ucs: LONGINT; VAR str: ARRAY OF CHAR; VAR i: SIZE): BOOLEAN;
+VAR len, j: SIZE; byte, mask, max: INTEGER;
 	buf: ARRAY 6 OF CHAR;
 BEGIN
 	len := LEN(str);
@@ -52,8 +52,8 @@ END EncodeChar;
 
 (** Decode one well-formed UTF-8 character at str[i..] and return its UCS-32 value in ucs.  When successful, parameter i is incremented to the start of the next UTF-8 character.  Otherwise, parameter i points to the byte where the error was detected (this will also be the next character in the case of a minimal coding error).  Return TRUE iff decoding succeeds. *)
 
-PROCEDURE DecodeChar*(CONST str: ARRAY OF CHAR; VAR i, ucs: LONGINT): BOOLEAN;
-VAR len, ch, min: LONGINT;
+PROCEDURE DecodeChar*(CONST str: ARRAY OF CHAR; VAR i: SIZE; VAR ucs: LONGINT): BOOLEAN;
+VAR len: SIZE; ch, min: LONGINT;
 BEGIN
 	IF i < LEN(str) THEN
 		ch := LONG(ORD(str[i]));
@@ -85,7 +85,7 @@ END DecodeChar;
 (** Check whether str is a 0X-terminated well-formed UTF-8 string. *)
 
 PROCEDURE Valid*(CONST str: ARRAY OF CHAR): BOOLEAN;
-VAR i, ucs: LONGINT;
+VAR i: SIZE; ucs: LONGINT;
 BEGIN
 	i := 0;
 	WHILE DecodeChar(str, i, ucs) DO
@@ -97,8 +97,8 @@ END Valid;
 
 (** Return the size of a string in bytes, excluding the terminating 0X.  Another way of seeing this is that the function returns the byte offset of the terminating 0X. *)
 
-PROCEDURE Size*(CONST str: ARRAY OF CHAR): LONGINT;
-VAR i: LONGINT;
+PROCEDURE Size*(CONST str: ARRAY OF CHAR): SIZE;
+VAR i: SIZE;
 BEGIN
 	i := 0; WHILE str[i] # 0X DO INC(i) END;
 	RETURN i
@@ -106,8 +106,8 @@ END Size;
 
 (** Set the size (in bytes) of a UTF-8 string by setting the terminating 0X.  If the specified size is larger than LEN(str)-1, the size will be set to this.  If the 0X falls in the middle of a UTF-8 character, the string is truncated before this character. *)
 
-PROCEDURE SetSize*(VAR str: ARRAY OF CHAR; size: LONGINT);
-VAR i: LONGINT;
+PROCEDURE SetSize*(VAR str: ARRAY OF CHAR; size: SIZE);
+VAR i: SIZE;
 BEGIN
 	IF size > LEN(str)-1 THEN size := LEN(str)-1 END;
 	IF size > 0 THEN	(* make sure last character is valid *)
@@ -122,8 +122,8 @@ END SetSize;
 
 (** Return the byte offset of the UTF-8 character with index idx, counting from 0.  If idx is past the end of the string, return the offset of the terminating 0X, and if idx is negative, return 0.  This is also the definition of an UTF-8 index used by the other procedures. *)
 
-PROCEDURE OffsetOfIndex*(CONST str: ARRAY OF CHAR; idx: LONGINT): LONGINT;
-VAR i, ch: LONGINT;
+PROCEDURE OffsetOfIndex*(CONST str: ARRAY OF CHAR; idx: SIZE): SIZE;
+VAR i: SIZE; ch: LONGINT;
 BEGIN
 	i := 0;
 	LOOP	(* find position *)
@@ -139,8 +139,8 @@ END OffsetOfIndex;
 
 (** Return the number of UTF-8 characters in str, excluding the terminating 0X. *)
 
-PROCEDURE Length*(CONST str: ARRAY OF CHAR): LONGINT;
-VAR i, len, ch: LONGINT;
+PROCEDURE Length*(CONST str: ARRAY OF CHAR): SIZE;
+VAR i, len: SIZE; ch: LONGINT;
 BEGIN
 	i := 0; len := 0;
 	LOOP	(* count characters *)
@@ -155,7 +155,7 @@ END Length;
 (** Copy src to dst.  Unlike COPY, ensure that dst is not truncated in the middle of a UTF-8 character.*)
 
 PROCEDURE Assign*(CONST src: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR);
-VAR i: LONGINT; ch: CHAR;
+VAR i: SIZE; ch: CHAR;
 BEGIN
 	i := 0;
 	LOOP	(* copy characters *)
@@ -168,8 +168,8 @@ END Assign;
 
 (** Copy at most num UTF-8 characters from src to dst, starting at UTF-8 index idx.  If num is negative, treat it as 0.  *)
 
-PROCEDURE Extract*(CONST src: ARRAY OF CHAR; idx, num: LONGINT; VAR dst: ARRAY OF CHAR);
-VAR i, j: LONGINT; ch: CHAR;
+PROCEDURE Extract*(CONST src: ARRAY OF CHAR; idx, num: SIZE; VAR dst: ARRAY OF CHAR);
+VAR i, j: SIZE; ch: CHAR;
 BEGIN
 	i := OffsetOfIndex(src, idx); j := 0;
 	LOOP	(* copy characters *)
@@ -184,8 +184,8 @@ END Extract;
 
 (** Delete num UTF-8 characters from str, starting at UTF-8 index idx.  The characters following the deleted characters are shifted down to index idx.  If less than num characters are present at idx, delete all characters up to the end of the string. *)
 
-PROCEDURE Delete*(VAR str: ARRAY OF CHAR; idx, num: LONGINT);
-VAR i, j: LONGINT; ch: CHAR;
+PROCEDURE Delete*(VAR str: ARRAY OF CHAR; idx, num: SIZE);
+VAR i, j: SIZE; ch: CHAR;
 BEGIN
 	i := OffsetOfIndex(str, idx); j := i;
 	LOOP	(* skip over deleted characters *)
@@ -205,7 +205,7 @@ END Delete;
 (** Append src to dst. *)
 
 PROCEDURE Append*(CONST src: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR);
-VAR i, j: LONGINT; ch: CHAR;
+VAR i, j: SIZE; ch: CHAR;
 BEGIN
 	i := 0; j := Size(dst);
 	LOOP	(* copy characters *)
@@ -218,8 +218,8 @@ END Append;
 
 (* Computes the string size with making sure that the last character is valid *)
 
-PROCEDURE ValidSize(CONST str: ARRAY OF CHAR): LONGINT;
-VAR i, size: LONGINT;
+PROCEDURE ValidSize(CONST str: ARRAY OF CHAR): SIZE;
+VAR i, size: SIZE;
 BEGIN
 	size := Size(str);
 	IF size > 0 THEN	(* make sure last character is valid *)
@@ -235,7 +235,7 @@ END ValidSize;
 (** Concatenate src2 onto src1 and copy the result to dst. *)
 
 PROCEDURE Concat*(CONST src1, src2: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR);
-VAR n1, n2: LONGINT;
+VAR n1, n2: SIZE;
 BEGIN
 	n1 := ValidSize(src1);
 	n2 := ValidSize(src2);
@@ -246,8 +246,8 @@ END Concat;
 
 (** Insert src into dst at UTF-8 index idx.  The characters from idx onwards are shifted up to make space for the inserted characters. *)
 
-PROCEDURE Insert*(CONST src: ARRAY OF CHAR; idx: LONGINT; VAR dst: ARRAY OF CHAR);
-VAR i, j, m, n: LONGINT; ch: CHAR;
+PROCEDURE Insert*(CONST src: ARRAY OF CHAR; idx: SIZE; VAR dst: ARRAY OF CHAR);
+VAR i, j, m, n: SIZE; ch: CHAR;
 BEGIN
 		(* make space in dst for src *)
 	n := Size(src); m := Size(dst);
@@ -270,7 +270,7 @@ END Insert;
 operation too obscure
 (** Replace the characters of dst starting at UTF-8 index idx with the characters from src. *)
 
-PROCEDURE Replace*(src: ARRAY OF CHAR; idx: LONGINT; VAR dst: ARRAY OF CHAR);
+PROCEDURE Replace*(src: ARRAY OF CHAR; idx: SIZE; VAR dst: ARRAY OF CHAR);
 BEGIN
 	Delete(dst, idx, Length(src)); Insert(src, idx, dst)
 END Replace;
@@ -279,8 +279,8 @@ END Replace;
 (** Transform a well-formed UTF-8 string into an 8-bit ASCII representation. Characters not present in the ASCII format are replaced
 	by 'substitute' if it is # 0X. *)
 
-PROCEDURE UTF8toASCII*(CONST src: ARRAY OF CHAR; substitute: CHAR; VAR dst: ARRAY OF CHAR): LONGINT;
-VAR count, i, len, pos, ucs: LONGINT;
+PROCEDURE UTF8toASCII*(CONST src: ARRAY OF CHAR; substitute: CHAR; VAR dst: ARRAY OF CHAR): SIZE;
+VAR count, i, len, pos: SIZE; ucs: LONGINT;
 BEGIN
 	len := LEN(dst); ucs := -1;
 	WHILE (ucs # 0) & DecodeChar(src, pos, ucs) & (i < len) DO
@@ -294,7 +294,7 @@ END UTF8toASCII;
 (** Transform an 8-bit ASCII string into a well-formed UTF-8 string. *)
 
 PROCEDURE ASCIItoUTF8*(CONST ascii: ARRAY OF CHAR; VAR utf8: ARRAY OF CHAR);
-VAR i,j: LONGINT; dummy: BOOLEAN;
+VAR i,j: SIZE; dummy: BOOLEAN;
 BEGIN
 	i := 0; j := 0;
 	WHILE (ascii[i] # 0X) & EncodeChar(ORD(ascii[i]), utf8, j) DO INC(i) END;
@@ -304,8 +304,8 @@ END ASCIItoUTF8;
 (** Transform a well-formed UTF-8 string into an array of UCS-32 values, ucs[idx...]. The UCS-32 representation is terminated with a 0 value.
 	The parameter idx points to the next free entry after the conversion. *)
 
-PROCEDURE UTF8toUnicode*(CONST utf8: ARRAY OF CHAR; VAR ucs: ARRAY OF LONGINT; VAR idx: LONGINT);
-VAR p, l: LONGINT;
+PROCEDURE UTF8toUnicode*(CONST utf8: ARRAY OF CHAR; VAR ucs: ARRAY OF LONGINT; VAR idx: SIZE);
+VAR p, l: SIZE;
 BEGIN
 	p := 0; l := LEN(ucs)-1;
 	WHILE (idx < l) & DecodeChar(utf8, p, ucs[idx]) & (ucs[idx] > 0)  DO INC(idx) END;
@@ -315,7 +315,7 @@ END UTF8toUnicode;
 (** Transform a 4-byte, 0-terminated unicode character 'ucs' into a well-formed UTF-8 representation *)
 
 PROCEDURE UnicodetoUTF8*(CONST ucs: ARRAY OF LONGINT; VAR utf8: ARRAY OF CHAR);
-VAR b: BOOLEAN; i, p, l: LONGINT;
+VAR b: BOOLEAN; i, p, l: SIZE;
 BEGIN
 	b := TRUE; i := 0; p := 0; l := LEN(ucs);
 	WHILE (i < l) & b DO
@@ -327,7 +327,7 @@ END UnicodetoUTF8;
 (** Convert all simple lower-case letters in a well-formed UTF-8 string to upper case. The resulting string is still in UTF-8 form *)
 
 PROCEDURE UpperCase*(CONST src: ARRAY OF CHAR; VAR dst: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	WHILE (src[i] # 0X) DO
 		IF (src[i] >= "a") & (src[i] <= "z") THEN dst[i] := CAP(src[i]) (* this works because non-ASCII chars have bit 7 set *)
@@ -349,14 +349,14 @@ END CanAssign;
 
 (** todo: Return TRUE iff Extract can be performed without truncation, and src contains at least num UTF-8 characters. *)
 
-PROCEDURE CanExtract*(CONST src: ARRAY OF CHAR; idx, num: LONGINT; CONST dst: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE CanExtract*(CONST src: ARRAY OF CHAR; idx, num: SIZE; CONST dst: ARRAY OF CHAR): BOOLEAN;
 BEGIN
 	HALT(99)
 END CanExtract;
 
 (** todo: Return TRUE iff there are num UTF-8 characters to delete at UTF-8 index idx in str. *)
 
-PROCEDURE CanDelete*(CONST str: ARRAY OF CHAR; idx, num: LONGINT);
+PROCEDURE CanDelete*(CONST str: ARRAY OF CHAR; idx, num: SIZE);
 BEGIN
 	HALT(99)
 END CanDelete;
@@ -377,7 +377,7 @@ END CanConcat;
 
 (** todo: Return TRUE iff Insert can be performed without truncation. *)
 
-PROCEDURE CanInsert*(CONST src: ARRAY OF CHAR; idx: LONGINT; CONST dst: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE CanInsert*(CONST src: ARRAY OF CHAR; idx: SIZE; CONST dst: ARRAY OF CHAR): BOOLEAN;
 BEGIN
 	HALT(99)
 END CanInsert;
@@ -385,7 +385,7 @@ END CanInsert;
 (*
 (** todo: Return TRUE iff Replace can be performed without truncation. *)
 
-PROCEDURE CanReplace*(src: ARRAY OF CHAR; idx: LONGINT; VAR dst: ARRAY OF CHAR): BOOLEAN;
+PROCEDURE CanReplace*(src: ARRAY OF CHAR; idx: SIZE; VAR dst: ARRAY OF CHAR): BOOLEAN;
 BEGIN
 	HALT(99)
 END CanReplace;
@@ -395,8 +395,8 @@ END CanReplace;
 
 (** Compare str1 and str2 lexically, and return CmpLess if str1 is less than str2, CmpEqual if str1 and str2 are equal, or CmpGreater if str1 is greater than str2. *)
 
-PROCEDURE Compare*(CONST str1, str2: ARRAY OF CHAR): LONGINT;
-VAR i: LONGINT; ch: CHAR;
+PROCEDURE Compare*(CONST str1, str2: ARRAY OF CHAR): WORD;
+VAR i: SIZE; ch: CHAR;
 BEGIN
 	i := 0;
 	LOOP
@@ -408,8 +408,8 @@ BEGIN
 	IF ch < str2[i] THEN RETURN CmpLess ELSE RETURN CmpGreater END
 END Compare;
 
-PROCEDURE CompareToUnicode*(CONST utf8 : ARRAY OF CHAR; CONST unicode : ARRAY OF LONGINT) : LONGINT;
-VAR len, i, j, char, ucs, result : LONGINT; valid, abort : BOOLEAN;
+PROCEDURE CompareToUnicode*(CONST utf8 : ARRAY OF CHAR; CONST unicode : ARRAY OF LONGINT) : WORD;
+VAR len, i, j: SIZE; char, ucs: LONGINT; result: WORD; valid, abort : BOOLEAN;
 BEGIN
 	len := LEN(unicode);
 	i := 0; j := 0; valid := TRUE; abort := FALSE;
@@ -435,7 +435,7 @@ rather use Oberon = operator
 (** Return TRUE iff str1 and str2 are lexically equal. *)
 
 PROCEDURE Equal*(str1, str2: ARRAY OF CHAR): BOOLEAN;
-VAR i: LONGINT; ch: CHAR;
+VAR i: SIZE; ch: CHAR;
 BEGIN
 	i := 0;
 	LOOP
@@ -449,22 +449,22 @@ END Equal;
 
 (** todo: Search forward for the next occurrance of UTF-8 string pat in UTF-8 string str, starting at UTF-8 index startidx.  Return found = TRUE iff the pattern was found.  If found, patidx is the UTF-8 index where the pattern was found, otherwise it is unchanged. *)
 
-PROCEDURE FindNext*(CONST pat, str: ARRAY OF CHAR; startidx: LONGINT; VAR found: BOOLEAN; VAR patidx: LONGINT);
+PROCEDURE FindNext*(CONST pat, str: ARRAY OF CHAR; startidx: SIZE; VAR found: BOOLEAN; VAR patidx: SIZE);
 BEGIN
 	HALT(99)
 END FindNext;
 
 (** todo: Search backward for the previous occurrance of UTF-8 string pat in UTF-8 string str, starting at UTF-8 index startidx.  Return found = TRUE iff the pattern was found.  If found, patidx is the UTF-8 index where the pattern was found (in the range 0..startidx), otherwise it is unchanged. *)
 
-PROCEDURE FindPrev*(CONST pat, str: ARRAY OF CHAR; startidx: LONGINT; VAR found: BOOLEAN; VAR patidx: LONGINT);
+PROCEDURE FindPrev*(CONST pat, str: ARRAY OF CHAR; startidx: SIZE; VAR found: BOOLEAN; VAR patidx: SIZE);
 BEGIN
 	HALT(99)
 END FindPrev;
 
 (** Compare str1 and str2 and return different = TRUE iff a difference was found.  If the strings are different, idx is set to the UTF-8 index of the first mismatching character, otherwise it is unchanged. *)
 
-PROCEDURE FindDiff*(CONST str1, str2: ARRAY OF CHAR; VAR different: BOOLEAN; VAR idx: LONGINT);
-VAR i, j: LONGINT; ch: CHAR;
+PROCEDURE FindDiff*(CONST str1, str2: ARRAY OF CHAR; VAR different: BOOLEAN; VAR idx: SIZE);
+VAR i, j: SIZE; ch: CHAR;
 BEGIN
 	i := 0; j := -1;	(* i is byte position, j is current character index *)
 	LOOP

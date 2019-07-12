@@ -168,7 +168,7 @@ END GetAdditionalFieldVals;
 	Realms = {realm}
 *)
 
-(* Base64 Utilities. Copied from BAse64.Mod because it's an Oberon module using Text,Files. *)
+(* Base64 Utilities. Copied from Oberon.Base64.Mod because it's an Oberon module using Text,Files. *)
 
 PROCEDURE InitTables;
 	VAR i, max: INTEGER;

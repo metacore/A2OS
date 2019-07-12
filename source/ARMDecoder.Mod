@@ -978,7 +978,7 @@ BEGIN
 	RETURN armDecoder
 END ARMDecoderFactory;
 
-PROCEDURE CodeScaleCallback(VAR codeSize: LONGINT);
+PROCEDURE CodeScaleCallback(VAR codeSize: SIZE);
 BEGIN
 	codeSize := codeSize * 4
 END CodeScaleCallback;

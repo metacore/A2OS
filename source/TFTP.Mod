@@ -40,7 +40,7 @@ TYPE
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.String(s) END
 		END Log;
 
-		PROCEDURE LogInt(level, i: LONGINT);
+		PROCEDURE LogInt(level, i: SIZE);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Int(i, 0) END
 		END LogInt;
 
@@ -83,7 +83,7 @@ TYPE
 
 		(* ReceiveAck - receives a server answer *)
 		PROCEDURE ReceiveAck(socket: UDP.Socket; VAR fip: IP.Adr; VAR fport: LONGINT; blockNr: LONGINT; VAR ack: ARRAY OF CHAR): BOOLEAN;
-		VAR ip: IP.Adr; port, len, ofs, wait: LONGINT; res: WORD; acked: BOOLEAN; msg: ARRAY 256 OF CHAR;
+		VAR ip: IP.Adr; port, ofs, wait: LONGINT; len: SIZE; res: WORD; acked: BOOLEAN; msg: ARRAY 256 OF CHAR;
 		BEGIN
 			wait := 0;
 			REPEAT
@@ -232,7 +232,7 @@ TYPE
 
 		(* Receive - receive a file from TFTP server at source:port *)
 		PROCEDURE Receive*(remoteFN, localFN: ARRAY OF CHAR; fip: IP.Adr; fport: LONGINT): BOOLEAN;
-		VAR socket: UDP.Socket; ofs, blockNr, port, len, retries, waitPacket: LONGINT; res: WORD; ok, Abort: BOOLEAN; ip: IP.Adr;
+		VAR socket: UDP.Socket; ofs, blockNr, port, retries, waitPacket: LONGINT; len: SIZE; res: WORD; ok, Abort: BOOLEAN; ip: IP.Adr;
 			buf: ARRAY 4+BlockSize OF CHAR; file: Files.File; r: Files.Rider;
 		BEGIN
 			ok := FALSE;

@@ -52,14 +52,14 @@ BEGIN
 END Insert;
 
 PROCEDURE FindDuplicates*;
-VAR enum: Files.Enumerator; time, date, size: LONGINT; continue: BOOLEAN; name: FileName; t: Texts.Text; flags: SET;
+VAR enum: Files.Enumerator; time, date: LONGINT; size: Files.Size; continue: BOOLEAN; name: FileName; t: Texts.Text; flags: SET;
 BEGIN
 	root.next := NIL;
 	NEW(enum);
 	enum.Open("", {Files.EnumSize, Files.EnumTime});
 	continue := TRUE;
 	WHILE enum.GetEntry(name, flags, time, date, size) DO
-		Insert(name, time, date, size, t)
+		Insert(name, time, date, size(LONGINT), t)
 	END;
 	enum.Close;
 	NEW(t); Texts.Open(t, "");

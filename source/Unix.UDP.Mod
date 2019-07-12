@@ -54,7 +54,7 @@ TYPE
 					*)
 				PROCEDURE Send*( fip: IP.Adr;
 								   fport: LONGINT;
-								   CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;
+								   CONST data: ARRAY OF CHAR;  ofs, len: SIZE;
 								   VAR res: WORD );
 				VAR addr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
@@ -69,7 +69,7 @@ TYPE
 					   The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized.
 					*)
 				PROCEDURE SendBroadcast*( int: IP.Interface;  fport: LONGINT;
-										      CONST data: ARRAY OF CHAR;  ofs, len: LONGINT );
+										      CONST data: ARRAY OF CHAR;  ofs, len: SIZE );
 				BEGIN (*{EXCLUSIVE}*)
 					ASSERT( (fport >= 0) & (fport < 10000H) );  ASSERT( (len >= 0) & (len <= MaxUDPDataLen) );
 					HALT( 99 ) (* not implemented yet *)
@@ -84,10 +84,10 @@ TYPE
 					"res" returns "Timeout" in case of a timeout and "BufferOverflow" if the received datagram was
 					too big.
 				*)
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, ms: LONGINT;
-									 VAR fip: IP.Adr;  VAR fport, len: LONGINT; VAR res: WORD );
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size: SIZE; ms: LONGINT;
+									 VAR fip: IP.Adr;  VAR fport: LONGINT; VAR len: SIZE; VAR res: WORD );
 				VAR
-					addr: Sockets.SocketAdr; i: LONGINT;
+					addr: Sockets.SocketAdr; i: SIZE;
 				BEGIN {EXCLUSIVE}
 					IF ~open THEN  res := Closed;  RETURN   END;
 					IF (ms >= 0) & ~Sockets.AwaitPacket( socket, ms ) THEN

@@ -46,7 +46,7 @@ TYPE
 
 
 		(** data: value to be hashed *)
-		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: LONGINT );
+		PROCEDURE Update*( CONST data: ARRAY OF CHAR;  pos, len: SIZE );
 		BEGIN
 			ASSERT( initialized );
 			sponge.Absorb( data, pos, len )
@@ -54,7 +54,7 @@ TYPE
 
 
 		(** get the hashvalue of length SELF.size *)
-		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: LONGINT );
+		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
 		BEGIN
 			sponge.AbsorbLastFewBits( 6X );  (* 1(pad) || 10(sha3) *)
 			sponge.Squeeze( buf, pos, size )

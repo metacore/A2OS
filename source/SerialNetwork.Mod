@@ -105,4 +105,3 @@ END SerialNetwork.
 V24.Install ~
 System.Free SerialNetwork ~
 SerialNetwork.Install 1 115200 8 1 none ~
-

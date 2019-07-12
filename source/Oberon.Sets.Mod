@@ -52,7 +52,7 @@ END Includes;
 PROCEDURE Elements*(CONST s: ARRAY OF SET; VAR lastElem: INTEGER): INTEGER;
 	VAR i, n, max: INTEGER;
 BEGIN
-	i := 0; n := 0; max := SHORT(LEN(s)) * size;
+	i := 0; n := 0; max := INTEGER(LEN(s)) * size;
 	WHILE i < max DO
 		IF (i MOD size) IN s[i DIV size] THEN INC(n); lastElem := i END ;
 		INC(i)
@@ -121,7 +121,7 @@ END Intersect;
 PROCEDURE Print*(VAR f: Texts.Writer; CONST s: ARRAY OF SET; w, indent: INTEGER);
 	VAR col, i, max: INTEGER;
 BEGIN
-	i := 0; col := indent; max := SHORT(LEN(s)) * size;
+	i := 0; col := indent; max := INTEGER(LEN(s)) * size;
 	Texts.Write(f, "{");
 	WHILE i < max DO
 		IF In(s, i) THEN

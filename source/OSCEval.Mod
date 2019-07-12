@@ -27,7 +27,7 @@ TYPE
 			buffer: POINTER TO ARRAY OF CHAR;
 			receivefip: IP.Adr;
 			receivefport: LONGINT;
-			got: LONGINT;
+			got: SIZE;
 			res: WORD;
 			fip: IP.Adr;
 		PROCEDURE &Init*;
@@ -59,7 +59,7 @@ TYPE
 		VAR
 			newpacket: OSC.OSCPacket;
 			res: WORD;
-			len: LONGINT;
+			len: SIZE;
 			buffer: POINTER TO ARRAY OF CHAR;
 			sizebuf: ARRAY 4 OF CHAR;
 			packetsize: LONGINT;

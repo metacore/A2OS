@@ -325,7 +325,7 @@ VAR
 
 
 	PROCEDURE ClearGeneration(g: Generation);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO LEN(g^)-1 DO g[i] := 0 END;
 	END ClearGeneration;

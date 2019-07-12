@@ -40,7 +40,7 @@ TYPE
 		lastDx, lastDy : LONGINT;
 		accelX, accelY : REAL;
 
-		PROCEDURE HandleEvent(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE HandleEvent(status : Usbdi.Status; actLen : SIZE);
 		VAR mm : Inputs.MouseMsg; dx, dy : LONGINT;
 		BEGIN
 			IF (status = Usbdi.Ok) OR ((status = Usbdi.ShortPacket) & (actLen >= 3))  THEN

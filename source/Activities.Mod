@@ -29,7 +29,7 @@ TYPE SwitchFinalizer* = PROCEDURE (previous {UNTRACED}: Activity; value: ADDRESS
 (* Represents the stack of an activity. *)
 TYPE Stack = POINTER {DISPOSABLE} TO ARRAY OF CHAR;
 TYPE StackRecord = POINTER {UNSAFE} TO RECORD
-	prev {UNTRACED}, next {UNTRACED}: Stack;
+	previous {UNTRACED}, next {UNTRACED}: Stack;
 END;
 
 (** Represents the handler identifying activities that are currently either running or suspended. *)
@@ -62,7 +62,7 @@ TYPE Activity* = OBJECT {DISPOSABLE} (Queues.Item)
 		firstStack := stack;
 		stackRecord := ADDRESS OF stack[0];
 		stackRecord.next := NIL;
-		stackRecord.prev := NIL;
+		stackRecord.previous := NIL;
 		stackLimit := ADDRESS OF stack[SafeStackSize+3* SIZE OF ADDRESS]; SELF.priority := priority;
 		framePointer := ADDRESS OF stack[InitialStackSize - 4 * SIZE OF ADDRESS] - CPU.StackDisplacement;
 		stackFrame := framePointer + CPU.StackDisplacement;
@@ -446,7 +446,7 @@ BEGIN{UNCOOPERATIVE, UNCHECKED}
 	*)
 	currentActivity := SYSTEM.GetActivity ()(Activity);
 	stackRecord := ADDRESS OF currentActivity.stack[0];
-	newStack := stackRecord.prev;
+	newStack := stackRecord.previous;
 	currentActivity.stack := newStack;
 	currentActivity.stackLimit := ADDRESS OF newStack[SafeStackSize + 3 * SIZE OF ADDRESS];
 END ReturnToStackSegment;
@@ -481,7 +481,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT(parSize >= 0);
 
 	newSize := LEN (currentActivity.stack); (* current stack size *)
-	minSize := SafeStackSize + parSize + varSize + 3 * SIZEOF(ADDRESS) (* stack frame *) + 3 * SIZEOF(ADDRESS) (* prev, next *);
+	minSize := SafeStackSize + parSize + varSize + 3 * SIZEOF(ADDRESS) (* stack frame *) + 3 * SIZEOF(ADDRESS) (* previous, next *);
 	REPEAT INC (newSize, newSize) UNTIL newSize >= minSize;
 	ASSERT (newSize <= MaximumStackSize);
 	stackRecord := ADDRESS OF currentActivity.stack[0];
@@ -490,12 +490,12 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		NEW (newStack, newSize);
 		ASSERT (newStack # NIL);
 		newStackRecord := ADDRESS OF newStack[0];
-		newStackRecord.prev := currentActivity.stack;
+		newStackRecord.previous := currentActivity.stack;
 		newStackRecord.next := NIL;
 		stackRecord.next := newStack;
 	ELSE
 		newStackRecord := ADDRESS OF newStack[0];
-		ASSERT(newStackRecord.prev = currentActivity.stack);
+		ASSERT(newStackRecord.previous = currentActivity.stack);
 		ASSERT(stackRecord.next = newStack);
 	END;
 	newSize := LEN(newStack);

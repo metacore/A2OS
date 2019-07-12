@@ -366,7 +366,7 @@ BEGIN
 END OpenURL;
 
 PROCEDURE OpenFile*(context : Commands.Context);
-VAR inst : Window; prefix, name, path : ARRAY 1024 OF CHAR; urlpath, url : String; i,j:LONGINT;
+VAR inst : Window; prefix, name, path : ARRAY 1024 OF CHAR; urlpath, url : String; i, j : SIZE;
 BEGIN
 	IF context.arg.GetString(name) THEN
 		Files.SplitName(name, prefix, path);

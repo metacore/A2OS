@@ -159,8 +159,8 @@ VAR
 	END GetHMacParams;
 
 
-	PROCEDURE ExpandBuf( VAR buf: Buffer; newSize: LONGINT );
-	VAR newBuf: Buffer; i: LONGINT;
+	PROCEDURE ExpandBuf( VAR buf: Buffer; newSize: SIZE );
+	VAR newBuf: Buffer; i: SIZE;
 	BEGIN
 		IF LEN( buf^ ) >= newSize THEN RETURN END;
 		NEW( newBuf, newSize );
@@ -172,7 +172,7 @@ VAR
 	PROCEDURE GetConfigBuffer(): Buffer;
 	VAR
 		text: Texts.Text; r: Texts.TextReader;
-		ch, format, len, i, j, bytesPerChar: LONGINT; res: WORD;
+		ch, format: WORD; len, i, j, bytesPerChar: SIZE; res: WORD;
 		buffer: Buffer;
 	BEGIN
 		NEW( text );

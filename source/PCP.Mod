@@ -1450,7 +1450,7 @@ TYPE
 			searchScope: PCT.Scope;
 			args: ARRAY 2 OF PCT.Struct;
 			dh: PCB.Designator;  h: PCT.Variable; hiddenVarName : StringPool.Index;
-			rtype: PCT.Struct; res: WORD; i : LONGINT;
+			rtype: PCT.Struct; res: WORD; i : SIZE;
 		BEGIN
 			PCS.GetOpName(op, name);
 			IF (mod # NIL) & (mod IS PCT.Module) THEN
@@ -1723,7 +1723,8 @@ TYPE
 				awaitparser: AwaitParser;
 				loopinfo: PCB.LoopInfo;  caseinfo: PCB.CaseInfo;
 				first, ifsuppress, oldUnlockOnExit: BOOLEAN;
-				oldforcount, i: LONGINT;
+				oldforcount: LONGINT;
+				i: SIZE;
 				mod: PCT.Symbol;
 				name: StringPool.Index;
 				proc: PCT.Proc; procScope: PCT.ProcScope;
@@ -1737,7 +1738,7 @@ TYPE
 				aindex: POINTER TO ARRAY OF LONGINT;
 
 				PROCEDURE AssignIndices(ae: PCB.ArrayExpression; dim: LONGINT);
-				VAR a: PCB.ArrayQ; index: PCB.EnhIndex; i,j: LONGINT;
+				VAR a: PCB.ArrayQ; index: PCB.EnhIndex; i: LONGINT; j: SIZE;
 				BEGIN
 					a := ae.array;
 					i := 0;
@@ -2807,7 +2808,7 @@ TYPE
 	END ScopeWarnings;
 
 	PROCEDURE ImportListWarnings( mod: PCT.Module );
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		IF mod.sysImported & (PCT.System.flags * {PCT.used} = {}) THEN
 			PCM.Warning( 900, PCT.System.pos, "SYSTEM");

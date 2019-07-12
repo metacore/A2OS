@@ -167,7 +167,7 @@ TYPE StateWindow= OBJECT(WMComponents.FormWindow)
 	(* Should be surrounded by out.text.AcquireWrite(); ... out.text.ReleaseWrite();*)
 	PROCEDURE OutState(name: Modules.Name);
 	VAR
-		i, refpos: LONGINT;
+		i, refpos: SIZE;
 		mod: Modules.Module;
 		refs: Bytes;
 		ch: CHAR;
@@ -265,10 +265,11 @@ TYPE StateWindow= OBJECT(WMComponents.FormWindow)
 	END SetInterval;
 
 
-	PROCEDURE Variables(refs: Bytes;  i: LONGINT; base: ADDRESS; w:Streams.Writer);
+	PROCEDURE Variables(refs: Bytes;  i: SIZE; base: ADDRESS; w:Streams.Writer);
 	VAR
 		mode, ch: CHAR;
-		m, type, n, lval, size, tmp1, tdadr: LONGINT;
+		m, tmp1: SIZE;
+		type, n, lval, size, tmp3, tdadr: LONGINT;
 		adr, tmp2: ADDRESS;
 		etc: BOOLEAN;
 		sval: SHORTINT;
@@ -289,7 +290,7 @@ TYPE StateWindow= OBJECT(WMComponents.FormWindow)
 			ELSE
 				IF type = 15 THEN n := MaxString (* best guess *) ELSE n := 1 END
 			END;
-			GetNum(refs, i, tmp1); adr := tmp1;
+			GetNum(refs, i, tmp3); adr := tmp3;
 			tw.SetFontColor(00BF00FFH);
 			w.Char(9X);  ch := refs[i];  INC(i);
 			WHILE ch # 0X DO w.Char(ch);  ch := refs[i];  INC(i) END;
@@ -380,8 +381,8 @@ TYPE StateWindow= OBJECT(WMComponents.FormWindow)
 
 
 	(* FindProc - Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
-	PROCEDURE FindProc(refs: Bytes;  ofs: ADDRESS): LONGINT;
-	VAR i, m, t, proc: LONGINT;  ch: CHAR;
+	PROCEDURE FindProc(refs: Bytes;  ofs: ADDRESS): SIZE;
+	VAR i, m, proc: SIZE; t: LONGINT; ch: CHAR;
 	BEGIN
 		proc := -1;  i := 0;  m := LEN(refs^);
 		ch := refs[i];  INC(i);
@@ -414,7 +415,7 @@ TYPE StateWindow= OBJECT(WMComponents.FormWindow)
 		RETURN proc
 	END FindProc;
 
-	PROCEDURE WriteProc(mod: Modules.Module;  pc, fp: ADDRESS;  VAR refs: Bytes;  VAR refpos: LONGINT; VAR base: ADDRESS; w: Streams.Writer);
+	PROCEDURE WriteProc(mod: Modules.Module;  pc, fp: ADDRESS;  VAR refs: Bytes;  VAR refpos: SIZE; VAR base: ADDRESS; w: Streams.Writer);
 	VAR ch: CHAR;
 	BEGIN
 		refpos := -1;
@@ -443,7 +444,7 @@ TYPE StateWindow= OBJECT(WMComponents.FormWindow)
 
 
 
-	PROCEDURE GetNum(refs: Bytes;  VAR i, num: LONGINT);
+	PROCEDURE GetNum(refs: Bytes;  VAR i: SIZE; VAR num: LONGINT);
 	VAR n, s: LONGINT;  x: CHAR;
 	BEGIN
 		s := 0;  n := 0;  x := refs[i];  INC(i);
@@ -475,7 +476,7 @@ VAR
 
 PROCEDURE Remove(stateWin: StateWindow);
 VAR
-	i, j: LONGINT;
+	i, j: SIZE;
 	wins: WinCollection;
 BEGIN {EXCLUSIVE}
 	i := 0;
@@ -509,7 +510,8 @@ END Remove;
 (* Usage: WMModuleState.Open modulename [ms] ~ *)
 PROCEDURE Open*(context : Commands.Context);
 VAR
-	interval, i: LONGINT;
+	i: SIZE;
+	interval: LONGINT;
 	name: Modules.Name;
 	wins: WinCollection;
 	stateWin: StateWindow;

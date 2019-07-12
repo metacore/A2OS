@@ -67,7 +67,7 @@ TYPE
 		VAR
 			sym-: SHORTINT;	(** current token *)
 			line-, col-, oldpos, pos: LONGINT;
-			reportError*: PROCEDURE {DELEGATE} (pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+			reportError*: PROCEDURE {DELEGATE} (pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 			nextCh: CHAR;	(* look-ahead *)
 			dynstr: DynamicStrings.DynamicString;	(* buffer for CharData, Literal, Name, CharRef, EntityRef and ParamEntityRef *)
 			r : Streams.Reader;
@@ -517,7 +517,7 @@ TYPE
 		RETURN (ch = 020X) OR (ch = 9X) OR (ch = 0DX) OR (ch = 0AX)
 	END IsWhiteSpace;
 
-	PROCEDURE DefaultReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR);
+	PROCEDURE DefaultReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR);
 	BEGIN
 		KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 		KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", col "); KernelLog.Int(col, 0);

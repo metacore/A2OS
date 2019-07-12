@@ -135,7 +135,7 @@ TYPE
 			name, string : Strings.String;
 			caption : ARRAY 512 OF CHAR;
 			enum : XMLObjects.Enumerator;
-			p : ANY; i, len : LONGINT;
+			p : ANY; i, len : SIZE;
 			id: Strings.String;
 		BEGIN
 			name := component.GetName();
@@ -441,7 +441,7 @@ TYPE
 			root , node: WMTrees.TreeNode;
 			array: WMComponents.SelectionArray;
 			selection: WMComponents.SelectionList;
-			i: LONGINT;
+			i: SIZE;
 		BEGIN
 			ASSERT(tree # NIL);
 			IF (data # NIL) & (data IS WMComponents.SelectionList) THEN

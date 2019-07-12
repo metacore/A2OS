@@ -752,7 +752,7 @@ TYPE
 		(*-------------------  particular register mappings / operands  ----------------------*)
 
 		(* returns if a virtual register is mapped to the register set described by virtualRegisterMapping*)
-		PROCEDURE MappedTo(CONST virtualRegister: LONGINT; part:LONGINT; physicalRegister: LONGINT): BOOLEAN;
+		PROCEDURE MappedTo(CONST virtualRegister: SIZE; part:LONGINT; physicalRegister: LONGINT): BOOLEAN;
 		VAR ticket: Ticket;
 		BEGIN
 			IF (virtualRegister > 0) THEN
@@ -936,7 +936,7 @@ TYPE
 		END GetImmediate;
 
 		PROCEDURE GetMemory(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Assembler.Operand);
-		VAR type: IntermediateCode.Type; virtualRegister, physicalRegister,offset: LONGINT; ticket,orig: Ticket; dest, source: Assembler.Operand;
+		VAR type: IntermediateCode.Type; virtualRegister: SIZE; physicalRegister: LONGINT; offset: SIZE; ticket,orig: Ticket; dest, source: Assembler.Operand;
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeMemory);
 			GetPartType(virtual.type,part,type);
@@ -987,14 +987,14 @@ TYPE
 				offset := virtual.offset;
 				ASSERT(virtual.intValue = 0);
 			END;
-			Assembler.InitMem(physical, SHORTINT(type.length * type.sizeInBits DIV 8) , physicalRegister, offset+ (cpuBits DIV 8) *part);
+			Assembler.InitMem(physical, SHORTINT(type.length * type.sizeInBits DIV 8) , physicalRegister, (offset + (cpuBits DIV 8) * part)(LONGINT));
 			IF (virtual.symbol.name # "") & (cpuBits # 64) THEN
 				Assembler.SetSymbol(physical,virtual.symbol.name,virtual.symbol.fingerprint,virtual.symbolOffset,virtual.offset+ (cpuBits DIV 8) *part);
 			END;
 		END GetMemory;
 
 		PROCEDURE GetRegister(CONST virtual: IntermediateCode.Operand; part:LONGINT; VAR physical: Assembler.Operand; VAR ticket: Ticket);
-		VAR type: IntermediateCode.Type; virtualRegister, tempReg: LONGINT;
+		VAR type: IntermediateCode.Type; virtualRegister: SIZE; tempReg: LONGINT;
 			tmp,imm: Assembler.Operand; index: LONGINT;
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeRegister);
@@ -1026,7 +1026,7 @@ TYPE
 					ticket := NIL;
 				END;
 				IF Assembler.IsRegisterOperand(physical) & (type.sizeInBits > 8) THEN
-					Assembler.InitMem(physical,SHORTINT(type.length * type.sizeInBits DIV 8) , physical.register, virtual.offset);
+					Assembler.InitMem(physical,SHORTINT(type.length * type.sizeInBits DIV 8) , physical.register, virtual.offset(LONGINT));
 					emitter.Emit2(InstructionSet.opLEA, tmp,physical);
 				ELSE
 					emitter.Emit2(InstructionSet.opMOV,tmp,physical);
@@ -1279,7 +1279,7 @@ TYPE
 
 		(* enter procedure: generate PAF and clear stack *)
 		PROCEDURE EmitEnter(CONST instruction: IntermediateCode.Instruction);
-		VAR op1,imm,target: Assembler.Operand; cc,size,numberMachineWords,destPC,firstPC,secondPC,x: LONGINT; body: SyntaxTree.Body; name: Basic.SegmentedName;
+		VAR op1,imm,target: Assembler.Operand; cc,size,numberMachineWords,firstPC,secondPC,x: LONGINT; destPC: SIZE; body: SyntaxTree.Body; name: Basic.SegmentedName;
 		parametersSize: SIZE;
 		CONST initialize=TRUE; FirstOffset = 5; SecondOffset = 11;
 		BEGIN
@@ -1429,7 +1429,7 @@ TYPE
 		END EmitReturn;
 
 		PROCEDURE EmitMovFloat(CONST vdest,vsrc:IntermediateCode.Operand);
-		VAR dest,src, espm: Assembler.Operand; sizeInBytes: SHORTINT; stackSize: LONGINT; vcopy: IntermediateCode.Operand;
+		VAR dest,src, espm: Assembler.Operand; sizeInBytes: SHORTINT; stackSize: SIZE; vcopy: IntermediateCode.Operand;
 		BEGIN
 			sizeInBytes := SHORTINT(vdest.type.sizeInBits DIV 8);
 			stackSize := sizeInBytes;
@@ -1573,7 +1573,7 @@ TYPE
 		END EmitMov;
 
 		PROCEDURE EmitConvertFloat(CONST instruction: IntermediateCode.Instruction);
-		VAR destType, srcType, dtype: IntermediateCode.Type; dest,src,espm,imm: Assembler.Operand; sizeInBytes, index: LONGINT;
+		VAR destType, srcType, dtype: IntermediateCode.Type; dest,src,espm,imm: Assembler.Operand; sizeInBytes, index: SIZE;
 		temp, temp2, temp3, temp4, zero: Assembler.Operand; ticket: Ticket; vdest, vsrc: IntermediateCode.Operand;
 			unsigned: BOOLEAN;
 		BEGIN
@@ -1952,7 +1952,7 @@ TYPE
 
 		PROCEDURE EmitCall(CONST instruction: IntermediateCode.Instruction);
 		VAR fixup: Sections.Section;  target, op: Assembler.Operand;
-			code: SyntaxTree.Code; emitterFixup,newFixup: BinaryCode.Fixup; resolved: BinaryCode.Section; pc: LONGINT;
+			code: SyntaxTree.Code; emitterFixup,newFixup: BinaryCode.Fixup; resolved: BinaryCode.Section; pc: SIZE;
 		BEGIN
 			IF fpStackPointer # 0 THEN Error(instruction.textPosition,"compiler implementation error: fp stack not cleared before call") END;
 			IF instruction.op1.mode = IntermediateCode.ModeImmediate THEN
@@ -2283,7 +2283,7 @@ TYPE
 		VAR
 			dividend,quotient,remainder,imm,target,memop: Assembler.Operand;
 			op1,op2,op3: Assembler.Operand; ra,rd: Ticket;
-			size: LONGINT;
+			size: SIZE;
 			value: HUGEINT; exp: LONGINT; iop3: IntermediateCode.Operand;
 			inst: IntermediateCode.Instruction;
 
@@ -2431,7 +2431,7 @@ TYPE
 				Assembler.InitImm8(target,0);
 				emitter.Emit1(InstructionSet.opJGE, target);
 				emitter.Emit2( InstructionSet.opADD, remainder, op3);
-				emitter.code.PutByteAt(target.pc,(emitter.code.pc -target.pc )-1);
+				emitter.code.PutByteAt(target.pc,(emitter.code.pc -target.pc - 1)(LONGINT));
 				emitter.Emit2(InstructionSet.opMOV, op1, remainder);
 			ELSE
 				imm := Assembler.NewImm8 (1);
@@ -2781,9 +2781,9 @@ TYPE
 		END EmitFill;
 
 		PROCEDURE EmitBr (CONST instruction: IntermediateCode.Instruction);
-		VAR dest,destPC,offset: LONGINT; target: Assembler.Operand;hit,fail: LONGINT; reverse: BOOLEAN;
+		VAR dest,destPC, offset: SIZE; target: Assembler.Operand;hit,fail: LONGINT; reverse: BOOLEAN;
 			(* jump operands *)  left,right,temp: Assembler.Operand;
-				failOp: Assembler.Operand; failPC: LONGINT;
+				failOp: Assembler.Operand; failPC: SIZE;
 
 			PROCEDURE JmpDest(brop: LONGINT);
 			BEGIN
@@ -2791,7 +2791,7 @@ TYPE
 					IF instruction.op1.symbol.name = in.name THEN
 						dest := (instruction.op1.symbolOffset); (* this is the offset in the in-data section (intermediate code), it is not byte- *)
 						destPC := (in.instructions[dest].pc );
-						offset := destPC - (out.pc );
+						offset := destPC - out.pc;
 						IF dest > inPC THEN (* forward jump *)
 							Assembler.InitOffset32(target,0);
 							Assembler.SetSymbol(target,instruction.op1.symbol.name,instruction.op1.symbol.fingerprint,instruction.op1.symbolOffset,instruction.op1.offset);
@@ -2941,7 +2941,7 @@ TYPE
 				END;
 			END;
 			JmpDest(hit);
-			IF failPC > 0 THEN out.PutByteAt(failPC,(out.pc-failPC)-1); END;
+			IF failPC > 0 THEN out.PutByteAt(failPC,((out.pc-failPC)-1)(LONGINT)); END;
 		END EmitBr;
 
 		PROCEDURE EmitPush(CONST vop: IntermediateCode.Operand; part: LONGINT);
@@ -3417,11 +3417,11 @@ TYPE
 			out: BinaryCode.Section;
 			name: Basic.SegmentedName;
 			procedure: SyntaxTree.Procedure;
-			i, j, initialSectionCount: LONGINT;
+			i, j, initialSectionCount: SIZE;
 
 			(* recompute fixup positions and assign binary sections *)
 			PROCEDURE PatchFixups(section: BinaryCode.Section);
-			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; displacement,symbolOffset: LONGINT; in: IntermediateCode.Section;
+			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; displacement: BinaryCode.Unit; symbolOffset: SIZE; in: IntermediateCode.Section;
 				symbol: Sections.Section;
 			BEGIN
 				fixup := section.fixupList.firstFixup;
@@ -3628,10 +3628,10 @@ TYPE
 	END BackendAMD64;
 
 	(** the number of regular sections in a section list **)
-	PROCEDURE RegularSectionCount(sectionList: Sections.SectionList): LONGINT;
+	PROCEDURE RegularSectionCount(sectionList: Sections.SectionList): SIZE;
 	VAR
 		section: Sections.Section;
-		i, result: LONGINT;
+		i, result: SIZE;
 	BEGIN
 		result := 0;
 		FOR i := 0 TO sectionList.Length() - 1 DO

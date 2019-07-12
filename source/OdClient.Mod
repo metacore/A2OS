@@ -63,7 +63,7 @@ TYPE
 		(* Split at the last '/' at the moment. *)
 		PROCEDURE SplitConfRes(CONST confRes: ARRAY OF CHAR; VAR conf, res: ARRAY OF CHAR);
 		CONST CollCh = '/';
-		VAR len, pos: LONGINT;
+		VAR len, pos: SIZE;
 		BEGIN
 			len := Strings.Length(confRes);
 			pos  := len - 1;
@@ -172,7 +172,8 @@ TYPE
 		(* Get filelist of client directory *)
 		PROCEDURE ClientMembers(CONST dir: ARRAY OF CHAR): OdUtil.Lines;
 		VAR
-			enum: Files.Enumerator; time, date, size: LONGINT; entryFlags, flags: SET;
+			enum: Files.Enumerator; time, date: LONGINT;
+			size: Files.Size; entryFlags, flags: SET;
 			pattern: ARRAY 128 OF CHAR;
 			fileNames: OdUtil.Lines; name: OdUtil.Line;
 		BEGIN
@@ -642,7 +643,7 @@ TYPE
 			f: Files.File;
 			scanner: OdXml.Scanner; parser: OdXml.Parser;
 			doc: XML.Document;
-			fr: Files.Reader; buf: ARRAY BufSize OF CHAR; read: LONGINT;
+			fr: Files.Reader; buf: ARRAY BufSize OF CHAR; read: SIZE;
 			xmlInName: ARRAY 16 OF CHAR;
 		BEGIN
 			(* Logfilename goes from XmlIn0.Log to XmlIn9.Log. *)
@@ -828,9 +829,10 @@ TYPE
 		CONST
 			StringWriterSize = 10000;
 		VAR
-			host : ARRAY 128 OF CHAR; path : ARRAY 256 OF CHAR; xmlSize, port : LONGINT;
+			host : ARRAY 128 OF CHAR; path : ARRAY 256 OF CHAR; port : LONGINT;
 			w, aosioWriter : Streams.Writer; x : WebHTTP.AdditionalField;
 			buf: ARRAY StringWriterSize OF CHAR; stringWriter: Streams.StringWriter;
+			xmlSize: Streams.Position;
 		BEGIN
 			reqHeader.useragent := UserAgent;
 			(* Cleanup responseHeader in case it's reused *)
@@ -1059,7 +1061,7 @@ TYPE
 			xmlDoc: XML.Document;
 			(* For bodytracing. TODO: Update should be converted to Net(). *)
 			CONST StringWriterSize = 10000;
-			VAR xmlSize: LONGINT; buf: ARRAY StringWriterSize OF CHAR; stringWriter: Streams.StringWriter;
+			VAR xmlSize: Streams.Position; buf: ARRAY StringWriterSize OF CHAR; stringWriter: Streams.StringWriter;
 			aosioWriter : Streams.Writer;
 		BEGIN
 			xmlSize := 0;
@@ -1446,7 +1448,7 @@ PROCEDURE ls(CONST prompt, string: ARRAY OF CHAR);
 BEGIN
 	log.Enter; log.String(prompt); log.String(string); log.Exit;
 END ls;
-PROCEDURE li(CONST prompt: ARRAY OF CHAR; i: LONGINT);
+PROCEDURE li(CONST prompt: ARRAY OF CHAR; i: HUGEINT);
 BEGIN
 	log.Enter; log.String(prompt); log.Int(i,1); log.Exit;
 END li;
@@ -1457,8 +1459,8 @@ END li;
 PROCEDURE SendData*(src: Streams.Reader; dst: Streams.Writer);
 CONST Log = TRUE;
 	BufSize = 512; (* Smaller than PPP Payload. *)
-VAR len: LONGINT; buf: ARRAY BufSize OF CHAR;
-	sent: LONGINT; timer: Kernel.Timer;
+VAR len: SIZE; buf: ARRAY BufSize OF CHAR;
+	sent: SIZE; timer: Kernel.Timer;
 BEGIN
 	NEW(timer);
 	IF Log THEN log.Enter; log.String("SendData "); log.TimeStamp(); log.Exit; END;
@@ -1508,12 +1510,12 @@ PROCEDURE StoreResult2File * (VAR resHeader: WebHTTP.ResponseHeader; res: WORD;
 	out : Streams.Reader; CONST target: ARRAY OF CHAR; VAR f: Files.File);
 CONST
 	BufSize = 512;
-VAR read : LONGINT;
+VAR read, remain : SIZE;
 	timer: Kernel.Timer; slept: LONGINT;
 	r: Files.Rider;
 	buf : ARRAY BufSize OF CHAR;
 	dechunk: WebHTTP.ChunkedInStream; sequential: Streams.Reader;
-	chunkSize, remain: LONGINT; token: ARRAY 16 OF CHAR;
+	chunkSize: LONGINT; token: ARRAY 16 OF CHAR;
 BEGIN
 	f := NIL;
 	IF res = Ok THEN

@@ -166,7 +166,7 @@ TYPE
 			ELSIF img.fmt.pal.used = 16 THEN Store4(img, img.width, -img.height, buf)
 			ELSIF img.fmt.pal.used = 2 THEN Store1(img, img.width, -img.height, buf)
 			END;
-			dataSize := sm.GetLength();
+			dataSize := sm.GetLength()(LONGINT);
 
 			(* Bitmap file header *)
 			out.String("BM");

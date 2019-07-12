@@ -440,7 +440,7 @@ TYPE
 			(* Enqueues a new buffer for DMA to fetch, and updates last valid buffer index. *)
 			PROCEDURE QueueBuffer*;
 			VAR
-				noOfSamples : LONGINT;
+				noOfSamples : SIZE;
 			BEGIN
 				MixBuffers;
 
@@ -448,7 +448,7 @@ TYPE
 					ADDRESSOF(playBufferList[playCurrentBufferIndex].data[0]), BufferSize);
 
 				noOfSamples := LSH(playBufferList[playCurrentBufferIndex].len, -1);
-				DMAOut[playLastValidIndex].CmdAndLength := noOfSamples;
+				DMAOut[playLastValidIndex].CmdAndLength := noOfSamples(LONGINT);
 				SetBit(DMAOut[playLastValidIndex].CmdAndLength, 31);
 
 				NABMBAR.RegWrite8(BMROutBase + BMRLastValidIndexReg, playLastValidIndex)
@@ -514,7 +514,7 @@ TYPE
 			PROCEDURE MixTwo(VAR buffer : SoundDevices.Buffer; buffer2 : SoundDevices.Buffer);
 			VAR
 				mix, sample1, sample2 : LONGINT;
-				i : LONGINT;
+				i : SIZE;
 			BEGIN
 				(* First buffer don't have to be mixed *)
 				IF buffer = NIL THEN
@@ -911,7 +911,7 @@ TYPE
 
 			PROCEDURE &Constr*(driver : Driver; volumeReg : LONGINT; mute : BOOLEAN; name, desc : ARRAY OF CHAR);
 			VAR
-				i : LONGINT;
+				i : SIZE;
 			BEGIN
 				SELF.driver := driver;
 				SELF.volumeReg := volumeReg;
@@ -1453,7 +1453,7 @@ TYPE
 		physadr : Machine.Address32;
 	BEGIN
 		(* All data has to be continous in memory since DMA does not understand pages *)
-		physadr := Machine.Ensure32BitAddress (Machine.PhysicalAdr(adr, size));
+		physadr := Machine.PhysicalAdr(adr, size)(Machine.Address32);
 		ASSERT(physadr # Machine.NilAdr);
 		(* Address must be 8 byte align. See Intel programmes manual
 		for close details of the Buffer Description List *)

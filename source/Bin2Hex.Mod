@@ -2,19 +2,19 @@ MODULE Bin2Hex;	(** AUTHOR "negelef"; PURPOSE "Binary file to Intel Hex-file con
 
 IMPORT Streams, Files, Commands;
 
-PROCEDURE Byte (VAR w: Streams.Writer; val: LONGINT);
+PROCEDURE Byte (VAR w: Streams.Writer; val: SIZE);
 BEGIN w.Hex (val MOD 100H, -2);
 END Byte;
 
-PROCEDURE ExtendedAddressRecord* (VAR w: Streams.Writer; extadr: LONGINT);
+PROCEDURE ExtendedAddressRecord* (VAR w: Streams.Writer; extadr: SIZE);
 BEGIN
 	w.Char (':'); Byte (w, 2); Byte (w, 0); Byte (w, 0); Byte (w, 4);
 	Byte (w, extadr DIV 100H); Byte (w, extadr);
 	Byte (w, 100H - (2 + 0 + 0 + 4 + extadr DIV 100H MOD 100H + extadr MOD 100H) MOD 100H); w.Ln;
 END ExtendedAddressRecord;
 
-PROCEDURE DataRecord* (VAR w: Streams.Writer; CONST data: ARRAY OF CHAR; len, offset: LONGINT);
-VAR checksum, i: LONGINT;
+PROCEDURE DataRecord* (VAR w: Streams.Writer; CONST data: ARRAY OF CHAR; len, offset: SIZE);
+VAR checksum, i: SIZE;
 BEGIN
 	checksum := len MOD 100H;
 	INC (checksum, offset DIV 100H MOD 100H + offset MOD 100H);
@@ -27,8 +27,8 @@ PROCEDURE EndOfFileRecord* (VAR w: Streams.Writer);
 BEGIN w.Char (':'); Byte (w, 0); Byte (w, 0); Byte (w, 0); Byte (w, 1); Byte (w, 255); w.Ln;
 END EndOfFileRecord;
 
-PROCEDURE ConvertFile* (r: Streams.Reader; w: Streams.Writer; offset, maxlen: LONGINT);
-VAR len, extadr: LONGINT; c: CHAR; data: POINTER TO ARRAY  OF CHAR;
+PROCEDURE ConvertFile* (r: Streams.Reader; w: Streams.Writer; offset, maxlen: SIZE);
+VAR len, extadr: SIZE; c: CHAR; data: POINTER TO ARRAY  OF CHAR;
 BEGIN
 	NEW(data,maxlen+1);
 	extadr := offset DIV 10000H;
@@ -56,14 +56,14 @@ END ConvertFile;
 PROCEDURE Convert* (context: Commands.Context);
 VAR
 	source, dest: ARRAY Files.NameLength OF CHAR;
-	offset, maxlen: LONGINT;
+	offset, maxlen: SIZE;
 	src, dst: Files.File;
 	r: Files.Reader; w: Files.Writer;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String (source);
 	context.arg.SkipWhitespace; context.arg.String (dest);
-	IF ~context.arg.GetInteger (offset, TRUE) THEN offset := 0 END;
-	IF ~context.arg.GetInteger (maxlen, TRUE) THEN maxlen := 255 END;
+	IF ~context.arg.GetSize (offset, TRUE) THEN offset := 0 END;
+	IF ~context.arg.GetSize (maxlen, TRUE) THEN maxlen := 255 END;
 
 	src := Files.Old (source);
 	IF src = NIL THEN

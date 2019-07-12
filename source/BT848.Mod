@@ -578,7 +578,7 @@ TYPE
 	(** chnl:	channel to set (see range of channel set). *)
 	PROCEDURE SetChannel*(chnl: LONGINT);
 	VAR
-		i: LONGINT;
+		i: SIZE;
 		freq: LONGINT;
 	BEGIN
 		ASSERT(chnl <= freqTable[chnlSet].maxChnl);
@@ -1540,7 +1540,7 @@ TYPE
 		(* poll remote control 5 times to turn off the LED *)
 		IF remoteControl THEN
 			FOR i := 1 TO 5 DO
-				valNirvana := i2cBus.I2CRead(Machine.Ensure32BitAddress (base) + remoteControlAddr);
+				valNirvana := i2cBus.I2CRead(base(Machine.Address32) + remoteControlAddr);
 			END;
 		END;
 		xtalPLLMode := Bt848UseXTALS;
@@ -2590,7 +2590,7 @@ TYPE
 	PROCEDURE SetVideo*(addr: ADDRESS; width: LONGINT);
 	BEGIN
 		ASSERT(flags * AosCapMask = {});
-		videoAddr := Machine.Ensure32BitAddress (addr);
+		videoAddr := addr(Machine.Address32);
 		videoWidth := width;
 		dmaProgLoaded := FALSE;
 	END SetVideo;

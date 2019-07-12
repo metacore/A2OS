@@ -74,7 +74,7 @@ TYPE
 		state : LONGINT;
 
 		PROCEDURE &Init*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Init^;
 			NEW(repositories, 20);
@@ -394,7 +394,7 @@ TYPE
 		END Resized;
 
 		PROCEDURE UpdateGridSpacings*;
-		VAR sum, w, i : LONGINT; rect : WMRectangles.Rectangle;
+		VAR sum, w : LONGINT; i: SIZE; rect : WMRectangles.Rectangle;
 		BEGIN
 			rect := bounds.Get(); w := rect.r - rect.l;
 			FOR i := 0 TO LEN(spacings)-1 DO sum := sum + spacings[i]; END;

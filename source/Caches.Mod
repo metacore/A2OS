@@ -153,7 +153,7 @@ TYPE
 
 		PROCEDURE Hash(dev: Disks.Device;  block: LONGINT): LONGINT;
 		BEGIN
-			RETURN block MOD LEN(hashTable)	(* good candidate for inlining *)
+			RETURN block MOD LEN(hashTable)(LONGINT)	(* good candidate for inlining *)
 		END Hash;
 
 		(* Move buffer from one hash list to another. *)

@@ -176,7 +176,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 			(*
 			eax := PCIFunctionId + getIrqRoutingOptions;
 			rb.BufferSize := dbN; rb.SegSelector := 0; rb.DataBufferAdr := ADDRESSOF(db[0]);
-			ebx := 0H; edi := Machine.Ensure32BitAddress(SYSTEM.VAL (ADDRESS, rb));
+			ebx := 0H; edi := SYSTEM.VAL (ADDRESS, rb)(Machine.Address32);
 			state := Machine.DisableInterrupts();
 			pcicall(pciEntry, eax, ebx, ecx, edx, esi, edi, eflags);
 			Machine.RestoreInterrupts(state);

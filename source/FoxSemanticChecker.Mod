@@ -2,12 +2,12 @@ MODULE FoxSemanticChecker; (* AUTHOR "fof & fn"; PURPOSE "Oberon Compiler: Seman
 (* (c) fof ETHZ 2009 *)
 
 IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree,
-Diagnostics, Global := FoxGlobal, Printout:= FoxPrintout, Formats := FoxFormats, SYSTEM, Strings;
+Diagnostics, Global := FoxGlobal, Printout:= FoxPrintout, Formats := FoxFormats, SYSTEM, Strings, Streams;
 
 CONST
 	Trace = FALSE;
 
-	Infinity = MAX(LONGINT); (* for type distance *)
+	Infinity = MAX(SIZE); (* for type distance *)
 	UndefinedPhase = 0; DeclarationPhase=1; ImplementationPhase=2;
 
 	InliningSupport = TRUE;
@@ -609,7 +609,7 @@ TYPE
 			x.SetCellsAreObjects(cellsAreObjects);
 			x.SetSizeExpression(ResolveExpression(x.sizeExpression));
 			IF (x.sizeExpression # NIL) & CheckPositiveIntegerValue(x.sizeExpression,value,FALSE) THEN
-				x.SetSize(LONGINT(value)) (* TODO: fix explicit integer truncation *)
+				x.SetSize(value(SIZE));
 			ELSE
 				x.SetSize(system.SizeOf(system.longintType));
 			END;
@@ -787,7 +787,7 @@ TYPE
 				END;
 			END;
 			IF HasFlag(modifiers, Global.NameNoReturn,position) THEN procedureType.SetNoReturn(TRUE) END;
-			IF HasValue(modifiers,Global.NameStackAligned,position,value) THEN procedureType.SetStackAlignment(LONGINT (value)) END; (* TODO: fix explicit integer truncation *)
+			IF HasValue(modifiers,Global.NameStackAligned,position,value) THEN procedureType.SetStackAlignment(value(SIZE)) END;
 			IF HasFlag(modifiers, Global.NameDelegate,position) THEN procedureType.SetDelegate(TRUE) END;
 			IF HasFlag(modifiers, Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;
 			CheckModifiers(modifiers, TRUE);
@@ -808,7 +808,7 @@ TYPE
 		**)
 		PROCEDURE ResolveRecordType(x: SyntaxTree.RecordType);
 		VAR resolved, baseType: SyntaxTree.Type; position: Position;
-			numberMethods: LONGINT; recordBase, recordType: SyntaxTree.RecordType; procedure: SyntaxTree.Procedure;
+			numberMethods: SIZE; recordBase, recordType: SyntaxTree.RecordType; procedure: SyntaxTree.Procedure;
 			symbol: SyntaxTree.Symbol; isRealtime: BOOLEAN;
 			hasPointers: BOOLEAN;
 			modifiers: SyntaxTree.Modifier;
@@ -831,8 +831,7 @@ TYPE
 			hasPointers := FALSE;
 
 			modifiers := x.modifiers;
-			IF HasValue(modifiers,Global.NameAligned,position,value) THEN x.SetAlignmentInBits(LONGINT(value)*system.dataUnit) (* TODO: fix explicit integer truncation *)
-			END;
+			IF HasValue(modifiers,Global.NameAligned,position,value) THEN x.SetAlignmentInBits(value(SIZE)*system.dataUnit) END;
 			IF HasFlag(modifiers,Global.NameAbstract,position) THEN x.SetAbstract(TRUE) END;
 			CheckModifiers(modifiers, TRUE);
 
@@ -971,7 +970,7 @@ TYPE
 			modifier: SyntaxTree.Modifier; position: Position; value: Basic.Integer; isEngine: BOOLEAN; property: SyntaxTree.Property;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			recordBase: SyntaxTree.RecordType;
-			numberMethods: LONGINT;
+			numberMethods: SIZE;
 			int: Basic.Integer;
 			real: LONGREAL;
 			bool: BOOLEAN;
@@ -1347,7 +1346,7 @@ TYPE
 		**)
 		PROCEDURE ResolveSet(set: SyntaxTree.Set): SyntaxTree.Expression;
 		VAR
-			i: LONGINT;
+			i: SIZE;
 			element: SyntaxTree.Expression;
 			constant: BOOLEAN;
 			elements: SyntaxTree.ExpressionList;
@@ -1503,7 +1502,7 @@ TYPE
 			value: SyntaxTree.MathArrayValue; arrayType: SyntaxTree.Type;
 
 			PROCEDURE RecursivelyFindType(x: SyntaxTree.MathArrayExpression);
-			VAR position: Position; numberElements,i: LONGINT; expression: SyntaxTree.Expression;
+			VAR position: Position; numberElements,i: SIZE; expression: SyntaxTree.Expression;
 			BEGIN
 				numberElements := x.elements.Length();
 				FOR i := 0 TO numberElements-1 DO
@@ -1529,7 +1528,7 @@ TYPE
 			END RecursivelyFindType;
 
 			PROCEDURE RecursivelySetExpression(x: SyntaxTree.MathArrayExpression);
-			VAR position: Position; numberElements,i: LONGINT; expression: SyntaxTree.Expression;
+			VAR position: Position; numberElements,i: SIZE; expression: SyntaxTree.Expression;
 			BEGIN
 				numberElements := x.elements.Length();
 				FOR i := 0 TO numberElements-1 DO
@@ -1546,7 +1545,7 @@ TYPE
 			END RecursivelySetExpression;
 
 			PROCEDURE RecursivelySetType(x: SyntaxTree.MathArrayExpression): SyntaxTree.Type;
-			VAR numberElements,i,size,gsize: LONGINT; baseType: SyntaxTree.Type;expression: SyntaxTree.Expression;
+			VAR numberElements,i,size,gsize: SIZE; baseType: SyntaxTree.Type;expression: SyntaxTree.Expression;
 				arrayType: SyntaxTree.MathArrayType;
 			BEGIN
 				numberElements := x.elements.Length();
@@ -1743,7 +1742,7 @@ TYPE
 			END BaseType;
 
 			PROCEDURE RecursivelyConvert(x, to: SyntaxTree.MathArrayExpression);
-			VAR position: Position; numberElements,i: LONGINT; expression: SyntaxTree.Expression; array: SyntaxTree.MathArrayExpression;
+			VAR position: Position; numberElements, i: SIZE; expression: SyntaxTree.Expression; array: SyntaxTree.MathArrayExpression;
 			BEGIN
 				numberElements := x.elements.Length();
 				FOR i := 0 TO numberElements-1 DO
@@ -1762,7 +1761,7 @@ TYPE
 			END RecursivelyConvert;
 
 			PROCEDURE RecursivelySetType(x: SyntaxTree.MathArrayExpression): SyntaxTree.Type;
-			VAR numberElements,i,size,gsize: LONGINT; baseType: SyntaxTree.Type;expression: SyntaxTree.Expression;
+			VAR numberElements,i,size,gsize: SIZE; baseType: SyntaxTree.Type;expression: SyntaxTree.Expression;
 				arrayType: SyntaxTree.MathArrayType;
 			BEGIN
 				numberElements := x.elements.Length();
@@ -1960,7 +1959,7 @@ TYPE
 				END;
 				(* nothing to be done *)
 			ELSIF expression IS SyntaxTree.ProcedureValue THEN
-				result := expression; 
+				result := expression;
 			ELSE
 				Error(position, "expression cannot be converted");
 				IF VerboseErrorMessage THEN
@@ -2105,11 +2104,11 @@ TYPE
 			- take operator with smalles distance, where signature distance is computed in procedure Distance
 		**)
 		PROCEDURE FindOperator(system: Global.System; operator: LONGINT; actualParameters: SyntaxTree.ExpressionList; returnType: SyntaxTree.Type): SyntaxTree.Operator;
-		VAR bestOperator: SyntaxTree.Operator; bestDistance: LONGINT; import: SyntaxTree.Import; numberParameters: LONGINT; procedureType: SyntaxTree.ProcedureType;
+		VAR bestOperator: SyntaxTree.Operator; bestDistance: SIZE; import: SyntaxTree.Import; numberParameters: SIZE; procedureType: SyntaxTree.ProcedureType;
 			identifier: SyntaxTree.Identifier;
 
 			PROCEDURE FindInScope(scope: SyntaxTree.ModuleScope; access: SET);
-			VAR operator: SyntaxTree.Operator; distance,i: LONGINT;
+			VAR operator: SyntaxTree.Operator; distance,i: SIZE;
 			BEGIN
 				operator := scope.firstOperator;
 				WHILE(operator # NIL) DO
@@ -2242,7 +2241,7 @@ TYPE
 					result := NewProcedureCallDesignator(position, original, designator,actualParameters);
 					IF op = Scanner.Alias THEN (* hard type cast to same type *)
 						castReturnType := SyntaxTree.NewMathArrayType(Basic.invalidPosition, expression.type.scope,SyntaxTree.Tensor);
-						castReturnType.SetArrayBase(ArrayBase(leftExpression.type.resolved,MAX(LONGINT)));
+						castReturnType.SetArrayBase(ArrayBase(leftExpression.type.resolved,MAX(SIZE)));
 						result.SetType(castReturnType);
 					END;
 				ELSE
@@ -2769,7 +2768,7 @@ TYPE
 				ArrayIndex:
 					- components must be integers
 					- replace missing lower bound with 0
-					- replace missing upper bound with MAX(LONGINT)
+					- replace missing upper bound with MAX(SIZE)
 					- replace missing step size with 1
 				SetElement:
 					- components must be integers
@@ -2866,7 +2865,7 @@ TYPE
 			ELSE (* ArrayIndex, SetElement *)
 				IF last = NIL THEN
 					IF x.context = SyntaxTree.ArrayIndex THEN
-						last := SyntaxTree.NewIntegerValue(x.position, MAX(LONGINT))
+						last := SyntaxTree.NewIntegerValue(x.position, MAX(SIZE))
 					ELSE
 						last := SyntaxTree.NewIntegerValue(x.position, MAX(SET))
 					END
@@ -3065,17 +3064,17 @@ TYPE
 			result.SetType(symbol.type);
 			result.SetAssignable(assignable);
 			symbol.MarkUsed;
-			WITH symbol: SyntaxTree.Constant DO				
+			WITH symbol: SyntaxTree.Constant DO
 				result.SetResolved(symbol.value.resolved);
 			| SyntaxTree.Procedure DO
 				IF ~symbol.type(SyntaxTree.ProcedureType).isDelegate THEN
 					result.SetResolved(SyntaxTree.NewProcedureValue(result.position, symbol));
 					result.resolved.SetType(symbol.type);
-				END;		
+				END;
 			| SyntaxTree.Variable DO
 				IF ~(symbol IS SyntaxTree.Property) THEN
 					variableAccessed := TRUE;
-				END; 
+				END;
 			ELSE
 			END;
 
@@ -3290,7 +3289,7 @@ TYPE
 					IF IsIntegerValue(first, firstValue) & (firstValue < 0) THEN
 						Error(indexListItem.position,"lower bound of array range too small")
 					END;
-					IF IsIntegerValue(last, lastValue) & (lastValue # MAX(LONGINT)) THEN
+					IF IsIntegerValue(last, lastValue) & (lastValue # MAX(SIZE)) THEN
 						IF (sourceArray.length # NIL) & IsIntegerValue(sourceArray.length, length) & (lastValue > (length - 1)) THEN
 							Error(indexListItem.position,"upper bound of array range too large")
 						END
@@ -3322,7 +3321,7 @@ TYPE
 								targetArray.SetIncrement(sourceArray.staticIncrementInBits)
 
 							ELSIF IsStaticRange(rangeExpression, firstValue, lastValue, stepValue) THEN
-								IF lastValue = MAX(LONGINT) THEN
+								IF lastValue = MAX(SIZE) THEN
 									IF IsIntegerValue(sourceArray.length, length) THEN
 										lastValue := length - 1;
 										isStaticTargetArrayLength := TRUE
@@ -3384,14 +3383,14 @@ TYPE
 
 		PROCEDURE NewObjectOperatorCall*(position: Position; left: SyntaxTree.Expression; oper: LONGINT; parameters: SyntaxTree.ExpressionList; rhs: SyntaxTree.Expression): SyntaxTree.Designator;
 		VAR type: SyntaxTree.Type; expression: SyntaxTree.Expression; op: SyntaxTree.Operator; recordType: SyntaxTree.RecordType;
-			actualParameters: SyntaxTree.ExpressionList; i: LONGINT; result: SyntaxTree.Designator;
+			actualParameters: SyntaxTree.ExpressionList; i: SIZE; result: SyntaxTree.Designator;
 			pointer: BOOLEAN; designator: SyntaxTree.Designator;
 
 			PROCEDURE FindOperator(recordType: SyntaxTree.RecordType; identifier: SyntaxTree.Identifier; actualParameters: SyntaxTree.ExpressionList): SyntaxTree.Operator;
-			VAR bestOperator: SyntaxTree.Operator; bestDistance: LONGINT; numberParameters: LONGINT; procedureType: SyntaxTree.ProcedureType;
+			VAR bestOperator: SyntaxTree.Operator; bestDistance: SIZE; numberParameters: SIZE; procedureType: SyntaxTree.ProcedureType;
 
 				PROCEDURE FindInScope(scope: SyntaxTree.RecordScope; access: SET);
-				VAR operator: SyntaxTree.Operator; distance,i: LONGINT;
+				VAR operator: SyntaxTree.Operator; distance, i: SIZE;
 				CONST trace = FALSE;
 				BEGIN
 					IF trace THEN
@@ -3515,7 +3514,7 @@ TYPE
 			designator: SyntaxTree.Designator;
 			type: SyntaxTree.Type;
 			expression: SyntaxTree.Expression;
-			i: LONGINT;
+			i: SIZE;
 			result: SyntaxTree.Expression;
 
 			PROCEDURE FinalizeIndexDesignator;
@@ -3644,7 +3643,7 @@ TYPE
 			- returns true if and only if all statements could have successfully been resolved
 		**)
 		PROCEDURE ExpressionList(expressionList: SyntaxTree.ExpressionList): BOOLEAN;
-		VAR i: LONGINT; expression: SyntaxTree.Expression; result: BOOLEAN;
+		VAR i: SIZE; expression: SyntaxTree.Expression; result: BOOLEAN;
 		BEGIN
 			result := TRUE;
 			FOR i := 0 TO expressionList.Length()-1 DO
@@ -3658,7 +3657,7 @@ TYPE
 
 (*
 		PROCEDURE ReplaceExpressions(x: SyntaxTree.ExpressionList; oScope, outer, rScope: SyntaxTree.Scope);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 				IF x # NIL THEN
 					FOR i := 0 TO x.Length()-1 DO
@@ -3742,7 +3741,7 @@ TYPE
 		END ReplaceIfPart;
 
 		PROCEDURE ReplaceStatement(x: SyntaxTree.Statement; oScope, outer, rScope: SyntaxTree.Scope);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			WITH x:
 			SyntaxTree.ProcedureCallStatement DO
@@ -3805,7 +3804,7 @@ TYPE
 		END ReplaceStatement;
 
 		PROCEDURE ReplaceStatements(statements: SyntaxTree.StatementSequence; oScope,outer,rScope: SyntaxTree.Scope);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO statements.Length()-1 DO
 				ReplaceStatement(statements.GetStatement(i),oScope,outer,rScope);
@@ -3821,11 +3820,11 @@ TYPE
 		**)
 		PROCEDURE NewProcedureCallDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression; actualParameters:SyntaxTree.ExpressionList): SyntaxTree.Designator;
 		VAR result: SyntaxTree.Designator;
-			numberFormalParameters, numberActualParameters: LONGINT;
+			numberFormalParameters, numberActualParameters: SIZE;
 			formalType: SyntaxTree.ProcedureType;
 			formalParameter: SyntaxTree.Parameter;
 			actualParameter: SyntaxTree.Expression;
-			i: LONGINT;
+			i: SIZE;
 			self: SyntaxTree.Expression;
 			inlineScope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType;
 			tooComplex : BOOLEAN;
@@ -4255,7 +4254,7 @@ TYPE
 			RETURN result;
 		END CheckStringValue;
 
-		PROCEDURE IsUnsignedValue(x: SyntaxTree.Expression; maxSizeInBits: LONGINT): BOOLEAN;
+		PROCEDURE IsUnsignedValue(x: SyntaxTree.Expression; maxSizeInBits: SIZE): BOOLEAN;
 		BEGIN
 			IF (x.resolved # NIL) & (x.resolved IS SyntaxTree.IntegerValue) THEN
 				RETURN Global.IsUnsignedInteger(x.resolved(SyntaxTree.IntegerValue).value, maxSizeInBits)
@@ -4354,7 +4353,7 @@ TYPE
 		*)
 		PROCEDURE NewBuiltinCallDesignator(position: Position; original: SyntaxTree.Designator; builtin: SyntaxTree.Builtin; actualParameters:SyntaxTree.ExpressionList; left: SyntaxTree.Expression; returnType: SyntaxTree.Type): SyntaxTree.Expression;
 		VAR
-			numberActualParameters,numberFormalParameters: LONGINT;
+			numberActualParameters,numberFormalParameters: SIZE;
 			formalParameter: SyntaxTree.Parameter;
 			actualParameter: SyntaxTree.Expression;
 			procedureType: SyntaxTree.ProcedureType;
@@ -4364,7 +4363,7 @@ TYPE
 			type0,type1,type2: SyntaxTree.Type;
 			type,base,parameterType: SyntaxTree.Type;
 			arrayType: SyntaxTree.ArrayType;
-			i: LONGINT; i0, i1, value: Basic.Integer;
+			i: SIZE; i0, i1, value: Basic.Integer;
 			r,r0,r1,im: LONGREAL;
 			c: CHAR;
 			id: LONGINT;
@@ -4623,7 +4622,7 @@ TYPE
 								IF type1 IS SyntaxTree.MathArrayType THEN (* NEW(a, array) *)
 
 									(* use type checking facilities of procedure calls: artificially build parameters here and call checker *)
-									base := ArrayBase(type0,MAX(LONGINT));
+									base := ArrayBase(type0,MAX(SIZE));
 
 									parameterType := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Tensor);
 									parameterType(SyntaxTree.MathArrayType).SetArrayBase(base);
@@ -4816,7 +4815,7 @@ TYPE
 					END;
 				(* ---- LEN ----- *)
 				ELSIF (id = Global.Len) & CheckArity(1,2) THEN
-					type := system.lenType;
+					type := system.sizeType;
 					base := type0;
 
 					IF (base IS SyntaxTree.PointerType) & (parameter0 IS SyntaxTree.Designator) THEN
@@ -4840,7 +4839,7 @@ TYPE
 							Error(position, "invalid dimension");
 							base := SyntaxTree.invalidType;
 						ELSE
-							base := ArrayBase(base,LONGINT(i1)); (* TODO: fix explicit integer truncation *)
+							base := ArrayBase(base,i1(SIZE));
 							IF (base # NIL) & Indexable(base) THEN
 							ELSE
 								Error(position, "len on no array");
@@ -4851,7 +4850,7 @@ TYPE
 							END;
 						END;
 						IF numberActualParameters=2 THEN
-							parameter1 := NewConversion(parameter1.position,parameter1,system.lenType,NIL);
+							parameter1 := NewConversion(parameter1.position,parameter1,system.sizeType,NIL);
 							actualParameters.SetExpression(1,parameter1);
 						ELSIF base IS SyntaxTree.MathArrayType THEN
 							Error(position, "missing dimension specification");
@@ -4878,7 +4877,7 @@ TYPE
 							END;
 						END;
 					ELSE
-						type := system.lenType;
+						type := system.sizeType;
 					END;
 				(* ---- FIRST ---- *)
 				ELSIF (id = Global.First) & CheckArity(1,1) THEN
@@ -5117,7 +5116,7 @@ TYPE
 						Error(parameter0.position,"is not a type symbol");
 					END
 				(* ---- SYSTEM.TRACE -----*)
-				ELSIF (id = Global.systemTrace) & CheckArity(1,MAX(LONGINT)) THEN
+				ELSIF (id = Global.systemTrace) & CheckArity(1,MAX(SIZE)) THEN
 					FOR i := 0 TO numberActualParameters-1 DO
 						parameter0 := actualParameters.GetExpression(i);
 						IF ~IsBasicType(parameter0.type) & ~IsStringType(parameter0.type) THEN
@@ -5314,7 +5313,7 @@ TYPE
 							Error(position, "invalid dimension");
 							base := SyntaxTree.invalidType;
 						ELSE
-							base := ArrayBase(base,LONGINT(i1)); (* TODO: fix explicit integer truncation *)
+							base := ArrayBase(base,i1(SIZE));
 							IF (base # NIL) & Indexable(base) THEN
 							ELSE
 								Error(position, "len on no array");
@@ -5377,7 +5376,7 @@ TYPE
 				ELSIF (id = Global.Reshape) & CheckArity(2,2) THEN
 					IF type0 IS SyntaxTree.MathArrayType THEN
 						(* use type checking facilities of procedure calls: artificially build parameters here and call checker *)
-						base := ArrayBase(type0,MAX(LONGINT));
+						base := ArrayBase(type0,MAX(SIZE));
 						type := SyntaxTree.NewMathArrayType(Basic.invalidPosition,currentScope,SyntaxTree.Tensor);
 						type(SyntaxTree.MathArrayType).SetArrayBase(base);
 
@@ -5767,7 +5766,7 @@ TYPE
 			- return result
 		**)
 		PROCEDURE ResolveExpression*(x: SyntaxTree.Expression): SyntaxTree.Expression;
-		VAR result: SyntaxTree.Expression; subtype: LONGINT; type: SyntaxTree.Type; pos: WORD;
+		VAR result: SyntaxTree.Expression; subtype: LONGINT; type: SyntaxTree.Type; pos: Streams.Position;
 		BEGIN
 			IF (x = NIL) OR (x = SyntaxTree.invalidExpression) OR (x.type # NIL) THEN RETURN x END;
 			pos := x.position.start;
@@ -6058,12 +6057,12 @@ TYPE
 			END;
 		END ResolveConstant;
 
-		PROCEDURE AdaptStackAlignment(procedure: SyntaxTree.Procedure; alignment: LONGINT);
-		VAR procedureAlignment: LONGINT;
+		PROCEDURE AdaptStackAlignment(procedure: SyntaxTree.Procedure; alignment: SIZE);
+		VAR procedureAlignment: SIZE;
 
-			PROCEDURE LCM(a0,b0: LONGINT): LONGINT;
+			PROCEDURE LCM(a0,b0: SIZE): SIZE;
 			(* least common multiple *)
-			VAR a,b: LONGINT;
+			VAR a,b: SIZE;
 			BEGIN
 				a := a0; b := b0;
 				WHILE (a # b) DO
@@ -6119,21 +6118,21 @@ TYPE
 						IF ~PowerOf2(value) THEN
 							Error(position, "forbidden alignment - must be power of two");
 						ELSE
-							AdaptStackAlignment(variable.scope(SyntaxTree.ProcedureScope).ownerProcedure, LONGINT (value)); (* TODO: fix explicit integer truncation *)
+							AdaptStackAlignment(variable.scope(SyntaxTree.ProcedureScope).ownerProcedure, value(SIZE));
 						END;
 					END;
-					variable.SetAlignment(FALSE,LONGINT(value)); (* TODO: fix explicit integer truncation *)
+					variable.SetAlignment(FALSE,value(SIZE));
 				ELSIF HasValue(modifiers, Global.NameFixed,position, value) THEN
 					IF (variable.scope IS SyntaxTree.ProcedureScope) THEN
 						Error(position, "fixed position not possible in procedure");
 					END;
-					variable.SetAlignment(TRUE,LONGINT(value)); (* TODO: fix explicit integer truncation *)
+					variable.SetAlignment(TRUE,value(SIZE));
 				ELSIF HasValue(modifiers, Global.NameFictive, position, value) THEN
 					IF (variable.scope IS SyntaxTree.ProcedureScope) THEN
 						Error(position,"fictive offset not possible in procedure");
 					END;
-					variable.SetFictive(LONGINT (value)); (* TODO: fix explicit integer truncation *)
-					variable.SetOffset(LONGINT(value)*system.dataUnit); (* TODO: fix explicit integer truncation *)
+					variable.SetFictive(value(SIZE));
+					variable.SetOffset(value(SIZE)*system.dataUnit);
 					IF ContainsPointer(variable.type) THEN variable.SetUntraced(TRUE) END;
 				END;
 				IF HasFlag(modifiers, Global.NameRegister, position) THEN variable.PreferRegister(TRUE) END;
@@ -6260,7 +6259,7 @@ TYPE
 				IF HasFlag(modifiers, Global.NameNoReturn, position) THEN
 					procedureType.SetNoReturn(TRUE);
 				END;
-				IF HasValue(modifiers, Global.NamePcOffset, position, value) THEN procedureType.SetPcOffset(LONGINT(value)) (* TODO: fix explicit integer truncation *) END;
+				IF HasValue(modifiers, Global.NamePcOffset, position, value) THEN procedureType.SetPcOffset(value(SIZE)) END;
 
 				IF HasFlag(modifiers,Global.NameNoPAF,position) THEN procedureType.SetNoPAF(TRUE) END;
 				IF (procedure.scope IS SyntaxTree.ModuleScope) THEN
@@ -6268,14 +6267,14 @@ TYPE
 					ELSIF HasFlag(modifiers, Global.NameExit, position) THEN procedure.SetExit(TRUE);
 					END;
 				END;
-				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,LONGINT(value)) (* TODO: fix explicit integer truncation *)
-				ELSIF HasValue(modifiers,Global.NameFixed,position,value) THEN procedure.SetAlignment(TRUE,LONGINT(value)) (* TODO: fix explicit integer truncation *)
+				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,value(SIZE));
+				ELSIF HasValue(modifiers,Global.NameFixed,position,value) THEN procedure.SetAlignment(TRUE,value(SIZE));
 				END;
 				IF HasValue(modifiers,Global.NameStackAligned, position, value) THEN
 					IF ~PowerOf2(value) THEN
 						Error(position, "forbidden stack alignment - must be power of two");
 					ELSE
-						procedureType.SetStackAlignment(LONGINT(value)) (* TODO: fix explicit integer truncation *)
+						procedureType.SetStackAlignment(value(SIZE));
 					END;
 				END;
 				IF HasFlag(modifiers,Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;
@@ -6647,22 +6646,22 @@ TYPE
 				ELSIF module.parameters = NIL THEN
 					Error(x.position,"imported module is no template");
 				ELSIF module.parameters.Length() # x.parameters.Length() THEN
-					Error(x.position,"numbers of template parameters do not match"); 
+					Error(x.position,"numbers of template parameters do not match");
 				ELSE
 					FOR i := 0 TO module.parameters.Length()-1 DO
 						ident := module.parameters.Get(i);
 						expression := x.parameters.GetExpression(i);
 						WITH expression: SyntaxTree.SymbolDesignator DO
 							symbol := expression.symbol;
-							WITH symbol: SyntaxTree.TypeDeclaration DO 
+							WITH symbol: SyntaxTree.TypeDeclaration DO
 								TRACE(symbol.declaredType,symbol.declaredType.typeDeclaration);
 								typeDeclaration := SyntaxTree.NewTypeDeclaration(expression.position,ident);
 								typeDeclaration.SetDeclaredType(symbol.declaredType);
 								module.moduleScope.AddTypeDeclaration(typeDeclaration);
 							| SyntaxTree.Constant DO TRACE("const");
-							| SyntaxTree.Procedure DO 
-								constDeclaration := SyntaxTree.NewConstant(expression.position, ident); 
-								constDeclaration.SetValue(SyntaxTree.NewProcedureValue(expression.position,symbol)); 
+							| SyntaxTree.Procedure DO
+								constDeclaration := SyntaxTree.NewConstant(expression.position, ident);
+								constDeclaration.SetValue(SyntaxTree.NewProcedureValue(expression.position,symbol));
 								module.moduleScope.AddConstant(constDeclaration);
 							ELSE
 								Printout.Info("expression", expression);
@@ -6686,7 +6685,7 @@ TYPE
 				END;
 			END
 		END ResolveTemplateImport;
-		
+
 
 		(** check and resolve import
 			- check for name = SYSTEM
@@ -6794,7 +6793,7 @@ TYPE
 		(*** statements ***)
 
 		PROCEDURE ResolveStatement*(x: SyntaxTree.Statement): SyntaxTree.Statement;
-		VAR result: SyntaxTree.Statement; pos: WORD;
+		VAR result: SyntaxTree.Statement; pos: Streams.Position;
 		BEGIN
 			pos := x.position.start;
 			IF currentIsUnreachable THEN x.SetUnreachable(TRUE) END;
@@ -6825,7 +6824,7 @@ TYPE
 			- check all statements, replace if necessary
 		**)
 		PROCEDURE StatementSequence(statementSequence: SyntaxTree.StatementSequence);
-		VAR i: LONGINT; statement,resolved: SyntaxTree.Statement;
+		VAR i: SIZE; statement,resolved: SyntaxTree.Statement;
 		BEGIN
 			IF statementSequence # NIL THEN (* else empty *)
 				FOR i := 0 TO statementSequence.Length()-1 DO
@@ -7000,7 +6999,7 @@ TYPE
 			- check if parts and else part statement sequence
 		**)
 		PROCEDURE ResolveIfStatement(ifStatement: SyntaxTree.IfStatement): SyntaxTree.Statement;
-		VAR elsif: SyntaxTree.IfPart; i: LONGINT; ifPartTrue, prevUnreachable: BOOLEAN;
+		VAR elsif: SyntaxTree.IfPart; i: SIZE; ifPartTrue, prevUnreachable: BOOLEAN;
 		BEGIN
 			prevUnreachable := currentIsUnreachable;
 			ifPartTrue := FALSE;
@@ -7078,7 +7077,7 @@ TYPE
 				WITH variable: type DO ... END; --> IF ~(variable IS type) THEN HALT(withTrap) ELSE ... END;
 		**)
 		PROCEDURE ResolveWithStatement(withStatement: SyntaxTree.WithStatement): SyntaxTree.Statement;
-		VAR i,j: LONGINT; prevScope: SyntaxTree.Scope; variable: SyntaxTree.Designator;
+		VAR i,j: SIZE; prevScope: SyntaxTree.Scope; variable: SyntaxTree.Designator;
 		BEGIN
 			prevScope := currentScope;
 
@@ -7111,7 +7110,7 @@ TYPE
 		**)
 		PROCEDURE CasePart(casePart: SyntaxTree.CasePart; type: SyntaxTree.Type; VAR allcases: SyntaxTree.CaseConstant; VAR min,max: Basic.Integer);
 		VAR
-			i: LONGINT;
+			i: SIZE;
 			position: Position;
 			expression, left, right: SyntaxTree.Expression;
 			expressionType: SyntaxTree.Type;
@@ -7200,7 +7199,7 @@ TYPE
 			- check case parts
 		**)
 		PROCEDURE ResolveCaseStatement(caseStatement: SyntaxTree.CaseStatement): SyntaxTree.Statement;
-		VAR expression: SyntaxTree.Expression; i: LONGINT; type: SyntaxTree.Type; caseList: SyntaxTree.CaseConstant;
+		VAR expression: SyntaxTree.Expression; i: SIZE; type: SyntaxTree.Type; caseList: SyntaxTree.CaseConstant;
 			ch: CHAR; l: Basic.Integer; min,max: Basic.Integer;
 		BEGIN
 			expression := ResolveExpression(caseStatement.variable);
@@ -7738,7 +7737,7 @@ TYPE
 			symbol: SyntaxTree.Symbol;
 			prevPhase: LONGINT;
 			prevError : BOOLEAN;
-			i: LONGINT;
+			i: SIZE;
 
 			PROCEDURE DeclareCell(type: SyntaxTree.CellType);
 			VAR baseType: SyntaxTree.Type; property: SyntaxTree.Property;
@@ -7896,7 +7895,7 @@ TYPE
 				END;
 			END;
 
-			
+
 			symbol := scope.firstSymbol;
 			WHILE(symbol # NIL) DO
 				IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN
@@ -8204,7 +8203,7 @@ TYPE
 		RETURN (scope # NIL) & IsCellNetScope(scope)
 	END InCellNetScope;
 
-	PROCEDURE ToMemoryUnits(system: Global.System; size: LONGINT): LONGINT;
+	PROCEDURE ToMemoryUnits(system: Global.System; size: SIZE): SIZE;
 	BEGIN
 		ASSERT(size MOD system.dataUnit = 0);
 		RETURN size DIV system.dataUnit
@@ -8482,8 +8481,8 @@ TYPE
 			tensor -> static
 	**)
 	(*! think about the metric here: is form matching more important than element type matching? *)
-	PROCEDURE MathArrayTypeDistance(system: Global.System; from,to: SyntaxTree.MathArrayType; varpar:BOOLEAN): LONGINT;
-	VAR i: LONGINT; fromBase, toBase: SyntaxTree.Type;
+	PROCEDURE MathArrayTypeDistance(system: Global.System; from,to: SyntaxTree.MathArrayType; varpar:BOOLEAN): SIZE;
+	VAR i: SIZE; fromBase, toBase: SyntaxTree.Type;
 	BEGIN
 		fromBase := Resolved(from.arrayBase);
 		toBase := Resolved(to.arrayBase);
@@ -8553,8 +8552,8 @@ TYPE
 	(** compute and return the distance of two array types
 	- return the distance of the base types
 	**)
-	PROCEDURE ArrayTypeDistance(system: Global.System; from, to: SyntaxTree.ArrayType): LONGINT;
-	VAR i: LONGINT;
+	PROCEDURE ArrayTypeDistance(system: Global.System; from, to: SyntaxTree.ArrayType): SIZE;
+	VAR i: SIZE;
 	BEGIN
 		i := Infinity;
 		IF from = to THEN
@@ -8576,9 +8575,9 @@ TYPE
 		- if any of the parameters are not compatible, the result is infinite
 		- add up and return the distance over all parameters
 	**)
-	PROCEDURE Distance(system: Global.System; procedureType: SyntaxTree.ProcedureType; actualParameters: SyntaxTree.ExpressionList): LONGINT;
-	VAR result: LONGINT; formalParameter: SyntaxTree.Parameter; actualParameter: SyntaxTree.Expression;
-	distance: LONGINT; baseFormal,baseActual, to: SyntaxTree.Type; i: LONGINT;
+	PROCEDURE Distance(system: Global.System; procedureType: SyntaxTree.ProcedureType; actualParameters: SyntaxTree.ExpressionList): SIZE;
+	VAR result: SIZE; formalParameter: SyntaxTree.Parameter; actualParameter: SyntaxTree.Expression;
+	distance: SIZE; baseFormal,baseActual, to: SyntaxTree.Type; i: SIZE;
 	BEGIN
 		IF actualParameters.Length() # (procedureType.numberParameters) THEN
 			result := Infinity
@@ -8645,15 +8644,14 @@ TYPE
 		RETURN result
 	END Distance;
 
-	PROCEDURE ProcedureTypeDistance(system: Global.System; procedureType: SyntaxTree.ProcedureType; right: SyntaxTree.ProcedureType): LONGINT;
-	VAR result: LONGINT; formalParameter, rightParameter: SyntaxTree.Parameter; distance: LONGINT; i: LONGINT;
+	PROCEDURE ProcedureTypeDistance(system: Global.System; procedureType: SyntaxTree.ProcedureType; right: SyntaxTree.ProcedureType): SIZE;
+	VAR result: SIZE; formalParameter, rightParameter: SyntaxTree.Parameter; distance: SIZE;
 	BEGIN
 		IF right.numberParameters # (procedureType.numberParameters) THEN
 			result := Infinity
 		ELSE
 			formalParameter := procedureType.firstParameter;
 			rightParameter := right.firstParameter;
-			i := 0;
 			result := 0;
 			IF right.isDelegate & ~procedureType.isDelegate THEN
 				INC(result);
@@ -8680,8 +8678,8 @@ TYPE
 	(** compute and return the distance between two types, used for computation of signature distance
 		from -> to
 	**)
-	PROCEDURE TypeDistance(system: Global.System; from, to: SyntaxTree.Type; varpar: BOOLEAN): LONGINT;
-	VAR i: LONGINT; ptr: SyntaxTree.PointerType;
+	PROCEDURE TypeDistance(system: Global.System; from, to: SyntaxTree.Type; varpar: BOOLEAN): SIZE;
+	VAR i: SIZE; ptr: SyntaxTree.PointerType;
 	BEGIN
 
 		i := Infinity;
@@ -8886,7 +8884,7 @@ TYPE
 		RETURN t1.SameType(t2.resolved);
 	END SameType;
 
-	PROCEDURE ArrayBase*(t: SyntaxTree.Type; max: LONGINT): SyntaxTree.Type;
+	PROCEDURE ArrayBase*(t: SyntaxTree.Type; max: SIZE): SyntaxTree.Type;
 	BEGIN
 		IF t IS SyntaxTree.MathArrayType THEN
 			WHILE (t # NIL) & (t IS SyntaxTree.MathArrayType) & ((t(SyntaxTree.MathArrayType).form # SyntaxTree.Tensor) OR (max = Infinity)) & (max > 0) DO
@@ -9139,8 +9137,8 @@ TYPE
 	(** compute and return the distance of two record types
 		returns the number of extension levels of from to to, returns infinite if to is not an extension of from
 	**)
-	PROCEDURE RecordTypeDistance(from, to: SyntaxTree.RecordType): LONGINT;
-	VAR i: LONGINT; baseType: SyntaxTree.Type;
+	PROCEDURE RecordTypeDistance(from, to: SyntaxTree.RecordType): SIZE;
+	VAR i: SIZE; baseType: SyntaxTree.Type;
 	BEGIN
 		i := 0;
 		WHILE (from # NIL) & (from # to) DO
@@ -9165,7 +9163,7 @@ TYPE
 	END RecordTypeDistance;
 
 	(** compute and return the distance of two pointer types **)
-	PROCEDURE PointerTypeDistance(from, to: SyntaxTree.PointerType): LONGINT;
+	PROCEDURE PointerTypeDistance(from, to: SyntaxTree.PointerType): SIZE;
 	BEGIN
 		IF ~((to.pointerBase.resolved IS SyntaxTree.RecordType) & (from.pointerBase.resolved IS SyntaxTree.RecordType)) THEN
 			RETURN Infinity;

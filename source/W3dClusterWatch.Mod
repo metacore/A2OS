@@ -232,7 +232,7 @@ TYPE
 		END New;
 
 		PROCEDURE Close*;
-		VAR i : LONGINT; o : ANY; info : Info;
+		VAR i : SIZE; o : ANY; info : Info;
 		BEGIN {EXCLUSIVE}
 			infoList.Lock;
 			FOR i := 0 TO infoList.GetCount() - 1 DO o := infoList.GetItem(i); info := o(Info); info.Kill END;

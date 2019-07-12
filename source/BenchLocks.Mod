@@ -45,7 +45,7 @@ BEGIN {EXCLUSIVE}
 END DecNofThreadsRunning;
 
 PROCEDURE Bench*(context : Commands.Context); (** nofThreads nofLoops [holdTime] ~*)
-VAR start, i, nofThreads, nofLoops, holdTime : LONGINT; threads : POINTER TO ARRAY OF Thread;
+VAR start, nofThreads, nofLoops, holdTime : LONGINT; i : SIZE; threads : POINTER TO ARRAY OF Thread;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.Int(nofThreads, FALSE);
 	context.arg.SkipWhitespace; context.arg.Int(nofLoops, FALSE);

@@ -192,7 +192,7 @@ TYPE
 		isConst*: BOOLEAN;
 
 		PROCEDURE AssignIndices(code: PCC.Code; ae: ArrayExpression; dim: LONGINT);
-		VAR a: ArrayQ; index: EnhIndex; i,j: LONGINT;
+		VAR a: ArrayQ; index: EnhIndex; i: LONGINT; j: SIZE;
 		BEGIN
 			a := ae.array;
 			i := 0;
@@ -212,7 +212,7 @@ TYPE
 		END AssignIndices;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR l: PCC.Item);
-		VAR i: LONGINT; v: PCT.Value;
+		VAR i: SIZE; v: PCT.Value;
 		BEGIN
 			NEW(aindex,dim);
 			FOR i := 0 TO LEN(aindex)-1 DO aindex[i] := 0 END;
@@ -5430,7 +5430,7 @@ END RealtimeCompatible;
 	END AllocateArrays;
 
 	PROCEDURE InitInterfaces(code: PCC.Code; r, int: PCT.Record);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 	BEGIN
 		PCC.InitInterface(code, r, int);
 		FOR i := 0 TO LEN(int.intf)-1 DO
@@ -5439,7 +5439,7 @@ END RealtimeCompatible;
 	END InitInterfaces;
 
 	PROCEDURE InitRecords(code: PCC.Code; r: PCT.Record);
-	VAR  r0: PCT.Record; i: LONGINT;
+	VAR  r0: PCT.Record; i: SIZE;
 	BEGIN
 		WHILE r # NIL DO
 			r0 := r;

@@ -13,19 +13,19 @@ CONST
 
 TYPE
 
-	ListenerProc* = PROCEDURE {DELEGATE} (nrUndos, nrRedos : LONGINT);
+	ListenerProc* = PROCEDURE {DELEGATE} (nrUndos, nrRedos : SIZE);
 
 	UndoManager*= OBJECT(Texts.UndoManager)
 		VAR
 			text: Texts.Text;
 			undoQu, redoQu: Buffer;
 			objUpdate: StyleUpdateInfo;
-			nrUndoUpdates-, nrRedoUpdates-: LONGINT;
+			nrUndoUpdates-, nrRedoUpdates-: SIZE;
 			nrUpdatesListener* : ListenerProc;
 			redo: BOOLEAN;
-			actualPos-: LONGINT;
+			actualPos-: SIZE;
 
-		PROCEDURE & New*(memorySize: LONGINT; redo: BOOLEAN);
+		PROCEDURE & New*(memorySize: SIZE; redo: BOOLEAN);
 		BEGIN
 			IF memorySize <= 0 THEN memorySize := 1001;END;
 			SELF.redo := redo;
@@ -66,7 +66,7 @@ TYPE
 			INC(nrRedoUpdates);
 		END SaveOperation;
 
-		PROCEDURE InsertText*(pos: LONGINT; text: Texts.Text);
+		PROCEDURE InsertText*(pos: SIZE; text: Texts.Text);
 		VAR i: InsertUpdateInfo; u:UpdateInfo; tr: Texts.TextReader; ucs32: LONGINT;
 		BEGIN
 			ResetRedo;
@@ -93,7 +93,7 @@ TYPE
 			NextOperation(i);
 		END InsertText;
 
-		PROCEDURE DeleteText*(pos: LONGINT; text: Texts.Text);
+		PROCEDURE DeleteText*(pos: SIZE; text: Texts.Text);
 		VAR d: DeleteUpdateInfo; u: UpdateInfo;
 		BEGIN
 			ResetRedo;
@@ -122,17 +122,17 @@ TYPE
 			NextOperation(d);
 		END DeleteText;
 
-		PROCEDURE BeginObjectChange*(pos: LONGINT);
+		PROCEDURE BeginObjectChange*(pos: SIZE);
 		BEGIN
 			NEW(objUpdate, pos);
 		END BeginObjectChange;
 
-		PROCEDURE ObjectChanged*(pos, len, type: LONGINT; obj: ANY);
+		PROCEDURE ObjectChanged*(pos, len: SIZE; type: WORD; obj: ANY);
 		BEGIN
 			objUpdate.Append(pos, len, obj, type)
 		END ObjectChanged;
 
-		PROCEDURE EndObjectChange*(len, type: LONGINT; to: ANY);
+		PROCEDURE EndObjectChange*(len: SIZE; type: WORD; to: ANY);
 		BEGIN
 			ResetRedo;
 			objUpdate.len := len;
@@ -196,7 +196,7 @@ TYPE
 	END UndoManager;
 
 	Buffer = OBJECT
-		VAR head, num: LONGINT; buffer: POINTER TO ARRAY OF UpdateInfo;
+		VAR head, num: SIZE; buffer: POINTER TO ARRAY OF UpdateInfo;
 
 		PROCEDURE Push*(x: UpdateInfo);
 		BEGIN
@@ -242,7 +242,7 @@ TYPE
 			head := 0; num := 0;
 		END Clear;
 
-		PROCEDURE &Init*(n: LONGINT);
+		PROCEDURE &Init*(n: SIZE);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;
@@ -251,7 +251,7 @@ TYPE
 
 	UpdateInfo= OBJECT
 		VAR
-			pos : LONGINT;
+			pos : SIZE;
 			sealed*: BOOLEAN;
 
 		PROCEDURE Undo(text: Texts.Text); (* abstract *)
@@ -266,10 +266,10 @@ TYPE
 
 	InsertUpdateInfo= OBJECT(UpdateInfo)
 		VAR
-			len: LONGINT;
+			len: SIZE;
 			t: Texts.Text;
 
-		PROCEDURE &New*(pos: LONGINT; text: Texts.Text);
+		PROCEDURE &New*(pos: SIZE; text: Texts.Text);
 		BEGIN
 			SELF.pos := pos;
 			SELF.t := text;
@@ -296,10 +296,10 @@ TYPE
 
 	DeleteUpdateInfo= OBJECT(UpdateInfo)
 		VAR
-			len: LONGINT;
+			len: SIZE;
 			t: Texts.Text;
 
-		PROCEDURE &New*(pos: LONGINT; text: Texts.Text);
+		PROCEDURE &New*(pos: SIZE; text: Texts.Text);
 		BEGIN
 			SELF.pos := pos;
 			SELF.t := text;
@@ -327,24 +327,25 @@ TYPE
 
 	StyleInfo= POINTER TO RECORD
 		next: StyleInfo;
-		pos, len: LONGINT;
+		pos, len: SIZE;
 		style: ANY;
-		type: LONGINT;
+		type: WORD;
 	END;
 
 
 	StyleUpdateInfo= OBJECT(UpdateInfo)
 		VAR
-			len, type: LONGINT;
+			len: SIZE;
+			type: WORD;
 			new: ANY;
 			old: StyleInfo;
 
-		PROCEDURE &New*(pos: LONGINT);
+		PROCEDURE &New*(pos: SIZE);
 		BEGIN
 			SELF.pos := pos;
 		END New;
 
-		PROCEDURE Append(pos, len: LONGINT; style: ANY; type: LONGINT);
+		PROCEDURE Append(pos, len: SIZE; style: ANY; type: WORD);
 		VAR ai: StyleInfo;
 		BEGIN
 			NEW(ai);
@@ -361,12 +362,12 @@ TYPE
 			SELF.new := new;
 		END SetObject;
 
-		PROCEDURE SetLen(len: LONGINT);
+		PROCEDURE SetLen(len: SIZE);
 		BEGIN
 			SELF.len := len;
 		END SetLen;
 
-		PROCEDURE SetStyle*(textpos, len: LONGINT; style: ANY);
+		PROCEDURE SetStyle*(textpos, len: SIZE; style: ANY);
 		END SetStyle;
 
 		PROCEDURE Undo(text: Texts.Text);

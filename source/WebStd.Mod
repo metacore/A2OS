@@ -964,7 +964,7 @@ TYPE
 
 		(** returns NIL iff not present in this container *)
 		PROCEDURE GetObjectByOid*(objectId: LONGINT) : PersistentDataObject;
-		VAR i: LONGINT; p: ANY; obj: PersistentDataObject;
+		VAR i: SIZE; p: ANY; obj: PersistentDataObject;
 		BEGIN
 			dataObjList.Lock;
 			FOR i := 0 TO dataObjList.GetCount()-1 DO
@@ -978,11 +978,11 @@ TYPE
 			RETURN NIL
 		END GetObjectByOid;
 
-		PROCEDURE GetCount*() : LONGINT;
+		PROCEDURE GetCount*() : SIZE;
 		BEGIN RETURN dataObjList.GetCount()
 		END GetCount;
 
-		PROCEDURE GetItem*(i: LONGINT) : PersistentDataObject;
+		PROCEDURE GetItem*(i: SIZE) : PersistentDataObject;
 		VAR p: ANY; obj: PersistentDataObject;
 		BEGIN
 			IF ((i >= 0) & (i < dataObjList.GetCount())) THEN
@@ -996,7 +996,7 @@ TYPE
 		(** returns a list of filtered persistent data objects entries, if filter = NIL THEN no filter is applied. persComp defines the
 		  * ordering of the list and can be NIL *)
 		PROCEDURE GetElementList*(filter: PersistentDataFilter; persComp: PersistentDataCompare) : PersistentDataObjectList;
-		VAR i: LONGINT; filteredList: TFClasses.List; persList: PersistentDataObjectList; p: ANY; obj: PersistentDataObject;
+		VAR i: SIZE; filteredList: TFClasses.List; persList: PersistentDataObjectList; p: ANY; obj: PersistentDataObject;
 			genArray: GenericSort.GenericArray; persSorter: PersistentDataSorter;
 		BEGIN
 			NEW (filteredList);
@@ -1046,7 +1046,7 @@ TYPE
 		END AddPersistentDataObject;
 
 		PROCEDURE Contains*(obj: PersistentDataObject) : BOOLEAN;
-		VAR p: ANY; i: LONGINT;
+		VAR p: ANY; i: SIZE;
 		BEGIN
 			dataObjList.Lock;
 			FOR i := 0 TO dataObjList.GetCount()-1 DO
@@ -1083,7 +1083,7 @@ TYPE
 		END FilterContainerByName;
 
 		PROCEDURE Externalize*() : XML.Content;
-		VAR elem: XML.Element; i: LONGINT; p: ANY; obj: PersistentDataObject; container: XML.Container;
+		VAR elem: XML.Element; i: SIZE; p: ANY; obj: PersistentDataObject; container: XML.Container;
 			oidString: ARRAY 14 OF CHAR;
 		BEGIN
 			NEW(container);
@@ -1153,7 +1153,7 @@ TYPE
 		END InternalizeElem;
 
 		PROCEDURE GetReferrencedObjects*() : PrevalenceSystem.PersistentObjectList;
-		VAR list: PrevalenceSystem.PersistentObjectList; i: LONGINT; pers: PrevalenceSystem.PersistentObject; p: ANY;
+		VAR list: PrevalenceSystem.PersistentObjectList; i: SIZE; pers: PrevalenceSystem.PersistentObject; p: ANY;
 		BEGIN
 			IF (dataObjList.GetCount() > 0) THEN
 				NEW(list, dataObjList.GetCount());
@@ -1170,7 +1170,7 @@ TYPE
 		END GetReferrencedObjects;
 
 		PROCEDURE ToXML*(request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR elem: XML.Element; i: LONGINT; p: ANY; obj: PersistentDataObject; container: XML.Container;
+		VAR elem: XML.Element; i: SIZE; p: ANY; obj: PersistentDataObject; container: XML.Container;
 			nameText: XML.ArrayChars; oidString, posString: ARRAY 14 OF CHAR; objSer: XML.Content;
 			persList: PersistentDataObjectList;
 		BEGIN
@@ -1298,7 +1298,7 @@ TYPE
 
 		(** returns NIL iff not present in this container *)
 		PROCEDURE GetObjectByOid*(objectId: LONGINT) : SessionDataObject;
-		VAR i: LONGINT; p: ANY; obj: SessionDataObject;
+		VAR i: SIZE; p: ANY; obj: SessionDataObject;
 		BEGIN
 			dataObjList.Lock;
 			FOR i := 0 TO dataObjList.GetCount()-1 DO
@@ -1312,11 +1312,11 @@ TYPE
 			RETURN NIL
 		END GetObjectByOid;
 
-		PROCEDURE GetCount*() : LONGINT;
+		PROCEDURE GetCount*() : SIZE;
 		BEGIN RETURN dataObjList.GetCount()
 		END GetCount;
 
-		PROCEDURE GetItem*(i: LONGINT) : SessionDataObject;
+		PROCEDURE GetItem*(i: SIZE) : SessionDataObject;
 		VAR p: ANY; obj: SessionDataObject;
 		BEGIN
 			IF ((i >= 0) & (i < dataObjList.GetCount())) THEN
@@ -1330,7 +1330,7 @@ TYPE
 		(** returns a list of filtered session data objects entries, if filter = NIL THEN no filter is applied.  sessComp defines the
 			ordering of the list and can be NIL *)
 		PROCEDURE GetElementList*(filter: SessionDataFilter; sessComp: SessionDataCompare) : SessionDataObjectList;
-		VAR i: LONGINT; filteredList: TFClasses.List; sessList: SessionDataObjectList; p: ANY; obj: SessionDataObject;
+		VAR i: SIZE; filteredList: TFClasses.List; sessList: SessionDataObjectList; p: ANY; obj: SessionDataObject;
 			genArray: GenericSort.GenericArray; sessSorter: SessionDataSorter;
 		BEGIN
 			NEW (filteredList);
@@ -1371,7 +1371,7 @@ TYPE
 		END AddSessionDataObject;
 
 		PROCEDURE Contains*(obj: SessionDataObject) : BOOLEAN;
-		VAR p: ANY; i: LONGINT;
+		VAR p: ANY; i: SIZE;
 		BEGIN
 			dataObjList.Lock;
 			FOR i := 0 TO dataObjList.GetCount()-1 DO
@@ -1393,7 +1393,7 @@ TYPE
 		END RemoveSessionDataObject;
 
 		PROCEDURE ToXML*(request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR elem: XML.Element; i: LONGINT; p: ANY; obj: SessionDataObject; container: XML.Container;
+		VAR elem: XML.Element; i: SIZE; p: ANY; obj: SessionDataObject; container: XML.Container;
 			nameText: XML.ArrayChars; objSer: XML.Content; posString, oidString: ARRAY 14 OF CHAR;
 		BEGIN
 			NEW(container);
@@ -2049,7 +2049,7 @@ TYPE
 
 	(** create attribute value text with encoded special charcters *)
 	PROCEDURE GetEncXMLAttributeText*(text: ARRAY OF CHAR): Strings.String;
-	VAR i: LONGINT; dynStr: DynamicStrings.DynamicString; chs: ARRAY 8 OF CHAR;
+	VAR i: SIZE; dynStr: DynamicStrings.DynamicString; chs: ARRAY 8 OF CHAR;
 		str: Strings.String;
 	BEGIN
 		NEW(dynStr);
@@ -2281,7 +2281,7 @@ TYPE
 	END ExternalizeDateTime;
 
 	(** externalize LONGINT 'number' to 'container' with XML element named 'elementName'. *)
-	PROCEDURE ExternalizeInteger*(number: LONGINT; container: XML.Container; elementName: ARRAY OF CHAR);
+	PROCEDURE ExternalizeInteger*(number: HUGEINT; container: XML.Container; elementName: ARRAY OF CHAR);
 	VAR elem: XML.Element; intStr: ARRAY 14 OF CHAR;
 	BEGIN
 		Strings.IntToStr(number, intStr);

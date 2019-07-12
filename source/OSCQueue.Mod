@@ -32,7 +32,7 @@ TYPE
 		PROCEDURE grow;
 		VAR
 			biggerq: PacketArray;
-			i: LONGINT;
+			i: SIZE;
 		BEGIN
 			NEW(biggerq, 2*LEN(q));
 			FOR i:=0 TO LEN(q)-1 DO biggerq[i] := q[i]; END;

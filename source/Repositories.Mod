@@ -99,7 +99,7 @@ TYPE
 	(** Base class of all components *)
 	Component* = OBJECT(XML.Element)
 	VAR
-		repository : Repository; name : Strings.String; refNum : LONGINT;
+		repository : Repository; name : Strings.String; refNum : SIZE;
 		flags : SET;
 		timestamp- : LONGINT;
 		onChanged* : WMEvents.EventSource; (* for update mechanisms, basically every component needs a feature to inform about updates *)
@@ -117,7 +117,7 @@ TYPE
 		BEGIN SetAttributeValue("generator", gen);
 		END SetGenerator;
 
-		PROCEDURE SetRepository*(repository : Repository; CONST name : Name; refNum : LONGINT);
+		PROCEDURE SetRepository*(repository : Repository; CONST name : Name; refNum : SIZE);
 		BEGIN {EXCLUSIVE}
 			SELF.repository := repository; SELF.refNum := refNum;
 			IF (repository # NIL) THEN
@@ -137,7 +137,7 @@ TYPE
 			INC(timestamp);
 		END SetRepository;
 
-		PROCEDURE GetRepository*(VAR repository : Repository; VAR name : Name; VAR refNum : LONGINT);
+		PROCEDURE GetRepository*(VAR repository : Repository; VAR name : Name; VAR refNum : SIZE);
 		BEGIN {EXCLUSIVE}
 			repository := SELF.repository; refNum := SELF.refNum;
 			IF (SELF.name # NIL) THEN COPY(SELF.name^, name); ELSE name := ""; END;
@@ -175,7 +175,7 @@ TYPE
 	ComponentInfo = OBJECT(XML.Element)
 	VAR
 		name, source : Strings.String; (* { (name # NIL) & (source # NIL) } *)
-		type, id : LONGINT;
+		type: WORD; id : SIZE;
 		instance : ANY;
 		next : ComponentInfo;
 
@@ -201,7 +201,7 @@ TYPE
 				ELSIF (name^ = XmlAttributeID) THEN
 					temp := attribute.GetValue();
 					IF (temp # NIL) THEN
-						Strings.StrToInt(temp^, SELF.id);
+						Strings.StrToSize(temp^, SELF.id);
 					END;
 				ELSIF (name^ = XmlAttributeSource) THEN
 					temp := attribute.GetValue();
@@ -300,7 +300,7 @@ TYPE
 		PROCEDURE Parse(reader : Streams.Reader;  VAR res : WORD);
 		VAR buffer : Strings.Buffer; entry : Entry; ch : CHAR;
 
-			PROCEDURE ReportError(CONST msg : ARRAY OF CHAR; position : LONGINT);
+			PROCEDURE ReportError(CONST msg : ARRAY OF CHAR; position : Streams.Position);
 			BEGIN
 				KernelLog.String("Repositories.Dictionary.Parse: Error: "); KernelLog.String(msg);
 				KernelLog.String(" at position "); KernelLog.Int(position, 0); KernelLog.Ln;
@@ -308,7 +308,7 @@ TYPE
 
 			(* Read all characters until '"' OR 0X (excl) *)
 			PROCEDURE GetString(reader : Streams.Reader) : Strings.String;
-			VAR temp : Strings.String; writer : Streams.Writer; escaping : BOOLEAN; escape : ARRAY 8 OF CHAR; i : LONGINT;
+			VAR temp : Strings.String; writer : Streams.Writer; escaping : BOOLEAN; escape : ARRAY 8 OF CHAR; i : SIZE;
 			BEGIN
 				ASSERT(reader # NIL);
 				buffer.Clear;
@@ -402,7 +402,7 @@ TYPE
 		END Parse;
 
 		PROCEDURE Find(CONST word : ARRAY OF CHAR) : Entry;
-		VAR e : Entry; result : LONGINT;
+		VAR e : Entry; result : WORD;
 		BEGIN
 			result := UTF8Strings.CmpLess;
 			e := entries;
@@ -424,7 +424,7 @@ TYPE
 		END Find;
 
 		PROCEDURE ComplexTranslation(CONST word : ARRAY OF CHAR) : Strings.String;
-		VAR buf : ARRAY 1024 OF CHAR; i, j : LONGINT; translation : Strings.String; w : Name;
+		VAR buf : ARRAY 1024 OF CHAR; i, j : SIZE; translation : Strings.String; w : Name;
 
 			PROCEDURE BoundsCheck() : BOOLEAN;
 			BEGIN
@@ -440,7 +440,7 @@ TYPE
 			END Append;
 
 			PROCEDURE AppendTranslation(CONST translation : ARRAY OF CHAR);
-			VAR idx : LONGINT;
+			VAR idx : SIZE;
 			BEGIN
 				idx := 0;
 				WHILE (j < LEN(buf) - 1) & (idx < LEN(translation)) & (translation[idx] # 0X) DO
@@ -451,7 +451,7 @@ TYPE
 			END AppendTranslation;
 
 			PROCEDURE GetName(VAR w : ARRAY OF CHAR) : BOOLEAN;
-			VAR getName : BOOLEAN; idx : LONGINT;
+			VAR getName : BOOLEAN; idx : SIZE;
 			BEGIN
 				getName := TRUE;
 				w := "";
@@ -573,7 +573,7 @@ TYPE
 		PROCEDURE InitializeLanguages;
 		VAR
 			enum : XMLObjects.Enumerator; string : Strings.String; ptr : ANY;
-			nofLanguages, i : LONGINT;
+			nofLanguages, i : SIZE;
 		BEGIN
 			nofLanguages := 0;
 			enum := GetContents();
@@ -615,7 +615,7 @@ TYPE
 		END InitializeLanguages;
 
 		PROCEDURE Find(CONST language : Localization.Language) : Translator;
-		VAR t : Translator; res: WORD; i : LONGINT;
+		VAR t : Translator; res: WORD; i : SIZE;
 		BEGIN
 			t := NIL;
 			IF (languages # NIL) THEN
@@ -640,7 +640,7 @@ TYPE
 		END Find;
 
 		PROCEDURE GetDefaultTranslator() : Translator;
-		VAR t : Translator; i: LONGINT; res : WORD;
+		VAR t : Translator; i: SIZE; res : WORD;
 		BEGIN
 			t := NIL;
 			IF (languages # NIL) THEN
@@ -660,7 +660,7 @@ TYPE
 		END GetDefaultTranslator;
 
 		PROCEDURE FindBestMatch(languages : Localization.Languages) : Translator;
-		VAR translator : Translator; i : LONGINT;
+		VAR translator : Translator; i : SIZE;
 		BEGIN
 			ASSERT(languages # NIL);
 			translator := NIL;
@@ -742,7 +742,7 @@ TYPE
 		END Translate;
 
 		PROCEDURE GetLanguages*() : Localization.Languages;
-		VAR languages : Localization.Languages; i : LONGINT;
+		VAR languages : Localization.Languages; i : SIZE;
 		BEGIN
 			IF (SELF.languages # NIL) THEN
 				NEW(languages, LEN(SELF.languages));
@@ -768,7 +768,7 @@ TYPE
 		timestamp- : LONGINT;
 
 		modified : BOOLEAN;
-		nextID : LONGINT;
+		nextID : SIZE;
 
 		components : ComponentInfo;
 		dictionaries : Dictionary;
@@ -829,7 +829,7 @@ TYPE
 			RETURN res;
 		END Initialize;
 
-		PROCEDURE FindComponentInfo(CONST name : ARRAY OF CHAR; id : LONGINT) : ComponentInfo;
+		PROCEDURE FindComponentInfo(CONST name : ARRAY OF CHAR; id : SIZE) : ComponentInfo;
 		VAR ci : ComponentInfo;
 		BEGIN
 			ci := components;
@@ -904,7 +904,7 @@ TYPE
 		END GetFile;
 
 		PROCEDURE Check() : BOOLEAN;
-		VAR archiveIndex : Archives.Index; error : BOOLEAN; i : LONGINT;
+		VAR archiveIndex : Archives.Index; error : BOOLEAN; i : SIZE;
 		BEGIN {EXCLUSIVE}
 			error := TRUE;
 			archive.Acquire;
@@ -918,7 +918,7 @@ TYPE
 			RETURN error;
 		END Check;
 
-		PROCEDURE GetComponent*(CONST name : ARRAY OF CHAR; id : LONGINT) : Component;
+		PROCEDURE GetComponent*(CONST name : ARRAY OF CHAR; id : SIZE) : Component;
 		VAR ci : ComponentInfo; component : Component; cname : Name;
 		BEGIN
 			IF TraceInstantiate IN Trace THEN
@@ -968,7 +968,7 @@ TYPE
 			RETURN component;
 		END GetComponent;
 
-		PROCEDURE PutComponent*(component : Component; CONST name : ARRAY OF CHAR; VAR id : LONGINT; VAR res : WORD);
+		PROCEDURE PutComponent*(component : Component; CONST name : ARRAY OF CHAR; VAR id : SIZE; VAR res : WORD);
 		VAR ci : ComponentInfo; filename : Files.FileName; nbrStr : ARRAY 16 OF CHAR; cname : Name;
 		BEGIN
 			ASSERT(component # NIL); (* TBD: Locking *)
@@ -1001,7 +1001,7 @@ TYPE
 			IncrementTimestamp(timestamp);
 		END PutComponent;
 
-		PROCEDURE UnbindComponent*(CONST name : ARRAY OF CHAR; id : LONGINT; VAR res : WORD);
+		PROCEDURE UnbindComponent*(CONST name : ARRAY OF CHAR; id : SIZE; VAR res : WORD);
 		VAR ci : ComponentInfo;
 		BEGIN
 			ci := FindComponentInfo(name, id);
@@ -1026,7 +1026,7 @@ TYPE
 			IncrementTimestamp(timestamp);
 		END Unbind;
 
-		PROCEDURE RemoveComponent*(CONST name : ARRAY OF CHAR; refNum : LONGINT; VAR res : WORD);
+		PROCEDURE RemoveComponent*(CONST name : ARRAY OF CHAR; refNum : SIZE; VAR res : WORD);
 		VAR ci : ComponentInfo;
 		BEGIN
 			archive.Acquire;
@@ -1080,7 +1080,7 @@ TYPE
 		END LoadComponent;
 
 		(* Return an ID that is unique withhin this repository *)
-		PROCEDURE GetID*() : LONGINT;
+		PROCEDURE GetID*() : SIZE;
 		BEGIN {EXCLUSIVE}
 			INC(nextID);
 			RETURN nextID;
@@ -1150,7 +1150,7 @@ TYPE
 
 		PROCEDURE InstantiateElement*(CONST name: ARRAY OF CHAR): XML.Element;
 		VAR
-			repositoryName, componentName : ARRAY 128 OF CHAR; id : LONGINT;
+			repositoryName, componentName : ARRAY 128 OF CHAR; id : SIZE;
 			repository : Repository;
 			element : XML.Element;
 			properties : Properties;
@@ -1233,14 +1233,14 @@ TYPE
 
 	ErrorReporter = OBJECT
 	VAR
-		nofErrors : LONGINT;
+		nofErrors : SIZE;
 
 		PROCEDURE &Reset;
 		BEGIN
 			nofErrors := 0;
 		END Reset;
 
-		PROCEDURE Report(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Report(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			INC(nofErrors);
 			KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
@@ -1378,7 +1378,7 @@ BEGIN (* must hold archive lock!! *)
 	RETURN writer;
 END GetWriter;
 
-PROCEDURE SplitName*(CONST name : ARRAY OF CHAR; VAR repositoryName, componentName : ARRAY OF CHAR; VAR id : LONGINT) : BOOLEAN;
+PROCEDURE SplitName*(CONST name : ARRAY OF CHAR; VAR repositoryName, componentName : ARRAY OF CHAR; VAR id : SIZE) : BOOLEAN;
 VAR count, pos, next : SIZE; succeeded : BOOLEAN;
 BEGIN
 	succeeded := TRUE;
@@ -1407,7 +1407,7 @@ BEGIN
 		next := Strings.Find(name, pos, Delimiter);
 		Strings.Copy(name, pos, next - pos, componentName);
 		pos := next + 1;
-		Strings.StrToIntPos(name, id, pos);
+		Strings.StrToSizePos(name, id, pos);
 		succeeded := ((repositoryName = "") OR IsValidName(repositoryName)) & IsValidName(componentName);
 	ELSE
 		succeeded := FALSE;
@@ -1415,7 +1415,7 @@ BEGIN
 	RETURN succeeded;
 END SplitName;
 
-PROCEDURE JoinName*(CONST repositoryName, componentName : ARRAY OF CHAR; id : LONGINT; VAR name : ARRAY OF CHAR);
+PROCEDURE JoinName*(CONST repositoryName, componentName : ARRAY OF CHAR; id : SIZE; VAR name : ARRAY OF CHAR);
 VAR nbrStr : ARRAY 16 OF CHAR;
 BEGIN
 	COPY(repositoryName, name);
@@ -1430,7 +1430,7 @@ END JoinName;
 
 (** valid name: Starts with latin letter, contains only latin letter and arabic number *)
 PROCEDURE IsValidName*(CONST name : ARRAY OF CHAR) : BOOLEAN;
-VAR valid : BOOLEAN; i : LONGINT;
+VAR valid : BOOLEAN; i : SIZE;
 BEGIN
 	valid := (("A" <= CAP(name[0]))  & (CAP(name[0]) <= "Z"));
 	IF valid THEN
@@ -1445,7 +1445,7 @@ BEGIN
 END IsValidName;
 
 PROCEDURE IsNumber*(CONST name: ARRAY OF CHAR): BOOLEAN;
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 	WHILE (i<LEN(name)) & (name[i] # 0X) & ('0' <= name[i]) & (name[i] <= '9') DO
@@ -1455,7 +1455,7 @@ BEGIN
 END IsNumber;
 
 
-PROCEDURE NewJoinName*(CONST repositoryName, componentName : ARRAY OF CHAR; id : LONGINT) : Strings.String;
+PROCEDURE NewJoinName*(CONST repositoryName, componentName : ARRAY OF CHAR; id : SIZE) : Strings.String;
 VAR name : ARRAY 256 OF CHAR;
 BEGIN
 	JoinName(repositoryName, componentName, id, name);
@@ -1508,7 +1508,7 @@ END ExtractCommand;
 PROCEDURE CallCommand*(CONST command : ARRAY OF CHAR; VAR context : Context; VAR res : WORD);
 VAR
 	cmd : ARRAY 64 OF CHAR; param : POINTER TO ARRAY OF CHAR; reader : Streams.StringReader;
-	proc : Command;  i, j : LONGINT; object: ANY;
+	proc : Command;  i, j : SIZE; object: ANY;
 BEGIN
 	IF Strings.StartsWith2(CommandPrefix, command) THEN
 		i := Strings.Length(CommandPrefix);
@@ -1558,7 +1558,7 @@ BEGIN
 END CallCommand;
 
 PROCEDURE GetTranslationInfo*(CONST string : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR word : Strings.String; VAR res : WORD);
-VAR repositoryName, dictionaryName, temp : ARRAY 512 OF CHAR; i, j : LONGINT;
+VAR repositoryName, dictionaryName, temp : ARRAY 512 OF CHAR; i, j : SIZE;
 BEGIN
 	res := Ok;
 	dictionary := NIL; word := NIL;
@@ -1632,7 +1632,7 @@ BEGIN
 END GetDictionary;
 
 PROCEDURE GetDictionaryByString*(CONST string : ARRAY OF CHAR; VAR dictionary : Dictionary; VAR res : WORD);
-VAR repositoryName : Files.FileName; dictionaryName : ARRAY 128 OF CHAR; ignoreID : LONGINT;
+VAR repositoryName : Files.FileName; dictionaryName : ARRAY 128 OF CHAR; ignoreID : SIZE;
 BEGIN
 	IF SplitName(string, repositoryName, dictionaryName, ignoreID) THEN
 		GetDictionary(repositoryName, dictionaryName, dictionary, res);
@@ -1641,7 +1641,7 @@ BEGIN
 	END;
 END GetDictionaryByString;
 
-PROCEDURE GetComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR component : Component; VAR res : WORD);
+PROCEDURE GetComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : SIZE; VAR component : Component; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	component := NIL;
@@ -1659,7 +1659,7 @@ BEGIN
 END GetComponent;
 
 PROCEDURE GetComponentByString*(CONST string : ARRAY OF CHAR; VAR component : Component; VAR res : WORD);
-VAR repositoryName : Files.FileName; componentName : ARRAY 128 OF CHAR; componentID : LONGINT;
+VAR repositoryName : Files.FileName; componentName : ARRAY 128 OF CHAR; componentID : SIZE;
 BEGIN
 	IF SplitName(string, repositoryName, componentName, componentID) THEN
 		GetComponent(repositoryName, componentName, componentID, component, res);
@@ -1668,7 +1668,7 @@ BEGIN
 	END;
 END GetComponentByString;
 
-PROCEDURE PutComponent*(component : Component; CONST repositoryName, componentName : ARRAY OF CHAR; VAR id : LONGINT; VAR res : WORD);
+PROCEDURE PutComponent*(component : Component; CONST repositoryName, componentName : ARRAY OF CHAR; VAR id : SIZE; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	ASSERT(component # NIL);
@@ -1680,7 +1680,7 @@ BEGIN
 	END;
 END PutComponent;
 
-PROCEDURE UnbindComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR res : WORD);
+PROCEDURE UnbindComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : SIZE; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	repository := ThisRepository(repositoryName);
@@ -1691,7 +1691,7 @@ BEGIN
 	END;
 END UnbindComponent;
 
-PROCEDURE RemoveComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : LONGINT; VAR res : WORD);
+PROCEDURE RemoveComponent*(CONST repositoryName, componentName : ARRAY OF CHAR; refNum : SIZE; VAR res : WORD);
 VAR repository : Repository;
 BEGIN
 	repository := ThisRepository(repositoryName);
@@ -1768,10 +1768,10 @@ END ThisRepository;
 PROCEDURE GetAll*(VAR reps : Repositories);
 VAR
 	r : Repository;
-	nofRepositories, i : LONGINT;
+	nofRepositories, i : SIZE;
 
-	PROCEDURE GetNofRepositories() : LONGINT;
-	VAR r : Repository; nofRepositories : LONGINT;
+	PROCEDURE GetNofRepositories() : SIZE;
+	VAR r : Repository; nofRepositories : SIZE;
 	BEGIN
 		nofRepositories := 0;
 		r := repositories;
@@ -1806,7 +1806,7 @@ VAR
 	element : XML.Element;
 	ignore : WORD;
 	errors : ErrorReporter;
-	file: Files.File; writer: Files.Writer; freader: Files.Reader; ch: CHAR; buf: ARRAY 512 OF CHAR; len: LONGINT;
+	file: Files.File; writer: Files.Writer; freader: Files.Reader; ch: CHAR; buf: ARRAY 512 OF CHAR; len: SIZE;
 BEGIN (* {EXCLUSIVE} *)
 	ASSERT(FindRepository(name) = NIL);
 	COPY(name, filename);
@@ -2108,7 +2108,7 @@ PROCEDURE Put*(context : Commands.Context); (** componentName repositoryName asN
 VAR
 	componentName, repositoryName, asName : ARRAY 256 OF CHAR;
 	nbr : ARRAY 3 OF CHAR;
-	component : Component; id : LONGINT; res: WORD;
+	component : Component; id : SIZE; res: WORD;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(componentName);
 	context.arg.SkipWhitespace; context.arg.String(repositoryName);
@@ -2149,7 +2149,7 @@ BEGIN
 END Dump;
 
 PROCEDURE DumpAll*(context : Commands.Context); (** ~ *)
-VAR repositories : Repositories; count, i : LONGINT;
+VAR repositories : Repositories; count, i : SIZE;
 BEGIN
 	context.out.String("Currently loaded repositories: "); context.out.Ln;
 	GetAll(repositories);
@@ -2169,7 +2169,7 @@ BEGIN
 END DumpAll;
 
 PROCEDURE Call*(context : Commands.Context); (** moduleName.procedureName [params] ~ *)
-VAR c : Context; cmdString : POINTER TO ARRAY OF CHAR; res : WORD; ignore: LONGINT;
+VAR c : Context; cmdString : POINTER TO ARRAY OF CHAR; res : WORD; ignore: SIZE;
 BEGIN
 	NEW(c,	NIL, NIL, context.out, context.error, context.caller);
 	IF (context.arg.Available() > 0) THEN

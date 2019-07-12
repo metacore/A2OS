@@ -30,7 +30,7 @@ VAR
 	buffer: Strings.Buffer;
 	s: String;
 	c: CHAR;
-	i, j: LONGINT;
+	i, j: SIZE;
 BEGIN
 	NEW(addresses);
 	NEW(buffer, 16);
@@ -101,7 +101,7 @@ VAR
 	p: ANY;
 	buffer: Strings.Buffer;
 	w: Streams.Writer;
-	i: LONGINT;
+	i: SIZE;
 	s: String;
 BEGIN
 	NEW(buffer, 16);
@@ -142,16 +142,16 @@ BEGIN
 END AddressToString;
 
 (* Strings that are longer then a certain limit must be passed as VAR-parameters so Strings.Length cannot be used. *)
-PROCEDURE StringLength*(VAR string: ARRAY OF CHAR): LONGINT;
-VAR len: LONGINT;
+PROCEDURE StringLength*(CONST string: ARRAY OF CHAR): SIZE;
+VAR len: SIZE;
 BEGIN
 	len := 0; WHILE (string[len] # 0X) DO INC(len) END;
 	RETURN len
 END StringLength;
 
 (* Strings that are longer then a certain limit must be passed as VAR-parameters so Strings.Copy cannot be used. *)
-PROCEDURE StringCopy*(VAR s: ARRAY OF CHAR; index, count: LONGINT; VAR result: ARRAY OF CHAR);
-VAR i, l: LONGINT;
+PROCEDURE StringCopy*(VAR s: ARRAY OF CHAR; index, count: SIZE; VAR result: ARRAY OF CHAR);
+VAR i, l: SIZE;
 BEGIN
 	i := 0; l := LEN(result)-1;
 	WHILE (i < count) & (i < l) DO
@@ -164,7 +164,7 @@ END StringCopy;
 (* Returns TRUE if string contains subString as a sub-String *)
 PROCEDURE StringContains*(string, subString: String): BOOLEAN;
 VAR
-	pos: LONGINT;
+	pos: SIZE;
 BEGIN
 	FOR pos := 0 TO StringLength(string^) - 1 BY 1 DO
 		IF StringStartsWith(subString^, pos, string^) THEN
@@ -175,9 +175,9 @@ BEGIN
 END StringContains;
 
 (* Tests if string s starts with the specified prefix beginning a specified index *)
-PROCEDURE StringStartsWith*(VAR prefix : ARRAY OF CHAR; toffset : LONGINT; VAR s : ARRAY OF CHAR) : BOOLEAN;
+PROCEDURE StringStartsWith*(VAR prefix : ARRAY OF CHAR; toffset : SIZE; VAR s : ARRAY OF CHAR) : BOOLEAN;
 VAR
-	lenString, lenPrefix, i : LONGINT;
+	lenString, lenPrefix, i : SIZE;
 BEGIN
 	lenString := StringLength(s);
 	lenPrefix := StringLength(prefix);
@@ -192,7 +192,7 @@ END StringStartsWith;
 
 (* Strings.Uppercase doesn't work for me... *)
 PROCEDURE UpperCase*(VAR s: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 	WHILE (s[i] # 0X) DO
@@ -204,9 +204,9 @@ BEGIN
 END UpperCase;
 
 (* Strings that are longer then a certain limit must be passed as VAR-parameters so TextUtilities.StrToInt cannot be used. *)
-PROCEDURE StrToText*(text : Texts.Text; pos : LONGINT; VAR string : ARRAY OF CHAR);
+PROCEDURE StrToText*(text : Texts.Text; pos : SIZE; VAR string : ARRAY OF CHAR);
 VAR r : Streams.StringReader;
-	i, m: LONGINT;
+	i, m: SIZE;
 	tempUCS32 : ARRAY 1024 OF Texts.Char32;
 	ch, last : Texts.Char32;
 BEGIN
@@ -234,7 +234,7 @@ END StrToText;
 (** Text to UTF8 string. Objects and attributes are lost. *)
 PROCEDURE TextToStr*(text : Texts.Text; VAR string :String);
 VAR
-	i, l, pos : LONGINT;
+	i, l, pos: SIZE;
 	r : Texts.TextReader;
 	ch : Texts.Char32;
 	ok : BOOLEAN;
@@ -273,7 +273,7 @@ END SetEditorText;
 
 (* Strings that are longer then a certain limit must be passed as VAR-parameters so Strings.NewString cannot be used. *)
 PROCEDURE NewString*(VAR str : ARRAY OF CHAR) : String;
-VAR l : LONGINT; s : String;
+VAR l : SIZE; s : String;
 BEGIN
 	l := StringLength(str) + 1;
 	NEW(s, l);
@@ -283,7 +283,7 @@ END NewString;
 
 PROCEDURE MakeQuotedString*(VAR s: Strings.String);
 VAR
-	i, count, len: LONGINT;
+	i, count, len: SIZE;
 	new: Strings.String;
 BEGIN
 	(* count the number of the characters " and \ because we want to send a quoted string *)
@@ -324,7 +324,7 @@ VAR
 	buf: Strings.Buffer;
 	string: String;
 	w: Streams.Writer;
-	i: LONGINT;
+	i: SIZE;
 	sum, value, factor: LONGINT;
 BEGIN
 	NEW(buf, 16);
@@ -384,7 +384,7 @@ VAR
 	buf: Strings.Buffer;
 	string: String;
 	w: Streams.Writer;
-	i: LONGINT;
+	i: SIZE;
 	value: LONGINT;
 BEGIN
 	NEW(buf, 16);
@@ -419,7 +419,8 @@ END decodeQuotedPrintable;
 
 PROCEDURE encodeQuotedPrintable*(VAR string: String);
 VAR
-	i, count, value: LONGINT;
+	i, count: SIZE;
+	value: LONGINT;
 	c: CHAR;
 	chars: ARRAY 17 OF CHAR;
 	buf: Strings.Buffer;
@@ -463,7 +464,7 @@ VAR
 	temp: String;
 	buffer: Strings.Buffer;
 	w: Streams.Writer;
-	i: LONGINT;
+	i: SIZE;
 	c: CHAR;
 BEGIN
 	NEW(buffer, 16);
@@ -492,7 +493,7 @@ END encodeXML;
 
 PROCEDURE replaceEncodedHeaderWord*(VAR buf: ARRAY OF CHAR);
 VAR
-	i, j, k: LONGINT;
+	i, j, k: SIZE;
 	buffer, res: Strings.Buffer;
 	writer, resWriter: Streams.Writer;
 	charset, text, string: String;
@@ -577,12 +578,12 @@ END replaceEncodedHeaderWord;
 
 PROCEDURE replaceEncodedFolderName*(VAR name: String);
 VAR
-	i: LONGINT;
+	i: SIZE;
 	buffer: Strings.Buffer;
 	w: Streams.Writer;
 	utf8: ARRAY 7 OF CHAR;
-	state: LONGINT;
-	value, pos: LONGINT;
+	state, value: LONGINT;
+	pos: SIZE;
 	r: BOOLEAN;
 BEGIN
 	NEW(buffer, 16);

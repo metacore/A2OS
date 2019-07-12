@@ -210,7 +210,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END Insert;
 
 	PROCEDURE Copy(VAR heap: Heap; ofs: LONGINT; VAR str: ARRAY OF CHAR);
-		VAR i, l: LONGINT;
+		VAR i, l: SIZE;
 	BEGIN
 		i := 0; l := LEN(str)-1;
 		WHILE (heap.buffer[ofs] # 0X) & (i < l) DO
@@ -545,7 +545,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		VAR
 			R: Files.Rider;
 			uidll: UIDLList;
-			i, l: LONGINT;
+			i, l: SIZE;
 	BEGIN
 		Files.Set(R, set.F, Files.Length(set.F));
 		Files.WriteString(R, uidl);
@@ -649,7 +649,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		S := Streams.OpenFileReader(msgsF, pos);
 		MIME.ReadHeader(S, NIL, h, len);
 		ParseContent(h, cont);
-		len := LEN(msgs^);
+		len := LEN(msgs^)(LONGINT);
 		IF noMsgs >= len THEN
 			NEW(nmsgs, 2*len);
 			FOR i := 0 TO noMsgs-1 DO
@@ -937,7 +937,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE ReadString(VAR R: Texts.Reader; VAR s: ARRAY OF CHAR);
 		VAR
-			l, i: LONGINT;
+			l, i: SIZE;
 			ch: CHAR;
 	BEGIN
 		l := LEN(s)-1; i := 0;
@@ -1682,7 +1682,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			Files.WriteLInt(r, IndexFileKey);
 			Files.WriteNum(r, t); Files.WriteNum(r, d); Files.WriteNum(r, len);
 			Files.WriteNum(r, noMsgs); Files.WriteNum(r, delMsgs);
-			Files.WriteNum(r, LEN(msgs^));	(* size of msgs array *)
+			Files.WriteNum(r, LEN(msgs^)(LONGINT));	(* size of msgs array *)
 			Files.WriteNum(r, noMsgs);
 			FOR i := 0 TO noMsgs - 1 DO
 				Files.WriteNum(r, i);
@@ -2300,13 +2300,14 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		CONST
 			MaxPatLen = 128;
 		VAR
-			i, pos, end, sPatLen: LONGINT;
+			i, sPatLen: SIZE;
+			pos, end: LONGINT;
 			R: Files.Rider;
 			sPat: ARRAY MaxPatLen OF CHAR;
 			sDv: ARRAY MaxPatLen + 1 OF LONGINT;
 			ch: CHAR;
 		PROCEDURE CalcDispVec;
-			VAR i, j, d: LONGINT;
+			VAR i, j: SIZE; d: LONGINT;
 		BEGIN
 			i := 1; d := 1;
 			WHILE i <= sPatLen DO
@@ -2350,7 +2351,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE MatchQuery(VAR Q: Query; no: LONGINT; VAR msg: MsgHead): BOOLEAN;
 		VAR
 			cond: Cond;
-			pos, i: LONGINT;
+			pos, i: SIZE;
 			str: ValueString;
 			txt: BOOLEAN;
 	BEGIN
@@ -3321,7 +3322,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 (** Parsing of a mailto url. *)
 	PROCEDURE SplitMailTo*(VAR url, mailadr: ARRAY OF CHAR): LONGINT;
 		VAR
-			key, i, j, l: LONGINT;
+			key: LONGINT;
+			i, j, l: SIZE;
 			buffer: ARRAY BufLen OF CHAR;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
@@ -3411,7 +3413,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 (** Parsing of a mailserver url. *)
 	PROCEDURE SplitMailServer*(VAR url, mailadr, subject, body: ARRAY OF CHAR): LONGINT;
 		VAR
-			key, i, j, l: LONGINT;
+			key: LONGINT;
+			i, j, l: SIZE;
 			buffer: ARRAY BufLen OF CHAR;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;

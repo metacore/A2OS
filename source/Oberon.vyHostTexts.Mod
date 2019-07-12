@@ -766,7 +766,7 @@ END DebugTest;
 
 (** Dumps *)
 PROCEDURE DumpBool* (VAR w: Texts.Writer;   VAR a: ARRAY OF BOOLEAN);
-	VAR i, count: LONGINT;
+	VAR i, count: SIZE;
 BEGIN
 	WriteTableStyle(w);
 	count := LEN(a); i := 0;
@@ -778,7 +778,7 @@ BEGIN
 END DumpBool;
 
 PROCEDURE DumpReal* (VAR w: Texts.Writer;    VAR a: ARRAY OF REAL;   prec: INTEGER);
-	VAR i, count: LONGINT;
+	VAR i, count: SIZE;
 BEGIN   WriteTableStyle(w);
 	count := LEN(a); i := 0;
 	WHILE i < count DO
@@ -788,7 +788,7 @@ BEGIN   WriteTableStyle(w);
 END DumpReal;
 
 PROCEDURE DumpLongreal* (VAR w: Texts.Writer;     VAR a: ARRAY OF LONGREAL;   prec: INTEGER);
-	VAR i, count: LONGINT;
+	VAR i, count: SIZE;
 BEGIN   WriteTableStyle(w);
 	count := LEN(a); i := 0;
 	WHILE i < count DO
@@ -798,7 +798,7 @@ BEGIN   WriteTableStyle(w);
 END DumpLongreal;
 
 PROCEDURE DumpInteger* (VAR w: Texts.Writer;     VAR a: ARRAY OF INTEGER;   prec: INTEGER);
-	VAR i, count: LONGINT;
+	VAR i, count: SIZE;
 BEGIN WriteTableStyle(w);
 	count := LEN(a);   i := 0;
 	WHILE i < count DO
@@ -808,7 +808,7 @@ BEGIN WriteTableStyle(w);
 END DumpInteger;
 
 PROCEDURE DumpLongint* (VAR w: Texts.Writer;    VAR a: ARRAY OF LONGINT;   prec: INTEGER);
-	VAR i, count: LONGINT;
+	VAR i, count: SIZE;
 BEGIN   WriteTableStyle(w);
 	count := LEN(a); i := 0;
 	WHILE i < count DO

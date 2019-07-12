@@ -18,14 +18,14 @@ CONST
 TYPE
 	Reference = POINTER TO RECORD
 		next : Reference;
-		fp, tp, np : LONGINT;
+		fp, tp, np : SIZE;
 		no : TS.NamedObject;
 	END;
 	RefArray = POINTER TO ARRAY OF Reference;
 
 	Comment = POINTER TO RECORD
 		next : Comment;
-		fp, tp : LONGINT;
+		fp, tp : SIZE;
 		h : WMTextView.Highlight;
 	END;
 
@@ -37,7 +37,7 @@ TYPE
 	TextInfo = OBJECT(PETTrees.TreeNode)
 	VAR
 		next : TextInfo;
-		fp, tp : LONGINT;
+		fp, tp : SIZE;
 		name : Strings.String;
 		def : TS.NamedObject;
 	END TextInfo;
@@ -52,7 +52,7 @@ TYPE
 		scope: TS.Scope;
 		firstLevel : BOOLEAN;
 		destinationText : Texts.Text;
-		startPos, cursorPos : LONGINT;
+		startPos, cursorPos : SIZE;
 
 		PROCEDURE CreateForm(): WMComponents.VisualComponent;
 		VAR
@@ -107,7 +107,7 @@ TYPE
 			RETURN panel
 		END CreateForm;
 
-		PROCEDURE &New*(text: Texts.Text; startPos, cursorPos, x, y :LONGINT; CONST prefix : ARRAY OF CHAR; scope : TS.Scope; first: BOOLEAN);
+		PROCEDURE &New*(text: Texts.Text; startPos, cursorPos: SIZE; x, y :LONGINT; CONST prefix : ARRAY OF CHAR; scope : TS.Scope; first: BOOLEAN);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
 			vc := CreateForm();
@@ -165,7 +165,7 @@ TYPE
 		PROCEDURE WriteSelected;
 		VAR ac, ar, bc, br : LONGINT;
 			p : ANY;
-			index, i : LONGINT;
+			index : SIZE;
 			str, newStr : ARRAY 1024 OF CHAR;
 			signature : TS.ProcedureSignature;
 			singleSuggestion : TS.NamedObject;
@@ -394,7 +394,7 @@ TYPE
 		END BrowseToDefinition;
 
 		PROCEDURE Complete*(sender, data : ANY);
-		VAR pos, index, i : LONGINT;
+		VAR pos, index : SIZE;
 			str : ARRAY 64 OF CHAR;
 			newStr : ARRAY 1024 OF CHAR;
 			signature : TS.ProcedureSignature;
@@ -586,7 +586,7 @@ TYPE
 		PROCEDURE SelectActualParameters(def : TS.NamedObject);
 		VAR
 			cur : CurrentHighlights;
-			cr : Reference; tp : LONGINT;
+			cr : Reference; tp : SIZE;
 		BEGIN
 			editor.DisableUpdate;
 
@@ -722,7 +722,7 @@ TYPE
 			instances, replacements : LONGINT;
 			cur : Reference;
 
-			PROCEDURE Replace(a, b : LONGINT; CONST  old, new : ARRAY OF CHAR) : BOOLEAN;
+			PROCEDURE Replace(a, b : SIZE; CONST old, new : ARRAY OF CHAR) : BOOLEAN;
 			VAR oldname : ARRAY 64 OF CHAR;
 			BEGIN
 				TextUtilities.SubTextToStr(editor.text, a, b - a, oldname);
@@ -818,7 +818,7 @@ TYPE
 
 		PROCEDURE DelActualParameterHandler(sender, data: ANY);
 		VAR
-			a, b, instances : LONGINT;
+			a, b, instances : SIZE;
 			cur : Reference;
 		BEGIN
 			IF currentNode = NIL THEN RETURN END;
@@ -1127,7 +1127,7 @@ TYPE
 			KernelLog.String("  -->  "); KernelLog.String(scope.name^); KernelLog.Ln;
 		END FindScopeByPos;
 
-		PROCEDURE FindIdentByPos(pos : LONGINT);
+		PROCEDURE FindIdentByPos(pos : SIZE);
 		VAR cur : Reference; ct : TextInfo; c : LONGINT;
 			msg : PETTrees.ExternalDefinitionInfo;
 			filename, definition : ARRAY 256 OF CHAR;

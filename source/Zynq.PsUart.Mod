@@ -271,7 +271,7 @@ VAR
 	(**
 		Send data to the UART
 	*)
-	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
+	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: SIZE; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
 	BEGIN
 		WHILE uart.open & (len > 0) DO
 			IF ~(PsUartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
@@ -305,7 +305,7 @@ VAR
 	PROCEDURE ReceiveChar*(uart: UartController; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD): CHAR;
 	VAR
 		buf: ARRAY 1 OF CHAR;
-		len: LONGINT;
+		len: SIZE;
 	BEGIN
 		Receive(uart,buf,0,1,1,len,onBusy,res);
 		RETURN buf[0];
@@ -314,7 +314,7 @@ VAR
 	(**
 		Receive data from the UART
 	*)
-	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len: LONGINT; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
+	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: SIZE; VAR len: SIZE; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
 	VAR
 		bufRdPos, bufWrPos, n: SIZE;
 	BEGIN

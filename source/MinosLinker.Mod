@@ -30,7 +30,7 @@ TYPE
 			SELF.plain := plain; SELF.descriptors := descriptors;
 		END InitLinker;
 
-		PROCEDURE SetPos (pos: LONGINT);
+		PROCEDURE SetPos (pos: Files.Position);
 		BEGIN
 			Rout.Update;
 			IF pos > Out.Length () THEN

@@ -14,7 +14,7 @@ VAR
 	PathChar*: CHAR;
 
 PROCEDURE Enumerate*(mask: ARRAY OF CHAR; detail: BOOLEAN; proc: EntryHandler);
-VAR enum: Files.Enumerator; time, date, size: LONGINT; continue: BOOLEAN; name: FileName; flags: SET;
+VAR enum: Files.Enumerator; time, date: LONGINT; size: Files.Size; continue: BOOLEAN; name: FileName; flags: SET;
 BEGIN
 	NEW(enum);
 	IF detail THEN enum.Open(mask, {Files.EnumSize, Files.EnumTime})
@@ -22,7 +22,7 @@ BEGIN
 	END;
 	continue := TRUE;
 	WHILE continue & enum.GetEntry(name, flags, time, date, size) DO
-		proc(name, time, date, size, continue)
+		proc(name, time, date, size(LONGINT), continue)
 	END;
 	enum.Close
 END Enumerate;

@@ -443,7 +443,7 @@ VAR
 	res: WORD;
 BEGIN
 	NEW(buf, SIZEOF(TocHeader) + SIZEOF(TocDescriptor));
-	res := ReadToc(dev, FALSE, TCFormatToc, tno, ADDRESSOF(buf^), LEN(buf));
+	res := ReadToc(dev, FALSE, TCFormatToc, tno, ADDRESSOF(buf^), LEN(buf)(LONGINT));
 	IF res = ResOk THEN
 		SYSTEM.MOVE(ADDRESSOF(buf^) + SIZEOF(TocHeader), ADDRESSOF(toc), SIZEOF(TocDescriptor));
 	END;

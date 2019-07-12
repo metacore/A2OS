@@ -14,10 +14,10 @@ MODULE PKCS1;
 		It uses a block type as specified by blockType. blockType can be 0, 1 or 2.
 		destLen = 0 iff encryption failed.
 	*)
-	PROCEDURE Encrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: LONGINT; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: LONGINT; VAR destLen: LONGINT);
+	PROCEDURE Encrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE);
 		VAR
-			k, padd: LONGINT;	(* Length of key modulus and padding string. *)
-			counter, ofs: LONGINT;
+			k, padd: SIZE;	(* Length of key modulus and padding string. *)
+			counter, ofs: SIZE;
 			encryptionBlock: POINTER TO ARRAY OF CHAR;
 			clear, cipher: CryptoBigNumbers.BigNumber;
 			nonzero: BOOLEAN;
@@ -86,10 +86,10 @@ MODULE PKCS1;
 		The result is written in dest[destOfs] .. dest[destOfs + destLen - 1]. destLen is written with the data length. destLen = 0
 		iff decryption failed or PKCS badly formatted.
 	*)
-	PROCEDURE Decrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: LONGINT; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: LONGINT; VAR destLen: LONGINT);
+	PROCEDURE Decrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE);
 		VAR
-			k, padd: LONGINT;
-			ofs, counter: LONGINT;
+			k, padd: SIZE;
+			ofs, counter: SIZE;
 			decryptedBlock: POINTER TO ARRAY OF CHAR;
 			clear, cipher: CryptoBigNumbers.BigNumber;
 	BEGIN
@@ -130,5 +130,4 @@ MODULE PKCS1;
 		destLen := k - ofs - 1
 	END Decrypt;
 END PKCS1.
-
 

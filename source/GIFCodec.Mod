@@ -221,7 +221,8 @@ TYPE
 		VAR
 			header : Header;
 			ch : CHAR;
-			n, size, length : LONGINT;
+			n, size : LONGINT;
+			length : SIZE;
 			w, h : INTEGER;
 		BEGIN
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN END;
@@ -374,7 +375,8 @@ TYPE
 		VAR
 			header : Header;
 			ch : CHAR;
-			n, size, length : LONGINT;
+			n, size: LONGINT;
+			length: SIZE;
 			w, h : INTEGER;
 		BEGIN
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN END;
@@ -514,7 +516,7 @@ PROCEDURE LoadData (r : Streams.Reader; pal : Raster.Palette; img: Raster.Image;
 VAR
 	ch: CHAR;
 	codeBits, clearCode, endCode, curBits, maxCode, nextCode, bits, x, y, lines, prevCode, curCode, seq, len: INTEGER;
-	n, buf, blkPos, blkSize, ptr, bytesRead: LONGINT;
+	n, buf, blkPos, blkSize, ptr: LONGINT; bytesRead: SIZE;
 	pix, run: ARRAY 1000H OF CHAR;
 	prev: ARRAY 1000H OF INTEGER;
 	block: ARRAY 255 OF CHAR;

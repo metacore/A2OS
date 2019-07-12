@@ -53,7 +53,7 @@ TYPE
 		VAR
 			attr, fg, bg : SHORTINT;
 			boxed : BOOLEAN;
-			i, begin, pos : LONGINT;
+			i, begin, pos : SIZE;
 			nl: ARRAY 3 OF LONGINT;
 			attributes: Texts.Attributes;
 			text : Texts.Text;
@@ -142,14 +142,14 @@ TYPE
 	(** Channel selector window for Teletext *)
 	ChannelSwitcher = OBJECT (Base.FormWindow)
 		VAR
-			nofChannels: LONGINT;
+			nofChannels: SIZE;
 			buttons: POINTER TO ARRAY OF Standard.Button;
 			browser : Browser;
 			viewer: TeletextViewer;
 
 		PROCEDURE &New *(browser : Browser; viewer: TeletextViewer);
 		VAR
-			i, left, top: LONGINT;
+			i: SIZE; left, top: LONGINT;
 			panel: Standard.Panel;
 			panels: POINTER TO ARRAY OF Standard.Panel;
 			channel: TVChannels.TVChannel;
@@ -163,9 +163,9 @@ TYPE
 			NEW (panel);
 			panel.fillColor.Set(0FFH);
 			IF nofChannels MOD ButtonsPerRow = 0 THEN
-				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow) * ButtonHeight)
+				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow)(LONGINT) * ButtonHeight)
 			ELSE
-				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow+1) * ButtonHeight)
+				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow+1)(LONGINT) * ButtonHeight)
 			END;
 
 			(* Create columns for the buttons *)
@@ -181,7 +181,7 @@ TYPE
 			IF ButtonsPerRow < 3 THEN
 				panel.bounds.SetWidth (Width)
 			ELSE
-				panel.bounds.SetWidth (LEN(panels) * ButtonWidth)
+				panel.bounds.SetWidth (LEN(panels)(LONGINT) * ButtonWidth)
 			END;
 
 			(* Create buttons for channel selection *)
@@ -214,8 +214,8 @@ TYPE
 		END New;
 
 		(** Determine which button has been pressed for correct action *)
-		PROCEDURE FindButton (button: Standard.Button): LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE FindButton (button: Standard.Button): SIZE;
+		VAR i: SIZE;
 		BEGIN
 			i := 0;
 			WHILE (i < LEN(buttons)) & (buttons[i] # button) DO
@@ -228,7 +228,7 @@ TYPE
 		PROCEDURE OnPushButton (sender, data: ANY);
 		VAR
 			button: Standard.Button;
-			buttonNo: LONGINT;
+			buttonNo: SIZE;
 			channel: TVChannels.TVChannel;
 		BEGIN
 			button := sender(Standard.Button);
@@ -449,7 +449,7 @@ TYPE
 		PROCEDURE OnMagClick (sender, data: ANY);
 		VAR
 			button: Standard.Button;
-			buttonNo, pageNo: LONGINT;
+			buttonNo, pageNo: SIZE;
 		BEGIN
 			ClearNumberField;
 			button := sender (Standard.Button);

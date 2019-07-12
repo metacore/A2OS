@@ -134,7 +134,7 @@ TYPE
 
 		(** set a new model. the view is re-initialized *)
 		PROCEDURE SetArchive*(archive : Archives.Archive);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 			node : WMTrees.TreeNode;
 			name : Strings.String;
 			archiveEntries : Archives.Index;
@@ -162,6 +162,7 @@ TYPE
 		PROCEDURE MyStartDrag(sender, data : ANY);
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
+			length: SIZE;
 			w : LONGINT;
 			a : ANY;
 			s : Strings.String;
@@ -172,8 +173,8 @@ TYPE
 				s := a(EntryInfo).GetName();
 				NEW(draggedString, LEN(s^)+64);
 				AppendToArchiveName(s^, draggedString^);
-				w := Strings.Length(draggedString^) * 7;
-				IF w > 400 THEN w := 400 END;
+				length := Strings.Length(draggedString^) * 7;
+				IF length > 400 THEN w := 400 ELSE w := LONGINT(length) END;
 				NEW(img); Raster.Create(img, w, 25, Raster.BGRA8888);
 				NEW(c, img); c.SetColor(LONGINT(0FFFF00FFH));
 				c.Fill(WMRectangles.MakeRect(0, 0, w, 25), 0FF80H, WMGraphics.ModeCopy);
@@ -810,7 +811,7 @@ TYPE
 		END GetSelection;
 
 		PROCEDURE Open(sender, data : ANY);
-		VAR d: NodeList; i : LONGINT;
+		VAR d: NodeList; i : SIZE;
 		BEGIN
 			IF (popup # NIL) THEN popup.Close; popup := NIL END;
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -868,7 +869,7 @@ TYPE
 		PROCEDURE DeleteEntries(sender, data : ANY);
 		VAR parent : WMTrees.TreeNode;
 			entry : NodeEntry; entryInfo : ANY; s : Strings.String;
-			dr, i : LONGINT; name : ARRAY 128 OF CHAR;
+			dr : LONGINT; i : SIZE; name : ARRAY 128 OF CHAR;
 			delete, always, never : BOOLEAN;
 		BEGIN
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -959,7 +960,7 @@ TYPE
 		PROCEDURE MyStartDrag(sender, data : ANY);
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top, i : LONGINT;
+			top: LONGINT; i : SIZE;
 		BEGIN
 			selection := GetSelection();
 			(* render to bitmap *)
@@ -984,7 +985,7 @@ TYPE
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i : LONGINT; res : WORD;
+			i : SIZE; res : WORD;
 			sel : NodeList;
 			url, caption : ARRAY 1024 OF CHAR;
 			text : Texts.Text;
@@ -1080,7 +1081,7 @@ END SplitString;
 
 (* "path1/path2/.../name"  =>  "name" *)
 PROCEDURE RemovePath(CONST src : ARRAY OF CHAR; VAR dest : ARRAY OF CHAR);
-VAR i, j : LONGINT;
+VAR i, j : SIZE;
 BEGIN
 	i := LEN(src) - 1;
 	WHILE (i > 0) & (src[i] # '/') DO DEC(i) END;
@@ -1093,7 +1094,7 @@ END RemovePath;
 
 (* "PART:file.ext"  =>  "file.ext" *)
 PROCEDURE RemovePartitionLabel(CONST src : ARRAY OF CHAR; VAR dest : ARRAY OF CHAR);
-VAR i, j : LONGINT;
+VAR i, j : SIZE;
 BEGIN
 	i := 0;
 	WHILE (i < LEN(src)) & (src[i] # ':') DO INC(i) END;
@@ -1110,7 +1111,7 @@ END RemovePartitionLabel;
 
 (* transfer data from rec to target *)
 PROCEDURE CopyFile(rec : Streams.Receiver; target : WMDropTarget.DropFiles; CONST remote : ARRAY OF CHAR; VAR res : WORD);
-VAR w : Streams.Writer; r : Streams.Reader; buf: ARRAY BufSize OF CHAR; len: LONGINT;
+VAR w : Streams.Writer; r : Streams.Reader; buf: ARRAY BufSize OF CHAR; len: SIZE;
 BEGIN
 	res := -1;
 	Streams.OpenReader(r, rec);

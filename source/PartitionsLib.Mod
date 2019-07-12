@@ -386,7 +386,7 @@ TYPE
 			doClose : BOOLEAN;
 			errorWriter : Streams.StringWriter;
 			errorString : ARRAY 1024 OF CHAR;
-			i, j : LONGINT; res: WORD;
+			i, j : SIZE; res: WORD;
 		BEGIN (* caller must hold lock *)
 			Acquire;
 			IF devTable # NIL THEN
@@ -453,8 +453,8 @@ TYPE
 			END;
 		END UpdateDisk;
 
-		PROCEDURE UpdateDiskInternal(i : LONGINT);
-		VAR dev : AosDisks.Device; errorWriter : Streams.StringWriter; errorString : ARRAY 1024 OF CHAR; doClose : BOOLEAN; j : LONGINT; res: WORD;
+		PROCEDURE UpdateDiskInternal(i : SIZE);
+		VAR dev : AosDisks.Device; errorWriter : Streams.StringWriter; errorString : ARRAY 1024 OF CHAR; doClose : BOOLEAN; j : SIZE; res: WORD;
 		BEGIN
 			dev := disks[i].device;
 			IF dev # NIL THEN
@@ -518,7 +518,7 @@ TYPE
 		END Release;
 
 		PROCEDURE DiskEventHandler(event : WORD; plugin : Plugins.Plugin);
-		VAR tempTable : Plugins.Table; dev : AosDisks.Device; i, j : LONGINT;
+		VAR tempTable : Plugins.Table; dev : AosDisks.Device; i, j : SIZE;
 		BEGIN
 			ASSERT(plugin#NIL);
 			dev := plugin (AosDisks.Device);
@@ -642,7 +642,7 @@ TYPE
 		END NewFree;
 
 		PROCEDURE FindFreePrimary(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT);
-		VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT;
+		VAR i: SIZE; g, t, max, start, end, prevstart, nextstart: LONGINT;
 		BEGIN
 			start := spt; g := hds * spt; (* skip first track *)
 			max := table[0].size - g;	(* reserve one cylinder at end of disk *)
@@ -680,7 +680,7 @@ TYPE
 		END FindFreePrimary;
 
 		PROCEDURE FindFreeExtended(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT);
-		VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT;
+		VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT; j: SIZE;
 		BEGIN
 			t := -1; i := 1;
 			WHILE i < LEN(table) DO
@@ -693,9 +693,9 @@ TYPE
 				start := table[t].start; g := hds * spt; max := start + table[t].size;
 				LOOP
 					prevstart := start; end := MAX(LONGINT);
-					FOR i := 1 TO LEN(table)-1 DO (* find first partition start after or on start *)
-						IF ~(AosDisks.Primary IN table[i].flags) & (table[i].start >= start) & (table[i].start < end) THEN
-							end := table[i].start
+					FOR j := 1 TO LEN(table)-1 DO (* find first partition start after or on start *)
+						IF ~(AosDisks.Primary IN table[j].flags) & (table[j].start >= start) & (table[j].start < end) THEN
+							end := table[j].start
 						END
 					END;
 					IF end > max THEN end := max END;
@@ -707,9 +707,9 @@ TYPE
 						(* {start..end-1 is free and aligned} *)
 					IF end-start > 0 THEN NewFree(FreeSpace, table, start, end-start, start-spt, {}) END;
 					nextstart := MAX(LONGINT);
-					FOR i := 1 TO LEN(table)-1 DO (* find first partition end after prevstart *)
-						IF ~(AosDisks.Primary IN table[i].flags) THEN
-							t := table[i].start+table[i].size-1;
+					FOR j := 1 TO LEN(table)-1 DO (* find first partition end after prevstart *)
+						IF ~(AosDisks.Primary IN table[j].flags) THEN
+							t := table[j].start+table[j].size-1;
 							IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 						END
 					END;
@@ -723,7 +723,7 @@ TYPE
 		END FindFreeExtended;
 
 		PROCEDURE FindReserved(VAR table: AosDisks.PartitionTable);
-		VAR i, t, max, start, end, prevstart, nextstart: LONGINT;
+		VAR i: SIZE; t, max, start, end, prevstart, nextstart: LONGINT;
 		BEGIN
 			 IF ShowReserved THEN
 				start := 0; max := table[0].size;
@@ -752,7 +752,7 @@ TYPE
 		END FindReserved;
 
 		PROCEDURE CheckTable(w : Streams.Writer; dev: AosDisks.Device; table: AosDisks.PartitionTable): BOOLEAN;
-		VAR i, j, ext: LONGINT;
+		VAR i, j, ext: SIZE;
 		BEGIN
 			ASSERT(w # NIL);
 			ext := -1;
@@ -814,7 +814,7 @@ TYPE
 		END FindFreeSpace;
 
 		(* For each partition of the specified disk, try to find the associated file system (if any) *)
-		PROCEDURE AssignFileSystems(disk : LONGINT);
+		PROCEDURE AssignFileSystems(disk : SIZE);
 		VAR
 			fs : Files.FileSystem;
 			ft : Files.FileSystemTable;
@@ -824,7 +824,7 @@ TYPE
 			volISO : ISO9660Volumes.Volume;
 			dev : AosDisks.Device;
 			found : BOOLEAN;
-			partition , fsStart, i : LONGINT;
+			partition , fsStart: LONGINT; i : SIZE;
 		BEGIN
 			ASSERT(disk < LEN(disks));
 			Files.GetList(ft);
@@ -874,13 +874,13 @@ TYPE
 		END AssignFileSystems;
 
 		(* Returns TRUE iff partition i contains sector x. *)
-		PROCEDURE Contains(table: AosDisks.PartitionTable; i, x: LONGINT): BOOLEAN;
+		PROCEDURE Contains(table: AosDisks.PartitionTable; i: SIZE; x: LONGINT): BOOLEAN;
 		BEGIN
 			RETURN (table[i].start <= x) & (x < table[i].start + table[i].size)
 		END Contains;
 
 		(* Returns TRUE iff partition i and j overlap *)
-		PROCEDURE PartitionsOverlap(table: AosDisks.PartitionTable; i, j: LONGINT): BOOLEAN;
+		PROCEDURE PartitionsOverlap(table: AosDisks.PartitionTable; i, j: SIZE): BOOLEAN;
 		BEGIN
 			RETURN Contains(table, i, table[j].start) OR Contains(table, i, table[j].start+table[j].size-1)
 				OR Contains(table, j, table[i].start) OR Contains(table, j, table[i].start+table[i].size-1)
@@ -1004,7 +1004,7 @@ TYPE
 		END ReportError;
 
 		PROCEDURE GetResult*() : Strings.String;
-		VAR string : Strings.String; length : LONGINT;
+		VAR string : Strings.String; length : SIZE;
 		BEGIN
 			string := Strings.NewString(""); result.Update;
 			resultText.AcquireRead;
@@ -1650,11 +1650,11 @@ TYPE
 	FileToPartition* = OBJECT(Image);
 
 		PROCEDURE DoOperation*; (** dev#part filename [block numblocks] ~ *)
-		VAR f: Files.File; r: Files.Reader; error : String; len, pos, num, i : LONGINT; res: WORD;
+		VAR f: Files.File; r: Files.Reader; error : String; len: SIZE; pos, num, i : LONGINT; res: WORD;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
-				num := (f.Length() + blocksize - 1) DIV blocksize;
+				num := (f.Length()(LONGINT) + blocksize - 1) DIV blocksize;
 				IF numblocks > num THEN
 					numblocks := num;
 					info.String("Warning: Specified number of blocks is bigger than image file size. Set numblocks to "); info.Int(numblocks, 0); info.Ln;
@@ -1891,7 +1891,7 @@ TYPE
 				IF res = AosDisks.Ok THEN
 					f := Files.Old(bootName);
 					IF (f # NIL) OR (fsRes # -1) THEN
-						IF fsRes = -1 THEN fsRes := (f.Length()+BS-1) DIV BS;
+						IF fsRes = -1 THEN fsRes := (f.Length()(LONGINT)+BS-1) DIV BS;
 						ELSIF fsRes = -2 THEN fsRes := FSRes;
 						ELSE fsRes := fsRes * 1024 DIV BS;
 						END;
@@ -2015,21 +2015,21 @@ TYPE
 		(* Write the OBL boot loader and an empty config table to disk. *)
 		PROCEDURE InitOBL(flag: LONGINT; VAR res: WORD);
 		VAR
-			buf: ARRAY 10*BS OF CHAR; i, tsize, rsize, lsize, len : LONGINT;
+			buf: ARRAY 10*BS OF CHAR; i, tsize, rsize, lsize : LONGINT; len: SIZE;
 			f: Files.File; r: Files.Reader;
 		BEGIN
 			ASSERT(dev.blockSize = BS);
 			IF disk.gres = AosDisks.Ok THEN
 				f := Files.Old(BootLoaderName);  NEW(r, f, 0);
 				ASSERT((f # NIL) & (f.Length() <= BootLoaderSize*BS));	(* assume boot file is present and small enough *)
-				len := f.Length();
+				len := f.Length()(SIZE);
 				r.Bytes(buf, 0, BootLoaderSize*BS, len);
 				ASSERT(r.res = 0);
 				ASSERT(Get4(buf, 1F8H) = FSIDOBL); (* new OBL.Bin *)
 				(* get parameters from boot loader *)
 				rsize := Get2(buf, 0EH); tsize := ORD(buf[10H]);
 				ASSERT((rsize-tsize)*BS = f.Length()); (* check boot loader size *)
-				lsize := f.Length() DIV BS;
+				lsize := f.Length()(LONGINT) DIV BS;
 				ASSERT(lsize = BootLoaderSize);
 				(* set parameters in boot loader *)
 				IF (disk.size > DisketteLimit) THEN (* Windows 2000 workaround *)
@@ -2226,22 +2226,22 @@ TYPE
 		PROCEDURE UpdateOBL(f: Files.File; VAR res: WORD);
 		CONST MaxSize = MaxBootLoaderSize*BS;
 		VAR
-			b, bnew: ARRAY MaxSize OF CHAR; i, tsize, rsize, lsize, len: LONGINT;
+			b, bnew: ARRAY MaxSize OF CHAR; i, tsize, rsize, lsize: LONGINT; len: SIZE;
 			r: Files.Reader;
 		BEGIN
 			ASSERT(disk.device.blockSize = BS);
 			IF res = AosDisks.Ok THEN
 				NEW(r, f, 0);
 				ASSERT((f # NIL) & (f.Length() <= BootLoaderSize*BS)); (* assume boot file is present and small enough *)
-				r.Bytes(bnew, 0, f.Length(), len);
+				r.Bytes(bnew, 0, f.Length()(SIZE), len);
 				ASSERT(r.res = 0);
-				lsize := f.Length() DIV BS;
+				lsize := f.Length()(LONGINT) DIV BS;
 				disk.device.Transfer(AosDisks.Read, disk.device.table[partition].start, lsize, b, 0, res);
 				ASSERT(Get4(b, 1F8H) = FSID); (* OBL.Bin signature 'AOS!' *)
 				(* get parameters from boot loader *)
 				rsize := Get2(b, 0EH); tsize := ORD(b[10H]);
 				ASSERT((rsize-tsize)*BS = f.Length()); (* check boot loader size *)
-				lsize := f.Length() DIV BS;
+				lsize := f.Length()(LONGINT) DIV BS;
 				ASSERT(lsize = BootLoaderSize);
 				(* set parameters in boot loader *)
 				FOR i := 0H TO 2H DO b[i] := bnew[i] END;
@@ -2356,7 +2356,7 @@ TYPE
 		VAR
 			f: Files.File; r: Files.Reader; buf1, buf2: ARRAY BS OF CHAR;
 			string : ARRAY 256 OF CHAR;
-			res: WORD; len, i: LONGINT;
+			res: WORD; len: SIZE; i: LONGINT;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
@@ -2520,7 +2520,7 @@ TYPE
 		hex : ARRAY 32 OF CHAR;
 
 		PROCEDURE GetEntries*() : Table;
-		VAR table : Table; i : LONGINT;
+		VAR table : Table; i : SIZE;
 		BEGIN {EXCLUSIVE}
 			table := NIL;
 			IF (entries # NIL) THEN
@@ -2532,8 +2532,8 @@ TYPE
 			RETURN table;
 		END GetEntries;
 
-		PROCEDURE GetNofEntries*() : LONGINT;
-		VAR len : LONGINT;
+		PROCEDURE GetNofEntries*() : SIZE;
+		VAR len : SIZE;
 		BEGIN {EXCLUSIVE}
 			IF (entries = NIL) THEN len := 0; ELSE len := LEN(entries); END;
 			RETURN len;
@@ -2546,7 +2546,7 @@ TYPE
 
 		(**	Replace all occurence of entries with key 'key'. If no entry is found, add it *)
 		PROCEDURE SetValueOf*(key, value : Strings.String);
-		VAR entry : ConfigEntry; found : BOOLEAN; i : LONGINT;
+		VAR entry : ConfigEntry; found : BOOLEAN; i : SIZE;
 		BEGIN {EXCLUSIVE}
 			ASSERT((key # NIL) & (value # NIL));
 			entry.key := key; entry.value := value;
@@ -2568,7 +2568,7 @@ TYPE
 		END SetValueOf;
 
 		PROCEDURE GetAsStringInternal() : Strings.String;
-		VAR string : ARRAY MaxConfigString OF CHAR; w : Streams.StringWriter; i : LONGINT;
+		VAR string : ARRAY MaxConfigString OF CHAR; w : Streams.StringWriter; i : SIZE;
 		BEGIN
 			NEW(w, MaxConfigString);
 			FOR i := 0 TO LEN(entries)-1 DO
@@ -2762,7 +2762,7 @@ TYPE
 		END RemoveEntry;
 
 		PROCEDURE RemoveEntryInternal(entry : LONGINT);
-		VAR newTable : Table; i, j : LONGINT;
+		VAR newTable : Table; i, j : SIZE;
 		BEGIN
 			IF (entries # NIL) THEN
 				IF LEN(entries) = 1 THEN
@@ -2957,7 +2957,7 @@ TYPE
 
 		(* Delete the specified entry. *)
 		PROCEDURE DeleteEntry*(i: LONGINT);
-		VAR j, s: LONGINT;
+		VAR j: SIZE; s: LONGINT;
 		BEGIN {EXCLUSIVE}
 			ASSERT(Get4(table^, i) # -1); (* can not delete end marker *)
 			s := Get4(table^, i+4);
@@ -3111,7 +3111,7 @@ TYPE
 		PROCEDURE CreatePrimary(size, type: LONGINT) : BOOLEAN;
 		VAR
 			mbr, epbr : Block;
-			i, e : LONGINT; res: WORD;
+			i: SIZE; e : LONGINT; res: WORD;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT((disk.device.blockSize = BS) & (disk.table[partition].type = FreeSpace));
@@ -3130,8 +3130,8 @@ TYPE
 					(* find first free slot *)
 					e := -1;
 					FOR i := 0 TO 3 DO
-						IF (e = -1) & (Get4(mbr, Slot1 + 16*i + 12) = 0) THEN (* size is 0 (empty slot) *)
-							e := Slot1 + 16*i
+						IF (e = -1) & (Get4(mbr, Slot1 + 16*i(LONGINT) + 12) = 0) THEN (* size is 0 (empty slot) *)
+							e := Slot1 + 16*i(LONGINT)
 						END
 					END;
 					IF e # -1 THEN (* found free slot *)
@@ -3169,7 +3169,7 @@ TYPE
 		VAR
 			epbr, new : Block;
 			slot1, slot2 : ARRAY 16 OF CHAR;
-			extStart, extPart, lastLogical, i: LONGINT; res: WORD;
+			extStart: LONGINT; i, extPart, lastLogical: SIZE; res: WORD;
 		BEGIN
 			ASSERT((disk.device.blockSize = BS) & (disk.table[partition].type = FreeSpace));
 			IF IsExtendedPartition(type) THEN
@@ -3372,7 +3372,7 @@ TYPE
 		PROCEDURE DeleteLogical(type: LONGINT) : BOOLEAN;
 		VAR
 			epbr, temp : Block;
-			nextLogical, i, start : LONGINT; res: WORD;
+			nextLogical, start : LONGINT; i : SIZE; res: WORD;
 			slot2 : ARRAY 16 OF CHAR;
 			extStart : LONGINT; (* adr of EPBR of extended partition *)
 			writebackAdr : LONGINT;
@@ -3594,7 +3594,7 @@ TYPE
 				RETURN;
 			END;
 
-			nofSectors := f.Length() DIV BS;
+			nofSectors := f.Length()(LONGINT) DIV BS;
 			IF (nofSectors > 20) THEN
 				ReportError("Boot manager file is too large. Wrong file?");
 				RETURN;
@@ -3638,7 +3638,7 @@ VAR
 	BootLoaderName: ARRAY 64 OF CHAR;
 	BootLoaderSize: LONGINT;
 
-PROCEDURE WritePart*(w: Streams.Writer; dev: AosDisks.Device; part: LONGINT);
+PROCEDURE WritePart*(w: Streams.Writer; dev: AosDisks.Device; part: SIZE);
 BEGIN
 	ASSERT((dev#NIL) & (w # NIL) & (part >= 0) & (part <= 99));
 	w.String(dev.name); w.String("#"); w.Int(part,1); w.String(" ");
@@ -3711,14 +3711,14 @@ END GetVars;
 (* Write the specified file to the device, starting at block pos. *)
 PROCEDURE WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum: LONGINT; VAR res: WORD);
 CONST Size = 32;
-VAR buf: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num: LONGINT;
+VAR buf: ARRAY Size*BS OF CHAR; r: Files.Rider; n: LONGINT; num: SIZE;
 BEGIN
 	ASSERT(dev.blockSize = BS);
-	f.Set(r, 0); num := (f.Length()+BS-1) DIV BS; sum := 0;
+	f.Set(r, 0); num := (f.Length()(SIZE)+BS-1) DIV BS; sum := 0;
 	LOOP
 		IF num <= 0 THEN EXIT END;
 		f.ReadBytes(r, buf, 0, Size*BS);
-		n := Size*BS - r.res;
+		n := Size*BS - r.res(LONGINT);
 		WHILE n MOD BS # 0 DO buf[n] := 0X; INC(n) END;
 		ASSERT((n > 0) & (n <= num*BS));
 		dev.Transfer(AosDisks.Write, pos, n DIV BS, buf, 0, res);
@@ -3731,14 +3731,14 @@ END WriteFile;
 
 PROCEDURE CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: WORD);
 CONST Size = 32;
-VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num, i: LONGINT;
+VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n: LONGINT; num, i: SIZE;
 BEGIN
 	ASSERT(dev.blockSize = BS);
-	f.Set(r, 0); num := (f.Length()+BS-1) DIV BS;
+	f.Set(r, 0); num := (f.Length()(SIZE)+BS-1) DIV BS;
 	LOOP
 		IF num <= 0 THEN EXIT END;
 		f.ReadBytes(r, buf1, 0, Size*BS);
-		n := Size*BS - r.res;
+		n := Size*BS - r.res(LONGINT);
 		WHILE n MOD BS # 0 DO buf1[n] := 0X; INC(n) END;
 		ASSERT((n > 0) & (n <= num*BS));
 		dev.Transfer(AosDisks.Read, pos, n DIV BS, buf2, 0, res);
@@ -3776,7 +3776,7 @@ BEGIN
 				IF res = AosDisks.Ok THEN
 					Put4(data, 0, LoadAdr); Put4(data, 4, Frags + ASH(sum, 16));
 					Put4(data, 8, StartAdr); Put4(data, 12, 0); (* pos relative to start *)
-					Put4(data, 16, (f.Length()+BS-1) DIV BS);
+					Put4(data, 16, (f.Length()(LONGINT)+BS-1) DIV BS);
 					config.AddEntry(Frag, LEN(data), data);
 					config.PutTable(dev, part, res)
 				END
@@ -4126,7 +4126,7 @@ BEGIN
 	IF context.arg.GetString(fileName) THEN
 		file := Files.Old(fileName);
 		IF file # NIL THEN
-			BootLoaderSize := (file.Length()-1) DIV BS + 1;
+			BootLoaderSize := (file.Length()(LONGINT)-1) DIV BS + 1;
 			COPY(fileName, BootLoaderName);
 			context.out.String("PartitionsLib.BootLoaderName = "); context.out.String(BootLoaderName); context.out.Ln;
 			context.out.String("PartitionsLib.BootLoaderSize ="); context.out.Int(BootLoaderSize,1);context.out.Ln;

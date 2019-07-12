@@ -348,7 +348,7 @@ TYPE
 
 		owner : Window;
 		curList : FTPClient.FTPListing;
-		nofEntries : LONGINT;
+		nofEntries : SIZE;
 
 		PROCEDURE &Init*;
 		VAR label : WMStandardComponents.Label;
@@ -448,7 +448,7 @@ TYPE
 
 		PROCEDURE DeleteEntries(sender, data : ANY);
 		VAR  d : FTPClient.FTPEntry;
-			dr, i  : LONGINT; res : WORD;
+			dr : LONGINT; i : SIZE; res : WORD;
 			dp : ARRAY 128 OF CHAR;
 			delete, always, never : BOOLEAN;
 		BEGIN
@@ -561,7 +561,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE PrepareList;
-		VAR i, vis : LONGINT; mask, t : ARRAY 128 OF CHAR; s : Strings.String;
+		VAR i : SIZE; vis : LONGINT; mask, t : ARRAY 128 OF CHAR; s : Strings.String;
 			img: WMGraphics.Image;
 		BEGIN
 			IF curList = NIL THEN
@@ -575,7 +575,7 @@ TYPE
 			IF s # NIL THEN COPY(s^, mask) END;
 			IF mask = "" THEN
 				FOR i := 0 TO nofEntries - 1 DO curList[i].visible := TRUE END;
-				vis := nofEntries
+				vis := nofEntries(LONGINT);
 			ELSE
 				IF prefixSearch.Get() & ( mask[Strings.Length(mask)] # "*") THEN Strings.Append(mask, "*") END;
 				vis := 0;
@@ -636,7 +636,7 @@ TYPE
 		PROCEDURE MyStartDrag(sender, data : ANY);
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top, i : LONGINT;
+			top : LONGINT; i : SIZE;
 		BEGIN
 			selection := GetSelection();
 			(* render to bitmap *)
@@ -661,7 +661,7 @@ TYPE
 		VAR di : WMWindowManager.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i : LONGINT; res : WORD;
+			i : SIZE; res : WORD;
 			sel : FTPClient.FTPListing;
 			url : ARRAY 1024 OF CHAR;
 			text : Texts.Text;
@@ -738,7 +738,7 @@ TYPE
 		PROCEDURE CopyFile(target : WMDropTarget.DropFiles; CONST local, remote : ARRAY OF CHAR; VAR res : WORD);
 		VAR w : Streams.Writer;
 			r : Streams.Reader;
-			buf: ARRAY BufSize OF CHAR; len : LONGINT;
+			buf: ARRAY BufSize OF CHAR; len : SIZE;
 		BEGIN
 			res := -1;
 			owner.SetBusy(TRUE);

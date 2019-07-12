@@ -277,7 +277,7 @@ END CheckFields;
 PROCEDURE BinaryLabler*(buffer : Raster.Image; VAR labelBuffer, equivalence : ARRAY OF INTEGER; colorThreshold, pixelThreshold, maxLabels : LONGINT;
 	VAR labelInfo : ARRAY OF LabelInfo;
 	unifyLabels : BOOLEAN; VAR nofFLabels : LONGINT; VAR res : WORD);
-VAR i, x, y, w , h,  color: LONGINT;
+VAR i: SIZE; x, y, w , h,  color: LONGINT;
 	tr, tg, tb, ta  : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -311,7 +311,7 @@ BEGIN
 	res := Ok;
 	w := buffer.width; h := buffer.height;
 	(* initialize equivalences *)
-	FOR i := 0 TO SHORT(LEN( equivalence)) - 1 DO equivalence[i] := SHORT(i) END;
+	FOR i := 0 TO LEN( equivalence) - 1 DO equivalence[i] := INTEGER(i) END;
 
 	Raster.InitMode(mode, Raster.srcCopy);
 

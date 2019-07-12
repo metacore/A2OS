@@ -143,7 +143,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END ESC;
 
 			PROCEDURE Consume*(ch: CHAR);
-				VAR buf: ARRAY 128 OF LONGINT; i, n: LONGINT;
+				VAR buf: ARRAY 128 OF LONGINT; i, n: SIZE;
 			BEGIN
 				CASE ch OF
 					0X: (* NUL *)
@@ -317,7 +317,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 
 
-			PROCEDURE writeChars(VAR buf: ARRAY OF LONGINT; n: LONGINT);
+			PROCEDURE writeChars(VAR buf: ARRAY OF LONGINT; n: SIZE);
 				VAR l: Line; i, ofs: LONGINT; wrap: BOOLEAN;
 			BEGIN
 				wrap := FALSE;
@@ -342,7 +342,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END writeChars;
 
-			PROCEDURE WriteChars(VAR buf: ARRAY OF LONGINT; n: LONGINT);
+			PROCEDURE WriteChars(VAR buf: ARRAY OF LONGINT; n: SIZE);
 			BEGIN {EXCLUSIVE}
 				writeChars(buf,n);
 			END WriteChars;
@@ -590,7 +590,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 			PROCEDURE Copy;
 				VAR
-					l: Line; apos, pos, ofs, end: LONGINT; buf: ARRAY 2 OF LONGINT;
+					l: Line; apos, pos, ofs, end: SIZE; buf: ARRAY 2 OF LONGINT;
 					attr: Attribute; tattr: Texts.Attributes;
 			BEGIN {EXCLUSIVE}
 				IF sel.beg.line = NIL THEN RETURN END;

@@ -4,15 +4,17 @@ IMPORT Streams, ObjectFile, Scanner := FoxScanner, Basic := FoxBasic, BitSets, D
 
 CONST Trace = FALSE;
 TYPE
+	Unit* = ObjectFile.Unit;
+
 	Block*= POINTER TO RECORD (ObjectFile.Section)
-		to-: LONGINT;
+		to-: Unit;
 		next-: Block;
 	END;
 
 	Disassembler* = OBJECT
 	VAR
-		first, block: Block; w: Streams.Writer; stringWriter: Streams.StringWriter; code,data: BitSets.BitSet; codeUnit, dataUnit: LONGINT;
-		codeDisplacement-, dataDisplacement: LONGINT;
+		first, block: Block; w: Streams.Writer; stringWriter: Streams.StringWriter; code,data: BitSets.BitSet; codeUnit, dataUnit: ObjectFile.Bits;
+		codeDisplacement-, dataDisplacement: Unit;
 
 		PROCEDURE & Init*(w: Streams.Writer);
 		BEGIN SELF.w := w; NEW(stringWriter, 256);
@@ -29,7 +31,7 @@ TYPE
 		END GetLogFile;
 
 		PROCEDURE BlockHeader(block: Block);
-		VAR name: ObjectFile.SectionName; offset: LONGINT;
+		VAR name: ObjectFile.SectionName;
 		BEGIN
 			Basic.SegmentedNameToString(block.identifier.name, name);
 			w.String("-------- "); w.Char(Scanner.TAB);
@@ -39,13 +41,13 @@ TYPE
 			w.Char(Scanner.TAB);
 			w.String(name);
 			w.String(" @");
-			w.Hex(block.alignment,-8); (*w.String("-"); w.Hex(block.to+offset,-8);*)
+			w.Hex(block.alignment,-8); (*w.String("-"); w.Hex(block.to,-8);*)
 			w.String(" ---");
 			w.Ln;
 		END BlockHeader;
 
-		PROCEDURE WriteReference*(adr: LONGINT; isCode: BOOLEAN; w: Streams.Writer);
-		VAR b: Block; name: ObjectFile.SectionName; offset: LONGINT;
+		PROCEDURE WriteReference*(adr: Unit; isCode: BOOLEAN; w: Streams.Writer);
+		VAR b: Block; name: ObjectFile.SectionName; offset: Unit;
 		BEGIN
 			w.String(" --> "); w.Hex(adr+codeDisplacement,-8);
 			b := first; IF b = NIL THEN RETURN END;
@@ -71,12 +73,12 @@ TYPE
 			END;
 		END WriteReference;
 
-		PROCEDURE DisassembleInstruction*(bitset: BitSets.BitSet; VAR adrInUnits: LONGINT; maxInstructionSize: LONGINT; w: Streams.Writer);
+		PROCEDURE DisassembleInstruction*(bitset: BitSets.BitSet; VAR address: Unit; maxInstructionSize: Unit; w: Streams.Writer);
 		BEGIN
 		END DisassembleInstruction;
 
-		PROCEDURE DisassembleBlock(from, to: LONGINT);
-		VAR adr, prevadr, max, digit: LONGINT; value: WORD; string: ARRAY 256 OF CHAR;
+		PROCEDURE DisassembleBlock(from, to: Unit);
+		VAR adr, prevadr, max: Unit; value: WORD; string: ARRAY 256 OF CHAR;
 		BEGIN
 			IF code = NIL THEN RETURN END;
 			adr := from;
@@ -100,8 +102,8 @@ TYPE
 			END;
 		END DisassembleBlock;
 
-		PROCEDURE DataBlock(from, to: LONGINT);
-		VAR adr,width,max: LONGINT; value: WORD;
+		PROCEDURE DataBlock(from, to: Unit);
+		VAR adr,width,max: Unit; value: WORD;
 		BEGIN
 			IF data = NIL THEN RETURN END;
 			adr := from;
@@ -145,16 +147,16 @@ TYPE
 				END;
 			END ExpectThisIdentifier;
 
-			PROCEDURE ExpectNumber(VAR int: LONGINT):BOOLEAN;
+			PROCEDURE ExpectNumber(VAR int: Unit):BOOLEAN;
 			BEGIN
 				IF (token.symbol = Scanner.Number) THEN
-					int := SHORT(token.hugeint); GetNextToken; RETURN TRUE
+					int := token.integer(Unit); GetNextToken; RETURN TRUE
 				ELSE RETURN FALSE
 				END;
 			END ExpectNumber;
 
 			PROCEDURE ParseLine(): Block;
-			VAR from,to: LONGINT; block: Block; displacement: LONGINT;
+			VAR from,to: Unit; block: Block; displacement: Unit;
 			BEGIN
 				block := NIL;
 				IF ExpectNumber(from) & ExpectToken(Scanner.Colon) THEN
@@ -195,7 +197,7 @@ TYPE
 			RETURN first;
 		END ParseLogFile;
 
-		PROCEDURE Disassemble*(code, data: BitSets.BitSet; codeUnit, dataUnit: LONGINT; logFile: Files.File; address: ADDRESS);
+		PROCEDURE Disassemble*(code, data: BitSets.BitSet; codeUnit, dataUnit: ObjectFile.Bits; logFile: Files.File; address: ADDRESS);
 		BEGIN
 			SELF.code := code;SELF.data := data; SELF.codeUnit := codeUnit; SELF.dataUnit := dataUnit;
 			first := ParseLogFile(logFile); block := first;
@@ -221,7 +223,7 @@ TYPE
 			END;
 		END Disassemble;
 
-		PROCEDURE SetDisplacements*(code, data: LONGINT);
+		PROCEDURE SetDisplacements*(code, data: Unit);
 		BEGIN
 			codeDisplacement := code;
 			dataDisplacement := data;
@@ -230,9 +232,9 @@ TYPE
 	END Disassembler;
 
 	PROCEDURE FindPC*(context: Commands.Context);
-	VAR file: Files.File; logFile: Files.FileName; adr,maxadr: LONGINT; disassembler: Disassembler; block, found: Block; name: ObjectFile.SectionName;
+	VAR file: Files.File; logFile: Files.FileName; adr,maxadr: Unit; disassembler: Disassembler; block, found: Block; name: ObjectFile.SectionName;
 	BEGIN
-		IF context.arg.GetString(logFile) & context.arg.GetInteger(adr, TRUE) THEN
+		IF context.arg.GetString(logFile) & context.arg.GetSize(adr, TRUE) THEN
 			file := Files.Old(logFile);
 			IF file = NIL THEN Files.JoinExtension(logFile,".log",logFile); file := Files.Old(logFile) END;
 			IF file = NIL THEN

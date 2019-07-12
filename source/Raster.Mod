@@ -4558,7 +4558,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(** read image from file rider **)
 	PROCEDURE Read* (VAR fr: Streams.Reader; img: Image);
-		VAR ver, code, w, h, bpr, len, bytesRead: LONGINT; adr, aa: ADDRESS; fmt: Format; buf: ARRAY 256 OF CHAR; used: LONGINT;
+		VAR ver, code, w, h, bpr, len: LONGINT; bytesRead: SIZE; adr, aa: ADDRESS; fmt: Format; buf: ARRAY 256 OF CHAR; used: LONGINT;
 	BEGIN
 		ASSERT(img#NIL,100);
 		fr.RawNum(ver);	(* know version 1&2*)

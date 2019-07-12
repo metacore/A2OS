@@ -295,7 +295,7 @@ PROCEDURE XpmLine(VAR R: Rider; y,w,cpp: INTEGER; pict: Pictures.Picture);
 VAR
 	pat: ARRAY 16 OF CHAR;
 	i,j: INTEGER;
-	k: LONGINT;
+	k: SIZE;
 	c: CHAR;
 BEGIN
 	FOR i:= 0 TO w-1 DO

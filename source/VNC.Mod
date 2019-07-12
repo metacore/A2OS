@@ -48,7 +48,7 @@ TYPE
 		mode: Raster.Mode;
 		bytesPerPixel: LONGINT;	(* network transfer format size *)
 		rcvbuf, imgbuf: POINTER TO ARRAY OF CHAR;
-		rcvbufpos, rcvbuflen: LONGINT;
+		rcvbufpos, rcvbuflen: SIZE;
 		fip: IP.Adr
 	END;
 
@@ -327,8 +327,8 @@ VAR
 	pool: ConnectionPool;
 	bell: Bell;
 
-PROCEDURE ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: LONGINT; VAR len: LONGINT);
-VAR dst, n: LONGINT;
+PROCEDURE ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: SIZE; VAR len: LONGINT);
+VAR dst, n: SIZE;
 BEGIN
 	IF c.res = Ok THEN
 		dst := 0; len := 0;
@@ -345,7 +345,7 @@ BEGIN
 			ASSERT(dst+n <= LEN(buf));	(* index check *)
 			SYSTEM.MOVE(ADDRESSOF(c.rcvbuf[c.rcvbufpos]), ADDRESSOF(buf[dst]), n);
 			INC(c.rcvbufpos, n); DEC(c.rcvbuflen, n);
-			INC(dst, n); DEC(size, n); INC(len, n)
+			INC(dst, n); DEC(size, n); INC(len, n(LONGINT))
 		END
 	ELSE
 		buf[0] := 0X; len := 0
@@ -608,7 +608,7 @@ BEGIN
 		KernelLog.Enter; KernelLog.String("Raw"); KernelLog.Int(x, 5); KernelLog.Int(y, 5);
 		KernelLog.Int(w, 5); KernelLog.Int(h, 5); KernelLog.Exit
 	END;
-	bh := LEN(c.imgbuf^) DIV (w*c.bytesPerPixel);	(* number of lines that will fit in buffer *)
+	bh := (LEN(c.imgbuf^) DIV (w*c.bytesPerPixel))(LONGINT);	(* number of lines that will fit in buffer *)
 	Raster.Init(c.nb, w, bh, c.fmt, w*c.bytesPerPixel, ADDRESSOF(c.imgbuf[0]));
 	WHILE h > 0 DO
 		IF h >= bh THEN h0 := bh ELSE h0 := h END;

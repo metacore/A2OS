@@ -592,7 +592,7 @@ VAR
 	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): WORDSET;
 	GetModuleFileName-: PROCEDURE {WINAPI} ( hModule: HMODULE;
 																				    VAR lpFileName: ARRAY   OF CHAR;
-																				    nSize: LONGINT ): LONGINT;
+																				    nSize: DWORD ): LONGINT;
 	(** The GetModuleHandle function returns a module handle for the specified module if the file has been mapped
 			into the address space of the calling process. *)
 	GetModuleHandle-: PROCEDURE {WINAPI} ( CONST lpModuleName: ARRAY   OF CHAR ): HMODULE;
@@ -606,7 +606,7 @@ VAR
 																			CONST lpKeyName: ARRAY OF CHAR;
 																			CONST lpDefault: ARRAY OF CHAR;
 																			VAR lpReturnedString: ARRAY OF CHAR;
-																			nSize: LONGINT;
+																			nSize: DWORD;
 																			CONST lpFileName: ARRAY OF CHAR): LONGINT;
 	(** The GetProcessAffinityMask function retrieves the process affinity mask for the specified process and the system affinity mask for the system. *)
 	GetProcessAffinityMask- : PROCEDURE {WINAPI} ( hProcess: HANDLE; lpProcessAffinityMask: ADDRESS;  lpSystemAffinityMask: ADDRESS ): BOOL;
@@ -670,7 +670,7 @@ VAR
 			(an atom) identifying the string. *)
 	GlobalAddAtom-: PROCEDURE {WINAPI} ( VAR lpString: ARRAY   OF CHAR ): ATOM;
 	(** The GlobalAlloc function allocates the specified number of bytes from the heap. *)
-	GlobalAlloc-: PROCEDURE {WINAPI} ( uFlags: WORDSET;  dwBytes: LONGINT ): HGLOBAL;
+	GlobalAlloc-: PROCEDURE {WINAPI} ( uFlags: WORDSET;  dwBytes: SIZE ): HGLOBAL;
 	(** The GlobalDeleteAtom function decrements the reference count of a global string atom. *)
 	GlobalDeleteAtom-: PROCEDURE {WINAPI} ( nAtom: ATOM ): ATOM;
 	(** The GlobalLock function locks a global memory object and returns a pointer to the first byte of the
@@ -684,7 +684,7 @@ VAR
 	GlobalReAlloc-: PROCEDURE {WINAPI} ( hMem: HGLOBAL;  dwBytes: LONGINT;
 																		uFlags: DWORD ): HGLOBAL;
 	(** The GlobalSize function retrieves the current size, in bytes, of the specified global memory object. *)
-	GlobalSize-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): LONGINT;
+	GlobalSize-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): SIZE;
 	(** The GlobalUnlock function decrements the lock count associated with a memory object that was allocated with
 			the GMEM_MOVEABLE flag. *)
 	GlobalUnlock-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): BOOL;
@@ -761,7 +761,7 @@ VAR
 	ResumeThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
 	(** The SearchPath function searches for the specified file. *)
 	SearchPath-: PROCEDURE {WINAPI} ( CONST lpPath, lpFileName, lpExtension: ARRAY   OF CHAR;
-																  nBufferLength: LONGINT;
+																  nBufferLength: DWORD;
 																  VAR lpBuffer: ARRAY   OF CHAR;
 																  VAR lpFilePart: LPSTR ): LONGINT;
 	(** The SetCommBreak function suspends character transmission for a specified communications device and places the transmission line in a break state until the ClearCommBreak function is called. *)
@@ -853,8 +853,8 @@ VAR
 	(** The WriteFile function writes data to a file and is designed for both synchronous and asynchronous operation. *)
 	WriteFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
-															   nNumberOfBytesToWrite: LONGINT;
-															   VAR lpNumberOfBytesWritten: LONGINT;
+															   nNumberOfBytesToWrite: DWORD;
+															   VAR lpNumberOfBytesWritten: DWORD;
 															   VAR lpOverlapped: Overlapped ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)

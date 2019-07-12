@@ -208,7 +208,7 @@ TYPE
 			newCustomStyles: CustomStyles;
 			pStyle: ParagraphStyleObject;
 			cStyle: CharacterStyleObject;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			IF (style IS ParagraphStyleObject) THEN
 				pStyle := GetParagraphStyleByName(style.name);
@@ -273,7 +273,7 @@ TYPE
 		END AddStyle;
 
 		PROCEDURE RemoveStyle*(style: StyleObject);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			IF (style IS ParagraphStyleObject) THEN
 				IF (style(ParagraphStyleObject).name # "defaultParagraphStyle") THEN
@@ -317,7 +317,7 @@ TYPE
 
 		PROCEDURE GetCharacterStyleByName*(name: ARRAY OF CHAR): CharacterStyleObject;
 		VAR styleObject: CharacterStyleObject;
-			i : LONGINT;
+			i : SIZE;
 			found : BOOLEAN;
 			match: Strings.String;
 		BEGIN
@@ -335,7 +335,7 @@ TYPE
 
 		PROCEDURE GetParagraphStyleByName*(name: ARRAY OF CHAR): ParagraphStyleObject;
 		VAR styleObject: ParagraphStyleObject;
-			i : LONGINT;
+			i : SIZE;
 			found : BOOLEAN;
 			match: Strings.String;
 		BEGIN
@@ -353,7 +353,7 @@ TYPE
 
 		PROCEDURE AddContent*(content: ContentObject);
 		VAR newContents: Contents;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			INC(nofContents); (* INC(objectCounter); *)
 			IF nofContents > LEN(contents) THEN
@@ -365,7 +365,7 @@ TYPE
 		END AddContent;
 
 		PROCEDURE RemoveContent*(content: ContentObject);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			i := 0; WHILE (i < nofContents) & (contents[i] # content) DO INC(i) END;
 			IF i < nofContents THEN
@@ -377,7 +377,7 @@ TYPE
 
 		PROCEDURE GetContentByName*(name: ARRAY OF CHAR): ContentObject;
 		VAR contentObject: ContentObject;
-			i : LONGINT;
+			i : SIZE;
 			found : BOOLEAN;
 			match: Strings.String;
 		BEGIN
@@ -395,7 +395,7 @@ TYPE
 
 		PROCEDURE FixContents*;							(* loop over all contents and fix the links *)
 		VAR contentObject: ContentObject;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			i := 0;
 			WHILE (i < nofContents) DO
@@ -1290,7 +1290,7 @@ TYPE
 
 		PROCEDURE Clone*(): FrameObject;
 		VAR newframe: FrameObject;
-			newcontent: ContentObject; (* DTPFrame.ContentObject; *)
+			newcontent: ContentObject; (* DTPFrame.ContentObject; *)
 		BEGIN
 			NEW(newframe);
 			newframe.SetName(GetName());					(* maybe change name to avoid conflicts *)

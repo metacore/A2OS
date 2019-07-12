@@ -11,17 +11,17 @@ TYPE
 		(** A pipe is a bounded buffer that can be used as an Streams Reader and Writer.  Everything sent to the sink can be read from the source. *)
 	Pipe* = OBJECT
 		VAR
-			head, num: LONGINT;
+			head, num: SIZE;
 			buffer: POINTER TO ARRAY OF CHAR;
 			closed: BOOLEAN;
 
 		(** return the number of bytes that can be read without blocking *)
-		PROCEDURE Available*() : LONGINT;
+		PROCEDURE Available*() : SIZE;
 		BEGIN
 			RETURN num
 		END Available;
 
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate : BOOLEAN; VAR res: WORD);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate : BOOLEAN; VAR res: WORD);
 		BEGIN
 			ASSERT(len >= 0);
 			BEGIN {EXCLUSIVE}
@@ -38,9 +38,7 @@ TYPE
 			END
 		END Send;
 
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
-		VAR
-			t, ti: LONGINT;
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		BEGIN
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
 			len := 0;
@@ -59,7 +57,7 @@ TYPE
 			END
 		END Receive;
 
-		PROCEDURE &Init*(size: LONGINT);
+		PROCEDURE &Init*(size: SIZE);
 		BEGIN
 			head := 0; num := 0;
 			IF (buffer = NIL) OR (LEN(buffer) # size) THEN
@@ -75,18 +73,16 @@ TYPE
 
 	END Pipe;
 
-
 (** Any stream input procedure or method. Identical to the definition in Streams.Mod, but I don't want to import that here*)
-TYPE	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
+TYPE	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
 (*makes a decoupled copy of a receiver*)
 (*internally it's a pipe that automatically reads the input in a continuous loop*)
 TYPE ReadDecoupler*= OBJECT
 	VAR
 		pipe: Pipe;
 		inputReceiver: Receiver;
-		numR: LONGINT;
 		smallbuf: ARRAY[128] OF CHAR;
-		len: LONGINT;
+		len: SIZE;
 		res: WORD;
 
 	PROCEDURE &InitReadDecoupler*(inputReceiver: Receiver);
@@ -95,7 +91,7 @@ TYPE ReadDecoupler*= OBJECT
 		SELF.inputReceiver:=inputReceiver;
 	END InitReadDecoupler;
 
-	PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+	PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 	BEGIN
 		pipe.Receive(buf,ofs,size,min,len,res);
 	END Receive;
@@ -110,78 +106,3 @@ BEGIN{ACTIVE}
 END ReadDecoupler;
 
 END Pipes.
-
-(*
-What's wrong with this
-
-(* Aos, Copyright 2001, Pieter Muller, ETH Zurich *)
-
-MODULE Pipes; (** AUTHOR "pjm"; PURPOSE "Simple pipe object"; *)
-
-IMPORT SYSTEM;
-
-CONST
-	Ok = 0;
-	Closed = 4301;
-
-TYPE
-		(** A pipe is a bounded buffer that can be used as an Streams Reader and Writer.  Everything sent to the sink can be read from the source. *)
-	Pipe* = OBJECT
-		VAR
-			head, tail: LONGINT;	(* buffer[head..(tail-1) MOD LEN] contains data (circular).  one character is reserved. *)
-			buffer: POINTER TO ARRAY OF CHAR;
-
-		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate : BOOLEAN; VAR res: WORD);
-		VAR n: LONGINT;
-		BEGIN {EXCLUSIVE}
-			ASSERT(len >= 0);
-			LOOP
-				IF len = 0 THEN res := Ok; EXIT END;
-				AWAIT((tail+1) MOD LEN(buffer) # head);	(* some free space available *)
-				IF head = -1 THEN res := Closed; EXIT END;
-				IF tail >= head THEN n := LEN(buffer)-tail ELSE n := head-tail END;	(* contiguous free space *)
-				IF n > len THEN n := len END;
-				ASSERT(tail+n <= LEN(buffer));	(* index check *)
-				SYSTEM.MOVE(ADDRESSOF(buf[ofs]), ADDRESSOF(buffer[tail]), n);
-				tail := (tail+n) MOD LEN(buffer);
-				INC(ofs, n); DEC(len, n)
-			END
-		END Send;
-
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
-		VAR n: LONGINT;
-		BEGIN {EXCLUSIVE}
-			ASSERT((size > 0) & (min <= size) & (min >= 0));
-			len := 0;
-			LOOP
-				IF min # 0 THEN AWAIT(head # tail) END;	(* wait until some data available *)
-				IF head = -1 THEN res := Closed; EXIT END;
-				IF tail >= head THEN n := tail-head ELSE n := LEN(buffer)-head END;	(* contiguous data *)
-				IF n > size THEN n := size END;
-				ASSERT(ofs+n <= LEN(buf));	(* index check *)
-				SYSTEM.MOVE(ADDRESSOF(buffer[head]), ADDRESSOF(buf[ofs]), n);
-				head := (head+n) MOD LEN(buffer);
-				INC(ofs, n); INC(len, n); DEC(size, n);
-				IF len >= min THEN res := Ok; EXIT END
-			END
-		END Receive;
-
-		PROCEDURE &Init*(size: LONGINT);
-		BEGIN
-			head := 0; tail := 0; NEW(buffer, size+1)	(* reserve one character to distinguish full and empty buffer *)
-		END Init;
-
-		PROCEDURE Close*;
-		BEGIN {EXCLUSIVE}
-			head := -1
-		END Close;
-
-	END Pipe;
-
-END Pipes.
-
-
-
-*)
-
-

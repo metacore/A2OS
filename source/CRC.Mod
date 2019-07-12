@@ -24,8 +24,8 @@ TYPE
 			InitWriter(Send, 256)
 		END InitStream;
 
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-			VAR fcs, idx: SET; i: LONGINT;
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+			VAR fcs, idx: SET; i: SIZE;
 		BEGIN
 			fcs := SYSTEM.VAL( SET, crc ) * SYSTEM.VAL( SET, 0FFFFH );
 			FOR i := ofs TO ofs + len - 1 DO
@@ -66,7 +66,7 @@ TYPE
 			crc := Init32
 		END Reset;
 
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 		VAR idx: LONGINT;
 		BEGIN
 			WHILE len > 0 DO

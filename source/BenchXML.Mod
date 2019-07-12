@@ -148,7 +148,7 @@ BEGIN
 	RETURN (86400 * nofDays + 3600 * nofHours + 60 * nofMinutes + nofSeconds);
 END ToSeconds;
 
-PROCEDURE DefaultReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR);
+PROCEDURE DefaultReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR);
 BEGIN
 	error := TRUE;
 	KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
@@ -163,7 +163,7 @@ BEGIN
 END ShowUsage;
 
 PROCEDURE Cleanup;
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	IF (workers # NIL) THEN
 		FOR i := 0 TO LEN(workers)-1 DO

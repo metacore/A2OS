@@ -63,7 +63,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR i, m: LONGINT;
+		VAR i, m: SIZE;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
 		BEGIN
@@ -110,7 +110,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
 			c: CHAR;
 		BEGIN
 			res :=  -1;
@@ -146,7 +146,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR i, m: LONGINT;
+		VAR i, m: SIZE;
 			(*r : Files.Reader;*)
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
@@ -194,7 +194,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
 			c: CHAR;
 		BEGIN
 			res :=  -1;
@@ -230,7 +230,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR i, m: LONGINT;
+		VAR i, m: SIZE;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
 		BEGIN
@@ -277,7 +277,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
 			c: CHAR;
 		BEGIN
 			res :=  -1;
@@ -313,7 +313,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR i, m: LONGINT;
+		VAR i, m: SIZE;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
 		BEGIN
@@ -360,7 +360,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
 			c: CHAR;
 		BEGIN
 			res :=  -1;
@@ -396,7 +396,7 @@ TYPE
 		END Error;
 
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR i, m: LONGINT;
+		VAR i, m: SIZE;
 			tempUCS32 : ARRAY 1024 OF Char32;
 			ch, last : CHAR;
 		BEGIN
@@ -443,7 +443,7 @@ TYPE
 		END Open;
 
 		PROCEDURE WriteText*(text : Texts.Text; VAR res : WORD);
-		VAR r : Texts.TextReader; ch : Texts.Char32; i : LONGINT;
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
 			c: CHAR;
 		BEGIN
 			res :=  -1;
@@ -472,13 +472,13 @@ VAR
 	hash: HashTable;
 	bFirst: BOOLEAN;
 	setInitDone: SET;
-	nCollisions: LONGINT;
+	nCollisions: SIZE;
 	ucs32Min, ucs32Max: Char32;
 
 	PROCEDURE hashSearch(encoding: SHORTINT; bAddAllowed: BOOLEAN; ucs32: Char32; VAR ch: CHAR): BOOLEAN;
 	VAR
 		d: INTEGER;
-		h: LONGINT;
+		h: SIZE;
 		bFound, bExit: BOOLEAN;
 	BEGIN
 

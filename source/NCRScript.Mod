@@ -114,7 +114,7 @@ MODULE NCRScript;	(** non-portable *)	(* Contributed by P. Ryser to the System 3
 		SetUnsigned(Script[90] , 080880000H);	SetUnsigned(Script[91] , 0FFFFFF98H);
 		SetUnsigned(Script[92] , 098080000H);	SetUnsigned(Script[93] , 000000024H);
 		SetUnsigned(Script[94] , 098080000H);	SetUnsigned(Script[95] , 000000040H);
-		ScriptsAddress := Machine.Ensure32BitAddress (Machine.PhysicalAdr(ADDRESSOF(Script[0]), 201*4));
+		ScriptsAddress := Machine.PhysicalAdr(ADDRESSOF(Script[0]), 201*4)(Machine.Address32);
 		CheckAlign
 	END Init;
 

@@ -17,7 +17,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED} Ln;
 END Exit;
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
-PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 BEGIN {UNCOOPERATIVE, UNCHECKED} INC (len, ofs); ASSERT (len <= LEN (buf)); WHILE ofs # len DO Char (buf[ofs]); INC (ofs); END; res := 0;
 END Send;
 
@@ -196,7 +196,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END StackFrames;
 
 (** Write a buffer in hex. *)
-PROCEDURE Buffer* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
+PROCEDURE Buffer* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE);
 BEGIN {UNCOOPERATIVE, UNCHECKED} Memory (ADDRESSOF (buf[ofs]), len)
 END Buffer;
 

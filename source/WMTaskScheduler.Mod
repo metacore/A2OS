@@ -468,7 +468,7 @@ TYPE
 			entry : WMDropDownLists.Entry;
 
 			PROCEDURE GetNumbers(stringArray : Strings.StringArray; VAR nbrArray : ARRAY OF LONGINT) : BOOLEAN;
-			VAR i, j : LONGINT; error : BOOLEAN;
+			VAR i, j : SIZE; error : BOOLEAN;
 			BEGIN
 				ASSERT(LEN(nbrArray) >= LEN(stringArray));
 				FOR i := 0 TO LEN(nbrArray)-1 DO nbrArray[i] := 0; END;
@@ -664,7 +664,7 @@ TYPE
 		selectMode : LONGINT;
 
 		statusLabel : WMStandardComponents.Label;
-		lastNofSelectedTasks, lastNofTasks : LONGINT;
+		lastNofSelectedTasks, lastNofTasks : SIZE;
 
 		filenameEditor : WMEditors.Editor;
 		loadBtn, storeBtn, addBtn, todayBtn, thisWeekBtn, allBtn : WMStandardComponents.Button;
@@ -900,7 +900,7 @@ TYPE
 		END Selector;
 
 		PROCEDURE CreateTaskViews(tasks : TaskScheduler.TaskArray);
-		VAR taskView : TaskView; i : LONGINT;
+		VAR taskView : TaskView; i : SIZE;
 		BEGIN
 			ASSERT(tasks # NIL);
 			FOR i := 0 TO LEN(tasks)-1 DO
@@ -917,7 +917,7 @@ TYPE
 		END CreateTaskViews;
 
 		PROCEDURE RemoveTaskViews(tasks : TaskScheduler.TaskArray);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(tasks # NIL);
 			FOR i := 0 TO LEN(tasks)-1 DO
@@ -929,7 +929,7 @@ TYPE
 		END RemoveTaskViews;
 
 		PROCEDURE UpdateTaskViews( dt : Dates.DateTime; tasks : TaskScheduler.TaskArray);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(tasks # NIL);
 			FOR i := 0 TO LEN(tasks)-1 DO
@@ -979,7 +979,7 @@ TYPE
 
 VAR
 	DefaultImage : WMGraphics.Image;
-	nofWindows : LONGINT;
+	nofWindows : SIZE;
 
 PROCEDURE SameDay( dt1, dt2 : Dates.DateTime) : BOOLEAN;
 BEGIN

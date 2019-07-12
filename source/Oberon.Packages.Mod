@@ -80,9 +80,9 @@ MODULE Packages IN Oberon; (** portable / source: Native.Packages.Mod *)	(* ejz 
 		END
 	END OpenScanner;
 
-	PROCEDURE WriteResource(VAR R: Files.Rider; VAR res: Resource; tag: INTEGER; dLen: LONGINT);
+	PROCEDURE WriteResource(VAR R: Files.Rider; VAR res: Resource; tag: INTEGER; dLen: SIZE);
 	BEGIN
-		Files.WriteInt(R, tag); Files.WriteString(R, res.name); Files.WriteLInt(R, dLen+12);
+		Files.WriteInt(R, tag); Files.WriteString(R, res.name); Files.WriteLInt(R, dLen(LONGINT)+12);
 		Files.WriteLInt(R, res.time); Files.WriteLInt(R, res.date);
 		Files.WriteInt(R, res.minor); Files.WriteInt(R, res.major)
 	END WriteResource;
@@ -331,7 +331,7 @@ MODULE Packages IN Oberon; (** portable / source: Native.Packages.Mod *)	(* ejz 
 		Files.Set(R, BTrees.Base(index), org);
 		Files.WriteInt(R, res.major); Files.WriteInt(R, res.minor);
 		Files.WriteLInt(R, res.date); Files.WriteLInt(R, res.time);
-		Files.WriteBytes(R, package, LEN(package));
+		Files.WriteBytes(R, package, LEN(package)(LONGINT));
 		Files.Close(BTrees.Base(index))
 	END RegisterResource;
 

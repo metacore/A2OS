@@ -13,7 +13,7 @@ TYPE
 	UnicodeString*	= POINTER TO ARRAY OF LONGINT;
 
 PROCEDURE Unicode2Ascii*(unicode : UnicodeString) : AsciiString;
-VAR utf8, ascii : AsciiString; res : WORD;
+VAR utf8, ascii : AsciiString; res : SIZE;
 BEGIN
 	IF unicode # NIL THEN
 		NEW(utf8, LEN(unicode)+1);  (* +1 because of the 0X string termination *)
@@ -25,7 +25,7 @@ BEGIN
 	RETURN ascii;
 END Unicode2Ascii;
 
-PROCEDURE DecodeChar(CONST str: ARRAY OF CHAR; VAR i, ucs: LONGINT): BOOLEAN;
+PROCEDURE DecodeChar(CONST str: ARRAY OF CHAR; VAR i: SIZE; VAR ucs: LONGINT): BOOLEAN;
 VAR len, ch, min: LONGINT;
 BEGIN
 	IF i < LEN(str) THEN
@@ -55,8 +55,8 @@ BEGIN
 	RETURN FALSE
 END DecodeChar;
 
-PROCEDURE EncodeChar(ucs: LONGINT; VAR str: ARRAY OF CHAR; VAR i: LONGINT): BOOLEAN;
-VAR len, j: LONGINT; byte, mask, max: INTEGER; buf: ARRAY 6 OF CHAR;
+PROCEDURE EncodeChar(ucs: LONGINT; VAR str: ARRAY OF CHAR; VAR i: SIZE): BOOLEAN;
+VAR len, j: SIZE; byte, mask, max: INTEGER; buf: ARRAY 6 OF CHAR;
 BEGIN
 	len := LEN(str);
 
@@ -88,7 +88,7 @@ BEGIN
 END EncodeChar;
 
 PROCEDURE UnicodetoUTF8(CONST ucs: ARRAY OF LONGINT; VAR utf8: ARRAY OF CHAR);
-VAR b: BOOLEAN; i, p, l: LONGINT;
+VAR b: BOOLEAN; i, p, l: SIZE;
 BEGIN
 	b := TRUE; i := 0; p := 0; l := LEN(ucs);
 	WHILE (i < l) & b DO
@@ -97,8 +97,8 @@ BEGIN
 	END
 END UnicodetoUTF8;
 
-PROCEDURE UTF8toASCII(CONST src:  ARRAY OF CHAR; substitute: CHAR; VAR dst: ARRAY OF CHAR): LONGINT;
-VAR count, i, len, pos, ucs: LONGINT;
+PROCEDURE UTF8toASCII(CONST src:  ARRAY OF CHAR; substitute: CHAR; VAR dst: ARRAY OF CHAR): SIZE;
+VAR count, i, len, pos: SIZE; ucs: LONGINT;
 BEGIN
 	len := LEN(dst); ucs := -1;
 	WHILE (ucs # 0) & DecodeChar(src, pos, ucs) & (i < len) DO

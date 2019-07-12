@@ -1018,7 +1018,7 @@ END IPConfig;
 	be passed to Checksum2, which sums the data following sequentially on the data summed by this
 	operation. Carries from bit 15 are accumulated in the top 16 bits, so at most 65535 words can be
 	summed by Checksum1 and Checksum2 together. *)
-PROCEDURE Checksum1*(CONST data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): LONGINT;
+PROCEDURE Checksum1*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; chk1: LONGINT): LONGINT;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+chk1]
@@ -1038,9 +1038,9 @@ sloop:
 #ELSIF AMD64 THEN
 	MOV EAX, [RBP+chk1]
 	MOV RBX, [RBP+data]
-	ADD EBX, [RBP+ofs]
-	MOV ECX, [RBP+len]
-	SHR ECX, 1
+	ADD RBX, [RBP+ofs]
+	MOV RCX, [RBP+len]
+	SHR RCX, 1
 	JNC sloop
 	PUSH 8	; ASSERT(~ODD(len))
 	INT 3
@@ -1048,7 +1048,7 @@ sloop:
 	MOVZX EDX, WORD [RBX]
 	ADD EAX, EDX
 	ADD RBX, 2
-	DEC ECX
+	DEC RCX
 	JNZ sloop
 #ELSIF ARM THEN
 	LDR R0, [FP, #chk1]
@@ -1076,7 +1076,7 @@ END Checksum1;
 
 (** 	Continue a checksum operation. len can be zero or odd. chk1 can be the result of Checksum1 for
 	the immediately preceding data, or 0 for contiguous data. *)
-PROCEDURE Checksum2*(CONST data: ARRAY OF CHAR; ofs, len, chk1: LONGINT): INTEGER;
+PROCEDURE Checksum2*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; chk1: LONGINT): INTEGER;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+chk1]
@@ -1108,15 +1108,15 @@ even:
 #ELSIF AMD64 THEN
 	MOV EAX, [RBP + chk1]
 	MOV RBX, [RBP + data]
-	ADD EBX, [RBP + ofs]
-	MOV ECX, [RBP + len]
-	SHR ECX, 1
+	ADD RBX, [RBP + ofs]
+	MOV RCX, [RBP + len]
+	SHR RCX, 1
 	JZ eloop
 sloop:
 	MOVZX EDX, WORD [RBX]
 	ADD EAX, EDX
 	ADD RBX, 2
-	DEC ECX
+	DEC RCX
 	JNZ sloop
 eloop:
 	TEST [RBP + len], 1	; check for odd length
@@ -1668,8 +1668,8 @@ END RemoveInterface;
 (* Prints out a packet *)
 PROCEDURE PacketOut*(CONST title, buffer: ARRAY OF CHAR; all: BOOLEAN);
 VAR
-	i: LONGINT;
-	length: LONGINT;
+	i: SIZE;
+	length: SIZE;
 
 BEGIN
 	KernelLog.Ln;KernelLog.String("********************");KernelLog.Ln;
@@ -1754,5 +1754,4 @@ EOS: end of string
 	State 4:	/ goto state 3
 			0-9/A-F goto state 1
 			EOS valid
-
 

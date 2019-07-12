@@ -559,7 +559,7 @@ TYPE
 		buffers : BufferArray;
 
 		PROCEDURE &Init;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			nofComponents := 0;
 			NEW(buffers, 32);
@@ -623,13 +623,13 @@ TYPE
 		END LoadContent;
 
 		PROCEDURE Clear;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(buffers) - 1 DO buffers[i] := NIL; END;
 		END Clear;
 
 		PROCEDURE Resize;
-		VAR newBuffers : BufferArray; i : LONGINT;
+		VAR newBuffers : BufferArray; i : SIZE;
 		BEGIN
 			NEW(newBuffers, 2 * LEN(buffers));
 			FOR i := 0 TO LEN(buffers) - 1 DO newBuffers[i] := buffers[i]; END;
@@ -650,7 +650,7 @@ TYPE
 			hasError := FALSE;
 		END Init;
 
-		PROCEDURE ReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			hasError := TRUE;
 			KernelLog.String("WMBuilder.Clipboard.Parser.Parse: line = "); KernelLog.Int(line, 0);
@@ -1269,7 +1269,7 @@ TYPE
 		END Remove;
 
 		PROCEDURE Clear;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			nofComponents := 0;
 			FOR i := 0 TO LEN(components)-1 DO
@@ -1284,7 +1284,7 @@ TYPE
 		END Reset;
 
 		PROCEDURE ResizeComponentsArray;
-		VAR newComponents : ComponentArray; i : LONGINT;
+		VAR newComponents : ComponentArray; i : SIZE;
 		BEGIN
 			NEW(newComponents, 2 * LEN(components));
 			FOR i := 0 TO LEN(components)-1 DO
@@ -2005,7 +2005,7 @@ TYPE
 			END Copy;
 
 			PROCEDURE Paste;
-			VAR components : ComponentArray; i : LONGINT;
+			VAR components : ComponentArray; i : SIZE;
 			BEGIN
 				components := clipboard.Get();
 				IF (components # NIL) THEN
@@ -2469,7 +2469,7 @@ TYPE
 		END Get;
 
 		PROCEDURE GetAll() : WindowArray;
-		VAR result : WindowArray; w, temp : EditWindow; nofWindows, i, j : LONGINT;
+		VAR result : WindowArray; w, temp : EditWindow; nofWindows, i, j : SIZE;
 		BEGIN {EXCLUSIVE}
 			nofWindows := 0;
 			w := windows; WHILE (w # NIL) DO INC(nofWindows); w := w.next; END;
@@ -2720,7 +2720,7 @@ TYPE
 		END CreateForm;
 
 		PROCEDURE UpdateInfo;
-		VAR i, j : LONGINT; windows : WindowArray; focusWindow : EditWindow;
+		VAR i, j : SIZE; windows : WindowArray; focusWindow : EditWindow;
 		BEGIN
 			FOR i := 0 TO LEN(windowInfo.openDocuments)-1 DO windowInfo.openDocuments[i].name := ""; END;
 			windowInfo.handleDocumentInfo := HandleDocumentInfo;
@@ -2937,7 +2937,7 @@ TYPE
 		PROCEDURE HandleStoreBtn(sender, data : ANY);
 		VAR
 			w : EditWindow;
-			repositoryName, componentName : ARRAY 64 OF CHAR; refNum : LONGINT;
+			repositoryName, componentName : ARRAY 64 OF CHAR; refNum : SIZE;
 			name, filename : Files.FileName;
 			repository : Repositories.Repository;
 			res : WORD;
@@ -3148,7 +3148,7 @@ TYPE
 		VAR
 			windows : WindowArray; data, w : XML.Element;
 			string : ARRAY 32 OF CHAR; bounds : WMRectangles.Rectangle;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			windows := windowList.GetAll();
 			IF (windows # NIL) THEN
@@ -3184,7 +3184,7 @@ TYPE
 		END Handle;
 
 		PROCEDURE Close*;
-		VAR windows : WindowArray; i : LONGINT;
+		VAR windows : WindowArray; i : SIZE;
 		BEGIN
 			windows := windowList.GetAll();
 			IF (windows # NIL) THEN
@@ -3459,5 +3459,4 @@ PC.Compile \s
 	WMInspectionComponents.Mod
 	WMBuilder.Mod
 ~
-
 

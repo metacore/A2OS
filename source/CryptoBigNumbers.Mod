@@ -18,12 +18,12 @@ TYPE
 
 	BigNumber* = OBJECT
 			VAR
-				len-: LONGINT;  (** number of significant 'digits' *)
+				len-: SIZE;  (** number of significant 'digits' *)
 				neg-: BOOLEAN;
 				d-: digits;
 
-				PROCEDURE & Init( bitsize: LONGINT );
-				VAR n: LONGINT;
+				PROCEDURE & Init( bitsize: SIZE );
+				VAR n: SIZE;
 				BEGIN
 					IF bitsize # 0 THEN
 						n := (bitsize + 31) DIV 32;
@@ -33,8 +33,8 @@ TYPE
 					len := 0;  neg := FALSE
 				END Init;
 
-				PROCEDURE Mask*( bits: LONGINT );
-				VAR w, b: LONGINT;
+				PROCEDURE Mask*( bits: SIZE );
+				VAR w, b: SIZE;
 				BEGIN
 					w := bits DIV 32;  b := bits MOD 32;  len := w;
 					IF b # 0 THEN  INC( len );
@@ -70,8 +70,8 @@ TYPE
 
 
 
-				PROCEDURE Shift*( n: LONGINT );
-				VAR right: BOOLEAN;  w, bits, i, l: LONGINT;  a, b: BNdigit;
+				PROCEDURE Shift*( n: SIZE );
+				VAR right: BOOLEAN;  w, bits, i, l: SIZE;  a, b: BNdigit;
 				BEGIN
 					IF len = 0 THEN  RETURN  END;
 					IF n < 0 THEN  right := TRUE;  n := ABS( n )  ELSE  right := FALSE  END;
@@ -110,7 +110,7 @@ TYPE
 
 
 				PROCEDURE Dec*;
-				VAR i: LONGINT;
+				VAR i: SIZE;
 				BEGIN
 					i := 0;
 					IF IsZero( ) THEN  len := 1;  neg := TRUE;  d[0] := 1
@@ -124,7 +124,7 @@ TYPE
 				END Dec;
 
 				PROCEDURE Inc*;
-				VAR i: LONGINT;
+				VAR i: SIZE;
 				BEGIN
 					i := 0;
 					IF ~neg THEN
@@ -142,8 +142,8 @@ TYPE
 					IF ~IsZero( ) THEN  neg := ~neg  END
 				END Negate;
 
-				PROCEDURE BitSize*( ): LONGINT;
-				VAR n: LONGINT; t: BNdigit;
+				PROCEDURE BitSize*( ): SIZE;
+				VAR n: SIZE; t: BNdigit;
 				BEGIN
 					IF len = 0 THEN  RETURN 0
 					ELSE  n := (len - 1) * 32
@@ -153,8 +153,8 @@ TYPE
 					RETURN n
 				END BitSize;
 
-				PROCEDURE BitSet*( n: LONGINT ): BOOLEAN;
-				VAR w, bit: LONGINT;
+				PROCEDURE BitSet*( n: SIZE ): BOOLEAN;
+				VAR w, bit: SIZE;
 				BEGIN
 					w := n DIV 32;  bit := n MOD 32;
 					IF w >= len THEN  RETURN FALSE
@@ -163,8 +163,8 @@ TYPE
 				END BitSet;
 
 
-				PROCEDURE adjust( newlen: LONGINT );
-				VAR n, i: LONGINT;  nd: digits;
+				PROCEDURE adjust( newlen: SIZE );
+				VAR n, i: SIZE;  nd: digits;
 				BEGIN
 					n := 16;
 					WHILE n < newlen DO  INC( n, 16 )  END;
@@ -182,7 +182,7 @@ TYPE
 
 	Montgomery = OBJECT
 				VAR
-					bits: LONGINT;	(* of R *)
+					bits: SIZE;	(* of R *)
 					r, n, t1, t2: BigNumber;
 
 				PROCEDURE & Init( x: BigNumber );
@@ -195,7 +195,7 @@ TYPE
 				END Init;
 
 				PROCEDURE Convert( VAR val: BigNumber ); 	(* val := val ^ R mod n *)
-				VAR i: LONGINT;
+				VAR i: SIZE;
 				BEGIN
 					FOR i := 0 TO bits - 1 DO
 						val.Shift( 1 );
@@ -232,16 +232,16 @@ VAR
 	randomgenerator: Random.Generator;
 
 
-	PROCEDURE RandomBytes*( VAR buf: ARRAY OF CHAR;  p: LONGINT;  n: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE RandomBytes*( VAR buf: ARRAY OF CHAR;  p, n: SIZE );
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO n - 1 DO buf[p + i] := CHR( ENTIER( randomgenerator.Uniform()*256 ) ) END
 	END RandomBytes;
 
 
 
-	PROCEDURE adjust( VAR d: digits;  dl, len: LONGINT );
-	VAR n, i: LONGINT;  nd: digits;
+	PROCEDURE adjust( VAR d: digits;  dl, len: SIZE );
+	VAR n, i: SIZE;  nd: digits;
 	BEGIN
 		ASSERT( d # NIL );
 		n := 16;
@@ -255,8 +255,8 @@ VAR
 
 
 	(** random number with len 'bits' *)
-	PROCEDURE NewRand*( bits: LONGINT;  top, bottom: SHORTINT ): BigNumber;
-	VAR n, len, i, topbit: LONGINT;  topword: SET32;  b: BigNumber;
+	PROCEDURE NewRand*( bits: SIZE;  top, bottom: SHORTINT ): BigNumber;
+	VAR n, len, i, topbit: SIZE;  topword: SET32;  b: BigNumber;
 	BEGIN
 		len := bits;  INC( len, (-len) MOD 32 );
 		NEW( b, len );
@@ -281,7 +281,7 @@ VAR
 		RETURN b
 	END NewRandRange;
 
-	PROCEDURE fixlen( VAR d: digits;  VAR len: LONGINT );
+	PROCEDURE fixlen( VAR d: digits;  VAR len: SIZE );
 	BEGIN
 		WHILE (len > 0) & (d[len - 1] = 0) DO  DEC( len )  END;
 	END fixlen;
@@ -298,8 +298,8 @@ VAR
 		RETURN v
 	END h2i;
 
-	PROCEDURE AssignHex*( VAR b: BigNumber;  CONST hex: ARRAY OF CHAR;  len: LONGINT );
-	VAR n, w, pos: LONGINT;
+	PROCEDURE AssignHex*( VAR b: BigNumber;  CONST hex: ARRAY OF CHAR;  len: SIZE );
+	VAR n, pos: SIZE; w: BNdigit;
 	BEGIN
 		ASSERT( len <= LEN( hex ) - 1);
 		NEW( b, 4*len );  b.len := (4*len + 31) DIV 32;
@@ -311,11 +311,11 @@ VAR
 		fixlen( b.d, b.len )
 	END AssignHex;
 
-	PROCEDURE AssignBin*( VAR b: BigNumber;  CONST buf: ARRAY OF CHAR;  pos, len: LONGINT );
-	VAR n, w: LONGINT;
+	PROCEDURE AssignBin*( VAR b: BigNumber;  CONST buf: ARRAY OF CHAR;  pos, len: SIZE );
+	VAR n: SIZE; w: BNdigit;
 	BEGIN
 		ASSERT( (pos + len) <= LEN( buf ) );
-		NEW( b, 8*len );  b.len := SHORT( (8*len + 31) DIV 32 );
+		NEW( b, 8*len );  b.len := (8*len + 31) DIV 32;
 		n := b.len - 1;  w := 0;
 		WHILE len > 0 DO
 			w := w*256 + ORD( buf[pos] );  INC( pos );  DEC( len );
@@ -326,8 +326,8 @@ VAR
 
 	(** Returns the value of b as a binary string 'data' starting at ofs.
 		The Length of 'data' must be longer or equal to 4*b.len + ofs. *)
-	PROCEDURE GetBinaryValue*( VAR b: BigNumber; VAR data: ARRAY OF CHAR; ofs: LONGINT );
-	VAR j, n: LONGINT;  tmp: BNdigit;
+	PROCEDURE GetBinaryValue*( VAR b: BigNumber; VAR data: ARRAY OF CHAR; ofs: SIZE );
+	VAR j, n: SIZE;  tmp: BNdigit;
 	BEGIN
 		ASSERT( LEN( data ) >= 4 * b.len + ofs );
 		FOR n := b.len-1 TO 0 BY -1 DO
@@ -347,8 +347,8 @@ VAR
 		IF val # 0 THEN  b.len := 1;  b.d[0] := val  ELSE  b.len := 0   END
 	END AssignInt;
 
-	PROCEDURE cmpd( VAR a, b: digits;  len: LONGINT ): SHORTINT;
-	VAR i: LONGINT;
+	PROCEDURE cmpd( VAR a, b: digits;  len: SIZE ): SHORTINT;
+	VAR i: SIZE;
 	BEGIN
 		i := len - 1;
 		WHILE (i >= 0) & (a[i] = b[i]) DO  DEC( i )  END;
@@ -375,8 +375,8 @@ VAR
 		END
 	END Cmp;
 
-	PROCEDURE copy( a, b: digits;  len: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE copy( a, b: digits;  len: SIZE );
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO len - 1 DO  b[i] := a[i]  END
 	END copy;
@@ -393,8 +393,8 @@ VAR
 		RETURN S.VAL( BNdigit, -S.VAL( SET32, x ) )
 	END Invert;
 
-	PROCEDURE add( a, b: digits; VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );
-	VAR i, n: LONGINT;  A, B, x: BNdigit;  carry: BOOLEAN;
+	PROCEDURE add( a, b: digits; VAR c: digits;  al, bl: SIZE;  VAR cl: SIZE );
+	VAR i, n: SIZE;  A, B, x: BNdigit;  carry: BOOLEAN;
 	BEGIN
 		n := MAX( al, bl );  carry := FALSE;
 		IF LEN( c^ ) < (n + 1) THEN  adjust( c, cl, n + 1 )  END;
@@ -409,8 +409,8 @@ VAR
 		cl := n
 	END add;
 
-	PROCEDURE sub( a, b: digits;  VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );
-	VAR i, n: LONGINT;  A, B, x: BNdigit;  borrow: BOOLEAN;
+	PROCEDURE sub( a, b: digits;  VAR c: digits;  al, bl: SIZE;  VAR cl: SIZE );
+	VAR i, n: SIZE;  A, B, x: BNdigit;  borrow: BOOLEAN;
 	BEGIN
 		n := MAX( al, bl );  borrow := FALSE;
 		IF LEN( c^ ) < n THEN  adjust( c, cl, n )  END;
@@ -427,7 +427,7 @@ VAR
 	END sub;
 
 	PROCEDURE Add*( a, b: BigNumber ): BigNumber;   (**  a + b *)
-	VAR sd: digits;  l, sl: LONGINT;  c: BigNumber;
+	VAR sd: digits;  l, sl: SIZE;  c: BigNumber;
 	BEGIN
 		ASSERT( (a # NIL) & (b # NIL) );
 		l := MAX( a.len, b.len ) + 1;
@@ -445,7 +445,7 @@ VAR
 	END Add;
 
 	PROCEDURE Sub*( a, b: BigNumber ): BigNumber;   (**  a - b  *)
-	VAR sd: digits;  l, sl: LONGINT;  c: BigNumber;
+	VAR sd: digits;  l, sl: SIZE;  c: BigNumber;
 	BEGIN
 		ASSERT( (a # NIL) & (b # NIL) );
 		l := MAX( a.len, b.len ) + 1;
@@ -463,9 +463,9 @@ VAR
 	END Sub;
 
 
-	PROCEDURE mul( a, b: digits; VAR c: digits;  al, bl: LONGINT;  VAR cl: LONGINT );  (* c = a*b *)
+	PROCEDURE mul( a, b: digits; VAR c: digits;  al, bl: SIZE;  VAR cl: SIZE );  (* c = a*b *)
 	VAR
-		prod, sum, tmp, mulc: BNdigit;  addc: BOOLEAN;  i, j: LONGINT;  pl: LONGINT;
+		prod, sum, tmp, mulc: BNdigit;  addc: BOOLEAN;  i, j, pl: SIZE;
 		p: digits;  tmp64: UNSIGNED64;
 	BEGIN
 		pl := 0;  NEW( p, al + bl + 2 );
@@ -491,8 +491,8 @@ VAR
 		c := p;  cl := pl;  fixlen( c, cl );
 	END mul;
 
-	PROCEDURE muls( a: digits;  b: BNdigit; c: digits;  al: LONGINT;  VAR cl: LONGINT );  (* c = a*b *)
-	VAR carry: BNdigit;  tmp64: UNSIGNED64;  i: LONGINT;
+	PROCEDURE muls( a: digits;  b: BNdigit; c: digits;  al: SIZE;  VAR cl: SIZE );  (* c = a*b *)
+	VAR carry: BNdigit;  tmp64: UNSIGNED64;  i: SIZE;
 	BEGIN
 		carry := 0;  cl := al;
 		FOR i := 0 TO al - 1 DO
@@ -504,7 +504,7 @@ VAR
 	END muls;
 
 	PROCEDURE Mul*( a, b: BigNumber ): BigNumber;   (**  a * b  *)
-	VAR pd: digits;  pl: LONGINT;  c: BigNumber;
+	VAR pd: digits;  pl: SIZE;  c: BigNumber;
 	BEGIN
 		ASSERT( (a # NIL) & (b # NIL) );
 		IF (a.len = 0) OR (b.len = 0) THEN  AssignInt( c, 0 );  RETURN c  END;
@@ -582,7 +582,7 @@ VAR
 	END div96;
 
 	PROCEDURE Div2*( a, b: BigNumber;  VAR q, r: BigNumber );   (** q = a div b;  r = a mod b *)
-	VAR td, sd, bd, qd: digits;  x, i, tail, bl, tl, sl, ql, qi: LONGINT;
+	VAR td, sd, bd, qd: digits;  x: LONGINT; i, tl, bl, tail, ql, qi, sl: SIZE;
 		t3: dig3;  t2, d0: dig2;
 		aq, ar: ADDRESS;
 	BEGIN
@@ -636,7 +636,7 @@ VAR
 	END Div2;
 
 	PROCEDURE ModWord*( VAR a: BigNumber;  b: BNdigit ): BNdigit;   (**  a mod b *)
-	VAR x: BNdigit;  td, sd, bd: digits;  tail, tl, sl, bl: LONGINT;  t2: dig2;
+	VAR x: BNdigit;  td, sd, bd: digits;  tail, tl, sl, bl: SIZE;  t2: dig2;
 	BEGIN
 		ASSERT( a # NIL );
 		td := GetBuffer();
@@ -681,7 +681,7 @@ VAR
 
 
 	PROCEDURE Exp*( a, b: BigNumber ): BigNumber;   (**  a ^ b  *)
-	VAR v: digits; i: LONGINT; vl: LONGINT;  e: BigNumber;
+	VAR v: digits; i, vl: SIZE;  e: BigNumber;
 	BEGIN
 		NEW( e, 8192 );
 		NEW( v, 256 );
@@ -702,8 +702,8 @@ VAR
 		RETURN r
 	END ModMul;
 
-	PROCEDURE wbits( exp: BigNumber ): LONGINT;
-	VAR b, w: LONGINT;
+	PROCEDURE wbits( exp: BigNumber ): SIZE;
+	VAR b, w: SIZE;
 	BEGIN
 		(* window bits for exponent size,  for sliding window ModExp functions *)
 		b := exp.BitSize( );
@@ -719,7 +719,7 @@ VAR
 	PROCEDURE ModExp*( a, b, m: BigNumber ): BigNumber;	(**  a ^ b mod m *)
 	VAR
 		a0: ARRAY 32 OF BigNumber;  res, d: BigNumber;
-		wsize, v, wstart, e, i, j: LONGINT;
+		wsize, v, wstart, e, i, j: SIZE;
 		mg: Montgomery;
 	BEGIN
 		ASSERT( (a # NIL) & (b # NIL) & (m # NIL) );
@@ -776,7 +776,7 @@ VAR
 
 	PROCEDURE ModInverse*( a, m: BigNumber ): BigNumber;	(** Return x so that (x * a) mod m = 1 *)
 	VAR
-		q, t, x: BigNumber;  g, v: ARRAY 3 OF BigNumber;  p, i, s, tmp, n: LONGINT;
+		q, t, x: BigNumber;  g, v: ARRAY 3 OF BigNumber;  p, i, s, tmp, n: SIZE;
 	BEGIN
 		FOR i := 0 TO 2 DO  AssignInt( g[i], 0 ); AssignInt( v[i], 0 ) END;
 		Copy( a, g[0] );  Copy( m, g[1] );  AssignInt( v[0], 1 );  AssignInt( v[1], 0 );
@@ -799,7 +799,7 @@ VAR
 	(*--------------------------- Text I/O ---------------------------------*)
 
 	PROCEDURE TextWrite*( w: Streams.Writer;  b: BigNumber );
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		IF b.neg THEN  w.String( "-" ) END;
 		IF b.len = 0 THEN  w.String( " 00000000" )
@@ -818,7 +818,7 @@ VAR
 
 	(** writes a hexadecimal representation of b to the standard output *)
 	PROCEDURE Print*( b: BigNumber );
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		IF b.neg THEN Out.String( "-" ) END;
 		IF b.len = 0 THEN  Out.String( "00000000" )
@@ -849,7 +849,7 @@ VAR
 	END nibble;
 
 	PROCEDURE TextRead*( r: Streams.Reader;  VAR b: BigNumber );
-	VAR buf: ARRAY 2048 OF CHAR; i: LONGINT; n: CHAR;
+	VAR buf: ARRAY 2048 OF CHAR; i: SIZE; n: CHAR;
 	BEGIN
 		i := 0;  n := nibble( r );
 		WHILE n # '.' DO buf[i] := n;  INC( i );  n := nibble( r ) END;
@@ -872,7 +872,7 @@ VAR
 	PROCEDURE FileWrite*( w: Streams.Writer;  b: BigNumber );
 	VAR i, j, v: LONGINT;
 	BEGIN
-		j := b.len;
+		j := b.len(LONGINT);
 		w.RawLInt( j );
 		FOR i := 0 TO j - 1 DO  w.RawLInt( v ); b.d[ i ] := v  END
 	END FileWrite;
@@ -914,7 +914,4 @@ BEGIN
 	nextFreeBuffer := BufferPoolSize-1;
 	InitRandomgenerator();
 END CryptoBigNumbers.
-
-
-
 

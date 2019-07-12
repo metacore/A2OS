@@ -90,7 +90,7 @@ TYPE
 
 	MsgQ = OBJECT
 	VAR
-		head, num: LONGINT;
+		head, num: SIZE;
 		msgQ: POINTER TO ARRAY OF Message;
 		owner: MsgSequencer;
 
@@ -102,7 +102,7 @@ TYPE
 		END InitQ;
 
 		PROCEDURE Grow(trace: BOOLEAN);
-		VAR new: POINTER TO ARRAY (* MsgQSize*)  OF Message; i: LONGINT; name: ARRAY 128 OF CHAR; VAR pc: ADDRESS;
+		VAR new: POINTER TO ARRAY (* MsgQSize*)  OF Message; i: SIZE; name: ARRAY 128 OF CHAR; VAR pc: ADDRESS;
 			type: Modules.TypeDesc; msg: Message;
 		BEGIN
 			NEW(new, LEN(msgQ) * 3 DIV 2);
@@ -144,7 +144,7 @@ TYPE
 
 		(** Add a message to a queue. Discards the message if the queue is full *)
 		PROCEDURE Add*(VAR msg : Message; debug:BOOLEAN): BOOLEAN;
-		VAR i, pos: LONGINT; name: ARRAY 256 OF CHAR; pc: ADDRESS;
+		VAR i, pos: SIZE; name: ARRAY 256 OF CHAR; pc: ADDRESS;
 		type: Modules.TypeDesc;
 		CONST
 			MergePointers = TRUE;

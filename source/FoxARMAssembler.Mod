@@ -56,7 +56,7 @@ TYPE
 		PROCEDURE GetSpecialRegisterWithFields(VAR registerNumber: LONGINT; VAR fields: SET): BOOLEAN;
 		VAR
 			result: BOOLEAN;
-			i: LONGINT;
+			i: SIZE;
 			strings: Strings.StringArray;
 		BEGIN
 			result := FALSE;
@@ -131,7 +131,7 @@ TYPE
 			result: BOOLEAN;
 		BEGIN
 			IF (token.symbol = Scanner.Number) & (token.numberType = Scanner.Integer) & (token.integer >= 0) & (token.integer <= 7) THEN
-				coprocessorOpcode := token.integer;
+				coprocessorOpcode := LONGINT(token.integer);
 				result := TRUE;
 				NextToken
 			ELSE
@@ -265,7 +265,7 @@ TYPE
 							registerNumber := InstructionSet.PC;
 							isImmediateOffset := TRUE;
 							DEC(offsetImmediateValue, 8);
-							DEC(offsetImmediateValue, code.pc);
+							DEC(offsetImmediateValue, code.pc(LONGINT));
 							IF ABS(offsetImmediateValue) < InstructionSet.Bits12 THEN
 								IF offsetImmediateValue >= 0 THEN
 									INCL(indexingMode, InstructionSet.Increment)

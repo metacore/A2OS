@@ -584,7 +584,7 @@ BEGIN
 		Files.WriteReal(R,obj.rotvel); Files.WriteInt(R,obj.n0);
 		Files.WriteInt(R,obj.u); Files.WriteInt(R,obj.v);
 		Files.WriteInt(R,obj.w); Files.WriteInt(R,obj.h);
-		j:= LEN(obj.px0^); Files.WriteLInt(R,j);
+		j:= LEN(obj.px0^)(LONGINT); Files.WriteLInt(R,j);
 		FOR i:= 0 TO j-1 DO
 			Files.WriteInt(R,obj.px0[i]); Files.WriteInt(R,obj.py0[i]);
 			Files.WriteInt(R,obj.px1[i]); Files.WriteInt(R,obj.py1[i]);
@@ -1415,7 +1415,7 @@ END StarfieldInput;
 PROCEDURE StarfieldModify(F: Starfield; VAR M: ModifyMsg);
 VAR
 	model: Field;
-	len: LONGINT;
+	len: SIZE;
 BEGIN
 	IF (M.F = F) THEN
 		F.scaleX:= M.W / Display.Width; F.scaleY:= M.H / Display.Height;
@@ -1703,7 +1703,7 @@ VAR
 	D: Document;
 	M: MenuMsg;
 	model: Field;
-	i,j: LONGINT;
+	i,j: SIZE;
 BEGIN
 	D:= Desktops.CurDoc(Gadgets.context);
 	IF (D # NIL) & (D.dsc IS Panels.Panel) THEN

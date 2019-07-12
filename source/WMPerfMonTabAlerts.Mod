@@ -176,7 +176,7 @@ TYPE
 		END UpdateStatusLabel;
 
 		PROCEDURE ComputeAlertInfo(alerts : Alerts.Alerts; VAR nbrOfRules, nbrOfAlerts : LONGINT);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			nbrOfRules := 0; nbrOfAlerts := 0;
 			IF alerts # NIL THEN
@@ -213,7 +213,7 @@ TYPE
 		VAR
 			gridRow, alertsGridRow : LONGINT; alerts : Alerts.Alerts;
 			nbrOfRules, nbrOfAlerts : LONGINT;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			alerts := Alerts.GetAlerts();
 			ComputeAlertInfo(alerts, nbrOfRules, nbrOfAlerts);

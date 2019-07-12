@@ -7,8 +7,8 @@ CONST
 	DefaultHighlighterName = "Oberon";
 	DefaultNofIterations = 1000;
 
-PROCEDURE Reader(reader : Texts.TextReader; nofIterations : LONGINT; out : Streams.Writer);
-VAR char32 : Texts.Char32; startTime, endTime : Dates.DateTime; i : LONGINT;
+PROCEDURE Reader(reader : Texts.TextReader; nofIterations : SIZE; out : Streams.Writer);
+VAR char32 : Texts.Char32; startTime, endTime : Dates.DateTime; i : SIZE;
 BEGIN
 	ASSERT((reader # NIL) & (nofIterations > 0) & (out # NIL));
 	out.String("Reading text "); out.Int(nofIterations, 0); out.String(" times ... "); out.Update;
@@ -23,10 +23,10 @@ BEGIN
 	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END Reader;
 
-PROCEDURE Words(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : LONGINT; out : Streams.Writer);
+PROCEDURE Words(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
 VAR
 	char32 : Texts.Char32; style : SyntaxHighlighter.Style;
-	wordEnd, readerPosition, i : LONGINT;
+	wordEnd, readerPosition, i : SIZE;
 	startTime, endTime : Dates.DateTime;
 BEGIN
 	ASSERT((reader # NIL) & (highlighter # NIL) & (nofIterations > 0) & (out # NIL));
@@ -49,11 +49,11 @@ BEGIN
 	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END Words;
 
-PROCEDURE RebuildRegions(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : LONGINT; out : Streams.Writer);
+PROCEDURE RebuildRegions(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
 VAR
 	state : SyntaxHighlighter.State;
 	startTime, endTime : Dates.DateTime;
-	i : LONGINT;
+	i : SIZE;
 BEGIN
 	ASSERT((reader # NIL) & (highlighter # NIL) & (nofIterations > 0) & (out # NIL));
 	state := highlighter.GetState();
@@ -66,12 +66,12 @@ BEGIN
 	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END RebuildRegions;
 
-PROCEDURE RegionLookup(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : LONGINT; out : Streams.Writer);
+PROCEDURE RegionLookup(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
 VAR
 	style : SyntaxHighlighter.Style;
 	state : SyntaxHighlighter.State;
 	random : Random.Generator;
-	length, position, start, end, i : LONGINT;
+	length, position, start, end, i : SIZE;
 	startTime, endTime : Dates.DateTime;
 BEGIN
 	ASSERT((reader # NIL) & (highlighter # NIL) & (nofIterations > 0) & (out # NIL));
@@ -82,19 +82,19 @@ BEGIN
 	out.String("Region lookup"); out.Int(nofIterations, 0); out.String(" times ... "); out.Update;
 	startTime := Dates.Now();
 	FOR i := 1 TO nofIterations DO
-		position := random.Dice(length);
+		position := random.Dice(length(LONGINT));
 		style := highlighter.GetRegionStyle(position, state, start, end);
 	END;
 	endTime := Dates.Now();
 	Strings.ShowTimeDifference(startTime, endTime, out); out.Ln;
 END RegionLookup;
 
-PROCEDURE Full(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : LONGINT; out : Streams.Writer);
+PROCEDURE Full(reader : Texts.TextReader; highlighter : SyntaxHighlighter.Highlighter; nofIterations : SIZE; out : Streams.Writer);
 VAR
 	char32 : Texts.Char32; style : SyntaxHighlighter.Style;
 	state : SyntaxHighlighter.State;
 	startTime, endTime : Dates.DateTime;
-	readerPosition, regionStart, regionEnd, lastEnd, i : LONGINT;
+	readerPosition, regionStart, regionEnd, lastEnd, i : SIZE;
 BEGIN
 	ASSERT((reader # NIL) & (highlighter # NIL) & (nofIterations > 0) & (out # NIL));
 	state := highlighter.GetState();
@@ -199,7 +199,7 @@ VAR
 	highlighter : SyntaxHighlighter.Highlighter;
 	text : Texts.Text; reader : Texts.TextReader; char32 : Texts.Char32;
 	token : SyntaxHighlighter.Token;
-	position, format : LONGINT; res: WORD;
+	position: SIZE; format, res: WORD;
 BEGIN
 	NEW(options);
 	options.Add("d", "details", Options.Flag);

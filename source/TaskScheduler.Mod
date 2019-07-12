@@ -524,7 +524,7 @@ BEGIN
 END IsEqual;
 
 PROCEDURE Copy*(from : TaskArray; VAR to : TaskArray);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	ASSERT(from # NIL);
 	IF (to = NIL) OR (LEN(to) < LEN(from)) THEN NEW(to, LEN(from)); END;
@@ -532,7 +532,7 @@ BEGIN
 END Copy;
 
 PROCEDURE Clear*(tasks : TaskArray);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	ASSERT(tasks # NIL);
 	FOR i := 0 TO LEN(tasks)-1 DO tasks[i] := NIL; END;

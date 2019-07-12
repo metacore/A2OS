@@ -437,7 +437,7 @@ TYPE
 		END SynchFrame;
 
 		(** USB device request *)
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex : LONGINT; wLength : SIZE; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
 		BEGIN
 			RETURN defaultpipe.Request(bmRequestType, bRequest, wValue, wIndex, wLength, buffer);
 		END Request;
@@ -452,7 +452,7 @@ TYPE
 		VAR buffer : Usbdi.BufferPtr; c, length : LONGINT;
 		BEGIN
 			ASSERT(((type = DescriptorConfiguration) & (descriptor # NIL)) OR ((type = DescriptorOtherSpeedConfig) & (qualifier # NIL)));
-			FOR c := 0 TO LEN(configurations)-1 DO
+			FOR c := 0 TO LEN(configurations)(LONGINT)-1 DO
 				(* Get the total size of this configuration *)
 				NEW(buffer, 8);
 				IF GetDescriptor(type, c, 0, 8, buffer^) THEN
@@ -592,7 +592,7 @@ TYPE
 		END Register;
 
 		(** Emulated USB device request *)
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex : LONGINT; wLength : SIZE; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
 		VAR res : Usbdi.Status;
 		BEGIN
 			res := Usbdi.Stalled;
@@ -859,7 +859,7 @@ TYPE
 
 		(* For all USB devices which are attached to any USB root hub in the system the procedure ProbeDeviceChain() is called *)
 		PROCEDURE ProbeDriversInternal;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN (* Works with local copy of rootHubs array *)
 			GetRootHubs(rootHubs);
 			IF rootHubs # NIL THEN
@@ -1044,8 +1044,8 @@ TYPE
 
 		(* Appends the suffix to name; the suffix is a number between 0-99 which is added as 2 ASCII characters (each 1 bytes)
 		 * note: name mustn't be longer than 30 characters (incl. Null-Termination)  *)
-		PROCEDURE AddSuffix*(CONST name: Plugins.Name; suffix : LONGINT) :  Plugins.Name;
-		VAR i : LONGINT; newName : Plugins.Name;
+		PROCEDURE AddSuffix*(CONST name: Plugins.Name; suffix : SIZE) :  Plugins.Name;
+		VAR i : SIZE; newName : Plugins.Name;
 		BEGIN
 			WHILE name[i]#0X DO newName[i]:=name[i]; INC(i); END;
 			(* Append suffix to name *)
@@ -1652,7 +1652,7 @@ BEGIN
 END ShowStateTransition;
 
 PROCEDURE GetRootHubs*(VAR rootHubsCopy : RootHubArray);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN {EXCLUSIVE}
 	IF rootHubs = NIL THEN rootHubsCopy := NIL; RETURN; END;
 	IF (rootHubsCopy = NIL) OR (LEN(rootHubs) # LEN(rootHubsCopy)) THEN
@@ -1678,7 +1678,7 @@ BEGIN
 END RootHubEvent;
 
 PROCEDURE AddRootHub(hcd : UsbHcdi.Hcd);
-VAR roothub : EmulatedHubDevice; temp : RootHubArray; i : LONGINT;
+VAR roothub : EmulatedHubDevice; temp : RootHubArray; i : SIZE;
 BEGIN {EXCLUSIVE}
 	NEW(roothub, hcd);
 	IF rootHubs = NIL THEN
@@ -1696,7 +1696,7 @@ BEGIN {EXCLUSIVE}
 END AddRootHub;
 
 PROCEDURE RemoveRootHub(hcd : UsbHcdi.Hcd);
-VAR i, j : LONGINT; temp : RootHubArray; roothub : EmulatedHubDevice;
+VAR i, j : SIZE; temp : RootHubArray; roothub : EmulatedHubDevice;
 BEGIN {EXCLUSIVE}
 	IF rootHubs # NIL THEN
 		IF LEN(rootHubs) > 1 THEN
@@ -1723,7 +1723,7 @@ BEGIN {EXCLUSIVE}
 END RemoveRootHub;
 
 PROCEDURE InstallRootHubs;
-VAR table : Plugins.Table; i : LONGINT; res: WORD;
+VAR table : Plugins.Table; i : SIZE; res: WORD;
 BEGIN
 	UsbHcdi.controllers.AddEventHandler(RootHubEvent, res); (* ignore res *)
 	UsbHcdi.controllers.GetAll(table);
@@ -1757,5 +1757,4 @@ BEGIN
 
 	IF Debug.Verbose THEN KernelLog.Enter; KernelLog.String("Usb: USB driver loaded."); KernelLog.Exit; END;
 END Usb.
-
 

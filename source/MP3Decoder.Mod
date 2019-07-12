@@ -1406,7 +1406,7 @@ TYPE
 
 		PROCEDURE Open*(in: Streams.Reader; VAR res: WORD);
 		VAR
-			tmp: LONGINT;
+			tmp: Streams.Position;
 		BEGIN
 			SELF.s := in;
 
@@ -1534,7 +1534,7 @@ TYPE
 		(* @returns: nothing																	*)
 		PROCEDURE FillBuffer*(buffer: SoundDevices.Buffer);
 		VAR
-			j: LONGINT;
+			j: SIZE;
 		BEGIN
 			IF first THEN
 				NEW(encFrame);

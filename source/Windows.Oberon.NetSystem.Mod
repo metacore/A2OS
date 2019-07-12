@@ -227,7 +227,7 @@ END Available;
 (** Blocking read a single byte. *)
 
 PROCEDURE Read* (C: Connection; VAR ch: CHAR);
-VAR len, res: LONGINT; buf: ARRAY 1 OF CHAR;
+VAR len: SIZE; res: WORD; buf: ARRAY 1 OF CHAR;
 BEGIN
 	C.pcb.Receive(buf, 0, 1, 1, len, res);
 	IF (res = 0) & (len = 1) THEN ch := buf[0] ELSE C.res := error; ch := 0X END
@@ -236,7 +236,7 @@ END Read;
 (** Blocking read len bytes of data (beginning at pos in buf) to buf. *)
 
 PROCEDURE ReadBytes* (C: Connection; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE);
-VAR res, read: LONGINT;
+VAR read: SIZE; res: WORD;
 BEGIN
 	ASSERT(pos+len <= LEN(buf));	(* index check *)
 	C.pcb.Receive(SYSTEM.VAL(Bytes, buf), pos, len, len, read, res);
@@ -246,7 +246,7 @@ END ReadBytes;
 (** Blocking read two bytes in network byte ordering. *)
 
 PROCEDURE ReadInt* (C: Connection; VAR x: INTEGER);
-VAR buf: ARRAY 2 OF CHAR; res, len: LONGINT;
+VAR buf: ARRAY 2 OF CHAR; res: WORD; len: SIZE;
 BEGIN
 	C.pcb.Receive(buf, 0, 2, 2, len, res);
 	IF (res = 0) & (len = 2) THEN
@@ -259,7 +259,7 @@ END ReadInt;
 (** Blocking read four bytes in network byte ordering. *)
 
 PROCEDURE ReadLInt* (C: Connection; VAR x: LONGINT);
-VAR buf: ARRAY 4 OF CHAR; res, len: LONGINT;
+VAR buf: ARRAY 4 OF CHAR; res: WORD; len: SIZE;
 BEGIN
 	C.pcb.Receive(buf, 0, 4, 4, len, res);
 	IF (res = 0) & (len = 4) THEN
@@ -386,12 +386,12 @@ END SendDG;
 
 PROCEDURE ReceiveDG*(S: Socket; VAR remIP: IPAdr; VAR remPort: INTEGER; pos: LONGINT; VAR len: LONGINT;
 	VAR buf: ARRAY OF SYSTEM.BYTE);
-VAR res, fport: LONGINT;
+VAR res, fport: LONGINT; length: SIZE;
 BEGIN
 	ASSERT(pos+len <= LEN(buf));	(* index check *)
-	S.pcb.Receive(SYSTEM.VAL(Bytes, buf), pos, len, 0, remIP, fport, len, res);
+	S.pcb.Receive(SYSTEM.VAL(Bytes, buf), pos, len, 0, remIP, fport, length, res);
 	remPort := SHORT(fport);
-	IF res = 0 THEN S.res := done ELSE S.res := error; len := -1 END
+	IF res = 0 THEN S.res := done; len := length(LONGINT) ELSE S.res := error; len := -1 END
 END ReceiveDG;
 
 (** Returns the size of the first available datagram on the socket. *)

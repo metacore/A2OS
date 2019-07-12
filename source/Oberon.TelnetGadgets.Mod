@@ -236,7 +236,8 @@ END SetUp;
 
 	PROCEDURE SplitTelnetAdr(VAR url, host, user, passwd: ARRAY OF CHAR; VAR port: INTEGER; prefix: BOOLEAN): LONGINT;
 		VAR
-			key, i, j, l: LONGINT;
+			key: LONGINT;
+			i, j, l: SIZE;
 			iskey: BOOLEAN;
 			str: ARRAY 8 OF CHAR;
 		PROCEDURE Blanks;

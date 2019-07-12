@@ -16,9 +16,9 @@ IMPORT
 TYPE
 	(** input/output buffer **)
 	Buffer* = RECORD
-		avail-: LONGINT;	(** number of bytes that can be produced/consumed **)
-		size-: LONGINT;	(** total number of bytes in buffer memory **)
-		totalOut-, totalIn-: LONGINT;	(** total number of bytes produced/consumed **)
+		avail-: SIZE;	(** number of bytes that can be produced/consumed **)
+		size-: SIZE;	(** total number of bytes in buffer memory **)
+		totalOut-, totalIn-: SIZE;	(** total number of bytes produced/consumed **)
 		next: ADDRESS;	(* address of next byte to produce/consume **)
 		adr: ADDRESS;	(* buffer memory *)
 	END;
@@ -31,7 +31,7 @@ BEGIN
 END Reset;
 
 (** initialize buffer on memory in client space **)
-PROCEDURE Init* (VAR buf: Buffer; CONST mem: ARRAY OF CHAR; offset, size, avail: LONGINT);
+PROCEDURE Init* (VAR buf: Buffer; CONST mem: ARRAY OF CHAR; offset, size, avail: SIZE);
 BEGIN
 	ASSERT((0 <= offset) & (0 < size) & (offset + size <= LEN(mem)), 100);
 	ASSERT((0 <= avail) & (avail <= size),101);
@@ -47,7 +47,7 @@ BEGIN
 END Read;
 
 (** read len bytes from (input) buffer **)
-PROCEDURE ReadBytes* (VAR buf: Buffer; VAR dst: ARRAY OF CHAR; offset, len: LONGINT);
+PROCEDURE ReadBytes* (VAR buf: Buffer; VAR dst: ARRAY OF CHAR; offset, len: SIZE);
 BEGIN
 	ASSERT((0 <= offset) & (0 < len) & (offset + len <= LEN(dst)) & (len <= buf.avail), 100);
 	SYSTEM.MOVE(buf.next, ADDRESSOF(dst[offset]), len);
@@ -63,7 +63,7 @@ BEGIN
 END Write;
 
 (** write len bytes into (output) buffer **)
-PROCEDURE WriteBytes* (VAR buf: Buffer; CONST src: ARRAY OF CHAR; offset, len: LONGINT);
+PROCEDURE WriteBytes* (VAR buf: Buffer; CONST src: ARRAY OF CHAR; offset, len: SIZE);
 BEGIN
 	ASSERT((0 <= offset) & (0 < len) & (offset + len <= LEN(src)) & (len <= buf.avail), 100);
 	SYSTEM.MOVE(ADDRESSOF(src[offset]), buf.next, len);
@@ -71,7 +71,7 @@ BEGIN
 END WriteBytes;
 
 (** rewind previously empty input buffer to first position after it has been filled with new input **)
-PROCEDURE Rewind* (VAR buf: Buffer; avail: LONGINT);
+PROCEDURE Rewind* (VAR buf: Buffer; avail: SIZE);
 BEGIN
 	ASSERT(buf.avail = 0, 100);
 	ASSERT((0 <= avail) & (avail <= buf.size), 101);
@@ -79,7 +79,7 @@ BEGIN
 END Rewind;
 
 (** move position of next read for -offset bytes **)
-PROCEDURE Reread* (VAR buf: Buffer; offset: LONGINT);
+PROCEDURE Reread* (VAR buf: Buffer; offset: SIZE);
 BEGIN
 	ASSERT((0 <= offset) & (buf.avail + offset <= buf.size), 101);
 	DEC(buf.next, offset); INC(buf.avail, offset)
@@ -92,7 +92,7 @@ BEGIN
 END Rewrite;
 
 (** fill input buffer with new bytes to consume **)
-PROCEDURE Fill* (VAR buf: Buffer; CONST src: ARRAY OF CHAR; offset, size: LONGINT);
+PROCEDURE Fill* (VAR buf: Buffer; CONST src: ARRAY OF CHAR; offset, size: SIZE);
 BEGIN
 	ASSERT((0 <= offset) & (0 < size) & (offset + size <= LEN(src)), 100);
 	ASSERT(buf.avail + size <= buf.size, 101);
@@ -105,8 +105,8 @@ BEGIN
 END Fill;
 
 (** extract bytes from output buffer to make room for new bytes **)
-PROCEDURE Drain* (VAR buf: Buffer; VAR dst: ARRAY OF CHAR; offset, size: LONGINT);
-VAR i, n: LONGINT; s, d: ADDRESS; c: CHAR;
+PROCEDURE Drain* (VAR buf: Buffer; VAR dst: ARRAY OF CHAR; offset, size: SIZE);
+VAR i, n: SIZE; s, d: ADDRESS; c: CHAR;
 BEGIN
 	ASSERT((0 <= offset) & (0 < size) & (offset + size <= LEN(dst)), 100);
 	ASSERT(buf.avail + size <= buf.size, 101);	(* can't consume more than is in buffer *)

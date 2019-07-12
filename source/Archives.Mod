@@ -11,7 +11,7 @@ TYPE
 	VAR value -: ARRAY 256 OF CHAR;
 
 		PROCEDURE & Init*(CONST name : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(name)-1 DO
 				value[i] := name[i];

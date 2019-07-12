@@ -62,7 +62,7 @@ TYPE
 		description- : ARRAY 128 OF CHAR;
 
 		(** Characters sent/read since port has been opened. Consider these fields read-only! *)
-		charactersSent*, charactersReceived* : LONGINT;
+		charactersSent*, charactersReceived* : Streams.Position;
 
 		PROCEDURE Open* (bps, data, parity, stop : LONGINT; VAR res: WORD);
 		END Open;
@@ -74,8 +74,8 @@ TYPE
 		END SendChar;
 
 		(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR i : LONGINT;
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		VAR i : SIZE;
 		BEGIN
 			i := 0;
 			WHILE i < len DO
@@ -90,7 +90,7 @@ TYPE
 
 		(** Receive size characters into buf, starting at ofs and return the effective number of bytes read in len.
 			Wait until at least min bytes (possibly zero) are available. res is non-zero on error. *)
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		VAR ch: CHAR;
 		BEGIN
 			len := 0;
@@ -109,7 +109,7 @@ TYPE
 			END;
 		END Receive;
 
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available*(): SIZE;
 		END Available;
 
 		(** Get the port state: state (open, closed), speed in bps, no. of data bits, parity, stop bit length. *)

@@ -8,8 +8,8 @@ IMPORT
 TYPE
 
 	Error* = RECORD
-		pos- : LONGINT;
-		line-, row- : LONGINT;
+		pos- : Streams.Position;
+		line-, row- : Streams.Position;
 		msg- : ARRAY 128 OF CHAR;
 	END;
 
@@ -84,7 +84,7 @@ TYPE
 		END SetEditor;
 
 		PROCEDURE Click(sender, data : ANY);
-		VAR p : ANY; a, b : LONGINT;
+		VAR p : ANY; a, b : SIZE;
 		BEGIN
 			IF (data # NIL) & (data IS WMTrees.TreeNode) THEN
 				tree.Acquire;
@@ -93,9 +93,9 @@ TYPE
 				IF (p # NIL) & (p IS XML.Element) THEN
 					IF editor # NIL THEN
 						text.AcquireRead;
-						editor.tv.cursor.SetPosition(p(XML.Element).GetPos());
+						editor.tv.cursor.SetPosition(p(XML.Element).GetPos()(SIZE));
 						editor.tv.cursor.SetVisible(TRUE);
-						editor.tv.FindCommand(p(XML.Element).GetPos()-1, a, b);
+						editor.tv.FindCommand((p(XML.Element).GetPos()-1)(SIZE), a, b);
 						IF highlight # NIL THEN highlight.SetFromTo(a, b) END;
 						text.ReleaseRead;
 					END
@@ -165,7 +165,7 @@ TYPE
 
 		(* Return a copy of the errorList or NIL in case of no errors *)
 		PROCEDURE GetErrorList*() : ErrorList;
-		VAR result : ErrorList; i : LONGINT;
+		VAR result : ErrorList; i : SIZE;
 		BEGIN
 			IF errorList # NIL THEN
 				NEW(result, LEN(errorList));
@@ -176,8 +176,8 @@ TYPE
 			RETURN result;
 		END GetErrorList;
 
-		PROCEDURE AddErrorToList(pos, line, row : LONGINT; CONST msg : ARRAY OF CHAR);
-		VAR temp : ErrorList; i : LONGINT;
+		PROCEDURE AddErrorToList(pos, line, row : Streams.Position; CONST msg : ARRAY OF CHAR);
+		VAR temp : ErrorList; i : SIZE;
 		BEGIN
 			IF errorList = NIL THEN
 				i := 0;
@@ -195,7 +195,7 @@ TYPE
 			COPY(msg, errorList[i].msg);
 		END AddErrorToList;
 
-		PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 		VAR tw : TextUtilities.TextWriter;
 		BEGIN
 			AddErrorToList(pos, line, row, msg);
@@ -214,7 +214,7 @@ TYPE
 			scanner : XMLScanner.Scanner;
 			parser : XMLParser.Parser;
 			doc : XML.Document;
-			tr : Texts.TextReader; ch : Texts.Char32; i, p : LONGINT; resstr : ARRAY 7 OF CHAR;
+			tr : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
 			out : Streams.Writer;
 			ob : Strings.Buffer;
 			s : Strings.String;

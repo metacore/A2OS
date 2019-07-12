@@ -226,15 +226,15 @@ TYPE
 		(* Receiving data is somewhat more complicated than sending it. Since the device expects us to always ask
 		for at least bulkInPipe.maxPacketSize data, we can't use a standard ring buffer. Instead, we use a ring buffer with
 		variable buffer end indicated by rxBufferLastIndex *)
-		rxBufferHead : LONGINT; 		(* index in rxBuffer: next byte to be processed *)
-		rxBufferTail : LONGINT; 			(* index in rxBuffer: next unused byte *)
-		rxBufferLastIndex : LONGINT;	(* index in rxBuffer:  last byte that contains valid data *)
-		rxBufferBytes : LONGINT; 		(* number of bytes in rxBuffer *)
+		rxBufferHead : SIZE; 		(* index in rxBuffer: next byte to be processed *)
+		rxBufferTail : SIZE; 			(* index in rxBuffer: next unused byte *)
+		rxBufferLastIndex : SIZE;	(* index in rxBuffer:  last byte that contains valid data *)
+		rxBufferBytes : SIZE; 		(* number of bytes in rxBuffer *)
 
 		(* To make the parsing of the USB header & ethernet header simpler, we copy the header to the buffer start if it's
 		not contiguous in the buffer. A headerBytes value n > 0 indicates that n bytes of the header are located at the end
 		of the buffer and have to be copied to its start *)
-		headerBytes : LONGINT;
+		headerBytes : SIZE;
 
 		sRomWriteEnabled : BOOLEAN;
 
@@ -405,8 +405,8 @@ TYPE
 
 		PROCEDURE ScanRxBuffer;
 		VAR
-			index, packetSize, packetSizeChecksum, packetSizeEven, packetStart, type : LONGINT; res : WORD;
-			contiguousLength, bytesCopied : LONGINT;
+			packetSize, packetSizeChecksum, packetSizeEven, type : LONGINT; res : WORD;
+			index, packetStart, contiguousLength, bytesCopied : SIZE;
 			error : BOOLEAN;
 			buffer : Network.Buffer;
 		BEGIN
@@ -541,8 +541,8 @@ TYPE
 			rxBufferBytes := 0; headerBytes := 0;
 		END ResetRxBuffer;
 
-		PROCEDURE HandleBulkIn*(status : Usbdi.Status; actLen : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE HandleBulkIn*(status : Usbdi.Status; actLen : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			IF (status = Usbdi.Ok) OR (status = Usbdi.ShortPacket) THEN
 				IF Trace * TraceReceive # {} THEN Show("[USB RECEIVE] "); KernelLog.Int(actLen, 5); KernelLog.String(" Bytes"); KernelLog.Ln; END;
@@ -590,7 +590,7 @@ TYPE
 			END;
 		END HandleBulkIn;
 
-		PROCEDURE HandleInterrupt*(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE HandleInterrupt*(status : Usbdi.Status; actLen : SIZE);
 		VAR s, register1, register2 : SET; oldLinkStatus : LONGINT; res : WORD;
 		BEGIN
 			IF (status = Usbdi.Ok) OR ((status = Usbdi.ShortPacket) & (actLen >=8)) THEN
@@ -1037,7 +1037,7 @@ TYPE
 
 (* Converts a string formatted as AA:BB:CC:DD:EE:FF:GG into a Network link address *)
 PROCEDURE StringToLinkAdr(CONST string : ARRAY OF CHAR; VAR linkAdr : Network.LinkAdr) : BOOLEAN;
-VAR stringArray : Strings.StringArray; value, i : LONGINT; res : WORD;
+VAR stringArray : Strings.StringArray; value : LONGINT; i : SIZE; res : WORD;
 BEGIN
 	stringArray := Strings.Split(string, ":");
 	IF LEN(stringArray) = 6 THEN

@@ -532,12 +532,12 @@ TYPE
 			drv: Driver; (* driver object *)
 			bufferListenerCaller: BufferListenerCaller; (* buffer listener call object *)
 			buffFirst, buffLast: ListBuffer; (* buffer queue (FIFO) *)
-			buffFirstPos: LONGINT; (* position in currently used buffer *)
+			buffFirstPos: SIZE; (* position in currently used buffer *)
 			playRecBuff: PlayRecBuffer; (* ring buffer for playing/recording *)
 			playRecBuffSize: LONGINT; (* size of ring buffer for playing/recording *)
 			playRecBuffPhys: LONGINT; (* physical address of ring buffer *)
-			playRecBuffPos: LONGINT; (* position marker in ring buffer in bytes *)
-			samplePosition: LONGINT; (* current absolute position in samples *)
+			playRecBuffPos: SIZE; (* position marker in ring buffer in bytes *)
+			samplePosition: SIZE; (* current absolute position in samples *)
 			bytesPerSampleExp: LONGINT; (* bytesPerSampleExp^2 = bytes per sample *)
 			running: BOOLEAN; (* is channel currently playing/recording? *)
 			closed: BOOLEAN; (* has channel been closed? *)
@@ -648,7 +648,7 @@ TYPE
 		PROCEDURE GetPosition*() : LONGINT;
 		BEGIN
 			ASSERT(~closed);
-			RETURN samplePosition;
+			RETURN samplePosition(LONGINT);
 		END GetPosition;
 
 		(** Start playing / recording *)
@@ -782,8 +782,8 @@ TYPE
 		(* Prepare data - this procedure is called for each channel every time PCI Audio generates an interrupt *)
 		PROCEDURE PrepareData;
 		VAR
-			curBuffPos: LONGINT; (* current recording position in ring buffer in bytes *)
-			copySize: LONGINT; (* size of next block to copy in bytes *)
+			curBuffPos: SIZE; (* current recording position in ring buffer in bytes *)
+			copySize: SIZE; (* size of next block to copy in bytes *)
 		BEGIN
 			IF ~running THEN RETURN END;
 			curBuffPos := LSH(playSlot[0][drv.inactiveBank].pgStart, bytesPerSampleExp);
@@ -819,7 +819,7 @@ TYPE
 
 		(* Init banks and start playback/record *)
 		PROCEDURE Activate;
-		VAR copySize, i, j: LONGINT;
+		VAR copySize, i, j: SIZE;
 		BEGIN
 			IF Logging THEN
 				KernelLog.String("YMF754 - Starting PlayerChannel number ");
@@ -963,8 +963,8 @@ TYPE
 		(* Prepare data - this procedure is called for each channel every time PCI Audio generates an interrupt *)
 		PROCEDURE PrepareData;
 		VAR
-			curBuffPos: LONGINT; (* current recording position in ring buffer in bytes *)
-			copySize: LONGINT; (* size of next block to copy in bytes *)
+			curBuffPos: SIZE; (* current recording position in ring buffer in bytes *)
+			copySize: SIZE; (* size of next block to copy in bytes *)
 		BEGIN
 			IF ~running THEN RETURN END;
 			curBuffPos := recSlot.recSlotADC[drv.inactiveBank].pgStartAdr;
@@ -1607,7 +1607,7 @@ VAR physadr: Machine.Address32;
 BEGIN
 	(* All data must be continous in physical memory ! *)
 	(* This can not be forced, but Aos seems to do it anyway. *)
-	physadr := Machine.Ensure32BitAddress (Machine.PhysicalAdr(adr, size));
+	physadr := Machine.PhysicalAdr(adr, size)(Machine.Address32);
 	ASSERT(physadr # Machine.NilAdr); (* check if it is continous in physical memory ! *)
 	ASSERT(physadr MOD 4 = 0); (* must be 4 byte aligned in physical memory *)
 	RETURN physadr;
@@ -1616,9 +1616,10 @@ END GetPhysicalAdr;
 (* Scan the PCI bus for the specified card *)
 PROCEDURE ScanPCI(vendor, device: LONGINT; name: Plugins.Name; CntrlInst1E: BOOLEAN);
 VAR
-	len, reg, index: LONGINT; res: WORD;
+	reg, index: LONGINT; res: WORD;
 	bus, dev, fct: LONGINT;
 	base, irq: LONGINT;
+	len: SIZE;
 	d: Driver;
 BEGIN
 	index := 0;
@@ -1696,7 +1697,7 @@ END Install;
 (** Called when unloading module *)
 PROCEDURE Close*;
 VAR
-	i: LONGINT;
+	i: SIZE;
 BEGIN
 	IF Logging THEN
 		KernelLog.String("Unloading driver module..."); KernelLog.Ln;

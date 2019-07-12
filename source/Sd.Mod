@@ -497,7 +497,7 @@ TYPE
 	(** Command execution procedure *)
 	CommandProcedure * = PROCEDURE (VAR command: Command; VAR result: WORD): BOOLEAN;
 	(** Data command execution procedure *)
-	TransferProcedure * = PROCEDURE (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: WORD): BOOLEAN;
+	TransferProcedure * = PROCEDURE (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: SIZE; VAR result: WORD): BOOLEAN;
 	(** Procedure called to wait for interrupt. mask specifies which interrupts are expected, timeout is in ms. Returns FALSE if timeout occurred *)
 	Blocker * = PROCEDURE {DELEGATE} (hc: HostController; mask: SET; timeout: LONGINT): BOOLEAN;
 
@@ -802,7 +802,7 @@ VAR
 		Execute command with data transfer using CPU.
 		Data is read from/written to [data[ofs], data[ofs + len]).
 	*)
-	PROCEDURE ExecuteDataCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: WORD): BOOLEAN;
+	PROCEDURE ExecuteDataCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: SIZE; VAR result: WORD): BOOLEAN;
 	TYPE
 		DataBytes = ARRAY 4 OF CHAR;
 	VAR
@@ -956,7 +956,7 @@ VAR
 		data, ofs, len: Buffer
 		result: error code
 	*)
-	PROCEDURE ExecuteAdmaCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: LONGINT; VAR result: WORD): BOOLEAN;
+	PROCEDURE ExecuteAdmaCommand (VAR command: Command; VAR data: ARRAY OF SYSTEM.BYTE; ofs, len: SIZE; VAR result: WORD): BOOLEAN;
 	VAR
 		tt: SdEnvironment.Time;
 		hc: HostController;
@@ -1991,7 +1991,7 @@ TYPE
 	END InitCard;
 
 	(** Write 'data[ofs, ofs + len)' to 'card', starting at block 'firstBlock'. *)
-	PROCEDURE Write * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR result: WORD): BOOLEAN;
+	PROCEDURE Write * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: SIZE; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		start, stop: HUGEINT;
@@ -2043,7 +2043,7 @@ TYPE
 	END Write;
 
 	(** Read 'len' bytes starting from 'firstBlock' of 'card' to 'data[ofs, ofs + len)' *)
-	PROCEDURE Read * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR result: WORD): BOOLEAN;
+	PROCEDURE Read * (card: Card; firstBlock, len: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: SIZE; VAR result: WORD): BOOLEAN;
 	VAR
 		command: Command;
 		start, stop: HUGEINT;

@@ -226,12 +226,12 @@ L3:
 END TableUS;
 
 PROCEDURE TableFromFile(name: ARRAY OF CHAR): ADDRESS;
-VAR f: Files.File; r: Files.Rider; len: LONGINT;
+VAR f: Files.File; r: Files.Rider; len: SIZE;
 BEGIN
 	KernelLog.String("Keyboard: "); KernelLog.String(name);
 	f := Files.Old(name);
 	IF f # NIL THEN
-		len := f.Length();
+		len := f.Length()(SIZE);
 		IF len MOD 4 = 0 THEN
 			NEW(keytable, len+1);
 			f.Set(r, 0); f.ReadBytes(r, keytable^, 0, len);

@@ -290,7 +290,7 @@ TYPE
 		END Number;
 
 		PROCEDURE GetNumAsString*(VAR val: ARRAY OF CHAR);
-		VAR i, l: LONGINT;
+		VAR i, l: SIZE;
 		BEGIN
 			(*Strings.Copy(buffer^, numStartPos, numEndPos-numStartPos, val);*)
 			IF isNummer THEN
@@ -634,7 +634,7 @@ TYPE
 	END NewScanner;
 
 	PROCEDURE InitWithText*(t: Texts.Text; pos: LONGINT): Scanner;
-		VAR buffer: Buffer; len, i, j, ch: LONGINT; r: Texts.TextReader;
+		VAR buffer: Buffer; len, i, j: SIZE; ch: LONGINT; r: Texts.TextReader;
 		bytesPerChar: LONGINT;
 	BEGIN
 		t.AcquireRead;
@@ -656,8 +656,8 @@ TYPE
 		RETURN NewScanner(buffer, pos, 0);
 	END InitWithText;
 
-	PROCEDURE ExpandBuf(VAR oldBuf: Buffer; newSize: LONGINT);
-	VAR newBuf: Buffer; i: LONGINT;
+	PROCEDURE ExpandBuf(VAR oldBuf: Buffer; newSize: SIZE);
+	VAR newBuf: Buffer; i: SIZE;
 	BEGIN
 		IF LEN(oldBuf^) >= newSize THEN RETURN END;
 		NEW(newBuf, newSize);
@@ -667,12 +667,12 @@ TYPE
 		oldBuf := newBuf;
 	END ExpandBuf;
 
-	PROCEDURE InitWithReader*(r: Streams.Reader; size, pos: LONGINT): Scanner;
-		VAR buffer: Buffer; read: LONGINT;
+	PROCEDURE InitWithReader*(r: Streams.Reader; size: SIZE; pos: Streams.Position): Scanner;
+		VAR buffer: Buffer; read: SIZE;
 	BEGIN
 		NEW(buffer, size);
 		r.Bytes(buffer^, 0, size, read);
-		RETURN NewScanner(buffer, 0, pos)
+		RETURN NewScanner(buffer, 0, pos(LONGINT))
 	END InitWithReader;
 
 (*

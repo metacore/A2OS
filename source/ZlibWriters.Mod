@@ -72,7 +72,7 @@ BEGIN
 END Open;
 
 (** write specified number of bytes from buffer into and return number of bytes actually written **)
-PROCEDURE WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR written: LONGINT);
+PROCEDURE WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR written: SIZE);
 BEGIN
 	ASSERT((0 <= offset) & (0 <= len) & (len <= LEN(buf)), 110);
 	IF ~w.s.open THEN
@@ -92,7 +92,7 @@ BEGIN
 			END
 		END;
 		w.crc32 := Zlib.CRC32(w.crc32, buf, offset, len - w.s.in.avail);
-		written := len - w.s.in.avail
+		written := len - w.s.in.avail;
 	END;
 END WriteBytes;
 
@@ -100,7 +100,7 @@ END WriteBytes;
 PROCEDURE Write*(VAR w: Writer; ch: CHAR);
 VAR
 	buf: ARRAY 1 OF CHAR;
-	written: LONGINT;
+	written: SIZE;
 BEGIN
 	buf[0] := ch;
 	WriteBytes(w, buf, 0, 1, written)
@@ -110,7 +110,7 @@ END Write;
 PROCEDURE Close*(VAR w: Writer);
 VAR
 	done: BOOLEAN;
-	len: LONGINT;
+	len: SIZE;
 BEGIN
 	ASSERT(w.s.in.avail = 0, 110);
 	done := FALSE;
@@ -137,7 +137,7 @@ END Close;
 (** compress srclen bytes from src to dst with specified level and strategy. dstlen returns how many bytes have been written. **)
 PROCEDURE Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: WORD);
 VAR
-	w: Writer; buf: ARRAY BufSize OF CHAR; totWritten, written, read: LONGINT;
+	w: Writer; buf: ARRAY BufSize OF CHAR; totWritten, written, read: SIZE;
 BEGIN
 	Open(w, level, strategy, NoFlush, FALSE, dst);
 	IF w.res = Ok THEN
@@ -152,7 +152,7 @@ BEGIN
 		UNTIL (w.res # Ok) OR (totWritten >= srclen);
 		Close(w);
 		crc32 := w.crc32;
-		dstlen := w.r.file.Pos(w.r) - dst.file.Pos(dst);
+		dstlen := (w.r.file.Pos(w.r) - dst.file.Pos(dst))(LONGINT);
 	END;
 	res := w.res
 END Compress;

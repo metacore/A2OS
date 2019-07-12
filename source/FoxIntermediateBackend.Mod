@@ -1552,7 +1552,7 @@ TYPE
 					END;
 				ELSE
 					Emit(Mov(Basic.invalidPosition, fp, sp));
-					IF backend.preciseGC & (body # NIL) & (body.code = NIL) THEN
+					IF backend.preciseGC & (body # NIL) THEN
 						Emit(Push(Basic.invalidPosition, nil)) ;
 						ASSERT(system.GenerateParameterOffsets(procedure, procedure.level > 0));
 					END;

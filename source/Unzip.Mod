@@ -117,7 +117,7 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 				R.RawInt(i); R.RawInt(i);
 				R.RawInt(i); entries := i;
 				R.RawInt(i); R.RawLInt(l);
-				R.RawLInt(j); pos := i;
+				R.RawLInt(j); pos := j;
 				IF R.res # Streams.Ok THEN res := R.res END;
 				IF (pos < 0) OR (pos >= F.Length()) THEN res := Streams.FormatError; RETURN END;
 				Files.OpenReader(R, F, pos);

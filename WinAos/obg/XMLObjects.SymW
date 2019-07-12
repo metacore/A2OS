@@ -106,6 +106,6 @@ TYPE
 		PROCEDURE ^ Remove*(key: ARRAY OF CHAR); 
 	END ArrayDict; 
 
-	PROCEDURE ^ StringLength(CONST string: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ StringLength(CONST string: ARRAY OF CHAR): LONGINT; 
 BEGIN
 END XMLObjects.

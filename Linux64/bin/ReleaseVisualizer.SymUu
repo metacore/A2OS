@@ -97,7 +97,7 @@ TYPE
 	Graphic = OBJECT (Object)
 	VAR 
 		list: ObjectList; 
-		nofObj: SIZE; 
+		nofObj: LONGINT; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Add(o: Object); 

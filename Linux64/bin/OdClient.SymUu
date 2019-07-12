@@ -97,7 +97,7 @@ VAR
 	traceLevel*: LONGINT; 
 
 	PROCEDURE ^ ls(CONST prompt, string: ARRAY OF CHAR); 
-	PROCEDURE ^ li(CONST prompt: ARRAY OF CHAR; i: HUGEINT); 
+	PROCEDURE ^ li(CONST prompt: ARRAY OF CHAR; i: LONGINT); 
 	PROCEDURE ^ SendData*(src: Streams.Reader; dst: Streams.Writer); 
 	PROCEDURE ^ Terminate; 
 	PROCEDURE ^ ShowMethodUrl*(method: LONGINT; CONST url: ARRAY OF CHAR); 

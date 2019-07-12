@@ -53,7 +53,7 @@ TYPE
 	Operand = InstructionSet.Operand; 
 
 	FixupEntry = POINTER TO RECORD 
-		maxPC: BinaryCode.Unit; 
+		maxPC: LONGINT; 
 		fixup: BinaryCode.Fixup; 
 		next: FixupEntry; 
 	END; 
@@ -63,8 +63,8 @@ TYPE
 		first, last: FixupEntry; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Enter(fixup: BinaryCode.Fixup; currentPC: BinaryCode.Unit; bits: LONGINT); 
-		PROCEDURE ^ Check(outPC: BinaryCode.Unit): BinaryCode.Fixup; 
+		PROCEDURE ^ Enter(fixup: BinaryCode.Fixup; currentPC: LONGINT; bits: LONGINT); 
+		PROCEDURE ^ Check(outPC: LONGINT): BinaryCode.Fixup; 
 	END ForwardFixupList; 
 
 	Ticket = CodeGenerators.Ticket; 
@@ -150,7 +150,7 @@ TYPE
 		PROCEDURE ^ HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT; 
 		PROCEDURE ^ GetTypedHardwareRegister(index: LONGINT; type: IntermediateCode.Type): LONGINT; 
 		PROCEDURE ^ ParameterRegister(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT; 
-		PROCEDURE ^ PhysicalRegister(virtualReg: SIZE; part: LONGINT; VAR offset: LONGINT): LONGINT; 
+		PROCEDURE ^ PhysicalRegister(virtualReg: LONGINT; part: LONGINT; VAR offset: LONGINT): LONGINT; 
 		PROCEDURE ^ GetRegister(CONST virtual: IntermediateCode.Operand; part: LONGINT; VAR physical: Operand); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: InstructionSet.Operand): BOOLEAN; 
 		PROCEDURE ^ MovIfDifferent(CONST a, b: InstructionSet.Operand); 
@@ -190,7 +190,7 @@ TYPE
 
 	System = OBJECT (Global.System)
 
-		PROCEDURE ^ SizeOf*(type: SyntaxTree.Type): SIZE; 
+		PROCEDURE ^ SizeOf*(type: SyntaxTree.Type): LONGINT; 
 	END System; 
 
 	BackendTRM = OBJECT (IntermediateBackend.IntermediateBackend)
@@ -202,7 +202,7 @@ TYPE
 
 		PROCEDURE ^  & InitBackendTRM; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
-		PROCEDURE ^ SetInstructionWidth*(instructionWidth: SIZE); 
+		PROCEDURE ^ SetInstructionWidth*(instructionWidth: LONGINT); 
 		PROCEDURE ^ GetSystem*(): Global.System; 
 		PROCEDURE ^ SupportedInstruction*(CONST instruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SupportedImmediate*(CONST immediate: IntermediateCode.Operand): BOOLEAN; 
@@ -214,7 +214,7 @@ TYPE
 		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
 		PROCEDURE ^ GetDescription*(VAR instructionSet: ARRAY OF CHAR); 
 		PROCEDURE ^ FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT); 
-		PROCEDURE ^ CheckCodeAddress*(VAR adr: BinaryCode.Unit); 
+		PROCEDURE ^ CheckCodeAddress*(VAR adr: LONGINT); 
 		PROCEDURE ^ ResolvedSection(in: IntermediateCode.Section): BinaryCode.Section; 
 	END BackendTRM; 
 VAR 

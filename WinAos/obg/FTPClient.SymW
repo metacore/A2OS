@@ -49,7 +49,7 @@ TYPE
 		actvListener: TCP.Connection; 
 		actvTimeout: Objects.Timer; 
 		listing-: FTPListing; 
-		nofEntries-: SIZE; 
+		nofEntries-: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Open*(CONST host, user, password: ARRAY OF CHAR; port: LONGINT; VAR res: WORD); 

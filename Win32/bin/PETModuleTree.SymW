@@ -29,9 +29,9 @@ TYPE
 	VAR 
 		commandName: Strings.String; 
 		modulename: Name; 
-		sortHint: WORD; 
+		sortHint: LONGINT; 
 		flags: SET; 
-		position: Streams.Position; 
+		position: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
 	END TreeNode; 
@@ -53,14 +53,14 @@ TYPE
 		PROCEDURE ^ AddNodes*(parent: PETTrees.TreeNode; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
 		PROCEDURE ^ ClickNode*(sender, data: ANY); 
 		PROCEDURE ^ MiddleClickNode*(sender, data: ANY); 
-		PROCEDURE ^ SetNodeInfo(node: TreeNode; mnode: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortHint: WORD; color: WMGraphics.Color; style: SET); 
+		PROCEDURE ^ SetNodeInfo(node: TreeNode; mnode: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortHint: LONGINT; color: WMGraphics.Color; style: SET); 
 		PROCEDURE ^ IsPublic(identDef: ModuleParser.IdentDef): BOOLEAN; 
 		PROCEDURE ^ IsNodeGreater*(left, right: WMTrees.TreeNode): BOOLEAN; 
 		PROCEDURE ^ HasPublicConsts(constDecl: ModuleParser.ConstDecl): BOOLEAN; 
 		PROCEDURE ^ HasPublicVars(varDecl: ModuleParser.VarDecl): BOOLEAN; 
 		PROCEDURE ^ GetModuleNode(node: ModuleParser.Node): ModuleParser.Module; 
-		PROCEDURE ^ GetProcedureType(procHead: ModuleParser.ProcHead): WORD; 
-		PROCEDURE ^ AddBody(root: WMTrees.TreeNode; pnode: ModuleParser.Node; modifiers: SET; pos: Streams.Position); 
+		PROCEDURE ^ GetProcedureType(procHead: ModuleParser.ProcHead): LONGINT; 
+		PROCEDURE ^ AddBody(root: WMTrees.TreeNode; pnode: ModuleParser.Node; modifiers: SET; pos: LONGINT); 
 		PROCEDURE ^ AddImportList(parent: WMTrees.TreeNode; importList: ModuleParser.Import; showImportedModules: BOOLEAN); 
 		PROCEDURE ^ AddDefinitions(parent: WMTrees.TreeNode; definitions: ModuleParser.Definition); 
 		PROCEDURE ^ AddDeclSeq(parent: WMTrees.TreeNode; declSeq: ModuleParser.DeclSeq); 
@@ -84,10 +84,10 @@ TYPE
 		PROCEDURE ^ AddCell(parent: WMTrees.TreeNode; cell: ModuleParser.Cell; anonymous: BOOLEAN); 
 		PROCEDURE ^ AddPort(parent: WMTrees.TreeNode; port: ModuleParser.Port); 
 		PROCEDURE ^ AddProcedure(parent: WMTrees.TreeNode; proc: ModuleParser.Procedure); 
-		PROCEDURE ^ AddIdentList(parent: WMTrees.TreeNode; identList: ModuleParser.IdentList; VAR nofIdents: SIZE); 
+		PROCEDURE ^ AddIdentList(parent: WMTrees.TreeNode; identList: ModuleParser.IdentList; VAR nofIdents: LONGINT); 
 		PROCEDURE ^ AddConstDecl(parent: WMTrees.TreeNode; constDecl: ModuleParser.ConstDecl); 
-		PROCEDURE ^ AddIdentDef(parent: WMTrees.TreeNode; node: ModuleParser.Node; identDef: ModuleParser.IdentDef; sortHint: WORD; color: WMGraphics.Color; style: SET): TreeNode; 
-		PROCEDURE ^ AddInfoItem(parent: WMTrees.TreeNode; node: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortHint: WORD; color: WMGraphics.Color; style: SET): TreeNode; 
+		PROCEDURE ^ AddIdentDef(parent: WMTrees.TreeNode; node: ModuleParser.Node; identDef: ModuleParser.IdentDef; sortHint: LONGINT; color: WMGraphics.Color; style: SET): TreeNode; 
+		PROCEDURE ^ AddInfoItem(parent: WMTrees.TreeNode; node: ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic: BOOLEAN; sortHint: LONGINT; color: WMGraphics.Color; style: SET): TreeNode; 
 	END ModuleTree; 
 VAR 
 	PrototypeShowTypeHierarchy, PrototypeShowImportedModules: WMProperties.BooleanProperty; 

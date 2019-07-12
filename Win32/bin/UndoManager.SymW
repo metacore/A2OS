@@ -8,27 +8,27 @@ CONST
 	SpecialPiece = 103; 
 	AdvancedUndoStrategy = TRUE; 
 TYPE 
-	ListenerProc* = PROCEDURE {DELEGATE}(nrUndos, nrRedos: SIZE); 
+	ListenerProc* = PROCEDURE {DELEGATE}(nrUndos, nrRedos: LONGINT); 
 
 	UndoManager* = OBJECT (Texts.UndoManager)
 	VAR 
 		text: Texts.Text; 
 		undoQu, redoQu: Buffer; 
 		objUpdate: StyleUpdateInfo; 
-		nrUndoUpdates-, nrRedoUpdates-: SIZE; 
+		nrUndoUpdates-, nrRedoUpdates-: LONGINT; 
 		nrUpdatesListener*: ListenerProc; 
 		redo: BOOLEAN; 
-		actualPos-: SIZE; 
+		actualPos-: LONGINT; 
 
-		PROCEDURE ^  & New*(memorySize: SIZE; redo: BOOLEAN); 
+		PROCEDURE ^  & New*(memorySize: LONGINT; redo: BOOLEAN); 
 		PROCEDURE ^ ResetRedo; 
 		PROCEDURE ^ NextOperation(u: UpdateInfo); 
 		PROCEDURE ^ SaveOperation(u: UpdateInfo); 
-		PROCEDURE ^ InsertText*(pos: SIZE; text: Texts.Text); 
-		PROCEDURE ^ DeleteText*(pos: SIZE; text: Texts.Text); 
-		PROCEDURE ^ BeginObjectChange*(pos: SIZE); 
-		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: WORD; obj: ANY); 
-		PROCEDURE ^ EndObjectChange*(len: SIZE; type: WORD; to: ANY); 
+		PROCEDURE ^ InsertText*(pos: LONGINT; text: Texts.Text); 
+		PROCEDURE ^ DeleteText*(pos: LONGINT; text: Texts.Text); 
+		PROCEDURE ^ BeginObjectChange*(pos: LONGINT); 
+		PROCEDURE ^ ObjectChanged*(pos, len, type: LONGINT; obj: ANY); 
+		PROCEDURE ^ EndObjectChange*(len, type: LONGINT; to: ANY); 
 		PROCEDURE ^ SetText*(text: Texts.Text); 
 		PROCEDURE ^ Undo*; 
 		PROCEDURE ^ Redo*; 
@@ -37,7 +37,7 @@ TYPE
 
 	Buffer = OBJECT 
 	VAR 
-		head, num: SIZE; 
+		head, num: LONGINT; 
 		buffer: POINTER TO ARRAY OF UpdateInfo; 
 
 		PROCEDURE ^ Push*(x: UpdateInfo); 
@@ -47,12 +47,12 @@ TYPE
 		PROCEDURE ^ IsFull*(): BOOLEAN; 
 		PROCEDURE ^ IsEmpty*(): BOOLEAN; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^  & Init*(n: SIZE); 
+		PROCEDURE ^  & Init*(n: LONGINT); 
 	END Buffer; 
 
 	UpdateInfo = OBJECT 
 	VAR 
-		pos: SIZE; 
+		pos: LONGINT; 
 		sealed*: BOOLEAN; 
 
 		PROCEDURE ^ Undo(text: Texts.Text); 
@@ -61,43 +61,42 @@ TYPE
 
 	InsertUpdateInfo = OBJECT (UpdateInfo)
 	VAR 
-		len: SIZE; 
+		len: LONGINT; 
 		t: Texts.Text; 
 
-		PROCEDURE ^  & New*(pos: SIZE; text: Texts.Text); 
+		PROCEDURE ^  & New*(pos: LONGINT; text: Texts.Text); 
 		PROCEDURE ^ Undo(text: Texts.Text); 
 		PROCEDURE ^ Redo(text: Texts.Text); 
 	END InsertUpdateInfo; 
 
 	DeleteUpdateInfo = OBJECT (UpdateInfo)
 	VAR 
-		len: SIZE; 
+		len: LONGINT; 
 		t: Texts.Text; 
 
-		PROCEDURE ^  & New*(pos: SIZE; text: Texts.Text); 
+		PROCEDURE ^  & New*(pos: LONGINT; text: Texts.Text); 
 		PROCEDURE ^ Undo(text: Texts.Text); 
 		PROCEDURE ^ Redo(text: Texts.Text); 
 	END DeleteUpdateInfo; 
 
 	StyleInfo = POINTER TO RECORD 
 		next: StyleInfo; 
-		pos, len: SIZE; 
+		pos, len: LONGINT; 
 		style: ANY; 
-		type: WORD; 
+		type: LONGINT; 
 	END; 
 
 	StyleUpdateInfo = OBJECT (UpdateInfo)
 	VAR 
-		len: SIZE; 
-		type: WORD; 
+		len, type: LONGINT; 
 		new: ANY; 
 		old: StyleInfo; 
 
-		PROCEDURE ^  & New*(pos: SIZE); 
-		PROCEDURE ^ Append(pos, len: SIZE; style: ANY; type: WORD); 
+		PROCEDURE ^  & New*(pos: LONGINT); 
+		PROCEDURE ^ Append(pos, len: LONGINT; style: ANY; type: LONGINT); 
 		PROCEDURE ^ SetObject(new: ANY); 
-		PROCEDURE ^ SetLen(len: SIZE); 
-		PROCEDURE ^ SetStyle*(textpos, len: SIZE; style: ANY); 
+		PROCEDURE ^ SetLen(len: LONGINT); 
+		PROCEDURE ^ SetStyle*(textpos, len: LONGINT; style: ANY); 
 		PROCEDURE ^ Undo(text: Texts.Text); 
 		PROCEDURE ^ Redo(text: Texts.Text); 
 	END StyleUpdateInfo; 

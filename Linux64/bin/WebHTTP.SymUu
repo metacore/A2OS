@@ -110,7 +110,7 @@ TYPE
 		date*: ARRAY 32 OF CHAR; 
 		location*: ARRAY 1024 OF CHAR; 
 		contenttype*: ARRAY 64 OF CHAR; 
-		contentlength*: SIZE; 
+		contentlength*: LONGINT; 
 		contentlocation*: ARRAY 1024 OF CHAR; 
 		transferencoding*: ARRAY 64 OF CHAR; 
 		lastmodified*: ARRAY 32 OF CHAR; 
@@ -126,7 +126,7 @@ TYPE
 		token: ARRAY TokenSize OF CHAR; 
 
 		PROCEDURE ^  & Init*(VAR inW: Streams.Writer; outW: Streams.Writer; VAR request: RequestHeader; VAR reply: ResponseHeader); 
-		PROCEDURE ^ Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ WriteChunked; 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Close*; 
@@ -141,7 +141,7 @@ TYPE
 		first: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(VAR inR, outR: Streams.Reader); 
-		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 	END ChunkedInStream; 
 
 	LimitedOutStream* = OBJECT 
@@ -152,7 +152,7 @@ TYPE
 		remain-: LONGINT; 
 
 		PROCEDURE ^  & Init*(VAR inW, outW: Streams.Writer; size: LONGINT); 
-		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Write; 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Padding*(ch: CHAR); 
@@ -161,10 +161,10 @@ TYPE
 	LimitedInStream* = OBJECT 
 	VAR 
 		inR: Streams.Reader; 
-		remain-: SIZE; 
+		remain-: LONGINT; 
 
-		PROCEDURE ^  & Init*(VAR inR, outR: Streams.Reader; size: SIZE); 
-		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^  & Init*(VAR inR, outR: Streams.Reader; size: LONGINT); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 	END LimitedInStream; 
 
 	PROCEDURE ^ EOL(VAR in: Streams.Reader): BOOLEAN; 

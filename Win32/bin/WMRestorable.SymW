@@ -1,5 +1,5 @@
 MODULE WMRestorable;
-	IMPORT Commands, Files, Kernel, Modules, KernelLog, Strings, WMMessages, XML, XMLObjects, XMLScanner, XMLParser, WM := WMWindowManager, Streams;
+	IMPORT Commands, Files, Kernel, Modules, KernelLog, Strings, WMMessages, XML, XMLObjects, XMLScanner, XMLParser, WM := WMWindowManager;
 CONST 
 TYPE 
 	String* = Strings.String; 
@@ -37,7 +37,7 @@ VAR
 
 	PROCEDURE ^ Store*(c: Commands.Context); 
 	PROCEDURE ^ AddByContext*(w: WM.Window; c: Context); 
-	PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ RestoreWindow(w: XML.Element); 
 	PROCEDURE ^ StoreWindow*(window: WM.Window; CONST fileName: ARRAY OF CHAR); 
 	PROCEDURE ^ Load*(context: Commands.Context); 

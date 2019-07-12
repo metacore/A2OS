@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE ^ ReceiveServerVersion(): BOOLEAN; 
 		PROCEDURE ^ SendClientVersion; 
 		PROCEDURE ^ SendPacket*(p: Packet); 
-		PROCEDURE ^ ReceivePacket*(VAR buf: ARRAY OF CHAR; VAR size: SIZE): CHAR; 
+		PROCEDURE ^ ReceivePacket*(VAR buf: ARRAY OF CHAR; VAR size: LONGINT): CHAR; 
 		PROCEDURE ^ SendDebug*; 
 		PROCEDURE ^ Disconnect*(reason: SHORTINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ GetChannelNo*(): LONGINT; 
@@ -61,7 +61,7 @@ TYPE
 		PROCEDURE ^ ClientAlgorythms(): Packet; 
 		PROCEDURE ^ Group1(sha1: SHA1.Hash); 
 		PROCEDURE ^ Group14(sha1: SHA1.Hash); 
-		PROCEDURE ^ CheckSHK(CONST buf: ARRAY OF CHAR; shk, sig: SIZE); 
+		PROCEDURE ^ CheckSHK(CONST buf: ARRAY OF CHAR; shk, sig: LONGINT); 
 		PROCEDURE ^ GroupExchange(sha1: SHA1.Hash); 
 		PROCEDURE ^ ActivateNewKeys; 
 		PROCEDURE ^ DeriveKey(keykind: CHAR; keylen: LONGINT; VAR key: ARRAY OF CHAR); 
@@ -70,20 +70,20 @@ TYPE
 	Packet* = OBJECT 
 	VAR 
 		buf-: POINTER TO ARRAY OF CHAR; 
-		len-: SIZE; 
+		len-: LONGINT; 
 
-		PROCEDURE ^  & Init*(type: CHAR; size: SIZE); 
+		PROCEDURE ^  & Init*(type: CHAR; size: LONGINT); 
 		PROCEDURE ^ AppChar*(c: CHAR); 
 		PROCEDURE ^ AppInteger*(v: LONGINT); 
 		PROCEDURE ^ AppString*(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ AppArray*(CONST arr: ARRAY OF CHAR; pos, arrlen: SIZE); 
+		PROCEDURE ^ AppArray*(CONST arr: ARRAY OF CHAR; pos, arrlen: LONGINT); 
 	END Packet; 
 VAR 
 	hexd: ARRAY 17 OF CHAR; 
 
 	PROCEDURE ^ Int2Chars(v: LONGINT; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ Head(CONST buf, s: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ ReceiveLine(tcp: TCP.Connection; VAR buf: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ ReceiveLine(tcp: TCP.Connection; VAR buf: ARRAY OF CHAR): LONGINT; 
 	PROCEDURE ^ algoMatch(CONST cstr, sstr: ARRAY OF CHAR; VAR match: ARRAY OF CHAR); 
 BEGIN
 END SSHTransport.

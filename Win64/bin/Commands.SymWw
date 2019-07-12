@@ -51,7 +51,7 @@ VAR
 	defaultContext: Context; 
 
 	PROCEDURE ^ GetEmptyReader(): Streams.Reader; 
-	PROCEDURE ^ SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ Split*(CONST cmdstr: ARRAY OF CHAR; VAR moduleName, procedureName: Modules.Name; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ GetContext*(): Context; 
 	PROCEDURE ^ Activate*(CONST cmd: ARRAY OF CHAR; context: Context; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR); 

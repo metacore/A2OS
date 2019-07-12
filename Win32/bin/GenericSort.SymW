@@ -5,6 +5,6 @@ TYPE
 	GenericCompareFunct* = PROCEDURE {DELEGATE}(obj1, obj2: ANY):BOOLEAN; 
 
 	PROCEDURE ^ QuickSort*(VAR genArray: GenericArray; compFunc: GenericCompareFunct); 
-	PROCEDURE ^ QuickSortRec(VAR genArray: GenericArray; comp: GenericCompareFunct; lo, hi: SIZE); 
+	PROCEDURE ^ QuickSortRec(VAR genArray: GenericArray; comp: GenericCompareFunct; lo, hi: LONGINT); 
 BEGIN
 END GenericSort.

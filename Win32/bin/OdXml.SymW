@@ -113,8 +113,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ShowDAVError*(doc: XML.Document): BOOLEAN; 
 		PROCEDURE ^ IsDAVError*(doc: XML.Document; VAR name: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Dev0(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ XmlSize*(doc: XML.Document): Streams.Position; 
+		PROCEDURE ^ Dev0(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ XmlSize*(doc: XML.Document): LONGINT; 
 		PROCEDURE ^ GetXmlns*(el: XML.Element); 
 		PROCEDURE ^ AbsXmlName*(rawName: XML.String): OdUtil.Line; 
 		PROCEDURE ^ AbsName*(CONST rawName: ARRAY OF CHAR): OdUtil.Line; 
@@ -142,7 +142,7 @@ TYPE
 VAR 
 	xmlDecl: XML.XMLDecl; 
 
-	PROCEDURE ^ XMLReportError(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ XMLReportError(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ NameContent(CONST name: ARRAY OF CHAR): XML.NameContent; 
 	PROCEDURE ^ XmlDecl(CONST version, encoding: ARRAY OF CHAR): XML.XMLDecl; 
 	PROCEDURE ^ GetCharData*(parent: XML.Element; VAR charData: ARRAY OF CHAR); 

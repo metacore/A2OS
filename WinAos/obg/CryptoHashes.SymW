@@ -10,8 +10,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ SetNameAndSize*(CONST name: ARRAY OF CHAR; size: LONGINT); 
-		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ GetHash*(VAR buffer: ARRAY OF CHAR; position: SIZE); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ GetHash*(VAR buffer: ARRAY OF CHAR; position: LONGINT); 
 	END Hash; 
 
 	HashFactory = PROCEDURE ():Hash; 

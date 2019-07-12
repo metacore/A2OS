@@ -26,7 +26,7 @@ VAR
 	PROCEDURE ^ Connect(VAR S: NS.Connection; host: ARRAY OF CHAR; port: INTEGER; VAR res: INTEGER); 
 	PROCEDURE ^ SendCmd(S: NS.Connection; cmd, arg: ARRAY OF CHAR); 
 	PROCEDURE ^ Prefix(t: ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ Copy(i: SIZE; VAR s, t: ARRAY OF CHAR); 
+	PROCEDURE ^ Copy(i: LONGINT; VAR s, t: ARRAY OF CHAR); 
 	PROCEDURE ^ IsHexDigit(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ HexVal(ch: CHAR): INTEGER; 
 	PROCEDURE ^ WriteStringI2O(VAR W: Texts.Writer; VAR str: ARRAY OF CHAR; quoted: BOOLEAN); 

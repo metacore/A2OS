@@ -33,7 +33,7 @@ TYPE
 	LeaseManager = OBJECT {EXCLUSIVE} 
 	VAR 
 		timer: Kernel.Timer; 
-		i, j: SIZE; 
+		i, j: LONGINT; 
 		pSession, pHandler: ANY; 
 		s: Session; 
 		expiredSessions: TFClasses.List; 

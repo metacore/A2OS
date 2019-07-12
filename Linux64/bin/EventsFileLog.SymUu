@@ -12,11 +12,11 @@ TYPE
 	VAR 
 		file: Files.File; 
 		w: Files.Writer; 
-		currentFileSize, maxFileSize: Files.Size; 
+		currentFileSize, maxFileSize: LONGINT; 
 		warned: BOOLEAN; 
 
 		PROCEDURE ^ Handle*(event: Events.Event); 
-		PROCEDURE ^  & Init*(file: Files.File; append: BOOLEAN; maxFileSize: Files.Size); 
+		PROCEDURE ^  & Init*(file: Files.File; append: BOOLEAN; maxFileSize: LONGINT); 
 	END EventLogger; 
 VAR 
 	eventLogger-: EventLogger; 

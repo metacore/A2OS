@@ -54,14 +54,14 @@ TYPE
 		ime: WMInputMethods.IME; 
 		currentFlags: SET; 
 		string: Texts.PUCS32String; 
-		cursorPosition: SIZE; 
-		curLen: SIZE; 
+		cursorPosition: LONGINT; 
+		curLen: LONGINT; 
 		selection: RECORD 
-			start, end: SIZE; 
+			start, end: LONGINT; 
 		END; 
 		cursorIsVisible: BOOLEAN; 
 		selecting, doubleClicking: BOOLEAN; 
-		selectingCursorPos: SIZE; 
+		selectingCursorPos: LONGINT; 
 		interclick: LONGINT; 
 		dragPossible: BOOLEAN; 
 		dragString: Strings.String; 
@@ -75,7 +75,7 @@ TYPE
 		PROCEDURE ^ SetCurrentCursorVisibility(isVisible: BOOLEAN); 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ CheckSize(min: SIZE); 
+		PROCEDURE ^ CheckSize(min: LONGINT); 
 		PROCEDURE ^ GetAsString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ SetAsString*(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ LinkChanged*(sender, object: ANY); 
@@ -89,8 +89,8 @@ TYPE
 		PROCEDURE ^ IsAllowedString(CONST string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ IsValidUCS32String(CONST string: Texts.UCS32String): BOOLEAN; 
 		PROCEDURE ^ InsertChar(ch: LONGINT); 
-		PROCEDURE ^ InsertStringAt(CONST x: ARRAY OF CHAR; position: SIZE; VAR res: WORD); 
-		PROCEDURE ^ InsertUCS32(atPosition: SIZE; CONST string: Texts.UCS32String); 
+		PROCEDURE ^ InsertStringAt(CONST x: ARRAY OF CHAR; position: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ InsertUCS32(atPosition: LONGINT; CONST string: Texts.UCS32String); 
 		PROCEDURE ^ Backspace; 
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ Home; 
@@ -113,8 +113,8 @@ TYPE
 		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; position: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ SetCursorInfo(charsAdded: SIZE); 
-		PROCEDURE ^ GetCurrentCursorPosition(): SIZE; 
+		PROCEDURE ^ SetCursorInfo(charsAdded: LONGINT); 
+		PROCEDURE ^ GetCurrentCursorPosition(): LONGINT; 
 		PROCEDURE ^ GetCursorScreenPosition(VAR x, y: LONGINT); 
 		PROCEDURE ^ SetIMEInterface(ime: WMInputMethods.IME); 
 		PROCEDURE ^ FocusReceived*; 
@@ -172,8 +172,8 @@ TYPE
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
 		PROCEDURE ^ SetText*(t: Texts.Text); 
-		PROCEDURE ^ SetCursorInfo(charsAdded: SIZE); 
-		PROCEDURE ^ GetCursorPosition(): SIZE; 
+		PROCEDURE ^ SetCursorInfo(charsAdded: LONGINT); 
+		PROCEDURE ^ GetCursorPosition(): LONGINT; 
 		PROCEDURE ^ GetCursorScreenPosition(VAR x, y: LONGINT); 
 		PROCEDURE ^ SetIMEInterface(ime: WMInputMethods.IME; text: Texts.Text); 
 		PROCEDURE ^ FocusReceived*; 

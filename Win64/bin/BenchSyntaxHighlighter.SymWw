@@ -4,11 +4,11 @@ CONST
 	DefaultHighlighterName = \"Oberon"\; 
 	DefaultNofIterations = 1000; 
 
-	PROCEDURE ^ Reader(reader: Texts.TextReader; nofIterations: SIZE; out: Streams.Writer); 
-	PROCEDURE ^ Words(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: SIZE; out: Streams.Writer); 
-	PROCEDURE ^ RebuildRegions(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: SIZE; out: Streams.Writer); 
-	PROCEDURE ^ RegionLookup(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: SIZE; out: Streams.Writer); 
-	PROCEDURE ^ Full(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: SIZE; out: Streams.Writer); 
+	PROCEDURE ^ Reader(reader: Texts.TextReader; nofIterations: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ Words(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ RebuildRegions(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ RegionLookup(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ Full(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: LONGINT; out: Streams.Writer); 
 	PROCEDURE ^ Indent(writer: Streams.Writer; width: LONGINT); 
 	PROCEDURE ^ Bench*(context: Commands.Context); 
 	PROCEDURE ^ TestScanner*(context: Commands.Context); 

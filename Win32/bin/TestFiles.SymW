@@ -14,7 +14,7 @@ TYPE
 		reader: Files.Reader; 
 		path: ARRAY 512 OF CHAR; 
 		lastCommandWasComment: BOOLEAN; 
-		readerBytesLength: SIZE; 
+		readerBytesLength: LONGINT; 
 		byte: CHAR; 
 		buffer: Strings.String; 
 
@@ -43,7 +43,7 @@ TYPE
 		PROCEDURE ^ InitBuffer(length: LONGINT); 
 		PROCEDURE ^ CallCommand(r: Streams.Reader; VAR error, parseError: BOOLEAN); 
 		PROCEDURE ^ ProcessCommand(r: Streams.Reader; VAR error, parseError, finished: BOOLEAN); 
-		PROCEDURE ^ Handle*(r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; testType: TestSuite.TestType): WORD; 
+		PROCEDURE ^ Handle*(r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; testType: TestSuite.TestType): INTEGER; 
 	END Tester; 
 
 	PROCEDURE ^ StringsAreEqual(string, buffer: Strings.String): BOOLEAN; 

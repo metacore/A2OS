@@ -21,8 +21,7 @@ TYPE
 		running, terminated: BOOLEAN; 
 		ip: IP.Adr; 
 		branch, command, seqNum, messageType: INTEGER; 
-		uin, receiverUin, port, receiveBufOffset: LONGINT; 
-		len: SIZE; 
+		uin, receiverUin, port, len, receiveBufOffset: LONGINT; 
 		res: WORD; 
 		user: Base.User; 
 		users: Base.Users; 

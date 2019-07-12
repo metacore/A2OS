@@ -36,8 +36,7 @@ TYPE
 		running, terminated, onLine: BOOLEAN; 
 		str1, str2: ARRAY 256 OF CHAR; 
 		branch, command, seqNum, messageType, inSeqNum, outSeqNum: INTEGER; 
-		senderUin, receiverUin, port, receiveBufOffset: LONGINT; 
-		len: SIZE; 
+		senderUin, receiverUin, port, len, receiveBufOffset: LONGINT; 
 		sendBuf-: Base.Buffer; 
 		receiveBuf, message, string: String; 
 		userInfos: Base.List; 

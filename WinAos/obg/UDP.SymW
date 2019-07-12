@@ -18,8 +18,8 @@ TYPE
 		sock: WSock32.Socket; 
 
 		PROCEDURE ^  & Open*(lport: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: SIZE; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size: SIZE; ms: LONGINT; VAR fip: IP.Adr; VAR fport: LONGINT; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, ms: LONGINT; VAR fip: IP.Adr; VAR fport, len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Close*; 
 	END Socket; 
 VAR 

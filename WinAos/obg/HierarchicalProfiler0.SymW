@@ -14,10 +14,10 @@ TYPE
 	Poller = OBJECT {EXCLUSIVE} 
 	VAR 
 		processes, oldProcesses: ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process; 
-		nofProcesses, oldNofProcesses: SIZE; 
+		nofProcesses, oldNofProcesses: LONGINT; 
 		times, oldTimes: ProcessTimeArray; 
 		me: Objects.Process; 
-		state: WORD; 
+		state: LONGINT; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Terminate; 
@@ -29,7 +29,7 @@ TYPE
 VAR 
 	poller: Poller; 
 	callback: Callback; 
-	state: WORD; 
+	state: LONGINT; 
 
 	PROCEDURE ^ HandleProcess(process: Objects.Process); 
 	PROCEDURE ^ Enable*(proc: Callback); 

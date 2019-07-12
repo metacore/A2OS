@@ -94,7 +94,7 @@ TYPE
 		mode-: LONGINT; 
 		procID-: LONGINT; 
 		waitingOn-: ProtectedObject; 
-		id-: WORD; 
+		id-: LONGINT; 
 		flags*: SET; 
 		priority-: LONGINT; 
 		stackBottom: ADDRESS; 
@@ -159,7 +159,7 @@ VAR
 	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
 	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
 	PROCEDURE ^ ActiveObject*(): ANY; 
-	PROCEDURE ^ GetProcessID*(): WORD; 
+	PROCEDURE ^ GetProcessID*(): LONGINT; 
 	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ {WINAPI} ExcpFrmHandler(CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD; 

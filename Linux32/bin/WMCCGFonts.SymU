@@ -53,9 +53,9 @@ TYPE
 		fontFile: Files.File; 
 		name: ARRAY 256 OF CHAR; 
 
-		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR glyphRangeIndex: SIZE): BOOLEAN; 
+		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR glyphRangeIndex: LONGINT): BOOLEAN; 
 		PROCEDURE ^ ReadPackedGlyph(r: Streams.Reader; VAR glyph: Glyph); 
-		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: SIZE); 
+		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: LONGINT); 
 		PROCEDURE ^ GetGlyph*(ucs, variant: LONGINT): Glyph; 
 		PROCEDURE ^ Load*(fontName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ FindGlyphSubComponent(VAR ref: GlyphRef): Glyph; 

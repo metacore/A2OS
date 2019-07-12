@@ -43,23 +43,23 @@ TYPE
 	ComparisonFunction = PROCEDURE {DELEGATE}(object1, object2: ANY):BOOLEAN; 
 
 	Position* = RECORD 
-		start*, end*, line*, linepos*: Streams.Position; 
+		start*, end*, line*, linepos*: LONGINT; 
 		reader*: Streams.Reader; 
 	END; 
 
-	ErrorCode* = WORD; 
+	ErrorCode* = LONGINT; 
 
 	Fingerprint* = ObjectFile.Fingerprint; 
 
 	List* = OBJECT 
 	VAR 
 		list: ObjectArray; 
-		count-: SIZE; 
+		count-: LONGINT; 
 		multipleAllowed*: BOOLEAN; 
 		nilAllowed*: BOOLEAN; 
 
-		PROCEDURE ^  & InitList*(initialSize: SIZE); 
-		PROCEDURE ^ Length*(): SIZE; 
+		PROCEDURE ^  & InitList*(initialSize: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Get*(i: SIZE): ANY; 
 		PROCEDURE ^ Set*(i: SIZE; x: ANY); 
@@ -71,21 +71,21 @@ TYPE
 		PROCEDURE ^ Insert*(i: SIZE; x: ANY); 
 		PROCEDURE ^ Replace*(x, y: ANY); 
 		PROCEDURE ^ ReplaceByIndex*(i: SIZE; x: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): SIZE; 
+		PROCEDURE ^ IndexOf*(x: ANY): LONGINT; 
 		PROCEDURE ^ Contains*(x: ANY): BOOLEAN; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GrowAndSet*(i: SIZE; x: ANY); 
+		PROCEDURE ^ GrowAndSet*(i: LONGINT; x: ANY); 
 		PROCEDURE ^ Sort*(comparisonFunction: ComparisonFunction); 
-		PROCEDURE ^ QuickSort(comparisonFunction: ComparisonFunction; lo, hi: SIZE); 
+		PROCEDURE ^ QuickSort(comparisonFunction: ComparisonFunction; lo, hi: LONGINT); 
 	END List; 
 
 	HashEntryAny = RECORD 
 		key, value: ANY; 
-		valueInt: SIZE; 
+		valueInt: LONGINT; 
 	END; 
 
 	HashEntryInt = RECORD 
-		key, valueInt: SIZE; 
+		key, valueInt: LONGINT; 
 		value: ANY; 
 	END; 
 
@@ -96,47 +96,47 @@ TYPE
 	HashTable* = OBJECT 
 	VAR 
 		table: HashAnyArray; 
-		size: SIZE; 
-		used-: SIZE; 
+		size: LONGINT; 
+		used-: LONGINT; 
 		maxLoadFactor: REAL; 
 
-		PROCEDURE ^  & Init*(initialSize: SIZE); 
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
 		PROCEDURE ^ Put*(key, value: ANY); 
 		PROCEDURE ^ Get*(key: ANY): ANY; 
 		PROCEDURE ^ Has*(key: ANY): BOOLEAN; 
-		PROCEDURE ^ Length*(): SIZE; 
+		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ PutInt*(key: ANY; value: SIZE); 
-		PROCEDURE ^ GetInt*(key: ANY): SIZE; 
-		PROCEDURE ^ HashValue(key: ANY): SIZE; 
+		PROCEDURE ^ PutInt*(key: ANY; value: LONGINT); 
+		PROCEDURE ^ GetInt*(key: ANY): LONGINT; 
+		PROCEDURE ^ HashValue(key: ANY): LONGINT; 
 		PROCEDURE ^ Grow; 
 	END HashTable; 
 
 	IntIterator* = OBJECT 
 	VAR 
 		table: HashIntArray; 
-		count: SIZE; 
+		count: LONGINT; 
 
 		PROCEDURE ^  & Init(t: HashIntArray); 
-		PROCEDURE ^ GetNext*(VAR key: SIZE; VAR value: ANY): BOOLEAN; 
+		PROCEDURE ^ GetNext*(VAR key: LONGINT; VAR value: ANY): BOOLEAN; 
 	END IntIterator; 
 
 	HashTableInt* = OBJECT 
 	VAR 
 		table: HashIntArray; 
-		size: SIZE; 
-		used-: SIZE; 
+		size: LONGINT; 
+		used-: LONGINT; 
 		maxLoadFactor: REAL; 
 
-		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
-		PROCEDURE ^ Get*(key: SIZE): ANY; 
-		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
-		PROCEDURE ^ Length*(): SIZE; 
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^ Put*(key: LONGINT; value: ANY); 
+		PROCEDURE ^ Get*(key: LONGINT): ANY; 
+		PROCEDURE ^ Has*(key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ PutInt*(key, value: SIZE); 
-		PROCEDURE ^ GetInt*(key: SIZE): SIZE; 
-		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
+		PROCEDURE ^ PutInt*(key, value: LONGINT); 
+		PROCEDURE ^ GetInt*(key: LONGINT): LONGINT; 
+		PROCEDURE ^ HashValue(key: LONGINT): LONGINT; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ GetIterator*(): IntIterator; 
 	END HashTableInt; 
@@ -151,18 +151,18 @@ TYPE
 	HashTableSegmentedName* = OBJECT 
 	VAR 
 		table: HashSegmentedNameArray; 
-		size: SIZE; 
-		used-: SIZE; 
+		size: LONGINT; 
+		used-: LONGINT; 
 		maxLoadFactor: REAL; 
 
-		PROCEDURE ^  & Init*(initialSize: SIZE); 
+		PROCEDURE ^  & Init*(initialSize: LONGINT); 
 		PROCEDURE ^ Put*(CONST key: SegmentedName; value: ANY); 
 		PROCEDURE ^ Get*(CONST key: SegmentedName): ANY; 
 		PROCEDURE ^ Has*(CONST key: SegmentedName): BOOLEAN; 
-		PROCEDURE ^ Length*(): SIZE; 
+		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ Hash*(CONST name: SegmentedName): SIZE; 
-		PROCEDURE ^ HashValue(CONST key: SegmentedName): SIZE; 
+		PROCEDURE ^ Hash*(CONST name: SegmentedName): LONGINT; 
+		PROCEDURE ^ HashValue(CONST key: SegmentedName): LONGINT; 
 		PROCEDURE ^ Grow; 
 	END HashTableSegmentedName; 
 
@@ -184,7 +184,7 @@ TYPE
 		PROCEDURE ^ Pos*(): Streams.Position; 
 		PROCEDURE ^ Indent; 
 		PROCEDURE ^ Char*(x: CHAR); 
-		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ RawSInt*(x: SHORTINT); 
 		PROCEDURE ^ RawInt*(x: INTEGER); 
 		PROCEDURE ^ RawLInt*(x: LONGINT); 
@@ -236,9 +236,9 @@ TYPE
 
 	DiagnosticsFactory* = PROCEDURE {DELEGATE}(w: Streams.Writer):Diagnostics.Diagnostics; 
 VAR 
-	lists-: SIZE; 
-	enlarged-: SIZE; 
-	strings-: SIZE; 
+	lists-: LONGINT; 
+	enlarged-: LONGINT; 
+	strings-: LONGINT; 
 	integerObjects: HashTableInt; 
 	errMsg: ErrorMsgs; 
 	emptyString-: String; 
@@ -251,7 +251,7 @@ VAR
 	PROCEDURE ^ MakeString*(CONST s: ARRAY OF CHAR): String; 
 	PROCEDURE ^ GetString*(s: String; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ StringEqual*(s, t: String): BOOLEAN; 
-	PROCEDURE ^ GetErrorMessage*(err: ErrorCode; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ GetErrorMessage*(err: LONGINT; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
 	PROCEDURE ^ AppendDetailedErrorMessage*(VAR message: ARRAY OF CHAR; pos: Position; reader: Streams.Reader); 
 	PROCEDURE ^ AppendPosition*(VAR msg: ARRAY OF CHAR; pos: Position); 
 	PROCEDURE ^ MakeMessage(pos: Position; code: ErrorCode; CONST msg: ARRAY OF CHAR; VAR message: ARRAY OF CHAR); 
@@ -260,9 +260,9 @@ VAR
 	PROCEDURE ^ Error*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Warning*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Information*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
-	PROCEDURE ^ SetErrorMessage*(n: ErrorCode; CONST msg: ARRAY OF CHAR); 
-	PROCEDURE ^ SetErrorExpected*(n: ErrorCode; CONST msg: ARRAY OF CHAR); 
-	PROCEDURE ^ AppendNumber*(VAR s: ARRAY OF CHAR; num: HUGEINT); 
+	PROCEDURE ^ SetErrorMessage*(n: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ SetErrorExpected*(n: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ AppendNumber*(VAR s: ARRAY OF CHAR; num: LONGINT); 
 	PROCEDURE ^ InitSegmentedName*(VAR name: SegmentedName); 
 	PROCEDURE ^ ToSegmentedName*(CONST name: ARRAY OF CHAR; VAR pooledName: SegmentedName); 
 	PROCEDURE ^ SegmentedNameToString*(CONST pooledName: SegmentedName; VAR name: ARRAY OF CHAR); 
@@ -278,9 +278,10 @@ VAR
 	PROCEDURE ^ Lowercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ Uppercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ GetIntegerObj*(value: LONGINT): ANY; 
-	PROCEDURE ^ Align*(VAR offset: SIZE; alignment: SIZE); 
+	PROCEDURE ^ Align*(VAR offset: LONGINT; alignment: LONGINT); 
 	PROCEDURE ^ InitErrorMessages; 
 	PROCEDURE ^ ActivateDebug*; 
+	PROCEDURE ^ Test*; 
 	PROCEDURE ^ GetFileReader*(CONST filename: ARRAY OF CHAR): Streams.Reader; 
 	PROCEDURE ^ GetWriter*(w: Streams.Writer): Writer; 
 	PROCEDURE ^ GetDebugWriter*(CONST title: ARRAY OF CHAR): Streams.Writer; 

@@ -6,10 +6,10 @@ TYPE
 	Reader* = OBJECT (Streams.Reader)
 	VAR 
 		memoryAdr: ADDRESS; 
-		available: SIZE; 
+		available: LONGINT; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
-		PROCEDURE ^  & InitMemoryReader*(memoryAdr: ADDRESS; length: SIZE); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^  & InitMemoryReader*(memoryAdr: ADDRESS; length: LONGINT); 
 	END Reader; 
 BEGIN
 END MemoryReader.

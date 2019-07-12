@@ -67,7 +67,7 @@ TYPE
 		huff: HuffmanCoder; 
 
 		PROCEDURE ^  & New*(archive: Streams.Writer); 
-		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: SIZE); 
+		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: LONGINT); 
 	END Encoder; 
 
 	Decoder* = OBJECT 

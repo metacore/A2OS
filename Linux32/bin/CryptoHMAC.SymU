@@ -4,14 +4,14 @@ CONST
 TYPE 
 	HMac* = OBJECT 
 	VAR 
-		size-: SIZE; 
+		size-: LONGINT; 
 		name-: ARRAY 64 OF CHAR; 
 		ih, oh: Hashes.Hash; 
 
 		PROCEDURE ^  & Init*(CONST hashmod: ARRAY OF CHAR); 
-		PROCEDURE ^ Initialize*(CONST key: ARRAY OF CHAR; keyLen: SIZE); 
-		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
-		PROCEDURE ^ GetMac*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ Initialize*(CONST key: ARRAY OF CHAR; keyLen: LONGINT); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ GetMac*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
 	END HMac; 
 BEGIN
 END CryptoHMAC.

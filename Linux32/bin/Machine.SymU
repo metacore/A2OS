@@ -52,21 +52,21 @@ VAR
 	SSE5Support-: BOOLEAN; 
 	AVXSupport-: BOOLEAN; 
 	ticks-: LONGINT; 
-	prioLow-, prioHigh-: WORD; 
+	prioLow-, prioHigh-: LONGINT; 
 	fcr-: SET; 
 	mhz-: HUGEINT; 
 	gcThreshold-: SIZE; 
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 	config: ARRAY 2048 OF CHAR; 
 	logname: ARRAY 32 OF CHAR; 
-	logfile: WORD; 
+	logfile: LONGINT; 
 	traceHeap: BOOLEAN; 
 	timer0: HUGEINT; 
 
 	PROCEDURE ^ ID*(): LONGINT; 
-	PROCEDURE ^ FlushDCacheRange*(adr: ADDRESS; len: SIZE); 
-	PROCEDURE ^ InvalidateDCacheRange*(adr: ADDRESS; len: SIZE); 
-	PROCEDURE ^ InvalidateICacheRange*(adr: ADDRESS; len: SIZE); 
+	PROCEDURE ^ FlushDCacheRange*(adr: ADDRESS; len: LONGINT); 
+	PROCEDURE ^ InvalidateDCacheRange*(adr: ADDRESS; len: LONGINT); 
+	PROCEDURE ^ InvalidateICacheRange*(adr: ADDRESS; len: LONGINT); 
 	PROCEDURE ^ InsertMemoryBlock(memBlock: MemoryBlock); 
 	PROCEDURE ^ FreeMemBlock*(memBlock: MemoryBlock); 
 	PROCEDURE ^ ExpandHeap*(dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS); 
@@ -146,8 +146,8 @@ VAR
 
 	END GetTimer; 
 	PROCEDURE ^ GetConfig*(CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
-	PROCEDURE ^ StrToInt*(VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ NumberOfProcessors*(): SIZE; 
+	PROCEDURE ^ StrToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ NumberOfProcessors*(): LONGINT; 
 	PROCEDURE ^ SetNumberOfProcessors*(num: LONGINT); 
 	PROCEDURE ^ ChangeByteOrder*(n: LONGINT): LONGINT; 
 	PROCEDURE ^ TraceChar*(c: CHAR); 

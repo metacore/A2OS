@@ -55,7 +55,7 @@ VAR
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 
 	PROCEDURE ^ GetWriter*(): Streams.Writer; 
-	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ TraceDebugString*(CONST name, value: ARRAY OF CHAR); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ Int*(x, w: LONGINT); 
@@ -68,8 +68,8 @@ VAR
 	PROCEDURE ^ TraceDebugSet*(CONST name: ARRAY OF CHAR; s: SET); 
 	PROCEDURE ^ SubscribeProcess*(color: WMGraphics.Color; date, overwrite: BOOLEAN); 
 	PROCEDURE ^ CheckColor(color: WMGraphics.Color): BOOLEAN; 
-	PROCEDURE ^ FindProc(refs: Modules.Bytes; modpc: ADDRESS): SIZE; 
-	PROCEDURE ^ GetNum(refs: Modules.Bytes; VAR i: SIZE; num: LONGINT); 
+	PROCEDURE ^ FindProc(refs: Modules.Bytes; modpc: ADDRESS): LONGINT; 
+	PROCEDURE ^ GetNum(refs: Modules.Bytes; VAR i, num: LONGINT); 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IntOpen; 
 	PROCEDURE ^ Close; 

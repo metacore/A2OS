@@ -47,6 +47,6 @@ VAR
 	PROCEDURE ^ PrintHexString*(w: Streams.Writer; CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ PrintNumericString*(w: Streams.Writer; CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ PrintString*(w: Streams.Writer; CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ Decode*(reader: Streams.Reader; level: LONGINT; VAR len: SIZE): Triplet; 
+	PROCEDURE ^ Decode*(reader: Streams.Reader; level: LONGINT; VAR len: LONGINT): Triplet; 
 BEGIN
 END ASN1.

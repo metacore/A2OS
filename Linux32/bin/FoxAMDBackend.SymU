@@ -140,7 +140,7 @@ TYPE
 		PROCEDURE ^ AllocateSpillStack*(size: LONGINT); 
 		PROCEDURE ^ ToRegister*(ticket: Ticket); 
 		PROCEDURE ^ ExchangeTickets*(ticket1, ticket2: Ticket); 
-		PROCEDURE ^ MappedTo(CONST virtualRegister: SIZE; part: LONGINT; physicalRegister: LONGINT): BOOLEAN; 
+		PROCEDURE ^ MappedTo(CONST virtualRegister: LONGINT; part: LONGINT; physicalRegister: LONGINT): BOOLEAN; 
 		PROCEDURE ^ ResultRegister(CONST type: IntermediateCode.Type; part: LONGINT): LONGINT; 
 		PROCEDURE ^ IsMemoryOperand(vop: IntermediateCode.Operand; part: LONGINT): BOOLEAN; 
 		PROCEDURE ^ IsRegister(CONST vop: IntermediateCode.Operand): BOOLEAN; 
@@ -238,7 +238,7 @@ VAR
 	unusable, split, blocked, free: CodeGenerators.Ticket; 
 	traceStackSize: LONGINT; 
 
-	PROCEDURE ^ RegularSectionCount(sectionList: Sections.SectionList): SIZE; 
+	PROCEDURE ^ RegularSectionCount(sectionList: Sections.SectionList): LONGINT; 
 	PROCEDURE ^ Assert(b: BOOLEAN; CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Halt(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ ResolvedSection(in: IntermediateCode.Section): BinaryCode.Section; 

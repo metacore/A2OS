@@ -18,8 +18,8 @@ TYPE
 		PROCEDURE ^ Receive; 
 		PROCEDURE ^ Connect; 
 		PROCEDURE ^ Listen; 
-		PROCEDURE ^ SendBytes(): SIZE; 
-		PROCEDURE ^ ReceiveBytes(): SIZE; 
+		PROCEDURE ^ SendBytes(): Streams.StreamSize; 
+		PROCEDURE ^ ReceiveBytes(): Streams.StreamSize; 
 		PROCEDURE ^ Close; 
 	END Link; 
 
@@ -29,8 +29,8 @@ TYPE
 
 		PROCEDURE ^ Connect; 
 		PROCEDURE ^ Listen; 
-		PROCEDURE ^ SendBytes(): SIZE; 
-		PROCEDURE ^ ReceiveBytes(): SIZE; 
+		PROCEDURE ^ SendBytes(): Streams.StreamSize; 
+		PROCEDURE ^ ReceiveBytes(): Streams.StreamSize; 
 		PROCEDURE ^ Close; 
 	END TCPLink; 
 
@@ -40,8 +40,8 @@ TYPE
 
 		PROCEDURE ^ Connect; 
 		PROCEDURE ^ Listen; 
-		PROCEDURE ^ SendBytes(): SIZE; 
-		PROCEDURE ^ ReceiveBytes(): SIZE; 
+		PROCEDURE ^ SendBytes(): Streams.StreamSize; 
+		PROCEDURE ^ ReceiveBytes(): Streams.StreamSize; 
 		PROCEDURE ^ Close; 
 	END UDPLink; 
 

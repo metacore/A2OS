@@ -57,13 +57,12 @@ TYPE
 	DirEntry* = OBJECT 
 	VAR 
 		name*, path-: Strings.String; 
-		time, date: LONGINT; 
-		size*: Files.Size; 
+		time, date, size*: LONGINT; 
 		flags: SET; 
 		visible: BOOLEAN; 
 		node*: WMTrees.TreeNode; 
 
-		PROCEDURE ^  & Init*(name, path: Strings.String; time, date: LONGINT; size: Files.Size; flags: SET); 
+		PROCEDURE ^  & Init*(name, path: Strings.String; time, date, size: LONGINT; flags: SET); 
 	END DirEntry; 
 
 	DirEntries* = POINTER TO ARRAY OF DirEntry; 
@@ -87,8 +86,7 @@ TYPE
 		enumerator: Files.Enumerator; 
 		dir: DirEntries; 
 		selection: DirEntries; 
-		nfiles: SIZE; 
-		nofRows: LONGINT; 
+		nfiles, nofRows: LONGINT; 
 		px, py: LONGINT; 
 		colWidths: WMGrids.Spacings; 
 
@@ -119,7 +117,7 @@ TYPE
 		PROCEDURE ^ ScanPath; 
 		PROCEDURE ^ StartNewPath*(path: Strings.String); 
 		PROCEDURE ^ StartNewFilter*(filter: Strings.String); 
-		PROCEDURE ^ GetNofFiles*(): SIZE; 
+		PROCEDURE ^ GetNofFiles*(): LONGINT; 
 		PROCEDURE ^ SortDir; 
 		PROCEDURE ^ SortDirDate; 
 	END FileList; 

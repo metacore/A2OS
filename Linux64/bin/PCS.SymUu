@@ -144,8 +144,8 @@ VAR
 	PROCEDURE ^ ForkScanner*(s: Scanner): Scanner; 
 	PROCEDURE ^ NewScanner(b: Buffer; pos, curpos: LONGINT): Scanner; 
 	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: LONGINT): Scanner; 
-	PROCEDURE ^ ExpandBuf(VAR oldBuf: Buffer; newSize: SIZE); 
-	PROCEDURE ^ InitWithReader*(r: Streams.Reader; size: SIZE; pos: Streams.Position): Scanner; 
+	PROCEDURE ^ ExpandBuf(VAR oldBuf: Buffer; newSize: LONGINT); 
+	PROCEDURE ^ InitWithReader*(r: Streams.Reader; size, pos: LONGINT): Scanner; 
 	PROCEDURE ^ InitReservedChars; 
 	PROCEDURE ^ InitNewChar; 
 	PROCEDURE ^ CreateOperatorTable; 

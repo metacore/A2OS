@@ -31,7 +31,7 @@ TYPE
 		plain, descriptors: BOOLEAN; 
 
 		PROCEDURE ^  & InitLinker*(w: Streams.Writer; plain, descriptors: BOOLEAN); 
-		PROCEDURE ^ SetPos(pos: Files.Position); 
+		PROCEDURE ^ SetPos(pos: LONGINT); 
 		PROCEDURE ^ WriteCodeBlock(len, adr: LONGINT); 
 		PROCEDURE ^ Fixup(fixloc, offset, base: LONGINT; VAR entry: ARRAY OF LONGINT); 
 		PROCEDURE ^ FixSelf(fixloc, base: LONGINT); 

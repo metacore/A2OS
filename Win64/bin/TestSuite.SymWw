@@ -7,7 +7,7 @@ CONST
 	Negative* = 1; 
 	Failure* = 2; 
 TYPE 
-	TestType* = WORD; 
+	TestType* = INTEGER; 
 
 	TestName = ARRAY 100 OF CHAR; 
 
@@ -24,7 +24,7 @@ TYPE
 
 	Report* = OBJECT 
 	VAR 
-		tests-, succeeded-, succeededThisTime-, failed-, failedThisTime-: SIZE; 
+		tests-, succeeded-, succeededThisTime-, failed-, failedThisTime-: INTEGER; 
 
 		PROCEDURE ^ Open*; 
 		PROCEDURE ^ Handle*(result: TestResult); 
@@ -38,7 +38,7 @@ TYPE
 
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ Process*(r: Streams.Reader): BOOLEAN; 
-		PROCEDURE ^ Handle*(r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestType): WORD; 
+		PROCEDURE ^ Handle*(r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestType): INTEGER; 
 		PROCEDURE ^ Print*(report: Report); 
 	END Tester; 
 

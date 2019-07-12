@@ -194,7 +194,7 @@ TYPE
 	BrowseEntry = POINTER TO RECORD 
 		prev, next: BrowseEntry; 
 		filename: Filename; 
-		pos: SIZE; 
+		pos: LONGINT; 
 	END; 
 
 	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -226,17 +226,17 @@ TYPE
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
-		PROCEDURE ^ NrUpdatesChanged(nrUndos, nrRedos: SIZE); 
+		PROCEDURE ^ NrUpdatesChanged(nrUndos, nrRedos: LONGINT); 
 		PROCEDURE ^ ProjectTextModified(sender, data: ANY); 
 		PROCEDURE ^ InitCodecs; 
 		PROCEDURE ^ SelectNextTab; 
 		PROCEDURE ^ SelectPreviousTab; 
-		PROCEDURE ^ SelectTab(tabNr: SIZE); 
+		PROCEDURE ^ SelectTab(tabNr: LONGINT); 
 		PROCEDURE ^ RecordCurrentPos; 
-		PROCEDURE ^ GotoFileInternal(CONST filename: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ GotoFileInternal(CONST filename: ARRAY OF CHAR; pos: LONGINT); 
 		PROCEDURE ^ BrowseBack; 
 		PROCEDURE ^ BrowseForward; 
-		PROCEDURE ^ GotoFile(CONST filename: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ GotoFile(CONST filename: ARRAY OF CHAR; pos: LONGINT); 
 		PROCEDURE ^ GotoDefinition(info: PETTrees.ExternalDefinitionInfo); 
 		PROCEDURE ^ GetNrFromPage(page: PETPanel): LONGINT; 
 		PROCEDURE ^ TabSelected(sender, data: ANY); 
@@ -266,7 +266,7 @@ TYPE
 		PROCEDURE ^ FindPC(sender, data: ANY); 
 		PROCEDURE ^ UnloadModule; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadState(CONST filename: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ StoreState(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadPages(pages: XML.Element); 

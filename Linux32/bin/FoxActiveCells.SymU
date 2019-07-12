@@ -42,7 +42,7 @@ TYPE
 
 	SymbolList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetSymbol*(i: SIZE): Symbol; 
+		PROCEDURE ^ GetSymbol*(i: LONGINT): Symbol; 
 		PROCEDURE ^ AddSymbol(a: Symbol); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Symbol; 
 		PROCEDURE ^ Same(as: SymbolList; flags: SET): BOOLEAN; 
@@ -54,7 +54,7 @@ TYPE
 		adr-: LONGINT; 
 		width-: LONGINT; 
 		delegate-: PortInstance; 
-		index-: SIZE; 
+		index-: LONGINT; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & InitPort*(CONST name: ARRAY OF CHAR; scope: Scope; direction: LONGINT; adr: LONGINT); 
@@ -66,7 +66,7 @@ TYPE
 
 	PortList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetPort*(i: SIZE): Port; 
+		PROCEDURE ^ GetPort*(i: LONGINT): Port; 
 		PROCEDURE ^ AddPort(a: Port); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Port; 
 		PROCEDURE ^ Same(as: PortList; flags: SET): BOOLEAN; 
@@ -75,7 +75,7 @@ TYPE
 	Device* = OBJECT (Symbol)
 	VAR 
 		adr-: LONGINT; 
-		index-: SIZE; 
+		index-: LONGINT; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & InitDevice*(CONST name: ARRAY OF CHAR; scope: Scope; adr: LONGINT); 
@@ -85,7 +85,7 @@ TYPE
 
 	DeviceList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetDevice*(i: SIZE): Device; 
+		PROCEDURE ^ GetDevice*(i: LONGINT): Device; 
 		PROCEDURE ^ AddDevice(p: Device); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Device; 
 		PROCEDURE ^ Same(as: DeviceList; flags: SET): BOOLEAN; 
@@ -94,7 +94,7 @@ TYPE
 	Module* = OBJECT (Symbol)
 	VAR 
 		fileName*: Files.FileName; 
-		index-: SIZE; 
+		index-: LONGINT; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & InitModule(CONST name: ARRAY OF CHAR; scope: Scope; CONST fileName: ARRAY OF CHAR); 
@@ -104,7 +104,7 @@ TYPE
 
 	ModuleList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetModule*(i: SIZE): Module; 
+		PROCEDURE ^ GetModule*(i: LONGINT): Module; 
 		PROCEDURE ^ AddModule(a: Module); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Module; 
 		PROCEDURE ^ Same(as: ModuleList; flags: SET): BOOLEAN; 
@@ -116,7 +116,7 @@ TYPE
 		Integer = 1; 
 		String = 2; 
 	VAR 
-		index-: SIZE; 
+		index-: LONGINT; 
 		parameterType-: SHORTINT; 
 		integer-: LONGINT; 
 		boolean-: BOOLEAN; 
@@ -133,7 +133,7 @@ TYPE
 
 	ParameterList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetParameter*(i: SIZE): Parameter; 
+		PROCEDURE ^ GetParameter*(i: LONGINT): Parameter; 
 		PROCEDURE ^ AddParameter(a: Parameter); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Parameter; 
 		PROCEDURE ^ Same(as: ParameterList; flags: SET): BOOLEAN; 
@@ -144,7 +144,7 @@ TYPE
 		instanceType-: Type; 
 		parameters-: ParameterList; 
 		capabilityParameters-: ParameterList; 
-		index-: SIZE; 
+		index-: LONGINT; 
 		instructionMemorySize-, dataMemorySize-: LONGINT; 
 		capabilities-: SET; 
 
@@ -163,7 +163,7 @@ TYPE
 
 	InstanceList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetInstance*(i: SIZE): Instance; 
+		PROCEDURE ^ GetInstance*(i: LONGINT): Instance; 
 		PROCEDURE ^ AddInstance(a: Instance); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Instance; 
 		PROCEDURE ^ Same(as: InstanceList; flags: SET): BOOLEAN; 
@@ -180,7 +180,7 @@ TYPE
 		channels-: ChannelList; 
 		types-: TypeList; 
 		ports-: PortList; 
-		index-: SIZE; 
+		index-: LONGINT; 
 		specification-: Specification; 
 
 		PROCEDURE ^  & InitScope(CONST name: ARRAY OF CHAR; scope: Scope; specification: Specification); 
@@ -214,7 +214,7 @@ TYPE
 
 	TypeList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetType*(i: SIZE): Type; 
+		PROCEDURE ^ GetType*(i: LONGINT): Type; 
 		PROCEDURE ^ AddType(a: Type); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Type; 
 		PROCEDURE ^ Same(as: TypeList; flags: SET): BOOLEAN; 
@@ -225,7 +225,7 @@ TYPE
 		in-, out-: PortInstance; 
 		fifoSize-: LONGINT; 
 		widthInBits-: LONGINT; 
-		index-: SIZE; 
+		index-: LONGINT; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & InitChannel(CONST name: ARRAY OF CHAR; scope: Scope); 
@@ -239,7 +239,7 @@ TYPE
 
 	ChannelList* = OBJECT (Basic.List)
 
-		PROCEDURE ^ GetChannel*(i: SIZE): Channel; 
+		PROCEDURE ^ GetChannel*(i: LONGINT): Channel; 
 		PROCEDURE ^ AddChannel*(a: Channel); 
 		PROCEDURE ^ ByName*(CONST name: ARRAY OF CHAR): Channel; 
 		PROCEDURE ^ ByPort*(port: Port): Channel; 

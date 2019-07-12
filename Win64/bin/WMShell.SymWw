@@ -28,7 +28,7 @@ TYPE
 		PROCEDURE ^ InitShell; 
 		PROCEDURE ^ CopyFromClipboard; 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: SIZE); 
+		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: LONGINT); 
 		PROCEDURE ^ ReceiveCharacters; 
 		PROCEDURE ^  & Init*; 
 	BEGIN{ACTIVE} 
@@ -41,13 +41,13 @@ TYPE
 	VAR 
 		shell: ShellComponent; 
 
-		PROCEDURE ^ HandleUpcall(command: WORD); 
+		PROCEDURE ^ HandleUpcall(command: LONGINT); 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: SIZE; 
+	nofWindows: LONGINT; 
 	StrShellComponent: Strings.String; 
 
 	PROCEDURE ^ InitStrings; 

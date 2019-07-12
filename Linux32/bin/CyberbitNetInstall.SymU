@@ -29,7 +29,7 @@ TYPE
 		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Show*; 
 		PROCEDURE ^ Hide*; 
-		PROCEDURE ^ UpdateStatus*(file, size: SIZE); 
+		PROCEDURE ^ UpdateStatus*(file, size: LONGINT); 
 	END StatusWindow; 
 
 	BevelPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)

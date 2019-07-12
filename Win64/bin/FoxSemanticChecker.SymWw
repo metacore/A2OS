@@ -1,8 +1,8 @@
 MODULE FoxSemanticChecker;
-	IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Diagnostics, Global := FoxGlobal, Printout := FoxPrintout, Formats := FoxFormats, SYSTEM, Strings, Streams;
+	IMPORT D := Debugging, Basic := FoxBasic, Scanner := FoxScanner, SyntaxTree := FoxSyntaxTree, Diagnostics, Global := FoxGlobal, Printout := FoxPrintout, Formats := FoxFormats, SYSTEM, Strings;
 CONST 
 	Trace = FALSE; 
-	Infinity = MAX(SIZE); 
+	Infinity = MAX(LONGINT); 
 	UndefinedPhase = 0; 
 	DeclarationPhase = 1; 
 	ImplementationPhase = 2; 
@@ -148,7 +148,7 @@ TYPE
 		PROCEDURE ^ CheckTypeDeclarationType(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ CheckIntegerValue(x: SyntaxTree.Expression; VAR value: Basic.Integer): BOOLEAN; 
 		PROCEDURE ^ CheckStringValue(x: SyntaxTree.Expression; VAR value: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ IsUnsignedValue(x: SyntaxTree.Expression; maxSizeInBits: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsUnsignedValue(x: SyntaxTree.Expression; maxSizeInBits: LONGINT): BOOLEAN; 
 		PROCEDURE ^ IsAddressValue(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ IsAddressExpression(x: SyntaxTree.Expression): BOOLEAN; 
 		PROCEDURE ^ IsSizeExpression(x: SyntaxTree.Expression): BOOLEAN; 
@@ -172,7 +172,7 @@ TYPE
 		PROCEDURE ^ SymbolNeedsResolution(x: SyntaxTree.Symbol): BOOLEAN; 
 		PROCEDURE ^ ResolveTypeDeclaration(typeDeclaration: SyntaxTree.TypeDeclaration); 
 		PROCEDURE ^ ResolveConstant(constant: SyntaxTree.Constant); 
-		PROCEDURE ^ AdaptStackAlignment(procedure: SyntaxTree.Procedure; alignment: SIZE); 
+		PROCEDURE ^ AdaptStackAlignment(procedure: SyntaxTree.Procedure; alignment: LONGINT); 
 		PROCEDURE ^ ResolveVariable(variable: SyntaxTree.Variable); 
 		PROCEDURE ^ ResolveParameter(parameter: SyntaxTree.Parameter); 
 		PROCEDURE ^ ResolveProcedure(procedure: SyntaxTree.Procedure); 
@@ -235,18 +235,18 @@ TYPE
 	PROCEDURE ^ IsCellNetScope(scope: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ IsCellScope(scope: SyntaxTree.Scope): BOOLEAN; 
 	PROCEDURE ^ InCellNetScope(scope: SyntaxTree.Scope): BOOLEAN; 
-	PROCEDURE ^ ToMemoryUnits(system: Global.System; size: SIZE): SIZE; 
+	PROCEDURE ^ ToMemoryUnits(system: Global.System; size: LONGINT): LONGINT; 
 	PROCEDURE ^ GetProcedureAllowed*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ RemoveModuleFromCache*(importCache: SyntaxTree.ModuleScope; x: SyntaxTree.Module); 
 	PROCEDURE ^ CompatibleTo(system: Global.System; this, to: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ StaticArrayCompatible(formal: SyntaxTree.Type; actual: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ OpenArrayCompatible(formalType: SyntaxTree.ArrayType; actualType: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ MathArrayCompatible(formalType: SyntaxTree.MathArrayType; actualType: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ MathArrayTypeDistance(system: Global.System; from, to: SyntaxTree.MathArrayType; varpar: BOOLEAN): SIZE; 
-	PROCEDURE ^ ArrayTypeDistance(system: Global.System; from, to: SyntaxTree.ArrayType): SIZE; 
-	PROCEDURE ^ Distance(system: Global.System; procedureType: SyntaxTree.ProcedureType; actualParameters: SyntaxTree.ExpressionList): SIZE; 
-	PROCEDURE ^ ProcedureTypeDistance(system: Global.System; procedureType: SyntaxTree.ProcedureType; right: SyntaxTree.ProcedureType): SIZE; 
-	PROCEDURE ^ TypeDistance(system: Global.System; from, to: SyntaxTree.Type; varpar: BOOLEAN): SIZE; 
+	PROCEDURE ^ MathArrayTypeDistance(system: Global.System; from, to: SyntaxTree.MathArrayType; varpar: BOOLEAN): LONGINT; 
+	PROCEDURE ^ ArrayTypeDistance(system: Global.System; from, to: SyntaxTree.ArrayType): LONGINT; 
+	PROCEDURE ^ Distance(system: Global.System; procedureType: SyntaxTree.ProcedureType; actualParameters: SyntaxTree.ExpressionList): LONGINT; 
+	PROCEDURE ^ ProcedureTypeDistance(system: Global.System; procedureType: SyntaxTree.ProcedureType; right: SyntaxTree.ProcedureType): LONGINT; 
+	PROCEDURE ^ TypeDistance(system: Global.System; from, to: SyntaxTree.Type; varpar: BOOLEAN): LONGINT; 
 	PROCEDURE ^ IsIntegerType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsAddressType*(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsSizeType(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN; 
@@ -262,7 +262,7 @@ TYPE
 	PROCEDURE ^ IsStringValue(x: SyntaxTree.Expression; VAR value: Scanner.StringType): BOOLEAN; 
 	PROCEDURE ^ Indexable(x: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ SameType(t1, t2: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ ArrayBase*(t: SyntaxTree.Type; max: SIZE): SyntaxTree.Type; 
+	PROCEDURE ^ ArrayBase*(t: SyntaxTree.Type; max: LONGINT): SyntaxTree.Type; 
 	PROCEDURE ^ IsOpenArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type; VAR dim: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsDynamicArray*(type: SyntaxTree.Type; VAR base: SyntaxTree.Type): BOOLEAN; 
@@ -283,8 +283,8 @@ TYPE
 	PROCEDURE ^ IsTypeExtension(base, extension: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsEnumerationExtension(base, extension: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsCallable(expression: SyntaxTree.Expression): BOOLEAN; 
-	PROCEDURE ^ RecordTypeDistance(from, to: SyntaxTree.RecordType): SIZE; 
-	PROCEDURE ^ PointerTypeDistance(from, to: SyntaxTree.PointerType): SIZE; 
+	PROCEDURE ^ RecordTypeDistance(from, to: SyntaxTree.RecordType): LONGINT; 
+	PROCEDURE ^ PointerTypeDistance(from, to: SyntaxTree.PointerType): LONGINT; 
 	PROCEDURE ^ IsTypeDesignator(expression: SyntaxTree.Expression; VAR typeDeclaration: SyntaxTree.TypeDeclaration): BOOLEAN; 
 	PROCEDURE ^ IsExtensibleType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsIndexOperator*(expression: SyntaxTree.Expression): BOOLEAN; 

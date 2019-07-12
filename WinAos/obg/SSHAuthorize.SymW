@@ -27,7 +27,7 @@ VAR
 	PROCEDURE ^ RequestAuthorizeNone(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ RequestConnPW(ssh: Connection; CONST user, host: ARRAY OF CHAR; try: LONGINT); 
 	PROCEDURE ^ AuthorizePasswd(ssh: Connection; CONST host, user: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ MakePubKeyBlob(VAR buf: ARRAY OF CHAR; VAR len: SIZE); 
+	PROCEDURE ^ MakePubKeyBlob(VAR buf: ARRAY OF CHAR; VAR len: LONGINT); 
 	PROCEDURE ^ CheckAuthorizeKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ RequestAuthorizeKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ AuthorizeKey(ssh: Connection; CONST user: ARRAY OF CHAR): BOOLEAN; 

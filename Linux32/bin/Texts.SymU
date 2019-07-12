@@ -91,7 +91,7 @@ TYPE
 
 	HighlightStyle* = OBJECT 
 	VAR 
-		kind*: WORD; 
+		kind*: LONGINT; 
 
 		PROCEDURE ^ IsEqual*(hstyle: HighlightStyle): BOOLEAN; 
 	END HighlightStyle; 
@@ -101,21 +101,21 @@ TYPE
 	Piece* = OBJECT 
 	VAR 
 		next*, prev*: Piece; 
-		len*, startpos*: SIZE; 
+		len*, startpos*: LONGINT; 
 		attributes*: Attributes; 
 		pstyle*: ParagraphStyle; 
 		cstyle*: CharacterStyle; 
 		link*: Link; 
 
 		PROCEDURE ^ Clone*(): Piece; 
-		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ Split*(pos: LONGINT; VAR right: Piece); 
 		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
 	END Piece; 
 
 	UnicodePiece* = OBJECT (Piece)
 
-		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: WORD); 
-		PROCEDURE ^ GetUCS32*(index: SIZE; VAR ucs: Char32); 
+		PROCEDURE ^ GetUCS32Buf*(index: LONGINT; length: LONGINT; VAR ucs: UCS32String; VAR res: WORD); 
+		PROCEDURE ^ GetUCS32*(index: LONGINT; VAR ucs: Char32); 
 	END UnicodePiece; 
 
 	MemUnicodePiece* = OBJECT (UnicodePiece)
@@ -125,9 +125,9 @@ TYPE
 		PROCEDURE ^ SetBuf(CONST buffer: UCS32String); 
 		PROCEDURE ^ SetBufAsUTF8(CONST buffer: ARRAY OF CHAR); 
 		PROCEDURE ^ Clone*(): Piece; 
-		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: WORD); 
-		PROCEDURE ^ GetUCS32*(index: SIZE; VAR ucs: Char32); 
-		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ GetUCS32Buf*(index: LONGINT; length: LONGINT; VAR ucs: UCS32String; VAR res: WORD); 
+		PROCEDURE ^ GetUCS32*(index: LONGINT; VAR ucs: Char32); 
+		PROCEDURE ^ Split*(pos: LONGINT; VAR right: Piece); 
 		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
 	END MemUnicodePiece; 
 
@@ -137,7 +137,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Clone*(): Piece; 
-		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ Split*(pos: LONGINT; VAR right: Piece); 
 		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
 	END ObjectPiece; 
 
@@ -147,24 +147,24 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Clone*(): Piece; 
-		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
+		PROCEDURE ^ Split*(pos: LONGINT; VAR right: Piece); 
 		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
 	END LabelPiece; 
 
-	PositionTranslator* = PROCEDURE {DELEGATE}(pos: SIZE):SIZE; 
+	PositionTranslator* = PROCEDURE {DELEGATE}(pos: LONGINT):LONGINT; 
 
 	TextPosition* = OBJECT 
 	VAR 
-		position: SIZE; 
+		position: LONGINT; 
 		data*: ANY; 
 		text-: UnicodeText; 
 		GetInternalPos, GetDisplayPos: PositionTranslator; 
-		nextInternalPos*: SIZE; 
+		nextInternalPos*: LONGINT; 
 
 		PROCEDURE ^  & New*(t: UnicodeText); 
-		PROCEDURE ^ Changed*(op: WORD; pos, len: SIZE); 
-		PROCEDURE ^ SetPosition*(pos: SIZE); 
-		PROCEDURE ^ GetPosition*(): SIZE; 
+		PROCEDURE ^ Changed*(op, pos, len: LONGINT); 
+		PROCEDURE ^ SetPosition*(pos: LONGINT); 
+		PROCEDURE ^ GetPosition*(): LONGINT; 
 		PROCEDURE ^ SetInternalPositionTranslator*(getInternalPos: PositionTranslator); 
 		PROCEDURE ^ SetDisplayPositionTranslator*(getDisplayPos: PositionTranslator); 
 	END TextPosition; 
@@ -184,26 +184,24 @@ TYPE
 
 		PROCEDURE ^  & New*(t: UnicodeText); 
 		PROCEDURE ^ CloneProperties*(CONST otherReader: TextReader); 
-		PROCEDURE ^ Changed*(op: WORD; pos, len: SIZE); 
+		PROCEDURE ^ Changed*(op, pos, len: LONGINT); 
 		PROCEDURE ^ ReadCh*(VAR ucs32: LONGINT); 
-		PROCEDURE ^ SetPosition*(pos: SIZE); 
-		PROCEDURE ^ SetDirection*(dir: WORD); 
+		PROCEDURE ^ SetPosition*(pos: LONGINT); 
+		PROCEDURE ^ SetDirection*(dir: LONGINT); 
 	END TextReader; 
 
 	TextChangeInfo* = OBJECT 
 	VAR 
-		timestamp*: LONGINT; 
-		op*: WORD; 
-		pos*, len*: SIZE; 
+		timestamp*, op*, pos*, len*: LONGINT; 
 	END TextChangeInfo; 
 
 	UndoManager* = OBJECT 
 
-		PROCEDURE ^ InsertText*(pos: SIZE; text: Text); 
-		PROCEDURE ^ DeleteText*(pos: SIZE; text: Text); 
-		PROCEDURE ^ BeginObjectChange*(pos: SIZE); 
-		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: WORD; obj: ANY); 
-		PROCEDURE ^ EndObjectChange*(len: SIZE; type: WORD; to: ANY); 
+		PROCEDURE ^ InsertText*(pos: LONGINT; text: Text); 
+		PROCEDURE ^ DeleteText*(pos: LONGINT; text: Text); 
+		PROCEDURE ^ BeginObjectChange*(pos: LONGINT); 
+		PROCEDURE ^ ObjectChanged*(pos, len, type: LONGINT; obj: ANY); 
+		PROCEDURE ^ EndObjectChange*(len, type: LONGINT; to: ANY); 
 		PROCEDURE ^ SetText*(text: Text); 
 		PROCEDURE ^ Undo*; 
 		PROCEDURE ^ Redo*; 
@@ -213,14 +211,12 @@ TYPE
 	UnicodeText* = OBJECT 
 	VAR 
 		first: Piece; 
-		length: SIZE; 
-		nofPieces: SIZE; 
+		length: LONGINT; 
+		nofPieces: LONGINT; 
 		posObjects: Kernel.FinalizedCollection; 
-		pop: WORD; 
-		ppos, plen: SIZE; 
+		pop, ppos, plen: LONGINT; 
 		timestamp: LONGINT; 
-		upOp: WORD; 
-		upPos, upLen: SIZE; 
+		upOp, upPos, upLen: LONGINT; 
 		onTextChanged*: WMEvents.EventSource; 
 		lock: Locks.RWLock; 
 		pieceTableOk: BOOLEAN; 
@@ -237,27 +233,27 @@ TYPE
 		PROCEDURE ^ AcquireRead*; 
 		PROCEDURE ^ ReleaseRead*; 
 		PROCEDURE ^ HasReadLock*(): BOOLEAN; 
-		PROCEDURE ^ InformListeners(timestamp: LONGINT; op: WORD; pos, len: SIZE); 
+		PROCEDURE ^ InformListeners(timestamp, op, pos, len: LONGINT); 
 		PROCEDURE ^ UpdatePieceTable; 
-		PROCEDURE ^ FindPiece(pos: SIZE; VAR piece: Piece); 
+		PROCEDURE ^ FindPiece(pos: LONGINT; VAR piece: Piece); 
 		PROCEDURE ^ SendPositionUpdate(obj: ANY; VAR cont: BOOLEAN); 
-		PROCEDURE ^ UpdatePositionObjects(op: WORD; pos, len: SIZE); 
-		PROCEDURE ^ AccumulateChanges(op: WORD; pos, len: SIZE); 
+		PROCEDURE ^ UpdatePositionObjects(op, pos, len: LONGINT); 
+		PROCEDURE ^ AccumulateChanges(op, pos, len: LONGINT); 
 		PROCEDURE ^ RegisterPositionObject*(po: TextPosition); 
-		PROCEDURE ^ GetSplittedPos(pos: SIZE; VAR left, right: Piece); 
-		PROCEDURE ^ InsertPiece*(pos: SIZE; n: Piece); 
+		PROCEDURE ^ GetSplittedPos(pos: LONGINT; VAR left, right: Piece); 
+		PROCEDURE ^ InsertPiece*(pos: LONGINT; n: Piece); 
 		PROCEDURE ^ InsertObject*(obj: XML.Element); 
-		PROCEDURE ^ InsertUCS32*(pos: SIZE; CONST buf: UCS32String); 
-		PROCEDURE ^ InsertUTF8*(pos: SIZE; CONST buf: ARRAY OF CHAR); 
-		PROCEDURE ^ Delete*(pos, len: SIZE); 
-		PROCEDURE ^ CopyFromText*(fromText: UnicodeText; fromPos, len, destPos: SIZE); 
+		PROCEDURE ^ InsertUCS32*(pos: LONGINT; CONST buf: UCS32String); 
+		PROCEDURE ^ InsertUTF8*(pos: LONGINT; CONST buf: ARRAY OF CHAR); 
+		PROCEDURE ^ Delete*(pos, len: LONGINT); 
+		PROCEDURE ^ CopyFromText*(fromText: UnicodeText; fromPos, len, destPos: LONGINT); 
 		PROCEDURE ^ AttributeChanger(VAR attr: Attributes; userData: ANY); 
-		PROCEDURE ^ SetAttributes*(pos, len: SIZE; attr: Attributes); 
-		PROCEDURE ^ UpdateAttributes*(pos, len: SIZE; attributeChanger: AttributeChangerProc; userData: ANY); 
-		PROCEDURE ^ SetCharacterStyle*(pos, len: SIZE; cstyle: CharacterStyle); 
-		PROCEDURE ^ SetParagraphStyle*(pos, len: SIZE; pstyle: ParagraphStyle); 
-		PROCEDURE ^ SetLink*(pos, len: SIZE; link: Link); 
-		PROCEDURE ^ GetLength*(): SIZE; 
+		PROCEDURE ^ SetAttributes*(pos, len: LONGINT; attr: Attributes); 
+		PROCEDURE ^ UpdateAttributes*(pos, len: LONGINT; attributeChanger: AttributeChangerProc; userData: ANY); 
+		PROCEDURE ^ SetCharacterStyle*(pos, len: LONGINT; cstyle: CharacterStyle); 
+		PROCEDURE ^ SetParagraphStyle*(pos, len: LONGINT; pstyle: ParagraphStyle); 
+		PROCEDURE ^ SetLink*(pos, len: LONGINT; link: Link); 
+		PROCEDURE ^ GetLength*(): LONGINT; 
 		PROCEDURE ^ GetTimestamp*(): LONGINT; 
 		PROCEDURE ^ CheckHealth*; 
 		PROCEDURE ^ DumpPieces*; 
@@ -272,9 +268,9 @@ VAR
 	lastText: Text; 
 	onLastSelectionChanged-, onLastTextChanged-: WMEvents.EventSource; 
 	pStyles: ParagraphStyleArray; 
-	nofPStyles: SIZE; 
+	nofPStyles: LONGINT; 
 	cStyles: CharacterStyleArray; 
-	nofCStyles: SIZE; 
+	nofCStyles: LONGINT; 
 	forceUTF*, unforceUTF*: BOOLEAN; 
 	defaultAttributes-: Attributes; 
 

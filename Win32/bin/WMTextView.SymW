@@ -59,7 +59,7 @@ TYPE
 		leftIndent, rightIndent, firstIndent, spaceBefore, spaceAfter: LONGINT; 
 		firstInParagraph, lastInParagraph: BOOLEAN; 
 		height, width, ascent: LONGINT; 
-		pos: SIZE; 
+		pos: LONGINT; 
 		align: LONGINT; 
 		tabStops: TabStops; 
 	END; 
@@ -67,25 +67,25 @@ TYPE
 	LineInfoArray = POINTER TO ARRAY OF LineInfo; 
 
 	Layout = RECORD 
-		nofLines: SIZE; 
+		nofLines: LONGINT; 
 		lines: LineInfoArray; 
 		text: Texts.Text; 
 		paperWidth: LONGINT; 
 		textWidth: LONGINT; 
 		textHeight: LONGINT; 
-		layoutLineProc: PROCEDURE {DELEGATE}(VAR pos: SIZE; VAR ch: Char32; VAR lineInfo: LineInfo; wrapWidth: LONGINT; stopPos: SIZE; stopXPos: LONGINT); 
+		layoutLineProc: PROCEDURE {DELEGATE}(VAR pos: LONGINT; VAR ch: Char32; VAR lineInfo: LineInfo; wrapWidth, stopPos, stopXPos: LONGINT); 
 		bidiFormatter: UnicodeBidirectionality.BidiFormatter; 
 		initialized: BOOLEAN; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ SetText(text: Texts.Text); 
 		PROCEDURE ^ GrowLines; 
-		PROCEDURE ^ FindLineNrByPos(pos: SIZE): SIZE; 
-		PROCEDURE ^ GetLineStartPos(lineNr: SIZE): SIZE; 
-		PROCEDURE ^ GetLineLength(lineNr: SIZE): SIZE; 
-		PROCEDURE ^ LayoutLine(VAR pos: SIZE; VAR lineInfo: LineInfo); 
+		PROCEDURE ^ FindLineNrByPos(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ GetLineStartPos(lineNr: LONGINT): LONGINT; 
+		PROCEDURE ^ GetLineLength(lineNr: LONGINT): LONGINT; 
+		PROCEDURE ^ LayoutLine(VAR pos: LONGINT; VAR lineInfo: LineInfo); 
 		PROCEDURE ^ FullLayout(textChanged: BOOLEAN); 
-		PROCEDURE ^ FixLayoutFrom(pos, delta: SIZE; VAR first, last: SIZE; VAR linesChanged: BOOLEAN); 
+		PROCEDURE ^ FixLayoutFrom(pos, delta: LONGINT; VAR first, last: LONGINT; VAR linesChanged: BOOLEAN); 
 	END
 	; 
 
@@ -93,9 +93,9 @@ TYPE
 	VAR 
 		kind: LONGINT; 
 		from*, to*: Texts.TextPosition; 
-		a*, b*: SIZE; 
+		a*, b*: LONGINT; 
 		active*: BOOLEAN; 
-		oldFrom, oldTo: SIZE; 
+		oldFrom, oldTo: LONGINT; 
 		oldColor, color: WMGraphics.Color; 
 		text: Texts.UnicodeText; 
 		onChanged: WMMessages.CompCommand; 
@@ -103,9 +103,9 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ SetKind*(kind: LONGINT); 
 		PROCEDURE ^ SetColor*(color: WMGraphics.Color); 
-		PROCEDURE ^ SetFrom*(from: SIZE); 
-		PROCEDURE ^ SetTo*(to: SIZE); 
-		PROCEDURE ^ SetFromTo*(from, to: SIZE); 
+		PROCEDURE ^ SetFrom*(from: LONGINT); 
+		PROCEDURE ^ SetTo*(to: LONGINT); 
+		PROCEDURE ^ SetFromTo*(from, to: LONGINT); 
 		PROCEDURE ^ Sort*; 
 		PROCEDURE ^ SetText(text: Texts.UnicodeText); 
 	END Highlight; 
@@ -128,12 +128,12 @@ TYPE
 		PROCEDURE ^ GetArea(x, y, ascent: LONGINT): WMRectangles.Rectangle; 
 		PROCEDURE ^ Load*(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ SetVisible*(visible: BOOLEAN); 
-		PROCEDURE ^ SetPosition*(pos: SIZE); 
-		PROCEDURE ^ GetPosition*(): SIZE; 
+		PROCEDURE ^ SetPosition*(pos: LONGINT); 
+		PROCEDURE ^ GetPosition*(): LONGINT; 
 		PROCEDURE ^ SetColor*(color: WMGraphics.Color); 
 		PROCEDURE ^ SetText(text: Texts.UnicodeText); 
-		PROCEDURE ^ SetNextInternalPosition*(next: SIZE); 
-		PROCEDURE ^ GetNextInternalPosition*(): SIZE; 
+		PROCEDURE ^ SetNextInternalPosition*(next: LONGINT); 
+		PROCEDURE ^ GetNextInternalPosition*(): LONGINT; 
 	END PositionMarker; 
 
 	PositionMarkerArray = POINTER TO ARRAY OF PositionMarker; 
@@ -243,7 +243,7 @@ TYPE
 		highlights: HighlightArray; 
 		nofPositionMarkers: LONGINT; 
 		positionMarkers: PositionMarkerArray; 
-		lastCursorPos: SIZE; 
+		lastCursorPos: LONGINT; 
 		selecting: BOOLEAN; 
 		doubleclickedWord: BOOLEAN; 
 		dragPossible: BOOLEAN; 
@@ -254,13 +254,13 @@ TYPE
 		downX, downY: LONGINT; 
 		selectWords: BOOLEAN; 
 		wordSelOrdered: BOOLEAN; 
-		lineEnter: SIZE; 
+		lineEnter: LONGINT; 
 		modifierFlags: SET; 
 		oldFlags: SET; 
 		interclick: LONGINT; 
 		lastTimeStamp: LONGINT; 
 		oldObject, focusObject: ANY; 
-		oldPos, focusPos: SIZE; 
+		oldPos, focusPos: LONGINT; 
 		objHasFocus: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -284,7 +284,7 @@ TYPE
 		PROCEDURE ^ AddHighlight(highlight: Highlight); 
 		PROCEDURE ^ CreateHighlight*(): Highlight; 
 		PROCEDURE ^ RemoveHighlight*(x: Highlight); 
-		PROCEDURE ^ InvalidateRange(a, b: SIZE); 
+		PROCEDURE ^ InvalidateRange(a, b: LONGINT); 
 		PROCEDURE ^ HighlightChanged(sender, data: ANY); 
 		PROCEDURE ^ AddPositionMarker(pm: PositionMarker); 
 		PROCEDURE ^ CreatePositionMarker*(): PositionMarker; 
@@ -293,39 +293,39 @@ TYPE
 		PROCEDURE ^ PositionMarkerChanged(sender, data: ANY); 
 		PROCEDURE ^ CheckNumberOfLines; 
 		PROCEDURE ^ CheckCursor; 
-		PROCEDURE ^ CheckParagraphBegin(lineNr: SIZE; VAR height: LONGINT); 
-		PROCEDURE ^ CheckParagraphEnd(lineNr: SIZE; VAR height: LONGINT); 
+		PROCEDURE ^ CheckParagraphBegin(lineNr: LONGINT; VAR height: LONGINT); 
+		PROCEDURE ^ CheckParagraphEnd(lineNr: LONGINT; VAR height: LONGINT); 
 		PROCEDURE ^ TextChanged(sender, data: ANY); 
-		PROCEDURE ^ GetLineLeftIndent(linenr: SIZE): LONGINT; 
+		PROCEDURE ^ GetLineLeftIndent(linenr: LONGINT): LONGINT; 
 		PROCEDURE ^ FindLineByY*(firstLine, y: LONGINT): LONGINT; 
-		PROCEDURE ^ ViewToTextPos*(x, y: LONGINT; VAR pos: SIZE); 
+		PROCEDURE ^ ViewToTextPos*(x, y: LONGINT; VAR pos: LONGINT); 
 		PROCEDURE ^ GetHeight*(width: LONGINT): LONGINT; 
 		PROCEDURE ^ GetMinMaxWidth*(VAR word, line: LONGINT); 
-		PROCEDURE ^ LineYPos(lineNr: SIZE; VAR y0, y1: LONGINT); 
-		PROCEDURE ^ FindScreenPos*(pos: SIZE; VAR x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetInternalPos*(pos: SIZE): SIZE; 
-		PROCEDURE ^ GetDisplayPos*(pos: SIZE): SIZE; 
-		PROCEDURE ^ IsRightToLeft*(pos: SIZE): BOOLEAN; 
-		PROCEDURE ^ GetParagraphEmbeddingLevel*(pos: SIZE): SIZE; 
-		PROCEDURE ^ LayoutLine(VAR pos: SIZE; VAR ch: Char32; VAR l: LineInfo; wrapwidth: LONGINT; stopPos: SIZE; stopXPos: LONGINT); 
-		PROCEDURE ^ RenderLine*(canvas: WMGraphics.Canvas; VAR l: LineInfo; linenr: SIZE; top: LONGINT; llen: SIZE); 
+		PROCEDURE ^ LineYPos(lineNr: LONGINT; VAR y0, y1: LONGINT); 
+		PROCEDURE ^ FindScreenPos*(pos: LONGINT; VAR x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetInternalPos*(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ GetDisplayPos*(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ IsRightToLeft*(pos: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetParagraphEmbeddingLevel*(pos: LONGINT): LONGINT; 
+		PROCEDURE ^ LayoutLine(VAR pos: LONGINT; VAR ch: Char32; VAR l: LineInfo; wrapwidth, stopPos, stopXPos: LONGINT); 
+		PROCEDURE ^ RenderLine*(canvas: WMGraphics.Canvas; VAR l: LineInfo; linenr, top, llen: LONGINT); 
 		PROCEDURE ^ RenderAboveTextMarkers*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ StoreLineEnter; 
 		PROCEDURE ^ WheelMove*(dz: LONGINT); 
 		PROCEDURE ^ AbortStart; 
-		PROCEDURE ^ DoubleClickSelect(pos: SIZE); 
+		PROCEDURE ^ DoubleClickSelect(pos: LONGINT); 
 		PROCEDURE ^ SetInterclick(new: LONGINT); 
 		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
 		PROCEDURE ^ TransformCoordinates(VAR x, y: LONGINT; obj: WMComponents.VisualComponent); 
 		PROCEDURE ^ ChangePointer(pointerInfo: WMWindowManager.PointerInfo); 
-		PROCEDURE ^ HitObject(x, y: LONGINT; VAR pos: SIZE; VAR obj: ANY): BOOLEAN; 
-		PROCEDURE ^ HitLink(x, y: LONGINT; VAR pos: SIZE; VAR link: Texts.Link): BOOLEAN; 
+		PROCEDURE ^ HitObject(x, y: LONGINT; VAR pos: LONGINT; VAR obj: ANY): BOOLEAN; 
+		PROCEDURE ^ HitLink(x, y: LONGINT; VAR pos: LONGINT; VAR link: Texts.Link): BOOLEAN; 
 		PROCEDURE ^ LinkClick(link: Texts.Link); 
 		PROCEDURE ^ LinkClicked*(sender, data: ANY); 
-		PROCEDURE ^ FindLabel*(CONST label: ARRAY OF CHAR; VAR pos: SIZE): BOOLEAN; 
+		PROCEDURE ^ FindLabel*(CONST label: ARRAY OF CHAR; VAR pos: LONGINT): BOOLEAN; 
 		PROCEDURE ^ AutoStartDrag*; 
 		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
 		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
@@ -335,8 +335,8 @@ TYPE
 		PROCEDURE ^ DeleteSelection*; 
 		PROCEDURE ^ Paste*; 
 		PROCEDURE ^ SelectAll*; 
-		PROCEDURE ^ KeyStartSelection(pos: SIZE); 
-		PROCEDURE ^ KeyUpdateSelection(pos: SIZE); 
+		PROCEDURE ^ KeyStartSelection(pos: LONGINT); 
+		PROCEDURE ^ KeyUpdateSelection(pos: LONGINT); 
 		PROCEDURE ^ CursorChanged; 
 		PROCEDURE ^ CursorUp*(select: BOOLEAN); 
 		PROCEDURE ^ CursorDown*(select: BOOLEAN); 
@@ -348,9 +348,9 @@ TYPE
 		PROCEDURE ^ End*(ctrl, select: BOOLEAN); 
 		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keysym: LONGINT); 
 		PROCEDURE ^ SetFlags*(flags: SET); 
-		PROCEDURE ^ FindCommandRange*(pos: SIZE; VAR start, end, nofLastSelections: SIZE); 
-		PROCEDURE ^ FindCommand*(pos: SIZE; VAR start, end: SIZE); 
-		PROCEDURE ^ StartCommand*(pos: SIZE; openFile: BOOLEAN); 
+		PROCEDURE ^ FindCommandRange*(pos: LONGINT; VAR start, end, nofLastSelections: LONGINT); 
+		PROCEDURE ^ FindCommand*(pos: LONGINT; VAR start, end: LONGINT); 
+		PROCEDURE ^ StartCommand*(pos: LONGINT; openFile: BOOLEAN); 
 		PROCEDURE ^ Start(sender, data: ANY); 
 		PROCEDURE ^ Open(sender, data: ANY); 
 		PROCEDURE ^ PieMenuStart(sender, data: ANY); 
@@ -418,6 +418,7 @@ VAR
 	DefaultStyle: POINTER TO RECORD 
 	END; 
 
+	PROCEDURE ^ Limit(x, min, max: LONGINT): LONGINT; 
 	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; value, currentSize: LONGINT; VAR newSize: LONGINT); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
 	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY); 

@@ -17,7 +17,7 @@ TYPE
 	END DynamicWebpagePlugin; 
 
 	ParserError = POINTER TO RECORD 
-		pos, line, row: Streams.Position; 
+		pos, line, row: LONGINT; 
 		msg: ARRAY 1024 OF CHAR; 
 	END; 
 
@@ -64,8 +64,8 @@ VAR
 	PROCEDURE ^ IsModuleRegistered(CONST moduleName: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ FindActiveElemFactory(CONST moduleName, objName: ARRAY OF CHAR): ActiveElementFactory; 
 	PROCEDURE ^ ExtractModuleObjectName(n: XML.Element; VAR moduleName: Strings.String; VAR objName: Strings.String); 
-	PROCEDURE ^ ReportGeneratorError(f: Files.File; w: Streams.Writer; pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
-	PROCEDURE ^ ReportXMLParserScannerError(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ReportGeneratorError(f: Files.File; w: Streams.Writer; pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ReportXMLParserScannerError(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ HandleClientAction(request: HTTPSupport.HTTPRequest); 
 	PROCEDURE ^ ClearFactoryList; 
 	PROCEDURE ^ ReadRegisteredModules; 

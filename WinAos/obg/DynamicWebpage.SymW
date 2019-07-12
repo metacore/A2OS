@@ -26,7 +26,7 @@ TYPE
 
 		PROCEDURE ^ GetParameterValueByName*(CONST name: ARRAY OF CHAR): Strings.String; 
 		PROCEDURE ^ GetParameterByName*(CONST name: ARRAY OF CHAR): Parameter; 
-		PROCEDURE ^ GetCount*(): SIZE; 
+		PROCEDURE ^ GetCount*(): LONGINT; 
 	END ParameterList; 
 
 	EventHandler* = PROCEDURE {DELEGATE}(request: HTTPSupport.HTTPRequest; params: ParameterList); 
@@ -69,8 +69,8 @@ TYPE
 		descriptors*: POINTER TO ARRAY OF ActiveElementDescriptor; 
 
 		PROCEDURE ^  & Init*(CONST descs: ARRAY OF ActiveElementDescriptor); 
-		PROCEDURE ^ GetCount*(): SIZE; 
-		PROCEDURE ^ GetItem*(i: SIZE): ActiveElementDescriptor; 
+		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetItem*(i: LONGINT): ActiveElementDescriptor; 
 	END ActiveElementDescSet; 
 
 	ActiveElementDescSetFactory* = PROCEDURE ():ActiveElementDescSet; 

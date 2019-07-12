@@ -107,7 +107,7 @@ TYPE
 		PROCEDURE ^ Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN); 
 		PROCEDURE ^ FlagEnd(first: BOOLEAN); 
 		PROCEDURE ^ Int(value: LONGINT); 
-		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: SIZE; VAR first: BOOLEAN); 
+		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: LONGINT; VAR first: BOOLEAN); 
 		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
 		PROCEDURE ^ String(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ Whitespace; 

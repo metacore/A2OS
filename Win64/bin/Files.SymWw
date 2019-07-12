@@ -33,15 +33,14 @@ CONST
 TYPE 
 	Position* = Streams.Position; 
 
-	Size* = Streams.Position; 
+	TSize* = LONGINT; 
 
 	FileName* = ARRAY (PrefixLength + NameLength) OF CHAR; 
 
 	Rider* = RECORD 
 		eof*: BOOLEAN; 
-		res*: SIZE; 
-		apos*: Position; 
-		bpos*: SIZE; 
+		res*: LONGINT; 
+		apos*, bpos*: LONGINT; 
 		hint*: Hint; 
 		file*: File; 
 		fs*: FileSystem; 
@@ -52,10 +51,10 @@ TYPE
 		file: File; 
 		r: Rider; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
-		PROCEDURE ^  & InitFileReader*(file: File; pos: Position); 
+		PROCEDURE ^  & InitFileReader*(file: File; pos: LONGINT); 
 	END Reader; 
 
 	Writer* = OBJECT (Streams.Writer)
@@ -63,11 +62,11 @@ TYPE
 		file: File; 
 		r: Rider; 
 
-		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^ Pos*(): Streams.Position; 
-		PROCEDURE ^  & InitFileWriter*(file: File; pos: Position); 
+		PROCEDURE ^  & InitFileWriter*(file: File; pos: LONGINT); 
 	END Writer; 
 
 	Prefix* = ARRAY PrefixLength OF CHAR; 
@@ -95,9 +94,9 @@ TYPE
 
 		PROCEDURE ^ AllocBlock*(hint: Address; VAR adr: Address); 
 		PROCEDURE ^ FreeBlock*(adr: Address); 
-		PROCEDURE ^ FreeBlocks*(CONST a: ARRAY OF Address; ofs, len: SIZE); 
+		PROCEDURE ^ FreeBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize); 
 		PROCEDURE ^ MarkBlock*(adr: Address); 
-		PROCEDURE ^ MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: SIZE); 
+		PROCEDURE ^ MarkBlocks*(CONST a: ARRAY OF Address; ofs, len: TSize); 
 		PROCEDURE ^ Marked*(adr: Address): BOOLEAN; 
 		PROCEDURE ^ Available*(): LONGINT; 
 		PROCEDURE ^ GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
@@ -134,13 +133,13 @@ TYPE
 		key*: LONGINT; 
 		fs*: FileSystem; 
 
-		PROCEDURE ^ Set*(VAR r: Rider; pos: Position); 
-		PROCEDURE ^ Pos*(VAR r: Rider): Position; 
+		PROCEDURE ^ Set*(VAR r: Rider; pos: LONGINT); 
+		PROCEDURE ^ Pos*(VAR r: Rider): LONGINT; 
 		PROCEDURE ^ Read*(VAR r: Rider; VAR x: CHAR); 
-		PROCEDURE ^ ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ ReadBytes*(VAR r: Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ Write*(VAR r: Rider; x: CHAR); 
-		PROCEDURE ^ WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ Length*(): Size; 
+		PROCEDURE ^ WriteBytes*(VAR r: Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
 		PROCEDURE ^ SetDate*(t, d: LONGINT); 
 		PROCEDURE ^ GetAttributes*(): SET; 
@@ -155,14 +154,14 @@ TYPE
 	VAR 
 		r: Rider; 
 		adding: BOOLEAN; 
-		size-: SIZE; 
+		size-: LONGINT; 
 
 		PROCEDURE ^ Open*(CONST mask: ARRAY OF CHAR; flags: SET); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ HasMoreEntries*(): BOOLEAN; 
-		PROCEDURE ^ GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Size): BOOLEAN; 
+		PROCEDURE ^ GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date, size: LONGINT): BOOLEAN; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size: Size); 
+		PROCEDURE ^ PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT); 
 	END Enumerator; 
 
 	FileSearcher = OBJECT 
@@ -187,8 +186,8 @@ VAR
 	seacher: FileSearcher; 
 	fileClipboard: File; 
 
-	PROCEDURE ^ OpenReader*(VAR b: Reader; f: File; pos: Position); 
-	PROCEDURE ^ OpenWriter*(VAR b: Writer; f: File; pos: Position); 
+	PROCEDURE ^ OpenReader*(VAR b: Reader; f: File; pos: LONGINT); 
+	PROCEDURE ^ OpenWriter*(VAR b: Writer; f: File; pos: LONGINT); 
 	PROCEDURE ^ SplitName*(CONST fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR); 
 	PROCEDURE ^ JoinName*(CONST prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR); 
 	PROCEDURE ^ SplitPath*(CONST pathname: ARRAY OF CHAR; VAR path, name: ARRAY OF CHAR); 
@@ -230,7 +229,6 @@ VAR
 	PROCEDURE ^ ReadLReal*(VAR r: Rider; VAR x: LONGREAL); 
 	PROCEDURE ^ ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR); 
 	PROCEDURE ^ ReadNum*(VAR r: Rider; VAR x: LONGINT); 
-	PROCEDURE ^ ReadSize*(VAR r: Rider; VAR x: Size); 
 	PROCEDURE ^ WriteSInt*(VAR r: Rider; x: SHORTINT); 
 	PROCEDURE ^ WriteInt*(VAR r: Rider; x: INTEGER); 
 	PROCEDURE ^ WriteLInt*(VAR r: Rider; x: LONGINT); 
@@ -240,7 +238,7 @@ VAR
 	PROCEDURE ^ WriteReal*(VAR r: Rider; x: REAL); 
 	PROCEDURE ^ WriteLReal*(VAR r: Rider; x: LONGREAL); 
 	PROCEDURE ^ WriteString*(VAR r: Rider; CONST x: ARRAY OF CHAR); 
-	PROCEDURE ^ WriteNum*(VAR r: Rider; x: HUGEINT); 
+	PROCEDURE ^ WriteNum*(VAR r: Rider; x: LONGINT); 
 	PROCEDURE ^ AppendStr*(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
 	PROCEDURE ^ AppendInt*(x: LONGINT; VAR to: ARRAY OF CHAR); 
 	PROCEDURE ^ GetDevPart*(arg: Streams.Reader; VAR deviceName: ARRAY OF CHAR; VAR partition: LONGINT); 

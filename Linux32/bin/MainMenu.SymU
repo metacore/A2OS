@@ -9,7 +9,7 @@ TYPE
 		pages: ARRAY 100 OF WMComponents.VisualComponent; 
 		tabList: ARRAY 100 OF WMTabComponents.Tab; 
 		currentPage: WMComponents.VisualComponent; 
-		currentPageNr: SIZE; 
+		currentPageNr: LONGINT; 
 		page: WMStandardComponents.Panel; 
 		moveToFront: BOOLEAN; 
 

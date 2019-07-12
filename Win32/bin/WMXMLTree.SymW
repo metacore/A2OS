@@ -3,8 +3,8 @@ MODULE WMXMLTree;
 CONST 
 TYPE 
 	Error* = RECORD 
-		pos-: Streams.Position; 
-		line-, row-: Streams.Position; 
+		pos-: LONGINT; 
+		line-, row-: LONGINT; 
 		msg-: ARRAY 128 OF CHAR; 
 	END; 
 
@@ -32,8 +32,8 @@ TYPE
 		PROCEDURE ^ AddSubNode(node: WMTrees.TreeNode; xml: XML.Element); 
 		PROCEDURE ^ SetDocument(xml: XML.Element); 
 		PROCEDURE ^ GetErrorList*(): ErrorList; 
-		PROCEDURE ^ AddErrorToList(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ AddErrorToList(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Refresh*(sender, data: ANY); 
 	END XMLView; 
 VAR 

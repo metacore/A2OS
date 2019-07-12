@@ -37,7 +37,7 @@ VAR
 	PROCEDURE ^ FlagsAreEqual(f1, f2: SET): BOOLEAN; 
 	PROCEDURE ^ GetHotKey(ch: CHAR; flags: SET; keysym: LONGINT): HotKey; 
 	PROCEDURE ^ ExecuteCommandFor(command: XML.String); 
-	PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Read(CONST name: ARRAY OF CHAR; context: Commands.Context); 
 	PROCEDURE ^ Handle(VAR msg: WMMessages.Message; VAR discard: BOOLEAN); 
 	PROCEDURE ^ InstallHandler; 

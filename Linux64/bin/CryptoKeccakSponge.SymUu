@@ -9,16 +9,16 @@ TYPE
 	Instance* = OBJECT 
 	VAR 
 		state: Keccak.Instance; 
-		chunk: SIZE; 
-		index: SIZE; 
+		chunk: LONGINT; 
+		index: LONGINT; 
 		squeezing: BOOLEAN; 
-		cmodl: SIZE; 
-		cdivl: SIZE; 
+		cmodl: LONGINT; 
+		cdivl: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Initialize*(rate, capacity: SIZE); 
-		PROCEDURE ^ Absorb*(CONST data: ARRAY OF CHAR; offset, len: SIZE); 
-		PROCEDURE ^ Squeeze*(VAR data: ARRAY OF CHAR; offset, len: SIZE); 
+		PROCEDURE ^ Initialize*(rate, capacity: LONGINT); 
+		PROCEDURE ^ Absorb*(CONST data: ARRAY OF CHAR; offset, len: LONGINT); 
+		PROCEDURE ^ Squeeze*(VAR data: ARRAY OF CHAR; offset, len: LONGINT); 
 		PROCEDURE ^ AbsorbLastFewBits*(data: CHAR); 
 	END Instance; 
 BEGIN

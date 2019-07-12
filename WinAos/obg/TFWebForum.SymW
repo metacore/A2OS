@@ -47,7 +47,7 @@ TYPE
 		PROCEDURE ^  & Create*; 
 		PROCEDURE ^ SetTitle(CONST title: ARRAY OF CHAR); 
 		PROCEDURE ^ SetEditor(CONST editor, password: ARRAY OF CHAR); 
-		PROCEDURE ^ Fail(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Fail(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ StoreInternal(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR); 

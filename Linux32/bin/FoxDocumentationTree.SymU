@@ -20,7 +20,7 @@ TYPE
 
 		PROCEDURE ^ AppendNew*(type: ElementType): TextElement; 
 		PROCEDURE ^ AddElement*(x: TextElement); 
-		PROCEDURE ^ GetElement*(index: SIZE): TextElement; 
+		PROCEDURE ^ GetElement*(index: LONGINT): TextElement; 
 		PROCEDURE ^ FindByString*(CONST string: ARRAY OF CHAR): TextElement; 
 		PROCEDURE ^ WriteString*(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ WriteWhitespace*; 
@@ -53,7 +53,7 @@ TYPE
 
 		PROCEDURE ^ AppendNew*(type: ParagraphType): Paragraph; 
 		PROCEDURE ^ AddParagraph*(x: Paragraph); 
-		PROCEDURE ^ GetParagraph*(index: SIZE): Paragraph; 
+		PROCEDURE ^ GetParagraph*(index: LONGINT): Paragraph; 
 		PROCEDURE ^ Last*(): Paragraph; 
 		PROCEDURE ^ ForAllParagraphsDo*(this: PROCEDURE {DELEGATE}(x: Paragraph)); 
 	END Paragraphs; 
@@ -76,7 +76,7 @@ TYPE
 
 		PROCEDURE ^ AppendNew*(level: LONGINT): Section; 
 		PROCEDURE ^ AddSection*(x: Section); 
-		PROCEDURE ^ GetSection*(index: SIZE): Section; 
+		PROCEDURE ^ GetSection*(index: LONGINT): Section; 
 		PROCEDURE ^ Last*(): Section; 
 		PROCEDURE ^ ForAllSectionsDo*(this: PROCEDURE {DELEGATE}(x: Section)); 
 	END Sections; 
@@ -92,7 +92,7 @@ TYPE
 	Documents* = OBJECT (Basic.List)
 
 		PROCEDURE ^ AddDocument*(x: Document); 
-		PROCEDURE ^ GetDocument*(index: SIZE): Document; 
+		PROCEDURE ^ GetDocument*(index: LONGINT): Document; 
 		PROCEDURE ^ ForAllDocumentsDo*(this: PROCEDURE {DELEGATE}(x: Document)); 
 	END Documents; 
 

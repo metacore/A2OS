@@ -71,13 +71,13 @@ VAR
 	PROCEDURE ^ NameToBak(name: TFileName; VAR df: TFileName); 
 	PROCEDURE ^ GetTextLen(VAR fr: Files.Rider; f: Files.File): LONGINT; 
 	PROCEDURE ^ GetNewestVersion(fr: Files.Rider; f: Files.File): LONGINT; 
-	PROCEDURE ^ GetDiffPos(fr: Files.Rider; f: Files.File; n: LONGINT): Files.Position; 
+	PROCEDURE ^ GetDiffPos(fr: Files.Rider; f: Files.File; n: LONGINT): LONGINT; 
 	PROCEDURE ^ Init*(name: TFileName): LONGINT; 
 	PROCEDURE ^ GetLog*(name: TFileName; n: LONGINT; VAR log: TLog); 
 	PROCEDURE ^ GetDelta*(name: TFileName; n: LONGINT; VAR df: Files.File; VAR dr: Files.Rider); 
 	PROCEDURE ^ SetLog*(name: TFileName; n: INTEGER; log: TLog); 
 	PROCEDURE ^ GetDeltaList*(name: TFileName; VAR list: TDList): INTEGER; 
-	PROCEDURE ^ WriteTag(VAR rdr: Files.Rider; tag: CHAR; len: SIZE; VAR data: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteTag(VAR rdr: Files.Rider; tag: CHAR; len: LONGINT; VAR data: ARRAY OF CHAR); 
 	PROCEDURE ^ Create*(historyName, name: TFileName; log: TLog; flags: SET): LONGINT; 
 	PROCEDURE ^ NewVersion*(name: TFileName; log: TLog; flags: SET): LONGINT; 
 	PROCEDURE ^ newVersion(historyName, name: TFileName; log: TLog; flags: SET): LONGINT; 

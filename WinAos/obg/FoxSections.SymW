@@ -23,20 +23,20 @@ TYPE
 		name-: SectionName; 
 		type-: SHORTINT; 
 		fixed-: BOOLEAN; 
-		positionOrAlignment-: SIZE; 
+		positionOrAlignment-: LONGINT; 
 		fingerprint-: Basic.Fingerprint; 
 		bitsPerUnit-: LONGINT; 
 		symbol-: SyntaxTree.Symbol; 
-		offset-: SIZE; 
+		offset-: LONGINT; 
 		isReachable-: BOOLEAN; 
 
 		PROCEDURE ^  & InitSection*(type: SHORTINT; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol); 
 		PROCEDURE ^ IsCode*(): BOOLEAN; 
-		PROCEDURE ^ SetOffset*(offset: SIZE); 
+		PROCEDURE ^ SetOffset*(offset: LONGINT); 
 		PROCEDURE ^ SetReachability*(isReachable: BOOLEAN); 
 		PROCEDURE ^ SetBitsPerUnit*(bitsPerUnit: LONGINT); 
 		PROCEDURE ^ IsAligned*(): BOOLEAN; 
-		PROCEDURE ^ SetPositionOrAlignment*(isFixed: BOOLEAN; positionOrAlignment: SIZE); 
+		PROCEDURE ^ SetPositionOrAlignment*(isFixed: BOOLEAN; positionOrAlignment: LONGINT); 
 		PROCEDURE ^ GetSize*(): LONGINT; 
 		PROCEDURE ^ SetFingerprint*(fingerprint: Basic.Fingerprint); 
 		PROCEDURE ^ SetType*(type: SHORTINT); 
@@ -50,16 +50,16 @@ TYPE
 	Comment* = OBJECT 
 	VAR 
 		str-: CommentStr; 
-		strLen: SIZE; 
-		pos-: SIZE; 
+		strLen: LONGINT; 
+		pos-: LONGINT; 
 		nextComment-: Comment; 
 
-		PROCEDURE ^  & Init*(pos: SIZE); 
-		PROCEDURE ^ Append(CONST buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^  & Init*(pos: LONGINT); 
+		PROCEDURE ^ Append(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END Comment; 
 
-	GetPCProcedure = PROCEDURE {DELEGATE}():SIZE; 
+	GetPCProcedure = PROCEDURE {DELEGATE}():LONGINT; 
 
 	CommentWriter* = OBJECT (Streams.Writer)
 	VAR 
@@ -67,7 +67,7 @@ TYPE
 		comments-: LONGINT; 
 		getPC: GetPCProcedure; 
 
-		PROCEDURE ^ AppendToLine*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ AppendToLine*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^  & InitCommentWriter*(getPC: GetPCProcedure); 
@@ -91,8 +91,8 @@ TYPE
 		lookupName: SectionNameLookup; 
 
 		PROCEDURE ^  & InitListOfSections*; 
-		PROCEDURE ^ GetSection*(index: SIZE): Section; 
-		PROCEDURE ^ SetSection*(index: SIZE; section: Section); 
+		PROCEDURE ^ GetSection*(index: LONGINT): Section; 
+		PROCEDURE ^ SetSection*(index: LONGINT; section: Section); 
 		PROCEDURE ^ AddSection*(section: Section); 
 		PROCEDURE ^ FindBySymbol*(CONST symbol: SyntaxTree.Symbol): Section; 
 		PROCEDURE ^ FindByName*(CONST name: Basic.SegmentedName): Section; 
@@ -107,7 +107,7 @@ TYPE
 	NameList* = OBJECT (Basic.List)
 
 		PROCEDURE ^ AddName*(CONST moduleName: ARRAY OF CHAR); 
-		PROCEDURE ^ GetName*(index: SIZE): SyntaxTree.IdentifierString; 
+		PROCEDURE ^ GetName*(index: LONGINT): SyntaxTree.IdentifierString; 
 		PROCEDURE ^ ContainsName*(name: SyntaxTree.IdentifierString): BOOLEAN; 
 	END NameList; 
 

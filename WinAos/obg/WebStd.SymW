@@ -106,8 +106,8 @@ TYPE
 		PROCEDURE ^ GetName*(): Strings.String; 
 		PROCEDURE ^ SetName*(n: ARRAY OF CHAR); 
 		PROCEDURE ^ GetObjectByOid*(objectId: LONGINT): PersistentDataObject; 
-		PROCEDURE ^ GetCount*(): SIZE; 
-		PROCEDURE ^ GetItem*(i: SIZE): PersistentDataObject; 
+		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetItem*(i: LONGINT): PersistentDataObject; 
 		PROCEDURE ^ GetElementList*(filter: PersistentDataFilter; persComp: PersistentDataCompare): PersistentDataObjectList; 
 		PROCEDURE ^ AddPersistentDataObject*(obj: PersistentDataObject; desc: PrevalenceSystem.PersistentObjectDescriptor); 
 		PROCEDURE ^ Contains*(obj: PersistentDataObject): BOOLEAN; 
@@ -155,8 +155,8 @@ TYPE
 		PROCEDURE ^  & Create*(containerName: ARRAY OF CHAR); 
 		PROCEDURE ^ GetName*(): Strings.String; 
 		PROCEDURE ^ GetObjectByOid*(objectId: LONGINT): SessionDataObject; 
-		PROCEDURE ^ GetCount*(): SIZE; 
-		PROCEDURE ^ GetItem*(i: SIZE): SessionDataObject; 
+		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetItem*(i: LONGINT): SessionDataObject; 
 		PROCEDURE ^ GetElementList*(filter: SessionDataFilter; sessComp: SessionDataCompare): SessionDataObjectList; 
 		PROCEDURE ^ AddSessionDataObject*(obj: SessionDataObject); 
 		PROCEDURE ^ Contains*(obj: SessionDataObject): BOOLEAN; 
@@ -253,7 +253,7 @@ VAR
 	PROCEDURE ^ InternalizeBoolean*(container: XML.Container; elementName: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ExternalizeString*(str: Strings.String; container: XML.Container; elementName: ARRAY OF CHAR); 
 	PROCEDURE ^ ExternalizeDateTime*(dateTime: PtrDateTime; container: XML.Container; elementName: ARRAY OF CHAR); 
-	PROCEDURE ^ ExternalizeInteger*(number: HUGEINT; container: XML.Container; elementName: ARRAY OF CHAR); 
+	PROCEDURE ^ ExternalizeInteger*(number: LONGINT; container: XML.Container; elementName: ARRAY OF CHAR); 
 	PROCEDURE ^ ExternalizeBoolean*(boolVal: BOOLEAN; container: XML.Container; elementName: ARRAY OF CHAR); 
 	PROCEDURE ^ DefaultPersistentDataFilter*(obj: PersistentDataObject): BOOLEAN; 
 	PROCEDURE ^ DefaultSessionDataFilter*(obj: SessionDataObject): BOOLEAN; 

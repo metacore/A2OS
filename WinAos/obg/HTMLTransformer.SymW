@@ -300,7 +300,7 @@ VAR
 	monospace: ARRAY 64 OF CHAR; 
 
 	PROCEDURE ^ EncodeLinkData(link, target, url: String): String; 
-	PROCEDURE ^ Utf82UrlEncodedUtf8*(CONST in: ARRAY OF CHAR): String; 
+	PROCEDURE ^ Utf82UrlEncodedUtf8*(VAR in: ARRAY OF CHAR): String; 
 	PROCEDURE ^ GetElems(root: XML.Element; wanted: StringArray; stopAt: StringArray; checkMe: BOOLEAN): XMLObjects.Enumerator; 
 	PROCEDURE ^ GetCharsetConverter(charset: ARRAY OF CHAR): CharsetConvProc; 
 	PROCEDURE ^ Iso2Utf8(VAR input: ARRAY OF CHAR): String; 

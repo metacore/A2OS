@@ -51,10 +51,10 @@ TYPE
 
 		PROCEDURE ^  & New*(output: Streams.Writer); 
 		PROCEDURE ^ WriteFrequencies(pw: PatternWeights); 
-		PROCEDURE ^ CountPatterns(CONST source: ARRAY OF CHAR; len: SIZE): PatternWeights; 
+		PROCEDURE ^ CountPatterns(CONST source: ARRAY OF CHAR; len: LONGINT): PatternWeights; 
 		PROCEDURE ^ BuildCodeTable(pw: PatternWeights); 
 		PROCEDURE ^ PutCode(code: HuffCode); 
-		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: SIZE); 
+		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: LONGINT); 
 	END Encoder; 
 
 	Decoder* = OBJECT 

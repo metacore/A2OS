@@ -10,8 +10,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ SetNameAndSize*(CONST name: ARRAY OF CHAR; bytesize: LONGINT); 
-		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
-		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
 	END Hash; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 

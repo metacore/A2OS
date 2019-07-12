@@ -131,7 +131,7 @@ TYPE
 		hasError: BOOLEAN; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ ReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Parse(reader: Streams.Reader; VAR document: XML.Document): BOOLEAN; 
 	END Parser; 
 

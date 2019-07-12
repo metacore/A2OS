@@ -24,7 +24,7 @@ TYPE
 	VAR 
 		moduleName, typeName: Modules.Name; 
 		identifiers: IdentifierArray; 
-		nofIdentifiers: SIZE; 
+		nofIdentifiers: LONGINT; 
 		next: VariableDeclaration; 
 
 		PROCEDURE ^  & Init(CONST moduleName, typeName: Modules.Name); 
@@ -46,10 +46,10 @@ TYPE
 	ImportList = OBJECT 
 	VAR 
 		imports: ARRAY 128 OF Modules.Name; 
-		nofImports: SIZE; 
+		nofImports: LONGINT; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ IndexOf(CONST import: Modules.Name): SIZE; 
+		PROCEDURE ^ IndexOf(CONST import: Modules.Name): LONGINT; 
 		PROCEDURE ^ Add(CONST moduleName: Modules.Name); 
 		PROCEDURE ^ ToStream(w: Streams.Writer); 
 	END ImportList; 
@@ -57,11 +57,11 @@ TYPE
 	Names = OBJECT 
 	VAR 
 		names: IdentifierArray; 
-		nofNames: SIZE; 
+		nofNames: LONGINT; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Add(CONST name: ARRAY OF CHAR; component: ANY); 
-		PROCEDURE ^ IndexOf(CONST identifier: ARRAY OF CHAR): SIZE; 
+		PROCEDURE ^ IndexOf(CONST identifier: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ GetNameOf(component: ANY; VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ GenerateIdentifier(caption: ARRAY OF CHAR; CONST moduleName, typeName: ARRAY OF CHAR; component: ANY): Identifier; 
 		PROCEDURE ^ Resize; 

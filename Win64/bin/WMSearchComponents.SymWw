@@ -7,16 +7,16 @@ TYPE
 
 	UcsSearchString* = ARRAY SearchStringMaxLen OF Texts.Char32; 
 
-	StackData = POINTER TO ARRAY OF SIZE; 
+	StackData = POINTER TO ARRAY OF LONGINT; 
 
 	PositionStack = OBJECT 
 	VAR 
 		data: StackData; 
-		size, top: SIZE; 
+		size, top: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Push(l: SIZE); 
-		PROCEDURE ^ Pop(): SIZE; 
+		PROCEDURE ^ Push(l: LONGINT); 
+		PROCEDURE ^ Pop(): LONGINT; 
 		PROCEDURE ^ Expand; 
 		PROCEDURE ^ Invalidate; 
 	END PositionStack; 
@@ -31,7 +31,7 @@ TYPE
 		textView: WMTextView.TextView; 
 		highlights: Highlight; 
 
-		PROCEDURE ^ Add(from, to: SIZE); 
+		PROCEDURE ^ Add(from, to: LONGINT); 
 		PROCEDURE ^ RemoveAll; 
 		PROCEDURE ^  & Init*(textView: WMTextView.TextView); 
 	END Highlights; 
@@ -45,12 +45,12 @@ TYPE
 		searchLabel, replLabel: WMStandardComponents.Label; 
 		textView: WMTextView.TextView; 
 		text: Texts.Text; 
-		pos, len: SIZE; 
-		hitCount: SIZE; 
+		pos, len: LONGINT; 
+		hitCount: LONGINT; 
 		posValid: BOOLEAN; 
 		positionStack: PositionStack; 
 		highlights: Highlights; 
-		lastPos: SIZE; 
+		lastPos: LONGINT; 
 		lastBackwards: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -71,8 +71,8 @@ TYPE
 		PROCEDURE ^ ReplaceHandler(sender, data: ANY); 
 		PROCEDURE ^ ReplaceAllHandler(sender, data: ANY); 
 		PROCEDURE ^ Replace(CONST ucsStr: ARRAY OF Texts.Char32); 
-		PROCEDURE ^ Search(CONST ucsStr: ARRAY OF Texts.Char32; from: SIZE); 
-		PROCEDURE ^ SearchAndHighlight(from: SIZE); 
+		PROCEDURE ^ Search(CONST ucsStr: ARRAY OF Texts.Char32; from: LONGINT); 
+		PROCEDURE ^ SearchAndHighlight(from: LONGINT); 
 		PROCEDURE ^ SearchAndHighlightAll; 
 		PROCEDURE ^ RemoveHighlights; 
 		PROCEDURE ^ Highlight; 

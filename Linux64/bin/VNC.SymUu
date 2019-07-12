@@ -29,7 +29,7 @@ TYPE
 		mode: Raster.Mode; 
 		bytesPerPixel: LONGINT; 
 		rcvbuf, imgbuf: POINTER TO ARRAY OF CHAR; 
-		rcvbufpos, rcvbuflen: SIZE; 
+		rcvbufpos, rcvbuflen: LONGINT; 
 		fip: IP.Adr; 
 	END; 
 
@@ -105,7 +105,7 @@ VAR
 	pool: ConnectionPool; 
 	bell: Bell; 
 
-	PROCEDURE ^ ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: SIZE; VAR len: LONGINT); 
+	PROCEDURE ^ ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: LONGINT; VAR len: LONGINT); 
 	PROCEDURE ^ Receive(c: Connection; VAR ch: CHAR); 
 	PROCEDURE ^ ReceiveInt(c: Connection; VAR x: LONGINT); 
 	PROCEDURE ^ ReceiveLInt(c: Connection; VAR x: LONGINT); 

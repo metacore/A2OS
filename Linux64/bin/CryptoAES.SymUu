@@ -29,8 +29,8 @@ TYPE
 		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
 		PROCEDURE ^ IncIV; 
-		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ RoundE(VAR b: Block); 
 		PROCEDURE ^ RoundD(VAR b: Block); 
 		PROCEDURE  - split(s: SET32; VAR b: Ind4);

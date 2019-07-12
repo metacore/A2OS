@@ -77,7 +77,7 @@ TYPE
 		scrollpanel: WMStandardComponents.Panel; 
 		selectMode: LONGINT; 
 		statusLabel: WMStandardComponents.Label; 
-		lastNofSelectedTasks, lastNofTasks: SIZE; 
+		lastNofSelectedTasks, lastNofTasks: LONGINT; 
 		filenameEditor: WMEditors.Editor; 
 		loadBtn, storeBtn, addBtn, todayBtn, thisWeekBtn, allBtn: WMStandardComponents.Button; 
 		inputWindow: InputWindow; 
@@ -104,7 +104,7 @@ TYPE
 	END Window; 
 VAR 
 	DefaultImage: WMGraphics.Image; 
-	nofWindows: SIZE; 
+	nofWindows: LONGINT; 
 
 	PROCEDURE ^ SameDay(dt1, dt2: Dates.DateTime): BOOLEAN; 
 	PROCEDURE ^ IsTomorrow(start, end: Dates.DateTime): BOOLEAN; 

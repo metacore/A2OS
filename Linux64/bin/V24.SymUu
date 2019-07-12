@@ -28,11 +28,11 @@ TYPE
 		PROCEDURE ^  & Init*(port: LONGINT; CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Available*(): SIZE; 
+		PROCEDURE ^ Available*(): LONGINT; 
 		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: WORD); 
 		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: WORD); 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
 		PROCEDURE ^ ClearMC*(s: SET); 
 		PROCEDURE ^ SetMC*(s: SET); 

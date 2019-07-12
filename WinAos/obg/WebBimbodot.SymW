@@ -40,7 +40,7 @@ TYPE
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Store(w: Streams.Writer); 
-		PROCEDURE ^ Fail(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Fail(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Load(r: Streams.Reader): BOOLEAN; 
 	END Version; 
 

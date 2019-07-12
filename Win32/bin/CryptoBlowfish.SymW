@@ -20,10 +20,10 @@ TYPE
 
 		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
-		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
-		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
 		PROCEDURE ^ F(x: LONGINT): SET32; 
 		PROCEDURE ^ encrypt0(xl, xr: SET32; VAR yl, yr: SET32); 
 		PROCEDURE ^ decrypt0(xl, xr: SET32; VAR yl, yr: SET32); 

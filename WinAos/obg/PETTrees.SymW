@@ -6,9 +6,9 @@ TYPE
 	ExternalInfo* = OBJECT 
 	VAR 
 		filename-: ARRAY 32 OF CHAR; 
-		position-: Streams.Position; 
+		position-: LONGINT; 
 
-		PROCEDURE ^  & Init*(CONST filename: ARRAY OF CHAR; position: Streams.Position); 
+		PROCEDURE ^  & Init*(CONST filename: ARRAY OF CHAR; position: LONGINT); 
 	END ExternalInfo; 
 
 	ExternalDefinitionInfo* = OBJECT 
@@ -59,19 +59,19 @@ TYPE
 		PROCEDURE ^ GetNewNode*(): TreeNode; 
 		PROCEDURE ^ AddNodes*(parent: TreeNode; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
 		PROCEDURE ^ SortHandler(sender, data: ANY); 
-		PROCEDURE ^ SelectNodeByPos*(pos: SIZE); 
+		PROCEDURE ^ SelectNodeByPos*(pos: LONGINT); 
 		PROCEDURE ^ BrowseToDefinition*(sender, data: ANY); 
 		PROCEDURE ^ SortTree(parent: WMTrees.TreeNode); 
 		PROCEDURE ^ IsNodeGreater*(left, right: WMTrees.TreeNode): BOOLEAN; 
 		PROCEDURE ^ SwapSiblings(parent, left, right: WMTrees.TreeNode); 
 		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: WMTrees.TreeNode; state: SET); 
-		PROCEDURE ^ SetEditorPosition*(position: SIZE; doHighlight: BOOLEAN); 
+		PROCEDURE ^ SetEditorPosition*(position: LONGINT; doHighlight: BOOLEAN); 
 		PROCEDURE ^ ClickNode*(sender, node: ANY); 
 		PROCEDURE ^ MiddleClickNode*(sender, data: ANY); 
 		PROCEDURE ^ PrefixPostfixToCaption*(node: WMTrees.TreeNode; prePost: Strings.String; prefix: BOOLEAN); 
 		PROCEDURE ^ AddPrefixToCaption*(node: WMTrees.TreeNode; prefix: Strings.String); 
 		PROCEDURE ^ AddPostfixToCaption*(node: WMTrees.TreeNode; postfix: Strings.String); 
-		PROCEDURE ^ AddNumberPostfixToCaption*(node: WMTrees.TreeNode; number: SIZE); 
+		PROCEDURE ^ AddNumberPostfixToCaption*(node: WMTrees.TreeNode; number: LONGINT); 
 	END Tree; 
 
 	Factory* = PROCEDURE ():Tree; 

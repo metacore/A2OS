@@ -9,15 +9,15 @@ TYPE
 
 	Buffer* = OBJECT 
 	VAR 
-		length: SIZE; 
+		length: LONGINT; 
 		data: String; 
 		w: Streams.Writer; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
-		PROCEDURE ^ GetLength*(): SIZE; 
+		PROCEDURE ^ GetLength*(): LONGINT; 
 		PROCEDURE ^ GetString*(): String; 
 		PROCEDURE ^ Write*(out: Streams.Writer); 
 	END Buffer; 
@@ -29,7 +29,7 @@ VAR
 	OPERATOR ^ "+"-(a, b: String): String; 
 	OPERATOR ^ "+"-(a: String; b: HUGEINT): String; 
 	OPERATOR ^ "+"-(a: String; b: LONGREAL): String; 
-	PROCEDURE ^ Length*(CONST string: ARRAY OF CHAR): SIZE; 
+	PROCEDURE ^ Length*(CONST string: ARRAY OF CHAR): LONGINT; 
 	PROCEDURE ^ Find*(CONST string: ARRAY OF CHAR; pos: SIZE; ch: CHAR): SIZE; 
 	PROCEDURE ^ Count*(CONST string: ARRAY OF CHAR; ch: CHAR): SIZE; 
 	PROCEDURE ^ Truncate*(VAR string: ARRAY OF CHAR; length: SIZE); 
@@ -61,14 +61,9 @@ VAR
 	PROCEDURE ^ StrToBool*(CONST s: ARRAY OF CHAR; VAR b: BOOLEAN); 
 	PROCEDURE ^ IntToStr*(x: HUGEINT; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT); 
-	PROCEDURE ^ StrToHInt*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT); 
-	PROCEDURE ^ StrToSize*(CONST str: ARRAY OF CHAR; VAR val: SIZE); 
 	PROCEDURE ^ StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: LONGINT; VAR i: SIZE); 
-	PROCEDURE ^ StrToHIntPos*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT; VAR i: SIZE); 
-	PROCEDURE ^ StrToSizePos*(CONST str: ARRAY OF CHAR; VAR val: SIZE; VAR i: SIZE); 
 	PROCEDURE ^ IntToHexStr*(h: HUGEINT; width: WORD; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ HexStrToSize*(CONST string: ARRAY OF CHAR; VAR val: SIZE; VAR res: WORD); 
 	PROCEDURE ^ FloatToStr*(x: LONGREAL; n, f, D: LONGINT; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ AddressToStr*(adr: ADDRESS; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL); 

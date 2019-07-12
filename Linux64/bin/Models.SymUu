@@ -54,19 +54,6 @@ TYPE
 		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
 	END Integer; 
 
-	Hugeint* = OBJECT {EXCLUSIVE} (Model)
-	VAR 
-		value: HUGEINT; 
-
-		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Set*(value: HUGEINT); 
-		PROCEDURE ^ Get*(): HUGEINT; 
-		PROCEDURE ^ Add*(value: HUGEINT); 
-		PROCEDURE ^ SetGeneric*(CONST value: Types.Any; VAR res: WORD); 
-		PROCEDURE ^ GetGeneric*(VAR value: Types.Any; VAR res: WORD); 
-		PROCEDURE ^ WriteValue*(w: Streams.Writer; level: LONGINT); 
-	END Hugeint; 
-
 	Real* = OBJECT {EXCLUSIVE} (Model)
 	VAR 
 		value: REAL; 
@@ -163,7 +150,7 @@ TYPE
 		PROCEDURE ^ GetField*(CONST name: ARRAY OF CHAR; VAR value: Types.Any; VAR res: WORD); 
 	END Container; 
 VAR 
-	StrBoolean, StrInteger, StrHugeint, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer: Strings.String; 
+	StrBoolean, StrInteger, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer: Strings.String; 
 
 	PROCEDURE ^ NewLine*(w: Streams.Writer; level: LONGINT); 
 	PROCEDURE ^ IsPrintableCharacter(ch: CHAR): BOOLEAN; 
@@ -172,7 +159,6 @@ VAR
 	PROCEDURE ^ SetReal*(m: Model; r: LONGREAL); 
 	PROCEDURE ^ GenBoolean*(): XML.Element; 
 	PROCEDURE ^ GenInteger*(): XML.Element; 
-	PROCEDURE ^ GenHugeint*(): XML.Element; 
 	PROCEDURE ^ GenReal*(): XML.Element; 
 	PROCEDURE ^ GenLongreal*(): XML.Element; 
 	PROCEDURE ^ GenChar*(): XML.Element; 

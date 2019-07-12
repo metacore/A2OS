@@ -3,9 +3,9 @@ MODULE WhitespaceRemover;
 CONST 
 	LineFeed = 10; 
 
-	PROCEDURE ^ RemoveFromText*(text: Texts.Text; VAR nofRemoved: SIZE); 
+	PROCEDURE ^ RemoveFromText*(text: Texts.Text; VAR nofRemoved: LONGINT); 
 	PROCEDURE ^ CheckWhitespace*(text: Texts.Text; diagnostics: Diagnostics.Diagnostics); 
-	PROCEDURE ^ RemoveFromFile*(VAR filename: Files.FileName; VAR nofRemoved: SIZE; VAR res: WORD); 
+	PROCEDURE ^ RemoveFromFile*(VAR filename: Files.FileName; VAR nofRemoved: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ Remove*(context: Commands.Context); 
 BEGIN
 END WhitespaceRemover.

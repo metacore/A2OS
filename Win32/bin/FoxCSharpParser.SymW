@@ -1,5 +1,5 @@
 MODULE FoxCSharpParser;
-	IMPORT Strings, StringPool, Diagnostics, D := Debugging, Basic := FoxBasic, FoxScanner, Scanner := FoxCSharpScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Streams, KernelLog;
+	IMPORT Strings, StringPool, Diagnostics, D := Debugging, Basic := FoxBasic, FoxScanner, Scanner := FoxCSharpScanner, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, KernelLog;
 CONST 
 	Trace = FALSE; 
 	Public = 0; 
@@ -33,11 +33,11 @@ TYPE
 	Parser* = OBJECT 
 	VAR 
 		scanner: Scanner.Scanner; 
-		token-: Scanner.Token; 
+		symbol-: Scanner.Symbol; 
 		diagnostics: Diagnostics.Diagnostics; 
 		currentScope: SyntaxTree.Scope; 
 		recentCommentItem: ANY; 
-		recentLine: Streams.Position; 
+		recentLine: LONGINT; 
 		recentComment: SyntaxTree.Comment; 
 		moduleScope: SyntaxTree.ModuleScope; 
 		error-: BOOLEAN; 
@@ -80,17 +80,17 @@ TYPE
 		PROCEDURE ^ E(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ EE(CONST s, t: ARRAY OF CHAR); 
 		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ NextToken; 
-		PROCEDURE ^ Peek(symbol: Scanner.Symbol): BOOLEAN; 
-		PROCEDURE ^ Mandatory(symbol: Scanner.Symbol): BOOLEAN; 
-		PROCEDURE ^ Check(symbol: Scanner.Symbol); 
+		PROCEDURE ^ NextSymbol; 
+		PROCEDURE ^ Peek(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Mandatory(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Check(token: Scanner.Token); 
 		PROCEDURE ^ MandatoryIdentifier(VAR name: SyntaxTree.Identifier): BOOLEAN; 
 		PROCEDURE ^ Identifier(VAR position: Position): SyntaxTree.Identifier; 
-		PROCEDURE ^ Optional(symbol: Scanner.Symbol): BOOLEAN; 
-		PROCEDURE ^ Ignore(symbol: Scanner.Symbol); 
+		PROCEDURE ^ Optional(token: Scanner.Token): BOOLEAN; 
+		PROCEDURE ^ Ignore(token: Scanner.Token); 
 		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY); 
 		PROCEDURE ^ CommentSymbol(symbol: SyntaxTree.Symbol); 
-		PROCEDURE ^ MapOperator(symbol: Scanner.Symbol): LONGINT; 
+		PROCEDURE ^ MapOperator(token: Scanner.Token): LONGINT; 
 		PROCEDURE ^ NewUnaryExpression(position: Position; operand: SyntaxTree.Expression; operator: LONGINT): SyntaxTree.Expression; 
 		PROCEDURE ^ NewBinaryExpression(position: Position; left, right: SyntaxTree.Expression; operator: LONGINT): SyntaxTree.Expression; 
 		PROCEDURE ^ NewTypeExpression(position: Position): SyntaxTree.Expression; 

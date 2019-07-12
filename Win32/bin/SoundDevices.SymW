@@ -14,19 +14,19 @@ CONST
 TYPE 
 	Buffer* = OBJECT 
 	VAR 
-		len*: SIZE; 
+		len*: LONGINT; 
 		data*: POINTER TO ARRAY OF CHAR; 
 	END Buffer; 
 
 	BufferPool* = OBJECT {EXCLUSIVE} 
 	VAR 
-		head, num: SIZE; 
+		head, num: LONGINT; 
 		buffer: POINTER TO ARRAY OF Buffer; 
 
 		PROCEDURE ^  & Init*(n: LONGINT); 
 		PROCEDURE ^ Add*(x: Buffer); 
 		PROCEDURE ^ Remove*(): Buffer; 
-		PROCEDURE ^ NofBuffers*(): SIZE; 
+		PROCEDURE ^ NofBuffers*(): LONGINT; 
 	END BufferPool; 
 
 	BufferListener* = PROCEDURE {DELEGATE}(buffer: Buffer); 

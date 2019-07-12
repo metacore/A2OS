@@ -101,10 +101,10 @@ TYPE
 VAR 
 	extension-: ARRAY MaxObjFormats OF ARRAY 8 OF CHAR; 
 	loader: ARRAY MaxObjFormats OF LoaderProc; 
-	numLoaders: SIZE; 
+	numLoaders: LONGINT; 
 	freeRoot*: Module; 
 	root-: Module; 
-	shutdown*: WORD; 
+	shutdown*: LONGINT; 
 	trace: BOOLEAN; 
 	register: RECORD 
 		first{UNTRACED} , last{UNTRACED} : Module; 
@@ -135,7 +135,7 @@ VAR
 	PROCEDURE ^ FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer; 
 	PROCEDURE ^ InstallTermHandler*(h: TerminationHandler); 
 	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
-	PROCEDURE ^ Shutdown*(code: WORD); 
+	PROCEDURE ^ Shutdown*(code: LONGINT); 
 	PROCEDURE ^ IsExceptionHandled*(VAR pc, fp: ADDRESS; deep: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ GetExceptionHandler*(pc: ADDRESS): ADDRESS; 
 	PROCEDURE ^ Initialized*(m: Module): BOOLEAN; 

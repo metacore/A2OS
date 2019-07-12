@@ -20,7 +20,7 @@ TYPE
 		instr*: LONGINT; 
 		offset*: ADDRESS; 
 		code*: Modules.Bytes; 
-		length-: SIZE; 
+		length-: LONGINT; 
 		decoder*: Decoder; 
 		next*: Opcode; 
 		stream: Streams.Writer; 
@@ -44,8 +44,7 @@ TYPE
 		outputStreamWriter*: Streams.Writer; 
 		firstOpcode, lastOpcode, currentOpcode: Opcode; 
 		completed: BOOLEAN; 
-		currentBufferPos, currentCodePos, opcodes: SIZE; 
-		mode: LONGINT; 
+		currentBufferPos, currentCodePos, opcodes, mode: LONGINT; 
 		currentProc*: ProcedureInfo; 
 
 		PROCEDURE ^  & New*(reader: Streams.Reader); 
@@ -73,7 +72,7 @@ TYPE
 	VAR 
 		offset, mode, kind, type, dim, tdadr: LONGINT; 
 		markerPositions, temp: POINTER TO ARRAY OF RECORD 
-			pos: Streams.Position; 
+			pos: LONGINT; 
 			marker: WMTextView.PositionMarker; 
 		END; 
 		nextMarker, markerSize: LONGINT; 
@@ -82,7 +81,7 @@ TYPE
 
 		PROCEDURE ^ WriteType(w: Streams.Writer); 
 		PROCEDURE ^ ToString(w: Streams.Writer); 
-		PROCEDURE ^ AddMarkerPosition*(pos: Streams.Position); 
+		PROCEDURE ^ AddMarkerPosition*(pos: LONGINT); 
 		PROCEDURE ^ CreateMarkers(tv: WMTextView.TextView); 
 		PROCEDURE ^ ToggleMarkers(enabled: BOOLEAN); 
 	END FieldInfo; 
@@ -92,15 +91,14 @@ TYPE
 	ProcedureInfo* = OBJECT (Info)
 	VAR 
 		codeOffset: ADDRESS; 
-		codeSize: SIZE; 
-		retType: LONGINT; 
-		index: SIZE; 
+		codeSize: LONGINT; 
+		retType, index: LONGINT; 
 		fields: FieldArray; 
 		fieldCount: LONGINT; 
 		method: BOOLEAN; 
 		gcInfo: GCInfo; 
 
-		PROCEDURE ^  & New(CONST n: ARRAY OF CHAR; ofs: ADDRESS; idx: SIZE); 
+		PROCEDURE ^  & New(CONST n: ARRAY OF CHAR; ofs: ADDRESS; idx: LONGINT); 
 		PROCEDURE ^ AddField(fldInfo: FieldInfo); 
 		PROCEDURE ^ GetFieldAtOffset*(offset: LONGINT): FieldInfo; 
 	END ProcedureInfo; 
@@ -145,7 +143,7 @@ TYPE
 	END Import; 
 
 	VarConstLink = RECORD 
-		num: SIZE; 
+		num: LONGINT; 
 		ch: CHAR; 
 		links: POINTER TO ARRAY OF LONGINT; 
 	END; 
@@ -164,10 +162,9 @@ TYPE
 	END; 
 
 	ObjHeader = RECORD 
-		entries, commands, pointers, types, modules, links, dataLinks: SIZE; 
-		codeSize, dataSize, refSize, constSize, exTableLen, procs, maxPtrs: SIZE; 
-		crc: LONGINT; 
-		staticTdSize: SIZE; 
+		entries, commands, pointers, types, modules, links, dataLinks: LONGINT; 
+		codeSize, dataSize, refSize, constSize, exTableLen, procs, maxPtrs, crc: LONGINT; 
+		staticTdSize: LONGINT; 
 		name: Modules.Name; 
 	END; 
 
@@ -177,9 +174,9 @@ TYPE
 		header: ObjHeader; 
 		representationMode: LONGINT; 
 		procedures: ProcedureArray; 
-		procedureCount: SIZE; 
+		procedureCount: LONGINT; 
 		types: TypeArray; 
-		typeCount: SIZE; 
+		typeCount: LONGINT; 
 		treeView: WMTrees.TreeView; 
 		tree: WMTrees.Tree; 
 		treePanel, lastDAssPanel: WMStandardComponents.Panel; 
@@ -202,8 +199,8 @@ TYPE
 		PROCEDURE ^ IsExceptionHandled(pc: ADDRESS): BOOLEAN; 
 		PROCEDURE ^ GetOpcodes(proc: ProcedureInfo): Opcode; 
 		PROCEDURE ^ AddProcedure(procInfo: ProcedureInfo); 
-		PROCEDURE ^ FindEntryByOffset(ofs: ADDRESS): SIZE; 
-		PROCEDURE ^ GetProcedureByIndex(idx: SIZE): ProcedureInfo; 
+		PROCEDURE ^ FindEntryByOffset(ofs: ADDRESS): LONGINT; 
+		PROCEDURE ^ GetProcedureByIndex(idx: LONGINT): ProcedureInfo; 
 		PROCEDURE ^ DecodeRefs(reader: Streams.Reader); 
 		PROCEDURE ^ DecodeTypes; 
 		PROCEDURE ^ DecodeField(reader: Streams.Reader): FieldInfo; 
@@ -226,14 +223,14 @@ TYPE
 		PROCEDURE ^ Outline(panel: WMStandardComponents.Panel); 
 	END ModuleInfoBytes; 
 
-	CodeScaleCallback* = PROCEDURE (VAR size: SIZE); 
+	CodeScaleCallback* = PROCEDURE (VAR size: LONGINT); 
 
 	ModuleInfoObjectFile = OBJECT (ModuleInfo)
 	VAR 
 		f: Files.File; 
 		r: Files.Reader; 
 		version: LONGINT; 
-		nofLinks, nofVarConstLinks: SIZE; 
+		nofLinks, nofVarConstLinks: LONGINT; 
 		symSize: LONGINT; 
 		noProcs: LONGINT; 
 

@@ -3,27 +3,25 @@ MODULE BitSets;
 CONST 
 	Elements = ((MAX(SET) - MIN(SET)) + 1); 
 TYPE 
-	Bits = SIZE; 
-
 	Data = POINTER TO ARRAY OF SET; 
 
 	BitSet* = OBJECT 
 	VAR 
-		size: Bits; 
+		size: LONGINT; 
 		data: Data; 
 
-		PROCEDURE ^  & InitBitSet*(size: Bits); 
+		PROCEDURE ^  & InitBitSet*(size: LONGINT); 
 		PROCEDURE ^ Zero*; 
-		PROCEDURE ^ Resize*(size: Bits); 
-		PROCEDURE ^ GetSize*(): SIZE; 
-		PROCEDURE ^ SetBit*(pos: Bits; value: BOOLEAN); 
-		PROCEDURE ^ GetBit*(pos: Bits): BOOLEAN; 
-		PROCEDURE ^ SetBits*(startPos, bits: Bits; value: HUGEINT); 
+		PROCEDURE ^ Resize*(size: LONGINT); 
+		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ SetBit*(pos: SIZE; value: BOOLEAN); 
+		PROCEDURE ^ GetBit*(pos: SIZE): BOOLEAN; 
+		PROCEDURE ^ SetBits*(startPos, bits: SIZE; value: HUGEINT); 
 		PROCEDURE ^ SetBytes*(startPos, bytes: SIZE; CONST values: ARRAY OF CHAR); 
-		PROCEDURE ^ GetBits*(startPos, bits: Bits): WORD; 
-		PROCEDURE ^ CopyTo*(address: ADDRESS; bits: Bits); 
+		PROCEDURE ^ GetBits*(startPos, bits: SIZE): WORD; 
+		PROCEDURE ^ CopyTo*(address: ADDRESS; bits: SIZE); 
 	END BitSet; 
 
-	PROCEDURE ^ CopyBits*(source: BitSet; sourcePos: Bits; dest: BitSet; destPos, count: Bits); 
+	PROCEDURE ^ CopyBits*(source: BitSet; sourcePos: SIZE; dest: BitSet; destPos, count: SIZE); 
 BEGIN
 END BitSets.

@@ -10,8 +10,8 @@ TYPE
 		size: LONGINT; 
 		cyls, hds, spt: LONGINT; 
 
-		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetSize*(VAR size: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: WORD); 
 		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: LONGINT); 
@@ -22,7 +22,7 @@ TYPE
 		file: Files.File; 
 		rider: Files.Rider; 
 
-		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
+		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^  & New*(file: Files.File; CONST name, filename: ARRAY OF CHAR; blockSize, cyls, hds, spt: LONGINT); 
 	END FileDisk; 
 
@@ -32,7 +32,7 @@ TYPE
 	VAR 
 		memory: MemoryBlock; 
 
-		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
+		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
 		PROCEDURE ^  & New*(memory: MemoryBlock; CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: LONGINT); 
 	END RamDisk; 
 

@@ -12,7 +12,7 @@ TYPE
 	TYPE 
 		ArrangementRestriction = RECORD 
 			fixed: BOOLEAN; 
-			positionOrAlignment: SIZE; 
+			positionOrAlignment: LONGINT; 
 		END; 
 	VAR 
 		backend-: Backend.Backend; 
@@ -25,10 +25,10 @@ TYPE
 		objectFile-: IRObjectFile.ObjectFileFormat; 
 
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend); 
-		PROCEDURE ^ PatchStackSize*(CONST typeName: SectionName; size: SIZE); 
-		PROCEDURE ^ EmitAt(section: IntermediateCode.Section; index: SIZE; CONST instruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN; 
-		PROCEDURE ^ PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ PatchStackSize*(CONST typeName: SectionName; size: LONGINT); 
+		PROCEDURE ^ EmitAt(section: IntermediateCode.Section; index: LONGINT; CONST instruction: IntermediateCode.Instruction); 
+		PROCEDURE ^ PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN; 
+		PROCEDURE ^ PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR; index: LONGINT; value: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ LoadModule*(CONST moduleFileName: ARRAY OF CHAR; recursive: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ LinkPrefixed*(CONST sectionPrefix: ARRAY OF CHAR): BOOLEAN; 
@@ -45,17 +45,17 @@ TYPE
 		PROCEDURE ^ ExtractModuleWithName(CONST desiredName: ARRAY OF CHAR): Sections.Module; 
 		PROCEDURE ^ SectionPositionComparison(leftObject, rightObject: ANY): BOOLEAN; 
 		PROCEDURE ^ SectionPositionAndSizeComparison(leftObject, rightObject: ANY): BOOLEAN; 
-		PROCEDURE ^ FixSections(binaryModule: Sections.Module; VAR sizes: ARRAY OF BinaryCode.Unit); 
-		PROCEDURE ^ Conflict(binaryModule: Sections.Module; VAR sizes: ARRAY OF BinaryCode.Unit): BOOLEAN; 
+		PROCEDURE ^ FixSections(binaryModule: Sections.Module; VAR sizes: ARRAY OF LONGINT); 
+		PROCEDURE ^ Conflict(binaryModule: Sections.Module; VAR sizes: ARRAY OF LONGINT): BOOLEAN; 
 		PROCEDURE ^ GenerateObjectFile*(objectFileFormat: Formats.ObjectFileFormat; log: Streams.Writer; CONST desiredName: ARRAY OF CHAR): BOOLEAN; 
 	END Linker; 
 
 	PROCEDURE ^ FileNameToModuleName(CONST filename: ARRAY OF CHAR; VAR moduleName: ARRAY OF CHAR); 
 	PROCEDURE ^ SectionNameToFileName(CONST sectionName: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
-	PROCEDURE ^ GetPriority*(block: Sections.Section): WORD; 
+	PROCEDURE ^ GetPriority*(block: Sections.Section): LONGINT; 
 	PROCEDURE ^ CopySections*(from, to: Sections.SectionList); 
 	PROCEDURE ^ Link*(context: Commands.Context); 
-	PROCEDURE ^ WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: BinaryCode.Unit; backend: Backend.Backend; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer): BOOLEAN; 
+	PROCEDURE ^ WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: LONGINT; backend: Backend.Backend; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer): BOOLEAN; 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 BEGIN
 END FoxIntermediateLinker.

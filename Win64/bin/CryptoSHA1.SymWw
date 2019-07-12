@@ -8,15 +8,15 @@ TYPE
 	Hash* = OBJECT (Hashes.Hash)
 	VAR 
 		hash: State; 
-		Nl, Nh: SIZE; 
+		Nl, Nh: LONGINT; 
 		cdata: ARRAY BlockSize OF CHAR; 
-		cn: SIZE; 
+		cn: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ HashContextBlock; 
-		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
-		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
 	END Hash; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
@@ -40,6 +40,6 @@ TYPE
 		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(3395469782)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) / S.VAL(SET32, c)) / S.VAL(SET32, d)))); 
 		b := ROT(b, 30)
 	END tr6079; 
-	PROCEDURE ^ HashBlock(VAR state: State; CONST buf: ARRAY OF CHAR; pos: SIZE); 
+	PROCEDURE ^ HashBlock(VAR state: State; CONST buf: ARRAY OF CHAR; pos: LONGINT); 
 BEGIN
 END CryptoSHA1.

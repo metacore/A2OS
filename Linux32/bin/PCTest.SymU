@@ -9,7 +9,7 @@ TYPE
 		options: ARRAY 100 OF CHAR; 
 
 		PROCEDURE ^  & InitTester*(log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; execute: BOOLEAN; CONST options: ARRAY OF CHAR); 
-		PROCEDURE ^ Handle*(r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): WORD; 
+		PROCEDURE ^ Handle*(r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER; 
 	END Tester; 
 
 	PROCEDURE ^ DriveTest(context: Commands.Context; execute: BOOLEAN); 

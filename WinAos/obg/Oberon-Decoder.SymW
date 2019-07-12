@@ -228,7 +228,7 @@ VAR
 	PROCEDURE ^ Float7(op: INTEGER); 
 	PROCEDURE ^ Prefix(VAR op: INTEGER); 
 	PROCEDURE ^ IA32Decoder(VAR PC: LONGINT; VAR r: Files.Rider; VAR w: Texts.Writer); 
-	PROCEDURE ^ Dump(size: SIZE); 
+	PROCEDURE ^ Dump(size: LONGINT); 
 	PROCEDURE ^ Reference(size: LONGINT); 
 	PROCEDURE ^ Check(ch: CHAR; str: ARRAY OF CHAR); 
 	PROCEDURE ^ DumpData(VAR a: ARRAY OF CHAR; len: LONGINT); 

@@ -56,10 +56,10 @@ VAR
 	PROCEDURE ^ DeleteFile(VAR name: ARRAY OF CHAR; VAR S: Texts.Scanner); 
 	PROCEDURE ^ DeleteFiles*; 
 	PROCEDURE ^ Watch*; 
-	PROCEDURE ^ GetNum(refs: Bytes; VAR i: SIZE; VAR num: LONGINT); 
-	PROCEDURE ^ FindProc(refs: Bytes; ofs: LONGINT): SIZE; 
-	PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos: SIZE; VAR base: LONGINT); 
-	PROCEDURE ^ Variables(refs: Bytes; i: SIZE; base: LONGINT); 
+	PROCEDURE ^ GetNum(refs: Bytes; VAR i, num: LONGINT); 
+	PROCEDURE ^ FindProc(refs: Bytes; ofs: LONGINT): LONGINT; 
+	PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos, base: LONGINT); 
+	PROCEDURE ^ Variables(refs: Bytes; i, base: LONGINT); 
 	PROCEDURE ^ OutState(VAR name: ARRAY OF CHAR; t: Texts.Text); 
 	PROCEDURE ^ State*; 
 	PROCEDURE ^ ShowCommands*; 

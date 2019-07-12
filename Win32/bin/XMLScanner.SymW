@@ -56,7 +56,7 @@ TYPE
 	VAR 
 		sym-: SHORTINT; 
 		line-, col-, oldpos, pos: LONGINT; 
-		reportError*: PROCEDURE {DELEGATE}(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		reportError*: PROCEDURE {DELEGATE}(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 		nextCh: CHAR; 
 		dynstr: DynamicStrings.DynamicString; 
 		r: Streams.Reader; 
@@ -84,6 +84,6 @@ TYPE
 	END Scanner; 
 
 	PROCEDURE ^ IsWhiteSpace(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ DefaultReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
 BEGIN
 END XMLScanner.

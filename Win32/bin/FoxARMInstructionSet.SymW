@@ -484,7 +484,7 @@ TYPE
 	END; 
 
 	Instruction* = RECORD 
-		format: SIZE; 
+		format: LONGINT; 
 		condition: LONGINT; 
 		flags: SET; 
 		operands: ARRAY MaxOperands OF Operand; 

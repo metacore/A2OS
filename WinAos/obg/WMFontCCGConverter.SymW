@@ -74,11 +74,11 @@ TYPE
 		fontFile: Files.File; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR glyphRangeIndex: SIZE): BOOLEAN; 
+		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR glyphRangeIndex: LONGINT): BOOLEAN; 
 		PROCEDURE ^ WritePackedGlyph(w: Streams.Writer; g: Glyph); 
 		PROCEDURE ^ ReadPackedGlyph(r: Streams.Reader; VAR glyph: Glyph); 
 		PROCEDURE ^ StoreRange(w: Streams.Writer; VAR range: GlyphRange); 
-		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: SIZE); 
+		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: LONGINT); 
 		PROCEDURE ^ GetGlyph(ucs, variant: LONGINT): Glyph; 
 		PROCEDURE ^ Save(CONST fileName: ARRAY OF CHAR); 
 		PROCEDURE ^ Load(CONST fileName: ARRAY OF CHAR); 

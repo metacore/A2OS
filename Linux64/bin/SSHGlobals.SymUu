@@ -24,7 +24,7 @@ VAR
 	PROCEDURE ^ GetHMacList*(VAR list: ARRAY OF CHAR); 
 	PROCEDURE ^ GetCipherParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bits: LONGINT; VAR mode: SHORTINT); 
 	PROCEDURE ^ GetHMacParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bytes: LONGINT); 
-	PROCEDURE ^ ExpandBuf(VAR buf: Buffer; newSize: SIZE); 
+	PROCEDURE ^ ExpandBuf(VAR buf: Buffer; newSize: LONGINT); 
 	PROCEDURE ^ GetConfigBuffer(): Buffer; 
 BEGIN
 END SSHGlobals.

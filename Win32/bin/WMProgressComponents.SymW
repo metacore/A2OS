@@ -4,8 +4,8 @@ CONST
 TYPE 
 	ProgressBar* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		min-, max-: WMProperties.IntegerProperty; 
-		current: HUGEINT; 
+		min-, max-: WMProperties.Int32Property; 
+		current: LONGINT; 
 		model-: WMProperties.ReferenceProperty; 
 		modelI: Models.Model; 
 		isVertical-: WMProperties.BooleanProperty; 
@@ -15,12 +15,12 @@ TYPE
 		showPercents-: WMProperties.BooleanProperty; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetRange*(min, max: HUGEINT); 
-		PROCEDURE ^ SetCurrent*(current: HUGEINT); 
-		PROCEDURE ^ SetInternal(current: HUGEINT; updateModel: BOOLEAN); 
+		PROCEDURE ^ SetRange*(min, max: LONGINT); 
+		PROCEDURE ^ SetCurrent*(current: LONGINT); 
+		PROCEDURE ^ SetInternal(current: LONGINT; updateModel: BOOLEAN); 
 		PROCEDURE ^ IncPos*; 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ UpdateModel(value: HUGEINT); 
+		PROCEDURE ^ UpdateModel(value: LONGINT); 
 		PROCEDURE ^ ModelChanged(sender, data: ANY); 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 

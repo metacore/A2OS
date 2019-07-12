@@ -6,7 +6,7 @@ CONST
 TYPE 
 	PC = RECORD 
 		section: Intermediate.Section; 
-		index: SIZE; 
+		index: LONGINT; 
 	END; 
 
 	Int1 = SHORTINT; 
@@ -30,9 +30,9 @@ TYPE
 		float8: Float8; 
 	END; 
 
-	Address = SIZE; 
+	Address = LONGINT; 
 
-	Size = SIZE; 
+	Size = LONGINT; 
 
 	Memory = POINTER TO ARRAY OF SYSTEM.BYTE; 
 

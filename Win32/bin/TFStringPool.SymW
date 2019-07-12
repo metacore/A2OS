@@ -10,14 +10,14 @@ TYPE
 	StringPool* = OBJECT {EXCLUSIVE} 
 	VAR 
 		bufList: BufferList; 
-		end*: SIZE; 
-		nofBufs: SIZE; 
+		end*: LONGINT; 
+		nofBufs: LONGINT; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GrowBufList; 
-		PROCEDURE ^ AddString*(CONST str: ARRAY OF CHAR): SIZE; 
-		PROCEDURE ^ GetString*(i: SIZE; VAR str: ARRAY OF CHAR); 
-		PROCEDURE ^ Equal*(a, b: SIZE): BOOLEAN; 
+		PROCEDURE ^ AddString*(CONST str: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ GetString*(i: LONGINT; VAR str: ARRAY OF CHAR); 
+		PROCEDURE ^ Equal*(a, b: LONGINT): BOOLEAN; 
 	END StringPool; 
 VAR 
 	s: StringPool; 

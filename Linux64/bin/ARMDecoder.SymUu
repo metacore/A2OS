@@ -234,7 +234,7 @@ VAR
 	PROCEDURE ^ Hex(n: LONGINT; w: Streams.Writer); 
 	PROCEDURE ^ SwapBytes(VAR code: LONGINT); 
 	PROCEDURE ^ ARMDecoderFactory(reader: Streams.Reader): Decoder.Decoder; 
-	PROCEDURE ^ CodeScaleCallback(VAR codeSize: SIZE); 
+	PROCEDURE ^ CodeScaleCallback(VAR codeSize: LONGINT); 
 	PROCEDURE ^ Init*; 
 BEGIN
 END ARMDecoder.

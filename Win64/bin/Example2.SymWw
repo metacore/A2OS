@@ -5,12 +5,12 @@ TYPE
 
 	Buffer* = OBJECT {EXCLUSIVE} 
 	VAR 
-		head, num: SIZE; 
+		head, num: LONGINT; 
 		buffer: POINTER TO ARRAY OF Item; 
 
 		PROCEDURE ^ Append*(x: Item); 
 		PROCEDURE ^ Remove*(): Item; 
-		PROCEDURE ^  & Init*(n: SIZE); 
+		PROCEDURE ^  & Init*(n: LONGINT); 
 	END Buffer; 
 BEGIN
 END Example2.

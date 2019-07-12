@@ -165,22 +165,20 @@ CONST
 TYPE 
 	Name = Scanner.IdentifierString; 
 
-	OperandType = InstructionSet.OperandType; 
-
 	Size = SHORTINT; 
 
 	Register* = LONGINT; 
 
 	Operand* = RECORD 
-		type-: OperandType; 
+		type-: SHORTINT; 
 		register-: Register; 
 		sizeInBytes-: Size; 
 		segment-, index-: Register; 
 		scale-, displacement-: LONGINT; 
 		symbol-: ObjectFile.Identifier; 
-		symbolOffset-: SIZE; 
+		symbolOffset-: LONGINT; 
 		val-: HUGEINT; 
-		pc-: SIZE; 
+		pc-: LONGINT; 
 		selector-, offset-: LONGINT; 
 	END; 
 
@@ -188,13 +186,13 @@ TYPE
 
 	NamedLabel* = OBJECT 
 	VAR 
-		offset: SIZE; 
+		offset: LONGINT; 
 		name-: SyntaxTree.IdentifierString; 
 		nextNamedLabel-: NamedLabel; 
 		index-: LONGINT; 
 
-		PROCEDURE ^  & InitNamedLabel(offset: SIZE; CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ SetOffset*(ofs: SIZE); 
+		PROCEDURE ^  & InitNamedLabel(offset: LONGINT; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ SetOffset*(ofs: LONGINT); 
 	END NamedLabel; 
 
 	NamedLabelList* = OBJECT 
@@ -223,13 +221,13 @@ TYPE
 		PROCEDURE ^ Error(CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSS(CONST msg1, msg2: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSI(CONST msg1: ARRAY OF CHAR; mnemonic: LONGINT; CONST operands: ARRAY OF Operand); 
-		PROCEDURE ^ AddFixup(mode: SHORTINT; size: SHORTINT; pc: SIZE; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: LONGINT); 
+		PROCEDURE ^ AddFixup(mode: SHORTINT; size: SHORTINT; pc: LONGINT; symbol: ObjectFile.Identifier; symbolOffset, displacement: LONGINT); 
 		PROCEDURE ^ EmitInstruction(mnem: LONGINT; VAR operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ EmitPrefix*(prefix: LONGINT); 
 		PROCEDURE ^ Emit*(mnem: LONGINT; VAR op1, op2, op3: Operand); 
-		PROCEDURE ^ EmitAt*(pc: SIZE; mnem: LONGINT; VAR op1, op2, op3: Operand); 
-		PROCEDURE ^ StartEmitAt*(VAR pc: SIZE): SIZE; 
-		PROCEDURE ^ EndEmitAt*(pc: SIZE); 
+		PROCEDURE ^ EmitAt*(pc: LONGINT; mnem: LONGINT; VAR op1, op2, op3: Operand); 
+		PROCEDURE ^ StartEmitAt*(VAR pc: LONGINT): LONGINT; 
+		PROCEDURE ^ EndEmitAt*(pc: LONGINT); 
 		PROCEDURE ^ Emit0*(mnem: LONGINT); 
 		PROCEDURE ^ Emit1*(mnem: LONGINT; VAR op1: Operand); 
 		PROCEDURE ^ Emit2*(mnem: LONGINT; VAR op1, op2: Operand); 
@@ -250,7 +248,7 @@ TYPE
 		diagnostics: Diagnostics.Diagnostics; 
 		dump: Streams.Writer; 
 		fixup: BinaryCode.Fixup; 
-		type: OperandType; 
+		type: SHORTINT; 
 		currentFixup: Sections.SectionName; 
 		currentLabel: NamedLabel; 
 		sourceName: Basic.FileName; 
@@ -271,7 +269,7 @@ VAR
 	PROCEDURE ^ DumpType*(w: Streams.Writer; type: LONGINT); 
 	PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
 	PROCEDURE ^ DumpInstruction(w: Streams.Writer; mnemonic: LONGINT; CONST operands: ARRAY OF Operand); 
-	PROCEDURE ^ Matches(CONST operand: Operand; type: OperandType): BOOLEAN; 
+	PROCEDURE ^ Matches(CONST operand: Operand; type: InstructionSet.OperandType): BOOLEAN; 
 	PROCEDURE ^ ValueInByteRange(value: HUGEINT): BOOLEAN; 
 	PROCEDURE ^ ValueInWordRange(value: HUGEINT): BOOLEAN; 
 	PROCEDURE ^ InitOperand*(VAR operand: Operand); 
@@ -290,7 +288,7 @@ VAR
 	PROCEDURE ^ NewMem64*(reg: Register; displacement: LONGINT): Operand; 
 	PROCEDURE ^ InitMem128*(VAR operand: Operand; reg: Register; displacement: LONGINT); 
 	PROCEDURE ^ NewMem128*(reg: Register; displacement: LONGINT): Operand; 
-	PROCEDURE ^ SetSymbol*(VAR operand: Operand; symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; displacement: SIZE); 
+	PROCEDURE ^ SetSymbol*(VAR operand: Operand; symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset, displacement: LONGINT); 
 	PROCEDURE ^ InitImm*(VAR operand: Operand; size: SHORTINT; val: HUGEINT); 
 	PROCEDURE ^ InitImm8*(VAR operand: Operand; val: HUGEINT); 
 	PROCEDURE ^ NewImm8*(val: HUGEINT): Operand; 

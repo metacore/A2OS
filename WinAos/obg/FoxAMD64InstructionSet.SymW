@@ -324,7 +324,7 @@ CONST
 TYPE 
 	Name = ARRAY 20 OF CHAR; 
 
-	OperandType* = WORD; 
+	OperandType* = SHORTINT; 
 
 	CPUOptions* = SET; 
 

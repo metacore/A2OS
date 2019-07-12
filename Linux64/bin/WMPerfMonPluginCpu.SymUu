@@ -4,7 +4,7 @@ CONST
 	ModuleName = \"WMPerfMonPluginCpu"\; 
 TYPE 
 	CpuParameter* = POINTER TO RECORD (WMPerfMonPlugins.Parameter)
-		processorID*: SIZE; 
+		processorID*: LONGINT; 
 	END; 
 
 	CpuLoad* = OBJECT {EXCLUSIVE} (WMPerfMonPlugins.Plugin)

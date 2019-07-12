@@ -78,8 +78,8 @@ TYPE
 		PROCEDURE ^ UpdateBox(line: Line; ofs: LONGINT); 
 		PROCEDURE ^ UpdateRect(al, bl: Line; aofs, bofs: LONGINT; cur: SET); 
 		PROCEDURE ^ UpdateAll; 
-		PROCEDURE ^ writeChars(VAR buf: ARRAY OF LONGINT; n: SIZE); 
-		PROCEDURE ^ WriteChars(VAR buf: ARRAY OF LONGINT; n: SIZE); 
+		PROCEDURE ^ writeChars(VAR buf: ARRAY OF LONGINT; n: LONGINT); 
+		PROCEDURE ^ WriteChars(VAR buf: ARRAY OF LONGINT; n: LONGINT); 
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ goto(col, row: LONGINT; scroll: BOOLEAN); 
 		PROCEDURE ^ Goto(col, row: LONGINT; scroll: BOOLEAN); 

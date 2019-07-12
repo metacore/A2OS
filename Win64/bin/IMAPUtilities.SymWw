@@ -19,12 +19,12 @@ VAR
 	PROCEDURE ^ ParseAddresses*(string: String; VAR addresses: Classes.List); 
 	PROCEDURE ^ AddressesToString*(list: Classes.List; VAR string: String); 
 	PROCEDURE ^ AddressToString*(address: Address; VAR string: String); 
-	PROCEDURE ^ StringLength*(CONST string: ARRAY OF CHAR): SIZE; 
-	PROCEDURE ^ StringCopy*(VAR s: ARRAY OF CHAR; index, count: SIZE; VAR result: ARRAY OF CHAR); 
+	PROCEDURE ^ StringLength*(VAR string: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StringCopy*(VAR s: ARRAY OF CHAR; index, count: LONGINT; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ StringContains*(string, subString: String): BOOLEAN; 
-	PROCEDURE ^ StringStartsWith*(VAR prefix: ARRAY OF CHAR; toffset: SIZE; VAR s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ StringStartsWith*(VAR prefix: ARRAY OF CHAR; toffset: LONGINT; VAR s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ UpperCase*(VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ StrToText*(text: Texts.Text; pos: SIZE; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToText*(text: Texts.Text; pos: LONGINT; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ TextToStr*(text: Texts.Text; VAR string: String); 
 	PROCEDURE ^ SetEditorText*(editor: WMEditors.Editor; string: String); 
 	PROCEDURE ^ NewString*(VAR str: ARRAY OF CHAR): String; 

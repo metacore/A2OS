@@ -180,13 +180,13 @@ TYPE
 		ext: SuperIndex; 
 		sec: SectorTable; 
 
-		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
-		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
+		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: LONGINT); 
+		PROCEDURE ^ Pos*(VAR r: Files.Rider): LONGINT; 
 		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
-		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT); 
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
-		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ Length*(): Files.Size; 
+		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Length*(): LONGINT; 
 		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
 		PROCEDURE ^ SetDate*(t, d: LONGINT); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 

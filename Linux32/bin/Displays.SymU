@@ -37,7 +37,7 @@ TYPE
 VAR 
 	reverse*: BOOLEAN; 
 	registry*: Plugins.Registry; 
-	buf: POINTER TO ARRAY BufSize OF CHAR; 
+	buf: POINTER TO ARRAY OF CHAR; 
 
 	PROCEDURE ^ Fill0(d: Display; col, x, y, w, h: LONGINT); 
 	PROCEDURE ^ Copy0(d: Display; sx, sy, w, h, dx, dy: LONGINT); 

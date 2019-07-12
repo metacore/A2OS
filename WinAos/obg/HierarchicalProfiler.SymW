@@ -58,7 +58,7 @@ TYPE
 	VAR 
 		nodes-: Node; 
 		nofSamples-: LONGINT; 
-		nofProcessors-: SIZE; 
+		nofProcessors-: LONGINT; 
 		nofRunsTooDeep-: LONGINT; 
 		nofUnwindingFaults-: LONGINT; 
 		nofSamplesNotStored-: LONGINT; 
@@ -78,7 +78,7 @@ TYPE
 VAR 
 	samples: Samples; 
 	sampleInfos: SampleInfos; 
-	maxNofSamples: SIZE; 
+	maxNofSamples: LONGINT; 
 	nofRunsTooDeep: LONGINT; 
 	nofUnwindingFaults: LONGINT; 
 	nofSamplesNotStored: LONGINT; 
@@ -96,7 +96,7 @@ VAR
 	PROCEDURE ^ PostProcessNode(profile: Profile; node: Node); 
 	PROCEDURE ^ PostProcessProfile(profile: Profile); 
 	PROCEDURE ^ CreateProfile(type: LONGINT; info: LONGINT): Profile; 
-	PROCEDURE ^ GetBufferSize*(time: LONGINT): SIZE; 
+	PROCEDURE ^ GetBufferSize*(time: LONGINT): LONGINT; 
 	PROCEDURE ^ GetProfile*(type, info: LONGINT; VAR profile: Profile; VAR res: WORD); 
 	PROCEDURE ^ Start*(context: Commands.Context); 
 	PROCEDURE ^ StartProfiling*(maxTime: LONGINT; VAR res: WORD); 
@@ -104,7 +104,7 @@ VAR
 	PROCEDURE ^ StopProfiling*(VAR res: WORD); 
 	PROCEDURE ^ Continue*(context: Commands.Context); 
 	PROCEDURE ^ ContinueProfiling*(VAR res: WORD); 
-	PROCEDURE ^ GetState*(VAR currentSamples, maxSamples: SIZE): WORD; 
+	PROCEDURE ^ GetState*(VAR currentSamples, maxSamples: LONGINT): LONGINT; 
 	PROCEDURE ^ Show*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

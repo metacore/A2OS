@@ -85,7 +85,7 @@ TYPE
 		PROCEDURE ^ UpdateStats*(): BOOLEAN; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ ScaleDataset(scale: REAL; VAR dataset: WMDiagramComponents.Dataset); 
-		PROCEDURE ^ InitStats(dimensions: SIZE); 
+		PROCEDURE ^ InitStats(dimensions: LONGINT); 
 	END PluginView; 
 
 	PluginGraphView* = OBJECT {EXCLUSIVE} (PluginView)

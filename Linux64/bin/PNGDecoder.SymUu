@@ -26,7 +26,7 @@ TYPE
 		eof: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(firstChunk: LONGINT; inR: Streams.Reader; VAR outR: Streams.Reader); 
-		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 	END IDATReader; 
 
 	PNGDecoder = OBJECT (Codecs.ImageDecoder)

@@ -81,9 +81,9 @@ TYPE
 
 	AVIStream* = OBJECT (Codecs.DemuxStream)
 	VAR 
-		bufAdr: ADDRESS; 
+		bufAdr: LONGINT; 
 		r: Streams.Reader; 
-		chunkSize*: SIZE; 
+		chunkSize*: LONGINT; 
 		streamHeader: AVIStreamHeader; 
 		stuffByte*: LONGINT; 
 		eof*: BOOLEAN; 
@@ -95,7 +95,7 @@ TYPE
 		PROCEDURE ^ Resynch*(VAR buf: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Pos*(): Streams.Position; 
 		PROCEDURE ^ SetAVIPos*(pos: LONGINT; VAR retPos: LONGINT); 
-		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: SIZE; VAR len: SIZE); 
+		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: LONGINT; VAR len: LONGINT); 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END AVIStream; 
 
@@ -107,8 +107,8 @@ TYPE
 		audioStreamHeader: AVIStreamHeader; 
 		videoStreamHeader: AVIStreamHeader; 
 		riffLength: LONGINT; 
-		movieBeginPos: Streams.Position; 
-		indexStart: Streams.Position; 
+		movieBeginPos: LONGINT; 
+		indexStart: LONGINT; 
 		videoFrames: LONGINT; 
 		audioChunks: LONGINT; 
 		videoIndex: IndexArrayPointer; 
@@ -150,7 +150,7 @@ TYPE
 		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): Codecs.AVStreamInfo; 
 		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetInfo*(VAR vl, vf, vr, mspf, al, af, ar: LONGINT); 
-		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetVideoWidth*(): LONGINT; 
 		PROCEDURE ^ GetVideoHeight*(): LONGINT; 

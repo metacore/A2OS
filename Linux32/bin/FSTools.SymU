@@ -22,7 +22,7 @@ VAR
 	PROCEDURE ^ Mount*(context: Commands.Context); 
 	PROCEDURE ^ Unmount*(context: Commands.Context); 
 	PROCEDURE ^ SetDefault*(context: Commands.Context); 
-	PROCEDURE ^ WriteK(k: Files.Size; out: Streams.Writer); 
+	PROCEDURE ^ WriteK(k: LONGINT; out: Streams.Writer); 
 	PROCEDURE ^ Watch*(context: Commands.Context); 
 	PROCEDURE ^ Align(out: Streams.Writer; CONST string: ARRAY OF CHAR); 
 	PROCEDURE ^ Directory*(context: Commands.Context); 
@@ -42,7 +42,7 @@ VAR
 	PROCEDURE ^ SortFileList(filelist: FileList; length: LONGINT); 
 	PROCEDURE ^ ResizeFilelist(VAR filelist: FileList); 
 	PROCEDURE ^ InsertFiles(CONST mask: ARRAY OF CHAR; VAR filelist: FileList; VAR index: LONGINT); 
-	PROCEDURE ^ CountCharacters(CONST string: ARRAY OF CHAR; ch: CHAR): SIZE; 
+	PROCEDURE ^ CountCharacters(CONST string: ARRAY OF CHAR; ch: CHAR): LONGINT; 
 	PROCEDURE ^ SplitFullName(CONST fullname: ARRAY OF CHAR; VAR prefix, path, filename, extension: ARRAY OF CHAR); 
 	PROCEDURE ^ IsValidTargetMask(context: Commands.Context; CONST mask: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ AllowMaskInSafeMode(CONST mask: ARRAY OF CHAR): BOOLEAN; 

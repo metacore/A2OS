@@ -30,7 +30,7 @@ VAR
 	PROCEDURE ^ ParseFile(file: Files.File; pooling: SET): XML.Document; 
 	PROCEDURE ^ BenchParser*(context: Commands.Context); 
 	PROCEDURE ^ ToSeconds(nofDays, nofHours, nofMinutes, nofSeconds: LONGINT): LONGINT; 
-	PROCEDURE ^ DefaultReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ ShowUsage(out: Streams.Writer); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

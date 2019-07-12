@@ -37,14 +37,14 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RestoreDefaultSettings; 
-		PROCEDURE ^ ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ ReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
 		PROCEDURE ^ ProcessFrame(frame: XML.Element; VAR desc: Codecs.ImageDescriptor; VAR res: WORD); 
 		PROCEDURE ^ ProcessFrames(frames: XML.Element; VAR sequence: Codecs.ImageSequence; VAR res: WORD); 
 		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: WORD); 
 	END Decoder; 
 
-	PROCEDURE ^ GenerateFilename(CONST base: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR; suffix, minDigits: SIZE); 
+	PROCEDURE ^ GenerateFilename(CONST base: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR; suffix, minDigits: LONGINT); 
 	PROCEDURE ^ GetInteger(element: XML.Element; CONST attributeName: ARRAY OF CHAR; VAR value: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GenDecoder*(): Codecs.AnimationDecoder; 
 BEGIN

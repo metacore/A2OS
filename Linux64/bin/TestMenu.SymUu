@@ -1,5 +1,5 @@
 MODULE TestMenu;
-	IMPORT KernelLog, Streams, Modules, Commands, Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, WMGraphics, WMMessages, WM := WMWindowManager, WMComponents, WMStandardComponents, WMTrees, WMMenus;
+	IMPORT KernelLog, Modules, Commands, Strings, Files, XML, XMLObjects, XMLScanner, XMLParser, WMGraphics, WMMessages, WM := WMWindowManager, WMComponents, WMStandardComponents, WMTrees, WMMenus;
 CONST 
 TYPE 
 	KillerMsg = OBJECT 
@@ -17,7 +17,7 @@ TYPE
 		PROCEDURE ^ Selected(sender, data: ANY); 
 		PROCEDURE ^ AddSubMenu(node: WMTrees.TreeNode; xml: XML.Element); 
 		PROCEDURE ^ SetDocument(xml: XML.Element); 
-		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Read(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

@@ -234,11 +234,11 @@ TYPE
 		PROCEDURE ^ GenerateCellOffsets(x: SyntaxTree.CellType): BOOLEAN; 
 		PROCEDURE ^ GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN; 
 		PROCEDURE ^ GenerateParameterOffsets*(procedure: SyntaxTree.Procedure; nestedProcedure: BOOLEAN): BOOLEAN; 
-		PROCEDURE ^ SizeOf*(type: SyntaxTree.Type): SIZE; 
-		PROCEDURE ^ SizeOfParameter*(par: SyntaxTree.Parameter): SIZE; 
-		PROCEDURE ^ SizeOfVariable*(var: SyntaxTree.Variable): SIZE; 
-		PROCEDURE ^ AlignmentOf*(CONST alignment: Alignment; type: SyntaxTree.Type): SIZE; 
-		PROCEDURE ^ AlignedSizeOf*(type: SyntaxTree.Type): SIZE; 
+		PROCEDURE ^ SizeOf*(type: SyntaxTree.Type): LONGINT; 
+		PROCEDURE ^ SizeOfParameter*(par: SyntaxTree.Parameter): LONGINT; 
+		PROCEDURE ^ SizeOfVariable*(var: SyntaxTree.Variable): LONGINT; 
+		PROCEDURE ^ AlignmentOf*(CONST alignment: Alignment; type: SyntaxTree.Type): LONGINT; 
+		PROCEDURE ^ AlignedSizeOf*(type: SyntaxTree.Type): LONGINT; 
 		PROCEDURE ^ IsLynx*(): BOOLEAN; 
 	END System; 
 VAR 
@@ -256,12 +256,12 @@ VAR
 	Byte32: SyntaxTree.ByteType; 
 
 	PROCEDURE ^ BuildScopes(system: System); 
-	PROCEDURE ^ SetDefaultDeclarations*(system: System; minBits: SIZE); 
+	PROCEDURE ^ SetDefaultDeclarations*(system: System; minBits: LONGINT); 
 	PROCEDURE ^ OperatorDefined*(system: System; op: LONGINT; defined: BOOLEAN); 
 	PROCEDURE ^ SetDefaultOperators*(system: System); 
 	PROCEDURE ^ DefaultSystem*(): System; 
 	PROCEDURE ^ IsOberonProcedure*(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ AlignedSizeOf*(system: System; CONST alignment: Alignment; type: SyntaxTree.Type): SIZE; 
+	PROCEDURE ^ AlignedSizeOf*(system: System; CONST alignment: Alignment; type: SyntaxTree.Type): LONGINT; 
 	PROCEDURE ^ IsSystemModule*(module: SyntaxTree.Module): BOOLEAN; 
 	PROCEDURE ^ DeclareType0(type: SyntaxTree.Type; CONST name: ARRAY OF CHAR; in: SyntaxTree.Scope); 
 	PROCEDURE ^ DeclareType*(type: SyntaxTree.Type; CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope); 
@@ -288,15 +288,15 @@ VAR
 	PROCEDURE ^ GetSymbolSegmentedNameInScope*(symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope; VAR pooledName: Basic.SegmentedName); 
 	PROCEDURE ^ GetSymbolSegmentedName*(symbol: SyntaxTree.Symbol; VAR pooledName: Basic.SegmentedName); 
 	PROCEDURE ^ Level*(t: SyntaxTree.Type): LONGINT; 
-	PROCEDURE ^ ConvertSigned*(this: HUGEINT; bits: SIZE): HUGEINT; 
-	PROCEDURE ^ ConvertUnsigned*(this: HUGEINT; bits: SIZE): HUGEINT; 
+	PROCEDURE ^ ConvertSigned*(this: HUGEINT; bits: LONGINT): HUGEINT; 
+	PROCEDURE ^ ConvertUnsigned*(this: HUGEINT; bits: LONGINT): HUGEINT; 
 	PROCEDURE ^ MaxInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT; 
 	PROCEDURE ^ MinInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT; 
 	PROCEDURE ^ MaxFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL; 
 	PROCEDURE ^ MinFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL; 
-	PROCEDURE ^ ConvertSet*(this: Basic.Set; bits: SIZE): Basic.Set; 
-	PROCEDURE ^ IsUnsignedInteger*(this: HUGEINT; sizeInBits: SIZE): BOOLEAN; 
-	PROCEDURE ^ IsSignedInteger*(this: HUGEINT; sizeInBits: SIZE): BOOLEAN; 
+	PROCEDURE ^ ConvertSet*(this: Basic.Set; bits: LONGINT): Basic.Set; 
+	PROCEDURE ^ IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN; 
+	PROCEDURE ^ IsSignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN; 
 	PROCEDURE ^ GetSignedIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
 	PROCEDURE ^ GetIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType; 
 	PROCEDURE ^ NewIntegerValue*(system: System; position: Position; hugeint: HUGEINT): SyntaxTree.Value; 
@@ -305,7 +305,7 @@ VAR
 	PROCEDURE ^ NewSetValue*(system: System; position: Position; s: Basic.Set): SyntaxTree.Value; 
 	PROCEDURE ^ NewCharacterValue*(system: System; position: Position; c: CHAR): SyntaxTree.Value; 
 	PROCEDURE ^ NewNilValue*(system: System; position: Position): SyntaxTree.Value; 
-	PROCEDURE ^ BasicTypeDistance*(system: System; from, to: SyntaxTree.BasicType): SIZE; 
+	PROCEDURE ^ BasicTypeDistance*(system: System; from, to: SyntaxTree.BasicType): LONGINT; 
 	PROCEDURE ^ GetIdentifier*(symbol: LONGINT; case: LONGINT): SyntaxTree.Identifier; 
 	PROCEDURE ^ GetSymbol*(case: LONGINT; id: SyntaxTree.Identifier): LONGINT; 
 	PROCEDURE ^ InitIdentifiers; 

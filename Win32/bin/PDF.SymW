@@ -63,7 +63,7 @@ TYPE
 		data: Strings.String; 
 
 		PROCEDURE ^  & Init*(context: Document); 
-		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ GetWriter(): Streams.Writer; 
 		PROCEDURE ^ Write(w: Streams.Writer); 
 	END Stream; 
@@ -237,7 +237,7 @@ TYPE
 
 	PROCEDURE ^ WriteReal(w: Streams.Writer; val: REAL); 
 	PROCEDURE ^ WritePDFString(w: Streams.Writer; CONST data: ARRAY OF CHAR); 
-	PROCEDURE ^ WritePDFStringPos(w: Streams.Writer; CONST data: ARRAY OF CHAR; from, to: SIZE); 
-	PROCEDURE ^ GetCharSpacings(f: WMGraphics.Font; VAR text: ARRAY OF CHAR; i: SIZE; VAR g: WMGraphics.GlyphSpacings): BOOLEAN; 
+	PROCEDURE ^ WritePDFStringPos(w: Streams.Writer; CONST data: ARRAY OF CHAR; from, to: LONGINT); 
+	PROCEDURE ^ GetCharSpacings(f: WMGraphics.Font; VAR text: ARRAY OF CHAR; i: LONGINT; VAR g: WMGraphics.GlyphSpacings): BOOLEAN; 
 BEGIN
 END PDF.

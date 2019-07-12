@@ -338,3 +338,18 @@ ComponentViewer.Open FractalDemo.XML ~
 
 ComponentViewer.Open ComponentHelper:Panel:1 ~
 ComponentViewer.Open --moveable --width=100 --height=100 WMStandardComponents.GenButton  ~
+
+
+
+
+1) Create a window containing an ImagePanel or an Image (both variants work, but are slighly different in term of zooming behaviour)
+ComponentViewer.Open WMStandardComponents.GenImagePanel ~
+or
+ComponentViewer.Open WMStandardComponents.GenImage ~
+
+2) open an image into the window:
+variant a: Open the ComponentViewer, and set the "ImagePanel:Form:ImagePanel" extended property "Image" to "Yellow_Duck.jpg"~
+variant b: Open the ComponentViewer, and set the "ImagePanel:Form:Image" extended property "ImageName" to "Yellow_Duck.jpg"~
+This can also be done more directly by using WMComponents.
+variant c: Use the ComponentInspector to drag an image from somewhere to somewher
+variang d: drag an image name to a Image window created above (not implemented yet)

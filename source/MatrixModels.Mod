@@ -27,7 +27,7 @@ TYPE
 			SetNameAsString(StrMatrix);
 		END Init;
 
-		PROCEDURE Set*(matrix : Matrix);
+		PROCEDURE Set*(CONST matrix : Matrix);
 		BEGIN
 			AcquireWrite;
 			SELF.matrix := matrix;

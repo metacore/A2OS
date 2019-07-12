@@ -2,7 +2,7 @@ MODULE WMGraphics;	(** AUTHOR "TF"; PURPOSE "Generic Graphic Support"; *)
 
 IMPORT
 	Kernel, Rectangles := WMRectangles, Raster, KernelLog, UTF8Strings, Strings, RasterScale := WMRasterScale,
-	Codecs, Files, Streams;
+	Codecs, Files, Streams, Reals;
 
 CONST
 	(** Copy Modes *)
@@ -431,7 +431,9 @@ TYPE
 
 		PROCEDURE LineReal*(x0, y0, x1, y1 : Real; color : Color; mode : LONGINT);
 		BEGIN
-			Line(ENTIER(x0),ENTIER(y0),ENTIER(x1),ENTIER(y1),color,mode);
+			IF ~( Reals.IsNaNL(x0) OR Reals.IsNaNL(y0) OR Reals.IsNaNL(x1) OR Reals.IsNaNL(y1)) THEN
+				Line(ENTIER(x0),ENTIER(y0),ENTIER(x1),ENTIER(y1),color,mode);
+			END;
 		END LineReal;
 
 		(** set a pixel within the current clipping rectangle *)

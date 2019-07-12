@@ -1168,4 +1168,4 @@ BEGIN
 	TimeFormat := "hh:nn:ss"
 END Strings.
 
-System.Free Utilities ~
+System.Free Strings ~

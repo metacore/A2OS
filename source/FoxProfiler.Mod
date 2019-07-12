@@ -413,7 +413,7 @@ WMUtilities.Call --font=VeraMo FoxProfiler.Report time ~
 WMUtilities.Call --font=VeraMo FoxProfiler.Report calls ~
 WMUtilities.Call --font=VeraMo FoxProfiler.Report name ~
 WMUtilities.Call --font=VeraMo FoxProfiler.Report brut ~
-
+WMUtilities.Call --font=Courier FoxProfiler.Reset ~
 WMUtilities.Call --font=Courier FoxProfiler.Report time all ~
 
 Compiler.Compile --profile TuringCoatWnd.Mod ~

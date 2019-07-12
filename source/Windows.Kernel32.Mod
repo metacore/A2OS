@@ -1243,6 +1243,9 @@ VAR hout: HANDLE;
 				RET 12
 
 			exit:
+			MOV EBP, ESP
+			PUSH 0
+
 		END EntryPoint;
 
 	#ELSE
@@ -1289,6 +1292,8 @@ VAR hout: HANDLE;
 			MOV [LoadLibrary], EAX
 			MOV EAX,[401000H+adrGetProcAddress]
 			MOV [getProcAddress], EAX
+			MOV EBP, ESP
+			PUSH 0
 
 		END EntryPoint;
 	#END;
@@ -1340,6 +1345,8 @@ VAR hout: HANDLE;
 			MOV [LoadLibrary], RAX
 			MOV RAX,[401000H+adrGetProcAddress]
 			MOV [getProcAddress], RAX
+			MOV EBP, ESP
+			PUSH 0
 	END EntryPoint;
 #ELSE
 	UNIMPLEMENTED

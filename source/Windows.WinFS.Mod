@@ -541,7 +541,7 @@ TYPE
 		VAR pos: SIZE;
 		BEGIN {EXCLUSIVE}
 			pos := LONGINT(r.apos * BufferSize) + r.bpos;
-			IF LONGINT(r.apos) # r.apos THEN ReadBuffer( LONGINT(r.apos) ) END;
+			IF buffer.apos # r.apos THEN ReadBuffer( LONGINT(r.apos) ) END;
 			buffer.data[r.bpos] := x;  INC( pos );
 			IF (r.bpos + 1) > buffer.len THEN buffer.len := LONGINT(r.bpos + 1) END;
 			r.apos := pos DIV BufferSize;  r.bpos := pos MOD BufferSize;

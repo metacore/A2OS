@@ -80,7 +80,7 @@ TYPE
 		zr: ZlibReaders.Reader; 
 	END; 
 
-	PROCEDURE ^ StringLength(VAR str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StringLength(VAR str: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ OberonToDosTime(t: LONGINT): INTEGER; 
 	PROCEDURE ^ OberonToDosDate(d: LONGINT): INTEGER; 
 	PROCEDURE ^ DosToOberonTime(t: INTEGER): LONGINT; 

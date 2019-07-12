@@ -22,7 +22,7 @@ TYPE
 	NamedLabel* = OBJECT 
 	VAR 
 		section: IntermediateCode.Section; 
-		offset, displacement: LONGINT; 
+		offset, displacement: BinaryCode.Unit; 
 		name-: Scanner.IdentifierString; 
 		nextNamedLabel-: NamedLabel; 
 		fixupList: FixupElement; 
@@ -30,7 +30,7 @@ TYPE
 		PROCEDURE ^  & InitNamedLabel(section: IntermediateCode.Section; CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetFixup(): BinaryCode.Fixup; 
 		PROCEDURE ^ ResetDisplacements; 
-		PROCEDURE ^ SetOffset*(ofs: LONGINT); 
+		PROCEDURE ^ SetOffset*(ofs: BinaryCode.Unit); 
 	END NamedLabel; 
 
 	NamedLabelList* = OBJECT 
@@ -45,7 +45,7 @@ TYPE
 
 	Result* = RECORD 
 		type*: INTEGER; 
-		sizeInBits*: INTEGER; 
+		sizeInBits*: SIZE; 
 		value*: HUGEINT; 
 		valueR*: LONGREAL; 
 		fixup*: BinaryCode.Fixup; 

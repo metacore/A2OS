@@ -12,16 +12,16 @@ TYPE
 		alpha: Node; 
 
 		PROCEDURE ^ Initialize; 
-		PROCEDURE ^ Encode(VAR buf: ARRAY OF CHAR; len: LONGINT); 
-		PROCEDURE ^ Decode(VAR buf: ARRAY OF CHAR; len: LONGINT); 
+		PROCEDURE ^ Encode(VAR buf: ARRAY OF CHAR; len: SIZE); 
+		PROCEDURE ^ Decode(VAR buf: ARRAY OF CHAR; len: SIZE); 
 	END MTF; 
 
 	Encoder* = OBJECT 
 	TYPE 
-		Index = LONGINT; 
+		Index = SIZE; 
 	VAR 
 		mtf: MTF; 
-		length: LONGINT; 
+		length: SIZE; 
 		sbuf: ARRAY (2 * BlockSize) OF CHAR; 
 		rotation: ARRAY BlockSize OF Index; 
 
@@ -29,13 +29,13 @@ TYPE
 		PROCEDURE ^ Less(a, b: Index): BOOLEAN; 
 		PROCEDURE ^ Swap(a, b: Index); 
 		PROCEDURE ^ InsertSort(lo, hi: Index); 
-		PROCEDURE ^ SortR(lo, hi: LONGINT); 
-		PROCEDURE ^ EncodeBlock*(VAR buf: ARRAY OF CHAR; len: LONGINT): LONGINT; 
+		PROCEDURE ^ SortR(lo, hi: SIZE); 
+		PROCEDURE ^ EncodeBlock*(VAR buf: ARRAY OF CHAR; len: SIZE): LONGINT; 
 	END Encoder; 
 
 	Decoder* = OBJECT 
 	TYPE 
-		Index = LONGINT; 
+		Index = SIZE; 
 	VAR 
 		mtf: MTF; 
 		f, l: ARRAY BlockSize OF CHAR; 
@@ -51,7 +51,7 @@ TYPE
 			f[b] := tmp
 		END Swap; 
 		PROCEDURE ^ SortF(lo, hi: Index); 
-		PROCEDURE ^ DecodeBlock*(VAR buf: ARRAY OF CHAR; len, index: LONGINT); 
+		PROCEDURE ^ DecodeBlock*(VAR buf: ARRAY OF CHAR; len, index: SIZE); 
 	END Decoder; 
 BEGIN
 END BorrowsWheeler.

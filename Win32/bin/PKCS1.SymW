@@ -3,7 +3,7 @@ MODULE PKCS1;
 CONST 
 	Trace = FALSE; 
 
-	PROCEDURE ^ Encrypt*(CONST src: ARRAY OF CHAR; srcOfs, srcLen: LONGINT; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: LONGINT; VAR destLen: LONGINT); 
-	PROCEDURE ^ Decrypt*(CONST src: ARRAY OF CHAR; srcOfs, srcLen: LONGINT; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: LONGINT; VAR destLen: LONGINT); 
+	PROCEDURE ^ Encrypt*(CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE); 
+	PROCEDURE ^ Decrypt*(CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE); 
 BEGIN
 END PKCS1.

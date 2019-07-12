@@ -10,7 +10,7 @@ VAR
 
 	PROCEDURE ^ NewPrime*(bits: INTEGER; safe: BOOLEAN): BigNumber; 
 	PROCEDURE ^ NewDHPrime*(bits: INTEGER; safe: BOOLEAN; add, rem: BigNumber): BigNumber; 
-	PROCEDURE ^ Checks(b: LONGINT): INTEGER; 
+	PROCEDURE ^ Checks(b: SIZE): INTEGER; 
 	PROCEDURE ^ ProbablePrime(bits: INTEGER): BigNumber; 
 	PROCEDURE ^ ProbableDHPrime(bits: INTEGER; add, rem: BigNumber): BigNumber; 
 	PROCEDURE ^ ProbableDHPrimeSafe(bits: INTEGER; padd, rem: BigNumber): BigNumber; 

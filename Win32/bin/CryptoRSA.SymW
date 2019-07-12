@@ -19,7 +19,7 @@ TYPE
 	VAR 
 		name-: ARRAY 128 OF CHAR; 
 		private-: BOOLEAN; 
-		size-: LONGINT; 
+		size-: SIZE; 
 		exponent-, modulus-: Number; 
 		p, q, u: Number; 
 		time-, date-: LONGINT; 
@@ -34,7 +34,7 @@ TYPE
 VAR 
 	one, two: Number; 
 
-	PROCEDURE ^ l2n(l: UNSIGNED32; VAR buf: Buffer; pos: LONGINT); 
+	PROCEDURE ^ l2n(l: UNSIGNED32; VAR buf: Buffer; pos: SIZE); 
 	PROCEDURE ^ MakeKeys*(p, q, e: Number; CONST name: ARRAY OF CHAR; VAR pub, priv: Key); 
 	PROCEDURE ^ PubKey*(e, m: Number): Key; 
 	PROCEDURE ^ ChineseRemainder(msg, d, p, q, u: Number): Number; 

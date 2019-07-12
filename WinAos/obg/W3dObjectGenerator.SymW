@@ -8,12 +8,12 @@ TYPE
 	Path* = OBJECT 
 	VAR 
 		points: VectorArray; 
-		nofPoints: LONGINT; 
+		nofPoints: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ AddPoint*(p: Vectors.TVector3d); 
-		PROCEDURE ^ GetNofPoints*(): LONGINT; 
-		PROCEDURE ^ GetPoint*(i: LONGINT): Vectors.TVector3d; 
+		PROCEDURE ^ GetNofPoints*(): SIZE; 
+		PROCEDURE ^ GetPoint*(i: SIZE): Vectors.TVector3d; 
 	END Path; 
 
 	PROCEDURE ^ RotationObject*(mat: Matrix.Matrix4x4; path: Path; axis: Vectors.TVector3d; sides: LONGINT; obj: AbstractWorld.Object; color: LONGINT); 

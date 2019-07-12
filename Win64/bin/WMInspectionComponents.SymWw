@@ -337,11 +337,11 @@ TYPE
 	ComponentElement* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		component: WMComponents.Component; 
-		nofElements: LONGINT; 
+		nofElements: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ CountNofElements(component: WMComponents.Component); 
-		PROCEDURE ^ GetNofElements*(): LONGINT; 
+		PROCEDURE ^ GetNofElements*(): SIZE; 
 		PROCEDURE ^ SetComponent*(component: WMComponents.Component); 
 		PROCEDURE ^ Apply*; 
 		PROCEDURE ^ Synchronize*(force: BOOLEAN); 
@@ -487,7 +487,7 @@ TYPE
 		tabs: WMTabComponents.Tabs; 
 		tabList: ARRAY NofTabs OF WMTabComponents.Tab; 
 		tabPanels: ARRAY NofTabs OF ComponentElement; 
-		tabNofElements: ARRAY NofTabs OF LONGINT; 
+		tabNofElements: ARRAY NofTabs OF SIZE; 
 		tabCaptions: ARRAY NofTabs OF ARRAY 128 OF CHAR; 
 		tabPanel: WMScrollableComponents.ScrollableContainer; 
 		curTabPanel: ComponentElement; 
@@ -578,7 +578,7 @@ VAR
 	PROCEDURE ^ GetModelTypeString(model: Models.Model): Strings.String; 
 	PROCEDURE ^ IsComponentProperty(property: WMProperties.Property): BOOLEAN; 
 	PROCEDURE ^ IsVisualComponentProperty(property: WMProperties.Property): BOOLEAN; 
-	PROCEDURE ^ CountExtendedProperties(component: WMComponents.Component): LONGINT; 
+	PROCEDURE ^ CountExtendedProperties(component: WMComponents.Component): SIZE; 
 	PROCEDURE ^ CreateLine*(): WMStandardComponents.Panel; 
 	PROCEDURE ^ CreateLabel*(CONST caption: ARRAY OF CHAR; width, alignment: LONGINT): WMStandardComponents.Label; 
 	PROCEDURE ^ CreateEditor*(width: LONGINT): WMEditors.TextField; 

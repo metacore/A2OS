@@ -95,7 +95,7 @@ TYPE
 		PROCEDURE ^ Size(name: ARRAY OF CHAR); 
 		PROCEDURE ^ WaitEstablished(c: TCP.Connection); 
 		PROCEDURE ^ Retrieve(name: ARRAY OF CHAR; marker: LONGINT); 
-		PROCEDURE ^ Store(name: ARRAY OF CHAR; marker: LONGINT); 
+		PROCEDURE ^ Store(name: ARRAY OF CHAR; marker: Files.Position); 
 		PROCEDURE ^ Execute(VAR cmd, param: ARRAY OF CHAR); 
 	BEGIN{ACTIVE, SAFE} 
 	END FTPAgent; 

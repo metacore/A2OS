@@ -14,9 +14,6 @@ CONST
 	TypeDescOffset* =  -AddressSize; 
 	MaxCandidates = 1024; 
 	ProtTypeBit* = 31; 
-	FlagsOfs = (AddressSize * 3); 
-	ModOfs* = (AddressSize * 4); 
-	TypeNameOfs = (AddressSize * 5); 
 	ModNameOfs = (AddressSize * 2); 
 	MinPtrOfs =  -1073741824; 
 	MethodEndMarker* = MinPtrOfs; 
@@ -233,9 +230,6 @@ VAR
 	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: LONGINT); 
 	PROCEDURE ^ AddFinalizer*(obj: ANY; n: FinalizerNode); 
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
-	PROCEDURE ^ Assign*(VAR dest: ADDRESS; src: ADDRESS); 
-	PROCEDURE ^ AssignRecord*(dest: ADDRESS; tag: StaticTypeBlockU; src: ADDRESS); 
-	PROCEDURE ^ AssignArray*(dest: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE; src: ADDRESS); 
 	PROCEDURE ^ MarkPointer*(adr: ADDRESS); 
 	PROCEDURE ^ MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU); 
 	PROCEDURE ^ MarkArray*(adr: ADDRESS; tag: StaticTypeBlockU; numElems: SIZE); 

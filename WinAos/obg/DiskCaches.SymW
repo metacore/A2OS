@@ -4,7 +4,7 @@ CONST
 	BlockSize = 512; 
 	NumberCacheLines = 128; 
 TYPE 
-	TransferProcedure = PROCEDURE {DELEGATE}(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
+	TransferProcedure = PROCEDURE {DELEGATE}(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
 
 	CacheLine = RECORD 
 		globalIndex: SIZE; 
@@ -18,7 +18,7 @@ TYPE
 		transfer: TransferProcedure; 
 
 		PROCEDURE ^  & Init*(transfer: TransferProcedure; blocksPerCacheLine= 32: LONGINT); 
-		PROCEDURE ^ Transfer*(op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Transfer*(op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
 	END Cache; 
 BEGIN
 END DiskCaches.

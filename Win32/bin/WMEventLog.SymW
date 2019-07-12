@@ -25,12 +25,12 @@ TYPE
 		grid: WMStringGrids.StringGrid; 
 		spacings: WMGrids.Spacings; 
 		events: EventsUtils.EventContainer; 
-		eventsInGrid: LONGINT; 
+		eventsInGrid: SIZE; 
 		timeEdit, originatorEdit, typeEdit, classEdit, subclassEdit, codeEdit, messageEdit: WMEditors.Editor; 
 		updateBtn, clearBtn: WMStandardComponents.Button; 
 		statusLabel: WMStandardComponents.Label; 
-		nofEventsInGrid, nofEventsTot, containerSize: LONGINT; 
-		lastCleared, stamp, lastStamp: LONGINT; 
+		nofEventsInGrid, nofEventsTot, containerSize: SIZE; 
+		lastCleared, stamp, lastStamp: SIZE; 
 		update, fullUpdate: BOOLEAN; 
 		state: LONGINT; 
 		timer: Kernel.Timer; 
@@ -44,8 +44,8 @@ TYPE
 		PROCEDURE ^ FilterMessage(event: Events.Event; VAR discard: BOOLEAN); 
 		PROCEDURE ^ Filter(event: Events.Event; VAR discard: BOOLEAN); 
 		PROCEDURE ^ UpdateRow(row: LONGINT; event: Events.Event); 
-		PROCEDURE ^ FullUpdate(wrapper: EventsUtils.EventWrapper; nofEvents: LONGINT); 
-		PROCEDURE ^ IncrementalUpdate(wrapper: EventsUtils.EventWrapper; nofEvents: LONGINT): LONGINT; 
+		PROCEDURE ^ FullUpdate(wrapper: EventsUtils.EventWrapper; nofEvents: SIZE); 
+		PROCEDURE ^ IncrementalUpdate(wrapper: EventsUtils.EventWrapper; nofEvents: SIZE): SIZE; 
 		PROCEDURE ^ UpdateStatusLabel; 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ NewGrid(): WMStringGrids.StringGrid; 

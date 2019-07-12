@@ -117,6 +117,7 @@ TYPE
 		PROCEDURE ^ VisitStringValue*(x: StringValue); 
 		PROCEDURE ^ VisitNilValue*(x: NilValue); 
 		PROCEDURE ^ VisitEnumerationValue*(x: EnumerationValue); 
+		PROCEDURE ^ VisitProcedureValue*(x: ProcedureValue); 
 		PROCEDURE ^ VExpression*(x: Expression); 
 		PROCEDURE ^ VisitSymbol*(x: Symbol); 
 		PROCEDURE ^ VisitModule*(x: Module); 
@@ -184,12 +185,12 @@ TYPE
 		fingerprint-: Fingerprint; 
 		isRealtime-: BOOLEAN; 
 		recursion: BOOLEAN; 
-		sizeInBits-: LONGINT; 
-		alignmentInBits-: LONGINT; 
+		sizeInBits-: SIZE; 
+		alignmentInBits-: SIZE; 
 
 		PROCEDURE ^  & InitType*(position: Position); 
-		PROCEDURE ^ SetSize*(sizeInBits: LONGINT); 
-		PROCEDURE ^ SetAlignmentInBits*(alignmentInBits: LONGINT); 
+		PROCEDURE ^ SetSize*(sizeInBits: SIZE); 
+		PROCEDURE ^ SetAlignmentInBits*(alignmentInBits: SIZE); 
 		PROCEDURE ^ End*(position: LONGINT); 
 		PROCEDURE ^ SetFingerprint*(CONST fp: Fingerprint); 
 		PROCEDURE ^ SetState*(state: LONGINT); 
@@ -210,14 +211,14 @@ TYPE
 	VAR 
 		name-: Identifier; 
 
-		PROCEDURE ^  & InitBasicType(CONST id: ARRAY OF CHAR; sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitBasicType(CONST id: ARRAY OF CHAR; sizeInBits: SIZE); 
 		PROCEDURE ^ SetName*(CONST id: ARRAY OF CHAR); 
 		PROCEDURE ^ SetTypeDeclaration*(typeDeclaration: TypeDeclaration); 
 	END BasicType; 
 
 	ObjectType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitObjectType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitObjectType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsPointer*(): BOOLEAN; 
@@ -225,7 +226,7 @@ TYPE
 
 	NilType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitNilType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitNilType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsPointer*(): BOOLEAN; 
@@ -233,7 +234,7 @@ TYPE
 
 	AnyType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitAnyType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitAnyType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsPointer*(): BOOLEAN; 
@@ -241,49 +242,49 @@ TYPE
 
 	ByteType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitByteType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitByteType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END ByteType; 
 
 	AddressType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitAddressType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitAddressType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END AddressType; 
 
 	SizeType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitSizeType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitSizeType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END SizeType; 
 
 	BooleanType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitBooleanType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitBooleanType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END BooleanType; 
 
 	SetType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitSetType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitSetType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END SetType; 
 
 	CharacterType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitCharacterType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitCharacterType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END CharacterType; 
 
 	RangeType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitRangeType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitRangeType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsComposite*(): BOOLEAN; 
@@ -291,21 +292,21 @@ TYPE
 
 	NumberType* = OBJECT (BasicType)
 
-		PROCEDURE ^  & InitNumberType(CONST name: ARRAY OF CHAR; sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitNumberType(CONST name: ARRAY OF CHAR; sizeInBits: SIZE); 
 	END NumberType; 
 
 	IntegerType* = OBJECT (NumberType)
 	VAR 
 		signed-: BOOLEAN; 
 
-		PROCEDURE ^  & InitIntegerType(sizeInBits: LONGINT; signed: BOOLEAN); 
+		PROCEDURE ^  & InitIntegerType(sizeInBits: SIZE; signed: BOOLEAN); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END IntegerType; 
 
 	FloatType* = OBJECT (NumberType)
 
-		PROCEDURE ^  & InitFloatType(sizeInBits: LONGINT); 
+		PROCEDURE ^  & InitFloatType(sizeInBits: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 	END FloatType; 
@@ -336,11 +337,11 @@ TYPE
 
 	StringType* = OBJECT (Type)
 	VAR 
-		length-: LONGINT; 
+		length-: SIZE; 
 		baseType-: Type; 
 
-		PROCEDURE ^  & InitStringType(position: Position; baseType: Type; length: LONGINT); 
-		PROCEDURE ^ SetLength*(length: LONGINT); 
+		PROCEDURE ^  & InitStringType(position: Position; baseType: Type; length: SIZE); 
+		PROCEDURE ^ SetLength*(length: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ IsComposite*(): BOOLEAN; 
@@ -384,7 +385,7 @@ TYPE
 		arrayBase-: Type; 
 		length-: Expression; 
 		staticLength-: LONGINT; 
-		staticIncrementInBits-: LONGINT; 
+		staticIncrementInBits-: SIZE; 
 		form-: LONGINT; 
 		isUnsafe-: BOOLEAN; 
 
@@ -394,7 +395,7 @@ TYPE
 		PROCEDURE ^ SetForm*(form: LONGINT); 
 		PROCEDURE ^ SetArrayBase*(type: Type); 
 		PROCEDURE ^ SetLength*(length: Expression); 
-		PROCEDURE ^ SetIncrement*(increment: LONGINT); 
+		PROCEDURE ^ SetIncrement*(increment: SIZE); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
 		PROCEDURE ^ CompatibleTo*(to: Type): BOOLEAN; 
 		PROCEDURE ^ ElementType*(): Type; 
@@ -433,11 +434,11 @@ TYPE
 	VAR 
 		direction-: LONGINT; 
 		sizeExpression-: Expression; 
-		sizeInBits-: LONGINT; 
+		sizeInBits-: SIZE; 
 		cellsAreObjects-: BOOLEAN; 
 
 		PROCEDURE ^  & InitPortType(position: Position; direction: LONGINT; sizeExpression: Expression; scope: Scope); 
-		PROCEDURE ^ SetSize*(size: LONGINT); 
+		PROCEDURE ^ SetSize*(size: SIZE); 
 		PROCEDURE ^ SetSizeExpression*(sizeExpression: Expression); 
 		PROCEDURE ^ SetCellsAreObjects*(b: BOOLEAN); 
 		PROCEDURE ^ SameType*(this: Type): BOOLEAN; 
@@ -476,9 +477,9 @@ TYPE
 	CellType* = OBJECT (Type)
 	VAR 
 		firstParameter-, lastParameter-: Parameter; 
-		numberParameters-: LONGINT; 
+		numberParameters-: SIZE; 
 		firstProperty-, lastProperty-: Property; 
-		numberProperties: LONGINT; 
+		numberProperties: SIZE; 
 		cellScope-: CellScope; 
 		isCellNet-: BOOLEAN; 
 		modifiers-: Modifier; 
@@ -510,21 +511,21 @@ TYPE
 		returnParameter-: Parameter; 
 		selfParameter-: Parameter; 
 		isDelegate-, isInterrupt-, noPAF-, noReturn-: BOOLEAN; 
-		pcOffset-: LONGINT; 
+		pcOffset-: SIZE; 
 		callingConvention-: CallingConvention; 
-		stackAlignment-: LONGINT; 
-		parametersOffset-: LONGINT; 
+		stackAlignment-: SIZE; 
+		parametersOffset-: SIZE; 
 
 		PROCEDURE ^  & InitProcedureType(position: Position; scope: Scope); 
 		PROCEDURE ^ SetNoPAF*(noPAF: BOOLEAN); 
 		PROCEDURE ^ SetNoReturn*(noReturn: BOOLEAN); 
-		PROCEDURE ^ SetPcOffset*(pcOffset: LONGINT); 
+		PROCEDURE ^ SetPcOffset*(pcOffset: SIZE); 
 		PROCEDURE ^ SetInterrupt*(isInterrupt: BOOLEAN); 
 		PROCEDURE ^ SetModifiers*(flags: Modifier); 
 		PROCEDURE ^ SetReturnTypeModifiers*(flags: Modifier); 
 		PROCEDURE ^ SetDelegate*(delegate: BOOLEAN); 
 		PROCEDURE ^ SetUntracedReturn*(untraced: BOOLEAN); 
-		PROCEDURE ^ SetStackAlignment*(alignment: LONGINT); 
+		PROCEDURE ^ SetStackAlignment*(alignment: SIZE); 
 		PROCEDURE ^ SetParametersOffset*(ofs: LONGINT); 
 		PROCEDURE ^ SetReturnParameter*(parameter: Parameter); 
 		PROCEDURE ^ SetSelfParameter*(parameter: Parameter); 
@@ -566,7 +567,7 @@ TYPE
 		list: Basic.List; 
 
 		PROCEDURE ^  & InitList; 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ AddExpression*(d: Expression); 
 		PROCEDURE ^ GetExpression*(index: SIZE): Expression; 
 		PROCEDURE ^ SetExpression*(index: SIZE; expression: Expression); 
@@ -838,7 +839,7 @@ TYPE
 	StringValue* = OBJECT (Value)
 	VAR 
 		value-: String; 
-		length-: LONGINT; 
+		length-: SIZE; 
 
 		PROCEDURE ^  & InitStringValue(position: Position; value: String); 
 		PROCEDURE ^ SetValue*(CONST value: String); 
@@ -861,6 +862,15 @@ TYPE
 		PROCEDURE ^ Equals*(v: Expression): BOOLEAN; 
 	END EnumerationValue; 
 
+	ProcedureValue* = OBJECT (Value)
+	VAR 
+		value-: Procedure; 
+
+		PROCEDURE ^  & InitProcedureValue(position: Position; value: Procedure); 
+		PROCEDURE ^ SetValue*(value: Procedure); 
+		PROCEDURE ^ Equals*(v: Expression): BOOLEAN; 
+	END ProcedureValue; 
+
 	Symbol* = OBJECT 
 	VAR 
 		nextSymbol-: Symbol; 
@@ -869,10 +879,10 @@ TYPE
 		access-: SET; 
 		type-: Type; 
 		scope-: Scope; 
-		offsetInBits-: LONGINT; 
+		offsetInBits-: SIZE; 
 		used-, written-: BOOLEAN; 
 		fixed-: BOOLEAN; 
-		alignment-: LONGINT; 
+		alignment-: SIZE; 
 		position-, end-: Position; 
 		state-: SET; 
 		fingerprint-: Fingerprint; 
@@ -880,14 +890,14 @@ TYPE
 
 		PROCEDURE ^  & InitSymbol(position: Position; name: Identifier); 
 		PROCEDURE ^ Copy(target: Symbol); 
-		PROCEDURE ^ SetAlignment*(fix: BOOLEAN; align: LONGINT); 
+		PROCEDURE ^ SetAlignment*(fix: BOOLEAN; align: SIZE); 
 		PROCEDURE ^ SetFingerprint*(CONST fp: Fingerprint); 
 		PROCEDURE ^ SetState*(state: LONGINT); 
 		PROCEDURE ^ SetScope*(scope: Scope); 
 		PROCEDURE ^ SetType*(type: Type); 
 		PROCEDURE ^ SetNext*(symbol: Symbol); 
 		PROCEDURE ^ SetAccess*(access: SET); 
-		PROCEDURE ^ SetOffset*(ofs: LONGINT); 
+		PROCEDURE ^ SetOffset*(ofs: SIZE); 
 		PROCEDURE ^ MarkUsed*; 
 		PROCEDURE ^ MarkWritten*; 
 		PROCEDURE ^ GetName*(VAR str: ARRAY OF CHAR); 
@@ -902,11 +912,11 @@ TYPE
 		list: Basic.List; 
 
 		PROCEDURE ^  & InitList*; 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Add*(d: Symbol); 
-		PROCEDURE ^ Get*(index: LONGINT): Symbol; 
-		PROCEDURE ^ Set*(index: LONGINT; symbol: Symbol); 
-		PROCEDURE ^ Remove*(i: LONGINT); 
+		PROCEDURE ^ Get*(index: SIZE): Symbol; 
+		PROCEDURE ^ Set*(index: SIZE; symbol: Symbol); 
+		PROCEDURE ^ Remove*(i: SIZE); 
 	END Symbols; 
 
 	TypeDeclaration* = OBJECT (Symbol)
@@ -935,8 +945,8 @@ TYPE
 		nextVariable-: Variable; 
 		untraced-: BOOLEAN; 
 		fictive-: BOOLEAN; 
-		fictiveOffset-: LONGINT; 
-		registerNumber-: LONGINT; 
+		fictiveOffset-: SIZE; 
+		registerNumber-: SIZE; 
 		inRegister-: BOOLEAN; 
 		preferRegister-: BOOLEAN; 
 		modifiers-: Modifier; 
@@ -951,8 +961,8 @@ TYPE
 		PROCEDURE ^ SetUntraced*(u: BOOLEAN); 
 		PROCEDURE ^ PreferRegister*(b: BOOLEAN); 
 		PROCEDURE ^ InRegister*(b: BOOLEAN); 
-		PROCEDURE ^ RegisterNumber*(reg: LONGINT); 
-		PROCEDURE ^ SetFictive*(offset: LONGINT); 
+		PROCEDURE ^ RegisterNumber*(reg: SIZE); 
+		PROCEDURE ^ SetFictive*(offset: SIZE); 
 		PROCEDURE ^ SetModifiers*(flag: Modifier); 
 		PROCEDURE ^ SetInitializer*(initializer: Expression); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
@@ -968,14 +978,14 @@ TYPE
 		untraced-: BOOLEAN; 
 		movable-: BOOLEAN; 
 		selfParameter-: BOOLEAN; 
-		registerNumber-: LONGINT; 
+		registerNumber-: SIZE; 
 		inRegister-: BOOLEAN; 
 		preferRegister-: BOOLEAN; 
 
 		PROCEDURE ^  & InitParameter(position: Position; ownerType: Type; name: Identifier; kind: LONGINT); 
 		PROCEDURE ^ PreferRegister*(b: BOOLEAN); 
 		PROCEDURE ^ InRegister*(b: BOOLEAN); 
-		PROCEDURE ^ RegisterNumber*(reg: LONGINT); 
+		PROCEDURE ^ RegisterNumber*(reg: SIZE); 
 		PROCEDURE ^ SetModifiers*(flag: Modifier); 
 		PROCEDURE ^ SetUntraced*(untraced: BOOLEAN); 
 		PROCEDURE ^ SetMoveable*(movable: BOOLEAN); 
@@ -1008,7 +1018,8 @@ TYPE
 		nextProcedure-: Procedure; 
 		procedureScope-: ProcedureScope; 
 		super-: Procedure; 
-		level-, methodNumber-: LONGINT; 
+		level-: LONGINT; 
+		methodNumber-: SIZE; 
 		isBodyProcedure-, isConstructor-, isFinalizer-, isInline-, isOberonInline-, isEntry-, isExit-, isFinal-, isAbstract-, isOverwritten-: BOOLEAN; 
 		resolving-: LONGINT; 
 
@@ -1026,7 +1037,7 @@ TYPE
 		PROCEDURE ^ SetOverwritten*(locallyOverwritten: BOOLEAN); 
 		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
 		PROCEDURE ^ SetLevel*(level: LONGINT); 
-		PROCEDURE ^ SetMethodNumber*(methodNumber: LONGINT); 
+		PROCEDURE ^ SetMethodNumber*(methodNumber: SIZE); 
 		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 	END Procedure; 
 
@@ -1062,6 +1073,7 @@ TYPE
 		moduleName-: Identifier; 
 		context-: Identifier; 
 		direct-: BOOLEAN; 
+		parameters-: ExpressionList; 
 
 		PROCEDURE ^  & InitImport(position: Position; name, moduleName: Identifier; direct: BOOLEAN); 
 		PROCEDURE ^ SetType*(type: Type); 
@@ -1069,6 +1081,7 @@ TYPE
 		PROCEDURE ^ SetDirect*(d: BOOLEAN); 
 		PROCEDURE ^ SetModuleName*(moduleName: Identifier); 
 		PROCEDURE ^ SetContext*(context: Identifier); 
+		PROCEDURE ^ SetParameters*(p: ExpressionList); 
 	END Import; 
 
 	StatementSequence* = OBJECT 
@@ -1076,12 +1089,12 @@ TYPE
 		list: Basic.List; 
 
 		PROCEDURE ^  & InitList; 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ AddStatement*(statement: Statement); 
 		PROCEDURE ^ PrependStatement*(statement: Statement); 
 		PROCEDURE ^ HasStatement*(statement: Statement): BOOLEAN; 
-		PROCEDURE ^ GetStatement*(index: LONGINT): Statement; 
-		PROCEDURE ^ SetStatement*(index: LONGINT; statement: Statement); 
+		PROCEDURE ^ GetStatement*(index: SIZE): Statement; 
+		PROCEDURE ^ SetStatement*(index: SIZE; statement: Statement); 
 		PROCEDURE ^ RemoveStatement*(statement: Statement); 
 		PROCEDURE ^ InsertBefore*(search, new: Statement); 
 		PROCEDURE ^ Clone(VAR copy: StatementSequence); 
@@ -1166,8 +1179,8 @@ TYPE
 		PROCEDURE ^  & InitIfStatement(position: Position; outer: Statement); 
 		PROCEDURE ^ SetElsePart*(elsePart: StatementSequence); 
 		PROCEDURE ^ AddElsifPart*(elsifPart: IfPart); 
-		PROCEDURE ^ GetElsifPart*(i: LONGINT): IfPart; 
-		PROCEDURE ^ ElsifParts*(): LONGINT; 
+		PROCEDURE ^ GetElsifPart*(i: SIZE): IfPart; 
+		PROCEDURE ^ ElsifParts*(): SIZE; 
 		PROCEDURE ^ Clone(): Statement; 
 	END IfStatement; 
 
@@ -1193,8 +1206,8 @@ TYPE
 		PROCEDURE ^  & InitWithStatement(position: Position; outer: Statement); 
 		PROCEDURE ^ SetVariable*(variable: Designator); 
 		PROCEDURE ^ AddWithPart*(withPart: WithPart); 
-		PROCEDURE ^ GetWithPart*(i: LONGINT): WithPart; 
-		PROCEDURE ^ WithParts*(): LONGINT; 
+		PROCEDURE ^ GetWithPart*(i: SIZE): WithPart; 
+		PROCEDURE ^ WithParts*(): SIZE; 
 		PROCEDURE ^ SetElsePart*(elsePart: StatementSequence); 
 		PROCEDURE ^ Clone(): Statement; 
 	END WithStatement; 
@@ -1229,8 +1242,8 @@ TYPE
 		PROCEDURE ^ SetVariable*(expression: Expression); 
 		PROCEDURE ^ SetElsePart*(elsePart: StatementSequence); 
 		PROCEDURE ^ AddCasePart*(casePart: CasePart); 
-		PROCEDURE ^ GetCasePart*(i: LONGINT): CasePart; 
-		PROCEDURE ^ CaseParts*(): LONGINT; 
+		PROCEDURE ^ GetCasePart*(i: SIZE): CasePart; 
+		PROCEDURE ^ CaseParts*(): SIZE; 
 		PROCEDURE ^ Clone(): Statement; 
 		PROCEDURE ^ MaxConstant*(): Basic.Integer; 
 		PROCEDURE ^ SetMinMax*(min, max: Basic.Integer); 
@@ -1349,11 +1362,11 @@ TYPE
 	Code* = OBJECT (Statement)
 	VAR 
 		sourceCode-: SourceCode; 
-		sourceCodeLength-: LONGINT; 
+		sourceCodeLength-: SIZE; 
 		inlineCode-: BinaryCode; 
 
 		PROCEDURE ^  & InitCode(position: Position; outer: Statement); 
-		PROCEDURE ^ SetSourceCode*(source: SourceCode; length: LONGINT); 
+		PROCEDURE ^ SetSourceCode*(source: SourceCode; length: SIZE); 
 		PROCEDURE ^ SetBinaryCode*(code: BinaryCode); 
 		PROCEDURE ^ Clone(): Statement; 
 	END Code; 
@@ -1383,23 +1396,23 @@ TYPE
 		sameLine-: BOOLEAN; 
 		nextComment-: Comment; 
 
-		PROCEDURE ^  & InitComment(pos: Position; scope: Scope; CONST s: ARRAY OF CHAR; length: LONGINT); 
+		PROCEDURE ^  & InitComment(pos: Position; scope: Scope; CONST s: ARRAY OF CHAR; length: SIZE); 
 		PROCEDURE ^ SetItem*(p: ANY; sameLine: BOOLEAN); 
 	END Comment; 
 
 	Scope* = OBJECT 
 	VAR 
 		firstSymbol-: Symbol; 
-		numberSymbols-: LONGINT; 
+		numberSymbols-: SIZE; 
 		symbolTable: Basic.HashTableInt; 
 		firstConstant-, lastConstant-: Constant; 
-		numberConstants-: LONGINT; 
+		numberConstants-: SIZE; 
 		firstTypeDeclaration-, lastTypeDeclaration-: TypeDeclaration; 
-		numberTypeDeclarations-: LONGINT; 
+		numberTypeDeclarations-: SIZE; 
 		firstVariable-, lastVariable-: Variable; 
-		numberVariables-: LONGINT; 
+		numberVariables-: SIZE; 
 		firstProcedure-, lastProcedure-: Procedure; 
-		numberProcedures-: LONGINT; 
+		numberProcedures-: SIZE; 
 		firstAlias-, lastAlias-: Alias; 
 		numberAliases-: LONGINT; 
 		firstScope-, lastScope-: Scope; 
@@ -1408,11 +1421,11 @@ TYPE
 		outerScope-: Scope; 
 		nextScope-: Scope; 
 		ownerModule-: Module; 
-		currentVariableOffset-, minVariableOffset-, maxVariableOffset-: LONGINT; 
+		currentVariableOffset-, minVariableOffset-, maxVariableOffset-: SIZE; 
 
 		PROCEDURE ^  & InitScope(outer: Scope); 
-		PROCEDURE ^ SetMinVariableOffset*(o: LONGINT); 
-		PROCEDURE ^ SetCurrentVariableOffset*(o: LONGINT); 
+		PROCEDURE ^ SetMinVariableOffset*(o: SIZE); 
+		PROCEDURE ^ SetCurrentVariableOffset*(o: SIZE); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ EnterSymbol*(symbol: Symbol; VAR duplicate: BOOLEAN); 
 		PROCEDURE ^ FindSymbol*(identifier: Identifier): Symbol; 
@@ -1428,7 +1441,7 @@ TYPE
 		PROCEDURE ^ AddProcedure*(p: Procedure); 
 		PROCEDURE ^ AddProcedureDeclaration*(p: Procedure); 
 		PROCEDURE ^ FindProcedure*(identifier: Identifier): Procedure; 
-		PROCEDURE ^ FindMethod*(number: LONGINT): Procedure; 
+		PROCEDURE ^ FindMethod*(number: SIZE): Procedure; 
 		PROCEDURE ^ Level*(): LONGINT; 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ SetOuter*(outer: Scope); 
@@ -1462,17 +1475,17 @@ TYPE
 		bodyProcedure-: Procedure; 
 		constructor-: Procedure; 
 		finalizer-: Procedure; 
-		numberMethods-: LONGINT; 
+		numberMethods-: SIZE; 
 		firstParameter-, lastParameter-: Parameter; 
-		numberParameters-: LONGINT; 
+		numberParameters-: SIZE; 
 		firstOperator-, lastOperator-: Operator; 
-		numberOperators: LONGINT; 
+		numberOperators: SIZE; 
 
 		PROCEDURE ^  & InitRecordScope(outer: Scope); 
 		PROCEDURE ^ SetBodyProcedure*(body: Procedure); 
 		PROCEDURE ^ SetConstructor*(body: Procedure); 
 		PROCEDURE ^ SetFinalizer*(body: Procedure); 
-		PROCEDURE ^ SetNumberMethods*(numberMethods: LONGINT); 
+		PROCEDURE ^ SetNumberMethods*(numberMethods: SIZE); 
 		PROCEDURE ^ AddOperator*(p: Operator); 
 		PROCEDURE ^ FindSymbol*(identifier: Identifier): Symbol; 
 		PROCEDURE ^ AbstractProcedure*(inScope: Scope): Procedure; 
@@ -1480,7 +1493,7 @@ TYPE
 		PROCEDURE ^ FindTypeDeclaration*(identifier: Identifier): TypeDeclaration; 
 		PROCEDURE ^ FindVariable*(identifier: Identifier): Variable; 
 		PROCEDURE ^ FindProcedure*(identifier: Identifier): Procedure; 
-		PROCEDURE ^ FindMethod*(number: LONGINT): Procedure; 
+		PROCEDURE ^ FindMethod*(number: SIZE): Procedure; 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 	END RecordScope; 
 
@@ -1490,7 +1503,7 @@ TYPE
 		bodyProcedure-: Procedure; 
 		constructor-: Procedure; 
 		firstImport-, lastImport-: Import; 
-		numberImports: LONGINT; 
+		numberImports: SIZE; 
 
 		PROCEDURE ^  & InitCellScope(outer: Scope); 
 		PROCEDURE ^ Clear*; 
@@ -1506,13 +1519,13 @@ TYPE
 	ModuleScope* = OBJECT (Scope)
 	VAR 
 		firstImport-, lastImport-: Import; 
-		numberImports: LONGINT; 
+		numberImports: SIZE; 
 		firstOperator-, lastOperator-: Operator; 
-		numberOperators: LONGINT; 
+		numberOperators: SIZE; 
 		firstBuiltin-, lastBuiltin-: Builtin; 
-		numberBuiltins: LONGINT; 
+		numberBuiltins: SIZE; 
 		firstComment-, lastComment-: Comment; 
-		numberComments-: LONGINT; 
+		numberComments-: SIZE; 
 		bodyProcedure-: Procedure; 
 
 		PROCEDURE ^  & InitModuleScope; 
@@ -1529,6 +1542,20 @@ TYPE
 		PROCEDURE ^ RemoveImporters*(moduleName, context: Identifier); 
 	END ModuleScope; 
 
+	Identifiers* = OBJECT 
+	TYPE 
+		IdentifierArray = POINTER TO ARRAY OF Identifier; 
+	VAR 
+		list: IdentifierArray; 
+		len: SIZE; 
+
+		PROCEDURE ^  & InitList*; 
+		PROCEDURE ^ Length*(): SIZE; 
+		PROCEDURE ^ Add*(d: Identifier); 
+		PROCEDURE ^ Get*(index: SIZE): Identifier; 
+		PROCEDURE ^ Set*(index: SIZE; symbol: Identifier); 
+	END Identifiers; 
+
 	Module* = OBJECT (Symbol)
 	VAR 
 		sourceName-: Basic.FileName; 
@@ -1538,6 +1565,7 @@ TYPE
 		isCellNet-: BOOLEAN; 
 		closingComment-: Comment; 
 		modifiers-: Modifier; 
+		parameters-: Identifiers; 
 
 		PROCEDURE ^  & InitModule(CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT); 
 		PROCEDURE ^ SetCase*(case: LONGINT); 
@@ -1546,30 +1574,19 @@ TYPE
 		PROCEDURE ^ SetName*(name: Identifier); 
 		PROCEDURE ^ SetClosingComment*(comment: Comment); 
 		PROCEDURE ^ SetModifiers*(modifiers: Modifier); 
+		PROCEDURE ^ SetParameters*(parameters: Identifiers); 
 	END Module; 
-
-	SymbolList* = OBJECT 
-	VAR 
-		list: Basic.List; 
-
-		PROCEDURE ^  & InitList*; 
-		PROCEDURE ^ Length*(): LONGINT; 
-		PROCEDURE ^ AddSymbol*(d: Symbol); 
-		PROCEDURE ^ GetSymbol*(index: LONGINT): Symbol; 
-		PROCEDURE ^ SetSymbol*(index: LONGINT; expression: Symbol); 
-		PROCEDURE ^ RemoveSymbol*(i: LONGINT); 
-	END SymbolList; 
 
 	ProcedureList* = OBJECT 
 	VAR 
 		list: Basic.List; 
 
 		PROCEDURE ^  & InitList*; 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ AddProcedure*(d: Procedure); 
-		PROCEDURE ^ GetProcedure*(index: LONGINT): Procedure; 
-		PROCEDURE ^ SetProcedure*(index: LONGINT; expression: Procedure); 
-		PROCEDURE ^ RemoveProcedure*(i: LONGINT); 
+		PROCEDURE ^ GetProcedure*(index: SIZE): Procedure; 
+		PROCEDURE ^ SetProcedure*(index: SIZE; expression: Procedure); 
+		PROCEDURE ^ RemoveProcedure*(i: SIZE); 
 	END ProcedureList; 
 VAR 
 	invalidIdentifier-: Identifier; 
@@ -1589,7 +1606,7 @@ VAR
 	PROCEDURE ^ CloneDesignator*(x: Designator): Designator; 
 	PROCEDURE ^ CloneExpression*(x: Expression): Expression; 
 	PROCEDURE ^ NewModule*(CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT): Module; 
-	PROCEDURE ^ NewComment*(position: Position; scope: Scope; CONST source: ARRAY OF CHAR; length: LONGINT): Comment; 
+	PROCEDURE ^ NewComment*(position: Position; scope: Scope; CONST source: ARRAY OF CHAR; length: SIZE): Comment; 
 	PROCEDURE ^ NewImport*(position: Position; alias, name: Identifier; direct: BOOLEAN): Import; 
 	PROCEDURE ^ NewConstant*(position: Position; name: Identifier): Constant; 
 	PROCEDURE ^ NewProcedure*(position: Position; name: Identifier; scope: ProcedureScope): Procedure; 
@@ -1598,21 +1615,21 @@ VAR
 	PROCEDURE ^ NewCustomBuiltin*(position: Position; name: Identifier; id: LONGINT; subType: SHORTINT): CustomBuiltin; 
 	PROCEDURE ^ NewOperator*(position: Position; name: Identifier; scope: ProcedureScope): Operator; 
 	PROCEDURE ^ NewType*(): Type; 
-	PROCEDURE ^ NewByteType*(sizeInBits: LONGINT): ByteType; 
-	PROCEDURE ^ NewAnyType*(sizeInBits: LONGINT): AnyType; 
-	PROCEDURE ^ NewObjectType*(sizeInBits: LONGINT): ObjectType; 
-	PROCEDURE ^ NewNilType*(sizeInBits: LONGINT): NilType; 
-	PROCEDURE ^ NewAddressType*(sizeInBits: LONGINT): AddressType; 
-	PROCEDURE ^ NewSizeType*(sizeInBits: LONGINT): SizeType; 
-	PROCEDURE ^ NewBooleanType*(sizeInBits: LONGINT): BooleanType; 
-	PROCEDURE ^ NewSetType*(sizeInBits: LONGINT): SetType; 
-	PROCEDURE ^ NewCharacterType*(sizeInBits: LONGINT): CharacterType; 
-	PROCEDURE ^ NewRangeType*(sizeInBits: LONGINT): RangeType; 
+	PROCEDURE ^ NewByteType*(sizeInBits: SIZE): ByteType; 
+	PROCEDURE ^ NewAnyType*(sizeInBits: SIZE): AnyType; 
+	PROCEDURE ^ NewObjectType*(sizeInBits: SIZE): ObjectType; 
+	PROCEDURE ^ NewNilType*(sizeInBits: SIZE): NilType; 
+	PROCEDURE ^ NewAddressType*(sizeInBits: SIZE): AddressType; 
+	PROCEDURE ^ NewSizeType*(sizeInBits: SIZE): SizeType; 
+	PROCEDURE ^ NewBooleanType*(sizeInBits: SIZE): BooleanType; 
+	PROCEDURE ^ NewSetType*(sizeInBits: SIZE): SetType; 
+	PROCEDURE ^ NewCharacterType*(sizeInBits: SIZE): CharacterType; 
+	PROCEDURE ^ NewRangeType*(sizeInBits: SIZE): RangeType; 
 	PROCEDURE ^ NewComplexType*(base: Type): ComplexType; 
 	PROCEDURE ^ NewIntegerType*(size: LONGINT; signed: BOOLEAN): IntegerType; 
-	PROCEDURE ^ NewFloatType*(sizeInBits: LONGINT): FloatType; 
+	PROCEDURE ^ NewFloatType*(sizeInBits: SIZE): FloatType; 
 	PROCEDURE ^ NewTypeDeclaration*(position: Position; name: Identifier): TypeDeclaration; 
-	PROCEDURE ^ NewStringType*(position: Position; baseType: Type; length: LONGINT): StringType; 
+	PROCEDURE ^ NewStringType*(position: Position; baseType: Type; length: SIZE): StringType; 
 	PROCEDURE ^ NewEnumerationType*(position: Position; scope: Scope; enumerationScope: EnumerationScope): EnumerationType; 
 	PROCEDURE ^ NewArrayType*(position: Position; scope: Scope; form: LONGINT): ArrayType; 
 	PROCEDURE ^ NewMathArrayType*(position: Position; scope: Scope; form: LONGINT): MathArrayType; 
@@ -1666,6 +1683,7 @@ VAR
 	PROCEDURE ^ NewBooleanValue*(position: Position; value: BOOLEAN): BooleanValue; 
 	PROCEDURE ^ NewNilValue*(position: Position): NilValue; 
 	PROCEDURE ^ NewEnumerationValue*(position: Position; value: Basic.Integer): EnumerationValue; 
+	PROCEDURE ^ NewProcedureValue*(position: Position; value: Procedure): ProcedureValue; 
 	PROCEDURE ^ NewStatement*(outer: Statement): Statement; 
 	PROCEDURE ^ CloneStatement*(statement: Statement): Statement; 
 	PROCEDURE ^ NewStatementSequence*(): StatementSequence; 

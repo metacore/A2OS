@@ -11,32 +11,32 @@ CONST
 	dirDiag = 6; 
 TYPE 
 	LineBuffer = POINTER TO RECORD 
-		lines: ARRAY lineBufferSize OF LONGINT; 
+		lines: ARRAY lineBufferSize OF SIZE; 
 		next: LineBuffer; 
-		size: LONGINT; 
+		size: SIZE; 
 	END; 
 
 	Element = RECORD 
-		val: LONGINT; 
-		dir: LONGINT; 
+		val: SIZE; 
+		dir: WORD; 
 	END; 
 
-	Handler* = PROCEDURE {DELEGATE}(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+	Handler* = PROCEDURE {DELEGATE}(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
 
 	EmptyHandler* = PROCEDURE {DELEGATE}; 
 
-	SetupHandler* = PROCEDURE {DELEGATE}(nofLines: LONGINT); 
+	SetupHandler* = PROCEDURE {DELEGATE}(nofLines: SIZE); 
 VAR 
 	separator: BOOLEAN; 
 
-	PROCEDURE ^ GetLinePos(lineBuffer: LineBuffer; offset: LONGINT): LONGINT; 
-	PROCEDURE ^ GetLineBuffer(reader: Texts.TextReader; VAR size: LONGINT): LineBuffer; 
-	PROCEDURE ^ ReadLine(pos: LONGINT; reader: Texts.TextReader): Strings.String; 
+	PROCEDURE ^ GetLinePos(lineBuffer: LineBuffer; offset: SIZE): SIZE; 
+	PROCEDURE ^ GetLineBuffer(reader: Texts.TextReader; VAR size: SIZE): LineBuffer; 
+	PROCEDURE ^ ReadLine(pos: SIZE; reader: Texts.TextReader): Strings.String; 
 	PROCEDURE ^ Diff*(leftFile, rightFile: ARRAY OF CHAR; setup: SetupHandler; leftDiff, rightDiff, leftEqual, rightEqual: Handler; emptyLeft, emptyRight: EmptyHandler; out: Streams.Writer); 
-	PROCEDURE ^ Handle(line: LONGINT; reader: Texts.TextReader; buffer: LineBuffer; handler: Handler; out: Streams.Writer); 
-	PROCEDURE ^ Left(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
-	PROCEDURE ^ Right(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
-	PROCEDURE ^ Equal(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+	PROCEDURE ^ Handle(line: SIZE; reader: Texts.TextReader; buffer: LineBuffer; handler: Handler; out: Streams.Writer); 
+	PROCEDURE ^ Left(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
+	PROCEDURE ^ Right(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
+	PROCEDURE ^ Equal(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
 	PROCEDURE ^ Compare*(context: Commands.Context); 
 BEGIN
 END DiffLib.

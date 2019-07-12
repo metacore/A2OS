@@ -18,9 +18,9 @@ CONST
 	DefaultStyle = 0; 
 	StailaStyle = 1; 
 TYPE 
-	Style = INTEGER; 
+	Style = WORD; 
 
-	Indent = INTEGER; 
+	Indent = WORD; 
 
 	Identifier = ARRAY Scanner.MaxIdentifierLength OF CHAR; 
 
@@ -66,7 +66,7 @@ TYPE
 		PROCEDURE ^ PrintParameter(symbol: SyntaxTree.Symbol; nested: BOOLEAN); 
 		PROCEDURE ^ PrintParameters(procedureType: SyntaxTree.ProcedureType; scope: SyntaxTree.Scope); 
 		PROCEDURE ^ PrintArgument(argument: SyntaxTree.Expression; parameter: SyntaxTree.Symbol; nested: BOOLEAN); 
-		PROCEDURE ^ PrintArguments(arguments: SyntaxTree.ExpressionList; index, count: LONGINT; parameter: SyntaxTree.Parameter; outerScope: SyntaxTree.Scope): BOOLEAN; 
+		PROCEDURE ^ PrintArguments(arguments: SyntaxTree.ExpressionList; index, count: SIZE; parameter: SyntaxTree.Parameter; outerScope: SyntaxTree.Scope): BOOLEAN; 
 		PROCEDURE ^ PrintSelf; 
 		PROCEDURE ^ PrintDelegate(expression: SyntaxTree.Expression); 
 		PROCEDURE ^ PrintBody(procedure: SyntaxTree.Procedure; body: SyntaxTree.Body; variable: SyntaxTree.Variable); 
@@ -151,7 +151,7 @@ TYPE
 	PROCEDURE ^ IsEmptyString(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsNegative(expression: SyntaxTree.Expression): BOOLEAN; 
 	PROCEDURE ^ IsInlineAssemblyCode(procedure: SyntaxTree.Procedure): BOOLEAN; 
-	PROCEDURE ^ GetRecordMethod(record: SyntaxTree.RecordType; method: LONGINT): SyntaxTree.Procedure; 
+	PROCEDURE ^ GetRecordMethod(record: SyntaxTree.RecordType; method: SIZE): SyntaxTree.Procedure; 
 	PROCEDURE ^ GetRecord(type: SyntaxTree.Type): SyntaxTree.RecordType; 
 	PROCEDURE ^ Replace(VAR string: ARRAY OF CHAR; replace, by: CHAR); 
 	PROCEDURE ^ FixStailaIdentifier(VAR identifier: ARRAY OF CHAR); 

@@ -19,7 +19,7 @@ TYPE
 	END Grabber; 
 VAR 
 	sendBuffer, recBuffer, utf8Buffer: Buffer; 
-	slen, rlen, ulen: LONGINT; 
+	slen, rlen, ulen: SIZE; 
 	received: BOOLEAN; 
 	grabber: Grabber; 
 	myProperty: X11.Atom; 
@@ -30,8 +30,8 @@ VAR
 
 	PROCEDURE ^ A2ToUnix; 
 	PROCEDURE ^ UnixToA2; 
-	PROCEDURE ^ ScanHexDigits(CONST buf: ARRAY OF CHAR; VAR pos: LONGINT): LONGINT; 
-	PROCEDURE ^ Utf8ToUnicode(CONST buf: ARRAY OF CHAR; VAR pos: LONGINT): LONGINT; 
+	PROCEDURE ^ ScanHexDigits(CONST buf: ARRAY OF CHAR; VAR pos: SIZE): UNSIGNED32; 
+	PROCEDURE ^ Utf8ToUnicode(CONST buf: ARRAY OF CHAR; VAR pos: SIZE): UNSIGNED32; 
 	PROCEDURE ^ ClearSelection; 
 	PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
 	PROCEDURE ^ PutToClipboard(text: Texts.Text); 

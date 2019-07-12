@@ -10,7 +10,7 @@ TYPE
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ AddName(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ GetName(index: LONGINT; VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ GetName(index: SIZE; VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ ContainsName(CONST otherName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ DumpNames(w: Streams.Writer); 
 		PROCEDURE ^ SortNames; 

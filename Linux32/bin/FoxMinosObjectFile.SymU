@@ -28,7 +28,7 @@ TYPE
 
 	PROCEDURE ^ GetFixups(diagnostics: Diagnostics.Diagnostics; module: Sections.Module; symbol: Sections.Section; VAR first: Fixup): LONGINT; 
 	PROCEDURE ^ FindPC(pc: LONGINT; module: Sections.Module; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
-	PROCEDURE ^ MakeSectionOffsets(module: Sections.Module; VAR varSize, codeSize, bodyOffset: LONGINT; VAR code: ByteArray); 
+	PROCEDURE ^ MakeSectionOffsets(module: Sections.Module; VAR varSize, codeSize, bodyOffset: SIZE; VAR code: ByteArray); 
 	PROCEDURE ^ WriteObjectFile*(w: Streams.Writer; module: Sections.Module; symbolFile: Files.File; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
 	PROCEDURE ^ Get*(): Formats.ObjectFileFormat; 
 BEGIN

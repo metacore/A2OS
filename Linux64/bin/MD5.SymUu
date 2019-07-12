@@ -5,7 +5,7 @@ TYPE
 
 	ContextDesc = RECORD 
 		buf: ARRAY 4 OF LONGINT; 
-		bits: LONGINT; 
+		bits: SIZE; 
 		in: ARRAY 64 OF CHAR; 
 	END; 
 
@@ -24,7 +24,7 @@ TYPE
 	PROCEDURE ^ STEP4(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT); 
 	PROCEDURE ^ Transform(VAR buf, in: ARRAY OF LONGINT); 
 	PROCEDURE ^ Write*(context: Context; ch: CHAR); 
-	PROCEDURE ^ WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: SIZE); 
 	PROCEDURE ^ Close*(context: Context; VAR digest: Digest); 
 	PROCEDURE ^ HexDigit(i: LONGINT): CHAR; 
 	PROCEDURE ^ ToString*(digest: Digest; VAR str: ARRAY OF CHAR); 

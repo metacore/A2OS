@@ -5,30 +5,29 @@ CONST
 TYPE 
 	Pipe* = OBJECT {EXCLUSIVE} 
 	VAR 
-		head, num: LONGINT; 
+		head, num: SIZE; 
 		buffer: POINTER TO ARRAY OF CHAR; 
 		closed: BOOLEAN; 
 
-		PROCEDURE ^ Available*(): LONGINT; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
-		PROCEDURE ^  & Init*(size: LONGINT); 
+		PROCEDURE ^ Available*(): SIZE; 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^  & Init*(size: SIZE); 
 		PROCEDURE ^ Close*; 
 	END Pipe; 
 
-	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 
 	ReadDecoupler* = OBJECT {EXCLUSIVE} 
 	VAR 
 		pipe: Pipe; 
 		inputReceiver: Receiver; 
-		numR: LONGINT; 
 		smallbuf: ARRAY [128] OF CHAR; 
-		len: LONGINT; 
+		len: SIZE; 
 		res: WORD; 
 
 		PROCEDURE ^  & InitReadDecoupler*(inputReceiver: Receiver); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 	BEGIN{ACTIVE} 
 	END ReadDecoupler; 
 BEGIN

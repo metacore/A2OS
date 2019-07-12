@@ -157,7 +157,7 @@ TYPE
 		PROCEDURE ^ SetReportErrorProc(proc: ReportErrorProc); 
 		PROCEDURE ^ SetReportProgressProc(proc: ReportProgressProc); 
 		PROCEDURE ^ SetAbortedProc(proc: AbortedProc); 
-		PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ OpenPackages*(CONST name: ARRAY OF CHAR; error: Streams.Writer): BOOLEAN; 
 		PROCEDURE ^ ParsePackages(document: XML.Document; error: Streams.Writer): Package; 
 		PROCEDURE ^ CheckPackages(): BOOLEAN; 

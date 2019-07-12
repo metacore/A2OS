@@ -61,7 +61,7 @@ TYPE
 		PROCEDURE ^ Close*(): LONGINT; 
 		PROCEDURE ^ Noop*(VAR ret: Classes.List): LONGINT; 
 		PROCEDURE ^ Status*(VAR mailbox, items: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT; 
-		PROCEDURE ^ Search*(VAR criteria: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT; 
+		PROCEDURE ^ Search*(CONST criteria: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT; 
 		PROCEDURE ^ Fetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT; 
 		PROCEDURE ^ UIDFetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT; 
 		PROCEDURE ^ UIDStore*(set: ARRAY OF CHAR; flags: ARRAY OF CHAR; plus: BOOLEAN; VAR ret: Classes.List): LONGINT; 

@@ -98,13 +98,13 @@ VAR
 	PROCEDURE ^ SymWMod*(VAR R: Rider; CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ SymWReal*(VAR R: Rider; r: REAL); 
 	PROCEDURE ^ SymWLReal*(VAR R: Rider; r: LONGREAL); 
-	PROCEDURE ^ ObjWGetPos*(VAR R: Rider; VAR pos: LONGINT); 
+	PROCEDURE ^ ObjWGetPos*(VAR R: Rider; VAR pos: Files.Position); 
 	PROCEDURE ^ ObjW*(VAR R: Rider; ch: CHAR); 
 	PROCEDURE ^ ObjWNum*(VAR R: Rider; i: LONGINT); 
 	PROCEDURE ^ ObjWInt*(VAR R: Rider; i: INTEGER); 
 	PROCEDURE ^ ObjWIntAt*(VAR R: Rider; pos: LONGINT; i: INTEGER); 
 	PROCEDURE ^ ObjWLInt*(VAR R: Rider; i: LONGINT); 
-	PROCEDURE ^ ObjWLIntAt*(VAR R: Rider; pos: LONGINT; i: LONGINT); 
+	PROCEDURE ^ ObjWLIntAt*(VAR R: Rider; pos: Files.Position; i: LONGINT); 
 	PROCEDURE ^ ObjWName*(VAR R: Rider; CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ RefW*(VAR R: Rider; ch: CHAR); 
 	PROCEDURE ^ RefWNum*(VAR R: Rider; i: LONGINT); 
@@ -124,7 +124,7 @@ VAR
 	PROCEDURE ^ LogWStr*(CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ LogWStr0*(str: StringPool.Index); 
 	PROCEDURE ^ LogWHex*(i: LONGINT); 
-	PROCEDURE ^ LogWNum*(i: LONGINT); 
+	PROCEDURE ^ LogWNum*(i: HUGEINT); 
 	PROCEDURE ^ LogWBool*(b: BOOLEAN); 
 	PROCEDURE ^ LogWType*(p: ANY); 
 	PROCEDURE ^ LogWLn*; 

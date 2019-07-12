@@ -1,5 +1,5 @@
 MODULE UDPChatBase;
-	IMPORT Kernel, Strings, BIT, IO := Streams, IP, FS := Files;
+	IMPORT Kernel, Strings, IO := Streams, IP, FS := Files;
 CONST 
 	serverPort* = 14000; 
 	UserFile = \"Sage.UDPChatUsers.dat"\; 
@@ -97,7 +97,7 @@ TYPE
 
 	Buffer* = OBJECT (Strings.Buffer)
 
-		PROCEDURE ^ AddInt*(n, len: LONGINT); 
+		PROCEDURE ^ AddInt*(n, len: SIZE); 
 	END Buffer; 
 
 	PArray = POINTER TO ARRAY OF ANY; 

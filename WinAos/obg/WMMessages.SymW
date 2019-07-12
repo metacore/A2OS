@@ -70,7 +70,7 @@ TYPE
 
 	MsgQ = OBJECT 
 	VAR 
-		head, num: LONGINT; 
+		head, num: SIZE; 
 		msgQ: POINTER TO ARRAY OF Message; 
 		owner: MsgSequencer; 
 

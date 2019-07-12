@@ -45,24 +45,24 @@ TYPE
 	VAR 
 		descriptor: DatasetDescriptor; 
 		buffer: POINTER TO ARRAY OF Dataset; 
-		pos, nofItems, dimensions: LONGINT; 
-		bufferSize: LONGINT; 
+		pos, nofItems, dimensions: SIZE; 
+		bufferSize: SIZE; 
 		viewSampleCount: LONGINT; 
 		statistics: BOOLEAN; 
 		valid: BOOLEAN; 
 		nbrOfValues: LONGINT; 
 		cur, min, max, sum: Dataset; 
 
-		PROCEDURE ^  & Init*(bufferSize, dimensions: LONGINT); 
+		PROCEDURE ^  & Init*(bufferSize, dimensions: SIZE); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ GetStatistics*(VAR statistics: Statistics); 
-		PROCEDURE ^ FindMinMax*(from, len: LONGINT; VAR min, max: REAL); 
-		PROCEDURE ^ FindAllMinMax*(from, len: LONGINT; VAR min, max: REAL); 
+		PROCEDURE ^ FindMinMax*(from, len: SIZE; VAR min, max: REAL); 
+		PROCEDURE ^ FindAllMinMax*(from, len: SIZE; VAR min, max: REAL); 
 		PROCEDURE ^ SetDescriptor*(ds: DatasetDescriptor); 
 		PROCEDURE ^ PutValues*(values: Dataset); 
-		PROCEDURE ^ GetValues*(index: LONGINT; VAR dataset: Dataset); 
-		PROCEDURE ^ GetNofDimensions*(): LONGINT; 
-		PROCEDURE ^ GetNofPoints*(): LONGINT; 
+		PROCEDURE ^ GetValues*(index: SIZE; VAR dataset: Dataset); 
+		PROCEDURE ^ GetNofDimensions*(): SIZE; 
+		PROCEDURE ^ GetNofPoints*(): SIZE; 
 	END MultiPointModel; 
 
 	ExtUpdateHandler* = PROCEDURE {DELEGATE}; 
@@ -80,7 +80,7 @@ TYPE
 		style-: WMProperties.Int32Property; 
 		styleI: LONGINT; 
 		extUpdate: ExtUpdateHandler; 
-		dimensions: LONGINT; 
+		dimensions: SIZE; 
 		points: Dataset; 
 		points0, points1: LongintDataset; 
 
@@ -147,8 +147,8 @@ VAR
 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitProtoTypes; 
-	PROCEDURE ^ FindIndexOf*(flag: LONGINT; ds: DatasetDescriptor): LONGINT; 
-	PROCEDURE ^ GetNumberOf*(flag: LONGINT; startIndex, endIndex: LONGINT; ds: DatasetDescriptor): LONGINT; 
+	PROCEDURE ^ FindIndexOf*(flag: LONGINT; ds: DatasetDescriptor): SIZE; 
+	PROCEDURE ^ GetNumberOf*(flag: LONGINT; startIndex, endIndex: SIZE; ds: DatasetDescriptor): SIZE; 
 	PROCEDURE ^ ClearFlag*(flag: LONGINT; ds: DatasetDescriptor); 
 	PROCEDURE ^ RMin(a, b: REAL): REAL; 
 	PROCEDURE ^ RMax(a, b: REAL): REAL; 

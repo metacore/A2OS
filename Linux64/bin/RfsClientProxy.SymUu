@@ -1,0 +1,100 @@
+MODULE RfsClientProxy;
+	IMPORT SYSTEM, RfsConnection, Files, Network, TCP, KernelLog, Streams;
+CONST 
+	ERROR = 0; 
+	GETATTR = 1; 
+	SETATTR = 2; 
+	LOOKUP = 3; 
+	READ = 4; 
+	WRITE = 5; 
+	CREATE = 6; 
+	REMOVE = 8; 
+	RENAME = 10; 
+	READDIR = 11; 
+	CREATETMP = 12; 
+	CHDIR = 13; 
+	KILL = 14; 
+	AUTHENT = 15; 
+	REPLYOK* = 0; 
+	RECEIVERROR* = 1; 
+	PARAMERROR* = 2; 
+	CACHEMISS* = 3; 
+	GETATTRERROR* = 4; 
+	SETATTRERROR* = 5; 
+	NOFILE* = 6; 
+	READERROR* = 7; 
+	WRITEERROR* = 8; 
+	REMOVEERROR* = 9; 
+	RENAMEERROR* = 10; 
+	NODIR* = 11; 
+	AUTHENTICATIONERROR* = 12; 
+	HeaderLength = 100; 
+	Payload* = 16280; 
+	BufSize = (Payload + HeaderLength); 
+	MaxNameLen = 64; 
+	DataOff = 8; 
+	Ok = TCP.Ok; 
+	DefaultPort = 9107; 
+TYPE 
+	Address* = LONGINT; 
+
+	Dir* = OBJECT 
+	VAR 
+		first*: Dirent; 
+		last*: Dirent; 
+		nbrOfEntrys*: LONGINT; 
+
+		PROCEDURE ^  & Init*; 
+		PROCEDURE ^ Insert*(VAR name: ARRAY OF CHAR; off, len, time, date, size: LONGINT); 
+		PROCEDURE ^ Get*(VAR name: ARRAY OF CHAR; VAR time, date, size: LONGINT); 
+	END Dir; 
+
+	Dirent* = OBJECT 
+	VAR 
+		name: ARRAY MaxNameLen OF CHAR; 
+		time, date, size: LONGINT; 
+		next: Dirent; 
+	END Dirent; 
+
+	Proxy* = OBJECT {EXCLUSIVE} (Files.Volume)
+	VAR 
+		connection: RfsConnection.Connection; 
+		user, passwd, host, path: ARRAY MaxNameLen OF CHAR; 
+		port: INTEGER; 
+		buf, backupBuf: ARRAY BufSize OF CHAR; 
+
+		PROCEDURE ^  & InitProxy*(VAR user, passwd, host, path: ARRAY OF CHAR; port: INTEGER); 
+		PROCEDURE ^ Error*(VAR errorcode: WORD); 
+		PROCEDURE ^ GetAttr*(fileID: LONGINT; VAR fileLen, time, date: LONGINT; VAR errorcode: WORD); 
+		PROCEDURE ^ SetAttr*(VAR filename: ARRAY OF CHAR; time, date: LONGINT; VAR errorcode: LONGINT); 
+		PROCEDURE ^ Lookup*(VAR filename: ARRAY OF CHAR; VAR fileID: LONGINT; VAR errorcode: WORD); 
+		PROCEDURE ^ Read*(fileID, off, len: LONGINT; VAR buffer: ARRAY OF CHAR; dstOff: LONGINT; VAR received: SIZE; VAR errorcode: WORD); 
+		PROCEDURE ^ Write*(fileID, off, len: LONGINT; VAR buffer: ARRAY OF CHAR; VAR written: LONGINT; VAR errorcode: WORD); 
+		PROCEDURE ^ Create*(VAR filename: ARRAY OF CHAR; VAR fileID: LONGINT; VAR errorcode: WORD); 
+		PROCEDURE ^ Remove*(VAR filename: ARRAY OF CHAR; VAR errorcode: WORD); 
+		PROCEDURE ^ Rename*(VAR filenameFrom, filenameTo: ARRAY OF CHAR; VAR errorcode: WORD); 
+		PROCEDURE ^ ReadDir*(CONST filename, mask: ARRAY OF CHAR; detail, cookie: LONGINT; dir: Dir; VAR endOfDir: LONGINT; VAR errorcode: WORD); 
+		PROCEDURE ^ CreateTmp*(VAR filename: ARRAY OF CHAR; VAR hashval: LONGINT; VAR errorcode: WORD); 
+		PROCEDURE ^ ChDir*(VAR dir: ARRAY OF CHAR; VAR errorcode: WORD); 
+		PROCEDURE ^ Kill*(VAR errorcode: WORD); 
+		PROCEDURE ^ Authent*(VAR user, passwd, path: ARRAY OF CHAR; VAR errorcode: WORD); 
+		PROCEDURE ^ Mount*(VAR errorcode: WORD); 
+		PROCEDURE ^ Unmount*(VAR errorcode: WORD); 
+		PROCEDURE ^ AllocBlock*(hint: Address; VAR adr: Address); 
+		PROCEDURE ^ FreeBlock*(adr: Address); 
+		PROCEDURE ^ MarkBlock*(adr: Address); 
+		PROCEDURE ^ Marked*(adr: Address): BOOLEAN; 
+		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+	END Proxy; 
+
+	PROCEDURE ^ New*(context: Files.Parameters); 
+	PROCEDURE ^ GetResult(connection: RfsConnection.Connection; VAR errorcode: WORD; VAR dataBytes, received: SIZE; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ Int2Char*(int: SIZE; VAR buf: ARRAY OF CHAR; off: SIZE); 
+	PROCEDURE ^ Char2Int*(buf: ARRAY OF CHAR; off: LONGINT; VAR int: LONGINT); 
+	PROCEDURE ^ ReadInteger*(connection: RfsConnection.Connection; VAR res: WORD): LONGINT; 
+	PROCEDURE ^ Len(x: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ CopyBuffer*(CONST bufFrom: ARRAY OF CHAR; offFrom: SIZE; VAR bufTo: ARRAY OF CHAR; offTo, len: SIZE); 
+BEGIN
+END RfsClientProxy.

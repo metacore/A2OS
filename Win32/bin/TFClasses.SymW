@@ -6,23 +6,23 @@ TYPE
 	List* = OBJECT {EXCLUSIVE} 
 	VAR 
 		list: ObjectArray; 
-		count: LONGINT; 
-		readLock: LONGINT; 
+		count: SIZE; 
+		readLock: SIZE; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetCount*(): SIZE; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Add*(x: ANY); 
 		PROCEDURE ^ Replace*(x, y: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): LONGINT; 
+		PROCEDURE ^ IndexOf*(x: ANY): SIZE; 
 		PROCEDURE ^ Remove*(x: ANY); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetItem*(i: LONGINT): ANY; 
+		PROCEDURE ^ GetItem*(i: SIZE): ANY; 
 		PROCEDURE ^ Lock*; 
 		PROCEDURE ^ Unlock*; 
 	END List; 
 
-	CompareMethod* = PROCEDURE {DELEGATE}(first, second: ANY):LONGINT; 
+	CompareMethod* = PROCEDURE {DELEGATE}(first, second: ANY):WORD; 
 
 	SortedList* = OBJECT {EXCLUSIVE} (List)
 	VAR 
@@ -32,7 +32,7 @@ TYPE
 		PROCEDURE ^ SetCompareMethod*(m: CompareMethod); 
 		PROCEDURE ^ Add*(x: ANY); 
 		PROCEDURE ^ AddUnlocked(x: ANY); 
-		PROCEDURE ^ FindPosition(x: ANY): LONGINT; 
+		PROCEDURE ^ FindPosition(x: ANY): SIZE; 
 		PROCEDURE ^ Remove*(x: ANY); 
 		PROCEDURE ^ RemoveUnlocked(x: ANY); 
 		PROCEDURE ^ Replace*(x, y: ANY); 
@@ -43,7 +43,7 @@ TYPE
 		key: Strings.String; 
 		value: ANY; 
 		next: StringMapEntry; 
-		hash: LONGINT; 
+		hash: SIZE; 
 	END; 
 
 	StringMapEntryArray = POINTER TO ARRAY OF StringMapEntry; 
@@ -53,7 +53,7 @@ TYPE
 		hashtable: StringMapEntryArray; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ CalcHash(CONST buffer: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ CalcHash(CONST buffer: ARRAY OF CHAR): SIZE; 
 		PROCEDURE ^ Find*(CONST key: ARRAY OF CHAR): ANY; 
 		PROCEDURE ^ Add*(CONST key: ARRAY OF CHAR; value: ANY); 
 		PROCEDURE ^ GetKeys; 

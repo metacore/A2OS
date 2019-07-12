@@ -16,7 +16,7 @@ TYPE
 		repositoryName: Strings.String; 
 		componentName: Strings.String; 
 		generator: Strings.String; 
-		componentID: LONGINT; 
+		componentID: SIZE; 
 		inLinkUpdate: BOOLEAN; 
 
 		PROCEDURE ^  & New*(prototype: Property; name, info: String); 
@@ -108,6 +108,29 @@ TYPE
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
 		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
 	END Int32Property; 
+
+	IntegerProperty* = OBJECT (Property)
+	VAR 
+		value: HUGEINT; 
+		min, max: HUGEINT; 
+		bounded: BOOLEAN; 
+
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ SetBounds*(min, max: HUGEINT); 
+		PROCEDURE ^ GetBounds*(VAR min, max: HUGEINT); 
+		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
+		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
+		PROCEDURE ^ Validate(v: HUGEINT): HUGEINT; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): HUGEINT; 
+		PROCEDURE ^ Set*(value: HUGEINT); 
+		PROCEDURE ^ SetPassive*(value: HUGEINT); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+	END IntegerProperty; 
 
 	RealProperty* = OBJECT (Property)
 	VAR 
@@ -306,10 +329,11 @@ VAR
 
 	PROCEDURE ^ Indent(w: Streams.Writer; indent: LONGINT); 
 	PROCEDURE ^ ReadCharDataInt(xml: XML.Element): LONGINT; 
-	PROCEDURE ^ NewIntChars(i: LONGINT): XML.Chars; 
+	PROCEDURE ^ NewIntChars(i: HUGEINT): XML.Chars; 
 	PROCEDURE ^ NewBoolean*(): Property; 
 	PROCEDURE ^ NewSet*(): Property; 
 	PROCEDURE ^ NewInt32*(): Property; 
+	PROCEDURE ^ NewInteger*(): Property; 
 	PROCEDURE ^ NewReal*(): Property; 
 	PROCEDURE ^ NewString*(): Property; 
 	PROCEDURE ^ NewColor*(): Property; 

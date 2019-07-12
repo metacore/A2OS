@@ -71,18 +71,18 @@ TYPE
 		progressBar: WMProgressComponents.ProgressBar; 
 		filenameLabel: WMStandardComponents.Label; 
 		progressLabel: WMStandardComponents.Label; 
-		currentBytes, maxBytes: LONGINT; 
+		currentBytes, maxBytes: Streams.Position; 
 		w: Streams.StringWriter; 
 		string: ARRAY 128 OF CHAR; 
 
-		PROCEDURE ^ SetProgress(progress: LONGINT); 
-		PROCEDURE ^  & New*(CONST filename: ARRAY OF CHAR; length: LONGINT); 
+		PROCEDURE ^ SetProgress(progress: Streams.Position); 
+		PROCEDURE ^  & New*(CONST filename: ARRAY OF CHAR; length: Streams.Position); 
 	END ProgressInfo; 
 
 	CustomTextView = OBJECT {EXCLUSIVE} (WMTextView.TextView)
 	VAR 
 		selecting, selectWords, dragPossible: BOOLEAN; 
-		lastPos: LONGINT; 
+		lastPos: SIZE; 
 		downX, downY: LONGINT; 
 		utilreader: Texts.TextReader; 
 		text: Texts.Text; 
@@ -153,7 +153,7 @@ TYPE
 		PROCEDURE ^ ResetStatus; 
 		PROCEDURE ^ ToggleOpen(sender, data: ANY); 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: LONGINT); 
+		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: SIZE); 
 		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: WORD); 
 		PROCEDURE ^ EvaluateError(res: WORD); 
 		PROCEDURE ^ ReceiveCharacters; 

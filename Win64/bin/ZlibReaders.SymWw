@@ -20,7 +20,7 @@ TYPE
 	END; 
 
 	PROCEDURE ^ Open*(VAR r: Reader; wrapper: BOOLEAN; VAR fr: Files.Rider); 
-	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
+	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR read: SIZE); 
 	PROCEDURE ^ Read*(VAR r: Reader; VAR ch: CHAR); 
 	PROCEDURE ^ Close*(VAR r: Reader); 
 	PROCEDURE ^ Uncompress*(VAR src, dst: Files.Rider; VAR crc32: LONGINT; VAR res: WORD); 

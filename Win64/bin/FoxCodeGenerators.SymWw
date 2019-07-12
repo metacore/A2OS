@@ -6,7 +6,7 @@ CONST
 	MaxSpilledRegisters = 64; 
 TYPE 
 	AllocationArray = POINTER TO ARRAY OF RECORD 
-		first, last: LONGINT; 
+		first, last: SIZE; 
 	END; 
 
 	RegisterAllocation* = OBJECT 
@@ -15,12 +15,12 @@ TYPE
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Use(register, pc: LONGINT); 
+		PROCEDURE ^ Use(register: SIZE; pc: SIZE); 
 	END RegisterAllocation; 
 
 	RegisterEntry* = POINTER TO RECORD 
 		prev, next: RegisterEntry; 
-		register: LONGINT; 
+		register: SIZE; 
 		registerClass: IntermediateCode.RegisterClass; 
 		type: IntermediateCode.Type; 
 	END; 
@@ -30,8 +30,8 @@ TYPE
 		first, last, cache: RegisterEntry; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ AddRegisterEntry(register: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type); 
-		PROCEDURE ^ RemoveRegisterEntry(register: LONGINT); 
+		PROCEDURE ^ AddRegisterEntry(register: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type); 
+		PROCEDURE ^ RemoveRegisterEntry(register: SIZE); 
 	END LiveRegisters; 
 
 	GenericCodeGenerator* = OBJECT 
@@ -41,7 +41,7 @@ TYPE
 		dump*: Streams.Writer; 
 		in-: IntermediateCode.Section; 
 		out-: BinaryCode.Section; 
-		inPC-, outPC-: LONGINT; 
+		inPC-, outPC-: SIZE; 
 		error*: BOOLEAN; 
 		allocation: RegisterAllocation; 
 		liveRegisters: LiveRegisters; 
@@ -52,8 +52,8 @@ TYPE
 		PROCEDURE ^ SetModule*(module: Sections.Module); 
 		PROCEDURE ^ Error*(position: Basic.Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
-		PROCEDURE ^ FirstUse*(virtualRegister: LONGINT): LONGINT; 
-		PROCEDURE ^ LastUse*(virtualRegister: LONGINT): LONGINT; 
+		PROCEDURE ^ FirstUse*(virtualRegister: SIZE): SIZE; 
+		PROCEDURE ^ LastUse*(virtualRegister: SIZE): SIZE; 
 		PROCEDURE ^ Supported*(CONST instr: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Generate*(VAR instr: IntermediateCode.Instruction); 
 		PROCEDURE ^ PostGenerate*(CONST instr: IntermediateCode.Instruction); 
@@ -68,10 +68,10 @@ TYPE
 		next-: Ticket; 
 		type-: IntermediateCode.Type; 
 		class-: IntermediateCode.RegisterClass; 
-		lastuse-: LONGINT; 
+		lastuse-: SIZE; 
 		spilled*, spillable*: BOOLEAN; 
 		register*, offset*: LONGINT; 
-		parts-: LONGINT; 
+		parts-: SIZE; 
 	END; 
 
 	Tickets* = OBJECT 
@@ -80,7 +80,7 @@ TYPE
 		free: Ticket; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; spillable, spilled: BOOLEAN; offset: LONGINT; lastuse: LONGINT): Ticket; 
+		PROCEDURE ^ Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; spillable, spilled: BOOLEAN; offset: LONGINT; lastuse: SIZE): Ticket; 
 		PROCEDURE ^ Remove*(ticket: Ticket); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END Tickets; 
@@ -90,15 +90,15 @@ TYPE
 	VirtualRegisters* = OBJECT 
 	VAR 
 		tickets: VirtualRegisterMappings; 
-		parts: LONGINT; 
-		firstMapped-, lastMapped-: LONGINT; 
+		parts: SIZE; 
+		firstMapped-, lastMapped-: SIZE; 
 
-		PROCEDURE ^  & Init*(parts: LONGINT); 
+		PROCEDURE ^  & Init*(parts: SIZE); 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Mapped*(register: LONGINT; part: LONGINT): Ticket; 
-		PROCEDURE ^ SetMapped*(register: LONGINT; part: LONGINT; ticket: Ticket); 
-		PROCEDURE ^ Unmap*(register: LONGINT); 
-		PROCEDURE ^ Parts*(): LONGINT; 
+		PROCEDURE ^ Mapped*(register: SIZE; part: SIZE): Ticket; 
+		PROCEDURE ^ SetMapped*(register: SIZE; part: SIZE; ticket: Ticket); 
+		PROCEDURE ^ Unmap*(register: SIZE); 
+		PROCEDURE ^ Parts*(): SIZE; 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END VirtualRegisters; 
 
@@ -148,9 +148,9 @@ TYPE
 		PROCEDURE ^ UnSpill*(ticket: Ticket); 
 		PROCEDURE ^ GetPreferredSpill*(CONST type: IntermediateCode.Type): Ticket; 
 		PROCEDURE ^ ForceFreeRegister*(CONST type: IntermediateCode.Type): LONGINT; 
-		PROCEDURE ^ ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; lastUse: LONGINT): Ticket; 
+		PROCEDURE ^ ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; lastUse: SIZE): Ticket; 
 		PROCEDURE ^ TemporaryTicket*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type): Ticket; 
-		PROCEDURE ^ MapVirtualRegister*(virtualRegister: LONGINT; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT); 
+		PROCEDURE ^ MapVirtualRegister*(virtualRegister: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT); 
 		PROCEDURE ^ ResetTicket(ticket: Ticket); 
 		PROCEDURE ^ FreeTicket(ticket: Ticket); 
 		PROCEDURE ^ UnmapTicket*(ticket: Ticket); 

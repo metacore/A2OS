@@ -107,15 +107,15 @@ TYPE
 		fileSystem: WinFileSystem; 
 
 		PROCEDURE ^  & Init*(VAR name: ARRAY OF CHAR; hfile: Kernel32.HANDLE; key: LONGINT; fs: WinFileSystem); 
-		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: LONGINT); 
-		PROCEDURE ^ Pos*(VAR r: Files.Rider): LONGINT; 
+		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
+		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
 		PROCEDURE ^ WriteBuffer; 
 		PROCEDURE ^ ReadBuffer(apos: LONGINT); 
 		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
-		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
-		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Length*(): Files.Size; 
 		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
 		PROCEDURE ^ SetDate*(t, d: LONGINT); 
 		PROCEDURE ^ GetAttributes*(): SET; 

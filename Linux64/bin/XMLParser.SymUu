@@ -1,5 +1,5 @@
 MODULE XMLParser;
-	IMPORT Strings, KernelLog, DynamicStrings, Scanner := XMLScanner, XML;
+	IMPORT Strings, KernelLog, DynamicStrings, Streams, Scanner := XMLScanner, XML;
 CONST 
 	Ok* = XML.Ok; 
 	UnknownError* =  -1; 
@@ -11,7 +11,7 @@ TYPE
 		scanner: Scanner.Scanner; 
 		dtd: XML.DocTypeDecl; 
 		elemReg*: XML.ElementRegistry; 
-		reportError*: PROCEDURE {DELEGATE}(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		reportError*: PROCEDURE {DELEGATE}(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		res*: LONGINT; 
 		ds1, ds2: DynamicStrings.DynamicString; 
 
@@ -58,7 +58,7 @@ VAR
 
 	PROCEDURE ^ IsPubidLiteral(CONST str: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ StrToInt(VAR str: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ DefaultReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ ExpandPredefinedEntity(CONST name: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ Init; 
 BEGIN

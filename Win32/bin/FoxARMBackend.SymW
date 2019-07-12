@@ -179,7 +179,7 @@ TYPE
 
 	Citation = OBJECT 
 	VAR 
-		pc: LONGINT; 
+		pc: SIZE; 
 		bits: LONGINT; 
 		shift: LONGINT; 
 		next: Citation; 
@@ -193,7 +193,7 @@ TYPE
 
 		PROCEDURE ^  & Init(size: LONGINT); 
 		PROCEDURE ^ Emit(out: BinaryCode.Section); 
-		PROCEDURE ^ AddCitation(pc: LONGINT; bits: LONGINT; shift: LONGINT); 
+		PROCEDURE ^ AddCitation(pc: SIZE; bits: LONGINT; shift: LONGINT); 
 	END Reference; 
 
 	ImmediateReference = OBJECT (Reference)
@@ -215,9 +215,9 @@ TYPE
 	SymbolReference = OBJECT (Reference)
 	VAR 
 		identifier: ObjectFile.Identifier; 
-		symbolOffset: LONGINT; 
+		symbolOffset: SIZE; 
 
-		PROCEDURE ^  & InitSym(s: Sections.SectionName; fp: Basic.Fingerprint; offs: LONGINT); 
+		PROCEDURE ^  & InitSym(s: Sections.SectionName; fp: Basic.Fingerprint; offs: SIZE); 
 		PROCEDURE ^ Emit(out: BinaryCode.Section); 
 	END SymbolReference; 
 
@@ -225,15 +225,15 @@ TYPE
 	VAR 
 		firstReference, lastReference: Reference; 
 		size: LONGINT; 
-		due: LONGINT; 
+		due: SIZE; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ UpdateDue(pc: LONGINT; bits: LONGINT; shift: LONGINT); 
-		PROCEDURE ^ AddCitation(reference: Reference; pc: LONGINT; bits: LONGINT; shift: LONGINT); 
+		PROCEDURE ^ UpdateDue(pc: SIZE; bits: LONGINT; shift: LONGINT); 
+		PROCEDURE ^ AddCitation(reference: Reference; pc: SIZE; bits: LONGINT; shift: LONGINT); 
 		PROCEDURE ^ AddReference(reference: Reference): Reference; 
-		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: LONGINT; pc: LONGINT; bits: LONGINT); 
-		PROCEDURE ^ AddImmediate(value: LONGINT; pc: LONGINT; bits: LONGINT); 
-		PROCEDURE ^ AddHImmediate(value: HUGEINT; pc: LONGINT; bits: LONGINT); 
+		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; pc: SIZE; bits: LONGINT); 
+		PROCEDURE ^ AddImmediate(value: LONGINT; pc: SIZE; bits: LONGINT); 
+		PROCEDURE ^ AddHImmediate(value: HUGEINT; pc: SIZE; bits: LONGINT); 
 	END ListOfReferences; 
 
 	PhysicalRegisters* = OBJECT (CodeGenerators.PhysicalRegisters)
@@ -264,8 +264,8 @@ TYPE
 		backend: BackendARM; 
 		opSP, opFP, opPC, opLR, opRES, opRESHI, opRESFS, opRESFD, fpscr: InstructionSet.Operand; 
 		listOfReferences: ListOfReferences; 
-		spillStackStart, pushChainLength: LONGINT; 
-		stackSize: LONGINT; 
+		spillStackStart, pushChainLength: SIZE; 
+		stackSize: SIZE; 
 		stackSizeKnown: BOOLEAN; 
 		inStackAllocation: BOOLEAN; 
 
@@ -288,17 +288,17 @@ TYPE
 		PROCEDURE ^ Emit3WithCondition(opCode: LONGINT; op1, op2, op3: Operand; condition: LONGINT); 
 		PROCEDURE ^ ValueComposition(value: LONGINT; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT; 
 		PROCEDURE ^ ValueComposition2(value: LONGINT; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT; 
-		PROCEDURE ^ PhysicalRegisterNumber(virtualRegisterNumber: LONGINT; part: LONGINT): LONGINT; 
+		PROCEDURE ^ PhysicalRegisterNumber(virtualRegisterNumber: SIZE; part: LONGINT): LONGINT; 
 		PROCEDURE ^ GetSpillOperand(ticket: Ticket): Operand; 
 		PROCEDURE ^ OperandFromTicket(ticket: Ticket): Operand; 
 		PROCEDURE ^ GetFreeRegister(CONST type: IntermediateCode.Type): Operand; 
 		PROCEDURE ^ GetFreeRegisterOrHint(CONST type: IntermediateCode.Type; CONST registerHint: Operand): Operand; 
 		PROCEDURE ^ IsRegisterForType(registerNumber: LONGINT; CONST type: IntermediateCode.Type): BOOLEAN; 
-		PROCEDURE ^ RegisterAfterAppliedOffset(register: Operand; offset: LONGINT; registerHint: Operand): Operand; 
+		PROCEDURE ^ RegisterAfterAppliedOffset(register: Operand; offset: SIZE; registerHint: Operand): Operand; 
 		PROCEDURE ^ RegisterFromIrRegister(CONST irRegisterOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ Load(targetRegister, memoryOperand: Operand; irType: IntermediateCode.Type); 
 		PROCEDURE ^ Store(sourceRegister, memoryOperand: Operand; type: IntermediateCode.Type); 
-		PROCEDURE ^ RegisterFromSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; resolved: Sections.Section; symbolOffset: LONGINT; CONST registerHint: Operand): Operand; 
+		PROCEDURE ^ RegisterFromSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; resolved: Sections.Section; symbolOffset: SIZE; CONST registerHint: Operand): Operand; 
 		PROCEDURE ^ MemoryOperandFromIrMemoryOperand(VAR irMemoryOperand: IntermediateCode.Operand; part: LONGINT; CONST registerHint: Operand): Operand; 
 		PROCEDURE ^ RegisterOrImmediateFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ RegisterFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
@@ -324,7 +324,7 @@ TYPE
 		PROCEDURE ^ SinglePrecisionFloatRegisterFromValue(value: REAL; registerHint: Operand): Operand; 
 		PROCEDURE ^ DoublePrecisionFloatRegisterFromValue(value: LONGREAL; registerHint: Operand): Operand; 
 		PROCEDURE ^ RegisterFromValue(value: LONGINT; registerHint: Operand): Operand; 
-		PROCEDURE ^ AllocateStack(allocationSize: LONGINT; doUpdateStackSize: BOOLEAN; clear: BOOLEAN); 
+		PROCEDURE ^ AllocateStack(allocationSize: SIZE; doUpdateStackSize: BOOLEAN; clear: BOOLEAN); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: Operand): BOOLEAN; 
 		PROCEDURE ^ MovIfDifferent(CONST a, b: Operand); 
 		PROCEDURE ^ AcquireDestinationRegister(CONST irDestinationOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 

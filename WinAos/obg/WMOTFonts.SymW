@@ -44,8 +44,8 @@ TYPE
 		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: WMGraphics.Image); 
 		PROCEDURE ^ HasChar*(code: LONGINT): BOOLEAN; 
 		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
-		PROCEDURE ^ LoadGlyphRange(gri: LONGINT); 
-		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR gri: LONGINT): BOOLEAN; 
+		PROCEDURE ^ LoadGlyphRange(gri: SIZE); 
+		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR gri: SIZE): BOOLEAN; 
 		PROCEDURE ^ FindGlyph(code: LONGINT; VAR glyph: Glyph): BOOLEAN; 
 		PROCEDURE ^ CountGlyphes(): LONGINT; 
 		PROCEDURE ^ ReadGlyph(code: LONGINT; VAR g: Glyph); 

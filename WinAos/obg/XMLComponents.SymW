@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE ^ Connect*; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ ConnectAttribute(attribute: XML.Attribute); 
-		PROCEDURE ^ RegisterListener(listener: Listener; VAR event, path: ARRAY OF CHAR; offset, len: LONGINT); 
+		PROCEDURE ^ RegisterListener(listener: Listener; VAR event, path: ARRAY OF CHAR; offset, len: SIZE); 
 	END Component; 
 
 	CSS2Component* = OBJECT {EXCLUSIVE} (Component)
@@ -195,6 +195,6 @@ VAR
 
 	PROCEDURE ^ NoReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
 	PROCEDURE ^ NewString*(value: ARRAY OF CHAR): String; 
-	PROCEDURE ^ ExtractEvent(VAR string: ARRAY OF CHAR): String; 
+	PROCEDURE ^ ExtractEvent(CONST string: ARRAY OF CHAR): String; 
 BEGIN
 END XMLComponents.

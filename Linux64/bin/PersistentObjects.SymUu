@@ -93,8 +93,8 @@ TYPE
 		PROCEDURE ^ ActionEnumerator(CONST name: ARRAY OF CHAR; array: BOOLEAN); 
 		PROCEDURE ^ Traverse*(action: Action); 
 		PROCEDURE ^ Enumerate*(enum: Enumerator); 
-		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
-		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
 		PROCEDURE ^ AddTranslation*(CONST name: ARRAY OF CHAR; str: Strings.String); 
 		PROCEDURE ^ FindTranslation*(CONST name: ARRAY OF CHAR; VAR translation: Interpretation): BOOLEAN; 
 		PROCEDURE ^ RemoveTranslation*(CONST name: ARRAY OF CHAR): BOOLEAN; 
@@ -110,17 +110,17 @@ TYPE
 		list*: FoxBasic.List; 
 		baseType*: Name; 
 
-		PROCEDURE ^  & InitList*(initialSize: LONGINT; CONST baseType: ARRAY OF CHAR); 
-		PROCEDURE ^ Length*(): LONGINT; 
-		PROCEDURE ^ GetElement*(i: LONGINT): Object; 
-		PROCEDURE ^ SetElement*(i: LONGINT; o: Object); 
+		PROCEDURE ^  & InitList*(initialSize: SIZE; CONST baseType: ARRAY OF CHAR); 
+		PROCEDURE ^ Length*(): SIZE; 
+		PROCEDURE ^ GetElement*(i: SIZE): Object; 
+		PROCEDURE ^ SetElement*(i: SIZE; o: Object); 
 		PROCEDURE ^ Enumerate*(enum: Enumerator); 
-		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
-		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: LONGINT; c: Content); 
+		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
+		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
 		PROCEDURE ^ Add*(o: Object); 
 		PROCEDURE ^ Contains*(o: Object): BOOLEAN; 
 		PROCEDURE ^ Traverse*(action: Action); 
-		PROCEDURE ^ IndexOf*(o: Object): LONGINT; 
+		PROCEDURE ^ IndexOf*(o: Object): SIZE; 
 	END ObjectList; 
 
 	Generator = PROCEDURE {DELEGATE}(CONST type: ARRAY OF CHAR):Object; 
@@ -204,7 +204,7 @@ TYPE
 	END; 
 
 	Symbol = POINTER TO RECORD 
-		name: LONGINT; 
+		name: StringPool.Index; 
 		first, last: Element; 
 		numberElements: LONGINT; 
 		next: Symbol; 
@@ -242,7 +242,7 @@ TYPE
 		scope: Scope; 
 		read: ReadTable; 
 
-		PROCEDURE ^ ReportXMLError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ ReportXMLError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^  & InitXMLReader*(reader: Streams.Reader; generator: Generator); 
 		PROCEDURE ^ Error(CONST s1, s2: ARRAY OF CHAR); 
 		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 

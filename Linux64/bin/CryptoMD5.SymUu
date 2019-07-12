@@ -14,8 +14,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ Write(ch: CHAR); 
-		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
-		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 
 VAR 
 	T: ARRAY 65 OF LONGINT; 

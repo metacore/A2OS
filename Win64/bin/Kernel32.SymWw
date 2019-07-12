@@ -401,10 +401,10 @@ VAR
 	GetLocalTime-: PROCEDURE {WINAPI}(VAR lpSystemTime: SystemTime); 
 	GetLogicalDriveStrings-: PROCEDURE {WINAPI}(nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR):LONGINT; 
 	GetLogicalDrives-: PROCEDURE {WINAPI}():WORDSET; 
-	GetModuleFileName-: PROCEDURE {WINAPI}(hModule: HMODULE; VAR lpFileName: ARRAY OF CHAR; nSize: LONGINT):LONGINT; 
+	GetModuleFileName-: PROCEDURE {WINAPI}(hModule: HMODULE; VAR lpFileName: ARRAY OF CHAR; nSize: DWORD):LONGINT; 
 	GetModuleHandle-: PROCEDURE {WINAPI}(CONST lpModuleName: ARRAY OF CHAR):HMODULE; 
 	GetOverlappedResult-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL):BOOL; 
-	GetPrivateProfileString-: PROCEDURE {WINAPI}(CONST lpAppName: ARRAY OF CHAR; CONST lpKeyName: ARRAY OF CHAR; CONST lpDefault: ARRAY OF CHAR; VAR lpReturnedString: ARRAY OF CHAR; nSize: LONGINT; CONST lpFileName: ARRAY OF CHAR):LONGINT; 
+	GetPrivateProfileString-: PROCEDURE {WINAPI}(CONST lpAppName: ARRAY OF CHAR; CONST lpKeyName: ARRAY OF CHAR; CONST lpDefault: ARRAY OF CHAR; VAR lpReturnedString: ARRAY OF CHAR; nSize: DWORD; CONST lpFileName: ARRAY OF CHAR):LONGINT; 
 	GetProcessAffinityMask-: PROCEDURE {WINAPI}(hProcess: HANDLE; lpProcessAffinityMask: ADDRESS; lpSystemAffinityMask: ADDRESS):BOOL; 
 	GetProcessHeap-: PROCEDURE {WINAPI}():HANDLE; 
 	GetProcessTimes-: PROCEDURE {WINAPI}(CONST hProcess: HANDLE; VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime):LONGINT; 
@@ -424,12 +424,12 @@ VAR
 	GetVersionEx-: PROCEDURE {WINAPI}(VAR lpVersionInfo: OSVersionInfo):BOOL; 
 	GetVolumeInformation-: PROCEDURE {WINAPI}(VAR lpRootPathName: ARRAY OF CHAR; VAR lpVolumeNameBuffer: ARRAY OF CHAR; nVolumeNameSize: LONGINT; VAR lpVolumeSerialNumber: LONGINT; VAR lpMaximumComponentLength: LONGINT; VAR lpFileSystemFlags: LONGINT; VAR lpFileSystemNameBuffer: ARRAY OF CHAR; nFileSystemNameSize: LONGINT):LONGINT; 
 	GlobalAddAtom-: PROCEDURE {WINAPI}(VAR lpString: ARRAY OF CHAR):ATOM; 
-	GlobalAlloc-: PROCEDURE {WINAPI}(uFlags: WORDSET; dwBytes: LONGINT):HGLOBAL; 
+	GlobalAlloc-: PROCEDURE {WINAPI}(uFlags: WORDSET; dwBytes: SIZE):HGLOBAL; 
 	GlobalDeleteAtom-: PROCEDURE {WINAPI}(nAtom: ATOM):ATOM; 
 	GlobalLock-: PROCEDURE {WINAPI}(hMem: HGLOBAL):ADDRESS; 
 	GlobalMemoryStatusEx-: PROCEDURE {WINAPI}(VAR lpBuffer: MemoryStatusEx):BOOL; 
 	GlobalReAlloc-: PROCEDURE {WINAPI}(hMem: HGLOBAL; dwBytes: LONGINT; uFlags: DWORD):HGLOBAL; 
-	GlobalSize-: PROCEDURE {WINAPI}(hMem: HGLOBAL):LONGINT; 
+	GlobalSize-: PROCEDURE {WINAPI}(hMem: HGLOBAL):SIZE; 
 	GlobalUnlock-: PROCEDURE {WINAPI}(hMem: HGLOBAL):BOOL; 
 	HeapAlloc-: PROCEDURE {WINAPI}(hHeap: HANDLE; dwFlags: LONGINT; size: SIZE):ADDRESS; 
 	HeapFree-: PROCEDURE {WINAPI}(hHeap: HANDLE; dwFlags: LONGINT; lpMem: ADDRESS):ADDRESS; 
@@ -454,7 +454,7 @@ VAR
 	RemoveVectoredExceptionHandler-: PROCEDURE {WINAPI}(vectoredHandler: VectoredExceptionHandler):ULONG; 
 	ResetEvent-: PROCEDURE {WINAPI}(hEvent: HANDLE):BOOL; 
 	ResumeThread-: PROCEDURE {WINAPI}(hThread: HANDLE):LONGINT; 
-	SearchPath-: PROCEDURE {WINAPI}(CONST lpPath, lpFileName, lpExtension: ARRAY OF CHAR; nBufferLength: LONGINT; VAR lpBuffer: ARRAY OF CHAR; VAR lpFilePart: LPSTR):LONGINT; 
+	SearchPath-: PROCEDURE {WINAPI}(CONST lpPath, lpFileName, lpExtension: ARRAY OF CHAR; nBufferLength: DWORD; VAR lpBuffer: ARRAY OF CHAR; VAR lpFilePart: LPSTR):LONGINT; 
 	SetCommBreak-: PROCEDURE {WINAPI}(hFile: HANDLE):BOOL; 
 	SetCommMask-: PROCEDURE {WINAPI}(hFile: HANDLE; dwEvtMask: DWORD):BOOL; 
 	SetCommState-: PROCEDURE {WINAPI}(hFile: HANDLE; VAR lpDCB: DCB):BOOL; 
@@ -489,7 +489,7 @@ VAR
 	VirtualAlloc-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; flAllocationType, flProtect: WORDSET):ADDRESS; 
 	VirtualFree-: PROCEDURE {WINAPI}(lpAddress: ADDRESS; dwSize: SIZE; dwFreeType: WORDSET):BOOL; 
 	WaitForSingleObject-: PROCEDURE {WINAPI}(hHandle: HANDLE; dwMilliseconds: LONGINT):LONGINT; 
-	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: LONGINT; VAR lpNumberOfBytesWritten: LONGINT; VAR lpOverlapped: Overlapped):BOOL; 
+	WriteFile-: PROCEDURE {WINAPI}(hFile: HANDLE; CONST lpBuffer: ARRAY OF SYSTEM.BYTE; nNumberOfBytesToWrite: DWORD; VAR lpNumberOfBytesWritten: DWORD; VAR lpOverlapped: Overlapped):BOOL; 
 	OutputString*: PROCEDURE (CONST a: ARRAY OF CHAR); 
 	Shutdown*: PROCEDURE (code: LONGINT); 
 	g: BOOLEAN; 

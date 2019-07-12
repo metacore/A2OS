@@ -106,7 +106,7 @@ TYPE
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ UpdateAllDisks; 
 		PROCEDURE ^ UpdateDisk*(disk: Disk); 
-		PROCEDURE ^ UpdateDiskInternal(i: LONGINT); 
+		PROCEDURE ^ UpdateDiskInternal(i: SIZE); 
 		PROCEDURE ^ Acquire*; 
 		PROCEDURE ^ Release*; 
 		PROCEDURE ^ DiskEventHandler(event: WORD; plugin: Plugins.Plugin); 
@@ -118,9 +118,9 @@ TYPE
 		PROCEDURE ^ FindReserved(VAR table: AosDisks.PartitionTable); 
 		PROCEDURE ^ CheckTable(w: Streams.Writer; dev: AosDisks.Device; table: AosDisks.PartitionTable): BOOLEAN; 
 		PROCEDURE ^ FindFreeSpace(w: Streams.Writer; dev: AosDisks.Device; VAR table: AosDisks.PartitionTable; spt, hds: LONGINT): BOOLEAN; 
-		PROCEDURE ^ AssignFileSystems(disk: LONGINT); 
-		PROCEDURE ^ Contains(table: AosDisks.PartitionTable; i, x: LONGINT): BOOLEAN; 
-		PROCEDURE ^ PartitionsOverlap(table: AosDisks.PartitionTable; i, j: LONGINT): BOOLEAN; 
+		PROCEDURE ^ AssignFileSystems(disk: SIZE); 
+		PROCEDURE ^ Contains(table: AosDisks.PartitionTable; i: SIZE; x: LONGINT): BOOLEAN; 
+		PROCEDURE ^ PartitionsOverlap(table: AosDisks.PartitionTable; i, j: SIZE): BOOLEAN; 
 		PROCEDURE ^ Finalize; 
 	END DisksModel; 
 
@@ -362,7 +362,7 @@ TYPE
 		hex: ARRAY 32 OF CHAR; 
 
 		PROCEDURE ^ GetEntries*(): Table; 
-		PROCEDURE ^ GetNofEntries*(): LONGINT; 
+		PROCEDURE ^ GetNofEntries*(): SIZE; 
 		PROCEDURE ^ GetAsString*(): Strings.String; 
 		PROCEDURE ^ SetValueOf*(key, value: Strings.String); 
 		PROCEDURE ^ GetAsStringInternal(): Strings.String; 
@@ -464,7 +464,7 @@ VAR
 	BootLoaderName: ARRAY 64 OF CHAR; 
 	BootLoaderSize: LONGINT; 
 
-	PROCEDURE ^ WritePart*(w: Streams.Writer; dev: AosDisks.Device; part: LONGINT); 
+	PROCEDURE ^ WritePart*(w: Streams.Writer; dev: AosDisks.Device; part: SIZE); 
 	PROCEDURE ^ DetectFS*(dev: AosDisks.Device; part: LONGINT): LONGINT; 
 	PROCEDURE ^ DisketteInserted*(dev: AosDisks.Device): BOOLEAN; 
 	PROCEDURE ^ GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs: LONGINT; VAR res: WORD); 

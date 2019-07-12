@@ -97,6 +97,7 @@ TYPE
 		PROCEDURE ^ VisitBooleanValue*(x: SyntaxTree.BooleanValue); 
 		PROCEDURE ^ VisitIntegerValue*(x: SyntaxTree.IntegerValue); 
 		PROCEDURE ^ VisitEnumerationValue*(x: SyntaxTree.EnumerationValue); 
+		PROCEDURE ^ VisitProcedureValue*(x: SyntaxTree.ProcedureValue); 
 		PROCEDURE ^ VisitCharacterValue*(x: SyntaxTree.CharacterValue); 
 		PROCEDURE ^ VisitSetValue*(x: SyntaxTree.SetValue); 
 		PROCEDURE ^ VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression); 

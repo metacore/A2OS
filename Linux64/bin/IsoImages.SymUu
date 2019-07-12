@@ -56,7 +56,7 @@ TYPE
 	PROCEDURE ^ CalcIsoImageSectorCount(inputImageSize: LONGINT): LONGINT; 
 	PROCEDURE ^ WriteBothByteOrder32(w: Streams.Writer; x: LONGINT); 
 	PROCEDURE ^ WriteBothByteOrder16(w: Streams.Writer; x: INTEGER); 
-	PROCEDURE ^ WriteByteRep(w: Streams.Writer; b: CHAR; n: LONGINT); 
+	PROCEDURE ^ WriteByteRep(w: Streams.Writer; b: CHAR; n: SIZE); 
 	PROCEDURE ^ WriteStringWithPadding(w: Streams.Writer; CONST str: ARRAY OF CHAR; padChar: CHAR; len: LONGINT); 
 	PROCEDURE ^ WriteEmptySectors(w: Streams.Writer; n: LONGINT); 
 	PROCEDURE ^ CalcChecksum16(CONST buf: ARRAY OF CHAR): INTEGER; 

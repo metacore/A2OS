@@ -1,5 +1,5 @@
 MODULE WMPerfMonPluginSerials;
-	IMPORT WMPerfMonPlugins, Strings, Modules, Serials;
+	IMPORT WMPerfMonPlugins, Strings, Modules, Serials, Streams;
 CONST 
 	PluginName = \"Serials"\; 
 	PluginDescription = \"Serial Port Transfer Rate"\; 

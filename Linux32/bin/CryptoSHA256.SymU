@@ -6,16 +6,16 @@ TYPE
 	Hash* = OBJECT (Hashes.Hash)
 	VAR 
 		hash: ARRAY 8 OF LONGINT; 
-		Nl, Nh: LONGINT; 
+		Nl, Nh: SIZE; 
 		cdata: ARRAY BlockSize OF CHAR; 
-		cn: LONGINT; 
+		cn: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ HashBlock(CONST buf: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ HashBlock(CONST buf: ARRAY OF CHAR; pos: SIZE); 
 		PROCEDURE ^ HashContextBlock; 
-		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: LONGINT); 
-		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
+		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 
 VAR 
 	K256: ARRAY 64 OF LONGINT; 

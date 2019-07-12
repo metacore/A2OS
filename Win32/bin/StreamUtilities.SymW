@@ -1,0 +1,154 @@
+MODULE StreamUtilities;
+	IMPORT Streams, SYSTEM;
+CONST 
+	ReaderBufSize = Streams.DefaultReaderSize; 
+	WriterBufSize = Streams.DefaultWriterSize; 
+TYPE 
+	WriterMonitor* = OBJECT (Streams.Writer)
+	VAR 
+		out, monitor: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(out: Streams.Writer; monitor: Streams.Writer); 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+	END WriterMonitor; 
+
+	Encryptor* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; pos, len: SIZE); 
+
+	EncryptingWriter* = OBJECT (Streams.Writer)
+	VAR 
+		out: Streams.Writer; 
+		encrypt: Encryptor; 
+		buf: POINTER TO ARRAY OF CHAR; 
+
+		PROCEDURE ^  & Init*(out: Streams.Writer; encrypt: Encryptor); 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+	END EncryptingWriter; 
+
+	Decryptor* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; pos, len: SIZE); 
+
+	DecryptingReader* = OBJECT (Streams.Reader)
+	VAR 
+		in: Streams.Reader; 
+		decrypt: Decryptor; 
+
+		PROCEDURE ^  & Init*(in: Streams.Reader; decrypt: Decryptor); 
+		PROCEDURE ^ Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+	END DecryptingReader; 
+
+	WriteEntry = POINTER TO RECORD 
+		buf: POINTER TO ARRAY OF CHAR; 
+		len: SIZE; 
+		propagate: BOOLEAN; 
+		next: WriteEntry; 
+	END; 
+
+	AsynchronousWriter = OBJECT {EXCLUSIVE} (Streams.Writer)
+	VAR 
+		first, last: WriteEntry; 
+		free: WriteEntry; 
+		size: SIZE; 
+		sender: Streams.Sender; 
+
+		PROCEDURE ^  & InitWriter*(sender: Streams.Sender; size: SIZE); 
+		PROCEDURE ^ Add(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ ToLastEntry(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD): BOOLEAN; 
+		PROCEDURE ^ GetFreeEntry(len: SIZE): WriteEntry; 
+		PROCEDURE ^ ReturnEntry(entry: WriteEntry); 
+		PROCEDURE ^ PutEntry(entry: WriteEntry); 
+		PROCEDURE ^ GetEntry(): WriteEntry; 
+		PROCEDURE ^ ProcessWrites; 
+	BEGIN{ACTIVE} 
+	END AsynchronousWriter; 
+
+	AsynchronousForwarder* = OBJECT {EXCLUSIVE} (AsynchronousWriter)
+	VAR 
+		out: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(out: Streams.Writer); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	END AsynchronousForwarder; 
+
+	ReaderMonitor* = OBJECT (Streams.Reader)
+	VAR 
+		in: Streams.Reader; 
+		monitor: Streams.Writer; 
+
+		PROCEDURE ^  & Init*(in: Streams.Reader; monitor: Streams.Writer); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+	END ReaderMonitor; 
+
+	LimitedWriter* = OBJECT (Streams.Writer)
+	VAR 
+		out: Streams.Writer; 
+		size, remain-: SIZE; 
+
+		PROCEDURE ^  & Init*(out: Streams.Writer; size: SIZE); 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Reset*; 
+	END LimitedWriter; 
+
+	LimitedReader* = OBJECT (Streams.Reader)
+	VAR 
+		in: Streams.Reader; 
+		total, remain-: SIZE; 
+
+		PROCEDURE ^  & Init*(in: Streams.Reader; size: SIZE); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Reset*; 
+	END LimitedReader; 
+
+	Base64Writer* = OBJECT (Streams.Writer)
+	VAR 
+		out: Streams.Writer; 
+		buf: POINTER TO ARRAY OF CHAR; 
+		group, i, ll: SIZE; 
+		done: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(out: Streams.Writer); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Close*; 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+	END Base64Writer; 
+
+	Base64Reader* = OBJECT (Streams.Reader)
+	VAR 
+		in: Streams.Reader; 
+		i, rest, group: SIZE; 
+		code: INTEGER; 
+		done: BOOLEAN; 
+
+		PROCEDURE ^  & Init*(in: Streams.Reader); 
+		PROCEDURE ^ Reset*; 
+		PROCEDURE ^ Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Pos*(): Streams.Position; 
+	END Base64Reader; 
+
+	DumpWriter* = OBJECT (Streams.Writer)
+
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	END DumpWriter; 
+VAR 
+	etab: ARRAY 64 OF CHAR; 
+	dtab: ARRAY 128 OF INTEGER; 
+	tablesReady: BOOLEAN; 
+
+	PROCEDURE ^ InitTables; 
+	PROCEDURE ^ OpenWriterMonitor*(VAR w: Streams.Writer; out: Streams.Writer; monitor: Streams.Writer); 
+	PROCEDURE ^ OpenAsynchronousForwarder*(out: Streams.Writer): Streams.Writer; 
+	PROCEDURE ^ OpenReaderMonitor*(VAR r: Streams.Reader; in: Streams.Reader; monitor: Streams.Writer); 
+	PROCEDURE ^ OpenLimitedWriter*(VAR w: Streams.Writer; out: Streams.Writer; size: SIZE); 
+	PROCEDURE ^ OpenLimitedReader*(VAR r: Streams.Reader; in: Streams.Reader; size: SIZE); 
+BEGIN
+END StreamUtilities.

@@ -1,5 +1,5 @@
 MODULE Configuration;
-	IMPORT KernelLog, Strings, Files, XMLObjects, XML, XMLScanner, XMLParser;
+	IMPORT KernelLog, Strings, Files, XMLObjects, XML, XMLScanner, XMLParser, Streams;
 CONST 
 	Ok* = 0; 
 	ElementNotFound* = 10001; 
@@ -30,7 +30,7 @@ VAR
 	PROCEDURE ^ PutColor*(CONST key: ARRAY OF CHAR; value: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ PutInteger*(CONST key: ARRAY OF CHAR; value: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ WriteConfig; 
-	PROCEDURE ^ TrapHandler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ TrapHandler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Init*; 
 BEGIN
 END Configuration.

@@ -33,8 +33,8 @@ TYPE
 	StreamType = RECORD 
 		stream*: Codec.DemuxStream; 
 		idByte*: CHAR; 
-		pos: LONGINT; 
-		bytesLeftInPacket: LONGINT; 
+		pos: SIZE; 
+		bytesLeftInPacket: SIZE; 
 		eos: BOOLEAN; 
 	END; 
 
@@ -115,7 +115,7 @@ TYPE
 	MPEGDemultiplexer* = OBJECT (Codec.AVDemultiplexer)
 	VAR 
 		input: Streams.Reader; 
-		bytesRead: LONGINT; 
+		bytesRead: SIZE; 
 		streams: ARRAY 64 OF POINTER TO StreamType; 
 		nextStreamNr: LONGINT; 
 		singleStream: BOOLEAN; 
@@ -131,9 +131,9 @@ TYPE
 		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetStream*(streamNr: LONGINT): Codec.DemuxStream; 
 		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): Codec.AVStreamInfo; 
-		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ SkipData(streamNr: LONGINT; size: LONGINT; VAR len: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ GetPosInMuxedStream*(streamNr: LONGINT): LONGINT; 
+		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ SkipData(streamNr: LONGINT; size: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ GetPosInMuxedStream*(streamNr: LONGINT): SIZE; 
 		PROCEDURE ^ GotoNextPacket(VAR stream: StreamType): BOOLEAN; 
 		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ HasMoreData(streamNr: LONGINT): BOOLEAN; 

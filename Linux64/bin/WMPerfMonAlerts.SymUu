@@ -125,7 +125,7 @@ VAR
 	PROCEDURE ^ ParseAlert*(r: Streams.Reader; VAR alert: AlertInfo; VAR msg: ARRAY OF CHAR; res: WORD); 
 	PROCEDURE ^ ParseXmlAlert(elem: XML.Element; VAR msg: ARRAY OF CHAR): AlertObject; 
 	PROCEDURE ^ ParseXmlDocument(document: XML.Document; VAR msg: ARRAY OF CHAR; VAR nbrOfRules: LONGINT; VAR res: WORD): AlertObject; 
-	PROCEDURE ^ ReportError(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ ReportError(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ LoadXmlDocument(CONST filename: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD): XML.Document; 
 	PROCEDURE ^ GetStatus*(): Status; 
 	PROCEDURE ^ GetAlerts*(): Alerts; 

@@ -69,7 +69,7 @@ TYPE
 		selection: FTPClient.FTPListing; 
 		owner: Window; 
 		curList: FTPClient.FTPListing; 
-		nofEntries: LONGINT; 
+		nofEntries: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetColSize; 

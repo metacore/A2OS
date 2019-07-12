@@ -2,6 +2,7 @@ MODULE Objects;
 	IMPORT SYSTEM, Trace, Glue, Unix, Machine, Heaps, Modules;
 CONST 
 	ConcurrentGC = TRUE; 
+	LinuxHost = (Unix.Version = \"Linux"\); 
 	PleaseHalt* = 10; 
 	Unbreakable* = 11; 
 	SelfTermination* = 12; 
@@ -92,11 +93,11 @@ TYPE
 		threadId-: Unix.Thread_t; 
 		nextProcess-: Process; 
 		stackBottom-: ADDRESS; 
-		id-: LONGINT; 
+		id-: WORD; 
 		body: Body; 
-		mode-: LONGINT; 
+		mode-: WORD; 
 		flags-: SET; 
-		priority-: LONGINT; 
+		priority-: WORD; 
 		succ: Process; 
 		obj-: ProtectedObject; 
 		condition-: Condition; 
@@ -113,9 +114,9 @@ TYPE
 		PROCEDURE ^ SetMode(mode: WORD); 
 		PROCEDURE ^ FindRoots*; 
 		PROCEDURE ^ Cancel; 
-		PROCEDURE ^ GetPriority(): LONGINT; 
-		PROCEDURE ^ SetPriority(prio: LONGINT); 
-		PROCEDURE ^  & Initialize(obj: ProtectedObject; bodyProc: Body; prio: LONGINT; fl: SET; stacksize: LONGINT); 
+		PROCEDURE ^ GetPriority(): WORD; 
+		PROCEDURE ^ SetPriority(prio: WORD); 
+		PROCEDURE ^  & Initialize(obj: ProtectedObject; bodyProc: Body; prio: WORD; fl: SET; stacksize: SIZE); 
 	END Process; 
 
 	GCStatusExt = OBJECT (Heaps.GCStatus)
@@ -137,7 +138,7 @@ VAR
 	timerListMutex: Unix.Mutex_t; 
 	timerStopped: BOOLEAN; 
 	root-: Process; 
-	stacksize: LONGINT; 
+	stacksize: SIZE; 
 	processList: Unix.Mutex_t; 
 	createProcess: Unix.Mutex_t; 
 	startProcess: Unix.Mutex_t; 
@@ -146,7 +147,7 @@ VAR
 	childrunning: Unix.Condition_t; 
 	processPointer: Unix.Key_t; 
 	newProcess: Process; 
-	nextPID: LONGINT; 
+	nextPID: WORD; 
 	finalizerCaller: FinalizerCaller; 
 	mainthread: Unix.Thread_t; 
 	startedMainProcess := FALSE: BOOLEAN; 
@@ -155,7 +156,7 @@ VAR
 
 	PROCEDURE ^ BodyStarter; 
 	PROCEDURE ^ InitProtHeader(hdr{UNTRACED} : ObjectHeader); 
-	PROCEDURE ^ CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject); 
+	PROCEDURE ^ CreateProcess*(body: Body; priority: WORD; flags: SET; obj: ProtectedObject); 
 	PROCEDURE ^ Lock*(obj: ProtectedObject; exclusive: BOOLEAN); 
 	PROCEDURE ^ Await*(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET); 
 	PROCEDURE ^ Unlock*(obj: ProtectedObject; dummy: BOOLEAN); 
@@ -164,7 +165,7 @@ VAR
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ Terminate*; 
 	PROCEDURE ^ TerminateThis*(p: Process; unbreakable: BOOLEAN); 
-	PROCEDURE ^ SetPriority*(pri: LONGINT); 
+	PROCEDURE ^ SetPriority*(pri: WORD); 
 	PROCEDURE ^ Sleep*(ms: LONGINT); 
 	PROCEDURE ^ Yield*; 
 	PROCEDURE ^ CurrentProcess*(): {UNTRACED} Process; 
@@ -174,7 +175,7 @@ VAR
 	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
 	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
 	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
-	PROCEDURE ^ GetProcessID*(): LONGINT; 
+	PROCEDURE ^ GetProcessID*(): WORD; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ RegisterFinalizer(obj: ANY; fin: Heaps.Finalizer); 
 	PROCEDURE ^ FinalizeActiveObj(obj: ANY); 

@@ -59,7 +59,7 @@ TYPE
 		milliTimer: Kernel.MilliTimer; 
 		lastDataset, temp: Dataset; 
 		isFirstUpdate: BOOLEAN; 
-		dimensions: LONGINT; 
+		dimensions: SIZE; 
 		link: Plugin; 
 
 		PROCEDURE ^ UpdateDataset*; 
@@ -140,7 +140,7 @@ TYPE
 	END Updater; 
 VAR 
 	updater-: Updater; 
-	NnofPlugins-, NnofValues-: LONGINT; 
+	NnofPlugins-, NnofValues-: SIZE; 
 
 	PROCEDURE ^ EstimateCpuClockrate*(VAR clockrate: LONGINT): BOOLEAN; 
 	PROCEDURE ^ CyclesToMs*(cycles: HUGEINT; mhz: LONGINT): LONGINT; 

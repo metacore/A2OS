@@ -11,7 +11,8 @@ TYPE
 		bufferPool: SoundDevices.BufferPool; 
 		buffer: SoundDevices.Buffer; 
 		out: Streams.Writer; 
-		channels, rate, bits, recLength: LONGINT; 
+		channels, rate, bits: LONGINT; 
+		recLength: SIZE; 
 		t: Kernel.Timer; 
 		ready, recording, paused, finished: BOOLEAN; 
 
@@ -21,7 +22,7 @@ TYPE
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ Pause*; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ GetLength*(): LONGINT; 
+		PROCEDURE ^ GetLength*(): SIZE; 
 	BEGIN{ACTIVE} 
 	END Recorder; 
 
@@ -49,7 +50,7 @@ VAR
 	file: Files.File; 
 	filename: ARRAY 256 OF CHAR; 
 
-	PROCEDURE ^ WriteRawBELongInt(VAR w: Files.Writer; value: LONGINT); 
+	PROCEDURE ^ WriteRawBELongInt(VAR w: Files.Writer; value: SIZE); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Stop*(context: Commands.Context); 
 	PROCEDURE ^ StartBridge*; 

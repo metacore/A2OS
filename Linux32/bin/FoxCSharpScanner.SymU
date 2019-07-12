@@ -126,20 +126,19 @@ TYPE
 
 	KeywordTable* = FoxScanner.KeywordTable; 
 
-	Token* = LONGINT; 
+	Symbol* = LONGINT; 
 
 	Position* = Basic.Position; 
 
-	Symbol* = RECORD 
+	Token* = RECORD 
 		position*: Position; 
-		token*: Token; 
+		symbol*: Symbol; 
 		identifier*: IdentifierType; 
 		identifierString*: IdentifierString; 
 		string*: StringType; 
-		stringLength*: LONGINT; 
+		stringLength*: SIZE; 
 		numberType*: FoxScanner.SubType; 
-		integer*: LONGINT; 
-		hugeint*: HUGEINT; 
+		integer*: HUGEINT; 
 		character*: CHAR; 
 		real*: LONGREAL; 
 	END; 
@@ -163,28 +162,28 @@ TYPE
 		PROCEDURE ^ GetNextCharacter; 
 		PROCEDURE ^ IsNewlineCharacter(ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ GetEscapeSequence(VAR esc: CHAR); 
-		PROCEDURE ^ GetCharacter(VAR symbol: Symbol); 
-		PROCEDURE ^ GetString(VAR symbol: Symbol); 
-		PROCEDURE ^ GetIdentifier(VAR symbol: Symbol); 
-		PROCEDURE ^ GetNumber(VAR symbol: Symbol; frac: BOOLEAN): Token; 
-		PROCEDURE ^ ReadSingleLineComment(VAR symbol: Symbol); 
-		PROCEDURE ^ ReadDelimitedComment(VAR symbol: Symbol); 
+		PROCEDURE ^ GetCharacter(VAR token: Token); 
+		PROCEDURE ^ GetString(VAR token: Token); 
+		PROCEDURE ^ GetIdentifier(VAR token: Token); 
+		PROCEDURE ^ GetNumber(VAR token: Token; frac: BOOLEAN): Symbol; 
+		PROCEDURE ^ ReadSingleLineComment(VAR token: Token); 
+		PROCEDURE ^ ReadDelimitedComment(VAR token: Token); 
 		PROCEDURE ^ SkipBlanks; 
-		PROCEDURE ^ GetNextSymbol*(VAR symbol: Symbol): BOOLEAN; 
+		PROCEDURE ^ GetNextToken*(VAR token: Token): BOOLEAN; 
 		PROCEDURE ^ ResetError*; 
 		PROCEDURE ^ ResetErrorDiagnostics*(VAR diagnostics: Diagnostics.Diagnostics); 
 	END Scanner; 
 VAR 
 	reservedCharacter: ARRAY 256 OF BOOLEAN; 
-	tokens-: ARRAY (EndOfText + 1) OF Keyword; 
+	symbols-: ARRAY (EndOfText + 1) OF Keyword; 
 	keywords: KeywordTable; 
 
 	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics): Scanner; 
-	PROCEDURE ^ SymbolToString*(CONST symbol: Symbol; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ OutSymbol*(w: Streams.Writer; CONST symbol: Symbol); 
+	PROCEDURE ^ TokenToString*(CONST token: Token; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ OutToken*(w: Streams.Writer; CONST token: Token); 
 	PROCEDURE ^ InitReservedCharacters; 
-	PROCEDURE ^ GetKeyword*(token: LONGINT; VAR identifier: IdentifierType); 
-	PROCEDURE ^ InitTokens; 
+	PROCEDURE ^ GetKeyword*(symbol: LONGINT; VAR identifier: IdentifierType); 
+	PROCEDURE ^ InitSymbols; 
 	PROCEDURE ^ InitKeywords; 
 	PROCEDURE ^ ReportKeywords*(context: Commands.Context); 
 BEGIN

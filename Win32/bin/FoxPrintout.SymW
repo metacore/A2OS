@@ -98,6 +98,7 @@ TYPE
 		PROCEDURE ^ VisitStringValue*(x: SyntaxTree.StringValue); 
 		PROCEDURE ^ VisitNilValue*(x: SyntaxTree.NilValue); 
 		PROCEDURE ^ VisitEnumerationValue*(x: SyntaxTree.EnumerationValue); 
+		PROCEDURE ^ VisitProcedureValue*(x: SyntaxTree.ProcedureValue); 
 		PROCEDURE ^ Symbol*(x: SyntaxTree.Symbol); 
 		PROCEDURE ^ VisitSymbol*(x: SyntaxTree.Symbol); 
 		PROCEDURE ^ Visible(symbol: SyntaxTree.Symbol): BOOLEAN; 
@@ -151,6 +152,7 @@ TYPE
 		PROCEDURE ^ Code(x: SyntaxTree.Code); 
 		PROCEDURE ^ VisitCode*(x: SyntaxTree.Code); 
 		PROCEDURE ^ Body(x: SyntaxTree.Body; implementation: BOOLEAN); 
+		PROCEDURE ^ VisitModule*(x: SyntaxTree.Module); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
 		PROCEDURE ^ SingleStatement*(b: BOOLEAN); 
 		PROCEDURE ^  & Init*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN); 

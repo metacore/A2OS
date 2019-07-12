@@ -36,7 +36,7 @@ VAR
 	useCrypt: BOOLEAN; 
 
 	PROCEDURE ^ OpenScanner(VAR T: Texts.Text; VAR S: Texts.Scanner); 
-	PROCEDURE ^ WriteResource(VAR R: Files.Rider; VAR res: Resource; tag: INTEGER; dLen: LONGINT); 
+	PROCEDURE ^ WriteResource(VAR R: Files.Rider; VAR res: Resource; tag: INTEGER; dLen: SIZE); 
 	PROCEDURE ^ ClosePackage(VAR pack: Package); 
 	PROCEDURE ^ Build*; 
 	PROCEDURE ^ ReadResource(VAR R: Files.Rider; VAR res: Resource; VAR tag: INTEGER; VAR dLen: LONGINT); 

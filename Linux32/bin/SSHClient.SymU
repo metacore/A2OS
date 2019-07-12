@@ -81,7 +81,7 @@ TYPE
 		PROCEDURE ^ UpdateBox(line: Line; ofs: LONGINT); 
 		PROCEDURE ^ UpdateRect(al, bl: Line; aofs, bofs: LONGINT; cur: SET); 
 		PROCEDURE ^ UpdateAll; 
-		PROCEDURE ^ WriteChars(CONST buf: ARRAY OF CHAR; n: LONGINT); 
+		PROCEDURE ^ WriteChars(CONST buf: ARRAY OF CHAR; n: SIZE); 
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ GetLine(n: LONGINT): Line; 
 		PROCEDURE ^ GetLastLine(): Line; 

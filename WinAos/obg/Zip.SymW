@@ -81,7 +81,7 @@ TYPE
 	END; 
 
 	PROCEDURE ^ ShowError*(errorCode: WORD; out: Streams.Writer); 
-	PROCEDURE ^ StringLength(CONST str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StringLength(CONST str: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ OberonToDosTime(t: LONGINT): INTEGER; 
 	PROCEDURE ^ OberonToDosDate(d: LONGINT): INTEGER; 
 	PROCEDURE ^ DosToOberonTime(t: INTEGER): LONGINT; 
@@ -101,7 +101,7 @@ TYPE
 	PROCEDURE ^ AddEntry*(arc: Archive; CONST name: ARRAY OF CHAR; VAR src: Files.Rider; len: LONGINT; level, strategy: SHORTINT; VAR res: WORD); 
 	PROCEDURE ^ DeleteEntry*(arc: Archive; VAR ent: Entry; VAR res: WORD); 
 	PROCEDURE ^ OpenReader*(arc: Archive; ent: Entry): Reader; 
-	PROCEDURE ^ ReadBytes*(r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
+	PROCEDURE ^ ReadBytes*(r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR read: SIZE); 
 	PROCEDURE ^ Read*(r: Reader; VAR ch: CHAR); 
 	PROCEDURE ^ Close*(r: Reader); 
 BEGIN

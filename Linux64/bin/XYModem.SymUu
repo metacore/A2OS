@@ -35,7 +35,7 @@ TYPE
 		data: ARRAY 1024 OF CHAR; 
 		error: ARRAY 64 OF CHAR; 
 		done, fail: BOOLEAN; 
-		bytesProcessed-, totalBytes-: LONGINT; 
+		bytesProcessed-, totalBytes-: SIZE; 
 
 		PROCEDURE ^  & Init*(W: Streams.Writer; R: Streams.Reader; F: Files.File; mode: LONGINT); 
 		PROCEDURE ^ IsDone*(): BOOLEAN; 
@@ -47,7 +47,7 @@ TYPE
 
 	Sender* = OBJECT {EXCLUSIVE} (Modem)
 
-		PROCEDURE ^ YHeader(): LONGINT; 
+		PROCEDURE ^ YHeader(): Files.Size; 
 		PROCEDURE ^ SendFile; 
 	BEGIN{ACTIVE} 
 	END Sender; 

@@ -6,10 +6,10 @@ CONST
 TYPE 
 	IMEInterface* = RECORD 
 		AcquireText*, ReleaseText*: PROCEDURE {DELEGATE}; 
-		InsertUCS32*: PROCEDURE {DELEGATE}(atPosition: LONGINT; CONST string: Texts.UCS32String); 
-		GetCursorPosition*: PROCEDURE {DELEGATE}():LONGINT; 
+		InsertUCS32*: PROCEDURE {DELEGATE}(atPosition: SIZE; CONST string: Texts.UCS32String); 
+		GetCursorPosition*: PROCEDURE {DELEGATE}():SIZE; 
 		GetCursorScreenPosition*: PROCEDURE {DELEGATE}(VAR x, y: LONGINT); 
-		SetCursorInfo*: PROCEDURE {DELEGATE}(position: LONGINT); 
+		SetCursorInfo*: PROCEDURE {DELEGATE}(position: SIZE); 
 	END; 
 
 	IME* = OBJECT {EXCLUSIVE} 

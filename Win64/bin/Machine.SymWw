@@ -79,7 +79,7 @@ VAR
 	gcThreshold-: SIZE; 
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 
-	PROCEDURE ^ StrToInt*(VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StrToInt*(VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT; 
 	PROCEDURE {Fingerprint(-4906166419077515203)}  - AtomicInc*(VAR x: LONGINT);
 	CODE
 
@@ -154,9 +154,9 @@ VAR
 
 	END GetTimer; 
 	PROCEDURE ^ ID*(): LONGINT; 
-	PROCEDURE ^ FlushDCacheRange*(adr: ADDRESS; len: LONGINT); 
-	PROCEDURE ^ InvalidateDCacheRange*(adr: ADDRESS; len: LONGINT); 
-	PROCEDURE ^ InvalidateICacheRange*(adr: ADDRESS; len: LONGINT); 
+	PROCEDURE ^ FlushDCacheRange*(adr: ADDRESS; len: SIZE); 
+	PROCEDURE ^ InvalidateDCacheRange*(adr: ADDRESS; len: SIZE); 
+	PROCEDURE ^ InvalidateICacheRange*(adr: ADDRESS; len: SIZE); 
 	PROCEDURE ^ SetupSSE2Ext; 
 	PROCEDURE ^ ReadCommandLine(VAR commandLine: ARRAY OF CHAR); 
 	PROCEDURE ^ ParseLine(VAR c: ARRAY OF CHAR; VAR iniFile: ARRAY OF CHAR); 

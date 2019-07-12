@@ -150,14 +150,14 @@ TYPE
 
 	KeywordTable* = OBJECT (Basic.HashTableInt)
 	VAR 
-		table: POINTER TO ARRAY OF LONGINT; 
+		table: POINTER TO ARRAY OF IdentifierType; 
 
-		PROCEDURE ^  & InitTable*(size: LONGINT); 
-		PROCEDURE ^ IndexByIdentifier*(identifier: IdentifierType): LONGINT; 
-		PROCEDURE ^ IndexByString*(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ IdentifierByIndex*(index: LONGINT; VAR identifier: IdentifierType); 
-		PROCEDURE ^ StringByIndex*(index: LONGINT; VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ PutString*(CONST name: ARRAY OF CHAR; index: LONGINT); 
+		PROCEDURE ^  & InitTable*(size: SIZE); 
+		PROCEDURE ^ SymbolByIdentifier*(identifier: IdentifierType): Symbol; 
+		PROCEDURE ^ SymbolByString*(CONST name: ARRAY OF CHAR): Symbol; 
+		PROCEDURE ^ IdentifierBySymbol*(symbol: Symbol; VAR identifier: IdentifierType); 
+		PROCEDURE ^ StringBySymbol*(symbol: Symbol; VAR name: ARRAY OF CHAR); 
+		PROCEDURE ^ PutString*(CONST name: ARRAY OF CHAR; symbol: Symbol); 
 	END KeywordTable; 
 
 	Symbol* = LONGINT; 
@@ -170,27 +170,26 @@ TYPE
 		identifier*: IdentifierType; 
 		identifierString*: IdentifierString; 
 		string*: StringType; 
-		stringLength*: LONGINT; 
+		stringLength*: SIZE; 
 		numberType*: SubType; 
-		integer*: LONGINT; 
-		hugeint*: HUGEINT; 
+		integer*: HUGEINT; 
 		character*: CHAR; 
 		real*: LONGREAL; 
 	END; 
 
 	StringMaker* = OBJECT 
 	VAR 
-		length: LONGINT; 
+		length: SIZE; 
 		data: StringType; 
 
-		PROCEDURE ^  & Init*(initialSize: LONGINT); 
-		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Shorten*(n: LONGINT); 
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Shorten*(n: SIZE); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
 		PROCEDURE ^ GetReader*(): Streams.Reader; 
-		PROCEDURE ^ GetString*(VAR len: LONGINT): StringType; 
-		PROCEDURE ^ GetStringCopy*(VAR len: LONGINT): StringType; 
+		PROCEDURE ^ GetString*(VAR len: SIZE): StringType; 
+		PROCEDURE ^ GetStringCopy*(VAR len: SIZE): StringType; 
 	END StringMaker; 
 
 	Scanner* = OBJECT 
@@ -219,7 +218,7 @@ TYPE
 		PROCEDURE ^ GetIdentifier(VAR token: Token); 
 		PROCEDURE ^ GetNumber(VAR token: Token): Symbol; 
 		PROCEDURE ^ ReadComment(VAR token: Token); 
-		PROCEDURE ^ SkipToEndOfCode*(VAR startPos, endPos: LONGINT; VAR token: Token): Symbol; 
+		PROCEDURE ^ SkipToEndOfCode*(VAR startPos, endPos: Streams.Position; VAR token: Token): Symbol; 
 		PROCEDURE ^ SkipBlanks; 
 		PROCEDURE ^ GetNextToken*(VAR token: Token): BOOLEAN; 
 		PROCEDURE ^ ResetError*; 
@@ -228,7 +227,7 @@ TYPE
 
 	Context* = RECORD 
 		position: Position; 
-		readerPosition: LONGINT; 
+		readerPosition: Streams.Position; 
 		ch: CHAR; 
 	END; 
 
@@ -248,12 +247,12 @@ VAR
 	symbols-: ARRAY (EndOfText + 1) OF Keyword; 
 	keywordsLower, keywordsUpper: KeywordTable; 
 
-	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics): Scanner; 
-	PROCEDURE ^ NewAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics): AssemblerScanner; 
+	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics): Scanner; 
+	PROCEDURE ^ NewAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics): AssemblerScanner; 
 	PROCEDURE ^ TokenToString*(CONST token: Token; case: LONGINT; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ PrintToken*(w: Streams.Writer; CONST token: Token); 
 	PROCEDURE ^ InitReservedCharacters; 
-	PROCEDURE ^ GetKeyword*(case: LONGINT; symbol: LONGINT; VAR identifier: IdentifierType); 
+	PROCEDURE ^ GetKeyword*(case: WORD; symbol: Symbol; VAR identifier: IdentifierType); 
 	PROCEDURE ^ InitSymbols; 
 	PROCEDURE ^ InitKeywords; 
 	PROCEDURE ^ ReportKeywords*(context: Commands.Context); 

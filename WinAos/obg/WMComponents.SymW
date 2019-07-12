@@ -413,16 +413,16 @@ VAR
 	selection-: SelectionList; 
 
 	PROCEDURE ^ IsWhiteSpace(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ SkipWhiteSpace(CONST string: ARRAY OF CHAR; VAR index: LONGINT); 
-	PROCEDURE ^ ReadWord*(CONST string: ARRAY OF CHAR; VAR word: ARRAY OF CHAR; VAR index: LONGINT): BOOLEAN; 
+	PROCEDURE ^ SkipWhiteSpace(CONST string: ARRAY OF CHAR; VAR index: SIZE); 
+	PROCEDURE ^ ReadWord*(CONST string: ARRAY OF CHAR; VAR word: ARRAY OF CHAR; VAR index: SIZE): BOOLEAN; 
 	PROCEDURE ^ SplitMacroString(CONST string: ARRAY OF CHAR; VAR namespace, name: ARRAY OF CHAR; separator: CHAR); 
 	PROCEDURE ^ ReportError(CONST text, argument1, argument2: ARRAY OF CHAR); 
-	PROCEDURE ^ GetArgumentStream*(command: Strings.String; offset: LONGINT; VAR arguments: Streams.StringReader); 
-	PROCEDURE ^ GenerateContext*(oldCommand, command: Strings.String; index: LONGINT; originator: Component; CONST event: Event): EventContext; 
+	PROCEDURE ^ GetArgumentStream*(command: Strings.String; offset: SIZE; VAR arguments: Streams.StringReader); 
+	PROCEDURE ^ GenerateContext*(oldCommand, command: Strings.String; index: SIZE; originator: Component; CONST event: Event): EventContext; 
 	PROCEDURE ^ HandleEvent*(CONST event: Event; originator: Component; command: Strings.String); 
 	PROCEDURE ^ ContainsMacros(CONST string: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ WriteSelectionToStream(w: Streams.Writer); 
-	PROCEDURE ^ SubstituteMacro(CONST command: Strings.String; VAR index: LONGINT; originator: Component; w: Streams.Writer); 
+	PROCEDURE ^ SubstituteMacro(CONST command: Strings.String; VAR index: SIZE; originator: Component; w: Streams.Writer); 
 	PROCEDURE ^ SubstituteMacros*(CONST command: Strings.String; VAR newCommand: Strings.String; originator: Component); 
 	PROCEDURE ^ GetAttributeValue(originator: Component; CONST fullname: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ GetPropertyValue(originator: Component; CONST fullname: ARRAY OF CHAR): Strings.String; 
@@ -437,7 +437,7 @@ VAR
 	PROCEDURE ^ SetStyle*(style: XML.Element); 
 	PROCEDURE ^ SetStyleInternal(style: XML.Element); 
 	PROCEDURE ^ FindRelativePath(x: Component; CONST path: ARRAY OF CHAR; pos: LONGINT): Component; 
-	PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Load*(CONST filename: ARRAY OF CHAR): XML.Content; 
 	PROCEDURE ^ FormWindowGen*(xml: XML.Content): WM.Window; 
 	PROCEDURE ^ LoadFormWindow*(xml: XML.Content): WM.Window; 

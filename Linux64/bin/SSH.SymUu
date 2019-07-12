@@ -28,7 +28,7 @@ TYPE
 		f: Forwarder; 
 		p: T.Packet; 
 		buf: ARRAY 64 OF CHAR; 
-		len: LONGINT; 
+		len: SIZE; 
 		res: WORD; 
 
 		PROCEDURE ^  & Init(forw: Forwarder); 
@@ -48,7 +48,7 @@ TYPE
 		chan: Channel; 
 		buf: ARRAY 4096 OF CHAR; 
 		type: CHAR; 
-		len: LONGINT; 
+		len: SIZE; 
 		res: WORD; 
 		clientHandlerRunning: BOOLEAN; 
 		clientHandler: ClientHandler; 
@@ -65,7 +65,7 @@ TYPE
 		state-: SHORTINT; 
 		conn-: T.Connection; 
 		rchan: LONGINT; 
-		wsize-: LONGINT; 
+		wsize-: SIZE; 
 		clchan: LONGINT; 
 		clwsize: LONGINT; 
 		pmax: LONGINT; 
@@ -74,13 +74,13 @@ TYPE
 		rbstart, rbend: LONGINT; 
 		interactive: BOOLEAN; 
 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ NewDataPacket(size: LONGINT): T.Packet; 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ NewDataPacket(size: SIZE): T.Packet; 
 		PROCEDURE ^ SendPacket*(p: T.Packet); 
-		PROCEDURE ^ SendBuffer*(CONST buf: ARRAY OF CHAR; len: LONGINT); 
+		PROCEDURE ^ SendBuffer*(CONST buf: ARRAY OF CHAR; len: SIZE); 
 		PROCEDURE ^ SendChar*(ch: CHAR); 
-		PROCEDURE ^ ReceivePacket*(VAR buf: ARRAY OF CHAR; VAR len: LONGINT): CHAR; 
+		PROCEDURE ^ ReceivePacket*(VAR buf: ARRAY OF CHAR; VAR len: SIZE): CHAR; 
 		PROCEDURE ^ ReceiveLine*(VAR line: ARRAY OF CHAR; VAR len: LONGINT); 
 		PROCEDURE ^ WindowChange*(width, height: LONGINT); 
 		PROCEDURE ^ RemoteCommand*(CONST cmd: ARRAY OF CHAR); 
@@ -98,9 +98,9 @@ VAR
 
 	PROCEDURE ^ OpenSession*(conn: T.Connection; interactive: BOOLEAN): Channel; 
 	PROCEDURE ^ Error(CONST msg: ARRAY OF CHAR); 
-	PROCEDURE ^ ErrorResponse(CONST msg, buf: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ ErrorResponse(CONST msg, buf: ARRAY OF CHAR; len: SIZE); 
 	PROCEDURE ^ ShowChar(c: CHAR); 
-	PROCEDURE ^ ShowPacket(CONST buf: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ ShowPacket(CONST buf: ARRAY OF CHAR; len: SIZE); 
 	PROCEDURE ^ Pause(ms: LONGINT); 
 	PROCEDURE ^ Connect(arg: Streams.Reader; VAR remHost: ARRAY OF CHAR): A.Connection; 
 	PROCEDURE ^ Send*(context: Commands.Context); 

@@ -27,16 +27,16 @@ TYPE
 	HashTableSegmentedName* = OBJECT 
 	VAR 
 		table: HashSegmentedNameArray; 
-		size: LONGINT; 
-		used-: LONGINT; 
+		size: SIZE; 
+		used-: SIZE; 
 		maxLoadFactor: REAL; 
 
-		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(CONST key: ObjectFile.SegmentedName; value: Block); 
 		PROCEDURE ^ Get*(CONST key: ObjectFile.SegmentedName): Block; 
 		PROCEDURE ^ Clear; 
-		PROCEDURE ^ Hash(CONST name: ObjectFile.SegmentedName): LONGINT; 
-		PROCEDURE ^ HashValue(CONST key: ObjectFile.SegmentedName): LONGINT; 
+		PROCEDURE ^ Hash(CONST name: ObjectFile.SegmentedName): SIZE; 
+		PROCEDURE ^ HashValue(CONST key: ObjectFile.SegmentedName): SIZE; 
 		PROCEDURE ^ Grow; 
 	END HashTableSegmentedName; 
 
@@ -53,7 +53,7 @@ TYPE
 		address*: Address; 
 		aliasOf*: Block; 
 		referenced, used: BOOLEAN; 
-		priority: LONGINT; 
+		priority: WORD; 
 	END; 
 
 	Linker* = OBJECT 
@@ -78,7 +78,7 @@ TYPE
 		PROCEDURE ^ ImportBlock*(CONST fixup: ObjectFile.Fixup): Block; 
 		PROCEDURE ^ ExportBlock*(block: Block); 
 		PROCEDURE ^ GetArrangement(block: Block): Arrangement; 
-		PROCEDURE ^ Precedes*(this, that: Block): BOOLEAN; 
+		PROCEDURE ^ Precedes*(left, right: Block): BOOLEAN; 
 		PROCEDURE ^ AddSection*(CONST section: ObjectFile.Section); 
 		PROCEDURE ^ Resolve*; 
 		PROCEDURE ^ PatchAlias*(block: Block); 
@@ -90,8 +90,8 @@ TYPE
 		PROCEDURE ^ Diagnose(block: Block); 
 	END Linker; 
 
-	PROCEDURE ^ GetPriority(block: Block): LONGINT; 
-	PROCEDURE ^ Header(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): LONGINT; 
+	PROCEDURE ^ GetPriority(block: Block): WORD; 
+	PROCEDURE ^ ReadHeader(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): WORD; 
 	PROCEDURE ^ OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList); 
 	PROCEDURE ^ Process*(reader: Streams.Reader; linker: Linker); 
 BEGIN

@@ -69,15 +69,15 @@ TYPE
 	VAR 
 		repository: Repository; 
 		name: Strings.String; 
-		refNum: LONGINT; 
+		refNum: SIZE; 
 		flags: SET; 
 		timestamp-: LONGINT; 
 		onChanged*: WMEvents.EventSource; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetGenerator*(CONST gen: ARRAY OF CHAR); 
-		PROCEDURE ^ SetRepository*(repository: Repository; CONST name: Name; refNum: LONGINT); 
-		PROCEDURE ^ GetRepository*(VAR repository: Repository; VAR name: Name; VAR refNum: LONGINT); 
+		PROCEDURE ^ SetRepository*(repository: Repository; CONST name: Name; refNum: SIZE); 
+		PROCEDURE ^ GetRepository*(VAR repository: Repository; VAR name: Name; VAR refNum: SIZE); 
 		PROCEDURE ^ IsLocked*(): BOOLEAN; 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 	END Component; 
@@ -90,7 +90,8 @@ TYPE
 	ComponentInfo = OBJECT {EXCLUSIVE} (XML.Element)
 	VAR 
 		name, source: Strings.String; 
-		type, id: LONGINT; 
+		type: WORD; 
+		id: SIZE; 
 		instance: ANY; 
 		next: ComponentInfo; 
 
@@ -159,7 +160,7 @@ TYPE
 		archive: Archives.Archive; 
 		timestamp-: LONGINT; 
 		modified: BOOLEAN; 
-		nextID: LONGINT; 
+		nextID: SIZE; 
 		components: ComponentInfo; 
 		dictionaries: Dictionary; 
 		errors: ErrorReporter; 
@@ -168,7 +169,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize(): WORD; 
-		PROCEDURE ^ FindComponentInfo(CONST name: ARRAY OF CHAR; id: LONGINT): ComponentInfo; 
+		PROCEDURE ^ FindComponentInfo(CONST name: ARRAY OF CHAR; id: SIZE): ComponentInfo; 
 		PROCEDURE ^ GetDictionary*(CONST name: ARRAY OF CHAR): Dictionary; 
 		PROCEDURE ^ AddComponentInfo(ci: ComponentInfo); 
 		PROCEDURE ^ RemoveComponentInfo(ci: ComponentInfo); 
@@ -176,14 +177,14 @@ TYPE
 		PROCEDURE ^ GetApplicationEnumerator*(): XMLObjects.Enumerator; 
 		PROCEDURE ^ GetFile(CONST name: ARRAY OF CHAR): Streams.Reader; 
 		PROCEDURE ^ Check(): BOOLEAN; 
-		PROCEDURE ^ GetComponent*(CONST name: ARRAY OF CHAR; id: LONGINT): Component; 
-		PROCEDURE ^ PutComponent*(component: Component; CONST name: ARRAY OF CHAR; VAR id: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ UnbindComponent*(CONST name: ARRAY OF CHAR; id: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ GetComponent*(CONST name: ARRAY OF CHAR; id: SIZE): Component; 
+		PROCEDURE ^ PutComponent*(component: Component; CONST name: ARRAY OF CHAR; VAR id: SIZE; VAR res: WORD); 
+		PROCEDURE ^ UnbindComponent*(CONST name: ARRAY OF CHAR; id: SIZE; VAR res: WORD); 
 		PROCEDURE ^ Unbind*(component: Component); 
-		PROCEDURE ^ RemoveComponent*(CONST name: ARRAY OF CHAR; refNum: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ RemoveComponent*(CONST name: ARRAY OF CHAR; refNum: SIZE; VAR res: WORD); 
 		PROCEDURE ^ Remove*(component: Component; VAR res: WORD); 
 		PROCEDURE ^ LoadComponent(CONST filename: ARRAY OF CHAR): Component; 
-		PROCEDURE ^ GetID*(): LONGINT; 
+		PROCEDURE ^ GetID*(): SIZE; 
 		PROCEDURE ^ Store*(VAR res: WORD); 
 		PROCEDURE ^ StoreComponent(CONST filename: ARRAY OF CHAR; component: Component; VAR res: WORD); 
 		PROCEDURE ^ Dump*(writer: Streams.Writer); 
@@ -209,10 +210,10 @@ TYPE
 
 	ErrorReporter = OBJECT 
 	VAR 
-		nofErrors: LONGINT; 
+		nofErrors: SIZE; 
 
 		PROCEDURE ^  & Reset; 
-		PROCEDURE ^ Report(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Report(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	END ErrorReporter; 
 VAR 
 	registry-: Registry; 
@@ -231,11 +232,11 @@ VAR
 	PROCEDURE ^ IsXmlFilename(string: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Parse(reader: Streams.Reader; elemReg: XML.ElementRegistry; errors: ErrorReporter): XML.Element; 
 	PROCEDURE ^ GetWriter(archive: Archives.Archive; CONST filename: ARRAY OF CHAR): Streams.Writer; 
-	PROCEDURE ^ SplitName*(CONST name: ARRAY OF CHAR; VAR repositoryName, componentName: ARRAY OF CHAR; VAR id: LONGINT): BOOLEAN; 
-	PROCEDURE ^ JoinName*(CONST repositoryName, componentName: ARRAY OF CHAR; id: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ SplitName*(CONST name: ARRAY OF CHAR; VAR repositoryName, componentName: ARRAY OF CHAR; VAR id: SIZE): BOOLEAN; 
+	PROCEDURE ^ JoinName*(CONST repositoryName, componentName: ARRAY OF CHAR; id: SIZE; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ IsValidName*(CONST name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ IsNumber*(CONST name: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ NewJoinName*(CONST repositoryName, componentName: ARRAY OF CHAR; id: LONGINT): Strings.String; 
+	PROCEDURE ^ NewJoinName*(CONST repositoryName, componentName: ARRAY OF CHAR; id: SIZE): Strings.String; 
 	PROCEDURE ^ SplitFilename(CONST fullname: ARRAY OF CHAR; VAR repositoryName, extension: ARRAY OF CHAR); 
 	PROCEDURE ^ GetCommand*(CONST command: ARRAY OF CHAR; VAR res: WORD): Command; 
 	PROCEDURE ^ IsCommandString*(CONST string: ARRAY OF CHAR): BOOLEAN; 
@@ -245,11 +246,11 @@ VAR
 	PROCEDURE ^ Translate*(CONST string: ARRAY OF CHAR; languages: Localization.Languages): Strings.String; 
 	PROCEDURE ^ GetDictionary*(CONST repositoryName, dictionaryName: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR res: WORD); 
 	PROCEDURE ^ GetDictionaryByString*(CONST string: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR res: WORD); 
-	PROCEDURE ^ GetComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: LONGINT; VAR component: Component; VAR res: WORD); 
+	PROCEDURE ^ GetComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR component: Component; VAR res: WORD); 
 	PROCEDURE ^ GetComponentByString*(CONST string: ARRAY OF CHAR; VAR component: Component; VAR res: WORD); 
-	PROCEDURE ^ PutComponent*(component: Component; CONST repositoryName, componentName: ARRAY OF CHAR; VAR id: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ UnbindComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ RemoveComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ PutComponent*(component: Component; CONST repositoryName, componentName: ARRAY OF CHAR; VAR id: SIZE; VAR res: WORD); 
+	PROCEDURE ^ UnbindComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR res: WORD); 
+	PROCEDURE ^ RemoveComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR res: WORD); 
 	PROCEDURE ^ Add(repository: Repository; VAR res: WORD); 
 	PROCEDURE ^ Remove(repository: Repository; VAR res: WORD); 
 	PROCEDURE ^ FindRepository(CONST name: ARRAY OF CHAR): Repository; 

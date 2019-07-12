@@ -41,7 +41,7 @@ TYPE
 		openCount*: LONGINT; 
 		NbytesRead*, NbytesWritten*, NnofReads*, NnofWrites*, NnofOthers*, NnofErrors*: HUGEINT; 
 
-		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
 		PROCEDURE ^ GetSize*(VAR size: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ Handle*(VAR msg: Message; VAR res: WORD); 
 		PROCEDURE ^ Open*(VAR res: WORD); 
@@ -75,7 +75,7 @@ VAR
 	registry*: Plugins.Registry; 
 
 	PROCEDURE ^ InitDevice*(d: Device); 
-	PROCEDURE ^ Resize(VAR p: PartitionTable; n: LONGINT); 
+	PROCEDURE ^ Resize(VAR p: PartitionTable; n: SIZE); 
 	PROCEDURE ^ Get4(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
 	PROCEDURE ^ Extended(type: LONGINT): BOOLEAN; 
 	PROCEDURE ^ ValidFlag(f: CHAR): BOOLEAN; 

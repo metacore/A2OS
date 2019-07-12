@@ -48,13 +48,13 @@ TYPE
 		PROCEDURE ^ CreateGrid(): NoWheelGrid; 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ToggleLineNumbers; 
-		PROCEDURE ^ SetNofLines(nofLines: LONGINT); 
+		PROCEDURE ^ SetNofLines(nofLines: SIZE); 
 		PROCEDURE ^ FileNameEditDragOver(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ FileNameEditDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ FillLines(nofRows, nofLines: LONGINT); 
-		PROCEDURE ^ InsertLine(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+		PROCEDURE ^ InsertLine(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
 		PROCEDURE ^ InsertEmptyLine; 
-		PROCEDURE ^ InsertCommonLine(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+		PROCEDURE ^ InsertCommonLine(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
 		PROCEDURE ^ SetFileName(fileName: ARRAY OF CHAR); 
 		PROCEDURE ^ GetFileName(): Strings.String; 
 		PROCEDURE ^ Setup; 
@@ -95,7 +95,7 @@ TYPE
 		PROCEDURE ^ Load*(leftFilename, rightFilename: ARRAY OF CHAR); 
 		PROCEDURE ^ Resized*(width, height: LONGINT); 
 		PROCEDURE ^ OnViewResized(sender, par: ANY); 
-		PROCEDURE ^ Setup(nofLines: LONGINT); 
+		PROCEDURE ^ Setup(nofLines: SIZE); 
 		PROCEDURE ^ SetScrollbarProperties; 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ DiffHandler(sender, par: ANY); 

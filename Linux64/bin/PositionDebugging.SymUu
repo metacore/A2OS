@@ -15,7 +15,7 @@ TYPE
 		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: LONGINT; Keys: SET); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ ChangePos(realPos, bidiPos: LONGINT); 
+		PROCEDURE ^ ChangePos(realPos, bidiPos: SIZE); 
 	END DebugWindow; 
 
 	DebugComponent* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -45,6 +45,6 @@ VAR
 	PROCEDURE ^ AppendToList(debugWindow: DebugWindow); 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ CloseAll*; 
-	PROCEDURE ^ SetPos*(realPos, bidiPos: LONGINT); 
+	PROCEDURE ^ SetPos*(realPos, bidiPos: SIZE); 
 BEGIN
 END PositionDebugging.

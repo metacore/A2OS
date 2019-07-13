@@ -20,7 +20,7 @@ IMPORT Objects;
 
 TYPE
 	RecursiveLock* = OBJECT
-		VAR lockedBy: ANY; level: LONGINT;
+		VAR lockedBy: ANY; level: SIZE;
 
 		PROCEDURE Acquire*;
 		VAR me: ANY;

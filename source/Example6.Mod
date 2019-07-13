@@ -9,7 +9,7 @@ Ref: C.A.R. Hoare, "Monitors: An Operating System Structuring Concept", CACM 17(
 
 TYPE
 	ReadersWritersScheduler* = OBJECT
-		VAR busy: BOOLEAN; readers, writers: LONGINT;
+		VAR busy: BOOLEAN; readers, writers: SIZE;
 
 		PROCEDURE StartRead*;
 		BEGIN {EXCLUSIVE}

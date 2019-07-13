@@ -9,10 +9,10 @@ Ref: C.A.R. Hoare, "Monitors: An Operating System Structuring Concept", CACM 17(
 
 TYPE
 	Clock* = OBJECT
-		VAR now: LONGINT;
+		VAR now: SIZE;
 
-		PROCEDURE Delay*(n: LONGINT);
-		VAR then: LONGINT;
+		PROCEDURE Delay*(n: SIZE);
+		VAR then: SIZE;
 		BEGIN {EXCLUSIVE}
 			then := now + n;
 			AWAIT(then - now >= 0)

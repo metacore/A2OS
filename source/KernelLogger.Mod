@@ -5,7 +5,7 @@ IMPORT
 
 CONST
 	BufSize = LONGINT(8192) * 8; (* Kernel buffer size *)
-	DeleteSize= BufSize DIV 8; 
+	DeleteSize= BufSize DIV 8;
 	UpdateInterval = 200;	(* ms *)
 	LocalBuf = LONGINT(4096) * 2;
 

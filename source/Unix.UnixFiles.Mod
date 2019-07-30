@@ -192,11 +192,11 @@ TYPE
 			newFiles.Enumerate( EnumFinalize );  newFiles.Clear();
 			oldFiles.Enumerate( EnumFinalize );  oldFiles.Clear();
 		END Finalize;
-		
+
 		PROCEDURE Collect;
 		BEGIN{EXCLUSIVE}
 			Kernel.GC; Kernel.GC; (* make sure that no file enumeration takes place during GC --> limit the chance to revive files with concurrent GC *)
-		END Collect; 
+		END Collect;
 
 		PROCEDURE FinalizeFile( obj: ANY );
 		VAR F: File;
@@ -1119,12 +1119,12 @@ TYPE
 			IF fd < 0 THEN
 				errno := Unix.errno();
 				IF errno IN  {Unix.ENFILE, Unix.EMFILE} THEN
-					fo := openfiles;  
+					fo := openfiles;
 					collection.Collect;
 					WaitClose( fo )
 				ELSIF (errno = Unix.EINVAL) & (openfiles > 1000) THEN
 					(* in Solaris open fails with EINVAL ??? *)
-					fo := openfiles;  
+					fo := openfiles;
 					collection.Collect;
 					WaitClose( fo )
 				ELSIF errno # Unix.EINTR THEN

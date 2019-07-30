@@ -978,7 +978,7 @@ TYPE
 			(* add import names to the generated Sections.Module *)
 			import := x.moduleScope.firstImport;
 			WHILE import # NIL DO
-				IF import.parameters = NIL THEN 
+				IF import.parameters = NIL THEN
 					import.module.GetName(idstr);
 					module.imports.AddName(idstr);
 				ELSE
@@ -8324,7 +8324,7 @@ TYPE
 				source := NewSection(module.importedSections, Sections.VarSection, pooledName, NIL,commentPrintout # NIL);
 				IntermediateCode.InitAddress(mark, addressType, pooledName , 0, 0);
 				res := NewRegisterOperand(IntermediateCode.GetType(system, system.booleanType));
-				Emit(Cas(position, mark, false, false)); 
+				Emit(Cas(position, mark, false, false));
 				ReleaseIntermediateOperand(mark);
 				Emit(Result(position, res));
 				label := NewLabel();
@@ -8332,7 +8332,7 @@ TYPE
 				ReleaseIntermediateOperand(res);
 				RETURN label;
 		END IfMarking;
-		
+
 		PROCEDURE MarkPointer(CONST op: IntermediateCode.Operand);
 		VAR saved: RegisterEntry; label: Label;
 		BEGIN
@@ -8344,7 +8344,7 @@ TYPE
 				RestoreRegisters(saved);
 				SetLabel(label);
 			END;
-		END MarkPointer;	
+		END MarkPointer;
 
 		PROCEDURE MarkRecord(CONST op, tag: IntermediateCode.Operand);
 		VAR saved: RegisterEntry; label: Label;
@@ -8352,22 +8352,22 @@ TYPE
 				label := IfMarking();
 				SaveRegisters();ReleaseUsedRegisters(saved);
 				Emit(Push(position, op));
-				Emit(Push(position, tag)); 
+				Emit(Push(position, tag));
 				CallThis(position,"Heaps","MarkRecord",2);
 				RestoreRegisters(saved);
 				SetLabel(label);
 		END MarkRecord;
-		
+
 		PROCEDURE MarkArray(CONST adr, tag, size: IntermediateCode.Operand);
 		VAR saved: RegisterEntry; label: Label;
 		BEGIN
 				label := IfMarking();
 				SaveRegisters();ReleaseUsedRegisters(saved);
-				Emit(Push(position,adr));		
+				Emit(Push(position,adr));
 				Emit(Push(position,tag));
 				Emit(Push(position,size));
 				CallThis(position,"Heaps","MarkArray",3);
-				RestoreRegisters(saved); 
+				RestoreRegisters(saved);
 				SetLabel(label);
 		END MarkArray;
 
@@ -10530,9 +10530,9 @@ TYPE
 				Emit(Copy(position,leftO.op,rightO.op,sizeOp));
 				ReleaseIntermediateOperand(sizeOp);
 				IF backend.writeBarriers & left.NeedsTrace() THEN
-					MarkRecord(rightO.op, leftO.tag); 					
+					MarkRecord(rightO.op, leftO.tag);
 				END;
-				ReleaseOperand(leftO); 
+				ReleaseOperand(leftO);
 				ReleaseOperand(rightO);
 			ELSIF (leftType IS SyntaxTree.ArrayType) THEN
 				IF (rightType IS SyntaxTree.StringType) THEN
@@ -10544,7 +10544,7 @@ TYPE
 					Emit(Copy(position,leftO.op, rightO.op, IntermediateCode.Immediate(addressType,size)));
 					IF backend.writeBarriers & left.NeedsTrace() THEN
 						base := StaticArrayBaseType(leftType);
-						MarkArray(rightO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType))); 
+						MarkArray(rightO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType)));
 					END;
 					ReleaseOperand(leftO); ReleaseOperand(rightO);
 				ELSE
@@ -10583,7 +10583,7 @@ TYPE
 					END;
 					IF backend.writeBarriers & left.NeedsTrace() THEN
 						base := StaticArrayBaseType(leftType);
-						MarkArray(rightO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType))); 
+						MarkArray(rightO.op, TypeDescriptorAdr(base), IntermediateCode.Immediate(addressType,StaticArrayNumElements(leftType)));
 					END;
 
 					ReleaseOperand(leftO); ReleaseOperand(rightO);
@@ -13933,7 +13933,7 @@ TYPE
 				END;
 			END
 		END CheckTypeDeclaration
-		
+
 
 	END MetaDataGenerator;
 
@@ -15003,7 +15003,7 @@ TYPE
 	BEGIN
 		RETURN (scope.ownerModule = module) OR (scope.ownerModule.moduleScope.outerScope = module.moduleScope);
 	END InThisModule;
-	
+
 
 BEGIN
 	Init;

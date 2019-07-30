@@ -2432,7 +2432,7 @@ TYPE
 				IF isCellNet THEN module.SetCellNet(TRUE); module.SetModifiers(modifiers); END;
 
 				module.SetType(SyntaxTree.moduleType);
-				
+
 				IF Optional(Scanner.Less) THEN
 					NEW(parameters);
 					module.SetParameters(parameters);
@@ -2440,9 +2440,9 @@ TYPE
 					WHILE Optional(Scanner.Comma) DO
 						parameters.Add(Identifier(position));
 					END;
-					Check(Scanner.Greater); 
-				END; 
-				
+					Check(Scanner.Greater);
+				END;
+
 				IF Optional(Scanner.In) THEN
 					position := token.position;
 					context := Identifier(position);

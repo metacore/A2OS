@@ -199,18 +199,18 @@ TYPE
 				suspended := TRUE;
 				Suspend(SELF);
 			END;
-			
+
 			sb := stackBottom;
 			contextPos := CAS(gcContext.nextPos,0,0);
 			sp := state.SP; bp := state.BP; pc := state.PC;  (* <---- might all be invalid, when A2 was left ! *)
-		
+
 			IF TraceProcessHook # NIL THEN (* stack trace *)
 				TraceProcessHook(SELF, pc, bp, sp, sb);
-			END;						
-				
+			END;
+
 			IF Machine.ValidHeapAddress(pc) & (bp # NIL) THEN (* bp = NIL can happen when code has no procedure activation frame *)
 				(* ok, valid stack frame from A2, we can trace this *)
-			ELSE ASSERT( gcContext.GetNextContext(contextPos, bp, pc, sp) ); 
+			ELSE ASSERT( gcContext.GetNextContext(contextPos, bp, pc, sp) );
 			END;
 			IF contextPos >= 0 THEN (* this thread is currently active in A2 *)
 				IF Heaps.GCType = Heaps.HeuristicStackInspectionGC THEN
@@ -273,25 +273,25 @@ TYPE
 		BEGIN {UNTRACKED}
 			IF value THEN
 				time := Kernel32.GetTickCount();
-					
+
 				IF ConcurrentGC THEN
-					Machine.Acquire(Machine.GC); 
+					Machine.Acquire(Machine.GC);
 					Machine.Acquire(Machine.Heaps); (* to protect agains concurrent LazySweep *)
-					gcProcess := CurrentProcess(); 
+					gcProcess := CurrentProcess();
 					Heaps.CollectGarbage( Modules.root );
-					gcProcess := NIL; 
+					gcProcess := NIL;
 					Machine.Release(Machine.Heaps);
-					Machine.Release(Machine.GC); 
+					Machine.Release(Machine.GC);
 				ELSE
-					Machine.Acquire(Machine.GC); 
+					Machine.Acquire(Machine.GC);
 					Machine.Acquire(Machine.Heaps); (* to protect agains concurrent LazySweep *)
-					gcProcess := CurrentProcess(); 
+					gcProcess := CurrentProcess();
 					SuspendActivities;
 					Heaps.CollectGarbage(Modules.root);
-					gcProcess := NIL; 
+					gcProcess := NIL;
 					ResumeActivities;
 					Machine.Release(Machine.Heaps);
-					Machine.Release(Machine.GC); 
+					Machine.Release(Machine.GC);
 				END;
 
 				time := Kernel32.GetTickCount()-time;
@@ -359,7 +359,7 @@ VAR
 	terminateProc: PROCEDURE;
 	ready: ProcessQueue;	(* contains running processes in this implementation *)
 	startedMainProcess := FALSE: BOOLEAN;
-	gcProcess : Process; 
+	gcProcess : Process;
 
 	numberOfProcessors: LONGINT; (* cached value of Machine.NumberOfProcessors() *)
 	finalizerCaller: FinalizerCaller; (* active object for finalizer process, regarded as aprt of GC *)
@@ -410,7 +410,7 @@ PROCEDURE Yield*;
 BEGIN
 	Kernel32.Sleep(0)
 END Yield;
-	
+
 (** Return current process. (DEPRECATED, use ActiveObject) *)
 PROCEDURE CurrentProcess*( ): Process;
 (* The following code replaces RETURN Kernel32.TlsGetValue(tlsIndex) and does not need to leave A2 *)
@@ -549,12 +549,12 @@ BEGIN{UNTRACKED}
 	SetCurrent(excpFrame);
 	*)
 	t := SYSTEM.VAL(Process, Kernel32.TlsGetValue(tlsIndex));
-	IF t = gcProcess THEN 
+	IF t = gcProcess THEN
 		(*Machine.Release(Machine.GC); *)
-		Machine.Release(Machine.Heaps); 
-		Heaps.StopMarking 
-	END; 
-	
+		Machine.Release(Machine.Heaps);
+		Heaps.StopMarking
+	END;
+
 	IF exceptionhandler = NIL THEN
 		Trace.StringLn ( "Objects: No exception handler installed" );
 		IF HandleExcp THEN
@@ -701,7 +701,7 @@ VAR hdr {UNTRACED}: Heaps.ProtRecBlock; res: Kernel32.BOOL; shutdown: BOOLEAN;
 BEGIN
 	IF t = NIL THEN RETURN END;
 	(* see Objects.TerminateThis *)
-	Machine.Acquire( Machine.GC ); 
+	Machine.Acquire( Machine.GC );
 	Machine.Acquire( Machine.Objects );
 
 	IF TraceVerbose OR TraceOpenClose THEN
@@ -714,14 +714,14 @@ BEGIN
 	ELSIF t.mode = AwaitingLock THEN
 		SYSTEM.GET(SYSTEM.VAL(ADDRESS, t.waitingOn) + Heaps.HeapBlockOffset, hdr);
 		ASSERT(hdr IS Heaps.ProtRecBlock);
-		Remove( hdr.awaitingLock, t );  Machine.Release( Machine.Objects );Machine.Release(Machine.GC); 
+		Remove( hdr.awaitingLock, t );  Machine.Release( Machine.Objects );Machine.Release(Machine.GC);
 		HALT( 97 )
 	ELSIF t.mode = AwaitingCond THEN
 		SYSTEM.GET(SYSTEM.VAL(ADDRESS, t.waitingOn) + Heaps.HeapBlockOffset, hdr);
 		ASSERT(hdr IS Heaps.ProtRecBlock);
-		Remove( hdr.awaitingCond, t ); Machine.Release( Machine.Objects );Machine.Release(Machine.GC); 
+		Remove( hdr.awaitingCond, t ); Machine.Release( Machine.Objects );Machine.Release(Machine.GC);
 		HALT( 98 )
-	ELSE Machine.Release( Machine.Objects );Machine.Release(Machine.GC); 
+	ELSE Machine.Release( Machine.Objects );Machine.Release(Machine.GC);
 		HALT( 99 )
 	END;
 	t.mode := Terminated;   (* a process can also be "terminated" if the queue containing it is garbage collected *)
@@ -743,7 +743,7 @@ VAR t: Process;  obj: ProtectedObject; res: Kernel32.BOOL; bp,sp: ADDRESS;
 BEGIN
 	(* it may happen that the garbage collector runs right here and ignores this procedure.
 	    This is not a problem since lpParameter (being a reference to a process) is protected by the process lists *)
-	Machine.Acquire(Machine.GC); 
+	Machine.Acquire(Machine.GC);
 	Machine.Acquire(Machine.Objects);
 	res := Kernel32.TlsSetValue(tlsIndex, SYSTEM.VAL(ADDRESS, lpParameter));
 	t := lpParameter(Process);  obj := t.obj;
@@ -805,7 +805,7 @@ BEGIN
 	END;
 	Machine.Acquire(Machine.GC);
 	p.mode := Terminated; (* fof for GC problem *)
-	Machine.Release(Machine.GC); 
+	Machine.Release(Machine.GC);
 	IF p.handle # 0 THEN
 		res := Kernel32.CloseHandle(p.handle); p.handle := 0
 	END
@@ -838,7 +838,7 @@ BEGIN
 	NEW(fn);   (* implicit call Heaps.NewRec -> might invoke GC *)
 	Heaps.AddFinalizer(t, fn); (* requires heaps lock *)
 
-	Machine.Acquire(Machine.GC); 
+	Machine.Acquire(Machine.GC);
 	Machine.Acquire(Machine.Objects);
 	t.next := NIL; t.prev := NIL;
 	t.waitingOn := NIL; t.flags := flags; t.obj := obj; t.mode := Unknown;
@@ -878,7 +878,7 @@ BEGIN
 	NewProcess(body, priority, flags, obj, t);  INC(nProcs);  (* acquires Machine.Objects lock *)
 	Machine.Release(Machine.Objects);
 	Machine.Release(Machine.GC);
-	
+
 END CreateProcess;
 
 
@@ -921,7 +921,7 @@ BEGIN  (* {called from user level} *)
 		ASSERT(res = Kernel32.WaitObject0);
 		IF StrongChecks THEN
 			ASSERT(hdr.lockedBy = r); (* at this moment only this process can own the lock and only this process can release it*)
-			ASSERT(r.mode = Running); 
+			ASSERT(r.mode = Running);
 		END;
 	END
 END Lock;
@@ -985,7 +985,7 @@ BEGIN
 	Machine.Release( Machine.Objects )
 END Unlock;
 
-VAR globalRunning: Process; 
+VAR globalRunning: Process;
 	(* global in order to save a reference to the current processes somewhere when
 		it temporarily is not in any queue	 *)
 
@@ -1055,7 +1055,7 @@ BEGIN
 	IF StrongChecks THEN
 		ASSERT(cond(slink));
 		ASSERT(hdr.lockedBy = r); (* lock held again *)
-		ASSERT(r.mode = Running); 
+		ASSERT(r.mode = Running);
 	END
 END Await;
 

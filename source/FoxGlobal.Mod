@@ -65,7 +65,7 @@ CONST
 	StringTRMS*="TRMS";
 	StringBackend*="Backend";
 	StringRuntime*="Runtime";
-	
+
 	(* traps *)
 	WithTrap* = 1;
 	CaseTrap* = 2;
@@ -445,19 +445,19 @@ TYPE
 				RETURN GenerateCellOffsets(scope(SyntaxTree.CellScope).ownerCell);
 			ELSE (* module scope or procedure scope: decreasing indices *)
 				ASSERT((scope IS SyntaxTree.ModuleScope) OR (scope IS SyntaxTree.ProcedureScope) OR (scope IS SyntaxTree.BlockScope));
-								
+
 				bscope := scope;
 				WHILE (bscope IS SyntaxTree.BlockScope) DO
 					bscope := bscope.outerScope;
 				END;
-				
+
 				offset := bscope.currentVariableOffset;
 				IF scope IS SyntaxTree.ProcedureScope THEN
 					IF offset > offsetFirstVariable THEN
 						offset := offsetFirstVariable;
 					END;
 				END;
-				
+
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
 					IF variable.offsetInBits = MIN(LONGINT) THEN
@@ -1864,9 +1864,9 @@ TYPE
 		NameUncooperative := SyntaxTree.NewIdentifier(StringUncooperative);
 		NameFingerprint := SyntaxTree.NewIdentifier(StringFingerprint);
 
-		NameGlobal := SyntaxTree.NewIdentifier("@GLOBAL"); 
-		Nameglobal := SyntaxTree.NewIdentifier("@global"); 
-		
+		NameGlobal := SyntaxTree.NewIdentifier("@GLOBAL");
+		Nameglobal := SyntaxTree.NewIdentifier("@global");
+
 
 		(* types *)
 		Boolean8 := SyntaxTree.NewBooleanType(8);

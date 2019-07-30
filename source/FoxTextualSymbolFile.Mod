@@ -51,11 +51,11 @@ TYPE
 			ELSE
 
 				flags := {};
-				
+
 				IF module.parameters = NIL THEN
 					InterfaceComparison.CompareThis(module,SELF,diagnostics,importCache,flags);
 				END;
-				
+
 				IF noRedefinition OR noModification THEN
 					IF (InterfaceComparison.Redefined IN flags) THEN
 						Basic.Error(diagnostics, module.sourceName, Basic.invalidPosition, " no redefinition of symbol file allowed");

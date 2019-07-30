@@ -1960,7 +1960,7 @@ TYPE
 				END;
 				(* nothing to be done *)
 			ELSIF expression IS SyntaxTree.ProcedureValue THEN
-				result := expression; 
+				result := expression;
 			ELSE
 				Error(position, "expression cannot be converted");
 				IF VerboseErrorMessage THEN
@@ -3065,17 +3065,17 @@ TYPE
 			result.SetType(symbol.type);
 			result.SetAssignable(assignable);
 			symbol.MarkUsed;
-			WITH symbol: SyntaxTree.Constant DO				
+			WITH symbol: SyntaxTree.Constant DO
 				result.SetResolved(symbol.value.resolved);
 			| SyntaxTree.Procedure DO
 				IF ~symbol.type(SyntaxTree.ProcedureType).isDelegate THEN
 					result.SetResolved(SyntaxTree.NewProcedureValue(result.position, symbol));
 					result.resolved.SetType(symbol.type);
-				END;		
+				END;
 			| SyntaxTree.Variable DO
 				IF ~(symbol IS SyntaxTree.Property) THEN
 					variableAccessed := TRUE;
-				END; 
+				END;
 			ELSE
 			END;
 
@@ -6647,22 +6647,22 @@ TYPE
 				ELSIF module.parameters = NIL THEN
 					Error(x.position,"imported module is no template");
 				ELSIF module.parameters.Length() # x.parameters.Length() THEN
-					Error(x.position,"numbers of template parameters do not match"); 
+					Error(x.position,"numbers of template parameters do not match");
 				ELSE
 					FOR i := 0 TO module.parameters.Length()-1 DO
 						ident := module.parameters.Get(i);
 						expression := x.parameters.GetExpression(i);
 						WITH expression: SyntaxTree.SymbolDesignator DO
 							symbol := expression.symbol;
-							WITH symbol: SyntaxTree.TypeDeclaration DO 
+							WITH symbol: SyntaxTree.TypeDeclaration DO
 								TRACE(symbol.declaredType,symbol.declaredType.typeDeclaration);
 								typeDeclaration := SyntaxTree.NewTypeDeclaration(expression.position,ident);
 								typeDeclaration.SetDeclaredType(symbol.declaredType);
 								module.moduleScope.AddTypeDeclaration(typeDeclaration);
 							| SyntaxTree.Constant DO TRACE("const");
-							| SyntaxTree.Procedure DO 
-								constDeclaration := SyntaxTree.NewConstant(expression.position, ident); 
-								constDeclaration.SetValue(SyntaxTree.NewProcedureValue(expression.position,symbol)); 
+							| SyntaxTree.Procedure DO
+								constDeclaration := SyntaxTree.NewConstant(expression.position, ident);
+								constDeclaration.SetValue(SyntaxTree.NewProcedureValue(expression.position,symbol));
 								module.moduleScope.AddConstant(constDeclaration);
 							ELSE
 								Printout.Info("expression", expression);
@@ -6686,7 +6686,7 @@ TYPE
 				END;
 			END
 		END ResolveTemplateImport;
-		
+
 
 		(** check and resolve import
 			- check for name = SYSTEM
@@ -7896,7 +7896,7 @@ TYPE
 				END;
 			END;
 
-			
+
 			symbol := scope.firstSymbol;
 			WHILE(symbol # NIL) DO
 				IF ~(symbol IS SyntaxTree.Parameter) OR (symbol(SyntaxTree.Parameter).ownerType IS SyntaxTree.CellType) THEN

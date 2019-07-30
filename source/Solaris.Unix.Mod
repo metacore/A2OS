@@ -655,13 +655,13 @@ VAR
 	(*------------------------------------------------------------------------------------------------------*)
 
 	VAR suspendHandler*: PROCEDURE( c: Ucontext );
-	
+
 
 	PROCEDURE {C} SigHandler( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
 	BEGIN
 		IF sig = SIGUSR1 THEN
 			suspendHandler( ucp );
-			handler_done := TRUE;	
+			handler_done := TRUE;
 		ELSIF trap # NIL THEN
 			trap( sig, S.VAL( Mcontext, ADDRESSOF( ucp.mc ) ) );
 		ELSE
@@ -708,8 +708,8 @@ VAR
 		high := sched_get_priority_max( SCHED_OTHER );
 		low := sched_get_priority_min( SCHED_OTHER );
 
-		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);	
-		
+		ASSERT( pthread_key_create( ADDRESSOF( thread_exit ), NIL ) = 0);
+
 		RETURN TRUE;
 	END ThrInitialize;
 
@@ -753,7 +753,7 @@ VAR
 		me: Thread_t;
 		old, new: Sigset;
 		state: ARRAY 2048 OF CHAR;
-		
+
 		param: Sched_param;
 		r: LONGINT;
 	BEGIN
@@ -779,7 +779,7 @@ VAR
 
 		ASSERT( pthread_setspecific( thread_exit, ADDRESSOF( state ) ) = 0 );
 		IF sigsetjmp( ADDRESSOF( state ), 0 ) = 0 THEN proc() END;
-		
+
 		RETURN NIL;
 	END Starter;
 
@@ -803,7 +803,7 @@ VAR
 			tv_sec: LONGWORD;        (* seconds *)
          		tv_nsec: LONGWORD;       (* nanoseconds *)
      	END;
-	BEGIN 
+	BEGIN
 		sltime.tv_sec := ms DIV 1000;
 		sltime.tv_nsec := 1000000*(ms MOD 1000);
 		WHILE nanosleep( ADDRESSOF( sltime ), ADDRESSOF( rem ) ) < 0 DO
@@ -811,8 +811,8 @@ VAR
 			sltime := rem;
 		END;
 	END ThrSleep;
-	
-	
+
+
 	PROCEDURE NanoSleep*( ns: LONGWORD );
 	VAR
 		sltime, rem: RECORD
@@ -826,7 +826,7 @@ VAR
 			(* check error ! *)
 			sltime := rem;
 		END;
-	END NanoSleep;	
+	END NanoSleep;
 
 
 	PROCEDURE ThrKill*( thr: Thread_t );

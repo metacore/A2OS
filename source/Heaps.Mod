@@ -189,7 +189,7 @@ TYPE
 	END GCStatus;
 
 	MarkStack = RECORD first{UNTRACED}: HeapBlock END;
-	
+
 VAR
 	marking-: BOOLEAN; (* do not rename: used by compiler for the write barriers *)
 	markStack: MarkStack;
@@ -1218,7 +1218,7 @@ BEGIN
 	IF (adr # NIL) & CAS(marking, FALSE, FALSE) THEN
 		any := adr;
 		Mark(any);
-	END; 
+	END;
 END MarkPointer;
 
 PROCEDURE MarkRecord*(adr: ADDRESS; tag: StaticTypeBlockU);

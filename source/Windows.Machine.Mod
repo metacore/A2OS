@@ -769,7 +769,7 @@ END Init;
 		IF StrongChecks THEN
 			ASSERT ( lock[level] = "N", 1001 );
 			FOR i := 0 TO level-1 DO
-				ASSERT(taken[i] # taken[level]); 
+				ASSERT(taken[i] # taken[level]);
 			END
 		ELSIF lock[level] # "N" THEN
 			Trace.String("warning: reentered non-reentrant lock"); Trace.Ln;
@@ -830,7 +830,7 @@ PROCEDURE ValidHeapAddress*(p: ADDRESS): BOOLEAN;
 VAR mb: MemoryBlock;
 BEGIN
 	IF (p>=ADDRESS OF Kernel32.EntryPoint) & (p<=ADDRESSOF(LastAddress)) THEN RETURN TRUE END;
-	IF (p < memBlockHead.beginBlockAdr) OR (p>memBlockTail.endBlockAdr) THEN RETURN FALSE END; 
+	IF (p < memBlockHead.beginBlockAdr) OR (p>memBlockTail.endBlockAdr) THEN RETURN FALSE END;
 	mb := memBlockHead;
 	WHILE mb # NIL DO
 		IF (p >= mb.beginBlockAdr) & (p <= mb.endBlockAdr) THEN  RETURN TRUE  END;

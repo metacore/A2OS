@@ -188,7 +188,7 @@ TYPE
 						warnings.Module(module);
 					END;
 				END;
-				
+
 				IF Print IN flags THEN
 					IF ChangeCase IN flags THEN module.SetCase(1-module.case) END;
 					PrintModule;

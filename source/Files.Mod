@@ -58,6 +58,7 @@ CONST
 
 TYPE
 	Position* = Streams.Position;
+	Size* = Streams.Position;
 	TSize* = LONGINT;
 
 TYPE

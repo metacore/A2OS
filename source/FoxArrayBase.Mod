@@ -8407,6 +8407,19 @@ TYPE
 		ApplyUnarySAOp(dest, ADDRESSOF( right ), AssignSLALLoop );
 	END ":=";
 
+(** SIZE *)
+	PROCEDURE AssignSYAYLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
+	VAR lval: SIZE;
+	BEGIN
+		SYSTEM.GET( ladr, lval );
+		WHILE (len > 0) DO SYSTEM.PUT( dadr, lval );  INC( dadr, dinc );  DEC( len );  END;
+	END AssignSYAYLoop;
+
+	OPERATOR ":="*(VAR dest: ARRAY {UNSAFE} [?] OF SIZE; right: SIZE);
+	BEGIN
+		ApplyUnarySAOp(dest, ADDRESSOF( right ), AssignSYAYLoop );
+	END ":=";
+
 (** HUGEINT *)
 	PROCEDURE AssignSHAHLoop( ladr, dadr: ADDRESS; dinc, len: SIZE );
 	VAR dval: POINTER{UNSAFE,UNTRACED} TO RECORD val: HUGEINT END;	lval: HUGEINT;

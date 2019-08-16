@@ -1585,32 +1585,54 @@ BEGIN
 END ResolveTypeHierarchy;
 
 PROCEDURE ResolveMethodOverwrites(module : Module; cache : ModuleCache);
-VAR typeDecl := NIL: TypeDecl; method := NIL, procDecl := NIL: ProcDecl; superClass := NIL: Object;
+VAR typeDecl := NIL: TypeDecl; method := NIL, procDecl := NIL: ProcDecl;
+VAR superClass := NIL: Object; superRecord := NIL: Record;
 BEGIN
 	IF module.resolved & (module.declSeq # NIL) & (module.declSeq.typeDecl # NIL) THEN
 		typeDecl := module.declSeq.typeDecl;
 		WHILE (typeDecl # NIL) DO
 			IF (typeDecl.type.object # NIL) & (typeDecl.type.object.declSeq # NIL) THEN
 				method := typeDecl.type.object.declSeq.procDecl;
+
+				WHILE (method # NIL) DO
+					superClass := typeDecl.type.object.superPtr;
+					
+					WHILE (superClass # NIL) DO
+						procDecl := superClass.FindProcDecl(method.head.identDef.ident.name^);
+						IF (procDecl # NIL) THEN
+							INCL(procDecl.head.modifiers, Overwritten);
+							INCL(method.head.modifiers, Overwrite)
+						END;
+						superClass := superClass.superPtr;
+					END;
+					IF (method.next # NIL) THEN
+						method := method.next (ProcDecl);
+					ELSE
+						method := NIL;
+					END;
+				END;				
 			ELSIF (typeDecl.type.record # NIL) THEN
 				method := typeDecl.type.record.procDecl;
-			END;
-			WHILE (method # NIL) DO
-				superClass := typeDecl.type.object.superPtr;
-				WHILE (superClass # NIL) DO
-					procDecl := superClass.FindProcDecl(method.head.identDef.ident.name^);
-					IF (procDecl # NIL) THEN
-						INCL(procDecl.head.modifiers, Overwritten);
-						INCL(method.head.modifiers, Overwrite)
+
+				WHILE (method # NIL) DO
+					superRecord := typeDecl.type.record.superPtr;
+					
+					WHILE (superRecord # NIL) DO
+						procDecl := superRecord.FindProcDecl(method.head.identDef.ident.name^);
+						IF (procDecl # NIL) THEN
+							INCL(procDecl.head.modifiers, Overwritten);
+							INCL(method.head.modifiers, Overwrite)
+						END;
+						superRecord := superRecord.superPtr;
 					END;
-					superClass := superClass.superPtr;
-				END;
-				IF (method.next # NIL) THEN
-					method := method.next (ProcDecl);
-				ELSE
-					method := NIL;
-				END;
+					IF (method.next # NIL) THEN
+						method := method.next (ProcDecl);
+					ELSE
+						method := NIL;
+					END;
+				END;				
 			END;
+
 			IF (typeDecl.next # NIL) THEN
 				typeDecl := typeDecl.next (TypeDecl);
 			ELSE

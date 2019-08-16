@@ -49,9 +49,8 @@ TYPE
 		parent- : Node;
 
 		PROCEDURE GetModule*() : Module;
-		VAR node : Node; module : Module;
+		VAR node : Node; module := NIL : Module;
 		BEGIN
-			module := NIL;
 			node := SELF;
 			WHILE (node # NIL) & (node.parent # node) DO node := node.parent; END;
 			IF (node # NIL) THEN
@@ -156,12 +155,10 @@ TYPE
 		formalPars*: FormalPars;
 
 		PROCEDURE FindProcDecl*(CONST name : ARRAY OF CHAR) : ProcDecl;
-		VAR procDecl : ProcDecl;
+		VAR procDecl := NIL : ProcDecl;
 		BEGIN
 			IF (declSeq # NIL) THEN
 				procDecl := declSeq.FindProcDecl(name);
-			ELSE
-				procDecl := NIL;
 			END;
 			RETURN procDecl;
 		END FindProcDecl;
@@ -177,12 +174,10 @@ TYPE
 		bodyPos- : LONGINT;
 
 		PROCEDURE FindProcDecl*(CONST name : ARRAY OF CHAR) : ProcDecl;
-		VAR procDecl : ProcDecl;
+		VAR procDecl := NIL : ProcDecl;
 		BEGIN
 			IF (declSeq # NIL) THEN
 				procDecl := declSeq.FindProcDecl(name);
-			ELSE
-				procDecl := NIL;
 			END;
 			RETURN procDecl;
 		END FindProcDecl;
@@ -362,12 +357,10 @@ TYPE
 		resolved* : BOOLEAN;
 
 		PROCEDURE FindTypeDecl*(CONST name : ARRAY OF CHAR) : TypeDecl;
-		VAR typeDecl : TypeDecl;
+		VAR typeDecl := NIL : TypeDecl;
 		BEGIN
 			IF (declSeq # NIL) THEN
 				typeDecl := declSeq.FindTypeDecl(name);
-			ELSE
-				typeDecl := NIL;
 			END;
 			RETURN typeDecl;
 		END FindTypeDecl;
@@ -1050,7 +1043,7 @@ TYPE
 
 		PROCEDURE CellP(cell: Cell);
 		VAR declSeq: DeclSeq;
-			pos: LONGINT;
+			pos := -1: LONGINT;
 		(*?	qualident: Qualident; *)
 		BEGIN
 			SysFlag;
@@ -1058,7 +1051,6 @@ TYPE
 				NEW(cell.formalPars, cell);
 				FormalParsP(cell.formalPars);
 			END;
-			pos := -1;
 			WHILE (token.symbol # FoxScanner.Begin) & (token.symbol # FoxScanner.End) & (token.symbol # FoxScanner.EndOfText) DO
 					(* avoid endless-loop *)
 				IF pos = token.position.start THEN NextToken END;
@@ -1263,11 +1255,9 @@ TYPE
 		END ModifierValueP;
 
 		PROCEDURE BodyP(allowBody : BOOLEAN; VAR modifiers : SET);
-		VAR end: LONGINT; lastSymbol: FoxScanner.Symbol; m : SET; first : BOOLEAN;
+		VAR end := 1: LONGINT; lastSymbol: FoxScanner.Symbol; m : SET; first := TRUE : BOOLEAN;
 		BEGIN
 			IF token.symbol = FoxScanner.Begin THEN
-				end := 1;
-				first := TRUE;
 				REPEAT
 					lastSymbol := token.symbol;
 					NextToken;
@@ -1458,14 +1448,12 @@ BEGIN
 END AppendLast;
 
 PROCEDURE SplitName*(CONST name : ARRAY OF CHAR; VAR moduleName, typeName : ARRAY OF CHAR);
-VAR i, j : LONGINT;
+VAR i := 0, j := 0 : LONGINT;
 BEGIN
 	IF Strings.ContainsChar(name, ".", FALSE) THEN
-		i := 0;
 		WHILE (i < LEN(name)) & (name[i] # ".") DO moduleName[i] := name[i]; INC(i); END;
 		moduleName[i] := 0X;
 		INC(i); (* skip "." *)
-		j := 0;
 		WHILE (i < LEN(name)) & (name[i] # 0X) DO typeName[j] := name[i]; INC(i); INC(j); END;
 		typeName[j] := 0X;
 	ELSE
@@ -1597,7 +1585,7 @@ BEGIN
 END ResolveTypeHierarchy;
 
 PROCEDURE ResolveMethodOverwrites(module : Module; cache : ModuleCache);
-VAR typeDecl : TypeDecl; method, procDecl : ProcDecl; superClass : Object;
+VAR typeDecl := NIL: TypeDecl; method := NIL, procDecl := NIL: ProcDecl; superClass := NIL: Object;
 BEGIN
 	IF module.resolved & (module.declSeq # NIL) & (module.declSeq.typeDecl # NIL) THEN
 		typeDecl := module.declSeq.typeDecl;

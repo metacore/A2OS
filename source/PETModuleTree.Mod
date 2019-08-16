@@ -681,6 +681,9 @@ TYPE
 					AddPostfixToCaption(p, Strings.NewString(")"));
 				END;
 				AddFieldDecl(p, record.fieldList);
+				IF record.procDecl # NIL THEN
+					AddProcDecl(parent, record.procDecl);
+				END;
 			END;
 		END AddRecord;
 

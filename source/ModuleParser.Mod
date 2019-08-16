@@ -110,6 +110,23 @@ TYPE
 		super*: Qualident;
 		superPtr* : Record;
 		fieldList*: FieldDecl;
+		procDecl*: ProcDecl;
+
+		PROCEDURE FindProcDecl*(CONST name : ARRAY OF CHAR) : ProcDecl;
+		VAR pd : ProcDecl;
+		BEGIN
+			pd := procDecl;
+			WHILE (pd # NIL) & (pd.head.identDef.ident.name^ # name) DO
+				IF (pd.next # NIL) THEN
+					pd := pd.next (ProcDecl);
+				ELSE
+					pd := NIL;
+				END;
+			END;
+			ASSERT((pd = NIL) OR (pd.head.identDef.ident.name^ = name));
+			RETURN pd;
+		END FindProcDecl;
+
 	END Record;
 
 	FieldDecl* = OBJECT (NodeList)
@@ -873,6 +890,7 @@ TYPE
 		END ArrayP;
 
 		PROCEDURE RecordP(record: Record);
+		VAR procDecl: ProcDecl;
 		BEGIN
 			SysFlag;
 			IF token.symbol = FoxScanner.LeftParenthesis THEN
@@ -885,6 +903,22 @@ TYPE
 			IF token.symbol = FoxScanner.Identifier THEN
 				NEW(record.fieldList, record);
 				FieldListP(record.fieldList);
+			END;
+		
+			WHILE (token.symbol = FoxScanner.Procedure) OR (token.symbol = FoxScanner.Operator) DO
+				NextToken;
+				NEW(procDecl, record);
+				ProcDeclP(procDecl);
+				IF procDecl.head = NIL THEN
+					procDecl := NIL
+				ELSE
+					IF record.procDecl = NIL THEN record.procDecl := procDecl;
+					ELSE AppendLast(record.procDecl, procDecl);
+					END;
+				END;
+				IF token.symbol # FoxScanner.End THEN
+					REPEAT Check(FoxScanner.Semicolon) UNTIL token.symbol # FoxScanner.Semicolon
+				END;
 			END;
 			Check(FoxScanner.End);
 		END RecordP;

@@ -466,42 +466,44 @@ TYPE
 		PROCEDURE ImportListP(import: Import);
 		VAR newImport: Import;
 		BEGIN
-			NextToken;
-			WHILE token.symbol = FoxScanner.Identifier DO
-				NEW(import.ident);
-				import.ident.name := Strings.NewString(token.identifierString);
-				import.ident.pos := token.position.start;
-				NextToken;	(* avoids endless loop *)
-				IF token.symbol = FoxScanner.Becomes THEN
-					NextToken;
-					IF token.symbol = FoxScanner.Identifier THEN
-						NEW(import.alias);
-						import.alias.name := Strings.NewString(token.identifierString);
-						import.alias.pos := token.position.start;
+			WHILE token.symbol = FoxScanner.Import DO
+				NextToken;
+				WHILE token.symbol = FoxScanner.Identifier DO
+					NEW(import.ident);
+					import.ident.name := Strings.NewString(token.identifierString);
+					import.ident.pos := token.position.start;
+					NextToken;	(* avoids endless loop *)
+					IF token.symbol = FoxScanner.Becomes THEN
 						NextToken;
-					ELSE
-						(* Error *)
-						hasError := TRUE;
-						KernelLog.String("err2: "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
+						IF token.symbol = FoxScanner.Identifier THEN
+							NEW(import.alias);
+							import.alias.name := Strings.NewString(token.identifierString);
+							import.alias.pos := token.position.start;
+							NextToken;
+						ELSE
+							(* Error *)
+							hasError := TRUE;
+							KernelLog.String("err2: "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
+						END;
 					END;
-				END;
-				IF token.symbol = FoxScanner.In THEN
-					NextToken;
-					IF token.symbol = FoxScanner.Identifier THEN
-						NEW(import.context);
-						import.context.name := Strings.NewString(token.identifierString);
-						import.context.pos := token.position.start;
+					IF token.symbol = FoxScanner.In THEN
+						NextToken;
+						IF token.symbol = FoxScanner.Identifier THEN
+							NEW(import.context);
+							import.context.name := Strings.NewString(token.identifierString);
+							import.context.pos := token.position.start;
+						END;
+						Check (FoxScanner.Identifier);
 					END;
-					Check (FoxScanner.Identifier);
+					IF token.symbol = FoxScanner.Comma THEN
+						NextToken;
+					END;
+					NEW(newImport, import.parent);
+					import.next := newImport;
+					import := newImport;
 				END;
-				IF token.symbol = FoxScanner.Comma THEN
-					NextToken;
-				END;
-				NEW(newImport, import.parent);
-				import.next := newImport;
-				import := newImport;
+				Check(FoxScanner.Semicolon);
 			END;
-			Check(FoxScanner.Semicolon);
 		END ImportListP;
 
 		PROCEDURE DefinitionP(definition: Definition);

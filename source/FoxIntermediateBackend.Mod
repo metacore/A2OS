@@ -12117,7 +12117,7 @@ TYPE
 				END;
 				Address(source,0);
 			ELSE
-				Address(source,0);
+				Size(source,0);
 				(* first pointer for GC *)
 				IF hasPointer THEN
 					(* points to first element in the array, this is NOT the base type descriptor *)
@@ -12126,7 +12126,8 @@ TYPE
 					Address(source,0);
 				END;
 				sizePC := source.pc;
-				Address(source,0);
+				Size(source,0);
+				source.Emit(Reserve(Basic.invalidPosition,ToMemoryUnits(implementationEmitter.system,(- implementationEmitter.addressType.sizeInBits * 3) MOD ArrayAlignment)));
 				Info(source,"array data");
 			END;
 		END ArrayBlock;
@@ -13086,7 +13087,7 @@ TYPE
 					offset := ToMemoryUnits(module.system, 18* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
 				ELSE
 					(* change this when Heaps.HeapBlock is modified *)
-					offset := ToMemoryUnits(module.system, 23* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
+					offset := ToMemoryUnits(module.system, 22* module.system.addressSize) (* Module pointer offset -- cf. ModuleSection(), how to encode generically correct? *);
 				END;
 			END;
 			import :=  module.module.moduleScope.firstImport;

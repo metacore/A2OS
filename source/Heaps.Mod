@@ -1127,7 +1127,7 @@ VAR p: ANY; dim: SIZE;
 		(* static elements is requred for this case : POINTER TO ARRAY OF ARRAY X OF RecordWithPointer *)
 		dim := LEN( a,0 );
 		IF tag = NIL THEN
-			NewSys(p, GetSize() * elementSize + dim * SIZEOF(ADDRESS) + 2 *SIZEOF(ADDRESS) + (dim DIV 2) * 2 * SIZEOF(ADDRESS), FALSE);
+			NewSys(p, GetSize() * elementSize + dim * SIZEOF(ADDRESS) + 2 *SIZEOF(ADDRESS) + (-(dim * SIZEOF(ADDRESS) + 2 *SIZEOF(ADDRESS))) MOD ArrayAlignment, FALSE);
 		ELSE
 			NewArr(p, tag, GetSize(), dim, FALSE);
 		END;

@@ -706,7 +706,7 @@ TYPE
 				KernelLog.String("Sending frame of length ");
 				KernelLog.Int(txLen, 0);
 				KernelLog.Ln;
-				KernelLog.Memory(bufferAdr, txLen)
+				KernelLog.Memory(bufferAdr, txLen)
 			END;*)
 
 			(* Send it with DMA *)

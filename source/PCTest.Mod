@@ -15,7 +15,7 @@ TYPE
 	BEGIN Init (diagnostics); SELF.log := log; SELF.execute := execute; COPY (options, SELF.options);
 	END InitTester;
 
-	PROCEDURE Handle* (r: Streams.Reader; pos: LONGINT; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER;
+	PROCEDURE Handle* (r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): WORD;
 	CONST ModuleName = "Test";
 	VAR result: INTEGER; error: BOOLEAN; msg: ARRAY 128 OF CHAR; res: WORD;
 	BEGIN
@@ -108,7 +108,7 @@ BEGIN
 	END;
 	NEW(reader, LEN(regrbuf));
 	WHILE (pos2 # -1) & (regrfile = "") DO
-		reader.SetRaw(buffer^, LONGINT(pos1), LONGINT(pos2-pos1)); (* TODO *)
+		reader.SetRaw(buffer^, pos1, pos2-pos1);
 		reader.SkipWhitespace; reader.String(regrbuf);
 		Strings.LowerCase(regrbuf);
 		IF Strings.StartsWith2("regression", regrbuf) THEN
@@ -191,7 +191,7 @@ BEGIN
 END PCTest.
 
 System.Free PCTest TestSuite~
-WMUtilities.Call PCTest.Compile Oberon.Compilation.Test ~	 Verbose testing mode
+WMUtilities.Call PCTest.Compile Oberon.Compilation.Test ~  Verbose testing mode
 WMUtilities.Call PCTest.Compile Oberon.Compilation.Test Oberon.Compilation.tmp ~ Regression testing mode
-WMUtilities.Call PCTest.Execute Oberon.Execution.Test ~	 Verbose testing mode
+WMUtilities.Call PCTest.Execute Oberon.Execution.Test ~ Verbose testing mode
 WMUtilities.Call PCTest.Execute Oberon.Execution.Test Oberon.Execution.tmp ~ Regression testing mode

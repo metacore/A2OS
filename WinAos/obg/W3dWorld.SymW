@@ -47,7 +47,7 @@ TYPE
 		trans: Matrix.Matrix4x4; 
 		distpp: LONGREAL; 
 		rasterizer: Rasterizer.Rasterizer; 
-		width, height: LONGINT; 
+		width, height: SIZE; 
 		quality*: LONGINT; 
 		frustum*: W3dGeometry.Frustum; 
 		clearColor: LONGINT; 
@@ -56,7 +56,7 @@ TYPE
 		changed, invertable: BOOLEAN; 
 		worldValid: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(w, h, clearColor: LONGINT); 
+		PROCEDURE ^  & Init*(w, h: SIZE; clearColor: LONGINT); 
 		PROCEDURE ^ CreateObject*(): AbstractWorld.Object; 
 		PROCEDURE ^ AddObject*(x: AbstractWorld.Object); 
 		PROCEDURE ^ ReplaceObject*(x, y: AbstractWorld.Object); 
@@ -68,7 +68,7 @@ TYPE
 		PROCEDURE ^ ClipDrawTriangle(VAR tri: Triangle); 
 		PROCEDURE ^ RenderInternal*(img: Raster.Image; animatedOnly: BOOLEAN); 
 		PROCEDURE ^ Render*(img: Raster.Image; movingOnly: BOOLEAN); 
-		PROCEDURE ^ GetOwnerIndex*(x, y: LONGINT): LONGINT; 
+		PROCEDURE ^ GetOwnerIndex*(x, y: SIZE): LONGINT; 
 	END World; 
 
 	PROCEDURE ^ GrowAABB(VAR aabb: AABB; p: Vectors.TVector3d); 

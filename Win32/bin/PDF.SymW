@@ -63,7 +63,7 @@ TYPE
 		data: Strings.String; 
 
 		PROCEDURE ^  & Init*(context: Document); 
-		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Add(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ GetWriter(): Streams.Writer; 
 		PROCEDURE ^ Write(w: Streams.Writer); 
 	END Stream; 
@@ -204,22 +204,22 @@ TYPE
 		xfont: Font; 
 
 		PROCEDURE ^  & Init*(pc: PDFCreator; pageFormat: LONGINT; landscape: BOOLEAN; unit: LONGINT); 
-		PROCEDURE ^ Transform(x, y: LONGINT; VAR rx, ry: REAL); 
-		PROCEDURE ^ WriteTrafoCoord(x, y: LONGINT); 
+		PROCEDURE ^ Transform(x, y: SIZE; VAR rx, ry: REAL); 
+		PROCEDURE ^ WriteTrafoCoord(x, y: SIZE); 
 		PROCEDURE ^ SetColor*(col: WMGraphics.Color); 
 		PROCEDURE ^ SetColrg(col: WMGraphics.Color); 
 		PROCEDURE ^ SetColRG(col: WMGraphics.Color); 
 		PROCEDURE ^ Fill*(r: WMRectangles.Rectangle; col: WMGraphics.Color; mode: LONGINT); 
 		PROCEDURE ^ GetPDFFont(f: WMGraphics.Font): Font; 
 		PROCEDURE ^ PDFSetFont*(name: ARRAY OF CHAR; size: LONGINT; style: SET); 
-		PROCEDURE ^ DrawString*(x, y: LONGINT; CONST text: ARRAY OF CHAR); 
-		PROCEDURE ^ DrawStringMultiLine*(x, y, width, height: LONGINT; resizeHeight: BOOLEAN; CONST stext: ARRAY OF CHAR; VAR actualHeight: LONGINT); 
+		PROCEDURE ^ DrawString*(x, y: SIZE; CONST text: ARRAY OF CHAR); 
+		PROCEDURE ^ DrawStringMultiLine*(x, y, width, height: LONGINT; resizeHeight: BOOLEAN; CONST stext: ARRAY OF CHAR; VAR actualHeight: SIZE); 
 		PROCEDURE ^ DrawStringSingleLine*(x, y, width, align: LONGINT; stext: ARRAY OF CHAR); 
 		PROCEDURE ^ PDFSetLineWidth*(width: REAL); 
 		PROCEDURE ^ PDFSetLineJoin*(param: INTEGER); 
-		PROCEDURE ^ PolyLine*(CONST points: ARRAY OF WMGraphics.Point2d; nofPoints: LONGINT; closed: BOOLEAN; color: WMGraphics.Color; mode: LONGINT); 
+		PROCEDURE ^ PolyLine*(CONST points: ARRAY OF WMGraphics.Point2d; nofPoints: SIZE; closed: BOOLEAN; color: WMGraphics.Color; mode: WORD); 
 		PROCEDURE ^ FillPoly*(CONST points: ARRAY OF WMGraphics.Point2d; nofPoints: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
-		PROCEDURE ^ Line*(x0, y0, x1, y1: LONGINT; color: WMGraphics.Color; mode: LONGINT); 
+		PROCEDURE ^ Line*(x0, y0, x1, y1: SIZE; color: WMGraphics.Color; mode: LONGINT); 
 		PROCEDURE ^ Close; 
 	END PDFCanvas; 
 
@@ -237,7 +237,7 @@ TYPE
 
 	PROCEDURE ^ WriteReal(w: Streams.Writer; val: REAL); 
 	PROCEDURE ^ WritePDFString(w: Streams.Writer; CONST data: ARRAY OF CHAR); 
-	PROCEDURE ^ WritePDFStringPos(w: Streams.Writer; CONST data: ARRAY OF CHAR; from, to: LONGINT); 
-	PROCEDURE ^ GetCharSpacings(f: WMGraphics.Font; VAR text: ARRAY OF CHAR; i: LONGINT; VAR g: WMGraphics.GlyphSpacings): BOOLEAN; 
+	PROCEDURE ^ WritePDFStringPos(w: Streams.Writer; CONST data: ARRAY OF CHAR; from, to: SIZE); 
+	PROCEDURE ^ GetCharSpacings(f: WMGraphics.Font; VAR text: ARRAY OF CHAR; i: SIZE; VAR g: WMGraphics.GlyphSpacings): BOOLEAN; 
 BEGIN
 END PDF.

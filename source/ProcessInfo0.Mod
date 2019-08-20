@@ -7,7 +7,7 @@ TYPE
 
 	ProcessArray* = ARRAY OF Objects.Process;
 
-PROCEDURE GetProcesses*(VAR array : ProcessArray; VAR nofProcesses : LONGINT);
+PROCEDURE GetProcesses*(VAR array : ProcessArray; VAR nofProcesses : SIZE);
 VAR
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock {UNTRACED}: Heaps.HeapBlock;
@@ -16,7 +16,7 @@ VAR
 		Lazy-Sweep might become active
 	*)
 	blockAdr, tag : ADDRESS;
-	length, i : LONGINT;
+	length, i : SIZE;
 BEGIN
 	length := LEN(array); nofProcesses := 0;
 	FOR i := 0 TO i-1 DO array[i] := NIL; END;
@@ -47,15 +47,13 @@ BEGIN
 	Machine.Release(Machine.Heaps);
 END GetProcesses;
 
-PROCEDURE GetProcess*(id : LONGINT) : Objects.Process;
+PROCEDURE GetProcess*(id : WORD) : Objects.Process;
 VAR
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock {UNTRACED}: Heaps.HeapBlock;
 	blockAdr, tag : ADDRESS;
 	process : Objects.Process;
-	i : LONGINT;
 BEGIN
-	i := 0;
 	process := NIL;
 	Machine.Acquire(Machine.Heaps);
 

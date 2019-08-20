@@ -101,7 +101,7 @@ VAR
 	p: Popup; 
 	closePopupMsg: ClosePopupMsg; 
 
-	PROCEDURE ^ OpenPopup*(x, y: LONGINT; CONST filename: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenPopup*(x, y: SIZE; CONST filename: ARRAY OF CHAR); 
 	PROCEDURE ^ ClosePopup*; 
 	PROCEDURE ^ GenSubMenuOpener*(): XML.Element; 
 	PROCEDURE ^ Open*; 

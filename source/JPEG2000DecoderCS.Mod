@@ -1992,7 +1992,7 @@ TYPE
 						(* Get the index of the first code-block in the precinct, i.e. the code-block at the upper left corner of the precinct *)
 						cblkInfoUpLeftIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precX][0].index;
 						(* Get the index of the last code-block in the precinct, i.e. the code-block at the lower right corner of the precinct *)
-						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precX]^) - 1;
+						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precX]^)(LONGINT) - 1;
 						cblkInfoLowRightIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precX][lastIdx].index;
 
 						IF (cblkInfoUpLeftIdx MOD subbInfo.nblocksx) > cblkSubbIdxX THEN
@@ -2020,7 +2020,7 @@ TYPE
 						(* Get the index of the first code-block in the precinct, i.e. the code-block at the upper left corner of the precinct *)
 						cblkInfoUpLeftIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx][0].index;
 						(* Get the index of the last code-block in the precinct, i.e. the code-block at the lower right corner of the precinct *)
-						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx]^) - 1;
+						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx]^)(LONGINT) - 1;
 						cblkInfoLowRightIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx][lastIdx].index;
 
 						IF (cblkInfoUpLeftIdx DIV subbInfo.nblocksx) > cblkSubbIdxY THEN
@@ -2236,7 +2236,7 @@ TYPE
 				ntilePartsAvailable : J2KU.LongIntArrayPtr;	(* The number of tile-parts for each tile as signalled in by a TNSot parameter of a SOT segment of at least one tile-part *)
 				curTile : LONGINT;			(* The index of the current tile for which data is being read *)
 				curPart : LONGINT;			(* The index of the current tile-part of curTile for which data is being read *)
-				partRem : LONGINT;			(* Number of bytes remaining in the current tile-part *)
+				partRem : Streams.Position;		(* Number of bytes remaining in the current tile-part *)
 				initError : BOOLEAN;		(* TRUE if an error occured during initialization *)
 				pktDec : PacketDecoder;		(* The packet decoder used to extract encoded code-block data *)
 				cblkBuf : POINTER TO ARRAY OF J2KU.CodedCblk;		(* Buffer for coded code-blocks obtained from the packed decoder *)
@@ -2324,7 +2324,7 @@ TYPE
 					ok : BOOLEAN;
 					nt, ncomp, comp, i, j : LONGINT;
 					markerStr : ARRAY 8 OF CHAR;
-					nppmLeft, nppmRead : LONGINT;
+					nppmLeft, nppmRead : SIZE;
 					ppmFirst, ppmLast : DataListElement;
 					ncod, nqcd, npoc, ncrg : LONGINT; (* Counter variables used for constraint checking *)
 					ncoc, nqcc, nrgn : J2KU.LongIntArrayPtr;
@@ -2618,7 +2618,8 @@ TYPE
 				VAR
 					markerStr : ARRAY 8 OF CHAR;
 					ok : BOOLEAN;
-					bytesSkipped, ncomp, c, ndec: LONGINT;
+					bytesSkipped: Streams.Position;
+					ncomp, c, ndec: LONGINT;
 				BEGIN
 
 					(* Check preconditions *)
@@ -2860,7 +2861,8 @@ TYPE
 			*)
 			PROCEDURE GetCodeBlocks* (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks : LONGINT) : LONGINT;
 				VAR
-					i, startPos, cblkDecLvl : LONGINT;
+					i, cblkDecLvl : LONGINT;
+					startPos: Streams.Position;
 					ok : BOOLEAN;
 				BEGIN
 
@@ -3298,9 +3300,10 @@ TYPE
 			(*
 				Advances to the end of the current tile-part, reads all packets from the stream
 			*)
-			PROCEDURE JumpToTilePartEnd () : LONGINT;
+			PROCEDURE JumpToTilePartEnd () : Streams.Position;
 				VAR
-					bytesSkipped, startPos : LONGINT;
+					bytesSkipped : Streams.Position;
+					startPos: Streams.Position;
 					ok : BOOLEAN;
 				BEGIN
 					bytesSkipped := 0;
@@ -3754,7 +3757,7 @@ TYPE
 
 			PROCEDURE ReadBytes(VAR bytes : ARRAY OF CHAR; nbytes : LONGINT);
 				VAR
-					len, off : LONGINT;
+					len, off : SIZE;
 				BEGIN
 
 					IF buf8Valid THEN
@@ -3869,7 +3872,8 @@ TYPE
 
 			PROCEDURE ReadSOTSegment() : BOOLEAN;
 				VAR
-					lsot, psot, sPos, ePos, comp, i : LONGINT;
+					lsot, psot, comp, i : LONGINT;
+					sPos, ePos: Streams.Position;
 					ncod, nqcd, npoc, nmax : LONGINT; (* Counter variables used for constraint checking *)
 					ncoc, nqcc, nrgn : J2KU.LongIntArrayPtr;
 					tileIdx, partIdx, nparts, ncomp, nt : LONGINT;
@@ -4148,7 +4152,8 @@ TYPE
 
 			PROCEDURE ReadSIZSegment(VAR imgInfo : ImageInfo) : BOOLEAN;
 				VAR
-					rsiz, lsiz, i, ssizInt, sPos, ePos : LONGINT;
+					rsiz, lsiz, i, ssizInt : LONGINT;
+					sPos, ePos: Streams.Position;
 					ssiz, ch : CHAR;
 				BEGIN
 				(*
@@ -4242,8 +4247,9 @@ TYPE
 
 			PROCEDURE ReadCODSegment (VAR cod : CodingStyle; VAR cics : CICodingStyle) : BOOLEAN;
 				VAR
-					lcod, nl, i, scodInt, cblsInt, precsizInt, sPos, ePos : LONGINT;
+					lcod, nl, i, scodInt, cblsInt, precsizInt: LONGINT;
 					scod, prog, mct, ndec, cblw, cblh, cbls, trans, precsiz: CHAR;
+					sPos, ePos: Streams.Position;
 					tmpCod : CodingStyle;
 					tmpCics : CICodingStyle;
 				BEGIN
@@ -4364,9 +4370,9 @@ TYPE
 
 			PROCEDURE ReadCOCSegment(VAR coc : CodingStyle; VAR comp : LONGINT) : BOOLEAN;
 				VAR
-					lcoc, ccoc, i, scocInt, cblsInt, precsizInt, sPos, ePos, ncomp : LONGINT;
+					lcoc, ccoc, i, scocInt, cblsInt, precsizInt, ncomp : LONGINT;
 					ccocByte, scoc, ndec, cblw, cblh, cbls, trans, precsiz: CHAR;
-					tmpCoc : CodingStyle;
+					tmpCoc : CodingStyle; sPos, ePos: Streams.Position;
 				BEGIN
 				(*
 					IF s.Available() < 9 THEN
@@ -4474,7 +4480,8 @@ TYPE
 
 			PROCEDURE ReadRGNSegment(VAR roiShift, comp : LONGINT) : BOOLEAN;
 				VAR
-					lrgn, crgn, sPos, ePos, ncomp : LONGINT;
+					lrgn, crgn, ncomp : LONGINT;
+					sPos, ePos: Streams.Position;
 					crgnByte, srgn, sprgn : CHAR;
 				BEGIN
 				(*
@@ -4533,7 +4540,8 @@ TYPE
 
 			PROCEDURE ReadQCDSegment(VAR quant : Quantization) : BOOLEAN;
 				VAR
-					lqcd, ssize, i, sqcdInt, sPos, ePos : LONGINT;
+					lqcd, ssize, i, sqcdInt : LONGINT;
+					sPos, ePos: Streams.Position;
 					sqcd, ch : CHAR;
 					tmp : Quantization;
 				BEGIN
@@ -4608,7 +4616,8 @@ TYPE
 
 			PROCEDURE ReadQCCSegment(VAR quant : Quantization; VAR comp : LONGINT) : BOOLEAN;
 				VAR
-					lqcc, ssize, i, sqccInt, cqcc, cqccLen, sPos, ePos, ncomp : LONGINT;
+					lqcc, ssize, i, sqccInt, cqcc, cqccLen, ncomp : LONGINT;
+					sPos, ePos: Streams.Position;
 					sqcc, cqccByte, ch : CHAR;
 					tmp : Quantization;
 				BEGIN
@@ -4701,7 +4710,8 @@ TYPE
 
 			PROCEDURE ReadPOCSegment(VAR changes : 	ProgChangeArrayPtr) : BOOLEAN;
 				VAR
-					nchanges, lpoc, i, sPos, ePos : LONGINT;
+					nchanges, lpoc, i : LONGINT;
+					sPos, ePos: Streams.Position;
 					rspoc, repoc, cspocByte, cepocByte, ppoc : CHAR;
 					twoBytes : BOOLEAN;
 				BEGIN
@@ -4846,10 +4856,12 @@ TYPE
 					RETURN TRUE;
 			END ReadPLTSegment;
 
-			PROCEDURE ReadPPMSegment(VAR first, last : DataListElement; VAR nppmLeft, nppmRead : LONGINT) : BOOLEAN;
+			PROCEDURE ReadPPMSegment(VAR first, last : DataListElement; VAR nppmLeft, nppmRead : SIZE) : BOOLEAN;
 				VAR
-				 	lppm, len, actLen, sPos, ePos, bytesLeft : LONGINT;
+				 	lppm, len, bytesLeft : SIZE;
 				 	dummy, curElem, newElem : DataListElement;
+					sPos, ePos: Streams.Position;
+					actLen: SIZE;
 				 	zppm : CHAR;
 				BEGIN
 
@@ -4924,7 +4936,10 @@ TYPE
 
 			PROCEDURE ReadPPTSegment(VAR first, last : DataListElement) : BOOLEAN;
 				VAR
-				 	lppt, actLen, sPos, ePos, bytesLeft : LONGINT;
+				 	lppt: LONGINT;
+					bytesLeft : SIZE;
+					sPos, ePos: Streams.Position;
+					actLen: SIZE;
 				 	zppt : CHAR;
 				 	newElem : DataListElement;
 				BEGIN
@@ -5416,7 +5431,8 @@ TYPE
 			*)
 			PROCEDURE GetCodeBlocks* (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos : ARRAY OF J2KU.CblkInfo; ncblocks : LONGINT) : LONGINT;
 				VAR
-					i, j, startPos, tmpCblkInBuf, cblkDecLvl, subbIdx, cblkSubbIdx : LONGINT;
+					i, j, tmpCblkInBuf, cblkDecLvl, subbIdx, cblkSubbIdx : LONGINT;
+					startPos: Streams.Position;
 					ok, deliver : BOOLEAN;
 				BEGIN
 
@@ -5578,7 +5594,7 @@ TYPE
 								WHILE locCurSubbIdx <= maxSubbIdx DO
 
 									curSubbType := J2KU.SubbandIndexToSubband(locCurRes, locCurSubbIdx);
-									maxSubbCblk := LEN(bufferedBlocks[curTile][locCurComp][locCurRes][locCurSubbIdx]^) - 1;
+									maxSubbCblk := LEN(bufferedBlocks[curTile][locCurComp][locCurRes][locCurSubbIdx]^)(LONGINT) - 1;
 
 									(* Loop over blocks in subband *)
 									WHILE locCurSubbCblk <= maxSubbCblk DO
@@ -5684,7 +5700,7 @@ TYPE
 					END;
 			END TilePartAvailable;
 
-			PROCEDURE JumpToTilePartEnd () : LONGINT;
+			PROCEDURE JumpToTilePartEnd () : Streams.Position;
 				BEGIN
 					IF reBuildMode THEN
 						curComp := cmax + 1;

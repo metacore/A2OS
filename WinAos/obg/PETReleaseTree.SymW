@@ -14,11 +14,11 @@ TYPE
 		PROCEDURE ^ AddBuild(parent: WMTrees.TreeNode; build: Build.BuildObj); 
 		PROCEDURE ^ AddPackages(parent: WMTrees.TreeNode; packages: Build.PackageArray); 
 		PROCEDURE ^ AddPackage(parent: WMTrees.TreeNode; package: Build.Package); 
-		PROCEDURE ^ SetNodeInfo(node: PETTrees.TreeNode; position: LONGINT); 
+		PROCEDURE ^ SetNodeInfo(node: PETTrees.TreeNode; position: Streams.Position); 
 		PROCEDURE ^ NewNode(parent: WMTrees.TreeNode; CONST caption: ARRAY OF CHAR): PETTrees.TreeNode; 
 	END Tree; 
 
-	PROCEDURE ^ GetNumberCaption(CONST string: ARRAY OF CHAR; number: LONGINT): String; 
+	PROCEDURE ^ GetNumberCaption(CONST string: ARRAY OF CHAR; number: SIZE): String; 
 	PROCEDURE ^ GetCaption(CONST string1, string2: ARRAY OF CHAR): String; 
 	PROCEDURE ^ GenBuildTree*(): PETTrees.Tree; 
 BEGIN

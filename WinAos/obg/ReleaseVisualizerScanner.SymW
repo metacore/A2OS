@@ -85,14 +85,14 @@ CONST
 TYPE 
 	StringMaker* = OBJECT 
 	VAR 
-		length: LONGINT; 
+		length: SIZE; 
 		data: Strings.String; 
 
-		PROCEDURE ^  & Init(initialSize: LONGINT); 
-		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^  & Init(initialSize: SIZE); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
-		PROCEDURE ^ GetLength*(): LONGINT; 
+		PROCEDURE ^ GetLength*(): SIZE; 
 		PROCEDURE ^ GetString*(): Strings.String; 
 	END StringMaker; 
 
@@ -122,7 +122,7 @@ VAR
 	reservedChar-, newChar: ARRAY 256 OF BOOLEAN; 
 
 	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: LONGINT): Scanner; 
-	PROCEDURE ^ ExpandBuf(VAR oldBuf: Strings.String; newSize: LONGINT); 
+	PROCEDURE ^ ExpandBuf(VAR oldBuf: Strings.String; newSize: SIZE); 
 	PROCEDURE ^ InitReservedChars; 
 	PROCEDURE ^ InitNewChar; 
 BEGIN

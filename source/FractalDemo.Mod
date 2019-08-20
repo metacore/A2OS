@@ -10,7 +10,7 @@ TYPE
 	WorkUnit = POINTER TO RECORD
 		terminate : BOOLEAN;
 		x0, y0, x1, y1: LONGREAL;
-		w, h, maxIter, ys, ye : LONGINT;
+		w, h, maxIter, ys, ye : SIZE;
 		result : POINTER TO ARRAY OF LONGINT;
 		next : WorkUnit;
 	END;
@@ -116,7 +116,7 @@ TYPE
 		list, l : List;
 
 		selecting : BOOLEAN;
-		x0, y0, x1, y1 : LONGINT;
+		x0, y0, x1, y1 : SIZE;
 
 		palette : ARRAY MaxIter OF WMGraphics.Color;
 
@@ -143,7 +143,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Recalc;
-		VAR w, h, p, i, j: LONGINT;
+		VAR w, h, p, i, j: SIZE;
 			str : ARRAY 32 OF CHAR;
 			t : Kernel.MilliTimer;
 			t2 : LONGINT;
@@ -202,7 +202,7 @@ TYPE
 			calculating := FALSE
 		END Recalc;
 
-		PROCEDURE PointerDown*(x,y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x,y : SIZE; keys : SET);
 		BEGIN
 			IF calculating THEN RETURN END;
 			IF (keys*{0}#{}) THEN
@@ -215,7 +215,7 @@ TYPE
 			END
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x,y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x,y : SIZE; keys : SET);
 		BEGIN
 			IF calculating THEN RETURN END;
 			x1 := x; y1 := y;
@@ -223,7 +223,7 @@ TYPE
 		END PointerMove;
 
 
-		PROCEDURE PointerUp*(x,y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x,y : SIZE; keys : SET);
 		VAR t: LONGREAL;
 		BEGIN
 			IF calculating THEN RETURN END;
@@ -247,7 +247,7 @@ TYPE
 		END NeedRecalc;
 
 		PROCEDURE PrepareBuffer;
-		VAR w, h:LONGINT;
+		VAR w, h: SIZE;
 		BEGIN
 			w := bounds.GetWidth(); h := bounds.GetHeight();
 			IF w <= 0 THEN w := 1 END; IF h <= 0 THEN h := 1 END;

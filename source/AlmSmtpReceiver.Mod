@@ -212,7 +212,7 @@ TYPE
 	END OpenLog;
 
 	PROCEDURE ToMemory* (VAR token: ARRAY OF CHAR);
-	VAR maxix, ix : LONGINT; trash, next : CHAR;
+	VAR maxix, ix : SIZE; trash, next : CHAR;
 	BEGIN
 		next := in.Peek();
 		WHILE (next=" ") OR (next=Tab) DO trash := GetCh (); INC (charcount); next := in.Peek() END;
@@ -1107,5 +1107,4 @@ Hex.Open mail.config
 	start = 39, 0, 0, 0, 0, 0, 0, 0, 0, 0 ...
 	state = 7
 	sym = 3
-
 

@@ -230,7 +230,7 @@ VAR
 	PROCEDURE ^ InitPool*(VAR pool: Pool); 
 	PROCEDURE ^ AllocStretch(len: LONGINT; VAR pool: Pool; VAR str: Stretch); 
 	PROCEDURE ^ MakeStretch(VAR s: ARRAY OF CHAR; VAR pool: Pool; VAR str: Stretch); 
-	PROCEDURE ^ GetStretch(VAR str: Stretch; pos, len: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ GetStretch(VAR str: Stretch; pos, len: SIZE; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ SetStretch(VAR str: Stretch; pos, len: LONGINT; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ StretchEquals(VAR str: Stretch; VAR s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ NewNull(): Object; 

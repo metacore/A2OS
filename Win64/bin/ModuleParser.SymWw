@@ -31,7 +31,7 @@ TYPE
 	InfoItem* = OBJECT 
 	VAR 
 		name*: Strings.String; 
-		pos*: LONGINT; 
+		pos*: Streams.Position; 
 	END InfoItem; 
 
 	Node* = OBJECT 
@@ -84,6 +84,9 @@ TYPE
 		super*: Qualident; 
 		superPtr*: Record; 
 		fieldList*: FieldDecl; 
+		procDecl*: ProcDecl; 
+
+		PROCEDURE ^ FindProcDecl*(CONST name: ARRAY OF CHAR): ProcDecl; 
 	END Record; 
 
 	FieldDecl* = OBJECT (NodeList)
@@ -109,7 +112,7 @@ TYPE
 	VAR 
 		modifiers*: SET; 
 		declSeq*: DeclSeq; 
-		bodyPos-: LONGINT; 
+		bodyPos-: Streams.Position; 
 		formalPars*: FormalPars; 
 
 		PROCEDURE ^ FindProcDecl*(CONST name: ARRAY OF CHAR): ProcDecl; 
@@ -121,7 +124,7 @@ TYPE
 		superPtr*: Object; 
 		modifiers*: SET; 
 		declSeq*: DeclSeq; 
-		bodyPos-: LONGINT; 
+		bodyPos-: Streams.Position; 
 
 		PROCEDURE ^ FindProcDecl*(CONST name: ARRAY OF CHAR): ProcDecl; 
 	END Object; 
@@ -166,7 +169,7 @@ TYPE
 	VAR 
 		head*: ProcHead; 
 		declSeq*: DeclSeq; 
-		bodyPos-: LONGINT; 
+		bodyPos-: Streams.Position; 
 	END ProcDecl; 
 
 	ProcHead* = OBJECT (NodeList)
@@ -266,7 +269,7 @@ TYPE
 		modifiers*: SET; 
 		definitions*: Definition; 
 		declSeq*: DeclSeq; 
-		bodyPos-: LONGINT; 
+		bodyPos-: Streams.Position; 
 		hasError-: BOOLEAN; 
 		resolved*: BOOLEAN; 
 
@@ -310,12 +313,11 @@ TYPE
 		PROCEDURE ^ ConstExprP(delimiter1, delimiter2: FoxScanner.Symbol; expr: InfoItem); 
 		PROCEDURE ^ BlockModifierP(allowBody: BOOLEAN; VAR modifiers: SET); 
 		PROCEDURE ^ ProcedureModifierP(procHead: ProcHead); 
-		PROCEDURE ^ ModifierValueP(VAR value: LONGINT); 
 		PROCEDURE ^ BodyP(allowBody: BOOLEAN; VAR modifiers: SET); 
 		PROCEDURE ^ QualidentP(qualident: Qualident); 
 		PROCEDURE ^ IdentDefP(identDef: IdentDef); 
 		PROCEDURE ^ Check(symbol: FoxScanner.Symbol); 
-		PROCEDURE ^ Error(pos: LONGINT); 
+		PROCEDURE ^ Error(pos: Streams.Position); 
 	END Parser; 
 
 	ListEntry = POINTER TO RECORD 
@@ -326,7 +328,7 @@ TYPE
 	ModuleCache = OBJECT {EXCLUSIVE} 
 	VAR 
 		head: ListEntry; 
-		nofModules: LONGINT; 
+		nofModules: SIZE; 
 
 		PROCEDURE ^ Add(module: Module); 
 		PROCEDURE ^ Get(CONST moduleName: ARRAY OF CHAR): Module; 
@@ -339,7 +341,7 @@ TYPE
 
 	PROCEDURE ^ AppendLast(head, node: NodeList); 
 	PROCEDURE ^ SplitName*(CONST name: ARRAY OF CHAR; VAR moduleName, typeName: ARRAY OF CHAR); 
-	PROCEDURE ^ FindType(CONST name: ARRAY OF CHAR; type: LONGINT; definitionModule: Module; cache: ModuleCache): TypeDecl; 
+	PROCEDURE ^ FindType(CONST name: ARRAY OF CHAR; type: WORD; definitionModule: Module; cache: ModuleCache): TypeDecl; 
 	PROCEDURE ^ ResolveTypeHierarchy(module: Module; cache: ModuleCache); 
 	PROCEDURE ^ ResolveMethodOverwrites(module: Module; cache: ModuleCache); 
 	PROCEDURE ^ ParseFile*(CONST filename: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics): Module; 

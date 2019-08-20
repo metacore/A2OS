@@ -340,7 +340,7 @@ BEGIN
 	END;
 	log.String (name);
 	Files.OpenReader(r, f, 0);
-	Module(PCS.InitWithReader(r, f.Length(),0), name, opt, pc, log, diagnostics, error);
+	Module(PCS.InitWithReader(r, f.Length()(SIZE),0), name, opt, pc, log, diagnostics, error);
 END CompileAsciiFile;
 
 PROCEDURE Compile*(context : Commands.Context);
@@ -374,7 +374,7 @@ BEGIN
 	PCT.InitDB(PCT.database);
 END Compile;
 
-PROCEDURE TrapHandler(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+PROCEDURE TrapHandler(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 BEGIN
 	PCM.LogWStr("could not load error messages: "); PCM.LogWLn;
 	PCM.LogWStr(ErrorFile); PCM.LogWStr(" invalid (pos ");
@@ -389,7 +389,7 @@ PROCEDURE InitErrMsg*; (** ~ *)
 VAR
 	f: Files.File; scanner: XMLScanner.Scanner; parser: XMLParser.Parser; errors: XML.Document;
 	e: XML.Element; enum, msgEnum: XMLObjects.Enumerator; p: ANY;
-	code, i: LONGINT; str: XML.String;
+	code: LONGINT; i: SIZE; str: XML.String;
 	dynStr: DynamicStrings.DynamicString;
 	r : Files.Reader;
 	res : WORD;

@@ -24,7 +24,7 @@ TYPE
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: WORD); 
 		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: WORD); 
-		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ Available*(): SIZE; 
 		PROCEDURE ^ SetPortState(bps, data, parity, stop: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
 		PROCEDURE ^ ClearMC*(s: SET); 
@@ -42,7 +42,7 @@ TYPE
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: WORD); 
 		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: WORD); 
-		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ Available*(): SIZE; 
 		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
 		PROCEDURE ^ ClearMC*(s: SET); 
 		PROCEDURE ^ SetMC*(s: SET); 

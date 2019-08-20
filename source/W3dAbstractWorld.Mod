@@ -64,7 +64,7 @@ TYPE
 		END Render;
 
 		(** currently not for animated objects :-( *)
-		PROCEDURE GetOwnerIndex*(x, y : LONGINT): LONGINT;
+		PROCEDURE GetOwnerIndex*(x, y : SIZE): LONGINT;
 		END GetOwnerIndex;
 	END World;
 

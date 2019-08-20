@@ -7,7 +7,7 @@ TYPE
 		list: XMLObjects.ArrayCollection; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Alloc*(VAR doc: SVG.Document; width, height: LONGINT); 
+		PROCEDURE ^ Alloc*(VAR doc: SVG.Document; width, height: SIZE); 
 		PROCEDURE ^ Free*(doc: SVG.Document); 
 	END RenderTargetPool; 
 

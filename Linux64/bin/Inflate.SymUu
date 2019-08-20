@@ -15,7 +15,7 @@ TYPE
 
 	Window = RECORD 
 		data: ARRAY WindowSize OF CHAR; 
-		in, out, size: LONGINT; 
+		in, out, size: SIZE; 
 	END; 
 
 	Reader* = OBJECT {EXCLUSIVE} (Streams.Reader)
@@ -26,11 +26,11 @@ TYPE
 		bits, nbits: LONGINT; 
 		buffer: RECORD 
 			data: ARRAY DefaultReaderSize OF CHAR; 
-			size: LONGINT; 
+			size: SIZE; 
 		END; 
 		eof: BOOLEAN; 
 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^  & Init*(input: Streams.Reader); 
 		PROCEDURE ^ ReadBits(nbits: LONGINT; VAR bits: LONGINT); 
 		PROCEDURE ^ SwapBits(VAR bits: LONGINT; n: LONGINT); 

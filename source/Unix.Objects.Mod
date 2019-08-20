@@ -47,7 +47,7 @@ VAR
 
 	(* processes *)
 	root-	: Process;	(*!  Anchor of all instantiated threads in system *)
-	stacksize: LONGINT;		(* stack size of active objects, adjustable via boot parameter *)
+	stacksize: SIZE;		(* stack size of active objects, adjustable via boot parameter *)
 
 	processList		: Unix.Mutex_t;
 	createProcess	: Unix.Mutex_t;
@@ -59,7 +59,7 @@ VAR
 	processPointer	: Unix.Key_t;
 
 	newProcess: Process;
-	nextPID: LONGINT;
+	nextPID: WORD;
 
 	finalizerCaller	: FinalizerCaller;
 	mainthread: Unix.Thread_t;
@@ -205,11 +205,11 @@ TYPE
 		threadId-			: Unix.Thread_t;
 		nextProcess-	: Process;	(* next in list of all processes *)
 		stackBottom	-	: ADDRESS;
-		id-				: LONGINT;
+		id-				: WORD;
 		body			: Body;
-		mode-		: LONGINT;
+		mode-		: WORD;
 		flags-			: SET;
-		priority-		: LONGINT;	(* only effective if Aos is running SUID root *)
+		priority-		: WORD;	(* only effective if Aos is running SUID root *)
 		succ			: Process;   		  	(* in ProcessQueue *)
 		obj-			: ProtectedObject;	(* associated active object *)
 		condition-	: Condition;   			(* awaited process' condition *)
@@ -231,7 +231,7 @@ TYPE
 		END SetMode;
 
 		PROCEDURE FindRoots;
-		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: WORD; p {UNTRACED}: ANY;
+		VAR sp, bp, sb, n, a0, a1, adr, pc: ADDRESS; desc {UNTRACED}: Modules.ProcedureDescPointer; i: SIZE; p {UNTRACED}: ANY;
 			contextPos: SIZE; suspended: BOOLEAN;
 		BEGIN {UNTRACKED}
 			IF (mode < Running) OR (mode = Terminated) THEN  RETURN  END;
@@ -325,13 +325,13 @@ TYPE
 			END
 		END Cancel;
 
-		PROCEDURE GetPriority( ): LONGINT;
+		PROCEDURE GetPriority( ): WORD;
 		BEGIN
 			RETURN Unix.ThrGetPriority( threadId )
 		END GetPriority;
 
-		PROCEDURE SetPriority( prio: LONGINT );
-		VAR pr: LONGINT;
+		PROCEDURE SetPriority( prio: WORD );
+		VAR pr: WORD;
 		BEGIN
 		(*
 			Linux/Solaris11: works only with SUID root and FIFO threads
@@ -344,7 +344,7 @@ TYPE
 		END SetPriority;
 
 
-		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: LONGINT; fl: SET; stacksize: LONGINT);
+		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: WORD; fl: SET; stacksize: SIZE);
 		BEGIN
 			SELF.obj := obj;  condition := NIL;  continue := Unix.NewCond( );
 			flags := fl;
@@ -454,7 +454,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	END InitProtHeader;
 
 
-	PROCEDURE CreateProcess*( body: Body;  priority: LONGINT;  flags: SET;  obj: ProtectedObject );
+	PROCEDURE CreateProcess*( body: Body;  priority: WORD;  flags: SET;  obj: ProtectedObject );
 	VAR p: Process;  hdr{UNTRACED}: ObjectHeader;
 	BEGIN
 		Unix.MtxLock( createProcess );
@@ -564,7 +564,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		p.Cancel
 	END TerminateThis;
 
-	PROCEDURE SetPriority*( pri: LONGINT );		(* Set the current process' priority. *)
+	PROCEDURE SetPriority*( pri: WORD );		(* Set the current process' priority. *)
 	VAR me: Process;
 	BEGIN
 		me := CurrentProcess();
@@ -649,7 +649,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		RETURN bp  # NIL;
 	END NextValidStackSegment;
 
-	PROCEDURE GetProcessID*( ): LONGINT;
+	PROCEDURE GetProcessID*( ): WORD;
 	VAR p: Process;
 	BEGIN
 		p := CurrentProcess();
@@ -943,7 +943,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE GetStacksize;
-	VAR str: ARRAY  32 OF  CHAR;  i: LONGINT;
+	VAR str: ARRAY  32 OF  CHAR;  i: SIZE;
 	BEGIN
 		Machine.GetConfig( "StackSize", str );
 		IF str = "" THEN  stacksize := DefaultStacksize

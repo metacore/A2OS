@@ -38,7 +38,7 @@ TYPE
 		imageNameAnalog : Strings.String;
 		contextMenu : WMPopups.Popup;
 		dragging, resizing : BOOLEAN;
-		lastX, lastY : LONGINT;
+		lastX, lastY : SIZE;
 
 		PROCEDURE &New*(context : WMRestorable.Context; flags : SET);
 		VAR configuration : WMRestorable.XmlElement; viewMode, color : LONGINT;
@@ -114,7 +114,7 @@ TYPE
 			END
 		END HandleToggleView;
 
-		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
 		BEGIN
 			lastX := bounds.l + x; lastY:=bounds.t + y;
 			IF keys = {0} THEN
@@ -134,8 +134,8 @@ TYPE
 			END
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x,y:LONGINT; keys:SET);
-		VAR dx, dy, width, height : LONGINT;
+		PROCEDURE PointerMove*(x,y:SIZE; keys:SET);
+		VAR dx, dy, width, height : SIZE;
 		BEGIN
 			IF dragging OR resizing THEN
 				x := bounds.l + x; y := bounds.t + y; dx := x - lastX; dy := y - lastY;
@@ -154,7 +154,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
 		BEGIN
 			dragging := FALSE;
 			IF (keys # {1,2}) THEN
@@ -314,7 +314,7 @@ TYPE
 		PROCEDURE DrawHands(canvas : WMGraphics.Canvas; time : Dates.DateTime);
 
 			PROCEDURE DrawLine(handLengthInPercent : LONGINT; color : WMGraphics.Color; angle : REAL);
-			VAR deltaX, deltaY : LONGINT; radiants : REAL; lengthX, lengthY : LONGINT;
+			VAR deltaX, deltaY : LONGINT; radiants : REAL; lengthX, lengthY : SIZE;
 			BEGIN
 				lengthX := handLengthInPercent * bounds.GetWidth() DIV 2 DIV 100;
 				lengthY := handLengthInPercent * bounds.GetHeight() DIV 2 DIV 100;

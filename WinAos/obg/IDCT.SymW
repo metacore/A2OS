@@ -18,10 +18,10 @@ VAR
 	RNDINVROW, RNDINVCOL, RNDINVCORR: INTEGER; 
 	M128onecorr, M128roundinvrow, M128roundinvcol, M128roundinvcorr, M128tg116, M128tg216, M128tg316, M128cos416: POINTER TO ARRAY OF INTEGER; 
 	M128tabi04, M128tabi17, M128tabi26, M128tabi35: POINTER TO ARRAY OF INTEGER; 
-	tabi04adr, tabi17adr, tabi26adr, tabi35adr, onecorradr, roundinvrowadr, roundinvcoladr, roundinvcorradr, tg116adr, tg216adr, tg316adr, cos416adr: LONGINT; 
-	Transform*: PROCEDURE (src, dst: LONGINT); 
+	tabi04adr, tabi17adr, tabi26adr, tabi35adr, onecorradr, roundinvrowadr, roundinvcoladr, roundinvcorradr, tg116adr, tg216adr, tg316adr, cos416adr: ADDRESS; 
+	Transform*: PROCEDURE (src, dst: ADDRESS); 
 	intTab: POINTER TO ARRAY OF INTEGER; 
-	status*: LONGINT; 
+	status*: WORD; 
 
 	PROCEDURE {Fingerprint(-2987779864456514201)}  - MOVDQA1;
 	CODE
@@ -62,7 +62,7 @@ VAR
 	PROCEDURE {Fingerprint(4941011743546179062)}  - SetRDI(n: SIZE);
 	CODE
 	END SetRDI; 
-	PROCEDURE ^ TransformSSE2*(src, dst: LONGINT); 
+	PROCEDURE ^ TransformSSE2*(src, dst: ADDRESS); 
 	PROCEDURE {Fingerprint(-5339889505364421979)}  - DCT8INVROWSSE2;
 	CODE
 	END DCT8INVROWSSE2; 
@@ -99,16 +99,16 @@ VAR
 	PROCEDURE {Fingerprint(-3482050473584753562)}  - MOVQ10;
 	CODE
 	END MOVQ10; 
-	PROCEDURE ^ TransformSSE*(src, dst: LONGINT); 
+	PROCEDURE ^ TransformSSE*(src, dst: ADDRESS); 
 	PROCEDURE {Fingerprint(5434659260151223209)}  - DCT8INVROWSSE;
 	CODE
 	END DCT8INVROWSSE; 
 	PROCEDURE {Fingerprint(-3792653426377501791)}  - DCT8INVCOLSSE;
 	CODE
 	END DCT8INVCOLSSE; 
-	PROCEDURE ^ TransformINT*(src, dst: LONGINT); 
-	PROCEDURE ^ Row(src: LONGINT); 
-	PROCEDURE ^ Col(src: LONGINT); 
+	PROCEDURE ^ TransformINT*(src, dst: ADDRESS); 
+	PROCEDURE ^ Row(src: ADDRESS); 
+	PROCEDURE ^ Col(src: ADDRESS); 
 	PROCEDURE ^ FillTablesSSE2; 
 	PROCEDURE ^ FillTablesSSE; 
 	PROCEDURE ^ FillTablesINT; 

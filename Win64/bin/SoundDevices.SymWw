@@ -14,19 +14,19 @@ CONST
 TYPE 
 	Buffer* = OBJECT 
 	VAR 
-		len*: LONGINT; 
+		len*: SIZE; 
 		data*: POINTER TO ARRAY OF CHAR; 
 	END Buffer; 
 
 	BufferPool* = OBJECT {EXCLUSIVE} 
 	VAR 
-		head, num: LONGINT; 
+		head, num: SIZE; 
 		buffer: POINTER TO ARRAY OF Buffer; 
 
 		PROCEDURE ^  & Init*(n: LONGINT); 
 		PROCEDURE ^ Add*(x: Buffer); 
 		PROCEDURE ^ Remove*(): Buffer; 
-		PROCEDURE ^ NofBuffers*(): LONGINT; 
+		PROCEDURE ^ NofBuffers*(): SIZE; 
 	END BufferPool; 
 
 	BufferListener* = PROCEDURE {DELEGATE}(buffer: Buffer); 
@@ -35,8 +35,8 @@ TYPE
 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetDesc*(VAR desc: ARRAY OF CHAR); 
-		PROCEDURE ^ SetVolume*(volume: LONGINT); 
-		PROCEDURE ^ GetVolume*(): LONGINT; 
+		PROCEDURE ^ SetVolume*(volume: WORD); 
+		PROCEDURE ^ GetVolume*(): WORD; 
 		PROCEDURE ^ SetMute*(mute: BOOLEAN); 
 		PROCEDURE ^ GetIsMute*(): BOOLEAN; 
 	END MixerChannel; 

@@ -44,19 +44,19 @@ TYPE
 		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: WMGraphics.Image); 
 		PROCEDURE ^ HasChar*(code: LONGINT): BOOLEAN; 
 		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
-		PROCEDURE ^ LoadGlyphRange(gri: LONGINT); 
-		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR gri: LONGINT): BOOLEAN; 
+		PROCEDURE ^ LoadGlyphRange(gri: SIZE); 
+		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR gri: SIZE): BOOLEAN; 
 		PROCEDURE ^ FindGlyph(code: LONGINT; VAR glyph: Glyph): BOOLEAN; 
 		PROCEDURE ^ CountGlyphes(): LONGINT; 
 		PROCEDURE ^ ReadGlyph(code: LONGINT; VAR g: Glyph); 
-		PROCEDURE ^ Load(filename: ARRAY OF CHAR; size: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Load(filename: ARRAY OF CHAR; size: SIZE): BOOLEAN; 
 	END Font; 
 VAR 
 	bit: ARRAY 256 OF ARRAY 8 OF BOOLEAN; 
 
 	PROCEDURE ^ FillRect*(llx, lly, urx, ury, opacity: INTEGER; VAR data: OpenType.RasterData0); 
 	PROCEDURE ^ InitBitTable; 
-	PROCEDURE ^ LoadFont(name: ARRAY OF CHAR; size: LONGINT): Font; 
+	PROCEDURE ^ LoadFont(name: ARRAY OF CHAR; size: SIZE): Font; 
 	PROCEDURE ^ LoadExactFont*(fi: WMFontManager.FontInfo): WMGraphics.Font; 
 	PROCEDURE ^ LoadApproximateFont*(fi: WMFontManager.FontInfo): WMGraphics.Font; 
 	PROCEDURE ^ MultiTest*; 

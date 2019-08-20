@@ -66,7 +66,7 @@ TYPE
 		next: Alias; 
 	END; 
 
-	NotifyProcedure* = PROCEDURE {DELEGATE}(command: LONGINT); 
+	NotifyProcedure* = PROCEDURE {DELEGATE}(command: WORD); 
 
 	Shell* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -74,7 +74,7 @@ TYPE
 		context: Commands.Context; 
 		command: ARRAY MaxLen OF CHAR; 
 		res: WORD; 
-		nestingLevel: LONGINT; 
+		nestingLevel: SIZE; 
 		aliases: Alias; 
 		prompt: ARRAY 32 OF CHAR; 
 		upcall: NotifyProcedure; 

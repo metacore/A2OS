@@ -61,8 +61,7 @@ TYPE
 	HeapBlockDesc* = RECORD 
 		heapBlock{FICTIVE(-16)} : ADDRESS; 
 		typeDesc{FICTIVE(-8), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
-		mark: WORD; 
-		refCount: WORD; 
+		mark: SIZE; 
 		dataAdr-: ADDRESS; 
 		size-: SIZE; 
 		nextMark{UNTRACED} : HeapBlock; 
@@ -112,7 +111,6 @@ TYPE
 
 	TypeInfoDesc = RECORD 
 		descSize: SIZE; 
-		sentinel: ADDRESS; 
 		tag: ADDRESS; 
 		flags: SET; 
 		mod: ADDRESS; 
@@ -147,7 +145,6 @@ TYPE
 
 	ArrayDataBlockDesc* = RECORD (DataBlockDesc)
 		numElems: SIZE; 
-		current: ADDRESS; 
 		first: ADDRESS; 
 	END; 
 
@@ -176,25 +173,24 @@ VAR
 	markStack: MarkStack; 
 	GC*: PROCEDURE ; 
 	initBlock{UNTRACED} : ANY; 
-	currentMarkValue: LONGINT; 
-	sweepMarkValue: LONGINT; 
+	currentMarkValue: SIZE; 
+	sweepMarkValue: SIZE; 
 	sweepBlockAdr: ADDRESS; 
 	sweepMemBlock{UNTRACED} : Machine.MemoryBlock; 
 	candidates: ARRAY MaxCandidates OF ADDRESS; 
-	numCandidates: LONGINT; 
+	numCandidates: SIZE; 
 	newSum: SIZE; 
 	checkRoot: FinalizerNode; 
 	finalizeRoot: FinalizerNode; 
 	freeBlockTag, systemBlockTag, recordBlockTag, protRecBlockTag, arrayBlockTag: ADDRESS; 
-	Nnew-: LONGINT; 
+	Nnew-: SIZE; 
 	NnewBytes-: HUGEINT; 
-	Ngc-: LONGINT; 
-	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT; 
+	Ngc-: SIZE; 
+	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: SIZE; 
 	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns-: HUGEINT; 
 	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT; 
 	gcStatus*: GCStatus; 
-	GCType*: LONGINT; 
-	freeBlockFound-, freeBlockNotFound-: LONGINT; 
+	GCType*: WORD; 
 	trace-: BOOLEAN; 
 	allocationLogger-: PROCEDURE (p: ANY); 
 	endMark: HeapBlockU; 
@@ -219,7 +215,7 @@ VAR
 	PROCEDURE ^ InvokeGC*; 
 	PROCEDURE ^ FullSweep*; 
 	PROCEDURE ^ LazySweepGC*; 
-	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE); 
+	PROCEDURE ^ InitFreeBlock(freeBlock: FreeBlockU; mark: SIZE; dataAdr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ NewBlock(size: SIZE): ADDRESS; 
 	PROCEDURE ^ SetPC*(p: DataBlockU); 
 	PROCEDURE ^ NewSys*(VAR p: ANY; size: SIZE; isRealtime: BOOLEAN); 
@@ -227,7 +223,7 @@ VAR
 	PROCEDURE ^ NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN); 
 	PROCEDURE ^ NewArray*(CONST a: ARRAY OF SIZE; tag: ADDRESS; staticElements, elementSize: SIZE; VAR dest: ANY); 
-	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: LONGINT); 
+	PROCEDURE ^ FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE; numPtrs, numSlots: SIZE); 
 	PROCEDURE ^ AddFinalizer*(obj: ANY; n: FinalizerNode); 
 	PROCEDURE ^ GetHeapInfo*(VAR total, free, largest: SIZE); 
 	PROCEDURE ^ MarkPointer*(adr: ADDRESS); 

@@ -23,7 +23,7 @@ TYPE
 		PROCEDURE ^ Next(fade: BOOLEAN); 
 		PROCEDURE ^ Prev; 
 		PROCEDURE ^ Search; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keySym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keySym: SIZE); 
 	END PWin; 
 VAR 
 	head, tail: Slide; 

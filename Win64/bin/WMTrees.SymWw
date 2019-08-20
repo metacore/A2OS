@@ -30,15 +30,15 @@ TYPE
 		PROCEDURE ^ Remove; 
 	END TreeNode; 
 
-	DrawNodeProc = PROCEDURE {DELEGATE}(canvas: WMGraphics.Canvas; w, h: LONGINT; node: TreeNode; state: SET); 
+	DrawNodeProc = PROCEDURE {DELEGATE}(canvas: WMGraphics.Canvas; w, h: SIZE; node: TreeNode; state: SET); 
 
-	MeasureNodeProc = PROCEDURE {DELEGATE}(node: TreeNode; VAR w, h: LONGINT); 
+	MeasureNodeProc = PROCEDURE {DELEGATE}(node: TreeNode; VAR w, h: SIZE); 
 
 	Tree* = OBJECT {EXCLUSIVE} 
 	VAR 
 		root: TreeNode; 
 		lockedBy: ANY; 
-		lockLevel: LONGINT; 
+		lockLevel: SIZE; 
 		viewChanged: BOOLEAN; 
 		onChanged*: WMEvents.EventSource; 
 		beforeExpand*: WMEvents.EventSource; 
@@ -60,8 +60,8 @@ TYPE
 		PROCEDURE ^ GetLastChild*(node: TreeNode): TreeNode; 
 		PROCEDURE ^ GetParent*(node: TreeNode): TreeNode; 
 		PROCEDURE ^ SetNodeState*(node: TreeNode; state: SET); 
-		PROCEDURE ^ InclNodeState*(node: TreeNode; state: LONGINT); 
-		PROCEDURE ^ ExclNodeState*(node: TreeNode; state: LONGINT); 
+		PROCEDURE ^ InclNodeState*(node: TreeNode; state: WORD); 
+		PROCEDURE ^ ExclNodeState*(node: TreeNode; state: WORD); 
 		PROCEDURE ^ GetNodeState*(node: TreeNode): SET; 
 		PROCEDURE ^ SetNodeCaption*(node: TreeNode; caption: String); 
 		PROCEDURE ^ GetNodeCaption*(node: TreeNode): String; 
@@ -74,7 +74,7 @@ TYPE
 	TreeView* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		tree: Tree; 
-		downX, downY, firstLine, lines: LONGINT; 
+		downX, downY, firstLine, lines: SIZE; 
 		vscrollbar, hscrollbar: WMStandardComponents.Scrollbar; 
 		drawNode: DrawNodeProc; 
 		measureNode: MeasureNodeProc; 
@@ -83,7 +83,7 @@ TYPE
 		draggedNode-: TreeNode; 
 		selecting, middleClicking, dragPossible: BOOLEAN; 
 		cs: WMGraphics.CanvasState; 
-		hindent, indent, hdelta: LONGINT; 
+		hindent, indent, hdelta: SIZE; 
 		onSelectNode-, onExpandNode-, onClickNode-, onMiddleClickNode-: WMEvents.EventSource; 
 		clHover-, clSelected-, clTextDefault-, clTextHover-, clTextSelected-: WMProperties.ColorProperty; 
 		fontHeight-: WMProperties.Int32Property; 
@@ -91,29 +91,29 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ SetIndent*(indent: LONGINT); 
+		PROCEDURE ^ SetIndent*(indent: SIZE); 
 		PROCEDURE ^ GetTree*(): Tree; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ TreeChanged*(sender, data: ANY); 
-		PROCEDURE ^ SetFirstLine*(line: LONGINT; adjustScrollbar: BOOLEAN); 
+		PROCEDURE ^ SetFirstLine*(line: SIZE; adjustScrollbar: BOOLEAN); 
 		PROCEDURE ^ SetDrawNodeProc*(x: DrawNodeProc); 
 		PROCEDURE ^ SetMeasureNodeProc*(x: MeasureNodeProc); 
-		PROCEDURE ^ MeasureTree(VAR lines, width: LONGINT); 
-		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: TreeNode; state: SET); 
-		PROCEDURE ^ MeasureNode*(node: TreeNode; VAR w, h: LONGINT); 
-		PROCEDURE ^ RenderTreeNode(canvas: WMGraphics.Canvas; y, h: LONGINT; node: TreeNode; level: LONGINT); 
+		PROCEDURE ^ MeasureTree(VAR lines, width: SIZE); 
+		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: SIZE; node: TreeNode; state: SET); 
+		PROCEDURE ^ MeasureNode*(node: TreeNode; VAR w, h: SIZE); 
+		PROCEDURE ^ RenderTreeNode(canvas: WMGraphics.Canvas; y, h: SIZE; node: TreeNode; level: SIZE); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ GetNodeAtPos*(x, y: LONGINT): TreeNode; 
+		PROCEDURE ^ GetNodeAtPos*(x, y: SIZE): TreeNode; 
 		PROCEDURE ^ GetNextVisibleNode(this: TreeNode; ignoreChildren: BOOLEAN): TreeNode; 
 		PROCEDURE ^ GetPrevVisibleNode(this: TreeNode): TreeNode; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keysym: LONGINT); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keysym: SIZE); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ ClickNode*(node: TreeNode); 
 		PROCEDURE ^ MiddleClickNode*(node: TreeNode); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ SelectNode*(node: TreeNode); 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ ScrollbarChanged*(sender, data: ANY); 

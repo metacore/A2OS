@@ -74,7 +74,7 @@ TYPE
 		PROCEDURE ^ RootEntryFilter(obj: WebStd.PersistentDataObject): BOOLEAN; 
 		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetMainOverview(persCont: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
-		PROCEDURE ^ RecursiveEntryOverview(depth: LONGINT; table: XML.Element; entryObj: WebForumEntry; request: HTTPSupport.HTTPRequest; moduleName, objectName: Strings.String): LONGINT; 
+		PROCEDURE ^ RecursiveEntryOverview(depth: LONGINT; table: XML.Element; entryObj: WebForumEntry; request: HTTPSupport.HTTPRequest; moduleName, objectName: Strings.String): SIZE; 
 		PROCEDURE ^ GetSearchFormular(labelName, buttonName: Strings.String): XML.Content; 
 		PROCEDURE ^ AddStatusMessage(container: XML.Container); 
 		PROCEDURE ^ GetMainDetailView(persCont: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 

@@ -522,7 +522,7 @@ TYPE
 				END;
 				(* send queued packet *)
 				IF p.buf # NIL THEN
-					dev.Send(ether, EtherTypeIP, p.buf^, p.buf^, p.buf^, 0, 0, 0, LEN(p.buf^), FALSE);
+					dev.Send(ether, EtherTypeIP, p.buf^, p.buf^, p.buf^, 0, 0, 0, LEN(p.buf^)(LONGINT), FALSE);
 					p.buf := NIL; (* 26.02.04 : fixes the resend bug *)
 				END;
 				(* update entry *)

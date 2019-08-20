@@ -37,7 +37,7 @@ TYPE
 		fileFormat: LONGINT; 
 		modified: BOOLEAN; 
 		fullScreen-: BOOLEAN; 
-		currentWidth, currentHeight: LONGINT; 
+		currentWidth, currentHeight: SIZE; 
 		XMLdocLayout, XMLdocStyle, XMLdocContent: XML.Document; 
 
 		PROCEDURE ^ CreatePluginButton(CONST pluginName: ARRAY OF CHAR): WMStandardComponents.Button; 
@@ -54,10 +54,10 @@ TYPE
 		PROCEDURE ^ TestHandler(sender, data: ANY); 
 		PROCEDURE ^ MasterHandler(sender, data: ANY); 
 		PROCEDURE ^ PreviewHandler(sender, data: ANY); 
-		PROCEDURE ^ FileMenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ ObjectMenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ PageMenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ MiscMenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FileMenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ObjectMenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ PageMenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ MiscMenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ZoomHandler(sender, data: ANY); 
 		PROCEDURE ^ ZoomUserHandler(sender, data: ANY); 
 		PROCEDURE ^ GridHandler(sender, data: ANY); 
@@ -131,7 +131,7 @@ TYPE
 		button*: WMStandardComponents.Button; 
 		mode: LONGINT; 
 		shown: BOOLEAN; 
-		x, y: LONGINT; 
+		x, y: SIZE; 
 		progress: LONGINT; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 

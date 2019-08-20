@@ -4,19 +4,19 @@ CONST
 	StringPoolSize0 = (1024 * 256); 
 	HashTableSize0 = 1024; 
 TYPE 
-	Index* = LONGINT; 
+	Index* = SIZE; 
 
 	StringPool = POINTER TO ARRAY OF CHAR; 
 VAR 
 	pool: StringPool; 
-	poolLen: LONGINT; 
+	poolLen: SIZE; 
 	poolIndex: POINTER TO ARRAY OF Index; 
-	poolIndexSize: LONGINT; 
+	poolIndexSize: SIZE; 
 	ALastGet, AStrings, AGetString, ACompareString, ACompareString0, AStringCmpHit, ASearchHits, ASearchMisses: SIZE; 
 	AInsertHashRetries: ARRAY 10 OF SIZE; 
 	ASearchHashRetries: ARRAY 10 OF SIZE; 
 
-	PROCEDURE ^ Hash(CONST str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ Hash(CONST str: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ GrowPool; 
 	PROCEDURE ^ GrowHashTable; 
 	PROCEDURE ^ GetString*(index: Index; VAR str: ARRAY OF CHAR); 

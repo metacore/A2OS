@@ -134,8 +134,8 @@ TYPE
 
 	GadgetWindow = OBJECT(Window);
 	VAR
-		lastX, lastY : LONGINT;
-		mode : LONGINT;
+		lastX, lastY : SIZE;
+		mode : WORD;
 		resized : BOOLEAN;
 		viewport : WMWindowManager.ViewPort;
 
@@ -148,8 +148,8 @@ TYPE
 			ASSERT(viewport # NIL);
 		END New;
 
-		PROCEDURE GetMode(x, y : LONGINT) : LONGINT;
-		VAR mode, width, height : LONGINT;
+		PROCEDURE GetMode(x, y : SIZE) : WORD;
+		VAR mode: WORD; width, height : SIZE;
 		BEGIN
 			width := bounds.r - bounds.l; height := bounds.b - bounds.t;
 			IF (x <= ResizeAreaSize) THEN
@@ -207,7 +207,7 @@ TYPE
 			RETURN (Inputs.LeftCtrl IN state);
 		END MoveOrResize;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			PointerDown^(x, y, keys);
 			lastX := bounds.l + x; lastY:=bounds.t + y;
@@ -217,8 +217,8 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
-		VAR dx, dy, width, height, newWidth, newHeight, moveX, moveY, tempMode : LONGINT;
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
+		VAR dx, dy, width, height, newWidth, newHeight, moveX, moveY: SIZE; tempMode : WORD;
 		BEGIN
 			PointerMove^(x, y, keys);
 			IF MoveOrResize() & (mode = Mode_Standard) THEN
@@ -287,7 +287,7 @@ TYPE
 			END;
 		END Handle;
 
-		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
 		BEGIN
 			PointerUp^(x, y, keys);
 			IF (mode # Mode_Standard) & ~(0 IN keys) THEN
@@ -312,7 +312,7 @@ VAR
 PROCEDURE Open*(context : Commands.Context);
 VAR
 	fullName, repositoryName, applicationName : ARRAY 128 OF CHAR;
-	refNum: LONGINT; res: WORD;
+	refNum: SIZE; res: WORD;
 	info : ApplicationInfo;
 	window : Window;
 	gadgetWindow : GadgetWindow;

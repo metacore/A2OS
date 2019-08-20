@@ -41,7 +41,7 @@ TYPE
 VAR 
 	v: VVList; 
 
-	PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
+	PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
 	PROCEDURE ^ ClipAtImage(VAR x: Rectangle; img: Raster.Image); 
 	PROCEDURE ^ Install*(context: Commands.Context); 
 	PROCEDURE ^ Uninstall*; 

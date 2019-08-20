@@ -19,13 +19,13 @@ TYPE
 		font: RawCCGFont; 
 		colWidths: WMGrids.Spacings; 
 		scaler: Standard.Scrollbar; 
-		scale: LONGINT; 
+		scale: SIZE; 
 
 		PROCEDURE ^  & New*(f: RawCCGFont); 
 		PROCEDURE ^ Rescale(sender, data: ANY); 
 		PROCEDURE ^ GlyphSelected(sender, data: ANY); 
 		PROCEDURE ^ PaintBoxPaint(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
+		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 		PROCEDURE ^ RenderGlyphReal(canvas: WMGraphics.Canvas; glyph: Glyph; x, y, w, h: REAL; level: LONGINT; trace: BOOLEAN); 
 		PROCEDURE ^ CalcBB(glyph: Glyph): WMRectangles.Rectangle; 
 		PROCEDURE ^ Close*; 
@@ -74,11 +74,11 @@ TYPE
 		fontFile: Files.File; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR glyphRangeIndex: LONGINT): BOOLEAN; 
+		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR glyphRangeIndex: SIZE): BOOLEAN; 
 		PROCEDURE ^ WritePackedGlyph(w: Streams.Writer; g: Glyph); 
 		PROCEDURE ^ ReadPackedGlyph(r: Streams.Reader; VAR glyph: Glyph); 
 		PROCEDURE ^ StoreRange(w: Streams.Writer; VAR range: GlyphRange); 
-		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: LONGINT); 
+		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: SIZE); 
 		PROCEDURE ^ GetGlyph(ucs, variant: LONGINT): Glyph; 
 		PROCEDURE ^ Save(CONST fileName: ARRAY OF CHAR); 
 		PROCEDURE ^ Load(CONST fileName: ARRAY OF CHAR); 

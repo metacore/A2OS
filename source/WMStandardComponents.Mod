@@ -598,8 +598,8 @@ TYPE
 			END;
 		END ExecuteClickHandler;
 
-		PROCEDURE ScaleFont*(height: LONGINT; percent: LONGINT);
-		VAR fh,hfh,ntw,newSize,width: LONGINT; f,hf: WMGraphics.Font; str: String; tw, th: LONGINT; oldFontSize: LONGINT;
+		PROCEDURE ScaleFont*(height: SIZE; percent: WORD);
+		VAR fh,hfh,ntw,newSize,width: SIZE; f,hf: WMGraphics.Font; str: String; tw, th: SIZE; oldFontSize: SIZE;
 		BEGIN
 			height := height - 2*textBorder.Get();
 			IF height < 4 THEN height := 4 END;
@@ -830,13 +830,13 @@ TYPE
 			ChangeModel(pressed);
 		END Up;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerDown*(x, y: SIZE; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN Down END;
 			PointerDown^(x, y, keys)
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN
 				IF IsHit(x, y) THEN
@@ -849,7 +849,7 @@ TYPE
 			PointerMove^(x, y, keys)
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET); (** PROTECTED *)
 		BEGIN
 			Up;
 			PointerUp^(x, y, keys)
@@ -865,7 +865,7 @@ TYPE
 			caption.Set(WMComponents.NewString(x))
 		END SetCaption;
 
-		PROCEDURE IsHit*(x, y: LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y: SIZE) : BOOLEAN;
 		VAR t : BOOLEAN;
 		BEGIN
 			IF ~visible.Get() THEN RETURN FALSE END;
@@ -882,8 +882,8 @@ TYPE
 			RETURN t
 		END IsHit;
 
-		PROCEDURE IsHitHorizontal(x, y: LONGINT) : BOOLEAN;
-		VAR a, b, c : WMGraphics.Image; aw, bw, cw : LONGINT;
+		PROCEDURE IsHitHorizontal(x, y: SIZE) : BOOLEAN;
+		VAR a, b, c : WMGraphics.Image; aw, bw, cw : SIZE;
 		BEGIN
 			IF imgDefault # NIL THEN
 				RETURN WMGraphics.IsScaledBitmapHit (x,y,bounds.GetWidth(), bounds.GetHeight(), 64,imgDefault);
@@ -910,8 +910,8 @@ TYPE
 			END
 		END IsHitHorizontal;
 
-		PROCEDURE IsHitVertical(x, y: LONGINT) : BOOLEAN;
-		VAR a, b, c : WMGraphics.Image; ah, bh, ch : LONGINT;
+		PROCEDURE IsHitVertical(x, y: SIZE) : BOOLEAN;
+		VAR a, b, c : WMGraphics.Image; ah, bh, ch : SIZE;
 		BEGIN
 			GetVerticalImages(a, b, c);
 	 		IF a # NIL THEN ah := a.height ELSE ah := 0 END;
@@ -1089,22 +1089,22 @@ TYPE
 		VAR
 			 deco: Decoration;
 
-			 l,r,t,b: LONGINT;
+			 l,r,t,b: SIZE;
 			 (* left and right boundaries *)
-			 tl, ml, bl, tr, mr, br: LONGINT;
+			 tl, ml, bl, tr, mr, br: SIZE;
 			 (* top and bottom boundaries *)
-			 lt, mt, rt, lb, mb, rb: LONGINT;
+			 lt, mt, rt, lb, mb, rb: SIZE;
 
-			 maxBorder: LONGINT;
+			 maxBorder: SIZE;
 
-			 PROCEDURE Draw(img:WMGraphics.Image; l,t,r,b: LONGINT );
+			 PROCEDURE Draw(img:WMGraphics.Image; l,t,r,b: SIZE );
 			 BEGIN
 			 	IF (r>l) & (b>t) & (img # NIL) THEN
 		 			canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, img.width, img.height),	WMRectangles.MakeRect(l,t,r,b), WMGraphics.ModeSrcOverDst, WMGraphics.ScaleBilinear)
 		 		END;
 			 END Draw;
 
-			 PROCEDURE Scale(i: LONGINT): LONGINT;
+			 PROCEDURE Scale(i: SIZE): SIZE;
 			 BEGIN
 			 	IF i > maxBorder THEN RETURN maxBorder ELSE RETURN i END;
 			 END Scale;
@@ -1150,7 +1150,7 @@ TYPE
 
 		PROCEDURE DrawHorizontalBackground(canvas : WMGraphics.Canvas);
 		VAR imgLeft, imgMiddle, imgRight, img : WMGraphics.Image;
-			 wLeft, wRight : LONGINT;
+			 wLeft, wRight : SIZE;
 			 down : BOOLEAN;
 		BEGIN
 			IF ~enabled.Get() & (imgInactive # NIL) THEN
@@ -1211,7 +1211,7 @@ TYPE
 
 		PROCEDURE DrawVerticalBackground(canvas : WMGraphics.Canvas);
 		VAR imgMiddle, imgTop, imgBottom : WMGraphics.Image;
-			 hTop, hBottom : LONGINT;
+			 hTop, hBottom : SIZE;
 		BEGIN
 			GetVerticalImages(imgTop, imgMiddle, imgBottom);
 	 		(* top*)
@@ -1246,7 +1246,7 @@ TYPE
 			END
 		END DrawVerticalBackground;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; VAR keyCode : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; VAR keyCode : SIZE);
 		BEGIN
 			IF ~ (Inputs.Release IN flags) THEN
 				IF keyCode = 20H THEN keyboardPressed := TRUE; Down
@@ -1294,10 +1294,10 @@ TYPE
 	(** Scrollbar *)
 	Scrollbar* = OBJECT (WMComponents.VisualComponent)
 	VAR
-		min-, max-, pos-, pageSize-, width- : WMProperties.Int32Property;
+		min-, max-, pos-, pageSize-, width- : WMProperties.SizeProperty;
 
 		vertical- : WMProperties.BooleanProperty;
-		minTrackerSize- : WMProperties.Int32Property;
+		minTrackerSize- : WMProperties.SizeProperty;
 
 		clDefault-, clHover-, clPressed- : WMProperties.ColorProperty;
 		clBtnDefault-, clBtnHover-, clBtnPressed- : WMProperties.ColorProperty;
@@ -1353,7 +1353,7 @@ TYPE
 
 		timer : InternalTimer;
 
-		ts, tp, tDownX, tDownY : LONGINT;
+		ts, tp, tDownX, tDownY : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -1472,12 +1472,12 @@ TYPE
 			END;
 		END LinkChanged;
 
-		PROCEDURE ChangeModel(value : LONGINT);
-		VAR integer : Types.Integer; res : WORD; m: Models.Model;
+		PROCEDURE ChangeModel(value : SIZE);
+		VAR size : Types.Size; res : WORD; m: Models.Model;
 		BEGIN
 			IF WMProperties.GetModel(model, m) THEN
-				integer.value := value;
-				m.SetGeneric(integer, res);
+				size.value := value;
+				m.SetGeneric(size, res);
 			END;
 		END ChangeModel;
 
@@ -1510,7 +1510,7 @@ TYPE
 			END;
 		END Down;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			PointerDown^(x, y, keys);
 			IF (0 IN keys) THEN
@@ -1530,7 +1530,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		VAR oldHover, oldPressed, area : SHORTINT;
 		BEGIN
 			PointerMove^(x, y, keys);
@@ -1556,7 +1556,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		VAR oldPressed : SHORTINT;
 		BEGIN
 			PointerUp^(x, y, keys);
@@ -1582,7 +1582,7 @@ TYPE
 			END;
 		END PointerLeave;
 
-		PROCEDURE FindArea(x, y : LONGINT) : SHORTINT;
+		PROCEDURE FindArea(x, y : SIZE) : SHORTINT;
 		VAR result : SHORTINT;
 		BEGIN
 			result := 0;
@@ -1591,8 +1591,8 @@ TYPE
 			RETURN result;
 		END FindArea;
 
-		PROCEDURE TrackerMove(x, y : LONGINT; keys : SET);
-		VAR newPosition, value, d, dy, dp, dx : LONGINT; f : REAL; tmax, tmin, a, b : LONGINT;
+		PROCEDURE TrackerMove(x, y : SIZE; keys : SET);
+		VAR newPosition, value, d, dy, dp, dx : SIZE; f : REAL; tmax, tmin, a, b : SIZE;
 		BEGIN
 			tmin := min.Get(); tmax := max.Get();
 			IF 1 IN keys  THEN
@@ -1743,7 +1743,7 @@ TYPE
 		END PageDown;
 
 		PROCEDURE UpdateLayout;
-		VAR h, w, ps, tmin, tmax : LONGINT; f : REAL; width, height : LONGINT;
+		VAR h, w, ps, tmin, tmax : SIZE; f : REAL; width, height : SIZE;
 		BEGIN
 			width := bounds.GetWidth(); height := bounds.GetHeight();
 			tmin := min.Get(); tmax := max.Get();
@@ -1860,7 +1860,7 @@ TYPE
 		END GetBgImage;
 
 		PROCEDURE DrawHorizontalBackground(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle;  image, imgLeft, imgMiddle, imgRight : WMGraphics.Image);
-		VAR  wLeft, wRight : LONGINT;
+		VAR  wLeft, wRight : SIZE;
 		BEGIN
 			IF image # NIL THEN
 				canvas.ScaleImage(image,
@@ -1898,7 +1898,7 @@ TYPE
 		END DrawHorizontalBackground;
 
 		PROCEDURE DrawVerticalBackground(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; image, imgTop, imgMiddle, imgBottom : WMGraphics.Image);
-		VAR hTop, hBottom : LONGINT;
+		VAR hTop, hBottom : SIZE;
 		BEGIN
 			IF image # NIL THEN
 				canvas.ScaleImage(image,
@@ -2001,7 +2001,7 @@ TYPE
 
 	Slider* = OBJECT (WMComponents.VisualComponent)
 	VAR
-		min-, max-, pos-, pageSize-, trackerSize- : WMProperties.Int32Property;
+		min-, max-, pos-, pageSize-, trackerSize- : WMProperties.SizeProperty;
 
 		vertical- : WMProperties.BooleanProperty;
 		clDefault-, clHover-, clPressed-, clBar : WMProperties.ColorProperty;
@@ -2018,7 +2018,7 @@ TYPE
 		onPositionChanged- : WMEvents.EventSource;
 
 		minusPage, plusPage, tracker : Button;
-		ts, tp, lx, ly : LONGINT;
+		ts, tp, lx, ly : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -2112,7 +2112,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		CONST BarWidth = 8;
-		VAR rect : WMRectangles.Rectangle; width, height : LONGINT;
+		VAR rect : WMRectangles.Rectangle; width, height : SIZE;
 		BEGIN
 			DrawBackground^(canvas);
 			IF ~useBgBitmaps.Get() & (clBar.Get() # 0) THEN
@@ -2137,18 +2137,18 @@ TYPE
 			END;
 		END DrawBackground;
 
-		PROCEDURE TrackerPointerDown(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE TrackerPointerDown(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		BEGIN
 			lx := x; ly := y; handled := FALSE
 		END TrackerPointerDown;
 
-		PROCEDURE TrackerPointerUp(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE TrackerPointerUp(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		BEGIN
 			ChangeModel
 		END TrackerPointerUp;
 
 		PROCEDURE ChangeModel;
-		VAR m: Models.Model; real: Types.Integer; res : WORD;
+		VAR m: Models.Model; real: Types.Size; res : WORD;
 		BEGIN
 			IF WMProperties.GetModel(model,m) THEN
 				real.value := pos.Get();
@@ -2156,8 +2156,8 @@ TYPE
 			END;
 		END ChangeModel;
 
-		PROCEDURE TrackerPointerMove(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
-		VAR dx, dy, dp, d : LONGINT; f : REAL; tmax, tmin : LONGINT;
+		PROCEDURE TrackerPointerMove(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
+		VAR dx, dy, dp, d : SIZE; f : REAL; tmax, tmin : SIZE;
 		BEGIN
 			tmax := max.Get();
 			tmin := min.Get();
@@ -2248,7 +2248,7 @@ TYPE
 		END PageDown;
 
 		PROCEDURE AlignSubComponents*;
-		VAR h, w, ps, tmin, tmax : LONGINT;
+		VAR h, w, ps, tmin, tmax : SIZE;
 		BEGIN
 			Acquire; DisableUpdate;
 			(* break a possible endless realignment  *)
@@ -2340,7 +2340,7 @@ TYPE
 	VAR
 		clDefault- : WMProperties.ColorProperty;
 		isFlat- : WMProperties.BooleanProperty;
-		dnx, dny : LONGINT;
+		dnx, dny : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -2372,13 +2372,13 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET); (** PROTECTED *)
+		PROCEDURE PointerDown*(x, y: SIZE; keys: SET); (** PROTECTED *)
 		BEGIN
 			dnx := x; dny := y
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET); (** PROTECTED *)
-		VAR dx, dy, align, myWidth, myHeight, newL, newR, newT, newB: LONGINT;
+		PROCEDURE PointerMove*(x, y: SIZE; keys: SET); (** PROTECTED *)
+		VAR dx, dy, align, myWidth, myHeight, newL, newR, newT, newB: SIZE;
 			p, pp : WMComponents.VisualComponent;
 			parent : XML.Element;
 			pRect, ppRect: WMRectangles.Rectangle;
@@ -2474,7 +2474,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
-			highlight, shadow, w, h : LONGINT;
+			highlight, shadow : LONGINT; w, h : SIZE;
 			tempString : Strings.String;
 		BEGIN
 			DrawBackground^(canvas);
@@ -2655,7 +2655,7 @@ TYPE
 			Invalidate
 		END FocusLost;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerDown*(x, y: SIZE; keys: SET);
 		VAR value : LONGINT;
 		BEGIN
 			IF enabled.Get() THEN
@@ -2675,7 +2675,7 @@ TYPE
 			PointerDown^(x, y, keys)
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF IsHit(x, y) THEN
 				IF ~mouseOver THEN mouseOver := TRUE; Invalidate END
@@ -2825,7 +2825,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR width, height : LONGINT;
+		VAR width, height : SIZE;
 		BEGIN
 			DrawBackground^(canvas);
 			IF (image # NIL) & show THEN
@@ -2856,7 +2856,7 @@ TYPE
 		imgName- : WMProperties.StringProperty;
 		img- : WMGraphics.Image;
 		vScrollbar, hScrollbar : Scrollbar;
-		dx, dy : LONGINT;
+		dx, dy : SIZE;
 
 		PROCEDURE &  Init*;
 		BEGIN
@@ -2898,7 +2898,7 @@ TYPE
 			END;
 		END Resized;
 
-		PROCEDURE GetOffsets*(VAR x,y: LONGINT); (*returns offset caused by scrollbars*)
+		PROCEDURE GetOffsets*(VAR x,y: SIZE); (*returns offset caused by scrollbars*)
 		BEGIN
 			x :=-( dx * hScrollbar.pos.Get() DIV 100);
 			y :=-(dy * vScrollbar.pos.Get() DIV 100);
@@ -2953,7 +2953,7 @@ TYPE
 		END SetImage;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR x, y : LONGINT;
+		VAR x, y : SIZE;
 		BEGIN
 			IF show THEN
 				DrawBackground^(canvas);
@@ -2987,6 +2987,7 @@ VAR
 	 BooleanPrototype : WMProperties.BooleanProperty;
 	 StringPrototype : WMProperties.StringProperty;
 	 Int32Prototype : WMProperties.Int32Property;
+	 SizePrototype : WMProperties.SizeProperty;
 	 RectanglePrototype : WMProperties.RectangleProperty;
 	 PrototypeBlinking*: WMProperties.BooleanProperty;
 
@@ -3012,7 +3013,7 @@ VAR
 	 (* Scrollbar prototypes *)
 	 PrototypeSvertical* : WMProperties.BooleanProperty;
 	 PrototypeSmin*, PrototypeSmax*, PrototypeSpos*, PrototypeSpageSize*, PrototypeTrackerSize*, PrototypeSWidth*,
-	 PrototypeSMinTrackerSize* : WMProperties.Int32Property;
+	 PrototypeSMinTrackerSize* : WMProperties.SizeProperty;
 		 (* presentation : colors / images *)
 	 PrototypeSUseArrowImages*, PrototypeSUseTrackerImages*, PrototypeSRepeatMiddleBitmap* : WMProperties.BooleanProperty;
 	 	(* background *)
@@ -3270,13 +3271,13 @@ BEGIN
 	NEW(PrototypeTrackerSize, NIL, NewString("TrackerSize"), NewString("defines the tracker size"));
 	PrototypeTrackerSize.Set(20);
 		(* scrollbar width *)
-	NEW(Int32Prototype, NIL, NewString("Width"), NewString("defines the scrollbar width")); Int32Prototype.Set(14);
-	NEW(PrototypeSWidth, Int32Prototype, NIL, NIL); plScrollbar.Add(PrototypeSWidth);
+	NEW(SizePrototype, NIL, NewString("Width"), NewString("defines the scrollbar width")); SizePrototype.Set(14);
+	NEW(PrototypeSWidth, SizePrototype, NIL, NIL); plScrollbar.Add(PrototypeSWidth);
 
 	NEW(PrototypeSvertical, NIL, NewString("Vertical"),	NewString("defines if the scrollbar is vertical"));
 	PrototypeSvertical.Set(TRUE);
-	NEW(Int32Prototype, NIL, NewString("MinTrackerSize"), NewString("")); Int32Prototype.Set(5);
-	NEW(PrototypeSMinTrackerSize, Int32Prototype, NIL, NIL); plScrollbar.Add(PrototypeSMinTrackerSize);
+	NEW(SizePrototype, NIL, NewString("MinTrackerSize"), NewString("")); SizePrototype.Set(5);
+	NEW(PrototypeSMinTrackerSize, SizePrototype, NIL, NIL); plScrollbar.Add(PrototypeSMinTrackerSize);
 			(* color *)
 	NEW(ColorPrototype, NIL, NewString("ClDefault"), NewString("Default background color")); ColorPrototype.Set(000000077H);
 	NEW(PrototypeSClDefault, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClDefault);
@@ -3411,7 +3412,7 @@ BEGIN
 	NEW(PrototypeSlClPressed, NIL, NewString("ClPressed"), NewString("Pressed color of slider"));
 	PrototypeSlClPressed.Set(0);
 	NEW(PrototypeSlClBar, NIL, NewString("ClBar"), NewString("Color of slider bar"));
-	PrototypeSlClBar.Set(0CCCCCCCCH);
+	PrototypeSlClBar.Set(LONGINT(0CCCCCCCCH));
 
 	NEW(PrototypeSlvertical, NIL, NewString("Vertical"),NewString("defines if the slider is vertical"));
 	PrototypeSlvertical.Set(TRUE);

@@ -45,13 +45,13 @@ TYPE
 
 	Line = POINTER TO RECORD 
 		data: Data; 
-		t, b: LONGINT; 
+		t, b: SIZE; 
 		next: Line; 
 	END; 
 
 	Position = RECORD 
 		line: Line; 
-		ofs: LONGINT; 
+		ofs: SIZE; 
 	END; 
 
 	Frame = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -61,7 +61,7 @@ TYPE
 		C: Connection; 
 		first, last, top: Line; 
 		bg: WMGraphics.Color; 
-		rows, cols, boxW, boxH, dX, dY: LONGINT; 
+		rows, cols, boxW, boxH, dX, dY: SIZE; 
 		tabs: POINTER TO ARRAY OF BOOLEAN; 
 		attr: Attribute; 
 		cursor: Position; 
@@ -71,21 +71,21 @@ TYPE
 		popup: WMPopups.Popup; 
 		doEcho: BOOLEAN; 
 
-		PROCEDURE ^ GetCol(): LONGINT; 
+		PROCEDURE ^ GetCol(): SIZE; 
 		PROCEDURE ^ GetRow(): LONGINT; 
 		PROCEDURE ^ appendLine(): Line; 
 		PROCEDURE ^ AppendLine(): Line; 
-		PROCEDURE ^ UpdateBox(line: Line; ofs: LONGINT); 
-		PROCEDURE ^ UpdateRect(al, bl: Line; aofs, bofs: LONGINT; cur: SET); 
+		PROCEDURE ^ UpdateBox(line: Line; ofs: SIZE); 
+		PROCEDURE ^ UpdateRect(al, bl: Line; aofs, bofs: SIZE; cur: SET); 
 		PROCEDURE ^ UpdateAll; 
-		PROCEDURE ^ writeChars(VAR buf: ARRAY OF LONGINT; n: LONGINT); 
-		PROCEDURE ^ WriteChars(VAR buf: ARRAY OF LONGINT; n: LONGINT); 
+		PROCEDURE ^ writeChars(VAR buf: ARRAY OF LONGINT; n: SIZE); 
+		PROCEDURE ^ WriteChars(VAR buf: ARRAY OF LONGINT; n: SIZE); 
 		PROCEDURE ^ Delete; 
-		PROCEDURE ^ goto(col, row: LONGINT; scroll: BOOLEAN); 
-		PROCEDURE ^ Goto(col, row: LONGINT; scroll: BOOLEAN); 
+		PROCEDURE ^ goto(col, row: SIZE; scroll: BOOLEAN); 
+		PROCEDURE ^ Goto(col, row: SIZE; scroll: BOOLEAN); 
 		PROCEDURE ^ SetTop(row: LONGINT); 
 		PROCEDURE ^ RightTab; 
-		PROCEDURE ^ EraseLine(l: Line; from, to: LONGINT); 
+		PROCEDURE ^ EraseLine(l: Line; from, to: SIZE); 
 		PROCEDURE ^ Erase(mode: CHAR; par: ARRAY OF LONGINT; n: LONGINT); 
 		PROCEDURE ^ NewAttr; 
 		PROCEDURE ^ Bright; 
@@ -94,16 +94,16 @@ TYPE
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ LocateBox(x, y: LONGINT; VAR pos: Position); 
+		PROCEDURE ^ LocateBox(x, y: SIZE; VAR pos: Position); 
 		PROCEDURE ^ Copy; 
 		PROCEDURE ^ Paste; 
 		PROCEDURE ^ ClickHandler(sender, par: ANY); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ CursorKey(keySym: LONGINT); 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ CursorKey(keySym: SIZE); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
 		PROCEDURE ^ resized; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ Initialize*; 

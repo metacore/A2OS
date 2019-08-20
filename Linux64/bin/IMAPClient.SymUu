@@ -62,13 +62,13 @@ TYPE
 		FolderIsSynchronized: BOOLEAN; 
 		FolderComplete: BOOLEAN; 
 		Task*: LONGINT; 
-		searchResult-: POINTER TO ARRAY OF LONGINT; 
+		searchResult-: POINTER TO ARRAY OF SIZE; 
 		timer*: Kernel.Timer; 
 		observer: EventListener; 
 		errorHandler: ErrorListener; 
 		applySearchFilter*: BOOLEAN; 
 		ret: Classes.List; 
-		numberOfMessages: LONGINT; 
+		numberOfMessages: SIZE; 
 		preferences*: AccountPreferences; 
 
 		PROCEDURE ^  & Init*(obs: EventListener; error: ErrorListener); 
@@ -91,9 +91,9 @@ TYPE
 		PROCEDURE ^ CheckFetch(answer: IMAP.Entry); 
 		PROCEDURE ^ Synchronize(): LONGINT; 
 		PROCEDURE ^ DownloadAllMessages(): LONGINT; 
-		PROCEDURE ^ FetchSomeHeaders(idx, len: LONGINT): LONGINT; 
-		PROCEDURE ^ FetchSomeUIDs(idx, len: LONGINT): LONGINT; 
-		PROCEDURE ^ FetchSomeMessages(idx, len: LONGINT): LONGINT; 
+		PROCEDURE ^ FetchSomeHeaders(idx, len: SIZE): LONGINT; 
+		PROCEDURE ^ FetchSomeUIDs(idx, len: SIZE): LONGINT; 
+		PROCEDURE ^ FetchSomeMessages(idx, len: SIZE): LONGINT; 
 		PROCEDURE ^ FetchMessage*(message: Message): LONGINT; 
 		PROCEDURE ^ DeleteMessage*(message: Message; expunge: BOOLEAN): LONGINT; 
 		PROCEDURE ^ MoveMessageToTrashBin*(message: Message): LONGINT; 
@@ -113,8 +113,8 @@ TYPE
 		PROCEDURE ^ Rename*(folder: Folder; VAR name: ARRAY OF CHAR): LONGINT; 
 		PROCEDURE ^ Delete*(folder: Folder): LONGINT; 
 		PROCEDURE ^ Create*(folder: Folder; name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ Search*(string: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ OfflineSearch(string: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ Search*(CONST string: ARRAY OF CHAR): SIZE; 
+		PROCEDURE ^ OfflineSearch(CONST string: ARRAY OF CHAR): SIZE; 
 		PROCEDURE ^ Save*(VAR doc: XML.Document): LONGINT; 
 		PROCEDURE ^ SavePreferences(element: XML.Element); 
 		PROCEDURE ^ ExtractMailboxContent(folder: Folder; element: XML.Element); 

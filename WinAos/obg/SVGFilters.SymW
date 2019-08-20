@@ -38,7 +38,7 @@ TYPE
 		PROCEDURE ^ Apply*(window: FilterWindow): Buffer; 
 		PROCEDURE ^ ApplyFilter*(window: FilterWindow; target: Buffer); 
 		PROCEDURE ^ GetInBuffer(in: In; window: FilterWindow): Buffer; 
-		PROCEDURE ^ GetInPixel(x, y, tx0, ty0: LONGINT; window: FilterWindow; in: In; source: Buffer; VAR pix: Raster.Pixel); 
+		PROCEDURE ^ GetInPixel(x, y, tx0, ty0: SIZE; window: FilterWindow; in: In; source: Buffer; VAR pix: Raster.Pixel); 
 	END FilterElement; 
 
 	feBlend* = OBJECT (FilterElement)

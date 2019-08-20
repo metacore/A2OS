@@ -47,8 +47,8 @@ TYPE
 		PROCEDURE ^ RemoveFromFilter(ucs: LONGINT); 
 		PROCEDURE ^ PaintCharacter(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ DrawAll(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
-		PROCEDURE ^ DrawFilterComponents(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
+		PROCEDURE ^ DrawAll(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
+		PROCEDURE ^ DrawFilterComponents(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 	END Identifier; 
 VAR 
 	winstance: Identifier; 

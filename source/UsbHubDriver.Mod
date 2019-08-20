@@ -147,7 +147,7 @@ TYPE
 		 * @param buffer: Buffer where to put the descriptor in (at offset 0)
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE GetHubDescriptor(type, index, length : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetHubDescriptor(type, index : LONGINT; length : SIZE; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE; END GetHubDescriptor; (* abstract *)
 
 		(*
@@ -389,7 +389,7 @@ TYPE
 
 		(* Are there any device drivers associated to the specified device? *)
 		PROCEDURE DriversInstalled(dev : Usb.UsbDevice) : BOOLEAN;
-		VAR intf : Usb.InterfaceDescriptor; i : LONGINT;
+		VAR intf : Usb.InterfaceDescriptor; i : SIZE;
 		BEGIN (* locking? *)
 			FOR i := 0 TO LEN(dev.actConfiguration.interfaces)-1 DO
 				intf := dev.actConfiguration.interfaces[i] (Usb.InterfaceDescriptor);
@@ -1053,7 +1053,7 @@ TYPE
 		statusPipeRetries : LONGINT;
 
 		(* This hub class specific request returns the hub descriptor. *)
-		PROCEDURE GetHubDescriptor(type, index, length : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetHubDescriptor(type , index : LONGINT; length : SIZE; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN
 			ASSERT(length >= 2);
 			RETURN (hub.defaultpipe.Request(ToHost + Class + Device, GetDescriptor, index + type*100H, 0, length, buffer) = Usbdi.Ok) &
@@ -1197,8 +1197,8 @@ TYPE
 		 * This handler is called when the hub's interrupt IN status pipe reports a change of either
 		 * the hub status or the status of a hub port.
 		 *)
-		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : LONGINT);
-		VAR ignore : Usbdi.Status; i, port : LONGINT;
+		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : SIZE);
+		VAR ignore : Usbdi.Status; i : SIZE; port : LONGINT;
 		BEGIN
 			IF Debug.Trace & Debug.traceConnects THEN
 				Show("Hub reports status change: "); FOR i := 0 TO LEN(statusBuffer)-1 DO KernelLog.Hex(ORD(statusBuffer[i]), -2); END; KernelLog.Ln;
@@ -1213,7 +1213,7 @@ TYPE
 				FOR i := 0 TO actLen-1 DO
 					FOR port := 0 TO 7 DO
 						IF SYSTEM.VAL(SET, statusBuffer[i]) * {port} # {} THEN
-							HandlePortStatusChange(port + i * 8 - 1);
+							HandlePortStatusChange(port + i(LONGINT) * 8 - 1);
 						END;
 					END;
 				END;
@@ -1263,7 +1263,7 @@ TYPE
 		 * it has been left in a busy state due to high-speed errors. This request is only defined for non-periodic endpoints.
 		 *)
 		PROCEDURE ClearTTBuffer(dev : Usb.UsbDevice; endpoint, port : LONGINT) : BOOLEAN;
-		VAR intf : Usb.InterfaceDescriptor; endp : Usb.EndpointDescriptor; wValue : SET; i, e : LONGINT;
+		VAR intf : Usb.InterfaceDescriptor; endp : Usb.EndpointDescriptor; wValue : SET; i, e : SIZE;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((dev.speed # Usb.HighSpeed) & (dev.parent.speed = Usb.HighSpeed)); END;
 			(* Get the endpoint *)
@@ -1335,8 +1335,8 @@ TYPE
 		initialized : BOOLEAN;
 
 		(* Get the emulated hub descriptor. Ignore type and index parameters. *)
-		PROCEDURE GetHubDescriptor(type, index, length : LONGINT;  VAR buffer : Usbdi.Buffer) : BOOLEAN;
-		VAR i : LONGINT; hd : UsbHcdi.HubDescriptor;
+		PROCEDURE GetHubDescriptor(type , index : LONGINT; length : SIZE;  VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		VAR i : SIZE; hd : UsbHcdi.HubDescriptor;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT(LEN(buffer) <= length); END;
 			hd := device(Usb.UsbDevice).controller.GetHubDescriptor();
@@ -1348,7 +1348,7 @@ TYPE
 
 		(* Overwrites the emulated hub descriptor. Ignore type and index paramters. *)
 		 PROCEDURE SetHubDescriptor(type, index : LONGINT; buffer : Usbdi.Buffer) : BOOLEAN;
-		 VAR i : LONGINT; hd : UsbHcdi.HubDescriptor;
+		 VAR i : SIZE; hd : UsbHcdi.HubDescriptor;
 		 BEGIN
 		 	IF Debug.StrongChecks THEN ASSERT((LEN(buffer)>=8) & (ORD(buffer[0])=LEN(buffer)) & (ORD(buffer[1])=type)); END;
 		 	NEW(hd, LEN(buffer));
@@ -1445,7 +1445,7 @@ TYPE
 
 		(* Root hubs that support interrupt notification for port status changes will call this
 		handler when a corresponding interrupt occurs. The parameters are ignored. *)
-		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : SIZE);
 		BEGIN {EXCLUSIVE}
 			statusChange := TRUE;
 		END HandleStatusChange;

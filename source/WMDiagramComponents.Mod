@@ -89,8 +89,8 @@ TYPE
 		descriptor : DatasetDescriptor;
 
 		buffer : POINTER TO ARRAY OF Dataset;
-		pos, nofItems, dimensions : LONGINT;
-		bufferSize : LONGINT;
+		pos, nofItems, dimensions : SIZE;
+		bufferSize : SIZE;
 
 		viewSampleCount : LONGINT;
 
@@ -100,8 +100,8 @@ TYPE
 		nbrOfValues : LONGINT;
 		cur, min, max, sum : Dataset;
 
-		PROCEDURE &Init*(bufferSize, dimensions : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE &Init*(bufferSize, dimensions : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(dimensions >= 1);
 			New;
@@ -119,7 +119,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Reset*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			nofItems := 0; pos := 0; viewSampleCount := 0; viewChanged := TRUE;
@@ -134,7 +134,7 @@ TYPE
 		END Reset;
 
 		PROCEDURE GetStatistics*(VAR statistics : Statistics);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			ASSERT(LEN(statistics.cur) = dimensions);
@@ -156,8 +156,8 @@ TYPE
 		END GetStatistics;
 
 		(* Find the max and min value in the model dataset. Model lock must be held *)
-		PROCEDURE FindMinMax*(from, len : LONGINT; VAR min, max : REAL);
-		VAR bufferIndex, dim : LONGINT; v : REAL; points : Dataset;
+		PROCEDURE FindMinMax*(from, len : SIZE; VAR min, max : REAL);
+		VAR bufferIndex, dim : SIZE; v : REAL; points : Dataset;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			ASSERT((from >= 0) & (len > 0) & (from + len < nofItems));
@@ -179,8 +179,8 @@ TYPE
 		END FindMinMax;
 
 		(* Find the max and min value in the model dataset for each dimension. Model lock must be held *)
-		PROCEDURE FindAllMinMax*(from, len : LONGINT; VAR min, max : REAL);
-		VAR bufferIndex, dim : LONGINT; sum : REAL; points : Dataset;
+		PROCEDURE FindAllMinMax*(from, len : SIZE; VAR min, max : REAL);
+		VAR bufferIndex, dim : SIZE; sum : REAL; points : Dataset;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			ASSERT((from >= 0) & (len > 0) & (from + len < nofItems));
@@ -211,7 +211,7 @@ TYPE
 		END SetDescriptor;
 
 		PROCEDURE PutValues*(values : Dataset);
-		VAR i : LONGINT; value : REAL;
+		VAR i : SIZE; value : REAL;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			ASSERT(LEN(values) = dimensions);
@@ -235,8 +235,8 @@ TYPE
 			END;
 		END PutValues;
 
-		PROCEDURE GetValues*(index : LONGINT; VAR dataset : Dataset);
-		VAR dim, bufferIndex : LONGINT;
+		PROCEDURE GetValues*(index : SIZE; VAR dataset : Dataset);
+		VAR dim, bufferIndex : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			ASSERT((dataset # NIL) & (LEN(dataset) = dimensions));
@@ -246,12 +246,12 @@ TYPE
 			END;
 		END GetValues;
 
-		PROCEDURE GetNofDimensions*() : LONGINT;
+		PROCEDURE GetNofDimensions*() : SIZE;
 		BEGIN (* don't need lock here *)
 			RETURN dimensions;
 		END GetNofDimensions;
 
-		PROCEDURE GetNofPoints*() : LONGINT;
+		PROCEDURE GetNofPoints*() : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			RETURN nofItems;
@@ -286,7 +286,7 @@ TYPE
 
 		extUpdate : ExtUpdateHandler;
 
-		dimensions : LONGINT;
+		dimensions : SIZE;
 
 		points : Dataset;
 		points0, points1 : LongintDataset;
@@ -386,19 +386,18 @@ TYPE
 			END;
 		END Update;
 
-		PROCEDURE Scale(factor, min : REAL; srcPoints : Dataset; tarPoints : LongintDataset; height, border : LONGINT);
-		VAR dim : LONGINT;
+		PROCEDURE Scale(factor, min : REAL; srcPoints : Dataset; tarPoints : LongintDataset; height, border : SIZE);
+		VAR dim : SIZE;
 		BEGIN
 			FOR dim := 0 TO dimensions-1 DO
 				tarPoints[dim] := ENTIER(((srcPoints[dim] - min) * factor) * (height - 2 * border));
 			END;
 		END Scale;
 
-		PROCEDURE DrawLines(canvas : WMGraphics.Canvas; w, h, border : LONGINT; VAR tmin, tmax : REAL);
+		PROCEDURE DrawLines(canvas : WMGraphics.Canvas; w, h, border : SIZE; VAR tmin, tmax : REAL);
 		VAR
-			nofPoints, nofVisible : LONGINT;
-			dim, x, index : LONGINT;
-			v0, v1 : LONGINT;
+			nofPoints, nofVisible, index, dim : SIZE;
+			x, v0, v1 : SIZE;
 			factor : REAL;
 		BEGIN
 			model.Acquire;
@@ -439,11 +438,11 @@ TYPE
 			model.Release;
 		END DrawLines;
 
-		PROCEDURE DrawAreas(canvas : WMGraphics.Canvas; w, h, border : LONGINT; VAR tmin, tmax : REAL);
+		PROCEDURE DrawAreas(canvas : WMGraphics.Canvas; w, h, border : SIZE; VAR tmin, tmax : REAL);
 		VAR
-			nofPoints, nofVisible, nofStandalone : LONGINT;
-			dim, index, x, y0, y1: LONGINT; colorLine, color : WMGraphics.Color;
-			maxSumIdx : LONGINT;
+			nofPoints, nofVisible, nofStandalone, index, dim : SIZE;
+			x, y0, y1: SIZE; colorLine, color : WMGraphics.Color;
+			maxSumIdx : SIZE;
 			v0, v1 : LONGINT;
 			factor : REAL;
 			poly : ARRAY 4 OF WMGraphics.Point2d;
@@ -451,7 +450,7 @@ TYPE
 			model.Acquire;
 			nofPoints := model.GetNofPoints();
 			nofVisible := MIN(nofPoints - 1, w DIV deltaxI + 1);
-			nofStandalone := GetNumberOf(Standalone, 0, MAX(LONGINT), model.descriptor);
+			nofStandalone := GetNumberOf(Standalone, 0, MAX(SIZE), model.descriptor);
 
 			IF nofVisible >= 2 THEN
 				maxSumIdx := FindIndexOf(Maximum, model.descriptor);
@@ -553,7 +552,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			w, h, yborder, t, virtp : LONGINT; color: WMGraphics.Color;
+			w, h, yborder, t, virtp : SIZE; color: WMGraphics.Color;
 			mode : LONGINT;
 			tmin, tmax : REAL;
 			str : ARRAY 16 OF CHAR;
@@ -589,7 +588,7 @@ TYPE
 
 			mode := styleI;
 			IF (styleI = StyleAuto) THEN
-				IF (GetNumberOf(Maximum, 0, MAX(LONGINT), model.descriptor) > 0) OR (GetNumberOf(Sum, 0, MAX(LONGINT), model.descriptor) > 0) THEN
+				IF (GetNumberOf(Maximum, 0, MAX(SIZE), model.descriptor) > 0) OR (GetNumberOf(Sum, 0, MAX(SIZE), model.descriptor) > 0) THEN
 					mode := StyleAreas;
 				ELSE
 					mode := StyleLines;
@@ -641,7 +640,7 @@ TYPE
 
 		(** onClick handler called by each checkbox *)
 		PROCEDURE HandleClick(sender, data : ANY);
-		VAR i, state : LONGINT;
+		VAR i : SIZE; state : LONGINT;
 		BEGIN
 			FOR i := 0 TO LEN(checkboxes)-1 DO
 				state := checkboxes[i].state.Get();
@@ -654,7 +653,7 @@ TYPE
 		END HandleClick;
 
 		PROCEDURE HandleButton(sender, data : ANY);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			IF sender = checkAllBtn THEN
 				FOR i := 0 TO LEN(checkboxes)-1 DO
@@ -671,7 +670,7 @@ TYPE
 		END HandleButton;
 
 		PROCEDURE &New*(ds : DatasetDescriptor);
-		VAR i : LONGINT; panel : WMStandardComponents.Panel;
+		VAR i : SIZE; panel : WMStandardComponents.Panel;
 		BEGIN
 			ASSERT((ds # NIL) & (LEN(ds) >=1));
 			descriptor := ds;
@@ -680,7 +679,7 @@ TYPE
 			NEW(names, LEN(ds));
 			NEW(colors, LEN(ds));
 			NEW(checkboxes, LEN(ds));
-			optWidth := 200; optHeight := LEN(ds) * 20;
+			optWidth := 200; optHeight := LEN(ds)(LONGINT) * 20;
 			FOR i := 0 TO LEN(ds)-1 DO
 				NEW(panel);
 				panel.alignment.Set(WMComponents.AlignTop); panel.bounds.SetHeight(20);
@@ -850,7 +849,7 @@ TYPE
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR boundary,rect: WMRectangles.Rectangle; i: LONGINT;
 
-			PROCEDURE Point2dToPoint(xr,yr: LONGREAL; VAR x,y: LONGINT);
+			PROCEDURE Point2dToPoint(xr,yr: LONGREAL; VAR x,y: SIZE);
 			BEGIN
 				x := ENTIER(boundary.l + (xr-c.l)/(c.r-c.l) * (boundary.r-boundary.l) +0.5);
 				y := ENTIER(boundary.b + (yr-c.b)/(c.t-c.b) * (boundary.t-boundary.b) +0.5);
@@ -943,8 +942,8 @@ BEGIN
 	NEW(PrototypeStyle, NIL, S("Style"), NIL); PrototypeStyle.Set(StyleAuto);
 END InitProtoTypes;
 
-PROCEDURE FindIndexOf*(flag : LONGINT; ds : DatasetDescriptor) : LONGINT;
-VAR index, length : LONGINT;
+PROCEDURE FindIndexOf*(flag : LONGINT; ds : DatasetDescriptor) : SIZE;
+VAR index, length : SIZE;
 BEGIN
 	IF (ds # NIL) THEN
 		index := 0; length := LEN(ds);
@@ -956,12 +955,12 @@ BEGIN
 	RETURN index;
 END FindIndexOf;
 
-PROCEDURE GetNumberOf*(flag : LONGINT; startIndex, endIndex : LONGINT; ds : DatasetDescriptor) : LONGINT;
-VAR result, i : LONGINT;
+PROCEDURE GetNumberOf*(flag : LONGINT; startIndex, endIndex : SIZE; ds : DatasetDescriptor) : SIZE;
+VAR result, i : SIZE;
 BEGIN
 	result := 0;
-	IF (ds # NIL) & (0 <= startIndex) & (startIndex <= endIndex) & ((endIndex < LEN(ds)) OR (endIndex = MAX(LONGINT))) THEN
-		IF (endIndex = MAX(LONGINT)) THEN endIndex := LEN(ds) - 1; END;
+	IF (ds # NIL) & (0 <= startIndex) & (startIndex <= endIndex) & ((endIndex < LEN(ds)) OR (endIndex = MAX(SIZE))) THEN
+		IF (endIndex = MAX(SIZE)) THEN endIndex := LEN(ds) - 1; END;
 		FOR i := startIndex TO endIndex DO
 			IF (flag IN ds[i].flags) THEN INC(result); END;
 		END;
@@ -970,7 +969,7 @@ BEGIN
 END GetNumberOf;
 
 PROCEDURE ClearFlag*(flag : LONGINT; ds : DatasetDescriptor);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	IF (ds # NIL) THEN
 		FOR i := 0 TO LEN(ds)-1 DO
@@ -990,7 +989,7 @@ BEGIN
 END RMax;
 
 PROCEDURE CopyDatasetDescriptor*(ds : DatasetDescriptor) : DatasetDescriptor;
-VAR result : DatasetDescriptor; i : LONGINT;
+VAR result : DatasetDescriptor; i : SIZE;
 BEGIN
 	IF ds # NIL THEN
 		NEW(result, LEN(ds));
@@ -1013,5 +1012,4 @@ BEGIN
 END WMDiagramComponents.
 
 System.Free WMDiagramComponents ~
-
 

@@ -249,7 +249,7 @@ VAR
 	END NewExt;
 
 	PROCEDURE DoubleStructArr( VAR x: StructArr );
-	VAR i: LONGINT;  h: StructArr;
+	VAR i: SIZE;  h: StructArr;
 	BEGIN
 		i := LEN( x^ );  h := x;  NEW( x, 2 * i );
 		ASSERT ( x # NIL );
@@ -257,7 +257,7 @@ VAR
 	END DoubleStructArr;
 
 	PROCEDURE DoubleModArr( VAR x: ModArr );
-	VAR i: LONGINT;  h: ModArr;
+	VAR i: SIZE;  h: ModArr;
 	BEGIN
 		i := LEN( x^ );  h := x;  NEW( x, 2 * i );
 		ASSERT ( x # NIL );

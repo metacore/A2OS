@@ -33,7 +33,7 @@ TYPE
 		fp*: HUGEINT; 
 		name*{UNTRACED} : DynamicName; 
 		adr*: ADDRESS; 
-		exports*: LONGINT; 
+		exports*: SIZE; 
 		dsc*{UNTRACED} : ExportArray; 
 	END; 
 
@@ -45,7 +45,6 @@ TYPE
 
 	TypeDesc* = POINTER TO RECORD 
 		descSize-: SIZE; 
-		sentinel-: LONGINT; 
 		tag-: ADDRESS; 
 		flags-: SET; 
 		mod-{UNTRACED} : Module; 
@@ -74,8 +73,7 @@ TYPE
 	VAR 
 		next*: Module; 
 		name*: Name; 
-		init, published: BOOLEAN; 
-		refcnt*: LONGINT; 
+		refcnt*: SIZE; 
 		sb*: ADDRESS; 
 		entry*: POINTER TO ARRAY OF ADDRESS; 
 		command*: POINTER TO ARRAY OF Command; 
@@ -83,14 +81,15 @@ TYPE
 		typeInfo*: POINTER TO ARRAY OF TypeDesc; 
 		module*: POINTER TO ARRAY OF Module; 
 		procTable*: ProcedureDescs; 
-		data*, code*, staticTypeDescs*, refs*: Bytes; 
+		data*, code*, refs*: Bytes; 
 		export*: ExportDesc; 
 		term*: TerminationHandler; 
 		exTable*: ExceptionTable; 
 		internal-: POINTER TO ARRAY OF ANY; 
-		crc*: LONGINT; 
 		body*: PROCEDURE ; 
 		flags*: SET; 
+		crc*: LONGINT; 
+		init, published: BOOLEAN; 
 
 		PROCEDURE ^ FindRoots*; 
 	END Module; 
@@ -101,10 +100,10 @@ TYPE
 VAR 
 	extension-: ARRAY MaxObjFormats OF ARRAY 8 OF CHAR; 
 	loader: ARRAY MaxObjFormats OF LoaderProc; 
-	numLoaders: LONGINT; 
+	numLoaders: SIZE; 
 	freeRoot*: Module; 
 	root-: Module; 
-	shutdown*: LONGINT; 
+	shutdown*: WORD; 
 	trace: BOOLEAN; 
 	register: RECORD 
 		first{UNTRACED} , last{UNTRACED} : Module; 
@@ -135,7 +134,7 @@ VAR
 	PROCEDURE ^ FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer; 
 	PROCEDURE ^ InstallTermHandler*(h: TerminationHandler); 
 	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
-	PROCEDURE ^ Shutdown*(code: LONGINT); 
+	PROCEDURE ^ Shutdown*(code: WORD); 
 	PROCEDURE ^ IsExceptionHandled*(VAR pc, fp: ADDRESS; deep: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ GetExceptionHandler*(pc: ADDRESS): ADDRESS; 
 	PROCEDURE ^ Initialized*(m: Module): BOOLEAN; 

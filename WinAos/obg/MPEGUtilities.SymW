@@ -76,10 +76,10 @@ TYPE
 		last: LONGINT; 
 		bitIndex: LONGINT; 
 		buffer: ARRAY 8 OF CHAR; 
-		bufAdr: LONGINT; 
+		bufAdr: ADDRESS; 
 		input: Codecs.DemuxStream; 
 		eof: BOOLEAN; 
-		bitsLeft: LONGINT; 
+		bitsLeft: SIZE; 
 		len: LONGINT; 
 		i: LONGINT; 
 
@@ -133,27 +133,27 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Convert*(src: PointerToArrayOfCHAR; srcYBaseOffset: LONGINT; yStride: LONGINT; srcUBaseOffset, srcVBaseOffset, uvStride: LONGINT; img: Raster.Image; width, height, dstStride: LONGINT); 
-		PROCEDURE ^ ConvertYUVToRGB565MMX(puc: PointerToArrayOfCHAR; pucYBaseOffset: LONGINT; strideY: LONGINT; pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT; pucOut: Raster.Image; widthY, heightY, strideOut: LONGINT); 
-		PROCEDURE ^ ScanLine565MMX(horizCount, pucV, pucU, pucY, pucOut: LONGINT; mmxConsts: LONGINT); 
-		PROCEDURE ^ ConvertYUVToRGB565(puc: PointerToArrayOfCHAR; pucYBaseOffset: LONGINT; strideY: LONGINT; pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT; pucOut: Raster.Image; widthY, heightY, strideOut: LONGINT); 
-		PROCEDURE ^ ConvertYUVToRGB888(puc: PointerToArrayOfCHAR; pucYBaseOffset: LONGINT; strideY: LONGINT; pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT; pucOut: Raster.Image; widthY, heightY, strideOut: LONGINT); 
+		PROCEDURE ^ ConvertYUVToRGB565MMX(puc: PointerToArrayOfCHAR; pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS; strideY, strideUV: SIZE; pucOut: Raster.Image; widthY, heightY, strideOut: LONGINT); 
+		PROCEDURE ^ ScanLine565MMX(horizCount: SIZE; pucV, pucU, pucY, pucOut, mmxConsts: ADDRESS); 
+		PROCEDURE ^ ConvertYUVToRGB565(puc: PointerToArrayOfCHAR; pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS; strideY: SIZE; strideUV: SIZE; pucOut: Raster.Image; widthY, heightY, strideOut: LONGINT); 
+		PROCEDURE ^ ConvertYUVToRGB888(puc: PointerToArrayOfCHAR; pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS; strideY, strideUV: SIZE; pucOut: Raster.Image; widthY, heightY, strideOut: LONGINT); 
 	END ColorSpace; 
 
 	BlockActions* = OBJECT 
 
-		PROCEDURE ^ ClearBlock*(dest: PointerToArrayOfCHAR; destOffs, incr: LONGINT); 
+		PROCEDURE ^ ClearBlock*(dest: PointerToArrayOfCHAR; destOffs, incr: SIZE); 
 		PROCEDURE ^ ClearBlockLongint*(block: PointerToArrayOfLONGINT); 
 		PROCEDURE ^ ClearBlockGeneric(block: PointerToArrayOfLONGINT); 
-		PROCEDURE ^ ClearBlockMMX(dst: LONGINT); 
-		PROCEDURE ^ CopyBlock*(src, dest: PointerToArrayOfCHAR; srcOffs, destOffs, srcIncr, destIncr, lines: LONGINT); 
+		PROCEDURE ^ ClearBlockMMX(dst: ADDRESS); 
+		PROCEDURE ^ CopyBlock*(src, dest: PointerToArrayOfCHAR; srcOffs, destOffs, srcIncr, destIncr, lines: SIZE); 
 		PROCEDURE ^ MoveBlockOverwrite*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: LONGINT); 
 		PROCEDURE ^ MoveBlockInterp*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: LONGINT); 
-		PROCEDURE ^ TransferIDCTAdd*(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT); 
-		PROCEDURE ^ TransferIDCTCopy*(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT); 
-		PROCEDURE ^ TransferIDCTAddGeneric(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT); 
-		PROCEDURE ^ TransferIDCTAddMMX(source, dest, stride: LONGINT); 
-		PROCEDURE ^ TransferIDCTCopyGeneric(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: LONGINT); 
-		PROCEDURE ^ TransferIDCTCopyMMX(source, dest, stride: LONGINT); 
+		PROCEDURE ^ TransferIDCTAdd*(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopy*(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTAddGeneric(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTAddMMX(source, dest: ADDRESS; stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopyGeneric(source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE); 
+		PROCEDURE ^ TransferIDCTCopyMMX(source, dest: ADDRESS; stride: SIZE); 
 	END BlockActions; 
 VAR 
 	IdctBorder*: POINTER TO ARRAY OF LONGINT; 

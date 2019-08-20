@@ -5,7 +5,7 @@ CONST
 
 TYPE
 (* converts a 16.16 fixpoint integer to float *)
-PROCEDURE FixpToFloat*(x: LONGINT): REAL;
+PROCEDURE FixpToFloat*(x: SIZE): REAL;
 BEGIN
 	RETURN (x / FIXPOINT);
 END FixpToFloat;

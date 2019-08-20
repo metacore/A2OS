@@ -66,7 +66,7 @@ TYPE
 		END Close;
 
 		(** If Connection down, Receive tries to connect again **)
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; off, len: LONGINT; VAR received: LONGINT; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR received: SIZE; VAR res: WORD);
 		BEGIN{EXCLUSIVE}
 			received := 0;
 			res := TCP.NotConnected;
@@ -87,7 +87,7 @@ TYPE
 		END Receive;
 
 		(** if the connection is down Send tries to connect again **)
-		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; off, len: LONGINT; VAR res: WORD);
+		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR res: WORD);
 		BEGIN{EXCLUSIVE}
 			res := TCP.NotConnected;
 			IF off < 0 THEN

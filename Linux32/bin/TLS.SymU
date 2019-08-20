@@ -115,7 +115,7 @@ TYPE
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Inc; 
-		PROCEDURE ^ GetBytes(VAR buf: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ GetBytes(VAR buf: ARRAY OF CHAR; ofs: SIZE); 
 	END DoubleLong; 
 
 	PHash = OBJECT 
@@ -123,7 +123,7 @@ TYPE
 		hMac: HMAC.HMac; 
 
 		PROCEDURE ^  & Init*(hashname: ARRAY OF CHAR); 
-		PROCEDURE ^ Expand(VAR secret, seed, outbuf: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT); 
+		PROCEDURE ^ Expand(VAR secret, seed, outbuf: ARRAY OF CHAR; secretLen, seedLen, outLen: SIZE); 
 	END PHash; 
 
 	PRF = OBJECT 
@@ -132,19 +132,19 @@ TYPE
 		pHash: PHash; 
 
 		PROCEDURE ^  & Init*(CONST algorithm: ARRAY OF CHAR); 
-		PROCEDURE ^ GetBytes(VAR secret, seed, outbuf: ARRAY OF CHAR; CONST label: ARRAY OF CHAR; secretLen, seedLen, outLen: LONGINT); 
+		PROCEDURE ^ GetBytes(VAR secret, seed, outbuf: ARRAY OF CHAR; CONST label: ARRAY OF CHAR; secretLen, seedLen, outLen: SIZE); 
 	END PRF; 
 
 	Policy* = OBJECT 
 	VAR 
 		cipherSuites-: ARRAY Suites OF LONGINT; 
-		nofCipherSuites-: LONGINT; 
+		nofCipherSuites-: SIZE; 
 		sessionResumptionEnabled-: BOOLEAN; 
 		sessionLifetime-: LONGINT; 
 		version-: ARRAY 2 OF CHAR; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetCipherSuites*(VAR s: ARRAY OF LONGINT; n: LONGINT); 
+		PROCEDURE ^ SetCipherSuites*(VAR s: ARRAY OF LONGINT; n: SIZE); 
 		PROCEDURE ^ IsSupported*(s: LONGINT): BOOLEAN; 
 		PROCEDURE ^ EnableSessionResumption*(enable: BOOLEAN); 
 		PROCEDURE ^ SetSessionLifetime*(t: LONGINT); 
@@ -154,7 +154,7 @@ TYPE
 	Session = OBJECT {EXCLUSIVE} 
 	VAR 
 		id: ARRAY 32 OF CHAR; 
-		idLength: LONGINT; 
+		idLength: SIZE; 
 		resumable: BOOLEAN; 
 		cipherSuite: LONGINT; 
 		preMasterSecret, masterSecret-: ARRAY 48 OF CHAR; 
@@ -162,9 +162,9 @@ TYPE
 		timer: Kernel.Timer; 
 		next: Session; 
 
-		PROCEDURE ^  & Init*(caching: BOOLEAN; VAR data: ARRAY OF CHAR; ofs, len, lifetime: LONGINT); 
+		PROCEDURE ^  & Init*(caching: BOOLEAN; VAR data: ARRAY OF CHAR; ofs, len: SIZE; lifetime: LONGINT); 
 		PROCEDURE ^ Invalidate; 
-		PROCEDURE ^ SetPreMasterSecret(data: ARRAY OF CHAR; ofs: LONGINT); 
+		PROCEDURE ^ SetPreMasterSecret(data: ARRAY OF CHAR; ofs: SIZE); 
 	BEGIN{ACTIVE} 
 	END Session; 
 
@@ -173,7 +173,7 @@ TYPE
 		policy-: Policy; 
 		rsaCertificate: ARRAY 10000 OF CHAR; 
 		rsaPrivateKey, rsaPublicKey: CryptoRSA.Key; 
-		lengthOfRsaCertificate: LONGINT; 
+		lengthOfRsaCertificate: SIZE; 
 		sessionCache: ARRAY SessionHashtableSize OF Session; 
 		timer: Kernel.Timer; 
 		active: BOOLEAN; 
@@ -185,9 +185,9 @@ TYPE
 		PROCEDURE ^ GetRsaPublicKey*; 
 		PROCEDURE ^ PrintRsaCertificate*; 
 		PROCEDURE ^ GetNewServerSession*(): Session; 
-		PROCEDURE ^ FindSessionByID*(VAR data: ARRAY OF CHAR; ofs, idLen: LONGINT): Session; 
+		PROCEDURE ^ FindSessionByID*(VAR data: ARRAY OF CHAR; ofs, idLen: SIZE): Session; 
 		PROCEDURE ^ StoreSession(s: Session); 
-		PROCEDURE ^ EqualSessionID(VAR data1, data2: ARRAY OF CHAR; ofs1, ofs2, len: LONGINT): BOOLEAN; 
+		PROCEDURE ^ EqualSessionID(VAR data1, data2: ARRAY OF CHAR; ofs1, ofs2, len: SIZE): BOOLEAN; 
 		PROCEDURE ^ DeleteUnresumableSessions(s: Session): Session; 
 		PROCEDURE ^ CleanUpSessionCache; 
 	BEGIN{ACTIVE} 
@@ -225,40 +225,40 @@ TYPE
 		PROCEDURE ^ Accept*(VAR client: TCP.Connection; VAR res: WORD); 
 		PROCEDURE ^ Connect*; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^ GenerateMasterSecret; 
 		PROCEDURE ^ GenerateKeys; 
 		PROCEDURE ^ InitializeConnectionState(state: ConnectionState; sp: SecurityParameters); 
 		PROCEDURE ^ PrepareConnectionState(state: ConnectionState; cipherSuite: LONGINT; VAR res: WORD); 
 		PROCEDURE ^ PrepareSecurityParameters(sp: SecurityParameters; cipherSuite: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ SendRecord(VAR data: ARRAY OF CHAR; contentType, ofs, len: LONGINT); 
+		PROCEDURE ^ SendRecord(VAR data: ARRAY OF CHAR; contentType, ofs, len: SIZE); 
 		PROCEDURE ^ ReceiveRecord; 
 		PROCEDURE ^ SendChangeCipherSpec; 
-		PROCEDURE ^ ReceiveChangeCipherSpec(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
-		PROCEDURE ^ SendHandshake(VAR data: ARRAY OF CHAR; hsType, ofs, len: LONGINT); 
-		PROCEDURE ^ ReceiveHandshake(VAR data: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ ReceiveV2Handshake(VAR data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveChangeCipherSpec(VAR data: ARRAY OF CHAR; ofs: SIZE); 
+		PROCEDURE ^ SendHandshake(VAR data: ARRAY OF CHAR; hsType: LONGINT; ofs, len: SIZE); 
+		PROCEDURE ^ ReceiveHandshake(VAR data: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ ReceiveV2Handshake(VAR data: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ StartHandshake; 
-		PROCEDURE ^ ReceiveClientHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
+		PROCEDURE ^ ReceiveClientHello(VAR data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT; 
 		PROCEDURE ^ SendClientHello(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
-		PROCEDURE ^ ReceiveV2ClientHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
-		PROCEDURE ^ ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
-		PROCEDURE ^ SendServerHello(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
-		PROCEDURE ^ SendClientKeyExchange(VAR data: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
-		PROCEDURE ^ ReceiveClientKeyExchange(CONST data: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ ReceiveCertificate(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
-		PROCEDURE ^ SendCertificate(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
-		PROCEDURE ^ SendServerHelloDone(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
-		PROCEDURE ^ ReceiveServerHelloDone(CONST data: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
-		PROCEDURE ^ SendFinished(VAR data: ARRAY OF CHAR; ofs: LONGINT); 
-		PROCEDURE ^ ReceiveFinished(CONST data: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ ReceiveAlert(VAR data: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ ReceiveV2ClientHello(VAR data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT; 
+		PROCEDURE ^ ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT; 
+		PROCEDURE ^ SendServerHello(VAR data: ARRAY OF CHAR; ofs: SIZE); 
+		PROCEDURE ^ SendClientKeyExchange(VAR data: ARRAY OF CHAR; ofs: SIZE): LONGINT; 
+		PROCEDURE ^ ReceiveClientKeyExchange(CONST data: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ ReceiveCertificate(VAR data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT; 
+		PROCEDURE ^ SendCertificate(VAR data: ARRAY OF CHAR; ofs: SIZE); 
+		PROCEDURE ^ SendServerHelloDone(VAR data: ARRAY OF CHAR; ofs: SIZE); 
+		PROCEDURE ^ ReceiveServerHelloDone(CONST data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT; 
+		PROCEDURE ^ SendFinished(VAR data: ARRAY OF CHAR; ofs: SIZE); 
+		PROCEDURE ^ ReceiveFinished(CONST data: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ ReceiveAlert(VAR data: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ ReceiveWarning(desc: LONGINT); 
 		PROCEDURE ^ ReceiveError(alertType: LONGINT); 
 		PROCEDURE ^ SendWarning(alertType: LONGINT); 
 		PROCEDURE ^ SendError(alertType: LONGINT); 
-		PROCEDURE ^ Transition(VAR data: ARRAY OF CHAR; action, subAction, ofs, len: LONGINT); 
+		PROCEDURE ^ Transition(VAR data: ARRAY OF CHAR; action, subAction: LONGINT; ofs, len: SIZE); 
 		PROCEDURE ^ Create32RandomBytes(VAR data: ARRAY OF CHAR); 
 		PROCEDURE ^ PrintDirection(send: BOOLEAN); 
 	BEGIN{ACTIVE} 

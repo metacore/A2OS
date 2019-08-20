@@ -73,8 +73,9 @@ TYPE
 		PROCEDURE GetSelection*() : Selection;
 		VAR
 			processes : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
-			nofProcesses : LONGINT;
-			scol, srow, ecol, erow, id, i : LONGINT;
+			nofProcesses : SIZE;
+			scol, srow, ecol, erow, i : SIZE;
+			id: WORD;
 			selection : Selection;
 			str : Strings.String;
 		BEGIN
@@ -139,7 +140,7 @@ TYPE
 		VAR
 			grid : WMStringGrids.StringGrid;
 			str : ARRAY 256 OF CHAR;
-			i, dx, dy, minWidth : LONGINT;
+			i : WORD; dx, dy, minWidth : SIZE;
 			f : WMGraphics.Font;
 		BEGIN
 			NEW(grid); grid.alignment.Set(WMComponents.AlignClient);
@@ -185,7 +186,7 @@ TYPE
 		END Pause;
 
 		PROCEDURE Resized*;
-		VAR width, height, w, add, i : LONGINT; newColWidth : WMGrids.Spacings;
+		VAR width, height, w, add : SIZE; i : SIZE; newColWidth : WMGrids.Spacings;
 		BEGIN
 			width := bounds.GetWidth(); height := bounds.GetHeight();
 			NEW(newColWidth, LEN(colWidth));
@@ -314,10 +315,11 @@ TYPE
 		END Update;
 
 		PROCEDURE Refresh;
-		VAR proc : ProcessInfo.IsGreaterThanProc;
+		VAR proc : ProcessInfo.IsGreaterThanProc; nofProcesses : SIZE;
 		BEGIN
 			Acquire;
 			ProcessInfo.GetProcesses(processes, nofProcesses);
+			SELF.nofProcesses := LONGINT (nofProcesses);
 			CASE sortI OF
 			| ID: proc := ProcessInfo.SortByID;
 			| Priority : proc := ProcessInfo.SortByPriority;
@@ -394,7 +396,7 @@ TYPE
 		toolbar- : WMStandardComponents.Panel;
 
 		PROCEDURE &Init*;
-		VAR font : WMGraphics.Font; dx, dy : LONGINT; sortInfo : SortInfo;
+		VAR font : WMGraphics.Font; dx, dy : SIZE; sortInfo : SortInfo;
 		BEGIN
 			Init^;
 			SetNameAsString(StrProcessManager);
@@ -465,7 +467,7 @@ TYPE
 		END Decision;
 
 		PROCEDURE HaltThread(unbreakable : BOOLEAN);
-		VAR selection : Selection; i : LONGINT;
+		VAR selection : Selection; i : SIZE;
 		BEGIN
 			selection := processSelector.GetSelection();
 			IF (selection # NIL) THEN
@@ -495,7 +497,7 @@ TYPE
 		END HandleUnbreakableHalt;
 
 		PROCEDURE HandleSort(sender, data : ANY);
-		VAR gx, gy : LONGINT;
+		VAR gx, gy : SIZE;
 		BEGIN
 			sortBtn.ToWMCoordinates(0, sortBtn.bounds.GetBottom(), gx, gy);
 			sortPopup.Popup(gx, gy);
@@ -513,7 +515,7 @@ TYPE
 		END HandleSortPopup;
 
 		PROCEDURE HandleShowStack(sender, data : ANY);
-		VAR selection : Selection; w: Streams.Writer; i : LONGINT;
+		VAR selection : Selection; w: Streams.Writer; i : SIZE;
 		BEGIN
 			selection := processSelector.GetSelection();
 			IF (selection # NIL) THEN
@@ -528,7 +530,7 @@ TYPE
 		END HandleShowStack;
 
 		PROCEDURE HandleCpuLoad(sender, data : ANY);
-		VAR selection : Selection; i : LONGINT;
+		VAR selection : Selection; i : SIZE;
 		BEGIN
 			selection := processSelector.GetSelection();
 			IF (selection # NIL) THEN
@@ -546,7 +548,7 @@ VAR
 	StrProcessSelector, StrProcessManager : Strings.String;
 	PrototypeSort : WMProperties.Int32Property;
 
-PROCEDURE GetTitleStr(col : LONGINT; VAR x : ARRAY OF CHAR);
+PROCEDURE GetTitleStr(col : WORD; VAR x : ARRAY OF CHAR);
 BEGIN
 	CASE col OF
 		| 0 : COPY("PID", x)

@@ -9,7 +9,7 @@ TYPE
 	FontInfo* = OBJECT
 	VAR
 		name* : String;
-		size* : LONGINT;
+		size* : SIZE;
 		style* : SET;
 	END FontInfo;
 
@@ -31,7 +31,7 @@ TYPE
 		defaultFont : WMGraphics.Font;
 		font : WMGraphics.Font; (* set by the enumerator *)
 		searchName : ARRAY 256 OF CHAR;
-		searchSize : LONGINT;
+		searchSize : SIZE;
 		searchStyle : SET;
 		found : BOOLEAN;
 		exactLoaders, approximateLoaders : LoaderInfo;
@@ -143,7 +143,7 @@ TYPE
 			RETURN font;
 		END Load;
 
-		PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET) : WMGraphics.Font;
+		PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : WMGraphics.Font;
 		VAR tf,f : WMGraphics.Font; l : LoaderInfo; fi : FontInfo; i: LONGINT;
 		BEGIN {EXCLUSIVE}
 			font := defaultFont;

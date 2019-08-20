@@ -107,7 +107,7 @@ CONST
 				descriptors*: POINTER TO ARRAY OF PersistentObjectDescriptor;
 
 			PROCEDURE &Init*(CONST descs: ARRAY OF PersistentObjectDescriptor);
-			VAR i: LONGINT;
+			VAR i: SIZE;
 			BEGIN
 				NEW(descriptors, LEN(descs));
 				FOR i := 0 TO LEN(descs)-1 DO
@@ -115,12 +115,12 @@ CONST
 				END
 			END Init;
 
-			PROCEDURE GetCount*() : LONGINT;
+			PROCEDURE GetCount*() : SIZE;
 			BEGIN
 				RETURN LEN(descriptors^)
 			END GetCount;
 
-			PROCEDURE GetItem*(i: LONGINT) : PersistentObjectDescriptor;
+			PROCEDURE GetItem*(i: SIZE) : PersistentObjectDescriptor;
 			BEGIN
 				RETURN descriptors[i]
 			END GetItem;
@@ -159,7 +159,7 @@ CONST
 
 		SnapShotManager = OBJECT
 			VAR timer: Kernel.Timer; alive, terminated: BOOLEAN;
-				i: LONGINT; p: ANY; prevSys: PrevalenceSystem;
+				i: SIZE; p: ANY; prevSys: PrevalenceSystem;
 			BEGIN {ACTIVE}
 				IF (DEBUG) THEN KernelLog.String("Prevalence System: Snapshot Manager started."); KernelLog.Ln END;
 				NEW(timer); alive := TRUE; terminated := FALSE;
@@ -206,7 +206,7 @@ CONST
 		(**  the prevalence system name, the snapshot file name and the log file name must be different to
 		 * those of the other present prevalence systems. *)
 		PROCEDURE &Init*(CONST name, snapShotFn, logFn: ARRAY OF CHAR);
-		VAR i: LONGINT; p: ANY; prevSys: PrevalenceSystem;
+		VAR i: SIZE; p: ANY; prevSys: PrevalenceSystem;
 		BEGIN
 			LockPrevSystemList;
 			prevSystemList.Lock;
@@ -333,7 +333,7 @@ CONST
 		END GetDescriptorByObject;
 
 		PROCEDURE FindPersistentObjects*(pred: FilterPredicate) : PersistentObjectList;
-		VAR i: LONGINT; p: ANY; wrapper: PersistentObjectWrapper; obj: PersistentObject;
+		VAR i: SIZE; p: ANY; wrapper: PersistentObjectWrapper; obj: PersistentObject;
 			list: TFClasses.List; persList: PersistentObjectList;
 		BEGIN
 			NEW(list);
@@ -419,7 +419,7 @@ CONST
 
 		PROCEDURE CompactLogFile;
 		VAR file, newfile: Files.File; doc: XML.Document; root, elem: XML.Element; enum: XMLObjects.Enumerator;
-			p: ANY; oidString, savingCounterString: Strings.String; i, oid, savingCounter: LONGINT;
+			p: ANY; oidString, savingCounterString: Strings.String; i: SIZE; oid, savingCounter: LONGINT;
 			wrapper: PersistentObjectWrapper; removeList: TFClasses.List; fwriter: Files.Writer; writer: Streams.Writer;
 			elemName, rootName: Strings.String;
 		BEGIN
@@ -491,10 +491,10 @@ CONST
 		END CompactLogFile;
 
 		PROCEDURE GarbageCollect*;
-		VAR i: LONGINT; pObj: ANY; wrapper: PersistentObjectWrapper; removeList: TFClasses.List;
+		VAR i: SIZE; pObj: ANY; wrapper: PersistentObjectWrapper; removeList: TFClasses.List;
 			(* get the registered wrapper without locking the persistentObjectList, since it is already locked by outer procedure *)
 			PROCEDURE GetWrapperForObj(obj: PersistentObject) : PersistentObjectWrapper;
-			VAR k: LONGINT; ptr: ANY; wpr: PersistentObjectWrapper;
+			VAR k: SIZE; ptr: ANY; wpr: PersistentObjectWrapper;
 			BEGIN
 				FOR k := 0 TO persistentObjectList.GetCount()-1 DO
 					ptr := persistentObjectList.GetItem(k); wpr := ptr(PersistentObjectWrapper); (* wpr # NIL *)
@@ -506,7 +506,7 @@ CONST
 			END GetWrapperForObj;
 
 			PROCEDURE MarkReachableObjects(obj: PersistentObject);
-			VAR k: LONGINT; list: PersistentObjectList; wpr: PersistentObjectWrapper;
+			VAR k: SIZE; list: PersistentObjectList; wpr: PersistentObjectWrapper;
 			BEGIN (* w # NIL & w.instance # NIL *)
 				list := obj.GetReferrencedObjects();
 				IF (list # NIL) THEN
@@ -562,7 +562,7 @@ CONST
 
 		PROCEDURE PersistAllObjects; (* store a snapshot of the prevalence system to an XML file *)
 		VAR fw: Files.Writer; w: Streams.Writer; newFile: Files.File; newRoot, elem: XML.Element;
-			i: LONGINT; pObj: ANY; wrapper: PersistentObjectWrapper; instance: PersistentObject;
+			i: SIZE; pObj: ANY; wrapper: PersistentObjectWrapper; instance: PersistentObject;
 			oldDocument: XML.Document; oidCounterString: ARRAY 14 OF CHAR;
 
 			PROCEDURE GetPreviousSnapShotState(oid: LONGINT) : XML.Element;
@@ -731,7 +731,7 @@ CONST
 		END GetXMLInstanceDeletion;
 
 		PROCEDURE LogXMLElement(elem: XML.Element);
-		VAR file: Files.File; fwriter: Files.Writer; writer: Streams.Writer; endPos, endTagLength: LONGINT;
+		VAR file: Files.File; fwriter: Files.Writer; writer: Streams.Writer; endPos: Files.Size; endTagLength: SIZE;
 		BEGIN
 			LockLoggingFile;
 			file := Files.Old(LogFileName^);
@@ -848,7 +848,7 @@ CONST
 
 			PROCEDURE RestorePersistentObject;
 			VAR pContent: ANY; content: XML.Content; contentEnum: XMLObjects.Enumerator; contentList: TFClasses.List;
-				persObj: PersistentObject; container: XML.Container; j: LONGINT;
+				persObj: PersistentObject; container: XML.Container; j: SIZE;
 			BEGIN
 				persObj := GetPersistentObject(oid);
 				IF (persObj # NIL) THEN
@@ -1079,7 +1079,7 @@ CONST
 		END RestoreAllObjects;
 
 		PROCEDURE GetRegisteredWrapperByOid(oid: LONGINT) : PersistentObjectWrapper;
-		VAR i: LONGINT; p: ANY; wrapper: PersistentObjectWrapper;
+		VAR i: SIZE; p: ANY; wrapper: PersistentObjectWrapper;
 		BEGIN
 			persistentObjectList.Lock;
 			FOR i := 0 TO persistentObjectList.GetCount()-1 DO
@@ -1095,7 +1095,7 @@ CONST
 		END GetRegisteredWrapperByOid;
 
 		PROCEDURE GetRegisteredWrapper(obj: PersistentObject) : PersistentObjectWrapper;
-		VAR i: LONGINT; p: ANY; wrapper: PersistentObjectWrapper;
+		VAR i: SIZE; p: ANY; wrapper: PersistentObjectWrapper;
 		BEGIN
 			IF (obj # NIL) THEN
 				persistentObjectList.Lock;
@@ -1126,7 +1126,7 @@ CONST
 		lockPrevSystemList: BOOLEAN;
 
 	PROCEDURE GetPrevalenceSystem*(CONST name: ARRAY OF CHAR) : PrevalenceSystem;
-	VAR i: LONGINT; p: ANY; prevSys: PrevalenceSystem;
+	VAR i: SIZE; p: ANY; prevSys: PrevalenceSystem;
 	BEGIN
 		prevSystemList.Lock;
 		FOR i := 0 TO prevSystemList.GetCount()-1 DO
@@ -1201,7 +1201,7 @@ CONST
 		lockParsingScanning := FALSE
 	END UnlockParsingScanning;
 
-	PROCEDURE ReportXMLParserScannerError(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); (* Error handler for the XML parser *)
+	PROCEDURE ReportXMLParserScannerError(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); (* Error handler for the XML parser *)
 	VAR w: Streams.StringWriter;
 	BEGIN
 		xmlParserErrorOccurred := TRUE;
@@ -1220,7 +1220,7 @@ CONST
 	END IsModuleLoaded;
 
 	PROCEDURE FindRegisteredDescriptor(CONST moduleName, objectName: ARRAY OF CHAR) : PersistentObjectDescriptor;
-	VAR p: ANY; i: LONGINT; desc: PersistentObjectDescriptor;
+	VAR p: ANY; i: SIZE; desc: PersistentObjectDescriptor;
 	BEGIN
 		persistentObjectDescs.Lock;
 		FOR i := 0 TO persistentObjectDescs.GetCount()-1 DO
@@ -1235,7 +1235,7 @@ CONST
 	END FindRegisteredDescriptor;
 
 	PROCEDURE RegisterDescriptor(desc: PersistentObjectDescriptor);
-	VAR pos: LONGINT;
+	VAR pos: SIZE;
 	BEGIN {EXCLUSIVE}
 		IF (desc # NIL) THEN
 			persistentObjectDescs.Lock;
@@ -1286,7 +1286,7 @@ CONST
 	END ReadRegisteredModules;
 
 	PROCEDURE RegisterModuleByName(moduleName: Strings.String);
-	VAR module: Modules.Module; factory : PersistentObjectDescSetFactory; i: LONGINT; res: WORD;
+	VAR module: Modules.Module; factory : PersistentObjectDescSetFactory; i: SIZE; res: WORD;
 		msg: ARRAY 1024 OF CHAR; desc: PersistentObjectDescriptor;
 		descList: PersistentObjectDescSet;
 	BEGIN

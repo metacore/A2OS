@@ -8,7 +8,7 @@ IMPORT
 TYPE
 	FrameHandler* = PROCEDURE {DELEGATE} (buffer : Raster.Image);
 	PreviewWindow* = OBJECT (WMWindowManager.BufferWindow);
-		PROCEDURE &New*(width, height : LONGINT);
+		PROCEDURE &New*(width, height : SIZE);
 		BEGIN
 			Init(width, height, FALSE);
 			WMWindowManager.AddWindow(SELF, 200, 200);
@@ -17,7 +17,7 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()));
 		END New;
 		(* Overwrite draw procedure because we do not want any interpolation *)
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : WORD);
 		BEGIN
 			Draw^(canvas, w, h, 0);
 		END Draw;
@@ -144,7 +144,7 @@ VAR
 PROCEDURE SimulateImage*(context : Commands.Context); (** filename ~ *)
 VAR
 	fn, name : Files.FileName;
-	res: WORD; w, h, x : LONGINT;
+	res, x: WORD; w, h : SIZE;;
 	dec : Codecs.ImageDecoder;
 	rdr : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;
@@ -194,7 +194,7 @@ BEGIN
 END GetFreq;
 
 PROCEDURE {WINAPI} FrameReceived (hWnd : VfW.HWND; VAR lpVHdr : VfW.VHdr) : User32.LResult;
-VAR y : LONGINT;
+VAR y : SIZE;
 	i : ADDRESS;
 	t0, t1 : HUGEINT;
 	t, f : LONGREAL;

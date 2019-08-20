@@ -17,7 +17,7 @@ TYPE
 
 		PROCEDURE ^ Show(CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Stop; 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
 	BEGIN{ACTIVE} 

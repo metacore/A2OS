@@ -64,7 +64,7 @@ TYPE
 		fileFormat : LONGINT;
 		modified : BOOLEAN;
 		fullScreen-: BOOLEAN;
-		currentWidth, currentHeight: LONGINT;
+		currentWidth, currentHeight: SIZE;
 		XMLdocLayout, XMLdocStyle, XMLdocContent: XML.Document;
 
 
@@ -554,7 +554,7 @@ TYPE
 			SetActive;
 		END PreviewHandler;
 
-		PROCEDURE FileMenuHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE FileMenuHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR rectangle: WMRectangles.Rectangle;
 		BEGIN
 			NEW(popup);
@@ -567,7 +567,7 @@ TYPE
 			popup.Popup(bounds.l + rectangle.l, bounds.t + rectangle.b);
 		END FileMenuHandler;
 
-		PROCEDURE ObjectMenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN);
+		PROCEDURE ObjectMenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN);
 		VAR rectangle: WMRectangles.Rectangle;
 		BEGIN
 			NEW(popup);
@@ -586,7 +586,7 @@ TYPE
 			popup.Popup(bounds.l + rectangle.l, bounds.t + rectangle.b);
 		END ObjectMenuHandler;
 
-		PROCEDURE PageMenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN);
+		PROCEDURE PageMenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN);
 		VAR rectangle: WMRectangles.Rectangle;
 		BEGIN
 			NEW(popup);
@@ -598,7 +598,7 @@ TYPE
 			popup.Popup(bounds.l + rectangle.l, bounds.t + rectangle.b);
 		END PageMenuHandler;
 
-		PROCEDURE MiscMenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN);
+		PROCEDURE MiscMenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN);
 		VAR rectangle: WMRectangles.Rectangle;
 		BEGIN
 			NEW(popup);
@@ -682,7 +682,7 @@ TYPE
 
 		PROCEDURE FullScreenHandler*(sender, data: ANY);
 		VAR rect : WMRectangles.Rectangle;
-			height, width : LONGINT;
+			height, width : SIZE;
 			view : WMWindowManager.ViewPort;
 		BEGIN
 			popup.Close;
@@ -712,7 +712,7 @@ TYPE
 		END FullScreenHandler;
 
 		PROCEDURE EscFullScreen*;
-		VAR height, width : LONGINT;
+		VAR height, width : SIZE;
 		BEGIN
 			IF fullScreen THEN
 				fullScreen := FALSE;
@@ -2111,7 +2111,7 @@ TYPE
 												(* 1 = Animated Bar *)
 												(* 2 = Status Bar *)
 		shown : BOOLEAN;
-		x, y : LONGINT;
+		x, y : SIZE;
 		progress : LONGINT;
 		(* abortProc: PROCEDURE {DELEGATE} ;	*)
 

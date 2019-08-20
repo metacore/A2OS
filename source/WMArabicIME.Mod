@@ -15,7 +15,7 @@ TYPE
 		END GetName;
 
 		(* Map characters from US-Keyboard to arabic keyboard *)
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		VAR multiChar : ARRAY 2 OF LONGINT;
 		BEGIN
 			CASE ucs OF
@@ -152,6 +152,4 @@ System.Free WMArabicIME~
 WMArabicIME.SelectedCharToUCS ~
 
 WMKeyCode.Open ~
-
-
 

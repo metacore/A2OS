@@ -305,6 +305,132 @@ TYPE
 
 	END Integer;
 
+	Hugeint* = OBJECT(Model)
+	VAR
+		value : HUGEINT;
+
+		PROCEDURE &Init*;
+		BEGIN
+			Init^;
+			SetNameAsString(StrHugeint);
+			value := 0;
+			SetGenerator("Models.GenHugeint");
+		END Init;
+
+		PROCEDURE Set*(value : HUGEINT);
+		BEGIN
+			AcquireWrite;
+			IF (SELF.value # value) THEN
+				SELF.value := value;
+				Changed;
+			END;
+			ReleaseWrite;
+		END Set;
+
+		PROCEDURE Get*() : HUGEINT;
+		VAR value : HUGEINT;
+		BEGIN
+			AcquireRead;
+			value := SELF.value;
+			ReleaseRead;
+			RETURN value;
+		END Get;
+
+		PROCEDURE Add*(value : HUGEINT);
+		BEGIN
+			IF (value # 0) THEN
+				AcquireWrite;
+				SELF.value := SELF.value + value;
+				Changed;
+				ReleaseWrite;
+			END;
+		END Add;
+
+		PROCEDURE SetGeneric*(CONST value : Types.Any; VAR res : WORD);
+		VAR newValue : HUGEINT;
+		BEGIN
+			Types.GetHugeint(value, newValue, res);
+			IF (res = Types.Ok) THEN Set(newValue); END;
+		END SetGeneric;
+
+		PROCEDURE GetGeneric*(VAR value : Types.Any; VAR res : WORD);
+		VAR currentValue : HUGEINT;
+		BEGIN
+			currentValue := Get();
+			Types.SetHugeint(value, currentValue, res);
+		END GetGeneric;
+
+		PROCEDURE WriteValue*(w : Streams.Writer; level : LONGINT); (** protected *)
+		BEGIN
+			WriteValue^(w, level);
+			w.Int(value, 0);
+		END WriteValue;
+
+	END Hugeint;
+
+	Size* = OBJECT(Model)
+	VAR
+		value : SIZE;
+
+		PROCEDURE &Init*;
+		BEGIN
+			Init^;
+			SetNameAsString(StrSize);
+			value := 0;
+			SetGenerator("Models.GenSize");
+		END Init;
+
+		PROCEDURE Set*(value : SIZE);
+		BEGIN
+			AcquireWrite;
+			IF (SELF.value # value) THEN
+				SELF.value := value;
+				Changed;
+			END;
+			ReleaseWrite;
+		END Set;
+
+		PROCEDURE Get*() : SIZE;
+		VAR value : SIZE;
+		BEGIN
+			AcquireRead;
+			value := SELF.value;
+			ReleaseRead;
+			RETURN value;
+		END Get;
+
+		PROCEDURE Add*(value : SIZE);
+		BEGIN
+			IF (value # 0) THEN
+				AcquireWrite;
+				SELF.value := SELF.value + value;
+				Changed;
+				ReleaseWrite;
+			END;
+		END Add;
+
+		PROCEDURE SetGeneric*(CONST value : Types.Any; VAR res : WORD);
+		VAR newValue : SIZE;
+		BEGIN
+			Types.GetSize(value, newValue, res);
+			IF (res = Types.Ok) THEN Set(newValue); END;
+		END SetGeneric;
+
+		PROCEDURE GetGeneric*(VAR value : Types.Any; VAR res : WORD);
+		VAR currentValue : SIZE;
+		BEGIN
+			currentValue := Get();
+			Types.SetSize(value, currentValue, res);
+		END GetGeneric;
+
+		PROCEDURE WriteValue*(w : Streams.Writer; level : LONGINT); (** protected *)
+		BEGIN
+			WriteValue^(w, level);
+			w.Int(value, 0);
+		END WriteValue;
+
+	END Size;
+
 TYPE
 
 	Real* = OBJECT(Model)
@@ -838,7 +964,7 @@ TYPE
 
 
 VAR
-	StrBoolean, StrInteger, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer : Strings.String;
+	StrBoolean, StrInteger, StrHugeint, StrSize, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer : Strings.String;
 
 PROCEDURE NewLine*(w : Streams.Writer; level : LONGINT);
 BEGIN
@@ -901,6 +1027,18 @@ BEGIN
 	NEW(integer); RETURN integer;
 END GenInteger;
 
+PROCEDURE GenHugeint*() : XML.Element;
+VAR hugeint : Hugeint;
+BEGIN
+	NEW(hugeint); RETURN hugeint;
+END GenHugeint;
+
+PROCEDURE GenSize*() : XML.Element;
+VAR size : Size;
+BEGIN
+	NEW(size); RETURN size;
+END GenSize;
+
 PROCEDURE GenReal*() : XML.Element;
 VAR real : Real;
 BEGIN
@@ -947,6 +1085,8 @@ PROCEDURE InitStrings;
 BEGIN
 	StrBoolean := Strings.NewString("Boolean");
 	StrInteger := Strings.NewString("Integer");
+	StrHugeint := Strings.NewString("Hugeint");
+	StrSize := Strings.NewString("Size");
 	StrReal := Strings.NewString("Real");
 	StrLongreal := Strings.NewString("Longreal");
 	StrChar := Strings.NewString("Char");

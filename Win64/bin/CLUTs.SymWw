@@ -10,8 +10,8 @@ TYPE
 		cube: POINTER TO ARRAY OF CHAR; 
 	END; 
 
-	PROCEDURE ^ Set*(VAR clut: CLUT; n, col: LONGINT); 
-	PROCEDURE ^ Get*(VAR clut: CLUT; n: LONGINT; VAR col: LONGINT); 
+	PROCEDURE ^ Set*(VAR clut: CLUT; n: SIZE; col: LONGINT); 
+	PROCEDURE ^ Get*(VAR clut: CLUT; n: SIZE; VAR col: LONGINT); 
 	PROCEDURE ^ Init*(VAR clut: CLUT; size, bits: LONGINT); 
 	PROCEDURE ^ Match*(VAR clut: CLUT; col: LONGINT): LONGINT; 
 	PROCEDURE ^ Copy*(from, to: CLUT); 

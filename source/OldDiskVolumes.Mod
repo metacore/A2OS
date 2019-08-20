@@ -182,7 +182,7 @@ BEGIN
 END GetOberonFS;
 
 PROCEDURE InitCache;
-VAR i: LONGINT; str: ARRAY 16 OF CHAR;
+VAR i: SIZE; str: ARRAY 16 OF CHAR;
 BEGIN
 	IF cache = NIL THEN
 		Machine.GetConfig("CacheSize", str);

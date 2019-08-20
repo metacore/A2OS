@@ -80,14 +80,14 @@ TYPE
 	VAR
 
 		(* overwrite PointerDown method *)
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF keys * {0, 1, 2} = {2} THEN 					(* right mouse button pressed *)
 				ShowContextMenu(x, y);
 			END
 		END PointerDown;
 
-		PROCEDURE ShowContextMenu*(x, y :  LONGINT);
+		PROCEDURE ShowContextMenu*(x, y :  SIZE);
 		VAR bimbo : WMPieMenu.Menu;
 			manager : WM.WindowManager;
 			window : WM.Window;

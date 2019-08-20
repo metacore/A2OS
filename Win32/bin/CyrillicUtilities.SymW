@@ -125,7 +125,7 @@ VAR
 	hash: HashTable; 
 	bFirst: BOOLEAN; 
 	setInitDone: SET; 
-	nCollisions: LONGINT; 
+	nCollisions: SIZE; 
 	ucs32Min, ucs32Max: Char32; 
 
 	PROCEDURE ^ hashSearch(encoding: SHORTINT; bAddAllowed: BOOLEAN; ucs32: Char32; VAR ch: CHAR): BOOLEAN; 

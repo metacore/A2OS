@@ -1,7 +1,7 @@
 MODULE UDPChatBase; (** AUTHOR "SAGE"; PURPOSE "UDP Chat base" *)
 
 IMPORT
-	Kernel, Strings, BIT, IO := Streams, IP, FS := Files;
+	Kernel, Strings, IO := Streams, IP, FS := Files;
 
 CONST
 
@@ -231,16 +231,16 @@ TYPE
 	END Users;
 
 	Buffer* = OBJECT (Strings.Buffer)
-		PROCEDURE AddInt* (n, len: LONGINT);
+		PROCEDURE AddInt* (n, len: SIZE);
 		VAR
-			i: INTEGER;
-			b: LONGINT; res: WORD;
+			i: SIZE;
+			b: SIZE; res: WORD;
 			s: ARRAY 4 OF CHAR;
 		BEGIN
 			ASSERT (len <= 4);
 			i := 0; b := 1;
 			WHILE i < len DO
-				s[i] := CHR (BIT.LAND ((n DIV b), 0FFH));
+				s[i] := CHR (n DIV b);
 				b := b * 100H;
 				INC (i);
 			END;

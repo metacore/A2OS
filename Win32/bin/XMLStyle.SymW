@@ -7,7 +7,7 @@ TYPE
 	SelectorRuleSet = RECORD 
 		selector: CSS2.Selector; 
 		ruleSet: CSS2.RuleSet; 
-		order: LONGINT; 
+		order: SIZE; 
 	END; 
 
 	PROCEDURE ^ AttachStyle*(root: XML.Element; css: CSS2.StyleSheet); 

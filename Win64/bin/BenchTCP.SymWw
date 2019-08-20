@@ -14,11 +14,11 @@ TYPE
 	VAR 
 		res: WORD; 
 		c: TCP.Connection; 
-		num, num0: LONGINT; 
+		num, num0: SIZE; 
 		buf: Bytes; 
 		done: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(c: TCP.Connection; buf: Bytes; num: LONGINT); 
+		PROCEDURE ^  & Init*(c: TCP.Connection; buf: Bytes; num: SIZE); 
 		PROCEDURE ^ Join(): WORD; 
 	BEGIN{ACTIVE} 
 	END Sender; 
@@ -27,11 +27,13 @@ TYPE
 	VAR 
 		res: WORD; 
 		c: TCP.Connection; 
-		num, num0, port, total, len: LONGINT; 
+		num, num0: SIZE; 
+		port: LONGINT; 
 		fip: IP.Adr; 
 		timer: Kernel.MilliTimer; 
 		sender: Sender; 
 		server: ARRAY 64 OF CHAR; 
+		total, len: SIZE; 
 		time: HUGEINT; 
 
 		PROCEDURE ^  & Init*(CONST server: ARRAY OF CHAR; num, port: LONGINT); 
@@ -41,7 +43,7 @@ VAR
 	buf: Bytes; 
 
 	PROCEDURE ^ Message(CONST msg1, msg2: ARRAY OF CHAR; res: WORD); 
-	PROCEDURE ^ Report(ms, port, total: LONGINT; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Report(ms, port: LONGINT; total: SIZE; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Discard*(context: Commands.Context); 
 	PROCEDURE ^ Echo*(context: Commands.Context); 
 	PROCEDURE ^ Time*(context: Commands.Context); 

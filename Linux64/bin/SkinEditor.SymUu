@@ -73,7 +73,7 @@ TYPE
 		PROCEDURE ^ StoreHandler(sender, data: ANY); 
 		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ SearchHandler(sender, data: ANY); 
-		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
+		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 		PROCEDURE ^ TextChanged(sender, data: ANY); 
 		PROCEDURE ^ Split(sender, data: ANY); 
 		PROCEDURE ^ BackHandler(sender, data: ANY); 

@@ -1,10 +1,10 @@
-MODULE MailStorage; (** AUTHOR "TF"; PURPOSE "Simple mail storeage"; *)
+MODULE MailStorage; (** AUTHOR "TF"; PURPOSE "Simple mail storage"; *)
 
 IMPORT
 	Streams, Files, KernelLog, Strings;
 
 TYPE IndexEntry* = RECORD
-		from, to : LONGINT;
+		from, to : Streams.Position;
 		hFrom, hTo, hSubject, hDate : ARRAY 64 OF CHAR;
 	END;
 
@@ -53,7 +53,7 @@ TYPE Storage* = OBJECT
 			RETURN with[j] = 0X
 		END Match;
 
-		PROCEDURE ScanMessage(r : Streams.Reader; VAR from, to : LONGINT);
+		PROCEDURE ScanMessage(r : Streams.Reader; VAR from, to : Streams.Position);
 		VAR line : ARRAY 1001 OF CHAR; i : LONGINT;
 		BEGIN
 			hFrom := ""; hTo := ""; hSubject := ""; hDate := "";
@@ -75,7 +75,7 @@ TYPE Storage* = OBJECT
 		END ScanMessage;
 
 		PROCEDURE ScanStorage(r : Streams.Reader);
-		VAR from, to : LONGINT;
+		VAR from, to : Streams.Position;
 		BEGIN
 			nofItems := 0;
 			REPEAT
@@ -92,7 +92,7 @@ TYPE Storage* = OBJECT
 			index := new
 		END GrowIndex;
 
-		PROCEDURE AddIndex(from, to : LONGINT; hFrom, hTo, hSubject, hDate : ARRAY OF CHAR);
+		PROCEDURE AddIndex(from, to : Streams.Position; hFrom, hTo, hSubject, hDate : ARRAY OF CHAR);
 		BEGIN
 			IF nofItems = LEN(index) THEN GrowIndex END;
 			index[nofItems].from := from;
@@ -119,7 +119,7 @@ TYPE Storage* = OBJECT
 			END
 		END GetHeader;
 
-		PROCEDURE ToFile*(nr : LONGINT; filename : ARRAY OF CHAR) : BOOLEAN;
+		PROCEDURE ToFile*(nr : SIZE; filename : ARRAY OF CHAR) : BOOLEAN;
 		VAR f : Files.File; r : Files.Reader; w : Files.Writer; str : ARRAY 1001 OF CHAR;
 		BEGIN
 			IF (nr >= 0) & (nr < nofItems) & (storageFile # NIL) THEN

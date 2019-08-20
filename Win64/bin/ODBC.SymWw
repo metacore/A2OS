@@ -57,7 +57,7 @@ VAR
 	SQLGetStmtOption: PROCEDURE {WINAPI}(hstmt: Kernel32.HANDLE; whichOption: INTEGER; option: ADDRESS):INTEGER; 
 	SQLGetTypeInfo: PROCEDURE {WINAPI}(hstmt: Kernel32.HANDLE; whichType: INTEGER):INTEGER; 
 	SQLParamData: PROCEDURE {WINAPI}(hstmt: Kernel32.HANDLE; dataAdr: ADDRESS):INTEGER; 
-	SQLPutData: PROCEDURE {WINAPI}(hstmt: Kernel32.HANDLE; dataAdr: ADDRESS; dataSize: LONGINT):INTEGER; 
+	SQLPutData: PROCEDURE {WINAPI}(hstmt: Kernel32.HANDLE; dataAdr: ADDRESS; dataSize: SIZE):INTEGER; 
 	SQLSetConnectOption: PROCEDURE {WINAPI}(hdbc: Kernel32.HANDLE; whichOption: INTEGER; option: ADDRESS):INTEGER; 
 	SQLSetStmtOption: PROCEDURE {WINAPI}(hstmt: Kernel32.HANDLE; whichOption: INTEGER; option: ADDRESS):INTEGER; 
 	SQLSpecialColumns: PROCEDURE {WINAPI}(hstmt: Kernel32.HANDLE; whichColType: INTEGER; tableQualifier: ADDRESS; tabelQualifierLen: INTEGER; tableOwner: ADDRESS; tableOwnerLen: INTEGER; tableName: ADDRESS; tableNameLen: INTEGER; scope: INTEGER; nullableCols: INTEGER):INTEGER; 
@@ -117,7 +117,7 @@ VAR
 	PROCEDURE ^ GetStmtOption*(hstmt: HSTMT; whichOption: INTEGER; VAR optValue: ARRAY OF S.BYTE; VAR res: INTEGER); 
 	PROCEDURE ^ GetTypeInfo*(hstmt: HSTMT; whichSQLType: INTEGER; VAR res: INTEGER); 
 	PROCEDURE ^ ParamData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; VAR res: INTEGER); 
-	PROCEDURE ^ PutData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; len: LONGINT; VAR res: INTEGER); 
+	PROCEDURE ^ PutData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; len: SIZE; VAR res: INTEGER); 
 	PROCEDURE ^ SetConnectOption*(hdbc: HDBC; whichOpt: INTEGER; VAR option: ARRAY OF S.BYTE; VAR res: INTEGER); 
 	PROCEDURE ^ SetStmtOption*(hstmt: HSTMT; whichOpt: INTEGER; VAR option: ARRAY OF S.BYTE; VAR res: INTEGER); 
 	PROCEDURE ^ SpecialColumns*(hstmt: HSTMT; colType: INTEGER; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; scope: INTEGER; nullables: BOOLEAN; VAR res: INTEGER); 

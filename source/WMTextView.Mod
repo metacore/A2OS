@@ -53,23 +53,23 @@ TYPE
 	END ClickInfo;
 
 	TabStops* = OBJECT
-	VAR tabDist : LONGINT;
+	VAR tabDist : SIZE;
 		(* return the next TabStop from the x position *)
-		PROCEDURE GetNextTabStop*(x : LONGINT) : LONGINT;
+		PROCEDURE GetNextTabStop*(x : SIZE) : SIZE;
 		BEGIN
 			RETURN ((x DIV tabDist) + 1) * tabDist
 		END GetNextTabStop;
 	END TabStops;
 
-	TabPositions* = POINTER TO ARRAY OF LONGINT;
+	TabPositions* = POINTER TO ARRAY OF SIZE;
 
 	CustomTabStops* = OBJECT (TabStops)
 	VAR
 		positions : TabPositions;
 
-		PROCEDURE GetNextTabStop*(x : LONGINT) : LONGINT;
+		PROCEDURE GetNextTabStop*(x : SIZE) : SIZE;
 		VAR
-			idx : LONGINT;
+			idx : SIZE;
 		BEGIN
 			idx := 0;
 			ASSERT(positions # NIL);
@@ -89,11 +89,11 @@ TYPE
 	END CustomTabStops;
 
 	LineInfo = RECORD
-		leftIndent, rightIndent, firstIndent, spaceBefore, spaceAfter : LONGINT;
+		leftIndent, rightIndent, firstIndent, spaceBefore, spaceAfter : SIZE;
 		firstInParagraph, lastInParagraph : BOOLEAN;
-		height, width, ascent : LONGINT;
-		pos : LONGINT; (* the position in the text, where this line starts *)
-		align : LONGINT;
+		height, width, ascent : SIZE;
+		pos : SIZE; (* the position in the text, where this line starts *)
+		align : SIZE;
 		tabStops : TabStops;
 	END;
 
@@ -102,13 +102,13 @@ TYPE
 TYPE
 
 	Layout = RECORD
-		nofLines : LONGINT;
+		nofLines : SIZE;
 		lines : LineInfoArray;
 		text : Texts.Text;
-		paperWidth : LONGINT;
-		textWidth : LONGINT; (* maximal width of the text <= textWidth *)
-		textHeight : LONGINT;
-		layoutLineProc : PROCEDURE {DELEGATE} (VAR pos : LONGINT; VAR ch : Char32; VAR lineInfo : LineInfo; wrapWidth, stopPos, stopXPos : LONGINT);
+		paperWidth : SIZE;
+		textWidth : SIZE; (* maximal width of the text <= textWidth *)
+		textHeight : SIZE;
+		layoutLineProc : PROCEDURE {DELEGATE} (VAR pos : SIZE; VAR ch : Char32; VAR lineInfo : LineInfo; wrapWidth: SIZE; stopPos: SIZE; stopXPos : SIZE);
 		bidiFormatter : UnicodeBidirectionality.BidiFormatter;
 		initialized : BOOLEAN;
 
@@ -127,7 +127,7 @@ TYPE
 		END SetText;
 
 		PROCEDURE GrowLines;
-		VAR i : LONGINT; newLines : LineInfoArray;
+		VAR i : SIZE; newLines : LineInfoArray;
 		BEGIN
 			NEW(newLines, LEN(lines) * 2);
 			FOR i := 0 TO LEN(lines) - 1 DO newLines[i] := lines[i] END;
@@ -135,8 +135,8 @@ TYPE
 		END GrowLines;
 
 		(** find the linenumber by the position *)
-		PROCEDURE FindLineNrByPos(pos : LONGINT) : LONGINT;
-		VAR a, b, m : LONGINT;
+		PROCEDURE FindLineNrByPos(pos : SIZE) : SIZE;
+		VAR a, b, m : SIZE;
 		BEGIN
 			a := 0; b := nofLines - 1;
 			WHILE (a < b) DO m := (a + b) DIV 2;
@@ -149,13 +149,13 @@ TYPE
 			RETURN a - 1
 		END FindLineNrByPos;
 
-		PROCEDURE GetLineStartPos(lineNr : LONGINT) : LONGINT;
+		PROCEDURE GetLineStartPos(lineNr : SIZE) : SIZE;
 		BEGIN
 			IF (lineNr >= 0) & (lineNr < nofLines) THEN RETURN lines[lineNr].pos ELSE RETURN 0 END
 		END GetLineStartPos;
 
 		(** return the length in characters of this line *)
-		PROCEDURE GetLineLength(lineNr : LONGINT) : LONGINT;
+		PROCEDURE GetLineLength(lineNr : SIZE) : SIZE;
 		BEGIN
 			IF (lineNr >= 0) & (lineNr < nofLines - 1) THEN RETURN lines[lineNr + 1].pos - lines[lineNr].pos
 			ELSE
@@ -165,7 +165,7 @@ TYPE
 			END
 		END GetLineLength;
 
-		PROCEDURE LayoutLine(VAR pos : LONGINT; VAR lineInfo : LineInfo);
+		PROCEDURE LayoutLine(VAR pos : SIZE; VAR lineInfo : LineInfo);
 		VAR
 			dummyCh : Char32;
 		BEGIN
@@ -174,7 +174,7 @@ TYPE
 
 		(* generate a new layout from scratch. if the text has not actually changed, no bidi-reformatting needs to be done *)
 		PROCEDURE FullLayout(textChanged : BOOLEAN);
-		VAR i, pos, oldpos : LONGINT;
+		VAR pos, oldpos : SIZE;
 		BEGIN
 			ASSERT((text # NIL) & (lines#NIL));
 			text.AcquireRead;
@@ -187,7 +187,6 @@ TYPE
 				bidiFormatter.ReformatText;
 			END;
 
-			i := 0;
 			pos := 0; nofLines := 0; textHeight := 0;
 			WHILE pos < text.GetLength() DO
 				oldpos := pos;
@@ -202,8 +201,8 @@ TYPE
 		END FullLayout;
 
 			(** Fix the layouting of the text starting at pos where delta characters have been inserted (delta negativ if deleted) *)
-		PROCEDURE FixLayoutFrom(pos, delta : LONGINT; VAR first, last : LONGINT; VAR linesChanged : BOOLEAN);
-		VAR l, dl, oldh : LONGINT;
+		PROCEDURE FixLayoutFrom(pos, delta : SIZE; VAR first, last : SIZE; VAR linesChanged : BOOLEAN);
+		VAR l: SIZE; dl, oldh : SIZE;
 		BEGIN
 			ASSERT(text # NIL);
 			text.AcquireRead;
@@ -266,11 +265,11 @@ CONST HLOver* = 0; HLUnder* = 1; HLWave* = 2;
 TYPE
 	Highlight* = OBJECT
 	VAR
-		kind : LONGINT;
+		kind : WORD;
 		from*, to* : Texts.TextPosition;
-		a*, b* : LONGINT; (* only valid after sort, while holding the lock *)
+		a*, b* : SIZE; (* only valid after sort, while holding the lock *)
 		active* : BOOLEAN; (* only valid after sort, while holding the lock *)
-		oldFrom, oldTo : LONGINT;
+		oldFrom, oldTo : SIZE;
 		oldColor, color : WMGraphics.Color;
 		text : Texts.UnicodeText;
 		onChanged : WMMessages.CompCommand;
@@ -281,7 +280,7 @@ TYPE
 			oldColor := color;
 		END New;
 
-		PROCEDURE SetKind*(kind : LONGINT);
+		PROCEDURE SetKind*(kind : WORD);
 		BEGIN
 			IF SELF.kind # kind THEN
 				SELF.kind := kind;
@@ -298,7 +297,7 @@ TYPE
 			END
 		END SetColor;
 
-		PROCEDURE SetFrom*(from : LONGINT);
+		PROCEDURE SetFrom*(from : SIZE);
 		BEGIN
 			IF text = NIL THEN RETURN END; (* if no text is set, the position within is undef *)
 			text.AcquireRead;
@@ -310,7 +309,7 @@ TYPE
 			text.ReleaseRead
 		END SetFrom;
 
-		PROCEDURE SetTo*(to : LONGINT);
+		PROCEDURE SetTo*(to : SIZE);
 		BEGIN
 			IF text = NIL THEN RETURN END; (* if no text is set, the position within is undef *)
 			text.AcquireRead;
@@ -322,7 +321,7 @@ TYPE
 			text.ReleaseRead
 		END SetTo;
 
-		PROCEDURE SetFromTo*(from, to : LONGINT);
+		PROCEDURE SetFromTo*(from, to : SIZE);
 		BEGIN
 			IF text = NIL THEN RETURN END; (* if no text is set, the position within is undef *)
 			text.AcquireRead;
@@ -343,7 +342,7 @@ TYPE
 		END SetFromTo;
 
 		PROCEDURE Sort*;
-		VAR t : LONGINT;
+		VAR t : SIZE;
 		BEGIN
 			a := from.GetPosition();
 			b := to.GetPosition();
@@ -368,7 +367,7 @@ TYPE
 		img : WMGraphics.Image;
 		color : WMGraphics.Color;
 
-		hotX, hotY : LONGINT;
+		hotX, hotY : SIZE;
 		currentArea : WMRectangles.Rectangle;
 		text : Texts.UnicodeText;
 		onChanged : WMMessages.CompCommand;
@@ -379,7 +378,7 @@ TYPE
 			color := LONGINT(0FF0000CCH); visible := TRUE
 		END Init;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; x, y, ascent : LONGINT);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; x, y, ascent : SIZE);
 		BEGIN
 			IF ~visible THEN RETURN END;
 			IF img # NIL THEN canvas.DrawImage(x - hotX, y - hotY, img, WMGraphics.ModeSrcOverDst)
@@ -389,7 +388,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE GetArea(x, y, ascent : LONGINT) : WMRectangles.Rectangle;
+		PROCEDURE GetArea(x, y, ascent : SIZE) : WMRectangles.Rectangle;
 		BEGIN
 			IF img # NIL THEN RETURN WMRectangles.MakeRect(x - hotX, y - hotY, x - hotX + img.width, y - hotY + img.height)
 			ELSE RETURN WMRectangles.MakeRect(x , y - ascent, x + 2, y)
@@ -411,7 +410,7 @@ TYPE
 			END
 		END SetVisible;
 
-		PROCEDURE SetPosition*(pos : LONGINT);
+		PROCEDURE SetPosition*(pos : SIZE);
 		BEGIN
 			IF text = NIL THEN RETURN END; (* if no text is set, the position within is undef *)
 			text.AcquireRead;
@@ -422,7 +421,7 @@ TYPE
 			text.ReleaseRead
 		END SetPosition;
 
-		PROCEDURE GetPosition*() : LONGINT;
+		PROCEDURE GetPosition*() : SIZE;
 		BEGIN
 			RETURN pos.GetPosition()
 		END GetPosition;
@@ -443,12 +442,12 @@ TYPE
 			END
 		END SetText;
 
-		PROCEDURE SetNextInternalPosition*(next : LONGINT);
+		PROCEDURE SetNextInternalPosition*(next : SIZE);
 		BEGIN
 			pos.nextInternalPos := next;
 		END SetNextInternalPosition;
 
-		PROCEDURE GetNextInternalPosition*() : LONGINT;
+		PROCEDURE GetNextInternalPosition*() : SIZE;
 		BEGIN
 			RETURN pos.nextInternalPos;
 		END GetNextInternalPosition;
@@ -476,14 +475,14 @@ TYPE
 			END;
 		END SetCurrentVisibility;
 
-		PROCEDURE GetArea(x, y, ascent : LONGINT) : WMRectangles.Rectangle;
+		PROCEDURE GetArea(x, y, ascent : SIZE) : WMRectangles.Rectangle;
 		BEGIN
 			IF img # NIL THEN RETURN WMRectangles.MakeRect(x - hotX, y - hotY, x - hotX + img.width, y - hotY + img.height)
 			ELSE RETURN WMRectangles.MakeRect(x , y - ascent - 2, x + 1, y + 2)
 			END
 		END GetArea;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; x, y, ascent : LONGINT);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; x, y, ascent : SIZE);
 		BEGIN
 			IF ~visible OR ~isVisible THEN RETURN END;
 			IF img # NIL THEN canvas.DrawImage(x - hotX, y - hotY, img, WMGraphics.ModeSrcOverDst)
@@ -594,7 +593,7 @@ TYPE
 			SELF.text := text; SELF.pos := pos
 		END New;
 
-		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : WORD) : WMDropTarget.DropInterface;
 		VAR di : WMDropTarget.DropText;
 		BEGIN
 			IF type = WMDropTarget.TypeText THEN
@@ -624,18 +623,18 @@ TYPE
 		wrapMode- : WMProperties.Int32Property;
 		wrapModeI : LONGINT;
 
-		firstLine- : WMProperties.Int32Property;
-		firstLineI : LONGINT;
+		firstLine- : WMProperties.SizeProperty;
+		firstLineI : SIZE;
 
-		leftShift- : WMProperties.Int32Property;
-		leftShiftI : LONGINT; (* number of units, the view is shifted to left -> line scrolling *)
+		leftShift- : WMProperties.SizeProperty;
+		leftShiftI : SIZE; (* number of units, the view is shifted to left -> line scrolling *)
 
 		showBorder- : WMProperties.BooleanProperty;
 		showBorderI : BOOLEAN;
 
 		borders- : WMProperties.RectangleProperty;
 		bordersI, borderClip : WMRectangles.Rectangle;
-		x0 : LONGINT; (* text starts at x = x0. Used to get column for line numbers in subclass CodeView *)
+		x0 : SIZE; (* text starts at x = x0. Used to get column for line numbers in subclass CodeView *)
 
 		alwaysShowCursor- : WMProperties.BooleanProperty;
 		alwaysShowCursorI : BOOLEAN;
@@ -712,14 +711,14 @@ TYPE
 		hScrollbar : WMStandardComponents.Scrollbar;
 
 		(* highlighting *)
-		nofHighlights : LONGINT;
+		nofHighlights : SIZE;
 		highlights : HighlightArray;
 
 		(* marked positions *)
-		nofPositionMarkers : LONGINT;
+		nofPositionMarkers : SIZE;
 		positionMarkers : PositionMarkerArray;
 
-		lastCursorPos: LONGINT;
+		lastCursorPos: SIZE;
 		selecting : BOOLEAN;
 		doubleclickedWord : BOOLEAN;
 
@@ -730,10 +729,10 @@ TYPE
 		canStart, openFile : BOOLEAN; (* set for command selection mode *)
 		commandMarker : Highlight;
 
-		downX, downY : LONGINT;
+		downX, downY : SIZE;
 		selectWords : BOOLEAN;
 		wordSelOrdered : BOOLEAN;
-		lineEnter : LONGINT;
+		lineEnter : SIZE;
 		modifierFlags : SET;
 		oldFlags : SET;	(* old pointer flags *)
 		interclick : LONGINT;
@@ -741,7 +740,7 @@ TYPE
 		lastTimeStamp : LONGINT;
 
 		oldObject, focusObject : ANY;
-		oldPos, focusPos : LONGINT;
+		oldPos, focusPos : SIZE;
 		objHasFocus : BOOLEAN;
 
 		PROCEDURE &Init*;
@@ -971,7 +970,7 @@ TYPE
 		END UpdateScrollbars;
 
 		PROCEDURE BordersChanged;
-		VAR vScroll : LONGINT;
+		VAR vScroll : SIZE;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			IF (vScrollbar # NIL) & (vScrollbar.visible.Get()) THEN vScroll := vScrollbar.bounds.GetWidth() ELSE vScroll := 0 END;
@@ -1054,7 +1053,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE Resized*;
-		VAR prevWidth: LONGINT;
+		VAR prevWidth: SIZE;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			Resized^; (*? here, an implicit Invalidate() is triggered - this is probably redundant *)
@@ -1069,7 +1068,7 @@ TYPE
 
 		(** Replace the text *)
 		PROCEDURE SetText*(text : Texts.Text);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(text # NIL);
 			Acquire;
@@ -1153,7 +1152,7 @@ TYPE
 
 (* BEGIN highlighting *)
 		PROCEDURE AddHighlight(highlight : Highlight);
-		VAR newHighlights : HighlightArray; i : LONGINT;
+		VAR newHighlights : HighlightArray; i : SIZE;
 		BEGIN
 			INC(nofHighlights);
 			IF nofHighlights > LEN(highlights) THEN
@@ -1177,7 +1176,7 @@ TYPE
 		END CreateHighlight;
 
 		PROCEDURE RemoveHighlight*(x : Highlight);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Acquire;
 			i := 0; WHILE (i < nofHighlights) & (highlights[i] # x) DO INC(i) END;
@@ -1190,11 +1189,11 @@ TYPE
 			Release
 		END RemoveHighlight;
 
-		PROCEDURE InvalidateRange(a, b : LONGINT);
+		PROCEDURE InvalidateRange(a, b : SIZE);
 		VAR
-			t, l0, l1 : LONGINT;
-			x0, y0, x1, y1, d : LONGINT;
-			ia, ib : LONGINT;
+			t, l0, l1 : SIZE;
+			x0, y0, x1, y1, d : SIZE;
+			ia, ib : SIZE;
 		BEGIN
 			ia := GetDisplayPos(a);
 			ib := GetDisplayPos(b);
@@ -1221,7 +1220,7 @@ TYPE
 		END InvalidateRange;
 
 		PROCEDURE HighlightChanged(sender, data : ANY);
-		VAR hl : Highlight; min, max : LONGINT;
+		VAR hl : Highlight; min, max : SIZE;
 		BEGIN
 			IF ~initialized THEN RETURN END;
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.HighlightChanged, sender, data)
@@ -1255,7 +1254,7 @@ TYPE
 
 (* BEGIN PositionMarkers *)
 		PROCEDURE AddPositionMarker(pm : PositionMarker);
-		VAR newPositionMarkers : PositionMarkerArray; i : LONGINT;
+		VAR newPositionMarkers : PositionMarkerArray; i : SIZE;
 		BEGIN
 			INC(nofPositionMarkers);
 			IF nofPositionMarkers > LEN(positionMarkers) THEN
@@ -1289,7 +1288,7 @@ TYPE
 		END CreateCursor;
 
 		PROCEDURE RemovePositionMarker*(x : PositionMarker);
-		VAR i, xp, yp, l, ascent : LONGINT; newRect : WMRectangles.Rectangle;
+		VAR i, xp, yp, ascent : SIZE; l: SIZE; newRect : WMRectangles.Rectangle;
 		BEGIN
 			Acquire;
 			i := 0; WHILE (i < nofPositionMarkers) & (positionMarkers[i] # x) DO INC(i) END;
@@ -1313,7 +1312,7 @@ TYPE
 		END RemovePositionMarker;
 
 		PROCEDURE PositionMarkerChanged(sender, data : ANY);
-		VAR newRect, combinedRect : WMRectangles.Rectangle; x, y, l, ascent : LONGINT;
+		VAR newRect, combinedRect : WMRectangles.Rectangle; x, y, ascent : SIZE; l: SIZE;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.PositionMarkerChanged, sender, data)
 			ELSE
@@ -1363,12 +1362,12 @@ TYPE
 
 		PROCEDURE CheckCursor;
 		VAR
-			cp, l, i : LONGINT;
-			ty : LONGINT;
-			lineStartPosition, lineLength: LONGINT;
+			cp, l, i: SIZE;
+			ty : SIZE;
+			lineStartPosition, lineLength: SIZE;
 			li: LineInfo;
 			dummyCh : Char32;
-			x, dummyY, xend, paperWidth, newShift: LONGINT;
+			x, dummyY, xend, paperWidth, newShift: SIZE;
 			dummyBool : BOOLEAN;
 		BEGIN
 			ASSERT(IsCallFromSequencer() & text.HasReadLock());
@@ -1452,19 +1451,19 @@ TYPE
 			END;
 		END CheckCursor;
 
-		PROCEDURE CheckParagraphBegin(lineNr : LONGINT; VAR height: LONGINT);
+		PROCEDURE CheckParagraphBegin(lineNr : SIZE; VAR height: SIZE);
 		BEGIN
 			IF layout.lines[lineNr].firstInParagraph THEN height := height + layout.lines[lineNr].spaceBefore END
 		END CheckParagraphBegin;
 
-		PROCEDURE CheckParagraphEnd(lineNr : LONGINT; VAR height: LONGINT);
+		PROCEDURE CheckParagraphEnd(lineNr : SIZE; VAR height: SIZE);
 		BEGIN
 			IF layout.lines[lineNr].lastInParagraph THEN height := height + layout.lines[lineNr].spaceAfter; END;
 		END CheckParagraphEnd;
 
 		PROCEDURE TextChanged(sender, data : ANY);
 		VAR
-			f, l, t, b, i, p, pa, pb, h: LONGINT; linesChanged, fullLayout : BOOLEAN;
+			t, b, h: SIZE; f, i, l, p, pa, pb: SIZE; linesChanged, fullLayout : BOOLEAN;
 			info : Texts.TextChangeInfo;
 		BEGIN
 			IF ~initialized THEN RETURN END;
@@ -1583,8 +1582,8 @@ TYPE
 (* BEGIN view dependant layout functions *)
 		(** Return the left indent of a line - depending on alignment *)
 		(* returns left border, in case of errors *)
-		PROCEDURE GetLineLeftIndent(linenr : LONGINT): LONGINT;
-		VAR indent : LONGINT;
+		PROCEDURE GetLineLeftIndent(linenr : SIZE): SIZE;
+		VAR indent : SIZE;
 		BEGIN
 			IF (linenr < 0) OR (linenr >= layout.nofLines) THEN RETURN 0 END;
 			IF layout.lines[linenr].firstInParagraph THEN indent := layout.lines[linenr].firstIndent ELSE indent := layout.lines[linenr].leftIndent END;
@@ -1598,8 +1597,8 @@ TYPE
 		END GetLineLeftIndent;
 
 		(** Find the line number that currently contains the y value (y relative to 0 in component)*)
-		PROCEDURE FindLineByY*(firstLine, y : LONGINT) : LONGINT;
-		VAR i : LONGINT; ypos : LONGINT;
+		PROCEDURE FindLineByY*(firstLine, y : SIZE) : SIZE;
+		VAR i : SIZE; ypos : SIZE;
 		BEGIN
 			ASSERT(text.HasReadLock());
 			ypos := bordersI.t; i := firstLine;
@@ -1613,12 +1612,12 @@ TYPE
 			RETURN MAX(i -1, 0)
 		END FindLineByY;
 
-		PROCEDURE ViewToTextPos*(x, y: LONGINT; VAR pos : LONGINT);
+		PROCEDURE ViewToTextPos*(x, y: SIZE; VAR pos : SIZE);
 		VAR
-			l : LONGINT;
+			l : SIZE;
 			dummy : LineInfo;
 			dummyCh : Char32;
-			indent : LONGINT;
+			indent : SIZE;
 		BEGIN
 			text.AcquireRead;
 			pos := -1;
@@ -1653,8 +1652,8 @@ TYPE
 		END ViewToTextPos;
 
 		(* Returns the height for the given width *)
-		PROCEDURE GetHeight*(width: LONGINT): LONGINT;
-		VAR oldWidth, height : LONGINT;
+		PROCEDURE GetHeight*(width: SIZE): SIZE;
+		VAR oldWidth, height : SIZE;
 		BEGIN
 			oldWidth := layout.paperWidth;
 			layout.paperWidth := width;
@@ -1668,9 +1667,9 @@ TYPE
 		END GetHeight;
 
 		(* Returns the size of the largest word and line in pixels *)
-		PROCEDURE GetMinMaxWidth*(VAR word, line : LONGINT);
-		VAR dx, pos : LONGINT;
-			cws, cls : LONGINT;
+		PROCEDURE GetMinMaxWidth*(VAR word, line : SIZE);
+		VAR dx, pos : SIZE;
+			cws, cls : SIZE;
 			f,cf : WMGraphics.Font;
 			ch : Char32;
 			tabstring : ARRAY 256 OF CHAR; tabs : CustomTabStops; tp : TabPositions;
@@ -1678,7 +1677,7 @@ TYPE
 			pStyle : Texts.ParagraphStyle;
 			cStyle : Texts.CharacterStyle;
 
-			PROCEDURE GetWidth(ch : Char32; VAR dx : LONGINT);
+			PROCEDURE GetWidth(ch : Char32; VAR dx : SIZE);
 			VAR gs : WMGraphics.GlyphSpacings; vc : WMComponents.VisualComponent;
 			BEGIN
 				IF ch = Texts.ObjectChar THEN
@@ -1797,8 +1796,8 @@ TYPE
 
 (* END view dependant layout functions *)
 
-		PROCEDURE LineYPos(lineNr : LONGINT; VAR y0, y1 : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE LineYPos(lineNr : SIZE; VAR y0, y1 : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			IF (lineNr >= firstLineI) & (lineNr < layout.nofLines) THEN
 				y0 := bordersI.t; i := firstLineI;
@@ -1814,10 +1813,11 @@ TYPE
 			END
 		END LineYPos;
 
-		PROCEDURE FindScreenPos*(pos : LONGINT; VAR x, y : LONGINT) : BOOLEAN;
+		PROCEDURE FindScreenPos*(pos : SIZE; VAR x, y : SIZE) : BOOLEAN;
 		VAR
-			l, i, startPos, intPos: LONGINT;
-			ty : LONGINT;
+			l, i: SIZE;
+			startPos, intPos: SIZE;
+			ty : SIZE;
 			li : LineInfo;
 			thisCh, lastCh : Char32;
 			lastLine : BOOLEAN;
@@ -1933,9 +1933,9 @@ TYPE
 		END FindScreenPos;
 
 		(* Get the internal position for a given display position. *)
-		PROCEDURE GetInternalPos*(pos : LONGINT) : LONGINT;
+		PROCEDURE GetInternalPos*(pos : SIZE) : SIZE;
 		VAR
-			lineNr, startPos, lineLength : LONGINT;
+			lineNr, startPos, lineLength : SIZE;
 			dummyTextReader : Texts.TextReader;
 		BEGIN
 			(* if the text is non-utf formatted, the internal position and the display position are the same *)
@@ -1955,9 +1955,9 @@ TYPE
 
 
 		(* Get the display position for a given display position. *)
-		PROCEDURE GetDisplayPos*(pos : LONGINT) : LONGINT;
+		PROCEDURE GetDisplayPos*(pos : SIZE) : SIZE;
 		VAR
-			lineNr, startPos, lineLength : LONGINT;
+			lineNr, startPos, lineLength : SIZE;
 			dummyTextReader : Texts.TextReader;
 		BEGIN
 
@@ -1975,9 +1975,9 @@ TYPE
 		END GetDisplayPos;
 
 		(* Checks if the current position is in an rtl context *)
-		PROCEDURE IsRightToLeft*(pos : LONGINT) : BOOLEAN;
+		PROCEDURE IsRightToLeft*(pos : SIZE) : BOOLEAN;
 		VAR
-			lineNr, startPos, lineLength : LONGINT;
+			lineNr, startPos, lineLength : SIZE;
 			dummyTextReader : Texts.TextReader;
 		BEGIN
 			IF ~text.isUTF OR (layout.bidiFormatter = NIL) THEN
@@ -1996,7 +1996,7 @@ TYPE
 		END IsRightToLeft;
 
 		(* Gets the paragraph embedding level of the current position's line *)
-		PROCEDURE GetParagraphEmbeddingLevel*(pos : LONGINT) : LONGINT;
+		PROCEDURE GetParagraphEmbeddingLevel*(pos : SIZE) : SIZE;
 		BEGIN
 			IF ~text.isUTF OR (layout.bidiFormatter = NIL) THEN
 				RETURN 0;
@@ -2006,19 +2006,20 @@ TYPE
 		END GetParagraphEmbeddingLevel;
 
 
-		PROCEDURE LayoutLine(VAR pos : LONGINT; VAR ch : Char32; VAR l : LineInfo; wrapwidth, stopPos, stopXPos : LONGINT);
+		PROCEDURE LayoutLine(VAR pos : SIZE; VAR ch : Char32; VAR l : LineInfo; wrapwidth: SIZE; stopPos: SIZE; stopXPos : SIZE);
 		VAR
-			i, wrapPos : LONGINT;
+			i : SIZE;
+			wrapPos: SIZE;
 			eol, first : BOOLEAN;
-			ascent, descent, leading, ld, a, d, dx, x : LONGINT;
+			ascent, descent, leading, ld, a, d, dx, x : SIZE;
 			align, firstIndent, leftIndent, rightIndent, spaceBefore, spaceAfter : LONGINT;
 			tabstring : ARRAY 256 OF CHAR; tabs : CustomTabStops; tp : TabPositions;
 			sr : Streams.StringReader; tabCounter, tabPos : LONGINT; token : ARRAY 16 OF CHAR;
 			pStyle : Texts.ParagraphStyle;
 			start, stop, isFirst : BOOLEAN;
 			bidiTextReader, localTextReader : Texts.TextReader;
-			regionStart, regionEnd,lastEnd : LONGINT;
-			readerPosition : LONGINT;
+			regionStart, regionEnd, lastEnd : SIZE;
+			readerPosition : SIZE;
 			highlighterStyle, lastHighlighterStyle : SyntaxHighlighter.Style;
 			currentStyle, lastStyle : ANY;
 			cf:  WMGraphics.Font;
@@ -2027,7 +2028,7 @@ TYPE
 				font : WMGraphics.Font;
 			END;
 
-			PROCEDURE GetExtents(ch : Char32; VAR dx, ascent, descent: LONGINT);
+			PROCEDURE GetExtents(ch : Char32; VAR dx, ascent, descent: SIZE);
 			VAR gs : WMGraphics.GlyphSpacings; vc : WMComponents.VisualComponent; font : WMGraphics.Font;
 			BEGIN
 				IF ch = Texts.ObjectChar THEN
@@ -2317,15 +2318,15 @@ TYPE
 		END LayoutLine;
 
 		(* llen = -1 to render until the end of line > 0 to render llen elements in the line *)
-		PROCEDURE RenderLine*(canvas : WMGraphics.Canvas; VAR l : LineInfo; linenr, top, llen : LONGINT);
-		VAR sx, dx, dy, x, sp, i, j, k, t, tx, linelength, w, p : LONGINT; char : Char32; gs: WMGraphics.GlyphSpacings;
+		PROCEDURE RenderLine*(canvas : WMGraphics.Canvas; VAR l : LineInfo; linenr: SIZE; top: SIZE; llen : SIZE);
+		VAR sx, dx, dy, x, i, j, k, t, tx, w: SIZE; linelength, p, sp: SIZE; char : Char32; gs: WMGraphics.GlyphSpacings;
 	 		font : WMGraphics.Font;
 	 		vc : WMComponents.VisualComponent;
 	 		hc : BOOLEAN;
 	 		bidiTextReader, localTextReader : Texts.TextReader;
-			cursorPosition : LONGINT;
-			regionStart, regionEnd, lastEnd: LONGINT;
-			readerPosition : LONGINT;
+			cursorPosition : SIZE;
+			regionStart, regionEnd, lastEnd: SIZE;
+			readerPosition : SIZE;
 			lineNumberString : ARRAY 16 OF CHAR;
 			canvasState : WMGraphics.CanvasState;
 			cliprect, temp : WMRectangles.Rectangle;
@@ -2619,7 +2620,7 @@ TYPE
 		END RenderLine;
 
 		PROCEDURE RenderAboveTextMarkers*(canvas : WMGraphics.Canvas);
-		VAR x, y, l, pos, i, ascent : LONGINT;
+		VAR x, y, i, ascent, l, pos: SIZE;
 		BEGIN
 			AssertLock;
 			IF text = NIL THEN RETURN END;
@@ -2641,7 +2642,7 @@ TYPE
 		END RenderAboveTextMarkers;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR la, lb, i, top, t, b : LONGINT; rect, clip : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
+		VAR la, lb, i, top, b : SIZE; t: SIZE; rect, clip : WMRectangles.Rectangle; cstate : WMGraphics.CanvasState;
 		BEGIN
 			canvas.GetClipRect(clip);
 			IF WMRectangles.RectEmpty(clip) THEN RETURN END;
@@ -2706,7 +2707,7 @@ TYPE
 		END DrawBackground;
 
 		PROCEDURE StoreLineEnter;
-		VAR pos, cl : LONGINT;
+		VAR pos, cl : SIZE;
 		BEGIN
 			pos := cursor.GetPosition();
 			cl := layout.FindLineNrByPos(pos);
@@ -2714,7 +2715,7 @@ TYPE
 		END StoreLineEnter;
 
 	(* navigation *)
-		PROCEDURE WheelMove*(dz: LONGINT); (** PROTECTED *)
+		PROCEDURE WheelMove*(dz: SIZE); (** PROTECTED *)
 		VAR ddz: DZ;
 		BEGIN
 			IF modifierFlags * Inputs.Ctrl # {} THEN (* CTRL pressed -> Resize Font*)
@@ -2752,13 +2753,13 @@ TYPE
 			The same applies when search to the right. But to highlight the character at, for example,  position 4, we need a highlight from 4-5.
 			That's why utilreader.GetPosition()-1 is used instead of utilreader.GetPosition()-2.
 		*)
-		PROCEDURE DoubleClickSelect(pos : LONGINT);
+		PROCEDURE DoubleClickSelect(pos : SIZE);
 		CONST
 			LineFeed = 0AH;
 			Underscore = 05FH;
 		VAR
 			char : Texts.Char32;
-			from, to : LONGINT;
+			from, to : SIZE;
 		BEGIN
 			ASSERT(text.HasReadLock());
 			utilreader.SetPosition(pos);
@@ -2815,8 +2816,8 @@ TYPE
 			END;
 		END SetInterclick;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR pos, a, b, internalPos : LONGINT; oldInterclick : LONGINT;
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
+		VAR pos, a, b, internalPos : SIZE; oldInterclick : LONGINT;
 		BEGIN
 			ViewToTextPos(x,y,pos);
 			internalPos := GetInternalPos(pos);
@@ -2888,8 +2889,8 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
-		VAR pos, a, b, internalPos : LONGINT;
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
+		VAR pos, a, b, internalPos : SIZE;
 		BEGIN
 			IF ~canStart & dragPossible THEN
 				IF (ABS(x - downX) > DragDist) OR (ABS(y - downY) > DragDist) THEN dragPossible := FALSE; AutoStartDrag END
@@ -2928,7 +2929,7 @@ TYPE
 			END
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF canStart & (commandMarker # NIL) THEN
 				commandMarker.Sort;
@@ -2951,8 +2952,8 @@ TYPE
 		END PointerUp;
 
 		(* Transforms the TextView Coordinates into TextObject obj Coordinates *)
-		PROCEDURE TransformCoordinates(VAR x, y : LONGINT; obj : WMComponents.VisualComponent);
-		VAR line, pos, x0, y0, y1 : LONGINT;
+		PROCEDURE TransformCoordinates(VAR x, y : SIZE; obj : WMComponents.VisualComponent);
+		VAR line, pos: SIZE; x0, y0, y1 : SIZE;
 		BEGIN
 			ViewToTextPos(x, y, pos);
 			IF FindScreenPos(pos, x0, y0) THEN
@@ -2976,8 +2977,8 @@ TYPE
 		END ChangePointer;
 
 		(* Returns TRUE if an Object is Hit, FALSE otherwise *)
-		PROCEDURE HitObject(x, y : LONGINT; (* keys : SET;*)  VAR pos : LONGINT; VAR obj : ANY): BOOLEAN;
-		VAR ch, tx, ty : LONGINT;
+		PROCEDURE HitObject(x, y : SIZE; (* keys : SET;*)  VAR pos : SIZE; VAR obj : ANY): BOOLEAN;
+		VAR ch : LONGINT; tx, ty : SIZE;
 		BEGIN
 			text.AcquireRead;
 			ViewToTextPos(x, y, pos);
@@ -2995,8 +2996,8 @@ TYPE
 		END HitObject;
 
 		(* Returns TRUE if a Link is Hit, FALSE otherwise *)
-		PROCEDURE HitLink(x, y : LONGINT;  VAR pos : LONGINT; VAR link : Texts.Link): BOOLEAN;
-		VAR ch, tx, ty : LONGINT;
+		PROCEDURE HitLink(x, y : SIZE;  VAR pos : SIZE; VAR link : Texts.Link): BOOLEAN;
+		VAR ch: LONGINT; tx, ty : SIZE;
 		BEGIN
 			text.AcquireRead;
 			ViewToTextPos(x, y, pos);
@@ -3025,7 +3026,7 @@ TYPE
 		PROCEDURE LinkClicked*(sender, data : ANY);
 		VAR tempLink : ARRAY 2048 OF CHAR;
 			tempLabel : ARRAY 256 OF CHAR;
-			pos, i : LONGINT;
+			pos, i : SIZE;
 		BEGIN
 			IF data IS LinkWrapper THEN
 				COPY(data(LinkWrapper).link^, tempLink);
@@ -3051,7 +3052,7 @@ TYPE
 		END LinkClicked;
 
 		(* Returns the position of the label in text *)
-		PROCEDURE FindLabel*(CONST label : ARRAY OF CHAR; VAR pos : LONGINT): BOOLEAN;
+		PROCEDURE FindLabel*(CONST label : ARRAY OF CHAR; VAR pos : SIZE): BOOLEAN;
 		VAR ch : LONGINT;
 			found : BOOLEAN;
 		BEGIN
@@ -3075,7 +3076,8 @@ TYPE
 		PROCEDURE AutoStartDrag*;
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			w, h, i, la, lb, top : LONGINT;
+			i, la, lb : SIZE;
+			w, h, top: SIZE;
 			l : LineInfo;
 		BEGIN
 			text.AcquireRead;
@@ -3083,16 +3085,16 @@ TYPE
 			NEW(dragSelA, text);NEW(dragSelB, text);
 			dragSelA.SetPosition(selection.a); dragSelB.SetPosition(selection.b);
 
-			la := Limit(layout.FindLineNrByPos(selection.a), 0, layout.nofLines - 1);
-			lb := Limit(layout.FindLineNrByPos(selection.b), 0, layout.nofLines - 1);
+			la := MIN(MAX(layout.FindLineNrByPos(selection.a), 0), layout.nofLines - 1);
+			lb := MIN(MAX(layout.FindLineNrByPos(selection.b), 0), layout.nofLines - 1);
 			(* estimate the size of the selection *)
 			h := 0; w := 0;
 			FOR i := la TO lb DO
 				h := h + (layout.lines[i].height);
 				w := MAX(w, layout.lines[i].width);
 			END;
-			h := Limit(h, 20, 200);
-			w := Limit(w, 20, 400);
+			h := MIN(MAX(h, 20), 200);
+			w := MIN(MAX(w, 20), 400);
 
 			(* render to bitmap *)
 			NEW(img); Raster.Create(img, w, h, Raster.BGRA8888);
@@ -3127,7 +3129,7 @@ TYPE
 			itf : WMDropTarget.DropInterface;
 			targetText, temp : Texts.Text;
 			string : Strings.String;
-			pos, a, b: LONGINT; res: WORD;
+			pos, a, b: SIZE; res: WORD;
 		BEGIN
 			IF (dragSelA = NIL) OR (dragSelB = NIL)  THEN RETURN END;
 
@@ -3206,8 +3208,8 @@ TYPE
 		END DragWasAccepted;
 
 		(* Drag onto operations *)
-		PROCEDURE DragOver*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
-		VAR pos : LONGINT;
+		PROCEDURE DragOver*(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
+		VAR pos : SIZE;
 		BEGIN
 			IF takesFocus.Get() THEN
 				text.AcquireRead;
@@ -3226,9 +3228,9 @@ TYPE
 			END;
 		END ConfirmDrag;
 
-		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragDropped*(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
 		VAR dropTarget : TextDropTarget;
-			pos, internalPos : LONGINT;
+			pos, internalPos : SIZE;
 			p : Texts.TextPosition;
 		BEGIN
 			IF takesFocus.Get() THEN
@@ -3304,13 +3306,13 @@ TYPE
 		END SelectAll;
 
 		(* Prepare to start the selection by keyboard. Clear the selection, if it is not contigous *)
-		PROCEDURE KeyStartSelection(pos : LONGINT);
+		PROCEDURE KeyStartSelection(pos : SIZE);
 		BEGIN
 			IF selection.to.GetPosition() # pos THEN selection.SetFromTo(pos, pos); cursor.SetVisible(TRUE); Texts.ClearLastSelection END;
 		END KeyStartSelection;
 
 		(* update the keyboard selection with the new position, redraw from the last StartSelection *)
-		PROCEDURE KeyUpdateSelection(pos : LONGINT);
+		PROCEDURE KeyUpdateSelection(pos : SIZE);
 		BEGIN
 			selection.SetTo(pos);
 			selection.Sort;
@@ -3326,7 +3328,7 @@ TYPE
 
 		PROCEDURE CursorUp*(select : BOOLEAN);
 		VAR
-			pos, cPos, cl, lineStart : LONGINT;
+			pos, cPos, cl, lineStart : SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3345,7 +3347,7 @@ TYPE
 				lineStart := layout.GetLineStartPos(cl);
 				cPos := lineStart + MIN(layout.GetLineLength(cl) - 1, lineEnter);
 				cursor.SetPosition(cPos);
-				IF cl < firstLineI THEN firstLine.Set(cl) END
+				IF cl < firstLineI THEN firstLine.Set(LONGINT(cl)) END
 			END;
 			IF select THEN
 				KeyUpdateSelection(GetInternalPos(cursor.GetPosition()));
@@ -3356,7 +3358,7 @@ TYPE
 		END CursorUp;
 
 		PROCEDURE CursorDown*(select : BOOLEAN);
-		VAR pos, cPos, cl, lineStart : LONGINT;
+		VAR pos, cPos, cl, lineStart : SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3389,7 +3391,7 @@ TYPE
 		(* Move the cursor one character/word to the left *)
 		PROCEDURE CursorLeft*(word, select : BOOLEAN);
 		VAR
-			pos, cPos, wPos : LONGINT;
+			pos, cPos, wPos : SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3421,7 +3423,7 @@ TYPE
 		(* Move the cursor one character/word to the right *)
 		PROCEDURE CursorRight*(word, select : BOOLEAN);
 		VAR
-			pos, cPos, wPos : LONGINT;
+			pos, cPos, wPos : SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3451,8 +3453,8 @@ TYPE
 		END CursorRight;
 
 		PROCEDURE PageDown*(select : BOOLEAN);
-		VAR dy : LONGINT; i, pos, iPos : LONGINT;
-			cx, cy : LONGINT;
+		VAR dy, i : SIZE; pos, iPos : SIZE;
+			cx, cy : SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3489,8 +3491,8 @@ TYPE
 		END PageDown;
 
 		PROCEDURE PageUp*(select : BOOLEAN);
-		VAR dy : LONGINT; i, pos, iPos : LONGINT;
-			cx, cy : LONGINT;
+		VAR dy, i : SIZE; pos, iPos : SIZE;
+			cx, cy : SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3530,7 +3532,7 @@ TYPE
 
 		PROCEDURE Home*(ctrl, select : BOOLEAN);
 		VAR
-			lineStart, cl, pos : LONGINT;
+			lineStart, cl, pos : SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3561,7 +3563,7 @@ TYPE
 		END Home;
 
 		PROCEDURE End*(ctrl, select : BOOLEAN);
-		VAR lineEnd, textLength, cl, pos, dispPos: LONGINT;
+		VAR lineEnd, cl, textLength, pos, dispPos: SIZE;
 		BEGIN
 			Acquire;
 			text.AcquireRead;
@@ -3577,7 +3579,7 @@ TYPE
 				textLength := text.GetLength();
 
 				cursor.SetPosition(GetDisplayPos(textLength));
-				firstLine.Set(layout.FindLineNrByPos(text.GetLength()))
+				firstLine.Set(layout.FindLineNrByPos(text.GetLength()));
 			ELSE
 				cl := layout.FindLineNrByPos(cursor.GetPosition());
 				lineEnd := layout.GetLineStartPos(cl) + layout.GetLineLength(cl) - 1;
@@ -3594,7 +3596,7 @@ TYPE
 			CursorChanged
 		END End;
 
-		PROCEDURE KeyEvent*(ucs :LONGINT; flags : SET; VAR keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs :SIZE; flags : SET; VAR keysym : SIZE);
 		BEGIN
 			modifierFlags := flags;
 			IF Inputs.Release IN flags THEN RETURN END;
@@ -3634,8 +3636,8 @@ TYPE
 			dragCopy := modifierFlags * Inputs.Ctrl # {};
 		END SetFlags;
 
-		PROCEDURE FindCommandRange*(pos: LONGINT; VAR start, end, nofLastSelections : LONGINT);
-		VAR ch : LONGINT; string : ARRAY 23 OF CHAR; i : LONGINT; sDoCommands, lastWasTilde : BOOLEAN;
+		PROCEDURE FindCommandRange*(pos: SIZE; VAR start, end, nofLastSelections : SIZE);
+		VAR ch : LONGINT; string : ARRAY 23 OF CHAR; i : SIZE; sDoCommands, lastWasTilde : BOOLEAN;
 			escapeString: ARRAY 32 OF LONGINT; escapePos: LONGINT; escape: BOOLEAN;
 
 			(* note: this simple algorithm can be emplyed if  the substring to be implicitly searched for does not contain its first character *)
@@ -3727,7 +3729,7 @@ TYPE
 			text.ReleaseRead
 		END FindCommandRange;
 
-		PROCEDURE FindCommand*(pos: LONGINT; VAR start, end : LONGINT);
+		PROCEDURE FindCommand*(pos: SIZE; VAR start, end : SIZE);
 		VAR ch : LONGINT;
 		BEGIN
 			text.AcquireRead;
@@ -3745,9 +3747,9 @@ TYPE
 
 		(**	Start the command in the text, starting on pos (or wordboundary before),
 			caller should hold lock on text  to make the pos stable *)
-		PROCEDURE StartCommand*(pos : LONGINT; openFile : BOOLEAN);
+		PROCEDURE StartCommand*(pos : SIZE; openFile : BOOLEAN);
 		VAR
-			start, end, bufSize : LONGINT;
+			start, end, bufSize : SIZE;
 			context : Commands.Context;
 			arg : Streams.StringReader;
 			command : ARRAY MaxCommandLength OF CHAR;
@@ -3755,7 +3757,7 @@ TYPE
 			s : Strings.String;
 			msg : ARRAY 128 OF CHAR;
 			ignore : Modules.Name;
-			paramSize, nofLastSelections, i, j, a, b: LONGINT; res: WORD;
+			paramSize, i, j, nofLastSelections, a, b: SIZE; res: WORD;
 			selectionText : Texts.Text;
 			selectionOk : BOOLEAN;
 			from, to: Texts.TextPosition;
@@ -3910,15 +3912,15 @@ TYPE
 			Paste;
 		END PieMenuPaste;
 
-		PROCEDURE ShowContextMenu*(x, y: LONGINT);
+		PROCEDURE ShowContextMenu*(x, y: SIZE);
 		VAR
 			popup : WMPopups.Popup;
-			start, end, bufSize : LONGINT;
+			start, end, bufSize : SIZE;
 			command, s : Strings.String;
 			clickInfo : ClickInfo;
 			str : ARRAY 256 OF CHAR;
 			window : WMWindowManager.Window;
-			nofLastSelections : LONGINT;
+			nofLastSelections : SIZE;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			text.AcquireRead;
@@ -3968,7 +3970,7 @@ TYPE
 		END ShowContextMenu;
 
 		PROCEDURE HandleInternal*(VAR x: WMMessages.Message);
-		VAR pos : LONGINT; obj : ANY; link : Texts.Link;
+		VAR pos : SIZE; obj : ANY; link : Texts.Link;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			IF (x.msgType = WMMessages.MsgKey) & objHasFocus THEN (* forward KeyMsg *)
@@ -4054,11 +4056,11 @@ TYPE
 	FontAttributes = OBJECT
 	VAR
 		font : WMGraphics.Font; (* { font # {} *)
-		size : LONGINT;
+		size : SIZE;
 		style : SET;
 		next : FontAttributes;
 
-		PROCEDURE &Init(size : LONGINT; style : SET);
+		PROCEDURE &Init(size : SIZE; style : SET);
 		BEGIN
 			font := NIL;
 			SELF.size := size;
@@ -4080,7 +4082,7 @@ TYPE
 			defaultFont := WMGraphics.GetDefaultFont();
 		END Init;
 
-		PROCEDURE Find(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET) : WMGraphics.Font;
+		PROCEDURE Find(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : WMGraphics.Font;
 		VAR font : WMGraphics.Font; e : FontEntry; a : FontAttributes;
 		BEGIN
 			font := NIL;
@@ -4098,7 +4100,7 @@ TYPE
 			RETURN font;
 		END Find;
 
-		PROCEDURE Add(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET) : WMGraphics.Font;
+		PROCEDURE Add(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : WMGraphics.Font;
 		VAR entry, e : FontEntry; attribute, a : FontAttributes;
 		BEGIN
 			e := entries;
@@ -4132,7 +4134,7 @@ TYPE
 		END Add;
 
 		(* Get specified font. If not available, the system default font is returned *)
-		PROCEDURE GetFont(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET) : WMGraphics.Font;
+		PROCEDURE GetFont(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : WMGraphics.Font;
 		VAR font : WMGraphics.Font;
 		BEGIN
 			font := Find(name, size, style);
@@ -4152,7 +4154,8 @@ VAR
 	PTVIsMultiLine, PTVIsPassword, PTVShowBorder, PTValwaysShowCursor, PTVShowLabels : WMProperties.BooleanProperty;
 	PTVAllowCommandExecution, PTVAllowTextSelection, PTVAllowPiemenu : WMProperties.BooleanProperty;
 	PTVWrapMode, PTVMouseWheelScrollSpeed, PVTtextAlignV : WMProperties.Int32Property;
-	PTVfirstLine, PTVleftShift, PTVPasswordChar : WMProperties.Int32Property;
+	PTVPasswordChar : WMProperties.Int32Property;
+	PTVfirstLine, PTVleftShift : WMProperties.SizeProperty;
 	PTVdefaultTextColor, PTVdefaultTextBgColor : WMProperties.ColorProperty;
 	PTVborders : WMProperties.RectangleProperty;
 	PTVonLinkClick, PTVonLinkClickInfo : Strings.String;
@@ -4166,15 +4169,8 @@ VAR
 
 	DefaultStyle : POINTER TO RECORD END;
 
-PROCEDURE Limit(x, min, max : LONGINT) : LONGINT;
-BEGIN
-	IF x < min THEN x := min END;
-	IF x > max THEN x := max END;
-	RETURN x
-END Limit;
-
 (* Actually, this is a hack... but for now, do it.  *)
-PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; value, currentSize : LONGINT; VAR newSize : LONGINT);
+PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; value, currentSize : SIZE; VAR newSize : SIZE);
 BEGIN
 	IF (fontname = "Oberon") THEN
 		IF (value >0) THEN
@@ -4218,8 +4214,8 @@ END GetNewSize;
 TYPE
 
 DZ = OBJECT (Texts.Attributes);
-VAR value: LONGINT;
-	PROCEDURE &Init(v: LONGINT);
+VAR value: SIZE;
+	PROCEDURE &Init(v: SIZE);
 	BEGIN
 		value := v;
 	END Init;
@@ -4254,7 +4250,7 @@ BEGIN
 END IsSameFont;
 
 PROCEDURE CheckFont(style : SyntaxHighlighter.Style; font : WMGraphics.Font; VAR fontCache : FontCache);
-VAR fontname : ARRAY 256 OF CHAR; fontsize : LONGINT; fontstyle : SET;
+VAR fontname : ARRAY 256 OF CHAR; fontsize : SIZE; fontstyle : SET;
 BEGIN
 	ASSERT(style # NIL);
 	IF (fontCache = NIL) THEN NEW(fontCache); END;

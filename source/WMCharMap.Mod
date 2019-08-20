@@ -103,8 +103,8 @@ TYPE
 			RETURN mainPanel
 		END CreateForm;
 
-		PROCEDURE DrawAll(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
-		VAR pos, i, dx, dy : LONGINT; charString : ARRAY 16 OF CHAR;
+		PROCEDURE DrawAll(canvas : WMGraphics.Canvas; w, h : SIZE; state : SET; x, y : SIZE);
+		VAR pos, dx, dy : SIZE; i: SIZE; charString : ARRAY 16 OF CHAR;
 		BEGIN
 			IF WMGrids.CellSelected IN state THEN
 				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(08888FFFFH), WMGraphics.ModeCopy)
@@ -118,20 +118,20 @@ TYPE
 			IF pos < nofCharacters THEN
 				canvas.SetColor(0FFH);
 				canvas.SetFont(font);
-				IF ~UTF8Strings.EncodeChar(pos, charString, i) THEN COPY("", charString) END;
+				IF ~UTF8Strings.EncodeChar(pos(LONGINT), charString, i) THEN COPY("", charString) END;
 				font.GetStringSize(charString, dx, dy);
 				canvas.DrawString(w-30+((30 - dx) DIV 2) ,h-8 , charString);
 			END
 		END DrawAll;
 
 		PROCEDURE SelectChar(sender, data : ANY);
-		VAR l, t, r, b, i, pos : LONGINT; charString, tempString : ARRAY 16 OF CHAR;
+		VAR l, t, r, b, pos : SIZE; i: SIZE; charString, tempString : ARRAY 16 OF CHAR;
 		BEGIN
 			characters.GetSelection(l, t, r, b);
 			pos := t * NofCols + l;
 
 			IF pos < nofCharacters THEN
-				curChar := pos; i := 0;
+				curChar := pos(LONGINT); i := 0;
 				IF UTF8Strings.EncodeChar(curChar, charString, i) THEN preview.caption.SetAOC(charString)
 				ELSE preview.caption.SetAOC("") END;
 
@@ -165,7 +165,7 @@ TYPE
 		END FindChar;
 
 		PROCEDURE CopyChar(sender, data : ANY);
-		VAR charString : ARRAY 16 OF CHAR; i : LONGINT; buf : Texts.PUCS32String;
+		VAR charString : ARRAY 16 OF CHAR; i : SIZE; buf : Texts.PUCS32String;
 		BEGIN
 			Texts.clipboard.AcquireWrite; i := 0;
 			IF UTF8Strings.EncodeChar(curChar, charString, i) THEN

@@ -58,10 +58,10 @@ TYPE
 		partition: LONGINT; 
 		diskpartString: PartitionsLib.String; 
 
-		PROCEDURE ^ SetInstallStep*(step: LONGINT; doStep: BOOLEAN; VAR msg: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ IsValidStepNumber(stepNr: LONGINT): BOOLEAN; 
-		PROCEDURE ^ DoStep*(step: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetNofSteps(): LONGINT; 
+		PROCEDURE ^ SetInstallStep*(step: SIZE; doStep: BOOLEAN; VAR msg: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ IsValidStepNumber(stepNr: SIZE): BOOLEAN; 
+		PROCEDURE ^ DoStep*(step: SIZE): BOOLEAN; 
+		PROCEDURE ^ GetNofSteps(): SIZE; 
 		PROCEDURE ^ IsUsbDisk(): BOOLEAN; 
 		PROCEDURE ^ SpaceAvailable*(): LONGINT; 
 		PROCEDURE ^ CheckConfiguration*(w: Streams.Writer): BOOLEAN; 
@@ -76,7 +76,7 @@ TYPE
 	Installer* = OBJECT {EXCLUSIVE} (PartitionsLib.Operation)
 	VAR 
 		config: Configuration; 
-		currentStep, nofSteps: LONGINT; 
+		currentStep, nofSteps: SIZE; 
 		nofFiles: LONGINT; 
 		installLog: Streams.Writer; 
 
@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE ^ SetParameters*(config: Configuration); 
 		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
 		PROCEDURE ^ SetStep(CONST string: PartitionsLib.String); 
-		PROCEDURE ^ PackagesProgress(nofFilesExtracted: LONGINT); 
+		PROCEDURE ^ PackagesProgress(nofFilesExtracted: SIZE); 
 		PROCEDURE ^ DoOperation*; 
 		PROCEDURE ^ DoInstallPackages(): BOOLEAN; 
 		PROCEDURE ^ DoWriteMBR(): BOOLEAN; 
@@ -104,7 +104,7 @@ TYPE
 		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: LONGINT; out: Streams.Writer); 
 	END Installer; 
 
-	ReportProgressProc = PROCEDURE {DELEGATE}(nofFilesExtracted: LONGINT); 
+	ReportProgressProc = PROCEDURE {DELEGATE}(nofFilesExtracted: SIZE); 
 
 	AbortedProc = PROCEDURE {DELEGATE}():BOOLEAN; 
 
@@ -157,7 +157,7 @@ TYPE
 		PROCEDURE ^ SetReportErrorProc(proc: ReportErrorProc); 
 		PROCEDURE ^ SetReportProgressProc(proc: ReportProgressProc); 
 		PROCEDURE ^ SetAbortedProc(proc: AbortedProc); 
-		PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ OpenPackages*(CONST name: ARRAY OF CHAR; error: Streams.Writer): BOOLEAN; 
 		PROCEDURE ^ ParsePackages(document: XML.Document; error: Streams.Writer): Package; 
 		PROCEDURE ^ CheckPackages(): BOOLEAN; 

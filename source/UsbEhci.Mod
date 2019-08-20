@@ -975,7 +975,7 @@ TYPE
 		 * @param bufferlen Number of bytes transmitted/received in the data stage
 		 * @param buffer Buffer where to get/put the specified number of bytes
 		 *)
-		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : LONGINT; VAR buffer : Usbdi.Buffer);
+		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : SIZE; VAR buffer : Usbdi.Buffer);
 		VAR
 			qtd : Machine.Address32;
 			dword : SET;
@@ -1093,7 +1093,7 @@ TYPE
 			pipe.lastTD := qtd;
 		END ScheduleControl;
 
-		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: LONGINT; VAR buffer: Usbdi.Buffer);
+		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: SIZE; VAR buffer: Usbdi.Buffer);
 		VAR dword : SET;
 		BEGIN
 			Machine.FlushDCacheRange(ADDRESSOF(buffer[offset]), bufferLen);
@@ -1119,7 +1119,7 @@ TYPE
 			END;
 		END Schedule;
 
-		PROCEDURE CreateTDList(pipe : UsbHcdi.Pipe; direction, len, ofs : LONGINT; VAR buffer : Usbdi.Buffer; firstTD : LONGINT; VAR lastTD : Machine.Address32; tdToggle : BOOLEAN) : BOOLEAN;
+		PROCEDURE CreateTDList(pipe : UsbHcdi.Pipe; direction: WORD; len, ofs : SIZE; VAR buffer : Usbdi.Buffer; firstTD : LONGINT; VAR lastTD : Machine.Address32; tdToggle : BOOLEAN) : BOOLEAN;
 		VAR
 			restlen, curlen, temp : LONGINT;
 			j, qtd, nextTd : LONGINT;
@@ -1138,7 +1138,7 @@ TYPE
 			idx := 0;
 			offset := 0;		(* offset from last qTD (must fill multiples of packetSize into qTD buffers) *)
 			curlen := 0; 		(* amount of data that is transferred in a single qTD *)
-			restlen := len;	(* total amount of data to be transferred *)
+			restlen := len(LONGINT);	(* total amount of data to be transferred *)
 
 			WHILE restlen > 0 DO (* build qTD chain *)
 
@@ -1441,7 +1441,7 @@ TYPE
 
 			(* Addresses of queue heads *)
 			NEW(interruptQh);
-			FOR i := 0 TO 10 DO interruptQh[i] := Machine.Ensure32BitAddress (ADDRESSOF(qhlist.data[qhlist.base]) + i*sizeQh); END;
+			FOR i := 0 TO 10 DO interruptQh[i] := (ADDRESSOF(qhlist.data[qhlist.base]) + i*sizeQh)(Machine.Address32); END;
 			fstn := interruptQh[10] + sizeQh; (* Actually 8 bytes *)
 			isochronousQh := fstn + sizeQh;
 

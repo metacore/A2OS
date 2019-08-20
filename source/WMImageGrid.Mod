@@ -14,14 +14,14 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		canvas* : Graphics.BufferCanvas;
 		canvasGen-: Graphics.CanvasGenerator;
 		pointerThreshold*,
-		maxInterpolation* : LONGINT; (* allows limiting the interpolation degree on Draw *)
-		hs,ws: POINTER TO ARRAY OF LONGINT;
-		totalW, totalH: LONGINT;
-		gap: LONGINT;
+		maxInterpolation* : WORD; (* allows limiting the interpolation degree on Draw *)
+		hs,ws: POINTER TO ARRAY OF SIZE;
+		totalW, totalH: SIZE;
+		gap: SIZE;
 
-		PROCEDURE &Init1*( CONST Ws, Hs: ARRAY OF LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init1*( CONST Ws, Hs: ARRAY OF SIZE; alpha : BOOLEAN);
 		VAR
-			i,j: LONGINT;
+			i,j: SIZE;
 			rm: Raster.Mode;
 			pix: Raster.Pixel;
 		BEGIN
@@ -67,8 +67,8 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
 		END SetCanvasGenerator;
 
-		PROCEDURE IsHit(x, y  : LONGINT) : BOOLEAN;
-		VAR w, h : LONGINT; fx, fy : REAL;
+		PROCEDURE IsHit(x, y  : SIZE) : BOOLEAN;
+		VAR w, h : SIZE; fx, fy : REAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # totalW) OR (h # totalH)) THEN
@@ -79,16 +79,16 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 			END
 		END IsHit;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
 		VAR
-			mode: LONGINT;
+			mode: WORD;
 			isScaled: BOOLEAN;
-			i,j: LONGINT;
-			x,y: LONGINT;
+			i,j: SIZE;
+			x,y: SIZE;
 
-			PROCEDURE DrawSingle(CONST  img: Graphics.Image; offX,offY: LONGINT; isScaled: BOOLEAN; mode: LONGINT);
+			PROCEDURE DrawSingle(CONST  img: Graphics.Image; offX,offY: SIZE; isScaled: BOOLEAN; mode: WORD);
 			VAR
-				wscaled,hscaled: LONGINT;
+				wscaled,hscaled: SIZE;
 			BEGIN
 				IF img # NIL THEN
 				IF ~isScaled THEN
@@ -128,7 +128,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		END Draw;
 
 		PROCEDURE Invalidate*(rect : Rectangle);
-		VAR w, h : LONGINT; fx, fy : LONGREAL;
+		VAR w, h : SIZE; fx, fy : LONGREAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # totalW) OR (h # totalH))  THEN
@@ -140,7 +140,7 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 		END Invalidate;
 
 		PROCEDURE Handle*(VAR m : Message);
-		VAR w, h : LONGINT; fx, fy : REAL;
+		VAR w, h : SIZE; fx, fy : REAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # totalW) OR (h # totalH)) & (m.msgType = Messages.MsgPointer) THEN
@@ -167,8 +167,8 @@ TYPE GridWindow* = OBJECT(WMWindowManager.Window)
 	PROCEDURE Test*();
 	VAR
 		w: GridWindow;
-		Ws,Hs: ARRAY 3 OF LONGINT;
-		i: LONGINT;
+		Ws,Hs: ARRAY 3 OF SIZE;
+		i: SIZE;
 		rm: Raster.Mode;
 		pix: Raster.Pixel;
 	BEGIN

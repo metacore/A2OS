@@ -32,7 +32,7 @@ TYPE
 	Char32 = LONGINT; 
 
 	Point2d* = RECORD 
-		x*, y*: LONGINT; 
+		x*, y*: SIZE; 
 	END; 
 
 	Image* = OBJECT (Raster.Image)
@@ -46,24 +46,24 @@ TYPE
 
 	GlyphSpacings* = RECORD 
 		bearing*: Rectangle; 
-		width*, height*, ascent*, descent*: LONGINT; 
-		dx*, dy*: LONGINT; 
+		width*, height*, ascent*, descent*: SIZE; 
+		dx*, dy*: SIZE; 
 	END; 
 
 	Font* = OBJECT 
 	VAR 
-		ascent*, descent*: LONGINT; 
+		ascent*, descent*: SIZE; 
 		name*: ARRAY 256 OF CHAR; 
-		size*: LONGINT; 
+		size*: SIZE; 
 		style*: SET; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetHeight*(): LONGINT; 
-		PROCEDURE ^ GetAscent*(): LONGINT; 
-		PROCEDURE ^ GetDescent*(): LONGINT; 
+		PROCEDURE ^ GetHeight*(): SIZE; 
+		PROCEDURE ^ GetAscent*(): SIZE; 
+		PROCEDURE ^ GetDescent*(): SIZE; 
 		PROCEDURE ^ HasChar*(char: Char32): BOOLEAN; 
 		PROCEDURE ^ RenderString*(canvas: Canvas; x, y: Real; CONST text: ARRAY OF CHAR); 
-		PROCEDURE ^ GetStringSize*(CONST text: ARRAY OF CHAR; VAR dx, dy: LONGINT); 
+		PROCEDURE ^ GetStringSize*(CONST text: ARRAY OF CHAR; VAR dx, dy: SIZE); 
 		PROCEDURE ^ RenderChar*(canvas: Canvas; x, y: Real; char: Char32); 
 		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: Image); 
 		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: GlyphSpacings); 
@@ -71,14 +71,14 @@ TYPE
 
 	FontManager* = OBJECT 
 
-		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET): Font; 
+		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): Font; 
 	END FontManager; 
 
 	CanvasState* = RECORD 
 		clipMode: SET; 
 		clipRect: Rectangle; 
 		limits: Rectangle; 
-		dx, dy: LONGINT; 
+		dx, dy: SIZE; 
 		font: Font; 
 		color: Color; 
 	END; 
@@ -86,7 +86,7 @@ TYPE
 	Canvas* = OBJECT 
 	VAR 
 		limits*, clipRect*: Rectangle; 
-		dx*, dy*: LONGINT; 
+		dx*, dy*: SIZE; 
 		color*: Color; 
 		clipMode*: SET; 
 		generator*: Strings.String; 
@@ -94,7 +94,7 @@ TYPE
 
 		PROCEDURE ^ SaveState*(VAR cs: CanvasState); 
 		PROCEDURE ^ RestoreState*(CONST cs: CanvasState); 
-		PROCEDURE ^ ClipRectAsNewLimits*(ddx, ddy: LONGINT); 
+		PROCEDURE ^ ClipRectAsNewLimits*(ddx, ddy: SIZE); 
 		PROCEDURE ^ SetClipRect*(rect: Rectangle); 
 		PROCEDURE ^ GetClipRect*(VAR rect: Rectangle); 
 		PROCEDURE ^ SetClipMode*(mode: SET); 
@@ -102,29 +102,29 @@ TYPE
 		PROCEDURE ^ GetColor*(): Color; 
 		PROCEDURE ^ SetFont*(f: Font); 
 		PROCEDURE ^ GetFont*(): Font; 
-		PROCEDURE ^ DrawString*(x, y: LONGINT; CONST text: ARRAY OF CHAR); 
+		PROCEDURE ^ DrawString*(x, y: SIZE; CONST text: ARRAY OF CHAR); 
 		PROCEDURE ^ SetLineWidth*(w: Real); 
-		PROCEDURE ^ Line*(x0, y0, x1, y1: LONGINT; color: Color; mode: LONGINT); 
-		PROCEDURE ^ LineReal*(x0, y0, x1, y1: Real; color: Color; mode: LONGINT); 
-		PROCEDURE ^ SetPixel*(x, y: LONGINT; color: Color; mode: LONGINT); 
-		PROCEDURE ^ Fill*(rect: Rectangle; color: Color; mode: LONGINT); 
-		PROCEDURE ^ FillPolygonFlat*(CONST points: ARRAY OF Point2d; nofPoints: LONGINT; color: Color; mode: LONGINT); 
-		PROCEDURE ^ FillPolygonCB*(CONST points: ARRAY OF Point2d; nofPoints: LONGINT; callBack: FillLineCallBack); 
-		PROCEDURE ^ PolyLine*(CONST points: ARRAY OF Point2d; nofPoints: LONGINT; closed: BOOLEAN; color: Color; mode: LONGINT); 
-		PROCEDURE ^ DrawImage*(x, y: LONGINT; image: Raster.Image; mode: LONGINT); 
-		PROCEDURE ^ ScaleImage*(src: Raster.Image; sr, dr: Rectangle; copyMode, scaleMode: LONGINT); 
-		PROCEDURE ^ SetDelta*(dx, dy: LONGINT); 
+		PROCEDURE ^ Line*(x0, y0, x1, y1: SIZE; color: Color; mode: WORD); 
+		PROCEDURE ^ LineReal*(x0, y0, x1, y1: Real; color: Color; mode: WORD); 
+		PROCEDURE ^ SetPixel*(x, y: SIZE; color: Color; mode: WORD); 
+		PROCEDURE ^ Fill*(rect: Rectangle; color: Color; mode: WORD); 
+		PROCEDURE ^ FillPolygonFlat*(CONST points: ARRAY OF Point2d; nofPoints: SIZE; color: Color; mode: WORD); 
+		PROCEDURE ^ FillPolygonCB*(CONST points: ARRAY OF Point2d; nofPoints: SIZE; callBack: FillLineCallBack); 
+		PROCEDURE ^ PolyLine*(CONST points: ARRAY OF Point2d; nofPoints: SIZE; closed: BOOLEAN; color: Color; mode: WORD); 
+		PROCEDURE ^ DrawImage*(x, y: SIZE; image: Raster.Image; mode: WORD); 
+		PROCEDURE ^ ScaleImage*(src: Raster.Image; sr, dr: Rectangle; copyMode, scaleMode: WORD); 
+		PROCEDURE ^ SetDelta*(dx, dy: SIZE); 
 		PROCEDURE ^ SetLimits*(r: Rectangle); 
 		PROCEDURE ^ GetLimits*(): Rectangle; 
 	END Canvas; 
 
 	FillPosEntry = RECORD 
-		pos, next: LONGINT; 
+		pos, next: SIZE; 
 	END; 
 
 	FillHeap = POINTER TO ARRAY OF FillPosEntry; 
 
-	FillLineCallBack* = PROCEDURE {DELEGATE}(canvas: Canvas; y, x0, x1: LONGINT); 
+	FillLineCallBack* = PROCEDURE {DELEGATE}(canvas: Canvas; y, x0, x1: SIZE); 
 
 	CanvasGenerator* = PROCEDURE (img: Raster.Image):BufferCanvas; 
 
@@ -133,24 +133,24 @@ TYPE
 		img-: Raster.Image; 
 		bounds: Rectangle; 
 		fillHeap: FillHeap; 
-		heapSize, topHeap: LONGINT; 
-		height: LONGINT; 
-		edges: POINTER TO ARRAY OF LONGINT; 
+		heapSize, topHeap: SIZE; 
+		height: SIZE; 
+		edges: POINTER TO ARRAY OF SIZE; 
 
 		PROCEDURE ^  & New*(img: Raster.Image); 
 		PROCEDURE ^ GetImage*(): Raster.Image; 
 		PROCEDURE ^ SetLimits*(r: Rectangle); 
-		PROCEDURE ^ Fill*(rect: Rectangle; color: Color; mode: LONGINT); 
-		PROCEDURE ^ FillPolygonFlat*(CONST points: ARRAY OF Point2d; nofPoints: LONGINT; color: Color; mode: LONGINT); 
-		PROCEDURE ^ FillPolygonCB*(CONST points: ARRAY OF Point2d; nofPoints: LONGINT; callBack: FillLineCallBack); 
+		PROCEDURE ^ Fill*(rect: Rectangle; color: Color; mode: WORD); 
+		PROCEDURE ^ FillPolygonFlat*(CONST points: ARRAY OF Point2d; nofPoints: SIZE; color: Color; mode: WORD); 
+		PROCEDURE ^ FillPolygonCB*(CONST points: ARRAY OF Point2d; nofPoints: SIZE; callBack: FillLineCallBack); 
 		PROCEDURE ^ ClearHeap; 
-		PROCEDURE ^ NewFillPos(pos: LONGINT): LONGINT; 
-		PROCEDURE ^ AddIntersection(y, pos: LONGINT); 
-		PROCEDURE ^ AddLine(x0, y0, x1, y1: LONGINT); 
-		PROCEDURE ^ FillFlat(color: Color; mode: LONGINT); 
+		PROCEDURE ^ NewFillPos(pos: SIZE): SIZE; 
+		PROCEDURE ^ AddIntersection(y, pos: SIZE); 
+		PROCEDURE ^ AddLine(x0, y0, x1, y1: SIZE); 
+		PROCEDURE ^ FillFlat(color: Color; mode: WORD); 
 		PROCEDURE ^ FillCB(cb: FillLineCallBack); 
-		PROCEDURE ^ DrawImage*(x, y: LONGINT; img: Raster.Image; mode: LONGINT); 
-		PROCEDURE ^ ScaleImage*(src: Raster.Image; sr, dr: Rectangle; copyMode, scaleMode: LONGINT); 
+		PROCEDURE ^ DrawImage*(x, y: SIZE; img: Raster.Image; mode: WORD); 
+		PROCEDURE ^ ScaleImage*(src: Raster.Image; sr, dr: Rectangle; copyMode, scaleMode: WORD); 
 	END BufferCanvas; 
 VAR 
 	imgCache: Kernel.FinalizedCollection; 
@@ -159,10 +159,10 @@ VAR
 	defaultFont: Font; 
 	fontManager: FontManager; 
 	fallbackFonts*: ARRAY 5 OF Font; 
-	nofFallbackFonts: LONGINT; 
+	nofFallbackFonts: SIZE; 
 
-	PROCEDURE ^ Swap(VAR a, b: LONGINT); 
-	PROCEDURE ^ MakeRectangle*(l, t, r, b: LONGINT): Rectangle; 
+	PROCEDURE ^ Swap(VAR a, b: SIZE); 
+	PROCEDURE ^ MakeRectangle*(l, t, r, b: SIZE): Rectangle; 
 	PROCEDURE ^ ColorToRGBA*(color: Color; VAR r, g, b, a: LONGINT); 
 	PROCEDURE ^ RGBAToColor*(r, g, b, a: LONGINT): Color; 
 	PROCEDURE ^ Dark*(color: Color): Color; 
@@ -171,16 +171,16 @@ VAR
 	PROCEDURE ^ GetExtension(CONST name: ARRAY OF CHAR; VAR ext: ARRAY OF CHAR); 
 	PROCEDURE ^ LoadImage*(CONST name: ARRAY OF CHAR; shared: BOOLEAN): Image; 
 	PROCEDURE ^ StoreImage*(img: Raster.Image; CONST name: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ DrawStringInRect*(canvas: Canvas; rect: Rectangle; wrap: BOOLEAN; hAlign, vAlign: LONGINT; CONST text: ARRAY OF CHAR); 
+	PROCEDURE ^ DrawStringInRect*(canvas: Canvas; rect: Rectangle; wrap: BOOLEAN; hAlign, vAlign: WORD; CONST text: ARRAY OF CHAR); 
 	PROCEDURE ^ GenCanvas*(img: Raster.Image): BufferCanvas; 
 	PROCEDURE ^ InstallDefaultFont*(f: Font); 
 	PROCEDURE ^ GetDefaultFont*(): Font; 
 	PROCEDURE ^ InstallFontManager*(fm: FontManager); 
-	PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET): Font; 
+	PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): Font; 
 	PROCEDURE ^ FBRenderChar*(canvas: Canvas; x, y: Real; char: Char32); 
 	PROCEDURE ^ FBGetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: GlyphSpacings); 
-	PROCEDURE ^ IsBitmapHit*(x, y, threshold: LONGINT; img: Raster.Image): BOOLEAN; 
-	PROCEDURE ^ IsScaledBitmapHit*(x, y, w, h, threshold: LONGINT; img: Raster.Image): BOOLEAN; 
+	PROCEDURE ^ IsBitmapHit*(x, y: SIZE; threshold: LONGINT; img: Raster.Image): BOOLEAN; 
+	PROCEDURE ^ IsScaledBitmapHit*(x, y, w, h: SIZE; threshold: LONGINT; img: Raster.Image): BOOLEAN; 
 	PROCEDURE ^ ClearCache*; 
 BEGIN
 END WMGraphics.

@@ -328,10 +328,10 @@ TYPE
 		END Handle;
 
 		PROCEDURE SliderSearch(sender, data: ANY);
-		VAR pos: LONGINT;
+		VAR pos: SIZE;
 		BEGIN
 			pos := search.pos.Get();
-			player.SetPos(pos)
+			player.SetPos(pos(LONGINT))
 		END SliderSearch;
 
 		(* Update the Info Labels *)

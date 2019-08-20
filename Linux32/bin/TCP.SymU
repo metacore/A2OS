@@ -25,7 +25,7 @@ TYPE
 		conn: Connection; 
 
 		PROCEDURE ^  & New(c: Connection); 
-		PROCEDURE ^ SendPacket(CONST data: ARRAY OF CHAR; ofs, len: LONGINT): BOOLEAN; 
+		PROCEDURE ^ SendPacket(CONST data: ARRAY OF CHAR; ofs, len: SIZE): BOOLEAN; 
 	END Sender; 
 
 	Connection* = OBJECT {EXCLUSIVE} (Streams.Connection)
@@ -44,8 +44,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^ DelaySend*(enable: BOOLEAN); 
 		PROCEDURE ^ KeepAlive*(enable: BOOLEAN); 
 		PROCEDURE ^ Available*(): LONGINT; 

@@ -19,21 +19,21 @@ VAR
 
 TYPE
 	LineBuffer = POINTER TO RECORD
-		lines: ARRAY lineBufferSize OF LONGINT;
+		lines: ARRAY lineBufferSize OF SIZE;
 		next: LineBuffer;
-		size: LONGINT;
+		size: SIZE;
 	END;
 
 	Element = RECORD
-		val: LONGINT;
-		dir: LONGINT;
+		val: SIZE;
+		dir: WORD;
 	END;
 
-	Handler* = PROCEDURE {DELEGATE} (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
+	Handler* = PROCEDURE {DELEGATE} (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
 	EmptyHandler* = PROCEDURE {DELEGATE};
-	SetupHandler* = PROCEDURE {DELEGATE} (nofLines: LONGINT);
+	SetupHandler* = PROCEDURE {DELEGATE} (nofLines: SIZE);
 
-	PROCEDURE GetLinePos (lineBuffer: LineBuffer; offset: LONGINT): LONGINT;
+	PROCEDURE GetLinePos (lineBuffer: LineBuffer; offset: SIZE): SIZE;
 	BEGIN
 		WHILE offset >= lineBuffer.size DO
 			DEC (offset, lineBuffer.size);
@@ -42,7 +42,7 @@ TYPE
 		RETURN lineBuffer.lines[offset];
 	END GetLinePos;
 
-	PROCEDURE GetLineBuffer (reader: Texts.TextReader; VAR size: LONGINT): LineBuffer;
+	PROCEDURE GetLineBuffer (reader: Texts.TextReader; VAR size: SIZE): LineBuffer;
 	VAR
 		first, current: LineBuffer;
 		ch: LONGINT;
@@ -68,9 +68,9 @@ TYPE
 		RETURN first;
 	END GetLineBuffer;
 
-	PROCEDURE ReadLine (pos: LONGINT; reader: Texts.TextReader): Strings.String;
+	PROCEDURE ReadLine (pos: SIZE; reader: Texts.TextReader): Strings.String;
 	VAR
-		ch, i: LONGINT;
+		ch: LONGINT; i: SIZE;
 		string: Strings.String;
 	BEGIN
 		reader.SetPosition (pos);
@@ -96,13 +96,13 @@ TYPE
 	VAR
 		leftText, rightText: Texts.Text;
 		leftReader, rightReader: Texts.TextReader;
-		format, res: LONGINT; textRes: WORD;
+		format, res: WORD;
 		leftBuffer, rightBuffer, left, right: LineBuffer;
-		width, height : LONGINT;
+		width, height : SIZE;
 		table: POINTER TO ARRAY OF ARRAY OF Element;
-		x, y: LONGINT;
+		x, y, xv, yv: SIZE;
 
-		PROCEDURE CompareLines (left, right: LONGINT): BOOLEAN;
+		PROCEDURE CompareLines (left, right: SIZE): BOOLEAN;
 		VAR
 			leftCh, rightCh: LONGINT;
 		BEGIN
@@ -125,13 +125,13 @@ TYPE
 
 	BEGIN
 		NEW (leftText);
-		TextUtilities.LoadAuto(leftText, leftFile, format, textRes);
+		TextUtilities.LoadAuto(leftText, leftFile, format, res);
 		leftText.AcquireRead;
 		NEW (leftReader, leftText);
 		leftReader.SetPosition (0);
 
 		NEW (rightText);
-		TextUtilities.LoadAuto(rightText, rightFile, format, textRes);
+		TextUtilities.LoadAuto(rightText, rightFile, format, res);
 		rightText.AcquireRead;
 		NEW (rightReader, rightText);
 		rightReader.SetPosition (0);
@@ -164,13 +164,13 @@ TYPE
 					table[x, y].val := table[x - 1, y - 1].val + 1;
 					table[x, y].dir := dirDiag;
 				ELSE
-					format := table[x - 1, y].val;
-					res := table[x, y - 1].val;
-					IF format > res THEN
-						table[x, y].val := format;
+					xv := table[x - 1, y].val;
+					yv := table[x, y - 1].val;
+					IF xv > yv THEN
+						table[x, y].val := xv;
 						table[x, y].dir := dirLeft;
 					ELSE
-						table[x, y].val := res;
+						table[x, y].val := yv;
 						table[x, y].dir := dirUp;
 					END;
 				END;
@@ -204,9 +204,9 @@ TYPE
 		END;
 	END Diff;
 
-	PROCEDURE Handle (line: LONGINT; reader: Texts.TextReader; buffer: LineBuffer; handler: Handler; out : Streams.Writer);
+	PROCEDURE Handle (line: SIZE; reader: Texts.TextReader; buffer: LineBuffer; handler: Handler; out : Streams.Writer);
 	VAR
-		pos: LONGINT;
+		pos: SIZE;
 	BEGIN
 		IF handler # NIL THEN
 			pos := GetLinePos (buffer, line - 1);
@@ -214,21 +214,21 @@ TYPE
 		END
 	END Handle;
 
-	PROCEDURE Left (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
+	PROCEDURE Left (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
 	BEGIN
 		out.String (		"< ("); out.Int (line, 0); out.Char (':');
 		out.Int (pos, 0); out.String (") "); out.String (string^); out.Ln;
 		separator := TRUE;
 	END Left;
 
-	PROCEDURE Right (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
+	PROCEDURE Right (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
 	BEGIN
 		out.String ("> ("); out.Int (line, 0); out.Char (':');
 		out.Int (pos, 0); out.String (") "); out.String (string^); out.Ln;
 		separator := TRUE;
 	END Right;
 
-	PROCEDURE Equal (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
+	PROCEDURE Equal (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
 	BEGIN
 		IF separator THEN out.Ln; separator := FALSE END
 	END Equal;

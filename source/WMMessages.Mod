@@ -43,7 +43,7 @@ TYPE
 		token* : AsyncToken;
 		event* : CompCommand;
 		msgType*, msgSubType* : LONGINT; (** generic message type *)
-		x*, y*, z*, dx*, dy*, dz* : LONGINT; (** in keyboard messages : ucs value in x, keysym in y *)
+		x*, y*, z*, dx*, dy*, dz* : SIZE; (** in keyboard messages : ucs value in x, keysym in y *)
 		flags* : SET; (** in pointer messages : keys in flags *)
 		ext* : ANY; (** extended message *)
 	END;
@@ -90,7 +90,7 @@ TYPE
 
 	MsgQ = OBJECT
 	VAR
-		head, num: LONGINT;
+		head, num: SIZE;
 		msgQ: POINTER TO ARRAY OF Message;
 		owner: MsgSequencer;
 
@@ -102,7 +102,7 @@ TYPE
 		END InitQ;
 
 		PROCEDURE Grow(trace: BOOLEAN);
-		VAR new: POINTER TO ARRAY (* MsgQSize*)  OF Message; i: LONGINT; name: ARRAY 128 OF CHAR; VAR pc: ADDRESS;
+		VAR new: POINTER TO ARRAY (* MsgQSize*)  OF Message; i: SIZE; name: ARRAY 128 OF CHAR; VAR pc: ADDRESS;
 			type: Modules.TypeDesc; msg: Message;
 		BEGIN
 			NEW(new, LEN(msgQ) * 3 DIV 2);
@@ -144,15 +144,15 @@ TYPE
 
 		(** Add a message to a queue. Discards the message if the queue is full *)
 		PROCEDURE Add*(VAR msg : Message; debug:BOOLEAN): BOOLEAN;
-		VAR i, pos: LONGINT; name: ARRAY 256 OF CHAR; pc: ADDRESS;
+		VAR i, pos: SIZE; name: ARRAY 256 OF CHAR; pc: ADDRESS;
 		type: Modules.TypeDesc;
 		CONST
 			MergePointers = TRUE;
 			MergeInvalidates = TRUE;
 			MergeInvokeEvents = FALSE;
 
-			PROCEDURE Merge(VAR x,y,dx,dy: LONGINT; X,Y,dX,dY: LONGINT);
-			VAR nx, ny, ndx, ndy: LONGINT;
+			PROCEDURE Merge(VAR x,y,dx,dy: SIZE; X,Y,dX,dY: SIZE);
+			VAR nx, ny, ndx, ndy: SIZE;
 			BEGIN
 				nx := MIN(x,X);
 				ny := MIN(y,Y);

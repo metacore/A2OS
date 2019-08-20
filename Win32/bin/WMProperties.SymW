@@ -16,7 +16,7 @@ TYPE
 		repositoryName: Strings.String; 
 		componentName: Strings.String; 
 		generator: Strings.String; 
-		componentID: LONGINT; 
+		componentID: SIZE; 
 		inLinkUpdate: BOOLEAN; 
 
 		PROCEDURE ^  & New*(prototype: Property; name, info: String); 
@@ -109,6 +109,52 @@ TYPE
 		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
 	END Int32Property; 
 
+	IntegerProperty* = OBJECT (Property)
+	VAR 
+		value: HUGEINT; 
+		min, max: HUGEINT; 
+		bounded: BOOLEAN; 
+
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ SetBounds*(min, max: HUGEINT); 
+		PROCEDURE ^ GetBounds*(VAR min, max: HUGEINT); 
+		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
+		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
+		PROCEDURE ^ Validate(v: HUGEINT): HUGEINT; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): HUGEINT; 
+		PROCEDURE ^ Set*(value: HUGEINT); 
+		PROCEDURE ^ SetPassive*(value: HUGEINT); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+	END IntegerProperty; 
+
+	SizeProperty* = OBJECT (Property)
+	VAR 
+		value: SIZE; 
+		min, max: SIZE; 
+		bounded: BOOLEAN; 
+
+		PROCEDURE ^ UpdateProperty; 
+		PROCEDURE ^ UpdateModel; 
+		PROCEDURE ^ SetBounds*(min, max: SIZE); 
+		PROCEDURE ^ GetBounds*(VAR min, max: SIZE); 
+		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
+		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
+		PROCEDURE ^ Validate(v: SIZE): SIZE; 
+		PROCEDURE ^ FromStream*(r: Streams.Reader); 
+		PROCEDURE ^ ToStream*(w: Streams.Writer); 
+		PROCEDURE ^ Get*(): SIZE; 
+		PROCEDURE ^ Set*(value: SIZE); 
+		PROCEDURE ^ SetPassive*(value: SIZE); 
+		PROCEDURE ^ FromXML*(xml: XML.Element); 
+		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+	END SizeProperty; 
+
 	RealProperty* = OBJECT (Property)
 	VAR 
 		value: LONGREAL; 
@@ -183,12 +229,12 @@ TYPE
 		PROCEDURE ^ Get*(): WMGraphics.Font; 
 		PROCEDURE ^ Set*(font: WMGraphics.Font); 
 		PROCEDURE ^ SetPassive*(font: WMGraphics.Font); 
-		PROCEDURE ^ GetFont*(VAR name: ARRAY OF CHAR; VAR size: LONGINT; VAR style: SET); 
+		PROCEDURE ^ GetFont*(VAR name: ARRAY OF CHAR; VAR size: SIZE; VAR style: SET); 
 		PROCEDURE ^ SetFont*(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET); 
 		PROCEDURE ^ SetFontName*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetFontName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ SetSize*(size: LONGINT); 
-		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ SetSize*(size: SIZE); 
+		PROCEDURE ^ GetSize*(): SIZE; 
 		PROCEDURE ^ SetStyle*(style: SET); 
 		PROCEDURE ^ GetSyle*(): SET; 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
@@ -205,12 +251,12 @@ TYPE
 		PROCEDURE ^ Get*(): WMGraphics.Point2d; 
 		PROCEDURE ^ Set*(value: WMGraphics.Point2d); 
 		PROCEDURE ^ SetPassive*(value: WMGraphics.Point2d); 
-		PROCEDURE ^ SetCoordinate*(x, y: LONGINT); 
-		PROCEDURE ^ GetCoordinate*(VAR x, y: LONGINT); 
-		PROCEDURE ^ SetX*(x: LONGINT); 
-		PROCEDURE ^ SetY*(y: LONGINT); 
-		PROCEDURE ^ GetX*(): LONGINT; 
-		PROCEDURE ^ GetY*(): LONGINT; 
+		PROCEDURE ^ SetCoordinate*(x, y: SIZE); 
+		PROCEDURE ^ GetCoordinate*(VAR x, y: SIZE); 
+		PROCEDURE ^ SetX*(x: SIZE); 
+		PROCEDURE ^ SetY*(y: SIZE); 
+		PROCEDURE ^ GetX*(): SIZE; 
+		PROCEDURE ^ GetY*(): SIZE; 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
 		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
@@ -225,20 +271,20 @@ TYPE
 		PROCEDURE ^ Get*(): WMRectangles.Rectangle; 
 		PROCEDURE ^ Set*(value: WMRectangles.Rectangle); 
 		PROCEDURE ^ SetPassive*(value: WMRectangles.Rectangle); 
-		PROCEDURE ^ SetWidth*(w: LONGINT); 
-		PROCEDURE ^ SetHeight*(h: LONGINT); 
-		PROCEDURE ^ SetLeft*(l: LONGINT); 
-		PROCEDURE ^ SetTop*(t: LONGINT); 
-		PROCEDURE ^ SetRight*(r: LONGINT); 
-		PROCEDURE ^ SetBottom*(b: LONGINT); 
-		PROCEDURE ^ SetExtents*(w, h: LONGINT); 
-		PROCEDURE ^ GetWidth*(): LONGINT; 
-		PROCEDURE ^ GetHeight*(): LONGINT; 
-		PROCEDURE ^ GetLeft*(): LONGINT; 
-		PROCEDURE ^ GetTop*(): LONGINT; 
-		PROCEDURE ^ GetRight*(): LONGINT; 
-		PROCEDURE ^ GetBottom*(): LONGINT; 
-		PROCEDURE ^ GetExtents*(VAR width, height: LONGINT); 
+		PROCEDURE ^ SetWidth*(w: SIZE); 
+		PROCEDURE ^ SetHeight*(h: SIZE); 
+		PROCEDURE ^ SetLeft*(l: SIZE); 
+		PROCEDURE ^ SetTop*(t: SIZE); 
+		PROCEDURE ^ SetRight*(r: SIZE); 
+		PROCEDURE ^ SetBottom*(b: SIZE); 
+		PROCEDURE ^ SetExtents*(w, h: SIZE); 
+		PROCEDURE ^ GetWidth*(): SIZE; 
+		PROCEDURE ^ GetHeight*(): SIZE; 
+		PROCEDURE ^ GetLeft*(): SIZE; 
+		PROCEDURE ^ GetTop*(): SIZE; 
+		PROCEDURE ^ GetRight*(): SIZE; 
+		PROCEDURE ^ GetBottom*(): SIZE; 
+		PROCEDURE ^ GetExtents*(VAR width, height: SIZE); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
 		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
@@ -306,10 +352,12 @@ VAR
 
 	PROCEDURE ^ Indent(w: Streams.Writer; indent: LONGINT); 
 	PROCEDURE ^ ReadCharDataInt(xml: XML.Element): LONGINT; 
-	PROCEDURE ^ NewIntChars(i: LONGINT): XML.Chars; 
+	PROCEDURE ^ NewIntChars(i: HUGEINT): XML.Chars; 
 	PROCEDURE ^ NewBoolean*(): Property; 
 	PROCEDURE ^ NewSet*(): Property; 
 	PROCEDURE ^ NewInt32*(): Property; 
+	PROCEDURE ^ NewInteger*(): Property; 
+	PROCEDURE ^ NewSize*(): Property; 
 	PROCEDURE ^ NewReal*(): Property; 
 	PROCEDURE ^ NewString*(): Property; 
 	PROCEDURE ^ NewColor*(): Property; 

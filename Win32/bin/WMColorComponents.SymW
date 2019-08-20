@@ -66,12 +66,12 @@ TYPE
 		PROCEDURE ^ SetColor*(sender, color: ANY); 
 		PROCEDURE ^ DefaultColorChangeHandler(sender, color: ANY); 
 		PROCEDURE ^ SetExternalColorChangeHandler*(cch: ColorChangeHandler); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
 		PROCEDURE ^ DragArrived(sender, data: ANY); 
-		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 	END ColorPot; 
 
 	ColorChooser* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)

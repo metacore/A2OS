@@ -60,7 +60,7 @@ TYPE
 		END GetInBuffer;
 
 		(* Get a pixel from the source buffer*)
-		PROCEDURE GetInPixel(x,y, tx0,ty0: LONGINT; window: FilterWindow; in: In; source: Buffer; VAR pix: Raster.Pixel);
+		PROCEDURE GetInPixel(x,y, tx0,ty0: SIZE; window: FilterWindow; in: In; source: Buffer; VAR pix: Raster.Pixel);
 		BEGIN
 			IF in.type#InFilterElement THEN
 				x:=x+tx0-ENTIER(window.x);
@@ -82,7 +82,7 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty: LONGINT;
+		VAR tx,ty: SIZE;
 			source,source2: Buffer;
 			pix,pix2: Raster.Pixel;
 		BEGIN
@@ -99,7 +99,7 @@ TYPE
 
 		(* Blend two pixels *)
 		PROCEDURE Blend(VAR a, b: Raster.Pixel);
-		VAR fa, fb, ta, tb, i: LONGINT;
+		VAR fa, fb, ta, tb, i: SIZE;
 		BEGIN
 			CASE mode OF
 			| BlendModeNormal:	(* (1-qa)*cb+ca *)
@@ -159,7 +159,7 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty, sx,sy: LONGINT;
+		VAR tx,ty, sx,sy: SIZE;
 			source: Buffer;
 			pix: Raster.Pixel;
 		BEGIN
@@ -185,7 +185,7 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty: LONGINT;
+		VAR tx,ty: SIZE;
 			source: Buffer;
 			pix: Raster.Pixel;
 		BEGIN
@@ -205,12 +205,12 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty, k: LONGINT;
+		VAR tx,ty, k: SIZE;
 			source: Buffer;
 			pix: Raster.Pixel;
 			temp: Buffer;
 			kernel: POINTER TO ARRAY OF LONGREAL;
-			kernelSizeX, kernelSizeY, kernelHalfX, kernelHalfY: LONGINT;
+			kernelSizeX, kernelSizeY, kernelHalfX, kernelHalfY: SIZE;
 			norm, sSquared2: LONGREAL;
 			sum: SVGColors.ColorSum;
 		BEGIN
@@ -270,7 +270,7 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty: LONGINT;
+		VAR tx,ty: SIZE;
 			source: Buffer;
 			pix: Raster.Pixel;
 			enum: XMLObjects.Enumerator;
@@ -315,7 +315,7 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty: LONGINT;
+		VAR tx,ty: SIZE;
 		BEGIN
 			FOR ty:=0 TO target.height-1 DO
 			FOR tx:=0 TO target.width-1 DO
@@ -329,7 +329,7 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty, sx,sy: LONGINT;
+		VAR tx,ty, sx,sy: SIZE;
 			pix: Raster.Pixel;
 		BEGIN
 			FOR ty:=0 TO target.height-1 DO
@@ -350,7 +350,7 @@ TYPE
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
-		VAR tx,ty, sx,sy: LONGINT;
+		VAR tx,ty, sx,sy: SIZE;
 			source: Buffer;
 			pix: Raster.Pixel;
 		BEGIN
@@ -397,7 +397,7 @@ TYPE
 		(* Apply this filter *)
 		PROCEDURE Apply*(source, target: Buffer);
 		VAR result: Buffer;
-			minx, miny, maxx, maxy: LONGINT;
+			minx, miny, maxx, maxy: SIZE;
 		BEGIN
 			IF rootElement#NIL THEN
 				window.sourceGraphic := SVG.NewDocument(window.width,window.height);
@@ -514,7 +514,7 @@ END ParseColorMatrixType;
 
 (* Parse some values attribute of some feColorMatrix element *)
 PROCEDURE ParseColorMatrixValues*(values: XML.String; type: SHORTINT; VAR matrix: ColorMatrix):BOOLEAN;
-VAR pos: SIZE; i,j: LONGINT;
+VAR pos: SIZE; i,j: SIZE;
 	angle, s,c: LONGREAL;
 BEGIN
 	(* Init to the zero matrix *)

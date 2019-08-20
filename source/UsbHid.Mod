@@ -161,7 +161,7 @@ TYPE
 		 * @param type Type of the report we want
 		 * @param id of the report we want
 		 * @param buffer: Buffer to put the report into
-		 * @param len: Exspected length of the report
+		 * @param len: Expected length of the report
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		*)
 		PROCEDURE GetReport*(type, id : LONGINT; VAR buffer: Usbdi.Buffer; len : LONGINT) : BOOLEAN;
@@ -226,7 +226,7 @@ BEGIN
 END ParseHidDescriptor;
 
 PROCEDURE ShowHidDescriptor*(hd : HidDescriptor);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	KernelLog.String("HID Descriptor: ");
 	IF hd = NIL THEN KernelLog.String("NIL"); END; KernelLog.Ln;

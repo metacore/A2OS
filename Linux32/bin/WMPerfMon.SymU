@@ -38,9 +38,9 @@ TYPE
 		cpuMemory: CpuMemoryComponent; 
 		network: NetworkComponent; 
 		selection: WMPerfMonComponents.SelectionComponent; 
-		width, height: LONGINT; 
+		width, height: SIZE; 
 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ TabSelected(sender, data: ANY); 
 		PROCEDURE ^ SelectTabByName(CONST name: ARRAY OF CHAR); 

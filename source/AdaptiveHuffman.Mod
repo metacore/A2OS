@@ -342,8 +342,8 @@ TYPE
 				NEW( huff, Encode, NIL, archive );
 			END New;
 
-			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: LONGINT );
-			VAR  i: LONGINT;
+			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: SIZE );
+			VAR  i: SIZE;
 			BEGIN
 				huff.Initialize;
 				i := 0;

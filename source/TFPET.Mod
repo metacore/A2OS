@@ -345,10 +345,10 @@ TYPE
 	Position = OBJECT
 	VAR
 		marker : WMTextView.PositionMarker;
-		ucs, keysym : LONGINT; flags : SET;
+		ucs, keysym : SIZE; flags : SET;
 		next : Position;
 
-		PROCEDURE &Init*(ucs, keysym : LONGINT; flags : SET);
+		PROCEDURE &Init*(ucs, keysym : SIZE; flags : SET);
 		BEGIN
 			SELF.ucs := ucs; SELF.keysym := keysym; SELF.flags := flags;
 			marker := NIL; next := NIL;
@@ -368,7 +368,7 @@ TYPE
 			SELF.textView := textView;
 		END Init;
 
-		PROCEDURE FindPosition(ucs, keysym : LONGINT; flags : SET) : Position;
+		PROCEDURE FindPosition(ucs, keysym : SIZE; flags : SET) : Position;
 		VAR p : Position;
 		BEGIN
 			p := positions;
@@ -379,8 +379,8 @@ TYPE
 		END FindPosition;
 
 		(* Associate current cursor position with the spec  ified key combination.  *)
-		PROCEDURE StoreCurrentPosition(ucs, keysym : LONGINT; flags : SET);
-		VAR newPosition : Position; intPos : LONGINT;
+		PROCEDURE StoreCurrentPosition(ucs, keysym : SIZE; flags : SET);
+		VAR newPosition : Position; intPos : SIZE;
 		BEGIN
 			ASSERT(flags * { Inputs.Release} = {});
 			newPosition := FindPosition(ucs, keysym, flags);
@@ -395,7 +395,7 @@ TYPE
 			newPosition.marker.SetPosition(intPos);
 		END StoreCurrentPosition;
 
-		PROCEDURE RecallPosition(ucs, keysym : LONGINT; flags : SET);
+		PROCEDURE RecallPosition(ucs, keysym : SIZE; flags : SET);
 		VAR position : Position;
 		BEGIN
 			position := FindPosition(ucs, keysym, flags);
@@ -698,7 +698,7 @@ TYPE
 				COPY(info.filename, filename); Strings.Append(filename, ".Mod");
 				file := Files.Old(filename);
 				IF (file # NIL) THEN
-					owner.GotoFile(filename, info.position);
+					owner.GotoFile(filename, info.position(SIZE));
 				END;
 			END;
 		END OnGoToFile;
@@ -733,7 +733,7 @@ TYPE
 		PROCEDURE DoCompile(findPC : BOOLEAN; CONST pc :ARRAY OF CHAR; options : CompilerOptions);
 		VAR
 			compiler : CompilerInterface.Compiler; tw : TextUtilities.TextWriter; errors : BOOLEAN;
-			positions : ARRAY 2 OF LONGINT;
+			positions : ARRAY 2 OF SIZE;
 			type : LONGINT;
 		BEGIN
 			ClearLog;
@@ -802,7 +802,7 @@ TYPE
 		END ErrorClick;
 
 		PROCEDURE GoToNextError(forward : BOOLEAN);
-		VAR nearestPosition, row, index : LONGINT; focusEditor: WMEditors.Editor;
+		VAR nearestPosition, row, index : SIZE; focusEditor: WMEditors.Editor;
 		BEGIN
 			IF focus = EditorFocus THEN focusEditor := editor; index := 0;
 			ELSIF focus = SplitEditorFocus THEN focusEditor := splitEditor; index := 1;
@@ -869,7 +869,7 @@ TYPE
 		END TextChanged;
 
 		PROCEDURE CursorChanged;
-		VAR position : LONGINT; pos : ARRAY 16 OF CHAR;
+		VAR position : SIZE; pos : ARRAY 16 OF CHAR;
 		BEGIN
 			position := editor.tv.cursor.GetPosition();
 			Strings.IntToStr(position, pos);
@@ -877,8 +877,8 @@ TYPE
 			IF (tree # NIL) THEN tree.SelectNodeByPos (position) END
 		END CursorChanged;
 
-		PROCEDURE HandleShortcut(ucs : LONGINT; flags : SET; keysym : LONGINT) : BOOLEAN;
-		VAR pos : LONGINT;
+		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
+		VAR pos : SIZE;
 
 			PROCEDURE HandlePreviousNext(forward : BOOLEAN);
 			BEGIN
@@ -928,7 +928,7 @@ TYPE
 			END HandlePositions;
 
 			PROCEDURE RemoveWhitespace;
-			VAR tw : TextUtilities.TextWriter; nofRemoved : LONGINT;
+			VAR tw : TextUtilities.TextWriter; nofRemoved : SIZE;
 			BEGIN
 				ClearLog;
 				NEW(tw, logEdit.text);
@@ -1018,7 +1018,7 @@ TYPE
 	BrowseEntry = POINTER TO RECORD
 		prev, next : BrowseEntry;
 		filename : Filename;
-		pos : LONGINT;
+		pos : SIZE;
 	END;
 
 	Window = OBJECT (WMComponents.FormWindow)
@@ -1118,7 +1118,7 @@ TYPE
 			resizer : WMStandardComponents.Resizer;
 			posLabel : WMStandardComponents.Label;
 			font: WMGraphics.Font;
-			dx, dy: LONGINT;
+			dx, dy: SIZE;
 
 			PROCEDURE CreateToolbar() : WMComponents.VisualComponent;
 			VAR toolbar : WMStandardComponents.Panel;
@@ -1305,7 +1305,7 @@ TYPE
 			END;
 		END ButtonHandler;
 
-		PROCEDURE NrUpdatesChanged(nrUndos, nrRedos: LONGINT);
+		PROCEDURE NrUpdatesChanged(nrUndos, nrRedos: SIZE);
 		VAR lbl, str: ARRAY 32 OF CHAR;
 		BEGIN
 			IF nrUndos = 0 THEN
@@ -1390,7 +1390,7 @@ TYPE
 		END InitCodecs;
 
 		PROCEDURE SelectNextTab;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			IF currentPageNr < 0 THEN RETURN; END;
 			i := currentPageNr + 1;
@@ -1404,7 +1404,7 @@ TYPE
 		END SelectNextTab;
 
 		PROCEDURE SelectPreviousTab;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			IF currentPageNr < 0 THEN RETURN; END;
 			i := currentPageNr - 1;
@@ -1417,7 +1417,7 @@ TYPE
 			END;
 		END SelectPreviousTab;
 
-		PROCEDURE SelectTab(tabNr : LONGINT);
+		PROCEDURE SelectTab(tabNr : SIZE);
 		BEGIN
 			IF (tabNr >= 0) & (tabNr < LEN(SELF.pages)) & (SELF.pages[tabNr] # NIL) THEN
 				TabSelected(NIL, tabList[tabNr]);
@@ -1440,8 +1440,8 @@ TYPE
 			END;
 		END RecordCurrentPos;
 
-		PROCEDURE GotoFileInternal(CONST filename : ARRAY OF CHAR; pos : LONGINT);
-		VAR page : PETPanel; i : LONGINT;
+		PROCEDURE GotoFileInternal(CONST filename : ARRAY OF CHAR; pos : SIZE);
+		VAR page : PETPanel; i : SIZE;
 		BEGIN
 			KernelLog.String("filename= "); KernelLog.String(filename); KernelLog.Ln;
 			KernelLog.String("pos= "); KernelLog.Int(pos, 0); KernelLog.Ln;
@@ -1486,7 +1486,7 @@ TYPE
 			END
 		END BrowseForward;
 
-		PROCEDURE GotoFile(CONST filename : ARRAY OF CHAR; pos : LONGINT);
+		PROCEDURE GotoFile(CONST filename : ARRAY OF CHAR; pos : SIZE);
 		VAR page : PETPanel; i : LONGINT;
 		BEGIN
 			IF browseTOS = browseBase THEN RecordCurrentPos END;
@@ -1659,7 +1659,7 @@ TYPE
 		END HandleDocumentInfo;
 
 		PROCEDURE UpdateState;
-		VAR tInt : LONGINT; tStr : ARRAY 16 OF CHAR;
+		VAR tInt : SIZE; tStr : ARRAY 16 OF CHAR;
 
 			PROCEDURE SetSplitted(splitted : BOOLEAN);
 			BEGIN
@@ -1720,7 +1720,7 @@ TYPE
 			END;
 		END UpdateState;
 
-		PROCEDURE DragDroppedHandler(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
+		PROCEDURE DragDroppedHandler(x, y : SIZE; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
 		VAR dropTarget : URLDropTarget;
 		BEGIN
 			NEW(dropTarget, SELF);
@@ -1741,7 +1741,7 @@ TYPE
 			END
 		END PositionHandler;
 
-		PROCEDURE FormatHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN);
+		PROCEDURE FormatHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN);
 		VAR rectangle: WMRectangles.Rectangle;
 		BEGIN
 			handled := TRUE;
@@ -2089,15 +2089,15 @@ TYPE
 						currentPage.editor.text.AcquireWrite;
 						encoder.WriteText(currentPage.editor.text, res);
 						currentPage.editor.text.ReleaseWrite;
-						w.Update;
-						IF res # 0 THEN
-							msg := "Could not encode file "; Strings.Append(msg, fullname);
+						w.Update;
+						IF res # 0 THEN
+							msg := "Could not encode file "; Strings.Append(msg, fullname);
 							WMDialogs.Error(WindowTitle, msg);
-						END;
-				ELSE
-						msg := "Could not store to file "; Strings.Append(msg, fullname); Strings.Append(msg, " (Could not open output stream)");
-						WMDialogs.Error(WindowTitle, msg);
-				END;
+						END;
+				ELSE
+						msg := "Could not store to file "; Strings.Append(msg, fullname); Strings.Append(msg, " (Could not open output stream)");
+						WMDialogs.Error(WindowTitle, msg);
+				END;
 				ELSE
 					msg := "Could not store file "; Strings.Append(msg, fullname); Strings.Append(msg, " (No encoder found)");
 					WMDialogs.Error(WindowTitle, msg);
@@ -2254,7 +2254,7 @@ TYPE
 		END LinkClickedHandler;
 
 		PROCEDURE FindPC(sender, data : ANY);
-		VAR a, b : LONGINT;
+		VAR a, b : SIZE;
 			pcStr : ARRAY 128 OF CHAR;
 			selectionText: Texts.Text;
 			from, to: Texts.TextPosition;
@@ -2315,9 +2315,9 @@ TYPE
 		END Close;
 
 		(* XML scanner/parser error handler *)
-		PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
-			xmlHasErrors := TRUE;
+			xmlHasErrors := TRUE;
 		END Error;
 
 		PROCEDURE LoadState(CONST filename : ARRAY OF CHAR) : BOOLEAN;
@@ -2432,7 +2432,7 @@ TYPE
 			entries: XMLObjects.Enumerator;
 			entry : XML.Element;
 			s : Strings.String;
-			firstLine, cursorPos, width, height : LONGINT;
+			firstLine, cursorPos, width, height : SIZE;
 			options : CompilerOptions;
 			showLabels, wordWrap, visible, wrap, caseSensitive, backwards, highlightAll : BOOLEAN;
 			searchString, replaceString : WMSearchComponents.SearchString;
@@ -2458,15 +2458,15 @@ TYPE
 						s := entry.GetName();
 						IF (s # NIL) THEN
 							IF (s^ = "Editor") THEN
-								WMRestorable.LoadLongint(entry, "firstLine", firstLine);
-								WMRestorable.LoadLongint(entry, "cursorPos", cursorPos);
+								WMRestorable.LoadSize(entry, "firstLine", firstLine);
+								WMRestorable.LoadSize(entry, "cursorPos", cursorPos);
 								currentPage.editor.tv.firstLine.Set(firstLine);
 								currentPage.editor.tv.cursor.SetPosition(cursorPos);
 							ELSIF (s^ = "SplitEditor") THEN
-								WMRestorable.LoadLongint(entry, "firstLine", firstLine);
-								WMRestorable.LoadLongint(entry, "cursorPos", cursorPos);
+								WMRestorable.LoadSize(entry, "firstLine", firstLine);
+								WMRestorable.LoadSize(entry, "cursorPos", cursorPos);
 								WMRestorable.LoadBoolean(entry, "visible", visible);
-								WMRestorable.LoadLongint(entry, "height", height);
+								WMRestorable.LoadSize(entry, "height", height);
 								currentPage.splitEditor.tv.firstLine.Set(firstLine);
 								currentPage.splitEditor.tv.cursor.SetPosition(cursorPos);
 								currentPage.splitPanel.visible.Set(visible);
@@ -2474,8 +2474,8 @@ TYPE
 								currentPage.splitPanel.bounds.SetHeight(height);
 							ELSIF (s^ = "SidePanel") THEN
 								WMRestorable.LoadBoolean(entry, "visible", visible);
-								WMRestorable.LoadLongint(entry, "width", width);
-								WMRestorable.LoadLongint(entry, "scratchHeight", height);
+								WMRestorable.LoadSize(entry, "width", width);
+								WMRestorable.LoadSize(entry, "scratchHeight", height);
 								currentPage.sidePanel.visible.Set(visible);
 								currentPage.sidePanel.bounds.SetWidth(width);
 								currentPage.scratchPanel.bounds.SetHeight(height);
@@ -2492,7 +2492,7 @@ TYPE
 								currentPage.searchPanel.searchEdit.SetAsString(searchString);
 								currentPage.searchPanel.replEdit.SetAsString(replaceString);
 							ELSIF (s^ = "LogPanel") THEN
-								WMRestorable.LoadLongint(entry, "height", height);
+								WMRestorable.LoadSize(entry, "height", height);
 								currentPage.logPanel.bounds.SetHeight(height);
 							END;
 						END;
@@ -2516,15 +2516,15 @@ TYPE
 			WMRestorable.StoreBoolean(elem, "wordWrap", page.editor.tv.wrapMode.Get() = WMTextView.WrapWord);
 
 			NEW(entry); entry.SetName("Editor");
-				WMRestorable.StoreLongint(entry, "firstLine", page.editor.tv.firstLine.Get());
-				WMRestorable.StoreLongint(entry, "cursorPos", page.editor.tv.cursor.GetPosition());
+				WMRestorable.StoreSize(entry, "firstLine", page.editor.tv.firstLine.Get());
+				WMRestorable.StoreSize(entry, "cursorPos", page.editor.tv.cursor.GetPosition());
 			elem.AddContent(entry);
 
 			NEW(entry); entry.SetName("SplitEditor");
 				WMRestorable.StoreBoolean(entry, "visible", page.splitPanel.visible.Get());
-				WMRestorable.StoreLongint(entry, "firstLine", page.splitEditor.tv.firstLine.Get());
-				WMRestorable.StoreLongint(entry, "cursorPos", page.splitEditor.tv.cursor.GetPosition());
-				WMRestorable.StoreLongint(entry, "height", page.splitPanel.bounds.GetHeight());
+				WMRestorable.StoreSize(entry, "firstLine", page.splitEditor.tv.firstLine.Get());
+				WMRestorable.StoreSize(entry, "cursorPos", page.splitEditor.tv.cursor.GetPosition());
+				WMRestorable.StoreSize(entry, "height", page.splitPanel.bounds.GetHeight());
 			elem.AddContent(entry);
 
 			NEW(entry); entry.SetName("SearchPanel");
@@ -2541,19 +2541,19 @@ TYPE
 			elem.AddContent(entry);
 
 			NEW(entry); entry.SetName("LogPanel");
-				WMRestorable.StoreLongint(entry, "height", page.logPanel.bounds.GetHeight());
+				WMRestorable.StoreSize(entry, "height", page.logPanel.bounds.GetHeight());
 			elem.AddContent(entry);
 
 			NEW(entry); entry.SetName("SidePanel");
 				WMRestorable.StoreBoolean(entry, "visible", page.sidePanel.visible.Get());
-				WMRestorable.StoreLongint(entry, "width", page.sidePanel.bounds.GetWidth());
-				WMRestorable.StoreLongint(entry, "scratchHeight", page.scratchPanel.bounds.GetHeight());
+				WMRestorable.StoreSize(entry, "width", page.sidePanel.bounds.GetWidth());
+				WMRestorable.StoreSize(entry, "scratchHeight", page.scratchPanel.bounds.GetHeight());
 			elem.AddContent(entry);
 
 			RETURN elem;
 		END StorePage;
 
-		PROCEDURE HandleShortcut(ucs : LONGINT; flags : SET; keysym : LONGINT) : BOOLEAN;
+		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
 		VAR filename : Filename; options : CompilerOptions;
 		BEGIN
 			modifierFlags := flags;
@@ -2676,7 +2676,7 @@ END Restore;
 
 (** Comment the currently selected text *)
 PROCEDURE CommentSelection*(text : Texts.Text; from, to : Texts.TextPosition);
-VAR a, b : LONGINT; string : ARRAY 4 OF Texts.Char32;
+VAR a, b : SIZE; string : ARRAY 4 OF Texts.Char32;
 BEGIN
 	ASSERT((text # NIL) & (from # NIL) & (to # NIL));
 	text.AcquireWrite;
@@ -2695,8 +2695,8 @@ END CommentSelection;
 PROCEDURE UncommentSelection*(text : Texts.Text; from, to : Texts.TextPosition);
 VAR
 	reader : Texts.TextReader; ch : Texts.Char32;
-	a, b : LONGINT;
-	openPos, closePos, openLen, closeLen : LONGINT;
+	a, b : SIZE;
+	openPos, closePos, openLen, closeLen : SIZE;
 BEGIN
 	text.AcquireWrite;
 	a := MIN(from.GetPosition(), to.GetPosition());

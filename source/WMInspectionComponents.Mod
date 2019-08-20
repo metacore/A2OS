@@ -165,14 +165,14 @@ TYPE
 			END;
 		END UpdateAdrLabel;
 
-		PROCEDURE AdrLabelMove(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE AdrLabelMove(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR dx, dy, dp, d : LONGINT; f : REAL; tmax, tmin : LONGINT;
 		BEGIN
 			IF keys = {0} THEN adrLabel.AutoStartDrag END;
 		END AdrLabelMove;
 
 		PROCEDURE MyStartDrag(sender, data: ANY);
-		VAR w,h: LONGINT; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas;
+		VAR w,h: SIZE; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas;
 		BEGIN
 			NEW(img);
 			adrLabel.bounds.GetExtents(w,h);
@@ -182,14 +182,14 @@ TYPE
 			IF StartDrag(property.GetLink(),img,0,0,NIL,NIL) THEN END;
 		END MyStartDrag;
 
-		PROCEDURE InfoLabelMove(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE InfoLabelMove(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR dx, dy, dp, d : LONGINT; f : REAL; tmax, tmin : LONGINT;
 		BEGIN
 			IF keys = {0} THEN infoLabel.AutoStartDrag END;
 		END InfoLabelMove;
 
 		PROCEDURE InfoLabelStartDrag(sender, data: ANY);
-		VAR w,h: LONGINT; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas; font: WMGraphics.Font; string: Strings.String;
+		VAR w,h: SIZE; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas; font: WMGraphics.Font; string: Strings.String;
 		BEGIN
 			IF info # NIL THEN string := info
 			ELSIF name # NIL THEN string := name
@@ -209,7 +209,7 @@ TYPE
 			IF StartDrag(NIL,img,0,0,NIL,NIL) THEN END;
 		END InfoLabelStartDrag;
 
-		PROCEDURE MyDragDropped(x,y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN);
+		PROCEDURE MyDragDropped(x,y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN);
 		VAR ref,sender: ANY; dt: DropTarget; pos: LONGINT;
 		BEGIN
 			ref := dragInfo.data;
@@ -742,16 +742,16 @@ TYPE
 
 		PROCEDURE Apply(force : BOOLEAN);
 		VAR rectangle : WMProperties.RectangleProperty; rect, r : WMRectangles.Rectangle; string : ARRAY 32 OF CHAR;
-			width, height: LONGINT;
+			width, height: SIZE;
 		BEGIN
 			rectangle := SELF.rectangle;
 			IF (rectangle # NIL) THEN
-				editLeft.GetAsString(string); Strings.StrToInt(string, rect.l);
-				editTop.GetAsString(string); Strings.StrToInt(string, rect.t);
-				editRight.GetAsString(string); Strings.StrToInt(string, rect.r);
-				editBottom.GetAsString(string); Strings.StrToInt(string, rect.b);
-				IF editWidth # NIL THEN editWidth.GetAsString(string); Strings.StrToInt(string, width) ELSE width := rect.r-rect.l END;
-				IF editHeight # NIL THEN editHeight.GetAsString(string); Strings.StrToInt(string, height) ELSE height := rect.t- rect.b END;
+				editLeft.GetAsString(string); Strings.StrToSize(string, rect.l);
+				editTop.GetAsString(string); Strings.StrToSize(string, rect.t);
+				editRight.GetAsString(string); Strings.StrToSize(string, rect.r);
+				editBottom.GetAsString(string); Strings.StrToSize(string, rect.b);
+				IF editWidth # NIL THEN editWidth.GetAsString(string); Strings.StrToSize(string, width) ELSE width := rect.r-rect.l END;
+				IF editHeight # NIL THEN editHeight.GetAsString(string); Strings.StrToSize(string, height) ELSE height := rect.t- rect.b END;
 				IF 5 IN outOfDate THEN rect.t := rect.b - height END;
 				IF 4 IN outOfDate THEN rect.r := rect.l + width END;
 				r := rectangle.Get();
@@ -915,8 +915,8 @@ TYPE
 		BEGIN
 			point := SELF.point;
 			IF (point # NIL) THEN
-				editX.GetAsString(string); Strings.StrToInt(string, pnt.x);
-				editY.GetAsString(string); Strings.StrToInt(string, pnt.y);
+				editX.GetAsString(string); Strings.StrToSize(string, pnt.x);
+				editY.GetAsString(string); Strings.StrToSize(string, pnt.y);
 				p := point.Get();
 				IF force OR (p.x#pnt.x) OR (p.y#pnt.y)  THEN
 					point.Set(pnt);
@@ -1303,7 +1303,7 @@ TYPE
 		END Apply;
 
 		PROCEDURE Synchronize(force : BOOLEAN);
-		VAR font : WMProperties.FontProperty; name, temp : ARRAY 32 OF CHAR; size : LONGINT; style : SET;
+		VAR font : WMProperties.FontProperty; name, temp : ARRAY 32 OF CHAR; size : SIZE; style : SET;
 		BEGIN
 			Synchronize^(force);
 			font := SELF.font;
@@ -1431,14 +1431,14 @@ TYPE
 			outOfDate := FALSE;
 		END Init;
 
-		PROCEDURE AdrLabelMove(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE AdrLabelMove(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR dx, dy, dp, d : LONGINT; f : REAL; tmax, tmin : LONGINT;
 		BEGIN
 			IF keys = {0} THEN adrLabel.AutoStartDrag END;
 		END AdrLabelMove;
 
 		PROCEDURE MyStartDrag(sender, data: ANY);
-		VAR w,h: LONGINT; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas;
+		VAR w,h: SIZE; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas;
 		BEGIN
 			NEW(img);
 			adrLabel.bounds.GetExtents(w,h);
@@ -2062,7 +2062,7 @@ TYPE
 	ComponentElement* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		component : WMComponents.Component;
-		nofElements : LONGINT;
+		nofElements : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -2075,7 +2075,7 @@ TYPE
 		PROCEDURE CountNofElements(component : WMComponents.Component);
 		END CountNofElements;
 
-		PROCEDURE GetNofElements*() : LONGINT;
+		PROCEDURE GetNofElements*() : SIZE;
 		BEGIN
 			RETURN nofElements;
 		END GetNofElements;
@@ -2121,7 +2121,7 @@ TYPE
 		END Init;
 
 		PROCEDURE CountNofElements(component : WMComponents.Component);
-		VAR propertyArray : WMProperties.PropertyArray;  i : LONGINT;
+		VAR propertyArray : WMProperties.PropertyArray;  i : SIZE;
 		BEGIN
 			nofElements := 0;
 			IF (component # NIL) THEN
@@ -2137,7 +2137,7 @@ TYPE
 		END CountNofElements;
 
 		PROCEDURE SetProperties(component : WMComponents.Component);
-		VAR propertyArray : WMProperties.PropertyArray; res: WORD; i : LONGINT;
+		VAR propertyArray : WMProperties.PropertyArray; res: WORD; i : SIZE;
 			init:WMProperties.BooleanProperty;
 		BEGIN
 			ASSERT(component # NIL);
@@ -2487,7 +2487,7 @@ TYPE
 			stringView : StringPropertyView;
 			colorView : ColorPropertyView;
 			unknownView : UnknownPropertyView;
-			height, i : LONGINT;
+			height : SIZE; i : SIZE;
 		BEGIN
 			ASSERT(component # NIL);
 			list.RemoveAll;
@@ -2657,7 +2657,7 @@ TYPE
 		END CountNofElements;
 
 		PROCEDURE SetComponent*(component : WMComponents.Component);
-		VAR eventsArray : WMEvents.EventSourceArray; source : EventSourceView;  height, i : LONGINT;
+		VAR eventsArray : WMEvents.EventSourceArray; source : EventSourceView;  height : SIZE; i : SIZE;
 		BEGIN
 			IF (component # SELF.component) THEN
 				height := 0; nofElements := 0;
@@ -2721,7 +2721,7 @@ TYPE
 		END CountNofElements;
 
 		PROCEDURE SetComponent*(component : WMComponents.Component);
-		VAR eventsArray : WMEvents.EventListenerArray; listener : EventListenerView; height, i : LONGINT;
+		VAR eventsArray : WMEvents.EventListenerArray; listener : EventListenerView; height : SIZE; i : SIZE;
 		BEGIN
 			IF (component # SELF.component) THEN
 				height := 0; nofElements := 0;
@@ -2968,7 +2968,7 @@ TYPE
 		PROCEDURE SetAttributes(element : XML.Element);
 		VAR
 			v, last : AttributeView; enumerator : XMLObjects.Enumerator; ptr : ANY;
-			height : LONGINT;
+			height : SIZE;
 		BEGIN
 			Acquire;
 			height := LineHeight + 2*LineBearing; (* add/remove panel *)
@@ -3061,7 +3061,7 @@ TYPE
 		tabs : WMTabComponents.Tabs;
 		tabList : ARRAY NofTabs OF WMTabComponents.Tab;
 		tabPanels : ARRAY NofTabs OF ComponentElement;
-		tabNofElements : ARRAY NofTabs OF LONGINT;
+		tabNofElements : ARRAY NofTabs OF SIZE;
 		tabCaptions : ARRAY NofTabs OF ARRAY 128 OF CHAR;
 
 		tabPanel : WMScrollableComponents.ScrollableContainer;
@@ -3146,7 +3146,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateTabCaptions;
-		VAR caption : ARRAY 128 OF CHAR; nbr : ARRAY 8 OF CHAR; nofElements, i : LONGINT;
+		VAR caption : ARRAY 128 OF CHAR; nbr : ARRAY 8 OF CHAR; nofElements, i : SIZE;
 		BEGIN
 			FOR i := 0 TO NofTabs - 1 DO
 				CASE i OF
@@ -3404,7 +3404,7 @@ TYPE
 		PROCEDURE HandleStoreButton(sender, data : ANY);
 		VAR
 			component : Repositories.Component; repository : Repositories.Repository;
-			name, repositoryName, componentName : ARRAY 256 OF CHAR; id: LONGINT; res: WORD;
+			name, repositoryName, componentName : ARRAY 256 OF CHAR; id: SIZE; res: WORD;
 			filename : Files.FileName;
 		BEGIN
 			component := SELF.component;
@@ -3440,7 +3440,7 @@ TYPE
 		END HandleStoreButton;
 
 		PROCEDURE HandleRemoveButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name; repository : Repositories.Repository; refNum: LONGINT;
+		VAR component : Repositories.Component; ignore : Repositories.Name; repository : Repositories.Repository; refNum: SIZE;
 			res: WORD;
 		BEGIN
 			component := SELF.component;
@@ -3458,7 +3458,7 @@ TYPE
 		END HandleRemoveButton;
 
 		PROCEDURE HandleUpdateButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum: LONGINT;
+		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum: SIZE;
 			res: WORD;
 		BEGIN
 			component := SELF.component;
@@ -3476,7 +3476,7 @@ TYPE
 		END HandleUpdateButton;
 
 		PROCEDURE HandleUnbindButton(sender, data : ANY);
-		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum : LONGINT;
+		VAR component : Repositories.Component; ignore : Repositories.Name;  repository : Repositories.Repository; refNum : SIZE;
 		BEGIN
 			component := SELF.component;
 			IF (component # NIL) THEN
@@ -3507,7 +3507,7 @@ TYPE
 		PROCEDURE Update;
 		VAR
 			component : Repositories.Component; repository : Repositories.Repository; cname : Repositories.Name;
-			caption : Strings.String; refNum : LONGINT;
+			caption : Strings.String; refNum : SIZE;
 		BEGIN
 			component := SELF.component;
 			IF (component # NIL) THEN
@@ -3636,7 +3636,7 @@ TYPE
 			END;
 		END HandleAutoRefreshBtn;
 
-		PROCEDURE EditorKeyEvent(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE EditorKeyEvent(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			IF (keySym = Inputs.KsReturn) & (Inputs.Shift * flags # {}) THEN
 				HandleShiftReturn;
@@ -3650,7 +3650,7 @@ TYPE
 		END EditorKeyEvent;
 
 		PROCEDURE HandleShiftReturn;
-		VAR model : Models.Model; string : Types.DynamicString; length : LONGINT; res: WORD;
+		VAR model : Models.Model; string : Types.DynamicString; length : SIZE; res: WORD;
 		BEGIN
 			model := SELF.model;
 			IF (model # NIL) THEN
@@ -3816,8 +3816,8 @@ BEGIN
 	);
 END IsVisualComponentProperty;
 
-PROCEDURE CountExtendedProperties(component : WMComponents.Component) : LONGINT;
-VAR propertyArray : WMProperties.PropertyArray; nofElements, i : LONGINT;
+PROCEDURE CountExtendedProperties(component : WMComponents.Component) : SIZE;
+VAR propertyArray : WMProperties.PropertyArray; nofElements, i : SIZE;
 BEGIN
 	nofElements := 0;
 	IF (component # NIL) THEN
@@ -3944,5 +3944,4 @@ BEGIN
 END WMInspectionComponents.
 
 System.FreeDownTo WMInspectionComponents ~
-
 

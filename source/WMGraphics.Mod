@@ -30,7 +30,7 @@ CONST
 TYPE
 	Real* = REAL;
 	Char32 = LONGINT;
-	Point2d* = RECORD x*, y* : LONGINT END;
+	Point2d* = RECORD x*, y* : SIZE END;
 	Image* = OBJECT(Raster.Image)
 	VAR
 		key* : POINTER TO ARRAY OF CHAR;
@@ -41,8 +41,8 @@ TYPE
 
 	GlyphSpacings* = RECORD
 		bearing* : Rectangle;
-		width*, height*, ascent*, descent* : LONGINT;
-		dx*, dy* : LONGINT; (** Delta position where the bitmap returned by GetGlyphMap has to be placed relatively to
+		width*, height*, ascent*, descent* : SIZE;
+		dx*, dy* : SIZE; (** Delta position where the bitmap returned by GetGlyphMap has to be placed relatively to
 											x, y on the base line *)
 	END;
 
@@ -62,25 +62,25 @@ TYPE
 
 	Font* = OBJECT
 	VAR
-		ascent*, descent* : LONGINT;
+		ascent*, descent* : SIZE;
 		name* : ARRAY 256 OF CHAR;
-		size* : LONGINT;
+		size* : SIZE;
 		style* : SET;
 
 		PROCEDURE &Init*;
 		END Init;
 
-		PROCEDURE GetHeight*():LONGINT;
+		PROCEDURE GetHeight*():SIZE;
 		BEGIN
 			RETURN ascent + descent
 		END GetHeight;
 
-		PROCEDURE GetAscent*():LONGINT;
+		PROCEDURE GetAscent*():SIZE;
 		BEGIN
 			RETURN ascent
 		END GetAscent;
 
-		PROCEDURE GetDescent*():LONGINT;
+		PROCEDURE GetDescent*():SIZE;
 		BEGIN
 			RETURN descent
 		END GetDescent;
@@ -93,7 +93,7 @@ TYPE
 
 		(** Render an UTF8 string to a canvas *)
 		PROCEDURE RenderString*(canvas : Canvas ; x, y : Real; CONST text : ARRAY OF CHAR);
-		VAR i, len, code : LONGINT; g : GlyphSpacings;
+		VAR i, len: SIZE; code : LONGINT; g : GlyphSpacings;
 		BEGIN
 			len := LEN(text); i := 0;
 			WHILE (i < len) & (text[i] # 0X) DO
@@ -112,8 +112,8 @@ TYPE
 		END RenderString;
 
 		(** Render an UTF8 string to a canvas *)
-		PROCEDURE GetStringSize*(CONST text : ARRAY OF CHAR; VAR dx, dy : LONGINT);
-		VAR i, len, code : LONGINT; g : GlyphSpacings;
+		PROCEDURE GetStringSize*(CONST text : ARRAY OF CHAR; VAR dx, dy : SIZE);
+		VAR i, len: SIZE; code : LONGINT; g : GlyphSpacings;
 		BEGIN
 			len := LEN(text); i := 0; dx := 0; dy := GetHeight();
 			WHILE (i < len) & (text[i] # 0X) DO
@@ -147,7 +147,7 @@ TYPE
 	END Font;
 
 	FontManager* = OBJECT
-		PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET) : Font;
+		PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : Font;
 		BEGIN
 			RETURN NIL
 		END GetFont;
@@ -157,7 +157,7 @@ TYPE
 		clipMode : SET;
 		clipRect : Rectangle;
 		limits : Rectangle;
-		dx, dy : LONGINT;
+		dx, dy : SIZE;
 		font : Font;
 		color : Color;
 	END;
@@ -166,7 +166,7 @@ TYPE
 	VAR
 		limits*, (* The limits to which the clip Rect can be set *)
 		clipRect* : Rectangle; (* The current clip rectangle *)
-		dx*, dy* : LONGINT;
+		dx*, dy* : SIZE;
 		color* : Color;
 		clipMode* : SET;
 		generator*: Strings.String;
@@ -194,7 +194,7 @@ TYPE
 
 		(** set the current clipping rectangle as the limit for new SetClipRect operations.
 			ddx and ddy specify a coordinate shift. *)
-		PROCEDURE ClipRectAsNewLimits*(ddx, ddy : LONGINT);
+		PROCEDURE ClipRectAsNewLimits*(ddx, ddy : SIZE);
 		BEGIN
 			limits := clipRect;
 			SetDelta(dx + ddx, dy + ddy)
@@ -252,7 +252,7 @@ TYPE
 		(** Draw an UTF8 String at position x, y (base line)
 			The currently set font and color is used
 		*)
-		PROCEDURE DrawString*(x, y: LONGINT; CONST text : ARRAY OF CHAR);
+		PROCEDURE DrawString*(x, y: SIZE; CONST text : ARRAY OF CHAR);
 		BEGIN
 			IF font # NIL THEN
 				font.RenderString(SELF, x, y, text)
@@ -266,16 +266,16 @@ TYPE
 
 		(** draw a line within the current clipping rectangle *)
 		(** Override for improved speed *)
-		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : Color; mode : LONGINT);
-		VAR t, xi, mi, xf, mf, dt2, ds2 : LONGINT; r: Rectangles.Rectangle;
+		PROCEDURE Line*(x0, y0, x1, y1 : SIZE; color : Color; mode : WORD);
+		VAR t, xi, mi, xf, mf, dt2, ds2 : SIZE; r: Rectangles.Rectangle;
 
 
 		(* clipped bresenham algorithm according to
 			Bresenham's Line Generation Algorithm with Built-in Clipping, Yevgeny P. Kuzmin, 1995
 		*)
-		PROCEDURE ClippedLine(x0,y0,x1,y1: LONGINT; r: Rectangle; color : Color; mode : LONGINT);
+		PROCEDURE ClippedLine(x0,y0,x1,y1: SIZE; r: Rectangle; color : Color; mode : WORD);
 		VAR
-			dsx,dsy,stx,sty,xd,yd,dx2,dy2,rem,term,e: LONGINT;
+			dsx,dsy,stx,sty,xd,yd,dx2,dy2,rem,term,e: SIZE;
 			tmp: HUGEINT;
 			rev,setx: BOOLEAN;
 		BEGIN
@@ -319,8 +319,8 @@ TYPE
 			IF (y0 < r.t) THEN
 				(* window horizontal entry *)
 				tmp := HUGEINT(dx2) *(r.t-y0)-dsx;
-				INC(xd,LONGINT(tmp DIV dy2));
-				rem := LONGINT(tmp MOD dy2);
+				INC(xd,SIZE(tmp DIV dy2));
+				rem := SIZE(tmp MOD dy2);
 				IF ( xd>r.r ) THEN RETURN END;
 				IF ( xd+1>=r.l ) THEN
 					yd := r.t; DEC(e,rem+dsx);
@@ -332,8 +332,8 @@ TYPE
 			IF setx & ( x0 < r.l )  THEN
 				(* window vertical entry *)
 				tmp := HUGEINT(dy2) * (r.l-x0);
-				INC(yd, LONGINT(tmp DIV dx2));
-				rem := LONGINT(tmp MOD dx2);
+				INC(yd, SIZE(tmp DIV dx2));
+				rem := SIZE(tmp MOD dx2);
 				IF ( yd>r.b) OR (yd=r.b) & (rem>=dsx) THEN RETURN END;
 				xd :=r.l; INC(e,rem);
 				IF( rem>=dsx ) THEN INC(yd); DEC(e,dx2) END;
@@ -342,8 +342,8 @@ TYPE
 			IF ( y1 > r.b )  THEN
 				(* window exit *)
 				tmp := HUGEINT(dx2)*(r.b-y0)+dsx;
-				term := x0+LONGINT(tmp DIV dy2);
-				rem := LONGINT(tmp MOD dy2);
+				term := x0+SIZE(tmp DIV dy2);
+				rem := SIZE(tmp MOD dy2);
 				IF ( rem=0 ) THEN DEC(term) END;
 			END;
 			IF ( term>r.r) THEN term := r.r; END;
@@ -429,7 +429,7 @@ TYPE
 			END
 		END Line;
 
-		PROCEDURE LineReal*(x0, y0, x1, y1 : Real; color : Color; mode : LONGINT);
+		PROCEDURE LineReal*(x0, y0, x1, y1 : Real; color : Color; mode : WORD);
 		BEGIN
 			IF ~( Reals.IsNaNL(x0) OR Reals.IsNaNL(y0) OR Reals.IsNaNL(x1) OR Reals.IsNaNL(y1)) THEN
 				Line(ENTIER(x0),ENTIER(y0),ENTIER(x1),ENTIER(y1),color,mode);
@@ -437,24 +437,24 @@ TYPE
 		END LineReal;
 
 		(** set a pixel within the current clipping rectangle *)
-		PROCEDURE SetPixel*(x, y : LONGINT; color : Color; mode : LONGINT);
+		PROCEDURE SetPixel*(x, y : SIZE; color : Color; mode : WORD);
 		BEGIN
 			Fill(Rectangles.MakeRect(x, y, x + 1, y + 1), color, mode)
 		END SetPixel;
 
 		(** fill a rectangle within the current clipping rectangle *)
-		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
+		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : WORD);
 		END Fill;
 
 		(** fill a polygon given by points *)
-		PROCEDURE FillPolygonFlat*(CONST points : ARRAY OF Point2d; nofPoints : LONGINT; color : Color; mode : LONGINT);
+		PROCEDURE FillPolygonFlat*(CONST points : ARRAY OF Point2d; nofPoints : SIZE; color : Color; mode : WORD);
 		END FillPolygonFlat;
 
-		PROCEDURE FillPolygonCB*(CONST points : ARRAY OF Point2d; nofPoints : LONGINT; callBack : FillLineCallBack);
+		PROCEDURE FillPolygonCB*(CONST points : ARRAY OF Point2d; nofPoints : SIZE; callBack : FillLineCallBack);
 		END FillPolygonCB;
 
-		PROCEDURE PolyLine*(CONST points : ARRAY OF Point2d; nofPoints : LONGINT; closed : BOOLEAN;	color : Color; mode : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE PolyLine*(CONST points : ARRAY OF Point2d; nofPoints : SIZE; closed : BOOLEAN;	color : Color; mode : WORD);
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 1 TO nofPoints - 1 DO
 				Line(points[i-1].x, points[i-1].y, points[i].x, points[i].y, color, mode)
@@ -465,14 +465,14 @@ TYPE
 		END PolyLine;
 
 		(** draw an image within the current clipping rectangle *)
-		PROCEDURE DrawImage*(x, y: LONGINT; image: Raster.Image; mode : LONGINT);
+		PROCEDURE DrawImage*(x, y: SIZE; image: Raster.Image; mode : WORD);
 		END DrawImage;
 
-		PROCEDURE ScaleImage*(src : Raster.Image; sr, dr : Rectangle; copyMode, scaleMode : LONGINT);
+		PROCEDURE ScaleImage*(src : Raster.Image; sr, dr : Rectangle; copyMode, scaleMode : WORD);
 		END ScaleImage;
 
 		(** Set coordinate shift *)
-		PROCEDURE SetDelta*(dx, dy: LONGINT);
+		PROCEDURE SetDelta*(dx, dy: SIZE);
 		BEGIN
 			SELF.dx := dx; SELF.dy := dy
 		END SetDelta;
@@ -492,9 +492,9 @@ TYPE
 	END Canvas;
 
 TYPE
-	FillPosEntry = RECORD pos, next : LONGINT END;
+	FillPosEntry = RECORD pos, next : SIZE END;
 	FillHeap = POINTER TO ARRAY OF FillPosEntry;
-	FillLineCallBack* = PROCEDURE {DELEGATE} (canvas : Canvas; y, x0, x1 : LONGINT);
+	FillLineCallBack* = PROCEDURE {DELEGATE} (canvas : Canvas; y, x0, x1 : SIZE);
 	CanvasGenerator* = PROCEDURE(img:Raster.Image):BufferCanvas;
 
 TYPE
@@ -503,9 +503,9 @@ TYPE
 		bounds : Rectangle; (* real limiting img bounds *)
 		(* filling *)
 		fillHeap : FillHeap;
-		heapSize, topHeap : LONGINT;
-		height : LONGINT;
-		edges : POINTER TO ARRAY OF LONGINT;
+		heapSize, topHeap : SIZE;
+		height : SIZE;
+		edges : POINTER TO ARRAY OF SIZE;
 
 		PROCEDURE &New*(img : Raster.Image);
 		BEGIN
@@ -532,11 +532,11 @@ TYPE
 			Rectangles.ClipRect(r, bounds); SetLimits^(r)
 		END SetLimits;
 
-	(*	PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : Color; mode : LONGINT);
+	(*	PROCEDURE Line*(x0, y0, x1, y1 : SIZE; color : Color; mode : WORD);
 		BEGIN
 		END Line; *)
 
-		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : LONGINT);
+		PROCEDURE Fill*(rect : Rectangle; color : Color; mode : WORD);
 		VAR rm : Raster.Mode; pix : Raster.Pixel;
 		BEGIN
 			(* convert to super coordinates *)
@@ -555,8 +555,8 @@ TYPE
 
 		(* Polygon filling *)
 		(** fill a polygon given by points *)
-		PROCEDURE FillPolygonFlat*(CONST points : ARRAY OF Point2d; nofPoints : LONGINT; color : Color; mode : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE FillPolygonFlat*(CONST points : ARRAY OF Point2d; nofPoints : SIZE; color : Color; mode : WORD);
+		VAR i : SIZE;
 		BEGIN
 			IF nofPoints < 3 THEN RETURN END;
 			ASSERT(nofPoints <= LEN(points));
@@ -567,8 +567,8 @@ TYPE
 		END FillPolygonFlat;
 
 		(** fill a polygon given by points *)
-		PROCEDURE FillPolygonCB*(CONST points : ARRAY OF Point2d; nofPoints : LONGINT; callBack : FillLineCallBack);
-		VAR i : LONGINT;
+		PROCEDURE FillPolygonCB*(CONST points : ARRAY OF Point2d; nofPoints : SIZE; callBack : FillLineCallBack);
+		VAR i : SIZE;
 		BEGIN
 			IF nofPoints < 3 THEN RETURN END;
 			ASSERT(nofPoints <= LEN(points));
@@ -579,16 +579,16 @@ TYPE
 		END FillPolygonCB;
 
 		 PROCEDURE ClearHeap;
-		 VAR i : LONGINT;
+		 VAR i : SIZE;
 		 BEGIN
 			topHeap := 0;
 			FOR i := 0 TO height - 1 DO edges[i] := 0 END;
 			IF fillHeap = NIL THEN NEW(fillHeap, 1024); heapSize := 1024 END
 		 END ClearHeap;
 
-		 PROCEDURE NewFillPos(pos : LONGINT) : LONGINT;
+		 PROCEDURE NewFillPos(pos : SIZE) : SIZE;
 		 VAR newHeap : FillHeap;
-			i : LONGINT;
+			i : SIZE;
 		 BEGIN
 			INC(topHeap);
 			IF topHeap >= heapSize THEN (* grow heap *)
@@ -602,8 +602,8 @@ TYPE
 			RETURN topHeap
 		 END NewFillPos;
 
-		 PROCEDURE AddIntersection(y, pos : LONGINT);
-		 VAR new, cur : LONGINT;
+		 PROCEDURE AddIntersection(y, pos : SIZE);
+		 VAR new, cur : SIZE;
 		 BEGIN
 			IF (y < 0) OR (y >= height) THEN RETURN END;
 			new := NewFillPos(pos);
@@ -621,8 +621,8 @@ TYPE
 			END;
 		 END AddIntersection;
 
-		PROCEDURE AddLine(x0, y0, x1, y1 : LONGINT);
-		VAR t, xi, xf, mi, mf, dt2	: LONGINT ;
+		PROCEDURE AddLine(x0, y0, x1, y1 : SIZE);
+		VAR t, xi, xf, mi, mf, dt2	: SIZE ;
 		BEGIN
 			IF (y0 = y1) THEN RETURN END;
 			IF y0 > y1 THEN t := y0; y0 := y1; y1 := t; t := x0; x0 := x1; x1 := t END;
@@ -634,8 +634,8 @@ TYPE
 			END
 		END AddLine;
 
-		PROCEDURE FillFlat(color : Color; mode : LONGINT);
-		VAR i, sp, cur : LONGINT;
+		PROCEDURE FillFlat(color : Color; mode : WORD);
+		VAR i, sp, cur : SIZE;
 		in : BOOLEAN;
 		BEGIN
 			FOR i := 0 TO height - 1 DO
@@ -652,7 +652,7 @@ TYPE
 		END FillFlat;
 
 		PROCEDURE FillCB(cb : FillLineCallBack);
-		VAR i, sp, cur : LONGINT;
+		VAR i, sp, cur : SIZE;
 		in : BOOLEAN;
 		BEGIN
 			FOR i := 0 TO height - 1 DO
@@ -668,10 +668,10 @@ TYPE
 			END
 		END FillCB;
 
-		PROCEDURE DrawImage*(x, y: LONGINT; img: Raster.Image; mode : LONGINT);
+		PROCEDURE DrawImage*(x, y: SIZE; img: Raster.Image; mode : WORD);
 		VAR imgBounds : Rectangle;
 			rm : Raster.Mode;
-			dx, dy: LONGINT;
+			dx, dy: SIZE;
 		BEGIN
 			IF (img = NIL) OR (img.adr = NIL) THEN RETURN END;
 			dx := SELF.dx; dy := SELF.dy; (* avoid race below *)
@@ -705,7 +705,7 @@ TYPE
 			END;
 		END DrawImage;
 
-		PROCEDURE ScaleImage*(src : Raster.Image; sr , dr : Rectangle; copyMode, scaleMode : LONGINT);
+		PROCEDURE ScaleImage*(src : Raster.Image; sr , dr : Rectangle; copyMode, scaleMode : WORD);
 		BEGIN
 			Rectangles.MoveRel(dr, dx, dy);
 			RasterScale.Scale(src, sr, img, dr, clipRect, copyMode, scaleMode);
@@ -721,20 +721,20 @@ VAR imgCache : Kernel.FinalizedCollection;
 	defaultFont : Font;
 	fontManager : FontManager;
 	fallbackFonts* : ARRAY 5 OF Font;
-	nofFallbackFonts : LONGINT;
+	nofFallbackFonts : SIZE;
 
 CONST
 	AlignLeft* = 0; AlignCenter* = 1; AlignRight* = 2;
 	AlignTop* = 0; AlignBottom* = 2;
 
-PROCEDURE Swap(VAR a,b: LONGINT);
-VAR t: LONGINT;
+PROCEDURE Swap(VAR a,b: SIZE);
+VAR t: SIZE;
 BEGIN
 	t := a; a := b; b := t;
 END Swap;
 
 (* Tool Functions *)
-PROCEDURE MakeRectangle*(l, t, r, b: LONGINT):Rectangle;
+PROCEDURE MakeRectangle*(l, t, r, b: SIZE):Rectangle;
 VAR result : Rectangle;
 BEGIN
 	result.l := l; result.t := t; result.r := r; result.b := b; RETURN result
@@ -787,7 +787,7 @@ END CheckImage;
 
 
 PROCEDURE GetExtension (CONST name : ARRAY OF CHAR;VAR ext: ARRAY OF CHAR);
-VAR i, j: LONGINT; ch: CHAR;
+VAR i, j: SIZE; ch: CHAR;
 BEGIN
 	i := 0; j := 0;
 	WHILE name[i] # 0X DO
@@ -806,7 +806,7 @@ END GetExtension;
 *)
 PROCEDURE LoadImage*(CONST name : ARRAY OF CHAR; shared : BOOLEAN): Image;
 VAR img : Image;
-	res: WORD; w, h, x : LONGINT;
+	res: WORD; w, h : SIZE; x : LONGINT;
 	decoder : Codecs.ImageDecoder;
 	in : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;
@@ -874,9 +874,9 @@ END StoreImage;
 
 
 (** Draw an UTF8 String in a rectangle *)
-PROCEDURE DrawStringInRect*(canvas : Canvas; rect : Rectangle; wrap : BOOLEAN; hAlign, vAlign : LONGINT;
+PROCEDURE DrawStringInRect*(canvas : Canvas; rect : Rectangle; wrap : BOOLEAN; hAlign, vAlign : WORD;
 								CONST text : ARRAY OF CHAR);
-VAR tw, th, xPos, yPos : LONGINT;
+VAR tw, th, xPos, yPos : SIZE;
 	font : Font;
 BEGIN
 	font := canvas.GetFont();
@@ -928,7 +928,7 @@ END InstallFontManager;
 	If the font with a weight other than Bold is required, use a full name of the file (for ttf-fonts) with empty style.
 	For example: GetFont( "IBMPlexSans-SemiBold", 24, {} );
 *)
-PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : LONGINT; style : SET) : Font;
+PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : Font;
 VAR f : Font;
 BEGIN { EXCLUSIVE }
 	f := NIL;
@@ -939,7 +939,7 @@ END GetFont;
 
 (** Render the fallback case of the character char to canvas at x, y (baseline) *)
 PROCEDURE FBRenderChar*(canvas : Canvas ; x, y : Real; char : Char32);
-VAR i, w, h : LONGINT; f : Font; found : BOOLEAN; str : ARRAY 16 OF CHAR; r: Rectangles.Rectangle;
+VAR i, w, h : SIZE; f : Font; found : BOOLEAN; str : ARRAY 16 OF CHAR; r: Rectangles.Rectangle;
 BEGIN
 	i := 0; found := FALSE;
 	WHILE ~found & (i < nofFallbackFonts) DO
@@ -960,7 +960,7 @@ END FBRenderChar;
 
 (** return the fallback spacing of character code *)
 PROCEDURE FBGetGlyphSpacings*(code : LONGINT; VAR glyphSpacings : GlyphSpacings);
-VAR i : LONGINT; f : Font; found : BOOLEAN; str : ARRAY 16 OF CHAR;
+VAR i : SIZE; f : Font; found : BOOLEAN; str : ARRAY 16 OF CHAR;
 BEGIN
 	i := 0; found := FALSE;
 	WHILE ~found & (i < nofFallbackFonts) DO
@@ -981,7 +981,7 @@ END FBGetGlyphSpacings;
 
 (** Tools *)
 (* Return true if the alpha value at pos x, y in img is >= threshold. Returns false if x, y are out of image *)
-PROCEDURE IsBitmapHit*(x, y, threshold: LONGINT; img: Raster.Image) : BOOLEAN;
+PROCEDURE IsBitmapHit*(x, y: SIZE; threshold: LONGINT; img: Raster.Image) : BOOLEAN;
 VAR pix : Raster.Pixel;
 	mode : Raster.Mode;
 BEGIN
@@ -993,7 +993,7 @@ BEGIN
 	END
 END IsBitmapHit;
 
-PROCEDURE IsScaledBitmapHit*(x,y,w,h,threshold: LONGINT; img: Raster.Image): BOOLEAN;
+PROCEDURE IsScaledBitmapHit*(x,y,w,h: SIZE; threshold: LONGINT; img: Raster.Image): BOOLEAN;
 BEGIN
 	RETURN IsBitmapHit(x*img.width DIV w, y*img.height DIV h, threshold,img);
 END IsScaledBitmapHit;

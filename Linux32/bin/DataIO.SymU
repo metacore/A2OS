@@ -71,7 +71,7 @@ TYPE
 		W-: Writer; 
 
 		PROCEDURE ^  & Initialize*; 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Length*(): Files.Size; 
 	END File; 
 
 	LoadProc* = PROCEDURE (R: Reader; VAR obj: OBJECT); 

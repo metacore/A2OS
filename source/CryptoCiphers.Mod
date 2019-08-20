@@ -55,12 +55,12 @@ TYPE
 				END SetIV;
 
 				(** encrypts len bytes of data; len must be a multiple of blockSize *)
-				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  pos, len: LONGINT );
+				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  pos, len: SIZE );
 				(* empty Cipher does nothing *)
 				END Encrypt;
 
 				(** decrypts len bytes of data; len must be a multiple of blockSize *)
-				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  pos, len: LONGINT );
+				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  pos, len: SIZE );
 				(* empty Cipher does nothing *)
 				END Decrypt;
 

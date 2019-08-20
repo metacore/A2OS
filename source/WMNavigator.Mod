@@ -8,7 +8,7 @@ IMPORT
 TYPE
 
 	Level = RECORD
-		x, y, width, height : LONGINT;
+		x, y, width, height : SIZE;
 	END;
 
 	OnDrawnProc = PROCEDURE {DELEGATE};
@@ -17,7 +17,7 @@ TYPE
 	VAR
 		backbuffer- : WMGraphics.Image;
 		deviceRect : WMRectangles.Rectangle;
-		width, height : LONGINT;
+		width, height : SIZE;
 		canvas : WMGraphics.BufferCanvas;
 		state : WMGraphics.CanvasState;
 		internnavig, navig : BOOLEAN;
@@ -26,7 +26,7 @@ TYPE
 		onDrawn : OnDrawnProc;
 
 		zoomLevel : ARRAY 7 OF Level;
-		currentZoomLevel : LONGINT;
+		currentZoomLevel : SIZE;
 
 		PROCEDURE &New*;
 		BEGIN
@@ -51,8 +51,8 @@ TYPE
 			SetZoomLevels(1280, 1024);
 		END New;
 
-		PROCEDURE SetZoomLevels(width, height : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE SetZoomLevels(width, height : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(zoomLevel)-1 DO
 				zoomLevel[i].width := (i + 1) * width;
@@ -62,7 +62,7 @@ TYPE
 			END;
 		END SetZoomLevels;
 
-		PROCEDURE SetZoomLevel(level, xg, yg : LONGINT);
+		PROCEDURE SetZoomLevel(level, xg, yg : SIZE);
 		BEGIN
 			IF (level < 0) THEN level := 0;
 			ELSIF (level >= LEN(zoomLevel)) THEN level := LEN(zoomLevel)-1; END;
@@ -70,12 +70,12 @@ TYPE
 			currentZoomLevel := level;
 		END SetZoomLevel;
 
-		PROCEDURE ChangeZoom(dz, xg, yg : LONGINT);
+		PROCEDURE ChangeZoom(dz, xg, yg : SIZE);
 		BEGIN
 			SetZoomLevel(currentZoomLevel + dz, xg, yg);
 		END ChangeZoom;
 
-		PROCEDURE ReInit(width, height, format : LONGINT; onDrawn : OnDrawnProc);
+		PROCEDURE ReInit(width, height : SIZE; format : WORD; onDrawn : OnDrawnProc);
 		VAR tf : REAL;
 		BEGIN
 			SELF.onDrawn := onDrawn;
@@ -117,7 +117,7 @@ TYPE
 			RETURN rect;
 		END GetWMCoordinates;
 
-		PROCEDURE GetWMPosition(x, y : LONGINT; VAR xg, yg : LONGINT);
+		PROCEDURE GetWMPosition(x, y : SIZE; VAR xg, yg : SIZE);
 		BEGIN
 			xg := ENTIER(range.l + x * inffx);
 			yg := ENTIER(range.t + y * inffy);
@@ -281,8 +281,8 @@ TYPE
 		timer : Kernel.Timer;
 		alive, dead, refresh, doRefresh : BOOLEAN;
 
-		offsetX, offsetY : LONGINT;
-		lastX, lastY : LONGINT;
+		offsetX, offsetY : SIZE;
+		lastX, lastY : SIZE;
 
 		PROCEDURE &Init*;
 		VAR style : WMWindowManager.WindowStyle;
@@ -327,8 +327,8 @@ TYPE
 			PointerLeave^;
 		END PointerLeave;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
-		VAR xg, yg : LONGINT; rect : WMRectangles.Rectangle; title : Strings.String;
+		PROCEDURE PointerDown*(x, y: SIZE; keys: SET);
+		VAR xg, yg : SIZE; rect : WMRectangles.Rectangle; title : Strings.String;
 		BEGIN
 			PointerDown^(x, y, keys);
 			IF (0 IN keys) THEN
@@ -352,8 +352,8 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
-		VAR xg, yg : LONGINT;
+		PROCEDURE PointerMove*(x, y: SIZE; keys: SET);
+		VAR xg, yg : SIZE;
 		BEGIN
 			lastX := x; lastY := y;
 			PointerMove^(x, y, keys);
@@ -365,15 +365,15 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE WheelMove*(dz: LONGINT);
-		VAR xg, yg : LONGINT;
+		PROCEDURE WheelMove*(dz: SIZE);
+		VAR xg, yg : SIZE;
 		BEGIN
 			WheelMove^(dz);
 			viewPort.GetWMPosition(lastX, lastY, xg, yg);
 			viewPort.ChangeZoom(dz, xg, yg);
 		END WheelMove;
 
-		PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerUp*(x, y: SIZE; keys: SET);
 		BEGIN
 			PointerUp^(x, y, keys);
 			selectedWindow := NIL;

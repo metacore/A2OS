@@ -23,9 +23,9 @@ VAR
 	random: Random.Generator;
 	camera: Camera;
 	speed: SREAL;
-	pointerlastx, pointerlasty: LONGINT;
+	pointerlastx, pointerlasty: SIZE;
 	pi: WMWindowManager.PointerInfo;
-	px, pdx, py, pdy: LONGINT;
+	px, pdx, py, pdy: SIZE;
 	pkeys: SET;
 	t1, t2, dt: LONGINT;
 	big, focus, voxconnect: BOOLEAN;
@@ -78,7 +78,7 @@ BEGIN
 	speed := speed * 2 / 3;
 END slowdown;
 
-PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 BEGIN
 	Key := CHR(ucs);
 	CASE CHR(ucs) OF
@@ -125,7 +125,7 @@ BEGIN
 	END;
 END KeyEvent;
 
-PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 BEGIN
 	pointerlastx := x ; pointerlasty := y;
 	pkeys := keys;
@@ -137,14 +137,14 @@ BEGIN
 	camera.deathray(pointerlastx,pointerlasty)
 END deathray;
 
-PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 BEGIN
 	pkeys := keys;
 	DEATH:=FALSE;
 	srRayEngine.fast:=FALSE;
 END PointerUp;
 
-PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 BEGIN
 	pdx := px - x; pdy := py - y;
 	px := ABS(x); py := ABS(y); pkeys := keys;
@@ -155,7 +155,7 @@ BEGIN
 	focus := FALSE;
 END PointerLeave;
 
-PROCEDURE WheelMove*(dz : LONGINT);
+PROCEDURE WheelMove*(dz : SIZE);
 BEGIN
     	camera.up(dz/10);
 END WheelMove;
@@ -325,7 +325,7 @@ BEGIN
 	Out.String("movie playing off")
 END stopplaying;
 
-PROCEDURE deathray (x, y: LONGINT);
+PROCEDURE deathray (x, y: SIZE);
 BEGIN
 	IF large THEN
 		block.deathray(srBase.lrays[x,y]);
@@ -341,14 +341,14 @@ BEGIN
 	END
 END mutateray;
 
-PROCEDURE connectray(x, y: LONGINT; VAR connection: BOOLEAN; VAR vox: Voxel);
+PROCEDURE connectray(x, y: SIZE; VAR connection: BOOLEAN; VAR vox: Voxel);
 BEGIN
 	IF  (x < W) & (y < H) THEN
 		block.connectray(srBase.rays[x ,y], connection, vox);
 	END
 END connectray;
 
-PROCEDURE forward (x, y: LONGINT);
+PROCEDURE forward (x, y: SIZE);
 VAR
 	speed: SREAL;
 BEGIN
@@ -373,7 +373,7 @@ BEGIN
 	END
 END forward;
 
-PROCEDURE backward (x, y: LONGINT);
+PROCEDURE backward (x, y: SIZE);
 VAR
 	speed: SREAL;
 BEGIN

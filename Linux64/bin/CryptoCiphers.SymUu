@@ -17,8 +17,8 @@ TYPE
 		PROCEDURE ^ appmode(CONST str: ARRAY OF CHAR); 
 		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
-		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; pos, len: LONGINT); 
-		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; pos, len: LONGINT); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; pos, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; pos, len: SIZE); 
 		PROCEDURE ^ SetNameAndBlocksize*(CONST name: ARRAY OF CHAR; size: LONGINT); 
 		PROCEDURE ^  & Init*; 
 	END Cipher; 

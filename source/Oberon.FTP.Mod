@@ -188,7 +188,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END Close2;
 
 	PROCEDURE QuerySystem(S: Session);
-		VAR pos: LONGINT;
+		VAR pos: SIZE;
 	BEGIN
 		S.system := UNIX;
 		SendCmd(S, "SYST"); ReadResponse(S, line);
@@ -790,7 +790,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END OpenScanner;
 
 	PROCEDURE SplitFTPAdr(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): BOOLEAN;
-		VAR i, j, l: LONGINT; service: ARRAY 8 OF CHAR;
+		VAR i, j, l: SIZE; service: ARRAY 8 OF CHAR;
 		PROCEDURE Blanks;
 		BEGIN
 			WHILE (url[i] # 0X) & (url[i] <= " ") DO

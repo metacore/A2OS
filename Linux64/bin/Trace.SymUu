@@ -9,7 +9,7 @@ VAR
 
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 
-	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ StringLn*(CONST s: ARRAY OF CHAR); 
@@ -22,7 +22,7 @@ VAR
 	PROCEDURE ^ HIntHex*(x: HUGEINT; w: SIZE); 
 	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ StackFrames-(skip, count, size: SIZE); 
-	PROCEDURE ^ Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT); 
+	PROCEDURE ^ Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE); 
 	PROCEDURE ^ Bits*(x: SET; ofs, n: SIZE); 
 	PROCEDURE ^ Set*(x: SET); 
 	PROCEDURE ^ Blue*; 

@@ -42,19 +42,19 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 		Line = POINTER TO RECORD
 			data: Data;
-			t, b: LONGINT;
+			t, b: SIZE;
 			next: Line
 		END;
 
 		Position = RECORD
-			line: Line; ofs: LONGINT
+			line: Line; ofs: SIZE
 		END;
 
 
 
 		Frame = OBJECT (WMComponents.VisualComponent)
 			VAR
-				rows, cols, boxW, boxH, dX, dY: LONGINT;
+				rows, cols, boxW, boxH, dX, dY: SIZE;
 				chan: SSH.Channel;
 				r: Streams.Reader; w: Streams.Writer;
 				mode: SET;
@@ -62,15 +62,15 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 				first, top: Line; bg: WMG.Color;
 				scrollTop, scrollBottom: Line;
-				scrollBegin, scrollEnd: LONGINT;
+				scrollBegin, scrollEnd: SIZE;
 
 				tabs: POINTER TO ARRAY OF BOOLEAN;
 				attr: Attribute;
 				cursor: Position;
 				old:	RECORD
 						attr: Attribute;
-						offs: LONGINT;
-						row: LONGINT
+						offs: SIZE;
+						row: SIZE
 					END;
 				sel:	RECORD
 						beg, end: Position
@@ -92,13 +92,13 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 				*)
 			END EFill;
 
-			PROCEDURE GetCol(): LONGINT;
+			PROCEDURE GetCol(): SIZE;
 			BEGIN {EXCLUSIVE}
 				RETURN cursor.ofs
 			END GetCol;
 
-			PROCEDURE GetRow(): LONGINT;
-			VAR l: Line; row: LONGINT;
+			PROCEDURE GetRow(): SIZE;
+			VAR l: Line; row: SIZE;
 			BEGIN {EXCLUSIVE}
 				l := top;  row := 0;
 				WHILE l # cursor.line DO
@@ -109,7 +109,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 
 			PROCEDURE GetNewLine(): Line;
-			VAR line: Line; i: LONGINT; ch: Char;
+			VAR line: Line; i: SIZE; ch: Char;
 			BEGIN
 				NEW( line ); line.next := NIL;
 				NEW( line.data, cols );
@@ -136,7 +136,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 
 
-			PROCEDURE UpdateBox(line: Line; ofs: LONGINT);
+			PROCEDURE UpdateBox(line: Line; ofs: SIZE);
 			VAR update: WMG.Rectangle;
 			BEGIN
 				update.l := dX + ofs*boxW; update.r := update.l + boxW;
@@ -144,8 +144,8 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 				InvalidateRect(update)
 			END UpdateBox;
 
-			PROCEDURE UpdateRect(al, bl: Line; aofs, bofs: LONGINT; cur: SET);
-			VAR tl: Line; tofs: LONGINT; update: WMG.Rectangle; swapl, swapo: BOOLEAN;
+			PROCEDURE UpdateRect(al, bl: Line; aofs, bofs: SIZE; cur: SET);
+			VAR tl: Line; tofs: SIZE; update: WMG.Rectangle; swapl, swapo: BOOLEAN;
 			BEGIN
 				swapl := FALSE; swapo := FALSE;
 				IF al # bl THEN
@@ -182,8 +182,8 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 			END UpdateAll;
 
 
-			PROCEDURE WriteChars( CONST buf: ARRAY OF CHAR; n: LONGINT);
-			VAR prev, l: Line; i, ofs: LONGINT; wrap: BOOLEAN;
+			PROCEDURE WriteChars( CONST buf: ARRAY OF CHAR; n: SIZE);
+			VAR prev, l: Line; i, ofs: SIZE; wrap: BOOLEAN;
 			BEGIN {EXCLUSIVE}
 				wrap := FALSE;
 				l := cursor.line;  ofs := cursor.ofs;  i := 0;
@@ -213,7 +213,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 
 			PROCEDURE Delete;
-			VAR l: Line; ofs: LONGINT;
+			VAR l: Line; ofs: SIZE;
 			BEGIN {EXCLUSIVE}
 				l := cursor.line;  ofs := cursor.ofs;
 				IF ofs > 0 THEN
@@ -225,7 +225,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 			END Delete;
 
 
-			PROCEDURE GetLine( n: LONGINT ): Line;
+			PROCEDURE GetLine( n: SIZE ): Line;
 			VAR line: Line;
 			BEGIN
 				line := top;
@@ -248,8 +248,8 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 				scrollBottom := GetLine( scrollEnd );
 			END SetScrollRegion;
 
-			PROCEDURE Goto( row, col: LONGINT );
-			VAR l: Line; hl, lines: LONGINT;
+			PROCEDURE Goto( row, col: SIZE );
+			VAR l: Line; hl, lines: SIZE;
 			BEGIN {EXCLUSIVE}
 				IF col < 0 THEN  col := 0  ELSIF col >= cols THEN  col := cols - 1  END;
 
@@ -280,7 +280,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 
 			PROCEDURE SetOffsets;
-			VAR l: Line; y: LONGINT;
+			VAR l: Line; y: SIZE;
 			BEGIN
 				l := top; y := dY;
 				REPEAT
@@ -330,7 +330,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 			END Scroll;
 
 
-			PROCEDURE SetMargins( beg, end: LONGINT );
+			PROCEDURE SetMargins( beg, end: SIZE );
 			BEGIN {EXCLUSIVE}
 				scrollBegin := beg - 1;
 				scrollEnd := end - 1 ;
@@ -339,7 +339,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 
 
 			PROCEDURE RightTab;
-			VAR l: Line; ofs: LONGINT; char: Char;
+			VAR l: Line; ofs: SIZE; char: Char;
 			BEGIN {EXCLUSIVE}
 				char.attr := attr; char.char := 020H;
 				l := cursor.line;  ofs := cursor.ofs + 1;
@@ -350,8 +350,8 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 				UpdateRect( l, l, cursor.ofs, ofs, {4} )
 			END RightTab;
 
-			PROCEDURE EraseLine( l: Line; from, to: LONGINT );
-			VAR i: LONGINT;
+			PROCEDURE EraseLine( l: Line; from, to: SIZE );
+			VAR i: SIZE;
 			BEGIN
 				i := from;
 				WHILE i <= to DO
@@ -360,7 +360,7 @@ MODULE SSHClient; 	(** AUTHOR "G.F.";  PURPOSE "Secure Shell"; *)
 				END
 			END EraseLine;
 
-			PROCEDURE Erase( mode: CHAR;  CONST par: ARRAY OF LONGINT;  n: LONGINT );
+			PROCEDURE Erase( mode: CHAR;  CONST par: ARRAY OF LONGINT;  n: SIZE );
 			BEGIN {EXCLUSIVE}
 				CASE mode OF
 				|"J":
@@ -422,8 +422,8 @@ Out.String("Dim"); Out.Ln()
 				END
 			END Dim;
 
-			PROCEDURE SetAttributes( CONST attrs: ARRAY OF LONGINT; n: LONGINT );
-			VAR c: WMG.Color; i: LONGINT;
+			PROCEDURE SetAttributes( CONST attrs: ARRAY OF LONGINT; n: SIZE );
+			VAR c: WMG.Color; i: SIZE;
 			BEGIN {EXCLUSIVE}
 				NewAttr();
 				i := 0;
@@ -445,7 +445,7 @@ Out.String("attr "); Out.Int(attrs[i], 0); Out.Ln()
 
 			PROCEDURE Draw*( canvas: WMG.Canvas );
 			VAR
-				l: Line; i, j, dy, bottom: LONGINT; attr: Attribute; char: Char;
+				l: Line; i, j, dy, bottom: SIZE; attr: Attribute; char: Char;
 				box: WMG.Rectangle;
 			BEGIN {EXCLUSIVE}
 				canvas.Fill( canvas.clipRect, bg, WMG.ModeCopy );
@@ -518,8 +518,8 @@ Out.String("attr "); Out.Int(attrs[i], 0); Out.Ln()
 				END
 			END Draw;
 
-			PROCEDURE MoveCursor( dr, dc: LONGINT );
-			VAR col, currrow: LONGINT;
+			PROCEDURE MoveCursor( dr, dc: SIZE );
+			VAR col, currrow: SIZE;
 			BEGIN
 				col := GetCol() + dc;
 				IF col < 0 THEN  col := 0  END;
@@ -535,7 +535,7 @@ Out.String("attr "); Out.Int(attrs[i], 0); Out.Ln()
 
 			PROCEDURE ESCSequence(ch: CHAR);
 			VAR
-				par: ARRAY 4 OF LONGINT; i, n: LONGINT;
+				par: ARRAY 4 OF LONGINT; i, n: SIZE;
 			BEGIN
 				r.Char( ch );
 				IF ch = "[" THEN
@@ -629,7 +629,7 @@ Out.Ln;
 
 
 			PROCEDURE Consume( ch: CHAR );
-			VAR buf: ARRAY 256 OF CHAR; i, n: LONGINT;
+			VAR buf: ARRAY 256 OF CHAR; i, n: SIZE;
 			BEGIN
 				CASE ch OF
 				|  0X: (* NUL *)
@@ -675,8 +675,8 @@ Out.Ln;
 				UpdateBox( cursor.line, cursor.ofs )
 			END FocusLost;
 
-			PROCEDURE LocateBox( x, y: LONGINT; VAR pos: Position );
-			VAR l: Line; ofs, i: LONGINT;
+			PROCEDURE LocateBox( x, y: SIZE; VAR pos: Position );
+			VAR l: Line; ofs, i: SIZE;
 			BEGIN
 				IF x < dX THEN x := dX ELSIF x >= (dX + cols*boxW) THEN x := dX + cols*boxW-1 END;
 				IF y < dY THEN y := dY ELSIF y >= (dY + rows*boxH) THEN y := dY + rows*boxH-1 END;
@@ -698,7 +698,7 @@ Out.Ln;
 
 			PROCEDURE Copy;
 			VAR
-				l: Line; apos, pos, ofs, end: LONGINT; buf: ARRAY 2 OF LONGINT;
+				l: Line; apos, pos, ofs, end: SIZE; buf: ARRAY 2 OF LONGINT;
 				attr: Attribute; tattr: Texts.Attributes;
 			BEGIN {EXCLUSIVE}
 				IF sel.beg.line = NIL THEN RETURN END;
@@ -774,7 +774,7 @@ Out.Ln;
 				END
 			END ClickHandler;
 
-			PROCEDURE PointerDown*( x, y: LONGINT; keys: SET );
+			PROCEDURE PointerDown*( x, y: SIZE; keys: SET );
 			BEGIN
 				IF (Left IN keys) & hasFocus THEN
 					LocateBox( x, y, sel.beg );  sel.end := sel.beg
@@ -788,7 +788,7 @@ Out.Ln;
 				UpdateAll()
 			END PointerDown;
 
-			PROCEDURE PointerMove*( x, y: LONGINT; keys: SET );
+			PROCEDURE PointerMove*( x, y: SIZE; keys: SET );
 			VAR pos: Position;
 			BEGIN
 				IF (Left IN keys) & (sel.beg.line # NIL) THEN
@@ -805,10 +805,10 @@ Out.Ln;
 			END PointerMove;
 
 
-			PROCEDURE PointerUp*( x, y: LONGINT; keys: SET );
+			PROCEDURE PointerUp*( x, y: SIZE; keys: SET );
 			END PointerUp;
 
-			PROCEDURE CursorKey( keySym: LONGINT );
+			PROCEDURE CursorKey( keySym: SIZE );
 			BEGIN
 				w.Char( ESC );
 				IF CursorKeyMode IN mode THEN  w.Char( "O" )
@@ -824,7 +824,7 @@ Out.Ln;
 				w.Update()
 			END CursorKey;
 
-			PROCEDURE KeyEvent*( ucs: LONGINT; flags: SET; VAR keySym: LONGINT );
+			PROCEDURE KeyEvent*( ucs: SIZE; flags: SET; VAR keySym: SIZE );
 			BEGIN
 				IF chan = NIL THEN  RETURN  END;
 
@@ -874,7 +874,7 @@ Out.Ln;
 
 
 			PROCEDURE resized;
-			VAR l: Line; W, H, c, r, i: LONGINT; d: Data; ch: Char;
+			VAR l: Line; W, H, c, r, i: SIZE; d: Data; ch: Char;
 			BEGIN {EXCLUSIVE}
 				W := bounds.GetWidth() - 2*Border;
 				H := bounds.GetHeight() - 2*Border;
@@ -933,8 +933,8 @@ Out.Ln;
 				chan.WindowChange( cols, rows )
 			END SetChannel;
 
-			PROCEDURE &New*( cols, rows: LONGINT; close: WindowCloser );
-			VAR i: LONGINT;
+			PROCEDURE &New*( cols, rows: SIZE; close: WindowCloser );
+			VAR i: SIZE;
 			BEGIN
 				Init();
 				closeWindow := close;
@@ -1158,5 +1158,4 @@ emacs
 pine
 pico
 lynx
-
 

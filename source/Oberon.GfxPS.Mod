@@ -152,7 +152,7 @@ MODULE GfxPS IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Str (VAR r: Files.Rider; s: ARRAY OF CHAR);
 	BEGIN
-		Files.WriteBytes(r, s, Strings.Length(s))
+		Files.WriteBytes(r, s, Strings.Length(s)(LONGINT))
 	END Str;
 
 	PROCEDURE Int (VAR r: Files.Rider; l: LONGINT);

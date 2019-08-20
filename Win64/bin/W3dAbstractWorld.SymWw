@@ -28,7 +28,7 @@ TYPE
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ SetCamera*(p, d, u: Vectors.TVector3d); 
 		PROCEDURE ^ Render*(img: Raster.Image; movingOnly: BOOLEAN); 
-		PROCEDURE ^ GetOwnerIndex*(x, y: LONGINT): LONGINT; 
+		PROCEDURE ^ GetOwnerIndex*(x, y: SIZE): LONGINT; 
 	END World; 
 BEGIN
 END W3dAbstractWorld.

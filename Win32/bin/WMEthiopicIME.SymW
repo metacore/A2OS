@@ -6,12 +6,13 @@ TYPE
 	IME* = OBJECT {EXCLUSIVE} (WMInputMethods.IME)
 	VAR 
 		cons, vow: LONGINT; 
-		ucs0, geez: LONGINT; 
+		ucs0: SIZE; 
+		geez: LONGINT; 
 
 		PROCEDURE ^ GetName*(): Strings.String; 
 		PROCEDURE ^ Reset; 
 		PROCEDURE ^ Remap(ucs1: LONGINT): LONGINT; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 	END IME; 
 VAR 
 	i: LONGINT; 

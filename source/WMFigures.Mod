@@ -15,7 +15,7 @@ CONST
 
 TYPE
 	Point* = POINTER TO RECORD
-		x, y : LONGINT;
+		x, y : SIZE;
 		previous, next : Point;
 		END;
 
@@ -38,7 +38,7 @@ TYPE
 
 		lastKeys, state : SET;
 
-		oldx,oldy:LONGINT;
+		oldx,oldy:SIZE;
 		PArray: WMProperties.PropertyArray; (* PArray#NIL !*)
 
 		PROCEDURE &Init*;
@@ -65,7 +65,7 @@ TYPE
 			NEW(PArray,0);
 		END Init;
 
-		PROCEDURE AddPoint*(x, y : LONGINT); (* in stable parent coordinates (because coordinates relative to the figure bound change with normalization) *)
+		PROCEDURE AddPoint*(x, y : SIZE); (* in stable parent coordinates (because coordinates relative to the figure bound change with normalization) *)
 		VAR
 			s: ARRAY 16 OF CHAR;
 			pp:WMProperties.PointProperty;
@@ -83,13 +83,13 @@ TYPE
 		END AddPoint;
 
 		(* x,y in Figure coordinates, which may change when adding new points etc. Remember that PointProperty is in (stable) parent coordinates*)
-		PROCEDURE MovePoint*(point: WMProperties.Property; fx, fy: LONGINT);
+		PROCEDURE MovePoint*(point: WMProperties.Property; fx, fy: SIZE);
 		BEGIN
 			point(WMProperties.PointProperty).SetCoordinate(fx+bounds.GetLeft(), fy+bounds.GetTop());
 		END MovePoint;
 
 		(* remove point coordinates are currently in figure coordinates, in contrast to AddPoint() *)
-		PROCEDURE RemovePoint*(fx, fy : LONGINT);
+		PROCEDURE RemovePoint*(fx, fy : SIZE);
 		VAR
 			pp:WMProperties.Property;
 		BEGIN
@@ -102,8 +102,8 @@ TYPE
 		END RemovePoint;
 
 		(** Return point located at mouse position fx. fy, which are in Figure coordinates that change, e.g. when points are added. (NIL if no point at location). *)
-		PROCEDURE ThisPoint*(fx, fy : LONGINT): WMProperties.Property;
-		VAR  i:LONGINT; px,py: LONGINT;
+		PROCEDURE ThisPoint*(fx, fy : SIZE): WMProperties.Property;
+		VAR  i:SIZE; px,py: SIZE;
 		BEGIN
 			i:=0;
 			WHILE i<LEN(PArray) DO
@@ -118,7 +118,7 @@ TYPE
 
 		(** Return point Nr 'index' .  Negative numbers are counted top-down.  *)
 		PROCEDURE IndexedPoint*(index : LONGINT): WMProperties.Property;
-		VAR  i,j:LONGINT;
+		VAR  i,j:SIZE;
 		BEGIN
 			i:=0; j:=0;
 			IF index >=0 THEN
@@ -144,8 +144,8 @@ TYPE
 			RETURN NIL;
 		END IndexedPoint;
 
-		PROCEDURE MoveFigure*(dx,dy:LONGINT);
-		VAR i,x,y:LONGINT;
+		PROCEDURE MoveFigure*(dx,dy:SIZE);
+		VAR i: SIZE; x,y:SIZE;
 		BEGIN
 			Acquire;
 			IF PArray=NIL THEN PArray:=properties.Enumerate(); END; (*?redundant*)
@@ -160,7 +160,7 @@ TYPE
 		END MoveFigure;
 
 		(* fx,fy in Figure coordinate system, NOT in parent coordinates*)
-		PROCEDURE PointerDown*(fx, fy : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(fx, fy : SIZE; keys : SET);
 		BEGIN
 			lastKeys := keys;
 			IF (0 IN keys) THEN
@@ -174,8 +174,8 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp*(fx, fy : LONGINT; keys : SET);
-		VAR dx,dy,bt,bl:LONGINT;
+		PROCEDURE PointerUp*(fx, fy : SIZE; keys : SET);
+		VAR dx,dy,bt,bl:SIZE;
 		BEGIN
 			bl:=bounds.GetLeft();
 			bt:=bounds.GetTop();
@@ -206,8 +206,8 @@ TYPE
 			selectedPoint:=NIL;
 		END PointerUp;
 
-		PROCEDURE PointerMove*(fx, fy : LONGINT; keys : SET);
-		VAR dx,dy,bl,bt:LONGINT; pp:WMProperties.Property;
+		PROCEDURE PointerMove*(fx, fy : SIZE; keys : SET);
+		VAR dx,dy,bl,bt:SIZE; pp:WMProperties.Property;
 		BEGIN
 			IF (Reshape IN state)  & (keys*{0,1}#{})  & (selectedPoint # NIL) THEN
 				MovePoint(selectedPoint, fx, fy);
@@ -231,11 +231,11 @@ TYPE
 		END PointerMove;
 
 				(* Is X, Y somewhere inside the polygon defined by p ? *)
-		PROCEDURE Inside*(X, Y: LONGINT): BOOLEAN;(*Prototype*)
+		PROCEDURE Inside*(X, Y: SIZE): BOOLEAN;(*Prototype*)
 		END Inside;
 
 		(** Return if the line is hit at (x, y) in parent coordinates *)
-		PROCEDURE IsHit*(x, y: LONGINT): BOOLEAN; (*Prototype*)
+		PROCEDURE IsHit*(x, y: SIZE): BOOLEAN; (*Prototype*)
 		END IsHit;
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
@@ -255,7 +255,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE AddDisplayPoint(x, y : LONGINT);
+		PROCEDURE AddDisplayPoint(x, y : SIZE);
 		VAR point, p : Point;
 		BEGIN
 			Acquire;
@@ -280,10 +280,10 @@ TYPE
 		END MoveDisplayPoints;
 
 		PROCEDURE Normalize;
-		VAR p:Point; oldrect, rect: WMRectangles.Rectangle; dx,dy:LONGINT;
+		VAR p:Point; oldrect, rect: WMRectangles.Rectangle; dx,dy:SIZE;
 		BEGIN
 			Acquire;
-			rect.l := MAX(LONGINT); rect.t := MAX(LONGINT); rect.r := MIN(LONGINT); rect.b := MIN(LONGINT);
+			rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
 			p:=points;
 			WHILE p#NIL DO (* adapt display point coordinates to new bounds *)
 				rect.l:=MIN(rect.l, p.x-PointSize DIV 2 -1); rect.r:=MAX(rect.r, p.x+PointSize DIV 2+1);  (*compute bounds*)
@@ -304,10 +304,10 @@ TYPE
 		END Scale;
 
 		PROCEDURE GetBoundingBox() : WMRectangles.Rectangle; (*! will be eliminated*)
-		VAR rect : WMRectangles.Rectangle; i:LONGINT;
+		VAR rect : WMRectangles.Rectangle; i:SIZE;
 		BEGIN
-			rect.l := MAX(LONGINT); rect.t := MAX(LONGINT);
-			rect.r := MIN(LONGINT); rect.b := MIN(LONGINT);
+			rect.l := MAX(SIZE); rect.t := MAX(SIZE);
+			rect.r := MIN(SIZE); rect.b := MIN(SIZE);
 			IF PArray#NIL THEN PArray:=properties.Enumerate(); END;
 			IF PArray=NIL THEN RETURN rect END;
 			FOR i:=0 TO LEN(PArray)-1 DO
@@ -334,7 +334,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE RecachePoints; (*build point list in parent coordinates*)
-		VAR p:Point;	i,x,y:LONGINT;
+		VAR p:Point;	i:SIZE; x,y:SIZE;
 		BEGIN
 			Acquire;
 			PArray:=properties.Enumerate();
@@ -349,7 +349,7 @@ TYPE
 		END RecachePoints;
 
 		PROCEDURE DrawDisplayPoint(canvas : WMGraphics.Canvas; pp: WMProperties.PointProperty);
-		VAR rect : WMRectangles.Rectangle; color, x,y,fx,fy : LONGINT;
+		VAR rect : WMRectangles.Rectangle; color, x,y,fx,fy : SIZE;
 		BEGIN
 			ASSERT(pp # NIL);
 			IF (pp = selectedPoint) THEN color := WMGraphics.Yellow;
@@ -366,7 +366,7 @@ TYPE
 		END DrawDisplayPoint;
 
 		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
-		VAR a: BOOLEAN; i:LONGINT;
+		VAR a: BOOLEAN; i:SIZE;
 		BEGIN
 			DrawForeground^(canvas);
 			a:=arrow.Get();
@@ -430,7 +430,7 @@ TYPE
 		END Initialize;
 
 		PROCEDURE Scale;
-		VAR p : Point; bounds, box : WMRectangles.Rectangle; oldWidth, oldHeight, newWidth, newHeight, n : LONGINT;
+		VAR p : Point; bounds, box : WMRectangles.Rectangle; oldWidth, oldHeight, newWidth, newHeight, n : SIZE;
 		BEGIN
 			Acquire;
 			bounds := SELF.bounds.Get();
@@ -452,7 +452,7 @@ TYPE
 		END Scale;
 
 		(* Is X, Y somewhere inside the polygon defined by p ? *)
-		PROCEDURE Inside*(X, Y: LONGINT): BOOLEAN;
+		PROCEDURE Inside*(X, Y: SIZE): BOOLEAN;
 		VAR c: LONGINT; p, q: Point;
 		BEGIN
 			c := 0;
@@ -467,7 +467,7 @@ TYPE
 			RETURN ODD(c);
 		END Inside;
 
-		PROCEDURE IsHit*(mx, my: LONGINT): BOOLEAN;
+		PROCEDURE IsHit*(mx, my: SIZE): BOOLEAN;
 		VAR p, q: Point; i : LONGINT;
 		BEGIN
 			IF (points = NIL) OR (points.next = NIL) THEN RETURN FALSE; END;
@@ -533,9 +533,9 @@ TYPE
 		END Initialize;
 
 		PROCEDURE Normalize;
-		VAR p:Point; rect: WMRectangles.Rectangle; r,n:LONGINT;
+		VAR p:Point; rect: WMRectangles.Rectangle; r,n:SIZE;
 		BEGIN
-			rect.l := MAX(LONGINT); rect.t := MAX(LONGINT); rect.r := MIN(LONGINT); rect.b := MIN(LONGINT);
+			rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
 			p:=points;
 			r := Distance(p.x, p.y, p.next.x, p.next.y);
 			n := r + (PointSize DIV 2) + 1;
@@ -550,8 +550,8 @@ TYPE
 			bounds.Set(rect);
 		END Normalize;
 
-		PROCEDURE IsHit*(mx, my: LONGINT): BOOLEAN;
-		VAR radius0, radius: LONGINT;
+		PROCEDURE IsHit*(mx, my: SIZE): BOOLEAN;
+		VAR radius0, radius: SIZE;
 		BEGIN
 			IF ~ (Reshape IN state) THEN RETURN FALSE END;
 			radius0:= Distance(points.x, points.y, points.next.x,points.next.y);
@@ -607,7 +607,7 @@ TYPE
 			Initialize^;
 		END Initialize;
 
-		PROCEDURE IsHit*(mx, my: LONGINT): BOOLEAN;
+		PROCEDURE IsHit*(mx, my: SIZE): BOOLEAN;
 		BEGIN
 			IF ~ (Reshape IN state) THEN RETURN FALSE
 			ELSIF Filled IN state THEN
@@ -675,7 +675,7 @@ TYPE
 		END Initialize;
 
 			(* Is X, Y somewhere inside the polygon defined by p ? *) (*! to be implemented for pointarray*)
-		PROCEDURE Inside*(X, Y: LONGINT): BOOLEAN;
+		PROCEDURE Inside*(X, Y: SIZE): BOOLEAN;
 		VAR c: LONGINT; p,q: Point;
 		BEGIN
 			c := 0;
@@ -690,7 +690,7 @@ TYPE
 			RETURN ODD(c);
 		END Inside;
 
-		PROCEDURE IsHit*(mx, my: LONGINT): BOOLEAN;
+		PROCEDURE IsHit*(mx, my: SIZE): BOOLEAN;
 		VAR p, q: Point; i : LONGINT;
 		BEGIN
 			IF (points = NIL) OR (points.next = NIL) THEN RETURN FALSE; END;
@@ -750,7 +750,7 @@ TYPE
 		VAR i:LONGINT; oldrect, rect:WMRectangles.Rectangle; p:Point;
 		BEGIN
 			oldrect:=bounds.Get();
-			rect.l := MAX(LONGINT); rect.t := MAX(LONGINT); rect.r := MIN(LONGINT); rect.b := MIN(LONGINT);
+			rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
 			FOR i:=0 TO nSegments-1 DO
 				rect.l:=MIN(rect.l, pointArray[i].x-PointSize DIV 2 -1); rect.r:=MAX(rect.r, pointArray[i].x+PointSize DIV 2+1);  (*compute bounds*)
 				rect.t:=MIN(rect.t, pointArray[i].y-PointSize DIV 2 -1); rect.b:=MAX(rect.b, pointArray[i].y+PointSize DIV 2+1);
@@ -824,7 +824,7 @@ PROCEDURE MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: LONGI
 	Polynom = RECORD A, B, C, D: REAL END;
  VAR
 	i, cs, smax, k1: LONGINT; px, py: Polynom;
-	x, dx1, dx2, dx3, y, dy1, dy2, dy3: REAL; L, B, R, T,dW  : LONGINT;
+	x, dx1, dx2, dx3, y, dy1, dy2, dy3: REAL; L, B, R, T,dW  : SIZE;
 
 	PROCEDURE GetPolynom((* VAR *) y1, y2, y1s, y2s: REAL; VAR p: Polynom);
 		VAR dx1, dyx: REAL;
@@ -839,7 +839,7 @@ PROCEDURE MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: LONGI
 
 BEGIN
 	points[0].x := SHORT(ENTIER(RX[1])); points[0].y := SHORT(ENTIER(RY[1]));
-	L := MAX(LONGINT);  B := MAX(LONGINT); R := MIN(LONGINT); T := MIN(LONGINT);
+	L := MAX(SIZE);  B := MAX(SIZE); R := MIN(SIZE); T := MIN(SIZE);
 	i := 1; WHILE i <= n DO
 		L := MIN(L,SHORT(ENTIER(RX[i]))); B := MIN(B,SHORT(ENTIER(RY[i])));
 		R := MAX(R,SHORT(ENTIER(RX[i]))); T := MAX(T,SHORT(ENTIER(RY[i])));
@@ -1002,16 +1002,16 @@ END SplineToPoly;
 
 
 (** Returns TRUE if mx, my is within gravity pixels from X, Y. *)
-PROCEDURE Invicinity(mx, my, X, Y: LONGINT): BOOLEAN;
+PROCEDURE Invicinity(mx, my, X, Y: SIZE): BOOLEAN;
 BEGIN RETURN (mx - X) * (mx - X) + (my - Y) * (my - Y) < gravity * gravity
 END Invicinity;
 
 (** Returns TRUE if mx, my is within gravity pixels of the line from X, Y to X1, Y1. *)
-PROCEDURE InLineVicinity(mx, my, X, Y, X1, Y1: LONGINT): BOOLEAN;
-VAR  w, h, pw, ph, det,len : LONGINT;
+PROCEDURE InLineVicinity(mx, my, X, Y, X1, Y1: SIZE): BOOLEAN;
+VAR  w, h, pw, ph, det,len : SIZE;
 
-	PROCEDURE Between(x, a, b: LONGINT): BOOLEAN;
-	VAR min, max: LONGINT;
+	PROCEDURE Between(x, a, b: SIZE): BOOLEAN;
+	VAR min, max: SIZE;
 	BEGIN
 		min := MIN(a, b); max := MAX(a, b);
 		RETURN (min - gravity <= x) & (x <= max + gravity);
@@ -1032,7 +1032,7 @@ BEGIN
 	END
 END InLineVicinity;
 
-PROCEDURE Intersect(X, Y, x0,y0,x1,y1 : LONGINT) : BOOLEAN;
+PROCEDURE Intersect(X, Y, x0,y0,x1,y1 : SIZE) : BOOLEAN;
 BEGIN
 	IF ((Y >= y0) & (Y < y1)) OR ((Y >= y1) & (Y < y0)) THEN
 		IF y1 > y0 THEN RETURN x0 + (Y - y0) * (x1 -x0) DIV (y1 - y0) - X >= 0
@@ -1043,8 +1043,8 @@ BEGIN
 	END
 END Intersect;
 
-PROCEDURE Distance(x, y, x0, y0: LONGINT): LONGINT;
-VAR dx, dy: LONGINT;
+PROCEDURE Distance(x, y, x0, y0: SIZE): SIZE;
+VAR dx, dy: SIZE;
 BEGIN dx := x - x0; dy := y - y0;
 	RETURN ENTIER(Math.sqrt(dx * dx + dy * dy))
 END Distance;

@@ -226,7 +226,7 @@ TYPE
 			IF rxRingAdr MOD 16 # 0 THEN
 				INC(rxRingAdr, 16 - rxRingAdr MOD 16);
 			END;
-			initBlock.rdra := Machine.Ensure32BitAddress (rxRingAdr);
+			initBlock.rdra := rxRingAdr(Machine.Address32);
 
 
 			NEW(txAlignDescriptorRing);
@@ -234,7 +234,7 @@ TYPE
 			IF txRingAdr MOD 16 # 0 THEN
 				INC(txRingAdr, 16 - txRingAdr MOD 16);
 			END;
-			initBlock.tdra := Machine.Ensure32BitAddress (txRingAdr);
+			initBlock.tdra := txRingAdr(Machine.Address32);
 
 
 			(*Switch to 32bit mode. SSIZE32=1 *)

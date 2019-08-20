@@ -39,7 +39,7 @@ TYPE
 		f*: Files.File; 
 		streamInfo*: AVStreamInfo; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: LONGINT); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
 		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): AVStreamInfo; 
 		PROCEDURE ^ GetStream*(streamNr: LONGINT): DemuxStream; 
-		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 	END AVDemultiplexer; 
 
@@ -63,7 +63,7 @@ TYPE
 		streamInfo*: AVStreamInfo; 
 
 		PROCEDURE ^  & Open*(demultiplexer: AVDemultiplexer; streamNr: LONGINT); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^ SetPosX*(seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
 	END DemuxStream; 
@@ -116,7 +116,7 @@ TYPE
 	ImageDecoder* = OBJECT 
 
 		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageInfo*(VAR width, height, format, maxProgressionLevel: LONGINT); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: LONGINT); 
 		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
 		PROCEDURE ^ Render*(img: Raster.Image); 
@@ -155,7 +155,7 @@ TYPE
 
 	ImageDescriptor* = OBJECT 
 	VAR 
-		left*, top*, width*, height*: LONGINT; 
+		left*, top*, width*, height*: SIZE; 
 		image*: Raster.Image; 
 		delayTime*: LONGINT; 
 		disposeMode*: LONGINT; 
@@ -166,7 +166,7 @@ TYPE
 	END ImageDescriptor; 
 
 	ImageSequence* = RECORD 
-		width*, height*: LONGINT; 
+		width*, height*: SIZE; 
 		bgColor*: LONGINT; 
 		images*: ImageDescriptor; 
 	END; 

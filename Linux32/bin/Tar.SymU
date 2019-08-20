@@ -40,7 +40,7 @@ TYPE
 	Entry = OBJECT 
 	VAR 
 		next: Entry; 
-		pos: LONGINT; 
+		pos: Files.Position; 
 		header: Header; 
 
 		PROCEDURE ^  & Init*; 
@@ -53,16 +53,16 @@ TYPE
 	SizeReader = OBJECT 
 	VAR 
 		input: Streams.Reader; 
-		max: LONGINT; 
+		max: SIZE; 
 		archive: Archive; 
 
 		PROCEDURE ^  & Init*(input: Streams.Reader; size: LONGINT; archive: Archive); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 	END SizeReader; 
 
 	Buffer = OBJECT 
 
-		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 	END Buffer; 
 
 	BufferSegment = OBJECT 
@@ -80,7 +80,7 @@ TYPE
 		closed: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(a: Archive; CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ NewSegment; 
 		PROCEDURE ^ WriteBuffer; 
 	END MemoryBuffer; 
@@ -114,11 +114,11 @@ TYPE
 	PROCEDURE ^ CalcCheckSum(VAR hdr: Header); 
 	PROCEDURE ^ WriteHeader(W: Streams.Writer; VAR hdr: Header); 
 	PROCEDURE ^ OctStrToInt(CONST str: ARRAY OF CHAR; VAR val: LONGINT); 
-	PROCEDURE ^ IntToOctStr(val: LONGINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ IntToOctStr(val: HUGEINT; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ CopyArchiveName(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
 	PROCEDURE ^ Backup(f: Files.File); 
 	PROCEDURE ^ CopyFiles(VAR from, to: Files.File); 
-	PROCEDURE ^ TransferBytes(from: Streams.Reader; to: Streams.Writer; n: LONGINT); 
+	PROCEDURE ^ TransferBytes(from: Files.Reader; to: Files.Writer; n: Files.Size); 
 	PROCEDURE ^ Old*(name: Archives.StringObject): Archives.Archive; 
 	PROCEDURE ^ New*(name: Archives.StringObject): Archives.Archive; 
 	PROCEDURE ^ List*(context: Commands.Context); 

@@ -19,7 +19,7 @@ TYPE
 		PROCEDURE ^ DragAccepted(sender, data: ANY); 
 		PROCEDURE ^ DragRejected(sender, data: ANY); 
 		PROCEDURE ^ GetNodeData(node: WMTrees.TreeNode): WMComponents.VisualComponent; 
-		PROCEDURE ^ DragDroppedHandler(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ DragDroppedHandler(x, y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ OnStartDrag(sender, data: ANY); 
 		PROCEDURE ^ AddComponents(component: WMComponents.Component; parent: WMTrees.TreeNode); 
 		PROCEDURE ^ Refresh(sender, data: ANY); 
@@ -92,7 +92,7 @@ TYPE
 		PROCEDURE ^ MoveOneDown(sender, data: ANY); 
 		PROCEDURE ^ MoveOneUp(sender, data: ANY); 
 		PROCEDURE ^ InvalidateM(sender, data: ANY); 
-		PROCEDURE ^ ContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ ContextMenu(sender: ANY; x, y: SIZE); 
 	END InspectorComponent; 
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -114,7 +114,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ Accept(sender, par: ANY); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 	END DragCommand; 
 VAR 
 	nofWindows: LONGINT; 

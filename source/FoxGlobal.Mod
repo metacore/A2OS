@@ -247,11 +247,14 @@ TYPE
 		*)
 
 		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-,byteType-,
-		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-, lenType-: SyntaxTree.Type;
+		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
 
 		CanPassInRegister-: PassInRegisterProc;
 		cellsAreObjects-: BOOLEAN;
 		platformCallingConvention-: SyntaxTree.CallingConvention;
+
+		(* MAX values of commonly-used types *)
+		maxSize-, maxSet-: Basic.Integer;
 
 		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, offsetFirstVar: LONGINT; cooperative: BOOLEAN);
 		VAR i: LONGINT;
@@ -304,7 +307,7 @@ TYPE
 		END AddCapability;
 
 		PROCEDURE GenerateRecordOffsets*(x: SyntaxTree.RecordType): BOOLEAN; (* normally done in checker but the binary symbol file format makes this necessary *)
-		VAR baseType: SyntaxTree.RecordType; offset,baseOffset, size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
+		VAR baseType: SyntaxTree.RecordType; offset,baseOffset, size: SIZE; alignment, thisAlignment: SIZE; variable: SyntaxTree.Variable;
 		BEGIN
 			baseType :=x.GetBaseRecord();
 			IF (baseType  # NIL) & (baseType.sizeInBits < 0) THEN
@@ -347,7 +350,7 @@ TYPE
 		END GenerateRecordOffsets;
 
 		PROCEDURE GenerateCellOffsets(x: SyntaxTree.CellType): BOOLEAN;
-		VAR baseType: SyntaxTree.Type; offset,size: LONGINT; alignment, thisAlignment: LONGINT; variable: SyntaxTree.Variable;
+		VAR baseType: SyntaxTree.Type; offset,size: SIZE; alignment, thisAlignment: SIZE; variable: SyntaxTree.Variable;
 			parameter: SyntaxTree.Parameter; property: SyntaxTree.Property;
 		BEGIN
 			baseType := x.baseType;
@@ -436,7 +439,7 @@ TYPE
 		END GenerateCellOffsets;
 
 		PROCEDURE GenerateVariableOffsets*(scope: SyntaxTree.Scope): BOOLEAN;
-		VAR variable: SyntaxTree.Variable; offset,size: LONGINT; alignment: LONGINT;
+		VAR variable: SyntaxTree.Variable; offset,size: SIZE; alignment: SIZE;
 			bscope: SyntaxTree.Scope;
 		BEGIN
 			IF scope IS SyntaxTree.RecordScope THEN (* increasing indices *)
@@ -460,7 +463,7 @@ TYPE
 
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
-					IF variable.offsetInBits = MIN(LONGINT) THEN
+					IF variable.offsetInBits = MIN(SIZE) THEN
 						IF (variable.externalName # NIL) THEN
 							variable.SetOffset(offset)
 						ELSIF ~variable.fictive & ~variable.preferRegister THEN
@@ -510,7 +513,7 @@ TYPE
 		END GenerateVariableOffsets;
 
 		PROCEDURE GenerateParameterOffsets*(procedure : SyntaxTree.Procedure; nestedProcedure: BOOLEAN): BOOLEAN;
-		VAR offset,size: LONGINT;parameter: SyntaxTree.Parameter; procedureType: SyntaxTree.ProcedureType;
+		VAR offset,size: SIZE;parameter: SyntaxTree.Parameter; procedureType: SyntaxTree.ProcedureType;
 		BEGIN
 			procedureType := procedure.type(SyntaxTree.ProcedureType);
 			IF (procedure.isInline) THEN
@@ -565,8 +568,8 @@ TYPE
 			RETURN TRUE
 		END GenerateParameterOffsets;
 
-		PROCEDURE SizeOf*(type: SyntaxTree.Type): LONGINT;
-		VAR size: LONGINT; base: SyntaxTree.Type;
+		PROCEDURE SizeOf*(type: SyntaxTree.Type): SIZE;
+		VAR size: SIZE; base: SyntaxTree.Type;
 		BEGIN
 			IF type = NIL THEN RETURN -1 END;
 			type := type.resolved;
@@ -643,14 +646,14 @@ TYPE
 			ELSIF type IS SyntaxTree.CellType THEN
 				size := addressSize;
 			ELSIF type IS SyntaxTree.RangeType THEN
-				size := 3 * SizeOf(lenType);
+				size := 3 * SizeOf(sizeType);
 			ELSE
 				HALT(100)
 			END;
 			RETURN size
 		END SizeOf;
 
-		PROCEDURE SizeOfParameter*(par: SyntaxTree.Parameter):LONGINT;
+		PROCEDURE SizeOfParameter*(par: SyntaxTree.Parameter):SIZE;
 		BEGIN
 			IF (par.type.resolved IS SyntaxTree.ArrayType) OR (par.type.resolved IS SyntaxTree.MathArrayType) THEN
 				IF (par.type.resolved IS SyntaxTree.ArrayType) & (par.type.resolved(SyntaxTree.ArrayType).form = SyntaxTree.Static) &
@@ -692,7 +695,7 @@ TYPE
 			END;
 		END SizeOfParameter;
 
-		PROCEDURE SizeOfVariable*(var: SyntaxTree.Variable):LONGINT;
+		PROCEDURE SizeOfVariable*(var: SyntaxTree.Variable):SIZE;
 		BEGIN
 			IF (var.type.resolved IS SyntaxTree.MathArrayType) OR (var.type.resolved IS SyntaxTree.ArrayType) THEN
 				IF (var.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
@@ -722,8 +725,8 @@ TYPE
 		END SizeOfVariable;
 
 
-		PROCEDURE AlignmentOf*(CONST alignment: Alignment;type: SyntaxTree.Type): LONGINT;
-		VAR result: LONGINT;
+		PROCEDURE AlignmentOf*(CONST alignment: Alignment;type: SyntaxTree.Type): SIZE;
+		VAR result: SIZE;
 		BEGIN
 			type := type.resolved;
 			IF type IS SyntaxTree.RecordType THEN
@@ -746,7 +749,7 @@ TYPE
 					result := type.alignmentInBits
 				END;
 			ELSIF type IS SyntaxTree.RangeType THEN
-				result := AlignmentOf(alignment,lenType);
+				result := AlignmentOf(alignment,sizeType);
 			ELSIF type IS SyntaxTree.StringType THEN
 				result := SizeOf(type(SyntaxTree.StringType).baseType);
 			ELSE
@@ -758,8 +761,8 @@ TYPE
 			RETURN result
 		END AlignmentOf;
 
-		PROCEDURE AlignedSizeOf*(type: SyntaxTree.Type): LONGINT;
-		VAR size: LONGINT;
+		PROCEDURE AlignedSizeOf*(type: SyntaxTree.Type): SIZE;
+		VAR size: SIZE;
 		BEGIN
 			size := SizeOf(type);
 			Basic.Align(size, AlignmentOf(variableAlignment, type));
@@ -791,7 +794,7 @@ TYPE
 		system.systemModule[Scanner.Lowercase] := SyntaxTree.NewModule("",SyntaxTree.invalidPosition,systemName,system.systemScope[Scanner.Lowercase],Scanner.Lowercase);
 	END BuildScopes;
 
-	PROCEDURE SetDefaultDeclarations*(system: System; minBits: LONGINT);
+	PROCEDURE SetDefaultDeclarations*(system: System; minBits: SIZE);
 	VAR now: Dates.DateTime; date, time: ARRAY 20 OF CHAR;
 	BEGIN
 		(* types *)
@@ -850,14 +853,15 @@ TYPE
 		system.addressType := SyntaxTree.NewAddressType(system.addressSize);
 		system.sizeType := SyntaxTree.NewSizeType(system.addressSize);
 
-		system.lenType := system.longintType;
-		(* generally, the lenType should be sizeType but for historical (legacy) reasons, it is longint in the current implementation *)
-
-		system.rangeType := SyntaxTree.NewRangeType(3 * system.SizeOf(system.lenType));
+		system.rangeType := SyntaxTree.NewRangeType(3 * system.SizeOf(system.sizeType));
 
 		system.complexType := Complex64;
 		system.longcomplexType := Complex128;
 		system.setType := SyntaxTree.NewSetType(system.addressSize);
+
+		system.maxSize := MaxInteger(system, system.sizeType(SyntaxTree.BasicType), TRUE);
+		system.maxSet := system.SizeOf(system.setType) - 1;
+
 		(* type declarations *)
 		DeclareType(system.byteType,"BYTE",system.systemScope);
 		DeclareType(system.addressType,"ADDRESS",system.globalScope);
@@ -1109,10 +1113,10 @@ TYPE
 		RETURN (type IS SyntaxTree.ProcedureType) & (type(SyntaxTree.ProcedureType).callingConvention = SyntaxTree.OberonCallingConvention)
 	END IsOberonProcedure;
 
-	PROCEDURE AlignedSizeOf*(system: System; CONST alignment: Alignment; type: SyntaxTree.Type):LONGINT;
-	VAR value: LONGINT;
+	PROCEDURE AlignedSizeOf*(system: System; CONST alignment: Alignment; type: SyntaxTree.Type):SIZE;
+	VAR value: SIZE;
 	BEGIN
-		value := SHORT(system.SizeOf(type));
+		value := system.SizeOf(type);
 		INC(value, (-value) MOD system.AlignmentOf(alignment, type));
 		RETURN value;
 	END AlignedSizeOf;
@@ -1492,13 +1496,13 @@ TYPE
 		RETURN level
 	END Level;
 
-	PROCEDURE ConvertSigned*(this: HUGEINT; bits: LONGINT): HUGEINT;
+	PROCEDURE ConvertSigned*(this: HUGEINT; bits: SIZE): HUGEINT;
 	BEGIN
 		bits := 64-bits;
 		RETURN ASH (ASH (this, bits), -bits);
 	END ConvertSigned;
 
-	PROCEDURE ConvertUnsigned*(this: HUGEINT; bits: LONGINT): HUGEINT;
+	PROCEDURE ConvertUnsigned*(this: HUGEINT; bits: SIZE): HUGEINT;
 	BEGIN
 		bits := 64-bits;
 		RETURN LSH (LSH (this, bits), -bits);
@@ -1533,20 +1537,20 @@ TYPE
 		IF system.SizeOf(type) = 32 THEN RETURN MIN(REAL) ELSE RETURN MIN(LONGREAL) END;
 	END MinFloat;
 
-	PROCEDURE ConvertSet*(this: Basic.Set; bits: LONGINT): Basic.Set;
+	PROCEDURE ConvertSet*(this: Basic.Set; bits: SIZE): Basic.Set;
 	BEGIN
 		WHILE bits <= MAX (Basic.Set) DO EXCL (this, bits); INC (bits) END;
 		RETURN this;
 	END ConvertSet;
 
-	PROCEDURE IsUnsignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN;
+	PROCEDURE IsUnsignedInteger*(this: HUGEINT; sizeInBits: SIZE): BOOLEAN;
 	VAR m: HUGEINT;
 	BEGIN
 		m := ASH(HUGEINT(1),sizeInBits);
 		RETURN (this >= 0) & (this < m)
 	END IsUnsignedInteger;
 
-	PROCEDURE IsSignedInteger*(this: HUGEINT; sizeInBits: LONGINT): BOOLEAN;
+	PROCEDURE IsSignedInteger*(this: HUGEINT; sizeInBits: SIZE): BOOLEAN;
 	VAR m: HUGEINT;
 	BEGIN
 			m := ASH(HUGEINT(1),sizeInBits-1);
@@ -1646,15 +1650,15 @@ TYPE
 	END NewNilValue;
 
 	(* distance for assignment to <- from *)
-	PROCEDURE BasicTypeDistance*(system: System; from, to: SyntaxTree.BasicType): LONGINT;
-	VAR fromSize, toSize, distance: LONGINT;
+	PROCEDURE BasicTypeDistance*(system: System; from, to: SyntaxTree.BasicType): SIZE;
+	VAR fromSize, toSize, distance: SIZE;
 	BEGIN
 		fromSize := system.SizeOf(from); toSize := system.SizeOf(to);
 		distance := -1;
 		IF (from IS SyntaxTree.IntegerType) & (to IS SyntaxTree.IntegerType) & (toSize >= fromSize) THEN
 			IF from(SyntaxTree.IntegerType).signed # to(SyntaxTree.IntegerType).signed THEN
 				IF (toSize=fromSize) & to(SyntaxTree.IntegerType).signed THEN
-					distance := MIN(LONGINT)
+					distance := MIN(SIZE)
 				ELSE
 					INC(distance,2);
 				END;
@@ -1696,7 +1700,7 @@ TYPE
 			distance := 0;
 		END;
 
-		IF distance < 0 THEN distance := MAX(LONGINT) END;
+		IF distance < 0 THEN distance := MAX(SIZE) END;
 		RETURN distance
 	END BasicTypeDistance;
 

@@ -35,7 +35,7 @@ TYPE
 		pathIsFile, readGlobalData, readFromTempfile: BOOLEAN; 
 		r: Files.Reader; 
 		w: Files.Writer; 
-		pathLength: LONGINT; 
+		pathLength: SIZE; 
 
 		PROCEDURE ^  & Init*(c: Commands.Context); 
 		PROCEDURE ^ ReadVersionUrl*(CONST filename: ARRAY OF CHAR); 

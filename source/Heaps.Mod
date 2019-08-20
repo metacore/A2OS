@@ -84,8 +84,7 @@ TYPE
 		heapBlock {FICTIVE =HeapBlockOffset}: ADDRESS;
 		typeDesc {FICTIVE =TypeDescOffset}: POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
 		(* when this is changed --> change constant in Machine too and provide changes in FoxIntermediateBackend where noted *)
-		mark: WORD;
-		refCount: WORD;
+		mark: SIZE;
 		dataAdr-: ADDRESS;
 		size-: SIZE;
 		nextMark {UNTRACED}: HeapBlock;
@@ -125,7 +124,6 @@ TYPE
 	TypeInfo*= POINTER{UNSAFE,UNTRACED} TO TypeInfoDesc;
 	TypeInfoDesc = RECORD
 		descSize: SIZE;
-		sentinel: ADDRESS;	(* = MPO-4 *)
 		tag: ADDRESS; (* pointer to static type descriptor, only used by linker and loader *)
 		flags: SET;
 		mod: ADDRESS; (* module *)
@@ -156,7 +154,6 @@ TYPE
 	ArrayDataBlockU = POINTER {UNSAFE,UNTRACED} TO ArrayDataBlockDesc;
 	ArrayDataBlockDesc*= RECORD (DataBlockDesc)
 		numElems: SIZE;
-		current: ADDRESS; (* unused *)
 		first: ADDRESS;
 		(* len info *)
 		(* data *)
@@ -195,12 +192,12 @@ VAR
 	markStack: MarkStack;
 	GC*: PROCEDURE;	(** activate the garbage collector *)
 	initBlock {UNTRACED}: ANY;	(* anchor for init calls *)
-	currentMarkValue: LONGINT; (* all objects that have this value in their mark field are still used - initial value filled in by linker *)
-	sweepMarkValue: LONGINT; (* most recent mark value *)
+	currentMarkValue: SIZE; (* all objects that have this value in their mark field are still used - initial value filled in by linker *)
+	sweepMarkValue: SIZE; (* most recent mark value *)
 	sweepBlockAdr: ADDRESS;	(* where to resume sweeping *)
 	sweepMemBlock {UNTRACED}: Machine.MemoryBlock; (* where to resume sweeping *)
 	candidates: ARRAY MaxCandidates OF ADDRESS; (* procedure stack pointer candidates *)
-	numCandidates: LONGINT;
+	numCandidates: SIZE;
 	newSum: SIZE;
 	checkRoot: FinalizerNode;	(* list of checked objects (contains weak references to the checked objects) *)
 	finalizeRoot: FinalizerNode;	(* objects scheduled for finalization (contains references to scheduled objects) *)
@@ -210,21 +207,20 @@ VAR
 	(** Statistics. Will only be maintained if Stats = TRUE *)
 
 	(** Memory allocation statistics *)
-	Nnew- : LONGINT;			(** Number of times NewBlock has been called since system startup *)
+	Nnew- : SIZE;			(** Number of times NewBlock has been called since system startup *)
 	NnewBytes- : HUGEINT;		(** Number of bytes allocated by NewBlock since system startup *)
 
 	(** Garbage collection statistics *)
-	Ngc- : LONGINT; 			(** Number of GC cycles since system startup *)
+	Ngc- : SIZE; 			(** Number of GC cycles since system startup *)
 
 	(** Statistics considering the last GC cyle *)
-	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT;
+	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: SIZE;
 	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : HUGEINT;
 	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT;
 
 	gcStatus*: GCStatus;
 
-	GCType*: LONGINT;
-	freeBlockFound-, freeBlockNotFound-: LONGINT;
+	GCType*: WORD;
 	trace-: BOOLEAN;
 
 	allocationLogger-: PROCEDURE(p: ANY);
@@ -315,10 +311,10 @@ END Mark;
 PROCEDURE TraverseMarkStack();
 VAR orgBlock: ADDRESS;(*: ADDRESS*); staticTypeBlock {UNTRACED}: StaticTypeBlock;
 	orgHeapBlock {UNTRACED}, next{UNTRACED}: HeapBlock;
-	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: LONGINT;
+	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: SIZE;
 	protected {UNTRACED}: ProtRecBlock;
 	b {UNTRACED}: POINTER {UNSAFE} TO RECORD p: ANY END;
-	meta {UNTRACED }: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; last, current, first: ADDRESS END;
+	meta {UNTRACED }: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; numElems: SIZE; first: ADDRESS END;
 	block {UNTRACED}: ANY;
 BEGIN{UNCHECKED} (* omit any range checks etc.*)
 	IF Stats THEN INC(Nmark) END;
@@ -339,7 +335,7 @@ BEGIN{UNCHECKED} (* omit any range checks etc.*)
 			ELSE
 				currentArrayElemAdr := meta.first;
 
-				lastArrayElemAdr := meta.first + meta.last * staticTypeBlock.recSize;
+				lastArrayElemAdr := meta.first + meta.numElems * staticTypeBlock.recSize;
 				WHILE currentArrayElemAdr < lastArrayElemAdr DO
 					FOR i := 0 TO LEN(staticTypeBlock.pointerOffsets) - 1 DO
 						b := currentArrayElemAdr + staticTypeBlock.pointerOffsets[i];
@@ -367,7 +363,7 @@ END TraverseMarkStack;
 
 (** WriteType - Write a type name (for tracing only). *)
 PROCEDURE WriteType*(t: ADDRESS);	(* t is static type descriptor *)
-VAR m: ADDRESS; i: LONGINT; ch: CHAR;
+VAR m: ADDRESS; i: SIZE; ch: CHAR;
 	typeDesc: StaticTypeBlockU;
 BEGIN
 	typeDesc := t;
@@ -405,7 +401,7 @@ VAR
 	lastFreeBlockAdr: ADDRESS;
 	lastFreeBlockSize: ADDRESS;
 	block : HeapBlockU ; freeBlock, lastFreeBlock: FreeBlockU;
-	blockMark: LONGINT; blockSize: SIZE;
+	blockMark: SIZE; blockSize: SIZE;
 	time1, time2: HUGEINT;
 CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 CONST StrongChecks = FALSE;
@@ -487,7 +483,7 @@ END LazySweep;
 (* -- useful for debugging --
 PROCEDURE CheckHeap;
 VAR memBlock {UNTRACED}: Machine.MemoryBlock; p, refBlock, currentArrayElemAdr, lastArrayElemAdr: ADDRESS;
-	heapBlock {UNTRACED}: HeapBlock; staticTypeBlock {UNTRACED}: StaticTypeBlock; i: LONGINT;
+	heapBlock {UNTRACED}: HeapBlock; staticTypeBlock {UNTRACED}: StaticTypeBlock; i: SIZE;
 
 	PROCEDURE CheckBlock(block: ADDRESS): BOOLEAN;
 	VAR heapBlockAdr: ADDRESS;
@@ -570,7 +566,7 @@ END CheckHeap;
 (* CheckCandidates - Check which candidates could be pointers, and mark them. (exported for debugging only) *)
 PROCEDURE CheckCandidates*;
 CONST MinDataOffset = BlockHeaderSize + SIZEOF(HeapBlockDesc) + BlockHeaderSize; (* minimal offset of data address with respect to block start address *)
-VAR i, j, h: LONGINT; p, blockStart: ADDRESS; memBlock {UNTRACED}: Machine.MemoryBlock;
+VAR i, j, h: SIZE; p, blockStart: ADDRESS; memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock {UNTRACED}: HeapBlock;
 BEGIN
 	(* {numCandidates > 0} *)
@@ -727,7 +723,7 @@ END GetFinalizer;
 
 (** Check finalizers registered in the specified module, which is about to be freed or shut down. Remove all finalizer procedures in this module from the finalizer lists so they won't be called any more. *)
 PROCEDURE CleanupModuleFinalizers*(codeAdr: ADDRESS; codeLen: SIZE; CONST name: ARRAY OF CHAR);
-VAR n, p, t: FinalizerNode; codeEnd: ADDRESS; N1, N2: LONGINT;
+VAR n, p, t: FinalizerNode; codeEnd: ADDRESS; N1, N2: SIZE;
 BEGIN
 	codeEnd := codeAdr + codeLen; N1 := 0; N2 := 0;
 	Machine.Acquire(Machine.Heaps);
@@ -827,14 +823,13 @@ BEGIN
 END LazySweepGC;
 
 (* initialize a free heap block *)
-PROCEDURE InitFreeBlock(freeBlock: FreeBlockU; mark: LONGINT; dataAdr: ADDRESS; size: SIZE);
+PROCEDURE InitFreeBlock(freeBlock: FreeBlockU; mark: SIZE; dataAdr: ADDRESS; size: SIZE);
 BEGIN
 	(* initialize heap block header *)
 	freeBlock.typeDesc := freeBlockTag;
 	freeBlock.heapBlock := NIL;
 	(* initialize heap block fields *)
 	freeBlock.mark := mark;
-	freeBlock.refCount := 1;
 	freeBlock.dataAdr := dataAdr;
 	freeBlock.size := size;
 	(* initialize free block fields *)
@@ -845,7 +840,7 @@ VAR throughput* := 0 : SIZE;
 
 (* NewBlock - Allocate a heap block. {(size MOD BlockSize = 0)}. Caller must hold Heap lock. *)
 PROCEDURE NewBlock(size: SIZE): ADDRESS;
-VAR try: LONGINT; p: FreeBlock; freeBlock : FreeBlockU; memBlock {UNTRACED}: Machine.MemoryBlock;
+VAR try: WORD; p: FreeBlock; freeBlock : FreeBlockU; memBlock {UNTRACED}: Machine.MemoryBlock;
 	beginHeapBlockAdr, endHeapBlockAdr: ADDRESS;
 BEGIN
 	try := 1;
@@ -920,7 +915,6 @@ BEGIN
 		dataBlock.typeDesc := NilVal;
 		dataBlock.heapBlock := systemBlock;
 		systemBlock.mark := currentMarkValue;
-		systemBlock.refCount := 0;
 		systemBlock.dataAdr := dataBlockAdr;
 		systemBlock.size := blockSize;
 		systemBlock.nextMark := NIL;
@@ -967,7 +961,6 @@ BEGIN
 			dataBlock.typeDesc := tag;
 			dataBlock.heapBlock := recordBlockAdr;
 			recordBlock.mark := currentMarkValue;
-			recordBlock.refCount := 0;
 			recordBlock.dataAdr := dataBlockAdr;
 			recordBlock.size := blockSize;
 			recordBlock.nextMark := NIL;
@@ -990,7 +983,7 @@ PROCEDURE NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN);
 VAR size, blockSize: SIZE; protRecBlockAdr, dataBlockAdr: ADDRESS;
 	protRecBlock: ProtRecBlockU;
 	dataBlock: DataBlockU;
-	i: LONGINT;
+	i: SIZE;
 	typeDesc: StaticTypeBlockU;
 BEGIN
 	typeDesc := tag;
@@ -1011,7 +1004,6 @@ BEGIN
 		dataBlock.typeDesc := tag;
 		dataBlock.heapBlock := protRecBlockAdr;
 		protRecBlock.mark := currentMarkValue;
-		protRecBlock.refCount := 0;
 		protRecBlock.dataAdr := dataBlockAdr;
 		protRecBlock.size := blockSize;
 		protRecBlock.count := 0;
@@ -1054,11 +1046,11 @@ BEGIN
 	arrSize := numElems * elemSize;
 
 	IF arrSize = 0 THEN
-		NewSys(p, numDims * AddressSize + 3 * AddressSize, isRealtime); (* no data, thus no specific alignment *)
+		NewSys(p, numDims * AddressSize + 2 * AddressSize, isRealtime); (* no data, thus no specific alignment *)
 		SetPC(p);
 	ELSE
 		ASSERT(BlockHeaderSize MOD ArrayAlignment = 0);
-		arrayDataOffset := numDims * AddressSize + 3 * AddressSize;
+		arrayDataOffset := numDims * AddressSize + 2 * AddressSize;
 		INC(arrayDataOffset, (-arrayDataOffset) MOD ArrayAlignment);  (* round up to multiple of ArrayAlignment to ensure that first array element is aligned at 0 MOD ArrayAlignment *)
 		ptrOfs := elemType.pointerOffsets;
 		IF ptrOfs = MinPtrOfs - AddressSize THEN (* no pointers in element type *)
@@ -1080,7 +1072,6 @@ BEGIN
 				dataBlock.typeDesc := elemType;
 				dataBlock.heapBlock := arrayBlock;
 				arrayBlock.mark := currentMarkValue;
-				arrayBlock.refCount := 0;
 				arrayBlock.dataAdr := dataBlockAdr;
 				arrayBlock.size := blockSize;
 				arrayBlock.nextMark := NIL;
@@ -1091,7 +1082,6 @@ BEGIN
 
 				firstElem := dataBlockAdr + arrayDataOffset;
 				dataBlock.numElems := numElems;
-				dataBlock.current := NIL;
 				dataBlock.first := firstElem;
 
 				SetPC(dataBlock);
@@ -1137,7 +1127,7 @@ VAR p: ANY; dim: SIZE;
 		(* static elements is requred for this case : POINTER TO ARRAY OF ARRAY X OF RecordWithPointer *)
 		dim := LEN( a,0 );
 		IF tag = NIL THEN
-			NewSys(p, GetSize() * elementSize + dim * SIZEOF(ADDRESS) + 3 *SIZEOF(ADDRESS) + (dim DIV 2) * 2 * SIZEOF(ADDRESS), FALSE);
+			NewSys(p, GetSize() * elementSize + dim * SIZEOF(ADDRESS) + 2 *SIZEOF(ADDRESS) + (dim DIV 2) * 2 * SIZEOF(ADDRESS), FALSE);
 		ELSE
 			NewArr(p, tag, GetSize(), dim, FALSE);
 		END;
@@ -1149,7 +1139,7 @@ END NewArray;
 
 (* obsolete for generic object file / required only for old loader *)
 PROCEDURE FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE;
-							numPtrs, numSlots: LONGINT);
+							numPtrs, numSlots: SIZE);
 VAR p, offset: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock;
 BEGIN
 	Machine.Acquire(Machine.Heaps);

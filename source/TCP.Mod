@@ -413,14 +413,14 @@ TYPE
 
 
 		(** Send data on a TCP connection. *)
-		PROCEDURE Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 		VAR buf: SendBuffer; len0: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF StrongChecks THEN Invariant(SELF) END;
 			ASSERT(ofs+len <= LEN(data));	(* index check *)
 			LOOP
 				IF len <= 0 THEN EXIT END;
-				IF len <= maxseg THEN len0 := len ELSE len0 := maxseg END;
+				IF len <= maxseg THEN len0 := LONGINT(len) ELSE len0 := maxseg END;
 				IF ~((state IN {Established, CloseWait}) & (sndspace >= len0)) THEN	(* can not send immediately *)
 					AWAIT(((state IN {Established, CloseWait}) & (sndspace >= len0)) OR ~(state IN {SynSent..CloseWait}));
 					IF StrongChecks THEN Invariant(SELF) END;
@@ -460,7 +460,7 @@ TYPE
 
 
 		(** Receive data on a TCP connection. The data parameter specifies the buffer. The ofs parameters specify the position in the buffer where data should be received (usually 0), and the size parameters specifies how many bytes of data can be received in the buffer. The min parameter specifies the minimum number of bytes to receive before Receive returns and must by <= size. The len parameter returns the number of bytes received, and the res parameter returns 0 if ok, or a non-zero error code otherwise (e.g. if the connection is closed by the communication partner, or by a call of the Close method). *)
-		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 		VAR
 			buf: Network.Buffer;
 			rlen: LONGINT;
@@ -473,7 +473,7 @@ TYPE
 				WHILE (rcvhead # NIL) & (rcvhead # rcvreasm) & (size > 0) DO
 					IF rcvhead.nextFragment = NIL THEN
 						(* read all available data until user buffer is full *)
-						rlen := MIN(rcvhead.len, size);
+						rlen := MIN(rcvhead.len, size(LONGINT));
 						Network.Copy(rcvhead.data, data, rcvhead.ofs, ofs, rlen);
 						INC(len, rlen);
 						INC(ofs, rlen);
@@ -498,7 +498,7 @@ TYPE
 						IF rcvheadFragment = NIL THEN
 							rcvheadFragment := rcvhead;
 						END;
-						rlen := MIN(rcvheadFragment.len, size);
+						rlen := MIN(rcvheadFragment.len, size(LONGINT));
 						Network.Copy(rcvheadFragment.data, data, rcvheadFragment.ofs, ofs, rlen);
 						INC(len, rlen);
 						INC(ofs, rlen);
@@ -1272,7 +1272,7 @@ END TraceConnection;
 
 (* Trace the protocol. *)
 
-PROCEDURE TraceTCP(msg: ARRAY OF CHAR; p: Connection; CONST hdr, data: ARRAY OF CHAR; hlen, ofs, len: LONGINT);
+PROCEDURE TraceTCP(msg: ARRAY OF CHAR; p: Connection; CONST hdr, data: ARRAY OF CHAR; hlen, ofs, len: SIZE);
 BEGIN
 	IF Trace THEN
 		WriteTime(Kernel.GetTicks()); KernelLog.Char(" ");

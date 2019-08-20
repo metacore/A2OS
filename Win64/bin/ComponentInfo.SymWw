@@ -7,8 +7,8 @@ TYPE
 
 	Statistics = OBJECT 
 	VAR 
-		nofComponents, nofVisualComponents, nofOtherElements, nofEventSources, nofEventListeners: LONGINT; 
-		nofBooleanProperties, nofInt32Properties, nofColorProperties, nofRectangleProperties, nofStringProperties, nofOtherProperties: LONGINT; 
+		nofComponents, nofVisualComponents, nofOtherElements, nofEventSources, nofEventListeners: SIZE; 
+		nofBooleanProperties, nofInt32Properties, nofColorProperties, nofRectangleProperties, nofStringProperties, nofOtherProperties: SIZE; 
 
 		PROCEDURE ^  & Reset; 
 		PROCEDURE ^ Add(stats: Statistics); 

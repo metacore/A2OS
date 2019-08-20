@@ -40,7 +40,7 @@ TYPE
 
 		PROCEDURE Grow;
 		VAR temp : NamedObjectArray;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			NEW(temp, LEN(items) * 2);
 			FOR i := 0 TO LEN(items) - 1 DO
@@ -72,7 +72,7 @@ TYPE
 
 		PROCEDURE Grow;
 		VAR temp : StringList;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			NEW(temp, LEN(items) * 2);
 			FOR i := 0 TO LEN(items) - 1 DO
@@ -615,7 +615,7 @@ VAR ch : CHAR;
 	inRange, inComment, lastInRange : BOOLEAN;
 	token : ARRAY 1024 OF CHAR;
 	filename, scopePath, name, path : ARRAY 1024 OF CHAR;
-	i : LONGINT;
+	i : SIZE;
 	referencedModule : TS.Module;
 CONST DoXml = TRUE;
 BEGIN
@@ -757,11 +757,11 @@ BEGIN
 END GenerateModule;
 
 PROCEDURE InitWithText(t: Texts.Text; pos: LONGINT): Strings.String;
-	VAR buffer: Strings.String; len, i, j, ch: LONGINT; r: Texts.TextReader;
+	VAR buffer: Strings.String; len, i, j: SIZE; ch: LONGINT; r: Texts.TextReader;
 	bytesPerChar: LONGINT;
 
-	PROCEDURE ExpandBuf(VAR oldBuf: Strings.String; newSize: LONGINT);
-	VAR newBuf: Strings.String; i: LONGINT;
+	PROCEDURE ExpandBuf(VAR oldBuf: Strings.String; newSize: SIZE);
+	VAR newBuf: Strings.String; i: SIZE;
 	BEGIN
 		IF LEN(oldBuf^) >= newSize THEN RETURN END;
 		NEW(newBuf, newSize);
@@ -867,7 +867,8 @@ END Generate;
 (** Make sure to have built all the TFPET Symbol files first *)
 PROCEDURE MakeXRef*(par : Commands.Context) ;
 VAR e : Files.Enumerator;
-	path, name, exclude : ARRAY 256 OF CHAR; flags : SET; time, date, size : LONGINT;
+	path, name, exclude : ARRAY 256 OF CHAR; flags : SET; time, date : LONGINT;
+	size : Files.Size;
 	sr : Streams.Reader;
 	indexFileWriter : Files.Writer;
 	f : Files.File;

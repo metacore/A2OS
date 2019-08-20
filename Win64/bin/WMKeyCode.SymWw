@@ -5,7 +5,7 @@ TYPE
 	Window = OBJECT {EXCLUSIVE} (WM.BufferWindow)
 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ Close*; 
 	END Window; 
@@ -13,7 +13,7 @@ VAR
 	winstance: Window; 
 	manager: WM.WindowManager; 
 
-	PROCEDURE ^ GetKeysymString(keysym: LONGINT; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetKeysymString(keysym: SIZE; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ GetFlagsString(flags: SET; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ Handle(VAR msg: WMMessages.Message; VAR discard: BOOLEAN); 
 	PROCEDURE ^ StartLog*(context: Commands.Context); 

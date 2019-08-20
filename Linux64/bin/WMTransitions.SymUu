@@ -5,16 +5,16 @@ CONST
 TYPE 
 	Transition* = OBJECT 
 
-		PROCEDURE ^ Init*(w, h: LONGINT); 
+		PROCEDURE ^ Init*(w, h: SIZE); 
 		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: LONGINT); 
 	END Transition; 
 
 	TransitionMask* = OBJECT (Transition)
 	VAR 
-		mW, mH: LONGINT; 
+		mW, mH: SIZE; 
 		mask: POINTER TO ARRAY OF CHAR; 
 
-		PROCEDURE ^ Init*(w, h: LONGINT); 
+		PROCEDURE ^ Init*(w, h: SIZE); 
 		PROCEDURE ^ SetMask*(mi: Raster.Image); 
 		PROCEDURE ^ DumpMask; 
 		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: LONGINT); 
@@ -22,19 +22,19 @@ TYPE
 
 	TransitionFade* = OBJECT (Transition)
 	VAR 
-		mW, mH: LONGINT; 
+		mW, mH: SIZE; 
 		mode: Raster.Mode; 
 
-		PROCEDURE ^ Init*(w, h: LONGINT); 
+		PROCEDURE ^ Init*(w, h: SIZE); 
 		PROCEDURE ^ CalcImage*(a, b, result: Raster.Image; per255: LONGINT); 
 	END TransitionFade; 
 
 	PROCEDURE ^ Calc565Opt(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
 	PROCEDURE ^ Calc565MMX(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
-	PROCEDURE ^ Calc565MMXLine(adra, adrb, adrr: ADDRESS; i, alpha: LONGINT; a64, mr64, mg64, mb64: HUGEINT); 
+	PROCEDURE ^ Calc565MMXLine(adra, adrb, adrr: ADDRESS; i: SIZE; alpha: LONGINT; a64, mr64, mg64, mb64: HUGEINT); 
 	PROCEDURE ^ Calc888Opt(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
 	PROCEDURE ^ Calc888MMX(a, b: Raster.Image; VAR result: Raster.Image; per255: LONGINT); 
-	PROCEDURE ^ Calc888MMXLine(adra, adrb, adrr: ADDRESS; i: LONGINT; a64, m64: HUGEINT); 
+	PROCEDURE ^ Calc888MMXLine(adra, adrb, adrr: ADDRESS; i: SIZE; a64, m64: HUGEINT); 
 	PROCEDURE ^ CalcGenUnknown(a, b: Raster.Image; VAR result: Raster.Image; perc: LONGINT); 
 	PROCEDURE ^ LoadImage(CONST fileName: ARRAY OF CHAR): Raster.Image; 
 	PROCEDURE ^ Test*; 

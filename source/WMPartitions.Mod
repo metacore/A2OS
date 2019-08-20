@@ -19,7 +19,7 @@ CONST
 	ParBoolean = 2;
 
 	(* Return values of Plugin.SelectionUpdated *)
-	SelectionValid = 1; (** selected partition seems to be of the exspected type *)
+	SelectionValid = 1; (** selected partition seems to be of the expected type *)
 	SelectionInvalid = 2; (** plugin will do nothing when user tries to apply it *)
 	SelectionMaybe = 3; (** plugin can't determine whether its application will be successful *)
 	SelectionNotSupported = 0; (** plugin doesn't care about this return value *)
@@ -253,7 +253,7 @@ TYPE
 			fs : Files.FileSystem;
 			fstype : LONGINT;
 			doClose : BOOLEAN;
-			result : LONGINT; res : WORD;
+			result, res : WORD;
 		BEGIN
 			SELF.selection := selection;
 			IF IsValid(selection) THEN
@@ -369,7 +369,7 @@ TYPE
 			match : BOOLEAN;
 			temp : ARRAY 32 OF CHAR;
 			default, prefix : Strings.String;
-			i, j, result : LONGINT;
+			i, j: SIZE; result : LONGINT;
 		BEGIN
 			prefix := Strings.NewString(iprefix);
 			default := Strings.NewString(DefaultPrefix);
@@ -481,20 +481,20 @@ TYPE
 							fs := ft[i];
 							IF fs.vol # NIL THEN
 								IF fs.vol IS DiskVolumes.Volume THEN
-									vol := fs.vol (DiskVolumes.Volume);
-									dev := vol.dev; fsStart := vol.startfs;
-								ELSIF fs.vol IS OldDiskVolumes.Volume THEN
-									volOld := fs.vol (OldDiskVolumes.Volume);
-									dev := volOld.dev; fsStart := volOld.startfs;
-								ELSIF fs.vol IS FATVolumes.Volume THEN
-									volFAT := fs.vol (FATVolumes.Volume);
-									dev := volFAT.dev; fsStart := volFAT.start;
-								ELSIF fs.vol IS ISO9660Volumes.Volume THEN
-									volISO := fs.vol (ISO9660Volumes.Volume);
-									dev := volISO.dev; fsStart := 512; (* dummy value *)
-								ELSE
-									dev := NIL;
-								END;
+									vol := fs.vol (DiskVolumes.Volume);
+									dev := vol.dev; fsStart := vol.startfs;
+								ELSIF fs.vol IS OldDiskVolumes.Volume THEN
+									volOld := fs.vol (OldDiskVolumes.Volume);
+									dev := volOld.dev; fsStart := volOld.startfs;
+								ELSIF fs.vol IS FATVolumes.Volume THEN
+									volFAT := fs.vol (FATVolumes.Volume);
+									dev := volFAT.dev; fsStart := volFAT.start;
+								ELSIF fs.vol IS ISO9660Volumes.Volume THEN
+									volISO := fs.vol (ISO9660Volumes.Volume);
+									dev := volISO.dev; fsStart := 512; (* dummy value *)
+								ELSE
+									dev := NIL;
+								END;
 								IF (dev#NIL) & (dev = selection.disk.device) &
 							           ((selection.disk.isDiskette) OR
 								    (fsStart >= dev.table[selection.partition].start) &
@@ -569,8 +569,8 @@ TYPE
 		grid : WMPartitionsComponents.NoWheelGrid;
 		gridContainer : WMStandardComponents.Panel;
 		gridPanel : WMPartitionsComponents.BevelPanel;
-		selectedRow : LONGINT;
-		cellHeight : LONGINT;
+		selectedRow : SIZE;
+		cellHeight : SIZE;
 		scrollbarY : WMStandardComponents.Scrollbar;
 
 		(* edit panel *)
@@ -584,7 +584,7 @@ TYPE
 		toFile, toPartition : WMStandardComponents.Button; (* check boxes *)
 		editorFile, editorPartition : WMEditors.Editor;
 		target : LONGINT; (* ToFile | ToPartition *)
-		fileLeft : LONGINT; (* left offset from editorFile *)
+		fileLeft : SIZE; (* left offset from editorFile *)
 
 		statusLabel : WMStandardComponents.Label;
 
@@ -706,9 +706,9 @@ TYPE
 			RETURN res = Disks.Ok;
 		END SetSelection;
 
-		PROCEDURE WheelMove*(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : SIZE);
 		CONST	Multiplier = 30;
-		VAR pos : LONGINT;
+		VAR pos : SIZE;
 		BEGIN
 			IF scrollbarY.visible.Get() THEN
 				pos := scrollbarY.pos.Get() + Multiplier*dz;
@@ -803,7 +803,7 @@ TYPE
 		END CheckboxHandler;
 
 		PROCEDURE GridClicked(sender, data : ANY);
-		VAR grid : WMPartitionsComponents.NoWheelGrid; ignore, row : LONGINT; string : Strings.String;
+		VAR grid : WMPartitionsComponents.NoWheelGrid; ignore, row : SIZE; string : Strings.String;
 		BEGIN
 			grid := sender (WMPartitionsComponents.NoWheelGrid);
 			grid.GetSelection(ignore, row, ignore, ignore);
@@ -817,20 +817,20 @@ TYPE
 		END GridClicked;
 
 		PROCEDURE UpdateGrid;
-		VAR row, height : LONGINT; spacings : WMGrids.Spacings; table : PartitionsLib.Table;
+		VAR row, height : SIZE; spacings : WMGrids.Spacings; table : PartitionsLib.Table;
 		BEGIN
 			table := configTable.GetEntries();
 			IF table # NIL THEN
 				grid.Acquire;
 				grid.model.Acquire;
-				grid.model.SetNofRows(LEN(table));
-				FOR row := 0 TO LEN(table)-1 DO
+				grid.model.SetNofRows(LEN(table)(LONGINT));
+				FOR row := 0 TO LEN(table)(LONGINT)-1 DO
 					grid.model.SetCellText(0, row, table[row].key);
 					grid.model.SetCellText(1, row, table[row].value);
 					height := height + cellHeight + CeCellHeightMinSpacer + 1;
 				END;
-				NEW(spacings, LEN(table));
-				FOR row := 0 TO LEN(table)-1 DO spacings[row] := cellHeight + CeCellHeightMinSpacer; END;
+				NEW(spacings, LEN(table)(LONGINT));
+				FOR row := 0 TO LEN(table)(LONGINT)-1 DO spacings[row] := cellHeight + CeCellHeightMinSpacer; END;
 				grid.SetRowSpacings(spacings);
 				grid.model.Release;
 				grid.Release;
@@ -849,8 +849,8 @@ TYPE
 			UpdateLayout(SELF.bounds.r - SELF.bounds.l, SELF.bounds.b - SELF.bounds.t);
 		END UpdateGrid;
 
-		PROCEDURE UpdateLayout(width, height : LONGINT);
-		VAR gridHeight : LONGINT; table : PartitionsLib.Table;
+		PROCEDURE UpdateLayout(width, height : SIZE);
+		VAR gridHeight : SIZE; table : PartitionsLib.Table;
 		BEGIN
 			DisableUpdate;
 			mainpanel.bounds.SetExtents(width, height);
@@ -859,7 +859,7 @@ TYPE
 			gridContainer.bounds.SetExtents(gridPanel.bounds.GetWidth() - 2*MarginH, gridPanel.bounds.GetHeight() - 2*MarginV);
 			table := configTable.GetEntries();
 			IF table # NIL THEN
-				gridHeight := LEN(table)*(cellHeight + CeCellHeightMinSpacer + 1);
+				gridHeight := LEN(table)(LONGINT)*(cellHeight + CeCellHeightMinSpacer + 1);
 			END;
 			scrollbarY.bounds.SetLeft(gridContainer.bounds.GetWidth() - scrollbarY.bounds.GetWidth());
 			scrollbarY.bounds.SetHeight(gridContainer.bounds.GetHeight());
@@ -888,15 +888,15 @@ TYPE
 			Close^; IF popup # NIL THEN popup.Close; END;
 		END Close;
 
-		PROCEDURE Resized*(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : SIZE);
 		BEGIN
 			Resized^(width, height);
 			UpdateLayout(width, height);
 		END Resized;
 
-		PROCEDURE &Init*(width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(width, height : SIZE; alpha : BOOLEAN);
 		VAR
-			left, ignore : LONGINT;
+			left, ignore : SIZE;
 			spacings : WMGrids.Spacings;
 			font : WMGraphics.Font;
 			label : WMStandardComponents.Label;
@@ -2209,9 +2209,9 @@ TYPE
 
 		result : LONGINT;
 
-		width, height : LONGINT; (* of this popup window *)
+		width, height : SIZE; (* of this popup window *)
 
-		PROCEDURE &Init*(width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(width, height : SIZE; alpha : BOOLEAN);
 		VAR panel, line : WMStandardComponents.Panel;
 		BEGIN
 			SELF.width := width; SELF.height := height; scaling := FALSE;
@@ -2293,16 +2293,16 @@ TYPE
 		CONST MinSpacer = 5;
 		VAR
 			label, line : WMStandardComponents.Label;
-			width, labelwidth : LONGINT;
-			maxWidth, ignore : LONGINT;
+			width, labelwidth : SIZE;
+			maxWidth, ignore : SIZE;
 			font : WMGraphics.Font;
 			caption : ARRAY 128 OF CHAR;
-			i : LONGINT;
+			i : SIZE;
 
 			PROCEDURE SetFocusChain;
-			VAR ref, lastRef, uid : Strings.String; nbr : ARRAY 16 OF CHAR; i : LONGINT;
+			VAR ref, lastRef, uid : Strings.String; nbr : ARRAY 16 OF CHAR; i : SIZE;
 
-				PROCEDURE GenRef(number : LONGINT) : Strings.String;
+				PROCEDURE GenRef(number : SIZE) : Strings.String;
 				VAR string : Strings.String; temp, nbr : ARRAY 16 OF CHAR;
 				BEGIN
 					temp := "&";
@@ -2432,7 +2432,7 @@ TYPE
 		END BuildLayout;
 
 		PROCEDURE EvalParameters() : BOOLEAN;
-		VAR  result : BOOLEAN; string : ARRAY 32 OF CHAR; temp : Strings.String; i : LONGINT;
+		VAR  result : BOOLEAN; string : ARRAY 32 OF CHAR; temp : Strings.String; i : SIZE;
 		BEGIN
 			IF parameters=NIL THEN result := TRUE;
 			ELSE
@@ -2466,7 +2466,7 @@ TYPE
 		VAR
 			checkbox : WMStandardComponents.Button;
 			string : Strings.String;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			checkbox := sender (WMStandardComponents.Button);
 			FOR i := 0 TO LEN(boxes)-1 DO
@@ -2526,7 +2526,7 @@ TYPE
 		(* status bar *)
 		statusLabel : WMStandardComponents.Label;
 
-		width, height : LONGINT; (* caches "window size"; needed for correct update when downscaled *)
+		width, height : SIZE; (* caches "window size"; needed for correct update when downscaled *)
 
 		PROCEDURE &New*(c : WMRestorable.Context);
 		VAR configuration : WMRestorable.XmlElement; scale, showDetails : BOOLEAN;
@@ -2536,8 +2536,8 @@ TYPE
 				width := c.r - c.l; height := c.b - c.t;
 				configuration := WMRestorable.GetElement(c, "Configuration");
 				IF configuration # NIL THEN
-					WMRestorable.LoadLongint(configuration, "Width", width);
-					WMRestorable.LoadLongint(configuration, "Height", height);
+					WMRestorable.LoadSize(configuration, "Width", width);
+					WMRestorable.LoadSize(configuration, "Height", height);
 					WMRestorable.LoadBoolean(configuration, "Details", showDetails);
 					IF (width < WindowMinWidth) OR (height < WindowMinHeight) THEN
 						(* First render window in real size and then scale it down to the size specified by the context *)
@@ -2684,7 +2684,7 @@ TYPE
 			RETURN panel;
 		END CreateForm;
 
-		PROCEDURE Resized*(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : SIZE);
 		BEGIN
 			IF (width >= WindowMinWidth) & (height >= WindowMinHeight) THEN
 				scaling := FALSE;
@@ -2742,7 +2742,7 @@ TYPE
 			PartitionsLib.diskModel.Update;
 		END Refresh;
 
-		PROCEDURE WheelMove*(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : SIZE);
 		BEGIN
 			partitionSelector.WheelMove(dz);
 		END WheelMove;
@@ -2791,8 +2791,8 @@ TYPE
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS WMRestorable.Storage) THEN
 					NEW(configuration); configuration.SetName("Configuration");
-					WMRestorable.StoreLongint(configuration, "Width", width);
-					WMRestorable.StoreLongint(configuration, "Height", height);
+					WMRestorable.StoreSize(configuration, "Width", width);
+					WMRestorable.StoreSize(configuration, "Height", height);
 					WMRestorable.StoreBoolean(configuration, "Details", showDetailsBtn.GetPressed());
 					x.ext(WMRestorable.Storage).Add("PartitionTool", "Restore", SELF, configuration);
 				ELSE Handle^(x)

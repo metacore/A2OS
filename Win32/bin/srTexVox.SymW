@@ -14,7 +14,7 @@ TYPE
 		img*: Raster.Image; 
 		fmt: Raster.Format; 
 		copy: Raster.Mode; 
-		W, H, bpr, adr: LONGINT; 
+		W, H, bpr, adr: SIZE; 
 		transparent*: BOOLEAN; 
 
 		PROCEDURE ^  & init*(n: Name); 
@@ -34,7 +34,7 @@ TYPE
 		img*: Raster.Image; 
 		fmt: Raster.Format; 
 		copy: Raster.Mode; 
-		w, h, bpr, adr: LONGINT; 
+		w, h, bpr, adr: SIZE; 
 		transparent: BOOLEAN; 
 		off: INTEGER; 
 
@@ -47,7 +47,7 @@ TYPE
 		imgn, imgm*: Raster.Image; 
 		fmt: Raster.Format; 
 		copy: Raster.Mode; 
-		w, h, bpr, adr: LONGINT; 
+		w, h, bpr, adr: SIZE; 
 		done: BOOLEAN; 
 		off: INTEGER; 
 

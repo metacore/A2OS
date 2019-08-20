@@ -68,7 +68,7 @@ TYPE
 			RETURN panel
 		END CreateForm;
 
-		PROCEDURE &New*(ime : IME; x, y :LONGINT; CONST text : ARRAY OF CHAR);
+		PROCEDURE &New*(ime : IME; x, y :SIZE; CONST text : ARRAY OF CHAR);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
 			vc := CreateForm();
@@ -90,7 +90,7 @@ TYPE
 			edit.text.onTextChanged.Add(TextChanged);
 		END New;
 
-		PROCEDURE EditKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE EditKeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			handled := TRUE;
 			IF keySym = 20H THEN (* space *)
@@ -142,7 +142,7 @@ TYPE
 		END Ok;
 
 		PROCEDURE TextChanged*(sender, data:ANY);
-		VAR ch, no : LONGINT; charString : ARRAY 16 OF CHAR;
+		VAR ch : LONGINT; no : SIZE; charString : ARRAY 16 OF CHAR;
 
 		BEGIN
 			(* avoid recursion *)
@@ -207,12 +207,12 @@ TYPE
 			RETURN Strings.NewString(imeName);
 		END GetName;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
-		VAR x, y, pos : LONGINT; str : ARRAY 8 OF CHAR;
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
+		VAR x, y: SIZE; pos : SIZE; str : ARRAY 8 OF CHAR;
 		BEGIN
 			IF (ucs >= 48) & (ucs <= 57) THEN
 				GetCursorScreenPosition(x, y);
-				pos := 0; IF UTF8Strings.EncodeChar(ucs, str, pos) THEN END;
+				pos := 0; IF UTF8Strings.EncodeChar(ucs(LONGINT), str, pos) THEN END;
 				NEW(w, SELF, x, y, str);
 			ELSE InsertChar(ucs)
 			END

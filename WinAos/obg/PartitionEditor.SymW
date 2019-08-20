@@ -23,7 +23,7 @@ TYPE
 		PROCEDURE ^  & New*(context: WMRestorable.Context); 
 		PROCEDURE ^ Load(deviceName: ARRAY OF CHAR; block: LONGINT); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Resizing*(VAR width, height: LONGINT); 
+		PROCEDURE ^ Resizing*(VAR width, height: SIZE); 
 		PROCEDURE ^ HandleChange(changeType: LONGINT; VAR partition: PartitionTable.Partition); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 

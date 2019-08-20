@@ -14,7 +14,7 @@ TYPE
 
 	Bunny = OBJECT (WM.Window)
 	VAR
-		posX, posY : LONGINT;
+		posX, posY : SIZE;
 		alive : BOOLEAN;
 		timer : Kernel.Timer;
 		random : Random.Generator;
@@ -31,29 +31,29 @@ TYPE
 			nofFrames := frames; frame := 0; SELF.movie := movie; SELF.step := step;
 			NEW(timer);
 			posX := (posX+ step) MOD (Width * 2 + movie.width);
-			posY := random.Dice((Height - movie.height) DIV 2);
+			posY := random.Dice((Height - movie.height)(LONGINT) DIV 2);
 			manager := WM.GetDefaultManager();
 			manager.Add(posX, posY, SELF, {});
 		END New;
 
 		PROCEDURE Move;
-		VAR opx : LONGINT;
+		VAR opx : SIZE;
 		BEGIN
 			opx := posX;
 			posX := (posX+ step) MOD (Width * 2 + movie.width);
 			IF ((step < 0) & (posX > opx)) OR ((step > 0) & (posX < opx)) THEN
-				posY := random.Dice(Height - movie.height)
+				posY := random.Dice((Height - movie.height)(LONGINT))
 			END;
 			frame := (frame + 1) MOD nofFrames;
 			manager.SetWindowPos(SELF, posX - movie.width, posY)
 		END Move;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			keyPressed := keyPressed + (keys * {0, 1, 2})
 		END PointerDown;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF keys={} THEN
 				IF keyPressed#{0, 1, 2} THEN
@@ -64,7 +64,7 @@ TYPE
 			END
 		END PointerUp;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : WORD);
 		BEGIN
 			IF movie # NIL THEN
 				IF (w = GetWidth()) & (h = GetHeight()) THEN
@@ -77,7 +77,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE IsHit*(x, y  : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y  : SIZE) : BOOLEAN;
 		BEGIN
 			RETURN WMGraphics.IsBitmapHit(frame * GetWidth() + x, y, 128, movie)
 		END IsHit;

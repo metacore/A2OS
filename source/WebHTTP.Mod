@@ -113,7 +113,7 @@ TYPE
 		date* : ARRAY 32 OF CHAR;
 		location*: ARRAY 1024 OF CHAR;
 		contenttype* : ARRAY 64 OF CHAR;
-		contentlength* : LONGINT;
+		contentlength* : SIZE;
 		contentlocation*: ARRAY 1024 OF CHAR;
 		transferencoding* : ARRAY 64 OF CHAR;
 		lastmodified*: ARRAY 32 OF CHAR;
@@ -143,8 +143,8 @@ TYPE
 			END
 		END Init;
 
-		PROCEDURE Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR i: LONGINT;
+		PROCEDURE Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		VAR i: SIZE;
 		BEGIN
 			ASSERT(chunked);
 			i := ofs;
@@ -201,8 +201,8 @@ TYPE
 			eof := FALSE; first := TRUE;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
-		VAR i: LONGINT; token: ARRAY 16 OF CHAR; ch: CHAR;
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		VAR i: SIZE; token: ARRAY 16 OF CHAR; ch: CHAR;
 		BEGIN
 			IF ~eof THEN
 				ASSERT((size > 0) & (min <= size) & (min >= 0));
@@ -248,8 +248,8 @@ TYPE
 			Streams.OpenWriter(inW, Sender);
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR i: LONGINT;
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		VAR i: SIZE;
 		BEGIN
 			i := ofs;
 			res:=outW.res ;
@@ -289,16 +289,16 @@ TYPE
 
 	LimitedInStream* = OBJECT
 		VAR inR: Streams.Reader;
-			remain-: LONGINT;
+			remain-: SIZE;
 
-		PROCEDURE &Init*(VAR inR, outR: Streams.Reader; size : LONGINT);
+		PROCEDURE &Init*(VAR inR, outR: Streams.Reader; size : SIZE);
 		BEGIN
 			SELF.inR := inR;	remain := size;
 			Streams.OpenReader(outR, Receiver);
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
-		VAR l: LONGINT;
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		VAR l: SIZE;
 		BEGIN
 			IF remain > 0 THEN
 				ASSERT((size > 0) & (min <= size) & (min >= 0));
@@ -571,7 +571,7 @@ BEGIN
 			ELSIF sLow = "date" THEN in.Char(ch);in.Ln(header.date)
 			ELSIF sLow = "location" THEN in.Char(ch);in.Ln(header.location)
 			ELSIF sLow = "content-type" THEN in.Char(ch); in.Ln(header.contenttype)
-			ELSIF sLow = "content-length" THEN in.Char(ch); in.Ln(s); Strings.StrToInt(s, header.contentlength)
+			ELSIF sLow = "content-length" THEN in.Char(ch); in.Ln(s); Strings.StrToSize(s, header.contentlength)
 			ELSIF sLow = "content-location" THEN in.Char(ch);in.Ln(header.contentlocation)
 			ELSIF sLow = "transfer-encoding" THEN in.Char(ch); in.Ln(header.transferencoding)
 			ELSIF sLow = "last-modified" THEN in.Char(ch);in.Ln(header.lastmodified)
@@ -602,7 +602,7 @@ BEGIN
 		ELSIF sLow = "date" THEN in.Char(ch);in.Ln(header.date)
 		ELSIF sLow = "location" THEN in.Char(ch);in.Ln(header.location)
 		ELSIF sLow = "content-type" THEN in.Char(ch); in.Ln(header.contenttype)
-		ELSIF sLow = "content-length" THEN in.Char(ch); in.Ln(s); Strings.StrToInt(s, header.contentlength)
+		ELSIF sLow = "content-length" THEN in.Char(ch); in.Ln(s); Strings.StrToSize(s, header.contentlength)
 		ELSIF sLow = "content-location" THEN in.Char(ch);in.Ln(header.contentlocation)
 		ELSIF sLow = "transfer-encoding" THEN in.Char(ch); in.Ln(header.transferencoding)
 		ELSIF sLow = "last-modified" THEN in.Char(ch);in.Ln(header.lastmodified)

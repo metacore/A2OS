@@ -56,7 +56,6 @@ MODULE Diff IN Oberon; (** portable *)	(** PS  **)
 		opts: SET;
 		nrSyncs: INTEGER;
 
-
 (* *************** STATISTIC OUTPUT *************** *)
 
 PROCEDURE HashStat (T: Text);
@@ -101,7 +100,6 @@ BEGIN
 	Texts.Write(W, TAB); Texts.WriteString(W, "# syncs:"); Texts.WriteInt(W, nrSyncs, 5); Texts.WriteLn(W);
 	Texts.Append(Oberon.Log, W.buf)
 END DiffStat;
-
 
 (* *************** HASHING *************** *)
 
@@ -168,7 +166,6 @@ BEGIN
 	END;
 	line.next := NIL; T.total := total; T.inserted := inserted
 END HashText;
-
 
 (* *************** COMPARE *************** *)
 
@@ -254,7 +251,6 @@ BEGIN
 	END
 END Compare;
 
-
 (* *************** PREPARE TEXTS TO SHOW *************** *)
 
 PROCEDURE PrepareTexts (d1, d2: Text);
@@ -333,7 +329,6 @@ BEGIN
 	PrepareTexts(T1, T2);
 	DiffGadgets.OpenDoc(T1.text, T2.text, T1.name, T2.name)
 END ShowTexts;
-
 
 (* *************** USER INTERFACE *************** *)
 

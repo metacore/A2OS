@@ -32,13 +32,13 @@ TYPE
 	*)
 	Buffer* = OBJECT
 	VAR
-		len* : LONGINT;
+		len* : SIZE;
 		data* : POINTER TO ARRAY OF CHAR;
 	END Buffer;
 
 	(* a blocking buffer pool that can be used by a sound playing process to synchronize sound generation *)
 	BufferPool* = OBJECT
-		VAR head, num: LONGINT; buffer: POINTER TO ARRAY OF Buffer;
+		VAR head, num: SIZE; buffer: POINTER TO ARRAY OF Buffer;
 
 		PROCEDURE &Init*(n: LONGINT);
 		BEGIN
@@ -62,7 +62,7 @@ TYPE
 			RETURN x
 		END Remove;
 
-		PROCEDURE NofBuffers*(): LONGINT;
+		PROCEDURE NofBuffers*(): SIZE;
 		BEGIN {EXCLUSIVE}
 			RETURN num
 		END NofBuffers;
@@ -87,13 +87,13 @@ TYPE
 
 		(** Set the volume of the channel *)
 		(** 0 is silent, 255 is max *)
-		PROCEDURE SetVolume*(volume : LONGINT);
+		PROCEDURE SetVolume*(volume : WORD);
 		BEGIN HALT(99) (* abstract *)
 		END SetVolume;
 
 		(** Get the volume of the channel *)
 		(** 0 is silent, 255 is max *)
-		PROCEDURE GetVolume*() : LONGINT;
+		PROCEDURE GetVolume*() : WORD;
 		BEGIN HALT(99) (* abstract *)
 		END GetVolume;
 

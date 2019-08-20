@@ -208,12 +208,12 @@ TYPE
 
 				encoder.Open(w);
 				encoder.WriteText(text, res);
-				IF res = 0 THEN
-					Files.Register(f); f.Update;
-				ELSE
-					msg := "Could not encode file "; Strings.Append(msg, fullname);
+				IF res = 0 THEN
+					Files.Register(f); f.Update;
+				ELSE
+					msg := "Could not encode file "; Strings.Append(msg, fullname);
 					WMDialogs.Error("Error", msg);
-				END;
+				END;
 			ELSE
 				msg := "Could not store file "; Strings.Append(msg, fullname); Strings.Append(msg, " (No encoder found)");
 				WMDialogs.Error("Error", msg);
@@ -228,8 +228,8 @@ TYPE
 			IF (buttons * StoreButton # {}) THEN storeBtn.caption.SetAOC("Store") END;
 		END Store;
 
-		PROCEDURE FormatHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
-		VAR rectangle : WMRectangles.Rectangle; left, top : LONGINT;
+		PROCEDURE FormatHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
+		VAR rectangle : WMRectangles.Rectangle; left, top : SIZE;
 		BEGIN
 			IF (formatBtn = NIL) THEN RETURN END;
 			handled := TRUE;
@@ -394,7 +394,7 @@ TYPE
 			toolbar.visible.Set(TRUE);
 		END SetToolbar;
 
-		PROCEDURE HandleShortcut*(ucs : LONGINT; flags : SET; keysym : LONGINT) : BOOLEAN;
+		PROCEDURE HandleShortcut*(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
 		BEGIN
 			IF (buttons * StoreButton # {}) & (keysym = 13H) & ControlKeyDown(flags) THEN (* CTRL-S *)
 				StoreHandler(NIL, NIL);
@@ -421,19 +421,19 @@ TYPE
 			filenameEdit.GetAsString(filename);
 			WMRestorable.StoreString(config, "file", filename);
 			WMRestorable.StoreString(config, "codecFormat", codecFormat);
-			WMRestorable.StoreLongint(config, "firstLine", editor.tv.firstLine.Get());
-			WMRestorable.StoreLongint(config, "cursorPos", editor.tv.cursor.GetPosition());
+			WMRestorable.StoreSize(config, "firstLine", editor.tv.firstLine.Get());
+			WMRestorable.StoreSize(config, "cursorPos", editor.tv.cursor.GetPosition());
 			WMRestorable.StoreBoolean(config, "wordWrap", wordWrap);
 		END ToXml;
 
 		PROCEDURE FromXml*(config : XML.Element);
-		VAR filename : Files.FileName; firstLine, cursorPos : LONGINT; wordWrap : BOOLEAN;
+		VAR filename : Files.FileName; firstLine, cursorPos : SIZE; wordWrap : BOOLEAN;
 		BEGIN
 			ASSERT(config # NIL);
 			WMRestorable.LoadString(config, "file", filename);
 			WMRestorable.LoadString(config, "codecFormat", codecFormat);
-			WMRestorable.LoadLongint(config, "firstLine", firstLine);
-			WMRestorable.LoadLongint(config, "cursorPos", cursorPos);
+			WMRestorable.LoadSize(config, "firstLine", firstLine);
+			WMRestorable.LoadSize(config, "cursorPos", cursorPos);
 			WMRestorable.LoadBoolean(config, "wordWrap", wordWrap);
 			Load(filename, codecFormat);
 			editor.tv.firstLine.Set(firstLine);

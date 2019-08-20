@@ -128,7 +128,7 @@ TYPE
 		END PasvTimeoutHandler;
 
 		PROCEDURE ReadCommand(VAR cmd, param: ARRAY OF CHAR);
-		VAR i,l: LONGINT; c: CHAR;
+		VAR i,l: SIZE; c: CHAR;
 		BEGIN
 			Objects.SetTimeout(timeout, TimeoutHandler, Timeout);
 			in.SkipSpaces;
@@ -197,7 +197,7 @@ TYPE
 
 		PROCEDURE Directory(name: ARRAY OF CHAR; full: BOOLEAN);
 		VAR data: TCP.Connection; w: Streams.Writer; e: Files.Enumerator; t: Kernel.MilliTimer;
-			prefix: Files.Prefix; str: ARRAY 20 OF CHAR; date, size, time: LONGINT; res: WORD; flags: SET; c: CHAR;
+			prefix: Files.Prefix; str: ARRAY 20 OF CHAR; date, time: LONGINT; size: Files.Size; res: WORD; flags: SET; c: CHAR;
 			split: BOOLEAN;
 		BEGIN
 			SendMessage(150, "Opening ASCII mode data connection for file list.");
@@ -316,7 +316,7 @@ TYPE
 					IF (type = ASCII) THEN ASCIITransfer(r, w)
 					ELSE BinaryTransfer(r, w)
 					END;
-					IncreaseSent(f.Length());
+					IncreaseSent(f.Length()(LONGINT));
 					SendMessage(226, "Transfer complete.")
 				END;
 
@@ -324,7 +324,7 @@ TYPE
 			END
 		END Retrieve;
 
-		PROCEDURE Store(name: ARRAY OF CHAR; marker: LONGINT);
+		PROCEDURE Store(name: ARRAY OF CHAR; marker: Files.Position);
 		VAR data: TCP.Connection; r: Streams.Reader; f: Files.File; w: Files.Writer;
 			filename, msg: ARRAY dirLen OF CHAR; res: WORD;
 		BEGIN
@@ -372,7 +372,7 @@ TYPE
 					ELSE BinaryTransfer(r, w)
 					END;
 					f.Update();
-					IncreaseReceived(f.Length());
+					IncreaseReceived(f.Length()(LONGINT));
 					SendMessage(226, Msg226)
 				END;
 
@@ -808,7 +808,7 @@ END SplitEPRT;
 
 
 PROCEDURE BinaryTransfer(r: Streams.Reader;  w: Streams.Writer);
-VAR buf: ARRAY BufSize OF CHAR; len: LONGINT;
+VAR buf: ARRAY BufSize OF CHAR; len: SIZE;
 BEGIN
 	REPEAT
 		r.Bytes(buf, 0, BufSize, len); w.Bytes(buf, 0, len);
@@ -817,7 +817,7 @@ BEGIN
 END BinaryTransfer;
 
 PROCEDURE ASCIITransfer(r: Streams.Reader; w: Streams.Writer);
-VAR buf: ARRAY BufSize OF CHAR; i, len: LONGINT; c: CHAR;
+VAR buf: ARRAY BufSize OF CHAR; i, len: SIZE; c: CHAR;
 BEGIN
 	REPEAT
 		r.Bytes(buf, 0, BufSize, len);
@@ -1177,7 +1177,7 @@ PROCEDURE W3CLog(e: LogEntry);
 VAR s: ARRAY 36 OF CHAR;
 
 	PROCEDURE ToURI(ascii: ARRAY OF CHAR; VAR uri: ARRAY OF CHAR); (* cf. RFC 1738 *)
-	VAR i,k,l: LONGINT; c: CHAR;
+	VAR i,k,l: SIZE; c: CHAR;
 	BEGIN
 		i := 0; k := 0; l := LEN(uri)-1;
 		WHILE (k < l) & (ascii[i] # 0X) DO

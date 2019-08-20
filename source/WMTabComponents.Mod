@@ -9,8 +9,8 @@ TYPE
 	Tab* = OBJECT
 	VAR
 		caption- : Strings.String;
-		w : LONGINT;
-		width : LONGINT; (* if 0, automatically determine width based on caption string size *)
+		w : SIZE;
+		width : SIZE; (* if 0, automatically determine width based on caption string size *)
 		color- : WMGraphics.Color;
 		data- : ANY;
 		inserted, attention* : BOOLEAN;
@@ -30,8 +30,8 @@ TYPE
 	Tabs* = OBJECT(WMComponents.VisualComponent)
 	VAR
 		left, right : WMStandardComponents.Button;
-		leftOfs, totalWidth, border, lines : LONGINT;
-		lineHeight-: WMProperties.Int32Property;
+		leftOfs, totalWidth, border, lines : SIZE;
+		lineHeight-: WMProperties.SizeProperty;
 		tabs-, hover, selected- : Tab;
 		canvasState : WMGraphics.CanvasState;
 
@@ -169,8 +169,8 @@ TYPE
 			(*Invalidate*)
 		END RecacheProperties;
 
-		PROCEDURE FindTabFromPos(x,y: LONGINT) : Tab;
-		VAR cur : Tab; pos,posy, dl, w,h: LONGINT;
+		PROCEDURE FindTabFromPos(x,y: SIZE) : Tab;
+		VAR cur : Tab; pos,posy, dl, w,h: SIZE;
 		BEGIN
 			IF left.visible.Get() THEN dl := left.bounds.GetWidth() ELSE dl := 0 END;
 			h := lineHeight.Get();
@@ -187,7 +187,7 @@ TYPE
 			RETURN NIL
 		END FindTabFromPos;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET); (** PROTECTED *)
+		PROCEDURE PointerDown*(x, y: SIZE; keys: SET); (** PROTECTED *)
 		VAR new : Tab;
 		BEGIN
 			IF 0 IN keys THEN
@@ -226,7 +226,7 @@ TYPE
 			Release;
 		END SelectByName;
 
-		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y: SIZE; keys: SET); (** PROTECTED *)
 		VAR  new : Tab;
 		BEGIN
 			new := FindTabFromPos(x,y);
@@ -243,8 +243,8 @@ TYPE
 		END PointerLeave;
 
 
-		PROCEDURE GetLeftTabs(VAR w: LONGINT; inner: BOOLEAN): BOOLEAN;
-		VAR cur : Tab; font : WMGraphics.Font; dx, dy, lh,dl : LONGINT; width, pos: LONGINT;
+		PROCEDURE GetLeftTabs(VAR w: SIZE; inner: BOOLEAN): BOOLEAN;
+		VAR cur : Tab; font : WMGraphics.Font; dx, dy, lh,dl : SIZE; width, pos: SIZE;
 		BEGIN
 			IF left.visible.Get() THEN dl := left.bounds.GetWidth() ELSE dl := 0 END;
 			font := GetFont();
@@ -268,7 +268,7 @@ TYPE
 		END GetLeftTabs;
 
 		PROCEDURE MoveLeft(sender, data : ANY);
-		VAR w: LONGINT;
+		VAR w: SIZE;
 		BEGIN
 			IF GetLeftTabs(w, FALSE) THEN
 				DEC(leftOfs, w)
@@ -280,7 +280,7 @@ TYPE
 		END MoveLeft;
 
 		PROCEDURE MoveRight(sender, data : ANY);
-		VAR w: LONGINT;
+		VAR w: SIZE;
 		BEGIN
 			IF GetLeftTabs(w, TRUE) THEN
 				INC(leftOfs, w)
@@ -354,7 +354,7 @@ TYPE
 		END Resized;
 
 		PROCEDURE CalcSize;
-		VAR cur : Tab; font : WMGraphics.Font; dx, dy, lh : LONGINT; width, w, pos: LONGINT;
+		VAR cur : Tab; font : WMGraphics.Font; dx, dy, lh : SIZE; width, w, pos: SIZE;
 		BEGIN
 			font := GetFont();
 			totalWidth := 0; width := 0; lines := 1; lh := lineHeight.Get();
@@ -424,8 +424,8 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR r : WMRectangles.Rectangle;
-			w, h, lh, dl, dr, wLeft, wRight : LONGINT;
-			pos,ypos : LONGINT; dx, dy, dc : LONGINT;
+			w, h, lh, dl, dr, wLeft, wRight : SIZE;
+			pos,ypos : SIZE; dx, dy, dc : SIZE;
 			cur : Tab; font : WMGraphics.Font;
 			imgLeft, imgMiddle, imgRight : WMGraphics.Image;
 		BEGIN
@@ -708,12 +708,13 @@ TYPE
 VAR
 	ColorPrototype, ProtoTcDefault*, ProtoTcHover*, ProtoTcSelected*, ProtoTcAttention*, ProtoTcSelectedAttention*,
 	ProtoTcTextDefault*, ProtoTcTextHover*, ProtoTcTextSelected*, ProtoTcTextAttention, ProtoTcTextSelectedAttention* : WMProperties.ColorProperty;
-	Int32Prototype, ProtoTcBorderWidth*, ProtoLineHeight : WMProperties.Int32Property;
+	Int32Prototype, ProtoTcBorderWidth* : WMProperties.Int32Property;
 	StringPrototype, ProtoTcBgLeftDefault, ProtoTcBgMiddleDefault, ProtoTcBgRightDefault,
 	ProtoTcBgLeftHover, ProtoTcBgMiddleHover, ProtoTcBgRightHover,
 	ProtoTcBgLeftSelected, ProtoTcBgMiddleSelected, ProtoTcBgRightSelected,
 	ProtoTcBgLeftAttention, ProtoTcBgMiddleAttention, ProtoTcBgRightAttention : WMProperties.StringProperty;
 	BooleanPrototype, ProtoTcUseBgBitmaps : WMProperties.BooleanProperty;
+	ProtoLineHeight : WMProperties.SizeProperty;
 
 	StrTabs, StrTabPanel, StrTab,
 	StrCaption, StrCaptionDescription, StrNoCaption,

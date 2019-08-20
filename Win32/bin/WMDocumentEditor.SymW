@@ -40,7 +40,7 @@ TYPE
 		PROCEDURE ^ Load*(CONST filename, format: ARRAY OF CHAR); 
 		PROCEDURE ^ StoreHandler(sender, data: ANY); 
 		PROCEDURE ^ Store*(CONST filename, format: ARRAY OF CHAR); 
-		PROCEDURE ^ FormatHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FormatHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ SetFormatCaption(CONST format: ARRAY OF CHAR); 
 		PROCEDURE ^ FormatPopupHandler(sender, data: ANY); 
 		PROCEDURE ^ SearchHandler(sender, data: ANY); 
@@ -51,7 +51,7 @@ TYPE
 		PROCEDURE ^ TextChanged(sender, data: ANY); 
 		PROCEDURE ^ SetText*(text: Texts.Text); 
 		PROCEDURE ^ SetToolbar*(buttons: SET); 
-		PROCEDURE ^ HandleShortcut*(ucs: LONGINT; flags: SET; keysym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HandleShortcut*(ucs: SIZE; flags: SET; keysym: SIZE): BOOLEAN; 
 		PROCEDURE ^ ToXml*(config: XML.Element); 
 		PROCEDURE ^ FromXml*(config: XML.Element); 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 

@@ -56,7 +56,7 @@ TYPE
 		baseAddress: String; 
 		baseTarget: String; 
 		sequencer: WMMessages.MsgSequencer; 
-		initWidth: LONGINT; 
+		initWidth: SIZE; 
 		loadLink*: WMEvents.EventListener; 
 		charset: String; 
 		frameName: String; 
@@ -89,7 +89,7 @@ TYPE
 		initAlignment: LONGINT; 
 		isTableContent: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(doc: XML.Container; url: String; initWidth: LONGINT; loadLink: WMEvents.EventListener; charset: String; frameName: String); 
+		PROCEDURE ^  & Init*(doc: XML.Container; url: String; initWidth: SIZE; loadLink: WMEvents.EventListener; charset: String; frameName: String); 
 		PROCEDURE ^ Transform*(): XML.Document; 
 		PROCEDURE ^ TransformContent(container: XML.Container; style: TextStyle); 
 		PROCEDURE ^ GetText(container: XML.Container): String; 
@@ -107,7 +107,7 @@ TYPE
 		PROCEDURE ^ AddLabel(s: String); 
 	END Transformer; 
 
-	CellSizes = POINTER TO ARRAY OF LONGINT; 
+	CellSizes = POINTER TO ARRAY OF SIZE; 
 
 	StringArray = POINTER TO ARRAY OF String; 
 
@@ -120,8 +120,8 @@ TYPE
 	Table* = OBJECT {EXCLUSIVE} (VisualComponent)
 	VAR 
 		tableElem: XML.Element; 
-		parentWidth: LONGINT; 
-		align-: LONGINT; 
+		parentWidth: SIZE; 
+		align-: WORD; 
 		textColor, linkColor, vlinkColor, alinkColor: LONGINT; 
 		url: String; 
 		loadLink: WMEvents.EventListener; 
@@ -144,17 +144,17 @@ TYPE
 		colsCnt: LONGINT; 
 		rowsCnt: LONGINT; 
 		minCellWidths, maxCellWidths: CellSizes; 
-		minTableWidth, maxTableWidth: LONGINT; 
+		minTableWidth, maxTableWidth: SIZE; 
 		x, y: LONGINT; 
 		internalWidth, internalHeight: LONGINT; 
 
-		PROCEDURE ^  & New*(tableElem: XML.Element; parentWidth: LONGINT; align: LONGINT; textColor, linkColor, vlinkColor, alinkColor: LONGINT; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String; seq: WMMessages.MsgSequencer; isSubtable: BOOLEAN); 
+		PROCEDURE ^  & New*(tableElem: XML.Element; parentWidth: SIZE; align: LONGINT; textColor, linkColor, vlinkColor, alinkColor: LONGINT; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String; seq: WMMessages.MsgSequencer; isSubtable: BOOLEAN); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ BuildCellGrid; 
 		PROCEDURE ^ AddCell(elem: XML.Element; newRow: BOOLEAN); 
 		PROCEDURE ^ CalculateMinMaxTableWidth; 
 		PROCEDURE ^ AlignCells; 
-		PROCEDURE ^ ParentTvWidthChanged*(x: LONGINT); 
+		PROCEDURE ^ ParentTvWidthChanged*(x: SIZE); 
 	END Table; 
 
 	TableCell = OBJECT {EXCLUSIVE} (VisualComponent)
@@ -163,7 +163,7 @@ TYPE
 		transformer: Transformer; 
 		tv: WMTextView.TextView; 
 		text: Texts.Text; 
-		minWidth, maxWidth: LONGINT; 
+		minWidth, maxWidth: SIZE; 
 		width, height: LONGINT; 
 		colspan, rowspan: LONGINT; 
 		bgImage: WebBrowserComponents.TileImagePanel; 
@@ -171,7 +171,7 @@ TYPE
 		textWriter: TextUtilities.TextWriter; 
 
 		PROCEDURE ^  & New*(seq: WMMessages.MsgSequencer; parentTable: Table; elem: XML.Element; textColor, linkColor, vlinkColor, alinkColor: LONGINT; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String); 
-		PROCEDURE ^ SetWidth(width: LONGINT); 
+		PROCEDURE ^ SetWidth(width: SIZE); 
 	END TableCell; 
 
 	Form = OBJECT 
@@ -276,7 +276,7 @@ TYPE
 		current: FormMenuItem; 
 
 		PROCEDURE ^  & Init*(name: String); 
-		PROCEDURE ^ MenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ MenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ MenuPopupHandler(sender, data: ANY); 
 		PROCEDURE ^ NewItem(value: String; label: String; selected: BOOLEAN); 
 		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
@@ -300,7 +300,7 @@ VAR
 	monospace: ARRAY 64 OF CHAR; 
 
 	PROCEDURE ^ EncodeLinkData(link, target, url: String): String; 
-	PROCEDURE ^ Utf82UrlEncodedUtf8*(VAR in: ARRAY OF CHAR): String; 
+	PROCEDURE ^ Utf82UrlEncodedUtf8*(CONST in: ARRAY OF CHAR): String; 
 	PROCEDURE ^ GetElems(root: XML.Element; wanted: StringArray; stopAt: StringArray; checkMe: BOOLEAN): XMLObjects.Enumerator; 
 	PROCEDURE ^ GetCharsetConverter(charset: ARRAY OF CHAR): CharsetConvProc; 
 	PROCEDURE ^ Iso2Utf8(VAR input: ARRAY OF CHAR): String; 

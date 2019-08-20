@@ -37,7 +37,7 @@ TYPE
 
 	AliasList*=OBJECT
 	VAR
-		firstAlias-, lastAlias-: Alias; aliases-: LONGINT;
+		firstAlias-, lastAlias-: Alias; aliases-: SIZE;
 
 		PROCEDURE &InitAliasList*;
 		BEGIN
@@ -73,7 +73,7 @@ TYPE
 	Fixup*=OBJECT
 	VAR
 		nextFixup-: Fixup;
-		mode-: INTEGER; (* fixup mode: relative or absolute *)
+		mode-: WORD; (* fixup mode: relative or absolute *)
 		displacement-: Unit; (* displacement of the fixup ('source') *)
 		scale-: ObjectFile.Bits; (* exponent of scale factor (factor=2^scale) *)
 		patterns-: SIZE;
@@ -81,10 +81,10 @@ TYPE
 		offset-: Unit;
 
 		symbol-: ObjectFile.Identifier; (* reference to the fixup's destination section *)
-		symbolOffset-: LONGINT; (* offset in intermediate section, must be patched (resolved and added to displacement) to destination section displacement *)
+		symbolOffset-: SIZE; (* offset in intermediate section, must be patched (resolved and added to displacement) to destination section displacement *)
 		resolved*: Sections.Section; (* cache ! *)
 
-		PROCEDURE & InitFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: LONGINT; displacement: Unit; scale: LONGINT; fixupPattern: ObjectFile.FixupPatterns);
+		PROCEDURE & InitFixup*(mode: WORD; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns);
 		BEGIN
 			ASSERT((mode = Relative) OR (mode = Absolute));
 			ASSERT(symbol.name # "");
@@ -110,7 +110,7 @@ TYPE
 			SELF.offset := offset;
 		END SetFixupOffset;
 
-		PROCEDURE SetSymbol*(symbol: Sections.SectionName; fp: ObjectFile.Fingerprint; symbolOffset: LONGINT; displacement: Unit);
+		PROCEDURE SetSymbol*(symbol: Sections.SectionName; fp: ObjectFile.Fingerprint; symbolOffset: SIZE; displacement: Unit);
 		BEGIN
 			SELF.symbol.name := symbol;
 			SELF.symbol.fingerprint := fp;
@@ -119,7 +119,7 @@ TYPE
 		END SetSymbol;
 
 		PROCEDURE Dump*(w: Streams.Writer);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			Basic.WriteSegmentedName(w, symbol.name);
 			IF symbol.fingerprint # 0 THEN w.String("["); w.Hex(symbol.fingerprint,0); w.String("]") END;
@@ -148,7 +148,7 @@ TYPE
 
 	FixupList*=OBJECT
 	VAR
-		firstFixup-, lastFixup-: Fixup; fixups-: LONGINT;
+		firstFixup-, lastFixup-: Fixup; fixups-: SIZE;
 
 		PROCEDURE &InitFixupList*;
 		BEGIN
@@ -199,10 +199,10 @@ TYPE
 
 		PROCEDURE GetPC(): Unit;
 		BEGIN
-			RETURN pc
+			RETURN pc;
 		END GetPC;
 
-		PROCEDURE & InitBinarySection*(type: SHORTINT; unit: Bits; CONST name:Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN);
+		PROCEDURE & InitBinarySection*(type: WORD; unit: Bits; CONST name:Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN);
 		BEGIN
 			ASSERT(unit > 0);
 			ASSERT(unit <= 32); (* implementation restriction *)
@@ -265,11 +265,11 @@ TYPE
 		BEGIN finally := atPC
 		END SetFinally;
 
-		PROCEDURE SetAlignment*(fixed: BOOLEAN; alignat: LONGINT);
+		PROCEDURE SetAlignment*(fixed: BOOLEAN; alignat: Unit);
 		BEGIN os.alignment := alignat; SELF.os.fixed := fixed;
 		END SetAlignment;
 
-		PROCEDURE CheckSize(size: LONGINT);
+		PROCEDURE CheckSize(size: SIZE);
 		BEGIN
 			IF os.bits.GetSize()  < size + pc*os.unit THEN os.bits.Resize(size + pc*os.unit) END;
 			ASSERT(os.bits.GetSize() MOD os.unit = 0);
@@ -412,7 +412,7 @@ TYPE
 			pc := oldpc;
 		END PutQWordAt;
 
-		PROCEDURE PutBytes* (data: HUGEINT; bytes: SHORTINT);
+		PROCEDURE PutBytes* (data: HUGEINT; bytes: WORD);
 		BEGIN
 			CASE bytes OF
 			1: PutByte (SHORT(data));
@@ -491,9 +491,7 @@ TYPE
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
-				IF pattern.offset # MIN(SHORTINT) THEN
-					os.bits.SetBits(fixup.offset*os.unit+pattern.offset,pattern.bits,address);
-				END;
+				os.bits.SetBits(fixup.offset*os.unit+pattern.offset,pattern.bits,address);
 				address := ASH (address, -pattern.bits);
 			END PatchPattern;
 
@@ -531,7 +529,7 @@ TYPE
 		PROCEDURE DumpCode*(w: Streams.Writer; from,to: Unit);
 		VAR i: Unit; c: Sections.Comment; nextpos: Unit;
 
-			PROCEDURE Hex(i: LONGINT): CHAR;
+			PROCEDURE Hex(i: WORD): CHAR;
 			BEGIN
 				ASSERT(i>=0);
 				ASSERT(i<16);
@@ -623,7 +621,7 @@ TYPE
 
 	PROCEDURE ConvertReal* (value: REAL): LONGINT;
 	CONST Exponent = 8; Significant = 23;
-	VAR result: LONGINT; VAR exponent, i: INTEGER;
+	VAR result: LONGINT; VAR exponent, i: WORD;
 	BEGIN
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
 		IF value = 0 THEN RETURN 0 END;
@@ -641,7 +639,7 @@ TYPE
 
 	PROCEDURE ConvertLongreal*(value: LONGREAL): HUGEINT;
 	CONST Exponent = 11; Significant = 52;
-	VAR result: HUGEINT; VAR exponent, i: INTEGER;
+	VAR result: HUGEINT; VAR exponent, i: WORD;
 	BEGIN
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
 		IF value = 0 THEN RETURN 0 END;
@@ -713,13 +711,13 @@ TYPE
 		RETURN result
 	END ConvertToLongreal;
 
-	PROCEDURE NewFixup*(mode: INTEGER; fixupOffset: LONGINT; symbol: ObjectFile.Identifier; symbolOffset,displacement: LONGINT; scale: LONGINT; fixupPattern: ObjectFile.FixupPatterns): Fixup;
+	PROCEDURE NewFixup*(mode: WORD; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns): Fixup;
 	VAR fixup: Fixup;
 	BEGIN
 		NEW(fixup,mode,fixupOffset,symbol,symbolOffset,displacement,scale,fixupPattern); RETURN fixup
 	END NewFixup;
 
-	PROCEDURE NewBinarySection*(type: SHORTINT; unit: LONGINT; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section;
+	PROCEDURE NewBinarySection*(type: WORD; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section;
 	VAR binarySection: Section;
 	BEGIN
 		NEW(binarySection,type,unit,name,dump,bigEndian); RETURN binarySection
@@ -728,47 +726,3 @@ TYPE
 END FoxBinaryCode.
 
 FoxBinaryCode.TestFixup
-	(*
-	PROCEDURE TestFixup*;
-	VAR data1,data2: Section; i: LONGINT; fixup: Fixup; fixupFormat: FixupFormat;
-		PROCEDURE DumpBits(ch: CHAR);
-		VAR v: LONGINT; s: ARRAY 9 OF CHAR; i: LONGINT;
-		BEGIN
-			v := ORD(ch);
-			FOR i := 7 TO 0 BY -1 DO
-				IF ODD(v) THEN s[i]:='1' ELSE s[i] := '0' END;
-				v := ASH(v,-1);
-			END;
-			s[8] := 0X;
-			D.String(s);
-		END DumpBits;
-
-	BEGIN
-		NEW(data1,Sections.CodeSection,8,"test",NIL,FALSE,TRUE);
-		NEW(data2,Sections.CodeSection,8,"test",NIL,FALSE,TRUE);
-		FOR i := 0 TO 100 DO
-			data1.PutByte(170);
-			data2.PutByte(85);
-		END;
-		FOR i := 15 TO 20 DO DumpBits(data1.data[i]); END; D.Ln;
-		FOR i := 15 TO 20 DO DumpBits(data2.data[i]); END;D.Ln;
-
-		NEW(fixupFormat,3);
-		fixupFormat[0].offset := 0;
-		fixupFormat[0].bits := 12;
-		fixupFormat[1].offset := MIN(SHORTINT);
-		fixupFormat[1].bits := 8;
-		fixupFormat[2].offset := 20;
-		fixupFormat[2].bits := 12;
-
-		NEW(fixup,Absolute,16,NIL,0,0,0,fixupFormat);
-		data1.ApplyFixup(fixup,3F7DEEDH);
-		data2.ApplyFixup(fixup,3F7DEEDH);
-		FOR i := 15 TO 20 DO DumpBits(data1.data[i]); END; D.Ln;
-		FOR i := 15 TO 20 DO DumpBits(data2.data[i]); END;D.Ln;		D.Ln;
-		D.Update;
-
-		data1.Dump(D.Log); D.Ln;
-		data2.Dump(D.Log); D.Ln;
-	END TestFixup;
-	*)

@@ -18,7 +18,7 @@ TYPE
 	(** Generic teletext browser *)
 	TeletextBrowser* = OBJECT
 	VAR
-		page-, subPage: LONGINT;
+		page-, subPage: SIZE;
 		suite-: TeletextDecoder.TeletextSuite;
 		pgSet: TeletextDecoder.TeletextPageSet;
 		pgData*: TeletextDecoder.TeletextPage;
@@ -69,7 +69,7 @@ TYPE
 		(** Reload the current teletext page *)
 		PROCEDURE ReloadPage*() : TeletextPage;
 		VAR
-			sub: LONGINT;
+			sub: SIZE;
 			tmp: TeletextPage;
 		BEGIN
 			sub := subPage;
@@ -143,7 +143,7 @@ TYPE
 		END GetPreviousSubpage;
 
 		(** Get a teletext page by number. page is in range 100-899 *)
-		PROCEDURE GetPage*(page: LONGINT) : TeletextPage;
+		PROCEDURE GetPage*(page: SIZE) : TeletextPage;
 		BEGIN
 			page := page - 100;
 			SELF.page := page;

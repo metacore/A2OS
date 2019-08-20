@@ -56,7 +56,7 @@ TYPE
 		basw*, bisw* : LONGINT;
 
 		(** height / width of frame windows th = top height, bh = bottom height, lw = left width, rw = right width *)
-		th*, bh*, lw*, rw* : LONGINT;
+		th*, bh*, lw*, rw* : SIZE;
 
 		(** frame window bitmaps
 			1st letter:	t = top, l = left, r = right, b = bottom decor window
@@ -134,7 +134,7 @@ TYPE
 	VAR
 		data*, sender* : ANY;
 		onAccept*, onReject* : Messages.CompCommand;
-		offsetX*, offsetY*: LONGINT;
+		offsetX*, offsetY*: SIZE;
 	END DragInfo;
 
 	(** List of decoration - windows to a master window *)
@@ -201,7 +201,7 @@ TYPE
 		acceptDrag : BOOLEAN;
 		reduceQuality- : BOOLEAN;
 
-		PROCEDURE &Init*(w, h : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(w, h : SIZE; alpha : BOOLEAN);
 		BEGIN
 			id := GetId();
 			timestamp := 0;
@@ -253,13 +253,13 @@ TYPE
 		END SetIcon;
 
 		(** Return the height in client space *) (* go via manager *)
-		PROCEDURE GetHeight*() : LONGINT;
+		PROCEDURE GetHeight*() : SIZE;
 		BEGIN
 			RETURN bounds.b - bounds.t
 		END GetHeight;
 
 		(** Return the width in client space *) (* go via manager *)
-		PROCEDURE GetWidth*() : LONGINT;
+		PROCEDURE GetWidth*() : SIZE;
 		BEGIN
 			RETURN bounds.r - bounds.l
 		END GetWidth;
@@ -291,7 +291,7 @@ TYPE
 		(** Resize is called by the WM if it wants to resize the window.
 			width and height contain the desired new size. The Window should set width and height to acceptable
 			values or return the current size, if resize is not supported *)
-		PROCEDURE Resizing*(VAR width, height : LONGINT);
+		PROCEDURE Resizing*(VAR width, height : SIZE);
 		BEGIN
 			IF FlagNoResizing IN flags THEN
 				width := GetWidth(); height := GetHeight();
@@ -306,7 +306,7 @@ TYPE
 		END Resizing;
 
 		(** May replace the back-image, if needed. MUST check if requested size is reasonable (0 < x * y < memory) *)
-		PROCEDURE Resized*(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : SIZE);
 		END Resized;
 
 		(** Invalidate a rectangle in window coordinates*)
@@ -327,7 +327,7 @@ TYPE
 			x and y are in window coordinates but may lie out of the window boundaries in case b)
 			keys is the set of buttons that are down
 		*)
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		END PointerDown;
 
 		(** PointerMove is called via the generic message handler if the pointer (mouse) is moved and
@@ -338,17 +338,17 @@ TYPE
 			x and y are in window coordinates but may lie out of the window boundaries.
 			keys is the set of buttons that are down
 		*)
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		END PointerMove;
 
-		PROCEDURE WheelMove*(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : SIZE);
 		END WheelMove;
 
 		(** PointerUp is called via the generic message handler if the pointer (or a mouse button) went up.
 			x and y are in window coordinates but may lie out of the window boundaries.
 			keys is the set of buttons that are STILL DOWN
 		*)
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		END PointerUp;
 
 		(** PointerLeave is called via the generic message handler if the pointer has left the window with no button pressed. *)
@@ -356,11 +356,11 @@ TYPE
 		END PointerLeave;
 
 		(** DragOver is called via the message handler. *)
-		PROCEDURE DragOver*(x, y: LONGINT; dragInfo : DragInfo);
+		PROCEDURE DragOver*(x, y: SIZE; dragInfo : DragInfo);
 		END DragOver;
 
 		(** Dropped is called via the message handler to indicate an item has been dropped. *)
-		PROCEDURE DragDropped*(x, y: LONGINT; dragInfo : DragInfo);
+		PROCEDURE DragDropped*(x, y: SIZE; dragInfo : DragInfo);
 		END DragDropped;
 
 		(** send the srcWindow a confirmation for the completed drag operation *)
@@ -376,7 +376,7 @@ TYPE
 		END ConfirmDrag;
 
 		(** Start a drag operation. *)
-		PROCEDURE StartDrag*(sender, data : ANY; img : Graphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject : Messages.CompCommand) : BOOLEAN;
+		PROCEDURE StartDrag*(sender, data : ANY; img : Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject : Messages.CompCommand) : BOOLEAN;
 		BEGIN
 			RETURN manager.StartDrag(SELF, sender, data, img, offsetX, offsetY, onAccept, onReject)
 		END StartDrag;
@@ -387,7 +387,7 @@ TYPE
 			The window can determine wheter the key was pressed or released by examining the
 			Inputs.Release flag in flags. ucs contains the unicode equivalent of the key. Special input editors
 			send the generated unicode characters via KeyEvent.  *)
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		END KeyEvent;
 
 (**  Focus messages *)
@@ -424,7 +424,7 @@ TYPE
 			this to generate non-rectangular windows.
 			This Method will be called directly by the window manager. __> Don't block, don't crash !!
 			*)
-		PROCEDURE IsHit*(x, y : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y : SIZE) : BOOLEAN;
 		BEGIN
 			RETURN TRUE
 		END IsHit;
@@ -442,7 +442,7 @@ TYPE
 		PROCEDURE Handle*(VAR m : Message);
 		BEGIN
 			IF m.msgType = Messages.MsgKey THEN
-				KeyEvent(m.x, m.flags, m.y)
+				KeyEvent(m.x(LONGINT), m.flags, m.y(LONGINT))
 			ELSIF m.msgType = Messages.MsgPointer THEN
 				(* global to local transformation by sequencer thread: *)
 				m.x := m.x-bounds.l;
@@ -477,7 +477,7 @@ TYPE
 		(** Draw request form the window manager. The canvas becomes invalid when the method ends. The
 		draw method may not modify window or WindowManager properties.
 		w, h is the area in view coordinates, q is the Quality 0 lowest 1 mid 2 high. A window may ignore q  *)
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
 		END Draw;
 
 		(** Is called by the windowmanager with reduce set, if the window is resized or moved on slow machines *)
@@ -502,7 +502,7 @@ TYPE
 		pointerThreshold*,
 		maxInterpolation* : LONGINT; (* allows limiting the interpolation degree on Draw *)
 
-		PROCEDURE &Init*(w, h : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(w, h : SIZE; alpha : BOOLEAN);
 		BEGIN
 			Init^(w, h, alpha);
 			NEW(img);
@@ -518,8 +518,8 @@ TYPE
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
 		END SetCanvasGenerator;
 
-		PROCEDURE IsHit*(x, y  : LONGINT) : BOOLEAN;
-		VAR w, h : LONGINT; fx, fy : REAL;
+		PROCEDURE IsHit*(x, y  : SIZE) : BOOLEAN;
+		VAR w, h : SIZE; fx, fy : REAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # img.width) OR (h # img.height)) THEN
@@ -529,7 +529,7 @@ TYPE
 			END
 		END IsHit;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
 		VAR img: Graphics.Image;
 		BEGIN
 			img := SELF.img;
@@ -553,7 +553,7 @@ TYPE
 		END Draw;
 
 		PROCEDURE Invalidate*(rect : Rectangle);
-		VAR w, h : LONGINT; fx, fy : REAL;
+		VAR w, h : SIZE; fx, fy : REAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # img.width) OR (h # img.height))  THEN
@@ -565,7 +565,7 @@ TYPE
 		END Invalidate;
 
 		PROCEDURE Handle*(VAR m : Message);
-		VAR w, h : LONGINT; fx, fy : REAL;
+		VAR w, h : SIZE; fx, fy : REAL;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # img.width) OR (h # img.height)) & (m.msgType = Messages.MsgPointer) THEN
@@ -584,14 +584,14 @@ TYPE
 		backImg* : Graphics.Image;
 		swapping, drawing : BOOLEAN;
 
-		PROCEDURE &Init*(w, h: LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(w, h: SIZE; alpha : BOOLEAN);
 		BEGIN
 			NEW(backImg);
 			IF alpha THEN Raster.Create(backImg, w, h, Raster.BGRA8888) ELSE Raster.Create(backImg, w, h, format) END;
 			Init^(w, h, alpha);
 		END Init;
 
-		PROCEDURE ReInit*(w, h : LONGINT);
+		PROCEDURE ReInit*(w, h : SIZE);
 		BEGIN {EXCLUSIVE}
 			AWAIT(~drawing);
 			IF useAlpha THEN
@@ -613,7 +613,7 @@ TYPE
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
 		END SetCanvasGenerator;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
 		BEGIN
 			BEGIN{EXCLUSIVE}
 				AWAIT(~swapping); drawing := TRUE;
@@ -672,7 +672,7 @@ TYPE
 		range* : RealRect;
 
 		(* Width and height of viewport at 1:1 zoom. Will be set once in the constructor of the ViewPort implementation *)
-		width0*, height0* : LONGINT; (* read-only! *)
+		width0*, height0* : SIZE; (* read-only! *)
 
 		(** The WindowManager calls the Update Procedure in locked state. *)
 		PROCEDURE Update*(r : Rectangle; top : Window);
@@ -747,7 +747,7 @@ TYPE
 (** Window management *)
 
 		(** Add adds a window at pos l, t with flags *)
-		PROCEDURE Add*(l, t : LONGINT; item : Window; flags:SET);
+		PROCEDURE Add*(l, t : SIZE; item : Window; flags:SET);
 		END Add;
 
 		(** Remove removes a window *)
@@ -755,13 +755,13 @@ TYPE
 		END Remove;
 
 		(** Set the position of a window *)
-		PROCEDURE SetWindowPos*(vs : Window; x, y : LONGINT);
+		PROCEDURE SetWindowPos*(vs : Window; x, y : SIZE);
 		END SetWindowPos;
 
 		(** Set the size of a window. Return the new size in width and height *)
 		(** If the window contains left, top, right or bottom, SetWindowSize is called
 			appropriately *)
-		PROCEDURE SetWindowSize*(vs : Window; VAR width, height : LONGINT);
+		PROCEDURE SetWindowSize*(vs : Window; VAR width, height : SIZE);
 		END SetWindowSize;
 
 		(** Add a region to be refreshed *)
@@ -868,7 +868,7 @@ TYPE
 		(** Return the window at postition x, y in global space. *)
 		(** Windows that have the FlagNavigate flag set will not be considered *)
 		(** Must hold WM lock *)
-		PROCEDURE GetPositionOwner*(x, y : LONGINT) : Window;
+		PROCEDURE GetPositionOwner*(x, y : SIZE) : Window;
 		END GetPositionOwner;
 
 		PROCEDURE GetFocusOwner*() : Window;
@@ -931,7 +931,7 @@ TYPE
 			lock.ReleaseWrite
 		END SetAcceptDrag;
 
-		PROCEDURE StartDrag*(w : Window; sender, data : ANY; img : Graphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject : Messages.CompCommand) : BOOLEAN;
+		PROCEDURE StartDrag*(w : Window; sender, data : ANY; img : Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject : Messages.CompCommand) : BOOLEAN;
 		END StartDrag;
 
 		(** a pointer button must be pressed *)
@@ -1060,7 +1060,7 @@ VAR
 	oTimestamp- : LONGINT;
 
 	(* Coordinate offsets use to determine position of a new window *)
-	x1, y1 : LONGINT;
+	x1, y1 : SIZE;
 
 	format* : Raster.Format;
 
@@ -1144,8 +1144,8 @@ BEGIN {EXCLUSIVE}
 	x1 := 0; y1 := 0;
 END ResetNextPosition;
 
-PROCEDURE GetNextPosition*(window : Window; manager : WindowManager; view : ViewPort; VAR dx, dy : LONGINT);
-VAR style : WindowStyle; x, y : LONGINT;
+PROCEDURE GetNextPosition*(window : Window; manager : WindowManager; view : ViewPort; VAR dx, dy : SIZE);
+VAR style : WindowStyle; x, y : SIZE;
 BEGIN {EXCLUSIVE}
 	ASSERT((window # NIL) & (manager # NIL) & (view # NIL));
 	style := manager.GetStyle();
@@ -1158,7 +1158,7 @@ BEGIN {EXCLUSIVE}
 END GetNextPosition;
 
 PROCEDURE DefaultAddWindow*(w : Window);
-VAR manager : WindowManager; view : ViewPort; dy, dx : LONGINT;
+VAR manager : WindowManager; view : ViewPort; dy, dx : SIZE;
 BEGIN
 	manager := GetDefaultManager();
 	view := GetDefaultView();
@@ -1167,7 +1167,7 @@ BEGIN
 	manager.SetFocus(w)
 END DefaultAddWindow;
 
-PROCEDURE AddWindow*(w : Window; dx, dy : LONGINT);
+PROCEDURE AddWindow*(w : Window; dx, dy : SIZE);
 VAR manager : WindowManager; view : ViewPort;
 BEGIN
 	manager := GetDefaultManager();
@@ -1175,7 +1175,7 @@ BEGIN
 	manager.Add(ENTIER(view.range.l) + dx, ENTIER(view.range.t) + dy, w, {FlagFrame, FlagClose, FlagMinimize})
 END AddWindow;
 
-PROCEDURE ExtAddWindow*(w : Window; dx, dy : LONGINT; flags : SET);
+PROCEDURE ExtAddWindow*(w : Window; dx, dy : SIZE; flags : SET);
 VAR manager : WindowManager; view : ViewPort;
 BEGIN
 	manager := GetDefaultManager();
@@ -1183,7 +1183,7 @@ BEGIN
 	manager.Add(ENTIER(view.range.l) + dx, ENTIER(view.range.t) + dy, w, flags)
 END ExtAddWindow;
 
-PROCEDURE ExtAddViewBoundWindow*(w : Window; dx, dy : LONGINT; view : ViewPort; flags : SET);
+PROCEDURE ExtAddViewBoundWindow*(w : Window; dx, dy : SIZE; view : ViewPort; flags : SET);
 VAR manager : WindowManager;
 BEGIN
 	flags := flags + {FlagNavigation};
@@ -1193,7 +1193,7 @@ END ExtAddViewBoundWindow;
 
 (** move a window to the default view *)
 PROCEDURE DefaultBringToView*(w : Window; toFront : BOOLEAN);
-VAR manager : WindowManager; view : ViewPort; dy, dx : LONGINT;
+VAR manager : WindowManager; view : ViewPort; dy, dx : SIZE;
 BEGIN
 	manager := GetDefaultManager();
 	view := GetDefaultView();

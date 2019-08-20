@@ -31,7 +31,7 @@ TYPE
 	VAR
 		file : Files.File;
 		w : Files.Writer;
-		currentFileSize, maxFileSize : LONGINT;
+		currentFileSize, maxFileSize : Files.Size;
 		warned : BOOLEAN;
 
 		PROCEDURE Handle*(event : Events.Event);
@@ -45,8 +45,8 @@ TYPE
 			END;
 		END Handle;
 
-		PROCEDURE &Init*(file : Files.File; append : BOOLEAN; maxFileSize : LONGINT);
-		VAR ofs : LONGINT;
+		PROCEDURE &Init*(file : Files.File; append : BOOLEAN; maxFileSize : Files.Size);
+		VAR ofs : Files.Position;
 		BEGIN
 			ASSERT(file # NIL);
 			name := ModuleName;

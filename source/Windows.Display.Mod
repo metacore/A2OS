@@ -190,7 +190,7 @@ TYPE
 
 	Display = OBJECT (Displays.Display) (* only one instance of this object allowed ! *)
 
-		PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h, op: LONGINT );
+		PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h: SIZE; op: LONGINT );
 		BEGIN
 
 			IF letWindowsHandleTheBuffer THEN
@@ -680,18 +680,18 @@ VAR
 		END
 	END UpdateDisplay;
 
-	PROCEDURE FromMemory( win: Window;  VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h: LONGINT );
+	PROCEDURE FromMemory( win: Window;  VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h: SIZE );
 	END FromMemory;
 
-	PROCEDURE ToMemory( win: Window;  VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h: LONGINT );
+	PROCEDURE ToMemory( win: Window;  VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h: SIZE );
 	VAR adr: ADDRESS;  hDC: User32.HDC;  ret: Kernel32.BOOL;
 	BEGIN
 		hDC := win.bmphdc;   (*  hDC := win.hDC; (* writes to screen*) *)
-		bmi.info.bmiHeader.biWidth := stride DIV format (* w *) ;  bmi.info.bmiHeader.biHeight := -h;   (* top-down *)
+		bmi.info.bmiHeader.biWidth := LONGINT(stride) DIV format (* w *) ;  bmi.info.bmiHeader.biHeight := -LONGINT(h);   (* top-down *)
 		adr := ADDRESSOF( buf[ofs] );
 
 		ret :=
-			GDI32.SetDIBitsToDevice( hDC, x, y, w, h, 0, 0, 0, h, adr, SYSTEM.VAL( GDI32.BitmapInfo, bmi.info ),
+			GDI32.SetDIBitsToDevice( hDC, LONGINT(x), LONGINT(y), LONGINT(w), LONGINT(h), 0, 0, 0, LONGINT(h), adr, SYSTEM.VAL( GDI32.BitmapInfo, bmi.info ),
 													   GDI32.DIBPalColors )
 		(*	ELSE
 			bmi.info.bmiHeader.biHeight := 1;
@@ -707,14 +707,14 @@ VAR
 		*)
 	END ToMemory;
 
-	PROCEDURE ToWindow*( win: Window;  x, y, w, h: LONGINT;  dx, dy: LONGINT );
+	PROCEDURE ToWindow*( win: Window;  x, y, w, h: SIZE;  dx, dy: LONGINT );
 	VAR ret: Kernel32.BOOL;
 	BEGIN
 		IF traceDisplay THEN
-			ret := GDI32.BitBlt( win.hDC (* = destination *) , x + dx, y + dy, w, h, win.bmphdc (* source *) , x, y, GDI32.NotSrcCopy );
+			ret := GDI32.BitBlt( win.hDC (* = destination *) , LONGINT(x) + dx, LONGINT(y) + dy, LONGINT(w), LONGINT(h), win.bmphdc (* source *) , LONGINT(x), LONGINT(y), GDI32.NotSrcCopy );
 			Kernel32.Sleep(50);
 		END;
-		ret := GDI32.BitBlt( win.hDC (* = destination *) , x + dx, y + dy, w, h, win.bmphdc (* source *) , x, y, GDI32.SrcCopy );
+		ret := GDI32.BitBlt( win.hDC (* = destination *) , LONGINT(x) + dx, LONGINT(y) + dy, LONGINT(w), LONGINT(h), win.bmphdc (* source *) , LONGINT(x), LONGINT(y), GDI32.SrcCopy );
 	END ToWindow;
 
 	PROCEDURE GetMinMaxInfo( win: Window;  lParam: User32.LParam ): BOOLEAN;

@@ -16,7 +16,7 @@ TYPE
 	VAR add, store, delete, edit, toFront : WMStandardComponents.Button;
 		panel, toolbar : WMStandardComponents.Panel;
 		selectedObj : WMComponents.VisualComponent;
-		lx, ly : LONGINT;
+		lx, ly : SIZE;
 		generator : Random.Generator;
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
@@ -64,7 +64,7 @@ TYPE
 			SetTitle(Strings.NewString("Menu Edit"));
 		END New;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR button : WMStandardComponents.Button;
 		BEGIN
 			IF 1 IN keys THEN
@@ -193,13 +193,13 @@ TYPE
 		END SelectPresent;
 
 
-		PROCEDURE HandlePointerDown(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE HandlePointerDown(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		BEGIN
 			lx := x; ly := y; handled := TRUE
 		END HandlePointerDown;
 
-		PROCEDURE HandlePointerMove(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
-		VAR dx, dy : LONGINT; r : WMRectangles.Rectangle;
+		PROCEDURE HandlePointerMove(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
+		VAR dx, dy : SIZE; r : WMRectangles.Rectangle;
 		BEGIN
 			IF 0 IN keys THEN
 				IF selectedObj # NIL THEN

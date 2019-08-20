@@ -54,7 +54,7 @@ TYPE
 		PROCEDURE WriteScrDesc(w: Streams.Writer; img: Raster.Image);
 		VAR i: LONGINT;
 		BEGIN
-			w.RawInt(SHORT(img.width)); w.RawInt(SHORT(img.height));
+			w.RawInt(INTEGER(img.width)); w.RawInt(INTEGER(img.height));
 			i := ASH(7+ 8 (*img.fmt.bpp*), 4); i := i+ 8 (*img.fmt.bpp*) - 1;
 			w.Char( CHR(i) );
 			w.Char( 0X );
@@ -80,7 +80,7 @@ TYPE
 		BEGIN
 			w.Char(2CX);
 			w.RawInt( 0); w.RawInt(0);
-			w.RawInt(SHORT(img.width)); w.RawInt(SHORT(img.height));
+			w.RawInt(INTEGER(img.width)); w.RawInt(INTEGER(img.height));
 			w.Char(CHR(8 (*img.fmt.bpp*) - 1));
 		END WriteImageDesc;
 
@@ -138,7 +138,7 @@ TYPE
 
 			startSize := codelen;
 			InitCodeBook(codelen); INC(codelen);
-			x := 0; y := 0; width := img.width;
+			x := 0; y := 0; width := img.width(LONGINT);
 
 			Raster.InitMode(mode, Raster.srcCopy);
 
@@ -221,7 +221,8 @@ TYPE
 		VAR
 			header : Header;
 			ch : CHAR;
-			n, size, length : LONGINT;
+			n, size : LONGINT;
+			length : SIZE;
 			w, h : INTEGER;
 		BEGIN
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN END;
@@ -265,7 +266,7 @@ TYPE
 			res := 0;
 		END Open;
 
-		PROCEDURE GetImageInfo*(VAR width, height, format, maxProgressionLevel : LONGINT);
+		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
 		BEGIN
 			width := SELF.width; height := SELF.height
 		END GetImageInfo;
@@ -374,7 +375,8 @@ TYPE
 		VAR
 			header : Header;
 			ch : CHAR;
-			n, size, length : LONGINT;
+			n, size: LONGINT;
+			length: SIZE;
 			w, h : INTEGER;
 		BEGIN
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN END;
@@ -514,7 +516,7 @@ PROCEDURE LoadData (r : Streams.Reader; pal : Raster.Palette; img: Raster.Image;
 VAR
 	ch: CHAR;
 	codeBits, clearCode, endCode, curBits, maxCode, nextCode, bits, x, y, lines, prevCode, curCode, seq, len: INTEGER;
-	n, buf, blkPos, blkSize, ptr, bytesRead: LONGINT;
+	n, buf, blkPos, blkSize, ptr: LONGINT; bytesRead: SIZE;
 	pix, run: ARRAY 1000H OF CHAR;
 	prev: ARRAY 1000H OF INTEGER;
 	block: ARRAY 255 OF CHAR;
@@ -530,13 +532,13 @@ VAR
 		IF x = img.width THEN
 			IF interlaced THEN
 				IF lines >= 8 THEN INC(y, 8) ELSE INC(y, lines) END;
-				WHILE y > SHORT(img.height-1) DO
+				WHILE y > INTEGER(img.height-1) DO
 					lines := lines DIV 2; y := lines DIV 2
 				END
 			ELSE
 				INC(y)
 			END;
-			x := 0; ptr := y * img.bpr
+			x := 0; ptr := y * img.bpr(LONGINT);
 		END
 	END Dot;
 

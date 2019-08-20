@@ -27,7 +27,7 @@ CONST
 	initialCacheElementSize	= 1000;
 
 TYPE
-	IntegerArray = POINTER TO ARRAY OF LONGINT;
+	IntegerArray = POINTER TO ARRAY OF SIZE;
 
 	CharArray = POINTER TO ARRAY OF Texts.Char32;
 
@@ -36,8 +36,8 @@ TYPE
 	BoolArray = POINTER TO ARRAY OF BOOLEAN;
 
 	PosArray = POINTER TO RECORD
-		array : IntegerArray;
-		size : LONGINT;
+		array : POINTER TO ARRAY OF SIZE;
+		size : SIZE;
 		next : PosArray;
 	END;
 
@@ -46,12 +46,12 @@ TYPE
 		(* simple stack for integers with some default stack functions *)
 	IntegerStack = OBJECT
 	VAR
-		top : INTEGER;
+		top : SIZE;
 		internalStack : IntegerArray;
-		internalStackSize : LONGINT;
+		internalStackSize : SIZE;
 
 		(* initializes the stack with a certain size *)
-		PROCEDURE &Init*(size : LONGINT);
+		PROCEDURE &Init*(size : SIZE);
 		BEGIN
 			NEW(internalStack,size);
 			top := 0;
@@ -59,10 +59,10 @@ TYPE
 		END Init;
 
 		(* pushes a new element on top of the stack *)
-		PROCEDURE Push(i : LONGINT);
+		PROCEDURE Push(i : SIZE);
 		VAR
 			tempStack : IntegerArray;
-			j : LONGINT;
+			j : SIZE;
 		BEGIN
 			(* if the internal stack is full it needs to be resized *)
 			IF (top >= internalStackSize) THEN
@@ -83,7 +83,7 @@ TYPE
 		END Push;
 
 		(* returns the top element of the stack and removes it *)
-		PROCEDURE Pop() : LONGINT;
+		PROCEDURE Pop() : SIZE;
 		BEGIN
 			IF (top = 0) THEN
 				RETURN -1;
@@ -94,7 +94,7 @@ TYPE
 		END Pop;
 
 		(* returns the top element of the stack without removing it *)
-		PROCEDURE Top() : LONGINT;
+		PROCEDURE Top() : SIZE;
 		BEGIN
 			IF (top = 0) THEN
 				RETURN -1;
@@ -110,7 +110,7 @@ TYPE
 		END Purge;
 
 		(* returns the current number of elements on the stack *)
-		PROCEDURE Size() : INTEGER;
+		PROCEDURE Size() : SIZE;
 		BEGIN
 			RETURN top;
 		END Size;
@@ -147,7 +147,7 @@ TYPE
 
 		PROCEDURE &Init*;
 		VAR
-			i : LONGINT;
+			i : SIZE;
 			newPosArray: PosArray;
 		BEGIN
 
@@ -177,7 +177,7 @@ TYPE
 		END Init;
 
 		(* Allocates a new textreader array if necessary *)
-		PROCEDURE NewTextReaderArray(VAR trArray : TextReaderArray; size : LONGINT);
+		PROCEDURE NewTextReaderArray(VAR trArray : TextReaderArray; size : SIZE);
 		BEGIN
 			IF trArray = NIL THEN
 				NEW(trArray,MAX(initialCacheElementSize,2*size));
@@ -187,9 +187,9 @@ TYPE
 		END NewTextReaderArray;
 
 		(* Gets a previously allocated integer stack from the pool if available *)
-		PROCEDURE NewIntegerStack(VAR stack : IntegerStack; size : LONGINT);
+		PROCEDURE NewIntegerStack(VAR stack : IntegerStack; size : SIZE);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO 9 DO
 				IF ~integerStackPool[i].used THEN
@@ -207,7 +207,7 @@ TYPE
 		(* Puts the integer stack back to the pool *)
 		PROCEDURE FreeIntegerStack(stack : IntegerStack);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO 9 DO
 				IF stack = integerStackPool[i].element THEN
@@ -218,7 +218,7 @@ TYPE
 		END FreeIntegerStack;
 
 		(* Allocates a new boolean array if necessary *)
-		PROCEDURE NewBoolArray(VAR bArray : BoolArray; size : LONGINT);
+		PROCEDURE NewBoolArray(VAR bArray : BoolArray; size : SIZE);
 		BEGIN
 			IF bArray = NIL THEN
 				NEW(bArray,MAX(initialCacheElementSize,2*size));
@@ -228,7 +228,7 @@ TYPE
 		END NewBoolArray;
 
 		(* Allocates a new array for position arrays if necessary *)
-		PROCEDURE NewPosArrays(VAR pArrays : PosArrays; size : LONGINT);
+		PROCEDURE NewPosArrays(VAR pArrays : PosArrays; size : SIZE);
 		BEGIN
 			IF pArrays = NIL THEN
 				NEW(pArrays,MAX(initialCacheElementSize,2*size));
@@ -238,7 +238,7 @@ TYPE
 		END NewPosArrays;
 
 		(* Gets a previously allocated position array from the pool if available *)
-		PROCEDURE NewPosArray(VAR pArray : PosArray; size : LONGINT);
+		PROCEDURE NewPosArray(VAR pArray : PosArray; size : SIZE);
 		VAR
 			thisPosArray, lastPosArray : PosArray;
 		BEGIN
@@ -291,7 +291,7 @@ TYPE
 		END NewPosArray;
 
 		(* Allocates a new integer array if necessary *)
-		PROCEDURE NewIntegerArray(VAR iArray : IntegerArray; size : LONGINT);
+		PROCEDURE NewIntegerArray(VAR iArray : IntegerArray; size : SIZE);
 		BEGIN
 			IF iArray = NIL THEN
 				NEW(iArray,MAX(initialCacheElementSize,2*size));
@@ -301,7 +301,7 @@ TYPE
 		END NewIntegerArray;
 
 		(* Allocates a new string array if necessary *)
-		PROCEDURE NewStringArray(VAR sArray : Strings.StringArray; size : LONGINT);
+		PROCEDURE NewStringArray(VAR sArray : Strings.StringArray; size : SIZE);
 		BEGIN
 			IF sArray = NIL THEN
 				NEW(sArray,MAX(initialCacheElementSize,2*size));
@@ -311,7 +311,7 @@ TYPE
 		END NewStringArray;
 
 		(* Allocates a new character array if necessary *)
-		PROCEDURE NewCharArray(VAR cArray : CharArray; size : LONGINT);
+		PROCEDURE NewCharArray(VAR cArray : CharArray; size : SIZE);
 		BEGIN
 			IF cArray = NIL THEN
 				NEW(cArray,MAX(initialCacheElementSize,2*size));
@@ -331,7 +331,7 @@ TYPE
 		(* Gets a previously allocated string from the pool if available *)
 		PROCEDURE NewString(VAR string : Strings.String);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO initialCachePoolSize - 1 DO
 				IF ~stringPool[i].used THEN
@@ -346,7 +346,7 @@ TYPE
 		(* Puts the string back to the pool *)
 		PROCEDURE FreeString(string : Strings.String);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO initialCachePoolSize - 1 DO
 				IF string = stringPool[i].element THEN
@@ -359,7 +359,7 @@ TYPE
 		(* Gets a previously allocated one-character-string from the pool if available *)
 		PROCEDURE NewUString(VAR string : Texts.PUCS32String);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO 9 DO
 				IF ~uStringPool[i].used THEN
@@ -374,7 +374,7 @@ TYPE
 		(* Puts the one-character-string back to the pool *)
 		PROCEDURE FreeUString(string : Texts.PUCS32String);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO 9 DO
 				IF string = uStringPool[i].element THEN
@@ -391,10 +391,10 @@ TYPE
 	LineElement = OBJECT
 	VAR
 		next : LineElement;
-		id : LONGINT;
-		pos : LONGINT;
-		lineLength : LONGINT;
-		paragraphEmbeddingLevel : LONGINT;
+		id : SIZE;
+		pos : SIZE;
+		lineLength : SIZE;
+		paragraphEmbeddingLevel : SIZE;
 
 		textReaders : TextReaderArray;
 		dirty : BoolArray;
@@ -449,7 +449,7 @@ TYPE
 		END Init;
 
 		(* Inserts a line with a certain start position into the cache. The lines in the cache are sorted by their start position. *)
-		PROCEDURE InsertLine(pos : LONGINT);
+		PROCEDURE InsertLine(pos : SIZE);
 		VAR
 			thisElement, lastElement, newElement : LineElement;
 		BEGIN
@@ -496,7 +496,7 @@ TYPE
 
 		(* gets the start position of the next line or the start position of the same line if the line is actually
 		the last one in the text. *)
-		PROCEDURE GetNextPos(pos : LONGINT) : LONGINT;
+		PROCEDURE GetNextPos(pos : SIZE) : SIZE;
 		VAR
 			thisElement : LineElement;
 		BEGIN
@@ -519,7 +519,7 @@ TYPE
 		END GetNextPos;
 
 		(* removes a certain line - identified by its start position - from the cache *)
-		PROCEDURE RemoveLine(pos : LONGINT);
+		PROCEDURE RemoveLine(pos : SIZE);
 		VAR
 			thisElement, lastElement : LineElement;
 		BEGIN
@@ -546,7 +546,7 @@ TYPE
 		END RemoveLine;
 
 		(* changes all positions starting from a certain position by a certain value *)
-		PROCEDURE ChangePos(startPos, changeValue : LONGINT);
+		PROCEDURE ChangePos(startPos, changeValue : SIZE);
 		VAR
 			thisElement : LineElement;
 		BEGIN
@@ -563,7 +563,7 @@ TYPE
 		END ChangePos;
 
 		(* finds the line a certain position belongs to *)
-		PROCEDURE FindElement(pos : LONGINT; VAR thisElement : LineElement);
+		PROCEDURE FindElement(pos : SIZE; VAR thisElement : LineElement);
 		VAR
 			nextElement : LineElement;
 		BEGIN
@@ -611,7 +611,7 @@ TYPE
 	SegmentCache = OBJECT
 	VAR
 		first, last : LineElement;
-		nextId : LONGINT;
+		nextId : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -621,7 +621,7 @@ TYPE
 		END Init;
 
 		(* Inserts a segment with a certain start and end position into the cache. The next free id is assigned to the element. *)
-		PROCEDURE InsertSegment(start, end : LONGINT) : LONGINT;
+		PROCEDURE InsertSegment(start, end : SIZE) : SIZE;
 		VAR
 			thisElement, newElement : LineElement;
 		BEGIN
@@ -649,7 +649,7 @@ TYPE
 		END InsertSegment;
 
 		(* removes a certain segment - identified by its id - from the cache *)
-		PROCEDURE RemoveSegment(id : LONGINT);
+		PROCEDURE RemoveSegment(id : SIZE);
 		VAR
 			thisElement : LineElement;
 		BEGIN
@@ -682,7 +682,7 @@ TYPE
 		END RemoveSegment;
 
 		(* changes the start position of a certain element by a certain value *)
-		PROCEDURE ChangePos(id, changeValue : LONGINT);
+		PROCEDURE ChangePos(id, changeValue : SIZE);
 		VAR
 			thisElement : LineElement;
 		BEGIN
@@ -701,7 +701,7 @@ TYPE
 		END ChangePos;
 
 		(* finds the segment identified by a certain id *)
-		PROCEDURE FindElement(id : LONGINT; VAR thisElement : LineElement);
+		PROCEDURE FindElement(id : SIZE; VAR thisElement : LineElement);
 		BEGIN
 			thisElement := first;
 
@@ -763,7 +763,7 @@ TYPE
 		reformatted : BOOLEAN;
 		lineCache: LineCache;
 		segmentCache : SegmentCache;
-		trueTextLength : LONGINT;
+		trueTextLength : SIZE;
 		HL1* : HigherLevelProtocol1;
 		HL2* : HigherLevelProtocol2;
 		HL3* : HigherLevelProtocol3;
@@ -788,7 +788,7 @@ TYPE
 		reapplied. After reformatting, the text is ready for word-wrapping and later for reordering. *)
 		PROCEDURE ReformatText*;
 		VAR
-			thisPos, nextPos : LONGINT;
+			thisPos, nextPos : SIZE;
 			char : Texts.Char32;
 		BEGIN
 			(* do nothing if the text is not utf formatted *)
@@ -848,7 +848,7 @@ TYPE
 		(* Applies the steps introduced ReformatText to some few affected lines. This is used for faster on-the-fly
 		reformatting. When a character is inserted or deleted, only the current line and the line before (in some
 		cases) need reformatting. *)
-		PROCEDURE ReformatTextFrom*(pos, changed : LONGINT);
+		PROCEDURE ReformatTextFrom*(pos, changed : SIZE);
 		VAR
 			char : Texts.Char32;
 		BEGIN
@@ -907,10 +907,10 @@ TYPE
 
 
 		(* performs the reformatting steps from the algorithm line-wise *)
-		PROCEDURE ReformatParagraph(pos : LONGINT);
+		PROCEDURE ReformatParagraph(pos : SIZE);
 		VAR
 			cacheElement : LineElement;
-			start, end : LONGINT;
+			start, end : SIZE;
 		BEGIN
 			(* find the previously created cache entry for the current line *)
 			lineCache.FindElement(pos,cacheElement);
@@ -930,9 +930,9 @@ TYPE
 		END ReformatParagraph;
 
 		(* HL4. performs the reformatting steps from the algorithm for a single segment *)
-		PROCEDURE ReformatSegment*(start, end : LONGINT) : LONGINT;
+		PROCEDURE ReformatSegment*(start, end : SIZE) : SIZE;
 		VAR
-			thisId : LONGINT;
+			thisId : SIZE;
 			cacheElement : LineElement;
 		BEGIN
 			IF ~textReader.text.isUTF OR ~HL4 OR (segmentCache = NIL) THEN
@@ -950,7 +950,7 @@ TYPE
 		END ReformatSegment;
 
 		(* HL4. removes a certain segment from the cache *)
-		PROCEDURE RemoveSegment*(id : LONGINT);
+		PROCEDURE RemoveSegment*(id : SIZE);
 		BEGIN
 			IF ~textReader.text.isUTF OR ~HL4 OR (segmentCache = NIL) THEN
 				RETURN;
@@ -960,7 +960,7 @@ TYPE
 		END RemoveSegment;
 
 		(* HL4. changes the start position of a certain segment *)
-		PROCEDURE ChangeSegmentPos*(id, changeValue : LONGINT);
+		PROCEDURE ChangeSegmentPos*(id, changeValue : SIZE);
 		BEGIN
 			IF ~textReader.text.isUTF OR ~HL4 OR (segmentCache = NIL) THEN
 				RETURN;
@@ -970,10 +970,10 @@ TYPE
 		END ChangeSegmentPos;
 
 		(* reformats a part of the text (either a single line or a predefined segment *)
-		PROCEDURE ReformatClause(start, end : LONGINT; VAR cacheElement : LineElement);
+		PROCEDURE ReformatClause(start, end : SIZE; VAR cacheElement : LineElement);
 		VAR
 			charType : Strings.String;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			amm.NewString(charType);
 
@@ -1047,17 +1047,17 @@ TYPE
 		END ReformatClause;
 
 		(* Scans the text and applies the explicit embedding level of each character *)
-		PROCEDURE ApplyExplicitLevels(start, end : LONGINT; VAR cacheElement : LineElement);
+		PROCEDURE ApplyExplicitLevels(start, end : SIZE; VAR cacheElement : LineElement);
 		VAR
 			embeddingLevels : IntegerStack;
-			dummyEmbeddingLevel : LONGINT;
+			dummyEmbeddingLevel : SIZE;
 			overrideStati : IntegerStack;
-			dummyOverrideStatus : LONGINT;
+			dummyOverrideStatus : SIZE;
 			char : Texts.Char32;
 			charType : Strings.String;
-			nextLevel : LONGINT;
-			i : INTEGER;
-			lineLength : LONGINT;
+			nextLevel : SIZE;
+			i : SIZE;
+			lineLength : SIZE;
 			surplusLevels : LONGINT;
 			hlCharacterType  : Strings.String;
 			hlEmbeddingLevel : LONGINT;
@@ -1197,8 +1197,8 @@ TYPE
 		(* Scans through the text and resolves all weak types *)
 		PROCEDURE ResolveWeakTypes(VAR cacheElement : LineElement);
 		VAR
-			i,nextI : LONGINT;
-			pos, state, ENstate : LONGINT;
+			i, nextI, pos : SIZE;
+			state, ENstate : LONGINT;
 			passedBNs : IntegerStack;
 			charType : Strings.String;
 			lastCharType : Strings.String;
@@ -1504,7 +1504,7 @@ TYPE
 		(* Scan through the text and resolve neutral types *)
 		PROCEDURE ResolveNeutralTypes(VAR cacheElement : LineElement);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 			directionalType, hlCharacterType : Strings.String;
 			dummyInt : LONGINT;
 		BEGIN
@@ -1552,7 +1552,7 @@ TYPE
 		(* Scan through the text and resolve implicit levels *)
 		PROCEDURE ResolveImplicitLevels(VAR cacheElement : LineElement);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 
 			(* iterate through all characters of the paragraph *)
@@ -1578,7 +1578,7 @@ TYPE
 
 		(* Reorder an already reformatted line. The line is not necessarily the same line that has been reformatted before
 			but a whole part of it. *)
-		PROCEDURE ReorderLine*(start, length : LONGINT) : Texts.TextReader;
+		PROCEDURE ReorderLine*(start, length : SIZE) : Texts.TextReader;
 		VAR
 			cacheElement : LineElement;
 		BEGIN
@@ -1596,7 +1596,7 @@ TYPE
 		END ReorderLine;
 
 		(* Reorder an already reformatted segment. *)
-		PROCEDURE ReorderSegment*(id : LONGINT) : Texts.TextReader;
+		PROCEDURE ReorderSegment*(id : SIZE) : Texts.TextReader;
 		VAR
 			cacheElement : LineElement;
 		BEGIN
@@ -1612,14 +1612,14 @@ TYPE
 		END ReorderSegment;
 
 		(* Reorders a part of the text (either a single line or a predefined segment *)
-		PROCEDURE ReorderClause(VAR cacheElement : LineElement; start, length : LONGINT) : Texts.TextReader;
+		PROCEDURE ReorderClause(VAR cacheElement : LineElement; start, length : SIZE) : Texts.TextReader;
 		VAR
 			bidiTextReader : Texts.TextReader;
 			reorderedText : Texts.Text;
 			posArray, reversePosArray : PosArray;
-			i, newPos : LONGINT;
-			relStart: LONGINT;
-			maxLevel, minLevel : LONGINT;
+			i, newPos : SIZE;
+			relStart: SIZE;
+			maxLevel, minLevel : SIZE;
 			oneCharString : Texts.PUCS32String;
 			lastChar : Strings.String;
 		BEGIN
@@ -1750,9 +1750,9 @@ TYPE
 
 
 		(* Returns the position in the reordered text given its internal position and the start position of its line *)
-		PROCEDURE GetDisplayPosition*(pos, lineStart : LONGINT) : LONGINT;
+		PROCEDURE GetDisplayPosition*(pos, lineStart : SIZE) : SIZE;
 		VAR
-			relPos, relLineStart : LONGINT;
+			relPos, relLineStart : SIZE;
 			cacheElement : LineElement;
 			posArray : PosArray;
 		BEGIN
@@ -1788,9 +1788,9 @@ TYPE
 		END GetDisplayPosition;
 
 		(* Returns the internal position given its display position and the start position of its line *)
-		PROCEDURE GetInternalPosition*(pos, lineStart : LONGINT) : LONGINT;
+		PROCEDURE GetInternalPosition*(pos, lineStart : SIZE) : SIZE;
 		VAR
-			relPos, relLineStart : LONGINT;
+			relPos, relLineStart : SIZE;
 			cacheElement : LineElement;
 			posArray : PosArray;
 		BEGIN
@@ -1827,9 +1827,9 @@ TYPE
 		END GetInternalPosition;
 
 		(* Returns the characters implicit level *)
-		PROCEDURE GetImplicitLevel*(pos : LONGINT) : LONGINT;
+		PROCEDURE GetImplicitLevel*(pos : SIZE) : SIZE;
 		VAR
-			relPos : LONGINT;
+			relPos : SIZE;
 			cacheElement : LineElement;
 		BEGIN
 
@@ -1857,7 +1857,7 @@ TYPE
 		END GetImplicitLevel;
 
 		(* Gets the embedding level of the pargraph the character is a part of *)
-		PROCEDURE GetParagraphEmbeddingLevel*(pos : LONGINT) : LONGINT;
+		PROCEDURE GetParagraphEmbeddingLevel*(pos : SIZE) : SIZE;
 		VAR
 			cacheElement : LineElement;
 		BEGIN
@@ -1881,10 +1881,10 @@ TYPE
 
 
 		(* Returns the cached text reader of a line if available *)
-		PROCEDURE ReadyTextReader*(start : LONGINT; VAR isFirst : BOOLEAN) : Texts.TextReader;
+		PROCEDURE ReadyTextReader*(start : SIZE; VAR isFirst : BOOLEAN) : Texts.TextReader;
 		VAR
 			cacheElement : LineElement;
-			relStart : LONGINT;
+			relStart : SIZE;
 		BEGIN
 
 			(* if the text has not been reformatted yet or isn't even formatted in UTF, do nothing *)
@@ -1916,10 +1916,10 @@ TYPE
 		END ReadyTextReader;
 
 		(* Sets the a text reader to the cache at a certain position. This is only for contextually analyzed text readers! *)
-		PROCEDURE SetReadyTextReader*(start : LONGINT; textReader : Texts.TextReader);
+		PROCEDURE SetReadyTextReader*(start : SIZE; textReader : Texts.TextReader);
 		VAR
 			cacheElement : LineElement;
-			relStart : LONGINT;
+			relStart : SIZE;
 		BEGIN
 			(* if the text has not been reformatted yet or isn't even formatted in UTF, do nothing *)
 			IF (~reformatted) OR ~textReader.text.isUTF THEN
@@ -1940,7 +1940,7 @@ TYPE
 
 
 		(* Checks if the given position is the last one of its line *)
-		PROCEDURE IsLastCharacterInLine*(pos : LONGINT) : BOOLEAN;
+		PROCEDURE IsLastCharacterInLine*(pos : SIZE) : BOOLEAN;
 		VAR
 			cacheElement : LineElement;
 		BEGIN
@@ -1951,11 +1951,11 @@ TYPE
 
 
 		(* Finds the end of a paragraph. Since this procedure can be called before any reformatting, the cache can't be used *)
-		PROCEDURE FindEndOfParagraph(pos : LONGINT; VAR end : LONGINT);
+		PROCEDURE FindEndOfParagraph(pos : SIZE; VAR end : SIZE);
 		VAR
 			char : Texts.Char32;
 			charType : Strings.String;
-			textLength : LONGINT;
+			textLength : SIZE;
 		BEGIN
 
 			(* initialize the text reader and some necessary variables *)
@@ -1977,7 +1977,7 @@ TYPE
 
 
 		(* Finds the start of a paragraph. Since this procedure can be called before any reformatting, the cache can't be used *)
-		PROCEDURE FindStartOfParagraph(pos : LONGINT; VAR start : LONGINT);
+		PROCEDURE FindStartOfParagraph(pos : SIZE; VAR start : SIZE);
 		VAR
 			char : Texts.Char32;
 			charType : Strings.String;
@@ -2006,7 +2006,7 @@ TYPE
 
 		(* Mirrors a character if the rules allow it. A character is only mirrored if the current embedding level is odd
 			and the 'mirrored' property of the character is true. Consider HL6 if necessary. *)
-		PROCEDURE MirrorCharacter(VAR originalChar : Texts.Char32; embeddingLevel : LONGINT);
+		PROCEDURE MirrorCharacter(VAR originalChar : Texts.Char32; embeddingLevel : SIZE);
 		BEGIN
 			IF ODD(embeddingLevel) & unicodePropertyReader.IsMirroredChar(originalChar) THEN
 				originalChar := mirrorPropertyReader.GetMirroredChar(originalChar);
@@ -2017,9 +2017,9 @@ TYPE
 
 
 		(* Reverts all substrings between the minimum and the maximum level *)
-		PROCEDURE ReorderSubstrings(globalStart, fromLevel, toLevel : LONGINT; CONST levels : ARRAY OF LONGINT; VAR posArray : PosArray; lastCharType : Strings.String);
+		PROCEDURE ReorderSubstrings(globalStart, fromLevel, toLevel : SIZE; CONST levels : ARRAY OF SIZE; VAR posArray : PosArray; lastCharType : Strings.String);
 		VAR
-			i, start, end : LONGINT;
+			i, start, end : SIZE;
 		BEGIN
 
 			(* shortcut for arrays of length 1 *)
@@ -2056,9 +2056,9 @@ TYPE
 
 
 		(* Revert the substring marked by its start position and its length *)
-		PROCEDURE SwapSubstring(start, end: LONGINT; VAR posArray : ARRAY OF LONGINT);
+		PROCEDURE SwapSubstring(start, end: SIZE; VAR posArray : ARRAY OF SIZE);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO (end+1) DIV 2 - 1 DO
 				SwapPositions(start+i,start+end-i,posArray);
@@ -2066,9 +2066,9 @@ TYPE
 		END SwapSubstring;
 
 		(* Swap two entries in the position array *)
-		PROCEDURE SwapPositions(pos1, pos2 : LONGINT; VAR posArray : ARRAY OF LONGINT);
+		PROCEDURE SwapPositions(pos1, pos2 : SIZE; VAR posArray : ARRAY OF SIZE);
 		VAR
-			temp : LONGINT;
+			temp : SIZE;
 		BEGIN
 			temp := posArray[pos1];
 			posArray[pos1] := posArray[pos2];
@@ -2076,9 +2076,9 @@ TYPE
 		END SwapPositions;
 
 		(* Fill a line's position array with its real positions *)
-		PROCEDURE FillPositionArray(start : LONGINT; VAR posArray : ARRAY OF LONGINT);
+		PROCEDURE FillPositionArray(start : SIZE; VAR posArray : ARRAY OF SIZE);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(posArray) - 1 DO
 				posArray[i] := start + i;
@@ -2086,9 +2086,9 @@ TYPE
 		END FillPositionArray;
 
 		(* Look through a level array and find its maximum entry *)
-		PROCEDURE GetHighestLevel(start, length : LONGINT; CONST levels : ARRAY OF LONGINT) : LONGINT;
+		PROCEDURE GetHighestLevel(start, length : SIZE; CONST levels : ARRAY OF SIZE) : SIZE;
 		VAR
-			i, max : LONGINT;
+			i, max: SIZE;
 		BEGIN
 			max := 0;
 			FOR i := start TO start+length - 1 DO
@@ -2104,9 +2104,9 @@ TYPE
 		END GetHighestLevel;
 
 		(* Look through a level array and find its minimum odd entry *)
-		PROCEDURE GetLowestOddLevel(start, length : LONGINT; CONST levels : ARRAY OF LONGINT) : LONGINT;
+		PROCEDURE GetLowestOddLevel(start, length : SIZE; CONST levels : ARRAY OF SIZE) : SIZE;
 		VAR
-			i, min : LONGINT;
+			i, min: SIZE;
 		BEGIN
 			min := 61;
 			FOR i := start TO start + length - 1 DO
@@ -2124,7 +2124,7 @@ TYPE
 
 
 		(* Computes the next even level which is not higher than 60 *)
-		PROCEDURE GetNextEvenEmbeddingLevel(thisLevel : LONGINT; VAR nextLevel : LONGINT);
+		PROCEDURE GetNextEvenEmbeddingLevel(thisLevel : SIZE; VAR nextLevel : SIZE);
 		BEGIN
 			IF thisLevel > 59 THEN
 				nextLevel := thisLevel;
@@ -2139,7 +2139,7 @@ TYPE
 		END GetNextEvenEmbeddingLevel;
 
 		(* Computes the next odd level which is not higher than 61 *)
-		PROCEDURE GetNextOddEmbeddingLevel(thisLevel : LONGINT; VAR nextLevel : LONGINT);
+		PROCEDURE GetNextOddEmbeddingLevel(thisLevel : SIZE; VAR nextLevel : SIZE);
 		BEGIN
 			IF thisLevel > 60 THEN
 				nextLevel := thisLevel;
@@ -2155,7 +2155,7 @@ TYPE
 
 
 		(* Returns the character type of the higher of two levels *)
-		PROCEDURE GetBorderOfRunCharacterType(thisLevel, otherLevel : LONGINT; VAR result : Strings.String);
+		PROCEDURE GetBorderOfRunCharacterType(thisLevel, otherLevel : SIZE; VAR result : Strings.String);
 		BEGIN
 			IF (ODD(MAX(thisLevel,otherLevel))) THEN
 				result^ := "R";
@@ -2165,7 +2165,7 @@ TYPE
 		END GetBorderOfRunCharacterType;
 
 		(* Checks if the next non-separator/non-terminator is a European Number *)
-		PROCEDURE IsEuropeanNumberAdjacent(pos : LONGINT; terminators : BOOLEAN; VAR cacheElement : LineElement; VAR max : LONGINT; VAR state : LONGINT; VAR ENstate : LONGINT) : BOOLEAN;
+		PROCEDURE IsEuropeanNumberAdjacent(pos : SIZE; terminators : BOOLEAN; VAR cacheElement : LineElement; VAR max : SIZE; VAR state : LONGINT; VAR ENstate : LONGINT) : BOOLEAN;
 		VAR
 			ENstateBefore : LONGINT;
 			hlThisCharacterType : Strings.String;
@@ -2248,7 +2248,7 @@ TYPE
 		END IsEuropeanNumberAdjacent;
 
 		(* Checks if the next non-separator is an Arabic Number *)
-		PROCEDURE IsArabicNumberAdjacent(pos : LONGINT; VAR cacheElement : LineElement; VAR max : LONGINT; VAR state : LONGINT; VAR ENstate : LONGINT) : BOOLEAN;
+		PROCEDURE IsArabicNumberAdjacent(pos : SIZE; VAR cacheElement : LineElement; VAR max : SIZE; VAR state : LONGINT; VAR ENstate : LONGINT) : BOOLEAN;
 		VAR
 			hlThisCharacterType : Strings.String;
 		BEGIN
@@ -2305,7 +2305,7 @@ TYPE
 
 
 		(* Finds the first strong character from 'start' on without using the cache *)
-		PROCEDURE FindFirstStrongCharacter(start, end : LONGINT; VAR charType : Strings.String);
+		PROCEDURE FindFirstStrongCharacter(start, end : SIZE; VAR charType : Strings.String);
 		VAR
 			char : Texts.Char32;
 			strongCharFound : BOOLEAN;
@@ -2350,7 +2350,7 @@ TYPE
 		END IsNeutralCharacterType;
 
 		(* Returns the directional type considering borders of a run *)
-		PROCEDURE GetFinalDirectionalType(charType : Strings.String; thisLevel, otherLevel : LONGINT; VAR result : Strings.String);
+		PROCEDURE GetFinalDirectionalType(charType : Strings.String; thisLevel, otherLevel : SIZE; VAR result : Strings.String);
 		BEGIN
 
 			(* if the current position is at a border run determine the sor *)
@@ -2368,7 +2368,7 @@ TYPE
 
 
 		(* Compares a directional type with the one of its non-Neutral successor *)
-		PROCEDURE HasSameDirectionalType(charType : Strings.String; thisPos : LONGINT; cacheElement : LineElement) : BOOLEAN;
+		PROCEDURE HasSameDirectionalType(charType : Strings.String; thisPos : SIZE; cacheElement : LineElement) : BOOLEAN;
 		VAR
 			hlThisCharacterType : Strings.String;
 			dummyInt : LONGINT;
@@ -2416,7 +2416,7 @@ TYPE
 		(* Scans the line cache for invalid lines and removes them *)
 		PROCEDURE SweepCache;
 		VAR
-			thisPos, lastPos : LONGINT;
+			thisPos, lastPos : SIZE;
 			char : Texts.Char32;
 			charType : Strings.String;
 		BEGIN
@@ -2458,7 +2458,7 @@ TYPE
 
 
 		(* Print a certain paragraph's original character types *)
-		PROCEDURE PrintOriginalTypedParagraph(start,end : LONGINT);
+		PROCEDURE PrintOriginalTypedParagraph(start,end : SIZE);
 		VAR
 			char : Texts.Char32;
 			charType : Strings.String;
@@ -2490,9 +2490,9 @@ TYPE
 
 
 		(* Print a certain paragraph's character types after reformatting *)
-		PROCEDURE PrintCurrentTypedParagraph(start, end : LONGINT);
+		PROCEDURE PrintCurrentTypedParagraph(start, end : SIZE);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 			type: Strings.String;
 			cacheElement : LineElement;
 		BEGIN
@@ -2515,7 +2515,7 @@ TYPE
 
 
 		(* Print a certain paragraph's character utf-codes *)
-		PROCEDURE PrintCodedParagraph(start, end : LONGINT);
+		PROCEDURE PrintCodedParagraph(start, end : SIZE);
 		VAR
 			char : Texts.Char32;
 		BEGIN
@@ -2535,7 +2535,7 @@ TYPE
 		END PrintCodedParagraph;
 
 		(* Print a certain line's character utf-codes *)
-		PROCEDURE PrintCodedLine(textReader : Texts.TextReader; start, end : LONGINT);
+		PROCEDURE PrintCodedLine(textReader : Texts.TextReader; start, end : SIZE);
 		VAR
 			char : Texts.Char32;
 		BEGIN
@@ -2562,9 +2562,9 @@ TYPE
 		END PrintLeveledText;
 
 		(* Print a certain paragraph's character embedding levels *)
-		PROCEDURE PrintLeveledParagraph(start, end : LONGINT);
+		PROCEDURE PrintLeveledParagraph(start, end : SIZE);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 			cacheElement : LineElement;
 		BEGIN
 			lineCache.FindElement(start,cacheElement);
@@ -2581,7 +2581,7 @@ TYPE
 		(* Print a certain line's character embedding levels *)
 		PROCEDURE PrintLineEmbeddingLevels(CONST levels : IntegerArray);
 		VAR
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			KernelLog.Ln;
 			KernelLog.String("Printing line levels:"); KernelLog.Ln;
@@ -2604,12 +2604,12 @@ TYPE
 	(* HL1. Override P3, and set the paragraph level explicitly.
 		The function has reading access to the whole text and gets the start and end position of the clause of interest. It returns
 		the paragraph embedding level for this clause. *)
-	HigherLevelProtocol1* = PROCEDURE(textReader : Texts.TextReader; start, end : LONGINT) : LONGINT;
+	HigherLevelProtocol1* = PROCEDURE(textReader : Texts.TextReader; start, end : SIZE) : LONGINT;
 
 	(* HL2. Override W2, and set EN or AN explicitly.
 		The function gets access to the whole cache line, the current position and the last strong type. It computes the character
 		type for the character at the given position. *)
-	HigherLevelProtocol2* = PROCEDURE(cacheLine : LineElement; pos, lastStrongType : LONGINT) : Strings.String;
+	HigherLevelProtocol2* = PROCEDURE(cacheLine : LineElement; pos: SIZE; lastStrongType : LONGINT) : Strings.String;
 
 	(* HL3. Emulate directional overrides or embedding codes.
 		The function gets access to the characters, previously computed embedding levels, original and newly computed character
@@ -2623,7 +2623,7 @@ TYPE
 		The function gets access to the whole cache line, the current position, the character type of the current character and
 		the position in the algorithm where the function is called. It defines the current state and ENstate on which the algorithm
 		will operate further on. If it returns false, the algorithm is performed normally for this character. *)
-	HigherLevelProtocol5* = PROCEDURE(cacheElement : LineElement; pos : LONGINT; VAR thisCharacterType : Strings.String;
+	HigherLevelProtocol5* = PROCEDURE(cacheElement : LineElement; pos : SIZE; VAR thisCharacterType : Strings.String;
 							VAR state, ENstate : LONGINT; placeOfVenue : LONGINT) : BOOLEAN;
 
 	(* HL6. Additional mirroring.

@@ -40,7 +40,7 @@ TYPE
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ CheckScrollbars; 
 		PROCEDURE ^ ScrollbarChanged(sender, data: ANY); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^  & Init*; 
 	END ScrollPanel; 
 
@@ -73,7 +73,7 @@ TYPE
 		PROCEDURE ^ SetConfiguration(config: Installer.Configuration); 
 		PROCEDURE ^ GetConfiguration(): Installer.Configuration; 
 		PROCEDURE ^ IsValidConfiguration(w: Streams.Writer): BOOLEAN; 
-		PROCEDURE ^ CreateLine(lineNbr: LONGINT): WMStandardComponents.Panel; 
+		PROCEDURE ^ CreateLine(lineNbr: SIZE): WMStandardComponents.Panel; 
 		PROCEDURE ^ ClickHandler(sender, data: ANY); 
 		PROCEDURE ^ ApplyConfiguration; 
 		PROCEDURE ^ NewLabel(CONST caption: ARRAY OF CHAR; width: LONGINT): WMStandardComponents.Label; 
@@ -119,7 +119,7 @@ TYPE
 		selection, lockedSelection: WMPartitionsComponents.Selection; 
 		opened: BOOLEAN; 
 
-		PROCEDURE ^ Resizing*(VAR width, height: LONGINT); 
+		PROCEDURE ^ Resizing*(VAR width, height: SIZE); 
 		PROCEDURE ^ ShowHelpText; 
 		PROCEDURE ^ GetDiskPartString(selection: WMPartitionsComponents.Selection): Strings.String; 
 		PROCEDURE ^ ReallyDoInstallation(selection: WMPartitionsComponents.Selection): BOOLEAN; 
@@ -148,7 +148,7 @@ TYPE
 		PROCEDURE ^ CreatePageSelectPartition(): WMComponents.VisualComponent; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ NewButton(): WMStandardComponents.Button; 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^  & New*; 
 	END Window; 

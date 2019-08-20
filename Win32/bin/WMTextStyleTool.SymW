@@ -73,11 +73,11 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ GetStyle(sender, data: ANY); 
 		PROCEDURE ^ SetCustomStyle(sender, data: ANY); 
-		PROCEDURE ^ StyleDrop(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StyleDrop(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
-		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
-		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ Close*; 
 	END AdHocStyleWindow; 
@@ -124,13 +124,13 @@ TYPE
 		PROCEDURE ^ ImportCharacterStyles(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ RemoveCHandler(sender, data: ANY); 
 		PROCEDURE ^ ApplyCHandler(sender, data: ANY); 
-		PROCEDURE ^ AlignHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ AlignHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ AlignPopupHandler(sender, data: ANY); 
-		PROCEDURE ^ StyleHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StyleHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
-		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
-		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
 	END StyleEditor; 
 VAR 
@@ -138,9 +138,9 @@ VAR
 	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
 
-	PROCEDURE ^ CreateStyleName(CONST fontname: ARRAY OF CHAR; style: SET; size, fgColor, bgColor: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ CreateStyleName(CONST fontname: ARRAY OF CHAR; style: SET; size: SIZE; fgColor, bgColor: LONGINT; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
-	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value, currentSize: LONGINT; VAR newSize: LONGINT); 
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: LONGINT; currentSize: SIZE; VAR newSize: SIZE); 
 	PROCEDURE ^ ChangeFontSize(VAR attr: Texts.Attributes; userData: ANY); 
 	PROCEDURE ^ ChangeFontColor(VAR attr: Texts.Attributes; userData: ANY); 
 	PROCEDURE ^ ChangeFontStyle(VAR attr: Texts.Attributes; userData: ANY); 

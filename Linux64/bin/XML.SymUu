@@ -33,12 +33,12 @@ TYPE
 
 	Content* = OBJECT 
 	VAR 
-		pos: LONGINT; 
+		pos: Streams.Position; 
 		previous, next: Content; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetPos*(): LONGINT; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
+		PROCEDURE ^ GetPos*(): Streams.Position; 
+		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY; level: LONGINT); 
 	END Content; 
 
@@ -262,18 +262,18 @@ TYPE
 	Chars* = OBJECT (Content)
 
 		PROCEDURE ^ GetStr*(): String; 
-		PROCEDURE ^ GetLength*(): LONGINT; 
+		PROCEDURE ^ GetLength*(): SIZE; 
 		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY; level: LONGINT); 
 	END Chars; 
 
 	ArrayChars* = OBJECT (Chars)
 	VAR 
 		str: String; 
-		len: LONGINT; 
+		len: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetStr*(): String; 
-		PROCEDURE ^ GetLength*(): LONGINT; 
+		PROCEDURE ^ GetLength*(): SIZE; 
 		PROCEDURE ^ SetStr*(CONST str: ARRAY OF CHAR); 
 		PROCEDURE ^ SetStrAsString*(str: String); 
 	END ArrayChars; 

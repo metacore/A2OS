@@ -50,7 +50,7 @@ TYPE
 		selectionON* : BOOLEAN;
 		snapOnCreate: BOOLEAN;
 		activeTool*: Strings.String;
-		x0, y0, x1, y1, dx, dy, gx, gy, vx0, vy0, vx1, vy1: LONGINT;
+		x0, y0, x1, y1, dx, dy, gx, gy, vx0, vy0, vx1, vy1: SIZE;
 		fx0, fy0, fx1, fy1, tx0, ty0, tx1, ty1: REAL;
 		res, res2: LONGINT;
 		down, move, resize, addobject, addguide, moveguide, oldpointer: BOOLEAN;
@@ -62,7 +62,7 @@ TYPE
 
 		props*: PropertyWindow;
 		propertyOpen*: BOOLEAN;
-		propsX*, propsY*: LONGINT;
+		propsX*, propsY*: SIZE;
 
 (*		nObj*: NewObjectDialog;
 		newObjOpen*: BOOLEAN;
@@ -464,7 +464,7 @@ TYPE
 			gridDivision := gDiv;
 		END SetGrid;
 
-		PROCEDURE WheelMove*(dz: LONGINT);
+		PROCEDURE WheelMove*(dz: SIZE);
 		BEGIN
 			IF ~previewMode THEN
 				IF wheelMode = 0 THEN								(* wheel zoom *)
@@ -482,7 +482,7 @@ TYPE
 			END;
 		END WheelMove;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR
 (*			cpage: DTPData.PageObject;
 			cframe: DTPData.FrameObject;
@@ -586,14 +586,14 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		VAR
 (*			cpage: DTPData.PageObject;
 			cframe: DTPData.FrameObject;
 			cguide: DTPData.GuideObject;
 *)			fx, fy, tx, ty: REAL;
 			xs, ys, xe, ye, w, h: LONGINT;
-			oldx1, oldy1 : LONGINT;
+			oldx1, oldy1 : SIZE;
 			pointerres: LONGINT;
 			manager: WMWindowManager.WindowManager;
 			snapLeft, snapTop, snapRight, snapBottom : BOOLEAN;
@@ -795,7 +795,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		VAR string, tempString, tempString2: ARRAY 32 OF CHAR;
 			content, activeContent: DTPData.ContentObject;
 			resguide: DTPData.GuideObject;
@@ -971,7 +971,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT);
+		PROCEDURE KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE);
 		VAR
 (*			cpage: DTPData.PageObject;
 			cframe: DTPData.FrameObject;
@@ -1297,7 +1297,7 @@ TYPE
 			RETURN result;
 		END WillSnap;
 
-		PROCEDURE IsInRuler*(x, y: LONGINT): LONGINT;
+		PROCEDURE IsInRuler*(x, y: SIZE): LONGINT;
 		VAR result: LONGINT;
 		BEGIN
 			result := -2;
@@ -1311,7 +1311,7 @@ TYPE
 			RETURN result;
 		END IsInRuler;
 
-		PROCEDURE IsInFrameHandle*(x, y: LONGINT): LONGINT;
+		PROCEDURE IsInFrameHandle*(x, y: SIZE): LONGINT;
 		VAR res, xs, ys, xe, ye, w, h: LONGINT;
 			cpage: DTPData.PageObject;
 			cframe: DTPData.FrameObject;
@@ -1796,7 +1796,7 @@ TYPE
 			Invalidate;
 		END InvalidateCurrentFrame;
 
-		PROCEDURE SetContentPropsPosition*(x, y: LONGINT);
+		PROCEDURE SetContentPropsPosition*(x, y: SIZE);
 		BEGIN
 			propsX := x; propsY := y;
 		END SetContentPropsPosition;

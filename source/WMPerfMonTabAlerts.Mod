@@ -87,7 +87,7 @@ TYPE
 		END HandleButtons;
 
 		PROCEDURE ResetSelectedAlerts;
-		VAR scol, srow, ecol, erow, row: LONGINT; res: WORD; ptr : ANY; cellData : CellData; msg : ARRAY 128 OF CHAR;
+		VAR scol, srow, ecol, erow, row: SIZE; res: WORD; ptr : ANY; cellData : CellData; msg : ARRAY 128 OF CHAR;
 		BEGIN
 			rulesGrid.Acquire;
 			rulesGrid.model.Acquire;
@@ -106,7 +106,7 @@ TYPE
 		END ResetSelectedAlerts;
 
 		PROCEDURE RemoveSelectedAlerts() : LONGINT;
-		VAR scol, srow, ecol, erow, row : LONGINT; ptr : ANY; cellData : CellData; nofRemoved : LONGINT;
+		VAR scol, srow, ecol, erow, row : SIZE; ptr : ANY; cellData : CellData; nofRemoved : LONGINT;
 		BEGIN
 			rulesGrid.Acquire;
 			rulesGrid.model.Acquire;
@@ -176,7 +176,7 @@ TYPE
 		END UpdateStatusLabel;
 
 		PROCEDURE ComputeAlertInfo(alerts : Alerts.Alerts; VAR nbrOfRules, nbrOfAlerts : LONGINT);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			nbrOfRules := 0; nbrOfAlerts := 0;
 			IF alerts # NIL THEN
@@ -213,7 +213,7 @@ TYPE
 		VAR
 			gridRow, alertsGridRow : LONGINT; alerts : Alerts.Alerts;
 			nbrOfRules, nbrOfAlerts : LONGINT;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			alerts := Alerts.GetAlerts();
 			ComputeAlertInfo(alerts, nbrOfRules, nbrOfAlerts);

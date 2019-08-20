@@ -34,7 +34,7 @@ CONST
 TYPE
 
 	Entry* = RECORD
-		type- : LONGINT;
+		type- : WORD;
 		source- : Files.FileName;
 		position-: Streams.Position;
 		message- : ARRAY 256 OF CHAR;
@@ -49,9 +49,9 @@ TYPE
 		entries : EntryArray;
 		nofEntries- : LONGINT;
 
-		nofInformations: LONGINT;
-		nofWarnings : LONGINT;
-		nofErrors : LONGINT;
+		nofInformations: SIZE;
+		nofWarnings : SIZE;
+		nofErrors : SIZE;
 
 		lock : Locks.RWLock;
 
@@ -131,7 +131,7 @@ TYPE
 
 		(* Make sure that <entries> cannot hold at least one more entry *)
 		PROCEDURE CheckEntriesSize;
-		VAR newEntries : EntryArray; i : LONGINT;
+		VAR newEntries : EntryArray; i : SIZE;
 		BEGIN
 			ASSERT(lock.HasWriteLock());
 			IF (entries = NIL) THEN
@@ -161,7 +161,7 @@ TYPE
 		END Information;
 
 		PROCEDURE Exists(type: WORD; position : Streams.Position; CONST message: ARRAY OF CHAR) : BOOLEAN;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			i := 0;
 			WHILE (i < nofEntries) & ((entries[i].type # type) OR (entries[i].position # position) OR (entries[i].message # message)) DO
@@ -170,7 +170,7 @@ TYPE
 			RETURN (nofEntries > 0) & (i < nofEntries);
 		END Exists;
 
-		PROCEDURE Add(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: LONGINT);
+		PROCEDURE Add(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
 		BEGIN
 			AcquireWrite;
 			IF ~Exists(type, position, message) THEN
@@ -213,10 +213,10 @@ TYPE
 		END GetSummary;
 
 		PROCEDURE Synchronize(VAR entries : ViewEntryArray; VAR nofEntries : LONGINT);
-		VAR dest : LONGINT;
+		VAR dest : SIZE;
 
-			PROCEDURE Insert(type: LONGINT);
-			VAR i: LONGINT;
+			PROCEDURE Insert(type: WORD);
+			VAR i: SIZE;
 			BEGIN
 				FOR i := 0 TO nofEntries - 1 DO
 					IF SELF.entries[i].type = type THEN
@@ -247,7 +247,7 @@ TYPE
 
 TYPE
 
-	CompareProcedure = PROCEDURE(CONST entry1, entry2 : Entry) : LONGINT;
+	CompareProcedure = PROCEDURE(CONST entry1, entry2 : Entry) : WORD;
 
 
 	ViewEntry* = RECORD (Entry)
@@ -261,7 +261,7 @@ TYPE
 		entryValid- : BOOLEAN;
 		entry- : ViewEntry;
 
-		PROCEDURE &Init(entryValid : BOOLEAN; CONST entry : ViewEntry; column, row : LONGINT);
+		PROCEDURE &Init(entryValid : BOOLEAN; CONST entry : ViewEntry; column, row : SIZE);
 		BEGIN
 			SELF.entryValid := entryValid;
 			SELF.entry := entry;
@@ -328,7 +328,7 @@ TYPE
 
 		PROCEDURE OnClickHandler(sender, data : ANY);
 		CONST Position = 0;
-		VAR column, row, newMode : LONGINT;
+		VAR column, row : SIZE; newMode: WORD;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.OnClickHandler, sender, data)
 			ELSE
@@ -363,7 +363,7 @@ TYPE
 		END OnClickHandler;
 
 		PROCEDURE ShowMarkers(enable : BOOLEAN);
-		VAR i, j : LONGINT;
+		VAR i, j : SIZE;
 		BEGIN
 			Acquire;
 			IF (enable # showMarkersI) THEN
@@ -382,7 +382,7 @@ TYPE
 			Release;
 		END ShowMarkers;
 
-		PROCEDURE SortBy(mode : LONGINT);
+		PROCEDURE SortBy(mode : WORD);
 		BEGIN
 			ASSERT(
 				(mode = SortByTypeAscending) OR (mode = SortByTypeDescending) OR
@@ -402,7 +402,7 @@ TYPE
 			Release;
 		END SortBy;
 
-		PROCEDURE GetCellData*(column, row : LONGINT) : ANY; (* override *)
+		PROCEDURE GetCellData*(column, row : SIZE) : ANY; (* override *)
 		VAR info : CellInfo; entryValid : BOOLEAN; entry : ViewEntry;
 		BEGIN
 			Acquire;
@@ -418,7 +418,7 @@ TYPE
 		END GetCellData;
 
 		PROCEDURE AddPositionMarkers;
-		VAR picture : Files.FileName; i, j : LONGINT;
+		VAR picture : Files.FileName; i, j : SIZE;
 		BEGIN (* caller holds lock *)
 			IF (textViews # NIL) THEN
 				FOR i := 0 TO nofEntries - 1 DO
@@ -436,7 +436,7 @@ TYPE
 						FOR j := 0 TO LEN(textViews) - 1 DO
 							entries[i].pos[j] := textViews[j].CreatePositionMarker();
 							IF (picture # "") THEN entries[i].pos[j].Load(picture); END;
-							entries[i].pos[j].SetPosition(entries[i].position);
+							entries[i].pos[j].SetPosition(entries[i].position(SIZE));
 						END;
 					END;
 
@@ -445,7 +445,7 @@ TYPE
 		END AddPositionMarkers;
 
 		PROCEDURE RemovePositionMarkers;
-		VAR i, j : LONGINT;
+		VAR i, j : SIZE;
 		BEGIN (* caller holds lock *)
 			IF (textViews # NIL) THEN
 				FOR i := 0 TO nofEntries-1 DO
@@ -459,8 +459,8 @@ TYPE
 			END;
 		END RemovePositionMarkers;
 
-		PROCEDURE GetFirstPosition*(VAR positions : ARRAY OF LONGINT; VAR type: LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE GetFirstPosition*(VAR positions : ARRAY OF SIZE; VAR type: LONGINT);
+		VAR i : SIZE;
 		BEGIN
 			Acquire;
 			ASSERT((textViews # NIL) & (LEN(textViews) = LEN(positions)));
@@ -479,8 +479,8 @@ TYPE
 			Release;
 		END GetFirstPosition;
 
-		PROCEDURE GetNearestPosition*(cursorPosition, editorIndex : LONGINT; forward : BOOLEAN; VAR nearestPosition : LONGINT; VAR number : LONGINT);
-		VAR pos, i : LONGINT;
+		PROCEDURE GetNearestPosition*(cursorPosition, editorIndex : SIZE; forward : BOOLEAN; VAR nearestPosition : SIZE; VAR number : SIZE);
+		VAR pos, i : SIZE;
 		BEGIN
 			Acquire;
 			ASSERT((textViews # NIL) & (0 <= editorIndex) & (editorIndex < LEN(textViews)));
@@ -503,13 +503,13 @@ TYPE
 			Release;
 		END GetNearestPosition;
 
-		PROCEDURE SelectEntry*(number : LONGINT; moveTo : BOOLEAN);
+		PROCEDURE SelectEntry*(number : SIZE; moveTo : BOOLEAN);
 		BEGIN
 			Acquire;
 			IF (0 <= number) & (number <= nofEntries) THEN
-				SetSelection(0, number, 2, number);
+				SetSelection(0, number(LONGINT), 2, number(LONGINT));
 				IF moveTo THEN
-					SetTopPosition(0, number, TRUE);
+					SetTopPosition(0, number(LONGINT), TRUE);
 				END;
 			END;
 			Release;
@@ -536,7 +536,7 @@ TYPE
 		END SortEntries;
 
 		PROCEDURE SetTextViews*(CONST textViews : ARRAY OF WMTextView.TextView);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Acquire;
 			RemovePositionMarkers;
@@ -575,7 +575,7 @@ TYPE
 			END;
 		END ModelChanged;
 
-		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
+		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : SIZE; state : SET; x, y : SIZE);
 		VAR color: WMGraphics.Color; str : ARRAY 128 OF CHAR;
 		BEGIN
 			color := WMGraphics.RGBAToColor(255, 255, 255, 255);
@@ -634,8 +634,8 @@ VAR
 	PrototypeShowMarkers : WMProperties.BooleanProperty;
 	PrototypeSortBy : WMProperties.Int32Property;
 
-PROCEDURE CompareByPosition(CONST e1, e2 : Entry) : LONGINT;
-VAR result : LONGINT;
+PROCEDURE CompareByPosition(CONST e1, e2 : Entry) : WORD;
+VAR result : WORD;
 BEGIN
 	IF (e1.position < e2.position) THEN result := Less;
 	ELSIF (e1.position > e2.position) THEN result := Greater;
@@ -645,8 +645,8 @@ BEGIN
 	RETURN result;
 END CompareByPosition;
 
-PROCEDURE CompareByType(CONST e1, e2 : Entry) : LONGINT;
-VAR result : LONGINT;
+PROCEDURE CompareByType(CONST e1, e2 : Entry) : WORD;
+VAR result : WORD;
 BEGIN
 	IF (e1.type < e2.type) THEN result := Less;
 	ELSIF (e1.type > e2.type) THEN result := Greater;

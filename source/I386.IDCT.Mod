@@ -29,10 +29,10 @@ VAR
 	RNDINVROW, RNDINVCOL, RNDINVCORR: INTEGER;
 	M128onecorr, M128roundinvrow, M128roundinvcol, M128roundinvcorr, M128tg116, M128tg216, M128tg316, M128cos416: POINTER TO ARRAY OF INTEGER;
 	M128tabi04, M128tabi17, M128tabi26, M128tabi35: POINTER TO ARRAY OF INTEGER;
-	tabi04adr, tabi17adr, tabi26adr, tabi35adr, onecorradr, roundinvrowadr, roundinvcoladr, roundinvcorradr, tg116adr, tg216adr, tg316adr, cos416adr: LONGINT;
-	Transform*: PROCEDURE (src, dst: LONGINT);
+	tabi04adr, tabi17adr, tabi26adr, tabi35adr, onecorradr, roundinvrowadr, roundinvcoladr, roundinvcorradr, tg116adr, tg216adr, tg316adr, cos416adr: ADDRESS;
+	Transform*: PROCEDURE (src, dst: ADDRESS);
 	intTab: POINTER TO ARRAY OF INTEGER;
-	status*: LONGINT;
+	status*: WORD;
 
 
 PROCEDURE -MOVDQA1;
@@ -106,8 +106,8 @@ END MOVDQA5;
 	END SetRDI;
 
 (* Pay attention if you change local varss. In the inline procedures there are direct address variable *)
-PROCEDURE TransformSSE2*(src, dst: LONGINT);
-VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr, ecx: LONGINT;
+PROCEDURE TransformSSE2*(src, dst: ADDRESS);
+VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr: ADDRESS; ecx: SIZE;
 BEGIN {UNCOOPERATIVE}
 
 	tg116 := tg116adr;
@@ -368,8 +368,8 @@ CODE{SYSTEM.i386, SYSTEM.SSE, SYSTEM.MMX}
 END MOVQ10;
 
 (* Pay attention if you change local varss. In the inline procedures there are direct address variable *)
-PROCEDURE TransformSSE*(src, dst: LONGINT);
-VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr, ecx: LONGINT;
+PROCEDURE TransformSSE*(src, dst: ADDRESS);
+VAR tg116, tg216, tg316, cos416, onecorr, roundinvcol, roundinvcorr: ADDRESS; ecx: SIZE;
 BEGIN {UNCOOPERATIVE}
 
 	tg116 := tg116adr;
@@ -559,8 +559,8 @@ CODE{SYSTEM.i386, SYSTEM.SSE, SYSTEM.MMX}
 	MOVQ		[EDX+112], MMX5
 END DCT8INVCOLSSE;
 
-PROCEDURE TransformINT*(src, dst: LONGINT);
-VAR i: LONGINT;
+PROCEDURE TransformINT*(src, dst: ADDRESS);
+VAR i: SIZE;
 BEGIN
 
 	Row(src + 0);
@@ -599,10 +599,10 @@ END TransformINT;
 *)
 
 
-PROCEDURE Row( src: LONGINT);
+PROCEDURE Row( src: ADDRESS);
 VAR
 	x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
-	adr, tempAdr: LONGINT;
+	adr, tempAdr: ADDRESS;
 BEGIN
 	adr := src;
 
@@ -691,10 +691,10 @@ END Row;
 
 	 where: c[0]    = 1/1024 c[1..7] = (1/1024)*sqrt(2)
 *)
-PROCEDURE Col( src: LONGINT);
+PROCEDURE Col( src: ADDRESS);
 VAR
 	x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
-	adr, tempAdr, sourceAdr: LONGINT;
+	adr, tempAdr, sourceAdr: ADDRESS;
 BEGIN
 	adr := src;
 
@@ -779,7 +779,7 @@ BEGIN
 END Col;
 
 PROCEDURE FillTablesSSE2;
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	NEW(M128onecorr, 12);
 	FOR i := 4 TO 11 DO M128onecorr[i] := 1 END;
@@ -861,7 +861,7 @@ BEGIN
 END FillTablesSSE2;
 
 PROCEDURE FillTablesSSE;
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	NEW(M128onecorr, 4);
 	FOR i := 0 TO 3 DO M128onecorr[i] := 1 END;

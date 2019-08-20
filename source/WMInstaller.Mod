@@ -74,7 +74,7 @@ TYPE
 		END Resized;
 
 		PROCEDURE CheckScrollbars;
-		VAR availableHeight, neededHeight : LONGINT;
+		VAR availableHeight, neededHeight : SIZE;
 		BEGIN
 			IF (content = NIL) THEN RETURN; END;
 			availableHeight := scrollPanel.bounds.GetHeight();
@@ -94,7 +94,7 @@ TYPE
 			IF (content # NIL) THEN content.bounds.SetTop(-scrollbar.pos.Get()); END;
 		END ScrollbarChanged;
 
-		PROCEDURE WheelMove*(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : SIZE);
 		BEGIN
 			IF (scrollbar.visible.Get()) THEN
 				scrollbar.pos.Set(scrollbar.pos.Get() + dz * MouseWheelMultiplier);
@@ -129,7 +129,7 @@ TYPE
 		allBtn, noneBtn : WMStandardComponents.Button;
 
 		PROCEDURE ClickHandler(sender, data : ANY);
-		VAR checkbox : WMStandardComponents.Checkbox; msg : ARRAY 512 OF CHAR;i : LONGINT; install : BOOLEAN;
+		VAR checkbox : WMStandardComponents.Checkbox; msg : ARRAY 512 OF CHAR; i : SIZE; install : BOOLEAN;
 		BEGIN
 			FOR i := 0 TO LEN(packageList)-1 DO
 				checkbox := packageList[i].user (WMStandardComponents.Checkbox);
@@ -149,7 +149,7 @@ TYPE
 		END ClickHandler;
 
 		PROCEDURE GetTotalSize(VAR size, sizeOnDisk : LONGINT);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			size := 0; sizeOnDisk := 0;
 			IF (packageList = NIL) THEN RETURN; END;
@@ -221,7 +221,7 @@ TYPE
 		END CreatePackagePanel;
 
 		PROCEDURE SetPackages(packages : Installer.Packages);
-		VAR packagePanel : WMStandardComponents.Panel; panel : WMStandardComponents.Panel; height, i : LONGINT;
+		VAR packagePanel : WMStandardComponents.Panel; panel : WMStandardComponents.Panel; height, i : SIZE;
 		BEGIN
 			ASSERT(packages # NIL);
 			height := 0;
@@ -245,7 +245,7 @@ TYPE
 		END SetPackages;
 
 		PROCEDURE HandleButtons(sender, data : ANY);
-		VAR newState, i : LONGINT; checkbox : WMStandardComponents.Checkbox; ignore : ARRAY 512 OF CHAR; install : BOOLEAN;
+		VAR newState : LONGINT; i : SIZE; checkbox : WMStandardComponents.Checkbox; ignore : ARRAY 512 OF CHAR; install : BOOLEAN;
 		BEGIN
 			IF (sender = allBtn) THEN
 				newState := WMStandardComponents.Checked;
@@ -308,7 +308,7 @@ TYPE
 		panel : WMStandardComponents.Panel;
 
 		PROCEDURE CreateConfigPanel() : WMStandardComponents.Panel;
-		VAR panel, line : WMStandardComponents.Panel; lineNbr, height : LONGINT;
+		VAR panel, line : WMStandardComponents.Panel; lineNbr, height : SIZE;
 		BEGIN
 			NEW(panel); panel.alignment.Set(WMComponents.AlignNone);
 
@@ -343,7 +343,7 @@ TYPE
 			RETURN config.CheckConfiguration(w);
 		END IsValidConfiguration;
 
-		PROCEDURE CreateLine(lineNbr : LONGINT) : WMStandardComponents.Panel;
+		PROCEDURE CreateLine(lineNbr : SIZE) : WMStandardComponents.Panel;
 		VAR panel : WMStandardComponents.Panel;
 		BEGIN
 			NEW(panel); panel.alignment.Set(WMComponents.AlignTop);
@@ -403,7 +403,7 @@ TYPE
 		END CreateLine;
 
 		PROCEDURE ClickHandler(sender, data : ANY);
-		VAR checkbox : WMStandardComponents.Checkbox; msg : ARRAY 512 OF CHAR; i : LONGINT; doStep : BOOLEAN;
+		VAR checkbox : WMStandardComponents.Checkbox; msg : ARRAY 512 OF CHAR; i : SIZE; doStep : BOOLEAN;
 		BEGIN
 			i := 0;
 			LOOP
@@ -570,7 +570,7 @@ TYPE
 		selection, lockedSelection : WMPartitionsComponents.Selection;
 		opened : BOOLEAN;
 
-		PROCEDURE Resizing*(VAR width, height : LONGINT);
+		PROCEDURE Resizing*(VAR width, height : SIZE);
 		BEGIN
 			IF width < WindowMinWidth THEN width := WindowMinWidth; END;
 			IF height < WindowMinHeight THEN height := WindowMinHeight; END;
@@ -1119,7 +1119,7 @@ TYPE
 			RETURN button;
 		END NewButton;
 
-		PROCEDURE WheelMove*(dz: LONGINT);
+		PROCEDURE WheelMove*(dz: SIZE);
 		BEGIN
 			CASE currentPage OF
 				|PageSelectPartition:

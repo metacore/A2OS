@@ -8,25 +8,25 @@ CONST
 	DateTimeFormat = \"dd.mm.yyyy hh:nn:ss"\; 
 TYPE 
 	EventWrapper* = POINTER TO RECORD 
-		nextIndex-: LONGINT; 
+		nextIndex-: SIZE; 
 		events-: POINTER TO ARRAY OF Events.Event; 
 		next-: EventWrapper; 
 	END; 
 
 	EventContainer* = OBJECT {EXCLUSIVE} (Events.Sink)
 	VAR 
-		nofWrappers, nofEvents: LONGINT; 
-		lastCleared, lastAdded: LONGINT; 
+		nofWrappers, nofEvents: SIZE; 
+		lastCleared, lastAdded: SIZE; 
 		events, current: EventWrapper; 
-		maxNofWrappers, eventsPerWrapper: LONGINT; 
+		maxNofWrappers, eventsPerWrapper: SIZE; 
 
-		PROCEDURE ^ GetStamp*(): LONGINT; 
-		PROCEDURE ^ GetEvents*(VAR nofEvents: LONGINT; VAR full: BOOLEAN; VAR lastCleared: LONGINT): EventWrapper; 
+		PROCEDURE ^ GetStamp*(): SIZE; 
+		PROCEDURE ^ GetEvents*(VAR nofEvents: SIZE; VAR full: BOOLEAN; VAR lastCleared: SIZE): EventWrapper; 
 		PROCEDURE ^ IsFull*(): BOOLEAN; 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ GetSize*(): SIZE; 
 		PROCEDURE ^ Handle*(event: Events.Event); 
-		PROCEDURE ^  & Init*(maxNofWrappers, eventsPerWrapper: LONGINT); 
+		PROCEDURE ^  & Init*(maxNofWrappers, eventsPerWrapper: SIZE); 
 	END EventContainer; 
 
 	PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: WORD); 

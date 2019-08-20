@@ -29,7 +29,7 @@ TYPE
 		VAR
 			par : WMPerfMonPlugins.Parameter;
 			cpar : WMPerfMonPluginCpu.CpuParameter;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			NEW(cpu, WMPerfMonPluginCpu.nbrOfCpus);
 			FOR i := 0 TO LEN(cpu)-1 DO
@@ -41,7 +41,7 @@ TYPE
 		END LocatePlugins;
 
 		PROCEDURE Finalize*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Finalize^;
 			FOR i := 0 TO LEN(cpu)-1 DO WMPerfMonPlugins.updater.RemovePlugin(cpu[i]); END;
@@ -59,7 +59,7 @@ TYPE
 		VAR
 			npar : WMPerfMonPluginNetwork.NetParameter;
 			table : Plugins.Table; dev : Network.LinkDevice;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			Network.registry.GetAll(table);
 			IF table # NIL THEN
@@ -76,7 +76,7 @@ TYPE
 		END LocatePlugins;
 
 		PROCEDURE Finalize*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Finalize^;
 			IF (netspeed # NIL) THEN
@@ -107,9 +107,9 @@ TYPE
 		network : NetworkComponent;
 		selection : WMPerfMonComponents.SelectionComponent;
 
-		width, height : LONGINT;
+		width, height : SIZE;
 
-		PROCEDURE Resized*(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : SIZE);
 		BEGIN
 			IF (width >= MinWidth) & (height >= MinHeight) THEN
 				scaling := FALSE;
@@ -218,8 +218,8 @@ TYPE
 					WMRestorable.StoreLongint(elem, "ScreenInterval", WMPerfMonPlugins.updater.screenInterval);
 					WMRestorable.StoreString(elem, "CurrentTab", curTab.caption^);
 					NEW(elem); elem.SetName("Size"); data.AddContent(elem);
-					WMRestorable.StoreLongint(elem, "Width", width);
-					WMRestorable.StoreLongint(elem, "Height", height);
+					WMRestorable.StoreSize(elem, "Width", width);
+					WMRestorable.StoreSize(elem, "Height", height);
 					x.ext(WMRestorable.Storage).Add("WMPerfMon", "WMPerfMon.Restore", SELF, data);
 				ELSIF x.ext IS KillerMsg THEN
 					Close;
@@ -248,8 +248,8 @@ TYPE
 				width := c.r - c.l; height :=  c.b - c.t;
 				size := WMRestorable.GetElement(c, "Data\Size");
 				IF size # NIL THEN
-					WMRestorable.LoadLongint(size, "Width", width);
-					WMRestorable.LoadLongint(size, "Height", height);
+					WMRestorable.LoadSize(size, "Width", width);
+					WMRestorable.LoadSize(size, "Height", height);
 					IF (width < MinWidth) OR (height < MinHeight) THEN
 						scale := TRUE;
 					END;

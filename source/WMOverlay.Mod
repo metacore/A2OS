@@ -38,19 +38,19 @@ TYPE
 TYPE
 	Window = OBJECT (WMWindowManager.BufferWindow);
 	VAR
-		lx, ly, stringX, stringY, stringX0, stringY0 : LONGINT;
-		mode : LONGINT;
+		lx, ly, stringX, stringY, stringX0, stringY0 : SIZE;
+		mode : WORD;
 
 		currentString : ARRAY 1024 OF CHAR;
-		currentIdx : LONGINT;
+		currentIdx : SIZE;
 
 		mrEnabled : BOOLEAN;
-		mouseOver : LONGINT; (* index of mouse over icon, -1 of no mouse over *)
-		currentPointer : LONGINT;
-		currentIndex : LONGINT;
+		mouseOver : SIZE; (* index of mouse over icon, -1 of no mouse over *)
+		currentPointer : WORD;
+		currentIndex : SIZE;
 		color, bgColor : LONGINT;
 
-		dragStartX, dragStartY : LONGINT;
+		dragStartX, dragStartY : SIZE;
 		dragging, noDrag : BOOLEAN;
 
 		modifierFlags : SET;
@@ -115,8 +115,8 @@ TYPE
 			IF (font # NIL) THEN canvas.SetFont(font); END;
 		END New;
 
-		PROCEDURE GetItemIndex(x, y : LONGINT) : LONGINT;
-		VAR i, result : LONGINT;
+		PROCEDURE GetItemIndex(x, y : SIZE) : SIZE;
+		VAR i, result : SIZE;
 		BEGIN
 			i := 0; result := -1;
 			WHILE (result < 0) & (i < LEN(items)) DO
@@ -126,12 +126,12 @@ TYPE
 			RETURN result;
 		END GetItemIndex;
 
-		PROCEDURE IsHit*(x, y : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y : SIZE) : BOOLEAN;
 		BEGIN
 			RETURN (mode = Mode_Drawing) OR (GetItemIndex(x, y) >= 0);
 		END IsHit;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; width, height, quality : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; width, height : SIZE; quality : WORD);
 		CONST IconBorder = 8;
 		VAR image : WMGraphics.Image; nbr : ARRAY 8 OF CHAR; color, i : LONGINT;
 		BEGIN
@@ -161,10 +161,10 @@ TYPE
 			END;
 		END Draw;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
-		VAR icon, oldMouseOver : LONGINT;
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
+		VAR icon, oldMouseOver : SIZE;
 
-			PROCEDURE InvalidateIcon(idx  : LONGINT);
+			PROCEDURE InvalidateIcon(idx  : SIZE);
 			BEGIN
 				IF (0 <= idx) & (idx < LEN(items)) THEN
 					Invalidate(items[idx].rect);
@@ -205,8 +205,8 @@ TYPE
 			lx := x; ly := y
 		END PointerMove;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR rect : WMRectangles.Rectangle; index : LONGINT;
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
+		VAR rect : WMRectangles.Rectangle; index : SIZE;
 		BEGIN
 			PointerDown^(x, y, keys);
 			lx := x; ly := y;
@@ -239,7 +239,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			PointerUp^(x, y, keys);
@@ -259,8 +259,8 @@ TYPE
 			IF (mouseOver >= 0) THEN mouseOver := -1; Invalidate(bounds); END;
 		END PointerLeave;
 
-		PROCEDURE ProcessCommand(item : Item; index : LONGINT);
-		VAR i : LONGINT; c : WMGraphics.BufferCanvas;
+		PROCEDURE ProcessCommand(item : Item; index : SIZE);
+		VAR i : SIZE; c : WMGraphics.BufferCanvas;
 		BEGIN
 			IF (index = Function_Close) THEN
 				Close;
@@ -295,10 +295,10 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()))
 		END Fill;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keySym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keySym : SIZE);
 		VAR
 			filename : Files.FileName; newImg : WMGraphics.Image; oldMode: LONGINT; res: WORD;
-			string : ARRAY 2 OF CHAR; dx, dy : LONGINT;
+			string : ARRAY 2 OF CHAR; dx, dy : SIZE;
 			font : WMGraphics.Font;
 		BEGIN
 			modifierFlags := flags;

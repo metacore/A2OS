@@ -14,7 +14,7 @@ CONST
 	MoreDependencies =  -2; 
 	Stats = TRUE; 
 TYPE 
-	Dependencies* = ARRAY (MaxNofDependencies + 1) OF LONGINT; 
+	Dependencies* = ARRAY (MaxNofDependencies + 1) OF SIZE; 
 
 	JobProcedure* = PROCEDURE {DELEGATE}(parameters: ANY; VAR error: BOOLEAN); 
 
@@ -22,8 +22,8 @@ TYPE
 	VAR 
 		proc: JobProcedure; 
 		parameters: ANY; 
-		uid: LONGINT; 
-		priority: LONGINT; 
+		uid: SIZE; 
+		priority: SIZE; 
 		completed: BOOLEAN; 
 		dependencies: Dependencies; 
 		previous, next: Job; 
@@ -36,12 +36,12 @@ TYPE
 	Worker = OBJECT {EXCLUSIVE} 
 	VAR 
 		job: Job; 
-		state: LONGINT; 
+		state: WORD; 
 		threadPool: ThreadPool; 
 		previous, next: Worker; 
 
 		PROCEDURE ^ SetJob(job: Job); 
-		PROCEDURE ^ SetState(state: LONGINT); 
+		PROCEDURE ^ SetState(state: WORD); 
 		PROCEDURE ^ DoJob; 
 		PROCEDURE ^ Terminate; 
 		PROCEDURE ^  & Init(threadPool: ThreadPool); 
@@ -51,9 +51,9 @@ TYPE
 	WorkerList = OBJECT {EXCLUSIVE} 
 	VAR 
 		head: Worker; 
-		nofWorkers: LONGINT; 
+		nofWorkers: SIZE; 
 
-		PROCEDURE ^ GetNofWorkers(): LONGINT; 
+		PROCEDURE ^ GetNofWorkers(): SIZE; 
 		PROCEDURE ^ Get(): Worker; 
 		PROCEDURE ^ Add(worker: Worker); 
 		PROCEDURE ^  & Init; 
@@ -62,18 +62,18 @@ TYPE
 	HashTable = OBJECT {EXCLUSIVE} 
 	VAR 
 		table: POINTER TO ARRAY OF Job; 
-		size: LONGINT; 
+		size: SIZE; 
 
-		PROCEDURE ^ Find(uid: LONGINT): Job; 
+		PROCEDURE ^ Find(uid: SIZE): Job; 
 		PROCEDURE ^ Add(job: Job); 
 		PROCEDURE ^ Remove(job: Job); 
-		PROCEDURE ^  & Init(size: LONGINT); 
+		PROCEDURE ^  & Init(size: SIZE); 
 	END HashTable; 
 
 	SortedJobList = OBJECT {EXCLUSIVE} 
 	VAR 
 		head: Job; 
-		nofJobs: LONGINT; 
+		nofJobs: SIZE; 
 
 		PROCEDURE ^ Get(): Job; 
 		PROCEDURE ^ Add(job: Job); 
@@ -87,7 +87,7 @@ TYPE
 		readyList: SortedJobList; 
 		waitingList: SortedJobList; 
 
-		PROCEDURE ^  & Init(size: LONGINT); 
+		PROCEDURE ^  & Init(size: SIZE); 
 		PROCEDURE ^ GetReadyJob(): Job; 
 		PROCEDURE ^ Add(job: Job); 
 		PROCEDURE ^ Remove(job: Job); 
@@ -98,11 +98,11 @@ TYPE
 	JobPool = OBJECT {EXCLUSIVE} 
 	VAR 
 		head: Job; 
-		nextUid: LONGINT; 
+		nextUid: SIZE; 
 
 		PROCEDURE ^ Get(): Job; 
 		PROCEDURE ^ Recycle(job: Job); 
-		PROCEDURE ^ GetUID(): LONGINT; 
+		PROCEDURE ^ GetUID(): SIZE; 
 		PROCEDURE ^  & Init; 
 	END JobPool; 
 
@@ -113,12 +113,12 @@ TYPE
 		jobManager: JobManager; 
 		workers: POINTER TO ARRAY OF Worker; 
 		hadError: BOOLEAN; 
-		jobsOnTheFly: LONGINT; 
+		jobsOnTheFly: SIZE; 
 		doScheduling: BOOLEAN; 
 		alive, dead: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(nofWorkers: LONGINT); 
-		PROCEDURE ^ CreateJob*(proc: JobProcedure; parameters: ANY; priority: LONGINT; CONST dependencies: Dependencies): LONGINT; 
+		PROCEDURE ^  & Init*(nofWorkers: SIZE); 
+		PROCEDURE ^ CreateJob*(proc: JobProcedure; parameters: ANY; priority: SIZE; CONST dependencies: Dependencies): SIZE; 
 		PROCEDURE ^ AwaitAllDone*; 
 		PROCEDURE ^ JobDone(worker: Worker; job: Job); 
 		PROCEDURE ^ DoScheduling; 
@@ -126,7 +126,7 @@ TYPE
 	BEGIN{ACTIVE} 
 	END ThreadPool; 
 VAR 
-	NjobsCreated-, NjobsDone-, NjobErrors-, NjobHandoverSucceeded-, NjobHandoverFailed-, NjobPoolCreated-, NjobPoolRecycled-, NjobPoolReused-, NdependencyChecks-, NdependenciesResolved-, NdependenciesPersist-, Nscheduling-, NjobsScheduled-, Nlookups-, NlookupCollisions-, NlookupNotFound-: LONGINT; 
+	NjobsCreated-, NjobsDone-, NjobErrors-, NjobHandoverSucceeded-, NjobHandoverFailed-, NjobPoolCreated-, NjobPoolRecycled-, NjobPoolReused-, NdependencyChecks-, NdependenciesResolved-, NdependenciesPersist-, Nscheduling-, NjobsScheduled-, Nlookups-, NlookupCollisions-, NlookupNotFound-: SIZE; 
 
 	PROCEDURE ^ ClearStats*; 
 BEGIN

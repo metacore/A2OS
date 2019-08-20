@@ -19,7 +19,7 @@ TYPE
 		diagnostics: Diagnostics.Diagnostics; 
 		currentScope: SyntaxTree.Scope; 
 		recentCommentItem: ANY; 
-		recentLine: LONGINT; 
+		recentLine: Streams.Position; 
 		recentComment: SyntaxTree.Comment; 
 		moduleScope: SyntaxTree.ModuleScope; 
 		error-: BOOLEAN; 

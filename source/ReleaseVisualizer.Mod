@@ -373,7 +373,7 @@ TYPE
 		END ScanModule;
 
 		PROCEDURE ScanForModules(CONST filemask : ARRAY OF CHAR; out : Streams.Writer);
-		VAR enum : Files.Enumerator; name : ARRAY 256 OF CHAR; flags : SET; time, date, size, nofFiles : LONGINT;
+		VAR enum : Files.Enumerator; name : ARRAY 256 OF CHAR; flags : SET; time, date: LONGINT; size : Files.Size; nofFiles : SIZE;
 		BEGIN
 			IF (out # NIL) THEN out.String("Scanning modules "); out.String(filemask); out.String(" ... "); out.Update; END;
 			nofModules := 0;
@@ -415,7 +415,7 @@ TYPE
 	Graphic = OBJECT (Object)
 	VAR
 		list : ObjectList;
-		nofObj : LONGINT;
+		nofObj : SIZE;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -423,7 +423,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Add(o : Object);
-		VAR nl : ObjectList; i : LONGINT;
+		VAR nl : ObjectList; i : SIZE;
 		BEGIN
 			o.parent := SELF;
 			IF nofObj >= LEN(list) THEN
@@ -436,7 +436,7 @@ TYPE
 		END Add;
 
 		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO nofObj - 1 DO
 				list[i].Draw(canvas, dx + fx * aabb.l, dy + fy * aabb.t, fx, fy);
@@ -524,7 +524,7 @@ TYPE
 			o : Object;
 			dist : LONGREAL;
 			inter, first : BOOLEAN;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			IF (parent # NIL) & (parent IS Graphic) THEN
 				g := parent(Graphic);
@@ -911,7 +911,7 @@ TYPE
 
 		PROCEDURE Populate;
 		VAR mb : ModuleBox;
-			i, j, k  : LONGINT;
+			i, j, k, maxProbGroup : SIZE;
 			levels : POINTER TO ARRAY OF Level;
 			s : ARRAY 10 OF CHAR;
 			m: ModuleInfo;
@@ -921,7 +921,7 @@ TYPE
 			r : Line;
 			t : Title;
 			maxW, lastG, g, gc, y : LONGINT;
-			maxProb, maxProbGroup, totSlots : LONGINT;
+			maxProb, totSlots : LONGINT;
 
 			PROCEDURE Compare(m0, m1 : ModuleInfo) : BOOLEAN;
 			VAR a, b, c : LONGINT;

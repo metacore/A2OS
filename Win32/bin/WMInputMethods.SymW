@@ -6,10 +6,10 @@ CONST
 TYPE 
 	IMEInterface* = RECORD 
 		AcquireText*, ReleaseText*: PROCEDURE {DELEGATE}; 
-		InsertUCS32*: PROCEDURE {DELEGATE}(atPosition: LONGINT; CONST string: Texts.UCS32String); 
-		GetCursorPosition*: PROCEDURE {DELEGATE}():LONGINT; 
-		GetCursorScreenPosition*: PROCEDURE {DELEGATE}(VAR x, y: LONGINT); 
-		SetCursorInfo*: PROCEDURE {DELEGATE}(position: LONGINT); 
+		InsertUCS32*: PROCEDURE {DELEGATE}(atPosition: SIZE; CONST string: Texts.UCS32String); 
+		GetCursorPosition*: PROCEDURE {DELEGATE}():SIZE; 
+		GetCursorScreenPosition*: PROCEDURE {DELEGATE}(VAR x, y: SIZE); 
+		SetCursorInfo*: PROCEDURE {DELEGATE}(position: SIZE); 
 	END; 
 
 	IME* = OBJECT {EXCLUSIVE} 
@@ -20,11 +20,11 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetName*(): Strings.String; 
 		PROCEDURE ^ SetInterface*(i: IMEInterface); 
-		PROCEDURE ^ InsertChar*(ucs: LONGINT); 
+		PROCEDURE ^ InsertChar*(ucs: SIZE); 
 		PROCEDURE ^ InsertMultiChar*(CONST ucs: ARRAY OF LONGINT); 
 		PROCEDURE ^ InsertUTF8String*(CONST string: ARRAY OF CHAR); 
-		PROCEDURE ^ GetCursorScreenPosition*(VAR x, y: LONGINT); 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ GetCursorScreenPosition*(VAR x, y: SIZE); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ Finalize*; 
 	END IME; 

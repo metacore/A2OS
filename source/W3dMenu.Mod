@@ -108,7 +108,7 @@ TYPE
 		lookat: Vectors.TVector3d;
 		radius, angle, height : LONGREAL;
 		mouseKeys, keyflags : SET;
-		oldX, oldY : LONGINT;
+		oldX, oldY : SIZE;
 
 		(* 3d World *)
 		world : World.World;
@@ -289,13 +289,13 @@ TYPE
 			Invalidate(Rect.MakeRect(0, 0, img.width, img.height))
 		END Render;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys :SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys :SET);
 		BEGIN
 			mouseKeys := (keys * {0, 1, 2});
 			oldX := x; oldY := y
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerMove*(x, y: SIZE; keys: SET);
 		VAR idx : LONGINT;
 			info : Symbol; dummy : ANY;
 		BEGIN
@@ -336,7 +336,7 @@ TYPE
 			oldX := x; oldY := y
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerUp*(x, y: SIZE; keys: SET);
 		BEGIN
 			IF mouseKeys = {0} THEN
 				IF selectedSymbol # NIL THEN
@@ -353,7 +353,7 @@ TYPE
 			mouseKeys := (keys * {0, 1, 2});
 		END PointerUp;
 
-(*		PROCEDURE KeyPressed(ch : CHAR; flags : SET; keysym : LONGINT);
+(*		PROCEDURE KeyPressed(ch : CHAR; flags : SET; keysym : SIZE);
 		BEGIN
 			keyflags := flags;
 			IF ch = "s" THEN
@@ -396,7 +396,7 @@ VAR res : BOOLEAN;
 	 tex : AbstractWorld.Texture;
 	 img : Raster.Image;
 	timg: Raster.Image;
-	tw, th, dx, dy : LONGINT;
+	tw, th, dx, dy : SIZE;
 BEGIN
 	timg := WMGraphics.LoadImage(icon, TRUE);
 	Raster.InitMode(mode, Raster.srcCopy);
@@ -419,7 +419,7 @@ BEGIN
 END GenTexture;
 
 PROCEDURE TextureByName(name: ARRAY OF CHAR; obj : AbstractWorld.Object): AbstractWorld.Texture;
-VAR i : LONGINT;
+VAR i : SIZE;
 	dummy : ANY;
 	ti : TextureInfo; mode: Raster.Mode;
 	timg: Raster.Image;

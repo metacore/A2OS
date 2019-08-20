@@ -130,7 +130,7 @@ TYPE
 		END LoadPhrases;
 
 		PROCEDURE FindMatches(CONST s : ARRAY OF CHAR; resultList : ResultList; VAR nofResults : LONGINT);
-		VAR i, pos : LONGINT;
+		VAR i, pos : SIZE;
 			r, tr, cur : ResultList;
 			cl : ListElement;
 			str : ARRAY 16 OF CHAR;
@@ -266,7 +266,7 @@ TYPE
 			RETURN panel
 		END CreateForm;
 
-		PROCEDURE &New*(ime : IME; x, y :LONGINT; CONST text : ARRAY OF CHAR; table : Table);
+		PROCEDURE &New*(ime : IME; x, y :SIZE; CONST text : ARRAY OF CHAR; table : Table);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
 			vc := CreateForm();
@@ -287,13 +287,13 @@ TYPE
 			edit.text.onTextChanged.Add(TextChanged);
 		END New;
 
-		PROCEDURE ListKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE ListKeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			IF keySym = 0FF0DH THEN handled := TRUE; edit.SetFocus END;
 		END ListKeyPressed;
 
 
-		PROCEDURE EditKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE EditKeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			handled := TRUE;
 			IF keySym = 20H THEN (* space *)
@@ -326,7 +326,7 @@ TYPE
 		END ScheduleHide;
 
 		PROCEDURE WriteSelected;
-		VAR ac, ar, bc, br : LONGINT;
+		VAR ac, ar, bc, br : SIZE;
 			p : ANY;
 		BEGIN
 			list.Acquire;
@@ -438,8 +438,8 @@ TYPE
 			RETURN Strings.NewString(imeName);
 		END GetName;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
-		VAR x, y, pos : LONGINT; str : ARRAY 8 OF CHAR;
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
+		VAR x, y: SIZE; pos : SIZE; str : ARRAY 8 OF CHAR;
 		BEGIN
 (*			IF text.isUTF THEN
 				KernelLog.String("Chinese characters are currently not allowed in potentially bidirectionally formatted texts.");
@@ -447,7 +447,7 @@ TYPE
 			END; *)
 			IF (cap[ucs MOD 256] >= "A") & (cap[ucs MOD 256] <= "Z") THEN
 				GetCursorScreenPosition(x, y);
-				pos := 0; IF UTF8Strings.EncodeChar(ucs, str, pos) THEN END;
+				pos := 0; IF UTF8Strings.EncodeChar(ucs(LONGINT), str, pos) THEN END;
 				NEW(w, SELF, x, y, str, table);
 			ELSE
 				InsertChar(ucs);
@@ -467,7 +467,7 @@ VAR
 	only strings matching the tone are returned. If the pattern does not contain tone
 	information, strings with or without tone information will match. Spaces are ignored*)
 PROCEDURE MatchPinyin*(pattern, string : ARRAY OF CHAR; complete : BOOLEAN) : BOOLEAN;
-VAR i, j, lp, ls : LONGINT; match : BOOLEAN;
+VAR i, j, lp, ls : SIZE; match : BOOLEAN;
 BEGIN
 	lp := LEN(pattern); ls := LEN(string);
 	Strings.Trim(pattern, " "); Strings.Trim(string, " ");
@@ -488,7 +488,7 @@ BEGIN
 END MatchPinyin;
 
 PROCEDURE MatchPinyinFirstChars*(pattern, string : ARRAY OF CHAR; complete : BOOLEAN) : BOOLEAN;
-VAR i, j, ls : LONGINT; match : BOOLEAN;
+VAR i, j, ls : SIZE; match : BOOLEAN;
 BEGIN
 	ls := LEN(string);
 	Strings.Trim(pattern, " "); Strings.Trim(string, " ");

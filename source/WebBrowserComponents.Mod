@@ -37,7 +37,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			w, h : LONGINT;
+			w, h : SIZE;
 		BEGIN
 			DrawBackground^(canvas);
 			w := bounds.GetWidth();
@@ -71,7 +71,7 @@ TYPE
 			SetPointerInfo(manager.pointerLink);
 		END Create;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y: SIZE; keys : SET);
 		BEGIN
 			onClick.Call(msg);
 			PointerDown^(x, y, keys);
@@ -83,7 +83,7 @@ TYPE
 	VAR
 		img : WMGraphics.Image;
 
-		PROCEDURE & New*(rc : ResourceConnection; url : String; x, y : LONGINT);
+		PROCEDURE & New*(rc : ResourceConnection; url : String; x, y : SIZE);
 		BEGIN
 			Init;
 			IF rc = NIL THEN
@@ -115,7 +115,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			w, h : LONGINT;
+			w, h : SIZE;
 		BEGIN
 			DrawBackground^(canvas);
 			w := bounds.GetWidth();
@@ -139,7 +139,7 @@ TYPE
 		onClick : WMEvents.EventSource;
 		msg : ANY;
 
-		PROCEDURE & Create*(rc : ResourceConnection; url : String; x, y : LONGINT; loadLink : WMEvents.EventListener; msg : ANY);
+		PROCEDURE & Create*(rc : ResourceConnection; url : String; x, y : SIZE; loadLink : WMEvents.EventListener; msg : ANY);
 		BEGIN
 			New(rc, url, x, y);
 			NEW(onClick, SELF, NIL, NIL, SELF.StringToCompCommand);
@@ -149,7 +149,7 @@ TYPE
 			SetPointerInfo(manager.pointerLink);
 		END Create;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y: SIZE; keys : SET);
 		BEGIN
 			onClick.Call(msg);
 			PointerDown^(x, y, keys);
@@ -179,7 +179,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			w, h, i, j, wCnt, hCnt : LONGINT;
+			w, h, i, j, wCnt, hCnt : SIZE;
 		BEGIN
 			DrawBackground^(canvas);
 			IF img # NIL THEN
@@ -201,15 +201,15 @@ TYPE
 
 	HR* = OBJECT(VisualComponent)
 	VAR
-		x : LONGINT;
+		x : SIZE;
 
-		PROCEDURE & New*(x : LONGINT);
+		PROCEDURE & New*(x : SIZE);
 		BEGIN
 			Init;
 			ParentTvWidthChanged(x);
 		END New;
 
-		PROCEDURE ParentTvWidthChanged*(x : LONGINT);
+		PROCEDURE ParentTvWidthChanged*(x : SIZE);
 		BEGIN
 			DEC(x, 30);
 			IF x < 10 THEN x := 10 END;
@@ -310,13 +310,13 @@ log : Streams.Writer;*)
 		PROCEDURE PrivateGet(url : String) : ResourceConnection;
 		VAR
 			server, newServer : String;
-			index : LONGINT;
-			i : LONGINT;
+			index : SIZE;
+			i : SIZE;
 			con : ResourceConnection;
 			charset: WebHTTP.AdditionalField;
 			reader : Streams.Reader;
 			result : WORD;
-			cnt : LONGINT;
+			cnt : SIZE;
 		BEGIN
 			server := GetServer(url^);
 
@@ -417,9 +417,9 @@ log : Streams.Writer;*)
 			DEC(conCnt);
 		END Release;
 
-		PROCEDURE ServerCnt(server : String) : LONGINT;
+		PROCEDURE ServerCnt(server : String) : SIZE;
 		VAR
-			cnt, i : LONGINT;
+			cnt, i : SIZE;
 		BEGIN
 			cnt := 0;
 			FOR i := 0 TO MaxHTTPConnections - 1 DO
@@ -446,7 +446,7 @@ log : Streams.Writer;*)
 		reader- : Streams.Reader;
 		http : NewHTTPClient.HTTPConnection;
 		busy : BOOLEAN;
-		index : LONGINT;
+		index : SIZE;
 		server : String;
 		released : BOOLEAN;
 
@@ -517,7 +517,7 @@ BEGIN
 END GetResourceConnection;
 
 PROCEDURE ClearFilename( VAR name: ARRAY OF CHAR );  (* strip positioning info appended to filename *)
-VAR i: LONGINT;
+VAR i: SIZE;
 BEGIN
 	i := 0;
 	LOOP
@@ -559,7 +559,7 @@ END GetMimeType;
 PROCEDURE LoadImage*(reader : Streams.Reader; mimeType : ARRAY OF CHAR; name : ARRAY OF CHAR): WMGraphics.Image;
 VAR
 	img : WMGraphics.Image;
-	res: WORD; w, h, x : LONGINT;
+	res: WORD; w, h : SIZE; x : LONGINT;
 	decoder : Codecs.ImageDecoder;
 	ext : String;
 

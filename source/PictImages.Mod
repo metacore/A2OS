@@ -35,7 +35,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 
 	(* pack/unpack procedures for 1 and 4 bit formats *)
 
-	PROCEDURE PackP1 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Raster.Pixel);
+	PROCEDURE PackP1 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
 		VAR b: CHAR;
 	BEGIN
 		SYSTEM.GET(adr, b);
@@ -50,7 +50,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 		END
 	END PackP1;
 
-	PROCEDURE UnpackP1 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Raster.Pixel);
+	PROCEDURE UnpackP1 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
 		VAR b: CHAR;
 	BEGIN
 		SYSTEM.GET(adr, b);
@@ -59,7 +59,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 		END
 	END UnpackP1;
 
-	PROCEDURE PackP4 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Raster.Pixel);
+	PROCEDURE PackP4 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
 		VAR b: CHAR; i: LONGINT;
 	BEGIN
 		SYSTEM.GET(adr, b);
@@ -69,7 +69,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 		END
 	END PackP4;
 
-	PROCEDURE UnpackP4 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Raster.Pixel);
+	PROCEDURE UnpackP4 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
 		VAR b: CHAR;
 	BEGIN
 		SYSTEM.GET(adr, b); pix := fmt.pal.col[ASH(ORD(b), -bit) MOD 10H]
@@ -148,7 +148,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 	PROCEDURE StorePict (img: Raster.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN);
 		TYPE Bytes129 = ARRAY 129 OF CHAR;
 		VAR
-			file: Files.File; w: Files.Writer; pal: Raster.Palette; i, y, inc, x: LONGINT; fmt: Raster.Format; depth: INTEGER;
+			file: Files.File; w: Files.Writer; pal: Raster.Palette; i, y, inc, x: SIZE; fmt: Raster.Format; depth: INTEGER;
 			pix: POINTER TO ARRAY OF CHAR; buf: ARRAY 129 OF SHORTINT;
 			SrcCopy: Raster.Mode;
 	BEGIN
@@ -157,7 +157,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 			Raster.InitMode(SrcCopy, Raster.srcCopy);
 			Files.OpenWriter(w, file, 0);
 			w.RawInt(-4093);	(* Pictures.PictFileId *)
-			w.RawInt(SHORT(img.width)); w.RawInt(SHORT(img.height));
+			w.RawInt(INTEGER(img.width)); w.RawInt(INTEGER(img.height));
 
 			(* find out which format to use *)
 			pal := img.fmt.pal;

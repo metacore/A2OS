@@ -6,7 +6,7 @@ TYPE
 	IME* = OBJECT {EXCLUSIVE} (WMInputMethods.IME)
 
 		PROCEDURE ^ GetName*(): Strings.String; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 	END IME; 
 
 	PROCEDURE ^ Install*; 

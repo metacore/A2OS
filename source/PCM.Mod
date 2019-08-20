@@ -209,7 +209,7 @@ IMPORT
 	BEGIN  R.sym.RawLReal(r)  END SymWLReal;
 
 
-	PROCEDURE ObjWGetPos*(VAR R: Rider; VAR pos: LONGINT);
+	PROCEDURE ObjWGetPos*(VAR R: Rider; VAR pos: Files.Position);
 	BEGIN pos := R.obj.Pos()
 	END ObjWGetPos;
 
@@ -238,7 +238,7 @@ IMPORT
 	BEGIN R.obj.RawLInt(i)
 	END ObjWLInt;
 
-	PROCEDURE ObjWLIntAt*(VAR R: Rider; pos: LONGINT; i: LONGINT);
+	PROCEDURE ObjWLIntAt*(VAR R: Rider; pos: Files.Position; i: LONGINT);
 		VAR w: Files.Writer;
 	BEGIN
 		R.obj.Update;
@@ -282,7 +282,7 @@ IMPORT
 	END Open;
 
 	PROCEDURE AppendFile(f: Files.File;  to: Streams.Writer);
-		VAR buffer: ARRAY 1024 OF CHAR;  r: Files.Reader;  read: LONGINT;
+		VAR buffer: ARRAY 1024 OF CHAR;  r: Files.Reader;  read: SIZE;
 	BEGIN
 		Files.OpenReader(r, f, 0);
 		REPEAT
@@ -316,7 +316,7 @@ IMPORT
 	END CloseObj;
 
 	PROCEDURE RefSize*(VAR R: Rider): LONGINT;
-	BEGIN  RETURN R.ref.Pos()
+	BEGIN  RETURN R.ref.Pos()(LONGINT);
 	END RefSize;
 
 
@@ -415,7 +415,7 @@ IMPORT
 	BEGIN log.Hex(i, 0)
 	END LogWHex;
 
-	PROCEDURE LogWNum* (i: LONGINT);
+	PROCEDURE LogWNum* (i: HUGEINT);
 	BEGIN log.Int(i, 0)
 	END LogWNum;
 
@@ -471,7 +471,7 @@ IMPORT
 
 	PROCEDURE Expand(VAR oldAry: ErrorMsgs);
 	VAR
-		len, i: LONGINT;
+		len, i: SIZE;
 		newAry: ErrorMsgs;
 	BEGIN
 		IF oldAry = NIL THEN RETURN END;

@@ -135,7 +135,7 @@ BEGIN
 END GetNextColor;
 
 PROCEDURE Grow;
-VAR tmp : SubscriberList; i : LONGINT;
+VAR tmp : SubscriberList; i : SIZE;
 BEGIN
 	NEW(tmp, 2 * LEN(subscriptions));
 	FOR i := 0 TO LEN(subscriptions) - 1 DO
@@ -155,7 +155,7 @@ BEGIN
 END Subscribe;
 
 PROCEDURE GetColor(processID : LONGINT) : WMGraphics.Color;
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	FOR i := 0 TO LEN(subscriptions) - 1 DO
 		IF subscriptions[i].processID = processID THEN
@@ -179,7 +179,7 @@ END GetSubscription;
 PROCEDURE TraceIdString;
 VAR
 	bp, pc, nextbp : ADDRESS;
-	methadr, i : LONGINT;
+	methadr, i : SIZE;
 	module : Modules.Module;
 	process : Objects.Process;
 	now, name : ARRAY 128 OF CHAR;
@@ -364,8 +364,8 @@ END GetWriter;
 
 (* UNSAFE *)
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
-PROCEDURE Send*(CONST buf : ARRAY OF CHAR; ofs, len : LONGINT; propagate : BOOLEAN; VAR res : WORD);
-VAR i : LONGINT; str : POINTER TO ARRAY OF CHAR;
+PROCEDURE Send*(CONST buf : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : WORD);
+VAR i : SIZE; str : POINTER TO ARRAY OF CHAR;
 BEGIN
 	NEW(str, len + 1);
 	FOR i := 0 TO len - 1 DO
@@ -560,8 +560,8 @@ BEGIN
 END CheckColor;
 
 (* Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
-PROCEDURE FindProc(refs : Modules.Bytes; modpc : ADDRESS) : LONGINT;
-VAR i, m, t, proc : LONGINT; ch : CHAR;
+PROCEDURE FindProc(refs : Modules.Bytes; modpc : ADDRESS) : SIZE;
+VAR i, m, proc : SIZE; t: LONGINT; ch : CHAR;
 BEGIN
 	proc := -1; i := 0; m := LEN(refs^);
 	ch := refs[i]; INC(i);
@@ -595,7 +595,7 @@ BEGIN
 END FindProc;
 
 (* Get a compressed refblk number. *)
-PROCEDURE GetNum(refs : Modules.Bytes; VAR i, num : LONGINT);
+PROCEDURE GetNum(refs : Modules.Bytes; VAR i: SIZE; num : LONGINT);
 VAR n, s : LONGINT; x : CHAR;
 BEGIN
 	s := 0; n := 0;

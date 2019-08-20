@@ -11,7 +11,7 @@ VAR
 	fmt: Raster.Format;
 	copy : Raster.Mode;
 	p: Raster.Pixel;
-	W,H, bpr,adr, i, j: LONGINT;
+	W,H, bpr,adr, i, j: SIZE;
 	r,g,b: REAL;
 	pixel,normal: PT;
 	color: COLOR;
@@ -45,7 +45,7 @@ VAR
 	fmt: Raster.Format;
 	copy : Raster.Mode;
 	p,q: Raster.Pixel;
-	W,H, bpr,adr, i, j: LONGINT;
+	W,H, bpr,adr, i, j: SIZE;
 	nr,ng,nb,mr,mg,mb: REAL;
 	pixel,normal: PT;
 	color: COLOR;

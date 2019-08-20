@@ -117,7 +117,7 @@ TYPE
 			(* SetTitle(Strings.NewString("Color Chooser")); *)
 		END New;
 
-		PROCEDURE Show*(x, y: LONGINT; VAR chosen: WMGraphics.Color):BOOLEAN;
+		PROCEDURE Show*(x, y: SIZE; VAR chosen: WMGraphics.Color):BOOLEAN;
 		BEGIN
 			IF ~shown THEN
 				result := -1; shown := TRUE;
@@ -187,8 +187,8 @@ TYPE
 			theCaller := caller;
 		END SetCaller;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR r, g, b, a, i, j: LONGINT; cColor: WMGraphics.Color;
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
+		VAR r, g, b, a: LONGINT; i, j: SIZE; cColor: WMGraphics.Color;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;
 			IF (i>= 0) & (i<=2) THEN
@@ -671,7 +671,7 @@ TYPE
 			ELSE styleCounter := 0; END;
 		END New;
 
-		PROCEDURE Show*(x, y: LONGINT);
+		PROCEDURE Show*(x, y: SIZE);
 		BEGIN
 			IF ~shown THEN
 				shown := TRUE;
@@ -1468,7 +1468,7 @@ TYPE
 			END;
 		END LoadCharacterStyle;
 
-		PROCEDURE AlignHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE AlignHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		BEGIN
 			NEW(popup);
 			popup.AddParButton("Left", AlignPopupHandler, ctxAlignLeft);
@@ -1497,7 +1497,7 @@ TYPE
 			END;
 		END AlignPopupHandler;
 
-		PROCEDURE StyleHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE StyleHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		BEGIN
 			NEW(popup);
 			popup.AddParButton("Regular", StylePopupHandler, ctxRegular);
@@ -1529,7 +1529,7 @@ TYPE
 			END;
 		END StylePopupHandler;
 
-		PROCEDURE ColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE ColorHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: ColorChooserWindow;
 			result: WMGraphics.Color;
 			replaceColor: BOOLEAN;
@@ -1546,7 +1546,7 @@ TYPE
 			handled := TRUE;
 		END ColorHandler;
 
-		PROCEDURE BGColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE BGColorHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: ColorChooserWindow;
 			result: WMGraphics.Color;
 			replaceColor: BOOLEAN;
@@ -1665,7 +1665,7 @@ TYPE
 			checked := FALSE; hasThreeStates := FALSE; inactive := FALSE;
 		END Init;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerDown*(x, y: SIZE; keys: SET);
 		BEGIN
 			IF ~inactive THEN
 				IF hasThreeStates THEN
@@ -1765,7 +1765,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
-			highlight, shadow, w, h, dist : LONGINT;
+			highlight, shadow: LONGINT; w, h, dist : SIZE;
 		BEGIN
 			highlight := LONGINT(0FFFFFF80H);
 			shadow := 000000080H;
@@ -1822,7 +1822,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
-			highlight, shadow, w, h : LONGINT;
+			highlight, shadow: LONGINT; w, h : SIZE;
 
 		BEGIN
 			highlight := LONGINT(0FFFFFF80H);
@@ -2093,7 +2093,7 @@ BEGIN
 END Dec;
 
 (* converts a 16.16 fixpoint integer to float *)
-PROCEDURE FixpToFloat*(x: LONGINT): REAL;
+PROCEDURE FixpToFloat*(x: SIZE): REAL;
 BEGIN
 	RETURN (x / 65536);
 END FixpToFloat;

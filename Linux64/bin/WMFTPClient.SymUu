@@ -64,17 +64,17 @@ TYPE
 		prefixSearch: WMProperties.BooleanProperty; 
 		filterEdit, pathEdit: WMEditors.Editor; 
 		popup: WMPopups.Popup; 
-		px, py: LONGINT; 
+		px, py: SIZE; 
 		parent: FTPClient.FTPEntry; 
 		selection: FTPClient.FTPListing; 
 		owner: Window; 
 		curList: FTPClient.FTPListing; 
-		nofEntries: LONGINT; 
+		nofEntries: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetColSize; 
 		PROCEDURE ^ ClickSelected(sender, data: ANY); 
-		PROCEDURE ^ ContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ ContextMenu(sender: ANY; x, y: SIZE); 
 		PROCEDURE ^ DeleteEntries(sender, data: ANY); 
 		PROCEDURE ^ RenameEntry(sender, data: ANY); 
 		PROCEDURE ^ CreateDir(sender, data: ANY); 
@@ -82,8 +82,8 @@ TYPE
 		PROCEDURE ^ PathChanged(sender, data: ANY); 
 		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
 		PROCEDURE ^ PrepareList; 
-		PROCEDURE ^ MyDragDropped(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
-		PROCEDURE ^ DragDroppedList(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ MyDragDropped(x, y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ DragDroppedList(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
 		PROCEDURE ^ DragArrivedList(sender, data: ANY); 
 		PROCEDURE ^ GetSelection(): FTPClient.FTPListing; 

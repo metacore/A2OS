@@ -257,7 +257,7 @@ TYPE
 			usageTuple	: UsageTuple;
 			subColl		: HidCollection;
 			i,
-			tupleLength	: LONGINT;
+			tupleLength	: SIZE;
 		BEGIN
 			ASSERT(hidCollection#NIL);
 			cursor := hidCollection.firstReport;
@@ -314,7 +314,8 @@ TYPE
 		*)
 		PROCEDURE GetDictKey*(index: LONGINT; dict: UsageDictionary):UsageTuple;
 		VAR
-			counter, i	: LONGINT;
+			i	: SIZE;
+			counter	: LONGINT;
 			rv			: UsageTuple;
 		BEGIN
 			ASSERT(dict.elements#NIL);
@@ -344,7 +345,7 @@ TYPE
 		*	return:	length of the dictionary
 		*)
 		PROCEDURE DictSize*(dict: UsageDictionary):LONGINT;
-		VAR sum, i:	LONGINT;
+		VAR sum: LONGINT; i: SIZE;
 		BEGIN
 			ASSERT(dict.elements#NIL);
 			FOR i:=0 TO LEN(dict.elements)-1 DO
@@ -497,7 +498,7 @@ TYPE
 		VAR
 			subCollectionCursor:	HidCollection;
 			reportCursor:		HidReport;
-			i:					LONGINT;
+			i:					SIZE;
 			mainState:			SET;
 		BEGIN
 			reportCursor := collection.firstReport;

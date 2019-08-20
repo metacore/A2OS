@@ -325,7 +325,7 @@ TYPE
 		END SplitEditorFocusHandler;
 
 		PROCEDURE ErrorClick(sender, data : ANY);
-		VAR scol, srow, ecol, erow, y : LONGINT;
+		VAR scol, srow, ecol, erow, y : SIZE;
 			focusEditor : WMEditors.Editor;
 			index : LONGINT;
 		BEGIN
@@ -460,7 +460,7 @@ TYPE
 			searchPanel.ToggleVisibility;
 		END SearchHandler;
 
-		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
+		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : SIZE; state : SET; x, y : SIZE);
 		VAR color : WMGraphics.Color; str : ARRAY 128 OF CHAR;
 		BEGIN
 			color := WMGraphics.RGBAToColor(255, 255, 255, 255);

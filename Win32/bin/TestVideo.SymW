@@ -23,7 +23,7 @@ TYPE
 	END; 
 
 	Point = RECORD 
-		x, y: INTEGER; 
+		x, y: SIZE; 
 	END; 
 VAR 
 	threshold, pixThreshold: LONGINT; 
@@ -42,8 +42,8 @@ VAR
 	PROCEDURE ^ MapInverseProjective(CONST H: ARRAY OF LONGREAL; u, v: LONGREAL; VAR x, y: LONGREAL); 
 	PROCEDURE ^ Transform(src, dst: Raster.Image; CONST points: ARRAY OF Point); 
 	PROCEDURE ^ SearchHVLines(buffer: Raster.Image); 
-	PROCEDURE ^ IsEmptyField(buffer: Raster.Image; x, y, w, h: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Dist(buffer: Raster.Image; x0, y0, x1, y1, w, h: LONGINT): LONGINT; 
+	PROCEDURE ^ IsEmptyField(buffer: Raster.Image; x, y, w, h: SIZE): BOOLEAN; 
+	PROCEDURE ^ Dist(buffer: Raster.Image; x0, y0, x1, y1, w, h: SIZE): LONGINT; 
 	PROCEDURE ^ CheckFields(buffer: Raster.Image); 
 	PROCEDURE ^ BinaryLabler*(buffer: Raster.Image; VAR labelBuffer, equivalence: ARRAY OF INTEGER; colorThreshold, pixelThreshold, maxLabels: LONGINT; VAR labelInfo: ARRAY OF LabelInfo; unifyLabels: BOOLEAN; VAR nofFLabels: LONGINT; VAR res: WORD); 
 	PROCEDURE ^ Trace(buffer: Raster.Image; CONST labelBuffer: ARRAY OF INTEGER; VAR labelInfo: LabelInfo; VAR length: LONGINT; VAR path: ARRAY OF Point; VAR res: WORD); 

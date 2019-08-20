@@ -255,7 +255,7 @@ TYPE
 		END Show;
 
 		PROCEDURE &Init*(fileSystem : FileSystem);
-		VAR bitmapSize : LONGINT; i : LONGINT;
+		VAR bitmapSize : LONGINT; i : SIZE;
 		BEGIN
 			ASSERT((fileSystem # NIL) & (fileSystem.volume # NIL));
 			ASSERT(BlockSize MOD BitsPerSET = 0); (* entries of bitmap must not cross block boundaries *)
@@ -658,13 +658,13 @@ TYPE
 
 		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file.
 		A Rider cannot be positioned beyond the end of a file. *)
-		PROCEDURE Set*(VAR r: Files.Rider; pos: LONGINT);
+		PROCEDURE Set*(VAR r: Files.Rider; pos: Files.Position);
 		BEGIN {EXCLUSIVE}
 			r.res := Ok; r.eof := FALSE; r.fs := fs; r.file := SELF;
 			IF (pos < 0) THEN
 				pos := 0;
 			ELSIF (pos < inode.size) THEN
-				r.apos := pos MOD BlockSize; r.bpos := pos DIV BlockSize;
+				r.apos := LONGINT(pos) MOD BlockSize; r.bpos := LONGINT(pos) DIV BlockSize;
 			ELSE (* position beyond end of file -> set to end of file *)
 				r.apos := inode.size MOD BlockSize; r.bpos := inode.size DIV BlockSize;
 			END;
@@ -672,7 +672,7 @@ TYPE
 
 		(** Return the offset of a Rider positioned on a file. *)
 
-		PROCEDURE Pos*(VAR r:  Files.Rider): LONGINT;
+		PROCEDURE Pos*(VAR r:  Files.Rider): Files.Position;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
 			RETURN r.apos + BlockSize * r.bpos;
@@ -688,7 +688,7 @@ TYPE
 		(** Read a sequence of len bytes into the buffer x at offset ofs, advancing the Rider.
 		Less bytes will be read when reading over the end of the file.
 		r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
-		PROCEDURE ReadBytes*(VAR r:  Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE ReadBytes*(VAR r:  Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
 		VAR dnode : Dnode; dataLeft, nofBytes, pos, res : LONGINT; eof : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
@@ -701,15 +701,15 @@ TYPE
 					fileSystem.volume.ReadBlock(inode.direct[r.bpos], dnode, res);
 					IF (res = Ok) THEN
 						(* determine the number of bytes to be read from this dnode *)
-						dataLeft := BlockSize - r.apos; (* data in this dnode starting at offset r.apos *)
+						dataLeft := BlockSize - LONGINT(r.apos); (* data in this dnode starting at offset r.apos *)
 						IF (len < dataLeft) THEN
-							nofBytes := len;
+							nofBytes := LONGINT(len);
 						ELSE
 							nofBytes := dataLeft;
 						END;
 
 						(* check against file length *)
-						pos := r.bpos * BlockSize + r.apos;
+						pos := LONGINT(r.bpos) * BlockSize + LONGINT(r.apos);
 						IF (pos + nofBytes > inode.size) THEN
 							nofBytes := inode.size - pos;
 							IF (nofBytes < 0) THEN nofBytes := 0; END;
@@ -720,7 +720,7 @@ TYPE
 
 						len := len - nofBytes;
 						ofs := ofs + len;
-						r.apos := (r.apos + nofBytes) MOD BlockSize;
+						r.apos := (LONGINT(r.apos) + nofBytes) MOD BlockSize;
 						IF (nofBytes = dataLeft) THEN
 							r.bpos := r.bpos + 1; (* rider positioned at next dnode now *)
 						END;
@@ -748,7 +748,7 @@ TYPE
 		END Write;
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
-		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
 		VAR dnode : Dnode; blockNumber, spaceLeft, nofBytes, pos, res : LONGINT;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
@@ -781,9 +781,9 @@ TYPE
 					ASSERT(blockNumber >= fileSystem.superBlock.firstDataBlock);
 
 					(* determine how much bytes we write to this dnode *)
-					spaceLeft := BlockSize - r.apos;
+					spaceLeft := BlockSize - LONGINT(r.apos);
 					IF (len < spaceLeft) THEN
-						nofBytes := len;
+						nofBytes := LONGINT(len);
 					ELSE
 						nofBytes := spaceLeft;
 					END;
@@ -794,8 +794,8 @@ TYPE
 					IF (res = Ok) THEN
 						len := len - nofBytes;
 						ofs := ofs + nofBytes;
-						r.apos := (r.apos + nofBytes) MOD BlockSize;
-						IF (r.apos = 0) THEN
+						r.apos := (LONGINT(r.apos) + nofBytes) MOD BlockSize;
+						IF (LONGINT(r.apos) = 0) THEN
 							INC(r.bpos);
 							IF (r.bpos >= LEN(inode.direct)) THEN (* maximum file size reached *)
 								DEC(r.bpos);
@@ -810,7 +810,7 @@ TYPE
 					END;
 				END;
 			END;
-			pos := r.bpos * BlockSize + r.apos;
+			pos := LONGINT(r.bpos) * BlockSize + LONGINT(r.apos);
 			IF (pos > inode.size) THEN
 				inode.size := pos;
 				inodeModified := TRUE;
@@ -819,7 +819,7 @@ TYPE
 		END WriteBytes;
 
 		(** Return the current length of a file. *)
-		PROCEDURE Length*(): LONGINT;
+		PROCEDURE Length*(): Files.Size;
 		BEGIN {EXCLUSIVE}
 			RETURN inode.size;
 		END Length;

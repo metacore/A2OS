@@ -10,7 +10,7 @@ TYPE
 	VAR 
 		caption: String; 
 		color, textColor: WMGraphics.Color; 
-		align: LONGINT; 
+		align: WORD; 
 		img: WMGraphics.Image; 
 		data: ANY; 
 		flags: SET; 
@@ -29,35 +29,35 @@ TYPE
 	StringGridModel* = OBJECT {EXCLUSIVE} 
 	VAR 
 		lockedBy: ANY; 
-		lockLevel: LONGINT; 
+		lockLevel: SIZE; 
 		viewChanged: BOOLEAN; 
 		onChanged*: WMEvents.EventSource; 
 		rows: RowArray; 
-		nofRows, nofCols: LONGINT; 
+		nofRows, nofCols: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Acquire*; 
 		PROCEDURE ^ Release*; 
-		PROCEDURE ^ AdjustRows(newSize: LONGINT); 
+		PROCEDURE ^ AdjustRows(newSize: SIZE); 
 		PROCEDURE ^ AdjustRow(row: Row); 
-		PROCEDURE ^ SetNofRows*(newNofRows: LONGINT); 
-		PROCEDURE ^ SetNofCols*(newNofCols: LONGINT); 
-		PROCEDURE ^ GetNofRows*(): LONGINT; 
-		PROCEDURE ^ GetNofCols*(): LONGINT; 
-		PROCEDURE ^ SetCellText*(col, row: LONGINT; caption: String); 
-		PROCEDURE ^ GetCellText*(col, row: LONGINT): String; 
-		PROCEDURE ^ SetCellTextAOC*(col, row, minBufferSize: LONGINT; CONST caption: ARRAY OF CHAR); 
-		PROCEDURE ^ GetCellTextAOC*(col, row: LONGINT; VAR caption: ARRAY OF CHAR); 
-		PROCEDURE ^ SetCellColors*(col, row: LONGINT; color, textColor: WMGraphics.Color); 
-		PROCEDURE ^ GetCellColors*(col, row: LONGINT; VAR color, textColor: WMGraphics.Color; VAR valid: BOOLEAN); 
-		PROCEDURE ^ SetCellData*(col, row: LONGINT; data: ANY); 
-		PROCEDURE ^ GetCellData*(col, row: LONGINT): ANY; 
-		PROCEDURE ^ SetCellImage*(col, row: LONGINT; img: WMGraphics.Image); 
-		PROCEDURE ^ GetCellImage*(col, row: LONGINT): WMGraphics.Image; 
-		PROCEDURE ^ SetTextAlign*(col, row, align: LONGINT); 
-		PROCEDURE ^ GetTextAlign*(col, row: LONGINT): LONGINT; 
-		PROCEDURE ^ DeleteRow*(rowNo: LONGINT; viewChanged: BOOLEAN); 
-		PROCEDURE ^ InsertEmptyRow*(atRowNo: LONGINT); 
+		PROCEDURE ^ SetNofRows*(newNofRows: SIZE); 
+		PROCEDURE ^ SetNofCols*(newNofCols: SIZE); 
+		PROCEDURE ^ GetNofRows*(): SIZE; 
+		PROCEDURE ^ GetNofCols*(): SIZE; 
+		PROCEDURE ^ SetCellText*(col, row: SIZE; caption: String); 
+		PROCEDURE ^ GetCellText*(col, row: SIZE): String; 
+		PROCEDURE ^ SetCellTextAOC*(col, row, minBufferSize: SIZE; CONST caption: ARRAY OF CHAR); 
+		PROCEDURE ^ GetCellTextAOC*(col, row: SIZE; VAR caption: ARRAY OF CHAR); 
+		PROCEDURE ^ SetCellColors*(col, row: SIZE; color, textColor: WMGraphics.Color); 
+		PROCEDURE ^ GetCellColors*(col, row: SIZE; VAR color, textColor: WMGraphics.Color; VAR valid: BOOLEAN); 
+		PROCEDURE ^ SetCellData*(col, row: SIZE; data: ANY); 
+		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY; 
+		PROCEDURE ^ SetCellImage*(col, row: SIZE; img: WMGraphics.Image); 
+		PROCEDURE ^ GetCellImage*(col, row: SIZE): WMGraphics.Image; 
+		PROCEDURE ^ SetTextAlign*(col, row: SIZE; align: WORD); 
+		PROCEDURE ^ GetTextAlign*(col, row: SIZE): WORD; 
+		PROCEDURE ^ DeleteRow*(rowNo: SIZE; viewChanged: BOOLEAN); 
+		PROCEDURE ^ InsertEmptyRow*(atRowNo: SIZE); 
 	END StringGridModel; 
 
 	StringGrid* = OBJECT {EXCLUSIVE} (WMGrids.GenericGrid)
@@ -69,8 +69,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ModelChanged(sender, data: ANY); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ GetCellData*(col, row: LONGINT): ANY; 
-		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
+		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY; 
+		PROCEDURE ^ DrawCell(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 	END StringGrid; 
 VAR 
 	PrototypeTclCell*, PrototypeTclHover*, PrototypeTclSelected*, PrototypeTclTextDefault*, PrototypeTclTextHover*, PrototypeTclTextSelected*, PrototypeTclFixed*: WMProperties.ColorProperty; 

@@ -62,7 +62,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT);
 		BEGIN
 			Draw^(canvas, w, h, 0)
 		END Draw;

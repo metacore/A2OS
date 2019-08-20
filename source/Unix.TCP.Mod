@@ -44,8 +44,8 @@ TYPE
 				conn := c
 			END New;
 
-			PROCEDURE SendPacket( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT ): BOOLEAN;
-			VAR n: LONGINT;
+			PROCEDURE SendPacket( CONST data: ARRAY OF CHAR;  ofs, len: SIZE ): BOOLEAN;
+			VAR n: SIZE;
 			BEGIN {EXCLUSIVE}
 				WHILE len > 0 DO
 					n := len;
@@ -153,7 +153,7 @@ TYPE
 
 
 				(** Send data on a TCP connection. *)
-				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: WORD );
+				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
 				BEGIN
 					IF trace THEN  Out.String( "Send: socket=" );  Out.Int( socket, 0 )  END;
 					IF state = Established THEN
@@ -176,8 +176,8 @@ TYPE
 					res parameter returns 0 if ok, or a non-zero error code otherwise (e.g. if the connection is closed
 					by the communication partner, or by a call of the Close method). *)
 
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
-				VAR p, x: LONGINT;
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+				VAR p, x: SIZE;
 				BEGIN {EXCLUSIVE}
 					ASSERT( (ofs >= 0) & (ofs + size <= LEN( data )) & (min <= size) );   (* parameter consistency check *)
 					IF trace THEN

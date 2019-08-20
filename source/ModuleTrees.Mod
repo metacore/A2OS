@@ -49,21 +49,21 @@ TYPE
 		pos : Texts.TextPosition;
 		name : Strings.String;
 		color : WMGraphics.Color;
-		sortInfo : LONGINT;
+		sortInfo : WORD;
 		font : WMGraphics.Font;
 		node : ModuleParser.Node;
 		modulename : ARRAY 32 OF CHAR;
 		external : BOOLEAN;
-		position : LONGINT;
+		position : Streams.Position;
 	END TextInfo;
 
 	ExternalInfo* = OBJECT
 	VAR
 		modulename- : ARRAY 32 OF CHAR;
-		position- : LONGINT;
+		position- : Streams.Position;
 		node- : ModuleParser.Node;
 
-		PROCEDURE &Init(CONST modulename : ARRAY OF CHAR; position : LONGINT; node : ModuleParser.Node);
+		PROCEDURE &Init(CONST modulename : ARRAY OF CHAR; position : Streams.Position; node : ModuleParser.Node);
 		BEGIN
 			COPY(modulename, SELF.modulename);
 			SELF.position := position;
@@ -221,18 +221,18 @@ TYPE
 			scanner: FoxScanner.Scanner;
 			reader : TextUtilities.TextReader;
 			rootNode: WMTrees.TreeNode;
-			nofOpenNodes : LONGINT;
+			nofOpenNodes : SIZE;
 			openNodes : StringList;
-			i : LONGINT;
+			i : SIZE;
 
 			PROCEDURE Store;
 			VAR node, tnode : WMTrees.TreeNode;
 				stack : ARRAY 32 OF WMTrees.TreeNode;
 				caption : Strings.String;
-				tos : LONGINT;
+				tos : SIZE;
 				path : ARRAY 1024 OF CHAR;
 				sl, tl : StringList;
-				i : LONGINT;
+				i : SIZE;
 			BEGIN
 				nofOpenNodes := 0;
 				node := tree.GetRoot();
@@ -354,13 +354,13 @@ TYPE
 			tree.Release;
 		END SortHandler;
 
-		PROCEDURE SelectNodeByPos* (pos: LONGINT);
+		PROCEDURE SelectNodeByPos* (pos: SIZE);
 		VAR root, node: WMTrees.TreeNode; data : ANY;
 
-			PROCEDURE FindNearestNode (node: WMTrees.TreeNode; pos: LONGINT): WMTrees.TreeNode;
-			VAR nearestNode: WMTrees.TreeNode; distance, nearestDistance: LONGINT;
+			PROCEDURE FindNearestNode (node: WMTrees.TreeNode; pos: SIZE): WMTrees.TreeNode;
+			VAR nearestNode: WMTrees.TreeNode; distance, nearestDistance: SIZE;
 
-				PROCEDURE GetDistance (node: WMTrees.TreeNode; pos: LONGINT): LONGINT;
+				PROCEDURE GetDistance (node: WMTrees.TreeNode; pos: SIZE): SIZE;
 				VAR data: ANY;
 				BEGIN
 					data := tree.GetNodeData (node);
@@ -370,12 +370,12 @@ TYPE
 					IF (data # NIL) & (data IS TextInfo) & (data(TextInfo).pos # NIL) & (pos >= data(TextInfo).pos.GetPosition ()) THEN
 						RETURN pos - data(TextInfo).pos.GetPosition ()
 					ELSE
-						RETURN MAX(LONGINT)
+						RETURN MAX(SIZE)
 					END
 				END GetDistance;
 
 			BEGIN
-				nearestNode := NIL; nearestDistance := MAX (LONGINT);
+				nearestNode := NIL; nearestDistance := MAX (SIZE);
 				WHILE node # NIL DO
 					data := tree.GetNodeData(node);
 					IF (data # NIL) & (data IS TextInfo) & (data(TextInfo).external = FALSE) THEN
@@ -400,7 +400,7 @@ TYPE
 		PROCEDURE SortTree(parent: WMTrees.TreeNode);
 		VAR
 			n, left, right: WMTrees.TreeNode;
-			nodeCount, i: LONGINT;
+			nodeCount, i: SIZE;
 		BEGIN
 			n := tree.GetChildren(parent);
 			WHILE n # NIL DO
@@ -460,8 +460,8 @@ TYPE
 			tree.AddChildNodeAfter(parent, right, left);
 		END SwapSiblings;
 
-		PROCEDURE DrawNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: WMTrees.TreeNode; state: SET);
-		VAR dx, tdx, tdy : LONGINT; f : WMGraphics.Font; image : WMGraphics.Image;
+		PROCEDURE DrawNode(canvas: WMGraphics.Canvas; w, h: SIZE; node: WMTrees.TreeNode; state: SET);
+		VAR dx, tdx, tdy : SIZE; f : WMGraphics.Font; image : WMGraphics.Image;
 			caption: Strings.String;
 			ptr: ANY;
 		BEGIN
@@ -498,7 +498,7 @@ TYPE
 			d: ANY;
 			node : WMTrees.TreeNode;
 			textInfo: TextInfo;
-			a, b  : LONGINT;
+			a, b  : SIZE;
 			text : Texts.Text;
 			moduleNode : ModuleParser.Module;
 			extInfo : ExternalInfo;
@@ -544,7 +544,7 @@ TYPE
 		END ClickNode;
 
 		PROCEDURE MiddleClickNode(sender, data : ANY);
-		VAR d : ANY; commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: LONGINT; ignore : WORD;
+		VAR d : ANY; commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: SIZE; ignore : WORD;
 		BEGIN
 			IF (data # NIL) & (data IS WMTrees.TreeNode) THEN
 				tree.Acquire;
@@ -563,7 +563,7 @@ TYPE
 			END;
 		END MiddleClickNode;
 
-		PROCEDURE GetTextInfo(node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo: LONGINT; color: WMGraphics.Color; style: SET): TextInfo;
+		PROCEDURE GetTextInfo(node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo: WORD; color: WMGraphics.Color; style: SET): TextInfo;
 		VAR newInfo: TextInfo; moduleNode : ModuleParser.Module; font: WMGraphics.Font;
 		BEGIN
 			NEW(newInfo);
@@ -596,7 +596,7 @@ TYPE
 					newInfo.external := FALSE;
 					newInfo.modulename := "";
 					NEW(newInfo.pos, editor.text);
-					newInfo.pos.SetPosition(infoItem.pos);
+					newInfo.pos.SetPosition(infoItem.pos(SIZE));
 				ELSE
 					newInfo.external := TRUE;
 					newInfo.pos := NIL;
@@ -651,8 +651,8 @@ TYPE
 			END;
 		END GetModuleNode;
 
-		PROCEDURE GetProcedureType(procHead : ModuleParser.ProcHead) : LONGINT;
-		VAR type : LONGINT;
+		PROCEDURE GetProcedureType(procHead : ModuleParser.ProcHead) : WORD;
+		VAR type : WORD;
 
 			PROCEDURE InModuleScope(procHead : ModuleParser.ProcHead) : BOOLEAN;
 			BEGIN
@@ -684,13 +684,13 @@ TYPE
 			RETURN type;
 		END GetProcedureType;
 
-		PROCEDURE AddBody (root: WMTrees.TreeNode; pnode : ModuleParser.Node; modifiers: SET; pos: LONGINT);
+		PROCEDURE AddBody (root: WMTrees.TreeNode; pnode : ModuleParser.Node; modifiers: SET; pos: Streams.Position);
 		VAR node: WMTrees.TreeNode; info: TextInfo;
 		BEGIN
 			node := NewNode(root, Strings.NewString("BODY"));
 			info := GetTextInfo(pnode, NIL, FALSE, SortBody, GetColor(modifiers, treeView.clTextDefault.Get()), {});
 			NEW(info.pos, editor.text);
-			info.pos.SetPosition(pos);
+			info.pos.SetPosition(pos(SIZE));
 			INCL(info.flags, PosValid);
 			tree.SetNodeData(node, info);
 		END AddBody;
@@ -701,7 +701,7 @@ TYPE
 			newNode, importNode: WMTrees.TreeNode;
 			info : TextInfo;
 			import: ModuleParser.Import;
-			nofImports : LONGINT;
+			nofImports : SIZE;
 		BEGIN
 			n := importList;
 			IF n # NIL THEN
@@ -798,7 +798,7 @@ TYPE
 		PROCEDURE AddProcHead(treeNode: WMTrees.TreeNode; procHead: ModuleParser.ProcHead): WMTrees.TreeNode;
 		VAR
 			newNode: WMTrees.TreeNode; caption: Strings.String;
-			color : WMGraphics.Color; image : WMGraphics.Image; type : LONGINT; d : ANY;
+			color : WMGraphics.Color; image : WMGraphics.Image; type : WORD; d : ANY;
 		BEGIN
 			IF (procHead # NIL) THEN
 				color := GetColor(procHead.modifiers, ColorProcedure);
@@ -898,7 +898,7 @@ TYPE
 		END AddFPSection;
 
 		PROCEDURE AddVarDecl(parent: WMTrees.TreeNode; varDecl: ModuleParser.VarDecl);
-		VAR n: ModuleParser.NodeList; nofVariables, nofIdents : LONGINT;
+		VAR n: ModuleParser.NodeList; nofVariables, nofIdents : SIZE;
 		BEGIN
 			n := varDecl; nofVariables := 0;
 			WHILE n # NIL DO
@@ -1159,7 +1159,7 @@ TYPE
 		PROCEDURE PrefixPostfixToCaption(node: WMTrees.TreeNode; prePost: Strings.String; prefix: BOOLEAN);
 		VAR
 			oldCaption, newCaption: Strings.String;
-			len: LONGINT;
+			len: SIZE;
 		BEGIN
 			oldCaption := tree.GetNodeCaption(node);
 			len := LEN(oldCaption^) + LEN(prePost^);
@@ -1182,7 +1182,7 @@ TYPE
 			PrefixPostfixToCaption(node, postfix, FALSE);
 		END AddPostfixToCaption;
 
-		PROCEDURE AddNumberPostfixToCaption(node : WMTrees.TreeNode; number : LONGINT);
+		PROCEDURE AddNumberPostfixToCaption(node : WMTrees.TreeNode; number : SIZE);
 		VAR postfix, nbr : ARRAY 16 OF CHAR;
 		BEGIN
 			Strings.IntToStr(number, nbr);
@@ -1190,7 +1190,7 @@ TYPE
 			PrefixPostfixToCaption(node, Strings.NewString(postfix), FALSE);
 		END AddNumberPostfixToCaption;
 
-		PROCEDURE AddIdentList(parent: WMTrees.TreeNode; identList: ModuleParser.IdentList; VAR nofIdents : LONGINT);
+		PROCEDURE AddIdentList(parent: WMTrees.TreeNode; identList: ModuleParser.IdentList; VAR nofIdents : SIZE);
 		VAR n: ModuleParser.NodeList; newNode: WMTrees.TreeNode;
 		BEGIN
 			nofIdents := 0;
@@ -1207,7 +1207,7 @@ TYPE
 			n: ModuleParser.NodeList;
 			newNode: WMTrees.TreeNode;
 			c : ModuleParser.ConstDecl;
-			nofConstants : LONGINT;
+			nofConstants : SIZE;
 		BEGIN
 			n := constDecl; nofConstants := 0;
 			WHILE n # NIL DO
@@ -1220,7 +1220,7 @@ TYPE
 			AddNumberPostfixToCaption(parent, nofConstants);
 		END AddConstDecl;
 
-		PROCEDURE AddIdentDef(parent: WMTrees.TreeNode; node : ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo: LONGINT; color: WMGraphics.Color; style: SET):
+		PROCEDURE AddIdentDef(parent: WMTrees.TreeNode; node : ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo: WORD; color: WMGraphics.Color; style: SET):
 			WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 		BEGIN
@@ -1237,7 +1237,7 @@ TYPE
 			END
 		END AddIdentDef;
 
-		PROCEDURE AddInfoItem(parent: WMTrees.TreeNode; node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo : LONGINT; color : WMGraphics.Color; style: SET):
+		PROCEDURE AddInfoItem(parent: WMTrees.TreeNode; node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo : WORD; color : WMGraphics.Color; style: SET):
 			WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 		BEGIN

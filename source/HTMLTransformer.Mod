@@ -74,7 +74,7 @@ TYPE
 		baseAddress : String;
 		baseTarget : String;
 		sequencer : WMMessages.MsgSequencer;
-		initWidth : LONGINT;
+		initWidth : SIZE;
 		loadLink* : WMEvents.EventListener;
 		charset : String;
 		frameName : String;
@@ -107,7 +107,7 @@ TYPE
 		initAlignment : LONGINT;
 		isTableContent : BOOLEAN;
 
-		PROCEDURE &Init*(doc: XML.Container; url : String; initWidth : LONGINT; loadLink : WMEvents.EventListener; charset : String; frameName : String);
+		PROCEDURE &Init*(doc: XML.Container; url : String; initWidth : SIZE; loadLink : WMEvents.EventListener; charset : String; frameName : String);
 		VAR
 			crlf : ARRAY 5 OF CHAR;
 		BEGIN
@@ -234,7 +234,7 @@ TYPE
 			enum: XMLObjects.Enumerator;
 			p : ANY;
 			i, j, res : LONGINT;
-			pos: SIZE;
+			pos, k: SIZE;
 			exitLoop : BOOLEAN;
 			aoc : ARRAY 16 OF CHAR;
 			olulStackItem : OLULStackItem;
@@ -829,9 +829,9 @@ TYPE
 					| 2 : s := Strings.NewString("&#9675; "); (* circle *)
 					| 3 : IF olulStackTop#NIL THEN  (* 1, 2, 3... *)
 							Strings.IntToStr(olulStackTop.value, aoc);
-							j :=Strings.Length(aoc);
-							IF (j+2) <= (LEN(aoc)-1) THEN
-								aoc[j]:='.'; aoc[j+1]:=' '; aoc[j+2]:=0X;
+							k := Strings.Length(aoc);
+							IF (k+2) <= (LEN(aoc)-1) THEN
+								aoc[k]:='.'; aoc[k+1]:=' '; aoc[k+2]:=0X;
 							END;
 						ELSE
 							aoc := "0. ";
@@ -1374,7 +1374,7 @@ TYPE
 	END Transformer;
 
 
-	CellSizes = POINTER TO ARRAY OF LONGINT;
+	CellSizes = POINTER TO ARRAY OF SIZE;
 
 	StringArray = POINTER TO ARRAY OF String;
 
@@ -1387,8 +1387,8 @@ TYPE
 	Table* = OBJECT (VisualComponent)
 	VAR
 		tableElem : XML.Element;
-		parentWidth : LONGINT;
-		align- : LONGINT;
+		parentWidth : SIZE;
+		align- : WORD;
 		textColor, linkColor, vlinkColor, alinkColor : LONGINT;
 		url : String;
 		loadLink : WMEvents.EventListener;
@@ -1411,11 +1411,11 @@ TYPE
 		colsCnt : LONGINT;
 		rowsCnt : LONGINT;
 		minCellWidths, maxCellWidths : CellSizes;
-		minTableWidth, maxTableWidth : LONGINT;
+		minTableWidth, maxTableWidth : SIZE;
 		x, y : LONGINT;
 		internalWidth, internalHeight : LONGINT;
 
-		PROCEDURE & New*(tableElem : XML.Element; parentWidth : LONGINT; align : LONGINT; textColor, linkColor, vlinkColor, alinkColor : LONGINT; url : String; loadLink : WMEvents.EventListener; charset : String; frameName : String; form : Form; baseAddress : String; baseTarget : String; seq : WMMessages.MsgSequencer; isSubtable : BOOLEAN);
+		PROCEDURE & New*(tableElem : XML.Element; parentWidth : SIZE; align : LONGINT; textColor, linkColor, vlinkColor, alinkColor : LONGINT; url : String; loadLink : WMEvents.EventListener; charset : String; frameName : String; form : Form; baseAddress : String; baseTarget : String; seq : WMMessages.MsgSequencer; isSubtable : BOOLEAN);
 		VAR
 			s : String; sequencer: Messages.MsgSequencer;
 		BEGIN
@@ -1536,7 +1536,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			h, w, color, i : LONGINT;
+			h, w, i: SIZE; color : LONGINT;
 		BEGIN
 			DrawBackground^(canvas);
 
@@ -1724,7 +1724,7 @@ TYPE
 
 		PROCEDURE CalculateMinMaxTableWidth;
 		VAR
-			i, j, k : LONGINT;
+			i, j, k : SIZE;
 		BEGIN
 			NEW(minCellWidths, colsCnt);
 			NEW(maxCellWidths, colsCnt);
@@ -1770,13 +1770,13 @@ TYPE
 		PROCEDURE AlignCells;
 		VAR
 			cell : TableCell;
-			w, h, i, j, k : LONGINT;
-			W, D, d : LONGINT;
-			tableWidth, tableHeight : LONGINT;
-			targetWidth : LONGINT;
+			w, h, i, j, k : SIZE;
+			W, D, d : SIZE;
+			tableWidth, tableHeight : SIZE;
+			targetWidth : SIZE;
 			cellWidths, cellHeights : CellSizes;
 			fac : REAL;
-			leftIndent, topIndent : LONGINT;
+			leftIndent, topIndent : SIZE;
 		BEGIN
 
 			NEW(cellWidths, colsCnt);
@@ -1925,7 +1925,7 @@ TYPE
 
 		END AlignCells;
 
-		PROCEDURE ParentTvWidthChanged*(x : LONGINT);
+		PROCEDURE ParentTvWidthChanged*(x : SIZE);
 		BEGIN
 			parentWidth := x - 20;
 			IF parentWidth < 1 THEN parentWidth := 1 END;
@@ -1940,7 +1940,7 @@ TYPE
 		transformer : Transformer;
 		tv : WMTextView.TextView;
 		text : Texts.Text;
-		minWidth, maxWidth : LONGINT;
+		minWidth, maxWidth : SIZE;
 		width, height : LONGINT;
 		colspan, rowspan : LONGINT;
 		bgImage : WebBrowserComponents.TileImagePanel;
@@ -1956,7 +1956,7 @@ TYPE
 			rec : WMRectangles.Rectangle;
 			bgImageName : String;
 			item : EmbeddedObject;
-			dummy : LONGINT;
+			dummy : SIZE;
 		BEGIN
 			Init;
 			SetSequencer(seq);
@@ -2101,7 +2101,7 @@ TYPE
 			(*SetSequencer(seq); *)(*!??PH*)
 		END New;
 
-		PROCEDURE SetWidth(width : LONGINT);
+		PROCEDURE SetWidth(width : SIZE);
 		VAR
 			item : EmbeddedObject;
 		BEGIN
@@ -2235,7 +2235,7 @@ TYPE
 
 		PROCEDURE &Init*(name : String; value : String; proc : WMEvents.EventListener);
 		VAR
-			x, y : LONGINT;
+			x, y : SIZE;
 			font : WMGraphics.Font;
 		BEGIN
 			SELF.name := name;
@@ -2495,7 +2495,7 @@ TYPE
 			button.SetExtPointerDownHandler(MenuHandler);
 		END Init;
 
-		PROCEDURE MenuHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN);
+		PROCEDURE MenuHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN);
 		BEGIN
 			handled := TRUE;
 			button.ToWMCoordinates(0, button.bounds.GetHeight(), x, y);
@@ -2587,7 +2587,7 @@ PROCEDURE EncodeLinkData(link, target, url : String) : String;
 VAR
 	s : String;
 	inlineLink : BOOLEAN;
-	urlLen : LONGINT;
+	urlLen : SIZE;
 BEGIN
 	ASSERT(link # NIL);
 	inlineLink := FALSE;
@@ -2609,9 +2609,9 @@ BEGIN
 	END;
 END EncodeLinkData;
 
-PROCEDURE Utf82UrlEncodedUtf8*(VAR in : ARRAY OF CHAR) : String;
+PROCEDURE Utf82UrlEncodedUtf8*(CONST in : ARRAY OF CHAR) : String;
 VAR
-	i, cnt : LONGINT;
+	i, cnt : SIZE;
 	output : String;
 	aoc : ARRAY 3 OF CHAR;
 BEGIN
@@ -2644,7 +2644,7 @@ VAR
 	enum, enum2 : XMLObjects.Enumerator;
 	p, p2 : ANY;
 	name : String;
-	i : LONGINT;
+	i : SIZE;
 BEGIN
 	NEW(col);
 	name := root.GetName();
@@ -2690,7 +2690,7 @@ VAR
 	dyn : DynamicStrings.DynamicString;
 	dynPos : LONGINT;
 	temp : ARRAY 5 OF CHAR;
-	i, j, len : LONGINT;
+	i, j, len : SIZE;
 BEGIN
 	NEW(dyn);
 	dynPos := 0;
@@ -2762,7 +2762,7 @@ END GetColor;
 
 PROCEDURE StringIsWhiteSpace(VAR txt : ARRAY OF CHAR) : BOOLEAN;
 VAR
-	i : LONGINT;
+	i : SIZE;
 BEGIN
 	FOR i := 0 TO Strings.Length(txt)-1 DO
 		IF ORD(txt[i]) > 32 THEN RETURN FALSE END;
@@ -2772,7 +2772,7 @@ END StringIsWhiteSpace;
 
 PROCEDURE StringHasNewLine(VAR txt : ARRAY OF CHAR) : BOOLEAN;
 VAR
-	i : LONGINT;
+	i : SIZE;
 BEGIN
 	FOR i := 0 TO Strings.Length(txt)-1 DO
 		IF (ORD(txt[i]) = 10) OR (ORD(txt[i]) = 13) THEN RETURN TRUE END;
@@ -2784,7 +2784,7 @@ PROCEDURE ReplaceWhiteSpaces(VAR txt : String) : String;
 VAR
 	dyn : DynamicStrings.DynamicString;
 	dynPos : LONGINT;
-	i : LONGINT;
+	i : SIZE;
 	ch : CHAR;
 	putYet : BOOLEAN;
 BEGIN
@@ -2810,7 +2810,7 @@ BEGIN
 END ReplaceWhiteSpaces;
 
 PROCEDURE TrimLineBreak(VAR string : ARRAY OF CHAR);
-VAR i,j: LONGINT;
+VAR i,j: SIZE;
 BEGIN
 	j := 0;
 	WHILE (ORD(string[j]) = 10) OR (ORD(string[j]) = 13) DO INC(j) END;
@@ -2978,7 +2978,7 @@ VAR
 
 	PROCEDURE Get(f : ARRAY OF CHAR; alternatives : BOOLEAN) : String;
 	VAR
-		i, j, last : LONGINT;
+		i, j, last : SIZE;
 	BEGIN
 		Strings.Trim(f, ' ');
 		Strings.Trim(f, '"');
@@ -3108,7 +3108,7 @@ END IntToRomanString;
 PROCEDURE TransformCharEnt*(in : String) : String;
 VAR
 	ent : ARRAY 32 OF CHAR;
-	i, j : LONGINT;
+	i, j : SIZE;
 	rep, s1, s2 : String;
 	ds: DynamicStrings.DynamicString;
 BEGIN
@@ -3148,7 +3148,7 @@ PROCEDURE GetCharEnt(VAR ent : ARRAY OF CHAR) : String;
 VAR
 	temp : String;
 	aoc : ARRAY 5 OF CHAR;
-	res, len : LONGINT; suc: WORD;
+	len : SIZE; res, suc: WORD;
 BEGIN
 	res := 0;
 	IF ent[0] = '#' THEN

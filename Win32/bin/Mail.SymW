@@ -36,23 +36,23 @@ TYPE
 		PROCEDURE ^ SetDate*(CONST date: ARRAY OF CHAR); 
 		PROCEDURE ^ GetDate*(VAR date: ARRAY OF CHAR); 
 		PROCEDURE ^ AddTo*(CONST name, address: ARRAY OF CHAR); 
-		PROCEDURE ^ GetNofTo*(): LONGINT; 
-		PROCEDURE ^ GetTo*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofTo*(): SIZE; 
+		PROCEDURE ^ GetTo*(nr: SIZE; VAR name, address: ARRAY OF CHAR); 
 		PROCEDURE ^ AddReplyTo*(CONST name, address: ARRAY OF CHAR); 
-		PROCEDURE ^ GetNofReplyTo*(): LONGINT; 
-		PROCEDURE ^ GetReplyTo*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofReplyTo*(): SIZE; 
+		PROCEDURE ^ GetReplyTo*(nr: SIZE; VAR name, address: ARRAY OF CHAR); 
 		PROCEDURE ^ AddCc*(CONST name, address: ARRAY OF CHAR); 
-		PROCEDURE ^ GetNofCc*(): LONGINT; 
-		PROCEDURE ^ GetCc*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofCc*(): SIZE; 
+		PROCEDURE ^ GetCc*(nr: SIZE; VAR name, address: ARRAY OF CHAR); 
 		PROCEDURE ^ AddBcc*(CONST name, address: ARRAY OF CHAR); 
-		PROCEDURE ^ GetNofBcc*(): LONGINT; 
-		PROCEDURE ^ GetBcc*(nr: LONGINT; VAR name, address: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofBcc*(): SIZE; 
+		PROCEDURE ^ GetBcc*(nr: SIZE; VAR name, address: ARRAY OF CHAR); 
 		PROCEDURE ^ AddHeader*(CONST id, content: ARRAY OF CHAR); 
-		PROCEDURE ^ GetNofHeaders*(): LONGINT; 
-		PROCEDURE ^ GetHeader*(nr: LONGINT; VAR id, content: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNofHeaders*(): SIZE; 
+		PROCEDURE ^ GetHeader*(nr: SIZE; VAR id, content: ARRAY OF CHAR); 
 		PROCEDURE ^ AddLine*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ GetNofLines*(): LONGINT; 
-		PROCEDURE ^ GetLine*(nr: LONGINT; VAR l: Line); 
+		PROCEDURE ^ GetNofLines*(): SIZE; 
+		PROCEDURE ^ GetLine*(nr: SIZE; VAR l: Line); 
 	END Message; 
 
 	Sender* = OBJECT 

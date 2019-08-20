@@ -19,7 +19,7 @@ TYPE
 
 		PROCEDURE ^  & New*(alpha, delay: BOOLEAN); 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Delay; 
 		PROCEDURE ^ Generation; 

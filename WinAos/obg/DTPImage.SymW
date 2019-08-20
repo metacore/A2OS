@@ -16,14 +16,14 @@ TYPE
 		properties: ImagePropWindow; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: LONGINT; zoomFactor: REAL; quality, preview: BOOLEAN); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomFactor: REAL; quality, preview: BOOLEAN); 
 		PROCEDURE ^ Clone*(): DTPData.ContentObject; 
 		PROCEDURE ^ LoadImg(CONST file: ARRAY OF CHAR); 
 		PROCEDURE ^ Load*(elem: XML.Element); 
 		PROCEDURE ^ Store*(VAR w: Files.Writer); 
 		PROCEDURE ^ OnCreate*; 
 		PROCEDURE ^ Redraw*; 
-		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Show*(x, y: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ Close*; 
 	END ImageObject; 
@@ -37,7 +37,7 @@ TYPE
 
 		PROCEDURE ^  & New*(caller: ImageObject); 
 		PROCEDURE ^ CreatePropertyForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Show*(x, y: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ RefreshValues; 
 		PROCEDURE ^ SetValueHandler(sender, data: ANY); 

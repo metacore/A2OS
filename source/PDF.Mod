@@ -94,8 +94,8 @@ TYPE
 			SELF.context := context; NEW(data, 4 *  4096); length := 0;
 		END Init;
 
-		PROCEDURE Add (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-		VAR i : LONGINT; n : Strings.String;
+		PROCEDURE Add (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		VAR i : SIZE; n : Strings.String;
 		BEGIN
 			IF length + len >= LEN(data) THEN
 				NEW(n, LEN(data) + len); FOR i := 0 TO length - 1 DO n[i] := data[i] END;
@@ -245,7 +245,7 @@ TYPE
 		PROCEDURE WriteContent(w : Streams.Writer);
 		VAR i : LONGINT;
 		BEGIN
-			filepos := w.Pos();
+			filepos := w.Pos()(LONGINT);
 			w.Int(id, 0); w.String(" "); w.Int(generation, 0); w.String(" obj"); w.Ln;
 			FOR i := 0 TO content.nof - 1 DO
 				content.data[i].Write(w); w.Ln;
@@ -598,7 +598,7 @@ TYPE
 
 
 		PROCEDURE WriteLZInt(w : Streams.Writer; val, digits : LONGINT);
-		VAR s : ARRAY 16 OF CHAR; i : LONGINT;
+		VAR s : ARRAY 16 OF CHAR; i : SIZE;
 		BEGIN
 			Strings.IntToStr(val, s);
 			FOR i := 1 TO digits - Strings.Length(s) DO w.Char("0") END;
@@ -607,7 +607,7 @@ TYPE
 
 		PROCEDURE Write(w : Streams.Writer);
 		VAR cur : Object;
-			lastXRefPos : LONGINT;
+			lastXRefPos : Streams.Position;
 			trailDict : Dictionary;
 		BEGIN
 			(* header *)
@@ -691,13 +691,13 @@ TYPE
 			WriteReal(w, 1/72); w.String(" w"); w.Ln;
 		END Init;
 
-		PROCEDURE Transform(x, y : LONGINT; VAR rx, ry : REAL);
+		PROCEDURE Transform(x, y : SIZE; VAR rx, ry : REAL);
 		BEGIN
 			rx := x * scale;
 			ry := prb - y * scale
 		END Transform;
 
-		PROCEDURE WriteTrafoCoord(x, y : LONGINT);
+		PROCEDURE WriteTrafoCoord(x, y : SIZE);
 		VAR rx, ry : REAL;
 		BEGIN
 			Transform(x, y, rx, ry);
@@ -771,7 +771,7 @@ TYPE
 		END PDFSetFont;
 
 
-		PROCEDURE DrawString*(x, y: LONGINT; CONST text : ARRAY OF CHAR);
+		PROCEDURE DrawString*(x, y: SIZE; CONST text : ARRAY OF CHAR);
 		BEGIN
 			font := GetPDFFont(GetFont());
 			SetColrg(color);
@@ -784,16 +784,16 @@ TYPE
 		END DrawString;
 
 		(*ALEX 2005.10.26*)
-		PROCEDURE DrawStringMultiLine*(x, y, width,height: LONGINT; resizeHeight: BOOLEAN; CONST stext : ARRAY OF CHAR; VAR actualHeight: LONGINT);
+		PROCEDURE DrawStringMultiLine*(x, y, width,height: LONGINT; resizeHeight: BOOLEAN; CONST stext : ARRAY OF CHAR; VAR actualHeight: SIZE);
 		VAR i: LONGINT;
 			buf: ARRAY 2 OF CHAR;
-			sumW, sumH, strW, strH, lineH: LONGINT;
+			sumW, sumH, strW, strH, lineH: SIZE;
 			beginLine: LONGINT;
 			f : WMGraphics.Font;
 			overflowH: BOOLEAN;
 
 			text: Strings.String;
-			sz, ret: LONGINT;
+			sz: SIZE; ret: SIZE;
 
 			PROCEDURE  WriteLine;
 			BEGIN
@@ -855,14 +855,14 @@ TYPE
 		(*ALEX 2005.10.25*)
 		PROCEDURE DrawStringSingleLine*(x, y, width, align: LONGINT; stext : ARRAY OF CHAR);
 		VAR f : WMGraphics.Font;
-			sz, i, j: LONGINT;
+			sz, i, j: SIZE;
 			overflow: BOOLEAN;
 			buf: ARRAY 2 OF CHAR;
-			sumW, sumWLeft, strW, strH: LONGINT;
+			sumW, sumWLeft, strW, strH: SIZE;
 			g: WMGraphics.GlyphSpacings;
 			lbRet: BOOLEAN;
 			text: Strings.String;
-			ret: LONGINT;
+			ret: SIZE;
 		BEGIN
 			buf[1] := 0X;
 			font := GetPDFFont(GetFont());
@@ -955,8 +955,8 @@ TYPE
 			w.String(str); w.String(" j");
 		END PDFSetLineJoin;
 
-		PROCEDURE PolyLine*(CONST points : ARRAY OF WMGraphics.Point2d; nofPoints : LONGINT; closed : BOOLEAN;  color : WMGraphics.Color; mode : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE PolyLine*(CONST points : ARRAY OF WMGraphics.Point2d; nofPoints : SIZE; closed : BOOLEAN;  color : WMGraphics.Color; mode : WORD);
+		VAR i : SIZE;
 		BEGIN
 			IF nofPoints < 2 THEN RETURN END;
 			ASSERT(nofPoints <= LEN(points));
@@ -982,7 +982,7 @@ TYPE
 			w.String("f*"); w.Ln
 		END FillPoly;
 
-		PROCEDURE Line*(x0, y0, x1, y1 : LONGINT; color : WMGraphics.Color; mode : LONGINT);
+		PROCEDURE Line*(x0, y0, x1, y1 : SIZE; color : WMGraphics.Color; mode : LONGINT);
 		BEGIN
 			SetColRG(color);
 			WriteTrafoCoord(x0, y0); w.String(" m ");
@@ -1071,8 +1071,8 @@ BEGIN
 END WritePDFString;
 
 (*ALEX 2005.10.26: same asa the above function only that writes data[from..to-1]*)
-PROCEDURE WritePDFStringPos(w : Streams.Writer; CONST data : ARRAY OF CHAR; from, to: LONGINT);
-VAR i : LONGINT;
+PROCEDURE WritePDFStringPos(w : Streams.Writer; CONST data : ARRAY OF CHAR; from, to: SIZE);
+VAR i : SIZE;
 BEGIN
 	w.Char("(");
 	i := from; WHILE (i < to) & (data[i] # 0X)  DO
@@ -1092,7 +1092,7 @@ BEGIN
 END WritePDFStringPos;
 
 (*ALEX 2005.10.31*)
-PROCEDURE GetCharSpacings(f: WMGraphics.Font; VAR text: ARRAY OF CHAR; i: LONGINT; VAR g : WMGraphics.GlyphSpacings): BOOLEAN;
+PROCEDURE GetCharSpacings(f: WMGraphics.Font; VAR text: ARRAY OF CHAR; i: SIZE; VAR g : WMGraphics.GlyphSpacings): BOOLEAN;
 VAR code: LONGINT;
 BEGIN
 	IF UTF8Strings.DecodeChar(text, i, code) THEN

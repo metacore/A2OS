@@ -94,7 +94,7 @@ TYPE
 		partition : LONGINT;
 		diskpartString : PartitionsLib.String;
 
-		PROCEDURE SetInstallStep*(step : LONGINT; doStep : BOOLEAN; VAR msg : ARRAY OF CHAR) : BOOLEAN;
+		PROCEDURE SetInstallStep*(step : SIZE; doStep : BOOLEAN; VAR msg : ARRAY OF CHAR) : BOOLEAN;
 		BEGIN
 			IF ~IsValidStepNumber(step) THEN msg := "Invalid installation step specified"; RETURN FALSE; END;
 			CASE steps[step] OF
@@ -112,21 +112,21 @@ TYPE
 			RETURN TRUE;
 		END SetInstallStep;
 
-		PROCEDURE IsValidStepNumber(stepNr : LONGINT) : BOOLEAN;
+		PROCEDURE IsValidStepNumber(stepNr : SIZE) : BOOLEAN;
 		BEGIN
 			RETURN (0 <= stepNr) & (stepNr < NofSteps);
 		END IsValidStepNumber;
 
 		(* Return TRUE of the specified install step will be performed, FALSE otherwise *)
-		PROCEDURE DoStep*(step : LONGINT) : BOOLEAN;
+		PROCEDURE DoStep*(step : SIZE) : BOOLEAN;
 		BEGIN
 			ASSERT(IsValidStepNumber(step));
 			RETURN (steps[step] = Mandatory) OR (steps[step] = OptionalYes);
 		END DoStep;
 
 		(* Return the number of steps that will be performed *)
-		PROCEDURE GetNofSteps() : LONGINT;
-		VAR nofSteps, i : LONGINT;
+		PROCEDURE GetNofSteps() : SIZE;
+		VAR nofSteps, i : SIZE;
 		BEGIN
 			nofSteps := 0;
 			FOR i := 0 TO LEN(steps)-1 DO
@@ -389,7 +389,7 @@ TYPE
 		(* parameters *)
 		config : Configuration;
 
-		currentStep, nofSteps : LONGINT;
+		currentStep, nofSteps : SIZE;
 		nofFiles : LONGINT;
 
 		installLog : Streams.Writer;
@@ -444,8 +444,8 @@ TYPE
 			SetStatus(state.status,  caption, 0, currentStep, 100, TRUE);
 		END SetStep;
 
-		PROCEDURE PackagesProgress(nofFilesExtracted : LONGINT);
-		VAR progress : LONGINT;
+		PROCEDURE PackagesProgress(nofFilesExtracted : SIZE);
+		VAR progress : SIZE;
 		BEGIN
 			IF nofFilesExtracted = nofFiles THEN
 				progress := 100;
@@ -456,7 +456,7 @@ TYPE
 		END PackagesProgress;
 
 		PROCEDURE DoOperation*;
-		VAR i : LONGINT; res : WORD;
+		VAR i : SIZE; res : WORD;
 		BEGIN
 			ASSERT((config.disk.device = disk.device) & (config.partition = partition));
 			installLog.String("Starting installation on partition "); installLog.String(diskpartString); installLog.String("..."); installLog.Ln; installLog.Update;
@@ -745,7 +745,7 @@ TYPE
 
 TYPE
 
-	ReportProgressProc = PROCEDURE {DELEGATE} (nofFilesExtracted : LONGINT);
+	ReportProgressProc = PROCEDURE {DELEGATE} (nofFilesExtracted : SIZE);
 	AbortedProc = PROCEDURE {DELEGATE} () : BOOLEAN;
 	ReportErrorProc = PROCEDURE {DELEGATE} (CONST msg : ARRAY OF CHAR);
 
@@ -1066,7 +1066,7 @@ TYPE
 		END SetAbortedProc;
 
 		(* Report errors while parsing *)
-		PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 		VAR string : ARRAY 256 OF CHAR; nbr : ARRAY 16 OF CHAR;
 		BEGIN
 			string := "Parse error at pos "; Strings.IntToStr(pos, nbr); Strings.Append(string, nbr);

@@ -11,7 +11,7 @@ TYPE
 	Item* = OBJECT END Item;
 
 	Buffer* = OBJECT
-		VAR head, num: LONGINT; buffer: POINTER TO ARRAY OF Item;
+		VAR head, num: SIZE; buffer: POINTER TO ARRAY OF Item;
 
 		PROCEDURE Append*(x: Item);
 		BEGIN {EXCLUSIVE}
@@ -30,7 +30,7 @@ TYPE
 			RETURN x
 		END Remove;
 
-		PROCEDURE &Init*(n: LONGINT);
+		PROCEDURE &Init*(n: SIZE);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;

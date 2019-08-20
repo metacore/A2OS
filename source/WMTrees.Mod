@@ -86,8 +86,8 @@ TYPE
 
 	END TreeNode;
 
-	DrawNodeProc = PROCEDURE {DELEGATE} (canvas : WMGraphics.Canvas; w, h : LONGINT; node : TreeNode; state : SET);
-	MeasureNodeProc = PROCEDURE {DELEGATE} (node : TreeNode; VAR w, h : LONGINT);
+	DrawNodeProc = PROCEDURE {DELEGATE} (canvas : WMGraphics.Canvas; w, h : SIZE; node : TreeNode; state : SET);
+	MeasureNodeProc = PROCEDURE {DELEGATE} (node : TreeNode; VAR w, h : SIZE);
 
 	(* Tree structure that can be visualized in the TreeView. No node may be inserted more than once.
 		Before manipulating or querying, the tree must be locked with Acquire *)
@@ -95,7 +95,7 @@ TYPE
 	Tree* = OBJECT
 	VAR root : TreeNode;
 		lockedBy : ANY;
-		lockLevel : LONGINT;
+		lockLevel : SIZE;
 		viewChanged : BOOLEAN;
 		onChanged* : WMEvents.EventSource; (** does not hold the lock, if called *)
 		beforeExpand* : WMEvents.EventSource; (** does hold the lock, if called *)
@@ -251,7 +251,7 @@ TYPE
 		END SetNodeState;
 
 		(** Incl node state *)
-		PROCEDURE InclNodeState*(node : TreeNode; state : LONGINT);
+		PROCEDURE InclNodeState*(node : TreeNode; state : WORD);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF node = NIL THEN RETURN END;
@@ -265,7 +265,7 @@ TYPE
 		END InclNodeState;
 
 		(**Excl node state *)
-		PROCEDURE ExclNodeState*(node : TreeNode; state : LONGINT);
+		PROCEDURE ExclNodeState*(node : TreeNode; state : WORD);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF node = NIL THEN RETURN END;
@@ -332,7 +332,7 @@ TYPE
 TYPE
 	TreeView* = OBJECT (WMComponents.VisualComponent)
 	VAR tree : Tree;
-		downX, downY, firstLine, lines : LONGINT;
+		downX, downY, firstLine, lines : SIZE;
 		vscrollbar, hscrollbar : WMStandardComponents.Scrollbar;
 		drawNode : DrawNodeProc;
 		measureNode : MeasureNodeProc;
@@ -341,7 +341,7 @@ TYPE
 		draggedNode -: TreeNode;
 		selecting, middleClicking, dragPossible : BOOLEAN;
 		cs : WMGraphics.CanvasState;
-		hindent, indent, hdelta : LONGINT;
+		hindent, indent, hdelta : SIZE;
 		onSelectNode-, onExpandNode-, onClickNode-, onMiddleClickNode- : WMEvents.EventSource;
 		clHover-, clSelected-,
 		clTextDefault-, clTextHover-, clTextSelected- : WMProperties.ColorProperty;
@@ -399,7 +399,7 @@ TYPE
 		BEGIN FocusLost^
 		END FocusLost;
 
-		PROCEDURE SetIndent*(indent : LONGINT);
+		PROCEDURE SetIndent*(indent : SIZE);
 		BEGIN
 			Acquire;
 			IF indent # SELF.indent THEN
@@ -424,7 +424,7 @@ TYPE
 		END Initialize;
 
 		PROCEDURE TreeChanged*(sender, data : ANY);
-		VAR width, t : LONGINT;
+		VAR width, t : SIZE;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.TreeChanged, sender, data)
 			ELSE
@@ -444,7 +444,7 @@ TYPE
 			END
 		END TreeChanged;
 
-		PROCEDURE SetFirstLine*(line : LONGINT; adjustScrollbar : BOOLEAN);
+		PROCEDURE SetFirstLine*(line : SIZE; adjustScrollbar : BOOLEAN);
 		BEGIN
 			Acquire;
 			firstLine := line;
@@ -469,12 +469,12 @@ TYPE
 			Invalidate
 		END SetMeasureNodeProc;
 
-		PROCEDURE MeasureTree(VAR lines, width : LONGINT);
-		VAR cury : LONGINT;
+		PROCEDURE MeasureTree(VAR lines, width : SIZE);
+		VAR cury : SIZE;
 
-			PROCEDURE RenderTree(x : TreeNode; level : LONGINT);
+			PROCEDURE RenderTree(x : TreeNode; level : SIZE);
 			VAR a : TreeNode;
-				w, h : LONGINT;
+				w, h : SIZE;
 			BEGIN
 				IF (x = NIL) OR (NodeHidden IN x.state) THEN RETURN END;
 				INC(lines);
@@ -501,8 +501,8 @@ TYPE
 		END MeasureTree;
 
 		(** default DrawNode, can be replaced with SetDrawNodeMethod *)
-		PROCEDURE DrawNode(canvas : WMGraphics.Canvas; w, h : LONGINT; node : TreeNode; state : SET);
-		VAR dx, tdx, tdy : LONGINT; f : WMGraphics.Font;
+		PROCEDURE DrawNode(canvas : WMGraphics.Canvas; w, h : SIZE; node : TreeNode; state : SET);
+		VAR dx, tdx, tdy : SIZE; f : WMGraphics.Font;
 		BEGIN
 			dx := 0;
 			f := GetFont();
@@ -522,8 +522,8 @@ TYPE
 		END DrawNode;
 
 		(** default MeasuereNode, can be replaced with SetMeasureNodeMethod *)
-		PROCEDURE MeasureNode*(node : TreeNode; VAR w, h : LONGINT);
-		VAR dx, dy : LONGINT; f : WMGraphics.Font;
+		PROCEDURE MeasureNode*(node : TreeNode; VAR w, h : SIZE);
+		VAR dx, dy : SIZE; f : WMGraphics.Font;
 		BEGIN
 			w := 0; h := 0;
 			(*f := WMGraphics.GetDefaultFont();*)
@@ -536,8 +536,8 @@ TYPE
 			END
 		END MeasureNode;
 
-		PROCEDURE RenderTreeNode(canvas : WMGraphics.Canvas; y, h : LONGINT; node : TreeNode; level : LONGINT);
-		VAR x, i, px, py : LONGINT; t : TreeNode;  height, color : LONGINT;
+		PROCEDURE RenderTreeNode(canvas : WMGraphics.Canvas; y, h : SIZE; node : TreeNode; level : SIZE);
+		VAR x, i, px, py : SIZE; t : TreeNode;  height : SIZE; color : LONGINT;
 			state : SET;
 
 			PROCEDURE HasMoreVisibleNodes(node : TreeNode): BOOLEAN;
@@ -614,10 +614,10 @@ TYPE
 
 		(* draw tree *)
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR y, height, i : LONGINT; clip : Rect.Rectangle;
+		VAR y, height, i : SIZE; clip : Rect.Rectangle;
 
-			PROCEDURE RenderTree(x : TreeNode; level : LONGINT);
-			VAR a : TreeNode; w, h : LONGINT; t: Rect.Rectangle;
+			PROCEDURE RenderTree(x : TreeNode; level : SIZE);
+			VAR a : TreeNode; w, h : SIZE; t: Rect.Rectangle;
 			BEGIN
 				IF (x = NIL) OR (NodeHidden IN x.state) OR (y > height) THEN RETURN END;
 				INC(i);
@@ -653,12 +653,12 @@ TYPE
 		END DrawBackground;
 
 		(** Return the TreeNode at the position x, y *)
-		PROCEDURE GetNodeAtPos*(x, y : LONGINT) : TreeNode;
-		VAR cury, i, height : LONGINT; found : TreeNode;
+		PROCEDURE GetNodeAtPos*(x, y : SIZE) : TreeNode;
+		VAR cury, i, height : SIZE; found : TreeNode;
 
-			PROCEDURE RenderTree(x : TreeNode; level : LONGINT);
+			PROCEDURE RenderTree(x : TreeNode; level : SIZE);
 			VAR a : TreeNode;
-				w, h : LONGINT;
+				w, h : SIZE;
 			BEGIN
 				IF (x = NIL) OR (NodeHidden IN x.state) OR (cury > height) THEN RETURN END;
 				INC(i);
@@ -715,7 +715,7 @@ TYPE
 			END;
 		END GetPrevVisibleNode;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; VAR keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; VAR keysym : SIZE);
 		VAR state : SET; selNode : TreeNode;
 
 			PROCEDURE Up;
@@ -755,7 +755,7 @@ TYPE
 			END
 		END KeyEvent;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			ASSERT(IsCallFromSequencer());
 			selecting := 0 IN keys;
@@ -766,7 +766,7 @@ TYPE
 			downY := y
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		VAR new : TreeNode;
 		BEGIN
 			new := GetNodeAtPos(downX, downY);
@@ -794,8 +794,8 @@ TYPE
 			onMiddleClickNode.Call(node);
 		END MiddleClickNode;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
-		VAR new : TreeNode; tn : TreeNode; w : LONGINT;
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
+		VAR new : TreeNode; tn : TreeNode; w : SIZE;
 		BEGIN
 			tree.Acquire;
 			IF selecting & ~(0 IN keys)  THEN
@@ -836,7 +836,7 @@ TYPE
 			draggedNode := NIL;
 		END PointerUp;
 
-		PROCEDURE DragOver*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragOver*(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
 		VAR node : TreeNode;
 		BEGIN
 			tree.Acquire;
@@ -856,7 +856,7 @@ TYPE
 			tree.Release
 		END DragOver;
 
-		PROCEDURE WheelMove*(dz: LONGINT); (** PROTECTED *)
+		PROCEDURE WheelMove*(dz: SIZE); (** PROTECTED *)
 		BEGIN
 			SetFirstLine(MIN(MAX(firstLine + dz, 0), lines - 1), TRUE)
 		END WheelMove;

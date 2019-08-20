@@ -160,7 +160,7 @@ TYPE
 
 		isFirstUpdate : BOOLEAN;
 
-		dimensions : LONGINT;
+		dimensions : SIZE;
 
 		link : Plugin;
 
@@ -243,7 +243,7 @@ TYPE
 		END Finalize;
 
 		PROCEDURE Update;
-		VAR i, dim, dTime : LONGINT; sum: REAL;
+		VAR i, dim: SIZE; dTime : LONGINT; sum: REAL;
 		BEGIN
 			dTime := Kernel.Elapsed(milliTimer);
 			Kernel.SetTimer(milliTimer, 0);
@@ -278,7 +278,7 @@ TYPE
 		END UpdateScreen;
 
 		PROCEDURE CopyDataset(source : Dataset; VAR target : Dataset);
-		VAR dim : LONGINT;
+		VAR dim : SIZE;
 		BEGIN
 			FOR dim := 0 TO dimensions-1 DO target[dim] := source[dim]; END;
 		END CopyDataset;
@@ -294,7 +294,7 @@ TYPE
 
 		PROCEDURE EvaluateParameter(p : Parameter);
 		CONST Decrement = 35;
-		VAR r, g, b, a, i, round : LONGINT;
+		VAR r, g, b, a, round : LONGINT; i : SIZE;
 		BEGIN
 			IF (p.scale = 0) & (p.statsUnit = "")  THEN COPY(p.unit, p.statsUnit); END;
 			IF p.scale = 0 THEN p.scale := 1.0; END;
@@ -738,7 +738,7 @@ VAR
 	updater- : Updater;
 
 	(* statistics *)
-	NnofPlugins-, NnofValues- : LONGINT;
+	NnofPlugins-, NnofValues- : SIZE;
 
 (**	Estimate the processors clock rate.
 	This is done by measuring the number of clock cycles within a time interval of 1 second.
@@ -751,7 +751,7 @@ PROCEDURE EstimateCpuClockrate*(VAR clockrate : LONGINT) : BOOLEAN;
 VAR
 	timer : Kernel.Timer; milliTimer : Kernel.MilliTimer;
 	startTime, endTime, timeDiff : HUGEINT;
-	nbrOfGcRuns : LONGINT;
+	nbrOfGcRuns : SIZE;
 BEGIN
 	NEW(timer); nbrOfGcRuns := Heaps.Ngc;
 	Kernel.SetTimer(milliTimer, 1000);

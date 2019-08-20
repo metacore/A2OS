@@ -52,7 +52,7 @@ TYPE
 		selection: WMRepositories.EntryWrapper; 
 		opNum: LONGINT; 
 
-		PROCEDURE ^  & Init*(width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ SetStatusLabel(CONST m1, m2, m3: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadRepository(CONST filename: ARRAY OF CHAR); 
@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE ^ UpdateNodeColor(node: WMTrees.TreeNode); 
 		PROCEDURE ^ TraverseNodes(parent: WMTrees.TreeNode); 
 		PROCEDURE ^ UpdateColors; 
-		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: WMTrees.TreeNode; state: SET); 
+		PROCEDURE ^ DrawNode(canvas: WMGraphics.Canvas; w, h: SIZE; node: WMTrees.TreeNode; state: SET); 
 		PROCEDURE ^ SetComponent(rootComponent: Repositories.Component; selection: Selection); 
 		PROCEDURE ^ SetInsertAtObj(insertAtObj: ANY); 
 	END ComponentTree; 
@@ -105,7 +105,7 @@ TYPE
 	VAR 
 		propertyPanel: WMInspectionComponents.PropertyPanel; 
 
-		PROCEDURE ^  & Init*(width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ SetComponent(sender, component: ANY); 
 	END PropertyWindow; 
 
@@ -131,22 +131,22 @@ TYPE
 		hasError: BOOLEAN; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ ReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ Parse(reader: Streams.Reader; VAR document: XML.Document): BOOLEAN; 
 	END Parser; 
 
 	ComponentInfo = RECORD 
-		originX, originY: LONGINT; 
+		originX, originY: SIZE; 
 	END; 
 
 	SnapGrid = OBJECT 
 	VAR 
-		offsetX, offsetY: LONGINT; 
-		deltaX, deltaY: LONGINT; 
-		nX, nY: LONGINT; 
+		offsetX, offsetY: SIZE; 
+		deltaX, deltaY: SIZE; 
+		nX, nY: SIZE; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Snap(x, y: LONGINT; VAR snapX, snapY: LONGINT); 
+		PROCEDURE ^ Snap(x, y: SIZE; VAR snapX, snapY: SIZE); 
 	END SnapGrid; 
 
 	Frame = OBJECT 
@@ -156,17 +156,17 @@ TYPE
 		clLine0, clLine1, clActiveHandles, clInactiveHandles: LONGINT; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ GetWidth(): LONGINT; 
-		PROCEDURE ^ GetHeight(): LONGINT; 
+		PROCEDURE ^ GetWidth(): SIZE; 
+		PROCEDURE ^ GetHeight(): SIZE; 
 		PROCEDURE ^ IsValid(): BOOLEAN; 
 		PROCEDURE ^ SetFrameType(type: LONGINT); 
 		PROCEDURE ^ Clear; 
 		PROCEDURE ^ SetActiveHandlesFor(alignment: LONGINT); 
 		PROCEDURE ^ SetActiveHandles(activeHandles: SET); 
 		PROCEDURE ^ FixBounds; 
-		PROCEDURE ^ IsInActiveFrameHandle(x, y: LONGINT): WORD; 
-		PROCEDURE ^ IsInFrameHandle(x, y: LONGINT): LONGINT; 
-		PROCEDURE ^ DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye, activeColor, inactiveColor: LONGINT; active: SET); 
+		PROCEDURE ^ IsInActiveFrameHandle(x, y: SIZE): WORD; 
+		PROCEDURE ^ IsInFrameHandle(x, y: SIZE): WORD; 
+		PROCEDURE ^ DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; activeColor, inactiveColor: LONGINT; active: SET); 
 		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas); 
 	END Frame; 
 
@@ -196,11 +196,11 @@ TYPE
 		PROCEDURE ^ ModificationsAllowed(): BOOLEAN; 
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ ToFront; 
-		PROCEDURE ^ SetExtents(width, height: LONGINT); 
-		PROCEDURE ^ SetLimit(rect: WMRectangles.Rectangle; mode: LONGINT); 
-		PROCEDURE ^ MoveRelative(dx, dy: LONGINT); 
-		PROCEDURE ^ InitResize(x0, y0, width0, height0: LONGINT); 
-		PROCEDURE ^ ResizeProportional(x, y, width, height: LONGINT; snapX, snapY: LONGINT); 
+		PROCEDURE ^ SetExtents(width, height: SIZE); 
+		PROCEDURE ^ SetLimit(rect: WMRectangles.Rectangle; mode: WORD); 
+		PROCEDURE ^ MoveRelative(dx, dy: SIZE); 
+		PROCEDURE ^ InitResize(x0, y0, width0, height0: SIZE); 
+		PROCEDURE ^ ResizeProportional(x, y, width, height: SIZE; snapX, snapY: SIZE); 
 		PROCEDURE ^ Resize(mode: LONGINT; dx, dy: LONGINT); 
 		PROCEDURE ^ Get(): ComponentArray; 
 		PROCEDURE ^ Set(component: Repositories.Component); 
@@ -226,7 +226,7 @@ TYPE
 		frame, dragFrame: Frame; 
 		limitMode: LONGINT; 
 		insertObjAt: WMComponents.VisualComponent; 
-		downX, downY, lastX, lastY, dragX, dragY: LONGINT; 
+		downX, downY, lastX, lastY, dragX, dragY: SIZE; 
 		oldPointerInfo: WORD; 
 		selectInsertObjAt: BOOLEAN; 
 		showSnapGrid: WMProperties.BooleanProperty; 
@@ -256,38 +256,38 @@ TYPE
 		PROCEDURE ^ SetPaint(paint: BOOLEAN); 
 		PROCEDURE ^ SetMode(mode: LONGINT); 
 		PROCEDURE ^ GetMode(): LONGINT; 
-		PROCEDURE ^ ExtGetPositionOwnerHandler(x, y: LONGINT; VAR pointerOwner: WMComponents.VisualComponent; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ExtGetPositionOwnerHandler(x, y: SIZE; VAR pointerOwner: WMComponents.VisualComponent; VAR handled: BOOLEAN); 
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ ToFront; 
-		PROCEDURE ^ AddComponent(c: Repositories.Component; x, y: LONGINT); 
+		PROCEDURE ^ AddComponent(c: Repositories.Component; x, y: SIZE); 
 		PROCEDURE ^ Select(c: Repositories.Component); 
 		PROCEDURE ^ SelectInsertAtObj(vc: WMComponents.VisualComponent); 
 		PROCEDURE ^ InvalidateRegion(frame, oldFrame: WMRectangles.Rectangle); 
 		PROCEDURE ^ InvalidateFrame(frame: Frame); 
-		PROCEDURE ^ GetLimitMode(x, y: LONGINT; VAR bounds: WMRectangles.Rectangle): WORD; 
+		PROCEDURE ^ GetLimitMode(x, y: SIZE; VAR bounds: WMRectangles.Rectangle): WORD; 
 		PROCEDURE ^ MoveFrame(direction: LONGINT); 
 		PROCEDURE ^ CheckSelectionFrame; 
-		PROCEDURE ^ CheckCursor(x, y: LONGINT; keys, modifierFlags: SET); 
+		PROCEDURE ^ CheckCursor(x, y: SIZE; keys, modifierFlags: SET); 
 		PROCEDURE ^ CheckSelection; 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ TakeOverSize(x, y: LONGINT); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ TakeOverSize(x, y: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ DragAddComponent(component: Repositories.Component; VAR res: WORD); 
-		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ UpdateFramePosition; 
-		PROCEDURE ^ FindPositionOwner(x, y: LONGINT): WMComponents.VisualComponent; 
+		PROCEDURE ^ FindPositionOwner(x, y: SIZE): WMComponents.VisualComponent; 
 		PROCEDURE ^ GetComponentInfo(component: WMComponents.VisualComponent): ComponentInfo; 
-		PROCEDURE ^ ToMyCoordinates(component: WMComponents.VisualComponent; x, y: LONGINT; VAR myX, myY: LONGINT); 
-		PROCEDURE ^ ToComponentCoordinates(component: WMComponents.VisualComponent; x, y: LONGINT; VAR cx, cy: LONGINT); 
-		PROCEDURE ^ DrawHorizontalLine(canvas: WMGraphics.Canvas; y, color: LONGINT); 
-		PROCEDURE ^ DrawVerticalLine(canvas: WMGraphics.Canvas; x, color: LONGINT); 
-		PROCEDURE ^ DrawFrames(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; ofsX, ofsY: LONGINT); 
-		PROCEDURE ^ DrawHelperLines(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; level: LONGINT; ofsX, ofsY: LONGINT); 
+		PROCEDURE ^ ToMyCoordinates(component: WMComponents.VisualComponent; x, y: SIZE; VAR myX, myY: SIZE); 
+		PROCEDURE ^ ToComponentCoordinates(component: WMComponents.VisualComponent; x, y: SIZE; VAR cx, cy: SIZE); 
+		PROCEDURE ^ DrawHorizontalLine(canvas: WMGraphics.Canvas; y: SIZE; color: LONGINT); 
+		PROCEDURE ^ DrawVerticalLine(canvas: WMGraphics.Canvas; x: SIZE; color: LONGINT); 
+		PROCEDURE ^ DrawFrames(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; ofsX, ofsY: SIZE); 
+		PROCEDURE ^ DrawHelperLines(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; level: LONGINT; ofsX, ofsY: SIZE); 
 		PROCEDURE ^ DrawForeground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawSnapGrid(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -307,7 +307,7 @@ TYPE
 
 		PROCEDURE ^ FocusGot*; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^  & New(owner: MainWindow; width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & New(owner: MainWindow; width, height: SIZE; alpha: BOOLEAN); 
 	END EditWindow; 
 
 	WindowArray = POINTER TO ARRAY OF EditWindow; 
@@ -361,8 +361,8 @@ TYPE
 		PROCEDURE ^ HandleStoreBtn(sender, data: ANY); 
 		PROCEDURE ^ HandleToggleEditModeBtn(sender, data: ANY); 
 		PROCEDURE ^ HandleNodeClicked(sender, data: ANY); 
-		PROCEDURE ^ HandleNodeContextMenu(sender: ANY; x, y: LONGINT); 
-		PROCEDURE ^ UpdateCursorPosition(x, y: LONGINT); 
+		PROCEDURE ^ HandleNodeContextMenu(sender: ANY; x, y: SIZE); 
+		PROCEDURE ^ UpdateCursorPosition(x, y: SIZE); 
 		PROCEDURE ^ UpdateFramePosition(valid: BOOLEAN; frame: WMRectangles.Rectangle); 
 		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; VAR res: WORD); 
 		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; window: EditWindow; VAR res: WORD); 
@@ -377,11 +377,11 @@ VAR
 	leftLimit, topLeftLimit, topLimit, topRightLimit, rightLimit, bottomRightLimit, bottomLimit, bottomLeftLimit, sizeLimit, crosshair: WMWindowManager.PointerInfo; 
 
 	PROCEDURE ^ CreateIndicator(CONST content: ARRAY OF CHAR; width, alignment: LONGINT): Indicator; 
-	PROCEDURE ^ Distance(x0, y0, x1, y1: LONGINT): REAL; 
-	PROCEDURE ^ DrawDashedLine(canvas: WMGraphics.Canvas; xs, ys, xe, ye, color0, color1, width0, width1: LONGINT); 
-	PROCEDURE ^ DrawRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye, color: LONGINT); 
-	PROCEDURE ^ DrawDashedRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye, color0, color1, width0, width1: LONGINT); 
-	PROCEDURE ^ DrawIndication(canvas: WMGraphics.Canvas; xs, ys, xe, ye, width, color: LONGINT); 
+	PROCEDURE ^ Distance(x0, y0, x1, y1: SIZE): REAL; 
+	PROCEDURE ^ DrawDashedLine(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: LONGINT); 
+	PROCEDURE ^ DrawRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color: LONGINT); 
+	PROCEDURE ^ DrawDashedRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: LONGINT); 
+	PROCEDURE ^ DrawIndication(canvas: WMGraphics.Canvas; xs, ys, xe, ye, width: SIZE; color: LONGINT); 
 	PROCEDURE ^ FillWithRectangles(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; width: LONGINT; color1, color2: LONGINT); 
 	PROCEDURE ^ ShowComponent*(component: WMComponents.Component); 
 	PROCEDURE ^ ShowRect*(CONST name: ARRAY OF CHAR; rect: WMRectangles.Rectangle); 

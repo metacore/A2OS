@@ -31,7 +31,7 @@ CONST
 TYPE
 
 	(* Uses NoMoreDependencies as sentinel *)
-	Dependencies* = ARRAY MaxNofDependencies + 1 OF LONGINT;
+	Dependencies* = ARRAY MaxNofDependencies + 1 OF SIZE;
 
 	JobProcedure* = PROCEDURE {DELEGATE} (parameters : ANY; VAR error : BOOLEAN);
 
@@ -39,8 +39,8 @@ TYPE
 	VAR
 		proc : JobProcedure;
 		parameters : ANY;
-		uid : LONGINT;
-		priority : LONGINT;
+		uid : SIZE;
+		priority : SIZE;
 		completed : BOOLEAN;
 		dependencies : Dependencies;
 
@@ -56,7 +56,7 @@ TYPE
 		END IsCompleted;
 
 		PROCEDURE &Init;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			proc := NIL;
 			parameters := NIL;
@@ -78,7 +78,7 @@ TYPE
 	Worker = OBJECT
 	VAR
 		job : Job;
-		state : LONGINT;
+		state : WORD;
 		threadPool : ThreadPool;
 
 		(* WorkerList fields *)
@@ -92,7 +92,7 @@ TYPE
 			state := GotWork;
 		END SetJob;
 
-		PROCEDURE SetState(state : LONGINT);
+		PROCEDURE SetState(state : WORD);
 		BEGIN {EXCLUSIVE}
 			IF (SELF.state < Terminating) OR ((SELF.state = Terminating) & (state = Terminated)) THEN
 				SELF.state := state;
@@ -149,10 +149,10 @@ TYPE
 	WorkerList = OBJECT
 	VAR
 		head : Worker;
-		nofWorkers : LONGINT;
+		nofWorkers : SIZE;
 
 		(* Return the number of workers currently in this list *)
-		PROCEDURE GetNofWorkers() : LONGINT;
+		PROCEDURE GetNofWorkers() : SIZE;
 		BEGIN {EXCLUSIVE}
 			RETURN nofWorkers;
 		END GetNofWorkers;
@@ -201,10 +201,10 @@ TYPE
 	HashTable = OBJECT
 	VAR
 		table : POINTER TO ARRAY OF Job;
-		size : LONGINT;
+		size : SIZE;
 
-		PROCEDURE Find(uid : LONGINT) : Job;
-		VAR hashValue : LONGINT; job : Job;
+		PROCEDURE Find(uid : SIZE) : Job;
+		VAR hashValue : SIZE; job : Job;
 		BEGIN
 			IF Stats THEN INC(Nlookups); END;
 			hashValue := uid MOD size;
@@ -216,7 +216,7 @@ TYPE
 		END Find;
 
 		PROCEDURE Add(job : Job);
-		VAR hashValue : LONGINT;
+		VAR hashValue : SIZE;
 		BEGIN {EXCLUSIVE}
 			ASSERT((job # NIL) & (job.proc # NIL) & (job.hashPrevious = NIL) & (job.hashNext = NIL));
 			hashValue := job.uid MOD size;
@@ -237,8 +237,8 @@ TYPE
 			ASSERT((job.hashPrevious = NIL) & (job.hashNext = NIL));
 		END Remove;
 
-		PROCEDURE &Init(size : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE &Init(size : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(size > 0);
 			SELF.size := size;
@@ -255,7 +255,7 @@ TYPE
 	SortedJobList = OBJECT
 	VAR
 		head : Job;
-		nofJobs : LONGINT;
+		nofJobs : SIZE;
 
 		(* 	Returns the first job in the list (highest priority) or NIL, if no jobs are ready to be executed.
 			The job is removed from the list *)
@@ -320,7 +320,7 @@ TYPE
 		(* list of jobs waiting because of dependencies on other jobs *)
 		waitingList : SortedJobList;
 
-		PROCEDURE &Init(size : LONGINT);
+		PROCEDURE &Init(size : SIZE);
 		BEGIN
 			NEW(hashTable, size);
 			NEW(readyList);
@@ -376,7 +376,7 @@ TYPE
 
 		(* Returns TRUE if the job is ready to be executed, FALSE if the job has to wait because of dependencies to other jobs *)
 		PROCEDURE IsReady(job : Job) : BOOLEAN;
-		VAR otherJob : Job; i : LONGINT;
+		VAR otherJob : Job; i : SIZE;
 		BEGIN (* concurrency allowed here *)
 			ASSERT(job # NIL);
 			i := 0;
@@ -401,7 +401,7 @@ TYPE
 	JobPool = OBJECT
 	VAR
 		head : Job;
-		nextUid : LONGINT;
+		nextUid : SIZE;
 
 		PROCEDURE Get() : Job;
 		VAR job : Job;
@@ -438,7 +438,7 @@ TYPE
 			IF Stats THEN INC(NjobPoolRecycled); END;
 		END Recycle;
 
-		PROCEDURE GetUID() : LONGINT;
+		PROCEDURE GetUID() : SIZE;
 		BEGIN {EXCLUSIVE}
 			INC(nextUid);
 			ASSERT(nextUid > 0);
@@ -468,14 +468,14 @@ TYPE
 
 		hadError : BOOLEAN; (* sticky *)
 
-		jobsOnTheFly : LONGINT;
+		jobsOnTheFly : SIZE;
 
 		(* activity control fields *)
 		doScheduling : BOOLEAN;
 		alive, dead : BOOLEAN;
 
-		PROCEDURE &Init*(nofWorkers : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE &Init*(nofWorkers : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(nofWorkers > 0);
 			NEW(readyList);
@@ -493,7 +493,7 @@ TYPE
 			alive := TRUE; dead := FALSE;
 		END Init;
 
-		PROCEDURE CreateJob*(proc : JobProcedure; parameters : ANY; priority : LONGINT; CONST dependencies : Dependencies) : LONGINT;
+		PROCEDURE CreateJob*(proc : JobProcedure; parameters : ANY; priority : SIZE; CONST dependencies : Dependencies) : SIZE;
 		VAR job : Job;
 		BEGIN
 			ASSERT((proc # NIL) & (priority >= 0));
@@ -569,7 +569,7 @@ TYPE
 		END DoScheduling;
 
 		PROCEDURE Close*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			BEGIN {EXCLUSIVE} alive := FALSE; END;
 			FOR i := 0 TO LEN(workers)-1 DO
@@ -599,7 +599,7 @@ VAR
 	NjobPoolCreated-, NjobPoolRecycled-, NjobPoolReused- ,
 	NdependencyChecks-, NdependenciesResolved-, NdependenciesPersist-,
 	Nscheduling-, NjobsScheduled-,
-	Nlookups-, NlookupCollisions-, NlookupNotFound- : LONGINT;
+	Nlookups-, NlookupCollisions-, NlookupNotFound- : SIZE;
 
 PROCEDURE ClearStats*;
 BEGIN

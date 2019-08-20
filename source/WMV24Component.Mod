@@ -243,12 +243,12 @@ TYPE
 		progressBar : WMProgressComponents.ProgressBar;
 		filenameLabel : WMStandardComponents.Label;
 		progressLabel : WMStandardComponents.Label;
-		currentBytes, maxBytes : LONGINT;
+		currentBytes, maxBytes : Streams.Position;
 
 		w : Streams.StringWriter;
 		string : ARRAY 128 OF CHAR;
 
-		PROCEDURE SetProgress(progress : LONGINT);
+		PROCEDURE SetProgress(progress : Streams.Position);
 		BEGIN
 			w.Reset;
 			w.String("Received "); w.Int(progress, 0);
@@ -262,7 +262,7 @@ TYPE
 			progressLabel.caption.SetAOC(string);
 		END SetProgress;
 
-		PROCEDURE &New*(CONST filename : ARRAY OF CHAR; length : LONGINT);
+		PROCEDURE &New*(CONST filename : ARRAY OF CHAR; length : Streams.Position);
 		VAR panel : WMStandardComponents.Panel;
 		BEGIN
 			Init;
@@ -298,8 +298,8 @@ TYPE
 	CustomTextView = OBJECT(WMTextView.TextView)
 	VAR
 		selecting, selectWords, dragPossible  : BOOLEAN;
-		lastPos : LONGINT;
-		downX, downY : LONGINT;
+		lastPos : SIZE;
+		downX, downY : SIZE;
 
 		utilreader : Texts.TextReader;
 
@@ -312,8 +312,8 @@ TYPE
 			NEW(utilreader, text);
 		END SetText;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR pos : LONGINT;
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
+		VAR pos : SIZE;
 		BEGIN
 			IF keys * {0, 1, 2} = {2} THEN
 				ShowContextMenu(x, y) END;
@@ -342,9 +342,9 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		CONST DragDist = 5;
-		VAR pos : LONGINT;
+		VAR pos : SIZE;
 		BEGIN
 			IF dragPossible THEN
 				IF (ABS(x - downX) > DragDist) OR (ABS(y - downY) > DragDist) THEN dragPossible := FALSE; AutoStartDrag END
@@ -368,7 +368,7 @@ TYPE
 			END
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		BEGIN
 			selecting := FALSE;
 			IF dragPossible THEN selection.SetFromTo(0, 0); Texts.ClearLastSelection (* reset selection *) END;
@@ -444,7 +444,7 @@ TYPE
 		END Handle;
 
 		PROCEDURE HandleCommandMenuButton(sender, data : ANY);
-		VAR buttonBounds, panelBounds: WMRectangles.Rectangle; gx, gy : LONGINT;
+		VAR buttonBounds, panelBounds: WMRectangles.Rectangle; gx, gy : SIZE;
 		BEGIN
 			buttonBounds := commandMenuBtn.bounds.Get();
 			panelBounds := bounds.Get();
@@ -526,8 +526,9 @@ TYPE
 			command : Strings.String;
 			filename, msg : ARRAY 512 OF CHAR;
 			filenames : Strings.StringArray;
-			mode, i : LONGINT;
+			mode : LONGINT;
 			send : BOOLEAN;
+			i : SIZE;
 		BEGIN
 			IF sender IS WMStandardComponents.Button THEN
 				button := sender (WMStandardComponents.Button);
@@ -575,7 +576,7 @@ TYPE
 			END;
 		END HandleXYButtons;
 
-		PROCEDURE HandleShortcut(ucs : LONGINT; flags : SET; keySym : LONGINT)  : BOOLEAN;
+		PROCEDURE HandleShortcut(ucs : SIZE; flags : SET; keySym : SIZE)  : BOOLEAN;
 		VAR handled : BOOLEAN;
 		BEGIN
 			IF ControlKeyDown(flags) THEN
@@ -603,7 +604,7 @@ TYPE
 			RETURN handled;
 		END HandleShortcut;
 
-		PROCEDURE ExtKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE ExtKeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			textView.SetFlags(flags);
 			handled := TRUE;
@@ -871,7 +872,7 @@ TYPE
 		END Init;
 
 		(* Get global coordinates of the terminal panel *)
-		PROCEDURE GetPanelCoordinates(VAR gx, gy : LONGINT);
+		PROCEDURE GetPanelCoordinates(VAR gx, gy : SIZE);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			rect := bounds.Get();
@@ -924,7 +925,7 @@ TYPE
 			progressInfo : ProgressInfo;
 			xysender : XYModem.Sender;
 			msg : ARRAY 32 OF CHAR;
-			x, y : LONGINT; res: WORD;
+			x, y : SIZE; res: WORD;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
@@ -971,7 +972,7 @@ TYPE
 			caption : ARRAY 128 OF CHAR;
 			xyreceiver : XYModem.Receiver;
 			msg : ARRAY 32 OF CHAR;
-			x, y : LONGINT; res: WORD;
+			x, y : SIZE; res: WORD;
 			awaitF : BOOLEAN;
 		BEGIN
 			IF filename # "" THEN
@@ -1102,8 +1103,8 @@ TYPE
 			END;
 		END Finalize;
 
-		PROCEDURE DeleteNCharacters(nbrOfCharacters : LONGINT);
-		VAR pos : LONGINT;
+		PROCEDURE DeleteNCharacters(nbrOfCharacters : SIZE);
+		VAR pos : SIZE;
 		BEGIN
 			text.AcquireWrite;
 			pos := textView.cursor.GetPosition();
@@ -1144,7 +1145,7 @@ TYPE
 		END EvaluateError;
 
 		PROCEDURE ReceiveCharacters;
-		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, len : LONGINT; res: WORD;
+		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, len : SIZE; res: WORD;
 		BEGIN
 			len := 0;
 			res := Streams.Ok;
@@ -1285,7 +1286,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE &New*(vc : WMComponents.VisualComponent; x, y : LONGINT);
+		PROCEDURE &New*(vc : WMComponents.VisualComponent; x, y : SIZE);
 		BEGIN
 			IncCount;
 
@@ -1335,7 +1336,7 @@ TYPE
 			vc : WMComponents.VisualComponent;
 			configuration : WMRestorable.XmlElement; string : ARRAY 64 OF CHAR;
 			s: POINTER TO ARRAY OF CHAR;
-			len: LONGINT;
+			len: SIZE;
 		BEGIN
 			IncCount;
 

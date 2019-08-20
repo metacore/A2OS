@@ -64,7 +64,7 @@ TYPE
 			default.x := 0; default.y := 0; default.time := 20; default.mode := Codecs.Unspecified;
 		END RestoreDefaultSettings;
 
-		PROCEDURE ReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			error := TRUE;
 		END ReportError;
@@ -130,11 +130,11 @@ TYPE
 		END Open;
 
 		PROCEDURE ProcessFrame(frame : XML.Element; VAR desc : Codecs.ImageDescriptor; VAR res : WORD);
-		VAR string, imageName : Strings.String; from, to, current, minDigits : LONGINT; filename : Files.FileName; last, d : Codecs.ImageDescriptor;
+		VAR string, imageName : Strings.String; left, top, from, to, current : LONGINT; minDigits : SIZE; filename : Files.FileName; last, d : Codecs.ImageDescriptor;
 		BEGIN
 			NEW(desc);
-			IF ~GetInteger(frame, XmlLeft, desc.left) THEN desc.left := default.x; END;
-			IF ~GetInteger(frame, XmlTop, desc.top) THEN desc.top := default.y; END;
+			IF ~GetInteger(frame, XmlLeft, left) THEN desc.left := default.x; ELSE desc.left := left END;
+			IF ~GetInteger(frame, XmlTop, top) THEN desc.top := default.y; ELSE desc.top := top END;
 			IF ~GetInteger(frame, XmlDelayTime, desc.delayTime) THEN desc.delayTime := default.time; END;
 			IF ~GetInteger(frame, XmlDisposeMode, desc.disposeMode) THEN desc.disposeMode := default.mode; END;
 			IF ~GetInteger(frame, XmlFrom, from) THEN from := 0 END;
@@ -248,8 +248,8 @@ TYPE
 
 	END Decoder;
 
-PROCEDURE GenerateFilename(CONST base : ARRAY OF CHAR; VAR filename : ARRAY OF CHAR; suffix, minDigits : LONGINT);
-VAR name, extension : Files.FileName; temp, digits : LONGINT; nbr : ARRAY 32 OF CHAR;
+PROCEDURE GenerateFilename(CONST base : ARRAY OF CHAR; VAR filename : ARRAY OF CHAR; suffix, minDigits : SIZE);
+VAR name, extension : Files.FileName; temp, digits : SIZE; nbr : ARRAY 32 OF CHAR;
 BEGIN
 	Files.SplitExtension(base, name, extension);
 	COPY(name, filename);

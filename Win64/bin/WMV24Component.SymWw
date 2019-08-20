@@ -71,26 +71,26 @@ TYPE
 		progressBar: WMProgressComponents.ProgressBar; 
 		filenameLabel: WMStandardComponents.Label; 
 		progressLabel: WMStandardComponents.Label; 
-		currentBytes, maxBytes: LONGINT; 
+		currentBytes, maxBytes: Streams.Position; 
 		w: Streams.StringWriter; 
 		string: ARRAY 128 OF CHAR; 
 
-		PROCEDURE ^ SetProgress(progress: LONGINT); 
-		PROCEDURE ^  & New*(CONST filename: ARRAY OF CHAR; length: LONGINT); 
+		PROCEDURE ^ SetProgress(progress: Streams.Position); 
+		PROCEDURE ^  & New*(CONST filename: ARRAY OF CHAR; length: Streams.Position); 
 	END ProgressInfo; 
 
 	CustomTextView = OBJECT {EXCLUSIVE} (WMTextView.TextView)
 	VAR 
 		selecting, selectWords, dragPossible: BOOLEAN; 
-		lastPos: LONGINT; 
-		downX, downY: LONGINT; 
+		lastPos: SIZE; 
+		downX, downY: SIZE; 
 		utilreader: Texts.TextReader; 
 		text: Texts.Text; 
 
 		PROCEDURE ^ SetText*(text: Texts.Text); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^  & Init*; 
 	END CustomTextView; 
 
@@ -134,8 +134,8 @@ TYPE
 		PROCEDURE ^ HandleCopyButton(sender, data: ANY); 
 		PROCEDURE ^ HandlePasteButton(sender, data: ANY); 
 		PROCEDURE ^ HandleXYButtons(sender, data: ANY); 
-		PROCEDURE ^ HandleShortcut(ucs: LONGINT; flags: SET; keySym: LONGINT): BOOLEAN; 
-		PROCEDURE ^ ExtKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ HandleShortcut(ucs: SIZE; flags: SET; keySym: SIZE): BOOLEAN; 
+		PROCEDURE ^ ExtKeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ExtFocus(hasFocus: BOOLEAN); 
 		PROCEDURE ^ CreateUpperToolBar(): WMComponents.VisualComponent; 
 		PROCEDURE ^ CreateCommandMenu(): WMStandardComponents.Button; 
@@ -144,7 +144,7 @@ TYPE
 		PROCEDURE ^ CreateContent; 
 		PROCEDURE ^ Wait(ms: LONGINT); 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetPanelCoordinates(VAR gx, gy: LONGINT); 
+		PROCEDURE ^ GetPanelCoordinates(VAR gx, gy: SIZE); 
 		PROCEDURE ^ CopyFromClipboard; 
 		PROCEDURE ^ GetXYCommand(send: BOOLEAN; mode: LONGINT): Strings.String; 
 		PROCEDURE ^ SendXYCommand(send: BOOLEAN; CONST command, filename: ARRAY OF CHAR); 
@@ -153,7 +153,7 @@ TYPE
 		PROCEDURE ^ ResetStatus; 
 		PROCEDURE ^ ToggleOpen(sender, data: ANY); 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: LONGINT); 
+		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: SIZE); 
 		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: WORD); 
 		PROCEDURE ^ EvaluateError(res: WORD); 
 		PROCEDURE ^ ReceiveCharacters; 
@@ -180,7 +180,7 @@ TYPE
 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^  & New*(vc: WMComponents.VisualComponent; x, y: LONGINT); 
+		PROCEDURE ^  & New*(vc: WMComponents.VisualComponent; x, y: SIZE); 
 	END ProgressWindow; 
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)

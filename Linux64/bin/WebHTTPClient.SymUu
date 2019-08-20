@@ -7,10 +7,10 @@ TYPE
 	VAR 
 		in: Streams.Reader; 
 		encoding: ARRAY 64 OF CHAR; 
-		length: LONGINT; 
+		length: SIZE; 
 
 		PROCEDURE ^  & InitContentReader*(in: Streams.Reader; CONST h: WebHTTP.ResponseHeader); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 	END ContentReader; 
 VAR 
 	log: TFLog.Log; 

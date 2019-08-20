@@ -4,9 +4,9 @@ CONST
 TYPE 
 	TestComponent = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: WM.DragInfo); 
-		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WM.DragInfo); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WM.DragInfo); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ DragAccepted(sender, data: ANY); 
 		PROCEDURE ^ DragRejected(sender, data: ANY); 
 	END TestComponent; 

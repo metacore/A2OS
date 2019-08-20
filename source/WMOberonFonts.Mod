@@ -250,8 +250,8 @@ BEGIN
 	w.RawInt(font.height);
 	w.RawInt(font.minX);
 	w.RawInt(font.maxX);
-	w.RawInt(-SHORT(font.descent));
-	w.RawInt(SHORT(font.ascent));
+	w.RawInt(-INTEGER(font.descent));
+	w.RawInt(INTEGER(font.ascent));
 	w.RawInt(font.nofRuns);
 
 	nofGlyphs := 0; i := 0;

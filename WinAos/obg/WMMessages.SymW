@@ -45,7 +45,7 @@ TYPE
 		token*: AsyncToken; 
 		event*: CompCommand; 
 		msgType*, msgSubType*: LONGINT; 
-		x*, y*, z*, dx*, dy*, dz*: LONGINT; 
+		x*, y*, z*, dx*, dy*, dz*: SIZE; 
 		flags*: SET; 
 		ext*: ANY; 
 	END; 
@@ -70,7 +70,7 @@ TYPE
 
 	MsgQ = OBJECT 
 	VAR 
-		head, num: LONGINT; 
+		head, num: SIZE; 
 		msgQ: POINTER TO ARRAY OF Message; 
 		owner: MsgSequencer; 
 

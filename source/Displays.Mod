@@ -32,7 +32,7 @@ TYPE
 			fbadr-: ADDRESS; fbsize-, fbstride-: LONGINT; (** frame buffer address, size and stride *)
 
 		(** Transfer a block of pixels in "raw" display format to (op = set) or from (op = get) the display.  Pixels in the rectangular area are transferred from left to right and top to bottom.  The pixels are transferred to or from "buf", starting at "ofs".  The line byte increment is "stride", which may be positive, negative or zero. *)
-		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT);
+		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: WORD);
 		VAR bufadr, buflow, bufhigh, dispadr,w0,b,d: ADDRESS;
 		BEGIN
 			IF w > 0 THEN
@@ -200,14 +200,14 @@ TYPE
 
 VAR
 	registry*: Plugins.Registry;
-	buf: POINTER TO ARRAY OF CHAR;
+	buf: POINTER TO ARRAY BufSize OF CHAR;
 
 PROCEDURE Fill0(d: Display; col, x, y, w, h: LONGINT);
 VAR j, w0, h0, s: LONGINT; p: ADDRESS; t, c: SET; invert: BOOLEAN;
 BEGIN {EXCLUSIVE}
 	IF (w > 0) & (h > 0) & (col >= 0) THEN	(* opaque or invert *)
 		invert := ASH(col, 1) < 0;
-		IF buf = NIL THEN NEW(buf, BufSize) END;
+		IF buf = NIL THEN NEW(buf) END;
 		CASE d.format OF
 			index8:
 				s := 4; col := d.ColorToIndex(col);
@@ -254,7 +254,7 @@ PROCEDURE Copy0(d: Display; sx, sy, w, h, dx, dy: LONGINT);
 VAR w0, h0, s: LONGINT;
 BEGIN {EXCLUSIVE}
 	IF (w > 0) & (h > 0) THEN
-		IF buf = NIL THEN NEW(buf, BufSize) END;
+		IF buf = NIL THEN NEW(buf) END;
 		w0 := w*d.format; h0 := LEN(buf^) DIV w0;
 		ASSERT(h0 > 0);
 		IF (sy >= dy) OR (h <= h0) THEN

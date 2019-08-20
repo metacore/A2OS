@@ -7,7 +7,7 @@ TYPE
 	FontInfo* = OBJECT 
 	VAR 
 		name*: String; 
-		size*: LONGINT; 
+		size*: SIZE; 
 		style*: SET; 
 	END FontInfo; 
 
@@ -26,7 +26,7 @@ TYPE
 		defaultFont: WMGraphics.Font; 
 		font: WMGraphics.Font; 
 		searchName: ARRAY 256 OF CHAR; 
-		searchSize: LONGINT; 
+		searchSize: SIZE; 
 		searchStyle: SET; 
 		found: BOOLEAN; 
 		exactLoaders, approximateLoaders: LoaderInfo; 
@@ -41,7 +41,7 @@ TYPE
 		PROCEDURE ^ AddApproximate(str: String); 
 		PROCEDURE ^ GetConfig; 
 		PROCEDURE ^ Load(ln: String; fi: FontInfo): WMGraphics.Font; 
-		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET): WMGraphics.Font; 
+		PROCEDURE ^ GetFont*(CONST name: ARRAY OF CHAR; size: SIZE; style: SET): WMGraphics.Font; 
 	END FontManager; 
 VAR 
 	fm: FontManager; 

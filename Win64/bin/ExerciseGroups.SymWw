@@ -39,12 +39,12 @@ TYPE
 		locked: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetCount(): LONGINT; 
-		PROCEDURE ^ GetItem(pos: LONGINT): LONGINT; 
-		PROCEDURE ^ GetIntObj(pos: LONGINT): IntObj; 
-		PROCEDURE ^ Exchange(pos, newNumber: LONGINT); 
+		PROCEDURE ^ GetCount(): SIZE; 
+		PROCEDURE ^ GetItem(pos: SIZE): LONGINT; 
+		PROCEDURE ^ GetIntObj(pos: SIZE): IntObj; 
+		PROCEDURE ^ Exchange(pos: SIZE; newNumber: LONGINT); 
 		PROCEDURE ^ Add(newNumber: LONGINT); 
-		PROCEDURE ^ Remove(pos: LONGINT); 
+		PROCEDURE ^ Remove(pos: SIZE); 
 		PROCEDURE ^ Lock; 
 		PROCEDURE ^ Unlock; 
 	END IntList; 
@@ -63,13 +63,13 @@ TYPE
 		PROCEDURE ^ DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetGradesDetailView(): XML.Content; 
 		PROCEDURE ^ EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
-		PROCEDURE ^ GetExerciseListHeaderRow(nofCols: LONGINT): XML.Element; 
+		PROCEDURE ^ GetExerciseListHeaderRow(nofCols: SIZE): XML.Element; 
 	END Person; 
 
 	SingleGroupDatagrid* = OBJECT (WebComplex.WebForum)
 	VAR 
 		searchText: Strings.String; 
-		maxEntries: LONGINT; 
+		maxEntries: SIZE; 
 
 		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetHeaderXMLContent*(persContainer: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
@@ -101,7 +101,7 @@ TYPE
 		place: Strings.String; 
 		info: Strings.String; 
 		openToJoin: BOOLEAN; 
-		maxPeople: LONGINT; 
+		maxPeople: SIZE; 
 		members: WebStd.PersistentDataContainer; 
 		membersDgId: Strings.String; 
 		gradesEditListId: Strings.String; 
@@ -119,7 +119,7 @@ TYPE
 		PROCEDURE ^ GetSingleGroupDatagridView(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ AddNewExercise; 
-		PROCEDURE ^ DeleteExercise(pos: LONGINT); 
+		PROCEDURE ^ DeleteExercise(pos: SIZE); 
 	END Group; 
 
 	AllGroupsDatagrid* = OBJECT (WebComplex.WebForum)
@@ -160,8 +160,8 @@ TYPE
 		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ TransformForGroup(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetGradesEditView(objectId: Strings.String; activeOrdering: WebStd.PersistentDataCompare): XML.Content; 
-		PROCEDURE ^ GetExerciseListHeaderRow(objectId: Strings.String; allowDelete: BOOLEAN; nofCols: LONGINT): XML.Element; 
-		PROCEDURE ^ GetPersonGradesEditRow(nofCols: LONGINT; person: Person): XML.Element; 
+		PROCEDURE ^ GetExerciseListHeaderRow(objectId: Strings.String; allowDelete: BOOLEAN; nofCols: SIZE): XML.Element; 
+		PROCEDURE ^ GetPersonGradesEditRow(nofCols: SIZE; person: Person): XML.Element; 
 		PROCEDURE ^ GetNotification(person: Person): XML.Content; 
 		PROCEDURE ^ UpdateList(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 
 		PROCEDURE ^ AddNewExercise(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList); 

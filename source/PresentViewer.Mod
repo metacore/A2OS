@@ -8,7 +8,7 @@ VAR w : WMComponents.FormWindow;
 PROCEDURE Open*(context : Commands.Context);
 VAR
 	c : XML.Content; filename : ARRAY 128 OF CHAR;
-	width, height : LONGINT;
+	width, height : SIZE;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(filename);
 	c := WMComponents.Load(filename);
@@ -41,6 +41,4 @@ END PresentViewer.
 
 System.Free PresentViewer ~
 PresentViewer.Open XmasMenu.XML ~
-
-
 

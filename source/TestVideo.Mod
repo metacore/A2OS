@@ -20,7 +20,7 @@ TYPE
 	END;
 
 	Point = RECORD
-		x, y : INTEGER;
+		x, y : SIZE;
 	END;
 
 VAR
@@ -92,7 +92,7 @@ VAR
 
 PROCEDURE Transform(src, dst : Raster.Image; CONST points : ARRAY OF Point);
 VAR h, hinv : ARRAY 9 OF LONGREAL;
-	x,  y, six, siy : LONGINT;
+	x,  y, six, siy : SIZE;
 	u, v, sx, sy : LONGREAL;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -115,7 +115,7 @@ BEGIN
 END Transform;
 
 PROCEDURE SearchHVLines(buffer : Raster.Image);
-VAR x, y, tr, tg, tb, ta : LONGINT;
+VAR x, y : SIZE; tr, tg, tb, ta : LONGINT;
 	sum : LONGINT;
 	hArray, vArray : ARRAY 2048 OF LONGINT;
 	mode : Raster.Mode;
@@ -142,8 +142,8 @@ BEGIN
 	END
 END SearchHVLines;
 
-PROCEDURE IsEmptyField(buffer : Raster.Image; x, y , w, h : LONGINT) : BOOLEAN;
-VAR i, j, tr, tg, tb, ta : LONGINT;
+PROCEDURE IsEmptyField(buffer : Raster.Image; x, y , w, h : SIZE) : BOOLEAN;
+VAR i, j : SIZE; tr, tg, tb, ta : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
 	nonEmpty : LONGINT;
@@ -162,8 +162,8 @@ BEGIN
 	RETURN nonEmpty < 8*w*h DIV 100;
 END IsEmptyField;
 
-PROCEDURE Dist(buffer : Raster.Image; x0, y0, x1, y1, w, h : LONGINT) : LONGINT;
-VAR i, j, tr, tg, tb, ta, s0, s1 : LONGINT;
+PROCEDURE Dist(buffer : Raster.Image; x0, y0, x1, y1, w, h : SIZE) : LONGINT;
+VAR i, j : SIZE; tr, tg, tb, ta, s0, s1 : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
 	sum : LONGINT;
@@ -181,10 +181,10 @@ BEGIN
 END Dist;
 
 PROCEDURE CheckFields(buffer : Raster.Image);
-VAR i, j, x, y, w, h : LONGINT;
+VAR i, j, x, y, w, h : SIZE;
 	empty : ARRAY 9, 9 OF BOOLEAN;
-	nofNumbers : LONGINT;
-	numbers : ARRAY 81 OF LONGINT;
+	nofNumbers : SIZE;
+	numbers : ARRAY 81 OF SIZE;
 
 	cluster: ARRAY 81 OF RECORD
 		nofFields : SHORTINT;
@@ -192,21 +192,21 @@ VAR i, j, x, y, w, h : LONGINT;
 	END;
 	distance, dist : ARRAY 81, 81 OF LONGINT;
 
-	PROCEDURE SetDist(a, b, d : LONGINT);
+	PROCEDURE SetDist(a, b : SIZE; d : LONGINT);
 	BEGIN
 		IF a < b THEN dist[a, b] := d
 		ELSE dist[b, a] := d
 		END
 	END SetDist;
 
-	PROCEDURE GetDist(a, b : LONGINT) : LONGINT;
+	PROCEDURE GetDist(a, b : SIZE) : LONGINT;
 	BEGIN
 		IF a < b THEN RETURN dist[a, b]
 		ELSE RETURN dist[b, a]
 		END
 	END GetDist;
 
-	PROCEDURE GetSmallest(VAR maxi, maxj : LONGINT);
+	PROCEDURE GetSmallest(VAR maxi, maxj : SIZE);
 	VAR max : LONGINT;
 		first : BOOLEAN;
 	BEGIN
@@ -228,9 +228,9 @@ VAR i, j, x, y, w, h : LONGINT;
 	END GetSmallest;
 
 	PROCEDURE Cluster;
-	VAR i : LONGINT;
+	VAR i : SIZE;
 	BEGIN
-		FOR i := 0 TO 81 - 1 DO cluster[i].nofFields := 0; cluster[i].fields[0] := SHORT(SHORT(i)) END;
+		FOR i := 0 TO 81 - 1 DO cluster[i].nofFields := 0; cluster[i].fields[0] := SHORTINT(i) END;
 		FOR i := 0 TO nofNumbers - 1 DO cluster[i].nofFields := 1 END;
 		FOR i := 0 TO nofNumbers - 1 DO
 
@@ -277,7 +277,7 @@ END CheckFields;
 PROCEDURE BinaryLabler*(buffer : Raster.Image; VAR labelBuffer, equivalence : ARRAY OF INTEGER; colorThreshold, pixelThreshold, maxLabels : LONGINT;
 	VAR labelInfo : ARRAY OF LabelInfo;
 	unifyLabels : BOOLEAN; VAR nofFLabels : LONGINT; VAR res : WORD);
-VAR i, x, y, w , h,  color: LONGINT;
+VAR i, x, y, w, h: SIZE; color: LONGINT;
 	tr, tg, tb, ta  : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -311,7 +311,7 @@ BEGIN
 	res := Ok;
 	w := buffer.width; h := buffer.height;
 	(* initialize equivalences *)
-	FOR i := 0 TO SHORT(LEN( equivalence)) - 1 DO equivalence[i] := SHORT(i) END;
+	FOR i := 0 TO LEN( equivalence) - 1 DO equivalence[i] := INTEGER(i) END;
 
 	Raster.InitMode(mode, Raster.srcCopy);
 
@@ -423,12 +423,12 @@ END BinaryLabler;
 PROCEDURE Trace(buffer : Raster.Image; CONST labelBuffer : ARRAY OF INTEGER; VAR labelInfo :  LabelInfo;
 			VAR length : LONGINT; VAR path : ARRAY OF Point;
 			VAR res : WORD);
-VAR x, y, tx, ty : LONGINT;
-	w, h, i, j: LONGINT;
-	dir, p, p2 : LONGINT;
+VAR x, y, tx, ty : SIZE;
+	w, h, i, j: SIZE;
+	dir, p, p2 : SIZE;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
-	deltaX, deltaY : ARRAY 8 OF LONGINT;
+	deltaX, deltaY : ARRAY 8 OF SIZE;
 BEGIN
 	res := Ok;
 	w := buffer.width; h := buffer.height;
@@ -471,8 +471,8 @@ BEGIN
 			g.Fill(WMRectangles.MakeRect(x-1, y-1, x+1, y+1), 0FFFFH, WMGraphics.ModeCopy);
 		END;
 		(* SLOW *)
-		path[length].x := SHORT(p MOD w);
-		path[length].y := SHORT(p DIV w);
+		path[length].x := p MOD w;
+		path[length].y := p DIV w;
 		INC(length);
 		IF p = labelInfo.firstPos THEN EXIT END;
 	END;
@@ -501,8 +501,8 @@ VAR i, p, nofLines, straight, nonStraight : LONGINT;
 	l: LONGINT;
 
 	PROCEDURE IsLine(from, to, l : LONGINT) : BOOLEAN;
-	VAR i, d : LONGINT;
-		x0, x1, y0, y1, px, py : LONGINT;
+	VAR i, d : SIZE;
+		x0, x1, y0, y1, px, py : SIZE;
 	BEGIN
 		i := from;
 		x0 := path[from].x; y0 := path[from].y;
@@ -577,7 +577,7 @@ BEGIN
 END GetFreq;
 
 PROCEDURE Label2(buffer : Raster.Image);
-VAR nof, length, i, j : LONGINT; w, h: LONGINT; res: WORD;
+VAR nof, length, i, j : LONGINT; w, h: SIZE; res: WORD;
 	path : ARRAY 1024*4 OF Point;
 	poly : ARRAY 40 OF Point;
 	nofPoints : LONGINT;
@@ -648,7 +648,7 @@ BEGIN
 END Label2;
 
 PROCEDURE YUVFilter(buffer : Raster.Image);
-VAR x, y, w , h : LONGINT;
+VAR x, y, w , h : SIZE;
 	tr, tg, tb, ta, cy, cu, cv : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -673,7 +673,7 @@ BEGIN
 END SetYUVFilter;
 
 PROCEDURE BWFilter(buffer : Raster.Image);
-VAR x, y, w , h : LONGINT;
+VAR x, y, w , h : SIZE;
 	tr, tg, tb, ta, cy, cu, cv : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -697,7 +697,7 @@ BEGIN
 END SetBWFilter;
 
 PROCEDURE RedDotFilter(buffer : Raster.Image);
-VAR x, y, w , h : LONGINT;
+VAR x, y, w , h : SIZE;
 	tr, tg, tb, ta : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -721,7 +721,7 @@ BEGIN
 END SetRedDotFilter;
 
 PROCEDURE ThresholdFilter(buffer : Raster.Image);
-VAR x, y, w , h : LONGINT;
+VAR x, y, w , h : SIZE;
 	sum, lastsum, tr, tg, tb, ta : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -769,7 +769,7 @@ BEGIN
 END SetThresholdFilter;
 
 PROCEDURE AdaptiveThresholdFilter(buffer : Raster.Image);
-VAR x, y, w, h, p, t : LONGINT;
+VAR x, y, w, h, p, t : SIZE;
 	sum : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;
@@ -816,7 +816,7 @@ END SetAdaptiveThresholdFilter;
 
 PROCEDURE FineAdaptiveThresholdFilter(buffer : Raster.Image);
 CONST WindowX = 32;
-VAR x, y, w, h, p, t : LONGINT;
+VAR x, y, w, h, p, t : SIZE;
 	sum : LONGINT;
 	mode : Raster.Mode;
 	pix : Raster.Pixel;

@@ -11,7 +11,7 @@ CONST
 VAR ftp : FTPClient.FTPClient;
 
 PROCEDURE PutFile(ftp : FTPClient.FTPClient; local, remote : ARRAY OF CHAR; VAR res : WORD);
-VAR buf: ARRAY BufSize OF CHAR; len: LONGINT;
+VAR buf: ARRAY BufSize OF CHAR; len: SIZE;
 	f : Files.File; r : Files.Reader;
 	w : Streams.Writer;
 BEGIN
@@ -31,18 +31,18 @@ END PutFile;
 
 PROCEDURE PutText(ftp : FTPClient.FTPClient; local, remote : ARRAY OF CHAR; VAR res : WORD);
 VAR w : Streams.Writer;
-        text: Texts.Text;
-        r: Texts.TextReader;
-        ch: Texts.Char32;
-        i: LONGINT;
+	text: Texts.Text;
+	r: Texts.TextReader;
+	ch: Texts.Char32;
+	i: SIZE;
 BEGIN
-        NEW(text);
-        TextUtilities.LoadOberonText(text, local, res);
-        IF res # 0 THEN res:= LocalFileNotFound; RETURN END;
-        text.AcquireRead;
-        NEW(r, text);
-        ftp.OpenPut(remote, w, res);
-        IF res = 0 THEN
+	NEW(text);
+	TextUtilities.LoadOberonText(text, local, res);
+	IF res # 0 THEN res:= LocalFileNotFound; RETURN END;
+	text.AcquireRead;
+	NEW(r, text);
+	ftp.OpenPut(remote, w, res);
+	IF res = 0 THEN
 		FOR i := 0 TO text.GetLength() - 1 DO
 			r.ReadCh(ch);
 			IF (ch >= 0) & (ch < 128) THEN w.Char(CHR(ch)) END;
@@ -54,7 +54,7 @@ BEGIN
 END PutText;
 
 PROCEDURE GetFile(ftp : FTPClient.FTPClient; remote, local : ARRAY OF CHAR; VAR res : WORD);
-VAR buf: ARRAY BufSize OF CHAR; len: LONGINT;
+VAR buf: ARRAY BufSize OF CHAR; len: SIZE;
 	f : Files.File; w : Files.Writer;
 	r : Streams.Reader;
 BEGIN
@@ -240,7 +240,7 @@ BEGIN
 END ChangeDir;
 
 PROCEDURE Directory*(context : Commands.Context);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	IF ftp = NIL THEN
 		context.out.String("not open"); context.out.Ln;

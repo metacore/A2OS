@@ -26,7 +26,7 @@ CONST
 
 TYPE
 
-	Handler = PROCEDURE {DELEGATE} (packet : Usbdi.Buffer; actLen : LONGINT);
+	Handler = PROCEDURE {DELEGATE} (packet : Usbdi.Buffer; actLen : SIZE);
 
 TYPE
 
@@ -94,7 +94,7 @@ TYPE
 			IF (status = Usbdi.Ok) OR (status = Usbdi.ShortPacket) THEN res := 0; ELSE res := 1; END;
 		END SendACL;
 
-		PROCEDURE ReadACL*(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE ReadACL*(status : Usbdi.Status; actLen : SIZE);
 		BEGIN
 			IF Debug THEN KernelLog.String("UsbBluetooth: Received data ACL In Pipe."); KernelLog.Ln;END;
 			IF (status = Usbdi.Ok) OR ((status = Usbdi.ShortPacket) & (actLen > 0)) THEN (* received ACL data *)
@@ -124,7 +124,7 @@ TYPE
 			aclHandler:=proc;
 		END SetAclHandler;
 
-		PROCEDURE HciEventHandler(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE HciEventHandler(status : Usbdi.Status; actLen : SIZE);
 		BEGIN
 			IF (status = Usbdi.Ok) OR ((status = Usbdi.ShortPacket) & (actLen > 0)) THEN
 				IF eventHandler # NIL THEN eventHandler(hciEvent^, actLen); END;

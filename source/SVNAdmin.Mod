@@ -47,7 +47,7 @@ TYPE
 		pathIsFile, readGlobalData, readFromTempfile : BOOLEAN;
 		r : Files.Reader;
 		w : Files.Writer;
-		pathLength : LONGINT;
+		pathLength : SIZE;
 
 		PROCEDURE &Init* ( c: Commands.Context );
 		BEGIN
@@ -270,7 +270,8 @@ TYPE
 		PROCEDURE Add* ( CONST path : ARRAY OF CHAR; CONST name : ARRAY OF CHAR; addGlobal : BOOLEAN; VAR res : WORD );
 		VAR
 			file, entryfile, tmp, tmp2 : Files.FileName;
-			res1 : WORD; time, date, size : LONGINT;
+			res1 : WORD; time, date : LONGINT;
+			size : Files.Size;
 			w : Files.Writer;
 			flags : SET;
 			enum : Files.Enumerator;
@@ -578,7 +579,7 @@ TYPE
 		PROCEDURE ReadWriteRest*;
 		VAR
 			tmp : ARRAY 256 OF CHAR;
-			len : LONGINT;
+			len : SIZE;
 		BEGIN
 			REPEAT
 				r.Bytes ( tmp, 0, LEN(tmp), len );
@@ -753,7 +754,7 @@ TYPE
 		key = "svn:wc:ra_dav:version-url";
 	VAR
 		tmp,fstr,fstr2 : ARRAY 256 OF CHAR;
-		read, len, keyLength, i : LONGINT; res : WORD;
+		keyLength: SIZE; read, len: SIZE; i, res : WORD;
 		fr, fw : Files.File;
 		r : Files.Reader;
 		w : Files.Writer;

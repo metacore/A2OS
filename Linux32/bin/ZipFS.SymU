@@ -18,11 +18,11 @@ TYPE
 		F: Files.File; 
 		E: Unzip.Entry; 
 
-		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: LONGINT); 
-		PROCEDURE ^ Pos*(VAR r: Files.Rider): LONGINT; 
+		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
+		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
 		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
-		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Length*(): Files.Size; 
 		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ Update*; 

@@ -259,8 +259,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		n := 0; WHILE n < len DO str.buf[str.pos + n] := s[n]; INC(n) END
 	END MakeStretch;
 
-	PROCEDURE GetStretch (VAR str: Stretch; pos, len: LONGINT; VAR s: ARRAY OF CHAR);
-		VAR buf: Buffer; n: LONGINT;
+	PROCEDURE GetStretch (VAR str: Stretch; pos, len: SIZE; VAR s: ARRAY OF CHAR);
+		VAR buf: Buffer; n: SIZE;
 	BEGIN
 		IF len >= LEN(s) THEN len := LEN(s)-1 END;
 		buf := str.buf; pos := str.pos + pos; n := 0;
@@ -269,14 +269,14 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END GetStretch;
 
 	PROCEDURE SetStretch (VAR str: Stretch; pos, len: LONGINT; VAR s: ARRAY OF CHAR);
-		VAR buf: Buffer; n: LONGINT;
+		VAR buf: Buffer; n: SIZE;
 	BEGIN
 		buf := str.buf; pos := str.pos + pos; n := 0;
 		WHILE n < len DO buf[pos + n] := s[n]; INC(n) END
 	END SetStretch;
 
 	PROCEDURE StretchEquals (VAR str: Stretch; VAR s: ARRAY OF CHAR): BOOLEAN;
-		VAR n: LONGINT;
+		VAR n: SIZE;
 	BEGIN
 		n := 0;
 		LOOP

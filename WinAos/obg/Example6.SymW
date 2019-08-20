@@ -3,7 +3,7 @@ TYPE
 	ReadersWritersScheduler* = OBJECT {EXCLUSIVE} 
 	VAR 
 		busy: BOOLEAN; 
-		readers, writers: LONGINT; 
+		readers, writers: SIZE; 
 
 		PROCEDURE ^ StartRead*; 
 		PROCEDURE ^ EndRead*; 

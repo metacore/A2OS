@@ -82,7 +82,7 @@ TYPE
 			END;
 		END GetNodeData;
 
-		PROCEDURE DragDroppedHandler(x,y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN);
+		PROCEDURE DragDroppedHandler(x,y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN);
 		VAR node: WMTrees.TreeNode; destination,source: WMComponents.VisualComponent; data: ANY; parent: XML.Element;
 		BEGIN
 			node := treeView.GetNodeAtPos(x,y);
@@ -108,7 +108,7 @@ TYPE
 		END DragDroppedHandler;
 
 		PROCEDURE OnStartDrag(sender, data : ANY);
-		VAR w, h: LONGINT; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas; caption: Strings.String;
+		VAR w, h: SIZE; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas; caption: Strings.String;
 		BEGIN
 			NEW(img);
 			dragged := treeView.draggedNode;
@@ -135,7 +135,7 @@ TYPE
 			name, string : Strings.String;
 			caption : ARRAY 512 OF CHAR;
 			enum : XMLObjects.Enumerator;
-			p : ANY; i, len : LONGINT;
+			p : ANY; i, len : SIZE;
 			id: Strings.String;
 		BEGIN
 			name := component.GetName();
@@ -441,7 +441,7 @@ TYPE
 			root , node: WMTrees.TreeNode;
 			array: WMComponents.SelectionArray;
 			selection: WMComponents.SelectionList;
-			i: LONGINT;
+			i: SIZE;
 		BEGIN
 			ASSERT(tree # NIL);
 			IF (data # NIL) & (data IS WMComponents.SelectionList) THEN
@@ -782,8 +782,8 @@ TYPE
 			END;
 		END InvalidateM;
 
-		PROCEDURE ContextMenu(sender : ANY; x, y: LONGINT);
-		VAR popup: WMPopups.Popup; wmx, wmy: LONGINT; node: WMTrees.TreeNode; treeView: WMTrees.TreeView;
+		PROCEDURE ContextMenu(sender : ANY; x, y: SIZE);
+		VAR popup: WMPopups.Popup; wmx, wmy: SIZE; node: WMTrees.TreeNode; treeView: WMTrees.TreeView;
 			par: SelectionWrapper;
 		BEGIN
 			NEW(popup);
@@ -982,7 +982,7 @@ TYPE
 			END;
 		END Accept;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR
 			img,icon: WMGraphics.Image; canvas, iconCanvas: WMGraphics.BufferCanvas; color: LONGINT;
 			r: WMRectangles.Rectangle; data: WMComponents.FindComponentMode;

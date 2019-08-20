@@ -18,13 +18,13 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ XORBytesInLane*(laneNo, laneOffset, length: LONGINT; CONST data: ARRAY OF CHAR; dataOffset: LONGINT); 
-		PROCEDURE ^ XORLanes*(CONST data: ARRAY OF CHAR; offset, laneCount: LONGINT); 
-		PROCEDURE ^ ComplementBit*(position: LONGINT); 
-		PROCEDURE ^ ExtractBytesInLane*(laneNo, laneOffset, length: LONGINT; VAR data: ARRAY OF CHAR; dataOffset: LONGINT); 
-		PROCEDURE ^ ExtractLanes*(VAR data: ARRAY OF CHAR; offset, laneCount: LONGINT); 
-		PROCEDURE ^ XORPermute*(CONST inData: ARRAY OF CHAR; offset, count: LONGINT); 
-		PROCEDURE ^ XORPermuteExtract*(CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: LONGINT; VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: LONGINT); 
+		PROCEDURE ^ XORBytesInLane*(laneNo, laneOffset, length: SIZE; CONST data: ARRAY OF CHAR; dataOffset: SIZE); 
+		PROCEDURE ^ XORLanes*(CONST data: ARRAY OF CHAR; offset, laneCount: SIZE); 
+		PROCEDURE ^ ComplementBit*(position: SIZE); 
+		PROCEDURE ^ ExtractBytesInLane*(laneNo, laneOffset, length: SIZE; VAR data: ARRAY OF CHAR; dataOffset: SIZE); 
+		PROCEDURE ^ ExtractLanes*(VAR data: ARRAY OF CHAR; offset, laneCount: SIZE); 
+		PROCEDURE ^ XORPermute*(CONST inData: ARRAY OF CHAR; offset, count: SIZE); 
+		PROCEDURE ^ XORPermuteExtract*(CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: SIZE; VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: SIZE); 
 		PROCEDURE ^ Permute*; 
 	END Instance; 
 VAR 
@@ -33,9 +33,9 @@ VAR
 
 	PROCEDURE ^ ToBitInterleaving(CONST in: Lane; VAR out: Lane); 
 	PROCEDURE ^ FromBitInterleaving(CONST in: Lane; VAR out: Lane); 
-	PROCEDURE ^ ROL64(VAR lane: Lane; offset: LONGINT); 
+	PROCEDURE ^ ROL64(VAR lane: Lane; offset: SIZE); 
 	PROCEDURE ^ ROL64_1XOR(CONST in1, in2: Lane; VAR out: Lane); 
-	PROCEDURE ^ Round(VAR a: State; r: LONGINT); 
+	PROCEDURE ^ Round(VAR a: State; r: SIZE); 
 	PROCEDURE ^ InitializeRoundConstants; 
 	PROCEDURE ^ InitializeRhoOffsets; 
 	PROCEDURE ^ LFSR86540(VAR LFSR: SET32): BOOLEAN; 

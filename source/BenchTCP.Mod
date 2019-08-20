@@ -18,9 +18,9 @@ TYPE
 	Sender = OBJECT
 		VAR
 			res: WORD;
-			c: TCP.Connection; num, num0: LONGINT; buf: Bytes; done: BOOLEAN;
+			c: TCP.Connection; num, num0: SIZE; buf: Bytes; done: BOOLEAN;
 
-		PROCEDURE &Init*(c: TCP.Connection; buf: Bytes; num: LONGINT);
+		PROCEDURE &Init*(c: TCP.Connection; buf: Bytes; num: SIZE);
 		BEGIN
 			ASSERT(LEN(buf^) >= 1024);
 			SELF.c := c; SELF.buf := buf; SELF.num := num;
@@ -48,9 +48,9 @@ TYPE
 	Tester = OBJECT
 		VAR
 			res: WORD;
-			c: TCP.Connection; num, num0, port, total, len: LONGINT; fip: IP.Adr;
+			c: TCP.Connection; num, num0: SIZE; port: LONGINT; fip: IP.Adr;
 			timer: Kernel.MilliTimer; sender: Sender; server: ARRAY 64 OF CHAR;
-			time:HUGEINT;
+			total, len: SIZE; time: HUGEINT;
 
 		PROCEDURE &Init*(CONST server: ARRAY OF CHAR; num, port: LONGINT);
 		BEGIN
@@ -113,7 +113,7 @@ BEGIN
 END Message;
 
 
-PROCEDURE Report(ms, port, total: LONGINT; CONST msg: ARRAY OF CHAR);
+PROCEDURE Report(ms, port: LONGINT; total: SIZE; CONST msg: ARRAY OF CHAR);
 VAR
 	realStr: ARRAY 128 OF CHAR;
 

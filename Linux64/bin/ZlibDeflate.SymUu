@@ -89,8 +89,8 @@ TYPE
 
 	PendingBuffer = RECORD 
 		buf: POINTER TO ARRAY PendingBufSize OF CHAR; 
-		beg: LONGINT; 
-		end: LONGINT; 
+		beg: SIZE; 
+		end: SIZE; 
 	END; 
 
 	Stream* = RECORD 
@@ -106,16 +106,16 @@ TYPE
 		status: SHORTINT; 
 		adler: LONGINT; 
 		window: POINTER TO Window; 
-		block: LONGINT; 
+		block: SIZE; 
 		hash: LONGINT; 
-		prev: POINTER TO ARRAY WindowSize OF LONGINT; 
-		head: POINTER TO ARRAY HashSize OF LONGINT; 
-		string: LONGINT; 
-		lookAhead: LONGINT; 
-		match: LONGINT; 
-		matchLen: LONGINT; 
-		prevMatch: LONGINT; 
-		prevLen: LONGINT; 
+		prev: POINTER TO ARRAY WindowSize OF SIZE; 
+		head: POINTER TO ARRAY HashSize OF SIZE; 
+		string: SIZE; 
+		lookAhead: SIZE; 
+		match: SIZE; 
+		matchLen: SIZE; 
+		prevMatch: SIZE; 
+		prevLen: SIZE; 
 		prevAvail: BOOLEAN; 
 		pend: PendingBuffer; 
 		ltree, dtree, btree: Tree; 
@@ -155,9 +155,9 @@ VAR
 	END; 
 
 	PROCEDURE ^ PutChar(VAR pend: PendingBuffer; c: CHAR); 
-	PROCEDURE ^ Put16BitsLSB(VAR pend: PendingBuffer; b: LONGINT); 
-	PROCEDURE ^ Put16BitsMSB(VAR pend: PendingBuffer; b: LONGINT); 
-	PROCEDURE ^ Put32BitsMSB(VAR pend: PendingBuffer; b: LONGINT); 
+	PROCEDURE ^ Put16BitsLSB(VAR pend: PendingBuffer; b: SIZE); 
+	PROCEDURE ^ Put16BitsMSB(VAR pend: PendingBuffer; b: SIZE); 
+	PROCEDURE ^ Put32BitsMSB(VAR pend: PendingBuffer; b: SIZE); 
 	PROCEDURE ^ ReverseBits(code, len: INTEGER): INTEGER; 
 	PROCEDURE ^ SendBits(VAR stream: Stream; val: LONGINT; len: INTEGER); 
 	PROCEDURE ^ SendCode(VAR stream: Stream; VAR node: Node); 
@@ -178,18 +178,18 @@ VAR
 	PROCEDURE ^ InitTrees(VAR stream: Stream); 
 	PROCEDURE ^ FreeTrees(VAR stream: Stream); 
 	PROCEDURE ^ AlignTrees(VAR stream: Stream); 
-	PROCEDURE ^ CopyBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; header: BOOLEAN); 
-	PROCEDURE ^ StoreBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; eof: BOOLEAN); 
+	PROCEDURE ^ CopyBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: SIZE; header: BOOLEAN); 
+	PROCEDURE ^ StoreBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; offset, len: SIZE; eof: BOOLEAN); 
 	PROCEDURE ^ CompressBlock(VAR stream: Stream; lnode, dnode: Nodes); 
-	PROCEDURE ^ FlushBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; pos, len: LONGINT; eof: BOOLEAN); 
+	PROCEDURE ^ FlushBlock(VAR stream: Stream; VAR buf: ARRAY OF CHAR; pos, len: SIZE; eof: BOOLEAN); 
 	PROCEDURE ^ TallyLit(VAR stream: Stream; ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ TallyDistLen(VAR stream: Stream; dist, len: INTEGER): BOOLEAN; 
 	PROCEDURE ^ ClearHash(VAR stream: Stream); 
 	PROCEDURE ^ UpdateHash(VAR h: LONGINT; ch: CHAR); 
-	PROCEDURE ^ InsertString(VAR stream: Stream; pos: LONGINT; VAR head: LONGINT); 
+	PROCEDURE ^ InsertString(VAR stream: Stream; pos: SIZE; VAR head: SIZE); 
 	PROCEDURE ^ InitMatches(VAR stream: Stream); 
-	PROCEDURE ^ LongestMatch(VAR stream: Stream; cur: LONGINT): LONGINT; 
-	PROCEDURE ^ CheckMatch(VAR stream: Stream; start, match, len: LONGINT); 
+	PROCEDURE ^ LongestMatch(VAR stream: Stream; cur: SIZE): SIZE; 
+	PROCEDURE ^ CheckMatch(VAR stream: Stream; start, match, len: SIZE); 
 	PROCEDURE ^ FillWindow(VAR stream: Stream); 
 	PROCEDURE ^ CompressStored(VAR stream: Stream; flush: SHORTINT): SHORTINT; 
 	PROCEDURE ^ CompressFast(VAR stream: Stream; flush: SHORTINT): SHORTINT; 
@@ -197,9 +197,9 @@ VAR
 	PROCEDURE ^ Reset*(VAR stream: Stream); 
 	PROCEDURE ^ Close*(VAR stream: Stream); 
 	PROCEDURE ^ Open*(VAR stream: Stream; level, strategy: SHORTINT; wrapper: BOOLEAN); 
-	PROCEDURE ^ SetDictionary*(VAR stream: Stream; VAR dict: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ SetDictionary*(VAR stream: Stream; VAR dict: ARRAY OF CHAR; len: SIZE); 
 	PROCEDURE ^ Deflate*(VAR stream: Stream; flush: SHORTINT); 
 	PROCEDURE ^ SetParams*(VAR stream: Stream; level, strategy: SHORTINT); 
-	PROCEDURE ^ Compress*(VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ Compress*(VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; level, strategy: SHORTINT; VAR len: SIZE; VAR res: WORD); 
 BEGIN
 END ZlibDeflate.

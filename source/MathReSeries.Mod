@@ -57,13 +57,13 @@ VAR
 
 (** The lengths of the supplied arrays  a & b  must be the same. *)
 	PROCEDURE TruncatedContinuedFraction*( a, b: ARRAY OF NbrRe.Real;  x: NbrRe.Real ): NbrRe.Real;
-	VAR i, aLen, bLen: NbrInt.Integer;  c, d, f: NbrRe.Real;
+	VAR i, aLen, bLen: SIZE;  c, d, f: NbrRe.Real;
 	BEGIN
 		aLen := LEN( a );  bLen := LEN( b );
 		IF aLen # bLen THEN DataErrors.Error( "Lengths of supplied arrays must be equal." );  f := 0;  RETURN f END;
 		IF b[0] = 0 THEN b[0] := 1/NbrRe.MaxNbr END;
 		f := b[0];  c := f;  d := 0;  i := 1;
-		REPEAT c := b[i] + a[i] * x / c;  d := 1 / (b[i] + a[i] * x * d);  f := c * d * f;  NbrInt.Inc( i ) UNTIL i = aLen;
+		REPEAT c := b[i] + a[i] * x / c;  d := 1 / (b[i] + a[i] * x * d);  f := c * d * f;  INC( i ) UNTIL i = aLen;
 		RETURN f
 	END TruncatedContinuedFraction;
 
@@ -80,7 +80,7 @@ VAR
 	END PowerSeries;
 
 	PROCEDURE TruncatedPowerSeries*( a: ARRAY OF NbrRe.Real;  x: NbrRe.Real ): NbrRe.Real;
-	VAR i, len: NbrInt.Integer;  prod: NbrRe.Real;
+	VAR i, len: SIZE;  prod: NbrRe.Real;
 	BEGIN
 		len := LEN( a );  prod := a[len - 1] * x;
 		FOR i := len - 2 TO 1 BY -1 DO prod := (a[i] + prod) * x END;

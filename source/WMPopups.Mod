@@ -71,7 +71,7 @@ TYPE
 			button : WMStandardComponents.Button;
 			font : WMGraphics.Font;
 			entry : Entry;
-			width, height, w, h : LONGINT;
+			width, height, w, h : SIZE;
 			temp : Strings.String;
 		BEGIN
 			NEW(panel);
@@ -181,7 +181,7 @@ TYPE
 			END;
 		END Close;
 
-		PROCEDURE Popup* (x, y : LONGINT);
+		PROCEDURE Popup* (x, y : SIZE);
 		VAR manager : WMWindowManager.WindowManager;
 		BEGIN {EXCLUSIVE}
 			IF (first # NIL) THEN
@@ -215,7 +215,7 @@ TYPE
 			colorPanel.ChosenColorProc := SetColor;
 		END CreatePopup;
 
-		PROCEDURE Popup*(x, y : LONGINT);
+		PROCEDURE Popup*(x, y : SIZE);
 		BEGIN
 			manager := WMWindowManager.GetDefaultManager();
 			manager.Add(x, y, SELF, {WMWindowManager.FlagStayOnTop, WMWindowManager.FlagHidden});
@@ -248,7 +248,7 @@ TYPE
 
 (** Color Swatch Visual Component *)
 	ColorSwatchPanel* = OBJECT(WMComponents.VisualComponent)
-	VAR colors : ARRAY 19 OF LONGINT;
+	VAR colors : ARRAY 19 OF WMGraphics.Color;
 		ChosenColorProc* : PROCEDURE {DELEGATE} (color: WMGraphics.Color);
 		(* CloseProc : PROCEDURE {DELEGATE}; *)
 
@@ -259,8 +259,8 @@ TYPE
 			BuildPalette;
 		END Init;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
-		VAR r, g, b, a, i, j: LONGINT; cColor: WMGraphics.Color;
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
+		VAR r, g, b, a: WORD; i, j: SIZE; cColor: WMGraphics.Color;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;
 			IF (i>= 0) & (i<=2) THEN
@@ -282,7 +282,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
-		VAR r, g, b, a, i, j: LONGINT; color: WMGraphics.Color;
+		VAR r, g, b, a: WORD; i, j: SIZE; color: WMGraphics.Color;
 		BEGIN
 			DrawBackground^(canvas);
 

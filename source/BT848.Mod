@@ -578,7 +578,7 @@ TYPE
 	(** chnl:	channel to set (see range of channel set). *)
 	PROCEDURE SetChannel*(chnl: LONGINT);
 	VAR
-		i: LONGINT;
+		i: SIZE;
 		freq: LONGINT;
 	BEGIN
 		ASSERT(chnl <= freqTable[chnlSet].maxChnl);
@@ -1041,7 +1041,7 @@ TYPE
 		oddDmaProgLength: LONGINT;
 		formatParameters: LONGINT;
 		currentCol: LONGINT;
-		videoAddr: LONGINT;
+		videoAddr: Machine.Address32;
 		videoWidth: LONGINT;
 
 		notificationProcess: NotificationProcess;	(* user land notification handler *)
@@ -1540,7 +1540,7 @@ TYPE
 		(* poll remote control 5 times to turn off the LED *)
 		IF remoteControl THEN
 			FOR i := 1 TO 5 DO
-				valNirvana := i2cBus.I2CRead(Machine.Ensure32BitAddress (base) + remoteControlAddr);
+				valNirvana := i2cBus.I2CRead(base(Machine.Address32) + remoteControlAddr);
 			END;
 		END;
 		xtalPLLMode := Bt848UseXTALS;
@@ -2587,11 +2587,11 @@ TYPE
 	(** Set the video data buffer. *)
 	(** addr:	physical address of target buffer for video data. *)
 	(** width:	line length of video frame buffer *)
-	PROCEDURE SetVideo*(addr: ADDRESS; width: LONGINT);
+	PROCEDURE SetVideo*(addr: ADDRESS; width: SIZE);
 	BEGIN
 		ASSERT(flags * AosCapMask = {});
-		videoAddr := Machine.Ensure32BitAddress (addr);
-		videoWidth := width;
+		videoAddr := addr(Machine.Address32);
+		videoWidth := width(LONGINT);
 		dmaProgLoaded := FALSE;
 	END SetVideo;
 

@@ -16,7 +16,7 @@ TYPE
 			format := Displays.color565; unit := 10000
 		END Init;
 
-		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT);
+		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: WORD);
 		END Transfer;
 
 		PROCEDURE Fill*(col, x, y, w, h: LONGINT);

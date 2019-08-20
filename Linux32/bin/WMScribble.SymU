@@ -4,12 +4,12 @@ CONST
 TYPE 
 	ScribbleWindow = OBJECT {EXCLUSIVE} (WMWindowManager.BufferWindow)
 	VAR 
-		lx, ly: LONGINT; 
+		lx, ly: SIZE; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keySym: LONGINT); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keySym: SIZE); 
 	END ScribbleWindow; 
 VAR 
 	s: ScribbleWindow; 

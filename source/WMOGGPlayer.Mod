@@ -118,7 +118,7 @@ TYPE
 		END FillList;
 
 		PROCEDURE Play(sender, data : ANY);
-		VAR l, t, r, b : LONGINT;
+		VAR l, t, r, b : SIZE;
 			p : ANY; url : Strings.String;
 		BEGIN
 			list.Acquire;

@@ -93,28 +93,28 @@ END Args;
 
 #END
 
-PROCEDURE ReceiveStdin( VAR data: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len: LONGINT; VAR res: WORD );
-VAR ures: SIZE;  i, err: LONGINT;
+PROCEDURE ReceiveStdin( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+VAR ures: SIZE;  err: WORD;
 BEGIN
 	len := 0;
 	REPEAT
 		ures := Read( ADDRESSOF (data[ofs]), size );
 		IF ures > 0 THEN
-			INC( ofs, LONGINT(ures) );  DEC( size, LONGINT(ures) );  INC( len, LONGINT(ures) )
+			INC( ofs, ures );  DEC( size, ures );  INC( len, ures )
 		END;
 		IF ures < 0 THEN err := Unix.errno() END;
 	UNTIL (len >= min) OR ((ures <= 0) & (err # Unix.EINTR) & (err # 0));
 	IF len >= min THEN  res := Streams.Ok  ELSE  res := Streams.EOF  END;
 END ReceiveStdin;
 
-PROCEDURE SendStdout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: WORD );
+PROCEDURE SendStdout( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  prop: BOOLEAN;  VAR res: WORD );
 VAR ignore: SIZE;
 BEGIN
 	ignore := Unix.write( 1, ADDRESSOF( data[ofs] ), len );  res := Streams.Ok
 END SendStdout;
 
 
-PROCEDURE SendErrout( CONST data: ARRAY OF CHAR;  ofs, len: LONGINT;  prop: BOOLEAN;  VAR res: WORD );
+PROCEDURE SendErrout( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  prop: BOOLEAN;  VAR res: WORD );
 VAR ignore: SIZE;
 BEGIN
 	ignore := Unix.write( 2, ADDRESSOF( data[ofs] ), len );  res := Streams.Ok

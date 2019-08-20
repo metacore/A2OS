@@ -527,7 +527,7 @@ TYPE
 				mtime: HUGEINT;
 				fsize, fpos: SIZE;
 				bufs: ARRAY NBufs OF Buffer;
-				swapper, state: LONGINT;
+				swapper: SIZE; state: LONGINT;
 
 
 				PROCEDURE & Init( fs: Files.FileSystem );
@@ -583,19 +583,19 @@ TYPE
 				END Flush;
 
 
-				PROCEDURE Set*( VAR r: Files.Rider;  pos: LONGINT );
+				PROCEDURE Set*( VAR r: Files.Rider;  pos: Files.Position );
 				BEGIN {EXCLUSIVE}
 					SetX( r, pos )
 				END Set;
 
-				PROCEDURE SetX( VAR r: Files.Rider;  p: LONGINT );
-				VAR  org, offset, i: LONGINT;  n: SIZE;  buf: Buffer;
+				PROCEDURE SetX( VAR r: Files.Rider;  p: Files.Position );
+				VAR  org, offset, i, n: SIZE;  buf: Buffer;
 				BEGIN
 					r.file := SELF;  r.fs := fs;
 					IF p > fsize THEN  p := LONGINT(fsize)
 					ELSIF p < 0 THEN  p := 0
 					END;
-					offset := p MOD Bufsize;  org := p - offset;
+					offset := SIZE(p) MOD Bufsize;  org := SIZE(p) - offset;
 					i := 0;
 					WHILE (i < NBufs) & (bufs[i] # NIL) & (org # bufs[i].org) DO  INC( i )  END;
 					IF i < NBufs THEN
@@ -638,14 +638,14 @@ TYPE
 				END SetX;
 
 
-				PROCEDURE Pos*( VAR r: Files.Rider ): LONGINT;
+				PROCEDURE Pos*( VAR r: Files.Rider ): Files.Position;
 				BEGIN
 					RETURN r.apos + r.bpos
 				END Pos;
 
 
 				PROCEDURE Read*( VAR r: Files.Rider;  VAR x: CHAR );
-				VAR offset: LONGINT;  buf: Buffer;
+				VAR offset: SIZE;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
 					buf := r.hint(Buffer);  offset := r.bpos;
 					IF r.apos # buf.org THEN
@@ -662,8 +662,8 @@ TYPE
 					END
 				END Read;
 
-				PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR xpos, offset, restInBuf: SIZE;  min: LONGINT;  buf: Buffer;
+				PROCEDURE ReadBytes*( VAR r: Files.Rider;  VAR x: ARRAY OF CHAR;  ofs, len: SIZE );
+				VAR xpos, offset, restInBuf, min: SIZE;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
 					x[ofs] := 0X;  xpos := ofs;
 					buf := r.hint(Buffer);  offset := r.bpos;
@@ -686,7 +686,7 @@ TYPE
 
 
 				PROCEDURE Write*( VAR r: Files.Rider;  x: CHAR );
-				VAR buf: Buffer;  offset: LONGINT;
+				VAR buf: Buffer;  offset: SIZE;
 				BEGIN  {EXCLUSIVE}
 					buf := r.hint(Buffer);  offset := r.bpos;
 					IF (r.apos # buf.org) OR (offset >= Bufsize) THEN
@@ -698,8 +698,8 @@ TYPE
 					r.bpos := offset + 1;  r.res := Files.Ok
 				END Write;
 
-				PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
-				VAR xpos, min, restInBuf, offset: LONGINT;  buf: Buffer;
+				PROCEDURE WriteBytes*( VAR r: Files.Rider;  CONST x: ARRAY OF CHAR;  ofs, len: SIZE );
+				VAR xpos, min, restInBuf, offset: SIZE;  buf: Buffer;
 				BEGIN  {EXCLUSIVE}
 					xpos := ofs;  buf := r.hint(Buffer);  offset := r.bpos;
 					WHILE len > 0 DO
@@ -720,9 +720,9 @@ TYPE
 				END WriteBytes;
 
 
-				PROCEDURE Length*( ): LONGINT;
+				PROCEDURE Length*( ): Files.Size;
 				BEGIN
-					RETURN LONGINT(fsize)
+					RETURN fsize
 				END Length;
 
 
@@ -1181,7 +1181,7 @@ TYPE
 	END SetWorkPath;
 
 	PROCEDURE Finalization;
-	VAR ft: Files.FileSystemTable;  i: LONGINT;
+	VAR ft: Files.FileSystemTable;  i: SIZE;
 	BEGIN
 		Files.GetList( ft );
 		IF ft # NIL THEN

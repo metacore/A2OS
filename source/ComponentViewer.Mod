@@ -17,7 +17,7 @@ TYPE
 	END KillerMsg;
 
 	Window* = OBJECT(WMComponents.FormWindow)
-	VAR dragging: BOOLEAN; lastX, lastY: LONGINT;
+	VAR dragging: BOOLEAN; lastX, lastY: SIZE;
 
 		PROCEDURE RestoreWindow*(c : WMRestorable.Context);
 		BEGIN
@@ -34,7 +34,7 @@ TYPE
 			Resized(c.r-c.l,c.b-c.t);
 		END RestoreWindow;
 
-		PROCEDURE &InitWindow(width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &InitWindow(width, height : SIZE; alpha : BOOLEAN);
 		BEGIN
 			IncCount;
 			Init(width, height, alpha);
@@ -60,7 +60,7 @@ TYPE
 			END;
 		END Handle;
 
-		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
 		BEGIN
 			lastX := bounds.l + x; lastY:=bounds.t + y;
 			IF (keys = {0}) & (FlagMoveable IN flags) THEN
@@ -71,8 +71,8 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x,y:LONGINT; keys:SET);
-		VAR dx, dy : LONGINT;
+		PROCEDURE PointerMove*(x,y:SIZE; keys:SET);
+		VAR dx, dy : SIZE;
 		BEGIN
 			IF dragging THEN
 				x := bounds.l + x; y := bounds.t + y; dx := x - lastX; dy := y - lastY;
@@ -83,7 +83,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
 		BEGIN
 			dragging := FALSE;
 			PointerDown^(x,y,keys);
@@ -92,11 +92,11 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIZE;
 
-PROCEDURE DoShow*( vc: WMComponents.VisualComponent; VAR window: Window; x,y,width, height: LONGINT; client, alpha, fullscreen: BOOLEAN;flags: SET);
+PROCEDURE DoShow*( vc: WMComponents.VisualComponent; VAR window: Window; x,y,width, height: SIZE; client, alpha, fullscreen: BOOLEAN;flags: SET);
 VAR
-	fx,fy,fw,fh: LONGINT;
+	fx,fy,fw,fh: SIZE;
 	viewPort: WMWindowManager.ViewPort;
 	manager: WMWindowManager.WindowManager;
 BEGIN
@@ -153,7 +153,7 @@ VAR
 	ignoreMsg : ARRAY 1 OF CHAR;
 	generatorProc : XML.GeneratorProcedure;
 	c : XML.Content; component : Repositories.Component;
-	id: LONGINT; res: WORD;
+	id: SIZE; res: WORD;
 BEGIN
 	IF Repositories.SplitName(filename, repositoryName, componentName, id) & (repositoryName # "") THEN
 		(* Retrieve component from repository *)
@@ -183,7 +183,7 @@ BEGIN
 	IF ( c # NIL ) & (c IS WMComponents.VisualComponent) THEN RETURN c(WMComponents.VisualComponent) ELSE RETURN NIL END;
 END DoLoad;
 
-PROCEDURE DoOpen*(CONST filename: ARRAY OF CHAR; error: Streams.Writer; x,y,width, height: LONGINT; client, alpha, fullscreen: BOOLEAN; flags:SET): WMComponents.VisualComponent;
+PROCEDURE DoOpen*(CONST filename: ARRAY OF CHAR; error: Streams.Writer; x,y,width, height: SIZE; client, alpha, fullscreen: BOOLEAN; flags:SET): WMComponents.VisualComponent;
 VAR
 	window : Window;
 	c : WMComponents.VisualComponent;
@@ -261,7 +261,7 @@ PROCEDURE Store*(context: Commands.Context);
 VAR
 	filename, name, ext, formName : ARRAY 256 OF CHAR;
 	form: WMComponents.Component;
-	id: LONGINT; res: WORD;
+	id: SIZE; res: WORD;
 	originator: WMComponents.Component;
 	parent: XML.Element;
 BEGIN{EXCLUSIVE}

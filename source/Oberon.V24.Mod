@@ -122,7 +122,7 @@ BEGIN
 END GetMC;
 
 (** Available - Return the number of bytes available in the specified port's buffer. *)
-PROCEDURE Available*(portNo: LONGINT): LONGINT;
+PROCEDURE Available*(portNo: LONGINT): SIZE;
 BEGIN
 	RETURN ports[portNo].Available()
 END Available;

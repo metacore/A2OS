@@ -92,7 +92,7 @@ BEGIN
 			END
 		END;
 		w.crc32 := Zlib.CRC32(w.crc32, buf, offset, len - w.s.in.avail);
-		written := len - w.s.in.avail
+		written := (len - w.s.in.avail)(LONGINT);
 	END;
 END WriteBytes;
 
@@ -115,7 +115,7 @@ BEGIN
 	ASSERT(w.s.in.avail = 0, 110);
 	done := FALSE;
 	LOOP
-		len := BufSize - w.s.out.avail;
+		len := (BufSize - w.s.out.avail)(LONGINT);
 		IF len # 0 THEN
 			Files.WriteBytes(w.r, w.out^, len);
 			ZlibBuffers.Rewrite(w.s.out)

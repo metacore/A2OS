@@ -20,13 +20,13 @@ TYPE
 			END;
 		END New;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		VAR t : ARRAY 128 OF CHAR;
 			font : WMGraphics.Font;
-			x, y : LONGINT;
+			x, y : SIZE;
 
 			PROCEDURE WriteString(CONST s : ARRAY OF CHAR);
-			VAR dx, dy : LONGINT;
+			VAR dx, dy : SIZE;
 			BEGIN
 				font.GetStringSize(s, dx, dy);
 				canvas.DrawString(x, y, s); INC(x, dx)
@@ -74,7 +74,7 @@ VAR
 	winstance : Window;
 	manager : WM.WindowManager;
 
-PROCEDURE GetKeysymString(keysym : LONGINT; VAR string: ARRAY OF CHAR);
+PROCEDURE GetKeysymString(keysym : SIZE; VAR string: ARRAY OF CHAR);
 BEGIN
 	IF keysym = Inputs.KsBackSpace THEN string := "BackSpace";
 	ELSIF keysym = Inputs.KsTab THEN string := "Tab";

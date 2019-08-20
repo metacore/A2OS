@@ -15,7 +15,7 @@ TYPE
 		END GetName;
 
 		(* Map characters from US-Keyboard to  cyrillic keyboard *)
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		BEGIN
 			CASE ucs OF
 			(* unshifted *)

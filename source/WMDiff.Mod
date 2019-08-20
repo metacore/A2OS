@@ -30,7 +30,6 @@ CONST
 
 	MouseWheelMultiplier = 3;
 
-
 	NonDefaultFont = FALSE;
 
 	(* Font to be used when NonDefaultFont = TRUE *)
@@ -42,7 +41,7 @@ TYPE
 
 	NoWheelGrid* = OBJECT(WMStringGrids.StringGrid);
 
-		PROCEDURE WheelMove*(dz : LONGINT); (* do nothing *) END WheelMove;
+		PROCEDURE WheelMove*(dz : SIZE); (* do nothing *) END WheelMove;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -51,7 +50,6 @@ TYPE
 		END Init;
 
 	END NoWheelGrid;
-
 
 	DiffState= OBJECT
 	VAR state:LONGINT;
@@ -63,7 +61,7 @@ TYPE
 		lineNbr, grid: NoWheelGrid;
 		colWidths : WMGrids.Spacings;
 		commonLines, diffLines: LONGINT;
-		diffColor, maxLineWidth, minLineWidth: LONGINT;
+		diffColor: LONGINT; maxLineWidth, minLineWidth: SIZE;
 		curLine: LONGINT;
 		font : WMGraphics.Font;
 		onPropertyChange, onResized: WMEvents.EventSource;
@@ -121,7 +119,7 @@ TYPE
 		END CreateGrid;
 
 		PROCEDURE &Init*;
-		VAR scrollPanel : WMScrollableComponents.ScrollableContainer; VAR dx, dy : LONGINT;
+		VAR scrollPanel : WMScrollableComponents.ScrollableContainer; VAR dx, dy : SIZE;
 		BEGIN
 			Init^;
 			SetNameAsString(StrDiffView);
@@ -157,24 +155,24 @@ TYPE
 			Invalidate;
 		END ToggleLineNumbers;
 
-		PROCEDURE SetNofLines(nofLines: LONGINT);
+		PROCEDURE SetNofLines(nofLines: SIZE);
 		BEGIN
 			lineNbr.model.Acquire;
 			grid.model.Acquire;
-			lineNbr.model.SetNofRows(nofLines);
-			grid.model.SetNofRows(nofLines);
+			lineNbr.model.SetNofRows(nofLines(LONGINT));
+			grid.model.SetNofRows(nofLines(LONGINT));
 			grid.model.Release;
 			lineNbr.model.Release;
 		END SetNofLines;
 
-		PROCEDURE FileNameEditDragOver(x, y : LONGINT; dragInfo : WM.DragInfo; VAR handled : BOOLEAN);
+		PROCEDURE FileNameEditDragOver(x, y : SIZE; dragInfo : WM.DragInfo; VAR handled : BOOLEAN);
 		BEGIN
 			filenameEdit.tv.SelectAll;
 			filenameEdit.tv.SetFocus;
 			handled := TRUE;
 		END FileNameEditDragOver;
 
-		PROCEDURE FileNameEditDragDropped(x, y : LONGINT; dragInfo : WM.DragInfo; VAR handled : BOOLEAN);
+		PROCEDURE FileNameEditDragDropped(x, y : SIZE; dragInfo : WM.DragInfo; VAR handled : BOOLEAN);
 		VAR dropTarget : WMTextView.TextDropTarget; p : Texts.TextPosition;
 		BEGIN
 			filenameEdit.SetAsString("");
@@ -188,8 +186,8 @@ TYPE
 			handled := TRUE;
 		END FileNameEditDragDropped;
 
-		PROCEDURE FillLines(nofRows, nofLines: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE FillLines(nofRows, nofLines: SIZE);
+		VAR i: SIZE;
 		BEGIN
 			grid.model.Acquire;
 			FOR i := nofRows TO nofLines DO
@@ -199,8 +197,8 @@ TYPE
 			grid.model.Release;
 		END FillLines;
 
-		PROCEDURE InsertLine (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
-		VAR intStr: ARRAY 32 OF CHAR; nofRows: LONGINT; diffState : DiffState; lineWidth, dy: LONGINT;
+		PROCEDURE InsertLine (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
+		VAR intStr: ARRAY 32 OF CHAR; nofRows: SIZE; diffState : DiffState; lineWidth, dy: SIZE;
 		BEGIN
 			font.GetStringSize(string^, lineWidth, dy); INC(lineWidth,4);
 			maxLineWidth := MAX(lineWidth, maxLineWidth);
@@ -227,7 +225,7 @@ TYPE
 		END InsertLine;
 
 		PROCEDURE InsertEmptyLine;
-		VAR nofRows: LONGINT;
+		VAR nofRows: SIZE;
 		BEGIN
 			lineNbr.model.Acquire;
 			grid.model.Acquire;
@@ -245,8 +243,8 @@ TYPE
 			INC(curLine);
 		END InsertEmptyLine;
 
-		PROCEDURE InsertCommonLine (pos, line: LONGINT; string: Strings.String; out : Streams.Writer);
-		VAR intStr: ARRAY 32 OF CHAR; nofRows, lineWidth, dy: LONGINT;
+		PROCEDURE InsertCommonLine (pos, line: SIZE; string: Strings.String; out : Streams.Writer);
+		VAR intStr: ARRAY 32 OF CHAR; nofRows, lineWidth, dy: SIZE;
 		BEGIN
 			font.GetStringSize(string^, lineWidth, dy); INC(lineWidth, 4);
 			maxLineWidth := MAX(lineWidth, maxLineWidth);
@@ -275,7 +273,7 @@ TYPE
 		END SetFileName;
 
 		PROCEDURE GetFileName(): Strings.String;
-		VAR string, fileName: Files.FileName; count: LONGINT; sr: Streams.StringReader;
+		VAR string, fileName: Files.FileName; count: SIZE; sr: Streams.StringReader;
 		BEGIN
 			filenameEdit.GetAsString(string);
 			count := UTF8Strings.UTF8toASCII(string, " ", fileName);
@@ -320,7 +318,7 @@ TYPE
 	VAR
 		view: DiffView;
 		img: WMGraphics.Image;
-		nofRows, pageStart, pageSize: LONGINT;
+		nofRows, pageStart, pageSize: SIZE;
 		showPage: BOOLEAN;
 		diffColor : LONGINT;
 
@@ -331,8 +329,8 @@ TYPE
 			SELF.view:= view;
 		END New;
 
-		PROCEDURE SetPage(pageStart, pageSize: LONGINT);
-		VAR barHeight: LONGINT;
+		PROCEDURE SetPage(pageStart, pageSize: SIZE);
+		VAR barHeight: SIZE;
 		BEGIN
 			IF nofRows < 1 THEN RETURN; END;
 			showPage := TRUE;
@@ -371,7 +369,7 @@ TYPE
 		PROCEDURE Update;
 		VAR pos: LONGINT; fact: REAL; c: WMGraphics.BufferCanvas;
 			rect : WMRectangles.Rectangle;
-			i: LONGINT;
+			i: SIZE;
 			data:ANY;
 			prev: BOOLEAN;
 		BEGIN
@@ -440,7 +438,7 @@ TYPE
 		lblcommonLines, lbldiffLinesLeft, lbldiffLinesRight : WMStandardComponents.Label;
 		scrolly : WMStandardComponents.Scrollbar;
 		leftOverview, rightOverview: Overview;
-		pageSize: LONGINT;
+		pageSize: SIZE;
 
 		PROCEDURE &New *(c : WMRestorable.Context);
 		VAR vc : WMComponents.VisualComponent;
@@ -557,8 +555,8 @@ TYPE
 			Resized(Width, Height);
 		END Load;
 
-		PROCEDURE Resized*(width, height : LONGINT);
-		VAR viewWidth: LONGINT;
+		PROCEDURE Resized*(width, height : SIZE);
+		VAR viewWidth: SIZE;
 		BEGIN
 			Resized^(width, height);
 			viewWidth := (width - 2*OverviewWidth - ScrollbarWidth) DIV 2;
@@ -572,7 +570,7 @@ TYPE
 			Scrolled(NIL, NIL)
 		END OnViewResized;
 
-		PROCEDURE Setup(nofLines: LONGINT);
+		PROCEDURE Setup(nofLines: SIZE);
 		BEGIN
 			leftView.SetNofLines(nofLines + 1);
 			rightView.SetNofLines(nofLines + 1);
@@ -629,14 +627,14 @@ TYPE
 		END DiffHandler;
 
 		PROCEDURE OnViewPropertyChange(sender, par: ANY);
-		VAR ymax: LONGINT;
+		VAR ymax: SIZE;
 		BEGIN
 			ymax := sender(DiffView).grid.nofRows.Get();
 			scrolly.max.Set(ymax);
 		END OnViewPropertyChange;
 
 		PROCEDURE Scrolled(sender, data : ANY);
-		VAR col, coll, row, rowl : LONGINT;
+		VAR col, coll, row, rowl : SIZE;
 		BEGIN
 			rightView.lineNbr.GetTopPosition(coll, rowl);
 			rightView.grid.GetTopPosition(col, row);
@@ -651,7 +649,7 @@ TYPE
 			rightOverview.SetPage(scrolly.pos.Get(), pageSize);
 		END Scrolled;
 
-		PROCEDURE HandleKey(ucs : LONGINT; flags : SET; keysym : LONGINT) : BOOLEAN;
+		PROCEDURE HandleKey(ucs : SIZE; flags : SET; keysym : SIZE) : BOOLEAN;
 		VAR handled : BOOLEAN;
 		BEGIN
 			handled := TRUE;
@@ -690,8 +688,8 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE WheelMove*(dz : LONGINT);
-		VAR pos : LONGINT;
+		PROCEDURE WheelMove*(dz : SIZE);
+		VAR pos : SIZE;
 		BEGIN
 			pos := scrolly.pos.Get() + MouseWheelMultiplier * dz;
 			IF pos < scrolly.min.Get() THEN pos := scrolly.min.Get(); END;
@@ -733,8 +731,8 @@ END DecCount;
 
 PROCEDURE Cleanup;
 VAR die : KillerMsg;
-	 msg : WMMessages.Message;
-	 m : WM.WindowManager;
+	msg : WMMessages.Message;
+	m : WM.WindowManager;
 BEGIN {EXCLUSIVE}
 	NEW(die); msg.ext := die; msg.msgType := WMMessages.MsgExt;
 	m := WM.GetDefaultManager();

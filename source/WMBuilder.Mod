@@ -89,7 +89,7 @@ TYPE
 
 		opNum : LONGINT;
 
-		PROCEDURE &Init*(width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(width, height : SIZE; alpha : BOOLEAN);
 		VAR slib : Repositories.Repository;
 		BEGIN
 			Init^(width, height, FALSE);
@@ -435,9 +435,9 @@ TYPE
 			Invalidate;
 		END UpdateColors;
 
-		PROCEDURE DrawNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: WMTrees.TreeNode; state: SET);
+		PROCEDURE DrawNode(canvas: WMGraphics.Canvas; w, h: SIZE; node: WMTrees.TreeNode; state: SET);
 		VAR
-			dx, tdx, tdy, bgColor : LONGINT; f : WMGraphics.Font; image : WMGraphics.Image;
+			dx, tdx, tdy: SIZE; bgColor : LONGINT; f : WMGraphics.Font; image : WMGraphics.Image;
 			caption: Strings.String;
 		BEGIN
 			dx := 0;
@@ -532,7 +532,7 @@ TYPE
 	VAR
 		propertyPanel : WMInspectionComponents.PropertyPanel;
 
-		PROCEDURE &Init*(width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(width, height : SIZE; alpha : BOOLEAN);
 		BEGIN
 			Init^(width, height, alpha);
 
@@ -559,7 +559,7 @@ TYPE
 		buffers : BufferArray;
 
 		PROCEDURE &Init;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			nofComponents := 0;
 			NEW(buffers, 32);
@@ -623,13 +623,13 @@ TYPE
 		END LoadContent;
 
 		PROCEDURE Clear;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(buffers) - 1 DO buffers[i] := NIL; END;
 		END Clear;
 
 		PROCEDURE Resize;
-		VAR newBuffers : BufferArray; i : LONGINT;
+		VAR newBuffers : BufferArray; i : SIZE;
 		BEGIN
 			NEW(newBuffers, 2 * LEN(buffers));
 			FOR i := 0 TO LEN(buffers) - 1 DO newBuffers[i] := buffers[i]; END;
@@ -650,7 +650,7 @@ TYPE
 			hasError := FALSE;
 		END Init;
 
-		PROCEDURE ReportError(pos, line, col: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			hasError := TRUE;
 			KernelLog.String("WMBuilder.Clipboard.Parser.Parse: line = "); KernelLog.Int(line, 0);
@@ -675,14 +675,14 @@ TYPE
 TYPE
 
 	ComponentInfo = RECORD
-		originX, originY : LONGINT;
+		originX, originY : SIZE;
 	END;
 
 	SnapGrid = OBJECT
 	VAR
-		offsetX, offsetY : LONGINT;
-		deltaX, deltaY : LONGINT;
-		nX, nY : LONGINT;
+		offsetX, offsetY : SIZE;
+		deltaX, deltaY : SIZE;
+		nX, nY : SIZE;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -691,7 +691,7 @@ TYPE
 			nX := 8; nY := 4;
 		END Init;
 
-		PROCEDURE Snap(x, y : LONGINT; VAR snapX, snapY : LONGINT);
+		PROCEDURE Snap(x, y : SIZE; VAR snapX, snapY : SIZE);
 		VAR r : REAL; f : LONGINT;
 		BEGIN
 			x := x - offsetX;
@@ -722,12 +722,12 @@ TYPE
 			SetFrameType(Frame_Selection);
 		END Init;
 
-		PROCEDURE GetWidth() : LONGINT;
+		PROCEDURE GetWidth() : SIZE;
 		BEGIN
 			RETURN bounds.r - bounds.l;
 		END GetWidth;
 
-		PROCEDURE GetHeight() : LONGINT;
+		PROCEDURE GetHeight() : SIZE;
 		BEGIN
 			RETURN bounds.b - bounds.t
 		END GetHeight;
@@ -789,7 +789,7 @@ TYPE
 			);
 		END FixBounds;
 
-		PROCEDURE IsInActiveFrameHandle(x, y : LONGINT) : WORD;
+		PROCEDURE IsInActiveFrameHandle(x, y : SIZE) : WORD;
 		VAR res : WORD;
 		BEGIN
 			res := IsInFrameHandle(x, y);
@@ -799,8 +799,8 @@ TYPE
 			RETURN res;
 		END IsInActiveFrameHandle;
 
-		PROCEDURE IsInFrameHandle(x, y : LONGINT): LONGINT;
-		VAR xs, ys, xe, ye, res : LONGINT;
+		PROCEDURE IsInFrameHandle(x, y : SIZE): WORD;
+		VAR xs, ys, xe, ye: SIZE; res : WORD;
 		BEGIN
 			IF IsValid() THEN
 				xs := bounds.l; ys := bounds.t; xe := bounds.r; ye := bounds.b;
@@ -831,7 +831,7 @@ TYPE
 			RETURN res;
 		END IsInFrameHandle;
 
-		PROCEDURE DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye , activeColor, inactiveColor : LONGINT; active : SET);
+		PROCEDURE DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; activeColor, inactiveColor : LONGINT; active : SET);
 		VAR color : LONGINT;
 		BEGIN
 			IF (TopLeft IN active) THEN color := activeColor; ELSE color := inactiveColor; END;
@@ -972,7 +972,7 @@ TYPE
 		END Delete;
 
 		PROCEDURE ToFront;
-		VAR parent : XML.Element; i : LONGINT;
+		VAR parent : XML.Element; i : SIZE;
 		BEGIN
 			FOR i := 0 TO nofComponents - 1 DO
 				IF (components[i] # root) THEN
@@ -983,8 +983,8 @@ TYPE
 			END;
 		END ToFront;
 
-		PROCEDURE SetExtents(width, height : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE SetExtents(width, height : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO nofComponents - 1 DO
 				IF (components[i] IS WMComponents.VisualComponent) THEN
@@ -993,8 +993,8 @@ TYPE
 			END;
 		END SetExtents;
 
-		PROCEDURE SetLimit(rect : WMRectangles.Rectangle; mode : LONGINT);
-		VAR bounds : WMRectangles.Rectangle; dx, dy, i : LONGINT;
+		PROCEDURE SetLimit(rect : WMRectangles.Rectangle; mode : WORD);
+		VAR bounds : WMRectangles.Rectangle; dx, dy, i : SIZE;
 		BEGIN
 			FOR i := 0 TO nofComponents - 1 DO
 				IF (components[i] # NIL) & (components[i] IS WMComponents.VisualComponent) THEN
@@ -1019,8 +1019,8 @@ TYPE
 			END;
 		END SetLimit;
 
-		PROCEDURE MoveRelative(dx, dy : LONGINT);
-		VAR bounds : WMRectangles.Rectangle; i : LONGINT;
+		PROCEDURE MoveRelative(dx, dy : SIZE);
+		VAR bounds : WMRectangles.Rectangle; i : SIZE;
 		BEGIN
 			FOR i := 0 TO nofComponents - 1 DO
 				IF (components[i] # NIL) & (components[i] IS WMComponents.VisualComponent) THEN
@@ -1031,7 +1031,7 @@ TYPE
 			END;
 		END MoveRelative;
 
-		PROCEDURE InitResize(x0, y0, width0, height0 : LONGINT);
+		PROCEDURE InitResize(x0, y0, width0, height0 : SIZE);
 		VAR i : LONGINT; r, temp : WMRectangles.Rectangle;
 		BEGIN
 			IF (bounds = NIL) OR (LEN(bounds) < nofComponents) THEN NEW(bounds, nofComponents); END;
@@ -1048,10 +1048,10 @@ TYPE
 			END;
 		END InitResize;
 
-		PROCEDURE ResizeProportional(x, y, width, height : LONGINT; snapX, snapY : LONGINT);
-		VAR r, temp : WMRectangles.Rectangle; i : LONGINT;
+		PROCEDURE ResizeProportional(x, y, width, height : SIZE; snapX, snapY : SIZE);
+		VAR r, temp : WMRectangles.Rectangle; i : SIZE;
 
-			PROCEDURE Snap(r : WMRectangles.Rectangle; snapX, snapY : LONGINT);
+			PROCEDURE Snap(r : WMRectangles.Rectangle; snapX, snapY : SIZE);
 			BEGIN
 
 			END Snap;
@@ -1269,7 +1269,7 @@ TYPE
 		END Remove;
 
 		PROCEDURE Clear;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			nofComponents := 0;
 			FOR i := 0 TO LEN(components)-1 DO
@@ -1284,7 +1284,7 @@ TYPE
 		END Reset;
 
 		PROCEDURE ResizeComponentsArray;
-		VAR newComponents : ComponentArray; i : LONGINT;
+		VAR newComponents : ComponentArray; i : SIZE;
 		BEGIN
 			NEW(newComponents, 2 * LEN(components));
 			FOR i := 0 TO LEN(components)-1 DO
@@ -1311,7 +1311,7 @@ TYPE
 
 		insertObjAt : WMComponents.VisualComponent;
 
-		downX, downY, lastX, lastY, dragX, dragY : LONGINT;
+		downX, downY, lastX, lastY, dragX, dragY : SIZE;
 		oldPointerInfo: WORD;
 		selectInsertObjAt : BOOLEAN;
 
@@ -1462,7 +1462,7 @@ TYPE
 			RETURN mode;
 		END GetMode;
 
-		PROCEDURE ExtGetPositionOwnerHandler(x, y : LONGINT; VAR pointerOwner : WMComponents.VisualComponent; VAR handled : BOOLEAN);
+		PROCEDURE ExtGetPositionOwnerHandler(x, y : SIZE; VAR pointerOwner : WMComponents.VisualComponent; VAR handled : BOOLEAN);
 		BEGIN
 			(* let editpanel handle all messages *)
 			pointerOwner := SELF; handled := TRUE;
@@ -1495,7 +1495,7 @@ TYPE
 			END;
 		END ToFront;
 
-		PROCEDURE AddComponent(c :Repositories.Component; x, y : LONGINT);
+		PROCEDURE AddComponent(c :Repositories.Component; x, y : SIZE);
 		VAR vc : WMComponents.VisualComponent; bounds : WMRectangles.Rectangle;
 		BEGIN
 			ASSERT(c # NIL);
@@ -1588,12 +1588,12 @@ TYPE
 			END;
 		END InvalidateFrame;
 
-		PROCEDURE GetLimitMode(x, y : LONGINT; VAR bounds : WMRectangles.Rectangle) : WORD;
+		PROCEDURE GetLimitMode(x, y : SIZE; VAR bounds : WMRectangles.Rectangle) : WORD;
 		VAR
 			vc : WMComponents.VisualComponent; mode : LONGINT;
 			ci : ComponentInfo;
 
-			PROCEDURE Near(x, xRef : LONGINT) : BOOLEAN;
+			PROCEDURE Near(x, xRef : SIZE) : BOOLEAN;
 			BEGIN
 				RETURN (xRef - DistanceLimit <= x) & (x  <= xRef + DistanceLimit);
 			END Near;
@@ -1629,7 +1629,7 @@ TYPE
 		END GetLimitMode;
 
 		PROCEDURE MoveFrame(direction : LONGINT);
-		VAR oldFrame : WMRectangles.Rectangle; dx, dy : LONGINT;
+		VAR oldFrame : WMRectangles.Rectangle; dx, dy : SIZE;
 		BEGIN
 			ASSERT((direction = Left) OR (direction = Top) OR (direction = Right) OR (direction = Bottom));
 			IF selectionFrame.IsValid() & selection.ModificationsAllowed() THEN
@@ -1683,7 +1683,7 @@ TYPE
 			END;
 		END CheckSelectionFrame;
 
-		PROCEDURE CheckCursor(x, y : LONGINT; keys, modifierFlags : SET);
+		PROCEDURE CheckCursor(x, y : SIZE; keys, modifierFlags : SET);
 		CONST ShiftValue = 256;
 		VAR ignore : WMRectangles.Rectangle; res : WORD;
 		BEGIN
@@ -1754,10 +1754,10 @@ TYPE
 			END;
 		END CheckSelection;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		VAR
 			down : BOOLEAN; oldFrame : WMRectangles.Rectangle;
-			snapX, snapY, snapDownX, snapDownY, dx, dy : LONGINT; f : WMRectangles.Rectangle;
+			snapX, snapY, snapDownX, snapDownY, dx, dy : SIZE; f : WMRectangles.Rectangle;
 			oldParent : XML.Element;
 		BEGIN
 			PointerMove^(x, y, keys);
@@ -1863,7 +1863,7 @@ TYPE
 			IF (owner # NIL) THEN owner.UpdateCursorPosition(Invalid, Invalid); END;
 		END PointerLeave;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR down : BOOLEAN; res: LONGINT; rect : WMRectangles.Rectangle;
 		BEGIN
 			PointerDown^(x, y, keys);
@@ -1900,7 +1900,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE TakeOverSize(x, y : LONGINT);
+		PROCEDURE TakeOverSize(x, y : SIZE);
 		VAR vc : WMComponents.VisualComponent; rect : WMRectangles.Rectangle;
 		BEGIN
 			IF selection.ModificationsAllowed() & (selection.NofVisualComponents() > 0) THEN
@@ -1916,11 +1916,11 @@ TYPE
 			END;
 		END TakeOverSize;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		VAR
 			vc : WMComponents.VisualComponent; down : BOOLEAN; oldParent : XML.Element;
 			component : Repositories.Component;
-			cx, cy : LONGINT;
+			cx, cy : SIZE;
 		BEGIN
 			PointerUp^(x, y, keys);
 			mouseKeys := keys;
@@ -1988,7 +1988,7 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags: SET; VAR keySym: LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags: SET; VAR keySym: SIZE);
 
 			PROCEDURE ControlKey(flags : SET) : BOOLEAN;
 			BEGIN
@@ -2005,7 +2005,7 @@ TYPE
 			END Copy;
 
 			PROCEDURE Paste;
-			VAR components : ComponentArray; i : LONGINT;
+			VAR components : ComponentArray; i : SIZE;
 			BEGIN
 				components := clipboard.Get();
 				IF (components # NIL) THEN
@@ -2087,7 +2087,7 @@ TYPE
 			downX := Invalid; downY := Invalid; lastX := Invalid; lastY := Invalid;
 		END FocusLost;
 
-		PROCEDURE DragOver*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragOver*(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
 		BEGIN
 			IF takesFocus.Get() THEN
 				dragX := x; dragY := y;
@@ -2095,7 +2095,7 @@ TYPE
 		END DragOver;
 
 		PROCEDURE DragAddComponent(component : Repositories.Component; VAR res : WORD); (* ! needs work work hierarchical buildup *)
-		VAR x, y : LONGINT; c: WMComponents.VisualComponent;
+		VAR x, y : SIZE; c: WMComponents.VisualComponent;
 			rect:WMRectangles.Rectangle; id:ARRAY 64 OF CHAR; b:BOOLEAN;
 		BEGIN
 			ASSERT(component # NIL);
@@ -2124,7 +2124,7 @@ TYPE
 			END;
 		END DragAddComponent;
 
-		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragDropped*(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
 		VAR dc : WMRepositories.DropTarget;
 		BEGIN
 			IF takesFocus.Get() THEN
@@ -2147,7 +2147,7 @@ TYPE
 			END;
 		END UpdateFramePosition;
 
-		PROCEDURE FindPositionOwner(x, y : LONGINT) : WMComponents.VisualComponent;
+		PROCEDURE FindPositionOwner(x, y : SIZE) : WMComponents.VisualComponent;
 		VAR vc, po, positionOwner : WMComponents.VisualComponent; bounds : WMRectangles.Rectangle;
 		BEGIN
 			vc := SELF;
@@ -2170,7 +2170,7 @@ TYPE
 		END GetComponentInfo;
 
 		(** Get bounds of component in ComponentEditor coordinates *)
-		PROCEDURE ToMyCoordinates(component : WMComponents.VisualComponent; x, y : LONGINT; VAR myX,myY : LONGINT);
+		PROCEDURE ToMyCoordinates(component : WMComponents.VisualComponent; x, y : SIZE; VAR myX,myY : SIZE);
 		VAR c : XML.Element; bounds : WMRectangles.Rectangle;
 		BEGIN
 			ASSERT(component # NIL);
@@ -2184,7 +2184,7 @@ TYPE
 			END;
 		END ToMyCoordinates;
 
-		PROCEDURE ToComponentCoordinates(component : WMComponents.VisualComponent; x, y : LONGINT; VAR cx, cy : LONGINT);
+		PROCEDURE ToComponentCoordinates(component : WMComponents.VisualComponent; x, y : SIZE; VAR cx, cy : SIZE);
 		VAR c : XML.Element; bounds : WMRectangles.Rectangle;
 		BEGIN
 			ASSERT(component # NIL);
@@ -2200,17 +2200,17 @@ TYPE
 			END;
 		END ToComponentCoordinates;
 
-		PROCEDURE DrawHorizontalLine(canvas : WMGraphics.Canvas; y, color : LONGINT);
+		PROCEDURE DrawHorizontalLine(canvas : WMGraphics.Canvas; y : SIZE; color : LONGINT);
 		BEGIN
 			canvas.Line(0, y, bounds.GetWidth(), y, color, WMGraphics.ModeSrcOverDst);
 		END DrawHorizontalLine;
 
-		PROCEDURE DrawVerticalLine(canvas : WMGraphics.Canvas; x, color : LONGINT);
+		PROCEDURE DrawVerticalLine(canvas : WMGraphics.Canvas; x : SIZE; color : LONGINT);
 		BEGIN
 			canvas.Line(x, 0, x, bounds.GetHeight(), color, WMGraphics.ModeSrcOverDst);
 		END DrawVerticalLine;
 
-		PROCEDURE DrawFrames(canvas : WMGraphics.Canvas; parent : WMComponents.VisualComponent; ofsX, ofsY : LONGINT);
+		PROCEDURE DrawFrames(canvas : WMGraphics.Canvas; parent : WMComponents.VisualComponent; ofsX, ofsY : SIZE);
 		VAR c : XML.Content; vc : WMComponents.VisualComponent; rect : WMRectangles.Rectangle; color : LONGINT;
 		BEGIN
 			ASSERT((canvas # NIL) & (parent # NIL));
@@ -2238,7 +2238,7 @@ TYPE
 			END;
 		END DrawFrames;
 
-		PROCEDURE DrawHelperLines(canvas : WMGraphics.Canvas; parent : WMComponents.VisualComponent; level : LONGINT; ofsX, ofsY : LONGINT);
+		PROCEDURE DrawHelperLines(canvas : WMGraphics.Canvas; parent : WMComponents.VisualComponent; level : LONGINT; ofsX, ofsY : SIZE);
 		VAR c : XML.Content; vc : WMComponents.VisualComponent; rect : WMRectangles.Rectangle;
 		CONST Color = LONGINT(0A0A0FFFFH);
 		BEGIN
@@ -2261,7 +2261,7 @@ TYPE
 		END DrawHelperLines;
 
 		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
-		VAR rect : WMRectangles.Rectangle; e : XML.Element; x0, y0 : LONGINT;
+		VAR rect : WMRectangles.Rectangle; e : XML.Element; x0, y0 : SIZE;
 		BEGIN
 			DrawForeground^(canvas);
 			IF (mode = EditMode) THEN
@@ -2292,7 +2292,7 @@ TYPE
 		END DrawForeground;
 
 		PROCEDURE DrawSnapGrid(canvas : WMGraphics.Canvas);
-		VAR x, y, width, height, count, deltaN: LONGINT;
+		VAR x, y, width, height, count, deltaN: SIZE;
 		BEGIN
 			width := bounds.GetWidth();
 			height := bounds.GetHeight();
@@ -2393,7 +2393,7 @@ TYPE
 			owner.RemoveEditor(SELF);
 		END Close;
 
-		PROCEDURE &New(owner : MainWindow; width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &New(owner : MainWindow; width, height : SIZE; alpha : BOOLEAN);
 		BEGIN
 			ASSERT(owner # NIL);
 			SELF.owner := owner;
@@ -2469,7 +2469,7 @@ TYPE
 		END Get;
 
 		PROCEDURE GetAll() : WindowArray;
-		VAR result : WindowArray; w, temp : EditWindow; nofWindows, i, j : LONGINT;
+		VAR result : WindowArray; w, temp : EditWindow; nofWindows, i, j : SIZE;
 		BEGIN {EXCLUSIVE}
 			nofWindows := 0;
 			w := windows; WHILE (w # NIL) DO INC(nofWindows); w := w.next; END;
@@ -2720,7 +2720,7 @@ TYPE
 		END CreateForm;
 
 		PROCEDURE UpdateInfo;
-		VAR i, j : LONGINT; windows : WindowArray; focusWindow : EditWindow;
+		VAR i, j : SIZE; windows : WindowArray; focusWindow : EditWindow;
 		BEGIN
 			FOR i := 0 TO LEN(windowInfo.openDocuments)-1 DO windowInfo.openDocuments[i].name := ""; END;
 			windowInfo.handleDocumentInfo := HandleDocumentInfo;
@@ -2871,7 +2871,7 @@ TYPE
 
 		PROCEDURE HandleLoadBtn(sender, data : ANY);
 		VAR
-			c : Repositories.Component; width, height : LONGINT;
+			c : Repositories.Component; width, height : SIZE;
 			manager : WMWindowManager.WindowManager;
 			w : EditWindow;
 		BEGIN
@@ -2937,7 +2937,7 @@ TYPE
 		PROCEDURE HandleStoreBtn(sender, data : ANY);
 		VAR
 			w : EditWindow;
-			repositoryName, componentName : ARRAY 64 OF CHAR; refNum : LONGINT;
+			repositoryName, componentName : ARRAY 64 OF CHAR; refNum : SIZE;
 			name, filename : Files.FileName;
 			repository : Repositories.Repository;
 			res : WORD;
@@ -3009,7 +3009,7 @@ TYPE
 			END;
 		END HandleNodeClicked;
 
-		PROCEDURE HandleNodeContextMenu(sender : ANY; x, y : LONGINT);
+		PROCEDURE HandleNodeContextMenu(sender : ANY; x, y : SIZE);
 		VAR  w : EditWindow; node : WMTrees.TreeNode; ptr : ANY;
 		BEGIN
 			w := windowList.GetActive();
@@ -3028,7 +3028,7 @@ TYPE
 			END;
 		END HandleNodeContextMenu;
 
-		PROCEDURE UpdateCursorPosition(x, y : LONGINT);
+		PROCEDURE UpdateCursorPosition(x, y : SIZE);
 		VAR nbr : ARRAY 16 OF CHAR;
 		BEGIN
 			IF (x # Invalid) THEN Strings.IntToStr(x, nbr); ELSE nbr := "-"; END;
@@ -3040,7 +3040,7 @@ TYPE
 		PROCEDURE UpdateFramePosition(valid : BOOLEAN; frame : WMRectangles.Rectangle);
 		VAR string : ARRAY 32 OF CHAR;
 
-			PROCEDURE AppendNumber(VAR string : ARRAY OF CHAR; number : LONGINT);
+			PROCEDURE AppendNumber(VAR string : ARRAY OF CHAR; number : SIZE);
 			VAR nbr : ARRAY 8 OF CHAR;
 			BEGIN
 				Strings.IntToStr(number, nbr);
@@ -3073,7 +3073,7 @@ TYPE
 		END UpdateFramePosition;
 
 		PROCEDURE Load(CONST filename : ARRAY OF CHAR; VAR res : WORD);
-		VAR window : EditWindow; content : XML.Content; panel : WMStandardComponents.Panel; width, height : LONGINT;
+		VAR window : EditWindow; content : XML.Content; panel : WMStandardComponents.Panel; width, height : SIZE;
 		BEGIN
 			content := WMComponents.Load(filename);
 			IF (content # NIL) & (content IS WMStandardComponents.Panel) THEN
@@ -3132,10 +3132,10 @@ TYPE
 					e := c (XML.Element);
 					s := e.GetName();
 					IF (s # NIL) & (s^ = "Window") THEN
-						s := e.GetAttributeValue("l"); IF (s # NIL) THEN Strings.StrToInt(s^, bounds.l); END;
-						s := e.GetAttributeValue("t"); IF (s # NIL) THEN Strings.StrToInt(s^, bounds.t); END;
-						s := e.GetAttributeValue("r"); IF (s # NIL) THEN Strings.StrToInt(s^, bounds.r); END;
-						s := e.GetAttributeValue("b"); IF (s # NIL) THEN Strings.StrToInt(s^, bounds.b); END;
+						s := e.GetAttributeValue("l"); IF (s # NIL) THEN Strings.StrToSize(s^, bounds.l); END;
+						s := e.GetAttributeValue("t"); IF (s # NIL) THEN Strings.StrToSize(s^, bounds.t); END;
+						s := e.GetAttributeValue("r"); IF (s # NIL) THEN Strings.StrToSize(s^, bounds.r); END;
+						s := e.GetAttributeValue("b"); IF (s # NIL) THEN Strings.StrToSize(s^, bounds.b); END;
 						s := e.GetAttributeValue("file"); IF (s # NIL) THEN COPY(s^, filename); ELSE filename := "Unknown.wm"; END;
 					END;
 					Load(filename, res);
@@ -3148,7 +3148,7 @@ TYPE
 		VAR
 			windows : WindowArray; data, w : XML.Element;
 			string : ARRAY 32 OF CHAR; bounds : WMRectangles.Rectangle;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			windows := windowList.GetAll();
 			IF (windows # NIL) THEN
@@ -3184,7 +3184,7 @@ TYPE
 		END Handle;
 
 		PROCEDURE Close*;
-		VAR windows : WindowArray; i : LONGINT;
+		VAR windows : WindowArray; i : SIZE;
 		BEGIN
 			windows := windowList.GetAll();
 			IF (windows # NIL) THEN
@@ -3218,13 +3218,13 @@ BEGIN
 	RETURN i;
 END CreateIndicator;
 
-PROCEDURE Distance(x0, y0, x1, y1 : LONGINT) : REAL;
+PROCEDURE Distance(x0, y0, x1, y1 : SIZE) : REAL;
 BEGIN
 	RETURN Math.sqrt((x0 - x1) * (x0 - x1) + (y0 - y1) * (y0 - y1));
 END Distance;
 
-PROCEDURE DrawDashedLine(canvas : WMGraphics.Canvas; xs, ys, xe, ye, color0, color1, width0, width1 : LONGINT);
-VAR p0, p1, color, width : LONGINT;
+PROCEDURE DrawDashedLine(canvas : WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1 : LONGINT);
+VAR p0, p1: SIZE; color, width : LONGINT;
 BEGIN
 	ASSERT((width0 > 0) & (width1 > 0));
 	color := color0;
@@ -3260,7 +3260,7 @@ BEGIN
 	END;
 END DrawDashedLine;
 
-PROCEDURE DrawRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye, color: LONGINT);
+PROCEDURE DrawRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color: LONGINT);
 BEGIN
 	canvas.Line(xs, ys, xs, ye, color, WMGraphics.ModeSrcOverDst);
 	canvas.Line(xs, ys, xe, ys, color, WMGraphics.ModeSrcOverDst);
@@ -3268,7 +3268,7 @@ BEGIN
 	canvas.Line(xs, ye, xe, ye, color, WMGraphics.ModeSrcOverDst);
 END DrawRectangle;
 
-PROCEDURE DrawDashedRectangle(canvas : WMGraphics.Canvas; xs, ys, xe, ye, color0, color1, width0, width1 : LONGINT);
+PROCEDURE DrawDashedRectangle(canvas : WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1 : LONGINT);
 BEGIN
 	DrawDashedLine(canvas, xs, ys, xs, ye, color0, color1, width0, width1);
 	DrawDashedLine(canvas, xs, ys, xe, ys, color0, color1, width0, width1);
@@ -3276,7 +3276,7 @@ BEGIN
 	DrawDashedLine(canvas, xs, ye, xe, ye, color0, color1, width0, width1);
 END DrawDashedRectangle;
 
-PROCEDURE DrawIndication(canvas: WMGraphics.Canvas; xs, ys, xe, ye , width, color : LONGINT);
+PROCEDURE DrawIndication(canvas: WMGraphics.Canvas; xs, ys, xe, ye , width: SIZE; color : LONGINT);
 CONST CornerWidth = 8; EdgeWidth = 20;
 BEGIN
 	(* top-left *)
@@ -3306,7 +3306,7 @@ BEGIN
 END DrawIndication;
 
 PROCEDURE FillWithRectangles(canvas : WMGraphics.Canvas; rectangle : WMRectangles.Rectangle; width : LONGINT; color1, color2 : LONGINT);
-VAR column, row, nofColumns, nofRows : LONGINT; x, y : LONGINT; color : LONGINT;
+VAR column, row, nofColumns, nofRows : SIZE; x, y : SIZE; color : LONGINT;
 BEGIN
 	nofColumns := (rectangle.r - rectangle.l) DIV width + 1;
 	nofRows := (rectangle.b - rectangle.t) DIV width + 1;
@@ -3459,5 +3459,4 @@ PC.Compile \s
 	WMInspectionComponents.Mod
 	WMBuilder.Mod
 ~
-
 

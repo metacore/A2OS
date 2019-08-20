@@ -22,13 +22,13 @@ TYPE
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^ Clear; 
-		PROCEDURE ^ ExtPointerUp(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ ExtKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ExtPointerUp(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ExtKeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 		PROCEDURE ^ Wait(ms: LONGINT); 
 		PROCEDURE ^ InitShell; 
 		PROCEDURE ^ CopyFromClipboard; 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: LONGINT); 
+		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: SIZE); 
 		PROCEDURE ^ ReceiveCharacters; 
 		PROCEDURE ^  & Init*; 
 	BEGIN{ACTIVE} 
@@ -41,13 +41,13 @@ TYPE
 	VAR 
 		shell: ShellComponent; 
 
-		PROCEDURE ^ HandleUpcall(command: LONGINT); 
+		PROCEDURE ^ HandleUpcall(command: WORD); 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIZE; 
 	StrShellComponent: Strings.String; 
 
 	PROCEDURE ^ InitStrings; 

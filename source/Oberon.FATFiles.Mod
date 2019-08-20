@@ -311,7 +311,7 @@ END ReadFAT12;
 
 PROCEDURE FindDrive(num: SHORTINT;  VAR d: Disks.Device;  VAR part: SHORTINT);
 VAR
-	dev: Disks.DeviceTable;  i, j, res: LONGINT;  dnum: SHORTINT;  name: Disks.Name;
+	dev: Disks.DeviceTable;  i, j: SIZE; res: LONGINT;  dnum: SHORTINT;  name: Disks.Name;
 	m: Modules.Module; c: Modules.Command;
 BEGIN
 	IF num < NumFlop THEN	(* floppy *)
@@ -346,7 +346,7 @@ BEGIN
 						IF IsDOS(dev[i].table[j].type) THEN
 							IF dnum = num THEN
 								IF ~(Disks.Mounted IN dev[i].table[j].flags) THEN
-									d := dev[i];  part := SHORT(SHORT(j));
+									d := dev[i];  part := SHORTINT(j);
 									INCL(d.table[j].flags, Disks.Mounted);
 									RETURN	(* leave device open *)
 								END

@@ -69,7 +69,7 @@ TYPE
 		END RemoveAll;
 
 		PROCEDURE Write;
-		VAR len: LONGINT; writer: Streams.Writer;
+		VAR len: SIZE; writer: Streams.Writer;
 			e: Entry;
 		BEGIN
 			GetRaw (contents, len); Reset;

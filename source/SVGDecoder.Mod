@@ -7,7 +7,7 @@ TYPE
 		VAR
 			in: Streams.Reader;
 			img: Raster.Image;
-			width, height: LONGINT;
+			width, height: SIZE;
 
 		(* open the decoder on a file *)
 		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
@@ -36,7 +36,7 @@ TYPE
 			height := img.height;
 		END Open;
 
-		PROCEDURE GetImageInfo*(VAR width, height, format, maxProgressionLevel : LONGINT);
+		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
 		BEGIN
 			width := SELF.width;
 			height := SELF.height;

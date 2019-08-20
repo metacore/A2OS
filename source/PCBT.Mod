@@ -274,7 +274,7 @@ TYPE
 	(** fof >> *)
 	(** NewArrayConst - Create a new array constant;  *)
 		PROCEDURE NewArrayConst*( VAR a: ARRAY OF CHAR;  VAR len: ARRAY OF LONGINT;  blen: LONGINT ): LONGINT;
-		VAR base: LONGINT;  c: ConstArray;  tlen, tdim: LONGINT;  clen, alen, tbase: LONGINT;  dim: LONGINT;
+		VAR base: LONGINT;  c: ConstArray;  tlen, tdim: LONGINT;  clen: SIZE; alen, tbase: LONGINT;  dim: SIZE;
 		BEGIN {EXCLUSIVE}
 			base := constsize;  dim := LEN( len );  tlen := blen;  tdim := 0;
 			WHILE (tdim < dim) DO tlen := tlen * len[tdim];  INC( tdim );  END;

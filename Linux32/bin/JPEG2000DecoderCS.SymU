@@ -261,7 +261,7 @@ TYPE
 		ntilePartsAvailable: J2KU.LongIntArrayPtr; 
 		curTile: LONGINT; 
 		curPart: LONGINT; 
-		partRem: LONGINT; 
+		partRem: Streams.Position; 
 		initError: BOOLEAN; 
 		pktDec: PacketDecoder; 
 		cblkBuf: POINTER TO ARRAY OF J2KU.CodedCblk; 
@@ -312,7 +312,7 @@ TYPE
 		PROCEDURE ^ AdvanceComPosResLay(): BOOLEAN; 
 		PROCEDURE ^ ProgressionChange; 
 		PROCEDURE ^ EndOfCodestream*(): BOOLEAN; 
-		PROCEDURE ^ JumpToTilePartEnd(): LONGINT; 
+		PROCEDURE ^ JumpToTilePartEnd(): Streams.Position; 
 		PROCEDURE ^ GetDecoderSpecs*(): DecoderSpecs; 
 		PROCEDURE ^ CreateSubbandInfos; 
 		PROCEDURE ^ GetNumMagBits(tile, comp, reslevel, subband: LONGINT): LONGINT; 
@@ -338,7 +338,7 @@ TYPE
 		PROCEDURE ^ ReadTLMSegment(): BOOLEAN; 
 		PROCEDURE ^ ReadPLMSegment(): BOOLEAN; 
 		PROCEDURE ^ ReadPLTSegment(): BOOLEAN; 
-		PROCEDURE ^ ReadPPMSegment(VAR first, last: DataListElement; VAR nppmLeft, nppmRead: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ReadPPMSegment(VAR first, last: DataListElement; VAR nppmLeft, nppmRead: SIZE): BOOLEAN; 
 		PROCEDURE ^ ReadPPTSegment(VAR first, last: DataListElement): BOOLEAN; 
 		PROCEDURE ^ ReadCRGSegment(): BOOLEAN; 
 		PROCEDURE ^ ReadCOMSegment(): BOOLEAN; 
@@ -361,7 +361,7 @@ TYPE
 		PROCEDURE ^ GetCodeBlocks*(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: LONGINT): LONGINT; 
 		PROCEDURE ^ GetBufferedBlocks(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: LONGINT): LONGINT; 
 		PROCEDURE ^ TilePartAvailable*(): BOOLEAN; 
-		PROCEDURE ^ JumpToTilePartEnd(): LONGINT; 
+		PROCEDURE ^ JumpToTilePartEnd(): Streams.Position; 
 		PROCEDURE ^ NextTilePart*(): BOOLEAN; 
 		PROCEDURE ^ EndOfCodestream*(): BOOLEAN; 
 		PROCEDURE ^ FreeNonRebuildResources*; 

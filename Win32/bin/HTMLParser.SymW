@@ -47,7 +47,7 @@ TYPE
 		PROCEDURE ^ ParseEndTag(): String; 
 	END Parser; 
 
-	PROCEDURE ^ IsPubidLiteral(VAR str: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ IsPubidLiteral(CONST str: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; msg: ARRAY OF CHAR); 
 	PROCEDURE ^ IsSolitaryTag(name: String): BOOLEAN; 
 	PROCEDURE ^ PrematureTagClosing(name, next: String): BOOLEAN; 

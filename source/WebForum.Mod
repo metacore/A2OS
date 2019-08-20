@@ -382,7 +382,7 @@ CONST
 
 		PROCEDURE RecursiveSearchFilter(featureEntry: FeatureEntry) : BOOLEAN;
 		VAR modifDate: WebStd.PtrDateTime; list: WebStd.PersistentDataObjectList;
-			subFeature: FeatureEntry; i: LONGINT;
+			subFeature: FeatureEntry; i: SIZE;
 		BEGIN
 			modifDate := featureEntry.modifiedDate;
 			IF (modifDate # NIL) THEN
@@ -753,7 +753,7 @@ CONST
 
 	(* append HTML option list to 'select'. the string equal to 'actualValue' is selected *)
 	PROCEDURE AppendOptionList(select: XML.Element; list: StringList; actualValue: Strings.String);
-	VAR str: Strings.String; option: XML.Element; i: LONGINT;
+	VAR str: Strings.String; option: XML.Element; i: SIZE;
 	BEGIN (* select # NIL & list # NIL *)
 		FOR i := 0 TO LEN(list)-1 DO
 			str := list[i];

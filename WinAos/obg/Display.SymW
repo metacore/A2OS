@@ -217,7 +217,7 @@ TYPE
 
 	Display = OBJECT (Displays.Display)
 
-		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: LONGINT); 
 	END Display; 
 
 	; 
@@ -263,9 +263,9 @@ VAR
 	PROCEDURE ^ HandleKeyUp(win: Window; wParam: User32.WParam; lParam: User32.LParam); 
 	PROCEDURE ^ SetDocRect(win: Window; resize: BOOLEAN); 
 	PROCEDURE ^ UpdateDisplay(win: Window; id: LONGINT; lParam: User32.LParam; wParam: User32.WParam); 
-	PROCEDURE ^ FromMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: LONGINT); 
-	PROCEDURE ^ ToMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: LONGINT); 
-	PROCEDURE ^ ToWindow*(win: Window; x, y, w, h: LONGINT; dx, dy: LONGINT); 
+	PROCEDURE ^ FromMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE); 
+	PROCEDURE ^ ToMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE); 
+	PROCEDURE ^ ToWindow*(win: Window; x, y, w, h: SIZE; dx, dy: LONGINT); 
 	PROCEDURE ^ GetMinMaxInfo(win: Window; lParam: User32.LParam): BOOLEAN; 
 	PROCEDURE ^ Minimize(win: Window); 
 	PROCEDURE ^ Maximize(win: Window); 

@@ -35,7 +35,7 @@ TYPE
 
 		PROCEDURE ^  & Create*(vncInfo: VNCServer.VNCInfo); 
 		PROCEDURE ^ Run; 
-		PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
+		PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
 		PROCEDURE ^ ClipAtImage(VAR x: WMRectangles.Rectangle; img: Raster.Image); 
 		PROCEDURE ^ AddDirty(l, t, r, b: LONGINT); 
 		PROCEDURE ^ Close; 

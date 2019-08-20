@@ -92,12 +92,12 @@ TYPE
 		audio : TVDriver.Audio;
 		vbi : TeletextDecoder.VbiDecoder;
 		timer : Kernel.Timer;
-		chNr : LONGINT;
+		chNr : SIZE;
 		chSwitcher : Standard.Timer;
 		autoSwitch, alive- : BOOLEAN;
 		chnlSeeker : ChannelSeeker;
 		newImage : BOOLEAN;
-		lastX, lastY : LONGINT;
+		lastX, lastY : SIZE;
 		dragging : BOOLEAN;
 		chName : ARRAY 33 OF CHAR;
 
@@ -203,13 +203,13 @@ TYPE
 			tuner.SetTVFrequency(ch.freq)
 		END NextCh;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			lastX := bounds.l+x; lastY := bounds.t+y; dragging := TRUE
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x,y : LONGINT; keys : SET);
-		VAR dx, dy : LONGINT;
+		PROCEDURE PointerMove*(x,y : SIZE; keys : SET);
+		VAR dx, dy : SIZE;
 		BEGIN
 			IF dragging THEN
 				x := bounds.l + x; y := bounds.t + y; dx := x - lastX; dy := y - lastY;
@@ -218,12 +218,12 @@ TYPE
 			END
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; Keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; Keys : SET);
 		BEGIN
 			dragging := FALSE
 		END PointerUp;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
 		BEGIN
 			Draw^(canvas, w, h, 0)
 		END Draw;
@@ -327,7 +327,7 @@ TYPE
 			END
 		END StopTeletextCapture;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keySym : LONGINT);
+		PROCEDURE KeyEvent(ucs : SIZE; flags : SET; keySym : SIZE);
 		VAR
 			ch : CHAR;
 		BEGIN
@@ -441,7 +441,8 @@ PROCEDURE BuildChannelTableImpl(filename : ARRAY OF CHAR);
 CONST
 	Delay = 500;
 VAR
-	ch, max, i, found, length: LONGINT;
+	ch, max, found: LONGINT;
+	i, length: SIZE;
 	res: WORD;
 	tvWnd : TvWindow;
 	tvCh : TVChannels.TVChannel;

@@ -23,7 +23,7 @@ TYPE
 		fbadr-: ADDRESS; 
 		fbsize-, fbstride-: LONGINT; 
 
-		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: WORD); 
 		PROCEDURE ^ Fill*(col, x, y, w, h: LONGINT); 
 		PROCEDURE ^ Dot*(col, x, y: LONGINT); 
 		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitof, stride, fg, bg, x, y, w, h: LONGINT); 
@@ -37,7 +37,7 @@ TYPE
 VAR 
 	reverse*: BOOLEAN; 
 	registry*: Plugins.Registry; 
-	buf: POINTER TO ARRAY OF CHAR; 
+	buf: POINTER TO ARRAY BufSize OF CHAR; 
 
 	PROCEDURE ^ Fill0(d: Display; col, x, y, w, h: LONGINT); 
 	PROCEDURE ^ Copy0(d: Display; sx, sy, w, h, dx, dy: LONGINT); 

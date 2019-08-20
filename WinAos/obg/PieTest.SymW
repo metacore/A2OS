@@ -18,8 +18,8 @@ TYPE
 
 	SomePanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ ShowContextMenu*(x, y: LONGINT); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ ShowContextMenu*(x, y: SIZE); 
 		PROCEDURE ^ TestHandler(sender, data: ANY); 
 	END SomePanel; 
 VAR 

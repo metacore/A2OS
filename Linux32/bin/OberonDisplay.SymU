@@ -13,7 +13,7 @@ TYPE
 	VAR 
 		input: OberonInput; 
 		curKeys: SET; 
-		curX, curY: LONGINT; 
+		curX, curY: SIZE; 
 		keyhead, keytail: LONGINT; 
 		keybuf: ARRAY KeyBufSize OF CHAR; 
 		keys: SET; 
@@ -21,14 +21,14 @@ TYPE
 		fixMM: BOOLEAN; 
 		lastCtrl: BOOLEAN; 
 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ Mouse(VAR x, y: INTEGER; VAR keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ InsertKey(ch: CHAR; keysym: LONGINT; flags: SET); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ Read(VAR ch: CHAR; VAR b: BOOLEAN); 
 		PROCEDURE ^ Available(VAR num: INTEGER; VAR b: BOOLEAN); 
 		PROCEDURE ^ KeyState(VAR k: SET); 
@@ -50,11 +50,11 @@ TYPE
 		inp: OberonInput; 
 		bufimg: Raster.Image; 
 		mode, mode1: Raster.Mode; 
-		ml, mt, mr, mb: LONGINT; 
+		ml, mt, mr, mb: SIZE; 
 
-		PROCEDURE ^ LocalAddDirty(l, t, r, b: LONGINT); 
+		PROCEDURE ^ LocalAddDirty(l, t, r, b: SIZE); 
 		PROCEDURE ^ Update*; 
-		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: WORD); 
 		PROCEDURE ^ Fill*(col, x, y, w, h: LONGINT); 
 		PROCEDURE ^ Dot*(col, x, y: LONGINT); 
 		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h: LONGINT); 

@@ -861,7 +861,7 @@ MODULE News IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE ReadString(VAR R: Texts.Reader; VAR s: ARRAY OF CHAR);
 		VAR
-			l, i: LONGINT;
+			l, i: SIZE;
 			ch: CHAR;
 	BEGIN
 		l := LEN(s)-1; i := 0;
@@ -1131,7 +1131,8 @@ MODULE News IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE SplitNewsAdr(VAR url, host, groupart: ARRAY OF CHAR): LONGINT;
 		VAR
-			key, i, j, l: LONGINT;
+			key: LONGINT;
+			i, j, l: SIZE;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
 		BEGIN
@@ -1207,7 +1208,8 @@ MODULE News IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE SplitNNTPAdr(VAR url, group: ARRAY OF CHAR; VAR artnr: LONGINT): LONGINT;
 		VAR
-			i, j, l, key: LONGINT;
+			i, j, l: SIZE;
+			key: LONGINT;
 			iskey: BOOLEAN;
 			str: ARRAY 12 OF CHAR;
 		PROCEDURE Blanks;
@@ -1231,7 +1233,7 @@ MODULE News IN Oberon; (** portable *)	(* ejz,  *)
 		Blanks();
 		(* get group *)
 		iskey := TRUE;
-		l := SHORT(LEN(group));
+		l := LEN(group);
 		j := 0;
 		WHILE (url[i] # 0X) & (url[i] # "/") DO
 			IF (url[i] > " ") & ~Strings.IsDigit(url[i]) THEN

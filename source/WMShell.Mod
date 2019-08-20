@@ -58,14 +58,14 @@ TYPE
 			Invalidate;
 		END Clear;
 
-		PROCEDURE ExtPointerUp(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE ExtPointerUp(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		BEGIN
 			text.AcquireRead;
 			editor.editor.tv.cursor.SetPosition(text.GetLength());
 			text.ReleaseRead;
 		END ExtPointerUp;
 
-		PROCEDURE ExtKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE ExtKeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			handled := FALSE;
 			IF editor.HandleShortcut(ucs, flags, keySym) THEN handled := TRUE; END;
@@ -150,8 +150,8 @@ TYPE
 			END;
 		END Finalize;
 
-		PROCEDURE DeleteNCharacters(nbrOfCharacters : LONGINT);
-		VAR pos : LONGINT;
+		PROCEDURE DeleteNCharacters(nbrOfCharacters : SIZE);
+		VAR pos : SIZE;
 		BEGIN
 			text.AcquireWrite;
 			pos := editor.editor.tv.cursor.GetPosition();
@@ -160,7 +160,7 @@ TYPE
 		END DeleteNCharacters;
 
 		PROCEDURE ReceiveCharacters;
-		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; backspaces, i, size, len : LONGINT;
+		VAR ch : CHAR; buffer : ARRAY ReceiveBufferSize OF CHAR; i, size, backspaces, len: SIZE;
 		BEGIN
 			(* Receive at least one character *)
 			size := in.Available();
@@ -221,7 +221,7 @@ TYPE
 	VAR
 		shell : ShellComponent;
 
-		PROCEDURE HandleUpcall(command : LONGINT);
+		PROCEDURE HandleUpcall(command : WORD);
 		BEGIN
 			IF command = Shell.Clear THEN
 				shell.Clear;
@@ -275,7 +275,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIZE;
 
 	StrShellComponent : Strings.String;
 

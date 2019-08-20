@@ -74,7 +74,7 @@ TYPE
 		state : LONGINT;
 
 		PROCEDURE &Init*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			Init^;
 			NEW(repositories, 20);
@@ -91,7 +91,7 @@ TYPE
 		END Initialize;
 
 		PROCEDURE SelectByRepository*(repository : Repositories.Repository);
-		VAR row, nofRows, selectRow : LONGINT; data : ANY;
+		VAR row, nofRows, selectRow : SIZE; data : ANY;
 		BEGIN
 			selectRow:= -1;
 			IF (repository # NIL) THEN
@@ -255,7 +255,7 @@ TYPE
 		VAR
 			component : Repositories.Component; string : Strings.String; id : LONGINT;
 			wrapper : EntryWrapper;
-			scol, srow, ecol, erow : LONGINT;
+			scol, srow, ecol, erow : SIZE;
 			ptr : ANY;
 		BEGIN
 			component := NIL;
@@ -291,7 +291,7 @@ TYPE
 			bounds : WMRectangles.Rectangle;
 			image : WMGraphics.Image; canvas : WMGraphics.BufferCanvas;
 			font : WMGraphics.Font;
-			w, h : LONGINT;
+			w, h : SIZE;
 		BEGIN
 			component := GetSelectedComponent();
 			IF (component # NIL) THEN
@@ -394,7 +394,7 @@ TYPE
 		END Resized;
 
 		PROCEDURE UpdateGridSpacings*;
-		VAR sum, w, i : LONGINT; rect : WMRectangles.Rectangle;
+		VAR sum, w : SIZE; i: SIZE; rect : WMRectangles.Rectangle;
 		BEGIN
 			rect := bounds.Get(); w := rect.r - rect.l;
 			FOR i := 0 TO LEN(spacings)-1 DO sum := sum + spacings[i]; END;

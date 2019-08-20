@@ -157,13 +157,15 @@ TYPE
 					are transferred to or from "buf", starting at "ofs".  The line byte increment is "stride", which may
 					be positive, negative or zero. *)
 
-				PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h, op: LONGINT );
+				PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, left, top, width, height : SIZE; op: WORD );
 				CONST  Get = 0;  Set = 1;
 				VAR image: X11.Image;
 					imp: X11.ImagePtr;
 					bp, ip: ADDRESS;
 					line, ll: LONGINT;
+					x, y, w, h : LONGINT;
 				BEGIN
+					x := left(LONGINT); y := top(LONGINT); w := width(LONGINT); h := height(LONGINT);
 					ll := w*(xformat DIV 8);
 					IF (ofs + (h - 1)*stride + ll > LEN( buf )) OR (ofs + (h - 1)*stride < 0) THEN  HALT( 99 )  END;
 

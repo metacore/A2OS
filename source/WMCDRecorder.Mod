@@ -205,9 +205,9 @@ TYPE
 			END;
 		END EnableComponents;
 
-		PROCEDURE Resized(width, height: LONGINT);
+		PROCEDURE Resized(width, height: SIZE);
 		VAR
-			oldWidth: LONGINT;
+			oldWidth: SIZE;
 			factor: REAL;
 		BEGIN
 			oldWidth := leftPanel.bounds.GetWidth() + filePanel.bounds.GetWidth();
@@ -1959,7 +1959,7 @@ TYPE
 
 		PROCEDURE ListSpeeds(sender, data: ANY);
 		VAR
-			i: LONGINT;
+			i: SIZE;
 			recorder: CDRecord.CDRecorder;
 			tmp, entry: ARRAY MaxLen OF CHAR;
 			speed, max : LONGINT;
@@ -2228,11 +2228,11 @@ TYPE
 			grid.SetExtContextMenuHandler(ContextMenu);
 		END New;
 
-		PROCEDURE ContextMenu(sender: ANY; x, y: LONGINT);
+		PROCEDURE ContextMenu(sender: ANY; x, y: SIZE);
 		VAR
 			curSel: Selection;
 			w: SelectionWrapper;
-			px, py: LONGINT;
+			px, py: SIZE;
 		BEGIN
 			NEW(popup); NEW(w);
 			curSel := GetSelection();
@@ -2248,7 +2248,7 @@ TYPE
 		PROCEDURE GetSelection(): Selection;
 		VAR
 			selection: Selection;
-			l, t, r, b, i, j: LONGINT;
+			l, t, r, b, i, j: SIZE;
 			p: ANY;
 		BEGIN
 			grid.model.Acquire;
@@ -2386,7 +2386,7 @@ TYPE
 
 		PROCEDURE Resized;
 		VAR
-			width: LONGINT;
+			width: SIZE;
 		BEGIN
 			Resized^();
 			width := bounds.GetWidth();
@@ -2396,7 +2396,7 @@ TYPE
 			grid.SetColSpacings(colWidths);
 		END Resized;
 
-		PROCEDURE DragDroppedH(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
+		PROCEDURE DragDroppedH(x, y : SIZE; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
 		VAR
 			dropTarget: URLDropTarget;
 		BEGIN
@@ -2414,7 +2414,7 @@ TYPE
 		onPathChanged : WMEvents.EventSource;
 		onNodeRenamed : WMEvents.EventSource;
 		popup: WMPopups.Popup;
-		px, py: LONGINT;
+		px, py: SIZE;
 
 		PROCEDURE &Init*;
 		VAR
@@ -2484,7 +2484,7 @@ TYPE
 			tree.Release;
 		END RemoveDir;
 
-		PROCEDURE ContextMenu(sender: ANY; x, y: LONGINT);
+		PROCEDURE ContextMenu(sender: ANY; x, y: SIZE);
 		VAR
 			node: WMTrees.TreeNode;
 		BEGIN
@@ -2564,7 +2564,7 @@ TYPE
 			tree.Release
 		END ExpandNode;
 
-		PROCEDURE DragDropped(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo);
+		PROCEDURE DragDropped(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
 		VAR
 			dropTarget: URLDropTarget;
 			node : WMTrees.TreeNode;
@@ -2614,8 +2614,8 @@ TYPE
 		onNodeRenamed: WMEvents.EventSource;
 		onNodeCreated: WMEvents.EventSource;
 		popup: WMPopups.Popup;
-		px, py: LONGINT;
-		nofEntries: LONGINT;
+		px, py: SIZE;
+		nofEntries: SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -2643,7 +2643,7 @@ TYPE
 			grid.SetExtDragDroppedHandler(DragDroppedH);
 		END Init;
 
-		PROCEDURE ContextMenu(sender: ANY; x, y: LONGINT);
+		PROCEDURE ContextMenu(sender: ANY; x, y: SIZE);
 		VAR
 			curSel: Selection;
 			w: SelectionWrapper;
@@ -2725,7 +2725,7 @@ TYPE
 		PROCEDURE GetSelection(): Selection;
 		VAR
 			selection: Selection;
-			l, t, r, b, i, j: LONGINT;
+			l, t, r, b, i, j: SIZE;
 			p: ANY;
 		BEGIN
 			IF nofEntries < 1 THEN RETURN NIL END;
@@ -2800,7 +2800,7 @@ TYPE
 			RETURN nofNodes;
 		END GetNofNodes;
 
-		PROCEDURE DragDroppedH(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
+		PROCEDURE DragDroppedH(x, y : SIZE; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
 		VAR
 			dropTarget: URLDropTarget;
 		BEGIN
@@ -2997,7 +2997,7 @@ TYPE
 					Insert(parent, newDir);
 					list.Refresh();
 				ELSE
-					NEW(newFile, Strings.NewString(filename), Strings.NewString(name), file.Length());
+					NEW(newFile, Strings.NewString(filename), Strings.NewString(name), file.Length()(LONGINT));
 					INC(project.totalSize, newFile.size);
 					owner.UpdateSize(project.totalSize, project(DataProject).overhead);
 					Insert(parent, newFile);
@@ -3056,7 +3056,8 @@ TYPE
 		VAR
 			enumerator: Files.Enumerator;
 			name, filename, path, mask: ARRAY MaxLen OF CHAR;
-			time, date, size: LONGINT;
+			time, date: LONGINT;
+			size: Files.Size;
 			flags: SET;
 			newDir, curDir : Directory;
 			newFile : MakeIsoImages.File;
@@ -3081,8 +3082,8 @@ TYPE
 						curDir := newDir;
 						tmp := newDir;
 					ELSE
-						NEW(newFile, Strings.NewString(filename), Strings.NewString(name), size);
-						INC(project.totalSize, size);
+						NEW(newFile, Strings.NewString(filename), Strings.NewString(name), size(LONGINT));
+						INC(project.totalSize, size(LONGINT));
 						owner.UpdateSize(project.totalSize, project(DataProject).overhead);
 						tmp := newFile;
 					END;
@@ -3205,12 +3206,12 @@ VAR
 	file: Files.File;
 BEGIN
 	file := Files.Old(filename);
-	RETURN file.Length();
+	RETURN file.Length()(LONGINT);
 END GetFileSize;
 
 PROCEDURE RemoveSpecialChars(VAR str: ARRAY OF CHAR);
 VAR
-	i, j: LONGINT;
+	i, j: SIZE;
 BEGIN
 	j := 0;
 	FOR i := 0 TO LEN(str) - 1 DO

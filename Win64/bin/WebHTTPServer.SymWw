@@ -70,19 +70,19 @@ TYPE
 	HTTPAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
 		res: WORD; 
-		len: LONGINT; 
+		len: SIZE; 
 		body, closeRequested: BOOLEAN; 
 		out: Streams.Writer; 
 		in, inR: Streams.Reader; 
 		o: ANY; 
 		h, th: Host; 
-		i: LONGINT; 
+		i: SIZE; 
 		request: WebHTTP.RequestHeader; 
 		reply: WebHTTP.ResponseHeader; 
 		value: ARRAY 128 OF CHAR; 
 		timeout: Objects.Timer; 
 		dechunk: WebHTTP.ChunkedInStream; 
-		consecutiveErrors: LONGINT; 
+		consecutiveErrors: SIZE; 
 		secure: BOOLEAN; 
 		listenerProc: ListenerProc; 
 

@@ -76,9 +76,9 @@ TYPE
 		(* 	1. Send command block wrapper (CBW) to device														*)
 		(*	2. Dataphase (optional)																				*)
 		(*	3. Receive command status word (CSW) from device 													*)
-		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : LONGINT; dir :  SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : WORD;
-		VAR status : Usbdi.Status; i, residual : LONGINT;
+		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : SIZE; dir :  SET;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIZE; VAR tlen : SIZE; timeout : LONGINT) : WORD;
+		VAR status : Usbdi.Status; i, residual : SIZE;
 		BEGIN (* No concurrency allowed *)
 			ASSERT((cmdlen > 0) & (cmdlen <= 16)); (* [2], page 14 *)
 			(* set up dCBWSignature *)

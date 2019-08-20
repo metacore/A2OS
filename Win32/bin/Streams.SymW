@@ -14,30 +14,26 @@ CONST
 	TAB = 9X; 
 	SP = 20X; 
 TYPE 
-	BufferOffset* = LONGINT; 
+	Position* = HUGEINT; 
 
-	Position* = LONGINT; 
+	Sender* = PROCEDURE {DELEGATE}(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 
-	StreamSize* = LONGINT; 
-
-	Sender* = PROCEDURE {DELEGATE}(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-
-	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 
 	Connection* = OBJECT 
 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^ Close*; 
 	END Connection; 
 
 	Writer* = OBJECT 
 	VAR 
-		tail: LONGINT; 
+		tail: SIZE; 
 		buf: POINTER TO ARRAY OF CHAR; 
 		res*: WORD; 
 		send: Sender; 
-		sent*: LONGINT; 
+		sent*: Position; 
 
 		PROCEDURE ^  & InitWriter*(send: Sender; size: SIZE); 
 		PROCEDURE ^ Reset*; 
@@ -46,7 +42,7 @@ TYPE
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Pos*(): Position; 
 		PROCEDURE ^ Char*(x: CHAR); 
-		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ RawSInt*(x: SHORTINT); 
 		PROCEDURE ^ RawInt*(x: INTEGER); 
 		PROCEDURE ^ RawLInt*(x: LONGINT); 
@@ -80,33 +76,33 @@ TYPE
 	StringWriter* = OBJECT (Writer)
 
 		PROCEDURE ^  & InitStringWriter*(size: SIZE); 
-		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Get*(VAR s: ARRAY OF CHAR); 
-		PROCEDURE ^ GetRaw*(VAR s: ARRAY OF CHAR; VAR len: LONGINT); 
+		PROCEDURE ^ GetRaw*(VAR s: ARRAY OF CHAR; VAR len: SIZE); 
 	END StringWriter; 
 
 	Reader* = OBJECT 
 	VAR 
-		head, tail: LONGINT; 
+		head, tail: SIZE; 
 		buf: POINTER TO ARRAY OF CHAR; 
 		res*: WORD; 
 		receive: Receiver; 
-		received*: LONGINT; 
+		received*: Position; 
 
 		PROCEDURE ^  & InitReader*(receive: Receiver; size: SIZE); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
-		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ Available*(): SIZE; 
 		PROCEDURE ^ Pos*(): Position; 
 		PROCEDURE ^ Char*(VAR x: CHAR); 
 		PROCEDURE ^ Get*(): CHAR; 
 		PROCEDURE ^ Peek*(): CHAR; 
-		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: LONGINT; VAR len: LONGINT); 
-		PROCEDURE ^ SkipBytes*(n: LONGINT); 
+		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: SIZE; VAR len: SIZE); 
+		PROCEDURE ^ SkipBytes*(n: Position); 
 		PROCEDURE ^ RawSInt*(VAR x: SHORTINT); 
 		PROCEDURE ^ RawInt*(VAR x: INTEGER); 
 		PROCEDURE ^ RawLInt*(VAR x: LONGINT); 
@@ -148,9 +144,9 @@ TYPE
 		PROCEDURE ^  & InitStringReader*(size: SIZE); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^ Set*(CONST s: ARRAY OF CHAR); 
-		PROCEDURE ^ SetRaw*(CONST s: ARRAY OF CHAR; ofs, len: LONGINT); 
+		PROCEDURE ^ SetRaw*(CONST s: ARRAY OF CHAR; ofs, len: SIZE); 
 	END StringReader; 
 
 	Bytes2 = ARRAY 2 OF CHAR; 

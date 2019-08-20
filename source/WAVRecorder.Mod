@@ -14,7 +14,8 @@ TYPE
 		bufferPool : SoundDevices.BufferPool;
 		buffer : SoundDevices.Buffer;
 		out : Streams.Writer;
-		channels, rate, bits, recLength : LONGINT;
+		channels, rate, bits : LONGINT;
+		recLength: SIZE;
 		t : Kernel.Timer;
 
 		ready, recording, paused, finished : BOOLEAN;
@@ -94,7 +95,7 @@ TYPE
 			recording := TRUE
 		END Close;
 
-		PROCEDURE GetLength*() : LONGINT;
+		PROCEDURE GetLength*() : SIZE;
 		BEGIN
 			RETURN recLength;
 		END GetLength;
@@ -214,7 +215,7 @@ VAR recorder : Recorder;
 	file : Files.File;
 	filename : ARRAY 256 OF CHAR;
 
-PROCEDURE WriteRawBELongInt(VAR w: Files.Writer; value: LONGINT);
+PROCEDURE WriteRawBELongInt(VAR w: Files.Writer; value: SIZE);
 BEGIN
 	w.Char(CHR(value MOD 100H));
 	value := value DIV 100H;
@@ -242,7 +243,7 @@ END Open;
 
 PROCEDURE Stop*(context : Commands.Context);
 VAR writer : Files.Writer;
-	length : LONGINT;
+	length : SIZE;
 BEGIN
 	IF recorder = NIL THEN RETURN END;
 	length := recorder.GetLength() + 44;

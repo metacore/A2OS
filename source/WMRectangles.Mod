@@ -1,18 +1,18 @@
 MODULE WMRectangles; (** AUTHOR "TF"; PURPOSE "Basic rectangles that are used by the WM and visual components"; *)
 
 TYPE
-	Rectangle* = RECORD l*, t*, r*, b*: LONGINT END;
+	Rectangle* = RECORD l*, t*, r*, b*: SIZE END;
 		(* It is important to understand and respect that the point (r,b) is not included in the rectangle !
 			This is to ensure consistency between the continuous and discrete case
 		*)
 
 	(** move the rectangle by deltaX, deltaY *)
-	PROCEDURE MoveRel*(VAR x:Rectangle; deltaX, deltaY:LONGINT);
+	PROCEDURE MoveRel*(VAR x:Rectangle; deltaX, deltaY:SIZE);
 	BEGIN
 		x.l:=x.l+deltaX; x.t:=x.t+deltaY; x.r:=x.r+deltaX; x.b:=x.b+deltaY
 	END MoveRel;
 
-	PROCEDURE Bound(VAR x:LONGINT; min, max:LONGINT);
+	PROCEDURE Bound(VAR x:SIZE; min, max:SIZE);
 	BEGIN
 		IF x<min THEN x:=min ELSE IF x>max THEN x:=max END END
 	END Bound;
@@ -31,7 +31,7 @@ TYPE
 	END RectEmpty;
 
 	(** return true if x and y are inside rect *)
-	PROCEDURE PointInRect*(x, y : LONGINT; rect : Rectangle) : BOOLEAN;
+	PROCEDURE PointInRect*(x, y : SIZE; rect : Rectangle) : BOOLEAN;
 	BEGIN
 		RETURN (x >= rect.l) & (x < rect.r) & (y >= rect.t) & (y < rect.b)
 	END PointInRect;
@@ -55,13 +55,13 @@ TYPE
 	END Intersect;
 
 	(** Set rect to (l, t, r, b) *)
-	PROCEDURE SetRect*(VAR rect : Rectangle; l, t, r, b : LONGINT);
+	PROCEDURE SetRect*(VAR rect : Rectangle; l, t, r, b : SIZE);
 	BEGIN
 		rect.l := l; rect.t := t; rect.r := r; rect.b := b
 	END SetRect;
 
-	(** return the area of r. Overflow if r w * h > MAX(LONGINT) *)
-	PROCEDURE Area*(VAR r : Rectangle) : LONGINT;
+	(** return the area of r. Overflow if r w * h > MAX(SIZE) *)
+	PROCEDURE Area*(VAR r : Rectangle) : SIZE;
 	BEGIN
 		RETURN (r.r - r.l) * (r.b - r.t)
 	END Area;
@@ -74,14 +74,14 @@ TYPE
 	END ExtendRect;
 
 	(** return the Rectangle (l, t, r, b) *)
-	PROCEDURE MakeRect*(l, t, r, b: LONGINT) : Rectangle;
+	PROCEDURE MakeRect*(l, t, r, b: SIZE) : Rectangle;
 	VAR result : Rectangle;
 	BEGIN
 		result.l := l; result.t := t; result.r := r; result.b := b; RETURN result
 	END MakeRect;
 
 	(** extend the rectangle by units in each direction *)
-	PROCEDURE ResizeRect*(x : Rectangle; units : LONGINT) : Rectangle;
+	PROCEDURE ResizeRect*(x : Rectangle; units : SIZE) : Rectangle;
 	VAR t : Rectangle;
 	BEGIN
 		t.l := x.l - units; t.t := x.t - units; t.r := x.r + units; t.b := x.b + units;
@@ -90,7 +90,7 @@ TYPE
 
 	PROCEDURE Normalize*(VAR rect: Rectangle);
 	VAR
-		temp: LONGINT;
+		temp: SIZE;
 	BEGIN
 		IF rect.l > rect.r THEN
 			temp := rect.l;

@@ -15,8 +15,8 @@ CONST
 	contentPlace = "%content%";
 	changedatePlace = "%changedate%";
 
-PROCEDURE ReplaceString(text : Text; search : ARRAY OF CHAR; replace : Text; sfrom, slen : LONGINT);
-VAR pos, len : LONGINT;
+PROCEDURE ReplaceString(text : Text; search : ARRAY OF CHAR; replace : Text; sfrom, slen : SIZE);
+VAR pos, len : SIZE;
 	xs : ARRAY 128 OF LONGINT;
 BEGIN
 	text.AcquireWrite;
@@ -30,13 +30,13 @@ BEGIN
 END ReplaceString;
 
 PROCEDURE UTFUCS(src : ARRAY OF CHAR; VAR dst : ARRAY OF LONGINT);
-VAR pos : LONGINT;
+VAR pos : SIZE;
 BEGIN
 	pos := 0; UTF8Strings.UTF8toUnicode(src, dst, pos)
 END UTFUCS;
 
 PROCEDURE MergeWithTemplate(template, src, date : Text; VAR dst : Text);
-VAR tb, te, cb, ce: LONGINT; str : ARRAY 32 OF LONGINT;
+VAR tb, te, cb, ce: SIZE; str : ARRAY 32 OF LONGINT;
 BEGIN
 	NEW(dst);
 	template.AcquireRead; src.AcquireRead; dst.AcquireWrite;

@@ -106,10 +106,10 @@ OSCBundle b:
 
 			(* Returns the number of bytes that this Parameter uses in the argument data.
 				This function will be called for every stored argument to calculate the size of the OSCPacket *)
-			PROCEDURE GetSize*(): LONGINT; BEGIN HALT(WrngClassUsedOrFunNotOverl); END GetSize;
+			PROCEDURE GetSize*(): SIZE; BEGIN HALT(WrngClassUsedOrFunNotOverl); END GetSize;
 
 			(* Exports the argumentdata to packet[pos..pos+GetSize()-1]. In packet all data is stored in network byteorder. *)
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT); BEGIN HALT(WrngClassUsedOrFunNotOverl); END export;
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE); BEGIN HALT(WrngClassUsedOrFunNotOverl); END export;
 
 			(* Dumps the current parameter (with stored values) to the kernel log. *)
 			PROCEDURE dump*(indent: LONGINT);
@@ -124,11 +124,11 @@ OSCBundle b:
 		OSCParamAbsInteger = OBJECT(OSCParamObject)
 			VAR (* 32bit on IA32 *)
 				integer-: LONGINT;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN 4;
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			BEGIN
 				Network.PutNet4(packet, pos, integer);
 				INC(pos, 4);
@@ -162,11 +162,11 @@ OSCBundle b:
 				float := f;
 				tag := 'f';
 			END InitFloat;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN 4;
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			BEGIN
 				Network.PutNet4(packet, pos, Reals.Int(float));
 				INC(pos, 4);
@@ -188,11 +188,11 @@ OSCBundle b:
 		OSCParamAbsString = OBJECT(OSCParamObject)
 			VAR
 				string-: String;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN(padsize(Strings.Length(string^)+1));
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			BEGIN
 				ASSERT(string # NIL);
 				exportString(string, packet, pos);
@@ -223,22 +223,22 @@ OSCBundle b:
 		OSCParamBlob* = OBJECT(OSCParamObject)
 			VAR
 				blob-: Blob;
-				size-: LONGINT;
-			PROCEDURE &InitBlob*(b: Blob; s: LONGINT);
+				size-: SIZE;
+			PROCEDURE &InitBlob*(b: Blob; s: SIZE);
 			BEGIN
 				ASSERT(b # NIL);
 				blob := b;
 				size := s;
 				tag := 'b';
 			END InitBlob;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN(padsize(size)+4);
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
-			VAR i: LONGINT;
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
+			VAR i: SIZE;
 			BEGIN
-				Network.PutNet4(packet, pos, size); INC(pos, 4);
+				Network.PutNet4(packet, pos, size(LONGINT)); INC(pos, 4);
 				FOR i:=0 TO size-1 DO
 					packet[pos+i] := blob[i];
 				END;
@@ -276,11 +276,11 @@ OSCBundle b:
 				integer := i;
 				tag := 'h';
 			END InitInt64;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN 8;
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			VAR
 				l, h: LONGINT;
 			BEGIN
@@ -304,11 +304,11 @@ OSCBundle b:
 				ASSERT(tt # NIL);
 				tag := 't';
 			END InitTT;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN tt.GetSize();
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			BEGIN
 				tt.export(packet, pos);
 			END export;
@@ -329,11 +329,11 @@ OSCBundle b:
 				float := f;
 				tag := 'd';
 			END InitFloat64;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN 8;
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			VAR
 				l, h: LONGINT;
 			BEGIN
@@ -370,11 +370,11 @@ OSCBundle b:
 				char := c;
 				tag := 'c';
 			END InitChar;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN 4;
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			BEGIN
 				Network.PutNet4(packet, pos, ORD(char)); INC(pos, 4);
 			END export;
@@ -399,11 +399,11 @@ OSCBundle b:
 
 		(* This 'abstract' class contains shared code for all types without argument data *)
 		OSCParamEmpty = OBJECT(OSCParamObject)
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			BEGIN
 				RETURN 0;
 			END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			END export;
 			PROCEDURE dump*(indent: LONGINT);
 			BEGIN
@@ -480,7 +480,7 @@ OSCBundle b:
 			BEGIN
 				seconds := 0; miliseconds := 0; imm := FALSE;
 			END Init;
-			PROCEDURE GetSize*(): LONGINT; BEGIN RETURN 8; END GetSize;
+			PROCEDURE GetSize*(): SIZE; BEGIN RETURN 8; END GetSize;
 
 			(* Sets the OSCTimeTag to the special case 'immediately' *)
 			PROCEDURE SetImmediately*; BEGIN imm := TRUE; END SetImmediately;
@@ -512,7 +512,7 @@ OSCBundle b:
 				END;
 			END dump;
 
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			VAR
 				i: LONGINT;
 				fraction: LONGINT;
@@ -555,8 +555,8 @@ OSCBundle b:
 			END Init;
 
 			(* This 'abstract' function is used to calculate the size of the binary representation of OSCPackets. *)
-			PROCEDURE GetSize*(): LONGINT; BEGIN HALT(WrngClassUsedOrFunNotOverl); END GetSize;
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR position: LONGINT); BEGIN HALT(WrngClassUsedOrFunNotOverl); END export;
+			PROCEDURE GetSize*(): SIZE; BEGIN HALT(WrngClassUsedOrFunNotOverl); END GetSize;
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR position: SIZE); BEGIN HALT(WrngClassUsedOrFunNotOverl); END export;
 
 			PROCEDURE GetBytes*(): String; (* returns the binary representation of this OSCPacket. *)
 			BEGIN
@@ -593,7 +593,7 @@ OSCBundle b:
 
 			PROCEDURE assemble;
 				VAR
-					p: LONGINT;
+					p: SIZE;
 			BEGIN
 				NEW(bytearray, GetSize());
 				ASSERT(bytearray # NIL);
@@ -649,9 +649,9 @@ OSCBundle b:
 					adr: OSCString;
 					"the argument data"
 			*)
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			VAR
-				i, argsize: LONGINT;
+				i, argsize: SIZE;
 			BEGIN
 				argsize := 0;
 				FOR i:=0 TO argumentcount-1 DO
@@ -677,9 +677,9 @@ OSCBundle b:
 			END AddArgument;
 
 			(* exports the binary representation of this OSCMessage to packet[pos..pos+GetSize()-1] *)
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			VAR
-				i: LONGINT;
+				i: SIZE;
 			BEGIN
 				exportString(address, packet, pos);
 				IF noTypeTagString THEN
@@ -725,8 +725,8 @@ OSCBundle b:
 			VAR
 				timetag-: OSCTimeTag;
 				messages-: OSCPacketArray;
-				messagescount-: INTEGER;
-			PROCEDURE &InitBundle*(tt: OSCTimeTag; msgs: OSCPacketArray; msgcount: INTEGER);
+				messagescount-: SIZE;
+			PROCEDURE &InitBundle*(tt: OSCTimeTag; msgs: OSCPacketArray; msgcount: SIZE);
 			BEGIN
 				Init();
 				timetag := tt;
@@ -745,10 +745,9 @@ OSCBundle b:
 				messages[messagescount] := p;
 				INC(messagescount);
 			END AddPacket;
-			PROCEDURE GetSize*(): LONGINT;
+			PROCEDURE GetSize*(): SIZE;
 			VAR
-				s: LONGINT;
-				i: INTEGER;
+				s, i: SIZE;
 			BEGIN (* '#bundle' 8, timetag: 8, bundle elements ( := size + packet ) *)
 				s := 16;
 				FOR i:= 0 TO messagescount-1 DO
@@ -804,7 +803,7 @@ OSCBundle b:
 			(* registers the returner also to all submessages or subbundles *)
 			PROCEDURE SetReturner*(s: OSCReturnProc; data: OBJECT);
 			VAR
-				i: LONGINT;
+				i: SIZE;
 			BEGIN
 				SetReturner^(s, data);
 				FOR i:=0 TO messagescount-1 DO
@@ -814,7 +813,7 @@ OSCBundle b:
 
 			PROCEDURE dump*(indent: LONGINT);
 			VAR
-				i: LONGINT;
+				i: SIZE;
 			BEGIN
 				indentDump(indent); KernelLog.String('OSCBundle { timetag: '); timetag.dump(indent+1); KernelLog.String(' packets(');
 				KernelLog.Int(messagescount, 1); KernelLog.String(')'); KernelLog.Ln;
@@ -824,14 +823,14 @@ OSCBundle b:
 				indentDump(indent); KernelLog.String('}'); KernelLog.Ln;
 			END dump;
 
-			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+			PROCEDURE export(VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 			VAR
-				i: INTEGER;
+				i: SIZE;
 			BEGIN
 				exportString(OSCBundleIdent, packet, pos);
 				timetag.export(packet, pos);
 				FOR i := 0 TO messagescount-1 DO
-					Network.PutNet4(packet, pos, messages[i].GetSize()); INC(pos, 4);
+					Network.PutNet4(packet, pos, messages[i].GetSize()(LONGINT)); INC(pos, 4);
 					messages[i].export(packet, pos);
 				END;
 			END export;
@@ -840,7 +839,7 @@ OSCBundle b:
 			PROCEDURE grow;
 			VAR
 				newmsgs: OSCPacketArray;
-				i: LONGINT;
+				i: SIZE;
 			BEGIN
 				NEW(newmsgs, 2*LEN(messages));
 				FOR i:=0 TO LEN(messages)-1 DO
@@ -930,9 +929,9 @@ OSCBundle b:
 
 	This function parses the packet in data[0..endofs-1]. It returns the corresponding object or NIL if a
 	parse error occured. *)
-	PROCEDURE ParseOSCPacket*(VAR data: ARRAY OF CHAR; endofs: LONGINT): OSCPacket;
+	PROCEDURE ParseOSCPacket*(VAR data: ARRAY OF CHAR; endofs: SIZE): OSCPacket;
 	VAR
-		ofs: LONGINT;
+		ofs: SIZE;
 	BEGIN
 		IF Trace THEN
 			KernelLog.String('ParseOSCPacket started'); KernelLog.Ln;
@@ -944,7 +943,7 @@ OSCBundle b:
 
 	(* parses a packet in data[ofs..endofs-1] (the size of the packet is endofs-ofs).
 	Note: Since ofs is a VAR parameter, it will also be adjusted in calling functions! *)
-	PROCEDURE parseOSCPacketInt(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCPacket;
+	PROCEDURE parseOSCPacketInt(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCPacket;
 	VAR
 		p: OSCPacket;
 	BEGIN
@@ -964,14 +963,14 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCPacketInt;
 
-	PROCEDURE parseOSCBundle(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCBundle;
+	PROCEDURE parseOSCBundle(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCBundle;
 	VAR
 		b: OSCBundle;
 		p: OSCPacket;
 		tt: OSCTimeTag;
-		packetsize: LONGINT;
-		packetendofs: LONGINT;
-		i: LONGINT;
+		packetsize: SIZE;
+		packetendofs: SIZE;
+		i: SIZE;
 	BEGIN
 		IF Trace THEN KernelLog.String('parseOSCBundle: '); KernelLog.Int(ofs, 4); KernelLog.Int(endofs, 4); KernelLog.Ln; END;
 		(* #bundle || tt || { size || message } *)
@@ -1005,7 +1004,7 @@ OSCBundle b:
 		RETURN b;
 	END parseOSCBundle;
 
-	PROCEDURE parseOSCTT(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT): OSCTimeTag;
+	PROCEDURE parseOSCTT(VAR data: ARRAY OF CHAR; VAR ofs: SIZE): OSCTimeTag;
 	VAR
 		tt: OSCTimeTag;
 		sec, fraction, msec: LONGINT;
@@ -1031,7 +1030,7 @@ OSCBundle b:
 		RETURN tt;
 	END parseOSCTT;
 
-	PROCEDURE parseOSCParamInteger(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamInteger;
+	PROCEDURE parseOSCParamInteger(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamInteger;
 	VAR
 		p: OSCParamInteger;
 	BEGIN
@@ -1041,7 +1040,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamInteger;
 
-	PROCEDURE parseOSCParamFloat(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamFloat;
+	PROCEDURE parseOSCParamFloat(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamFloat;
 	VAR
 		p: OSCParamFloat;
 		i: LONGINT;
@@ -1052,7 +1051,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamFloat;
 
-	PROCEDURE parseOSCParamString(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamString;
+	PROCEDURE parseOSCParamString(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamString;
 	VAR
 		p: OSCParamString;
 		s: String;
@@ -1064,7 +1063,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamString;
 
-	PROCEDURE parseOSCParamBlob(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamBlob;
+	PROCEDURE parseOSCParamBlob(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamBlob;
 	VAR
 		p: OSCParamBlob;
 		b: Blob;
@@ -1080,7 +1079,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamBlob;
 
-	PROCEDURE parseOSCParamInteger64(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamInteger64;
+	PROCEDURE parseOSCParamInteger64(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamInteger64;
 	VAR
 		p: OSCParamInteger64;
 		h, l: LONGINT;
@@ -1096,7 +1095,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamInteger64;
 
-	PROCEDURE parseOSCParamTT(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamTT;
+	PROCEDURE parseOSCParamTT(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamTT;
 	VAR
 		tt: OSCTimeTag;
 		p: OSCParamTT;
@@ -1109,7 +1108,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamTT;
 
-	PROCEDURE parseOSCParamFloat64(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamFloat64;
+	PROCEDURE parseOSCParamFloat64(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamFloat64;
 	VAR
 		p: OSCParamFloat64;
 		h,l: LONGINT;
@@ -1124,7 +1123,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamFloat64;
 
-	PROCEDURE parseOSCParamAltString(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamString;
+	PROCEDURE parseOSCParamAltString(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamString;
 	VAR
 		p: OSCParamAltString;
 		s: String;
@@ -1136,7 +1135,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamAltString;
 
-	PROCEDURE parseOSCParamChar(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamChar;
+	PROCEDURE parseOSCParamChar(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamChar;
 	VAR
 		p: OSCParamChar;
 		i: LONGINT;
@@ -1148,7 +1147,7 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamChar;
 
-	PROCEDURE parseOSCParamRGBAColor(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCParamRGBAColor;
+	PROCEDURE parseOSCParamRGBAColor(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCParamRGBAColor;
 	VAR
 		p: OSCParamRGBAColor;
 	BEGIN
@@ -1158,9 +1157,9 @@ OSCBundle b:
 		RETURN p;
 	END parseOSCParamRGBAColor;
 
-	PROCEDURE parseOSCParams(adr: String; VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCMessage;
+	PROCEDURE parseOSCParams(adr: String; VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCMessage;
 	VAR
-		argstrofs: LONGINT;
+		argstrofs: SIZE;
 		m: OSCMessage;
 		param: OSCParamObject;
 		T: OSCParamTrue;
@@ -1204,12 +1203,12 @@ OSCBundle b:
 		RETURN m;
 	END parseOSCParams;
 
-	PROCEDURE parseOSCMessage(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): OSCMessage;
+	PROCEDURE parseOSCMessage(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): OSCMessage;
 	VAR
 		adr: String;
-		argumentofs: LONGINT;
+		argumentofs: SIZE;
 		m: OSCMessage;
-		i: LONGINT;
+		i: SIZE;
 	BEGIN
 		IF Trace THEN KernelLog.String('parseOSCMessage: '); KernelLog.Int(ofs, 4); KernelLog.Int(endofs, 4); KernelLog.Ln; END;
 		(* address [ || typetagstring ] || argumentdata *)
@@ -1286,7 +1285,7 @@ OSCBundle b:
 	END CheckOSCAdrPattern;
 
 
-	PROCEDURE skipAndCheckOSCString(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): BOOLEAN;
+	PROCEDURE skipAndCheckOSCString(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): BOOLEAN;
 	BEGIN
 		IF Trace THEN KernelLog.String('skipAndCheckOSCString: '); KernelLog.Int(ofs, 4); KernelLog.Int(endofs, 4); KernelLog.Ln; END;
 		WHILE (ofs < endofs) & (data[ofs] # 0X) DO INC(ofs); END;
@@ -1303,9 +1302,9 @@ OSCBundle b:
 	END skipAndCheckOSCString;
 
 	(* helper function to import an OSCString - checks also the extra padding 0X characters *)
-	PROCEDURE importString(VAR data: ARRAY OF CHAR; VAR ofs: LONGINT; endofs: LONGINT): String;
+	PROCEDURE importString(VAR data: ARRAY OF CHAR; VAR ofs: SIZE; endofs: SIZE): String;
 	VAR
-		pos: LONGINT;
+		pos: SIZE;
 		s: String;
 	BEGIN
 		IF Trace THEN KernelLog.String('importString: '); KernelLog.Int(ofs, 4); KernelLog.Int(endofs, 4); KernelLog.Ln; END;
@@ -1327,7 +1326,7 @@ OSCBundle b:
 		RETURN s;
 	END importString;
 
-	PROCEDURE padsize(i: LONGINT): LONGINT;
+	PROCEDURE padsize(i: SIZE): SIZE;
 	BEGIN
 		CASE i MOD 4 OF
 			0:	RETURN i; (* size is ok *)
@@ -1338,16 +1337,16 @@ OSCBundle b:
 	END padsize;
 
 	(* returns the length of the exported OSCString of s *)
-	PROCEDURE oscStrSize(s: String): LONGINT;
+	PROCEDURE oscStrSize(s: String): SIZE;
 	BEGIN
 		ASSERT(s # NIL );
 		RETURN padsize(Strings.Length(s^)+1);
 	END oscStrSize;
 
 	(* exports an string s to packet[pos..pos+oscstrlen(s)-1] *)
-	PROCEDURE exportString(s: String; VAR packet: ARRAY OF CHAR; VAR pos: LONGINT);
+	PROCEDURE exportString(s: String; VAR packet: ARRAY OF CHAR; VAR pos: SIZE);
 	VAR
-		i, length: LONGINT;
+		i, length: SIZE;
 	BEGIN
 		length := oscStrSize(s);
 		i := 0;

@@ -44,27 +44,27 @@ TYPE
 
 	VideoBufferPool = OBJECT {EXCLUSIVE} 
 	VAR 
-		head, num: LONGINT; 
+		head, num: SIZE; 
 		buffer: POINTER TO ARRAY OF VideoBuffer; 
 
-		PROCEDURE ^  & Init*(n: LONGINT); 
+		PROCEDURE ^  & Init*(n: SIZE); 
 		PROCEDURE ^ Add(x: VideoBuffer); 
 		PROCEDURE ^ Remove(): VideoBuffer; 
-		PROCEDURE ^ NofBuffers(): LONGINT; 
+		PROCEDURE ^ NofBuffers(): SIZE; 
 	END VideoBufferPool; 
 
-	KeyEventHandler* = PROCEDURE {DELEGATE}(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+	KeyEventHandler* = PROCEDURE {DELEGATE}(ucs: SIZE; flags: SET; keysym: SIZE); 
 
-	PointerDownHandler* = PROCEDURE {DELEGATE}(x, y: LONGINT; keys: SET); 
+	PointerDownHandler* = PROCEDURE {DELEGATE}(x, y: SIZE; keys: SET); 
 
 	PlayerWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.DoubleBufferWindow)
 	VAR 
 		player: Player; 
 		rect: WMRectangles.Rectangle; 
-		videoWidth, videoHeight: LONGINT; 
+		videoWidth, videoHeight: SIZE; 
 		fullscreen-: BOOLEAN; 
 		lastFrame: WMGraphics.Image; 
-		posX, posY: LONGINT; 
+		posX, posY: SIZE; 
 		timer: Kernel.Timer; 
 		lastTimestamp, timestamp: LONGINT; 
 		extPointerDownHandler*: PointerDownHandler; 
@@ -73,13 +73,13 @@ TYPE
 
 		PROCEDURE ^  & New*(w, h: LONGINT; alpha: BOOLEAN; player: Player; autoHideCursor: BOOLEAN); 
 		PROCEDURE ^ ToggleFullscreen*; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ ShowBlack*; 
 		PROCEDURE ^ ShowFrame*(frame: WMGraphics.Image); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ SetPointerVisible(visible: BOOLEAN); 
 	BEGIN{ACTIVE} 
 	END PlayerWindow; 
@@ -99,14 +99,14 @@ TYPE
 		perf: LONGINT; 
 		dropped: LONGINT; 
 
-		PROCEDURE ^  & New*(videoWidth, videoHeight: LONGINT; videoDecoder: Codecs.VideoDecoder); 
+		PROCEDURE ^  & New*(videoWidth, videoHeight: SIZE; videoDecoder: Codecs.VideoDecoder); 
 		PROCEDURE ^ GetNextBuffer(): VideoBuffer; 
 		PROCEDURE ^ ReturnBuffer(buf: VideoBuffer); 
 		PROCEDURE ^ DropFrames(n: LONGINT); 
 		PROCEDURE ^ GetPos(): LONGINT; 
 		PROCEDURE ^ SeekAndGetFrame(pos: LONGINT; VAR f: WMGraphics.Image; VAR res: LONGINT); 
 		PROCEDURE ^ SeekFrame(pos: LONGINT; isKeyFrame: BOOLEAN; VAR res: LONGINT); 
-		PROCEDURE ^ NofFullBuffers(): LONGINT; 
+		PROCEDURE ^ NofFullBuffers(): SIZE; 
 		PROCEDURE ^ Stop; 
 		PROCEDURE ^ Close; 
 	BEGIN{ACTIVE} 

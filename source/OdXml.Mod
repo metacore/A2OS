@@ -577,13 +577,11 @@ BEGIN
 END IsDAVError;
 
 (* don't write anything. Just for counting what's written to a writer. *)
-(*PROCEDURE Dev0(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
-BEGIN END Dev0;*)
-PROCEDURE Dev0(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE Dev0(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 BEGIN END Dev0;
 
 (* Find size of an XML object which must be written. *)
-PROCEDURE XmlSize*(doc: XML.Document): LONGINT;
+PROCEDURE XmlSize*(doc: XML.Document): Streams.Position;
 VAR counter: Streams.Writer;
 BEGIN
 	Streams.OpenWriter(counter, Dev0); doc.Write(counter, NIL, 0); counter.Update();
@@ -914,7 +912,7 @@ END GetVersionControlHref;
 (* update, version, href: versionName*)
 PROCEDURE GetUpdateVersionName*(doc: XML.Document; VAR versionName: ARRAY OF CHAR);
 VAR
-	e: XML.Element; versionResource: ARRAY 256 OF CHAR; i, dotPos: LONGINT;
+	e: XML.Element; versionResource: ARRAY 256 OF CHAR; i, dotPos: SIZE;
 	host, path: ARRAY 256 OF CHAR; port: LONGINT;
 BEGIN
 	e := FindElement(doc.GetRoot(), "DAV:version");
@@ -979,7 +977,7 @@ END File;
 
 
 (* Like in XMLScanner and XMLParser but doesn't HALT(99) *)
-PROCEDURE XMLReportError(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+PROCEDURE XMLReportError(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 	BEGIN
 		KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 		KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", row "); KernelLog.Int(row, 0);

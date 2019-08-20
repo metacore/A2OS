@@ -18,7 +18,7 @@ TYPE
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^ DrawAll(canvas: WMGraphics.Canvas; w, h: LONGINT; state: SET; x, y: LONGINT); 
+		PROCEDURE ^ DrawAll(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 
 		PROCEDURE ^ SelectChar(sender, data: ANY); 
 		PROCEDURE ^ FindChar(sender, data: ANY); 
 		PROCEDURE ^ CopyChar(sender, data: ANY); 

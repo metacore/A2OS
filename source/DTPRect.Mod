@@ -28,7 +28,7 @@ TYPE
 	VAR
 		lineColor, rectColor, rectColor2: WMGraphics.Color;
 		lineWidth : REAL;
-		fillMode : LONGINT;
+		fillMode : WORD;
 		gradientHorizontal: BOOLEAN;
 		properties : RectPropWindow;
 
@@ -45,8 +45,8 @@ TYPE
 			NEW(properties, SELF);
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; x, y, w, h : LONGINT; zoomFactor: REAL; quality, preview: BOOLEAN);
-		VAR rw, rh: REAL; linePixel: LONGINT;
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; x, y, w, h : SIZE; zoomFactor: REAL; quality, preview: BOOLEAN);
+		VAR rw, rh: REAL; linePixel: SIZE;
 		BEGIN
 
 			rw := w/zoomFactor; rh := h/zoomFactor; linePixel := ENTIER(lineWidth * zoomFactor);
@@ -150,7 +150,7 @@ TYPE
 			w.String('  <node-attribute name="gradient-horizontal" value="'); IF gradientHorizontal THEN w.Int(1, 0); ELSE w.Int(0, 0); END; w.String('" />'); w.Ln;
 		END Store;
 
-		PROCEDURE Show*(x, y: LONGINT);
+		PROCEDURE Show*(x, y: SIZE);
 		BEGIN
 			properties.Show(x, y);
 		END Show;
@@ -300,7 +300,7 @@ TYPE
 			RETURN panel;
 		END CreatePropertyForm;
 
-		PROCEDURE LineColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE LineColorHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: DTPUtilities.ColorChooserWindow;
 			rectangle: WMRectangles.Rectangle;
 			result: WMGraphics.Color;
@@ -319,7 +319,7 @@ TYPE
 			handled := TRUE;
 		END LineColorHandler;
 
-		PROCEDURE RectColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE RectColorHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: DTPUtilities.ColorChooserWindow;
 			rectangle: WMRectangles.Rectangle;
 			result: WMGraphics.Color;
@@ -338,7 +338,7 @@ TYPE
 			handled := TRUE;
 		END RectColorHandler;
 
-		PROCEDURE RectColor2Handler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE RectColor2Handler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR colorChooser: DTPUtilities.ColorChooserWindow;
 			rectangle: WMRectangles.Rectangle;
 			result: WMGraphics.Color;
@@ -357,7 +357,7 @@ TYPE
 			handled := TRUE;
 		END RectColor2Handler;
 
-		PROCEDURE FillModeHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE FillModeHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR rectangle: WMRectangles.Rectangle;
 		BEGIN
 			NEW(popup);
@@ -382,7 +382,7 @@ TYPE
 			END;
 		END FillModePopupHandler;
 
-		PROCEDURE Show*(x, y: LONGINT);
+		PROCEDURE Show*(x, y: SIZE);
 		BEGIN
 			IF ~shown THEN
 				shown := TRUE;

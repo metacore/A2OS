@@ -23,7 +23,7 @@ TYPE
 		state : Graphics.CanvasState;
 		display : Displays.Display;
 		internnavig, navig : BOOLEAN;
-		lastx, lasty : LONGINT;
+		lastx, lasty : SIZE;
 		lastKeys : SET;
 		modifierKeys : SET;
 		meta : BOOLEAN;
@@ -99,9 +99,9 @@ TYPE
 			manager.lock.ReleaseWrite
 		END KeyEvent;
 
-		PROCEDURE PointerEvent(x, y, z, dx, dy, dz : LONGINT; keys : SET);
+		PROCEDURE PointerEvent(x, y, z, dx, dy, dz : SIZE; keys : SET);
 		VAR
-			msg : Messages.Message; of : REAL; i : LONGINT; ignore : BOOLEAN;
+			msg : Messages.Message; of : REAL; i : SIZE; ignore : BOOLEAN;
 			centerX, centerY : REAL; w : Window;
 		BEGIN
 			ignore := FALSE;
@@ -193,7 +193,7 @@ TYPE
 		END ZoomToWindow;
 
 		PROCEDURE SetInitialWindowBounds(w : Window);
-		VAR width, height : LONGINT;
+		VAR width, height : SIZE;
 		BEGIN
 			ASSERT(manager.lock.HasWriteLock());
 			IF w.master # NIL THEN w := w.master END;
@@ -277,7 +277,7 @@ TYPE
 			wr, nr : Rectangle;
 
 			PROCEDURE InternalDraw(r : Rectangle; cur : Window);
-			VAR nr, cb, tnr, dsr : Rectangle; width, height : LONGINT;
+			VAR nr, cb, tnr, dsr : Rectangle; width, height : SIZE;
 			BEGIN
 				ASSERT(cur.isVisible);
 				IF cur.useAlpha & (cur.prev # NIL)  THEN Draw(r, cur.prev)
@@ -405,7 +405,7 @@ TYPE
 	END DirtyQ;
 
 	UnhitableWindow = OBJECT(WM.BufferWindow);
-		PROCEDURE IsHit*(x, y : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y : SIZE) : BOOLEAN;
 		BEGIN
 			RETURN FALSE
 		END IsHit;
@@ -425,7 +425,7 @@ TYPE
 		pointerKeys : SET;
 		(* used by CheckPointerImg *)
 		pointerOwner : Window;
-		pointerX, pointerY : LONGINT;
+		pointerX, pointerY : SIZE;
 		pointerInfo : WM.PointerInfo;
 
 		(* focus *)
@@ -551,7 +551,7 @@ TYPE
 			lock.ReleaseWrite
 		END Broadcast;
 
-		PROCEDURE Add*(left, top : LONGINT; w : Window; flags : SET);
+		PROCEDURE Add*(left, top : SIZE; w : Window; flags : SET);
 		VAR plugin : Plugins.Plugin; oldPointerOwner: Window; m: Messages.Message;
 		BEGIN
 			ASSERT((w.next = NIL) & (w.prev = NIL)); (* window can not be inserted twice *)
@@ -733,8 +733,8 @@ TYPE
 			IF flagChanged THEN WM.IncOTimestamp; END;
 		END SetWindowFlag;
 
-		PROCEDURE SetWindowPos*(w : Window; x, y : LONGINT);
-		VAR rect : Rectangle; dx, dy : LONGINT; cur : WM.DecorList;
+		PROCEDURE SetWindowPos*(w : Window; x, y : SIZE);
+		VAR rect : Rectangle; dx, dy : SIZE; cur : WM.DecorList;
 		BEGIN
 			IF w = NIL THEN RETURN END;
 			lock.AcquireWrite;
@@ -752,12 +752,12 @@ TYPE
 			WM.ResetNextPosition;
 		END SetWindowPos;
 
-		PROCEDURE SetWindowSize*(w : Window; VAR width, height : LONGINT);
+		PROCEDURE SetWindowSize*(w : Window; VAR width, height : SIZE);
 		VAR
 			rect : Rectangle;
-			cw, ch, t, nw : LONGINT;
+			cw, ch, t, nw : SIZE;
 
-			PROCEDURE Set(win : Window; w, h  : LONGINT);
+			PROCEDURE Set(win : Window; w, h  : SIZE);
 			BEGIN
 				Rect.ExtendRect(rect, win.bounds);
 				win.Resizing(w, h); win.bounds.r := win.bounds.l + w; win.bounds.b := win.bounds.t + h;
@@ -948,8 +948,8 @@ TYPE
 
 		(** Return the window at postition x, y in global space. *)
 		(** Must hold WM lock *)
-		PROCEDURE GetPositionOwnerIntern(x, y : LONGINT; owner : WM.ViewPort) : Window;
-		VAR cur : Window; xt, yt : LONGINT; bounds : Rect.Rectangle; ignore : BOOLEAN;
+		PROCEDURE GetPositionOwnerIntern(x, y : SIZE; owner : WM.ViewPort) : Window;
+		VAR cur : Window; xt, yt : SIZE; bounds : Rect.Rectangle; ignore : BOOLEAN;
 		BEGIN
 			lock.AcquireWrite;
 			cur := top.prev; (* not the mouse *)
@@ -979,7 +979,7 @@ TYPE
 			RETURN NIL
 		END GetPositionOwnerIntern;
 
-		PROCEDURE GetPositionOwner*(x, y : LONGINT) : Window;
+		PROCEDURE GetPositionOwner*(x, y : SIZE) : Window;
 		BEGIN
 			RETURN GetPositionOwnerIntern(x, y, NIL);
 		END GetPositionOwner;
@@ -1155,11 +1155,11 @@ TYPE
 			END
 		END HandleInternal;
 
-		PROCEDURE StartDrag*(w : Window; sender, data : ANY; img : Graphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject : Messages.CompCommand) : BOOLEAN;
+		PROCEDURE StartDrag*(w : Window; sender, data : ANY; img : Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject : Messages.CompCommand) : BOOLEAN;
 		VAR result : BOOLEAN;
 
 			PROCEDURE AddDragCursor;
-			VAR w, h : LONGINT;
+			VAR w, h : SIZE;
 			BEGIN
 				NEW(dragCursor, 1, 1, TRUE); w := 1; h := 1;
 				IF dragImage # NIL THEN
@@ -1263,7 +1263,7 @@ TYPE
 
 		PROCEDURE RedrawDirty;
 		VAR r, m:Rectangle;
-			i, na, oa, nofPatches:LONGINT;
+			i, na, oa, nofPatches: SIZE;
 			found : BOOLEAN; cv : WM.ViewPort;
 		BEGIN
 			dirtyQ.Get(patches[0]);
@@ -1310,7 +1310,7 @@ TYPE
 			left : DW.LeftWindow;
 			right : DW.RightWindow;
 			bottom : DW.BottomWindow;
-			l, t, r, b : LONGINT;
+			l, t, r, b : SIZE;
 			th, lw, rw, bh : LONGINT;
 
 			PROCEDURE InitW(n : Window);
@@ -1385,12 +1385,12 @@ TYPE
 	MouseObj = OBJECT (Inputs.Sink)
 	VAR
 		view : ViewPort;
-		x, y, z : LONGINT;
+		x, y, z : SIZE;
 		threshold, speedup: LONGINT;
 		enableMMEmulation : BOOLEAN;
 
 		(* double click support *)
-		lastTime, lastX, lastY: LONGINT;
+		lastTime: LONGINT; lastX, lastY: SIZE;
 		prevKeys: SET; inDoubleClick: BOOLEAN;
 	(*CONST
 		DoubleClick = 400 (* ms *);*)
@@ -1406,7 +1406,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Handle*(VAR msg: Inputs.Message);
-		VAR dx, dy, dz, nx, ny, nz: LONGINT; modifierFlags : SET; time: LONGINT;
+		VAR dx, dy, dz, nx, ny, nz: SIZE; modifierFlags : SET; time: LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF (msg IS Inputs.MouseMsg) THEN
 				WITH msg: Inputs.MouseMsg DO
@@ -1568,7 +1568,7 @@ VAR
 	CharToUnicode: ARRAY 256 OF LONGINT; (** mapping from Oberon character codes to Unicodes **)
 
 
-PROCEDURE Bound(VAR x:LONGINT; min, max:LONGINT);
+PROCEDURE Bound(VAR x:SIZE; min, max:SIZE);
 BEGIN
 	IF x < min THEN x := min ELSE IF x > max THEN x := max END END
 END  Bound;
@@ -1588,7 +1588,7 @@ BEGIN
 		INCL(bg.flags, WM.FlagNoPointer);
 	END;
 	wm.SetWindowTitle(bg, WM.NewString("New background"));
-	Rect.SetRect(bg.bounds, MIN(LONGINT), MIN(LONGINT), MAX(LONGINT), MAX(LONGINT));
+	Rect.SetRect(bg.bounds, MIN(SIZE), MIN(SIZE), MAX(SIZE), MAX(SIZE));
 	wm.lock.AcquireWrite; t := wm.ReplaceBackground(bg); wm.lock.ReleaseWrite;
 END FillSession;
 
@@ -1705,5 +1705,4 @@ BEGIN
 	Modules.InstallTermHandler(CleanUp);
 	DoubleClick := 500;
 END WindowManager.
-
 

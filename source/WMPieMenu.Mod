@@ -12,14 +12,14 @@ TYPE
 
 	PieMenu = OBJECT(WMComponents.VisualComponent)
 	VAR
-		lastX, lastY : LONGINT;
+		lastX, lastY : SIZE;
 		dir : ARRAY 4 * MenuPoints OF RECORD x, y : LONGINT END;
 		clDefault, clHover, clShadow, clLine : WMProperties.ColorProperty;
 		useBgBitmap : WMProperties.BooleanProperty;
 		bgBitmapName : WMProperties.StringProperty;
 		bgBitmap : WMGraphics.Image;
 		shadow: WMProperties.Int32Property;
-		dx, dy : LONGINT;
+		dx, dy : SIZE;
 		dirNr : LONGINT;
 		on0, on1, on2, on3, closeIt : WMEvents.EventSource;
 		images : ARRAY 4 OF WMGraphics.Image;
@@ -98,8 +98,8 @@ TYPE
 			END
 		END PropertyChanged;
 
-		PROCEDURE GetSector(nr : LONGINT; VAR s : ARRAY OF WMGraphics.Point2d);
-		VAR i, j : LONGINT; VAR x, y : LONGINT;
+		PROCEDURE GetSector(nr : SIZE; VAR s : ARRAY OF WMGraphics.Point2d);
+		VAR i, j : SIZE; VAR x, y : SIZE;
 		BEGIN
 			x := bounds.GetWidth() DIV 2 - 4;
 			y := bounds.GetHeight() DIV 2 - 4;
@@ -156,8 +156,8 @@ TYPE
 			Invalidate
 		END SetHover;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
-		VAR tdist, tx, ty : LONGINT;
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
+		VAR tdist, tx, ty : SIZE;
 		BEGIN
 			dx := x - bounds.GetWidth() DIV 2 + 4;
 			dy := y - bounds.GetHeight() DIV 2 + 4;
@@ -176,8 +176,8 @@ TYPE
 			ELSE SetHover({}) END
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
-		VAR tdist, tx, ty : LONGINT;
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
+		VAR tdist, tx, ty : SIZE;
 		BEGIN
 			IF sent THEN RETURN END;
 			lastX := x; lastY := y;
@@ -201,7 +201,7 @@ TYPE
 			closeIt.Call(NIL); dirNr := -1
 		END PointerUp;
 
-		PROCEDURE KeyEvent*(ucs :LONGINT; flags : SET; VAR keySym : LONGINT);
+		PROCEDURE KeyEvent*(ucs :SIZE; flags : SET; VAR keySym : SIZE);
 		BEGIN
 			IF keySym = 0FF51H THEN (* Cursor Left *)
 				SetHover({2}); on2.Call(NIL); dirNr := 2; closeIt.Call(NIL)
@@ -218,8 +218,8 @@ TYPE
 
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		VAR sector, shadow : ARRAY 2 * MenuPoints + 2 OF WMGraphics.Point2d;
-			i, j, shadowEffect : LONGINT;
-			x, y, dx, dy : LONGINT;
+			i, j: SIZE; shadowEffect : LONGINT;
+			x, y, dx, dy : SIZE;
 			font : WMGraphics.Font;
 		BEGIN
 			x := bounds.GetWidth() DIV 2;
@@ -289,7 +289,7 @@ TYPE
 	Menu* = OBJECT (WMComponents.FormWindow)
 	VAR piemenu: PieMenu;
 		on0-, on1-, on2-, on3- , onClose-: WMEvents.EventSource;
-		lastX*, lastY* : LONGINT;
+		lastX*, lastY* : SIZE;
 		caller : WMWindowManager.Window;
 		pointerReturned, bt* : BOOLEAN;
 		userData* : ANY;
@@ -348,7 +348,7 @@ TYPE
 			piemenu.SetEnabled(enabled)
 		END SetEnabled;
 
-		PROCEDURE Show*(caller : WMWindowManager.Window; x, y : LONGINT; bt : BOOLEAN);
+		PROCEDURE Show*(caller : WMWindowManager.Window; x, y : SIZE; bt : BOOLEAN);
 		VAR nm : WMMessages.Message;
 		BEGIN
 			IF ~shown THEN shown := TRUE;
@@ -420,6 +420,4 @@ BEGIN
 	InitStrings;
 	InitPrototypes;
 END WMPieMenu.
-
-
 

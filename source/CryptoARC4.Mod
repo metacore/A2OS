@@ -38,9 +38,10 @@ TYPE
 		END InitKey;
 
 		(** encrypt len bytes starting at position ofs. *)
-		PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
+		PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR; ofs, len: SIZE );
 		VAR
-			k, temp: LONGINT;
+			k: SIZE;
+			temp: LONGINT;
 			ch: CHAR;
 		BEGIN
 			ASSERT( isKeyInitialized );
@@ -57,7 +58,7 @@ TYPE
 		END Encrypt;
 
 		(** decrypt len bytes starting at position ofs. *)
-		PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
+		PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR; ofs, len: SIZE );
 		BEGIN
 			Encrypt( buf, ofs, len )
 		END Decrypt;

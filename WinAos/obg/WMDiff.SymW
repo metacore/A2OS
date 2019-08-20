@@ -24,7 +24,7 @@ CONST
 TYPE 
 	NoWheelGrid* = OBJECT {EXCLUSIVE} (WMStringGrids.StringGrid)
 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^  & Init*; 
 	END NoWheelGrid; 
 
@@ -39,7 +39,8 @@ TYPE
 		lineNbr, grid: NoWheelGrid; 
 		colWidths: WMGrids.Spacings; 
 		commonLines, diffLines: LONGINT; 
-		diffColor, maxLineWidth, minLineWidth: LONGINT; 
+		diffColor: LONGINT; 
+		maxLineWidth, minLineWidth: SIZE; 
 		curLine: LONGINT; 
 		font: WMGraphics.Font; 
 		onPropertyChange, onResized: WMEvents.EventSource; 
@@ -48,13 +49,13 @@ TYPE
 		PROCEDURE ^ CreateGrid(): NoWheelGrid; 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ToggleLineNumbers; 
-		PROCEDURE ^ SetNofLines(nofLines: LONGINT); 
-		PROCEDURE ^ FileNameEditDragOver(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
-		PROCEDURE ^ FileNameEditDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
-		PROCEDURE ^ FillLines(nofRows, nofLines: LONGINT); 
-		PROCEDURE ^ InsertLine(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+		PROCEDURE ^ SetNofLines(nofLines: SIZE); 
+		PROCEDURE ^ FileNameEditDragOver(x, y: SIZE; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FileNameEditDragDropped(x, y: SIZE; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FillLines(nofRows, nofLines: SIZE); 
+		PROCEDURE ^ InsertLine(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
 		PROCEDURE ^ InsertEmptyLine; 
-		PROCEDURE ^ InsertCommonLine(pos, line: LONGINT; string: Strings.String; out: Streams.Writer); 
+		PROCEDURE ^ InsertCommonLine(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 
 		PROCEDURE ^ SetFileName(fileName: ARRAY OF CHAR); 
 		PROCEDURE ^ GetFileName(): Strings.String; 
 		PROCEDURE ^ Setup; 
@@ -66,12 +67,12 @@ TYPE
 	VAR 
 		view: DiffView; 
 		img: WMGraphics.Image; 
-		nofRows, pageStart, pageSize: LONGINT; 
+		nofRows, pageStart, pageSize: SIZE; 
 		showPage: BOOLEAN; 
 		diffColor: LONGINT; 
 
 		PROCEDURE ^  & New*(view: DiffView); 
-		PROCEDURE ^ SetPage(pageStart, pageSize: LONGINT); 
+		PROCEDURE ^ SetPage(pageStart, pageSize: SIZE); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ Setup; 
 		PROCEDURE ^ Update; 
@@ -87,23 +88,23 @@ TYPE
 		lblcommonLines, lbldiffLinesLeft, lbldiffLinesRight: WMStandardComponents.Label; 
 		scrolly: WMStandardComponents.Scrollbar; 
 		leftOverview, rightOverview: Overview; 
-		pageSize: LONGINT; 
+		pageSize: SIZE; 
 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Load*(leftFilename, rightFilename: ARRAY OF CHAR); 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ OnViewResized(sender, par: ANY); 
-		PROCEDURE ^ Setup(nofLines: LONGINT); 
+		PROCEDURE ^ Setup(nofLines: SIZE); 
 		PROCEDURE ^ SetScrollbarProperties; 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ DiffHandler(sender, par: ANY); 
 		PROCEDURE ^ OnViewPropertyChange(sender, par: ANY); 
 		PROCEDURE ^ Scrolled(sender, data: ANY); 
-		PROCEDURE ^ HandleKey(ucs: LONGINT; flags: SET; keysym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HandleKey(ucs: SIZE; flags: SET; keysym: SIZE): BOOLEAN; 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 	END Window; 
 VAR 
 	nofWindows: LONGINT; 

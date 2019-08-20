@@ -123,7 +123,7 @@ TYPE
 	END;
 
 	Ident* = POINTER TO RECORD (Designator)
-		name* : LONGINT;
+		name* : SIZE;
 		type* : Type;
 		pos* : Position;
 	END;

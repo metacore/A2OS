@@ -18,8 +18,8 @@ TYPE
 
 	Statistics = OBJECT 
 	VAR 
-		nofFiles: LONGINT; 
-		nofMatches, nofConflicts, nofErrors: LONGINT; 
+		nofFiles: SIZE; 
+		nofMatches, nofConflicts, nofErrors: SIZE; 
 		verbose: BOOLEAN; 
 		abort: BOOLEAN; 
 

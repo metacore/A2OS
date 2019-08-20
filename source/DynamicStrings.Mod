@@ -22,9 +22,9 @@ TYPE
 	DynamicString* = OBJECT
 	VAR
 		buffer: String; (* { (buffer # NIL) & (LEN(buffer) = bufferSize) } *)
-		bufferSize: LONGINT; (* {bufferSize >= InitialSize} *)
+		bufferSize: SIZE; (* {bufferSize >= InitialSize} *)
 
-		length : LONGINT; (* current length of string excluding 0X *)
+		length : SIZE; (* current length of string excluding 0X *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -40,7 +40,7 @@ TYPE
 			length := 0;
 		END Clear;
 
-		PROCEDURE AdjustBufferSize(minSize: LONGINT);
+		PROCEDURE AdjustBufferSize(minSize: SIZE);
 		VAR newBuffer : String;
 		BEGIN
 			IF minSize >= bufferSize THEN
@@ -51,14 +51,14 @@ TYPE
 			END;
 		END AdjustBufferSize;
 
-		PROCEDURE Put*(ch: CHAR; at: LONGINT);
+		PROCEDURE Put*(ch: CHAR; at: SIZE);
 		BEGIN
 			IF (at + 1 >= bufferSize) THEN AdjustBufferSize(at + 1); END;
 			buffer[at] := ch;
 			length := StringLength(buffer^); (* not optimized *)
 		END Put;
 
-		PROCEDURE Get*(at: LONGINT): CHAR;
+		PROCEDURE Get*(at: SIZE): CHAR;
 		BEGIN
 			IF at + 1 > bufferSize THEN
 				RETURN 0X;
@@ -78,7 +78,7 @@ TYPE
 		END AppendCharacter;
 
 		PROCEDURE Append*(CONST this: ARRAY OF CHAR);
-		VAR thisLength : LONGINT;
+		VAR thisLength : SIZE;
 		BEGIN
 			thisLength := StringLength(this);
 			IF (length + thisLength + 1 >= bufferSize) THEN AdjustBufferSize(length + thisLength + 1); END;
@@ -86,8 +86,8 @@ TYPE
 			length := length + thisLength;
 		END Append;
 
-		PROCEDURE Extract*(offset, len: LONGINT): String;
-		VAR s: String; i: LONGINT;
+		PROCEDURE Extract*(offset, len: SIZE): String;
+		VAR s: String; i: SIZE;
 		BEGIN
 			IF offset < length THEN
 				IF offset + len > length THEN len := length - offset END;
@@ -102,7 +102,7 @@ TYPE
 			RETURN s
 		END Extract;
 
-		PROCEDURE Length*(): LONGINT;
+		PROCEDURE Length*(): SIZE;
 		BEGIN
 			RETURN length;
 		END Length;
@@ -123,8 +123,8 @@ TYPE
 		END FromArrOfChar;
 
 		(** Copy <len> characters starting at <offset> from string <ds> into this dynamic string*)
-		PROCEDURE CopyFrom*(ds : DynamicString; offset, len : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE CopyFrom*(ds : DynamicString; offset, len : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			ASSERT((ds # NIL) & (offset >= 0) & (len >= 0));
 			IF (offset < length) THEN
@@ -142,7 +142,7 @@ TYPE
 		END CopyFrom;
 
 		PROCEDURE EqualsTo*(CONST string : ARRAY OF CHAR; ignoreCase : BOOLEAN) : BOOLEAN;
-		VAR len : LONGINT; result : BOOLEAN; i : LONGINT;
+		VAR len : SIZE; result : BOOLEAN; i : SIZE;
 		BEGIN
 			len := StringLength(string);
 			result := (len = length);
@@ -169,14 +169,14 @@ TYPE
 
 	StringEntry = RECORD
 		value : String;
-		length : LONGINT;
+		length : SIZE;
 	END;
 
 	StringEntryArray = POINTER TO ARRAY OF StringEntry;
 
 	HashTableEntry = RECORD
 		strings : StringEntryArray; (* {strings # NIL} *)
-		nofStrings : LONGINT; (* { (0 <= nofStrings) & (nofStrings < LEN(strings)) } *)
+		nofStrings : SIZE; (* { (0 <= nofStrings) & (nofStrings < LEN(strings)) } *)
 	END;
 
 	Pool* = OBJECT
@@ -184,7 +184,7 @@ TYPE
 		hashtable : ARRAY HashTableSize OF HashTableEntry;
 
 		PROCEDURE &Init*;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(hashtable) - 1 DO
 				NEW(hashtable[i].strings, InitialStringArraySize);
@@ -193,7 +193,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Clear*;
-		VAR i, j : LONGINT;
+		VAR i, j : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(hashtable) - 1 DO
 				FOR j := 0 TO LEN(hashtable[i].strings) - 1 DO
@@ -205,14 +205,14 @@ TYPE
 		END Clear;
 
 		(* Compute index into hashtable (copied from StringPool.Mod) *)
-		PROCEDURE Hash(ds : DynamicString) : LONGINT;
-		VAR index, i : LONGINT; ch : CHAR;
+		PROCEDURE Hash(ds : DynamicString) : SIZE;
+		VAR index, i : SIZE; ch : CHAR;
 		BEGIN
 			ASSERT(ds # NIL);
 			index := 0;
 			i := 0; ch := ds.buffer[0]; index := 0;
 			WHILE (ch # 0X) DO
-				index :=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(index, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
+				index :=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(index, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
 				INC(i); ch := ds.buffer[i]
 			END;
 			index := index MOD HashTableSize;
@@ -221,7 +221,7 @@ TYPE
 		END Hash;
 
 		PROCEDURE Find(ds : DynamicString) : Strings.String;
-		VAR string : String; entry : HashTableEntry; i : LONGINT;
+		VAR string : String; entry : HashTableEntry; i : SIZE;
 		BEGIN
 			ASSERT(ds # NIL);
 			string := NIL;
@@ -240,7 +240,7 @@ TYPE
 
 		(* Double the size of the StringEntryArray within <entry> *)
 		PROCEDURE Grow(VAR strings : StringEntryArray);
-		VAR newStrings : StringEntryArray; i : LONGINT;
+		VAR newStrings : StringEntryArray; i : SIZE;
 		BEGIN
 			NEW(newStrings, 2 * LEN(strings));
 			FOR i := 0 TO LEN(strings) - 1 DO
@@ -249,8 +249,8 @@ TYPE
 			strings := newStrings;
 		END Grow;
 
-		PROCEDURE Add(ds : DynamicString; index : LONGINT; VAR string : String);
-		VAR (*entry : HashTableEntry;*)  i, j : LONGINT; (*! careful: entry is a record, not a pointer *)
+		PROCEDURE Add(ds : DynamicString; index : SIZE; VAR string : String);
+		VAR (*entry : HashTableEntry;*)  i, j : SIZE; (*! careful: entry is a record, not a pointer *)
 		BEGIN (* assumption: ds is not yet contained in pool! *)
 			ASSERT(ds # NIL);
 			ASSERT((0 <= index) & (index < HashTableSize));
@@ -292,7 +292,7 @@ TYPE
 		END Get;
 
 		PROCEDURE Dump*(out : Streams.Writer);
-		VAR index, entry : LONGINT;
+		VAR index, entry : SIZE;
 		BEGIN
 			ASSERT(out # NIL);
 			out.String("String pool dump:");
@@ -314,11 +314,11 @@ TYPE
 
 VAR
 	(* Statistics, not multi-instance capable *)
-	NnofRequests, NnofHits, NnofAdded : LONGINT;
+	NnofRequests, NnofHits, NnofAdded : SIZE;
 
 (* Returns TRUE if the string ds.buffer is shorter or lexically smaller than entry.value *)
 PROCEDURE LessThan(ds : DynamicString; CONST entry : StringEntry) : BOOLEAN;
-VAR lessThan : BOOLEAN; i : LONGINT;
+VAR lessThan : BOOLEAN; i : SIZE;
 BEGIN
 	i := 0;
 	lessThan := (ds.length < entry.length);
@@ -331,7 +331,7 @@ END LessThan;
 
 (* Returns TRUE if the string ds.buffer is larger or lexically greater than entry.value *)
 PROCEDURE GreaterThan(ds : DynamicString; CONST entry : StringEntry) : BOOLEAN;
-VAR greaterThan : BOOLEAN; i : LONGINT;
+VAR greaterThan : BOOLEAN; i : SIZE;
 BEGIN
 	i := 0;
 	greaterThan := (ds.length > entry.length);
@@ -344,7 +344,7 @@ END GreaterThan;
 
 (* Return TRUE if the string ds.buffer has same length and content as entry.value *)
 PROCEDURE Equals(ds : DynamicString; CONST entry : StringEntry) : BOOLEAN;
-VAR equals : BOOLEAN; i : LONGINT;
+VAR equals : BOOLEAN; i : SIZE;
 BEGIN
 	i := 0;
 	equals := (ds.length = entry.length);
@@ -355,8 +355,8 @@ BEGIN
 	RETURN equals;
 END Equals;
 
-PROCEDURE StringLength*(CONST str: ARRAY OF CHAR): LONGINT;
-	VAR i, l: LONGINT;
+PROCEDURE StringLength*(CONST str: ARRAY OF CHAR): SIZE;
+	VAR i, l: SIZE;
 BEGIN
 	l := LEN(str); i := 0;
 	WHILE (i < l) & (str[i] # 0X) DO
@@ -370,7 +370,7 @@ BEGIN Strings.Append (to, this);
 END StringAppend;
 
 PROCEDURE Lower*(CONST str: ARRAY OF CHAR; VAR lstr: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 BEGIN
 	i := 0;
 	WHILE str[i] # 0X DO
@@ -393,8 +393,8 @@ END LowerCh;
 
 PROCEDURE IntToStr*(val: LONGINT; VAR str: ARRAY OF CHAR);
 	VAR
-		i, j: LONGINT;
-		digits: ARRAY 16 OF LONGINT;
+		i, j: SIZE;
+		digits: ARRAY 16 OF CHAR;
 BEGIN
 	IF val = MIN(LONGINT) THEN
 		COPY("-2147483648", str);
@@ -407,17 +407,17 @@ BEGIN
 	END;
 	i := 0;
 	REPEAT
-		digits[i] := val MOD 10; INC(i); val := val DIV 10
+		digits[i] := CHR (val MOD 10 + ORD("0")); INC(i); val := val DIV 10
 	UNTIL val = 0;
 	DEC(i);
 	WHILE i >= 0 DO
-		str[j] := CHR(digits[i]+ORD("0")); INC(j); DEC(i)
+		str[j] := digits[i]; INC(j); DEC(i)
 	END;
 	str[j] := 0X
 END IntToStr;
 
 PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR): LONGINT;
-	VAR val, i, d: LONGINT; ch: CHAR; neg: BOOLEAN;
+	VAR val, d: LONGINT; i: SIZE; ch: CHAR; neg: BOOLEAN;
 BEGIN
 	val := 0; i := 0; ch := str[0];
 	WHILE (ch # 0X) & (ch <= " ") DO
@@ -445,7 +445,7 @@ BEGIN
 END StrToInt;
 
 PROCEDURE HexStrToInt*(CONST str: ARRAY OF CHAR): LONGINT;
-VAR val, i, d: LONGINT; ch: CHAR;
+VAR val, d: LONGINT; i: SIZE; ch: CHAR;
 BEGIN
 	i := 0; ch := str[0];
 	WHILE (ch # 0X) & (ch <= " ") DO
@@ -466,15 +466,15 @@ BEGIN
 	RETURN val
 END HexStrToInt;
 
-PROCEDURE Search*(CONST pat, src: ARRAY OF CHAR; VAR pos: LONGINT);
+PROCEDURE Search*(CONST pat, src: ARRAY OF CHAR; VAR pos: SIZE);
 	CONST MaxPat = 128;
 	VAR
 		buf: ARRAY MaxPat OF CHAR;
-		len, i, srclen: LONGINT;
+		len, i, srclen: SIZE;
 
-	PROCEDURE Find(beg: LONGINT);
+	PROCEDURE Find(beg: SIZE);
 		VAR
-			i, j, b, e: LONGINT;
+			i, j, b, e: SIZE;
 			ch: CHAR;
 			ref: ARRAY MaxPat OF CHAR;
 	BEGIN

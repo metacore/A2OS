@@ -97,7 +97,7 @@ TYPE
 		PROCEDURE ^ SetInputDev2*; 
 		PROCEDURE ^ SetInputDevSVideo*; 
 		PROCEDURE ^ SetInputDev3*; 
-		PROCEDURE ^ SetVideo*(addr: ADDRESS; width: LONGINT); 
+		PROCEDURE ^ SetVideo*(addr: ADDRESS; width: SIZE); 
 		PROCEDURE ^ CaptureSingle*; 
 		PROCEDURE ^ CaptureContinuous*; 
 		PROCEDURE ^ StopCaptureContinuous*; 

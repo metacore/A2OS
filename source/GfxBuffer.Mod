@@ -59,20 +59,20 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 	END Tile;
 
 	PROCEDURE Dot (rc: GfxRaster.Context; x, y: LONGINT);
-		VAR bc: Context; px, py: LONGINT; mode: Images.Mode;
+		VAR bc: Context; px, py: SIZE; mode: Images.Mode;
 	BEGIN
 		IF (rc.clipState = GfxRaster.In) OR
-			(rc.clipState = GfxRaster.InOut) & GfxRegions.RectInside(SHORT(x), SHORT(y), SHORT(x+1), SHORT(y+1), rc.clipReg)
+			(rc.clipState = GfxRaster.InOut) & GfxRegions.RectInside(INTEGER(x), INTEGER(y), INTEGER(x+1), INTEGER(y+1), rc.clipReg)
 		THEN
 			bc := rc(Context);
 			IF bc.pat = NIL THEN
 				Images.InitMode(mode, bc.compOp);
-				Images.Put(bc.img, SHORT(x), SHORT(y), bc.pix, mode)
+				Images.Put(bc.img, INTEGER(x), INTEGER(y), bc.pix, mode)
 			ELSE
 				px := (x - ENTIER(bc.orgX + bc.pat.px + 0.5)) MOD bc.pat.img.width;
 				py := (y - ENTIER(bc.orgY + bc.pat.py + 0.5)) MOD bc.pat.img.height;
 				Images.InitModeColor(mode, Images.srcOverDst, bc.col.r, bc.col.g, bc.col.b);
-				Images.Copy(bc.pat.img, bc.img, px, py, px+1, py+1, SHORT(x), SHORT(y), mode)
+				Images.Copy(bc.pat.img, bc.img, px, py, px+1, py+1, INTEGER(x), INTEGER(y), mode)
 			END
 		END
 	END Dot;
@@ -124,7 +124,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 	BEGIN
 		bc := ctxt(Context);
 		GfxRaster.ResetClip(bc);
-		GfxRegions.SetToRect(bc.clipReg, 0, 0, SHORT(bc.img.width), SHORT(bc.img.height))
+		GfxRegions.SetToRect(bc.clipReg, 0, 0, INTEGER(bc.img.width), INTEGER(bc.img.height))
 	END ResetClip;
 
 	PROCEDURE Image (ctxt: Gfx.Context; x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter);
@@ -143,12 +143,12 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 		THEN
 			GfxImages.Transform(img, bc.img, m, filter)
 		ELSE
-			llx := 0; lly := 0; urx := SHORT(img.width); ury := SHORT(img.height);
+			llx := 0; lly := 0; urx := INTEGER(img.width); ury := INTEGER(img.height);
 			GfxRegions.ClipRect(llx, lly, urx, ury, bc.clipReg.llx - dx, bc.clipReg.lly - dy, bc.clipReg.urx - dx, bc.clipReg.ury - dy);
 			IF bc.clipReg.llx >  dx THEN dx := bc.clipReg.llx END;
 			IF bc.clipReg.lly > dy THEN dy := bc.clipReg.lly END;
-			IF dx + urx > bc.img.width THEN urx := SHORT(bc.img.width - dx) END;
-			IF dy + ury > bc.img.height THEN ury := SHORT(bc.img.height - dy) END;
+			IF dx + urx > bc.img.width THEN urx := INTEGER(bc.img.width - dx) END;
+			IF dy + ury > bc.img.height THEN ury := INTEGER(bc.img.height - dy) END;
 			IF dx < 0 THEN llx := -dx; dx := 0 END;
 			IF dy < 0 THEN lly := -dy; dy := 0 END;
 			IF (llx < urx) & (lly < ury) THEN

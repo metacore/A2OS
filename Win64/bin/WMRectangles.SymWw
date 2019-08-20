@@ -1,22 +1,22 @@
 MODULE WMRectangles;
 TYPE 
 	Rectangle* = RECORD 
-		l*, t*, r*, b*: LONGINT; 
+		l*, t*, r*, b*: SIZE; 
 	END; 
 
-	PROCEDURE ^ MoveRel*(VAR x: Rectangle; deltaX, deltaY: LONGINT); 
-	PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
+	PROCEDURE ^ MoveRel*(VAR x: Rectangle; deltaX, deltaY: SIZE); 
+	PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
 	PROCEDURE ^ ClipRect*(VAR rect, bounds: Rectangle); 
 	PROCEDURE ^ RectEmpty*(x: Rectangle): BOOLEAN; 
-	PROCEDURE ^ PointInRect*(x, y: LONGINT; rect: Rectangle): BOOLEAN; 
+	PROCEDURE ^ PointInRect*(x, y: SIZE; rect: Rectangle): BOOLEAN; 
 	PROCEDURE ^ IsContained*(VAR outer, inner: Rectangle): BOOLEAN; 
 	PROCEDURE ^ IsEqual*(CONST a, b: Rectangle): BOOLEAN; 
 	PROCEDURE ^ Intersect*(VAR a, b: Rectangle): BOOLEAN; 
-	PROCEDURE ^ SetRect*(VAR rect: Rectangle; l, t, r, b: LONGINT); 
-	PROCEDURE ^ Area*(VAR r: Rectangle): LONGINT; 
+	PROCEDURE ^ SetRect*(VAR rect: Rectangle; l, t, r, b: SIZE); 
+	PROCEDURE ^ Area*(VAR r: Rectangle): SIZE; 
 	PROCEDURE ^ ExtendRect*(VAR old, addition: Rectangle); 
-	PROCEDURE ^ MakeRect*(l, t, r, b: LONGINT): Rectangle; 
-	PROCEDURE ^ ResizeRect*(x: Rectangle; units: LONGINT): Rectangle; 
+	PROCEDURE ^ MakeRect*(l, t, r, b: SIZE): Rectangle; 
+	PROCEDURE ^ ResizeRect*(x: Rectangle; units: SIZE): Rectangle; 
 	PROCEDURE ^ Normalize*(VAR rect: Rectangle); 
 BEGIN
 END WMRectangles.

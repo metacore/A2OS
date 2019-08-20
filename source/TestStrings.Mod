@@ -134,7 +134,7 @@ BEGIN
 END TestSetConversion;
 
 PROCEDURE TestSplitJoin*(context : Commands.Context);
-VAR string : ARRAY 1024 OF CHAR; separator : CHAR; sa : Strings.StringArray; s : Strings.String; i : LONGINT;
+VAR string : ARRAY 1024 OF CHAR; separator : CHAR; sa : Strings.StringArray; s : Strings.String; i : SIZE;
 BEGIN
 	separator := 0X;
 	context.arg.SkipWhitespace; context.arg.String(string);

@@ -629,7 +629,7 @@ TYPE
 		VAR
 			string, string2: String;
 			header: IMAPClient.HeaderElement;
-			i: LONGINT;
+			i: SIZE;
 			text: Texts.Text;
 		BEGIN
 			SELF.message := message;
@@ -1063,6 +1063,7 @@ TYPE
 			string, dateString: String;
 			writer, dateWriter: Streams.Writer;
 			i, dateCount: LONGINT;
+			r: SIZE;
 			monthString: ARRAY 37 OF CHAR;
 			valid: BOOLEAN;
 			errorString: ARRAY 65 OF CHAR;
@@ -1217,20 +1218,20 @@ TYPE
 				Strings.TrimRight(string^, " ");
 				IF DEBUG THEN KernelLog.String("Performing search..."); END;
 				status.caption.SetAOC("Status: Performing search...");
-				i := w.client.Search(string^);
-				IF i < 0 THEN
+				r := w.client.Search(string^);
+				IF r < 0 THEN
 					status.caption.SetAOC("Status: Searching Not Successful");
 				ELSE
 					NEW(buffer,16);
 					writer := buffer.GetWriter();
 					writer.String("Status: Finished. ");
 					NEW(string, 20);
-					Strings.IntToStr(i, string^);
+					Strings.IntToStr(r, string^);
 					writer.String(string^);
 					writer.String(" messages found.");
 					string := buffer.GetString();
 					status.caption.SetAOC(string^);
-					IF DEBUG THEN KernelLog.String("Search finished. "); KernelLog.Int(i,0); KernelLog.String(" messages found"); KernelLog.Ln(); END;
+					IF DEBUG THEN KernelLog.String("Search finished. "); KernelLog.Int(r,0); KernelLog.String(" messages found"); KernelLog.Ln(); END;
 					w.messageGrid.SetTopPosition(0,0,TRUE);
 					w.timer.Wakeup();
 				END;
@@ -1533,7 +1534,7 @@ TYPE
 		colWidths : WMGrids.Spacings;
 		address: WMEditors.Editor;
 		popup: WMPopups.Popup;
-		px, py : LONGINT;
+		px, py : SIZE;
 		IconRead, IconAnswered, IconUnread, IconDeleted: WMGraphics.Image;
 		copyTarget: IMAPClient.Folder;
 		client: IMAPClient.Client;
@@ -1570,7 +1571,7 @@ TYPE
 		END New;
 
 		(* Wird aufgerufen, wenn das Fenster seine Groesse aendert *)
-		PROCEDURE Resized*(width, height : LONGINT);
+		PROCEDURE Resized*(width, height : SIZE);
 		BEGIN
 			Resized^(width, height);
 			ResizeGrid;
@@ -1836,7 +1837,7 @@ TYPE
 			RefreshDisplay();
 		END ChangeFolder;
 
-		PROCEDURE FolderContextMenu(sender : ANY; x, y: LONGINT);
+		PROCEDURE FolderContextMenu(sender : ANY; x, y: SIZE);
 		VAR
 			p: ANY;
 			folder: IMAPClient.Folder;
@@ -1990,7 +1991,7 @@ TYPE
 			END;
 		END TrashBin;
 
-		PROCEDURE MessagesDragDropped(x, y : LONGINT; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
+		PROCEDURE MessagesDragDropped(x, y : SIZE; dragInfo : WMWindowManager.DragInfo; VAR handled : BOOLEAN);
 		VAR
 			selected: WMTrees.TreeNode;
 			p: ANY;
@@ -2048,7 +2049,8 @@ TYPE
 			list: Classes.List;
 			img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top, i: LONGINT;
+			top: LONGINT;
+			i: SIZE;
 			p: ANY;
 			message: IMAPClient.Message;
 		BEGIN
@@ -2088,7 +2090,7 @@ TYPE
 			END;
 		END DragArrivedList;
 
-		PROCEDURE MessageContextMenu(sender : ANY; x, y: LONGINT);
+		PROCEDURE MessageContextMenu(sender : ANY; x, y: SIZE);
 		VAR
 			list: Classes.List;
 		BEGIN
@@ -2107,7 +2109,7 @@ TYPE
 
 		PROCEDURE GetMessageSelection() : Classes.List;
 		VAR selection : Classes.List;
-			l, t, r, b, NofSel, i : LONGINT;
+			l, t, r, b, NofSel, i : SIZE;
 			p : ANY;
 			message: IMAPClient.Message;
 		BEGIN
@@ -2442,7 +2444,8 @@ TYPE
 		(* updates all the labels (statusLabel, currentFolderLabel, currentMessagesLabel) *)
 		PROCEDURE UpdateStatusLabels;
 		VAR
-			status, currentWork, nofMessages: LONGINT;
+			status, currentWork: LONGINT;
+			nofMessages: SIZE;
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
 			string: String;
@@ -2636,7 +2639,7 @@ TYPE
 
 		PROCEDURE UpdateMessages;
 		VAR
-			i, count: LONGINT;
+			i: SIZE; count: LONGINT;
 			message: IMAPClient.Message;
 			messageP: ANY;
 			header: IMAPClient.HeaderElement;

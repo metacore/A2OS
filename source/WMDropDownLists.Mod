@@ -39,7 +39,7 @@ TYPE
 		isClosed : BOOLEAN;
 		shadowRect, borderRect : WMRectangles.Rectangle;
 
-		PROCEDURE&New(x, y, width, height : LONGINT; grid : WMStringGrids.StringGrid; dropDownList : DropDownList);
+		PROCEDURE&New(x, y, width, height : SIZE; grid : WMStringGrids.StringGrid; dropDownList : DropDownList);
 		VAR
 			bDownDirection: BOOLEAN;
 			manager: WMWindowManager.WindowManager;
@@ -103,7 +103,7 @@ TYPE
 			CSChanged;
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT); (** override *)
 		BEGIN
 			canvas.Fill(shadowRect, 04FH, WMGraphics.ModeSrcOverDst);
 			Draw^(canvas, w, h, q);
@@ -117,7 +117,7 @@ TYPE
 		END Clicked;
 
 		PROCEDURE PropagateSelection;
-		VAR scol, srow, ecol, erow : LONGINT; ptr : ANY;
+		VAR scol, srow, ecol, erow : SIZE; ptr : ANY;
 		BEGIN
 			grid.GetSelection(scol, srow, ecol, erow);
 			 IF (srow # -1) THEN
@@ -140,7 +140,7 @@ TYPE
 		END Close;
 
 		PROCEDURE SelectEntry(next : BOOLEAN);
-		VAR selectRow, scol, srow, ecol, erow, nofRows : LONGINT;
+		VAR selectRow, scol, srow, ecol, erow, nofRows : SIZE;
 		BEGIN
 			grid.GetSelection(scol, srow, ecol, erow);
 			IF (srow # -1) THEN
@@ -159,7 +159,7 @@ TYPE
 			IF (srow # selectRow) THEN grid.SetSelection(0, selectRow, 0, selectRow); END;
 		END SelectEntry;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT); (* override *)
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE); (* override *)
 		VAR handled : BOOLEAN;
 		BEGIN
 			IF ~(Inputs.Release IN flags) THEN
@@ -351,7 +351,7 @@ TYPE
 		END FindByKey;
 
 		PROCEDURE ResizeEntryArray; (* private *)
-		VAR newEntries : EntryArray; i : LONGINT;
+		VAR newEntries : EntryArray; i : SIZE;
 		BEGIN
 			NEW(newEntries, 2 * LEN(entries));
 			FOR i := 0 TO LEN(entries)-1 DO newEntries[i] := entries[i]; END;
@@ -516,7 +516,7 @@ TYPE
 			UpdateGrid;
 		END ModelChanged;
 
-		PROCEDURE KeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE KeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			IF ~(Inputs.Release IN flags) THEN
 				IF (keySym = 0FF54H) OR (keySym = 0FF52H) THEN (* Cursor Down/Up *)
@@ -534,7 +534,7 @@ TYPE
 		END KeyPressed;
 
 		PROCEDURE ShowDropDownList(sender, data : ANY);
-		VAR gx, gy : LONGINT; width, height : LONGINT;  rect : WMRectangles.Rectangle;
+		VAR gx, gy : SIZE; width, height : SIZE;  rect : WMRectangles.Rectangle;
 		BEGIN
 			IF (window = NIL) OR (window.isClosed) THEN
 				rect := GetClientRect();

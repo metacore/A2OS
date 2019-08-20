@@ -40,7 +40,7 @@ TYPE
 		END Init;
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
-		VAR dx, dy :LONGINT; rect, rect0: WMRectangles.Rectangle;
+		VAR dx, dy :SIZE; rect, rect0: WMRectangles.Rectangle;
 		BEGIN
 			IF (property = color) THEN colorI := color.Get(); Invalidate;
 			ELSIF (property = isVertical) THEN isVerticalI := isVertical.Get(); Invalidate;
@@ -76,8 +76,8 @@ TYPE
 		END Set;
 
 		(** Return if the line is hit at (x, y) in parent coordinates *)
-		PROCEDURE IsHit*(x, y: LONGINT): BOOLEAN;
-		VAR r: WMRectangles.Rectangle; X0,Y0, X1,Y1: LONGINT; hit:BOOLEAN;
+		PROCEDURE IsHit*(x, y: SIZE): BOOLEAN;
+		VAR r: WMRectangles.Rectangle; X0,Y0, X1,Y1: SIZE; hit:BOOLEAN;
 		BEGIN
 			IF ~visible.Get() THEN hit:= FALSE
 			ELSE
@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		CONST pi=3.1516; headscale= 0.25;
 		VAR  alpha: REAL;
-			dx,dy: LONGINT;
+			dx,dy: SIZE;
 			size:LONGINT; head: LONGREAL;
 		BEGIN
 			DrawBackground^(canvas);
@@ -189,7 +189,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR rect : WMRectangles.Rectangle; radius : LONGINT;
+		VAR rect : WMRectangles.Rectangle; radius : SIZE;
 		BEGIN
 			DrawBackground^(canvas);
 			IF (colorI # 0) THEN

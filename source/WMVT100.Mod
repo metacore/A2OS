@@ -143,7 +143,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END ESC;
 
 			PROCEDURE Consume*(ch: CHAR);
-				VAR buf: ARRAY 128 OF LONGINT; i, n: LONGINT;
+				VAR buf: ARRAY 128 OF LONGINT; i, n: SIZE;
 			BEGIN
 				CASE ch OF
 					0X: (* NUL *)
@@ -212,26 +212,26 @@ MODULE WMVT100; (* ejz,  ph *)
 
 		Line = POINTER TO RECORD
 			data: Data;
-			t, b: LONGINT;
+			t, b: SIZE;
 			next: Line
 		END;
 
 		Position = RECORD
-			line: Line; ofs: LONGINT
+			line: Line; ofs: SIZE
 		END;
 
 		Frame = OBJECT (WMComponents.VisualComponent)
 			VAR
 				C: Connection;
 				first, last, top: Line; bg: WMGraphics.Color;
-				rows, cols, boxW, boxH, dX, dY: LONGINT;
+				rows, cols, boxW, boxH, dX, dY: SIZE;
 				tabs: POINTER TO ARRAY OF BOOLEAN;
 				attr: Attribute; cursor: Position;
 				sel: RECORD beg, end: Position END;
 				popup: WMPopups.Popup;
 				doEcho:BOOLEAN;
 
-			PROCEDURE GetCol(): LONGINT;
+			PROCEDURE GetCol(): SIZE;
 			BEGIN {EXCLUSIVE}
 				RETURN cursor.ofs
 			END GetCol;
@@ -270,7 +270,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				RETURN appendLine()
 			END AppendLine;
 
-			PROCEDURE UpdateBox(line: Line; ofs: LONGINT);
+			PROCEDURE UpdateBox(line: Line; ofs: SIZE);
 				VAR update: WMGraphics.Rectangle;
 			BEGIN
 				update.l := dX + ofs*boxW; update.r := update.l + boxW;
@@ -278,8 +278,8 @@ MODULE WMVT100; (* ejz,  ph *)
 				InvalidateRect(update)
 			END UpdateBox;
 
-			PROCEDURE UpdateRect(al, bl: Line; aofs, bofs: LONGINT; cur: SET);
-				VAR tl: Line; tofs: LONGINT; update: WMGraphics.Rectangle; swapl, swapo: BOOLEAN;
+			PROCEDURE UpdateRect(al, bl: Line; aofs, bofs: SIZE; cur: SET);
+				VAR tl: Line; tofs: SIZE; update: WMGraphics.Rectangle; swapl, swapo: BOOLEAN;
 			BEGIN
 				swapl := FALSE; swapo := FALSE;
 				IF al # bl THEN
@@ -317,8 +317,8 @@ MODULE WMVT100; (* ejz,  ph *)
 
 
 
-			PROCEDURE writeChars(VAR buf: ARRAY OF LONGINT; n: LONGINT);
-				VAR l: Line; i, ofs: LONGINT; wrap: BOOLEAN;
+			PROCEDURE writeChars(VAR buf: ARRAY OF LONGINT; n: SIZE);
+				VAR l: Line; i, ofs: SIZE; wrap: BOOLEAN;
 			BEGIN
 				wrap := FALSE;
 				l := cursor.line; ofs := cursor.ofs; i := 0;
@@ -342,13 +342,13 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END writeChars;
 
-			PROCEDURE WriteChars(VAR buf: ARRAY OF LONGINT; n: LONGINT);
+			PROCEDURE WriteChars(VAR buf: ARRAY OF LONGINT; n: SIZE);
 			BEGIN {EXCLUSIVE}
 				writeChars(buf,n);
 			END WriteChars;
 
 			PROCEDURE Delete;
-				VAR l: Line; ofs: LONGINT;
+				VAR l: Line; ofs: SIZE;
 			BEGIN {EXCLUSIVE}
 				l := cursor.line; ofs := cursor.ofs;
 				IF ofs > 0 THEN
@@ -357,8 +357,8 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END Delete;
 
-			PROCEDURE goto(col, row: LONGINT; scroll: BOOLEAN);
-				VAR l: Line; y, b: LONGINT;
+			PROCEDURE goto(col, row: SIZE; scroll: BOOLEAN);
+				VAR l: Line; y, b: SIZE;
 			BEGIN
 				(* top = row 0, < 0 => scroll up *)
 				ASSERT(row >= 0);
@@ -377,7 +377,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END goto;
 
 
-			PROCEDURE Goto(col, row: LONGINT; scroll: BOOLEAN);
+			PROCEDURE Goto(col, row: SIZE; scroll: BOOLEAN);
 			BEGIN {EXCLUSIVE}
 				goto(col,row,scroll)
 			END Goto;
@@ -393,7 +393,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END SetTop;
 
 			PROCEDURE RightTab;
-				VAR l: Line; ofs: LONGINT; char: Char;
+				VAR l: Line; ofs: SIZE; char: Char;
 			BEGIN {EXCLUSIVE}
 				char.attr := attr; char.char := 020H;
 				l := cursor.line; ofs := cursor.ofs+1;
@@ -404,8 +404,8 @@ MODULE WMVT100; (* ejz,  ph *)
 				UpdateRect(l, l, cursor.ofs, ofs, {4})
 			END RightTab;
 
-			PROCEDURE EraseLine(l: Line; from, to: LONGINT);
-				VAR i: LONGINT;
+			PROCEDURE EraseLine(l: Line; from, to: SIZE);
+				VAR i: SIZE;
 			BEGIN
 				i := from;
 				WHILE i <= to DO
@@ -486,7 +486,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END SetAttributes;
 
 			PROCEDURE Draw*(canvas: WMGraphics.Canvas);
-				VAR l: Line; i, j, dy, bottom: LONGINT; attr: Attribute; char: Char; box: WMGraphics.Rectangle;
+				VAR l: Line; i, j, dy, bottom: SIZE; attr: Attribute; char: Char; box: WMGraphics.Rectangle;
 			BEGIN {EXCLUSIVE}
 				canvas.Fill(canvas.clipRect, bg, WMGraphics.ModeCopy);
 				l := first;
@@ -567,8 +567,8 @@ MODULE WMVT100; (* ejz,  ph *)
 				UpdateBox(cursor.line, cursor.ofs)
 			END FocusLost;
 
-			PROCEDURE LocateBox(x, y: LONGINT; VAR pos: Position);
-				VAR l: Line; ofs, i: LONGINT;
+			PROCEDURE LocateBox(x, y: SIZE; VAR pos: Position);
+				VAR l: Line; ofs, i: SIZE;
 			BEGIN
 				IF x < dX THEN x := dX ELSIF x >= (dX + cols*boxW) THEN x := dX + cols*boxW-1 END;
 				IF y < dY THEN y := dY ELSIF y >= (dY + rows*boxH) THEN y := dY + rows*boxH-1 END;
@@ -590,7 +590,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 			PROCEDURE Copy;
 				VAR
-					l: Line; apos, pos, ofs, end: LONGINT; buf: ARRAY 2 OF LONGINT;
+					l: Line; apos, pos, ofs, end: SIZE; buf: ARRAY 2 OF LONGINT;
 					attr: Attribute; tattr: Texts.Attributes;
 			BEGIN {EXCLUSIVE}
 				IF sel.beg.line = NIL THEN RETURN END;
@@ -672,7 +672,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END ClickHandler;
 
-			PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
+			PROCEDURE PointerDown*(x, y: SIZE; keys: SET);
 			BEGIN
 				IF (Left IN keys) & hasFocus THEN
 					LocateBox(x, y, sel.beg); sel.end := sel.beg
@@ -686,7 +686,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				UpdateAll()
 			END PointerDown;
 
-			PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
+			PROCEDURE PointerMove*(x, y: SIZE; keys: SET);
 				VAR pos: Position;
 			BEGIN
 				IF (Left IN keys) & (sel.beg.line # NIL) THEN
@@ -702,7 +702,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END PointerMove;
 
-			PROCEDURE WheelMove*(dz: LONGINT);
+			PROCEDURE WheelMove*(dz: SIZE);
 				VAR l: Line;
 			BEGIN
 				IF (dz > 0) & (top.next # NIL) THEN
@@ -716,10 +716,10 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END WheelMove;
 
-			PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
+			PROCEDURE PointerUp*(x, y: SIZE; keys: SET);
 			END PointerUp;
 
-			PROCEDURE CursorKey(keySym: LONGINT);
+			PROCEDURE CursorKey(keySym: SIZE);
 			BEGIN
 				C.W.Char(01BX);
 				IF CursorKeyMode IN C.mode THEN
@@ -736,7 +736,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				C.W.Update()
 			END CursorKey;
 
-			PROCEDURE KeyEvent*(ucs: LONGINT; flags: SET; VAR keySym: LONGINT);
+			PROCEDURE KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE);
 			VAR echo: ARRAY 1 OF LONGINT; col: WMGraphics.Color;
 			BEGIN
 				IF ~(Inputs.Release IN flags) & hasFocus THEN
@@ -746,7 +746,7 @@ MODULE WMVT100; (* ejz,  ph *)
 						IF doEcho THEN
 							col:=attr.fg;
 							attr.fg:=WMGraphics.Red;
-							echo[0]:=keySym;
+							echo[0]:=keySym(LONGINT);
 							writeChars(echo,1);
 							attr.fg:=col;
 						END;
@@ -775,7 +775,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END KeyEvent;
 
 			PROCEDURE resized;
-				VAR l: Line; W, H, b, t, c, r, i: LONGINT; d: Data; ch: Char;
+				VAR l: Line; W, H, b, t, c, r, i: SIZE; d: Data; ch: Char;
 			BEGIN {EXCLUSIVE}
 				W := bounds.GetWidth() - 2*Border;
 				H := bounds.GetHeight() - 2*Border;

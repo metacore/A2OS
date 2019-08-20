@@ -307,8 +307,8 @@ TYPE
 			VAR j: LONGINT;
 			BEGIN
 				FOR j := 0 TO n-1 DO
-					dpd.frag[i].dataPhysAdr := Machine.Ensure32BitAddress (phys[j].adr);
-					dpd.frag[i].dataLen := Machine.Ensure32BitAddress (phys[j].size);
+					dpd.frag[i].dataPhysAdr := phys[j].adr(Machine.Address32);
+					dpd.frag[i].dataLen := phys[j].size(LONGINT);
 					INC(i);
 				END;
 			END PutToDPD;
@@ -423,7 +423,7 @@ END InitAddress;
 (* Get the specified setting for the NIC currently being initialized (indexed by "installed"). *)
 
 PROCEDURE GetSetting(s: ARRAY OF CHAR): LONGINT;
-VAR i: LONGINT; name, val: ARRAY 32 OF CHAR;
+VAR i: SIZE; name, val: ARRAY 32 OF CHAR;
 BEGIN
 	i := 0; WHILE s[i] # 0X DO name[i] := s[i]; INC(i) END;
 	name[i] := CHR(ORD("0") + installed); name[i+1] := 0X;
@@ -529,11 +529,11 @@ BEGIN
 		IF i = NewTries THEN HALT(3802) END	(* can not allocate contiguous DPD *)
 	END;
 	ASSERT(phys[0].size = SIZEOF(DPD));
-	dpd.physAdr := Machine.Ensure32BitAddress (phys[0].adr);
+	dpd.physAdr := phys[0].adr(Machine.Address32);
 	ASSERT(dpd.physAdr MOD 8 = 0);	(* alignment constraint (p. 6-3) *)
 	dpd.nextPhysAdr := 0;
 		(* entry 0 always points to ethernet header *)
-	dpd.frag[0].dataPhysAdr := Machine.Ensure32BitAddress ((ADDRESSOF(dpd.dst[0])-ADDRESSOF(dpd.nextPhysAdr)) + dpd.physAdr);
+	dpd.frag[0].dataPhysAdr := ((ADDRESSOF(dpd.dst[0])-ADDRESSOF(dpd.nextPhysAdr)) + dpd.physAdr)(Machine.Address32);
 	dpd.frag[0].dataLen := 14	(* ethernet header *)
 END InitDPD;
 
@@ -553,11 +553,11 @@ BEGIN
 			IF i = NewTries THEN HALT(3803) END	(* can not allocate contiguous UPD *)
 		END;
 		ASSERT(phys[0].size = SIZEOF(UPD));
-		upd.physAdr := Machine.Ensure32BitAddress (phys[0].adr);
+		upd.physAdr := phys[0].adr(Machine.Address32);
 		ASSERT(upd.physAdr MOD 8 = 0);	(* alignment constraint (p. 7-2) *)
 		upd.status := {};
 			(* entry 0 always points to ethernet header *)
-		upd.frag[0].dataPhysAdr := Machine.Ensure32BitAddress ((ADDRESSOF(upd.dst[0])-ADDRESSOF(upd.nextPhysAdr)) + upd.physAdr);
+		upd.frag[0].dataPhysAdr := ((ADDRESSOF(upd.dst[0])-ADDRESSOF(upd.nextPhysAdr)) + upd.physAdr)(Machine.Address32);
 		upd.frag[0].dataLen := 14;	(* ethernet header *)
 
 		(* get new empty buffer and attach it to the UPD *)
@@ -587,7 +587,7 @@ BEGIN
 		Machine.TranslateVirtual(ADDRESSOF(buffer.data[0]), LEN(buffer.data), n, phys);
 		ASSERT(n <= 2);
 		FOR i := 1 TO n DO
-			upd.frag[i].dataPhysAdr := Machine.Ensure32BitAddress (phys[i-1].adr); upd.frag[i].dataLen := Machine.Ensure32BitAddress (phys[i-1].size)
+			upd.frag[i].dataPhysAdr := phys[i-1].adr(Machine.Address32); upd.frag[i].dataLen := phys[i-1].size(LONGINT);
 		END;
 		INC(upd.frag[n].dataLen, LONGINT(80000000H)); (* end of buffer marker *)
 	ELSE
@@ -718,7 +718,7 @@ END Install;
 (** Remove all device driver objects. *)
 
 PROCEDURE Remove*;
-VAR table: Plugins.Table; i: LONGINT;
+VAR table: Plugins.Table; i: SIZE;
 BEGIN {EXCLUSIVE}
 	Network.registry.GetAll(table);
 	IF table # NIL THEN
@@ -732,7 +732,7 @@ END Remove;
 (* Request an interrupt from every controller. *)
 
 PROCEDURE Kick*;
-VAR i, base: LONGINT; table: Plugins.Table;
+VAR i: SIZE; base: LONGINT; table: Plugins.Table;
 BEGIN
 	Network.registry.GetAll(table);
 	IF table # NIL THEN
@@ -749,7 +749,7 @@ END Kick;
 (* Dump all registers - may have side effects that influence the device's normal operation *)
 
 PROCEDURE Dump*;
-VAR i, base, win: LONGINT; int: INTEGER; table: Plugins.Table;
+VAR i: SIZE; base, win: LONGINT; int: INTEGER; table: Plugins.Table;
 
 	PROCEDURE Byte(reg: ARRAY OF CHAR; ofs: LONGINT);
 	VAR x: CHAR;

@@ -4,7 +4,7 @@ IMPORT WMWindowManager, Strings, WMGraphics, WMRectangles, Modules, WMDialogs;
 
 TYPE
 	ScribbleWindow = OBJECT (WMWindowManager.BufferWindow);
-	VAR lx, ly : LONGINT;
+	VAR lx, ly : SIZE;
 
 	     PROCEDURE &New*;
 	     BEGIN
@@ -17,7 +17,7 @@ TYPE
 			SetPointerInfo(manager.pointerCrosshair)
 	     END New;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF 0 IN keys THEN canvas.Line(lx, ly, x, y, WMGraphics.Blue, WMGraphics.ModeSrcOverDst);
 				Invalidate(
@@ -27,7 +27,7 @@ TYPE
 			lx := x; ly := y
 		END PointerMove;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			lx := x; ly := y;
 			IF 2 IN keys THEN
@@ -36,7 +36,7 @@ TYPE
 			END
 		END PointerDown;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keySym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keySym : SIZE);
 		VAR res: WORD; filename : ARRAY 128 OF CHAR;
 		BEGIN
 			IF ucs = ORD("s") THEN

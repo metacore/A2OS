@@ -188,7 +188,7 @@ TYPE
 			tree.Release
 		END NodeSelected;
 
-		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WM.DragInfo);
+		PROCEDURE DragDropped*(x, y : SIZE; dragInfo : WM.DragInfo);
 		VAR node : WMTrees.TreeNode;
 			dropTarget : FilesDropTarget;
 			p : ANY;
@@ -213,7 +213,7 @@ TYPE
 
 		(* binary insertion algorithm from "Algorithms and Data Structures" by N. Wirth *)
 		PROCEDURE SortDirs(VAR dir: ARRAY OF TreeData);
-		VAR i, j, m, L, R : LONGINT;
+		VAR i, j, m, L, R : SIZE;
 			x : TreeData;
 			dirName, xName: Strings.String;
 		BEGIN
@@ -234,7 +234,7 @@ TYPE
 		END SortDirs;
 
 		PROCEDURE EnumerateSubDirectories(tree : WMTrees.Tree; node : WMTrees.TreeNode; dir : Strings.String);
-		VAR name, path, filename, mask : Files.FileName; flags : SET; time, date, size : LONGINT;
+		VAR name, path, filename, mask : Files.FileName; flags : SET; time, date : LONGINT; size : Files.Size;
 			dirNode : WMTrees.TreeNode;
 			td : TreeData; has : BOOLEAN;
 			dirArray: POINTER TO ARRAY OF TreeData;
@@ -292,7 +292,7 @@ TYPE
 		VAR list: Files.FileSystemTable;
 			prefixNode : WMTrees.TreeNode;
 			td : TreeData;
-			i : LONGINT;
+			i : SIZE;
 			prefix : Files.Prefix;
 		BEGIN
 			Files.GetList(list);
@@ -316,12 +316,13 @@ TYPE
 	DirEntry* = OBJECT
 	VAR
 		name*, path- : Strings.String;
-		time, date, size*: LONGINT;
+		time, date: LONGINT;
+		size*: Files.Size;
 		flags : SET;
 		visible : BOOLEAN;
 		node* : WMTrees.TreeNode;
 
-		PROCEDURE &Init*(name, path : Strings.String; time, date, size : LONGINT; flags : SET);
+		PROCEDURE &Init*(name, path : Strings.String; time, date : LONGINT; size: Files.Size; flags : SET);
 		BEGIN
 			SELF.name := name;
 			SELF.path := path;
@@ -356,8 +357,8 @@ TYPE
 		enumerator : Files.Enumerator;
 		dir : DirEntries;
 		selection : DirEntries;
-		nfiles, nofRows : LONGINT;
-		px, py : LONGINT;
+		nfiles: SIZE; nofRows : LONGINT;
+		px, py : SIZE;
 		colWidths : WMGrids.Spacings;
 
 		PROCEDURE &Init*;
@@ -401,7 +402,7 @@ TYPE
 
 		PROCEDURE GetSelection*() : DirEntries;
 		VAR selection : DirEntries;
-			l, t, r, b, i, j : LONGINT;
+			l, t, r, b, i, j : SIZE;
 			p : ANY;
 		BEGIN
 			grid.model.Acquire;
@@ -483,8 +484,8 @@ TYPE
 			END;
 		END HandleCommands;
 
-		PROCEDURE ContextMenu(sender : ANY; x, y: LONGINT);
-		VAR wmx, wmy : LONGINT;
+		PROCEDURE ContextMenu(sender : ANY; x, y: SIZE);
+		VAR wmx, wmy : SIZE;
 			curSel : DirEntries;
 			w : SelectionWrapper;
 			sw : StringWrapper;
@@ -549,8 +550,8 @@ TYPE
 
 		PROCEDURE Rename(sender, data : ANY);
 		VAR  d : DirEntry; rename : WMDialogs.MiniStringInput;
-			wmx, wmy: LONGINT; res: WORD;
-			name, op, np : ARRAY FileNameLength (* was 128*) OF CHAR;
+			wmx, wmy: SIZE; res: WORD;
+			name, op, np : ARRAY FileNameLength OF CHAR;
 		BEGIN
 			IF popup # NIL THEN popup.Close; popup := NIL END;
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -579,8 +580,8 @@ TYPE
 		END Rename;
 
 		PROCEDURE Delete(sender, data : ANY);
-		VAR  d : DirEntry;
-			dr, i  : LONGINT; res: WORD;
+		VAR  d : DirEntry; i: SIZE;
+			dr  : LONGINT; res: WORD;
 			dp : Files.FileName;
 			delete, always, never : BOOLEAN;
 		BEGIN
@@ -654,7 +655,7 @@ TYPE
 
 		PROCEDURE Tar(sender, data : ANY);
 		VAR
-			d : DirEntry; i, len : LONGINT;
+			d : DirEntry; i: SIZE; len : SIZE;
 			filename, format, temp : Files.FileName;
 			buf: ARRAY BufSize OF CHAR;
 			arc : Archives.Archive;
@@ -753,13 +754,13 @@ END Open;
 
 		*)
 
-		PROCEDURE MyDragDropped(x, y : LONGINT; dragInfo : WM.DragInfo; VAR handled : BOOLEAN);
+		PROCEDURE MyDragDropped(x, y : SIZE; dragInfo : WM.DragInfo; VAR handled : BOOLEAN);
 		BEGIN
 			handled := TRUE;
 			DragDropped(x, y, dragInfo)
 		END MyDragDropped;
 
-		PROCEDURE DragDropped*(x, y : LONGINT; dragInfo : WM.DragInfo);
+		PROCEDURE DragDropped*(x, y : SIZE; dragInfo : WM.DragInfo);
 		VAR dropTarget : FilesDropTarget;
 		BEGIN
 			NEW(dropTarget, path, Refresh);
@@ -770,7 +771,7 @@ END Open;
 		PROCEDURE MyStartDrag(sender, data : ANY);
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top, i : LONGINT;
+			top : LONGINT; i : SIZE;
 		BEGIN
 			selection := GetSelection();
 			(* render to bitmap *)
@@ -796,7 +797,7 @@ END Open;
 		VAR w : Streams.Writer;
 			f : Files.File;
 			r : Files.Reader;
-			buf: ARRAY BufSize OF CHAR; len: LONGINT;
+			buf: ARRAY BufSize OF CHAR; len: SIZE;
 		BEGIN
 			res := -1;
 			f := Files.Old(local);
@@ -843,7 +844,7 @@ END Open;
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i : LONGINT; res: WORD;
+			i : SIZE; res: WORD;
 			sel : DirEntries;
 			url : ARRAY 1024 OF CHAR;
 			text : Texts.Text;
@@ -986,7 +987,7 @@ END Open;
 		END FillGridRow;
 
 		PROCEDURE PrepareList;
-		VAR i, vis : LONGINT; mask : ARRAY FileNameLength (* was 128*) OF CHAR; s : Strings.String;
+		VAR i : SIZE; vis : LONGINT; mask : ARRAY FileNameLength (* was 128*) OF CHAR; s : Strings.String;
 		BEGIN
 			IF dir = NIL THEN RETURN END;
 			s := SELF.filter;
@@ -994,7 +995,7 @@ END Open;
 			IF s # NIL THEN COPY(s^, mask) END;
 			IF mask = "" THEN
 				FOR i := 0 TO LEN(dir) - 1 DO dir[i].visible := TRUE END;
-				vis := LEN(dir)
+				vis := LEN(dir)(LONGINT);
 			ELSE
 				IF prefixSearch.Get() & ( mask[Strings.Length(mask)] # "*") THEN Strings.Append(mask, "*") END;
 				vis := 0;
@@ -1024,9 +1025,9 @@ END Open;
 
 		PROCEDURE ScanPath;
 		VAR s, pathS : Strings.String;
-			i, l : LONGINT;
-			name, path, filename, mask : Files.FileName; flags : SET; time, date, size : LONGINT;
-			sorted : BOOLEAN;
+			i, l : SIZE;
+			name, path, filename, mask : Files.FileName; flags : SET; time, date : LONGINT;
+			size : Files.Size; sorted : BOOLEAN;
 		BEGIN
 			s := SELF.path;
 			IF s = NIL THEN RETURN END;
@@ -1070,7 +1071,7 @@ END Open;
 			PrepareList
 		END StartNewFilter;
 
-		PROCEDURE GetNofFiles*() : LONGINT;
+		PROCEDURE GetNofFiles*() : SIZE;
 		BEGIN
 			RETURN nfiles
 		END GetNofFiles;
@@ -1078,7 +1079,7 @@ END Open;
 		(* binary insertion algorithm from "Algorithms and Data Structures" by N. Wirth *)
 		PROCEDURE SortDir;
 		VAR
-			i, j, m, L, R : LONGINT;
+			i, j, m, L, R : SIZE;
 			x : DirEntry;
 			dirName, xName: Strings.String;
 			dirFlag, xFlag: SHORTINT;
@@ -1103,7 +1104,7 @@ END Open;
 		(* binary insertion algorithm from "Algorithms and Data Structures" by N. Wirth *)
 		PROCEDURE SortDirDate;
 		VAR
-			i, j, m, L, R : LONGINT;
+			i, j, m, L, R : SIZE;
 			x : DirEntry;
 			dirTime,dirDate:LONGINT;
 			dirFlag, xFlag: SHORTINT;
@@ -1168,7 +1169,7 @@ BEGIN
 END FileExists;
 
 PROCEDURE MakePathString*(VAR s : ARRAY OF CHAR);
-VAR l : LONGINT;
+VAR l : SIZE;
 BEGIN
 	l := Strings.Length(s);
 	IF (l > 1) & (s[l - 1] # ":") & (s[l - 1] # "/") THEN Strings.Append(s, "/") END;

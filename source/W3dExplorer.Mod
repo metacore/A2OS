@@ -16,7 +16,7 @@ TYPE
 
 		world : World.World;
 
-		oldX, oldY : LONGINT;
+		oldX, oldY : SIZE;
 
 		random : Random.Generator;
 		message : Raster.Image;
@@ -64,7 +64,7 @@ TYPE
 			x := world.CreateObject(); ObjectGenerator.Sphere(Matrix.Translation4x4(100, 50, 0), 10, 10, x, 0FAFH); world.AddObject(x);
 		END FillIn;
 
-		PROCEDURE &Init*(w, h : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &Init*(w, h : SIZE; alpha : BOOLEAN);
 		VAR mc : WMGraphics.BufferCanvas;
 		BEGIN
 			Init^(w, h, FALSE);
@@ -118,13 +118,13 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(0,0,img.width, img.height))
 		END Render;
 
-		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
 		BEGIN
 			mouseKeys := (keys * {0, 1, 2});
 			oldX := x; oldY := y;
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y: LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y: SIZE; keys : SET);
 		BEGIN
 			IF mouseKeys * {0} # {} THEN
 				IF mouseKeys * {2} # {} THEN
@@ -138,12 +138,12 @@ TYPE
 			oldX := x; oldY := y
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
 		BEGIN
 			mouseKeys := (keys * {0, 1, 2})
 		END PointerUp;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		BEGIN
 			IF ucs = ORD("0") THEN world.quality := 0; Render END;
 			IF ucs = ORD("1") THEN world.quality := 1; Render END;

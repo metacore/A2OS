@@ -20,8 +20,8 @@ TYPE
 		fullscreenX, fullscreenY, fullscreenW, fullscreenH: LONGINT; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ SetChangeable(c: BOOLEAN); 
 		PROCEDURE ^ HandleChangeable(sender, data: ANY); 
 		PROCEDURE ^ HandleFullScreen(sender, par: ANY); 
@@ -35,10 +35,10 @@ VAR
 	windowList: TFClasses.List; 
 	imgList: POINTER TO ARRAY OF ImageInfo; 
 
-	PROCEDURE ^ GetImage(CONST name: ARRAY OF CHAR; w, h: LONGINT): WMGraphics.Image; 
-	PROCEDURE ^ GetResizedImage(image: WMGraphics.Image; width, height: LONGINT): WMGraphics.Image; 
+	PROCEDURE ^ GetImage(CONST name: ARRAY OF CHAR; w, h: SIZE): WMGraphics.Image; 
+	PROCEDURE ^ GetResizedImage(image: WMGraphics.Image; width, height: SIZE): WMGraphics.Image; 
 	PROCEDURE ^ FindIndex(CONST imageName: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ DefaultPos(VAR x, y, w, h: LONGINT); 
+	PROCEDURE ^ DefaultPos(VAR x, y, w, h: SIZE); 
 	PROCEDURE ^ Rearrange; 
 	PROCEDURE ^ AddBackdropImage*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 

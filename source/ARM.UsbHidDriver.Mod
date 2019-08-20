@@ -1592,7 +1592,7 @@ END InstallDisplayDimensions;
 
 
 PROCEDURE Setup;
-VAR s: ARRAY 32 OF CHAR; p: LONGINT;
+VAR s: ARRAY 32 OF CHAR; p: SIZE;
 BEGIN
 	getDisplayDimensions := DefaultDisplayDimensions;
 	Machine.GetConfig("TouchDelay", s);

@@ -51,7 +51,7 @@ TYPE
 			END;
 		END FocusPrev;
 
-		PROCEDURE KeyPressed*(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE KeyPressed*(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			IF (flags # {}) & (flags - Inputs.Shift = {}) THEN
 				withShift := TRUE;
@@ -356,9 +356,9 @@ TYPE
 		PROCEDURE ContainsStr(CONST filename, content : ARRAY OF CHAR) : BOOLEAN;
 		VAR r : Files.Reader;
 			f : Files.File;
-			d : ARRAY 256 OF LONGINT;
+			d : ARRAY 256 OF SIZE;
 			cb : Strings.String;
-			cpos, i, j, k, m, shift : LONGINT;
+			cpos, i, j, k, m, shift : SIZE;
 		BEGIN
 			m := Strings.Length(content);
 			f := Files.Old(filename);
@@ -394,7 +394,7 @@ TYPE
 		PROCEDURE Match(CONST name : ARRAY OF CHAR);
 		VAR d : WMSystemComponents.DirEntry;
 			p, filename : ARRAY 1024 OF CHAR;
-			l : LONGINT;
+			l : SIZE;
 		BEGIN
 			IF (currentPar.content = "") OR ContainsStr(name, currentPar.content)  THEN
 				Files.SplitPath(name, p, filename);
@@ -408,7 +408,9 @@ TYPE
 		PROCEDURE SearchPath;
 		VAR mask, name : ARRAY 1024 OF CHAR;
 			flags : SET;
-			time, date, size, len : LONGINT;
+			len: SIZE;
+			time, date : LONGINT;
+			size : Files.Size;
 			e : Files.Enumerator;
 		BEGIN
 			COPY(currentPar.path, mask);

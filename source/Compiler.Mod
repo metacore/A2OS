@@ -267,7 +267,7 @@ TYPE
 
 	PROCEDURE GetOptions*(input: Streams.Reader; error:Streams.Writer; diagnostics: Diagnostics.Diagnostics;
 		VAR compilerOptions: CompilerOptions): BOOLEAN;
-	VAR options: Options.Options;  name: ARRAY 256 OF CHAR; result: BOOLEAN; position: LONGINT;
+	VAR options: Options.Options;  name: ARRAY 256 OF CHAR; result: BOOLEAN; position: Streams.Position;
 	defaults: Streams.Reader;
 		parsed: BOOLEAN;
 

@@ -157,7 +157,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ CheckClickHandler; 
 		PROCEDURE ^ ExecuteClickHandler; 
-		PROCEDURE ^ ScaleFont*(height: LONGINT; percent: LONGINT); 
+		PROCEDURE ^ ScaleFont*(height: SIZE; percent: WORD); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
 		PROCEDURE ^ ChangeModel(value: BOOLEAN); 
@@ -170,14 +170,14 @@ TYPE
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ Down; 
 		PROCEDURE ^ Up; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ SetCaption*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ IsHitHorizontal(x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ IsHitVertical(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHitHorizontal(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHitVertical(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ GetHorizontalImages(VAR a, b, c: WMGraphics.Image); 
 		PROCEDURE ^ GetVerticalImages(VAR a, b, c: WMGraphics.Image); 
 		PROCEDURE ^ GetDecorationImage(name: String; CONST suffix: ARRAY OF CHAR; VAR image: WMGraphics.Image); 
@@ -187,7 +187,7 @@ TYPE
 		PROCEDURE ^ DrawDecoBackground(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawHorizontalBackground(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawVerticalBackground(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; VAR keyCode: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keyCode: SIZE); 
 		PROCEDURE ^ Click*(sender, par: ANY); 
 	END Button; 
 
@@ -197,9 +197,9 @@ TYPE
 
 	Scrollbar* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		min-, max-, pos-, pageSize-, width-: WMProperties.Int32Property; 
+		min-, max-, pos-, pageSize-, width-: WMProperties.SizeProperty; 
 		vertical-: WMProperties.BooleanProperty; 
-		minTrackerSize-: WMProperties.Int32Property; 
+		minTrackerSize-: WMProperties.SizeProperty; 
 		clDefault-, clHover-, clPressed-: WMProperties.ColorProperty; 
 		clBtnDefault-, clBtnHover-, clBtnPressed-: WMProperties.ColorProperty; 
 		effect3D-: WMProperties.Int32Property; 
@@ -218,21 +218,21 @@ TYPE
 		areas: ARRAY 5 OF Area; 
 		down, pressed, hover: SHORTINT; 
 		timer: InternalTimer; 
-		ts, tp, tDownX, tDownY: LONGINT; 
+		ts, tp, tDownX, tDownY: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
-		PROCEDURE ^ ChangeModel(value: LONGINT); 
+		PROCEDURE ^ ChangeModel(value: SIZE); 
 		PROCEDURE ^ TimerCallback(sender, data: ANY); 
 		PROCEDURE ^ CheckRepeating(start: BOOLEAN); 
 		PROCEDURE ^ Down(area: SHORTINT); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ FindArea(x, y: LONGINT): SHORTINT; 
-		PROCEDURE ^ TrackerMove(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ FindArea(x, y: SIZE): SHORTINT; 
+		PROCEDURE ^ TrackerMove(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ RecacheImages; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
@@ -256,7 +256,7 @@ TYPE
 
 	Slider* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		min-, max-, pos-, pageSize-, trackerSize-: WMProperties.Int32Property; 
+		min-, max-, pos-, pageSize-, trackerSize-: WMProperties.SizeProperty; 
 		vertical-: WMProperties.BooleanProperty; 
 		clDefault-, clHover-, clPressed-, clBar: WMProperties.ColorProperty; 
 		useBgBitmaps-, repeatBgBitmap-: WMProperties.BooleanProperty; 
@@ -265,15 +265,15 @@ TYPE
 		hTrackerDefaultName-, hTrackerHoverName-, hTrackerPressedName-, vTrackerDefaultName-, vTrackerHoverName-, vTrackerPressedName-: WMProperties.StringProperty; 
 		onPositionChanged-: WMEvents.EventSource; 
 		minusPage, plusPage, tracker: Button; 
-		ts, tp, lx, ly: LONGINT; 
+		ts, tp, lx, ly: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ LinkChanged*(sender, link: ANY); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ TrackerPointerDown(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ TrackerPointerUp(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ TrackerPointerDown(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ TrackerPointerUp(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ChangeModel; 
-		PROCEDURE ^ TrackerPointerMove(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ TrackerPointerMove(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ DecPos*(sender, par: ANY); 
@@ -290,13 +290,13 @@ TYPE
 	VAR 
 		clDefault-: WMProperties.ColorProperty; 
 		isFlat-: WMProperties.BooleanProperty; 
-		dnx, dny: LONGINT; 
+		dnx, dny: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Resizer; 
 
@@ -331,8 +331,8 @@ TYPE
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ Click*(sender, par: ANY); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -356,11 +356,11 @@ TYPE
 		imgName-: WMProperties.StringProperty; 
 		img-: WMGraphics.Image; 
 		vScrollbar, hScrollbar: Scrollbar; 
-		dx, dy: LONGINT; 
+		dx, dy: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Resized*; 
-		PROCEDURE ^ GetOffsets*(VAR x, y: LONGINT); 
+		PROCEDURE ^ GetOffsets*(VAR x, y: SIZE); 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
@@ -384,6 +384,7 @@ VAR
 	BooleanPrototype: WMProperties.BooleanProperty; 
 	StringPrototype: WMProperties.StringProperty; 
 	Int32Prototype: WMProperties.Int32Property; 
+	SizePrototype: WMProperties.SizeProperty; 
 	RectanglePrototype: WMProperties.RectangleProperty; 
 	PrototypeBlinking*: WMProperties.BooleanProperty; 
 	PrototypeBBounds*: WMProperties.RectangleProperty; 
@@ -397,7 +398,7 @@ VAR
 	PrototypeUseDeco*: WMProperties.BooleanProperty; 
 	PrototypeDecoDefaultName*, PrototypeDecoHoverName*, PrototypeDecoPressedName*: WMProperties.StringProperty; 
 	PrototypeSvertical*: WMProperties.BooleanProperty; 
-	PrototypeSmin*, PrototypeSmax*, PrototypeSpos*, PrototypeSpageSize*, PrototypeTrackerSize*, PrototypeSWidth*, PrototypeSMinTrackerSize*: WMProperties.Int32Property; 
+	PrototypeSmin*, PrototypeSmax*, PrototypeSpos*, PrototypeSpageSize*, PrototypeTrackerSize*, PrototypeSWidth*, PrototypeSMinTrackerSize*: WMProperties.SizeProperty; 
 	PrototypeSUseArrowImages*, PrototypeSUseTrackerImages*, PrototypeSRepeatMiddleBitmap*: WMProperties.BooleanProperty; 
 	PrototypeSUseBgBitmaps*, PrototypeSRepeateBgBitmap*: WMProperties.BooleanProperty; 
 	PrototypeSClDefault*, PrototypeSClHover*, PrototypeSClPressed*, PrototypeSClBtnDefault*, PrototypeSClBtnHover*, PrototypeSClBtnPressed*: WMProperties.ColorProperty; 

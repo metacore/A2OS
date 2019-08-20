@@ -146,9 +146,9 @@ TYPE
 			inner, outer: WMRectangles.Rectangle;
 			d, radiusSqr, s: Real;
 
-			PROCEDURE DrawLeftRight(x, y, yend: LONGINT; left: BOOLEAN);
+			PROCEDURE DrawLeftRight(x, y, yend: SIZE; left: BOOLEAN);
 			VAR
-				xx, incx, k, m: LONGINT;
+				xx, incx, k, m: SIZE;
 				v, v0, v1: Real;
 			BEGIN
 				IF left THEN incx := -1; ELSE incx := 1; END;
@@ -177,9 +177,9 @@ TYPE
 				END;
 			END DrawLeftRight;
 
-			PROCEDURE DrawTopBottom(x, y, xend: LONGINT; top: BOOLEAN);
+			PROCEDURE DrawTopBottom(x, y, xend: SIZE; top: BOOLEAN);
 			VAR
-				yy, incy, k, m: LONGINT;
+				yy, incy, k, m: SIZE;
 				v, v0, v1: Real;
 			BEGIN
 				IF top THEN incy := -1; ELSE incy := 1; END;

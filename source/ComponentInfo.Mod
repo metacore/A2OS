@@ -11,9 +11,9 @@ TYPE
 
 	Statistics = OBJECT
 	VAR
-		nofComponents, nofVisualComponents, nofOtherElements, nofEventSources, nofEventListeners : LONGINT;
+		nofComponents, nofVisualComponents, nofOtherElements, nofEventSources, nofEventListeners : SIZE;
 		nofBooleanProperties, nofInt32Properties, nofColorProperties, nofRectangleProperties,
-		nofStringProperties, nofOtherProperties : LONGINT;
+		nofStringProperties, nofOtherProperties : SIZE;
 
 		PROCEDURE &Reset;
 		BEGIN
@@ -64,7 +64,7 @@ TYPE
 PROCEDURE DumpComponent*(obj : ANY; out : Streams.Writer);
 
 	PROCEDURE DumpProperties(pl : WMProperties.PropertyList);
-	VAR i : LONGINT; pa : WMProperties.PropertyArray; p :WMProperties.Property; s : Strings.String;
+	VAR i : SIZE; pa : WMProperties.PropertyArray; p :WMProperties.Property; s : Strings.String;
 		st : Streams.StringWriter;
 		value : ARRAY 100 OF CHAR;
 	BEGIN
@@ -83,7 +83,7 @@ PROCEDURE DumpComponent*(obj : ANY; out : Streams.Writer);
 	END DumpProperties;
 
 	PROCEDURE DumpEvents(el : WMEvents.EventSourceList);
-	VAR i : LONGINT; ea : WMEvents.EventSourceArray; e : WMEvents.EventSource; s : Strings.String;
+	VAR i : SIZE; ea : WMEvents.EventSourceArray; e : WMEvents.EventSource; s : Strings.String;
 	BEGIN
 		ea := el.Enumerate();
 		FOR i := 0 TO LEN(ea) - 1 DO
@@ -98,7 +98,7 @@ PROCEDURE DumpComponent*(obj : ANY; out : Streams.Writer);
 	END DumpEvents;
 
 	PROCEDURE DumpListeners(el : WMEvents.EventListenerList);
-	VAR i : LONGINT; ea : WMEvents.EventListenerArray; e : WMEvents.EventListenerInfo; s : Strings.String;
+	VAR i : SIZE; ea : WMEvents.EventListenerArray; e : WMEvents.EventListenerInfo; s : Strings.String;
 	BEGIN
 		ea := el.Enumerate();
 		FOR i := 0 TO LEN(ea)- 1 DO
@@ -140,7 +140,7 @@ PROCEDURE GatherStatistics*(component : XML.Element; stats : Statistics);
 		properties : WMProperties.PropertyArray;
 		enum : XMLObjects.Enumerator;
 		ptr : ANY;
-		i : LONGINT;
+		i : SIZE;
 	BEGIN
 		ASSERT(element # NIL);
 		IF (element IS WMComponents.Component) OR (element IS WMComponents.VisualComponent) THEN
@@ -189,7 +189,7 @@ VAR
 	windowTitle : Strings.String;
 	manager : WMWindowManager.WindowManager;
 	mask : ARRAY 128 OF CHAR;
-	nofWindows, nofMatches,  i : LONGINT;
+	nofWindows, nofMatches,  i : SIZE;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(mask);
 	FOR i := 0 TO LEN(windows)-1 DO windows[i] := NIL; END;
@@ -234,7 +234,7 @@ PROCEDURE ShowPrototypes*(context : Commands.Context);
 VAR
 	array : WMComponents.ListArray;
 	propertyArray : WMProperties.PropertyArray;
-	nofPrototypes, i, j : LONGINT;
+	nofPrototypes, i, j : SIZE;
 	string : Strings.String;
 BEGIN
 	nofPrototypes := 0;

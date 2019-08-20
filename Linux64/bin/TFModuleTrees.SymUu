@@ -8,7 +8,7 @@ CONST
 TYPE 
 	Reference = POINTER TO RECORD 
 		next: Reference; 
-		fp, tp, np: LONGINT; 
+		fp, tp, np: SIZE; 
 		no: TS.NamedObject; 
 	END; 
 
@@ -16,7 +16,7 @@ TYPE
 
 	Comment = POINTER TO RECORD 
 		next: Comment; 
-		fp, tp: LONGINT; 
+		fp, tp: SIZE; 
 		h: WMTextView.Highlight; 
 	END; 
 
@@ -28,7 +28,7 @@ TYPE
 	TextInfo = OBJECT (PETTrees.TreeNode)
 	VAR 
 		next: TextInfo; 
-		fp, tp: LONGINT; 
+		fp, tp: SIZE; 
 		name: Strings.String; 
 		def: TS.NamedObject; 
 	END TextInfo; 
@@ -43,12 +43,12 @@ TYPE
 		scope: TS.Scope; 
 		firstLevel: BOOLEAN; 
 		destinationText: Texts.Text; 
-		startPos, cursorPos: LONGINT; 
+		startPos, cursorPos: SIZE; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^  & New*(text: Texts.Text; startPos, cursorPos, x, y: LONGINT; CONST prefix: ARRAY OF CHAR; scope: TS.Scope; first: BOOLEAN); 
-		PROCEDURE ^ ListKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
-		PROCEDURE ^ EditKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^  & New*(text: Texts.Text; startPos, cursorPos: SIZE; x, y: SIZE; CONST prefix: ARRAY OF CHAR; scope: TS.Scope; first: BOOLEAN); 
+		PROCEDURE ^ ListKeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
+		PROCEDURE ^ EditKeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ScheduleHide; 
 		PROCEDURE ^ WriteSelected; 
 		PROCEDURE ^ ClearSelection; 
@@ -84,7 +84,7 @@ TYPE
 		PROCEDURE ^ SetEditor*(e: WMEditors.Editor); 
 		PROCEDURE ^ BrowseToDefinition*(sender, data: ANY); 
 		PROCEDURE ^ Complete*(sender, data: ANY); 
-		PROCEDURE ^ ContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ ContextMenu(sender: ANY; x, y: SIZE); 
 		PROCEDURE ^ Refresh(rootNode: WMTrees.TreeNode); 
 		PROCEDURE ^ AddNodes*(parent: PETTrees.TreeNode; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
 		PROCEDURE ^ HighlightReferences(no: TS.NamedObject); 
@@ -109,7 +109,7 @@ TYPE
 		PROCEDURE ^ GetNextNode(this: WMTrees.TreeNode; ignoreChildren: BOOLEAN): WMTrees.TreeNode; 
 		PROCEDURE ^ SelectNodeByNamedObject(no: TS.NamedObject; gotoDef: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ FindScopeByPos(pos: LONGINT); 
-		PROCEDURE ^ FindIdentByPos(pos: LONGINT); 
+		PROCEDURE ^ FindIdentByPos(pos: SIZE); 
 		PROCEDURE ^ HandleMacro*(sender, data: ANY); 
 		PROCEDURE ^ Follow(sender, data: ANY); 
 		PROCEDURE ^ AddComments(c: TS.Comments); 

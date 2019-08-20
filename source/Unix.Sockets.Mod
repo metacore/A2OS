@@ -1,5 +1,3 @@
-
-
 MODULE Sockets;	(** AUTHOR "G.F.";  PURPOSE "Interface to Unix sockets" *)
 
 (* derived from NetBase.Mod,  BD / 13.2.96 *)
@@ -17,7 +15,6 @@ CONST
 
 	(*listen *)
 	Backlog = 5;		(* max number of pending connections *)
-
 
 TYPE
 	SocketAdr* = POINTER TO RECORD
@@ -41,8 +38,8 @@ TYPE
 		buf: ARRAY 64 OF CHAR
 	END;
 
-
 	SocketOption = RECORD END;
+	Length = WORD;
 
 	Linger = RECORD (SocketOption)
 		onoff	: LONGINT;
@@ -53,31 +50,29 @@ TYPE
 		onoff	: LONGINT
 	END;
 
-
 VAR
-	socket		: PROCEDURE {C} ( af, typ, protocol: LONGINT ): LONGINT;
-	setsockopt	: PROCEDURE {C} ( s: LONGINT; level, optname: LONGINT; VAR opt: SocketOption; optlen: LONGINT): LONGINT;
-	accept		: PROCEDURE {C} ( s: LONGINT; adrPtr: ADDRESS; VAR adrlen: LONGINT ): LONGINT;
-	bind		: PROCEDURE {C} ( s: LONGINT; adr: SocketAdr; adrlen: LONGINT ): LONGINT;
-	connect		: PROCEDURE {C} ( s: LONGINT; adr: SocketAdr; adrlen: LONGINT ): LONGINT;
-	listen		: PROCEDURE {C} ( s: LONGINT; backlog: LONGINT ): LONGINT;
-	recv		: PROCEDURE {C} ( s: LONGINT; buf: ADDRESS; len, flags: LONGINT ): LONGINT;
-	send		: PROCEDURE {C} ( s: LONGINT; buf: ADDRESS; len, flags: LONGINT ): LONGINT;
-	recvfrom	: PROCEDURE {C} ( s: LONGINT; buf: ADDRESS; len, flags: LONGINT; from: NameBuf; VAR flen: LONGINT ): LONGINT;
-	sendto		: PROCEDURE {C} ( s: LONGINT; buf: ADDRESS; len, flags: LONGINT; to: SocketAdr; tolen: LONGINT ): LONGINT;
-	shutdown	: PROCEDURE {C} ( s: LONGINT; how: LONGINT );
+	socket		: PROCEDURE {C} ( af, typ, protocol: WORD ): WORD;
+	setsockopt	: PROCEDURE {C} ( s: WORD; level, optname: WORD; VAR opt: SocketOption; optlen: Length): WORD;
+	accept		: PROCEDURE {C} ( s: WORD; adrPtr: ADDRESS; VAR adrlen: Length ): WORD;
+	bind		: PROCEDURE {C} ( s: WORD; adr: SocketAdr; adrlen: Length ): WORD;
+	connect		: PROCEDURE {C} ( s: WORD; adr: SocketAdr; adrlen: Length ): WORD;
+	listen		: PROCEDURE {C} ( s: WORD; backlog: WORD ): WORD;
+	recv		: PROCEDURE {C} ( s: WORD; buf: ADDRESS; len: SIZE; flags: WORD ): SIZE;
+	send		: PROCEDURE {C} ( s: WORD; buf: ADDRESS; len: SIZE; flags: WORD ): SIZE;
+	recvfrom	: PROCEDURE {C} ( s: WORD; buf: ADDRESS; len: SIZE; flags: WORD; from: NameBuf; VAR flen: Length ): SIZE;
+	sendto		: PROCEDURE {C} ( s: WORD; buf: ADDRESS; len: SIZE; flags: WORD; to: SocketAdr; tolen: Length ): SIZE;
+	shutdown	: PROCEDURE {C} ( s: WORD; how: WORD ): WORD;
 
-	getpeername	: PROCEDURE {C} ( s: LONGINT; adr: NameBuf; VAR adrlen: LONGINT ): LONGINT;
-	getsockname	: PROCEDURE {C} ( s: LONGINT; adr: NameBuf; VAR adrlen: LONGINT ): LONGINT;
+	getpeername	: PROCEDURE {C} ( s: WORD; adr: NameBuf; VAR adrlen: Length ): WORD;
+	getsockname	: PROCEDURE {C} ( s: WORD; adr: NameBuf; VAR adrlen: Length ): WORD;
 
-	htonl	: PROCEDURE {C} ( hostlong	: LONGINT ): LONGINT;
-	htons	: PROCEDURE {C} ( hostshort	: LONGINT ): LONGINT;
-	ntohl	: PROCEDURE {C} ( netlong		: LONGINT ): LONGINT;
-	ntohs	: PROCEDURE {C} ( netshort	: LONGINT ): LONGINT;
-
+	htonl	: PROCEDURE {C} ( hostlong	: UNSIGNED32 ): UNSIGNED32;
+	htons	: PROCEDURE {C} ( hostshort	: UNSIGNED16 ): UNSIGNED16;
+	ntohl	: PROCEDURE {C} ( netlong	: UNSIGNED32 ): UNSIGNED32;
+	ntohs	: PROCEDURE {C} ( netshort	: UNSIGNED16 ): UNSIGNED16;
 
 	PROCEDURE NewSocketAdr*( ip: IP.Adr; port: LONGINT ): SocketAdr;
-	VAR sadr4: SocketAdrV4;  sadr6: SocketAdrV6; i: LONGINT;
+	VAR sadr4: SocketAdrV4;  sadr6: SocketAdrV6; i: SIZE;
 	BEGIN
 		CASE ip.usedProtocol OF
 		| -1:
@@ -107,7 +102,7 @@ VAR
 	END NewSocketAdr;
 
 	PROCEDURE SockAdrToIPAdr*( sadr: SocketAdr ): IP.Adr;
-	VAR ip: IP.Adr;  i: LONGINT;
+	VAR ip: IP.Adr;  i: SIZE;
 	BEGIN
 		IF sadr IS SocketAdrV4 THEN
 			ip.usedProtocol := IP.IPv4;
@@ -131,7 +126,7 @@ VAR
 		RETURN port
 	END GetPortNumber;
 
-	PROCEDURE BufToSocketAdr( CONST buf: ARRAY OF CHAR; len: LONGINT ): SocketAdr;
+	PROCEDURE BufToSocketAdr( CONST buf: ARRAY OF CHAR; len: WORD ): SocketAdr;
 	VAR adr4: SocketAdrV4; adr6: SocketAdrV6;
 	BEGIN
 		IF len = Unix.SockAddrSizeV4 THEN
@@ -145,8 +140,8 @@ VAR
 		END
 	END BufToSocketAdr;
 
-	PROCEDURE Accept*( s: LONGINT ): LONGINT;
-	VAR len, err: LONGINT; new: LONGINT;
+	PROCEDURE Accept*( s: WORD ): WORD;
+	VAR len: Length; err, new: WORD;
 	BEGIN
 		len := 0;
 		REPEAT
@@ -157,23 +152,22 @@ VAR
 		RETURN new
 	END Accept;
 
-	PROCEDURE Bind*( s: LONGINT; addr: SocketAdr): BOOLEAN;
-	VAR err, len: LONGINT;
+	PROCEDURE Bind*( s: WORD; addr: SocketAdr): BOOLEAN;
+	VAR err: WORD; len: Length;
 	BEGIN
 		IF addr.family = Unix.AFINET THEN  len := Unix.SockAddrSizeV4  ELSE  len := Unix.SockAddrSizeV6  END;
 		err:= bind( s, addr, len );
 		RETURN err = 0
 	END Bind;
 
-	PROCEDURE Close*( s: LONGINT );
-	VAR err: LONGINT;
+	PROCEDURE Close*( s: WORD );
 	BEGIN
-		shutdown( s, Unix.ShutRDWR );
-		err := Unix.close( s );
+		IGNORE shutdown( s, Unix.ShutRDWR );
+		IGNORE Unix.close( s );
 	END Close;
 
-	PROCEDURE Connect*( s: LONGINT; addr: SocketAdr ): BOOLEAN;
-	VAR err, len: LONGINT;
+	PROCEDURE Connect*( s: WORD; addr: SocketAdr ): BOOLEAN;
+	VAR err: WORD; len: Length;
 	BEGIN
 		IF addr.family = Unix.AFINET THEN  len := Unix.SockAddrSizeV4  ELSE  len := Unix.SockAddrSizeV6  END;
 		err:= connect( s, addr, len );
@@ -186,8 +180,8 @@ VAR
 		RETURN err = 0
 	END Connect;
 
-	PROCEDURE GetSockName*( s: LONGINT ): SocketAdr;
-	VAR len, err: LONGINT; buf: NameBuf;
+	PROCEDURE GetSockName*( s: WORD ): SocketAdr;
+	VAR len: Length; err: WORD; buf: NameBuf;
 	BEGIN
 		NEW( buf );  len := 64;
 		err := getsockname( s, buf, len );
@@ -199,9 +193,8 @@ VAR
 		END
 	END GetSockName;
 
-
-	PROCEDURE GetPeerName*( s: LONGINT ): SocketAdr;
-	VAR err, len: LONGINT; buf: NameBuf;
+	PROCEDURE GetPeerName*( s: WORD ): SocketAdr;
+	VAR err: WORD; len: Length; buf: NameBuf;
 	BEGIN
 		NEW( buf );  len := 64;
 		err:= getpeername( s, buf, len );
@@ -213,15 +206,15 @@ VAR
 		END
 	END GetPeerName;
 
-	PROCEDURE Listen*( s: LONGINT ): BOOLEAN;
-	VAR err: LONGINT;
+	PROCEDURE Listen*( s: WORD ): BOOLEAN;
+	VAR err: WORD;
 	BEGIN
 		err := listen( s, Backlog );
 		RETURN err = 0
 	END Listen;
 
-	PROCEDURE Recv*( s: LONGINT; VAR buf: ARRAY OF CHAR; pos: LONGINT; VAR len: LONGINT; flags: LONGINT ): BOOLEAN;
-	VAR res, err: LONGINT;
+	PROCEDURE Recv*( s: WORD; VAR buf: ARRAY OF CHAR; pos: SIZE; VAR len: SIZE; flags: WORD ): BOOLEAN;
+	VAR res: SIZE; err: WORD;
 	BEGIN
 		REPEAT
 			res := recv( s, ADDRESSOF( buf[pos] ), len, flags );
@@ -235,8 +228,8 @@ VAR
 		END
 	END Recv;
 
-	PROCEDURE Send*( s: LONGINT; CONST buf: ARRAY OF CHAR; pos: LONGINT; VAR len: LONGINT ): BOOLEAN;
-	VAR err: LONGINT;
+	PROCEDURE Send*( s: WORD; CONST buf: ARRAY OF CHAR; pos: SIZE; VAR len: SIZE ): BOOLEAN;
+	VAR err: SIZE;
 	BEGIN
 		ASSERT( LEN(buf)-pos >= len );
 		err := send( s, ADDRESSOF( buf[pos] ), len, 0 );
@@ -248,11 +241,9 @@ VAR
 		END
 	END Send;
 
-
-
-	PROCEDURE RecvFrom*( s: LONGINT; VAR from: SocketAdr;
-						    VAR buf: ARRAY OF CHAR; pos: LONGINT;  VAR len: LONGINT ): BOOLEAN;
-	VAR res, err, size: LONGINT; nbuf: NameBuf;
+	PROCEDURE RecvFrom*( s: WORD; VAR from: SocketAdr;
+						VAR buf: ARRAY OF CHAR; pos: SIZE;  VAR len: SIZE ): BOOLEAN;
+	VAR res: SIZE; err, size: WORD; nbuf: NameBuf;
 	BEGIN
 		NEW( nbuf ); size := 64;
 		REPEAT
@@ -268,8 +259,8 @@ VAR
 		END
 	END RecvFrom;
 
-	PROCEDURE SendTo*( s: LONGINT;  dest: SocketAdr;  CONST buf: ARRAY OF CHAR;  pos, len: LONGINT ): BOOLEAN;
-	VAR err, size: LONGINT;
+	PROCEDURE SendTo*( s: WORD;  dest: SocketAdr;  CONST buf: ARRAY OF CHAR;  pos, len: SIZE ): BOOLEAN;
+	VAR err: SIZE; size: Length;
 	BEGIN
 		ASSERT( LEN(buf) - pos >= len );
 		IF dest.family = Unix.AFINET THEN  size := Unix.SockAddrSizeV4  ELSE  size := Unix.SockAddrSizeV6  END;
@@ -282,15 +273,15 @@ VAR
 		END
 	END SendTo;
 
-	PROCEDURE Socket* ( af, typ, protocol: LONGINT ): LONGINT;
-	VAR s: LONGINT;
+	PROCEDURE Socket* ( af, typ, protocol: WORD ): WORD;
+	VAR s: WORD;
 	BEGIN
 		s := socket( af, typ, protocol );
 		RETURN s
 	END Socket;
 
-	PROCEDURE Available*( s: LONGINT ): LONGINT;
-	VAR available, err: LONGINT;
+	PROCEDURE Available*( s: WORD ): LONGINT;
+	VAR available, err: WORD;
 	BEGIN
 		available := 0;
 		err := Unix.ioctl( s, Unix.FioNRead, ADDRESSOF( available ) );
@@ -302,12 +293,12 @@ VAR
 		END
 	END Available;
 
-	PROCEDURE Requested*( s: LONGINT ): BOOLEAN;
+	PROCEDURE Requested*( s: WORD ): BOOLEAN;
 	CONST
 		SLen = Unix.FdSetLen;
 		SetBits = SIZEOF( SET32 ) * 8;
 	VAR
-		res, i: LONGINT;
+		res, i: WORD;
 		readfds: Unix.FdSet;
 		timeout: Unix.Timeval;
 	BEGIN
@@ -318,13 +309,12 @@ VAR
 		RETURN res > 0
 	END Requested;
 
-
-	PROCEDURE AwaitPacket*( s: LONGINT; ms: LONGINT ): BOOLEAN;
+	PROCEDURE AwaitPacket*( s: WORD; ms: LONGINT ): BOOLEAN;
 	CONST
 		SLen = Unix.FdSetLen;
 		SetBits = SIZEOF( SET32 ) * 8;
 	VAR
-		res, err, i: LONGINT;
+		res, err, i: WORD;
 		readfds: Unix.FdSet;
 		timeout: Unix.Timeval;
 	BEGIN
@@ -339,11 +329,10 @@ VAR
 		RETURN res > 0
 	END AwaitPacket;
 
-
-	PROCEDURE SetLinger* ( s: LONGINT ): BOOLEAN;
+	PROCEDURE SetLinger* ( s: WORD ): BOOLEAN;
 	VAR
 		linger: Linger;
-		err: LONGINT;
+		err: WORD;
 	BEGIN
 		linger.onoff := 1;  linger.linger := 1;
 		err := setsockopt( s, Unix.SoLSocket, Unix.SoLinger, linger, SIZE OF Linger);
@@ -351,10 +340,10 @@ VAR
 		RETURN err = 0
 	END SetLinger;
 
-	PROCEDURE KeepAlive* ( s: LONGINT; enable: BOOLEAN ): BOOLEAN;
+	PROCEDURE KeepAlive* ( s: WORD; enable: BOOLEAN ): BOOLEAN;
 	VAR
 		opt: Switch;
-		err: LONGINT;
+		err: WORD;
 	BEGIN
 		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;
 		err := setsockopt( s, Unix.SoLSocket, Unix.SoKeepAlive, opt, SIZE OF Switch );
@@ -362,11 +351,10 @@ VAR
 		RETURN err = 0
 	END KeepAlive;
 
-
-	PROCEDURE NoDelay* ( s: LONGINT; enable: BOOLEAN ): BOOLEAN;
+	PROCEDURE NoDelay* ( s: WORD; enable: BOOLEAN ): BOOLEAN;
 	VAR
 		opt: Switch;
-		err: LONGINT;
+		err: WORD;
 	BEGIN
 		IF enable THEN  opt.onoff := 1  ELSE  opt.onoff := 0  END;
 		err := setsockopt( s, Unix.IpProtoTCP, Unix.SoNoDelay, opt, SIZE OF Switch );
@@ -374,27 +362,25 @@ VAR
 		RETURN err = 0
 	END NoDelay;
 
-
 	PROCEDURE NetToInt* (x: INTEGER): INTEGER;
 	BEGIN
-		RETURN SHORT(ntohs(LONG(x)))
+		RETURN INTEGER(ntohs(x))
 	END NetToInt;
 
 	PROCEDURE IntToNet* (x: INTEGER): INTEGER;
 	BEGIN
-		RETURN SHORT(htons(LONG(x)))
+		RETURN INTEGER(htons(x))
 	END IntToNet;
 
 	PROCEDURE NetToLInt* (x: LONGINT): LONGINT;
 	BEGIN
-		RETURN ntohl(x)
+		RETURN LONGINT(ntohl(x))
 	END NetToLInt;
 
 	PROCEDURE LIntToNet* (x: LONGINT): LONGINT;
 	BEGIN
-		RETURN htonl(x)
+		RETURN LONGINT(htonl(x))
 	END LIntToNet;
-
 
 	PROCEDURE Init;
 	VAR slib: ADDRESS;

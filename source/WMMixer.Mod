@@ -87,7 +87,7 @@ TYPE
 		PROCEDURE VolChanged(sender, data : ANY);
 		BEGIN
 			IF channel # NIL THEN
-				channel.SetVolume(255 - value.pos.Get())
+				channel.SetVolume(WORD (255 - value.pos.Get()))
 			END
 		END VolChanged;
 

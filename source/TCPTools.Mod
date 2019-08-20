@@ -11,7 +11,7 @@ PROCEDURE SendFile*(context : Commands.Context); (** hostname port filename ~ *)
 VAR
 	hostname, adrStr : ARRAY 256 OF CHAR; ipAdr : IP.Adr; port: LONGINT; res: WORD;
 	filename : Files.FileName; file : Files.File; reader : Files.Reader;
-	offset, len : LONGINT;
+	offset: LONGINT; len : SIZE;
 	buffer : POINTER TO ARRAY OF CHAR;
 	connection : TCP.Connection;
 	writer : Streams.Writer;

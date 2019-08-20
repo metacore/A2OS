@@ -135,8 +135,8 @@ TYPE
 		PROCEDURE ^ CreateAlias*(ov: Variable; type: Struct; VAR res: WORD); 
 		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: LONGINT; info: ANY; VAR res: WORD); 
 		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ CreateHiddenVarName*(VAR name: StringPool.Index); 
-		PROCEDURE ^ CreateAwaitProcName*(VAR name: StringPool.Index; count: LONGINT); 
+		PROCEDURE ^ CreateHiddenVarName*(VAR name: StringIndex); 
+		PROCEDURE ^ CreateAwaitProcName*(VAR name: StringIndex; count: LONGINT); 
 		PROCEDURE ^ FindHiddenVar*(pos: LONGINT; info: ANY): Variable; 
 	END Scope; 
 
@@ -345,7 +345,7 @@ TYPE
 
 	ImporterPlugin* = PROCEDURE (self: Module; VAR new: Module; name: StringIndex); 
 VAR 
-	BodyName-, SelfName-, Anonymous-, PtrReturnType-: LONGINT; 
+	BodyName-, SelfName-, Anonymous-, PtrReturnType-: StringIndex; 
 	AWait, ANoWait: LONGINT; 
 	Byte-, Bool-, Char8-, Char16-, Char32-: Struct; 
 	Int8-, Int16-, Int32-, Int64-, Float32-, Float64-: Struct; 
@@ -393,9 +393,9 @@ VAR
 	PROCEDURE ^ IsVisible(vis: SET; current, search: Scope; localsearch: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ Find*(current, search: Scope; name: StringIndex; mode: SHORTINT; mark: BOOLEAN): Symbol; 
 	PROCEDURE ^ FindIndexer*(scope: RecScope; name: StringIndex): Method; 
-	PROCEDURE ^ FindOperator*(current, search: Scope; parents: BOOLEAN; name: StringIndex; CONST pars: ARRAY OF Struct; parCount, pos: LONGINT): Proc; 
-	PROCEDURE ^ PrintString*(s: StringPool.Index); 
-	PROCEDURE ^ Distance(CONST pars: ARRAY OF Struct; param: Parameter; parCount: LONGINT): LONGINT; 
+	PROCEDURE ^ FindOperator*(current, search: Scope; parents: BOOLEAN; name: StringIndex; CONST pars: ARRAY OF Struct; parCount: SIZE; pos: LONGINT): Proc; 
+	PROCEDURE ^ PrintString*(s: StringIndex); 
+	PROCEDURE ^ Distance(CONST pars: ARRAY OF Struct; param: Parameter; parCount: SIZE): LONGINT; 
 	PROCEDURE ^ FindProcedure*(current, search: Scope; name: StringIndex; parCount: LONGINT; CONST pars: ARRAY OF Struct; identicSignature, mark: BOOLEAN): Proc; 
 	PROCEDURE ^ FindSameSignature*(search: Scope; name: StringIndex; par: Parameter; identic: BOOLEAN): Proc; 
 	PROCEDURE ^ CheckInterfaceImpl(rec, int: Record; VAR res: WORD); 
@@ -441,10 +441,10 @@ VAR
 	PROCEDURE ^ InitType*(t: Type; name: StringIndex; vis: SET; type: Struct); 
 	PROCEDURE ^ NewValue*(name: StringIndex; vis: SET; c: Const): Value; 
 	PROCEDURE ^ CheckVar(v: Variable; allowedArray: SET; allowedEnhArray: SET; VAR res: WORD); 
-	PROCEDURE ^ NewGlobalVar*(vis: SET; name: LONGINT; flags: SET; type: Struct; VAR res: WORD): GlobalVar; 
+	PROCEDURE ^ NewGlobalVar*(vis: SET; name: StringIndex; flags: SET; type: Struct; VAR res: WORD): GlobalVar; 
 	PROCEDURE ^ InitProc(p: Proc; vis: SET; name: StringIndex; scope: ProcScope; return: Struct; VAR res: WORD); 
 	PROCEDURE ^ NewProc*(vis: SET; name: StringIndex; flags: SET; scope: ProcScope; return: Struct; VAR res: WORD): Proc; 
-	PROCEDURE ^ FindOverwrittenMethod(owner: Record; name: StringPool.Index; mscope: ProcScope; VAR res: WORD): Method; 
+	PROCEDURE ^ FindOverwrittenMethod(owner: Record; name: StringIndex; mscope: ProcScope; VAR res: WORD): Method; 
 	PROCEDURE ^ NewMethod(vis: SET; name: StringIndex; flags: SET; scope: ProcScope; return: Struct; boundTo: Record; pos: LONGINT; VAR res: WORD): Method; 
 	PROCEDURE ^ NewModule*(name: StringIndex; imported: BOOLEAN; flags: SET; scope: ModScope): Module; 
 	PROCEDURE ^ SetMode*(scope: Scope; mode: LONGINT; VAR res: WORD); 
@@ -456,8 +456,8 @@ VAR
 	PROCEDURE ^ GetTypeName*(type: Struct; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ GetScopeName*(scope: Scope; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ Register*(root: ModuleDB; m: Module); 
-	PROCEDURE ^ Unregister*(root: ModuleDB; name: StringPool.Index); 
-	PROCEDURE ^ Retrieve*(root: ModuleDB; name: StringPool.Index): Module; 
+	PROCEDURE ^ Unregister*(root: ModuleDB; name: StringIndex); 
+	PROCEDURE ^ Retrieve*(root: ModuleDB; name: StringIndex): Module; 
 	PROCEDURE ^ Enumerate*(root: ModuleDB; EnumProc: PROCEDURE {DELEGATE}(m: Module)); 
 	PROCEDURE ^ InitDB*(VAR root: ModuleDB); 
 	PROCEDURE ^ AddImporter*(p: ImporterPlugin); 

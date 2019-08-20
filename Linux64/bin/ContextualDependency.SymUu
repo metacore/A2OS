@@ -1,5 +1,5 @@
 MODULE ContextualDependency;
-	IMPORT Files, KernelLog, Configuration, Texts, Strings, XML, XMLObjects, XMLParser, XMLScanner;
+	IMPORT Files, KernelLog, Configuration, Texts, Strings, XML, XMLObjects, XMLParser, XMLScanner, Streams;
 CONST 
 	RangeDebug = FALSE; 
 	LanguageAttribute = \"language"\; 
@@ -111,10 +111,10 @@ TYPE
 		PROCEDURE ^ SetNoContext; 
 		PROCEDURE ^ AnalyzeCloseContext(thisChar, lastChar, nextChar: Texts.Char32): Texts.Char32; 
 		PROCEDURE ^ AnalyzeWideContext(thisChar, secondlastChar, lastChar, nextChar, secondnextChar: Texts.Char32): Texts.Char32; 
-		PROCEDURE ^ AnalyzeWholeContext(thisPos: LONGINT; line: String): Texts.Char32; 
+		PROCEDURE ^ AnalyzeWholeContext(thisPos: SIZE; line: String): Texts.Char32; 
 		PROCEDURE ^ CheckCloseContext(lastChar, nextChar: Texts.Char32; context: GenericContext): BOOLEAN; 
 		PROCEDURE ^ CheckWideContext(secondlastChar, lastChar, nextChar, secondnextChar: Texts.Char32; context: GenericContext): BOOLEAN; 
-		PROCEDURE ^ CheckWholeContext(thisPos: LONGINT; line: String; context: GenericContext): BOOLEAN; 
+		PROCEDURE ^ CheckWholeContext(thisPos: SIZE; line: String; context: GenericContext): BOOLEAN; 
 		PROCEDURE ^ RangeOK(thisChar: Texts.Char32; ranges: Ranges): BOOLEAN; 
 		PROCEDURE ^ GetContextsFromXML(thisChar: Texts.Char32); 
 		PROCEDURE ^ ParseRangeString(rangeString: XML.String; base16, neg: BOOLEAN; VAR ranges: Ranges); 
@@ -124,7 +124,7 @@ TYPE
 	ContextAnalyzer = OBJECT 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ AnalyzeLine(line: Texts.TextReader; start, end: LONGINT): Texts.TextReader; 
+		PROCEDURE ^ AnalyzeLine(line: Texts.TextReader; start, end: SIZE): Texts.TextReader; 
 	END ContextAnalyzer; 
 VAR 
 	contextAnalyzer: ContextAnalyzer; 

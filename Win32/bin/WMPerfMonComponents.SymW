@@ -21,7 +21,7 @@ TYPE
 	PluginContainer* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		pluginViews: PluginView; 
-		nbrOfPlugins: LONGINT; 
+		nbrOfPlugins: SIZE; 
 
 		PROCEDURE ^ SetPluginHeights; 
 		PROCEDURE ^ Resized*; 
@@ -85,7 +85,7 @@ TYPE
 		PROCEDURE ^ UpdateStats*(): BOOLEAN; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ ScaleDataset(scale: REAL; VAR dataset: WMDiagramComponents.Dataset); 
-		PROCEDURE ^ InitStats(dimensions: LONGINT); 
+		PROCEDURE ^ InitStats(dimensions: SIZE); 
 	END PluginView; 
 
 	PluginGraphView* = OBJECT {EXCLUSIVE} (PluginView)
@@ -148,10 +148,10 @@ TYPE
 	PluginWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		plugin: Plugins.Plugin; 
-		width, height: LONGINT; 
+		width, height: SIZE; 
 
 		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ SetActive*(active: BOOLEAN); 
 		PROCEDURE ^  & New*(plugin: Plugins.Plugin; c: WMRestorable.Context); 
 		PROCEDURE ^ LoadFromXml*(configuration: XML.Element); 

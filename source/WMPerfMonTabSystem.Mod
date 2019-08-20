@@ -22,7 +22,7 @@ TYPE
 		milliTimer : Kernel.MilliTimer;
 		lastTimestamp : HUGEINT;
 		lastGcCyclesAllRuns : HUGEINT;
-		lastNgc : LONGINT;
+		lastNgc : SIZE;
 		started : BOOLEAN;
 		startBtn : WMStandardComponents.Button;
 		elapsed : Perf.Indicator;

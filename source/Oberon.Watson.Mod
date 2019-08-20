@@ -484,7 +484,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	PROCEDURE Keywords(VAR last: Cmnt; word: ARRAY OF CHAR; ln, indent: BOOLEAN);	(* writes a word and shift comments *)
 		VAR cmnt: Cmnt; offset: LONGINT;
-	BEGIN offset:= LEN(word)-1;
+	BEGIN offset:= LEN(word)(LONGINT)-1;
 		IF indent THEN
 			IF ln THEN Ln; INC(offset) END;
 			Ln; Indent(1+recLevel); INC(offset, 2)

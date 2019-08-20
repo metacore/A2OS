@@ -91,7 +91,7 @@ BEGIN
 			context.result := Commands.CommandError;
 		END;
 	ELSE
-		context.error.String("Exspected parameters: uid"); context.error.Ln;
+		context.error.String("Expected parameters: uid"); context.error.Ln;
 		context.result := Commands.CommandParseError;
 	END;
 END ShowOp;
@@ -111,7 +111,7 @@ BEGIN
 
 		END;
 	ELSE
-		context.error.String("Exspected parameters: uid"); context.error.Ln;
+		context.error.String("Expected parameters: uid"); context.error.Ln;
 		context.result := Commands.CommandError;
 	END;
 END Abort;
@@ -443,7 +443,7 @@ BEGIN
 		IF context.arg.GetString(filename) THEN
 			IF context.arg.GetInteger(block, FALSE) THEN
 				IF ~context.arg.GetInteger(numblocks, FALSE) THEN
-					context.error.String("Exspected parameters: dev#part filename [block numblocks], failed to parse numblocks"); context.error.Ln;
+					context.error.String("Expected parameters: dev#part filename [block numblocks], failed to parse numblocks"); context.error.Ln;
 					context.result := Commands.CommandParseError;
 					RETURN;
 				END;
@@ -455,7 +455,7 @@ BEGIN
 			fileToPartition.SetBlockingStart;
 			IF Lib.StatusError IN fileToPartition.state.status THEN context.result := Commands.CommandError END;
 		ELSE
-			context.error.String("Exspected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
+			context.error.String("Expected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
 			context.result := Commands.CommandParseError;
 		END;
 	END;
@@ -474,7 +474,7 @@ BEGIN
 		IF context.arg.GetString(filename) THEN
 			IF context.arg.GetInteger(block, FALSE) THEN
 				IF ~context.arg.GetInteger(numblocks, FALSE) THEN
-					context.error.String("Exspected parameters: dev#part filename [block numblocks], failed to parse numblocks"); context.error.Ln;
+					context.error.String("Expected parameters: dev#part filename [block numblocks], failed to parse numblocks"); context.error.Ln;
 					context.result := Commands.CommandParseError;
 					RETURN;
 				END;
@@ -488,7 +488,7 @@ BEGIN
 			context.out.String("Partitions UID "); context.out.Int(partitionToFile.uid, 0); context.out.String(": Started PartitionToFile on ");
 			context.out.String(partitionToFile.diskpartString); context.out.Ln;
 		ELSE
-			context.error.String("Exspected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
+			context.error.String("Expected parameters: dev#part name [block numblocks], failed to parse filename"); context.error.Ln;
 			context.result := Commands.CommandParseError;
 		END;
 	END;
@@ -591,7 +591,7 @@ BEGIN
 			showBlocks.SetBlockingStart;
 			IF Lib.StatusError IN showBlocks.state.status THEN context.result := Commands.CommandError END;
 		ELSE
-			context.error.String("Exspected parameters: dev#part block [numblocks], failed to parse block"); context.error.Ln;
+			context.error.String("Expected parameters: dev#part block [numblocks], failed to parse block"); context.error.Ln;
 			context.result := Commands.CommandParseError;
 		END;
 	END;
@@ -661,7 +661,7 @@ VAR
 	diskTable : Lib.Disks; disk : Lib.Disk;
 	par : ARRAY 10 OF CHAR;
 	verbose : BOOLEAN;
-	i : LONGINT;
+	i : SIZE;
 	temp : ARRAY 256 OF CHAR;
 BEGIN
 	par := ""; context.arg.SkipWhitespace; context.arg.String(par);
@@ -721,7 +721,7 @@ BEGIN
 END ShowDevice;
 
 PROCEDURE ShowTable( context : Commands.Context; disk: Lib.Disk; table: Disks.PartitionTable; verbose: BOOLEAN);
-VAR j: LONGINT; r: LONGREAL; ugly : ARRAY 10 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : LONGINT;
+VAR j: SIZE; r: LONGREAL; ugly : ARRAY 10 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : LONGINT;
 BEGIN
 	FOR j := 0 TO LEN(table)-1 DO
 		r := (table[j].size * 1.0D0 * disk.device.blockSize) / (1024*1024); (* M *)

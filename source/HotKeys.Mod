@@ -62,7 +62,7 @@ VAR
 	manager : WMWindowManager.WindowManager;
 
 PROCEDURE ParseKeyString(keyString : XML.String; VAR ch : CHAR; VAR flags : SET; VAR keysym : LONGINT) : BOOLEAN;
-VAR keys : Strings.StringArray; i : LONGINT;
+VAR keys : Strings.StringArray; i : SIZE;
 BEGIN
 	ASSERT(keyString # NIL);
 	ch := 0X; flags := {}; keysym := NoKeysym;
@@ -244,10 +244,10 @@ BEGIN
 	RETURN match;
 END FlagsAreEqual;
 
-PROCEDURE GetHotKey(ch : CHAR; flags : SET; keysym : LONGINT) : HotKey;
+PROCEDURE GetHotKey(ch : CHAR; flags : SET; keysym : SIZE) : HotKey;
 VAR hk : HotKey;
 
-	PROCEDURE FixMessage(VAR ch : CHAR; VAR keysym : LONGINT;  flags : SET);
+	PROCEDURE FixMessage(VAR ch : CHAR; VAR keysym : SIZE;  flags : SET);
 	BEGIN
 		IF (0 < keysym) & (keysym < 32) & (flags * Inputs.Ctrl # {}) THEN (* Reverse keyboard driver ctrl key mapping *)
 			IF (0 < ORD(ch)) & (ORD(ch) < 32) THEN
@@ -302,7 +302,7 @@ BEGIN
 END ExecuteCommandFor;
 
 (* Report errors while parsing *)
-PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 BEGIN
 	KernelLog.String("HotKeys: Parse error at pos "); KernelLog.Int(pos, 5); KernelLog.String(" in line "); KernelLog.Int(line, 5);
 	KernelLog.String(" row "); KernelLog.Int(row, 5); KernelLog.String(" - "); KernelLog.String(msg); KernelLog.Ln;

@@ -8,7 +8,7 @@ TYPE
 
 	ScrollPanel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		left, top, dx, dy: LONGINT; 
+		left, top, dx, dy: SIZE; 
 		CheckScrollbars: WMMessages.CompCommand; 
 		resizing: BOOLEAN; 
 
@@ -27,7 +27,7 @@ TYPE
 	VAR 
 		vScrollbar, hScrollbar: WMStandardComponents.Scrollbar; 
 		scrollPanel: ScrollPanel; 
-		dx, dy: LONGINT; 
+		dx, dy: SIZE; 
 		minNofLevels*, nofLevelsPerPage*: WMProperties.Int32Property; 
 		wheelScrolling-: WMProperties.BooleanProperty; 
 
@@ -36,7 +36,7 @@ TYPE
 		PROCEDURE ^ HandleInternal*(VAR msg: WMMessages.Message); 
 		PROCEDURE ^ FitScrollTarget(sender, par: ANY); 
 		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ AddInternalComponent*(component: WMComponents.Component); 
 		PROCEDURE ^ AddContent*(content: XML.Content); 
 	END ScrollableContainer; 

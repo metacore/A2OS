@@ -394,7 +394,7 @@ TYPE
 	(** Set the video data buffer. *)
 	(** addr:	physical address of target buffer for video data. *)
 	(** width:	line length of video frame buffer *)
-		PROCEDURE SetVideo* (addr: ADDRESS; width: LONGINT);
+		PROCEDURE SetVideo* (addr: ADDRESS; width: SIZE);
 		BEGIN HALT(99);	(** abstract *)
 		END SetVideo;
 

@@ -49,6 +49,6 @@ VAR
 	PROCEDURE ^ ClearMC*(portNo: LONGINT; s: SET); 
 	PROCEDURE ^ SetMC*(portNo: LONGINT; s: SET); 
 	PROCEDURE ^ GetMC*(portNo: LONGINT; VAR s: SET); 
-	PROCEDURE ^ Available*(portNo: LONGINT): LONGINT; 
+	PROCEDURE ^ Available*(portNo: LONGINT): SIZE; 
 BEGIN
 END V24.

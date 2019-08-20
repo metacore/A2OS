@@ -29,7 +29,7 @@ TYPE
 		input : OberonInput;	(* initialized from outside *)
 
 		curKeys : SET;
-		curX, curY : LONGINT;	(* Coordinates of the mouse pointer while moving or when released. *)
+		curX, curY : SIZE;	(* Coordinates of the mouse pointer while moving or when released. *)
 
 		keyhead, keytail : LONGINT;
 		keybuf : ARRAY KeyBufSize OF CHAR;
@@ -39,7 +39,7 @@ TYPE
 		fixMM : BOOLEAN;	(* Value TRUE denotes the presence of a 2-button mouse, Ctrl-key acts then as middle button. *)
 		lastCtrl : BOOLEAN;	(* Value TRUE denotes Ctrl-key pressed. *)
 
-		PROCEDURE IsHit*(x, y  : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y  : SIZE) : BOOLEAN;
 		BEGIN RETURN TRUE;
 		END IsHit;
 
@@ -51,18 +51,18 @@ TYPE
 			IF 2 IN curKeys THEN INCL(keys, 0) END;
 			IF 30 IN curKeys THEN IF curKeys={30} THEN INCL(keys, 30); END; curKeys := curKeys - {30} END; (*fof*)
 			IF 31 IN curKeys THEN IF curKeys={31} THEN INCL(keys, 31); END; curKeys := curKeys - {31}  END;
-			x := SHORT(curX);
-			y := SHORT(curY)
+			x := INTEGER(curX);
+			y := INTEGER(curY)
 		END Mouse;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys :SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys :SET);
 		BEGIN {EXCLUSIVE}
 			curX := x; curY := y; curKeys := curKeys * {30, 31} + keys;
 			IF fixMM &lastCtrl THEN INCL(curKeys, 1) END;
 			IF input # NIL THEN input.timer.Wakeup END	(* have to check, because upcalls to us can start immediately *)
 		END PointerMove;
 
-		PROCEDURE WheelMove*(dz : LONGINT); (*fof*)
+		PROCEDURE WheelMove*(dz : SIZE); (*fof*)
 		BEGIN
 			IF dz > 0 THEN
 				INCL(curKeys, 30);
@@ -72,7 +72,7 @@ TYPE
 			IF input # NIL THEN input.timer.Wakeup END	(* have to check, because upcalls to us can start immediately *)
 		END WheelMove;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		BEGIN {EXCLUSIVE}
 			curX := x; curY := y; curKeys := keys;
 			IF input # NIL THEN input.timer.Wakeup END
@@ -103,14 +103,14 @@ TYPE
 			InsertKey(0FFX, 0, {})
 		END Close;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		BEGIN {EXCLUSIVE}
 			IF fixMM & ((flags * Inputs.Ctrl # {}) # lastCtrl)  THEN
 				lastCtrl := flags * Inputs.Ctrl # {};
 				IF lastCtrl THEN INCL(curKeys, 1) ELSE EXCL(curKeys, 1) END;
 				IF input # NIL THEN input.timer.Wakeup END
 			ELSE
-				InsertKey(CHR(ucs), keysym, flags);
+				InsertKey(CHR(ucs), keysym(LONGINT), flags);
 				IF input # NIL THEN input.timer.Wakeup END
 			END;
 		END KeyEvent;
@@ -173,9 +173,9 @@ TYPE
 			inp : OberonInput;
 			bufimg : Raster.Image;
 			mode, mode1 : Raster.Mode;
-			ml, mt, mr, mb : LONGINT;
+			ml, mt, mr, mb : SIZE;
 
-		PROCEDURE LocalAddDirty(l, t, r, b : LONGINT);
+		PROCEDURE LocalAddDirty(l, t, r, b : SIZE);
 		BEGIN
 			IF Cache THEN
 				IF l < ml THEN ml := l END;	(* enlarge dirty rectangle *)
@@ -195,7 +195,7 @@ TYPE
 			END
 		END Update;
 
-		PROCEDURE Transfer*(VAR buf : ARRAY OF CHAR; ofs, stride, x, y, w, h, op : LONGINT);
+		PROCEDURE Transfer*(VAR buf : ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op : WORD);
 		BEGIN
 			Raster.InitMode(mode, Raster.srcCopy);
 			IF Flip THEN

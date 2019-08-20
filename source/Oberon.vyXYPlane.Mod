@@ -255,6 +255,3 @@ VAR
 BEGIN
 	InitPattern();
 END vyXYPlane.
-
-
-Testing

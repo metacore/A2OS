@@ -75,7 +75,7 @@ TYPE
 
 		parentMenuPanel, focusPanel, rootMenuPanel : MenuPanel;
 
-		greyBoxWidth : LONGINT;
+		greyBoxWidth : SIZE;
 
 		dragNode : WMTrees.TreeNode;
 		dragObject : ANY;
@@ -156,7 +156,7 @@ TYPE
 			Release
 		END SetMenu;
 
-		PROCEDURE Measure(VAR width, height : LONGINT);
+		PROCEDURE Measure(VAR width, height : SIZE);
 		VAR child : WMTrees.TreeNode;
 		BEGIN
 			ASSERT((menu # NIL) & (root # NIL));
@@ -184,7 +184,7 @@ TYPE
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
 			child : WMTrees.TreeNode;
-			x, y, dx, dy, t, textY : LONGINT;
+			x, y, dx, dy, t, textY : SIZE;
 			font : WMGraphics.Font;
 			caption : Strings.String;
 			image : Raster.Image;
@@ -286,9 +286,9 @@ TYPE
 		END DrawBackground;
 
 		(* caller must hold tree lock *)
-		PROCEDURE ItemWidth(item : WMTrees.TreeNode; isHorizontal : BOOLEAN) : LONGINT;
+		PROCEDURE ItemWidth(item : WMTrees.TreeNode; isHorizontal : BOOLEAN) : SIZE;
 		VAR
-			width, dx, dy : LONGINT;
+			width, dx, dy : SIZE;
 			font : WMGraphics.Font;
 			caption : Strings.String;
 			image : Raster.Image;
@@ -318,9 +318,9 @@ TYPE
 		END ItemWidth;
 
 		(* caller must hold tree lock *)
-		PROCEDURE ItemHeight(item : WMTrees.TreeNode) : LONGINT;
+		PROCEDURE ItemHeight(item : WMTrees.TreeNode) : SIZE;
 		VAR
-			height, dx, dy : LONGINT;
+			height, dx, dy : SIZE;
 			font : WMGraphics.Font;
 			caption : Strings.String;
 			image : Raster.Image;
@@ -347,8 +347,8 @@ TYPE
 			RETURN height
 		END ItemHeight;
 
-		PROCEDURE MaxImageWidth() : LONGINT;
-		VAR child : WMTrees.TreeNode; image : WMGraphics.Image; maxWidth : LONGINT;
+		PROCEDURE MaxImageWidth() : SIZE;
+		VAR child : WMTrees.TreeNode; image : WMGraphics.Image; maxWidth : SIZE;
 		BEGIN
 			maxWidth := 0;
 			menu.Acquire;
@@ -370,8 +370,8 @@ TYPE
 			RETURN ~(node IS Separator);
 		END IsSelectable;
 
-		PROCEDURE FindHorizontal(x : LONGINT) : WMTrees.TreeNode;
-		VAR p : LONGINT; child : WMTrees.TreeNode;
+		PROCEDURE FindHorizontal(x : SIZE) : WMTrees.TreeNode;
+		VAR p : SIZE; child : WMTrees.TreeNode;
 		BEGIN
 			p := 0;
 			menu.Acquire;
@@ -386,8 +386,8 @@ TYPE
 			RETURN child;
 		END FindHorizontal;
 
-		PROCEDURE FindVertical(y : LONGINT) : WMTrees.TreeNode;
-		VAR p : LONGINT; child : WMTrees.TreeNode;
+		PROCEDURE FindVertical(y : SIZE) : WMTrees.TreeNode;
+		VAR p : SIZE; child : WMTrees.TreeNode;
 		BEGIN
 			p := 0;
 			menu.Acquire;
@@ -450,7 +450,7 @@ TYPE
 		END SetSelection;
 
 		PROCEDURE SelectNode(node : WMTrees.TreeNode; indicateLast : BOOLEAN);
-		VAR child : WMTrees.TreeNode; r : WMRectangles.Rectangle; x, y : LONGINT;
+		VAR child : WMTrees.TreeNode; r : WMRectangles.Rectangle; x, y : SIZE;
 		BEGIN
 			ASSERT(node # NIL);
 			menu.Acquire;
@@ -495,7 +495,7 @@ TYPE
 			END;
 		END CloseSubMenu;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR node : WMTrees.TreeNode;
 		BEGIN
 			IF horizontal.Get() THEN
@@ -515,7 +515,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		VAR node : WMTrees.TreeNode;
 		BEGIN
 			IF leftClick THEN
@@ -535,7 +535,7 @@ TYPE
 			dragPossible := FALSE;
 		END PointerUp;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		VAR node : WMTrees.TreeNode;
 		BEGIN
 			IF dragPossible THEN
@@ -566,7 +566,7 @@ TYPE
 		VAR
 			image, canvasImage : WMGraphics.Image; VAR caption : Strings.String;
 			canvas : WMGraphics.BufferCanvas;
-			width, height, x : LONGINT;
+			width, height, x : SIZE;
 		BEGIN
 			ASSERT((node # NIL) & (object # NIL));
 			menu.Acquire;
@@ -718,7 +718,7 @@ TYPE
 			Release;
 		END SelectCurrent;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags: SET; VAR keySym: LONGINT); (** PROTECTED *)
+		PROCEDURE KeyEvent*(ucs : SIZE; flags: SET; VAR keySym: SIZE); (** PROTECTED *)
 		VAR focusPanel : MenuPanel;
 		BEGIN
 			ASSERT(IsCallFromSequencer());
@@ -773,7 +773,7 @@ TYPE
 			color := 04FH;
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT);
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), color, WMGraphics.ModeSrcOverDst);
 		END Draw;
@@ -787,8 +787,8 @@ TYPE
 		menuPanel : MenuPanel;
 		takesFocus : BOOLEAN;
 
-		PROCEDURE &Open*(x, y : LONGINT; openDirection : LONGINT; menu : WMTrees.Tree; root : WMTrees.TreeNode; parent : MenuPanel; takesFocus, indicate : BOOLEAN);
-		VAR width, height, dx, dy : LONGINT; ignore : BOOLEAN; flags : SET;
+		PROCEDURE &Open*(x, y : SIZE; openDirection : LONGINT; menu : WMTrees.Tree; root : WMTrees.TreeNode; parent : MenuPanel; takesFocus, indicate : BOOLEAN);
+		VAR width, height, dx, dy : SIZE; ignore : BOOLEAN; flags : SET;
 		BEGIN
 			NEW(menuPanel);
 			menuPanel.openDirection.Set(openDirection);
@@ -841,7 +841,7 @@ TYPE
 			END;
 		END FocusLost;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT); (** override *)
 		BEGIN
 			Draw^(canvas, w, h, q);
 			WMGraphicUtilities.DrawRect(canvas, WMRectangles.MakeRect(0, 0, w, h), WMGraphics.Black, WMGraphics.ModeCopy);
@@ -852,7 +852,7 @@ TYPE
 VAR
 	StrMenuPanel : Strings.String;
 
-PROCEDURE AddWindow(window : WMWindowManager.Window; x, y : LONGINT; flags : SET);
+PROCEDURE AddWindow(window : WMWindowManager.Window; x, y : SIZE; flags : SET);
 VAR
 	manager : WMWindowManager.WindowManager;
 	view : WMWindowManager.ViewPort;
@@ -871,7 +871,7 @@ BEGIN
 END AddWindow;
 
 PROCEDURE ShadowDecorator(window : WMWindowManager.Window);
-VAR shadow : ShadowWindow; l, r, t, b : LONGINT;
+VAR shadow : ShadowWindow; l, r, t, b : SIZE;
 
 	PROCEDURE InsertAfter(old, new : WMWindowManager.Window);
 	BEGIN

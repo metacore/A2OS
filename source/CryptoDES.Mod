@@ -51,8 +51,8 @@ TYPE
 		END SetIV;
 
 
-		PROCEDURE  Encrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
-		VAR i, r: LONGINT;   X, Y: SET32;
+		PROCEDURE  Encrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: SIZE );
+		VAR i: SIZE;  r: WORD;   X, Y: SET32;
 		BEGIN
 			ASSERT( isKeyInitialized & (mode IN {Ciphers.ECB, Ciphers.CBC}) );
 			ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -73,8 +73,8 @@ TYPE
 		END Encrypt;
 
 
-		PROCEDURE  Decrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: LONGINT );
-		VAR i, r: LONGINT;  X, Y: SET32;  X0, Y0: SET32;
+		PROCEDURE  Decrypt* ( VAR buf: ARRAY OF CHAR; ofs, len: SIZE );
+		VAR i: SIZE;  r: WORD;  X, Y: SET32;  X0, Y0: SET32;
 		BEGIN
 			ASSERT( isKeyInitialized );
 			ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -236,7 +236,7 @@ TYPE
 
 
 		PROCEDURE InitTable( VAR tab: ARRAY OF SET32 );
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO LEN( tab ) - 1 DO  tab[i] := buf.GetSet( )  END
 		END InitTable;

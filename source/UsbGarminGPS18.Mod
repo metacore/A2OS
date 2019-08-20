@@ -306,7 +306,7 @@ TYPE
 		interruptInBuffer : Usbdi.BufferPtr;
 		started, received : BOOLEAN;
 		epMaxSize : LONGINT;
-		byteCounter : LONGINT;	(* how many bytes have been received *)
+		byteCounter : SIZE;	(* how many bytes have been received *)
 
 		(* information about the GPS device and its capabilities *)
 		unitID : LONGINT;
@@ -319,7 +319,8 @@ TYPE
 
 		(* used by Handleevent *)
 		data : POINTER TO ARRAY OF CHAR;
-		fragLen, fragOfs, fragType, fragId : LONGINT;
+		fragLen, fragOfs: SIZE;
+		fragType, fragId : LONGINT;
 
 		(** Start gathering PVT data *)
 		PROCEDURE StartPvtData*() : BOOLEAN;
@@ -344,7 +345,7 @@ TYPE
 		END GetPvtData;
 
 		PROCEDURE HandlePacket(type, id : LONGINT; data : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			IF Trace * TracePackets # {} THEN KernelLog.String("GPS18: packet received: "); ShowPacket(type, id); KernelLog.Ln; END;
 			IF  type = PacketTransport THEN
@@ -402,16 +403,16 @@ TYPE
 		END HandlePacket;
 
 		(* re-assembles fragmented packets and sends them to HandlePacket *)
-		PROCEDURE HandleEvent(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE HandleEvent(status : Usbdi.Status; actLen : SIZE);
 		VAR
 			packetType, packetId : LONGINT;
-			dataLen, len, i : LONGINT;
+			dataLen, len, i : SIZE;
 			error : BOOLEAN;
 		BEGIN
 			error := FALSE;
 			IF actLen > 0 THEN byteCounter := byteCounter + actLen; END;
 			IF (status = Usbdi.Ok) OR (status = Usbdi.ShortPacket) THEN
-				IF fragLen > 0 THEN (* we exspect a fragment of the lenght fragLen *)
+				IF fragLen > 0 THEN (* we expect a fragment of the lenght fragLen *)
 					IF Trace * TraceEvents # {} THEN
 						KernelLog.String("GPS18: Handle fragment: "); ShowPacket(fragType, fragId);
 						KernelLog.String(" fragLen: "); KernelLog.Int(fragLen, 0); KernelLog.String(" fragOfs: "); KernelLog.Int(fragOfs, 0);
@@ -487,7 +488,7 @@ TYPE
 		END SendPacket;
 
 		PROCEDURE BuildPacket(type, id : LONGINT; data : Usbdi.BufferPtr) : Usbdi.BufferPtr;
-		VAR packet : Usbdi.BufferPtr; i : LONGINT;
+		VAR packet : Usbdi.BufferPtr; i : SIZE;
 		BEGIN
 			IF data=NIL THEN
 				NEW(packet, 12);
@@ -496,7 +497,7 @@ TYPE
 				FOR i := 0 TO LEN(data)-1 DO packet[i + 12] := data[i]; END;
 			END;
 			FOR i := 0 TO 11 DO packet[i] := CHR(0); END;
-			IF data # NIL THEN Put4(packet, 8, LEN(data)); END;
+			IF data # NIL THEN Put4(packet, 8, LEN(data)(LONGINT)); END;
 			packet[0] := CHR(type);
 			packet[4] := CHR(id);
 			RETURN packet;
@@ -512,7 +513,7 @@ TYPE
 			waits : LONGINT;
 			i : LONGINT;
 		BEGIN
-			(* Exspected endpoints: 1 InterruptIn, 1 BulkIn, 1 Bulkout*)
+			(* Expected endpoints: 1 InterruptIn, 1 BulkIn, 1 Bulkout*)
 			LOOP
 				IF ((i >= LEN(interface.endpoints)) OR (epFound = 3)) THEN EXIT; END;
 				IF interface.endpoints[i].type = Usbdi.InterruptIn THEN
@@ -529,7 +530,7 @@ TYPE
 			END;
 
 			IF ~((epFound = 3) & (epInterruptIn # 0) & (epBulkIn # 0) & (epBulkOut # 0)) THEN
-				IF Debug THEN KernelLog.String("GPS18: Error: Exspected endpoints not found."); KernelLog.Ln; END;
+				IF Debug THEN KernelLog.String("GPS18: Error: Expected endpoints not found."); KernelLog.Ln; END;
 				RETURN FALSE;
 			END;
 

@@ -113,7 +113,7 @@ TYPE
 		colWidths: WMGrids.Spacings; 
 		address: WMEditors.Editor; 
 		popup: WMPopups.Popup; 
-		px, py: LONGINT; 
+		px, py: SIZE; 
 		IconRead, IconAnswered, IconUnread, IconDeleted: WMGraphics.Image; 
 		copyTarget: IMAPClient.Folder; 
 		client: IMAPClient.Client; 
@@ -122,13 +122,13 @@ TYPE
 		active: BOOLEAN; 
 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ ResizeGrid; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
 		PROCEDURE ^ DisplayMessage(sender, data: ANY); 
 		PROCEDURE ^ ChangeFolder(sender, data: ANY); 
-		PROCEDURE ^ FolderContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ FolderContextMenu(sender: ANY; x, y: SIZE); 
 		PROCEDURE ^ CreateDir(sender, data: ANY); 
 		PROCEDURE ^ RenameDir(sender, data: ANY); 
 		PROCEDURE ^ DeleteDir(sender, data: ANY); 
@@ -136,10 +136,10 @@ TYPE
 		PROCEDURE ^ SentFolder(sender, data: ANY); 
 		PROCEDURE ^ DraftFolder(sender, data: ANY); 
 		PROCEDURE ^ TrashBin(sender, data: ANY); 
-		PROCEDURE ^ MessagesDragDropped(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ MessagesDragDropped(x, y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ MessagesStartDrag(sender, data: ANY); 
 		PROCEDURE ^ DragArrivedList(sender, data: ANY); 
-		PROCEDURE ^ MessageContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ MessageContextMenu(sender: ANY; x, y: SIZE); 
 		PROCEDURE ^ GetMessageSelection(): Classes.List; 
 		PROCEDURE ^ CopyMessages(sender, data: ANY); 
 		PROCEDURE ^ DeleteMessages(sender, data: ANY); 

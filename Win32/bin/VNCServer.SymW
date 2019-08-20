@@ -55,7 +55,7 @@ TYPE
 		kl*: VNCKeyboardListener; 
 		cutl*: VNCClipboardListener; 
 		ncal*: VNCNofClientsActiveListener; 
-		width*, height*: LONGINT; 
+		width*, height*: SIZE; 
 		connection*: TCP.Connection; 
 		agent*: VNCAgent; 
 	END VNCInfo; 
@@ -83,7 +83,7 @@ TYPE
 		agent: VNCAgent; 
 		alive, allowed: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(agent: VNCAgent; w, h: LONGINT); 
+		PROCEDURE ^  & Init*(agent: VNCAgent; w, h: SIZE); 
 		PROCEDURE ^ Add(VAR r: Rectangle); 
 		PROCEDURE ^ GetBuffer(VAR nof: LONGINT; drawBuf: RectBuf); 
 		PROCEDURE ^ Close; 
@@ -153,8 +153,8 @@ VAR
 
 	PROCEDURE ^ SendPixel(out: Streams.Writer; pix: LONGINT; VAR pf: PixelFormat); 
 	PROCEDURE ^ SendRawRect(out: Streams.Writer; img: Raster.Image; VAR mode: Raster.Mode; VAR pf: PixelFormat; buf: WorkBuf; r: Rectangle); 
-	PROCEDURE ^ AnalyzeColors(VAR hextile: PFHextile; nofPixels: LONGINT; VAR bg, fg: LONGINT; VAR solid, mono: BOOLEAN); 
-	PROCEDURE ^ EncodeHextile(hextile: PFHextile; buf: WorkBuf; VAR pf: PixelFormat; w, h: LONGINT; bg, fg: LONGINT; mono: BOOLEAN; VAR nofRects: LONGINT): LONGINT; 
+	PROCEDURE ^ AnalyzeColors(VAR hextile: PFHextile; nofPixels: SIZE; VAR bg, fg: LONGINT; VAR solid, mono: BOOLEAN); 
+	PROCEDURE ^ EncodeHextile(hextile: PFHextile; buf: WorkBuf; VAR pf: PixelFormat; w, h: SIZE; bg, fg: LONGINT; mono: BOOLEAN; VAR nofRects: LONGINT): SIZE; 
 	PROCEDURE ^ SendHextile(out: Streams.Writer; img: Raster.Image; VAR mode: Raster.Mode; VAR pf: PixelFormat; buf: WorkBuf; VAR hextile: PFHextile; r: Rectangle); 
 	PROCEDURE ^ OpenServer*(port: LONGINT; img: Raster.Image; name, password: ARRAY OF CHAR; ml: VNCMouseListener; kl: VNCKeyboardListener; cl: VNCClipboardListener; ncal: VNCNofClientsActiveListener): Server; 
 	PROCEDURE ^ OpenService*(port: LONGINT; init: VNCService): Server; 

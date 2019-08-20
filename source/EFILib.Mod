@@ -371,7 +371,7 @@ END ReadString;
 
 (* convert signed integer to a string *)
 PROCEDURE IntToString* (CONST x : LONGINT; VAR s : ARRAY OF CHAR);
-VAR i, x0, slen, start : LONGINT;
+VAR i, slen, start : SIZE; x0 : LONGINT;
 BEGIN
 	IF x = MIN (LONGINT) THEN
 		s := "-2147483648";
@@ -399,7 +399,7 @@ END IntToString;
 
 (* Copied from BIOS.I386.Machine.Mod - StrToInt *)
 (** Convert a string to an integer. Parameter i specifies where in the string scanning should begin (usually 0 in the first call). Scanning stops at the first non-valid character, and i returns the updated position. Parameter s is the string to be scanned. The value is returned as result, or 0 if not valid. Syntax: number = ["-"] digit {digit} ["H" | "h"] . digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" . If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
-PROCEDURE StringToInt* (VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT;
+PROCEDURE StringToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT;
 VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
 BEGIN
 	vd := 0; vh := 0; hex := FALSE;
@@ -419,7 +419,7 @@ END StringToInt;
 
 (* copy the String 'str' to the char16-String 'lstr'. If 'lstr' is shorter than 'str' the prefix fitting into 'lstr' is copied. *)
 PROCEDURE StringToLongString*(CONST str : ARRAY OF CHAR; VAR lstr : ARRAY OF EFI.Char16);
-VAR strlen, lstrlen,i : LONGINT;
+VAR strlen, lstrlen,i : SIZE;
 BEGIN
 	strlen := LEN(str);
 	lstrlen := LEN(lstr);

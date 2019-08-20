@@ -63,7 +63,7 @@ TYPE
 		PROCEDURE ^ HasDownCollision(x, y: LONGINT): BOOLEAN; 
 		PROCEDURE ^ HasCollision(CONST bl: Block; x, y: LONGINT): BOOLEAN; 
 		PROCEDURE ^ Move(dir: LONGINT): BOOLEAN; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ NewBlock(): Block; 
 		PROCEDURE ^ RemoveLine(y: LONGINT); 
 		PROCEDURE ^ ClearLines; 

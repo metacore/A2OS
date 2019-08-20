@@ -559,7 +559,7 @@ TYPE
 			END;
 		END ClearHalt;
 
-		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : LONGINT; VAR buffer : Usbdi.Buffer);
+		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : SIZE; VAR buffer : Usbdi.Buffer);
 		VAR ranges : ARRAY ScatterGatherListSize OF Machine.Range; 	td, numRanges : LONGINT; dword : SET;
 		BEGIN
 			(* control transfers use a three stage protocol:
@@ -627,7 +627,7 @@ TYPE
 			pipe.lastTD := td;
 		END ScheduleControl;
 
-		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: LONGINT; VAR buffer: Usbdi.Buffer);
+		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: SIZE; VAR buffer: Usbdi.Buffer);
 		VAR dword : SET;
 		BEGIN
 			pipe.firstTD :=  pipe.tdBase;
@@ -645,7 +645,7 @@ TYPE
 			END;
 		END Schedule;
 
-		PROCEDURE CreateTDList(pipe : UsbHcdi.Pipe; direction, len, ofs : LONGINT; VAR buffer : Usbdi.Buffer; firstTD : LONGINT; VAR lastTD : LONGINT; tdToggle : BOOLEAN) : BOOLEAN;
+		PROCEDURE CreateTDList(pipe : UsbHcdi.Pipe; direction, len, ofs : SIZE; VAR buffer : Usbdi.Buffer; firstTD : LONGINT; VAR lastTD : LONGINT; tdToggle : BOOLEAN) : BOOLEAN;
 		VAR
 			restlen, curlen : LONGINT;
 			numRanges, idx, offset : LONGINT;
@@ -659,7 +659,7 @@ TYPE
 			END;
 
 			td := firstTD - 16;
-			restlen := len; idx := 0; offset := 0;
+			restlen := len(LONGINT); idx := 0; offset := 0;
 
 			WHILE restlen > 0 DO (* build TD chain *)
 
@@ -685,7 +685,7 @@ TYPE
 					restlen := restlen - curlen; offset := 0; INC(idx);
 					ASSERT(idx < numRanges);
 					(* The special thing here is, that, curlen must be a multiple of pipe.maxPacketSize if this is not the last TD in the chain. 	*)
-					(* Otherwise we would ask/sent for less data than device exspects to send/receive. 									*)
+					(* Otherwise we would ask/sent for less data than device expects to send/receive. 									*)
 					temp := PageSize - ((curlen + PageSize) MOD pipe.maxPacketSize); (* max amount of data that fits into second buffer *)
 					IF restlen > temp THEN (* Not last TD *)
 						(* There will be more TDs. *)
@@ -883,7 +883,7 @@ TYPE
 			(* okay... now allocate memory for the 16byte aligned queue heads ... *)
 			tdlist := UsbHcdi.GetAlignedMemSpace(16*TdListSize, 16);
 
-			NEW(interruptED); FOR i := 0 TO 5 DO interruptED[i] := Machine.Ensure32BitAddress (ADDRESSOF(tdlist.data[tdlist.base]) + i*16); END;
+			NEW(interruptED); FOR i := 0 TO 5 DO interruptED[i] := (ADDRESSOF(tdlist.data[tdlist.base]) + i*16)(Machine.Address32); END;
 
 			isochronousED := interruptED[5] + 16;
 			controlED :=  isochronousED + 16;
@@ -1549,7 +1549,7 @@ BEGIN
 				iobasePhys := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, iobasePhys) * {12..31});
 				Machine.MapPhysical(iobasePhys, 4096, iobaseVirt);
 				NEW(hostController, bus, device, function);
-				IF hostController.Init(Machine.Ensure32BitAddress(iobaseVirt), irq) THEN (* host controller has been initialized and started successfully *)
+				IF hostController.Init(iobaseVirt(Machine.Address32), irq) THEN (* host controller has been initialized and started successfully *)
 					IF Debug.Verbose THEN
 						KernelLog.Enter;
 						KernelLog.String("UsbOhci: Initialised USB Open Host Controller at base 0"); KernelLog.Hex(iobasePhys, 8);

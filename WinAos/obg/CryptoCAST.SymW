@@ -23,10 +23,10 @@ TYPE
 
 		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
-		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; p: LONGINT); 
-		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; p: LONGINT); 
+		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
+		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 
+		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 
 		PROCEDURE ^  & Init*; 
 	END Cipher; 
 VAR 

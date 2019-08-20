@@ -289,13 +289,13 @@ BEGIN
 						y := p(XML.Element);
 						ss := y.GetName();
 						IF ss^ = "Left" THEN
-							ts := GetCharContent(y); IF ts # NIL THEN Strings.StrToInt(ts^, desc.lw) END;
+							ts := GetCharContent(y); IF ts # NIL THEN Strings.StrToSize(ts^, desc.lw) END;
 						ELSIF ss^ = "Right" THEN
-							ts := GetCharContent(y); IF ts # NIL THEN Strings.StrToInt(ts^, desc.rw) END;
+							ts := GetCharContent(y); IF ts # NIL THEN Strings.StrToSize(ts^, desc.rw) END;
 						ELSIF ss^ = "Top" THEN
-							ts := GetCharContent(y); IF ts # NIL THEN Strings.StrToInt(ts^, desc.th) END;
+							ts := GetCharContent(y); IF ts # NIL THEN Strings.StrToSize(ts^, desc.th) END;
 						ELSIF ss^ = "Bottom" THEN
-							ts := GetCharContent(y); IF ts # NIL THEN ELSE Strings.StrToInt(ts^, desc.bh) END;
+							ts := GetCharContent(y); IF ts # NIL THEN ELSE Strings.StrToSize(ts^, desc.bh) END;
 						ELSIF ss^ = "ActiveColor" THEN
 							ts := GetCharContent(y); IF ts # NIL THEN Strings.HexStrToInt(ts^, desc.baCol, res) END;
 						ELSIF ss^ = "InactiveColor" THEN
@@ -492,7 +492,7 @@ END Load;
 
 (* convert s to lower case *)
 PROCEDURE LowerCase(s : String);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	FOR i := 0 TO LEN(s^)-1 DO s^[i] := Strings.LOW(s^[i]) END
 END LowerCase;
@@ -512,5 +512,4 @@ BEGIN
 END SkinEngine.
 
 System.Free SkinEngine ~
-
 

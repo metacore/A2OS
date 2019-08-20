@@ -19,7 +19,7 @@ TYPE
 		state: Graphics.CanvasState; 
 		display: Displays.Display; 
 		internnavig, navig: BOOLEAN; 
-		lastx, lasty: LONGINT; 
+		lastx, lasty: SIZE; 
 		lastKeys: SET; 
 		modifierKeys: SET; 
 		meta: BOOLEAN; 
@@ -28,7 +28,7 @@ TYPE
 		PROCEDURE ^  & New*(disp: Displays.Display); 
 		PROCEDURE ^ GetKeyState*(VAR state: SET); 
 		PROCEDURE ^ KeyEvent(ucs: LONGINT; flags: SET; keysym: LONGINT); 
-		PROCEDURE ^ PointerEvent(x, y, z, dx, dy, dz: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerEvent(x, y, z, dx, dy, dz: SIZE; keys: SET); 
 		PROCEDURE ^ ZoomToWindow(w: Window); 
 		PROCEDURE ^ SetInitialWindowBounds(w: Window); 
 		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
@@ -51,7 +51,7 @@ TYPE
 
 	UnhitableWindow = OBJECT {EXCLUSIVE} (WM.BufferWindow)
 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 	END UnhitableWindow; 
 
 	WindowManager* = OBJECT {EXCLUSIVE} (WM.WindowManager)
@@ -64,7 +64,7 @@ TYPE
 		kdprev: LONGINT; 
 		pointerKeys: SET; 
 		pointerOwner: Window; 
-		pointerX, pointerY: LONGINT; 
+		pointerX, pointerY: SIZE; 
 		pointerInfo: WM.PointerInfo; 
 		focusOwner: Window; 
 		fifi: Fifi; 
@@ -81,14 +81,14 @@ TYPE
 		PROCEDURE ^ FindTopWindow(stayontop: BOOLEAN): Window; 
 		PROCEDURE ^ FindBottomWindow(stayOnBottom: BOOLEAN): Window; 
 		PROCEDURE ^ Broadcast*(VAR m: Messages.Message); 
-		PROCEDURE ^ Add*(left, top: LONGINT; w: Window; flags: SET); 
+		PROCEDURE ^ Add*(left, top: SIZE; w: Window; flags: SET); 
 		PROCEDURE ^ InternalRemove(w: Window); 
 		PROCEDURE ^ Remove*(w: Window); 
 		PROCEDURE ^ ToFront*(x: Window); 
 		PROCEDURE ^ ToBack*(x: Window); 
 		PROCEDURE ^ SetWindowFlag*(w: Window; flag: LONGINT; include: BOOLEAN); 
-		PROCEDURE ^ SetWindowPos*(w: Window; x, y: LONGINT); 
-		PROCEDURE ^ SetWindowSize*(w: Window; VAR width, height: LONGINT); 
+		PROCEDURE ^ SetWindowPos*(w: Window; x, y: SIZE); 
+		PROCEDURE ^ SetWindowSize*(w: Window; VAR width, height: SIZE); 
 		PROCEDURE ^ AddView*(v: WM.ViewPort); 
 		PROCEDURE ^ RefreshView*(v: WM.ViewPort); 
 		PROCEDURE ^ RefreshViews; 
@@ -99,14 +99,14 @@ TYPE
 		PROCEDURE ^ GetNext*(cur: Window): Window; 
 		PROCEDURE ^ GetPrev*(cur: Window): Window; 
 		PROCEDURE ^ SetFocus*(w: Window); 
-		PROCEDURE ^ GetPositionOwnerIntern(x, y: LONGINT; owner: WM.ViewPort): Window; 
-		PROCEDURE ^ GetPositionOwner*(x, y: LONGINT): Window; 
+		PROCEDURE ^ GetPositionOwnerIntern(x, y: SIZE; owner: WM.ViewPort): Window; 
+		PROCEDURE ^ GetPositionOwner*(x, y: SIZE): Window; 
 		PROCEDURE ^ CheckPointerImage*; 
 		PROCEDURE ^ GetFocusOwner*(): Window; 
 		PROCEDURE ^ PointerEvent(VAR msg: Messages.Message); 
 		PROCEDURE ^ KeyEvent*(VAR m: Messages.Message); 
 		PROCEDURE ^ HandleInternal*(VAR msg: Messages.Message); 
-		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 
 		PROCEDURE ^ AddDirty*(VAR rect: Rectangle); 
 		PROCEDURE ^ AddVisibleDirty*(w: Window; rect: Rectangle); 
@@ -119,10 +119,11 @@ TYPE
 	MouseObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
 	VAR 
 		view: ViewPort; 
-		x, y, z: LONGINT; 
+		x, y, z: SIZE; 
 		threshold, speedup: LONGINT; 
 		enableMMEmulation: BOOLEAN; 
-		lastTime, lastX, lastY: LONGINT; 
+		lastTime: LONGINT; 
+		lastX, lastY: SIZE; 
 		prevKeys: SET; 
 		inDoubleClick: BOOLEAN; 
 
@@ -169,7 +170,7 @@ VAR
 	defaultMouse: MouseObj; 
 	CharToUnicode: ARRAY 256 OF LONGINT; 
 
-	PROCEDURE ^ Bound(VAR x: LONGINT; min, max: LONGINT); 
+	PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
 	PROCEDURE ^ ClipAtImage(VAR x: Rectangle; img: Raster.Image); 
 	PROCEDURE ^ FillSession(wm: WindowManager; bgColor: LONGINT; noPointer: BOOLEAN); 
 	PROCEDURE ^ Replace*(color: LONGINT; noPointer: BOOLEAN); 

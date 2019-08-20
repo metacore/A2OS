@@ -29,10 +29,10 @@ TYPE
 		PROCEDURE ^ RefreshSwitch(sender, data: ANY); 
 		PROCEDURE ^ Refresh(sender, data: ANY); 
 		PROCEDURE ^ SetInterval*(interval: LONGINT); 
-		PROCEDURE ^ Variables(refs: Bytes; i: LONGINT; base: ADDRESS; w: Streams.Writer); 
-		PROCEDURE ^ FindProc(refs: Bytes; ofs: ADDRESS): LONGINT; 
-		PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos: LONGINT; VAR base: ADDRESS; w: Streams.Writer); 
-		PROCEDURE ^ GetNum(refs: Bytes; VAR i, num: LONGINT); 
+		PROCEDURE ^ Variables(refs: Bytes; i: SIZE; base: ADDRESS; w: Streams.Writer); 
+		PROCEDURE ^ FindProc(refs: Bytes; ofs: ADDRESS): SIZE; 
+		PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos: SIZE; VAR base: ADDRESS; w: Streams.Writer); 
+		PROCEDURE ^ GetNum(refs: Bytes; VAR i: SIZE; VAR num: LONGINT); 
 	BEGIN{ACTIVE} 
 	END StateWindow; 
 

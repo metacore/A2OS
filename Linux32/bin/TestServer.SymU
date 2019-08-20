@@ -17,7 +17,7 @@ CONST
 TYPE 
 	DiscardAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
-		len: LONGINT; 
+		len: SIZE; 
 		res: WORD; 
 		buf: ARRAY DiscardBufSize OF CHAR; 
 
@@ -26,7 +26,7 @@ TYPE
 
 	EchoAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
-		len: LONGINT; 
+		len: SIZE; 
 		res: WORD; 
 		buf: ARRAY EchoBufSize OF CHAR; 
 

@@ -86,7 +86,7 @@ TYPE
 			tree.Release
 		END SetDocument;
 
-		PROCEDURE Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 		VAR diagnostics : Diagnostics.Diagnostics; log : Streams.Writer;
 		BEGIN
 			diagnostics := SELF.diagnostics;
@@ -99,7 +99,7 @@ TYPE
 			scanner : XMLScanner.Scanner;
 			parser : XMLParser.Parser;
 			doc : XML.Document;
-			tr : Texts.TextReader; ch : Texts.Char32; i, p : LONGINT; resstr : ARRAY 7 OF CHAR;
+			tr : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
 			s : Strings.String;
 			text : Texts.Text; out : Streams.Writer; ob : Strings.Buffer; hasErrors : BOOLEAN;
 		BEGIN
@@ -133,11 +133,11 @@ TYPE
 			END;
 		END AddNodes;
 
-		PROCEDURE SetNodeInfo(node : PETTrees.TreeNode; position : LONGINT);
+		PROCEDURE SetNodeInfo(node : PETTrees.TreeNode; position : Streams.Position);
 		BEGIN
 			IF (position >= 0) THEN
 				NEW(node.pos, editor.text);
-				node.pos.SetPosition(position);
+				node.pos.SetPosition(position(SIZE));
 			ELSE
 				node.pos := NIL;
 			END;
@@ -152,7 +152,7 @@ TYPE
 		diagnostics : Diagnostics.Diagnostics;
 		hasErrors : BOOLEAN;
 
-		PROCEDURE ReportError(pos, line, row : LONGINT; CONST msg : ARRAY OF CHAR);
+		PROCEDURE ReportError(pos, line, row : Streams.Position; CONST msg : ARRAY OF CHAR);
 		BEGIN
 			diagnostics.Error("PET", pos, msg);
 			hasErrors := TRUE;
@@ -175,7 +175,7 @@ VAR
 	scanner : XMLScanner.Scanner;
 	parser : XMLParser.Parser;
 	doc : XML.Document;
-	tr : Texts.TextReader; ch : Texts.Char32; i, p : LONGINT; resstr : ARRAY 7 OF CHAR;
+	tr : Texts.TextReader; ch : Texts.Char32; i, p : SIZE; resstr : ARRAY 7 OF CHAR;
 	s : Strings.String;
 	out : Streams.Writer; ob : Strings.Buffer;
 	errors : ErrorReporter;

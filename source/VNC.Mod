@@ -48,7 +48,7 @@ TYPE
 		mode: Raster.Mode;
 		bytesPerPixel: LONGINT;	(* network transfer format size *)
 		rcvbuf, imgbuf: POINTER TO ARRAY OF CHAR;
-		rcvbufpos, rcvbuflen: LONGINT;
+		rcvbufpos, rcvbuflen: SIZE;
 		fip: IP.Adr
 	END;
 
@@ -104,27 +104,27 @@ TYPE
 	Window = OBJECT (WMWindowManager.BufferWindow)
 		VAR sender: Sender;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerDown*(x, y: SIZE; keys: SET);
 		BEGIN
 			IF sender # NIL THEN sender.Pointer(x, y, keys) END
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerMove*(x, y: SIZE; keys: SET);
 		BEGIN
 			IF sender # NIL THEN sender.Pointer(x, y, keys) END
 		END PointerMove;
 
-		PROCEDURE WheelMove*(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : SIZE);
 		BEGIN
 			IF sender # NIL THEN sender.Wheel(dz) END
 		END WheelMove;
 
-		PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerUp*(x, y: SIZE; keys: SET);
 		BEGIN
 			IF sender # NIL THEN sender.Pointer(x, y, keys) END
 		END PointerUp;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags: SET; keysym: LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags: SET; keysym: SIZE);
 		BEGIN
 			IF (keysym # Inputs.KsNil) & (sender # NIL) THEN sender.Key(keysym, flags) END
 		END KeyEvent;
@@ -170,14 +170,14 @@ TYPE
 	Sender = OBJECT
 		VAR
 			c: Connection;
-			head, middle, tail, lx, ly: LONGINT;
+			head, middle, tail, lx, ly: SIZE;
 			res: WORD;
 			lkeys : SET;
 			buf: ARRAY OutBufSize OF CHAR;
 			done, poll: BOOLEAN;
 			timer: Objects.Timer;
 
-		PROCEDURE Available(): LONGINT;
+		PROCEDURE Available(): SIZE;
 		BEGIN
 			RETURN (head - tail - 1) MOD LEN(buf)
 		END Available;
@@ -193,7 +193,7 @@ TYPE
 			Put(CHR(x DIV 100H)); Put(CHR(x MOD 100H))
 		END PutInt;
 
-		PROCEDURE Pointer(x, y: LONGINT; keys: SET);
+		PROCEDURE Pointer(x, y: SIZE; keys: SET);
 		BEGIN {EXCLUSIVE}
 			IF (x >= 0) & (x < c.w.img.width) & (y >= 0) & (y < c.w.img.height) & (Available() >= 6) THEN
 				IF Trace THEN
@@ -201,12 +201,12 @@ TYPE
 				END;
 				Put(5X);	(* PointerEvent (sec. 5.2.6) *)
 				Put(CHR(SYSTEM.VAL(LONGINT, keys)));
-				PutInt(x); PutInt(y);
+				PutInt(x(LONGINT)); PutInt(y(LONGINT));
 				lx := x; ly := y; lkeys := keys
 			END
 		END Pointer;
 
-		PROCEDURE Wheel(dz : LONGINT);
+		PROCEDURE Wheel(dz : SIZE);
 		VAR keys : SET;
 		BEGIN {EXCLUSIVE}
 			IF (Available() >= 6) THEN
@@ -218,16 +218,16 @@ TYPE
 				IF dz < 0 THEN INCL(keys, 3) END;
 				IF dz > 0 THEN INCL(keys, 4) END;
 				Put(CHR(SYSTEM.VAL(LONGINT, keys)));
-				PutInt(lx); PutInt(ly)
+				PutInt(lx(LONGINT)); PutInt(ly(LONGINT))
 			END
 		END Wheel;
 
-		PROCEDURE Key(keysym: LONGINT; flags: SET);
+		PROCEDURE Key(keysym: SIZE; flags: SET);
 		BEGIN {EXCLUSIVE}
 			IF Available() >= 8 THEN
 				Put(4X);	(* KeyEvent (sec. 5.2.5) *)
 				IF Inputs.Release IN flags THEN Put(0X) ELSE Put(1X) END;
-				PutInt(0); PutInt(0); PutInt(keysym)
+				PutInt(0); PutInt(0); PutInt(keysym(LONGINT))
 			END
 		END Key;
 
@@ -253,7 +253,7 @@ TYPE
 			IF ~done & (Available() >= 10) THEN
 				Put(3X);	(* FramebufferUpdateRequest (sec. 5.2.4) *)
 				Put(1X);	(* incremental *)
-				PutInt(0); PutInt(0); PutInt(c.w.img.width); PutInt(c.w.img.height)
+				PutInt(0); PutInt(0); PutInt(c.w.img.width(LONGINT)); PutInt(c.w.img.height(LONGINT))
 			END;
 			middle := tail; poll := FALSE
 		END AwaitEvent;
@@ -327,8 +327,8 @@ VAR
 	pool: ConnectionPool;
 	bell: Bell;
 
-PROCEDURE ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: LONGINT; VAR len: LONGINT);
-VAR dst, n: LONGINT;
+PROCEDURE ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: SIZE; VAR len: LONGINT);
+VAR dst, n: SIZE;
 BEGIN
 	IF c.res = Ok THEN
 		dst := 0; len := 0;
@@ -345,7 +345,7 @@ BEGIN
 			ASSERT(dst+n <= LEN(buf));	(* index check *)
 			SYSTEM.MOVE(ADDRESSOF(c.rcvbuf[c.rcvbufpos]), ADDRESSOF(buf[dst]), n);
 			INC(c.rcvbufpos, n); DEC(c.rcvbuflen, n);
-			INC(dst, n); DEC(size, n); INC(len, n)
+			INC(dst, n); DEC(size, n); INC(len, n(LONGINT))
 		END
 	ELSE
 		buf[0] := 0X; len := 0
@@ -569,7 +569,7 @@ END DoInit;
 
 (* Send a framebuffer update request. *)
 
-PROCEDURE SendRequest(c: Connection; inc: BOOLEAN; x, y, w, h: LONGINT);
+PROCEDURE SendRequest(c: Connection; inc: BOOLEAN; x, y, w, h: SIZE);
 VAR buf: ARRAY 10 OF CHAR;
 BEGIN
 	IF Trace THEN
@@ -580,8 +580,8 @@ BEGIN
 	END;
 	buf[0] := 3X;	(* FramebufferUpdateRequest (sec. 5.2.4) *)
 	IF inc THEN buf[1] := 1X ELSE buf[1] := 0X END;
-	Network.PutNet2(buf, 2, x); Network.PutNet2(buf, 4, y);
-	Network.PutNet2(buf, 6, w); Network.PutNet2(buf, 8, h);
+	Network.PutNet2(buf, 2, x(LONGINT)); Network.PutNet2(buf, 4, y(LONGINT));
+	Network.PutNet2(buf, 6, w(LONGINT)); Network.PutNet2(buf, 8, h(LONGINT));
 	c.pcb.Send(buf, 0, 10, FALSE, c.res)
 END SendRequest;
 
@@ -608,7 +608,7 @@ BEGIN
 		KernelLog.Enter; KernelLog.String("Raw"); KernelLog.Int(x, 5); KernelLog.Int(y, 5);
 		KernelLog.Int(w, 5); KernelLog.Int(h, 5); KernelLog.Exit
 	END;
-	bh := LEN(c.imgbuf^) DIV (w*c.bytesPerPixel);	(* number of lines that will fit in buffer *)
+	bh := (LEN(c.imgbuf^) DIV (w*c.bytesPerPixel))(LONGINT);	(* number of lines that will fit in buffer *)
 	Raster.Init(c.nb, w, bh, c.fmt, w*c.bytesPerPixel, ADDRESSOF(c.imgbuf[0]));
 	WHILE h > 0 DO
 		IF h >= bh THEN h0 := bh ELSE h0 := h END;

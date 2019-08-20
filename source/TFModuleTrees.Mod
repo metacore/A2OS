@@ -18,14 +18,14 @@ CONST
 TYPE
 	Reference = POINTER TO RECORD
 		next : Reference;
-		fp, tp, np : LONGINT;
+		fp, tp, np : SIZE;
 		no : TS.NamedObject;
 	END;
 	RefArray = POINTER TO ARRAY OF Reference;
 
 	Comment = POINTER TO RECORD
 		next : Comment;
-		fp, tp : LONGINT;
+		fp, tp : SIZE;
 		h : WMTextView.Highlight;
 	END;
 
@@ -37,7 +37,7 @@ TYPE
 	TextInfo = OBJECT(PETTrees.TreeNode)
 	VAR
 		next : TextInfo;
-		fp, tp : LONGINT;
+		fp, tp : SIZE;
 		name : Strings.String;
 		def : TS.NamedObject;
 	END TextInfo;
@@ -52,7 +52,7 @@ TYPE
 		scope: TS.Scope;
 		firstLevel : BOOLEAN;
 		destinationText : Texts.Text;
-		startPos, cursorPos : LONGINT;
+		startPos, cursorPos : SIZE;
 
 		PROCEDURE CreateForm(): WMComponents.VisualComponent;
 		VAR
@@ -107,7 +107,7 @@ TYPE
 			RETURN panel
 		END CreateForm;
 
-		PROCEDURE &New*(text: Texts.Text; startPos, cursorPos, x, y :LONGINT; CONST prefix : ARRAY OF CHAR; scope : TS.Scope; first: BOOLEAN);
+		PROCEDURE &New*(text: Texts.Text; startPos, cursorPos: SIZE; x, y :SIZE; CONST prefix : ARRAY OF CHAR; scope : TS.Scope; first: BOOLEAN);
 		VAR vc : WMComponents.VisualComponent;
 		BEGIN
 			vc := CreateForm();
@@ -130,14 +130,14 @@ TYPE
 			edit.SetFocus;
 		END New;
 
-		PROCEDURE ListKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE ListKeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			IF keySym = 0FF0DH THEN handled := TRUE; Ok(SELF, NIL); (*edit.SetFocus*)
 			ELSIF keySym = 0FF1BH THEN ScheduleHide
 			END;
 		END ListKeyPressed;
 
-		PROCEDURE EditKeyPressed(ucs : LONGINT; flags : SET; VAR keySym : LONGINT; VAR handled : BOOLEAN);
+		PROCEDURE EditKeyPressed(ucs : SIZE; flags : SET; VAR keySym : SIZE; VAR handled : BOOLEAN);
 		BEGIN
 			handled := TRUE;
 (*			IF keySym = 0FF08H THEN
@@ -163,9 +163,9 @@ TYPE
 		END ScheduleHide;
 
 		PROCEDURE WriteSelected;
-		VAR ac, ar, bc, br : LONGINT;
+		VAR ac, ar, bc, br : SIZE;
 			p : ANY;
-			index, i : LONGINT;
+			index : SIZE;
 			str, newStr : ARRAY 1024 OF CHAR;
 			signature : TS.ProcedureSignature;
 			singleSuggestion : TS.NamedObject;
@@ -307,7 +307,7 @@ TYPE
 		END Init;
 
 		PROCEDURE OnStartDrag(sender, data : ANY);
-		VAR w, h: LONGINT; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas;
+		VAR w, h: SIZE; img: WMGraphics.Image; canvas: WMGraphics.BufferCanvas;
 		BEGIN
 			NEW(img);
 			treeView.MeasureNode(treeView.draggedNode, w, h);
@@ -394,11 +394,11 @@ TYPE
 		END BrowseToDefinition;
 
 		PROCEDURE Complete*(sender, data : ANY);
-		VAR pos, index, i : LONGINT;
+		VAR pos, index : SIZE;
 			str : ARRAY 64 OF CHAR;
 			newStr : ARRAY 1024 OF CHAR;
 			signature : TS.ProcedureSignature;
-			x, y : LONGINT;
+			x, y : SIZE;
 			selector : SelectWindow;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN
@@ -434,8 +434,8 @@ TYPE
 			tree.Release;
 		END Complete;
 
-		PROCEDURE ContextMenu(sender : ANY; x, y: LONGINT);
-		VAR wmx, wmy : LONGINT;
+		PROCEDURE ContextMenu(sender : ANY; x, y: SIZE);
+		VAR wmx, wmy : SIZE;
 			popup: WMPopups.Popup;
 		BEGIN
 			NEW(popup);
@@ -586,7 +586,7 @@ TYPE
 		PROCEDURE SelectActualParameters(def : TS.NamedObject);
 		VAR
 			cur : CurrentHighlights;
-			cr : Reference; tp : LONGINT;
+			cr : Reference; tp : SIZE;
 		BEGIN
 			editor.DisableUpdate;
 
@@ -722,7 +722,7 @@ TYPE
 			instances, replacements : LONGINT;
 			cur : Reference;
 
-			PROCEDURE Replace(a, b : LONGINT; CONST  old, new : ARRAY OF CHAR) : BOOLEAN;
+			PROCEDURE Replace(a, b : SIZE; CONST old, new : ARRAY OF CHAR) : BOOLEAN;
 			VAR oldname : ARRAY 64 OF CHAR;
 			BEGIN
 				TextUtilities.SubTextToStr(editor.text, a, b - a, oldname);
@@ -818,7 +818,7 @@ TYPE
 
 		PROCEDURE DelActualParameterHandler(sender, data: ANY);
 		VAR
-			a, b, instances : LONGINT;
+			a, b, instances : SIZE;
 			cur : Reference;
 		BEGIN
 			IF currentNode = NIL THEN RETURN END;
@@ -1127,7 +1127,7 @@ TYPE
 			KernelLog.String("  -->  "); KernelLog.String(scope.name^); KernelLog.Ln;
 		END FindScopeByPos;
 
-		PROCEDURE FindIdentByPos(pos : LONGINT);
+		PROCEDURE FindIdentByPos(pos : SIZE);
 		VAR cur : Reference; ct : TextInfo; c : LONGINT;
 			msg : PETTrees.ExternalDefinitionInfo;
 			filename, definition : ARRAY 256 OF CHAR;

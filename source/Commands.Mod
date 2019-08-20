@@ -145,7 +145,7 @@ BEGIN
 	RETURN reader;
 END GetEmptyReader;
 
-PROCEDURE SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE SendNothing(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 END SendNothing;
 
 (** Splits a command string of the form moduleName.commandProcName into its components. Can be used to check whether a
@@ -221,7 +221,7 @@ END Activate;
 *)
 
 PROCEDURE Call*(cmds : ARRAY OF CHAR; flags : SET; VAR res : WORD; VAR msg : ARRAY OF CHAR);
-VAR  outer, context : Context; arg : Streams.StringReader; i, j, k : LONGINT; mode : ARRAY 5 OF CHAR;
+VAR  outer, context : Context; arg : Streams.StringReader; i, j, k : SIZE; mode : ARRAY 5 OF CHAR;
 par : POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF trace THEN Trace.String("Commands.Call "); Trace.String(cmds); Trace.String("~"); Trace.Ln END;

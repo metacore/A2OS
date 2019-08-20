@@ -5,7 +5,6 @@ CONST
 	LinkerError = 3400; 
 	FileNotFound = 3401; 
 	CommandTrapped* = 3904; 
-	SupportOldObjectFileFormat = FALSE; 
 	TraceLoading = FALSE; 
 TYPE 
 	HashEntryIntInt = RECORD 
@@ -24,32 +23,32 @@ TYPE
 	HashTableInt = OBJECT 
 	VAR 
 		table: HashIntArray; 
-		size: LONGINT; 
-		used-: LONGINT; 
+		size: SIZE; 
+		used-: SIZE; 
 		maxLoadFactor: REAL; 
 
-		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(key: SIZE; value: SIZE); 
 		PROCEDURE ^ Get*(key: SIZE): SIZE; 
 		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
 		PROCEDURE ^ Grow; 
 	END HashTableInt; 
 
-	HashTableIntAny* = OBJECT 
+	HashTableIntAny = OBJECT 
 	VAR 
 		table: HashIntAnyArray; 
-		size: LONGINT; 
-		used-: LONGINT; 
+		size: SIZE; 
+		used-: SIZE; 
 		maxLoadFactor: REAL; 
 
-		PROCEDURE ^  & Init*(initialSize: LONGINT); 
+		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
 		PROCEDURE ^ Get*(key: SIZE): ANY; 
 		PROCEDURE ^ Has*(key: SIZE): BOOLEAN; 
-		PROCEDURE ^ Length*(): LONGINT; 
+		PROCEDURE ^ Length*(): SIZE; 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ HashValue(key: SIZE): SIZE; 
 		PROCEDURE ^ Grow; 
@@ -95,7 +94,6 @@ TYPE
 	END Linker; 
 VAR 
 	moduleList: ModuleList; 
-	testTypeDescs: Modules.Bytes; 
 	InternalModuleName: StringPool.Index; 
 
 	PROCEDURE ^ InitData(VAR data: Data); 

@@ -2,7 +2,7 @@ MODULE Example8;
 TYPE 
 	Semaphore* = OBJECT {EXCLUSIVE} 
 	VAR 
-		s: INTEGER; 
+		s: WORD; 
 
 		PROCEDURE ^ V*; 
 		PROCEDURE ^ P*; 

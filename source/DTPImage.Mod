@@ -31,8 +31,8 @@ TYPE
 			NEW(properties, SELF);
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; x, y, w, h : LONGINT; zoomFactor: REAL; quality, preview: BOOLEAN);
-		VAR mode: LONGINT;
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; x, y, w, h : SIZE; zoomFactor: REAL; quality, preview: BOOLEAN);
+		VAR mode: WORD;
 		BEGIN
 			IF ~quality THEN
 				mode := WMRasterScale.ScaleBox;
@@ -117,7 +117,7 @@ TYPE
 			Redraw^;
 		END Redraw;
 
-		PROCEDURE Show*(x, y: LONGINT);
+		PROCEDURE Show*(x, y: SIZE);
 		BEGIN
 			properties.Show(x, y);
 		END Show;
@@ -186,7 +186,7 @@ TYPE
 			RETURN panel;
 		END CreatePropertyForm;
 
-		PROCEDURE Show*(x, y: LONGINT);
+		PROCEDURE Show*(x, y: SIZE);
 		BEGIN
 			IF ~shown THEN
 				shown := TRUE;

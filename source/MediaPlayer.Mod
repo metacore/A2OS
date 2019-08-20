@@ -89,10 +89,10 @@ TYPE
 	(* buffer pool for the video frames *)
 	VideoBufferPool = OBJECT
 	VAR
-		head, num: LONGINT;
+		head, num: SIZE;
 		buffer: POINTER TO ARRAY OF VideoBuffer;
 
-		PROCEDURE &Init*(n: LONGINT);
+		PROCEDURE &Init*(n: SIZE);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;
@@ -114,7 +114,7 @@ TYPE
 			RETURN x
 		END Remove;
 
-		PROCEDURE NofBuffers(): LONGINT;
+		PROCEDURE NofBuffers(): SIZE;
 		BEGIN {EXCLUSIVE}
 			RETURN num
 		END NofBuffers;
@@ -123,21 +123,21 @@ TYPE
 
 TYPE
 
-	KeyEventHandler* = PROCEDURE {DELEGATE} (ucs : LONGINT; flags : SET; keysym : LONGINT);
+	KeyEventHandler* = PROCEDURE {DELEGATE} (ucs : SIZE; flags : SET; keysym : SIZE);
 
-	PointerDownHandler* = PROCEDURE {DELEGATE} (x, y : LONGINT; keys : SET);
+	PointerDownHandler* = PROCEDURE {DELEGATE} (x, y : SIZE; keys : SET);
 
 	(** default Player Window where the video is played *)
 	PlayerWindow* =  OBJECT(WMWindowManager.DoubleBufferWindow)
 	VAR
 		player : Player;
 		rect : WMRectangles.Rectangle;
-		videoWidth, videoHeight : LONGINT;
+		videoWidth, videoHeight : SIZE;
 
 		(* Fullscreen functionality related *)
 		fullscreen- : BOOLEAN;
 		lastFrame : WMGraphics.Image;
-		posX, posY : LONGINT; (* Last window position in windowed-mode *)
+		posX, posY : SIZE; (* Last window position in windowed-mode *)
 
 		(* Pointer invisible functionality related *)
 		timer : Kernel.Timer;
@@ -177,7 +177,7 @@ TYPE
 
 		(** Toggle between fullscreen and window mode *)
 		PROCEDURE ToggleFullscreen*;
-		VAR view : WMWindowManager.ViewPort; width, height : LONGINT;
+		VAR view : WMWindowManager.ViewPort; width, height : SIZE;
 		BEGIN
 			IF fullscreen THEN
 				ReInit(videoWidth, videoHeight);
@@ -201,7 +201,7 @@ TYPE
 		END ToggleFullscreen;
 
 		(* Overwrite draw procedure because we do not want any interpolation *)
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT);
 		BEGIN
 			Draw^(canvas, w, h, 0);
 		END Draw;
@@ -215,7 +215,7 @@ TYPE
 		END Close;
 
 		(* Key Handler *)
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		BEGIN
 			IF extKeyEventHandler # NIL THEN extKeyEventHandler(ucs, flags, keysym); END;
 			IF keysym = 0FF50H THEN (* Cursor Home *)
@@ -255,7 +255,7 @@ TYPE
 		END ShowFrame;
 
 		(* Make pointer visible when it is moved *)
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF PointerInvisibleAfter > 0 THEN
 				lastTimestamp := Kernel.GetTicks();
@@ -263,7 +263,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF PointerInvisibleAfter > 0 THEN
 				lastTimestamp := Kernel.GetTicks();
@@ -315,7 +315,7 @@ TYPE
 		perf : LONGINT;
 		dropped : LONGINT;
 
-		PROCEDURE &New*(videoWidth, videoHeight : LONGINT; videoDecoder : Codecs.VideoDecoder);
+		PROCEDURE &New*(videoWidth, videoHeight : SIZE; videoDecoder : Codecs.VideoDecoder);
 		VAR i : LONGINT;
 		BEGIN
 			(* empty buffers *)
@@ -393,7 +393,7 @@ TYPE
 		END SeekFrame;
 
 		(* Returns the number of decoded frames available *)
-		PROCEDURE NofFullBuffers() : LONGINT;
+		PROCEDURE NofFullBuffers() : SIZE;
 		BEGIN
 			RETURN readyBufferPool.NofBuffers()
 		END NofFullBuffers;
@@ -881,7 +881,7 @@ TYPE
 					hasAudio := TRUE;
 					audioCanSeek := audioDecoder.CanSeek();
 					IF in IS Codecs.FileInputStream THEN (* Set the Stream Length in Bytes, needed for some Functions in some Decoders *)
-						audioDecoder.SetStreamLength(in(Codecs.FileInputStream).f.Length());
+						audioDecoder.SetStreamLength(in(Codecs.FileInputStream).f.Length()(LONGINT));
 					END;
 				ELSE
 					videoDecoder := Codecs.GetVideoDecoder(ext);
@@ -1209,7 +1209,7 @@ TYPE
 		BEGIN
 			IF (current # NIL) THEN
 				IF current.hasVideo THEN
-					res := (current.video.GetCurrentFrame()-current.filler.NofFullBuffers());
+					res := (current.video.GetCurrentFrame()-current.filler.NofFullBuffers()(LONGINT));
 					IF current.hasAudio THEN
 						audioPos := ENTIER(current.maxTime/10*current.posRate*(res/current.maxFrames) -
 							ENTIER(current.maxTime/10*current.posRate*(res/current.maxFrames)) MOD 12);
@@ -1221,7 +1221,7 @@ TYPE
 			END;
 			IF (next # NIL) THEN
 				IF next.hasVideo THEN
-					res := (next.video.GetCurrentFrame()-next.filler.NofFullBuffers());
+					res := (next.video.GetCurrentFrame()-next.filler.NofFullBuffers()(LONGINT));
 					IF next.hasAudio THEN
 						audioPos := ENTIER(next.maxTime/10*next.posRate*(res/next.maxFrames) -
 							ENTIER(next.maxTime/10*next.posRate*(res/next.maxFrames)) MOD 12);

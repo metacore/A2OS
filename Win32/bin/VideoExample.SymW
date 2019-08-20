@@ -6,8 +6,8 @@ TYPE
 
 	PreviewWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.BufferWindow)
 
-		PROCEDURE ^  & New*(width, height: LONGINT); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^  & New*(width, height: SIZE); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: WORD); 
 	END PreviewWindow; 
 
 	Starter* = OBJECT {EXCLUSIVE} 

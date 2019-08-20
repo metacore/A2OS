@@ -353,9 +353,9 @@ TYPE
 			LOOP
 				IF TraceVerbose & (trace * TraceBuffer # {}) THEN KernelLog.String("    "); KernelLog.Hex(bufAdr, 0); END;
 				IF ~GetPhysAdr(bufAdr, 1, physAdr) THEN Show("Setup PRD failed (GetPhysAdr)"); KernelLog.Ln; RETURN Res_Err; END;
-				command.prdt.prd[i].physAdr := Machine.Ensure32BitAddress (physAdr);
+				command.prdt.prd[i].physAdr := physAdr(Machine.Address32);
 				IF TraceVerbose & (trace * TraceBuffer # {}) THEN KernelLog.String(", "); KernelLog.Hex(physAdr, 0); END;
-				left := 65536 - Machine.Ensure32BitAddress (physAdr MOD 65536);	(* should not cross 64k boundary (sec. 3.5.3) *)
+				left := 65536 - (physAdr MOD 65536)(Machine.Address32);	(* should not cross 64k boundary (sec. 3.5.3) *)
 				IF TraceVerbose & (trace * TraceBuffer # {})THEN KernelLog.String(", ("); KernelLog.Hex(left, 0); END;
 
 				(* Calculate the max. contiguous physical memory *)
@@ -927,7 +927,7 @@ TYPE
 			try := 3;
 			REPEAT
 				NEW(prdt);	(* must not cross page boundary, see Intel 290550-002 sec. 2.7.3 *)
-				prdtPhysAdr := Machine.Ensure32BitAddress (Machine.PhysicalAdr(ADDRESSOF(prdt.prd[0]), MaxPRD*8));
+				prdtPhysAdr := Machine.PhysicalAdr(ADDRESSOF(prdt.prd[0]), MaxPRD*8)(Machine.Address32);
 				DEC(try);
 			UNTIL (try = 0) OR ((prdtPhysAdr # Machine.NilAdr) &
 				(prdtPhysAdr DIV PageSize = (prdtPhysAdr+MaxPRD*8-1) DIV PageSize));
@@ -967,7 +967,7 @@ TYPE
 		cmdLBA: CommandLBA;
 		cmdLBA48: CommandLBA48;
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
 		VAR
 			num1, try: LONGINT; ignore: WORD; bufAdr: ADDRESS;
 			dma: BOOLEAN;
@@ -1461,13 +1461,13 @@ TYPE
 		PROCEDURE ExecuteCommand*(read: BOOLEAN; VAR packet, data: ARRAY OF CHAR; ofs, size: LONGINT; dma: BOOLEAN): WORD;
 		VAR
 			command: CommandPacket;
-			i: LONGINT; res: WORD;
+			i: SIZE; res: WORD;
 			status: SET;
 		BEGIN {EXCLUSIVE}
 			ASSERT(LEN(packet) <= LEN(command.packet));
 			ASSERT(size <= LEN(data)-ofs);	(* range check *)
 			command := cmdPacket;
-			command.packetLen := LEN(packet);
+			command.packetLen := LEN(packet)(LONGINT);
 			command.dev := dev; command.cmd := 0A0H;
 
 			IF dma THEN
@@ -2349,7 +2349,7 @@ PROCEDURE GetOptions;
 VAR str : ARRAY 32 OF CHAR;
 
 	PROCEDURE CharacterInString(ch : CHAR; CONST string : ARRAY OF CHAR) : BOOLEAN;
-	VAR i : LONGINT;
+	VAR i : SIZE;
 	BEGIN
 		FOR i := 0 TO LEN(string)-1 DO
 			IF string[i] = ch THEN RETURN TRUE; END;

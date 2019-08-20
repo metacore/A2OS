@@ -2422,7 +2422,7 @@ TYPE
 
 				rds[r].flags := {31} + (S.VAL(SET, Network.MaxPacketSize) * {0..13});
 				rds[r].vLanTag := 0;
-				rds[r].bufAdrLo := Machine.Ensure32BitAddress (physAdr);
+				rds[r].bufAdrLo := physAdr(Machine.Address32);
 				rds[r].bufAdrHi := 0;
 
 				IF prev # NIL THEN
@@ -2442,7 +2442,7 @@ TYPE
 			curRD := firstRD;
 			adr := ADDRESSOF(rds[firstRD]^);
 			(* return physical address of first rx descriptor *)
-			RETURN Machine.Ensure32BitAddress (Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr));
+			RETURN Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr)(Machine.Address32);
 		END SetupRxRing;
 
 		PROCEDURE SetupTxRing(): Machine.Address32;
@@ -2492,7 +2492,7 @@ TYPE
 
 				tds[r].flags := {};
 				tds[r].vLanTag := 0;
-				tds[r].bufAdrLo := Machine.Ensure32BitAddress (physAdr);
+				tds[r].bufAdrLo := physAdr(Machine.Address32);
 				tds[r].bufAdrHi := 0;
 
 				IF prev # NIL THEN
@@ -2512,7 +2512,7 @@ TYPE
 			curTD := firstTD;
 			adr := ADDRESSOF(tds[firstTD]^);
 			(* return physical address of first tx descriptor *)
-			RETURN Machine.Ensure32BitAddress (Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr));
+			RETURN Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr)(Machine.Address32);
 		END SetupTxRing;
 
 		PROCEDURE SendFrame(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
@@ -2564,7 +2564,7 @@ TYPE
 				KernelLog.String("Sending frame of length ");
 				KernelLog.Int(txLen, 0);
 				KernelLog.Ln;
-				(*KernelLog.Memory(bufBase, txLen);*)
+				(*KernelLog.Memory(bufBase, txLen);*)
 			END;
 
 			(* find out which protocols are used;
@@ -2716,7 +2716,7 @@ TYPE
 					buf := rxBuffer.buf;
 					ASSERT(rxBuffer.buf # NIL);
 					IF buf # NIL THEN
-						rds[curRD].bufAdrLo := Machine.Ensure32BitAddress (Machine.PhysicalAdr(ADDRESSOF(rxBuffer.buf.data[0]), Network.MaxPacketSize));
+						rds[curRD].bufAdrLo := Machine.PhysicalAdr(ADDRESSOF(rxBuffer.buf.data[0]), Network.MaxPacketSize)(Machine.Address32);
 					END;
 					END;
 				ELSE
@@ -3369,7 +3369,7 @@ VAR
 
 			dsc[r].flags := {31} + (S.VAL(SET, Network.MaxPacketSize) * {0..13});
 			dsc[r].vLanTag := 0;
-			dsc[r].bufAdrLo := Machine.Ensure32BitAddress (physAddr);
+			dsc[r].bufAdrLo := physAddr(Machine.Address32);
 			dsc[r].bufAdrHi := 0;
 		END;
 

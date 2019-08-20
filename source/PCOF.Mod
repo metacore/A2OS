@@ -3,7 +3,7 @@
 MODULE PCOF; (** AUTHOR "prk / be"; PURPOSE "Parallel Compiler: object file plug-in"; *)
 
 IMPORT
-	SYSTEM, KernelLog,
+	SYSTEM, KernelLog, Files,
 	StringPool, PCDebug, PCBT, PCLIR, PCM, PCT, PCOM;
 
 CONST
@@ -285,8 +285,9 @@ END OutReference;
 
 PROCEDURE Generate*(VAR R: PCM.Rider; scope: PCT.ModScope;  VAR codeSize: LONGINT);
 VAR commands: ARRAY 128 OF PCT.Proc;
-	i, nofptrs, nofProcs, maxPtrs, EntriesPos, PtrPos, nofProcsPos, maxPtrsPos, LinksPos, VarConsPos: LONGINT;
-	typeDescsSize, typeDescsSizePos: LONGINT; (* ug: temporary *)
+	i, nofptrs, nofProcs, maxPtrs: LONGINT;
+	EntriesPos, PtrPos, nofProcsPos, maxPtrsPos, LinksPos, VarConsPos: Files.Position;
+	typeDescsSize: LONGINT; typeDescsSizePos: Files.Position; (* ug: temporary *)
 	adr: PCBT.Module; mod: PCT.Module;  sym: PCOM.Module; emptyR: PCM.Rider;
 	code: PCLIR.CodeArray; str: StringBuf; hdrCodeSize, addressFactor: LONGINT;
 
@@ -587,7 +588,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	END PointerBlock;
 
 	PROCEDURE ImportBlock;
-	VAR  i, j, k: LONGINT;  m: PCT.Module;  str: StringBuf; adr: PCBT.Module;
+	VAR  i, j, k: SIZE; m: PCT.Module;  str: StringBuf; adr: PCBT.Module;
 	BEGIN
 		PCM.ObjW(R, 85X);
 		IF mod.imports # NIL THEN
@@ -597,7 +598,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 				m := mod.imports[i];
 				adr := m.adr(PCBT.Module);
 				IF adr.nr = -1 THEN
-					INC(j); adr.nr := SHORT(j);
+					INC(j); adr.nr := j(INTEGER);
 					StringPool.GetString(m.name, str); PCM.ObjWName(R, str);
 				END;
 				INC(i)
@@ -629,7 +630,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	END ImportBlock;
 *)
 	PROCEDURE VarConsBlock;
-	VAR p: PCBT.GlobalVariable;  pos, count: LONGINT;
+	VAR p: PCBT.GlobalVariable;  pos: Files.Position; count: LONGINT;
 
 		PROCEDURE FixList(p: PCBT.Fixup);
 		BEGIN
@@ -839,12 +840,12 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	*)
 	PROCEDURE ExportBlock;
 	TYPE ExpList = POINTER TO ARRAY OF LONGINT;
-	VAR count, nofstr: INTEGER;  pos: LONGINT;
+	VAR count, nofstr: INTEGER;  pos: Files.Position;
 		explist: ExpList; exppos, explen: LONGINT;
 		v: PCT.Variable; p: PCT.Proc; t: PCT.Type; c: PCT.Value;
 
 		PROCEDURE ExportType(t: PCT.Struct);
-		VAR count: INTEGER;  pos: LONGINT;  sym: PCOM.Struct;  p: PCT.Proc; v: PCT.Variable;
+		VAR count: INTEGER;  pos: Files.Position;  sym: PCOM.Struct;  p: PCT.Proc; v: PCT.Variable;
 		BEGIN
 			WHILE (t IS PCT.Pointer) OR (t IS PCT.Array) DO
 				IF t IS PCT.Pointer THEN  t := t(PCT.Pointer).base  ELSE  t := t(PCT.Array).base  END
@@ -994,7 +995,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 
 	PROCEDURE WriteType(rec: PCT.Record; VAR tdSize: LONGINT (* ug *));
 	CONST MaxTags = 16; (* ug: temporary solution, Modules.MaxTags *)
-	VAR  size: PCBT.RecSize;  nofptrsPos, tdSizePos, oldmth: LONGINT;  base: PCT.Record;  m: PCT.Method;
+	VAR  size: PCBT.RecSize;  nofptrsPos, tdSizePos: Files.Position; oldmth: LONGINT;  base: PCT.Record;  m: PCT.Method;
 		adr: PCBT.Method;  bsym: PCOM.Struct;  name, name2: StringBuf;
 		basenr: INTEGER; baseid: LONGINT;
 		upperPartTdSize, lowerPartTdSize: LONGINT;
@@ -1134,7 +1135,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		PROCEDURE PointerOffsets(s : PCT.Scope; codeoffset, beginOffset, endOffset: LONGINT);
 		VAR v: PCT.Variable; p: PCT.Proc; t: PCT.Type; par: PCT.Parameter;
 			rs: PCT.RecScope; adr: PCBT.Procedure;
-			nofPtrPos : LONGINT;
+			nofPtrPos : Files.Position;
 		BEGIN
 			IF s # NIL THEN
 				IF s IS PCT.ModScope THEN

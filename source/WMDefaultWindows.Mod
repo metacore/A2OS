@@ -20,7 +20,7 @@ TYPE
 	String = Strings.String;
 	DecorWindow* = OBJECT(Window);
 	VAR
-		lastX, lastY : LONGINT;
+		lastX, lastY : SIZE;
 		useBitmaps*, dragging : BOOLEAN;
 		resized : BOOLEAN;
 		mode* : LONGINT;
@@ -32,7 +32,7 @@ TYPE
 		distXY* : LONGINT;
 		vertical* : BOOLEAN;
 		focusthreshold*, threshold* : LONGINT;
-		draggingWidth, draggingHeight : LONGINT;
+		draggingWidth, draggingHeight : SIZE;
 		draggingSnapRange : LONGINT;
 		sac, sic, basw, bisw : LONGINT;
 		modKeys : SET;
@@ -52,8 +52,8 @@ TYPE
 			END
 		END GetActivePics;
 
-		PROCEDURE CheckHorizontal*(x, y : LONGINT) : BOOLEAN;
-		VAR t, th : LONGINT; a, b, c: Graphics.Image;
+		PROCEDURE CheckHorizontal*(x, y : SIZE) : BOOLEAN;
+		VAR t : SIZE; th : LONGINT; a, b, c: Graphics.Image;
 		BEGIN
 			GetActivePics(a, b, c);
 			IF hasFocus THEN th := focusthreshold ELSE th := threshold END;
@@ -68,8 +68,8 @@ TYPE
 			END
 		END CheckHorizontal;
 
-		PROCEDURE CheckVertical*(x, y : LONGINT) : BOOLEAN;
-		VAR t, th : LONGINT; a, b, c: Graphics.Image;
+		PROCEDURE CheckVertical*(x, y : SIZE) : BOOLEAN;
+		VAR t : SIZE; th : LONGINT; a, b, c: Graphics.Image;
 		BEGIN
 			GetActivePics(a, b, c);
 			IF hasFocus THEN th := focusthreshold ELSE th := threshold END;
@@ -84,7 +84,7 @@ TYPE
 			END
 		END CheckVertical;
 
-		PROCEDURE IsHit*(x, y : LONGINT) : BOOLEAN;
+		PROCEDURE IsHit*(x, y : SIZE) : BOOLEAN;
 		BEGIN
 			IF ~useBitmaps THEN RETURN TRUE
 			ELSE
@@ -94,7 +94,7 @@ TYPE
 			END
 		END IsHit;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF ~hasFocus OR (ABS(lastX - (bounds.l + x)) < 10) & (ABS(lastY - (bounds.t + y)) < 10) THEN manager.ToFront(master) END;
 			lastX := bounds.l + x; lastY := bounds.t + y;
@@ -121,9 +121,9 @@ TYPE
 			IF master # NIL THEN master.HintReduceQuality(TRUE) END
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
-		VAR curX, curY, dx, dy, moveX, moveY, newWidth, newHeight, snapWidth, snapHeight: LONGINT;
-		tx, ty : LONGINT;
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
+		VAR curX, curY, dx, dy, moveX, moveY, newWidth, newHeight, snapWidth, snapHeight: SIZE;
+		tx, ty : SIZE;
 		BEGIN
 			IF dragging THEN
 				curX := bounds.l + x; curY := bounds.t + y; dx := curX - lastX; dy := curY - lastY;
@@ -201,9 +201,9 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE SnapDraggingSize(VAR width, height : LONGINT);
+		PROCEDURE SnapDraggingSize(VAR width, height : SIZE);
 		VAR
-			ow, oh, snapWidth, snapHeight : LONGINT;
+			ow, oh, snapWidth, snapHeight : SIZE;
 
 			PROCEDURE Pow2(x : INTEGER) : LONGINT;
 			VAR
@@ -250,7 +250,7 @@ TYPE
 			IF (width > snapWidth - draggingSnapRange) & (width < snapWidth + draggingSnapRange) THEN width := snapWidth END;
 		END SnapDraggingSize;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys:SET);
 		VAR m : Messages.Message;
 		BEGIN
 			IF master # NIL THEN master.HintReduceQuality(FALSE) END;
@@ -299,8 +299,8 @@ TYPE
 		down, hover : LONGINT;
 		tac, tic, tax, tix, tay, tiy : LONGINT;
 
-		PROCEDURE CheckButtons(x, y : LONGINT; VAR button : LONGINT);
-		VAR img : Graphics.Image; closeImageWidth : LONGINT;
+		PROCEDURE CheckButtons(x, y : SIZE; VAR button : LONGINT);
+		VAR img : Graphics.Image; closeImageWidth : SIZE;
 		BEGIN
 			button := NoButton;
 			(* check close button *)
@@ -323,7 +323,7 @@ TYPE
 			END;
 		END CheckButtons;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		VAR oldHover : LONGINT;
 		BEGIN
 			IF ~dragging THEN
@@ -346,14 +346,14 @@ TYPE
 			PointerMove^(x, y, keys);
 		END PointerMove;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			CheckButtons(x, y, down);
 			PointerDown^(x, y, keys);
 			IF (down # NoButton) THEN dragging := FALSE; END;
 		END PointerDown;
 
-		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
 		VAR temp : LONGINT;
 		BEGIN
 			IF (down # NoButton) THEN
@@ -380,12 +380,12 @@ TYPE
 			END;
 		END PointerLeave;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
 		CONST IconBorder  = 5;
 		VAR
-			color, sw, tc, tx, ty, dx, dy : LONGINT; fw, fh : REAL; a, b, c, img : Graphics.Image; title : String;
+			color, tc, sw : LONGINT; tx, ty, dx, dy : SIZE; fw, fh : REAL; a, b, c, img : Graphics.Image; title : String;
 			f : Graphics.Font;
-			iconSize, closeImageWidth : LONGINT;
+			iconSize, closeImageWidth : SIZE;
 		BEGIN
 			fw := w / GetWidth(); fh := h / GetHeight();
 			IF hasFocus THEN
@@ -504,7 +504,7 @@ TYPE
 
 	LeftWindow* = OBJECT(DecorWindow)
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
 		VAR color, sw : LONGINT; a, b, c : Graphics.Image;
 		BEGIN
 			IF hasFocus THEN color := sac; sw := basw ELSE color := sic; sw := bisw END;
@@ -517,7 +517,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF ~dragging & ~(WM.FlagNoResizing IN flags) THEN
 				IF (y < distXY) THEN SetPointerInfo(manager.pointerULDR);
@@ -549,7 +549,7 @@ TYPE
 
 	RightWindow* = OBJECT(DecorWindow)
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
 		VAR color, sw : LONGINT; a, b, c : Graphics.Image;
 		BEGIN
 			IF hasFocus THEN color := sac; sw := basw ELSE color := sic; sw := bisw END;
@@ -562,7 +562,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF ~dragging & ~(WM.FlagNoResizing IN flags) THEN
 				IF (y < distXY) THEN SetPointerInfo(manager.pointerURDL);
@@ -593,7 +593,7 @@ TYPE
 
 	BottomWindow* = OBJECT(DecorWindow)
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
 		VAR color, sw : LONGINT; a, b, c : Graphics.Image;
 		BEGIN
 			IF hasFocus THEN color := sac; sw := basw ELSE color := sic; sw := bisw END;
@@ -606,7 +606,7 @@ TYPE
 			END
 		END Draw;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
 		BEGIN
 			IF ~dragging & ~(WM.FlagNoResizing IN flags) THEN
 				IF (x < distXY) THEN SetPointerInfo(manager.pointerURDL);
@@ -658,7 +658,7 @@ TYPE
 			END;
 		END StyleChanged;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			canvas.GetClipRect(rect);
@@ -668,8 +668,8 @@ TYPE
 
 (** GRAPHIC TOOLS *)
 (** Fill a rectangle vertically with images, repeating the middle if needed *)
-PROCEDURE RepeatMiddleVertical*(canvas : Graphics.Canvas; csw, csh, w, h, q : LONGINT; top, middle, bottom : Graphics.Image);
-VAR fh : REAL; y, t : LONGINT;
+PROCEDURE RepeatMiddleVertical*(canvas : Graphics.Canvas; csw, csh, w, h : SIZE; q : WORD; top, middle, bottom : Graphics.Image);
+VAR fh : REAL; y, t : SIZE;
 BEGIN
 	IF (csw = 0) OR (csh = 0) OR (w = 0) OR (h = 0) THEN RETURN END;
 	fh := h / csh;
@@ -700,8 +700,8 @@ BEGIN
 END RepeatMiddleVertical;
 
 (** Fill a rectangle vertically with images, repeating the middle if needed *)
-PROCEDURE RepeatMiddleHorizontal*(canvas : Graphics.Canvas; csw, csh, w, h, q : LONGINT; left, middle, right : Graphics.Image);
-VAR fw : REAL; x, t : LONGINT;
+PROCEDURE RepeatMiddleHorizontal*(canvas : Graphics.Canvas; csw, csh, w, h : SIZE; q : WORD; left, middle, right : Graphics.Image);
+VAR fw : REAL; x, t : SIZE;
 BEGIN
 	IF (csw = 0) OR (csh = 0) OR (w = 0) OR (h = 0) THEN RETURN END;
 	fw := w / csw;

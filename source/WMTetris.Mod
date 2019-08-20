@@ -288,7 +288,7 @@ TYPE
 			RETURN result
 		END Move;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags: SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags: SET; keysym : SIZE);
 		VAR ignore : BOOLEAN;
 			rotBlock : Block;
 		BEGIN {EXCLUSIVE}

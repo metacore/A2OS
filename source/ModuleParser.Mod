@@ -41,7 +41,7 @@ TYPE
 	InfoItem* = OBJECT
 	VAR
 		name*: Strings.String;
-		pos*: LONGINT;
+		pos*: Streams.Position;
 	END InfoItem;
 
 	Node* = OBJECT
@@ -151,7 +151,7 @@ TYPE
 	VAR
 		modifiers* : SET;
 		declSeq*: DeclSeq;
-		bodyPos- : LONGINT;
+		bodyPos- : Streams.Position;
 		formalPars*: FormalPars;
 
 		PROCEDURE FindProcDecl*(CONST name : ARRAY OF CHAR) : ProcDecl;
@@ -171,7 +171,7 @@ TYPE
 		superPtr* : Object;
 		modifiers* : SET;
 		declSeq*: DeclSeq;
-		bodyPos- : LONGINT;
+		bodyPos- : Streams.Position;
 
 		PROCEDURE FindProcDecl*(CONST name : ARRAY OF CHAR) : ProcDecl;
 		VAR procDecl := NIL : ProcDecl;
@@ -252,7 +252,7 @@ TYPE
 	VAR
 		head*: ProcHead;
 		declSeq*: DeclSeq;
-		bodyPos- : LONGINT;
+		bodyPos- : Streams.Position;
 	END ProcDecl;
 
 	ProcHead* = OBJECT (NodeList)
@@ -352,7 +352,7 @@ TYPE
 		modifiers* : SET;
 		definitions*: Definition;
 		declSeq*: DeclSeq;
-		bodyPos- : LONGINT;
+		bodyPos- : Streams.Position;
 		hasError-: BOOLEAN;
 		resolved* : BOOLEAN;
 
@@ -1001,7 +1001,7 @@ TYPE
 
 		PROCEDURE ObjectP(object: Object);
 		VAR declSeq: DeclSeq;
-			pos: LONGINT;
+			pos: Streams.Position;
 		(*?	qualident: Qualident; *)
 		BEGIN
 			IF (token.symbol = FoxScanner.Semicolon) OR (token.symbol = FoxScanner.RightParenthesis) THEN RETURN END;
@@ -1045,7 +1045,7 @@ TYPE
 
 		PROCEDURE CellP(cell: Cell);
 		VAR declSeq: DeclSeq;
-			pos := -1: LONGINT;
+			pos := -1: Streams.Position;
 		(*?	qualident: Qualident; *)
 		BEGIN
 			SysFlag;
@@ -1095,10 +1095,10 @@ TYPE
 		VAR
 			exprStr, name: ARRAY 1024 OF CHAR;
 			longExprStr : Strings.String; (* for exprStr content lengths > LEN(exprStr) *)
-			paren, brace, brak: LONGINT;
+			paren, brace, brak: SIZE;
 
 			PROCEDURE Add(CONST str: ARRAY OF CHAR);
-			VAR len1, len2 : LONGINT;
+			VAR len1, len2 : SIZE;
 			BEGIN
 				len1 := Strings.Length(exprStr);
 				len2 := Strings.Length(str);
@@ -1215,7 +1215,7 @@ TYPE
 
 		PROCEDURE ProcedureModifierP(procHead: ProcHead);
 		VAR
-			value: LONGINT; ignore: InfoItem;
+			ignore: InfoItem;
 		BEGIN
 			IF token.symbol = FoxScanner.LeftBrace THEN
 				NextToken;
@@ -1245,19 +1245,8 @@ TYPE
 			END
 		END ProcedureModifierP;
 
-		PROCEDURE ModifierValueP(VAR value: LONGINT);
-		BEGIN
-			IF token.symbol = FoxScanner.Equal THEN
-				NextToken; Check(FoxScanner.Number); value := token.integer
-			ELSIF token.symbol = FoxScanner.LeftParenthesis THEN
-				NextToken; Check(FoxScanner.Number); value := token.integer; Check(FoxScanner.RightParenthesis)
-			ELSE
-				Error(token.position.start); NextToken
-			END
-		END ModifierValueP;
-
 		PROCEDURE BodyP(allowBody : BOOLEAN; VAR modifiers : SET);
-		VAR end := 1: LONGINT; lastSymbol: FoxScanner.Symbol; m : SET; first := TRUE : BOOLEAN;
+		VAR end := 1: SIZE; lastSymbol: FoxScanner.Symbol; m : SET; first := TRUE : BOOLEAN;
 		BEGIN
 			IF token.symbol = FoxScanner.Begin THEN
 				REPEAT
@@ -1294,7 +1283,7 @@ TYPE
 		PROCEDURE QualidentP(qualident: Qualident);
 		VAR
 			name : ARRAY 64 OF CHAR;
-			pos: LONGINT;
+			pos: Streams.Position;
 		BEGIN
 			IF token.symbol = FoxScanner.Identifier THEN
 				COPY(token.identifierString, name);
@@ -1365,7 +1354,7 @@ TYPE
 			NextToken;
 		END Check;
 
-		PROCEDURE Error(pos : LONGINT);
+		PROCEDURE Error(pos : Streams.Position);
 		BEGIN
 			KernelLog.String("ModuleParser: Error at pos "); KernelLog.Int(pos, 0); KernelLog.Ln;
 		END Error;
@@ -1380,7 +1369,7 @@ TYPE
 	ModuleCache = OBJECT
 	VAR
 		head : ListEntry; (* private *)
-		nofModules : LONGINT;
+		nofModules : SIZE;
 
 		PROCEDURE Add(module : Module);
 		VAR entry : ListEntry;
@@ -1450,7 +1439,7 @@ BEGIN
 END AppendLast;
 
 PROCEDURE SplitName*(CONST name : ARRAY OF CHAR; VAR moduleName, typeName : ARRAY OF CHAR);
-VAR i := 0, j := 0 : LONGINT;
+VAR i := 0, j := 0 : SIZE;
 BEGIN
 	IF Strings.ContainsChar(name, ".", FALSE) THEN
 		WHILE (i < LEN(name)) & (name[i] # ".") DO moduleName[i] := name[i]; INC(i); END;
@@ -1464,7 +1453,7 @@ BEGIN
 	END;
 END SplitName;
 
-PROCEDURE FindType(CONST name : ARRAY OF CHAR; type : LONGINT; definitionModule : Module; cache : ModuleCache) : TypeDecl;
+PROCEDURE FindType(CONST name : ARRAY OF CHAR; type : WORD; definitionModule : Module; cache : ModuleCache) : TypeDecl;
 VAR
 	module : Module; import : Import; typeDecl : TypeDecl;
 	moduleName, importName, typeName : ARRAY 256 OF CHAR;
@@ -1649,7 +1638,7 @@ VAR
 	module : Module;
 	scanner : FoxScanner.Scanner;
 	text : Texts.Text; reader : TextUtilities.TextReader;
-	format: LONGINT; res : WORD;
+	format, res : WORD;
 BEGIN
 	NEW(text);
 	TextUtilities.LoadAuto(text, filename, format, res);
@@ -1665,7 +1654,7 @@ END ParseFile;
 
 (** Parse all modules required to set the Record.superPtr and Object.superPtr fields and set these fields*)
 PROCEDURE SetSuperTypes*(module: Module);
-VAR cache : ModuleCache; nofModules : LONGINT;
+VAR cache : ModuleCache; nofModules : SIZE;
 BEGIN
 	ASSERT(module # NIL);
 	NEW(cache);

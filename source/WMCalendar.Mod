@@ -70,14 +70,14 @@ TYPE
 		backgroundImageName- : WMProperties.StringProperty;
 		backgroundImage : WMGraphics.Image;
 
-		mouseOverColumn, mouseOverRow : LONGINT;
+		mouseOverColumn, mouseOverRow : SIZE;
 		selected : BOOLEAN;
 
 		currentDate : Dates.DateTime;
 
 		date0 : Dates.DateTime; (* date of position (0,1) *)
-		cellWidth, cellHeight : LONGINT;
-		fixWidth, fixHeight : LONGINT; (* additional width and height of last column respectively row (division remainder) *)
+		cellWidth, cellHeight : SIZE;
+		fixWidth, fixHeight : SIZE; (* additional width and height of last column respectively row (division remainder) *)
 
 		state : LONGINT;
 		timer : Kernel.Timer;
@@ -122,7 +122,7 @@ TYPE
 		PROCEDURE RecacheProperties*;
 		VAR dt : Dates.DateTime; ignore, weekDay : LONGINT; string : Strings.String;
 
-			PROCEDURE GetResizedImage(name : WMProperties.StringProperty; width, height : LONGINT) : WMGraphics.Image;
+			PROCEDURE GetResizedImage(name : WMProperties.StringProperty; width, height : SIZE) : WMGraphics.Image;
 			VAR newImage, resizedImage : WMGraphics.Image;
 			BEGIN
 				newImage := NIL;
@@ -197,13 +197,13 @@ TYPE
 			month.Set(dt.month);
 		END ChangeMonth;
 
-		PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		BEGIN
 			PointerDown^(x, y, keys);
 			IF (0 IN keys) THEN selected := TRUE; END;
 		END PointerDown;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		VAR
 			selection : SelectionWrapper; dt : Dates.DateTime;
 			year, week, weekDay : LONGINT;
@@ -219,8 +219,8 @@ TYPE
 			END;
 		END PointerUp;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET);
-		VAR column, row : LONGINT;
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
+		VAR column, row : SIZE;
 		BEGIN
 			PointerMove^(x, y, keys);
 			GetCell(x, y, column, row);
@@ -237,20 +237,20 @@ TYPE
 			Invalidate;
 	 	END PointerLeave;
 
-	 	PROCEDURE GetDateXY(x, y : LONGINT; VAR dt : Dates.DateTime) : BOOLEAN;
-	 	VAR column, row : LONGINT;
+	 	PROCEDURE GetDateXY(x, y : SIZE; VAR dt : Dates.DateTime) : BOOLEAN;
+	 	VAR column, row : SIZE;
 	 	BEGIN
 	 		GetCell(x, y, column, row);
 	 		IF (column # -1) & (row > 0) THEN
 	 			dt := date0;
-	 			Dates.AddDays(dt, (row - 1) * NofColumns + column);
+	 			Dates.AddDays(dt, ((row - 1) * NofColumns + column)(LONGINT));
 	 			RETURN TRUE;
 	 		ELSE
 	 			RETURN FALSE;
 	 		END;
 	 	END GetDateXY;
 
-	 	PROCEDURE GetCell(x, y : LONGINT; VAR column, row : LONGINT);
+	 	PROCEDURE GetCell(x, y : SIZE; VAR column, row : SIZE);
 	 	BEGIN
 	 		column := -1; row := -1;
 	 		IF WMRectangles.PointInRect(x, y, GetClientRect()) THEN
@@ -431,7 +431,7 @@ TYPE
 		colorScheme : LONGINT;
 		contextMenu : WMPopups.Popup;
 		dragging, resizing : BOOLEAN;
-		lastX, lastY : LONGINT;
+		lastX, lastY : SIZE;
 
 		PROCEDURE &New*(context : WMRestorable.Context);
 		VAR panel : WMStandardComponents.Panel; configuration : WMRestorable.XmlElement;
@@ -508,7 +508,7 @@ TYPE
 			DecCount;
 		END Close;
 
-		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
 		BEGIN
 			lastX := bounds.l + x; lastY:=bounds.t + y;
 			IF keys = {0} THEN
@@ -548,8 +548,8 @@ TYPE
 			SetColorScheme(colorScheme);
 		END HandleToggleColor;
 
-		PROCEDURE PointerMove*(x,y:LONGINT; keys:SET);
-		VAR dx, dy, width, height : LONGINT;
+		PROCEDURE PointerMove*(x,y:SIZE; keys:SET);
+		VAR dx, dy, width, height : SIZE;
 		BEGIN
 			IF dragging OR resizing THEN
 				x := bounds.l + x; y := bounds.t + y; dx := x - lastX; dy := y - lastY;
@@ -568,7 +568,7 @@ TYPE
 			END;
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
 		BEGIN
 			PointerUp^(x, y, keys);
 			dragging := FALSE;

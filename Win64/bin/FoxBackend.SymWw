@@ -1,5 +1,5 @@
 MODULE FoxBackend;
-	IMPORT Streams, Diagnostics, Basic := FoxBasic, Global := FoxGlobal, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
+	IMPORT Streams, Diagnostics, Basic := FoxBasic, Global := FoxGlobal, BinaryCode := FoxBinaryCode, Formats := FoxFormats, SyntaxTree := FoxSyntaxTree, SemanticChecker := FoxSemanticChecker, Options, Strings;
 CONST 
 TYPE 
 	SectionName = ARRAY 256 OF CHAR; 
@@ -17,7 +17,7 @@ TYPE
 		findSectionOffset-: LONGINT; 
 		capabilities-: SET; 
 		oberon07-: BOOLEAN; 
-		instructionWidth-: LONGINT; 
+		instructionWidth-: SIZE; 
 		hasLinkRegister-: BOOLEAN; 
 		name-: ARRAY 32 OF CHAR; 
 
@@ -25,7 +25,7 @@ TYPE
 		PROCEDURE ^ SetOberon07*; 
 		PROCEDURE ^ SetCapabilities*(capabilities: SET); 
 		PROCEDURE ^ SetHasLinkRegister*; 
-		PROCEDURE ^ SetInstructionWidth*(instructionWidth: LONGINT); 
+		PROCEDURE ^ SetInstructionWidth*(instructionWidth: SIZE); 
 		PROCEDURE ^ ResetError*; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
 		PROCEDURE ^ SetName*(CONST name: ARRAY OF CHAR); 
@@ -35,7 +35,7 @@ TYPE
 		PROCEDURE ^ ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule; 
 		PROCEDURE ^ Emit*(backend: Backend): BOOLEAN; 
 		PROCEDURE ^ FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT); 
-		PROCEDURE ^ CheckCodeAddress*(VAR adr: LONGINT); 
+		PROCEDURE ^ CheckCodeAddress*(VAR adr: BinaryCode.Unit); 
 		PROCEDURE ^ GetDescription*(VAR instructionSet: ARRAY OF CHAR); 
 		PROCEDURE ^ CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN; 
 		PROCEDURE ^ DefineOptions*(options: Options.Options); 

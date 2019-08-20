@@ -13,7 +13,7 @@ VAR
 	endAdr*: ADDRESS;
 
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS ): ADDRESS;
-	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: LONGINT ): ADDRESS;
+	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: WORD ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
 	cout		: PROCEDURE {C} ( ch: CHAR );	(* console output *)
 

@@ -214,13 +214,13 @@ VAR
 		Records=POINTER TO ARRAY OF Record;
 
 	VAR
-		i,j,k: LONGINT; records: Records; time,brut: HUGEINT; calls: LONGINT; recordNumber: LONGINT;
+		i,j,k: SIZE; records: Records; time,brut: HUGEINT; calls: LONGINT; recordNumber: SIZE;
 		option: ARRAY 32 OF CHAR;
 		log: Streams.Writer;
 		all,done: BOOLEAN; sort: LONGINT;
 
 		PROCEDURE Sort(id: LONGINT);
-		VAR i,j: LONGINT;
+		VAR i,j: SIZE;
 		(* stupid bubblesort *)
 			PROCEDURE Swap(VAR l,r: Record);
 			VAR temp: Record;
@@ -378,7 +378,7 @@ VAR
 	END Calibrate;
 
 	PROCEDURE Init;
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO LEN(modules)-1 DO	modules[i] := NIL	END;
 		FOR i := 0 TO LEN(table)-1 DO table[i].used := FALSE END;
@@ -388,7 +388,7 @@ VAR
 	END Init;
 
 	PROCEDURE Reset*;
-	VAR i,j,k: LONGINT;
+	VAR i,j,k: SIZE;
 	BEGIN{EXCLUSIVE}
 		FOR i := 0 TO numberModules-1 DO
 			FOR j := 0 TO LEN(modules[i])-1 DO

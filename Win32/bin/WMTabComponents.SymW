@@ -5,8 +5,8 @@ TYPE
 	Tab* = OBJECT 
 	VAR 
 		caption-: Strings.String; 
-		w: LONGINT; 
-		width: LONGINT; 
+		w: SIZE; 
+		width: SIZE; 
 		color-: WMGraphics.Color; 
 		data-: ANY; 
 		inserted, attention*: BOOLEAN; 
@@ -18,8 +18,8 @@ TYPE
 	Tabs* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		left, right: WMStandardComponents.Button; 
-		leftOfs, totalWidth, border, lines: LONGINT; 
-		lineHeight-: WMProperties.Int32Property; 
+		leftOfs, totalWidth, border, lines: SIZE; 
+		lineHeight-: WMProperties.SizeProperty; 
 		tabs-, hover, selected-: Tab; 
 		canvasState: WMGraphics.CanvasState; 
 		onSelectTab-: WMEvents.EventSource; 
@@ -33,13 +33,13 @@ TYPE
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
-		PROCEDURE ^ FindTabFromPos(x, y: LONGINT): Tab; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ FindTabFromPos(x, y: SIZE): Tab; 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ Select*(new: Tab); 
 		PROCEDURE ^ SelectByName*(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ GetLeftTabs(VAR w: LONGINT; inner: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ GetLeftTabs(VAR w: SIZE; inner: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ MoveLeft(sender, data: ANY); 
 		PROCEDURE ^ MoveRight(sender, data: ANY); 
 		PROCEDURE ^ AddTab*(tab: Tab); 
@@ -83,9 +83,10 @@ TYPE
 	END TabPanel; 
 VAR 
 	ColorPrototype, ProtoTcDefault*, ProtoTcHover*, ProtoTcSelected*, ProtoTcAttention*, ProtoTcSelectedAttention*, ProtoTcTextDefault*, ProtoTcTextHover*, ProtoTcTextSelected*, ProtoTcTextAttention, ProtoTcTextSelectedAttention*: WMProperties.ColorProperty; 
-	Int32Prototype, ProtoTcBorderWidth*, ProtoLineHeight: WMProperties.Int32Property; 
+	Int32Prototype, ProtoTcBorderWidth*: WMProperties.Int32Property; 
 	StringPrototype, ProtoTcBgLeftDefault, ProtoTcBgMiddleDefault, ProtoTcBgRightDefault, ProtoTcBgLeftHover, ProtoTcBgMiddleHover, ProtoTcBgRightHover, ProtoTcBgLeftSelected, ProtoTcBgMiddleSelected, ProtoTcBgRightSelected, ProtoTcBgLeftAttention, ProtoTcBgMiddleAttention, ProtoTcBgRightAttention: WMProperties.StringProperty; 
 	BooleanPrototype, ProtoTcUseBgBitmaps: WMProperties.BooleanProperty; 
+	ProtoLineHeight: WMProperties.SizeProperty; 
 	StrTabs, StrTabPanel, StrTab, StrCaption, StrCaptionDescription, StrNoCaption, StrColor, StrColorDescription, StrTabWidth, StrTabWidthDescription, StrSelection, StrSelectionDescription, StrNoSelection: Strings.String; 
 
 	PROCEDURE ^ GenTabPanel*(): XML.Element; 

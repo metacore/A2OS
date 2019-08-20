@@ -875,21 +875,21 @@ TYPE
 			ext: SuperIndex;
 			sec: SectorTable;
 
-		PROCEDURE Set*(VAR r: Files.Rider; pos: LONGINT);
+		PROCEDURE Set*(VAR r: Files.Rider; pos: Files.Position);
 		VAR a, b: LONGINT;
 		BEGIN {EXCLUSIVE}
 			r.eof := FALSE; r.res := 0; r.file := SELF; r.fs := fs;
 			IF pos < 0 THEN
 				a := 0; b := HS
 			ELSIF pos < aleng*SS + bleng - HS THEN
-				a := (pos + HS) DIV SS; b := (pos + HS) MOD SS
+				a := (LONGINT(pos) + HS) DIV SS; b := (LONGINT(pos) + HS) MOD SS
 			ELSE
 				a := aleng; b := bleng
 			END;
 			r.apos := a; r.bpos := b; r.hint := firstbuf
 		END Set;
 
-		PROCEDURE Pos*(VAR r: Files.Rider): LONGINT;
+		PROCEDURE Pos*(VAR r: Files.Rider): Files.Position;
 		BEGIN
 			RETURN r.apos*SS + r.bpos - HS
 		END Pos;
@@ -898,16 +898,16 @@ TYPE
 		VAR buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			buf := r.hint(Buffer);
-			IF r.apos # buf.apos THEN buf := GetBuf(SELF, r.apos); r.hint := buf END;
+			IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
 			IF r.bpos < buf.lim THEN
 				x := buf.data.B[r.bpos]; INC(r.bpos)
-			ELSIF r.apos < aleng THEN
+			ELSIF LONGINT(r.apos) < aleng THEN
 				INC(r.apos);
-				buf := SearchBuf(SELF, r.apos);
+				buf := SearchBuf(SELF, LONGINT(r.apos));
 				IF buf = NIL THEN
 					buf := r.hint(Buffer);
 					IF buf.mod THEN WriteBuf(SELF, buf) END ;
-					ReadBuf(SELF, buf, r.apos)
+					ReadBuf(SELF, buf, LONGINT(r.apos))
 				ELSE
 					r.hint := buf
 				END;
@@ -918,13 +918,13 @@ TYPE
 			END
 		END Read;
 
-		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: LONGINT);
-		VAR src: ADDRESS; m: LONGINT; buf: Buffer;
+		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
+		VAR src: ADDRESS; m: SIZE; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
 				buf := r.hint(Buffer);
-				IF r.apos # buf.apos THEN buf := GetBuf(SELF, r.apos); r.hint := buf END;
+				IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
 				LOOP
 					IF len <= 0 THEN EXIT END ;
 					src := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + len;
@@ -933,12 +933,12 @@ TYPE
 					ELSIF buf.lim = SS THEN
 						m := buf.lim - r.bpos;
 						IF m > 0 THEN SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), m); INC(ofs, m); DEC(len, m) END ;
-						IF r.apos < aleng THEN
-							INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, r.apos);
+						IF LONGINT(r.apos) < aleng THEN
+							INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, LONGINT(r.apos));
 							IF buf = NIL THEN
 								buf := r.hint(Buffer);
 								IF buf.mod THEN WriteBuf(SELF, buf) END ;
-								ReadBuf(SELF, buf, r.apos)
+								ReadBuf(SELF, buf, LONGINT(r.apos))
 							ELSE
 								r.hint := buf
 							END
@@ -960,18 +960,18 @@ TYPE
 		VAR buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			buf := r.hint(Buffer);
-			IF r.apos # buf.apos THEN buf := GetBuf(SELF, r.apos); r.hint := buf END;
+			IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
 			IF r.bpos >= buf.lim THEN
 				IF r.bpos < SS THEN
 					INC(buf.lim); INC(bleng); modH := TRUE
 				ELSE
-					WriteBuf(SELF, buf); INC(r.apos); buf := SearchBuf(SELF, r.apos);
+					WriteBuf(SELF, buf); INC(r.apos); buf := SearchBuf(SELF, LONGINT(r.apos));
 					IF buf = NIL THEN
 						buf := r.hint(Buffer);
-						IF r.apos <= aleng THEN
-							ReadBuf(SELF, buf, r.apos)
+						IF LONGINT(r.apos) <= aleng THEN
+							ReadBuf(SELF, buf, LONGINT(r.apos))
 						ELSE
-							buf.apos := r.apos; buf.lim := 1; INC(aleng); bleng := 1; modH := TRUE;
+							buf.apos := LONGINT(r.apos); buf.lim := 1; INC(aleng); bleng := 1; modH := TRUE;
 							IF (aleng - STS) MOD XS = 0 THEN NewSub(SELF) END
 						END
 					ELSE
@@ -983,13 +983,13 @@ TYPE
 			buf.data.B[r.bpos] := x; INC(r.bpos); buf.mod := TRUE
 		END Write;
 
-		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: LONGINT);
-		VAR src, dst: ADDRESS; m: LONGINT; buf: Buffer;
+		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
+		VAR src, dst: ADDRESS; m: SIZE; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
 				buf := r.hint(Buffer);
-				IF r.apos # buf.apos THEN buf := GetBuf(SELF, r.apos); r.hint := buf END;
+				IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
 				LOOP
 					IF len <= 0 THEN EXIT END;
 					buf.mod := TRUE; dst := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + len;
@@ -997,16 +997,16 @@ TYPE
 						SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, len); r.bpos := m; EXIT
 					ELSIF m <= SS THEN
 						SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, len); r.bpos := m;
-						bleng := m; buf.lim := m; modH := TRUE; EXIT
+						bleng := LONGINT(m); buf.lim := LONGINT(m); modH := TRUE; EXIT
 					ELSE
 						m := SS - r.bpos;
 						IF m > 0 THEN SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, m); INC(ofs, m); DEC(len, m) END;
-						WriteBuf(SELF, buf); INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, r.apos);
+						WriteBuf(SELF, buf); INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, LONGINT(r.apos));
 						IF buf = NIL THEN
 							buf := r.hint(Buffer);
-							IF r.apos <= aleng THEN ReadBuf(SELF, buf, r.apos)
+							IF LONGINT(r.apos) <= aleng THEN ReadBuf(SELF, buf, LONGINT(r.apos))
 							ELSE
-								buf.apos := r.apos; buf.lim := 0; INC(aleng); bleng := 0; modH := TRUE;
+								buf.apos := LONGINT(r.apos); buf.lim := 0; INC(aleng); bleng := 0; modH := TRUE;
 								IF (aleng - STS) MOD XS = 0 THEN NewSub(SELF) END
 							END
 						ELSE
@@ -1017,7 +1017,7 @@ TYPE
 			END
 		END WriteBytes;
 
-		PROCEDURE Length*(): LONGINT;
+		PROCEDURE Length*(): Files.Size;
 		BEGIN {EXCLUSIVE}
 			RETURN aleng*SS + bleng - HS
 		END Length;
@@ -1399,7 +1399,7 @@ END NewFS;
 (* Clean up when module unloaded. *)
 
 PROCEDURE Cleanup;
-VAR ft: Files.FileSystemTable; i: LONGINT;
+VAR ft: Files.FileSystemTable; i: SIZE;
 BEGIN
 	IF Modules.shutdown = Modules.None THEN
 		Files.GetList(ft);

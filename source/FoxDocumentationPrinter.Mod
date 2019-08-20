@@ -25,7 +25,7 @@ TYPE
 		END Section;
 
 		PROCEDURE SectionList*(sections: Tree.Sections);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO sections.Length()-1 DO
 				Section(sections.GetSection(i));
@@ -78,7 +78,7 @@ TYPE
 		END Paragraph;
 
 		PROCEDURE ParagraphList*(paragraphs: Tree.Paragraphs);
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO paragraphs.Length()-1 DO
 				Paragraph(paragraphs.GetParagraph(i))
@@ -142,7 +142,7 @@ TYPE
 		END TextElement;
 
 		PROCEDURE Text*(text: Tree.Text);
-		VAR element: Tree.TextElement; i: LONGINT;
+		VAR element: Tree.TextElement; i: SIZE;
 		BEGIN
 			FOR i := 0 TO text.Length()-1 DO
 				element := text.GetElement(i);

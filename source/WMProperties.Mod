@@ -20,7 +20,7 @@ TYPE
 		repositoryName : Strings.String;
 		componentName : Strings.String;
 		generator : Strings.String;
-		componentID : LONGINT;
+		componentID : SIZE;
 
 		inLinkUpdate: BOOLEAN;
 
@@ -53,7 +53,7 @@ TYPE
 		END LinkChanged;
 
 		PROCEDURE SetLinkAsString*(CONST string : ARRAY OF CHAR);
-		VAR repositoryName : ARRAY 256 OF CHAR; componentName : ARRAY 128 OF CHAR; componentID : LONGINT;
+		VAR repositoryName : ARRAY 256 OF CHAR; componentName : ARRAY 128 OF CHAR; componentID : SIZE;
 		context : Repositories.Context; res : WORD; object: Repositories.Component;
 		BEGIN
 			IF Repositories.IsCommandString(string) THEN
@@ -131,7 +131,7 @@ TYPE
 		END IsLink;
 
 		PROCEDURE WriteLink*(w : Streams.Writer; context: ANY;  indent : LONGINT): BOOLEAN;
-		VAR name : String; id: LONGINT; res: WORD; repository: Repositories.Repository; objectName: String;
+		VAR name : String; id: SIZE; res: WORD; repository: Repositories.Repository; objectName: String;
 		BEGIN
 			IF object # NIL THEN
 				Indent(w, indent);
@@ -766,6 +766,367 @@ TYPE
 	END Int32Property;
 
 TYPE
+	(** Accessor property to an integer value. The range of possible values can be restricted. *)
+	IntegerProperty* = OBJECT(Property)
+	VAR
+		value : HUGEINT;
+		min, max : HUGEINT;
+		bounded : BOOLEAN;
+
+		PROCEDURE UpdateProperty;
+		VAR integer: Types.Hugeint; model: Models.Model; res: WORD;
+		BEGIN
+			IF GetModel(object, model) THEN
+				 model.GetGeneric(integer, res);
+				 IF res = 0 THEN Set(integer.value) END;
+			END;
+		END UpdateProperty;
+
+		PROCEDURE UpdateModel;
+		VAR type: Types.Hugeint; model: Models.Model; res: WORD;
+		BEGIN
+			IF inLinkUpdate THEN RETURN END;
+			IF GetModel(object, model) THEN
+				type.value := value;
+				model.SetGeneric(type, res);
+			END;
+		END UpdateModel;
+
+		(** Confines the possible input values between min and max. Implicitly activates the bounds check. If the current value
+			lies outside the bounds, it is truncated to the nearest and a change notification is sent after the end of the transaction. *)
+		PROCEDURE SetBounds*(min, max : HUGEINT);
+		BEGIN
+			AcquireWrite;
+			SELF.min := min; SELF.max := max; bounded := TRUE;
+			Stamp;
+			Set(value);
+			ReleaseWrite
+		END SetBounds;
+
+		PROCEDURE GetBounds*(VAR min, max : HUGEINT);
+		BEGIN
+			AcquireRead;
+			min := SELF.min; max := SELF.max;
+			ReleaseRead;
+		END GetBounds;
+
+		(** enables or disables the bounds of the value. If enabled, a change notification is sent if the current value had to be
+			changed to lie within the bounds *)
+		PROCEDURE SetIsBounded*(isBounded : BOOLEAN);
+		BEGIN
+			AcquireWrite;
+			IF isBounded # bounded THEN
+				bounded := isBounded;
+				Stamp;
+				Set(value);
+			END;
+			ReleaseWrite
+		END SetIsBounded;
+
+		PROCEDURE GetIsBounded*(VAR isBounded : BOOLEAN);
+		BEGIN
+			AcquireRead;
+			isBounded := bounded;
+			ReleaseRead;
+		END GetIsBounded;
+
+		PROCEDURE Validate(v : HUGEINT) : HUGEINT;
+		BEGIN
+			IF bounded THEN RETURN MAX(min, MIN(max, v))
+			ELSE RETURN v
+			END
+		END Validate;
+
+		PROCEDURE FromStream*(r : Streams.Reader);
+		VAR v : HUGEINT;
+		BEGIN
+			AcquireWrite;
+			r.HInt(v, TRUE);
+			Set(v);
+			ReleaseWrite
+		END FromStream;
+
+		PROCEDURE ToStream*(w : Streams.Writer);
+		BEGIN
+			AcquireRead;
+			w.Int(value, 0);
+			ReleaseRead
+		END ToStream;
+
+		PROCEDURE Get*() : HUGEINT;
+		VAR r : HUGEINT;
+		BEGIN
+			AcquireRead;
+			IF nonDefault OR (prototype = NIL) THEN r := value
+			ELSE r := prototype(IntegerProperty).Get()
+			END;
+			ReleaseRead;
+			RETURN r
+		END Get;
+
+
+		PROCEDURE Set*(value : HUGEINT);
+		VAR v: HUGEINT;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			IF v # SELF.value THEN
+				SELF.value := v;
+				Changed;
+				IF object # NIL THEN UpdateModel END;
+			ELSIF ~nonDefault THEN
+				Changed;
+			END;
+			NotDefault;
+			ReleaseWrite
+		END Set;
+
+		PROCEDURE SetPassive*(value : HUGEINT);
+		VAR v: HUGEINT;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			IF v # SELF.value THEN
+				SELF.value := v;
+				NotDefault;
+			END;
+			ReleaseWrite
+		END SetPassive;
+
+
+		PROCEDURE FromXML*(xml : XML.Element);
+		VAR
+			en : XMLObjects.Enumerator;
+			p : ANY;
+			s, mins, maxs : String;
+		BEGIN
+			AcquireWrite; NotDefault;
+			mins := xml.GetAttributeValue("min");
+			maxs := xml.GetAttributeValue("max");
+			IF mins # NIL THEN Strings.StrToHInt(mins^, min) ELSE min := MIN(HUGEINT) END;
+			IF maxs # NIL THEN Strings.StrToHInt(maxs^, max) ELSE max := MAX(HUGEINT) END;
+			bounded := (mins # NIL) OR (maxs # NIL);
+			en := xml.GetContents();
+			IF en.HasMoreElements() THEN
+				p := en.GetNext();
+				IF IsLink(p) THEN
+				ELSIF p IS XML.Chars THEN
+					s := p(XML.Chars).GetStr();
+					IF s # NIL THEN Strings.StrToHInt(s^, value); Set(value) END
+				END
+			END;
+			Stamp;
+			ReleaseWrite
+		END FromXML;
+
+		PROCEDURE ToXML*(VAR element: XML.Element);
+		VAR chars: XML.ArrayChars;s: ARRAY 20 OF CHAR;
+		BEGIN
+			IF (GetName # NIL) & nonDefault THEN
+				ToXML^(element);
+				element.SetAttributeValue("loader","WMProperties.NewInteger");
+				element.AddContent(NewIntChars(value));
+			END;
+		END ToXML;
+
+		PROCEDURE WriteXML*(w : Streams.Writer; context: ANY;  indent : LONGINT);
+		VAR name : String;
+		BEGIN
+			name := GetName();
+			IF name = NIL THEN KernelLog.String("Nameless Integer property encountered. Ignored"); KernelLog.Ln; RETURN END;
+			IF nonDefault THEN
+				Indent(w, indent);
+				w.Char("<"); w.String(name^); w.String(' loader="WMProperties.NewInteger"'); w.Char(">");
+				IF ~WriteLink(w,context,indent) THEN
+					w.Int(value, 0);
+				END;
+				w.String("</"); w.String(name^); w.Char(">"); w.Ln
+			END
+		END WriteXML;
+
+	END IntegerProperty;
+
+	(** Accessor property to a size value. The range of possible values can be restricted. *)
+	SizeProperty* = OBJECT(Property)
+	VAR
+		value : SIZE;
+		min, max : SIZE;
+		bounded : BOOLEAN;
+
+		PROCEDURE UpdateProperty;
+		VAR integer: Types.Size; model: Models.Model; res: WORD;
+		BEGIN
+			IF GetModel(object, model) THEN
+				 model.GetGeneric(integer, res);
+				 IF res = 0 THEN Set(integer.value) END;
+			END;
+		END UpdateProperty;
+
+		PROCEDURE UpdateModel;
+		VAR type: Types.Size; model: Models.Model; res: WORD;
+		BEGIN
+			IF inLinkUpdate THEN RETURN END;
+			IF GetModel(object, model) THEN
+				type.value := value;
+				model.SetGeneric(type, res);
+			END;
+		END UpdateModel;
+
+		(** Confines the possible input values between min and max. Implicitly activates the bounds check. If the current value
+			lies outside the bounds, it is truncated to the nearest and a change notification is sent after the end of the transaction. *)
+		PROCEDURE SetBounds*(min, max : SIZE);
+		BEGIN
+			AcquireWrite;
+			SELF.min := min; SELF.max := max; bounded := TRUE;
+			Stamp;
+			Set(value);
+			ReleaseWrite
+		END SetBounds;
+
+		PROCEDURE GetBounds*(VAR min, max : SIZE);
+		BEGIN
+			AcquireRead;
+			min := SELF.min; max := SELF.max;
+			ReleaseRead;
+		END GetBounds;
+
+		(** enables or disables the bounds of the value. If enabled, a change notification is sent if the current value had to be
+			changed to lie within the bounds *)
+		PROCEDURE SetIsBounded*(isBounded : BOOLEAN);
+		BEGIN
+			AcquireWrite;
+			IF isBounded # bounded THEN
+				bounded := isBounded;
+				Stamp;
+				Set(value);
+			END;
+			ReleaseWrite
+		END SetIsBounded;
+
+		PROCEDURE GetIsBounded*(VAR isBounded : BOOLEAN);
+		BEGIN
+			AcquireRead;
+			isBounded := bounded;
+			ReleaseRead;
+		END GetIsBounded;
+
+		PROCEDURE Validate(v : SIZE) : SIZE;
+		BEGIN
+			IF bounded THEN RETURN MAX(min, MIN(max, v))
+			ELSE RETURN v
+			END
+		END Validate;
+
+		PROCEDURE FromStream*(r : Streams.Reader);
+		VAR v : HUGEINT;
+		BEGIN
+			AcquireWrite;
+			r.HInt(v, TRUE);
+			Set(v(SIZE));
+			ReleaseWrite
+		END FromStream;
+
+		PROCEDURE ToStream*(w : Streams.Writer);
+		BEGIN
+			AcquireRead;
+			w.Int(value, 0);
+			ReleaseRead
+		END ToStream;
+
+		PROCEDURE Get*() : SIZE;
+		VAR r : SIZE;
+		BEGIN
+			AcquireRead;
+			IF nonDefault OR (prototype = NIL) THEN r := value
+			ELSE r := prototype(SizeProperty).Get()
+			END;
+			ReleaseRead;
+			RETURN r
+		END Get;
+
+
+		PROCEDURE Set*(value : SIZE);
+		VAR v: SIZE;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			IF v # SELF.value THEN
+				SELF.value := v;
+				Changed;
+				IF object # NIL THEN UpdateModel END;
+			ELSIF ~nonDefault THEN
+				Changed;
+			END;
+			NotDefault;
+			ReleaseWrite
+		END Set;
+
+		PROCEDURE SetPassive*(value : SIZE);
+		VAR v: SIZE;
+		BEGIN
+			v := Validate(value);
+			AcquireWrite;
+			IF v # SELF.value THEN
+				SELF.value := v;
+				NotDefault;
+			END;
+			ReleaseWrite
+		END SetPassive;
+
+
+		PROCEDURE FromXML*(xml : XML.Element);
+		VAR
+			en : XMLObjects.Enumerator;
+			p : ANY;
+			s, mins, maxs : String;
+		BEGIN
+			AcquireWrite; NotDefault;
+			mins := xml.GetAttributeValue("min");
+			maxs := xml.GetAttributeValue("max");
+			IF mins # NIL THEN Strings.StrToSize(mins^, min) ELSE min := MIN(SIZE) END;
+			IF maxs # NIL THEN Strings.StrToSize(maxs^, max) ELSE max := MAX(SIZE) END;
+			bounded := (mins # NIL) OR (maxs # NIL);
+			en := xml.GetContents();
+			IF en.HasMoreElements() THEN
+				p := en.GetNext();
+				IF IsLink(p) THEN
+				ELSIF p IS XML.Chars THEN
+					s := p(XML.Chars).GetStr();
+					IF s # NIL THEN Strings.StrToSize(s^, value); Set(value) END
+				END
+			END;
+			Stamp;
+			ReleaseWrite
+		END FromXML;
+
+		PROCEDURE ToXML*(VAR element: XML.Element);
+		VAR chars: XML.ArrayChars;s: ARRAY 20 OF CHAR;
+		BEGIN
+			IF (GetName # NIL) & nonDefault THEN
+				ToXML^(element);
+				element.SetAttributeValue("loader","WMProperties.NewSize");
+				element.AddContent(NewIntChars(value));
+			END;
+		END ToXML;
+
+		PROCEDURE WriteXML*(w : Streams.Writer; context: ANY;  indent : LONGINT);
+		VAR name : String;
+		BEGIN
+			name := GetName();
+			IF name = NIL THEN KernelLog.String("Nameless Integer property encountered. Ignored"); KernelLog.Ln; RETURN END;
+			IF nonDefault THEN
+				Indent(w, indent);
+				w.Char("<"); w.String(name^); w.String(' loader="WMProperties.NewSize"'); w.Char(">");
+				IF ~WriteLink(w,context,indent) THEN
+					w.Int(value, 0);
+				END;
+				w.String("</"); w.String(name^); w.Char(">"); w.Ln
+			END
+		END WriteXML;
+
+	END SizeProperty;
+
+TYPE
 
 	(** Accessor property to an real value. The range of possible values can be restricted. *)
 	RealProperty* = OBJECT(Property)
@@ -1121,7 +1482,7 @@ TYPE
 		END FromXML;
 
 		PROCEDURE ToXML*(VAR element: XML.Element);
-		VAR chars: XML.ArrayChars;s: String; w: Streams.StringWriter; res: WORD; len: LONGINT;
+		VAR chars: XML.ArrayChars;s: String; w: Streams.StringWriter; res: WORD; len: SIZE;
 		BEGIN
 			IF (GetName # NIL) & nonDefault THEN
 				ToXML^(element);
@@ -1141,7 +1502,7 @@ TYPE
 					ELSE
 						XML.UTF8ToStream(value^, w, res);
 					END;
-					NEW(s, w.Pos()+1); w.Get(s^);
+					NEW(s, SIZE(w.Pos())+1); w.Get(s^);
 					chars.SetStr(s^);
 				END;
 			END;
@@ -1283,7 +1644,7 @@ TYPE
 				NEW(chars); element.AddContent(chars);
 				NEW(w,10 );
 				w.Hex(value, -8);
-				NEW(s, w.Pos()+1); w.Get(s^);
+				NEW(s, SIZE(w.Pos())+1); w.Get(s^);
 				chars.SetStr(s^);
 			END;
 		END ToXML;
@@ -1381,7 +1742,7 @@ TYPE
 			ReleaseWrite;
 		END SetPassive;
 
-		PROCEDURE GetFont*(VAR name : ARRAY OF CHAR; VAR size : LONGINT; VAR style : SET);
+		PROCEDURE GetFont*(VAR name : ARRAY OF CHAR; VAR size : SIZE; VAR style : SET);
 		VAR font : WMGraphics.Font;
 		BEGIN
 			font := Get();
@@ -1425,7 +1786,7 @@ TYPE
 			COPY(font.name, name);
 		END GetFontName;
 
-		PROCEDURE SetSize*(size : LONGINT);
+		PROCEDURE SetSize*(size : SIZE);
 		VAR font : WMGraphics.Font;
 		BEGIN
 			AcquireWrite;
@@ -1443,7 +1804,7 @@ TYPE
 			ReleaseWrite;
 		END SetSize;
 
-		PROCEDURE GetSize*() : LONGINT;
+		PROCEDURE GetSize*() : SIZE;
 		VAR font : WMGraphics.Font;
 		BEGIN
 			font := Get();
@@ -1529,8 +1890,8 @@ TYPE
 		VAR new : WMGraphics.Point2d;
 		BEGIN
 			AcquireWrite;
-			r.SkipWhitespace; r.Int(new.x, FALSE);
-			r.SkipWhitespace; r.Int(new.y, FALSE);
+			r.SkipWhitespace; r.Size(new.x, FALSE);
+			r.SkipWhitespace; r.Size(new.y, FALSE);
 			NotDefault;
 			IF (new.x=value.x) & (new.y=value.y) THEN
 				value := new;
@@ -1581,7 +1942,7 @@ TYPE
 			ReleaseWrite
 		END SetPassive;
 
-		PROCEDURE SetCoordinate*(x,y : LONGINT);
+		PROCEDURE SetCoordinate*(x,y : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF (x#value.x) OR (y#value.y) THEN
@@ -1592,32 +1953,32 @@ TYPE
 			ReleaseWrite
 		END SetCoordinate;
 
-		PROCEDURE GetCoordinate*(VAR x,y: LONGINT);
+		PROCEDURE GetCoordinate*(VAR x,y: SIZE);
 		BEGIN
 			x:=value.x; y:=value.y
 		END GetCoordinate;
 
 
-		PROCEDURE SetX*(x : LONGINT);
+		PROCEDURE SetX*(x : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF value.x # x THEN value.x := x; Changed END; NotDefault;
 			ReleaseWrite
 		END SetX;
 
-		PROCEDURE SetY*(y : LONGINT);
+		PROCEDURE SetY*(y : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF value.y # y THEN value.y := y; Changed END; NotDefault;
 			ReleaseWrite
 		END SetY;
 
-		PROCEDURE GetX*() : LONGINT;
+		PROCEDURE GetX*() : SIZE;
 		BEGIN
 			RETURN value.x
 		END GetX;
 
-		PROCEDURE GetY*(): LONGINT;
+		PROCEDURE GetY*(): SIZE;
 		BEGIN
 			RETURN value.y
 		END GetY;
@@ -1683,13 +2044,13 @@ TYPE
 		value : WMRectangles.Rectangle;
 
 		PROCEDURE FromStream*(r : Streams.Reader);
-		VAR new : WMRectangles.Rectangle;
+		VAR new : WMRectangles.Rectangle; v: LONGINT;
 		BEGIN
 			AcquireWrite;
-			r.SkipWhitespace; r.Int(new.l, FALSE);
-			r.SkipWhitespace; r.Int(new.t, FALSE);
-			r.SkipWhitespace; r.Int(new.r, FALSE);
-			r.SkipWhitespace; r.Int(new.b, FALSE);
+			r.SkipWhitespace; r.Int(v, FALSE); new.l := v;
+			r.SkipWhitespace; r.Int(v, FALSE); new.t := v;
+			r.SkipWhitespace; r.Int(v, FALSE); new.r := v;
+			r.SkipWhitespace; r.Int(v, FALSE); new.b := v;
 			NotDefault;
 			IF ~WMRectangles.IsEqual(new, value) THEN
 				value := new;
@@ -1742,98 +2103,98 @@ TYPE
 		END SetPassive;
 
 
-		PROCEDURE SetWidth*(w : LONGINT);
+		PROCEDURE SetWidth*(w : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF GetWidth() # w THEN Changed END; value.r := value.l + w; NotDefault;
 			ReleaseWrite
 		END SetWidth;
 
-		PROCEDURE SetHeight*(h : LONGINT);
+		PROCEDURE SetHeight*(h : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF GetHeight() # h THEN Changed END; value.b := value.t + h; NotDefault;
 			ReleaseWrite
 		END SetHeight;
 
-		PROCEDURE SetLeft*(l : LONGINT);
+		PROCEDURE SetLeft*(l : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF value.l # l THEN Changed END; value.r := l + GetWidth(); value.l := l; NotDefault;
 			ReleaseWrite
 		END SetLeft;
 
-		PROCEDURE SetTop*(t : LONGINT);
+		PROCEDURE SetTop*(t : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF value.t # t THEN Changed END; value.b := t + GetHeight(); value.t := t;  NotDefault;
 			ReleaseWrite
 		END SetTop;
 
-		PROCEDURE SetRight*(r : LONGINT);
+		PROCEDURE SetRight*(r : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF value.r # r THEN Changed END; value.r := r;  NotDefault;
 			ReleaseWrite
 		END SetRight;
 
-		PROCEDURE SetBottom*(b : LONGINT);
+		PROCEDURE SetBottom*(b : SIZE);
 		BEGIN
 			AcquireWrite;
 			IF value.b # b THEN Changed END; value.b := b; NotDefault;
 			ReleaseWrite
 		END SetBottom;
 
-		PROCEDURE SetExtents*(w, h : LONGINT);
+		PROCEDURE SetExtents*(w, h : SIZE);
 		BEGIN
 			AcquireWrite; (* protective transaction *)
 			SetWidth(w); SetHeight(h);
 			ReleaseWrite
 		END SetExtents;
 
-		PROCEDURE GetWidth*() : LONGINT;
+		PROCEDURE GetWidth*() : SIZE;
 		VAR r : WMRectangles.Rectangle;
 		BEGIN
 			r := Get();
 			RETURN r.r - r.l;
 		END GetWidth;
 
-		PROCEDURE GetHeight*() : LONGINT;
+		PROCEDURE GetHeight*() : SIZE;
 		VAR r : WMRectangles.Rectangle;
 		BEGIN
 			r := Get();
 			RETURN r.b - r.t;
 		END GetHeight;
 
-		PROCEDURE GetLeft*() : LONGINT;
+		PROCEDURE GetLeft*() : SIZE;
 		VAR r : WMRectangles.Rectangle;
 		BEGIN
 			r := Get();
 			RETURN r.l;
 		END GetLeft;
 
-		PROCEDURE GetTop*() : LONGINT;
+		PROCEDURE GetTop*() : SIZE;
 		VAR r : WMRectangles.Rectangle;
 		BEGIN
 			r := Get();
 			RETURN r.t;
 		END GetTop;
 
-		PROCEDURE GetRight*() : LONGINT;
+		PROCEDURE GetRight*() : SIZE;
 		VAR r : WMRectangles.Rectangle;
 		BEGIN
 			r := Get();
 			RETURN r.r;
 		END GetRight;
 
-		PROCEDURE GetBottom*() : LONGINT;
+		PROCEDURE GetBottom*() : SIZE;
 		VAR r : WMRectangles.Rectangle;
 		BEGIN
 			r := Get();
 			RETURN r.b;
 		END GetBottom;
 
-		PROCEDURE GetExtents*(VAR width, height : LONGINT);
+		PROCEDURE GetExtents*(VAR width, height : SIZE);
 		VAR r : WMRectangles.Rectangle;
 		BEGIN
 			r := Get();
@@ -1914,7 +2275,7 @@ TYPE
 		repositoryName : Strings.String;
 		componentName : Strings.String;
 		generator : Strings.String;
-		componentID : LONGINT;
+		componentID : SIZE;
 		*)
 		(* temporary used in WriteXML *)
 		level: LONGINT;
@@ -2078,7 +2439,7 @@ TYPE
 		END ToXML;
 
 		PROCEDURE WriteXML*(w : Streams.Writer; context: ANY;  indent : LONGINT);
-		VAR name : String; id: LONGINT; res: WORD; repository: Repositories.Repository; objectName: String;
+		VAR name : String; id: SIZE; res: WORD; repository: Repositories.Repository; objectName: String;
 		BEGIN
 			name := GetName();
 			IF name = NIL THEN KernelLog.String("Nameless boolean property encountered. Ignored"); KernelLog.Ln; RETURN END;
@@ -2241,7 +2602,7 @@ TYPE
 		END HasProperty;
 
 		PROCEDURE GetPropertyValue*(CONST name : ARRAY OF CHAR; VAR value : ARRAY OF CHAR) : BOOLEAN;
-		VAR i : LONGINT; n : String; vs : Streams.StringWriter; len : LONGINT;
+		VAR i : LONGINT; n : String; vs : Streams.StringWriter; len : SIZE;
 		BEGIN
 			AcquireRead;
 			i := 0;
@@ -2449,7 +2810,7 @@ BEGIN
 	RETURN value
 END ReadCharDataInt;
 
-PROCEDURE NewIntChars(i: LONGINT): XML.Chars;
+PROCEDURE NewIntChars(i: HUGEINT): XML.Chars;
 VAR chars: XML.ArrayChars; s: ARRAY 32 OF CHAR;
 BEGIN
 	NEW(chars);
@@ -2473,6 +2834,16 @@ PROCEDURE NewInt32*(): Property;
 VAR property: Int32Property;
 BEGIN NEW(property,NIL,NIL,NIL); RETURN property
 END NewInt32;
+
+PROCEDURE NewInteger*(): Property;
+VAR property: IntegerProperty;
+BEGIN NEW(property,NIL,NIL,NIL); RETURN property
+END NewInteger;
+
+PROCEDURE NewSize*(): Property;
+VAR property: SizeProperty;
+BEGIN NEW(property,NIL,NIL,NIL); RETURN property
+END NewSize;
 
 PROCEDURE NewReal*(): Property;
 VAR property: RealProperty;

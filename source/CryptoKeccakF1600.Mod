@@ -27,20 +27,18 @@ TYPE
 	VAR
 		state: State;
 
-
 		PROCEDURE & Init*;
 		BEGIN
 			Initialize
 		END Init;
 
 		PROCEDURE Initialize*;
-		VAR i: LONGINT;
+		VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO nrLanes-1 DO  state[i].low := {};  state[i].high := {}  END
 		END Initialize;
 
-
-		PROCEDURE XORBytesInLane*( laneNo, laneOffset, length: LONGINT;  CONST data: ARRAY OF CHAR; dataOffset: LONGINT );
+		PROCEDURE XORBytesInLane*( laneNo, laneOffset, length: SIZE;  CONST data: ARRAY OF CHAR; dataOffset: SIZE );
 		VAR
 			lane: Lane;
 		BEGIN
@@ -54,10 +52,9 @@ TYPE
 			state[laneNo].high := state[laneNo].high / lane.high;
 		END XORBytesInLane;
 
-
-		PROCEDURE XORLanes*( CONST data: ARRAY OF CHAR; offset, laneCount: LONGINT );
+		PROCEDURE XORLanes*( CONST data: ARRAY OF CHAR; offset, laneCount: SIZE );
 		VAR
-			lane: Lane;  laneNo: LONGINT;
+			lane: Lane;  laneNo: SIZE;
 		BEGIN
 			ASSERT( laneCount <= nrLanes );
 			FOR laneNo := 0 TO laneCount - 1 DO
@@ -70,10 +67,9 @@ TYPE
 			END
 		END XORLanes;
 
-
-		PROCEDURE ComplementBit*( position: LONGINT );
+		PROCEDURE ComplementBit*( position: SIZE );
 		VAR
-			laneNo, bit: LONGINT;
+			laneNo, bit: SIZE;
 		BEGIN
 			ASSERT( position < 1600 );
 			laneNo := position DIV 64;  bit := position MOD 64;
@@ -84,8 +80,7 @@ TYPE
 			END
 		END ComplementBit;
 
-
-		PROCEDURE ExtractBytesInLane*( laneNo, laneOffset, length: LONGINT;  VAR data: ARRAY OF CHAR; dataOffset: LONGINT );
+		PROCEDURE ExtractBytesInLane*( laneNo, laneOffset, length: SIZE;  VAR data: ARRAY OF CHAR; dataOffset: SIZE );
 		VAR
 			lane: Lane;
 		BEGIN
@@ -94,10 +89,9 @@ TYPE
 			S.MOVE( ADDRESSOF( lane ) + laneOffset, ADDRESSOF( data[dataOffset] ), length )
 		END ExtractBytesInLane;
 
-
-		PROCEDURE ExtractLanes*( VAR data: ARRAY OF CHAR; offset, laneCount: LONGINT );
+		PROCEDURE ExtractLanes*( VAR data: ARRAY OF CHAR; offset, laneCount: SIZE );
 		VAR
-			lane: Lane;  laneNo: LONGINT;
+			lane: Lane;  laneNo: SIZE;
 		BEGIN
 			ASSERT( laneCount <= nrLanes );
 			FOR laneNo := 0 TO laneCount - 1 DO
@@ -106,79 +100,70 @@ TYPE
 			END
 		END ExtractLanes;
 
-		PROCEDURE XORPermute*(	CONST inData: ARRAY OF CHAR; offset, count: LONGINT );
+		PROCEDURE XORPermute*(	CONST inData: ARRAY OF CHAR; offset, count: SIZE );
 		BEGIN
 			XORLanes( inData, offset, count );
 			Permute;
 		END XORPermute;
 
-
-		PROCEDURE XORPermuteExtract*(	CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: LONGINT;
-												VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: LONGINT );
+		PROCEDURE XORPermuteExtract*(	CONST inData: ARRAY OF CHAR; inOffset, inLaneCount: SIZE;
+												VAR outData: ARRAY OF CHAR; outOffset, outLaneCount: SIZE );
 		BEGIN
 			XORLanes( inData, inOffset, inLaneCount );
 			Permute;
 			ExtractLanes( outData, outOffset, outLaneCount )
 		END XORPermuteExtract;
 
-
 		PROCEDURE Permute*;
-		VAR r: LONGINT;
+		VAR r: SIZE;
 		BEGIN
 			FOR r := 0 TO nrRounds-1 DO  Round( state, r ) END
 		END Permute;
 
-
 	END Instance;
-
-
-
-
 
 	(* Credit to Henry S. Warren, Hacker's Delight, Addison-Wesley, 2002	*)
 	PROCEDURE ToBitInterleaving( CONST in: Lane; VAR out: Lane );
 	VAR temp, temp0, temp1: SET32;
 	BEGIN
-	        temp0 := in.low;
-	        temp1 := in.high;
-	        temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
-	        temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
-	        temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
-	        temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
+		temp0 := in.low;
+		temp1 := in.high;
+		temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
+		temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
+		temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
+		temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
 
-	        temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET32, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
-	        temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
-	        temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
-	        temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET32, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
-	        out.low := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 );
-	        out.high := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H ));
+		temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET32, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
+		temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
+		temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
+		temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET32, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
+		out.low := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 );
+		out.high := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H ));
 	END ToBitInterleaving;
 
 	(* Credit to Henry S. Warren, Hacker's Delight, Addison-Wesley, 2002 *)
 	PROCEDURE FromBitInterleaving( CONST in: Lane;  VAR out: Lane );
 	VAR temp, temp0, temp1: SET32;
 	BEGIN
-	        temp0 := in.low;
-	        temp1 := in.high;
-	        temp := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 );
-	        temp1 := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H ));
-	        temp0 := temp;
-	        temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
-	        temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
-	        temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
-	        temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
+		temp0 := in.low;
+		temp1 := in.high;
+		temp := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 );
+		temp1 := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H ));
+		temp0 := temp;
+		temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
+		temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
+		temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
+		temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
 
-	        temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET32, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
-	        temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
-	        temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
-	        temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET32, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
-	        out.low := temp0;
-	        out.high := temp1;
+		temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET32, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
+		temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
+		temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
+		temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET32, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
+		out.low := temp0;
+		out.high := temp1;
 	END FromBitInterleaving;
 
-
-
-	PROCEDURE ROL64( VAR lane: Lane; offset: LONGINT );
+	PROCEDURE ROL64( VAR lane: Lane; offset: SIZE );
 	VAR tmp: SET32;
 	BEGIN
 		IF ODD( offset ) THEN
@@ -191,15 +176,13 @@ TYPE
 		END;
 	END ROL64;
 
-
 	PROCEDURE ROL64_1XOR( CONST in1, in2: Lane; VAR out: Lane );
 	BEGIN
 		out.low := ROT( in1.high, 1 ) / in2.low;
 		out.high := in1.low / in2.high;
 	END ROL64_1XOR;
 
-
-	PROCEDURE Round( VAR a: State; r: LONGINT );
+	PROCEDURE Round( VAR a: State; r: SIZE );
 	VAR
 		x, y, i, i1, i2: LONGINT;
 		c, d: ARRAY 5 OF Lane;
@@ -257,10 +240,7 @@ TYPE
 		a[0].high := a[0].high / roundConstants[r].high;
 	END Round;
 
-
-
 	(* ---------------------------------------------------------------- *)
-
 
 	PROCEDURE InitializeRoundConstants;
 	VAR
@@ -272,28 +252,26 @@ TYPE
 		FOR i := 0 TO nrRounds - 1 DO
 			lane.low := {};  lane.high := {};
 			FOR j := 0 TO 6 DO
-	       		bit := ASH( 1, j ) - 1;
-	 			IF LFSR86540( LFSRstate ) THEN
-	      			IF bit < 32 THEN  INCL( lane.low, bit )  ELSE  INCL( lane.high, bit - 32 )  END
-	   			END
-	  		END;
-	   		ToBitInterleaving( lane, roundConstants[i] );
-	 	END
+				bit := ASH( 1, j ) - 1;
+				IF LFSR86540( LFSRstate ) THEN
+					IF bit < 32 THEN  INCL( lane.low, bit )  ELSE  INCL( lane.high, bit - 32 )  END
+				END
+			END;
+			ToBitInterleaving( lane, roundConstants[i] );
+		END
 	END InitializeRoundConstants;
-
-
 
 	PROCEDURE InitializeRhoOffsets;
 	VAR
-	    x, y, t, oldY: LONGINT;
+		x, y, oldY: SIZE; t: LONGINT;
 	BEGIN
-	  	rhoOffsets[0] := 0;
-	 	x := 1;
+		rhoOffsets[0] := 0;
+		x := 1;
 		y := 0;
 		FOR t := 0 TO 23 DO
 			rhoOffsets[x + 5*y] := ((t+1)*(t+2) DIV 2) MOD 64;
-	        	oldY := y;  y := (2*x + 3*y) MOD 5;
-	        	x := oldY;
+			oldY := y;  y := (2*x + 3*y) MOD 5;
+			x := oldY;
 		END
 	END InitializeRhoOffsets;
 
@@ -310,11 +288,7 @@ TYPE
 		RETURN result;
 	END LFSR86540;
 
-
-
 BEGIN
 	InitializeRoundConstants;
 	InitializeRhoOffsets;
 END CryptoKeccakF1600.
-
-

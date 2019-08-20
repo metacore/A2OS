@@ -31,7 +31,7 @@ TYPE
 		PROCEDURE ^ ExpectIntegerWithoutSign(VAR integer: LONGINT): BOOLEAN; 
 		PROCEDURE ^ IgnoreNewLines; 
 		PROCEDURE ^ ExpectLineDelimiter(): BOOLEAN; 
-		PROCEDURE ^ ParseLineNumber(expectedLineNumber: LONGINT); 
+		PROCEDURE ^ ParseLineNumber(expectedLineNumber: Streams.Position); 
 		PROCEDURE ^ ParseOperand(VAR operand: IntermediateCode.Operand; sectionList: Sections.SectionList); 
 		PROCEDURE ^ ParseInstruction(VAR instruction: IntermediateCode.Instruction; sectionList: Sections.SectionList); 
 		PROCEDURE ^ ParseSectionContent*(scanner: Scanner.AssemblerScanner; section: IntermediateCode.Section; sectionList: Sections.SectionList); 

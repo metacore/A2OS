@@ -24,7 +24,7 @@ CONST
 TYPE 
 	NoWheelGrid* = OBJECT {EXCLUSIVE} (WMStringGrids.StringGrid)
 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 	END NoWheelGrid; 
 
 	BevelPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
@@ -76,9 +76,9 @@ TYPE
 		scrollbarX, scrollbarY: WMStandardComponents.Scrollbar; 
 		scrollX, scrollY: LONGINT; 
 		titleGrid: NoWheelGrid; 
-		maxWidths: ARRAY DiskOverviewTableColumns OF LONGINT; 
-		maxHeight: LONGINT; 
-		minWidth, minHeight: LONGINT; 
+		maxWidths: ARRAY DiskOverviewTableColumns OF SIZE; 
+		maxHeight: SIZE; 
+		minWidth, minHeight: SIZE; 
 		firstAlign: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -93,7 +93,7 @@ TYPE
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ GridClicked(sender, x: ANY); 
-		PROCEDURE ^ UpdateDiskOverview(disk: Disk; top: LONGINT; updateContent: BOOLEAN): WMStandardComponents.Panel; 
+		PROCEDURE ^ UpdateDiskOverview(disk: Disk; top: SIZE; updateContent: BOOLEAN): WMStandardComponents.Panel; 
 		PROCEDURE ^ BuildVTable(VAR disk: Disk); 
 		PROCEDURE ^ BuildDiskPanel(VAR disk: Disk): WMStandardComponents.Panel; 
 		PROCEDURE ^ UpdateDiskPanel(disk: Disk); 
@@ -103,12 +103,12 @@ TYPE
 		PROCEDURE ^ BuildSkeleton; 
 		PROCEDURE ^ GetSizeString(nbrOfBlocks, blockSize: LONGINT): Strings.String; 
 		PROCEDURE ^ UpdateDiskGrids; 
-		PROCEDURE ^ CalcDiskPanelBounds(VAR minWidth, minHeight: LONGINT); 
+		PROCEDURE ^ CalcDiskPanelBounds(VAR minWidth, minHeight: SIZE); 
 		PROCEDURE ^ BuildTitleGrid(): NoWheelGrid; 
 		PROCEDURE ^ SetGridBounds(VAR grid: NoWheelGrid); 
-		PROCEDURE ^ UpdateLayout(w, h: LONGINT; updateContent: BOOLEAN); 
-		PROCEDURE ^ UpdateSelection(disk, partition: LONGINT); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ UpdateLayout(w, h: SIZE; updateContent: BOOLEAN); 
+		PROCEDURE ^ UpdateSelection(disk, partition: SIZE); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 	END PartitionSelector; 
 
 	Operation* = PartitionsLib.Operation; 
@@ -140,7 +140,7 @@ TYPE
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ UpdateGrid(updateContent: BOOLEAN); 
 		PROCEDURE ^ OperationEventHandler(sender, data: ANY); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ PollStatus; 
 	BEGIN{ACTIVE} 

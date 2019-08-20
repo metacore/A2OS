@@ -58,7 +58,7 @@ TYPE
 			run := TRUE
 		END Run;
 
-		PROCEDURE Bound(VAR x:LONGINT; min, max:LONGINT);
+		PROCEDURE Bound(VAR x:SIZE; min, max:SIZE);
 		BEGIN IF x<min THEN x:=min ELSE IF x>max THEN x:=max END END
 		END Bound;
 

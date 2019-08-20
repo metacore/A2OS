@@ -98,7 +98,7 @@ TYPE
 
 	Window = ARRAY WindowSize OF CHAR; 
 
-	CheckFunc = PROCEDURE (old: LONGINT; CONST buf: ARRAY OF CHAR; idx, len: LONGINT):LONGINT; 
+	CheckFunc = PROCEDURE (old: LONGINT; CONST buf: ARRAY OF CHAR; idx, len: SIZE):LONGINT; 
 
 	Stream* = RECORD 
 		in*, out*: ZlibBuffers.Buffer; 
@@ -106,11 +106,11 @@ TYPE
 		wrapper-: BOOLEAN; 
 		open-: BOOLEAN; 
 		window: POINTER TO Window; 
-		read, write: LONGINT; 
+		read, write: SIZE; 
 		checkFn: CheckFunc; 
 		check: LONGINT; 
 		buf: LONGINT; 
-		bits: LONGINT; 
+		bits: SIZE; 
 		inf: RECORD 
 			state: INTEGER; 
 			method: INTEGER; 
@@ -123,7 +123,7 @@ TYPE
 		block: RECORD 
 			state: SHORTINT; 
 			last: BOOLEAN; 
-			left: LONGINT; 
+			left: SIZE; 
 			nlit: INTEGER; 
 			ndist: SHORTINT; 
 			nclen: SHORTINT; 
@@ -155,11 +155,11 @@ VAR
 	PROCEDURE ^ BuildTree(VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: WORD); 
 	PROCEDURE ^ Flush(VAR s: Stream); 
 	PROCEDURE ^ Need(VAR s: Stream; bits: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Dump(VAR s: Stream; bits: LONGINT); 
-	PROCEDURE ^ NeedOut(VAR s: Stream; VAR wavail: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Dump(VAR s: Stream; bits: SIZE); 
+	PROCEDURE ^ NeedOut(VAR s: Stream; VAR wavail: SIZE): BOOLEAN; 
 	PROCEDURE ^ NewCodes(VAR s: Stream; VAR lltree, dtree: Tree); 
 	PROCEDURE ^ FreeCodes(VAR s: Stream); 
-	PROCEDURE ^ InflateFast(VAR s: Stream; VAR wavail: LONGINT); 
+	PROCEDURE ^ InflateFast(VAR s: Stream; VAR wavail: SIZE); 
 	PROCEDURE ^ InflateCodes(VAR s: Stream); 
 	PROCEDURE ^ ResetBlocks(VAR s: Stream; VAR check: LONGINT); 
 	PROCEDURE ^ NewBlocks(VAR s: Stream; checkFn: CheckFunc); 
@@ -175,6 +175,6 @@ VAR
 	PROCEDURE ^ SetDictionary*(VAR stream: Stream; VAR dict: ARRAY OF CHAR; dictLen: LONGINT); 
 	PROCEDURE ^ Sync*(VAR stream: Stream); 
 	PROCEDURE ^ SyncPoint*(VAR stream: Stream): BOOLEAN; 
-	PROCEDURE ^ Uncompress*(VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; VAR len: LONGINT; VAR res: Result); 
+	PROCEDURE ^ Uncompress*(VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; VAR len: SIZE; VAR res: Result); 
 BEGIN
 END ZlibInflate.

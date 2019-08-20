@@ -219,7 +219,7 @@ TYPE
 		VAR
 			text : Texts.Text; from, to : Texts.TextPosition;
 			utilreader : Texts.TextReader; tempString : ARRAY 256 OF CHAR;
-			a, b, ch : LONGINT;
+			a, b: SIZE; ch : LONGINT;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
@@ -345,7 +345,7 @@ TYPE
 			ApplyChange(changeInfo);
 		END SetCustomStyle;
 
-		PROCEDURE StyleDrop(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE StyleDrop(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		BEGIN
 			NEW(popup);
 			popup.Add("Regular", StylePopupHandler);
@@ -379,7 +379,7 @@ TYPE
 			END;
 		END StylePopupHandler;
 
-		PROCEDURE ColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE ColorHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR colorPanel : WMPopups.ColorSwatchPopup;
 		BEGIN
 			NEW(colorPanel);
@@ -398,7 +398,7 @@ TYPE
 			colB.clDefault.Set(result);
 		END ColorPopupHandler;
 
-		PROCEDURE BGColorHandler(x, y : LONGINT; keys : SET; VAR handled : BOOLEAN);
+		PROCEDURE BGColorHandler(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
 		VAR colorPanel: WMPopups.ColorSwatchPopup;
 		BEGIN
 			NEW(colorPanel);
@@ -503,7 +503,7 @@ VAR
 	nofWindows : LONGINT;
 
 (* Actually, this is a hack... but for now, do it.  *)
-PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; mode, value, currentSize : LONGINT; VAR newSize : LONGINT);
+PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; mode, value : LONGINT; currentSize : SIZE; VAR newSize : SIZE);
 BEGIN
 	ASSERT((mode = Absolute) OR (mode = IncrementBy) OR (mode = DecrementBy));
 	IF (mode = Absolute) THEN
@@ -588,7 +588,7 @@ VAR
 	text : Texts.Text;
 	from, to : Texts.TextPosition;
 	utilreader : Texts.TextReader;
-	a, b : LONGINT;
+	a, b : SIZE;
 	ch : Texts.Char32;
 BEGIN
 	ASSERT(changeInfo # NIL);

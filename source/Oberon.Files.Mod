@@ -47,7 +47,7 @@ VAR
 
 PROCEDURE UpdateFile(f: File);
 BEGIN
-	f.r.file.GetDate(f.checktime, f.checkdate); f.checklen := f.r.file.Length()
+	f.r.file.GetDate(f.checktime, f.checkdate); f.checklen := f.r.file.Length()(LONGINT);
 END UpdateFile;
 
 (* Check if our copy of the underlying file's time and length match the reality. *)
@@ -105,7 +105,7 @@ BEGIN
 			files.Remove(f); f := NIL	(* throw away old record (even though user may still have a copy; that is his fault) *)
 		END;
 		IF f = NIL THEN	(* none found, create new handle *)
-			len := file.Length();
+			len := file.Length()(LONGINT);
 			NEW(f); f.bufs := 1; f.alen := len DIV BufSize; f.blen := len MOD BufSize;
 			NEW(f.buf); f.buf.apos := 0; f.buf.next := f.buf; f.buf.mod := FALSE;
 			file.Set(f.r, 0); file.ReadBytes(f.r, f.buf.data, 0, BufSize);
@@ -480,7 +480,7 @@ VAR pos, n: LONGINT; file: Files.File;
 BEGIN
 	file := f.r.file;
 	pos := buf.apos*BufSize;
-	n := pos - file.Length();
+	n := pos - file.Length()(LONGINT);
 	IF n > 0 THEN	(* pos is past current eof, extend file *)
 		file.Set(f.r, file.Length());
 		WHILE n > 0 DO file.Write(f.r, 0X); DEC(n) END

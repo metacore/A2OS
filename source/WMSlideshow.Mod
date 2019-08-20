@@ -318,7 +318,7 @@ TYPE SlideshowApp= OBJECT
 	VAR
 		view : WMWindowManager.ViewPort;
 		manager : WMWindowManager.WindowManager;
-		w, h : LONGINT;
+		w, h : SIZE;
 	BEGIN
 		IF (win = NIL) THEN RETURN; END;
 		fullscreen := ~fullscreen;
@@ -512,7 +512,7 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 		image : Image;
 		fact : REAL;
 		c : WMGraphics.BufferCanvas;
-		w, h : LONGINT;
+		w, h : SIZE;
 	BEGIN
 		(* End? -> indiacted with a white preview panel *)
 		IF (app.slideNr >= data.CountSlides()-1) THEN
@@ -577,7 +577,7 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 		app.Last();
 	END ButtonHandlerLast;
 
-	PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+	PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 	BEGIN
 		IF Inputs.Release IN flags THEN RETURN; END;
 		IF ucs = ORD("f") THEN
@@ -620,7 +620,7 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 	END KeyEvent;
 
 	(** Dropped is called via the message handler to indicate an item has been dropped. *)
-	PROCEDURE DragDropped*(x, y: LONGINT; dragInfo : WMWindowManager.DragInfo);
+	PROCEDURE DragDropped*(x, y: SIZE; dragInfo : WMWindowManager.DragInfo);
 	VAR
 		dropTarget : URLDropTarget;
 	BEGIN
@@ -659,7 +659,7 @@ TYPE DropURL* = OBJECT(WMDropTarget.DropURLs)
 			app.data.AddSlide(url);
 			IF (app.data.CountSlides() = 1) THEN
 				(* Load first slide *)
-				app.win.Update();
+				app.win.Update();
 			ELSE
 				app.nav.UpdatePreview();
 			END;
@@ -691,7 +691,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	END New;
 
 
-	PROCEDURE PointerDown*(x, y : LONGINT; keys : SET);
+	PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 	BEGIN
 		IF (0 IN keys) THEN
 			(* Go to next Slide  *)
@@ -699,7 +699,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 		END;
 	END PointerDown;
 
-	PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+	PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 	BEGIN
 		IF Inputs.Release IN flags THEN RETURN; END;
 		IF ucs = ORD("f") THEN
@@ -747,7 +747,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 		w, h : LONGINT;
 	BEGIN
 		(*  Load image *)
-		s := data.GetSlide(slideNr);
+		s := data.GetSlide(slideNr);
 		img := LoadImage(s.img^, Raster.BGR565);
 		manager := WMWindowManager.GetDefaultManager();
 		w := img.width;  h := img.height;
@@ -802,7 +802,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	VAR
 		tm : TransitionMask;
 		i, step: LONGINT;
-		w, h : LONGINT;
+		w, h : SIZE;
 	BEGIN
 		IF (DEBUG) THEN KernelLog.String("Mask transition: "); KernelLog.String(mask); KernelLog.Ln; END;
 		w := current.width; h := current.height;
@@ -827,7 +827,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	VAR
 		tf : TransitionFade;
 		i,step : LONGINT;
-		w, h : LONGINT;
+		w, h : SIZE;
 	BEGIN
 		IF (DEBUG) THEN KernelLog.String("Fade transition"); KernelLog.Ln; END;
 		w := current.width; h := current.height;
@@ -854,23 +854,23 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 
 	PROCEDURE Update;
 	VAR s : Slide;
-		w, h : LONGINT;
+		w, h : SIZE;
 		manager : WMWindowManager.WindowManager;
 		img: Image;
 	BEGIN
 		(* Load current slide *)
 		IF (app.slideNr > data.CountSlides()-1) THEN RETURN; END;
-		s := data.GetSlide(app.slideNr);
+		s := data.GetSlide(app.slideNr);
 		img := LoadImage(s.img^, Raster.BGR565);
 		WHILE (img = NIL) DO
 			IF (DEBUG) THEN KernelLog.String("Error: Invalid image - no decoder found for "); KernelLog.String(s.img^); KernelLog.Ln; END;
 			data.RemoveSlide(app.slideNr);
 			IF (app.slideNr < data.CountSlides()-1) THEN
-				s := data.GetSlide(app.slideNr);
+				s := data.GetSlide(app.slideNr);
 				img := LoadImage(s.img^, Raster.BGR565);
 			ELSIF ( (data.CountSlides() > 0) & (app.slideNr > 0) ) THEN
 				DEC(app.slideNr);
-				s := data.GetSlide(app.slideNr);
+				s := data.GetSlide(app.slideNr);
 				img := LoadImage(s.img^, Raster.BGR565);
 			ELSE
 				(* no more slides -> can't display one :-) *)
@@ -908,7 +908,7 @@ END SlideshowWindow;
 	VAR
 		p : ANY; 	s : Slide;
 	BEGIN
-		p := slides.GetItem(i);
+		p := slides.GetItem(i);
 		IF (p = NIL) THEN
 			IF (DEBUG) THEN KernelLog.String("Slide nr. "); KernelLog.Int(i, 0); KernelLog.String(" doesn't exist!");  KernelLog.Ln; END;
 			RETURN NIL;
@@ -1063,7 +1063,7 @@ END SlideshowWindow;
 	 *  XML slideshow file reading stuff
 	 *
 	 *****)
-	PROCEDURE ErrorReport(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR);
+	PROCEDURE ErrorReport(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 	BEGIN
 		KernelLog.String("Parse error at pos "); KernelLog.Int(pos, 5); KernelLog.String(" in line "); KernelLog.Int(line, 5);
 		KernelLog.String(" row "); KernelLog.Int(row, 5); KernelLog.String(" - "); KernelLog.String(msg); KernelLog.Ln;
@@ -1145,7 +1145,7 @@ END Cleanup;
  ****)
 PROCEDURE LoadImage(CONST name : ARRAY OF CHAR; fmt : Raster.Format): Image;
 VAR img : Image;
-	res: WORD; w, h, x : LONGINT;
+	res, x: WORD; w, h : SIZE;
 	decoder : Codecs.ImageDecoder;
 	in : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;

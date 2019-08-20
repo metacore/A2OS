@@ -89,8 +89,8 @@ TYPE
 		grid: WMPartitionsComponents.NoWheelGrid; 
 		gridContainer: WMStandardComponents.Panel; 
 		gridPanel: WMPartitionsComponents.BevelPanel; 
-		selectedRow: LONGINT; 
-		cellHeight: LONGINT; 
+		selectedRow: SIZE; 
+		cellHeight: SIZE; 
 		scrollbarY: WMStandardComponents.Scrollbar; 
 		editPanel: WMPartitionsComponents.BevelPanel; 
 		editorKey, editorValue: WMEditors.Editor; 
@@ -100,7 +100,7 @@ TYPE
 		toFile, toPartition: WMStandardComponents.Button; 
 		editorFile, editorPartition: WMEditors.Editor; 
 		target: LONGINT; 
-		fileLeft: LONGINT; 
+		fileLeft: SIZE; 
 		statusLabel: WMStandardComponents.Label; 
 		hex: ARRAY 32 OF CHAR; 
 
@@ -109,16 +109,16 @@ TYPE
 		PROCEDURE ^ LoadFromFile(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ StoreToFile(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ SetSelection(selection: WMPartitionsComponents.Selection): BOOLEAN; 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
 		PROCEDURE ^ ScrollY(sender, data: ANY); 
 		PROCEDURE ^ CheckboxHandler(sender, data: ANY); 
 		PROCEDURE ^ GridClicked(sender, data: ANY); 
 		PROCEDURE ^ UpdateGrid; 
-		PROCEDURE ^ UpdateLayout(width, height: LONGINT); 
+		PROCEDURE ^ UpdateLayout(width, height: SIZE); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
-		PROCEDURE ^  & Init*(width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
+		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
 	END ConfigEditor; 
 
 	PartitionsPlugin = OBJECT {EXCLUSIVE} (Plugin)
@@ -217,9 +217,9 @@ TYPE
 		text: Texts.Text; 
 		attr: Texts.Attributes; 
 		result: LONGINT; 
-		width, height: LONGINT; 
+		width, height: SIZE; 
 
-		PROCEDURE ^  & Init*(width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ SetText(text: Texts.Text); 
 		PROCEDURE ^ SetTextAsString(CONST string: ARRAY OF CHAR); 
 		PROCEDURE ^ SetParameters(CONST operationName: ARRAY OF CHAR; selection: PartitionsLib.Selection; VAR parameters: Parameters); 
@@ -247,17 +247,17 @@ TYPE
 		refreshBtn, showDetailsBtn: WMStandardComponents.Button; 
 		pluginPanel: WMStandardComponents.Panel; 
 		statusLabel: WMStandardComponents.Label; 
-		width, height: LONGINT; 
+		width, height: SIZE; 
 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ TabSelected(sender, data: ANY); 
 		PROCEDURE ^ CompletionHandler(operation: PartitionsLib.Operation; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ UpdateStatusLabel(string: Strings.String); 
 		PROCEDURE ^ ShowDetails(sender, data: ANY); 
 		PROCEDURE ^ Refresh(sender, data: ANY); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ PartitionSelected(sender, data: ANY); 
 		PROCEDURE ^ UpdateContent*; 
 		PROCEDURE ^ UpdateSelection(selection: WMPartitionsComponents.Selection); 

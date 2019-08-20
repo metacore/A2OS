@@ -1105,7 +1105,7 @@ positive: procedure section before const section
 	PROCEDURE Procedure; END Procedure;
 	CONST Constant = 0;
 	END Test.
-	
+
 positive: procedure section before type section
 
 	MODULE Test;
@@ -9002,7 +9002,7 @@ positive: returning enumeration type
 	MODULE Test;
 
 	TYPE
-	Enumeration = ENUM 
+	Enumeration = ENUM
 		red, green, blue
 	END;
 
@@ -24665,14 +24665,14 @@ negative: entier on variable boolean
 negative: unary length of variable boolean
 
 	MODULE Test;
-	VAR boolean: BOOLEAN; result: LONGINT;
+	VAR boolean: BOOLEAN; result: SIZE;
 	BEGIN result := LEN (boolean)
 	END Test.
 
 negative: binary length of variable boolean
 
 	MODULE Test;
-	VAR boolean: BOOLEAN; result: LONGINT;
+	VAR boolean: BOOLEAN; result: SIZE;
 	BEGIN result := LEN (boolean, 0)
 	END Test.
 
@@ -24943,14 +24943,14 @@ negative: entier on variable character
 negative: unary length of variable character
 
 	MODULE Test;
-	VAR character: CHAR; result: LONGINT;
+	VAR character: CHAR; result: SIZE;
 	BEGIN result := LEN (character)
 	END Test.
 
 negative: binary length of variable character
 
 	MODULE Test;
-	VAR character: CHAR; result: LONGINT;
+	VAR character: CHAR; result: SIZE;
 	BEGIN result := LEN (character, 0)
 	END Test.
 
@@ -25270,14 +25270,14 @@ negative: entier on variable integer
 negative: unary length of variable integer
 
 	MODULE Test;
-	VAR integer: INTEGER; result: LONGINT;
+	VAR integer: INTEGER; result: SIZE;
 	BEGIN result := LEN (integer)
 	END Test.
 
 negative: binary length of variable integer
 
 	MODULE Test;
-	VAR integer: INTEGER; result: LONGINT;
+	VAR integer: INTEGER; result: SIZE;
 	BEGIN result := LEN (integer, 0)
 	END Test.
 
@@ -25592,14 +25592,14 @@ positive: entier on variable long real
 negative: unary length of variable real
 
 	MODULE Test;
-	VAR real: REAL; result: LONGINT;
+	VAR real: REAL; result: SIZE;
 	BEGIN result := LEN (real)
 	END Test.
 
 negative: binary length of variable real
 
 	MODULE Test;
-	VAR real: REAL; result: LONGINT;
+	VAR real: REAL; result: SIZE;
 	BEGIN result := LEN (real, 0)
 	END Test.
 
@@ -25954,14 +25954,14 @@ negative: entier on variable set
 negative: unary length of variable set
 
 	MODULE Test;
-	VAR set: SET; result: LONGINT;
+	VAR set: SET; result: SIZE;
 	BEGIN result := LEN (set)
 	END Test.
 
 negative: binary length of variable set
 
 	MODULE Test;
-	VAR set: SET; result: LONGINT;
+	VAR set: SET; result: SIZE;
 	BEGIN result := LEN (set, 0)
 	END Test.
 
@@ -26316,79 +26316,15 @@ negative: entier on variable array
 positive: unary length of variable array
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array); ASSERT (LEN (array) = 10);
-	END Test.
-
-positive: unary length of variable array as short integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: SHORTINT;
-	BEGIN result := LEN (array);
-	END Test.
-
-positive: unary length of variable array as integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: INTEGER;
-	BEGIN result := LEN (array);
-	END Test.
-
-positive: unary length of variable array as long integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
-	BEGIN result := LEN (array);
-	END Test.
-
-positive: unary length of variable array as huge integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: HUGEINT;
-	BEGIN result := LEN (array);
 	END Test.
 
 positive: unary length of variable open array
 
 	MODULE Test;
 	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: LONGINT;
-	BEGIN result := LEN (array)
-	END Procedure
-	END Test.
-
-negative: unary length of variable open array as short integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: SHORTINT;
-	BEGIN result := LEN (array)
-	END Procedure
-	END Test.
-
-negative: unary length of variable open array as integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: INTEGER;
-	BEGIN result := LEN (array)
-	END Procedure
-	END Test.
-
-positive: unary length of variable open array as long integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: LONGINT;
-	BEGIN result := LEN (array)
-	END Procedure
-	END Test.
-
-positive: unary length of variable open array as huge integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: HUGEINT;
+	VAR result: SIZE;
 	BEGIN result := LEN (array)
 	END Procedure
 	END Test.
@@ -26397,7 +26333,7 @@ positive: unary length of two-dimensional variable array
 
 	MODULE Test;
 	CONST Length = LEN (array);
-	VAR array: ARRAY 10, 20 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10, 20 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array); ASSERT (Length = 10);
 	END Test.
 
@@ -26405,7 +26341,7 @@ positive: unary length of two-dimensional variable open array
 
 	MODULE Test;
 	PROCEDURE Procedure (array: ARRAY OF ARRAY OF CHAR);
-	VAR result: LONGINT;
+	VAR result: SIZE;
 	BEGIN result := LEN (array);
 	END Procedure;
 	END Test.
@@ -26441,105 +26377,77 @@ positive: indirect unary array as size of another array
 positive: binary length of variable array
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array); ASSERT (LEN (array, 0) = 10); ASSERT (LEN (array, 0) = LEN (array));
-	END Test.
-
-positive: constant binary length of variable array as short integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: SHORTINT;
-	BEGIN result := LEN (array, 0);
-	END Test.
-
-positive: constant binary length of variable array as integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: INTEGER;
-	BEGIN result := LEN (array, 0);
-	END Test.
-
-positive: constant binary length of variable array as long integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
-	BEGIN result := LEN (array, 0);
-	END Test.
-
-positive: constant binary length of variable array as huge integer
-
-	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: HUGEINT;
-	BEGIN result := LEN (array, 0);
 	END Test.
 
 negative: binary length of variable array with negative dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array, -1);
 	END Test.
 
 negative: binary length of variable array with invalid dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array, 1);
 	END Test.
 
 positive: binary length of variable array with variable dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT; dimension: INTEGER;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE; dimension: INTEGER;
 	BEGIN result := LEN (array, dimension);
 	END Test.
 
 negative: binary length of variable array with boolean as dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT; dimension: BOOLEAN;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE; dimension: BOOLEAN;
 	BEGIN result := LEN (array, dimension);
 	END Test.
 
 negative: binary length of variable array with character as dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT; dimension: CHAR;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE; dimension: CHAR;
 	BEGIN result := LEN (array, dimension);
 	END Test.
 
 positive: binary length of variable array with integer as dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT; dimension: INTEGER;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE; dimension: INTEGER;
 	BEGIN result := LEN (array, dimension);
 	END Test.
 
 negative: binary length of variable array with real as dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT; dimension: REAL;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE; dimension: REAL;
 	BEGIN result := LEN (array, dimension);
 	END Test.
 
 negative: binary length of variable array with set as dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT; dimension: SET;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE; dimension: SET;
 	BEGIN result := LEN (array, dimension);
 	END Test.
 
 negative: binary length of variable array with constant string as dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array, "index");
 	END Test.
 
 negative: binary length of variable array with nil pointer as dimension index
 
 	MODULE Test;
-	VAR array: ARRAY 10 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array, NIL);
 	END Test.
 
@@ -26547,7 +26455,7 @@ positive: binary length of two-dimensional variable array
 
 	MODULE Test;
 	CONST Length0 = LEN (array, 0); Length1 = LEN (array, 1)
-	VAR array: ARRAY 10, 20 OF CHAR; result: LONGINT;
+	VAR array: ARRAY 10, 20 OF CHAR; result: SIZE;
 	BEGIN result := LEN (array, 0); ASSERT (Length0 = 10); ASSERT (Length1 = 20);
 	END Test.
 
@@ -26555,7 +26463,7 @@ positive: binary length of two-dimensional variable open array
 
 	MODULE Test;
 	PROCEDURE Procedure (array: ARRAY OF ARRAY OF CHAR);
-	VAR result: LONGINT;
+	VAR result: SIZE;
 	BEGIN result := LEN (array, 0); result := LEN (array, 1);
 	END Procedure;
 	END Test.
@@ -26624,44 +26532,8 @@ positive: binary length of variable open array
 
 	MODULE Test;
 	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: LONGINT;
+	VAR result: SIZE;
 	BEGIN result := LEN (array, 0);
-	END Procedure;
-	END Test.
-
-negative: binary length of variable open array as short integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: SHORTINT;
-	BEGIN result := LEN (array, 0);
-	END Procedure;
-	END Test.
-
-negative: binary length of variable open array as integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: INTEGER;
-	BEGIN result := LEN (array, 0);
-	END Procedure;
-	END Test.
-
-positive: binary length of variable open array as long integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: LONGINT;
-	BEGIN result := LEN (array);
-	END Procedure;
-	END Test.
-
-positive: binary length of variable open array as huge integer
-
-	MODULE Test;
-	PROCEDURE Procedure (array: ARRAY OF CHAR);
-	VAR result: HUGEINT;
-	BEGIN result := LEN (array);
 	END Procedure;
 	END Test.
 
@@ -27278,14 +27150,14 @@ negative: entier on variable record
 negative: unary length of variable record
 
 	MODULE Test;
-	VAR record: RECORD END; result: LONGINT;
+	VAR record: RECORD END; result: SIZE;
 	BEGIN result := LEN (record)
 	END Test.
 
 negative: binary length of variable record
 
 	MODULE Test;
-	VAR record: RECORD END; result: LONGINT;
+	VAR record: RECORD END; result: SIZE;
 	BEGIN result := LEN (record, 0)
 	END Test.
 
@@ -27716,14 +27588,14 @@ negative: entier on variable object
 negative: unary length of variable object
 
 	MODULE Test;
-	VAR object: OBJECT END; result: LONGINT;
+	VAR object: OBJECT END; result: SIZE;
 	BEGIN result := LEN (object)
 	END Test.
 
 negative: binary length of variable object
 
 	MODULE Test;
-	VAR object: OBJECT END; result: LONGINT;
+	VAR object: OBJECT END; result: SIZE;
 	BEGIN result := LEN (object, 0)
 	END Test.
 
@@ -28061,14 +27933,14 @@ negative: entier on variable base object
 negative: unary length of variable base object
 
 	MODULE Test;
-	VAR object: OBJECT; result: LONGINT;
+	VAR object: OBJECT; result: SIZE;
 	BEGIN result := LEN (object)
 	END Test.
 
 negative: binary length of variable base object
 
 	MODULE Test;
-	VAR object: OBJECT; result: LONGINT;
+	VAR object: OBJECT; result: SIZE;
 	BEGIN result := LEN (object, 0)
 	END Test.
 
@@ -28432,14 +28304,14 @@ negative: entier on variable pointer to record
 negative: unary length of variable pointer to record
 
 	MODULE Test;
-	VAR pointer: POINTER TO RECORD END; result: LONGINT;
+	VAR pointer: POINTER TO RECORD END; result: SIZE;
 	BEGIN result := LEN (pointer)
 	END Test.
 
 negative: binary length of variable pointer to record
 
 	MODULE Test;
-	VAR pointer: POINTER TO RECORD END; result: LONGINT;
+	VAR pointer: POINTER TO RECORD END; result: SIZE;
 	BEGIN result := LEN (pointer, 0)
 	END Test.
 
@@ -28802,14 +28674,14 @@ negative: entier on variable pointer to array
 positive: unary length of variable pointer to array
 
 	MODULE Test;
-	VAR pointer: POINTER TO ARRAY 10 OF CHAR; result: LONGINT;
+	VAR pointer: POINTER TO ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (pointer)
 	END Test.
 
 positive: binary length of variable pointer to array
 
 	MODULE Test;
-	VAR pointer: POINTER TO ARRAY 10 OF CHAR; result: LONGINT;
+	VAR pointer: POINTER TO ARRAY 10 OF CHAR; result: SIZE;
 	BEGIN result := LEN (pointer, 0)
 	END Test.
 
@@ -29690,14 +29562,14 @@ negative: entier on procedure variable
 negative: unary length of procedure variable
 
 	MODULE Test;
-	VAR procedure: PROCEDURE; result: LONGINT;
+	VAR procedure: PROCEDURE; result: SIZE;
 	BEGIN result := LEN (procedure)
 	END Test.
 
 negative: binary length of procedure variable
 
 	MODULE Test;
-	VAR procedure: PROCEDURE; result: LONGINT;
+	VAR procedure: PROCEDURE; result: SIZE;
 	BEGIN result := LEN (procedure, 0)
 	END Test.
 
@@ -39699,4 +39571,4 @@ positive: use array size for array size
 	CONST Data = [10,20];
 	VAR a: ARRAY LEN(Data,0) OF LONGINT;
 	END Test.
-	
+

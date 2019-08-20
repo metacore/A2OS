@@ -9,7 +9,7 @@ CONST
 	PointSize = 6; 
 TYPE 
 	Point* = POINTER TO RECORD 
-		x, y: LONGINT; 
+		x, y: SIZE; 
 		previous, next: Point; 
 	END; 
 
@@ -27,23 +27,23 @@ TYPE
 		selectedLine: BOOLEAN; 
 		mouseOver: BOOLEAN; 
 		lastKeys, state: SET; 
-		oldx, oldy: LONGINT; 
+		oldx, oldy: SIZE; 
 		PArray: WMProperties.PropertyArray; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ AddPoint*(x, y: LONGINT); 
-		PROCEDURE ^ MovePoint*(point: WMProperties.Property; fx, fy: LONGINT); 
-		PROCEDURE ^ RemovePoint*(fx, fy: LONGINT); 
-		PROCEDURE ^ ThisPoint*(fx, fy: LONGINT): WMProperties.Property; 
+		PROCEDURE ^ AddPoint*(x, y: SIZE); 
+		PROCEDURE ^ MovePoint*(point: WMProperties.Property; fx, fy: SIZE); 
+		PROCEDURE ^ RemovePoint*(fx, fy: SIZE); 
+		PROCEDURE ^ ThisPoint*(fx, fy: SIZE): WMProperties.Property; 
 		PROCEDURE ^ IndexedPoint*(index: LONGINT): WMProperties.Property; 
-		PROCEDURE ^ MoveFigure*(dx, dy: LONGINT); 
-		PROCEDURE ^ PointerDown*(fx, fy: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerUp*(fx, fy: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(fx, fy: LONGINT; keys: SET); 
-		PROCEDURE ^ Inside*(X, Y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ MoveFigure*(dx, dy: SIZE); 
+		PROCEDURE ^ PointerDown*(fx, fy: SIZE; keys: SET); 
+		PROCEDURE ^ PointerUp*(fx, fy: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(fx, fy: SIZE; keys: SET); 
+		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ AddDisplayPoint(x, y: LONGINT); 
+		PROCEDURE ^ AddDisplayPoint(x, y: SIZE); 
 		PROCEDURE ^ MoveDisplayPoints(dx, dy: LONGINT); 
 		PROCEDURE ^ Normalize; 
 		PROCEDURE ^ Scale; 
@@ -64,8 +64,8 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ Scale; 
-		PROCEDURE ^ Inside*(X, Y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ IsHit*(mx, my: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Line; 
 
@@ -74,7 +74,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ Normalize; 
-		PROCEDURE ^ IsHit*(mx, my: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Circle; 
 
@@ -82,7 +82,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ IsHit*(mx, my: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Rectangle; 
 
@@ -93,8 +93,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ Inside*(X, Y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ IsHit*(mx, my: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Inside*(X, Y: SIZE): BOOLEAN; 
+		PROCEDURE ^ IsHit*(mx, my: SIZE): BOOLEAN; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ Normalize; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -113,10 +113,10 @@ VAR
 	PROCEDURE ^ arctan2(x, y: REAL): REAL; 
 	PROCEDURE ^ MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: LONGINT; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: LONGINT); 
 	PROCEDURE ^ SplineToPoly(c: Point; closed: BOOLEAN; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: LONGINT); 
-	PROCEDURE ^ Invicinity(mx, my, X, Y: LONGINT): BOOLEAN; 
-	PROCEDURE ^ InLineVicinity(mx, my, X, Y, X1, Y1: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Intersect(X, Y, x0, y0, x1, y1: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Distance(x, y, x0, y0: LONGINT): LONGINT; 
+	PROCEDURE ^ Invicinity(mx, my, X, Y: SIZE): BOOLEAN; 
+	PROCEDURE ^ InLineVicinity(mx, my, X, Y, X1, Y1: SIZE): BOOLEAN; 
+	PROCEDURE ^ Intersect(X, Y, x0, y0, x1, y1: SIZE): BOOLEAN; 
+	PROCEDURE ^ Distance(x, y, x0, y0: SIZE): SIZE; 
 	PROCEDURE ^ GenLine*(): XML.Element; 
 	PROCEDURE ^ GenCircle*(): XML.Element; 
 	PROCEDURE ^ GenRectangle*(): XML.Element; 

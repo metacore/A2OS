@@ -44,17 +44,17 @@ TYPE
 
 	Layout = OBJECT
 	VAR
-		width, height : LONGINT; (* of overall space available *)
-		entryWidth, entryHeight : LONGINT;
+		width, height : SIZE; (* of overall space available *)
+		entryWidth, entryHeight : SIZE;
 
 		(* entries in rightmost column are 'fixX + entryWidth' width and entries in last row are 'fixY + entryHeight' in height *)
-		fixX, fixY : LONGINT;
-		nofRows, nofColumns : LONGINT;
-		nofEntries : LONGINT;
+		fixX, fixY : SIZE;
+		nofRows, nofColumns : SIZE;
+		nofEntries : SIZE;
 
 		(** Return position owning entry at x, y. Returns -1 if no entry owns the position *)
-		PROCEDURE GetIndexOf(x, y : LONGINT) : LONGINT;
-		VAR result, row, column  : LONGINT;
+		PROCEDURE GetIndexOf(x, y : SIZE) : SIZE;
+		VAR result, row, column  : SIZE;
 		BEGIN
 			result := -1;
 			IF (nofEntries > 0) & (nofRows > 0) & (nofColumns > 0) THEN
@@ -69,8 +69,8 @@ TYPE
 		END GetIndexOf;
 
 		(** Return the bounding box of the item hit at position x, y *)
-		PROCEDURE GetPositionOf(x, y : LONGINT) : WMRectangles.Rectangle;
-		VAR rect : WMRectangles.Rectangle; row, column : LONGINT;
+		PROCEDURE GetPositionOf(x, y : SIZE) : WMRectangles.Rectangle;
+		VAR rect : WMRectangles.Rectangle; row, column : SIZE;
 		BEGIN
 			rect := WMRectangles.MakeRect(0, 0, 0, 0);
 			IF (nofEntries > 0) & (nofRows > 0) & (nofColumns > 0) THEN
@@ -86,7 +86,7 @@ TYPE
 			RETURN rect;
 		END GetPositionOf;
 
-		PROCEDURE Compute(nofEntries, width, height, desiredEntryWidth, desiredEntryHeight, mode : LONGINT);
+		PROCEDURE Compute(nofEntries, width, height, desiredEntryWidth, desiredEntryHeight : SIZE; mode : LONGINT);
 		BEGIN
 			ASSERT(nofEntries >= 0);
 			ASSERT((width >= 0) & (height >= 0));
@@ -120,7 +120,7 @@ TYPE
 
 		(* Try to fit the entries of size (entryWidth,entryHeight) as good as possible into a number of columns and rows. Scale down entryWidth if necessary *)
 		PROCEDURE ComputeDefault; (* private *)
-		VAR nofEntriesPerRow, nofAvailableRows, nofRequiredRows : LONGINT;
+		VAR nofEntriesPerRow, nofAvailableRows, nofRequiredRows : SIZE;
 		BEGIN
 			nofEntriesPerRow := width DIV entryWidth;
 			IF (nofEntriesPerRow = 0) THEN nofEntriesPerRow := 1; END;
@@ -158,7 +158,7 @@ TYPE
 
 		(* width, height of remaining area, nofEntries that still need to be placed *)
 		PROCEDURE ComputeAspect;
-		VAR entryRatio, areaRatio : REAL; eWidth, eHeight : LONGINT; doesFit : BOOLEAN;
+		VAR entryRatio, areaRatio : REAL; eWidth, eHeight : SIZE; doesFit : BOOLEAN;
 		BEGIN
 			entryRatio := entryWidth / entryHeight;
 			areaRatio := width / height;
@@ -264,7 +264,7 @@ TYPE
 		lock : Locks.Lock; (* protects info, layout *)
 		state : LONGINT;
 
-		mouseOverIdx, lastMouseOverIdx : LONGINT;
+		mouseOverIdx, lastMouseOverIdx : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -312,7 +312,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN
 				lock.Acquire;
@@ -337,8 +337,8 @@ TYPE
 			Invalidate
 		END PointerLeave;
 
-		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
-		VAR index : LONGINT; window : WMWindowManager.Window;
+		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
+		VAR index : SIZE; window : WMWindowManager.Window;
 		BEGIN
 			IF (keys = {}) OR ~enabled.Get()  THEN RETURN; END;
 			IF (keys * {0, 2} # {}) THEN
@@ -361,7 +361,7 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE DrawInternal(canvas : WMGraphics.Canvas; x, y, width, height : LONGINT; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
+		PROCEDURE DrawInternal(canvas : WMGraphics.Canvas; x, y, width, height : SIZE; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			ASSERT(lock.HasLock());
@@ -383,9 +383,9 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			row, column, x, y : LONGINT;
-			width, height : LONGINT;
-			i : LONGINT;
+			row, column, x, y : SIZE;
+			width, height : SIZE;
+			i : SIZE;
 		BEGIN
 			DrawBackground^(canvas);
 			lock.Acquire;
@@ -431,7 +431,7 @@ TYPE
 		font : WMGraphics.Font;
 		timer : Kernel.Timer;
 
-		PROCEDURE CreateAuxCanvas(width, height : LONGINT; alpha : BOOLEAN) : WMGraphics.BufferCanvas;
+		PROCEDURE CreateAuxCanvas(width, height : SIZE; alpha : BOOLEAN) : WMGraphics.BufferCanvas;
 		VAR canvas : WMGraphics.BufferCanvas; img : WMGraphics.Image;
 		BEGIN
 			rect := WMRectangles.MakeRect(0, 0, width, height);
@@ -484,13 +484,13 @@ TYPE
 			NEW(timer);
 		END Init;
 
-		PROCEDURE DrawInternal(canvas : WMGraphics.Canvas; x, y, width, height : LONGINT; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
+		PROCEDURE DrawInternal(canvas : WMGraphics.Canvas; x, y, width, height : SIZE; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
 		VAR
 			image : Raster.Image;
 			title : Strings.String;
-			sizeX, sizeY : LONGINT;
-			imgX, imgY, imgWidth, imgHeight, winWidth, winHeight : LONGINT;
-			t_width, t_height : LONGINT;
+			sizeX, sizeY : SIZE;
+			imgX, imgY, imgWidth, imgHeight, winWidth, winHeight : SIZE;
+			t_width, t_height : SIZE;
 			scaleX, scaleY : REAL;
 			canvasState : WMGraphics.CanvasState;
 		BEGIN
@@ -640,7 +640,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE GoToWindow(window : WMWindowManager.Window; moveViewport : BOOLEAN);
-		VAR rect : WMRectangles.Rectangle; px, py : LONGINT;
+		VAR rect : WMRectangles.Rectangle; px, py : SIZE;
 		BEGIN
 			ASSERT(window # NIL);
 			manager.lock.AcquireWrite;
@@ -690,13 +690,13 @@ TYPE
 			lastKeys := {};
 		END FocusLost;
 
-		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
 		VAR
-			index : LONGINT; window : WMWindowManager.Window;
+			index : SIZE; window : WMWindowManager.Window;
 			info2 : WMWindowManager.WindowInfo;
-			gx, gy: LONGINT;
+			gx, gy: SIZE;
 			menu : MenuWindow;
-			type, index2 : LONGINT;
+			type : WORD; index2 : SIZE;
 			infoKeys : SET;
 			res : WORD;
 			rect : WMRectangles.Rectangle;
@@ -770,8 +770,8 @@ TYPE
 			END;
 		END PointerDown;
 
-		PROCEDURE PointerUp*(x, y : LONGINT; keys : SET);
-		VAR window : WMWindowManager.Window; windowCloser : DoCloseWindow; index : LONGINT;
+		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
+		VAR window : WMWindowManager.Window; windowCloser : DoCloseWindow; index : SIZE;
 		BEGIN
 			PointerUp^(x, y, keys);
 			IF ~enabled.Get() THEN RETURN; END;
@@ -790,7 +790,7 @@ TYPE
 			lastKeys := keys;
 		END PointerUp;
 
-		PROCEDURE DrawInternalIcons(canvas : WMGraphics.Canvas; x, y, width, height : LONGINT; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
+		PROCEDURE DrawInternalIcons(canvas : WMGraphics.Canvas; x, y, width, height : SIZE; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
 		VAR
 			image : WMGraphics.Image;
 			imageRect, indicatorRect : WMRectangles.Rectangle;
@@ -850,7 +850,7 @@ TYPE
 			END;
 		END DrawInternalIcons;
 
-		PROCEDURE DrawInternalText(canvas : WMGraphics.Canvas; x, y, width, height : LONGINT; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN);
+		PROCEDURE DrawInternalText(canvas : WMGraphics.Canvas; x, y, width, height : SIZE; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN);
 		VAR title : Strings.String;
 		BEGIN
 			title := window.GetTitle();
@@ -869,7 +869,7 @@ TYPE
 			canvas.DrawString(x + 4, y + height - 5, title^);
 		END DrawInternalText;
 
-		PROCEDURE DrawInternal(canvas : WMGraphics.Canvas; x, y, width, height : LONGINT; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
+		PROCEDURE DrawInternal(canvas : WMGraphics.Canvas; x, y, width, height : SIZE; window : WMWindowManager.Window; hasFocus, mouseOver : BOOLEAN; VAR extImage : WMGraphics.Image);
 		BEGIN
 			canvas.SetClipRect(WMRectangles.MakeRect(x, y, x + width, y + height));
 			DrawInternal^(canvas, x, y, width, height, window, hasFocus, mouseOver, extImage);
@@ -937,21 +937,22 @@ TYPE
 	VAR
 		window : WMWindowManager.Window;
 		info : WMWindowManager.WindowInfo;
-		nofDocuments: LONGINT;
+		nofDocuments: SIZE;
 
-		documentOffset, commandOffset, imageOffset : LONGINT;
+		documentOffset, commandOffset, imageOffset : SIZE;
 
 		owner : MenuWindow;
 		menuLocation : LONGINT;
 		showThumbnails : BOOLEAN;
 
-		type, index : LONGINT;
+		type : WORD;
+		index : SIZE;
 		keys : SET;
 
-		xt, yt : LONGINT;
+		xt, yt : SIZE;
 
 		image : WMGraphics.Image;
-		imgX, imgY : LONGINT;
+		imgX, imgY : SIZE;
 
 		imageYes, imageNo : WMGraphics.Image;
 
@@ -973,7 +974,7 @@ TYPE
 		PROCEDURE SetInfo(window : WMWindowManager.Window; CONST info : WMWindowManager.WindowInfo);
 		VAR
 			vc : WMComponents.VisualComponent; ptr : ANY; i : LONGINT; aux_canvas : WMGraphics.BufferCanvas;
-			height, imageWidth, imageHeight : LONGINT;
+			height, imageWidth, imageHeight : SIZE;
 		BEGIN
 			SELF.window := window;
 			Acquire;
@@ -1045,7 +1046,7 @@ TYPE
 			Invalidate;
 		END SetInfo;
 
-		PROCEDURE PointerMove*(x, y : LONGINT; keys : SET); (** PROTECTED *)
+		PROCEDURE PointerMove*(x, y : SIZE; keys : SET); (** PROTECTED *)
 		BEGIN
 			IF enabled.Get() THEN
 				xt := x; yt := y;
@@ -1063,7 +1064,7 @@ TYPE
 			Invalidate
 		END PointerLeave;
 
-		PROCEDURE PointerDown*(x, y:LONGINT; keys:SET);
+		PROCEDURE PointerDown*(x, y:SIZE; keys:SET);
 		BEGIN
 			IF enabled.Get() THEN
 				SELF.keys := keys;
@@ -1096,14 +1097,14 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
-		VAR y : LONGINT;
+		VAR y : SIZE;
 
-			PROCEDURE IsHighlighted(y : LONGINT) : BOOLEAN;
+			PROCEDURE IsHighlighted(y : SIZE) : BOOLEAN;
 			BEGIN
 				RETURN (y <= yt) & (yt < y + LineHeight);
 			END IsHighlighted;
 
-			PROCEDURE DrawBg(y : LONGINT);
+			PROCEDURE DrawBg(y : SIZE);
 			BEGIN
 				IF IsHighlighted(y) THEN
 					canvas.Fill(WMRectangles.MakeRect(0, y, bounds.GetWidth(), y + LineHeight), LONGINT(060606A0H), WMGraphics.ModeSrcOverDst);
@@ -1113,8 +1114,8 @@ TYPE
 				END;
 			END DrawBg;
 
-			PROCEDURE DrawDocuments(VAR y : LONGINT);
-			VAR row : LONGINT;
+			PROCEDURE DrawDocuments(VAR y : SIZE);
+			VAR row : SIZE;
 			BEGIN
 				FOR row := 1 TO nofDocuments DO
 					DrawBg(y);
@@ -1132,7 +1133,7 @@ TYPE
 				END;
 			END DrawDocuments;
 
-			PROCEDURE DrawSystemCommands(VAR y : LONGINT);
+			PROCEDURE DrawSystemCommands(VAR y : SIZE);
 			BEGIN
 				canvas.SetColor(WMGraphics.Black);
 				DrawBg(y);
@@ -1169,13 +1170,13 @@ TYPE
 				END;
 			END DrawSystemCommands;
 
-			PROCEDURE DrawLine(VAR y : LONGINT);
+			PROCEDURE DrawLine(VAR y : SIZE);
 			BEGIN
 				canvas.Line(LeftBorder, y + (LineHeight DIV 2), bounds.GetWidth(), y + (LineHeight DIV 2), LONGINT(0C0C0C0FFH), WMGraphics.ModeCopy);
 				INC(y, LineHeight);
 			END DrawLine;
 
-			PROCEDURE DrawImage(y : LONGINT);
+			PROCEDURE DrawImage(y : SIZE);
 			VAR canvasState : WMGraphics.CanvasState;
 			BEGIN
 				canvas.SaveState(canvasState);
@@ -1188,7 +1189,7 @@ TYPE
 				canvas.RestoreState(canvasState);
 			END DrawImage;
 
-			PROCEDURE DrawYesNo(y : LONGINT; value : BOOLEAN);
+			PROCEDURE DrawYesNo(y : SIZE; value : BOOLEAN);
 			BEGIN
 				IF value & (imageYes # NIL) THEN
 					canvas.DrawImage(5, y + 6, imageYes, WMGraphics.ModeSrcOverDst);
@@ -1238,7 +1239,7 @@ TYPE
 
 		close : BOOLEAN;
 
-		PROCEDURE GetSelection(VAR type,  index : LONGINT; VAR keys : SET);
+		PROCEDURE GetSelection(VAR type : WORD; VAR index : SIZE; VAR keys : SET);
 		BEGIN {EXCLUSIVE}
 			AWAIT(close);
 			type := infoView.type;
@@ -1247,11 +1248,11 @@ TYPE
 		END GetSelection;
 
 		PROCEDURE&New(
-			x, y, width, menuLocation : LONGINT;
+			x, y, width : SIZE; menuLocation : WORD;
 			showThumbnails : BOOLEAN;
 			window : WMWindowManager.Window; CONST info : WMWindowManager.WindowInfo
 		);
-		VAR height : LONGINT;
+		VAR height : SIZE;
 		BEGIN
 
 			ASSERT((width > 0));
@@ -1285,7 +1286,7 @@ TYPE
 			manager.SetFocus(SELF);
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h, q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : WORD); (** override *)
 		BEGIN
 			Draw^(canvas, w, h, q);
 			canvas.Fill(shadowRectB, 04FH, WMGraphics.ModeSrcOverDst);
@@ -1304,7 +1305,7 @@ TYPE
 			Close^;
 		END Close;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT); (* override *)
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE); (* override *)
 		BEGIN
 			IF ~(Inputs.Release IN flags) THEN
 				IF keysym = 0FF54H THEN (* Cursor Down *)
@@ -1333,9 +1334,9 @@ TYPE
 
 	Window = OBJECT(WMComponents.FormWindow)
 	VAR
-		myId : LONGINT;
+		myId : SIZE;
 
-		PROCEDURE &New*(id : LONGINT; component : WMComponents.VisualComponent; x, y, width, height : LONGINT; alpha : BOOLEAN; flags : SET);
+		PROCEDURE &New*(id : SIZE; component : WMComponents.VisualComponent; x, y, width, height : SIZE; alpha : BOOLEAN; flags : SET);
 		VAR title, nbr : ARRAY 32 OF CHAR;
 		BEGIN
 			ASSERT((component # NIL) & (width > 0) & (height > 0));
@@ -1392,8 +1393,8 @@ VAR
 	ProtoItemWidth, ProtoItemHeight : WMProperties.Int32Property;
 	ProtoLayoutMode : WMProperties.Int32Property;
 
-PROCEDURE GetWindowImage(window : WMWindowManager.Window; width, height : LONGINT) : WMGraphics.Image;
-VAR image : WMGraphics.Image; canvas : WMGraphics.BufferCanvas; ignore : LONGINT;
+PROCEDURE GetWindowImage(window : WMWindowManager.Window; width, height : SIZE) : WMGraphics.Image;
+VAR image : WMGraphics.Image; canvas : WMGraphics.BufferCanvas; ignore : SIZE;
 BEGIN (* must hold window manager lock *)
 	ASSERT((window # NIL));
 	NEW(image);
@@ -1490,8 +1491,8 @@ BEGIN
 	END;
 END StoreWindow;
 
-PROCEDURE DrawIntoCanvas(window : WMWindowManager.Window; canvas : WMGraphics.BufferCanvas; width, height : LONGINT; VAR offsetX, offsetY : LONGINT);
-VAR image : Raster.Image; winWidth, winHeight, imgWidth, imgHeight : LONGINT; scaleX, scaleY : REAL;
+PROCEDURE DrawIntoCanvas(window : WMWindowManager.Window; canvas : WMGraphics.BufferCanvas; width, height : SIZE; VAR offsetX, offsetY : SIZE);
+VAR image : Raster.Image; winWidth, winHeight, imgWidth, imgHeight : SIZE; scaleX, scaleY : REAL;
 BEGIN (* must hold window manager lock *)
 	ASSERT((window # NIL) & (canvas # NIL));
 	image := canvas.GetImage();
@@ -1585,7 +1586,7 @@ END GetWindows;
 PROCEDURE Open*(context : Commands.Context); (** [Options] id x y componentFile ~ *)
 VAR
 	options : Options.Options;
-	id, x, y, w, h : LONGINT;
+	id, x, y, w, h : SIZE;
 	filename : ARRAY 256 OF CHAR;
 	content : XML.Content;
 	flags : SET;
@@ -1598,9 +1599,9 @@ BEGIN {EXCLUSIVE}
 
 	IF options.Parse(context.arg, context.error) THEN
 		showWindowNames := options.GetFlag("names");
-		context.arg.SkipWhitespace; context.arg.Int(id, FALSE);
-		context.arg.SkipWhitespace; context.arg.Int(x, FALSE);
-		context.arg.SkipWhitespace; context.arg.Int(y, FALSE);
+		context.arg.SkipWhitespace; context.arg.Size(id, FALSE);
+		context.arg.SkipWhitespace; context.arg.Size(x, FALSE);
+		context.arg.SkipWhitespace; context.arg.Size(y, FALSE);
 		context.arg.SkipWhitespace; context.arg.String(filename);
 		IF (filename # "") THEN
 			IF (0 <= id) & (id < MaxNavigationWindows) THEN
@@ -1771,7 +1772,7 @@ END SetIsVisible;
 
 (** Toggle minimized/fullscreen for the window that currently owns the focus *)
 PROCEDURE ToggleFullscreen*;
-VAR window : WMWindowManager.Window; newWidth, newHeight : LONGINT;
+VAR window : WMWindowManager.Window; newWidth, newHeight : SIZE;
 BEGIN {EXCLUSIVE}
 	manager.lock.AcquireWrite;
 	window := manager.GetFocusOwner();

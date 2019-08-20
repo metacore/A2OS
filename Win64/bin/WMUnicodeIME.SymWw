@@ -12,8 +12,8 @@ TYPE
 		ime: IME; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^  & New*(ime: IME; x, y: LONGINT; CONST text: ARRAY OF CHAR); 
-		PROCEDURE ^ EditKeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^  & New*(ime: IME; x, y: SIZE; CONST text: ARRAY OF CHAR); 
+		PROCEDURE ^ EditKeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ScheduleHide; 
 		PROCEDURE ^ WriteSelected; 
 		PROCEDURE ^ ClearSelection; 
@@ -30,7 +30,7 @@ TYPE
 		w: IMEWindow; 
 
 		PROCEDURE ^ GetName*(): Strings.String; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ Finalize*; 
 	END IME; 
 

@@ -3,7 +3,7 @@ MODULE WMNavigator;
 CONST 
 TYPE 
 	Level = RECORD 
-		x, y, width, height: LONGINT; 
+		x, y, width, height: SIZE; 
 	END; 
 
 	OnDrawnProc = PROCEDURE {DELEGATE}; 
@@ -12,7 +12,7 @@ TYPE
 	VAR 
 		backbuffer-: WMGraphics.Image; 
 		deviceRect: WMRectangles.Rectangle; 
-		width, height: LONGINT; 
+		width, height: SIZE; 
 		canvas: WMGraphics.BufferCanvas; 
 		state: WMGraphics.CanvasState; 
 		internnavig, navig: BOOLEAN; 
@@ -20,15 +20,15 @@ TYPE
 		lock: Locks.Lock; 
 		onDrawn: OnDrawnProc; 
 		zoomLevel: ARRAY 7 OF Level; 
-		currentZoomLevel: LONGINT; 
+		currentZoomLevel: SIZE; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ SetZoomLevels(width, height: LONGINT); 
-		PROCEDURE ^ SetZoomLevel(level, xg, yg: LONGINT); 
-		PROCEDURE ^ ChangeZoom(dz, xg, yg: LONGINT); 
-		PROCEDURE ^ ReInit(width, height, format: LONGINT; onDrawn: OnDrawnProc); 
+		PROCEDURE ^ SetZoomLevels(width, height: SIZE); 
+		PROCEDURE ^ SetZoomLevel(level, xg, yg: SIZE); 
+		PROCEDURE ^ ChangeZoom(dz, xg, yg: SIZE); 
+		PROCEDURE ^ ReInit(width, height: SIZE; format: WORD; onDrawn: OnDrawnProc); 
 		PROCEDURE ^ GetWMCoordinates*(CONST r: WMRectangles.Rectangle): WMRectangles.Rectangle; 
-		PROCEDURE ^ GetWMPosition(x, y: LONGINT; VAR xg, yg: LONGINT); 
+		PROCEDURE ^ GetWMPosition(x, y: SIZE; VAR xg, yg: SIZE); 
 		PROCEDURE ^ GetKeyState*(VAR state: SET); 
 		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
 		PROCEDURE ^ Update*(r: WMRectangles.Rectangle; top: WMWindowManager.Window); 
@@ -43,18 +43,18 @@ TYPE
 		selectedWindow: WMWindowManager.Window; 
 		timer: Kernel.Timer; 
 		alive, dead, refresh, doRefresh: BOOLEAN; 
-		offsetX, offsetY: LONGINT; 
-		lastX, lastY: LONGINT; 
+		offsetX, offsetY: SIZE; 
+		lastX, lastY: SIZE; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ PropertyChanged*(sender, data: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ Refresh; 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 	BEGIN{ACTIVE} 

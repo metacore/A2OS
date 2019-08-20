@@ -88,7 +88,7 @@ TYPE
 			res := 0;
 		END Open;
 
-		PROCEDURE GetImageInfo*(VAR width, height, format, maxProgressionLevel : LONGINT);
+		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
 		BEGIN
 			width := SELF.width;
 			height := SELF.height;
@@ -166,7 +166,7 @@ TYPE
 			ELSIF img.fmt.pal.used = 16 THEN Store4(img, img.width, -img.height, buf)
 			ELSIF img.fmt.pal.used = 2 THEN Store1(img, img.width, -img.height, buf)
 			END;
-			dataSize := sm.GetLength();
+			dataSize := sm.GetLength()(LONGINT);
 
 			(* Bitmap file header *)
 			out.String("BM");
@@ -181,8 +181,8 @@ TYPE
 
 			(* Bitmap info header *)
 			out.RawLInt(40); (* header size *)
-			out.RawLInt(img.width);
-			out.RawLInt(img.height);
+			out.RawLInt(img.width(LONGINT));
+			out.RawLInt(img.height(LONGINT));
 			out.RawInt(1);	(* biPlanes *)
 			IF img.fmt.pal # NIL THEN
 				CASE img.fmt.pal.used OF
@@ -265,7 +265,7 @@ BEGIN
 END Unmask;
 
 PROCEDURE Load1 (img: Raster.Image; w, h: LONGINT; VAR pal: Raster.Palette; r : Streams.Reader);
-	VAR y, dy, x, p, b, i: LONGINT; fmt: Raster.Format;
+	VAR y, dy, x, b, i: LONGINT; p: SIZE; fmt: Raster.Format;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -289,7 +289,7 @@ BEGIN
 END Load1;
 
 PROCEDURE Load4 (img: Raster.Image; w, h, compression: LONGINT; pal: Raster.Palette; r: Streams.Reader);
-	VAR y, dy, x, p, b, i: LONGINT; fmt: Raster.Format; ch: CHAR; col: ARRAY 2 OF CHAR;
+	VAR y, dy, x, b, i: LONGINT; fmt: Raster.Format; ch: CHAR; col: ARRAY 2 OF CHAR; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -341,7 +341,7 @@ BEGIN
 END Load4;
 
 PROCEDURE Load8 (img: Raster.Image; w, h, compression: LONGINT; pal: Raster.Palette; r: Streams.Reader);
-	VAR y, dy, x, p, b, i: LONGINT; fmt: Raster.Format; ch: CHAR;
+	VAR y, dy, x, b, i: LONGINT; fmt: Raster.Format; ch: CHAR; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -386,7 +386,7 @@ BEGIN
 END Load8;
 
 PROCEDURE Load16 (img: Raster.Image; w, h, compression, rMask, gMask, bMask: LONGINT; r: Streams.Reader);
-	VAR y, dy, x, p, val, red, green, blue: LONGINT; convert: BOOLEAN;
+	VAR y, dy, x, val, red, green, blue: LONGINT; convert: BOOLEAN; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -420,7 +420,7 @@ BEGIN
 END Load16;
 
 PROCEDURE Load24 (img: Raster.Image; w, h: LONGINT; r: Streams.Reader);
-	VAR y, dy, x, p: LONGINT;
+	VAR y, dy, x: LONGINT; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -438,7 +438,7 @@ BEGIN
 END Load24;
 
 PROCEDURE Load32 (img: Raster.Image; w, h, compression, rMask, gMask, bMask: LONGINT; r: Streams.Reader);
-	VAR y, dy, x, p, val, red, green, blue: LONGINT; convert: BOOLEAN; ch: CHAR;
+	VAR y, dy, x, val, red, green, blue: LONGINT; convert: BOOLEAN; ch: CHAR; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -460,8 +460,8 @@ BEGIN
 	END
 END Load32;
 
-PROCEDURE Store1 (img: Raster.Image; w, h: LONGINT; out : Streams.Writer);
-	VAR y, dy, x, p, b, i: LONGINT;
+PROCEDURE Store1 (img: Raster.Image; w, h: SIZE; out : Streams.Writer);
+	VAR y, dy, x, b, i: SIZE; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -481,8 +481,8 @@ BEGIN
 	END
 END Store1;
 
-PROCEDURE Store4 (img: Raster.Image; w, h: LONGINT; out : Streams.Writer);
-	VAR y, dy, x, p, b: LONGINT;
+PROCEDURE Store4 (img: Raster.Image; w, h: SIZE; out : Streams.Writer);
+	VAR y, dy, x, b: SIZE; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -502,8 +502,8 @@ BEGIN
 	END
 END Store4;
 
-PROCEDURE Store8 (img: Raster.Image; w, h: LONGINT; out : Streams.Writer);
-	VAR y, dy, x, p: LONGINT;
+PROCEDURE Store8 (img: Raster.Image; w, h: SIZE; out : Streams.Writer);
+	VAR y, dy, x: SIZE; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -518,8 +518,8 @@ BEGIN
 	END
 END Store8;
 
-PROCEDURE Store16 (img: Raster.Image; w, h, rMask, gMask, bMask: LONGINT; out : Streams.Writer);
-	VAR y, dy, x, p: LONGINT;
+PROCEDURE Store16 (img: Raster.Image; w, h: SIZE; rMask, gMask, bMask: LONGINT; out : Streams.Writer);
+	VAR y, dy, x: SIZE; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -532,8 +532,8 @@ BEGIN
 	END
 END Store16;
 
-PROCEDURE Store24 (img: Raster.Image; w, h: LONGINT; out : Streams.Writer);
-	VAR y, dy, x, p: LONGINT; align: ARRAY 3 OF CHAR;
+PROCEDURE Store24 (img: Raster.Image; w, h: SIZE; out : Streams.Writer);
+	VAR y, dy, x: SIZE; align: ARRAY 3 OF CHAR; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1
@@ -549,8 +549,8 @@ BEGIN
 	END
 END Store24;
 
-PROCEDURE Store32 (img: Raster.Image; w, h, rMask, gMask, bMask: LONGINT; out : Streams.Writer);
-	VAR y, dy, x, p: LONGINT;
+PROCEDURE Store32 (img: Raster.Image; w, h: SIZE; rMask, gMask, bMask: LONGINT; out : Streams.Writer);
+	VAR y, dy, x: SIZE; p: SIZE;
 BEGIN
 	IF h > 0 THEN y := 0; dy := 1
 	ELSE h := -h; y := h-1; dy := -1

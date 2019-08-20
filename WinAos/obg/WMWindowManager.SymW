@@ -43,7 +43,7 @@ TYPE
 		useBitmaps*: BOOLEAN; 
 		baCol*, biCol*: LONGINT; 
 		basw*, bisw*: LONGINT; 
-		th*, bh*, lw*, rw*: LONGINT; 
+		th*, bh*, lw*, rw*: SIZE; 
 		taa*, tab*, tac*, tia*, tib*, tic*, laa*, lab*, lac*, lia*, lib*, lic*, raa*, rab*, rac*, ria*, rib*, ric*, baa*, bab*, bac*, bia*, bib*, bic*: Graphics.Image; 
 		ca*, ci*, closeHover*, ma*, mi*, minimizeHover*: Graphics.Image; 
 		minimizeOffset*: LONGINT; 
@@ -59,7 +59,7 @@ TYPE
 	VAR 
 		data*, sender*: ANY; 
 		onAccept*, onReject*: Messages.CompCommand; 
-		offsetX*, offsetY*: LONGINT; 
+		offsetX*, offsetY*: SIZE; 
 	END DragInfo; 
 
 	DecorList* = OBJECT 
@@ -120,38 +120,38 @@ TYPE
 		acceptDrag: BOOLEAN; 
 		reduceQuality-: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(w, h: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & Init*(w, h: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ IsCallFromSequencer*(): BOOLEAN; 
 		PROCEDURE ^ GetManager*(): WindowManager; 
 		PROCEDURE ^ SetTitle*(title: String); 
 		PROCEDURE ^ GetTitle*(): String; 
 		PROCEDURE ^ SetIcon*(icon: Graphics.Image); 
-		PROCEDURE ^ GetHeight*(): LONGINT; 
-		PROCEDURE ^ GetWidth*(): LONGINT; 
+		PROCEDURE ^ GetHeight*(): SIZE; 
+		PROCEDURE ^ GetWidth*(): SIZE; 
 		PROCEDURE ^ SetInfo*(CONST info: WindowInfo); 
 		PROCEDURE ^ GetInfo*(VAR info: WindowInfo): BOOLEAN; 
-		PROCEDURE ^ Resizing*(VAR width, height: LONGINT); 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ Resizing*(VAR width, height: SIZE); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ Invalidate*(rect: Rectangle); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ WheelMove*(dz: LONGINT); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
+		PROCEDURE ^ WheelMove*(dz: SIZE); 
+		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ DragOver*(x, y: LONGINT; dragInfo: DragInfo); 
-		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: DragInfo); 
+		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: DragInfo); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: DragInfo); 
 		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: DragInfo); 
-		PROCEDURE ^ StartDrag*(sender, data: ANY; img: Graphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ StartDrag*(sender, data: ANY; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ FocusGot*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ StyleChanged*; 
 		PROCEDURE ^ CanClose*(): BOOLEAN; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ SetPointerInfo*(pi: PointerInfo); 
 		PROCEDURE ^ Handle*(VAR m: Message); 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: WORD); 
 		PROCEDURE ^ HintReduceQuality*(reduce: BOOLEAN); 
 	END Window; 
 
@@ -162,10 +162,10 @@ TYPE
 		canvasGen-: Graphics.CanvasGenerator; 
 		pointerThreshold*, maxInterpolation*: LONGINT; 
 
-		PROCEDURE ^  & Init*(w, h: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & Init*(w, h: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ SetCanvasGenerator*(canvasGen: Graphics.CanvasGenerator); 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: WORD); 
 		PROCEDURE ^ Invalidate*(rect: Rectangle); 
 		PROCEDURE ^ Handle*(VAR m: Message); 
 	END BufferWindow; 
@@ -176,10 +176,10 @@ TYPE
 		backImg*: Graphics.Image; 
 		swapping, drawing: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(w, h: LONGINT; alpha: BOOLEAN); 
-		PROCEDURE ^ ReInit*(w, h: LONGINT); 
+		PROCEDURE ^  & Init*(w, h: SIZE; alpha: BOOLEAN); 
+		PROCEDURE ^ ReInit*(w, h: SIZE); 
 		PROCEDURE ^ SetCanvasGenerator*(canvasGen: Graphics.CanvasGenerator); 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: WORD); 
 		PROCEDURE ^ CopyRect*(rect: Rectangle); 
 		PROCEDURE ^ Swap*; 
 	END DoubleBufferWindow; 
@@ -189,7 +189,7 @@ TYPE
 		next*: ViewPort; 
 		manager*: WindowManager; 
 		range*: RealRect; 
-		width0*, height0*: LONGINT; 
+		width0*, height0*: SIZE; 
 
 		PROCEDURE ^ Update*(r: Rectangle; top: Window); 
 		PROCEDURE ^ Refresh*(top: Window); 
@@ -213,10 +213,10 @@ TYPE
 		PROCEDURE ^ InitCursors; 
 		PROCEDURE ^ ZeroSkin*; 
 		PROCEDURE ^ ShutDown*; 
-		PROCEDURE ^ Add*(l, t: LONGINT; item: Window; flags: SET); 
+		PROCEDURE ^ Add*(l, t: SIZE; item: Window; flags: SET); 
 		PROCEDURE ^ Remove*(item: Window); 
-		PROCEDURE ^ SetWindowPos*(vs: Window; x, y: LONGINT); 
-		PROCEDURE ^ SetWindowSize*(vs: Window; VAR width, height: LONGINT); 
+		PROCEDURE ^ SetWindowPos*(vs: Window; x, y: SIZE); 
+		PROCEDURE ^ SetWindowSize*(vs: Window; VAR width, height: SIZE); 
 		PROCEDURE ^ AddDirty*(VAR rect: Rectangle); 
 		PROCEDURE ^ AddVisibleDirty*(w: Window; rect: Rectangle); 
 		PROCEDURE ^ SetFocus*(w: Window); 
@@ -228,7 +228,7 @@ TYPE
 		PROCEDURE ^ ToBack*(w: Window); 
 		PROCEDURE ^ SetIsVisible*(w: Window; isVisible: BOOLEAN); 
 		PROCEDURE ^ SetWindowIcon*(w: Window; icon: Graphics.Image); 
-		PROCEDURE ^ GetPositionOwner*(x, y: LONGINT): Window; 
+		PROCEDURE ^ GetPositionOwner*(x, y: SIZE): Window; 
 		PROCEDURE ^ GetFocusOwner*(): Window; 
 		PROCEDURE ^ SetWindowTitle*(w: Window; title: String); 
 		PROCEDURE ^ GetWindowTitle*(w: Window): String; 
@@ -236,7 +236,7 @@ TYPE
 		PROCEDURE ^ GetWindowInfo*(w: Window; VAR info: WindowInfo): BOOLEAN; 
 		PROCEDURE ^ SetWindowFlag*(w: Window; flag: LONGINT; value: BOOLEAN); 
 		PROCEDURE ^ SetAcceptDrag*(w: Window; accept: BOOLEAN); 
-		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: LONGINT; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
+		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 
 		PROCEDURE ^ CheckPointerImage*; 
 		PROCEDURE ^ AddView*(v: ViewPort); 
@@ -260,7 +260,7 @@ VAR
 	pointerNull: PointerInfo; 
 	wTimestamp-: LONGINT; 
 	oTimestamp-: LONGINT; 
-	x1, y1: LONGINT; 
+	x1, y1: SIZE; 
 	format*: Raster.Format; 
 	nextId: LONGINT; 
 	standardCursorImage: Graphics.Image; 
@@ -275,11 +275,11 @@ VAR
 	PROCEDURE ^ GetDefaultManager*(): WindowManager; 
 	PROCEDURE ^ GetDefaultView*(): ViewPort; 
 	PROCEDURE ^ ResetNextPosition*; 
-	PROCEDURE ^ GetNextPosition*(window: Window; manager: WindowManager; view: ViewPort; VAR dx, dy: LONGINT); 
+	PROCEDURE ^ GetNextPosition*(window: Window; manager: WindowManager; view: ViewPort; VAR dx, dy: SIZE); 
 	PROCEDURE ^ DefaultAddWindow*(w: Window); 
-	PROCEDURE ^ AddWindow*(w: Window; dx, dy: LONGINT); 
-	PROCEDURE ^ ExtAddWindow*(w: Window; dx, dy: LONGINT; flags: SET); 
-	PROCEDURE ^ ExtAddViewBoundWindow*(w: Window; dx, dy: LONGINT; view: ViewPort; flags: SET); 
+	PROCEDURE ^ AddWindow*(w: Window; dx, dy: SIZE); 
+	PROCEDURE ^ ExtAddWindow*(w: Window; dx, dy: SIZE; flags: SET); 
+	PROCEDURE ^ ExtAddViewBoundWindow*(w: Window; dx, dy: SIZE; view: ViewPort; flags: SET); 
 	PROCEDURE ^ DefaultBringToView*(w: Window; toFront: BOOLEAN); 
 	PROCEDURE ^ CleanUp; 
 	PROCEDURE ^ CreateStandardCursorImage; 

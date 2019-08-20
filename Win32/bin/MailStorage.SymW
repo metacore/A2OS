@@ -3,7 +3,7 @@ MODULE MailStorage;
 CONST 
 TYPE 
 	IndexEntry* = RECORD 
-		from, to: LONGINT; 
+		from, to: Streams.Position; 
 		hFrom, hTo, hSubject, hDate: ARRAY 64 OF CHAR; 
 	END; 
 
@@ -21,13 +21,13 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Open*(storageName, indexName: ARRAY OF CHAR); 
 		PROCEDURE ^ Match(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR; VAR i: LONGINT): BOOLEAN; 
-		PROCEDURE ^ ScanMessage(r: Streams.Reader; VAR from, to: LONGINT); 
+		PROCEDURE ^ ScanMessage(r: Streams.Reader; VAR from, to: Streams.Position); 
 		PROCEDURE ^ ScanStorage(r: Streams.Reader); 
 		PROCEDURE ^ GrowIndex; 
-		PROCEDURE ^ AddIndex(from, to: LONGINT; hFrom, hTo, hSubject, hDate: ARRAY OF CHAR); 
+		PROCEDURE ^ AddIndex(from, to: Streams.Position; hFrom, hTo, hSubject, hDate: ARRAY OF CHAR); 
 		PROCEDURE ^ GetCount*(): LONGINT; 
 		PROCEDURE ^ GetHeader*(nr: LONGINT; VAR hFrom, hTo, hSubject, hDate: ARRAY OF CHAR); 
-		PROCEDURE ^ ToFile*(nr: LONGINT; filename: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ ToFile*(nr: SIZE; filename: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ RebuildIndex; 
 	END Storage; 
 

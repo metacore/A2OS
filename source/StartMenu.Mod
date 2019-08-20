@@ -124,7 +124,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Run*(sender, par : ANY); (** Eventhandler *)
-		VAR x, y : LONGINT; filename : String;
+		VAR x, y : SIZE; filename : String;
 			rect : WMRectangles.Rectangle;
 		BEGIN
 			(* synchronize if not synchronized *)
@@ -209,7 +209,7 @@ TYPE
 		END FindMenuButtonsSMO;
 
 		PROCEDURE Open;
-		VAR c : XML.Content; width, height : LONGINT; view : WM.ViewPort; s : String;
+		VAR c : XML.Content; width, height : SIZE; view : WM.ViewPort; s : String;
 		BEGIN
 			nofLayouts := CountLayouts();
 			s := layoutNames[pm.startIndex].Get();
@@ -324,10 +324,10 @@ VAR
 	p : Popup;
 	closePopupMsg : ClosePopupMsg;
 
-	PROCEDURE OpenPopup*(x, y : LONGINT; CONST filename : ARRAY OF CHAR);
+	PROCEDURE OpenPopup*(x, y : SIZE; CONST filename : ARRAY OF CHAR);
 	VAR m : WM.WindowManager;
 		 c : XML.Content;
-		width, height : LONGINT;
+		width, height : SIZE;
 	BEGIN
 		c := WMComponents.Load(filename);
 		IF (c # NIL) & (c IS WMComponents.VisualComponent) THEN

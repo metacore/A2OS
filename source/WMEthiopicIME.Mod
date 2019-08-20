@@ -28,7 +28,7 @@ CONST
 TYPE
 	IME* = OBJECT(WMInputMethods.IME)
 		VAR cons,vow: LONGINT; (* count the consonants and vowels to detect specific keycodes*)
-			ucs0, geez:LONGINT;
+			ucs0: SIZE; geez:LONGINT;
 
 		PROCEDURE GetName*() : Strings.String;
 		BEGIN
@@ -55,7 +55,7 @@ TYPE
 		END Remap;
 
 		(* Map characters from US-Keyboard to ethiopic keyboard *)
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
 		BEGIN
 			IF ((ucs>=65) & (ucs<=90)) OR  ((ucs>=97)&(ucs<=122)) THEN
 				CASE ucs OF

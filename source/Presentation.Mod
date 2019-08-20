@@ -99,7 +99,7 @@ TYPE
 			END;
 		END Search;
 
-		PROCEDURE KeyEvent*(ucs : LONGINT; flags:SET; keySym:LONGINT);
+		PROCEDURE KeyEvent*(ucs : SIZE; flags:SET; keySym:SIZE);
 		BEGIN
 			IF (keySym = 0FF53H) OR (keySym = 0FF0DH) THEN Next(FALSE)
 			ELSIF (keySym = 00020H) THEN Next(TRUE)

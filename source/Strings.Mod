@@ -18,7 +18,7 @@ TYPE
 	(** The stringmaker creates an automatically growing character array from the input with an Streams writer *)
 	Buffer* = OBJECT
 	VAR
-		length : LONGINT;
+		length : SIZE;
 		data : String;
 		w : Streams.Writer;
 
@@ -28,7 +28,7 @@ TYPE
 			NEW(data, initialSize); length := 0;
 		END Init;
 
-		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 		VAR newSize, i : SIZE; n : String;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
@@ -60,7 +60,7 @@ TYPE
 		END GetWriter;
 
 		(** returns the number of bytes written to the string. The Streams.Writer is updated *)
-		PROCEDURE GetLength*() : LONGINT;
+		PROCEDURE GetLength*() : SIZE;
 		BEGIN
 			IF w # NIL THEN w.Update END;
 			RETURN length
@@ -131,8 +131,8 @@ TYPE
 (** string handling *)
 
 (** returns the length of a string *)
-PROCEDURE Length* (CONST string: ARRAY OF CHAR): LONGINT;
-VAR len: LONGINT;
+PROCEDURE Length* (CONST string: ARRAY OF CHAR): SIZE;
+VAR len: SIZE;
 BEGIN
 	len := 0; WHILE (string[len] # 0X) DO INC(len) END;
 	RETURN len
@@ -590,7 +590,6 @@ BEGIN
 END IntToStr;
 
 (** converts a string to an integer. Leading whitespace is ignored *)
-(* adopted from Strings.Mod *)
 PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT);
 VAR i: SIZE; d: LONGINT; neg: BOOLEAN;
 BEGIN
@@ -615,9 +614,58 @@ BEGIN
 	IF neg THEN val := -val END
 END StrToInt;
 
+(** converts a string to a huge integer. Leading whitespace is ignored *)
+PROCEDURE StrToHInt*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT);
+VAR i: SIZE; d: HUGEINT; neg: BOOLEAN;
+BEGIN
+	i := 0; WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
+	neg := FALSE;
+	IF (str[i] = "+") THEN INC(i)
+	ELSIF (str[i] = "-") THEN neg := TRUE; INC(i)
+	END;
+
+	val := 0;
+	WHILE (str[i] >= "0") & (str[i] <= "9") DO
+		d := ORD(str[i])-ORD("0");
+		IF (val <= ((MAX(HUGEINT)-d) DIV 10)) THEN val := 10*val+d
+		ELSIF neg & (val = 922337203685477580) & (d = 8) & ((str[i+1] < "0") OR (str[i+1] > "9")) THEN
+			(* HUGEINT range: -9223372036854775808 ... 9223372036854775807 _> need special handling for -9223372036854775808 here *)
+			val := MIN(HUGEINT); neg := FALSE
+		ELSE
+			HALT(99)
+		END;
+		INC(i)
+	END;
+	IF neg THEN val := -val END
+END StrToHInt;
+
+(** converts a string to a size. Leading whitespace is ignored *)
+PROCEDURE StrToSize*(CONST str: ARRAY OF CHAR; VAR val: SIZE);
+VAR i: SIZE; d: SIZE; neg: BOOLEAN;
+BEGIN
+	i := 0; WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
+	neg := FALSE;
+	IF (str[i] = "+") THEN INC(i)
+	ELSIF (str[i] = "-") THEN neg := TRUE; INC(i)
+	END;
+
+	val := 0;
+	WHILE (str[i] >= "0") & (str[i] <= "9") DO
+		d := ORD(str[i])-ORD("0");
+		IF (val <= ((MAX(SIZE)-d) DIV 10)) THEN val := 10*val+d
+		ELSIF neg & (val = MAX(SIZE) DIV 10) & (d = MAX(SIZE) MOD 10) & ((str[i+1] < "0") OR (str[i+1] > "9")) THEN
+			(* SIZE range needs special handling *)
+			val := MIN(SIZE); neg := FALSE
+		ELSE
+			HALT(99)
+		END;
+		INC(i)
+	END;
+	IF neg THEN val := -val END
+END StrToSize;
+
 (** Convert the substring beginning at position i in str into an integer. Leading whitespace is ignored.
 	After the conversion i points to the first character after the integer. *)
-(* adopted from Strings.Mod *)
 PROCEDURE StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: LONGINT; VAR i: SIZE);
 VAR noStr: ARRAY 16 OF CHAR;
 BEGIN
@@ -631,6 +679,38 @@ BEGIN
 	noStr[val] := 0X;
 	StrToInt(noStr, val)
 END StrToIntPos;
+
+(** Convert the substring beginning at position i in str into a huge integer. Leading whitespace is ignored.
+	After the conversion i points to the first character after the integer. *)
+PROCEDURE StrToHIntPos*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT; VAR i: SIZE);
+VAR noStr: ARRAY 32 OF CHAR;
+BEGIN
+	WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
+	val := 0;
+	IF str[i] = "-" THEN
+		noStr[val] := str[i]; INC(val); INC(i);
+		WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END
+	END;
+	WHILE (str[i] >= "0") & (str[i] <= "9") DO noStr[val] := str[i]; INC(val); INC(i) END;
+	noStr[val] := 0X;
+	StrToHInt(noStr, val)
+END StrToHIntPos;
+
+(** Convert the substring beginning at position i in str into a size. Leading whitespace is ignored.
+	After the conversion i points to the first character after the integer. *)
+PROCEDURE StrToSizePos*(CONST str: ARRAY OF CHAR; VAR val: SIZE; VAR i: SIZE);
+VAR noStr: ARRAY 32 OF CHAR;
+BEGIN
+	WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
+	val := 0;
+	IF str[i] = "-" THEN
+		noStr[val] := str[i]; INC(val); INC(i);
+		WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END
+	END;
+	WHILE (str[i] >= "0") & (str[i] <= "9") DO noStr[val] := str[i]; INC(val); INC(i) END;
+	noStr[val] := 0X;
+	StrToSize(noStr, val)
+END StrToSizePos;
 
 (** converts an integer value to a hex string *)
 PROCEDURE IntToHexStr*(h : HUGEINT; width: WORD; VAR s: ARRAY OF CHAR);
@@ -677,8 +757,31 @@ BEGIN
 	END;
 END HexStrToInt;
 
+(** converts a hex string to a size. Leading whitespace is ignored. res=Ok indicates success, val=0 on failure. *)
+PROCEDURE HexStrToSize*(CONST string: ARRAY OF CHAR; VAR val: SIZE; VAR res: WORD);
+VAR length, i : SIZE; ch: CHAR;
+BEGIN
+	length := LEN(string); val := 0; res := -1;
+	(* skip whitespace *)
+	i := 0; WHILE (i < length) & (string[i] # 0X) & (string[i] <= " ") DO INC(i); END;
+	IF (i < length) THEN
+		LOOP
+			IF (i >= length) OR (string[i] = 0X) THEN EXIT; END;
+			ch := string[i];
+			IF (ch >= "0") & (ch <= "9") THEN val := 16 * val + ORD(ch) - ORD("0");
+			ELSIF (CAP(ch) >= "A") & (CAP(ch) <= "F") THEN val := 16 * val + ORD(CAP(ch)) - ORD("A") + 10;
+			ELSE EXIT;
+			END;
+			INC(i);
+		END;
+		IF (i < length) & (string[i] = "H") THEN INC(i); END; (* skip optional "H" *)
+		IF (i < length) & (string[i] = 0X) THEN
+			res := Ok;
+		END;
+	END;
+END HexStrToSize;
+
 (** converts a real value to a string *)
-(* adopted from Strings.Mod *)
 PROCEDURE FloatToStr*(x: LONGREAL; n, f, D: LONGINT; VAR str: ARRAY OF CHAR);
 BEGIN
 	RC.RealToStringFix( x, n, f, D, str )
@@ -690,14 +793,12 @@ BEGIN
 END AddressToStr;
 
 (** converts a string to a real value *)
-(* adopted from Strings.Mod *)
 PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
 BEGIN
 	RC.StringToReal(s,r);
 END StrToFloat;
 
 (** converts a set to a string *)
-(* adopted from Strings.Mod *)
 PROCEDURE SetToStr*(set: SET; VAR s: ARRAY OF CHAR);
 VAR i, j, k: INTEGER; noFirst: BOOLEAN;
 BEGIN
@@ -722,7 +823,6 @@ BEGIN
 END SetToStr;
 
 (** converts a string to a set *)
-(* adopted from Strings.Mod *)
 PROCEDURE StrToSet*(CONST str: ARRAY OF CHAR; VAR set: SET);
 VAR i, d, d1: INTEGER; dot: BOOLEAN;
 BEGIN
@@ -748,7 +848,6 @@ BEGIN FormatDateTime(TimeFormat, time, s)
 END TimeToStr;
 
 (** converts a string to a time *)
-(* adopted from Strings.Mod *)
 PROCEDURE StrToTime*(CONST str: ARRAY OF CHAR; VAR dt: Dates.DateTime);
 VAR i: SIZE;
 BEGIN

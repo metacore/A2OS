@@ -43,7 +43,7 @@ TYPE
 		label: WMStandardComponents.Label; 
 		toolbar: WMStandardComponents.Panel; 
 		refreshBtn: WMStandardComponents.Button; 
-		px, py: LONGINT; 
+		px, py: SIZE; 
 		draggedString: Strings.String; 
 		showFiles: WMProperties.BooleanProperty; 
 		showImagePreview: WMProperties.BooleanProperty; 
@@ -54,9 +54,9 @@ TYPE
 		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
 		PROCEDURE ^ DragArrived(sender, data: ANY); 
 		PROCEDURE ^ RefreshHandler(sender, data: ANY); 
-		PROCEDURE ^ MyDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
-		PROCEDURE ^ DragDropped*(x, y: LONGINT; dragInfo: WM.DragInfo); 
-		PROCEDURE ^ ContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ MyDragDropped(x, y: SIZE; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WM.DragInfo); 
+		PROCEDURE ^ ContextMenu(sender: ANY; x, y: SIZE); 
 		PROCEDURE ^ CreateFolder(sender, data: ANY); 
 		PROCEDURE ^ DeleteEntry(sender, data: ANY); 
 		PROCEDURE ^ RenameEntry(sender, data: ANY); 
@@ -64,8 +64,8 @@ TYPE
 		PROCEDURE ^ FindChildNode(parent: WMTrees.TreeNode; name: Strings.String): WMTrees.TreeNode; 
 		PROCEDURE ^ AddChildNode(parent: WMTrees.TreeNode; caption: Strings.String; data: EntryInfo; replace: BOOLEAN); 
 		PROCEDURE ^ InsertTreeNode(parent: WMTrees.TreeNode; name: Strings.String; data: EntryInfo); 
-		PROCEDURE ^ DrawTreeNode(canvas: WMGraphics.Canvas; w, h: LONGINT; node: WMTrees.TreeNode; state: SET); 
-		PROCEDURE ^ MeasureTreeNode(node: WMTrees.TreeNode; VAR w, h: LONGINT); 
+		PROCEDURE ^ DrawTreeNode(canvas: WMGraphics.Canvas; w, h: SIZE; node: WMTrees.TreeNode; state: SET); 
+		PROCEDURE ^ MeasureTreeNode(node: WMTrees.TreeNode; VAR w, h: SIZE); 
 		PROCEDURE ^ AppendToArchiveName(CONST src: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR); 
 	END ArchiveTree; 
 
@@ -92,14 +92,14 @@ TYPE
 		nodeContent, selection: NodeList; 
 		curArc: Archives.Archive; 
 		popup: WMPopups.Popup; 
-		px, py: LONGINT; 
+		px, py: SIZE; 
 		node: WMTrees.TreeNode; 
 		curFiles, curFolders, curBytes: LONGINT; 
 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ InitList; 
-		PROCEDURE ^ Resized*(width, height: LONGINT); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
 		PROCEDURE ^ AdjustTabSize; 
 		PROCEDURE ^ FixFilename(VAR filename: ARRAY OF CHAR); 
 		PROCEDURE ^ GetFormatFromFilename(CONST filename: ARRAY OF CHAR; VAR format: ARRAY OF CHAR); 
@@ -107,7 +107,7 @@ TYPE
 		PROCEDURE ^ LoadHandler(sender, data: ANY); 
 		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ ContextMenu(sender: ANY; x, y: LONGINT); 
+		PROCEDURE ^ ContextMenu(sender: ANY; x, y: SIZE); 
 		PROCEDURE ^ GetSelection(): NodeList; 
 		PROCEDURE ^ Open(sender, data: ANY); 
 		PROCEDURE ^ OpenFile(sender, data: ANY); 
@@ -115,8 +115,8 @@ TYPE
 		PROCEDURE ^ DeleteEntries(sender, data: ANY); 
 		PROCEDURE ^ RefreshList(sender, data: ANY); 
 		PROCEDURE ^ UpdateStatusbar; 
-		PROCEDURE ^ MyDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
-		PROCEDURE ^ ListDragDropped(x, y: LONGINT; dragInfo: WM.DragInfo); 
+		PROCEDURE ^ MyDragDropped(x, y: SIZE; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ListDragDropped(x, y: SIZE; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
 		PROCEDURE ^ ListDragArrived(sender, data: ANY); 
 		PROCEDURE ^ Close*; 

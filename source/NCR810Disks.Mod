@@ -20,7 +20,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 	Device = OBJECT (Disks.Device)
 	VAR drive: LONGINT;
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
+		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
 		BEGIN
 			IF op = Disks.Read THEN res := ReadBlocks(drive, block, num, ADDRESSOF(data[ofs]), 0)
 			ELSIF op = Disks.Write THEN res := WriteBlocks(drive, block, num, ADDRESSOF(data[ofs]), 0)
@@ -79,7 +79,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		srb.Target := devs[drive].target;
 		srb.Lun := devs[drive].lun;
 		srb.BufLen := BS*num;
-		srb.BufPointer :=  Machine.Ensure32BitAddress (adr);
+		srb.BufPointer := adr(Machine.Address32);
 		srb.SenseLen := 0X;
 		srb.CDBLen := 0AX;
 		srb.CDB[0] := 28X; srb.CDB[1] := LSH(devs[drive].lun, 5);
@@ -114,7 +114,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		srb.Target := devs[drive].target;
 		srb.Lun := devs[drive].lun;
 		srb.BufLen := BS*num;
-		srb.BufPointer :=  Machine.Ensure32BitAddress (adr);
+		srb.BufPointer := adr(Machine.Address32);
 		srb.SenseLen := 0X;
 		srb.CDBLen := 0AX;
 		srb.CDB[0] := 2AX; srb.CDB[1] := LSH(devs[drive].lun, 5);
@@ -141,7 +141,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		res := ReadBlocks(drive, 0, 1, ADDRESSOF(pd[0]), 0); ASSERT(res = 0);
 		res := -1; devs[drive].obstart := -1; devs[drive].obend := -1;
 		IF (pd[510] = 055X) &  (pd[511] = 0AAX) THEN
-			p :=  Machine.Ensure32BitAddress (1BEH+ADDRESSOF(pd[0])); lcyl := -1;
+			p := (1BEH+ADDRESSOF(pd[0]))(Machine.Address32); lcyl := -1;
 			FOR i := 0 TO 3 DO
 				IF chsdebug THEN KernelLog.String("Partition"); KernelLog.Int(i, 1); KernelLog.Ln END;
 				pp := SYSTEM.VAL(Part, p);
@@ -257,7 +257,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		srb.Target := devs[drive].target;
 		srb.Lun := devs[drive].lun;
 		srb.BufLen := 8;
-		srb.BufPointer := Machine.Ensure32BitAddress (ADDRESSOF(buf[0]));
+		srb.BufPointer := ADDRESSOF(buf[0])(Machine.Address32);
 		srb.SenseLen := 0X;
 		srb.CDBLen := 0AX;
 		srb.CDB[0] := 25X; srb.CDB[1] := LSH(devs[drive].lun, 5); srb.CDB[2] := 0X; srb.CDB[3] := 0X;

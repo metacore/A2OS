@@ -78,7 +78,7 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Show*(x, y: LONGINT; VAR chosen: WMGraphics.Color): BOOLEAN; 
+		PROCEDURE ^ Show*(x, y: SIZE; VAR chosen: WMGraphics.Color): BOOLEAN; 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ PressHandler(sender, data: ANY); 
@@ -94,7 +94,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetCaller(caller: ColorChooserWindow); 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ BuildPalette; 
 	END ColorChooser; 
@@ -131,7 +131,7 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ CreateEditorField(): WMEditors.Editor; 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Show*(x, y: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ LoadStyleList*(VAR doc: DTPData.Document); 
@@ -155,12 +155,12 @@ TYPE
 		PROCEDURE ^ RemoveCHandler(sender, data: ANY); 
 		PROCEDURE ^ ApplyCHandler(sender, data: ANY); 
 		PROCEDURE ^ LoadCharacterStyle(cstyle: DTPData.CharacterStyleObject); 
-		PROCEDURE ^ AlignHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ AlignHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ AlignPopupHandler(sender, data: ANY); 
-		PROCEDURE ^ StyleHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StyleHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
-		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
-		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 	END StyleEditor; 
 
 	Tab* = OBJECT {EXCLUSIVE} (WMStandardComponents.Button)
@@ -179,7 +179,7 @@ TYPE
 		imgChecked, imgUnchecked, imgCheckedDefault, imgCheckedInactive, imgUncheckedInactive: WMGraphics.Image; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 	END Checkbox; 
 
@@ -275,7 +275,7 @@ VAR
 
 	PROCEDURE ^ Inc*(VAR a, b: REAL); 
 	PROCEDURE ^ Dec*(VAR a, b: REAL); 
-	PROCEDURE ^ FixpToFloat*(x: LONGINT): REAL; 
+	PROCEDURE ^ FixpToFloat*(x: SIZE): REAL; 
 	PROCEDURE ^ FloatToFixp*(x: REAL): LONGINT; 
 	PROCEDURE ^ OutReal*(input: REAL; digits: LONGINT); 
 	PROCEDURE ^ ROUND*(input: REAL): LONGINT; 

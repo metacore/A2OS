@@ -420,7 +420,7 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		END;
 	END Open;
 
-	PROCEDURE GetImageInfo*(VAR width, height, format, maxProgressionLevel : LONGINT);
+	PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
 	BEGIN
 		width := SELF.cInfo.imageWidth; height := SELF.cInfo.imageHeight;
 		IF (cInfo.err = 0) THEN res := Codecs.ResOk ELSE res:=cInfo.err END;
@@ -441,7 +441,7 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		numScanlines: LONGINT;
 		zaehler: LONGINT;
 		rowOffset: LONGINT; (* changed type of i from INTEGER to LONGINT by boenhofph *)
-		w,h, y, dy, x, p: LONGINT;
+		w,h, y, dy, x, p: SIZE;
 		Rows:JSampRowList;
 		idct, factor, dither, colorMode: INTEGER;
 		ch: CHAR;
@@ -477,7 +477,7 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 		ELSE h := -h; y := h-1; dy := -1
 		END;
 		IF (img.width#w) OR (img.height#h) OR (img.fmt.code#Raster.bgr888) THEN (*! to do: gray and palette formats*)
-			Images.Create(img, SHORT(w), SHORT(h), Images.BGR888);
+			Images.Create(img, w, h, Images.BGR888);
 		END;
 		ChangeDirection(cInfo.bmpRows);
 		WHILE cInfo.bmpRows # NIL DO
@@ -3544,7 +3544,7 @@ KernelLog.String("  MCUColNum"); KernelLog.Int(lastMCUCol - cInfo.coef.MCUColNum
 	END colorQuantize3;
 
 	PROCEDURE Copy(VAR src,dest: ARRAY OF CHAR);
-	VAR l1,l2: LONGINT;
+	VAR l1,l2: SIZE;
 	BEGIN
 		l1 := LEN(src);
 		l2 := LEN(dest);
@@ -3586,7 +3586,7 @@ KernelLog.String("  MCUColNum"); KernelLog.Int(lastMCUCol - cInfo.coef.MCUColNum
 		numScanlines: LONGINT;
 		zaehler: LONGINT;
 		rowOffset: INTEGER;
-		VAR w,h, y, dy, x, p: LONGINT;
+		VAR w,h, y, dy, x, p: SIZE;
 		Rows:JSampRowList;
 	BEGIN
 		NEW(cInfo);
@@ -3621,7 +3621,7 @@ KernelLog.String("  MCUColNum"); KernelLog.Int(lastMCUCol - cInfo.coef.MCUColNum
 		ELSE h := -h; y := h-1; dy := -1
 		END;
 
-			Images.Create(img, SHORT(w), SHORT(h), Images.BGR888);
+			Images.Create(img, w, h, Images.BGR888);
 			ChangeDirection(cInfo.bmpRows);
 			WHILE cInfo.bmpRows # NIL DO
 				rowOffset := 0;

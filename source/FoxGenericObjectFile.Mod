@@ -6,7 +6,6 @@ IMPORT
 	Fingerprinter := FoxFingerprinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 
 CONST
-	Version = 6;
 	Trace = FALSE;
 	TraceAliases = FALSE;
 	WarnDuplicateFingerprints = FALSE;
@@ -14,24 +13,13 @@ CONST
 	(* optimizations *)
 	PatchFixups = TRUE; (* patch all fixups that can be processed during object file generation *)
 	AliasOnlyExported = TRUE;  (* create an alias only for exported sections *)
-	DetailedStatistics = FALSE;
 
-VAR
-	statModules, statModulesSize: LONGINT;
-	statHeaders, statHeadersSize: LONGINT;
 TYPE
+	Unit = BinaryCode.Unit;
 
-	SectionStat = POINTER TO RECORD
-		name: ARRAY 64 OF CHAR;
-		entries: LONGINT;
-		size: LONGINT;
-	END;
+	ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 
-VAR
-	statPool : Basic.HashTableInt;
-
-TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
-	VAR binary: BOOLEAN; mergeSections: BOOLEAN;
+		VAR binary: BOOLEAN; mergeSections: BOOLEAN;
 
 		PROCEDURE & InitObjectFileFormat;
 		BEGIN
@@ -66,10 +54,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			PROCEDURE MergeSections (sections: Sections.SectionList): BOOLEAN;
 			VAR
 				section: Sections.Section;
-				i: LONGINT;
+				i: SIZE;
 				sname: Basic.SegmentedName;
-				codeAlign, dataAlign, constAlign: LONGINT;
-				codeUnit, dataUnit, constUnit: LONGINT;
+				codeAlign, dataAlign, constAlign: Unit;
+				codeUnit, dataUnit, constUnit: BinaryCode.Bits;
 				resolved, codeSection, dataSection, constSection: BinaryCode.Section;
 				alias: BinaryCode.Alias;
 				irSection: IntermediateCode.Section;
@@ -187,7 +175,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 			PROCEDURE ExportSections (sections: Sections.SectionList): BOOLEAN;
 			VAR
 				section, test: Sections.Section;
-				i, j: LONGINT;
+				i, j: SIZE;
 				name: ObjectFile.SectionName;
 				msg: ARRAY 256 OF CHAR;
 			BEGIN
@@ -216,48 +204,13 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				RETURN TRUE
 			END ExportSections;
 
-			PROCEDURE MakeStatistics(sections: Sections.SectionList);
-			VAR i: LONGINT;
-				section: Sections.Section;
-				resolved: BinaryCode.Section;
-				suffix: ARRAY 128 OF CHAR;
-				index: StringPool.Index;
-				any: ANY;
-				sectionStat : SectionStat;
-			BEGIN
-				FOR i := 0 TO sections.Length()-1 DO
-					section := sections.GetSection(i);
-					resolved := section(IntermediateCode.Section).resolved;
-					Basic.GetSuffix(section.name, suffix);
-					IF (suffix[0] = "@")  & ((suffix[1] # "c") OR (suffix[2] # "o")) THEN
-						StringPool.GetIndex(suffix, index);
-						any := statPool.Get(index);
-						IF any = NIL THEN
-							NEW(sectionStat);
-							COPY(suffix, sectionStat.name);
-							sectionStat.entries := 0;
-							sectionStat.size := 0;
-							statPool.Put(index, sectionStat);
-						ELSE
-							sectionStat := any(SectionStat);
-						END;
-						INC(sectionStat.entries);
-						INC(sectionStat.size, resolved.pc);
-					END;
-				END;
-			END MakeStatistics;
-
 			PROCEDURE ExportModule (module: Sections.Module): BOOLEAN;
-			VAR result: BOOLEAN; pos: LONGINT;
+			VAR result: BOOLEAN;
 				offers, requires: ObjectFile.NameList;
 				numImports: LONGINT;
 				name: ObjectFile.SectionName;
 				import: SyntaxTree.Import;
 			BEGIN
-				pos := writer.Pos();
-				IF DetailedStatistics THEN
-					MakeStatistics(module.allSections);
-				END;
 				IF mergeSections & ~MergeSections(module.allSections) THEN RETURN FALSE END;
 				NEW (offers, 1); offers[0] := module.moduleName;
 
@@ -281,9 +234,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 					END;
 				END;
 				WriteHeader(writer,binary,module.allSections, poolMap, offers, requires, fingerprinter);
-				INC(statHeaders); INC(statHeadersSize, writer.Pos()-pos);
 				result := ExportSections (module.allSections);
-				INC(statModules); INC(statModulesSize, writer.Pos()-pos);
 				RETURN result
 			END ExportModule;
 
@@ -358,7 +309,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		RETURN fp
 	END GetFingerprint;
 
-	PROCEDURE CheckAlias(sections: Sections.SectionList; VAR identifier: ObjectFile.Identifier; VAR offset: LONGINT);
+	PROCEDURE CheckAlias(sections: Sections.SectionList; VAR identifier: ObjectFile.Identifier; VAR offset: SIZE);
 	VAR section: Sections.Section; alias: BinaryCode.Section;
 	BEGIN
 		offset := 0;
@@ -378,20 +329,20 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END;
 	END CheckAlias;
 
-	PROCEDURE CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: LONGINT);
+	PROCEDURE CopyFixups(sections: Sections.SectionList; from, to: BinaryCode.Section; offset: Unit);
 	VAR fixup: BinaryCode.Fixup; i, index, fixups: SIZE; fixupList: ObjectFile.Fixups;
-		aliasSymbol: ObjectFile.Identifier; aliasOffset: LONGINT;
+		aliasSymbol: ObjectFile.Identifier; aliasOffset: SIZE;
 
-		PROCEDURE PatchFixup (fixup: BinaryCode.Fixup; fixupOffset, targetOffset: LONGINT);
-		VAR target, address: ObjectFile.Unit; j: SIZE;
+		PROCEDURE PatchFixup (fixup: BinaryCode.Fixup; fixupOffset, targetOffset: Unit);
+		VAR target, address: Unit; j: SIZE;
 
 			PROCEDURE PatchPattern (CONST pattern: ObjectFile.FixupPattern);
 			BEGIN
 				to.os.bits.SetBits (target * to.os.unit + pattern.offset, pattern.bits, address); address := ASH (address, -pattern.bits);
 			END PatchPattern;
 
-			PROCEDURE CheckBits(value: LONGINT; offset: LONGINT);
-			VAR i: SIZE; nobits,remainder: LONGINT; minval, maxval: ObjectFile.Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
+			PROCEDURE CheckBits(value, offset: Unit);
+			VAR i: SIZE; nobits,remainder: ObjectFile.Bits; minval, maxval: Unit; name: ObjectFile.SectionName; number: ARRAY 32 OF CHAR;
 			BEGIN
 				nobits := 0;
 				FOR i := 0 TO fixup.patterns-1 DO
@@ -462,9 +413,8 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 	BEGIN NEW(objectFileFormat); RETURN objectFileFormat
 	END Get;
 
-	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList): WORD;
-	VAR ch: CHAR; string: ARRAY 32 OF CHAR;
-	VAR version: WORD;
+	PROCEDURE ReadHeader(reader: Streams.Reader; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList);
+	VAR ch: CHAR; version: WORD; string: ARRAY 32 OF CHAR;
 	BEGIN
 		reader.String(string);
 		binary := string="FoxOFB";
@@ -472,7 +422,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		reader.SkipWhitespace;
 		reader.Char(ch); ASSERT(ch='v');
 		reader.Int(version,FALSE);
-		IF version < Version THEN KernelLog.String("warning: old object file encountered, recompile all sources"); KernelLog.Ln END;
+		IF version # ObjectFile.Version THEN KernelLog.String("warning: invalid object file encountered, recompile all sources"); KernelLog.Ln END;
 		reader.Char(ch); ASSERT(ch='.');
 		IF ~binary THEN reader.SkipWhitespace
 		ELSE
@@ -481,22 +431,19 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END;
 		offers := NIL;
 		requires := NIL;
-		IF version >= 4 THEN
-			IF ~binary THEN
-				reader.String(string); ObjectFile.ReadNameList(reader, offers, binary, poolMap);
-				reader.SkipWhitespace;
-				reader.String(string); ObjectFile.ReadNameList(reader, requires, binary, poolMap);
-				reader.SkipWhitespace;
-			ELSE
-				ObjectFile.ReadNameList(reader, offers, binary, poolMap);
-				ObjectFile.ReadNameList(reader, requires, binary, poolMap);
-			END
-		END;
-		RETURN version;
+		IF ~binary THEN
+			reader.String(string); ObjectFile.ReadNameList(reader, offers, binary, poolMap);
+			reader.SkipWhitespace;
+			reader.String(string); ObjectFile.ReadNameList(reader, requires, binary, poolMap);
+			reader.SkipWhitespace;
+		ELSE
+			ObjectFile.ReadNameList(reader, offers, binary, poolMap);
+			ObjectFile.ReadNameList(reader, requires, binary, poolMap);
+		END
 	END ReadHeader;
 
 	PROCEDURE WriteHeader(writer: Streams.Writer; binary: BOOLEAN; sections: Sections.SectionList; VAR poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList; fingerprinter:Fingerprinter.Fingerprinter);
-	VAR i: LONGINT; section: Sections.Section;
+	VAR i: SIZE; section: Sections.Section;
 
 		PROCEDURE ProcessSection(section: IntermediateCode.Section);
 		VAR i: SIZE; fixup: BinaryCode.Fixup; alias: BinaryCode.Alias;
@@ -537,7 +484,7 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		ELSE writer.String("FoxOFT");
 		END;
 		writer.Char(' ');
-		writer.Char('v'); writer.Int(Version,0); writer.Char(".");
+		writer.Char('v'); writer.Int(ObjectFile.Version,0); writer.Char(".");
 		IF ~binary THEN
 				writer.Ln;
 				writer.String("offers "); ObjectFile.WriteNameList(writer, offers, binary, poolMap);
@@ -562,8 +509,8 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END;
 	END WriteHeader;
 
-	PROCEDURE GCD(a,b: LONGINT): LONGINT;
-	VAR h: LONGINT;
+	PROCEDURE GCD(a,b: Unit): Unit;
+	VAR h: Unit;
 	BEGIN
 		WHILE b # 0 DO
 			h := a MOD b;
@@ -573,12 +520,12 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		RETURN a
 	END GCD;
 
-	PROCEDURE SCM(a,b: LONGINT): LONGINT;
+	PROCEDURE SCM(a,b: Unit): Unit;
 	BEGIN
 		RETURN a*b DIV GCD(a,b)
 	END SCM;
 
-	PROCEDURE CommonAlignment(a,b: LONGINT): LONGINT;
+	PROCEDURE CommonAlignment(a,b: Unit): Unit;
 	BEGIN
 		(*TRACE(a,b);*)
 		IF a = 0 THEN RETURN b
@@ -592,17 +539,16 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		fileName: Files.FileName; file: Files.File; reader: Files.Reader; writer: Streams.Writer;
 		section: ObjectFile.Section; binary: BOOLEAN; poolMap, poolMapDummy: ObjectFile.PoolMap;
 		offers, requires: ObjectFile.NameList;
-		version: WORD;
 	BEGIN
 		IF context.arg.GetString(fileName) THEN
 			file := Files.Old(fileName);
 			IF file # NIL THEN
 				NEW(reader,file,0);
 				writer := Basic.GetWriter(Basic.GetDebugWriter(fileName));
-				version := ReadHeader(reader, binary, poolMap, offers, requires);
+				ReadHeader(reader, binary, poolMap, offers, requires);
 				WriteHeader(writer, FALSE, NIL, poolMapDummy, offers, requires, NIL);
 				WHILE reader.Peek () # 0X DO
-					ObjectFile.ReadSection (reader, version, section,binary, poolMap);
+					ObjectFile.ReadSection (reader, section,binary, poolMap);
 					ObjectFile.WriteSection(writer, section, FALSE, NIL); (* textual *)
 					reader.SkipWhitespace;
 				END;
@@ -623,11 +569,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		is: IntermediateCode.Section;
 		sectionList: Sections.SectionList;
 		section: ObjectFile.Section;
-		i: LONGINT;
+		i: SIZE;
 		dest: Files.FileName;
 		writer: Files.Writer;
 		name: ObjectFile.SegmentedName;
-		version: WORD;
 		offers, requires: ObjectFile.NameList;
 	BEGIN
 		NEW(sectionList);
@@ -637,10 +582,10 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 				file := Files.Old(fileName);
 				IF file # NIL THEN
 					NEW(reader,file,0);
-					version := ReadHeader(reader, binary, poolMap,offers, requires);
+					ReadHeader(reader, binary, poolMap,offers, requires);
 					WHILE reader.Peek () # 0X DO
 						ObjectFile.InitSection(section);
-						ObjectFile.ReadSection (reader, version, section, binary, poolMap);
+						ObjectFile.ReadSection (reader, section, binary, poolMap);
 						NEW(bs, SHORTINT(section.type) ,section.unit,name, FALSE, FALSE);
 						bs.os := section;
 						NEW(is, SHORTINT(bs.os.type),  bs.os.identifier.name,NIL, FALSE);
@@ -667,31 +612,4 @@ TYPE ObjectFileFormat* = OBJECT (Formats.ObjectFileFormat)
 		END;
 	END MakeLibrary;
 
-	PROCEDURE Statistics*;
-	VAR iterator: Basic.IntIterator; stat: SectionStat; index: StringPool.Index; any: ANY;
-	BEGIN
-		IF DetailedStatistics THEN
-			iterator := statPool.GetIterator();
-			WHILE iterator.GetNext(index, any) DO
-				stat := any(SectionStat);
-				TRACE(stat.name, stat.entries, stat.size);
-			END;
-		END;
-		TRACE(statModules, statModulesSize);
-		TRACE(statHeaders, statHeadersSize);
-		ObjectFile.Statistics;
-	END Statistics;
-
-	PROCEDURE ResetStatistics*;
-	BEGIN
-		ObjectFile.ResetStatistics;
-		statModules := 0; statModulesSize := 0;
-		statHeaders := 0; statHeadersSize := 0;
-		IF DetailedStatistics THEN
-			NEW(statPool,64);
-		END;
-	END ResetStatistics;
-
-BEGIN
-	ResetStatistics
 END FoxGenericObjectFile.

@@ -11,7 +11,7 @@ TYPE
 	(* special component to adapt to scroll target, in total conrol by ScrollablePanel, never use otherwise *)
 	ScrollPanel*= OBJECT(WMComponents.VisualComponent)
 	VAR
-		left, top, dx, dy: LONGINT;
+		left, top, dx, dy: SIZE;
 		CheckScrollbars: WMMessages.CompCommand;
 		resizing: BOOLEAN; (* distinguish whether AlignSubComponents is called from children or from Resized *)
 
@@ -154,7 +154,7 @@ TYPE
 	VAR
 		vScrollbar, hScrollbar : WMStandardComponents.Scrollbar;
 		scrollPanel: ScrollPanel;
-		dx, dy : LONGINT;
+		dx, dy : SIZE;
 		minNofLevels*, nofLevelsPerPage* : WMProperties.Int32Property;
 		wheelScrolling- : WMProperties.BooleanProperty;
 
@@ -199,7 +199,7 @@ TYPE
 		END HandleInternal;
 
 		PROCEDURE FitScrollTarget(sender, par: ANY);
-		VAR spw, sph, tw, th, sw, sh, w, h, rw, rh, nofLevels: LONGINT;
+		VAR spw, sph, tw, th, sw, sh, w, h, rw, rh, nofLevels: SIZE;
 		BEGIN
 			IF (sequencer # NIL) & ~sequencer.IsCallFromSequencer() THEN
 				sequencer.ScheduleEvent(FitScrollTarget, NIL, NIL)
@@ -259,9 +259,9 @@ TYPE
 			Invalidate
 		END ScrollbarsChanged;
 
-		PROCEDURE WheelMove*(dz : LONGINT);
+		PROCEDURE WheelMove*(dz : SIZE);
 		CONST Multiplier  = 3;
-		VAR pos : LONGINT;
+		VAR pos : SIZE;
 		BEGIN
 			WheelMove^(dz);
 			IF vScrollbar.visible.Get() THEN

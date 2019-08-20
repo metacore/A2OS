@@ -115,7 +115,7 @@ TYPE
 		trans : Matrix.Matrix4x4;
 		distpp : LONGREAL;
 		rasterizer : Rasterizer.Rasterizer;
-		width, height : LONGINT;
+		width, height : SIZE;
 		quality* 	: LONGINT;
 		frustum* : W3dGeometry.Frustum;
 		clearColor : LONGINT;
@@ -127,7 +127,7 @@ TYPE
 		worldValid : BOOLEAN; (* is the non-animated part of the world valid ?
 						No if not rendered, trans matrix changed or isAnimated of an object is changed *)
 
-		PROCEDURE &Init*(w, h, clearColor :LONGINT);
+		PROCEDURE &Init*(w, h: SIZE; clearColor :LONGINT);
 		BEGIN
 			NEW(objects); NEW(animated); distpp := w/2; NEW(rasterizer); rasterizer.SetSize(w, h);
 			NEW(frustum);
@@ -270,7 +270,7 @@ TYPE
 		END ClipDrawTriangle;
 
 		PROCEDURE RenderInternal*(img : Raster.Image; animatedOnly:BOOLEAN);
-		VAR i, j : LONGINT; obj : Object; huga : ANY; srcCopy:Raster.Mode;
+		VAR i, j : SIZE; obj : Object; huga : ANY; srcCopy:Raster.Mode;
 		BEGIN
 			Raster.InitMode(srcCopy, Raster.srcCopy);
 
@@ -347,7 +347,7 @@ TYPE
 			RenderInternal(img, movingOnly)
 		END Render;
 
-		PROCEDURE GetOwnerIndex*(x, y : LONGINT): LONGINT;
+		PROCEDURE GetOwnerIndex*(x, y : SIZE): LONGINT;
 		BEGIN {EXCLUSIVE}
 			IF ~changed THEN RETURN rasterizer.GetInvIdx(x, y) ELSE
 				invertable := TRUE;

@@ -1051,6 +1051,8 @@ VAR
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF INTEGER; right: INTEGER); 
 	PROCEDURE ^ AssignSLALLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF LONGINT; right: LONGINT); 
+	PROCEDURE ^ AssignSYAYLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
+	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF SIZE; right: SIZE); 
 	PROCEDURE ^ AssignSHAHLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF HUGEINT; right: HUGEINT); 
 	PROCEDURE ^ AssignSRARLoop(ladr, dadr: ADDRESS; dinc, len: SIZE); 

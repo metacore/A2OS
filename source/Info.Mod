@@ -50,7 +50,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Reset;
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			nofElements := 0;
 			IF (types # NIL) THEN
@@ -359,7 +359,7 @@ END WriteB;
 
 PROCEDURE ModuleDetails*(context : Commands.Context); (** [Options] module ~ *)
 VAR
-	m : Modules.Module; i, j, k: LONGINT;
+	m : Modules.Module; i: SIZE; j, k: LONGINT;
 	p, procAdr: ADDRESS;
 	adr : ADDRESS;
 	modn : ARRAY 33 OF CHAR;
@@ -376,7 +376,6 @@ BEGIN
 			context.out.String(" refcnt = "); context.out.Int(m.refcnt, 1);
 			context.out.String(" sb ="); context.out.Hex(m.sb, 9);
 			context.out.String(" dataSize = "); context.out.Int(LEN(m.data), 1);
-			context.out.String(" staticTdSize = "); context.out.Int(LEN(m.staticTypeDescs), 1);
 			context.out.String(" codeSize = "); context.out.Int(LEN(m.code), 1);
 			context.out.String(" refSize = "); context.out.Int(LEN(m.refs), 1);
 			context.out.String(" entries = "); context.out.Int(LEN(m.entry), 1);
@@ -885,6 +884,4 @@ Info.RecentAllocators --clear   --scale=2400000 ~
 Info.RecentAllocators    --scale=2400000 ~
 Info.RecentAllocators --clear ~
 Info.ClearRecentAllocators  ~
-
-
 

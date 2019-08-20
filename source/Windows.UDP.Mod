@@ -62,14 +62,14 @@ TYPE
 					 In case of concurrent sends the datagrams are serialized.
 	Sends len bytes of data (beginning at pos in buf) to the host specified by remIP and remPort. *)
 
-		PROCEDURE Send*( fip: IP.Adr;  fport: LONGINT;  CONST data: ARRAY OF CHAR;  ofs, len: LONGINT; VAR res: WORD );
+		PROCEDURE Send*( fip: IP.Adr;  fport: LONGINT;  CONST data: ARRAY OF CHAR;  ofs, len: SIZE; VAR res: WORD );
 		VAR sadr: WSock32.sockaddrIn;  err: LONGINT; winRes: LONGINT;
 		BEGIN
 			ASSERT ( LEN( data ) >= (ofs + len) );
 			IF (fip.usedProtocol = IP.IPv4) THEN
 				SYSTEM.MOVE( ADDRESSOF( fip ), ADDRESSOF( sadr.sinAddr ), IPAdrLen );
 				sadr.sinFamily := WSock32.PFINet;  sadr.sinPort := WSock32.htons( SHORT( fport ) );
-				winRes := WSock32.sendto( sock, data[ofs], len, 0, sadr, SIZEOF( WSock32.sockaddrIn ) );
+				winRes := WSock32.sendto( sock, data[ofs], len(WORD), {}, sadr, SIZEOF( WSock32.sockaddrIn ) );
 				(* account that sendto returns number of bytes sent to the socket (Alexey) *)
 				IF winRes = len THEN res := Ok; ELSE err := WSock32.WSAGetLastError(); res := unknown;  END;
 			ELSE res := unknown;
@@ -93,8 +93,8 @@ TYPE
 					if another thread is already blocked on this Socket.
 	Stores an entire datagram in buf beginning at pos. On success (S.res = done), remIP and remPort indicate the sender, len indicate the length of valid data. *)
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, ms: LONGINT;  VAR fip: IP.Adr;
-										   VAR fport, len: LONGINT; VAR res: WORD );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size: SIZE; ms: LONGINT;  VAR fip: IP.Adr;
+										   VAR fport: LONGINT; VAR len: SIZE; VAR res: WORD );
 		VAR sadr: WSock32.sockaddrIn;  err: LONGINT;  l: LONGINT; winRes: LONGINT;
 		ret: LONGINT;  fdset: WSock32.FDSet; avail: BOOLEAN; time: WSock32.TimeVal;
 		BEGIN
@@ -127,7 +127,7 @@ TYPE
 			END;
 
 			IF avail THEN
-				len := WSock32.recvfrom( sock, data[ofs], size, 0, sadr, l );
+				len := WSock32.recvfrom( sock, data[ofs], size(WORD), {}, sadr, l );
 				IF len < 0 THEN err := WSock32.WSAGetLastError(); (*  AosWinsock.DispError( err ); *)  res := unknown;
 				ELSE res := Ok;
 				END;

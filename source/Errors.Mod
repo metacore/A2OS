@@ -75,7 +75,7 @@ BEGIN
 END ToStream;
 
 PROCEDURE ResizeCache;
-VAR newCache : ErrorMessages; i : LONGINT;
+VAR newCache : ErrorMessages; i : SIZE;
 BEGIN
 	IF (cache # NIL) THEN
 		NEW(newCache, 2*LEN(cache));

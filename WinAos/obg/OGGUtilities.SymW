@@ -98,12 +98,12 @@ TYPE
 
 	BufferPool* = OBJECT {EXCLUSIVE} 
 	VAR 
-		head, num: LONGINT; 
+		head, num: SIZE; 
 		buffer: POINTER TO ARRAY OF SoundDevices.Buffer; 
 
 		PROCEDURE ^ Append*(x: SoundDevices.Buffer); 
 		PROCEDURE ^ Remove*(): SoundDevices.Buffer; 
-		PROCEDURE ^  & Init*(n: LONGINT); 
+		PROCEDURE ^  & Init*(n: SIZE); 
 	END BufferPool; 
 VAR 
 	f: Files.File; 
@@ -139,8 +139,8 @@ VAR
 	PROCEDURE ^ ArrayBool*(name: ARRAY OF CHAR; VAR a: ARRAY OF BOOLEAN); 
 	PROCEDURE ^ Array*(name: ARRAY OF CHAR; VAR a: ARRAY OF LONGINT); 
 	PROCEDURE ^ ArrayHuge*(name: ARRAY OF CHAR; VAR a: ARRAY OF HUGEINT); 
-	PROCEDURE ^ ArrayHugeLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF HUGEINT; n: LONGINT); 
-	PROCEDURE ^ ArrayLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF LONGINT; n: LONGINT); 
+	PROCEDURE ^ ArrayHugeLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF HUGEINT; n: SIZE); 
+	PROCEDURE ^ ArrayLen*(name: ARRAY OF CHAR; VAR a: ARRAY OF LONGINT; n: SIZE); 
 	PROCEDURE ^ String*(str: ARRAY OF CHAR); 
 	PROCEDURE ^ Buffer*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
 	PROCEDURE ^ CharToHex(ch: CHAR; VAR hex: ARRAY OF CHAR); 

@@ -12,7 +12,7 @@ MODULE MultiMail IN Oberon;	(** portable *) (* ejz,  *)
 		CONST
 			MaxPatLen = 128;
 		VAR
-			i, l, sPatLen: LONGINT;
+			i, l, sPatLen: SIZE;
 			R: Texts.Reader;
 			sPat: ARRAY MaxPatLen OF CHAR;
 			sDv: ARRAY MaxPatLen + 1 OF INTEGER;
@@ -34,7 +34,7 @@ MODULE MultiMail IN Oberon;	(** portable *) (* ejz,  *)
 		END CalcDispVec;
 	BEGIN
 		COPY(pat, sPat);
-		sPatLen := SHORT(Strings.Length(sPat));
+		sPatLen := Strings.Length(sPat);
 		CalcDispVec();
 		IF sPatLen > 0 THEN
 			Texts.OpenReader(R, text, pos);

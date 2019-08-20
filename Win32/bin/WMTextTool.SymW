@@ -39,11 +39,11 @@ TYPE
 		PROCEDURE ^ GetStyle(sender, data: ANY); 
 		PROCEDURE ^ SetStyle(sender, data: ANY); 
 		PROCEDURE ^ SetCustomStyle(sender, data: ANY); 
-		PROCEDURE ^ StyleDrop(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ StyleDrop(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ StylePopupHandler(sender, data: ANY); 
-		PROCEDURE ^ ColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ ColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ColorPopupHandler(result: WMGraphics.Color); 
-		PROCEDURE ^ BGColorHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ BGColorHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
 		PROCEDURE ^ UpdateColors(sender, data: ANY); 
 		PROCEDURE ^ Close*; 
@@ -54,7 +54,7 @@ TYPE
 VAR 
 	nofWindows: LONGINT; 
 
-	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value, currentSize: LONGINT; VAR newSize: LONGINT); 
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: LONGINT; currentSize: SIZE; VAR newSize: SIZE); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
 	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY); 
 	PROCEDURE ^ ApplyChange(changeInfo: ChangeInfo); 

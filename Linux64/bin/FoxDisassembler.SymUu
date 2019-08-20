@@ -3,8 +3,10 @@ MODULE FoxDisassembler;
 CONST 
 	Trace = FALSE; 
 TYPE 
+	Unit* = ObjectFile.Unit; 
+
 	Block* = POINTER TO RECORD (ObjectFile.Section)
-		to-: LONGINT; 
+		to-: Unit; 
 		next-: Block; 
 	END; 
 
@@ -14,19 +16,19 @@ TYPE
 		w: Streams.Writer; 
 		stringWriter: Streams.StringWriter; 
 		code, data: BitSets.BitSet; 
-		codeUnit, dataUnit: LONGINT; 
-		codeDisplacement-, dataDisplacement: LONGINT; 
+		codeUnit, dataUnit: ObjectFile.Bits; 
+		codeDisplacement-, dataDisplacement: Unit; 
 
 		PROCEDURE ^  & Init*(w: Streams.Writer); 
 		PROCEDURE ^ GetLogFile*(CONST binaryFileName: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ BlockHeader(block: Block); 
-		PROCEDURE ^ WriteReference*(adr: LONGINT; isCode: BOOLEAN; w: Streams.Writer); 
-		PROCEDURE ^ DisassembleInstruction*(bitset: BitSets.BitSet; VAR adrInUnits: LONGINT; maxInstructionSize: LONGINT; w: Streams.Writer); 
-		PROCEDURE ^ DisassembleBlock(from, to: LONGINT); 
-		PROCEDURE ^ DataBlock(from, to: LONGINT); 
+		PROCEDURE ^ WriteReference*(adr: Unit; isCode: BOOLEAN; w: Streams.Writer); 
+		PROCEDURE ^ DisassembleInstruction*(bitset: BitSets.BitSet; VAR address: Unit; maxInstructionSize: Unit; w: Streams.Writer); 
+		PROCEDURE ^ DisassembleBlock(from, to: Unit); 
+		PROCEDURE ^ DataBlock(from, to: Unit); 
 		PROCEDURE ^ ParseLogFile*(file: Files.File): Block; 
-		PROCEDURE ^ Disassemble*(code, data: BitSets.BitSet; codeUnit, dataUnit: LONGINT; logFile: Files.File; address: ADDRESS); 
-		PROCEDURE ^ SetDisplacements*(code, data: LONGINT); 
+		PROCEDURE ^ Disassemble*(code, data: BitSets.BitSet; codeUnit, dataUnit: ObjectFile.Bits; logFile: Files.File; address: ADDRESS); 
+		PROCEDURE ^ SetDisplacements*(code, data: Unit); 
 	END Disassembler; 
 
 	PROCEDURE ^ FindPC*(context: Commands.Context); 

@@ -76,7 +76,7 @@ VAR
 	StrProcessSelector, StrProcessManager: Strings.String; 
 	PrototypeSort: WMProperties.Int32Property; 
 
-	PROCEDURE ^ GetTitleStr(col: LONGINT; VAR x: ARRAY OF CHAR); 
+	PROCEDURE ^ GetTitleStr(col: WORD; VAR x: ARRAY OF CHAR); 
 	PROCEDURE ^ GetAlign(col: LONGINT): LONGINT; 
 	PROCEDURE ^ CheckBP(p: Objects.Process; bp: ADDRESS): ADDRESS; 
 	PROCEDURE ^ OpenCpuLoadWindow(pid: LONGINT); 

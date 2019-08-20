@@ -18,11 +18,11 @@ TYPE
 		timer : Kernel.Timer;
 		alive, dead, added : BOOLEAN;
 		buf : ARRAY LocalBuf OF CHAR;
-		bufPos : LONGINT;
+		bufPos : SIZE;
 		ch : CHAR;
 		tw : TextUtilities.TextWriter;
 
-		limitCounter, n: LONGINT;
+		limitCounter, n: SIZE;
 
 		PROCEDURE &Open;
 		BEGIN

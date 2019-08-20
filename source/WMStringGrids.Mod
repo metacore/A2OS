@@ -16,7 +16,7 @@ TYPE
 	VAR
 		caption : String;
 		color, textColor : WMGraphics.Color;
-		align: LONGINT;
+		align: WORD;
 		img : WMGraphics.Image;
 		data : ANY;
 		flags : SET;
@@ -45,11 +45,11 @@ TYPE
 	StringGridModel* = OBJECT
 	VAR
 		lockedBy : ANY;
-		lockLevel : LONGINT;
+		lockLevel : SIZE;
 		viewChanged : BOOLEAN;
 		onChanged* : WMEvents.EventSource; (** does not hold the lock, if called *)
 		rows : RowArray;
-		nofRows, nofCols : LONGINT;
+		nofRows, nofCols : SIZE;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -85,8 +85,8 @@ TYPE
 			IF hasChanged THEN onChanged.Call(NIL) END
 		END Release;
 
-		PROCEDURE AdjustRows(newSize : LONGINT);
-		VAR i : LONGINT; newRows : RowArray;
+		PROCEDURE AdjustRows(newSize : SIZE);
+		VAR i : SIZE; newRows : RowArray;
 		BEGIN
 			NEW(newRows, newSize);
 			FOR i := 0 TO MIN(nofRows, newSize) - 1 DO
@@ -100,7 +100,7 @@ TYPE
 		END AdjustRows;
 
 		PROCEDURE AdjustRow(row : Row);
-		VAR i : LONGINT; newCells : CellArray;
+		VAR i : SIZE; newCells : CellArray;
 		BEGIN
 			IF row.cells = NIL THEN NEW(row.cells, nofCols) END;
 			IF LEN(row.cells) # nofCols THEN
@@ -112,7 +112,7 @@ TYPE
 			END
 		END AdjustRow;
 
-		PROCEDURE SetNofRows*(newNofRows : LONGINT);
+		PROCEDURE SetNofRows*(newNofRows : SIZE);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (newNofRows > nofRows) OR (newNofRows < nofRows DIV 2)  THEN AdjustRows(newNofRows) END;
@@ -120,8 +120,8 @@ TYPE
 			viewChanged := TRUE
 		END SetNofRows;
 
-		PROCEDURE SetNofCols*(newNofCols : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE SetNofCols*(newNofCols : SIZE);
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			nofCols := newNofCols;
@@ -129,19 +129,19 @@ TYPE
 			viewChanged := TRUE
 		END SetNofCols;
 
-		PROCEDURE GetNofRows*() : LONGINT;
+		PROCEDURE GetNofRows*() : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			RETURN nofRows
 		END GetNofRows;
 
-		PROCEDURE GetNofCols*() : LONGINT;
+		PROCEDURE GetNofCols*() : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			RETURN nofCols
 		END GetNofCols;
 
-		PROCEDURE SetCellText*(col, row : LONGINT; caption : String);
+		PROCEDURE SetCellText*(col, row : SIZE; caption : String);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -154,7 +154,7 @@ TYPE
 			END
 		END SetCellText;
 
-		PROCEDURE GetCellText*(col, row : LONGINT ) : String;
+		PROCEDURE GetCellText*(col, row : SIZE ) : String;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -164,8 +164,8 @@ TYPE
 			END
 		END GetCellText;
 
-		PROCEDURE SetCellTextAOC*(col, row, minBufferSize : LONGINT; CONST caption : ARRAY OF CHAR);
-		VAR cell : Cell; length : LONGINT;
+		PROCEDURE SetCellTextAOC*(col, row, minBufferSize : SIZE; CONST caption : ARRAY OF CHAR);
+		VAR cell : Cell; length : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -183,7 +183,7 @@ TYPE
 			END
 		END SetCellTextAOC;
 
-		PROCEDURE GetCellTextAOC*(col, row : LONGINT; VAR caption : ARRAY OF CHAR);
+		PROCEDURE GetCellTextAOC*(col, row : SIZE; VAR caption : ARRAY OF CHAR);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -197,7 +197,7 @@ TYPE
 			END
 		END GetCellTextAOC;
 
-		PROCEDURE SetCellColors*(col, row : LONGINT; color, textColor : WMGraphics.Color);
+		PROCEDURE SetCellColors*(col, row : SIZE; color, textColor : WMGraphics.Color);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -214,7 +214,7 @@ TYPE
 			END;
 		END SetCellColors;
 
-		PROCEDURE GetCellColors*(col, row : LONGINT; VAR color, textColor : WMGraphics.Color; VAR valid : BOOLEAN);
+		PROCEDURE GetCellColors*(col, row : SIZE; VAR color, textColor : WMGraphics.Color; VAR valid : BOOLEAN);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			valid := FALSE;
@@ -227,7 +227,7 @@ TYPE
 			END;
 		END GetCellColors;
 
-		PROCEDURE SetCellData*(col, row : LONGINT; data : ANY);
+		PROCEDURE SetCellData*(col, row : SIZE; data : ANY);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -239,7 +239,7 @@ TYPE
 			END
 		END SetCellData;
 
-		PROCEDURE GetCellData*(col, row : LONGINT) : ANY;
+		PROCEDURE GetCellData*(col, row : SIZE) : ANY;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -249,7 +249,7 @@ TYPE
 			END
 		END GetCellData;
 
-		PROCEDURE SetCellImage*(col, row : LONGINT; img : WMGraphics.Image);
+		PROCEDURE SetCellImage*(col, row : SIZE; img : WMGraphics.Image);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -261,7 +261,7 @@ TYPE
 			END
 		END SetCellImage;
 
-		PROCEDURE GetCellImage*(col, row : LONGINT) : WMGraphics.Image;
+		PROCEDURE GetCellImage*(col, row : SIZE) : WMGraphics.Image;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -271,7 +271,7 @@ TYPE
 			END
 		END GetCellImage;
 
-		PROCEDURE SetTextAlign*(col, row, align : LONGINT);
+		PROCEDURE SetTextAlign*(col, row : SIZE; align : WORD);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -283,7 +283,7 @@ TYPE
 			END
 		END SetTextAlign;
 
-		PROCEDURE GetTextAlign*(col, row : LONGINT) : LONGINT;
+		PROCEDURE GetTextAlign*(col, row : SIZE) : WORD;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -293,8 +293,8 @@ TYPE
 			END
 		END GetTextAlign;
 
-		PROCEDURE DeleteRow*(rowNo : LONGINT; viewChanged : BOOLEAN);
-		VAR i : LONGINT;
+		PROCEDURE DeleteRow*(rowNo : SIZE; viewChanged : BOOLEAN);
+		VAR i : SIZE;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (rowNo >=  0) & (rowNo < nofRows) THEN
@@ -306,8 +306,8 @@ TYPE
 			END
 		END DeleteRow;
 
-		PROCEDURE InsertEmptyRow*(atRowNo : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE InsertEmptyRow*(atRowNo : SIZE);
+		VAR i : SIZE;
 			newRows : RowArray;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
@@ -381,7 +381,7 @@ TYPE
 			model.Release
 		END DrawBackground;
 
-		PROCEDURE GetCellData*(col, row : LONGINT) : ANY;
+		PROCEDURE GetCellData*(col, row : SIZE) : ANY;
 		VAR data : ANY;
 		BEGIN
 			model.Acquire;
@@ -390,7 +390,7 @@ TYPE
 			RETURN data
 		END GetCellData;
 
-(*		PROCEDURE CellClicked*(col, row : LONGINT); (** PROTECTED *)
+(*		PROCEDURE CellClicked*(col, row : SIZE); (** PROTECTED *)
 		BEGIN
 			model.Acquire;
 			data := model.GetCellData(col, row);
@@ -402,9 +402,9 @@ TYPE
 			END; *)
 		END CellClicked; *)
 
-		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
+		PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : SIZE; state : SET; x, y : SIZE);
 		VAR
-			s : String; font : WMGraphics.Font; left: LONGINT; c, tc: WMGraphics.Color; img : WMGraphics.Image; dispW, dispH: LONGINT;
+			s : String; font : WMGraphics.Font; left: SIZE; c, tc: WMGraphics.Color; img : WMGraphics.Image; dispW, dispH: SIZE;
 			valid : BOOLEAN;
 		BEGIN
 			s := model.GetCellText(x, y);
@@ -518,5 +518,4 @@ BEGIN
 END WMStringGrids.
 
 System.Free WMStringGrids ~
-
 

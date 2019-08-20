@@ -16,9 +16,9 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 		END;
 
 		SizeReader = OBJECT
-			VAR input: Streams.Reader; max: LONGINT;
+			VAR input: Streams.Reader; max: SIZE;
 
-			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD);
+			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
 			BEGIN
 				IF min > max THEN min := max END;
 				input.Bytes(buf, ofs, min, len);
@@ -28,7 +28,7 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 				END
 			END Receive;
 
-			PROCEDURE &Init*(input: Streams.Reader; size: LONGINT);
+			PROCEDURE &Init*(input: Streams.Reader; size: SIZE);
 			BEGIN
 				SELF.input := input; SELF.max := size
 			END Init;
@@ -82,7 +82,7 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 			END OpenReceiver;
 
 			PROCEDURE Extract*(entry: Entry; dest: Streams.Writer; VAR res: WORD);
-				VAR receiver : Streams.Receiver; R: Streams.Reader; buf: ARRAY 1024 OF CHAR; l: LONGINT; crc: CRC.CRC32Stream;
+				VAR receiver : Streams.Receiver; R: Streams.Reader; buf: ARRAY 1024 OF CHAR; l: SIZE; crc: CRC.CRC32Stream;
 			BEGIN
 				OpenReceiver(receiver, entry, res);
 				NEW(R, receiver, 1024);
@@ -104,7 +104,7 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 			END Extract;
 
 			PROCEDURE &New*(F: Files.File; VAR res: WORD);
-				VAR R: Files.Reader; r, e: Entry; pos, sig, l, j: LONGINT; i: INTEGER;
+				VAR R: Files.Reader; r, e: Entry; pos: Files.Position; sig, l, j: LONGINT; i: INTEGER;
 			BEGIN
 				res := Streams.Ok; SELF.F := NIL; root := NIL; entries := 0;
 				pos := F.Length()-20; sig := 0;
@@ -117,7 +117,7 @@ MODULE Unzip; (** AUTHOR "ejz"; PURPOSE "Aos unzip program"; *)
 				R.RawInt(i); R.RawInt(i);
 				R.RawInt(i); entries := i;
 				R.RawInt(i); R.RawLInt(l);
-				R.RawLInt(pos);
+				R.RawLInt(j); pos := j;
 				IF R.res # Streams.Ok THEN res := R.res END;
 				IF (pos < 0) OR (pos >= F.Length()) THEN res := Streams.FormatError; RETURN END;
 				Files.OpenReader(R, F, pos);

@@ -11,7 +11,7 @@ VAR
 	img*: Raster.Image;
 	fmt: Raster.Format;
 	copy : Raster.Mode;
-	W,H, bpr,adr: LONGINT;
+	W,H, bpr,adr: SIZE;
 	transparent*: BOOLEAN;
 
 PROCEDURE & init*(n: Name);
@@ -24,7 +24,7 @@ END init;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	p: Raster.Pixel;
-	xi,yj: LONGINT;
+	xi,yj: SIZE;
 	X,Y: SREAL;
 	r,g,b: SREAL;
 	a, lx, ly: SREAL;
@@ -89,7 +89,7 @@ END SetColor;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	p: Raster.Pixel;
-	xi,yj: LONGINT;
+	xi,yj: SIZE;
 	X,Y: SREAL;
 	r,g,b: SREAL;
 	dr,dg,db: SREAL;
@@ -150,7 +150,7 @@ VAR
 	img*: Raster.Image;
 	fmt: Raster.Format;
 	copy : Raster.Mode;
-	w,h, bpr,adr: LONGINT;
+	w,h, bpr,adr: SIZE;
 	transparent: BOOLEAN;
 	off: INTEGER;
 
@@ -165,7 +165,7 @@ END init;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	p: Raster.Pixel;
-	x,y: LONGINT;
+	x,y: SIZE;
 	r,g,b: SREAL;
 	lx, ly: SREAL;
 	nx, ny, nz: INTEGER;
@@ -219,7 +219,7 @@ VAR
 	imgn, imgm*: Raster.Image;
 	fmt: Raster.Format;
 	copy : Raster.Mode;
-	w,h, bpr,adr: LONGINT;
+	w,h, bpr,adr: SIZE;
 	done: BOOLEAN;
 	off: INTEGER;
 
@@ -236,7 +236,7 @@ END init;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	p: Raster.Pixel;
-	x,y: LONGINT;
+	x,y: SIZE;
 	r,g,b: SREAL;
 	lx, ly: SREAL;
 BEGIN
@@ -266,7 +266,7 @@ END Shade;
 
 PROCEDURE tick*;
 BEGIN
-	off := SHORT((off+1) MOD w);
+	off := INTEGER((off+1) MOD w);
 END tick;
 
 END interfereVox;
@@ -339,7 +339,7 @@ VAR
 	ax, ay, az, bx, by, bz : SREAL;
 	i: INTEGER;
 	p: Raster.Pixel;
-	X,Y: LONGINT;
+	X,Y: SIZE;
 BEGIN
 	IF img#NIL THEN
 		ax := ray.lxyz.x; ay := ray.lxyz.y; az := ray.lxyz.z;

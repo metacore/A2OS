@@ -68,11 +68,11 @@ TYPE
 		BEGIN NEW(new); COPY(name, new.name); COPY(address, new.address); toList.Add(new)
 		END AddTo;
 
-		PROCEDURE GetNofTo*():LONGINT;
+		PROCEDURE GetNofTo*():SIZE;
 		BEGIN RETURN toList.GetCount()
 		END GetNofTo;
 
-		PROCEDURE GetTo*(nr : LONGINT; VAR name, address: ARRAY OF CHAR);
+		PROCEDURE GetTo*(nr : SIZE; VAR name, address: ARRAY OF CHAR);
 		VAR old : Recipient; p : ANY;
 		BEGIN
 			ASSERT((nr >= 0) & (nr < toList.GetCount()));
@@ -85,11 +85,11 @@ TYPE
 		BEGIN NEW(new); COPY(name, new.name); COPY(address, new.address); replyToList.Add(new)
 		END AddReplyTo;
 
-		PROCEDURE GetNofReplyTo*():LONGINT;
+		PROCEDURE GetNofReplyTo*():SIZE;
 		BEGIN RETURN replyToList.GetCount()
 		END GetNofReplyTo;
 
-		PROCEDURE GetReplyTo*(nr : LONGINT; VAR name, address: ARRAY OF CHAR);
+		PROCEDURE GetReplyTo*(nr : SIZE; VAR name, address: ARRAY OF CHAR);
 		VAR old : Recipient; p : ANY;
 		BEGIN
 			ASSERT((nr >= 0) & (nr < replyToList.GetCount()));
@@ -102,11 +102,11 @@ TYPE
 		BEGIN NEW(new); COPY(name, new.name); COPY(address, new.address); ccList.Add(new)
 		END AddCc;
 
-		PROCEDURE GetNofCc*():LONGINT;
+		PROCEDURE GetNofCc*():SIZE;
 		BEGIN RETURN ccList.GetCount()
 		END GetNofCc;
 
-		PROCEDURE GetCc*(nr : LONGINT; VAR name, address:ARRAY OF CHAR);
+		PROCEDURE GetCc*(nr : SIZE; VAR name, address:ARRAY OF CHAR);
 		VAR old : Recipient; p : ANY;
 		BEGIN
 			ASSERT((nr >= 0) & (nr < ccList.GetCount()));
@@ -119,11 +119,11 @@ TYPE
 		BEGIN NEW(new); COPY(name, new.name); COPY(address, new.address); bccList.Add(new)
 		END AddBcc;
 
-		PROCEDURE GetNofBcc*():LONGINT;
+		PROCEDURE GetNofBcc*():SIZE;
 		BEGIN RETURN bccList.GetCount()
 		END GetNofBcc;
 
-		PROCEDURE GetBcc*(nr : LONGINT; VAR name, address:ARRAY OF CHAR);
+		PROCEDURE GetBcc*(nr : SIZE; VAR name, address:ARRAY OF CHAR);
 		VAR old : Recipient; p : ANY;
 		BEGIN
 			ASSERT((nr >= 0) & (nr < bccList.GetCount()));
@@ -136,11 +136,11 @@ TYPE
 		BEGIN NEW(new); COPY(id, new.id); COPY(content, new.content); headerList.Add(new)
 		END AddHeader;
 
-		PROCEDURE GetNofHeaders*():LONGINT;
+		PROCEDURE GetNofHeaders*():SIZE;
 		BEGIN RETURN headerList.GetCount()
 		END GetNofHeaders;
 
-		PROCEDURE GetHeader*(nr : LONGINT; VAR id, content: ARRAY OF CHAR);
+		PROCEDURE GetHeader*(nr : SIZE; VAR id, content: ARRAY OF CHAR);
 		VAR old : Header; p : ANY;
 		BEGIN
 			ASSERT((nr >= 0) & (nr < headerList.GetCount()));
@@ -149,7 +149,7 @@ TYPE
 		END GetHeader;
 
 		PROCEDURE AddLine*(CONST x: ARRAY OF CHAR);
-		VAR l, i : LONGINT; nl : Line;
+		VAR l, i : SIZE; nl : Line;
 		BEGIN {EXCLUSIVE}
 			l := 0;
 			IF LEN(x) > 0 THEN
@@ -169,11 +169,11 @@ TYPE
 			lines.Add(nl)
 		 END AddLine;
 
-		 PROCEDURE GetNofLines*():LONGINT;
+		 PROCEDURE GetNofLines*():SIZE;
 		 BEGIN RETURN lines.GetCount()
 		 END GetNofLines;
 
-		 PROCEDURE GetLine*(nr : LONGINT; VAR l : Line);
+		 PROCEDURE GetLine*(nr : SIZE; VAR l : Line);
 		 VAR p: ANY;
 		 BEGIN
 			ASSERT((nr >= 0) & (nr < lines.GetCount()));

@@ -91,11 +91,11 @@ TYPE
 	Position = OBJECT 
 	VAR 
 		marker: WMTextView.PositionMarker; 
-		ucs, keysym: LONGINT; 
+		ucs, keysym: SIZE; 
 		flags: SET; 
 		next: Position; 
 
-		PROCEDURE ^  & Init*(ucs, keysym: LONGINT; flags: SET); 
+		PROCEDURE ^  & Init*(ucs, keysym: SIZE; flags: SET); 
 	END Position; 
 
 	Positions = OBJECT 
@@ -104,9 +104,9 @@ TYPE
 		positions: Position; 
 
 		PROCEDURE ^  & Init*(textView: WMTextView.TextView); 
-		PROCEDURE ^ FindPosition(ucs, keysym: LONGINT; flags: SET): Position; 
-		PROCEDURE ^ StoreCurrentPosition(ucs, keysym: LONGINT; flags: SET); 
-		PROCEDURE ^ RecallPosition(ucs, keysym: LONGINT; flags: SET); 
+		PROCEDURE ^ FindPosition(ucs, keysym: SIZE; flags: SET): Position; 
+		PROCEDURE ^ StoreCurrentPosition(ucs, keysym: SIZE; flags: SET); 
+		PROCEDURE ^ RecallPosition(ucs, keysym: SIZE; flags: SET); 
 	END Positions; 
 
 	ScratchPanel = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -184,7 +184,7 @@ TYPE
 		PROCEDURE ^ TextChanged(sender, data: ANY); 
 		PROCEDURE ^ CursorChanged; 
 		PROCEDURE ^ OpenLogEditor; 
-		PROCEDURE ^ HandleShortcut(ucs: LONGINT; flags: SET; keysym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HandleShortcut(ucs: SIZE; flags: SET; keysym: SIZE): BOOLEAN; 
 		PROCEDURE ^ Finalize*; 
 	END PETPanel; 
 
@@ -194,7 +194,7 @@ TYPE
 	BrowseEntry = POINTER TO RECORD 
 		prev, next: BrowseEntry; 
 		filename: Filename; 
-		pos: LONGINT; 
+		pos: SIZE; 
 	END; 
 
 	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -226,17 +226,17 @@ TYPE
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
-		PROCEDURE ^ NrUpdatesChanged(nrUndos, nrRedos: LONGINT); 
+		PROCEDURE ^ NrUpdatesChanged(nrUndos, nrRedos: SIZE); 
 		PROCEDURE ^ ProjectTextModified(sender, data: ANY); 
 		PROCEDURE ^ InitCodecs; 
 		PROCEDURE ^ SelectNextTab; 
 		PROCEDURE ^ SelectPreviousTab; 
-		PROCEDURE ^ SelectTab(tabNr: LONGINT); 
+		PROCEDURE ^ SelectTab(tabNr: SIZE); 
 		PROCEDURE ^ RecordCurrentPos; 
-		PROCEDURE ^ GotoFileInternal(CONST filename: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ GotoFileInternal(CONST filename: ARRAY OF CHAR; pos: SIZE); 
 		PROCEDURE ^ BrowseBack; 
 		PROCEDURE ^ BrowseForward; 
-		PROCEDURE ^ GotoFile(CONST filename: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ GotoFile(CONST filename: ARRAY OF CHAR; pos: SIZE); 
 		PROCEDURE ^ GotoDefinition(info: PETTrees.ExternalDefinitionInfo); 
 		PROCEDURE ^ GetNrFromPage(page: PETPanel): LONGINT; 
 		PROCEDURE ^ TabSelected(sender, data: ANY); 
@@ -244,9 +244,9 @@ TYPE
 		PROCEDURE ^ UpdateInfo; 
 		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: WORD); 
 		PROCEDURE ^ UpdateState; 
-		PROCEDURE ^ DragDroppedHandler(x, y: LONGINT; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
+		PROCEDURE ^ DragDroppedHandler(x, y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ PositionHandler(sender, data: ANY); 
-		PROCEDURE ^ FormatHandler(x, y: LONGINT; keys: SET; VAR handled: BOOLEAN); 
+		PROCEDURE ^ FormatHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ SetFormatCaption(CONST format: ARRAY OF CHAR); 
 		PROCEDURE ^ SetCursorPosition(position: LONGINT); 
 		PROCEDURE ^ SetModified(modified: BOOLEAN); 
@@ -266,14 +266,14 @@ TYPE
 		PROCEDURE ^ FindPC(sender, data: ANY); 
 		PROCEDURE ^ UnloadModule; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Error(pos, line, row: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadState(CONST filename: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ StoreState(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadPages(pages: XML.Element); 
 		PROCEDURE ^ StorePages(): XML.Element; 
 		PROCEDURE ^ LoadPage(page: WMRestorable.XmlElement); 
 		PROCEDURE ^ StorePage(page: PETPanel): WMRestorable.XmlElement; 
-		PROCEDURE ^ HandleShortcut(ucs: LONGINT; flags: SET; keysym: LONGINT): BOOLEAN; 
+		PROCEDURE ^ HandleShortcut(ucs: SIZE; flags: SET; keysym: SIZE): BOOLEAN; 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
 	END Window; 
 VAR 

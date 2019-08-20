@@ -26,11 +26,11 @@ TYPE
 		crc32-: LONGINT; 
 		out: POINTER TO ARRAY BufSize OF CHAR; 
 		flush: SHORTINT; 
-		inputsize: LONGINT; 
+		inputsize: SIZE; 
 
 		PROCEDURE ^ WriteHeader(w: Streams.Writer); 
 		PROCEDURE ^  & Init*(writer: Streams.Writer; level, strategy, flush: SHORTINT); 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
 	END Deflator; 
 
 	Inflator* = OBJECT 
@@ -43,7 +43,7 @@ TYPE
 		s: ZlibInflate.Stream; 
 
 		PROCEDURE ^  & Init*(reader: Streams.Reader); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
 		PROCEDURE ^ CheckHeader; 
 	END Inflator; 
 

@@ -18,13 +18,13 @@ TYPE
 		isClosed: BOOLEAN; 
 		shadowRect, borderRect: WMRectangles.Rectangle; 
 
-		PROCEDURE ^  & New(x, y, width, height: LONGINT; grid: WMStringGrids.StringGrid; dropDownList: DropDownList); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h, q: LONGINT); 
+		PROCEDURE ^  & New(x, y, width, height: SIZE; grid: WMStringGrids.StringGrid; dropDownList: DropDownList); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
 		PROCEDURE ^ Clicked(sender, data: ANY); 
 		PROCEDURE ^ PropagateSelection; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ SelectEntry(next: BOOLEAN); 
-		PROCEDURE ^ KeyEvent*(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ FocusLost*; 
 	END Window; 
 
@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE ^ SetModel*(model: DropDownListModel); 
 		PROCEDURE ^ TextChanged(sender, data: ANY); 
 		PROCEDURE ^ ModelChanged(sender, data: ANY); 
-		PROCEDURE ^ KeyPressed(ucs: LONGINT; flags: SET; VAR keySym: LONGINT; VAR handled: BOOLEAN); 
+		PROCEDURE ^ KeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ShowDropDownList(sender, data: ANY); 
 		PROCEDURE ^ InitGrid; 
 		PROCEDURE ^ AddRow(entry: Entry; index: LONGINT); 

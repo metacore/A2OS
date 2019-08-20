@@ -13,7 +13,7 @@ TYPE
 		END New;
 
 		(* Allocate an unused or new document *)
-		PROCEDURE Alloc*(VAR doc: SVG.Document; width, height: LONGINT);
+		PROCEDURE Alloc*(VAR doc: SVG.Document; width, height: SIZE);
 		VAR p: ANY;
 		BEGIN
 			IF list.GetNumberOfElements()=0 THEN

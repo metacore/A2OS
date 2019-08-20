@@ -596,7 +596,7 @@ VAR
 			(an atom) identifying the string. *)
 	GlobalAddAtom-: PROCEDURE {WINAPI} ( VAR lpString: ARRAY   OF CHAR ): ATOM;
 	(** The GlobalAlloc function allocates the specified number of bytes from the heap. *)
-	GlobalAlloc-: PROCEDURE {WINAPI} ( uFlags: SET;  dwBytes: LONGINT ): HGLOBAL;
+	GlobalAlloc-: PROCEDURE {WINAPI} ( uFlags: SET;  dwBytes: SIZE ): HGLOBAL;
 	(** The GlobalDeleteAtom function decrements the reference count of a global string atom. *)
 	GlobalDeleteAtom-: PROCEDURE {WINAPI} ( nAtom: ATOM ): ATOM;
 	(** The GlobalLock function locks a global memory object and returns a pointer to the first byte of the
@@ -610,7 +610,7 @@ VAR
 	GlobalReAlloc-: PROCEDURE {WINAPI} ( hMem: HGLOBAL;  dwBytes: LONGINT;
 																		uFlags: SET ): HGLOBAL;
 	(** The GlobalSize function retrieves the current size, in bytes, of the specified global memory object. *)
-	GlobalSize-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): LONGINT;
+	GlobalSize-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): SIZE;
 	(** The GlobalUnlock function decrements the lock count associated with a memory object that was allocated with
 			the GMEM_MOVEABLE flag. *)
 	GlobalUnlock-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): BOOL;

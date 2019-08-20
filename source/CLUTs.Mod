@@ -26,7 +26,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 
 
 	(** set CLUT entry to specific color (invalidates existing reverse lookup structure) **)
-	PROCEDURE Set* (VAR clut: CLUT; n, col: LONGINT);
+	PROCEDURE Set* (VAR clut: CLUT; n: SIZE; col: LONGINT);
 	BEGIN
 		ASSERT((0 <= n) & (n < colors), 100);
 		clut.col[n] := col MOD 1000000H;
@@ -34,7 +34,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 	END Set;
 
 	(** get CLUT entry **)
-	PROCEDURE Get* (VAR clut: CLUT; n: LONGINT; VAR col: LONGINT);
+	PROCEDURE Get* (VAR clut: CLUT; n: SIZE; VAR col: LONGINT);
 	BEGIN
 		ASSERT((0 <= n) & (n < colors), 100);
 		col := clut.col[n]
@@ -214,7 +214,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 
 	(** copy color lookup table **)
 	PROCEDURE Copy* (from, to: CLUT);
-		VAR n: LONGINT;
+		VAR n: SIZE;
 	BEGIN
 		to.col := from.col; to.size := from.size; to.bits := from.bits;
 		IF from.cube = NIL THEN

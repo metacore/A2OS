@@ -60,7 +60,7 @@ VAR
 		END
 	END NewDHPrime;
 
-	PROCEDURE Checks( b: LONGINT ): INTEGER;
+	PROCEDURE Checks( b: SIZE ): INTEGER;
 	(* number of Miller-Rabin iterations for an error rate  of less than 2^-80
 		for random 'b'-bit input, b >= 100 (taken from table 4.4 in the Handbook
 		of Applied Cryptography [Menezes, van Oorschot, Vanstone; CRC Press 1996]

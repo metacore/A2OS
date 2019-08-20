@@ -183,8 +183,8 @@ TYPE
 		END Disconnect;
 
 		(* Interrupt on Completion - Handler for EpInterruptInData; data contained in variable data64 *)
-		PROCEDURE UpdateData(status : Usbdi.Status; actLen : LONGINT);
-		VAR ignore : Usbdi.Status; i : LONGINT;
+		PROCEDURE UpdateData(status : Usbdi.Status; actLen : SIZE);
+		VAR ignore : Usbdi.Status; i : SIZE;
 		BEGIN
 			IF Trace * TraceReceiveData # {} THEN
 				ShowModule("UpdateData: Received "); KernelLog.Int(actLen, 0); KernelLog.String(" Bytes:");
@@ -200,7 +200,7 @@ TYPE
 		END UpdateData;
 
 		(* Interrupt on Completion - Handler for EpInterruptInStatus; data contained in variable status2 *)
-		PROCEDURE UpdateStatus(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE UpdateStatus(status : Usbdi.Status; actLen : SIZE);
 		VAR ignore : Usbdi.Status;
 		BEGIN
 			IF Trace * TraceReceiveStatus # {} THEN ShowModule("UpdateStatus: Received "); KernelLog.Int(actLen, 0); KernelLog.String(" Bytes: ");  END;
@@ -401,7 +401,7 @@ TYPE
 		portbps : LONGINT;
 		data1 : Usbdi.BufferPtr; (* datax -> ARRAY x OF CHAR *)
 		buf: ARRAY BufSize OF CHAR;
-		head, tail: LONGINT;
+		head, tail: SIZE;
 		open: BOOLEAN;
 		diagnostic: LONGINT;
 
@@ -421,7 +421,7 @@ TYPE
 		END Open;
 
 		(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
 		VAR status : Usbdi.Status; buffer: POINTER TO ARRAY OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -468,8 +468,8 @@ TYPE
 		END ReceiveChar;
 
 		(** On detecting an interupt request, transfer the characters from the UART buffer to the input buffer *)
-		PROCEDURE HandleData(data :  Usbdi.Buffer; actLen : LONGINT);
-		VAR n, i : LONGINT; 	ch : CHAR;
+		PROCEDURE HandleData(data :  Usbdi.Buffer; actLen : SIZE);
+		VAR n, i : SIZE; 	ch : CHAR;
 		BEGIN {EXCLUSIVE}
 			charactersReceived := charactersReceived + actLen;
 			i := 0;
@@ -487,7 +487,7 @@ TYPE
 			END;
 		END HandleData;
 
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available*(): SIZE;
 		BEGIN {EXCLUSIVE}
 			RETURN (tail - head) MOD BufSize
 		END Available;

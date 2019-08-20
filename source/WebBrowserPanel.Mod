@@ -176,8 +176,8 @@ TYPE
 	HTMLPanel = OBJECT (VisualComponent)
 	VAR
 		rc : WebBrowserComponents.ResourceConnection;
-		width : LONGINT;
-		height : LONGINT;
+		width : SIZE;
+		height : SIZE;
 		scrollbars : BOOLEAN;
 		loadLink : WMEvents.EventListener;
 		charset : String;
@@ -205,7 +205,7 @@ TYPE
 		titleElem : XML.Element;
 		item : HTMLTransformer.EmbeddedObject;
 
-		PROCEDURE &New*(VAR title : String; rc :WebBrowserComponents.ResourceConnection; width : LONGINT; height : LONGINT; scrollbars : BOOLEAN; loadLink : WMEvents.EventListener; charset : String; frameName : String);
+		PROCEDURE &New*(VAR title : String; rc :WebBrowserComponents.ResourceConnection; width : SIZE; height : SIZE; scrollbars : BOOLEAN; loadLink : WMEvents.EventListener; charset : String; frameName : String);
 		VAR
 			sharpPos : SIZE;
 			wrp : WMTextView.LinkWrapper;
@@ -388,7 +388,7 @@ TYPE
 		PROCEDURE Resized*;
 		VAR
 			item : HTMLTransformer.EmbeddedObject;
-			width : LONGINT;
+			width : SIZE;
 		BEGIN
 			Resized^;
 			(* ignore first resize, because webPanel is not drawn for the first time yet! *)
@@ -417,15 +417,15 @@ TYPE
 	VAR
 		framesetElem : XML.Element;
 		baseAddress : String;
-		width : LONGINT;
-		height : LONGINT;
+		width : SIZE;
+		height : SIZE;
 		loadLink : WMEvents.EventListener;
 		frameborderSize : LONGINT;
 		totalFixSizes : LONGINT;
 		nodeIsCol : BOOLEAN;
 		firstFrame : FrameNode;
 
-		PROCEDURE &New*(framesetElem : XML.Element; baseAddress : String; width : LONGINT; height : LONGINT; loadLink : WMEvents.EventListener);
+		PROCEDURE &New*(framesetElem : XML.Element; baseAddress : String; width : SIZE; height : SIZE; loadLink : WMEvents.EventListener);
 		BEGIN
 			Init;
 			SELF.framesetElem := framesetElem;
@@ -448,7 +448,7 @@ TYPE
 			framesets : FramesetNode;
 			slotItem : FrameslotNode;
 			framesetPanel : FramesetPanel;
-			fWidth, fHeight : LONGINT;
+			fWidth, fHeight : SIZE;
 			lastFrame : FrameNode;
 		BEGIN
 			ParseFramesetAttr(framesetElem, frameSlots, frameborderSize, totalFixSizes, nodeIsCol);
@@ -503,9 +503,9 @@ TYPE
 			END;
 		END BuildFrameList;
 
-		PROCEDURE GetFrameWidth(frameItem : FrameNode) : LONGINT;
+		PROCEDURE GetFrameWidth(frameItem : FrameNode) : SIZE;
 		VAR
-			fWidth : LONGINT;
+			fWidth : SIZE;
 		BEGIN
 			(* calculate frame-width *)
 			IF nodeIsCol THEN
@@ -521,9 +521,9 @@ TYPE
 			RETURN fWidth;
 		END GetFrameWidth;
 
-		PROCEDURE GetFrameHeight(frameItem : FrameNode) : LONGINT;
+		PROCEDURE GetFrameHeight(frameItem : FrameNode) : SIZE;
 		VAR
-			fHeight : LONGINT;
+			fHeight : SIZE;
 		BEGIN
 			(* calculate frame-height *)
 			IF ~nodeIsCol THEN
@@ -644,7 +644,7 @@ TYPE
 			framesetPanel : FramesetPanel;
 			targetLow : String;
 			url, dummyTitle : String;
-			fWidth, fHeight : LONGINT;
+			fWidth, fHeight : SIZE;
 		BEGIN
 			frameItem := firstFrame;
 			WHILE frameItem # NIL DO
@@ -682,7 +682,7 @@ TYPE
 VAR
 	frameNameCount : LONGINT;
 
-PROCEDURE GetContent(VAR url : String; VAR title : String; initWidth : LONGINT; initHeight : LONGINT; scrollbars : BOOLEAN; loadLink : WMEvents.EventListener; frameName : String) : VisualComponent;
+PROCEDURE GetContent(VAR url : String; VAR title : String; initWidth : SIZE; initHeight : SIZE; scrollbars : BOOLEAN; loadLink : WMEvents.EventListener; frameName : String) : VisualComponent;
 VAR
 	rc : WebBrowserComponents.ResourceConnection;
 	panel : VisualComponent;

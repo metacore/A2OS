@@ -83,7 +83,7 @@ TYPE
 		drv : Driver;
 
 		PROCEDURE &Constr*(drv: Driver; name, desc : ARRAY OF CHAR; reg : LONGINT);
-		VAR i : LONGINT;
+		VAR i : SIZE;
 		BEGIN
 			SELF.drv := drv;
 			NEW(SELF.name, LEN(name));
@@ -729,7 +729,7 @@ TYPE
 			loopcount := 0;
 			Machine.Portout32(base+Es1370RegControl, SYSTEM.VAL(LONGINT, {})); (* Disable all Channels *)
 
-			sndbuf := Machine.Ensure32BitAddress (Machine.PhysicalAdr(ADDRESSOF(pr2[0]), Bsize));
+			sndbuf := Machine.PhysicalAdr(ADDRESSOF(pr2[0]), Bsize)(Machine.Address32);
 			IF sndbuf = -1 THEN KernelLog.String("not enough defragmented space"); END;
 
 
@@ -751,7 +751,7 @@ TYPE
 			Machine.Portout32(base+Es1370RegSerialControl, EsState.sctrl);
 
 
-			sndbuf := Machine.Ensure32BitAddress (Machine.PhysicalAdr(ADDRESSOF(p2[0]), Bsize));
+			sndbuf := Machine.PhysicalAdr(ADDRESSOF(p2[0]), Bsize)(Machine.Address32);
 			IF sndbuf = -1 THEN KernelLog.String("not enough defragmented space") END;
 
 			Machine.Portout8(base+Es1370RegMemPage, 0CX); (*1100*)

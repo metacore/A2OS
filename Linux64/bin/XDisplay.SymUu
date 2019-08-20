@@ -56,7 +56,7 @@ TYPE
 		PROCEDURE ^ SetMode(col: LONGINT); 
 		PROCEDURE ^ Dot*(col, x, y: LONGINT); 
 		PROCEDURE ^ Fill*(col, x, y, w, h: LONGINT); 
-		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, op: LONGINT); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, left, top, width, height: SIZE; op: WORD); 
 		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h: LONGINT); 
 		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: LONGINT); 
 		PROCEDURE ^ Update*; 

@@ -9,7 +9,7 @@ CONST
 TYPE
 	Transition* = OBJECT
 
-		PROCEDURE Init*(w, h : LONGINT);
+		PROCEDURE Init*(w, h : SIZE);
 		END Init;
 
 		PROCEDURE CalcImage*(a, b, result : Raster.Image; per255 : LONGINT);
@@ -20,16 +20,16 @@ TYPE
 TYPE
 	TransitionMask* = OBJECT(Transition)
 	VAR
-		mW, mH : LONGINT;
+		mW, mH : SIZE;
 		mask : POINTER TO ARRAY OF CHAR;
 
-		PROCEDURE Init*(w, h : LONGINT);
+		PROCEDURE Init*(w, h : SIZE);
 		BEGIN
 			mW := w; mH := h;
 		END Init;
 
 		PROCEDURE SetMask*(mi : Raster.Image);
-		VAR x, y, col, i, tr, tg, tb, ta : LONGINT;
+		VAR x, y, col, i : SIZE; tr, tg, tb, ta : LONGINT;
 			adr: ADDRESS;
 			ti : Raster.Image;
 			mode : Raster.Mode;
@@ -77,7 +77,7 @@ TYPE
 		END SetMask;
 
 		PROCEDURE DumpMask;
-		VAR i, x, y : LONGINT;
+		VAR i, x, y : SIZE;
 			w : WMWindowManager.BufferWindow;
 		BEGIN
 			NEW(w, mW, mH, FALSE);
@@ -92,7 +92,7 @@ TYPE
 		END DumpMask;
 
 		PROCEDURE CalcImage*(a, b, result : Raster.Image; per255 : LONGINT);
-		VAR i, x, y, col : LONGINT;
+		VAR i, x, y : SIZE; col : LONGINT;
 			adra, adrb, adrr: ADDRESS;
 			mode : Raster.Mode;
 			pix : Raster.Pixel;
@@ -149,10 +149,10 @@ TYPE
 
 	TransitionFade* = OBJECT(Transition)
 	VAR
-		mW, mH : LONGINT;
+		mW, mH : SIZE;
 		mode : Raster.Mode;
 
-		PROCEDURE Init*(w, h : LONGINT);
+		PROCEDURE Init*(w, h : SIZE);
 		BEGIN
 			mW := w; mH := h;
 			Raster.InitMode(mode, Raster.srcCopy);
@@ -217,11 +217,11 @@ TYPE
  *** *)
 PROCEDURE Calc565Opt(a, b : Raster.Image; VAR result : Raster.Image; per255 : LONGINT);
 VAR
-	x, y : LONGINT;
+	x, y : SIZE;
 	adra, adrb, adrr : ADDRESS;
 	ar,ag,ab,   br,bg,bb,   cr,cg,cb : LONGINT;
-	height, width : LONGINT;
-	oddWidth : BOOLEAN; blocksOf4Bytes : LONGINT;
+	height, width : SIZE;
+	oddWidth : BOOLEAN; blocksOf4Bytes : SIZE;
 	add64, alphaOver2 : LONGINT;
 	tmpA, tmpB : LONGINT;
 BEGIN
@@ -299,10 +299,10 @@ END Calc565Opt;
  *** *)
 PROCEDURE Calc565MMX(a, b : Raster.Image; VAR result : Raster.Image; per255 : LONGINT);
 VAR
-	x, y : LONGINT; (* current image coordinates *)
-	height, width : LONGINT;
-	remainder : LONGINT;
-	blocksOf8Bytes : LONGINT;
+	x, y : SIZE; (* current image coordinates *)
+	height, width : SIZE;
+	remainder : SIZE;
+	blocksOf8Bytes : SIZE;
 	adra, adrb, adrr : ADDRESS;
 	alpha64, maskRed64, maskGreen64, maskBlue64 : HUGEINT;
 	alpha32 : LONGINT;
@@ -366,7 +366,7 @@ END Calc565MMX;
  * Helper Function for Calc565MMX: :Calculate fade for just one line using assembler code (MMX technology)
  *
  *** *)
-PROCEDURE Calc565MMXLine (adra, adrb, adrr: ADDRESS; i, alpha : LONGINT; a64, mr64, mg64, mb64 : HUGEINT);
+PROCEDURE Calc565MMXLine (adra, adrb, adrr: ADDRESS; i : SIZE; alpha : LONGINT; a64, mr64, mg64, mb64 : HUGEINT);
 CODE
 #IF I386 THEN
 	;
@@ -497,8 +497,8 @@ skip565:
 	;
 	; Initialize the counter and skip if the latter is equal to zero
 	;
-	MOV		ECX, [RBP + i]
-	CMP		ECX, 0
+	MOV		RCX, [RBP + i]
+	CMP		RCX, 0
 	JZ			skip565
 
 	;
@@ -604,7 +604,7 @@ doblend565:
 	;
 	; Loop again or break
 	;
-	DEC		ECX
+	DEC		RCX
 	JNZ			doblend565
 
 	;
@@ -630,8 +630,8 @@ END Calc565MMXLine;
  *** *)
 PROCEDURE Calc888Opt(a, b : Raster.Image; VAR result : Raster.Image; per255 : LONGINT);
 VAR
-	x, y : LONGINT;  (* current image coordinates *)
-	height, width : LONGINT;
+	x, y : SIZE;  (* current image coordinates *)
+	height, width : SIZE;
 	adra, adrb, adrr : ADDRESS;  (* image start addresses *)
 	ar,ag,ab,   br,bg,bb,   cr,cg,cb : LONGINT; (* red, green, blue part of the images *)
 	tmpA, tmpB, tmpR : LONGINT; (* the two source pixels *)
@@ -688,8 +688,8 @@ END Calc888Opt;
  *** *)
 PROCEDURE Calc888MMX(a, b : Raster.Image; VAR result : Raster.Image; per255 : LONGINT);
 VAR
-	y : LONGINT; (* current image coordinates *)
-	height, width : LONGINT;
+	y : SIZE; (* current image coordinates *)
+	height, width : SIZE;
 	adra, adrb, adrr : ADDRESS;
 	alpha64, mask64 : HUGEINT;
 BEGIN
@@ -717,7 +717,7 @@ END Calc888MMX;
  * Helper Function for Calc888MMX: :Calculate fade for just one line using assembler code (MMX technology)
  *
  *** *)
-PROCEDURE Calc888MMXLine (adra, adrb, adrr: ADDRESS; i : LONGINT; a64, m64 : HUGEINT);
+PROCEDURE Calc888MMXLine (adra, adrb, adrr: ADDRESS; i : SIZE; a64, m64 : HUGEINT);
 CODE
 #IF I386 THEN
 	; (re)load the width counter
@@ -833,7 +833,7 @@ doblend24:
 	#END
 
 	; (re)load the width counter
-	MOV			ECX, [RBP + i]
+	MOV			RCX, [RBP + i]
 
 	;
 	; Load the frame buffer pointers into the registers
@@ -926,7 +926,7 @@ doblend24:
 	;
 	; Loop again or break
 	;
-	DEC			ECX
+	DEC			RCX
 	JNZ				doblend24
 
 	;
@@ -954,7 +954,7 @@ END Calc888MMXLine;
  *** *)
 PROCEDURE CalcGenUnknown(a, b : Raster.Image; VAR result : Raster.Image; perc : LONGINT);
 VAR
-	x, y : LONGINT; (* current image coordinates *)
+	x, y : SIZE; (* current image coordinates *)
 	mode : Raster.Mode;
 	canvas : WMGraphics.BufferCanvas;
 	pix : Raster.Pixel; (* pixel read from a or b *)

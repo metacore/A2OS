@@ -121,7 +121,7 @@ VAR
 
 	(** Convert a string to an integer.  Parameter i specifies where in the string scanning should begin (usually 0 in the first call).  Scanning stops at the first non-valid character, and i returns the updated position.  Parameter s is the string to be scanned.  The value is returned as result, or 0 if not valid.  Syntax: number = ["-"] digit {digit} ["H" | "h"] .  digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" .  If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
 
-	PROCEDURE StrToInt*( VAR i: LONGINT;  CONST s: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): LONGINT;
 	VAR vd, vh, sgn, d: LONGINT;  hex: BOOLEAN;
 	BEGIN
 		vd := 0;  vh := 0;  hex := FALSE;
@@ -411,8 +411,8 @@ VAR
 	BEGIN
 		COPY ("", val);
 
-		IF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), userConfigFile) # 0 THEN
-		ELSIF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val), defaultConfigFile) # 0 THEN
+		IF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val)(Kernel32.DWORD), userConfigFile) # 0 THEN
+		ELSIF Kernel32.GetPrivateProfileString (ConfigKey, name, "", val, LEN (val)(Kernel32.DWORD), defaultConfigFile) # 0 THEN
 		END;
 
 		IF (name = "ObjectFileExtension") & (val = "") THEN
@@ -458,7 +458,7 @@ END ID;
  * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
  * left empty on Intel architecture.
  *)
-PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: LONGINT);
+PROCEDURE FlushDCacheRange * (adr: ADDRESS; len: SIZE);
 END FlushDCacheRange;
 
 (**
@@ -466,7 +466,7 @@ END FlushDCacheRange;
  * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
  * left empty on Intel architecture.
  *)
-PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: LONGINT);
+PROCEDURE InvalidateDCacheRange * (adr: ADDRESS; len: SIZE);
 END InvalidateDCacheRange;
 
 (**
@@ -474,7 +474,7 @@ END InvalidateDCacheRange;
  * This is used on some architecture to interact with DMA hardware (e.g. Ethernet and USB. It can be
  * left empty on Intel architecture.
  *)
-PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: LONGINT);
+PROCEDURE InvalidateICacheRange * (adr: ADDRESS; len: SIZE);
 END InvalidateICacheRange;
 
 
@@ -669,7 +669,7 @@ END RemoveTraceFile;
 PROCEDURE ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR);
 VAR i,j: LONGINT;
 BEGIN
-	IGNORE Kernel32.GetModuleFileName(Kernel32.hInstance, fullName, LEN( fullName ) );
+	IGNORE Kernel32.GetModuleFileName(Kernel32.hInstance, fullName, LEN( fullName )(Kernel32.DWORD) );
 	j := -1; i := 0;
 	WHILE fullName[i] # 0X DO
 		IF fullName[i] = '\' THEN j := i END;

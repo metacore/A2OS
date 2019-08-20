@@ -36,7 +36,7 @@ TYPE
 		PROCEDURE ^ Add*(CONST caption: ARRAY OF CHAR; onClickHandler: WMEvents.EventListener); 
 		PROCEDURE ^ AddParButton*(CONST caption: ARRAY OF CHAR; onClickHandler: WMEvents.EventListener; par: ANY); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Popup*(x, y: LONGINT); 
+		PROCEDURE ^ Popup*(x, y: SIZE); 
 	END Popup; 
 
 	ColorSwatchPopup* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -47,7 +47,7 @@ TYPE
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ CreatePopup; 
-		PROCEDURE ^ Popup*(x, y: LONGINT); 
+		PROCEDURE ^ Popup*(x, y: SIZE); 
 		PROCEDURE ^ Clicked(sender, data: ANY); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ FocusGot*; 
@@ -56,11 +56,11 @@ TYPE
 
 	ColorSwatchPanel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		colors: ARRAY 19 OF LONGINT; 
+		colors: ARRAY 19 OF WMGraphics.Color; 
 		ChosenColorProc*: PROCEDURE {DELEGATE}(color: WMGraphics.Color); 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
+		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ BuildPalette; 
 	END ColorSwatchPanel; 

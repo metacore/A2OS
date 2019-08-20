@@ -192,7 +192,7 @@ TYPE
 		END Close;
 
 		(* Since the content of this window is not scalable, we don't allow window resizing *)
-		PROCEDURE Resizing*(VAR width, height : LONGINT);
+		PROCEDURE Resizing*(VAR width, height : SIZE);
 		BEGIN
 			width := WindowWidth; height := WindowHeight;
 		END Resizing;

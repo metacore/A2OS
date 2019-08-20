@@ -48,10 +48,10 @@ TYPE
 		zBuffer, savezBuffer : POINTER TO ARRAY OF REAL;
 		invBuffer : POINTER TO ARRAY OF LONGINT;
 
-		width*, height* : LONGINT;
+		width*, height* : SIZE;
 		(* Global to avoid stack clearing penalty, TODO: check accesstimes *)
 		x0, x1, x2, x3, dxL, dxR, xL, xR, xStart, xEnd, tr: REAL;
-		y0, y1, y2, dx, zStride, stride, color: LONGINT; (* buffer variables *)
+		y0, y1, y2, dx, zStride, stride: SIZE; color: LONGINT; (* buffer variables *)
 		adrBase, zBufBase: ADDRESS;
 
 		tx0, tx1, tx2, tx3, ty0, ty1, ty2, ty3, txStart, tyStart, dtxStart, dtyStart, dtx, dty: REAL; (* parameters for affine texture *)
@@ -60,7 +60,7 @@ TYPE
 		 zinv0, zinv1, zinv2, zinv3, zinvStart, dzinvStart, dzinv : REAL; (* used for perspective mapping *)
 
 		 invertable : BOOLEAN;
-		 invAdrStride, invIdx : LONGINT;
+		 invAdrStride, invIdx : SIZE;
 		 invAdrBase: ADDRESS;
 
 		 PROCEDURE CCW(tri : Triangle):BOOLEAN;
@@ -69,7 +69,7 @@ TYPE
 		 			(tri.vert[2].x - tri.vert[0].x) * (tri.vert[1].y - tri.vert[0].y) >= 0
 		 END CCW;
 
-		PROCEDURE SetSize*(w, h : LONGINT);
+		PROCEDURE SetSize*(w, h : SIZE);
 		BEGIN
 			NEW(img);
 			width := w; height := h;
@@ -109,7 +109,7 @@ TYPE
 		END SetObjectIndex;
 
 		(** Return 0 if no object found *)
-		PROCEDURE GetInvIdx*(x, y : LONGINT) : LONGINT;
+		PROCEDURE GetInvIdx*(x, y : SIZE) : LONGINT;
 		BEGIN
 			IF (invBuffer#NIL) & (x >= 0) & (x < width) & (y >= 0) & (y < height) THEN RETURN invBuffer[y * width + x] ELSE RETURN 0 END
 		END GetInvIdx;
@@ -117,7 +117,7 @@ TYPE
 		PROCEDURE Clear*(color: LONGINT);
 		VAR pix : Raster.Pixel;
 			mode : Raster.Mode;
-			i : LONGINT;
+			i : SIZE;
 		BEGIN
 			Raster.InitMode(mode, Raster.srcCopy);
 			Raster.SetRGB(pix, color DIV 65536 MOD 256, color DIV 256 MOD 256, color MOD 256);
@@ -165,7 +165,7 @@ TYPE
 		END RenderLine;
 
 		PROCEDURE RenderLineTex(tex : Texture);
-		VAR adr, zAdr, invAdr: ADDRESS; x, txi, tyi, tadr : LONGINT; z, tx, ty: REAL;
+		VAR adr, zAdr, invAdr: ADDRESS; x, txi, tyi: LONGINT; tadr: SIZE; z, tx, ty: REAL;
 		BEGIN
 			xL := xStart;
 			xR := xEnd;
@@ -218,7 +218,7 @@ TYPE
 		END RenderLineTex;
 
 		PROCEDURE RenderTriangle*(VAR tri : Triangle);
-		VAR p0, p1, p2, t : Vertex; y, dy : LONGINT; f, dxinv, dyinv:REAL;
+		VAR p0, p1, p2, t : Vertex; y, dy : SIZE; f, dxinv, dyinv:REAL;
 		BEGIN
 			IF tri.culled & ~CCW(tri) THEN RETURN END;
 			color := tri.transColor;
@@ -323,7 +323,7 @@ TYPE
 (* Expensive perspective case *)
 
 		PROCEDURE RenderPerspLineTex(tex : Texture);
-		VAR adr, zAdr, invAdr: ADDRESS; x, txi, tyi, tadr: LONGINT; z, zinv, rzinv, tx, ty, txr, tyr: REAL;
+		VAR adr, zAdr, invAdr: ADDRESS; x, txi, tyi: LONGINT; tadr: SIZE; z, zinv, rzinv, tx, ty, txr, tyr: REAL;
 		BEGIN
 			xL := xStart;
 			xR := xEnd;
@@ -428,7 +428,7 @@ TYPE
 		END RenderPerspLineFlat;
 
 		PROCEDURE RenderPerspTriangle*(VAR tri : Triangle);
-		VAR p0, p1, p2, t : Vertex; y, dy : LONGINT; f, dyinv, dxinv : REAL;
+		VAR p0, p1, p2, t : Vertex; y, dy : SIZE; f, dyinv, dxinv : REAL;
 		BEGIN
 			IF tri.culled & ~CCW(tri) THEN RETURN END;
 			color := tri.transColor;
@@ -529,7 +529,7 @@ TYPE
 (* Experimental Subdivision case *)
 
 		PROCEDURE SubDivLineTex(tex : Texture);
-		VAR adr, zAdr, invAdr: ADDRESS; x, txi, tyi, tadr: LONGINT; zinv, txr, tyr, zr, rzinv, tx, ty, sdtx, sdty, stx, sty, szr, ezr, dzr, subDivInv: REAL;
+		VAR adr, zAdr, invAdr: ADDRESS; x, txi, tyi: LONGINT; tadr: SIZE; zinv, txr, tyr, zr, rzinv, tx, ty, sdtx, sdty, stx, sty, szr, ezr, dzr, subDivInv: REAL;
 				i : LONGINT;
 		CONST SubDiv = 16;
 		BEGIN
@@ -670,7 +670,7 @@ TYPE
 		END SubDivLineFlat;
 
 		PROCEDURE SubDivTriangle*(VAR tri : Triangle);
-		VAR p0, p1, p2, t : Vertex; y, dy : LONGINT; f, dyinv, dxinv : REAL;
+		VAR p0, p1, p2, t : Vertex; y, dy : SIZE; f, dyinv, dxinv : REAL;
 		BEGIN
 			IF tri.culled & ~CCW(tri) THEN RETURN END;
 			color := tri.transColor;
@@ -772,7 +772,7 @@ TYPE
 		VAR tdx, tdy : LONGREAL;
 			tv : Vertex;
 			xr, yr, dxinv, dyinv, invdz, invaz, invbz, invz, z, dz, dx, dy : LONGREAL;
-			iy, ix, i : LONGINT;
+			iy, ix, i : SIZE;
 		CONST SubDiv = 8;
 			SubDivInv = 1 / SubDiv;
 		BEGIN

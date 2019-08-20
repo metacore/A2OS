@@ -22,7 +22,7 @@ TYPE
 		tuner: TVDriver.TVTuner;
 		audio: TVDriver.Audio;
 		tvWnd: TV.TvWindow;
-		nofChannels: LONGINT;
+		nofChannels: SIZE;
 		buttons: POINTER TO ARRAY OF Standard.Button;
 		isMute: BOOLEAN;
 		muteButton: Standard.Button;
@@ -30,7 +30,7 @@ TYPE
 
 		PROCEDURE &New *(vcd: TVDriver.VideoCaptureDevice; devNr: LONGINT; openTV: BOOLEAN);
 		VAR
-			i: LONGINT;
+			i: SIZE;
 			fix, panel: Standard.Panel;
 			channel: TVChannels.TVChannel;
 			openButton: Standard.Button;
@@ -130,11 +130,11 @@ TYPE
 			window := SELF;
 
 			channelList.model.Acquire;
-			channelList.model.SetNofRows(nofChannels);
+			channelList.model.SetNofRows(nofChannels(LONGINT));
 			FOR i := 0 TO nofChannels-1 DO
 				channel := TVChannels.channels.GetItem(i);
-				channelList.model.SetCellText(0, i,Strings.NewString(channel.name));
-				channelList.model.SetCellData(0, i, channel);
+				channelList.model.SetCellText(0, LONGINT(i), Strings.NewString(channel.name));
+				channelList.model.SetCellData(0, LONGINT(i), channel);
 			END;
 			channelList.model.Release;
 			channelList.Invalidate;

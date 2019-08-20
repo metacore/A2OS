@@ -114,7 +114,7 @@ TYPE
 
 	BEGIN
 
-		len := LEN( o[0] ) - 1;  id := SHORT( LEN( M.interactionFcache ) - 1 );  clen := M.n.clen - 1;
+		len := LEN( o[0] ) - 1;  id := INTEGER( LEN( M.interactionFcache ) - 1 );  clen := M.n.clen - 1;
 		ASSERT ( len - 1 = clen );
 
 		sum := 0;
@@ -135,7 +135,7 @@ TYPE
 	VAR i, j, max: LONGINT;
 		a: ARRAY 3 OF LONGREAL;
 	BEGIN
-		max := LEN( m.externalFcache ) - 1;  a[2] := max;
+		max := LEN( m.externalFcache )(LONGINT) - 1;  a[2] := max;
 		FOR i := 0 TO max DO
 			a[0] := i;  m.externalFcache[i] := m.externalF.get( m.externalF, a );
 			FOR j := 0 TO max DO
@@ -550,5 +550,4 @@ fofAutomatic.Do > interactive > secure
 antsMC.Forward chain  1 1 ~
 ~
 ants / antsTemp.Mod
-
 

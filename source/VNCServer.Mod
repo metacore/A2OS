@@ -49,7 +49,7 @@ TYPE
 		kl* : VNCKeyboardListener;
 		cutl* : VNCClipboardListener;
 		ncal* : VNCNofClientsActiveListener;
-		width*, height* : LONGINT;
+		width*, height* : SIZE;
 		(** only used in service case *)
 		connection* : TCP.Connection;
 		agent* : VNCAgent; (** not valid in service init *)
@@ -77,7 +77,7 @@ TYPE
 		agent : VNCAgent;
 		alive, allowed : BOOLEAN;
 
-		PROCEDURE &Init*(agent : VNCAgent; w, h : LONGINT);
+		PROCEDURE &Init*(agent : VNCAgent; w, h : SIZE);
 		BEGIN
 			SELF.agent := agent; alive := TRUE;
 			NEW(buffer, MaxRect);
@@ -85,7 +85,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Add(VAR r : Rectangle);
-		VAR i, a : LONGINT; e : Rectangle; done : BOOLEAN;
+		VAR i, a : SIZE; e : Rectangle; done : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			WMRectangles.ClipRect(r, clip);
 			IF WMRectangles.RectEmpty(r) THEN RETURN END;
@@ -107,7 +107,7 @@ TYPE
 		END Add;
 
 		PROCEDURE GetBuffer(VAR nof : LONGINT; drawBuf : RectBuf);
-		VAR r, e : Rectangle; i, j, a : LONGINT; done : BOOLEAN;
+		VAR r, e : Rectangle; i, j, a : SIZE; done : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			drawBuf[0] := buffer[0]; nof := 1;
 			FOR j := 1 TO nofRect - 1 DO
@@ -181,7 +181,7 @@ TYPE
 		END Init;
 
 		PROCEDURE SendVersion() : BOOLEAN;
-		VAR clientVersion : ARRAY 12 OF CHAR; len : LONGINT;
+		VAR clientVersion : ARRAY 12 OF CHAR; len : SIZE;
 		BEGIN
 			out.String(Version); out.Char(0AX); out.Update();
 			IF out.res # Streams.Ok THEN RETURN FALSE END;
@@ -193,7 +193,7 @@ TYPE
 		PROCEDURE Authenticate() : BOOLEAN;
 		VAR challenge, response, clear : ARRAY 16 OF CHAR;
 			des : DES.DES; seq : Random.Sequence;
-			i, len : LONGINT; ok : BOOLEAN;
+			i : LONGINT; len: SIZE; ok : BOOLEAN;
 		BEGIN
 			Machine.AtomicInc(NnofAuthenticate);
 			IF vncInfo.password = "" THEN
@@ -241,7 +241,7 @@ TYPE
 			IF in.Get() # 01X THEN CloseAllOtherClients END; (* Service *)
 
 			(* send server initialization 5.1.4 *)
-			out.Net16(vncInfo.width); out.Net16(vncInfo.height);
+			out.Net16(vncInfo.width(LONGINT)); out.Net16(vncInfo.height(LONGINT));
 
 			(* pixelformat *)
 			out.Char(CHR(pf.bpp)); out.Char(CHR(pf.depth));
@@ -325,7 +325,7 @@ TYPE
 
 		PROCEDURE SendRect(VAR r : Rectangle);
 		BEGIN
-			out.Net16(r.l); out.Net16(r.t); out.Net16(r.r - r.l); out.Net16(r.b - r.t);
+			out.Net16(r.l(LONGINT)); out.Net16(r.t(LONGINT)); out.Net16((r.r - r.l)(LONGINT)); out.Net16((r.b - r.t)(LONGINT));
 			IF EncHextile IN encodings THEN
 				out.Net32(5);
 				SendHextile(out, vncInfo.img, mode, pf, workBuffer, pfHextile, r)
@@ -475,7 +475,7 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			out.Char(3X); (* message type *)
 			out.Char(0X); out.Char(0X); out.Char(0X); (* padding *)
-			len := Strings.Length(text^);
+			len := Strings.Length(text^)(LONGINT);
 			out.Net32(len);
 			out.String(text^);
 		END SendClipboard;
@@ -488,7 +488,7 @@ TYPE
 			IF ~(EncCopyRect IN encodings) THEN RETURN FALSE END;
 			out.Char(0X); (* message type *) out.Char(0X); (* padding *)
 			out.Net16(1); (* number of rectangles *)
-			out.Net16(dst.l); out.Net16(dst.t); out.Net16(dst.r - dst.l); out.Net16(dst.b - dst.t);
+			out.Net16(dst.l(LONGINT)); out.Net16(dst.t(LONGINT)); out.Net16((dst.r - dst.l)(LONGINT)); out.Net16((dst.b - dst.t)(LONGINT));
 			out.Net32(1);
 			out.Net16(srcx); out.Net16(srcy);
 			RETURN TRUE
@@ -631,7 +631,7 @@ BEGIN
 END SendPixel;
 
 PROCEDURE SendRawRect(out : Streams.Writer; img : Raster.Image; VAR mode : Raster.Mode; VAR pf : PixelFormat; buf : WorkBuf; r : Rectangle);
-VAR i, j, rh, rw : LONGINT; cb, cg, cr : LONGINT;
+VAR i, j, rh, rw : SIZE; cb, cg, cr : LONGINT;
 BEGIN
 	rh := r.b - r.t; rw := r.r - r.l;
 (*	KernelLog.String("w/h"); KernelLog.Int(rw, 5); KernelLog.Int(rh, 5);
@@ -654,8 +654,8 @@ BEGIN
 	END
 END SendRawRect;
 
-PROCEDURE AnalyzeColors(VAR hextile : PFHextile; nofPixels : LONGINT; VAR bg, fg : LONGINT; VAR solid, mono : BOOLEAN);
-VAR i, n0, n1, c0, c1, c : LONGINT;
+PROCEDURE AnalyzeColors(VAR hextile : PFHextile; nofPixels : SIZE; VAR bg, fg : LONGINT; VAR solid, mono : BOOLEAN);
+VAR i : SIZE; n0, n1, c0, c1, c : LONGINT;
 BEGIN
 	n0 := 0; n1 := 0; solid := TRUE; mono := TRUE;
 	FOR i := 0 TO nofPixels - 1 DO
@@ -672,9 +672,9 @@ BEGIN
 	IF n0 > n1 THEN bg := c0; fg := c1 ELSE bg := c1; fg := c0 END
 END AnalyzeColors;
 
-PROCEDURE EncodeHextile(hextile : PFHextile; buf : WorkBuf; VAR pf : PixelFormat; w, h : LONGINT; bg, fg : LONGINT; mono : BOOLEAN;
-	VAR nofRects : LONGINT) : LONGINT;
-VAR pos, x, y, c, tx, ty, bypp, i, j : LONGINT; eq : BOOLEAN;
+PROCEDURE EncodeHextile(hextile : PFHextile; buf : WorkBuf; VAR pf : PixelFormat; w, h : SIZE; bg, fg : LONGINT; mono : BOOLEAN;
+	VAR nofRects : LONGINT) : SIZE;
+VAR pos, x, y, tx, ty, bypp, i, j : SIZE; c : LONGINT; eq : BOOLEAN;
 BEGIN
 	pos := 0; nofRects := 0;
 	IF pf.depth = 8 THEN bypp := 1
@@ -732,9 +732,10 @@ END EncodeHextile;
 
 PROCEDURE SendHextile(out : Streams.Writer; img : Raster.Image; VAR mode : Raster.Mode; VAR pf : PixelFormat;
 	buf : WorkBuf; VAR hextile : PFHextile; r : Rectangle);
-VAR x, y, w, h, ofs, i, cb, cg, cr, bg, fg : LONGINT;
+VAR x, y, w, h, ofs, i : SIZE; cb, cg, cr, bg, fg : LONGINT;
 			validbg, validfg, mono, solid : BOOLEAN;
-			newbg, newfg, encBytes, nofRects, flags : LONGINT;
+			newbg, newfg, nofRects : LONGINT;
+			flags, encBytes: SIZE;
 			hextileFlags : SET;
 BEGIN
 	validbg := FALSE;

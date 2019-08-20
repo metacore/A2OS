@@ -462,7 +462,7 @@ TYPE
 		(* expressions *)
 
 		PROCEDURE ExpressionList(x: SyntaxTree.ExpressionList);
-		VAR i: LONGINT;  expression: SyntaxTree.Expression;
+		VAR i: SIZE;  expression: SyntaxTree.Expression;
 		BEGIN
 			FOR i := 0 TO x.Length() - 1 DO
 				expression := x.GetExpression( i );  Expression(expression);
@@ -945,7 +945,7 @@ TYPE
 			textElement.SetString(s);
 		END Int;
 
-		PROCEDURE Value(identifier: SyntaxTree.Identifier; value: LONGINT; VAR first: BOOLEAN);
+		PROCEDURE Value(identifier: SyntaxTree.Identifier; value: SIZE; VAR first: BOOLEAN);
 		BEGIN
 			Flag(identifier,first);
 			w.String("("); w.Int(value,1); w.String(")");ToText(w,current.text,ElementType.Default);
@@ -1494,7 +1494,7 @@ TYPE
 	PROCEDURE ToText(w: Streams.StringWriter; text: DocumentationTree.Text; elementType: ElementType);
 	VAR textElement: DocumentationTree.TextElement; s: DocumentationTree.String;
 	BEGIN
-		NEW(s,w.Pos()+1);
+		NEW(s,(w.Pos()+1)(SIZE));
 		w.Get(s^);
 		textElement := text.AppendNew(elementType);
 		textElement.SetString(s);
@@ -1645,21 +1645,21 @@ TYPE
 	END MergeComments;
 
 	PROCEDURE KeepSections(in: DocumentationTree.Document);
-	VAR i , j: LONGINT; insert, check: DocumentationTree.Section; done: BOOLEAN; paragraph: DocumentationTree.Paragraph; section: DocumentationTree.Section;
+	VAR i: SIZE; insert, check: DocumentationTree.Section; done: BOOLEAN; paragraph: DocumentationTree.Paragraph; section: DocumentationTree.Section;
 	BEGIN
-			FOR i := 0 TO in.sections.Length()-1 DO
-				section := in.sections.GetSection(i);
-				IF section.title.Length() # 0 THEN
-					paragraph := in.description.AppendNew(ParagraphType.Heading);
-					paragraph.SetLevel(section.level);
-					paragraph.text.WriteText(section.title);
-					MergeParagraphs(in.description, section.contents);
-				END;
+		FOR i := 0 TO in.sections.Length()-1 DO
+			section := in.sections.GetSection(i);
+			IF section.title.Length() # 0 THEN
+				paragraph := in.description.AppendNew(ParagraphType.Heading);
+				paragraph.SetLevel(section.level);
+				paragraph.text.WriteText(section.title);
+				MergeParagraphs(in.description, section.contents);
 			END;
+		END;
 	END KeepSections;
 
 	PROCEDURE MergeDocument(in: DocumentationTree.Document; descriptionSection: DocumentationTree.Paragraphs; this: DocumentationTree.Document);
-	VAR i , j: LONGINT; insert, check: DocumentationTree.Section; done: BOOLEAN; paragraph: DocumentationTree.Paragraph; section: DocumentationTree.Section;
+	VAR i: SIZE; insert, check: DocumentationTree.Section; done: BOOLEAN; paragraph: DocumentationTree.Paragraph; section: DocumentationTree.Section;
 	BEGIN
 		ASSERT(in # NIL);
 		IF descriptionSection = NIL THEN descriptionSection := in.description END;
@@ -1682,7 +1682,7 @@ TYPE
 	END MergeDocument;
 
 	PROCEDURE MergeParagraphs(in, this: DocumentationTree.Paragraphs);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		FOR i := 0 TO this.Length()-1 DO
 			in.AddParagraph(this.GetParagraph(i));
@@ -1690,7 +1690,7 @@ TYPE
 	END MergeParagraphs;
 
 	PROCEDURE MergeSections(in, this: DocumentationTree.Sections);
-	VAR j,i,k,l: LONGINT;  insert, check: DocumentationTree.Section; done: BOOLEAN; par, paragraph,checkPar: DocumentationTree.Paragraph; section: DocumentationTree.Section;
+	VAR j,i,k,l: SIZE;  insert, check: DocumentationTree.Section; done: BOOLEAN; par, paragraph,checkPar: DocumentationTree.Paragraph; section: DocumentationTree.Section;
 	BEGIN
 			i := 0;
 			WHILE i < this.Length() DO
@@ -1737,7 +1737,7 @@ TYPE
 	END MergeSections;
 
 	PROCEDURE MergeSectionDocument(section: DocumentationTree.Section; document: DocumentationTree.Document);
-	VAR paragraphs: DocumentationTree.Paragraphs; i,j: LONGINT; paragraph: DocumentationTree.Paragraph; first: BOOLEAN; firstSection: DocumentationTree.Section;
+	VAR paragraphs: DocumentationTree.Paragraphs; i,j: SIZE; paragraph: DocumentationTree.Paragraph; first: BOOLEAN; firstSection: DocumentationTree.Section;
 	BEGIN
 		NEW(paragraphs, document.description.Length() + section.contents.Length());
 		FOR i := 0 TO document.description.Length()-1 DO

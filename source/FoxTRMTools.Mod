@@ -176,10 +176,10 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		reader: Files.Reader;
 		writers: POINTER TO ARRAY OF Files.Writer;
 		x: ARRAY 128 OF CHAR;
-		i,fileNumber: LONGINT;
-		linewidth: LONGINT;
+		i,fileNumber: SIZE;
+		linewidth: SIZE;
 
-		PROCEDURE GetFileName(index: LONGINT; VAR fileName: ARRAY OF CHAR);
+		PROCEDURE GetFileName(index: SIZE; VAR fileName: ARRAY OF CHAR);
 		BEGIN
 			COPY(dest,fileName);
 			Basic.AppendNumber(fileName, index);

@@ -23,7 +23,7 @@ type
 		data: pointer to array of system.byte;
 (*		inPos, outPos: longint; *)
 		length: longint;  
-		rdPos,numEle: longint;
+		rdPos,numEle: size;
 
 		inPort: Port; outPort: Port;
 
@@ -54,8 +54,8 @@ type
 
 		(*todo: instead of looping byte by byte, figure out how much we can safely copy over and just do that.*)
 		procedure BulkPut(const value: array of system.byte);
-		var i: longint;
-		numCopy, writePos: longint;
+		var i: size;
+		numCopy, writePos: size;
 		begin{EXCLUSIVE}
 			(*because of the exclusive semantics, this bulk put will fill the entire buffer before any get operation has a chance to run*)
 			
@@ -96,8 +96,8 @@ type
 		procedure BulkGet(var value: array of system.byte);
 		var
 		
-			i: longint;
-			numCopy: longint;
+			i: size;
+			numCopy: size;
 		begin{EXCLUSIVE}
 			(*because of the exclusive semantics, this bulk get will empty the entire buffer before any put operation has a chance to run*)
 			
@@ -134,8 +134,8 @@ type
 		
 		procedure BulkGetNonBlocking(var value: array of system.byte): boolean;
 		var		
-			i: longint;
-			numCopy: longint;
+			i: size;
+			numCopy: size;
 		begin{EXCLUSIVE}
 			(*because of the exclusive semantics, this bulk get will empty the entire buffer before any put operation has a chance to run*)
 			
@@ -323,7 +323,7 @@ type
 		end AddPortArray;
 
 		procedure AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: longint);
-		var i: longint;
+		var i: size;
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
 			if EnableTrace then trace(name, inout, width, len(ports)); end;

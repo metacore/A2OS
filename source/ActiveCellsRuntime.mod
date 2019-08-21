@@ -309,7 +309,7 @@ type
 	end Find;
 
 	procedure Imports(root, m: Module; const name: array of char): boolean;
-	var i: longint;
+	var i: size;
 	begin
 		if ~m.checked then
 			if m.m.name # name then

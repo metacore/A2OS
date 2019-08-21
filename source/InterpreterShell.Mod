@@ -202,7 +202,7 @@ TYPE
 		END Exit;
 
 		PROCEDURE DeleteStringFromDisplay(CONST x : ARRAY OF CHAR);
-		VAR i, len : LONGINT;
+		VAR i, len : SIZE;
 		BEGIN
 			len := Strings.Length(x);
 			FOR i :=	 0 TO len-1 DO context.out.Char(Backspace); END;
@@ -213,7 +213,7 @@ TYPE
 		PROCEDURE ReadCommand(w: Streams.Writer (*VAR command : ARRAY OF CHAR*));
 		VAR
 			ch: CHAR;
-			currentIndex : LONGINT;
+			currentIndex : SIZE;
 
 
 			PROCEDURE IsAsciiCharacter(ch : CHAR) : BOOLEAN;
@@ -730,7 +730,7 @@ TYPE
 	Reader* = OBJECT (Streams.Reader)
 	VAR length : LONGINT;
 			data : StringType;
-			rofs: LONGINT;
+			rofs: SIZE;
 
 		PROCEDURE &Init*(initialSize : LONGINT);
 		BEGIN
@@ -754,8 +754,8 @@ TYPE
 			END;
 		END Add;
 
-		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT );
-		VAR o,pos: LONGINT;
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+		VAR o,pos: SIZE;
 		BEGIN{EXCLUSIVE}
 			AWAIT(length >= min);
 			pos := rofs;
@@ -774,11 +774,12 @@ TYPE
 	END Reader;
 
 		PROCEDURE Run;
-		VAR cmdList: Command; wait, exit: BOOLEAN; i : LONGINT; interpreter: Interpreter.Interpreter; s: Scanner.StringMaker; w: Streams.Writer; r: Streams.Reader;
+		VAR cmdList: Command; wait, exit: BOOLEAN; 
+			i : SIZE; interpreter: Interpreter.Interpreter; s: Scanner.StringMaker; w: Streams.Writer; r: Streams.Reader;
 			scanner: Scanner.Scanner; parser: Interpreter.Parser;
 
 			diagnostics: Diagnostics.StreamDiagnostics; seq: SyntaxTree.StatementSequence;
-			str: Scanner.StringType; len: LONGINT; container: Interpreter.Container; scope: Interpreter.Scope; e: SyntaxTree.Expression; value: Interpreter.Value;
+			str: Scanner.StringType; len: SIZE; container: Interpreter.Container; scope: Interpreter.Scope; e: SyntaxTree.Expression; value: Interpreter.Value;
 			reader: Reader;
 
 			runner: OBJECT

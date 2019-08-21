@@ -1061,7 +1061,7 @@ BEGIN
 	ignore := AddItemNode(path, menu);
 END AddItem;
 
-PROCEDURE Show*(menu : WMTrees.Tree; x, y : LONGINT; handler : WMEvents.EventListener);
+PROCEDURE Show*(menu : WMTrees.Tree; x, y : SIZE; handler : WMEvents.EventListener);
 VAR window : MenuWindow; root : WMTrees.TreeNode;
 BEGIN
 	ASSERT((menu # NIL) & (handler # NIL));

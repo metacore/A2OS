@@ -1820,8 +1820,7 @@ TYPE
 			result := expression; type := type.resolved;
 			IF (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).arrayBase.resolved IS SyntaxTree.ByteType) THEN
 				(* skip, no conversion *)
-			ELSIF (expression IS SyntaxTree.IntegerValue)  THEN
-				int := expression(SyntaxTree.IntegerValue).value;
+			ELSIF IsIntegerValue(expression,int) THEN
 				IF (type IS SyntaxTree.IntegerType) OR (type IS SyntaxTree.SizeType) THEN
 					int := Global.ConvertSigned(int,system.SizeOf(type));
 					result := SyntaxTree.NewIntegerValue(position,int);
@@ -1861,7 +1860,7 @@ TYPE
 					int := Global.ConvertSigned(ENTIER(real),system.SizeOf(type));
 					result := SyntaxTree.NewIntegerValue(expression.position,int);
 					result.SetType(type);
-				ELSIF (type IS SyntaxTree.IntegerType) THEN
+				ELSIF (type IS SyntaxTree.IntegerType) OR (type IS SyntaxTree.SizeType) THEN
 					int := ENTIERH(real);
 					result := SyntaxTree.NewIntegerValue(expression.position,int);
 					result.SetType(type);
@@ -8762,7 +8761,6 @@ TYPE
 
 	PROCEDURE IsSizeType(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN;
 	BEGIN
-
 		RETURN (type # NIL) & ((type.resolved IS SyntaxTree.IntegerType) & (type.resolved(SyntaxTree.IntegerType).sizeInBits <= addressWidth) OR (type.resolved IS SyntaxTree.SizeType))
 	END IsSizeType;
 

@@ -311,7 +311,7 @@ VAR
 		KernelLog.String( name );
 		IF s = 0 THEN KernelLog.String( " : NIL " );  KernelLog.Ln;
 		ELSE
-			KernelLog.String( " at adr " );  KernelLog.Int( s, 1 );  KernelLog.String( "; ptr= " );
+			KernelLog.String( " at adr " );  KernelLog.Address( s );  KernelLog.String( "; ptr= " );
 			KernelLog.Address( GetPtr( s ));  KernelLog.String( "; adr= " );
 			KernelLog.Address( GetAdr( s ));  KernelLog.String( "; dim=" );
 			KernelLog.Int( GetDim( s ), 1 );  KernelLog.String( "; flags=" );  Set( GetFlags( s ) );
@@ -1471,7 +1471,7 @@ Sufficient (but not necessary) conditions:
 			(*
 			Debugging.Stack("copy array");
 			*)
-			Report( "copy array source", src );  Report( "copy array  des", dest );
+			Report( "copy array source", src );  Report( "copy array dest", dest );
 			HALT(100);
 		ELSIF src = dest THEN  (* self copy *)
 			CopyArraySelf( dest, src, elementsize );

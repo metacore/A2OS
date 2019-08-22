@@ -5041,6 +5041,7 @@ TYPE
 						END;
 						arrayDestinationTag := variableOp.op;
 						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
+						ReleaseOperand(variableOp); 
 						arrayDestinationDimension := 0;
 						Designate(expression,operand);
 						Pass((operand.tag));

@@ -18,7 +18,7 @@ CONST
 	AddressSize = SIZEOF(ADDRESS);
 
 	BlockSize* = 32;			(* power of two, <= 32 for RegisterCandidates *)
-	ArrayAlignment = 8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
+	ArrayAlignment* = 8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
 	BlockHeaderSize* = 2 * AddressSize;
 	HeapBlockOffset* = - 2 * AddressSize;
 	TypeDescOffset* = 0;

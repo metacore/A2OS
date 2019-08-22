@@ -37,7 +37,7 @@ VAR
 		VAR i, adr, size: LONGINT;
 	BEGIN
 		size := len * elsize + 4; adr := ADDRESSOF(a);
-		SYSTEM.PUT(adr, heap - 12);   (*address of array into descriptor*)
+		SYSTEM.PUT(adr, heap - 8);   (*address of array into descriptor*)
 		SYSTEM.PUT(adr-4, len);   (*length of array into descriptor*)
 		SYSTEM.PUT(heap, size);   (*size of block into header*)
 		IF size MOD 4 # 0 THEN INC(size, 4 - size MOD 4) END;
@@ -117,7 +117,7 @@ VAR
 	TYPE
 		UnsafeArray= POINTER {UNSAFE,UNTRACED} TO UnsafeArrayDesc;
 		UnsafeArrayDesc = RECORD
-			header : ARRAY 3 OF ADDRESS; 
+			header : ARRAY 2 OF ADDRESS;
 			len: ARRAY 8 OF SIZE;
 		END;
 	VAR p: ANY; dim: SIZE;

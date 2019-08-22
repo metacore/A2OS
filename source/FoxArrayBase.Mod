@@ -31,7 +31,7 @@ CONST
 	statistics= FALSE;
 	conservative=TRUE;
 
-	ArrDataArrayOffset=4*SIZEOF (ADDRESS); (* offset of data in array with pointers *)
+	ArrDataArrayOffset= 3*SIZEOF (ADDRESS) + ((-3)*SIZEOF (ADDRESS)) MOD Heaps.ArrayAlignment ; (* offset of data in array with pointers *)
 
 	AddressSize=SIZEOF(ADDRESS);
 	MathPtrOffset=0*AddressSize;

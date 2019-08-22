@@ -27,7 +27,7 @@ CONST
 	Unmarked = 0;				(* mark value of free blocks *)
 	BlockSize* = 8*SIZEOF(ADDRESS);			(* power of two, <= 32 for RegisterCandidates. Must be large enough to accomodate any basic block *)
 
-	ArrayAlignment = 8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
+	ArrayAlignment* = 8;			(* first array element of ArrayBlock and first data element of SystemBlock must be aligned to 0 MOD ArrayAlignment *)
 	BlockHeaderSize* = 2 * AddressSize;
 	HeapBlockOffset* = - 2 * AddressSize;
 	TypeDescOffset* = - AddressSize;
@@ -1065,7 +1065,7 @@ BEGIN
 			Machine.Acquire(Machine.Heaps);
 			arrayBlockAdr := NewBlock(blockSize);
 			IF arrayBlockAdr # 0 THEN
-				arrayBlock := arrayBlockAdr;
+				arrayBlock := arrayBlockAdr; (* contains the Block Header offset *)
 				dataBlockAdr := arrayBlockAdr + arrayBlockSize (* - BlockHeaderSize + BlockHeaderSize *);
 				dataBlock := dataBlockAdr;
 				arrayBlock.typeDesc := arrayBlockTag;

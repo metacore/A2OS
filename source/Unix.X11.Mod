@@ -140,6 +140,19 @@ TYPE
 				x*, y*, xRoot*, yRoot*, state*, button*: WORD;
 				sameScreen: Bool
 			END;
+
+	MotionEvent * = RECORD
+				typ*: WORD;
+				serial*: LONGWORD;
+				sendEvent*: Bool;
+				display*: DisplayPtr;
+				window*, root*, subwindow*: Window;
+				time*: Time;
+				x*, y*, xRoot*, yRoot*, state*, button*: WORD;
+				isHint*: CHAR;
+				sameScreen*: Bool;
+			END;
+
 	KeyEvent* = RECORD
 				typ*: WORD;
 				serial*: LONGWORD;
@@ -205,8 +218,6 @@ TYPE
 		above* : Window;
 		overrideRedirect* : BOOLEAN;
 	END;
-
-
 
 	ErrorEventPtr* = POINTER {UNSAFE,UNTRACED} TO ErrorEvent;
 	ErrorHandler* = PROCEDURE ( d: DisplayPtr;  err: ErrorEventPtr; p3, p4: LONGINT ): LONGINT;

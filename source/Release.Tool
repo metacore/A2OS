@@ -1318,6 +1318,9 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	DebugLog.Mod	# Multiprocess Log
 
 	WMJoysticks.Mod # Joystick tools
+
+	WMImageGrid.Mod
+	WMSimpleGraphs.Mod
 END
 
 PACKAGE Fun ARCHIVE "Fun.zip" SOURCE "FunSrc.zip" DESCRIPTION "Games, Demos and other fun stuff"

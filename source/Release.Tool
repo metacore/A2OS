@@ -1320,7 +1320,7 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 	WMJoysticks.Mod # Joystick tools
 
 	WMImageGrid.Mod
-	WMSimpleGraphs.Mod
+	~COOP { WMSimpleGraphs.Mod }
 END
 
 PACKAGE Fun ARCHIVE "Fun.zip" SOURCE "FunSrc.zip" DESCRIPTION "Games, Demos and other fun stuff"

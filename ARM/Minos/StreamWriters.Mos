@@ -24,15 +24,17 @@ CONST
 
 TYPE
 
+	Position* = LONGINT; (* position in the stream *)
+
 	(** Any stream output procedure *)
-	Sender* = PROCEDURE(VAR writer: Writer; CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT);
+	Sender* = PROCEDURE(VAR writer: Writer; CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD);
 
 	Writer* = RECORD
-		tail: LONGINT;
+		tail: SIZE;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: LONGINT; (** result of last output operation. *)
+		res*: WORD; (** result of last output operation. *)
 		send: Sender;
-		sent-: LONGINT;  (** count of sent bytes *)
+		sent-: Position;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
 	END;
 
@@ -42,7 +44,7 @@ VAR
 	months: ARRAY 12 * 4 + 1 OF CHAR;
 
 	(** Initialize a writer given a sender and a buffer size *)
-	PROCEDURE Init*(VAR wr: Writer; sender: Sender;  size: LONGINT);
+	PROCEDURE Init*(VAR wr: Writer; sender: Sender;  size: SIZE);
 	BEGIN
 		ASSERT(sender # NIL);
 		NEW(wr.buf,size);  wr.send := sender; Reset(wr);
@@ -64,7 +66,7 @@ VAR
 	END Update;
 
 	(** Current write position. *)
-	PROCEDURE Pos*(VAR wr: Writer ): LONGINT;
+	PROCEDURE Pos*(VAR wr: Writer ): Position;
 	BEGIN
 		RETURN wr.sent + wr.tail
 	END Pos;
@@ -82,8 +84,8 @@ VAR
 	END Char;
 
 	(** Write len bytes from x, starting at ofs. *)
-	PROCEDURE Bytes*(VAR wr: Writer; CONST x: ARRAY OF CHAR;  ofs, len: LONGINT );
-	VAR n: LONGINT;
+	PROCEDURE Bytes*(VAR wr: Writer; CONST x: ARRAY OF CHAR;  ofs, len: SIZE );
+	VAR n: SIZE;
 	BEGIN
 		ASSERT ( len >= 0 );
 		LOOP
@@ -121,7 +123,7 @@ VAR
 
 	(** Write a LONGINT. *)
 	PROCEDURE RawLInt*(VAR wr: Writer; x: LONGINT );
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		Char(wr,CHR(SYSTEM.MSK(x,0FFH)));
 		FOR i := 0 TO 2 DO
@@ -204,7 +206,7 @@ VAR
 
 	(** Write a 0X-terminated string, excluding the 0X terminator *)
 	PROCEDURE String*(VAR wr: Writer; CONST str: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	VAR i: SIZE;
 	BEGIN
 		i := 0;
 		WHILE (i < LEN(str)) & (str[i] # 0X) DO
@@ -220,9 +222,10 @@ VAR
 	END Bool;
 
 	(** Write an integer in decimal right-justified in a field of at least w characters. *)
-	PROCEDURE Int*(VAR wr: Writer; x, w: LONGINT );
+	PROCEDURE Int*(VAR wr: Writer; x: LONGINT; w: SIZE );
 	VAR
-		i, k, x0, y: LONGINT;
+		i: SIZE;
+		k, x0, y: LONGINT;
 		str: ARRAY 12 OF CHAR;
 	BEGIN
 		IF x < 0 THEN
@@ -275,9 +278,9 @@ VAR
 
 	(** Write a SET in Oberon notation. *)
 	PROCEDURE Set*(VAR wr: Writer; s: SET );   (* from P. Saladin *)
-	VAR i, last: LONGINT;  dots: BOOLEAN;
+	VAR i, last: SIZE;  dots: BOOLEAN;
 	BEGIN
-		Char(wr, "{" );  last := MIN( LONGINT );  dots := FALSE;
+		Char(wr, "{" );  last := MIN( SIZE );  dots := FALSE;
 		FOR i := MIN( SET ) TO MAX( SET ) DO
 			IF i IN s THEN
 				IF last = (i - 1) THEN
@@ -297,8 +300,8 @@ VAR
 		Write an integer in hexadecimal right-justified in a field of at least ABS(wr) characters.
 		If w < 0 THEN w least significant hex digits of x are written (potentially including leading zeros)
 	*)
-	PROCEDURE Hex*(VAR wr: Writer; x: LONGINT; w: LONGINT);
-	VAR filler: CHAR; i,maxw: LONGINT; a: ARRAY 10 OF CHAR; y: LONGINT;
+	PROCEDURE Hex*(VAR wr: Writer; x: LONGINT; w: SIZE);
+	VAR filler: CHAR; i,maxw: SIZE; a: ARRAY 10 OF CHAR; y: LONGINT;
 	BEGIN
 		IF w < 0 THEN filler := '0'; w := -w; maxw := w ELSE filler := ' '; maxw := 8 END;
 		i := 0;
@@ -397,7 +400,7 @@ VAR
 	END Float;
 
 	(** Write a floating point number x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
-	PROCEDURE FloatFix*(VAR writer: Writer; x: REAL; n, f, D: LONGINT);
+	PROCEDURE FloatFix*(VAR writer: Writer; x: REAL; n, f, D: WORD);
 	VAR
 		d: LONGINT;
 	BEGIN
@@ -418,7 +421,7 @@ VAR
 		END;
 	END FloatFix;
 
-	PROCEDURE NullSender*(VAR writer: Writer; CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT);
+	PROCEDURE NullSender*(VAR writer: Writer; CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD);
 	BEGIN
 		res := Ok
 	END NullSender;

@@ -19,7 +19,7 @@ TYPE
 		enetEndOfStream *: BOOLEAN;
 	END;
 
-	Sender * = PROCEDURE (access: ANY; CONST buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; flags: SET; VAR res: EnetBase.Int);
+	Sender * = PROCEDURE (access: ANY; CONST buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; flags: SET; VAR res: EnetBase.ResultCode);
 
 	Writer * = POINTER TO WriterDesc;
 	WriterDesc * = RECORD (StreamWriters.Writer)
@@ -45,7 +45,7 @@ TYPE
 		writer.enetSend := sender
 	END InitWriter;
 
-	PROCEDURE Receive * (VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: EnetBase.Int;  VAR len, res: EnetBase.Int);
+	PROCEDURE Receive * (VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: EnetBase.Int;  VAR len: EnetBase.Int; VAR res: EnetBase.ResultCode);
 	VAR
 		packet: EnetBase.Packet;
 		pktOfs, cpLen: EnetBase.Int;
@@ -94,7 +94,7 @@ TYPE
 		END
 	END Receive;
 
-	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: EnetBase.Int;  propagate: BOOLEAN;  VAR res: EnetBase.Int);
+	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: EnetBase.Int;  propagate: BOOLEAN; VAR res: EnetBase.ResultCode);
 	BEGIN
 		WITH writer: WriterDesc DO
 			writer.enetSend(writer.enetAccess, buf, ofs, len, writer.enetFlags, res)

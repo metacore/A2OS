@@ -17,39 +17,39 @@ TYPE
 		rider *: OFS.Rider;
 	END;
 
-	PROCEDURE OpenReader * (VAR reader: Reader; size: LONGINT; file: OFS.File);
+	PROCEDURE OpenReader * (VAR reader: Reader; size: SIZE; file: OFS.File);
 	BEGIN
 		StreamReaders.Init(reader, Receive, size);
 		OFS.Set(reader.rider, file, 0)
 	END OpenReader;
 
-	PROCEDURE OpenWriter * (VAR writer: Writer; size: LONGINT; file: OFS.File);
+	PROCEDURE OpenWriter * (VAR writer: Writer; size: SIZE; file: OFS.File);
 	BEGIN
 		StreamWriters.Init(writer, Send, size);
 		OFS.Set(writer.rider, file, 0)
 	END OpenWriter;
 
-	PROCEDURE SetReaderPos * (VAR reader: Reader; pos: LONGINT);
+	PROCEDURE SetReaderPos * (VAR reader: Reader; pos: StreamReaders.Position);
 	BEGIN
 		OFS.Set(reader.rider, reader.rider.file, pos)
 	END SetReaderPos;
 
-	PROCEDURE SetWriterPos * (VAR writer: Writer; pos: LONGINT);
+	PROCEDURE SetWriterPos * (VAR writer: Writer; pos: StreamWriters.Position);
 	BEGIN
 		OFS.Set(writer.rider, writer.rider.file, pos)
 	END SetWriterPos;
 
-	PROCEDURE ReaderPos * (VAR reader: Reader): LONGINT;
+	PROCEDURE ReaderPos * (VAR reader: Reader): StreamReaders.Position;
 	BEGIN
 		RETURN OFS.Pos(reader.rider)
 	END ReaderPos;
 
-	PROCEDURE WriterPos * (VAR writer: Writer): LONGINT;
+	PROCEDURE WriterPos * (VAR writer: Writer): StreamWriters.Position;
 	BEGIN
 		RETURN OFS.Pos(writer.rider)
 	END WriterPos;
 
-	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: LONGINT;  propagate: BOOLEAN;  VAR res: LONGINT);
+	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD);
 	BEGIN
 		WHILE len > 0 DO
 			OFS.Write(writer(Writer).rider, buf[ofs]);
@@ -58,7 +58,7 @@ TYPE
 		END
 	END Send;
 
-	PROCEDURE Receive (VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT);
+	PROCEDURE Receive (VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
 	BEGIN
 		len := 0;
 		WHILE ((min > 0) OR ~reader(Reader).rider.eof) & (size > 0) DO

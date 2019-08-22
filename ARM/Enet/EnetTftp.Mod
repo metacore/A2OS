@@ -87,8 +87,8 @@ TYPE
 		'transfer' is the transfer, 'buf', 'ofs' and 'len' represent the received data. 'res' is the result code and 'end' signals the last block of a transfer (error or transfer completed).
 		'packet' points to the receive packet if no error occurred. If 'res' is not 0 then 'packet' is NIL.
 	*)
-	DataReceiveHandler * = PROCEDURE {DELEGATE} (transfer: Transfer; VAR buf: ARRAY OF CHAR; ofs, len, res: EnetBase.Int; packet: EnetBase.Packet; end: BOOLEAN);
-	Listener * = PROCEDURE {DELEGATE} (transfer: Transfer; CONST file, mode: ARRAY OF CHAR; packet: EnetBase.Packet; VAR res: EnetBase.Int): BOOLEAN;
+	DataReceiveHandler * = PROCEDURE {DELEGATE} (transfer: Transfer; VAR buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; res: EnetBase.ResultCode; packet: EnetBase.Packet; end: BOOLEAN);
+	Listener * = PROCEDURE {DELEGATE} (transfer: Transfer; CONST file, mode: ARRAY OF CHAR; packet: EnetBase.Packet; VAR res: EnetBase.ResultCode): BOOLEAN;
 
 	(** Object wrapper for boolean for the simple blocking task handler *)
 	Boolean = POINTER TO RECORD value: BOOLEAN END;
@@ -109,7 +109,7 @@ VAR
 		Start sending a file to host 'destination' with name 'name', mode 'mode'.
 		The file is 'length' bytes long and its content is sent using 'SendData'.
 	*)
-	PROCEDURE WriteFile * (VAR transfer: Transfer; CONST name, mode: ARRAY OF CHAR; length: EnetBase.Int; CONST destination: EnetBase.IpAddr; VAR res: EnetBase.Int): BOOLEAN;
+	PROCEDURE WriteFile * (VAR transfer: Transfer; CONST name, mode: ARRAY OF CHAR; length: EnetBase.Int; CONST destination: EnetBase.IpAddr; VAR res: EnetBase.ResultCode): BOOLEAN;
 	BEGIN
 		(* Transfer must not be used *)
 		IF transfer = NIL THEN
@@ -147,7 +147,7 @@ VAR
 		Start receiving file 'name' with mode 'mode' from host 'source'.
 		The receiver 'handler' is called on all received data buffers.
 	*)
-	PROCEDURE ReadFile * (VAR transfer: Transfer; CONST name, mode: ARRAY OF CHAR; CONST source: EnetBase.IpAddr; handler: DataReceiveHandler; handlerParam: ANY; VAR res: EnetBase.Int): BOOLEAN;
+	PROCEDURE ReadFile * (VAR transfer: Transfer; CONST name, mode: ARRAY OF CHAR; CONST source: EnetBase.IpAddr; handler: DataReceiveHandler; handlerParam: ANY; VAR res: EnetBase.ResultCode): BOOLEAN;
 	BEGIN
 		res := 0;
 		(* Transfer must not be used *)
@@ -197,7 +197,7 @@ VAR
 		Can be called multiple times per transfer.
 		Transfer is automatically terminated when its remaining length has reached 0
 	*)
-	PROCEDURE SendData * (transfer: Transfer; CONST buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; completionHandler: EnetBase.TaskHandler; VAR res: EnetBase.Int): BOOLEAN;
+	PROCEDURE SendData * (transfer: Transfer; CONST buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; completionHandler: EnetBase.TaskHandler; VAR res: EnetBase.ResultCode): BOOLEAN;
 	VAR
 		blockLen, i: EnetBase.Int;
 	BEGIN
@@ -293,7 +293,8 @@ VAR
 	PROCEDURE HandlePacket (socket: EnetUdp.Socket; CONST remoteAdr: EnetBase.IpAddr; remotePort: EnetBase.Int; VAR data: ARRAY OF CHAR; dataOfs, dataLen: EnetBase.Int; packet: EnetBase.Packet);
 	VAR
 		transfer: Transfer;
-		res, opcode, block, sendLength: EnetBase.Int;
+		res: EnetBase.ResultCode;
+		opcode, block, sendLength: EnetBase.Int;
 	BEGIN
 		(* Get transfer *)
 		transfer := GetTransferBySocket(socket);
@@ -398,7 +399,7 @@ VAR
 	PROCEDURE TimeoutHandler (handler: EnetBase.TaskHandler);
 	VAR
 		transfer: Transfer;
-		res: EnetBase.Int;
+		res: EnetBase.ResultCode;
 	BEGIN
 		transfer := handler.param(Transfer);
 		IF ((transfer.state = WaitForData) OR (transfer.state = WaitForAck)) THEN
@@ -417,7 +418,7 @@ VAR
 	END TimeoutHandler;
 
 	(** Sends a packet for a transfer with a timeout for reception *)
-	PROCEDURE SendWithTimeout (transfer: Transfer; VAR res: EnetBase.Int): BOOLEAN;
+	PROCEDURE SendWithTimeout (transfer: Transfer; VAR res: EnetBase.ResultCode): BOOLEAN;
 	BEGIN
 		IF Trace THEN EnetTrace.StringLn("EnetTftp: Sending packet (" & transfer.dataLength & " B)") END;
 		EnetBase.ScheduleTask(transfer.socket.intf, transfer.timeoutTask, FALSE, timeout);
@@ -425,9 +426,9 @@ VAR
 	END SendWithTimeout;
 
 	(** Sets the transfer error state to 'res'. *)
-	PROCEDURE NotifyError (transfer: Transfer; res: EnetBase.Int; doHandle, sendErrorMsg: BOOLEAN);
+	PROCEDURE NotifyError (transfer: Transfer; res: EnetBase.ResultCode; doHandle, sendErrorMsg: BOOLEAN);
 	VAR
-		ignoreRes: EnetBase.Int;
+		ignoreRes: EnetBase.ResultCode;
 		ignore: BOOLEAN;
 	BEGIN
 		transfer.res := res;
@@ -521,7 +522,7 @@ VAR
 		t.param(Boolean).value := TRUE
 	END BlockingCompletion;
 
-	PROCEDURE StreamReceiveHandler (transfer: Transfer; VAR buffer: ARRAY OF CHAR; ofs, len, res: EnetBase.Int; packet: EnetBase.Packet; end: BOOLEAN);
+	PROCEDURE StreamReceiveHandler (transfer: Transfer; VAR buffer: ARRAY OF CHAR; ofs, len: EnetBase.Int; res: EnetBase.ResultCode; packet: EnetBase.Packet; end: BOOLEAN);
 	BEGIN
 		IF end THEN
 			transfer.handlerParam(EnetStreams.Reader).enetEndOfStream := TRUE
@@ -532,7 +533,7 @@ VAR
 		END
 	END StreamReceiveHandler;
 
-	PROCEDURE SendFromWriter (access: ANY; CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; flags: SET; VAR res: LONGINT);
+	PROCEDURE SendFromWriter (access: ANY; CONST buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; flags: SET; VAR res: EnetBase.ResultCode);
 	VAR
 		ignore: BOOLEAN;
 	BEGIN

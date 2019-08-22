@@ -11,6 +11,7 @@ TYPE
 	Int32 = EnetBase.Int32;
 	Int16 = EnetBase.Int16;
 	Int = EnetBase.Int;
+	ResultCode = EnetBase.ResultCode;
 
 	Interface* = EnetBase.Interface;
 
@@ -19,7 +20,7 @@ VAR
 	PROCEDURE InitInterface*(
 										intf: Interface;
 										dev: EnetBase.LinkDevice;
-										VAR res: Int
+										VAR res: ResultCode
 										);
 	BEGIN
 		IF ~Interfaces.InitInterface(intf,dev,res) THEN RETURN; END;
@@ -76,7 +77,7 @@ VAR
 		Update the state of all available network interfaces
 	*)
 	PROCEDURE Update*;
-	VAR i, res: Int;
+	VAR i: Int; res: ResultCode;
 	BEGIN
 		FOR i := 0 TO Interfaces.numIntfs -1 DO
 			IF ~Interfaces.Update(Interfaces.intfs[i],res) THEN
@@ -84,22 +85,22 @@ VAR
 		END;
 	END Update;
 
-	PROCEDURE Start(intf: EnetBase.Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Start(intf: EnetBase.Interface; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		RETURN intf.dev.start(intf.dev,res);
 	END Start;
 
-	PROCEDURE Stop(intf: EnetBase.Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Stop(intf: EnetBase.Interface; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		RETURN intf.dev.stop(intf.dev,res);
 	END Stop;
 
-	PROCEDURE Reset(intf: EnetBase.Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Reset(intf: EnetBase.Interface; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		RETURN intf.dev.reset(intf.dev,res);
 	END Reset;
 
-	PROCEDURE Finalize(intf: EnetBase.Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Finalize(intf: EnetBase.Interface; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		IF ~intf.dev.stop(intf.dev,res) THEN END;
 		RETURN intf.dev.finalize(intf.dev,res);

@@ -1,4 +1,4 @@
-MODULE ZynqTools; (** AUTHOR "Timothée Martiel"; PURPOSE "Utility commands for Zynq platforms"; *)
+MODULE ZynqTools; (** AUTHOR "TimothMartiel"; PURPOSE "Utility commands for Zynq platforms"; *)
 
 IMPORT SYSTEM, Commands, Streams, Files, Options, Strings;
 
@@ -482,7 +482,8 @@ TYPE
 		inFile, outFile: Files.File;
 		in: Files.Reader;
 		out: Files.Writer;
-		userWord, read, size, wrote: LONGINT;
+		userWord: LONGINT;
+		read, size, wrote: SIZE;
 		encrypt, keyFromEFuse, keyFromRam, inPlace: BOOLEAN;
 	BEGIN
 		NEW(opt);
@@ -576,8 +577,9 @@ TYPE
 			registers[read + 6] := 0X;
 			registers[read + 7] := 0X
 		END;
-
-		CreateBootHeader(userWord, size, 8C0H, 0, interrupts, registers, encrypt, keyFromEFuse, inPlace, header);
+		
+		ASSERT(LONGINT(size) = size);
+		CreateBootHeader(userWord, LONGINT(size), 8C0H, 0, interrupts, registers, encrypt, keyFromEFuse, inPlace, header);
 		out.Bytes(header, 0, HeaderSize);
 		WHILE in.res = Streams.Ok DO
 			in.Bytes(buffer, 0, 1024, read);
@@ -617,7 +619,8 @@ TYPE
 		fIm, fRom, fOut: Files.File;
 		im, rom: Files.Reader;
 		out: Files.Writer;
-		ofs, pos, read: LONGINT;
+		ofs, pos, read: SIZE;
+		li: LONGINT;
 	BEGIN
 		romName := "cfsbl/BOOT.BIN";
 		imName := "Fsbl.Bin";
@@ -672,8 +675,8 @@ TYPE
 		ASSERT(read = 30H);
 		out.Bytes(block, 0, read);
 
-		rom.RawLInt(ofs);
-		out.RawLInt(ofs);
+		rom.RawLInt(li); ofs := li;
+		out.RawLInt(li);
 
 		context.out.String("	Found image at location ");
 		context.out.Hex(ofs, -8);
@@ -710,7 +713,8 @@ TYPE
 		fRom, fOut: Files.File;
 		rom: Files.Reader;
 		out: Files.Writer;
-		ofs, pos, read: LONGINT;
+		ofs, pos, read: SIZE;
+		li: LONGINT;
 	BEGIN
 		IF ~context.arg.GetString(romName) THEN
 			context.error.String("Error: expected input and output files as parameters");
@@ -764,7 +768,7 @@ TYPE
 		rom.Bytes(block, 0, 30H, read);
 		ASSERT(read = 30H);
 
-		rom.RawLInt(ofs);
+		rom.RawLInt(li); ofs := li;
 
 		context.out.String("	Found image at location ");
 		context.out.Hex(ofs, -8);
@@ -807,7 +811,7 @@ TYPE
 		RegisterEnd		= 8A0H;
 	VAR
 		chk: LONGINT;
-		i, pos: LONGINT;
+		i, pos: SIZE;
 	BEGIN
 		ASSERT(LEN(header) >= 8C0H);
 
@@ -914,7 +918,7 @@ TYPE
 	END CreateBootHeader;
 
 	(** Insert a raw integer in the array at location [ofs .. ofs + 4). *)
-	PROCEDURE MoveRawInt (int: LONGINT; VAR dest: ARRAY OF CHAR; ofs: LONGINT);
+	PROCEDURE MoveRawInt (int: LONGINT; VAR dest: ARRAY OF CHAR; ofs: SIZE);
 	BEGIN
 		dest[ofs] := CHR(int MOD 100H);
 		dest[ofs + 1] := CHR(int DIV 100H MOD 100H);
@@ -923,7 +927,7 @@ TYPE
 	END MoveRawInt;
 
 	(** Get an integer from the array at positions [ofs .. ofs + 4). *)
-	PROCEDURE ReadRawInt (CONST src: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
+	PROCEDURE ReadRawInt (CONST src: ARRAY OF CHAR; ofs: SIZE): LONGINT;
 	VAR
 		adr: LONGINT;
 	BEGIN

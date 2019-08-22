@@ -21,6 +21,7 @@ TYPE
 
 	Int = EnetBase.Int;
 	UInt = EnetBase.UInt;
+	ResultCode = EnetBase.ResultCode;
 
 CONST
 
@@ -435,7 +436,7 @@ VAR
 		rxBdRingLen, txBdRingLen: receive/transmit buffer descriptor ring length
 		rxPacketPoolSize, txPacketPoolSize: receive/transmit packet pool size
 	*)
-	PROCEDURE GetDevice*(gemId: Int; rxBdRingLen, txBdRingLen: Int; rxPacketPoolSize, txPacketPoolSize: Int; VAR device: EnetBase.LinkDevice; VAR res: Int): BOOLEAN;
+	PROCEDURE GetDevice*(gemId: Int; rxBdRingLen, txBdRingLen: Int; rxPacketPoolSize, txPacketPoolSize: Int; VAR device: EnetBase.LinkDevice; VAR res: ResultCode): BOOLEAN;
 	VAR
 		dev: LinkDevice;
 		init: BOOLEAN;
@@ -543,7 +544,7 @@ VAR
 		regAddr: register address (5 bit)
 		data: data to write to the given register (16 bit)
 	*)
-	PROCEDURE PhyWrite*(dev: EnetBase.LinkDevice; phyAddr, regAddr, data: UInt; VAR res: Int): BOOLEAN;
+	PROCEDURE PhyWrite*(dev: EnetBase.LinkDevice; phyAddr, regAddr, data: UInt; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		ASSERT(phyAddr <= 31);
 		ASSERT(regAddr <= 31);
@@ -571,7 +572,7 @@ VAR
 		regAddr: register address (5 bit)
 		data: data read from the given register (16 bit)
 	*)
-	PROCEDURE PhyRead*(dev: EnetBase.LinkDevice; phyAddr, regAddr: UInt; VAR data: UInt; VAR res: Int): BOOLEAN;
+	PROCEDURE PhyRead*(dev: EnetBase.LinkDevice; phyAddr, regAddr: UInt; VAR data: UInt; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		ASSERT(phyAddr <= 31);
 		ASSERT(regAddr <= 31);
@@ -595,7 +596,7 @@ VAR
 	(**
 		Setup MAC address for a given link device
 	*)
-	PROCEDURE SetMacAddr*(dev: EnetBase.LinkDevice; CONST macAddr: EnetBase.MacAddr; VAR res: Int): BOOLEAN;
+	PROCEDURE SetMacAddr*(dev: EnetBase.LinkDevice; CONST macAddr: EnetBase.MacAddr; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		IF dev.isActive THEN
 			res := EnetBase.ErrCannotDoWhenActive;
@@ -617,7 +618,7 @@ VAR
 
 		speed: link speed in Mbps
 	*)
-	PROCEDURE SetLinkSpeed*(dev: EnetBase.LinkDevice; CONST speed: ARRAY OF CHAR; fullDuplex: BOOLEAN; VAR res: Int): BOOLEAN;
+	PROCEDURE SetLinkSpeed*(dev: EnetBase.LinkDevice; CONST speed: ARRAY OF CHAR; fullDuplex: BOOLEAN; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		IF dev.isActive THEN
 			res := EnetBase.ErrCannotDoWhenActive;
@@ -650,7 +651,7 @@ VAR
 
 		options: set of device options to enable, not included options will be disabled
 	*)
-	PROCEDURE SetOptions*(dev: EnetBase.LinkDevice; optionsPage: Int; options: SET; VAR res: Int): BOOLEAN;
+	PROCEDURE SetOptions*(dev: EnetBase.LinkDevice; optionsPage: Int; options: SET; VAR res: ResultCode): BOOLEAN;
 	CONST
 		NWCFG_OPTIONS_MASK = NWCFG_1536RXEN_MASK +
 										NWCFG_NVLANDISC_MASK +
@@ -723,7 +724,7 @@ VAR
 
 		Perform PHY link autonegotiation
 	*)
-	PROCEDURE PhyAutonegotiateLink(dev: LinkDevice; phyAddr: UInt; VAR speed: ARRAY OF CHAR; VAR fullDuplex: BOOLEAN; VAR res: Int): BOOLEAN;
+	PROCEDURE PhyAutonegotiateLink(dev: LinkDevice; phyAddr: UInt; VAR speed: ARRAY OF CHAR; VAR fullDuplex: BOOLEAN; VAR res: ResultCode): BOOLEAN;
 	CONST
 		RGMII_TXRX_CLOCK_DELAYED_MASK = 0x0030;
 		MII_ADVERTISE_MASK = EnetPhy.ADVERTISE_PAUSE_CAP+EnetPhy.ADVERTISE_PAUSE_ASYM+EnetPhy.ADVERTISE_ALL;
@@ -815,7 +816,7 @@ VAR
 	(**
 		Start a given link device
 	*)
-	PROCEDURE Start*(dev: EnetBase.LinkDevice; VAR res: Int): BOOLEAN;
+	PROCEDURE Start*(dev: EnetBase.LinkDevice; VAR res: ResultCode): BOOLEAN;
 	VAR d: UInt;
 	BEGIN
 		IF dev.isActive THEN
@@ -860,7 +861,7 @@ VAR
 	(**
 		Stop of a given link device
 	*)
-	PROCEDURE Stop*(dev: EnetBase.LinkDevice; VAR res: Int): BOOLEAN;
+	PROCEDURE Stop*(dev: EnetBase.LinkDevice; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		StopController(dev(LinkDevice));
 		dev.isActive := FALSE;
@@ -871,7 +872,7 @@ VAR
 	(**
 		Resetting a given link device
 	*)
-	PROCEDURE Reset*(dev: EnetBase.LinkDevice; VAR res: Int): BOOLEAN;
+	PROCEDURE Reset*(dev: EnetBase.LinkDevice; VAR res: ResultCode): BOOLEAN;
 	VAR
 		allowZeroPhyAddr: BOOLEAN;
 	BEGIN
@@ -904,7 +905,7 @@ VAR
 		RETURN TRUE;
 	END Reset;
 
-	PROCEDURE Finalize*(dev: EnetBase.LinkDevice; VAR res: Int): BOOLEAN;
+	PROCEDURE Finalize*(dev: EnetBase.LinkDevice; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		RETURN Stop(dev,res);
 	END Finalize;
@@ -912,7 +913,7 @@ VAR
 	(**
 		Update the state of the receive path of a link device
 	*)
-	PROCEDURE UpdateRx*(dev: EnetBase.LinkDevice; VAR res: Int): BOOLEAN;
+	PROCEDURE UpdateRx*(dev: EnetBase.LinkDevice; VAR res: ResultCode): BOOLEAN;
 	VAR
 		packet: EnetBase.Packet;
 		intrStatus, rxStatus: UInt;
@@ -932,7 +933,7 @@ VAR
 	(**
 		Update the state of the transmit path of a link device
 	*)
-	PROCEDURE UpdateTx*(dev: EnetBase.LinkDevice; VAR res: Int): BOOLEAN;
+	PROCEDURE UpdateTx*(dev: EnetBase.LinkDevice; VAR res: ResultCode): BOOLEAN;
 	VAR
 		packet: EnetBase.Packet;
 		txStatus: UInt;
@@ -1701,7 +1702,7 @@ VAR
 	(**
 		Send a packet
 	*)
-	PROCEDURE SendPacket*(dev: EnetBase.LinkDevice; packet: EnetBase.Packet; flags: SET; txTaskHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE SendPacket*(dev: EnetBase.LinkDevice; packet: EnetBase.Packet; flags: SET; txTaskHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR
 		bd0, bd1: BufDesc;
 		d0, d1: UInt;

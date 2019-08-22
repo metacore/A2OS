@@ -35,7 +35,7 @@ TYPE
 		Handling of an ICMP packet
 	*)
 	PROCEDURE HandlePacket(intf: EnetBase.Interface; packet: EnetBase.Packet; flags: SET);
-	VAR res: LONGINT;
+	VAR res: EnetBase.ResultCode;
 	BEGIN
 		CASE packet.icmpHdr.type OF
 			|EchoRequest:

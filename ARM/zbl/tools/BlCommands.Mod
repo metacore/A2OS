@@ -237,7 +237,8 @@ TYPE
 		PROCEDURE SendCommand (CONST cmd: ARRAY OF CHAR; VAR resp: ARRAY OF CHAR): BOOLEAN;
 		VAR
 			hostAdr: IP.Adr;
-			len, hostPort, res: LONGINT;
+			len: SIZE;
+			hostPort, res: LONGINT;
 		BEGIN
 			socket.Send(target, port, cmd, 0, Strings.Length(cmd), res);
 			socket.Receive(resp, 0, LEN(ack), CommandTimeout, hostAdr, hostPort, len, res);

@@ -33,7 +33,7 @@ VAR
 		Opens a new channel on 'socket'. The socket cannot be used in another way than with channels.
 		If remoteIP is not a valid IP address, the first datagram received on the socket will bind the channel to its sender.
 	*)
-	PROCEDURE NewChannel * (VAR channel: Channel; socket: EnetUdp.Socket; remoteIp: EnetBase.IpAddr; remotePort: EnetBase.Int; VAR result: EnetBase.Int): BOOLEAN;
+	PROCEDURE NewChannel * (VAR channel: Channel; socket: EnetUdp.Socket; remoteIp: EnetBase.IpAddr; remotePort: EnetBase.Int; VAR res: EnetBase.ResultCode): BOOLEAN;
 	VAR
 		ch: ANY;
 	BEGIN
@@ -51,7 +51,7 @@ VAR
 		IF ~EnetBase.IsValidIpAddr(remoteIp) & (remotePort < 0) THEN RETURN FALSE END;
 		channel.remoteIp := remoteIp;
 		channel.remotePort := remotePort;
-		IF ~EnetUdp.SetRecvHandler(socket, HandlePacket, result) THEN RETURN FALSE END;
+		IF ~EnetUdp.SetRecvHandler(socket, HandlePacket, res) THEN RETURN FALSE END;
 		RETURN TRUE
 	END NewChannel;
 
@@ -62,7 +62,7 @@ VAR
 	END SetReceiveHandler;
 
 	(** Send the [data[ofs], data[ofs + len]) on the channel. Send can only succeed on a bound channel. *)
-	PROCEDURE Send * (channel: Channel; CONST data: ARRAY OF CHAR; ofs, len: EnetBase.Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: EnetBase.Int): BOOLEAN;
+	PROCEDURE Send * (channel: Channel; CONST data: ARRAY OF CHAR; ofs, len: EnetBase.Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: EnetBase.ResultCode): BOOLEAN;
 	BEGIN
 		IF ~EnetBase.IsValidIpAddr(channel.remoteIp) OR (channel.remotePort < 0) THEN res := ErrUnboundChannel; RETURN FALSE END;
 		RETURN EnetUdp.SendTo(channel.socket, channel.remoteIp, channel.remotePort, data, ofs, len, flags, completionHandler, res)
@@ -87,7 +87,7 @@ VAR
 	PROCEDURE HandlePacket (socket: EnetUdp.Socket; CONST srcAddr: EnetBase.IpAddr; srcPort: EnetBase.Int; VAR data: ARRAY OF CHAR; dataOffs, dataLen: EnetBase.Int; packet: EnetBase.Packet);
 	VAR
 		channel: Channel;
-		res: EnetBase.Int;
+		res: EnetBase.ResultCode;
 	BEGIN
 		channel := socket.recvHandlerParam(Channel);
 		WHILE (channel # NIL) &
@@ -125,7 +125,7 @@ VAR
 		ASSERT(EnetBase.PacketFifoPut(channel.channelHandlerParam(EnetStreams.Reader).enetPackets, packet))
 	END StreamReceiveHandler;
 
-	PROCEDURE SendFromStreamWriter (access: ANY; CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; flags: SET; VAR res: LONGINT);
+	PROCEDURE SendFromStreamWriter (access: ANY; CONST buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; flags: SET; VAR res: EnetBase.ResultCode);
 	VAR
 		ignore: BOOLEAN;
 	BEGIN

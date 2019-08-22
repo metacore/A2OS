@@ -12,8 +12,10 @@ TYPE
 	Int16* = INTEGER;
 	Int32* = LONGINT;
 
-	Int* = LONGINT; (** system signed integer type *)
+	Int* = SIZE; (** system signed integer type *)
 	UInt* = ADDRESS; (** system unsigned integer type *)
+	
+	ResultCode* = WORD;
 
 	UnalignedInt32 = EnetUtils.UnalignedInt32;
 
@@ -239,7 +241,7 @@ TYPE
 	IpAddrCache* = POINTER TO IpAddrCacheDesc;
 	IpAddrCacheDesc* = RECORD
 		cleanCache*: PROCEDURE{DELEGATE}(cache: IpAddrCache; cleanStatic: BOOLEAN);
-		addStaticEntry*: PROCEDURE{DELEGATE}(cache: IpAddrCache; CONST ipAddr: IpAddr; CONST macAddr: MacAddr; VAR res: Int): BOOLEAN;
+		addStaticEntry*: PROCEDURE{DELEGATE}(cache: IpAddrCache; CONST ipAddr: IpAddr; CONST macAddr: MacAddr; VAR res: ResultCode): BOOLEAN;
 		enumerateEntries*: PROCEDURE{DELEGATE}(cache: IpAddrCache; enumerator: PROCEDURE{DELEGATE}(entry: IpAddrCacheEntry));
 		acquireWrite*, acquireRead*: PROCEDURE{DELEGATE}();
 		releaseWrite*, releaseRead*: PROCEDURE{DELEGATE}();
@@ -255,7 +257,7 @@ TYPE
 	END;
 
 	(** IP address resolution procedure *)
-	IpAddrResolver* = PROCEDURE{DELEGATE}(intf: Interface; CONST ipAddr: IpAddr; VAR macAddr: MacAddr; completionHandler: TaskHandler; VAR res: Int): BOOLEAN;
+	IpAddrResolver* = PROCEDURE{DELEGATE}(intf: Interface; CONST ipAddr: IpAddr; VAR macAddr: MacAddr; completionHandler: TaskHandler; VAR res: ResultCode): BOOLEAN;
 
 	(**
 		Network interface
@@ -263,7 +265,7 @@ TYPE
 	Interface* = POINTER TO InterfaceDesc;
 	InterfaceDesc* = RECORD
 
-		start*, stop*, reset*, finalize*: PROCEDURE{DELEGATE}(intf: Interface; VAR res: Int): BOOLEAN;
+		start*, stop*, reset*, finalize*: PROCEDURE{DELEGATE}(intf: Interface; VAR res: ResultCode): BOOLEAN;
 
 		(**
 			IPv4 network settings
@@ -315,18 +317,18 @@ TYPE
 	LinkDeviceDesc* = RECORD
 		macAddr*: MacAddr; (** MAC address of the device *)
 
-		phyWrite*: PROCEDURE(dev: LinkDevice; phyAddr, regAddr: UInt; data: UInt; VAR res: Int): BOOLEAN;
-		phyRead*: PROCEDURE(dev: LinkDevice; phyAddr, regAddr: UInt; VAR data: UInt; VAR res: Int): BOOLEAN;
-		setMacAddr*: PROCEDURE(dev: LinkDevice; CONST macAddr: MacAddr; VAR res: Int): BOOLEAN;
-		setLinkSpeed*: PROCEDURE(dev: LinkDevice; CONST speed: ARRAY OF CHAR; fullDuplex: BOOLEAN; VAR res: Int): BOOLEAN;
-		setOptions*: PROCEDURE(dev: LinkDevice; optionsPage: Int; options: SET; VAR res: Int): BOOLEAN;
-		start*, stop*, reset*, finalize*: PROCEDURE(dev: LinkDevice; VAR res: Int): BOOLEAN;
+		phyWrite*: PROCEDURE(dev: LinkDevice; phyAddr, regAddr: UInt; data: UInt; VAR res: ResultCode): BOOLEAN;
+		phyRead*: PROCEDURE(dev: LinkDevice; phyAddr, regAddr: UInt; VAR data: UInt; VAR res: ResultCode): BOOLEAN;
+		setMacAddr*: PROCEDURE(dev: LinkDevice; CONST macAddr: MacAddr; VAR res: ResultCode): BOOLEAN;
+		setLinkSpeed*: PROCEDURE(dev: LinkDevice; CONST speed: ARRAY OF CHAR; fullDuplex: BOOLEAN; VAR res: ResultCode): BOOLEAN;
+		setOptions*: PROCEDURE(dev: LinkDevice; optionsPage: Int; options: SET; VAR res: ResultCode): BOOLEAN;
+		start*, stop*, reset*, finalize*: PROCEDURE(dev: LinkDevice; VAR res: ResultCode): BOOLEAN;
 		newPacket*: PROCEDURE(): Packet;
-		setPacketPayload*: PROCEDURE(dev: LinkDevice; packet: Packet; CONST data: ARRAY OF CHAR; offset: Int; flags: SET; VAR res: Int): BOOLEAN;
-		sendPacket*: PROCEDURE(dev: LinkDevice; packet: Packet; flags: SET; completionHandler: TaskHandler; VAR res: Int): BOOLEAN;
+		setPacketPayload*: PROCEDURE(dev: LinkDevice; packet: Packet; CONST data: ARRAY OF CHAR; offset: Int; flags: SET; VAR res: ResultCode): BOOLEAN;
+		sendPacket*: PROCEDURE(dev: LinkDevice; packet: Packet; flags: SET; completionHandler: TaskHandler; VAR res: ResultCode): BOOLEAN;
 
-		updateRx*: PROCEDURE(dev: LinkDevice; VAR res: Int): BOOLEAN; (** update receive path *)
-		updateTx*: PROCEDURE(dev: LinkDevice; VAR res: Int): BOOLEAN; (** update transmit path *)
+		updateRx*: PROCEDURE(dev: LinkDevice; VAR res: ResultCode): BOOLEAN; (** update receive path *)
+		updateTx*: PROCEDURE(dev: LinkDevice; VAR res: ResultCode): BOOLEAN; (** update transmit path *)
 
 		rxPacketPool*: PacketFifo;
 		txPacketPool*: PacketFifo;
@@ -416,7 +418,7 @@ TYPE
 	(**
 		Process received packets for agiven interface
 	*)
-	PROCEDURE ProcessIntfRecvPackets*(intf: Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE ProcessIntfRecvPackets*(intf: Interface; VAR res: ResultCode): BOOLEAN;
 	VAR
 		packet: Packet;
 		packetHandler: PacketHandler;
@@ -481,7 +483,7 @@ TYPE
 	(**
 		Process interface-specific tasks
 	*)
-	PROCEDURE ProcessIntfTasks*(intf: Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE ProcessIntfTasks*(intf: Interface; VAR res: ResultCode): BOOLEAN;
 	VAR
 		t: EnetTiming.Time;
 		task: TaskHandler;

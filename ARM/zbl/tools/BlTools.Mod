@@ -193,7 +193,7 @@ VAR
 		file: Files.File;
 		reader: Files.Reader;
 		r: Resource;
-		len: LONGINT;
+		len: SIZE;
 	BEGIN
 		IF context.arg.GetString(resource) THEN
 			IF context.arg.GetString(algorithm) THEN
@@ -437,7 +437,7 @@ VAR
 	PROCEDURE Command * (context: Commands.Context);
 	VAR
 		cmd: ARRAY 1024 OF CHAR;
-		len: LONGINT;
+		len: SIZE;
 	BEGIN
 		context.arg.Bytes(cmd, 0, context.arg.Available(), len);
 		IF session.ExecuteCommand(cmd) THEN

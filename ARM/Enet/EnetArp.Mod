@@ -28,6 +28,7 @@ TYPE
 	Int32 = EnetBase.Int32;
 	Int16 = EnetBase.Int16;
 	Int = EnetBase.Int;
+	ResultCode = EnetBase.ResultCode;
 
 	(**
 		ARP cache
@@ -179,7 +180,7 @@ TYPE
 	(*
 		Make an ARP announcement on a given network interface
 	*)
-	PROCEDURE ArpAnnouncement(intf: EnetBase.Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE ArpAnnouncement(intf: EnetBase.Interface; VAR res: ResultCode): BOOLEAN;
 	VAR packet: EnetBase.Packet;
 	BEGIN
 		IF ~Interfaces.GetTxPacket(intf,packet) THEN
@@ -211,7 +212,7 @@ TYPE
 	(**
 		Send an ARP request for resolving a given IP address
 	*)
-	PROCEDURE ArpRequest(intf: EnetBase.Interface; CONST ipv4AddrToResolve: Int32; VAR res: Int): BOOLEAN;
+	PROCEDURE ArpRequest(intf: EnetBase.Interface; CONST ipv4AddrToResolve: Int32; VAR res: ResultCode): BOOLEAN;
 	VAR
 		packet: EnetBase.Packet;
 	BEGIN
@@ -249,7 +250,7 @@ TYPE
 		cache: ArpCache;
 		entry: ArpEntry;
 		srcIpAddr: Int32;
-		res: Int;
+		res: ResultCode;
 		completionHandler, timeoutHandler: EnetBase.TaskHandler;
 	BEGIN
 		IF (packet.arpHdr.hwType = ArpHwTypeEth) & (packet.arpHdr.protoType = EnetBase.EtherTypeIpv4) & (packet.arpHdr.dstIpAddr = intf.ipv4Addr.addr[0]) THEN
@@ -300,7 +301,7 @@ TYPE
 											entry: ArpEntry;
 											completionHandler: EnetBase.TaskHandler;
 											handleTimeout: BOOLEAN;
-											VAR res: Int): BOOLEAN;
+											VAR res: ResultCode): BOOLEAN;
 	VAR
 		i: Int;
 		b: BOOLEAN;
@@ -326,7 +327,7 @@ TYPE
 	(*
 		Resolve IPv4 address, thread-safe
 	*)
-	PROCEDURE ResolveIpv4Addr(intf: EnetBase.Interface; CONST ipAddr: EnetBase.IpAddr; VAR macAddr: EnetBase.MacAddr; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ResolveIpv4Addr(intf: EnetBase.Interface; CONST ipAddr: EnetBase.IpAddr; VAR macAddr: EnetBase.MacAddr; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR
 		cache: ArpCache;
 		entry: ArpEntry;
@@ -411,7 +412,7 @@ TYPE
 	(*
 		Add a static entry to the address resolution table
 	*)
-	PROCEDURE AddStaticEntry(cache: EnetBase.IpAddrCache; CONST ipAddr: EnetBase.IpAddr; CONST macAddr: EnetBase.MacAddr; VAR res: Int): BOOLEAN;
+	PROCEDURE AddStaticEntry(cache: EnetBase.IpAddrCache; CONST ipAddr: EnetBase.IpAddr; CONST macAddr: EnetBase.MacAddr; VAR res: ResultCode): BOOLEAN;
 	VAR
 		i: Int;
 		entry: ArpEntry;
@@ -554,7 +555,7 @@ TYPE
 		cache: ArpCache;
 		entry: ArpEntry;
 		t: EnetTiming.Time;
-		i, res: Int;
+		i: Int; res: ResultCode;
 		requestedEntryUpdate: BOOLEAN;
 	BEGIN
 		intf := handler.param(EnetBase.Interface);

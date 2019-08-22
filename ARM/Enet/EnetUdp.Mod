@@ -14,6 +14,7 @@ TYPE
 	Int32 = EnetBase.Int32;
 	Int16 = EnetBase.Int16;
 	Int = EnetBase.Int;
+	ResultCode = EnetBase.ResultCode;
 
 	(* UDP received datagram handler *)
 	RecvDatagramHandler* = PROCEDURE{DELEGATE}(
@@ -64,7 +65,7 @@ VAR
 	PROCEDURE NewSocket*(
 										VAR socket: Socket;
 										localPort: Int;
-										VAR res: Int
+										VAR res: ResultCode
 									): BOOLEAN;
 	BEGIN
 		IF numSockets >= MaxNumSockets THEN
@@ -98,7 +99,7 @@ VAR
 	(**
 		Setup socket's received datagram handler
 	*)
-	PROCEDURE SetRecvHandler*(socket: Socket; recvHandler: RecvDatagramHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE SetRecvHandler*(socket: Socket; recvHandler: RecvDatagramHandler; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		socket.recvHandler := recvHandler;
 		res := 0;
@@ -108,7 +109,7 @@ VAR
 	(**
 		Setup default destination of datagrams sent on a given socket using Send procedure
 	*)
-	PROCEDURE SetDestination*(socket: Socket; CONST sendToIpAddr: EnetBase.IpAddr; sendToPort: Int; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE SetDestination*(socket: Socket; CONST sendToIpAddr: EnetBase.IpAddr; sendToPort: Int; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		IF (sendToPort <= 0) OR (sendToPort >= 65535) THEN
 			res := EnetBase.ErrInvalidValue;
@@ -127,7 +128,7 @@ VAR
 	(**
 		Send a datagram on a given socket
 	*)
-	PROCEDURE Send*(socket: Socket; CONST data: ARRAY OF CHAR; offset, length: Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE Send*(socket: Socket; CONST data: ARRAY OF CHAR; offset, length: Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR
 		packet: EnetBase.Packet;
 		intf: EnetBase.Interface;
@@ -178,7 +179,7 @@ VAR
 	(**
 		Send at datagram on a given socket to a specified destination
 	*)
-	PROCEDURE SendTo*(socket: Socket; CONST sendToIpAddr: EnetBase.IpAddr; sendToPort: LONGINT; CONST data: ARRAY OF CHAR; offset, length: Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE SendTo*(socket: Socket; CONST sendToIpAddr: EnetBase.IpAddr; sendToPort: LONGINT; CONST data: ARRAY OF CHAR; offset, length: Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR
 		packet: EnetBase.Packet;
 		intf: EnetBase.Interface;

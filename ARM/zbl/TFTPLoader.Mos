@@ -18,7 +18,7 @@ VAR
 	END Load;
 
 	(** Handler for TFTP protocol *)
-	PROCEDURE TftpReceiver (transfer: EnetTftp.Transfer; VAR buf: ARRAY OF CHAR; ofs, len, res: LONGINT; packet: EnetBase.Packet; endOfFile: BOOLEAN);
+	PROCEDURE TftpReceiver (transfer: EnetTftp.Transfer; VAR buf: ARRAY OF CHAR; ofs, len: EnetBase.Int; res: EnetBase.ResultCode; packet: EnetBase.Packet; endOfFile: BOOLEAN);
 	BEGIN
 		ASSERT(transfer = tx);
 		IF (res = 0) & (len > 0) THEN

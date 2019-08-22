@@ -15,6 +15,7 @@ TYPE
 	Int16 = EnetBase.Int16;
 	Int = EnetBase.Int;
 	UInt = EnetBase.UInt;
+	ResultCode = EnetBase.ResultCode;
 
 	Packet = EnetBase.Packet;
 	IpAddr = EnetBase.IpAddr;
@@ -36,7 +37,7 @@ VAR
 	PROCEDURE InitInterface*(
 										intf: Interface;
 										dev: EnetBase.LinkDevice;
-										VAR res: Int
+										VAR res: ResultCode
 										): BOOLEAN;
 	BEGIN
 		IF intf = NIL THEN res := EnetBase.ErrInvalidValue; RETURN FALSE; END;
@@ -52,7 +53,7 @@ VAR
 	(**
 		Register an interface
 	*)
-	PROCEDURE Add*(intf: Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Add*(intf: Interface; VAR res: ResultCode): BOOLEAN;
 	VAR
 		b: BOOLEAN;
 		i: Int;
@@ -82,7 +83,7 @@ VAR
 	(**
 		Start a network interface; thread-safe in case if multithreading is enabled
 	*)
-	PROCEDURE Start*(intf: Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Start*(intf: Interface; VAR res: ResultCode): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN intf.dev.acquireTx; intf.dev.acquireRx; END;
@@ -94,8 +95,8 @@ VAR
 	(**
 		Start all network interfaces
 	*)
-	PROCEDURE StartAll*(VAR res: Int): BOOLEAN;
-	VAR i, r: Int;
+	PROCEDURE StartAll*(VAR res: ResultCode): BOOLEAN;
+	VAR i: Int; r: ResultCode;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN acquireIntfsRead; END;
 		res := 0;
@@ -109,7 +110,7 @@ VAR
 	(**
 		Stop a network interface; thread-safe in case if multithreading is enabled
 	*)
-	PROCEDURE Stop*(intf: Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Stop*(intf: Interface; VAR res: ResultCode): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN intf.dev.acquireTx; intf.dev.acquireRx; END;
@@ -121,8 +122,8 @@ VAR
 	(**
 		Stop all network interfaces
 	*)
-	PROCEDURE StopAll*(VAR res: Int): BOOLEAN;
-	VAR i, r: Int;
+	PROCEDURE StopAll*(VAR res: ResultCode): BOOLEAN;
+	VAR i: Int; r: ResultCode;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN acquireIntfsRead; END;
 		res := 0;
@@ -136,7 +137,7 @@ VAR
 	(**
 		Reset a network interface; thread-safe in case if multithreading is enabled
 	*)
-	PROCEDURE Reset*(intf: Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Reset*(intf: Interface; VAR res: ResultCode): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN intf.dev.acquireTx; intf.dev.acquireRx; END;
@@ -148,8 +149,8 @@ VAR
 	(**
 		Reset all network interfaces
 	*)
-	PROCEDURE ResetAll*(VAR res: Int): BOOLEAN;
-	VAR i, r: Int;
+	PROCEDURE ResetAll*(VAR res: ResultCode): BOOLEAN;
+	VAR i: Int; r: ResultCode;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN acquireIntfsRead; END;
 		res := 0;
@@ -163,7 +164,7 @@ VAR
 	(**
 		Set MAC address for a given network interface
 	*)
-	PROCEDURE SetMacAddr*(intf: Interface; CONST macAddr: MacAddr; VAR res: Int): BOOLEAN;
+	PROCEDURE SetMacAddr*(intf: Interface; CONST macAddr: MacAddr; VAR res: ResultCode): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN intf.dev.acquireTx; intf.dev.acquireRx; END;
@@ -175,7 +176,7 @@ VAR
 	(**
 		Setup interface link
 	*)
-	PROCEDURE SetLinkSpeed*(intf: Interface; CONST linkSpeed: ARRAY OF CHAR; fullDuplex: BOOLEAN; VAR res: Int): BOOLEAN;
+	PROCEDURE SetLinkSpeed*(intf: Interface; CONST linkSpeed: ARRAY OF CHAR; fullDuplex: BOOLEAN; VAR res: ResultCode): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN intf.dev.acquireTx; intf.dev.acquireRx; END;
@@ -192,7 +193,7 @@ VAR
 										CONST ipAddr: IpAddr;
 										CONST subnetMask: IpAddr;
 										CONST gateway: IpAddr;
-										VAR res: Int
+										VAR res: ResultCode
 										): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
@@ -240,7 +241,7 @@ VAR
 	(**
 		Send a packet via a given interface; thread-safe
 	*)
-	PROCEDURE SendPacket*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE SendPacket*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN intf.dev.acquireTx; END;
@@ -252,7 +253,7 @@ VAR
 	(**
 		Forward an Ethernet packet to a given destination
 	*)
-	PROCEDURE ForwardEth*(intf: Interface; packet: Packet; CONST dstMacAddr: MacAddr; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ForwardEth*(intf: Interface; packet: Packet; CONST dstMacAddr: MacAddr; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		packet.ethFrameHdr.dstMacAddr := dstMacAddr;
 		packet.ethFrameHdr.srcMacAddr := intf.dev.macAddr;
@@ -260,7 +261,7 @@ VAR
 	END ForwardEth;
 
 	(** Send a reply based on the received packet at the level of Ethernet *)
-	PROCEDURE ReplyEth*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ReplyEth*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		packet.ethFrameHdr.dstMacAddr := packet.ethFrameHdr.srcMacAddr;
 		packet.ethFrameHdr.srcMacAddr := intf.dev.macAddr;
@@ -268,7 +269,7 @@ VAR
 	END ReplyEth;
 
 	(** Forward an IP packet to a given destination *)
-	PROCEDURE ForwardIp*(intf: Interface; packet: Packet; CONST dstIpAddr: IpAddr; CONST dstMacAddr: MacAddr; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ForwardIp*(intf: Interface; packet: Packet; CONST dstIpAddr: IpAddr; CONST dstMacAddr: MacAddr; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		IF EnetBase.FlagIpv6 IN flags THEN (* IPv6 *)
 			HALT(100);
@@ -280,7 +281,7 @@ VAR
 	END ForwardIp;
 
 	(** Send a reply based on the received packet at the level of IP protocol *)
-	PROCEDURE ReplyIp*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ReplyIp*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		IF EnetBase.FlagIpv6 IN flags THEN (* IPv6 *)
 			HALT(100);
@@ -292,7 +293,7 @@ VAR
 	END ReplyIp;
 
 	(** Forward an UDP packet to a given destination *)
-	PROCEDURE ForwardUdp*(intf: Interface; packet: Packet; CONST dstIpAddr: IpAddr; srcPort, dstPort: Int16; CONST dstMacAddr: MacAddr; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ForwardUdp*(intf: Interface; packet: Packet; CONST dstIpAddr: IpAddr; srcPort, dstPort: Int16; CONST dstMacAddr: MacAddr; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	BEGIN
 		packet.udpHdr.srcPort := srcPort;
 		packet.udpHdr.dstPort := dstPort;
@@ -300,7 +301,7 @@ VAR
 	END ForwardUdp;
 
 	(** Send a reply based on the received packet at the level of UDP protocol *)
-	PROCEDURE ReplyUdp*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ReplyUdp*(intf: Interface; packet: Packet; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR port: Int16;
 	BEGIN
 		(*
@@ -313,7 +314,7 @@ VAR
 	END ReplyUdp;
 
 	(** Resolve an IP address *)
-	PROCEDURE ResolveIpAddr*(CONST ipAddr: IpAddr; VAR macAddr: MacAddr; VAR intf: Interface; completionHandler: EnetBase.TaskHandler; VAR res: Int): BOOLEAN;
+	PROCEDURE ResolveIpAddr*(CONST ipAddr: IpAddr; VAR macAddr: MacAddr; VAR intf: Interface; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR
 		i: Int;
 		b: BOOLEAN;
@@ -354,7 +355,7 @@ VAR
 	END ResolveIpAddr;
 
 	(** Update the state of a network interface; to be called regularly in a loop *)
-	PROCEDURE Update*(intf: Interface; VAR res: Int): BOOLEAN;
+	PROCEDURE Update*(intf: Interface; VAR res: ResultCode): BOOLEAN;
 	VAR b: BOOLEAN;
 	BEGIN
 
@@ -377,8 +378,8 @@ VAR
 	(**
 		Update the state of all network interfaces
 	*)
-	PROCEDURE UpdateAll*(VAR res: Int): BOOLEAN;
-	VAR i, r: Int;
+	PROCEDURE UpdateAll*(VAR res: ResultCode): BOOLEAN;
+	VAR i: Int; r: ResultCode;
 	BEGIN
 		IF EnetBase.ThreadSafe THEN acquireIntfsRead; END;
 		res := 0;

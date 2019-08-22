@@ -12,6 +12,7 @@ TYPE
 	Int16 = EnetBase.Int16;
 	Int = EnetBase.Int;
 	UInt = EnetBase.UInt;
+	ResultCode = EnetBase.ResultCode;
 
 CONST
 
@@ -148,7 +149,7 @@ CONST
 		allowZeroPhyAddr: TRUE to allow the use of PHY address 0
 		res: error code
 	*)
-	PROCEDURE DetectPhy*(dev: EnetBase.LinkDevice; VAR phyAddr: UInt; allowZeroPhyAddr: BOOLEAN; VAR res: Int): BOOLEAN;
+	PROCEDURE DetectPhy*(dev: EnetBase.LinkDevice; VAR phyAddr: UInt; allowZeroPhyAddr: BOOLEAN; VAR res: ResultCode): BOOLEAN;
 	VAR
 		minAddr: UInt;
 		d1, d2: UInt;
@@ -181,7 +182,7 @@ CONST
 	(**
 		Reset a PHY device
 	*)
-	PROCEDURE ResetPhy*(dev: EnetBase.LinkDevice; phyAddr: UInt; timeoutInMs: EnetTiming.Time; VAR res: Int): BOOLEAN;
+	PROCEDURE ResetPhy*(dev: EnetBase.LinkDevice; phyAddr: UInt; timeoutInMs: EnetTiming.Time; VAR res: ResultCode): BOOLEAN;
 	VAR
 		d: UInt;
 		t: EnetTiming.Timer;

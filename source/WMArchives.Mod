@@ -70,7 +70,7 @@ TYPE
 			tree := t; node := n
 		END New;
 
-		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : WORD) : WMDropTarget.DropInterface;
 		VAR di : ArchiveDropInterface;
 		BEGIN
 			IF type = WMDropTarget.TypeFiles THEN
@@ -163,7 +163,7 @@ TYPE
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
 			length: SIZE;
-			w : LONGINT;
+			w : SIZE;
 			a : ANY;
 			s : Strings.String;
 		BEGIN
@@ -174,7 +174,7 @@ TYPE
 				NEW(draggedString, LEN(s^)+64);
 				AppendToArchiveName(s^, draggedString^);
 				length := Strings.Length(draggedString^) * 7;
-				IF length > 400 THEN w := 400 ELSE w := LONGINT(length) END;
+				IF length > 400 THEN w := 400 ELSE w := length END;
 				NEW(img); Raster.Create(img, w, 25, Raster.BGRA8888);
 				NEW(c, img); c.SetColor(LONGINT(0FFFF00FFH));
 				c.Fill(WMRectangles.MakeRect(0, 0, w, 25), 0FF80H, WMGraphics.ModeCopy);
@@ -495,7 +495,7 @@ TYPE
 
 		(* dest := archive.name || :// || src *)
 		PROCEDURE AppendToArchiveName(CONST src: ARRAY OF CHAR;  VAR dest : ARRAY OF CHAR);
-		VAR i, j : LONGINT;
+		VAR i, j : SIZE;
 		BEGIN
 			i := 0;
 			WHILE archiveName[i] # 0X DO dest[i] := archiveName[i]; INC(i) END;
@@ -534,7 +534,7 @@ TYPE
 		popup : WMPopups.Popup;
 		px, py: SIZE;
 		node : WMTrees.TreeNode;
-		curFiles, curFolders, curBytes : LONGINT;
+		curFiles, curFolders, curBytes : SIZE;
 
 		PROCEDURE &New*(c : WMRestorable.Context);
 		VAR vc : WMComponents.VisualComponent; xml : XML.Element; s : Strings.String;
@@ -647,7 +647,7 @@ TYPE
 
 		(* removes the multiline input *)
 		PROCEDURE FixFilename(VAR filename : ARRAY OF CHAR);
-		VAR i : LONGINT; found : BOOLEAN;
+		VAR i : SIZE; found : BOOLEAN;
 		BEGIN
 			i := 0;
 			WHILE (i < LEN(filename)) & ~found DO
@@ -674,7 +674,7 @@ TYPE
 			tree : WMTrees.Tree; entry : NodeEntry;
 			any : ANY;
 			string : Strings.String; temp : ARRAY 128 OF CHAR;
-			counter, tempInt : LONGINT;
+			counter, tempInt : SIZE;
 			img : WMGraphics.Image;
 		BEGIN
 			IF (sender IS WMTrees.TreeView) & (data IS WMTrees.TreeNode) THEN
@@ -869,7 +869,7 @@ TYPE
 		PROCEDURE DeleteEntries(sender, data : ANY);
 		VAR parent : WMTrees.TreeNode;
 			entry : NodeEntry; entryInfo : ANY; s : Strings.String;
-			dr : LONGINT; i : SIZE; name : ARRAY 128 OF CHAR;
+			dr : WORD; i : SIZE; name : ARRAY 128 OF CHAR;
 			delete, always, never : BOOLEAN;
 		BEGIN
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -960,7 +960,7 @@ TYPE
 		PROCEDURE MyStartDrag(sender, data : ANY);
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top: LONGINT; i : SIZE;
+			top, i : SIZE;
 		BEGIN
 			selection := GetSelection();
 			(* render to bitmap *)
@@ -1051,7 +1051,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIZE;
 	ProtShowFiles, ProtShowImgPrev : WMProperties.BooleanProperty;
 	StrArchiveTree : Strings.String;
 
@@ -1059,7 +1059,7 @@ VAR
 
 (* copy the head of string to head and the tail of string to tail *)
 PROCEDURE SplitString(string : Strings.String;  VAR head, tail : Strings.String; index : SIZE);
-VAR i : LONGINT;
+VAR i : SIZE;
 BEGIN
 	NEW(head, index+1);
 	NEW(tail, LEN(string^)-index);

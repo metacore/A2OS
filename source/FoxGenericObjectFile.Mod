@@ -1,7 +1,7 @@
 MODULE FoxGenericObjectFile; (** AUTHOR "negelef"; PURPOSE "Generic Object File Writer"; *)
 
 IMPORT
-	StringPool, Streams, Commands, Basic := FoxBasic, Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode,
+	Streams, Commands, Basic := FoxBasic, Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode,
 	SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode,
 	Fingerprinter := FoxFingerprinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 
@@ -51,7 +51,7 @@ TYPE
 				RETURN TRUE
 			END ExportSection;
 
-			PROCEDURE MergeSections (sections: Sections.SectionList): BOOLEAN;
+			PROCEDURE MergeSections (module: Sections.Module): BOOLEAN;
 			VAR
 				section: Sections.Section;
 				i: SIZE;
@@ -62,112 +62,132 @@ TYPE
 				alias: BinaryCode.Alias;
 				irSection: IntermediateCode.Section;
 				exported: BOOLEAN;
+				sections: Sections.SectionList;
+				prefix: SyntaxTree.IdentifierString;
+				export: SIZE;
 			BEGIN
-				codeAlign := 0; dataAlign := 0; constAlign := 0;
-				FOR i := 0 TO sections.Length() - 1 DO
-					section := sections.GetSection(i);
-					resolved := section(IntermediateCode.Section).resolved;
-					IF resolved = NIL THEN RETURN FALSE END;
+				sections := module.allSections;
+				FOR export := 0 TO module.exports.Length()-1 DO
+					prefix := module.exports.GetName(export); 
+					codeSection := NIL; dataSection := NIL; constSection := NIL; 
+					codeAlign := 0; dataAlign := 0; constAlign := 0;
+					codeUnit := 0; dataUnit := 0; constUnit := 0; 
+					FOR i := 0 TO sections.Length() - 1 DO
 
-					IF (resolved # NIL)  & (resolved.pc # 0) & (~resolved.os.fixed) THEN
-						IF section.type = ObjectFile.Code THEN
-							codeAlign := CommonAlignment(codeAlign, resolved.os.alignment);
-							ASSERT((codeUnit=0) OR (codeUnit = resolved.os.unit));
-							codeUnit := resolved.os.unit;
-						ELSIF section.type = ObjectFile.Data THEN
-							dataAlign := CommonAlignment(dataAlign, resolved.os.alignment);
-							ASSERT((dataUnit=0) OR (dataUnit = resolved.os.unit));
-							dataUnit := resolved.os.unit;
-						ELSIF section.type = ObjectFile.Const THEN
-							constAlign := CommonAlignment(constAlign, resolved.os.alignment);
-							ASSERT((constUnit=0) OR (constUnit = resolved.os.unit));
-							constUnit := resolved.os.unit;
+						section := sections.GetSection(i);
+						sname := prefix;
+						IF Basic.IsPrefix(sname, section.name) THEN						
+							resolved := section(IntermediateCode.Section).resolved;
+							IF resolved = NIL THEN RETURN FALSE END;
+
+							IF (resolved # NIL)  & (resolved.pc # 0) & (~resolved.os.fixed) THEN
+								IF section.type = ObjectFile.Code THEN
+									codeAlign := CommonAlignment(codeAlign, resolved.os.alignment);
+									ASSERT((codeUnit=0) OR (codeUnit = resolved.os.unit));
+									codeUnit := resolved.os.unit;
+								ELSIF section.type = ObjectFile.Data THEN
+									dataAlign := CommonAlignment(dataAlign, resolved.os.alignment);
+									ASSERT((dataUnit=0) OR (dataUnit = resolved.os.unit));
+									dataUnit := resolved.os.unit;
+								ELSIF section.type = ObjectFile.Const THEN
+									constAlign := CommonAlignment(constAlign, resolved.os.alignment);
+									ASSERT((constUnit=0) OR (constUnit = resolved.os.unit));
+									constUnit := resolved.os.unit;
+								END;
+							END;
 						END;
 					END;
-				END;
-				IF codeUnit > 0 THEN
-					sname := module.moduleName;
-					Basic.AppendToSegmentedName(sname,".@CodeSections");
-					codeSection := BinaryCode.NewBinarySection(ObjectFile.Code, codeUnit, sname, FALSE, FALSE);
-					codeSection.SetAlignment(FALSE,codeAlign);
-				END;
-				IF dataUnit > 0 THEN
-					sname := module.moduleName;
-					Basic.AppendToSegmentedName(sname,".@DataSections");
-					dataSection := BinaryCode.NewBinarySection(ObjectFile.Data, dataUnit, sname, FALSE, FALSE);
-					dataSection.SetAlignment(FALSE,dataAlign);
-				END;
-				IF constUnit > 0 THEN
-					sname := module.moduleName;
-					Basic.AppendToSegmentedName(sname,".@ConstSections");
-					constSection := BinaryCode.NewBinarySection(ObjectFile.Const, constUnit, sname, FALSE, FALSE);
-					constSection.SetAlignment(FALSE,constAlign);
-				END;
-				(*TRACE(codeAlign, dataAlign, constAlign);*)
-				(*codeAlign := 0; dataAlign := 0; constAlign := 0;*)
-				FOR i := 0 TO sections.Length() - 1 DO
-					section := sections.GetSection(i);
-					resolved := section(IntermediateCode.Section).resolved;
-					exported := section(IntermediateCode.Section).exported;
-					IF (resolved # NIL) & (resolved.pc # 0) & (~resolved.os.fixed)  THEN
-						IF section.type = ObjectFile.Code THEN
-							IF resolved.os.alignment # 0 THEN
-							codeSection.Align(resolved.os.alignment);
-							END;
-							resolved.os.identifier.fingerprint := GetFingerprint (section, fingerprinter);
+					IF codeUnit > 0 THEN
+						sname := prefix;
+						Basic.AppendToSegmentedName(sname,".@CodeSections");
+						codeSection := BinaryCode.NewBinarySection(ObjectFile.Code, codeUnit, sname, FALSE, FALSE);
+						codeSection.SetAlignment(FALSE,codeAlign);
+					END;
+					IF dataUnit > 0 THEN
+						sname := prefix;
+						Basic.AppendToSegmentedName(sname,".@DataSections");
+						dataSection := BinaryCode.NewBinarySection(ObjectFile.Data, dataUnit, sname, FALSE, FALSE);
+						dataSection.SetAlignment(FALSE,dataAlign);
+					END;
+					IF constUnit > 0 THEN
+						sname := prefix;
+						Basic.AppendToSegmentedName(sname,".@ConstSections");
+						constSection := BinaryCode.NewBinarySection(ObjectFile.Const, constUnit, sname, FALSE, FALSE);
+						constSection.SetAlignment(FALSE,constAlign);
+					END;
+					(*TRACE(codeAlign, dataAlign, constAlign);*)
+					(*codeAlign := 0; dataAlign := 0; constAlign := 0;*)
+					FOR i := 0 TO sections.Length() - 1 DO
+						section := sections.GetSection(i);
+						sname := prefix;
+						IF Basic.IsPrefix(sname, section.name) THEN						
+							resolved := section(IntermediateCode.Section).resolved;
+							exported := section(IntermediateCode.Section).exported;
+							IF (resolved # NIL) & (resolved.pc # 0) & (~resolved.os.fixed)  THEN
+								IF section.type = ObjectFile.Code THEN
+									IF resolved.os.alignment # 0 THEN
+									codeSection.Align(resolved.os.alignment);
+									END;
+									resolved.os.identifier.fingerprint := GetFingerprint (section, fingerprinter);
 
-							NEW(alias, resolved.os.identifier, codeSection.pc);
-							IF ~AliasOnlyExported OR exported THEN  codeSection.aliasList.AddAlias(alias) END;
-							section(IntermediateCode.Section).SetAlias(codeSection, codeSection.pc);
-							codeSection.CopyBits(resolved.os.bits,0, resolved.pc*codeUnit);
+									NEW(alias, resolved.os.identifier, codeSection.pc);
+									IF ~AliasOnlyExported OR exported THEN  codeSection.aliasList.AddAlias(alias) END;
+									section(IntermediateCode.Section).SetAlias(codeSection, codeSection.pc);
+									codeSection.CopyBits(resolved.os.bits,0, resolved.pc*codeUnit);
 
-						ELSIF section.type = ObjectFile.Data THEN
-							IF resolved.os.alignment # 0 THEN
-							dataSection.Align(resolved.os.alignment);
+								ELSIF section.type = ObjectFile.Data THEN
+									IF resolved.os.alignment # 0 THEN
+									dataSection.Align(resolved.os.alignment);
+									END;
+									resolved.os.identifier.fingerprint := GetFingerprint (section, fingerprinter);
+									NEW(alias, resolved.os.identifier, dataSection.pc);
+									IF ~AliasOnlyExported OR exported THEN dataSection.aliasList.AddAlias(alias) END;
+									section(IntermediateCode.Section).SetAlias(dataSection, dataSection.pc);
+									dataSection.CopyBits(resolved.os.bits,0, resolved.pc*dataUnit );
+								ELSIF section.type = ObjectFile.Const THEN
+									IF resolved.os.alignment # 0 THEN
+									constSection.Align(resolved.os.alignment);
+									END;
+									resolved.os.identifier.fingerprint := GetFingerprint (section, fingerprinter);
+									NEW(alias, resolved.os.identifier, constSection.pc);
+									IF ~AliasOnlyExported OR exported THEN constSection.aliasList.AddAlias(alias) END;
+									section(IntermediateCode.Section).SetAlias(constSection, constSection.pc);
+									constSection.CopyBits(resolved.os.bits,0, resolved.pc*constUnit);
+								END;
 							END;
-							resolved.os.identifier.fingerprint := GetFingerprint (section, fingerprinter);
-							NEW(alias, resolved.os.identifier, dataSection.pc);
-							IF ~AliasOnlyExported OR exported THEN dataSection.aliasList.AddAlias(alias) END;
-							section(IntermediateCode.Section).SetAlias(dataSection, dataSection.pc);
-							dataSection.CopyBits(resolved.os.bits,0, resolved.pc*dataUnit );
-						ELSIF section.type = ObjectFile.Const THEN
-							IF resolved.os.alignment # 0 THEN
-							constSection.Align(resolved.os.alignment);
-							END;
-							resolved.os.identifier.fingerprint := GetFingerprint (section, fingerprinter);
-							NEW(alias, resolved.os.identifier, constSection.pc);
-							IF ~AliasOnlyExported OR exported THEN constSection.aliasList.AddAlias(alias) END;
-							section(IntermediateCode.Section).SetAlias(constSection, constSection.pc);
-							constSection.CopyBits(resolved.os.bits,0, resolved.pc*constUnit);
 						END;
 					END;
-				END;
 
-				FOR i := 0 TO sections.Length() - 1 DO
-					section := sections.GetSection(i);
-					resolved := section(IntermediateCode.Section).resolved;
-					exported := section(IntermediateCode.Section).exported;
-					IF (section(IntermediateCode.Section).alias # NIL) THEN
-						CopyFixups(sections, resolved, section(IntermediateCode.Section).alias, section(IntermediateCode.Section).aliasOffset);
-					ELSE
-						CopyFixups(sections, resolved, resolved,0);
+					FOR i := 0 TO sections.Length() - 1 DO
+						section := sections.GetSection(i);
+						sname := prefix;
+						IF Basic.IsPrefix(sname, section.name) THEN						
+							resolved := section(IntermediateCode.Section).resolved;
+							exported := section(IntermediateCode.Section).exported;
+							IF (section(IntermediateCode.Section).alias # NIL) THEN
+								CopyFixups(sections, resolved, section(IntermediateCode.Section).alias, section(IntermediateCode.Section).aliasOffset);
+							ELSE
+								CopyFixups(sections, resolved, resolved,0);
+							END;
+						END;
 					END;
-				END;
 
-				IF codeSection # NIL THEN
-					UpdateAliases (codeSection, fingerprinter);
-					irSection := IntermediateCode.NewSection(sections, SHORTINT(codeSection.os.type), codeSection.os.identifier.name, NIL, FALSE);
-					irSection.SetResolved(codeSection);
-				END;
-				IF dataSection # NIL THEN
-					UpdateAliases (dataSection, fingerprinter);
-					irSection := IntermediateCode.NewSection(sections, SHORTINT(dataSection.os.type), dataSection.os.identifier.name, NIL, FALSE);
-					irSection.SetResolved(dataSection);
-				END;
-				IF constSection # NIL THEN
-					UpdateAliases (constSection, fingerprinter);
-					irSection := IntermediateCode.NewSection(sections, SHORTINT(constSection.os.type), constSection.os.identifier.name, NIL, FALSE);
-					irSection.SetResolved(constSection);
+					IF codeSection # NIL THEN
+						UpdateAliases (codeSection, fingerprinter);
+						irSection := IntermediateCode.NewSection(sections, SHORTINT(codeSection.os.type), codeSection.os.identifier.name, NIL, FALSE);
+						irSection.SetResolved(codeSection);
+					END;
+					IF dataSection # NIL THEN
+						UpdateAliases (dataSection, fingerprinter);
+						irSection := IntermediateCode.NewSection(sections, SHORTINT(dataSection.os.type), dataSection.os.identifier.name, NIL, FALSE);
+						irSection.SetResolved(dataSection);
+					END;
+					IF constSection # NIL THEN
+						UpdateAliases (constSection, fingerprinter);
+						irSection := IntermediateCode.NewSection(sections, SHORTINT(constSection.os.type), constSection.os.identifier.name, NIL, FALSE);
+						irSection.SetResolved(constSection);
+					END;
+					
 				END;
 				RETURN TRUE;
 			END MergeSections;
@@ -210,10 +230,15 @@ TYPE
 				numImports: LONGINT;
 				name: ObjectFile.SectionName;
 				import: SyntaxTree.Import;
+				i: SIZE;
 			BEGIN
-				IF mergeSections & ~MergeSections(module.allSections) THEN RETURN FALSE END;
-				NEW (offers, 1); offers[0] := module.moduleName;
-
+				IF mergeSections & ~MergeSections(module) THEN RETURN FALSE END;
+				
+				NEW (offers, module.exports.Length()); 
+				FOR i := 0 TO module.exports.Length()-1 DO
+					offers[i] := module.exports.GetName(i);
+				END;
+				
 				IF module.module#NIL THEN
 					import := module.module.moduleScope.firstImport;
 					numImports := 0;
@@ -232,6 +257,8 @@ TYPE
 						END;
 						import := import.nextImport;
 					END;
+					
+					
 				END;
 				WriteHeader(writer,binary,module.allSections, poolMap, offers, requires, fingerprinter);
 				result := ExportSections (module.allSections);

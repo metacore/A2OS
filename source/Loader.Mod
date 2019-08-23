@@ -2,7 +2,7 @@ MODULE Loader; (** AUTHOR "fof"; PURPOSE "Object File Loader"; *)
 
 (* cf. Linker *)
 
-IMPORT SYSTEM, KernelLog, Modules, Streams, Files, D := KernelLog, GenericLinker, ObjectFile, Diagnostics, Strings, StringPool, Trace, Machine;
+IMPORT SYSTEM, KernelLog, Modules, Streams, Files, D := KernelLog, GenericLinker, ObjectFile, Diagnostics, StringPool, Trace, Machine;
 
 CONST
 	Ok = 0;
@@ -11,6 +11,7 @@ CONST
 	CommandTrapped* = 3904; (* cf module Commands *)
 
 	TraceLoading = FALSE;
+	TraceBlocks = FALSE;
 TYPE
 
 	HashEntryIntInt = RECORD
@@ -195,12 +196,9 @@ TYPE
 	Arrangement* = OBJECT (GenericLinker.Arrangement);
 	VAR
 		code, data: Data;
-		(*moduleAdr: ADDRESS;*)
-		hasBody: BOOLEAN;
-		bodyAddress : ADDRESS;
 
 		PROCEDURE & InitArrangement;
-		BEGIN InitData(code); InitData(data); hasBody := FALSE;
+		BEGIN InitData(code); InitData(data);
 		END InitArrangement;
 
 		PROCEDURE Preallocate*(CONST section: ObjectFile.Section);
@@ -223,19 +221,7 @@ TYPE
 			ELSE ASSERT(section.type IN {ObjectFile.Const, ObjectFile.Data});
 				adr := DoAllocate(section, data);
 			END;
-
-			IF section.type = ObjectFile.BodyCode THEN
-				hasBody := TRUE; bodyAddress := adr;
-			END;
-
-			(*
-			IF (section.identifier.name[0] >= 0) & (section.identifier.name[1] >= 0)  THEN
-				IF (section.identifier.name[1] = InternalModuleName) OR (section.identifier.name[2] = InternalModuleName) THEN
-					moduleAdr := adr
-				END;
-			END;
-			*)
-
+			
 			RETURN adr;
 		END Allocate;
 
@@ -300,7 +286,9 @@ TYPE
 		moduleName: ObjectFile.SegmentedName;
 		importBlock: GenericLinker.Block;
 		hash: HashTableIntAny;
-		moduleBlock: GenericLinker.Block;
+		
+		moduleBlock: ARRAY 32 OF GenericLinker.Block;
+		numberModuleBlocks: SIZE;
 
 		PROCEDURE &InitLinkerX* (diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; code, data: GenericLinker.Arrangement; CONST name: ARRAY OF CHAR);
 		BEGIN
@@ -308,22 +296,20 @@ TYPE
 			InitLinker(diagnostics, log, GenericLinker.UseAllButInitCode (* strip init code *), code, data);
 			NEW(importBlock);
 			NEW(hash,256); (* hash for blocks *)
+			numberModuleBlocks := 0;
 		END InitLinkerX;
 
 		(* oerwritten functionality of generic linker *)
 		PROCEDURE FindBlock*(CONST identifier: ObjectFile.Identifier): GenericLinker.Block;
 		VAR block: GenericLinker.Block; any: ANY;
 		BEGIN
-			block := NIL;
-			IF IsPrefix(moduleName, identifier.name) THEN (* local block *)
-				IF identifier.fingerprint = 0 THEN (* not identifiable via fingerprint *)
-					block := FindBlock^(identifier);
-				ELSE
-					any := hash.Get(SYSTEM.VAL(SIZE, identifier.fingerprint));
-					IF any # NIL THEN block := any(GenericLinker.Block)  (* local block *) END;
-					IF (block # NIL) & (block.identifier.name # identifier.name) THEN (* local block, false or duplicate fingerprint *)
-						block := FindBlock^(identifier)
-					END;
+			IF identifier.fingerprint = 0 THEN (* not identifiable via fingerprint *)
+				block := FindBlock^(identifier);
+			ELSE
+				any := hash.Get(SYSTEM.VAL(SIZE, identifier.fingerprint));
+				IF any # NIL THEN block := any(GenericLinker.Block)  (* local block *) END;
+				IF (block # NIL) & (block.identifier.name # identifier.name) THEN (* local block, false or duplicate fingerprint *)
+					block := FindBlock^(identifier)
 				END;
 			END;
 			RETURN block;
@@ -336,7 +322,8 @@ TYPE
 			END;
 			IF (block.identifier.name[0] >= 0) & (block.identifier.name[1] >= 0)  THEN
 				IF (block.identifier.name[1] = InternalModuleName) & (block.identifier.name[2]<0) OR (block.identifier.name[2] = InternalModuleName) & (block.identifier.name[3] < 0) THEN
-					moduleBlock := block;
+					moduleBlock[numberModuleBlocks] := block;
+					INC(numberModuleBlocks);
 				END;
 			END;
 		END ExportBlock;
@@ -359,14 +346,6 @@ TYPE
 				RETURN ORD(s[i]) - ORD(name[i]);
 			END CheckName;
 
-			PROCEDURE Error(n: StringPool.Index);
-			VAR name: ARRAY 256 OF CHAR;
-			BEGIN
-				StringPool.GetString(n, name);
-				TRACE("Fingerprint does not match",name);
-			END Error;
-
-
 			(* stupid implementation: just search for fp in all exports *)
 			PROCEDURE CheckScope(CONST scope: Modules.ExportDesc; level: SIZE): ADDRESS;
 			VAR adr,lo,hi,m,res: SIZE;
@@ -379,10 +358,6 @@ TYPE
 					res := CheckName(identifier.name[level], scope.dsc[m].name);
 					IF res = 0 THEN
 						IF (level = LEN(identifier.name)-1) OR (identifier.name[level+1] <= 0) THEN
-							(*IF (scope.dsc[m].fp # identifier.fingerprint) & (scope.dsc[m].fp # 0) & (identifier.fingerprint # 0) THEN
-								Error(identifier.name[level]);
-							END;
-							*)
 							fp := scope.dsc[m].fp;
 							RETURN scope.dsc[m].adr
 						ELSE
@@ -399,7 +374,7 @@ TYPE
 		BEGIN
 			identifier := fixup.identifier;
 
-			IF IsPrefix(moduleName, identifier.name) THEN
+			IF ObjectFile.IsPrefix(moduleName, identifier.name) THEN
 				D.String("circular import while trying to fetch ");
 				s := identifier.name; D.String(s);
 				D.Ln;
@@ -408,16 +383,7 @@ TYPE
 
 			StringPool.GetString(identifier.name[0], name);
 			isModule := identifier.name[1] = InternalModuleName;
-
-			(*
-				IF ~isModule & (identifier.fingerprint = 0) THEN
-				D.String("Invalid attempt to import symbol without fingerprint ");
-				s := identifier.name; D.String(s);
-				D.Ln;
-				RETURN NIL
-			END;
-			*)
-
+			
 			module := Modules.ThisModule(name,res,msg);
 			IF module = NIL THEN
 				D.String("could not get module while importing "); D.String(name); D.Ln;
@@ -428,20 +394,10 @@ TYPE
 			ELSE
 				m := moduleList.ThisModule(module);
 				ASSERT(module # NIL);
-				(* first try via hash-table *)
-				(* disabled -- might be able to remove hash table completely, needs some testing
-				IF identifier.fingerprint # 0 THEN
-					adr := m.Get(identifier.fingerprint);
-				END;
-				*)
-				(* if it does not work, then try export table directly *)
-				IF adr = 0 THEN
-					adr := CheckScope(module.export,1(*level*) );
-				END;
+				adr := CheckScope(module.export,1(*level*) );
 			END;
 
 			IF adr = 0 THEN
-				(*D.String("Loader Fatal error: did not find block "); s := identifier.name; D.String(s); D.Ln;*)
 				RETURN NIL;
 			ELSE (* found *)
 				importBlock.identifier.fingerprint := fp; importBlock.address := adr
@@ -460,25 +416,7 @@ VAR
 		data.address := 0; data.size := 0; data.alignment := 0; data.bytes := NIL;
 	END InitData;
 
-	PROCEDURE IsPrefix(CONST prefix, of: ObjectFile.SegmentedName): BOOLEAN;
-	VAR prefixS, ofS: ObjectFile.SectionName; i: SIZE;
-	BEGIN
-		i := 0;
-		WHILE (i< LEN(prefix)) & (prefix[i] = of[i]) DO INC(i) END;
 
-		IF i = LEN(prefix) THEN RETURN TRUE (* identical *)
-		ELSE (* prefix[i] # of[i] *)
-			IF prefix[i] < 0 THEN RETURN TRUE (* name longer than prefix *)
-			ELSIF of[i] < 0 THEN RETURN FALSE (* prefix longer than name *)
-			ELSIF (i<LEN(prefix)-1) THEN RETURN FALSE (* prefix and name differ but not at the tail *)
-			ELSE
-				(* check tail *)
-				StringPool.GetString(prefix[i], prefixS);
-				StringPool.GetString(of[i], ofS);
-				RETURN Strings.StartsWith(prefixS, 0, ofS)
-			END
-		END;
-	END IsPrefix;
 
 	PROCEDURE DoPreallocate(CONST section: ObjectFile.Section; VAR data: Data);
 	BEGIN
@@ -515,12 +453,13 @@ VAR
 	END DoAllocate;
 
 	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: WORD; VAR msg: ARRAY OF CHAR): Modules.Module;
-	TYPE Body=PROCEDURE;
 	VAR
 		file: Files.File; reader: Files.Reader; linker: Linker;
 		arrangement: Arrangement; diagnostics: Diagnostics.StreamDiagnostics; stringWriter: Streams.StringWriter;
 		module: Modules.Module; heapBlockAdr,moduleAdr: ADDRESS;
-		Log: Streams.Writer;
+		sname: ObjectFile.SectionName; 
+		Log, debug: Streams.Writer;
+		i: SIZE;
 	BEGIN
 		file := Files.Old(fileName);
 
@@ -531,40 +470,48 @@ VAR
 			NEW(arrangement); NEW(stringWriter,256);
 			Streams.OpenWriter( Log, KernelLog.Send );
 			NEW(diagnostics,Log);
-			NEW(linker, diagnostics, NIL, arrangement, arrangement,name);
+			IF TraceBlocks THEN debug := Log ELSE debug := NIL END;
+			NEW(linker, diagnostics, debug, arrangement, arrangement,name);
 			IF TraceLoading THEN Trace.String("before linking"); Trace.Ln END;
-			GenericLinker.Process (reader, linker);
+			GenericLinker.Load (reader, linker);
+			IF (linker.offers # NIL) & (LEN(linker.offers) > 1) THEN (* only when several modules in one object file *) 
+				(* remove all already loaded modules from linker sections *)
+				FOR i := 0 TO LEN(linker.offers)-1 DO
+					sname := linker.offers[i];
+					module := Modules.ModuleByName(sname);
+					TRACE(sname, module); 
+					IF module # NIL THEN
+						linker.RemovePrefixed(linker.offers[i]);
+					END;
+				END;
+				 
+			END; 
+			IF ~linker.error THEN linker.EnterBlocks END;
 			IF ~linker.error THEN linker.Resolve END;
 			IF ~linker.error THEN linker.Link END;
 			(*D.Update;*)
 			IF ~linker.error THEN
 				IF TraceLoading THEN Trace.String("linking done"); Trace.Ln END;
-
-				moduleAdr := linker.moduleBlock.address;
-				#IF ~COOP THEN
-					SYSTEM.GET(moduleAdr+3*SIZEOF(ADDRESS), moduleAdr);
-					SYSTEM.GET(moduleAdr-2*SIZEOF(ADDRESS), heapBlockAdr);
-					ASSERT(heapBlockAdr = linker.moduleBlock.address+2*SIZEOF(ADDRESS));
-				#END
-				module := SYSTEM.VAL(Modules.Module,moduleAdr);
-				module.data := arrangement.data.bytes;
-				module.code := arrangement.code.bytes;
-
-				module.sb := 0;
-				module.body := SYSTEM.VAL(Body, arrangement.bodyAddress);
-
-				(*
-				SortProcTable(module);
-				SelectionSort(module.exTable);
-				*)
-
-				(*
-					careful: when GC uses a heuristic for pointer detection on the stack, it will not
-					trace the module because the module is not reachable as a heap block in a sweep
-					Therefore the code and data array has to be secured in addition.
-					Here this is made sure to enter the module in the data structure before returning it.
-				*)
-				Modules.Initialize(module);
+				FOR i := 0 TO linker.numberModuleBlocks-1 DO
+					moduleAdr := linker.moduleBlock[i].address;
+					#IF ~COOP THEN
+						SYSTEM.GET(moduleAdr+2*SIZEOF(ADDRESS)+2*SIZEOF(WORD), moduleAdr);
+						SYSTEM.GET(moduleAdr-2*SIZEOF(ADDRESS), heapBlockAdr);
+						ASSERT(heapBlockAdr = linker.moduleBlock[i].address+2*SIZEOF(ADDRESS));
+					#END
+					module := SYSTEM.VAL(Modules.Module,moduleAdr);
+					module.data := arrangement.data.bytes;
+					module.code := arrangement.code.bytes;
+ 					module.sb := 0;
+					(*
+						careful: when GC uses a heuristic for pointer detection on the stack, it will not
+						trace the module because the module is not reachable as a heap block in a sweep
+						Therefore the code and data array has to be secured in addition.
+						Here this is made sure to enter the module in the data structure before returning it.
+					*)
+					Modules.Initialize(module);
+				END;
+				Log.Update;
 			ELSE module := NIL; res := LinkerError; stringWriter.Update; stringWriter.Get(msg);
 
 			END;
@@ -605,27 +552,4 @@ VAR
 		NEW(moduleList);
 		Install;
 	END Loader.
-
-
-
-	(* concurrent load test:
-	VAR
-	startConcurrentLoad: BOOLEAN;
-
-	PROCEDURE ConcurrentLoad*;
-	VAR i: SIZE;
-		o: OBJECT 		VAR
-			mod: Modules.Module; res: WORD; msg: ARRAY 32 OF CHAR;
-		BEGIN{ACTIVE}
-			WHILE(~startConcurrentLoad) DO END;
-			mod := Modules.ThisModule("Test",res,msg);
-		END;
-	BEGIN
-		startConcurrentLoad := FALSE;
-		FOR i := 0 TO 128 DO
-			NEW(o);
-		END;
-		startConcurrentLoad := TRUE;
-	END ConcurrentLoad;
-	*)
 

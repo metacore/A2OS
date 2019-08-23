@@ -65,9 +65,11 @@ TYPE
 		END Put;
 
 		PROCEDURE Get*(CONST key: ObjectFile.SegmentedName):Block;
+		VAR hashValue : SIZE;
 		BEGIN
-			IF table[HashValue(key)].key = key THEN
-				RETURN table[HashValue(key)].value;
+			hashValue := HashValue(key);
+			IF (table[hashValue].key = key) & (table[hashValue].value # unused) THEN
+				RETURN table[hashValue].value;
 			ELSE
 				RETURN NIL
 			END;
@@ -159,6 +161,7 @@ VAR
 	firstBlock, firstLinkedBlock: Block;
 	linkRoot: ObjectFile.SectionName;
 	hash: HashTableSegmentedName;
+	offers-, requires-: ObjectFile.NameList;
 
 	PROCEDURE &InitLinker* (diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; useCategories: SET; code, data: Arrangement);
 	BEGIN
@@ -166,11 +169,23 @@ VAR
 		error := FALSE; SELF.code := code; SELF.data := data; firstBlock := NIL; firstLinkedBlock := NIL;
 		linkRoot := "";
 		NEW(hash,64);
+		
 	END InitLinker;
-
+	
 	PROCEDURE SetLinkRoot*(CONST root: ARRAY OF CHAR);
 	BEGIN COPY(root, linkRoot)
 	END SetLinkRoot;
+	
+	PROCEDURE SetOffers*(CONST offers: ObjectFile.NameList);
+	BEGIN
+		SELF.offers := offers;
+	END SetOffers;
+	
+	PROCEDURE SetRequires*(CONST requires: ObjectFile.NameList);
+	BEGIN
+		SELF.requires := requires;
+	END SetRequires;
+	
 
 	PROCEDURE Error* (CONST source, message: ARRAY OF CHAR);
 	BEGIN diagnostics.Error (source, Streams.Invalid, message); error := TRUE;
@@ -220,6 +235,45 @@ VAR
 	BEGIN RETURN left.priority < right.priority
 	END Precedes;
 
+	PROCEDURE RemoveBlock* (block: Block);
+	VAR current: Block;
+	BEGIN
+		IF block = firstBlock THEN 
+			firstBlock := block.next
+		ELSE
+			current := firstBlock;
+			WHILE (current.next # NIL) & (current.next # block) DO
+				current := current.next;
+			END;
+			ASSERT(current # NIL); 
+			current.next := block.next;
+		END;
+		hash.Put(current.identifier.name, unused);
+	END RemoveBlock;
+	
+	PROCEDURE RemovePrefixed*(prefix: ObjectFile.SegmentedName);
+	VAR block: Block;
+	BEGIN
+		WHILE (firstBlock # NIL) & ObjectFile.IsPrefix(prefix, firstBlock.identifier.name) DO
+			IF hash.Get(firstBlock.identifier.name) # NIL THEN hash.Put(firstBlock.identifier.name, unused) END;
+			firstBlock := firstBlock.next;
+		END;
+		IF firstBlock = NIL THEN 
+			RETURN
+		END;
+		block := firstBlock;
+		(* invariant: block # NIL & block.identifier.name not prefixed by prefix *)
+		WHILE (block.next # NIL) DO
+			IF ObjectFile.IsPrefix(prefix, block.next.identifier.name) THEN
+				IF hash.Get(block.next.identifier.name) # NIL THEN hash.Put(block.next.identifier.name, unused) END;
+				block.next := block.next.next;
+			ELSE
+				block := block.next;
+			END;
+		END;
+	END RemovePrefixed;
+	
+
 	PROCEDURE AddSection* (CONST section: ObjectFile.Section);
 	VAR block, current, previous,newBlock: Block; name: ARRAY 256 OF CHAR; i: SIZE; alias: ObjectFile.Alias;
 	BEGIN
@@ -229,8 +283,6 @@ VAR
 		block.priority := GetPriority(block);
 		WHILE (current # NIL) & ~Precedes(block,current) DO previous := current; current := current.next; END;
 		IF previous # NIL THEN previous.next := block; ELSE firstBlock := block; END; block.next := current;
-		hash.Put(block.identifier.name, block);
-		ExportBlock(block);
 		current := block;
 		(* append all alias blocks after the block *)
 		FOR i := 0 TO block.aliases-1 DO
@@ -243,11 +295,20 @@ VAR
 			newBlock.next := current.next;
 			current.next := newBlock;
 			current := newBlock;
+		END;
+	END AddSection;
+	
+	PROCEDURE EnterBlocks*;
+	VAR current: Block;
+	BEGIN
+		current := firstBlock;
+		WHILE (current # NIL) DO
 			hash.Put(current.identifier.name, current);
 			ExportBlock(current);
-		END;
-
-	END AddSection;
+			current := current.next;
+		END;	
+	END EnterBlocks;
+	
 
 	PROCEDURE Resolve*;
 	VAR block: Block; used: BOOLEAN; name: ARRAY 256 OF CHAR;
@@ -438,6 +499,8 @@ VAR
 
 END Linker;
 
+VAR unused: Block;
+
 PROCEDURE GetPriority(block: Block): WORD;
 BEGIN
 	IF block.fixed THEN RETURN Fixed END;
@@ -492,17 +555,21 @@ BEGIN
 	ReadHeader(reader, NIL, binary, poolMap, offers, requires);
 END OffersRequires;
 
-PROCEDURE Process* (reader: Streams.Reader; linker: Linker);
+PROCEDURE Load* (reader: Streams.Reader; linker: Linker);
 VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList;
 BEGIN
 	ReadHeader(reader, linker, binary, poolMap, offers, requires);
+	linker.SetOffers(offers); 
+	linker.SetRequires(requires);
 	WHILE reader.Peek () # 0X DO
 		ObjectFile.ReadSection (reader, section,binary,poolMap);
 		reader.SkipWhitespace;
 		IF reader.res = Streams.Ok THEN linker.AddSection (section); END;
 	END;
-END Process;
+END Load;
 
+BEGIN
+	NEW(unused);
 END GenericLinker.
 
 Compiler.Compile GenericLinker.Mod   ~~~

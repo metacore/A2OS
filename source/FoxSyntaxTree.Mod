@@ -4920,12 +4920,21 @@ TYPE
 
 	END ModuleScope;
 
+	TemplateType*= ENUM 
+		Type*, Const*
+	END;
+	
+	TemplateParameter*= RECORD
+		type*: TemplateType;
+		identifier*: Identifier;
+	END;
+	
 	(** <<expression, expression, ...>> **)
-	Identifiers* = OBJECT
+	TemplateParameters* = OBJECT
 	TYPE
-		IdentifierArray = POINTER TO ARRAY OF Identifier;
+		TemplateParameterArray = POINTER TO ARRAY OF TemplateParameter;
 		VAR
-			list: IdentifierArray;
+			list: TemplateParameterArray;
 			len: SIZE;
 
 		PROCEDURE & InitList*;
@@ -4936,8 +4945,8 @@ TYPE
 		BEGIN RETURN len;
 		END Length;
 
-		PROCEDURE Add*( d: Identifier );
-		VAR l: IdentifierArray; i: SIZE;
+		PROCEDURE Add*(CONST d: TemplateParameter );
+		VAR l: TemplateParameterArray; i: SIZE;
 		BEGIN
 			IF len = LEN(list) THEN
 				NEW(l, 2*len);
@@ -4949,16 +4958,16 @@ TYPE
 			INC(len);
 		END Add;
 
-		PROCEDURE Get*( index: SIZE ): Identifier;
+		PROCEDURE Get*( index: SIZE ): TemplateParameter;
 		BEGIN
 			RETURN list[index];
 		END Get;
 
-		PROCEDURE Set*(index: SIZE; symbol: Identifier);
+		PROCEDURE Set*(index: SIZE; symbol: TemplateParameter);
 		BEGIN list[index] := symbol;
 		END Set;
 
-	END Identifiers;
+	END TemplateParameters;
 
 	(* << MODULE name ['in' context] moduleScope name '.' >>  *)
 	Module* = OBJECT (Symbol)
@@ -4970,7 +4979,7 @@ TYPE
 			isCellNet-: BOOLEAN;
 			closingComment-: Comment;
 			modifiers-: Modifier;
-			parameters-: Identifiers;
+			parameters-: TemplateParameters;
 
 		PROCEDURE & InitModule( CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT);
 		BEGIN
@@ -5013,7 +5022,7 @@ TYPE
 		BEGIN SELF.modifiers := modifiers
 		END SetModifiers;
 
-		PROCEDURE SetParameters*(parameters: Identifiers);
+		PROCEDURE SetParameters*(parameters: TemplateParameters);
 		BEGIN SELF.parameters := parameters;
 		END SetParameters;
 

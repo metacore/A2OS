@@ -2229,7 +2229,7 @@ TYPE
 					designator := NIL;
 					IF operator.scope.ownerModule # currentScope.ownerModule THEN
 						import := currentScope.ownerModule.moduleScope.firstImport;
-						WHILE(import # NIL) & (import.module # operator.scope.ownerModule) DO
+						WHILE(import # NIL) & (import.module # operator.scope.ownerModule)  DO
 							import := import.nextImport;
 						END;
 						expression := NewSymbolDesignator(position,NIL,NIL,import);
@@ -6623,11 +6623,9 @@ TYPE
 			IF error THEN error := FALSE; RETURN FALSE ELSE RETURN TRUE END;
 		END AddImport;
 
-
 		PROCEDURE ResolveTemplateImport(x: SyntaxTree.Import);
 		VAR
 			checker: Checker;
-			ident: SyntaxTree.Identifier;
 			expression: SyntaxTree.Expression;
 			i: SIZE;
 			symbol: SyntaxTree.Symbol;
@@ -6635,11 +6633,31 @@ TYPE
 			constDeclaration: SyntaxTree.Constant;
 			filename: FileName;
 			module: SyntaxTree.Module;
+			parameter: SyntaxTree.TemplateParameter;
+			name: Basic.SectionName;
+			import: SyntaxTree.Import;
+			stringWriter: Streams.StringWriter;
+			printer: Printout.Printer;
 		BEGIN
-			IF ExpressionList(x.parameters) THEN END;
+			IF ExpressionList(x.parameters) THEN (* resolve all symbols *) END;
+			
 			Global.ModuleFileName(x.moduleName,x.context,filename);
+			
 			IF symbolFileFormat # NIL THEN
 				module := symbolFileFormat.Import(filename,importCache); (* includes module parsing *)
+				
+				(* import the importing module with the sole purpose to enable operator overloading *)
+				import := SyntaxTree.NewImport(Basic.invalidPosition,SELF.module.name,SELF.module.name,FALSE);
+				import.SetModule(SELF.module);										
+				module.moduleScope.AddImport(import);
+				import.SetState(SyntaxTree.Resolved);
+				module.GetName(name);
+
+				NEW(stringWriter, LEN(name)); 
+				NEW(printer, stringWriter, Printout.SymbolFile, FALSE);
+				stringWriter.String(name); 
+				stringWriter.String("(");
+				
 				IF module = NIL THEN
 					Error(x.position, "module could not be imported: parser errors");
 				ELSIF module.parameters = NIL THEN
@@ -6648,20 +6666,37 @@ TYPE
 					Error(x.position,"numbers of template parameters do not match");
 				ELSE
 					FOR i := 0 TO module.parameters.Length()-1 DO
-						ident := module.parameters.Get(i);
+						IF i > 0 THEN stringWriter.String(",") END;
+						parameter := module.parameters.Get(i);
 						expression := x.parameters.GetExpression(i);
 						WITH expression: SyntaxTree.SymbolDesignator DO
 							symbol := expression.symbol;
 							WITH symbol: SyntaxTree.TypeDeclaration DO
 								TRACE(symbol.declaredType,symbol.declaredType.typeDeclaration);
-								typeDeclaration := SyntaxTree.NewTypeDeclaration(expression.position,ident);
+								typeDeclaration := SyntaxTree.NewTypeDeclaration(expression.position,parameter.identifier);
 								typeDeclaration.SetDeclaredType(symbol.declaredType);
 								module.moduleScope.AddTypeDeclaration(typeDeclaration);
-							| SyntaxTree.Constant DO TRACE("const");
+								IF parameter.type # SyntaxTree.TemplateType.Type THEN
+									Error(expression.position,"passed type where no type is expected");
+								END;
+								typeDeclaration := symbol.declaredType.resolved.typeDeclaration;
+								IF typeDeclaration = NIL THEN
+									printer.Type(symbol.declaredType.resolved);
+								ELSE
+									Global.GetSymbolName(typeDeclaration, name);
+									ReplaceCharacter(name,".","_");
+									stringWriter.String(name);
+								END
+							| SyntaxTree.Constant DO Error(expression.position,"not yet implemented");
 							| SyntaxTree.Procedure DO
-								constDeclaration := SyntaxTree.NewConstant(expression.position, ident);
+								constDeclaration := SyntaxTree.NewConstant(expression.position, parameter.identifier);
 								constDeclaration.SetValue(SyntaxTree.NewProcedureValue(expression.position,symbol));
 								module.moduleScope.AddConstant(constDeclaration);
+								IF parameter.type # SyntaxTree.TemplateType.Const THEN
+									Error(expression.position,"passed procedure where no constant is expected");
+								END;
+								Global.GetSymbolName(symbol, name);
+								stringWriter.String(name);
 							ELSE
 								Printout.Info("expression", expression);
 							END;
@@ -6672,8 +6707,10 @@ TYPE
 					END;
 					checker := NewChecker(diagnostics,VerboseErrorMessage,cooperative,system,symbolFileFormat,importCache,"");
 					ASSERT(SELF.module.moduleScope # NIL);
+					stringWriter.String(")"); 
+					stringWriter.Get(name);
+					module.SetName(SyntaxTree.NewIdentifier(name)); 
 					module.SetScope(SELF.module.moduleScope);
-					module.moduleScope.SetOuter(SELF.module.moduleScope);
 					checker.Module(module);
 					IF checker.error THEN
 						Error(x.position,"semantic errors when importing module");
@@ -7799,7 +7836,9 @@ TYPE
 					(* treat imports first for a module scope, , set default context if necessary *)
 					import := scope(SyntaxTree.ModuleScope).firstImport;
 					WHILE(import # NIL) DO
-						IF import.context = SyntaxTree.invalidIdentifier THEN import.SetContext(scope.ownerModule.context) END;
+						IF import.context = SyntaxTree.invalidIdentifier THEN 
+							import.SetContext(scope.ownerModule.context) 
+						END;
 						Register(import, currentScope, FALSE);
 						import := import.nextImport;
 					END;
@@ -7885,6 +7924,16 @@ TYPE
 				END;
 			END;
 
+			symbol := scope.firstSymbol;
+			WHILE(symbol # NIL) DO
+				IF (symbol IS SyntaxTree.Operator) THEN
+					IF 0 IN phases THEN
+						ResolveSymbol(symbol);
+					END;
+				END;
+				symbol := symbol.nextSymbol;
+			END;
+			
 			(* now process all symbols without any presumption on the order *)
 			IF scope IS SyntaxTree.ModuleScope THEN
 				import := scope(SyntaxTree.ModuleScope).firstImport;
@@ -9498,6 +9547,13 @@ TYPE
 		RETURN (procedureType # NIL) & (procedureType.callingConvention=SyntaxTree.OberonCallingConvention) & ReturnedAsParameter(system,procedureType.returnType);
 	END StructuredReturnType;
 
+	PROCEDURE ReplaceCharacter(VAR dst: ARRAY OF CHAR; this, by: CHAR);
+	VAR i: SIZE;
+	BEGIN
+		FOR i := 0 TO LEN(dst)-1 DO
+			IF dst[i] = this THEN dst[i] := by END;
+		END;
+	END ReplaceCharacter;
 
 END FoxSemanticChecker.
 

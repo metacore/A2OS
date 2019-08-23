@@ -1369,14 +1369,14 @@ TYPE
 			IF (x.scope = NIL) OR (x.scope.ownerModule = NIL) THEN context := SyntaxTree.invalidIdentifier ELSE context := x.scope.ownerModule.context END;
 			Identifier(x.moduleName);
 			IF x.parameters # NIL THEN
-				w.String("<");
+				w.String("(");
 				FOR i := 0 TO x.parameters.Length()-1 DO
 					Expression(x.parameters.GetExpression(i));
 					IF i < x.parameters.Length()-1 THEN
 						w.String(",");
 					END;
 				END;
-				w.String(">");
+				w.String(")");
 			END;
 			IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#context) THEN
 				Keyword(" IN ");
@@ -1853,6 +1853,17 @@ TYPE
 		PROCEDURE VisitModule*(x: SyntaxTree.Module);
 		BEGIN Module(x)
 		END VisitModule;
+		
+		PROCEDURE TemplateParameter(x: SyntaxTree.TemplateParameter);
+		BEGIN
+			IF x.type = SyntaxTree.TemplateType.Const THEN
+				Keyword("CONST ");
+			ELSIF x.type = SyntaxTree.TemplateType.Type THEN
+				Keyword("TYPE ");
+			ELSE HALT(200) END;
+			Identifier(x.identifier);
+		END TemplateParameter;
+		
 
 		PROCEDURE Module*(x: SyntaxTree.Module);
 		VAR i: SIZE;
@@ -1866,14 +1877,14 @@ TYPE
 				Keyword("MODULE ");
 				Identifier(x.name);
 				IF x.parameters # NIL THEN
-					w.String("<");
+					w.String("(");
 					FOR i := 0 TO x.parameters.Length()-1 DO
-						Identifier(x.parameters.Get(i));
+						TemplateParameter(x.parameters.Get(i));
 						IF i < x.parameters.Length()-1 THEN
 							w.String(", ");
 						END;
 					END;
-					w.String(">");
+					w.String(")");
 				END;
 				IF (x.context # SyntaxTree.invalidIdentifier) & (x.context#Global.A2Name) THEN
 					Keyword(" IN ");

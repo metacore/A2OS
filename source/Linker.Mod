@@ -230,7 +230,8 @@ BEGIN
 	linker.Information (moduleName, "processing");
 
 	reader.SetPos(0);
-	GenericLinker.Process (reader, linker);
+	GenericLinker.Load (reader, linker);
+	linker.EnterBlocks();
 	IF (moduleList # NIL) & (offers # NIL) THEN
 		FOR i := 0 TO LEN(offers)-1 DO
 			moduleList.Put(offers[i],finished);

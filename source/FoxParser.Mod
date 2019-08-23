@@ -2373,14 +2373,14 @@ TYPE
 					aliased := Optional( Scanner.Becomes );
 					IF aliased THEN name := Identifier(idPosition) ELSE name := alias END;
 					import := SyntaxTree.NewImport( position, alias, name, TRUE );
-					IF Optional(Scanner.Less) THEN
+					IF Optional(Scanner.LeftParenthesis) THEN
 						expressions := SyntaxTree.NewExpressionList();
 						expressions.AddExpression(Factor());
 						WHILE Optional(Scanner.Comma) DO
 							expressions.AddExpression(Factor());
 						END;
 						import.SetParameters(expressions);
-						Check(Scanner.Greater);
+						Check(Scanner.RightParenthesis);
 					END;
 					CommentSymbol(import);
 					IF Optional(Scanner.In) THEN
@@ -2401,15 +2401,32 @@ TYPE
 			IF Lax THEN Ignore(Scanner.Semicolon) ELSE Check( Scanner.Semicolon ) END;
 			IF Trace THEN E( "ImportList" );  END;
 		END ImportList;
+		
+		(**
+			TemplateParameter = ("const" | "type") Identifier
+		**)
+		PROCEDURE TemplateParameter(VAR position: SyntaxTree.Position): SyntaxTree.TemplateParameter;
+		VAR parameter: SyntaxTree.TemplateParameter;
+		BEGIN
+			IF Optional(Scanner.Const) THEN
+				parameter.type := SyntaxTree.TemplateType.Const
+			ELSIF Mandatory(Scanner.Type) THEN
+				parameter.type := SyntaxTree.TemplateType.Type
+			END;
+			parameter.identifier := Identifier(position);
+			RETURN parameter; 
+		END TemplateParameter;
+		
 
-		(** Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';'
+		(** Module = ('module' [TemplateParameters] | 'cellnet' [Flags]) Identifier ['in' Identifier]';'
 										{ImportList} DeclarationSequence [Body]
 										'end' Identifier '.'.
+				TemplateParameters = "(" TemplateParameter {"," TemplateParameter} ")".
 		**)
 
 		PROCEDURE Module*(): SyntaxTree.Module;
 		VAR moduleName, context: SyntaxTree.Identifier;  module: SyntaxTree.Module;  position: Position; isCellNet: BOOLEAN;
-			scannerDiagnostics: Diagnostics.Diagnostics; modifiers: SyntaxTree.Modifier; parameters: SyntaxTree.Identifiers; (* c: SyntaxTree.Comment; *)
+			scannerDiagnostics: Diagnostics.Diagnostics; modifiers: SyntaxTree.Modifier; parameters: SyntaxTree.TemplateParameters;
 		BEGIN
 			IF Trace THEN S( "Module" ) END;
 			position := token.position;
@@ -2432,14 +2449,14 @@ TYPE
 
 				module.SetType(SyntaxTree.moduleType);
 
-				IF Optional(Scanner.Less) THEN
+				IF Optional(Scanner.LeftParenthesis) THEN
 					NEW(parameters);
 					module.SetParameters(parameters);
-					parameters.Add(Identifier(position));
+					parameters.Add(TemplateParameter(position));
 					WHILE Optional(Scanner.Comma) DO
-						parameters.Add(Identifier(position));
+						parameters.Add(TemplateParameter(position));
 					END;
-					Check(Scanner.Greater);
+					Check(Scanner.RightParenthesis);
 				END;
 
 				IF Optional(Scanner.In) THEN

@@ -1,6 +1,6 @@
 MODULE ObjectFile;	(* AUTHOR "negelef"; PURPOSE "Generic Object File Representation"; *)
 
-IMPORT Streams, BitSets, StringPool;
+IMPORT Streams, BitSets, StringPool, Strings;
 
 CONST
 	Version* = 7;
@@ -515,7 +515,7 @@ VAR
 	END WriteSectionTextual;
 
 	PROCEDURE ReadSectionTextual (reader: Streams.Reader; VAR section: Section);
-	VAR i: SIZE; size: SIZE; char: CHAR; relocatibility, priority: WORD;
+	VAR i: SIZE; size: SIZE; char: CHAR; relocatibility: WORD;
 
 		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		VAR identifier: ARRAY 10 OF CHAR;
@@ -712,9 +712,6 @@ VAR
 		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
 			writer.RawNum(value);
-			(*
-			writer.RawString (identifiers[value]);
-			*)
 		END WriteValueIdentifier;
 
 		PROCEDURE WriteFixupPattern (CONST pattern: FixupPattern);
@@ -873,19 +870,12 @@ VAR
 	END WriteSectionBinary;
 
 	PROCEDURE ReadSectionBinary (reader: Streams.Reader; VAR section: Section; poolMap: PoolMap);
-	VAR i, size: SIZE; relocatibility, priority: WORD; ch: CHAR;;
+	VAR i, size: SIZE; relocatibility: WORD; ch: CHAR;;
 	CONST ByteSize=8;
 
 		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
-		(* VAR identifier: ARRAY 10 OF CHAR; *)
 		BEGIN
 			reader.RawNum(value);
-			(*
-			value := 0;
-			reader.RawString (identifier);
-			WHILE (value # LEN (identifiers)) & (identifier # identifiers[value]) DO INC (value); END;
-			IF value = LEN (identifiers) THEN reader.res := Streams.FormatError; END;
-			*)
 		END ReadValueIdentifier;
 
 		PROCEDURE ReadIdentifier(VAR identifier: Identifier);
@@ -1085,44 +1075,6 @@ VAR
 		RETURN (pat.mode = mode) & (pat.scale = scale) & (pat.patterns = patterns) & SameFixupPattern(patterns, pat.pattern, pattern);
 	END HasPattern;
 
-	(*
-	PROCEDURE AddPatch(VAR patches: SIZE; VAR patch: Patches; mode: WORD; displacement: Unit; scale: Bits; patterns: SIZE; pattern: FixupPatterns; offset: Unit);
-	VAR i, newPatches, len: SIZE; newPatch: Patches;
-	BEGIN
-		FOR i := 0 TO patches-1 DO
-			len := LEN(patch);
-			ASSERT(patch # NIL,101);
-			ASSERT(LEN(patch) > i,102);
-			IF (patch[i].mode = mode) & (patch[i].displacement = displacement) & (patch[i].scale = scale) &  (patch[i].patterns = patterns) & SamePattern(patterns, patch[i].pattern, pattern) THEN
-				AddOffset(patch[i].offsets, patch[i].offset, offset);
-				RETURN
-			END;
-		END;
-		newPatches := patches+1;
-		IF (patch = NIL) OR (LEN(patch) < newPatches) THEN
-			ASSERT(newPatches > 0);
-			NEW(newPatch, 2*newPatches);
-			FOR i := 0 TO patches-1 DO
-				newPatch[i] := patch[i];
-				(*
-				CopyPatch(patch[i], newPatch[i]);
-				*)
-			END;
-			patch := newPatch;
-		END;
-		ASSERT(LEN(patch) > patches);
-		patch[patches].mode := mode;
-		patch[patches].displacement := displacement;
-		patch[patches].patterns := patterns;
-		patch[patches].pattern := pattern;
-		patch[patches].offsets := 0;
-		patch[patches].offset := NIL;
-		AddOffset(patch[patches].offsets, patch[patches].offset, offset);
-		patches := newPatches;
-		(* increase size and add *)
-	END AddPatch;
-	*)
-
 	PROCEDURE AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: Bits; patterns: SIZE; pattern: FixupPatterns): SIZE;
 	VAR i, newFixups, index: SIZE; newFixup: Fixups;
 	BEGIN
@@ -1229,6 +1181,26 @@ VAR
 		END;
 		RETURN ORD(ch1) - ORD(ch2);
 	END CompareSegmentedNames;
+	
+	PROCEDURE IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN;
+	VAR prefixS, ofS: SectionName; i: SIZE;
+	BEGIN
+		i := 0;
+		WHILE (i< LEN(prefix)) & (prefix[i] = of[i]) DO INC(i) END;
+
+		IF i = LEN(prefix) THEN RETURN TRUE (* identical *)
+		ELSE (* prefix[i] # of[i] *)
+			IF prefix[i] < 0 THEN RETURN TRUE (* name longer than prefix *)
+			ELSIF of[i] < 0 THEN RETURN FALSE (* prefix longer than name *)
+			ELSIF (i<LEN(prefix)-1) THEN RETURN FALSE (* prefix and name differ but not at the tail *)
+			ELSE
+				(* check tail *)
+				StringPool.GetString(prefix[i], prefixS);
+				StringPool.GetString(of[i], ofS);
+				RETURN Strings.StartsWith(prefixS, 0, ofS)
+			END
+		END;
+	END IsPrefix;
 
 	OPERATOR "="*(CONST l,r: SegmentedName): BOOLEAN;
 	VAR i: SIZE;

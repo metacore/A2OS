@@ -402,6 +402,7 @@ TYPE
 
 		platformName-: SyntaxTree.IdentifierString;
 		imports-: NameList;
+		exports-: NameList;
 
 		PROCEDURE & Init*(module: SyntaxTree.Module; system: Global.System);
 		BEGIN
@@ -409,6 +410,7 @@ TYPE
 			NEW(allSections);
 			NEW(importedSections);
 			NEW(imports, 128);
+			NEW(exports, 128); 
 		END Init;
 
 		(*
@@ -459,6 +461,22 @@ TYPE
 				END;
 				dump.Ln; dump.Ln
 			END;
+
+			(* dump imports directive *)
+			IF exports.Length() > 0 THEN
+				dump.String(".exports ");
+				FOR i := 0 TO exports.Length() - 1 DO
+					IF i # 0 THEN dump.String(", ") END;
+					name := exports.GetName(i);
+					IF name = "" THEN
+						dump.String("<export failed>")
+					ELSE
+						dump.String(name)
+					END
+				END;
+				dump.Ln; dump.Ln
+			END;
+
 
 			(* dump all sections *)
 			allSections.Dump(w)

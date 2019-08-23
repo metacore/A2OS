@@ -214,15 +214,6 @@ TYPE
 			END;
 		END QualifiedType;
 
-		PROCEDURE HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN;
-		VAR this: SyntaxTree.Modifier; id: SyntaxTree.Identifier;
-		BEGIN
-			this := modifiers; id := SyntaxTree.NewIdentifier(name);
-			WHILE (this # NIL) & (this.identifier# id) DO
-				this := this.nextModifier;
-			END;
-			RETURN this # NIL
-		END HasFlag;
 
 		PROCEDURE RecordType(x: SyntaxTree.RecordType);
 		VAR name: ARRAY 256 OF CHAR; td: SyntaxTree.TypeDeclaration;
@@ -927,7 +918,6 @@ TYPE
 			hasDynamicOperatorDeclarations: BOOLEAN;
 			operator: SyntaxTree.Operator;
 			import: SyntaxTree.Import;
-			simple: BOOLEAN;
 
 			PROCEDURE TypeNeedsInitialization(type: SyntaxTree.Type): BOOLEAN;
 			BEGIN
@@ -981,8 +971,6 @@ TYPE
 				ELSE
 					(*simple := meta.simple;
 					meta.simple := TRUE;*)
-					Scope(import.module.moduleScope);
-					(*meta.simple := simple;*)
 				END;
 				import := import.nextImport
 			END;
@@ -6979,7 +6967,7 @@ TYPE
 		**)
 		PROCEDURE GetTemporaryVariable(type: SyntaxTree.Type; register: BOOLEAN; untraced: BOOLEAN): SyntaxTree.Variable;
 		VAR name: SyntaxTree.Identifier;  variable, v: SyntaxTree.Variable;
-			scope: SyntaxTree.Scope; duplicate: BOOLEAN; offset: LONGINT; index: SIZE;
+			scope: SyntaxTree.Scope; duplicate: BOOLEAN; index: SIZE;
 		BEGIN
 			IF ~register THEN
 				v := temporaries.GetFreeVariable(type, untraced, index);
@@ -13337,7 +13325,6 @@ TYPE
 			VAR name: Basic.SegmentedName;source: IntermediateCode.Section;
 				moduleSection: IntermediateCode.Section; i: LONGINT; flags: SET;
 				sectionName: Basic.SectionName;
-			CONST MPO=-40000000H;
 			BEGIN
 					(*
 						TypeDesc* = POINTER TO RECORD
@@ -13542,7 +13529,6 @@ TYPE
 			VAR name: Basic.SegmentedName;source: IntermediateCode.Section;
 				moduleSection: IntermediateCode.Section; i: LONGINT; flags: SET;
 				sectionName: Basic.SectionName;
-			CONST MPO=-40000000H;
 			BEGIN
 					(*
 						TypeDesc* = POINTER TO RECORD
@@ -13954,26 +13940,67 @@ TYPE
 			declarationEmitter: DeclarationEmitter;
 			implementationEmitter: ImplementationEmitter;
 			module: Sections.Module;
+			sections: Sections.SectionList; 
+			exports: Sections.NameList; 
 			name, platformName: SyntaxTree.IdentifierString;
 			meta: MetaDataGenerator;
 			crc: CRC.CRC32Stream;
+			import: SyntaxTree.Import;
+			i: SIZE; 
 		BEGIN
 			ResetError;
-			Global.GetSymbolName(x,name);
 
+			NEW(sections); NEW(exports,8); 
+
+		
+			import := x.moduleScope.firstImport;
+			WHILE import # NIL DO
+				IF import.parameters # NIL THEN
+					(*module.SetModule(import.module); *)
+					NEW(module,import.module,system); (* backend structures *)
+					
+					Global.GetModuleName(import.module, name);
+					exports.AddName(name); 
+					(*
+					module.SetModuleName(name);
+					*)
+					NEW(implementationEmitter,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
+					NEW(declarationEmitter,system,implementationEmitter,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
+					NEW(meta, implementationEmitter, declarationEmitter,simpleMetaData);
+					declarationEmitter.Module(import.module,module);
+
+					IF ~meta.simple THEN
+						meta.Module(implementationEmitter.moduleBodySection);
+					END;
+					
+					FOR i := 0 TO module.allSections.Length()-1 DO 
+						sections.AddSection(module.allSections.GetSection(i));
+					END; 
+				END;
+				import := import.nextImport
+			END;
+			
 			NEW(module,x,system); (* backend structures *)
-
+			
 			Global.GetModuleName(x, name);
+			module.exports.AddName(name);
 			module.SetModuleName(name);
-
 			NEW(implementationEmitter,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
 			NEW(declarationEmitter,system,implementationEmitter,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
-
 			NEW(meta, implementationEmitter, declarationEmitter,simpleMetaData);
+
 			declarationEmitter.Module(x,module);
 
 			IF ~meta.simple THEN
 				meta.Module(implementationEmitter.moduleBodySection);
+			END;
+
+			FOR i := 0 TO sections.Length()-1 DO 
+				module.allSections.AddSection(sections.GetSection(i));
+			END; 
+
+			FOR i := 0 TO exports.Length()-1 DO
+				module.exports.AddName(exports.GetName(i));
 			END;
 
 			GetDescription(platformName);
@@ -14129,6 +14156,16 @@ TYPE
 		statCoopResetProcedure,
 		statCoopTraceModule)
 	END Statistics;
+
+	PROCEDURE HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN;
+	VAR this: SyntaxTree.Modifier; id: SyntaxTree.Identifier;
+	BEGIN
+		this := modifiers; id := SyntaxTree.NewIdentifier(name);
+		WHILE (this # NIL) & (this.identifier# id) DO
+			this := this.nextModifier;
+		END;
+		RETURN this # NIL
+	END HasFlag;
 
 	PROCEDURE GCD(a,b: SIZE): SIZE;
 	VAR h: SIZE;
@@ -14440,21 +14477,6 @@ TYPE
 		RETURN (type IS SyntaxTree.ArrayType) & (type(SyntaxTree.ArrayType).form = SyntaxTree.Static);
 	END IsStaticArray;
 
-	PROCEDURE IsStaticMathArray(type: SyntaxTree.Type): BOOLEAN;
-	BEGIN
-		IF type = NIL THEN RETURN FALSE END;
-		type := type.resolved;
-		RETURN (type IS SyntaxTree.MathArrayType) & (type(SyntaxTree.MathArrayType).form = SyntaxTree.Static);
-	END IsStaticMathArray;
-
-	PROCEDURE StaticMathArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type;
-	BEGIN
-		WHILE (IsStaticMathArray(type)) DO
-			type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
-		END;
-		RETURN type;
-	END StaticMathArrayBaseType;
-
 	PROCEDURE StaticArrayNumElements(type: SyntaxTree.Type): LONGINT;
 	VAR size: LONGINT;
 	BEGIN
@@ -14465,17 +14487,6 @@ TYPE
 		END;
 		RETURN size;
 	END StaticArrayNumElements;
-
-	PROCEDURE StaticMathArrayNumElements(type: SyntaxTree.Type): LONGINT;
-	VAR size: LONGINT;
-	BEGIN
-		size := 1;
-		WHILE (IsStaticMathArray(type)) DO
-			size := size * type.resolved(SyntaxTree.MathArrayType).staticLength;
-			type := type.resolved(SyntaxTree.MathArrayType).arrayBase;
-		END;
-		RETURN size;
-	END StaticMathArrayNumElements;
 
 	PROCEDURE StaticArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type;
 	BEGIN
@@ -14977,7 +14988,7 @@ TYPE
 
 	PROCEDURE InThisModule(scope: SyntaxTree.Scope; module: SyntaxTree.Module): BOOLEAN;
 	BEGIN
-		RETURN (scope.ownerModule = module) OR (scope.ownerModule.moduleScope.outerScope = module.moduleScope);
+		RETURN (scope.ownerModule = module);
 	END InThisModule;
 
 

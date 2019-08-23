@@ -138,7 +138,6 @@ TYPE
 		PROCEDURE ^ Error(position: Position; CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ Type(x: SyntaxTree.Type); 
 		PROCEDURE ^ QualifiedType(x: SyntaxTree.QualifiedType); 
-		PROCEDURE ^ HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ RecordType(x: SyntaxTree.RecordType); 
 		PROCEDURE ^ CellType(x: SyntaxTree.CellType); 
 		PROCEDURE ^ Variable(x: SyntaxTree.Variable); 
@@ -598,6 +597,7 @@ VAR
 
 	PROCEDURE ^ ResetStatistics*; 
 	PROCEDURE ^ Statistics*; 
+	PROCEDURE ^ HasFlag(modifiers: SyntaxTree.Modifier; CONST name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GCD(a, b: SIZE): SIZE; 
 	PROCEDURE ^ SCM(a, b: SIZE): SIZE; 
 	PROCEDURE ^ CommonAlignment(a, b: SIZE): SIZE; 
@@ -628,10 +628,7 @@ VAR
 	PROCEDURE ^ IsOpenArray(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsSemiDynamicArray(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticArray(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ IsStaticMathArray(type: SyntaxTree.Type): BOOLEAN; 
-	PROCEDURE ^ StaticMathArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ StaticArrayNumElements(type: SyntaxTree.Type): LONGINT; 
-	PROCEDURE ^ StaticMathArrayNumElements(type: SyntaxTree.Type): LONGINT; 
 	PROCEDURE ^ StaticArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ ArrayBaseType(type: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ IsDelegate(type: SyntaxTree.Type): BOOLEAN; 

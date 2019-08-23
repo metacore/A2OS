@@ -1,5 +1,5 @@
 MODULE FoxGenericObjectFile;
-	IMPORT StringPool, Streams, Commands, Basic := FoxBasic, Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Fingerprinter := FoxFingerprinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
+	IMPORT Streams, Commands, Basic := FoxBasic, Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode, SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Fingerprinter := FoxFingerprinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 CONST 
 	Trace = FALSE; 
 	TraceAliases = FALSE; 

@@ -66,9 +66,12 @@ TYPE
 		firstBlock, firstLinkedBlock: Block; 
 		linkRoot: ObjectFile.SectionName; 
 		hash: HashTableSegmentedName; 
+		offers-, requires-: ObjectFile.NameList; 
 
 		PROCEDURE ^  & InitLinker*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; useCategories: SET; code, data: Arrangement); 
 		PROCEDURE ^ SetLinkRoot*(CONST root: ARRAY OF CHAR); 
+		PROCEDURE ^ SetOffers*(CONST offers: ObjectFile.NameList); 
+		PROCEDURE ^ SetRequires*(CONST requires: ObjectFile.NameList); 
 		PROCEDURE ^ Error*(CONST source, message: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning*(CONST source, message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorP*(CONST pooledName: ObjectFile.SegmentedName; CONST message: ARRAY OF CHAR); 
@@ -79,7 +82,10 @@ TYPE
 		PROCEDURE ^ ExportBlock*(block: Block); 
 		PROCEDURE ^ GetArrangement(block: Block): Arrangement; 
 		PROCEDURE ^ Precedes*(left, right: Block): BOOLEAN; 
+		PROCEDURE ^ RemoveBlock*(block: Block); 
+		PROCEDURE ^ RemovePrefixed*(prefix: ObjectFile.SegmentedName); 
 		PROCEDURE ^ AddSection*(CONST section: ObjectFile.Section); 
+		PROCEDURE ^ EnterBlocks*; 
 		PROCEDURE ^ Resolve*; 
 		PROCEDURE ^ PatchAlias*(block: Block); 
 		PROCEDURE ^ Link*; 
@@ -89,10 +95,12 @@ TYPE
 		PROCEDURE ^ Patch(block: Block); 
 		PROCEDURE ^ Diagnose(block: Block); 
 	END Linker; 
+VAR 
+	unused: Block; 
 
 	PROCEDURE ^ GetPriority(block: Block): WORD; 
 	PROCEDURE ^ ReadHeader(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList); 
 	PROCEDURE ^ OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList); 
-	PROCEDURE ^ Process*(reader: Streams.Reader; linker: Linker); 
+	PROCEDURE ^ Load*(reader: Streams.Reader; linker: Linker); 
 BEGIN
 END GenericLinker.

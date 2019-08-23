@@ -312,5 +312,6 @@ TYPE
 	PROCEDURE ^ CanPassInRegister*(system: Global.System; type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ ReturnedAsParameter*(system: Global.System; type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ StructuredReturnType*(system: Global.System; procedureType: SyntaxTree.ProcedureType): BOOLEAN; 
+	PROCEDURE ^ ReplaceCharacter(VAR dst: ARRAY OF CHAR; this, by: CHAR); 
 BEGIN
 END FoxSemanticChecker.

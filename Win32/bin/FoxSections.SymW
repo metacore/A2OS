@@ -117,6 +117,7 @@ TYPE
 		importedSections-: SectionList; 
 		platformName-: SyntaxTree.IdentifierString; 
 		imports-: NameList; 
+		exports-: NameList; 
 
 		PROCEDURE ^  & Init*(module: SyntaxTree.Module; system: Global.System); 
 		PROCEDURE ^ SetImports*(imports: NameList); 

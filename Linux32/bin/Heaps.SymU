@@ -8,7 +8,7 @@ CONST
 	MaxTries = 16; 
 	Unmarked = 0; 
 	BlockSize* = (8 * SIZEOF(ADDRESS)); 
-	ArrayAlignment = 8; 
+	ArrayAlignment* = 8; 
 	BlockHeaderSize* = (2 * AddressSize); 
 	HeapBlockOffset* =  -(2 * AddressSize); 
 	TypeDescOffset* =  -AddressSize; 

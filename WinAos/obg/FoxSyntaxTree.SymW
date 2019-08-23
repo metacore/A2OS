@@ -1542,19 +1542,26 @@ TYPE
 		PROCEDURE ^ RemoveImporters*(moduleName, context: Identifier); 
 	END ModuleScope; 
 
-	Identifiers* = OBJECT 
+	TemplateType* = ENUM Type* = 0, Const* = 1 END; 
+
+	TemplateParameter* = RECORD 
+		type*: TemplateType; 
+		identifier*: Identifier; 
+	END; 
+
+	TemplateParameters* = OBJECT 
 	TYPE 
-		IdentifierArray = POINTER TO ARRAY OF Identifier; 
+		TemplateParameterArray = POINTER TO ARRAY OF TemplateParameter; 
 	VAR 
-		list: IdentifierArray; 
+		list: TemplateParameterArray; 
 		len: SIZE; 
 
 		PROCEDURE ^  & InitList*; 
 		PROCEDURE ^ Length*(): SIZE; 
-		PROCEDURE ^ Add*(d: Identifier); 
-		PROCEDURE ^ Get*(index: SIZE): Identifier; 
-		PROCEDURE ^ Set*(index: SIZE; symbol: Identifier); 
-	END Identifiers; 
+		PROCEDURE ^ Add*(CONST d: TemplateParameter); 
+		PROCEDURE ^ Get*(index: SIZE): TemplateParameter; 
+		PROCEDURE ^ Set*(index: SIZE; symbol: TemplateParameter); 
+	END TemplateParameters; 
 
 	Module* = OBJECT (Symbol)
 	VAR 
@@ -1565,7 +1572,7 @@ TYPE
 		isCellNet-: BOOLEAN; 
 		closingComment-: Comment; 
 		modifiers-: Modifier; 
-		parameters-: Identifiers; 
+		parameters-: TemplateParameters; 
 
 		PROCEDURE ^  & InitModule(CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT); 
 		PROCEDURE ^ SetCase*(case: LONGINT); 
@@ -1574,7 +1581,7 @@ TYPE
 		PROCEDURE ^ SetName*(name: Identifier); 
 		PROCEDURE ^ SetClosingComment*(comment: Comment); 
 		PROCEDURE ^ SetModifiers*(modifiers: Modifier); 
-		PROCEDURE ^ SetParameters*(parameters: Identifiers); 
+		PROCEDURE ^ SetParameters*(parameters: TemplateParameters); 
 	END Module; 
 
 	ProcedureList* = OBJECT 

@@ -117,6 +117,6 @@ VAR
 	PROCEDURE ^ Find*(CONST path: ARRAY OF CHAR; menu: WMTrees.Tree): WMTrees.TreeNode; 
 	PROCEDURE ^ AddItemNode*(CONST path: ARRAY OF CHAR; menu: WMTrees.Tree): WMTrees.TreeNode; 
 	PROCEDURE ^ AddItem*(CONST path: ARRAY OF CHAR; menu: WMTrees.Tree); 
-	PROCEDURE ^ Show*(menu: WMTrees.Tree; x, y: LONGINT; handler: WMEvents.EventListener); 
+	PROCEDURE ^ Show*(menu: WMTrees.Tree; x, y: SIZE; handler: WMEvents.EventListener); 
 BEGIN
 END WMMenus.

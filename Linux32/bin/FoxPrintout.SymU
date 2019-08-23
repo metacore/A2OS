@@ -153,6 +153,7 @@ TYPE
 		PROCEDURE ^ VisitCode*(x: SyntaxTree.Code); 
 		PROCEDURE ^ Body(x: SyntaxTree.Body; implementation: BOOLEAN); 
 		PROCEDURE ^ VisitModule*(x: SyntaxTree.Module); 
+		PROCEDURE ^ TemplateParameter(x: SyntaxTree.TemplateParameter); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
 		PROCEDURE ^ SingleStatement*(b: BOOLEAN); 
 		PROCEDURE ^  & Init*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN); 

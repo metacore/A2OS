@@ -105,6 +105,7 @@ TYPE
 		PROCEDURE ^ ConstDeclaration(parentScope: SyntaxTree.Scope); 
 		PROCEDURE ^ DeclarationSequence(parentScope: SyntaxTree.Scope); 
 		PROCEDURE ^ ImportList(scope: SyntaxTree.Scope); 
+		PROCEDURE ^ TemplateParameter(VAR position: SyntaxTree.Position): SyntaxTree.TemplateParameter; 
 		PROCEDURE ^ Module*(): SyntaxTree.Module; 
 		PROCEDURE ^ NextModule*(): BOOLEAN; 
 	END Parser; 

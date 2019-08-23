@@ -30,7 +30,7 @@ TYPE
 		node: WMTrees.TreeNode; 
 
 		PROCEDURE ^  & New*(t: ArchiveTree; n: WMTrees.TreeNode); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: WORD): WMDropTarget.DropInterface; 
 	END ArchiveDropTarget; 
 
 	ArchiveTree* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
@@ -94,7 +94,7 @@ TYPE
 		popup: WMPopups.Popup; 
 		px, py: SIZE; 
 		node: WMTrees.TreeNode; 
-		curFiles, curFolders, curBytes: LONGINT; 
+		curFiles, curFolders, curBytes: SIZE; 
 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
@@ -122,7 +122,7 @@ TYPE
 		PROCEDURE ^ Close*; 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIZE; 
 	ProtShowFiles, ProtShowImgPrev: WMProperties.BooleanProperty; 
 	StrArchiveTree: Strings.String; 
 

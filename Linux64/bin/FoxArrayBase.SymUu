@@ -4,7 +4,7 @@ CONST
 	debug = FALSE; 
 	statistics = FALSE; 
 	conservative = TRUE; 
-	ArrDataArrayOffset = (4 * SIZEOF(ADDRESS)); 
+	ArrDataArrayOffset = ((3 * SIZEOF(ADDRESS)) + (( -3 * SIZEOF(ADDRESS)) MOD Heaps.ArrayAlignment)); 
 	AddressSize = SIZEOF(ADDRESS); 
 	MathPtrOffset = (0 * AddressSize); 
 	MathAdrOffset = (1 * AddressSize); 

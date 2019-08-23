@@ -641,6 +641,18 @@ TYPE
 		sameScreen: Bool; 
 	END; 
 
+	MotionEvent* = RECORD 
+		typ*: WORD; 
+		serial*: LONGWORD; 
+		sendEvent*: Bool; 
+		display*: DisplayPtr; 
+		window*, root*, subwindow*: Window; 
+		time*: Time; 
+		x*, y*, xRoot*, yRoot*, state*, button*: WORD; 
+		isHint*: CHAR; 
+		sameScreen*: Bool; 
+	END; 
+
 	KeyEvent* = RECORD 
 		typ*: WORD; 
 		serial*: LONGWORD; 

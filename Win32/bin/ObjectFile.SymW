@@ -1,5 +1,5 @@
 MODULE ObjectFile;
-	IMPORT Streams, BitSets, StringPool;
+	IMPORT Streams, BitSets, StringPool, Strings;
 CONST 
 	Version* = 7; 
 	Absolute* = 0; 
@@ -152,6 +152,7 @@ VAR
 	PROCEDURE ^ StringToSegmentedName*(CONST name: ARRAY OF CHAR; VAR segmentedName: SegmentedName); 
 	PROCEDURE ^ SegmentedNameToString*(CONST segmentedName: SegmentedName; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ CompareSegmentedNames*(CONST s1, s2: SegmentedName): WORD; 
+	PROCEDURE ^ IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN; 
 	OPERATOR ^ "="-(CONST l, r: SegmentedName): BOOLEAN; 
 	OPERATOR ^ "="-(CONST l, r: Identifier): BOOLEAN; 
 	OPERATOR ^ "#"-(CONST l, r: Identifier): BOOLEAN; 

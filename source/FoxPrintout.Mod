@@ -256,26 +256,34 @@ TYPE
 		PROCEDURE PointerFlags(x: SyntaxTree.PointerType);
 		VAR first: BOOLEAN;
 		BEGIN
-			first := TRUE;
-			IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
-			IF x.isUntraced THEN Flag(Global.NameUntraced,first) END;
-			IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
-			IF x.isDisposable THEN Flag(Global.NameDisposable,first) END;
-			IF x.isPlain THEN Flag(Global.NamePlain,first) END;
-			FlagEnd(first);
+				IF x.modifiers # NIL THEN
+					Modifiers(x.modifiers)
+				ELSE					
+					first := TRUE;
+					IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
+					IF x.isUntraced THEN Flag(Global.NameUntraced,first) END;
+					IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
+					IF x.isDisposable THEN Flag(Global.NameDisposable,first) END;
+					IF x.isPlain THEN Flag(Global.NamePlain,first) END;
+					FlagEnd(first);
+				END;
 		END PointerFlags;
 
 		PROCEDURE ObjectFlags ( rec: SyntaxTree.RecordType; x: SyntaxTree.PointerType);
 		VAR first: BOOLEAN;
 		BEGIN
-			first := TRUE;
-			IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
-			IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
-			IF x.isDisposable THEN Flag(Global.NameDisposable,first) END;
-			IF x.isPlain THEN Flag(Global.NamePlain,first) END;
-			IF rec.isAbstract THEN Flag(Global.NameAbstract, first) END;
-			IF rec.IsProtected() THEN Flag(Global.NameExclusive, first) END;
-			FlagEnd(first);
+			IF x.modifiers # NIL THEN
+				Modifiers(x.modifiers)
+			ELSE					
+				first := TRUE;
+				IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
+				IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
+				IF x.isDisposable THEN Flag(Global.NameDisposable,first) END;
+				IF x.isPlain THEN Flag(Global.NamePlain,first) END;
+				IF rec.isAbstract THEN Flag(Global.NameAbstract, first) END;
+				IF rec.IsProtected() THEN Flag(Global.NameExclusive, first) END;
+				FlagEnd(first);
+			END;
 		END ObjectFlags;
 
 		PROCEDURE VisitPointerType*(x: SyntaxTree.PointerType);

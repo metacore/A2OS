@@ -3896,6 +3896,8 @@ TYPE
 			IF result = SyntaxTree.invalidDesignator THEN
 			ELSIF (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) THEN
 				procedure := left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+			ELSIF (left.resolved # NIL) & (left.resolved IS SyntaxTree.ProcedureValue) THEN
+				procedure := left.resolved(SyntaxTree.ProcedureValue).value;
 			END;
 
 			IF InliningSupport & (procedure # NIL) & IsOberonInline(procedure) THEN

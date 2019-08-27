@@ -34,7 +34,7 @@ TYPE
 			IF ~(module IS Sections.Module) THEN
 				Basic.Error(diagnostics, module.module.sourceName, Basic.invalidPosition, "generated module format does not match object file format");
 				RETURN FALSE;
-			ELSIF module.findPC # MAX(LONGINT) THEN
+			ELSIF module.findPC # MAX(SIZE) THEN
 				MakeSectionOffsets(module(Sections.Module),varSize, codeSize, bodyOffset, code);
 				RETURN FindPC(module.findPC,module(Sections.Module),diagnostics);
 			ELSE
@@ -82,8 +82,8 @@ TYPE
 	(*
 		this procedure converts the section-based representation of fixups into a symbol based representation
 	*)
-	PROCEDURE GetFixups(diagnostics: Diagnostics.Diagnostics; module: Sections.Module; symbol: Sections.Section; VAR first: Fixup): LONGINT;
-	VAR temp: Fixup; fixup: BinaryCode.Fixup; nr :LONGINT; i: SIZE; section: Sections.Section; sectionList: Sections.SectionList;
+	PROCEDURE GetFixups(diagnostics: Diagnostics.Diagnostics; module: Sections.Module; symbol: Sections.Section; VAR first: Fixup): SIZE;
+	VAR temp: Fixup; fixup: BinaryCode.Fixup; nr, i: SIZE; section: Sections.Section; sectionList: Sections.SectionList;
 
 		PROCEDURE Do;
 		BEGIN
@@ -118,7 +118,7 @@ TYPE
 		RETURN nr
 	END GetFixups;
 
-	PROCEDURE FindPC(pc: LONGINT; module: Sections.Module; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
+	PROCEDURE FindPC(pc: SIZE; module: Sections.Module; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 	VAR
 		section:Sections.Section; binarySection: BinaryCode.Section; label: BinaryCode.LabelList;
 		i: SIZE;
@@ -259,7 +259,7 @@ TYPE
 		fp: SyntaxTree.Fingerprint;
 		error : BOOLEAN;
 		(** helper procedures *)
-		PROCEDURE GetEntries(moduleScope: SyntaxTree.ModuleScope; VAR numberEntries: LONGINT; VAR entries: ARRAY 256 OF IntermediateCode.Section);
+		PROCEDURE GetEntries(moduleScope: SyntaxTree.ModuleScope; VAR numberEntries: SIZE; VAR entries: ARRAY 256 OF IntermediateCode.Section);
 		VAR symbol: SyntaxTree.Symbol; p: Sections.Section;
 
 			PROCEDURE ConstantNeedsSection(constant: SyntaxTree.Constant): BOOLEAN;
@@ -418,7 +418,7 @@ TYPE
 
 		(* Imports = {name:String key:Int fix:Int} 0X:Char *)
 		PROCEDURE Imports;
-		VAR name: Name; import: SyntaxTree.Import; number: LONGINT; numberEntries: LONGINT; entries: ARRAY 256 OF IntermediateCode.Section;
+		VAR name: Name; import: SyntaxTree.Import; numberEntries: SIZE; entries: ARRAY 256 OF IntermediateCode.Section;
 
 			PROCEDURE IsFirstOccurence(import: SyntaxTree.Import): BOOLEAN; (*! inefficient *)
 			VAR i: SyntaxTree.Import;
@@ -431,7 +431,7 @@ TYPE
 			END IsFirstOccurence;
 
 			PROCEDURE MakeFixups(): SIZE;
-			VAR prev,this,i,instr: SIZE; section: Sections.Section; first: Fixup; numberFixups: LONGINT;
+			VAR prev,this,i,instr: SIZE; section: Sections.Section; first: Fixup; numberFixups: SIZE;
 			BEGIN
 				prev := 0;
 				FOR i := 1 TO numberEntries DO
@@ -510,10 +510,10 @@ TYPE
 		(* noEntries:Int BodyEntry {entry:Int32}:noEntries *)
 		PROCEDURE Entries(bodyOffset: SIZE);
 		VAR
-			i,numberEntries: LONGINT; entry: ARRAY 256 OF IntermediateCode.Section; (* more is not allowed anyway in the runtime system *)
+			i,numberEntries: SIZE; entry: ARRAY 256 OF IntermediateCode.Section; (* more is not allowed anyway in the runtime system *)
 		BEGIN
 			GetEntries(moduleScope, numberEntries, entry);
-			w.RawLInt(numberEntries);
+			w.RawLInt(numberEntries(LONGINT));
 			w.RawLInt(0); (* body entry: body is fixed at position 0, cf. MakeSectionOffsets *)
 			FOR i := 1 TO numberEntries DO
 				ASSERT(entry[i].offset MOD 4 = 0);

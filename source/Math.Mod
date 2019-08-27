@@ -15,208 +15,188 @@ CONST
 TYPE
 	Value = REAL;
 
-PROCEDURE -Sin(x: Value):Value;
-CODE
-#IF I386 THEN
-	FLD [ESP]
-	FSIN
-	#IF ~LEGACY THEN
-		FSTP [ESP]
-		MOVSS XMM0, [ESP]
-	#END
-	POP EAX
-#ELSIF AMD64 THEN
-	FLD [RSP]
-	FSIN
-	#IF ~LEGACY THEN
-		FSTP [RSP]
-		MOVSS XMM0, [RSP]
-	#END
-	POP RAX
-#ELSE
-	unimplemented
-#END
-END Sin;
-
-PROCEDURE -Cos(x: Value):Value;
-CODE
-#IF I386 THEN
-	FLD [ESP]
-	FCOS
-	#IF ~LEGACY THEN
-		FSTP [ESP]
-		MOVSS XMM0, [ESP]
-	#END
-	POP EAX
-#ELSIF AMD64 THEN
-	FLD [RSP]
-	FCOS
-	#IF ~LEGACY THEN
-		FSTP [RSP]
-		MOVSS XMM0, [RSP]
-	#END
-	POP RAX
-#ELSE
-	unimplemented
-#END
-END Cos;
-
-PROCEDURE -Arctan(x: Value):Value;
-CODE
-#IF I386 THEN
-	FLD [ESP]
-	FLD1
-	FPATAN
-	#IF ~LEGACY THEN
-		FSTP [ESP]
-		MOVSS XMM0, [ESP]
-	#END
-	POP EAX
-#ELSIF AMD64 THEN
-	FLD [RSP]
-	FLD1
-	FPATAN
-	#IF ~LEGACY THEN
-		FSTP [RSP]
-		MOVSS XMM0, [RSP]
-	#END
-	POP RAX
-#ELSE
-	unimplemented
-#END
-END Arctan;
-
-PROCEDURE -Sqrt(x: Value):Value;
-CODE
-#IF I386 THEN
-	FLD [ESP]
-	FSQRT
-	#IF ~LEGACY THEN
-		FSTP [ESP]
-		MOVSS XMM0, [ESP]
-	#END
-	POP EAX
-#ELSIF AMD64 THEN
-	FLD [RSP]
-	FSQRT
-	#IF ~LEGACY THEN
-		FSTP [RSP]
-		MOVSS XMM0, [RSP]
-	#END
-	POP RAX
-#ELSE
-	unimplemented
-#END
-END Sqrt;
-
-PROCEDURE -Ln(x: Value):Value;
-CODE
-#IF I386 THEN
-	FLD1
-	FLDL2E
-	FDIVP
-	FLD [ESP]
-	FYL2X
-	#IF ~LEGACY THEN
-		FSTP [ESP]
-		MOVSS XMM0, [ESP]
-	#END
-	POP EAX
-#ELSIF AMD64 THEN
-	FLD1
-	FLDL2E
-	FDIVP
-	FLD [RSP]
-	FYL2X
-	#IF ~LEGACY THEN
-		FSTP [RSP]
-		MOVSS XMM0, [RSP]
-	#END
-	POP RAX
-#ELSE
-	unimplemented
-#END
-END Ln;
-
-PROCEDURE -Exp(x: Value):Value;
-CODE
-#IF I386 THEN
-	FLD [ESP]
-	FLDL2E
-	FMULP
-	FLD ST0
-	FRNDINT
-	FXCH ST1
-	FSUB ST0, ST1
-	F2XM1
-	FLD1
-	FADDP
-	FSCALE
-	FSTP ST1
-	#IF ~LEGACY THEN
-		FSTP [ESP]
-		MOVSS XMM0, [ESP]
-	#END
-	POP EAX
-#ELSIF AMD64 THEN
-	FLD [RSP]
-	FLDL2E
-	FMULP
-	FLD ST0
-	FRNDINT
-	FXCH ST1
-	FSUB ST0, ST1
-	F2XM1
-	FLD1
-	FADDP
-	FSCALE
-	FSTP ST1
-	#IF ~LEGACY THEN
-		FSTP [RSP]
-		MOVSS XMM0, [RSP]
-	#END
-	POP RAX
-#ELSE
-	unimplemented
-#END
-END Exp;
-
 PROCEDURE sin*(x: Value): Value;
 BEGIN
-	RETURN Sin(x);
+#IF I386 THEN
+	CODE
+		FLD [EBP + x]
+		FSIN
+		#IF ~LEGACY THEN
+			FSTP [EBP + x]
+			MOVSS XMM0, [EBP + x]
+		#END
+	END
+#ELSIF AMD64 THEN
+	CODE
+		FLD [RBP + x]
+		FSIN
+		#IF ~LEGACY THEN
+			FSTP [RBP + x]
+			MOVSS XMM0, [RBP + x]
+		#END
+	END
+#ELSE
+	unimplemented
+#END
 END sin;
 
 PROCEDURE cos*(x: Value): Value;
 BEGIN
-	RETURN Cos(x);
+#IF I386 THEN
+	CODE
+		FLD [EBP + x]
+		FCOS
+		#IF ~LEGACY THEN
+			FSTP [EBP + x]
+			MOVSS XMM0, [EBP + x]
+		#END
+	END
+#ELSIF AMD64 THEN
+	CODE
+		FLD [RBP + x]
+		FCOS
+		#IF ~LEGACY THEN
+			FSTP [RBP + x]
+			MOVSS XMM0, [RBP + x]
+		#END
+	END
+#ELSE
+	unimplemented
+#END
 END cos;
 
 PROCEDURE arctan*(x: Value): Value;
 BEGIN
-	RETURN Arctan(x)
+#IF I386 THEN
+	CODE
+		FLD [EBP + x]
+		FLD1
+		FPATAN
+		#IF ~LEGACY THEN
+			FSTP [EBP + x]
+			MOVSS XMM0, [EBP + x]
+		#END
+	END
+#ELSIF AMD64 THEN
+	CODE
+		FLD [RBP + x]
+		FLD1
+		FPATAN
+		#IF ~LEGACY THEN
+			FSTP [RBP + x]
+			MOVSS XMM0, [RBP + x]
+		#END
+	END
+#ELSE
+	unimplemented
+#END
 END arctan;
 
 PROCEDURE sqrt*(x: Value): Value;
 BEGIN
 	IF x <= 0 THEN
-		IF x = 0 THEN RETURN 0 ELSE HALT(80) END
-	ELSE
-		RETURN Sqrt(x)
+		IF x = 0 THEN RETURN 0 ELSE HALT(80) END;
+	END;
+#IF I386 THEN
+	CODE
+		FLD [EBP + x]
+		FSQRT
+		#IF ~LEGACY THEN
+			FSTP [EBP + x]
+			MOVSS XMM0, [EBP + x]
+		#END
 	END
+#ELSIF AMD64 THEN
+	CODE
+		FLD [RBP + x]
+		FSQRT
+		#IF ~LEGACY THEN
+			FSTP [RBP + x]
+			MOVSS XMM0, [RBP + x]
+		#END
+	END
+#ELSE
+	unimplemented
+#END
 END sqrt;
 
 PROCEDURE ln*(x: Value): Value;
 BEGIN
 	IF x <= 0 THEN
-		HALT(80)
-	ELSE
-		RETURN Ln(x)
+		HALT(80);
+	END;
+#IF I386 THEN
+	CODE
+		FLD1
+		FLDL2E
+		FDIVP
+		FLD [EBP + x]
+		FYL2X
+		#IF ~LEGACY THEN
+			FSTP [EBP + x]
+			MOVSS XMM0, [EBP + x]
+		#END
 	END
+#ELSIF AMD64 THEN
+	CODE
+		FLD1
+		FLDL2E
+		FDIVP
+		FLD [RBP + x]
+		FYL2X
+		#IF ~LEGACY THEN
+			FSTP [RBP + x]
+			MOVSS XMM0, [RBP + x]
+		#END
+	END
+#ELSE
+	unimplemented
+#END
 END ln;
 
 PROCEDURE exp*(x: Value): Value;
 BEGIN
-	RETURN Exp(x)
+#IF I386 THEN
+	CODE
+		FLD [EBP + x]
+		FLDL2E
+		FMULP
+		FLD ST0
+		FRNDINT
+		FXCH ST1
+		FSUB ST0, ST1
+		F2XM1
+		FLD1
+		FADDP
+		FSCALE
+		FSTP ST1
+		#IF ~LEGACY THEN
+			FSTP [EBP + x]
+			MOVSS XMM0, [EBP + x]
+		#END
+	END
+#ELSIF AMD64 THEN
+	CODE
+		FLD [RBP + x]
+		FLDL2E
+		FMULP
+		FLD ST0
+		FRNDINT
+		FXCH ST1
+		FSUB ST0, ST1
+		F2XM1
+		FLD1
+		FADDP
+		FSCALE
+		FSTP ST1
+		#IF ~LEGACY THEN
+			FSTP [RBP + x]
+			MOVSS XMM0, [RBP + x]
+		#END
+	END
+#ELSE
+	unimplemented
+#END
 END exp;
 
 END Math.

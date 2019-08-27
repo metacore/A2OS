@@ -4,13 +4,13 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 MODULE MathL;	(** portable *)
 (** AUTHOR "?"; PURPOSE "Math utility module (LONGREAL)"; *)
 
-IMPORT SYSTEM;
-
 (* Aos version - requires floating-point instruction support. *)
 
 (**
 	Commonly needed Math for LONGREALs.
 *)
+
+IMPORT SYSTEM;
 
 CONST
 	e* = 2.7182818284590452354D0;

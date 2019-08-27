@@ -6,17 +6,16 @@ MODULE Math;	(** portable *)
 
 (* Aos version - requires floating-point instruction support. *)
 
-(**
-	Commonly needed Math for REALs.
-*)
-
 IMPORT SYSTEM;
 
 CONST
 	e* = 2.7182818284590452354E0;
 	pi* = 3.14159265358979323846E0;
 
-PROCEDURE -Sin(x: REAL):REAL;
+TYPE
+	Value = REAL;
+
+PROCEDURE -Sin(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD [ESP]
@@ -39,7 +38,7 @@ CODE
 #END
 END Sin;
 
-PROCEDURE -Cos(x: REAL):REAL;
+PROCEDURE -Cos(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD [ESP]
@@ -62,7 +61,7 @@ CODE
 #END
 END Cos;
 
-PROCEDURE -Arctan(x: REAL):REAL;
+PROCEDURE -Arctan(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD [ESP]
@@ -87,7 +86,7 @@ CODE
 #END
 END Arctan;
 
-PROCEDURE -Sqrt(x: REAL):REAL;
+PROCEDURE -Sqrt(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD [ESP]
@@ -110,7 +109,7 @@ CODE
 #END
 END Sqrt;
 
-PROCEDURE -Ln(x: REAL):REAL;
+PROCEDURE -Ln(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD1
@@ -139,7 +138,7 @@ CODE
 #END
 END Ln;
 
-PROCEDURE -Exp(x: REAL):REAL;
+PROCEDURE -Exp(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD [ESP]
@@ -182,22 +181,22 @@ CODE
 #END
 END Exp;
 
-PROCEDURE sin*(x: REAL): REAL;
+PROCEDURE sin*(x: Value): Value;
 BEGIN
-	IF x < 0.0 THEN RETURN -Sin(-x) ELSE RETURN Sin(x) END
+	IF x < 0 THEN RETURN -Sin(-x) ELSE RETURN Sin(x) END
 END sin;
 
-PROCEDURE cos*(x: REAL): REAL;
+PROCEDURE cos*(x: Value): Value;
 BEGIN
-	IF x < 0.0 THEN RETURN Cos(-x) ELSE RETURN Cos(x) END
+	IF x < 0 THEN RETURN Cos(-x) ELSE RETURN Cos(x) END
 END cos;
 
-PROCEDURE arctan*(x: REAL): REAL;
+PROCEDURE arctan*(x: Value): Value;
 BEGIN
 	RETURN Arctan(x)
 END arctan;
 
-PROCEDURE sqrt*(x: REAL): REAL;
+PROCEDURE sqrt*(x: Value): Value;
 BEGIN
 	IF x <= 0 THEN
 		IF x = 0 THEN RETURN 0 ELSE HALT(80) END
@@ -206,7 +205,7 @@ BEGIN
 	END
 END sqrt;
 
-PROCEDURE ln*(x: REAL): REAL;
+PROCEDURE ln*(x: Value): Value;
 BEGIN
 	IF x <= 0 THEN HALT(80)
 	ELSE
@@ -214,7 +213,7 @@ BEGIN
 	END
 END ln;
 
-PROCEDURE exp*(x: REAL): REAL;
+PROCEDURE exp*(x: Value): Value;
 BEGIN
 	RETURN Exp(x)
 END exp;

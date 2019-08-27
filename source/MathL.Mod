@@ -6,17 +6,16 @@ MODULE MathL;	(** portable *)
 
 (* Aos version - requires floating-point instruction support. *)
 
-(**
-	Commonly needed Math for LONGREALs.
-*)
-
 IMPORT SYSTEM;
 
 CONST
 	e* = 2.7182818284590452354D0;
 	pi* = 3.14159265358979323846D0;
 
-PROCEDURE -Sin(x: LONGREAL):LONGREAL;
+TYPE
+	Value = LONGREAL;
+
+PROCEDURE -Sin(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD QWORD [ESP]
@@ -40,7 +39,7 @@ CODE
 #END
 END Sin;
 
-PROCEDURE -Cos(x: LONGREAL):LONGREAL;
+PROCEDURE -Cos(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD QWORD [ESP]
@@ -64,7 +63,7 @@ CODE
 #END
 END Cos;
 
-PROCEDURE -Arctan(x: LONGREAL):LONGREAL;
+PROCEDURE -Arctan(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD QWORD [ESP]
@@ -90,7 +89,7 @@ CODE
 #END
 END Arctan;
 
-PROCEDURE -Sqrt(x: LONGREAL):LONGREAL;
+PROCEDURE -Sqrt(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD QWORD [ESP]
@@ -114,7 +113,7 @@ CODE
 #END
 END Sqrt;
 
-PROCEDURE -Ln(x: LONGREAL):LONGREAL;
+PROCEDURE -Ln(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD1
@@ -144,7 +143,7 @@ CODE
 #END
 END Ln;
 
-PROCEDURE -Exp(x: LONGREAL):LONGREAL;
+PROCEDURE -Exp(x: Value):Value;
 CODE
 #IF I386 THEN
 	FLD QWORD [ESP]
@@ -188,22 +187,22 @@ CODE
 #END
 END Exp;
 
-PROCEDURE sin*(x: LONGREAL): LONGREAL;
+PROCEDURE sin*(x: Value): Value;
 BEGIN
-	IF x < 0.0D0 THEN RETURN -Sin(-x) ELSE RETURN Sin(x) END
+	IF x < 0 THEN RETURN -Sin(-x) ELSE RETURN Sin(x) END
 END sin;
 
-PROCEDURE cos*(x: LONGREAL): LONGREAL;
+PROCEDURE cos*(x: Value): Value;
 BEGIN
-	IF x < 0.0D0 THEN RETURN Cos(-x) ELSE RETURN Cos(x) END
+	IF x < 0 THEN RETURN Cos(-x) ELSE RETURN Cos(x) END
 END cos;
 
-PROCEDURE arctan*(x: LONGREAL): LONGREAL;
+PROCEDURE arctan*(x: Value): Value;
 BEGIN
 	RETURN Arctan(x)
 END arctan;
 
-PROCEDURE sqrt*(x: LONGREAL): LONGREAL;
+PROCEDURE sqrt*(x: Value): Value;
 BEGIN
 	IF x <= 0 THEN
 		IF x = 0 THEN RETURN 0 ELSE HALT(80) END
@@ -212,7 +211,7 @@ BEGIN
 	END
 END sqrt;
 
-PROCEDURE ln*(x: LONGREAL): LONGREAL;
+PROCEDURE ln*(x: Value): Value;
 BEGIN
 	IF x <= 0 THEN HALT(80)
 	ELSE
@@ -220,7 +219,7 @@ BEGIN
 	END
 END ln;
 
-PROCEDURE exp*(x: LONGREAL): LONGREAL;
+PROCEDURE exp*(x: Value): Value;
 BEGIN
 	RETURN Exp(x)
 END exp;

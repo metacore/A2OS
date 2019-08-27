@@ -52,7 +52,7 @@ VAR
 	k: LONGINT;
 BEGIN
 	IF NEON THEN
-		IF x < 0.0 THEN RETURN -Sin(-x) ELSE RETURN Sin(x) END
+		RETURN Sin(x);
 	ELSE
 		WHILE x >= 2 * pi DO x := x - 2*pi END;
 		WHILE x < 0 DO x := x + 2*pi END;
@@ -75,7 +75,7 @@ VAR
 	prev, res, xk: REAL;
 BEGIN
 	IF NEON THEN
-		IF x < 0.0 THEN RETURN Cos(-x) ELSE RETURN Cos(x) END
+		RETURN Cos(x);
 	ELSE
 		WHILE x >= 2 * pi DO x := x - 2*pi END;
 		WHILE x < 0 DO x := x + 2*pi END;
@@ -142,7 +142,8 @@ VAR
 	res, y, yk: REAL;
 	k: LONGINT;
 BEGIN
-	IF x <= 0 THEN HALT(80)
+	IF x <= 0 THEN
+		HALT(80)
 	ELSIF NEON THEN
 		RETURN Ln(x)
 	ELSIF x < 1.0 THEN

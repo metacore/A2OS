@@ -189,12 +189,12 @@ END Exp;
 
 PROCEDURE sin*(x: Value): Value;
 BEGIN
-	IF x < 0 THEN RETURN -Sin(-x) ELSE RETURN Sin(x) END
+	RETURN Sin(x);
 END sin;
 
 PROCEDURE cos*(x: Value): Value;
 BEGIN
-	IF x < 0 THEN RETURN Cos(-x) ELSE RETURN Cos(x) END
+	RETURN Cos(x);
 END cos;
 
 PROCEDURE arctan*(x: Value): Value;
@@ -213,7 +213,8 @@ END sqrt;
 
 PROCEDURE ln*(x: Value): Value;
 BEGIN
-	IF x <= 0 THEN HALT(80)
+	IF x <= 0 THEN
+		HALT(80)
 	ELSE
 		RETURN Ln(x)
 	END

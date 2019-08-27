@@ -5742,7 +5742,7 @@ TYPE
 					ELSIF (procedureType.isDelegate) THEN (* push self pointer only if procedure is a method *)
 						Emit(Push(position,operand.tag));
 					END;
-				ELSE HALT(200);
+				ELSE HALT(200)
 				END;
 			END;
 

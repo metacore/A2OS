@@ -407,21 +407,21 @@ TYPE
 				oldmask	: LONGINT;
 				cr2			: LONGINT
 			#ELSIF AMD64 THEN
-				r_8			: HUGEINT;
-  				r_9			: HUGEINT;
-  				r_10		: HUGEINT;
-  				r_11		: HUGEINT;
-  				r_12		: HUGEINT;
-  				r_13		: HUGEINT;
-  				r_14		: HUGEINT;
-  				r_15		: HUGEINT;
-  				r_di		: HUGEINT;
-  				r_si		: HUGEINT;
+				r_8-			: HUGEINT;
+  				r_9-			: HUGEINT;
+  				r_10-		: HUGEINT;
+  				r_11-		: HUGEINT;
+  				r_12-		: HUGEINT;
+  				r_13-		: HUGEINT;
+  				r_14-		: HUGEINT;
+  				r_15-		: HUGEINT;
+  				r_di-		: HUGEINT;
+  				r_si-		: HUGEINT;
   				r_bp-		: ADDRESS;
   				r_bx-		: HUGEINT;
-  				r_dx		: HUGEINT;
-  				r_ax		: HUGEINT;
-  				r_cx		: HUGEINT;
+  				r_dx-		: HUGEINT;
+  				r_ax-		: HUGEINT;
+  				r_cx-		: HUGEINT;
   				r_sp-		: ADDRESS;
   				r_pc-		: ADDRESS;
   				r_efl		: HUGEINT;

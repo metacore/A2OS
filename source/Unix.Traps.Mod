@@ -87,11 +87,49 @@ VAR
 
 	END FinishTrap;
 
+	PROCEDURE Register(w: Streams.Writer; CONST name: ARRAY OF CHAR; value: ADDRESS);
+	BEGIN
+		w.String(name); w.String(" = "); w.Address(value); w.String(" ");
+	END Register;
+		
 	PROCEDURE Registers( CONST mc: Unix.Mcontext; w: Streams.Writer );
 	BEGIN
-		w.String( "SP  = " );  w.Address( mc.r_sp );
-		w.String( " FP  = " );  w.Address( mc.r_bp );
-		w.String( " PC  = " );  w.Address( mc.r_pc );  w.Ln;
+		Register(w,"SP",mc.r_sp);
+		Register(w,"FP",mc.r_bp);
+		Register(w,"PC",mc.r_pc); 
+		w.Ln; 
+		w.Ln;
+		#IF I386 THEN
+			Register(w,"EAX",mc.r_ax); 		
+			Register(w,"EBX",mc.r_bx); 		
+			Register(w,"ECX",mc.r_cx); 		
+			Register(w,"EDX",mc.r_dx);
+			w.Ln;	
+			Register(w,"ESI",mc.r_si); 		
+			Register(w,"EDI",mc.r_di); 		
+			w.Ln;	
+		#ELSIF AMD64 THEN
+			Register(w,"RAX",mc.r_ax); 		
+			Register(w,"RBX",mc.r_bx); 		
+			Register(w,"RCX",mc.r_cx); 		
+			Register(w,"RDX",mc.r_dx); 		
+			w.Ln;	
+			Register(w,"RSI",mc.r_si); 		
+			Register(w,"RDI",mc.r_di); 		
+			Register(w,"R8",mc.r_8); 		
+			Register(w,"R9",mc.r_9); 		
+			w.Ln;	
+			Register(w,"R10",mc.r_10); 		
+			Register(w,"R11",mc.r_11); 		
+			Register(w,"R12",mc.r_12); 		
+			Register(w,"R13",mc.r_13); 		
+			w.Ln;	
+			Register(w,"R14",mc.r_14); 		
+			Register(w,"R15",mc.r_15); 		
+			w.Ln;	
+		#ELSE
+			unimplemented
+		#END
 	END Registers;
 
 

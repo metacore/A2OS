@@ -735,10 +735,8 @@ PACKAGE Compiler ARCHIVE "Compiler.zip" SOURCE "CompilerSrc.zip" DESCRIPTION "Ac
 	FoxProfiler.Mod
 
 	# Runtime support for math oberon (Move to runtime package? *)
-	I386 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
-	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	AMD64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
-	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
+	I386 { I386.Math.Mod I386.MathL.Mod }
+	AMD64 { AMD64.Math.Mod AMD64.MathL.Mod }
 	ARM { ARM.Math.Mod ARM.MathL.Mod }
 	ComplexNumbers.Mod
 	FoxArrayBase.Mod
@@ -776,10 +774,8 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 		PCITools.Mod pci.ids # Automatic HW detection
 	}
 
-	I386 { XMM.I386.Math.Mod XMM.I386.MathL.Mod }
-	AMD64 { XMM.AMD64.Math.Mod XMM.AMD64.MathL.Mod }
-	#FPU32 { I386.Math.Mod I386.MathL.Mod }
-	#FPU64 { AMD64.Math.Mod AMD64.MathL.Mod }
+	I386 { I386.Math.Mod I386.MathL.Mod }
+	AMD64 { AMD64.Math.Mod AMD64.MathL.Mod }
 
 	Random.Mod Drand48.Mod
 

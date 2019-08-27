@@ -525,7 +525,7 @@ END PhysicalAdr;
 		LOCK
 		ADD	DWORD [EAX], EBX
 	#ELSIF AMD64 THEN
-		POP	ECX
+		POP	RCX
 		POP	RAX
 		LOCK
 		ADD	DWORD [RAX], ECX
@@ -561,8 +561,8 @@ END PhysicalAdr;
 		POP EDX		; address of x
 		LOCK CMPXCHG [EDX], EBX	; atomicly compare x with old and set it to new if equal
 	#ELSIF AMD64 THEN
-		POP ECX		; new
-		POP EAX		; old
+		POP RCX		; new
+		POP RAX		; old
 		POP RDX		; address of x
 		LOCK CMPXCHG [RDX], ECX	; atomicly compare x with old and set it to new if equal
 	#ELSE
@@ -700,7 +700,7 @@ END ChangeByteOrder;
 	END SetRSI;
 
 	PROCEDURE -SetRDI*(n: HUGEINT);
-	CODE POP EDI
+	CODE POP RDI
 	END SetRDI;
 
 	PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);

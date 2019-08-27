@@ -349,14 +349,14 @@ END PutPix;
 
 PROCEDURE -Copy0(src, dst: ADDRESS; hx, sw2, dw2: LONGINT);
 CODE {SYSTEM.AMD64}
-	POP EDX	; dw2
-	POP ECX	; sw2
-	POP EBX	; hx
+	POP RDX	; dw2
+	POP RCX	; sw2
+	POP RBX	; hx
 	POP RDI	; dst
 	POP RSI	; src
 	MOV EAX, EDX
 	SHR EAX, 1
-	PUSH EAX	; count
+	PUSH RAX	; count
 for:
 	MOV AL, [RSI]
 	MOV [RDI], AL
@@ -371,7 +371,7 @@ while1:
 	ADD EBX, ECX
 	DEC DWORD [RSP]
 	JNZ for
-	POP EAX
+	POP RAX
 END Copy0;
 
 PROCEDURE Copy*(sB, dB: Bitmap; SX, SY, SW, SH, DX, DY, DW, DH, mode: INTEGER);

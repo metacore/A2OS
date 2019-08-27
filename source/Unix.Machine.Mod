@@ -360,7 +360,7 @@ CODE
 	LOCK
 	ADD DWORD [EAX], EBX
 #ELSIF AMD64 THEN
-	POP EBX
+	POP RBX
 	POP RAX
 	LOCK
 	ADD DWORD [RAX], EBX
@@ -414,8 +414,8 @@ CODE
 	POP ECX		; address of x
 	LOCK CMPXCHG [ECX], EBX; atomicly compare x with old and set it to new if equal
 #ELSIF AMD64 THEN
-	POP EBX		; new
-	POP EAX		; old
+	POP RBX		; new
+	POP RAX		; old
 	POP RCX		; address of x
 	LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
 #ELSE

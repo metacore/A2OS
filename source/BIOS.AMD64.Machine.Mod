@@ -3077,7 +3077,7 @@ END AtomicExcl;
 (** Atomic INC(x, y). *)
 PROCEDURE -AtomicAdd*(VAR x: LONGINT; y: LONGINT);
 CODE {SYSTEM.AMD64}
-	POP EBX
+	POP RBX
 	POP RAX
 	LOCK
 	ADD DWORD [RAX], EBX
@@ -3094,8 +3094,8 @@ END AtomicTestSet;
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
 PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
 CODE {SYSTEM.AMD64}
-	POP EBX		; new
-	POP EAX		; old
+	POP RBX		; new
+	POP RAX		; old
 	POP RCX		; address of x
 	LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
 END AtomicCAS;

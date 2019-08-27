@@ -460,9 +460,9 @@ PROCEDURE UsbScanTab*() : ADDRESS;
 CODE {SYSTEM.AMD64}
 	CALL L1
 L1:
-	POP EAX
-	ADD EAX, L2 - L1
-	POP EBP
+	POP RAX
+	ADD RAX, L2 - L1
+	POP RBP
 	RET
 L2:
 	; Keyboard table stolen from Linux Usb keyboard driver, and corrected for Oberon

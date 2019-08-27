@@ -194,7 +194,7 @@ VAR
 	PROCEDURE -AtomicAdd*(VAR x: LONGINT; y: LONGINT);
 	CODE
 #IF AMD64 THEN
-		POP EBX
+		POP RBX
 		POP RAX
 		LOCK
 		ADD DWORD [RAX], EBX
@@ -228,8 +228,8 @@ VAR
 	PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
 	CODE
 #IF AMD64 THEN
-		POP EBX		; new
-		POP EAX		; old
+		POP RBX		; new
+		POP RAX		; old
 		POP RCX		; address of x
 		LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
 #ELSIF I386 THEN
@@ -301,7 +301,7 @@ VAR
 	CODE
 #IF AMD64 THEN
 		FLDCW	[RSP]	;  parameter s
-		POP	EAX
+		POP	RAX
 #ELSIF I386 THEN
 		FLDCW	[ESP]	;  parameter s
 		POP	EAX
@@ -316,7 +316,7 @@ VAR
 		PUSH	0
 		FNSTCW	[RSP]
 		FWAIT
-		POP	EAX
+		POP	RAX
 #ELSIF I386 THEN
 		PUSH	0
 		FNSTCW	[ESP]

@@ -180,7 +180,7 @@ CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	PUSH 0
 	FSTCW [RSP]
 	FWAIT
-	POP EAX
+	POP RAX
 END FCR;
 
 (** Set state of floating-point control register.  Traps reset this to the default.  Note that changing the rounding mode affects rounding of imprecise results as well as the ENTIER operation. *)
@@ -197,7 +197,7 @@ CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	FLD DWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT
-	POP EAX	; return value
+	POP RAX	; return value
 END Round;
 
 (** Round x to an integer using the current rounding mode. *)
@@ -207,7 +207,7 @@ CODE {SYSTEM.AMD64, SYSTEM.FPU}
 	FLD QWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT
-	POP EAX	; return value
+	POP RAX	; return value
 END RoundL;
 
 PROCEDURE RealX (hh, hl: HUGEINT; adr: ADDRESS);

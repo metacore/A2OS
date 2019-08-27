@@ -2952,6 +2952,9 @@ TYPE
 
 			IF	vop.mode = IntermediateCode.ModeImmediate THEN (* may not push 16 bit immediate: strange instruction in 32 / 64 bit mode *)
 				GetImmediate(vop,part,op1,TRUE,TRUE);
+				IF Assembler.IsRegisterOperand(op1) & (cpuBits=64) & (op1.register DIV 32 < 3) THEN
+					Assembler.InitRegister (op1, op1.register MOD 32 + RAX);
+				END;
 				emitter.Emit1(InstructionSet.opPUSH,op1);
 			ELSIF (type.sizeInBits = cpuBits) THEN
 				MakeOperand(vop,part,op1,NIL);

@@ -994,7 +994,7 @@ TYPE
 		NewBuiltin(systemTrace,"TRACE",system.globalScope,TRUE);
 		NewBuiltin(Reshape,"RESHAPE",system.globalScope,TRUE);
 		NewBuiltin(All,"ALL",system.globalScope,TRUE);
-		NewBuiltin(Map,"MAP",system.globalScope,TRUE);
+		NewBuiltin(Map,"MAPX",system.globalScope,TRUE);
 		NewBuiltin(Wait,"WAIT",system.globalScope,FALSE);
 		NewBuiltin(Connect,"CONNECT",system.globalScope,FALSE);
 		NewBuiltin(Receive,"RECEIVE",system.globalScope,FALSE);
@@ -1781,7 +1781,7 @@ TYPE
 		NewBuiltinIdentifier(Inc,"INC");
 		NewBuiltinIdentifier(Incl,"INCL");
 		NewBuiltinIdentifier(All,"ALL");
-		NewBuiltinIdentifier(Map,"MAP");
+		NewBuiltinIdentifier(Map,"MAPX");
 		NewBuiltinIdentifier(Re,"RE");
 		NewBuiltinIdentifier(Im,"IM");
 		NewBuiltinIdentifier(IncMul,"INCMUL");

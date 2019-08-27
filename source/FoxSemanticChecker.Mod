@@ -4373,7 +4373,13 @@ TYPE
 
 			mathArrayType: SyntaxTree.MathArrayType;
 			customBuiltin: SyntaxTree.CustomBuiltin;
-
+			
+			import: SyntaxTree.Import;
+			name: SyntaxTree.Identifier;
+			parameters : SyntaxTree.ExpressionList;
+			typeDeclaration: SyntaxTree.TypeDeclaration;
+			symbol: SyntaxTree.Symbol;
+			
 			PROCEDURE CheckArity(from,to: Basic.Integer): BOOLEAN;
 			VAR resultB: BOOLEAN;
 			BEGIN
@@ -5340,6 +5346,36 @@ TYPE
 				(* ---- SUM ----- *)
 				ELSIF (id = Global.Sum) & CheckArity(1,2) THEN (* can only be found by overloading *)
 					Error(position, "sum operator not applicable");
+				(* ---- MAP ----- *)
+				ELSIF (id = Global.Map) & CheckArity(1,1) THEN
+					WITH type0: SyntaxTree.ProcedureType DO
+						IF (type0.numberParameters = 1) & (type0.returnType # NIL) & type0.returnType.resolved.SameType(type0.firstParameter.type.resolved) THEN
+							name := SyntaxTree.NewIdentifier("Map"); 
+							import := SyntaxTree.NewImport(Basic.invalidPosition,name,name,FALSE);
+							parameters := SyntaxTree.NewExpressionList();
+							parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, parameter0(SyntaxTree.SymbolDesignator).symbol));
+							typeDeclaration := SyntaxTree.NewTypeDeclaration(position,NIL);
+							typeDeclaration.SetDeclaredType(type0.returnType);
+							typeDeclaration.SetScope(currentScope);
+							parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, typeDeclaration));
+							import.SetParameters(parameters); 
+							IF ~AddImport(module, import) THEN
+								Error(position,"MAP could not be generated (import failed)");
+							END;
+							name := SyntaxTree.NewIdentifier('Map');
+							symbol := Find(import.module.moduleScope, name, FALSE);
+							IF symbol # NIL THEN 
+								result := NewSymbolDesignator(position, NIL, NIL, symbol);
+								type := result.type;
+							ELSE
+								Error(position, "No procedure Map in Template Map"); 
+							END
+						ELSE
+							Error(position,"MAP operator not applicable to non one-to-one procedures");
+						END; 
+					ELSE
+						Error(position,"MAP operator not applicable to non procedure type"); 
+					END;
 				(* ---- ALL ----- *)
 				ELSIF (id = Global.All) & CheckArity(2,4) THEN (* can only be found by overloading *)
 					Error(position, "all operator not applicable");
@@ -6698,6 +6734,7 @@ TYPE
 									Error(expression.position,"passed procedure where no constant is expected");
 								END;
 								Global.GetSymbolName(symbol, name);
+								ReplaceCharacter(name,".","_");
 								stringWriter.String(name);
 							ELSE
 								Printout.Info("expression", expression);

@@ -10616,6 +10616,65 @@ TYPE
 		RETURN RESULT;
 	END "ALL";
 
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF SHORTINT; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF SHORTINT;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF INTEGER; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF INTEGER;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF LONGINT; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF LONGINT;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF HUGEINT; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF HUGEINT;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF REAL; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF REAL;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF LONGREAL; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF LONGREAL;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF COMPLEX; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF COMPLEX;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+
+	OPERATOR "ALL"*(CONST x: ARRAY [?] OF LONGCOMPLEX; map: PROCEDURE( ladr, dadr: ADDRESS; linc, dinc, len: SIZE)): ARRAY {UNSAFE}[?]  OF LONGCOMPLEX;
+	VAR elementSize: SIZE;
+	BEGIN
+		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
+		RETURN RESULT;
+	END "ALL";
+	
+
+		
+
 BEGIN
 	alloc := 0;  NEW(temporary);
 	PutFlags(temporary,{TensorFlag});

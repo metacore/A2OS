@@ -5708,6 +5708,11 @@ TYPE
 			ELSE
 				symbol := left(SyntaxTree.SymbolDesignator).symbol;
 			END;
+			
+			IF symbol IS SyntaxTree.Constant THEN 
+				ASSERT(symbol(SyntaxTree.Constant).value.resolved IS SyntaxTree.ProcedureValue); 
+				symbol := symbol(SyntaxTree.Constant).value.resolved(SyntaxTree.ProcedureValue).value;
+			END; 
 
 			IF procedureType.selfParameter # NIL THEN (* type bound procedure in a record *)
 				Designate(x.left(SyntaxTree.Designator).left, operand);
@@ -5723,7 +5728,7 @@ TYPE
 
 				Evaluate(x.left, operand);
 
-				IF (symbol IS SyntaxTree.Procedure) OR (symbol IS SyntaxTree.Constant) THEN
+				IF symbol IS SyntaxTree.Procedure THEN
 					IF (procedureType.selfParameter # NIL) THEN
 						Emit(Push(position,operand.tag));
 					ELSIF x.left IS SyntaxTree.SupercallDesignator THEN

@@ -11,7 +11,7 @@ BEGIN
 		NEW(w, "TRAPS", 860, 480, FALSE);
 		w.SetWindowBgColor(WMGraphics.DarkRed);
 		w.SetWindowIcon(WMGraphics.LoadImage("WMIcons.tar://WMTrapWriter.png", TRUE));
-		w.SetFontName("Courier");
+		w.SetFontName("VeraMo");
 		w.SetFontSize(12);
 		w.SetFontColor(WMGraphics.Gold);
 		w.window.editor.SetWordWrap(TRUE);

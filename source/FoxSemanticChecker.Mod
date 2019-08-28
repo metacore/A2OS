@@ -3989,7 +3989,9 @@ TYPE
  				ASSERT(system.GenerateVariableOffsets(inlineScope));
 
 				block := SyntaxTree.NewStatementBlock(result.position, NIL, inlineScope);
-				block.SetStatementSequence(SyntaxTree.CloneStatementSequence(procedure.procedureScope.body.statements));
+				IF procedure.procedureScope.body # NIL THEN
+					block.SetStatementSequence(SyntaxTree.CloneStatementSequence(procedure.procedureScope.body.statements));
+				END;
 				resolved := ResolveStatement(block);
 				returnType := result.type;
 				result := SyntaxTree.NewInlineCallDesignator(result.position, original, block);

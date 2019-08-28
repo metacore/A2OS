@@ -107,6 +107,7 @@ TYPE
 		replacements*: Replacement;
 		cellsAreObjects: BOOLEAN;
 		variableAccessed: BOOLEAN;
+		inAwait: BOOLEAN;
 
 		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR);
 		BEGIN
@@ -134,6 +135,7 @@ TYPE
 			SELF.cellsAreObjects := system.cellsAreObjects;
 			COPY(backend, backendName);
 			inConversion := 0;
+			inAwait := FALSE;
 		END InitChecker;
 
 		(*------------ service -------------*)
@@ -3900,7 +3902,7 @@ TYPE
 				procedure := left.resolved(SyntaxTree.ProcedureValue).value;
 			END;
 
-			IF InliningSupport & (procedure # NIL) & IsOberonInline(procedure) THEN
+			IF InliningSupport & (procedure # NIL) & IsOberonInline(procedure) & ~inAwait THEN
 				procedure.GetName(name);
 				inlineScope := SyntaxTree.NewBlockScope(currentScope);
  				currentScope := inlineScope;
@@ -5359,17 +5361,18 @@ TYPE
 							typeDeclaration.SetScope(currentScope);
 							parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, typeDeclaration));
 							import.SetParameters(parameters); 
-							IF ~AddImport(module, import) THEN
+							IF AddImport(module, import) THEN
+								name := SyntaxTree.NewIdentifier('Map');
+								symbol := Find(import.module.moduleScope, name, FALSE);
+								IF symbol # NIL THEN 
+									result := NewSymbolDesignator(position, NIL, NIL, symbol);
+									type := result.type;
+								ELSE
+									Error(position, "No procedure Map in Template Map"); 
+								END
+							ELSE
 								Error(position,"MAP could not be generated (import failed)");
 							END;
-							name := SyntaxTree.NewIdentifier('Map');
-							symbol := Find(import.module.moduleScope, name, FALSE);
-							IF symbol # NIL THEN 
-								result := NewSymbolDesignator(position, NIL, NIL, symbol);
-								type := result.type;
-							ELSE
-								Error(position, "No procedure Map in Template Map"); 
-							END
 						ELSE
 							Error(position,"MAP operator not applicable to non one-to-one procedures");
 						END; 
@@ -7505,12 +7508,49 @@ TYPE
 			RETURN returnStatement;
 		END ResolveReturnStatement;
 
+		VAR awaitProcCounter := 0 : SIZE;
+
+		PROCEDURE MakeAwaitProcedure(x: SyntaxTree.AwaitStatement): SyntaxTree.Procedure;
+		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; procedureScope: SyntaxTree.ProcedureScope;
+			identifier: SyntaxTree.Identifier; body: SyntaxTree.Body; returnStatement : SyntaxTree.ReturnStatement;
+			statements: SyntaxTree.StatementSequence;
+			name, suffix: SyntaxTree.IdentifierString;
+		BEGIN
+			Strings.IntToStr(awaitProcCounter,suffix);
+			Strings.Concat("@AwaitProcedure",suffix,name);
+			identifier := SyntaxTree.NewIdentifier(name);
+			INC(awaitProcCounter);
+			ASSERT(currentScope IS SyntaxTree.ProcedureScope);
+			procedureScope := SyntaxTree.NewProcedureScope(currentScope);
+			ASSERT(procedureScope.outerScope IS SyntaxTree.ProcedureScope);
+			procedure := SyntaxTree.NewProcedure(x.position,identifier,procedureScope);
+			procedure.SetAccess(SyntaxTree.Hidden);
+			procedure.SetScope(currentScope);
+			procedureType := SyntaxTree.NewProcedureType(x.position,currentScope);
+			procedureType.SetReturnType(system.booleanType);
+			procedure.SetType(procedureType);
+			body := SyntaxTree.NewBody(x.position,procedureScope);
+			procedureScope.SetBody(body);
+			returnStatement := SyntaxTree.NewReturnStatement(x.position,body);
+			returnStatement.SetReturnValue(x.condition); (* when inlining should be allowed, it should be CloneExpression(x.condition) *)
+			statements := SyntaxTree.NewStatementSequence();
+			statements.AddStatement(returnStatement);
+			body.SetStatementSequence(statements);
+			currentScope.AddProcedure(procedure);
+			ResolveProcedure(procedure);
+			RETURN procedure
+		END MakeAwaitProcedure;
+		
+
 		(** check and resolve await statement AWAIT(condition: Expression)
 			- check await condition
 		**)
 		PROCEDURE ResolveAwaitStatement(awaitStatement: SyntaxTree.AwaitStatement): SyntaxTree.Statement;
-		VAR condition: SyntaxTree.Expression;
+		VAR condition: SyntaxTree.Expression; prevInAwait: BOOLEAN;
 		BEGIN
+			prevInAwait := inAwait; 
+			inAwait := TRUE; (* avoid inlining *)
+			
 			condition := ResolveCondition(awaitStatement.condition);
 			IF currentIsRealtime THEN
 				Error(awaitStatement.position,"forbidden await statement in realtime block");
@@ -7519,6 +7559,10 @@ TYPE
 				Error(awaitStatement.position,"senseless await statement with constant condition");
 			END;
 			awaitStatement.SetCondition(condition);
+			
+			awaitStatement.SetProcedure(MakeAwaitProcedure(awaitStatement)); 
+			inAwait := prevInAwait; 
+			
 			RETURN awaitStatement;
 		END ResolveAwaitStatement;
 

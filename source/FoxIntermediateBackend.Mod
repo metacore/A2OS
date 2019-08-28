@@ -11144,36 +11144,6 @@ TYPE
 			IF Trace THEN TraceExit("VisitReturnStatement") END;
 		END ReturnStatement;
 
-		PROCEDURE MakeAwaitProcedure(x: SyntaxTree.AwaitStatement): SyntaxTree.Procedure;
-		VAR procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType; procedureScope: SyntaxTree.ProcedureScope;
-			identifier: SyntaxTree.Identifier; body: SyntaxTree.Body; returnStatement : SyntaxTree.ReturnStatement;
-			statements: SyntaxTree.StatementSequence;
-			name, suffix: SyntaxTree.IdentifierString;
-		BEGIN
-			Strings.IntToStr(awaitProcCounter,suffix);
-			Strings.Concat("@AwaitProcedure",suffix,name);
-			identifier := SyntaxTree.NewIdentifier(name);
-			INC(awaitProcCounter);
-			ASSERT(currentScope IS SyntaxTree.ProcedureScope);
-			procedureScope := SyntaxTree.NewProcedureScope(currentScope);
-			ASSERT(procedureScope.outerScope IS SyntaxTree.ProcedureScope);
-			procedure := SyntaxTree.NewProcedure(x.position,identifier,procedureScope);
-			procedure.SetAccess(SyntaxTree.Hidden);
-			procedure.SetScope(currentScope);
-			procedureType := SyntaxTree.NewProcedureType(x.position,currentScope);
-			procedureType.SetReturnType(system.booleanType);
-			procedure.SetType(procedureType);
-			body := SyntaxTree.NewBody(x.position,procedureScope);
-			procedureScope.SetBody(body);
-			returnStatement := SyntaxTree.NewReturnStatement(x.position,body);
-			returnStatement.SetReturnValue(x.condition);
-			statements := SyntaxTree.NewStatementSequence();
-			statements.AddStatement(returnStatement);
-			body.SetStatementSequence(statements);
-			currentScope.AddProcedure(procedure);
-			RETURN procedure
-		END MakeAwaitProcedure;
-
 		PROCEDURE AwaitStatement(x: SyntaxTree.AwaitStatement);
 		VAR proc: SyntaxTree.Procedure; res: IntermediateCode.Operand; symbol: Sections.Section;
 			call: IntermediateCode.Operand; label, startL, trueL: Label; name: Basic.SegmentedName;
@@ -11194,7 +11164,7 @@ TYPE
 				PushSelfPointer();
 				CallThis(position,"ExclusiveBlocks","FinalizeAwait",1);
 			ELSE
-				proc := MakeAwaitProcedure(x);
+				proc := x.procedure; 
 				Emit(Push(position,fp));
 				GetCodeSectionNameForSymbol(proc,name);
 				symbol := NewSection(module.allSections, Sections.CodeSection, name,proc,commentPrintout # NIL);

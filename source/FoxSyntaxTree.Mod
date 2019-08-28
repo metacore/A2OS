@@ -4001,16 +4001,23 @@ TYPE
 
 	(** << AWAIT condition >> **)
 	AwaitStatement* = OBJECT (Statement)
-		VAR condition-: Expression;
+		VAR 
+			condition-: Expression;
+			procedure-: Procedure;
 
 		PROCEDURE & InitAwaitStatement( position: Position; outer: Statement );
 		BEGIN
-			InitStatement( position,outer );  condition := NIL
+			InitStatement( position,outer );  condition := NIL; procedure := NIL;
 		END InitAwaitStatement;
 
 		PROCEDURE SetCondition*( condition: Expression );
 		BEGIN SELF.condition := condition
 		END SetCondition;
+		
+		PROCEDURE SetProcedure*(p: Procedure);
+		BEGIN procedure := p;
+		END SetProcedure;
+		
 
 		PROCEDURE Clone(): Statement;
 		VAR copy: AwaitStatement;

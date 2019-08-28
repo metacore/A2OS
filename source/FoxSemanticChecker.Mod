@@ -3917,7 +3917,13 @@ TYPE
 				tooComplex := FALSE;
 				i := 0;
 				WHILE (i < actualParameters.Length()) & ~tooComplex DO
-					actualParameter := ResolveExpression(actualParameters.GetExpression(i));
+					actualParameter := ResolveExpression(actualParameters.GetExpression(i));					
+					IF ~formalParameter.type.SameType(actualParameter.type.resolved) THEN
+						actualParameter := NewConversion(actualParameter.position,actualParameter,formalParameter.type,NIL);
+					END;
+					actualParameters.SetExpression(i,actualParameter);
+
+					
 					formalParameter.GetName(name);
 					IF actualParameter.resolved # NIL THEN
 						actualParameter := actualParameter.resolved

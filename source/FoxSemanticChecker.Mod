@@ -108,6 +108,7 @@ TYPE
 		cellsAreObjects: BOOLEAN;
 		variableAccessed: BOOLEAN;
 		inAwait: BOOLEAN;
+		inReturn: BOOLEAN;
 
 		PROCEDURE &InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage,cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR);
 		BEGIN
@@ -136,6 +137,7 @@ TYPE
 			COPY(backend, backendName);
 			inConversion := 0;
 			inAwait := FALSE;
+			inReturn := FALSE;
 		END InitChecker;
 
 		(*------------ service -------------*)
@@ -2980,7 +2982,7 @@ TYPE
 				ELSE
 					returnType := currentResultType;
 				END;
-				IF IsPointerType(returnType) OR IsArrayType(returnType) OR IsMathArrayType(returnType) & ReturnedAsParameter(system, returnType) OR ReturnedAsParameter(system,returnType)
+				IF IsPointerType(returnType) OR IsArrayType(returnType) OR IsMathArrayType(returnType) & ReturnedAsParameter(system, returnType) OR ReturnedAsParameter(system,returnType) OR inReturn
 				THEN
 					x.SetType(returnType);
 				ELSE
@@ -7468,8 +7470,10 @@ TYPE
 		**)
 		PROCEDURE ResolveReturnStatement(returnStatement: SyntaxTree.ReturnStatement): SyntaxTree.Statement;
 		VAR expression: SyntaxTree.Expression; position: Position; procedure: SyntaxTree.Procedure;
-			returnType: SyntaxTree.Type; outer: SyntaxTree.Statement; scope: SyntaxTree.Scope;
+			returnType: SyntaxTree.Type; outer: SyntaxTree.Statement; scope: SyntaxTree.Scope; prevInReturn: BOOLEAN;
 		BEGIN
+			prevInReturn := inReturn;
+			inReturn := TRUE;
 			position := returnStatement.position;
 			expression := returnStatement.returnValue;
 			IF expression # NIL THEN
@@ -7498,6 +7502,8 @@ TYPE
 							Error(position, "empty return type in procedure providing a return type")
 						ELSIF expression.type = NIL THEN
 							Error(position,"returned type incompatible: expression has no type");
+						ELSIF expression IS SyntaxTree.ResultDesignator THEN
+							(* always ok *)
 						ELSIF ~CompatibleTo(system,expression.type.resolved,returnType) THEN
 							Error(position, "return type not compatible");
 							IF VerboseErrorMessage THEN
@@ -7513,6 +7519,7 @@ TYPE
 					END;
 				END;
 			END;
+			inReturn := prevInReturn;
 			RETURN returnStatement;
 		END ResolveReturnStatement;
 

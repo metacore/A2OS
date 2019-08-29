@@ -3,7 +3,7 @@ MODULE Math;
 	AUTHOR Timothée Martiel, 12/2015
 	PURPOSE Math utilities for REALs
 *)
-IMPORT SYSTEM, Reals;
+IMPORT SYSTEM;
 
 CONST
 	e* = 2.7182818284590452354E0;
@@ -13,9 +13,14 @@ CONST
 	eps = 1.2E-7;
 	NEON = FALSE;
 
-PROCEDURE Mantissa (x: REAL): LONGINT;
+PROCEDURE Expo (x: REAL): UNSIGNED32;
 BEGIN
-	RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, x) * {0 .. 22})
+	RETURN ASH(SYSTEM.VAL(UNSIGNED32, x), -23) MOD 256
+END Expo;
+
+PROCEDURE Mantissa (x: REAL): UNSIGNED32;
+BEGIN
+	RETURN SYSTEM.VAL(UNSIGNED32, SYSTEM.VAL(SET32, x) * {0 .. 22})
 END Mantissa;
 
 PROCEDURE Equal (x, y: REAL): BOOLEAN;
@@ -155,7 +160,7 @@ BEGIN
 
 			ln(m * 2^e) = e ln(2) + ln(m)
 		*)
-		RETURN (Reals.Expo(x) - 127) * ln2 + ln(SYSTEM.VAL(REAL, Mantissa(x) + 3F800000H))
+		RETURN (Expo(x) - 127) * ln2 + ln(SYSTEM.VAL(REAL, Mantissa(x) + 3F800000H))
 	ELSE
 		(* ln(x) = 2 * sum_k 1/(2 k + 1) y^k, where y = (x - 1) / (x + 1), x real *)
 		y := (x - 1) / (x + 1);

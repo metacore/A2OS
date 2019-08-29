@@ -1,6 +1,6 @@
 MODULE MathL;
 
-IMPORT SYSTEM, Reals;
+IMPORT SYSTEM;
 
 CONST
 	e* = 2.7182818284590452354E0;
@@ -10,16 +10,14 @@ CONST
 	eps = 1.2E-7;
 	NEON = FALSE;
 
-(** Returns the mantissa *)
-PROCEDURE Mantissa (x: LONGREAL):HUGEINT;
-TYPE
-	Flt = ARRAY 2 OF LONGINT;
-VAR
-	y: Flt; h: HUGEINT;
+PROCEDURE Expo (x: LONGREAL): UNSIGNED32;
 BEGIN
-	y := SYSTEM.VAL(Flt, x);
-	h := y[0] + LSH(SYSTEM.VAL(HUGEINT, SYSTEM.VAL(SET, y[1])*{0..19}), 32);
-	RETURN h;
+	RETURN UNSIGNED32(ASH(SYSTEM.VAL(UNSIGNED64, x), -52)) MOD 2048
+END Expo;
+
+PROCEDURE Mantissa (x: LONGREAL): UNSIGNED64;
+BEGIN
+	RETURN SYSTEM.VAL(UNSIGNED64, SYSTEM.VAL(SET64, x) * {0 .. 51})
 END Mantissa;
 
 PROCEDURE Equal (x, y: LONGREAL): BOOLEAN;
@@ -145,7 +143,6 @@ PROCEDURE ln*(x: LONGREAL): LONGREAL;
 VAR
 	res, y, yk: LONGREAL;
 	k: LONGINT;
-	mantissa: HUGEINT;
 BEGIN
 	IF x <= 0 THEN
 		HALT(80)
@@ -160,8 +157,7 @@ BEGIN
 
 			ln(m * 2^e) = e ln(2) + ln(m)
 		*)
-		mantissa := Mantissa(x) + 3FF0000000000000H;
-		RETURN (Reals.ExpoL(x) - 1023) * ln2 + ln(SYSTEM.VAL(LONGREAL, mantissa))
+		RETURN (Expo(x) - 1023) * ln2 + ln(SYSTEM.VAL(LONGREAL, Mantissa(x) + 3FF0000000000000H))
 	ELSE
 		(* ln(x) = 2 * sum_k 1/(2 k + 1) y^k, where y = (x - 1) / (x + 1), x real *)
 		y := (x - 1) / (x + 1);

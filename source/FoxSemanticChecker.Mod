@@ -1733,17 +1733,7 @@ TYPE
 			value: SyntaxTree.MathArrayValue;
 			isValue: BOOLEAN;
 
-			PROCEDURE BaseType(type: SyntaxTree.Type): SyntaxTree.Type;
-			BEGIN
-				type := type.resolved;
-				WHILE (type # NIL) & (type IS SyntaxTree.MathArrayType) DO
-					type := Resolved(type(SyntaxTree.MathArrayType).arrayBase);
-				END;
-				WHILE (type # NIL) & (type IS SyntaxTree.ArrayType) DO
-					type := Resolved(type(SyntaxTree.ArrayType).arrayBase);
-				END;
-				RETURN type
-			END BaseType;
+
 
 			PROCEDURE RecursivelyConvert(x, to: SyntaxTree.MathArrayExpression);
 			VAR position: Position; numberElements, i: SIZE; expression: SyntaxTree.Expression; array: SyntaxTree.MathArrayExpression;
@@ -3824,12 +3814,12 @@ TYPE
 		PROCEDURE NewProcedureCallDesignator(position: Position; original: SyntaxTree.Expression; left: SyntaxTree.Expression; actualParameters:SyntaxTree.ExpressionList): SyntaxTree.Designator;
 		VAR result: SyntaxTree.Designator;
 			numberFormalParameters, numberActualParameters: SIZE;
-			formalType: SyntaxTree.ProcedureType;
+			procedureType: SyntaxTree.ProcedureType;
 			formalParameter: SyntaxTree.Parameter;
 			actualParameter: SyntaxTree.Expression;
 			i: SIZE;
 			self: SyntaxTree.Expression;
-			inlineScope: SyntaxTree.Scope; procedureType: SyntaxTree.ProcedureType;
+			inlineScope: SyntaxTree.Scope; 
 			tooComplex : BOOLEAN;
 			duplicate: BOOLEAN;
 			procedure: SyntaxTree.Procedure;
@@ -3842,18 +3832,82 @@ TYPE
 			resolved: SyntaxTree.Statement;
 			previousResultType: SyntaxTree.Type;
 			symbols: SyntaxTree.Symbols;
+			operator: SyntaxTree.Expression;
+			
+			PROCEDURE IsMap(): BOOLEAN;
+			VAR actualType, formalType, returnType: SyntaxTree.Type; 
+				name: SyntaxTree.Identifier;
+				import: SyntaxTree.Import;
+				parameters: SyntaxTree.ExpressionList;
+				typeDeclaration : SyntaxTree.TypeDeclaration;
+				symbol: SyntaxTree.Symbol;
+				parameter0: SyntaxTree.Expression;
+				symbolDesignator: SyntaxTree.Expression;
+			BEGIN
+				IF (numberActualParameters # 1) OR (numberFormalParameters # 1) OR (procedureType.returnType = NIL) THEN
+					RETURN FALSE;
+				END;
+				formalType := procedureType.firstParameter.type.resolved;
+				returnType := procedureType.returnType.resolved; 
+				IF ~returnType.SameType(formalType) THEN 
+					RETURN FALSE;
+				END;
+				parameter0 := actualParameters.GetExpression(0); 
+				actualType := parameter0.type.resolved;
+				IF IsMathArrayType(actualType) & BaseType(actualType).CompatibleTo(formalType) THEN
+					IF (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) THEN
+						procedure := left(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure);
+					ELSIF (left.resolved # NIL) & (left.resolved IS SyntaxTree.ProcedureValue) THEN
+						procedure := left.resolved(SyntaxTree.ProcedureValue).value;
+					END;
+					IF IsOberonInline(procedure) THEN
+						name := SyntaxTree.NewIdentifier("Map"); 
+						import := SyntaxTree.NewImport(Basic.invalidPosition,name,name,FALSE);
+						parameters := SyntaxTree.NewExpressionList();
+						(*
+						parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, parameter0(SyntaxTree.SymbolDesignator).symbol));
+						*)
+						parameters.AddExpression(left); 
+						typeDeclaration := SyntaxTree.NewTypeDeclaration(position,NIL);
+						typeDeclaration.SetDeclaredType(returnType);
+						typeDeclaration.SetScope(currentScope);
+						parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, typeDeclaration));
+						import.SetParameters(parameters); 
+						IF AddImport(module, import) THEN
+							name := SyntaxTree.NewIdentifier('Map');
+							symbol := Find(import.module.moduleScope, name, FALSE);
+							IF symbol # NIL THEN 
+								symbolDesignator := NewSymbolDesignator(position, NIL, NIL, symbol);
+								operator := NewOperatorCall(position, NIL, Global.All, parameter0, symbolDesignator, NIL);
+								RETURN TRUE;
+							ELSE
+								Printout.Info("symbol",symbol); 
+								Error(position, "No procedure Map in Template Map"); 
+							END
+						ELSE
+							Printout.Info("IMPORT PROBLEM",import); 
+							Error(position,"MAP could not be generated (import failed)");
+						END;
+					ELSE
+						operator := NewOperatorCall(position, NIL, Global.All, parameter0, left, NIL);	
+						RETURN TRUE;					
+					END;
+				END;
+				RETURN FALSE;
+			END IsMap;
+			
 		BEGIN
 			IF Trace THEN D.Str("ProcedureCallDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
-			formalType := left.type.resolved(SyntaxTree.ProcedureType); (* type checked in VisitParameterDesignator *)
-			numberFormalParameters := formalType.numberParameters;
+			procedureType := left.type.resolved(SyntaxTree.ProcedureType); (* type checked in VisitParameterDesignator *)
+			numberFormalParameters := procedureType.numberParameters;
 			numberActualParameters := actualParameters.Length();
 
-			IF (currentIsRealtime) & ~(formalType.isRealtime) THEN
+			IF (currentIsRealtime) & ~(procedureType.isRealtime) THEN
 				Error(position, "forbidden call of non-realtime procedure in realtime block");
 			END;
 
-			IF (formalType.selfParameter # NIL) & (formalType.selfParameter.kind = SyntaxTree.VarParameter) THEN
+			IF (procedureType.selfParameter # NIL) & (procedureType.selfParameter.kind = SyntaxTree.VarParameter) THEN
 				self := left(SyntaxTree.Designator).left;
 				IF (self # NIL) & ~IsVariable(self) THEN
 					Error(self.position, "Non-variable expression on variable receiver");
@@ -3863,8 +3917,10 @@ TYPE
 			IF ~ExpressionList(actualParameters) THEN
 				result := SyntaxTree.invalidDesignator
 			ELSE
-				IF numberActualParameters <= numberFormalParameters THEN
-					formalParameter := formalType.firstParameter;
+				IF IsMap() THEN 
+					RETURN operator(SyntaxTree.Designator);
+				ELSIF numberActualParameters <= numberFormalParameters THEN
+					formalParameter := procedureType.firstParameter;
 					FOR i := 0 TO numberActualParameters-1 DO
 						actualParameter := actualParameters.GetExpression(i);
 						IF (actualParameter = SyntaxTree.invalidExpression) THEN
@@ -4385,13 +4441,7 @@ TYPE
 
 			mathArrayType: SyntaxTree.MathArrayType;
 			customBuiltin: SyntaxTree.CustomBuiltin;
-			
-			import: SyntaxTree.Import;
-			name: SyntaxTree.Identifier;
-			parameters : SyntaxTree.ExpressionList;
-			typeDeclaration: SyntaxTree.TypeDeclaration;
-			symbol: SyntaxTree.Symbol;
-			
+						
 			PROCEDURE CheckArity(from,to: Basic.Integer): BOOLEAN;
 			VAR resultB: BOOLEAN;
 			BEGIN
@@ -5358,37 +5408,6 @@ TYPE
 				(* ---- SUM ----- *)
 				ELSIF (id = Global.Sum) & CheckArity(1,2) THEN (* can only be found by overloading *)
 					Error(position, "sum operator not applicable");
-				(* ---- MAP ----- *)
-				ELSIF (id = Global.Map) & CheckArity(1,1) THEN
-					WITH type0: SyntaxTree.ProcedureType DO
-						IF (type0.numberParameters = 1) & (type0.returnType # NIL) & type0.returnType.resolved.SameType(type0.firstParameter.type.resolved) THEN
-							name := SyntaxTree.NewIdentifier("Map"); 
-							import := SyntaxTree.NewImport(Basic.invalidPosition,name,name,FALSE);
-							parameters := SyntaxTree.NewExpressionList();
-							parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, parameter0(SyntaxTree.SymbolDesignator).symbol));
-							typeDeclaration := SyntaxTree.NewTypeDeclaration(position,NIL);
-							typeDeclaration.SetDeclaredType(type0.returnType);
-							typeDeclaration.SetScope(currentScope);
-							parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, typeDeclaration));
-							import.SetParameters(parameters); 
-							IF AddImport(module, import) THEN
-								name := SyntaxTree.NewIdentifier('Map');
-								symbol := Find(import.module.moduleScope, name, FALSE);
-								IF symbol # NIL THEN 
-									result := NewSymbolDesignator(position, NIL, NIL, symbol);
-									type := result.type;
-								ELSE
-									Error(position, "No procedure Map in Template Map"); 
-								END
-							ELSE
-								Error(position,"MAP could not be generated (import failed)");
-							END;
-						ELSE
-							Error(position,"MAP operator not applicable to non one-to-one procedures");
-						END; 
-					ELSE
-						Error(position,"MAP operator not applicable to non procedure type"); 
-					END;
 				(* ---- ALL ----- *)
 				ELSIF (id = Global.All) & CheckArity(2,4) THEN (* can only be found by overloading *)
 					Error(position, "all operator not applicable");
@@ -9514,6 +9533,18 @@ TYPE
 	BEGIN RETURN (type # NIL) & (type.resolved IS SyntaxTree.MathArrayType);
 	END IsMathArrayType;
 
+	PROCEDURE BaseType(type: SyntaxTree.Type): SyntaxTree.Type;
+	BEGIN
+		type := type.resolved;
+		WHILE (type # NIL) & (type IS SyntaxTree.MathArrayType) DO
+			type := Resolved(type(SyntaxTree.MathArrayType).arrayBase);
+		END;
+		WHILE (type # NIL) & (type IS SyntaxTree.ArrayType) DO
+			type := Resolved(type(SyntaxTree.ArrayType).arrayBase);
+		END;
+		RETURN type
+	END BaseType;
+		
 	PROCEDURE IsArrayType(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN RETURN (type # NIL) & (type.resolved IS SyntaxTree.ArrayType);
 	END IsArrayType;
@@ -9628,7 +9659,6 @@ TYPE
 			RETURN FALSE
 		END;
 	END CanPassInRegister;
-
 
 	PROCEDURE ReturnedAsParameter*(system: Global.System; type: SyntaxTree.Type): BOOLEAN;
 	BEGIN

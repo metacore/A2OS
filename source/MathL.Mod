@@ -208,6 +208,7 @@ PROCEDURE ln*(x: Value): Value;
 VAR
 	k: WORD;
 	res, y, yk: Value;
+	mantissa: UNSIGNED64;
 BEGIN
 	IF x <= 0 THEN
 		HALT(80);
@@ -248,7 +249,8 @@ BEGIN
 
 			ln(m * 2^e) = e ln(2) + ln(m)
 		*)
-		RETURN (Expo(x) - 1023) * ln2 + ln(SYSTEM.VAL(Value, Mantissa(x) + 3FF0000000000000H))
+		mantissa := Mantissa(x) + 3FF0000000000000H;
+		RETURN (Expo(x) - 1023) * ln2 + ln(SYSTEM.VAL(Value, mantissa))
 	ELSE
 		(* ln(x) = 2 * sum_k 1/(2 k + 1) y^k, where y = (x - 1) / (x + 1), x real *)
 		y := (x - 1) / (x + 1);

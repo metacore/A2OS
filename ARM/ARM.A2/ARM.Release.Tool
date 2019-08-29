@@ -89,10 +89,7 @@ PACKAGE SD ARCHIVE "SD.zip" SOURCE "SDSrc.zip" DESCRIPTION "SD Disk driver"
 END
 
 PACKAGE Math ARCHIVE "Math.zip" SOURCE "MathSrc.zip" DESCRIPTION "Math utilities"
-	ARM {
-		ARM.Math.Mod
-		ARM.MathL.Mod
-	}
+	Math.Mod MathL.Mod
 	ComplexNumbers.Mod
 	ARM {
 		ZYNQ:/ARM.FoxArrayBase.Mod
@@ -217,7 +214,7 @@ PACKAGE GUI ARCHIVE "GUI.zip" SOURCE "GUISrc.zip" DESCRIPTION "GUI & WindowManag
 
 	UnicodeProperties.Mod
 	WMGraphics.Mod WMDefaultFont.Mod WMGraphicsSmooth.Mod
-	
+
 	BMPCodec.Mod
 
 	TextUtilities.Mod Types.Mod Models.Mod
@@ -228,7 +225,7 @@ PACKAGE GUI ARCHIVE "GUI.zip" SOURCE "GUISrc.zip" DESCRIPTION "GUI & WindowManag
 	WMTabComponents.Mod MainMenu.Mod
 	UndoManager.Mod HostClipboard.Mod Diagnostics.Mod SyntaxHighlighter.Mod FileHandlers.Mod
 	WMPieMenu.Mod UnicodeBidirectionality.Mod
-	
+
 	WMProgressComponents.Mod
 
 	ContextualDependency.Mod WMTextView.Mod
@@ -434,12 +431,12 @@ END
 PACKAGE Archives ARCHIVE "Archives.zip" SOURCE "ArchivesSrc.zip" DESCRIPTION "Archiving tools"
 	Archives.Mod
 	Inflate.Mod # decompression on streams
-	
+
 	Tar.Mod
 
 	Zlib.Mod ZlibBuffers.Mod ZlibDeflate.Mod ZlibInflate.Mod 	# Zlib
 	ZlibWriters.Mod ZlibReaders.Mod Zip.Mod ZipTool.Mod	# Zip FS prk
-	
+
 	Unzip.Mod 	# zip file support
 	ZipFS.Mod
 	GZip.Mod

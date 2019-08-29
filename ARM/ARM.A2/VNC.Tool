@@ -7,7 +7,7 @@ Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	Strings.Mod Options.Mod ActiveTimers.Mod Plugins.Mod basel/ARM.A2/ARM.Network.Mod
 
 	Pipes.Mod Files.Mod Shell.Mod basel/ARM.A2/ShellController.Mod
-	
+
 	basel/ARM.A2/ARM.IP.Mod TCP.Mod basel/ARM.A2/ARM.IPv4.Mod IPv6.Mod ICMP.Mod UDP.Mod
 
 	DNS.Mod BIT.Mod DES.Mod CLUTs.Mod Displays.Mod DisplayNull.Mod basel/ARM.A2/ARM.Raster.Mod Reflection.Mod Locks.Mod
@@ -21,7 +21,7 @@ Compiler.Compile -b=ARM --traceModule=Trace --initLocals
 	WMTabComponents.Mod MainMenu.Mod
 	UndoManager.Mod HostClipboard.Mod Diagnostics.Mod SyntaxHighlighter.Mod FileHandlers.Mod
 	WMPieMenu.Mod UnicodeBidirectionality.Mod ContextualDependency.Mod WMTextView.Mod
-	WMInputMethods.Mod WMEditors.Mod WMDialogs.Mod Beep.Mod basel/ARM.A2/ARM.Math.Mod Random.Mod VNCServer.Mod WMVNCView.Mod
+	WMInputMethods.Mod WMEditors.Mod WMDialogs.Mod Beep.Mod Math.Mod Random.Mod VNCServer.Mod WMVNCView.Mod
 
 	basel/ARM.A2/VNCController.Mod
 ~

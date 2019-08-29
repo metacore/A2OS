@@ -25,7 +25,8 @@ BEGIN
 			FSTP QWORD [EBP + x]
 			MOVSD XMM0, [EBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSIF AMD64 THEN
 	CODE
 		FLD QWORD [RBP + x]
@@ -34,7 +35,8 @@ BEGIN
 			FSTP QWORD [RBP + x]
 			MOVSD XMM0, [RBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSE
 	unimplemented
 #END
@@ -50,7 +52,8 @@ BEGIN
 			FSTP QWORD [EBP + x]
 			MOVSD XMM0, [EBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSIF AMD64 THEN
 	CODE
 		FLD QWORD [RBP + x]
@@ -59,7 +62,8 @@ BEGIN
 			FSTP QWORD [RBP + x]
 			MOVSD XMM0, [RBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSE
 	unimplemented
 #END
@@ -76,7 +80,8 @@ BEGIN
 			FSTP QWORD [EBP + x]
 			MOVSD XMM0, [EBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSIF AMD64 THEN
 	CODE
 		FLD QWORD [RBP + x]
@@ -86,7 +91,8 @@ BEGIN
 			FSTP QWORD [RBP + x]
 			MOVSD XMM0, [RBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSE
 	unimplemented
 #END
@@ -105,7 +111,8 @@ BEGIN
 			FSTP QWORD [EBP + x]
 			MOVSD XMM0, [EBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSIF AMD64 THEN
 	CODE
 		FLD QWORD [RBP + x]
@@ -114,7 +121,8 @@ BEGIN
 			FSTP QWORD [RBP + x]
 			MOVSD XMM0, [RBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSE
 	unimplemented
 #END
@@ -136,7 +144,8 @@ BEGIN
 			FSTP QWORD [EBP + x]
 			MOVSD XMM0, [EBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSIF AMD64 THEN
 	CODE
 		FLD1
@@ -148,7 +157,8 @@ BEGIN
 			FSTP QWORD [RBP + x]
 			MOVSD XMM0, [RBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSE
 	unimplemented
 #END
@@ -174,7 +184,8 @@ BEGIN
 			FSTP QWORD [EBP + x]
 			MOVSD XMM0, [EBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSIF AMD64 THEN
 	CODE
 		FLD QWORD [RBP + x]
@@ -193,7 +204,8 @@ BEGIN
 			FSTP QWORD [RBP + x]
 			MOVSD XMM0, [RBP + x]
 		#END
-	END
+	END;
+	RETURN RESULT;
 #ELSE
 	unimplemented
 #END

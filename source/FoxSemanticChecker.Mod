@@ -1404,12 +1404,12 @@ TYPE
 
 				IF elementResult # SyntaxTree.invalidExpression THEN
 					IF IsIntegerValue(left,leftInteger) & IsIntegerValue(right,rightInteger) THEN
-						IF (leftInteger<0) OR (leftInteger >= system.setType.sizeInBits) THEN
+						IF (leftInteger<0) OR (leftInteger >= Global.Set64.sizeInBits) THEN
 							Error(left.position,"not allowed set integer value");
-							IF (rightInteger<0) OR (rightInteger  >= system.setType.sizeInBits) THEN
+							IF (rightInteger<0) OR (rightInteger  >= Global.Set64.sizeInBits) THEN
 								Error(right.position,"not allowed set integer value");
 							END
-						ELSIF (rightInteger<0) OR (rightInteger >= system.setType.sizeInBits) THEN
+						ELSIF (rightInteger<0) OR (rightInteger >= Global.Set64.sizeInBits) THEN
 							Error(right.position,"not allowed set integer value");
 						ELSE
 							IF (leftInteger > system.maxSet) OR (rightInteger <0) THEN

@@ -436,13 +436,11 @@ TYPE
 				IF mode  = Reflection.sfIndirect THEN (* by reference *)
 					IF type = Reflection.sfTypeOpenArray THEN
 						type := Reflection.GetChar(refs, offset);
-						CASE type OF
-						Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
-							IF o IS StringValue THEN
-								stack.PushSz(LEN(o(StringValue).value));
-								stack.PushA(ADDRESSOF(o(StringValue).value[0]));
-								RETURN TRUE;
-							END;
+						ASSERT (type = Reflection.sfTypeCHAR);
+						IF o IS StringValue THEN
+							stack.PushSz(LEN(o(StringValue).value));
+							stack.PushA(ADDRESSOF(o(StringValue).value[0]));
+							RETURN TRUE;
 						END;
 					ELSE
 						CASE type OF
@@ -506,13 +504,11 @@ TYPE
 							END;
 						|Reflection.sfTypeOpenArray:
 							type := Reflection.GetChar(refs, offset);
-							CASE type OF
-							Reflection.sfTypeCHAR, Reflection.sfTypeCHAR8:
-								IF v IS StringValue THEN
-									stack.PushSz(LEN(v(StringValue).value));
-									stack.PushA(ADDRESSOF(v(StringValue).value[0]));
-									RETURN TRUE;
-								END;
+							ASSERT (type = Reflection.sfTypeCHAR);
+							IF v IS StringValue THEN
+								stack.PushSz(LEN(v(StringValue).value));
+								stack.PushA(ADDRESSOF(v(StringValue).value[0]));
+								RETURN TRUE;
 							END;
 						END;
 					END;

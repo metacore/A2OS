@@ -201,7 +201,6 @@ VAR
 	(* some handy type variables for backend / checker implementers *)
 	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType;
 	Unsigned8-, Unsigned16-, Unsigned32-, Unsigned64-: SyntaxTree.IntegerType;
-	Character8-, Character16-, Character32-: SyntaxTree.CharacterType;
 	Set8-, Set16-, Set32-, Set64-: SyntaxTree.SetType;
 	Float32-, Float64-: SyntaxTree.FloatType;
 	Complex64-, Complex128-: SyntaxTree.ComplexType;
@@ -243,7 +242,7 @@ TYPE
 			A good concept has to be derived.
 		*)
 
-		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-,byteType-,
+		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, setType-, booleanType-, anyType-,byteType-,
 		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
 
 		CanPassInRegister-: PassInRegisterProc;
@@ -815,18 +814,12 @@ TYPE
 			system.booleanType := SyntaxTree.NewBooleanType(8);
 			system.byteType := SyntaxTree.NewByteType(8);
 			system.characterType := SyntaxTree.NewCharacterType(8);
-			system.characterType8 := SyntaxTree.NewCharacterType(8);
-			system.characterType16 := SyntaxTree.NewCharacterType(16);
-			system.characterType32 := SyntaxTree.NewCharacterType(32);
 		ELSIF minBits = 32 THEN
 			system.shortintType := SyntaxTree.NewIntegerType(32, TRUE);
 			system.integerType := SyntaxTree.NewIntegerType(32, TRUE);
 			system.booleanType := SyntaxTree.NewBooleanType(32);
 			system.byteType := SyntaxTree.NewByteType(32);
 			system.characterType := SyntaxTree.NewCharacterType(32);
-			system.characterType8 := SyntaxTree.NewCharacterType(32);
-			system.characterType16 := SyntaxTree.NewCharacterType(32);
-			system.characterType32 := SyntaxTree.NewCharacterType(32);
 		ELSE
 			HALT (3214); (* nothing else is currently implemented *)
 		END;
@@ -890,9 +883,6 @@ TYPE
 
 		(* Set up system types *)
 		DeclareType(system.characterType,"CHAR",system.globalScope);
-		DeclareType(system.characterType8,"CHAR8",system.globalScope);
-		DeclareType(system.characterType16,"CHAR16",system.globalScope);
-		DeclareType(system.characterType32,"CHAR32",system.globalScope);
 		DeclareType(system.rangeType,"RANGE",system.globalScope);
 		DeclareType(system.shortintType,"SHORTINT",system.globalScope);
 		DeclareType(system.integerType,"INTEGER",system.globalScope);
@@ -991,7 +981,7 @@ TYPE
        (* Following is LYNX version: *)
 
         IF minBits = 8 THEN
-            system.characterType := Character16;
+            system.characterType := SyntaxTree.NewCharacterType(16);
         END;
 
         (* LYNX builtin types *)
@@ -1867,9 +1857,6 @@ TYPE
 		Float64 := SyntaxTree.NewFloatType(64);
 		Complex64 := SyntaxTree.NewComplexType(Float32);
 		Complex128 := SyntaxTree.NewComplexType(Float64);
-		Character8 := SyntaxTree.NewCharacterType(8);
-		Character16 := SyntaxTree.NewCharacterType(16);
-		Character32 := SyntaxTree.NewCharacterType(32);
 		Set8 := SyntaxTree.NewSetType(8);
 		Set16 := SyntaxTree.NewSetType(16);
 		Set32 := SyntaxTree.NewSetType(32);

@@ -844,8 +844,8 @@ TYPE
 
 	END SetType;
 
-	(** <<CHAR, CHAR8, CHAR16, CHAR32>>
-		character types
+	(** <<CHAR>>
+		character type
 	**)
 	CharacterType*=OBJECT(BasicType)
 

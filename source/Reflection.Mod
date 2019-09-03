@@ -13,9 +13,6 @@ CONST
 CONST
 	sfTypeNone* = 0X;
 	sfTypeCHAR* = 01X;
-	sfTypeCHAR8* = 02X;
-	sfTypeCHAR16* = 03X;
-	sfTypeCHAR32* = 04X;
 	sfTypeRANGE* = 05X;
 	sfTypeSHORTINT* = 06X;
 	sfTypeINTEGER* = 07X;
@@ -100,7 +97,7 @@ CONST
 			| sfTypeDelegate {Parameter} return:Type
 			| sfTypePort (sfIN | sfOUT)
 			| sfTypeBOOLEAN
-			| sfTypeCHAR | sfTypeCHAR8 | sfTypeCHAR16 | sfTypeCHAR32
+			| sfTypeCHAR
 			| sfTypeSHORTINT | sfTypeINTEGER | sfTypeLONGINT | sfTypeHUGEINT
 			| sfTypeSIGNED8 | sfTypeSIGNED16 | sfTypeSIGNED32 | sfTypeSIGNED64
 			| sfTypeUNSIGNED8 | sfTypeUNSIGNED16 | sfTypeUNSIGNED32 | sfTypeUNSIGNED64
@@ -378,15 +375,9 @@ CONST
 		| sfTypeBOOLEAN:
 			size := SIZEOF(BOOLEAN);
 			SYSTEM.GET(adr, b); IF b THEN w.String("true") ELSE w.String("false") END;
-		| sfTypeCHAR, sfTypeCHAR8:
+		| sfTypeCHAR:
 			size := SIZEOF(CHAR);
 			SYSTEM.GET(adr, c); IF (c > " ") & (c <= "~") THEN w.Char( c ); ELSE w.Hex( ORD( c ), -2 );  w.Char( "X" ) END;
-		| sfTypeCHAR16:
-			size := SIZEOF(CHAR16);
-			SYSTEM.GET(adr, i); w.Hex(i,-4); w.Char("X");
-		| sfTypeCHAR32:
-			size := SIZEOF(CHAR32);
-			SYSTEM.GET(adr, l); w.Hex(l,-8); w.Char("X");
 		| sfTypeSHORTINT:
 			size := SIZEOF(SHORTINT);
 			SYSTEM.GET(adr, s); Signed(s);
@@ -581,7 +572,7 @@ CONST
 				IF ~OnHeapOrStack(a,low,high) THEN w.String(" (INVALID)") END;
 				SkipType(refs, offset);
 			| sfTypeOpenArray:
-				IF (refs[offset] = sfTypeCHAR) OR (refs[offset] = sfTypeCHAR8)  THEN (* ARRAY OF CHAR *)
+				IF refs[offset] = sfTypeCHAR THEN (* ARRAY OF CHAR *)
 					SYSTEM.GET(adr, a);
 					WriteValueString(w, a, MaxString, low, high);
 				ELSE
@@ -590,7 +581,7 @@ CONST
 				SkipType(refs, offset);
 			| sfTypeStaticArray:
 				len := GetSize(refs, offset);
-				IF (refs[offset] = sfTypeCHAR)  OR (refs[offset] = sfTypeCHAR8) THEN (* ARRAY x OF CHAR *)
+				IF refs[offset] = sfTypeCHAR THEN (* ARRAY x OF CHAR *)
 					WriteValueString(w, adr, len, low, high);
 				ELSE
 					w.String("... (NO STRING)");
@@ -1111,9 +1102,6 @@ TYPE
 			w.String("):"); ReportType(w, refs, offset);
 		| sfTypeBOOLEAN: w.String("BOOLEAN");
 		| sfTypeCHAR: w.String("CHAR");
-		| sfTypeCHAR8: w.String("CHAR8");
-		| sfTypeCHAR16: w.String("CHAR16");
-		| sfTypeCHAR32: w.String("CHAR32");
 		| sfTypeSHORTINT: w.String("SHORTINT");
 		| sfTypeINTEGER: w.String("INTEGER");
 		| sfTypeLONGINT: w.String("LONGINT");

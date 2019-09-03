@@ -37999,9 +37999,9 @@ positive: realtime object containing basic type fields
 	MODULE Test;
 	IMPORT SYSTEM;
 	TYPE A = OBJECT {REALTIME}
-		VAR a0: CHAR8; a1: CHAR16; a2: CHAR32; a3: SHORTINT; a4: INTEGER; a5: LONGINT; a6: HUGEINT; a7: REAL;
-		a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: ADDRESS; a12:SIZE; a13: SYSTEM.BYTE;
-		END A;
+		VAR a0: CHAR; a1: SHORTINT; a2: INTEGER; a3: LONGINT; a4: HUGEINT; a5: REAL;
+			a6: LONGREAL; a7: BOOLEAN; a8: SET; a9: ADDRESS; a10:SIZE; a11: SYSTEM.BYTE;
+	END A;
 	END Test.
 
 positive: realtime pointer to record that contains basic type fields
@@ -38009,9 +38009,9 @@ positive: realtime pointer to record that contains basic type fields
 	MODULE Test;
 	IMPORT SYSTEM;
 	TYPE A = POINTER {REALTIME} TO RECORD
-			a0: CHAR8; a1: CHAR16; a2: CHAR32; a3: SHORTINT; a4: INTEGER; a5: LONGINT; a6: HUGEINT; a7: REAL;
-			a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: ADDRESS; a12:SIZE; a13: SYSTEM.BYTE;
-			END;
+		a0: CHAR; a1: SHORTINT; a2: INTEGER; a3: LONGINT; a4: HUGEINT; a5: REAL;
+		a6: LONGREAL; a7: BOOLEAN; a8: SET; a9: ADDRESS; a10:SIZE; a11: SYSTEM.BYTE;
+	END;
 	END Test.
 
 positive: realtime pointer to array where the elements contain basic type fields
@@ -38019,9 +38019,9 @@ positive: realtime pointer to array where the elements contain basic type fields
 	MODULE Test;
 	IMPORT SYSTEM;
 	TYPE A0 = POINTER {REALTIME} TO ARRAY OF RECORD
-			a0: CHAR8; a1: CHAR16; a2: CHAR32; a3: SHORTINT; a4: INTEGER; a5: LONGINT; a6: HUGEINT; a7: REAL;
-			a8: LONGREAL; a9: BOOLEAN; a10: SET; a11: ADDRESS; a12:SIZE; a13: SYSTEM.BYTE;
-			END;
+		a0: CHAR; a1: SHORTINT; a2: INTEGER; a3: LONGINT; a4: HUGEINT; a5: REAL;
+		a6: LONGREAL; a7: BOOLEAN; a8: SET; a9: ADDRESS; a10:SIZE; a11: SYSTEM.BYTE;
+	END;
 	END Test.
 
 positive: realtime object containing enumeration type field

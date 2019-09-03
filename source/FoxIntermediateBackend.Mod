@@ -12348,9 +12348,6 @@ TYPE
 			CONST
 				sfTypeNone = 0X;
 				sfTypeCHAR = 01X;
-				sfTypeCHAR8 = 02X;
-				sfTypeCHAR16 = 03X;
-				sfTypeCHAR32 = 04X;
 				sfTypeRANGE = 05X;
 				sfTypeSHORTINT = 06X;
 				sfTypeINTEGER = 07X;
@@ -12450,7 +12447,7 @@ TYPE
 						| sfTypeDelegate {Parameter} return:Type
 						| sfTypePort (sfIN | sfOUT)
 						| sfTypeBOOLEAN
-						| sfTypeCHAR | sfTypeCHAR8 | sfTypeCHAR16 | sfTypeCHAR32
+						| sfTypeCHAR
 						| sfTypeSHORTINT | sfTypeINTEGER | sfTypeLONGINT | sfTypeHUGEINT
 						| sfTypeSIGNED8 | sfTypeSIGNED16 | sfTypeSIGNED32 | sfTypeSIGNED64
 						| sfTypeUNSIGNED8 | sfTypeUNSIGNED16 | sfTypeUNSIGNED32 | sfTypeUNSIGNED64
@@ -12607,17 +12604,8 @@ TYPE
 								Char(section, sfTypeBOOLEAN);
 							| SyntaxTree.CharacterType DO
 										IF type = module.system.characterType THEN
-										IF RefInfo THEN Info(section,"CHAR") END;
+											IF RefInfo THEN Info(section,"CHAR") END;
 											Char(section, sfTypeCHAR);
-										ELSIF (type = module.system.characterType8) OR (type.sizeInBits= 8) THEN
-											IF RefInfo THEN Info(section,"CHAR8") END;
-											Char(section, sfTypeCHAR8)
-										ELSIF (type = module.system.characterType16) OR (type.sizeInBits= 16) THEN
-											IF RefInfo THEN Info(section,"CHAR16") END;
-											Char(section, sfTypeCHAR16);
-										ELSIF (type = module.system.characterType32) OR (type.sizeInBits = 32) THEN
-											IF RefInfo THEN Info(section,"CHAR32") END;
-											Char(section, sfTypeCHAR32);
 										ELSE
 											HALT(100);
 										END;

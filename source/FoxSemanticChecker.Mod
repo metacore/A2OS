@@ -3819,7 +3819,7 @@ TYPE
 			actualParameter: SyntaxTree.Expression;
 			i: SIZE;
 			self: SyntaxTree.Expression;
-			inlineScope: SyntaxTree.Scope; 
+			inlineScope: SyntaxTree.Scope;
 			tooComplex : BOOLEAN;
 			duplicate: BOOLEAN;
 			procedure: SyntaxTree.Procedure;
@@ -3833,9 +3833,9 @@ TYPE
 			previousResultType: SyntaxTree.Type;
 			symbols: SyntaxTree.Symbols;
 			operator: SyntaxTree.Expression;
-			
+
 			PROCEDURE IsMap(): BOOLEAN;
-			VAR actualType, formalType, returnType: SyntaxTree.Type; 
+			VAR actualType, formalType, returnType: SyntaxTree.Type;
 				name: SyntaxTree.Identifier;
 				import: SyntaxTree.Import;
 				parameters: SyntaxTree.ExpressionList;
@@ -3848,11 +3848,11 @@ TYPE
 					RETURN FALSE;
 				END;
 				formalType := procedureType.firstParameter.type.resolved;
-				returnType := procedureType.returnType.resolved; 
-				IF ~returnType.SameType(formalType) THEN 
+				returnType := procedureType.returnType.resolved;
+				IF ~returnType.SameType(formalType) THEN
 					RETURN FALSE;
 				END;
-				parameter0 := actualParameters.GetExpression(0); 
+				parameter0 := actualParameters.GetExpression(0);
 				actualType := parameter0.type.resolved;
 				IF IsMathArrayType(actualType) & BaseType(actualType).CompatibleTo(formalType) THEN
 					IF (left IS SyntaxTree.SymbolDesignator) & (left(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) THEN
@@ -3861,41 +3861,41 @@ TYPE
 						procedure := left.resolved(SyntaxTree.ProcedureValue).value;
 					END;
 					IF IsOberonInline(procedure) THEN
-						name := SyntaxTree.NewIdentifier("Map"); 
+						name := SyntaxTree.NewIdentifier("Map");
 						import := SyntaxTree.NewImport(Basic.invalidPosition,name,name,FALSE);
 						parameters := SyntaxTree.NewExpressionList();
 						(*
 						parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, parameter0(SyntaxTree.SymbolDesignator).symbol));
 						*)
-						parameters.AddExpression(left); 
+						parameters.AddExpression(left);
 						typeDeclaration := SyntaxTree.NewTypeDeclaration(position,NIL);
 						typeDeclaration.SetDeclaredType(returnType);
 						typeDeclaration.SetScope(currentScope);
 						parameters.AddExpression(NewSymbolDesignator(position, NIL, NIL, typeDeclaration));
-						import.SetParameters(parameters); 
+						import.SetParameters(parameters);
 						IF AddImport(module, import) THEN
 							name := SyntaxTree.NewIdentifier('Map');
 							symbol := Find(import.module.moduleScope, name, FALSE);
-							IF symbol # NIL THEN 
+							IF symbol # NIL THEN
 								symbolDesignator := NewSymbolDesignator(position, NIL, NIL, symbol);
 								operator := NewOperatorCall(position, NIL, Global.All, parameter0, symbolDesignator, NIL);
 								RETURN TRUE;
 							ELSE
-								Printout.Info("symbol",symbol); 
-								Error(position, "No procedure Map in Template Map"); 
+								Printout.Info("symbol",symbol);
+								Error(position, "No procedure Map in Template Map");
 							END
 						ELSE
-							Printout.Info("IMPORT PROBLEM",import); 
+							Printout.Info("IMPORT PROBLEM",import);
 							Error(position,"MAP could not be generated (import failed)");
 						END;
 					ELSE
-						operator := NewOperatorCall(position, NIL, Global.All, parameter0, left, NIL);	
-						RETURN TRUE;					
+						operator := NewOperatorCall(position, NIL, Global.All, parameter0, left, NIL);
+						RETURN TRUE;
 					END;
 				END;
 				RETURN FALSE;
 			END IsMap;
-			
+
 		BEGIN
 			IF Trace THEN D.Str("ProcedureCallDesignator"); D.Ln; END;
 			result := SyntaxTree.invalidDesignator;
@@ -3917,7 +3917,7 @@ TYPE
 			IF ~ExpressionList(actualParameters) THEN
 				result := SyntaxTree.invalidDesignator
 			ELSE
-				IF IsMap() THEN 
+				IF IsMap() THEN
 					RETURN operator(SyntaxTree.Designator);
 				ELSIF numberActualParameters <= numberFormalParameters THEN
 					formalParameter := procedureType.firstParameter;
@@ -3975,13 +3975,13 @@ TYPE
 				tooComplex := FALSE;
 				i := 0;
 				WHILE (i < actualParameters.Length()) & ~tooComplex DO
-					actualParameter := ResolveExpression(actualParameters.GetExpression(i));					
+					actualParameter := ResolveExpression(actualParameters.GetExpression(i));
 					IF ~formalParameter.type.SameType(actualParameter.type.resolved) THEN
 						actualParameter := NewConversion(actualParameter.position,actualParameter,formalParameter.type,NIL);
 					END;
 					actualParameters.SetExpression(i,actualParameter);
 
-					
+
 					formalParameter.GetName(name);
 					IF actualParameter.resolved # NIL THEN
 						actualParameter := actualParameter.resolved
@@ -4441,7 +4441,7 @@ TYPE
 
 			mathArrayType: SyntaxTree.MathArrayType;
 			customBuiltin: SyntaxTree.CustomBuiltin;
-						
+
 			PROCEDURE CheckArity(from,to: Basic.Integer): BOOLEAN;
 			VAR resultB: BOOLEAN;
 			BEGIN
@@ -4849,12 +4849,8 @@ TYPE
 						END;
 					END;
 				(* ---- CHR ----- *)
-				ELSIF ((id = Global.Chr) OR (id = Global.Chr32)) & CheckArity(1,1) THEN
-					IF id = Global.Chr THEN
-						type := system.characterType
-					ELSE
-						type := system.characterType32
-					END;
+				ELSIF (id = Global.Chr) & CheckArity(1,1) THEN
+					type := system.characterType
 					IF CheckIntegerType(parameter0) THEN
 						IF IsIntegerValue(parameter0,i0)  THEN
 							result.SetResolved(SyntaxTree.NewCharacterValue(position,CHR(i0)));
@@ -6710,24 +6706,24 @@ TYPE
 			printer: Printout.Printer;
 		BEGIN
 			IF ExpressionList(x.parameters) THEN (* resolve all symbols *) END;
-			
+
 			Global.ModuleFileName(x.moduleName,x.context,filename);
-			
+
 			IF symbolFileFormat # NIL THEN
 				module := symbolFileFormat.Import(filename,importCache); (* includes module parsing *)
-				
+
 				(* import the importing module with the sole purpose to enable operator overloading *)
 				import := SyntaxTree.NewImport(Basic.invalidPosition,SELF.module.name,SELF.module.name,FALSE);
-				import.SetModule(SELF.module);										
+				import.SetModule(SELF.module);
 				module.moduleScope.AddImport(import);
 				import.SetState(SyntaxTree.Resolved);
 				module.GetName(name);
 
-				NEW(stringWriter, LEN(name)); 
+				NEW(stringWriter, LEN(name));
 				NEW(printer, stringWriter, Printout.SymbolFile, FALSE);
-				stringWriter.String(name); 
+				stringWriter.String(name);
 				stringWriter.String("(");
-				
+
 				IF module = NIL THEN
 					Error(x.position, "module could not be imported: parser errors");
 				ELSIF module.parameters = NIL THEN
@@ -6778,9 +6774,9 @@ TYPE
 					END;
 					checker := NewChecker(diagnostics,VerboseErrorMessage,cooperative,system,symbolFileFormat,importCache,"");
 					ASSERT(SELF.module.moduleScope # NIL);
-					stringWriter.String(")"); 
+					stringWriter.String(")");
 					stringWriter.Get(name);
-					module.SetName(SyntaxTree.NewIdentifier(name)); 
+					module.SetName(SyntaxTree.NewIdentifier(name));
 					module.SetScope(SELF.module.moduleScope);
 					checker.Module(module);
 					IF checker.error THEN
@@ -7574,7 +7570,7 @@ TYPE
 			ResolveProcedure(procedure);
 			RETURN procedure
 		END MakeAwaitProcedure;
-		
+
 
 		(** check and resolve await statement AWAIT(condition: Expression)
 			- check await condition
@@ -7582,9 +7578,9 @@ TYPE
 		PROCEDURE ResolveAwaitStatement(awaitStatement: SyntaxTree.AwaitStatement): SyntaxTree.Statement;
 		VAR condition: SyntaxTree.Expression; prevInAwait: BOOLEAN;
 		BEGIN
-			prevInAwait := inAwait; 
+			prevInAwait := inAwait;
 			inAwait := TRUE; (* avoid inlining *)
-			
+
 			condition := ResolveCondition(awaitStatement.condition);
 			IF currentIsRealtime THEN
 				Error(awaitStatement.position,"forbidden await statement in realtime block");
@@ -7593,10 +7589,10 @@ TYPE
 				Error(awaitStatement.position,"senseless await statement with constant condition");
 			END;
 			awaitStatement.SetCondition(condition);
-			
-			awaitStatement.SetProcedure(MakeAwaitProcedure(awaitStatement)); 
-			inAwait := prevInAwait; 
-			
+
+			awaitStatement.SetProcedure(MakeAwaitProcedure(awaitStatement));
+			inAwait := prevInAwait;
+
 			RETURN awaitStatement;
 		END ResolveAwaitStatement;
 
@@ -7953,8 +7949,8 @@ TYPE
 					(* treat imports first for a module scope, , set default context if necessary *)
 					import := scope(SyntaxTree.ModuleScope).firstImport;
 					WHILE(import # NIL) DO
-						IF import.context = SyntaxTree.invalidIdentifier THEN 
-							import.SetContext(scope.ownerModule.context) 
+						IF import.context = SyntaxTree.invalidIdentifier THEN
+							import.SetContext(scope.ownerModule.context)
 						END;
 						Register(import, currentScope, FALSE);
 						import := import.nextImport;
@@ -8050,7 +8046,7 @@ TYPE
 				END;
 				symbol := symbol.nextSymbol;
 			END;
-			
+
 			(* now process all symbols without any presumption on the order *)
 			IF scope IS SyntaxTree.ModuleScope THEN
 				import := scope(SyntaxTree.ModuleScope).firstImport;
@@ -9544,7 +9540,7 @@ TYPE
 		END;
 		RETURN type
 	END BaseType;
-		
+
 	PROCEDURE IsArrayType(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN RETURN (type # NIL) & (type.resolved IS SyntaxTree.ArrayType);
 	END IsArrayType;

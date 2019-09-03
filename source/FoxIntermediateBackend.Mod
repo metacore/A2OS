@@ -5029,7 +5029,7 @@ TYPE
 						END;
 						arrayDestinationTag := variableOp.op;
 						ReuseCopy(arrayDestinationTag,arrayDestinationTag);
-						ReleaseOperand(variableOp); 
+						ReleaseOperand(variableOp);
 						arrayDestinationDimension := 0;
 						Designate(expression,operand);
 						Pass((operand.tag));
@@ -5708,11 +5708,11 @@ TYPE
 			ELSE
 				symbol := left(SyntaxTree.SymbolDesignator).symbol;
 			END;
-			
-			IF symbol IS SyntaxTree.Constant THEN 
-				ASSERT(symbol(SyntaxTree.Constant).value.resolved IS SyntaxTree.ProcedureValue); 
+
+			IF symbol IS SyntaxTree.Constant THEN
+				ASSERT(symbol(SyntaxTree.Constant).value.resolved IS SyntaxTree.ProcedureValue);
 				symbol := symbol(SyntaxTree.Constant).value.resolved(SyntaxTree.ProcedureValue).value;
-			END; 
+			END;
 
 			IF procedureType.selfParameter # NIL THEN (* type bound procedure in a record *)
 				Designate(x.left(SyntaxTree.Designator).left, operand);
@@ -8543,7 +8543,7 @@ TYPE
 				SetLabel(ignore);
 				result.op := reg;
 			(* ---- CHR ----- *)
-			|Global.Chr, Global.Chr32:
+			|Global.Chr:
 				Evaluate(p0,result);
 				Convert(result.op,IntermediateCode.GetType(system,x.type));
 			|Global.Entier, Global.EntierH:
@@ -9161,7 +9161,7 @@ TYPE
 				SetLabel(ignore);
 				result.op := reg;
 			(* ---- CHR ----- *)
-			|Global.Chr, Global.Chr32:
+			|Global.Chr:
 				Evaluate(p0, result);
 				Convert(result.op,IntermediateCode.GetType(system,x.type));
 			|Global.Entier, Global.EntierH:
@@ -11164,7 +11164,7 @@ TYPE
 				PushSelfPointer();
 				CallThis(position,"ExclusiveBlocks","FinalizeAwait",1);
 			ELSE
-				proc := x.procedure; 
+				proc := x.procedure;
 				Emit(Push(position,fp));
 				GetCodeSectionNameForSymbol(proc,name);
 				symbol := NewSection(module.allSections, Sections.CodeSection, name,proc,commentPrintout # NIL);
@@ -13915,27 +13915,27 @@ TYPE
 			declarationEmitter: DeclarationEmitter;
 			implementationEmitter: ImplementationEmitter;
 			module: Sections.Module;
-			sections: Sections.SectionList; 
-			exports: Sections.NameList; 
+			sections: Sections.SectionList;
+			exports: Sections.NameList;
 			name, platformName: SyntaxTree.IdentifierString;
 			meta: MetaDataGenerator;
 			crc: CRC.CRC32Stream;
 			import: SyntaxTree.Import;
-			i: SIZE; 
+			i: SIZE;
 		BEGIN
 			ResetError;
 
-			NEW(sections); NEW(exports,8); 
+			NEW(sections); NEW(exports,8);
 
-		
+
 			import := x.moduleScope.firstImport;
 			WHILE import # NIL DO
 				IF import.parameters # NIL THEN
 					(*module.SetModule(import.module); *)
 					NEW(module,import.module,system); (* backend structures *)
-					
+
 					Global.GetModuleName(import.module, name);
-					exports.AddName(name); 
+					exports.AddName(name);
 					(*
 					module.SetModuleName(name);
 					*)
@@ -13947,16 +13947,16 @@ TYPE
 					IF ~meta.simple THEN
 						meta.Module(implementationEmitter.moduleBodySection);
 					END;
-					
-					FOR i := 0 TO module.allSections.Length()-1 DO 
+
+					FOR i := 0 TO module.allSections.Length()-1 DO
 						sections.AddSection(module.allSections.GetSection(i));
-					END; 
+					END;
 				END;
 				import := import.nextImport
 			END;
-			
+
 			NEW(module,x,system); (* backend structures *)
-			
+
 			Global.GetModuleName(x, name);
 			module.exports.AddName(name);
 			module.SetModuleName(name);
@@ -13970,9 +13970,9 @@ TYPE
 				meta.Module(implementationEmitter.moduleBodySection);
 			END;
 
-			FOR i := 0 TO sections.Length()-1 DO 
+			FOR i := 0 TO sections.Length()-1 DO
 				module.allSections.AddSection(sections.GetSection(i));
-			END; 
+			END;
 
 			FOR i := 0 TO exports.Length()-1 DO
 				module.exports.AddName(exports.GetName(i));

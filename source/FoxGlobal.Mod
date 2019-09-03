@@ -199,7 +199,6 @@ VAR
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier;
 
 	(* some handy type variables for backend / checker implementers *)
-	Boolean8-, Boolean32-: SyntaxTree.BooleanType;
 	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType;
 	Unsigned8-, Unsigned16-, Unsigned32-, Unsigned64-: SyntaxTree.IntegerType;
 	Character8-, Character16-, Character32-: SyntaxTree.CharacterType;
@@ -1858,8 +1857,6 @@ TYPE
 
 
 		(* types *)
-		Boolean8 := SyntaxTree.NewBooleanType(8);
-		Boolean32 := SyntaxTree.NewBooleanType(32);
 		Integer8 := SyntaxTree.NewIntegerType(8, TRUE);
 		Integer16 := SyntaxTree.NewIntegerType(16, TRUE);
 		Integer32 := SyntaxTree.NewIntegerType(32, TRUE);

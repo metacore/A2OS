@@ -2401,7 +2401,7 @@ TYPE
 			IF Lax THEN Ignore(Scanner.Semicolon) ELSE Check( Scanner.Semicolon ) END;
 			IF Trace THEN E( "ImportList" );  END;
 		END ImportList;
-		
+
 		(**
 			TemplateParameter = ("const" | "type") Identifier
 		**)
@@ -2414,9 +2414,9 @@ TYPE
 				parameter.type := SyntaxTree.TemplateType.Type
 			END;
 			parameter.identifier := Identifier(position);
-			RETURN parameter; 
+			RETURN parameter;
 		END TemplateParameter;
-		
+
 
 		(** Module = ('module' [TemplateParameters] | 'cellnet' [Flags]) Identifier ['in' Identifier]';'
 										{ImportList} DeclarationSequence [Body]

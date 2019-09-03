@@ -68,15 +68,15 @@ TYPE
 			BEGIN
 				sections := module.allSections;
 				FOR export := 0 TO module.exports.Length()-1 DO
-					prefix := module.exports.GetName(export); 
-					codeSection := NIL; dataSection := NIL; constSection := NIL; 
+					prefix := module.exports.GetName(export);
+					codeSection := NIL; dataSection := NIL; constSection := NIL;
 					codeAlign := 0; dataAlign := 0; constAlign := 0;
-					codeUnit := 0; dataUnit := 0; constUnit := 0; 
+					codeUnit := 0; dataUnit := 0; constUnit := 0;
 					FOR i := 0 TO sections.Length() - 1 DO
 
 						section := sections.GetSection(i);
 						sname := prefix;
-						IF Basic.IsPrefix(sname, section.name) THEN						
+						IF Basic.IsPrefix(sname, section.name) THEN
 							resolved := section(IntermediateCode.Section).resolved;
 							IF resolved = NIL THEN RETURN FALSE END;
 
@@ -120,7 +120,7 @@ TYPE
 					FOR i := 0 TO sections.Length() - 1 DO
 						section := sections.GetSection(i);
 						sname := prefix;
-						IF Basic.IsPrefix(sname, section.name) THEN						
+						IF Basic.IsPrefix(sname, section.name) THEN
 							resolved := section(IntermediateCode.Section).resolved;
 							exported := section(IntermediateCode.Section).exported;
 							IF (resolved # NIL) & (resolved.pc # 0) & (~resolved.os.fixed)  THEN
@@ -161,7 +161,7 @@ TYPE
 					FOR i := 0 TO sections.Length() - 1 DO
 						section := sections.GetSection(i);
 						sname := prefix;
-						IF Basic.IsPrefix(sname, section.name) THEN						
+						IF Basic.IsPrefix(sname, section.name) THEN
 							resolved := section(IntermediateCode.Section).resolved;
 							exported := section(IntermediateCode.Section).exported;
 							IF (section(IntermediateCode.Section).alias # NIL) THEN
@@ -187,7 +187,7 @@ TYPE
 						irSection := IntermediateCode.NewSection(sections, SHORTINT(constSection.os.type), constSection.os.identifier.name, NIL, FALSE);
 						irSection.SetResolved(constSection);
 					END;
-					
+
 				END;
 				RETURN TRUE;
 			END MergeSections;
@@ -233,12 +233,12 @@ TYPE
 				i: SIZE;
 			BEGIN
 				IF mergeSections & ~MergeSections(module) THEN RETURN FALSE END;
-				
-				NEW (offers, module.exports.Length()); 
+
+				NEW (offers, module.exports.Length());
 				FOR i := 0 TO module.exports.Length()-1 DO
 					offers[i] := module.exports.GetName(i);
 				END;
-				
+
 				IF module.module#NIL THEN
 					import := module.module.moduleScope.firstImport;
 					numImports := 0;
@@ -257,8 +257,8 @@ TYPE
 						END;
 						import := import.nextImport;
 					END;
-					
-					
+
+
 				END;
 				WriteHeader(writer,binary,module.allSections, poolMap, offers, requires, fingerprinter);
 				result := ExportSections (module.allSections);

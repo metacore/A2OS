@@ -899,7 +899,7 @@ TYPE
 				NEW(record.fieldList, record);
 				FieldListP(record.fieldList);
 			END;
-		
+
 			WHILE (token.symbol = FoxScanner.Procedure) OR (token.symbol = FoxScanner.Operator) DO
 				NextToken;
 				NEW(procDecl, record);
@@ -1587,7 +1587,7 @@ BEGIN
 
 				WHILE (method # NIL) DO
 					superClass := typeDecl.type.object.superPtr;
-					
+
 					WHILE (superClass # NIL) DO
 						procDecl := superClass.FindProcDecl(method.head.identDef.ident.name^);
 						IF (procDecl # NIL) THEN
@@ -1601,13 +1601,13 @@ BEGIN
 					ELSE
 						method := NIL;
 					END;
-				END;				
+				END;
 			ELSIF (typeDecl.type.record # NIL) THEN
 				method := typeDecl.type.record.procDecl;
 
 				WHILE (method # NIL) DO
 					superRecord := typeDecl.type.record.superPtr;
-					
+
 					WHILE (superRecord # NIL) DO
 						procDecl := superRecord.FindProcDecl(method.head.identDef.ident.name^);
 						IF (procDecl # NIL) THEN
@@ -1621,7 +1621,7 @@ BEGIN
 					ELSE
 						method := NIL;
 					END;
-				END;				
+				END;
 			END;
 
 			IF (typeDecl.next # NIL) THEN

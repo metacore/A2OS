@@ -10671,9 +10671,9 @@ TYPE
 		ApplyUnaryAAOp(RESULT,x,GetSize(x),map);
 		RETURN RESULT;
 	END "ALL";
-	
 
-		
+
+
 
 BEGIN
 	alloc := 0;  NEW(temporary);

@@ -4001,7 +4001,7 @@ TYPE
 
 	(** << AWAIT condition >> **)
 	AwaitStatement* = OBJECT (Statement)
-		VAR 
+		VAR
 			condition-: Expression;
 			procedure-: Procedure;
 
@@ -4013,11 +4013,11 @@ TYPE
 		PROCEDURE SetCondition*( condition: Expression );
 		BEGIN SELF.condition := condition
 		END SetCondition;
-		
+
 		PROCEDURE SetProcedure*(p: Procedure);
 		BEGIN procedure := p;
 		END SetProcedure;
-		
+
 
 		PROCEDURE Clone(): Statement;
 		VAR copy: AwaitStatement;
@@ -4927,15 +4927,15 @@ TYPE
 
 	END ModuleScope;
 
-	TemplateType*= ENUM 
+	TemplateType*= ENUM
 		Type*, Const*
 	END;
-	
+
 	TemplateParameter*= RECORD
 		type*: TemplateType;
 		identifier*: Identifier;
 	END;
-	
+
 	(** <<expression, expression, ...>> **)
 	TemplateParameters* = OBJECT
 	TYPE

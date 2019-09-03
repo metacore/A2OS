@@ -1181,7 +1181,7 @@ VAR
 		END;
 		RETURN ORD(ch1) - ORD(ch2);
 	END CompareSegmentedNames;
-	
+
 	PROCEDURE IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN;
 	VAR prefixS, ofS: SectionName; i: SIZE;
 	BEGIN

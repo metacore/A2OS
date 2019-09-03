@@ -774,7 +774,7 @@ TYPE
 	END Reader;
 
 		PROCEDURE Run;
-		VAR cmdList: Command; wait, exit: BOOLEAN; 
+		VAR cmdList: Command; wait, exit: BOOLEAN;
 			i : SIZE; interpreter: Interpreter.Interpreter; s: Scanner.StringMaker; w: Streams.Writer; r: Streams.Reader;
 			scanner: Scanner.Scanner; parser: Interpreter.Parser;
 

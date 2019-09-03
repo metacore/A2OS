@@ -169,23 +169,23 @@ VAR
 		error := FALSE; SELF.code := code; SELF.data := data; firstBlock := NIL; firstLinkedBlock := NIL;
 		linkRoot := "";
 		NEW(hash,64);
-		
+
 	END InitLinker;
-	
+
 	PROCEDURE SetLinkRoot*(CONST root: ARRAY OF CHAR);
 	BEGIN COPY(root, linkRoot)
 	END SetLinkRoot;
-	
+
 	PROCEDURE SetOffers*(CONST offers: ObjectFile.NameList);
 	BEGIN
 		SELF.offers := offers;
 	END SetOffers;
-	
+
 	PROCEDURE SetRequires*(CONST requires: ObjectFile.NameList);
 	BEGIN
 		SELF.requires := requires;
 	END SetRequires;
-	
+
 
 	PROCEDURE Error* (CONST source, message: ARRAY OF CHAR);
 	BEGIN diagnostics.Error (source, Streams.Invalid, message); error := TRUE;
@@ -238,19 +238,19 @@ VAR
 	PROCEDURE RemoveBlock* (block: Block);
 	VAR current: Block;
 	BEGIN
-		IF block = firstBlock THEN 
+		IF block = firstBlock THEN
 			firstBlock := block.next
 		ELSE
 			current := firstBlock;
 			WHILE (current.next # NIL) & (current.next # block) DO
 				current := current.next;
 			END;
-			ASSERT(current # NIL); 
+			ASSERT(current # NIL);
 			current.next := block.next;
 		END;
 		hash.Put(current.identifier.name, unused);
 	END RemoveBlock;
-	
+
 	PROCEDURE RemovePrefixed*(prefix: ObjectFile.SegmentedName);
 	VAR block: Block;
 	BEGIN
@@ -258,7 +258,7 @@ VAR
 			IF hash.Get(firstBlock.identifier.name) # NIL THEN hash.Put(firstBlock.identifier.name, unused) END;
 			firstBlock := firstBlock.next;
 		END;
-		IF firstBlock = NIL THEN 
+		IF firstBlock = NIL THEN
 			RETURN
 		END;
 		block := firstBlock;
@@ -272,7 +272,7 @@ VAR
 			END;
 		END;
 	END RemovePrefixed;
-	
+
 
 	PROCEDURE AddSection* (CONST section: ObjectFile.Section);
 	VAR block, current, previous,newBlock: Block; name: ARRAY 256 OF CHAR; i: SIZE; alias: ObjectFile.Alias;
@@ -297,7 +297,7 @@ VAR
 			current := newBlock;
 		END;
 	END AddSection;
-	
+
 	PROCEDURE EnterBlocks*;
 	VAR current: Block;
 	BEGIN
@@ -306,9 +306,9 @@ VAR
 			hash.Put(current.identifier.name, current);
 			ExportBlock(current);
 			current := current.next;
-		END;	
+		END;
 	END EnterBlocks;
-	
+
 
 	PROCEDURE Resolve*;
 	VAR block: Block; used: BOOLEAN; name: ARRAY 256 OF CHAR;
@@ -559,7 +559,7 @@ PROCEDURE Load* (reader: Streams.Reader; linker: Linker);
 VAR section: ObjectFile.Section; binary: BOOLEAN; poolMap: ObjectFile.PoolMap; offers, requires: ObjectFile.NameList;
 BEGIN
 	ReadHeader(reader, linker, binary, poolMap, offers, requires);
-	linker.SetOffers(offers); 
+	linker.SetOffers(offers);
 	linker.SetRequires(requires);
 	WHILE reader.Peek () # 0X DO
 		ObjectFile.ReadSection (reader, section,binary,poolMap);

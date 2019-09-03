@@ -221,7 +221,7 @@ TYPE
 			ELSE ASSERT(section.type IN {ObjectFile.Const, ObjectFile.Data});
 				adr := DoAllocate(section, data);
 			END;
-			
+
 			RETURN adr;
 		END Allocate;
 
@@ -286,7 +286,7 @@ TYPE
 		moduleName: ObjectFile.SegmentedName;
 		importBlock: GenericLinker.Block;
 		hash: HashTableIntAny;
-		
+
 		moduleBlock: ARRAY 32 OF GenericLinker.Block;
 		numberModuleBlocks: SIZE;
 
@@ -383,7 +383,7 @@ TYPE
 
 			StringPool.GetString(identifier.name[0], name);
 			isModule := identifier.name[1] = InternalModuleName;
-			
+
 			module := Modules.ThisModule(name,res,msg);
 			IF module = NIL THEN
 				D.String("could not get module while importing "); D.String(name); D.Ln;
@@ -457,7 +457,7 @@ VAR
 		file: Files.File; reader: Files.Reader; linker: Linker;
 		arrangement: Arrangement; diagnostics: Diagnostics.StreamDiagnostics; stringWriter: Streams.StringWriter;
 		module: Modules.Module; heapBlockAdr,moduleAdr: ADDRESS;
-		sname: ObjectFile.SectionName; 
+		sname: ObjectFile.SectionName;
 		Log, debug: Streams.Writer;
 		i: SIZE;
 	BEGIN
@@ -474,18 +474,18 @@ VAR
 			NEW(linker, diagnostics, debug, arrangement, arrangement,name);
 			IF TraceLoading THEN Trace.String("before linking"); Trace.Ln END;
 			GenericLinker.Load (reader, linker);
-			IF (linker.offers # NIL) & (LEN(linker.offers) > 1) THEN (* only when several modules in one object file *) 
+			IF (linker.offers # NIL) & (LEN(linker.offers) > 1) THEN (* only when several modules in one object file *)
 				(* remove all already loaded modules from linker sections *)
 				FOR i := 0 TO LEN(linker.offers)-1 DO
 					sname := linker.offers[i];
 					module := Modules.ModuleByName(sname);
-					TRACE(sname, module); 
+					TRACE(sname, module);
 					IF module # NIL THEN
 						linker.RemovePrefixed(linker.offers[i]);
 					END;
 				END;
-				 
-			END; 
+
+			END;
 			IF ~linker.error THEN linker.EnterBlocks END;
 			IF ~linker.error THEN linker.Resolve END;
 			IF ~linker.error THEN linker.Link END;

@@ -258,7 +258,7 @@ TYPE
 		BEGIN
 				IF x.modifiers # NIL THEN
 					Modifiers(x.modifiers)
-				ELSE					
+				ELSE
 					first := TRUE;
 					IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
 					IF x.isUntraced THEN Flag(Global.NameUntraced,first) END;
@@ -274,7 +274,7 @@ TYPE
 		BEGIN
 			IF x.modifiers # NIL THEN
 				Modifiers(x.modifiers)
-			ELSE					
+			ELSE
 				first := TRUE;
 				IF x.isUnsafe THEN Flag(Global.NameUnsafe,first) END;
 				IF x.isRealtime THEN Flag(Global.NameRealtime,first) END;
@@ -1861,7 +1861,7 @@ TYPE
 		PROCEDURE VisitModule*(x: SyntaxTree.Module);
 		BEGIN Module(x)
 		END VisitModule;
-		
+
 		PROCEDURE TemplateParameter(x: SyntaxTree.TemplateParameter);
 		BEGIN
 			IF x.type = SyntaxTree.TemplateType.Const THEN
@@ -1871,7 +1871,7 @@ TYPE
 			ELSE HALT(200) END;
 			Identifier(x.identifier);
 		END TemplateParameter;
-		
+
 
 		PROCEDURE Module*(x: SyntaxTree.Module);
 		VAR i: SIZE;

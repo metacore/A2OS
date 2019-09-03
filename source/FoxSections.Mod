@@ -410,7 +410,7 @@ TYPE
 			NEW(allSections);
 			NEW(importedSections);
 			NEW(imports, 128);
-			NEW(exports, 128); 
+			NEW(exports, 128);
 		END Init;
 
 		(*

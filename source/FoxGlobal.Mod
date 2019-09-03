@@ -113,7 +113,7 @@ CONST
 	Assert*= Scanner.EndOfText+1; Copy*= Assert+1; Dec*= Copy+1; Excl*= Dec+1; Halt*= Excl+1; Inc*= Halt+1; Incl*= Inc+1; New*= Incl+1; Dispose*= New+1; GetProcedure*= Dispose+1; Connect*= GetProcedure+1; Delegate*= Connect+1; Read*= Delegate+1; Write*= Read+1; Reshape*= Write+1; Wait*= Reshape+1;
 	(* global functions *)
 	Abs*= Wait+1; Cap*= Abs+1; Chr*= Cap+1; Entier*= Chr+1; EntierH*= Entier+1; Incr*= EntierH+1; Len*= Incr+1; Long*= Len+1; Max*= Long+1; Min*= Max+1; Odd*= Min+1; Ord*= Odd+1; Ord32*= Ord+1; Short*= Ord32+1; Size*= Short+1; Sum*= Size+1; Dim*= Sum+1; Cas*= Dim+1; First*= Cas+1; Last*= First+1; Step*= Last+1; Re*= Step+1; Im*= Re+1; Ash*= Im+1; Lsh*= Ash+1; Rot*= Lsh+1;
-	All* = Rot+1; 
+	All* = Rot+1;
 	(* system proper procedures *)
 	systemGet*= All+1; systemPut*= systemGet+1; systemMove*= systemPut+1; systemNew*= systemMove+1; systemRef*= systemNew+1; systemTypeCode*= systemRef+1; systemHalt*= systemTypeCode+1; systemPut8*= systemHalt+1; systemPut16*= systemPut8+1; systemPut32*= systemPut16+1; systemPut64*= systemPut32+1; systemTrace*= systemPut64+1; systemSetStackPointer*= systemTrace+1; systemSetFramePointer*= systemSetStackPointer+1; systemSetActivity*= systemSetFramePointer+1;
 	(* system functions *)

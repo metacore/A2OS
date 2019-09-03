@@ -206,8 +206,6 @@ VAR
 	Set8-, Set16-, Set32-, Set64-: SyntaxTree.SetType;
 	Float32-, Float64-: SyntaxTree.FloatType;
 	Complex64-, Complex128-: SyntaxTree.ComplexType;
-	Byte8: SyntaxTree.ByteType;
-	Byte32: SyntaxTree.ByteType;
 
 TYPE
 	Position = SyntaxTree.Position;
@@ -1874,8 +1872,6 @@ TYPE
 		Float64 := SyntaxTree.NewFloatType(64);
 		Complex64 := SyntaxTree.NewComplexType(Float32);
 		Complex128 := SyntaxTree.NewComplexType(Float64);
-		Byte8 := SyntaxTree.NewByteType(8);
-		Byte32 := SyntaxTree.NewByteType(32);
 		Character8 := SyntaxTree.NewCharacterType(8);
 		Character16 := SyntaxTree.NewCharacterType(16);
 		Character32 := SyntaxTree.NewCharacterType(32);

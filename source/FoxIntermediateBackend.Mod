@@ -12597,115 +12597,107 @@ TYPE
 								END;
 						| SyntaxTree.EnumerationType DO
 								Char(section, sfTypeENUM);
-						| SyntaxTree.BasicType DO
-							WITH type:
-							SyntaxTree.BooleanType DO
-								IF RefInfo THEN Info(section,"Boolean") END;
-								Char(section, sfTypeBOOLEAN);
-							| SyntaxTree.CharacterType DO
-										IF type = module.system.characterType THEN
-											IF RefInfo THEN Info(section,"CHAR") END;
-											Char(section, sfTypeCHAR);
-										ELSE
-											HALT(100);
-										END;
-								|SyntaxTree.IntegerType DO
-									IF type(SyntaxTree.IntegerType).signed THEN
-										IF (type = module.system.shortintType) THEN
-											IF RefInfo THEN Info(section,"SHORTINT") END;
-											Char(section, sfTypeSHORTINT)
-										ELSIF (type = module.system.integerType) THEN
-											IF RefInfo THEN Info(section,"INTEGER") END;
-											Char(section, sfTypeINTEGER)
-										ELSIF (type = module.system.longintType) THEN
-											IF RefInfo THEN Info(section,"LONGINT") END;
-											Char(section, sfTypeLONGINT)
-										ELSIF (type = module.system.hugeintType) THEN
-											IF RefInfo THEN Info(section,"HUGEINT") END;
-											Char(section, sfTypeHUGEINT)
-										ELSIF (type = module.system.wordType) THEN
-											IF RefInfo THEN Info(section,"WORD") END;
-											Char(section, sfTypeWORD)
-										ELSIF (type = module.system.longWordType) THEN
-											IF RefInfo THEN Info(section,"LONGWORD") END;
-											Char(section, sfTypeLONGWORD);
-										ELSIF (type = Global.Integer8) OR (type.sizeInBits = 8 ) THEN
-											IF RefInfo THEN Info(section,"SIGNED8") END;
-											Char(section, sfTypeSIGNED8)
-										ELSIF (type = Global.Integer16) OR (type.sizeInBits = 16 ) THEN
-											IF RefInfo THEN Info(section,"SIGNED16") END;
-											Char(section, sfTypeSIGNED16)
-										ELSIF (type = Global.Integer32) OR (type.sizeInBits = 32 ) THEN
-											IF RefInfo THEN Info(section,"SIGNED32") END;
-											Char(section, sfTypeSIGNED32)
-										ELSIF (type = Global.Integer64) OR (type.sizeInBits = 64 ) THEN
-											IF RefInfo THEN Info(section,"SIGNED64") END;
-											Char(section, sfTypeSIGNED64)
-										ELSE
-											HALT(100);
-										END
-									ELSE (* unsigned *)
-										IF (type = Global.Unsigned8) OR (type.sizeInBits = 8 ) THEN
-											IF RefInfo THEN Info(section,"UNSIGNED8") END;
-											Char(section, sfTypeUNSIGNED8)
-										ELSIF (type = Global.Unsigned16) OR (type.sizeInBits = 16 ) THEN
-											IF RefInfo THEN Info(section,"UNSIGNED16") END;
-											Char(section, sfTypeUNSIGNED16)
-										ELSIF (type = Global.Unsigned32) OR (type.sizeInBits = 32 ) THEN
-											IF RefInfo THEN Info(section,"UNSIGNED32") END;
-											Char(section, sfTypeUNSIGNED32)
-										ELSIF (type = Global.Unsigned64) OR (type.sizeInBits = 64 ) THEN
-											IF RefInfo THEN Info(section,"UNSIGNED64") END;
-											Char(section, sfTypeUNSIGNED64)
-										ELSE
-											HALT(100)
-										END
-								END;
-							| SyntaxTree.FloatType DO
-								IF (type = module.system.realType) OR (type.sizeInBits = 32) THEN
-									IF RefInfo THEN Info(section,"REAL") END;
-									Char(section, sfTypeREAL);
-								ELSIF (type = module.system.longrealType) OR (type.sizeInBits = 64) THEN
-									IF RefInfo THEN Info(section,"LONGREAL") END;
-									Char(section, sfTypeLONGREAL);
+						| SyntaxTree.BooleanType DO
+							IF RefInfo THEN Info(section,"Boolean") END;
+							Char(section, sfTypeBOOLEAN);
+						| SyntaxTree.CharacterType DO
+							IF RefInfo THEN Info(section,"CHAR") END;
+							Char(section, sfTypeCHAR);
+						| SyntaxTree.IntegerType DO
+							IF type(SyntaxTree.IntegerType).signed THEN
+								IF (type = module.system.shortintType) THEN
+									IF RefInfo THEN Info(section,"SHORTINT") END;
+									Char(section, sfTypeSHORTINT)
+								ELSIF (type = module.system.integerType) THEN
+									IF RefInfo THEN Info(section,"INTEGER") END;
+									Char(section, sfTypeINTEGER)
+								ELSIF (type = module.system.longintType) THEN
+									IF RefInfo THEN Info(section,"LONGINT") END;
+									Char(section, sfTypeLONGINT)
+								ELSIF (type = module.system.hugeintType) THEN
+									IF RefInfo THEN Info(section,"HUGEINT") END;
+									Char(section, sfTypeHUGEINT)
+								ELSIF (type = module.system.wordType) THEN
+									IF RefInfo THEN Info(section,"WORD") END;
+									Char(section, sfTypeWORD)
+								ELSIF (type = module.system.longWordType) THEN
+									IF RefInfo THEN Info(section,"LONGWORD") END;
+									Char(section, sfTypeLONGWORD);
+								ELSIF (type = Global.Integer8) OR (type.sizeInBits = 8 ) THEN
+									IF RefInfo THEN Info(section,"SIGNED8") END;
+									Char(section, sfTypeSIGNED8)
+								ELSIF (type = Global.Integer16) OR (type.sizeInBits = 16 ) THEN
+									IF RefInfo THEN Info(section,"SIGNED16") END;
+									Char(section, sfTypeSIGNED16)
+								ELSIF (type = Global.Integer32) OR (type.sizeInBits = 32 ) THEN
+									IF RefInfo THEN Info(section,"SIGNED32") END;
+									Char(section, sfTypeSIGNED32)
+								ELSIF (type = Global.Integer64) OR (type.sizeInBits = 64 ) THEN
+									IF RefInfo THEN Info(section,"SIGNED64") END;
+									Char(section, sfTypeSIGNED64)
 								ELSE
 									HALT(100);
-								END;
-							| SyntaxTree.ComplexType DO
-								IF (type = module.system.complexType) OR (type.sizeInBits = 64) THEN
-									IF RefInfo THEN Info(section,"COMPLEX") END;
-									Char(section, sfTypeCOMPLEX);
-								ELSIF (type = module.system.longcomplexType) OR (type.sizeInBits = 12) THEN
-									IF RefInfo THEN Info(section,"LONGCOMPLEX") END;
-									Char(section, sfTypeLONGCOMPLEX);
+								END
+							ELSE (* unsigned *)
+								IF (type = Global.Unsigned8) OR (type.sizeInBits = 8 ) THEN
+									IF RefInfo THEN Info(section,"UNSIGNED8") END;
+									Char(section, sfTypeUNSIGNED8)
+								ELSIF (type = Global.Unsigned16) OR (type.sizeInBits = 16 ) THEN
+									IF RefInfo THEN Info(section,"UNSIGNED16") END;
+									Char(section, sfTypeUNSIGNED16)
+								ELSIF (type = Global.Unsigned32) OR (type.sizeInBits = 32 ) THEN
+									IF RefInfo THEN Info(section,"UNSIGNED32") END;
+									Char(section, sfTypeUNSIGNED32)
+								ELSIF (type = Global.Unsigned64) OR (type.sizeInBits = 64 ) THEN
+									IF RefInfo THEN Info(section,"UNSIGNED64") END;
+									Char(section, sfTypeUNSIGNED64)
 								ELSE
-									HALT(100);
-								END;
-							|SyntaxTree.SetType DO
-								IF RefInfo THEN Info(section,"SET") END;
-								Char(section, sfTypeSET);
-							|SyntaxTree.AnyType DO
-								IF RefInfo THEN Info(section,"ANY") END;
-								Char(section, sfTypeANY);
-							|SyntaxTree.ObjectType DO
-								IF RefInfo THEN Info(section,"OBJECT") END;
-								Char(section, sfTypeOBJECT);
-							|SyntaxTree.ByteType DO
-								IF RefInfo THEN Info(section,"BYTE") END;
-								Char(section, sfTypeBYTE);
-							|SyntaxTree.RangeType DO
-								IF RefInfo THEN Info(section,"RANGE") END;
-								Char(section, sfTypeRANGE)
-							|SyntaxTree.AddressType DO
-								IF RefInfo THEN Info(section,"ADDRESS") END;
-								Char(section, sfTypeADDRESS)
-							|SyntaxTree.SizeType DO
-								IF RefInfo THEN Info(section,"SIZE") END;
-								Char(section, sfTypeSIZE)
-							ELSE
-								HALT(100)
+									HALT(100)
+								END
 							END;
-						ELSE HALT(101);
+						| SyntaxTree.FloatType DO
+							IF (type = module.system.realType) OR (type.sizeInBits = 32) THEN
+								IF RefInfo THEN Info(section,"REAL") END;
+								Char(section, sfTypeREAL);
+							ELSIF (type = module.system.longrealType) OR (type.sizeInBits = 64) THEN
+								IF RefInfo THEN Info(section,"LONGREAL") END;
+								Char(section, sfTypeLONGREAL);
+							ELSE
+								HALT(100);
+							END;
+						| SyntaxTree.ComplexType DO
+							IF (type = module.system.complexType) OR (type.sizeInBits = 64) THEN
+								IF RefInfo THEN Info(section,"COMPLEX") END;
+								Char(section, sfTypeCOMPLEX);
+							ELSIF (type = module.system.longcomplexType) OR (type.sizeInBits = 12) THEN
+								IF RefInfo THEN Info(section,"LONGCOMPLEX") END;
+								Char(section, sfTypeLONGCOMPLEX);
+							ELSE
+								HALT(100);
+							END;
+						|SyntaxTree.SetType DO
+							IF RefInfo THEN Info(section,"SET") END;
+							Char(section, sfTypeSET);
+						|SyntaxTree.AnyType DO
+							IF RefInfo THEN Info(section,"ANY") END;
+							Char(section, sfTypeANY);
+						|SyntaxTree.ObjectType DO
+							IF RefInfo THEN Info(section,"OBJECT") END;
+							Char(section, sfTypeOBJECT);
+						|SyntaxTree.ByteType DO
+							IF RefInfo THEN Info(section,"BYTE") END;
+							Char(section, sfTypeBYTE);
+						|SyntaxTree.RangeType DO
+							IF RefInfo THEN Info(section,"RANGE") END;
+							Char(section, sfTypeRANGE)
+						|SyntaxTree.AddressType DO
+							IF RefInfo THEN Info(section,"ADDRESS") END;
+							Char(section, sfTypeADDRESS)
+						|SyntaxTree.SizeType DO
+							IF RefInfo THEN Info(section,"SIZE") END;
+							Char(section, sfTypeSIZE)
+						ELSE
+							HALT(100)
 						END;
 					END;
 				END NType;

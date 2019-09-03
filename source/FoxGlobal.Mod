@@ -812,24 +812,7 @@ TYPE
 		system.longrealType := Float64;
 		*)
 
-		IF minBits = 32 THEN
-			system.shortintType := SyntaxTree.NewIntegerType(32, TRUE);
-			system.integerType := SyntaxTree.NewIntegerType(32, TRUE);
-			system.booleanType := SyntaxTree.NewBooleanType(32);
-			system.byteType := SyntaxTree.NewByteType(32);
-			system.characterType := SyntaxTree.NewCharacterType(32);
-			system.characterType8 := SyntaxTree.NewCharacterType(32);
-			system.characterType16 := SyntaxTree.NewCharacterType(32);
-			system.characterType32 := SyntaxTree.NewCharacterType(32);
-			(*
-			system.shortintType := Integer32;
-			system.integerType := Integer32;
-			system.booleanType := Boolean32;
-			system.byteType := Byte32;
-			system.characterType := Character32;
-			*)
-		ELSE
-			ASSERT(minBits = 8); (* nothing else is currently implemented *)
+		IF minBits = 8 THEN
 			system.shortintType := SyntaxTree.NewIntegerType(8, TRUE);
 			system.integerType := SyntaxTree.NewIntegerType(16, TRUE);
 			system.booleanType := SyntaxTree.NewBooleanType(8);
@@ -838,13 +821,17 @@ TYPE
 			system.characterType8 := SyntaxTree.NewCharacterType(8);
 			system.characterType16 := SyntaxTree.NewCharacterType(16);
 			system.characterType32 := SyntaxTree.NewCharacterType(32);
-			(*
-			system.shortintType := Integer8;
-			system.integerType := Integer16;
-			system.booleanType := Boolean8;
-			system.byteType := Byte8;
-			system.characterType := Character8;
-			*)
+		ELSIF minBits = 32 THEN
+			system.shortintType := SyntaxTree.NewIntegerType(32, TRUE);
+			system.integerType := SyntaxTree.NewIntegerType(32, TRUE);
+			system.booleanType := SyntaxTree.NewBooleanType(32);
+			system.byteType := SyntaxTree.NewByteType(32);
+			system.characterType := SyntaxTree.NewCharacterType(32);
+			system.characterType8 := SyntaxTree.NewCharacterType(32);
+			system.characterType16 := SyntaxTree.NewCharacterType(32);
+			system.characterType32 := SyntaxTree.NewCharacterType(32);
+		ELSE
+			HALT (3214); (* nothing else is currently implemented *)
 		END;
 
 		system.anyType := SyntaxTree.NewAnyType(system.addressSize);

@@ -939,7 +939,7 @@ BEGIN
 END GetCaption;
 
 PROCEDURE GetDragWrapper*(node : WMTrees.TreeNode; menu : WMTrees.Tree) : DragWrapper;
-VAR data: ANY; drag : DragWrapper
+VAR data: ANY; drag : DragWrapper;
 BEGIN
 	ASSERT(menu # NIL);
 	drag := NIL;

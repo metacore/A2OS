@@ -4850,7 +4850,7 @@ TYPE
 					END;
 				(* ---- CHR ----- *)
 				ELSIF (id = Global.Chr) & CheckArity(1,1) THEN
-					type := system.characterType
+					type := system.characterType;
 					IF CheckIntegerType(parameter0) THEN
 						IF IsIntegerValue(parameter0,i0)  THEN
 							result.SetResolved(SyntaxTree.NewCharacterValue(position,CHR(i0)));

@@ -40,6 +40,7 @@ TYPE
 
 	Integer* = SIGNED64;
 	Set* = SET64;
+	Real*= LONGREAL;
 
 	ObjectArray = POINTER TO ARRAY OF ANY;
 
@@ -708,7 +709,7 @@ TYPE
 		BEGIN  w.RawReal(x)
 		END RawReal;
 
-		PROCEDURE RawLReal*( x: LONGREAL );
+		PROCEDURE RawLReal*( x: Real );
 		BEGIN  w.RawLReal(x)
 		END RawLReal;
 
@@ -752,11 +753,11 @@ TYPE
 		BEGIN Indent; w.Date822(t,d,tz)
 		END Date822;
 
-		PROCEDURE Float*( x: LONGREAL;  n: LONGINT );
+		PROCEDURE Float*( x: Real;  n: LONGINT );
 		BEGIN Indent; w.Float(x,n)
 		END Float;
 
-		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: LONGINT );
+		PROCEDURE FloatFix*( x: Real;  n, f, D: LONGINT );
 		BEGIN Indent; w.FloatFix(x,n,f,D)
 		END FloatFix;
 

@@ -487,10 +487,10 @@ TYPE
 		IF type.form = Intermediate.Float THEN
 			HALT (1234);
 		ELSE
-			IF type.sizeInBits= 1 THEN value.int1 := SYSTEM.VAL (Int1, -SYSTEM.VAL (SET, value.int1));
-			ELSIF type.sizeInBits= 2 THEN value.int2 := SYSTEM.VAL (Int2, -SYSTEM.VAL (SET, value.int2));
-			ELSIF type.sizeInBits= 8 THEN value.int8 := SYSTEM.VAL (Int8, -SYSTEM.VAL (SET, value.int8));
-			ELSE value.int4 := SYSTEM.VAL (Int4, -SYSTEM.VAL (SET, value.int4)); END;
+			IF type.sizeInBits= 1 THEN value.int1 := SYSTEM.VAL (Int1, -SYSTEM.VAL (SET8, value.int1));
+			ELSIF type.sizeInBits= 2 THEN value.int2 := SYSTEM.VAL (Int2, -SYSTEM.VAL (SET16, value.int2));
+			ELSIF type.sizeInBits= 8 THEN value.int8 := SYSTEM.VAL (Int8, -SYSTEM.VAL (SET64, value.int8));
+			ELSE value.int4 := SYSTEM.VAL (Int4, -SYSTEM.VAL (SET32, value.int4)); END;
 		END;
 	END Complement;
 
@@ -576,10 +576,10 @@ TYPE
 		IF type.form = Intermediate.Float THEN
 			HALT (1234);
 		ELSE
-			IF type.sizeInBits= 1 THEN dest.int1 := SYSTEM.VAL (Int1, SYSTEM.VAL (SET, dest.int1) * SYSTEM.VAL (SET, source.int1));
-			ELSIF type.sizeInBits= 2 THEN dest.int2 := SYSTEM.VAL (Int2, SYSTEM.VAL (SET, dest.int2) * SYSTEM.VAL (SET, source.int2));
-			ELSIF type.sizeInBits= 8 THEN dest.int8 := SYSTEM.VAL (Int8, SYSTEM.VAL (SET, dest.int8) * SYSTEM.VAL (SET, source.int8));
-			ELSE dest.int4 := SYSTEM.VAL (Int4, SYSTEM.VAL (SET, dest.int4) * SYSTEM.VAL (SET, source.int4)); END;
+			IF type.sizeInBits= 1 THEN dest.int1 := SYSTEM.VAL (Int1, SYSTEM.VAL (SET8, dest.int1) * SYSTEM.VAL (SET8, source.int1));
+			ELSIF type.sizeInBits= 2 THEN dest.int2 := SYSTEM.VAL (Int2, SYSTEM.VAL (SET16, dest.int2) * SYSTEM.VAL (SET16, source.int2));
+			ELSIF type.sizeInBits= 8 THEN dest.int8 := SYSTEM.VAL (Int8, SYSTEM.VAL (SET64, dest.int8) * SYSTEM.VAL (SET64, source.int8));
+			ELSE dest.int4 := SYSTEM.VAL (Int4, SYSTEM.VAL (SET32, dest.int4) * SYSTEM.VAL (SET32, source.int4)); END;
 		END;
 	END And;
 
@@ -588,10 +588,10 @@ TYPE
 		IF type.form = Intermediate.Float THEN
 			HALT (1234);
 		ELSE
-			IF type.sizeInBits= 1 THEN dest.int1 := SYSTEM.VAL (Int1, SYSTEM.VAL (SET, dest.int1) + SYSTEM.VAL (SET, source.int1));
-			ELSIF type.sizeInBits= 2 THEN dest.int2 := SYSTEM.VAL (Int2, SYSTEM.VAL (SET, dest.int2) + SYSTEM.VAL (SET, source.int2));
-			ELSIF type.sizeInBits= 8 THEN dest.int8 := SYSTEM.VAL (Int8, SYSTEM.VAL (SET, dest.int8) + SYSTEM.VAL (SET, source.int8));
-			ELSE dest.int4 := SYSTEM.VAL (Int4, SYSTEM.VAL (SET, dest.int4) + SYSTEM.VAL (SET, source.int4)); END;
+			IF type.sizeInBits= 1 THEN dest.int1 := SYSTEM.VAL (Int1, SYSTEM.VAL (SET8, dest.int1) + SYSTEM.VAL (SET8, source.int1));
+			ELSIF type.sizeInBits= 2 THEN dest.int2 := SYSTEM.VAL (Int2, SYSTEM.VAL (SET16, dest.int2) + SYSTEM.VAL (SET16, source.int2));
+			ELSIF type.sizeInBits= 8 THEN dest.int8 := SYSTEM.VAL (Int8, SYSTEM.VAL (SET64, dest.int8) + SYSTEM.VAL (SET64, source.int8));
+			ELSE dest.int4 := SYSTEM.VAL (Int4, SYSTEM.VAL (SET32, dest.int4) + SYSTEM.VAL (SET32, source.int4)); END;
 		END;
 	END Or;
 
@@ -600,10 +600,10 @@ TYPE
 		IF type.form = Intermediate.Float THEN
 			HALT (1234);
 		ELSE
-			IF type.sizeInBits= 1 THEN dest.int1 := SYSTEM.VAL (Int1, SYSTEM.VAL (SET, dest.int1) / SYSTEM.VAL (SET, source.int1));
-			ELSIF type.sizeInBits= 2 THEN dest.int2 := SYSTEM.VAL (Int2, SYSTEM.VAL (SET, dest.int2) / SYSTEM.VAL (SET, source.int2));
-			ELSIF type.sizeInBits= 8 THEN dest.int8 := SYSTEM.VAL (Int8, SYSTEM.VAL (SET, dest.int8) / SYSTEM.VAL (SET, source.int8));
-			ELSE dest.int4 := SYSTEM.VAL (Int4, SYSTEM.VAL (SET, dest.int4) / SYSTEM.VAL (SET, source.int4)); END;
+			IF type.sizeInBits= 1 THEN dest.int1 := SYSTEM.VAL (Int1, SYSTEM.VAL (SET8, dest.int1) / SYSTEM.VAL (SET8, source.int1));
+			ELSIF type.sizeInBits= 2 THEN dest.int2 := SYSTEM.VAL (Int2, SYSTEM.VAL (SET16, dest.int2) / SYSTEM.VAL (SET16, source.int2));
+			ELSIF type.sizeInBits= 8 THEN dest.int8 := SYSTEM.VAL (Int8, SYSTEM.VAL (SET64, dest.int8) / SYSTEM.VAL (SET64, source.int8));
+			ELSE dest.int4 := SYSTEM.VAL (Int4, SYSTEM.VAL (SET32, dest.int4) / SYSTEM.VAL (SET32, source.int4)); END;
 		END;
 	END Xor;
 

@@ -13915,21 +13915,20 @@ TYPE
 					NEW(module,import.module,system); (* backend structures *)
 
 					Global.GetModuleName(import.module, name);
-					exports.AddName(name);
-					(*
-					module.SetModuleName(name);
-					*)
-					NEW(implementationEmitter,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
-					NEW(declarationEmitter,system,implementationEmitter,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
-					NEW(meta, implementationEmitter, declarationEmitter,simpleMetaData);
-					declarationEmitter.Module(import.module,module);
+					IF ~exports.ContainsName(name) THEN
+						exports.AddName(name); 
+						NEW(implementationEmitter,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
+						NEW(declarationEmitter,system,implementationEmitter,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
+						NEW(meta, implementationEmitter, declarationEmitter,simpleMetaData);
+						declarationEmitter.Module(import.module,module);
 
-					IF ~meta.simple THEN
-						meta.Module(implementationEmitter.moduleBodySection);
-					END;
-
-					FOR i := 0 TO module.allSections.Length()-1 DO
-						sections.AddSection(module.allSections.GetSection(i));
+						IF ~meta.simple THEN
+							meta.Module(implementationEmitter.moduleBodySection);
+						END;
+						
+						FOR i := 0 TO module.allSections.Length()-1 DO 
+							sections.AddSection(module.allSections.GetSection(i));
+						END;
 					END;
 				END;
 				import := import.nextImport

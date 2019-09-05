@@ -1833,7 +1833,7 @@ TYPE
 					result := SyntaxTree.NewSetValue(expression.position,SYSTEM.VAL(Basic.Set,int));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.CharacterType) OR (type IS SyntaxTree.ByteType) THEN
-					result := SyntaxTree.NewCharacterValue(expression.position,SYSTEM.VAL(CHAR,int));
+					result := SyntaxTree.NewCharacterValue(expression.position,CHR(int));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.EnumerationType) THEN
 					result := SyntaxTree.NewEnumerationValue(expression.position,int);
@@ -1881,11 +1881,11 @@ TYPE
 					result := SyntaxTree.invalidExpression;
 				END
 			ELSIF IsSetValue(expression,set) THEN
-				IF (type IS SyntaxTree.IntegerType) THEN
+				IF IsIntegerType(type) THEN
 					result := SyntaxTree.NewIntegerValue(expression.position,SYSTEM.VAL(Basic.Integer,set));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.CharacterType) OR (type IS SyntaxTree.ByteType) THEN (* for example: possible via ch = CHR(SYSTEM.VAL(Basic.Integer,set)) *)
-					result := SyntaxTree.NewCharacterValue(expression.position,SYSTEM.VAL(CHAR,set));
+					result := SyntaxTree.NewCharacterValue(expression.position,SYSTEM.VAL(CHAR,SET8(set)));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.PortType) THEN
 					result := ConvertValue(position, expression, system.integerType);
@@ -1917,7 +1917,7 @@ TYPE
 					result := SyntaxTree.NewCharacterValue(expression.position,char);
 					result.SetType(type)
 				ELSIF (type IS SyntaxTree.IntegerType) THEN
-					result := SyntaxTree.NewIntegerValue(expression.position,SYSTEM.VAL(Basic.Integer,char));
+					result := SyntaxTree.NewIntegerValue(expression.position,ORD(char));
 					result.SetType(type);
 				ELSIF (type IS SyntaxTree.SetType) THEN
 					result := SyntaxTree.NewSetValue(expression.position,SYSTEM.VAL(Basic.Set,Basic.Integer(ORD(char))));
@@ -5496,9 +5496,9 @@ TYPE
 								REPEAT value := 2 * value; DEC(i1) UNTIL value >= 800000H;
 							END;
 							value := (i1 + 127)*800000H - 800000H + value;
-							IF i0 < 0 THEN value := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, value) + {31}); END;
+							IF i0 < 0 THEN value := SYSTEM.VAL(Basic.Integer, SYSTEM.VAL(Basic.Set, value) + {31}); END;
 						END;
-						result.SetResolved(SyntaxTree.NewRealValue(position, SYSTEM.VAL(REAL, value), Scanner.None));
+						result.SetResolved(SyntaxTree.NewRealValue(position, SYSTEM.VAL(Basic.Real, value), Scanner.None));
 					END;
 				(* ------- CONNECT -------*)
 				ELSIF (id = Global.Connect) & (CheckArity(2,3)) THEN
@@ -5689,10 +5689,20 @@ TYPE
 						expression := parameters.GetExpression(0);
 						type := typeDeclaration.declaredType.resolved;
 						expressionType := BaseType(expression.type); (* type or base type of math array, if applicable *)
-						IF ((type IS SyntaxTree.NumberType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType)) &
-							((expressionType IS SyntaxTree.NumberType) OR (expressionType IS SyntaxTree.AddressType) OR (expressionType IS SyntaxTree.SizeType)
-							OR (expressionType IS SyntaxTree.EnumerationType)
-							) OR ((type IS SyntaxTree.SetType) & (expressionType IS SyntaxTree.SetType)) THEN
+						IF (IsNumberType(type)) &
+							(
+								(expressionType IS SyntaxTree.NumberType) OR (expressionType IS SyntaxTree.AddressType) OR (expressionType IS SyntaxTree.SizeType) 
+								OR (expressionType IS SyntaxTree.EnumerationType) OR (expressionType IS SyntaxTree.SetType)
+							) 
+								OR 
+							(
+								(type IS SyntaxTree.SetType) & 
+								((expressionType IS SyntaxTree.SetType) OR IsIntegerType(expressionType))
+							)
+								OR
+							(type IS SyntaxTree.AddressType) & 
+							((expressionType IS SyntaxTree.ProcedureType) OR IsPointerType(expressionType))
+						THEN
 							IF ((type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.IntegerType) & (~type(SyntaxTree.IntegerType).signed)) & (expressionType IS SyntaxTree.FloatType) THEN
 								Error(left.position,"invalid unsigned type in explicit conversion");
 							ELSE
@@ -7359,8 +7369,9 @@ TYPE
 				type := expression.type;
 			ELSIF IsCharacterType(type) THEN
 			ELSIF IsEnumerationType(type) THEN
+			ELSIF IsSetType(type) THEN
 			ELSE
-				Error(caseStatement.variable.position,"variable must be integer or character type");
+				Error(caseStatement.variable.position,"variable must be integer, enum, set or character type");
 				expression := SyntaxTree.invalidExpression;
 			END;
 			caseStatement.SetVariable(expression);
@@ -8951,29 +8962,45 @@ TYPE
 
 	PROCEDURE IsIntegerType*(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
-		RETURN (type # NIL) & ((type IS SyntaxTree.IntegerType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType))
+		IF type = NIL THEN RETURN FALSE END; 
+		type := type.resolved; 
+		RETURN (type IS SyntaxTree.IntegerType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType);
 	END IsIntegerType;
+	
+	PROCEDURE IsNumberType*(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE END; 
+		type := type.resolved; 
+		RETURN (type IS SyntaxTree.NumberType) OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType);
+	END IsNumberType;
 
 	PROCEDURE IsAddressType*(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN;
 	BEGIN
-		RETURN (type # NIL) & ((type IS SyntaxTree.IntegerType) & (type(SyntaxTree.IntegerType).sizeInBits <= addressWidth)
+		IF type = NIL THEN RETURN FALSE END; 
+		type := type.resolved; 
+		RETURN (type IS SyntaxTree.IntegerType) & (type(SyntaxTree.IntegerType).sizeInBits <= addressWidth)
 					OR (type IS SyntaxTree.AddressType) OR (type IS SyntaxTree.SizeType)
-					OR IsPointerType(type)
-					)
+					OR IsPointerType(type);
 	END IsAddressType;
 
 	PROCEDURE IsSizeType(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN;
 	BEGIN
-		RETURN (type # NIL) & ((type.resolved IS SyntaxTree.IntegerType) & (type.resolved(SyntaxTree.IntegerType).sizeInBits <= addressWidth) OR (type.resolved IS SyntaxTree.SizeType))
+		IF type = NIL THEN RETURN FALSE END; 
+		type := type.resolved; 
+		RETURN (type # NIL) & ((type IS SyntaxTree.IntegerType) & (type.resolved(SyntaxTree.IntegerType).sizeInBits <= addressWidth) OR (type.resolved IS SyntaxTree.SizeType))
 	END IsSizeType;
 
 	PROCEDURE IsSignedIntegerType*(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
+		IF type = NIL THEN RETURN FALSE END; 
+		type := type.resolved; 
 		RETURN (type # NIL) & (type IS SyntaxTree.IntegerType) & type(SyntaxTree.IntegerType).signed
 	END IsSignedIntegerType;
 
 	PROCEDURE IsUnsignedIntegerType*(type: SyntaxTree.Type): BOOLEAN;
 	BEGIN
+		IF type = NIL THEN RETURN FALSE END; 
+		type := type.resolved; 
 		RETURN (type # NIL) & (type IS SyntaxTree.IntegerType) & ~type(SyntaxTree.IntegerType).signed
 	END IsUnsignedIntegerType;
 
@@ -9255,6 +9282,12 @@ TYPE
 		type := type.resolved;
 		RETURN (type IS SyntaxTree.CharacterType) OR (type IS SyntaxTree.ByteType) OR (type IS SyntaxTree.StringType) & (type(SyntaxTree.StringType).length = 2)
 	END IsCharacterType;
+	
+	PROCEDURE IsSetType*(type: SyntaxTree.Type):BOOLEAN;
+	BEGIN
+		IF type = NIL THEN RETURN FALSE END;
+		RETURN type.resolved IS SyntaxTree.SetType; 
+	END IsSetType;
 
 	PROCEDURE IsEnumerationType*(type: SyntaxTree.Type):BOOLEAN;
 	BEGIN

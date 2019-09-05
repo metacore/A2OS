@@ -1958,7 +1958,7 @@ VAR
 		D.Str(" --------> ");
 		D.Str(info);
 		D.Str(" ");
-		D.Hex(SYSTEM.VAL(LONGINT,a),8);
+		D.Hex(SYSTEM.VAL(ADDRESS,a),8);
 		D.Str(" : ");
 
 		IF a = NIL THEN

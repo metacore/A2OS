@@ -18,7 +18,7 @@ TYPE
 
 		PROCEDURE PrintLabel(section: Tree.Section);
 		BEGIN
-			writer.String('"#'); IF section.label = NIL THEN writer.String("_"); writer.Hex(SYSTEM.VAL(LONGINT,section),-8); ELSE WriteString(writer,section.label); END; writer.String('"')
+			writer.String('"#'); IF section.label = NIL THEN writer.String("_"); writer.Hex(SYSTEM.VAL(ADDRESS,section),-8); ELSE WriteString(writer,section.label); END; writer.String('"')
 		END PrintLabel;
 
 		PROCEDURE Section*(section: Tree.Section);

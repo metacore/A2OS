@@ -1516,15 +1516,17 @@ TYPE
 							Assembler.SetSize(src,sizeInBytes);
 							MakeOperand(vdest,Low,dest,NIL);
 							Move(dest, src, vdest.type);
-						ELSE
-							IF IsComplex(vsrc) THEN
-								EmitPush(vsrc,High);
-							END;
+						ELSIF IsComplex(vsrc) THEN
+							EmitPush(vsrc,High);
 							EmitPush(vsrc,Low);
 							Assembler.InitMem(espm, sizeInBytes,SP,0);
 							MakeOperand(vdest, Low, dest, NIL);
 							Move(dest, espm, vdest.type);
-							ModifyStackPointer(-stackSize);
+							ModifyStackPointer(-stackSize);					
+						ELSE
+							MakeRegister(vsrc,Low,src); 
+							MakeOperand(vdest, Low, dest, NIL);
+							emitter.Emit2(InstructionSet.opMOVD,dest,src);
 						END;
 					END;
 				END;

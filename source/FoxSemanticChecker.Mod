@@ -6689,6 +6689,53 @@ TYPE
 			IF error THEN error := FALSE; RETURN FALSE ELSE RETURN TRUE END;
 		END AddImport;
 
+		PROCEDURE GetImportModuleName(x: SyntaxTree.Import): SyntaxTree.Identifier;
+		VAR i: SIZE;
+			printer: Printout.Printer;
+			stringWriter: Streams.StringWriter;
+			name: Basic.SectionName;
+			expression: SyntaxTree.Expression;
+			symbol: SyntaxTree.Symbol;
+			typeDeclaration: SyntaxTree.TypeDeclaration;
+		BEGIN
+		    IF x.module # NIL THEN
+		        RETURN x.module.name;           
+		    ELSE
+					NEW(stringWriter, LEN(name)); 
+					NEW(printer, stringWriter, Printout.SymbolFile, FALSE);
+		       	
+		       	Basic.GetString(x.moduleName, name);
+					stringWriter.String(name); 
+					stringWriter.String("(");
+		        FOR i := 0 TO x.parameters.Length()-1 DO
+		            IF i > 0 THEN stringWriter.String(",") END;
+		            expression := x.parameters.GetExpression(i);
+		            WITH expression: SyntaxTree.SymbolDesignator DO
+		                symbol := expression.symbol;
+		                WITH symbol: SyntaxTree.TypeDeclaration DO
+		                    typeDeclaration := symbol.declaredType.resolved.typeDeclaration;
+		                    IF typeDeclaration = NIL THEN
+		                        printer.Type(symbol.declaredType.resolved);
+		                    ELSE
+		                        Global.GetSymbolName(typeDeclaration, name);
+		                        ReplaceCharacter(name,".","_");
+		                        stringWriter.String(name);
+		                    END
+		                | SyntaxTree.Constant DO Error(expression.position,"not yet implemented");
+		                | SyntaxTree.Procedure DO
+		                    Global.GetSymbolName(symbol, name);
+		                    stringWriter.String(name);
+		                END;
+		            ELSE
+		            END;
+		        END;
+		        stringWriter.String(")");
+		        stringWriter.Get(name);
+		        ReplaceCharacter(name,".","_");
+		    END;
+		    RETURN SyntaxTree.NewIdentifier(name);
+		END GetImportModuleName;
+  
 		PROCEDURE ResolveTemplateImport(x: SyntaxTree.Import);
 		VAR
 			checker: Checker;
@@ -6700,13 +6747,22 @@ TYPE
 			filename: FileName;
 			module: SyntaxTree.Module;
 			parameter: SyntaxTree.TemplateParameter;
-			name: Basic.SectionName;
 			import: SyntaxTree.Import;
-			stringWriter: Streams.StringWriter;
-			printer: Printout.Printer;
+			identifier: SyntaxTree.Identifier;
 		BEGIN
 			IF ExpressionList(x.parameters) THEN (* resolve all symbols *) END;
 
+			IF x.module # NIL THEN
+				RETURN
+			END;
+			identifier := GetImportModuleName(x);
+			IF importCache # NIL THEN
+				import := importCache.ImportByModuleName(identifier,x.context);
+				IF import # NIL THEN 
+					x.SetModule(import.module);
+					RETURN;
+				END 
+			END;
 			Global.ModuleFileName(x.moduleName,x.context,filename);
 
 			IF symbolFileFormat # NIL THEN
@@ -6717,12 +6773,6 @@ TYPE
 				import.SetModule(SELF.module);
 				module.moduleScope.AddImport(import);
 				import.SetState(SyntaxTree.Resolved);
-				module.GetName(name);
-
-				NEW(stringWriter, LEN(name));
-				NEW(printer, stringWriter, Printout.SymbolFile, FALSE);
-				stringWriter.String(name);
-				stringWriter.String("(");
 
 				IF module = NIL THEN
 					Error(x.position, "module could not be imported: parser errors");
@@ -6732,27 +6782,17 @@ TYPE
 					Error(x.position,"numbers of template parameters do not match");
 				ELSE
 					FOR i := 0 TO module.parameters.Length()-1 DO
-						IF i > 0 THEN stringWriter.String(",") END;
 						parameter := module.parameters.Get(i);
 						expression := x.parameters.GetExpression(i);
 						WITH expression: SyntaxTree.SymbolDesignator DO
 							symbol := expression.symbol;
 							WITH symbol: SyntaxTree.TypeDeclaration DO
-								TRACE(symbol.declaredType,symbol.declaredType.typeDeclaration);
 								typeDeclaration := SyntaxTree.NewTypeDeclaration(expression.position,parameter.identifier);
 								typeDeclaration.SetDeclaredType(symbol.declaredType);
 								module.moduleScope.AddTypeDeclaration(typeDeclaration);
 								IF parameter.type # SyntaxTree.TemplateType.Type THEN
 									Error(expression.position,"passed type where no type is expected");
 								END;
-								typeDeclaration := symbol.declaredType.resolved.typeDeclaration;
-								IF typeDeclaration = NIL THEN
-									printer.Type(symbol.declaredType.resolved);
-								ELSE
-									Global.GetSymbolName(typeDeclaration, name);
-									ReplaceCharacter(name,".","_");
-									stringWriter.String(name);
-								END
 							| SyntaxTree.Constant DO Error(expression.position,"not yet implemented");
 							| SyntaxTree.Procedure DO
 								constDeclaration := SyntaxTree.NewConstant(expression.position, parameter.identifier);
@@ -6761,9 +6801,6 @@ TYPE
 								IF parameter.type # SyntaxTree.TemplateType.Const THEN
 									Error(expression.position,"passed procedure where no constant is expected");
 								END;
-								Global.GetSymbolName(symbol, name);
-								ReplaceCharacter(name,".","_");
-								stringWriter.String(name);
 							ELSE
 								Printout.Info("expression", expression);
 							END;
@@ -6774,11 +6811,15 @@ TYPE
 					END;
 					checker := NewChecker(diagnostics,VerboseErrorMessage,cooperative,system,symbolFileFormat,importCache,"");
 					ASSERT(SELF.module.moduleScope # NIL);
-					stringWriter.String(")");
-					stringWriter.Get(name);
-					module.SetName(SyntaxTree.NewIdentifier(name));
+					module.SetName(identifier); 
 					module.SetScope(SELF.module.moduleScope);
 					checker.Module(module);
+					IF importCache # NIL THEN
+						import := SyntaxTree.NewImport(Basic.invalidPosition,module.name,module.name,FALSE);
+						import.SetContext(x.context);
+						import.SetModule(module);
+						importCache.AddImport(import);
+					END;
 					IF checker.error THEN
 						Error(x.position,"semantic errors when importing module");
 					ELSE

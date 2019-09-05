@@ -33103,7 +33103,7 @@ negative: case statement with variable long real value
 	BEGIN CASE value OF 0.D0: END
 	END Test.
 
-negative: case statement with variable set value
+positive: case statement with variable set value
 
 	MODULE Test;
 	VAR value: SET;

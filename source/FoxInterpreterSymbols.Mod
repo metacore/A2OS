@@ -571,7 +571,7 @@ TYPE
 				NEW(real, stack.CallX(address));
 				RETURN real;
 			|Reflection.sfTypeBOOLEAN:
-				NEW(bool, SYSTEM.VAL(BOOLEAN, stack.CallH(address)));
+				NEW(bool, ODD(stack.CallH(address)));
 				RETURN bool;
 			|Reflection.sfTypeSET:
 				NEW(set,  SYSTEM.VAL(SET, stack.CallH(address)));

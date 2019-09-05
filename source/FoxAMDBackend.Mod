@@ -31,9 +31,11 @@ CONST
 	AH=InstructionSet.regAH; CH=InstructionSet.regCH; DH=InstructionSet.regDH; BH=InstructionSet.regBH;
 	ST0=InstructionSet.regST0;
 	XMM0 = InstructionSet.regXMM0;
+	XMM1 = InstructionSet.regXMM1;
 	XMM7 = InstructionSet.regXMM7;
 	XMM15 = InstructionSet.regXMM15;
 	YMM0 = InstructionSet.regYMM0;
+	YMM1 = InstructionSet.regYMM1;
 	YMM7 = InstructionSet.regYMM7;
 	YMM15 = InstructionSet.regYMM15;
 
@@ -248,9 +250,9 @@ TYPE
 			form := type.form;
 			IF (type.length > 1) THEN
 				IF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =4) THEN
-					i := Get(XMM7, XMM0);
+					i := Get(XMM1, XMM7);
 				ELSIF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =8) THEN
-					i := Get(YMM7, YMM0);
+					i := Get(YMM1, YMM7);
 				ELSE
 					HALT(100)
 				END
@@ -276,8 +278,8 @@ TYPE
 					i := Get(InstructionSet.regST0, InstructionSet.regST6);
 					(* ST7 unusable as it is overwritten during arithmetic instructions *)
 				ELSE
-					i := GetHint(XMM0, XMM7);
-					IF i = none THEN i := Get(XMM7, XMM0) END
+					i := GetHint(XMM1, XMM7);
+					IF i = none THEN i := Get(XMM1, XMM7) END
 				END;
 			END;
 			hint := none; (* reset *)
@@ -448,9 +450,9 @@ TYPE
 			BEGIN
 			IF (type.length > 1) THEN
 				IF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =4) THEN
-					i := Get(XMM15, XMM0);
+					i := Get(XMM1, XMM15);
 				ELSIF (* (type.form = IntermediateCode.Float) &*)  (type.sizeInBits<=32) & (type.length =8) THEN
-					i := Get(YMM15, YMM0);
+					i := Get(YMM1, YMM15);
 				ELSE
 					HALT(100)
 				END
@@ -491,7 +493,7 @@ TYPE
 					i := Get(InstructionSet.regST0, InstructionSet.regST6);
 					(* ST7 unusable as it is overwritten during arithmetic instructions *)
 				ELSE
-					i := Get(XMM15, XMM0)
+					i := Get(XMM1, XMM15)
 				END;
 			END;
 			RETURN i;

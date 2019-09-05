@@ -947,7 +947,7 @@ TYPE
 		END EmitCall;
 
 		PROCEDURE GetImmediate32(val: LONGINT; CONST reg: InstructionSet.Operand; emit: BOOLEAN): LONGINT;
-		VAR ops: LONGINT; set: SET;
+		VAR ops: LONGINT; set: SET32;
 
 			PROCEDURE Add(val,pos: LONGINT; VAR first: BOOLEAN): LONGINT;
 			VAR imm: InstructionSet.Operand; ops: LONGINT; op: InstructionSet.Operand;
@@ -997,7 +997,7 @@ TYPE
 			END Compute;
 
 		BEGIN
-			set := SYSTEM.VAL(SET,val);
+			set := SYSTEM.VAL(SET32,val);
 			ops := Compute(set);
 			RETURN ops
 		END GetImmediate32;

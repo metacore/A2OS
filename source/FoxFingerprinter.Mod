@@ -1348,7 +1348,7 @@ TYPE
 		ELSIF SyntaxTree.PublicRead IN vis THEN  FPNumber(fp, fpExternR)
 		ELSIF SyntaxTree.Internal * vis #{} THEN  FPNumber(fp, fpIntern)
 		ELSE
-			FPNumber(fp, fpOther + SYSTEM.VAL(WORD, vis))
+			FPNumber(fp, fpOther + SYSTEM.VAL(Basic.Fingerprint, vis))
 		END
 	END FPVisibility;
 

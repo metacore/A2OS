@@ -1774,7 +1774,7 @@ TYPE
 				END;
 			|SyntaxTree.CharacterValue DO
 				InitOperand(result,ModeValue);
-				IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),SYSTEM.VAL(Basic.Integer,x.value));
+				IntermediateCode.InitImmediate(result.op,IntermediateCode.GetType(system,x.type),ORD(x.value));
 			|SyntaxTree.RealValue DO
 				InitOperand(result,ModeValue);
 				IntermediateCode.InitFloatImmediate(result.op,IntermediateCode.GetType(system,x.type),x.value);
@@ -4342,7 +4342,7 @@ TYPE
 					PutMathArrayField(result.tag, IntermediateCode.Immediate(addressType, targetArrayDimensionality),MathDimOffset);
 				END;
 
-				PutMathArrayField(result.tag, IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{RangeFlag})),MathFlagsOffset);
+				PutMathArrayField(result.tag, IntermediateCode.Immediate(addressType,ASH(1,RangeFlag)),MathFlagsOffset);
 
 			END;
 
@@ -4876,7 +4876,7 @@ TYPE
 						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
 						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
-						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,arrayFlags)),MathFlagsOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(Basic.Integer,Basic.Set(arrayFlags))),MathFlagsOffset);
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
@@ -4936,7 +4936,7 @@ TYPE
 							PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 							PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
 							PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
-							PutMathArrayField(arrayDestinationTag, IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+							PutMathArrayField(arrayDestinationTag, IntermediateCode.Immediate(addressType,ASH(1, StaticFlag)),MathFlagsOffset);
 							baseType := SemanticChecker.ArrayBase(type,dim);
 							tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 							PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
@@ -5001,7 +5001,7 @@ TYPE
 						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
 						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
-						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,arrayFlags)),MathFlagsOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(Basic.Integer,Basic.Set(arrayFlags))),MathFlagsOffset);
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
@@ -5114,7 +5114,7 @@ TYPE
 						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
 						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
-						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,ASH(1,StaticFlag)),MathFlagsOffset);
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
@@ -5226,7 +5226,7 @@ TYPE
 						PutMathArrayField(arrayDestinationTag,dimOp,MathDimOffset);
 						PutMathArrayField(arrayDestinationTag,operand.op,MathAdrOffset);
 						PutMathArrayField(arrayDestinationTag,nil,MathPtrOffset);
-						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StaticFlag})),MathFlagsOffset);
+						PutMathArrayField(arrayDestinationTag,IntermediateCode.Immediate(addressType,ASH(1,StaticFlag)),MathFlagsOffset);
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						tmp := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,system.AlignedSizeOf(baseType)));
 						PutMathArrayField(arrayDestinationTag,tmp,MathElementSizeOffset);
@@ -6303,7 +6303,7 @@ TYPE
 
 					(* push kind *)
 					(* IF dump # NIL THEN dump.String("push kind"); dump.Ln; dump.Update END; *) (* TENTATIVE *)
-					operatorInitializationCodeSection.Emit(Push(position,IntermediateCode.Immediate(setType, SYSTEM.VAL(LONGINT, kind))));
+					operatorInitializationCodeSection.Emit(Push(position,IntermediateCode.Immediate(setType, SYSTEM.VAL(Basic.Integer,Basic.Set(kind)))));
 
 					(* push type infos *)
 					PushTypeInfo(leftType);
@@ -6660,7 +6660,7 @@ TYPE
 						Symbol(variable,operand);
 						InitFields(type, operand.tag,0);
 						IF temporary THEN
-							PutMathArrayField(operand.tag, IntermediateCode.Immediate(addressType,SYSTEM.VAL(LONGINT,{StackFlag})),MathFlagsOffset);
+							PutMathArrayField(operand.tag, IntermediateCode.Immediate(addressType,ASH(1,StackFlag)),MathFlagsOffset);
 						END;
 					ELSIF type.form = SyntaxTree.Tensor THEN
 						Symbol(variable, operand);

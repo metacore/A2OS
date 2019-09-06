@@ -1316,7 +1316,7 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 				DEC(i);
 				IF x >=k (* (x DIV k) > 0 *) THEN 		(*ph: replacements for DIV, MOD *)
 					(*BIT.LSETBIT(getBuffer, SHORT(i));*)
-					INCL(SYSTEM.VAL(SET,getBuffer), SHORT(i));	(*ph: inlining of BIT operations; losing portability here ?*)
+					INCL(SYSTEM.VAL(SET32,getBuffer), SHORT(i));	(*ph: inlining of BIT operations; losing portability here ?*)
 					x:=x-k
 				END;
 				(*x := x MOD k;*)
@@ -1501,12 +1501,12 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 						END;
 						(*IF ~checkBitBuffer(state,s) THEN RETURN FALSE END;*)
 
-						helpSet := SYSTEM.VAL(SET,LSH(state.cur.getBuffer,SHORT(-(state.cur.bitsLeft-s))));
+						helpSet := SET(LSH(state.cur.getBuffer,SHORT(-(state.cur.bitsLeft-s))));
 						helpSet2:={};
 						FOR i:=0 TO s - 1 DO INCL(helpSet2,SHORT(i)) END;
 						helpSet := helpSet * helpSet2;
 						DEC(state.cur.bitsLeft,s);
-						r:=SHORT(SYSTEM.VAL(LONGINT,helpSet));
+						r:=INTEGER(helpSet);
 						(*
 						r := getBits(state,s);
 						*)
@@ -1527,9 +1527,9 @@ TYPE JPEGDecoder*= OBJECT(Codecs.ImageDecoder)
 				WHILE k < DCTSIZE2 DO
 					IF ~huffDECODE(s,state,actbl) THEN RETURN FALSE END;
 					(*r := BIT.ILSH(s, -4);*)
-					r:= SYSTEM.VAL(INTEGER,ASH(s,-4));
+					r:= INTEGER(ASH(s,-4));
 					(*s := SHORT(BIT.LAND(LONG(s), set));*)
-					s := SHORT(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET,s) * SYSTEM.VAL(SET,set)));
+					s := INTEGER( SET(s) * SET(set));
 					IF s#0 THEN
 						INC(k,r);
 						IF ~checkBitBuffer(state,s) THEN RETURN FALSE END;

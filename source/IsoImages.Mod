@@ -316,7 +316,7 @@ BEGIN
 	checksum := 0;
 	numWords := LEN(buf) DIV 2;
 	FOR i := 0 TO numWords - 1 DO
-		checksum := (checksum + SYSTEM.VAL(INTEGER, buf[i * 2])) MOD 10000H;
+		checksum := (checksum + ORD(buf[i * 2])) MOD 10000H;
 	END;
 	RETURN SHORT(10000H - checksum);
 END CalcChecksum16;

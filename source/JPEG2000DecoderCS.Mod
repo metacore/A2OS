@@ -196,7 +196,7 @@ TYPE
 				VAR
 					tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					RETURN LSH(xsiz + tmp, -declevel) - LSH(xos + tmp, -declevel);
 			END GetImgWidth;
@@ -208,7 +208,7 @@ TYPE
 				VAR
 					tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					RETURN LSH(ysiz + tmp, -declevel) - LSH(yos + tmp, -declevel);
 			END GetImgHeight;
@@ -220,7 +220,7 @@ TYPE
 				VAR
 					tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					RETURN LSH(xos + tmp, -declevel);
 			END GetImgULX;
@@ -232,7 +232,7 @@ TYPE
 				VAR
 					tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					RETURN LSH(yos + tmp, -declevel);
 			END GetImgULY;
@@ -247,7 +247,7 @@ TYPE
 					(* cx1 - 1: Horizontal coordinate of lower right hand sample of component *)
 				BEGIN
 					subsx := comps[component].subsx;
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					cx0 := (xos + subsx - 1) DIV subsx;
 					cx1 := (xsiz + subsx - 1) DIV subsx;
@@ -265,7 +265,7 @@ TYPE
 					(* cy1 - 1: Vertical coordinate of lower right hand sample of component *)
 				BEGIN
 					subsy := comps[component].subsy;
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					cy0 := (yos + subsy - 1) DIV subsy;
 					cy1 := (ysiz + subsy - 1) DIV subsy;
@@ -305,7 +305,7 @@ TYPE
 				VAR
 					tx0, tx1, p, tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					(* Compute the horizontal index of the current tile in the reference grid *)
 					p := tile MOD nxt;
@@ -333,7 +333,7 @@ TYPE
 				VAR
 					ty0, ty1, q, tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					(* Compute the vertical index of the current tile in the reference grid *)
 					q := tile DIV nxt;
@@ -362,7 +362,7 @@ TYPE
 				VAR
 					tx0, p, tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					(* Compute the horizontal index of the current tile in the reference grid *)
 					p := tile MOD nxt;
@@ -385,7 +385,7 @@ TYPE
 				VAR
 					ty0, q, tmp : LONGINT;
 				BEGIN
-					tmp := LSH(SYSTEM.VAL(LONGINT, 1), declevel) - 1;
+					tmp := LSH(LONGINT( 1), declevel) - 1;
 
 					(* Compute the vertical index of the current tile in the reference grid *)
 					q := tile DIV nxt;
@@ -1120,9 +1120,9 @@ TYPE
 								sotEot[tile][c][r][0][1] := 1;
 								incStep[tile][c][r][0] := 1;
 							ELSE
-								sotEot[tile][c][r][0][0] := SYSTEM.VAL(LONGINT,
-																		SYSTEM.VAL(SET, tileCompULX)
-																		* (SYSTEM.VAL(SET, incStep[tile][c][r][0] - 1) / SYSTEM.VAL(SET, J2KU.SWAP_MASK))
+								sotEot[tile][c][r][0][0] := LONGINT(
+																		SET( tileCompULX)
+																		* (SET( incStep[tile][c][r][0] - 1) / SET( J2KU.SWAP_MASK))
 															);
 								sotEot[tile][c][r][0][1] := tileCompULX + tileCompWidth;
 							END;
@@ -1132,9 +1132,9 @@ TYPE
 								sotEot[tile][c][r][1][1] := 1;
 								incStep[tile][c][r][1] := 1;
 							ELSE
-								sotEot[tile][c][r][1][0] := SYSTEM.VAL(LONGINT,
-																		SYSTEM.VAL(SET, tileCompULY)
-																		* (SYSTEM.VAL(SET, incStep[tile][c][r][1] - 1) / SYSTEM.VAL(SET, J2KU.SWAP_MASK))
+								sotEot[tile][c][r][1][0] := LONGINT(
+																		SET( tileCompULY)
+																		* (SET( incStep[tile][c][r][1] - 1) / SET( J2KU.SWAP_MASK))
 															);
 								sotEot[tile][c][r][1][1] := tileCompULY + tileCompHeight;
 							END;
@@ -1149,9 +1149,9 @@ TYPE
 							maxSotEot[tile][c][0][1] := 1;
 							minIncStep[tile][c][0] := 1;
 						ELSE
-							maxSotEot[tile][c][0][0] := SYSTEM.VAL(LONGINT,
-																		SYSTEM.VAL(SET, tileCompULX)
-																		* (SYSTEM.VAL(SET, minIncStep[tile][c][0] - 1) / SYSTEM.VAL(SET, J2KU.SWAP_MASK))
+							maxSotEot[tile][c][0][0] := LONGINT(
+																		SET( tileCompULX)
+																		* (SET( minIncStep[tile][c][0] - 1) / SET( J2KU.SWAP_MASK))
 															);
 							maxSotEot[tile][c][0][1] := tileCompULX + tileCompWidth;
 						END;
@@ -1161,9 +1161,9 @@ TYPE
 							maxSotEot[tile][c][1][1] := 1;
 							minIncStep[tile][c][1] := 1;
 						ELSE
-							maxSotEot[tile][c][1][0] := SYSTEM.VAL(LONGINT,
-																		SYSTEM.VAL(SET, tileCompULY)
-																		* (SYSTEM.VAL(SET, minIncStep[tile][c][1] - 1) / SYSTEM.VAL(SET, J2KU.SWAP_MASK))
+							maxSotEot[tile][c][1][0] := LONGINT(
+																		SET( tileCompULY)
+																		* (SET( minIncStep[tile][c][1] - 1) / SET( J2KU.SWAP_MASK))
 															);
 							maxSotEot[tile][c][1][1] := tileCompULY + tileCompHeight;
 						END;
@@ -1207,8 +1207,8 @@ TYPE
 							cblkh := ppy;
 						END;
 
-						precw := LSH(SYSTEM.VAL(LONGINT, 1), ppx);
-						prech := LSH(SYSTEM.VAL(LONGINT, 1), ppy);
+						precw := LSH(LONGINT( 1), ppx);
+						prech := LSH(LONGINT( 1), ppy);
 
 						nband := 1;
 					ELSE
@@ -1227,8 +1227,8 @@ TYPE
 							3 subbands from the same and the LL-band from the next lower
 							resolution level
 						*)
-						precw := LSH(SYSTEM.VAL(LONGINT, 1), ppx - 1);
-						prech := LSH(SYSTEM.VAL(LONGINT, 1), ppy - 1);
+						precw := LSH(LONGINT( 1), ppx - 1);
+						prech := LSH(LONGINT( 1), ppy - 1);
 
 						nband := 3;
 					END;
@@ -1240,7 +1240,7 @@ TYPE
 
 					IF subbInfo.width > 0 THEN
 						(* NOTE: Implicit 'ceil' operation is done in this division (i.e. shift) by adding [divisor - 1] to the dividend *)
-						tmp := LSH(subbInfo.ulcx + subbInfo.width + LSH(SYSTEM.VAL(LONGINT, 1), ppx) - 1, -ppx);
+						tmp := LSH(subbInfo.ulcx + subbInfo.width + LSH(LONGINT( 1), ppx) - 1, -ppx);
 						nprecx := tmp - LSH(subbInfo.ulcx, -ppx);
 					ELSE
 						nprecx := 0;
@@ -1248,7 +1248,7 @@ TYPE
 
 					IF subbInfo.height > 0 THEN
 						(* NOTE: Implicit 'ceil' operation is done in this division (i.e. shift) by adding [divisor - 1] to the dividend *)
-						tmp := LSH(subbInfo.ulcy + subbInfo.height + LSH(SYSTEM.VAL(LONGINT, 1), ppy) - 1, -ppy);
+						tmp := LSH(subbInfo.ulcy + subbInfo.height + LSH(LONGINT( 1), ppy) - 1, -ppy);
 						nprecy := tmp - LSH(subbInfo.ulcy, -ppy);
 					ELSE
 						nprecy := 0;
@@ -1271,8 +1271,8 @@ TYPE
 					maxEotY := maxSotEot[tile][comp][1][1];
 					sotX := sotEot[tile][comp][reslevel][0][0];
 					sotY := sotEot[tile][comp][reslevel][1][0];
-					cblkwCeil := LSH(SYSTEM.VAL(LONGINT, 1), cblkw) - 1;
-					cblkhCeil := LSH(SYSTEM.VAL(LONGINT, 1), cblkh) - 1;
+					cblkwCeil := LSH(LONGINT( 1), cblkw) - 1;
+					cblkhCeil := LSH(LONGINT( 1), cblkh) - 1;
 
 					(* Build the information on number of code-blocks per precinct *)
 					curPrec := 0;
@@ -1424,8 +1424,8 @@ TYPE
 						nband := 3;
 					END;
 
-					nomCblkw := LSH(SYSTEM.VAL(LONGINT, 1), cblkw);
-					nomCblkh := LSH(SYSTEM.VAL(LONGINT, 1), cblkh);
+					nomCblkw := LSH(LONGINT( 1), cblkw);
+					nomCblkh := LSH(LONGINT( 1), cblkh);
 
 					nprecx := precInfo.nprecx;
 					nprecy := precInfo.nprecy;
@@ -2100,9 +2100,9 @@ TYPE
 				BEGIN
 
 					IF (pph # NIL) & ((LEN(pph.data^) - pphPos) >= 2) THEN
-						marker :=	SYSTEM.VAL(LONGINT,
-										SYSTEM.VAL(SET, LSH(LONG(ORD(pph.data[pphPos])), 8))
-										+ SYSTEM.VAL(SET, LONG(ORD(pph.data[pphPos + 1])))
+						marker :=	LONGINT(
+										SET( LSH(LONG(ORD(pph.data[pphPos])), 8))
+										+ SET( LONG(ORD(pph.data[pphPos + 1])))
 									);
 
 						IF marker = EPH THEN
@@ -2167,7 +2167,7 @@ TYPE
 
 					DEC(curBytePos);
 
-					RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LSH(curByte, -curBytePos)) * {0}	);
+					RETURN LONGINT( SET( LSH(curByte, -curBytePos)) * {0}	);
 			END NextBit;
 
 
@@ -2182,9 +2182,9 @@ TYPE
 					IF n <= curBytePos THEN
 						DEC(curBytePos, n);
 
-						RETURN SYSTEM.VAL(LONGINT,
-										SYSTEM.VAL(SET, LSH(curByte, -curBytePos))
-										* SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), n) - 1)
+						RETURN LONGINT(
+										SET( LSH(curByte, -curBytePos))
+										* SET( LSH(LONGINT( 1), n) - 1)
 									);
 
 
@@ -2192,11 +2192,11 @@ TYPE
 						result := 0;
 
 						REPEAT
-							result := SYSTEM.VAL(LONGINT,
-													SYSTEM.VAL(SET, LSH(result, curBytePos))
+							result := LONGINT(
+													SET( LSH(result, curBytePos))
 													+	(
-															SYSTEM.VAL(SET, curByte)
-															* SYSTEM.VAL(SET, LSH(SYSTEM.VAL(LONGINT, 1), curBytePos) - 1)
+															SET( curByte)
+															* SET( LSH(LONGINT( 1), curBytePos) - 1)
 														)
 												);
 
@@ -2215,9 +2215,9 @@ TYPE
 
 						DEC(curBytePos, n);
 
-						result := SYSTEM.VAL(LONGINT,
-												SYSTEM.VAL(SET, LSH(result, n))
-												+ SYSTEM.VAL(SET, LSH(curByte, -curBytePos))
+						result := LONGINT(
+												SET( LSH(result, n))
+												+ SET( LSH(curByte, -curBytePos))
 											);
 						RETURN result;
 					END;
@@ -2645,9 +2645,9 @@ TYPE
 						(* Need to see if we have a byte (of the stream) in the buffer -> flush buffer if so *)
 						IF buf8Valid THEN
 							buf8Valid := FALSE;
-							curMarker := SYSTEM.VAL(LONGINT,
-													SYSTEM.VAL(SET, LSH(buf8, 8))
-													+ SYSTEM.VAL(SET, LONG(ORD(s.Get())))
+							curMarker := LONGINT(
+													SET( LSH(buf8, 8))
+													+ SET( LONG(ORD(s.Get())))
 											);
 						ELSE
 							curMarker := s.Net16();
@@ -3422,8 +3422,8 @@ TYPE
 
 
 						(* Values used for implicit 'ceil' operation after division (i.e. shifting) *)
-						tmpW := LSH(SYSTEM.VAL(LONGINT, 1), cblw) - 1;
-						tmpH := LSH(SYSTEM.VAL(LONGINT, 1), cblh) - 1;
+						tmpW := LSH(LONGINT( 1), cblw) - 1;
+						tmpH := LSH(LONGINT( 1), cblh) - 1;
 
 						(* We have to allocate space for all subbands in each decomposition level *)
 						NEW(subbInfos[curTile][c], 4 * ndec + 1);
@@ -3491,8 +3491,8 @@ TYPE
 							END;
 
 							(* Values used for implicit 'ceil' operation after division (i.e. shifting) *)
-							tmpW := LSH(SYSTEM.VAL(LONGINT, 1), cblw) - 1;
-							tmpH := LSH(SYSTEM.VAL(LONGINT, 1), cblh) - 1;
+							tmpW := LSH(LONGINT( 1), cblw) - 1;
+							tmpH := LSH(LONGINT( 1), cblh) - 1;
 
 							(* The HL subband *)
 							NEW(hlBand);
@@ -3592,8 +3592,8 @@ TYPE
 							END;
 
 							(* Values used for implicit 'ceil' operation after division (i.e. shifting) *)
-							tmpW := LSH(SYSTEM.VAL(LONGINT, 1), cblw) - 1;
-							tmpH := LSH(SYSTEM.VAL(LONGINT, 1), cblh) - 1;
+							tmpW := LSH(LONGINT( 1), cblw) - 1;
+							tmpH := LSH(LONGINT( 1), cblh) - 1;
 
 							NEW(llBand);
 							llBand.type := J2KU.SUB_LL;
@@ -3736,9 +3736,9 @@ TYPE
 					END;
 
 					RETURN
-						SYSTEM.VAL(LONGINT,
-							SYSTEM.VAL(SET, LSH(buf8, 8))
-							+ SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, s.Peek()))
+						LONGINT(
+							SET( LSH(buf8, 8))
+							+ SET( ORD(s.Peek()))
 						);
 
 			END Peek16;
@@ -4220,12 +4220,12 @@ TYPE
 						NEW(imgInfo.comps[i]);
 						s.Char(ssiz);
 						ssizInt := ORD(ssiz);
-						IF (SYSTEM.VAL(SET, ssizInt) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT,  00000080H))) # {} THEN
+						IF (SET( ssizInt) * SET( LONGINT(  00000080H))) # {} THEN
 							 imgInfo.comps[i].signed := TRUE;
 						ELSE
 							 imgInfo.comps[i].signed := FALSE;
 						END;
-						imgInfo.comps[i].depth := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ssizInt) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000007FH))) + 1;
+						imgInfo.comps[i].depth := LONGINT( SET( ssizInt) * SET( LONGINT( 0000007FH))) + 1;
 						s.Char(ch);
 						imgInfo.comps[i].subsx := ORD(ch);
 						s.Char(ch);
@@ -4318,8 +4318,8 @@ TYPE
 						RETURN FALSE;
 					END;
 
-					tmpCod.cblw := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ORD(cblw)) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000000FH))) + 2;
-					tmpCod.cblh :=  SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ORD(cblh)) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000000FH))) + 2;
+					tmpCod.cblw := LONGINT( SET( ORD(cblw)) * SET( LONGINT( 0000000FH))) + 2;
+					tmpCod.cblh :=  LONGINT( SET( ORD(cblh)) * SET( LONGINT( 0000000FH))) + 2;
 					IF ((tmpCod.cblw > 10) OR (tmpCod.cblh > 10)) OR (tmpCod.cblw + tmpCod.cblh > 12) THEN
 						KernelLog.String("ERROR: Invalid code-block width or height exponent: width exp. = ");
 						KernelLog.Int(tmpCod.cblw, 0);
@@ -4346,7 +4346,7 @@ TYPE
 						FOR i := 0 TO tmpCod.ndec DO
 							s.Char(precsiz);
 							precsizInt := ORD(precsiz);
-							tmpCod.precs[i].ppx := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, precsizInt) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000000FH)));
+							tmpCod.precs[i].ppx := LONGINT( SET( precsizInt) * SET( LONGINT( 0000000FH)));
 							tmpCod.precs[i].ppy := LSH(precsizInt, -4);
 						END;
 					END;
@@ -4430,8 +4430,8 @@ TYPE
 						RETURN FALSE;
 					END;
 
-					tmpCoc.cblw := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ORD(cblw)) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000000FH))) + 2;
-					tmpCoc.cblh :=  SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ORD(cblh)) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000000FH))) + 2;
+					tmpCoc.cblw := LONGINT( SET( ORD(cblw)) * SET( LONGINT( 0000000FH))) + 2;
+					tmpCoc.cblh :=  LONGINT( SET( ORD(cblh)) * SET( LONGINT( 0000000FH))) + 2;
 					IF ((tmpCoc.cblw > 10) OR (tmpCoc.cblh > 10)) OR (tmpCoc.cblw + tmpCoc.cblh > 12) THEN
 						KernelLog.String("ERROR (CodestreamReader.ReadCOCSegment) : Invalid code-block width or height exponent: width exp. = ");
 						KernelLog.Int(tmpCoc.cblw, 0);
@@ -4457,7 +4457,7 @@ TYPE
 						FOR i := 0 TO tmpCoc.ndec DO
 							s.Char(precsiz);
 							precsizInt := ORD(precsiz);
-							tmpCoc.precs[i].ppx := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, precsizInt) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000000FH)));
+							tmpCoc.precs[i].ppx := LONGINT( SET( precsizInt) * SET( LONGINT( 0000000FH)));
 							tmpCoc.precs[i].ppy := LSH(precsizInt, -4);
 						END;
 					END;
@@ -4560,7 +4560,7 @@ TYPE
 					sqcdInt := ORD(sqcd);
 
 					NEW(tmp);
-					tmp.style := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, sqcdInt) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000001FH)));
+					tmp.style := LONGINT( SET( sqcdInt) * SET( LONGINT( 0000001FH)));
 					tmp.nguardb := LSH(sqcdInt, -5);
 
 					CASE tmp.style OF
@@ -4580,7 +4580,7 @@ TYPE
 								NEW(tmp.stepsiz, 1);
 								NEW(tmp.stepsiz[0]);
 								ssize := s.Net16();
-								tmp.stepsiz[0].mant := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ssize) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 000007FFH)));
+								tmp.stepsiz[0].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
 								tmp.stepsiz[0].exp := LSH(ssize, -11);
 						|	QUANT_EXP :
 								(* There are as many step sizes signalled as there ae subbands *)
@@ -4589,7 +4589,7 @@ TYPE
 								FOR i := 0 TO tmp.nstepsiz - 1 DO
 									NEW(tmp.stepsiz[i]);
 									ssize := s.Net16();
-									tmp.stepsiz[i].mant := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ssize) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 000007FFH)));
+									tmp.stepsiz[i].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
 									tmp.stepsiz[i].exp := LSH(ssize, -11);
 								END;
 						ELSE
@@ -4653,7 +4653,7 @@ TYPE
 					sqccInt := ORD(sqcc);
 
 					NEW(tmp);
-					tmp.style := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, sqccInt) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 0000001FH)));
+					tmp.style := LONGINT( SET( sqccInt) * SET( LONGINT( 0000001FH)));
 					tmp.nguardb := LSH(sqccInt, -5);
 
 					CASE tmp.style OF
@@ -4673,7 +4673,7 @@ TYPE
 								NEW(tmp.stepsiz, 1);
 								NEW(tmp.stepsiz[0]);
 								ssize := s.Net16();
-								tmp.stepsiz[0].mant := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ssize) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 000007FFH)));
+								tmp.stepsiz[0].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
 								tmp.stepsiz[0].exp := LSH(ssize, -11);
 						|	QUANT_EXP :
 								(* There are as many step sizes signalled as there ae subbands *)
@@ -4682,7 +4682,7 @@ TYPE
 								FOR i := 0 TO tmp.nstepsiz - 1 DO
 									NEW(tmp.stepsiz[i]);
 									ssize := s.Net16();
-									tmp.stepsiz[i].mant := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ssize) * SYSTEM.VAL(SET, SYSTEM.VAL(LONGINT, 000007FFH)));
+									tmp.stepsiz[i].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
 									tmp.stepsiz[i].exp := LSH(ssize, -11);
 								END;
 						ELSE

@@ -2967,7 +2967,7 @@ ASSERT(~loaded(instr.dest));
 
 	PROCEDURE LSW (x: LONGINT): LONGINT;
 	BEGIN (* least significant word (unsigned) *)
-		RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, x) * SYSTEM.VAL(SET, 0FFFFH))
+		RETURN LONGINT(SET(x) * SET(0FFFFH))
 	END LSW;
 
 	PROCEDURE Export(obj: OPT.Object; VAR nofExp: INTEGER);

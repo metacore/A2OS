@@ -257,7 +257,7 @@ VAR W*: Texts.Writer;
 				Str("   "); tab;
 				reg(c); IF ODD(b DIV 2) THEN Ch("!") END; Ch(","); Ch(" ");
 				Ch("{");
-				regset := SYSTEM.VAL(SET, d*1000H + e*100H + f*10H +g);
+				regset := SET(d*1000H + e*100H + f*10H +g);
 				FOR i := 0 TO 15 DO
 					IF i IN regset THEN reg(i); Ch(" "); END;
 				END;

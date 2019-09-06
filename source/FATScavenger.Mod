@@ -261,7 +261,7 @@ TYPE
 			shortName[11]:=0X;
 
 			(* get attributes *)
-			attr:=SYSTEM.VAL(SET, LONG(ORD(rawEntry[11])));
+			attr:=SYSTEM.VAL(SET32, LONG(ORD(rawEntry[11])));
 			IF (FATFiles.faDirectory IN attr) THEN directory:=TRUE; ELSE directory:=FALSE; END;
 
 			(* get creation time and date *)
@@ -775,7 +775,7 @@ TYPE
 			(* evaluate volume dirty flags on FAT16/FAT32 volumes *)
 			IF (fsType = FAT16) OR (fsType = FAT32) THEN
 				vol.unsafe := TRUE;
-				vdf := SYSTEM.VAL(SET, vol.ReadFATEntry(1));
+				vdf := SET(vol.ReadFATEntry(1));
 				vol.unsafe := FALSE;
 
 				IF fsType = FAT16 THEN
@@ -800,7 +800,7 @@ TYPE
 					IF vdf * (clnShutdown + ioError) # (clnShutdown + ioError) THEN
 						vdf := vdf + clnShutdown + ioError;
 						vol.unsafe := TRUE;
-						vol.WriteFATEntry(1, SYSTEM.VAL(LONGINT, vdf), res);
+						vol.WriteFATEntry(1, LONGINT(vdf), res);
 						vol.unsafe := FALSE;
 						IF res # Disks.Ok THEN
 							PartitionsLib.GetErrorMsg("Could not write back volume dirty flags ", res, string); ReportError (string);

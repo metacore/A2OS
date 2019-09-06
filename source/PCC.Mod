@@ -425,7 +425,7 @@ BEGIN
 	ELSIF PCT.IsCharType(t) OR (t = PCT.Byte) THEN
 		x.value := o.int
 	ELSIF t = PCT.Set THEN
-		x.value := SYSTEM.VAL(LONGINT, o.set)
+		x.value := LONGINT(o.set)
 	ELSIF t = PCT.NilType THEN
 		x.value := Nil;
 	ELSIF PCT.IsFloatType(t) OR (t = PCT.String) OR (t = PCT.Int64) THEN	(*stored in the const section*)
@@ -1505,7 +1505,7 @@ END PushOpenAryParams;
 			PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE , dims );
 			PCLIR.Emit01( code, PCLIR.push, const );   (* dimension *)
 			PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE ,
-												SYSTEM.VAL( LONGINT, {StackFlag} ) );
+												LONGINT( {StackFlag} ) );
 			PCLIR.Emit01( code, PCLIR.push, const );   (* flag *)
 			PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE , 0 );
 			PCLIR.Emit01( code, PCLIR.push, const );   (* nil address *)
@@ -2824,7 +2824,7 @@ END SysNewBlock;
 		(* now check if allocation is allowed *)
 		PCLIR.EmitLoadRelative( code, PCLIR.Address, FALSE , reg, Descr_FlagsOffs*PCT.AddressSize,  ptr.adr );
 		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE ,
-											SYSTEM.VAL( LONGINT, {RangeFlag} ) );
+											LONGINT({RangeFlag} ) );
 		PCLIR.Emit12( code, PCLIR.and, reg, bit, reg );
 		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE , 0 );
 		PCLIR.Emit02C( code, PCLIR.tne, reg, bit, PCM.ArrayFormTrap );
@@ -2903,10 +2903,10 @@ END SysNewBlock;
 		label2 := code.pc;
 		PCLIR.Emit02C( code, PCLIR.je, reg, dimR, none );   (* dimension fits -> don't reallocate (this is not only an optimization, but a rule! ) *)
 		(* dimension does not fit *)
-		PCLIR.EmitLoadConst( code, dimR, PCLIR.Address, FALSE , SYSTEM.VAL( LONGINT, {TensorFlag} ) );
+		PCLIR.EmitLoadConst( code, dimR, PCLIR.Address, FALSE , LONGINT( {TensorFlag} ) );
 		PCLIR.EmitLoadRelative( code, PCLIR.Address, FALSE , reg, Descr_FlagsOffs*PCT.AddressSize,  adr );   (* load flags *)
 		PCLIR.Emit12( code, PCLIR.and, adr, dimR, reg );
-		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE , SYSTEM.VAL( LONGINT, {TensorFlag} ) );
+		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE , LONGINT({TensorFlag} ) );
 		PCLIR.Emit02C( code, PCLIR.tne, adr, bit, PCM.ArrayFormTrap );   (* tensor flag not in descriptor *)
 		FixJmp( code, label );
 		PCLIR.Emit01( code, PCLIR.push, x.adr );   (*1st par: VAR p: PRT *)
@@ -3013,7 +3013,7 @@ END SysNewArray;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr ) END;
 		offs := Descr_FlagsOffs*PCT.AddressSize;
-		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , SYSTEM.VAL( LONGINT, flags ) );
+		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , LONGINT(flags ) );
 		PCLIR.EmitStoreRelative( code, offs, ptr.adr, size )
 	END SetEnhArrayFlags;
 
@@ -3040,7 +3040,7 @@ END SysNewArray;
 			set flags
 		*)
 		PCLIR.EmitLoadRelative(code,PCLIR.Address,TRUE,flags,flags_offs,ptr.adr); (* load current flags from the descriptor *)
-		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,SYSTEM.VAL(LONGINT,{SmallMatrixFlag}));
+		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,LONGINT({SmallMatrixFlag}));
 		PCLIR.Emit12(code,PCLIR.or,flags,flags,n); (* flags := flags + {SmallMatrixFlag} *)
 
 		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,2);
@@ -3077,7 +3077,7 @@ END SysNewArray;
 			set flags
 		*)
 		PCLIR.EmitLoadRelative(code,PCLIR.Address,TRUE,flags,flags_offs,ptr.adr); (* load current flags from the descriptor *)
-		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,SYSTEM.VAL(LONGINT,{SmallMatrixFlag}));
+		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,LONGINT({SmallMatrixFlag}));
 		PCLIR.Emit12(code,PCLIR.or,flags,flags,n); (* flags := flags + {SmallMatrixFlag} *)
 
 		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,2);
@@ -3138,7 +3138,7 @@ END SysNewArray;
 	BEGIN
 		IF ptr.mode # Reg THEN DerefTensor( code, ptr );  LoadAdr( code, ptr ) END;
 		offs :=   Descr_FlagsOffs*PCT.AddressSize;
-		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , SYSTEM.VAL( LONGINT, flags ) );
+		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , LONGINT( flags ) );
 		PCLIR.EmitStoreRelative( code, offs, ptr.adr, size )
 	END TensorSetFlags;
 
@@ -3908,7 +3908,7 @@ BEGIN
 		Load(code,dim);
 		PCLIR.Emit01(code,PCLIR.push,dim.adr);
 		PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE ,
-											SYSTEM.VAL( LONGINT, {RangeFlag} ) );   (* flags, no reallocation *)
+											LONGINT({RangeFlag} ) );   (* flags, no reallocation *)
 		PCLIR.Emit01( code, PCLIR.push, adr );
 		PCLIR.Emit01( code, PCLIR.push, ap.adr );   (* push array reference  *)
 
@@ -3951,7 +3951,7 @@ BEGIN
 
 			PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , type.dim );
 			PCLIR.Emit01( code, PCLIR.push, adr );
-			PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , SYSTEM.VAL( LONGINT, {RangeFlag} ) );   (* to protect size *)
+			PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , LONGINT({RangeFlag} ) );   (* to protect size *)
 			PCLIR.Emit01( code, PCLIR.push, adr );
 			IF arr.mode # Reg THEN LoadAdr( code, arr );  END;
 			PCLIR.Emit01( code, PCLIR.push, arr.adr );
@@ -3992,7 +3992,7 @@ BEGIN
 
 		PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , dim );   (*! replace by correct overal dimension *)
 		PCLIR.Emit01( code, PCLIR.push, adr );
-		PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , SYSTEM.VAL( LONGINT, {} ) );
+		PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , 0);
 		PCLIR.Emit01( code, PCLIR.push, adr );  INC( spoffset, 8 );
 
 		IF reference THEN

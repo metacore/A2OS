@@ -532,6 +532,6 @@ TYPE
 
 
 BEGIN
-	ASSERT( S.VAL( LONGINT, {0} ) = 1 );  Init
+	ASSERT( LONGINT({0} ) = 1 );  Init
 END CryptoCAST.
 

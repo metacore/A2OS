@@ -4646,10 +4646,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	PROCEDURE ColorToIndex*(col: LONGINT): LONGINT;
 	BEGIN
 			(* default implementation is not very useful and should be overridden. *)
-		RETURN SYSTEM.VAL(LONGINT,
-				SYSTEM.VAL(SET, ASH(col, 7-23)) * {5..7} +
-				SYSTEM.VAL(SET, ASH(col, 4-15)) * {2..4} +
-				SYSTEM.VAL(SET, ASH(col, 1-7)) * {0..1})
+		RETURN LONGINT(
+				SET32(ASH(col, 7-23)) * {5..7} +
+				SET32(ASH(col, 4-15)) * {2..4} +
+				SET32(ASH(col, 1-7)) * {0..1})
 	END ColorToIndex;
 
 	(** Map an 8-bit CLUT index to a color value.  Only used if format = index8. *)
@@ -4657,9 +4657,9 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	BEGIN
 			(* default implementation is not very useful and should be overridden. *)
 		RETURN
-				ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {5..7}), 23-7) +
-				ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {2..4}), 15-4) +
-				ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {0..1}), 7-1)
+				ASH(LONGINT(SET32(index) * {5..7}), 23-7) +
+				ASH(LONGINT(SET32(index) * {2..4}), 15-4) +
+				ASH(LONGINT(SET32(index) * {0..1}), 7-1)
 	END IndexToColor;
 
 BEGIN

@@ -37,7 +37,7 @@ VAR
 	VAR i: LONGINT;
 	BEGIN
 		IF context.arg.GetInteger( i, FALSE ) THEN
-			debug := SYSTEM.VAL( SET, i )
+			debug := SET(i )
 		ELSE
 			context.result := Commands.CommandParseError;
 		END;

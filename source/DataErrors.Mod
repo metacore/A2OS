@@ -124,7 +124,7 @@ CONST
 				SYSTEM.GET( adr, lval );  W.Hex( lval, 8 );  W.Char( "H" )
 		| 9:    (* SET *)
 				SYSTEM.GET( adr, lval );
-				W.Set( SYSTEM.VAL( SET, lval ) );  INC( col, 8 ) (* col is guess *)
+				W.Set( SET(lval ) );  INC( col, 8 ) (* col is guess *)
 		| 22:  (* RECORD *)
 				W.String( "Rec." );  W.Hex( tdadr, 8 );  W.Char( "H" );  INC( col, 13 )
 		| 14:  (* PROC *)

@@ -111,12 +111,12 @@ BEGIN
 	context.out.String("Test set <-> string conversion...  "); context.out.Update;
 	i := MIN(LONGINT);
 	WHILE (i < MAX(LONGINT)) DO
-		Strings.SetToStr(SYSTEM.VAL(SET, i), string);
+		Strings.SetToStr(SET(i), string);
 		Strings.StrToSet(string, temp);
-		IF (SYSTEM.VAL(SET, i) # temp) THEN
-			KernelLog.Bits(SYSTEM.VAL(SET, i), 0, 32); KernelLog.String(" # "); KernelLog.Bits(temp, 0, 32); KernelLog.Ln;
+		IF (SET(i) # temp) THEN
+			KernelLog.Bits(SET(i), 0, 32); KernelLog.String(" # "); KernelLog.Bits(temp, 0, 32); KernelLog.Ln;
 		END;
-		ASSERT(SYSTEM.VAL(SET, i) = temp);
+		ASSERT(SET( i) = temp);
 		INC(i);
 		IF (i MOD Step = 0) THEN
 			IF (i < 0) THEN
@@ -127,9 +127,9 @@ BEGIN
 			context.out.String("% "); context.out.Update;
 		END;
 	END;
-	Strings.SetToStr(SYSTEM.VAL(SET, MAX(LONGINT)), string);
+	Strings.SetToStr(SET(MAX(LONGINT)), string);
 	Strings.StrToSet(string, temp);
-	ASSERT(SYSTEM.VAL(SET, MAX(LONGINT)) = temp);
+	ASSERT(SET(MAX(LONGINT)) = temp);
 	context.out.String("100% done."); context.out.Ln;
 END TestSetConversion;
 

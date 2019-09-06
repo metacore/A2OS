@@ -635,7 +635,7 @@ TYPE
 					END;
 				END;
 				ch := reader.Get();
-				retType := SYSTEM.VAL(LONGINT, reader.Get());
+				retType := ORD( reader.Get());
 				ch := reader.Get(); ch := reader.Get();
 				reader.RawString(name);
 				entry := FindEntryByOffset(ofs);
@@ -687,7 +687,7 @@ TYPE
 				RETURN NIL (* not a field *)
 			END;
 			ch := reader.Get();
-			fieldInfo.type := SYSTEM.VAL(LONGINT, reader.Get());
+			fieldInfo.type := ORD(reader.Get());
 			IF fieldInfo.type <= 15H THEN
 				fieldInfo.kind := VarType;
 			ELSIF (fieldInfo.type >= 81H) & (fieldInfo.type <= 90H) THEN

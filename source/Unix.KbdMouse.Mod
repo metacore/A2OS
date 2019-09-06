@@ -407,7 +407,7 @@ VAR
 	END GetXDisplay;
 
 BEGIN
-	ASSERT( S.VAL( LONGINT, {0} ) = 1 );
+	ASSERT( LONGINT({0} ) = 1 );
 	GetXDisplay;
 END KbdMouse.
 

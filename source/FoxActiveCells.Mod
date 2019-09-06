@@ -1497,13 +1497,13 @@ TYPE
 	PROCEDURE GetSet(VAR r: Streams.Reader; VAR set: SET): BOOLEAN;
 	VAR int: LONGINT;
 	BEGIN
-		IF r.GetInteger(int, FALSE) THEN set := SYSTEM.VAL(SET, int); RETURN TRUE ELSE RETURN FALSE END;
+		IF r.GetInteger(int, FALSE) THEN set := SET(int); RETURN TRUE ELSE RETURN FALSE END;
 	END GetSet;
 
 	PROCEDURE WriteSet(VAR r: Streams.Writer; set: SET);
 	VAR int: LONGINT;
 	BEGIN
-		int := SYSTEM.VAL(LONGINT, set);
+		int := LONGINT(set);
 		r.Int(int,1);
 	END WriteSet;
 

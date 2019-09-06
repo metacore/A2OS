@@ -867,7 +867,7 @@ VAR
 
 	PROCEDURE Imp( VAR impName, modName: OPS.Name;  VAR M: Module );
 	VAR R: Files.Rider;  i: INTEGER;  tag: LONGINT;  done: BOOLEAN;  mode: SHORTINT;  obj, last: Object;  tdum: Struct;  new, operator, zeroCompress: BOOLEAN;
-		readString: ReadStringProc;   flag: SET; (* fof *)
+		readString: ReadStringProc;   flag: SET; (* fof *) int: LONGINT;
 
 		PROCEDURE GetImports;
 		VAR name: OPS.Name;  TM: Module;
@@ -926,7 +926,9 @@ VAR
 		VAR scope, last, fld: Object;  btyp: Struct;  n: LONGINT;  flags: SET;  conval: Const;
 		BEGIN
 			NEW( scope );  scope.mode := Head;  scope.mnolev := -typ.mno;  last := NIL;  btyp := typ.BaseTyp;  conval := NewConst();
-			typ.strobj.conval := conval;  Files.ReadNum( R, SYSTEM.VAL( LONGINT, flags ) );
+			typ.strobj.conval := conval;  
+			Files.ReadNum( R, n );
+			flags := SET(n); 
 			IF 0 IN flags THEN INCL( conval.setval, protectedObj ) END;
 			IF 1 IN flags THEN INCL( conval.setval, activeObj ) END;
 			IF 2 IN flags THEN INCL( conval.setval, safe ) END;
@@ -1055,14 +1057,15 @@ VAR
 		END InCProc;
 
 		PROCEDURE InConst;
-		VAR conval: Const;  s: INTEGER;  r: REAL;
+		VAR conval: Const;  s: INTEGER;  r: REAL; int: LONGINT;
 		BEGIN
 			NEW( conval );  obj.conval := conval;
 			CASE tag OF
 			| SFtypBool, SFtypChar, SFtypSInt..SFtypLInt:
 					Files.ReadNum( R, conval.intval )
 			| SFtypSet:
-					Files.ReadNum( R, SYSTEM.VAL( LONGINT, conval.setval ) )
+					Files.ReadNum( R, int); 
+					conval.setval := SET(int); 
 			| SFtypReal:
 					Files.ReadReal( R, r );  conval.realval := r;  conval.intval := OPM.ConstNotAlloc
 			| SFtypLReal:
@@ -1098,7 +1101,7 @@ VAR
 
 					(** fof >> *)
 					flag := {};
-					IF tag = SFsysflag THEN Files.ReadNum( R, SYSTEM.VAL( LONGINT, flag ) );  Files.ReadNum( R, tag );  END;
+					IF tag = SFsysflag THEN Files.ReadNum( R, int); flag := SET(int);  Files.ReadNum( R, tag );  END;
 					(** << fof  *)
 
 					IF tag = SFconst THEN

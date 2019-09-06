@@ -63,29 +63,29 @@ CONST
 	Size7Flag = 9; (* size = 7 *)
 	Size8Flag = 10; (* size = 8 *)
 
-	Mat2x2 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,Size2Flag});
-	Mat3x3 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,Size3Flag});
-	Mat4x4 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,Size4Flag});
-	Mat5x5 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,Size5Flag});
-	Mat6x6 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,Size6Flag});
-	Mat7x7 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,Size7Flag});
-	Mat8x8 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,Size8Flag});
+	Mat2x2 = {SmallMatrixFlag,Size2Flag};
+	Mat3x3 = {SmallMatrixFlag,Size3Flag};
+	Mat4x4 = {SmallMatrixFlag,Size4Flag};
+	Mat5x5 = {SmallMatrixFlag,Size5Flag};
+	Mat6x6 = {SmallMatrixFlag,Size6Flag};
+	Mat7x7 = {SmallMatrixFlag,Size7Flag};
+	Mat8x8 = {SmallMatrixFlag,Size8Flag};
 
-	Vec2 = SYSTEM.VAL(LONGINT,{SmallVectorFlag,Size2Flag});
-	Vec3 = SYSTEM.VAL(LONGINT,{SmallVectorFlag,Size3Flag});
-	Vec4 = SYSTEM.VAL(LONGINT,{SmallVectorFlag,Size4Flag});
-	Vec5 = SYSTEM.VAL(LONGINT,{SmallVectorFlag,Size5Flag});
-	Vec6 = SYSTEM.VAL(LONGINT,{SmallVectorFlag,Size6Flag});
-	Vec7 = SYSTEM.VAL(LONGINT,{SmallVectorFlag,Size7Flag});
-	Vec8 = SYSTEM.VAL(LONGINT,{SmallVectorFlag,Size8Flag});
+	Vec2 = {SmallVectorFlag,Size2Flag};
+	Vec3 = {SmallVectorFlag,Size3Flag};
+	Vec4 = {SmallVectorFlag,Size4Flag};
+	Vec5 = {SmallVectorFlag,Size5Flag};
+	Vec6 = {SmallVectorFlag,Size6Flag};
+	Vec7 = {SmallVectorFlag,Size7Flag};
+	Vec8 = {SmallVectorFlag,Size8Flag};
 
-	MatVec2x2 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size2Flag});
-	MatVec3x3 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size3Flag});
-	MatVec4x4 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size4Flag});
-	MatVec5x5 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size5Flag});
-	MatVec6x6 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size6Flag});
-	MatVec7x7 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size7Flag});
-	MatVec8x8 = SYSTEM.VAL(LONGINT,{SmallMatrixFlag,SmallVectorFlag,Size8Flag});
+	MatVec2x2 = {SmallMatrixFlag,SmallVectorFlag,Size2Flag};
+	MatVec3x3 = {SmallMatrixFlag,SmallVectorFlag,Size3Flag};
+	MatVec4x4 = {SmallMatrixFlag,SmallVectorFlag,Size4Flag};
+	MatVec5x5 = {SmallMatrixFlag,SmallVectorFlag,Size5Flag};
+	MatVec6x6 = {SmallMatrixFlag,SmallVectorFlag,Size6Flag};
+	MatVec7x7 = {SmallMatrixFlag,SmallVectorFlag,Size7Flag};
+	MatVec8x8 = {SmallMatrixFlag,SmallVectorFlag,Size8Flag};
 
 	SmallArrayMask = {SmallMatrixFlag,SmallVectorFlag,Size2Flag,Size3Flag,Size4Flag,Size5Flag,Size6Flag,Size7Flag,Size8Flag};
 
@@ -8859,12 +8859,12 @@ TYPE
 		(* account possible inplace left := left*right, right := left*right, left := left*left, right := right*right *)
 		IF (ladr # dadr) & (radr # dadr) THEN
 
-			flags := SmallArrayMask * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
+			flags := SmallArrayMask * GetFlags(ADDRESSOF(left)) * GetFlags(ADDRESSOF(right));
 
-			CASE SYSTEM.VAL(LONGINT,flags) OF
+			CASE flags OF
 
 				Mat2x2:
-					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat2x2 THEN
+					IF GetFlags(ADDRESSOF(RESULT)) * SmallArrayMask # Mat2x2 THEN
 						IF dadr = 0 THEN NEW(RESULT,2,2); dadr := GetAdr(ADDRESSOF(RESULT));
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -8879,7 +8879,7 @@ TYPE
 					END;
 
 				|Mat3x3:
-					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat3x3 THEN
+					IF GetFlags(ADDRESSOF(RESULT)) * SmallArrayMask # Mat3x3 THEN
 						IF dadr = 0 THEN NEW(RESULT,3,3);dadr := GetAdr(ADDRESSOF(RESULT));
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -8901,7 +8901,7 @@ TYPE
 					END;
 
 				|Mat4x4:
-					IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Mat4x4 THEN
+					IF GetFlags(ADDRESSOF(RESULT)) * SmallArrayMask # Mat4x4 THEN
 						IF dadr = 0 THEN NEW(RESULT,4,4); dadr := GetAdr(ADDRESSOF(RESULT));
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -8955,12 +8955,12 @@ TYPE
 		ladr := GetAdr(ADDRESSOF(left));
 		radr := GetAdr(ADDRESSOF(right));
 
-		flags := SmallArrayMask * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
+		flags := SmallArrayMask * GetFlags(ADDRESSOF(left)) *  GetFlags(ADDRESSOF(right));
 
-		CASE SYSTEM.VAL(LONGINT,flags) OF
+		CASE flags OF
 
 			MatVec2x2:
-				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec2 THEN
+				IF GetFlags(ADDRESSOF(RESULT)) * SmallArrayMask # Vec2 THEN
 					IF dadr = 0 THEN NEW(RESULT,2);dadr := GetAdr(ADDRESSOF(RESULT));
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
@@ -8975,7 +8975,7 @@ TYPE
 				END;
 
 			|MatVec3x3:
-				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec3 THEN
+				IF GetFlags(ADDRESSOF(RESULT)) * SmallArrayMask # Vec3 THEN
 					IF dadr = 0 THEN NEW(RESULT,3);dadr := GetAdr(ADDRESSOF(RESULT));
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
@@ -8991,7 +8991,7 @@ TYPE
 				END;
 
 			|MatVec4x4:
-				IF SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset)) * SmallArrayMask) # Vec4 THEN
+				IF GetFlags(ADDRESSOF(RESULT)) * SmallArrayMask # Vec4 THEN
 					IF dadr = 0 THEN NEW(RESULT,4);dadr := GetAdr(ADDRESSOF(RESULT));
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
@@ -9051,11 +9051,11 @@ TYPE
 
 		IF (ladr # dadr) & (radr # dadr) THEN
 
-			flags := SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
+			flags := GetFlags(ADDRESSOF(left)) * GetFlags(ADDRESSOF(right));
 
-			CASE SYSTEM.VAL(LONGINT,flags) OF
+			CASE flags OF
 				Mat2x2:
-					IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Mat2x2 THEN
+					IF GetFlags(ADDRESSOF(RESULT)) # Mat2x2 THEN
 						IF dadr = 0 THEN NEW(RESULT,2,2);
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -9070,7 +9070,7 @@ TYPE
 					END;
 
 				|Mat3x3:
-					IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Mat3x3 THEN
+					IF GetFlags(ADDRESSOF(RESULT)) # Mat3x3 THEN
 						IF dadr = 0 THEN NEW(RESULT,3,3);
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -9092,7 +9092,7 @@ TYPE
 					END;
 
 				|Mat4x4:
-					IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Mat4x4 THEN
+					IF GetFlags(ADDRESSOF(RESULT)) # Mat4x4 THEN
 						IF dadr = 0 THEN NEW(RESULT,4,4);
 						ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 						END;
@@ -9147,12 +9147,11 @@ TYPE
 		ladr := GetAdr(ADDRESSOF(left));
 		radr := GetAdr(ADDRESSOF(right));
 
-		flags := SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(left)+MathFlagsOffset)) * SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(right)+MathFlagsOffset));
+		flags := GetFlags(ADDRESSOF(left)) * GetFlags(ADDRESSOF(right));
 
-		CASE SYSTEM.VAL(LONGINT,flags) OF
-
+		CASE flags OF
 			MatVec2x2:
-				IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Vec2 THEN
+				IF GetFlags(ADDRESSOF(RESULT)) # Vec2 THEN
 					IF dadr = 0 THEN NEW(RESULT,2);
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
@@ -9167,7 +9166,7 @@ TYPE
 				END;
 
 			|MatVec3x3:
-				IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Vec3 THEN
+				IF GetFlags(ADDRESSOF(RESULT)) # Vec3 THEN
 					IF dadr = 0 THEN NEW(RESULT,3);
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;
@@ -9183,7 +9182,7 @@ TYPE
 				END;
 
 			|MatVec4x4:
-				IF SYSTEM.GET32(ADDRESSOF(RESULT)+MathFlagsOffset) # Vec4 THEN
+				IF GetFlags(ADDRESSOF(RESULT)) # Vec4 THEN
 					IF dadr = 0 THEN NEW(RESULT,4);
 					ELSE Halt(GeometryMismatch,ADDRESSOF(left),ADDRESSOF(right),0);
 					END;

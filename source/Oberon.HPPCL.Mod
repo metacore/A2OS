@@ -583,7 +583,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		IF map # NIL THEN
 			i := 0; j := 0;
 			WHILE j < PL DO
-				x := SYSTEM.VAL(LONGINT, map[y, j]);
+				x := LONGINT(map[y, j]);
 				line[i] := CHR(x); x := x DIV 256; INC(i);
 				line[i] := CHR(x); x := x DIV 256; INC(i);
 				line[i] := CHR(x); x := x DIV 256; INC(i);

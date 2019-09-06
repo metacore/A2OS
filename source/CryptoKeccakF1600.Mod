@@ -128,17 +128,17 @@ TYPE
 	BEGIN
 		temp0 := in.low;
 		temp1 := in.high;
-		temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
-		temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
-		temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
-		temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
+		temp := (temp0 / LSH( temp0, -1 )) * SET32( 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
+		temp := (temp0 / LSH( temp0, -2 )) * SET32( 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
+		temp := (temp0 / LSH( temp0, -4 )) * SET32( 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
+		temp := (temp0 / LSH( temp0, -8 )) * SET32( 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
 
-		temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET32, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
-		temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
-		temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
-		temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET32, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
-		out.low := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 );
-		out.high := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H ));
+		temp := (temp1 / LSH( temp1, -1 )) * SET32( 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
+		temp := (temp1 / LSH( temp1, -2 )) * SET32( 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
+		temp := (temp1 / LSH( temp1, -4 )) * SET32( 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
+		temp := (temp1 / LSH( temp1, -8 )) * SET32( 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
+		out.low := (temp0 * SET32( 00000FFFFH )) + LSH( temp1, 16 );
+		out.high := LSH( temp0, - 16) + (temp1 * SET32( 0FFFF0000H ));
 	END ToBitInterleaving;
 
 	(* Credit to Henry S. Warren, Hacker's Delight, Addison-Wesley, 2002 *)
@@ -147,18 +147,18 @@ TYPE
 	BEGIN
 		temp0 := in.low;
 		temp1 := in.high;
-		temp := (temp0 * S.VAL( SET32, 00000FFFFH )) + LSH( temp1, 16 );
-		temp1 := LSH( temp0, - 16) + (temp1 * S.VAL( SET32, 0FFFF0000H ));
+		temp := (temp0 * SET32(00000FFFFH )) + LSH( temp1, 16 );
+		temp1 := LSH( temp0, - 16) + (temp1 * SET32( 0FFFF0000H ));
 		temp0 := temp;
-		temp := (temp0 / LSH( temp0, -8 )) * S.VAL( SET32, 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
-		temp := (temp0 / LSH( temp0, -4 )) * S.VAL( SET32, 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
-		temp := (temp0 / LSH( temp0, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
-		temp := (temp0 / LSH( temp0, -1 )) * S.VAL( SET32, 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
+		temp := (temp0 / LSH( temp0, -8 )) * SET32( 00000FF00H );  temp0 := temp0 / temp / LSH( temp, 8 );
+		temp := (temp0 / LSH( temp0, -4 )) * SET32( 000F000F0H );  temp0 := temp0 / temp / LSH( temp, 4 );
+		temp := (temp0 / LSH( temp0, -2 )) * SET32( 00C0C0C0CH );  temp0 := temp0 / temp / LSH( temp, 2 );
+		temp := (temp0 / LSH( temp0, -1 )) * SET32( 022222222H );  temp0 := temp0 / temp / LSH( temp, 1 );
 
-		temp := (temp1 / LSH( temp1, -8 )) * S.VAL( SET32, 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
-		temp := (temp1 / LSH( temp1, -4 )) * S.VAL( SET32, 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
-		temp := (temp1 / LSH( temp1, -2 )) * S.VAL( SET32, 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
-		temp := (temp1 / LSH( temp1, -1 )) * S.VAL( SET32, 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
+		temp := (temp1 / LSH( temp1, -8 )) * SET32( 00000FF00H );  temp1 := temp1 / temp / LSH( temp, 8 );
+		temp := (temp1 / LSH( temp1, -4 )) * SET32( 000F000F0H );  temp1 := temp1 / temp / LSH( temp, 4 );
+		temp := (temp1 / LSH( temp1, -2 )) * SET32( 00C0C0C0CH );  temp1 := temp1 / temp / LSH( temp, 2 );
+		temp := (temp1 / LSH( temp1, -1 )) * SET32( 022222222H );  temp1 := temp1 / temp / LSH( temp, 1 );
 		out.low := temp0;
 		out.high := temp1;
 	END FromBitInterleaving;
@@ -281,7 +281,7 @@ TYPE
 		result := 0 IN LFSR;
 		IF 7 IN LFSR THEN
 			(* Primitive polynomial over GF(2): x^8+x^6+x^5+x^4+1 *)
-			LFSR := LSH( LFSR, 1) / S.VAL( SET32, 71H );
+			LFSR := LSH( LFSR, 1) / SET32( 71H );
 		ELSE
 			LFSR := LSH( LFSR, 1 )
 		END;

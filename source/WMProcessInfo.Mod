@@ -276,7 +276,7 @@ TYPE
 				(* PC - 5 *)
 				relpc := pc;
 				IF (mod # NIL) & (mod.code # NIL) THEN DEC(relpc, ADDRESSOF(mod.code[0])) END;
-				Strings.IntToStr(SYSTEM.VAL (LONGINT, relpc), str); SetText(i, 5, str);
+				Strings.IntToStr(LONGINT(relpc), str); SetText(i, 5, str);
 
 				(* active object type - 6 *)
 				sw.Reset; ProcessInfo.WriteActiveObject(processes[i], sw); sw.Get(str);

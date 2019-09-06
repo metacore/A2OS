@@ -60,7 +60,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 			WHILE n > 0 DO
 				ASSERT((data.adr <= a) & (a < data.adr + data.len), 110);
 				SYSTEM.GET(a, byte);
-				SYSTEM.PUT(a, CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(ORD(byte))) + mask)));
+				SYSTEM.PUT(a, CHR(LONGINT(SET(ORD(byte)) + mask)));
 				DEC(n); INC(a, data.bpr)
 			END;
 			IF x0 < x1 THEN
@@ -80,7 +80,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 					WHILE n > 0 DO
 						ASSERT((data.adr <= a) & (a < data.adr + data.len), 112);
 						SYSTEM.GET(a, byte);
-						SYSTEM.PUT(a, CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(ORD(byte))) + mask)));
+						SYSTEM.PUT(a, CHR(LONGINT(SET(ORD(byte)) + mask)));
 						DEC(n); INC(a, data.bpr)
 					END
 				END

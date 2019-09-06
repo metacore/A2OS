@@ -200,7 +200,7 @@ TYPE
 					KernelLog.Enter; KernelLog.String("Ptr "); KernelLog.Int(x, 5); KernelLog.Int(y, 5); KernelLog.Exit
 				END;
 				Put(5X);	(* PointerEvent (sec. 5.2.6) *)
-				Put(CHR(SYSTEM.VAL(LONGINT, keys)));
+				Put(CHR(LONGINT(keys)));
 				PutInt(x(LONGINT)); PutInt(y(LONGINT));
 				lx := x; ly := y; lkeys := keys
 			END
@@ -217,7 +217,7 @@ TYPE
 				keys := lkeys;
 				IF dz < 0 THEN INCL(keys, 3) END;
 				IF dz > 0 THEN INCL(keys, 4) END;
-				Put(CHR(SYSTEM.VAL(LONGINT, keys)));
+				Put(CHR(LONGINT(keys)));
 				PutInt(lx(LONGINT)); PutInt(ly(LONGINT))
 			END
 		END Wheel;
@@ -725,7 +725,7 @@ BEGIN
 			IF col < (w-1) DIV 16 THEN tw := 16 ELSE tw := wmin END;
 			Receive(c, ch);
 			IF c.res # Ok THEN RETURN END;
-			sub := SYSTEM.VAL(SET, LONG(ORD(ch)));
+			sub := SET(ORD(ch));
 			IF Raw IN sub THEN
 				ReceiveRaw(c, x + 16*col, y + 16*row, tw, th)
 			ELSE

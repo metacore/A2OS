@@ -125,7 +125,7 @@ TYPE
 				VAR mode: LONGINT;
 				BEGIN
 					mode :=  replace;
-					IF (col # -1) & (30 IN S.VAL( SET, col )) THEN  mode := invert;  EXCL( S.VAL( SET, col ), 30 )  END;
+					IF (col # -1) & (30 IN SET(col )) THEN  mode := invert;  EXCL( S.VAL( SET32, col ), 30 )  END;
 					IF mode # currmode THEN  X11.SetFunction( xdisp, gc, xfunc[mode] );  currmode := mode  END;
 					IF col # currcol THEN  X11.SetForeground( xdisp, gc, ColorToPixel( col ) );  currcol := col  END;
 				END SetMode;
@@ -786,7 +786,7 @@ VAR
 		d.xfunc[replace] := X11.GXcopy;
 		d.xfunc[paint] := X11.GXor;   (* not used *)
 		(* drawing in invert mode with BackgroundCol on BackgroundCol is a no-op: *)
-		IF S.VAL( SET, d.background )*S.VAL( SET, d.planesMask ) # {} THEN
+		IF SET(d.background )* SET(d.planesMask ) # {} THEN
 			d.xfunc[invert] := X11.GXequiv
 		ELSE
 			d.xfunc[invert] := X11.GXxor

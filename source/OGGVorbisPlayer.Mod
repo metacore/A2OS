@@ -1232,7 +1232,7 @@ TYPE
 			END;
 			FOR i := 0 TO classifications - 1 DO
 				FOR j := 0 TO 7 DO
-					tmpSet := SYSTEM.VAL(SET, cascades[i]);
+					tmpSet := SET(cascades[i]);
 					IF (j IN tmpSet) THEN
 						books[i, j] := bufReader.GetBits(buf, 8);
 						IF (books[i, j] > codec.codebookCnt) THEN
@@ -2532,7 +2532,7 @@ TYPE
 			IF (info.blocksizes[0] > info.blocksizes[1]) THEN RETURN ErrorIdentification END;
 
 			(* framing bit *)
-			set := SYSTEM.VAL(SET,bufReader.GetBit(buf));
+			set := SET(bufReader.GetBit(buf));
 			IF (set = {}) THEN RETURN ErrorIdentification END;
 
 			RETURN Ok

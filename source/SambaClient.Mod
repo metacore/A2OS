@@ -293,8 +293,8 @@ TYPE
 					c.in.SkipBytes(8);		(* allocation *)
 					c.in.RawLInt(attr);		(* attributes *)
 					fileFlags := {};
-					IF (4 IN SYSTEM.VAL(SET, attr)) THEN INCL(fileFlags, Files.Directory); END;
-					IF (0 IN SYSTEM.VAL(SET, attr)) THEN INCL(fileFlags, Files.ReadOnly); END;
+					IF (4 IN SET(attr)) THEN INCL(fileFlags, Files.Directory); END;
+					IF (0 IN SET(attr)) THEN INCL(fileFlags, Files.ReadOnly); END;
 					c.in.SkipBytes(4);		(* name len *)
 					c.in.SkipBytes(4);		(* ea len *)
 					c.in.SkipBytes(1);		(* short file len *)

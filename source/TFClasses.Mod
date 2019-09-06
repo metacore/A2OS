@@ -243,7 +243,7 @@ TYPE
 			hash := 0;
 			i := 0; ch := buffer[0]; hash := 0;
 			WHILE ch # 0X DO
-				hash :=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(hash, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
+				hash := SIZE(SET(ROT(hash, 7)) / SET((ORD(ch))));
 				INC(i); ch := buffer[i]
 			END;
 			RETURN hash

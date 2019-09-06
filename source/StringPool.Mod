@@ -39,7 +39,7 @@ VAR
 	BEGIN
 		i := 0; ch := str[0]; h := 0;
 		WHILE ch # 0X DO
-			h :=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(h, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
+			h := SIZE(SET(ROT(h, 7)) / SET(ORD(ch)));
 			INC(i); ch := str[i]
 		END;
 		h := h MOD poolIndexSize;
@@ -74,7 +74,7 @@ VAR
 			idx0 := idx; h := 0;
 			ch := pool[idx];
 			WHILE ch # 0X DO
-				h :=SYSTEM.VAL(SIZE, SYSTEM.VAL(SET, ROT(h, 7)) / SYSTEM.VAL(SET, LONG(ORD(ch))));
+				h :=SIZE(SET(ROT(h, 7)) / SET(LONG(ORD(ch))));
 				INC(idx); ch := pool[idx]
 			END;
 			h := h MOD poolIndexSize;

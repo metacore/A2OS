@@ -1125,7 +1125,7 @@ TYPE
 		VAR data: ARRAY 32 OF CHAR; cont: BOOLEAN;
 			type, i, k, chksumI, chksumII: LONGINT;
 			file, f: File; dir: Directory; r: Files.Rider; entry: DirEntry;
-			attr: SET; unicode: ARRAY 261 OF LONGINT; longname: Filename;
+			attr: SET32; unicode: ARRAY 261 OF LONGINT; longname: Filename;
 		BEGIN
 			NEW(file, fs); NEW(dir, fs);
 			SetX(r, 0);
@@ -1170,7 +1170,7 @@ TYPE
 						IF (entry.ofs < firstFreePos) THEN firstFreePos := entry.ofs END
 					ELSE
 						(* short entry *)
-						attr := SYSTEM.VAL(SET, LONG(ORD(data[11])));
+						attr := SET32(ORD(data[11]));
 						IF ~(faVolumeID IN attr) THEN
 							(* ignore "." and ".." entries *)
 							IF ~((faDirectory IN attr) & (data[0] = ".") & ((data[1] = " ") OR ((data[1] = ".") & (data[2] = " ")))) THEN
@@ -1397,7 +1397,7 @@ TYPE
 		VAR i, j: LONGINT;
 		BEGIN
 			FOR i := 0 TO 10 DO entry[i] := name[i] END;
-			entry[11] := CHR(SYSTEM.VAL(LONGINT, attr));
+			entry[11] := CHR(LONGINT(attr));
 			entry[12] := NTres;
 			IF (cluster = NotAssigned) THEN cluster := 0 END;
 			FATVolumes.PutUnsignedInteger(entry, 20, cluster DIV 10000H);

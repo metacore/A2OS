@@ -129,7 +129,7 @@ BEGIN
 	FOR n := 0 TO 255 DO
 		c := n;
 		FOR k := 0 TO 7 DO
-			IF ODD(c) THEN c := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, poly)/SYSTEM.VAL(SET, LSH(c, -1)))
+			IF ODD(c) THEN c := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, poly)/SYSTEM.VAL(SET32, LSH(c, -1)))
 			ELSE c := LSH(c, -1)
 			END
 		END;
@@ -144,13 +144,13 @@ BEGIN
 	IF offset < 0 THEN
 		crc := 0
 	ELSE
-		crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc)/{0..31});
+		crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, crc)/{0..31});
 		WHILE len > 0 DO
-			idx := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc)/SYSTEM.VAL(SET, LONG(ORD(buf[offset])))) MOD 100H;
-			crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, CRCTable[idx])/SYSTEM.VAL(SET, LSH(crc, -8)));
+			idx := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, crc)/SYSTEM.VAL(SET32, LONG(ORD(buf[offset])))) MOD 100H;
+			crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, CRCTable[idx])/SYSTEM.VAL(SET32, LSH(crc, -8)));
 			DEC(len); INC(offset)
 		END;
-		crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc)/{0..31})
+		crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, crc)/{0..31})
 	END;
 	RETURN crc
 END CRC32;

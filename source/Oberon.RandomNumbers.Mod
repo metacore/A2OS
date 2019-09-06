@@ -36,5 +36,5 @@ END InitSeed;
 
 BEGIN
 	Oberon.GetClock(t, d);
-	Z := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, t) / SYSTEM.VAL(SET, d))
+	Z := LONGINT(SET(t) / SET(d))
 END RandomNumbers.	(* Copyright M. Reiser, 1992 *)

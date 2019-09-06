@@ -381,9 +381,9 @@ TYPE
 		PROCEDURE IndexToColor(index: LONGINT): LONGINT;
 		BEGIN
 			RETURN
-					ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {5..7}), 23-7) +
-					ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {2..4}), 15-4) +
-					ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {0..1}), 7-1)
+					ASH(LONGINT(SET32(index) * {5..7}), 23-7) +
+					ASH(LONGINT(SET32(index) * {2..4}), 15-4) +
+					ASH(LONGINT(SET32(index) * {0..1}), 7-1)
 		END IndexToColor;
 
 		PROCEDURE InsertPiece(ofs, len : SIZE; attr : Texts.Attributes);
@@ -595,10 +595,10 @@ TYPE
 
 		PROCEDURE ColorToIndex(col: LONGINT): LONGINT;
 		BEGIN
-			RETURN SYSTEM.VAL(LONGINT,
-					SYSTEM.VAL(SET, ASH(col, 7-23)) * {5..7} +
-					SYSTEM.VAL(SET, ASH(col, 4-15)) * {2..4} +
-					SYSTEM.VAL(SET, ASH(col, 1-7)) * {0..1})
+			RETURN LONGINT(
+					SET32(ASH(col, 7-23)) * {5..7} +
+					SET32(ASH(col, 4-15)) * {2..4} +
+					SET32(ASH(col, 1-7)) * {0..1})
 		END ColorToIndex;
 
 		PROCEDURE GetOberonColor(color : LONGINT):LONGINT;

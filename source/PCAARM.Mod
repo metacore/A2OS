@@ -489,7 +489,7 @@ TYPE
 							PCM.Error(500, use.sourcepos, "Offset too big.");
 						ELSE
 							IF (type = ltBranch) THEN
-								assembler.FixBranch(use.pc, SYSTEM.VAL(SET, offset DIV 4)*PCOARM.Mask24)
+								assembler.FixBranch(use.pc, SYSTEM.VAL(SET32, offset DIV 4)*PCOARM.Mask24)
 							ELSIF (type = ltAddress) THEN
 								assembler.FixLoad(use.pc, use.mode, offset)
 							ELSE
@@ -539,12 +539,12 @@ TYPE
 					PCM.Error(500, sourcepos, "Offset too big."); RETURN {}
 				ELSE
 					IF (type = ltBranch) THEN
-						RETURN SYSTEM.VAL(SET, offset DIV 4)*PCOARM.Mask24
+						RETURN SET(offset DIV 4)*PCOARM.Mask24
 					ELSIF (type = ltAddress) THEN
-						IF (mode = lmLoad) THEN res := SYSTEM.VAL(SET, ABS(offset))
-						ELSIF (mode = lmLoadSpecial) THEN res := SYSTEM.VAL(SET, ABS(offset) DIV 10H * 100H + ABS(offset) MOD 10H)
+						IF (mode = lmLoad) THEN res := SET(ABS(offset))
+						ELSIF (mode = lmLoadSpecial) THEN res := SET(ABS(offset) DIV 10H * 100H + ABS(offset) MOD 10H)
 						ELSIF (mode = lmShifterOperand) THEN (* the offset will be put into a shifter operand - don't set any flags *)
-							RETURN SYSTEM.VAL(SET, offset)
+							RETURN SET(offset)
 						END;
 						IF (offset < 0) THEN res := res + PCOARM.IdxSub
 						ELSE res := res + PCOARM.IdxAdd
@@ -908,7 +908,7 @@ TYPE
 								asm.fixup := fixup;
 								offset := {}
 							ELSE (* address already known (this is probabely never the case) *)
-								offset := SYSTEM.VAL(SET, (adr.codeoffset - pc - 8) DIV 4)
+								offset := SYSTEM.VAL(SET32, (adr.codeoffset - pc - 8) DIV 4)
 							END
 						ELSE
 							Error(499) (* imported procedures cannot be called *)
@@ -960,7 +960,7 @@ TYPE
 							offset := offset - 8;
 						END;
 						IF (ABS(offset) < 1000H) THEN
-							var := LSH(var, 16) + SYSTEM.VAL(SET, ABS(offset)) + PCOARM.Offset;
+							var := LSH(var, 16) + SYSTEM.VAL(SET32, ABS(offset)) + PCOARM.Offset;
 							IF (offset < 0) THEN var := var + PCOARM.IdxSub
 							ELSE var := var + PCOARM.IdxAdd
 							END
@@ -997,7 +997,7 @@ TYPE
 						IF (scanner.symbol = sNumber) THEN
 							shift := shift + PCOARM.A1ShiftImm;
 							IF (-32 < scanner.number) & (scanner.number < 32) THEN
-								shift := shift + LSH(SYSTEM.VAL(SET, scanner.number)*{0..4}, 7)
+								shift := shift + LSH(SYSTEM.VAL(SET32, scanner.number)*{0..4}, 7)
 							ELSE Error(499) (* malformed addressing mode (immediate shift invalid) *)
 							END;
 							scanner.Scan
@@ -1018,12 +1018,12 @@ TYPE
 		VAR s: SET; rot: LONGINT;
 		BEGIN
 			ASSERT(scanner.symbol = sNumber);
-			rot := 0; s := SYSTEM.VAL(SET, scanner.number);
+			rot := 0; s := SYSTEM.VAL(SET32, scanner.number);
 			WHILE (rot < 32) & (ODD(rot) OR (s * { 8..31} # {})) DO
 				s := ROT(s, 1); INC(rot)
 			END;
 			IF (rot < 32) THEN
-				s := s + SYSTEM.VAL(SET, LSH(rot DIV 2, 8))
+				s := s + SYSTEM.VAL(SET32, LSH(rot DIV 2, 8))
 			ELSE Error(499); (* malformed addressing mode (immediate can't be generated) *)
 				s := {}
 			END;
@@ -1059,7 +1059,7 @@ TYPE
 				IF (scanner.number < 0) THEN offset := PCOARM.IdxSub
 				ELSE offset := PCOARM.IdxAdd
 				END;
-				offset := offset + PCOARM.A2Imm + SYSTEM.VAL(SET, ABS(scanner.number))
+				offset := offset + PCOARM.A2Imm + SYSTEM.VAL(SET32, ABS(scanner.number))
 			ELSE Error(499) (* offset too big *)
 			END;
 			scanner.Scan;
@@ -1159,7 +1159,7 @@ TYPE
 			ASSERT(scanner.symbol = sNumber);
 			IF (ABS(scanner.number) < 100H) THEN
 				v := ABS(scanner.number);
-				offset := PCOARM.A3Imm + SYSTEM.VAL(SET, (v DIV 10H) * 100H + v MOD 10H);
+				offset := PCOARM.A3Imm + SYSTEM.VAL(SET32, (v DIV 10H) * 100H + v MOD 10H);
 				IF (scanner.number < 0) THEN offset := offset + PCOARM.IdxSub
 				ELSE offset := offset + PCOARM.IdxAdd
 				END
@@ -1274,9 +1274,9 @@ TYPE
 				continue := TRUE;
 				WHILE continue DO
 					continue := FALSE;
-					regOne := SYSTEM.VAL(LONGINT, Register(stRegister, 0));
+					regOne := LONGINT(Register(stRegister, 0));
 					IF scanner.Match(sMinus) THEN
-						regTwo := SYSTEM.VAL(LONGINT, Register(stRegister, 0));
+						regTwo := LONGINT(Register(stRegister, 0));
 						IF (regOne < regTwo) THEN
 							FOR i := regOne TO regTwo DO INCL(regList, i) END
 						ELSE Error(499) (* error, lower register must be the first one *)
@@ -1404,7 +1404,7 @@ TYPE
 			Write("Immediate24 - ");
 			IF (scanner.symbol = sNumber) THEN
 				IF (scanner.number >= 0) & (scanner.number < 1000000H) THEN
-					imm := SYSTEM.VAL(SET, scanner.number);
+					imm := SYSTEM.VAL(SET32, scanner.number);
 					scanner.Scan
 				ELSE Error(499) (* immediate too small/big *)
 				END
@@ -1419,7 +1419,7 @@ TYPE
 		BEGIN
 			IF (scanner.symbol = sNumber) THEN
 				IF (scanner.number >= 0) & (scanner.number < 10000) THEN
-					imm := SYSTEM.VAL(SET, ((scanner.number DIV 10H) * 100H + scanner.number MOD 10H));
+					imm := SYSTEM.VAL(SET32, ((scanner.number DIV 10H) * 100H + scanner.number MOD 10H));
 					scanner.Scan
 				ELSE Error(499) (* immediate too small/big *)
 				END
@@ -1434,7 +1434,7 @@ TYPE
 		BEGIN
 			IF (scanner.symbol = sNumber) THEN
 				IF (scanner.number >= 0) & (scanner.number < max) THEN
-					opcode := LSH(SYSTEM.VAL(SET, scanner.number), shift);
+					opcode := LSH(SYSTEM.VAL(SET32, scanner.number), shift);
 					scanner.Scan
 				ELSE Error(499); (* opcode too small/big *)
 					ErrorStr("CPOpcode: opcode too small/big")
@@ -1468,7 +1468,7 @@ TYPE
 				IF (scanner.number < 0) THEN offset := PCOARM.IdxAdd
 				ELSE offset := PCOARM.IdxSub
 				END;
-				offset := offset + SYSTEM.VAL(SET, ABS(scanner.number));
+				offset := offset + SYSTEM.VAL(SET32, ABS(scanner.number));
 				scanner.Scan
 			ELSE (* offset too small/big *) Error(499)
 			END;
@@ -1503,7 +1503,7 @@ TYPE
 						ELSIF scanner.Match(sLBrace) THEN
 							IF (scanner.symbol = sNumber) THEN
 								IF (scanner.number >= 0) & (scanner.number < 100H) THEN
-									opcode := opcode + PCOARM.A5UnIdxd + SYSTEM.VAL(SET, scanner.number);
+									opcode := opcode + PCOARM.A5UnIdxd + SYSTEM.VAL(SET32, scanner.number);
 									scanner.Scan;
 									IF ~scanner.Match(sRBrace) THEN (* "}" expected *) Error(499)
 									END
@@ -1536,10 +1536,10 @@ TYPE
 							PutData(scanner.number, 1)
 						END
 					ELSIF (scanner.symbol = sCharacter) THEN
-						PutData(SYSTEM.VAL(LONGINT, scanner.ch), 1)
+						PutData(ORD(scanner.ch), 1)
 					ELSE
 						WHILE (scanner.string[pos] # 0X) DO
-							PutData(SYSTEM.VAL(LONGINT, scanner.string[pos]), 1);
+							PutData(ORD(scanner.string[pos]), 1);
 							INC(pos)
 						END;
 						PutData(0, 1); (* 0X terminated *)
@@ -1590,8 +1590,8 @@ TYPE
 					labels.AddDefinition(scanner.position, pc, scanner.ident, ltAddress);
 					NEW(fixup); fixup.offset := pc; fixup.adr := obj.adr;
 					fixup.next := asm.fixup; asm.fixup := fixup;
-					adr := SYSTEM.VAL(SET, obj(PCT.GlobalVar).adr(PCBT.GlobalVariable).offset);
-					PutData(SYSTEM.VAL(LONGINT, adr), 4)
+					adr := SYSTEM.VAL(SET32, obj(PCT.GlobalVar).adr(PCBT.GlobalVariable).offset);
+					PutData(LONGINT(adr), 4)
 				ELSE Error(499) (* global var expected *)
 				END;
 				scanner.Scan
@@ -1619,7 +1619,7 @@ TYPE
 		VAR adr, imm, regPC: SET; offset: LONGINT;
 		BEGIN
 			IF (scanner.symbol = sIdent) THEN
-				offset := SYSTEM.VAL(LONGINT, labels.AddUse(scanner.position, pc, scanner.ident, ltAddress, lmShifterOperand));
+				offset := LONGINT(labels.AddUse(scanner.position, pc, scanner.ident, ltAddress, lmShifterOperand));
 				IF (offset < 0) THEN adr := adr + PCOARM.opSUB; offset := -offset	(* offset known and negative *)
 				ELSE adr := adr + PCOARM.opADD													(* offset positive or unknown (0) *)
 				END;
@@ -1737,7 +1737,7 @@ TYPE
 		BEGIN
 			IF (pc MOD 4 # 0) THEN PCM.Error(500, scanner.position, "Alignment fault.") END; (* alignment fault *)
 			IF (code.len = 256) THEN NEW(code.next); code:= code.next; code.len := 0 END;
-			oc := SYSTEM.VAL(Opcode, opcode);
+			SYSTEM.PUT32(ADDRESS OF oc, SET32(opcode));
 			FOR i := 0 TO 3 DO
 				IF PCM.bigEndian THEN
 					code.code[code.len] := oc[3-i];
@@ -1776,7 +1776,7 @@ TYPE
 			code := asm.code;
 			WHILE (pc >= 256) & (code # NIL) DO code := code.next; DEC(pc, 256) END;
 			ASSERT(code # NIL);
-			v := SYSTEM.VAL(LONGINT, offset);
+			v := LONGINT(offset);
 
 			IF PCM.bigEndian THEN
 				INC(pc);
@@ -1793,7 +1793,7 @@ TYPE
 		(* FixLoad - fixes the load offset of a forward load. Called by the label manager *)
 		PROCEDURE FixLoad(pc: LONGINT; mode, offset: LONGINT);
 		TYPE Opcode = ARRAY 4 OF CHAR;
-		VAR i: LONGINT; code: PCLIR.AsmBlock; opcode, imm: SET; oc: Opcode;
+		VAR i: LONGINT; code: PCLIR.AsmBlock; opcode: SET32; imm: SET; oc: Opcode;
 		BEGIN
 			IF TraceParse THEN Write("Fixing forward load reference at pc "); Hex(pc, 8); Ln END;
 			code := asm.code;
@@ -1801,7 +1801,7 @@ TYPE
 			ASSERT(code # NIL);
 
 			FOR i := 0 TO 3 DO
-				opcode := opcode + LSH(SYSTEM.VAL(SET, code.code[pc+i]), 8*i)
+				opcode := opcode + LSH(SET32(ORD(code.code[pc+i])), 8*i)
 			END;
 
 			IF PCM.bigEndian THEN
@@ -1811,13 +1811,13 @@ TYPE
 			IF (offset >= MinMaxOffset[ltAddress + mode].min) & (offset <= MinMaxOffset[ltAddress + mode].max) THEN
 				IF (mode = lmLoad) THEN
 					ASSERT(opcode * PCOARM.opLDR = PCOARM.opLDR, 499); (* must be LDR *)
-					opcode := opcode + PCOARM.A2Imm + PCOARM.Offset + SYSTEM.VAL(SET, ABS(offset));
+					opcode := opcode + PCOARM.A2Imm + PCOARM.Offset + SYSTEM.VAL(SET32, ABS(offset));
 					IF (offset < 0) THEN opcode := opcode + PCOARM.IdxSub
 					ELSE opcode := opcode + PCOARM.IdxAdd
 					END
 				ELSIF (mode = lmLoadSpecial) THEN
 					ASSERT(opcode * PCOARM.opLDRH = PCOARM.opLDRH, 499); (* must be LDRH *)
-					opcode := opcode + PCOARM.A3Imm + PCOARM.Offset + SYSTEM.VAL(SET, ABS(offset) DIV 10H * 100H + ABS(offset) MOD 10H);
+					opcode := opcode + PCOARM.A3Imm + PCOARM.Offset + SYSTEM.VAL(SET32, ABS(offset) DIV 10H * 100H + ABS(offset) MOD 10H);
 					IF (offset < 0) THEN opcode := opcode + PCOARM.IdxSub
 					ELSE opcode := opcode + PCOARM.IdxAdd
 					END
@@ -1825,7 +1825,7 @@ TYPE
 					ASSERT(opcode * PCOARM.opADD = PCOARM.opADD, 499); (* must be ADD *)
 					IF (offset < 0) THEN opcode := opcode - PCOARM.opADD + PCOARM.opSUB; offset := -offset END;
 					IF ~PCOARM.MakeA1Immediate(offset, imm) THEN Error(499) END; (* cannot be generated *)
-					opcode := opcode + imm
+					opcode := opcode + SET32(imm)
 				ELSE
 					HALT(INTERNALERROR)
 				END;
@@ -1895,9 +1895,9 @@ TYPE
 					n := (scope(PCT.ProcScope).ownerO.adr(PCBT.Procedure).locsize + 3) DIV 4;
 					IF (n >= 100H) THEN Error(499); RETURN NIL END;
 					IF (n > 0) THEN
-						PutCode(SYSTEM.VAL(SET, 0E3A00000H)); (* MOV R0, #0 *)
+						PutCode(SYSTEM.VAL(SET32, 0E3A00000H)); (* MOV R0, #0 *)
 						FOR i := 1 TO n DO
-							PutCode(SYSTEM.VAL(SET, 0E52D0004H)); (* STR R0, [SP, -4H]! *)
+							PutCode(SYSTEM.VAL(SET32, 0E52D0004H)); (* STR R0, [SP, -4H]! *)
 						END
 					END
 				END;
@@ -1914,8 +1914,8 @@ TYPE
 				IF ~PCM.error THEN labels.Check END;
 
 				IF inlined & (n > 0) THEN (* clean up stack *)
-					PutCode(SYSTEM.VAL(SET, 0E3A0A000H + n)); (* MOV R10, n *)
-					PutCode(SYSTEM.VAL(SET, 0E08DD10AH));		(* ADD SP, SP, R10, LSL 2 *)
+					PutCode(SYSTEM.VAL(SET32, 0E3A0A000H + n)); (* MOV R10, n *)
+					PutCode(SYSTEM.VAL(SET32, 0E08DD10AH));		(* ADD SP, SP, R10, LSL 2 *)
 				END;
 
 				WHILE (pc MOD 4 # 0) DO PutData(0, 1) END; (* align *)
@@ -1963,7 +1963,7 @@ PROCEDURE Initialize;
 VAR s: SymbolTable; m: Mnemonics;
 
 	PROCEDURE Set(v: LONGINT): SET;
-	BEGIN RETURN SYSTEM.VAL(SET,v)
+	BEGIN RETURN SYSTEM.VAL(SET32,v)
 	END Set;
 
 BEGIN

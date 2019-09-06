@@ -113,7 +113,7 @@ BEGIN
 			IF Strings.Match(string, MouseX) THEN msg.dx := value;
 			ELSIF Strings.Match(string, MouseY) THEN msg.dy := value;
 			ELSIF Strings.Match(string, MouseWheel) THEN msg.dz := value;
-			ELSIF Strings.Match(string, MouseButtons) THEN msg.keys := SYSTEM.VAL(SET, value);
+			ELSIF Strings.Match(string, MouseButtons) THEN msg.keys := SET(value);
 			ELSE
 				doHandle := FALSE;
 			END;

@@ -61,7 +61,7 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 			WriteString("NIL  PC = ", name, i); WriteHex(pc, name, i)
 		ELSE
 			WriteString(mod.name, name, i); WriteString(".", name, i);
-			IF (SYSTEM.VAL(LONGINT, mod.refs) # 0) & (LEN(mod.refs) # 0) THEN
+			IF (SYSTEM.VAL(ADDRESS, mod.refs) # 0) & (LEN(mod.refs) # 0) THEN
 				refstart := 0;  refpos := ADDRESSOF(mod.refs[0]);
 				limit := refpos + LEN(mod.refs);
 				LOOP
@@ -101,7 +101,7 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 	BEGIN
 		IF p = NIL THEN COPY("NIL", name)
 		ELSE
-			SYSTEM.GET(SYSTEM.VAL(LONGINT, p)-4, tag);
+			SYSTEM.GET(SYSTEM.VAL(ADDRESS, p)-4, tag);
 			IF (tag # 0) & (tag MOD 16 = 8) THEN
 				SYSTEM.GET(tag-4, tag);
 				INC(tag, 16);

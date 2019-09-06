@@ -593,6 +593,7 @@ END SetMode;
 (** Display a picture.  Used internally by Pictures module only. *)
 PROCEDURE DisplayBlock*(adr: ADDRESS; dx, dy, w, h, sx, sy, mode: LONGINT; VAR palette: ARRAY OF LONGINT (* fof *));
 VAR pw, pd, rdx, tdy, col: LONGINT; src, dst: ADDRESS; ch, prev, prevmap: CHAR;
+	int: INTEGER;
 BEGIN
 	rdx := sx+w-1;  tdy := sy+h-1;	(* (sx,sy) bottom left & (rdx,tdy) top right *)
 	IF (sx <= clipX2) & (sy <= clipY2) & (rdx >= clipX1) & (tdy >= clipY1) THEN
@@ -601,7 +602,8 @@ BEGIN
 		IF rdx > clipX2 THEN DEC(w, rdx-clipX2) END;
 		IF tdy > clipY2 THEN DEC(h, tdy-clipY2) END;
 		IF (w > 0) & (h > 0) THEN
-			pd := 0; SYSTEM.GET(adr+4, SYSTEM.VAL(INTEGER, pd));
+			pd := 0; SYSTEM.GET(adr+4, int);
+			pd := int;
 			IF pd = 8 THEN
 				SYSTEM.GET(adr+8, pw); SYSTEM.GET(adr+16, src);
 				INC(src, (dy+h-1)*pw + dx);	(* top left corner *)
@@ -624,10 +626,10 @@ BEGIN
 						FOR tdy := 0 TO h-1 DO
 							FOR rdx := 0 TO w-1 DO
 								SYSTEM.GET(src, ch); INC(src); col := palette[ORD(ch)];
-								SYSTEM.PUT(dst, SHORT(SYSTEM.VAL(LONGINT,
-										SYSTEM.VAL(SET, ASH(col, 15-23)) * {11..15} +
-										SYSTEM.VAL(SET, ASH(col, 10-15)) * {5..10} +
-										SYSTEM.VAL(SET, ASH(col, 4-7)) * {0..4})));
+								SYSTEM.PUT(dst, INTEGER(
+										SET(ASH(col, 15-23)) * {11..15} +
+										SET(ASH(col, 10-15)) * {5..10} +
+										SET(ASH(col, 4-7)) * {0..4}));
 								INC(dst, 2)
 							END;
 							INC(src, -w-pw)

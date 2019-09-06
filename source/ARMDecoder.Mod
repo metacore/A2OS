@@ -553,7 +553,7 @@ TYPE
 			armOpcode := opcode(ARMOpcode);
 			armOpcode.op := ReadLInt();
 			IF bigEndian THEN SwapBytes(armOpcode.op) END;
-			opSet := SYSTEM.VAL(SET, armOpcode.op);
+			opSet := SET(armOpcode.op);
 			(* KernelLog.String("op = "); KernelLog.Hex(armOpcode.op, 0); KernelLog.String(" -> "); *)
 
 			code := armOpcode.op;
@@ -619,7 +619,7 @@ TYPE
 			immArg : ARMArgImm;
 			shiftArg : ARMArgShift;
 		BEGIN
-			IF (SYSTEM.VAL(SET, op) * {25}) = {25} THEN (* I Bit *)
+			IF (SET(op) * {25}) = {25} THEN (* I Bit *)
 				argStructure := ArgImm;
 				NEW(immArg, ROT(op MOD 100H, -2*bit8To11), RepHex); arg1 := immArg;
 			ELSE
@@ -678,7 +678,7 @@ TYPE
 				| 15 : opcode.instr := opMVN; type := 1
 			END;
 			DecodeShifterOperand(opcode.op, shStruct, argSh1, argSh2);
-			IF (SYSTEM.VAL(SET, opcode.op) * {20}) = {20} THEN SBit := TRUE ELSE SBit := FALSE END;
+			IF SET(opcode.op) * {20} = {20} THEN SBit := TRUE ELSE SBit := FALSE END;
 			opcode.ccUpdate := SBit & (type # 2);
 			Rn := bit16To19;
 			Rd := bit12To15;
@@ -763,7 +763,7 @@ TYPE
 				NEW(regArg, bit12To15); opcode.arg1 := regArg
 			ELSE
 				opcode.instr := opMSR;
-				regArg.sregMask := SYSTEM.VAL(SET, bit16To19);
+				regArg.sregMask := SET(bit16To19);
 				opcode.arg1 := regArg;
 				IF (bit24To27 DIV 2) = 1 THEN (* immediate operand *)
 					NEW(immArg, ROT(opcode.op MOD 100H, -2*bit8To11), RepHex); (* 8 bit imm rotated by rotate imm *)
@@ -827,7 +827,7 @@ TYPE
 			L := bit20To23 MOD 2 = 1;
 			IF L THEN opcode.instr := opLDM ELSE opcode.instr := opSTM END;
 			NEW(regArg, bit16To19);
-			NEW(regListArg, SYSTEM.VAL(SET, opcode.op MOD 10000H));
+			NEW(regListArg, SET(opcode.op MOD 10000H));
 			IF W THEN
 				IF P THEN IF U THEN regListArg.addrMode := AddrModeIB ELSE regListArg.addrMode := AddrModeDB END
 				ELSE IF U THEN regListArg.addrMode := AddrModeIA ELSE regListArg.addrMode := AddrModeDA END
@@ -841,7 +841,7 @@ TYPE
 		PROCEDURE Branch (opcode : ARMOpcode);
 		VAR immArg : ARMArgImm;
 		BEGIN
-			IF (SYSTEM.VAL(SET, opcode.op) * {24}) = {24} THEN opcode.instr := opBL
+			IF (SET(opcode.op) * {24}) = {24} THEN opcode.instr := opBL
 			ELSE opcode.instr := opB
 			END;
 			opcode.argStructure := ArgImm;

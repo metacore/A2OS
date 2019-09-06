@@ -263,7 +263,7 @@ TYPE
 				Mask^(buf, bitofs, stride, fg, bg, x, y, w, h)	(* supermethod not exclusive *)
 			ELSE
 				IF (w > 0) & (h > 0) THEN
-					i := SYSTEM.VAL (LONGINT, ADDRESSOF(buf[0])) MOD 4;
+					i := LONGINT(ADDRESSOF(buf[0])) MOD 4;
 					INC(bitofs, i * 8);
 					p := ADDRESSOF(buf[0])-i + bitofs DIV 32 * 4;	(* p always aligned to 32-bit boundary *)
 					bitofs := bitofs MOD 32; stride := stride*8;

@@ -1,6 +1,6 @@
 MODULE FoxARMInstructionSet; (** AUTHOR ""; PURPOSE ""; *)
 
-IMPORT D := Debugging, Commands, Streams, Files, BinaryCode := FoxBinaryCode, Disassembler := FoxDisassembler, BitSets, Options, Strings, ObjectFile;
+IMPORT D := Debugging, Commands, Streams, Files, Basic := FoxBasic, BinaryCode := FoxBinaryCode, Disassembler := FoxDisassembler, BitSets, Options, Strings, ObjectFile;
 
 CONST
 	TraceDecode= FALSE;
@@ -544,10 +544,10 @@ CONST
 		operand.shiftImmediate := shiftImmediate
 	END InitRegister;
 
-	PROCEDURE InitImmediate*(VAR operand: Operand; immediate: LONGINT);
+	PROCEDURE InitImmediate*(VAR operand: Operand; immediate: Basic.Integer);
 	BEGIN
 		InitOperand(operand); operand.mode := modeImmediate;
-		operand.immediate := immediate;
+		operand.immediate := LONGINT(immediate);
 	END InitImmediate;
 
 	(* note that this is a memory operand to be used in a load/store instruction *)
@@ -583,7 +583,7 @@ CONST
 		RETURN result
 	END NewRegister;
 
-	PROCEDURE NewImmediate*(immediate: LONGINT): Operand;
+	PROCEDURE NewImmediate*(immediate: Basic.Integer): Operand;
 	VAR
 		result: Operand;
 	BEGIN

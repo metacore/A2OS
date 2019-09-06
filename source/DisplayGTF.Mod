@@ -303,7 +303,7 @@ BEGIN
 		IF t.interlace = "I" THEN INCL(flags, 1) END;
 		IF t.hSyncPol = "-" THEN INCL(flags, 2) END;
 		IF t.vSyncPol = "-" THEN INCL(flags, 3) END;
-		Strings.Append(conf, "26c6450c"); HexByte(SYSTEM.VAL(LONGINT, flags));	(* mov [es:di+0CH], val *)
+		Strings.Append(conf, "26c6450c"); HexByte(LONGINT(flags));	(* mov [es:di+0CH], val *)
 		Strings.Append(conf, "2666894d0d26c74511"); HexWord(hz*100);	(* mov [es:di+0DH], ecx; mov [es:di+11H], val *)
 		Strings.Append(conf, cr);
 

@@ -955,7 +955,7 @@ BEGIN
 
 	f := Files.Old(filename);
 
-	IF ((f # NIL) OR (filename = c.sharename)) & (0 IN SYSTEM.VAL(SET, openFunc)) THEN
+	IF ((f # NIL) OR (filename = c.sharename)) & (0 IN SET( openFunc)) THEN
 		IF Trace THEN KernelLog.String(" -- opening file..."); KernelLog.Ln(); END;
 
 		COPY(filename, c.filename);
@@ -995,7 +995,7 @@ BEGIN
 		c.out.RawInt(0);			(* reserved *)
 		c.out.RawInt(0);			(* bytecount *)
 		c.out.Update();
-	ELSIF (f = NIL) & (4 IN SYSTEM.VAL(SET, openFunc)) THEN
+	ELSIF (f = NIL) & (4 IN SET( openFunc)) THEN
 		IF Trace THEN KernelLog.String(" -- creating file..."); KernelLog.Ln(); END;
 
 		f := Files.New(filename);
@@ -1023,7 +1023,7 @@ BEGIN
 		c.out.RawInt(0);			(* reserved *)
 		c.out.RawInt(0);			(* bytecount *)
 		c.out.Update();
-	ELSIF (f # NIL) & ~(0 IN SYSTEM.VAL(SET, openFunc)) THEN
+	ELSIF (f # NIL) & ~(0 IN SET( openFunc)) THEN
 		IF Trace THEN KernelLog.String(" -- Invalid open mode!."); KernelLog.Ln(); END;
 
 		c.error := TRUE;
@@ -1548,7 +1548,7 @@ BEGIN
 					flags := {};
 					IF (Files.Directory IN eFlags) THEN INCL(flags, 4); END;
 					IF (Files.ReadOnly IN eFlags) THEN INCL(flags, 0) END;
-					c.out.RawLInt(SYSTEM.VAL(LONGINT, flags));		(* file attr *)
+					c.out.RawLInt(LONGINT( flags));		(* file attr *)
 					c.out.RawLInt(1 + LONGINT(Strings.Length(eName)));		(* filename len *)
 					c.out.RawLInt(0);		(* ea list *)
 					c.out.RawSInt(0);		(* short fn len *)
@@ -1581,7 +1581,7 @@ BEGIN
 					flags := {};
 					IF (Files.Directory IN eFlags) THEN INCL(flags, 4); END;
 					IF (Files.ReadOnly IN eFlags) THEN INCL(flags, 0) END;
-					c.out.RawInt(SYSTEM.VAL(INTEGER, flags));			(* file attri *)
+					c.out.RawInt(INTEGER(flags));			(* file attri *)
 					c.out.RawSInt(SHORTINT(Strings.Length(eName)));	(* filename len *)
 					c.out.RawString(eName);		(* file name*)
 				END;
@@ -1737,7 +1737,7 @@ BEGIN
 					flags := {};
 					IF (Files.Directory IN eFlags) THEN INCL(flags, 4); END;
 					IF (Files.ReadOnly IN eFlags) THEN INCL(flags, 0) END;
-					c.out.RawLInt(SYSTEM.VAL(LONGINT, flags));		(* file attr *)
+					c.out.RawLInt(LONGINT( flags));		(* file attr *)
 
 					c.out.RawLInt(1 + LONGINT(Strings.Length(eName)));		(* filename len *)
 					c.out.RawLInt(0);		(* ea list *)
@@ -1775,7 +1775,7 @@ BEGIN
 					flags := {};
 					IF (Files.Directory IN eFlags) THEN INCL(flags, 4); END;
 					IF (Files.ReadOnly IN eFlags) THEN INCL(flags, 0) END;
-					c.out.RawInt(SYSTEM.VAL(INTEGER, flags));			(* file attri *)
+					c.out.RawInt(INTEGER(flags));			(* file attri *)
 					c.out.RawSInt(SHORTINT(Strings.Length(eName)));	(* filename len *)
 					c.out.RawString(eName);		(* file name*)
 				END;

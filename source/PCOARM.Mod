@@ -255,7 +255,7 @@ BEGIN ASSERT(pos < codelen);
 	END;
 	IF PCM.bigEndian THEN PCM.SwapBytes(l, 0, 4) END;
 
-	RETURN SYSTEM.VAL(SET, l)
+	RETURN SYSTEM.VAL(SET32, l)
 END GetInstruction;
 
 PROCEDURE GetCode*(VAR codeArr: PCLIR.CodeArray; VAR length, hdrLength, addressFactor: LONGINT);
@@ -264,7 +264,7 @@ BEGIN
 END GetCode;
 
 PROCEDURE Lsh(v, s: LONGINT): SET;
-BEGIN RETURN SYSTEM.VAL(SET, LSH(v,s))
+BEGIN RETURN SYSTEM.VAL(SET32, LSH(v,s))
 END Lsh;
 
 (*
@@ -309,7 +309,7 @@ BEGIN
 	neg := offset < 0; offset := ABS(offset);
 	ASSERT(offset < 100H);
 		(* address[11:8] = offset[7:4], address[3:0] = offset[3:0] *)
-	address := SYSTEM.VAL(SET, 100H*(offset DIV 10H) + (offset MOD 10H));
+	address := SYSTEM.VAL(SET32, 100H*(offset DIV 10H) + (offset MOD 10H));
 	addrMode := addrMode - (A3Imm + IdxAdd + IdxSub);
 	addrMode := addrMode + A3Imm;
 	IF ~neg THEN addrMode := addrMode + IdxAdd
@@ -319,19 +319,19 @@ BEGIN
 END MakeA3Immediate;
 
 PROCEDURE MakeA3Register*(register: LONGINT): SET;
-BEGIN RETURN SYSTEM.VAL(SET, register)
+BEGIN RETURN SYSTEM.VAL(SET32, register)
 END MakeA3Register;
 
 (**----- Data Processing  Instructions (Addressing Mode 1) -------*)
 PROCEDURE MakeA1Immediate*(immediate: LONGINT; VAR imm: SET): BOOLEAN;
 VAR rot: LONGINT;
 BEGIN
-	rot := 0; imm := SYSTEM.VAL(SET, immediate);
+	rot := 0; imm := SYSTEM.VAL(SET32, immediate);
 	WHILE (rot < 32) & (ODD(rot) OR (imm * { 8..31} # {})) DO
 		imm := ROT(imm, 1); INC(rot)
 	END;
 	IF (rot < 32) THEN
-		imm := imm + SYSTEM.VAL(SET, Lsh(rot DIV 2, 8));
+		imm := imm + SET32(Lsh(rot DIV 2, 8));
 		RETURN TRUE
 	ELSE
 		imm := {};
@@ -341,17 +341,17 @@ END MakeA1Immediate;
 
 PROCEDURE MakeA1Register*(reg: LONGINT): SET;
 BEGIN CheckReg(reg);
-	RETURN SYSTEM.VAL(SET, reg)
+	RETURN SYSTEM.VAL(SET32, reg)
 END MakeA1Register;
 
 PROCEDURE MakeA1RegSHIFTReg*(reg, shiftreg: LONGINT; mode: SET): SET;
 BEGIN CheckReg(reg); CheckReg(shiftreg); CheckSet(mode, ShiftMask);
-	RETURN Lsh(shiftreg, 8) + mode + A1ShiftReg + SYSTEM.VAL(SET, reg)
+	RETURN Lsh(shiftreg, 8) + mode + A1ShiftReg + SYSTEM.VAL(SET32, reg)
 END MakeA1RegSHIFTReg;
 
 PROCEDURE MakeA1RegSHIFTImm*(reg, imm: LONGINT; mode: SET): SET;
 BEGIN CheckReg(reg); CheckImm(imm, 20H); CheckSet(mode, ShiftMask);
-	RETURN Lsh(imm, 7) + mode + A1ShiftImm + SYSTEM.VAL(SET, reg)
+	RETURN Lsh(imm, 7) + mode + A1ShiftImm + SYSTEM.VAL(SET32, reg)
 END MakeA1RegSHIFTImm;
 
 (** ADC - add with carry (rD <- rN + shifterOperand + carry) *)
@@ -478,13 +478,13 @@ END UMULL;
 PROCEDURE B*(cond: SET; address: LONGINT);
 BEGIN ASSERT((ABS(address) < 1000000H), ErrBranchOffsetTooBig);
 	ASSERT(cond # {31, 30, 29, 28});
-	Code(cond + opB + Mask24*SYSTEM.VAL(SET, address))
+	Code(cond + opB + Mask24*SET(address))
 END B;
 
 (** BL - branch to address. (LR <- address of instr. after branch instruction, PC <- PC + extS(address << 2))
 	Hint: - PC is 2 instructions ahead *)
 PROCEDURE BL*(cond: SET; address: LONGINT);
-BEGIN Code(cond + opBL + Mask24*SYSTEM.VAL(SET, address))
+BEGIN Code(cond + opBL + Mask24*SET(address))
 END BL;
 
 (**------------ Load/Store Instructions (Addressing Modes 2, 3 & 4) --------------*)
@@ -494,7 +494,7 @@ VAR neg: BOOLEAN; address: SET;
 BEGIN
 	neg := offset < 0; offset := ABS(offset);
 	ASSERT(offset < 1000H);
-	address := SYSTEM.VAL(SET, offset);
+	address := SYSTEM.VAL(SET32, offset);
 	addrMode := addrMode - (A2Imm + IdxAdd + IdxSub);
 	addrMode := addrMode + A2Imm;
 	IF ~neg THEN addrMode := addrMode + IdxAdd
@@ -504,7 +504,7 @@ BEGIN
 END MakeA2Immediate;
 
 PROCEDURE MakeA2Register*(register: LONGINT): SET;
-BEGIN RETURN SYSTEM.VAL(SET, register)
+BEGIN RETURN SYSTEM.VAL(SET32, register)
 END MakeA2Register;
 
 PROCEDURE MakeA2ScaledRegister*(reg: LONGINT; mode: SET; shift: LONGINT): SET;
@@ -553,7 +553,7 @@ END SWI;
 
 (** DCD - puts a 32bit value into the code *)
 PROCEDURE DCD*(value: LONGINT);
-BEGIN dcd := TRUE; Code(SYSTEM.VAL(SET, value))
+BEGIN dcd := TRUE; Code(SET(value))
 END DCD;
 
 (**--------------------------- Fixup Handling -------------------------------*)
@@ -591,7 +591,7 @@ BEGIN
 END CheckCallback;
 
 PROCEDURE ExtractRegister(code: SET; pos: LONGINT): LONGINT;
-BEGIN RETURN LSH(SYSTEM.VAL(LONGINT, code), -pos) MOD 10H
+BEGIN RETURN LSH(SYSTEM.VAL(LONGINT, SET32(code)), -pos) MOD 10H
 END ExtractRegister;
 
 PROCEDURE FixLoad*(pc: LONGINT; address: LONGINT);
@@ -633,14 +633,14 @@ BEGIN
 	codelen := pc;
 	BL(b*CondMask, address);
 	codelen := currPos;
-	RETURN SYSTEM.VAL(LONGINT, b*Mask24)
+	RETURN SYSTEM.VAL(LONGINT, SET32(b*Mask24))
 END FixCall;
 
 PROCEDURE FixCaseTable*(pc: LONGINT; address: LONGINT);
 VAR fixup, currPos: LONGINT;
 BEGIN
 	ASSERT((address >= 0) & (address < 10000H), ErrCaseOffsetTooBig);
-	fixup := SYSTEM.VAL(LONGINT, GetInstruction(pc) * { 16..31 });
+	fixup := SYSTEM.VAL(LONGINT, SET32(GetInstruction(pc) * { 16..31 }));
 	currPos := codelen;
 	codelen := pc;
 	DCD(fixup + address);
@@ -663,7 +663,7 @@ END Init;
 
 PROCEDURE Code(opcode: SET);
 TYPE Bytes= ARRAY 4 OF CHAR;
-VAR b: Bytes; i: INTEGER;
+VAR b: Bytes; i: INTEGER; c32: SET32; 
 BEGIN
 	ASSERT(codelen MOD 4 = 0); (* in case PutChar did not write 4x characters *)
 	(*Trace IF Trace & dcd THEN
@@ -674,7 +674,8 @@ BEGIN
 		END
 	END; *)
 	IF (codelen <= MaxCodeLength-4) THEN
-		b := SYSTEM.VAL(Bytes, opcode);
+		c32 := SET32(opcode);
+		b := SYSTEM.VAL(Bytes, c32);
 		IF PCM.bigEndian THEN PCM.SwapBytes(b, 0, 4) END;
 		FOR i := 0 TO 3 DO
 			code[codelen] := b[i]; INC(codelen) (* little endian *)

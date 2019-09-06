@@ -941,7 +941,7 @@ TYPE
 		END ValueComposition;
 
 		(* note: used by 'ValueComposition'. do not call directly *)
-		PROCEDURE ValueComposition2(value: LONGINT; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT;
+		PROCEDURE ValueComposition2(value: Basic.Integer; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT;
 		VAR
 			immediateOperand: Operand;
 			result, position, partialValue, i: LONGINT;
@@ -964,7 +964,7 @@ TYPE
 					Emit2(opMOVW, targetRegister, InstructionSet.NewImmediate(value))
 				END
 			ELSE
-				valueAsSet := SYSTEM.VAL(SET, value);
+				valueAsSet := SET(SYSTEM.VAL(Basic.Set,value));
 				result := 0;
 				position := 0;
 				isFirst := TRUE;
@@ -1511,7 +1511,7 @@ TYPE
 
 			CASE irInstruction.opcode OF
 			| IntermediateCode.nop: (* do nothing *)
-			| IntermediateCode.mov: EmitMov(irInstruction, Low); IF IsComplex(irInstruction.op1) THEN EmitMov(irInstruction, High) END
+			| IntermediateCode.mov: EmitMov(irInstruction)
 			| IntermediateCode.conv: EmitConv(irInstruction)
 			| IntermediateCode.call: EmitCall(irInstruction)
 			| IntermediateCode.enter: EmitEnter(irInstruction)
@@ -1732,7 +1732,7 @@ TYPE
 		(** emit a MOV instruction if the two operands do not represent the same register
 		- for moves involving floating point registers special VFP instructions opFCPYS, opFMSR and opFMRS are used
 		**)
-		PROCEDURE MovIfDifferent(CONST a, b: Operand);
+		PROCEDURE MovIfDifferent(CONST a, b: Operand; part = Low: LONGINT);
 		BEGIN
 			IF ~IsSameRegister(a, b) THEN
 				ASSERT(a.mode = InstructionSet.modeRegister);
@@ -1744,7 +1744,14 @@ TYPE
 					ELSIF IsRegisterForType(b.register, IntermediateCode.FloatType(32)) THEN
 						(* mov float, float: *)
 						Emit2(opFCVTSD, a, b)
+					ELSIF IsRegisterForType(b.register, IntermediateCode.UnsignedIntegerType(32)) THEN
+						IF part = Low THEN
+							Emit2(opFMDLR, a, b); 
+						ELSE
+							Emit2(opFMDHR, a, b); 
+						END;						
 					ELSE
+						InstructionSet.DumpOperand(D.Log, a); D.Ln; 
 						HALT(200);
 					END
 				ELSIF IsRegisterForType(a.register, IntermediateCode.FloatType(32)) THEN
@@ -1763,7 +1770,11 @@ TYPE
 						(* mov int, float: *)
 						Emit2(opFMRS, a, b)
 					ELSIF IsRegisterForType(b.register, IntermediateCode.FloatType(64)) THEN
-						HALT(200)
+						IF part = Low THEN
+							Emit2(opFMRDL, a, b); 
+						ELSE
+							Emit2(opFMRDH, a, b); 
+						END;						
 					ELSE
 						(* mov int, int: *)
 						Emit2(opMOV, a, b)
@@ -2009,21 +2020,58 @@ TYPE
 			END
 		END EmitExit;
 
-		PROCEDURE EmitMov(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitMov(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
 			destinationRegister, sourceOperand: Operand;
 		BEGIN
 			IF irInstruction.op1.mode # IntermediateCode.ModeRegister THEN
 				(* optimization: mov [?], r? it is more optimal to determine the source operand first *)
-				sourceOperand := RegisterOrImmediateFromIrOperand(irInstruction.op2, part, emptyOperand);
+				sourceOperand := RegisterOrImmediateFromIrOperand(irInstruction.op2, Low, emptyOperand);
 
-				destinationRegister := GetFreeRegisterOrHint(PartType(irInstruction.op2.type, part), sourceOperand) (* note that the source operand (possibly a register) is used as hint *)
+				destinationRegister := GetFreeRegisterOrHint(PartType(irInstruction.op2.type, Low), sourceOperand) (* note that the source operand (possibly a register) is used as hint *)
 			ELSE
-				PrepareSingleSourceOpWithImmediate(irInstruction, part, destinationRegister, sourceOperand);
+				PrepareSingleSourceOpWithImmediate(irInstruction, Low, destinationRegister, sourceOperand);
 			END;
 
-			MovIfDifferent(destinationRegister, sourceOperand);
-			WriteBack(irInstruction.op1, part, destinationRegister)
+			MovIfDifferent(destinationRegister, sourceOperand, Low);
+
+			IF IsComplex(irInstruction.op1) & IsComplex(irInstruction.op2) THEN 
+				WriteBack(irInstruction.op1, Low, destinationRegister);
+				IF irInstruction.op1.mode # IntermediateCode.ModeRegister THEN
+					(* optimization: mov [?], r? it is more optimal to determine the source operand first *)
+					sourceOperand := RegisterOrImmediateFromIrOperand(irInstruction.op2, High, emptyOperand);
+					destinationRegister := GetFreeRegisterOrHint(PartType(irInstruction.op2.type, High), sourceOperand) (* note that the source operand (possibly a register) is used as hint *)
+				ELSE
+					PrepareSingleSourceOpWithImmediate(irInstruction, High, destinationRegister, sourceOperand);
+				END;
+
+				MovIfDifferent(destinationRegister, sourceOperand, Low);
+
+				WriteBack(irInstruction.op1, High, destinationRegister);
+			ELSIF IsComplex(irInstruction.op1) THEN
+				WriteBack(irInstruction.op1, Low, destinationRegister);
+				IF irInstruction.op1.mode # IntermediateCode.ModeRegister THEN
+					destinationRegister := GetFreeRegister(PartType(irInstruction.op1.type, High)); (* note that the source operand (possibly a register) is used as hint *)
+				ELSE
+					destinationRegister := AcquireDestinationRegister(irInstruction.op1, High, emptyOperand);
+				END;
+				MovIfDifferent(destinationRegister, sourceOperand, High);
+				WriteBack(irInstruction.op1, High, destinationRegister);
+			ELSIF IsComplex(irInstruction.op2) THEN
+				IF irInstruction.op1.mode # IntermediateCode.ModeRegister THEN
+					(* optimization: mov [?], r? it is more optimal to determine the source operand first *)
+					sourceOperand := RegisterOrImmediateFromIrOperand(irInstruction.op2, High, emptyOperand);
+				ELSE
+					sourceOperand := RegisterFromIrOperand(irInstruction.op2, High, destinationRegister); (* note that the destination register is used as hint *)
+				END;
+
+				MovIfDifferent(destinationRegister, sourceOperand, High);
+
+				WriteBack(irInstruction.op1, Low, destinationRegister);
+			ELSE
+				WriteBack(irInstruction.op1, Low, destinationRegister);
+			END;
+						
 		END EmitMov;
 
 		(* BITWISE LOGICAL OPERATIONS *)

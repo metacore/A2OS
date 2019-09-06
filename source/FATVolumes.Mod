@@ -564,13 +564,13 @@ CONST
 TYPE
 	FAT16Volume* = OBJECT(FAT1216Volume)
 		PROCEDURE Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN;
-		VAR vcf: SET; res: WORD;
+		VAR vcf: SET32; res: WORD;
 		BEGIN {EXCLUSIVE}
 			IF Initialize^(bpb, MaxClusters) THEN	(* see note in Volumes.Initialize *)
-				unsafe := TRUE; vcf := SYSTEM.VAL(SET, ReadFATEntryX(1));
+				unsafe := TRUE; vcf := SET32(ReadFATEntryX(1));
 				IF (vcf * fat16VCF = fat16VCF) THEN	(* volume is clean *)
 					unsafe := TRUE;
-					IF ~(Files.ReadOnly IN flags) THEN WriteFATEntryX(1, SYSTEM.VAL(LONGINT, vcf - fat16CleanShutdown), res) END
+					IF ~(Files.ReadOnly IN flags) THEN WriteFATEntryX(1, LONGINT(vcf - fat16CleanShutdown), res) END
 				ELSE
 					KernelLog.Ln; KernelLog.Enter;
 					IF (Override IN flags) THEN
@@ -587,10 +587,10 @@ TYPE
 		END Initialize;
 
 		PROCEDURE Finalize*;
-		VAR vcf: SET; res: WORD;
+		VAR vcf: SET32; res: WORD;
 		BEGIN {EXCLUSIVE}
 			IF ~(Files.ReadOnly IN flags) THEN
-				unsafe := TRUE; vcf := SYSTEM.VAL(SET, ReadFATEntryX(1));
+				unsafe := TRUE; vcf := SET32(ReadFATEntryX(1));
 				vcf := vcf + fat16CleanShutdown;
 				IF ioError THEN vcf := vcf - fat16IOError ELSE vcf := vcf + fat16IOError END;
 				unsafe := TRUE; WriteFATEntryX(1, SYSTEM.VAL(LONGINT, vcf), res) (* ignore res *)
@@ -672,7 +672,7 @@ TYPE
 			fsInfo-: Address; 	(* sector number of FSInfo sector (relative to 'start') *)
 
 		PROCEDURE Initialize(VAR bpb: BPB; MaxClusters: LONGINT): BOOLEAN;
-		VAR i: LONGINT; res: WORD; result: BOOLEAN; info: ARRAY BS OF CHAR; vcf: SET;
+		VAR i: LONGINT; res: WORD; result: BOOLEAN; info: ARRAY BS OF CHAR; vcf: SET32;
 		BEGIN {EXCLUSIVE}
 			result := FALSE;
 			IF Initialize^(bpb, MaxClusters) THEN	(* see note in Volumes.Initialize *)
@@ -709,7 +709,7 @@ TYPE
 					END;
 
 					result := TRUE;
-					unsafe := TRUE; vcf := SYSTEM.VAL(SET, ReadFATEntryX(1));
+					unsafe := TRUE; vcf := SET32(ReadFATEntryX(1));
 					IF (vcf * fat32VCF = fat32VCF) THEN	(* volume is clean *)
 						unsafe := TRUE;
 						IF ~(Files.ReadOnly IN flags) THEN WriteFATEntryX(1, SYSTEM.VAL(LONGINT, vcf - fat32CleanShutdown), res) END
@@ -731,7 +731,7 @@ TYPE
 		END Initialize;
 
 		PROCEDURE Finalize*;
-		VAR vcf: SET; res: WORD; info: ARRAY BS OF CHAR;
+		VAR vcf: SET32; res: WORD; info: ARRAY BS OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF ~(Files.ReadOnly IN flags) THEN
 				dev.Transfer(Disks.Read, start + fsInfo, 1, info, 0, res);
@@ -745,7 +745,7 @@ TYPE
 					ioError := ioError OR (res # Ok)
 				END;
 
-				unsafe := TRUE; vcf := SYSTEM.VAL(SET, ReadFATEntryX(1));
+				unsafe := TRUE; vcf := SET32(ReadFATEntryX(1));
 				vcf := vcf + fat32CleanShutdown;
 				IF ioError THEN vcf := vcf - fat32IOError ELSE vcf := vcf + fat32IOError END;
 				unsafe := TRUE; WriteFATEntryX(1, SYSTEM.VAL(LONGINT, vcf), res) (* ignore res *)
@@ -961,12 +961,12 @@ END InitVol;
 
 (** AND - bitwise AND *)
 PROCEDURE AND*(a,b: LONGINT): LONGINT;
-BEGIN RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, a) * SYSTEM.VAL(SET, b))
+BEGIN RETURN LONGINT(SET(a) * SET(b))
 END AND;
 
 (** Or - bitwise OR *)
 PROCEDURE Or*(a,b: LONGINT): LONGINT;
-BEGIN RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, a) + SYSTEM.VAL(SET, b))
+BEGIN RETURN LONGINT(SET(a) + SET(b))
 END Or;
 
 (** GetUnsignedInteger - returns an unsigned integer at offset 'ofs' in 'b' which is assumed to be little endian *)

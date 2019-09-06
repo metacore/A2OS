@@ -849,9 +849,9 @@ MODULE OPB IN Oberon;	(** non-portable *)
 					x := NewIntConst (SHORT(x.conval.intval))
 				END
 			ELSIF (typ.form IN intSet) & (f = Set) THEN
-				x.conval.intval := SYSTEM.VAL(LONGINT, x.conval.setval)
+				x.conval.intval := LONGINT(x.conval.setval)
 			ELSIF (typ.form = Set) & (f IN intSet) THEN
-				x.conval.setval := SYSTEM.VAL(SET, x.conval.intval)
+				x.conval.setval := SET(x.conval.intval)
 			ELSE
 				t := OPT.NewNode(Nmop); t^.subcl := val; t^.left := x; x := t
 			END

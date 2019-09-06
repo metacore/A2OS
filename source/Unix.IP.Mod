@@ -450,12 +450,9 @@ VAR
 			IF adr.ipv6Adr[i] # prefix.ipv6Adr[i] THEN  matches := FALSE  END;
 		END;
 		IF bitsToCheck # 0 THEN
-			diffSet := {};
-			FOR i := 0 TO 8 - bitsToCheck - 1 DO  diffSet := diffSet + {i}  END;
-			FOR i := 0 TO bitsToCheck - 1 DO
-				IF (S.VAL( SET, adr.ipv6Adr[bytesToCheck] ) - diffSet) #
-				    (S.VAL( SET, prefix.ipv6Adr[bytesToCheck] ) - diffSet) THEN  matches := FALSE
-				END
+			diffSet := {0..bitsToCheck};
+			IF (S.VAL( SET8, adr.ipv6Adr[bytesToCheck] ) - diffSet) # (S.VAL( SET8, prefix.ipv6Adr[bytesToCheck] ) - diffSet) THEN  
+				matches := FALSE
 			END
 		END;
 		RETURN matches

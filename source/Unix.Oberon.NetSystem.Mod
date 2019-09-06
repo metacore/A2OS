@@ -381,9 +381,10 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	(*----- Read -----*)
 
 	PROCEDURE Read* (conn: Connection; VAR ch: CHAR);
-	VAR l: SIZE; r: WORD;
+	VAR l: SIZE; r: WORD; bytes: ARRAY 1 OF CHAR;
 	BEGIN
-		conn.Receive( S.VAL( Bytes, ch ), 0, 1, 1, l, r );
+		conn.Receive( bytes, 0, 1, 1, l, r );
+		ch := bytes[0];
 	END Read;
 
 	PROCEDURE ReadBytes* ( conn: Connection; pos, len: LONGINT; VAR buf: ARRAY OF S.BYTE );
@@ -393,9 +394,10 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	END ReadBytes;
 
 	PROCEDURE ReadBool* (conn: Connection; VAR b: BOOLEAN);
-	VAR l: SIZE; r: WORD;
+	VAR l: SIZE; r: WORD; bytes: ARRAY 1 OF CHAR;
 	BEGIN
-		conn.Receive( S.VAL( Bytes, b ), 0, 1, 1, l, r );
+		conn.Receive(bytes, 0, 1, 1, l, r );
+		b := ODD(ORD(bytes[0]));
 	END ReadBool;
 
 	PROCEDURE ReadInt* ( conn: Connection; VAR x: INTEGER );
@@ -425,12 +427,14 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	VAR
 		ch, ch0: CHAR;
 		i, l: SIZE; r: WORD;
+		bytes: ARRAY 1 OF CHAR;
 	BEGIN
 		i := -1; ch := 0X;
 		REPEAT
 			INC( i );
 			ch0 := ch;
-			conn.Receive( S.VAL( Bytes, ch ), 0, 1, 1, l, r );
+			conn.Receive( bytes, 0, 1, 1, l, r );
+			ch := bytes[0];
 			s[i] := ch;
 		UNTIL ( r # TCP.Ok) OR (ch = 0X) OR (ch = LF);
 		IF (ch = LF) & (ch0 = CR) THEN
@@ -443,9 +447,10 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	(*----- Write -----*)
 
 	PROCEDURE Write* (conn: Connection; ch: CHAR);
-	VAR r: LONGINT;
+	VAR r: LONGINT; bytes: ARRAY 1 OF CHAR;
 	BEGIN
-		conn.Send( S.VAL( Bytes, ch ), 0, 1, TRUE, r )
+		bytes[0] := ch;
+		conn.Send( bytes, 0, 1, TRUE, r )
 	END Write;
 
 	PROCEDURE WriteBytes* (conn: Connection; pos, len: LONGINT; CONST buf: ARRAY OF S.BYTE );
@@ -455,9 +460,10 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	END WriteBytes;
 
 	PROCEDURE WriteBool* (conn: Connection; b: BOOLEAN);
-	VAR r: LONGINT;
+	VAR r: LONGINT; bytes: ARRAY 1 OF CHAR;
 	BEGIN
-		conn.Send( S.VAL( Bytes, b ), 0, 1, TRUE, r )
+		IF b THEN bytes[0] := 1X ELSE bytes[0] := 0X END;
+		conn.Send( bytes, 0, 1, TRUE, r )
 	END WriteBool;
 
 	PROCEDURE WriteInt* (conn: Connection; x: INTEGER);

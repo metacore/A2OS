@@ -6,11 +6,11 @@ MODULE CryptoDES;	(** AUTHOR "G.F."; PUROSE "DES Cipher";	 *)
 
 IMPORT S := SYSTEM, U := CryptoUtils, Ciphers := CryptoCiphers;
 CONST
-	Mask01 = S.VAL( SET32, 0AAAAAAAAH );
-	Mask02 = S.VAL( SET32, 33333333H );
-	Mask04 = S.VAL( SET32, 0F0F0F0FH );
-	Mask08 = S.VAL( SET32, 00FF00FFH );
-	Mask16 = S.VAL( SET32, 0000FFFFH );
+	Mask01 = SET32( 0AAAAAAAAH );
+	Mask02 = SET32( 33333333H );
+	Mask04 = SET32( 0F0F0F0FH );
+	Mask08 = SET32( 00FF00FFH );
+	Mask16 = SET32( 0000FFFFH );
 
 TYPE
 	Sandbox = ARRAY 64 OF SET32;

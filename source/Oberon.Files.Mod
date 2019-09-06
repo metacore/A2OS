@@ -276,8 +276,10 @@ BEGIN
 END ReadLInt;
 
 PROCEDURE ReadSet*(VAR r: Rider; VAR x: SET);
+VAR s: SET32;
 BEGIN
-	ReadBytes(r, SYSTEM.VAL(Bytes4, x), 4)
+	ReadBytes(r, SYSTEM.VAL(Bytes4, s), 4);
+	x := s;
 END ReadSet;
 
 PROCEDURE ReadBool*(VAR r: Rider; VAR x: BOOLEAN);
@@ -406,8 +408,10 @@ BEGIN
 END WriteLInt;
 
 PROCEDURE WriteSet*(VAR r: Rider; x: SET);
+VAR s: SET32;
 BEGIN
-	WriteBytes(r, SYSTEM.VAL(Bytes4, x), 4)
+	s := SET32(x);
+	WriteBytes(r, SYSTEM.VAL(Bytes4, s), 4)
 END WriteSet;
 
 PROCEDURE WriteBool*(VAR r: Rider; x: BOOLEAN);
@@ -543,8 +547,8 @@ PROCEDURE WriteFile(f: File);
 VAR name: ARRAY 64 OF CHAR;
 BEGIN
 	IF Trace THEN
-		KernelLog.Hex(SYSTEM.VAL(LONGINT, f), 8); KernelLog.Char(" ");
-		KernelLog.Hex(SYSTEM.VAL(LONGINT, f.r.file), 1); KernelLog.Char(" ");
+		KernelLog.Hex(ADDRESS( f), 8); KernelLog.Char(" ");
+		KernelLog.Hex(ADDRESS(f.r.file), 1); KernelLog.Char(" ");
 		KernelLog.Int(Length(f), 1); KernelLog.Char(" ");
 		KernelLog.Int(f.r.file.Length(), 1); KernelLog.Char(" ");
 		GetName(f, name);

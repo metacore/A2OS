@@ -1171,7 +1171,7 @@ BEGIN
 		END;
 		Texts.WriteInt(W, t.procID, 2); Texts.WriteInt(W, t.priority, 2);
 		(*Texts.WriteHex(W, SYSTEM.VAL(LONGINT, t));  Texts.Write(W, "H");*)
-		adr := SYSTEM.VAL(LONGINT, t.obj);
+		adr := LONGINT(ADDRESS(t.obj));
 		IF adr # 0 THEN
 			Texts.WriteHex(W, adr);  Texts.Write(W, "H");
 			SYSTEM.GET(adr-4, adr);  Texts.Write(W, ":");  WriteType(W, adr)
@@ -1180,14 +1180,14 @@ BEGIN
 		END;
 		(*Texts.WriteHex(W, t.state.EIP);  Texts.Write(W, "H");*)
 		IF mode = AosActive.AwaitingLock THEN
-			adr := SYSTEM.VAL(LONGINT, t.waitingOn);
+			adr := LONGINT(ADDRESS(t.waitingOn));
 			Texts.WriteHex(W, adr);  Texts.Write(W, "H");
 			IF adr # 0 THEN
 				SYSTEM.GET(adr-4, adr);  Texts.Write(W, ":");  WriteType(W, adr)
 			END
 		ELSIF mode = AosActive.AwaitingCond THEN
 			Texts.Write(W, " ");
-			pc := SYSTEM.VAL(LONGINT, t.condition);
+			pc := LONGINT(ADDRESS(t.condition));
 			WriteProc(AosModules.ThisModuleByAdr(pc), pc, t.condFP, refs, tmp1, tmp2);
 			(*Texts.WriteHex(W, SYSTEM.VAL(LONGINT, t.condition));  Texts.Write(W, "H");*)
 			(*Texts.WriteHex(W, t.condFP);  Texts.Write(W, "H")*)

@@ -19,7 +19,7 @@ TYPE
 		(** A pseudo-random number generator.  This object is not reentrant. *)
 	Generator* = OBJECT
 		VAR
-			buffer: ARRAY 250 OF SET;
+			buffer: ARRAY 250 OF SET32;
 			index: LONGINT;
 			Z: LONGINT;	(* seed for Rand() *)
 
@@ -42,18 +42,18 @@ TYPE
 		BEGIN
 			Z := seed; index := 0;
 			FOR i := 0 TO 249 DO
-				buffer[i] := SYSTEM.VAL(SET, Rand())
+				buffer[i] := SET32(Rand())
 			END;
 			FOR i := 0 TO 249 DO
 				IF Rand() > halfrange THEN
-					buffer[i] := buffer[i] + SYSTEM.VAL(SET,msbit);
+					buffer[i] := buffer[i] + SET32(msbit);
 				END;
 			END;
 			msb := msbit; mask := allbits;
 			FOR i := 0 TO 30 DO
 				k := step * i + 3;
-				buffer[k] := buffer[k] * SYSTEM.VAL(SET,mask);
-				buffer[k] := buffer[k] + SYSTEM.VAL(SET, msb);
+				buffer[k] := buffer[k] * SET32(mask);
+				buffer[k] := buffer[k] + SET32(msb);
 				msb := msb DIV 2;
 				mask := mask DIV 2;
 			END;

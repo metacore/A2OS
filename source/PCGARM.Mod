@@ -816,7 +816,7 @@ BEGIN
 	(* generate content records *)
 	IF (instr.src1 = PCLIR.Absolute) THEN
 		IF bimboTrace THEN
-			Write("  absolute addressing: instr.adr = "); Hex(SYSTEM.VAL(LONGINT, instr.adr), 8); Write("; instr.val = "); Int(instr.val); Ln;
+			Write("  absolute addressing: instr.adr = "); Hex(LONGINT(ADDRESS(instr.adr)), 8); Write("; instr.val = "); Int(instr.val); Ln;
 		END;
 		content := RA.NewMemAddress(instr.adr, 0);
 		IF twoRegisters THEN content2 := RA.NewMemAddress(instr.adr, 4) END

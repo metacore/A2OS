@@ -202,10 +202,11 @@ END Check;
 (* GetUWord - get unsigned word from array of bytes. *)
 
 PROCEDURE GetUWord(VAR buf : ARRAY OF SYSTEM.BYTE; idx : LONGINT): LONGINT;
-VAR val: LONGINT;
+VAR val: LONGINT; i: INTEGER; 
 BEGIN
 	val := 0;
-	SYSTEM.GET(ADDRESSOF(buf[idx]), SYSTEM.VAL(INTEGER, val));
+	SYSTEM.GET(ADDRESSOF(buf[idx]), i);
+	val := i;
 	RETURN val
 END GetUWord;
 
@@ -250,7 +251,7 @@ VAR
 	b: ARRAY 1000H*3 DIV 2 OF CHAR;  i, j, val: LONGINT;
 	even: BOOLEAN;
 BEGIN
-	b[0] := SYSTEM.VAL(CHAR, d.fat[0]);  b[1] := CHR(ASH(d.fat[0], -8));
+	b[0] := CHR(d.fat[0]);  b[1] := CHR(ASH(d.fat[0], -8));
 	b[2] := CHR(d.fat[1]);
 	val := 0;  j := 2*3;  even := TRUE;
 	FOR i := 2 TO d.fatsize-1 DO
@@ -258,7 +259,7 @@ BEGIN
 		IF even THEN even := FALSE
 		ELSE val := ASH(val, 4) + (ORD(b[j DIV 2]) MOD 100H); even := TRUE
 		END;
-		SYSTEM.PUT(ADDRESSOF(b[j DIV 2]), SYSTEM.VAL(INTEGER, val));
+		SYSTEM.PUT(ADDRESSOF(b[j DIV 2]), INTEGER(val));
 		INC(j, 3)
 	END;
 	WriteSectors(d, d.fatsec + copy*d.spf, d.spf, b, res)
@@ -287,7 +288,7 @@ END FlushDrive;
 PROCEDURE ReadFAT12(d: Drive; VAR res: WORD);
 VAR
 	b: ARRAY 1000H*3 DIV 2 OF CHAR; i, j, val: LONGINT;
-	even: BOOLEAN;
+	even: BOOLEAN; int: INTEGER; 
 BEGIN
 	ReadSectors(d, d.fatsec, d.spf, b, res);
 	IF res = 0 THEN
@@ -296,7 +297,7 @@ BEGIN
 		d.fat[1] := ORD(b[2]);
 		val := 0;  j := 2*3;  even := TRUE;
 		FOR i := 2 TO d.fatsize-1 DO
-			SYSTEM.GET(ADDRESSOF(b[j DIV 2]), SYSTEM.VAL(INTEGER, val));
+			SYSTEM.GET(ADDRESSOF(b[j DIV 2]), int); val := int;
 			IF even THEN val := val MOD 1000H;  even := FALSE
 			ELSE val := ASH(val, -4);  even := TRUE
 			END;
@@ -516,7 +517,7 @@ END SeparateName;
 PROCEDURE GetDir(VAR dir: ARRAY OF CHAR;  ofs: LONGINT; VAR attr : SET;  VAR time, date, firstcl, len: LONGINT);
 VAR t: LONGINT;
 BEGIN
-	t (*attr*) := ORD(dir[ofs+0BH]); attr := SYSTEM.VAL(SET, t);
+	t (*attr*) := ORD(dir[ofs+0BH]); attr := SET(t);
 	t := GetUWord(dir, ofs+16H);
 	time := (t MOD 65536)*2;
 	t := GetUWord(dir, ofs+18H);
@@ -544,7 +545,7 @@ BEGIN
 		ELSIF (operation = purge) & delete THEN
 			dir[ofs] := 0E5X (*mark entry as deleted*)
 		END;
-		dir[ofs+0BH] := CHR(SHORT(SHORT(SYSTEM.VAL(LONGINT, attr))));
+		dir[ofs+0BH] := CHR(LONGINT(attr));
 		t :=(time DIV 2)+LSH(((date MOD 32)+(date DIV 32 MOD 16)*32
 			  + ((date DIV 512) - 80)*512), 16);
 		SYSTEM.PUT(ADDRESSOF(dir[ofs+16H]), t);

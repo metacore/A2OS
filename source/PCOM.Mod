@@ -213,11 +213,11 @@ VAR
 (** ========== Symbol Table Checker ============== *)
 (** ---------- Fingerprinting -------------- *)
 PROCEDURE FPrint(VAR fp: LONGINT; val: LONGINT);
-BEGIN fp:=SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ROT(fp, 7)) / SYSTEM.VAL(SET, val))
+BEGIN fp:= LONGINT(SET32(ROT(fp, 7)) / SET32(val))
 END FPrint;
 
 PROCEDURE FPrintSet(VAR fp: LONGINT; set: SET);
-BEGIN FPrint(fp, SYSTEM.VAL(LONGINT, set))
+BEGIN FPrint(fp, LONGINT(set))
 END FPrintSet;
 
 PROCEDURE FPrintReal(VAR fp: LONGINT; real: REAL);
@@ -242,7 +242,7 @@ BEGIN
 	ELSIF vis = readonly THEN  FPrint(fp, FPexternR)
 	ELSIF vis = PCT.Internal THEN  FPrint(fp, FPintern)
 	ELSE
-		FPrint(fp, FPothervis + SYSTEM.VAL(LONGINT, vis))
+		FPrint(fp, FPothervis + LONGINT( vis))
 (*
 		HALT(99)
 *)
@@ -698,7 +698,7 @@ PROCEDURE Export*(VAR r: PCM.Rider; M: PCT.Module; new, extend, skipImport: BOOL
 		ELSIF type = PCT.Float64 THEN  PCM.SymWLReal(r, c.real)
 		ELSIF type = PCT.String THEN  PCM.SymWString(r, c.str^)
 		ELSIF type = PCT.Bool THEN  PCM.SymWNum(r, SYSTEM.VAL(SHORTINT, c.bool))
-		ELSIF type = PCT.Set THEN  PCM.SymWNum(r, SYSTEM.VAL(LONGINT, c.set))
+		ELSIF type = PCT.Set THEN  PCM.SymWNum(r, LONGINT(c.set))
 (** fof >> *)
 		ELSIF type IS PCT.EnhArray THEN
 			PCM.Error( 200, -1, "const arrays cannot be exported yet" );
@@ -937,7 +937,7 @@ PROCEDURE Export*(VAR r: PCM.Rider; M: PCT.Module; new, extend, skipImport: BOOL
 		IF PCM.error THEN RETURN END;		(*symfile is changed*)
 
 		IF {PCT.Overloading} * m.flags # {} THEN
-			PCM.SymWNum(r, SFsysflag); PCM.SymWNum(r, SYSTEM.VAL(LONGINT, m.flags * {PCT.Overloading}))
+			PCM.SymWNum(r, SFsysflag); PCM.SymWNum(r, LONGINT( m.flags * {PCT.Overloading}))
 		END;
 		p1 := NIL; p2 := NIL; t1 := NIL;
 		c := m.scope.firstValue; first := TRUE;
@@ -1191,14 +1191,15 @@ END ImportComplete;
 
 PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index);
 	VAR
-			res: WORD; tag, i: LONGINT;  name: PCS.Name;  str: PCT.Struct;  vis: SET; R: PCM.SymReader;
+			res: WORD; tag, i: LONGINT;  name: PCS.Name;  str: PCT.Struct;  vis: SET32; R: PCM.SymReader;
 			proc: PCT.Proc;
 			scope: PCT.ModScope;
 			pscope: PCT.ProcScope;
 			selfimport, zeroCompress: BOOLEAN;
 			ver: CHAR;
 			MAttr: Module;
-			flag, flags: SET;
+			flag, flags: SET32;
+			flagss: SET;
 			type: PCT.Type;
 			string: ARRAY 256 OF CHAR;
 			readString: ReadStringProc;
@@ -1303,7 +1304,7 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 		END GetImports;
 
 		PROCEDURE InConst(): PCT.Const;
-			VAR i: LONGINT;  r: REAL;  lr: LONGREAL;  str: PCS.String;  set: SET;  c: PCT.Const;
+			VAR i: LONGINT;  r: REAL;  lr: LONGREAL;  str: PCS.String;  set: SET32;  c: PCT.Const;
 		BEGIN
 			CASE	tag	OF
 			| SFtypBool:	R.RawNum(i);
@@ -1325,7 +1326,7 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 									IF TraceImport THEN PCM.LogWLn; PCM.LogWStr("InConst / HInt / ") END;
 									c := PCT.NewInt64Const(SYSTEM.VAL(HUGEINT, lr))
 			| SFtypSet:	R.RawNum(SYSTEM.VAL(LONGINT, set));
-									IF TraceImport THEN PCM.LogWLn; PCM.LogWStr("InConst / Set / "); PCM.LogWHex(SYSTEM.VAL(LONGINT, set)) END;
+									IF TraceImport THEN PCM.LogWLn; PCM.LogWStr("InConst / Set / "); PCM.LogWHex(LONGINT(set)) END;
 									c := PCT.NewSetConst(set)
 			| SFtypFloat32:	R.RawReal(r);
 									IF TraceImport THEN PCM.LogWLn; PCM.LogWStr("InConst / Real / ") END;
@@ -1342,7 +1343,7 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 		END InConst;
 
 		PROCEDURE InParList(upper: PCT.Scope): PCT.ProcScope;
-			VAR	s: PCT.ProcScope;  svar, var: BOOLEAN;  name: PCS.Name; styp, str: PCT.Struct; f: LONGINT; flags: SET; (* ejz *)
+			VAR	s: PCT.ProcScope;  svar, var: BOOLEAN;  name: PCS.Name; styp, str: PCT.Struct; f: LONGINT; flags: SET32; (* ejz *)
 		BEGIN
 			styp := NIL;
 			NEW(s); PCT.InitScope(s, upper, {}, TRUE); PCT.SetOwner(s);
@@ -1384,8 +1385,8 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 		END InParList;
 
 		PROCEDURE InRecord(rec: PCT.Record; btyp: PCT.Struct; intf: PCT.Interfaces);
-			VAR	mode, vis: SET;  typ: PCT.Struct;  name: PCS.Name;
-				mscope: PCT.ProcScope; s: PCT.RecScope;  flags: SET; ch: CHAR;
+			VAR	mode, vis: SET32;  typ: PCT.Struct;  name: PCS.Name;
+				mscope: PCT.ProcScope; s: PCT.RecScope;  flags: SET32; ch: CHAR;
 		BEGIN
 			NEW(s);
 			PCT.SetOwner(s);
@@ -1396,7 +1397,7 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 			rec.mode := mode;
 			R.Char(ch);  rec.prio := ORD(ch);
 			IF TraceImport THEN
-				PCM.LogWLn; PCM.LogWStr("Rec / Mode / "); PCM.LogWHex(SYSTEM.VAL(LONGINT, rec.mode));
+				PCM.LogWLn; PCM.LogWStr("Rec / Mode / "); PCM.LogWHex(LONGINT(rec.mode));
 				PCM.LogWLn; PCM.LogWStr("Rec / Prio / "); PCM.LogWNum(rec.prio)
 			END;
 			R.RawNum(tag);
@@ -1434,11 +1435,11 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 		END InRecord;
 
 		PROCEDURE InStruct(VAR typ: PCT.Struct);
-			VAR i, len, strref, typtag, typadr: LONGINT; vis: SET; name: PCS.Name; btyp: PCT.Struct;
+			VAR i, len, strref, typtag, typadr: LONGINT; vis: SET32; name: PCS.Name; btyp: PCT.Struct;
 				arr: PCT.Array; type: PCT.Type; mod: PCT.Module;  typname: PCS.Name; proc: PCT.Delegate; r, rec: PCT.Record;
 				ptr: PCT.Pointer;
 				modAttr: Module; tAttr: Struct;
-				sysflag: LONGINT; sf: SET;
+				sysflag: LONGINT; sf: SET32;
 				intf: ARRAY 32 OF PCT.Interface; c: CHAR;
 			earr: PCT.EnhArray; tensor: PCT.Tensor; readonly: LONGINT;  (*fof*)
 			flags: LONGINT;
@@ -1635,13 +1636,13 @@ PROCEDURE Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index
 			RETURN inline
 		END InCProc;
 
-		PROCEDURE InObj(VAR idx: PCS.Name;  VAR vis: SET;  VAR flag: SET;  VAR typ: PCT.Struct);
+		PROCEDURE InObj(VAR idx: PCS.Name;  VAR vis: SET32;  VAR flag: SET32;  VAR typ: PCT.Struct);
 		VAR  f: LONGINT; name: ARRAY 32 OF CHAR;
 		BEGIN
 			flag := {}; vis:=PCT.Public;
 			IF tag=SFobjflag THEN
 				R.RawNum(f); R.RawNum(tag);
-				IF f = PCM.Untraced THEN flag := {f}
+				IF f = PCM.Untraced THEN flag := SET32({f});
 				ELSIF f = PCM.RealtimeProc THEN flag := {PCT.RealtimeProc} (* ug *)
 				ELSE PCM.LogWLn; PCM.LogWStr("PCOM.InObj: unknown objflag");
 				END
@@ -1690,7 +1691,8 @@ BEGIN
 	END;
 	IF ~selfimport & (self # NIL) THEN self.AddImport(M) END;
 	IF (ver = PCM.FileVersion) OR (ver=PCM.FileVersionOC) THEN
-		R.RawSet(flags);
+		R.RawSet(flagss);
+		flags := SET32(flagss)
 	ELSE
 		PCM.Error(151, PCM.InvalidPosition, ""); M := NIL; RETURN
 	END;

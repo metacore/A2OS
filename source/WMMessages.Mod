@@ -124,7 +124,7 @@ TYPE
 						END;
 					END;
 					IF msg.msgType = MsgInvokeEvent THEN
-						Reflection.GetProcedureName(SYSTEM.VAL(ADDRESS, msg.event), name, pc );
+						Reflection.GetProcedureName(ADDRESS(msg.event), name, pc );
 						TRACE("Event procedure ", name);
 					END;
 					IF msg.ext # NIL THEN
@@ -182,7 +182,7 @@ TYPE
 					END;
 				END;
 				IF msg.msgType = MsgInvokeEvent THEN
-					Reflection.GetProcedureName(SYSTEM.VAL(ADDRESS, msg.event), name, pc );
+					Reflection.GetProcedureName(ADDRESS(msg.event), name, pc );
 					TRACE("Event procedure ", name);
 				END;
 				IF msg.ext # NIL THEN
@@ -357,7 +357,7 @@ TYPE
 					END;
 				END;
 				IF msg.msgType = MsgInvokeEvent THEN
-					Reflection.GetProcedureName(SYSTEM.VAL(ADDRESS, msg.event), name, pc );
+					Reflection.GetProcedureName(ADDRESS(msg.event), name, pc );
 					TRACE("Event procedure ", name);
 				END;
 				IF msg.ext # NIL THEN

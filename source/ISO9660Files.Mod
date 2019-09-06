@@ -329,7 +329,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	VAR t: LONGINT;
 	BEGIN
 		ExtractName(dir, fname);
-		t (*attr*) := ORD(dir[24]); attr := SYSTEM.VAL(SET, t);
+		t (*attr*) := ORD(dir[24]); attr := SET(t);
 		time := LONG(ORD(dir[20]))*64*64 + LONG(ORD(dir[21]))*64 + LONG(ORD(dir[22]));
 		date := LONG(ORD(dir[17]))*32*16 + LONG(ORD(dir[18]))*16 + LONG(ORD(dir[19]));
 		Get733(dir, 1, cl);

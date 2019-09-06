@@ -153,10 +153,10 @@ TYPE
 		PROCEDURE ColorToIndex*(col: LONGINT): LONGINT;
 		BEGIN
 				(* default implementation is not very useful and should be overridden. *)
-			RETURN SYSTEM.VAL(LONGINT,
-					SYSTEM.VAL(SET, ASH(col, 7-23)) * {5..7} +
-					SYSTEM.VAL(SET, ASH(col, 4-15)) * {2..4} +
-					SYSTEM.VAL(SET, ASH(col, 1-7)) * {0..1})
+			RETURN LONGINT(
+					SET32(ASH(col, 7-23)) * {5..7} +
+					SET32(ASH(col, 4-15)) * {2..4} +
+					SET32(ASH(col, 1-7)) * {0..1})
 		END ColorToIndex;
 
 		(** Map an 8-bit CLUT index to a color value.  Only used if format = index8. *)
@@ -164,9 +164,9 @@ TYPE
 		BEGIN
 				(* default implementation is not very useful and should be overridden. *)
 			RETURN
-					ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {5..7}), 23-7) +
-					ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {2..4}), 15-4) +
-					ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, index) * {0..1}), 7-1)
+					ASH(LONGINT(SET32(index) * {5..7}), 23-7) +
+					ASH(LONGINT(SET32(index) * {2..4}), 15-4) +
+					ASH(LONGINT(SET32(index) * {0..1}), 7-1)
 		END IndexToColor;
 
 		(** Initialize a linear frame buffer for Transfer. *)
@@ -203,7 +203,7 @@ VAR
 	buf: POINTER TO ARRAY BufSize OF CHAR;
 
 PROCEDURE Fill0(d: Display; col, x, y, w, h: LONGINT);
-VAR j, w0, h0, s: LONGINT; p: ADDRESS; t, c: SET; invert: BOOLEAN;
+VAR j, w0, h0, s: LONGINT; p: ADDRESS; t, c: SET32; invert: BOOLEAN;
 BEGIN {EXCLUSIVE}
 	IF (w > 0) & (h > 0) & (col >= 0) THEN	(* opaque or invert *)
 		invert := ASH(col, 1) < 0;
@@ -211,18 +211,17 @@ BEGIN {EXCLUSIVE}
 		CASE d.format OF
 			index8:
 				s := 4; col := d.ColorToIndex(col);
-				c := SYSTEM.VAL(SET, ASH(col, 24) + ASH(col, 16) + ASH(col, 8) + col)
+				c := SET32(ASH(col, 24) + ASH(col, 16) + ASH(col, 8) + col)
 			|color565:
 				s := 4;
-				col := SYSTEM.VAL(LONGINT,
-						SYSTEM.VAL(SET, ASH(col, 15-23)) * {11..15} +
-						SYSTEM.VAL(SET, ASH(col, 10-15)) * {5..10} +
-						SYSTEM.VAL(SET, ASH(col, 4-7)) * {0..4});
-				c := SYSTEM.VAL(SET, ASH(col MOD 10000H, 16) + col MOD 10000H)
+				col := LONGINT( SET32(ASH(col, 15-23)) * {11..15} +
+						SET32(ASH(col, 10-15)) * {5..10} +
+						SET32(ASH(col, 4-7)) * {0..4});
+				c := SET32(ASH(col MOD 10000H, 16) + col MOD 10000H)
 			|color888:
-				s := 3; c := SYSTEM.VAL(SET, col MOD 1000000H)
+				s := 3; c := SET32(col MOD 1000000H)
 			|color8888:
-				s := 4; c := SYSTEM.VAL(SET, col MOD 1000000H)
+				s := 4; c := SET32(col MOD 1000000H)
 		END;
 		w0 := w*d.format; h0 := (LEN(buf^)-3) DIV w0;	(* -3 for 32-bit loops below *)
 		ASSERT(h0 > 0);
@@ -238,7 +237,7 @@ BEGIN {EXCLUSIVE}
 				d.Transfer(buf^, 0, w0, x, y, w, h0, get);
 				p := ADDRESSOF(buf[0]);
 				FOR j := 0 TO (w0*h0-1) DIV s DO
-					t := SYSTEM.VAL (SET, SYSTEM.GET32(p)); SYSTEM.PUT32(p, t / c); INC(p, s)
+					t := SET32(SYSTEM.GET32(p)); SYSTEM.PUT32(p, t / c); INC(p, s)
 				END
 			END;
 			d.Transfer(buf^, 0, w0, x, y, w, h0, set);

@@ -38,7 +38,7 @@ TYPE
 				BEGIN
 					w := bits DIV 32;  b := bits MOD 32;  len := w;
 					IF b # 0 THEN  INC( len );
-						d[w] := S.VAL( UNSIGNED32,  S.VAL( SET32, d[w] ) * {0..b} )
+						d[w] := S.VAL( UNSIGNED32,  S.VAL( SET32, d[w] ) * SET32({0..b}) )
 					END
 				END Mask;
 
@@ -907,7 +907,7 @@ VAR
 	END InitRandomgenerator;
 
 BEGIN
-	ASSERT( S.VAL( LONGINT, {0}) = 1 );		(* little endian SETs! *)
+	ASSERT( LONGINT({0}) = 1 );		(* little endian SETs! *)
 	FOR nextFreeBuffer := 0 TO BufferPoolSize - 1 DO
 		NEW( bufferPool[nextFreeBuffer], 256 )
 	END;

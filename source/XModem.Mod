@@ -113,10 +113,10 @@ TYPE
 		BEGIN
 			crc := 0;
 			FOR i := 0 TO len-1 DO
-				crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc) / SYSTEM.VAL(SET, ORD(buffer[ofs+i])*100H));
+				crc := LONGINT(SET(crc) / SET(ORD(buffer[ofs+i])*100H));
 				FOR k := 0 TO 7 DO
-					IF (15 IN SYSTEM.VAL(SET, crc)) THEN
-						crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc*2) / SYSTEM.VAL(SET, 1021H))
+					IF (15 IN SET(crc)) THEN
+						crc := LONGINT(SET(crc*2) /SET(1021H))
 					ELSE
 						crc := crc*2
 					END

@@ -730,7 +730,7 @@ BEGIN
 	n := checkRoot;
 	WHILE n # NIL DO	(* iterate over checked list *)
 		t := n; n := n.nextFin;
-		IF (codeAdr <= SYSTEM.VAL (ADDRESS, t.finalizer)) & (SYSTEM.VAL (ADDRESS, t.finalizer) <= codeEnd) THEN
+		IF (codeAdr <= ADDRESS(t.finalizer)) & (ADDRESS(t.finalizer) <= codeEnd) THEN
 			IF t = checkRoot THEN checkRoot := t.nextFin ELSE p.nextFin := t.nextFin END;	(* remove from list *)
 			IF Stats THEN DEC(NfinalizeAlive) END;
 			INC(N1)
@@ -742,7 +742,7 @@ BEGIN
 	n := finalizeRoot;
 	WHILE n # NIL DO	(* iterate over finalized list *)
 		t := n; n := n.nextFin;
-		IF (codeAdr <= SYSTEM.VAL (ADDRESS, t.finalizer)) & (SYSTEM.VAL (ADDRESS, t.finalizer) <= codeEnd) THEN
+		IF (codeAdr <= ADDRESS(t.finalizer)) & (ADDRESS(t.finalizer) <= codeEnd) THEN
 			IF t = finalizeRoot THEN finalizeRoot := t.nextFin ELSE p.nextFin := t.nextFin END;	(* remove from list *)
 			IF Stats THEN DEC(NfinalizeDead) END;
 			INC(N2)

@@ -306,7 +306,7 @@ TYPE
 			IF identifier.fingerprint = 0 THEN (* not identifiable via fingerprint *)
 				block := FindBlock^(identifier);
 			ELSE
-				any := hash.Get(SYSTEM.VAL(SIZE, identifier.fingerprint));
+				any := hash.Get(SIZE(identifier.fingerprint));
 				IF any # NIL THEN block := any(GenericLinker.Block)  (* local block *) END;
 				IF (block # NIL) & (block.identifier.name # identifier.name) THEN (* local block, false or duplicate fingerprint *)
 					block := FindBlock^(identifier)
@@ -321,7 +321,8 @@ TYPE
 				hash.Put(SIZE(block.identifier.fingerprint), block)
 			END;
 			IF (block.identifier.name[0] >= 0) & (block.identifier.name[1] >= 0)  THEN
-				IF (block.identifier.name[1] = InternalModuleName) & (block.identifier.name[2]<0) OR (block.identifier.name[2] = InternalModuleName) & (block.identifier.name[3] < 0) THEN
+				IF (block.identifier.name[1] = InternalModuleName) & (block.identifier.name[2]<0) OR 
+				(block.identifier.name[2] = InternalModuleName) & (block.identifier.name[3] < 0) THEN
 					moduleBlock[numberModuleBlocks] := block;
 					INC(numberModuleBlocks);
 				END;
@@ -495,7 +496,7 @@ VAR
 				FOR i := 0 TO linker.numberModuleBlocks-1 DO
 					moduleAdr := linker.moduleBlock[i].address;
 					#IF ~COOP THEN
-						SYSTEM.GET(moduleAdr+2*SIZEOF(ADDRESS)+2*SIZEOF(WORD), moduleAdr);
+						SYSTEM.GET(moduleAdr+2*SIZEOF(ADDRESS)+1*SIZEOF(SIZE), moduleAdr);
 						SYSTEM.GET(moduleAdr-2*SIZEOF(ADDRESS), heapBlockAdr);
 						ASSERT(heapBlockAdr = linker.moduleBlock[i].address+2*SIZEOF(ADDRESS));
 					#END

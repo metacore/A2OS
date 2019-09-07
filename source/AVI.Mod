@@ -1301,7 +1301,7 @@ BEGIN
 
 	WHILE count < n DO
 		ret := ret * 2;
-		IF ( 7 - ( index MOD 8 ) ) IN SYSTEM.VAL( SET, buf[index DIV 8] ) THEN
+		IF ( 7 - ( index MOD 8 ) ) IN SET(ORD(buf[index DIV 8])) THEN
 			INC(ret)
 		END;
 		INC( index );

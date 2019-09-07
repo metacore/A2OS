@@ -574,7 +574,7 @@ TYPE
 				NEW(bool, ODD(stack.CallH(address)));
 				RETURN bool;
 			|Reflection.sfTypeSET:
-				NEW(set,  SYSTEM.VAL(SET, stack.CallH(address)));
+				NEW(set,  SET(stack.CallH(address)));
 				RETURN set;
 			| Reflection.sfTypeANY, Reflection.sfTypeOBJECT, Reflection.sfTypePointerToRecord:  (* pointers are passed as varpars *)
 				stack.Call(address);

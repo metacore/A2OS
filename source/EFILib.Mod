@@ -543,8 +543,8 @@ BEGIN
 	status := AllocateMemory(addr, numPages);
 	(* now addr contains the base address of the allocated pages *)
 	IF status = EFI.Success THEN
-		loadAddr := SYSTEM.VAL(ADDRESS, addr);
-		memSize := SYSTEM.VAL(EFI.Int, fileSize);
+		loadAddr := ADDRESS(addr);
+		memSize := EFI.Int(fileSize);
 		status := file.Read(file, memSize, loadAddr);
 	END;
 	RETURN status;

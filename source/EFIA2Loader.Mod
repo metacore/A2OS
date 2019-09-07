@@ -75,7 +75,7 @@ VAR
 						status := goProt.SetMode(goProt, modeNumber);
 						IF (status = EFI.Success) & (goProt.Mode.Mode = modeNumber) THEN
 							framebufPhysAddr := goProt.Mode.FrameBufferBase;
-							framebufAddr := SYSTEM.VAL(ADDRESS, framebufPhysAddr);
+							framebufAddr := ADDRESS(framebufPhysAddr);
 
 
 							framebufSize := goProt.Mode.FrameBufferSize;
@@ -256,7 +256,7 @@ VAR
 		IF status # EFI.Success THEN
 			RETURN status;
 		END;
-		bootTableBegin := SYSTEM.VAL(ADDRESS,btAddrPhys);
+		bootTableBegin := ADDRESS(btAddrPhys);
 		btAddr := bootTableBegin; (* out *)
 		btPos := bootTableBegin;
 
@@ -569,7 +569,7 @@ VAR
 			*)
 
 			memmapStat := EFILib.GetMemoryMapping(adr);
-			memmapAddr := SYSTEM.VAL(ADDRESS,adr);
+			memmapAddr := ADDRESS(adr);
 			TRACE(memmapAddr);
 			TRACE(fbAddr);
 			IF (memmapStat = EFI.Success ) THEN

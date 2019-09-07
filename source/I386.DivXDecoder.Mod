@@ -1561,8 +1561,8 @@ TYPE ColorSpace = OBJECT
 						( SYSTEM.VAL( SET, LSH( r, -3 ) ) * SYSTEM.VAL( SET, 001FH ) ) ) );
 *)
 
-					SYSTEM.PUT16( pusOut,  SYSTEM.VAL( INTEGER, SYSTEM.VAL( SET, r DIV 8 ) + SYSTEM.VAL( SET, ( g DIV 4 ) * 32 ) +
-																SYSTEM.VAL( SET, (b DIV 8 ) * 2048 ) ) );
+					SYSTEM.PUT16( pusOut,  INTEGER(SET(r DIV 8 ) + SET( ( g DIV 4 ) * 32 ) +
+																SET( (b DIV 8 ) * 2048 ) ));
 
 					pusOut := pusOut + SIZEOF( INTEGER );
 				END;

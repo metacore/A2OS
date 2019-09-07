@@ -244,7 +244,7 @@ IMPORT
 
 			(* if (!(m%2)) ld->block[63] ^= 1; *)
 			IF ( m MOD 2 ) = 0 THEN
-				block[63] := SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET , block[63] ) / SYSTEM.VAL(SET, 1 ) )
+				block[63] := LONGINT(SET(block[63] ) / SET(1))
 			END;
 		END;
 
@@ -1562,8 +1562,8 @@ IMPORT
 					(* sign extend level... *)
 					(* event.level = (event.level & 0x800) ? (event.level | (-1 ^ 0xfff)) : event.level; *)
 					IF 11 IN SYSTEM.VAL( SET, event.level )  THEN
-						 event.level := SYSTEM.VAL( LONGINT,
-						 	SYSTEM.VAL( SET, event.level ) + SYSTEM.VAL( SET, -4096  ) )
+						 event.level := LONGINT(
+						 	SET(event.level ) + SET(-4096  ) )
 					END;
 					temp := AVI.GetBits( 1, r.data^, r.index ); (* marker bit *)
 			END;
@@ -1639,8 +1639,8 @@ IMPORT
 					(* sign extend level... *)
 					(* event.level = (event.level & 0x800) ? (event.level | (-1 ^ 0xfff)) : event.level; *)
 					IF 11 IN SYSTEM.VAL( SET, event.level ) THEN
-						 event.level := SYSTEM.VAL( LONGINT,
-						 	SYSTEM.VAL( SET, event.level ) + ( SYSTEM.VAL( SET, -4096 ) ) )
+						 event.level := LONGINT(
+						 	SET(event.level ) + ( SET(-4096 ) ) )
 					END;
 					temp := AVI.GetBits( 1, r.data^, r.index ); (* marker bit *)
 			END;

@@ -849,7 +849,6 @@ PACKAGE ApplicationsMini ARCHIVE "ApplicationsMini.zip" SOURCE "ApplicationsMini
 	PCDebug.Mod PCM.Mod PCS.Mod PCT.Mod PCBT.Mod	# prk
 	PCLIR.Mod PCO.Mod PCG386.Mod PCC.Mod PCV.Mod PCArrays.Mod
 	PCB.Mod PCP.Mod PCA386.Mod PCOM.Mod PCOF.Mod PCOFPE.Mod PC.Mod
-	I386 { ArrayBase.Mod I386.ArrayBaseOptimized.Mod }
 	PCOARM.Mod PCARMCP.Mod PCARMRegisters.Mod	# ARM Backend (be)
 	PCAARM.Mod PCGARM.Mod
 	ASMAMD64.Mod PCAAMD64.Mod PCGAMD64.Mod	# AMD64 Backend

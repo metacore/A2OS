@@ -2001,8 +2001,8 @@ TYPE
 					IF g > 255 THEN g := 255; ELSIF g < 0 THEN g := 0 END;
 					IF b > 255 THEN b := 255; ELSIF b < 0 THEN b := 0 END;
 
-					SYSTEM.PUT16( pusOut,  SYSTEM.VAL( INTEGER, SYSTEM.VAL( SET, r DIV 8 ) + SYSTEM.VAL( SET, ( g DIV 4 ) * 32 ) +
-																SYSTEM.VAL( SET, (b DIV 8 ) * 2048 ) ) );
+					SYSTEM.PUT16( pusOut,  INTEGER( SET(r DIV 8 ) + SET(( g DIV 4 ) * 32 ) +
+																SET((b DIV 8 ) * 2048 ) ) );
 
 					pusOut := pusOut + SIZEOF( INTEGER );
 				END;

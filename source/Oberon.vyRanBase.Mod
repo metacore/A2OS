@@ -543,7 +543,7 @@ END Store;
 	BEGIN
 		v := x * y;  x := y;  y := v;
 		z :=
-			mwcParam * SYSTEM.VAL( Bits, SYSTEM.VAL( SET, z ) * SYSTEM.VAL( SET, sysMaskSecondHalf ) ) +
+			mwcParam * Bits(SET(z ) * SET(sysMaskSecondHalf ) ) +
 			LSH( z, sysBitsTypeSize DIV 2 * sysSHR );
 		RETURN y + z
 	END Combo;

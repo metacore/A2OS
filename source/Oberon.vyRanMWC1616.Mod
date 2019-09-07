@@ -86,10 +86,10 @@ VAR
 		seed := r.seed;
 		WITH seed: tSeed DO
 			seed.x :=
-				seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * SET( sysMaskSecondHalf ) ) +
 				LSH( seed.x, sysBitsTypeSize DIV 2 * sysSHR );
 			seed.y :=
-				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * SET( sysMaskSecondHalf ) ) +
 				LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR )
 		END
 	END Next;
@@ -105,10 +105,10 @@ VAR
 		seed := r.seed;
 		WITH seed: tSeed DO
 			seed.x :=
-				seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * SET(sysMaskSecondHalf ) ) +
 				LSH( seed.x, sysBitsTypeSize DIV 2 * sysSHR );
 			seed.y :=
-				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * SET(sysMaskSecondHalf ) ) +
 				LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
 			RETURN seed.x * sysHalfBitsType + LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR )
 		END
@@ -121,10 +121,10 @@ VAR
 		seed := r.seed;
 		WITH seed: tSeed DO
 			seed.x :=
-				seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * SET( sysMaskSecondHalf ) ) +
 				LSH( seed.x, sysBitsTypeSize DIV 2 * sysSHR );
 			seed.y :=
-				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * SET( sysMaskSecondHalf ) ) +
 				LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
 			n := seed.x * sysHalfBitsType + LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
 			IF n >= 0 THEN RETURN n * posScalefact + 0.5 ELSE RETURN n * negScalefact END
@@ -137,10 +137,10 @@ VAR
 		seed := r.seed;
 		WITH seed: tSeed DO
 			seed.x :=
-				seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.a * S.VAL( Bits, SET(seed.x ) * SET( sysMaskSecondHalf ) ) +
 				LSH( seed.x, sysBitsTypeSize DIV 2 * sysSHR );
 			seed.y :=
-				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * SET( sysMaskSecondHalf ) ) +
 				LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
 			n := seed.x * sysHalfBitsType + LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
 			IF n < 0 THEN DEC( n, MIN( LONGINT ) ) END;
@@ -158,14 +158,14 @@ VAR
 			IF seed.checkPeriod THEN
 				LOOP
 					x :=
-						seed.a * S.VAL( Bits, S.VAL( SET, seed.x ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+						seed.a * S.VAL( Bits, SET( seed.x ) * SET( sysMaskSecondHalf ) ) +
 						LSH( seed.x, sysBitsTypeSize DIV 2 * sysSHR );
 					IF x # seed.x THEN EXIT END;
 					INC( seed.x )
 				END;
 				LOOP
 					y :=
-						seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * S.VAL( SET, sysMaskSecondHalf ) ) +
+						seed.b * S.VAL( Bits, SET( seed.y ) * SET( sysMaskSecondHalf ) ) +
 						LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
 					IF y # seed.y THEN EXIT END;
 					INC( seed.y )

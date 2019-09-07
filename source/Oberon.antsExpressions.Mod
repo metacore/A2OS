@@ -1594,9 +1594,9 @@ VAR
 			Ln;  Str( " fpar.mode = Var" );  Eval( stack, apar );  Ln;  Str( " apar.class=" );  WInt( apar.class, 10 );  WClass( apar.class );
 			CASE apar.class OF
 			Bool:
-					IF class = Bool THEN PushLIntPar( call, SYSTEM.VAL( LONGINT, apar.b ) );  RETURN TRUE END
+					IF class = Bool THEN PushLIntPar( call, SYSTEM.VAL(UNSIGNED8, apar.b ) );  RETURN TRUE END
 			| Char:
-					IF class = Char THEN PushLIntPar( call, SYSTEM.VAL( LONGINT, apar.c ) );  RETURN TRUE
+					IF class = Char THEN PushLIntPar( call, ORD(apar.c ) );  RETURN TRUE
 					ELSIF class = Comp THEN
 						Ln;  Str( "PopString on CHAR" );
 						IF PopString() THEN RETURN TRUE END

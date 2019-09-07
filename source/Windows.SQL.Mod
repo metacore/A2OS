@@ -422,17 +422,17 @@ BEGIN
 			| DateType:
 				NEW(df); AppendField(s.params, df);
 				ODBC.BindParameter(s.hstmt, i+1, types[i].inOut, types[i].oberonType, types[i].sqlType, 0, 0,
-					SYSTEM.VAL(arr6, df.year), df.len, s.res)
+					df, df.len, s.res)
 
 			| TimeType:
 				NEW(tf); AppendField(s.params, tf);
 				ODBC.BindParameter(s.hstmt, i+1, types[i].inOut, types[i].oberonType, types[i].sqlType, 0, 0,
-					SYSTEM.VAL(arr6, tf.hour), tf.len, s.res)
+					tf, tf.len, s.res)
 
 			| TimeStampType:
 				NEW(tsf); AppendField(s.params, tsf);
 				ODBC.BindParameter(s.hstmt, i+1, types[i].inOut, types[i].oberonType, types[i].sqlType, 0, 0,
-					SYSTEM.VAL(arr16, tsf.year), tsf.len, s.res)
+					tsf, tsf.len, s.res)
 
 			| FileType:
 				NEW(ff); ff.f:= Files.New(""); AppendField(s.params, ff);
@@ -549,13 +549,13 @@ BEGIN
 						ODBC.BindCol(stmt.hstmt, i, LongRealType, rf.r, rf.len, stmt.res);
 
 					| 9: NEW(df); AppendField(resultRow, df); df.len:= prec;
-						ODBC.BindCol(stmt.hstmt, i, DateType, SYSTEM.VAL(arr6, df.year), df.len, stmt.res);
+						ODBC.BindCol(stmt.hstmt, i, DateType, df, df.len, stmt.res);
 
 					| 10: NEW(tf); AppendField(resultRow, tf); tf.len:= prec;
-						ODBC.BindCol(stmt.hstmt, i, TimeType, SYSTEM.VAL(arr6, tf.hour), tf.len, stmt.res);
+						ODBC.BindCol(stmt.hstmt, i, TimeType, tf, tf.len, stmt.res);
 
 					| 11: NEW(tsf); AppendField(resultRow, tsf); IF scale > 0 THEN tsf.len:= 20+scale ELSE tsf.len:= 19 END;
-						ODBC.BindCol(stmt.hstmt, i, TimeStampType, SYSTEM.VAL(arr16, tsf.year), tsf.len, stmt.res);
+						ODBC.BindCol(stmt.hstmt, i, TimeStampType, tsf, tsf.len, stmt.res);
 
 					| -2, -3: NEW(bf); AppendField(resultRow, bf); bf.len:= prec;
 						ODBC.BindCol(stmt.hstmt, i, LongIntType, bf.b, bf.len, stmt.res);

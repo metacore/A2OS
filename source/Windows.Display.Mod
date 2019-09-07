@@ -340,7 +340,7 @@ VAR
 	PROCEDURE GetKeyState( key: LONGINT;  what: INTEGER ): BOOLEAN;
 	VAR state: INTEGER;
 	BEGIN
-		state := User32.GetKeyState( key );  RETURN what IN SYSTEM.VAL( SET, state );
+		state := User32.GetKeyState( key );  RETURN what IN SET(state);
 	END GetKeyState;
 
 (* Common base handler for all variants of windows provided by this module. *)

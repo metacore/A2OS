@@ -33,7 +33,7 @@ END BaseOf;
 (** What is the extension level of t? *)
 PROCEDURE LevelOf* (t: Type): INTEGER;
 BEGIN
-	RETURN S.VAL(INTEGER,t.flags-{Modules.ProtTypeBit})
+	RETURN INTEGER(t.flags-{Modules.ProtTypeBit})
 END LevelOf;
 
 (*

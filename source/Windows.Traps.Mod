@@ -152,7 +152,7 @@ VAR
 				Val( "EBP", int.BP );  Val( "FS", int.FS );  Val( "GS", int.GS );
 				Val( "TMR", Kernel.GetTicks());
 				#IF I386 THEN
-					IF SYSTEM.VAL( CHAR, int.DR7 ) # 0X THEN  (* some breakpoints enabled *)
+					IF UNSIGNED8(int.DR7 ) # 0 THEN  (* some breakpoints enabled *)
 						Val( "DR0", int.DR0 );  Val( "DR1", int.DR1 );  Val( "DR2", int.DR2 );  Val( "DR3", int.DR3 );  Val( "DR6", int.DR6 );
 						Val( "DR7", int.DR7 );  w.Ln
 					END;

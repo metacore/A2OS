@@ -79,7 +79,7 @@ TYPE
 	VAR v: LONGINT;
 	BEGIN
 		v := x * y;  x := y;  y := v;
-		z := mwcParam * S.VAL( Bits, S.VAL( SET, z ) * S.VAL( SET, sysMaskSecondHalf ) ) + LSH( z, sysBitsTypeSize DIV 2 * sysSHR );
+		z := mwcParam * S.VAL( Bits, S.VAL( SET, z ) * SET(sysMaskSecondHalf ) ) + LSH( z, sysBitsTypeSize DIV 2 * sysSHR );
 		RETURN y + z
 	END Combo;
 

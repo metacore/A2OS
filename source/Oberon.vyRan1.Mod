@@ -107,7 +107,7 @@ TYPE
 	PROCEDURE Get( r: tRandom ): Bits;
 	VAR temp: LONGREAL;
 	BEGIN
-		HALT( 103 );  temp := Ran1( r.seed( tSeed ) );  RETURN SYSTEM.VAL( Bits, temp )
+		HALT( 103 );  temp := Ran1( r.seed( tSeed ) );  (*RETURN SYSTEM.VAL( Bits, temp )*)
 		(* better shift adjust: give preference to higher order bits *)
 	END Get;
 

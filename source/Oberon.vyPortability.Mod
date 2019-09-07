@@ -90,8 +90,8 @@ END StretchedPict; (* not implemented for native. Since images are used as doubl
 PROCEDURE TypeOf*(p: ANY): Type;
 VAR type: Type;
 BEGIN
-	SYSTEM.GET(SYSTEM.VAL(LONGINT, p)-4, type);
-	SYSTEM.GET(SYSTEM.VAL(LONGINT, type)-4, type);
+	SYSTEM.GET(SYSTEM.VAL(ADDRESS, p)-4, type);
+	SYSTEM.GET(SYSTEM.VAL(ADDRESS, type)-4, type);
 	RETURN type
 END TypeOf;
 

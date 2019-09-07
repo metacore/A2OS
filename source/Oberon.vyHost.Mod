@@ -192,9 +192,9 @@ VAR
 
 	dynboolarray*,dynintarray*,dynlintarray*,dynrealarray*,dynlrlarray*:Struct;   	*)
 	(***** ** PROCEDURE section **  ****)
-PROCEDURE Addr* (p: ANY): LONGINT;
+PROCEDURE Addr* (p: ANY): ADDRESS;
 BEGIN
-	RETURN SYSTEM.VAL(LONGINT, p)
+	RETURN SYSTEM.VAL(ADDRESS, p)
 END Addr;
 
 (** Texts **)

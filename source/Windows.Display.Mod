@@ -404,7 +404,7 @@ VAR
 															  lParam: User32.LParam ): User32.LResult;
 	VAR win: Window;  create: CreateStruct;  ret: Kernel32.BOOL;
 	BEGIN
-		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
+		win := SYSTEM.VAL( Window, User32.GetWindowLongPtr( hwnd, GWLWindow ) );
 
 		IF win # NIL THEN RETURN DummyHandler( win, uMsg, wParam, lParam )
 		ELSIF uMsg = User32.WMCreate THEN
@@ -543,7 +543,7 @@ VAR
 			IF win.frame THEN
 				ret :=
 					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-															 SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) + SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
+															 LONGINT(SET(User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) + SET(12582912 (* WScaption *) ) ) );
 				ret := User32.GetWindowRect( win.hWnd, rect );
 				ret :=
 					User32.SetWindowRgn( win.hWnd,
@@ -553,7 +553,7 @@ VAR
 			ELSE
 				ret :=
 					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-															 SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
+															 LONGINT(SET(User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SET(12582912 (* WScaption *) ) ) );
 
 				ret := User32.GetWindowRect( win.hWnd, rect );
 				ret :=
@@ -838,7 +838,7 @@ VAR
 			END;
 		END;
 
-		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
+		win := SYSTEM.VAL( Window, User32.GetWindowLongPtr( hwnd, GWLWindow ) );
 		IF win # NIL THEN RETURN WindowHandler( win, uMsg, wParam, lParam )
 		ELSE RETURN DummyProc( hwnd, uMsg, wParam, lParam )
 		END
@@ -971,11 +971,11 @@ VAR
 																		    lParam: User32.LParam ): User32.LResult;
 	VAR win: Window;  ret: Kernel32.BOOL;
 	BEGIN
-		win := SYSTEM.VAL( Window, User32.GetWindowLong( hwnd, GWLWindow ) );
+		win := SYSTEM.VAL( Window, User32.GetWindowLongPtr( hwnd, GWLWindow ) );
 		IF win # NIL THEN RETURN WindowHandler( win, uMsg, wParam, lParam )
 		ELSIF uMsg = User32.WMCreate THEN
 			SYSTEM.GET( lParam, win );  win.hWnd := hwnd;
-			ret := User32.SetWindowLong( hwnd, GWLWindow, SYSTEM.VAL( LONGINT, win ) );  InstallW( win, TRUE );  RETURN 0
+			IGNORE User32.SetWindowLongPtr( hwnd, GWLWindow, ADDRESS(win ) );  InstallW( win, TRUE );  RETURN 0
 		ELSE RETURN DummyProc(hwnd,uMsg,wParam,lParam);
 		END
 	END ControlWindowProc;
@@ -1136,7 +1136,7 @@ VAR
 			IF fullscreen THEN
 				res :=
 					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-															 SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
+															 LONGINT(SET(User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SET(12582912 (* WScaption *) ) ) );
 
 				res := User32.GetWindowRect( win.hWnd, rect );
 				res := User32.SetWindowRgn( win.hWnd, GDI32.CreateRectRgn( rect.left, rect.bottom, rect.right, rect.top ), 1 );

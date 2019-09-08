@@ -407,7 +407,7 @@ BEGIN
 				context.out.Ln; context.out.String("  type:");
 				context.out.Hex(m.typeInfo[i].tag, 9);
 				context.out.Char(" "); context.out.String(m.typeInfo[i].name);
-				context.out.Hex(SYSTEM.VAL(LONGINT, m.typeInfo[i].flags), 9);
+				context.out.Hex(SIZE(m.typeInfo[i].flags), 9);
 					(* type descriptor info *)
 				context.out.Ln; context.out.String("  typedesc1:");
 				p := m.typeInfo[i].tag; (* address of static type descriptor *)

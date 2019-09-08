@@ -36,7 +36,7 @@ VAR
 					w.Char( ch )
 				END
 			END;
-			w.String( " iopl" );  w.Int( ASH( SYSTEM.VAL( LONGINT, s * {12, 13} ), -12 ), 1 )
+			w.String( " iopl" );  w.Int( ASH( LONGINT(s * {12, 13} ), -12 ), 1 )
 		END Flags;
 
 		PROCEDURE Val( CONST s: ARRAY OF CHAR;  val:ADDRESS );
@@ -157,9 +157,9 @@ VAR
 						Val( "DR7", int.DR7 );  w.Ln
 					END;
 				#END
-				w.Ln; w.String( " FLAGS: " );  Flags( w, SYSTEM.VAL( SET, int.FLAGS ) );
+				w.Ln; w.String( " FLAGS: " );  Flags( w, SET(int.FLAGS ) );
 				w.Char( 0FX );   (* "proportional font" *)
-				w.Char( " " );  w.Set( SYSTEM.VAL( SET, int.FLAGS ) );  w.Ln;
+				w.Char( " " );  w.Set( SET(int.FLAGS ) );  w.Ln;
 				w.String(" Features="); w.Set(Machine.features); w.Set(Machine.features2); w.Ln;
 			ELSE w.Ln
 			END;

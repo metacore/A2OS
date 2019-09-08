@@ -173,21 +173,21 @@ END CapDriverDisconnect;
 PROCEDURE CapSetCallbackFrame*(hwnd : HWND; proc : CapVideoStreamCallback) : BOOLEAN;
 VAR result : User32.LResult;
 BEGIN
-	result := User32.SendMessage(hwnd, WM_CAP_SET_CALLBACK_FRAME, 0, SYSTEM.VAL(LONGINT, proc));
+	result := User32.SendMessage(hwnd, WM_CAP_SET_CALLBACK_FRAME, 0, ADDRESS(proc));
 	RETURN result # 0
 END CapSetCallbackFrame;
 
 PROCEDURE CapSetCallbackStream*(hwnd : HWND; proc : CapVideoStreamCallback) : BOOLEAN;
 VAR result : User32.LResult;
 BEGIN
-	result := User32.SendMessage(hwnd, WM_CAP_SET_CALLBACK_VIDEOSTREAM, 0, SYSTEM.VAL(LONGINT, proc));
+	result := User32.SendMessage(hwnd, WM_CAP_SET_CALLBACK_VIDEOSTREAM, 0, ADDRESS(proc));
 	RETURN result # 0
 END CapSetCallbackStream;
 
 PROCEDURE CapSetCallbackYield*(hwnd : HWND; proc : CapYieldCallback) : BOOLEAN;
 VAR result : User32.LResult;
 BEGIN
-	result := User32.SendMessage(hwnd, WM_CAP_SET_CALLBACK_YIELD, 0, SYSTEM.VAL(LONGINT, proc));
+	result := User32.SendMessage(hwnd, WM_CAP_SET_CALLBACK_YIELD, 0, ADDRESS(proc));
 	RETURN result # 0
 END CapSetCallbackYield;
 

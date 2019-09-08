@@ -606,7 +606,7 @@ BEGIN{UNTRACKED}
 				m := Modules.ThisModuleByAdr( eip );
 				IF m # NIL THEN
 					Trace.String( m.name );  Trace.String( " " );
-					Trace.Address(eip - SYSTEM.VAL( LONGINT, ADDRESSOF( m.code[0] ) ));
+					Trace.Address(eip - ADDRESSOF( m.code[0] ) );
 				ELSE Trace.String( "EIP " );  Trace.Address(eip)
 				END;
 				Trace.Ln();
@@ -691,7 +691,7 @@ VAR type: LONGINT;
 BEGIN
 	IF obj = NIL THEN Trace.String(" > NIL");
 	ELSE
-		Trace.String(" > ");  SYSTEM.GET(SYSTEM.VAL(LONGINT, obj) + Heaps.TypeDescOffset, type);
+		Trace.String(" > ");  SYSTEM.GET(SYSTEM.VAL(ADDRESS,obj) + Heaps.TypeDescOffset, type);
 		Heaps.WriteType(type);
 	END;
 END WriteType;

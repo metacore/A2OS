@@ -230,7 +230,7 @@ TYPE
 				IF (res = Ok) THEN
 					blockIdx := 0;
 					WHILE (blockIdx < BlockSize) & (index < LEN(bitmap)) DO
-						bitmap[index] := SYSTEM.VAL(SET, SYSTEM.GET32(ADDRESSOF(data[blockIdx])));
+						bitmap[index] := SET(SYSTEM.GET32(ADDRESSOF(data[blockIdx])));
 						INC(index); INC(blockIdx, SIZEOF(SET));
 					END;
 				ELSE

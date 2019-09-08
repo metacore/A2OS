@@ -7,6 +7,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 
 	TYPE
 		DWORD = Kernel32.DWORD;
+		Long = LONGWORD;
 	CONST
 		(** window messages *)
 		WMCreate* = 01H; WMDestroy* = 02H; WMMove* = 03H; WMSize* = 05H; WMActivate* = 06H; WMSetFocus* = 07H;
@@ -353,6 +354,9 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		GetWindowLong-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex: LONGINT): LONGINT;
 		(** The GetWindowPlacement function retrieves the show state and the restored, minimized, and maximized
 			positions of the specified window. *)
+		GetWindowLongPtr-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex: LONGINT): ADDRESS;
+		(** The GetWindowPlacement function retrieves the show state and the restored, minimized, and maximized
+			positions of the specified window. *)
 		GetWindowPlacement-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpwndpl: WindowPlacement): Kernel32.BOOL;
 		(** The GetWindowRect function retrieves the dimensions of the bounding rectangle of the specified window. *)
 		GetWindowRect-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpRect: Rect): Kernel32.BOOL;
@@ -446,6 +450,8 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The SetWindowLong function changes an attribute of the specified window. *)
 		SetWindowLong-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex, dwNewLong: LONGINT): LONGINT;
 		(** The SetWindowPos function changes the size, position, and Z order of a child, pop-up, or top-level window. *)
+		SetWindowLongPtr-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex:LONGINT; dwNewLong: ADDRESS): ADDRESS;
+		(** The SetWindowPos function changes the size, position, and Z order of a child, pop-up, or top-level window. *)
 		SetWindowPos-: PROCEDURE {WINAPI} (hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: LONGINT; uFlags: DWORD): Kernel32.BOOL;
 		(** The SetWindowRgn function sets the window region of a window. *)
 		SetWindowRgn-: PROCEDURE {WINAPI} (hWnd: HWND; hRgn: HRgn; bRedraw: Kernel32.BOOL): LONGINT;
@@ -530,6 +536,7 @@ BEGIN
 	Kernel32.GetProcAddress(mod, "GetSysColor", SYSTEM.VAL(ADDRESS,GetSysColor ));
 	Kernel32.GetProcAddress(mod, "GetSystemMetrics", SYSTEM.VAL(ADDRESS,GetSystemMetrics ));
 	Kernel32.GetProcAddress(mod, "GetWindowLongA", SYSTEM.VAL(ADDRESS,GetWindowLong ));
+	Kernel32.GetProcAddress(mod, "GetWindowLongPtr", SYSTEM.VAL(ADDRESS,GetWindowLongPtr ));
 	Kernel32.GetProcAddress(mod, "GetWindowPlacement", SYSTEM.VAL(ADDRESS,GetWindowPlacement ));
 	Kernel32.GetProcAddress(mod, "GetWindowRect", SYSTEM.VAL(ADDRESS,GetWindowRect ));
 	Kernel32.GetProcAddress(mod, "GetWindowRgn", SYSTEM.VAL(ADDRESS,GetWindowRgn ));
@@ -571,6 +578,7 @@ BEGIN
 	Kernel32.GetProcAddress(mod, "SetPropA", SYSTEM.VAL(ADDRESS,SetProp ));
 	Kernel32.GetProcAddress(mod, "SetWindowsHookExA", SYSTEM.VAL(ADDRESS,SetWindowsHookEx ));
 	Kernel32.GetProcAddress(mod, "SetWindowLongA", SYSTEM.VAL(ADDRESS,SetWindowLong ));
+	Kernel32.GetProcAddress(mod, "SetWindowLongPtrA", SYSTEM.VAL(ADDRESS,SetWindowLongPtr ));
 	Kernel32.GetProcAddress(mod, "SetWindowPos", SYSTEM.VAL(ADDRESS,SetWindowPos ));
 	Kernel32.GetProcAddress(mod, "SetWindowRgn", SYSTEM.VAL(ADDRESS,SetWindowRgn ));
 	Kernel32.GetProcAddress(mod, "SetWindowTextA", SYSTEM.VAL(ADDRESS,SetWindowText ));

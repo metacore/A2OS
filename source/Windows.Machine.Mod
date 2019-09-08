@@ -972,8 +972,8 @@ BEGIN
 		END;
 		memBlock.next := NIL;
 		startAdr := memBlock.startAdr; (* this value must be cached for the second call of Kernel32.VirtualFree *)
-		IGNORE Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, memBlock.startAdr), memBlock.size, {Kernel32.MEMDecommit});
-		IGNORE Kernel32.VirtualFree(SYSTEM.VAL(LONGINT, startAdr ), 0, {Kernel32.MEMRelease});
+		IGNORE Kernel32.VirtualFree(memBlock.startAdr, memBlock.size, {Kernel32.MEMDecommit});
+		IGNORE Kernel32.VirtualFree(startAdr , 0, {Kernel32.MEMRelease});
 	ELSE
 		HALT(535)	(* error in memory block management *)
 	END;

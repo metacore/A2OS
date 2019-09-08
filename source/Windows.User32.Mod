@@ -199,7 +199,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		WParam* = SIZE; LParam* = SIZE;
 
 		(** A 32-bit value returned from a window procedure or callback function. *)
-		LResult* = LONGINT;
+			LResult* = ADDRESS;
 
 		(** A 32-bit pointer to a window procedure. *)
 		WndProc* = PROCEDURE {WINAPI} (hwnd: HWND; uMsg: LONGINT; wParam: WParam; lParam: LParam): LResult;
@@ -536,7 +536,7 @@ BEGIN
 	Kernel32.GetProcAddress(mod, "GetSysColor", SYSTEM.VAL(ADDRESS,GetSysColor ));
 	Kernel32.GetProcAddress(mod, "GetSystemMetrics", SYSTEM.VAL(ADDRESS,GetSystemMetrics ));
 	Kernel32.GetProcAddress(mod, "GetWindowLongA", SYSTEM.VAL(ADDRESS,GetWindowLong ));
-	Kernel32.GetProcAddress(mod, "GetWindowLongPtr", SYSTEM.VAL(ADDRESS,GetWindowLongPtr ));
+	Kernel32.GetProcAddress(mod, "GetWindowLongPtrA", SYSTEM.VAL(ADDRESS,GetWindowLongPtr ));
 	Kernel32.GetProcAddress(mod, "GetWindowPlacement", SYSTEM.VAL(ADDRESS,GetWindowPlacement ));
 	Kernel32.GetProcAddress(mod, "GetWindowRect", SYSTEM.VAL(ADDRESS,GetWindowRect ));
 	Kernel32.GetProcAddress(mod, "GetWindowRgn", SYSTEM.VAL(ADDRESS,GetWindowRgn ));

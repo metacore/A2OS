@@ -811,7 +811,7 @@ TYPE
 		winGravity*: WORD; 
 	END; 
 
-	ExtData* = POINTER {UNSAFE, UNTRACED} TO ExtDataDesc; 
+	ExtData* = POINTER {UNTRACED, UNSAFE} TO ExtDataDesc; 
 
 	ExtDataDesc* = RECORD 
 		number*: WORD; 
@@ -835,7 +835,7 @@ TYPE
 		card32*: LONGWORD; 
 	END; 
 
-	FontStruct* = POINTER {UNSAFE, UNTRACED} TO FontStructDesc; 
+	FontStruct* = POINTER {UNTRACED, UNSAFE} TO FontStructDesc; 
 
 	FontStructDesc* = RECORD 
 		ext_data*: ExtData; 

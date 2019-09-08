@@ -1317,9 +1317,11 @@ TYPE
 	AwaitStatement* = OBJECT (Statement)
 	VAR 
 		condition-: Expression; 
+		procedure-: Procedure; 
 
 		PROCEDURE ^  & InitAwaitStatement(position: Position; outer: Statement); 
 		PROCEDURE ^ SetCondition*(condition: Expression); 
+		PROCEDURE ^ SetProcedure*(p: Procedure); 
 		PROCEDURE ^ Clone(): Statement; 
 	END AwaitStatement; 
 

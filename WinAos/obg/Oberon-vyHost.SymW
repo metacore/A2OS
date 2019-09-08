@@ -22,7 +22,7 @@ VAR
 	ticks-: LONGINT; 
 	w: Texts.Writer; 
 
-	PROCEDURE ^ Addr*(p: ANY): LONGINT; 
+	PROCEDURE ^ Addr*(p: ANY): ADDRESS; 
 	PROCEDURE ^ GetCaret*(VAR F: Frame; VAR text: Texts.Text; VAR pos: LONGINT); 
 	PROCEDURE ^ GetSelectionText*(VAR text: Texts.Text; VAR beg, end: LONGINT); 
 	PROCEDURE ^ GetPar*; 

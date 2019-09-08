@@ -80,7 +80,7 @@ VAR
 	memBlockHead-{UNTRACED} , memBlockTail-{UNTRACED} : MemoryBlock; 
 
 	PROCEDURE ^ StrToInt*(VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE {Fingerprint(-4906166419077515203)}  - AtomicInc*(VAR x: LONGINT);
+	PROCEDURE {Fingerprint(8896812235857205744)}  - AtomicInc*(VAR x: LONGINT);
 	CODE
 
 		POP RAX
@@ -89,7 +89,7 @@ VAR
 
 	
 	END AtomicInc; 
-	PROCEDURE {Fingerprint(-4906166419489605579)}  - AtomicDec*(VAR x: LONGINT);
+	PROCEDURE {Fingerprint(8896812235852052984)}  - AtomicDec*(VAR x: LONGINT);
 	CODE
 
 		POP RAX
@@ -99,17 +99,17 @@ VAR
 	
 	END AtomicDec; 
 	PROCEDURE ^ AtomicExcl*(VAR s: SET; bit: LONGINT); 
-	PROCEDURE {Fingerprint(-8128385309809622434)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+	PROCEDURE {Fingerprint(-8278068833601498723)}  - AtomicAdd*(VAR x: LONGINT; y: LONGINT);
 	CODE
 
-		POP EBX
+		POP RBX
 		POP RAX
 		LOCK
 		ADD DWORD [RAX], EBX
 
 	
 	END AtomicAdd; 
-	PROCEDURE {Fingerprint(3527218884401619127)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
+	PROCEDURE {Fingerprint(7521546277042004411)}  - AtomicTestSet*(VAR x: BOOLEAN): BOOLEAN;
 	CODE
 
 		POP RBX
@@ -118,11 +118,11 @@ VAR
 
 	
 	END AtomicTestSet; 
-	PROCEDURE {Fingerprint(-519038113181393041)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	PROCEDURE {Fingerprint(-1301654632009957655)}  - AtomicCAS*(VAR x: LONGINT; old, new: LONGINT): LONGINT;
 	CODE
 
-		POP EBX		; new
-		POP EAX		; old
+		POP RBX		; new
+		POP RAX		; old
 		POP RCX		; address of x
 		LOCK CMPXCHG [RCX], EBX	; atomicly compare x with old and set it to new if equal
 

@@ -18,6 +18,7 @@ VAR
 	PROCEDURE ^ Append(VAR ar: ARRAY OF CHAR; CONST this: ARRAY OF CHAR); 
 	PROCEDURE ^ TimeTag(w: Streams.Writer); 
 	PROCEDURE ^ FinishTrap(w: Streams.Writer; p: Objects.Process); 
+	PROCEDURE ^ Register(w: Streams.Writer; CONST name: ARRAY OF CHAR; value: ADDRESS); 
 	PROCEDURE ^ Registers(CONST mc: Unix.Mcontext; w: Streams.Writer); 
 	PROCEDURE ^ Trap(sig: LONGINT; mc: Unix.Mcontext); 
 	PROCEDURE ^ UnlockOberon; 

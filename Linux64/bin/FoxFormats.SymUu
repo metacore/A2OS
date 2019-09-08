@@ -1,7 +1,6 @@
 MODULE FoxFormats;
 	IMPORT SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, Strings, Streams, Diagnostics, Options, Files;
 CONST 
-	NoFindPC* = MAX(LONGINT); 
 TYPE 
 	SectionName = ARRAY 256 OF CHAR; 
 
@@ -9,10 +8,10 @@ TYPE
 	VAR 
 		module-: SyntaxTree.Module; 
 		system-: Global.System; 
-		findPC-: LONGINT; 
+		findPC-: SIZE; 
 		moduleName-: SectionName; 
 
-		PROCEDURE ^ SetFindPC*(findPC: LONGINT); 
+		PROCEDURE ^ SetFindPC*(findPC: SIZE); 
 		PROCEDURE ^  & Init*(module: SyntaxTree.Module; system: Global.System); 
 		PROCEDURE ^ SetModuleName*(CONST moduleName: ARRAY OF CHAR); 
 		PROCEDURE ^ SetSystem*(system: Global.System); 

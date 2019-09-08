@@ -213,6 +213,8 @@ CONST
 TYPE 
 	DWORD = Kernel32.DWORD; 
 
+	Long = LONGWORD; 
+
 	HWND* = Kernel32.HANDLE; 
 
 	HDC* = Kernel32.HANDLE; 
@@ -280,7 +282,7 @@ TYPE
 
 	LParam* = SIZE; 
 
-	LResult* = LONGINT; 
+	LResult* = ADDRESS; 
 
 	WndProc* = PROCEDURE {WINAPI}(hwnd: HWND; uMsg: LONGINT; wParam: WParam; lParam: LParam):LResult; 
 
@@ -377,6 +379,7 @@ VAR
 	GetSysColor-: PROCEDURE {WINAPI}(nIndex: LONGINT):ColorRef; 
 	GetSystemMetrics-: PROCEDURE {WINAPI}(nIndex: LONGINT):LONGINT; 
 	GetWindowLong-: PROCEDURE {WINAPI}(hWnd: HWND; nIndex: LONGINT):LONGINT; 
+	GetWindowLongPtr-: PROCEDURE {WINAPI}(hWnd: HWND; nIndex: LONGINT):ADDRESS; 
 	GetWindowPlacement-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpwndpl: WindowPlacement):Kernel32.BOOL; 
 	GetWindowRect-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpRect: Rect):Kernel32.BOOL; 
 	GetWindowRgn-: PROCEDURE {WINAPI}(hWnd: HWND; VAR hRgn: HRgn):LONGINT; 
@@ -418,6 +421,7 @@ VAR
 	SetProp-: PROCEDURE {WINAPI}(hWnd: HWND; lpString, hData: LONGINT):Kernel32.BOOL; 
 	SetWindowsHookEx-: PROCEDURE {WINAPI}(idHook: LONGINT; lpfn: HookProc; hMod: Kernel32.HINSTANCE; dwThreadId: LONGINT):HHook; 
 	SetWindowLong-: PROCEDURE {WINAPI}(hWnd: HWND; nIndex, dwNewLong: LONGINT):LONGINT; 
+	SetWindowLongPtr-: PROCEDURE {WINAPI}(hWnd: HWND; nIndex: LONGINT; dwNewLong: ADDRESS):ADDRESS; 
 	SetWindowPos-: PROCEDURE {WINAPI}(hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: LONGINT; uFlags: DWORD):Kernel32.BOOL; 
 	SetWindowRgn-: PROCEDURE {WINAPI}(hWnd: HWND; hRgn: HRgn; bRedraw: Kernel32.BOOL):LONGINT; 
 	SetWindowText-: PROCEDURE {WINAPI}(hWnd: HWND; VAR lpString: ARRAY OF CHAR):Kernel32.BOOL; 

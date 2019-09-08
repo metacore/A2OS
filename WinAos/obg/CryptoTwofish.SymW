@@ -3,11 +3,11 @@ MODULE CryptoTwofish;
 CONST 
 	N = 16; 
 	FDBK = 361; 
-	Fdbk2 = S.VAL(SET32, (FDBK DIV 2)); 
-	Fdbk4 = S.VAL(SET32, (FDBK DIV 4)); 
-	Byte0 = S.VAL(SET32, 255); 
-	S14d = S.VAL(SET32, 333); 
-	S0a6 = S.VAL(SET32, 166); 
+	Fdbk2 = SET32((FDBK DIV 2)); 
+	Fdbk4 = SET32((FDBK DIV 4)); 
+	Byte0 = SET32(255); 
+	S14d = SET32(333); 
+	S0a6 = SET32(166); 
 TYPE 
 	Block = ARRAY 4 OF SET32; 
 

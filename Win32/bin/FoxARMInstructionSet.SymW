@@ -1,5 +1,5 @@
 MODULE FoxARMInstructionSet;
-	IMPORT D := Debugging, Commands, Streams, Files, BinaryCode := FoxBinaryCode, Disassembler := FoxDisassembler, BitSets, Options, Strings, ObjectFile;
+	IMPORT D := Debugging, Commands, Streams, Files, Basic := FoxBasic, BinaryCode := FoxBinaryCode, Disassembler := FoxDisassembler, BitSets, Options, Strings, ObjectFile;
 CONST 
 	TraceDecode = FALSE; 
 	None* =  -1; 
@@ -524,11 +524,11 @@ VAR
 	PROCEDURE ^ AddFixup*(VAR operand: Operand; fixup: BinaryCode.Fixup); 
 	PROCEDURE ^ InitOperand*(VAR operand: Operand); 
 	PROCEDURE ^ InitRegister*(VAR operand: Operand; registerNumber: LONGINT; shiftMode: LONGINT; shiftAmountRegisterNumber: LONGINT; shiftImmediate: LONGINT); 
-	PROCEDURE ^ InitImmediate*(VAR operand: Operand; immediate: LONGINT); 
+	PROCEDURE ^ InitImmediate*(VAR operand: Operand; immediate: Basic.Integer); 
 	PROCEDURE ^ InitImmediateOffsetMemory*(VAR operand: Operand; register: LONGINT; offset: LONGINT; indexing: SET); 
 	PROCEDURE ^ InitRegisterOffsetMemory*(VAR operand: Operand; register, offsetRegister: LONGINT; shiftMode: LONGINT; shiftImmediate: LONGINT; indexing: SET); 
 	PROCEDURE ^ NewRegister*(registerNumber: LONGINT; shiftMode: LONGINT; shiftAmountRegisterNumber: LONGINT; shiftImmediate: LONGINT): Operand; 
-	PROCEDURE ^ NewImmediate*(immediate: LONGINT): Operand; 
+	PROCEDURE ^ NewImmediate*(immediate: Basic.Integer): Operand; 
 	PROCEDURE ^ NewImmediateOffsetMemory*(register: LONGINT; offset: LONGINT; indexing: SET): Operand; 
 	PROCEDURE ^ NewRegisterOffsetMemory*(register, offsetRegister: LONGINT; shiftMode: LONGINT; shiftImmediate: LONGINT; indexing: SET): Operand; 
 	PROCEDURE ^ NewRegisterList*(registerBase: LONGINT; registerList: SET): Operand; 

@@ -69,6 +69,9 @@ TYPE
 		replacements*: Replacement; 
 		cellsAreObjects: BOOLEAN; 
 		variableAccessed: BOOLEAN; 
+		inAwait: BOOLEAN; 
+		inReturn: BOOLEAN; 
+		awaitProcCounter := 0: SIZE; 
 
 		PROCEDURE ^  & InitChecker*(diagnostics: Diagnostics.Diagnostics; verboseErrorMessage, cooperative: BOOLEAN; system: Global.System; symbolFileFormat: Formats.SymbolFileFormat; VAR importCache: SyntaxTree.ModuleScope; CONST backend: ARRAY OF CHAR); 
 		PROCEDURE ^ Error(position: Position; CONST message: ARRAY OF CHAR); 
@@ -180,6 +183,7 @@ TYPE
 		PROCEDURE ^ ResolveBuiltin(builtinProcedure: SyntaxTree.Builtin); 
 		PROCEDURE ^ ResolveOperator(operator: SyntaxTree.Operator); 
 		PROCEDURE ^ AddImport*(module: SyntaxTree.Module; x: SyntaxTree.Import): BOOLEAN; 
+		PROCEDURE ^ GetImportModuleName(x: SyntaxTree.Import): SyntaxTree.Identifier; 
 		PROCEDURE ^ ResolveTemplateImport(x: SyntaxTree.Import); 
 		PROCEDURE ^ ResolveImport(x: SyntaxTree.Import); 
 		PROCEDURE ^ ResolveStatement*(x: SyntaxTree.Statement): SyntaxTree.Statement; 
@@ -201,6 +205,7 @@ TYPE
 		PROCEDURE ^ ResolveExitableBlock(exitableBlock: SyntaxTree.ExitableBlock): SyntaxTree.Statement; 
 		PROCEDURE ^ ResolveExitStatement(exitStatement: SyntaxTree.ExitStatement): SyntaxTree.Statement; 
 		PROCEDURE ^ ResolveReturnStatement(returnStatement: SyntaxTree.ReturnStatement): SyntaxTree.Statement; 
+		PROCEDURE ^ MakeAwaitProcedure(x: SyntaxTree.AwaitStatement): SyntaxTree.Procedure; 
 		PROCEDURE ^ ResolveAwaitStatement(awaitStatement: SyntaxTree.AwaitStatement): SyntaxTree.Statement; 
 		PROCEDURE ^ CheckSystemImport(position: Position); 
 		PROCEDURE ^ ResolveCode(code: SyntaxTree.Code); 
@@ -248,6 +253,7 @@ TYPE
 	PROCEDURE ^ ProcedureTypeDistance(system: Global.System; procedureType: SyntaxTree.ProcedureType; right: SyntaxTree.ProcedureType): SIZE; 
 	PROCEDURE ^ TypeDistance(system: Global.System; from, to: SyntaxTree.Type; varpar: BOOLEAN): SIZE; 
 	PROCEDURE ^ IsIntegerType*(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsNumberType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsAddressType*(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsSizeType(type: SyntaxTree.Type; addressWidth: LONGINT): BOOLEAN; 
 	PROCEDURE ^ IsSignedIntegerType*(type: SyntaxTree.Type): BOOLEAN; 
@@ -278,6 +284,7 @@ TYPE
 	PROCEDURE ^ ContainsPointer*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStringType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsCharacterType*(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsSetType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsEnumerationType*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsValidTypeTest(base, extension: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsTypeExtension(base, extension: SyntaxTree.Type): BOOLEAN; 
@@ -299,6 +306,7 @@ TYPE
 	PROCEDURE ^ NewWarnings*(diagnostics: Diagnostics.Diagnostics): Warnings; 
 	PROCEDURE ^ IsRangeType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsMathArrayType(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ BaseType(type: SyntaxTree.Type): SyntaxTree.Type; 
 	PROCEDURE ^ IsArrayType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsComplexType(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStaticRange(x: SyntaxTree.Expression; VAR firstValue, lastValue, stepValue: Basic.Integer): BOOLEAN; 

@@ -10,7 +10,7 @@ CONST
 TYPE 
 	Generator* = OBJECT 
 	VAR 
-		buffer: ARRAY 250 OF SET; 
+		buffer: ARRAY 250 OF SET32; 
 		index: LONGINT; 
 		Z: LONGINT; 
 

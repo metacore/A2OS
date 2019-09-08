@@ -457,7 +457,6 @@ TYPE
 		PROCEDURE ^ LoopStatement(x: SyntaxTree.LoopStatement); 
 		PROCEDURE ^ ExitStatement(x: SyntaxTree.ExitStatement); 
 		PROCEDURE ^ ReturnStatement(x: SyntaxTree.ReturnStatement); 
-		PROCEDURE ^ MakeAwaitProcedure(x: SyntaxTree.AwaitStatement): SyntaxTree.Procedure; 
 		PROCEDURE ^ AwaitStatement(x: SyntaxTree.AwaitStatement); 
 		PROCEDURE ^ StatementSequence(x: SyntaxTree.StatementSequence); 
 		PROCEDURE ^ PushSelfPointer; 

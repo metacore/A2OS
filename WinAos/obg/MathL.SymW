@@ -3,30 +3,19 @@ MODULE MathL;
 CONST 
 	e* =    2.718281828459046D+000; 
 	pi* =    3.141592653589793D+000; 
+	ln2* =    6.931471805599454D-001; 
+	eps =    2.200000000000000D-016; 
+TYPE 
+	Value = LONGREAL; 
 
-	PROCEDURE {Fingerprint(-3182998201464503292)}  - Sin(x: LONGREAL): LONGREAL;
-	CODE
-	END Sin; 
-	PROCEDURE {Fingerprint(-4332520016118266876)}  - Cos(x: LONGREAL): LONGREAL;
-	CODE
-	END Cos; 
-	PROCEDURE {Fingerprint(-809601197830276943)}  - Arctan(x: LONGREAL): LONGREAL;
-	CODE
-	END Arctan; 
-	PROCEDURE {Fingerprint(-1016177442466806167)}  - Sqrt(x: LONGREAL): LONGREAL;
-	CODE
-	END Sqrt; 
-	PROCEDURE {Fingerprint(691786327934387200)}  - Ln(x: LONGREAL): LONGREAL;
-	CODE
-	END Ln; 
-	PROCEDURE {Fingerprint(-4183351472601152508)}  - Exp(x: LONGREAL): LONGREAL;
-	CODE
-	END Exp; 
-	PROCEDURE ^ sin*(x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ cos*(x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ arctan*(x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ sqrt*(x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ ln*(x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ exp*(x: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Expo(x: Value): UNSIGNED32; 
+	PROCEDURE ^ Mantissa(x: Value): UNSIGNED64; 
+	PROCEDURE ^ Equal(x, y: Value): BOOLEAN; 
+	PROCEDURE ^ sin*(x: Value): Value; 
+	PROCEDURE ^ cos*(x: Value): Value; 
+	PROCEDURE ^ arctan*(x: Value): Value; 
+	PROCEDURE ^ sqrt*(x: Value): Value; 
+	PROCEDURE ^ ln*(x: Value): Value; 
+	PROCEDURE ^ exp*(x: Value): Value; 
 BEGIN
 END MathL.

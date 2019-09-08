@@ -82,8 +82,7 @@ CONST
 	Abs* = (Wait + 1); 
 	Cap* = (Abs + 1); 
 	Chr* = (Cap + 1); 
-	Chr32* = (Chr + 1); 
-	Entier* = (Chr32 + 1); 
+	Entier* = (Chr + 1); 
 	EntierH* = (Entier + 1); 
 	Incr* = (EntierH + 1); 
 	Len* = (Incr + 1); 
@@ -220,7 +219,7 @@ TYPE
 		offsetFirstVariable-: LONGINT; 
 		operatorDefined-: ARRAY end OF BOOLEAN; 
 		addressSize-: LONGINT; 
-		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, characterType8-, characterType16-, characterType32-, setType-, booleanType-, anyType-, byteType-, realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type; 
+		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, setType-, booleanType-, anyType-, byteType-, realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type; 
 		CanPassInRegister-: PassInRegisterProc; 
 		cellsAreObjects-: BOOLEAN; 
 		platformCallingConvention-: SyntaxTree.CallingConvention; 
@@ -246,15 +245,11 @@ VAR
 	SelfParameterName-, ReturnParameterName-, SystemName-, systemName-, PointerReturnName-, ResultName-, A2Name-, ArrayBaseName-, ComplexNumbersName-, RecordBodyName-, ModuleBodyName-, NameWinAPI-, NameC-, NamePlatformCC-, NameMovable-, NameUntraced-, NameUntracked-, NameDelegate-, NameInterrupt-, NamePcOffset-, NameNoPAF-, NameEntry-, NameExit-, NameFixed-, NameFictive-, NameAligned-, NameStackAligned-, NameExclusive-, NameActive-, NamePriority-, NameSafe-, NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-, NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-, NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-, NameNoReturn-, NamePlain-, NameUnsafe-, NameDisposable-, NameUnchecked-, NameUncooperative-: SyntaxTree.Identifier; 
 	NameGlobal-, Nameglobal: SyntaxTree.Identifier; 
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier; 
-	Boolean8-, Boolean32-: SyntaxTree.BooleanType; 
 	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType; 
 	Unsigned8-, Unsigned16-, Unsigned32-, Unsigned64-: SyntaxTree.IntegerType; 
-	Character8-, Character16-, Character32-: SyntaxTree.CharacterType; 
 	Set8-, Set16-, Set32-, Set64-: SyntaxTree.SetType; 
 	Float32-, Float64-: SyntaxTree.FloatType; 
 	Complex64-, Complex128-: SyntaxTree.ComplexType; 
-	Byte8: SyntaxTree.ByteType; 
-	Byte32: SyntaxTree.ByteType; 
 
 	PROCEDURE ^ BuildScopes(system: System); 
 	PROCEDURE ^ SetDefaultDeclarations*(system: System; minBits: SIZE); 

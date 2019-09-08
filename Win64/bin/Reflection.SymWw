@@ -8,9 +8,6 @@ CONST
 	LineDelay = 0; 
 	sfTypeNone* = 0X; 
 	sfTypeCHAR* = 1X; 
-	sfTypeCHAR8* = 2X; 
-	sfTypeCHAR16* = 3X; 
-	sfTypeCHAR32* = 4X; 
 	sfTypeRANGE* = 5X; 
 	sfTypeSHORTINT* = 6X; 
 	sfTypeINTEGER* = 7X; 

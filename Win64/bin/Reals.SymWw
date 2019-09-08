@@ -29,7 +29,7 @@ VAR
 	FLD DWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT
-	POP EAX	; return value
+	POP RAX	; return value
 
 	END Round; 
 	PROCEDURE {Fingerprint(960717997535041464)}  - RoundL*(x: LONGREAL): LONGINT;
@@ -37,7 +37,7 @@ VAR
 	FLD QWORD [RSP]
 	FISTP DWORD [RSP]	; store integer using current rounding mode
 	FWAIT
-	POP EAX	; return value
+	POP RAX	; return value
 
 	END RoundL; 
 	PROCEDURE ^ RealX(hh, hl: HUGEINT; adr: ADDRESS); 

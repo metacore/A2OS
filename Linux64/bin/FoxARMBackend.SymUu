@@ -287,7 +287,7 @@ TYPE
 		PROCEDURE ^ Emit2WithCondition(opCode: LONGINT; op1, op2: Operand; condition: LONGINT); 
 		PROCEDURE ^ Emit3WithCondition(opCode: LONGINT; op1, op2, op3: Operand; condition: LONGINT); 
 		PROCEDURE ^ ValueComposition(value: LONGINT; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT; 
-		PROCEDURE ^ ValueComposition2(value: LONGINT; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT; 
+		PROCEDURE ^ ValueComposition2(value: Basic.Integer; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT; 
 		PROCEDURE ^ PhysicalRegisterNumber(virtualRegisterNumber: SIZE; part: LONGINT): LONGINT; 
 		PROCEDURE ^ GetSpillOperand(ticket: Ticket): Operand; 
 		PROCEDURE ^ OperandFromTicket(ticket: Ticket): Operand; 
@@ -326,7 +326,7 @@ TYPE
 		PROCEDURE ^ RegisterFromValue(value: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ AllocateStack(allocationSize: SIZE; doUpdateStackSize: BOOLEAN; clear: BOOLEAN); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: Operand): BOOLEAN; 
-		PROCEDURE ^ MovIfDifferent(CONST a, b: Operand); 
+		PROCEDURE ^ MovIfDifferent(CONST a, b: Operand; part= Low: LONGINT); 
 		PROCEDURE ^ AcquireDestinationRegister(CONST irDestinationOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
 		PROCEDURE ^ WriteBack(VAR irDestinationOperand: IntermediateCode.Operand; part: LONGINT; register: Operand); 
 		PROCEDURE ^ ZeroExtendOperand(operand: Operand; sizeInBits: LONGINT); 
@@ -339,7 +339,7 @@ TYPE
 		PROCEDURE ^ EmitEnter(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitLeave(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitExit(CONST irInstruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ EmitMov(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitMov(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitNot(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
 		PROCEDURE ^ EmitAndP(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
 		PROCEDURE ^ EmitAnd(VAR irInstruction: IntermediateCode.Instruction); 

@@ -36,6 +36,8 @@ TYPE
 
 	Set* = SET64; 
 
+	Real* = LONGREAL; 
+
 	ObjectArray = POINTER TO ARRAY OF ANY; 
 
 	ErrorMsgs = POINTER TO ARRAY OF StringPool.Index; 
@@ -195,7 +197,7 @@ TYPE
 		PROCEDURE ^ RawSet*(x: SET); 
 		PROCEDURE ^ RawBool*(x: BOOLEAN); 
 		PROCEDURE ^ RawReal*(x: REAL); 
-		PROCEDURE ^ RawLReal*(x: LONGREAL); 
+		PROCEDURE ^ RawLReal*(x: Real); 
 		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ RawNum*(x: HUGEINT); 
 		PROCEDURE ^ Ln*; 
@@ -206,8 +208,8 @@ TYPE
 		PROCEDURE ^ Address*(x: ADDRESS); 
 		PROCEDURE ^ Date*(t, d: LONGINT); 
 		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
-		PROCEDURE ^ Float*(x: LONGREAL; n: LONGINT); 
-		PROCEDURE ^ FloatFix*(x: LONGREAL; n, f, D: LONGINT); 
+		PROCEDURE ^ Float*(x: Real; n: LONGINT); 
+		PROCEDURE ^ FloatFix*(x: Real; n, f, D: LONGINT); 
 		PROCEDURE ^ SetIndent*(i: LONGINT); 
 		PROCEDURE ^ IncIndent*; 
 		PROCEDURE ^ DecIndent*; 

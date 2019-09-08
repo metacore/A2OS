@@ -5294,11 +5294,8 @@ TYPE
 							result := SyntaxTree.invalidExpression;
 							Error(parameter0.position,"is no basic type");
 						ELSE
-							IF (parameter1.resolved # NIL) THEN
-								parameter0 := ConvertValue(parameter1.position,parameter1.resolved,type);
-								IF parameter0 IS SyntaxTree.Value THEN
-									result.SetResolved(parameter0(SyntaxTree.Value));
-								END;
+							IF (system.SizeOf(parameter1.type) # system.SizeOf(type)) & (IsBasicType(parameter1.type) OR IsBasicType(type)) THEN
+								Error(parameter0.position,"types do not have the same size");
 							END;
 							result.SetAssignable(parameter1.assignable);
 						END;

@@ -74,13 +74,13 @@ CONST
 	noInx* = none; 
 	noImm* = 0; 
 	BUG = 42; 
-	ROL* = 0; 
+	opROL* = 0; 
 	Ror* = 1; 
 	RCL* = 2; 
 	RCR* = 3; 
-	SHL* = 4; 
+	opSHL* = 4; 
 	SAL* = 4; 
-	SHR* = 5; 
+	opSHR* = 5; 
 	SAR* = 7; 
 	Left* = 0; 
 	Right* = 1; 

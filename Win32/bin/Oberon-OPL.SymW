@@ -388,12 +388,12 @@ CONST
 	Occupied = MIN(INTEGER); 
 	Splitted = (Occupied + 1); 
 	Ror = OPO.Ror; 
-	ROL = OPO.ROL; 
+	opROL = OPO.opROL; 
 	RCL = OPO.RCL; 
 	RCR = OPO.RCR; 
-	SHL = OPO.SHL; 
+	opSHL = OPO.opSHL; 
 	SAL = OPO.SAL; 
-	SHR = OPO.SHR; 
+	opSHR = OPO.opSHR; 
 	SAR = OPO.SAR; 
 	CMPS = OPO.CMPS; 
 	INS = OPO.INS; 

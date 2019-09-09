@@ -136,8 +136,10 @@ CONST
 	Send* = (systemGetActivity + 1); 
 	Receive* = (Send + 1); 
 	systemSpecial* = (Receive + 1); 
-	Asr* = (systemSpecial + 1); 
-	Ror* = (Asr + 1); 
+	Shl* = (systemSpecial + 1); 
+	Shr* = (Shl + 1); 
+	Rol* = (Shr + 1); 
+	Ror* = (Rol + 1); 
 	Flt* = (Ror + 1); 
 	Conversion* = (Flt + 1); 
 	DotTimesPlus* = (Conversion + 1); 

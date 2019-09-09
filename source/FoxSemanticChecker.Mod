@@ -5265,7 +5265,6 @@ TYPE
 								result.SetResolved(SyntaxTree.NewIntegerValue(position,ASH(i0,i1)));
 								result := ResolveExpression(result);
 								type := Global.GetIntegerType(system,i0);
-							(* bootstrapping 
 							ELSIF id = Global.Shl THEN
 								result.SetResolved(SyntaxTree.NewIntegerValue(position,SHL(i0,i1)));
 							ELSIF id = Global.Shr THEN
@@ -5274,7 +5273,6 @@ TYPE
 								result.SetResolved(SyntaxTree.NewIntegerValue(position,ROL(i0,i1)));
 							ELSIF id = Global.Ror THEN
 								result.SetResolved(SyntaxTree.NewIntegerValue(position,ROR(i0,i1)));					
-							*)							
 							END;
 						END;
 						IF id = Global.Ash THEN

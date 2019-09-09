@@ -2612,7 +2612,7 @@ VAR
 		ELSIF (memConfigStart <= virtualAddress) & (virtualAddress < memConfigStop) THEN
 			basePT := sysSecondLvlPtStop - (memConfigStop DIV k - virtualAddress DIV M * k)
 		END;
-		ptIdx := SHR(virtualAddress MOD M, PSlog2);
+		ptIdx := opSHR(virtualAddress MOD M, PSlog2);
 		ASSERT(basePT + 4 * ptIdx >= sysSecondLvlPtStart);
 		ASSERT(basePT + 4 * ptIdx < sysSecondLvlPtStop);
 		entry := SYSTEM.GET32(basePT + 4 * ptIdx);
@@ -2634,7 +2634,7 @@ VAR
 		ELSIF (memConfigStart <= virtualAddress) & (virtualAddress < memConfigStop) THEN
 			basePT := sysSecondLvlPtStop - (memConfigStop DIV k - virtualAddress DIV M * k)
 		END;
-		ptIdx := SHR(virtualAddress MOD M, PSlog2);
+		ptIdx := opSHR(virtualAddress MOD M, PSlog2);
 
 		IF physicalAddress = NilAdr THEN
 			entry := slFault
@@ -2767,7 +2767,7 @@ VAR
 	VAR
 		index, entry: LONGINT;
 	BEGIN
-		index := SHR(virtual, LogM) * 4;
+		index := opSHR(virtual, LogM) * 4;
 		ASSERT(index >= 0);
 		ASSERT(sysFirstLvlPtStart + index < sysFirstLvlPtStop);
 		entry := physical + permissions * 400H + flags + type;
@@ -2949,13 +2949,13 @@ VAR
 		AllocateHeap(memIOStart, memIOStart, memIOStop - memIOStart, SrwUrw, Shareable + B);
 
 		(* initialize stack & config page tables (excluding the last MB that is already initalized) *)
-		base := SHR(memStackStart, LogM);
+		base := opSHR(memStackStart, LogM);
 		FOR i := memStackStart TO memConfigStop - 1 BY M DO
-			SetFirstLevelEntry(i, sysSecondLvlPtStart + 2 * k + PTSize * (SHR(i, LogM) - base), 0, 0, flCoarse)
+			SetFirstLevelEntry(i, sysSecondLvlPtStart + 2 * k + PTSize * (opSHR(i, LogM) - base), 0, 0, flCoarse)
 		END;
 
 		(* Map config region directly *)
-		FOR i := 0 TO SHR(memConfigStop - memConfigStart, PSlog2) - 1 DO
+		FOR i := 0 TO opSHR(memConfigStop - memConfigStart, PSlog2) - 1 DO
 			SetSecondLevelEntry(memConfigStart + PS * i, memConfigStart + PS * i, FullAccess + fineFlags)
 		END;
 
@@ -2972,7 +2972,7 @@ VAR
 		(* get heap size (check how many MBs are allocated) *)
 		heapLow.physical := 1*M; heapLow.virtual := memHeapStart;
 		heapHigh.physical := 1*M;
-		i := SHR(memHeapStart, LogM);
+		i := opSHR(memHeapStart, LogM);
 		WHILE (SYSTEM.GET32(pageTable.virtual + i*4) MOD 4 = flSection) DO
 			INC(heapHigh.physical, M);
 			DEC(memory.free, M);
@@ -3016,9 +3016,9 @@ VAR
 	PROCEDURE GetFreeK*(VAR total, lowFree, highFree: SIZE);
 	BEGIN
 		Acquire(Memory);
-		total := SHR(memory.size, 10);
+		total := opSHR(memory.size, 10);
 		lowFree := 0;
-		highFree := SHR(memory.free, 10);
+		highFree := opSHR(memory.free, 10);
 		Release(Memory)
 	END GetFreeK;
 
@@ -3231,13 +3231,13 @@ VAR
 
 	(* ===== Caches, TLB & other ===== *)
 	(** SHR - logical shift right *)
-	PROCEDURE SHR(value, shift: ADDRESS): LONGINT;
+	PROCEDURE opSHR(value, shift: ADDRESS): LONGINT;
 	CODE
 		LDR R0, [FP, #value]
 		LDR R1, [FP, #shift]
 
 		MOV R0, R0, LSR R1
-	END SHR;
+	END opSHR;
 
 	(** SHRL - shift right and left. Mask out 'shift' lowest bits *)
 	PROCEDURE SHRL(value, shift: LONGINT): LONGINT;

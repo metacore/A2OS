@@ -8463,16 +8463,18 @@ TYPE
 			|Global.Shr, Global.Shl, Global.Ror, Global.Rol:
 				Evaluate(p0,s0);
 				Evaluate(p1,s1);
+				ReuseCopy(reg,s0.op);
 				IF IsIntegerConstant(p1,hint) THEN
-					ReuseCopy(reg,s0.op);
 					IntermediateCode.InitImmediate(s1.op,s1.op.type,hint);
 				END; 
-				IF x.id = Global.Shl THEN Emit(Shl(position,reg,s0.op,s1.op))
-				ELSIF x.id = Global.Shr THEN Emit(Shr(position,reg,s0.op,s1.op))
-				ELSIF x.id = Global.Rol THEN Emit(Rol(position,reg,s0.op,s1.op))
-				ELSIF x.id = Global.Ror THEN Emit(Ror(position,reg,s0.op,s1.op))
+				ReuseCopy(tmp,s1.op);
+				Convert(tmp,s1.op.type);
+				IF x.id = Global.Shl THEN Emit(Shl(position,reg,reg,tmp))
+				ELSIF x.id = Global.Shr THEN Emit(Shr(position,reg,reg,tmp))
+				ELSIF x.id = Global.Rol THEN Emit(Rol(position,reg,reg,tmp))
+				ELSIF x.id = Global.Ror THEN Emit(Ror(position,reg,reg,tmp))
 				END;
-				ReleaseOperand(s0); ReleaseOperand(s1);
+				ReleaseOperand(s0); ReleaseOperand(s1);ReleaseIntermediateOperand(tmp);
 				InitOperand(result,ModeValue);
 				result.op := reg;
 			(* ---- ASH, LSH, ROT ----- *)
@@ -9088,14 +9090,14 @@ TYPE
 			|Global.Shr, Global.Shl, Global.Ror, Global.Rol:
 				Evaluate(p0,s0);
 				Evaluate(p1,s1);
+				ReuseCopy(reg,s0.op);
 				IF IsIntegerConstant(p1,hint) THEN
-					ReuseCopy(reg,s0.op);
 					IntermediateCode.InitImmediate(s1.op,s1.op.type,hint);
 				END; 
-				IF x.id = Global.Shl THEN Emit(Shl(position,reg,s0.op,s1.op))
-				ELSIF x.id = Global.Shr THEN Emit(Shr(position,reg,s0.op,s1.op))
-				ELSIF x.id = Global.Rol THEN Emit(Rol(position,reg,s0.op,s1.op))
-				ELSIF x.id = Global.Ror THEN Emit(Ror(position,reg,s0.op,s1.op))
+				IF x.id = Global.Shl THEN Emit(Shl(position,reg,reg,s1.op))
+				ELSIF x.id = Global.Shr THEN Emit(Shr(position,reg,reg,s1.op))
+				ELSIF x.id = Global.Rol THEN Emit(Rol(position,reg,reg,s1.op))
+				ELSIF x.id = Global.Ror THEN Emit(Ror(position,reg,reg,s1.op))
 				END;
 				ReleaseOperand(s0); ReleaseOperand(s1);
 				InitOperand(result,ModeValue);

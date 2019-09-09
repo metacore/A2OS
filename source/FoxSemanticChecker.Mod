@@ -4804,36 +4804,6 @@ TYPE
 					ELSE
 						type := SyntaxTree.invalidType;
 					END;
-				(* ---- ASH, ASR ----- *)
-				ELSIF ((id = Global.Ash) OR (id= Global.Asr)) & CheckArity(2,2) THEN
-					type := type0;
-					IF CheckIntegerType(parameter0) & CheckIntegerType(parameter1) THEN
-						(*
-						ConvertOperands(parameter0,parameter1); (* same type *)
-						*)
-
-						type := parameter0.type;
-						IF IsIntegerValue(parameter0,i0) THEN
-							IF IsIntegerValue(parameter1,i1) THEN
-								IF id = Global.Ash THEN i0 := ASH(i0,i1) ELSE i0 := ASR(i0,i1) END;
-								result.SetResolved(SyntaxTree.NewIntegerValue(position,i0));
-								result := ResolveExpression(result);
-								type := Global.GetIntegerType(system,i0);
-							END;
-						END;
-
-						IF type.resolved.sizeInBits < 32 THEN
-							type := system.longintType;
-						END;
-
-						(*!compatibility with release, remove when resolved
-							critical in release : SHORT(ASH(..))), ASH(ORD(..))
-						*)
-						parameter1 := NewConversion(parameter1.position,parameter1,system.longintType,NIL);
-						parameter0 := NewConversion(parameter0.position,parameter0,type,NIL);
-						actualParameters.SetExpression(0,parameter0);
-						actualParameters.SetExpression(1,parameter1);
-					END;
 				(* ---- CAP ----- *)
 				ELSIF (id = Global.Cap) & CheckArity(1,1) THEN
 					type := system.characterType;
@@ -5270,21 +5240,55 @@ TYPE
 						parameter0 := NewConversion(Basic.invalidPosition,parameter0,system.addressType,NIL);
 						actualParameters.SetExpression(0,parameter0);
 					END;
-				(* ---- LSH, LSL, ROT, ROR ----- *)
-				ELSIF ((id = Global.Lsh) OR (id = Global.Rot) OR (id= Global.Ror)) & CheckArity(2,2) THEN
+				(* ---- LSH, ROT, ASH ----- *)
+				ELSIF ((id = Global.Lsh) OR (id = Global.Rot) OR (id = Global.Ash)
+					OR (id = Global.Shl) OR (id = Global.Shr) OR (id = Global.Ror) OR (id = Global.Rol)
+				) & CheckArity(2,2) THEN
 					type := type0;
 
-					parameter1 := NewConversion(parameter1.position,parameter1,system.longintType,NIL);
-					actualParameters.SetExpression(1, parameter1);
+					IF (id # Global.Ash) OR CheckIntegerType(parameter0) & CheckIntegerType(parameter1) THEN 
+						parameter1 := NewConversion(parameter1.position,parameter1,system.longintType,NIL);
+						actualParameters.SetExpression(1, parameter1);
 
-					IF IsIntegerValue(parameter0,i0) & IsIntegerValue(parameter1,i1) THEN
-						IF id = Global.Lsh THEN
-							result.SetResolved(SyntaxTree.NewIntegerValue(position,LSH(i0,i1)));
-						ELSIF id = Global.Rot THEN
-							result.SetResolved(SyntaxTree.NewIntegerValue(position,ROT(i0,i1)));
-						ELSIF id = Global.Ror THEN
-							result.SetResolved(SyntaxTree.NewIntegerValue(position,ROR(i0,i1)));
+						IF IsIntegerValue(parameter1,i1) & (i1 < 0) THEN
+							IF (id = Global.Shl) OR (id = Global.Shr) OR (id = Global.Rol) OR (id = Global.Ror) THEN
+								Error(parameter1.position,"must not be negative");
+							END; 
+						END; 
+
+						IF IsIntegerValue(parameter0,i0) & IsIntegerValue(parameter1,i1) THEN
+							IF id = Global.Lsh THEN
+								result.SetResolved(SyntaxTree.NewIntegerValue(position,LSH(i0,i1)));
+							ELSIF id = Global.Rot THEN
+								result.SetResolved(SyntaxTree.NewIntegerValue(position,ROT(i0,i1)));
+							ELSIF id = Global.Ash THEN
+								result.SetResolved(SyntaxTree.NewIntegerValue(position,ASH(i0,i1)));
+								result := ResolveExpression(result);
+								type := Global.GetIntegerType(system,i0);
+							(* bootstrapping 
+							ELSIF id = Global.Shl THEN
+								result.SetResolved(SyntaxTree.NewIntegerValue(position,SHL(i0,i1)));
+							ELSIF id = Global.Shr THEN
+								result.SetResolved(SyntaxTree.NewIntegerValue(position,SHR(i0,i1)));					
+							ELSIF id = Global.Rol THEN
+								result.SetResolved(SyntaxTree.NewIntegerValue(position,ROL(i0,i1)));
+							ELSIF id = Global.Ror THEN
+								result.SetResolved(SyntaxTree.NewIntegerValue(position,ROR(i0,i1)));					
+							*)							
+							END;
 						END;
+						IF id = Global.Ash THEN
+							IF type.resolved.sizeInBits < 32 THEN
+								type := system.longintType;
+							END;
+							(*!compatibility with release, remove when resolved
+								critical in release : SHORT(ASH(..))), ASH(ORD(..))
+							*)
+							parameter1 := NewConversion(parameter1.position,parameter1,system.longintType,NIL);
+							parameter0 := NewConversion(parameter0.position,parameter0,type,NIL);
+							actualParameters.SetExpression(0,parameter0);
+							actualParameters.SetExpression(1,parameter1);
+						END; 
 					END;
 				(* ---- SYSTEM.VAL ----- *)
 				ELSIF (id = Global.systemVal) & CheckArity(2,2) THEN

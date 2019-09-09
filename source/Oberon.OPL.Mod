@@ -448,8 +448,8 @@ References:
 	(* opcodes used for generating i386 code *)
 
 		(*  GenShiftRot *)
-		Ror= OPO.Ror; ROL = OPO.ROL; RCL = OPO.RCL; RCR = OPO.RCR;
-		SHL = OPO.SHL; SAL = OPO.SAL; SHR = OPO.SHR; SAR = OPO.SAR;
+		Ror= OPO.Ror; opROL = OPO.opROL; RCL = OPO.RCL; RCR = OPO.RCR;
+		opSHL = OPO.opSHL; SAL = OPO.SAL; opSHR = OPO.opSHR; SAR = OPO.SAR;
 
 		(*  GenString, GenRepString, GenRepCmpsScas *)
 		CMPS = OPO.CMPS; INS = OPO.INS; LODS = OPO.LODS; MOVS = OPO.MOVS;
@@ -1260,8 +1260,8 @@ ASSERT(~loaded(instr.dest));
 			CASE op OF
 				Sal: op := SAL
 			  | Sar: op := SAR
-			  | Shr: op := SHR
-			  | Rol: op := ROL
+			  | Shr: op := opSHR
+			  | Rol: op := opROL
 			ELSE HALT (BUG)
 			END;
 			OPO.GenShiftRot (op, mode, instr.reg, base, inx, scale, disp, instr.src2)
@@ -1460,7 +1460,7 @@ ASSERT(~loaded(instr.dest));
 					SHL R0, 1	-> sets CF
 					SBB R1, 0
 			*)
-			OPO.GenShiftRot(OPO.SHL, ImmReg, EDX+size, noBase, noInx, noScale, noDisp, 1);
+			OPO.GenShiftRot(OPO.opSHL, ImmReg, EDX+size, noBase, noInx, noScale, noDisp, 1);
 			OPO.GenTyp1(OPO.SBB, ImmReg, EAX+size, noBase, noInx, noScale, noDisp, 0);
 
 			instr.reg := EAX+size;
@@ -1606,7 +1606,7 @@ ASSERT(~loaded(instr.dest));
 		IF (instr.inx = AL) & (instr.hint = noHint) THEN (*8-bit move, forward move*)
 			 GetReg8(tmp);
 			OPO.GenMOV(RegReg, tmp, CL, noInx, noScale, noDisp, noImm);
-			OPO.GenShiftRot(SHR, ImmReg, ECX, noBase, noInx, noScale, noDisp, 2);
+			OPO.GenShiftRot(opSHR, ImmReg, ECX, noBase, noInx, noScale, noDisp, 2);
 			OPO.GenTyp1(AND, ImmReg, tmp, noBase, noInx, noScale, noDisp, 3);
 			OPO.GenRepString(MOVS, EAX);
 			OPO.GenMOV(RegReg, CL, tmp, noInx, noScale, noDisp, noImm);

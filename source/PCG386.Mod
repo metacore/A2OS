@@ -2434,7 +2434,7 @@ BEGIN
 
 		(* correction for negative numbers *)
 		IF instr.op = PCLIR.div THEN
-			PCO.GenShiftRot(PCO.SHL, PCO.ImmReg, remainder, noBase, noInx, noScale, noDisp, 1);
+			PCO.GenShiftRot(PCO.opSHL, PCO.ImmReg, remainder, noBase, noInx, noScale, noDisp, 1);
 			PCO.GenTyp1(PCO.SBB, PCO.ImmReg, result, noBase, noInx, noScale, noDisp, 0);
 		ELSE
 			PCO.GenTyp1(PCO.CMP, PCO.ImmReg, remainder, remainder, noInx, noScale, noDisp, 0);
@@ -2653,7 +2653,7 @@ BEGIN
 		GetTempReg8(tmp, -(MakeMask(ECX)+MakeMask(ESI)+MakeMask(EDI)));
 		IF tmp # -1 THEN	(*register found*)
 			PCO.GenMOV(PCO.RegReg, tmp, CL, noInx, noScale, noDisp, noImm);
-			PCO.GenShiftRot(PCO.SHR, PCO.ImmReg, ECX, noBase, noInx, noScale, noDisp, 2);
+			PCO.GenShiftRot(PCO.opSHR, PCO.ImmReg, ECX, noBase, noInx, noScale, noDisp, 2);
 			PCO.GenTyp1(PCO.AND, PCO.ImmReg, tmp, noBase, noInx, noScale, noDisp, 3);
 			PCO.GenRepString(PCO.MOVS, PCO.Bit32);
 			PCO.GenMOV(PCO.RegReg, CL, tmp, noInx, noScale, noDisp, noImm)
@@ -3146,9 +3146,9 @@ END Done;
 		BitOpcode[PCLIR.btc-PCLIR.bts] := PCO.BTR;
 		ShiftOpcode[PCLIR.ash-PCLIR.ash, left] := PCO.SAL;
 		ShiftOpcode[PCLIR.ash-PCLIR.ash, right] := PCO.SAR;
-		ShiftOpcode[PCLIR.bsh-PCLIR.ash, left] := PCO.SHL;
-		ShiftOpcode[PCLIR.bsh-PCLIR.ash, right] := PCO.SHR;
-		ShiftOpcode[PCLIR.rot-PCLIR.ash, left] := PCO.ROL;
+		ShiftOpcode[PCLIR.bsh-PCLIR.ash, left] := PCO.opSHL;
+		ShiftOpcode[PCLIR.bsh-PCLIR.ash, right] := PCO.opSHR;
+		ShiftOpcode[PCLIR.rot-PCLIR.ash, left] := PCO.opROL;
 		ShiftOpcode[PCLIR.rot-PCLIR.ash, right] := PCO.Ror;
 
 		FOR i := 0 TO 6 DO  FPSize[i] := -1  END;

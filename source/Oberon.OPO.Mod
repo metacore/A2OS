@@ -62,7 +62,7 @@ MODULE OPO IN Oberon;
 	(* opcodes used for generating i386 code *)
 
 		(*  GenShiftRot *)
-		ROL* = 0; Ror* = 1; RCL* = 2; RCR* = 3; SHL* = 4; SAL* = 4; SHR* = 5; SAR*= 7;
+		opROL* = 0; Ror* = 1; RCL* = 2; RCR* = 3; opSHL* = 4; SAL* = 4; opSHR* = 5; SAR*= 7;
 
 		(*  GenString, GenRepString, GenRepCmpsScas *)
 		CMPS* = 53H; INS* = 36H; LODS* = 56H; MOVS* = 52H; OUTS* = 37H; SCAS* = 57H; STOS* = 55H;

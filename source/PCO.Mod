@@ -73,7 +73,7 @@ MODULE PCO; (** AUTHOR "prk / be"; PURPOSE "Parallel Compiler: Intel 386 code pa
 	(** opcodes used for generating i386 code *)
 
 		(**  GenShiftRot *)
-		ROL* = 0; Ror* = 1; RCL* = 2; RCR* = 3; SHL* = 4; SAL* = 4; SHR* = 5; SAR*= 7;
+		opROL* = 0; Ror* = 1; RCL* = 2; RCR* = 3; opSHL* = 4; SAL* = 4; opSHR* = 5; SAR*= 7;
 
 		(** GenSHDouble *)
 		Left* = 0; Right* = 1;

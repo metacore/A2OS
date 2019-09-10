@@ -241,7 +241,7 @@ TYPE
 
 		(* system type mapping *)
 		addressType-, sizeType-, integerType-, longIntegerType-, integerSetType-, characterType-, setType-, booleanType-, anyType-, byteType-,
-		realType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
+		realType-, complexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
 
 		CanPassInRegister-: PassInRegisterProc;
 		cellsAreObjects-: BOOLEAN;
@@ -798,6 +798,7 @@ TYPE
 		system.longIntegerType := SyntaxTree.NewIntegerType(system.addressSize,TRUE);
 		system.integerSetType := SyntaxTree.NewSetType(system.integerType.sizeInBits);
 		system.realType := SyntaxTree.NewFloatType(64);
+		system.complexType := SyntaxTree.NewComplexType(system.realType);
 
 		system.booleanType := SyntaxTree.NewBooleanType(8);
 		system.byteType := SyntaxTree.NewByteType(8);
@@ -882,6 +883,7 @@ TYPE
 		DeclareType(Complex64, "COMPLEX64", system.globalScope);
 
 		DeclareType(system.realType,"REAL",system.globalScope);
+		DeclareType(system.complexType,"COMPLEX",system.globalScope);
 		DeclareType(system.booleanType,"BOOLEAN",system.globalScope);
 		DeclareType(system.setType,"SET",system.globalScope);
 		DeclareType(system.anyType,"ANY",system.globalScope);
